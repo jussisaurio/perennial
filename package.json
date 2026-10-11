@@ -4,5 +4,8 @@
   "scripts": {
     "dev": "bun scripts/dev.ts",
     "dev:ai": "bun scripts/dev.ts --ai"
+  },
+  "devDependencies": {
+    "railway": "^3.13.1"
   }
 }

@@ -20,9 +20,9 @@ This runbook deploys Perennial on **Railway** with a **PlanetScale Postgres** da
 
 | Railway service | Source | Job |
 |---|---|---|
-| `web` | This repo, `Dockerfile`, config `railway.json` | Serves the web app, the API, auth, and the Electric proxy (`/api/shape`). Runs migrations before each deploy. |
+| `web` (service name `perennial`) | This repo, `Dockerfile`, defined in `.railway/railway.ts` | Serves the web app, the API, auth, and the Electric proxy (`/api/shape`). Runs migrations before each deploy. |
 | `electric` | Docker image `electricsql/electric:1.8.1` | Reads changes from Postgres (logical replication) and serves shapes to `web`. Private only. |
-| `housekeeping` | This repo, `Dockerfile`, config `railway.housekeeping.json` | Runs `bun --preload ./instrument.ts src/housekeeping.ts` once a day (errors go to Sentry), then exits. |
+| `housekeeping` | This repo, `Dockerfile`, defined in `.railway/railway.ts` | Runs `bun --preload ./instrument.ts src/housekeeping.ts` once a day (errors go to Sentry), then exits. |
 
 Third-party services: Resend (sign-in email), Anthropic (Perennial AI), Sentry (server and browser errors, optional), PostHog (a few product events, optional).
 
@@ -165,8 +165,8 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 ### 3.3 Service `web`
 
 1. **New → GitHub Repo** → this repo. Name the service `web`. Branch: `main`.
-2. Railway reads `railway.json`: Dockerfile build, pre-deploy migration (`bun src/migrate.ts`), healthcheck `/health` (it also checks the database), restart on failure.
-3. **Settings → Deploy:** turn on **Wait for CI**, so that a red build on `main` does not deploy.
+2. `.railway/railway.ts` (Railway Infrastructure as Code) defines the build and deploy settings: Dockerfile build, pre-deploy migration (`bun src/migrate.ts`), healthcheck `/health` (it also checks the database), restart on failure, and Wait for CI. Apply changes with `railway config plan` then `railway config apply`. Variables are not in the file: set them in Railway.
+3. Wait for CI is on (`checkSuites: true` in `.railway/railway.ts`), so a red build on `main` does not deploy.
 4. **Networking:** generate a Railway domain for a first test. Target port: `8080`.
 5. Variables:
 
@@ -224,7 +224,7 @@ These values end up in the public JavaScript. That is expected: a Sentry DSN and
 ### 3.4 Service `housekeeping`
 
 1. **New → GitHub Repo** → this repo again. Name the service `housekeeping`.
-2. **Settings → Config-as-code → Railway config file:** `/railway.housekeeping.json`. This file sets the start command `bun --preload ./instrument.ts src/housekeeping.ts`, the cron schedule `17 3 * * *` (daily, 03:17 UTC), and no healthcheck. Without it, the service uses `railway.json` and its healthcheck fails, because the job does not serve HTTP.
+2. `.railway/railway.ts` sets the start command `bun --preload ./instrument.ts src/housekeeping.ts`, the cron schedule `17 3 * * *` (daily, 03:17 UTC) and no healthcheck (the job does not serve HTTP). Nothing to set in the dashboard.
 3. No domain.
 4. Variables:
 
