@@ -21,7 +21,8 @@
     "dexie-react-hooks": "^4.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "three": "^0.186.1"
+    "three": "^0.186.1",
+    "zod": "^4"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
