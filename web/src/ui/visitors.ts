@@ -21,6 +21,7 @@ import {
   type VisitorOverride,
   type VisitorView,
 } from "../garden/visitors";
+import { sceneryViews, type SceneryViews } from "../garden/scenery";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
 export function devVisitorOverride(): VisitorOverride {
@@ -43,6 +44,8 @@ export interface LearnerVisitors {
   known: string[];
   /** The mole looks up at the far right end of the strip today. */
   mole: boolean;
+  /** Words for the garden itself (#74), shown in the walk when you tap the sunflower, a tree, the pond... */
+  scenery: SceneryViews;
 }
 
 /** How many of `words` were known just before `t` (ms): the reading reviews before `t`, replayed. */
@@ -79,13 +82,14 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
     milestone: milestoneLine(before, known.length),
     known,
     mole: moleVisits(now, devVisitorOverride()),
+    scenery: sceneryViews(l.lang, (lemma) => lemmas.has(lemma.toLowerCase())),
   };
 }
 
 /** Visitors for a garden with no learner behind it (the landing page): the snail at the gate, and whoever drops by today. */
 export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitors {
   const today = visitorsFor(NO_FACTS, now, devVisitorOverride());
-  return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()) };
+  return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
 }
 
 /** Where the snail is along the whole fence of this garden (0 at the gate), for the 2D strip. */

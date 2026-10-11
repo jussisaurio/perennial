@@ -174,3 +174,53 @@ test("2D garden: a big garden scrolls; arrows page through it; a plant opens in 
   await card.getByRole("button", { name: /View in garden/ }).click();
   await expect(page.getByRole("dialog", { name: `The plant for ${word}` })).toBeVisible({ timeout: 20_000 });
 });
+
+test("the garden itself teaches: tap the sunflower for its word; a plant still opens its card (#74)", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  await page.goto("/?demo=es:30#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  // Stand somewhere, and return where a point shows on the canvas, in page pixels. The dev-only scene handle makes it exact.
+  const standAndAim = (at: { x: number; z: number; yaw: number; pitch: number }, target: "flower" | "plant") =>
+    page.evaluate(
+      ([at, target]) => {
+        type V = { project(c: unknown): { x: number; y: number } };
+        type Scene = { flower: { x: number; z: number }; layout: { plants: { x: number; z: number }[] }; camera: unknown; tmp: { constructor: new (x: number, y: number, z: number) => V } };
+        const s = (window as unknown as { __garden: Scene }).__garden;
+        const p = target === "flower" ? s.flower : s.layout.plants[0];
+        Object.assign(s, { x: p.x + at.x, z: p.z + at.z, yaw: at.yaw, pitch: at.pitch });
+        return new Promise<[number, number]>((done) =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              const v = new s.tmp.constructor(p.x, target === "flower" ? 0.9 : 0.5, p.z).project(s.camera);
+              const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+              done([r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
+            }),
+          ),
+        );
+      },
+      [at, target] as const,
+    );
+  // On the back path, 2.5 m to the sunflower's left, looking at it along the fence.
+  const [fx, fy] = await standAndAim({ x: -2.5, z: 0, yaw: -Math.PI / 2, pitch: 0 }, "flower");
+  // No tag on approach: scenery shows its word only when tapped.
+  await expect(page.locator(".gw-tag")).toHaveCount(0);
+  await page.mouse.click(fx, fy);
+  await expect(page.locator(".gw-tag")).toHaveText("el girasol · sunflower");
+  // A drag to look around is not a tap: no card opens.
+  await page.mouse.move(fx, fy + 60);
+  await page.mouse.down();
+  await page.mouse.move(fx + 80, fy + 60, { steps: 6 });
+  await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: /^The plant for / })).toHaveCount(0);
+
+  // A plant comes first: a tap on it opens its card, and the scenery tag goes.
+  const [px, py] = await standAndAim({ x: 0, z: 1.4, yaw: 0, pitch: -0.3 }, "plant");
+  await page.mouse.click(px, py);
+  await expect(page.getByRole("dialog", { name: /^The plant for / })).toBeVisible();
+  await expect(page.locator(".gw-tag")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

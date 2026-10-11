@@ -22,6 +22,7 @@ import { KNOWN_STABILITY, recall } from "./stats";
 import { plural } from "./format";
 import { learnerVisitors, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
+import { sceneryViews } from "../garden/scenery";
 
 export interface WalkSource {
   plants: GardenPlant[];
@@ -162,6 +163,7 @@ export function GardenWalk({
         keepsake: first,
         reserved: l.plants.length ? null : reservedStake(language(lang).name, lang).line,
         sleeper: sleeperId(l.plants.filter((p) => p.stage === "bloom").map((p) => p.id)),
+        scenery: visitors?.scenery ?? sceneryViews(lang),
       },
     });
   }, [source, data, visitors, lang]);
@@ -359,7 +361,17 @@ export function GardenWalk({
       if (sound && v.word) void speak(v.word, tag);
       return;
     }
-    scene.current.select(scene.current.pick(e.clientX - r.left, e.clientY - r.top, r.width, r.height));
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    const p = scene.current.pick(x, y, r.width, r.height);
+    scene.current.select(p);
+    if (p) return;
+    // Nothing else there: the garden itself (#74). Its tag shows for a moment and, with sound on, it says its word.
+    const s = scene.current.pickScenery(x, y, r.width, r.height);
+    if (!s) return;
+    scene.current.tapScenery(s);
+    setHint(false);
+    if (sound) void speak(s.view.word, tag);
   };
 
   const stats = useMemo(() => {
@@ -406,13 +418,13 @@ export function GardenWalk({
             <span key={l.id} className="gw-say" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
-          ) : l.kind === "visitor" && !l.known ? (
+          ) : (l.kind === "visitor" || l.kind === "scenery") && !l.known ? (
             <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               <i>{l.text}</i>
               <small lang="en"> · {l.gloss}</small>
             </span>
           ) : (
-            <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" ? l.near : 0.35 + l.near * 0.65 }}>
+            <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" || l.kind === "scenery" ? l.near : 0.35 + l.near * 0.65 }}>
               {l.known && <LeafMark />}
               {l.text}
             </span>

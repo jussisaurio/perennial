@@ -168,6 +168,25 @@ export function sky(s: Sky, stars: boolean): HTMLCanvasElement {
 }
 
 /** Two layers of rolling hills with dithered edges, for a ring around the world. */
+/** One layer of the far hills: the ridge's row (0 = top) in each of the texture's 256 columns. */
+export function hillLine(base: number, seed: number): number[] {
+  const r = rng(seed);
+  const ph = r() * 10;
+  return Array.from({ length: 256 }, (_, x) => {
+    // Periodic in x so the ring repeats without a seam.
+    const a = (x / 256) * Math.PI * 2;
+    return base - 9 * Math.sin(a * 2 + ph) - 5 * Math.sin(a * 5 + ph * 2) - 2 * Math.sin(a * 11 + ph);
+  });
+}
+
+/** The top of the hills (the higher of the two ridges) per column, as a texture row. Day and night share the shape. */
+export function hillProfile(): number[] {
+  const a = hillLine(30, 1);
+  const b = hillLine(42, 2);
+  // One pixel above the ridge on even columns (see hills()).
+  return a.map((h, x) => Math.min(Math.floor(h), Math.floor(b[x])) - (x % 2 === 0 ? 1 : 0));
+}
+
 export function hills(night: boolean): HTMLCanvasElement {
   const [c, ctx] = canvas(256, 64);
   const layers: [string, string, number, number][] = night
@@ -180,13 +199,9 @@ export function hills(night: boolean): HTMLCanvasElement {
         ["#6fae6a", "#64a160", 42, 2],
       ];
   for (const [color, shade, base, seed] of layers) {
-    const r = rng(seed);
-    const ph = r() * 10;
+    const line = hillLine(base, seed);
     for (let x = 0; x < 256; x++) {
-      // Periodic in x so the ring repeats without a seam.
-      const a = (x / 256) * Math.PI * 2;
-      const h = base - 9 * Math.sin(a * 2 + ph) - 5 * Math.sin(a * 5 + ph * 2) - 2 * Math.sin(a * 11 + ph);
-      const y0 = Math.floor(h);
+      const y0 = Math.floor(line[x]);
       px(ctx, x, y0, color, 1, 64 - y0);
       for (let y = y0 + 2; y < 64; y += 3) if ((x + y) % 4 === 0) px(ctx, x, y, shade);
       if (x % 2 === 0) px(ctx, x, y0 - 1, color);
