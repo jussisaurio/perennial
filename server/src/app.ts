@@ -8,7 +8,7 @@ import { z } from "zod";
 import { AIService, ExamplesIn, MineIn } from "./ai";
 import { createAuth } from "./auth";
 import type { Config } from "./config";
-import { fail, HttpError, json, securityHeaders, serveStatic, versionAtLeast } from "./http";
+import { fail, HttpError, json, readJson, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { addLogContext, log, withLogContext } from "./log";
 import { createMailer, OutboxMailer } from "./mail";
 import { handleWrite, proxyShape } from "./sync";
@@ -38,7 +38,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
     if (!versionAtLeast(req.headers.get("x-perennial-version"), config.minClientVersion)) throw new HttpError(426, "please_reload", { minVersion: config.minClientVersion });
   }
   const body = async <T extends z.ZodType>(req: Request, schema: T): Promise<z.infer<T>> => {
-    const r = schema.safeParse(await req.json().catch(() => null));
+    const r = schema.safeParse(await readJson(req, 64 * 1024));
     if (!r.success) throw new HttpError(422, "bad_request", { issues: r.error.issues.slice(0, 5) });
     return r.data;
   };

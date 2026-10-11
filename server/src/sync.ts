@@ -8,7 +8,7 @@ import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import type { SQL } from "bun";
 import { z } from "zod";
 import type { Config } from "./config";
-import { HttpError, json } from "./http";
+import { HttpError, json, readJson } from "./http";
 
 /** Tables a learner can read, each scoped to their user id. */
 const SHAPES: Record<string, { where: string }> = {
@@ -115,10 +115,35 @@ export type Mutation = z.infer<typeof Mutation>;
 /** A device clock can be wrong: never accept times from the future (with a little slack). */
 const clamp = (d: Date, now: Date) => (d.getTime() > now.getTime() ? now : d);
 
+/**
+ * Per-learner storage limits: far above real use (a 2000-word course with
+ * every word added from texts), low enough that one account can't fill the
+ * database.
+ */
+export const QUOTA = { user_word: 5_000, user_sentence: 25_000, word_state: 50_000, reviewsPerDay: 5_000 };
+
+async function checkQuota(tx: SQL, userId: string, mutations: Mutation[]) {
+  const adds = { user_word: 0, user_sentence: 0, word_state: 0, review: 0 };
+  for (const m of mutations) {
+    if (m.type === "user_word.upsert") adds.user_word++;
+    else if (m.type === "user_sentence.insert") adds.user_sentence++;
+    else if (m.type === "word_state.upsert") adds.word_state++;
+    else if (m.type === "review.insert") adds.review++;
+  }
+  const over = (table: keyof typeof QUOTA, n: number, limit: number) => {
+    if (n > limit) throw new HttpError(429, "quota", { table, limit });
+  };
+  if (adds.user_word) over("user_word", Number((await tx`select count(*) as n from user_word where user_id = ${userId}`)[0].n) + adds.user_word, QUOTA.user_word);
+  if (adds.user_sentence) over("user_sentence", Number((await tx`select count(*) as n from user_sentence where user_id = ${userId}`)[0].n) + adds.user_sentence, QUOTA.user_sentence);
+  if (adds.word_state) over("word_state", Number((await tx`select count(*) as n from word_state where user_id = ${userId}`)[0].n) + adds.word_state, QUOTA.word_state);
+  if (adds.review) over("reviewsPerDay", Number((await tx`select count(*) as n from review where user_id = ${userId} and received_at > now() - interval '1 day'`)[0].n) + adds.review, QUOTA.reviewsPerDay);
+}
+
 export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Promise<number> {
   const now = new Date();
   for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw new HttpError(422, "review_from_the_future");
   return sql.begin(async (tx) => {
+    await checkQuota(tx, userId, mutations);
     // The txid must be read inside the writing transaction.
     const [{ txid }] = await tx`select pg_current_xact_id()::xid::text as txid`;
     for (const m of mutations) {
@@ -183,7 +208,7 @@ export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[
 }
 
 export async function handleWrite(req: Request, sql: SQL, userId: string): Promise<Response> {
-  const body = WriteBatch.safeParse(await req.json().catch(() => null));
+  const body = WriteBatch.safeParse(await readJson(req, 512 * 1024));
   if (!body.success) throw new HttpError(422, "bad_request", { issues: body.error.issues.slice(0, 5) });
   return json({ txid: await applyWrites(sql, userId, body.data.mutations) });
 }

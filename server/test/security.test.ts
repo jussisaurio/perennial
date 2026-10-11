@@ -3,6 +3,7 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { configProblems, loadConfig } from "../src/config";
+import { QUOTA } from "../src/sync";
 import { review, startApp, stopMockLLM, unique } from "./helpers";
 
 const t = await startApp();
@@ -120,6 +121,29 @@ describe("state changes only from our own page", () => {
     const form = await fetch(`${t.url}/api/account/delete`, { method: "POST", headers: { cookie, origin: t.config.appUrl, "content-type": "application/x-www-form-urlencoded" }, body: "a=1" });
     expect(form.status).toBe(415);
     expect((await t.me(cookie)).id).toBeTruthy(); // still there
+  });
+});
+
+describe("limits", () => {
+  test("oversized bodies are refused before parsing", async () => {
+    const cookie = await t.signIn(unique("big"));
+    const huge = { mutations: [{ type: "user_sentence.insert", row: { text: "x".repeat(600 * 1024) } }] };
+    expect((await t.call("/api/write", huge, cookie)).status).toBe(413);
+  });
+
+  test("per-learner storage quotas", async () => {
+    const cookie = await t.signIn(unique("quota"));
+    const saved = QUOTA.user_word;
+    QUOTA.user_word = 2;
+    try {
+      const word = () => ({ type: "user_word.upsert", row: { id: crypto.randomUUID(), lang: "es", lemma: "x", gloss: "x", forms: [] } });
+      expect((await t.write(cookie, [word(), word()])).status).toBe(200);
+      const over = await t.write(cookie, [word()]);
+      expect(over.status).toBe(429);
+      expect(over.body).toMatchObject({ error: "quota", table: "user_word" });
+    } finally {
+      QUOTA.user_word = saved;
+    }
   });
 });
 

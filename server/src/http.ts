@@ -18,6 +18,18 @@ export class HttpError extends Error {
   }
 }
 
+/** Read a JSON body of at most `limit` bytes; bigger bodies are refused before parsing. */
+export async function readJson(req: Request, limit = 256 * 1024): Promise<unknown> {
+  if (Number(req.headers.get("content-length") ?? 0) > limit) throw new HttpError(413, "body_too_large");
+  const text = await req.text();
+  if (text.length > limit) throw new HttpError(413, "body_too_large");
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export const fail = (status: number, code: string, extra: Record<string, unknown> = {}) => json({ error: code, ...extra }, status);
 
 /** Extra origins the page may talk to (error reporting, analytics), from config. */

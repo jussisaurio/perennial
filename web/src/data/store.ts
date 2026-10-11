@@ -93,7 +93,8 @@ export async function createStore(userId: string) {
           reloadNeeded.dispatchEvent(new Event("reload"));
           throw new HttpError(426, "please reload");
         }
-        if (res.status === 422) throw new NonRetriableError(`rejected: ${await res.text()}`);
+        // Invalid, or over a storage limit: retrying would never succeed.
+        if (res.status === 422 || res.status === 413 || (res.status === 429 && (await res.clone().text()).includes('"quota"'))) throw new NonRetriableError(`rejected: ${await res.text()}`);
         if (!res.ok) throw new HttpError(res.status, `HTTP ${res.status}`);
         const { txid } = (await res.json()) as { txid: number };
         // Keep the optimistic rows until Electric echoes the write back.
