@@ -1,0 +1,9 @@
+{
+  "file": "source/0007.json",
+  "sha256": "e3a0a75bc50d2663b22d52316458834d94071de4c4b16df1af0367940cb6c599",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0007-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "100/100 ok after one fix round (6 fixes: carrera, detective, cámara, jurar, director, departamento)"
+}
