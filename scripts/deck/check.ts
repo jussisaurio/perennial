@@ -1,5 +1,6 @@
 // CI gate for decks: schema + invariants, deck.json up to date with source,
-// and compatibility with the deck at a base git ref.
+// every source file approved by a proofreader other than its author (as it is
+// now), and compatibility with the deck at a base git ref.
 //   bun scripts/deck/check.ts [--base origin/main]
 // Big changes (over 5% of live words retired) fail unless DECK_ALLOW_BIG_CHANGE=1.
 
@@ -7,6 +8,7 @@ import { join } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 import { DECK_LANGS, Deck, compatibility, deckProblems } from "../../web/src/deck/schema.ts";
 import { ROOT, buildDeck, deckDir, readDeckFiles, readSource, toJson } from "./lib.ts";
+import { reviewProblems } from "./reviews.ts";
 
 const args = process.argv.slice(2);
 const baseAt = args.indexOf("--base");
@@ -48,7 +50,10 @@ for (const lang of DECK_LANGS) {
   const deck = parsed.data;
   for (const p of deckProblems(deck)) fail(p);
 
-  // 2. Up to date with source: rebuilding changes nothing.
+  // 2. Every source file proofread by someone other than its author, as it is now.
+  for (const p of reviewProblems(lang)) fail(p);
+
+  // 3. Up to date with source: rebuilding changes nothing.
   const source = readSource(lang);
   for (const e of source.errors) fail(e);
   const files = readDeckFiles(lang);
@@ -62,7 +67,7 @@ for (const lang of DECK_LANGS) {
   const live = deck.words.filter((w) => !w.retired).length;
   console.log(`  version ${deck.version}, ${live} live words, ${deck.sentences.filter((s) => !s.retired).length} live sentences`);
 
-  // 3. Compatibility with the deck at the base ref.
+  // 4. Compatibility with the deck at the base ref.
   const prevText = atRef(base, `decks/${lang}/deck.json`);
   if (prevText === null) {
     console.log(`  no deck at ${base}: compatibility check skipped`);
