@@ -1,7 +1,7 @@
 {
   "lang": "es",
   "native": "en",
-  "version": 17,
+  "version": 20,
   "words": [
     {
       "id": "es.w.93eb423hjf",
@@ -7812,6 +7812,2578 @@
       ],
       "notes": "In much of Latin America departamento = apartment.",
       "gender": "m"
+    },
+    {
+      "id": "es.w.nf785d3q23",
+      "lemma": "lindo",
+      "gloss": "pretty; nice; cute",
+      "pos": "adj",
+      "rank": 601,
+      "forms": [
+        "lindo",
+        "linda",
+        "lindos",
+        "lindas"
+      ],
+      "notes": "Very common in Latin America; in Spain bonito is more usual."
+    },
+    {
+      "id": "es.w.gdetm825fq",
+      "lemma": "mar",
+      "gloss": "sea",
+      "pos": "noun",
+      "rank": 602,
+      "forms": [
+        "mar"
+      ],
+      "notes": "Usually el mar; la mar is poetic or used by sailors.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.18eayjd7wt",
+      "lemma": "duda",
+      "gloss": "doubt",
+      "pos": "noun",
+      "rank": 603,
+      "forms": [
+        "duda",
+        "dudas"
+      ],
+      "notes": "sin duda = no doubt, definitely.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.50r1cdr020",
+      "lemma": "edificio",
+      "gloss": "building",
+      "pos": "noun",
+      "rank": 604,
+      "forms": [
+        "edificio",
+        "edificios"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.nhktdwk5x5",
+      "lemma": "cargo",
+      "gloss": "charge; position (job)",
+      "pos": "noun",
+      "rank": 605,
+      "forms": [
+        "cargo"
+      ],
+      "notes": "a cargo de = in charge of; hacerse cargo = to take care of something.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.m9nbg0pk5n",
+      "lemma": "víctima",
+      "gloss": "victim",
+      "pos": "noun",
+      "rank": 606,
+      "forms": [
+        "víctima",
+        "víctimas"
+      ],
+      "notes": "Always feminine, even for a man.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.r75h04y9kt",
+      "lemma": "luna",
+      "gloss": "moon",
+      "pos": "noun",
+      "rank": 607,
+      "forms": [
+        "luna"
+      ],
+      "notes": "luna de miel = honeymoon.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.hzad6s4qve",
+      "lemma": "energía",
+      "gloss": "energy",
+      "pos": "noun",
+      "rank": 608,
+      "forms": [
+        "energía"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.09f2kpsgtq",
+      "lemma": "frío",
+      "gloss": "cold",
+      "pos": "adj",
+      "rank": 609,
+      "forms": [
+        "frío",
+        "fría",
+        "fríos",
+        "frías"
+      ],
+      "notes": "Also a noun: hace frío = it's cold (weather); tengo frío = I'm cold."
+    },
+    {
+      "id": "es.w.2af08d2dkd",
+      "lemma": "baile",
+      "gloss": "dance",
+      "pos": "noun",
+      "rank": 610,
+      "forms": [
+        "baile",
+        "bailes"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.kc6ehybjjj",
+      "lemma": "misión",
+      "gloss": "mission",
+      "pos": "noun",
+      "rank": 611,
+      "forms": [
+        "misión",
+        "misiones"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.pbcmtbqfmw",
+      "lemma": "izquierda",
+      "gloss": "left (side)",
+      "pos": "noun",
+      "rank": 612,
+      "forms": [
+        "izquierda"
+      ],
+      "notes": "a la izquierda = on/to the left.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.bfnyghq1tm",
+      "lemma": "beber",
+      "gloss": "to drink",
+      "pos": "verb",
+      "rank": 613,
+      "forms": [
+        "beber",
+        "bebo",
+        "bebes",
+        "bebe",
+        "bebemos",
+        "beben",
+        "bebí",
+        "bebió",
+        "bebiendo",
+        "bebido"
+      ],
+      "notes": "In Latin America tomar is also very common for 'to drink'."
+    },
+    {
+      "id": "es.w.h8e50yeyhb",
+      "lemma": "finalmente",
+      "gloss": "finally",
+      "pos": "adv",
+      "rank": 614,
+      "forms": [
+        "finalmente"
+      ]
+    },
+    {
+      "id": "es.w.syx9mamfnj",
+      "lemma": "simple",
+      "gloss": "simple",
+      "pos": "adj",
+      "rank": 615,
+      "forms": [
+        "simple",
+        "simples"
+      ]
+    },
+    {
+      "id": "es.w.cj6mzgjk0x",
+      "lemma": "regresar",
+      "gloss": "to come back; to return",
+      "pos": "verb",
+      "rank": 616,
+      "forms": [
+        "regresar",
+        "regresa",
+        "regresas",
+        "regresamos",
+        "regresé",
+        "regresó",
+        "regresaron",
+        "regresando"
+      ],
+      "notes": "Common in Latin America; volver means the same."
+    },
+    {
+      "id": "es.w.p5ttqy13r2",
+      "lemma": "sacar",
+      "gloss": "to take out; to get out",
+      "pos": "verb",
+      "rank": 617,
+      "forms": [
+        "sacar",
+        "saco",
+        "sacas",
+        "saca",
+        "sacamos",
+        "sacó",
+        "saqué",
+        "sacaron",
+        "sácame",
+        "sacando"
+      ],
+      "notes": "sacar una foto = to take a photo. saqué: c becomes qu before e."
+    },
+    {
+      "id": "es.w.8wx5f4ca96",
+      "lemma": "opinión",
+      "gloss": "opinion",
+      "pos": "noun",
+      "rank": 618,
+      "forms": [
+        "opinión",
+        "opiniones"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.eh2zt3j1wb",
+      "lemma": "apenas",
+      "gloss": "barely; hardly",
+      "pos": "adv",
+      "rank": 619,
+      "forms": [
+        "apenas"
+      ],
+      "notes": "Also 'as soon as': apenas llegó = as soon as he arrived."
+    },
+    {
+      "id": "es.w.dg629wvn9c",
+      "lemma": "segundo",
+      "gloss": "second (of time)",
+      "pos": "noun",
+      "rank": 620,
+      "forms": [
+        "segundo",
+        "segundos"
+      ],
+      "notes": "Also the adjective segundo, segunda = second (in order).",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.sg693gqxwd",
+      "lemma": "cerveza",
+      "gloss": "beer",
+      "pos": "noun",
+      "rank": 621,
+      "forms": [
+        "cerveza",
+        "cervezas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.wazwry81nt",
+      "lemma": "reina",
+      "gloss": "queen",
+      "pos": "noun",
+      "rank": 622,
+      "forms": [
+        "reina"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.pz1r3pdef7",
+      "lemma": "temprano",
+      "gloss": "early",
+      "pos": "adv",
+      "rank": 623,
+      "forms": [
+        "temprano"
+      ]
+    },
+    {
+      "id": "es.w.g14mk7axby",
+      "lemma": "tema",
+      "gloss": "topic; subject; issue",
+      "pos": "noun",
+      "rank": 624,
+      "forms": [
+        "tema"
+      ],
+      "notes": "Masculine despite the -a: el tema.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.amegt9vpa4",
+      "lemma": "prisión",
+      "gloss": "prison",
+      "pos": "noun",
+      "rank": 625,
+      "forms": [
+        "prisión"
+      ],
+      "notes": "Same as cárcel.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.we21d2evnz",
+      "lemma": "público",
+      "gloss": "public; audience",
+      "pos": "noun",
+      "rank": 626,
+      "forms": [
+        "público"
+      ],
+      "notes": "en público = in public. Also an adjective: un lugar público = a public place.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.s0hjtb5fwn",
+      "lemma": "salvar",
+      "gloss": "to save; to rescue",
+      "pos": "verb",
+      "rank": 627,
+      "forms": [
+        "salvar",
+        "salva",
+        "salvaste",
+        "salvó",
+        "salvé",
+        "salvamos",
+        "salvado",
+        "salvaron"
+      ],
+      "notes": "To save a life or a person; for saving money use ahorrar."
+    },
+    {
+      "id": "es.w.hwccryt8sm",
+      "lemma": "partido",
+      "gloss": "match, game; (political) party",
+      "pos": "noun",
+      "rank": 628,
+      "forms": [
+        "partido",
+        "partidos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.mek344w0bw",
+      "lemma": "causa",
+      "gloss": "cause",
+      "pos": "noun",
+      "rank": 629,
+      "forms": [
+        "causa",
+        "causas"
+      ],
+      "notes": "a causa de = because of.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.46hy14m11e",
+      "lemma": "caliente",
+      "gloss": "hot",
+      "pos": "adj",
+      "rank": 630,
+      "forms": [
+        "caliente",
+        "calientes"
+      ],
+      "notes": "For things and food; for the weather use hace calor."
+    },
+    {
+      "id": "es.w.5j9hzdk5m9",
+      "lemma": "sargento",
+      "gloss": "sergeant",
+      "pos": "noun",
+      "rank": 631,
+      "forms": [
+        "sargento"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.0y8j84xc2w",
+      "lemma": "cenar",
+      "gloss": "to have dinner",
+      "pos": "verb",
+      "rank": 632,
+      "forms": [
+        "cenar",
+        "cenamos",
+        "cenando"
+      ],
+      "notes": "la cena = dinner."
+    },
+    {
+      "id": "es.w.9t09bwhdw3",
+      "lemma": "compañero",
+      "gloss": "partner; mate; classmate",
+      "pos": "noun",
+      "rank": 633,
+      "forms": [
+        "compañero",
+        "compañeros",
+        "compañera",
+        "compañeras"
+      ],
+      "notes": "compañero de trabajo = coworker; compañero de cuarto = roommate. compañera = female.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.99vxmz8h9g",
+      "lemma": "banco",
+      "gloss": "bank; bench",
+      "pos": "noun",
+      "rank": 634,
+      "forms": [
+        "banco",
+        "bancos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.8k46edftv5",
+      "lemma": "existir",
+      "gloss": "to exist",
+      "pos": "verb",
+      "rank": 635,
+      "forms": [
+        "existir",
+        "existe",
+        "existen",
+        "existía",
+        "existió"
+      ]
+    },
+    {
+      "id": "es.w.tknk98pvrw",
+      "lemma": "zona",
+      "gloss": "zone; area",
+      "pos": "noun",
+      "rank": 636,
+      "forms": [
+        "zona",
+        "zonas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.97jww1g9q6",
+      "lemma": "destino",
+      "gloss": "fate, destiny; destination",
+      "pos": "noun",
+      "rank": 637,
+      "forms": [
+        "destino",
+        "destinos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.2kr5581vph",
+      "lemma": "base",
+      "gloss": "base; basis",
+      "pos": "noun",
+      "rank": 638,
+      "forms": [
+        "base",
+        "bases"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.zy879f8jmk",
+      "lemma": "soler",
+      "gloss": "to usually (do); used to",
+      "pos": "verb",
+      "rank": 639,
+      "forms": [
+        "soler",
+        "suele",
+        "sueles",
+        "solemos",
+        "suelen",
+        "solía",
+        "solías",
+        "solíamos"
+      ],
+      "notes": "soler + infinitive = to usually do; solía + infinitive = used to. suelo is also the noun 'floor'."
+    },
+    {
+      "id": "es.w.hyxmdbc6jc",
+      "lemma": "cliente",
+      "gloss": "customer; client",
+      "pos": "noun",
+      "rank": 640,
+      "forms": [
+        "cliente",
+        "clientes"
+      ],
+      "notes": "el cliente, la cliente.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.39pe3vewwf",
+      "lemma": "pelea",
+      "gloss": "fight",
+      "pos": "noun",
+      "rank": 641,
+      "forms": [
+        "pelea",
+        "peleas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.bpmrstn59t",
+      "lemma": "norte",
+      "gloss": "north",
+      "pos": "noun",
+      "rank": 642,
+      "forms": [
+        "norte"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.39qjc218xv",
+      "lemma": "coronel",
+      "gloss": "colonel",
+      "pos": "noun",
+      "rank": 643,
+      "forms": [
+        "coronel"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.dc2nyfgs6x",
+      "lemma": "apostar",
+      "gloss": "to bet",
+      "pos": "verb",
+      "rank": 644,
+      "forms": [
+        "apostar",
+        "apuesto",
+        "apuestas",
+        "aposté"
+      ],
+      "notes": "o becomes ue: apuesto. Te apuesto que… = I bet you…"
+    },
+    {
+      "id": "es.w.fg9bg61ck7",
+      "lemma": "peligroso",
+      "gloss": "dangerous",
+      "pos": "adj",
+      "rank": 645,
+      "forms": [
+        "peligroso",
+        "peligrosa",
+        "peligrosos",
+        "peligrosas"
+      ]
+    },
+    {
+      "id": "es.w.e0711qsccv",
+      "lemma": "té",
+      "gloss": "tea",
+      "pos": "noun",
+      "rank": 646,
+      "forms": [
+        "té"
+      ],
+      "notes": "With an accent; te without an accent = you (pronoun).",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.bz67k5hbv4",
+      "lemma": "excepto",
+      "gloss": "except",
+      "pos": "prep",
+      "rank": 647,
+      "forms": [
+        "excepto"
+      ]
+    },
+    {
+      "id": "es.w.ept5ph75j9",
+      "lemma": "juicio",
+      "gloss": "trial; judgment",
+      "pos": "noun",
+      "rank": 648,
+      "forms": [
+        "juicio"
+      ],
+      "notes": "perder el juicio = to lose one's mind.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.heps1f9c8j",
+      "lemma": "llave",
+      "gloss": "key",
+      "pos": "noun",
+      "rank": 649,
+      "forms": [
+        "llave",
+        "llaves"
+      ],
+      "notes": "cerrar con llave = to lock.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.p24f0y52pb",
+      "lemma": "equivocado",
+      "gloss": "wrong, mistaken",
+      "pos": "adj",
+      "rank": 650,
+      "forms": [
+        "equivocado",
+        "equivocada",
+        "equivocados",
+        "equivocadas"
+      ],
+      "notes": "estar equivocado = to be wrong (about something)."
+    },
+    {
+      "id": "es.w.0q0k2623s2",
+      "lemma": "posición",
+      "gloss": "position",
+      "pos": "noun",
+      "rank": 651,
+      "forms": [
+        "posición",
+        "posiciones"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.z1kj0e9fs7",
+      "lemma": "espalda",
+      "gloss": "back (of the body)",
+      "pos": "noun",
+      "rank": 652,
+      "forms": [
+        "espalda",
+        "espaldas"
+      ],
+      "notes": "a mis espaldas = behind my back.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.vsy5djgkae",
+      "lemma": "excelente",
+      "gloss": "excellent",
+      "pos": "adj",
+      "rank": 653,
+      "forms": [
+        "excelente",
+        "excelentes"
+      ]
+    },
+    {
+      "id": "es.w.dv4n23fgz1",
+      "lemma": "éxito",
+      "gloss": "success; hit",
+      "pos": "noun",
+      "rank": 654,
+      "forms": [
+        "éxito",
+        "éxitos"
+      ],
+      "notes": "False friend: exit = salida.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.n4ed9xc70g",
+      "lemma": "ventana",
+      "gloss": "window",
+      "pos": "noun",
+      "rank": 655,
+      "forms": [
+        "ventana",
+        "ventanas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.dcpaz092kx",
+      "lemma": "especie",
+      "gloss": "species; kind",
+      "pos": "noun",
+      "rank": 656,
+      "forms": [
+        "especie",
+        "especies"
+      ],
+      "notes": "una especie de = a kind of.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.hh1ttv0876",
+      "lemma": "diferencia",
+      "gloss": "difference",
+      "pos": "noun",
+      "rank": 657,
+      "forms": [
+        "diferencia",
+        "diferencias"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.kjycq4gtwm",
+      "lemma": "pedir",
+      "gloss": "to ask for; to order",
+      "pos": "verb",
+      "rank": 658,
+      "forms": [
+        "pedir",
+        "pido",
+        "pides",
+        "pide",
+        "pedimos",
+        "piden",
+        "pedí",
+        "pidió",
+        "pidieron",
+        "pidiendo",
+        "pedido"
+      ],
+      "notes": "e becomes i: pido, pidió. To ask FOR something; preguntar = to ask a question."
+    },
+    {
+      "id": "es.w.zjb1ff0j6q",
+      "lemma": "ejemplo",
+      "gloss": "example",
+      "pos": "noun",
+      "rank": 659,
+      "forms": [
+        "ejemplo",
+        "ejemplos"
+      ],
+      "notes": "por ejemplo = for example.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.ze4nn79yjx",
+      "lemma": "radio",
+      "gloss": "radio",
+      "pos": "noun",
+      "rank": 660,
+      "forms": [
+        "radio"
+      ],
+      "notes": "la radio = the radio; in much of Latin America el radio is also used for the device. el radio also means radius.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.18b6myf8kv",
+      "lemma": "calma",
+      "gloss": "calm",
+      "pos": "noun",
+      "rank": 661,
+      "forms": [
+        "calma"
+      ],
+      "notes": "con calma = calmly, without hurrying.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.z1s5beabf7",
+      "lemma": "hogar",
+      "gloss": "home",
+      "pos": "noun",
+      "rank": 662,
+      "forms": [
+        "hogar"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.dexz649p8a",
+      "lemma": "fondo",
+      "gloss": "bottom; back; background",
+      "pos": "noun",
+      "rank": 663,
+      "forms": [
+        "fondo"
+      ],
+      "notes": "en el fondo = deep down; al fondo = at the back.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.e7f6syhs0v",
+      "lemma": "humano",
+      "gloss": "human",
+      "pos": "adj",
+      "rank": 664,
+      "forms": [
+        "humano",
+        "humana",
+        "humanos",
+        "humanas"
+      ],
+      "notes": "un ser humano = a human being; los humanos = humans."
+    },
+    {
+      "id": "es.w.evpqskyfp0",
+      "lemma": "unido",
+      "gloss": "united; close (to each other)",
+      "pos": "adj",
+      "rank": 665,
+      "forms": [
+        "unido",
+        "unida",
+        "unidos",
+        "unidas"
+      ],
+      "notes": "Estados Unidos = the United States."
+    },
+    {
+      "id": "es.w.h0qzxnq0y8",
+      "lemma": "planeta",
+      "gloss": "planet",
+      "pos": "noun",
+      "rank": 666,
+      "forms": [
+        "planeta",
+        "planetas"
+      ],
+      "notes": "Masculine despite the -a: el planeta.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.j0s9h3xsw9",
+      "lemma": "respecto",
+      "gloss": "regard (respecto a = regarding)",
+      "pos": "noun",
+      "rank": 667,
+      "forms": [
+        "respecto"
+      ],
+      "notes": "Mostly in al respecto = about it, and con respecto a = regarding.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.sy04sw22ym",
+      "lemma": "regreso",
+      "gloss": "return",
+      "pos": "noun",
+      "rank": 668,
+      "forms": [
+        "regreso"
+      ],
+      "notes": "de regreso = back.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.7r4878x85g",
+      "lemma": "debido",
+      "gloss": "due (debido a = because of)",
+      "pos": "adj",
+      "rank": 669,
+      "forms": [
+        "debido"
+      ],
+      "notes": "debido a = because of, due to; con el debido respeto = with all due respect."
+    },
+    {
+      "id": "es.w.be7mpaemwm",
+      "lemma": "leer",
+      "gloss": "to read",
+      "pos": "verb",
+      "rank": 670,
+      "forms": [
+        "leer",
+        "leo",
+        "lees",
+        "lee",
+        "leen",
+        "leí",
+        "leyó",
+        "leído",
+        "leyendo"
+      ],
+      "notes": "i becomes y: leyó, leyendo."
+    },
+    {
+      "id": "es.w.txsay3d38f",
+      "lemma": "parar",
+      "gloss": "to stop",
+      "pos": "verb",
+      "rank": 671,
+      "forms": [
+        "parar",
+        "paras",
+        "paramos",
+        "paré",
+        "paró",
+        "pararon",
+        "parando"
+      ],
+      "notes": "para = he/she stops, but usually the preposition 'for'. Similar: detener."
+    },
+    {
+      "id": "es.w.5jgh5984km",
+      "lemma": "lleno",
+      "gloss": "full",
+      "pos": "adj",
+      "rank": 672,
+      "forms": [
+        "lleno",
+        "llena",
+        "llenos",
+        "llenas"
+      ],
+      "notes": "lleno de = full of."
+    },
+    {
+      "id": "es.w.yt41xn12x6",
+      "lemma": "respeto",
+      "gloss": "respect",
+      "pos": "noun",
+      "rank": 673,
+      "forms": [
+        "respeto"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.qfnnxv7zz5",
+      "lemma": "debajo",
+      "gloss": "under, underneath",
+      "pos": "adv",
+      "rank": 674,
+      "forms": [
+        "debajo"
+      ],
+      "notes": "debajo de = under."
+    },
+    {
+      "id": "es.w.w6nmxjje9a",
+      "lemma": "escribir",
+      "gloss": "to write",
+      "pos": "verb",
+      "rank": 675,
+      "forms": [
+        "escribir",
+        "escribo",
+        "escribes",
+        "escribe",
+        "escribimos",
+        "escribí",
+        "escribió",
+        "escrito",
+        "escribiendo"
+      ],
+      "notes": "Irregular participle: escrito."
+    },
+    {
+      "id": "es.w.ng5vhrzqm2",
+      "lemma": "estación",
+      "gloss": "station; season",
+      "pos": "noun",
+      "rank": 676,
+      "forms": [
+        "estación",
+        "estaciones"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.zhqrm7kv74",
+      "lemma": "pista",
+      "gloss": "clue; track; (dance) floor",
+      "pos": "noun",
+      "rank": 677,
+      "forms": [
+        "pista",
+        "pistas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.q40n5r8chm",
+      "lemma": "estrella",
+      "gloss": "star",
+      "pos": "noun",
+      "rank": 678,
+      "forms": [
+        "estrella",
+        "estrellas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.scmf48m7vc",
+      "lemma": "enfermo",
+      "gloss": "sick, ill",
+      "pos": "adj",
+      "rank": 679,
+      "forms": [
+        "enfermo",
+        "enferma",
+        "enfermos",
+        "enfermas"
+      ],
+      "notes": "estar enfermo = to be sick; un enfermo = a sick person."
+    },
+    {
+      "id": "es.w.jh6j8m3pyb",
+      "lemma": "doler",
+      "gloss": "to hurt, ache",
+      "pos": "verb",
+      "rank": 680,
+      "forms": [
+        "doler",
+        "duele",
+        "duelen",
+        "dolía",
+        "dolió"
+      ],
+      "notes": "Works like gustar: me duele la cabeza = my head hurts."
+    },
+    {
+      "id": "es.w.zpbbbxmwbr",
+      "lemma": "ocupado",
+      "gloss": "busy; taken",
+      "pos": "adj",
+      "rank": 681,
+      "forms": [
+        "ocupado",
+        "ocupada",
+        "ocupados",
+        "ocupadas"
+      ]
+    },
+    {
+      "id": "es.w.bs1sf41aq4",
+      "lemma": "nivel",
+      "gloss": "level",
+      "pos": "noun",
+      "rank": 682,
+      "forms": [
+        "nivel",
+        "niveles"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.47prpk9jvv",
+      "lemma": "experiencia",
+      "gloss": "experience",
+      "pos": "noun",
+      "rank": 683,
+      "forms": [
+        "experiencia"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.hx9avpnga3",
+      "lemma": "salida",
+      "gloss": "exit; way out; departure",
+      "pos": "noun",
+      "rank": 684,
+      "forms": [
+        "salida",
+        "salidas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.xsd2492yzv",
+      "lemma": "confiar",
+      "gloss": "to trust",
+      "pos": "verb",
+      "rank": 685,
+      "forms": [
+        "confiar",
+        "confío",
+        "confías",
+        "confía",
+        "confiamos",
+        "confié",
+        "confió"
+      ],
+      "notes": "confiar en alguien = to trust someone."
+    },
+    {
+      "id": "es.w.s0dh08yrcc",
+      "lemma": "zapato",
+      "gloss": "shoe",
+      "pos": "noun",
+      "rank": 686,
+      "forms": [
+        "zapato",
+        "zapatos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.b6ns7hcpq4",
+      "lemma": "color",
+      "gloss": "color",
+      "pos": "noun",
+      "rank": 687,
+      "forms": [
+        "color",
+        "colores"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.gta3ap8h2q",
+      "lemma": "vistazo",
+      "gloss": "look, glance",
+      "pos": "noun",
+      "rank": 688,
+      "forms": [
+        "vistazo"
+      ],
+      "notes": "echar un vistazo = to take a look.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.t3dnaw591a",
+      "lemma": "juez",
+      "gloss": "judge",
+      "pos": "noun",
+      "rank": 689,
+      "forms": [
+        "juez",
+        "jueces"
+      ],
+      "notes": "Plural jueces. For a woman: la juez or la jueza.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.y1exmnw5de",
+      "lemma": "paciente",
+      "gloss": "patient",
+      "pos": "noun",
+      "rank": 690,
+      "forms": [
+        "paciente",
+        "pacientes"
+      ],
+      "notes": "el/la paciente. Also an adjective: sé paciente = be patient.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.7xet0bmpkn",
+      "lemma": "bolsa",
+      "gloss": "bag",
+      "pos": "noun",
+      "rank": 691,
+      "forms": [
+        "bolsa",
+        "bolsas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.dvs8y92pxy",
+      "lemma": "arte",
+      "gloss": "art",
+      "pos": "noun",
+      "rank": 692,
+      "forms": [
+        "arte"
+      ],
+      "notes": "el arte in the singular, but las artes in the plural.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.3qj20qtzf2",
+      "lemma": "bailar",
+      "gloss": "to dance",
+      "pos": "verb",
+      "rank": 693,
+      "forms": [
+        "bailar",
+        "bailo",
+        "bailas",
+        "baila",
+        "bailamos",
+        "bailan",
+        "bailando"
+      ],
+      "notes": "el baile = the dance."
+    },
+    {
+      "id": "es.w.bkq503ny20",
+      "lemma": "diablo",
+      "gloss": "devil",
+      "pos": "noun",
+      "rank": 694,
+      "forms": [
+        "diablo",
+        "diablos"
+      ],
+      "notes": "¿Qué diablos…? = What the heck…? (mild).",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.brk1j4xjxy",
+      "lemma": "sur",
+      "gloss": "south",
+      "pos": "noun",
+      "rank": 695,
+      "forms": [
+        "sur"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.v6tm566kr1",
+      "lemma": "banda",
+      "gloss": "band; gang",
+      "pos": "noun",
+      "rank": 696,
+      "forms": [
+        "banda",
+        "bandas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.y43df02qxd",
+      "lemma": "aprender",
+      "gloss": "to learn",
+      "pos": "verb",
+      "rank": 697,
+      "forms": [
+        "aprender",
+        "aprendo",
+        "aprendes",
+        "aprende",
+        "aprendemos",
+        "aprendí",
+        "aprendió",
+        "aprendido",
+        "aprendiendo"
+      ],
+      "notes": "aprender a + infinitive = to learn to."
+    },
+    {
+      "id": "es.w.swa5xyfpjm",
+      "lemma": "precio",
+      "gloss": "price",
+      "pos": "noun",
+      "rank": 698,
+      "forms": [
+        "precio",
+        "precios"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.qczhvwqjyk",
+      "lemma": "completo",
+      "gloss": "complete; full",
+      "pos": "adj",
+      "rank": 699,
+      "forms": [
+        "completo",
+        "completa",
+        "completos",
+        "completas"
+      ],
+      "notes": "por completo = completely."
+    },
+    {
+      "id": "es.w.m39pppddrs",
+      "lemma": "santo",
+      "gloss": "holy",
+      "pos": "adj",
+      "rank": 700,
+      "forms": [
+        "santo",
+        "santa",
+        "santos"
+      ],
+      "notes": "Shortened to San before most male saints' names. Also a noun: un santo = a saint."
+    },
+    {
+      "id": "es.w.5gpma3nvmj",
+      "lemma": "culpable",
+      "gloss": "guilty",
+      "pos": "adj",
+      "rank": 701,
+      "forms": [
+        "culpable",
+        "culpables"
+      ],
+      "notes": "la culpa = the blame; tener la culpa = to be to blame."
+    },
+    {
+      "id": "es.w.xhbw3xem6z",
+      "lemma": "azul",
+      "gloss": "blue",
+      "pos": "adj",
+      "rank": 702,
+      "forms": [
+        "azul",
+        "azules"
+      ]
+    },
+    {
+      "id": "es.w.p7tdf4e97j",
+      "lemma": "comandante",
+      "gloss": "commander",
+      "pos": "noun",
+      "rank": 703,
+      "forms": [
+        "comandante"
+      ],
+      "notes": "el/la comandante.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.b1n8ytxb9c",
+      "lemma": "acción",
+      "gloss": "action",
+      "pos": "noun",
+      "rank": 704,
+      "forms": [
+        "acción",
+        "acciones"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.0xfc51g6q8",
+      "lemma": "regla",
+      "gloss": "rule",
+      "pos": "noun",
+      "rank": 705,
+      "forms": [
+        "regla",
+        "reglas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.3qzsee67sm",
+      "lemma": "obra",
+      "gloss": "work; play",
+      "pos": "noun",
+      "rank": 706,
+      "forms": [
+        "obra",
+        "obras"
+      ],
+      "notes": "obra de arte = work of art; obra de teatro = play; obras = roadworks, construction.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.bhjfs23ey0",
+      "lemma": "esperanza",
+      "gloss": "hope",
+      "pos": "noun",
+      "rank": 707,
+      "forms": [
+        "esperanza"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.bpakk3xmez",
+      "lemma": "cuestión",
+      "gloss": "matter, issue",
+      "pos": "noun",
+      "rank": 708,
+      "forms": [
+        "cuestión",
+        "cuestiones"
+      ],
+      "notes": "Not a question you ask (that is pregunta). es cuestión de = it's a matter of.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.sg6rxrrdrg",
+      "lemma": "molestar",
+      "gloss": "to bother",
+      "pos": "verb",
+      "rank": 709,
+      "forms": [
+        "molestar",
+        "molesta",
+        "molestas",
+        "molestan",
+        "molestó",
+        "molestes",
+        "molestando",
+        "molestarte"
+      ],
+      "notes": "¿Le molesta si…? = Do you mind if…?"
+    },
+    {
+      "id": "es.w.0px98a77tx",
+      "lemma": "informe",
+      "gloss": "report",
+      "pos": "noun",
+      "rank": 710,
+      "forms": [
+        "informe",
+        "informes"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.rpg6fjf469",
+      "lemma": "río",
+      "gloss": "river",
+      "pos": "noun",
+      "rank": 711,
+      "forms": [
+        "río",
+        "ríos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.qeem5zdkeq",
+      "lemma": "bienvenido",
+      "gloss": "welcome",
+      "pos": "adj",
+      "rank": 712,
+      "forms": [
+        "bienvenido",
+        "bienvenida",
+        "bienvenidos",
+        "bienvenidas"
+      ],
+      "notes": "Agrees with the person: ¡Bienvenida! to a woman. dar la bienvenida = to welcome."
+    },
+    {
+      "id": "es.w.dthsp72zkn",
+      "lemma": "tocar",
+      "gloss": "to touch; to play (music); to be someone's turn",
+      "pos": "verb",
+      "rank": 713,
+      "forms": [
+        "tocar",
+        "toco",
+        "tocas",
+        "toca",
+        "tocamos",
+        "tocó",
+        "toqué",
+        "toques",
+        "tocando"
+      ],
+      "notes": "me toca = it's my turn. toqué: c becomes qu before e."
+    },
+    {
+      "id": "es.w.wkss590aq9",
+      "lemma": "contar",
+      "gloss": "to tell; to count",
+      "pos": "verb",
+      "rank": 714,
+      "forms": [
+        "contar",
+        "cuento",
+        "contó",
+        "conté",
+        "contamos",
+        "cuentes",
+        "cuéntame",
+        "contando",
+        "contado"
+      ],
+      "notes": "o becomes ue: cuento. contar con = to count on."
+    },
+    {
+      "id": "es.w.gpcjfcjm99",
+      "lemma": "interior",
+      "gloss": "inside, interior",
+      "pos": "noun",
+      "rank": 715,
+      "forms": [
+        "interior"
+      ],
+      "notes": "Also an adjective: ropa interior = underwear.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.4xyx3xke62",
+      "lemma": "apartamento",
+      "gloss": "apartment, flat",
+      "pos": "noun",
+      "rank": 716,
+      "forms": [
+        "apartamento",
+        "apartamentos"
+      ],
+      "notes": "In Spain piso is more common.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.fgzw5db42b",
+      "lemma": "principal",
+      "gloss": "main",
+      "pos": "adj",
+      "rank": 717,
+      "forms": [
+        "principal",
+        "principales"
+      ]
+    },
+    {
+      "id": "es.w.31rq2zrkq6",
+      "lemma": "ojalá",
+      "gloss": "I hope; if only",
+      "pos": "interj",
+      "rank": 718,
+      "forms": [
+        "ojalá"
+      ],
+      "notes": "Followed by the subjunctive: ojalá venga = I hope he comes."
+    },
+    {
+      "id": "es.w.wfd4ram3y4",
+      "lemma": "perdonar",
+      "gloss": "to forgive; to excuse",
+      "pos": "verb",
+      "rank": 719,
+      "forms": [
+        "perdonar",
+        "perdona",
+        "perdone",
+        "perdóname",
+        "perdono",
+        "perdonas",
+        "perdonó",
+        "perdonarme"
+      ],
+      "notes": "Perdona / Perdone = excuse me, sorry (informal / formal)."
+    },
+    {
+      "id": "es.w.c0774cqb6j",
+      "lemma": "golpe",
+      "gloss": "blow, hit",
+      "pos": "noun",
+      "rank": 720,
+      "forms": [
+        "golpe",
+        "golpes"
+      ],
+      "notes": "de golpe = suddenly, all at once.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.vhfgvkcn5a",
+      "lemma": "estilo",
+      "gloss": "style",
+      "pos": "noun",
+      "rank": 721,
+      "forms": [
+        "estilo",
+        "estilos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.s0a6djq4w2",
+      "lemma": "nueve",
+      "gloss": "nine",
+      "pos": "num",
+      "rank": 722,
+      "forms": [
+        "nueve"
+      ]
+    },
+    {
+      "id": "es.w.sgjgntg9nj",
+      "lemma": "definitivamente",
+      "gloss": "definitely; for good, permanently",
+      "pos": "adv",
+      "rank": 723,
+      "forms": [
+        "definitivamente"
+      ],
+      "notes": "The core sense is for good / once and for all (se fue definitivamente); the definitely sense is common in Latin America and in dubbed films but sounds like an anglicism to many speakers in Spain."
+    },
+    {
+      "id": "es.w.c30tpb1hak",
+      "lemma": "bomba",
+      "gloss": "bomb",
+      "pos": "noun",
+      "rank": 724,
+      "forms": [
+        "bomba",
+        "bombas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.s9ct9f0hht",
+      "lemma": "guardia",
+      "gloss": "guard; duty",
+      "pos": "noun",
+      "rank": 725,
+      "forms": [
+        "guardia",
+        "guardias"
+      ],
+      "notes": "el/la guardia = the guard (person); estar de guardia = to be on duty.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.bbbjmk4w7b",
+      "lemma": "pistola",
+      "gloss": "pistol, gun",
+      "pos": "noun",
+      "rank": 726,
+      "forms": [
+        "pistola",
+        "pistolas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.55bkh574q0",
+      "lemma": "probar",
+      "gloss": "to try; to taste; to prove",
+      "pos": "verb",
+      "rank": 727,
+      "forms": [
+        "probar",
+        "probamos",
+        "probé",
+        "probó",
+        "probaste",
+        "probado",
+        "pruébalo",
+        "probando"
+      ],
+      "notes": "o becomes ue: pruebo. Try food or clothes; also to prove."
+    },
+    {
+      "id": "es.w.822v4hzw7s",
+      "lemma": "majestad",
+      "gloss": "majesty",
+      "pos": "noun",
+      "rank": 728,
+      "forms": [
+        "majestad"
+      ],
+      "notes": "Su Majestad = Your / His / Her Majesty.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.4acbp2h4xw",
+      "lemma": "marcha",
+      "gloss": "march; motion (en marcha)",
+      "pos": "noun",
+      "rank": 729,
+      "forms": [
+        "marcha"
+      ],
+      "notes": "en marcha = running, under way; ¡En marcha! = Let's go!",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.s2keejmt2j",
+      "lemma": "común",
+      "gloss": "common",
+      "pos": "adj",
+      "rank": 730,
+      "forms": [
+        "común",
+        "comunes"
+      ],
+      "notes": "en común = in common."
+    },
+    {
+      "id": "es.w.kvxb89748q",
+      "lemma": "aquel",
+      "gloss": "that (over there)",
+      "pos": "det",
+      "rank": 731,
+      "forms": [
+        "aquel",
+        "aquella",
+        "aquellos",
+        "aquellas"
+      ],
+      "notes": "Further away than ese; also for the distant past: aquellos días = those days."
+    },
+    {
+      "id": "es.w.3nc29z0yp4",
+      "lemma": "vuelo",
+      "gloss": "flight",
+      "pos": "noun",
+      "rank": 732,
+      "forms": [
+        "vuelo",
+        "vuelos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.v4pcgkjavq",
+      "lemma": "nota",
+      "gloss": "note; grade",
+      "pos": "noun",
+      "rank": 733,
+      "forms": [
+        "nota",
+        "notas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.drqbq8v2hv",
+      "lemma": "valor",
+      "gloss": "courage; value",
+      "pos": "noun",
+      "rank": 734,
+      "forms": [
+        "valor"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.xek2faav46",
+      "lemma": "suyo",
+      "gloss": "his; hers; theirs; yours (formal)",
+      "pos": "pron",
+      "rank": 735,
+      "forms": [
+        "suyo",
+        "suya",
+        "suyos",
+        "suyas"
+      ],
+      "notes": "Agrees with the thing owned: la casa es suya."
+    },
+    {
+      "id": "es.w.d8es0p6k00",
+      "lemma": "objetivo",
+      "gloss": "goal, objective; target",
+      "pos": "noun",
+      "rank": 736,
+      "forms": [
+        "objetivo",
+        "objetivos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.5871bz0tc4",
+      "lemma": "repente",
+      "gloss": "suddenly (de repente)",
+      "pos": "noun",
+      "rank": 737,
+      "forms": [
+        "repente"
+      ],
+      "notes": "Only in de repente = suddenly.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.d452bdsh7g",
+      "lemma": "rojo",
+      "gloss": "red",
+      "pos": "adj",
+      "rank": 738,
+      "forms": [
+        "rojo",
+        "roja",
+        "rojos",
+        "rojas"
+      ]
+    },
+    {
+      "id": "es.w.5e08ggaqr8",
+      "lemma": "bromear",
+      "gloss": "to joke",
+      "pos": "verb",
+      "rank": 739,
+      "forms": [
+        "bromear",
+        "bromeo",
+        "bromeas",
+        "bromea",
+        "bromeaba",
+        "bromeando"
+      ],
+      "notes": "¿Estás bromeando? = Are you kidding?"
+    },
+    {
+      "id": "es.w.0gkwqvpn9y",
+      "lemma": "entrada",
+      "gloss": "entrance; ticket",
+      "pos": "noun",
+      "rank": 740,
+      "forms": [
+        "entrada",
+        "entradas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.vhaq32qs5m",
+      "lemma": "doble",
+      "gloss": "double",
+      "pos": "adj",
+      "rank": 741,
+      "forms": [
+        "doble"
+      ],
+      "notes": "el doble = twice as much."
+    },
+    {
+      "id": "es.w.m0qhkbwt8e",
+      "lemma": "evitar",
+      "gloss": "to avoid",
+      "pos": "verb",
+      "rank": 742,
+      "forms": [
+        "evitar",
+        "evita",
+        "evitando"
+      ]
+    },
+    {
+      "id": "es.w.wmpgzh0dfv",
+      "lemma": "máquina",
+      "gloss": "machine",
+      "pos": "noun",
+      "rank": 743,
+      "forms": [
+        "máquina",
+        "máquinas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.e79mn0t701",
+      "lemma": "cuello",
+      "gloss": "neck",
+      "pos": "noun",
+      "rank": 744,
+      "forms": [
+        "cuello"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.bdw7cjex75",
+      "lemma": "animal",
+      "gloss": "animal",
+      "pos": "noun",
+      "rank": 745,
+      "forms": [
+        "animal",
+        "animales"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.ms938qvxet",
+      "lemma": "acaso",
+      "gloss": "perhaps; by any chance",
+      "pos": "adv",
+      "rank": 746,
+      "forms": [
+        "acaso"
+      ],
+      "notes": "In questions it shows surprise or reproach: ¿Acaso…? = Is it that…? por si acaso = just in case."
+    },
+    {
+      "id": "es.w.8tahr6k4ns",
+      "lemma": "pareja",
+      "gloss": "couple; partner",
+      "pos": "noun",
+      "rank": 747,
+      "forms": [
+        "pareja",
+        "parejas"
+      ],
+      "notes": "Always feminine, even for a man.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.tabp6qx6n5",
+      "lemma": "verano",
+      "gloss": "summer",
+      "pos": "noun",
+      "rank": 748,
+      "forms": [
+        "verano",
+        "veranos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.y3fw36z837",
+      "lemma": "mentira",
+      "gloss": "lie",
+      "pos": "noun",
+      "rank": 749,
+      "forms": [
+        "mentira",
+        "mentiras"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.1mnfg20y1n",
+      "lemma": "tarjeta",
+      "gloss": "card",
+      "pos": "noun",
+      "rank": 750,
+      "forms": [
+        "tarjeta",
+        "tarjetas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.fd33438txv",
+      "lemma": "correr",
+      "gloss": "to run",
+      "pos": "verb",
+      "rank": 751,
+      "forms": [
+        "correr",
+        "corro",
+        "corres",
+        "corre",
+        "corremos",
+        "corren",
+        "corrí",
+        "corrió",
+        "corriendo",
+        "corras"
+      ]
+    },
+    {
+      "id": "es.w.ahsxdey5zc",
+      "lemma": "preparado",
+      "gloss": "ready, prepared",
+      "pos": "adj",
+      "rank": 752,
+      "forms": [
+        "preparado",
+        "preparada",
+        "preparados",
+        "preparadas"
+      ],
+      "notes": "Similar to listo."
+    },
+    {
+      "id": "es.w.skpy7kgy81",
+      "lemma": "flor",
+      "gloss": "flower",
+      "pos": "noun",
+      "rank": 753,
+      "forms": [
+        "flor",
+        "flores"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.fftwb7jxsx",
+      "lemma": "vos",
+      "gloss": "you (informal, in Argentina and parts of Latin America)",
+      "pos": "pron",
+      "rank": 754,
+      "forms": [
+        "vos"
+      ],
+      "notes": "Used instead of tú in some countries, with its own verb forms: vos sos = tú eres."
+    },
+    {
+      "id": "es.w.5eg2xvwrfw",
+      "lemma": "opción",
+      "gloss": "option",
+      "pos": "noun",
+      "rank": 755,
+      "forms": [
+        "opción",
+        "opciones"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.zasrvqdjs5",
+      "lemma": "isla",
+      "gloss": "island",
+      "pos": "noun",
+      "rank": 756,
+      "forms": [
+        "isla",
+        "islas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.bffp02hs24",
+      "lemma": "cerrar",
+      "gloss": "to close; to shut",
+      "pos": "verb",
+      "rank": 757,
+      "forms": [
+        "cerrar",
+        "cierro",
+        "cierras",
+        "cierra",
+        "cerramos",
+        "cerré",
+        "cerró",
+        "cerraste",
+        "cerrado",
+        "cerrada",
+        "cerrando"
+      ],
+      "notes": "e becomes ie: cierro. cerrar con llave = to lock."
+    },
+    {
+      "id": "es.w.77jt1d4snf",
+      "lemma": "piel",
+      "gloss": "skin",
+      "pos": "noun",
+      "rank": 758,
+      "forms": [
+        "piel"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.z495a0c3at",
+      "lemma": "enemigo",
+      "gloss": "enemy",
+      "pos": "noun",
+      "rank": 759,
+      "forms": [
+        "enemigo",
+        "enemigos",
+        "enemiga",
+        "enemigas"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.y33ns64wnb",
+      "lemma": "exacto",
+      "gloss": "exact",
+      "pos": "adj",
+      "rank": 760,
+      "forms": [
+        "exacto",
+        "exacta",
+        "exactos",
+        "exactas"
+      ],
+      "notes": "¡Exacto! = Exactly!"
+    },
+    {
+      "id": "es.w.xnnaz88cn9",
+      "lemma": "justicia",
+      "gloss": "justice",
+      "pos": "noun",
+      "rank": 761,
+      "forms": [
+        "justicia"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.vhcyxktgwt",
+      "lemma": "obviamente",
+      "gloss": "obviously",
+      "pos": "adv",
+      "rank": 762,
+      "forms": [
+        "obviamente"
+      ]
+    },
+    {
+      "id": "es.w.kjqrgdxf7m",
+      "lemma": "despertar",
+      "gloss": "to wake up",
+      "pos": "verb",
+      "rank": 763,
+      "forms": [
+        "despertar",
+        "despierto",
+        "despierta",
+        "despiertas",
+        "despertó",
+        "desperté",
+        "despertarme"
+      ],
+      "notes": "e becomes ie: despierto. despertarse = to wake up (yourself)."
+    },
+    {
+      "id": "es.w.jwhw6xcvwk",
+      "lemma": "calor",
+      "gloss": "heat",
+      "pos": "noun",
+      "rank": 764,
+      "forms": [
+        "calor"
+      ],
+      "notes": "hace calor = it's hot; tengo calor = I'm hot.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.2hpv1rg2bz",
+      "lemma": "referir",
+      "gloss": "to refer; to mean",
+      "pos": "verb",
+      "rank": 765,
+      "forms": [
+        "referir",
+        "refiero",
+        "refieres",
+        "refiere",
+        "refería"
+      ],
+      "notes": "Usually referirse a: ¿A qué te refieres? = What do you mean?"
+    },
+    {
+      "id": "es.w.2mg175y7pm",
+      "lemma": "batalla",
+      "gloss": "battle",
+      "pos": "noun",
+      "rank": 766,
+      "forms": [
+        "batalla",
+        "batallas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.rhqeg9sfba",
+      "lemma": "fantástico",
+      "gloss": "fantastic",
+      "pos": "adj",
+      "rank": 767,
+      "forms": [
+        "fantástico",
+        "fantástica",
+        "fantásticos",
+        "fantásticas"
+      ]
+    },
+    {
+      "id": "es.w.thbev9667k",
+      "lemma": "brazo",
+      "gloss": "arm",
+      "pos": "noun",
+      "rank": 768,
+      "forms": [
+        "brazo",
+        "brazos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.60n52cgvhz",
+      "lemma": "absolutamente",
+      "gloss": "absolutely",
+      "pos": "adv",
+      "rank": 769,
+      "forms": [
+        "absolutamente"
+      ]
+    },
+    {
+      "id": "es.w.h3p36wg3pk",
+      "lemma": "escapar",
+      "gloss": "to escape, get away",
+      "pos": "verb",
+      "rank": 770,
+      "forms": [
+        "escapar",
+        "escapó",
+        "escapé",
+        "escapamos",
+        "escaparon",
+        "escapando"
+      ],
+      "notes": "Often escaparse."
+    },
+    {
+      "id": "es.w.d0cfvb2ywk",
+      "lemma": "bosque",
+      "gloss": "forest, woods",
+      "pos": "noun",
+      "rank": 771,
+      "forms": [
+        "bosque",
+        "bosques"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.q3e45qpev9",
+      "lemma": "pierna",
+      "gloss": "leg",
+      "pos": "noun",
+      "rank": 772,
+      "forms": [
+        "pierna",
+        "piernas"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.3nnm5rmmj3",
+      "lemma": "visita",
+      "gloss": "visit; visitors",
+      "pos": "noun",
+      "rank": 773,
+      "forms": [
+        "visita",
+        "visitas"
+      ],
+      "notes": "tener visita = to have visitors.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.v4v5vn6hfx",
+      "lemma": "movimiento",
+      "gloss": "movement; move",
+      "pos": "noun",
+      "rank": 774,
+      "forms": [
+        "movimiento",
+        "movimientos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.fn6kh134cb",
+      "lemma": "rico",
+      "gloss": "rich; tasty",
+      "pos": "adj",
+      "rank": 775,
+      "forms": [
+        "rico",
+        "rica",
+        "ricos",
+        "ricas"
+      ],
+      "notes": "ser rico = to be rich; estar rico = to taste good."
+    },
+    {
+      "id": "es.w.fw9jb5za8e",
+      "lemma": "inocente",
+      "gloss": "innocent",
+      "pos": "adj",
+      "rank": 776,
+      "forms": [
+        "inocente",
+        "inocentes"
+      ]
+    },
+    {
+      "id": "es.w.wy9mt0awrb",
+      "lemma": "pesar",
+      "gloss": "despite (a pesar de)",
+      "pos": "noun",
+      "rank": 777,
+      "forms": [
+        "pesar"
+      ],
+      "notes": "Almost always in a pesar de = despite. Also the verb pesar = to weigh.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.pf2p5mttjx",
+      "lemma": "absoluto",
+      "gloss": "absolute",
+      "pos": "adj",
+      "rank": 778,
+      "forms": [
+        "absoluto",
+        "absoluta"
+      ],
+      "notes": "en absoluto = not at all."
+    },
+    {
+      "id": "es.w.a1efhzykwm",
+      "lemma": "vacaciones",
+      "gloss": "vacation, holiday",
+      "pos": "noun",
+      "rank": 779,
+      "forms": [
+        "vacaciones"
+      ],
+      "notes": "Always plural: de vacaciones = on vacation.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.ct2wjc4q26",
+      "lemma": "cine",
+      "gloss": "cinema, movies",
+      "pos": "noun",
+      "rank": 780,
+      "forms": [
+        "cine"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.37ftxhwrpb",
+      "lemma": "brillante",
+      "gloss": "brilliant; shiny",
+      "pos": "adj",
+      "rank": 781,
+      "forms": [
+        "brillante",
+        "brillantes"
+      ]
+    },
+    {
+      "id": "es.w.454aexzfep",
+      "lemma": "confianza",
+      "gloss": "trust; confidence",
+      "pos": "noun",
+      "rank": 782,
+      "forms": [
+        "confianza"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.pfgh6v1g5j",
+      "lemma": "vuestro",
+      "gloss": "your (plural, Spain)",
+      "pos": "det",
+      "rank": 783,
+      "forms": [
+        "vuestro",
+        "vuestra",
+        "vuestros",
+        "vuestras"
+      ],
+      "notes": "Used in Spain with vosotros; in Latin America use su."
+    },
+    {
+      "id": "es.w.ttqc51hszv",
+      "lemma": "especialmente",
+      "gloss": "especially",
+      "pos": "adv",
+      "rank": 784,
+      "forms": [
+        "especialmente"
+      ]
+    },
+    {
+      "id": "es.w.fb2zgk2cmr",
+      "lemma": "embarazada",
+      "gloss": "pregnant",
+      "pos": "adj",
+      "rank": 785,
+      "forms": [
+        "embarazada",
+        "embarazadas"
+      ],
+      "notes": "False friend: embarrassed = avergonzado."
+    },
+    {
+      "id": "es.w.bkc8z9jzzy",
+      "lemma": "pantalón",
+      "gloss": "trousers, pants",
+      "pos": "noun",
+      "rank": 786,
+      "forms": [
+        "pantalón",
+        "pantalones"
+      ],
+      "notes": "Usually plural: los pantalones.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.w19wnhknf5",
+      "lemma": "defensa",
+      "gloss": "defense",
+      "pos": "noun",
+      "rank": 787,
+      "forms": [
+        "defensa",
+        "defensas"
+      ],
+      "notes": "en defensa propia = in self-defense.",
+      "gender": "f"
+    },
+    {
+      "id": "es.w.00fx8xgn63",
+      "lemma": "estupendo",
+      "gloss": "great, wonderful",
+      "pos": "adj",
+      "rank": 788,
+      "forms": [
+        "estupendo",
+        "estupenda"
+      ]
+    },
+    {
+      "id": "es.w.y4jnccv4xp",
+      "lemma": "presión",
+      "gloss": "pressure",
+      "pos": "noun",
+      "rank": 789,
+      "forms": [
+        "presión"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "es.w.sd2qazg1zd",
+      "lemma": "inmediatamente",
+      "gloss": "immediately",
+      "pos": "adv",
+      "rank": 790,
+      "forms": [
+        "inmediatamente"
+      ]
+    },
+    {
+      "id": "es.w.ejnfyke24c",
+      "lemma": "testigo",
+      "gloss": "witness",
+      "pos": "noun",
+      "rank": 791,
+      "forms": [
+        "testigo",
+        "testigos"
+      ],
+      "notes": "el/la testigo.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.5584y5v0wm",
+      "lemma": "soldado",
+      "gloss": "soldier",
+      "pos": "noun",
+      "rank": 792,
+      "forms": [
+        "soldado",
+        "soldados"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.g1pcf82da4",
+      "lemma": "resultar",
+      "gloss": "to turn out",
+      "pos": "verb",
+      "rank": 793,
+      "forms": [
+        "resultar",
+        "resulta",
+        "resultó",
+        "resultaron"
+      ],
+      "notes": "Resulta que… = It turns out that…"
+    },
+    {
+      "id": "es.w.fbpazd7e57",
+      "lemma": "depender",
+      "gloss": "to depend",
+      "pos": "verb",
+      "rank": 794,
+      "forms": [
+        "depender",
+        "depende",
+        "dependen"
+      ],
+      "notes": "depender de = to depend on."
+    },
+    {
+      "id": "es.w.0kj6j6x76p",
+      "lemma": "motivo",
+      "gloss": "reason, motive",
+      "pos": "noun",
+      "rank": 795,
+      "forms": [
+        "motivo",
+        "motivos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.bg4wv13bby",
+      "lemma": "inglés",
+      "gloss": "English (language)",
+      "pos": "noun",
+      "rank": 796,
+      "forms": [
+        "inglés"
+      ],
+      "notes": "Also an adjective: inglés, inglesa = English (person, thing).",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.1gm4p04fpg",
+      "lemma": "estudio",
+      "gloss": "study; studio",
+      "pos": "noun",
+      "rank": 797,
+      "forms": [
+        "estudio",
+        "estudios"
+      ],
+      "notes": "los estudios = studies, education. estudio is also 'I study'.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.a8qrtnqp0g",
+      "lemma": "sentimiento",
+      "gloss": "feeling",
+      "pos": "noun",
+      "rank": 798,
+      "forms": [
+        "sentimiento",
+        "sentimientos"
+      ],
+      "gender": "m"
+    },
+    {
+      "id": "es.w.gpyf7f9q3b",
+      "lemma": "propósito",
+      "gloss": "purpose",
+      "pos": "noun",
+      "rank": 799,
+      "forms": [
+        "propósito"
+      ],
+      "notes": "a propósito = on purpose; also 'by the way'.",
+      "gender": "m"
+    },
+    {
+      "id": "es.w.e5a76av1j5",
+      "lemma": "partir",
+      "gloss": "to leave, set off; to split",
+      "pos": "verb",
+      "rank": 800,
+      "forms": [
+        "partir",
+        "partimos",
+        "partió"
+      ],
+      "notes": "a partir de = from, starting (a partir de hoy = from today on). parte is also the noun 'part'."
     }
   ],
   "sentences": [
@@ -22525,6 +25097,4554 @@
       "text": "Trabaja en el departamento de policía.",
       "translation": "He works at the police department.",
       "cloze": "departamento",
+      "retired": true
+    },
+    {
+      "id": "es.s.wx7c4kkxgv",
+      "wordId": "es.w.nf785d3q23",
+      "text": "¡Qué día tan lindo!",
+      "translation": "What a lovely day!",
+      "cloze": "lindo"
+    },
+    {
+      "id": "es.s.ddymcwvbq4",
+      "wordId": "es.w.nf785d3q23",
+      "text": "Tu hermana es muy linda.",
+      "translation": "Your sister is very pretty.",
+      "cloze": "linda"
+    },
+    {
+      "id": "es.s.zt1v256awg",
+      "wordId": "es.w.nf785d3q23",
+      "text": "Son unos perros muy lindos.",
+      "translation": "They're very cute dogs.",
+      "cloze": "lindos"
+    },
+    {
+      "id": "es.s.w9zezr4xe3",
+      "wordId": "es.w.gdetm825fq",
+      "text": "Vivimos cerca del mar.",
+      "translation": "We live near the sea.",
+      "cloze": "mar"
+    },
+    {
+      "id": "es.s.h2ynnv0p7b",
+      "wordId": "es.w.gdetm825fq",
+      "text": "Desde mi casa veo el mar.",
+      "translation": "I can see the sea from my house.",
+      "cloze": "mar"
+    },
+    {
+      "id": "es.s.q8gcvtjp3q",
+      "wordId": "es.w.gdetm825fq",
+      "text": "El agua del mar está fría.",
+      "translation": "The sea water is cold.",
+      "cloze": "mar"
+    },
+    {
+      "id": "es.s.9yp7n644fy",
+      "wordId": "es.w.18eayjd7wt",
+      "text": "Sin duda es el mejor.",
+      "translation": "He's definitely the best.",
+      "cloze": "duda"
+    },
+    {
+      "id": "es.s.65537p8pdh",
+      "wordId": "es.w.18eayjd7wt",
+      "text": "¿Tienes alguna duda?",
+      "translation": "Do you have any questions?",
+      "cloze": "duda"
+    },
+    {
+      "id": "es.s.w2agx050p7",
+      "wordId": "es.w.18eayjd7wt",
+      "text": "No tengo dudas.",
+      "translation": "I have no doubts.",
+      "cloze": "dudas"
+    },
+    {
+      "id": "es.s.zpxpbf6ek7",
+      "wordId": "es.w.50r1cdr020",
+      "text": "Vivo en ese edificio.",
+      "translation": "I live in that building.",
+      "cloze": "edificio"
+    },
+    {
+      "id": "es.s.na648rdhy5",
+      "wordId": "es.w.50r1cdr020",
+      "text": "El edificio es muy alto.",
+      "translation": "The building is very tall.",
+      "cloze": "edificio"
+    },
+    {
+      "id": "es.s.q51hx2wcwt",
+      "wordId": "es.w.50r1cdr020",
+      "text": "Hay muchos edificios nuevos en la ciudad.",
+      "translation": "There are lots of new buildings in the city.",
+      "cloze": "edificios"
+    },
+    {
+      "id": "es.s.yc36jw6d5s",
+      "wordId": "es.w.nhktdwk5x5",
+      "text": "¿Quién está a cargo aquí?",
+      "translation": "Who's in charge here?",
+      "cloze": "cargo"
+    },
+    {
+      "id": "es.s.vj1nwj2e1t",
+      "wordId": "es.w.nhktdwk5x5",
+      "text": "Yo me hago cargo.",
+      "translation": "I'll take care of it.",
+      "cloze": "cargo"
+    },
+    {
+      "id": "es.s.jm9gbe6cg6",
+      "wordId": "es.w.nhktdwk5x5",
+      "text": "Tiene un cargo importante en el gobierno.",
+      "translation": "He has an important position in the government.",
+      "cloze": "cargo"
+    },
+    {
+      "id": "es.s.aahkmsr1wx",
+      "wordId": "es.w.m9nbg0pk5n",
+      "text": "La víctima era un hombre joven.",
+      "translation": "The victim was a young man.",
+      "cloze": "víctima"
+    },
+    {
+      "id": "es.s.xdshmc63n2",
+      "wordId": "es.w.m9nbg0pk5n",
+      "text": "No soy una víctima.",
+      "translation": "I'm not a victim.",
+      "cloze": "víctima"
+    },
+    {
+      "id": "es.s.1fkzzjtanx",
+      "wordId": "es.w.m9nbg0pk5n",
+      "text": "Hay tres víctimas.",
+      "translation": "There are three victims.",
+      "cloze": "víctimas"
+    },
+    {
+      "id": "es.s.f7b7eav1y5",
+      "wordId": "es.w.r75h04y9kt",
+      "text": "Mira la luna.",
+      "translation": "Look at the moon.",
+      "cloze": "luna"
+    },
+    {
+      "id": "es.s.dzy5gxymjs",
+      "wordId": "es.w.r75h04y9kt",
+      "text": "No se ve la luna.",
+      "translation": "You can't see the moon.",
+      "cloze": "luna"
+    },
+    {
+      "id": "es.s.954m74nmt6",
+      "wordId": "es.w.r75h04y9kt",
+      "text": "La luna está muy bonita esta noche.",
+      "translation": "The moon is very pretty tonight.",
+      "cloze": "luna"
+    },
+    {
+      "id": "es.s.q5798j1xax",
+      "wordId": "es.w.hzad6s4qve",
+      "text": "No tengo energía hoy.",
+      "translation": "I have no energy today.",
+      "cloze": "energía"
+    },
+    {
+      "id": "es.s.dnwnfshegf",
+      "wordId": "es.w.hzad6s4qve",
+      "text": "Los niños tienen mucha energía.",
+      "translation": "Kids have a lot of energy.",
+      "cloze": "energía"
+    },
+    {
+      "id": "es.s.2mxq421n08",
+      "wordId": "es.w.hzad6s4qve",
+      "text": "El sol nos da energía.",
+      "translation": "The sun gives us energy.",
+      "cloze": "energía"
+    },
+    {
+      "id": "es.s.afkvkraeqw",
+      "wordId": "es.w.09f2kpsgtq",
+      "text": "El agua está muy fría.",
+      "translation": "The water is very cold.",
+      "cloze": "fría"
+    },
+    {
+      "id": "es.s.cf4fdj9xhp",
+      "wordId": "es.w.09f2kpsgtq",
+      "text": "Tengo las manos frías.",
+      "translation": "My hands are cold.",
+      "cloze": "frías"
+    },
+    {
+      "id": "es.s.98ngtw45g4",
+      "wordId": "es.w.09f2kpsgtq",
+      "text": "Hoy hace un día muy frío.",
+      "translation": "It's a very cold day today.",
+      "cloze": "frío"
+    },
+    {
+      "id": "es.s.kxp82ese3q",
+      "wordId": "es.w.09f2kpsgtq",
+      "text": "Hace frío esta noche.",
+      "translation": "It's cold tonight.",
+      "cloze": "frío",
+      "retired": true
+    },
+    {
+      "id": "es.s.9dejk5ecjv",
+      "wordId": "es.w.2af08d2dkd",
+      "text": "¿Vas al baile?",
+      "translation": "Are you going to the dance?",
+      "cloze": "baile"
+    },
+    {
+      "id": "es.s.6qyse1egk1",
+      "wordId": "es.w.2af08d2dkd",
+      "text": "Me debes un baile.",
+      "translation": "You owe me a dance.",
+      "cloze": "baile"
+    },
+    {
+      "id": "es.s.tc7p4f7mvj",
+      "wordId": "es.w.2af08d2dkd",
+      "text": "Me enseñó dos bailes nuevos.",
+      "translation": "She taught me two new dances.",
+      "cloze": "bailes"
+    },
+    {
+      "id": "es.s.rnbsf82w4a",
+      "wordId": "es.w.kc6ehybjjj",
+      "text": "Hicimos muchas misiones juntos.",
+      "translation": "We did lots of missions together.",
+      "cloze": "misiones"
+    },
+    {
+      "id": "es.s.xddrhqxedg",
+      "wordId": "es.w.kc6ehybjjj",
+      "text": "La misión fue un éxito.",
+      "translation": "The mission was a success.",
+      "cloze": "misión"
+    },
+    {
+      "id": "es.s.mdnhtczg4s",
+      "wordId": "es.w.kc6ehybjjj",
+      "text": "Es una misión muy peligrosa.",
+      "translation": "It's a very dangerous mission.",
+      "cloze": "misión"
+    },
+    {
+      "id": "es.s.gjd2xxwhyc",
+      "wordId": "es.w.pbcmtbqfmw",
+      "text": "Está a la izquierda.",
+      "translation": "It's on the left.",
+      "cloze": "izquierda"
+    },
+    {
+      "id": "es.s.ctv3fr6w6d",
+      "wordId": "es.w.pbcmtbqfmw",
+      "text": "Es la segunda puerta a la izquierda.",
+      "translation": "It's the second door on the left.",
+      "cloze": "izquierda"
+    },
+    {
+      "id": "es.s.an3xs61214",
+      "wordId": "es.w.pbcmtbqfmw",
+      "text": "Mira a tu izquierda.",
+      "translation": "Look to your left.",
+      "cloze": "izquierda"
+    },
+    {
+      "id": "es.s.40hw843kk0",
+      "wordId": "es.w.bfnyghq1tm",
+      "text": "¿Quieres beber algo?",
+      "translation": "Do you want something to drink?",
+      "cloze": "beber"
+    },
+    {
+      "id": "es.s.hcxgmmb6t1",
+      "wordId": "es.w.bfnyghq1tm",
+      "text": "No bebo alcohol.",
+      "translation": "I don't drink alcohol.",
+      "cloze": "bebo"
+    },
+    {
+      "id": "es.s.6m149mzdpm",
+      "wordId": "es.w.bfnyghq1tm",
+      "text": "Bebió demasiado anoche.",
+      "translation": "He drank too much last night.",
+      "cloze": "Bebió"
+    },
+    {
+      "id": "es.s.3wm931pfkd",
+      "wordId": "es.w.bfnyghq1tm",
+      "text": "Estás bebiendo mucho café.",
+      "translation": "You're drinking a lot of coffee.",
+      "cloze": "bebiendo"
+    },
+    {
+      "id": "es.s.wq2jemcapa",
+      "wordId": "es.w.h8e50yeyhb",
+      "text": "Finalmente llegamos a casa.",
+      "translation": "We finally got home.",
+      "cloze": "Finalmente"
+    },
+    {
+      "id": "es.s.2js1x36cqk",
+      "wordId": "es.w.h8e50yeyhb",
+      "text": "Finalmente dijo que sí.",
+      "translation": "She finally said yes.",
+      "cloze": "Finalmente"
+    },
+    {
+      "id": "es.s.ehhy60gjaz",
+      "wordId": "es.w.h8e50yeyhb",
+      "text": "Finalmente encontré mis llaves.",
+      "translation": "I finally found my keys.",
+      "cloze": "Finalmente"
+    },
+    {
+      "id": "es.s.zb44zre8j3",
+      "wordId": "es.w.syx9mamfnj",
+      "text": "Es muy simple.",
+      "translation": "It's very simple.",
+      "cloze": "simple"
+    },
+    {
+      "id": "es.s.8n8j89fshx",
+      "wordId": "es.w.syx9mamfnj",
+      "text": "Es una pregunta simple.",
+      "translation": "It's a simple question.",
+      "cloze": "simple"
+    },
+    {
+      "id": "es.s.tgj1dq3zfm",
+      "wordId": "es.w.syx9mamfnj",
+      "text": "Me gustan las cosas simples.",
+      "translation": "I like simple things.",
+      "cloze": "simples"
+    },
+    {
+      "id": "es.s.6dxa8q3zzh",
+      "wordId": "es.w.cj6mzgjk0x",
+      "text": "Regresa pronto.",
+      "translation": "Come back soon.",
+      "cloze": "Regresa"
+    },
+    {
+      "id": "es.s.t65ysyb5v0",
+      "wordId": "es.w.cj6mzgjk0x",
+      "text": "Regresé a casa muy tarde.",
+      "translation": "I came back home very late.",
+      "cloze": "Regresé"
+    },
+    {
+      "id": "es.s.xb8ehc4406",
+      "wordId": "es.w.cj6mzgjk0x",
+      "text": "¿Cuándo regresas?",
+      "translation": "When are you coming back?",
+      "cloze": "regresas"
+    },
+    {
+      "id": "es.s.ekzy96q2fr",
+      "wordId": "es.w.cj6mzgjk0x",
+      "text": "Tenemos que regresar.",
+      "translation": "We have to go back.",
+      "cloze": "regresar"
+    },
+    {
+      "id": "es.s.2yjz1evys4",
+      "wordId": "es.w.p5ttqy13r2",
+      "text": "Sácame de aquí.",
+      "translation": "Get me out of here.",
+      "cloze": "Sácame"
+    },
+    {
+      "id": "es.s.1ph41rbcq8",
+      "wordId": "es.w.p5ttqy13r2",
+      "text": "Saca tu teléfono.",
+      "translation": "Take out your phone.",
+      "cloze": "Saca"
+    },
+    {
+      "id": "es.s.0k6zwphbwb",
+      "wordId": "es.w.p5ttqy13r2",
+      "text": "Saqué una foto del mar.",
+      "translation": "I took a photo of the sea.",
+      "cloze": "Saqué"
+    },
+    {
+      "id": "es.s.ha1tx66qv6",
+      "wordId": "es.w.p5ttqy13r2",
+      "text": "¿Quién sacó el dinero?",
+      "translation": "Who took the money out?",
+      "cloze": "sacó"
+    },
+    {
+      "id": "es.s.dxctfwj7mk",
+      "wordId": "es.w.8wx5f4ca96",
+      "text": "En mi opinión, es un error.",
+      "translation": "In my opinion, it's a mistake.",
+      "cloze": "opinión"
+    },
+    {
+      "id": "es.s.tapdzaxy2p",
+      "wordId": "es.w.8wx5f4ca96",
+      "text": "No me importa tu opinión.",
+      "translation": "I don't care about your opinion.",
+      "cloze": "opinión"
+    },
+    {
+      "id": "es.s.gy3r9yj9qf",
+      "wordId": "es.w.8wx5f4ca96",
+      "text": "Todos tienen opiniones diferentes.",
+      "translation": "Everyone has different opinions.",
+      "cloze": "opiniones"
+    },
+    {
+      "id": "es.s.dy7rdfr3zn",
+      "wordId": "es.w.eh2zt3j1wb",
+      "text": "Apenas puedo verte.",
+      "translation": "I can barely see you.",
+      "cloze": "Apenas"
+    },
+    {
+      "id": "es.s.xhymbn6xj9",
+      "wordId": "es.w.eh2zt3j1wb",
+      "text": "Apenas dormí anoche.",
+      "translation": "I hardly slept last night.",
+      "cloze": "Apenas"
+    },
+    {
+      "id": "es.s.tk6080q6rn",
+      "wordId": "es.w.eh2zt3j1wb",
+      "text": "Apenas tiene dinero.",
+      "translation": "He hardly has any money.",
+      "cloze": "Apenas"
+    },
+    {
+      "id": "es.s.y3tvztfm0e",
+      "wordId": "es.w.dg629wvn9c",
+      "text": "Espera un segundo.",
+      "translation": "Wait a second.",
+      "cloze": "segundo"
+    },
+    {
+      "id": "es.s.bq6ry7njfm",
+      "wordId": "es.w.dg629wvn9c",
+      "text": "Vuelvo en diez segundos.",
+      "translation": "I'll be back in ten seconds.",
+      "cloze": "segundos"
+    },
+    {
+      "id": "es.s.kzg5afqcmk",
+      "wordId": "es.w.dg629wvn9c",
+      "text": "Fueron los segundos más largos de mi vida.",
+      "translation": "Those were the longest seconds of my life.",
+      "cloze": "segundos"
+    },
+    {
+      "id": "es.s.vtbssg5r4y",
+      "wordId": "es.w.sg693gqxwd",
+      "text": "Una cerveza, por favor.",
+      "translation": "A beer, please.",
+      "cloze": "cerveza"
+    },
+    {
+      "id": "es.s.aaaxwaejms",
+      "wordId": "es.w.sg693gqxwd",
+      "text": "¿Quieres una cerveza?",
+      "translation": "Do you want a beer?",
+      "cloze": "cerveza"
+    },
+    {
+      "id": "es.s.32thw8yvst",
+      "wordId": "es.w.sg693gqxwd",
+      "text": "Tomamos unas cervezas en el bar.",
+      "translation": "We had a few beers at the bar.",
+      "cloze": "cervezas"
+    },
+    {
+      "id": "es.s.k9et49wass",
+      "wordId": "es.w.wazwry81nt",
+      "text": "¡Viva la reina!",
+      "translation": "Long live the queen!",
+      "cloze": "reina"
+    },
+    {
+      "id": "es.s.qv69arfwcw",
+      "wordId": "es.w.wazwry81nt",
+      "text": "Ella es la reina del baile.",
+      "translation": "She's the queen of the dance.",
+      "cloze": "reina"
+    },
+    {
+      "id": "es.s.74wfnjgxne",
+      "wordId": "es.w.wazwry81nt",
+      "text": "El rey y la reina llegaron ayer.",
+      "translation": "The king and queen arrived yesterday.",
+      "cloze": "reina"
+    },
+    {
+      "id": "es.s.3meraprk9w",
+      "wordId": "es.w.pz1r3pdef7",
+      "text": "Me levanto temprano.",
+      "translation": "I get up early.",
+      "cloze": "temprano"
+    },
+    {
+      "id": "es.s.ns20xv88c5",
+      "wordId": "es.w.pz1r3pdef7",
+      "text": "Es demasiado temprano.",
+      "translation": "It's too early.",
+      "cloze": "temprano"
+    },
+    {
+      "id": "es.s.s001v1j9t3",
+      "wordId": "es.w.pz1r3pdef7",
+      "text": "Mañana tenemos que salir temprano.",
+      "translation": "We have to leave early tomorrow.",
+      "cloze": "temprano"
+    },
+    {
+      "id": "es.s.qsg518jsq4",
+      "wordId": "es.w.g14mk7axby",
+      "text": "Vamos a cambiar de tema.",
+      "translation": "Let's change the subject.",
+      "cloze": "tema"
+    },
+    {
+      "id": "es.s.90t8b80wk9",
+      "wordId": "es.w.g14mk7axby",
+      "text": "Ese tema no me interesa.",
+      "translation": "That topic doesn't interest me.",
+      "cloze": "tema"
+    },
+    {
+      "id": "es.s.dvas454wyc",
+      "wordId": "es.w.g14mk7axby",
+      "text": "Es un tema muy serio.",
+      "translation": "It's a very serious issue.",
+      "cloze": "tema"
+    },
+    {
+      "id": "es.s.22pp6c3nb1",
+      "wordId": "es.w.amegt9vpa4",
+      "text": "Pasó diez años en prisión.",
+      "translation": "He spent ten years in prison.",
+      "cloze": "prisión"
+    },
+    {
+      "id": "es.s.t9dbv03hcp",
+      "wordId": "es.w.amegt9vpa4",
+      "text": "Vas a ir a prisión.",
+      "translation": "You're going to go to prison.",
+      "cloze": "prisión"
+    },
+    {
+      "id": "es.s.4gcs0jctac",
+      "wordId": "es.w.amegt9vpa4",
+      "text": "La prisión está lejos de la ciudad.",
+      "translation": "The prison is far from the city.",
+      "cloze": "prisión"
+    },
+    {
+      "id": "es.s.3skbqsxghf",
+      "wordId": "es.w.we21d2evnz",
+      "text": "No hables así en público.",
+      "translation": "Don't talk like that in public.",
+      "cloze": "público"
+    },
+    {
+      "id": "es.s.2axdrrvh25",
+      "wordId": "es.w.we21d2evnz",
+      "text": "El público está esperando.",
+      "translation": "The audience is waiting.",
+      "cloze": "público"
+    },
+    {
+      "id": "es.s.9n8vaxzfzy",
+      "wordId": "es.w.we21d2evnz",
+      "text": "El público quiere saber la verdad.",
+      "translation": "The public wants to know the truth.",
+      "cloze": "público"
+    },
+    {
+      "id": "es.s.6hf8zb7a0q",
+      "wordId": "es.w.s0hjtb5fwn",
+      "text": "Me salvaste la vida.",
+      "translation": "You saved my life.",
+      "cloze": "salvaste"
+    },
+    {
+      "id": "es.s.m45rd95azf",
+      "wordId": "es.w.s0hjtb5fwn",
+      "text": "Tenemos que salvar a los niños.",
+      "translation": "We have to save the children.",
+      "cloze": "salvar"
+    },
+    {
+      "id": "es.s.vj6s7mxam4",
+      "wordId": "es.w.s0hjtb5fwn",
+      "text": "El médico lo salvó.",
+      "translation": "The doctor saved him.",
+      "cloze": "salvó"
+    },
+    {
+      "id": "es.s.rxm6kxrt7e",
+      "wordId": "es.w.hwccryt8sm",
+      "text": "¿Viste el partido anoche?",
+      "translation": "Did you see the game last night?",
+      "cloze": "partido"
+    },
+    {
+      "id": "es.s.2vb7znbvh7",
+      "wordId": "es.w.hwccryt8sm",
+      "text": "Veo todos los partidos con mi padre.",
+      "translation": "I watch all the games with my dad.",
+      "cloze": "partidos"
+    },
+    {
+      "id": "es.s.1t03469a6r",
+      "wordId": "es.w.hwccryt8sm",
+      "text": "Es del mismo partido que el presidente.",
+      "translation": "He's from the same party as the president.",
+      "cloze": "partido"
+    },
+    {
+      "id": "es.s.a7zrh089p2",
+      "wordId": "es.w.mek344w0bw",
+      "text": "Murió por causas naturales.",
+      "translation": "He died of natural causes.",
+      "cloze": "causas"
+    },
+    {
+      "id": "es.s.bz8sp9fvka",
+      "wordId": "es.w.mek344w0bw",
+      "text": "Es por una buena causa.",
+      "translation": "It's for a good cause.",
+      "cloze": "causa"
+    },
+    {
+      "id": "es.s.g37cey66h6",
+      "wordId": "es.w.mek344w0bw",
+      "text": "Llegamos tarde a causa del accidente.",
+      "translation": "We arrived late because of the accident.",
+      "cloze": "causa"
+    },
+    {
+      "id": "es.s.zzyecqp1fm",
+      "wordId": "es.w.46hy14m11e",
+      "text": "El café está muy caliente.",
+      "translation": "The coffee is very hot.",
+      "cloze": "caliente"
+    },
+    {
+      "id": "es.s.8btrs11jmt",
+      "wordId": "es.w.46hy14m11e",
+      "text": "Quiero agua caliente.",
+      "translation": "I want hot water.",
+      "cloze": "caliente"
+    },
+    {
+      "id": "es.s.07kft27se1",
+      "wordId": "es.w.46hy14m11e",
+      "text": "Los platos están calientes.",
+      "translation": "The plates are hot.",
+      "cloze": "calientes"
+    },
+    {
+      "id": "es.s.s8f4494zsw",
+      "wordId": "es.w.5j9hzdk5m9",
+      "text": "Sí, sargento.",
+      "translation": "Yes, sergeant.",
+      "cloze": "sargento"
+    },
+    {
+      "id": "es.s.1t6kfyjw5t",
+      "wordId": "es.w.5j9hzdk5m9",
+      "text": "El sargento quiere hablar contigo.",
+      "translation": "The sergeant wants to talk to you.",
+      "cloze": "sargento"
+    },
+    {
+      "id": "es.s.bhs0x7c5x4",
+      "wordId": "es.w.5j9hzdk5m9",
+      "text": "Mi padre era sargento.",
+      "translation": "My father was a sergeant.",
+      "cloze": "sargento"
+    },
+    {
+      "id": "es.s.48ta3vmka5",
+      "wordId": "es.w.0y8j84xc2w",
+      "text": "¿Quieres cenar conmigo?",
+      "translation": "Do you want to have dinner with me?",
+      "cloze": "cenar"
+    },
+    {
+      "id": "es.s.cv5sdvek8s",
+      "wordId": "es.w.0y8j84xc2w",
+      "text": "Anoche cenamos en un restaurante.",
+      "translation": "Last night we had dinner at a restaurant.",
+      "cloze": "cenamos"
+    },
+    {
+      "id": "es.s.d3gxd2dh23",
+      "wordId": "es.w.0y8j84xc2w",
+      "text": "Estamos cenando, te llamo luego.",
+      "translation": "We're having dinner, I'll call you later.",
+      "cloze": "cenando"
+    },
+    {
+      "id": "es.s.xxk1eexprd",
+      "wordId": "es.w.0y8j84xc2w",
+      "text": "¿A qué hora vamos a cenar?",
+      "translation": "What time are we having dinner?",
+      "cloze": "cenar",
+      "retired": true
+    },
+    {
+      "id": "es.s.mqxb76bx43",
+      "wordId": "es.w.9t09bwhdw3",
+      "text": "Es mi compañero de trabajo.",
+      "translation": "He's my coworker.",
+      "cloze": "compañero"
+    },
+    {
+      "id": "es.s.bqd1dnxkj3",
+      "wordId": "es.w.9t09bwhdw3",
+      "text": "Mi compañera de cuarto es muy amable.",
+      "translation": "My roommate is very nice.",
+      "cloze": "compañera"
+    },
+    {
+      "id": "es.s.pmydhyzvyf",
+      "wordId": "es.w.9t09bwhdw3",
+      "text": "Somos compañeros de clase.",
+      "translation": "We're classmates.",
+      "cloze": "compañeros"
+    },
+    {
+      "id": "es.s.eewnt1dbcr",
+      "wordId": "es.w.99vxmz8h9g",
+      "text": "Tengo que ir al banco.",
+      "translation": "I have to go to the bank.",
+      "cloze": "banco"
+    },
+    {
+      "id": "es.s.6p7tkw6j3p",
+      "wordId": "es.w.99vxmz8h9g",
+      "text": "Los bancos están cerrados hoy.",
+      "translation": "The banks are closed today.",
+      "cloze": "bancos"
+    },
+    {
+      "id": "es.s.jsnzswn0dg",
+      "wordId": "es.w.99vxmz8h9g",
+      "text": "Nos sentamos en un banco del parque.",
+      "translation": "We sat on a bench in the park.",
+      "cloze": "banco"
+    },
+    {
+      "id": "es.s.ey1sanjre8",
+      "wordId": "es.w.8k46edftv5",
+      "text": "Eso no existe.",
+      "translation": "That doesn't exist.",
+      "cloze": "existe"
+    },
+    {
+      "id": "es.s.wfbcvtf2wb",
+      "wordId": "es.w.8k46edftv5",
+      "text": "¿Crees que existen los fantasmas?",
+      "translation": "Do you think ghosts exist?",
+      "cloze": "existen"
+    },
+    {
+      "id": "es.s.gj115rrxda",
+      "wordId": "es.w.8k46edftv5",
+      "text": "Hace diez años, esta calle no existía.",
+      "translation": "Ten years ago, this street didn't exist.",
+      "cloze": "existía"
+    },
+    {
+      "id": "es.s.j7fbnkx3te",
+      "wordId": "es.w.8k46edftv5",
+      "text": "Ese lugar ya no existe.",
+      "translation": "That place doesn't exist anymore.",
+      "cloze": "existe",
+      "retired": true
+    },
+    {
+      "id": "es.s.v9fqt3v2wb",
+      "wordId": "es.w.tknk98pvrw",
+      "text": "Es una zona peligrosa.",
+      "translation": "It's a dangerous area.",
+      "cloze": "zona"
+    },
+    {
+      "id": "es.s.cck1m5awga",
+      "wordId": "es.w.tknk98pvrw",
+      "text": "Vivo en una zona tranquila.",
+      "translation": "I live in a quiet area.",
+      "cloze": "zona"
+    },
+    {
+      "id": "es.s.mfrjgvj61f",
+      "wordId": "es.w.tknk98pvrw",
+      "text": "Hay zonas de la ciudad muy bonitas.",
+      "translation": "There are some very pretty areas in the city.",
+      "cloze": "zonas"
+    },
+    {
+      "id": "es.s.a0ymzv7pzy",
+      "wordId": "es.w.97jww1g9q6",
+      "text": "Nuestros destinos están unidos.",
+      "translation": "Our fates are linked.",
+      "cloze": "destinos"
+    },
+    {
+      "id": "es.s.dwst4n0vyq",
+      "wordId": "es.w.97jww1g9q6",
+      "text": "No creo en el destino.",
+      "translation": "I don't believe in fate.",
+      "cloze": "destino"
+    },
+    {
+      "id": "es.s.8kkaqh4x7p",
+      "wordId": "es.w.97jww1g9q6",
+      "text": "Llegamos a nuestro destino.",
+      "translation": "We've reached our destination.",
+      "cloze": "destino"
+    },
+    {
+      "id": "es.s.3fsh8hsw0q",
+      "wordId": "es.w.2kr5581vph",
+      "text": "Volvamos a la base.",
+      "translation": "Let's go back to base.",
+      "cloze": "base"
+    },
+    {
+      "id": "es.s.t4k2v2k2rm",
+      "wordId": "es.w.2kr5581vph",
+      "text": "La familia es la base de todo.",
+      "translation": "Family is the basis of everything.",
+      "cloze": "base"
+    },
+    {
+      "id": "es.s.tqq0dqcg69",
+      "wordId": "es.w.2kr5581vph",
+      "text": "Tienen bases en todo el mundo.",
+      "translation": "They have bases all over the world.",
+      "cloze": "bases"
+    },
+    {
+      "id": "es.s.rjtgxyapaj",
+      "wordId": "es.w.zy879f8jmk",
+      "text": "Solía vivir aquí.",
+      "translation": "I used to live here.",
+      "cloze": "Solía"
+    },
+    {
+      "id": "es.s.wy1f8fjx77",
+      "wordId": "es.w.zy879f8jmk",
+      "text": "¿Qué sueles hacer los domingos?",
+      "translation": "What do you usually do on Sundays?",
+      "cloze": "sueles"
+    },
+    {
+      "id": "es.s.5xw00cw33j",
+      "wordId": "es.w.zy879f8jmk",
+      "text": "Suele llegar tarde.",
+      "translation": "He usually arrives late.",
+      "cloze": "Suele"
+    },
+    {
+      "id": "es.s.9n61c1ebc2",
+      "wordId": "es.w.zy879f8jmk",
+      "text": "Solíamos ser amigos.",
+      "translation": "We used to be friends.",
+      "cloze": "Solíamos"
+    },
+    {
+      "id": "es.s.5cdhfq6s2h",
+      "wordId": "es.w.hyxmdbc6jc",
+      "text": "El cliente siempre tiene razón.",
+      "translation": "The customer is always right.",
+      "cloze": "cliente"
+    },
+    {
+      "id": "es.s.waqgxqnwn2",
+      "wordId": "es.w.hyxmdbc6jc",
+      "text": "Es mi mejor cliente.",
+      "translation": "She's my best client.",
+      "cloze": "cliente"
+    },
+    {
+      "id": "es.s.rh8b4w5c4e",
+      "wordId": "es.w.hyxmdbc6jc",
+      "text": "Hoy no hay muchos clientes.",
+      "translation": "There aren't many customers today.",
+      "cloze": "clientes"
+    },
+    {
+      "id": "es.s.9m2bxhydj0",
+      "wordId": "es.w.39pe3vewwf",
+      "text": "No quiero una pelea.",
+      "translation": "I don't want a fight.",
+      "cloze": "pelea"
+    },
+    {
+      "id": "es.s.ezhstm1zsc",
+      "wordId": "es.w.39pe3vewwf",
+      "text": "¿Quién empezó la pelea?",
+      "translation": "Who started the fight?",
+      "cloze": "pelea"
+    },
+    {
+      "id": "es.s.fwj9ab62mv",
+      "wordId": "es.w.39pe3vewwf",
+      "text": "Siempre hay peleas en ese bar.",
+      "translation": "There are always fights in that bar.",
+      "cloze": "peleas"
+    },
+    {
+      "id": "es.s.k6r7wg6tdm",
+      "wordId": "es.w.bpmrstn59t",
+      "text": "Vivimos en el norte.",
+      "translation": "We live in the north.",
+      "cloze": "norte"
+    },
+    {
+      "id": "es.s.5h6newt2n0",
+      "wordId": "es.w.bpmrstn59t",
+      "text": "El viento viene del norte.",
+      "translation": "The wind comes from the north.",
+      "cloze": "norte"
+    },
+    {
+      "id": "es.s.7yh92qmecv",
+      "wordId": "es.w.bpmrstn59t",
+      "text": "Está al norte de la ciudad.",
+      "translation": "It's north of the city.",
+      "cloze": "norte"
+    },
+    {
+      "id": "es.s.fqqgr751q0",
+      "wordId": "es.w.39qjc218xv",
+      "text": "Sí, mi coronel.",
+      "translation": "Yes, Colonel.",
+      "cloze": "coronel"
+    },
+    {
+      "id": "es.s.8ey7yn06fv",
+      "wordId": "es.w.39qjc218xv",
+      "text": "El coronel llegó esta mañana.",
+      "translation": "The colonel arrived this morning.",
+      "cloze": "coronel"
+    },
+    {
+      "id": "es.s.06x1rm5zc3",
+      "wordId": "es.w.39qjc218xv",
+      "text": "Tengo que hablar con el coronel.",
+      "translation": "I have to talk to the colonel.",
+      "cloze": "coronel"
+    },
+    {
+      "id": "es.s.nr26d1709v",
+      "wordId": "es.w.dc2nyfgs6x",
+      "text": "Te apuesto que no viene.",
+      "translation": "I bet you he won't come.",
+      "cloze": "apuesto"
+    },
+    {
+      "id": "es.s.7djw37xqsj",
+      "wordId": "es.w.dc2nyfgs6x",
+      "text": "Aposté todo mi dinero.",
+      "translation": "I bet all my money.",
+      "cloze": "Aposté"
+    },
+    {
+      "id": "es.s.x1hbe2rmp2",
+      "wordId": "es.w.dc2nyfgs6x",
+      "text": "¿Cuánto quieres apostar?",
+      "translation": "How much do you want to bet?",
+      "cloze": "apostar"
+    },
+    {
+      "id": "es.s.w3jtdrdvjh",
+      "wordId": "es.w.fg9bg61ck7",
+      "text": "Es muy peligroso.",
+      "translation": "It's very dangerous.",
+      "cloze": "peligroso"
+    },
+    {
+      "id": "es.s.vd2srg12ej",
+      "wordId": "es.w.fg9bg61ck7",
+      "text": "Es un hombre peligroso.",
+      "translation": "He's a dangerous man.",
+      "cloze": "peligroso"
+    },
+    {
+      "id": "es.s.ry07q07s9d",
+      "wordId": "es.w.fg9bg61ck7",
+      "text": "Estas calles son peligrosas de noche.",
+      "translation": "These streets are dangerous at night.",
+      "cloze": "peligrosas"
+    },
+    {
+      "id": "es.s.pawt4773ne",
+      "wordId": "es.w.e0711qsccv",
+      "text": "¿Quieres un té?",
+      "translation": "Would you like some tea?",
+      "cloze": "té"
+    },
+    {
+      "id": "es.s.7a4ccwbagx",
+      "wordId": "es.w.e0711qsccv",
+      "text": "Prefiero té, gracias.",
+      "translation": "I'd rather have tea, thanks.",
+      "cloze": "té"
+    },
+    {
+      "id": "es.s.s2fddamsbf",
+      "wordId": "es.w.e0711qsccv",
+      "text": "El té está muy caliente.",
+      "translation": "The tea is very hot.",
+      "cloze": "té"
+    },
+    {
+      "id": "es.s.cm92f033m3",
+      "wordId": "es.w.bz67k5hbv4",
+      "text": "Todos vinieron excepto él.",
+      "translation": "Everyone came except him.",
+      "cloze": "excepto"
+    },
+    {
+      "id": "es.s.td2fb2hxn6",
+      "wordId": "es.w.bz67k5hbv4",
+      "text": "Trabajo todos los días excepto los domingos.",
+      "translation": "I work every day except Sundays.",
+      "cloze": "excepto"
+    },
+    {
+      "id": "es.s.t7svddt4n0",
+      "wordId": "es.w.bz67k5hbv4",
+      "text": "Me gusta todo excepto el café.",
+      "translation": "I like everything except coffee.",
+      "cloze": "excepto"
+    },
+    {
+      "id": "es.s.qt0b1hz1ky",
+      "wordId": "es.w.bz67k5hbv4",
+      "text": "Trabajo todos los días excepto el domingo.",
+      "translation": "I work every day except Sunday.",
+      "cloze": "excepto",
+      "retired": true
+    },
+    {
+      "id": "es.s.se2t6akkap",
+      "wordId": "es.w.ept5ph75j9",
+      "text": "El juicio es mañana.",
+      "translation": "The trial is tomorrow.",
+      "cloze": "juicio"
+    },
+    {
+      "id": "es.s.wf4qy0x3h6",
+      "wordId": "es.w.ept5ph75j9",
+      "text": "Tienes que decir la verdad en el juicio.",
+      "translation": "You have to tell the truth at the trial.",
+      "cloze": "juicio"
+    },
+    {
+      "id": "es.s.xkqe1a3mhk",
+      "wordId": "es.w.ept5ph75j9",
+      "text": "Confío en tu juicio.",
+      "translation": "I trust your judgment.",
+      "cloze": "juicio"
+    },
+    {
+      "id": "es.s.xdh78se28m",
+      "wordId": "es.w.heps1f9c8j",
+      "text": "¿Dónde están mis llaves?",
+      "translation": "Where are my keys?",
+      "cloze": "llaves"
+    },
+    {
+      "id": "es.s.v92f121zr6",
+      "wordId": "es.w.heps1f9c8j",
+      "text": "Perdí la llave de la casa.",
+      "translation": "I lost the house key.",
+      "cloze": "llave"
+    },
+    {
+      "id": "es.s.04df8kq0wd",
+      "wordId": "es.w.heps1f9c8j",
+      "text": "Necesito una llave nueva.",
+      "translation": "I need a new key.",
+      "cloze": "llave"
+    },
+    {
+      "id": "es.s.2j1g6rxh1y",
+      "wordId": "es.w.p24f0y52pb",
+      "text": "Estás equivocado.",
+      "translation": "You're wrong.",
+      "cloze": "equivocado"
+    },
+    {
+      "id": "es.s.fnmpzm91cz",
+      "wordId": "es.w.p24f0y52pb",
+      "text": "Creo que estaba equivocada.",
+      "translation": "I think I was wrong.",
+      "cloze": "equivocada"
+    },
+    {
+      "id": "es.s.nq0aeg8frt",
+      "wordId": "es.w.p24f0y52pb",
+      "text": "Tienes el número equivocado.",
+      "translation": "You have the wrong number.",
+      "cloze": "equivocado"
+    },
+    {
+      "id": "es.s.dzc5z59nj2",
+      "wordId": "es.w.0q0k2623s2",
+      "text": "Todos a sus posiciones.",
+      "translation": "Everyone to their positions.",
+      "cloze": "posiciones"
+    },
+    {
+      "id": "es.s.4ncn2j9fw7",
+      "wordId": "es.w.0q0k2623s2",
+      "text": "Estoy en una posición difícil.",
+      "translation": "I'm in a difficult position.",
+      "cloze": "posición"
+    },
+    {
+      "id": "es.s.0q05mtahpw",
+      "wordId": "es.w.0q0k2623s2",
+      "text": "¿Cuál es tu posición?",
+      "translation": "What's your position?",
+      "cloze": "posición"
+    },
+    {
+      "id": "es.s.thgp830qyj",
+      "wordId": "es.w.z1kj0e9fs7",
+      "text": "Me duele la espalda.",
+      "translation": "My back hurts.",
+      "cloze": "espalda"
+    },
+    {
+      "id": "es.s.fxnbrjme2p",
+      "wordId": "es.w.z1kj0e9fs7",
+      "text": "Pon las manos detrás de la espalda.",
+      "translation": "Put your hands behind your back.",
+      "cloze": "espalda"
+    },
+    {
+      "id": "es.s.1hq8r8fpjw",
+      "wordId": "es.w.z1kj0e9fs7",
+      "text": "Hablan de mí a mis espaldas.",
+      "translation": "They talk about me behind my back.",
+      "cloze": "espaldas"
+    },
+    {
+      "id": "es.s.xj6byh9rjm",
+      "wordId": "es.w.vsy5djgkae",
+      "text": "¡Excelente idea!",
+      "translation": "Excellent idea!",
+      "cloze": "Excelente"
+    },
+    {
+      "id": "es.s.3p4t7950d2",
+      "wordId": "es.w.vsy5djgkae",
+      "text": "Es un médico excelente.",
+      "translation": "He's an excellent doctor.",
+      "cloze": "excelente"
+    },
+    {
+      "id": "es.s.fcq5rpxw6b",
+      "wordId": "es.w.vsy5djgkae",
+      "text": "Los resultados son excelentes.",
+      "translation": "The results are excellent.",
+      "cloze": "excelentes"
+    },
+    {
+      "id": "es.s.8j8sxfh8xc",
+      "wordId": "es.w.dv4n23fgz1",
+      "text": "La fiesta fue un éxito.",
+      "translation": "The party was a success.",
+      "cloze": "éxito"
+    },
+    {
+      "id": "es.s.jzdwj05bb1",
+      "wordId": "es.w.dv4n23fgz1",
+      "text": "Te deseo mucho éxito.",
+      "translation": "I wish you lots of success.",
+      "cloze": "éxito"
+    },
+    {
+      "id": "es.s.cwgq8n9vs3",
+      "wordId": "es.w.dv4n23fgz1",
+      "text": "Sus canciones son grandes éxitos.",
+      "translation": "Her songs are big hits.",
+      "cloze": "éxitos"
+    },
+    {
+      "id": "es.s.naa3dv3ed9",
+      "wordId": "es.w.n4ed9xc70g",
+      "text": "Abre la ventana, por favor.",
+      "translation": "Open the window, please.",
+      "cloze": "ventana"
+    },
+    {
+      "id": "es.s.xvr8xvcbwd",
+      "wordId": "es.w.n4ed9xc70g",
+      "text": "Mira por la ventana.",
+      "translation": "Look out the window.",
+      "cloze": "ventana"
+    },
+    {
+      "id": "es.s.fdmf2dczy4",
+      "wordId": "es.w.n4ed9xc70g",
+      "text": "Las ventanas están cerradas.",
+      "translation": "The windows are closed.",
+      "cloze": "ventanas"
+    },
+    {
+      "id": "es.s.pcswbva7c5",
+      "wordId": "es.w.dcpaz092kx",
+      "text": "Es una especie de juego.",
+      "translation": "It's a kind of game.",
+      "cloze": "especie"
+    },
+    {
+      "id": "es.s.zptwmwcn37",
+      "wordId": "es.w.dcpaz092kx",
+      "text": "Es una especie muy rara.",
+      "translation": "It's a very rare species.",
+      "cloze": "especie"
+    },
+    {
+      "id": "es.s.1wg5rwgctp",
+      "wordId": "es.w.dcpaz092kx",
+      "text": "Hay muchas especies de animales aquí.",
+      "translation": "There are many species of animals here.",
+      "cloze": "especies"
+    },
+    {
+      "id": "es.s.y8k3zvgsk6",
+      "wordId": "es.w.hh1ttv0876",
+      "text": "¿Cuál es la diferencia?",
+      "translation": "What's the difference?",
+      "cloze": "diferencia"
+    },
+    {
+      "id": "es.s.p5774nkcr7",
+      "wordId": "es.w.hh1ttv0876",
+      "text": "No veo la diferencia.",
+      "translation": "I don't see the difference.",
+      "cloze": "diferencia"
+    },
+    {
+      "id": "es.s.89yxwejf46",
+      "wordId": "es.w.hh1ttv0876",
+      "text": "Hay muchas diferencias entre nosotros.",
+      "translation": "There are lots of differences between us.",
+      "cloze": "diferencias"
+    },
+    {
+      "id": "es.s.rg28ec2dhd",
+      "wordId": "es.w.kjycq4gtwm",
+      "text": "Solo te pido una cosa.",
+      "translation": "I'm only asking you for one thing.",
+      "cloze": "pido"
+    },
+    {
+      "id": "es.s.hf1502dnq5",
+      "wordId": "es.w.kjycq4gtwm",
+      "text": "Pidió una cerveza.",
+      "translation": "He ordered a beer.",
+      "cloze": "Pidió"
+    },
+    {
+      "id": "es.s.9d95tbcvb5",
+      "wordId": "es.w.kjycq4gtwm",
+      "text": "¿Qué vas a pedir?",
+      "translation": "What are you going to order?",
+      "cloze": "pedir"
+    },
+    {
+      "id": "es.s.z36e35yw4j",
+      "wordId": "es.w.kjycq4gtwm",
+      "text": "Me pidieron ayuda.",
+      "translation": "They asked me for help.",
+      "cloze": "pidieron"
+    },
+    {
+      "id": "es.s.f4rn09nfry",
+      "wordId": "es.w.zjb1ff0j6q",
+      "text": "Dame un ejemplo.",
+      "translation": "Give me an example.",
+      "cloze": "ejemplo"
+    },
+    {
+      "id": "es.s.pdvy5cpt97",
+      "wordId": "es.w.zjb1ff0j6q",
+      "text": "Hay muchos ejemplos.",
+      "translation": "There are lots of examples.",
+      "cloze": "ejemplos"
+    },
+    {
+      "id": "es.s.k2hq1w0q7g",
+      "wordId": "es.w.zjb1ff0j6q",
+      "text": "Por ejemplo, mi padre nunca bebe café.",
+      "translation": "For example, my father never drinks coffee.",
+      "cloze": "ejemplo"
+    },
+    {
+      "id": "es.s.czx79chbft",
+      "wordId": "es.w.ze4nn79yjx",
+      "text": "Pon la radio.",
+      "translation": "Turn on the radio.",
+      "cloze": "radio"
+    },
+    {
+      "id": "es.s.m3q1fqy8fb",
+      "wordId": "es.w.ze4nn79yjx",
+      "text": "Lo escuché en la radio.",
+      "translation": "I heard it on the radio.",
+      "cloze": "radio"
+    },
+    {
+      "id": "es.s.246q3x9xhm",
+      "wordId": "es.w.ze4nn79yjx",
+      "text": "La radio no funciona.",
+      "translation": "The radio doesn't work.",
+      "cloze": "radio"
+    },
+    {
+      "id": "es.s.9p73rmkcz9",
+      "wordId": "es.w.18b6myf8kv",
+      "text": "Calma, todo va a estar bien.",
+      "translation": "Calm down, everything's going to be fine.",
+      "cloze": "Calma"
+    },
+    {
+      "id": "es.s.5fs1cysva0",
+      "wordId": "es.w.18b6myf8kv",
+      "text": "Necesito un poco de calma.",
+      "translation": "I need a little peace and quiet.",
+      "cloze": "calma"
+    },
+    {
+      "id": "es.s.tpwd4atv0s",
+      "wordId": "es.w.18b6myf8kv",
+      "text": "Hazlo con calma.",
+      "translation": "Take your time with it.",
+      "cloze": "calma"
+    },
+    {
+      "id": "es.s.t84rwrrxns",
+      "wordId": "es.w.z1s5beabf7",
+      "text": "Esta casa es mi hogar.",
+      "translation": "This house is my home.",
+      "cloze": "hogar"
+    },
+    {
+      "id": "es.s.agvqymgqb5",
+      "wordId": "es.w.z1s5beabf7",
+      "text": "Los niños necesitan un hogar.",
+      "translation": "Children need a home.",
+      "cloze": "hogar"
+    },
+    {
+      "id": "es.s.k94s427gkp",
+      "wordId": "es.w.z1s5beabf7",
+      "text": "Muchas familias perdieron su hogar.",
+      "translation": "Many families lost their homes.",
+      "cloze": "hogar"
+    },
+    {
+      "id": "es.s.rsk02fzte8",
+      "wordId": "es.w.z1s5beabf7",
+      "text": "No hay nada como el hogar.",
+      "translation": "There's no place like home.",
+      "cloze": "hogar",
+      "retired": true
+    },
+    {
+      "id": "es.s.h0eyn4r95v",
+      "wordId": "es.w.dexz649p8a",
+      "text": "En el fondo es buena persona.",
+      "translation": "Deep down, he's a good person.",
+      "cloze": "fondo"
+    },
+    {
+      "id": "es.s.skqd2jnj9d",
+      "wordId": "es.w.dexz649p8a",
+      "text": "El baño está al fondo.",
+      "translation": "The bathroom is at the back.",
+      "cloze": "fondo"
+    },
+    {
+      "id": "es.s.dtpdg42jyn",
+      "wordId": "es.w.dexz649p8a",
+      "text": "Está en el fondo del mar.",
+      "translation": "It's at the bottom of the sea.",
+      "cloze": "fondo"
+    },
+    {
+      "id": "es.s.av5sp8k4e5",
+      "wordId": "es.w.e7f6syhs0v",
+      "text": "Es un ser humano.",
+      "translation": "He's a human being.",
+      "cloze": "humano"
+    },
+    {
+      "id": "es.s.4yy61zwmvq",
+      "wordId": "es.w.e7f6syhs0v",
+      "text": "Solo soy humano.",
+      "translation": "I'm only human.",
+      "cloze": "humano"
+    },
+    {
+      "id": "es.s.g9e7tdp3z6",
+      "wordId": "es.w.e7f6syhs0v",
+      "text": "La naturaleza humana es complicada.",
+      "translation": "Human nature is complicated.",
+      "cloze": "humana"
+    },
+    {
+      "id": "es.s.8cpra2qadk",
+      "wordId": "es.w.e7f6syhs0v",
+      "text": "Todos los humanos quieren ser felices.",
+      "translation": "All humans want to be happy.",
+      "cloze": "humanos",
+      "retired": true
+    },
+    {
+      "id": "es.s.508p2a3je5",
+      "wordId": "es.w.evpqskyfp0",
+      "text": "Somos una familia muy unida.",
+      "translation": "We're a very close family.",
+      "cloze": "unida"
+    },
+    {
+      "id": "es.s.qtjda5kqhs",
+      "wordId": "es.w.evpqskyfp0",
+      "text": "Es un equipo muy unido.",
+      "translation": "It's a very close-knit team.",
+      "cloze": "unido"
+    },
+    {
+      "id": "es.s.k1m7gh21yg",
+      "wordId": "es.w.evpqskyfp0",
+      "text": "Tenemos que estar unidos.",
+      "translation": "We have to stay united.",
+      "cloze": "unidos"
+    },
+    {
+      "id": "es.s.m07bfm5a2e",
+      "wordId": "es.w.evpqskyfp0",
+      "text": "Viven en Estados Unidos.",
+      "translation": "They live in the United States.",
+      "cloze": "Unidos",
+      "retired": true
+    },
+    {
+      "id": "es.s.2tgrng3b90",
+      "wordId": "es.w.h0qzxnq0y8",
+      "text": "Es el planeta más grande.",
+      "translation": "It's the biggest planet.",
+      "cloze": "planeta"
+    },
+    {
+      "id": "es.s.y6jyffmq6j",
+      "wordId": "es.w.h0qzxnq0y8",
+      "text": "Vivimos en un planeta pequeño.",
+      "translation": "We live on a small planet.",
+      "cloze": "planeta"
+    },
+    {
+      "id": "es.s.57m726dbrr",
+      "wordId": "es.w.h0qzxnq0y8",
+      "text": "¿Hay otros planetas como el nuestro?",
+      "translation": "Are there other planets like ours?",
+      "cloze": "planetas"
+    },
+    {
+      "id": "es.s.xbea7xnbbt",
+      "wordId": "es.w.j0s9h3xsw9",
+      "text": "¿Qué piensas al respecto?",
+      "translation": "What do you think about it?",
+      "cloze": "respecto"
+    },
+    {
+      "id": "es.s.fsh7hd6x7j",
+      "wordId": "es.w.j0s9h3xsw9",
+      "text": "No tengo nada que decir al respecto.",
+      "translation": "I have nothing to say about it.",
+      "cloze": "respecto"
+    },
+    {
+      "id": "es.s.8sq0ejqdbx",
+      "wordId": "es.w.j0s9h3xsw9",
+      "text": "Tengo una pregunta con respecto al plan.",
+      "translation": "I have a question regarding the plan.",
+      "cloze": "respecto"
+    },
+    {
+      "id": "es.s.3ehe0y7cbw",
+      "wordId": "es.w.sy04sw22ym",
+      "text": "El viaje de regreso fue muy largo.",
+      "translation": "The trip back was very long.",
+      "cloze": "regreso"
+    },
+    {
+      "id": "es.s.n3rk88g57a",
+      "wordId": "es.w.sy04sw22ym",
+      "text": "Estoy de regreso.",
+      "translation": "I'm back.",
+      "cloze": "regreso"
+    },
+    {
+      "id": "es.s.663yhrsvrs",
+      "wordId": "es.w.sy04sw22ym",
+      "text": "Nos vemos a mi regreso.",
+      "translation": "See you when I get back.",
+      "cloze": "regreso"
+    },
+    {
+      "id": "es.s.z5ajtdgj6q",
+      "wordId": "es.w.sy04sw22ym",
+      "text": "¡Bienvenido de regreso!",
+      "translation": "Welcome back!",
+      "cloze": "regreso",
+      "retired": true
+    },
+    {
+      "id": "es.s.s4w57cvkf5",
+      "wordId": "es.w.sy04sw22ym",
+      "text": "Te veo a mi regreso.",
+      "translation": "I'll see you when I get back.",
+      "cloze": "regreso",
+      "retired": true
+    },
+    {
+      "id": "es.s.gnjj6d4spm",
+      "wordId": "es.w.7r4878x85g",
+      "text": "Debido al accidente, llegamos tarde.",
+      "translation": "Because of the accident, we arrived late.",
+      "cloze": "Debido"
+    },
+    {
+      "id": "es.s.1f79140s1m",
+      "wordId": "es.w.7r4878x85g",
+      "text": "Con el debido respeto, se equivoca.",
+      "translation": "With all due respect, you're wrong.",
+      "cloze": "debido"
+    },
+    {
+      "id": "es.s.x7m34whqtg",
+      "wordId": "es.w.7r4878x85g",
+      "text": "No duermo bien debido al trabajo.",
+      "translation": "I don't sleep well because of work.",
+      "cloze": "debido"
+    },
+    {
+      "id": "es.s.zxpbpdxam0",
+      "wordId": "es.w.be7mpaemwm",
+      "text": "Me encanta leer.",
+      "translation": "I love reading.",
+      "cloze": "leer"
+    },
+    {
+      "id": "es.s.p7440cf0qq",
+      "wordId": "es.w.be7mpaemwm",
+      "text": "¿Has leído este libro?",
+      "translation": "Have you read this book?",
+      "cloze": "leído"
+    },
+    {
+      "id": "es.s.ysatc9b958",
+      "wordId": "es.w.be7mpaemwm",
+      "text": "Lee la carta en voz alta.",
+      "translation": "Read the letter out loud.",
+      "cloze": "Lee"
+    },
+    {
+      "id": "es.s.dqcwva8c0d",
+      "wordId": "es.w.be7mpaemwm",
+      "text": "Lo leí ayer.",
+      "translation": "I read it yesterday.",
+      "cloze": "leí"
+    },
+    {
+      "id": "es.s.sp1ng7k0vp",
+      "wordId": "es.w.txsay3d38f",
+      "text": "No puedo parar.",
+      "translation": "I can't stop.",
+      "cloze": "parar"
+    },
+    {
+      "id": "es.s.ea97vt24h6",
+      "wordId": "es.w.txsay3d38f",
+      "text": "El coche paró de repente.",
+      "translation": "The car stopped suddenly.",
+      "cloze": "paró"
+    },
+    {
+      "id": "es.s.455gg08s94",
+      "wordId": "es.w.txsay3d38f",
+      "text": "¿Por qué paramos?",
+      "translation": "Why are we stopping?",
+      "cloze": "paramos"
+    },
+    {
+      "id": "es.s.8vzc9hzrme",
+      "wordId": "es.w.5jgh5984km",
+      "text": "El restaurante está lleno.",
+      "translation": "The restaurant is full.",
+      "cloze": "lleno"
+    },
+    {
+      "id": "es.s.h8ktfb4rex",
+      "wordId": "es.w.5jgh5984km",
+      "text": "Esta noche hay luna llena.",
+      "translation": "There's a full moon tonight.",
+      "cloze": "llena"
+    },
+    {
+      "id": "es.s.r8v931zcpg",
+      "wordId": "es.w.5jgh5984km",
+      "text": "Las calles están llenas de gente.",
+      "translation": "The streets are full of people.",
+      "cloze": "llenas"
+    },
+    {
+      "id": "es.s.4tvx3khcza",
+      "wordId": "es.w.yt41xn12x6",
+      "text": "Un poco de respeto, por favor.",
+      "translation": "A little respect, please.",
+      "cloze": "respeto"
+    },
+    {
+      "id": "es.s.9z9cb85dbs",
+      "wordId": "es.w.yt41xn12x6",
+      "text": "Te tengo mucho respeto.",
+      "translation": "I have a lot of respect for you.",
+      "cloze": "respeto"
+    },
+    {
+      "id": "es.s.03ydbpdzp4",
+      "wordId": "es.w.yt41xn12x6",
+      "text": "Hay que tratar a todos con respeto.",
+      "translation": "You have to treat everyone with respect.",
+      "cloze": "respeto"
+    },
+    {
+      "id": "es.s.5cdy8y98cp",
+      "wordId": "es.w.yt41xn12x6",
+      "text": "Con todo respeto, no estoy de acuerdo.",
+      "translation": "With all respect, I don't agree.",
+      "cloze": "respeto",
+      "retired": true
+    },
+    {
+      "id": "es.s.bpa0pd5qr8",
+      "wordId": "es.w.qfnnxv7zz5",
+      "text": "Está debajo de la cama.",
+      "translation": "It's under the bed.",
+      "cloze": "debajo"
+    },
+    {
+      "id": "es.s.4mw9df6jqr",
+      "wordId": "es.w.qfnnxv7zz5",
+      "text": "Mira debajo de la mesa.",
+      "translation": "Look under the table.",
+      "cloze": "debajo"
+    },
+    {
+      "id": "es.s.s9cz69qvb6",
+      "wordId": "es.w.qfnnxv7zz5",
+      "text": "¿Qué hay debajo?",
+      "translation": "What's underneath?",
+      "cloze": "debajo"
+    },
+    {
+      "id": "es.s.z2z79txp1d",
+      "wordId": "es.w.w6nmxjje9a",
+      "text": "Escribe tu nombre aquí.",
+      "translation": "Write your name here.",
+      "cloze": "Escribe"
+    },
+    {
+      "id": "es.s.md49drdsbh",
+      "wordId": "es.w.w6nmxjje9a",
+      "text": "Le escribí una carta.",
+      "translation": "I wrote him a letter.",
+      "cloze": "escribí"
+    },
+    {
+      "id": "es.s.86fdccq6cq",
+      "wordId": "es.w.w6nmxjje9a",
+      "text": "Estoy escribiendo un libro.",
+      "translation": "I'm writing a book.",
+      "cloze": "escribiendo"
+    },
+    {
+      "id": "es.s.cx7ceeep5w",
+      "wordId": "es.w.w6nmxjje9a",
+      "text": "¿Quién escribió esto?",
+      "translation": "Who wrote this?",
+      "cloze": "escribió"
+    },
+    {
+      "id": "es.s.vca9b91cf7",
+      "wordId": "es.w.ng5vhrzqm2",
+      "text": "¿Dónde está la estación de tren?",
+      "translation": "Where's the train station?",
+      "cloze": "estación"
+    },
+    {
+      "id": "es.s.adqs5b8eb0",
+      "wordId": "es.w.ng5vhrzqm2",
+      "text": "Lo llevaron a la estación de policía.",
+      "translation": "They took him to the police station.",
+      "cloze": "estación"
+    },
+    {
+      "id": "es.s.nsgw004sh0",
+      "wordId": "es.w.ng5vhrzqm2",
+      "text": "Hay cuatro estaciones en el año.",
+      "translation": "There are four seasons in the year.",
+      "cloze": "estaciones"
+    },
+    {
+      "id": "es.s.4fdpc1pzb3",
+      "wordId": "es.w.zhqrm7kv74",
+      "text": "No tenemos pistas.",
+      "translation": "We don't have any clues.",
+      "cloze": "pistas"
+    },
+    {
+      "id": "es.s.nvjfdc6s5m",
+      "wordId": "es.w.zhqrm7kv74",
+      "text": "Dame una pista.",
+      "translation": "Give me a hint.",
+      "cloze": "pista"
+    },
+    {
+      "id": "es.s.wa15wvefeq",
+      "wordId": "es.w.zhqrm7kv74",
+      "text": "Todos a la pista de baile.",
+      "translation": "Everyone to the dance floor.",
+      "cloze": "pista"
+    },
+    {
+      "id": "es.s.crfa8jbt8v",
+      "wordId": "es.w.q40n5r8chm",
+      "text": "Mira las estrellas.",
+      "translation": "Look at the stars.",
+      "cloze": "estrellas"
+    },
+    {
+      "id": "es.s.430vd3xhjr",
+      "wordId": "es.w.q40n5r8chm",
+      "text": "Quiere ser una estrella de cine.",
+      "translation": "She wants to be a movie star.",
+      "cloze": "estrella"
+    },
+    {
+      "id": "es.s.r6v06mg6j3",
+      "wordId": "es.w.q40n5r8chm",
+      "text": "Esta noche hay muchas estrellas.",
+      "translation": "There are lots of stars tonight.",
+      "cloze": "estrellas"
+    },
+    {
+      "id": "es.s.8y1v2sr1dt",
+      "wordId": "es.w.scmf48m7vc",
+      "text": "Estoy enfermo.",
+      "translation": "I'm sick.",
+      "cloze": "enfermo"
+    },
+    {
+      "id": "es.s.1qvw2hx4hw",
+      "wordId": "es.w.scmf48m7vc",
+      "text": "Mi madre está muy enferma.",
+      "translation": "My mother is very ill.",
+      "cloze": "enferma"
+    },
+    {
+      "id": "es.s.c4wmr9m5ja",
+      "wordId": "es.w.scmf48m7vc",
+      "text": "Los niños están enfermos hoy.",
+      "translation": "The kids are sick today.",
+      "cloze": "enfermos"
+    },
+    {
+      "id": "es.s.pjeefr83nw",
+      "wordId": "es.w.jh6j8m3pyb",
+      "text": "Me duele todo.",
+      "translation": "Everything hurts.",
+      "cloze": "duele"
+    },
+    {
+      "id": "es.s.nw708hm32s",
+      "wordId": "es.w.jh6j8m3pyb",
+      "text": "¿Te duelen los pies?",
+      "translation": "Do your feet hurt?",
+      "cloze": "duelen"
+    },
+    {
+      "id": "es.s.jsbfyay68t",
+      "wordId": "es.w.jh6j8m3pyb",
+      "text": "Me dolió mucho.",
+      "translation": "It hurt a lot.",
+      "cloze": "dolió"
+    },
+    {
+      "id": "es.s.hf5ez7v665",
+      "wordId": "es.w.zpbbbxmwbr",
+      "text": "Estoy muy ocupado ahora.",
+      "translation": "I'm very busy right now.",
+      "cloze": "ocupado"
+    },
+    {
+      "id": "es.s.re7abw4c7e",
+      "wordId": "es.w.zpbbbxmwbr",
+      "text": "¿Está ocupado este asiento?",
+      "translation": "Is this seat taken?",
+      "cloze": "ocupado"
+    },
+    {
+      "id": "es.s.wf3g9j10rg",
+      "wordId": "es.w.zpbbbxmwbr",
+      "text": "Estamos ocupados con el trabajo.",
+      "translation": "We're busy with work.",
+      "cloze": "ocupados"
+    },
+    {
+      "id": "es.s.azf1drrn1n",
+      "wordId": "es.w.bs1sf41aq4",
+      "text": "Tu nivel de español es muy bueno.",
+      "translation": "Your level of Spanish is very good.",
+      "cloze": "nivel"
+    },
+    {
+      "id": "es.s.g1anse4was",
+      "wordId": "es.w.bs1sf41aq4",
+      "text": "Pasamos al siguiente nivel.",
+      "translation": "We're moving on to the next level.",
+      "cloze": "nivel"
+    },
+    {
+      "id": "es.s.td59rnjjv7",
+      "wordId": "es.w.bs1sf41aq4",
+      "text": "El edificio tiene tres niveles.",
+      "translation": "The building has three levels.",
+      "cloze": "niveles"
+    },
+    {
+      "id": "es.s.vvbbjxgyvy",
+      "wordId": "es.w.47prpk9jvv",
+      "text": "No tengo experiencia.",
+      "translation": "I don't have any experience.",
+      "cloze": "experiencia"
+    },
+    {
+      "id": "es.s.dxzkzc2n2s",
+      "wordId": "es.w.47prpk9jvv",
+      "text": "Fue una experiencia increíble.",
+      "translation": "It was an amazing experience.",
+      "cloze": "experiencia"
+    },
+    {
+      "id": "es.s.9a5vkqp7vr",
+      "wordId": "es.w.47prpk9jvv",
+      "text": "Lo sé por experiencia.",
+      "translation": "I know from experience.",
+      "cloze": "experiencia"
+    },
+    {
+      "id": "es.s.qtjnbh401k",
+      "wordId": "es.w.hx9avpnga3",
+      "text": "¿Dónde están las salidas?",
+      "translation": "Where are the exits?",
+      "cloze": "salidas"
+    },
+    {
+      "id": "es.s.ngjtj8wq5r",
+      "wordId": "es.w.hx9avpnga3",
+      "text": "No hay salida.",
+      "translation": "There's no way out.",
+      "cloze": "salida"
+    },
+    {
+      "id": "es.s.amskpj5q4b",
+      "wordId": "es.w.hx9avpnga3",
+      "text": "La salida del tren es a las ocho.",
+      "translation": "The train departs at eight.",
+      "cloze": "salida"
+    },
+    {
+      "id": "es.s.ht7fmr61h1",
+      "wordId": "es.w.hx9avpnga3",
+      "text": "¿Dónde está la salida?",
+      "translation": "Where's the exit?",
+      "cloze": "salida",
+      "retired": true
+    },
+    {
+      "id": "es.s.a7ptjxqat1",
+      "wordId": "es.w.hx9avpnga3",
+      "text": "El edificio tiene dos salidas.",
+      "translation": "The building has two exits.",
+      "cloze": "salidas",
+      "retired": true
+    },
+    {
+      "id": "es.s.c4nd35a4xt",
+      "wordId": "es.w.xsd2492yzv",
+      "text": "Confía en mí.",
+      "translation": "Trust me.",
+      "cloze": "Confía"
+    },
+    {
+      "id": "es.s.2nmz23tky3",
+      "wordId": "es.w.xsd2492yzv",
+      "text": "No confío en él.",
+      "translation": "I don't trust him.",
+      "cloze": "confío"
+    },
+    {
+      "id": "es.s.a21m4v7e2p",
+      "wordId": "es.w.xsd2492yzv",
+      "text": "Confié en ti.",
+      "translation": "I trusted you.",
+      "cloze": "Confié"
+    },
+    {
+      "id": "es.s.r2mw2vdt1z",
+      "wordId": "es.w.xsd2492yzv",
+      "text": "Tienes que confiar en tu equipo.",
+      "translation": "You have to trust your team.",
+      "cloze": "confiar"
+    },
+    {
+      "id": "es.s.j8fdkhtfav",
+      "wordId": "es.w.s0dh08yrcc",
+      "text": "Me gustan tus zapatos.",
+      "translation": "I like your shoes.",
+      "cloze": "zapatos"
+    },
+    {
+      "id": "es.s.4j14gxm9wr",
+      "wordId": "es.w.s0dh08yrcc",
+      "text": "Quítate los zapatos, por favor.",
+      "translation": "Take your shoes off, please.",
+      "cloze": "zapatos"
+    },
+    {
+      "id": "es.s.caz4cgyqba",
+      "wordId": "es.w.s0dh08yrcc",
+      "text": "Perdí un zapato.",
+      "translation": "I lost a shoe.",
+      "cloze": "zapato"
+    },
+    {
+      "id": "es.s.8mnvsf8r1j",
+      "wordId": "es.w.s0dh08yrcc",
+      "text": "¿Dónde están mis zapatos?",
+      "translation": "Where are my shoes?",
+      "cloze": "zapatos",
+      "retired": true
+    },
+    {
+      "id": "es.s.dmh07990g9",
+      "wordId": "es.w.b6ns7hcpq4",
+      "text": "¿De qué color es?",
+      "translation": "What color is it?",
+      "cloze": "color"
+    },
+    {
+      "id": "es.s.21prw07ygx",
+      "wordId": "es.w.b6ns7hcpq4",
+      "text": "Mi color favorito es el azul.",
+      "translation": "My favorite color is blue.",
+      "cloze": "color"
+    },
+    {
+      "id": "es.s.z7ta5zva4b",
+      "wordId": "es.w.b6ns7hcpq4",
+      "text": "Hay flores de muchos colores.",
+      "translation": "There are flowers of many colors.",
+      "cloze": "colores"
+    },
+    {
+      "id": "es.s.tzx9ebhvjg",
+      "wordId": "es.w.gta3ap8h2q",
+      "text": "Echa un vistazo.",
+      "translation": "Take a look.",
+      "cloze": "vistazo"
+    },
+    {
+      "id": "es.s.d16bn1amsf",
+      "wordId": "es.w.gta3ap8h2q",
+      "text": "¿Puedo echar un vistazo?",
+      "translation": "Can I take a look?",
+      "cloze": "vistazo"
+    },
+    {
+      "id": "es.s.ht8vwqz6m0",
+      "wordId": "es.w.gta3ap8h2q",
+      "text": "Le eché un vistazo al informe.",
+      "translation": "I had a look at the report.",
+      "cloze": "vistazo"
+    },
+    {
+      "id": "es.s.mwm6r3cttv",
+      "wordId": "es.w.t3dnaw591a",
+      "text": "El juez dijo que no.",
+      "translation": "The judge said no.",
+      "cloze": "juez"
+    },
+    {
+      "id": "es.s.s18bzs7smc",
+      "wordId": "es.w.t3dnaw591a",
+      "text": "Hay que hablar con el juez.",
+      "translation": "We need to talk to the judge.",
+      "cloze": "juez"
+    },
+    {
+      "id": "es.s.tsty9q0a28",
+      "wordId": "es.w.t3dnaw591a",
+      "text": "Los jueces llegaron tarde.",
+      "translation": "The judges arrived late.",
+      "cloze": "jueces"
+    },
+    {
+      "id": "es.s.6nk7mt4jwe",
+      "wordId": "es.w.y1exmnw5de",
+      "text": "El paciente está mejor hoy.",
+      "translation": "The patient is better today.",
+      "cloze": "paciente"
+    },
+    {
+      "id": "es.s.y6038e785h",
+      "wordId": "es.w.y1exmnw5de",
+      "text": "El doctor tiene muchos pacientes.",
+      "translation": "The doctor has a lot of patients.",
+      "cloze": "pacientes"
+    },
+    {
+      "id": "es.s.zfk1c2hk2d",
+      "wordId": "es.w.y1exmnw5de",
+      "text": "La paciente quiere ver a su familia.",
+      "translation": "The patient wants to see her family.",
+      "cloze": "paciente"
+    },
+    {
+      "id": "es.s.v02cdweamv",
+      "wordId": "es.w.7xet0bmpkn",
+      "text": "¿Quiere una bolsa?",
+      "translation": "Would you like a bag?",
+      "cloze": "bolsa"
+    },
+    {
+      "id": "es.s.1ae52wd707",
+      "wordId": "es.w.7xet0bmpkn",
+      "text": "Pon todo en la bolsa.",
+      "translation": "Put everything in the bag.",
+      "cloze": "bolsa"
+    },
+    {
+      "id": "es.s.cyx8ftzspj",
+      "wordId": "es.w.7xet0bmpkn",
+      "text": "Tengo las bolsas en el coche.",
+      "translation": "I have the bags in the car.",
+      "cloze": "bolsas"
+    },
+    {
+      "id": "es.s.tx2an2tnm6",
+      "wordId": "es.w.dvs8y92pxy",
+      "text": "Me encanta el arte.",
+      "translation": "I love art.",
+      "cloze": "arte"
+    },
+    {
+      "id": "es.s.6m7pnsz94t",
+      "wordId": "es.w.dvs8y92pxy",
+      "text": "Esto no es arte.",
+      "translation": "This isn't art.",
+      "cloze": "arte"
+    },
+    {
+      "id": "es.s.w3mwc5y1cv",
+      "wordId": "es.w.dvs8y92pxy",
+      "text": "Estudia arte en la universidad.",
+      "translation": "She studies art at university.",
+      "cloze": "arte"
+    },
+    {
+      "id": "es.s.wc360gnx3x",
+      "wordId": "es.w.3qj20qtzf2",
+      "text": "¿Quieres bailar?",
+      "translation": "Do you want to dance?",
+      "cloze": "bailar"
+    },
+    {
+      "id": "es.s.j8wrf02s7e",
+      "wordId": "es.w.3qj20qtzf2",
+      "text": "Ella baila muy bien.",
+      "translation": "She dances very well.",
+      "cloze": "baila"
+    },
+    {
+      "id": "es.s.rggxbzc0za",
+      "wordId": "es.w.3qj20qtzf2",
+      "text": "Bailamos toda la noche.",
+      "translation": "We danced all night.",
+      "cloze": "Bailamos"
+    },
+    {
+      "id": "es.s.a0e6kzk4q0",
+      "wordId": "es.w.3qj20qtzf2",
+      "text": "No sé bailar.",
+      "translation": "I can't dance.",
+      "cloze": "bailar"
+    },
+    {
+      "id": "es.s.rjp62w0txp",
+      "wordId": "es.w.bkq503ny20",
+      "text": "Hizo un pacto con el diablo.",
+      "translation": "He made a deal with the devil.",
+      "cloze": "diablo"
+    },
+    {
+      "id": "es.s.v10gk0mhfp",
+      "wordId": "es.w.bkq503ny20",
+      "text": "¿Qué diablos haces aquí?",
+      "translation": "What the heck are you doing here?",
+      "cloze": "diablos"
+    },
+    {
+      "id": "es.s.sh5andx92c",
+      "wordId": "es.w.bkq503ny20",
+      "text": "Ese niño es un pequeño diablo.",
+      "translation": "That kid is a little devil.",
+      "cloze": "diablo"
+    },
+    {
+      "id": "es.s.7qnqycmtmy",
+      "wordId": "es.w.bkq503ny20",
+      "text": "No creo en el diablo.",
+      "translation": "I don't believe in the devil.",
+      "cloze": "diablo",
+      "retired": true
+    },
+    {
+      "id": "es.s.szf796rmx0",
+      "wordId": "es.w.brk1j4xjxy",
+      "text": "Vamos al sur.",
+      "translation": "We're going south.",
+      "cloze": "sur"
+    },
+    {
+      "id": "es.s.qcfphxqecw",
+      "wordId": "es.w.brk1j4xjxy",
+      "text": "Mi familia es del sur.",
+      "translation": "My family is from the south.",
+      "cloze": "sur"
+    },
+    {
+      "id": "es.s.yqsjs2ee1p",
+      "wordId": "es.w.brk1j4xjxy",
+      "text": "En el sur hace más calor.",
+      "translation": "It's warmer in the south.",
+      "cloze": "sur"
+    },
+    {
+      "id": "es.s.etmwpy8x42",
+      "wordId": "es.w.brk1j4xjxy",
+      "text": "El hotel está al sur de la ciudad.",
+      "translation": "The hotel is south of the city.",
+      "cloze": "sur",
+      "retired": true
+    },
+    {
+      "id": "es.s.4jj23shvj5",
+      "wordId": "es.w.v6tm566kr1",
+      "text": "Toco en una banda.",
+      "translation": "I play in a band.",
+      "cloze": "banda"
+    },
+    {
+      "id": "es.s.qnw4x4safh",
+      "wordId": "es.w.v6tm566kr1",
+      "text": "Esta noche tocan dos bandas.",
+      "translation": "Two bands are playing tonight.",
+      "cloze": "bandas"
+    },
+    {
+      "id": "es.s.frs9dy643c",
+      "wordId": "es.w.v6tm566kr1",
+      "text": "Una banda robó el banco.",
+      "translation": "A gang robbed the bank.",
+      "cloze": "banda"
+    },
+    {
+      "id": "es.s.r7pfeqevkq",
+      "wordId": "es.w.y43df02qxd",
+      "text": "Quiero aprender español.",
+      "translation": "I want to learn Spanish.",
+      "cloze": "aprender"
+    },
+    {
+      "id": "es.s.jgncxtxjbj",
+      "wordId": "es.w.y43df02qxd",
+      "text": "Aprendí mucho de ti.",
+      "translation": "I learned a lot from you.",
+      "cloze": "Aprendí"
+    },
+    {
+      "id": "es.s.fkbq0dd7d9",
+      "wordId": "es.w.y43df02qxd",
+      "text": "Estoy aprendiendo a cocinar.",
+      "translation": "I'm learning to cook.",
+      "cloze": "aprendiendo"
+    },
+    {
+      "id": "es.s.3af0entgdp",
+      "wordId": "es.w.y43df02qxd",
+      "text": "Nunca aprendes.",
+      "translation": "You never learn.",
+      "cloze": "aprendes"
+    },
+    {
+      "id": "es.s.qcttsw16nd",
+      "wordId": "es.w.swa5xyfpjm",
+      "text": "¿Cuál es el precio?",
+      "translation": "What's the price?",
+      "cloze": "precio"
+    },
+    {
+      "id": "es.s.p5d2zvbdz3",
+      "wordId": "es.w.swa5xyfpjm",
+      "text": "Es un buen precio.",
+      "translation": "It's a good price.",
+      "cloze": "precio"
+    },
+    {
+      "id": "es.s.ddq8dm1g1s",
+      "wordId": "es.w.swa5xyfpjm",
+      "text": "Los precios aquí son muy altos.",
+      "translation": "Prices here are very high.",
+      "cloze": "precios"
+    },
+    {
+      "id": "es.s.yamb3camgh",
+      "wordId": "es.w.qczhvwqjyk",
+      "text": "Necesito el nombre completo.",
+      "translation": "I need the full name.",
+      "cloze": "completo"
+    },
+    {
+      "id": "es.s.zke39rcy10",
+      "wordId": "es.w.qczhvwqjyk",
+      "text": "Lo olvidé por completo.",
+      "translation": "I completely forgot.",
+      "cloze": "completo"
+    },
+    {
+      "id": "es.s.p47zqm73ce",
+      "wordId": "es.w.qczhvwqjyk",
+      "text": "El equipo ya está completo.",
+      "translation": "The team is complete now.",
+      "cloze": "completo"
+    },
+    {
+      "id": "es.s.ay9eckvens",
+      "wordId": "es.w.qczhvwqjyk",
+      "text": "La lista completa está aquí.",
+      "translation": "The complete list is here.",
+      "cloze": "completa"
+    },
+    {
+      "id": "es.s.7zp1h3caw8",
+      "wordId": "es.w.m39pppddrs",
+      "text": "Para ellos, esta es tierra santa.",
+      "translation": "For them, this is holy ground.",
+      "cloze": "santa"
+    },
+    {
+      "id": "es.s.meh01fpzx3",
+      "wordId": "es.w.m39pppddrs",
+      "text": "¡Santo cielo!",
+      "translation": "Good heavens!",
+      "cloze": "Santo"
+    },
+    {
+      "id": "es.s.129mtf40m8",
+      "wordId": "es.w.m39pppddrs",
+      "text": "Es un lugar santo.",
+      "translation": "It's a holy place.",
+      "cloze": "santo"
+    },
+    {
+      "id": "es.s.sve6z5hxfk",
+      "wordId": "es.w.m39pppddrs",
+      "text": "Mi abuela era una santa.",
+      "translation": "My grandmother was a saint.",
+      "cloze": "santa",
+      "retired": true
+    },
+    {
+      "id": "es.s.n1k4ermyvs",
+      "wordId": "es.w.5gpma3nvmj",
+      "text": "No soy culpable.",
+      "translation": "I'm not guilty.",
+      "cloze": "culpable"
+    },
+    {
+      "id": "es.s.7a3sgdxdsx",
+      "wordId": "es.w.5gpma3nvmj",
+      "text": "El juez dijo que era culpable.",
+      "translation": "The judge said he was guilty.",
+      "cloze": "culpable"
+    },
+    {
+      "id": "es.s.8cfprnhyn0",
+      "wordId": "es.w.5gpma3nvmj",
+      "text": "Todos somos culpables.",
+      "translation": "We're all guilty.",
+      "cloze": "culpables"
+    },
+    {
+      "id": "es.s.9r0d5bp2kf",
+      "wordId": "es.w.xhbw3xem6z",
+      "text": "Las paredes de mi cuarto son azules.",
+      "translation": "The walls in my room are blue.",
+      "cloze": "azules"
+    },
+    {
+      "id": "es.s.eswc9v8n1g",
+      "wordId": "es.w.xhbw3xem6z",
+      "text": "El cielo está muy azul hoy.",
+      "translation": "The sky is very blue today.",
+      "cloze": "azul"
+    },
+    {
+      "id": "es.s.5rqvtz71k2",
+      "wordId": "es.w.xhbw3xem6z",
+      "text": "Me gusta tu vestido azul.",
+      "translation": "I like your blue dress.",
+      "cloze": "azul"
+    },
+    {
+      "id": "es.s.0nnt7qwfwt",
+      "wordId": "es.w.p7tdf4e97j",
+      "text": "Sí, comandante.",
+      "translation": "Yes, commander.",
+      "cloze": "comandante"
+    },
+    {
+      "id": "es.s.swknk6fcbh",
+      "wordId": "es.w.p7tdf4e97j",
+      "text": "El comandante quiere verte.",
+      "translation": "The commander wants to see you.",
+      "cloze": "comandante"
+    },
+    {
+      "id": "es.s.se10n44yvb",
+      "wordId": "es.w.p7tdf4e97j",
+      "text": "Es la comandante de la nave.",
+      "translation": "She's the commander of the ship.",
+      "cloze": "comandante"
+    },
+    {
+      "id": "es.s.50knpprs38",
+      "wordId": "es.w.b1n8ytxb9c",
+      "text": "Me gustan las películas de acción.",
+      "translation": "I like action movies.",
+      "cloze": "acción"
+    },
+    {
+      "id": "es.s.s9vyqzdnte",
+      "wordId": "es.w.b1n8ytxb9c",
+      "text": "Es hora de pasar a la acción.",
+      "translation": "It's time to take action.",
+      "cloze": "acción"
+    },
+    {
+      "id": "es.s.d7737rnav8",
+      "wordId": "es.w.b1n8ytxb9c",
+      "text": "Las acciones dicen más que las palabras.",
+      "translation": "Actions speak louder than words.",
+      "cloze": "acciones"
+    },
+    {
+      "id": "es.s.v6v2tzx9v1",
+      "wordId": "es.w.0xfc51g6q8",
+      "text": "Son las reglas.",
+      "translation": "Those are the rules.",
+      "cloze": "reglas"
+    },
+    {
+      "id": "es.s.cpgyk0wywc",
+      "wordId": "es.w.0xfc51g6q8",
+      "text": "Hay una regla muy simple.",
+      "translation": "There's a very simple rule.",
+      "cloze": "regla"
+    },
+    {
+      "id": "es.s.bmrazn1h54",
+      "wordId": "es.w.0xfc51g6q8",
+      "text": "Rompiste las reglas.",
+      "translation": "You broke the rules.",
+      "cloze": "reglas"
+    },
+    {
+      "id": "es.s.hgmtzfgjw8",
+      "wordId": "es.w.3qzsee67sm",
+      "text": "Es una obra de arte.",
+      "translation": "It's a work of art.",
+      "cloze": "obra"
+    },
+    {
+      "id": "es.s.92vjc7fam0",
+      "wordId": "es.w.3qzsee67sm",
+      "text": "Vamos a ver una obra de teatro.",
+      "translation": "We're going to see a play.",
+      "cloze": "obra"
+    },
+    {
+      "id": "es.s.sb3henqfq3",
+      "wordId": "es.w.3qzsee67sm",
+      "text": "Hay obras en la calle.",
+      "translation": "There's construction on the street.",
+      "cloze": "obras"
+    },
+    {
+      "id": "es.s.93r17hjjk1",
+      "wordId": "es.w.bhjfs23ey0",
+      "text": "No pierdas la esperanza.",
+      "translation": "Don't lose hope.",
+      "cloze": "esperanza"
+    },
+    {
+      "id": "es.s.13sk082bnc",
+      "wordId": "es.w.bhjfs23ey0",
+      "text": "Eres mi única esperanza.",
+      "translation": "You're my only hope.",
+      "cloze": "esperanza"
+    },
+    {
+      "id": "es.s.x29e62m0kd",
+      "wordId": "es.w.bhjfs23ey0",
+      "text": "Todavía hay esperanza.",
+      "translation": "There's still hope.",
+      "cloze": "esperanza"
+    },
+    {
+      "id": "es.s.pbd0te6p6b",
+      "wordId": "es.w.bpakk3xmez",
+      "text": "Es cuestión de tiempo.",
+      "translation": "It's a matter of time.",
+      "cloze": "cuestión"
+    },
+    {
+      "id": "es.s.6ny2cra6y9",
+      "wordId": "es.w.bpakk3xmez",
+      "text": "Esa no es la cuestión.",
+      "translation": "That's not the point.",
+      "cloze": "cuestión"
+    },
+    {
+      "id": "es.s.5sjmb6a84j",
+      "wordId": "es.w.bpakk3xmez",
+      "text": "Hablemos de otras cuestiones.",
+      "translation": "Let's talk about other matters.",
+      "cloze": "cuestiones"
+    },
+    {
+      "id": "es.s.w81m62wk59",
+      "wordId": "es.w.sg6rxrrdrg",
+      "text": "Siento molestarte.",
+      "translation": "Sorry to bother you.",
+      "cloze": "molestarte"
+    },
+    {
+      "id": "es.s.jb52vxaryf",
+      "wordId": "es.w.sg6rxrrdrg",
+      "text": "No me molestes.",
+      "translation": "Don't bother me.",
+      "cloze": "molestes"
+    },
+    {
+      "id": "es.s.r8z2kzzbjv",
+      "wordId": "es.w.sg6rxrrdrg",
+      "text": "¿Te molesta la música?",
+      "translation": "Does the music bother you?",
+      "cloze": "molesta"
+    },
+    {
+      "id": "es.s.wfdzkaqbs3",
+      "wordId": "es.w.sg6rxrrdrg",
+      "text": "Me molestó lo que dijo.",
+      "translation": "What he said bothered me.",
+      "cloze": "molestó"
+    },
+    {
+      "id": "es.s.fsdmqe2sdp",
+      "wordId": "es.w.0px98a77tx",
+      "text": "Necesito el informe para mañana.",
+      "translation": "I need the report for tomorrow.",
+      "cloze": "informe"
+    },
+    {
+      "id": "es.s.s1c60wmaz5",
+      "wordId": "es.w.0px98a77tx",
+      "text": "Leí tu informe.",
+      "translation": "I read your report.",
+      "cloze": "informe"
+    },
+    {
+      "id": "es.s.nfpdbr0csp",
+      "wordId": "es.w.0px98a77tx",
+      "text": "Los informes están en la mesa.",
+      "translation": "The reports are on the table.",
+      "cloze": "informes"
+    },
+    {
+      "id": "es.s.2yqsj5cgmt",
+      "wordId": "es.w.rpg6fjf469",
+      "text": "Vamos al río.",
+      "translation": "Let's go to the river.",
+      "cloze": "río"
+    },
+    {
+      "id": "es.s.nyrm77e4qp",
+      "wordId": "es.w.rpg6fjf469",
+      "text": "La casa está cerca del río.",
+      "translation": "The house is near the river.",
+      "cloze": "río"
+    },
+    {
+      "id": "es.s.zfrxp1k3bz",
+      "wordId": "es.w.rpg6fjf469",
+      "text": "Es uno de los ríos más largos del país.",
+      "translation": "It's one of the longest rivers in the country.",
+      "cloze": "ríos"
+    },
+    {
+      "id": "es.s.v0dpypxypf",
+      "wordId": "es.w.qeem5zdkeq",
+      "text": "¡Bienvenido a casa!",
+      "translation": "Welcome home!",
+      "cloze": "Bienvenido"
+    },
+    {
+      "id": "es.s.ppypnm7a7h",
+      "wordId": "es.w.qeem5zdkeq",
+      "text": "Bienvenidos a mi fiesta.",
+      "translation": "Welcome to my party.",
+      "cloze": "Bienvenidos"
+    },
+    {
+      "id": "es.s.b5hmhsc8sr",
+      "wordId": "es.w.qeem5zdkeq",
+      "text": "Siempre eres bienvenida aquí.",
+      "translation": "You're always welcome here.",
+      "cloze": "bienvenida"
+    },
+    {
+      "id": "es.s.dcgh28wcm0",
+      "wordId": "es.w.dthsp72zkn",
+      "text": "No me toques.",
+      "translation": "Don't touch me.",
+      "cloze": "toques"
+    },
+    {
+      "id": "es.s.dr69fjwwqf",
+      "wordId": "es.w.dthsp72zkn",
+      "text": "¿Tocas la guitarra?",
+      "translation": "Do you play the guitar?",
+      "cloze": "Tocas"
+    },
+    {
+      "id": "es.s.z92c01b6k5",
+      "wordId": "es.w.dthsp72zkn",
+      "text": "Ahora te toca a ti.",
+      "translation": "Now it's your turn.",
+      "cloze": "toca"
+    },
+    {
+      "id": "es.s.y957fbv4zm",
+      "wordId": "es.w.dthsp72zkn",
+      "text": "Toqué el agua y estaba fría.",
+      "translation": "I touched the water and it was cold.",
+      "cloze": "Toqué"
+    },
+    {
+      "id": "es.s.5r8qca0dgt",
+      "wordId": "es.w.dthsp72zkn",
+      "text": "Toqué la puerta, pero nadie abrió.",
+      "translation": "I knocked on the door, but nobody answered.",
+      "cloze": "Toqué",
+      "retired": true
+    },
+    {
+      "id": "es.s.b30qsj94t6",
+      "wordId": "es.w.wkss590aq9",
+      "text": "Cuéntame todo.",
+      "translation": "Tell me everything.",
+      "cloze": "Cuéntame"
+    },
+    {
+      "id": "es.s.xwm5q2s3ye",
+      "wordId": "es.w.wkss590aq9",
+      "text": "No se lo cuentes a nadie.",
+      "translation": "Don't tell anyone.",
+      "cloze": "cuentes"
+    },
+    {
+      "id": "es.s.sw1gn5g2x9",
+      "wordId": "es.w.wkss590aq9",
+      "text": "Puedes contar conmigo.",
+      "translation": "You can count on me.",
+      "cloze": "contar"
+    },
+    {
+      "id": "es.s.p3tapy0ged",
+      "wordId": "es.w.wkss590aq9",
+      "text": "Te conté la verdad.",
+      "translation": "I told you the truth.",
+      "cloze": "conté"
+    },
+    {
+      "id": "es.s.pppwn34xfw",
+      "wordId": "es.w.gpcjfcjm99",
+      "text": "El interior de la casa es muy bonito.",
+      "translation": "The inside of the house is very nice.",
+      "cloze": "interior"
+    },
+    {
+      "id": "es.s.44ggpfd947",
+      "wordId": "es.w.gpcjfcjm99",
+      "text": "Revisa el interior del coche.",
+      "translation": "Check the inside of the car.",
+      "cloze": "interior"
+    },
+    {
+      "id": "es.s.ebfkshdss9",
+      "wordId": "es.w.gpcjfcjm99",
+      "text": "Viven en el interior del país.",
+      "translation": "They live inland.",
+      "cloze": "interior"
+    },
+    {
+      "id": "es.s.gbj6gzvm2d",
+      "wordId": "es.w.4xyx3xke62",
+      "text": "Vivo en un apartamento pequeño.",
+      "translation": "I live in a small apartment.",
+      "cloze": "apartamento"
+    },
+    {
+      "id": "es.s.pm151xd5qp",
+      "wordId": "es.w.4xyx3xke62",
+      "text": "Mi apartamento está en el tercer piso.",
+      "translation": "My apartment is on the third floor.",
+      "cloze": "apartamento"
+    },
+    {
+      "id": "es.s.s0dgjmjsrz",
+      "wordId": "es.w.4xyx3xke62",
+      "text": "Los apartamentos aquí son caros.",
+      "translation": "The apartments here are expensive.",
+      "cloze": "apartamentos"
+    },
+    {
+      "id": "es.s.e8x9vrvxj4",
+      "wordId": "es.w.fgzw5db42b",
+      "text": "Es la calle principal.",
+      "translation": "It's the main street.",
+      "cloze": "principal"
+    },
+    {
+      "id": "es.s.xnzqsxawnc",
+      "wordId": "es.w.fgzw5db42b",
+      "text": "¿Cuál es el problema principal?",
+      "translation": "What's the main problem?",
+      "cloze": "principal"
+    },
+    {
+      "id": "es.s.9fppa5fbz5",
+      "wordId": "es.w.fgzw5db42b",
+      "text": "Son los personajes principales.",
+      "translation": "They're the main characters.",
+      "cloze": "principales"
+    },
+    {
+      "id": "es.s.merayqwsg2",
+      "wordId": "es.w.31rq2zrkq6",
+      "text": "Ojalá tengas razón.",
+      "translation": "I hope you're right.",
+      "cloze": "Ojalá"
+    },
+    {
+      "id": "es.s.ya8gj7m36m",
+      "wordId": "es.w.31rq2zrkq6",
+      "text": "¡Ojalá!",
+      "translation": "I wish!",
+      "cloze": "Ojalá"
+    },
+    {
+      "id": "es.s.8tc4y78dah",
+      "wordId": "es.w.31rq2zrkq6",
+      "text": "Ojalá pudiera ayudarte.",
+      "translation": "I wish I could help you.",
+      "cloze": "Ojalá"
+    },
+    {
+      "id": "es.s.jghnks952c",
+      "wordId": "es.w.wfd4ram3y4",
+      "text": "Perdona, ¿dónde está el baño?",
+      "translation": "Excuse me, where's the bathroom?",
+      "cloze": "Perdona"
+    },
+    {
+      "id": "es.s.jmwkwtvjgh",
+      "wordId": "es.w.wfd4ram3y4",
+      "text": "Perdóname, por favor.",
+      "translation": "Please forgive me.",
+      "cloze": "Perdóname"
+    },
+    {
+      "id": "es.s.shwm2t35vp",
+      "wordId": "es.w.wfd4ram3y4",
+      "text": "Nunca te voy a perdonar.",
+      "translation": "I'm never going to forgive you.",
+      "cloze": "perdonar"
+    },
+    {
+      "id": "es.s.7m0rw15msh",
+      "wordId": "es.w.wfd4ram3y4",
+      "text": "Te perdono.",
+      "translation": "I forgive you.",
+      "cloze": "perdono"
+    },
+    {
+      "id": "es.s.cxqw0p1t51",
+      "wordId": "es.w.c0774cqb6j",
+      "text": "Fue un golpe muy fuerte.",
+      "translation": "It was a very hard blow.",
+      "cloze": "golpe"
+    },
+    {
+      "id": "es.s.fw76r3x5g9",
+      "wordId": "es.w.c0774cqb6j",
+      "text": "Recibió un golpe en la cabeza.",
+      "translation": "He took a blow to the head.",
+      "cloze": "golpe"
+    },
+    {
+      "id": "es.s.f0y6qx9kyz",
+      "wordId": "es.w.c0774cqb6j",
+      "text": "Oí unos golpes en la puerta.",
+      "translation": "I heard some knocks at the door.",
+      "cloze": "golpes"
+    },
+    {
+      "id": "es.s.z4cwgwp7e7",
+      "wordId": "es.w.vhfgvkcn5a",
+      "text": "Me gusta tu estilo.",
+      "translation": "I like your style.",
+      "cloze": "estilo"
+    },
+    {
+      "id": "es.s.xr0ts6j0we",
+      "wordId": "es.w.vhfgvkcn5a",
+      "text": "No es mi estilo.",
+      "translation": "It's not my style.",
+      "cloze": "estilo"
+    },
+    {
+      "id": "es.s.ydhf8v58ce",
+      "wordId": "es.w.vhfgvkcn5a",
+      "text": "Hay muchos estilos de música.",
+      "translation": "There are many styles of music.",
+      "cloze": "estilos"
+    },
+    {
+      "id": "es.s.z17ytqhqa3",
+      "wordId": "es.w.s0a6djq4w2",
+      "text": "Son las nueve.",
+      "translation": "It's nine o'clock.",
+      "cloze": "nueve"
+    },
+    {
+      "id": "es.s.c83ahqmc4g",
+      "wordId": "es.w.s0a6djq4w2",
+      "text": "Tengo nueve años.",
+      "translation": "I'm nine years old.",
+      "cloze": "nueve"
+    },
+    {
+      "id": "es.s.r3gcbgtard",
+      "wordId": "es.w.s0a6djq4w2",
+      "text": "Trabajo de nueve a cinco.",
+      "translation": "I work from nine to five.",
+      "cloze": "nueve"
+    },
+    {
+      "id": "es.s.mna9yqj3h7",
+      "wordId": "es.w.sgjgntg9nj",
+      "text": "Definitivamente no.",
+      "translation": "Definitely not.",
+      "cloze": "Definitivamente"
+    },
+    {
+      "id": "es.s.cgj1y9pm74",
+      "wordId": "es.w.sgjgntg9nj",
+      "text": "Es definitivamente el mejor.",
+      "translation": "It's definitely the best.",
+      "cloze": "definitivamente"
+    },
+    {
+      "id": "es.s.9e3k89eb8t",
+      "wordId": "es.w.sgjgntg9nj",
+      "text": "Se fue a vivir a México definitivamente.",
+      "translation": "He moved to Mexico for good.",
+      "cloze": "definitivamente"
+    },
+    {
+      "id": "es.s.bfzqcr6aa8",
+      "wordId": "es.w.sgjgntg9nj",
+      "text": "Definitivamente voy a ir.",
+      "translation": "I'm definitely going.",
+      "cloze": "Definitivamente",
+      "retired": true
+    },
+    {
+      "id": "es.s.vcg691nt7p",
+      "wordId": "es.w.c30tpb1hak",
+      "text": "Hay una bomba en el edificio.",
+      "translation": "There's a bomb in the building.",
+      "cloze": "bomba"
+    },
+    {
+      "id": "es.s.bdq2frnnrz",
+      "wordId": "es.w.c30tpb1hak",
+      "text": "Encontraron dos bombas.",
+      "translation": "They found two bombs.",
+      "cloze": "bombas"
+    },
+    {
+      "id": "es.s.yzvy0dm4sg",
+      "wordId": "es.w.c30tpb1hak",
+      "text": "La noticia fue una bomba.",
+      "translation": "The news was a bombshell.",
+      "cloze": "bomba"
+    },
+    {
+      "id": "es.s.mj8fsardrh",
+      "wordId": "es.w.s9ct9f0hht",
+      "text": "Estoy de guardia esta noche.",
+      "translation": "I'm on duty tonight.",
+      "cloze": "guardia"
+    },
+    {
+      "id": "es.s.ep3r4j4w20",
+      "wordId": "es.w.s9ct9f0hht",
+      "text": "Los guardias están en la puerta.",
+      "translation": "The guards are at the door.",
+      "cloze": "guardias"
+    },
+    {
+      "id": "es.s.c1jrk89tmj",
+      "wordId": "es.w.s9ct9f0hht",
+      "text": "Hay que estar en guardia.",
+      "translation": "You have to be on guard.",
+      "cloze": "guardia"
+    },
+    {
+      "id": "es.s.1p9177mmq6",
+      "wordId": "es.w.bbbjmk4w7b",
+      "text": "Baja la pistola.",
+      "translation": "Put the gun down.",
+      "cloze": "pistola"
+    },
+    {
+      "id": "es.s.verh1xsk0m",
+      "wordId": "es.w.bbbjmk4w7b",
+      "text": "Tiene una pistola.",
+      "translation": "He has a gun.",
+      "cloze": "pistola"
+    },
+    {
+      "id": "es.s.ht6s0gnrgx",
+      "wordId": "es.w.bbbjmk4w7b",
+      "text": "Las pistolas están en la caja.",
+      "translation": "The guns are in the box.",
+      "cloze": "pistolas"
+    },
+    {
+      "id": "es.s.wt70eye8hp",
+      "wordId": "es.w.55bkh574q0",
+      "text": "Pruébalo, está muy rico.",
+      "translation": "Try it, it's really good.",
+      "cloze": "Pruébalo"
+    },
+    {
+      "id": "es.s.vabzc3ny4c",
+      "wordId": "es.w.55bkh574q0",
+      "text": "Nunca he probado el té.",
+      "translation": "I've never tried tea.",
+      "cloze": "probado"
+    },
+    {
+      "id": "es.s.s0h6d68gk4",
+      "wordId": "es.w.55bkh574q0",
+      "text": "No puedes probar nada.",
+      "translation": "You can't prove anything.",
+      "cloze": "probar"
+    },
+    {
+      "id": "es.s.gxc28jsyk7",
+      "wordId": "es.w.55bkh574q0",
+      "text": "¿Probaste la cena?",
+      "translation": "Did you try the dinner?",
+      "cloze": "Probaste"
+    },
+    {
+      "id": "es.s.v38588222f",
+      "wordId": "es.w.822v4hzw7s",
+      "text": "Sí, Su Majestad.",
+      "translation": "Yes, Your Majesty.",
+      "cloze": "Majestad"
+    },
+    {
+      "id": "es.s.b8kktkma8e",
+      "wordId": "es.w.822v4hzw7s",
+      "text": "Gracias, majestad.",
+      "translation": "Thank you, Your Majesty.",
+      "cloze": "majestad"
+    },
+    {
+      "id": "es.s.gb0pz4w4tk",
+      "wordId": "es.w.822v4hzw7s",
+      "text": "Su Majestad lo espera.",
+      "translation": "His Majesty is waiting for you.",
+      "cloze": "Majestad"
+    },
+    {
+      "id": "es.s.19hc9080jz",
+      "wordId": "es.w.4acbp2h4xw",
+      "text": "Mañana hay una marcha por la paz.",
+      "translation": "There's a peace march tomorrow.",
+      "cloze": "marcha"
+    },
+    {
+      "id": "es.s.889vmt8y43",
+      "wordId": "es.w.4acbp2h4xw",
+      "text": "El plan ya está en marcha.",
+      "translation": "The plan is already under way.",
+      "cloze": "marcha"
+    },
+    {
+      "id": "es.s.8eafz689mr",
+      "wordId": "es.w.4acbp2h4xw",
+      "text": "Pon el coche en marcha.",
+      "translation": "Start the car.",
+      "cloze": "marcha"
+    },
+    {
+      "id": "es.s.jmfw2z3c9g",
+      "wordId": "es.w.4acbp2h4xw",
+      "text": "¡En marcha!",
+      "translation": "Let's go!",
+      "cloze": "marcha",
+      "retired": true
+    },
+    {
+      "id": "es.s.g1j15fvz9g",
+      "wordId": "es.w.s2keejmt2j",
+      "text": "Es un nombre muy común.",
+      "translation": "It's a very common name.",
+      "cloze": "común"
+    },
+    {
+      "id": "es.s.kxc5rssvxp",
+      "wordId": "es.w.s2keejmt2j",
+      "text": "No tenemos nada en común.",
+      "translation": "We have nothing in common.",
+      "cloze": "común"
+    },
+    {
+      "id": "es.s.v842pznhqr",
+      "wordId": "es.w.s2keejmt2j",
+      "text": "Son problemas comunes.",
+      "translation": "They're common problems.",
+      "cloze": "comunes"
+    },
+    {
+      "id": "es.s.t6302dgth1",
+      "wordId": "es.w.kvxb89748q",
+      "text": "¿Ves aquel edificio?",
+      "translation": "Do you see that building over there?",
+      "cloze": "aquel"
+    },
+    {
+      "id": "es.s.g7fbrgbdcv",
+      "wordId": "es.w.kvxb89748q",
+      "text": "Aquella noche no dormí.",
+      "translation": "That night I didn't sleep.",
+      "cloze": "Aquella"
+    },
+    {
+      "id": "es.s.vbzq4ae3tt",
+      "wordId": "es.w.kvxb89748q",
+      "text": "Aquellos años fueron difíciles.",
+      "translation": "Those years were hard.",
+      "cloze": "Aquellos"
+    },
+    {
+      "id": "es.s.qz2vm6ym4q",
+      "wordId": "es.w.3nc29z0yp4",
+      "text": "Mi vuelo sale a las seis.",
+      "translation": "My flight leaves at six.",
+      "cloze": "vuelo"
+    },
+    {
+      "id": "es.s.vbhja5qkhf",
+      "wordId": "es.w.3nc29z0yp4",
+      "text": "¿Qué tal el vuelo?",
+      "translation": "How was the flight?",
+      "cloze": "vuelo"
+    },
+    {
+      "id": "es.s.pm71ybmgmj",
+      "wordId": "es.w.3nc29z0yp4",
+      "text": "Todos los vuelos llegan tarde.",
+      "translation": "All the flights are late.",
+      "cloze": "vuelos"
+    },
+    {
+      "id": "es.s.8f69g99tz6",
+      "wordId": "es.w.v4pcgkjavq",
+      "text": "Te dejé una nota.",
+      "translation": "I left you a note.",
+      "cloze": "nota"
+    },
+    {
+      "id": "es.s.mdn04qzc1b",
+      "wordId": "es.w.v4pcgkjavq",
+      "text": "Saqué buenas notas.",
+      "translation": "I got good grades.",
+      "cloze": "notas"
+    },
+    {
+      "id": "es.s.tynnrp1wrt",
+      "wordId": "es.w.v4pcgkjavq",
+      "text": "Toma nota.",
+      "translation": "Take note.",
+      "cloze": "nota"
+    },
+    {
+      "id": "es.s.vy4q07ypw9",
+      "wordId": "es.w.drqbq8v2hv",
+      "text": "Hace falta valor.",
+      "translation": "It takes courage.",
+      "cloze": "valor"
+    },
+    {
+      "id": "es.s.baewvq74bw",
+      "wordId": "es.w.drqbq8v2hv",
+      "text": "No tuve el valor de decírselo.",
+      "translation": "I didn't have the courage to tell him.",
+      "cloze": "valor"
+    },
+    {
+      "id": "es.s.9w7yb719tn",
+      "wordId": "es.w.drqbq8v2hv",
+      "text": "Esa foto tiene mucho valor para mí.",
+      "translation": "That photo means a lot to me.",
+      "cloze": "valor"
+    },
+    {
+      "id": "es.s.tmqkyq6c0h",
+      "wordId": "es.w.xek2faav46",
+      "text": "Esta casa es suya.",
+      "translation": "This house is his.",
+      "cloze": "suya"
+    },
+    {
+      "id": "es.s.9arzs5p66f",
+      "wordId": "es.w.xek2faav46",
+      "text": "Es un amigo suyo.",
+      "translation": "He's a friend of hers.",
+      "cloze": "suyo"
+    },
+    {
+      "id": "es.s.w6drt7rw1b",
+      "wordId": "es.w.xek2faav46",
+      "text": "Los libros son suyos.",
+      "translation": "The books are theirs.",
+      "cloze": "suyos"
+    },
+    {
+      "id": "es.s.hztygv7qbp",
+      "wordId": "es.w.d8es0p6k00",
+      "text": "¿Cuál es tu objetivo?",
+      "translation": "What's your goal?",
+      "cloze": "objetivo"
+    },
+    {
+      "id": "es.s.m71n5gqdbq",
+      "wordId": "es.w.d8es0p6k00",
+      "text": "Tenemos dos objetivos claros.",
+      "translation": "We have two clear goals.",
+      "cloze": "objetivos"
+    },
+    {
+      "id": "es.s.6anf80dq8z",
+      "wordId": "es.w.d8es0p6k00",
+      "text": "El objetivo está en el edificio.",
+      "translation": "The target is in the building.",
+      "cloze": "objetivo"
+    },
+    {
+      "id": "es.s.52ktjn8gda",
+      "wordId": "es.w.5871bz0tc4",
+      "text": "De repente, se fue la luz.",
+      "translation": "Suddenly, the power went out.",
+      "cloze": "repente"
+    },
+    {
+      "id": "es.s.j4xn611rph",
+      "wordId": "es.w.5871bz0tc4",
+      "text": "¿Por qué de repente te importa?",
+      "translation": "Why do you suddenly care?",
+      "cloze": "repente"
+    },
+    {
+      "id": "es.s.q05s03qwjn",
+      "wordId": "es.w.5871bz0tc4",
+      "text": "De repente empezó a llorar.",
+      "translation": "Suddenly she started to cry.",
+      "cloze": "repente"
+    },
+    {
+      "id": "es.s.qj4fmxyva3",
+      "wordId": "es.w.d452bdsh7g",
+      "text": "El coche rojo es mío.",
+      "translation": "The red car is mine.",
+      "cloze": "rojo"
+    },
+    {
+      "id": "es.s.0tnyfcjwn4",
+      "wordId": "es.w.d452bdsh7g",
+      "text": "Tienes la cara roja.",
+      "translation": "Your face is red.",
+      "cloze": "roja"
+    },
+    {
+      "id": "es.s.y9thcrrrs1",
+      "wordId": "es.w.d452bdsh7g",
+      "text": "Compré unos zapatos rojos.",
+      "translation": "I bought some red shoes.",
+      "cloze": "rojos"
+    },
+    {
+      "id": "es.s.q9zxqey4m3",
+      "wordId": "es.w.5e08ggaqr8",
+      "text": "¿Estás bromeando?",
+      "translation": "Are you kidding?",
+      "cloze": "bromeando"
+    },
+    {
+      "id": "es.s.tbtq48whyt",
+      "wordId": "es.w.5e08ggaqr8",
+      "text": "Mi padre siempre bromea con todo.",
+      "translation": "My dad is always joking about everything.",
+      "cloze": "bromea"
+    },
+    {
+      "id": "es.s.ga5e1sychq",
+      "wordId": "es.w.5e08ggaqr8",
+      "text": "Solo bromeaba.",
+      "translation": "I was only joking.",
+      "cloze": "bromeaba"
+    },
+    {
+      "id": "es.s.bw6qyfvk7a",
+      "wordId": "es.w.5e08ggaqr8",
+      "text": "No bromeo.",
+      "translation": "I'm not joking.",
+      "cloze": "bromeo",
+      "retired": true
+    },
+    {
+      "id": "es.s.56jy775n3b",
+      "wordId": "es.w.0gkwqvpn9y",
+      "text": "Te espero en la entrada.",
+      "translation": "I'll wait for you at the entrance.",
+      "cloze": "entrada"
+    },
+    {
+      "id": "es.s.pwymy99q0q",
+      "wordId": "es.w.0gkwqvpn9y",
+      "text": "Compré dos entradas para el partido.",
+      "translation": "I bought two tickets for the game.",
+      "cloze": "entradas"
+    },
+    {
+      "id": "es.s.mea4dj3ctg",
+      "wordId": "es.w.0gkwqvpn9y",
+      "text": "La entrada está detrás del edificio.",
+      "translation": "The entrance is behind the building.",
+      "cloze": "entrada"
+    },
+    {
+      "id": "es.s.931681ftr7",
+      "wordId": "es.w.vhaq32qs5m",
+      "text": "Una habitación doble, por favor.",
+      "translation": "A double room, please.",
+      "cloze": "doble"
+    },
+    {
+      "id": "es.s.zaxsys90ad",
+      "wordId": "es.w.vhaq32qs5m",
+      "text": "Es un agente doble.",
+      "translation": "He's a double agent.",
+      "cloze": "doble"
+    },
+    {
+      "id": "es.s.4s4k4cra8q",
+      "wordId": "es.w.vhaq32qs5m",
+      "text": "Ahora me pagan el doble.",
+      "translation": "Now they pay me double.",
+      "cloze": "doble"
+    },
+    {
+      "id": "es.s.1t9f4w4k4z",
+      "wordId": "es.w.m0qhkbwt8e",
+      "text": "Trato de evitar el café.",
+      "translation": "I try to avoid coffee.",
+      "cloze": "evitar"
+    },
+    {
+      "id": "es.s.xvc7et1nws",
+      "wordId": "es.w.m0qhkbwt8e",
+      "text": "Me estás evitando.",
+      "translation": "You're avoiding me.",
+      "cloze": "evitando"
+    },
+    {
+      "id": "es.s.60k8e9dahs",
+      "wordId": "es.w.m0qhkbwt8e",
+      "text": "No pudimos evitar el accidente.",
+      "translation": "We couldn't avoid the accident.",
+      "cloze": "evitar"
+    },
+    {
+      "id": "es.s.1kd0y7w162",
+      "wordId": "es.w.m0qhkbwt8e",
+      "text": "Siempre evita mis preguntas.",
+      "translation": "He always avoids my questions.",
+      "cloze": "evita"
+    },
+    {
+      "id": "es.s.ayhe7vjdqf",
+      "wordId": "es.w.wmpgzh0dfv",
+      "text": "La máquina no funciona.",
+      "translation": "The machine doesn't work.",
+      "cloze": "máquina"
+    },
+    {
+      "id": "es.s.5sf6fehm7h",
+      "wordId": "es.w.wmpgzh0dfv",
+      "text": "Es una máquina del tiempo.",
+      "translation": "It's a time machine.",
+      "cloze": "máquina"
+    },
+    {
+      "id": "es.s.yyhrzhxvh4",
+      "wordId": "es.w.wmpgzh0dfv",
+      "text": "Hay muchas máquinas en la fábrica.",
+      "translation": "There are lots of machines in the factory.",
+      "cloze": "máquinas"
+    },
+    {
+      "id": "es.s.ez5wq9rh4g",
+      "wordId": "es.w.e79mn0t701",
+      "text": "Me duele el cuello.",
+      "translation": "My neck hurts.",
+      "cloze": "cuello"
+    },
+    {
+      "id": "es.s.5vsz2yxm69",
+      "wordId": "es.w.e79mn0t701",
+      "text": "Tiene una marca en el cuello.",
+      "translation": "He has a mark on his neck.",
+      "cloze": "cuello"
+    },
+    {
+      "id": "es.s.rfc9fbh35g",
+      "wordId": "es.w.e79mn0t701",
+      "text": "Lleva una cadena al cuello.",
+      "translation": "She wears a chain around her neck.",
+      "cloze": "cuello"
+    },
+    {
+      "id": "es.s.aqknyx9pk4",
+      "wordId": "es.w.bdw7cjex75",
+      "text": "¿Te gustan los animales?",
+      "translation": "Do you like animals?",
+      "cloze": "animales"
+    },
+    {
+      "id": "es.s.2ebtmvdcdx",
+      "wordId": "es.w.bdw7cjex75",
+      "text": "Es un animal muy inteligente.",
+      "translation": "It's a very intelligent animal.",
+      "cloze": "animal"
+    },
+    {
+      "id": "es.s.s0jvdg7gs9",
+      "wordId": "es.w.bdw7cjex75",
+      "text": "Comes como un animal.",
+      "translation": "You eat like an animal.",
+      "cloze": "animal"
+    },
+    {
+      "id": "es.s.8xv2w4kpnh",
+      "wordId": "es.w.ms938qvxet",
+      "text": "¿Acaso no me conoces?",
+      "translation": "Don't you know me?",
+      "cloze": "Acaso"
+    },
+    {
+      "id": "es.s.j50h7k1sdb",
+      "wordId": "es.w.ms938qvxet",
+      "text": "¿Acaso es mi culpa?",
+      "translation": "So it's my fault, is it?",
+      "cloze": "Acaso"
+    },
+    {
+      "id": "es.s.b902kev1s0",
+      "wordId": "es.w.ms938qvxet",
+      "text": "Por si acaso, llámame.",
+      "translation": "Just in case, call me.",
+      "cloze": "acaso"
+    },
+    {
+      "id": "es.s.n966jvvzvh",
+      "wordId": "es.w.8tahr6k4ns",
+      "text": "Hacen una buena pareja.",
+      "translation": "They make a good couple.",
+      "cloze": "pareja"
+    },
+    {
+      "id": "es.s.s1fafcps5w",
+      "wordId": "es.w.8tahr6k4ns",
+      "text": "¿Tienes pareja?",
+      "translation": "Do you have a partner?",
+      "cloze": "pareja"
+    },
+    {
+      "id": "es.s.6nsh03h690",
+      "wordId": "es.w.8tahr6k4ns",
+      "text": "Hay muchas parejas en la playa.",
+      "translation": "There are lots of couples on the beach.",
+      "cloze": "parejas"
+    },
+    {
+      "id": "es.s.b5n43c767g",
+      "wordId": "es.w.tabp6qx6n5",
+      "text": "Me encanta el verano.",
+      "translation": "I love summer.",
+      "cloze": "verano"
+    },
+    {
+      "id": "es.s.ffnddsabs1",
+      "wordId": "es.w.tabp6qx6n5",
+      "text": "Este verano vamos al mar.",
+      "translation": "This summer we're going to the seaside.",
+      "cloze": "verano"
+    },
+    {
+      "id": "es.s.e6h02ayp4y",
+      "wordId": "es.w.tabp6qx6n5",
+      "text": "Pasaba los veranos con mis abuelos.",
+      "translation": "I used to spend summers with my grandparents.",
+      "cloze": "veranos"
+    },
+    {
+      "id": "es.s.hefqhvrw2s",
+      "wordId": "es.w.y3fw36z837",
+      "text": "¡Es mentira!",
+      "translation": "That's a lie!",
+      "cloze": "mentira"
+    },
+    {
+      "id": "es.s.evb4rsqp45",
+      "wordId": "es.w.y3fw36z837",
+      "text": "No digas mentiras.",
+      "translation": "Don't tell lies.",
+      "cloze": "mentiras"
+    },
+    {
+      "id": "es.s.9djtjrt7wg",
+      "wordId": "es.w.y3fw36z837",
+      "text": "Todo fue una mentira.",
+      "translation": "It was all a lie.",
+      "cloze": "mentira"
+    },
+    {
+      "id": "es.s.803cxbfz19",
+      "wordId": "es.w.1mnfg20y1n",
+      "text": "¿Puedo pagar con tarjeta?",
+      "translation": "Can I pay by card?",
+      "cloze": "tarjeta"
+    },
+    {
+      "id": "es.s.yyqat8xvp1",
+      "wordId": "es.w.1mnfg20y1n",
+      "text": "Te dejo mi tarjeta.",
+      "translation": "I'll leave you my card.",
+      "cloze": "tarjeta"
+    },
+    {
+      "id": "es.s.0a6g0ycdhh",
+      "wordId": "es.w.1mnfg20y1n",
+      "text": "Perdí todas mis tarjetas.",
+      "translation": "I lost all my cards.",
+      "cloze": "tarjetas"
+    },
+    {
+      "id": "es.s.zfbc3f4db9",
+      "wordId": "es.w.fd33438txv",
+      "text": "¡Corre!",
+      "translation": "Run!",
+      "cloze": "Corre"
+    },
+    {
+      "id": "es.s.g0r0x54drr",
+      "wordId": "es.w.fd33438txv",
+      "text": "Corro todas las mañanas.",
+      "translation": "I run every morning.",
+      "cloze": "Corro"
+    },
+    {
+      "id": "es.s.jtw8yg1e10",
+      "wordId": "es.w.fd33438txv",
+      "text": "Salió corriendo.",
+      "translation": "He ran off.",
+      "cloze": "corriendo"
+    },
+    {
+      "id": "es.s.sprvccgery",
+      "wordId": "es.w.fd33438txv",
+      "text": "No corras.",
+      "translation": "Don't run.",
+      "cloze": "corras"
+    },
+    {
+      "id": "es.s.yf7p1y03f0",
+      "wordId": "es.w.ahsxdey5zc",
+      "text": "¿Estás preparado?",
+      "translation": "Are you ready?",
+      "cloze": "preparado"
+    },
+    {
+      "id": "es.s.qh6zfpzm5a",
+      "wordId": "es.w.ahsxdey5zc",
+      "text": "No estoy preparada para esto.",
+      "translation": "I'm not ready for this.",
+      "cloze": "preparada"
+    },
+    {
+      "id": "es.s.r0tw05gd9h",
+      "wordId": "es.w.ahsxdey5zc",
+      "text": "Estamos preparados.",
+      "translation": "We're ready.",
+      "cloze": "preparados"
+    },
+    {
+      "id": "es.s.kjbhxvgsqe",
+      "wordId": "es.w.skpy7kgy81",
+      "text": "Te traje flores.",
+      "translation": "I brought you flowers.",
+      "cloze": "flores"
+    },
+    {
+      "id": "es.s.qksgqpw89y",
+      "wordId": "es.w.skpy7kgy81",
+      "text": "Es una flor muy bonita.",
+      "translation": "It's a very pretty flower.",
+      "cloze": "flor"
+    },
+    {
+      "id": "es.s.mn3m0c9h3d",
+      "wordId": "es.w.skpy7kgy81",
+      "text": "Hay flores en el jardín.",
+      "translation": "There are flowers in the garden.",
+      "cloze": "flores"
+    },
+    {
+      "id": "es.s.jyyy6j5r9d",
+      "wordId": "es.w.fftwb7jxsx",
+      "text": "¿Y vos?",
+      "translation": "And you?",
+      "cloze": "vos"
+    },
+    {
+      "id": "es.s.wvhrv8wmcp",
+      "wordId": "es.w.fftwb7jxsx",
+      "text": "Esto es para vos.",
+      "translation": "This is for you.",
+      "cloze": "vos"
+    },
+    {
+      "id": "es.s.0f9x8wezfm",
+      "wordId": "es.w.fftwb7jxsx",
+      "text": "Quiero ir con vos.",
+      "translation": "I want to go with you.",
+      "cloze": "vos"
+    },
+    {
+      "id": "es.s.4dw20w7f3h",
+      "wordId": "es.w.5eg2xvwrfw",
+      "text": "No tenemos otra opción.",
+      "translation": "We have no other option.",
+      "cloze": "opción"
+    },
+    {
+      "id": "es.s.284z1hf4p9",
+      "wordId": "es.w.5eg2xvwrfw",
+      "text": "Es la mejor opción.",
+      "translation": "It's the best option.",
+      "cloze": "opción"
+    },
+    {
+      "id": "es.s.89ah61xcbv",
+      "wordId": "es.w.5eg2xvwrfw",
+      "text": "Hay tres opciones.",
+      "translation": "There are three options.",
+      "cloze": "opciones"
+    },
+    {
+      "id": "es.s.dyx2mcfp8z",
+      "wordId": "es.w.zasrvqdjs5",
+      "text": "Vivimos en una isla.",
+      "translation": "We live on an island.",
+      "cloze": "isla"
+    },
+    {
+      "id": "es.s.p6rhxt3hmc",
+      "wordId": "es.w.zasrvqdjs5",
+      "text": "La isla es muy pequeña.",
+      "translation": "The island is very small.",
+      "cloze": "isla"
+    },
+    {
+      "id": "es.s.a1sbhbg2y2",
+      "wordId": "es.w.zasrvqdjs5",
+      "text": "Hay muchas islas en esta zona.",
+      "translation": "There are lots of islands in this area.",
+      "cloze": "islas"
+    },
+    {
+      "id": "es.s.fzx1j0wyxj",
+      "wordId": "es.w.bffp02hs24",
+      "text": "Cierra la puerta.",
+      "translation": "Close the door.",
+      "cloze": "Cierra"
+    },
+    {
+      "id": "es.s.zn24kfpmkk",
+      "wordId": "es.w.bffp02hs24",
+      "text": "La tienda está cerrada.",
+      "translation": "The store is closed.",
+      "cloze": "cerrada"
+    },
+    {
+      "id": "es.s.vvc26x4nrc",
+      "wordId": "es.w.bffp02hs24",
+      "text": "¿Cerraste con llave?",
+      "translation": "Did you lock it?",
+      "cloze": "Cerraste"
+    },
+    {
+      "id": "es.s.dzdxfmfytx",
+      "wordId": "es.w.bffp02hs24",
+      "text": "Cierro a las ocho.",
+      "translation": "I close at eight.",
+      "cloze": "Cierro"
+    },
+    {
+      "id": "es.s.zs9242av9f",
+      "wordId": "es.w.77jt1d4snf",
+      "text": "Tiene la piel muy blanca.",
+      "translation": "She has very pale skin.",
+      "cloze": "piel"
+    },
+    {
+      "id": "es.s.kbchj7s71j",
+      "wordId": "es.w.77jt1d4snf",
+      "text": "El sol es malo para la piel.",
+      "translation": "The sun is bad for your skin.",
+      "cloze": "piel"
+    },
+    {
+      "id": "es.s.3sh6r99975",
+      "wordId": "es.w.77jt1d4snf",
+      "text": "En invierno tengo la piel muy seca.",
+      "translation": "In winter my skin gets very dry.",
+      "cloze": "piel"
+    },
+    {
+      "id": "es.s.759hjc5614",
+      "wordId": "es.w.77jt1d4snf",
+      "text": "Siento el sol en la piel.",
+      "translation": "I feel the sun on my skin.",
+      "cloze": "piel",
+      "retired": true
+    },
+    {
+      "id": "es.s.swyt29gb67",
+      "wordId": "es.w.z495a0c3at",
+      "text": "No soy tu enemigo.",
+      "translation": "I'm not your enemy.",
+      "cloze": "enemigo"
+    },
+    {
+      "id": "es.s.phdftydyc9",
+      "wordId": "es.w.z495a0c3at",
+      "text": "Tiene muchos enemigos.",
+      "translation": "He has a lot of enemies.",
+      "cloze": "enemigos"
+    },
+    {
+      "id": "es.s.zsf7jjhk7x",
+      "wordId": "es.w.z495a0c3at",
+      "text": "Es mi peor enemiga.",
+      "translation": "She's my worst enemy.",
+      "cloze": "enemiga"
+    },
+    {
+      "id": "es.s.xkrng0mbg8",
+      "wordId": "es.w.y33ns64wnb",
+      "text": "¡Exacto!",
+      "translation": "Exactly!",
+      "cloze": "Exacto"
+    },
+    {
+      "id": "es.s.dn52qz3xd3",
+      "wordId": "es.w.y33ns64wnb",
+      "text": "¿Cuál es la hora exacta?",
+      "translation": "What's the exact time?",
+      "cloze": "exacta"
+    },
+    {
+      "id": "es.s.9zkz6p85wx",
+      "wordId": "es.w.y33ns64wnb",
+      "text": "No recuerdo las palabras exactas.",
+      "translation": "I don't remember the exact words.",
+      "cloze": "exactas"
+    },
+    {
+      "id": "es.s.0qsqk69mxa",
+      "wordId": "es.w.xnnaz88cn9",
+      "text": "Quiero justicia.",
+      "translation": "I want justice.",
+      "cloze": "justicia"
+    },
+    {
+      "id": "es.s.ar0t4swvae",
+      "wordId": "es.w.xnnaz88cn9",
+      "text": "La justicia es para todos.",
+      "translation": "Justice is for everyone.",
+      "cloze": "justicia"
+    },
+    {
+      "id": "es.s.4vhkddxz4n",
+      "wordId": "es.w.xnnaz88cn9",
+      "text": "Es hora de hacer justicia.",
+      "translation": "It's time for justice to be done.",
+      "cloze": "justicia"
+    },
+    {
+      "id": "es.s.r0zrgd7r2h",
+      "wordId": "es.w.vhcyxktgwt",
+      "text": "Obviamente no.",
+      "translation": "Obviously not.",
+      "cloze": "Obviamente"
+    },
+    {
+      "id": "es.s.he2h8qps87",
+      "wordId": "es.w.vhcyxktgwt",
+      "text": "Obviamente es mentira.",
+      "translation": "Obviously it's a lie.",
+      "cloze": "Obviamente"
+    },
+    {
+      "id": "es.s.sbazp96yn5",
+      "wordId": "es.w.vhcyxktgwt",
+      "text": "Obviamente, vamos contigo.",
+      "translation": "Obviously, we're coming with you.",
+      "cloze": "Obviamente"
+    },
+    {
+      "id": "es.s.ns5e3a874m",
+      "wordId": "es.w.kjqrgdxf7m",
+      "text": "Despierta, ya es tarde.",
+      "translation": "Wake up, it's late.",
+      "cloze": "Despierta"
+    },
+    {
+      "id": "es.s.fvjekc7tym",
+      "wordId": "es.w.kjqrgdxf7m",
+      "text": "Me desperté a las cinco.",
+      "translation": "I woke up at five.",
+      "cloze": "desperté"
+    },
+    {
+      "id": "es.s.1838tnek49",
+      "wordId": "es.w.kjqrgdxf7m",
+      "text": "No quiero despertar al bebé.",
+      "translation": "I don't want to wake the baby.",
+      "cloze": "despertar"
+    },
+    {
+      "id": "es.s.2hf5basfjh",
+      "wordId": "es.w.kjqrgdxf7m",
+      "text": "¿Por qué me despiertas tan temprano?",
+      "translation": "Why are you waking me up so early?",
+      "cloze": "despiertas"
+    },
+    {
+      "id": "es.s.3bffh0s82b",
+      "wordId": "es.w.jwhw6xcvwk",
+      "text": "Hace mucho calor hoy.",
+      "translation": "It's very hot today.",
+      "cloze": "calor"
+    },
+    {
+      "id": "es.s.q1z956vsa6",
+      "wordId": "es.w.jwhw6xcvwk",
+      "text": "Tengo calor.",
+      "translation": "I'm hot.",
+      "cloze": "calor"
+    },
+    {
+      "id": "es.s.xwq3b9rxva",
+      "wordId": "es.w.jwhw6xcvwk",
+      "text": "No soporto el calor.",
+      "translation": "I can't stand the heat.",
+      "cloze": "calor"
+    },
+    {
+      "id": "es.s.2jxhh9yacn",
+      "wordId": "es.w.2hpv1rg2bz",
+      "text": "¿A qué te refieres?",
+      "translation": "What do you mean?",
+      "cloze": "refieres"
+    },
+    {
+      "id": "es.s.bp4tz1mjqh",
+      "wordId": "es.w.2hpv1rg2bz",
+      "text": "Me refiero a tu hermano.",
+      "translation": "I mean your brother.",
+      "cloze": "refiero"
+    },
+    {
+      "id": "es.s.02y4vqdhar",
+      "wordId": "es.w.2hpv1rg2bz",
+      "text": "No me refería a eso.",
+      "translation": "I didn't mean that.",
+      "cloze": "refería"
+    },
+    {
+      "id": "es.s.f7nc1evnmb",
+      "wordId": "es.w.2mg175y7pm",
+      "text": "Ganamos la batalla.",
+      "translation": "We won the battle.",
+      "cloze": "batalla"
+    },
+    {
+      "id": "es.s.d39mkxdvrc",
+      "wordId": "es.w.2mg175y7pm",
+      "text": "Es una batalla difícil.",
+      "translation": "It's a hard battle.",
+      "cloze": "batalla"
+    },
+    {
+      "id": "es.s.11fq1cgtfm",
+      "wordId": "es.w.2mg175y7pm",
+      "text": "Ha visto muchas batallas.",
+      "translation": "He has seen many battles.",
+      "cloze": "batallas"
+    },
+    {
+      "id": "es.s.k3z8px10ef",
+      "wordId": "es.w.rhqeg9sfba",
+      "text": "¡Fantástico!",
+      "translation": "Fantastic!",
+      "cloze": "Fantástico"
+    },
+    {
+      "id": "es.s.94frnvd6m5",
+      "wordId": "es.w.rhqeg9sfba",
+      "text": "Fue una noche fantástica.",
+      "translation": "It was a fantastic night.",
+      "cloze": "fantástica"
+    },
+    {
+      "id": "es.s.23762234dz",
+      "wordId": "es.w.rhqeg9sfba",
+      "text": "Tus amigos son fantásticos.",
+      "translation": "Your friends are fantastic.",
+      "cloze": "fantásticos"
+    },
+    {
+      "id": "es.s.zm044p7rtr",
+      "wordId": "es.w.thbev9667k",
+      "text": "Se rompió el brazo.",
+      "translation": "He broke his arm.",
+      "cloze": "brazo"
+    },
+    {
+      "id": "es.s.d7rd73rtf7",
+      "wordId": "es.w.thbev9667k",
+      "text": "Levanta los brazos.",
+      "translation": "Raise your arms.",
+      "cloze": "brazos"
+    },
+    {
+      "id": "es.s.n7qtpywt8j",
+      "wordId": "es.w.thbev9667k",
+      "text": "La tomó del brazo.",
+      "translation": "He took her by the arm.",
+      "cloze": "brazo"
+    },
+    {
+      "id": "es.s.g7es3mwtfa",
+      "wordId": "es.w.60n52cgvhz",
+      "text": "Absolutamente nada.",
+      "translation": "Absolutely nothing.",
+      "cloze": "Absolutamente"
+    },
+    {
+      "id": "es.s.21pzfsta62",
+      "wordId": "es.w.60n52cgvhz",
+      "text": "Estoy absolutamente seguro.",
+      "translation": "I'm absolutely sure.",
+      "cloze": "absolutamente"
+    },
+    {
+      "id": "es.s.kf6yx050zy",
+      "wordId": "es.w.60n52cgvhz",
+      "text": "Es absolutamente necesario.",
+      "translation": "It's absolutely necessary.",
+      "cloze": "absolutamente"
+    },
+    {
+      "id": "es.s.petnshjg7c",
+      "wordId": "es.w.h3p36wg3pk",
+      "text": "No puedes escapar.",
+      "translation": "You can't escape.",
+      "cloze": "escapar"
+    },
+    {
+      "id": "es.s.xw2m1hrmjs",
+      "wordId": "es.w.h3p36wg3pk",
+      "text": "El perro se escapó.",
+      "translation": "The dog got away.",
+      "cloze": "escapó"
+    },
+    {
+      "id": "es.s.xt0d7zxj1b",
+      "wordId": "es.w.h3p36wg3pk",
+      "text": "Tenemos que escapar de aquí.",
+      "translation": "We have to get out of here.",
+      "cloze": "escapar"
+    },
+    {
+      "id": "es.s.cnsvmbfv8a",
+      "wordId": "es.w.d0cfvb2ywk",
+      "text": "Nos perdimos en el bosque.",
+      "translation": "We got lost in the woods.",
+      "cloze": "bosque"
+    },
+    {
+      "id": "es.s.a0sjp91mpn",
+      "wordId": "es.w.d0cfvb2ywk",
+      "text": "No vayas al bosque de noche.",
+      "translation": "Don't go into the forest at night.",
+      "cloze": "bosque"
+    },
+    {
+      "id": "es.s.gdgc4kxaxn",
+      "wordId": "es.w.d0cfvb2ywk",
+      "text": "Hay muchos bosques en el norte.",
+      "translation": "There are lots of forests in the north.",
+      "cloze": "bosques"
+    },
+    {
+      "id": "es.s.y8dn3bfy57",
+      "wordId": "es.w.q3e45qpev9",
+      "text": "Tienes las piernas muy largas.",
+      "translation": "You have very long legs.",
+      "cloze": "piernas"
+    },
+    {
+      "id": "es.s.cvkbp4tg6n",
+      "wordId": "es.w.q3e45qpev9",
+      "text": "Tiene una pierna rota.",
+      "translation": "He has a broken leg.",
+      "cloze": "pierna"
+    },
+    {
+      "id": "es.s.pzdbesmrkw",
+      "wordId": "es.w.q3e45qpev9",
+      "text": "No siento las piernas.",
+      "translation": "I can't feel my legs.",
+      "cloze": "piernas"
+    },
+    {
+      "id": "es.s.81fkasfd5r",
+      "wordId": "es.w.3nnm5rmmj3",
+      "text": "Gracias por la visita.",
+      "translation": "Thanks for the visit.",
+      "cloze": "visita"
+    },
+    {
+      "id": "es.s.vyjg00vqqh",
+      "wordId": "es.w.3nnm5rmmj3",
+      "text": "Tenemos visita.",
+      "translation": "We have visitors.",
+      "cloze": "visita"
+    },
+    {
+      "id": "es.s.rzk6s8s1nv",
+      "wordId": "es.w.3nnm5rmmj3",
+      "text": "Sus visitas son muy cortas.",
+      "translation": "His visits are very short.",
+      "cloze": "visitas"
+    },
+    {
+      "id": "es.s.j8wn9ytr4t",
+      "wordId": "es.w.v4v5vn6hfx",
+      "text": "Vi un movimiento detrás de la ventana.",
+      "translation": "I saw something move behind the window.",
+      "cloze": "movimiento"
+    },
+    {
+      "id": "es.s.x0nmk3vvqn",
+      "wordId": "es.w.v4v5vn6hfx",
+      "text": "Fue un buen movimiento.",
+      "translation": "It was a good move.",
+      "cloze": "movimiento"
+    },
+    {
+      "id": "es.s.b94svkbph7",
+      "wordId": "es.w.v4v5vn6hfx",
+      "text": "Sus movimientos son muy rápidos.",
+      "translation": "Her movements are very fast.",
+      "cloze": "movimientos"
+    },
+    {
+      "id": "es.s.9nh650k9pt",
+      "wordId": "es.w.v4v5vn6hfx",
+      "text": "Ni un movimiento.",
+      "translation": "Don't move a muscle.",
+      "cloze": "movimiento",
+      "retired": true
+    },
+    {
+      "id": "es.s.n18y30j9p8",
+      "wordId": "es.w.fn6kh134cb",
+      "text": "Es un hombre muy rico.",
+      "translation": "He's a very rich man.",
+      "cloze": "rico"
+    },
+    {
+      "id": "es.s.w6cfeczt3a",
+      "wordId": "es.w.fn6kh134cb",
+      "text": "Esta comida está muy rica.",
+      "translation": "This food is really tasty.",
+      "cloze": "rica"
+    },
+    {
+      "id": "es.s.arfh92bwm5",
+      "wordId": "es.w.fn6kh134cb",
+      "text": "Quiero ser rico.",
+      "translation": "I want to be rich.",
+      "cloze": "rico"
+    },
+    {
+      "id": "es.s.z2vdedr2k8",
+      "wordId": "es.w.fw9jb5za8e",
+      "text": "Soy inocente.",
+      "translation": "I'm innocent.",
+      "cloze": "inocente"
+    },
+    {
+      "id": "es.s.z4deykab5b",
+      "wordId": "es.w.fw9jb5za8e",
+      "text": "Murió gente inocente.",
+      "translation": "Innocent people died.",
+      "cloze": "inocente"
+    },
+    {
+      "id": "es.s.8748xdd8a9",
+      "wordId": "es.w.fw9jb5za8e",
+      "text": "Los niños son inocentes.",
+      "translation": "Children are innocent.",
+      "cloze": "inocentes"
+    },
+    {
+      "id": "es.s.0e6066m33c",
+      "wordId": "es.w.wy9mt0awrb",
+      "text": "A pesar de todo, te quiero.",
+      "translation": "Despite everything, I love you.",
+      "cloze": "pesar"
+    },
+    {
+      "id": "es.s.3nx7gkjett",
+      "wordId": "es.w.wy9mt0awrb",
+      "text": "Salimos a pesar de la lluvia.",
+      "translation": "We went out despite the rain.",
+      "cloze": "pesar"
+    },
+    {
+      "id": "es.s.9a5myw71pw",
+      "wordId": "es.w.wy9mt0awrb",
+      "text": "A pesar de eso, es buena persona.",
+      "translation": "Even so, he's a good person.",
+      "cloze": "pesar"
+    },
+    {
+      "id": "es.s.srynsxbcb6",
+      "wordId": "es.w.pf2p5mttjx",
+      "text": "Fue un desastre absoluto.",
+      "translation": "It was an absolute disaster.",
+      "cloze": "absoluto"
+    },
+    {
+      "id": "es.s.vkcc0694wd",
+      "wordId": "es.w.pf2p5mttjx",
+      "text": "Tengo absoluta confianza en ti.",
+      "translation": "I have absolute confidence in you.",
+      "cloze": "absoluta"
+    },
+    {
+      "id": "es.s.1ansqkcb6a",
+      "wordId": "es.w.pf2p5mttjx",
+      "text": "No me molesta en absoluto.",
+      "translation": "It doesn't bother me at all.",
+      "cloze": "absoluto"
+    },
+    {
+      "id": "es.s.2nhwmdwkc9",
+      "wordId": "es.w.pf2p5mttjx",
+      "text": "En absoluto.",
+      "translation": "Not at all.",
+      "cloze": "absoluto",
+      "retired": true
+    },
+    {
+      "id": "es.s.ghhj0ve3qx",
+      "wordId": "es.w.a1efhzykwm",
+      "text": "Estamos de vacaciones.",
+      "translation": "We're on vacation.",
+      "cloze": "vacaciones"
+    },
+    {
+      "id": "es.s.m2424nma4p",
+      "wordId": "es.w.a1efhzykwm",
+      "text": "Necesito unas vacaciones.",
+      "translation": "I need a vacation.",
+      "cloze": "vacaciones"
+    },
+    {
+      "id": "es.s.r907wkt4y0",
+      "wordId": "es.w.a1efhzykwm",
+      "text": "¿Adónde vas de vacaciones?",
+      "translation": "Where are you going on vacation?",
+      "cloze": "vacaciones"
+    },
+    {
+      "id": "es.s.vzde0gpy39",
+      "wordId": "es.w.ct2wjc4q26",
+      "text": "¿Vamos al cine esta noche?",
+      "translation": "Shall we go to the movies tonight?",
+      "cloze": "cine"
+    },
+    {
+      "id": "es.s.c5wb7v25cn",
+      "wordId": "es.w.ct2wjc4q26",
+      "text": "Me encanta el cine.",
+      "translation": "I love movies.",
+      "cloze": "cine"
+    },
+    {
+      "id": "es.s.d9q2b4fyya",
+      "wordId": "es.w.ct2wjc4q26",
+      "text": "Te espero en la puerta del cine.",
+      "translation": "I'll wait for you outside the cinema.",
+      "cloze": "cine"
+    },
+    {
+      "id": "es.s.y76apxcdw3",
+      "wordId": "es.w.37ftxhwrpb",
+      "text": "¡Es una idea brillante!",
+      "translation": "It's a brilliant idea!",
+      "cloze": "brillante"
+    },
+    {
+      "id": "es.s.2wjefw7jdb",
+      "wordId": "es.w.37ftxhwrpb",
+      "text": "Es una estudiante brillante.",
+      "translation": "She's a brilliant student.",
+      "cloze": "brillante"
+    },
+    {
+      "id": "es.s.b3qte5ff78",
+      "wordId": "es.w.37ftxhwrpb",
+      "text": "Tiene los ojos brillantes.",
+      "translation": "Her eyes are shining.",
+      "cloze": "brillantes"
+    },
+    {
+      "id": "es.s.r6xh0rd28e",
+      "wordId": "es.w.454aexzfep",
+      "text": "Gracias por tu confianza.",
+      "translation": "Thanks for your trust.",
+      "cloze": "confianza"
+    },
+    {
+      "id": "es.s.sdwatgvp6z",
+      "wordId": "es.w.454aexzfep",
+      "text": "Tengo confianza en ti.",
+      "translation": "I have confidence in you.",
+      "cloze": "confianza"
+    },
+    {
+      "id": "es.s.16x5jjjgng",
+      "wordId": "es.w.454aexzfep",
+      "text": "Le falta confianza.",
+      "translation": "He lacks confidence.",
+      "cloze": "confianza"
+    },
+    {
+      "id": "es.s.vsqh06xr52",
+      "wordId": "es.w.pfgh6v1g5j",
+      "text": "¿Este es vuestro coche?",
+      "translation": "Is this your car?",
+      "cloze": "vuestro"
+    },
+    {
+      "id": "es.s.bky0hgfw4d",
+      "wordId": "es.w.pfgh6v1g5j",
+      "text": "Gracias por vuestra ayuda.",
+      "translation": "Thanks for your help.",
+      "cloze": "vuestra"
+    },
+    {
+      "id": "es.s.hs59qwwezm",
+      "wordId": "es.w.pfgh6v1g5j",
+      "text": "¿Dónde están vuestros padres?",
+      "translation": "Where are your parents?",
+      "cloze": "vuestros"
+    },
+    {
+      "id": "es.s.476ra4qqqe",
+      "wordId": "es.w.pfgh6v1g5j",
+      "text": "¿Es vuestra casa?",
+      "translation": "Is it your house?",
+      "cloze": "vuestra",
+      "retired": true
+    },
+    {
+      "id": "es.s.0ch2jfrybf",
+      "wordId": "es.w.ttqc51hszv",
+      "text": "Me gusta todo, especialmente el café.",
+      "translation": "I like everything, especially the coffee.",
+      "cloze": "especialmente"
+    },
+    {
+      "id": "es.s.v3ykn6h23q",
+      "wordId": "es.w.ttqc51hszv",
+      "text": "Lo hice especialmente para ti.",
+      "translation": "I made it especially for you.",
+      "cloze": "especialmente"
+    },
+    {
+      "id": "es.s.vpgtrnjnm7",
+      "wordId": "es.w.ttqc51hszv",
+      "text": "Hace frío, especialmente de noche.",
+      "translation": "It's cold, especially at night.",
+      "cloze": "especialmente"
+    },
+    {
+      "id": "es.s.61ea85709s",
+      "wordId": "es.w.fb2zgk2cmr",
+      "text": "Estoy embarazada.",
+      "translation": "I'm pregnant.",
+      "cloze": "embarazada"
+    },
+    {
+      "id": "es.s.qxdv8e0hvm",
+      "wordId": "es.w.fb2zgk2cmr",
+      "text": "Mis dos hermanas están embarazadas.",
+      "translation": "My two sisters are pregnant.",
+      "cloze": "embarazadas"
+    },
+    {
+      "id": "es.s.606jkpnqdk",
+      "wordId": "es.w.fb2zgk2cmr",
+      "text": "¿Desde cuándo estás embarazada?",
+      "translation": "How long have you been pregnant?",
+      "cloze": "embarazada"
+    },
+    {
+      "id": "es.s.x387pn8m39",
+      "wordId": "es.w.bkc8z9jzzy",
+      "text": "Ponte los pantalones.",
+      "translation": "Put your pants on.",
+      "cloze": "pantalones"
+    },
+    {
+      "id": "es.s.jpdjgaf2dt",
+      "wordId": "es.w.bkc8z9jzzy",
+      "text": "Necesito unos pantalones negros.",
+      "translation": "I need some black trousers.",
+      "cloze": "pantalones"
+    },
+    {
+      "id": "es.s.ze31zdypyx",
+      "wordId": "es.w.bkc8z9jzzy",
+      "text": "Se le rompió el pantalón.",
+      "translation": "His trousers ripped.",
+      "cloze": "pantalón"
+    },
+    {
+      "id": "es.s.tr5grgjnyw",
+      "wordId": "es.w.w19wnhknf5",
+      "text": "Fue en defensa propia.",
+      "translation": "It was self-defense.",
+      "cloze": "defensa"
+    },
+    {
+      "id": "es.s.xrhzxjkk0r",
+      "wordId": "es.w.w19wnhknf5",
+      "text": "En mi defensa, no lo sabía.",
+      "translation": "In my defense, I didn't know.",
+      "cloze": "defensa"
+    },
+    {
+      "id": "es.s.a8ss4db8q1",
+      "wordId": "es.w.w19wnhknf5",
+      "text": "Las defensas de la ciudad son fuertes.",
+      "translation": "The city's defenses are strong.",
+      "cloze": "defensas"
+    },
+    {
+      "id": "es.s.2s868y74zk",
+      "wordId": "es.w.00fx8xgn63",
+      "text": "¡Estupendo!",
+      "translation": "Great!",
+      "cloze": "Estupendo"
+    },
+    {
+      "id": "es.s.2717tda63w",
+      "wordId": "es.w.00fx8xgn63",
+      "text": "Hace un día estupendo.",
+      "translation": "It's a wonderful day.",
+      "cloze": "estupendo"
+    },
+    {
+      "id": "es.s.bmh55atmqm",
+      "wordId": "es.w.00fx8xgn63",
+      "text": "Tu madre es una mujer estupenda.",
+      "translation": "Your mother is a wonderful woman.",
+      "cloze": "estupenda"
+    },
+    {
+      "id": "es.s.rr05p8tss6",
+      "wordId": "es.w.y4jnccv4xp",
+      "text": "Estoy bajo mucha presión.",
+      "translation": "I'm under a lot of pressure.",
+      "cloze": "presión"
+    },
+    {
+      "id": "es.s.sxvmqcdcqk",
+      "wordId": "es.w.y4jnccv4xp",
+      "text": "Tiene la presión alta.",
+      "translation": "He has high blood pressure.",
+      "cloze": "presión"
+    },
+    {
+      "id": "es.s.b1dppbb66h",
+      "wordId": "es.w.y4jnccv4xp",
+      "text": "Hay mucha presión en el trabajo.",
+      "translation": "There's a lot of pressure at work.",
+      "cloze": "presión"
+    },
+    {
+      "id": "es.s.5y87th0jn7",
+      "wordId": "es.w.sd2qazg1zd",
+      "text": "Ven aquí inmediatamente.",
+      "translation": "Come here immediately.",
+      "cloze": "inmediatamente"
+    },
+    {
+      "id": "es.s.7xqcb9d7t2",
+      "wordId": "es.w.sd2qazg1zd",
+      "text": "Llama a la policía inmediatamente.",
+      "translation": "Call the police immediately.",
+      "cloze": "inmediatamente"
+    },
+    {
+      "id": "es.s.fs94aznncp",
+      "wordId": "es.w.sd2qazg1zd",
+      "text": "Lo supe inmediatamente.",
+      "translation": "I knew it immediately.",
+      "cloze": "inmediatamente"
+    },
+    {
+      "id": "es.s.3xs424gmx5",
+      "wordId": "es.w.ejnfyke24c",
+      "text": "Hay un testigo.",
+      "translation": "There's a witness.",
+      "cloze": "testigo"
+    },
+    {
+      "id": "es.s.vrax91fxsz",
+      "wordId": "es.w.ejnfyke24c",
+      "text": "Fui testigo del accidente.",
+      "translation": "I witnessed the accident.",
+      "cloze": "testigo"
+    },
+    {
+      "id": "es.s.n3fjcyskkw",
+      "wordId": "es.w.ejnfyke24c",
+      "text": "Los testigos no vieron nada.",
+      "translation": "The witnesses didn't see anything.",
+      "cloze": "testigos"
+    },
+    {
+      "id": "es.s.n4mc6xhaan",
+      "wordId": "es.w.5584y5v0wm",
+      "text": "Soy soldado.",
+      "translation": "I'm a soldier.",
+      "cloze": "soldado"
+    },
+    {
+      "id": "es.s.e1rbbqaba6",
+      "wordId": "es.w.5584y5v0wm",
+      "text": "Los soldados llegaron al pueblo.",
+      "translation": "The soldiers arrived in the village.",
+      "cloze": "soldados"
+    },
+    {
+      "id": "es.s.6zvpah5b4d",
+      "wordId": "es.w.5584y5v0wm",
+      "text": "Era un buen soldado.",
+      "translation": "He was a good soldier.",
+      "cloze": "soldado"
+    },
+    {
+      "id": "es.s.hcmevja83c",
+      "wordId": "es.w.g1pcf82da4",
+      "text": "Resulta que tenías razón.",
+      "translation": "It turns out you were right.",
+      "cloze": "Resulta"
+    },
+    {
+      "id": "es.s.192fkwp99j",
+      "wordId": "es.w.g1pcf82da4",
+      "text": "Resultó ser un buen plan.",
+      "translation": "It turned out to be a good plan.",
+      "cloze": "Resultó"
+    },
+    {
+      "id": "es.s.xmdhfa7k95",
+      "wordId": "es.w.g1pcf82da4",
+      "text": "Al final todo resultó bien.",
+      "translation": "In the end everything turned out fine.",
+      "cloze": "resultó"
+    },
+    {
+      "id": "es.s.phn42fz2ep",
+      "wordId": "es.w.fbpazd7e57",
+      "text": "Depende.",
+      "translation": "It depends.",
+      "cloze": "Depende"
+    },
+    {
+      "id": "es.s.cskmmmxt0y",
+      "wordId": "es.w.fbpazd7e57",
+      "text": "Todo depende de ti.",
+      "translation": "Everything depends on you.",
+      "cloze": "depende"
+    },
+    {
+      "id": "es.s.952h5n6z71",
+      "wordId": "es.w.fbpazd7e57",
+      "text": "Mis hijos dependen de mí.",
+      "translation": "My children depend on me.",
+      "cloze": "dependen"
+    },
+    {
+      "id": "es.s.bh10d19yxx",
+      "wordId": "es.w.0kj6j6x76p",
+      "text": "¿Cuál fue el motivo?",
+      "translation": "What was the motive?",
+      "cloze": "motivo"
+    },
+    {
+      "id": "es.s.j5jv1jj9m9",
+      "wordId": "es.w.0kj6j6x76p",
+      "text": "No hay motivo para preocuparse.",
+      "translation": "There's no reason to worry.",
+      "cloze": "motivo"
+    },
+    {
+      "id": "es.s.33bhwr2gvg",
+      "wordId": "es.w.0kj6j6x76p",
+      "text": "Tengo mis motivos.",
+      "translation": "I have my reasons.",
+      "cloze": "motivos"
+    },
+    {
+      "id": "es.s.0z82082swk",
+      "wordId": "es.w.bg4wv13bby",
+      "text": "¿Habla usted inglés?",
+      "translation": "Do you speak English?",
+      "cloze": "inglés"
+    },
+    {
+      "id": "es.s.yy1t3hx317",
+      "wordId": "es.w.bg4wv13bby",
+      "text": "Mi inglés no es muy bueno.",
+      "translation": "My English isn't very good.",
+      "cloze": "inglés"
+    },
+    {
+      "id": "es.s.erkrqk2mhk",
+      "wordId": "es.w.bg4wv13bby",
+      "text": "Estoy aprendiendo inglés.",
+      "translation": "I'm learning English.",
+      "cloze": "inglés"
+    },
+    {
+      "id": "es.s.cyjc0qwn95",
+      "wordId": "es.w.1gm4p04fpg",
+      "text": "Está en su estudio.",
+      "translation": "He's in his study.",
+      "cloze": "estudio"
+    },
+    {
+      "id": "es.s.3254exnxms",
+      "wordId": "es.w.1gm4p04fpg",
+      "text": "Terminó sus estudios.",
+      "translation": "She finished her studies.",
+      "cloze": "estudios"
+    },
+    {
+      "id": "es.s.thsshnss1v",
+      "wordId": "es.w.1gm4p04fpg",
+      "text": "Trabaja en un estudio de música.",
+      "translation": "He works in a music studio.",
+      "cloze": "estudio"
+    },
+    {
+      "id": "es.s.jmeecnaxxw",
+      "wordId": "es.w.a8qrtnqp0g",
+      "text": "No juegues con mis sentimientos.",
+      "translation": "Don't play with my feelings.",
+      "cloze": "sentimientos"
+    },
+    {
+      "id": "es.s.j990e92en5",
+      "wordId": "es.w.a8qrtnqp0g",
+      "text": "Es un sentimiento extraño.",
+      "translation": "It's a strange feeling.",
+      "cloze": "sentimiento"
+    },
+    {
+      "id": "es.s.hxbsgfbbr1",
+      "wordId": "es.w.a8qrtnqp0g",
+      "text": "No sé expresar mis sentimientos.",
+      "translation": "I don't know how to express my feelings.",
+      "cloze": "sentimientos"
+    },
+    {
+      "id": "es.s.d1zvc5nfzw",
+      "wordId": "es.w.a8qrtnqp0g",
+      "text": "Tengo sentimientos por ti.",
+      "translation": "I have feelings for you.",
+      "cloze": "sentimientos",
+      "retired": true
+    },
+    {
+      "id": "es.s.k7w4enz4ex",
+      "wordId": "es.w.gpyf7f9q3b",
+      "text": "Lo hiciste a propósito.",
+      "translation": "You did it on purpose.",
+      "cloze": "propósito"
+    },
+    {
+      "id": "es.s.vwkgm81382",
+      "wordId": "es.w.gpyf7f9q3b",
+      "text": "A propósito, ¿cómo está tu madre?",
+      "translation": "By the way, how's your mother?",
+      "cloze": "propósito"
+    },
+    {
+      "id": "es.s.ej2swwqb6k",
+      "wordId": "es.w.gpyf7f9q3b",
+      "text": "¿Cuál es el propósito de todo esto?",
+      "translation": "What's the purpose of all this?",
+      "cloze": "propósito"
+    },
+    {
+      "id": "es.s.hnyvb6vhh5",
+      "wordId": "es.w.e5a76av1j5",
+      "text": "A partir de mañana, todo cambia.",
+      "translation": "Starting tomorrow, everything changes.",
+      "cloze": "partir"
+    },
+    {
+      "id": "es.s.y0770r0k41",
+      "wordId": "es.w.e5a76av1j5",
+      "text": "Partimos mañana temprano.",
+      "translation": "We set off early tomorrow.",
+      "cloze": "Partimos"
+    },
+    {
+      "id": "es.s.3v0e3nen5j",
+      "wordId": "es.w.e5a76av1j5",
+      "text": "Partió el pan en dos.",
+      "translation": "He split the bread in two.",
+      "cloze": "Partió"
+    },
+    {
+      "id": "es.s.8e01mcmnha",
+      "wordId": "es.w.e5a76av1j5",
+      "text": "El barco partió a las diez.",
+      "translation": "The boat left at ten.",
+      "cloze": "partió",
       "retired": true
     }
   ]
