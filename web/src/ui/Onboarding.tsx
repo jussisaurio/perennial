@@ -11,6 +11,7 @@ import { APP_VERSION } from "../version";
 import { SignIn } from "./Account";
 import { Garden, GrowthStrip, showcaseGarden } from "./Garden";
 import { GardenWalk, showcaseWalkPlants } from "./GardenWalk";
+import { showcaseVisitors } from "./visitors";
 
 import { FlowerIcon, SproutMark } from "./icons";
 
@@ -70,7 +71,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
     }
   };
 
-  if (walking) return <GardenWalk lang={lang} source={walkSource} onExit={() => setWalking(false)} />;
+  if (walking) return <GardenWalk lang={lang} source={walkSource} visitors={showcaseVisitors(lang)} onExit={() => setWalking(false)} />;
 
   return (
     <div className="page narrow stagger landing">
