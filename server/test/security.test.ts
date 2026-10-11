@@ -129,7 +129,9 @@ describe("limits", () => {
   test("oversized bodies are refused before parsing", async () => {
     const cookie = await t.signIn(unique("big"));
     const huge = { mutations: [{ type: "user_sentence.insert", row: { text: "x".repeat(600 * 1024) } }] };
-    expect((await t.call("/api/write", huge, cookie)).status).toBe(413);
+    const res = await t.call("/api/write", huge, cookie);
+    expect(res.status).toBe(413);
+    expect(res.headers.get("connection")).toBe("close"); // the unread rest must not poison the next request
   });
 
   test("per-learner storage quotas", async () => {

@@ -109,6 +109,9 @@ Copy the exact host, user and database name from the PlanetScale **Connect** pag
 
 ### 2.4 Check (after the first deploy)
 
+After every deploy, run the live security check: `bun scripts/live-check.ts <APP_URL>` (headers, closed dev and unused auth endpoints, no file leaks, cross-user isolation, CSRF, limits; it cleans up after itself).
+
+
 ```sql
 show wal_level;                                         -- logical
 select rolname, rolreplication from pg_roles where rolname like 'perennial%';   -- t
