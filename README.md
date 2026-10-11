@@ -6,75 +6,67 @@ Anki; see [DESIGN.md](DESIGN.md) for what we changed and why.
 
 - **Time-boxed sessions, no due counts.** After a week off, you still do your 7 minutes.
 - **MVP scope:** English speakers learning **Spanish** or **German**.
-- **Frequency-first course.** Words come from OpenSubtitles frequency lists. An LLM writes the sentences, using only words you already know.
+- **Frequency-first course.** Words come from OpenSubtitles frequency lists. The sentences are drafted with a model ahead of time, reviewed, and shipped as static decks.
 - **Memory per word × skill** (read / listen / write). Each review shows a different sentence.
 - **FSRS-6** scheduling, with two buttons.
 - **The garden:** a plant per word, grown from the word itself. A strip on Today, and a retro 3D garden you can walk through.
-- **Words from your own texts:** paste any text and tap the unknown words (Perennial AI, signed in).
-- **Offline-first PWA.** Signing in is the sync: progress follows your account to every device.
+- **Words from your own texts:** paste any text and tap the unknown words (Perennial AI, needs an email account).
+- **Offline-first PWA.** Start without an account. Add your email to keep your progress and use it on every device.
 
-## Server
+## Architecture
 
-Learners sign in with an email code. Everyone is on the free tier: the shared course, plus a small monthly allowance of AI words for personal extras (words from your own texts, fresh sentences).
-
-- **Shared course content** is generated once per language pair and position in the frequency list, then cached for every learner. It costs learners nothing. (Planned: pre-made static decks.)
-- **Safety limits:** a global monthly spend limit, per-user rate limits, and a daily limit on new shared batches. Together they stop runaway costs.
-- **Billing code** (Stripe) exists but is dormant and not shown in the app; it is off unless the Stripe variables are set.
-
-| Variable | Purpose | Default |
-|---|---|---|
-| `APP_URL` | Public URL of the app (emails, Stripe redirects) | `http://localhost:5173` |
-| `PERENNIAL_SECRET` | Hashes login codes and sessions. **Set in production.** | dev value |
-| `ANTHROPIC_API_KEY` | Enables Perennial AI | off |
-| `PERENNIAL_MODEL` | Model for hosted AI | `claude-haiku-4-5` |
-| `MONTHLY_BUDGET_USD` | AI pauses for everyone past this monthly spend | `200` |
-| `FREE_CREDITS` | Monthly AI words per learner | `25` |
-| `RESEND_API_KEY`, `MAIL_FROM` | Sends sign-in codes. Without a key, codes go to a dev outbox. | dev outbox |
-| `STRIPE_*` | Dormant billing (not shown in the app) | off |
-
-## Run
-
-```sh
-cd server && bun install && bun index.ts     # sync server on :8787
-cd web && bun install && bun dev             # app on :5173 (proxies /sync)
+```
+decks/<lang>/deck.json      the shared course: static JSON, built into the app, cached offline
+web/  (Vite + React PWA)    TanStack DB collections fed by Electric shapes; offline write queue
+server/  (Bun)              Better Auth, Electric shape proxy, /api/write, Perennial AI, serves web/dist
+Postgres + Electric         learner data; Electric streams each learner's rows to their devices
 ```
 
-Production: `cd web && bun run build`, then `bun server/index.ts` serves `web/dist` and `/sync` on one port.
+- **Decks are content, not user data.** The course is static JSON in `decks/`, built into the app. There is no AI at runtime for the course. Format and rules: [docs/schema.md](docs/schema.md).
+- **Server** (`server/`): Bun, Postgres through `Bun.sql`, plain SQL migrations in `server/migrations/`.
+  - **Accounts:** [Better Auth](https://better-auth.com). The first write ("Start learning") creates an anonymous user. Signing in with an email code moves the progress into the real account. Anonymous learners with no activity for 60 days are deleted by a daily job (`server/src/housekeeping.ts`).
+  - **Reads:** `/api/shape` is an auth proxy in front of [Electric](https://electric-sql.com). The shape is always the server's own (`where user_id = <session user>`), never the client's.
+  - **Writes:** `POST /api/write` takes a batch of mutations, checks them, scopes them to the session user, and applies them in one transaction. It returns the Postgres transaction id.
+  - **Perennial AI:** task endpoints (`/api/ai/mine`, `/api/ai/examples`) through the Anthropic SDK. Each word costs one AI word from a monthly allowance (`FREE_CREDITS`). A global monthly budget (`MONTHLY_BUDGET_USD`) pauses AI for everyone when it is reached.
+  - Also: `/health`, account deletion, structured JSON logs with request ids, Sentry (`server/instrument.ts`). All settings: `server/src/config.ts`.
+- **Client** (`web/src/data/`): each synced table is a TanStack DB collection fed by an Electric shape, kept in SQLite (OPFS) on the device where the browser allows it. Writes apply on the device at once, wait in an offline queue (IndexedDB), and go to `/api/write` when there is a connection. Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
 
-Offline development without any keys: run `bun server/mock-llm.ts`, then start the server with `ANTHROPIC_API_KEY=x ANTHROPIC_BASE_URL=http://localhost:8788`. Sign-in codes appear in the server log.
+Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Railway + PlanetScale Postgres). Data model: [docs/schema.md](docs/schema.md). Design and research: [DESIGN.md](DESIGN.md).
+
+## Run locally
+
+Needs [Bun](https://bun.sh) and Docker.
+
+```sh
+docker compose up -d                                  # Postgres (:55432) + Electric (:30009)
+cd server && bun install && bun run migrate && bun run dev   # API on :8787
+cd web && bun install && bun dev                      # app on :5173 (proxies /api to :8787)
+```
+
+No keys are needed. Without `RESEND_API_KEY`, the server is in dev mode: sign-in codes are printed in the server log as `[mail] sign-in code for you@example.com: 123456`.
+
+**Perennial AI without a key:** run `bun server/mock-llm.ts` (port 8788), and start the server with `ANTHROPIC_API_KEY=x ANTHROPIC_BASE_URL=http://localhost:8788 bun run dev`. The mock returns placeholder words, not real language.
+
+**Start over:** `docker compose down -v`, then migrate again. Also clear the site data in the browser.
 
 ## Demo data (dev mode)
 
-To see the garden and the progress views without weeks of practice, open the dev server with a `demo` switch:
+To see the garden and the progress views without weeks of practice, open the dev server with a `demo` switch. It makes a new anonymous learner with a made-up review history of 90 days, uploaded through the normal write API:
 
-- `http://localhost:5173/?demo=es#/garden`: a Spanish course with every demo word studied (about 330)
-- `http://localhost:5173/?demo=de:120#/garden`: a German course with 120 words studied
-- `http://localhost:5173/?demo=off`: remove the demo courses
+- `http://localhost:5173/?demo=es:30`: a Spanish learner with 30 words studied
+- `http://localhost:5173/?demo=de`: a German learner with every deck word studied
+- `http://localhost:5173/?demo=off`: remove the demo learner
 
-The same options are in Settings → Developer tools. A demo course has a made-up review history of 90 days. It stays in the browser and does not sync. These options are not in production builds.
-
-## Try it locally with mocks
-
-One command runs hosted mode with no real keys or accounts:
-
-```sh
-./scripts/dev-hosted.sh          # needs Bun (and Docker for the dormant billing mock)
-```
-
-It starts a mock AI model, Stripe's official API mock, the server, and the app on http://localhost:5173.
-
-1. **Sign in.** The 6-digit code appears in the terminal as `[mail] sign-in code for you@example.com: 123456`.
-2. **Learn.** Words come from the mock model, and every gloss starts with `[mock]`.
-3. **Run out of AI words faster** with `FREE_CREDITS=3 ./scripts/dev-hosted.sh`. Then add words from a text.
-4. **Start over:** `rm /tmp/perennial-dev.db*`.
+The same options are in Settings → Developer tools. They are not in production builds.
 
 ## Test
 
 ```sh
-cd web && bun test src      # FSRS (checked against ts-fsrs), planner, answer checking, text
-cd server && bun test       # sync, accounts, hosted AI limits, billing (Stripe SDK against stripe-mock in Docker)
-cd web && bun run e2e       # Playwright: sign-in, sessions, garden, sync between devices
-bun test scripts/deck web/src/deck   # decks: build, invariants, compatibility, replay
+cd web && bun test src                 # unit: FSRS (checked against ts-fsrs), planner, answer checking, text, deck schema
+bun test scripts/deck web/src/deck     # decks: build, invariants, compatibility, replay
+docker compose up -d                   # needed by the next two
+cd server && bun test                  # sync, accounts and merging, AI limits, housekeeping (real Postgres + Electric, mock model)
+cd web && bun run e2e                  # Playwright: starts its own server, mock model and Vite on other ports
 ```
 
 ## Decks
