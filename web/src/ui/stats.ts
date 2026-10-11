@@ -1,61 +1,34 @@
 import { DAY_MS } from "../core/fsrs";
-import { coverage } from "../content/text";
-import { db, scheduler } from "../db/db";
-import type { MemoryRow } from "../model";
+import type { Learner } from "../data/learner";
 
-/**
- * A word counts as known once its reading memory is stable for a week and it
- * has been recalled at least twice ("I knew it" alone is not a test).
- */
-export const KNOWN_STABILITY = 7;
-
-export type WordState = "new" | "learning" | "known";
-
-export function wordState(read: MemoryRow | undefined): WordState {
-  if (!read || read.reps === 0) return "new";
-  return read.s >= KNOWN_STABILITY && read.reps >= 2 ? "known" : "learning";
-}
-
-export function recall(m: MemoryRow, now = Date.now()): number {
-  return m.reps ? scheduler.retrievability((now - m.lastTs) / DAY_MS, m.s) : 0;
-}
+export { KNOWN_STABILITY, recall, wordState, type WordState } from "../data/learner";
+import { wordState } from "../data/learner";
 
 export interface CourseStats {
   known: number;
   learning: number;
-  coverage: number | null;
+  /** Words in the deck not started yet. */
+  seeds: number;
   retention30: number | null;
   days: { day: number; reviews: number }[]; // last 30 days
   minutesToday: number;
 }
 
-export async function courseStats(courseId: string, lang: string): Promise<CourseStats> {
-  const [memory, lexemes, reviews, freq] = await Promise.all([
-    db.memory.where("courseId").equals(courseId).toArray(),
-    db.lexemes.where("courseId").equals(courseId).toArray(),
-    db.reviews.where("courseId").equals(courseId).filter((r) => !r.deleted).toArray(),
-    db.freq.get(lang),
-  ]);
-  const read = new Map(memory.filter((m) => m.skill === "read").map((m) => [m.lexemeId, m]));
+export function courseStats(l: Learner, now = Date.now()): CourseStats {
   let known = 0;
   let learning = 0;
-  const knownForms = new Set<string>();
-  for (const l of lexemes) {
-    if (l.deleted) continue;
-    const st = wordState(read.get(l.id));
-    if (st === "known") {
-      known++;
-      l.forms.forEach((f) => knownForms.add(f));
-    } else if (st === "learning") learning++;
+  for (const w of l.words.values()) {
+    const st = wordState(l.memory.get(`${w.id}:read`));
+    if (st === "known") known++;
+    else if (st === "learning") learning++;
   }
-
-  const now = Date.now();
-  const startOfToday = new Date().setHours(0, 0, 0, 0);
+  const startOfToday = new Date(now).setHours(0, 0, 0, 0);
+  const reviews = l.reviews.map((r) => ({ ...r, ts: Date.parse(r.reviewed_at) })).sort((a, b) => a.ts - b.ts);
   const recent = reviews.filter((r) => r.ts > now - 30 * DAY_MS);
   // Retention = pass rate on reviews of items that had already been seen on an earlier day.
   const byItem = new Map<string, number[]>();
-  for (const r of [...reviews].sort((a, b) => a.ts - b.ts)) {
-    const k = `${r.lexemeId}:${r.skill}`;
+  for (const r of reviews) {
+    const k = `${l.resolve(r.word_id)}:${r.skill}`;
     const list = byItem.get(k);
     if (list) list.push(r.ts);
     else byItem.set(k, [r.ts]);
@@ -63,7 +36,8 @@ export async function courseStats(courseId: string, lang: string): Promise<Cours
   let pass = 0;
   let total = 0;
   for (const r of recent) {
-    const prior = byItem.get(`${r.lexemeId}:${r.skill}`)!.filter((t) => t < r.ts);
+    if (r.kind === "known") continue;
+    const prior = byItem.get(`${l.resolve(r.word_id)}:${r.skill}`)!.filter((t) => t < r.ts);
     if (prior.length && r.ts - prior[prior.length - 1] > 12 * 3_600_000) {
       total++;
       if (r.grade > 1) pass++;
@@ -74,14 +48,6 @@ export async function courseStats(courseId: string, lang: string): Promise<Cours
     const idx = 29 - Math.floor((startOfToday + DAY_MS - 1 - r.ts) / DAY_MS);
     if (idx >= 0 && idx < 30) days[idx].reviews++;
   }
-  const minutesToday = reviews.filter((r) => r.ts >= startOfToday).reduce((s, r) => s + r.ms, 0) / 60_000;
-
-  return {
-    known,
-    learning,
-    coverage: freq ? coverage(freq.entries, knownForms) : null,
-    retention30: total >= 20 ? pass / total : null,
-    days,
-    minutesToday,
-  };
+  const minutesToday = reviews.filter((r) => r.ts >= startOfToday).reduce((s, r) => s + r.duration_ms, 0) / 60_000;
+  return { known, learning, seeds: l.fresh().length, retention30: total >= 20 ? pass / total : null, days, minutesToday };
 }

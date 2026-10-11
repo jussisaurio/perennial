@@ -1,25 +1,25 @@
 import { useEffect, useState, lazy, Suspense } from "react";
-import { recomputeCourse, write } from "../db/db";
-import { getStatus, onStatus, sync, type SyncStatus } from "../db/sync";
-import type { Course } from "../model";
+import { saveCourse, useLearner, useStore } from "../data/learner";
+import type { CourseRow } from "../data/rows";
 import { useSound } from "./Sound";
-import { AccountPanel, useAccount } from "./Account";
+import { AccountPanel } from "./Account";
 import { DataSection } from "./DataSection";
 import { getThemePref, setThemePref, type ThemePref } from "./theme";
 
 const DevTools = import.meta.env.DEV ? lazy(() => import("../dev/DevTools")) : null;
 
-function CourseSettings({ course }: { course: Course }) {
+function CourseSettings({ course }: { course: CourseRow }) {
+  const store = useStore();
   const [retention, setRetention] = useState(course.retention);
   // Save once the user lets go (mouse, touch, keyboard, or leaving the control).
   const commit = () => {
-    if (retention !== course.retention) void write<Course>("courses", { id: course.id, retention }).then(() => recomputeCourse(course.id));
+    if (Math.abs(retention - course.retention) > 1e-6) void saveCourse(store, course.lang, { retention });
   };
   return (
     <div className="form">
       <label>
         Time per day
-        <select value={course.minutes} onChange={(e) => void write<Course>("courses", { id: course.id, minutes: Number(e.target.value) })}>
+        <select value={course.minutes} onChange={(e) => void saveCourse(store, course.lang, { minutes: Number(e.target.value) })}>
           {[3, 5, 7, 10, 15, 20, 30].map((m) => (
             <option key={m} value={m}>
               {m} minutes
@@ -80,43 +80,31 @@ function Appearance() {
 }
 
 /** Signed in: the account is the sync. Shows its status, nothing to set up. */
-function SignedInSync() {
-  const { signedIn } = useAccount();
-  return signedIn ? <AccountSyncStatus /> : null;
-}
-
-function AccountSyncStatus() {
-  const [status, setStatus] = useState<SyncStatus>(getStatus());
-  useEffect(() => onStatus(setStatus), []);
-  const text =
-    status.state === "syncing"
-      ? "Syncing…"
-      : status.state === "error"
-        ? `Could not sync: ${status.message}. Your words are safe on this device; Perennial tries again automatically.`
-        : status.state === "idle"
-          ? `Up to date. Last sync ${new Date(status.at).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}.`
-          : "Waiting to sync…";
+/** Whether the device has changes the server hasn't received yet (offline, for example). */
+function SavedStatus() {
+  const store = useStore();
+  const [pending, setPending] = useState(store.pendingWrites());
+  useEffect(() => {
+    const t = setInterval(() => setPending(store.pendingWrites()), 2000);
+    return () => clearInterval(t);
+  }, [store]);
   return (
-    <div className="form">
-      <p className="muted small">Your words and progress sync with your account on every device where you sign in.</p>
-      <div className="row">
-        <span className="small">{text}</span>
-        <button className="ghost" onClick={() => void sync()}>
-          Sync now
-        </button>
-      </div>
-    </div>
+    <p className="muted small" role="status">
+      {pending ? `${pending} ${pending === 1 ? "change is" : "changes are"} saved on this device and will upload when you are online.` : "All changes are saved."}
+    </p>
   );
 }
 
-export function SettingsScreen({ course }: { course: Course | undefined }) {
+export function SettingsScreen({ lang }: { lang: string; onSignedOut?: () => void }) {
+  const learner = useLearner(lang);
+  const course = learner?.course;
   return (
     <div className="page">
       <h1>Settings</h1>
       <section>
         <h2>Account</h2>
         <AccountPanel />
-        <SignedInSync />
+        <SavedStatus />
       </section>
       {course && (
         <section>
@@ -134,7 +122,7 @@ export function SettingsScreen({ course }: { course: Course | undefined }) {
       </section>
       <section>
         <h2>Your data</h2>
-        <DataSection />
+        <DataSection lang={lang} />
       </section>
       {DevTools && (
         <Suspense>

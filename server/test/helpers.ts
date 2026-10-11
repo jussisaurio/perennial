@@ -1,7 +1,12 @@
-import { rmSync } from "node:fs";
+// Test harness: the real app against the local Postgres + Electric
+// (`docker compose up -d`), with a mock model and the dev mail outbox.
+
 import { createApp } from "../src/app";
 import { loadConfig, type Config } from "../src/config";
-import { OutboxMailer } from "../src/mail";
+import { migrate } from "../src/migrate";
+import type { OutboxMailer } from "../src/mail";
+
+process.env.LOG_LEVEL ??= "silent";
 
 let mockPort = 0;
 let mockProc: ReturnType<typeof Bun.spawn> | null = null;
@@ -28,46 +33,79 @@ export function stopMockLLM() {
   mockProc = null;
 }
 
+export const unique = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}@example.com`;
+
 export async function startApp(overrides: Partial<Config> = {}) {
-  const dbPath = `/tmp/perennial-test-${process.pid}-${Math.random().toString(36).slice(2)}.db`;
-  const base = loadConfig();
-  const config = loadConfig({
-    dbPath,
-    dev: true,
-    anthropic: { apiKey: "test-key", baseURL: await mockLLM(), model: "claude-haiku-4-5" },
-    stripe: {},
-    ...overrides,
-  });
-  void base;
-  const mailer = new OutboxMailer();
-  const app = createApp(config, { mailer });
-  const server = Bun.serve({ port: 0, fetch: app.fetch });
+  const config = loadConfig({ dev: true, anthropic: { apiKey: "test-key", baseURL: await mockLLM(), model: "claude-haiku-4-5" }, ...overrides });
+  const sql = new Bun.SQL(config.databaseUrl, { max: 5 });
+  await migrate(sql);
+  const app = createApp(config, sql);
+  const server = Bun.serve({ port: 0, fetch: app.fetch, idleTimeout: 0 });
   const url = `http://localhost:${server.port}`;
-  const call = async (path: string, body?: unknown, token?: string, headers: Record<string, string> = {}) => {
+  const mailer = app.mailer as OutboxMailer;
+
+  /** A request as the browser would send it: same-origin, with the session cookie. */
+  const call = async (path: string, body?: unknown, cookie?: string, headers: Record<string, string> = {}) => {
     const res = await fetch(url + path, {
       method: body === undefined ? "GET" : "POST",
-      headers: { "content-type": "application/json", ...(token ? { authorization: `Session ${token}` } : {}), ...headers },
+      headers: { "content-type": "application/json", origin: config.appUrl, ...(cookie ? { cookie } : {}), ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    return { status: res.status, body: (await res.json().catch(() => null)) as any };
+    const text = await res.text();
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = text;
+    }
+    return { status: res.status, body: parsed, headers: res.headers, cookie: cookieOf(res, cookie) };
   };
-  const signIn = async (email: string) => {
-    await call("/api/auth/code", { email });
-    const code = mailer.latest(email)!.subject.match(/\d{6}/)![0];
-    const r = await call("/api/auth/verify", { email, code });
-    return r.body.token as string;
+
+  /** Keep the session cookie the server sets (or the one we already had). */
+  function cookieOf(res: Response, previous?: string) {
+    const set = res.headers.getSetCookie().map((c) => c.split(";")[0]).filter((c) => !c.endsWith("="));
+    if (!set.length) return previous;
+    const jar = new Map((previous ?? "").split("; ").filter(Boolean).map((c) => [c.split("=")[0], c] as const));
+    for (const c of set) jar.set(c.split("=")[0], c);
+    return [...jar.values()].join("; ");
+  }
+
+  const signIn = async (email: string, cookie?: string) => {
+    const sent = await call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, cookie);
+    if (sent.status !== 200) throw new Error(`send code: ${sent.status} ${JSON.stringify(sent.body)}`);
+    const otp = mailer.latest(email)!.subject.match(/\d{6}/)![0];
+    const r = await call("/api/auth/sign-in/email-otp", { email, otp }, cookie);
+    if (r.status !== 200) throw new Error(`sign in: ${r.status} ${JSON.stringify(r.body)}`);
+    return r.cookie!;
   };
+  const anonymous = async () => {
+    const r = await call("/api/auth/sign-in/anonymous", {});
+    if (r.status !== 200) throw new Error(`anonymous: ${r.status} ${JSON.stringify(r.body)}`);
+    return r.cookie!;
+  };
+  const write = (cookie: string, mutations: unknown[]) => call("/api/write", { mutations }, cookie);
+  const me = async (cookie: string) => (await call("/api/me", undefined, cookie)).body as { id: string; email: string | null; anonymous: boolean; credits: { used: number; left: number } };
+
   return {
     app,
+    config,
+    sql,
     url,
     call,
     signIn,
+    anonymous,
+    write,
+    me,
     mailer,
-    stop() {
+    async stop() {
       server.stop(true);
-      rmSync(dbPath, { force: true });
-      rmSync(`${dbPath}-wal`, { force: true });
-      rmSync(`${dbPath}-shm`, { force: true });
+      await app.close();
+      await sql.close();
     },
   };
 }
+
+export const review = (wordId: string, extra: Record<string, unknown> = {}) => ({
+  type: "review.insert",
+  row: { id: crypto.randomUUID(), lang: "es", word_id: wordId, skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 4000, ...extra },
+});

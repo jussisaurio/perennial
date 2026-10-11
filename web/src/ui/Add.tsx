@@ -1,17 +1,19 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect, useMemo, useState } from "react";
-import { aiMode, type AIMode } from "../ai/backend";
-import { hostedMessage, refreshMe, resetDate } from "../hosted/api";
-import { useAccount } from "./Account";
-import { addMined } from "../content/builder";
+// Adding words from a text the learner wants to read. Tapped words that the
+// course already has are simply moved to the front of the queue (free);
+// words the course doesn't have are made by Perennial AI (one AI word each),
+// keeping the learner's own sentence.
+
+import { useMemo, useState } from "react";
+import { apiMessage, mineWords, resetDate } from "../data/ai";
+import { useUser } from "../data/auth";
+import { setWordStatus, useLearner, useStore, wordState, type Learner } from "../data/learner";
+import type { UserSentenceRow, UserWordRow, WordStateRow } from "../data/rows";
 import { language } from "../content/languages";
 import { formKey, tokenize } from "../content/text";
-import { db, stableId, writeMany } from "../db/db";
-import type { Course, Lexeme } from "../model";
-import { wordState } from "./stats";
+import { useMe } from "./Account";
+import { track } from "../observability";
 
-// "queued": in the course but never practised, so still new to the learner.
-// "added": queued because the learner picked it from a text.
+// "queued": in the course but not started yet. "added": picked by the learner.
 type Status = "known" | "learning" | "queued" | "added" | "unknown" | "ignored";
 
 function sentences(text: string, tag: string): { text: string; start: number }[] {
@@ -19,38 +21,46 @@ function sentences(text: string, tag: string): { text: string; start: number }[]
   return [...seg.segment(text)].map((s) => ({ text: s.segment.trim(), start: s.index }));
 }
 
-function MineText({ course, mode }: { course: Course; mode: AIMode | null }) {
-  const tag = language(course.lang).tag;
+const formStateId = (lang: string, form: string) => `form:${lang}:${form}`;
+
+function statusMap(l: Learner): Map<string, { status: Status; wordId?: string }> {
+  const map = new Map<string, { status: Status; wordId?: string }>();
+  for (const w of l.words.values()) {
+    const st = wordState(l.memory.get(`${w.id}:read`));
+    const status: Status = w.status === "ignored" ? "ignored" : st !== "new" ? st : w.status === "queued" || w.source === "user" ? "added" : "queued";
+    for (const f of w.forms) {
+      const cur = map.get(f);
+      // A form shared by two words shows the more advanced one.
+      if (!cur || cur.status === "queued") map.set(f, { status, wordId: w.id });
+    }
+  }
+  for (const [id, s] of l.states) if (id.startsWith(`form:${l.lang}:`) && s.status === "ignored") map.set(id.split(":").slice(2).join(":"), { status: "ignored" });
+  return map;
+}
+
+function MineText({ learner }: { learner: Learner }) {
+  const store = useStore();
+  const { user } = useUser();
+  const { me, refresh } = useMe();
+  const tag = language(learner.lang).tag;
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<Map<string, string>>(new Map()); // form -> sentence
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const { me } = useAccount();
-  const lexemes = useLiveQuery(() => db.lexemes.where("courseId").equals(course.id).toArray(), [course.id]);
-  const memory = useLiveQuery(() => db.memory.where("courseId").equals(course.id).toArray(), [course.id]);
-
-  const statusOf = useMemo(() => {
-    const read = new Map((memory ?? []).filter((m) => m.skill === "read").map((m) => [m.lexemeId, m]));
-    const map = new Map<string, Status>();
-    for (const l of lexemes ?? []) {
-      if (l.deleted) continue;
-      const st = wordState(read.get(l.id));
-      const s: Status = l.status === "ignored" ? "ignored" : st === "new" ? (l.picked ? "added" : "queued") : st;
-      for (const f of l.forms) map.set(f, s);
-    }
-    return map;
-  }, [lexemes, memory]);
+  const statusOf = useMemo(() => statusMap(learner), [learner]);
 
   const sents = useMemo(() => sentences(text, tag), [text, tag]);
   const tokens = useMemo(() => tokenize(text, tag), [text, tag]);
   const sentenceAt = (i: number) => [...sents].reverse().find((s) => s.start <= i)?.text ?? "";
   const isNew = (s: Status | undefined) => s === undefined || s === "unknown" || s === "queued";
-  const unknownCount = new Set(tokens.filter((t) => t.word && isNew(statusOf.get(formKey(t.text))) && !/^\d+$/.test(t.text)).map((t) => formKey(t.text))).size;
+  const unknownCount = new Set(tokens.filter((t) => t.word && isNew(statusOf.get(formKey(t.text))?.status) && !/^\d+$/.test(t.text)).map((t) => formKey(t.text))).size;
 
-  // Hosted AI words are limited; show the cost before the tap, never after.
-  const hosted = mode === "hosted";
-  const left = hosted && me ? me.credits.left : Infinity;
-  const tooMany = picked.size > left;
+  // Words the course has are free; the rest need Perennial AI.
+  const inCourse = [...picked.keys()].filter((f) => statusOf.get(f)?.wordId);
+  const needAI = [...picked.keys()].filter((f) => !statusOf.get(f)?.wordId);
+  const canAI = !!user && !user.anonymous;
+  const left = me ? me.credits.left : 0;
+  const tooMany = needAI.length > 0 && (!canAI || needAI.length > left);
 
   const toggle = (form: string, index: number) => {
     const next = new Map(picked);
@@ -65,26 +75,51 @@ function MineText({ course, mode }: { course: Course; mode: AIMode | null }) {
     setBusy(true);
     setResult(null);
     try {
-      const items = [...picked].map(([form, sentence]) => ({ form, sentence }));
-      for (let i = 0; i < items.length; i += 15) await addMined(course, items.slice(i, i + 15));
+      for (const f of inCourse) await setWordStatus(store, statusOf.get(f)!.wordId!, "queued");
+      const items = needAI.map((form) => ({ form, sentence: picked.get(form)! }));
+      const known = learner.studied.slice(0, 400).map((w) => w.lemma);
+      for (let i = 0; i < items.length; i += 15) {
+        const r = await mineWords(learner.lang, items.slice(i, i + 15), known);
+        const now = new Date().toISOString();
+        await store.write(() => {
+          for (const w of r.words) {
+            const id = crypto.randomUUID();
+            store.collections.user_word.insert({ id, user_id: store.userId, lang: learner.lang, lemma: w.lemma, gloss: w.gloss, pos: w.pos || null, forms: w.forms, notes: w.notes ?? null, deck_id: null, created_at: now } as UserWordRow & Record<string, unknown>);
+            w.examples.forEach((e, k) => {
+              if (!e.text.includes(e.cloze) || e.cloze.length >= e.text.length) return;
+              store.collections.user_sentence.insert({ id: crypto.randomUUID(), user_id: store.userId, word_id: id, text: e.text, translation: e.translation, cloze: e.cloze, origin: k === 0 ? "own-text" : "ai", model: r.model, created_at: now } as UserSentenceRow & Record<string, unknown>);
+            });
+          }
+        });
+      }
+      const n = picked.size;
+      track("words_added", { fromCourse: inCourse.length, withAI: needAI.length });
       setPicked(new Map());
-      setResult(`Added ${items.length} ${items.length === 1 ? "word" : "words"} (marked ✓). You will see them first in your next session.`);
+      setResult(`Added ${n} ${n === 1 ? "word" : "words"} (marked ✓). You will see them first in your next session.`);
     } catch (e) {
-      setResult(`Could not add the words: ${hostedMessage(e)}`);
+      setResult(`Could not add the words: ${apiMessage(e)}`);
     } finally {
       setBusy(false);
-      void refreshMe().catch(() => {});
+      refresh();
     }
   };
 
   // Words you never want to study (names, onomatopoeia) stop being highlighted.
   const ignore = async () => {
-    const rows: Lexeme[] = [];
-    for (const form of picked.keys())
-      if (!statusOf.has(form))
-        rows.push({ id: await stableId(course.id, form), courseId: course.id, lemma: form, gloss: "", forms: [form], addedAt: Date.now(), status: "ignored" });
-    await writeMany("lexemes", rows);
-    setResult(`${rows.length === 1 ? "This word is" : "These words are"} no longer marked as new.`);
+    const now = new Date().toISOString();
+    await store.write(() => {
+      for (const form of picked.keys()) {
+        const id = statusOf.get(form)?.wordId ?? formStateId(learner.lang, form);
+        const c = store.collections.word_state;
+        if (c.has(id))
+          c.update(id, (d) => {
+            d.status = "ignored";
+            d.updated_at = now;
+          });
+        else c.insert({ user_id: store.userId, word_id: id, status: "ignored", queued_at: null, updated_at: now } as WordStateRow & Record<string, unknown>);
+      }
+    });
+    setResult(`${picked.size === 1 ? "This word is" : "These words are"} no longer marked as new.`);
     setPicked(new Map());
   };
 
@@ -92,12 +127,12 @@ function MineText({ course, mode }: { course: Course; mode: AIMode | null }) {
     <section>
       <h2>From a text</h2>
       <p className="muted small">Paste a text that you want to read, for example a message or song lyrics. Then tap the words that you want to learn.</p>
-      {hosted && me && (
+      {canAI && me && (
         <p className="muted small">
-          You have <strong>{me.credits.left}</strong> of {me.credits.limit} AI words left this month. Each word you learn from a text uses one.
+          Words from the course are free. Other words use Perennial AI: you have <strong>{me.credits.left}</strong> of {me.credits.limit} AI words left this month.
         </p>
       )}
-      <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder={`Paste ${language(course.lang).name} text here`} lang={tag} />
+      <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder={`Paste ${language(learner.lang).name} text here`} lang={tag} />
       {text && (
         <>
           <p className="muted small legend-row">
@@ -110,7 +145,7 @@ function MineText({ course, mode }: { course: Course; mode: AIMode | null }) {
             {tokens.map((t, i) => {
               if (!t.word) return <span key={i}>{t.text}</span>;
               const form = formKey(t.text);
-              const st = statusOf.get(form) ?? "unknown";
+              const st = statusOf.get(form)?.status ?? "unknown";
               const sel = picked.has(form);
               const cls = sel ? "picked" : st === "added" ? "added" : isNew(st) ? "new-word" : st === "learning" ? "learning" : "";
               return (
@@ -121,42 +156,42 @@ function MineText({ course, mode }: { course: Course; mode: AIMode | null }) {
             })}
           </div>
           <div className="row">
-            <button className="primary" disabled={!picked.size || !mode || busy || tooMany} onClick={() => void add()}>
-              {busy ? "Adding…" : picked.size ? `Learn ${picked.size} ${picked.size === 1 ? "word" : "words"}${hosted ? ` · uses ${picked.size} AI ${picked.size === 1 ? "word" : "words"}` : ""}` : "Select words to learn"}
+            <button className="primary" disabled={!picked.size || busy || tooMany} onClick={() => void add()}>
+              {busy
+                ? "Adding…"
+                : picked.size
+                  ? `Learn ${picked.size} ${picked.size === 1 ? "word" : "words"}${needAI.length ? ` · uses ${needAI.length} AI ${needAI.length === 1 ? "word" : "words"}` : ""}`
+                  : "Select words to learn"}
             </button>
             <button className="ghost" disabled={!picked.size} onClick={() => void ignore()} title="Names and other words you never want to learn">
               Never mark as new
             </button>
           </div>
           {result && <p className="small">{result}</p>}
-          {tooMany && (
+          {tooMany && canAI && (
             <div className="credit-note">
               <p className="small">
-                You selected {picked.size} words, but you have only {left} AI {left === 1 ? "word" : "words"} left this month.{" "}
-                {left > 0 ? `Select ${picked.size - left} fewer, ` : ""}
-                wait until {resetDate()}, type words yourself below (free), or use your own API key in Settings.
+                You selected {needAI.length} words that are not in the course, but you have only {left} AI {left === 1 ? "word" : "words"} left this month.{" "}
+                {left > 0 ? `Select ${needAI.length - left} fewer, or ` : ""}wait until {resetDate()}.
               </p>
             </div>
           )}
-          {!mode && <p className="muted small">To add words from a text, sign in or connect an AI model in Settings.</p>}
+          {tooMany && !canAI && <p className="muted small">Some of these words are not in the course. To have Perennial AI make cards for them, add your email in Settings.</p>}
         </>
       )}
     </section>
   );
 }
 
-export function AddScreen({ course, onBack }: { course: Course; onBack: () => void }) {
-  const [mode, setMode] = useState<AIMode | null>(null);
-  useEffect(() => {
-    void aiMode().then(setMode);
-  }, []);
+export function AddScreen({ lang, onBack }: { lang: string; onBack: () => void }) {
+  const learner = useLearner(lang);
   return (
     <div className="page">
       <button className="ghost link" onClick={onBack}>
         ← Words
       </button>
       <h1>Add words</h1>
-      <MineText course={course} mode={mode} />
+      {learner && <MineText learner={learner} />}
     </div>
   );
 }

@@ -1,17 +1,28 @@
 import { useEffect, useState } from "react";
-import { getCachedMe, getSession, hostedMessage, onAccountChange, refreshMe, requestCode, resetDate, signOut, verifyCode, type Me } from "../hosted/api";
+import { apiMessage, getMe, resetDate, type Me } from "../data/ai";
+import { AuthError, sendCode, signInWithCode, signOut, useUser } from "../data/auth";
 import { CheckIcon } from "./icons";
 
-/** Current account state, kept fresh when anything signs in, out, or changes plan. */
-export function useAccount(): { signedIn: boolean | null; me: Me | null } {
-  const [state, setState] = useState<{ signedIn: boolean | null; me: Me | null }>({ signedIn: null, me: null });
+export { apiMessage };
+
+/** Account details from the server (credits), refreshed when the user changes. */
+export function useMe(): { me: Me | null; refresh: () => void } {
+  const { user } = useUser();
+  const [me, setMe] = useState<Me | null>(null);
+  const [tick, setTick] = useState(0);
+  const id = user?.id;
+  const anonymous = user?.anonymous;
   useEffect(() => {
-    const load = async () => setState({ signedIn: !!(await getSession()), me: await getCachedMe() });
-    void load();
-    void refreshMe().catch(() => {});
-    return onAccountChange(() => void load());
-  }, []);
-  return state;
+    if (!id) return;
+    let alive = true;
+    void getMe()
+      .then((m) => alive && setMe(m))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [id, anonymous, tick]);
+  return { me: id ? me : null, refresh: () => setTick((t) => t + 1) };
 }
 
 export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
@@ -27,7 +38,7 @@ export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
     try {
       await fn();
     } catch (e) {
-      setError(hostedMessage(e));
+      setError(e instanceof AuthError ? e.message : "Something went wrong. Try again.");
     } finally {
       setBusy(false);
     }
@@ -40,7 +51,7 @@ export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
         onSubmit={(e) => {
           e.preventDefault();
           void run(async () => {
-            await requestCode(email);
+            await sendCode(email.trim());
             setStep("code");
           });
         }}
@@ -68,7 +79,7 @@ export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        void run(() => verifyCode(email, code));
+        void run(() => signInWithCode(email.trim(), code));
       }}
     >
       <p className="muted small">
@@ -106,19 +117,22 @@ export function Credits({ me }: { me: Me }) {
       <span className="muted small">
         {me.credits.left} of {me.credits.limit} AI words left this month. New AI words on {resetDate()}.
       </span>
-      <span className="muted small">AI words are used when the AI makes cards from your own texts. The daily course words are free.</span>
+      <span className="muted small">AI words are used when the AI makes cards from your own texts or writes new sentences. The course itself is free.</span>
     </div>
   );
 }
 
 export function AccountPanel() {
-  const { signedIn, me } = useAccount();
-  if (signedIn === null) return null;
-  if (!signedIn)
+  const { user } = useUser();
+  const { me } = useMe();
+  if (!user) return null;
+  if (user.anonymous)
     return (
       <div className="form">
-        <p className="muted small">Sign in to use Perennial AI and to keep your words on all your devices.</p>
-        <SignIn cta="Sign in" />
+        <p className="small">
+          <strong>Keep your garden safe.</strong> Add your email to keep your words on all your devices and to use Perennial AI. Your progress stays.
+        </p>
+        <SignIn cta="Send me a code" />
       </div>
     );
   return (
@@ -126,14 +140,13 @@ export function AccountPanel() {
       <div className="status-card">
         <CheckIcon size={18} />
         <div>
-          <strong>{me?.email ?? "Signed in"}</strong>
+          <strong>{user.email}</strong>
           <span className="muted small">Your words sync on all your devices</span>
         </div>
-        <button className="ghost" onClick={() => void signOut()} title="Your words stay on this device. Sign in again to sync them.">
+        <button className="ghost" onClick={() => void signOut()} title="Your garden stays in your account. Sign in again to see it.">
           Sign out
         </button>
       </div>
-      <p className="muted small">If you sign out, your words stay on this device. Sign in again to sync them.</p>
       {me && <Credits me={me} />}
     </div>
   );

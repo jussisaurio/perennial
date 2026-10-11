@@ -1,11 +1,11 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect, useState, type ReactNode } from "react";
-import { aiMode } from "./ai/backend";
-import { ensurePool } from "./content/builder";
-import { db, getMeta, setMeta } from "./db/db";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { signOut, useUser } from "./data/auth";
+import { identify } from "./observability";
+import { StoreContext, useCourses } from "./data/learner";
+import { createStore, reloadNeeded, type Store } from "./data/store";
 import { Home } from "./ui/Home";
 import { FlowerIcon, GearIcon, HomeIcon, ListIcon, SproutMark } from "./ui/icons";
-import { GardenWalk } from "./ui/GardenWalk";
+import { LearnerGardenWalk } from "./ui/GardenWalk";
 import { Onboarding } from "./ui/Onboarding";
 import { SessionScreen } from "./ui/Session";
 import { SettingsScreen } from "./ui/Settings";
@@ -42,53 +42,118 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
   return [route, go];
 }
 
-export default function App() {
-  const courses = useLiveQuery(() => db.courses.filter((c) => !c.deleted).sortBy("createdAt"), []);
-  const [courseId, setCourseId] = useState<string | null>(null);
-  const [route, go] = useRoute();
-  const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
+const COURSE_KEY = "perennial-course";
+const readCourse = () => {
+  try {
+    return localStorage.getItem(COURSE_KEY);
+  } catch {
+    return null;
+  }
+};
 
+/** One store per signed-in user; a new user (sign-in, sign-out) gets a fresh one. */
+function StoreProvider({ userId, children }: { userId: string; children: ReactNode }) {
+  const [store, setStore] = useState<Store | null>(null);
+  const [error, setError] = useState("");
   useEffect(() => {
-    void getMeta<string | null>("course", null).then(setCourseId);
-  }, []);
-  const selectCourse = (id: string) => {
-    setCourseId(id);
-    void setMeta("course", id);
-  };
+    let alive = true;
+    let made: Store | null = null;
+    createStore(userId).then(
+      (s) => {
+        made = s;
+        if (alive) setStore(s);
+        else s.dispose();
+      },
+      (e) => alive && setError(e instanceof Error ? e.message : String(e)),
+    );
+    return () => {
+      alive = false;
+      // Dispose after the screens using this store have unmounted.
+      setTimeout(() => made?.dispose(), 0);
+    };
+  }, [userId]);
+  if (error) return <div className="page narrow"><p className="error">Could not open your data: {error}</p></div>;
+  if (!store) return null;
+  // Keyed by user: a new user remounts every screen, so none holds the old store.
+  return (
+    <StoreContext.Provider key={store.userId} value={store}>
+      {children}
+    </StoreContext.Provider>
+  );
+}
 
-  if (!courses) return null;
-  const course = courses.find((c) => c.id === courseId) ?? courses[0];
+function ReloadBanner() {
+  const [needed, setNeeded] = useState(false);
+  useEffect(() => {
+    const on = () => setNeeded(true);
+    reloadNeeded.addEventListener("reload", on);
+    return () => reloadNeeded.removeEventListener("reload", on);
+  }, []);
+  if (!needed) return null;
+  return (
+    <div className="toast" role="status">
+      A new version of Perennial is ready. Your recent answers are saved on this device.
+      <button className="ghost" onClick={() => location.reload()}>
+        Reload
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  const { user, pending } = useUser();
+  const [route, go] = useRoute();
+  // Signing in, out, or linking an anonymous learner to an account changes the
+  // user: start clean with a reload. Queued writes are kept and upload after.
+  const firstUser = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (pending) return;
+    const id = user?.id ?? null;
+    if (firstUser.current === undefined) firstUser.current = id;
+    else if (firstUser.current !== null && firstUser.current !== id) location.reload();
+    else firstUser.current = id;
+    if (id) identify(id);
+  }, [user?.id, pending]);
+  if (pending) return null;
+  if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
+  return (
+    <StoreProvider key={user.id} userId={user.id}>
+      <Main route={route} go={go} />
+      <ReloadBanner />
+    </StoreProvider>
+  );
+}
+
+function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: boolean }) => void }) {
+  const courses = useCourses();
+  const [chosen, setChosen] = useState(readCourse);
+  const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
+  const course = courses.find((c) => c.lang === chosen) ?? courses[0];
 
   if (!course)
     return (
       <Onboarding
-        onCreated={(id) => {
-          selectCourse(id);
+        signedIn
+        onStarted={(lang) => {
+          setChosen(lang);
+          try {
+            localStorage.setItem(COURSE_KEY, lang);
+          } catch {
+            /* private mode */
+          }
           go("/today", { replace: true });
         }}
       />
     );
+  const lang = course.lang;
 
   if (route === "/session")
-    return (
-      <SessionScreen
-        course={course}
-        minutes={sessionMinutes ?? course.minutes}
-        onExit={() => {
-          go("/today", { replace: true });
-          // Top up content in the background while the learner is away.
-          void (async () => {
-            if (!(await aiMode())) return;
-            await ensurePool(course);
-          })().catch(() => {});
-        }}
-      />
-    );
+    return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} onExit={() => go("/today", { replace: true })} />;
 
   if (route === "/garden")
     return (
-      <GardenWalk
-        course={course}
+      <LearnerGardenWalk
+        lang={lang}
         onExit={() => (history.length > 1 ? history.back() : go("/today", { replace: true }))}
         onWater={() => {
           setSessionMinutes(null);
@@ -117,7 +182,7 @@ export default function App() {
       </nav>
       {route === "/today" && (
         <Home
-          course={course}
+          lang={lang}
           onStart={(m) => {
             setSessionMinutes(m);
             go("/session");
@@ -126,8 +191,8 @@ export default function App() {
           onWalk={() => go("/garden")}
         />
       )}
-      {(route === "/words" || route === "/words/add") && <WordsScreen course={course} adding={route === "/words/add"} onAdd={() => go("/words/add")} onBack={() => go("/words")} />}
-      {route === "/settings" && <SettingsScreen course={course} />}
+      {(route === "/words" || route === "/words/add") && <WordsScreen lang={lang} adding={route === "/words/add"} onAdd={() => go("/words/add")} onBack={() => go("/words")} />}
+      {route === "/settings" && <SettingsScreen lang={lang} onSignedOut={() => void signOut()} />}
     </div>
   );
 }

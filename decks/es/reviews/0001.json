@@ -1,0 +1,9 @@
+{
+  "file": "source/0001.json",
+  "sha256": "2cb64fde7f5822490519eb6f899d419c94797b6002c27202c624b3e4e2264b09",
+  "author": "claude-agent:deck-pipeline-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "3 findings (1 translation, 1 natural phrasing, 1 notes wording), all fixed"
+}

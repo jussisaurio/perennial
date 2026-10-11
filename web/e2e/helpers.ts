@@ -1,25 +1,19 @@
 import { expect, type Page } from "@playwright/test";
 
-/** Read a whole IndexedDB object store from the app's database. */
-export function store<T = Record<string, unknown>>(page: Page, name: string): Promise<T[]> {
-  return page.evaluate(
-    (name) =>
-      new Promise<T[]>((resolve, reject) => {
-        const open = indexedDB.open("perennial");
-        open.onerror = () => reject(open.error);
-        open.onsuccess = () => {
-          const req = open.result.transaction(name).objectStore(name).getAll();
-          req.onsuccess = () => resolve(req.result as T[]);
-          req.onerror = () => reject(req.error);
-        };
-      }),
-    name,
-  );
-}
-
 export const newEmail = (prefix = "learner") => `${prefix}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-/** Sign in with an email code, read from the dev server's outbox. */
+/** Rows the server has for the signed-in learner (dev-only endpoint). */
+export async function serverRows<T = Record<string, unknown>>(page: Page, table: string): Promise<T[]> {
+  return page.evaluate(async (table) => (await fetch(`/api/dev/rows?table=${table}`)).json(), table);
+}
+
+/** Wait until the server has `n` rows in `table` (writes upload in the background). */
+export async function expectServerRows(page: Page, table: string, n: number | ((count: number) => boolean)) {
+  const ok = typeof n === "number" ? (c: number) => c === n : n;
+  await expect.poll(async () => ok((await serverRows(page, table)).length), { timeout: 15_000, message: `${table} rows` }).toBe(true);
+}
+
+/** Enter an email, read the code from the dev server's outbox, sign in. */
 export async function signIn(page: Page, address: string, cta: string) {
   await page.getByLabel("Email").fill(address);
   await page.getByRole("button", { name: cta }).click();
@@ -29,14 +23,23 @@ export async function signIn(page: Page, address: string, cta: string) {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 
-/** First-run onboarding through to a home screen with words ready. */
-export async function startCourse(page: Page, address = newEmail()) {
+/** First run: the landing page, then "Start learning", as an anonymous learner. */
+export async function startCourse(page: Page, language: "Spanish" | "German" = "Spanish") {
   await page.goto("/");
-  // Perennial AI (the mock model behind the dev server) prepares the words.
-  await signIn(page, address, "Start free with my email");
-  await expect(page.getByText(`Signed in as ${address}`)).toBeVisible();
-  await page.getByRole("button", { name: "Start learning" }).click();
-  await expect(page.getByText(/new words are ready/)).toBeVisible();
+  if (language !== "Spanish") await page.getByRole("radio", { name: new RegExp(language) }).check();
+  await page.getByRole("button", { name: `Start learning ${language}` }).click();
+  await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15_000 });
+}
+
+/** Add an email to the anonymous learner from Settings. */
+export async function addEmail(page: Page, address = newEmail()) {
+  await page.getByRole("tab", { name: "Settings" }).click();
+  // The app reloads once the user changes (anonymous → account).
+  const reloaded = page.waitForEvent("load");
+  await signIn(page, address, "Send me a code");
+  await reloaded;
+  await expect(page.getByText(address)).toBeVisible();
+  return address;
 }
 
 export async function startSession(page: Page) {

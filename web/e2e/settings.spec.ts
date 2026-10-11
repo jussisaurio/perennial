@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { startCourse, store } from "./helpers";
+import { addEmail, serverRows, startCourse } from "./helpers";
 
-test("target recall changed with the keyboard is saved", async ({ page }) => {
+test("target recall changed with the keyboard is saved on the server", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Settings" }).click();
   await page.getByText("How often to review").click();
@@ -10,7 +10,7 @@ test("target recall changed with the keyboard is saved", async ({ page }) => {
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await expect(page.getByText("Target: remember 92% of words")).toBeVisible();
-  await expect.poll(async () => (await store<{ retention: number }>(page, "courses"))[0].retention).toBeCloseTo(0.92);
+  await expect.poll(async () => (await serverRows<{ retention: number }>(page, "course"))[0]?.retention).toBeCloseTo(0.92);
 });
 
 test("theme choice uses plain words and applies", async ({ page }) => {
@@ -23,9 +23,12 @@ test("theme choice uses plain words and applies", async ({ page }) => {
   await expect(page.getByRole("radio", { name: "Same as my device" })).toBeVisible();
 });
 
-test("signed in: the account card says words sync, with a sync status", async ({ page }) => {
+test("anonymous learners are invited to add an email; after that the account card says words sync", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Settings" }).click();
+  await expect(page.getByText("Keep your garden safe.")).toBeVisible();
+  await expect(page.getByText("All changes are saved.")).toBeVisible();
+  await addEmail(page);
   await expect(page.getByText("Your words sync on all your devices")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sync now" })).toBeVisible();
+  await expect(page.getByText(/AI words left this month/)).toBeVisible();
 });

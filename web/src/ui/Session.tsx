@@ -1,19 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
 import { ActiveClock } from "../core/clock";
 import { MAX_NEW_PER_DAY, plan, Session as Runner, type Task } from "../core/session";
-import { freshLexemes } from "../content/builder";
+import { fsrs as scheduler } from "../core/scheduler";
 import { language } from "../content/languages";
 import { locate } from "../content/text";
-import { addReview, db, scheduler, undoReview } from "../db/db";
-import { memKey, type Course, type Example, type Lexeme } from "../model";
-import { Garden } from "./Garden";
+import { memKey, recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
+import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
 import { hasVoice, isSoundOn, speak, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
-import { courseStats, wordState, type CourseStats } from "./stats";
+import { courseStats, wordState } from "./stats";
+import { track } from "../observability";
+
+type Lexeme = Word;
+type Example = Sentence;
 
 interface Card {
   task: Task;
@@ -25,12 +28,11 @@ interface Card {
 }
 
 /** Pick the sentence the learner has seen least, so no two reviews look the same. */
-async function chooseExample(lexemeId: string): Promise<Example | undefined> {
-  const examples = (await db.examples.where("lexemeId").equals(lexemeId).toArray()).filter((e) => !e.deleted);
+function chooseExample(l: Learner, wordId: string): Example | undefined {
+  const examples = l.sentences(wordId);
   if (!examples.length) return undefined;
-  const reviews = (await db.reviews.where("lexemeId").equals(lexemeId).toArray()).filter((r) => !r.deleted);
   const seen = new Map<string, number>();
-  for (const r of reviews) if (r.exampleId) seen.set(r.exampleId, (seen.get(r.exampleId) ?? 0) + 1);
+  for (const r of l.reviewsByWord.get(wordId) ?? []) if (r.sentence_id) seen.set(r.sentence_id, (seen.get(r.sentence_id) ?? 0) + 1);
   const min = Math.min(...examples.map((e) => seen.get(e.id) ?? 0));
   const least = examples.filter((e) => (seen.get(e.id) ?? 0) === min);
   return least[Math.floor(Math.random() * least.length)];
@@ -59,7 +61,9 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
 
 function useKeys(map: Record<string, () => void>) {
   const ref = useRef(map);
-  ref.current = map;
+  useLayoutEffect(() => {
+    ref.current = map;
+  });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -74,8 +78,13 @@ function useKeys(map: Record<string, () => void>) {
   }, []);
 }
 
-export function SessionScreen({ course, onExit, minutes }: { course: Course; onExit: () => void; minutes: number }) {
-  const tag = language(course.lang).tag;
+export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit: () => void; minutes: number }) {
+  const learner = useLearner(lang);
+  // Answers update the learner live; reads in event handlers use the latest.
+  const live = useRef(learner);
+  live.current = learner;
+  const store = useStore();
+  const tag = language(lang).tag;
   const [runner, setRunner] = useState<Runner | null>(null);
   const [card, setCard] = useState<Card | null>(null);
   const [done, setDone] = useState(false);
@@ -97,17 +106,19 @@ export function SessionScreen({ course, onExit, minutes }: { course: Course; onE
   const start = useCallback(
     async (mins: number) => {
       // No voice, or sound turned off: no listening exercises.
+      const l = live.current;
+      if (!l) return;
       const voice = isSoundOn() && (await hasVoice(tag));
-      const memories = (await db.memory.where("courseId").equals(course.id).toArray()).filter((m) => voice || m.skill !== "listen");
-      const suspended = new Set((await db.lexemes.where("courseId").equals(course.id).toArray()).filter((l) => l.deleted || l.status === "suspended" || l.status === "ignored").map((l) => l.id));
-      const fresh = (await freshLexemes(course.id)).map((l) => l.id);
+      const memories = l.memories.filter((m) => voice || m.skill !== "listen");
+      const suspended = new Set([...l.words.values()].filter((w) => w.status === "paused" || w.status === "ignored").map((w) => w.id));
+      const fresh = l.fresh();
       const p = plan({
         now: Date.now(),
         budgetMs: mins * 60_000,
         memories: memories.filter((m) => !suspended.has(m.lexemeId)),
         fresh,
         fsrs: scheduler,
-        newToday: await newWordsToday(course.id),
+        newToday: newWordsToday(l),
       });
       setNewLimitReached(p.newLimitReached);
       const r = new Runner(p, mins * 60_000);
@@ -118,7 +129,7 @@ export function SessionScreen({ course, onExit, minutes }: { course: Course; onE
       await advance(r);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [course.id, tag],
+    [!!learner, tag],
   );
 
   const advance = async (r: Runner) => {
@@ -131,10 +142,11 @@ export function SessionScreen({ course, onExit, minutes }: { course: Course; onE
       setDone(true);
       return;
     }
-    const lexeme = await db.lexemes.get(task.lexemeId);
+    const l = live.current!;
+    const lexeme = l.words.get(task.lexemeId);
     if (!lexeme) return advance(r);
-    const example = await chooseExample(lexeme.id);
-    const read = await db.memory.get(memKey(lexeme.id, "read"));
+    const example = chooseExample(l, lexeme.id);
+    const read = l.memory.get(memKey(lexeme.id, "read"));
     shownAt.current = clock.current.elapsed;
     serial.current++;
     setDone(false);
@@ -197,7 +209,7 @@ export function SessionScreen({ course, onExit, minutes }: { course: Course; onE
       const last = undoStack[undoStack.length - 1];
       if (!runner.undo()) return;
       setUndoStack((s) => s.slice(0, -1));
-      if (last.reviewId) await undoReview(last.reviewId);
+      if (last.reviewId) undoReview(store, last.reviewId);
       if (last.review) counts.current.reviews--;
       if (!last.intro) counts.current.answers--;
       if (last.intro) counts.current.intros--;
@@ -225,7 +237,7 @@ export function SessionScreen({ course, onExit, minutes }: { course: Course; onE
     if (task.kind === "intro") {
       counts.current.intros++;
       pop(lexeme.lemma, 0, false);
-      const reviewId = opts.alreadyKnown ? await addReview({ courseId: course.id, lexemeId: lexeme.id, skill: "read", grade: 4, ts: Date.now(), ms }) : undefined;
+      const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: lexeme.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       if (opts.alreadyKnown) flash("OK. No quick check now. You will see this word again in about a week.");
       setUndoStack((s) => [...s, { reviewId, review: false, intro: true }]);
@@ -236,10 +248,13 @@ export function SessionScreen({ course, onExit, minutes }: { course: Course; onE
       counts.current.answers++;
       const fresh = !practised.current.has(lexeme.id);
       practised.current.add(lexeme.id);
-      const reviewId = await addReview({ courseId: course.id, lexemeId: lexeme.id, skill: task.skill, grade, ts: Date.now(), ms, exampleId: example?.id });
+      const reviewId = recordReview(store, { lang, word_id: lexeme.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms), sentence_id: example?.id ?? null });
       if (grade >= 3) {
-        const read = await db.memory.get(memKey(lexeme.id, "read"));
-        pop(lexeme.lemma, read?.s ?? 0, wordState(read) === "known");
+        // The new review shows up in the learner on the next render; let it land first.
+        setTimeout(() => {
+          const read = live.current?.memory.get(memKey(lexeme.id, "read"));
+          pop(lexeme.lemma, read?.s ?? 0, wordState(read) === "known");
+        }, 0);
       }
       const retry = runner.report(task, { grade });
       if (grade === 1) flash(retry ? "You will see this word again soon." : "You will see this word again next time.");
@@ -283,9 +298,9 @@ export function SessionScreen({ course, onExit, minutes }: { course: Course; onE
         </button>
       </header>
       {done ? (
-        <Summary course={course} counts={counts.current} practised={practised.current} ended={ended} newLimitReached={newLimitReached} onMore={() => void start(5)} onExit={onExit} />
+        <Summary learner={learner} counts={counts.current} practised={practised.current} ended={ended} newLimitReached={newLimitReached} onMore={() => void start(5)} onExit={onExit} />
       ) : card ? (
-        <CardView key={serial.current} card={card} tag={tag} lang={course.lang} onDone={finish} />
+        <CardView key={serial.current} card={card} tag={tag} lang={lang} onDone={finish} />
       ) : null}
       {note && (
         <div className="session-note" role="status">
@@ -644,7 +659,7 @@ function ShortcutHelp({ onClose }: { onClose: () => void }) {
 }
 
 function Summary({
-  course,
+  learner,
   counts,
   practised,
   ended,
@@ -652,7 +667,7 @@ function Summary({
   onMore,
   onExit,
 }: {
-  course: Course;
+  learner: Learner | null;
   counts: { reviews: number; intros: number; answers: number };
   practised: Set<string>;
   ended: "time" | "empty" | "user";
@@ -660,10 +675,9 @@ function Summary({
   onMore: () => void;
   onExit: () => void;
 }) {
-  const [stats, setStats] = useState<CourseStats | null>(null);
-  useEffect(() => {
-    void courseStats(course.id, course.lang).then(setStats);
-  }, [course.id, course.lang]);
+  const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
+  useEffect(() => track("session_finished", { ended, answers: counts.answers, newWords: counts.intros }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   useKeys(useMemo(() => ({ Enter: onExit }), [onExit]));
   const did = counts.answers + counts.intros > 0;
   const title = ended === "user" ? "Session paused" : "Session complete";
@@ -692,7 +706,7 @@ function Summary({
           <span>{counts.answers === 1 ? "answer" : "answers"}</span>
         </div>
       </div>
-      <Garden courseId={course.id} highlight={practised} compact />
+      <Garden data={garden} highlight={practised} compact />
       {stats && (
         <p>
           {stats.known > 0 ? (
@@ -719,13 +733,15 @@ function Summary({
 }
 
 /** New words introduced today: their first reading review happened today. */
-async function newWordsToday(courseId: string): Promise<number> {
+function newWordsToday(l: Learner): number {
   const startOfDay = new Date().setHours(0, 0, 0, 0);
   const first = new Map<string, number>();
-  for (const r of await db.reviews.where("courseId").equals(courseId).toArray()) {
-    if (r.deleted || r.skill !== "read") continue;
-    const t = first.get(r.lexemeId);
-    if (t === undefined || r.ts < t) first.set(r.lexemeId, r.ts);
+  for (const r of l.reviews) {
+    if (r.skill !== "read") continue;
+    const id = l.resolve(r.word_id);
+    const t = Date.parse(r.reviewed_at);
+    const prev = first.get(id);
+    if (prev === undefined || t < prev) first.set(id, t);
   }
   return [...first.values()].filter((t) => t >= startOfDay).length;
 }

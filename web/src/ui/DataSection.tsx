@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { db } from "../db/db";
-import { deleteAccount, hostedMessage } from "../hosted/api";
+import { deleteAccount, useUser } from "../data/auth";
+import { useLearner, wordState, type Learner } from "../data/learner";
 import { language } from "../content/languages";
-import { useAccount } from "./Account";
 
 function download(name: string, type: string, body: string) {
   const url = URL.createObjectURL(new Blob([body], { type }));
@@ -13,12 +12,11 @@ function download(name: string, type: string, body: string) {
 
 const stamp = () => new Date().toISOString().slice(0, 10);
 
-/** Everything Perennial knows about you, including the full review log. */
-async function exportJSON() {
-  const [courses, lexemes, examples, reviews] = await Promise.all([db.courses.toArray(), db.lexemes.toArray(), db.examples.toArray(), db.reviews.toArray()]);
-  const strip = <T extends { _ts?: unknown }>(rows: T[]) => rows.map(({ _ts, ...r }) => r);
-  const data = { app: "perennial", version: 1, exportedAt: new Date().toISOString(), courses: strip(courses), lexemes: strip(lexemes), examples: strip(examples), reviews };
-  download(`perennial-${stamp()}.json`, "application/json", JSON.stringify(data, null, 2));
+/** Everything Perennial keeps about you for this language, including the full review log. */
+function exportJSON(l: Learner) {
+  const words = l.studied.map((w) => ({ ...w, sentences: l.sentences(w.id) }));
+  const data = { app: "perennial", version: 2, exportedAt: new Date().toISOString(), language: l.lang, course: l.course, words, reviews: l.reviews, wordStates: [...l.states.values()] };
+  download(`perennial-${l.lang}-${stamp()}.json`, "application/json", JSON.stringify(data, null, 2));
 }
 
 const csvCell = (v: unknown) => {
@@ -26,42 +24,31 @@ const csvCell = (v: unknown) => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-async function exportCSV() {
-  const [courses, lexemes, reviews] = await Promise.all([db.courses.toArray(), db.lexemes.toArray(), db.reviews.toArray()]);
-  const lang = new Map(courses.map((c) => [c.id, language(c.lang).name]));
-  const count = new Map<string, number>();
-  for (const r of reviews) if (!r.deleted) count.set(r.lexemeId, (count.get(r.lexemeId) ?? 0) + 1);
-  const rows = [["language", "word", "meaning", "part of speech", "notes", "reviews", "status"]];
-  for (const l of lexemes) if (!l.deleted && l.status !== "ignored") rows.push([lang.get(l.courseId) ?? "", l.lemma, l.gloss, l.pos ?? "", l.notes ?? "", String(count.get(l.id) ?? 0), l.status ?? "active"]);
-  download(`perennial-words-${stamp()}.csv`, "text/csv", rows.map((r) => r.map(csvCell).join(",")).join("\n"));
+function exportCSV(l: Learner) {
+  const rows = [["language", "word", "meaning", "part of speech", "notes", "reviews", "state", "status"]];
+  for (const w of l.studied) {
+    if (w.status === "ignored") continue;
+    rows.push([language(l.lang).name, w.lemma, w.gloss, w.pos ?? "", w.notes ?? "", String(l.reviewsByWord.get(w.id)?.length ?? 0), wordState(l.memory.get(`${w.id}:read`)), w.status]);
+  }
+  download(`perennial-words-${l.lang}-${stamp()}.csv`, "text/csv", rows.map((r) => r.map(csvCell).join(",")).join("\n"));
 }
 
 function DeleteAccount() {
   const [typed, setTyped] = useState("");
   const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
-  if (done) return <p className="small">Your account and the data on our server are deleted. Your words are still on this device.</p>;
   return (
     <details className="more danger">
       <summary>Delete my account</summary>
       <div className="form">
         <p className="small">
-          This deletes your account and everything stored on our server. Your words stay on this device. <strong>You cannot undo this.</strong>
+          This deletes your account, your garden and everything stored on our server. <strong>You cannot undo this.</strong> Download your data first if you want to keep a copy.
         </p>
         <label>
           Type <strong>delete</strong> to confirm
           <input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
         </label>
         <div className="row">
-          <button
-            className="fail"
-            disabled={typed.trim().toLowerCase() !== "delete"}
-            onClick={() =>
-              void deleteAccount()
-                .then(() => setDone(true))
-                .catch((e) => setError(hostedMessage(e)))
-            }
-          >
+          <button className="fail" disabled={typed.trim().toLowerCase() !== "delete"} onClick={() => void deleteAccount().catch((e) => setError(e instanceof Error ? e.message : String(e)))}>
             Delete my account
           </button>
         </div>
@@ -71,22 +58,24 @@ function DeleteAccount() {
   );
 }
 
-export function DataSection() {
-  const { signedIn } = useAccount();
+export function DataSection({ lang }: { lang: string }) {
+  const { user } = useUser();
+  const learner = useLearner(lang);
   return (
     <div className="form">
       <p className="muted small">
-        Your words and progress are stored in this browser. {signedIn ? "Because you are signed in, a copy is also kept on the Perennial server to sync your devices." : "Nothing leaves this device until you sign in."} When the AI makes cards, the words and sentences are sent to the AI service. Word lists come from FrequencyWords (film and TV subtitles).
+        Your progress is saved on this device and on the Perennial server, so you can continue on any device {user?.anonymous ? "after you add your email" : "where you sign in"}. When Perennial AI makes cards for you, those words and sentences are sent to the AI service (Anthropic). See the{" "}
+        <a href="/privacy.html">privacy policy</a>.
       </p>
       <div className="row">
-        <button className="secondary" onClick={() => void exportJSON()}>
+        <button className="secondary" disabled={!learner} onClick={() => learner && exportJSON(learner)}>
           Download all my data (JSON)
         </button>
-        <button className="secondary" onClick={() => void exportCSV()}>
+        <button className="secondary" disabled={!learner} onClick={() => learner && exportCSV(learner)}>
           Download my words (CSV)
         </button>
       </div>
-      {signedIn && <DeleteAccount />}
+      {user && <DeleteAccount />}
     </div>
   );
 }

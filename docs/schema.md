@@ -99,7 +99,7 @@ Theme and sound are per-device preferences (localStorage), so they don't sync. D
 
 - **Before the first write:** the app is local-only. The first write creates an anonymous user and session, then the shapes connect.
 - **Signing in** links the account in Better Auth's `onLinkAccount`, all in one transaction:
-  - reviews, user words and sentences: `insert … select … on conflict do nothing`;
+  - reviews, user words and sentences: their ids are globally unique, so they just change owner (`update … set user_id`);
   - word state and course: newer row wins;
   - then the anonymous user is deleted.
 - **During the link:** the client keeps its local DB and upload queue, reconnects with the new token, and replays. The server stamps the new `user_id`.

@@ -33,3 +33,6 @@ coverage/
 .vscode/*
 !.vscode/extensions.json
 *.sw?
+
+# Claude Code local state (agent worktrees)
+.claude/

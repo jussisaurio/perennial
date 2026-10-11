@@ -28,7 +28,7 @@ test("export downloads everything, including the review log", async ({ page }) =
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download all my data (JSON)" }).click()]);
   const data = JSON.parse(readFileSync((await download.path())!, "utf8"));
   expect(data.app).toBe("perennial");
-  expect(data.lexemes.length).toBeGreaterThan(0);
+  expect(data.words.length).toBe(1);
   expect(data.reviews).toHaveLength(1);
-  expect(data.reviews[0].grade).toBe(4);
+  expect(data.reviews[0]).toMatchObject({ grade: 4, kind: "known" });
 });

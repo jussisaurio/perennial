@@ -1,24 +1,37 @@
-// Perennial server: sync (op log), accounts, hosted AI, and billing. Also
-// serves the built web app from ../web/dist when present.
-//
-// Configuration is read from the environment; see src/config.ts.
+// Perennial server: auth, sync (Electric proxy + writes), Perennial AI, and
+// the built web app from ../web/dist. Configuration: see src/config.ts.
+// Error reporting is set up in instrument.ts (preloaded, see package.json).
 
 import { createApp } from "./src/app";
 import { loadConfig } from "./src/config";
+import { log } from "./src/log";
 
 const config = loadConfig();
-const app = createApp(config);
-const server = Bun.serve({ port: config.port, fetch: app.fetch });
+const sql = new Bun.SQL(config.databaseUrl, { max: 10, idleTimeout: 30 });
+const app = createApp(config, sql);
 
-const housekeeping = () => {
-  const r = app.maintain();
-  if (r.rows || r.sessions || r.codes) console.log(`housekeeping: forgot ${r.rows} deleted rows (${r.ops} history entries), ${r.sessions} expired sessions, ${r.codes} old codes`);
-};
-housekeeping();
-setInterval(housekeeping, 24 * 3_600_000);
+const server = Bun.serve({
+  port: config.port,
+  fetch: app.fetch,
+  // Electric holds live shape requests open for ~20 s; Bun's default 10 s idle
+  // timeout would cut them.
+  idleTimeout: 0,
+});
 
-console.log(
-  `perennial server on http://localhost:${server.port}` +
-    ` (db: ${config.dbPath}, ai: ${config.anthropic.apiKey || config.anthropic.baseURL ? config.anthropic.model : "off"},` +
-    ` billing: ${app.billing.stripe ? "on" : "off"}, mail: ${config.dev ? "dev outbox" : "resend"})`,
-);
+log.info("perennial server started", {
+  url: `http://localhost:${server.port}`,
+  release: config.release,
+  ai: app.ai.enabled ? config.anthropic.model : "off",
+  mail: config.dev ? "dev outbox" : "resend",
+  electric: config.electric.url,
+});
+
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.on(signal, async () => {
+    log.info("shutting down", { signal });
+    await server.stop();
+    await app.close();
+    await sql.close();
+    process.exit(0);
+  });
+}

@@ -22,8 +22,18 @@ function entry(form: string, sentence?: string) {
   return { lemma: form, gloss: `[mock] ${form}`, pos: "mock", forms: [form], notes: "Placeholder from mock-llm.ts — not real content.", examples };
 }
 
+// A valid deck source entry (scripts/deck/generate.ts --mock).
+function deckWord(lemma: string, pos: string) {
+  const sentences = [`Veo ${lemma} aquí.`, `¿Dónde está ${lemma}?`, `Me gusta ${lemma} mucho.`].map((text) => ({ text, translation: `(translation of: ${text})`, cloze: lemma }));
+  return { lemma, gloss: `[mock] ${lemma}`, pos, forms: [lemma], ...(pos === "noun" ? { gender: "m" } : {}), notes: "Placeholder from mock-llm.ts.", sentences };
+}
+
 function reply(prompt: string): unknown {
   if (prompt.includes('{"ok": true}')) return { ok: true };
+  const surface = prompt.match(/^Surface forms \(most frequent first\):\n(.+)$/m);
+  if (surface) return { lemmas: surface[1].split(", ").map((f) => ({ lemma: f, pos: "noun" })) };
+  const deck = [...prompt.matchAll(/^- lemma: (.+?) \| pos: (\w+)/gm)];
+  if (deck.length) return { words: deck.map(([, l, pos]) => deckWord(l, pos)) };
   const freq = prompt.match(/in frequency order:\n(.+)\n/);
   if (freq) return { words: freq[1].split(", ").map((f) => entry(f)) };
   const mined = [...prompt.matchAll(/^- "(.+?)" in: (.+)$/gm)];
