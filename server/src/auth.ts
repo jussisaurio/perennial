@@ -58,6 +58,14 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
       // Codes by email are the main abuse target (email bombing).
       customRules: { "/email-otp/send-verification-otp": { window: 300, max: 3 }, "/sign-in/anonymous": { window: 3600, max: 20 } },
     },
+    // Better Auth's own messages go through our structured log (with the
+    // request id). Of the extra arguments only errors are kept: the rest can
+    // be anything, users and request bodies included.
+    logger: {
+      log(level, message, ...args) {
+        log[level](`auth: ${message}`, { err: args.find((a) => a instanceof Error) });
+      },
+    },
     advanced: {
       database: { generateId: "uuid" },
       ipAddress: { ipAddressHeaders: config.clientIpHeaders },

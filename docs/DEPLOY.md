@@ -349,7 +349,7 @@ After you change a variable, Railway asks you to deploy the change. Deploy all s
 | `BETTER_AUTH_SECRET` | New value on `web`, redeploy. **Only when it leaked.** | **Every learner is signed out.** Learners with an email sign in again. **Anonymous learners lose access to their progress** (it stays on the server until housekeeping deletes it). |
 | `RESEND_API_KEY` | Create a new key in Resend, update `web`, redeploy, then delete the old key. | None, if you do it in this order. |
 | `ANTHROPIC_API_KEY` | Same order as Resend. | None. |
-| `SENTRY_DSN` | not set | Server error reports (web and housekeeping). |
+| `SENTRY_DSN`, `VITE_SENTRY_DSN` | Sentry → project → **Client Keys (DSN)** → create a new key. Update the variable (`SENTRY_DSN` on `web` and `housekeeping`; `VITE_SENTRY_DSN` on `web`, which rebuilds the app), redeploy, then disable the old key. A DSN only lets someone send reports, so rotate it when it is abused. | None, if you do it in this order. |
 
 Also rotate a secret when a person with access leaves.
 

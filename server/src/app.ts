@@ -102,6 +102,19 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
     };
   }
 
+  /**
+   * The only Better Auth endpoints the app uses (web/src/data/auth.ts). The
+   * rest (passwords, email change, account linking, session lists, user
+   * updates...) stay unreachable, whatever a future Better Auth enables.
+   */
+  const authEndpoints: Record<string, string[]> = {
+    "/api/auth/get-session": ["GET"],
+    "/api/auth/sign-out": ["POST"],
+    "/api/auth/sign-in/anonymous": ["POST"],
+    "/api/auth/email-otp/send-verification-otp": ["POST"],
+    "/api/auth/sign-in/email-otp": ["POST"],
+  };
+
   const appOrigin = new URL(config.appUrl).origin;
   /**
    * Cookie sessions: a state-changing request must come from our own page.
@@ -117,7 +130,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
 
   async function route(req: Request): Promise<Response> {
     const url = new URL(req.url);
-    if (url.pathname.startsWith("/api/auth/")) return auth.handler(req);
+    if (url.pathname.startsWith("/api/auth/")) return authEndpoints[url.pathname]?.includes(req.method) ? auth.handler(req) : fail(404, "not_found");
     if (req.method !== "GET" && req.method !== "HEAD" && url.pathname.startsWith("/api/")) requireSameOrigin(req);
     const r = routes[url.pathname];
     if (r) {
