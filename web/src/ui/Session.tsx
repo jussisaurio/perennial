@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
 import { ActiveClock } from "../core/clock";
@@ -61,7 +61,9 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
 
 function useKeys(map: Record<string, () => void>) {
   const ref = useRef(map);
-  ref.current = map;
+  useLayoutEffect(() => {
+    ref.current = map;
+  });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;

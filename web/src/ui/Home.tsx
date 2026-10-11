@@ -6,6 +6,7 @@ import { SignIn } from "./Account";
 import { Garden, gardenFromLearner } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
+import { useNow } from "./useNow";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -22,6 +23,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   }, []);
   const { user } = useUser();
   const learner = useLearner(code);
+  const now = useNow();
   const stats = useMemo(() => (learner ? courseStats(learner) : undefined), [learner]);
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   if (!learner || !stats) return <div className="page home" />;
@@ -41,7 +43,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
     <div className={stagger ? "page home stagger" : "page home"}>
       <header className="home-head">
         <div>
-          <div className="date">{new Date().toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}</div>
+          <div className="date">{new Date(now).toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}</div>
           <h1>
             {greeting()}. Time for <em>{lang}</em>.
           </h1>

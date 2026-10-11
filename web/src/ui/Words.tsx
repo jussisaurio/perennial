@@ -6,6 +6,7 @@ import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type 
 import type { UserSentenceRow } from "../data/rows";
 import type { MemoryRow } from "../model";
 import { useMe } from "./Account";
+import { useNow } from "./useNow";
 import { AddScreen } from "./Add";
 import { StageGlyph } from "./Garden";
 import { PlusIcon } from "./icons";
@@ -218,6 +219,7 @@ function RewriteButton({ learner, word, label }: { learner: Learner; word: Word;
 
 function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; lexeme: Lexeme; memory: MemoryRow[]; onDeleted: () => void }) {
   const store = useStore();
+  const now = useNow();
   const examples = learner.sentences(lexeme.id);
   const mine = lexeme.source === "user";
   const [gloss, setGloss] = useState(lexeme.gloss);
@@ -260,7 +262,7 @@ function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; 
             .sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill))
             .map((m) => (
               <li key={m.skill}>
-                <strong>{SKILL_NAME[m.skill]}:</strong> next review {m.due <= Date.now() ? "now" : relTime(m.due)} · {plural(m.reps, "review")}
+                <strong>{SKILL_NAME[m.skill]}:</strong> next review {m.due <= now ? "now" : relTime(m.due)} · {plural(m.reps, "review")}
                 {m.lapses > 0 && ` · missed ${plural(m.lapses, "time")}`}
               </li>
             ))}
