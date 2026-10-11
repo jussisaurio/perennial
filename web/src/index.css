@@ -717,3 +717,8 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .greeting-aside { margin: 0.2rem 0 0; color: var(--muted); font-style: italic; }
 .headline-small { margin-top: -0.4rem; }
 .farewell { margin: 1.5rem 0 0; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink-2); }
+
+/* Between screens: nothing for a fast load, a quietly growing sprout for a slow one. */
+.settling { min-height: 60vh; display: grid; place-items: center; color: var(--leaf); opacity: 0; animation: settle-in 0.4s var(--ease) 0.3s forwards; }
+@keyframes settle-in { to { opacity: 0.7; } }
+@media (prefers-reduced-motion: reduce) { .settling { animation: none; opacity: 0.7; } }

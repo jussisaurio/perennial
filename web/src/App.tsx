@@ -6,7 +6,8 @@ import { createStore, reloadNeeded, type Store } from "./data/store";
 import { Home } from "./ui/Home";
 import { FlowerIcon, GearIcon, HomeIcon, ListIcon, SproutMark } from "./ui/icons";
 import { LearnerGardenWalk } from "./ui/GardenWalk";
-import { Onboarding } from "./ui/Onboarding";
+import { courseArrived, Onboarding, startingCourse } from "./ui/Onboarding";
+import { Settling } from "./ui/Settling";
 import { SessionScreen } from "./ui/Session";
 import { SettingsScreen } from "./ui/Settings";
 import { WordsScreen } from "./ui/Words";
@@ -73,7 +74,7 @@ function StoreProvider({ userId, children }: { userId: string; children: ReactNo
     };
   }, [userId]);
   if (error) return <div className="page narrow"><p className="error">Could not open your data: {error}</p></div>;
-  if (!store) return null;
+  if (!store) return <Settling />;
   // Keyed by user: a new user remounts every screen, so none holds the old store.
   return (
     <StoreContext.Provider key={store.userId} value={store}>
@@ -114,7 +115,7 @@ export default function App() {
     else firstUser.current = id;
     if (id) identify(id);
   }, [user?.id, pending]);
-  if (pending) return null;
+  if (pending) return <Settling />;
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
   return (
     <StoreProvider key={user.id} userId={user.id}>
@@ -125,11 +126,14 @@ export default function App() {
 }
 
 function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: boolean }) => void }) {
-  const courses = useCourses();
+  const { courses, ready } = useCourses();
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
+  if (course && startingCourse) courseArrived();
 
+  // Still loading, or a course was just started and is on its way: not the landing page.
+  if (!course && (!ready || startingCourse)) return <Settling />;
   if (!course)
     return (
       <Onboarding

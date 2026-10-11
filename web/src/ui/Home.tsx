@@ -8,6 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
+import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
@@ -43,7 +44,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const snailAt = snailAlong();
   // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
   const aside = visitors?.milestone ?? visitors?.welcome ?? greetingAside();
-  if (!learner || !stats) return <div className="page home" />;
+  if (!learner || !stats) return <Settling />;
   const course = learner.course;
   const ready = stats.seeds;
   const started = stats.known + stats.learning;

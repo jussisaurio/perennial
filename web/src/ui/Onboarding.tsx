@@ -35,7 +35,16 @@ function saveDraft(d: Draft) {
 }
 
 /** The first write: an anonymous account (if there is none yet) and the course. */
+/**
+ * A course being started: set before the first write, so the app shows a calm
+ * loading screen (not this page again) while the new account and its course
+ * arrive, even though signing in remounts everything in between.
+ */
+export let startingCourse: string | null = null;
+export const courseArrived = () => void (startingCourse = null);
+
 export async function startCourse(lang: string, minutes: number) {
+  startingCourse = lang;
   await ensureUser();
   const res = await fetch("/api/write", {
     method: "POST",
@@ -81,6 +90,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       track("course_started", { lang, minutes });
       onStarted(lang);
     } catch {
+      courseArrived();
       setError("Could not start. Check your internet connection and try again.");
       setBusy(false);
     }
