@@ -74,4 +74,31 @@ It starts a mock AI model, Stripe's official API mock, the server, and the app o
 cd web && bun test src      # FSRS (checked against ts-fsrs), planner, answer checking, text
 cd server && bun test       # sync, accounts, hosted AI limits, billing (Stripe SDK against stripe-mock in Docker)
 cd web && bun run e2e       # Playwright: sign-in, sessions, garden, sync between devices
+bun test scripts/deck web/src/deck   # decks: build, invariants, compatibility, replay
 ```
+
+## Decks
+
+The shared course is static JSON in `decks/<lang>/`. The format and the rules are in [docs/schema.md](docs/schema.md).
+
+- `source/0001.json`, `0002.json`, …: the words, written by people or drafted by a model. No ids. At most 100 words per file. The order is the frequency rank.
+- `ids.json`: the id manifest: `(lemma, pos, sense)` → word id, and `(word id, sentence)` → sentence id. Committed. Edit it by hand only to keep an id when you fix a typo in a lemma.
+- `aliases.json` (optional): `{ "<duplicate word id>": "<target word id>" }`.
+- `deck.json`: the published deck. Generated and committed.
+
+```sh
+cd scripts && bun install && cd ..
+bun scripts/deck/build.ts es                   # after you edit the source: assign ids, write deck.json and ids.json
+bun scripts/deck/check.ts --base origin/main   # what CI runs: schema, up to date, compatibility, diff report
+```
+
+A word removed from the source stays in `deck.json` with `retired: true`, so its reviews are kept. A sentence whose text changes gets a new id, and the old one is retired. CI fails when more than 5% of a deck's words are retired. To approve, add the `deck-big-change` label to the PR (locally: `DECK_ALLOW_BIG_CHANGE=1`).
+
+**Drafting words with a model** (costs money, never runs in CI):
+
+```sh
+ANTHROPIC_API_KEY=… bun scripts/deck/generate.ts es --count 200    # model: DECK_MODEL, default claude-sonnet-4-5
+bun server/mock-llm.ts & bun scripts/deck/generate.ts es --count 20 --mock   # plumbing only: placeholder words
+```
+
+It takes the next lemmas from the OpenSubtitles frequency list ([hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords)), writes the entries through the Message Batches API, validates them, and appends them to the source. Read the diff before you run `build.ts`.
