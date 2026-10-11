@@ -92,6 +92,7 @@ export function deckProblems(deck: Deck): string[] {
   if (words.size !== deck.words.length) out.push("duplicate word ids");
   const sentenceIds = new Set<string>();
   const live = new Map<string, number>();
+  const keys = new Set<string>();
   for (const s of deck.sentences) {
     if (sentenceIds.has(s.id)) out.push(`duplicate sentence id ${s.id}`);
     sentenceIds.add(s.id);
@@ -105,9 +106,14 @@ export function deckProblems(deck: Deck): string[] {
       const target = words.get(w.aliasOf);
       if (!target) out.push(`word ${w.id} is an alias of unknown ${w.aliasOf}`);
       else if (target.aliasOf) out.push(`word ${w.id} is an alias of an alias (${w.aliasOf})`);
+      else if (target.retired) out.push(`word ${w.id} is an alias of retired ${w.aliasOf}`);
       continue;
     }
-    if (!w.retired && (live.get(w.id) ?? 0) < 3) out.push(`word ${w.id} (${w.lemma}) has fewer than 3 live sentences`);
+    if (w.retired) continue;
+    const key = manifestKey(w);
+    if (keys.has(key)) out.push(`two live words share lemma, part of speech and sense: ${key}`);
+    keys.add(key);
+    if ((live.get(w.id) ?? 0) < 3) out.push(`word ${w.id} (${w.lemma}) has fewer than 3 live sentences`);
   }
   return out;
 }
@@ -131,15 +137,20 @@ export function compatibility(prev: Deck, next: Deck): { errors: string[]; added
     }
     if (n.pos !== w.pos) errors.push(`word ${w.id} changed part of speech (${w.pos} → ${n.pos}): use a new id`);
     if (w.retired && !n.retired) errors.push(`word ${w.id} was un-retired`);
-    if (!w.retired && n.retired) retired++;
-    else if (n.lemma !== w.lemma || n.gloss !== w.gloss || n.notes !== w.notes) edited++;
+    // Reviews of an alias are unioned with its target, so the link is permanent.
+    if (w.aliasOf && n.aliasOf !== w.aliasOf) errors.push(`word ${w.id} changed alias (${w.aliasOf} → ${n.aliasOf ?? "none"})`);
+    // A word folded into another as an alias keeps its progress: not counted as retired.
+    if (!w.retired && n.retired && !n.aliasOf) retired++;
+    else if (n.lemma !== w.lemma || n.gloss !== w.gloss || n.notes !== w.notes || n.gender !== w.gender || n.forms.join() !== w.forms.join()) edited++;
   }
   for (const s of prev.sentences) {
     const n = nextSentences.get(s.id);
     if (!n) errors.push(`sentence ${s.id} was removed; retire it instead`);
     else if (n.wordId !== s.wordId) errors.push(`sentence ${s.id} moved to another word`);
+    else if (s.retired && !n.retired) errors.push(`sentence ${s.id} was un-retired`);
   }
-  const added = next.words.filter((w) => !prev.words.some((p) => p.id === w.id)).length;
+  const prevIds = new Set(prev.words.map((w) => w.id));
+  const added = next.words.filter((w) => !prevIds.has(w.id)).length;
   const liveBefore = prev.words.filter((w) => !w.retired && !w.aliasOf).length || 1;
   return { errors, added, edited, retired, retiredShare: retired / liveBefore };
 }
