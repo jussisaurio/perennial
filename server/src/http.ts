@@ -66,7 +66,9 @@ export function securityHeaders(connect: string[], https: boolean, turnstile = f
 /**
  * Serve the built web app. Hashed assets are immutable; everything else
  * (index.html, the service worker, the manifest) must revalidate so a deploy
- * reaches users. Unknown paths fall back to index.html (hash routing).
+ * reaches users. Unknown paths fall back to index.html (hash routing), but a
+ * missing file (a path with an extension, e.g. last release's hashed chunk) is
+ * a 404: the old client then reloads instead of parsing HTML as JavaScript.
  */
 export async function serveStatic(dir: string, pathname: string): Promise<Response> {
   const rel = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, "");
@@ -75,6 +77,7 @@ export async function serveStatic(dir: string, pathname: string): Promise<Respon
     const immutable = rel.startsWith("/assets/") || rel.startsWith("/decks/");
     return new Response(file, { headers: { "cache-control": immutable ? "public, max-age=31536000, immutable" : "no-cache" } });
   }
+  if (/\.[a-z0-9]+$/i.test(rel)) return new Response("not found", { status: 404, headers: { "cache-control": "no-cache" } });
   const index = Bun.file(join(dir, "index.html"));
   return (await index.exists()) ? new Response(index, { headers: { "cache-control": "no-cache" } }) : new Response("not found", { status: 404 });
 }

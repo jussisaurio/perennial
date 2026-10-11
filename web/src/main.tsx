@@ -9,6 +9,20 @@ initTheme();
 initObservability();
 void navigator.storage?.persist?.();
 
+// After a deploy, this page may ask for last release's code chunks, which are
+// gone: load the new release instead (once a minute at most, so never a loop).
+window.addEventListener("vite:preloadError", (e) => {
+  try {
+    const last = Number(sessionStorage.getItem("reloaded-for-chunk") ?? 0);
+    if (Date.now() - last < 60_000) return;
+    sessionStorage.setItem("reloaded-for-chunk", String(Date.now()));
+  } catch {
+    // No storage: reload anyway.
+  }
+  e.preventDefault();
+  location.reload();
+});
+
 async function boot() {
   // Dev-only switches like ?demo=es. Removed from production builds, except
   // the one the UI performance run measures (VITE_DEV_TOOLS=1, perf/ui.ts).
