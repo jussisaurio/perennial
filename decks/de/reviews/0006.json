@@ -1,0 +1,9 @@
+{
+  "file": "source/0006.json",
+  "sha256": "46f9beeff6be982a5e127483e808a9ab0a1545f11c08ca16353f1d92cdeec8fb",
+  "author": "claude-agent:de-author-2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-0006-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "All 100 entries ok after re-check of 10 fixes; accepted editor's ändern s2 alternative (Er hat seine Meinung geändert) to avoid duplicating Meinung's sentence in 0007."
+}

@@ -1,0 +1,2860 @@
+[
+  {
+    "lemma": "Dollar",
+    "gloss": "dollar",
+    "pos": "noun",
+    "forms": [
+      "Dollar",
+      "Dollars"
+    ],
+    "notes": "After a number the plural is usually Dollar: zehn Dollar.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Das kostet zehn Dollar.",
+        "translation": "That costs ten dollars.",
+        "cloze": "Dollar"
+      },
+      {
+        "text": "Ich habe nur fünf Dollar dabei.",
+        "translation": "I only have five dollars on me.",
+        "cloze": "Dollar"
+      },
+      {
+        "text": "Er hat seine Dollars in Euro getauscht.",
+        "translation": "He exchanged his dollars for euros.",
+        "cloze": "Dollars"
+      }
+    ]
+  },
+  {
+    "lemma": "aufpassen",
+    "gloss": "to watch out, pay attention; to look after",
+    "pos": "verb",
+    "forms": [
+      "aufpassen",
+      "aufgepasst",
+      "aufzupassen",
+      "pass"
+    ],
+    "notes": "Separable: Pass auf! = Watch out! auf jemanden aufpassen = to look after someone.",
+    "sentences": [
+      {
+        "text": "Pass gut auf dich auf!",
+        "translation": "Take good care of yourself!",
+        "cloze": "Pass"
+      },
+      {
+        "text": "Du musst besser aufpassen.",
+        "translation": "You need to pay more attention.",
+        "cloze": "aufpassen"
+      },
+      {
+        "text": "Ich habe nicht aufgepasst.",
+        "translation": "I wasn't paying attention.",
+        "cloze": "aufgepasst"
+      },
+      {
+        "text": "Kannst du heute auf das Baby aufpassen?",
+        "translation": "Can you look after the baby today?",
+        "cloze": "aufpassen"
+      }
+    ]
+  },
+  {
+    "lemma": "Büro",
+    "gloss": "office",
+    "pos": "noun",
+    "forms": [
+      "Büro",
+      "Büros"
+    ],
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Ich bin noch im Büro.",
+        "translation": "I'm still at the office.",
+        "cloze": "Büro"
+      },
+      {
+        "text": "Komm bitte in mein Büro.",
+        "translation": "Please come into my office.",
+        "cloze": "Büro"
+      },
+      {
+        "text": "Hier gibt es viele Büros.",
+        "translation": "There are lots of offices here.",
+        "cloze": "Büros"
+      }
+    ]
+  },
+  {
+    "lemma": "rufen",
+    "gloss": "to call, shout",
+    "pos": "verb",
+    "forms": [
+      "rufen",
+      "rufe",
+      "rufst",
+      "ruft",
+      "rief",
+      "gerufen",
+      "ruf"
+    ],
+    "notes": "past rief, perfect gerufen. To phone someone is anrufen.",
+    "sentences": [
+      {
+        "text": "Ruf sofort einen Arzt!",
+        "translation": "Call a doctor right away!",
+        "cloze": "Ruf"
+      },
+      {
+        "text": "Ich rufe dir ein Taxi.",
+        "translation": "I'll call you a taxi.",
+        "cloze": "rufe"
+      },
+      {
+        "text": "Wer hat mich gerufen?",
+        "translation": "Who called me?",
+        "cloze": "gerufen"
+      },
+      {
+        "text": "Sie rief seinen Namen.",
+        "translation": "She called his name.",
+        "cloze": "rief"
+      }
+    ]
+  },
+  {
+    "lemma": "schaffen",
+    "gloss": "to manage, make it, get done",
+    "pos": "verb",
+    "forms": [
+      "schaffen",
+      "schaffe",
+      "schaffst",
+      "schafft",
+      "schaffte",
+      "geschafft"
+    ],
+    "notes": "Es schaffen = to make it, to manage it.",
+    "sentences": [
+      {
+        "text": "Wir haben es geschafft!",
+        "translation": "We made it!",
+        "cloze": "geschafft"
+      },
+      {
+        "text": "Das schaffst du!",
+        "translation": "You can do it!",
+        "cloze": "schaffst"
+      },
+      {
+        "text": "Ich schaffe das nicht allein.",
+        "translation": "I can't manage this alone.",
+        "cloze": "schaffe"
+      },
+      {
+        "text": "Schaffen wir das bis morgen?",
+        "translation": "Can we get it done by tomorrow?",
+        "cloze": "Schaffen"
+      }
+    ]
+  },
+  {
+    "lemma": "leider",
+    "gloss": "unfortunately",
+    "pos": "adv",
+    "forms": [
+      "leider"
+    ],
+    "sentences": [
+      {
+        "text": "Leider kann ich nicht kommen.",
+        "translation": "Unfortunately I can't come.",
+        "cloze": "Leider"
+      },
+      {
+        "text": "Das weiß ich leider nicht.",
+        "translation": "I'm afraid I don't know.",
+        "cloze": "leider"
+      },
+      {
+        "text": "Er ist leider schon weg.",
+        "translation": "Unfortunately he's already gone.",
+        "cloze": "leider"
+      }
+    ]
+  },
+  {
+    "lemma": "Hölle",
+    "gloss": "hell",
+    "pos": "noun",
+    "forms": [
+      "Hölle"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Das war die Hölle.",
+        "translation": "That was hell.",
+        "cloze": "Hölle"
+      },
+      {
+        "text": "Hier ist die Hölle los.",
+        "translation": "All hell is breaking loose here.",
+        "cloze": "Hölle"
+      },
+      {
+        "text": "Er hat mir das Leben zur Hölle gemacht.",
+        "translation": "He made my life hell.",
+        "cloze": "Hölle"
+      }
+    ]
+  },
+  {
+    "lemma": "trotzdem",
+    "gloss": "still, anyway, all the same",
+    "pos": "adv",
+    "forms": [
+      "trotzdem"
+    ],
+    "sentences": [
+      {
+        "text": "Es regnet, aber wir gehen trotzdem.",
+        "translation": "It's raining, but we're going anyway.",
+        "cloze": "trotzdem"
+      },
+      {
+        "text": "Danke trotzdem!",
+        "translation": "Thanks anyway!",
+        "cloze": "trotzdem"
+      },
+      {
+        "text": "Ich liebe dich trotzdem.",
+        "translation": "I love you all the same.",
+        "cloze": "trotzdem"
+      }
+    ]
+  },
+  {
+    "lemma": "Doktor",
+    "gloss": "doctor (title; colloquially a physician)",
+    "pos": "noun",
+    "forms": [
+      "Doktor"
+    ],
+    "notes": "Herr Doktor / Frau Doktor when addressing one. For a physician, Arzt is the everyday word.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Danke, Herr Doktor.",
+        "translation": "Thank you, doctor.",
+        "cloze": "Doktor"
+      },
+      {
+        "text": "Wo ist der Doktor?",
+        "translation": "Where's the doctor?",
+        "cloze": "Doktor"
+      },
+      {
+        "text": "Ich muss morgen zum Doktor.",
+        "translation": "I have to go to the doctor tomorrow.",
+        "cloze": "Doktor"
+      }
+    ]
+  },
+  {
+    "lemma": "voll",
+    "gloss": "full",
+    "pos": "adj",
+    "forms": [
+      "voll",
+      "volle",
+      "vollen",
+      "voller"
+    ],
+    "notes": "voller + noun = full of: voller Wasser. In speech also 'totally': voll gut.",
+    "sentences": [
+      {
+        "text": "Das Glas ist voll.",
+        "translation": "The glass is full.",
+        "cloze": "voll"
+      },
+      {
+        "text": "Der Bus war sehr voll.",
+        "translation": "The bus was very full.",
+        "cloze": "voll"
+      },
+      {
+        "text": "Er kam mit vollen Taschen nach Hause.",
+        "translation": "He came home with full bags.",
+        "cloze": "vollen"
+      },
+      {
+        "text": "Das Haus war voller Leute.",
+        "translation": "The house was full of people.",
+        "cloze": "voller"
+      }
+    ]
+  },
+  {
+    "lemma": "Film",
+    "gloss": "film, movie",
+    "pos": "noun",
+    "forms": [
+      "Film",
+      "Filme",
+      "Filmen",
+      "Films"
+    ],
+    "notes": "Plural: Filme.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Der Film war echt gut.",
+        "translation": "The film was really good.",
+        "cloze": "Film"
+      },
+      {
+        "text": "Wollen wir heute Abend einen Film sehen?",
+        "translation": "Shall we watch a film tonight?",
+        "cloze": "Film"
+      },
+      {
+        "text": "Ich mag alte Filme.",
+        "translation": "I like old films.",
+        "cloze": "Filme"
+      }
+    ]
+  },
+  {
+    "lemma": "überall",
+    "gloss": "everywhere",
+    "pos": "adv",
+    "forms": [
+      "überall"
+    ],
+    "sentences": [
+      {
+        "text": "Ich habe überall gesucht.",
+        "translation": "I've looked everywhere.",
+        "cloze": "überall"
+      },
+      {
+        "text": "Die Polizei ist überall.",
+        "translation": "The police are everywhere.",
+        "cloze": "überall"
+      },
+      {
+        "text": "Er hat überall Freunde.",
+        "translation": "He has friends everywhere.",
+        "cloze": "überall"
+      }
+    ]
+  },
+  {
+    "lemma": "Hund",
+    "gloss": "dog",
+    "pos": "noun",
+    "forms": [
+      "Hund",
+      "Hunde",
+      "Hunden",
+      "Hundes"
+    ],
+    "notes": "Plural: Hunde.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Wir haben einen Hund.",
+        "translation": "We have a dog.",
+        "cloze": "Hund"
+      },
+      {
+        "text": "Der Hund schläft in meinem Bett.",
+        "translation": "The dog sleeps in my bed.",
+        "cloze": "Hund"
+      },
+      {
+        "text": "Ich habe Angst vor Hunden.",
+        "translation": "I'm afraid of dogs.",
+        "cloze": "Hunden"
+      }
+    ]
+  },
+  {
+    "lemma": "direkt",
+    "gloss": "direct; directly, right (next to, after)",
+    "pos": "adj",
+    "forms": [
+      "direkt",
+      "direkte",
+      "direkten"
+    ],
+    "sentences": [
+      {
+        "text": "Ich komme direkt nach der Arbeit.",
+        "translation": "I'll come straight after work.",
+        "cloze": "direkt"
+      },
+      {
+        "text": "Das Hotel liegt direkt am Meer.",
+        "translation": "The hotel is right by the sea.",
+        "cloze": "direkt"
+      },
+      {
+        "text": "Gibt es einen direkten Zug?",
+        "translation": "Is there a direct train?",
+        "cloze": "direkten"
+      }
+    ]
+  },
+  {
+    "lemma": "Schiff",
+    "gloss": "ship",
+    "pos": "noun",
+    "forms": [
+      "Schiff",
+      "Schiffe",
+      "Schiffen",
+      "Schiffs"
+    ],
+    "notes": "Plural: Schiffe.",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Das Schiff fährt um acht.",
+        "translation": "The ship leaves at eight.",
+        "cloze": "Schiff"
+      },
+      {
+        "text": "Wir sind mit dem Schiff gekommen.",
+        "translation": "We came by ship.",
+        "cloze": "Schiff"
+      },
+      {
+        "text": "Im Hafen liegen viele Schiffe.",
+        "translation": "There are lots of ships in the harbour.",
+        "cloze": "Schiffe"
+      }
+    ]
+  },
+  {
+    "lemma": "König",
+    "gloss": "king",
+    "pos": "noun",
+    "forms": [
+      "König",
+      "Könige",
+      "Königs"
+    ],
+    "notes": "Plural: Könige. Queen: Königin.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Der König ist tot.",
+        "translation": "The king is dead.",
+        "cloze": "König"
+      },
+      {
+        "text": "Das ist das Schloss des Königs.",
+        "translation": "That's the king's castle.",
+        "cloze": "Königs"
+      },
+      {
+        "text": "Er lebt wie ein König.",
+        "translation": "He lives like a king.",
+        "cloze": "König"
+      }
+    ]
+  },
+  {
+    "lemma": "danach",
+    "gloss": "after that, afterwards",
+    "pos": "adv",
+    "forms": [
+      "danach"
+    ],
+    "sentences": [
+      {
+        "text": "Und was passiert danach?",
+        "translation": "And what happens after that?",
+        "cloze": "danach"
+      },
+      {
+        "text": "Danach gehen wir essen.",
+        "translation": "Afterwards we'll go out to eat.",
+        "cloze": "Danach"
+      },
+      {
+        "text": "Kurz danach war er weg.",
+        "translation": "Shortly after, he was gone.",
+        "cloze": "danach"
+      }
+    ]
+  },
+  {
+    "lemma": "funktionieren",
+    "gloss": "to work (machine, plan)",
+    "pos": "verb",
+    "forms": [
+      "funktionieren",
+      "funktioniert",
+      "funktionierte"
+    ],
+    "notes": "Used for things, not people: a person who works is arbeiten.",
+    "sentences": [
+      {
+        "text": "Das Telefon funktioniert nicht.",
+        "translation": "The phone doesn't work.",
+        "cloze": "funktioniert"
+      },
+      {
+        "text": "Das wird nie funktionieren.",
+        "translation": "That will never work.",
+        "cloze": "funktionieren"
+      },
+      {
+        "text": "Gestern funktionierte das noch.",
+        "translation": "It still worked yesterday.",
+        "cloze": "funktionierte"
+      }
+    ]
+  },
+  {
+    "lemma": "lernen",
+    "gloss": "to learn; to study",
+    "pos": "verb",
+    "forms": [
+      "lernen",
+      "lerne",
+      "lernst",
+      "lernt",
+      "lernte",
+      "gelernt"
+    ],
+    "sentences": [
+      {
+        "text": "Ich lerne Deutsch.",
+        "translation": "I'm learning German.",
+        "cloze": "lerne"
+      },
+      {
+        "text": "Wo hast du das gelernt?",
+        "translation": "Where did you learn that?",
+        "cloze": "gelernt"
+      },
+      {
+        "text": "Du lernst schnell.",
+        "translation": "You learn fast.",
+        "cloze": "lernst"
+      },
+      {
+        "text": "Wir müssen noch viel lernen.",
+        "translation": "We still have a lot to learn.",
+        "cloze": "lernen"
+      }
+    ]
+  },
+  {
+    "lemma": "deswegen",
+    "gloss": "that's why, so",
+    "pos": "adv",
+    "forms": [
+      "deswegen"
+    ],
+    "notes": "Same as deshalb. The verb comes right after it: Deswegen bin ich hier.",
+    "sentences": [
+      {
+        "text": "Deswegen bin ich hier.",
+        "translation": "That's why I'm here.",
+        "cloze": "Deswegen"
+      },
+      {
+        "text": "Er ist krank, deswegen kommt er nicht.",
+        "translation": "He's sick, so he isn't coming.",
+        "cloze": "deswegen"
+      },
+      {
+        "text": "Ist sie deswegen so traurig?",
+        "translation": "Is that why she's so sad?",
+        "cloze": "deswegen"
+      }
+    ]
+  },
+  {
+    "lemma": "nennen",
+    "gloss": "to call, name",
+    "pos": "verb",
+    "forms": [
+      "nennen",
+      "nenne",
+      "nennst",
+      "nennt",
+      "nannte",
+      "nannten",
+      "genannt"
+    ],
+    "notes": "past nannte, perfect genannt. To phone someone is anrufen, not nennen.",
+    "sentences": [
+      {
+        "text": "Wie nennt man das auf Deutsch?",
+        "translation": "What do you call that in German?",
+        "cloze": "nennt"
+      },
+      {
+        "text": "Sie nannten ihn den König.",
+        "translation": "They called him the king.",
+        "cloze": "nannten"
+      },
+      {
+        "text": "Ich nenne das Glück.",
+        "translation": "I call that luck.",
+        "cloze": "nenne"
+      }
+    ]
+  },
+  {
+    "lemma": "Feuer",
+    "gloss": "fire",
+    "pos": "noun",
+    "forms": [
+      "Feuer"
+    ],
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Hast du Feuer?",
+        "translation": "Have you got a light?",
+        "cloze": "Feuer"
+      },
+      {
+        "text": "Wir sitzen am Feuer.",
+        "translation": "We're sitting by the fire.",
+        "cloze": "Feuer"
+      },
+      {
+        "text": "Das Feuer ist aus.",
+        "translation": "The fire is out.",
+        "cloze": "Feuer"
+      }
+    ]
+  },
+  {
+    "lemma": "erinnern",
+    "gloss": "to remind; (sich erinnern) to remember",
+    "pos": "verb",
+    "forms": [
+      "erinnern",
+      "erinnere",
+      "erinnerst",
+      "erinnert",
+      "erinnerte"
+    ],
+    "notes": "sich an etwas erinnern = to remember something. jemanden an etwas erinnern = to remind someone of something.",
+    "sentences": [
+      {
+        "text": "Ich erinnere mich an nichts.",
+        "translation": "I don't remember anything.",
+        "cloze": "erinnere"
+      },
+      {
+        "text": "Erinnerst du dich an mich?",
+        "translation": "Do you remember me?",
+        "cloze": "Erinnerst"
+      },
+      {
+        "text": "Er erinnert mich an meinen Vater.",
+        "translation": "He reminds me of my father.",
+        "cloze": "erinnert"
+      },
+      {
+        "text": "Sie erinnerte sich an den Tag.",
+        "translation": "She remembered the day.",
+        "cloze": "erinnerte"
+      }
+    ]
+  },
+  {
+    "lemma": "völlig",
+    "gloss": "completely, totally",
+    "pos": "adv",
+    "forms": [
+      "völlig"
+    ],
+    "sentences": [
+      {
+        "text": "Das ist mir völlig egal.",
+        "translation": "I couldn't care less.",
+        "cloze": "völlig"
+      },
+      {
+        "text": "Du hast völlig recht.",
+        "translation": "You're completely right.",
+        "cloze": "völlig"
+      },
+      {
+        "text": "Ich bin völlig fertig.",
+        "translation": "I'm totally exhausted.",
+        "cloze": "völlig"
+      }
+    ]
+  },
+  {
+    "lemma": "Kumpel",
+    "gloss": "buddy, mate",
+    "pos": "noun",
+    "forms": [
+      "Kumpel",
+      "Kumpels"
+    ],
+    "notes": "Informal. Plural: Kumpel or Kumpels.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Er ist mein bester Kumpel.",
+        "translation": "He's my best buddy.",
+        "cloze": "Kumpel"
+      },
+      {
+        "text": "Danke, Kumpel!",
+        "translation": "Thanks, mate!",
+        "cloze": "Kumpel"
+      },
+      {
+        "text": "Ich gehe mit meinen Kumpels was trinken.",
+        "translation": "I'm going for a drink with my mates.",
+        "cloze": "Kumpels"
+      }
+    ]
+  },
+  {
+    "lemma": "Kaffee",
+    "gloss": "coffee",
+    "pos": "noun",
+    "forms": [
+      "Kaffee"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Möchtest du noch einen Kaffee?",
+        "translation": "Would you like another coffee?",
+        "cloze": "Kaffee"
+      },
+      {
+        "text": "Ich trinke Kaffee ohne Milch.",
+        "translation": "I drink coffee without milk.",
+        "cloze": "Kaffee"
+      },
+      {
+        "text": "Der Kaffee ist kalt.",
+        "translation": "The coffee is cold.",
+        "cloze": "Kaffee"
+      }
+    ]
+  },
+  {
+    "lemma": "Luft",
+    "gloss": "air",
+    "pos": "noun",
+    "forms": [
+      "Luft"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Ich brauche frische Luft.",
+        "translation": "I need some fresh air.",
+        "cloze": "Luft"
+      },
+      {
+        "text": "Die Luft hier ist gut.",
+        "translation": "The air here is good.",
+        "cloze": "Luft"
+      },
+      {
+        "text": "Ich bekomme keine Luft!",
+        "translation": "I can't breathe!",
+        "cloze": "Luft"
+      }
+    ]
+  },
+  {
+    "lemma": "ziehen",
+    "gloss": "to pull; to move (house)",
+    "pos": "verb",
+    "forms": [
+      "ziehen",
+      "ziehe",
+      "ziehst",
+      "zieht",
+      "zog",
+      "gezogen",
+      "zieh"
+    ],
+    "notes": "past zog, perfect gezogen. When it means moving house, the perfect takes sein.",
+    "sentences": [
+      {
+        "text": "Du musst ziehen, nicht drücken.",
+        "translation": "You have to pull, not push.",
+        "cloze": "ziehen"
+      },
+      {
+        "text": "Sie ist in die Stadt gezogen.",
+        "translation": "She moved to the city.",
+        "cloze": "gezogen"
+      },
+      {
+        "text": "Er zog sie an der Hand.",
+        "translation": "He pulled her by the hand.",
+        "cloze": "zog"
+      }
+    ]
+  },
+  {
+    "lemma": "verschwinden",
+    "gloss": "to disappear",
+    "pos": "verb",
+    "forms": [
+      "verschwinden",
+      "verschwinde",
+      "verschwindet",
+      "verschwand",
+      "verschwunden"
+    ],
+    "notes": "past verschwand, perfect ist verschwunden. Verschwinde! = Get lost!",
+    "sentences": [
+      {
+        "text": "Verschwinde von hier!",
+        "translation": "Get out of here!",
+        "cloze": "Verschwinde"
+      },
+      {
+        "text": "Das Kind ist verschwunden.",
+        "translation": "The child has disappeared.",
+        "cloze": "verschwunden"
+      },
+      {
+        "text": "Dann verschwand er.",
+        "translation": "Then he disappeared.",
+        "cloze": "verschwand"
+      },
+      {
+        "text": "Wir sollten verschwinden.",
+        "translation": "We should get out of here.",
+        "cloze": "verschwinden"
+      }
+    ]
+  },
+  {
+    "lemma": "aufhören",
+    "gloss": "to stop",
+    "pos": "verb",
+    "forms": [
+      "aufhören",
+      "aufgehört",
+      "aufzuhören"
+    ],
+    "notes": "Separable: Hör auf! = Stop it! mit etwas aufhören = to stop doing something.",
+    "sentences": [
+      {
+        "text": "Ich kann nicht aufhören.",
+        "translation": "I can't stop.",
+        "cloze": "aufhören"
+      },
+      {
+        "text": "Es hat aufgehört zu regnen.",
+        "translation": "It has stopped raining.",
+        "cloze": "aufgehört"
+      },
+      {
+        "text": "Es ist Zeit aufzuhören.",
+        "translation": "It's time to stop.",
+        "cloze": "aufzuhören"
+      }
+    ]
+  },
+  {
+    "lemma": "eigen",
+    "gloss": "own",
+    "pos": "adj",
+    "forms": [
+      "eigene",
+      "eigenen",
+      "eigenes",
+      "eigener"
+    ],
+    "notes": "Usually after a possessive, and always with an ending: mein eigenes Auto, mit eigenen Augen.",
+    "sentences": [
+      {
+        "text": "Ich habe mein eigenes Zimmer.",
+        "translation": "I have my own room.",
+        "cloze": "eigenes"
+      },
+      {
+        "text": "Das ist deine eigene Schuld.",
+        "translation": "That's your own fault.",
+        "cloze": "eigene"
+      },
+      {
+        "text": "Er hat es mit eigenen Augen gesehen.",
+        "translation": "He saw it with his own eyes.",
+        "cloze": "eigenen"
+      }
+    ]
+  },
+  {
+    "lemma": "zwar",
+    "gloss": "admittedly, it's true (that)",
+    "pos": "adv",
+    "forms": [
+      "zwar"
+    ],
+    "notes": "zwar …, aber … = it's true …, but …. und zwar = namely, and what's more.",
+    "sentences": [
+      {
+        "text": "Das ist zwar teuer, aber gut.",
+        "translation": "It's expensive, sure, but it's good.",
+        "cloze": "zwar"
+      },
+      {
+        "text": "Ich bin zwar müde, aber glücklich.",
+        "translation": "I may be tired, but I'm happy.",
+        "cloze": "zwar"
+      },
+      {
+        "text": "Komm her, und zwar sofort!",
+        "translation": "Come here, and I mean right now!",
+        "cloze": "zwar"
+      }
+    ]
+  },
+  {
+    "lemma": "Buch",
+    "gloss": "book",
+    "pos": "noun",
+    "forms": [
+      "Buch",
+      "Bücher",
+      "Büchern",
+      "Buchs"
+    ],
+    "notes": "Plural: Bücher.",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Ich lese gerade ein Buch.",
+        "translation": "I'm reading a book at the moment.",
+        "cloze": "Buch"
+      },
+      {
+        "text": "Das Buch ist besser als der Film.",
+        "translation": "The book is better than the film.",
+        "cloze": "Buch"
+      },
+      {
+        "text": "Er hat viele Bücher.",
+        "translation": "He has a lot of books.",
+        "cloze": "Bücher"
+      }
+    ]
+  },
+  {
+    "lemma": "krank",
+    "gloss": "sick, ill",
+    "pos": "adj",
+    "forms": [
+      "krank",
+      "kranke",
+      "kranken",
+      "kranker"
+    ],
+    "sentences": [
+      {
+        "text": "Ich bin krank.",
+        "translation": "I'm sick.",
+        "cloze": "krank"
+      },
+      {
+        "text": "Sie ist seit einer Woche krank.",
+        "translation": "She's been ill for a week.",
+        "cloze": "krank"
+      },
+      {
+        "text": "Er kümmert sich um seine kranke Mutter.",
+        "translation": "He looks after his sick mother.",
+        "cloze": "kranke"
+      }
+    ]
+  },
+  {
+    "lemma": "fühlen",
+    "gloss": "to feel",
+    "pos": "verb",
+    "forms": [
+      "fühlen",
+      "fühle",
+      "fühlst",
+      "fühlt",
+      "fühlte",
+      "gefühlt"
+    ],
+    "notes": "Usually sich fühlen: Ich fühle mich gut = I feel good.",
+    "sentences": [
+      {
+        "text": "Wie fühlst du dich?",
+        "translation": "How do you feel?",
+        "cloze": "fühlst"
+      },
+      {
+        "text": "Ich fühle mich nicht gut.",
+        "translation": "I don't feel well.",
+        "cloze": "fühle"
+      },
+      {
+        "text": "Sie fühlte sich allein.",
+        "translation": "She felt alone.",
+        "cloze": "fühlte"
+      },
+      {
+        "text": "Er fühlt sich hier wie zu Hause.",
+        "translation": "He feels at home here.",
+        "cloze": "fühlt"
+      }
+    ]
+  },
+  {
+    "lemma": "wert",
+    "gloss": "worth",
+    "pos": "adj",
+    "forms": [
+      "wert"
+    ],
+    "notes": "etwas wert sein = to be worth something.",
+    "sentences": [
+      {
+        "text": "Das ist es wert.",
+        "translation": "It's worth it.",
+        "cloze": "wert"
+      },
+      {
+        "text": "Wie viel ist das Auto wert?",
+        "translation": "How much is the car worth?",
+        "cloze": "wert"
+      },
+      {
+        "text": "Das ist nichts wert.",
+        "translation": "That's worth nothing.",
+        "cloze": "wert"
+      }
+    ]
+  },
+  {
+    "lemma": "Arzt",
+    "gloss": "doctor (physician)",
+    "pos": "noun",
+    "forms": [
+      "Arzt",
+      "Ärzte",
+      "Ärzten",
+      "Arztes"
+    ],
+    "notes": "Plural: Ärzte. A female doctor: Ärztin. No article for jobs: Er ist Arzt.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Du musst zum Arzt gehen.",
+        "translation": "You need to go to the doctor.",
+        "cloze": "Arzt"
+      },
+      {
+        "text": "Mein Bruder ist Arzt.",
+        "translation": "My brother is a doctor.",
+        "cloze": "Arzt"
+      },
+      {
+        "text": "Die Ärzte haben alles versucht.",
+        "translation": "The doctors tried everything.",
+        "cloze": "Ärzte"
+      }
+    ]
+  },
+  {
+    "lemma": "froh",
+    "gloss": "glad, happy",
+    "pos": "adj",
+    "forms": [
+      "froh",
+      "frohe",
+      "frohes"
+    ],
+    "sentences": [
+      {
+        "text": "Ich bin froh, dass du hier bist.",
+        "translation": "I'm glad you're here.",
+        "cloze": "froh"
+      },
+      {
+        "text": "Sie ist froh über die gute Nachricht.",
+        "translation": "She's happy about the good news.",
+        "cloze": "froh"
+      },
+      {
+        "text": "Frohe Weihnachten!",
+        "translation": "Merry Christmas!",
+        "cloze": "Frohe"
+      }
+    ]
+  },
+  {
+    "lemma": "Straße",
+    "gloss": "street, road",
+    "pos": "noun",
+    "forms": [
+      "Straße",
+      "Straßen"
+    ],
+    "notes": "Plural: Straßen.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Wir wohnen in dieser Straße.",
+        "translation": "We live on this street.",
+        "cloze": "Straße"
+      },
+      {
+        "text": "Geh nicht allein über die Straße.",
+        "translation": "Don't cross the road alone.",
+        "cloze": "Straße"
+      },
+      {
+        "text": "Die Straßen sind heute voll.",
+        "translation": "The roads are busy today.",
+        "cloze": "Straßen"
+      }
+    ]
+  },
+  {
+    "lemma": "heiraten",
+    "gloss": "to marry, get married",
+    "pos": "verb",
+    "forms": [
+      "heiraten",
+      "heirate",
+      "heiratest",
+      "heiratet",
+      "heiratete",
+      "geheiratet"
+    ],
+    "notes": "jemanden heiraten (no preposition) = to marry someone.",
+    "sentences": [
+      {
+        "text": "Willst du mich heiraten?",
+        "translation": "Will you marry me?",
+        "cloze": "heiraten"
+      },
+      {
+        "text": "Wir haben letztes Jahr geheiratet.",
+        "translation": "We got married last year.",
+        "cloze": "geheiratet"
+      },
+      {
+        "text": "Meine Schwester heiratet im Mai.",
+        "translation": "My sister is getting married in May.",
+        "cloze": "heiratet"
+      }
+    ]
+  },
+  {
+    "lemma": "super",
+    "gloss": "great, super",
+    "pos": "adj",
+    "forms": [
+      "super"
+    ],
+    "notes": "Never takes an ending.",
+    "sentences": [
+      {
+        "text": "Das ist super!",
+        "translation": "That's great!",
+        "cloze": "super"
+      },
+      {
+        "text": "Du siehst super aus.",
+        "translation": "You look great.",
+        "cloze": "super"
+      },
+      {
+        "text": "Das Essen war super.",
+        "translation": "The food was great.",
+        "cloze": "super"
+      }
+    ]
+  },
+  {
+    "lemma": "leben",
+    "gloss": "to live; to be alive",
+    "pos": "verb",
+    "forms": [
+      "leben",
+      "lebe",
+      "lebst",
+      "lebt",
+      "lebte",
+      "lebten",
+      "gelebt"
+    ],
+    "notes": "das Leben (capital L) = life.",
+    "sentences": [
+      {
+        "text": "Er lebt noch!",
+        "translation": "He's still alive!",
+        "cloze": "lebt"
+      },
+      {
+        "text": "Wo lebst du?",
+        "translation": "Where do you live?",
+        "cloze": "lebst"
+      },
+      {
+        "text": "Ich lebe seit zehn Jahren hier.",
+        "translation": "I've lived here for ten years.",
+        "cloze": "lebe"
+      },
+      {
+        "text": "Sie lebten glücklich zusammen.",
+        "translation": "They lived happily together.",
+        "cloze": "lebten"
+      }
+    ]
+  },
+  {
+    "lemma": "Onkel",
+    "gloss": "uncle",
+    "pos": "noun",
+    "forms": [
+      "Onkel"
+    ],
+    "notes": "Plural: Onkel.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Mein Onkel wohnt in der Stadt.",
+        "translation": "My uncle lives in the city.",
+        "cloze": "Onkel"
+      },
+      {
+        "text": "Das ist mein Onkel.",
+        "translation": "That's my uncle.",
+        "cloze": "Onkel"
+      },
+      {
+        "text": "Wir besuchen morgen unseren Onkel.",
+        "translation": "We're visiting our uncle tomorrow.",
+        "cloze": "Onkel"
+      }
+    ]
+  },
+  {
+    "lemma": "total",
+    "gloss": "totally, completely (spoken)",
+    "pos": "adv",
+    "forms": [
+      "total"
+    ],
+    "sentences": [
+      {
+        "text": "Das ist total verrückt.",
+        "translation": "That's totally crazy.",
+        "cloze": "total"
+      },
+      {
+        "text": "Ich habe es total vergessen.",
+        "translation": "I totally forgot.",
+        "cloze": "total"
+      },
+      {
+        "text": "Sie war total nett.",
+        "translation": "She was really nice.",
+        "cloze": "total"
+      }
+    ]
+  },
+  {
+    "lemma": "Party",
+    "gloss": "party",
+    "pos": "noun",
+    "forms": [
+      "Party",
+      "Partys"
+    ],
+    "notes": "Plural: Partys. auf eine Party gehen = to go to a party.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Kommst du zu meiner Party?",
+        "translation": "Are you coming to my party?",
+        "cloze": "Party"
+      },
+      {
+        "text": "Die Party war super.",
+        "translation": "The party was great.",
+        "cloze": "Party"
+      },
+      {
+        "text": "Er geht jedes Wochenende auf Partys.",
+        "translation": "He goes to parties every weekend.",
+        "cloze": "Partys"
+      }
+    ]
+  },
+  {
+    "lemma": "erklären",
+    "gloss": "to explain",
+    "pos": "verb",
+    "forms": [
+      "erklären",
+      "erkläre",
+      "erklärst",
+      "erklärt",
+      "erklärte"
+    ],
+    "sentences": [
+      {
+        "text": "Kannst du mir das erklären?",
+        "translation": "Can you explain that to me?",
+        "cloze": "erklären"
+      },
+      {
+        "text": "Ich erkläre es dir später.",
+        "translation": "I'll explain it to you later.",
+        "cloze": "erkläre"
+      },
+      {
+        "text": "Das erklärt alles.",
+        "translation": "That explains everything.",
+        "cloze": "erklärt"
+      }
+    ]
+  },
+  {
+    "lemma": "Wahl",
+    "gloss": "choice; election",
+    "pos": "noun",
+    "forms": [
+      "Wahl",
+      "Wahlen"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Ich habe keine Wahl.",
+        "translation": "I have no choice.",
+        "cloze": "Wahl"
+      },
+      {
+        "text": "Du hast die Wahl.",
+        "translation": "It's your choice.",
+        "cloze": "Wahl"
+      },
+      {
+        "text": "Bald sind wieder Wahlen.",
+        "translation": "There's another election soon.",
+        "cloze": "Wahlen"
+      }
+    ]
+  },
+  {
+    "lemma": "vertrauen",
+    "gloss": "to trust",
+    "pos": "verb",
+    "forms": [
+      "vertrauen",
+      "vertraue",
+      "vertraust",
+      "vertraut",
+      "vertraute"
+    ],
+    "notes": "Takes the dative: Ich vertraue dir. das Vertrauen = trust.",
+    "sentences": [
+      {
+        "text": "Ich vertraue dir.",
+        "translation": "I trust you.",
+        "cloze": "vertraue"
+      },
+      {
+        "text": "Kann ich ihm vertrauen?",
+        "translation": "Can I trust him?",
+        "cloze": "vertrauen"
+      },
+      {
+        "text": "Vertraust du mir?",
+        "translation": "Do you trust me?",
+        "cloze": "Vertraust"
+      }
+    ]
+  },
+  {
+    "lemma": "damals",
+    "gloss": "back then, at that time",
+    "pos": "adv",
+    "forms": [
+      "damals"
+    ],
+    "sentences": [
+      {
+        "text": "Damals war alles anders.",
+        "translation": "Back then everything was different.",
+        "cloze": "Damals"
+      },
+      {
+        "text": "Ich war damals noch ein Kind.",
+        "translation": "I was still a child back then.",
+        "cloze": "damals"
+      },
+      {
+        "text": "Wo hast du damals gewohnt?",
+        "translation": "Where did you live at that time?",
+        "cloze": "damals"
+      }
+    ]
+  },
+  {
+    "lemma": "leicht",
+    "gloss": "easy; light (not heavy)",
+    "pos": "adj",
+    "forms": [
+      "leicht",
+      "leichte",
+      "leichten",
+      "leichter"
+    ],
+    "sentences": [
+      {
+        "text": "Das ist nicht leicht.",
+        "translation": "That's not easy.",
+        "cloze": "leicht"
+      },
+      {
+        "text": "Die Tasche ist ganz leicht.",
+        "translation": "The bag is quite light.",
+        "cloze": "leicht"
+      },
+      {
+        "text": "Das war eine leichte Frage.",
+        "translation": "That was an easy question.",
+        "cloze": "leichte"
+      }
+    ]
+  },
+  {
+    "lemma": "nachdem",
+    "gloss": "after (doing something)",
+    "pos": "conj",
+    "forms": [
+      "nachdem"
+    ],
+    "notes": "A conjunction: the verb goes to the end. Before a noun use nach: nach dem Essen.",
+    "sentences": [
+      {
+        "text": "Nachdem er gegessen hatte, ging er schlafen.",
+        "translation": "After he had eaten, he went to bed.",
+        "cloze": "Nachdem"
+      },
+      {
+        "text": "Was ist passiert, nachdem ich weg war?",
+        "translation": "What happened after I left?",
+        "cloze": "nachdem"
+      },
+      {
+        "text": "Nachdem sie gegangen war, war es still.",
+        "translation": "After she had left, it was quiet.",
+        "cloze": "Nachdem"
+      }
+    ]
+  },
+  {
+    "lemma": "Gefühl",
+    "gloss": "feeling",
+    "pos": "noun",
+    "forms": [
+      "Gefühl",
+      "Gefühle",
+      "Gefühlen"
+    ],
+    "notes": "Plural: Gefühle.",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Ich habe ein gutes Gefühl.",
+        "translation": "I have a good feeling.",
+        "cloze": "Gefühl"
+      },
+      {
+        "text": "Das ist ein schönes Gefühl.",
+        "translation": "That's a nice feeling.",
+        "cloze": "Gefühl"
+      },
+      {
+        "text": "Er spricht nie über seine Gefühle.",
+        "translation": "He never talks about his feelings.",
+        "cloze": "Gefühle"
+      }
+    ]
+  },
+  {
+    "lemma": "kaufen",
+    "gloss": "to buy",
+    "pos": "verb",
+    "forms": [
+      "kaufen",
+      "kaufe",
+      "kaufst",
+      "kauft",
+      "kaufte",
+      "gekauft",
+      "kauf"
+    ],
+    "sentences": [
+      {
+        "text": "Ich kaufe noch schnell Brot.",
+        "translation": "I'm just going to buy some bread.",
+        "cloze": "kaufe"
+      },
+      {
+        "text": "Was hast du gekauft?",
+        "translation": "What did you buy?",
+        "cloze": "gekauft"
+      },
+      {
+        "text": "Wir wollen ein Haus kaufen.",
+        "translation": "We want to buy a house.",
+        "cloze": "kaufen"
+      },
+      {
+        "text": "Sie kaufte ihm ein Geschenk.",
+        "translation": "She bought him a present.",
+        "cloze": "kaufte"
+      }
+    ]
+  },
+  {
+    "lemma": "interessieren",
+    "gloss": "to interest; (sich interessieren für) to be interested in",
+    "pos": "verb",
+    "forms": [
+      "interessieren",
+      "interessiere",
+      "interessiert",
+      "interessierte"
+    ],
+    "notes": "sich für etwas interessieren = to be interested in something. interessiert (adj) = interested.",
+    "sentences": [
+      {
+        "text": "Das interessiert mich nicht.",
+        "translation": "I'm not interested in that.",
+        "cloze": "interessiert"
+      },
+      {
+        "text": "Ich interessiere mich für Musik.",
+        "translation": "I'm interested in music.",
+        "cloze": "interessiere"
+      },
+      {
+        "text": "Mich interessierte nur das Geld.",
+        "translation": "I was only interested in the money.",
+        "cloze": "interessierte"
+      }
+    ]
+  },
+  {
+    "lemma": "irgendwo",
+    "gloss": "somewhere",
+    "pos": "adv",
+    "forms": [
+      "irgendwo"
+    ],
+    "sentences": [
+      {
+        "text": "Ich habe ihn irgendwo gesehen.",
+        "translation": "I've seen him somewhere.",
+        "cloze": "irgendwo"
+      },
+      {
+        "text": "Er muss hier irgendwo sein.",
+        "translation": "He must be here somewhere.",
+        "cloze": "irgendwo"
+      },
+      {
+        "text": "Lass uns irgendwo essen gehen.",
+        "translation": "Let's go and eat somewhere.",
+        "cloze": "irgendwo"
+      }
+    ]
+  },
+  {
+    "lemma": "Stück",
+    "gloss": "piece, bit",
+    "pos": "noun",
+    "forms": [
+      "Stück",
+      "Stücke",
+      "Stücken"
+    ],
+    "notes": "ein Stück Brot = a piece of bread (no 'of').",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Willst du ein Stück Kuchen?",
+        "translation": "Do you want a piece of cake?",
+        "cloze": "Stück"
+      },
+      {
+        "text": "Ich gehe ein Stück mit dir.",
+        "translation": "I'll walk part of the way with you.",
+        "cloze": "Stück"
+      },
+      {
+        "text": "Das Glas ist in tausend Stücke zersprungen.",
+        "translation": "The glass broke into a thousand pieces.",
+        "cloze": "Stücke"
+      }
+    ]
+  },
+  {
+    "lemma": "genauso",
+    "gloss": "just as, exactly the same",
+    "pos": "adv",
+    "forms": [
+      "genauso"
+    ],
+    "notes": "genauso … wie = just as … as.",
+    "sentences": [
+      {
+        "text": "Ich sehe das genauso.",
+        "translation": "I see it exactly the same way.",
+        "cloze": "genauso"
+      },
+      {
+        "text": "Sie ist genauso alt wie ich.",
+        "translation": "She's just as old as me.",
+        "cloze": "genauso"
+      },
+      {
+        "text": "Mir geht es genauso.",
+        "translation": "I feel the same way.",
+        "cloze": "genauso"
+      }
+    ]
+  },
+  {
+    "lemma": "Zukunft",
+    "gloss": "future",
+    "pos": "noun",
+    "forms": [
+      "Zukunft"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Wer weiß, was die Zukunft bringt?",
+        "translation": "Who knows what the future will bring?",
+        "cloze": "Zukunft"
+      },
+      {
+        "text": "In Zukunft machen wir das anders.",
+        "translation": "In future we'll do it differently.",
+        "cloze": "Zukunft"
+      },
+      {
+        "text": "Wir haben keine Zukunft.",
+        "translation": "We have no future.",
+        "cloze": "Zukunft"
+      }
+    ]
+  },
+  {
+    "lemma": "Licht",
+    "gloss": "light",
+    "pos": "noun",
+    "forms": [
+      "Licht",
+      "Lichter"
+    ],
+    "notes": "das Licht anmachen / ausmachen = to turn the light on / off.",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Mach bitte das Licht aus.",
+        "translation": "Please turn off the light.",
+        "cloze": "Licht"
+      },
+      {
+        "text": "Im Zimmer brennt noch Licht.",
+        "translation": "There's still a light on in the room.",
+        "cloze": "Licht"
+      },
+      {
+        "text": "Sieh mal, die Lichter der Stadt!",
+        "translation": "Look, the lights of the city!",
+        "cloze": "Lichter"
+      }
+    ]
+  },
+  {
+    "lemma": "Himmel",
+    "gloss": "sky; heaven",
+    "pos": "noun",
+    "forms": [
+      "Himmel",
+      "Himmels"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Der Himmel ist heute ganz blau.",
+        "translation": "The sky is completely blue today.",
+        "cloze": "Himmel"
+      },
+      {
+        "text": "Sie ist jetzt im Himmel.",
+        "translation": "She's in heaven now.",
+        "cloze": "Himmel"
+      },
+      {
+        "text": "Um Himmels willen!",
+        "translation": "For heaven's sake!",
+        "cloze": "Himmels"
+      }
+    ]
+  },
+  {
+    "lemma": "Nachricht",
+    "gloss": "message; (plural) the news",
+    "pos": "noun",
+    "forms": [
+      "Nachricht",
+      "Nachrichten"
+    ],
+    "notes": "die Nachrichten = the news (on TV, radio).",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Ich habe deine Nachricht bekommen.",
+        "translation": "I got your message.",
+        "cloze": "Nachricht"
+      },
+      {
+        "text": "Hast du die Nachrichten gesehen?",
+        "translation": "Did you see the news?",
+        "cloze": "Nachrichten"
+      },
+      {
+        "text": "Das ist eine gute Nachricht.",
+        "translation": "That's good news.",
+        "cloze": "Nachricht"
+      }
+    ]
+  },
+  {
+    "lemma": "drüben",
+    "gloss": "over there",
+    "pos": "adv",
+    "forms": [
+      "drüben"
+    ],
+    "notes": "Usually da drüben.",
+    "sentences": [
+      {
+        "text": "Er wohnt da drüben.",
+        "translation": "He lives over there.",
+        "cloze": "drüben"
+      },
+      {
+        "text": "Da drüben steht mein Auto.",
+        "translation": "My car is over there.",
+        "cloze": "drüben"
+      },
+      {
+        "text": "Was ist da drüben los?",
+        "translation": "What's going on over there?",
+        "cloze": "drüben"
+      }
+    ]
+  },
+  {
+    "lemma": "passen",
+    "gloss": "to fit; to suit, be convenient",
+    "pos": "verb",
+    "forms": [
+      "passen",
+      "passe",
+      "passt",
+      "passte",
+      "gepasst"
+    ],
+    "notes": "Das passt mir = That suits me. To watch out is aufpassen.",
+    "sentences": [
+      {
+        "text": "Die Schuhe passen mir nicht.",
+        "translation": "The shoes don't fit me.",
+        "cloze": "passen"
+      },
+      {
+        "text": "Passt dir Montag?",
+        "translation": "Does Monday work for you?",
+        "cloze": "Passt"
+      },
+      {
+        "text": "Das Kleid passte nicht mehr.",
+        "translation": "The dress didn't fit any more.",
+        "cloze": "passte"
+      }
+    ]
+  },
+  {
+    "lemma": "kümmern",
+    "gloss": "(sich kümmern um) to take care of, look after",
+    "pos": "verb",
+    "forms": [
+      "kümmern",
+      "kümmere",
+      "kümmerst",
+      "kümmert",
+      "kümmerte",
+      "gekümmert"
+    ],
+    "notes": "sich um etwas kümmern = to take care of something. Das kümmert mich nicht = I don't care.",
+    "sentences": [
+      {
+        "text": "Ich kümmere mich um alles.",
+        "translation": "I'll take care of everything.",
+        "cloze": "kümmere"
+      },
+      {
+        "text": "Wer kümmert sich um die Kinder?",
+        "translation": "Who's looking after the children?",
+        "cloze": "kümmert"
+      },
+      {
+        "text": "Du musst dich um nichts kümmern.",
+        "translation": "You don't have to worry about anything.",
+        "cloze": "kümmern"
+      }
+    ]
+  },
+  {
+    "lemma": "laut",
+    "gloss": "loud; aloud",
+    "pos": "adj",
+    "forms": [
+      "laut",
+      "laute",
+      "lauten",
+      "lauter"
+    ],
+    "sentences": [
+      {
+        "text": "Die Kinder sind heute sehr laut.",
+        "translation": "The children are very loud today.",
+        "cloze": "laut"
+      },
+      {
+        "text": "Kannst du etwas lauter sprechen?",
+        "translation": "Can you speak a bit louder?",
+        "cloze": "lauter"
+      },
+      {
+        "text": "Er hat eine laute Stimme.",
+        "translation": "He has a loud voice.",
+        "cloze": "laute"
+      }
+    ]
+  },
+  {
+    "lemma": "anrufen",
+    "gloss": "to call, phone",
+    "pos": "verb",
+    "forms": [
+      "anrufen",
+      "angerufen",
+      "anzurufen"
+    ],
+    "notes": "Separable: Ich rufe dich an. Takes the accusative: jemanden anrufen.",
+    "sentences": [
+      {
+        "text": "Ich muss meine Mutter anrufen.",
+        "translation": "I have to call my mother.",
+        "cloze": "anrufen"
+      },
+      {
+        "text": "Hat jemand angerufen?",
+        "translation": "Did anyone call?",
+        "cloze": "angerufen"
+      },
+      {
+        "text": "Vergiss nicht, mich anzurufen.",
+        "translation": "Don't forget to call me.",
+        "cloze": "anzurufen"
+      }
+    ]
+  },
+  {
+    "lemma": "sitzen",
+    "gloss": "to sit, be sitting",
+    "pos": "verb",
+    "forms": [
+      "sitzen",
+      "sitze",
+      "sitzt",
+      "saß",
+      "saßen",
+      "gesessen"
+    ],
+    "notes": "A state, not a movement: to sit down is sich setzen. past saß.",
+    "sentences": [
+      {
+        "text": "Wo sitzt du?",
+        "translation": "Where are you sitting?",
+        "cloze": "sitzt"
+      },
+      {
+        "text": "Ich sitze gerade im Zug.",
+        "translation": "I'm on the train right now.",
+        "cloze": "sitze"
+      },
+      {
+        "text": "Wir saßen den ganzen Abend draußen.",
+        "translation": "We sat outside all evening.",
+        "cloze": "saßen"
+      },
+      {
+        "text": "Hier kann man gut sitzen.",
+        "translation": "It's nice to sit here.",
+        "cloze": "sitzen"
+      }
+    ]
+  },
+  {
+    "lemma": "Erde",
+    "gloss": "earth; ground, soil",
+    "pos": "noun",
+    "forms": [
+      "Erde"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Die Erde ist rund.",
+        "translation": "The earth is round.",
+        "cloze": "Erde"
+      },
+      {
+        "text": "Er lag auf der Erde.",
+        "translation": "He was lying on the ground.",
+        "cloze": "Erde"
+      },
+      {
+        "text": "Die Erde im Garten ist nass.",
+        "translation": "The soil in the garden is wet.",
+        "cloze": "Erde"
+      }
+    ]
+  },
+  {
+    "lemma": "Schlüssel",
+    "gloss": "key",
+    "pos": "noun",
+    "forms": [
+      "Schlüssel"
+    ],
+    "notes": "Plural: Schlüssel (same form).",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Wo sind meine Schlüssel?",
+        "translation": "Where are my keys?",
+        "cloze": "Schlüssel"
+      },
+      {
+        "text": "Hast du meinen Schlüssel gesehen?",
+        "translation": "Have you seen my key?",
+        "cloze": "Schlüssel"
+      },
+      {
+        "text": "Der Schlüssel steckt noch in der Tür.",
+        "translation": "The key is still in the door.",
+        "cloze": "Schlüssel"
+      }
+    ]
+  },
+  {
+    "lemma": "Rest",
+    "gloss": "rest, remainder",
+    "pos": "noun",
+    "forms": [
+      "Rest",
+      "Reste"
+    ],
+    "notes": "Reste = leftovers.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Den Rest mache ich morgen.",
+        "translation": "I'll do the rest tomorrow.",
+        "cloze": "Rest"
+      },
+      {
+        "text": "Wo ist der Rest vom Geld?",
+        "translation": "Where's the rest of the money?",
+        "cloze": "Rest"
+      },
+      {
+        "text": "Ich esse die Reste von gestern.",
+        "translation": "I'm eating yesterday's leftovers.",
+        "cloze": "Reste"
+      }
+    ]
+  },
+  {
+    "lemma": "eher",
+    "gloss": "rather; sooner, earlier",
+    "pos": "adv",
+    "forms": [
+      "eher"
+    ],
+    "sentences": [
+      {
+        "text": "Ich bleibe eher zu Hause.",
+        "translation": "I'll probably stay at home instead.",
+        "cloze": "eher"
+      },
+      {
+        "text": "Er ist eher still.",
+        "translation": "He's rather quiet.",
+        "cloze": "eher"
+      },
+      {
+        "text": "Je eher, desto besser.",
+        "translation": "The sooner the better.",
+        "cloze": "eher"
+      }
+    ]
+  },
+  {
+    "lemma": "Gefängnis",
+    "gloss": "prison",
+    "pos": "noun",
+    "forms": [
+      "Gefängnis"
+    ],
+    "notes": "Plural: Gefängnisse.",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Er sitzt im Gefängnis.",
+        "translation": "He's in prison.",
+        "cloze": "Gefängnis"
+      },
+      {
+        "text": "Sie war zwei Jahre im Gefängnis.",
+        "translation": "She was in prison for two years.",
+        "cloze": "Gefängnis"
+      },
+      {
+        "text": "Willst du ins Gefängnis?",
+        "translation": "Do you want to go to prison?",
+        "cloze": "Gefängnis"
+      }
+    ]
+  },
+  {
+    "lemma": "Opfer",
+    "gloss": "victim; sacrifice",
+    "pos": "noun",
+    "forms": [
+      "Opfer"
+    ],
+    "notes": "Plural: Opfer (same form).",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Wer ist das Opfer?",
+        "translation": "Who is the victim?",
+        "cloze": "Opfer"
+      },
+      {
+        "text": "Das Opfer ist eine junge Frau.",
+        "translation": "The victim is a young woman.",
+        "cloze": "Opfer"
+      },
+      {
+        "text": "Sie hat viele Opfer gebracht.",
+        "translation": "She made a lot of sacrifices.",
+        "cloze": "Opfer"
+      }
+    ]
+  },
+  {
+    "lemma": "Körper",
+    "gloss": "body",
+    "pos": "noun",
+    "forms": [
+      "Körper"
+    ],
+    "notes": "Plural: Körper (same form).",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Mein ganzer Körper tut weh.",
+        "translation": "My whole body hurts.",
+        "cloze": "Körper"
+      },
+      {
+        "text": "Wasser ist gut für den Körper.",
+        "translation": "Water is good for the body.",
+        "cloze": "Körper"
+      },
+      {
+        "text": "Hör auf deinen Körper.",
+        "translation": "Listen to your body.",
+        "cloze": "Körper"
+      }
+    ]
+  },
+  {
+    "lemma": "solcher",
+    "gloss": "such, like that",
+    "pos": "det",
+    "forms": [
+      "solche",
+      "solchen",
+      "solcher",
+      "solches"
+    ],
+    "notes": "Endings like dieser. In speech, so ein is more common: so ein Tag = such a day.",
+    "sentences": [
+      {
+        "text": "Ich habe solche Angst.",
+        "translation": "I'm so scared.",
+        "cloze": "solche"
+      },
+      {
+        "text": "Solche Leute mag ich nicht.",
+        "translation": "I don't like people like that.",
+        "cloze": "Solche"
+      },
+      {
+        "text": "Mit solchen Dingen spielt man nicht.",
+        "translation": "You don't play with things like that.",
+        "cloze": "solchen"
+      }
+    ]
+  },
+  {
+    "lemma": "schreiben",
+    "gloss": "to write",
+    "pos": "verb",
+    "forms": [
+      "schreiben",
+      "schreibe",
+      "schreibst",
+      "schreibt",
+      "schrieb",
+      "geschrieben",
+      "schreib"
+    ],
+    "notes": "past schrieb, perfect geschrieben.",
+    "sentences": [
+      {
+        "text": "Ich schreibe dir morgen.",
+        "translation": "I'll write to you tomorrow.",
+        "cloze": "schreibe"
+      },
+      {
+        "text": "Wer hat das geschrieben?",
+        "translation": "Who wrote this?",
+        "cloze": "geschrieben"
+      },
+      {
+        "text": "Er schrieb ihr jeden Tag.",
+        "translation": "He wrote to her every day.",
+        "cloze": "schrieb"
+      },
+      {
+        "text": "Schreib mir eine Nachricht!",
+        "translation": "Send me a message!",
+        "cloze": "Schreib"
+      }
+    ]
+  },
+  {
+    "lemma": "böse",
+    "gloss": "bad, evil; angry (with someone)",
+    "pos": "adj",
+    "forms": [
+      "böse",
+      "bösen",
+      "böser",
+      "böses"
+    ],
+    "notes": "jemandem böse sein = to be angry with someone.",
+    "sentences": [
+      {
+        "text": "Bist du mir böse?",
+        "translation": "Are you angry with me?",
+        "cloze": "böse"
+      },
+      {
+        "text": "Er ist kein böser Mensch.",
+        "translation": "He's not a bad person.",
+        "cloze": "böser"
+      },
+      {
+        "text": "Ich hatte einen bösen Traum.",
+        "translation": "I had a bad dream.",
+        "cloze": "bösen"
+      }
+    ]
+  },
+  {
+    "lemma": "vorstellen",
+    "gloss": "to introduce; (sich vorstellen) to imagine",
+    "pos": "verb",
+    "forms": [
+      "vorstellen",
+      "vorgestellt",
+      "vorzustellen"
+    ],
+    "notes": "Separable. sich (dat) etwas vorstellen = to imagine something. Darf ich vorstellen? = May I introduce …?",
+    "sentences": [
+      {
+        "text": "Das kann ich mir nicht vorstellen.",
+        "translation": "I can't imagine that.",
+        "cloze": "vorstellen"
+      },
+      {
+        "text": "Hast du dich schon vorgestellt?",
+        "translation": "Have you introduced yourself yet?",
+        "cloze": "vorgestellt"
+      },
+      {
+        "text": "Es ist schwer, sich das vorzustellen.",
+        "translation": "It's hard to imagine that.",
+        "cloze": "vorzustellen"
+      }
+    ]
+  },
+  {
+    "lemma": "wovon",
+    "gloss": "what … of/about",
+    "pos": "adv",
+    "forms": [
+      "wovon"
+    ],
+    "notes": "Question word for verbs with von: reden von → Wovon redest du?",
+    "sentences": [
+      {
+        "text": "Wovon redest du?",
+        "translation": "What are you talking about?",
+        "cloze": "Wovon"
+      },
+      {
+        "text": "Wovon träumst du?",
+        "translation": "What do you dream about?",
+        "cloze": "Wovon"
+      },
+      {
+        "text": "Wovon lebt er eigentlich?",
+        "translation": "What does he actually live on?",
+        "cloze": "Wovon"
+      }
+    ]
+  },
+  {
+    "lemma": "sobald",
+    "gloss": "as soon as",
+    "pos": "conj",
+    "forms": [
+      "sobald"
+    ],
+    "notes": "The verb goes to the end.",
+    "sentences": [
+      {
+        "text": "Ich rufe an, sobald ich da bin.",
+        "translation": "I'll call as soon as I'm there.",
+        "cloze": "sobald"
+      },
+      {
+        "text": "Sobald es dunkel ist, gehen wir.",
+        "translation": "As soon as it's dark, we'll go.",
+        "cloze": "Sobald"
+      },
+      {
+        "text": "Komm, sobald du kannst.",
+        "translation": "Come as soon as you can.",
+        "cloze": "sobald"
+      }
+    ]
+  },
+  {
+    "lemma": "nochmal",
+    "gloss": "again, once more (spoken)",
+    "pos": "adv",
+    "forms": [
+      "nochmal"
+    ],
+    "notes": "Also written noch mal; the full form is noch einmal.",
+    "sentences": [
+      {
+        "text": "Sag das nochmal!",
+        "translation": "Say that again!",
+        "cloze": "nochmal"
+      },
+      {
+        "text": "Können wir nochmal reden?",
+        "translation": "Can we talk again?",
+        "cloze": "nochmal"
+      },
+      {
+        "text": "Versuch es nochmal.",
+        "translation": "Try again.",
+        "cloze": "nochmal"
+      }
+    ]
+  },
+  {
+    "lemma": "Wohnung",
+    "gloss": "flat, apartment",
+    "pos": "noun",
+    "forms": [
+      "Wohnung",
+      "Wohnungen"
+    ],
+    "notes": "Plural: Wohnungen.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Wir suchen eine neue Wohnung.",
+        "translation": "We're looking for a new flat.",
+        "cloze": "Wohnung"
+      },
+      {
+        "text": "Seine Wohnung ist sehr klein.",
+        "translation": "His flat is very small.",
+        "cloze": "Wohnung"
+      },
+      {
+        "text": "In der Stadt sind Wohnungen teuer.",
+        "translation": "Flats are expensive in the city.",
+        "cloze": "Wohnungen"
+      }
+    ]
+  },
+  {
+    "lemma": "weh",
+    "gloss": "sore, painful (in wehtun: to hurt)",
+    "pos": "adj",
+    "forms": [
+      "weh"
+    ],
+    "notes": "wehtun = to hurt: Das tut weh. The person is in the dative: Mir tut der Fuß weh.",
+    "sentences": [
+      {
+        "text": "Das tut weh!",
+        "translation": "That hurts!",
+        "cloze": "weh"
+      },
+      {
+        "text": "Mir tut der Rücken weh.",
+        "translation": "My back hurts.",
+        "cloze": "weh"
+      },
+      {
+        "text": "Wo tut es dir weh?",
+        "translation": "Where does it hurt?",
+        "cloze": "weh"
+      }
+    ]
+  },
+  {
+    "lemma": "Krankenhaus",
+    "gloss": "hospital",
+    "pos": "noun",
+    "forms": [
+      "Krankenhaus"
+    ],
+    "notes": "Plural: Krankenhäuser.",
+    "gender": "n",
+    "sentences": [
+      {
+        "text": "Er liegt im Krankenhaus.",
+        "translation": "He's in hospital.",
+        "cloze": "Krankenhaus"
+      },
+      {
+        "text": "Wir müssen sofort ins Krankenhaus.",
+        "translation": "We have to go to the hospital right away.",
+        "cloze": "Krankenhaus"
+      },
+      {
+        "text": "Wann darfst du aus dem Krankenhaus?",
+        "translation": "When can you leave the hospital?",
+        "cloze": "Krankenhaus"
+      }
+    ]
+  },
+  {
+    "lemma": "Million",
+    "gloss": "million",
+    "pos": "noun",
+    "forms": [
+      "Million",
+      "Millionen"
+    ],
+    "notes": "A noun: eine Million, zwei Millionen.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Das Haus kostet eine Million.",
+        "translation": "The house costs a million.",
+        "cloze": "Million"
+      },
+      {
+        "text": "In der Stadt leben drei Millionen Menschen.",
+        "translation": "Three million people live in the city.",
+        "cloze": "Millionen"
+      },
+      {
+        "text": "Er hat Millionen verdient.",
+        "translation": "He earned millions.",
+        "cloze": "Millionen"
+      }
+    ]
+  },
+  {
+    "lemma": "Klasse",
+    "gloss": "class (school); (spoken) great",
+    "pos": "noun",
+    "forms": [
+      "Klasse",
+      "Klassen"
+    ],
+    "notes": "Klasse! = Great!",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Wir waren in derselben Klasse.",
+        "translation": "We were in the same class.",
+        "cloze": "Klasse"
+      },
+      {
+        "text": "Das ist echt Klasse!",
+        "translation": "That's really great!",
+        "cloze": "Klasse"
+      },
+      {
+        "text": "Die Klassen sind zu groß.",
+        "translation": "The classes are too big.",
+        "cloze": "Klassen"
+      }
+    ]
+  },
+  {
+    "lemma": "hart",
+    "gloss": "hard; tough",
+    "pos": "adj",
+    "forms": [
+      "hart",
+      "harte",
+      "harten",
+      "harter",
+      "härter"
+    ],
+    "notes": "Comparative: härter.",
+    "sentences": [
+      {
+        "text": "Das Brot ist hart.",
+        "translation": "The bread is hard.",
+        "cloze": "hart"
+      },
+      {
+        "text": "Sie arbeitet sehr hart.",
+        "translation": "She works very hard.",
+        "cloze": "hart"
+      },
+      {
+        "text": "Es war ein harter Tag.",
+        "translation": "It was a tough day.",
+        "cloze": "harter"
+      }
+    ]
+  },
+  {
+    "lemma": "Sinn",
+    "gloss": "sense, meaning; point",
+    "pos": "noun",
+    "forms": [
+      "Sinn"
+    ],
+    "notes": "Es hat keinen Sinn = There's no point. Sinn machen (to make sense) is common in speech.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Das hat keinen Sinn.",
+        "translation": "There's no point.",
+        "cloze": "Sinn"
+      },
+      {
+        "text": "Was ist der Sinn des Lebens?",
+        "translation": "What's the meaning of life?",
+        "cloze": "Sinn"
+      },
+      {
+        "text": "Jetzt macht alles Sinn.",
+        "translation": "Now it all makes sense.",
+        "cloze": "Sinn"
+      }
+    ]
+  },
+  {
+    "lemma": "außerdem",
+    "gloss": "besides, also, what's more",
+    "pos": "adv",
+    "forms": [
+      "außerdem"
+    ],
+    "sentences": [
+      {
+        "text": "Außerdem bin ich müde.",
+        "translation": "Besides, I'm tired.",
+        "cloze": "Außerdem"
+      },
+      {
+        "text": "Es ist spät, und außerdem regnet es.",
+        "translation": "It's late, and besides, it's raining.",
+        "cloze": "außerdem"
+      },
+      {
+        "text": "Ich habe außerdem kein Geld.",
+        "translation": "Also, I don't have any money.",
+        "cloze": "außerdem"
+      }
+    ]
+  },
+  {
+    "lemma": "verletzen",
+    "gloss": "to hurt, injure",
+    "pos": "verb",
+    "forms": [
+      "verletzen",
+      "verletze",
+      "verletzt",
+      "verletzte"
+    ],
+    "notes": "verletzt (adj) = hurt, injured. sich verletzen = to hurt oneself.",
+    "sentences": [
+      {
+        "text": "Bist du verletzt?",
+        "translation": "Are you hurt?",
+        "cloze": "verletzt"
+      },
+      {
+        "text": "Ich wollte dich nicht verletzen.",
+        "translation": "I didn't want to hurt you.",
+        "cloze": "verletzen"
+      },
+      {
+        "text": "Er verletzte sich beim Spielen.",
+        "translation": "He hurt himself while playing.",
+        "cloze": "verletzte"
+      }
+    ]
+  },
+  {
+    "lemma": "ändern",
+    "gloss": "to change",
+    "pos": "verb",
+    "forms": [
+      "ändern",
+      "ändere",
+      "änderst",
+      "ändert",
+      "änderte",
+      "geändert"
+    ],
+    "notes": "sich ändern = to change (oneself).",
+    "sentences": [
+      {
+        "text": "Das ändert nichts.",
+        "translation": "That doesn't change anything.",
+        "cloze": "ändert"
+      },
+      {
+        "text": "Er hat seine Meinung geändert.",
+        "translation": "He's changed his mind.",
+        "cloze": "geändert"
+      },
+      {
+        "text": "Wir können es nicht ändern.",
+        "translation": "We can't change it.",
+        "cloze": "ändern"
+      }
+    ]
+  },
+  {
+    "lemma": "erfahren",
+    "gloss": "to find out, hear (news)",
+    "pos": "verb",
+    "forms": [
+      "erfahren",
+      "erfahre",
+      "erfährst",
+      "erfährt",
+      "erfuhr"
+    ],
+    "notes": "past erfuhr, perfect erfahren. As an adjective: experienced.",
+    "sentences": [
+      {
+        "text": "Wie hast du das erfahren?",
+        "translation": "How did you find out?",
+        "cloze": "erfahren"
+      },
+      {
+        "text": "Das erfährt niemand.",
+        "translation": "Nobody will find out.",
+        "cloze": "erfährt"
+      },
+      {
+        "text": "Ich erfuhr es von seiner Schwester.",
+        "translation": "I heard it from his sister.",
+        "cloze": "erfuhr"
+      }
+    ]
+  },
+  {
+    "lemma": "tragen",
+    "gloss": "to carry; to wear",
+    "pos": "verb",
+    "forms": [
+      "tragen",
+      "trage",
+      "trägst",
+      "trägt",
+      "trug",
+      "getragen"
+    ],
+    "notes": "du trägst, er trägt; past trug, perfect getragen.",
+    "sentences": [
+      {
+        "text": "Kannst du die Tasche tragen?",
+        "translation": "Can you carry the bag?",
+        "cloze": "tragen"
+      },
+      {
+        "text": "Sie trägt immer Schwarz.",
+        "translation": "She always wears black.",
+        "cloze": "trägt"
+      },
+      {
+        "text": "Er trug sie nach Hause.",
+        "translation": "He carried her home.",
+        "cloze": "trug"
+      }
+    ]
+  },
+  {
+    "lemma": "wenigstens",
+    "gloss": "at least",
+    "pos": "adv",
+    "forms": [
+      "wenigstens"
+    ],
+    "sentences": [
+      {
+        "text": "Wenigstens regnet es nicht.",
+        "translation": "At least it isn't raining.",
+        "cloze": "Wenigstens"
+      },
+      {
+        "text": "Du könntest wenigstens anrufen.",
+        "translation": "You could at least call.",
+        "cloze": "wenigstens"
+      },
+      {
+        "text": "Wenigstens bist du ehrlich.",
+        "translation": "At least you're honest.",
+        "cloze": "Wenigstens"
+      }
+    ]
+  },
+  {
+    "lemma": "vorsichtig",
+    "gloss": "careful",
+    "pos": "adj",
+    "forms": [
+      "vorsichtig"
+    ],
+    "sentences": [
+      {
+        "text": "Sei vorsichtig!",
+        "translation": "Be careful!",
+        "cloze": "vorsichtig"
+      },
+      {
+        "text": "Fahr vorsichtig.",
+        "translation": "Drive carefully.",
+        "cloze": "vorsichtig"
+      },
+      {
+        "text": "Wir müssen sehr vorsichtig sein.",
+        "translation": "We have to be very careful.",
+        "cloze": "vorsichtig"
+      }
+    ]
+  },
+  {
+    "lemma": "stolz",
+    "gloss": "proud",
+    "pos": "adj",
+    "forms": [
+      "stolz"
+    ],
+    "notes": "stolz auf = proud of.",
+    "sentences": [
+      {
+        "text": "Ich bin stolz auf dich.",
+        "translation": "I'm proud of you.",
+        "cloze": "stolz"
+      },
+      {
+        "text": "Deine Eltern wären stolz.",
+        "translation": "Your parents would be proud.",
+        "cloze": "stolz"
+      },
+      {
+        "text": "Er ist zu stolz, um zu fragen.",
+        "translation": "He's too proud to ask.",
+        "cloze": "stolz"
+      }
+    ]
+  },
+  {
+    "lemma": "stark",
+    "gloss": "strong",
+    "pos": "adj",
+    "forms": [
+      "stark",
+      "starke",
+      "starken",
+      "stärker"
+    ],
+    "notes": "Comparative: stärker.",
+    "sentences": [
+      {
+        "text": "Du bist stark.",
+        "translation": "You're strong.",
+        "cloze": "stark"
+      },
+      {
+        "text": "Er ist stärker als ich.",
+        "translation": "He's stronger than me.",
+        "cloze": "stärker"
+      },
+      {
+        "text": "Ich brauche einen starken Kaffee.",
+        "translation": "I need a strong coffee.",
+        "cloze": "starken"
+      }
+    ]
+  },
+  {
+    "lemma": "fallen",
+    "gloss": "to fall",
+    "pos": "verb",
+    "forms": [
+      "fallen",
+      "falle",
+      "fällst",
+      "fällt",
+      "fiel",
+      "fielen"
+    ],
+    "notes": "past fiel; perfect with sein: ist gefallen. Es fällt mir schwer = I find it hard.",
+    "sentences": [
+      {
+        "text": "Pass auf, dass du nicht fällst!",
+        "translation": "Be careful you don't fall!",
+        "cloze": "fällst"
+      },
+      {
+        "text": "Im Herbst fallen die Blätter.",
+        "translation": "In autumn the leaves fall.",
+        "cloze": "fallen"
+      },
+      {
+        "text": "Er fiel ins Wasser.",
+        "translation": "He fell into the water.",
+        "cloze": "fiel"
+      }
+    ]
+  },
+  {
+    "lemma": "besonders",
+    "gloss": "especially, particularly",
+    "pos": "adv",
+    "forms": [
+      "besonders"
+    ],
+    "sentences": [
+      {
+        "text": "Heute ist es besonders kalt.",
+        "translation": "It's especially cold today.",
+        "cloze": "besonders"
+      },
+      {
+        "text": "Ich mag Tiere, besonders Hunde.",
+        "translation": "I like animals, especially dogs.",
+        "cloze": "besonders"
+      },
+      {
+        "text": "Das war nicht besonders gut.",
+        "translation": "That wasn't particularly good.",
+        "cloze": "besonders"
+      }
+    ]
+  },
+  {
+    "lemma": "schicken",
+    "gloss": "to send",
+    "pos": "verb",
+    "forms": [
+      "schicken",
+      "schicke",
+      "schickst",
+      "schickt",
+      "schickte",
+      "geschickt",
+      "schick"
+    ],
+    "sentences": [
+      {
+        "text": "Schick mir ein Foto!",
+        "translation": "Send me a photo!",
+        "cloze": "Schick"
+      },
+      {
+        "text": "Ich schicke dir die Adresse.",
+        "translation": "I'll send you the address.",
+        "cloze": "schicke"
+      },
+      {
+        "text": "Wer hat dich geschickt?",
+        "translation": "Who sent you?",
+        "cloze": "geschickt"
+      }
+    ]
+  }
+]
