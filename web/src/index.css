@@ -230,7 +230,7 @@ section { margin-bottom: 1.25rem; }
 /* ---------- garden ---------- */
 .garden { position: relative; margin: 0.5rem -16px 0; }
 .garden svg { display: block; overflow: visible; }
-.garden-scroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
+.garden-scroll { position: relative; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
 .garden-scroll::-webkit-scrollbar { display: none; }
 .garden-arrows { margin-left: auto; display: inline-flex; gap: 0.35rem; }
 .garden-arrow {
@@ -281,6 +281,15 @@ section { margin-bottom: 1.25rem; }
 .plant-tip strong { font: 1.15rem/1.2 var(--display); }
 .plant-tip em { font-style: normal; color: var(--muted); font-size: 0.75rem; }
 .garden.compact { margin-top: 1rem; }
+.garden-visitor { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; line-height: 0; border-radius: 4px; }
+.garden-visitor:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.garden-visitor svg { display: block; }
+.visitor-tip {
+  position: absolute; padding: 0.3rem 0.6rem; border-radius: 10px; pointer-events: none; white-space: nowrap; z-index: 2;
+  background: var(--card); border: 1px solid var(--line); box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.45); font-size: 0.82rem; animation: rise 0.18s var(--ease);
+}
+.visitor-tip i { font: italic 1.05rem/1.2 var(--display); }
+.visitor-tip span { color: var(--muted); }
 
 /* ---------- session ---------- */
 .session { max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
@@ -587,6 +596,15 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 }
 .gw-label::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 4px; height: 4px; margin-left: -2px; background: #2b1d12; }
 .gw-label.on { color: var(--accent); font-size: 1.15rem; }
+/* A visitor tag, unlike a plant label: a small paper tag, the word in italic, the English small. Decorative (aria-hidden). */
+.gw-tag {
+  position: absolute; transform: translate(-50%, calc(-100% - 7px)); white-space: nowrap;
+  padding: 0.18rem 0.5rem 0.22rem; background: #fff4dc; color: #3a2416; border: 2px solid #3a2416;
+  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28); font: italic 1.12rem/1.1 var(--display);
+}
+.gw-tag small { font: 500 0.78rem/1 var(--pixel); letter-spacing: 0.03em; color: #7a5a40; }
+.gw-tag::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -4px; border: 4px solid transparent; border-top-color: #3a2416; }
+.gw-leaf { display: inline-block; margin-right: 3px; vertical-align: -1px; filter: drop-shadow(1px 1px 0 #2b1d12); }
 
 .gw-card {
   position: absolute; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%);

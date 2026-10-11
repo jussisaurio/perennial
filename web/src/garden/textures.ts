@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 import { Plant } from "../ui/plant";
 import type { PlacedPlant } from "./world";
+import * as Art from "./visitorArt";
 
 function rng(seed: number): () => number {
   let a = seed >>> 0;
@@ -608,5 +609,24 @@ export function sunflower(): HTMLCanvasElement {
       px(ctx, ox + 18, 15, ink);
     } else px(ctx, ox + 15, 13, "#3f7d36", 2, 9); // the stem joins the middle of the back
   }
+  return c;
+}
+
+
+// ---- Visitors ---------------------------------------------------------------
+
+/** Visitor cells (32×32 each, standing on the bottom row), in this order. */
+export const VISITOR_CELL = { snail: 0, catAsleep: 1, catAwake: 2, toadstool: 3, bird: 4, birdHop: 5 } as const;
+export const VISITOR_CELLS = 6;
+
+/** The garden visitors in one small atlas (drawn once): snail, cat asleep and with one eye open, toadstool, bird perched and hopping. */
+export function visitors(): HTMLCanvasElement {
+  const [c, ctx] = canvas(32 * VISITOR_CELLS, 32);
+  [Art.SNAIL, Art.CAT_ASLEEP, Art.CAT_AWAKE, Art.TOADSTOOL, Art.BIRD, Art.BIRD_HOP].forEach((art, i) => {
+    const w = art.rows[0].length;
+    const ox = i * 32 + Math.floor((32 - w) / 2);
+    const oy = 32 - art.rows.length - (art === Art.BIRD_HOP ? 2 : 0);
+    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  });
   return c;
 }

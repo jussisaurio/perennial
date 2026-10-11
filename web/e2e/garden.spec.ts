@@ -42,6 +42,29 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
   expect(errors).toEqual([]);
 });
 
+test("visitors: the snail and the cat in the 2D strip say their word; they are not plants", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  // A dev-only override brings every visitor today, so the test does not depend on the date.
+  await page.goto("/?demo=es:30&visitors=all#/today");
+  const snail = page.getByRole("button", { name: "el caracol · snail" });
+  await expect(snail).toBeAttached({ timeout: 30_000 });
+  await snail.evaluate((el) => el.scrollIntoView({ inline: "center", block: "center" }));
+  await snail.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("el caracol · snail");
+  // The cat sleeps at the right end of the strip.
+  const cat = page.getByRole("button", { name: "el gato · cat" });
+  await cat.evaluate((el) => el.scrollIntoView({ inline: "center", block: "center" }));
+  await cat.click();
+  await expect(page.getByRole("tooltip")).toHaveText("el gato · cat");
+
+  // Visitors are not plants: the walk still counts only the learner's words.
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  expect(errors).toEqual([]);
+});
+
 test("the garden tab opens the garden; an empty garden offers the first session", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Garden" }).click();

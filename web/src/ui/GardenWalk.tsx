@@ -10,7 +10,7 @@ import type { LoadedDeck } from "../data/deck";
 import { useLearner, type Learner } from "../data/learner";
 import { track } from "../observability";
 import { groupOf, layout, THIRSTY, type GardenPlant, type Layout, type PlacedPlant } from "../garden/world";
-import type { Detail, GardenScene, TimeOfDay } from "../garden/scene";
+import type { Detail, GardenScene, Label, TimeOfDay, WalkVisitors } from "../garden/scene";
 import { loadingLine, plantLine } from "../content/voice";
 import { takeFocus } from "./gardenFocus";
 import { stageFor, WordPlant } from "./plant";
@@ -18,6 +18,7 @@ import { speak } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { KNOWN_STABILITY, recall } from "./stats";
 import { plural } from "./format";
+import { learnerVisitors, type LearnerVisitors } from "./visitors";
 
 export interface WalkSource {
   plants: GardenPlant[];
@@ -59,8 +60,9 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   useEffect(() => track("garden_opened"), []);
   const learner = useLearner(lang);
   const source = useMemo(() => (learner ? walkPlants(learner) : null), [learner]);
+  const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
   const [focus] = useState(takeFocus);
-  return <GardenWalk lang={lang} source={source} onExit={onExit} onWater={onWater} focus={focus} />;
+  return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} onWater={onWater} focus={focus} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -101,12 +103,27 @@ function personality(p: PlantView): string {
 type PlantView = PlacedPlant;
 
 /** Without onWater it is view-only (the landing page): no watering, no sessions. */
-export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: string; source: WalkSource | null; onExit: () => void; onWater?: () => void; focus?: string | null }) {
-  const [data, setData] = useState<{ l: Layout; seeds: number } | null>(null);
+export function GardenWalk({
+  lang,
+  source,
+  visitors,
+  onExit,
+  onWater,
+  focus,
+}: {
+  lang: string;
+  source: WalkSource | null;
+  /** Today's visitors (snail, cat, ...): a snapshot is taken when the garden opens. */
+  visitors?: LearnerVisitors | null;
+  onExit: () => void;
+  onWater?: () => void;
+  focus?: string | null;
+}) {
+  const [data, setData] = useState<{ l: Layout; seeds: number; visitors: WalkVisitors } | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const [selected, setSelected] = useState<PlantView | null>(null);
-  const [labels, setLabels] = useState<{ id: string; text: string; x: number; y: number; near: number }[]>([]);
+  const [labels, setLabels] = useState<Label[]>([]);
   const [time, setTime] = useState<TimeOfDay>(initialTime);
   const [hint, setHint] = useState(true);
   const [ready, setReady] = useState(false);
@@ -129,8 +146,8 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
-    if (source && !data) setData({ l: layout(source.plants), seeds: source.seeds });
-  }, [source, data]);
+    if (source && !data) setData({ l: layout(source.plants), seeds: source.seeds, visitors: { list: visitors?.views ?? [], snailDay: visitors?.today.snailDay ?? null } });
+  }, [source, data, visitors]);
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -144,7 +161,7 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
       if (!mod.webglAvailable()) return setFailed("Your browser cannot show 3D graphics.");
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-        s = new mod.GardenScene(canvas.current!, data.l, { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]) }, reduced, lang);
+        s = new mod.GardenScene(canvas.current!, data.l, { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]) }, reduced, lang, data.visitors);
       } catch (e) {
         return setFailed(e instanceof Error ? e.message : String(e));
       }
@@ -308,6 +325,13 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
     drag.current = null;
     if (!d || d.moved > 6 || !scene.current || !wrap.current) return;
     const r = wrap.current.getBoundingClientRect();
+    // A visitor first: its tag shows for a moment and, with sound on, it says its word. No card.
+    const v = scene.current.pickVisitor(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
+    if (v) {
+      scene.current.tapVisitor(v.id);
+      if (sound && v.word) void speak(v.word, tag);
+      return;
+    }
     scene.current.select(scene.current.pick(e.clientX - r.left, e.clientY - r.top, r.width, r.height));
   };
 
@@ -350,11 +374,19 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
         onPointerCancel={() => (drag.current = null)}
       />
       <div className="gw-labels" aria-hidden="true">
-        {labels.map((l) => (
-          <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: 0.35 + l.near * 0.65 }}>
-            {l.text}
-          </span>
-        ))}
+        {labels.map((l) =>
+          l.kind === "visitor" && !l.known ? (
+            <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+              <i>{l.text}</i>
+              <small lang="en"> · {l.gloss}</small>
+            </span>
+          ) : (
+            <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: 0.35 + l.near * 0.65 }}>
+              {l.known && <LeafMark />}
+              {l.text}
+            </span>
+          ),
+        )}
       </div>
 
       <div className="gw-top">
@@ -462,6 +494,15 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
 
       <Joystick onMove={(x, y) => scene.current && ((scene.current.input.move.x = x), (scene.current.input.move.y = y), setHint(false))} />
     </div>
+  );
+}
+
+/** A tiny pixel leaf: this visitor is also one of your words. */
+function LeafMark() {
+  return (
+    <svg className="gw-leaf" viewBox="0 0 5 5" width="10" height="10" aria-hidden="true" shapeRendering="crispEdges">
+      <path d="M3 0h2v2h-1v1h-1v1h-2v1h-1v-2h1v-1h1v-1h1z" fill="#8ccc6a" />
+    </svg>
   );
 }
 

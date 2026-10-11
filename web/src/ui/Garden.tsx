@@ -7,6 +7,8 @@ import type { LoadedDeck } from "../data/deck";
 import { KNOWN_STABILITY, recall, type Learner } from "../data/learner";
 import { plantLine } from "../content/voice";
 import { Plant as WordPlantShape, stageFor } from "./plant";
+import { CAT_ASLEEP, runs, SNAIL, type PixelArt } from "../garden/visitorArt";
+import type { VisitorView } from "../garden/visitors";
 
 interface Plant {
   id: string;
@@ -103,11 +105,14 @@ export function Garden({
   compact,
   showcase,
   onView,
+  visitors,
 }: {
   data: GardenData | null | undefined;
   highlight?: Set<string>;
   compact?: boolean;
   showcase?: boolean;
+  /** Today's visitors drawn in the strip: the snail on the soil line, the cat asleep at the right end. */
+  visitors?: { views: VisitorView[]; snailAt: number; lang: string } | null;
   /** Offered in the plant card: open this plant in the 3D garden. */
   onView?: (id: string) => void;
 }) {
@@ -119,14 +124,17 @@ export function Garden({
   // Hover intent: with a card open, switching to another plant waits a moment,
   // so the pointer can cross other plants on its way to the card's button.
   const switching = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [visitorTip, setVisitorTip] = useState<{ v: VisitorView; x: number } | null>(null);
   const show = (h: { p: Plant; x: number; y: number }, now = false) => {
     clearTimeout(switching.current);
+    setVisitorTip(null);
     if (now || !hover) setHover(h);
     else switching.current = setTimeout(() => setHover(h), 160);
   };
   const hide = () => {
     clearTimeout(switching.current);
     setHover(null);
+    setVisitorTip(null);
   };
   useEffect(() => () => clearTimeout(switching.current), []);
 
@@ -141,16 +149,20 @@ export function Garden({
   const plants = useMemo(() => data?.plants ?? [], [data]);
   const n = plants.length;
   const pad = 18;
-  const scrolls = n * SPACING + pad * 2 > width;
-  const fullWidth = scrolls ? n * SPACING + pad * 2 : width;
+  const snail = visitors?.views.find((v) => v.id === "snail" && v.word);
+  const cat = visitors?.views.find((v) => v.id === "cat" && v.word);
+  // Room at the right end for the cat, so it does not sleep on the newest plant.
+  const catRoom = cat ? 46 : 0;
+  const scrolls = n * SPACING + pad * 2 + catRoom > width;
+  const fullWidth = scrolls ? n * SPACING + pad * 2 + catRoom : width;
 
   const layout = useMemo(() => {
     // Small gardens cluster in the middle instead of scattering across the width.
-    const spacing = scrolls ? SPACING : n ? Math.min(34, (width - pad * 2) / n) : width;
-    const offset = scrolls ? pad : (width - spacing * n) / 2;
+    const spacing = scrolls ? SPACING : n ? Math.min(34, (width - pad * 2 - catRoom) / n) : width;
+    const offset = scrolls ? pad : (width - catRoom - spacing * n) / 2;
     const scale = Math.max(0.42, Math.min(1.05, spacing / 20));
     return plants.map((p, i) => ({ p, x: offset + spacing * (i + 0.5) + (hash(p.id, 17) - 0.5) * spacing * 0.8, y: GROUND + hash(p.id, 19) * 4, scale }));
-  }, [plants, n, scrolls, width]);
+  }, [plants, n, scrolls, width, catRoom]);
 
   // Open where the newest growth is, or on today's words after a session, and
   // keep following it while words sync in, until the learner scrolls.
@@ -218,7 +230,39 @@ export function Garden({
             return <ellipse key={i} className="seed" cx={sx} cy={sy} rx={2.6} ry={1.7} transform={`rotate(${hash(`seed${i}`, 43) * 180} ${sx} ${sy})`} />;
           })}
         </svg>
+        {snail && (
+          <VisitorMark
+            v={snail}
+            art={SNAIL}
+            scale={1.5}
+            x={pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2)}
+            onShow={(x) => {
+              setHover(null);
+              setVisitorTip({ v: snail, x });
+            }}
+            onHide={() => setVisitorTip(null)}
+          />
+        )}
+        {cat && (
+          <VisitorMark
+            v={cat}
+            art={CAT_ASLEEP}
+            scale={2}
+            x={fullWidth - 30}
+            onShow={(x) => {
+              setHover(null);
+              setVisitorTip({ v: cat, x });
+            }}
+            onHide={() => setVisitorTip(null)}
+          />
+        )}
       </div>
+      {visitorTip && (
+        <div className="visitor-tip" role="tooltip" style={{ left: Math.min(width - 150, Math.max(8, visitorTip.x - scrollX - 60)), top: GROUND - 58 }}>
+          <i lang={visitors?.lang}>{visitorTip.v.word}</i>
+          <span> · {visitorTip.v.gloss}</span>
+        </div>
+      )}
       {data && data.total === 0 && <p className="garden-empty">Your words will grow here.</p>}
       {hover && (
         <div className={onView ? "plant-tip interactive" : "plant-tip"} style={{ left: Math.min(width - 170, Math.max(8, hover.x - scrollX - 80)), top: 8 }} role="status" onPointerEnter={() => clearTimeout(switching.current)}>
@@ -262,6 +306,34 @@ export function Garden({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * A visitor in the strip, standing on the soil line: a small pixel sprite in a
+ * button, so it can be focused and tapped. Hover, focus or tap shows its word.
+ */
+function VisitorMark({ v, art, x, scale, onShow, onHide }: { v: VisitorView; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void }) {
+  const w = art.rows[0].length;
+  const h = art.rows.length;
+  return (
+    <button
+      type="button"
+      className={`garden-visitor visitor-${v.id}`}
+      aria-label={`${v.word} · ${v.gloss}`}
+      style={{ left: x - (w * scale) / 2, top: GROUND + 4 - h * scale }}
+      onPointerEnter={() => onShow(x)}
+      onPointerLeave={onHide}
+      onFocus={() => onShow(x)}
+      onBlur={onHide}
+      onClick={() => onShow(x)}
+    >
+      <svg width={w * scale} height={h * scale} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" aria-hidden="true">
+        {runs(art).map((r, i) => (
+          <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />
+        ))}
+      </svg>
+    </button>
   );
 }
 

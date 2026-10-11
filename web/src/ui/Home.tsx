@@ -10,6 +10,9 @@ import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
 import { doneTodayNote, greetingAside, startNote } from "../content/voice";
 import { focusPlant } from "./gardenFocus";
+import { walkPlants } from "./GardenWalk";
+import { learnerVisitors, snailAlong } from "./visitors";
+import { today } from "./whimsy";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -33,7 +36,13 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const now = useNow();
   const stats = useMemo(() => (learner ? courseStats(learner) : undefined), [learner]);
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  const aside = greetingAside();
+  // Today's visitors change with the calendar day, not every minute.
+  const day = today(new Date(now));
+  const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const snailDay = visitors?.today.snailDay ?? null;
+  const snailAt = useMemo(() => (learner ? snailAlong(walkPlants(learner).plants, snailDay) : 0), [learner, snailDay]);
+  // After a break, a kind line instead of the usual aside.
+  const aside = visitors?.welcome ?? greetingAside();
   if (!learner || !stats) return <div className="page home" />;
   const course = learner.course;
   const ready = stats.seeds;
@@ -59,7 +68,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </div>
       </header>
 
-      <Garden data={garden} onView={view} />
+      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code }} />
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>

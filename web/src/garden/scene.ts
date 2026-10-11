@@ -6,12 +6,34 @@ import * as THREE from "three";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
+import { fencePickets, fencePoint, GATE_HALF, snailPicket, type VisitorId, type VisitorView } from "./visitors";
+import { daily } from "../ui/whimsy";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
+/** A name over a plant, or a visitor's tag (kind "visitor"), in screen fractions. */
+export interface Label {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  near: number;
+  kind?: "visitor";
+  gloss?: string;
+  /** A visitor whose noun the learner knows: plant-label styling with a tiny leaf. */
+  known?: boolean;
+}
+
+/** Who visits the walk today. */
+export interface WalkVisitors {
+  list: VisitorView[];
+  /** Calendar days since the first review, or null for a new learner. */
+  snailDay: number | null;
+}
+
 export interface SceneCallbacks {
   onSelect: (p: PlacedPlant | null) => void;
-  onLabels: (labels: { id: string; text: string; x: number; y: number; near: number }[]) => void;
+  onLabels: (labels: Label[]) => void;
   onProgress?: (done: number, total: number) => void;
 }
 
@@ -248,6 +270,14 @@ export class GardenScene {
   private selected: PlacedPlant | null = null;
   private time: TimeOfDay = "day";
   private lastLabels = "";
+  private tmp = new THREE.Vector3();
+  /** Visitor sprites: their own materials, tinted with the time of day but never swaying or selected. */
+  private still = new Set<THREE.ShaderMaterial>();
+  private visitorSprites: { v: VisitorView; x: number; y: number; z: number; w: number; h: number; mesh: THREE.Mesh; pos: THREE.InstancedBufferAttribute; uv: THREE.InstancedBufferAttribute }[] = [];
+  private tapped: { id: VisitorId; until: number } | null = null;
+  private catAwake = false;
+  /** The bird hops away when you come close (t: 0..1 while hopping, 1 once gone) and comes back when you walk off. */
+  private bird = { t: -1, dx: 0, dz: 0 };
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
 
   private layout: Layout;
@@ -256,12 +286,14 @@ export class GardenScene {
 
   /** The course language, for the odd sign written in it. */
   private lang: string;
+  private visitors: WalkVisitors;
 
-  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang = "") {
+  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang = "", visitors: WalkVisitors = { list: [], snailDay: null }) {
     this.layout = layout;
     this.cb = cb;
     this.reducedMotion = reducedMotion;
     this.lang = lang;
+    this.visitors = visitors;
     THREE.ColorManagement.enabled = false;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -462,6 +494,7 @@ export class GardenScene {
 
     // Two notice boards whose text changes each day: one on the back fence, one by the bench.
     const signs = pickSigns(this.lang);
+    if (this.visitors.list.some((v) => v.id === "cat")) signs.bench = { text: "Bench: taken" };
     const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
       const g = new THREE.Group();
       const board = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.48), mat(T.pixelTexture(T.notice(line.text)), { side: THREE.DoubleSide }));
@@ -479,6 +512,20 @@ export class GardenScene {
     };
     noticeBoard(signs.fence, L.gate.x, b.minZ + 0.25, 0);
     noticeBoard(signs.bench, bench.position.x + 1.05, bench.position.z - 0.05, 0.35);
+    // The snail's progress, on a small board just inside the gate, facing the garden.
+    if (this.visitors.snailDay !== null && this.visitors.list.some((v) => v.id === "snail")) {
+      const g = new THREE.Group();
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.32), mat(T.pixelTexture(T.notice(`Snail: day ${this.visitors.snailDay + 1}`)), { side: THREE.DoubleSide }));
+      board.position.y = 0.62;
+      g.add(board);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), mat(woodTex));
+      post.position.set(0, 0.25, 0.03);
+      g.add(post);
+      g.position.set(L.gate.x + GATE_HALF + 1.7, 0, b.maxZ - 0.3);
+      g.rotation.y = Math.PI - 0.25;
+      this.scene.add(g);
+    }
+    this.buildVisitors(bench.position);
 
     // One sunflower in the far right corner, by the back fence. Unlike every other
     // sprite, it does not look at you: from the garden you see the back of its head,
@@ -586,6 +633,132 @@ export class GardenScene {
     this.scene.add(this.marker);
 
     this.setTime(this.time);
+  }
+
+  /**
+   * Today's visitors (garden/visitors.ts): the snail on the fence rail, the cat
+   * on the bench, a toadstool by a bed, a bird on a sign or the fence. One small
+   * texture for all of them; each is a one-instance sprite mesh.
+   */
+  private buildVisitors(bench: THREE.Vector3) {
+    if (!this.visitors.list.length) return;
+    const L = this.layout;
+    const b = L.bounds;
+    const tex = T.pixelTexture(T.visitors());
+    const RAIL = 0.53; // the top of the fence's upper rail
+    const cellU = 1 / T.VISITOR_CELLS;
+    for (const v of this.visitors.list) {
+      let x: number, y: number, z: number, cell: number, size: number;
+      if (v.id === "snail") {
+        const p = fencePoint(L, snailPicket(this.visitors.snailDay ?? 0, fencePickets(L)));
+        // A few centimetres inside the fence, so it sits on the rail and not in it.
+        [x, y, z] = [p.x + p.dz * 0.06, RAIL, p.z - p.dx * 0.06];
+        [cell, size] = [T.VISITOR_CELL.snail, 0.4];
+      } else if (v.id === "cat") {
+        [x, y, z] = [bench.x + 0.18, 0.45, bench.z + 0.02];
+        [cell, size] = [T.VISITOR_CELL.catAsleep, 0.95];
+      } else if (v.id === "toadstool") {
+        const bed = daily(L.beds, "visitor-toadstool-bed");
+        const along = daily([-0.3, -0.1, 0.15, 0.35], "visitor-toadstool-z");
+        [x, y, z] = [bed.x + bed.w / 2 + 0.16, 0.0, bed.z + along * bed.d];
+        [cell, size] = [T.VISITOR_CELL.toadstool, 0.6];
+      } else {
+        // On a sign or the fence rail.
+        const first = L.beds[0];
+        const spots: [number, number, number][] = [
+          [L.gate.x, 1.19, b.minZ + 0.25],
+          [first.x - first.w / 2 - 0.3, 0.93, first.z + first.d / 2 + 0.3],
+          [b.maxX - 0.06, RAIL, (b.maxZ + first.z) / 2],
+          [b.minX + 0.06, RAIL, first.z - 1],
+        ];
+        if (!this.visitors.list.some((o) => o.id === "cat")) spots.push([bench.x + 1.05, 1.19, bench.z - 0.05]);
+        [x, y, z] = daily(spots, "visitor-bird-spot");
+        [cell, size] = [T.VISITOR_CELL.bird, 0.5];
+      }
+      const mesh = sprites(tex, [{ x, y, z, u: cell * cellU, v: 0, uw: cellU, vh: 1, phase: 0, droop: 0, scale: 1, index: -6 }], size, size);
+      const m = mesh.material as THREE.ShaderMaterial;
+      m.uniforms.uSway.value = 0;
+      m.uniforms.uFogNear.value = FOG_NEAR;
+      m.uniforms.uFogFar.value = FOG_FAR;
+      this.still.add(m);
+      this.scene.add(mesh);
+      const pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
+      const uv = mesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
+      this.visitorSprites.push({ v, x, y, z, w: size, h: size, mesh, pos, uv });
+    }
+  }
+
+  /** The visitor under a point on the canvas (CSS pixels), if any. */
+  pickVisitor(cssX: number, cssY: number, cssW: number, cssH: number): VisitorView | null {
+    const nx = (cssX / cssW) * 2 - 1;
+    const ny = -(cssY / cssH) * 2 + 1;
+    const ty = Math.tan((this.camera.fov * Math.PI) / 360);
+    const tx = ty * this.camera.aspect;
+    let best: VisitorView | null = null;
+    let bestDepth = Infinity;
+    for (const s of this.visitorSprites) {
+      if (!s.mesh.visible) continue;
+      // The drawn part fills about the lower half of the cell.
+      this.tmp.set(s.pos.getX(0), s.pos.getY(0) + s.h * 0.2, s.pos.getZ(0)).applyMatrix4(this.camera.matrixWorldInverse);
+      const depth = -this.tmp.z;
+      if (depth < 0.2 || depth > 14) continue;
+      const rw = Math.max(0.04, (s.w * 0.4) / depth / tx);
+      const rh = Math.max(0.05, (s.h * 0.3) / depth / ty);
+      if (Math.abs(nx - this.tmp.x / depth / tx) < rw && Math.abs(ny - this.tmp.y / depth / ty) < rh && depth < bestDepth) {
+        best = s.v;
+        bestDepth = depth;
+      }
+    }
+    return best;
+  }
+
+  /** Show a visitor's tag for a few seconds (after a tap). */
+  tapVisitor(id: VisitorId) {
+    this.tapped = { id, until: this.elapsed + 4 };
+  }
+
+  /** Visitors react to you: the cat opens one eye, the bird hops away. No allocations here: it runs every frame. */
+  private tickVisitors(dt: number) {
+    for (const s of this.visitorSprites) {
+      const d = Math.hypot(s.x - this.x, s.z - this.z);
+      if (s.v.id === "cat") {
+        const awake = d < 2.4;
+        if (awake !== this.catAwake) {
+          this.catAwake = awake;
+          s.uv.setX(0, (awake ? T.VISITOR_CELL.catAwake : T.VISITOR_CELL.catAsleep) / T.VISITOR_CELLS);
+          s.uv.needsUpdate = true;
+        }
+      } else if (s.v.id === "bird") {
+        const bd = this.bird;
+        if (bd.t < 0 && d < 1) {
+          // Away from you, a little to the side.
+          const k = 1 / Math.max(d, 0.01);
+          bd.dx = (s.x - this.x) * k;
+          bd.dz = (s.z - this.z) * k;
+          bd.t = this.reducedMotion ? 1 : 0;
+          if (this.tapped?.id === "bird") this.tapped = null;
+          s.uv.setX(0, T.VISITOR_CELL.birdHop / T.VISITOR_CELLS);
+          s.uv.needsUpdate = true;
+        }
+        if (bd.t >= 0 && bd.t < 1) {
+          bd.t = Math.min(1, bd.t + dt / 0.7);
+          const e = bd.t * 2.2;
+          s.pos.setXYZ(0, s.x + bd.dx * e - bd.dz * e * 0.3, s.y + Math.sin(Math.min(1, bd.t * 1.6) * Math.PI) * 0.25 + bd.t * bd.t * 1.6, s.z + bd.dz * e + bd.dx * e * 0.3);
+          s.pos.needsUpdate = true;
+        }
+        if (bd.t >= 1 && s.mesh.visible) s.mesh.visible = false;
+        // It comes back to the same spot once you are well away.
+        if (bd.t >= 1 && d > 6) {
+          bd.t = -1;
+          s.pos.setXYZ(0, s.x, s.y, s.z);
+          s.pos.needsUpdate = true;
+          s.uv.setX(0, T.VISITOR_CELL.bird / T.VISITOR_CELLS);
+          s.uv.needsUpdate = true;
+          s.mesh.visible = true;
+        }
+      }
+    }
+    if (this.tapped && this.elapsed > this.tapped.until) this.tapped = null;
   }
 
   async loadPlants(): Promise<void> {
@@ -753,7 +926,7 @@ export class GardenScene {
     this.hillMat.needsUpdate = true;
     const tint = new THREE.Color(...s.tint);
     for (const m of this.basic) m.color.copy(tint);
-    for (const mat of this.mats) {
+    for (const mat of [...this.mats, ...this.still]) {
       mat.uniforms.uTint.value.copy(tint);
       mat.uniforms.uFog.value.copy(fog);
       mat.uniforms.uFogNear.value = FOG_NEAR;
@@ -948,6 +1121,8 @@ export class GardenScene {
       fl.uv.needsUpdate = true;
     }
 
+    if (this.visitorSprites.length) this.tickVisitors(dt);
+
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, 200);
     this.renderer.render(this.scene, this.camera);
     this.labels();
@@ -955,19 +1130,38 @@ export class GardenScene {
 
   /** Names over the nearest plants, as DOM text so they stay crisp and readable. */
   private labels() {
-    const v = new THREE.Vector3();
+    const v = this.tmp;
     const near: { p: PlacedPlant; d: number }[] = [];
     for (const p of this.layout.plants) {
       const d = Math.hypot(p.x - this.x, p.z - this.z);
       if (d < 3.2) near.push({ p, d });
     }
     near.sort((a, b) => a.d - b.d);
-    const out: { id: string; text: string; x: number; y: number; near: number }[] = [];
+    const out: Label[] = [];
     for (const { p, d } of near.slice(0, 10)) {
       const h = ((14 + 120 * p.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
       v.set(p.x, 0.28 + h + 0.12, p.z).project(this.camera);
       if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
       out.push({ id: p.id, text: p.lemma, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / 3.2 });
+    }
+    // One visitor tag at most: the one you tapped, or the nearest within 1.5 m that shows its name on approach.
+    let tapped: (typeof this.visitorSprites)[number] | null = null;
+    let nearest: (typeof this.visitorSprites)[number] | null = null;
+    let nearD = 1.5;
+    for (const s of this.visitorSprites) {
+      if (!s.v.word || !s.mesh.visible) continue;
+      if (this.tapped?.id === s.v.id) tapped = s;
+      const d = Math.hypot(s.x - this.x, s.z - this.z);
+      if (s.v.tag === "approach" && d < nearD) [nearest, nearD] = [s, d];
+    }
+    for (let i = 0; i < 2; i++) {
+      const tag = i === 0 ? tapped : nearest;
+      if (!tag) continue;
+      // Just above the drawn part of the sprite (it fills the lower part of its cell).
+      v.set(tag.pos.getX(0), tag.pos.getY(0) + tag.h * (tag.v.id === "cat" ? 0.45 : 0.55), tag.pos.getZ(0)).project(this.camera);
+      if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
+      out.push({ id: `visitor:${tag.v.id}`, text: tag.v.word!, gloss: tag.v.gloss, known: tag.v.known, kind: "visitor", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 });
+      break;
     }
     const key = out.map((l) => `${l.id}${l.x.toFixed(3)}${l.y.toFixed(3)}`).join();
     if (key !== this.lastLabels) {
