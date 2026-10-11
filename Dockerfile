@@ -1,6 +1,6 @@
 # One image runs the web app and the API. Build: docker build -t perennial .
 # The Railway "web" service runs the default command; the "housekeeping" cron
-# service runs `bun src/housekeeping.ts`; migrations run before each deploy.
+# service runs `bun --preload ./instrument.ts src/housekeeping.ts`; migrations run before each deploy.
 
 FROM oven/bun:1.3.14 AS web
 WORKDIR /app/web

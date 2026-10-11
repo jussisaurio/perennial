@@ -6,7 +6,7 @@
     "start": "bun --preload ./instrument.ts index.ts",
     "dev": "LOG_PRETTY=1 bun --watch --preload ./instrument.ts index.ts",
     "migrate": "bun src/migrate.ts",
-    "housekeeping": "bun src/housekeeping.ts",
+    "housekeeping": "bun --preload ./instrument.ts src/housekeeping.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit -p ."
   },

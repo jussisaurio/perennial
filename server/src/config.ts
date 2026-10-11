@@ -26,7 +26,9 @@ export interface Config {
   electric: { url: string; secret?: string };
   anthropic: { apiKey?: string; baseURL?: string; model: string };
   mail: { resendKey?: string; from: string };
-  observability: { sentryDsn?: string; posthogHost?: string };
+  /** Server reports go to sentryDsn. connect lists the origins the browser
+   *  may send reports and analytics to (CSP connect-src). */
+  observability: { sentryDsn?: string; connect: string[] };
 
   /** AI words per learner per month. */
   freeCredits: number;
@@ -61,7 +63,14 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
       model: env.PERENNIAL_MODEL ?? "claude-haiku-4-5",
     },
     mail: { resendKey: env.RESEND_API_KEY, from: env.MAIL_FROM ?? "Perennial <hello@perennial.local>" },
-    observability: { sentryDsn: env.SENTRY_DSN, posthogHost: env.POSTHOG_HOST },
+    // The browser's keys are baked in at build time; Railway gives the same
+    // variables to the build and the running server, so the CSP follows them.
+    observability: {
+      sentryDsn: env.SENTRY_DSN,
+      connect: [env.VITE_SENTRY_DSN, env.VITE_POSTHOG_KEY ? (env.VITE_POSTHOG_HOST ?? "https://eu.i.posthog.com") : undefined, env.POSTHOG_HOST]
+        .map(origin)
+        .filter((o): o is string => !!o),
+    },
     freeCredits: num(env.FREE_CREDITS, 25),
     monthlyBudgetUsd: num(env.MONTHLY_BUDGET_USD, 200),
     aiRequestsPerMinute: num(env.AI_RPM, 20),
@@ -96,3 +105,13 @@ export const PRICES: Record<string, [number, number]> = {
   "claude-opus-5": [5, 25],
   "claude-opus-5-5": [4, 20],
 };
+
+/** The origin of a URL (a Sentry DSN's ingest host, a PostHog host), or undefined. */
+function origin(url: string | undefined) {
+  if (!url) return undefined;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return undefined;
+  }
+}

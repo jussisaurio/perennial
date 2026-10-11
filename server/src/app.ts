@@ -18,7 +18,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
   const { auth, pool } = createAuth(config, sql, mailer);
   const ai = deps.ai ?? new AIService(sql, config);
   const headers = securityHeaders(
-    [config.observability.sentryDsn ? "https://*.ingest.sentry.io https://*.ingest.de.sentry.io" : "", config.observability.posthogHost ?? ""].filter(Boolean),
+    [...new Set(config.observability.connect)],
     config.appUrl.startsWith("https://"),
   );
 

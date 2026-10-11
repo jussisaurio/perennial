@@ -1,5 +1,5 @@
 // Daily housekeeping. Runs as its own Railway cron service
-// (`bun src/housekeeping.ts`); an advisory lock keeps two runs from overlapping.
+// (`bun --preload ./instrument.ts src/housekeeping.ts`); an advisory lock keeps two runs from overlapping.
 //
 // - Anonymous learners with no activity for N days are deleted (their rows
 //   cascade). Activity = a session renewed, which happens daily while in use.
@@ -35,6 +35,17 @@ if (import.meta.main) {
   const config = loadConfig();
   if (config.production && !process.env.DATABASE_URL) throw new Error("DATABASE_URL must be set");
   const sql = new Bun.SQL(config.databaseUrl, { max: 1 });
-  await housekeeping(sql, config);
-  await sql.close();
+  try {
+    await housekeeping(sql, config);
+  } catch (err) {
+    // A cron run has no request to hang the error on: report it, then wait
+    // for Sentry to send it before the process exits (instrument.ts is preloaded).
+    log.error("housekeeping failed", { error: String(err) });
+    const Sentry = await import("@sentry/bun");
+    Sentry.captureException(err);
+    await Sentry.flush(5000);
+    process.exitCode = 1;
+  } finally {
+    await sql.close();
+  }
 }

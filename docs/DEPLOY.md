@@ -22,7 +22,7 @@ This runbook deploys Perennial on **Railway** with a **PlanetScale Postgres** da
 |---|---|---|
 | `web` | This repo, `Dockerfile`, config `railway.json` | Serves the web app, the API, auth, and the Electric proxy (`/api/shape`). Runs migrations before each deploy. |
 | `electric` | Docker image `electricsql/electric:1.8.1` | Reads changes from Postgres (logical replication) and serves shapes to `web`. Private only. |
-| `housekeeping` | This repo, `Dockerfile`, config `railway.housekeeping.json` | Runs `bun src/housekeeping.ts` once a day, then exits. |
+| `housekeeping` | This repo, `Dockerfile`, config `railway.housekeeping.json` | Runs `bun --preload ./instrument.ts src/housekeeping.ts` once a day (errors go to Sentry), then exits. |
 
 Third-party services: Resend (sign-in email), Anthropic (Perennial AI), Sentry (server and browser errors, optional), PostHog (a few product events, optional).
 
@@ -38,7 +38,7 @@ Create these before you start. Keep every secret in a password manager.
 | Resend | A verified sending domain and an API key ("Sending access" only) | `RESEND_API_KEY`, `MAIL_FROM` |
 | Anthropic | An API key in a workspace with a monthly spend limit | `ANTHROPIC_API_KEY` |
 | Sentry (optional) | One project for the server (platform "Bun") and one for the browser (platform "React"). In each project's security settings, turn on **Prevent storing of IP addresses**. Use the EU region if your users are mostly in the EU. | `SENTRY_DSN`, `VITE_SENTRY_DSN` |
-| PostHog (optional) | A project (EU or US cloud) | `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `POSTHOG_HOST` |
+| PostHog (optional) | A project (EU or US cloud) | `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST` |
 
 Generate these yourself:
 
@@ -199,18 +199,18 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 |---|---|---|
 | `MIN_CLIENT_VERSION` | `0.0.0` | Clients with an older `web/package.json` version get "please reload" instead of writing. Raise it only when the write format changes. |
 | `ANONYMOUS_RETENTION_DAYS` | `60` | Used by housekeeping. Keep the value equal on both services. |
-| `SENTRY_DSN` | not set | Server error reports. **Also needed for browser reports:** only when it is set does the CSP allow the Sentry ingest hosts (`*.ingest.sentry.io`, `*.ingest.de.sentry.io`). |
+| `SENTRY_DSN` | not set | Server error reports (web and housekeeping). |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | |
-| `POSTHOG_HOST` | not set | Adds the host to the CSP `connect-src`. **Required when PostHog is on**, with the same value as `VITE_POSTHOG_HOST` (for example `https://eu.i.posthog.com`). Without it the browser blocks the events. |
+| `POSTHOG_HOST` | not set | Optional. An extra origin for the CSP `connect-src`, for example a PostHog reverse proxy. Normally not needed: see `VITE_POSTHOG_HOST`. |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` or `silent` |
 
 **Build arguments** (Railway passes service variables with these names to the Docker build; changing one needs a rebuild)
 
 | Variable | Default | Notes |
 |---|---|---|
-| `VITE_SENTRY_DSN` | empty (off) | Browser error reports (`@sentry/react`). Needs `SENTRY_DSN` on the server too (CSP). |
+| `VITE_SENTRY_DSN` | empty (off) | Browser error reports (`@sentry/react`). The server reads the same variable at runtime and allows its ingest host (any region) in the CSP `connect-src`. |
 | `VITE_POSTHOG_KEY` | empty (off) | Turns on PostHog: no cookies, no autocapture, no session replay, Do Not Track respected, five named events. |
-| `VITE_POSTHOG_HOST` | `https://eu.i.posthog.com` (in the client) | Set it explicitly, and set `POSTHOG_HOST` to the same value. |
+| `VITE_POSTHOG_HOST` | `https://eu.i.posthog.com` | The PostHog host. When `VITE_POSTHOG_KEY` is set, the server allows this host in the CSP `connect-src`. |
 | `VITE_RELEASE` | `dev` | Release name in browser error reports. Set it to `${{RAILWAY_GIT_COMMIT_SHA}}` so that it matches the server's release. |
 
 These values end up in the public JavaScript. That is expected: a Sentry DSN and a PostHog project key are not secrets.
@@ -220,7 +220,7 @@ These values end up in the public JavaScript. That is expected: a Sentry DSN and
 ### 3.4 Service `housekeeping`
 
 1. **New → GitHub Repo** → this repo again. Name the service `housekeeping`.
-2. **Settings → Config-as-code → Railway config file:** `/railway.housekeeping.json`. This file sets the start command `bun src/housekeeping.ts`, the cron schedule `17 3 * * *` (daily, 03:17 UTC), and no healthcheck. Without it, the service uses `railway.json` and its healthcheck fails, because the job does not serve HTTP.
+2. **Settings → Config-as-code → Railway config file:** `/railway.housekeeping.json`. This file sets the start command `bun --preload ./instrument.ts src/housekeeping.ts`, the cron schedule `17 3 * * *` (daily, 03:17 UTC), and no healthcheck. Without it, the service uses `railway.json` and its healthcheck fails, because the job does not serve HTTP.
 3. No domain.
 4. Variables:
 
@@ -345,7 +345,7 @@ After you change a variable, Railway asks you to deploy the change. Deploy all s
 | `BETTER_AUTH_SECRET` | New value on `web`, redeploy. **Only when it leaked.** | **Every learner is signed out.** Learners with an email sign in again. **Anonymous learners lose access to their progress** (it stays on the server until housekeeping deletes it). |
 | `RESEND_API_KEY` | Create a new key in Resend, update `web`, redeploy, then delete the old key. | None, if you do it in this order. |
 | `ANTHROPIC_API_KEY` | Same order as Resend. | None. |
-| `SENTRY_DSN` | Sentry → Client Keys → new key, update, redeploy, disable the old key. | None. |
+| `SENTRY_DSN` | not set | Server error reports (web and housekeeping). |
 
 Also rotate a secret when a person with access leaves.
 

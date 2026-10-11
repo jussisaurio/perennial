@@ -3,6 +3,7 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { configProblems, loadConfig } from "../src/config";
+import { securityHeaders } from "../src/http";
 import { QUOTA } from "../src/sync";
 import { review, startApp, stopMockLLM, unique } from "./helpers";
 
@@ -176,6 +177,13 @@ describe("production configuration fails closed", () => {
     const c = prod({ ...good, RESEND_API_KEY: undefined, PERENNIAL_DEV: "1" });
     expect(c.dev).toBe(false);
     expect(configProblems(c).join()).toContain("RESEND_API_KEY");
+  });
+
+  test("the CSP allows exactly the configured report and analytics hosts", () => {
+    const c = prod({ ...good, VITE_SENTRY_DSN: "https://abc@o12.ingest.us.sentry.io/34", VITE_POSTHOG_KEY: "phc_x", VITE_POSTHOG_HOST: "https://us.i.posthog.com" });
+    expect(c.observability.connect).toEqual(["https://o12.ingest.us.sentry.io", "https://us.i.posthog.com"]);
+    expect(securityHeaders(c.observability.connect, true)["content-security-policy"]).toContain("connect-src 'self' data: https://o12.ingest.us.sentry.io https://us.i.posthog.com");
+    expect(prod(good).observability.connect).toEqual([]);
   });
 
   test("default or short auth secret refuses to start", () => {
