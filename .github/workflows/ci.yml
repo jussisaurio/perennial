@@ -40,7 +40,11 @@ jobs:
       - name: Unit tests (web)
         working-directory: web
         run: bun run test
-      - name: Server tests (billing runs against stripe-mock in Docker)
+      - name: Start Postgres + Electric
+        run: |
+          docker compose up -d --wait
+          for i in $(seq 1 60); do curl -sf localhost:30009/v1/health && break; sleep 1; done
+      - name: Server tests (against Postgres + Electric)
         working-directory: server
         run: bun test
       - name: Build (web)
@@ -80,12 +84,6 @@ jobs:
   e2e:
     name: End-to-end (Playwright)
     runs-on: ubuntu-latest
-    services:
-      # The Playwright config reuses a stripe-mock already listening on this port.
-      stripe-mock:
-        image: stripe/stripe-mock:latest
-        ports:
-          - 12199:12111
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -111,6 +109,10 @@ jobs:
         working-directory: web
         run: bunx playwright install --with-deps chromium
 
+      - name: Start Postgres + Electric
+        run: |
+          docker compose up -d --wait
+          for i in $(seq 1 60); do curl -sf localhost:30009/v1/health && break; sleep 1; done
       - name: Run e2e
         working-directory: web
         run: bunx playwright test
