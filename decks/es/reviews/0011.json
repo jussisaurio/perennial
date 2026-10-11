@@ -1,0 +1,9 @@
+{
+  "file": "source/0011.json",
+  "sha256": "64c76bf2f2102b239625678fa07d73f7054f200ccacbd4b3695e34637c171af3",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0011-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "Re-checked 20 edited entries; all fixes applied correctly; 100/100 ok."
+}
