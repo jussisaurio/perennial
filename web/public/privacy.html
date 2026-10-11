@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Privacy policy — Perennial</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <style>
+      :root {
+        --paper: #f3eee4; --card: #fbf8f1; --ink: #1d1b16; --ink-2: #47423a; --muted: #877f71;
+        --line: #ddd3c1; --accent: #dc5636; --note: #f8e6bd;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --paper: #10130e; --card: #1b2017; --ink: #efe9da; --ink-2: #c9c2b0; --muted: #8d9482; --line: #2c3326; --accent: #ff7b58; --note: #3a3220; }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+      main { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+      h1, h2 { font-family: "Iowan Old Style", Palatino, Georgia, serif; font-weight: 400; line-height: 1.15; }
+      h1 { font-size: 2.2rem; margin: 0.5rem 0 0.25rem; }
+      h2 { font-size: 1.35rem; margin: 2.2rem 0 0.5rem; }
+      p, li { color: var(--ink-2); }
+      ul { padding-left: 1.2rem; }
+      li { margin: 0.25rem 0; }
+      a { color: var(--accent); }
+      .back { font-size: 0.95rem; text-decoration: none; }
+      .muted { color: var(--muted); font-size: 0.95rem; }
+      .draft { background: var(--note); border: 1px solid var(--line); border-radius: 12px; padding: 0.75rem 1rem; margin: 1rem 0 1.5rem; color: var(--ink); }
+      table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+      th, td { text-align: left; vertical-align: top; padding: 0.5rem 0.5rem 0.5rem 0; border-bottom: 1px solid var(--line); }
+      th { color: var(--ink); font-weight: 600; }
+      td { color: var(--ink-2); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="/">← Back to Perennial</a>
+      <h1>Privacy policy</h1>
+      <p class="muted">Last updated: [DATE]</p>
+      <div class="draft"><strong>Draft — review before launch.</strong> This text describes what the app does today. A person who knows the law in your country must check it before you publish it.</div>
+
+      <p>Perennial is an app for learning words in a new language. This page tells you what data we keep, why we keep it, who else sees it, and how you can delete it. We wrote it in simple English. If something is not clear, write to us (see <a href="#contact">Contact</a>).</p>
+
+      <h2>The short version</h2>
+      <ul>
+        <li>We keep your learning progress so that you can use it on all your devices.</li>
+        <li>We keep your email address only if you add it, so that you can sign in.</li>
+        <li>We do not show ads. We do not sell your data. We do not share it for advertising.</li>
+        <li>You can download your data and delete your account in Settings.</li>
+      </ul>
+
+      <h2>What we keep</h2>
+      <table>
+        <tr><th>Data</th><th>Why</th><th>Where</th></tr>
+        <tr><td>Your learning data: your courses and settings, every review (word, answer, time), the status of your words, and words and sentences you added</td><td>To plan your sessions, grow your garden, and sync between devices</td><td>On your device and on our server</td></tr>
+        <tr><td>Your email address (only if you add it)</td><td>To send you sign-in codes and to find your account</td><td>Our server</td></tr>
+        <tr><td>Session data: a session id, its expiry date, the IP address and the browser name (user agent) of the device that signed in</td><td>To keep you signed in and to protect accounts from abuse</td><td>Our server</td></tr>
+        <tr><td>Perennial AI use: how many AI words you used this month, and a log of each AI request (task, model, size, cost, time, success). The log does not contain your text.</td><td>To apply the monthly limit and to control our costs</td><td>Our server</td></tr>
+        <tr><td>Server logs: the address of each request, the result, the time, and your user id</td><td>To find and fix problems</td><td>Our hosting provider</td></tr>
+      </table>
+      <p>You can start without an account. In that case we make an anonymous account with no email address. If you add your email later, we move your progress into that account.</p>
+
+      <h2>On your device</h2>
+      <p>The app keeps a copy of your learning data on your device, so it works offline. It also keeps changes that are not sent yet, the course content, and a few preferences (theme, sound, and graphics quality). These preferences stay on your device and are not sent to us. To remove this data, sign out and clear the site data in your browser.</p>
+
+      <h2>Cookies</h2>
+      <p>We use one essential cookie: the session cookie that keeps you signed in. We do not use advertising or tracking cookies.</p>
+
+      <h2>Who else processes your data</h2>
+      <p>We use these services to run Perennial. Each one gets only the data it needs.</p>
+      <ul>
+        <li><strong>Railway</strong> runs our server and keeps its logs.</li>
+        <li><strong>PlanetScale</strong> runs our database (Postgres), where your account and learning data are stored.</li>
+        <li><strong>Resend</strong> sends the email with your sign-in code. It gets your email address and the code.</li>
+        <li><strong>Anthropic</strong> runs the AI model for Perennial AI. It gets only the text that you choose to send: the words you tap, the sentences they come from, the words you ask for new sentences for, and a list of words you already know. It does not get your email address or your name. We use Perennial AI only when you start it. Anonymous learners cannot use it.</li>
+        <li><strong>Sentry</strong> (only if we turn it on) gets error reports from our server when something breaks. A report can contain the request address and your user id.</li>
+        <li><strong>PostHog</strong> (only if we turn it on) gets usage analytics, for example which screens people use. [Describe what is sent if you turn it on.]</li>
+      </ul>
+      <p>[List the countries where these services store data, and the legal basis for transfers, if you need to.]</p>
+
+      <h2>How long we keep data</h2>
+      <ul>
+        <li><strong>Anonymous accounts</strong> (no email): deleted after 60 days with no activity, with all their data.</li>
+        <li><strong>Accounts with an email:</strong> kept until you delete the account.</li>
+        <li><strong>AI request logs:</strong> deleted after 180 days.</li>
+        <li><strong>Sign-in codes</strong> work for 10 minutes and are deleted after they expire. <strong>Sessions</strong> end after 90 days without use and are then deleted.</li>
+        <li><strong>Backups</strong> of the database are kept for [N] days. Deleted data leaves the backups when they expire.</li>
+      </ul>
+
+      <h2>Your choices and rights</h2>
+      <ul>
+        <li><strong>Download your data:</strong> Settings → Your data → “Download all my data (JSON)”. The file has your data for the language you are learning now; switch the course to download another language.</li>
+        <li><strong>Delete your account:</strong> Settings → Your data → “Delete my account”. This deletes your account and all your learning data on our server at once. It cannot be undone.</li>
+        <li><strong>Correct your data:</strong> you can edit or delete your own words in the app. For other changes, write to us.</li>
+        <li>Depending on where you live, you can have more rights, for example to object or to complain to a data protection authority. [Add the details that apply to you.]</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>Perennial is not made for children under [13/16]. Do not use it if you are younger.</p>
+
+      <h2>Changes</h2>
+      <p>If we change this policy, we will update the date at the top. If a change is important, we will tell you in the app.</p>
+
+      <h2 id="contact">Contact</h2>
+      <p>[Name of the person or company that runs Perennial]<br />[Postal address]<br />Email: <a href="mailto:privacy@example.com">[privacy@example.com]</a></p>
+    </main>
+  </body>
+</html>
