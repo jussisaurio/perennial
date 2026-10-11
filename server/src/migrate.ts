@@ -1,5 +1,5 @@
-// Plain SQL migrations: server/migrations/NNNN_name.sql, applied in order,
-// each in its own transaction, recorded in schema_migrations. An advisory lock
+// Plain SQL migrations: server/migrations/NNNN_name.sql, applied in order in
+// one transaction (all pending or none), recorded in schema_migrations. An advisory lock
 // makes it safe when several instances start at once.
 //
 // Rule: expand, then contract. A migration must keep the previous app

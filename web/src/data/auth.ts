@@ -57,7 +57,7 @@ export async function signOut() {
 }
 
 export async function deleteAccount() {
-  const res = await fetch("/api/account/delete", { method: "POST" });
+  const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
   if (!res.ok) throw new Error(`Could not delete the account (${res.status})`);
   await authClient.signOut().catch(() => {});
 }

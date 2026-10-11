@@ -33,6 +33,7 @@ export async function housekeeping(sql: SQL, config: Config) {
 if (import.meta.main) {
   const { loadConfig } = await import("./config");
   const config = loadConfig();
+  if (config.production && !process.env.DATABASE_URL) throw new Error("DATABASE_URL must be set");
   const sql = new Bun.SQL(config.databaseUrl, { max: 1 });
   await housekeeping(sql, config);
   await sql.close();

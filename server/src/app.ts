@@ -101,9 +101,23 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
     };
   }
 
+  const appOrigin = new URL(config.appUrl).origin;
+  /**
+   * Cookie sessions: a state-changing request must come from our own page.
+   * Browsers send Origin on every POST; a form or another site can't fake it,
+   * and a JSON body can't be sent cross-origin without a preflight we don't allow.
+   */
+  function requireSameOrigin(req: Request) {
+    const origin = req.headers.get("origin");
+    const site = req.headers.get("sec-fetch-site");
+    if (origin ? origin !== appOrigin : site !== null && site !== "same-origin") throw new HttpError(403, "cross_origin");
+    if (!(req.headers.get("content-type") ?? "").startsWith("application/json")) throw new HttpError(415, "json_only");
+  }
+
   async function route(req: Request): Promise<Response> {
     const url = new URL(req.url);
     if (url.pathname.startsWith("/api/auth/")) return auth.handler(req);
+    if (req.method !== "GET" && req.method !== "HEAD" && url.pathname.startsWith("/api/")) requireSameOrigin(req);
     const r = routes[url.pathname];
     if (r) {
       const h = r[req.method];

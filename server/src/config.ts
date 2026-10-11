@@ -3,7 +3,6 @@
 
 import { fileURLToPath } from "node:url";
 
-const env = process.env;
 const num = (v: string | undefined, d: number) => (v === undefined || v === "" ? d : Number(v));
 
 export interface Config {
@@ -15,7 +14,9 @@ export interface Config {
   appUrl: string;
   /** Signs sessions and cookies (Better Auth). */
   secret: string;
-  /** Dev mode: sign-in codes go to an in-memory outbox (readable at /api/dev/outbox). */
+  /** NODE_ENV=production: strict checks, never dev mode. */
+  production: boolean;
+  /** Dev mode: sign-in codes go to an in-memory outbox (readable at /api/dev/outbox). Never in production. */
   dev: boolean;
   /** Build identifier (git sha) for logs and error reports. */
   release: string;
@@ -38,13 +39,17 @@ export interface Config {
 }
 
 export function loadConfig(overrides: Partial<Config> = {}): Config {
-  const dev = env.PERENNIAL_DEV === "1" || !env.RESEND_API_KEY;
+  const env = process.env;
+  const production = env.NODE_ENV === "production";
+  // Fail closed: production is never dev mode, whatever else is (not) set.
+  const dev = !production && (env.PERENNIAL_DEV === "1" || !env.RESEND_API_KEY);
   return {
     port: num(env.PORT, 8787),
     databaseUrl: env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:55432/perennial",
     staticDir: env.PERENNIAL_STATIC ?? fileURLToPath(new URL("../../web/dist", import.meta.url)),
     appUrl: (env.APP_URL ?? "http://localhost:5173").replace(/\/$/, ""),
     secret: env.BETTER_AUTH_SECRET ?? "dev-secret-change-me-dev-secret-change-me",
+    production,
     dev,
     release: env.RAILWAY_GIT_COMMIT_SHA ?? env.RELEASE ?? "dev",
     minClientVersion: env.MIN_CLIENT_VERSION ?? "0.0.0",
@@ -63,6 +68,25 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     anonymousRetentionDays: num(env.ANONYMOUS_RETENTION_DAYS, 60),
     ...overrides,
   };
+}
+
+const DEFAULT_SECRET = "dev-secret-change-me-dev-secret-change-me";
+
+/**
+ * Production must be configured, not defaulted: refuse to start rather than
+ * run with a public secret, an open dev outbox, or no email.
+ */
+export function configProblems(c: Config): string[] {
+  if (!c.production) return [];
+  const out: string[] = [];
+  if (c.dev) out.push("dev mode is on in production");
+  if (!c.secret || c.secret === DEFAULT_SECRET || c.secret.length < 32) out.push("BETTER_AUTH_SECRET must be set to a random value of at least 32 characters");
+  if (!c.mail.resendKey) out.push("RESEND_API_KEY must be set (sign-in codes are sent by email)");
+  if (!c.mail.from || c.mail.from.includes("perennial.local")) out.push("MAIL_FROM must be set to an address on your sending domain");
+  if (!c.appUrl.startsWith("https://")) out.push("APP_URL must be the public https URL");
+  if (c.databaseUrl.includes("@localhost:55432/")) out.push("DATABASE_URL must be set");
+  if (!c.electric.secret) out.push("ELECTRIC_SECRET must be set (and match the Electric service)");
+  return out;
 }
 
 /** USD per million tokens [input, output]. Used for the global spend breaker. */
