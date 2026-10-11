@@ -36,3 +36,6 @@ coverage/
 
 # Claude Code local state (agent worktrees)
 .claude/
+
+# Downloaded frequency lists for the deck audit
+scripts/.cache/

@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { z } from "zod";
 import { deckDir } from "./lib.ts";
+import { ledgerProblems, readLedger } from "./proof.ts";
 
 export const Review = z.object({
   file: z.string(),
@@ -36,6 +37,13 @@ export function reviewProblems(lang: string): string[] {
     if (!r.success) out.push(`decks/${lang}/reviews/${num}.json is not a valid review record`);
     else if (r.data.sha256 !== sha256File(join(dir, f))) out.push(`${where} changed after it was approved: it needs a new review`);
     else if (r.data.author.trim().toLowerCase() === r.data.reviewer.trim().toLowerCase()) out.push(`${where} was approved by its own author`);
+    else {
+      // The approval must rest on a complete, per-entry ledger by the same proofreader.
+      const ledger = readLedger(lang, num);
+      if (!ledger) out.push(`${where} has an approval but no proofreading ledger (decks/${lang}/reviews/${num}.ledger.json)`);
+      else if (ledger.reviewer.trim().toLowerCase() !== r.data.reviewer.trim().toLowerCase()) out.push(`${where}: the ledger's proofreader is not the approver`);
+      else out.push(...ledgerProblems(lang, num));
+    }
   }
   return out;
 }

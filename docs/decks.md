@@ -14,15 +14,18 @@ The author and the proofreader must be different. The approval record names both
 
 ## Steps
 
-1. **Write.** The author adds or changes source files, runs `bun scripts/deck/build.ts <lang>`, and fixes every build error and warning.
-2. **Proofread.** The proofreader checks each entry against the checklist and writes `decks/<lang>/reviews/NNNN.findings.md`: one line per problem, with the lemma, what is wrong, and the exact fix. Entries without problems are not listed. A file with no findings says "No findings".
-3. **Fix.** The editor applies the findings and rebuilds. A finding they disagree with gets a reply in the findings file; the proofreader decides.
-4. **Verify.** The proofreader rereads the changed entries. If everything is right, they approve the file as it is now:
+1. **Write.** The author adds or changes source files (100 words each), runs `bun scripts/deck/build.ts <lang>`, fixes every build error and warning, and runs `bun scripts/deck/audit.ts <lang>` to clean up duplicates and rare words.
+2. **Proofread, one entry at a time.** The proofreader works through the file with the ledger tool, never by reading the whole file at once:
+   - `bun scripts/deck/proof.ts next <lang> NNNN` shows the next entry to judge: the word, its sentences, and the automatic flags (audit, cloze, length).
+   - Judge it against the checklist, then record a verdict: `proof.ts mark <lang> NNNN "<lemma|pos>" ok --reviewer <name>`, or `fix --note "s2: …; gloss: …"` with the exact change.
+   - Repeat until `next` says every entry is judged. The ledger (`decks/<lang>/reviews/NNNN.ledger.json`) records a verdict for every entry, tied to a hash of that entry. Several proofreaders can split a deck by file; one proofreader owns each file's ledger.
+3. **Fix.** The editor (usually the author) runs `proof.ts status <lang> NNNN` to list every open fix, applies them, and rebuilds. Disagreements go back to the proofreader, who decides.
+4. **Re-check.** Edited entries change their hash, so `proof.ts next` hands the proofreader exactly those entries again. When everything is "ok", the proofreader approves:
    `bun scripts/deck/review.ts <lang> NNNN --author <author> --reviewer <proofreader> --notes "<summary>"`
-   This writes `decks/<lang>/reviews/NNNN.json` with a hash of the file. If anything is still wrong, go back to step 3.
-5. **Ship.** `bun scripts/deck/check.ts` passes, and the pull request shows the deck diff report.
+   `review.ts` refuses unless the proofreader's ledger has every entry "ok" as it is now.
+5. **Ship.** `bun scripts/deck/check.ts` passes: it checks the approval, the file hash, and the full ledger.
 
-Any later edit to a source file (even a typo fix) invalidates its approval: steps 2–4 run again for that file.
+Any later edit to an entry needs a new verdict for that entry and a new approval for the file.
 
 ## Proofreading checklist
 
@@ -47,6 +50,9 @@ For each **sentence**:
 ## Tools
 
 - `bun scripts/deck/build.ts <lang>`: rebuilds `deck.json` and `ids.json` from source.
+- `bun scripts/deck/audit.ts [lang]`: duplicates (sentences, lemmas, shared forms), rare words, corpus rank drift, comprehensibility (share of a sentence's other words already met), cognates. Errors fail CI.
+- `bun scripts/deck/proof.ts next|mark|status`: the one-entry-at-a-time proofreading ledger.
+- `bun scripts/deck/sheet.ts <lang> NNNN [--only-flagged]`: an overview page of a file with all flags (for skimming, not for the verdicts).
 - `bun scripts/deck/review.ts <lang> NNNN --author … --reviewer …`: records an approval.
 - `bun scripts/deck/check.ts --base origin/main`: the CI gate (schema, invariants, approvals, up to date, compatibility).
 - `bun scripts/deck/generate.ts`: drafts source words with the Anthropic API. Drafts still need a proofreader.

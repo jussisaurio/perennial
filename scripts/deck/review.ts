@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { deckDir } from "./lib.ts";
 import { reviewPath, sha256File } from "./reviews.ts";
+import { ledgerProblems, readLedger } from "./proof.ts";
 
 const [lang, num, ...rest] = process.argv.slice(2);
 const flag = (name: string) => {
@@ -22,6 +23,16 @@ if (!lang || !num || !author || !reviewer) {
 }
 if (author.trim().toLowerCase() === reviewer.trim().toLowerCase()) {
   console.error("the author and the reviewer must be different");
+  process.exit(2);
+}
+const ledger = readLedger(lang, num);
+if (!ledger || ledger.reviewer.trim().toLowerCase() !== reviewer.trim().toLowerCase()) {
+  console.error(`no proofreading ledger by ${reviewer} for this file: use scripts/deck/proof.ts first`);
+  process.exit(2);
+}
+const open = ledgerProblems(lang, num);
+if (open.length) {
+  console.error(open.join("\n"));
   process.exit(2);
 }
 const source = join(deckDir(lang), "source", `${num}.json`);

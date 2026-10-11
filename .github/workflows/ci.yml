@@ -76,7 +76,9 @@ jobs:
         run: bun test scripts/deck web/src/deck
       # Prints the diff report (added / edited / retired). Fails on broken
       # invariants, a stale deck.json, or more than 5% of words retired.
-      - name: Check decks against main
+      - name: Audit decks (duplicates, rare words, order)
+        run: bun scripts/deck/audit.ts
+      - name: Check decks against main (approvals, ledgers, compatibility)
         run: bun scripts/deck/check.ts --base origin/main
         env:
           DECK_ALLOW_BIG_CHANGE: ${{ contains(github.event.pull_request.labels.*.name, 'deck-big-change') && '1' || '' }}
