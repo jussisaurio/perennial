@@ -486,12 +486,11 @@ export function decor(): HTMLCanvasElement {
     px(ctx, x, 62 - h, col, 1, 3);
     px(ctx, x, 63 - h, "#f0a020");
   }
-  // 2: mushrooms
+  // 2: mushrooms. Plain brown on purpose: the red, spotted toadstool is a
+  // visitor with a name (visitors.ts), and decor never looks like a visitor.
   const shroom = (x: number, w: number, h: number) => {
-    px(ctx, x - 1, 64 - h, "#f4ecdc", 3, h);
-    for (let y = 0; y < Math.ceil(w / 2); y++) px(ctx, x - w / 2 + y, 64 - h - y, "#d9443d", w - y * 2, 1);
-    px(ctx, x - 2, 63 - h, "#fff8e7");
-    px(ctx, x + 1, 62 - h, "#fff8e7");
+    px(ctx, x - 1, 64 - h, "#ece2cf", 3, h);
+    for (let y = 0; y < Math.ceil(w / 2); y++) px(ctx, x - w / 2 + y, 64 - h - y, y === 0 ? "#8a5a3c" : "#a8714a", w - y * 2, 1);
   };
   shroom(74, 10, 6);
   shroom(84, 7, 4);
