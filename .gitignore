@@ -39,3 +39,5 @@ coverage/
 
 # Downloaded frequency lists for the deck audit
 scripts/.cache/
+server/load/out/
+web/perf/out/
