@@ -7,6 +7,7 @@ import { Garden, gardenFromLearner } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
+import { useShortcut } from "./useShortcut";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -65,7 +66,8 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
       )}
 
       <div className="start-row">
-        <button className="start" disabled={!canStart} onClick={() => onStart(sessionMinutes)}>
+        {canStart && <Shortcut keyName="Enter" run={() => onStart(sessionMinutes)} />}
+        <button className="start" disabled={!canStart} onClick={() => onStart(sessionMinutes)} aria-keyshortcuts="Enter">
           <span className="clock" aria-hidden="true">
             <SeedIcon size={20} />
           </span>
@@ -132,4 +134,10 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
       )}
     </div>
   );
+}
+
+/** Enter starts the session (only while it can start). */
+function Shortcut({ keyName, run }: { keyName: string; run: () => void }) {
+  useShortcut(keyName, run);
+  return null;
 }

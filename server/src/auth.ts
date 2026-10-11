@@ -75,6 +75,9 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
         otpLength: 6,
         expiresIn: 10 * 60,
         allowedAttempts: 5,
+        // Asking again sends the same code while it is valid, so the code in
+        // any of the emails works (a new code per request made older emails fail).
+        resendStrategy: "reuse",
         async sendVerificationOTP({ email, otp }) {
           // The response is the same either way, so a capped address learns nothing.
           if (!(await mayMail(sql, config, email))) return log.warn("sign-in code not sent: per-email limit", {});

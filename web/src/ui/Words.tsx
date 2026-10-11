@@ -7,6 +7,7 @@ import type { UserSentenceRow } from "../data/rows";
 import type { MemoryRow } from "../model";
 import { useMe } from "./Account";
 import { useNow } from "./useNow";
+import { useShortcut } from "./useShortcut";
 import { AddScreen } from "./Add";
 import { StageGlyph } from "./Garden";
 import { PlusIcon } from "./icons";
@@ -53,6 +54,8 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
   const learner = useLearner(lang);
   const store = useStore();
   const [q, setQ] = useState("");
+  const search = useRef<HTMLInputElement>(null);
+  useShortcut("/", () => search.current?.focus());
   const [filter, setFilter] = useState<Filter>("all");
   const [open, setOpen] = useState<string | null>(null);
   const [deleted, setDeleted] = useState<Lexeme | null>(null);
@@ -96,7 +99,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
         </button>
       </div>
       <div className="row">
-        <input className="search" placeholder="Search words or meanings" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input ref={search} className="search" type="search" placeholder="Search words or meanings (/)" aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}>
           <option value="all">All</option>
           <option value="known">Known</option>
