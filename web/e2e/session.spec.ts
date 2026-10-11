@@ -18,7 +18,8 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   const word = await page.locator(".word").textContent();
   await continueIntros(page, 4);
   await expect(kicker(page)).toHaveText(/quick check/);
-  await expect(page.locator(".prompt")).toContainText(word!.trim());
+  // The prompt may capitalise it ("What does De mean?").
+  await expect(page.locator(".prompt")).toContainText(word!.trim(), { ignoreCase: true });
 });
 
 test("double-clicking Show does not grade the unseen answer", async ({ page }) => {

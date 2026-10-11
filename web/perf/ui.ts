@@ -87,6 +87,8 @@ async function measure(page: Page, cdp: CDPSession, screen: string, action: () =
   writeFileSync(join(OUT, `${screen.replace(/\W+/g, "-")}.cpuprofile`), JSON.stringify(profile));
   const { long, frames } = await page.evaluate(() => (window as unknown as { __perf: { long: number[]; frames: number[] } }).__perf);
   const { metrics } = await cdp.send("Performance.getMetrics");
+  // Live elements (Chrome's "Nodes" metric also counts detached ones awaiting GC).
+  const nodes = await page.evaluate(() => document.getElementsByTagName("*").length);
   const metric = (name: string) => metrics.find((m) => m.name === name)?.value ?? 0;
   return {
     screen,
@@ -97,7 +99,7 @@ async function measure(page: Page, cdp: CDPSession, screen: string, action: () =
     p95Frame: Math.round(pct(frames, 95)),
     jank: frames.filter((f) => f > 50).length,
     heapMb: Math.round(metric("JSHeapUsedSize") / 1e6),
-    nodes: metric("Nodes"),
+    nodes,
   };
 }
 

@@ -2,7 +2,7 @@
 // memory stability, flowers open once a word is known, and plants droop as
 // recall fades — until the next session waters them. Nothing ever dies.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import { KNOWN_STABILITY, recall, type Learner } from "../data/learner";
 import { Plant as WordPlantShape, stageFor } from "./plant";
@@ -27,7 +27,6 @@ function hash(str: string, salt = 0): number {
   return ((h >>> 0) % 10007) / 10007;
 }
 
-const MAX_PLANTS = 280;
 export type { Plant };
 const H = 210;
 const GROUND = H - 34;
@@ -52,7 +51,7 @@ export function gardenFromLearner(l: Learner, now = Date.now()): GardenData {
     plants.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, s: m.s, r: recall(m, now), listen: strong("listen"), write: strong("write"), order: w.rank });
   }
   plants.sort((a, b) => a.order - b.order);
-  return { plants: plants.slice(0, MAX_PLANTS), total: plants.length, seeds: l.fresh().length };
+  return { plants, total: plants.length, seeds: l.fresh().length };
 }
 
 /**
@@ -86,10 +85,49 @@ function PlantShape({ p, scale, highlighted }: { p: Plant; scale: number; highli
   );
 }
 
-export function Garden({ data, highlight, compact, showcase }: { data: GardenData | null | undefined; highlight?: Set<string>; compact?: boolean; showcase?: boolean }) {
+/** Width per plant when the garden scrolls: every plant stays a real, tappable flower. */
+const SPACING = 22;
+/** Plants drawn beyond each edge of the view, so a quick pan never shows gaps. */
+const OVERSCAN = 160;
+
+/**
+ * Small gardens (the landing page, a first week) fit the width. Bigger ones
+ * become a strip you pan sideways, in course order, so the newest growth is
+ * at the right, where it opens; only the plants in view are drawn, so 2000
+ * words cost the same as 200.
+ */
+export function Garden({
+  data,
+  highlight,
+  compact,
+  showcase,
+  onView,
+}: {
+  data: GardenData | null | undefined;
+  highlight?: Set<string>;
+  compact?: boolean;
+  showcase?: boolean;
+  /** Offered in the plant card: open this plant in the 3D garden. */
+  onView?: (id: string) => void;
+}) {
   const wrap = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
+  const [scrollX, setScrollX] = useState(0);
   const [hover, setHover] = useState<{ p: Plant; x: number; y: number } | null>(null);
+  // Hover intent: with a card open, switching to another plant waits a moment,
+  // so the pointer can cross other plants on its way to the card's button.
+  const switching = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const show = (h: { p: Plant; x: number; y: number }, now = false) => {
+    clearTimeout(switching.current);
+    if (now || !hover) setHover(h);
+    else switching.current = setTimeout(() => setHover(h), 160);
+  };
+  const hide = () => {
+    clearTimeout(switching.current);
+    setHover(null);
+  };
+  useEffect(() => () => clearTimeout(switching.current), []);
 
   useEffect(() => {
     const el = wrap.current;
@@ -99,62 +137,90 @@ export function Garden({ data, highlight, compact, showcase }: { data: GardenDat
     return () => ro.disconnect();
   }, []);
 
-  const layout = useMemo(() => {
-    const plants = data?.plants ?? [];
-    const n = plants.length;
-    const pad = 18;
-    // Small gardens cluster in the middle instead of scattering across the width.
-    const spacing = n ? Math.min(34, (width - pad * 2) / n) : width;
-    const offset = (width - spacing * n) / 2;
-    // Dense gardens get a back row for depth.
-    const twoRows = spacing < 14;
-    const scale = Math.max(0.42, Math.min(1.05, (twoRows ? spacing * 2 : spacing) / 20));
-    return plants.map((p, i) => {
-      const back = twoRows && hash(p.id, 13) > 0.5;
-      const jitter = (hash(p.id, 17) - 0.5) * spacing * 0.8;
-      return { p, x: offset + spacing * (i + 0.5) + jitter, y: GROUND - (back ? 10 : 0) + hash(p.id, 19) * 4, scale: scale * (back ? 0.8 : 1), back };
-    });
-  }, [data, width]);
+  const plants = useMemo(() => data?.plants ?? [], [data]);
+  const n = plants.length;
+  const pad = 18;
+  const scrolls = n * SPACING + pad * 2 > width;
+  const fullWidth = scrolls ? n * SPACING + pad * 2 : width;
 
+  const layout = useMemo(() => {
+    // Small gardens cluster in the middle instead of scattering across the width.
+    const spacing = scrolls ? SPACING : n ? Math.min(34, (width - pad * 2) / n) : width;
+    const offset = scrolls ? pad : (width - spacing * n) / 2;
+    const scale = Math.max(0.42, Math.min(1.05, spacing / 20));
+    return plants.map((p, i) => ({ p, x: offset + spacing * (i + 0.5) + (hash(p.id, 17) - 0.5) * spacing * 0.8, y: GROUND + hash(p.id, 19) * 4, scale }));
+  }, [plants, n, scrolls, width]);
+
+  // Open where the newest growth is, or on today's words after a session, and
+  // keep following it while words sync in, until the learner scrolls.
+  const autoX = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    if (!el || !scrolls || (autoX.current !== null && Math.abs(el.scrollLeft - autoX.current) > 2)) return;
+    const lit = highlight?.size ? layout.filter((l) => highlight.has(l.p.id)) : [];
+    el.scrollLeft = lit.length ? lit.reduce((a, l) => a + l.x, 0) / lit.length - width / 2 : fullWidth;
+    autoX.current = el.scrollLeft;
+    setScrollX(el.scrollLeft);
+    // Not on highlight/layout identity changes: n and width cover growth and resizes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrolls, width, n]);
+
+  // Swipe on touch, two-finger scroll on trackpads, and arrows on desktop.
+  const atStart = scrollX <= 4;
+  const atEnd = scrollX >= fullWidth - width - 4;
+  const page = (dir: -1 | 1) => scroller.current?.scrollBy({ left: dir * width * 0.7, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+
+  const onScroll = () => {
+    const x = scroller.current?.scrollLeft ?? 0;
+    requestAnimationFrame(() => setScrollX(x));
+    hide();
+  };
+
+  const visible = scrolls ? layout.filter((l) => l.x > scrollX - OVERSCAN && l.x < scrollX + width + OVERSCAN) : layout;
   const seeds = Math.min(data?.seeds ?? 0, 24);
   const blooming = data?.plants.filter((p) => p.s >= KNOWN_STABILITY).length ?? 0;
   const label = data ? `Word garden: ${blooming} known, ${data.total - blooming} learning, ${data.seeds} new.` : "Word garden";
+  const from = scrolls ? Math.max(0, scrollX - OVERSCAN) : 0;
+  const to = scrolls ? Math.min(fullWidth, scrollX + width + OVERSCAN) : width;
 
   return (
-    <div className={`garden ${compact ? "compact" : ""}`} ref={wrap}>
-      <svg width={width} height={H} viewBox={`0 0 ${width} ${H}`} role="img" aria-label={label} onPointerLeave={() => setHover(null)}>
-        <defs>
-          <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="var(--soil-1)" />
-            <stop offset="1" stopColor="var(--soil-2)" />
-          </linearGradient>
-        </defs>
-        {Array.from({ length: 6 }, (_, i) => (
-          <circle key={i} className="firefly" cx={(width / 6) * (i + 0.5)} cy={40 + (i % 3) * 30} r={1.8} style={{ animationDelay: `${i * 1.3}s` }} />
-        ))}
-        {[...layout].sort((a, b) => Number(b.back) - Number(a.back)).map(({ p, x, y, scale, back }) => (
-          <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} opacity={back ? 0.72 : 1} onPointerEnter={() => setHover({ p, x, y })} onClick={() => setHover({ p, x, y })}>
-            <g className="sway" style={{ animationDelay: `${-hash(p.id, 23) * 6}s`, animationDuration: `${5 + hash(p.id, 29) * 4}s` }}>
-              <PlantShape p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
-              {/* generous invisible hit area */}
-              <rect x={-8} y={-140 * scale} width={16} height={140 * scale} fill="transparent" />
+    <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} onPointerLeave={hide}>
+      <div className="garden-scroll" ref={scroller} onScroll={scrolls ? onScroll : undefined}>
+        <svg width={fullWidth} height={H} viewBox={`0 0 ${fullWidth} ${H}`} role="img" aria-label={label}>
+          <defs>
+            <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="var(--soil-1)" />
+              <stop offset="1" stopColor="var(--soil-2)" />
+            </linearGradient>
+          </defs>
+          {Array.from({ length: 6 }, (_, i) => (
+            <circle key={i} className="firefly" cx={scrollX + (width / 6) * (i + 0.5)} cy={40 + (i % 3) * 30} r={1.8} style={{ animationDelay: `${i * 1.3}s` }} />
+          ))}
+          {visible.map(({ p, x, y, scale }) => (
+            <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={() => show({ p, x, y })} onClick={() => show({ p, x, y }, true)}>
+              <g className="sway" style={{ animationDelay: `${-hash(p.id, 23) * 6}s`, animationDuration: `${5 + hash(p.id, 29) * 4}s` }}>
+                <PlantShape p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
+                {/* generous invisible hit area */}
+                <rect x={-8} y={-140 * scale} width={16} height={140 * scale} fill="transparent" />
+              </g>
             </g>
-          </g>
-        ))}
-        <path d={`M0 ${GROUND + 4} Q ${width * 0.25} ${GROUND - 3} ${width * 0.5} ${GROUND + 3} T ${width} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
-        {Array.from({ length: Math.floor(width / 38) }, (_, i) => {
-          const gx = (i + hash(String(i), 31)) * 38;
-          return <path key={i} className="tuft" d={`M${gx} ${GROUND + 6} l -3 -7 M${gx} ${GROUND + 6} l 0 -9 M${gx} ${GROUND + 6} l 3 -6`} />;
-        })}
-        {Array.from({ length: seeds }, (_, i) => {
-          const sx = 24 + hash(`seed${i}`, 37) * (width - 48);
-          const sy = GROUND + 14 + hash(`seed${i}`, 41) * 12;
-          return <ellipse key={i} className="seed" cx={sx} cy={sy} rx={2.6} ry={1.7} transform={`rotate(${hash(`seed${i}`, 43) * 180} ${sx} ${sy})`} />;
-        })}
-      </svg>
+          ))}
+          <path d={`M0 ${GROUND + 4} Q ${fullWidth * 0.25} ${GROUND - 3} ${fullWidth * 0.5} ${GROUND + 3} T ${fullWidth} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
+          {Array.from({ length: Math.ceil((to - from) / 38) }, (_, k) => {
+            const i = Math.floor(from / 38) + k;
+            const gx = (i + hash(String(i), 31)) * 38;
+            return <path key={i} className="tuft" d={`M${gx} ${GROUND + 6} l -3 -7 M${gx} ${GROUND + 6} l 0 -9 M${gx} ${GROUND + 6} l 3 -6`} />;
+          })}
+          {Array.from({ length: seeds }, (_, i) => {
+            const sx = (scrolls ? fullWidth - width : 0) + 24 + hash(`seed${i}`, 37) * (width - 48);
+            const sy = GROUND + 14 + hash(`seed${i}`, 41) * 12;
+            return <ellipse key={i} className="seed" cx={sx} cy={sy} rx={2.6} ry={1.7} transform={`rotate(${hash(`seed${i}`, 43) * 180} ${sx} ${sy})`} />;
+          })}
+        </svg>
+      </div>
       {data && data.total === 0 && <p className="garden-empty">Your words will grow here.</p>}
       {hover && (
-        <div className="plant-tip" style={{ left: Math.min(width - 170, Math.max(8, hover.x - 80)), top: 8 }} role="status">
+        <div className={onView ? "plant-tip interactive" : "plant-tip"} style={{ left: Math.min(width - 170, Math.max(8, hover.x - scrollX - 80)), top: 8 }} role="status" onPointerEnter={() => clearTimeout(switching.current)}>
           <strong>{hover.p.lemma}</strong>
           <span>{hover.p.gloss}</span>
           <em>
@@ -162,6 +228,11 @@ export function Garden({ data, highlight, compact, showcase }: { data: GardenDat
             {hover.p.listen && " · listening ✓"}
             {hover.p.write && " · writing ✓"}
           </em>
+          {onView && (
+            <button className="ghost small" onClick={() => onView(hover.p.id)}>
+              View in garden →
+            </button>
+          )}
         </div>
       )}
       {data && !compact && !showcase && (
@@ -175,13 +246,35 @@ export function Garden({ data, highlight, compact, showcase }: { data: GardenDat
           <span>
             <b>{data.seeds}</b> new
           </span>
+          {scrolls && <span className="muted swipe-hint">Swipe to see the whole garden</span>}
+          {scrolls && (
+            <span className="garden-arrows">
+              <button className="garden-arrow left" disabled={atStart} onClick={() => page(-1)} aria-label="Earlier words">
+                <SproutArrow />
+              </button>
+              <button className="garden-arrow right" disabled={atEnd} onClick={() => page(1)} aria-label="Later words">
+                <SproutArrow />
+              </button>
+            </span>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-/** Seed → sprout → bud → bloom, drawn with the real plant renderer. Explains the metaphor at a glance. */
+/** A chevron made of two leaves meeting at a bud, pointing right (mirrored for "back"). */
+function SproutArrow() {
+  return (
+    <svg viewBox="0 0 32 40" width="18" height="22" aria-hidden="true">
+      <path d="M6 7 C 13 6, 21 12, 24 20 C 15 19, 8 14, 6 7 Z" fill="var(--leaf-2)" />
+      <path d="M6 33 C 8 26, 15 21, 24 20 C 21 28, 13 34, 6 33 Z" fill="var(--leaf)" />
+      <path d="M8 9 C 14 11, 19 15, 23 19.5 M8 31 C 14 28, 19 24, 23 20.5" fill="none" stroke="var(--stem)" strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
+      <circle cx="25" cy="20" r="3.2" fill="var(--sun)" />
+    </svg>
+  );
+}
+
 export function GrowthStrip() {
   const stages: { label: string; s: number }[] = [
     { label: "new word", s: 0 },

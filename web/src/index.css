@@ -230,6 +230,24 @@ section { margin-bottom: 1.25rem; }
 /* ---------- garden ---------- */
 .garden { position: relative; margin: 0.5rem -16px 0; }
 .garden svg { display: block; overflow: visible; }
+.garden-scroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
+.garden-scroll::-webkit-scrollbar { display: none; }
+.garden-arrows { margin-left: auto; display: inline-flex; gap: 0.35rem; }
+.garden-arrow {
+  width: 38px; height: 30px; display: grid; place-items: center; padding: 0;
+  border: 1px solid var(--line); border-radius: 15px; background: var(--card); cursor: pointer;
+}
+.garden-arrow:disabled { opacity: 0.35; cursor: default; }
+.garden-arrow.left svg { transform: scaleX(-1); }
+.garden-arrow svg { transition: transform 0.2s var(--ease); }
+.garden-arrow.right:hover:enabled svg { transform: translateX(3px) rotate(4deg); }
+.garden-arrow.left:hover:enabled svg { transform: scaleX(-1) translateX(3px) rotate(4deg); }
+/* Touch screens swipe; the arrows are for mice and keyboards. */
+@media (hover: none) { .garden-arrows { display: none; } }
+@media (hover: hover) { .swipe-hint { display: none; } }
+.garden.scrolls .garden-scroll { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+.plant-tip.interactive { pointer-events: auto; cursor: auto; }
+.plant-tip button { margin-top: 0.3rem; padding: 0.2rem 0; align-self: flex-start; }
 .garden .stem { fill: none; stroke: var(--stem); transition: stroke 0.6s; }
 .garden .thirsty .stem { stroke: var(--stem-dry); }
 .garden .leaf { fill: var(--leaf-2); }
@@ -252,7 +270,7 @@ section { margin-bottom: 1.25rem; }
   85% { transform: translate(-10px, -24px); opacity: 0; }
 }
 .garden-empty { position: absolute; inset: 0 0 50px; display: grid; place-items: center; color: var(--muted); font: 1.15rem var(--display); pointer-events: none; }
-.garden-legend { display: flex; gap: 1.1rem; font-size: 0.82rem; color: var(--muted); padding: 0.5rem 16px 0; }
+.garden-legend { display: flex; align-items: center; gap: 1.1rem; font-size: 0.82rem; color: var(--muted); padding: 0.5rem 16px 0; }
 .garden-legend b { color: var(--ink); font-weight: 600; }
 .plant-tip {
   position: absolute; width: 160px; padding: 0.6rem 0.75rem; border-radius: 12px; pointer-events: none;

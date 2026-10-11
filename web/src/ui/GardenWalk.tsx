@@ -11,6 +11,7 @@ import { useLearner, type Learner } from "../data/learner";
 import { track } from "../observability";
 import { groupOf, layout, THIRSTY, type GardenPlant, type Layout, type PlacedPlant } from "../garden/world";
 import type { Detail, GardenScene, TimeOfDay } from "../garden/scene";
+import { takeFocus } from "./gardenFocus";
 import { stageFor, WordPlant } from "./plant";
 import { speak } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
@@ -57,7 +58,8 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   useEffect(() => track("garden_opened"), []);
   const learner = useLearner(lang);
   const source = useMemo(() => (learner ? walkPlants(learner) : null), [learner]);
-  return <GardenWalk lang={lang} source={source} onExit={onExit} onWater={onWater} />;
+  const [focus] = useState(takeFocus);
+  return <GardenWalk lang={lang} source={source} onExit={onExit} onWater={onWater} focus={focus} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -91,7 +93,7 @@ function stageText(p: PlantView): string {
 type PlantView = PlacedPlant;
 
 /** Without onWater it is view-only (the landing page): no watering, no sessions. */
-export function GardenWalk({ lang, source, onExit, onWater }: { lang: string; source: WalkSource | null; onExit: () => void; onWater?: () => void }) {
+export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: string; source: WalkSource | null; onExit: () => void; onWater?: () => void; focus?: string | null }) {
   const [data, setData] = useState<{ l: Layout; seeds: number } | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -146,6 +148,12 @@ export function GardenWalk({ lang, source, onExit, onWater }: { lang: string; so
       ro.observe(el);
       s.start();
       setReady(true);
+      // Opened from "View in garden": walk to that plant and show its card.
+      const target = focus ? data.l.plants.find((p) => p.id === focus) : undefined;
+      if (target) {
+        s.select(target, true);
+        setHint(false);
+      }
       await s.loadPlants();
       if (alive) setProgress(null);
     })();
