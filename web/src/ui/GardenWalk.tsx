@@ -11,6 +11,7 @@ import { useLearner, type Learner } from "../data/learner";
 import { track } from "../observability";
 import { groupOf, layout, THIRSTY, type GardenPlant, type Layout, type PlacedPlant } from "../garden/world";
 import type { Detail, GardenScene, TimeOfDay } from "../garden/scene";
+import { loadingLine, plantLine } from "../content/voice";
 import { takeFocus } from "./gardenFocus";
 import { stageFor, WordPlant } from "./plant";
 import { speak } from "./speech";
@@ -88,6 +89,13 @@ function stageText(p: PlantView): string {
   if (p.stage === "bloom") return "In bloom: you know this word.";
   if (p.stage === "bud") return "Budding: you almost know this word.";
   return "A new sprout: you are learning this word.";
+}
+
+/** The plant's one line of personality (the same every time for this word). */
+function personality(p: PlantView): string {
+  if (p.r < THIRSTY) return plantLine(p.lemma, "thirsty");
+  if (p.s >= 200) return plantLine(p.lemma, "old");
+  return plantLine(p.lemma, p.stage === "bloom" ? "bloom" : p.stage === "bud" ? "bud" : "sprout");
 }
 
 type PlantView = PlacedPlant;
@@ -376,7 +384,7 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
 
       {progress && progress[1] > 0 && (
         <div className="gw-loading" role="status">
-          Growing your plants… {Math.round((progress[0] / progress[1]) * 100)}%
+          {loadingLine()}… {Math.round((progress[0] / progress[1]) * 100)}%
         </div>
       )}
 
@@ -419,6 +427,7 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
                 {stageText(selected)} {selected.r < THIRSTY ? "It is a little thirsty: practise it soon." : `You remember it ${Math.round(selected.r * 100)}% of the time.`}
               </span>
               <span className="muted small gw-bed">In the bed for {groupOf(selected.pos).toLowerCase()}.</span>
+              <span className="small gw-flavour">{personality(selected)}</span>
             </div>
           </div>
           <div className="row">

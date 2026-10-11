@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { forgotLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
 import { ActiveClock } from "../core/clock";
@@ -257,7 +258,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
         }, 0);
       }
       const retry = runner.report(task, { grade });
-      if (grade === 1) flash(retry ? "You will see this word again soon." : "You will see this word again next time.");
+      if (grade === 1) flash(forgotLine(retry));
       setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? lexeme.id : undefined }]);
     }
   };
@@ -680,6 +681,7 @@ function Summary({
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   useKeys(useMemo(() => ({ Enter: onExit }), [onExit]));
   const did = counts.answers + counts.intros > 0;
+  const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? ""));
   const title = ended === "user" ? "Session paused" : "Session complete";
   const why =
     ended === "user"
@@ -687,14 +689,15 @@ function Summary({
       : ended === "empty"
         ? newLimitReached
           ? `That is all for today: ${MAX_NEW_PER_DAY} new words is the daily limit, and no other words need practice now. More new words tomorrow.`
-          : "No other words need practice now. Come back tomorrow."
+          : "Every plant has water. Come back tomorrow."
         : null;
   return (
     <main className="card summary">
       <div className="kicker read">
         <SeedIcon size={15} /> {title.toLowerCase()}
       </div>
-      <h1>{did ? "Well done." : "Nothing to practice now."}</h1>
+      <h1>{did ? headline.line : "Nothing to practice now."}</h1>
+      {did && headline.small && <p className="muted small headline-small">{headline.small}</p>}
       {why && <p className="muted">{why}</p>}
       <div className="tally">
         <div>

@@ -8,6 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
+import { doneTodayNote, greetingAside, startNote } from "../content/voice";
 import { focusPlant } from "./gardenFocus";
 
 function greeting(): string {
@@ -32,6 +33,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const now = useNow();
   const stats = useMemo(() => (learner ? courseStats(learner) : undefined), [learner]);
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
+  const aside = greetingAside();
   if (!learner || !stats) return <div className="page home" />;
   const course = learner.course;
   const ready = stats.seeds;
@@ -53,6 +55,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <h1>
             {greeting()}. Time for <em>{lang}</em>.
           </h1>
+          {aside && <p className="greeting-aside">{aside}</p>}
         </div>
       </header>
 
@@ -85,10 +88,10 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
             : started === 0
               ? `${ready} words are ready, most common first. Each word has example sentences and audio.`
               : doneToday
-                ? "You did your minutes for today. More practice is a bonus."
+                ? doneTodayNote()
                 : partial
                   ? ""
-                  : "Missed days do not pile up. We choose the most useful practice for your time."}
+                  : startNote()}
         </p>
       </div>
 

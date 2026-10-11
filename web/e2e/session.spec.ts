@@ -79,7 +79,7 @@ test("leaving after doing something shows the summary", async ({ page }) => {
   await startSession(page);
   await advance(page, "Space");
   await page.getByRole("button", { name: "End session" }).click();
-  await expect(page.getByRole("heading", { name: "Well done." })).toBeVisible();
+  await expect(page.locator(".summary h1")).not.toHaveText("Nothing to practice now."); // the headline rotates daily
   await expect(page.getByText("session paused")).toBeVisible(); // not "complete" when you leave early
   await expect(page.getByText("new word", { exact: true })).toBeVisible(); // singular
   await page.getByRole("button", { name: /Done/ }).click();
