@@ -3,7 +3,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { apiMessage, moreExamples } from "../data/ai";
 import { useUser } from "../data/auth";
 import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
-import type { UserSentenceRow } from "../data/rows";
+import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import type { MemoryRow } from "../model";
 import { useMe } from "./Account";
 import { useNow } from "./useNow";
@@ -276,6 +276,7 @@ function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; 
       ) : (
         <p className="muted small">Not started. It will come in a session as a new word.</p>
       )}
+      {memory.some((m) => m.reps > 0) && <SchedulingDetails memory={memory} reviews={learner.reviewsByWord.get(lexeme.id) ?? []} now={now} />}
       <ul className="examples">
         {examples.map((e) => {
           const by = authorLabel(e);
@@ -310,5 +311,47 @@ function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; 
         {paused && <span className="muted small">Paused. It does not appear in sessions.</span>}
       </div>
     </div>
+  );
+}
+
+const GRADE: Record<number, string> = { 1: "forgot", 2: "hard", 3: "remembered", 4: "easy" };
+
+/** The numbers behind the schedule (FSRS), for learners who want them. */
+function SchedulingDetails({ memory, reviews, now }: { memory: MemoryRow[]; reviews: ReviewRow[]; now: number }) {
+  const practised = memory.filter((m) => m.reps > 0).sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill));
+  return (
+    <details className="more scheduling">
+      <summary>Scheduling details</summary>
+      <table className="small">
+        <thead>
+          <tr>
+            <th>Skill</th>
+            <th title="Days until the chance of remembering falls to 90%">Stability</th>
+            <th title="1 (easy) to 10 (hard)">Difficulty</th>
+            <th title="The chance you remember it now">Recall now</th>
+          </tr>
+        </thead>
+        <tbody>
+          {practised.map((m) => (
+            <tr key={m.skill}>
+              <td>{SKILL_NAME[m.skill]}</td>
+              <td>{m.s < 1 ? `${Math.round(m.s * 24)} h` : plural(Math.round(m.s), "day")}</td>
+              <td>{m.d.toFixed(1)}</td>
+              <td>{Math.round(recall(m, now) * 100)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <ul className="review-log small">
+        {[...reviews]
+          .sort((a, b) => b.reviewed_at.localeCompare(a.reviewed_at))
+          .map((r) => (
+            <li key={r.id}>
+              <time dateTime={r.reviewed_at}>{new Date(r.reviewed_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time> · {SKILL_NAME[r.skill]} ·{" "}
+              {r.kind === "known" ? "marked as known" : GRADE[r.grade]}
+            </li>
+          ))}
+      </ul>
+    </details>
   );
 }

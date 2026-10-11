@@ -42,3 +42,13 @@ test("keyboard: Enter starts today's session, / focuses the word search", async 
   await page.keyboard.type("x");
   await expect(page.getByRole("searchbox")).toHaveValue("x"); // the slash itself isn't typed
 });
+
+test("word detail: scheduling details show stability, difficulty, recall and the review log", async ({ page }) => {
+  await page.goto("/?demo=es:5#/words");
+  await page.locator(".word-row").first().click();
+  await page.getByText("Scheduling details").click();
+  const details = page.locator(".scheduling");
+  await expect(details.getByRole("columnheader", { name: "Stability" })).toBeVisible();
+  await expect(details.locator("tbody tr").first()).toContainText("%");
+  await expect(details.locator(".review-log li").first()).toBeVisible();
+});

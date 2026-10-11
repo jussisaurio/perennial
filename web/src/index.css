@@ -407,6 +407,10 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .speaker button { min-width: 40px; min-height: 40px; }
 .schedule { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.2rem; font-size: 0.88rem; color: var(--muted); }
 .schedule strong { color: var(--ink-2); font-weight: 600; }
+.scheduling table { border-collapse: collapse; margin: 0.4rem 0; }
+.scheduling th, .scheduling td { text-align: left; padding: 0.15rem 0.9rem 0.15rem 0; font-variant-numeric: tabular-nums; }
+.scheduling th { color: var(--muted); font-weight: 600; }
+.review-log { color: var(--muted); list-style: none; padding: 0; margin: 0.25rem 0; max-height: 12rem; overflow-y: auto; }
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: max(24px, env(safe-area-inset-bottom));
   display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem 0.4rem 1rem; border-radius: 999px;
