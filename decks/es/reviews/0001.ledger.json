@@ -1,0 +1,216 @@
+{
+  "file": "source/0001.json",
+  "reviewer": "claude-agent:es-proofreader-0001-2026-10-11",
+  "entries": {
+    "de|prep|": {
+      "hash": "0696c9943634a344",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:50.685Z"
+    },
+    "que|conj|": {
+      "hash": "037c39d44d79929b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:53.897Z"
+    },
+    "no|adv|": {
+      "hash": "cb7daad04566d50c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:56.627Z"
+    },
+    "a|prep|": {
+      "hash": "d81ab78f5451c11d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:59.777Z"
+    },
+    "el|det|": {
+      "hash": "9d3e6ea2d5c425e5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:03.283Z"
+    },
+    "ser|verb|": {
+      "hash": "2c9cd64579f1d2f9",
+      "verdict": "fix",
+      "note": "notes: append ' Preterite fui, fue, fueron are shared with ir (Fue un buen día = It was a good day; Fue a casa = He went home).' because these forms are listed for ser but are also ir forms, a common beginner trap.",
+      "at": "2026-10-11T13:50:12.939Z"
+    },
+    "y|conj|": {
+      "hash": "3c56b966ef2bc6a8",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:17.328Z"
+    },
+    "en|prep|": {
+      "hash": "149b60227bb866e5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:20.123Z"
+    },
+    "lo|pron|": {
+      "hash": "9bb099ffedc872a5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:25.473Z"
+    },
+    "un|det|": {
+      "hash": "272ab4c15b7f553d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:28.171Z"
+    },
+    "por|prep|": {
+      "hash": "cd5668c7f9af4d0a",
+      "verdict": "fix",
+      "note": "s2: replace 'Por favor, ven aquí.' / 'Please come here.' with 'Te lo envío [por] correo.' / 'I'll send it to you by mail.' because 'por favor' is a fixed phrase that does not show the glossed sense, and no sentence covers the 'by' sense in the gloss.",
+      "at": "2026-10-11T13:50:33.765Z"
+    },
+    "qué|pron|": {
+      "hash": "f0550df124dee5fa",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:37.403Z"
+    },
+    "me|pron|": {
+      "hash": "1f25403d560af00c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:44.598Z"
+    },
+    "te|pron|": {
+      "hash": "15696c8acabaae49",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:48.406Z"
+    },
+    "se|pron|": {
+      "hash": "c54f6bb3f59e70e9",
+      "verdict": "fix",
+      "note": "s3: replace 'Ella se va mañana.' / 'She's leaving tomorrow.' with 'Ella [se] mira en el espejo.' / 'She looks at herself in the mirror.' because no sentence shows the glossed reflexive sense (himself/herself) where English actually has the reflexive; 'irse' is a separate idiomatic use.",
+      "at": "2026-10-11T13:50:55.523Z"
+    },
+    "con|prep|": {
+      "hash": "1e020e9ef782d51c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:58.276Z"
+    },
+    "estar|verb|": {
+      "hash": "aa1919d3c44277b7",
+      "verdict": "fix",
+      "note": "s4: replace 'Estamos listos.' / 'We're ready.' with 'La tienda [estaba] cerrada.' / 'The shop was closed.' because all four sentences are present tense; variety needs a past form (estaba is already in forms).",
+      "at": "2026-10-11T13:51:03.373Z"
+    },
+    "para|prep|": {
+      "hash": "86242554463bbb0c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:06.137Z"
+    },
+    "mi|det|": {
+      "hash": "b3007d9182894c32",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:08.879Z"
+    },
+    "si|conj|": {
+      "hash": "e1772eb03aa8b2cb",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:11.462Z"
+    },
+    "bien|adv|": {
+      "hash": "dd3259532baec695",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:14.152Z"
+    },
+    "pero|conj|": {
+      "hash": "e2cc25ff252a7c50",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:16.823Z"
+    },
+    "yo|pron|": {
+      "hash": "1e31dac12d969185",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:20.246Z"
+    },
+    "eso|pron|": {
+      "hash": "16f2d69b45599dd2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:23.478Z"
+    },
+    "sí|adv|": {
+      "hash": "4dfa4c34c4240926",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:26.627Z"
+    },
+    "haber|verb|": {
+      "hash": "be0ae7cf231c9482",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:30.820Z"
+    },
+    "tener|verb|": {
+      "hash": "7b0abe204474f4de",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:35.841Z"
+    },
+    "su|det|": {
+      "hash": "f130cb0e7d53a476",
+      "verdict": "fix",
+      "note": "s3: replace '¿Es su coche?' / 'Is it his car?' with 'Señora, ¿es [su] coche?' / 'Ma'am, is this your car?' because without context su is ambiguous (his/her/your) and no sentence shows the glossed formal 'your' sense; the vocative makes it unambiguous.",
+      "at": "2026-10-11T13:51:40.866Z"
+    },
+    "tú|pron|": {
+      "hash": "86f028ff91a3968b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:46.487Z"
+    },
+    "aquí|adv|": {
+      "hash": "c345ea930507456c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:49.387Z"
+    },
+    "ir|verb|": {
+      "hash": "b74f5ae89bff729b",
+      "verdict": "fix",
+      "note": "s1: replace 'Voy a casa.' / 'I'm going home.' with 'Ayer [fui] al médico.' / 'Yesterday I went to the doctor.' because all four sentences are present/infinitive and the past is a core form (fui is already in forms; voy stays covered by the notes and s3's pattern); notes: append ' fui and fue are also forms of ser (fue un buen día = it was a good day).' because they are listed under both verbs.",
+      "at": "2026-10-11T13:51:56.997Z"
+    },
+    "como|adv|": {
+      "hash": "20c4896864d90abe",
+      "verdict": "fix",
+      "note": "notes: append ' Como is also the yo form of comer: como pan (I eat bread).' because the identical form is a very common trap for beginners; s2: replace 'Haz como yo.' with 'Hazlo [como] yo.' (translation unchanged: 'Do as I do.') because bare 'Haz como yo' sounds clipped; 'Hazlo como yo' is the natural phrasing.",
+      "at": "2026-10-11T13:52:03.542Z"
+    },
+    "más|adv|": {
+      "hash": "d0133151e02ffa1a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:06.866Z"
+    },
+    "este|det|": {
+      "hash": "f633338390c6cd1a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:10.156Z"
+    },
+    "ya|adv|": {
+      "hash": "1553884448ca51a6",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:14.086Z"
+    },
+    "todo|pron|": {
+      "hash": "6d634df9e4c9da67",
+      "verdict": "fix",
+      "note": "s2: replace 'Todos mis amigos están aquí.' / 'All my friends are here.' with '[Todos] quieren venir.' / 'Everyone wants to come.' because the entry is pos pron but s2 and s3 both use todo as a determiner before a noun; notes: add 'Also before a noun: toda la semana (all week), todos mis amigos (all my friends).' so the remaining determiner use in s3 is explained.",
+      "at": "2026-10-11T13:52:21.470Z"
+    },
+    "muy|adv|": {
+      "hash": "9a998febfe908130",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:24.885Z"
+    },
+    "poder|verb|": {
+      "hash": "a89a95b0e51a27ea",
+      "verdict": "fix",
+      "note": "s2: replace 'No puedo dormir.' / 'I can't sleep.' with 'Ayer no [pudo] venir.' / 'He couldn't come yesterday.' because s1 and s2 repeat the same form (puedo) and all sentences are present; pudo is already in forms.",
+      "at": "2026-10-11T13:52:28.970Z"
+    },
+    "saber|verb|": {
+      "hash": "dc18ee124cd5ce9b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:32.981Z"
+    },
+    "querer|verb|": {
+      "hash": "70c4ae3f4fd5b7b3",
+      "verdict": "fix",
+      "note": "s1: replace 'Quiero ir a casa.' / 'I want to go home.' with 'Ella [quería] ir a casa.' / 'She wanted to go home.' because s1 and s3 repeat the same form (quiero) and all sentences are present; quería is already in forms.",
+      "at": "2026-10-11T13:52:38.741Z"
+    }
+  }
+}
