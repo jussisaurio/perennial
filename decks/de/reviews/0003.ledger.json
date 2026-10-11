@@ -1,0 +1,314 @@
+{
+  "file": "source/0003.json",
+  "reviewer": "claude-agent:de-proofreader-0003-2026-10-11",
+  "entries": {
+    "lange|adv|": {
+      "hash": "9ae5111146a09d7c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:03.456Z"
+    },
+    "natürlich|adv|": {
+      "hash": "633b89c89c720a9f",
+      "verdict": "fix",
+      "note": "gloss: change 'of course; natural' to 'of course; naturally' (pos is adv; 'natural' is the adjective sense); s3: replace 'Das ist ganz [natürlich].' / 'That's completely natural.' with 'Du hast [natürlich] recht.' / 'Of course you're right.' because s3 uses natürlich as a predicative adjective, not as the adverb",
+      "at": "2026-10-11T13:50:32.656Z"
+    },
+    "gar|particle|": {
+      "hash": "9ee1799f19a62e28",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:42.540Z"
+    },
+    "dort|adv|": {
+      "hash": "0f2ea9caad5141e0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:45.361Z"
+    },
+    "weiter|adv|": {
+      "hash": "311bff92e313ab40",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:48.753Z"
+    },
+    "seit|prep|": {
+      "hash": "3d17246175d02280",
+      "verdict": "fix",
+      "note": "s3: replace 'Ich warte [seit] einer Stunde.' / 'I've been waiting for an hour.' with 'Ich bin [seit] Montag krank.' / 'I've been sick since Monday.' because s1 and s3 both show the 'for + duration' pattern and no sentence shows the glossed 'since + point in time' sense",
+      "at": "2026-10-11T13:50:53.919Z"
+    },
+    "gleich|adv|": {
+      "hash": "42d5e99e197ce580",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:56.762Z"
+    },
+    "recht|adj|": {
+      "hash": "b5b495802ca8e6de",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:01.405Z"
+    },
+    "richtig|adj|": {
+      "hash": "4cf244f1bd2e1c69",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:04.066Z"
+    },
+    "ordnung|noun|": {
+      "hash": "9e6279f61c2f1203",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:06.611Z"
+    },
+    "davon|adv|": {
+      "hash": "b657fba557aabde2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:10.242Z"
+    },
+    "dafür|adv|": {
+      "hash": "30c4c6f7bd896d11",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:13.614Z"
+    },
+    "wegen|prep|": {
+      "hash": "0e72c6cfad4d76f3",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:16.750Z"
+    },
+    "haus|noun|": {
+      "hash": "f4dfd5c23b9e1453",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:22.856Z"
+    },
+    "mädchen|noun|": {
+      "hash": "8265c661ae96789c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:25.600Z"
+    },
+    "hin|adv|": {
+      "hash": "18864d3e88140b6a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:28.553Z"
+    },
+    "abend|noun|": {
+      "hash": "8f2116b25188178f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:31.839Z"
+    },
+    "drei|num|": {
+      "hash": "eefa16e3f6bf1b07",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:34.623Z"
+    },
+    "freund|noun|": {
+      "hash": "158322bc5a0c0cf0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:37.438Z"
+    },
+    "warten|verb|": {
+      "hash": "c54d6a53d0c5dd9b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:42.419Z"
+    },
+    "mensch|noun|": {
+      "hash": "748c075e327ee65f",
+      "verdict": "fix",
+      "note": "s3: replace '[Mensch], bist du groß geworden!' / 'Wow, you've grown!' with 'Ich mag diesen [Menschen] nicht.' / 'I don't like this person.' because s3 uses the interjection (Mensch! = wow), not the glossed sense 'person'; the replacement also shows the weak accusative singular -en that the notes mention (keep the interjection in notes only)",
+      "at": "2026-10-11T13:51:49.835Z"
+    },
+    "essen|verb|": {
+      "hash": "ad4a970bc2f597af",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:52.773Z"
+    },
+    "angst|noun|": {
+      "hash": "27b8244d01c01ba0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:55.672Z"
+    },
+    "bleiben|verb|": {
+      "hash": "a368f42331e2d8b1",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:58.543Z"
+    },
+    "zusammen|adv|": {
+      "hash": "b7fb3fecbee42c3c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:01.848Z"
+    },
+    "welt|noun|": {
+      "hash": "12f6d147f2b37e67",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:04.608Z"
+    },
+    "unter|prep|": {
+      "hash": "99faa58d98b7ab19",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:09.152Z"
+    },
+    "schnell|adj|": {
+      "hash": "bad0e6112e95769d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:12.581Z"
+    },
+    "tot|adj|": {
+      "hash": "802efeafa8cac05a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:16.200Z"
+    },
+    "dürfen|verb|": {
+      "hash": "42eda8b8247ef21f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:19.325Z"
+    },
+    "erst|adv|": {
+      "hash": "5b0683824841c5bc",
+      "verdict": "fix",
+      "note": "s3: replace 'Ich bin [erst] seit gestern hier.' / 'I've only been here since yesterday.' with '[Erst] essen wir, dann gehen wir spazieren.' / 'First we eat, then we go for a walk.' because the gloss lists 'first' but no sentence shows it, and s3 repeats the 'not until/only (time)' sense of s1",
+      "at": "2026-10-11T13:52:24.422Z"
+    },
+    "stimmen|verb|": {
+      "hash": "e0b1473f2351a4fc",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:27.969Z"
+    },
+    "nehmen|verb|": {
+      "hash": "eae911e4a2d4401f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:30.922Z"
+    },
+    "kind|noun|": {
+      "hash": "ec2b65cdef692d5a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:33.995Z"
+    },
+    "bringen|verb|": {
+      "hash": "2b40515e67a4e1f0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:37.772Z"
+    },
+    "genug|adv|": {
+      "hash": "e3ed81160dff9919",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:40.949Z"
+    },
+    "brauchen|verb|": {
+      "hash": "0d2914c13e22c27d",
+      "verdict": "fix",
+      "note": "s4: replace 'Wir [brauchen] ein neues Auto.' / 'We need a new car.' with 'Wir [brauchten] ein neues Auto.' / 'We needed a new car.' (and add 'brauchten' to forms) because all four sentences are present tense; variety needs one past form",
+      "at": "2026-10-11T13:52:45.454Z"
+    },
+    "gegen|prep|": {
+      "hash": "4fb5625a1f11276e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:49.968Z"
+    },
+    "moment|noun|": {
+      "hash": "1d8fd8a03b179bca",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:55.105Z"
+    },
+    "junge|noun|": {
+      "hash": "c7ad20779eb00e3c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:58.240Z"
+    },
+    "stehen|verb|": {
+      "hash": "413c2e833c55b84f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:02.291Z"
+    },
+    "sonst|adv|": {
+      "hash": "efe95402784f8361",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:05.306Z"
+    },
+    "musik|noun|": {
+      "hash": "9731d2ed77a084c3",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:08.211Z"
+    },
+    "arbeit|noun|": {
+      "hash": "a79c93b0d252760f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:11.517Z"
+    },
+    "fragen|verb|": {
+      "hash": "2b56ad7030ed5b29",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:15.235Z"
+    },
+    "herr|noun|": {
+      "hash": "6b4c61f34ac3b1ab",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:18.952Z"
+    },
+    "dabei|adv|": {
+      "hash": "6f7d81854a20ec5f",
+      "verdict": "fix",
+      "note": "s3: replace 'Was ist schon [dabei]?' / 'What's the big deal?' with 'Sie kocht und hört [dabei] Musik.' / 'She cooks and listens to music at the same time.' because s3 is an opaque idiom outside the gloss, while the glossed sense 'at the same time' has no sentence",
+      "at": "2026-10-11T13:53:24.743Z"
+    },
+    "heißen|verb|": {
+      "hash": "1f67d13d3db4264a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:28.248Z"
+    },
+    "familie|noun|": {
+      "hash": "1d82587a7619b46d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:31.211Z"
+    },
+    "niemand|pron|": {
+      "hash": "e771ac1efc4d99e1",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:34.383Z"
+    },
+    "sofort|adv|": {
+      "hash": "6a20cbb124cf4306",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:37.620Z"
+    },
+    "bevor|conj|": {
+      "hash": "8275094c10f91b18",
+      "verdict": "fix",
+      "note": "s3: replace 'Ich lese, [bevor] ich schlafe.' with 'Ich lese immer, [bevor] ich schlafen gehe.' / 'I always read before I go to bed.' because 'bevor ich schlafe' is unidiomatic (natives say 'bevor ich schlafen gehe' / 'einschlafe'), and the current translation 'go to sleep' does not match 'schlafe'",
+      "at": "2026-10-11T13:53:42.846Z"
+    },
+    "jahr|noun|": {
+      "hash": "5871ef70161ec905",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:46.033Z"
+    },
+    "einmal|adv|": {
+      "hash": "7f5c532068473a8f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:50.772Z"
+    },
+    "problem|noun|": {
+      "hash": "dafb7173c2c36150",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:54.825Z"
+    },
+    "sohn|noun|": {
+      "hash": "79baf405b3f3ee7a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:57.991Z"
+    },
+    "wann|adv|": {
+      "hash": "0cdfac8e6526c98d",
+      "verdict": "fix",
+      "note": "notes: replace 'Use wann in questions. In statements, 'when' is usually wenn or als.' with 'Use wann in direct and indirect questions (Ich weiß nicht, wann ...). When ''when'' links two clauses (whenever / at the time that), use wenn or als.' because s3 is a statement that correctly uses wann, so the current note contradicts it",
+      "at": "2026-10-11T13:54:03.013Z"
+    },
+    "fertig|adj|": {
+      "hash": "d76127473ca743d3",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:07.971Z"
+    },
+    "allein|adv|": {
+      "hash": "0883fff069e00e31",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:11.247Z"
+    },
+    "sprechen|verb|": {
+      "hash": "bc727e1519a60e91",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:14.629Z"
+    }
+  }
+}
