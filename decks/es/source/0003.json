@@ -1,0 +1,1770 @@
+[
+  {
+    "lemma": "tres",
+    "gloss": "three",
+    "pos": "num",
+    "forms": [
+      "tres"
+    ],
+    "sentences": [
+      {
+        "text": "Tengo tres hijos.",
+        "translation": "I have three children.",
+        "cloze": "tres"
+      },
+      {
+        "text": "Son las tres y media.",
+        "translation": "It's half past three.",
+        "cloze": "tres"
+      },
+      {
+        "text": "Vuelvo en tres días.",
+        "translation": "I'll be back in three days.",
+        "cloze": "tres"
+      }
+    ]
+  },
+  {
+    "lemma": "necesitar",
+    "gloss": "to need",
+    "pos": "verb",
+    "forms": [
+      "necesitar",
+      "necesito",
+      "necesitas",
+      "necesita",
+      "necesitamos",
+      "necesitan",
+      "necesitaba"
+    ],
+    "sentences": [
+      {
+        "text": "Necesito un café.",
+        "translation": "I need a coffee.",
+        "cloze": "Necesito"
+      },
+      {
+        "text": "¿Necesitas algo?",
+        "translation": "Do you need anything?",
+        "cloze": "Necesitas"
+      },
+      {
+        "text": "Necesitamos más tiempo.",
+        "translation": "We need more time.",
+        "cloze": "Necesitamos"
+      },
+      {
+        "text": "Ella necesita dormir.",
+        "translation": "She needs to sleep.",
+        "cloze": "necesita"
+      }
+    ]
+  },
+  {
+    "lemma": "oír",
+    "gloss": "to hear",
+    "pos": "verb",
+    "forms": [
+      "oír",
+      "oigo",
+      "oyes",
+      "oye",
+      "oímos",
+      "oyen",
+      "oí",
+      "oíste",
+      "oyó",
+      "oído"
+    ],
+    "notes": "Irregular: oigo, oyes, oyó. ¡Oye! = Hey! (to get attention).",
+    "sentences": [
+      {
+        "text": "Oye, ¿tienes un minuto?",
+        "translation": "Hey, do you have a minute?",
+        "cloze": "Oye"
+      },
+      {
+        "text": "No te oigo.",
+        "translation": "I can't hear you.",
+        "cloze": "oigo"
+      },
+      {
+        "text": "¿Oíste eso?",
+        "translation": "Did you hear that?",
+        "cloze": "Oíste"
+      },
+      {
+        "text": "¿Me oyes?",
+        "translation": "Can you hear me?",
+        "cloze": "oyes"
+      }
+    ]
+  },
+  {
+    "lemma": "gustar",
+    "gloss": "to like (literally: to please)",
+    "pos": "verb",
+    "forms": [
+      "gustar",
+      "gusta",
+      "gustan",
+      "gustaba",
+      "gustó",
+      "gustaría"
+    ],
+    "notes": "Me gusta el café = I like coffee (coffee pleases me). For more than one thing: me gustan los perros.",
+    "sentences": [
+      {
+        "text": "¿Te gusta?",
+        "translation": "Do you like it?",
+        "cloze": "gusta"
+      },
+      {
+        "text": "Me gustan los perros.",
+        "translation": "I like dogs.",
+        "cloze": "gustan"
+      },
+      {
+        "text": "¿Te gustó la película?",
+        "translation": "Did you like the movie?",
+        "cloze": "gustó"
+      },
+      {
+        "text": "Me gustaría ir contigo.",
+        "translation": "I'd like to go with you.",
+        "cloze": "gustaría"
+      }
+    ]
+  },
+  {
+    "lemma": "parte",
+    "gloss": "part",
+    "pos": "noun",
+    "forms": [
+      "parte",
+      "partes"
+    ],
+    "notes": "en todas partes = everywhere. de mi parte = from me.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Es parte del trabajo.",
+        "translation": "It's part of the job.",
+        "cloze": "parte"
+      },
+      {
+        "text": "Te busqué por todas partes.",
+        "translation": "I looked for you everywhere.",
+        "cloze": "partes"
+      },
+      {
+        "text": "La mejor parte es el final.",
+        "translation": "The best part is the end.",
+        "cloze": "parte"
+      }
+    ]
+  },
+  {
+    "lemma": "nombre",
+    "gloss": "name",
+    "pos": "noun",
+    "forms": [
+      "nombre",
+      "nombres"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "¿Cuál es tu nombre?",
+        "translation": "What's your name?",
+        "cloze": "nombre"
+      },
+      {
+        "text": "Mi nombre es Ana.",
+        "translation": "My name is Ana.",
+        "cloze": "nombre"
+      },
+      {
+        "text": "No recuerdo los nombres.",
+        "translation": "I don't remember the names.",
+        "cloze": "nombres"
+      }
+    ]
+  },
+  {
+    "lemma": "mal",
+    "gloss": "badly; wrong",
+    "pos": "adv",
+    "forms": [
+      "mal"
+    ],
+    "notes": "Opposite of bien. Before a masculine noun it is an adjective: un mal día (a bad day).",
+    "sentences": [
+      {
+        "text": "Me siento mal.",
+        "translation": "I feel bad.",
+        "cloze": "mal"
+      },
+      {
+        "text": "Lo hice mal.",
+        "translation": "I did it wrong.",
+        "cloze": "mal"
+      },
+      {
+        "text": "No está mal.",
+        "translation": "It's not bad.",
+        "cloze": "mal"
+      }
+    ]
+  },
+  {
+    "lemma": "deber",
+    "gloss": "must; should; to owe",
+    "pos": "verb",
+    "forms": [
+      "deber",
+      "debo",
+      "debes",
+      "debe",
+      "debemos",
+      "deben",
+      "debía",
+      "debería",
+      "deberías"
+    ],
+    "notes": "debería = should. Also to owe: te debo diez euros.",
+    "sentences": [
+      {
+        "text": "Debo irme.",
+        "translation": "I must go.",
+        "cloze": "Debo"
+      },
+      {
+        "text": "Deberías dormir más.",
+        "translation": "You should sleep more.",
+        "cloze": "Deberías"
+      },
+      {
+        "text": "¿Cuánto le debo?",
+        "translation": "How much do I owe you?",
+        "cloze": "debo"
+      },
+      {
+        "text": "Los niños deben comer bien.",
+        "translation": "Children must eat well.",
+        "cloze": "deben"
+      }
+    ]
+  },
+  {
+    "lemma": "realmente",
+    "gloss": "really",
+    "pos": "adv",
+    "forms": [
+      "realmente"
+    ],
+    "sentences": [
+      {
+        "text": "¿Realmente lo crees?",
+        "translation": "Do you really believe it?",
+        "cloze": "Realmente"
+      },
+      {
+        "text": "Es realmente bonito.",
+        "translation": "It's really pretty.",
+        "cloze": "realmente"
+      },
+      {
+        "text": "No sé realmente qué pasó.",
+        "translation": "I don't really know what happened.",
+        "cloze": "realmente"
+      }
+    ]
+  },
+  {
+    "lemma": "aún",
+    "gloss": "still; yet",
+    "pos": "adv",
+    "forms": [
+      "aún"
+    ],
+    "notes": "Same as todavía. Without the accent, aun means 'even'.",
+    "sentences": [
+      {
+        "text": "Aún no ha llegado.",
+        "translation": "He hasn't arrived yet.",
+        "cloze": "Aún"
+      },
+      {
+        "text": "¿Aún vives allí?",
+        "translation": "Do you still live there?",
+        "cloze": "Aún"
+      },
+      {
+        "text": "Es aún mejor.",
+        "translation": "It's even better.",
+        "cloze": "aún"
+      }
+    ]
+  },
+  {
+    "lemma": "mío",
+    "gloss": "mine",
+    "pos": "pron",
+    "forms": [
+      "mío",
+      "mía",
+      "míos",
+      "mías"
+    ],
+    "notes": "After a noun: un amigo mío (a friend of mine).",
+    "sentences": [
+      {
+        "text": "Este libro es mío.",
+        "translation": "This book is mine.",
+        "cloze": "mío"
+      },
+      {
+        "text": "La culpa es mía.",
+        "translation": "It's my fault.",
+        "cloze": "mía"
+      },
+      {
+        "text": "Son amigos míos.",
+        "translation": "They're friends of mine.",
+        "cloze": "míos"
+      }
+    ]
+  },
+  {
+    "lemma": "cada",
+    "gloss": "each; every",
+    "pos": "det",
+    "forms": [
+      "cada"
+    ],
+    "notes": "It never changes form. cada día = every day.",
+    "sentences": [
+      {
+        "text": "Lo veo cada día.",
+        "translation": "I see him every day.",
+        "cloze": "cada"
+      },
+      {
+        "text": "Cada uno paga lo suyo.",
+        "translation": "Everyone pays for their own.",
+        "cloze": "Cada"
+      },
+      {
+        "text": "Cada vez hace más frío.",
+        "translation": "It's getting colder and colder.",
+        "cloze": "Cada"
+      }
+    ]
+  },
+  {
+    "lemma": "importar",
+    "gloss": "to matter",
+    "pos": "verb",
+    "forms": [
+      "importar",
+      "importa",
+      "importan",
+      "importas",
+      "importaba",
+      "importó"
+    ],
+    "notes": "Used like gustar: No me importa (I don't care). ¿Te importa ...? = Do you mind ...?",
+    "sentences": [
+      {
+        "text": "No importa.",
+        "translation": "It doesn't matter.",
+        "cloze": "importa"
+      },
+      {
+        "text": "Me importas mucho.",
+        "translation": "You matter a lot to me.",
+        "cloze": "importas"
+      },
+      {
+        "text": "¿Te importa si me siento?",
+        "translation": "Do you mind if I sit down?",
+        "cloze": "importa"
+      },
+      {
+        "text": "No me importan sus problemas.",
+        "translation": "I don't care about his problems.",
+        "cloze": "importan"
+      }
+    ]
+  },
+  {
+    "lemma": "razón",
+    "gloss": "reason",
+    "pos": "noun",
+    "forms": [
+      "razón",
+      "razones"
+    ],
+    "notes": "tener razón = to be right: tienes razón (you're right).",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Tienes razón.",
+        "translation": "You're right.",
+        "cloze": "razón"
+      },
+      {
+        "text": "¿Por qué razón?",
+        "translation": "For what reason?",
+        "cloze": "razón"
+      },
+      {
+        "text": "Tengo mis razones.",
+        "translation": "I have my reasons.",
+        "cloze": "razones"
+      }
+    ]
+  },
+  {
+    "lemma": "alguno",
+    "gloss": "some; any",
+    "pos": "det",
+    "forms": [
+      "alguno",
+      "alguna",
+      "algunos",
+      "algunas",
+      "algún"
+    ],
+    "notes": "Before a masculine singular noun: algún. algunos = some, a few.",
+    "sentences": [
+      {
+        "text": "¿Tienes alguna pregunta?",
+        "translation": "Do you have any questions?",
+        "cloze": "alguna"
+      },
+      {
+        "text": "Algún día lo sabrás.",
+        "translation": "Some day you'll know.",
+        "cloze": "Algún"
+      },
+      {
+        "text": "Algunos amigos vienen hoy.",
+        "translation": "Some friends are coming today.",
+        "cloze": "Algunos"
+      }
+    ]
+  },
+  {
+    "lemma": "tanto",
+    "gloss": "so much; so many",
+    "pos": "det",
+    "forms": [
+      "tanto",
+      "tanta",
+      "tantos",
+      "tantas"
+    ],
+    "notes": "tanto ... como = as much ... as. Also an adverb: No comas tanto (Don't eat so much).",
+    "sentences": [
+      {
+        "text": "Te quiero tanto.",
+        "translation": "I love you so much.",
+        "cloze": "tanto"
+      },
+      {
+        "text": "¡Hay tanta gente!",
+        "translation": "There are so many people!",
+        "cloze": "tanta"
+      },
+      {
+        "text": "Tengo tantas cosas que hacer.",
+        "translation": "I have so many things to do.",
+        "cloze": "tantas"
+      },
+      {
+        "text": "No comas tanto.",
+        "translation": "Don't eat so much.",
+        "cloze": "tanto"
+      }
+    ]
+  },
+  {
+    "lemma": "serio",
+    "gloss": "serious",
+    "pos": "adj",
+    "forms": [
+      "serio",
+      "seria",
+      "serios",
+      "serias"
+    ],
+    "notes": "¿En serio? = Really?",
+    "sentences": [
+      {
+        "text": "¿En serio?",
+        "translation": "Really?",
+        "cloze": "serio"
+      },
+      {
+        "text": "Es un problema serio.",
+        "translation": "It's a serious problem.",
+        "cloze": "serio"
+      },
+      {
+        "text": "Ella es muy seria.",
+        "translation": "She's very serious.",
+        "cloze": "seria"
+      },
+      {
+        "text": "Hablo en serio.",
+        "translation": "I'm serious.",
+        "cloze": "serio"
+      }
+    ]
+  },
+  {
+    "lemma": "venir",
+    "gloss": "to come",
+    "pos": "verb",
+    "forms": [
+      "venir",
+      "vengo",
+      "vienes",
+      "viene",
+      "venimos",
+      "vienen",
+      "vine",
+      "vino",
+      "ven",
+      "venga",
+      "venido"
+    ],
+    "notes": "Irregular: vengo, vine. ¡Ven! = Come! ¡Venga! = Come on!",
+    "sentences": [
+      {
+        "text": "¡Ven aquí!",
+        "translation": "Come here!",
+        "cloze": "Ven"
+      },
+      {
+        "text": "¿Vienes a la fiesta?",
+        "translation": "Are you coming to the party?",
+        "cloze": "Vienes"
+      },
+      {
+        "text": "Mi madre viene mañana.",
+        "translation": "My mother is coming tomorrow.",
+        "cloze": "viene"
+      },
+      {
+        "text": "Vine en tren.",
+        "translation": "I came by train.",
+        "cloze": "Vine"
+      }
+    ]
+  },
+  {
+    "lemma": "idea",
+    "gloss": "idea",
+    "pos": "noun",
+    "forms": [
+      "idea",
+      "ideas"
+    ],
+    "notes": "No tengo ni idea = I have no idea.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "¡Buena idea!",
+        "translation": "Good idea!",
+        "cloze": "idea"
+      },
+      {
+        "text": "No tengo ni idea.",
+        "translation": "I have no idea.",
+        "cloze": "idea"
+      },
+      {
+        "text": "Tengo muchas ideas.",
+        "translation": "I have a lot of ideas.",
+        "cloze": "ideas"
+      }
+    ]
+  },
+  {
+    "lemma": "tarde",
+    "gloss": "late",
+    "pos": "adv",
+    "forms": [
+      "tarde"
+    ],
+    "notes": "As a noun, la tarde means 'the afternoon, the evening'. más tarde = later.",
+    "sentences": [
+      {
+        "text": "Es tarde, me voy.",
+        "translation": "It's late, I'm leaving.",
+        "cloze": "tarde"
+      },
+      {
+        "text": "Llegué tarde al trabajo.",
+        "translation": "I was late for work.",
+        "cloze": "tarde"
+      },
+      {
+        "text": "Te llamo más tarde.",
+        "translation": "I'll call you later.",
+        "cloze": "tarde"
+      }
+    ]
+  },
+  {
+    "lemma": "tarde",
+    "gloss": "afternoon; evening",
+    "pos": "noun",
+    "forms": [
+      "tarde",
+      "tardes"
+    ],
+    "notes": "Buenas tardes = good afternoon. por la tarde = in the afternoon.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Buenas tardes.",
+        "translation": "Good afternoon.",
+        "cloze": "tardes"
+      },
+      {
+        "text": "Te veo esta tarde.",
+        "translation": "I'll see you this afternoon.",
+        "cloze": "tarde"
+      },
+      {
+        "text": "Estudio por la tarde.",
+        "translation": "I study in the afternoon.",
+        "cloze": "tarde"
+      }
+    ]
+  },
+  {
+    "lemma": "problema",
+    "gloss": "problem",
+    "pos": "noun",
+    "forms": [
+      "problema",
+      "problemas"
+    ],
+    "notes": "Masculine, although it ends in -a: el problema. No hay problema = no problem.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "No hay problema.",
+        "translation": "No problem.",
+        "cloze": "problema"
+      },
+      {
+        "text": "Tengo un problema.",
+        "translation": "I have a problem.",
+        "cloze": "problema"
+      },
+      {
+        "text": "Ese es tu problema.",
+        "translation": "That's your problem.",
+        "cloze": "problema"
+      },
+      {
+        "text": "Tenemos muchos problemas.",
+        "translation": "We have a lot of problems.",
+        "cloze": "problemas"
+      }
+    ]
+  },
+  {
+    "lemma": "hora",
+    "gloss": "hour; time (on the clock)",
+    "pos": "noun",
+    "forms": [
+      "hora",
+      "horas"
+    ],
+    "notes": "¿Qué hora es? = What time is it? Es hora de ... = It's time to ...",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "¿Qué hora es?",
+        "translation": "What time is it?",
+        "cloze": "hora"
+      },
+      {
+        "text": "Llevo dos horas aquí.",
+        "translation": "I've been here for two hours.",
+        "cloze": "horas"
+      },
+      {
+        "text": "Es hora de comer.",
+        "translation": "It's time to eat.",
+        "cloze": "hora"
+      }
+    ]
+  },
+  {
+    "lemma": "cierto",
+    "gloss": "true; certain",
+    "pos": "adj",
+    "forms": [
+      "cierto",
+      "cierta",
+      "ciertos",
+      "ciertas"
+    ],
+    "notes": "Es cierto = it's true. por cierto = by the way.",
+    "sentences": [
+      {
+        "text": "Eso no es cierto.",
+        "translation": "That's not true.",
+        "cloze": "cierto"
+      },
+      {
+        "text": "Por cierto, ¿cómo está tu madre?",
+        "translation": "By the way, how is your mother?",
+        "cloze": "cierto"
+      },
+      {
+        "text": "Ciertas cosas no cambian.",
+        "translation": "Certain things don't change.",
+        "cloze": "Ciertas"
+      }
+    ]
+  },
+  {
+    "lemma": "quien",
+    "gloss": "who (not in a question)",
+    "pos": "pron",
+    "forms": [
+      "quien",
+      "quienes"
+    ],
+    "notes": "In questions it has an accent: ¿quién?",
+    "sentences": [
+      {
+        "text": "Fue ella quien me llamó.",
+        "translation": "It was she who called me.",
+        "cloze": "quien"
+      },
+      {
+        "text": "Él es el chico con quien salgo.",
+        "translation": "He's the boy I go out with.",
+        "cloze": "quien"
+      },
+      {
+        "text": "Hay quienes no comen carne.",
+        "translation": "There are people who don't eat meat.",
+        "cloze": "quienes"
+      }
+    ]
+  },
+  {
+    "lemma": "demasiado",
+    "gloss": "too; too much",
+    "pos": "adv",
+    "forms": [
+      "demasiado"
+    ],
+    "notes": "Before a noun it agrees: demasiada gente (too many people).",
+    "sentences": [
+      {
+        "text": "Es demasiado tarde.",
+        "translation": "It's too late.",
+        "cloze": "demasiado"
+      },
+      {
+        "text": "Hablas demasiado.",
+        "translation": "You talk too much.",
+        "cloze": "demasiado"
+      },
+      {
+        "text": "Esto es demasiado caro.",
+        "translation": "This is too expensive.",
+        "cloze": "demasiado"
+      }
+    ]
+  },
+  {
+    "lemma": "amor",
+    "gloss": "love",
+    "pos": "noun",
+    "forms": [
+      "amor"
+    ],
+    "notes": "Also a pet name: mi amor (my love, honey).",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "El amor es ciego.",
+        "translation": "Love is blind.",
+        "cloze": "amor"
+      },
+      {
+        "text": "Buenos días, mi amor.",
+        "translation": "Good morning, my love.",
+        "cloze": "amor"
+      },
+      {
+        "text": "Hizo todo por amor.",
+        "translation": "He did it all for love.",
+        "cloze": "amor"
+      }
+    ]
+  },
+  {
+    "lemma": "entre",
+    "gloss": "between; among",
+    "pos": "prep",
+    "forms": [
+      "entre"
+    ],
+    "sentences": [
+      {
+        "text": "Está entre la casa y el río.",
+        "translation": "It's between the house and the river.",
+        "cloze": "entre"
+      },
+      {
+        "text": "Entre nosotros, no me gusta.",
+        "translation": "Between us, I don't like it.",
+        "cloze": "Entre"
+      },
+      {
+        "text": "Lo hicimos entre todos.",
+        "translation": "We all did it together.",
+        "cloze": "entre"
+      }
+    ]
+  },
+  {
+    "lemma": "familia",
+    "gloss": "family",
+    "pos": "noun",
+    "forms": [
+      "familia",
+      "familias"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Mi familia es muy grande.",
+        "translation": "My family is very big.",
+        "cloze": "familia"
+      },
+      {
+        "text": "¿Cómo está tu familia?",
+        "translation": "How's your family?",
+        "cloze": "familia"
+      },
+      {
+        "text": "Muchas familias viven aquí.",
+        "translation": "Many families live here.",
+        "cloze": "familias"
+      }
+    ]
+  },
+  {
+    "lemma": "policía",
+    "gloss": "police; police officer",
+    "pos": "noun",
+    "forms": [
+      "policía",
+      "policías"
+    ],
+    "notes": "la policía = the police. el policía, la policía = a police officer.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "¡Llama a la policía!",
+        "translation": "Call the police!",
+        "cloze": "policía"
+      },
+      {
+        "text": "La policía está aquí.",
+        "translation": "The police are here.",
+        "cloze": "policía"
+      },
+      {
+        "text": "Dos policías hablan con él.",
+        "translation": "Two police officers are talking to him.",
+        "cloze": "policías"
+      }
+    ]
+  },
+  {
+    "lemma": "ustedes",
+    "gloss": "you (plural)",
+    "pos": "pron",
+    "forms": [
+      "ustedes"
+    ],
+    "notes": "In Latin America for every plural 'you'; in Spain only the formal one. It takes the same verb form as ellos: ustedes son.",
+    "sentences": [
+      {
+        "text": "¿Ustedes son hermanos?",
+        "translation": "Are you brothers?",
+        "cloze": "Ustedes"
+      },
+      {
+        "text": "Esto es para ustedes.",
+        "translation": "This is for you all.",
+        "cloze": "ustedes"
+      },
+      {
+        "text": "¿De dónde son ustedes?",
+        "translation": "Where are you from?",
+        "cloze": "ustedes"
+      }
+    ]
+  },
+  {
+    "lemma": "chico",
+    "gloss": "boy; guy; kid",
+    "pos": "noun",
+    "forms": [
+      "chico",
+      "chicos",
+      "chica",
+      "chicas"
+    ],
+    "notes": "chica = girl. chicos can mean a mixed group: kids, guys.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Es un chico muy simpático.",
+        "translation": "He's a very nice boy.",
+        "cloze": "chico"
+      },
+      {
+        "text": "¡Hola, chicos!",
+        "translation": "Hi, guys!",
+        "cloze": "chicos"
+      },
+      {
+        "text": "¿Quién es esa chica?",
+        "translation": "Who is that girl?",
+        "cloze": "chica"
+      },
+      {
+        "text": "Las chicas están en el parque.",
+        "translation": "The girls are in the park.",
+        "cloze": "chicas"
+      }
+    ]
+  },
+  {
+    "lemma": "cuenta",
+    "gloss": "bill; account",
+    "pos": "noun",
+    "forms": [
+      "cuenta",
+      "cuentas"
+    ],
+    "notes": "La cuenta, por favor = The bill, please. darse cuenta = to realize.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "La cuenta, por favor.",
+        "translation": "The bill, please.",
+        "cloze": "cuenta"
+      },
+      {
+        "text": "No me di cuenta.",
+        "translation": "I didn't realize.",
+        "cloze": "cuenta"
+      },
+      {
+        "text": "Tengo una cuenta en el banco.",
+        "translation": "I have an account at the bank.",
+        "cloze": "cuenta"
+      },
+      {
+        "text": "Hay que pagar las cuentas.",
+        "translation": "We have to pay the bills.",
+        "cloze": "cuentas"
+      }
+    ]
+  },
+  {
+    "lemma": "todavía",
+    "gloss": "still; yet",
+    "pos": "adv",
+    "forms": [
+      "todavía"
+    ],
+    "notes": "Same as aún. todavía no = not yet.",
+    "sentences": [
+      {
+        "text": "Todavía no lo sé.",
+        "translation": "I don't know yet.",
+        "cloze": "Todavía"
+      },
+      {
+        "text": "¿Todavía estás aquí?",
+        "translation": "Are you still here?",
+        "cloze": "Todavía"
+      },
+      {
+        "text": "Es todavía muy joven.",
+        "translation": "He's still very young.",
+        "cloze": "todavía"
+      }
+    ]
+  },
+  {
+    "lemma": "salir",
+    "gloss": "to go out; to leave",
+    "pos": "verb",
+    "forms": [
+      "salir",
+      "salgo",
+      "sales",
+      "sale",
+      "salimos",
+      "salen",
+      "salí",
+      "salió",
+      "sal",
+      "salga"
+    ],
+    "notes": "Irregular: salgo, ¡sal! salir con = to go out with, to date.",
+    "sentences": [
+      {
+        "text": "Salgo a las cinco.",
+        "translation": "I leave at five.",
+        "cloze": "Salgo"
+      },
+      {
+        "text": "¿Sales esta noche?",
+        "translation": "Are you going out tonight?",
+        "cloze": "Sales"
+      },
+      {
+        "text": "El tren sale a las ocho.",
+        "translation": "The train leaves at eight.",
+        "cloze": "sale"
+      },
+      {
+        "text": "Ella salió de casa temprano.",
+        "translation": "She left home early.",
+        "cloze": "salió"
+      }
+    ]
+  },
+  {
+    "lemma": "hermano",
+    "gloss": "brother",
+    "pos": "noun",
+    "forms": [
+      "hermano",
+      "hermanos",
+      "hermana",
+      "hermanas"
+    ],
+    "notes": "hermana = sister. hermanos = brothers, or brothers and sisters.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Mi hermano vive en Lima.",
+        "translation": "My brother lives in Lima.",
+        "cloze": "hermano"
+      },
+      {
+        "text": "¿Tienes hermanos?",
+        "translation": "Do you have brothers or sisters?",
+        "cloze": "hermanos"
+      },
+      {
+        "text": "Mi hermana es mayor que yo.",
+        "translation": "My sister is older than me.",
+        "cloze": "hermana"
+      }
+    ]
+  },
+  {
+    "lemma": "pensar",
+    "gloss": "to think",
+    "pos": "verb",
+    "forms": [
+      "pensar",
+      "pienso",
+      "piensas",
+      "piensa",
+      "pensamos",
+      "piensan",
+      "pensé",
+      "pensaba",
+      "pensando"
+    ],
+    "notes": "e changes to ie: pienso, piensas. pensar en = to think about.",
+    "sentences": [
+      {
+        "text": "¿Qué piensas?",
+        "translation": "What do you think?",
+        "cloze": "piensas"
+      },
+      {
+        "text": "Estoy pensando en ti.",
+        "translation": "I'm thinking about you.",
+        "cloze": "pensando"
+      },
+      {
+        "text": "Pensé que no venías.",
+        "translation": "I thought you weren't coming.",
+        "cloze": "Pensé"
+      },
+      {
+        "text": "Lo voy a pensar.",
+        "translation": "I'm going to think about it.",
+        "cloze": "pensar"
+      }
+    ]
+  },
+  {
+    "lemma": "cabeza",
+    "gloss": "head",
+    "pos": "noun",
+    "forms": [
+      "cabeza",
+      "cabezas"
+    ],
+    "notes": "Me duele la cabeza = I have a headache.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Me duele la cabeza.",
+        "translation": "I have a headache.",
+        "cloze": "cabeza"
+      },
+      {
+        "text": "Usa la cabeza.",
+        "translation": "Use your head.",
+        "cloze": "cabeza"
+      },
+      {
+        "text": "Dos cabezas piensan mejor que una.",
+        "translation": "Two heads are better than one.",
+        "cloze": "cabezas"
+      }
+    ]
+  },
+  {
+    "lemma": "cariño",
+    "gloss": "affection; (to a person) honey, dear",
+    "pos": "noun",
+    "forms": [
+      "cariño"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Hola, cariño.",
+        "translation": "Hi, honey.",
+        "cloze": "cariño"
+      },
+      {
+        "text": "Le tengo mucho cariño.",
+        "translation": "I'm very fond of him.",
+        "cloze": "cariño"
+      },
+      {
+        "text": "Cariño, ¿dónde estás?",
+        "translation": "Honey, where are you?",
+        "cloze": "Cariño"
+      }
+    ]
+  },
+  {
+    "lemma": "cualquier",
+    "gloss": "any; whatever",
+    "pos": "det",
+    "forms": [
+      "cualquier",
+      "cualquiera"
+    ],
+    "notes": "Before a noun: cualquier. Alone: cualquiera (anyone, any one).",
+    "sentences": [
+      {
+        "text": "Llámame a cualquier hora.",
+        "translation": "Call me at any time.",
+        "cloze": "cualquier"
+      },
+      {
+        "text": "Cualquier cosa es mejor que esto.",
+        "translation": "Anything is better than this.",
+        "cloze": "Cualquier"
+      },
+      {
+        "text": "Cualquiera puede hacerlo.",
+        "translation": "Anyone can do it.",
+        "cloze": "Cualquiera"
+      }
+    ]
+  },
+  {
+    "lemma": "forma",
+    "gloss": "way; form; shape",
+    "pos": "noun",
+    "forms": [
+      "forma",
+      "formas"
+    ],
+    "notes": "de todas formas = anyway. estar en forma = to be fit.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "No hay otra forma.",
+        "translation": "There's no other way.",
+        "cloze": "forma"
+      },
+      {
+        "text": "De todas formas, gracias.",
+        "translation": "Thanks anyway.",
+        "cloze": "formas"
+      },
+      {
+        "text": "Tiene forma de corazón.",
+        "translation": "It's heart-shaped.",
+        "cloze": "forma"
+      }
+    ]
+  },
+  {
+    "lemma": "mientras",
+    "gloss": "while",
+    "pos": "conj",
+    "forms": [
+      "mientras"
+    ],
+    "notes": "mientras tanto = meanwhile.",
+    "sentences": [
+      {
+        "text": "Leo mientras como.",
+        "translation": "I read while I eat.",
+        "cloze": "mientras"
+      },
+      {
+        "text": "Mientras tanto, espera aquí.",
+        "translation": "Meanwhile, wait here.",
+        "cloze": "Mientras"
+      },
+      {
+        "text": "Mientras tú duermes, yo trabajo.",
+        "translation": "While you sleep, I work.",
+        "cloze": "Mientras"
+      }
+    ]
+  },
+  {
+    "lemma": "lado",
+    "gloss": "side",
+    "pos": "noun",
+    "forms": [
+      "lado",
+      "lados"
+    ],
+    "notes": "al lado de = next to. por otro lado = on the other hand.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Vivo al lado del parque.",
+        "translation": "I live next to the park.",
+        "cloze": "lado"
+      },
+      {
+        "text": "Siéntate a mi lado.",
+        "translation": "Sit next to me.",
+        "cloze": "lado"
+      },
+      {
+        "text": "Hay árboles a los dos lados.",
+        "translation": "There are trees on both sides.",
+        "cloze": "lados"
+      }
+    ]
+  },
+  {
+    "lemma": "caso",
+    "gloss": "case",
+    "pos": "noun",
+    "forms": [
+      "caso",
+      "casos"
+    ],
+    "notes": "en ese caso = in that case. hacer caso = to pay attention, to listen.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "En ese caso, me voy.",
+        "translation": "In that case, I'm leaving.",
+        "cloze": "caso"
+      },
+      {
+        "text": "No me haces caso.",
+        "translation": "You don't listen to me.",
+        "cloze": "caso"
+      },
+      {
+        "text": "Hay muchos casos así.",
+        "translation": "There are many cases like this.",
+        "cloze": "casos"
+      }
+    ]
+  },
+  {
+    "lemma": "primero",
+    "gloss": "first",
+    "pos": "adj",
+    "forms": [
+      "primero",
+      "primera",
+      "primeros",
+      "primeras",
+      "primer"
+    ],
+    "notes": "Before a masculine singular noun: primer. Also an adverb: primero = first (of all).",
+    "sentences": [
+      {
+        "text": "Es mi primer día.",
+        "translation": "It's my first day.",
+        "cloze": "primer"
+      },
+      {
+        "text": "Es la primera vez.",
+        "translation": "It's the first time.",
+        "cloze": "primera"
+      },
+      {
+        "text": "Primero, lávate las manos.",
+        "translation": "First, wash your hands.",
+        "cloze": "Primero"
+      }
+    ]
+  },
+  {
+    "lemma": "genial",
+    "gloss": "great; brilliant",
+    "pos": "adj",
+    "forms": [
+      "genial",
+      "geniales"
+    ],
+    "sentences": [
+      {
+        "text": "¡Es genial!",
+        "translation": "It's great!",
+        "cloze": "genial"
+      },
+      {
+        "text": "Fue una noche genial.",
+        "translation": "It was a great night.",
+        "cloze": "genial"
+      },
+      {
+        "text": "Tus ideas son geniales.",
+        "translation": "Your ideas are brilliant.",
+        "cloze": "geniales"
+      }
+    ]
+  },
+  {
+    "lemma": "suponer",
+    "gloss": "to suppose",
+    "pos": "verb",
+    "forms": [
+      "suponer",
+      "supongo",
+      "supones",
+      "supone",
+      "suponía",
+      "supuesto"
+    ],
+    "notes": "Irregular: supongo. por supuesto = of course.",
+    "sentences": [
+      {
+        "text": "Supongo que sí.",
+        "translation": "I suppose so.",
+        "cloze": "Supongo"
+      },
+      {
+        "text": "Por supuesto.",
+        "translation": "Of course.",
+        "cloze": "supuesto"
+      },
+      {
+        "text": "Se supone que viene hoy.",
+        "translation": "He's supposed to come today.",
+        "cloze": "supone"
+      }
+    ]
+  },
+  {
+    "lemma": "pues",
+    "gloss": "well; then",
+    "pos": "conj",
+    "forms": [
+      "pues"
+    ],
+    "notes": "Very common at the start of a sentence: Pues no sé (Well, I don't know).",
+    "sentences": [
+      {
+        "text": "Pues no sé.",
+        "translation": "Well, I don't know.",
+        "cloze": "Pues"
+      },
+      {
+        "text": "¿No quieres? Pues me lo como yo.",
+        "translation": "You don't want it? Then I'll eat it.",
+        "cloze": "Pues"
+      },
+      {
+        "text": "Pues claro que sí.",
+        "translation": "Well, of course.",
+        "cloze": "Pues"
+      }
+    ]
+  },
+  {
+    "lemma": "adiós",
+    "gloss": "goodbye; bye",
+    "pos": "interj",
+    "forms": [
+      "adiós"
+    ],
+    "sentences": [
+      {
+        "text": "Adiós, hasta mañana.",
+        "translation": "Goodbye, see you tomorrow.",
+        "cloze": "Adiós"
+      },
+      {
+        "text": "Dile adiós a la abuela.",
+        "translation": "Say goodbye to Grandma.",
+        "cloze": "adiós"
+      },
+      {
+        "text": "Se fue sin decir adiós.",
+        "translation": "He left without saying goodbye.",
+        "cloze": "adiós"
+      }
+    ]
+  },
+  {
+    "lemma": "persona",
+    "gloss": "person",
+    "pos": "noun",
+    "forms": [
+      "persona",
+      "personas"
+    ],
+    "notes": "Always feminine, also for a man: Él es una buena persona.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Es una buena persona.",
+        "translation": "He's a good person.",
+        "cloze": "persona"
+      },
+      {
+        "text": "Hay cinco personas en la casa.",
+        "translation": "There are five people in the house.",
+        "cloze": "personas"
+      },
+      {
+        "text": "Eres la persona más importante para mí.",
+        "translation": "You're the most important person to me.",
+        "cloze": "persona"
+      }
+    ]
+  },
+  {
+    "lemma": "volver",
+    "gloss": "to come back; to go back",
+    "pos": "verb",
+    "forms": [
+      "volver",
+      "vuelvo",
+      "vuelves",
+      "vuelve",
+      "volvemos",
+      "vuelven",
+      "volví",
+      "volvió",
+      "vuelto"
+    ],
+    "notes": "o changes to ue: vuelvo. Irregular: vuelto. volver a + verb = to do again: volvió a llamar.",
+    "sentences": [
+      {
+        "text": "Vuelvo enseguida.",
+        "translation": "I'll be right back.",
+        "cloze": "Vuelvo"
+      },
+      {
+        "text": "¿Cuándo vuelves?",
+        "translation": "When are you coming back?",
+        "cloze": "vuelves"
+      },
+      {
+        "text": "Volvió a llamar.",
+        "translation": "He called again.",
+        "cloze": "Volvió"
+      },
+      {
+        "text": "Ya ha vuelto a casa.",
+        "translation": "He's already back home.",
+        "cloze": "vuelto"
+      }
+    ]
+  },
+  {
+    "lemma": "quizá",
+    "gloss": "maybe; perhaps",
+    "pos": "adv",
+    "forms": [
+      "quizá",
+      "quizás"
+    ],
+    "notes": "Both spellings are correct.",
+    "sentences": [
+      {
+        "text": "Quizá llueva hoy.",
+        "translation": "Maybe it'll rain today.",
+        "cloze": "Quizá"
+      },
+      {
+        "text": "Quizás tienes razón.",
+        "translation": "Maybe you're right.",
+        "cloze": "Quizás"
+      },
+      {
+        "text": "Quizá no venga.",
+        "translation": "Maybe he won't come.",
+        "cloze": "Quizá"
+      }
+    ]
+  },
+  {
+    "lemma": "contra",
+    "gloss": "against",
+    "pos": "prep",
+    "forms": [
+      "contra"
+    ],
+    "sentences": [
+      {
+        "text": "Estoy contra la guerra.",
+        "translation": "I'm against the war.",
+        "cloze": "contra"
+      },
+      {
+        "text": "No tengo nada contra ti.",
+        "translation": "I have nothing against you.",
+        "cloze": "contra"
+      },
+      {
+        "text": "Jugamos contra México.",
+        "translation": "We're playing against Mexico.",
+        "cloze": "contra"
+      }
+    ]
+  },
+  {
+    "lemma": "camino",
+    "gloss": "way; road; path",
+    "pos": "noun",
+    "forms": [
+      "camino",
+      "caminos"
+    ],
+    "notes": "Also a form of caminar: camino = I walk.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "¿Sabes el camino?",
+        "translation": "Do you know the way?",
+        "cloze": "camino"
+      },
+      {
+        "text": "Estoy en camino.",
+        "translation": "I'm on my way.",
+        "cloze": "camino"
+      },
+      {
+        "text": "Todos los caminos llevan a Roma.",
+        "translation": "All roads lead to Rome.",
+        "cloze": "caminos"
+      }
+    ]
+  },
+  {
+    "lemma": "durante",
+    "gloss": "during; for",
+    "pos": "prep",
+    "forms": [
+      "durante"
+    ],
+    "sentences": [
+      {
+        "text": "Dormí durante el viaje.",
+        "translation": "I slept during the trip.",
+        "cloze": "durante"
+      },
+      {
+        "text": "Viví allí durante diez años.",
+        "translation": "I lived there for ten years.",
+        "cloze": "durante"
+      },
+      {
+        "text": "No hables durante la película.",
+        "translation": "Don't talk during the movie.",
+        "cloze": "durante"
+      }
+    ]
+  },
+  {
+    "lemma": "manera",
+    "gloss": "way; manner",
+    "pos": "noun",
+    "forms": [
+      "manera",
+      "maneras"
+    ],
+    "notes": "de ninguna manera = no way. de todas maneras = anyway.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Lo hago a mi manera.",
+        "translation": "I do it my way.",
+        "cloze": "manera"
+      },
+      {
+        "text": "¡De ninguna manera!",
+        "translation": "No way!",
+        "cloze": "manera"
+      },
+      {
+        "text": "Hay muchas maneras de hacerlo.",
+        "translation": "There are many ways to do it.",
+        "cloze": "maneras"
+      }
+    ]
+  },
+  {
+    "lemma": "muerto",
+    "gloss": "dead",
+    "pos": "adj",
+    "forms": [
+      "muerto",
+      "muerta",
+      "muertos",
+      "muertas"
+    ],
+    "notes": "Also the past participle of morir: ha muerto (he has died). muerto de hambre = starving.",
+    "sentences": [
+      {
+        "text": "El pez está muerto.",
+        "translation": "The fish is dead.",
+        "cloze": "muerto"
+      },
+      {
+        "text": "Estoy muerta de hambre.",
+        "translation": "I'm starving.",
+        "cloze": "muerta"
+      },
+      {
+        "text": "Las flores están muertas.",
+        "translation": "The flowers are dead.",
+        "cloze": "muertas"
+      }
+    ]
+  },
+  {
+    "lemma": "rápido",
+    "gloss": "fast; quick",
+    "pos": "adj",
+    "forms": [
+      "rápido",
+      "rápida",
+      "rápidos",
+      "rápidas"
+    ],
+    "notes": "Also an adverb: ¡Ven rápido! (Come quickly!)",
+    "sentences": [
+      {
+        "text": "Es un coche muy rápido.",
+        "translation": "It's a very fast car.",
+        "cloze": "rápido"
+      },
+      {
+        "text": "¡Rápido, ven aquí!",
+        "translation": "Quick, come here!",
+        "cloze": "Rápido"
+      },
+      {
+        "text": "Fue una visita rápida.",
+        "translation": "It was a quick visit.",
+        "cloze": "rápida"
+      }
+    ]
+  },
+  {
+    "lemma": "cuál",
+    "gloss": "which; what",
+    "pos": "pron",
+    "forms": [
+      "cuál",
+      "cuáles"
+    ],
+    "notes": "¿Cuál es ...? often means 'What is ...?': ¿Cuál es tu nombre?",
+    "sentences": [
+      {
+        "text": "¿Cuál quieres?",
+        "translation": "Which one do you want?",
+        "cloze": "Cuál"
+      },
+      {
+        "text": "¿Cuál es tu color favorito?",
+        "translation": "What's your favorite color?",
+        "cloze": "Cuál"
+      },
+      {
+        "text": "¿Cuáles son tus libros?",
+        "translation": "Which ones are your books?",
+        "cloze": "Cuáles"
+      }
+    ]
+  },
+  {
+    "lemma": "ayuda",
+    "gloss": "help",
+    "pos": "noun",
+    "forms": [
+      "ayuda"
+    ],
+    "notes": "¡Ayuda! = Help! The verb is ayudar.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Necesito tu ayuda.",
+        "translation": "I need your help.",
+        "cloze": "ayuda"
+      },
+      {
+        "text": "Gracias por tu ayuda.",
+        "translation": "Thanks for your help.",
+        "cloze": "ayuda"
+      },
+      {
+        "text": "¿Necesitas ayuda?",
+        "translation": "Do you need help?",
+        "cloze": "ayuda"
+      }
+    ]
+  }
+]
