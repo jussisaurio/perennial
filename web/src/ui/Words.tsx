@@ -14,7 +14,7 @@ import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
 import { recall, wordState, type WordState } from "./stats";
 
-type Filter = "all" | WordState | "suspended";
+type Filter = "all" | WordState | "suspended" | "mine";
 type Lexeme = Word;
 const SKILL_ORDER = ["read", "listen", "write"];
 
@@ -75,7 +75,9 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
         .filter((w) => !byLex.get(w.id)?.some((m) => m.reps > 0))
         .sort((a, b) => a.rank - b.rank)
         .slice(0, 500);
-    const base = filter === "new" ? notStarted() : learner.studied;
+    // Words from your own texts, newest first (user words are ranked in the order added).
+    const mine = () => [...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => b.rank - a.rank);
+    const base = filter === "new" ? notStarted() : filter === "mine" ? mine() : learner.studied;
     return base
       .filter((l) => l.status !== "ignored")
       .map((l) => {
@@ -84,10 +86,10 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
       })
       .filter(({ l, state }) => {
         if (filter === "suspended") return l.status === "paused";
-        if (filter !== "all" && state !== filter) return false;
+        if (filter !== "all" && filter !== "mine" && state !== filter) return false;
         return !needle || l.lemma.toLocaleLowerCase().includes(needle) || l.gloss.toLocaleLowerCase().includes(needle) || l.forms.some((f) => f.includes(needle));
       })
-      .sort((a, b) => (a.l.rank ?? 1e9) - (b.l.rank ?? 1e9) || a.l.lemma.localeCompare(b.l.lemma));
+      .sort((a, b) => (filter === "mine" ? 0 : (a.l.rank ?? 1e9) - (b.l.rank ?? 1e9) || a.l.lemma.localeCompare(b.l.lemma)));
   }, [learner, q, filter]);
 
   return (
@@ -106,6 +108,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
           <option value="learning">Learning</option>
           <option value="new">New</option>
           <option value="suspended">Paused</option>
+          <option value="mine">From my texts</option>
         </select>
       </div>
       <p className="muted small">{plural(rows.length, "word")}</p>
