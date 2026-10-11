@@ -2,7 +2,7 @@
 // studied, and Chrome measuring the heaviest screens with the CPU slowed 4×
 // (roughly a mid-range phone). Needs the local stack (`docker compose up -d`).
 //
-//   bun perf/ui.ts [--cpu 4]
+//   bun perf/ui.ts [--cpu 4] [--reduced-motion]
 //
 // Writes to perf/out/: report.md (per screen: long tasks, frame times, JS heap,
 // DOM size) and one CPU profile per screen (.cpuprofile: open in Chrome
@@ -14,6 +14,8 @@ import { join } from "node:path";
 
 const i = process.argv.indexOf("--cpu");
 const CPU = i > 0 ? Number(process.argv[i + 1]) : 4;
+// --reduced-motion: compare with animations off (the app honours the setting).
+const REDUCED = process.argv.includes("--reduced-motion");
 const WEB = join(import.meta.dir, "..");
 const OUT = join(import.meta.dir, "out");
 const PORT = 19900 + Math.floor(Math.random() * 1000);
@@ -100,7 +102,7 @@ async function measure(page: Page, cdp: CDPSession, screen: string, action: () =
 }
 
 const browser = await chromium.launch({ args: ["--mute-audio", "--enable-unsafe-swiftshader"] });
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: REDUCED ? "reduce" : "no-preference" });
 page.setDefaultTimeout(60_000);
 await page.addInitScript(PROBE);
 await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
@@ -161,7 +163,7 @@ results.push(await measure(page, cdp, "3D walk: open and walk", async () => {
 await browser.close();
 server.kill();
 
-const report = `# UI performance (production build, CPU ${CPU}× slower, every Spanish deck word studied)
+const report = `# UI performance (production build, CPU ${CPU}× slower, every Spanish deck word studied${REDUCED ? ", reduced motion" : ""})
 
 | Screen | Took ms | Long tasks | Longest ms | Blocked ms | p95 frame ms | Frames > 50 ms | JS heap MB | DOM nodes |
 |---|---|---|---|---|---|---|---|---|
