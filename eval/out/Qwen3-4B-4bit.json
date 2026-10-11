@@ -1,0 +1,1284 @@
+{
+  "model": "mlx-community/Qwen3-4B-4bit",
+  "results": [
+    {
+      "lang": "es",
+      "kind": "beginner",
+      "ms": 3043.048709,
+      "words": [
+        {
+          "lemma": "de",
+          "gloss": "of; from",
+          "pos": "prep",
+          "forms": [
+            "de",
+            "que",
+            "no",
+            "a",
+            "la",
+            "el",
+            "y",
+            "es",
+            "en",
+            "lo",
+            "un",
+            "por"
+          ],
+          "notes": "used to indicate possession or origin",
+          "examples": [
+            {
+              "text": "es de ella",
+              "translation": "it is hers",
+              "cloze": "es"
+            },
+            {
+              "text": "es de España",
+              "translation": "it is from Spain",
+              "cloze": "es"
+            },
+            {
+              "text": "es de la casa",
+              "translation": "it is from the house",
+              "cloze": "es"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 3,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 3.3333333333333335
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "intermediate",
+      "ms": 14498.792,
+      "words": [
+        {
+          "lemma": "volver",
+          "gloss": "to return; to go back",
+          "pos": "verb",
+          "forms": [
+            "volver",
+            "camino",
+            "contra",
+            "rápido",
+            "persona",
+            "muerto",
+            "esas",
+            "quizá",
+            "durante",
+            "hablando",
+            "manera",
+            "cúal",
+            "por",
+            "qué",
+            "es",
+            "me",
+            "una",
+            "los",
+            "se",
+            "te",
+            "con",
+            "para",
+            "está",
+            "mi",
+            "pero",
+            "sí",
+            "si",
+            "bien",
+            "eso",
+            "su",
+            "las",
+            "yo",
+            "del",
+            "como",
+            "aquí",
+            "tu",
+            "al",
+            "más",
+            "le",
+            "esto",
+            "todo",
+            "ya",
+            "estoy",
+            "ahora",
+            "muy",
+            "ha",
+            "esta",
+            "así",
+            "vamos",
+            "algo",
+            "hay",
+            "bueno",
+            "tengo",
+            "él",
+            "cuando",
+            "estás",
+            "sé",
+            "tú",
+            "nos",
+            "nada",
+            "cómo",
+            "este",
+            "o",
+            "he",
+            "ser",
+            "tiene",
+            "puedo",
+            "ella",
+            "quiere",
+            "hacer",
+            "fue",
+            "gracias",
+            "vez",
+            "era",
+            "soy",
+            "solo",
+            "todos",
+            "porque",
+            "son",
+            "tienes",
+            "creo",
+            "voy",
+            "sabes",
+            "estaba",
+            "puede",
+            "eres",
+            "ese",
+            "usted",
+            "entonces",
+            "hola",
+            "solo",
+            "verdad",
+            "casa",
+            "tan",
+            "quién",
+            "sus",
+            "tiempo",
+            "dos",
+            "esa",
+            "nunca",
+            "dónde",
+            "va",
+            "oh",
+            "favor",
+            "mucho",
+            "mí",
+            "quieres",
+            "siento",
+            "señor",
+            "mejor",
+            "hace",
+            "has",
+            "decir",
+            "también",
+            "sobre",
+            "dios",
+            "sin",
+            "tenemos",
+            "están",
+            "ti",
+            "puedes",
+            "ver",
+            "hombre",
+            "vida",
+            "alguien",
+            "cosas",
+            "siempre",
+            "hasta",
+            "ahí",
+            "ir",
+            "años",
+            "antes",
+            "estar",
+            "ni",
+            "poco",
+            "día",
+            "uno",
+            "noche",
+            "hecho",
+            "mis",
+            "estamos",
+            "otra",
+            "acuerdo",
+            "trabajo",
+            "nosotros",
+            "parece",
+            "gente",
+            "sea",
+            "padre",
+            "mira",
+            "mismo",
+            "dijo",
+            "esas",
+            "quizá",
+            "durante",
+            "hablando",
+            "manera",
+            "cúal",
+            "por",
+            "qué",
+            "es",
+            "me",
+            "una",
+            "los",
+            "se",
+            "te",
+            "con",
+            "para",
+            "está",
+            "mi",
+            "pero",
+            "sí",
+            "si",
+            "bien",
+            "eso",
+            "su",
+            "las",
+            "yo",
+            "del",
+            "como",
+            "aquí",
+            "tu",
+            "al",
+            "más",
+            "le",
+            "esto",
+            "todo",
+            "ya",
+            "estoy",
+            "ahora",
+            "muy",
+            "ha",
+            "esta",
+            "así",
+            "vamos",
+            "algo",
+            "hay",
+            "bueno",
+            "tengo",
+            "él",
+            "cuando",
+            "estás",
+            "sé",
+            "tú",
+            "nos",
+            "nada",
+            "cómo",
+            "este",
+            "o",
+            "he",
+            "ser",
+            "tiene",
+            "puedo",
+            "ella",
+            "quiere",
+            "hacer",
+            "fue",
+            "gracias",
+            "vez",
+            "era",
+            "soy",
+            "solo",
+            "todos",
+            "porque",
+            "son",
+            "tienes",
+            "creo",
+            "voy",
+            "sabes",
+            "estaba",
+            "puede",
+            "eres",
+            "ese",
+            "usted",
+            "entonces",
+            "hola",
+            "solo",
+            "verdad",
+            "casa",
+            "tan",
+            "quién",
+            "sus",
+            "tiempo",
+            "dos",
+            "esa",
+            "nunca",
+            "dónde",
+            "va",
+            "oh",
+            "favor",
+            "mucho",
+            "mí",
+            "quieres",
+            "siento",
+            "señor",
+            "mejor",
+            "hape",
+            "has",
+            "decir",
+            "también",
+            "sobre",
+            "dios",
+            "sin",
+            "tenemos",
+            "están",
+            "ti",
+            "puedes",
+            "ver",
+            "hombre",
+            "vida",
+            "alguien",
+            "cosas",
+            "siempre",
+            "hasta",
+            "ahí",
+            "ir",
+            "años",
+            "antes",
+            "estar",
+            "ni",
+            "poco",
+            "día",
+            "uno",
+            "noche",
+            "hecho",
+            "mis",
+            "estamos",
+            "otra",
+            "acuerdo",
+            "trabajo",
+            "nosotros",
+            "parece",
+            "gente",
+            "sea",
+            "padre",
+            "mira",
+            "mismo",
+            "dijo"
+          ],
+          "notes": "'volver' is a common verb meaning 'to return' or 'to go back'; it can also mean 'to return to a place' or 'to return to a state'",
+          "examples": [
+            {
+              "text": "Voy a volver a casa.",
+              "translation": "I am going to go back home.",
+              "cloze": "volver"
+            },
+            {
+              "text": "El perro volverá a su jaula.",
+              "translation": "The dog will return to its cage.",
+              "cloze": "volver"
+            },
+            {
+              "text": "Volver a empezar es importante.",
+              "translation": "To start over is important.",
+              "cloze": "volver"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 3,
+        "threePerWord": 1,
+        "clozeOk": 0.6666666666666666,
+        "avgLen": 5.333333333333333,
+        "inVocab": 0.6875
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "mine",
+      "ms": 7836.459375000002,
+      "words": [
+        {
+          "lemma": "encontré",
+          "gloss": "I found",
+          "pos": "verb",
+          "forms": [
+            "encontré"
+          ],
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "encontré"
+            },
+            {
+              "text": "I found the key under the table.",
+              "translation": "Encontré la llave debajo de la mesa.",
+              "cloze": "encontré"
+            },
+            {
+              "text": "She found the book on the shelf.",
+              "translation": "Ella encontró el libro en la estantería.",
+              "cloze": "encontró"
+            }
+          ]
+        },
+        {
+          "lemma": "abandonado",
+          "gloss": "abandoned",
+          "pos": "adjective",
+          "forms": [
+            "abandonado"
+          ],
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "abandonado"
+            },
+            {
+              "text": "The house is abandoned.",
+              "translation": "La casa está abandonada.",
+              "cloze": "abandonado"
+            },
+            {
+              "text": "The boat was abandoned on the shore.",
+              "translation": "El barco estaba abandonado en la playa.",
+              "cloze": "abandonado"
+            }
+          ]
+        },
+        {
+          "lemma": "puerto",
+          "gloss": "port",
+          "pos": "noun",
+          "forms": [
+            "puerto"
+          ],
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "puerto"
+            },
+            {
+              "text": "The ship is in the port.",
+              "translation": "El barco está en el puerto.",
+              "cloze": "puerto"
+            },
+            {
+              "text": "We went to the port for the festival.",
+              "translation": "Vamos al puerto para el festival.",
+              "cloze": "puerto"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 9,
+        "threePerWord": 1,
+        "clozeOk": 0.3333333333333333,
+        "avgLen": 7,
+        "keptOriginal": 1
+      }
+    },
+    {
+      "lang": "ja",
+      "kind": "beginner",
+      "ms": 1155.757458,
+      "words": [
+        {
+          "lemma": "",
+          "gloss": "",
+          "pos": "noun|verb|adj|adv|pron|prep|conj|det|num|particle|phrase",
+          "forms": [
+            ""
+          ],
+          "examples": [
+            {
+              "text": "",
+              "translation": "",
+              "cloze": ""
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 1,
+        "threePerWord": 0,
+        "clozeOk": 0,
+        "avgLen": 0
+      }
+    },
+    {
+      "lang": "ja",
+      "kind": "intermediate",
+      "ms": 4281.717375,
+      "words": [
+        {
+          "lemma": "ヶ月",
+          "gloss": "month; month period",
+          "pos": "noun",
+          "forms": [
+            "ヶ月",
+            "多",
+            "１人",
+            "番号",
+            "状態",
+            "来い",
+            "開",
+            "上手",
+            "済",
+            "場合",
+            "刑務",
+            "今度"
+          ],
+          "notes": "Used for time periods, often in contexts like 'how many months' or 'a month period'",
+          "examples": [
+            {
+              "text": "彼は退職後、3ヶ月の休暇を取った",
+              "translation": "He took a three-month vacation after retirement",
+              "cloze": "3ヶ月"
+            },
+            {
+              "text": "この薬は1ヶ月続けたら効く",
+              "translation": "This medicine will work if taken for a month",
+              "cloze": "1ヶ月"
+            },
+            {
+              "text": "彼女は1ヶ月前に会社を辞めた",
+              "translation": "She left the company a month ago",
+              "cloze": "1ヶ月"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 3,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 10.666666666666666,
+        "inVocab": 0.21875
+      }
+    },
+    {
+      "lang": "ja",
+      "kind": "mine",
+      "ms": 8399.841583999998,
+      "words": [
+        {
+          "lemma": "財布",
+          "gloss": "wallet",
+          "pos": "noun",
+          "forms": [
+            "財布",
+            "_wallet"
+          ],
+          "examples": [
+            {
+              "text": "昨日、駅の近くで財布を落としてしまった。",
+              "translation": "I dropped my wallet near the station yesterday.",
+              "cloze": "財布"
+            },
+            {
+              "text": "彼女は財布を手に持っていた。",
+              "translation": "She was holding her wallet.",
+              "cloze": "財布"
+            },
+            {
+              "text": "財布は家の中にある。",
+              "translation": "The wallet is in the house.",
+              "cloze": "財布"
+            }
+          ]
+        },
+        {
+          "lemma": "落として",
+          "gloss": "drop (causative)",
+          "pos": "verb",
+          "forms": [
+            "落として",
+            "drop"
+          ],
+          "examples": [
+            {
+              "text": "昨日、駅の近くで財布を落としてしまった。",
+              "translation": "I dropped my wallet near the station yesterday.",
+              "cloze": "落として"
+            },
+            {
+              "text": "彼は本を落としてしまった。",
+              "translation": "He dropped the book.",
+              "cloze": "落として"
+            },
+            {
+              "text": "お前の手が滑って、本を落としてしまった。",
+              "translation": "Your hand slipped, and you dropped the book.",
+              "cloze": "落として"
+            }
+          ]
+        },
+        {
+          "lemma": "駅",
+          "gloss": "station",
+          "pos": "noun",
+          "forms": [
+            "駅",
+            "station"
+          ],
+          "examples": [
+            {
+              "text": "昨日、駅の近くで財布を落としてしまった。",
+              "translation": "I dropped my wallet near the station yesterday.",
+              "cloze": "駅"
+            },
+            {
+              "text": "電車は駅で止まった。",
+              "translation": "The train stopped at the station.",
+              "cloze": "駅"
+            },
+            {
+              "text": "駅の近くにはレストランがある。",
+              "translation": "There is a restaurant near the station.",
+              "cloze": "駅"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 9,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 10,
+        "keptOriginal": 1
+      }
+    },
+    {
+      "lang": "fi",
+      "kind": "beginner",
+      "ms": 103453.932834,
+      "words": [
+        {
+          "lemma": "on",
+          "gloss": "is; exists",
+          "pos": "verb",
+          "forms": [
+            "on",
+            "ei",
+            "ja",
+            "se",
+            "hän",
+            "en",
+            "mitä",
+            " että",
+            "ole",
+            "olen",
+            "oli",
+            "niin"
+          ],
+          "notes": "used for existence and negation",
+          "examples": [
+            {
+              "text": "hän on oikealla paikalla",
+              "translation": "she is in the right place",
+              "cloze": "on"
+            },
+            {
+              "text": "se ei ole oikein",
+              "translation": "it is not right",
+              "cloze": "ei"
+            },
+            {
+              "text": "ja se on oikein",
+              "translation": "and it is right",
+              "cloze": "ja"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 3,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 4
+      }
+    },
+    {
+      "lang": "fi",
+      "kind": "intermediate",
+      "ms": 130888.90695900001,
+      "error": "Error: AI reply was unusable: SyntaxError: JSON Parse error: Unexpected identifier \"midtext\"",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "fi",
+      "kind": "mine",
+      "ms": 6139.913499999966,
+      "words": [
+        {
+          "lemma": "unohdin",
+          "gloss": "I forgot",
+          "pos": "verb",
+          "forms": [
+            "unohdin"
+          ],
+          "examples": [
+            {
+              "text": "Unohdin sateenvarjoni bussiin eilen illalla.",
+              "translation": "I forgot the raincoat bus yesterday afternoon.",
+              "cloze": "unohdin"
+            },
+            {
+              "text": "Minä unohdin löytää sateenvarjoni.",
+              "translation": "I forgot to find the raincoat.",
+              "cloze": "unohdin"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 2,
+        "threePerWord": 0,
+        "clozeOk": 0.5,
+        "avgLen": 4.5,
+        "keptOriginal": 1
+      }
+    },
+    {
+      "lang": "ar",
+      "kind": "beginner",
+      "ms": 1758.9127089999965,
+      "words": [
+        {
+          "lemma": "لا",
+          "gloss": "no; not",
+          "pos": "adv",
+          "forms": [
+            "لا",
+            "هل",
+            "يا"
+          ],
+          "notes": "used for negation; can be an exclamation",
+          "examples": [
+            {
+              "text": "لا أعرف",
+              "translation": "I don't know",
+              "cloze": "أعرف"
+            },
+            {
+              "text": "لا تقلق",
+              "translation": "Don't worry",
+              "cloze": "تقلق"
+            },
+            {
+              "text": "يا له",
+              "translation": "Oh no",
+              "cloze": "له"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 3,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 2
+      }
+    },
+    {
+      "lang": "ar",
+      "kind": "intermediate",
+      "ms": 3233.0944169999566,
+      "words": [
+        {
+          "lemma": "الوحيد",
+          "gloss": "the only; unique",
+          "pos": "noun",
+          "forms": [
+            "الوحيد"
+          ],
+          "notes": "used for things or people that are unique or one in a group",
+          "examples": [
+            {
+              "text": "الشخص هو الأكثر وحيدًا في القسم.",
+              "translation": "The person is the most unique in the section.",
+              "cloze": "الوحيد"
+            },
+            {
+              "text": "الحالة كانت وحيدة في التاريخ.",
+              "translation": "The condition was unique in history.",
+              "cloze": "الوحيد"
+            },
+            {
+              "text": "الكلمة تعني وحيدًا في اللغة.",
+              "translation": "The word means unique in the language.",
+              "cloze": "الوحيد"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 3,
+        "threePerWord": 1,
+        "clozeOk": 0,
+        "avgLen": 5.333333333333333,
+        "inVocab": 0.3125
+      }
+    },
+    {
+      "lang": "ar",
+      "kind": "mine",
+      "ms": 5797.153416999965,
+      "words": [
+        {
+          "lemma": "نسيت",
+          "gloss": "I forgot",
+          "pos": "verb",
+          "forms": [
+            "نسيت"
+          ],
+          "examples": [
+            {
+              "text": "نسيت كلمة السر",
+              "translation": "I forgot the password",
+              "cloze": "نسيت"
+            },
+            {
+              "text": "نسيت غدًا",
+              "translation": "I forgot tomorrow",
+              "cloze": "نسيت"
+            }
+          ]
+        },
+        {
+          "lemma": "مفاتيحي",
+          "gloss": "my keys",
+          "pos": "noun",
+          "forms": [
+            "مفاتيحي"
+          ],
+          "examples": [
+            {
+              "text": "أحتاج مفاتيحي",
+              "translation": "I need my keys",
+              "cloze": "مفاتيحي"
+            },
+            {
+              "text": "أنا أبحث عن مفاتيحي",
+              "translation": "I am looking for my keys",
+              "cloze": "مفاتيحي"
+            }
+          ]
+        },
+        {
+          "lemma": "السيارة",
+          "gloss": "the car",
+          "pos": "noun",
+          "forms": [
+            "السيارة"
+          ],
+          "examples": [
+            {
+              "text": "أنا في السيارة",
+              "translation": "I am in the car",
+              "cloze": "السيارة"
+            },
+            {
+              "text": "السيارة حديثة",
+              "translation": "The car is new",
+              "cloze": "السيارة"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 6,
+        "threePerWord": 0,
+        "clozeOk": 1,
+        "avgLen": 2.6666666666666665,
+        "keptOriginal": 0
+      }
+    },
+    {
+      "lang": "th",
+      "kind": "beginner",
+      "ms": 1802.4870840000222,
+      "words": [
+        {
+          "lemma": "เธอ",
+          "gloss": "she; pron",
+          "pos": "pron",
+          "forms": [
+            "เธอ",
+            "นี่"
+          ],
+          "notes": "refers to a female person",
+          "examples": [
+            {
+              "text": "เธอไปไหน",
+              "translation": "where is she",
+              "cloze": "เธอ"
+            },
+            {
+              "text": "เธอเป็นนักเรียน",
+              "translation": "she is a student",
+              "cloze": "เธอ"
+            },
+            {
+              "text": "เธอต้องไปเรียน",
+              "translation": "she has to go to school",
+              "cloze": "เธอ"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 1,
+        "examples": 3,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 3.3333333333333335
+      }
+    },
+    {
+      "lang": "th",
+      "kind": "intermediate",
+      "ms": 18449.33579099999,
+      "words": [
+        {
+          "lemma": "ระวัง",
+          "gloss": "watch out; be careful",
+          "pos": "verb",
+          "forms": [
+            "ระวัง"
+          ],
+          "examples": [
+            {
+              "text": "ไม่ต้องระวังนะ ฉันจะดูแล",
+              "translation": "Don't worry, I'll take care",
+              "cloze": "ระวัง"
+            },
+            {
+              "text": "ต้องระวังนะ ไม่ควรทำแบบนี้",
+              "translation": "You need to be careful, you shouldn't do this",
+              "cloze": "ระวัง"
+            },
+            {
+              "text": "เธอไม่ระวัง ทำให้เสียชีวิต",
+              "translation": "She was careless, it caused her death",
+              "cloze": "ระวัง"
+            }
+          ]
+        },
+        {
+          "lemma": "let",
+          "gloss": "let (someone do something)",
+          "pos": "verb",
+          "forms": [
+            "let"
+          ],
+          "examples": [
+            {
+              "text": "ฉันขอให้เธอ let ไป",
+              "translation": "I asked her to let go",
+              "cloze": "let"
+            },
+            {
+              "text": "เขา let ฉันไปก่อน",
+              "translation": "He let me go first",
+              "cloze": "let"
+            },
+            {
+              "text": "อย่า let ฉันทำแบบนี้อีก",
+              "translation": "Don't let me do this again",
+              "cloze": "let"
+            }
+          ]
+        },
+        {
+          "lemma": "โอ๊ะ",
+          "gloss": "oh (expression of surprise)",
+          "pos": "interjection",
+          "forms": [
+            "โอ๊ะ"
+          ],
+          "examples": [
+            {
+              "text": "โอ๊ะ ฉันดีมาก",
+              "translation": "Oh, I'm fine",
+              "cloze": "โอ๊ะ"
+            },
+            {
+              "text": "โอ๊ะ นี่คือเรื่องใหญ่",
+              "translation": "Oh, this is a big deal",
+              "cloze": "โอ๊ะ"
+            },
+            {
+              "text": "โอ๊ะ ฉันไม่รู้เรื่องนี้",
+              "translation": "Oh, I don't know about this",
+              "cloze": "โอ๊ะ"
+            }
+          ]
+        },
+        {
+          "lemma": "เข้าใจแล้ว",
+          "gloss": "understand",
+          "pos": "verb",
+          "forms": [
+            "เข้าใจแล้ว"
+          ],
+          "examples": [
+            {
+              "text": "ฉันเข้าใจแล้ว แล้วค่อยคุยกัน",
+              "translation": "I understand, let's talk later",
+              "cloze": "เข้าใจแล้ว"
+            },
+            {
+              "text": "เธอเข้าใจแล้ว แล้วค่อยเริ่ม",
+              "translation": "You understand, let's start now",
+              "cloze": "เข้าใจแล้ว"
+            },
+            {
+              "text": "ไม่เข้าใจแล้ว อยากถามอีก",
+              "translation": "I don't understand, I want to ask again",
+              "cloze": "เข้าใจแล้ว"
+            }
+          ]
+        },
+        {
+          "lemma": "if",
+          "gloss": "if",
+          "pos": "conjunction",
+          "forms": [
+            "if"
+          ],
+          "examples": [
+            {
+              "text": "ถ้าเธอไป ฉันก็ไป",
+              "translation": "If you go, I'll go",
+              "cloze": "if"
+            },
+            {
+              "text": "if ฉันมีเวลา ฉันจะไป",
+              "translation": "If I have time, I'll go",
+              "cloze": "if"
+            },
+            {
+              "text": "if คุณมา ฉันจะรับประทาน",
+              "translation": "If you come, I'll eat",
+              "cloze": "if"
+            }
+          ]
+        },
+        {
+          "lemma": "แหม",
+          "gloss": "well, you know",
+          "pos": "interjection",
+          "forms": [
+            "แหม"
+          ],
+          "examples": [
+            {
+              "text": "แหม ฉันไม่รู้อะไรเลย",
+              "translation": "Well, I don't know anything",
+              "cloze": "แหม"
+            },
+            {
+              "text": "แหม นี่คือเรื่องขี้เล่น",
+              "translation": "Well, this is a silly thing",
+              "cloze": "แหม"
+            },
+            {
+              "text": "แหม ฉันไม่เข้าใจ",
+              "translation": "Well, I don't understand",
+              "cloze": "แหม"
+            }
+          ]
+        },
+        {
+          "lemma": "แล้ว",
+          "gloss": "then; and then",
+          "pos": "conjunction",
+          "forms": [
+            "แล้ว"
+          ],
+          "examples": [
+            {
+              "text": "ฉันไปแล้ว แล้วคุณไปกัน",
+              "translation": "I went, and you go too",
+              "cloze": "แล้ว"
+            },
+            {
+              "text": "แล้วคุณอยู่ไหน",
+              "translation": "And where are you",
+              "cloze": "แล้ว"
+            },
+            {
+              "text": "แล้วคุณไม่รู้เลย",
+              "translation": "And you don't know at all",
+              "cloze": "แล้ว"
+            }
+          ]
+        },
+        {
+          "lemma": "พวก",
+          "gloss": "they; them",
+          "pos": "pronoun",
+          "forms": [
+            "พวก"
+          ],
+          "examples": [
+            {
+              "text": "พวกเธอต้องไป",
+              "translation": "You all have to go",
+              "cloze": "พวก"
+            },
+            {
+              "text": "พวกเรากำลังไป",
+              "translation": "We are going",
+              "cloze": "พวก"
+            },
+            {
+              "text": "พวกนั้นไม่รู้เลย",
+              "translation": "They don't know",
+              "cloze": "พวก"
+            }
+          ]
+        },
+        {
+          "lemma": "ผมคิดว่า",
+          "gloss": "I think",
+          "pos": "verb",
+          "forms": [
+            "ผมคิดว่า"
+          ],
+          "examples": [
+            {
+              "text": "ผมคิดว่าเธอไม่ดี",
+              "translation": "I think you're not good",
+              "cloze": "ผมคิดว่า"
+            },
+            {
+              "text": "ผมคิดว่าเธอต้องไป",
+              "translation": "I think you have to go",
+              "cloze": "ผมคิดว่า"
+            },
+            {
+              "text": "ผมคิดว่าเธอไม่รู้",
+              "translation": "I think you don't know",
+              "cloze": "ผมคิดว่า"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 9,
+        "examples": 27,
+        "threePerWord": 1,
+        "clozeOk": 0.9629629629629629,
+        "avgLen": 5.592592592592593,
+        "inVocab": 0.543046357615894
+      }
+    },
+    {
+      "lang": "th",
+      "kind": "mine",
+      "ms": 9880.436707999965,
+      "words": [
+        {
+          "lemma": "ลืม",
+          "gloss": "to forget",
+          "pos": "verb",
+          "forms": [
+            "ลืม",
+            "ลืม"
+          ],
+          "examples": [
+            {
+              "text": "เมื่อวานฉันลืมกระเป๋าเงินไว้ที่ร้านกาแฟ",
+              "translation": "Last night I forgot my wallet at the coffee shop",
+              "cloze": "ลืม"
+            },
+            {
+              "text": "ฉันลืมบัญชีธนาคารของฉัน",
+              "translation": "I forgot my bank account",
+              "cloze": "ลืม"
+            },
+            {
+              "text": "เธอลืมพูดภาษาอังกฤษ",
+              "translation": "She forgot to speak English",
+              "cloze": "ลืม"
+            }
+          ]
+        },
+        {
+          "lemma": "กระเป๋าเงิน",
+          "gloss": "wallet",
+          "pos": "noun",
+          "forms": [
+            "กระเป๋าเงิน",
+            "กระเป๋าเงิน"
+          ],
+          "examples": [
+            {
+              "text": "เมื่อวานฉันลืมกระเป๋าเงินไว้ที่ร้านกาแฟ",
+              "translation": "Last night I forgot my wallet at the coffee shop",
+              "cloze": "กระเป๋าเงิน"
+            },
+            {
+              "text": "ฉันมีกระเป๋าเงินไว้ใส่เงิน",
+              "translation": "I have a wallet to put money",
+              "cloze": "กระเป๋าเงิน"
+            },
+            {
+              "text": "กระเป๋าเงินนี้คือของฉัน",
+              "translation": "This wallet is mine",
+              "cloze": "กระเป๋าเงิน"
+            }
+          ]
+        },
+        {
+          "lemma": "ร้านกาแฟ",
+          "gloss": "coffee shop",
+          "pos": "noun",
+          "forms": [
+            "ร้านกาแฟ",
+            "ร้านกาแฟ"
+          ],
+          "examples": [
+            {
+              "text": "เมื่อวานฉันลืมกระเป๋าเงินไว้ที่ร้านกาแฟ",
+              "translation": "Last night I forgot my wallet at the coffee shop",
+              "cloze": "ร้านกาแฟ"
+            },
+            {
+              "text": "เราไปร้านกาแฟดื่มน้ำ",
+              "translation": "We went to the coffee shop to drink water",
+              "cloze": "ร้านกาแฟ"
+            },
+            {
+              "text": "ร้านกาแฟนี้มีบาร์อีก",
+              "translation": "This coffee shop has a bar",
+              "cloze": "ร้านกาแฟ"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 9,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 7.333333333333333,
+        "keptOriginal": 1
+      }
+    }
+  ]
+}

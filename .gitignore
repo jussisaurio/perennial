@@ -1,0 +1,35 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# Local data: server databases (accounts, sync data, AI usage)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite*
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs (eval server logs include local paths)
+*.log
+logs/
+
+# Test output
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.sw?

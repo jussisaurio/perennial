@@ -1,0 +1,20 @@
+{
+  "name": "perennial-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "~6.0.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "resend": "^6.32.1",
+    "stripe": "^23.0.0",
+    "zod": "^4.6.5"
+  }
+}

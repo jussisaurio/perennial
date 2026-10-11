@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - name: Install (web)
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - name: Install (server)
+        working-directory: server
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck (web)
+        working-directory: web
+        run: bun run typecheck
+      - name: Typecheck (server)
+        working-directory: server
+        run: bun run typecheck
+      - name: Lint (web)
+        working-directory: web
+        run: bun run lint
+      - name: Unit tests (web)
+        working-directory: web
+        run: bun run test
+      - name: Server tests (billing runs against stripe-mock in Docker)
+        working-directory: server
+        run: bun test
+      - name: Build (web)
+        working-directory: web
+        run: bunx vite build
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      # The Playwright config reuses a stripe-mock already listening on this port.
+      stripe-mock:
+        image: stripe/stripe-mock:latest
+        ports:
+          - 12199:12111
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install (web)
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - name: Install (server)
+        working-directory: server
+        run: bun install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - name: Install Playwright browsers
+        working-directory: web
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run e2e
+        working-directory: web
+        run: bunx playwright test
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 7

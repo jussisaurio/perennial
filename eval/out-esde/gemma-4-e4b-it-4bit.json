@@ -1,0 +1,2727 @@
+{
+  "model": "mlx-community/gemma-4-e4b-it-4bit",
+  "results": [
+    {
+      "lang": "es",
+      "kind": "beginner",
+      "ms": 34854.879208000006,
+      "words": [
+        {
+          "lemma": "ser",
+          "gloss": "to be",
+          "pos": "verb",
+          "forms": [
+            "es",
+            "era"
+          ],
+          "notes": "Used for identity or essential qualities.",
+          "examples": [
+            {
+              "text": "Yo es estudiante.",
+              "translation": "I am a student.",
+              "cloze": "es"
+            },
+            {
+              "text": "Ella es amable.",
+              "translation": "She is kind.",
+              "cloze": "es"
+            },
+            {
+              "text": "Eso es verdad.",
+              "translation": "That is true.",
+              "cloze": "es"
+            }
+          ]
+        },
+        {
+          "lemma": "haber",
+          "gloss": "to have (auxiliary)",
+          "pos": "verb",
+          "forms": [
+            "hay"
+          ],
+          "notes": "Used impersonally to say 'there is/are'.",
+          "examples": [
+            {
+              "text": "Hay un libro.",
+              "translation": "There is a book.",
+              "cloze": "Hay"
+            }
+          ]
+        },
+        {
+          "lemma": "de",
+          "gloss": "of; about",
+          "pos": "preposition",
+          "forms": [
+            "de"
+          ],
+          "notes": "Indicates possession or origin.",
+          "examples": [
+            {
+              "text": "El libro de Juan.",
+              "translation": "Juan's book.",
+              "cloze": "de"
+            },
+            {
+              "text": "Casa de mi madre.",
+              "translation": "My mother's house.",
+              "cloze": "de"
+            },
+            {
+              "text": "Ven de Madrid.",
+              "translation": "Come from Madrid.",
+              "cloze": "de"
+            }
+          ]
+        },
+        {
+          "lemma": "que",
+          "gloss": "that; whom",
+          "pos": "conjunction|pronoun",
+          "forms": [
+            "que"
+          ],
+          "notes": "Introduces a clause or refers to something.",
+          "examples": [
+            {
+              "text": "Creo que es bueno.",
+              "translation": "I think it is good.",
+              "cloze": "que"
+            },
+            {
+              "text": "El libro que leí.",
+              "translation": "The book I read.",
+              "cloze": "que"
+            },
+            {
+              "text": "No sé que pasa.",
+              "translation": "I don't know what happens.",
+              "cloze": "que"
+            }
+          ]
+        },
+        {
+          "lemma": "no",
+          "gloss": "no; not",
+          "pos": "adverb",
+          "forms": [
+            "no"
+          ],
+          "notes": "Denies a statement.",
+          "examples": [
+            {
+              "text": "Yo no hablo.",
+              "translation": "I don't speak.",
+              "cloze": "no"
+            },
+            {
+              "text": "No es correcto.",
+              "translation": "It is not correct.",
+              "cloze": "no"
+            },
+            {
+              "text": "No quiero eso.",
+              "translation": "I don't want that.",
+              "cloze": "no"
+            }
+          ]
+        },
+        {
+          "lemma": "a",
+          "gloss": "to; at",
+          "pos": "preposition",
+          "forms": [
+            "a"
+          ],
+          "notes": "Indicates direction or destination.",
+          "examples": [
+            {
+              "text": "Voy a casa.",
+              "translation": "I go home.",
+              "cloze": "a"
+            },
+            {
+              "text": "Dame el libro.",
+              "translation": "Give me the book.",
+              "cloze": "a"
+            },
+            {
+              "text": "Voy a comer.",
+              "translation": "I go to eat.",
+              "cloze": "a"
+            }
+          ]
+        },
+        {
+          "lemma": "el",
+          "gloss": "the (masculine singular)",
+          "pos": "definite article",
+          "forms": [
+            "el"
+          ],
+          "notes": "Masculine singular article.",
+          "examples": [
+            {
+              "text": "El perro es grande.",
+              "translation": "The dog is big.",
+              "cloze": "el"
+            },
+            {
+              "text": "El libro es mío.",
+              "translation": "The book is mine.",
+              "cloze": "el"
+            },
+            {
+              "text": "El sol brilla.",
+              "translation": "The sun shines.",
+              "cloze": "El"
+            }
+          ]
+        },
+        {
+          "lemma": "y",
+          "gloss": "and",
+          "pos": "conjunction",
+          "forms": [
+            "y"
+          ],
+          "notes": "Joins words or clauses.",
+          "examples": [
+            {
+              "text": "Yo y tú vamos.",
+              "translation": "You and I go.",
+              "cloze": "y"
+            },
+            {
+              "text": "Café y té.",
+              "translation": "Coffee and tea.",
+              "cloze": "y"
+            },
+            {
+              "text": "Es rojo y azul.",
+              "translation": "It is red and blue.",
+              "cloze": "y"
+            }
+          ]
+        },
+        {
+          "lemma": "en",
+          "gloss": "in; on",
+          "pos": "preposition",
+          "forms": [
+            "en"
+          ],
+          "notes": "Indicates location or time.",
+          "examples": [
+            {
+              "text": "Estoy en casa.",
+              "translation": "I am at home.",
+              "cloze": "en"
+            },
+            {
+              "text": "El libro en la mesa.",
+              "translation": "The book on the table.",
+              "cloze": "en"
+            },
+            {
+              "text": "Vamos en coche.",
+              "translation": "We go by car.",
+              "cloze": "en"
+            }
+          ]
+        },
+        {
+          "lemma": "lo",
+          "gloss": "it (masculine singular)",
+          "pos": "definite article|pronoun",
+          "forms": [
+            "lo"
+          ],
+          "notes": "Masculine singular article or pronoun.",
+          "examples": [
+            {
+              "text": "Lo sé todo.",
+              "translation": "I know everything.",
+              "cloze": "lo"
+            },
+            {
+              "text": "Lo quiero mucho.",
+              "translation": "I love it much.",
+              "cloze": "lo"
+            },
+            {
+              "text": "Lo hace bien.",
+              "translation": "He does it well.",
+              "cloze": "lo"
+            }
+          ]
+        },
+        {
+          "lemma": "un",
+          "gloss": "a; an (masculine singular)",
+          "pos": "indefinite article",
+          "forms": [
+            "un"
+          ],
+          "notes": "Masculine singular article.",
+          "examples": [
+            {
+              "text": "Un gato es negro.",
+              "translation": "A cat is black.",
+              "cloze": "un"
+            },
+            {
+              "text": "Tengo un amigo.",
+              "translation": "I have a friend.",
+              "cloze": "un"
+            },
+            {
+              "text": "Un día soleado.",
+              "translation": "A sunny day.",
+              "cloze": "un"
+            }
+          ]
+        },
+        {
+          "lemma": "por",
+          "gloss": "by; through",
+          "pos": "preposition",
+          "forms": [
+            "por"
+          ],
+          "notes": "Indicates cause or passage.",
+          "examples": [
+            {
+              "text": "Voy por ahí.",
+              "translation": "I go through there.",
+              "cloze": "por"
+            },
+            {
+              "text": "Gracias por esto.",
+              "translation": "Thank you for this.",
+              "cloze": "por"
+            },
+            {
+              "text": "Pasa por mi casa.",
+              "translation": "Pass by my house.",
+              "cloze": "por"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 34,
+        "threePerWord": 0.9166666666666666,
+        "clozeOk": 0.7352941176470589,
+        "avgLen": 3.3823529411764706
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "early",
+      "ms": 35175.212791000005,
+      "words": [
+        {
+          "lemma": "o",
+          "gloss": "or",
+          "pos": "conj",
+          "forms": [
+            "o"
+          ],
+          "examples": [
+            {
+              "text": "Yo quiero ir o no ir.",
+              "translation": "I want to go or not go.",
+              "cloze": "o"
+            }
+          ]
+        },
+        {
+          "lemma": "haber",
+          "gloss": "to have",
+          "pos": "verb",
+          "forms": [
+            "he",
+            "haber"
+          ],
+          "notes": "Present tense of 'haber' (used for perfect tenses).",
+          "examples": [
+            {
+              "text": "Yo he visto eso.",
+              "translation": "I have seen that.",
+              "cloze": "he"
+            },
+            {
+              "text": "Ella ha hecho eso.",
+              "translation": "She has done that.",
+              "cloze": "he"
+            },
+            {
+              "text": "Hemos ido ya.",
+              "translation": "We have gone already.",
+              "cloze": "he"
+            }
+          ]
+        },
+        {
+          "lemma": "ser",
+          "gloss": "to be",
+          "pos": "verb",
+          "forms": [
+            "ser",
+            "era"
+          ],
+          "notes": "Used for identity or essential qualities.",
+          "examples": [
+            {
+              "text": "Ella es mi amiga.",
+              "translation": "She is my friend.",
+              "cloze": "ser"
+            },
+            {
+              "text": "Éramos amigos ayer.",
+              "translation": "We were friends yesterday.",
+              "cloze": "era"
+            },
+            {
+              "text": "Era bueno eso.",
+              "translation": "That was good.",
+              "cloze": "era"
+            }
+          ]
+        },
+        {
+          "lemma": "tener",
+          "gloss": "to have",
+          "pos": "verb",
+          "forms": [
+            "tiene",
+            "tenemos"
+          ],
+          "notes": "Third person singular present tense.",
+          "examples": [
+            {
+              "text": "Ella tiene un libro.",
+              "translation": "She has a book.",
+              "cloze": "tiene"
+            },
+            {
+              "text": "Nosotros tenemos razón.",
+              "translation": "We have reason.",
+              "cloze": "tenemos"
+            },
+            {
+              "text": "Él tiene razón.",
+              "translation": "He is right.",
+              "cloze": "tiene"
+            }
+          ]
+        },
+        {
+          "lemma": "poder",
+          "gloss": "to be able to",
+          "pos": "verb",
+          "forms": [
+            "puedo"
+          ],
+          "examples": [
+            {
+              "text": "Yo puedo ir hoy.",
+              "translation": "I can go today.",
+              "cloze": "puedo"
+            },
+            {
+              "text": "Ella puede hablar.",
+              "translation": "She can speak.",
+              "cloze": "puedo"
+            },
+            {
+              "text": "Podemos hacer esto.",
+              "translation": "We can do this.",
+              "cloze": "puedo"
+            }
+          ]
+        },
+        {
+          "lemma": "ella",
+          "gloss": "she",
+          "pos": "pronoun",
+          "forms": [
+            "ella"
+          ],
+          "examples": [
+            {
+              "text": "Ella quiere comer ahora.",
+              "translation": "She wants to eat now.",
+              "cloze": "ella"
+            },
+            {
+              "text": "Ella fue muy amable.",
+              "translation": "She was very kind.",
+              "cloze": "ella"
+            },
+            {
+              "text": "Ella tiene razón.",
+              "translation": "She is right.",
+              "cloze": "ella"
+            }
+          ]
+        },
+        {
+          "lemma": "querer",
+          "gloss": "to want",
+          "pos": "verb",
+          "forms": [
+            "quiero"
+          ],
+          "examples": [
+            {
+              "text": "Yo quiero agua, por favor.",
+              "translation": "I want water, please.",
+              "cloze": "quiero"
+            },
+            {
+              "text": "Él quiere hablar.",
+              "translation": "He wants to speak.",
+              "cloze": "quiero"
+            },
+            {
+              "text": "Ella quiere venir.",
+              "translation": "She wants to come.",
+              "cloze": "quiero"
+            }
+          ]
+        },
+        {
+          "lemma": "hacer",
+          "gloss": "to do; to make",
+          "pos": "verb",
+          "forms": [
+            "hacer"
+          ],
+          "examples": [
+            {
+              "text": "Yo quiero hacer eso.",
+              "translation": "I want to do that.",
+              "cloze": "hacer"
+            },
+            {
+              "text": "Ella hizo bien el trabajo.",
+              "translation": "She did the job well.",
+              "cloze": "hacer"
+            },
+            {
+              "text": "Vamos a hacer nada.",
+              "translation": "We are going to do nothing.",
+              "cloze": "hacer"
+            }
+          ]
+        },
+        {
+          "lemma": "ser",
+          "gloss": "to be",
+          "pos": "verb",
+          "forms": [
+            "fue"
+          ],
+          "notes": "Preterite past tense of 'ser'.",
+          "examples": [
+            {
+              "text": "Fue muy bueno el día.",
+              "translation": "The day was very good.",
+              "cloze": "fue"
+            },
+            {
+              "text": "Fue ella quien vino.",
+              "translation": "She was the one who came.",
+              "cloze": "fue"
+            },
+            {
+              "text": "Fue el mío.",
+              "translation": "It was mine.",
+              "cloze": "fue"
+            }
+          ]
+        },
+        {
+          "lemma": "gracias",
+          "gloss": "thank you",
+          "pos": "interjection",
+          "forms": [],
+          "examples": [
+            {
+              "text": "Gracias por eso.",
+              "translation": "Thank you for that.",
+              "cloze": "gracias"
+            },
+            {
+              "text": "Muchas gracias, amigo.",
+              "translation": "Thank you very much, friend.",
+              "cloze": "gracias"
+            },
+            {
+              "text": "Gracias por tu ayuda.",
+              "translation": "Thanks for your help.",
+              "cloze": "gracias"
+            }
+          ]
+        },
+        {
+          "lemma": "vez",
+          "gloss": "time; occasion",
+          "pos": "noun",
+          "forms": [],
+          "examples": [
+            {
+              "text": "Primera vez que vengo.",
+              "translation": "First time I come.",
+              "cloze": "vez"
+            },
+            {
+              "text": "Otra vez, por favor.",
+              "translation": "Again, please.",
+              "cloze": "vez"
+            },
+            {
+              "text": "Una vez más, sí.",
+              "translation": "One more time, yes.",
+              "cloze": "vez"
+            }
+          ]
+        },
+        {
+          "lemma": "era",
+          "gloss": "it was; she/he was",
+          "pos": "verb",
+          "forms": [
+            "era"
+          ],
+          "notes": "Imperfect past tense of 'ser' (to be).",
+          "examples": [
+            {
+              "text": "Era bueno el libro.",
+              "translation": "The book was good.",
+              "cloze": "era"
+            },
+            {
+              "text": "Ella era mi madre.",
+              "translation": "She was my mother.",
+              "cloze": "era"
+            },
+            {
+              "text": "Era frío el día.",
+              "translation": "The day was cold.",
+              "cloze": "era"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 34,
+        "threePerWord": 0.9166666666666666,
+        "clozeOk": 0.4411764705882353,
+        "avgLen": 3.764705882352941,
+        "inVocab": 0.5390625
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "intermediate",
+      "ms": 40221.685958999995,
+      "words": [
+        {
+          "lemma": "volver",
+          "gloss": "to return",
+          "pos": "verb",
+          "forms": [
+            "volver",
+            "volviendo"
+          ],
+          "notes": "Used for physical return or recurrence.",
+          "examples": [
+            {
+              "text": "Debes volver pronto.",
+              "translation": "You must return soon.",
+              "cloze": "Debes volver pronto."
+            },
+            {
+              "text": "Ella va a volver.",
+              "translation": "She is going to return.",
+              "cloze": "Ella va a volver."
+            },
+            {
+              "text": "Volvimos tras el viaje.",
+              "translation": "We returned after the trip.",
+              "cloze": "Volvimos tras el viaje."
+            }
+          ]
+        },
+        {
+          "lemma": "ser",
+          "gloss": "to be (permanent state/identity)",
+          "pos": "verb",
+          "forms": [
+            "ser"
+          ],
+          "notes": "Used for identity, origin, or inherent qualities.",
+          "examples": [
+            {
+              "text": "Yo soy estudiante.",
+              "translation": "I am a student.",
+              "cloze": "Yo soy estudiante."
+            },
+            {
+              "text": "Ellos son mis amigos.",
+              "translation": "They are my friends.",
+              "cloze": "Ellos son mis amigos."
+            },
+            {
+              "text": "Ella es muy alta.",
+              "translation": "She is very tall.",
+              "cloze": "Ella es muy alta."
+            }
+          ]
+        },
+        {
+          "lemma": "quizá",
+          "gloss": "perhaps, maybe",
+          "pos": "adverb",
+          "forms": [
+            "quizá"
+          ],
+          "notes": "Expresses possibility.",
+          "examples": [
+            {
+              "text": "Quizá llueva hoy.",
+              "translation": "Maybe it will rain today.",
+              "cloze": "Quizá llueva hoy."
+            },
+            {
+              "text": "Quizá él venga.",
+              "translation": "Perhaps he will come.",
+              "cloze": "Quizá él venga."
+            },
+            {
+              "text": "Quizá es verdad.",
+              "translation": "Perhaps it is true.",
+              "cloze": "Quizá es verdad."
+            }
+          ]
+        },
+        {
+          "lemma": "contra",
+          "gloss": "against",
+          "pos": "preposition",
+          "forms": [
+            "contra"
+          ],
+          "notes": "Indicates opposition.",
+          "examples": [
+            {
+              "text": "Contra la pared.",
+              "translation": "Against the wall.",
+              "cloze": "Contra la pared."
+            },
+            {
+              "text": "Contra mí no.",
+              "translation": "Not against me.",
+              "cloze": "Contra mí no."
+            },
+            {
+              "text": "Contra viento y lluvia.",
+              "translation": "Against wind and rain.",
+              "cloze": "Contra viento y lluvia."
+            }
+          ]
+        },
+        {
+          "lemma": "camino",
+          "gloss": "road, path, way",
+          "pos": "noun",
+          "forms": [
+            "camino"
+          ],
+          "notes": "Can refer to a physical path or a way of doing things.",
+          "examples": [
+            {
+              "text": "Por este camino.",
+              "translation": "By this road.",
+              "cloze": "Por este camino."
+            },
+            {
+              "text": "No hay camino.",
+              "translation": "There is no path.",
+              "cloze": "No hay camino."
+            },
+            {
+              "text": "En el camino.",
+              "translation": "On the way.",
+              "cloze": "En el camino."
+            }
+          ]
+        },
+        {
+          "lemma": "durante",
+          "gloss": "during",
+          "pos": "preposition",
+          "forms": [
+            "durante"
+          ],
+          "notes": "Indicates that something happens within a period.",
+          "examples": [
+            {
+              "text": "Durante el día.",
+              "translation": "During the day.",
+              "cloze": "Durante el día."
+            },
+            {
+              "text": "Durante la noche.",
+              "translation": "During the night.",
+              "cloze": "Durante la noche."
+            },
+            {
+              "text": "Durante su viaje.",
+              "translation": "During his trip.",
+              "cloze": "Durante su viaje."
+            }
+          ]
+        },
+        {
+          "lemma": "hablando",
+          "gloss": "speaking, talking",
+          "pos": "present participle",
+          "forms": [
+            "hablando"
+          ],
+          "notes": "The -ando form of hablar.",
+          "examples": [
+            {
+              "text": "Hablando yo mucho.",
+              "translation": "Me speaking much.",
+              "cloze": "Hablando yo mucho."
+            },
+            {
+              "text": "Ella estaba hablando.",
+              "translation": "She was talking.",
+              "cloze": "Ella estaba hablando."
+            },
+            {
+              "text": "Hablando sin parar.",
+              "translation": "Speaking without stopping.",
+              "cloze": "Hablando sin parar."
+            }
+          ]
+        },
+        {
+          "lemma": "manera",
+          "gloss": "manner, way",
+          "pos": "noun",
+          "forms": [
+            "manera"
+          ],
+          "notes": "Refers to the way something is done.",
+          "examples": [
+            {
+              "text": "Una buena manera.",
+              "translation": "A good way.",
+              "cloze": "Una buena manera."
+            },
+            {
+              "text": "Su manera es distinta.",
+              "translation": "His manner is different.",
+              "cloze": "Su manera es distinta."
+            },
+            {
+              "text": "De esa manera.",
+              "translation": "In that manner.",
+              "cloze": "De esa manera."
+            }
+          ]
+        },
+        {
+          "lemma": "muerto",
+          "gloss": "dead",
+          "pos": "adjective",
+          "forms": [
+            "muerto"
+          ],
+          "notes": "Past participle of morir.",
+          "examples": [
+            {
+              "text": "El hombre muerto.",
+              "translation": "The dead man.",
+              "cloze": "El hombre muerto."
+            },
+            {
+              "text": "Estaba muerto él.",
+              "translation": "He was dead.",
+              "cloze": "Estaba muerto él."
+            },
+            {
+              "text": "Por eso muerto ya.",
+              "translation": "Dead already because.",
+              "cloze": "Por eso muerto ya."
+            }
+          ]
+        },
+        {
+          "lemma": "persona",
+          "gloss": "person",
+          "pos": "noun",
+          "forms": [
+            "persona"
+          ],
+          "notes": "A person; individual.",
+          "examples": [
+            {
+              "text": "Una buena persona.",
+              "translation": "A good person.",
+              "cloze": "Una buena persona."
+            },
+            {
+              "text": "Esa persona vino.",
+              "translation": "That person came.",
+              "cloze": "Esa persona vino."
+            },
+            {
+              "text": "Muchas personas vinieron.",
+              "translation": "Many people came.",
+              "cloze": "Muchas personas vinieron."
+            }
+          ]
+        },
+        {
+          "lemma": "rápido",
+          "gloss": "fast, quick",
+          "pos": "adjective",
+          "forms": [
+            "rápido"
+          ],
+          "notes": "Describes speed or action.",
+          "examples": [
+            {
+              "text": "Es muy rápido.",
+              "translation": "It is very fast.",
+              "cloze": "Es muy rápido."
+            },
+            {
+              "text": "Vamos rápido ya.",
+              "translation": "Let's go fast now.",
+              "cloze": "Vamos rápido ya."
+            },
+            {
+              "text": "Corrió rápido él.",
+              "translation": "He ran fast.",
+              "cloze": "Corrió rápido él."
+            }
+          ]
+        },
+        {
+          "lemma": "cuál",
+          "gloss": "which",
+          "pos": "pronoun",
+          "forms": [
+            "cuál"
+          ],
+          "notes": "Used to ask for choice.",
+          "examples": [
+            {
+              "text": "¿Cuál es tu nombre?",
+              "translation": "What is your name?",
+              "cloze": "¿Cuál es tu nombre?"
+            },
+            {
+              "text": "Dime cuál quieres.",
+              "translation": "Tell me which one you want.",
+              "cloze": "Dime cuál quieres."
+            },
+            {
+              "text": "Cuál es el plan?",
+              "translation": "What is the plan?",
+              "cloze": "Cuál es el plan?"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 3.25,
+        "inVocab": 0.8290598290598291
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "advanced",
+      "ms": 39600.30595799998,
+      "words": [
+        {
+          "lemma": "oiga",
+          "gloss": "hear (formal command)",
+          "pos": "verb",
+          "forms": [
+            "oiga"
+          ],
+          "notes": "Formal command form of 'oír' (to hear).",
+          "examples": [
+            {
+              "text": "Oiga mi historia.",
+              "translation": "Hear my story.",
+              "cloze": "Oiga"
+            },
+            {
+              "text": "Oiga la verdad.",
+              "translation": "Hear the truth.",
+              "cloze": "Oiga"
+            },
+            {
+              "text": "Oiga mi amigo.",
+              "translation": "Hear my friend.",
+              "cloze": "Oiga"
+            }
+          ]
+        },
+        {
+          "lemma": "estar",
+          "gloss": "to be",
+          "pos": "verb",
+          "forms": [
+            "estén",
+            "están",
+            "estés"
+          ],
+          "notes": "Used for temporary states or location.",
+          "examples": [
+            {
+              "text": "Están aquí ahora.",
+              "translation": "They are here now.",
+              "cloze": "Están"
+            },
+            {
+              "text": "Estén muy bien.",
+              "translation": "Be very well.",
+              "cloze": "Estén"
+            },
+            {
+              "text": "Estás muy cansado.",
+              "translation": "You are very tired.",
+              "cloze": "Estás"
+            }
+          ]
+        },
+        {
+          "lemma": "cuenta",
+          "gloss": "account; story; bill",
+          "pos": "noun",
+          "forms": [
+            "cuenta",
+            "cuentas"
+          ],
+          "notes": "Singular/plural noun.",
+          "examples": [
+            {
+              "text": "Tengo una cuenta.",
+              "translation": "I have a bill.",
+              "cloze": "cuenta"
+            },
+            {
+              "text": "Sus cuentas son buenas.",
+              "translation": "Their accounts are good.",
+              "cloze": "cuentas"
+            },
+            {
+              "text": "Cuenta mi verdad.",
+              "translation": "Tell my truth.",
+              "cloze": "cuenta"
+            }
+          ]
+        },
+        {
+          "lemma": "taxi",
+          "gloss": "taxi",
+          "pos": "noun",
+          "forms": [
+            "taxi"
+          ],
+          "notes": "Borrowed word, common.",
+          "examples": [
+            {
+              "text": "Llamé al taxi.",
+              "translation": "I called the taxi.",
+              "cloze": "taxi"
+            },
+            {
+              "text": "El taxi fue lento.",
+              "translation": "The taxi was slow.",
+              "cloze": "taxi"
+            },
+            {
+              "text": "Vamos en taxi.",
+              "translation": "We go by taxi.",
+              "cloze": "taxi"
+            }
+          ]
+        },
+        {
+          "lemma": "anillo",
+          "gloss": "ring",
+          "pos": "noun",
+          "forms": [
+            "anillo"
+          ],
+          "notes": "Can mean wedding ring.",
+          "examples": [
+            {
+              "text": "Es un anillo viejo.",
+              "translation": "It is an old ring.",
+              "cloze": "anillo"
+            },
+            {
+              "text": "Su anillo brilla.",
+              "translation": "His ring shines.",
+              "cloze": "anillo"
+            },
+            {
+              "text": "Perdí mi anillo.",
+              "translation": "I lost my ring.",
+              "cloze": "anillo"
+            }
+          ]
+        },
+        {
+          "lemma": "Richard",
+          "gloss": "Richard",
+          "pos": "proper noun",
+          "forms": [
+            "richard"
+          ],
+          "notes": "Proper name.",
+          "examples": [
+            {
+              "text": "Richard fue mi amigo.",
+              "translation": "Richard was my friend.",
+              "cloze": "Richard"
+            },
+            {
+              "text": "Vi a Richard hoy.",
+              "translation": "I saw Richard today.",
+              "cloze": "Richard"
+            },
+            {
+              "text": "Richard vino aquí.",
+              "translation": "Richard came here.",
+              "cloze": "Richard"
+            }
+          ]
+        },
+        {
+          "lemma": "preguntar",
+          "gloss": "to ask",
+          "pos": "verb",
+          "forms": [
+            "preguntar"
+          ],
+          "notes": "Infinitive form.",
+          "examples": [
+            {
+              "text": "Puedo preguntar algo.",
+              "translation": "I can ask something.",
+              "cloze": "preguntar"
+            },
+            {
+              "text": "¿Por qué preguntar eso?",
+              "translation": "Why ask that?",
+              "cloze": "preguntar"
+            },
+            {
+              "text": "Vamos a preguntar ahora.",
+              "translation": "Let's ask now.",
+              "cloze": "preguntar"
+            }
+          ]
+        },
+        {
+          "lemma": "Victoria",
+          "gloss": "victory",
+          "pos": "noun",
+          "forms": [
+            "victoria"
+          ],
+          "notes": "Proper noun, but also noun.",
+          "examples": [
+            {
+              "text": "Ganamos la victoria.",
+              "translation": "We won the victory.",
+              "cloze": "victoria"
+            },
+            {
+              "text": "Busco la victoria.",
+              "translation": "I seek the victory.",
+              "cloze": "victoria"
+            },
+            {
+              "text": "Victoria fue nuestra.",
+              "translation": "Victory was ours.",
+              "cloze": "victoria"
+            }
+          ]
+        },
+        {
+          "lemma": "quiénes",
+          "gloss": "who (plural)",
+          "pos": "pronoun",
+          "forms": [
+            "quiénes"
+          ],
+          "notes": "Plural form of 'quien'.",
+          "examples": [
+            {
+              "text": "¿Quiénes vienen aquí?",
+              "translation": "Who is coming here?",
+              "cloze": "Quiénes"
+            },
+            {
+              "text": "Quienes saben mi nombre.",
+              "translation": "Those who know my name.",
+              "cloze": "Quienes"
+            },
+            {
+              "text": "Quienes vinieron ayer.",
+              "translation": "Those who came yesterday.",
+              "cloze": "Quienes"
+            }
+          ]
+        },
+        {
+          "lemma": "héroe",
+          "gloss": "hero",
+          "pos": "noun",
+          "forms": [
+            "héroe"
+          ],
+          "notes": "Male hero.",
+          "examples": [
+            {
+              "text": "Es un gran héroe.",
+              "translation": "He is a great hero.",
+              "cloze": "héroe"
+            },
+            {
+              "text": "El héroe ganó todo.",
+              "translation": "The hero won everything.",
+              "cloze": "héroe"
+            },
+            {
+              "text": "Somos su héroe.",
+              "translation": "We are his hero.",
+              "cloze": "héroe"
+            }
+          ]
+        },
+        {
+          "lemma": "pequeño",
+          "gloss": "small; little",
+          "pos": "adjective",
+          "forms": [
+            "pequeños"
+          ],
+          "notes": "Plural form.",
+          "examples": [
+            {
+              "text": "Los pequeños niños jugaron.",
+              "translation": "The small children played.",
+              "cloze": "pequeños"
+            },
+            {
+              "text": "Un pequeño error.",
+              "translation": "A small mistake.",
+              "cloze": "pequeño"
+            },
+            {
+              "text": "Son pequeños ahora.",
+              "translation": "They are small now.",
+              "cloze": "pequeños"
+            }
+          ]
+        },
+        {
+          "lemma": "decidido",
+          "gloss": "determined; decided",
+          "pos": "adjective",
+          "forms": [
+            "decidido"
+          ],
+          "notes": "Past participle or adjective.",
+          "examples": [
+            {
+              "text": "Él es muy decidido.",
+              "translation": "He is very determined.",
+              "cloze": "decidido"
+            },
+            {
+              "text": "Estábamos decididos ya.",
+              "translation": "We were already decided.",
+              "cloze": "decididos"
+            },
+            {
+              "text": "Fue un paso decidido.",
+              "translation": "It was a decisive step.",
+              "cloze": "decidido"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 0.9444444444444444,
+        "avgLen": 3.361111111111111,
+        "inVocab": 0.9338842975206612
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "mine",
+      "ms": 11610.095084,
+      "words": [
+        {
+          "lemma": "encontrar",
+          "gloss": "to find",
+          "pos": "verb",
+          "forms": [
+            "encontré"
+          ],
+          "notes": "Past tense, first person singular (I found).",
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "Ayer encontré un perro abandonado cerca del puerto."
+            }
+          ]
+        },
+        {
+          "lemma": "abandonado",
+          "gloss": "abandoned",
+          "pos": "adjective",
+          "forms": [
+            "abandonado"
+          ],
+          "notes": "Used here as an adjective meaning 'left behind' or 'deserted'.",
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "Ayer encontré un perro abandonado cerca del puerto."
+            }
+          ]
+        },
+        {
+          "lemma": "puerto",
+          "gloss": "port",
+          "pos": "noun",
+          "forms": [
+            "puerto"
+          ],
+          "notes": "A place where ships load/unload.",
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "Ayer encontré un perro abandonado cerca del puerto."
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 3,
+        "threePerWord": 0,
+        "clozeOk": 1,
+        "avgLen": 8,
+        "keptOriginal": 1
+      }
+    },
+    {
+      "lang": "de",
+      "kind": "beginner",
+      "ms": 32729.507583,
+      "words": [
+        {
+          "lemma": "ich",
+          "gloss": "I",
+          "pos": "pron",
+          "forms": [
+            "ich"
+          ],
+          "examples": [
+            {
+              "text": "Ich bin neu.",
+              "translation": "I am new.",
+              "cloze": "Ich"
+            },
+            {
+              "text": "Ich wohne hier.",
+              "translation": "I live here.",
+              "cloze": "Ich"
+            },
+            {
+              "text": "Ich verstehe das.",
+              "translation": "I understand that.",
+              "cloze": "Ich"
+            }
+          ]
+        },
+        {
+          "lemma": "er/sie/es",
+          "gloss": "he/she/it",
+          "pos": "pron",
+          "forms": [
+            "er",
+            "sie",
+            "es"
+          ],
+          "notes": "Used for third-person singular.",
+          "examples": [
+            {
+              "text": "Er ist gut.",
+              "translation": "He is good.",
+              "cloze": "Er"
+            },
+            {
+              "text": "Sie geht nach Haus.",
+              "translation": "She goes home.",
+              "cloze": "Sie"
+            },
+            {
+              "text": "Es ist kalt.",
+              "translation": "It is cold.",
+              "cloze": "Es"
+            }
+          ]
+        },
+        {
+          "lemma": "das",
+          "gloss": "that (neuter article)",
+          "pos": "det",
+          "forms": [
+            "das"
+          ],
+          "examples": [
+            {
+              "text": "Das ist Buch.",
+              "translation": "That is book.",
+              "cloze": "Das"
+            },
+            {
+              "text": "Das Haus ist groß.",
+              "translation": "The house is big.",
+              "cloze": "Das"
+            },
+            {
+              "text": "Das ist richtig.",
+              "translation": "That is correct.",
+              "cloze": "Das"
+            }
+          ]
+        },
+        {
+          "lemma": "sein",
+          "gloss": "to be",
+          "pos": "verb",
+          "forms": [
+            "ist"
+          ],
+          "examples": [
+            {
+              "text": "Ich bin hier.",
+              "translation": "I am here.",
+              "cloze": "bin"
+            },
+            {
+              "text": "Das ist neu.",
+              "translation": "That is new.",
+              "cloze": "ist"
+            },
+            {
+              "text": "Wir sind bereit.",
+              "translation": "We are ready.",
+              "cloze": "sind"
+            }
+          ]
+        },
+        {
+          "lemma": "du",
+          "gloss": "you (informal singular)",
+          "pos": "pron",
+          "forms": [
+            "du"
+          ],
+          "examples": [
+            {
+              "text": "Du bist nett.",
+              "translation": "You are nice.",
+              "cloze": "Du"
+            },
+            {
+              "text": "Du kommst jetzt.",
+              "translation": "You come now.",
+              "cloze": "Du"
+            },
+            {
+              "text": "Wo bist du?",
+              "translation": "Where are you?",
+              "cloze": "du"
+            }
+          ]
+        },
+        {
+          "lemma": "nicht",
+          "gloss": "not",
+          "pos": "particle",
+          "forms": [
+            "nicht"
+          ],
+          "examples": [
+            {
+              "text": "Das ist nicht.",
+              "translation": "That is not.",
+              "cloze": "nicht"
+            },
+            {
+              "text": "Ich bin nicht da.",
+              "translation": "I am not there.",
+              "cloze": "nicht"
+            },
+            {
+              "text": "Es ist nicht gut.",
+              "translation": "It is not good.",
+              "cloze": "nicht"
+            }
+          ]
+        },
+        {
+          "lemma": "die",
+          "gloss": "the (feminine/plural article)",
+          "pos": "det",
+          "forms": [
+            "die"
+          ],
+          "examples": [
+            {
+              "text": "Die Frau ist hier.",
+              "translation": "The woman is here.",
+              "cloze": "Die"
+            },
+            {
+              "text": "Die Bücher sind neu.",
+              "translation": "The books are new.",
+              "cloze": "Die"
+            },
+            {
+              "text": "Ich sehe die Sonne.",
+              "translation": "I see the sun.",
+              "cloze": "die"
+            }
+          ]
+        },
+        {
+          "lemma": "es",
+          "gloss": "it",
+          "pos": "pron",
+          "forms": [
+            "es"
+          ],
+          "examples": [
+            {
+              "text": "Es regnet heute.",
+              "translation": "It is raining today.",
+              "cloze": "Es"
+            },
+            {
+              "text": "Es ist kalt draußen.",
+              "translation": "It is cold outside.",
+              "cloze": "Es"
+            },
+            {
+              "text": "Es geht gut.",
+              "translation": "It goes well.",
+              "cloze": "Es"
+            }
+          ]
+        },
+        {
+          "lemma": "und",
+          "gloss": "and",
+          "pos": "conj",
+          "forms": [
+            "und"
+          ],
+          "examples": [
+            {
+              "text": "Ich lese und du schreibst.",
+              "translation": "I read and you write.",
+              "cloze": "und"
+            },
+            {
+              "text": "Kaffee und Tee.",
+              "translation": "Coffee and tea.",
+              "cloze": "und"
+            },
+            {
+              "text": "Er kommt und sie geht.",
+              "translation": "He comes and she goes.",
+              "cloze": "und"
+            }
+          ]
+        },
+        {
+          "lemma": "der",
+          "gloss": "the (masculine article)",
+          "pos": "det",
+          "forms": [
+            "der"
+          ],
+          "examples": [
+            {
+              "text": "Der Hund ist groß.",
+              "translation": "The dog is big.",
+              "cloze": "Der"
+            },
+            {
+              "text": "Der Mann geht nach Haus.",
+              "translation": "The man goes home.",
+              "cloze": "Der"
+            },
+            {
+              "text": "Ich sehe der Mann.",
+              "translation": "I see the man.",
+              "cloze": "der"
+            }
+          ]
+        },
+        {
+          "lemma": "wir",
+          "gloss": "we",
+          "pos": "pron",
+          "forms": [
+            "wir"
+          ],
+          "examples": [
+            {
+              "text": "Wir sind hier.",
+              "translation": "We are here.",
+              "cloze": "Wir"
+            },
+            {
+              "text": "Wir gehen jetzt.",
+              "translation": "We go now.",
+              "cloze": "Wir"
+            },
+            {
+              "text": "Wir lernen Deutsch.",
+              "translation": "We learn German.",
+              "cloze": "Wir"
+            }
+          ]
+        },
+        {
+          "lemma": "was",
+          "gloss": "what",
+          "pos": "pron",
+          "forms": [
+            "was"
+          ],
+          "examples": [
+            {
+              "text": "Was ist das?",
+              "translation": "What is that?",
+              "cloze": "Was"
+            },
+            {
+              "text": "Was machst du?",
+              "translation": "What do you do?",
+              "cloze": "Was"
+            },
+            {
+              "text": "Was ist dein Name?",
+              "translation": "What is your name?",
+              "cloze": "Was"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 3.4722222222222223
+      }
+    },
+    {
+      "lang": "de",
+      "kind": "early",
+      "ms": 35252.66662500001,
+      "words": [
+        {
+          "lemma": "aus",
+          "gloss": "out of; from",
+          "pos": "prep",
+          "forms": [
+            "aus"
+          ],
+          "notes": "Requires dative case.",
+          "examples": [
+            {
+              "text": "Ich komme aus Berlin.",
+              "translation": "I come from Berlin.",
+              "cloze": "aus"
+            },
+            {
+              "text": "Es geht aus dem Haus.",
+              "translation": "It goes out of the house.",
+              "cloze": "aus"
+            },
+            {
+              "text": "Wir sind aus Deutschland.",
+              "translation": "We are from Germany.",
+              "cloze": "aus"
+            }
+          ]
+        },
+        {
+          "lemma": "mein",
+          "gloss": "my",
+          "pos": "det",
+          "forms": [
+            "mein"
+          ],
+          "notes": "Must agree in case and gender.",
+          "examples": [
+            {
+              "text": "Das ist mein Buch.",
+              "translation": "That is my book.",
+              "cloze": "mein"
+            },
+            {
+              "text": "Mein Haus ist groß.",
+              "translation": "My house is big.",
+              "cloze": "mein"
+            },
+            {
+              "text": "Mein Hund kommt hierher.",
+              "translation": "My dog comes here.",
+              "cloze": "mein"
+            }
+          ]
+        },
+        {
+          "lemma": "um",
+          "gloss": "around; at (time)",
+          "pos": "prep",
+          "forms": [
+            "um"
+          ],
+          "notes": "Used for time or location surrounding something.",
+          "examples": [
+            {
+              "text": "Um zehn Uhr treffe ich dich.",
+              "translation": "I meet you at ten o'clock.",
+              "cloze": "Um"
+            },
+            {
+              "text": "Wir gehen um das Haus.",
+              "translation": "We walk around the house.",
+              "cloze": "um"
+            },
+            {
+              "text": "Es ist um die Ecke.",
+              "translation": "It is around the corner.",
+              "cloze": "um"
+            }
+          ]
+        },
+        {
+          "lemma": "im",
+          "gloss": "in the",
+          "pos": "prep",
+          "forms": [
+            "im"
+          ],
+          "notes": "Contraction of 'in dem'.",
+          "examples": [
+            {
+              "text": "Ich bin im Haus.",
+              "translation": "I am in the house.",
+              "cloze": "im"
+            },
+            {
+              "text": "Es ist im Garten.",
+              "translation": "It is in the garden.",
+              "cloze": "im"
+            },
+            {
+              "text": "Wir gehen im Kino.",
+              "translation": "We go to the cinema.",
+              "cloze": "im"
+            }
+          ]
+        },
+        {
+          "lemma": "werden",
+          "gloss": "to become; will",
+          "pos": "verb",
+          "forms": [
+            "wird"
+          ],
+          "notes": "Present tense singular form of 'werden'.",
+          "examples": [
+            {
+              "text": "Das wird gut.",
+              "translation": "That will be good.",
+              "cloze": "wird"
+            },
+            {
+              "text": "Es wird kalt hier.",
+              "translation": "It becomes cold here.",
+              "cloze": "wird"
+            },
+            {
+              "text": "Was wird das sein?",
+              "translation": "What will that be?",
+              "cloze": "wird"
+            }
+          ]
+        },
+        {
+          "lemma": "mein",
+          "gloss": "my",
+          "pos": "det",
+          "forms": [
+            "mein"
+          ],
+          "notes": "See previous entry.",
+          "examples": [
+            {
+              "text": "Mein Buch ist neu.",
+              "translation": "My book is new.",
+              "cloze": "Mein"
+            }
+          ]
+        },
+        {
+          "lemma": "sein",
+          "gloss": "to be",
+          "pos": "verb",
+          "forms": [
+            "bist",
+            "ist",
+            "war",
+            "sind"
+          ],
+          "notes": "Highly irregular verb.",
+          "examples": [
+            {
+              "text": "Du bist alt.",
+              "translation": "You are old.",
+              "cloze": "bist"
+            },
+            {
+              "text": "Es ist kalt.",
+              "translation": "It is cold.",
+              "cloze": "ist"
+            },
+            {
+              "text": "Wir waren da.",
+              "translation": "We were there.",
+              "cloze": "war"
+            }
+          ]
+        },
+        {
+          "lemma": "doch",
+          "gloss": "yet; however",
+          "pos": "adv",
+          "forms": [
+            "doch"
+          ],
+          "notes": "Used to contradict or soften a statement.",
+          "examples": [
+            {
+              "text": "Doch, ich weiß es.",
+              "translation": "Yes, I know it.",
+              "cloze": "Doch"
+            },
+            {
+              "text": "Es doch geht.",
+              "translation": "It is possible.",
+              "cloze": "doch"
+            },
+            {
+              "text": "Wo ist er doch?",
+              "translation": "Where is he, though?",
+              "cloze": "doch"
+            }
+          ]
+        },
+        {
+          "lemma": "alles",
+          "gloss": "all; everything",
+          "pos": "pron",
+          "forms": [
+            "alles"
+          ],
+          "notes": "Can mean 'everything' or 'all'.",
+          "examples": [
+            {
+              "text": "Alles ist gut.",
+              "translation": "Everything is fine.",
+              "cloze": "Alles"
+            },
+            {
+              "text": "Ich weiß alles.",
+              "translation": "I know everything.",
+              "cloze": "alles"
+            },
+            {
+              "text": "Wo ist alles?",
+              "translation": "Where is everything?",
+              "cloze": "alles"
+            }
+          ]
+        },
+        {
+          "lemma": "wissen",
+          "gloss": "to know (a fact)",
+          "pos": "verb",
+          "forms": [
+            "weiß"
+          ],
+          "notes": "Present tense singular form of 'wissen'.",
+          "examples": [
+            {
+              "text": "Ich weiß das.",
+              "translation": "I know that.",
+              "cloze": "weiß"
+            },
+            {
+              "text": "Was weißt du?",
+              "translation": "What do you know?",
+              "cloze": "weiß"
+            },
+            {
+              "text": "Er weiß es nicht.",
+              "translation": "He doesn't know it.",
+              "cloze": "weiß"
+            }
+          ]
+        },
+        {
+          "lemma": "kein",
+          "gloss": "no; none",
+          "pos": "det",
+          "forms": [
+            "keine"
+          ],
+          "notes": "Negates nouns. Like 'no/any'.",
+          "examples": [
+            {
+              "text": "Ich habe kein Brot.",
+              "translation": "I have no bread.",
+              "cloze": "kein"
+            },
+            {
+              "text": "Es gibt keine Zeit.",
+              "translation": "There is no time.",
+              "cloze": "keine"
+            },
+            {
+              "text": "Keine Angst, es gut.",
+              "translation": "No fear, it is fine.",
+              "cloze": "keine"
+            }
+          ]
+        },
+        {
+          "lemma": "oder",
+          "gloss": "or",
+          "pos": "conj",
+          "forms": [
+            "oder"
+          ],
+          "notes": "Connects alternatives.",
+          "examples": [
+            {
+              "text": "Kommst du oder nicht?",
+              "translation": "Are you coming or not?",
+              "cloze": "oder"
+            },
+            {
+              "text": "Kaffee oder Tee?",
+              "translation": "Coffee or tea?",
+              "cloze": "oder"
+            },
+            {
+              "text": "Gehen wir jetzt oder später?",
+              "translation": "Shall we go now or later?",
+              "cloze": "oder"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 34,
+        "threePerWord": 0.9166666666666666,
+        "clozeOk": 0.9117647058823529,
+        "avgLen": 3.8529411764705883,
+        "inVocab": 0.6793893129770993
+      }
+    },
+    {
+      "lang": "de",
+      "kind": "intermediate",
+      "ms": 39485.604375000024,
+      "words": [
+        {
+          "lemma": "dabei",
+          "gloss": "thereby; also",
+          "pos": "adverb",
+          "forms": [
+            "dabei"
+          ],
+          "examples": [
+            {
+              "text": "Ich bin dabei.",
+              "translation": "I am there [at it].",
+              "cloze": "Ich bin dabei."
+            },
+            {
+              "text": "Was ist dabei?",
+              "translation": "What is there [with this]?",
+              "cloze": "Was ist dabei?"
+            },
+            {
+              "text": "Das dabei hilft.",
+              "translation": "That helps [with it].",
+              "cloze": "Das dabei hilft."
+            }
+          ]
+        },
+        {
+          "lemma": "heißen",
+          "gloss": "to be called",
+          "pos": "verb",
+          "forms": [
+            "heißen"
+          ],
+          "notes": "Present tense: heißt.",
+          "examples": [
+            {
+              "text": "Wie heißt du?",
+              "translation": "What is your name?",
+              "cloze": "Wie heißt du?"
+            },
+            {
+              "text": "Er heißt Peter.",
+              "translation": "His name is Peter.",
+              "cloze": "Er heißt Peter."
+            },
+            {
+              "text": "Wie heißt sie?",
+              "translation": "What is her name?",
+              "cloze": "Wie heißt sie?"
+            }
+          ]
+        },
+        {
+          "lemma": "Familie",
+          "gloss": "family",
+          "pos": "noun",
+          "forms": [
+            "familie"
+          ],
+          "notes": "Feminine noun (die Familie).",
+          "examples": [
+            {
+              "text": "Die Familie ist da.",
+              "translation": "The family is here.",
+              "cloze": "Die Familie ist da."
+            },
+            {
+              "text": "Meine Familie kommt.",
+              "translation": "My family is coming.",
+              "cloze": "Meine Familie kommt."
+            },
+            {
+              "text": "Die Familie wartet.",
+              "translation": "The family waits.",
+              "cloze": "Die Familie wartet."
+            }
+          ]
+        },
+        {
+          "lemma": "warten",
+          "gloss": "to wait",
+          "pos": "verb",
+          "forms": [
+            "warten"
+          ],
+          "notes": "Present tense: wartet.",
+          "examples": [
+            {
+              "text": "Wir warten hier.",
+              "translation": "We wait here.",
+              "cloze": "Wir warten hier."
+            },
+            {
+              "text": "Warum wartest du?",
+              "translation": "Why are you waiting?",
+              "cloze": "Warum wartest du?"
+            },
+            {
+              "text": "Sie warten schon.",
+              "translation": "They are already waiting.",
+              "cloze": "Sie warten schon."
+            }
+          ]
+        },
+        {
+          "lemma": "niemand",
+          "gloss": "nobody",
+          "pos": "pronoun",
+          "forms": [
+            "niemand"
+          ],
+          "examples": [
+            {
+              "text": "Niemand kommt.",
+              "translation": "Nobody is coming.",
+              "cloze": "Niemand kommt."
+            },
+            {
+              "text": "Niemand weiß es.",
+              "translation": "Nobody knows it.",
+              "cloze": "Niemand weiß es."
+            },
+            {
+              "text": "Niemand hilft dabei.",
+              "translation": "Nobody helps with it.",
+              "cloze": "Niemand hilft dabei."
+            }
+          ]
+        },
+        {
+          "lemma": "sofort",
+          "gloss": "immediately; at once",
+          "pos": "adverb",
+          "forms": [
+            "sofort"
+          ],
+          "examples": [
+            {
+              "text": "Komm sofort her.",
+              "translation": "Come here immediately.",
+              "cloze": "Komm sofort her."
+            },
+            {
+              "text": "Das ist sofort gut.",
+              "translation": "That is okay right away.",
+              "cloze": "Das ist sofort gut."
+            },
+            {
+              "text": "Wann kommt er sofort?",
+              "translation": "When is he coming immediately?",
+              "cloze": "Wann kommt er sofort?"
+            }
+          ]
+        },
+        {
+          "lemma": "bevor",
+          "gloss": "before",
+          "pos": "conjunction",
+          "forms": [
+            "bevor"
+          ],
+          "examples": [
+            {
+              "text": "Bevor es regnet.",
+              "translation": "Before it rains.",
+              "cloze": "Bevor es regnet."
+            },
+            {
+              "text": "Mach es, bevor es spät ist.",
+              "translation": "Do it before it is late.",
+              "cloze": "Mach es, bevor es spät ist."
+            },
+            {
+              "text": "Bevor wir gehen.",
+              "translation": "Before we go.",
+              "cloze": "Bevor wir gehen."
+            }
+          ]
+        },
+        {
+          "lemma": "jahre",
+          "gloss": "years",
+          "pos": "noun",
+          "forms": [
+            "jahre"
+          ],
+          "notes": "Plural of Jahr.",
+          "examples": [
+            {
+              "text": "Es dauert Jahre.",
+              "translation": "It takes years.",
+              "cloze": "Es dauert Jahre."
+            },
+            {
+              "text": "Nach vielen Jahren.",
+              "translation": "After many years.",
+              "cloze": "Nach vielen Jahren."
+            },
+            {
+              "text": "Wir warten Jahre.",
+              "translation": "We wait years.",
+              "cloze": "Wir warten Jahre."
+            }
+          ]
+        },
+        {
+          "lemma": "einmal",
+          "gloss": "once",
+          "pos": "adverb",
+          "forms": [
+            "einmal"
+          ],
+          "examples": [
+            {
+              "text": "Komm einmal her.",
+              "translation": "Come here once.",
+              "cloze": "Komm einmal her."
+            },
+            {
+              "text": "Das passiert einmal.",
+              "translation": "That happens once.",
+              "cloze": "Das passiert einmal."
+            },
+            {
+              "text": "Wann noch einmal?",
+              "translation": "When once more?",
+              "cloze": "Wann noch einmal?"
+            }
+          ]
+        },
+        {
+          "lemma": "Problem",
+          "gloss": "problem",
+          "pos": "noun",
+          "forms": [
+            "problem"
+          ],
+          "notes": "Neuter noun (das Problem).",
+          "examples": [
+            {
+              "text": "Ich habe ein Problem.",
+              "translation": "I have a problem.",
+              "cloze": "Ich habe ein Problem."
+            },
+            {
+              "text": "Was ist das Problem?",
+              "translation": "What is the problem?",
+              "cloze": "Was ist das Problem?"
+            },
+            {
+              "text": "Es gibt kein Problem.",
+              "translation": "There is no problem.",
+              "cloze": "Es gibt kein Problem."
+            }
+          ]
+        },
+        {
+          "lemma": "Sohn",
+          "gloss": "son",
+          "pos": "noun",
+          "forms": [
+            "sohn"
+          ],
+          "notes": "Masculine noun (der Sohn).",
+          "examples": [
+            {
+              "text": "Mein Sohn kommt.",
+              "translation": "My son is coming.",
+              "cloze": "Mein Sohn kommt."
+            },
+            {
+              "text": "Sein Sohn wartet.",
+              "translation": "His son waits.",
+              "cloze": "Sein Sohn wartet."
+            },
+            {
+              "text": "Der Sohn ist groß.",
+              "translation": "The son is big.",
+              "cloze": "Der Sohn ist groß."
+            }
+          ]
+        },
+        {
+          "lemma": "wann",
+          "gloss": "when",
+          "pos": "adverb",
+          "forms": [
+            "wann"
+          ],
+          "examples": [
+            {
+              "text": "Wann kommst du?",
+              "translation": "When are you coming?",
+              "cloze": "Wann kommst du?"
+            },
+            {
+              "text": "Wann geht es gut?",
+              "translation": "When is it okay?",
+              "cloze": "Wann geht es gut?"
+            },
+            {
+              "text": "Wann beginnt es?",
+              "translation": "When does it begin?",
+              "cloze": "Wann beginnt es?"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 3.2777777777777777,
+        "inVocab": 0.8220338983050848
+      }
+    },
+    {
+      "lang": "de",
+      "kind": "advanced",
+      "ms": 40470.21704099997,
+      "words": [
+        {
+          "lemma": "die Position",
+          "gloss": "the position",
+          "pos": "",
+          "forms": [
+            "die position"
+          ],
+          "notes": "Feminine noun.",
+          "examples": [
+            {
+              "text": "Was ist deine neue Position?",
+              "translation": "What is your new position?",
+              "cloze": "Was ist deine neue Position?"
+            },
+            {
+              "text": "Ich nehme diese Position an.",
+              "translation": "I accept this position.",
+              "cloze": "Ich nehme diese Position an."
+            },
+            {
+              "text": "Die Position ist sehr wichtig.",
+              "translation": "The position is very important.",
+              "cloze": "Die Position ist sehr wichtig."
+            }
+          ]
+        },
+        {
+          "lemma": "echt",
+          "gloss": "real; true",
+          "pos": "",
+          "forms": [
+            "echte"
+          ],
+          "notes": "Adjective.",
+          "examples": [
+            {
+              "text": "Ist das echt?",
+              "translation": "Is that real?",
+              "cloze": "Ist das echt?"
+            },
+            {
+              "text": "Er ist echt gut.",
+              "translation": "He is truly good.",
+              "cloze": "Er ist echt gut."
+            },
+            {
+              "text": "Echte Freunde sind wichtig.",
+              "translation": "Real friends are important.",
+              "cloze": "Echte Freunde sind wichtig."
+            }
+          ]
+        },
+        {
+          "lemma": "gleichen",
+          "gloss": "the same",
+          "pos": "",
+          "forms": [
+            "gleichen"
+          ],
+          "notes": "Adjective/Comparative form.",
+          "examples": [
+            {
+              "text": "Die gleichen Dinge geschehen.",
+              "translation": "The same things happen.",
+              "cloze": "Die gleichen Dinge geschehen."
+            },
+            {
+              "text": "Wir sind gleich gewesen.",
+              "translation": "We were the same.",
+              "cloze": "Wir sind gleich gewesen."
+            },
+            {
+              "text": "Das ist das Gleiche.",
+              "translation": "That is the same.",
+              "cloze": "Das ist das Gleiche."
+            }
+          ]
+        },
+        {
+          "lemma": "fernsehen",
+          "gloss": "to watch TV",
+          "pos": "",
+          "forms": [
+            "fernsehen"
+          ],
+          "notes": "Verb.",
+          "examples": [
+            {
+              "text": "Wir wollen fernsehen.",
+              "translation": "We want to watch TV.",
+              "cloze": "Wir wollen fernsehen."
+            },
+            {
+              "text": "Was siehst du im Fernsehen?",
+              "translation": "What are you watching on TV?",
+              "cloze": "Was siehst du im Fernsehen?"
+            },
+            {
+              "text": "Ich sehe fern.",
+              "translation": "I am watching TV.",
+              "cloze": "Ich sehe fern."
+            }
+          ]
+        },
+        {
+          "lemma": "der Wunsch",
+          "gloss": "the wish",
+          "pos": "",
+          "forms": [
+            "wünsche"
+          ],
+          "notes": "Plural of 'der Wunsch'.",
+          "examples": [
+            {
+              "text": "Was ist dein Wunsch?",
+              "translation": "What is your wish?",
+              "cloze": "Was ist dein Wunsch?"
+            },
+            {
+              "text": "Ich habe viele Wünsche.",
+              "translation": "I have many wishes.",
+              "cloze": "Ich habe viele Wünsche."
+            },
+            {
+              "text": "Seine Wünsche sind groß.",
+              "translation": "His wishes are big.",
+              "cloze": "Seine Wünsche sind groß."
+            }
+          ]
+        },
+        {
+          "lemma": "schließlich",
+          "gloss": "finally; eventually",
+          "pos": "",
+          "forms": [
+            "schließlich"
+          ],
+          "notes": "Adverb.",
+          "examples": [
+            {
+              "text": "Schließlich kommen wir an.",
+              "translation": "Finally we arrive.",
+              "cloze": "Schließlich kommen wir an."
+            },
+            {
+              "text": "Schließlich entscheide ich mich.",
+              "translation": "Eventually I decide.",
+              "cloze": "Schließlich entscheide ich mich."
+            },
+            {
+              "text": "Schließlich ist alles gut.",
+              "translation": "In the end, everything is fine.",
+              "cloze": "Schließlich ist alles gut."
+            }
+          ]
+        },
+        {
+          "lemma": "gefangen",
+          "gloss": "captured; caught",
+          "pos": "",
+          "forms": [
+            "gefangen"
+          ],
+          "notes": "Past participle of 'fangen'.",
+          "examples": [
+            {
+              "text": "Die Tiere sind gefangen.",
+              "translation": "The animals are caught.",
+              "cloze": "Die Tiere sind gefangen."
+            },
+            {
+              "text": "Er geriet in die Falle.",
+              "translation": "He fell into the trap.",
+              "cloze": "Er geriet in die Falle."
+            },
+            {
+              "text": "Sie waren gefangen dort.",
+              "translation": "They were caught there.",
+              "cloze": "Sie waren gefangen dort."
+            }
+          ]
+        },
+        {
+          "lemma": "das Schätzchen",
+          "gloss": "the treasure; darling",
+          "pos": "",
+          "forms": [
+            "schätzchen"
+          ],
+          "notes": "Diminutive, term of endearment.",
+          "examples": [
+            {
+              "text": "Mein Schätzchen, komm her.",
+              "translation": "My darling, come here.",
+              "cloze": "Mein Schätzchen, komm her."
+            },
+            {
+              "text": "Für dich, mein Schätzchen.",
+              "translation": "For you, my treasure.",
+              "cloze": "Für dich, mein Schätzchen."
+            },
+            {
+              "text": "Alles gut, mein Schatz.",
+              "translation": "It's okay, my dear.",
+              "cloze": "Alles gut, mein Schatz."
+            }
+          ]
+        },
+        {
+          "lemma": "sich sehen",
+          "gloss": "to see each other",
+          "pos": "",
+          "forms": [
+            "seh"
+          ],
+          "notes": "Contraction of 'sich sehen'.",
+          "examples": [
+            {
+              "text": "Wir sehen uns später.",
+              "translation": "We see each other later.",
+              "cloze": "Wir sehen uns später."
+            },
+            {
+              "text": "Bis wir uns sehen.",
+              "translation": "Until we see each other.",
+              "cloze": "Bis wir uns sehen."
+            },
+            {
+              "text": "Wann sehen wir uns?",
+              "translation": "When will we see each other?",
+              "cloze": "Wann sehen wir uns?"
+            }
+          ]
+        },
+        {
+          "lemma": "schwierig",
+          "gloss": "difficult; hard",
+          "pos": "",
+          "forms": [
+            "schwierig"
+          ],
+          "notes": "Adjective.",
+          "examples": [
+            {
+              "text": "Das ist schwierig für mich.",
+              "translation": "That is difficult for me.",
+              "cloze": "Das ist schwierig für mich."
+            },
+            {
+              "text": "Es war schwierig hier.",
+              "translation": "It was difficult here.",
+              "cloze": "Es war schwierig hier."
+            },
+            {
+              "text": "Die Aufgabe ist schwierig.",
+              "translation": "The task is difficult.",
+              "cloze": "Die Aufgabe ist schwierig."
+            }
+          ]
+        },
+        {
+          "lemma": "das Angebot",
+          "gloss": "the offer",
+          "pos": "",
+          "forms": [
+            "angebot"
+          ],
+          "notes": "Neuter noun.",
+          "examples": [
+            {
+              "text": "Ich nehme dein Angebot an.",
+              "translation": "I accept your offer.",
+              "cloze": "Ich nehme dein Angebot an."
+            },
+            {
+              "text": "Das Angebot ist gut.",
+              "translation": "The offer is good.",
+              "cloze": "Das Angebot ist gut."
+            },
+            {
+              "text": "Neues Angebot heute.",
+              "translation": "New offer today.",
+              "cloze": "Neues Angebot heute."
+            }
+          ]
+        },
+        {
+          "lemma": "nah",
+          "gloss": "near; close",
+          "pos": "",
+          "forms": [
+            "nah"
+          ],
+          "notes": "Adverb/Adjective.",
+          "examples": [
+            {
+              "text": "Komm her, bin nah.",
+              "translation": "Come here, I am near.",
+              "cloze": "Komm her, bin nah."
+            },
+            {
+              "text": "Es ist nah dran.",
+              "translation": "It is close to it.",
+              "cloze": "Es ist nah dran."
+            },
+            {
+              "text": "Wir sind nah dabei.",
+              "translation": "We are close to it.",
+              "cloze": "Wir sind nah dabei."
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 4.083333333333333,
+        "inVocab": 0.9387755102040817
+      }
+    },
+    {
+      "lang": "de",
+      "kind": "mine",
+      "ms": 9968.416874999995,
+      "words": [
+        {
+          "lemma": "regenschirm",
+          "gloss": "umbrella",
+          "pos": "m.",
+          "forms": [
+            "Regenschirm"
+          ],
+          "examples": [
+            {
+              "text": "Gestern habe ich meinen Regenschirm im Bus vergessen.",
+              "translation": "Yesterday I forgot my umbrella in the bus.",
+              "cloze": "Regenschirm"
+            },
+            {
+              "text": "Brauchst du einen Regenschirm?",
+              "translation": "Do you need an umbrella?",
+              "cloze": "Regenschirm"
+            },
+            {
+              "text": "Mein Regenschirm ist kaputt.",
+              "translation": "My umbrella is broken.",
+              "cloze": "Regenschirm"
+            }
+          ]
+        },
+        {
+          "lemma": "vergessen",
+          "gloss": "to forget",
+          "pos": "v.",
+          "forms": [
+            "vergessen"
+          ],
+          "examples": [
+            {
+              "text": "Gestern habe ich meinen Regenschirm im Bus vergessen.",
+              "translation": "Yesterday I forgot my umbrella in the bus.",
+              "cloze": "vergessen"
+            },
+            {
+              "text": "Ich habe das nicht vergessen.",
+              "translation": "I didn't forget that.",
+              "cloze": "vergessen"
+            },
+            {
+              "text": "Was hast du vergessen?",
+              "translation": "What did you forget?",
+              "cloze": "vergessen"
+            }
+          ]
+        },
+        {
+          "lemma": "bus",
+          "gloss": "bus",
+          "pos": "m.",
+          "forms": [
+            "Bus"
+          ],
+          "examples": [
+            {
+              "text": "Gestern habe ich meinen Regenschirm im Bus vergessen.",
+              "translation": "Yesterday I forgot my umbrella in the bus.",
+              "cloze": "Bus"
+            },
+            {
+              "text": "Wir fahren mit dem Bus.",
+              "translation": "We are going by bus.",
+              "cloze": "Bus"
+            },
+            {
+              "text": "Der Bus kommt spät.",
+              "translation": "The bus comes late.",
+              "cloze": "Bus"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 9,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 5.555555555555555,
+        "keptOriginal": 1
+      }
+    }
+  ]
+}

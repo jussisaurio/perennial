@@ -1,0 +1,1993 @@
+{
+  "model": "mlx-community/Qwen3.5-2B-MLX-4bit",
+  "results": [
+    {
+      "lang": "es",
+      "kind": "beginner",
+      "ms": 93292.938541,
+      "error": "Error: AI reply was unusable: Error: unterminated JSON in reply",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "es",
+      "kind": "intermediate",
+      "ms": 14343.989541000003,
+      "words": [
+        {
+          "lemma": "volver",
+          "gloss": "to go back / to return",
+          "pos": "verb",
+          "forms": [
+            "volver",
+            "vuelto"
+          ],
+          "notes": "Irregular: volví, volviste, volvió, volvimos, volvisteis, volvieron",
+          "examples": [
+            {
+              "text": "¿Cuándo volviste de tu viaje?",
+              "translation": "When did you return from your trip?",
+              "cloze": "vuelto"
+            },
+            {
+              "text": "Me gusta volver las escaleras.",
+              "translation": "I like going back to the stairs.",
+              "cloze": "volver"
+            },
+            {
+              "text": "Nunca volvemos con ese coche.",
+              "translation": "We never go back with that car.",
+              "cloze": "volver"
+            }
+          ]
+        },
+        {
+          "lemma": "esas",
+          "gloss": "those (masculine plural)",
+          "pos": "pronoun",
+          "forms": [
+            "esas"
+          ],
+          "notes": "Same as 'ese'",
+          "examples": [
+            {
+              "text": "Ese libro es bueno. ¿Son esos amigos?",
+              "translation": "That book is good. Are those friends?",
+              "cloze": "esas"
+            },
+            {
+              "text": "Dame esas fotos.",
+              "translation": "Give me those photos.",
+              "cloze": "esas"
+            }
+          ]
+        },
+        {
+          "lemma": "quizá",
+          "gloss": "probably / perhaps",
+          "pos": "adv",
+          "forms": [
+            "quizá"
+          ],
+          "notes": "Syn: quizás",
+          "examples": [
+            {
+              "text": "Quizá vinieron tarde.",
+              "translation": "Perhaps they came late.",
+              "cloze": "quizá"
+            },
+            {
+              "text": "¿Quizá es la razón?",
+              "translation": "Maybe that's the reason",
+              "cloze": "quizá"
+            }
+          ]
+        },
+        {
+          "lemma": "contra",
+          "gloss": "against / opposed to",
+          "pos": "prep",
+          "forms": [
+            "contra",
+            "contrario"
+          ],
+          "notes": "Syn: en contra de",
+          "examples": [
+            {
+              "text": "No está contra mí.",
+              "translation": "I am not against you.",
+              "cloze": "contra"
+            },
+            {
+              "text": "Me contrapuse a su idea.",
+              "translation": "I opposed her idea.",
+              "cloze": "contra"
+            }
+          ]
+        },
+        {
+          "lemma": "camino",
+          "gloss": "path / way",
+          "pos": "noun",
+          "forms": [
+            "camino",
+            "caminante"
+          ],
+          "notes": "Syn: camino (masc), camino (f), camino (neut)",
+          "examples": [
+            {
+              "text": "Por dónde caminas?",
+              "translation": "How do you get there?",
+              "cloze": "camino"
+            },
+            {
+              "text": "El camino a la ciudad es largo.",
+              "translation": "The way to the city is long.",
+              "cloze": "camino"
+            }
+          ]
+        },
+        {
+          "lemma": "durante",
+          "gloss": "during / while",
+          "pos": "prep",
+          "forms": [
+            "durante",
+            "durmante"
+          ],
+          "notes": "Syn: en (during)",
+          "examples": [
+            {
+              "text": "Durante la guerra no vendimos.",
+              "translation": "During the war we didn't sell.",
+              "cloze": "durante"
+            },
+            {
+              "text": "El libro se compró durante el verano.",
+              "translation": "The book was bought during the summer.",
+              "cloze": "durante"
+            }
+          ]
+        },
+        {
+          "lemma": "hablando",
+          "gloss": "being / talking",
+          "pos": "noun",
+          "forms": [
+            "hablando"
+          ],
+          "notes": "Syn: hablando (masc), hablando (f), hablando (neut)",
+          "examples": [
+            {
+              "text": "Me hago daño mientras hablo.",
+              "translation": "I hurt myself while talking.",
+              "cloze": "hablando"
+            },
+            {
+              "text": "Hablando honestamente, no me gusta.",
+              "translation": "Speaking honestly, I don't like it.",
+              "cloze": "hablando"
+            }
+          ]
+        },
+        {
+          "lemma": "manera",
+          "gloss": "manner / way",
+          "pos": "noun",
+          "forms": [
+            "manera",
+            "maneras"
+          ],
+          "notes": "Syn: forma; feminine: manera(s)",
+          "examples": [
+            {
+              "text": "La manera de hablar es grave.",
+              "translation": "The way of speaking is grave.",
+              "cloze": "manera"
+            },
+            {
+              "text": "¡Cómo va esa manera!",
+              "translation": "How is that way!",
+              "cloze": "manera"
+            }
+          ]
+        },
+        {
+          "lemma": "muerto",
+          "gloss": "dead",
+          "pos": "adj",
+          "forms": [
+            "muerto",
+            "dead"
+          ],
+          "notes": "Syn: dead",
+          "examples": [
+            {
+              "text": "Ese hombre es muy muerto.",
+              "translation": "That man is very dead.",
+              "cloze": "muerto"
+            },
+            {
+              "text": "El perro está muerto en el parque.",
+              "translation": "The dog is dead in the park.",
+              "cloze": "muerto"
+            }
+          ]
+        },
+        {
+          "lemma": "persona",
+          "gloss": "person",
+          "pos": "noun",
+          "forms": [
+            "persona",
+            "personas"
+          ],
+          "notes": "Syn: personal",
+          "examples": [
+            {
+              "text": "Como persona humana.",
+              "translation": "As a human person.",
+              "cloze": "persona"
+            },
+            {
+              "text": "¿Son personas honestas?",
+              "translation": "Are they honest persons?",
+              "cloze": "persona"
+            }
+          ]
+        },
+        {
+          "lemma": "rápido",
+          "gloss": "fast / swift",
+          "pos": "adj",
+          "forms": [
+            "rápido",
+            "rapid"
+          ],
+          "notes": "Syn: rápido (masc), rápido (f), rápido (neut)",
+          "examples": [
+            {
+              "text": "El coche es muy rápido.",
+              "translation": "The car is very fast.",
+              "cloze": "rápido"
+            },
+            {
+              "text": "Un viaje rápido.",
+              "translation": "A quick journey.",
+              "cloze": "rápido"
+            }
+          ]
+        },
+        {
+          "lemma": "cuál",
+          "gloss": "which / any",
+          "pos": "pronoun",
+          "forms": [
+            "cuál",
+            "cual"
+          ],
+          "notes": "Syn: cuál; feminine: cual(s)",
+          "examples": [
+            {
+              "text": "Con qué le pediste el libro?",
+              "translation": "Which book did you ask him for?",
+              "cloze": "cuál"
+            },
+            {
+              "text": "¿Cuál es tu nombre?",
+              "translation": "What is your name?",
+              "cloze": "cuál"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 25,
+        "threePerWord": 0.08333333333333333,
+        "clozeOk": 0.56,
+        "avgLen": 4.76,
+        "inVocab": 0.6470588235294118
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "mine",
+      "ms": 7004.474541999996,
+      "words": [
+        {
+          "lemma": "encontré",
+          "gloss": "I found",
+          "pos": "pronominal verb",
+          "forms": [
+            "encontré",
+            "encontro",
+            "encontramos",
+            "encontran",
+            "encontráis",
+            "encuentran",
+            "encuentramos",
+            "encontraban",
+            "encuentra",
+            "encuentramos"
+          ],
+          "notes": "Past participle of 'encontrar'. Used as 'encontré' for 'I found'.",
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "Ayer encontré un perro abandonado cerca del puerto."
+            },
+            {
+              "text": "No puedo encontrar esta puerta.",
+              "translation": "I can't find this door.",
+              "cloze": "No puedo encontrar esta puerta."
+            },
+            {
+              "text": "La verdad es que no lo encontré.",
+              "translation": "The truth is that I didn't find it.",
+              "cloze": "La verdad es que no lo encontré."
+            }
+          ]
+        },
+        {
+          "lemma": "abandonado",
+          "gloss": "abandoned",
+          "pos": "adjective",
+          "forms": [
+            "abandonado",
+            "abandonados"
+          ],
+          "notes": "Adjective from 'abandonar'. Used for 'I found'.",
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "Ayer encontré un perro abandonado cerca del puerto."
+            },
+            {
+              "text": "Los animales abandonados necesitan ayuda.",
+              "translation": "Abandoned animals need help.",
+              "cloze": "Los animales abandonados necesitan ayuda."
+            },
+            {
+              "text": "No hay nadie abandonado en la casa.",
+              "translation": "No one is abandoned in the house.",
+              "cloze": "No hay nadie abandonado en la casa."
+            }
+          ]
+        },
+        {
+          "lemma": "puerto",
+          "gloss": "port",
+          "pos": "noun (masculine)",
+          "forms": [
+            "el puerto",
+            "el puerto",
+            "las puertas",
+            "la puerta"
+          ],
+          "notes": "Noun. Singular 'el puerto', plural 'las puertas'.",
+          "examples": [
+            {
+              "text": "Ayer encontré un perro abandonado cerca del puerto.",
+              "translation": "Yesterday I found an abandoned dog near the port.",
+              "cloze": "Ayer encontré un perro abandonado cerca del puerto."
+            },
+            {
+              "text": "El puerto es muy grande.",
+              "translation": "The port is very big.",
+              "cloze": "El puerto es muy grande."
+            },
+            {
+              "text": "Mira las puertas de tu coche.",
+              "translation": "Look at the doors of your car.",
+              "cloze": "Mira las puertas de tu coche."
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 9,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 6.555555555555555,
+        "keptOriginal": 1
+      }
+    },
+    {
+      "lang": "ja",
+      "kind": "beginner",
+      "ms": 16329.888582999993,
+      "words": [
+        {
+          "lemma": "、",
+          "gloss": "comma",
+          "pos": "particle",
+          "forms": [
+            ",",
+            "，",
+            "、"
+          ],
+          "notes": "Ends sentences and lists.",
+          "examples": [
+            {
+              "text": "Hello, how are you?",
+              "translation": "こんにちは、どうお召しなり？",
+              "cloze": ""
+            },
+            {
+              "text": "I will go home.",
+              "translation": "帰ります。",
+              "cloze": "、"
+            },
+            {
+              "text": "Today is a sunny day.",
+              "translation": "今日は晴天です。",
+              "cloze": "、"
+            }
+          ]
+        },
+        {
+          "lemma": "。",
+          "gloss": "period",
+          "pos": "particle",
+          "forms": [
+            ",",
+            ".",
+            "、"
+          ],
+          "notes": "Ends sentences.",
+          "examples": [
+            {
+              "text": "Hello。Goodbye.",
+              "translation": "こんにちは。おはよう。",
+              "cloze": ""
+            },
+            {
+              "text": "Who said that?",
+              "translation": "誰が言ったんだ？",
+              "cloze": "。"
+            },
+            {
+              "text": "Stop there.",
+              "translation": "そこへ止まれ。",
+              "cloze": "。"
+            }
+          ]
+        },
+        {
+          "lemma": "何",
+          "gloss": "what",
+          "pos": "noun",
+          "forms": [
+            ",",
+            "、",
+            "何",
+            "何",
+            "、"
+          ],
+          "notes": "Asks questions.",
+          "examples": [
+            {
+              "text": "What color is the sky?",
+              "translation": "青い色なぞ？",
+              "cloze": ""
+            },
+            {
+              "text": "How many apples are there?",
+              "translation": "いくつな？",
+              "cloze": "何"
+            },
+            {
+              "text": "How did you go there?",
+              "translation": "どこへ行ったの？",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "あ",
+          "gloss": "a/an",
+          "pos": "determiner",
+          "forms": [
+            ",",
+            "、",
+            "あ",
+            "あ"
+          ],
+          "notes": "An indefinite article.",
+          "examples": [
+            {
+              "text": "I have a dog.",
+              "translation": "犬がいます。",
+              "cloze": ""
+            },
+            {
+              "text": "Go there.",
+              "translation": "行。",
+              "cloze": ""
+            },
+            {
+              "text": "Take a seat.",
+              "translation": "座る。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "あなた",
+          "gloss": "you",
+          "pos": "noun",
+          "forms": [
+            ",",
+            "、",
+            "あ",
+            "あなた"
+          ],
+          "notes": "Polite pronoun.",
+          "examples": [
+            {
+              "text": "I love you.",
+              "translation": "あなたが好き。",
+              "cloze": ""
+            },
+            {
+              "text": "Who is that?",
+              "translation": "誰だ？",
+              "cloze": ""
+            },
+            {
+              "text": "I don't know.",
+              "translation": "知らない。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "言",
+          "gloss": "speak",
+          "pos": "verb",
+          "forms": [
+            ",",
+            "、",
+            "言",
+            "言",
+            "、"
+          ],
+          "notes": "To speak.",
+          "examples": [
+            {
+              "text": "I speak English.",
+              "translation": "英語を話します。",
+              "cloze": ""
+            },
+            {
+              "text": "Speak fast.",
+              "translation": "速く言。",
+              "cloze": ""
+            },
+            {
+              "text": "He says he is happy.",
+              "translation": "彼は happy と言う。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "行",
+          "gloss": "go / walk",
+          "pos": "verb",
+          "forms": [
+            ",",
+            "、",
+            "行",
+            "行",
+            "、"
+          ],
+          "notes": "To move or walk.",
+          "examples": [
+            {
+              "text": "I walk.",
+              "translation": "私は行きます。",
+              "cloze": ""
+            },
+            {
+              "text": "Let's go.",
+              "translation": "行こう。",
+              "cloze": ""
+            },
+            {
+              "text": "He went there.",
+              "translation": "彼は行った。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "人",
+          "gloss": "person",
+          "pos": "noun",
+          "forms": [
+            ",",
+            "、",
+            "人",
+            "人",
+            "、"
+          ],
+          "notes": "Human beings.",
+          "examples": [
+            {
+              "text": "Japan is a big country.",
+              "translation": "日本は大きな国です。",
+              "cloze": ""
+            },
+            {
+              "text": "There are many people.",
+              "translation": "多い人です。",
+              "cloze": ""
+            },
+            {
+              "text": "I like people.",
+              "translation": "人喜欢的人です。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "知",
+          "gloss": "know",
+          "pos": "verb",
+          "forms": [
+            ",",
+            "、",
+            "知",
+            "知",
+            "、"
+          ],
+          "notes": "To have knowledge.",
+          "examples": [
+            {
+              "text": "I know English.",
+              "translation": "英語を知っています。",
+              "cloze": ""
+            },
+            {
+              "text": "Do you know where to go?",
+              "translation": "行所を知っています。",
+              "cloze": ""
+            },
+            {
+              "text": "I don't know.",
+              "translation": "知らない。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": ")",
+          "gloss": "right parenthesis",
+          "pos": "determiner",
+          "forms": [
+            ",",
+            "、",
+            "）",
+            "）"
+          ],
+          "notes": "Ends lists.",
+          "examples": [
+            {
+              "text": "Do you know?",
+              "translation": "知っています。",
+              "cloze": ""
+            },
+            {
+              "text": "I like.",
+              "translation": "好きです。",
+              "cloze": ""
+            },
+            {
+              "text": "Yes.",
+              "translation": "はい。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "（",
+          "gloss": "left parenthesis",
+          "pos": "determiner",
+          "forms": [
+            ",",
+            "、",
+            "（",
+            "（"
+          ],
+          "notes": "Starts lists.",
+          "examples": [
+            {
+              "text": "I like.",
+              "translation": "好きです。",
+              "cloze": ""
+            },
+            {
+              "text": "Come here.",
+              "translation": "ここに来て。",
+              "cloze": ""
+            },
+            {
+              "text": "Open the door.",
+              "translation": "開け。",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "事",
+          "gloss": "thing",
+          "pos": "noun",
+          "forms": [
+            ",",
+            "、",
+            "事",
+            "事",
+            "、"
+          ],
+          "notes": "Matters/affairs.",
+          "examples": [
+            {
+              "text": "There are many things.",
+              "translation": "多い事です。",
+              "cloze": ""
+            },
+            {
+              "text": "What is this?",
+              "translation": "これが何事？",
+              "cloze": ""
+            },
+            {
+              "text": "Do not forget.",
+              "translation": "忘れな。",
+              "cloze": ""
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 0,
+        "avgLen": 3.25
+      }
+    },
+    {
+      "lang": "ja",
+      "kind": "intermediate",
+      "ms": 65864.23354200002,
+      "error": "Error: AI reply was unusable: Error: unterminated JSON in reply",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "ja",
+      "kind": "mine",
+      "ms": 8886.662125000003,
+      "words": [
+        {
+          "lemma": "財布",
+          "gloss": "wallet",
+          "pos": "noun",
+          "forms": [],
+          "notes": "a small bag used for carrying money and personal items",
+          "examples": [
+            {
+              "text": "昨日、駅の近くで財布を落としてしまった。",
+              "translation": "Yesterday, I dropped my wallet near the station.",
+              "cloze": "財布を"
+            },
+            {
+              "text": "彼は新しい財布を買い取った。",
+              "translation": "He bought a new wallet.",
+              "cloze": "新しい財布を"
+            },
+            {
+              "text": "財布の中に入れたお札を拾った。",
+              "translation": "He picked up the money card inside his wallet.",
+              "cloze": "財布の中に入れたお札を"
+            }
+          ]
+        },
+        {
+          "lemma": "落として",
+          "gloss": "dropped (past tense marker)",
+          "pos": "verb",
+          "forms": [
+            "落とした",
+            "落とした",
+            "落とした"
+          ],
+          "notes": "often used with honorifics like した",
+          "examples": [
+            {
+              "text": "昨日、駅の近くで財布を落としてしまった。",
+              "translation": "Yesterday, I dropped my wallet near the station.",
+              "cloze": "落として"
+            },
+            {
+              "text": "傘を落とした。",
+              "translation": "I dropped the umbrella.",
+              "cloze": "傘を"
+            },
+            {
+              "text": "箱を落とした。",
+              "translation": "I dropped the box.",
+              "cloze": "箱を"
+            }
+          ]
+        },
+        {
+          "lemma": "駅",
+          "gloss": "station",
+          "pos": "noun",
+          "forms": [
+            "駅",
+            "駅",
+            "駅"
+          ],
+          "notes": "a train or railway station",
+          "examples": [
+            {
+              "text": "昨日、駅で財布を落とした。",
+              "translation": "Yesterday, I dropped the wallet at the station.",
+              "cloze": "駅で"
+            },
+            {
+              "text": "駅が遠かったので、帰りに少し待った。",
+              "translation": "The station was far, so I stopped slightly to return.",
+              "cloze": "駅が遠かったので、帰りに"
+            },
+            {
+              "text": "乗っているですか。",
+              "translation": "Are you riding?",
+              "cloze": "乗っているですか。"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 9,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 8.333333333333334,
+        "keptOriginal": 0.6666666666666666
+      }
+    },
+    {
+      "lang": "fi",
+      "kind": "beginner",
+      "ms": 17384.831875000003,
+      "words": [
+        {
+          "lemma": "on",
+          "gloss": "there (certain location)",
+          "pos": "prep, adv",
+          "forms": [
+            ""
+          ],
+          "notes": "Used for location (e.g., 'on the road').",
+          "examples": [
+            {
+              "text": "I am on my way.",
+              "translation": "Jatani lähtevän.",
+              "cloze": "on"
+            },
+            {
+              "text": "I am on the train.",
+              "translation": "Jatani bussilla.",
+              "cloze": "on"
+            },
+            {
+              "text": "A coffee is on the table.",
+              "translation": "Yksi kofei on pöydällä.",
+              "cloze": "on"
+            }
+          ]
+        },
+        {
+          "lemma": "ei",
+          "gloss": "no; not",
+          "pos": "particle, adv",
+          "forms": [
+            ""
+          ],
+          "notes": "Negative for yes/no questions or statements.",
+          "examples": [
+            {
+              "text": "I do not know.",
+              "translation": "En tunnusta.",
+              "cloze": "ei"
+            },
+            {
+              "text": "He is not here.",
+              "translation": "Hän ei ole täällä.",
+              "cloze": "ei"
+            },
+            {
+              "text": "I do not like that.",
+              "translation": "En ole mielellä siitä.",
+              "cloze": "ei"
+            }
+          ]
+        },
+        {
+          "lemma": "ja",
+          "gloss": "and",
+          "pos": "conj",
+          "forms": [
+            ""
+          ],
+          "notes": "Connects two items or ideas.",
+          "examples": [
+            {
+              "text": "I ate bread and cheese.",
+              "translation": "Vaan syönyt pähkitty ja täyst.",
+              "cloze": "ja"
+            },
+            {
+              "text": "This is big and red.",
+              "translation": "Tämä on suuri ja punainen.",
+              "cloze": "ja"
+            },
+            {
+              "text": "He came and stayed.",
+              "translation": "Hän tuli ja pysähti.",
+              "cloze": "ja"
+            }
+          ]
+        },
+        {
+          "lemma": "se",
+          "gloss": "that; it; this",
+          "pos": "det, pron",
+          "forms": [
+            ""
+          ],
+          "notes": "Demonstrative pronouns for specific references.",
+          "examples": [
+            {
+              "text": "I see that boy.",
+              "translation": "Tunne tätä poikua.",
+              "cloze": "se"
+            },
+            {
+              "text": "She is my best friend.",
+              "translation": "Hän on minun parempi ystäjäni.",
+              "cloze": "se"
+            },
+            {
+              "text": "That is the time.",
+              "translation": "Tämä on aika.",
+              "cloze": "se"
+            }
+          ]
+        },
+        {
+          "lemma": "hän",
+          "gloss": "he",
+          "pos": "pron, det",
+          "forms": [
+            ""
+          ],
+          "notes": "Neutral pronoun for 'he' and 'she'.",
+          "examples": [
+            {
+              "text": "That is my friend.",
+              "translation": "Tämä on minun ystäjäni.",
+              "cloze": "se"
+            },
+            {
+              "text": "He is big.",
+              "translation": "Hän on suuri.",
+              "cloze": "hän"
+            },
+            {
+              "text": "She is kind.",
+              "translation": "Hän on hyvä.",
+              "cloze": "hän"
+            }
+          ]
+        },
+        {
+          "lemma": "en",
+          "gloss": "not",
+          "pos": "particle, adv",
+          "forms": [
+            ""
+          ],
+          "notes": "Negative for 'yes' or 'no'.",
+          "examples": [
+            {
+              "text": "You are not here.",
+              "translation": "En ole täällä.",
+              "cloze": "en"
+            },
+            {
+              "text": "He is not here.",
+              "translation": "Hän ei ole täällä.",
+              "cloze": "ei"
+            },
+            {
+              "text": "I do not know.",
+              "translation": "En tunnusta.",
+              "cloze": "en"
+            }
+          ]
+        },
+        {
+          "lemma": "mitä",
+          "gloss": "what",
+          "pos": "det, adv",
+          "forms": [
+            ""
+          ],
+          "notes": "Question word for 'what'.",
+          "examples": [
+            {
+              "text": "What is your name?",
+              "translation": "Mikä on nimesi?",
+              "cloze": "mitä"
+            },
+            {
+              "text": "What do you do?",
+              "translation": "Mikä teet?",
+              "cloze": "mitä"
+            },
+            {
+              "text": "What is the time?",
+              "translation": "Mikä on aika?",
+              "cloze": "mitä"
+            }
+          ]
+        },
+        {
+          "lemma": "että",
+          "gloss": "that",
+          "pos": "det, conj",
+          "forms": [
+            ""
+          ],
+          "notes": "Indicates 'that' clause.",
+          "examples": [
+            {
+              "text": "He is big; I am tall.",
+              "translation": "Hän on suuri; minä olen korkea.",
+              "cloze": "että"
+            },
+            {
+              "text": "That is the time.",
+              "translation": "Tämä on aika.",
+              "cloze": "että"
+            },
+            {
+              "text": "If he is here, I am not.",
+              "translation": "Jos hän on täällä, en ole.",
+              "cloze": "että"
+            }
+          ]
+        },
+        {
+          "lemma": "ole",
+          "gloss": "to be; become",
+          "pos": "verb",
+          "forms": [
+            ""
+          ],
+          "notes": "Core verb for existence and change.",
+          "examples": [
+            {
+              "text": "I am a doctor.",
+              "translation": "Enin on lääkäri.",
+              "cloze": "ole"
+            },
+            {
+              "text": "She is a teacher.",
+              "translation": "Hän on opettaja.",
+              "cloze": "ole"
+            },
+            {
+              "text": "He will become happy.",
+              "translation": "Hän tulee olemaan tyytyvä.",
+              "cloze": "ole"
+            }
+          ]
+        },
+        {
+          "lemma": "olen",
+          "gloss": "to be; am",
+          "pos": "verb",
+          "forms": [
+            ""
+          ],
+          "notes": "First person singular present.",
+          "examples": [
+            {
+              "text": "I am not here.",
+              "translation": "En ole täällä.",
+              "cloze": "olen"
+            },
+            {
+              "text": "I am big.",
+              "translation": "En on suuri.",
+              "cloze": "olen"
+            },
+            {
+              "text": "He is not here.",
+              "translation": "Hän ei ole täällä.",
+              "cloze": "olen"
+            }
+          ]
+        },
+        {
+          "lemma": "oli",
+          "gloss": "to be; was",
+          "pos": "verb",
+          "forms": [
+            ""
+          ],
+          "notes": "Past tense for 'to be'.",
+          "examples": [
+            {
+              "text": "He was not here.",
+              "translation": "Hän ei ole täällä.",
+              "cloze": "oli"
+            },
+            {
+              "text": "I was a doctor.",
+              "translation": "Enin en ole lääkäri.",
+              "cloze": "oli"
+            },
+            {
+              "text": "He is not here.",
+              "translation": "Hän ei ole täällä.",
+              "cloze": "oli"
+            }
+          ]
+        },
+        {
+          "lemma": "niin",
+          "gloss": "so; well; therefore",
+          "pos": "adv, conj",
+          "forms": [
+            ""
+          ],
+          "notes": "Conjunctions for connection or conclusion.",
+          "examples": [
+            {
+              "text": "If he is big, I am not.",
+              "translation": "Jos hän on suuri, en ole.",
+              "cloze": "niin"
+            },
+            {
+              "text": "I am big; I am tall.",
+              "translation": "En on suuri; minä olen korkea.",
+              "cloze": "niin"
+            },
+            {
+              "text": "He is big; I am tall.",
+              "translation": "Hän on suuri; minä olen korkea.",
+              "cloze": "niin"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 0.1111111111111111,
+        "avgLen": 4.472222222222222
+      }
+    },
+    {
+      "lang": "fi",
+      "kind": "intermediate",
+      "ms": 92321.30116700003,
+      "error": "Error: AI reply was unusable: Error: unterminated JSON in reply",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "fi",
+      "kind": "mine",
+      "ms": 16199.774749999982,
+      "error": "Error: AI reply was unusable: Error: expected {\"words\": [...]}",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "ar",
+      "kind": "beginner",
+      "ms": 15811.242749999976,
+      "words": [
+        {
+          "lemma": "لا",
+          "gloss": "no",
+          "pos": "particle",
+          "forms": [
+            "لا",
+            "ل",
+            "لّ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "لا نرى",
+              "translation": "we don't see",
+              "cloze": "لا"
+            },
+            {
+              "text": "لا يوجد",
+              "translation": "there is no",
+              "cloze": "لا"
+            },
+            {
+              "text": "لا ينام",
+              "translation": "he does not sleep",
+              "cloze": "لا"
+            }
+          ]
+        },
+        {
+          "lemma": "من",
+          "gloss": "from",
+          "pos": "preposition",
+          "forms": [
+            "من",
+            "م",
+            "مَ",
+            "ن"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "من هنا",
+              "translation": "from here",
+              "cloze": "من"
+            },
+            {
+              "text": "من ذلك",
+              "translation": "from that",
+              "cloze": "من"
+            },
+            {
+              "text": "من أننا",
+              "translation": "from us",
+              "cloze": "من"
+            }
+          ]
+        },
+        {
+          "lemma": "في",
+          "gloss": "in",
+          "pos": "preposition",
+          "forms": [
+            "في",
+            "ف",
+            "فَ",
+            "ن"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "في البيت",
+              "translation": "in the house",
+              "cloze": "في"
+            },
+            {
+              "text": "في الفصل",
+              "translation": "in the class",
+              "cloze": "في"
+            },
+            {
+              "text": "في السرير",
+              "translation": "in the bed",
+              "cloze": "في"
+            }
+          ]
+        },
+        {
+          "lemma": "أن",
+          "gloss": "that",
+          "pos": "conjunction",
+          "forms": [
+            "أن",
+            "ن",
+            "نَ",
+            "نْ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "أنه لا",
+              "translation": "he does not",
+              "cloze": "أنه"
+            },
+            {
+              "text": "أنه ينام",
+              "translation": "he does sleep",
+              "cloze": "أنه"
+            },
+            {
+              "text": "أنه",
+              "translation": "he",
+              "cloze": "أنه"
+            }
+          ]
+        },
+        {
+          "lemma": "هذا",
+          "gloss": "this",
+          "pos": "determiner",
+          "forms": [
+            "هذا",
+            "هَ",
+            "هْ",
+            "س"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "هذا الماء",
+              "translation": "this water",
+              "cloze": "هذا"
+            },
+            {
+              "text": "هذا الكتاب",
+              "translation": "this book",
+              "cloze": "هذا"
+            },
+            {
+              "text": "هذا المثل",
+              "translation": "this example",
+              "cloze": "هذا"
+            }
+          ]
+        },
+        {
+          "lemma": "على",
+          "gloss": "on",
+          "pos": "preposition",
+          "forms": [
+            "على",
+            "ع",
+            "عَ",
+            "لُ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "على الطاولة",
+              "translation": "on the table",
+              "cloze": "على"
+            },
+            {
+              "text": "على الطريق",
+              "translation": "on the way",
+              "cloze": "على"
+            },
+            {
+              "text": "على القدم",
+              "translation": "on the foot",
+              "cloze": "على"
+            }
+          ]
+        },
+        {
+          "lemma": "ما",
+          "gloss": "what",
+          "pos": "determiner",
+          "forms": [
+            "ما",
+            "م",
+            "مَ",
+            "أ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "ما هو",
+              "translation": "what is",
+              "cloze": "ما"
+            },
+            {
+              "text": "ما تقول",
+              "translation": "what you say",
+              "cloze": "ما"
+            },
+            {
+              "text": "ما نريد",
+              "translation": "what we want",
+              "cloze": "ما"
+            }
+          ]
+        },
+        {
+          "lemma": "أنا",
+          "gloss": "I",
+          "pos": "pronoun",
+          "forms": [
+            "أنا",
+            "ن",
+            "نَ",
+            "نْ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "أنا أفكر",
+              "translation": "I think",
+              "cloze": "أنا"
+            },
+            {
+              "text": "أنا لا",
+              "translation": "I do not",
+              "cloze": "أنا"
+            },
+            {
+              "text": "أنا",
+              "translation": "I",
+              "cloze": "أنا"
+            }
+          ]
+        },
+        {
+          "lemma": "هل",
+          "gloss": "what",
+          "pos": "interjection",
+          "forms": [
+            "هل",
+            "هَل",
+            "هَلْ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "هل هل",
+              "translation": "yes yes",
+              "cloze": "هل"
+            },
+            {
+              "text": "هل أنت",
+              "translation": "are you",
+              "cloze": "هل"
+            },
+            {
+              "text": "هل تريد",
+              "translation": "do you want",
+              "cloze": "هل"
+            }
+          ]
+        },
+        {
+          "lemma": "و",
+          "gloss": "and",
+          "pos": "conjunction",
+          "forms": [
+            "و",
+            "وَ",
+            "وْ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "أنا و",
+              "translation": "I and",
+              "cloze": "أنا"
+            },
+            {
+              "text": "أنا و",
+              "translation": "I and",
+              "cloze": "أنا"
+            },
+            {
+              "text": "أنا و",
+              "translation": "I and",
+              "cloze": "أنا"
+            }
+          ]
+        },
+        {
+          "lemma": "يا",
+          "gloss": "oh",
+          "pos": "interjection",
+          "forms": [
+            "يا",
+            "يَا",
+            "يْ"
+          ],
+          "notes": "no",
+          "examples": [
+            {
+              "text": "يا",
+              "translation": "oh",
+              "cloze": "يا"
+            },
+            {
+              "text": "يا",
+              "translation": "oh",
+              "cloze": "يا"
+            },
+            {
+              "text": "يا",
+              "translation": "oh",
+              "cloze": "يا"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 11,
+        "examples": 33,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 1.8484848484848484
+      }
+    },
+    {
+      "lang": "ar",
+      "kind": "intermediate",
+      "ms": 49383.32716699998,
+      "error": "Error: AI reply was unusable: Error: unterminated JSON in reply",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "ar",
+      "kind": "mine",
+      "ms": 4803.434207999962,
+      "words": [
+        {
+          "lemma": "نسيت",
+          "gloss": "I forgot",
+          "pos": "verb",
+          "forms": [
+            " نسيت",
+            "نَسيت"
+          ],
+          "examples": [
+            {
+              "text": "نسيت مفاتيحي في السيارة هذا الصباح.",
+              "translation": "I forgot my keys in my car this morning.",
+              "cloze": "نسيت"
+            },
+            {
+              "text": "هذا الصباح لم أكن أعرف أين أحسنت.",
+              "translation": "This morning I did not remember where I went.",
+              "cloze": "أحسنت"
+            },
+            {
+              "text": "أحسنت هذا الصباح.",
+              "translation": "This morning I went.",
+              "cloze": "أحسنت"
+            }
+          ]
+        },
+        {
+          "lemma": "مفاتيحي",
+          "gloss": "my keys",
+          "pos": "noun",
+          "forms": [
+            "مفاتيحي",
+            "مَفاتيحي"
+          ],
+          "examples": [
+            {
+              "text": "نسيت مفاتيحي في السيارة هذا الصباح.",
+              "translation": "I forgot my keys in my car this morning.",
+              "cloze": "مفاتيحي"
+            },
+            {
+              "text": "هل مفاتيحي مفكوك؟",
+              "translation": "Are my keys unlocked?",
+              "cloze": "مفاتيحي"
+            },
+            {
+              "text": "أنا مفاتيحي.",
+              "translation": "I am my keys.",
+              "cloze": "مفاتيحي"
+            }
+          ]
+        },
+        {
+          "lemma": "السيارة",
+          "gloss": "the car",
+          "pos": "noun",
+          "forms": [
+            "السيارة",
+            "السيَرة"
+          ],
+          "examples": [
+            {
+              "text": "نسيت مفاتيحي في السيارة هذا الصباح.",
+              "translation": "I forgot my keys in my car this morning.",
+              "cloze": "السيارة"
+            },
+            {
+              "text": "أنا في السيارة.",
+              "translation": "I am in the car.",
+              "cloze": "السيارة"
+            },
+            {
+              "text": "السيارة تحركت.",
+              "translation": "The car moved.",
+              "cloze": "السيارة"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 9,
+        "threePerWord": 1,
+        "clozeOk": 1,
+        "avgLen": 4.222222222222222,
+        "keptOriginal": 1
+      }
+    },
+    {
+      "lang": "th",
+      "kind": "beginner",
+      "ms": 8738.416374999972,
+      "words": [
+        {
+          "lemma": "yes",
+          "gloss": "affirmative",
+          "pos": "pron",
+          "forms": [
+            "yes",
+            "ใช่"
+          ],
+          "notes": "used for 'yes' and 'ใช่'.",
+          "examples": [
+            {
+              "text": "ฉันต้องการกินข้าว",
+              "translation": "I want to eat rice.",
+              "cloze": "ใช่"
+            },
+            {
+              "text": "แอปเปิ้ลอร่อยมาก",
+              "translation": "Apples are very delicious.",
+              "cloze": "ใช่"
+            },
+            {
+              "text": "วันนี้ฝนตก",
+              "translation": "It is raining today.",
+              "cloze": "ใช่"
+            }
+          ]
+        },
+        {
+          "lemma": "no",
+          "gloss": "negative",
+          "pos": "pron",
+          "forms": [
+            "no",
+            "ไม่ใช่",
+            "ไม่"
+          ],
+          "notes": "used for 'no', 'ไม่ใช่', and 'ไม่'.",
+          "examples": [
+            {
+              "text": "ฉันไม่กลัว",
+              "translation": "I am not afraid.",
+              "cloze": "ไม่"
+            },
+            {
+              "text": "เขาไม่ชอบ",
+              "translation": "He does not like.",
+              "cloze": "ไม่"
+            },
+            {
+              "text": "วันนี้ไม่ร้อน",
+              "translation": "It is not hot today.",
+              "cloze": "ไม่"
+            }
+          ]
+        },
+        {
+          "lemma": "okay",
+          "gloss": "acceptable",
+          "pos": "adv",
+          "forms": [
+            "โอเค",
+            "โอเค",
+            "โอเค"
+          ],
+          "notes": "used for 'okay'.",
+          "examples": [
+            {
+              "text": "กินที่นั่นเป็นโอเค",
+              "translation": "That's okay.",
+              "cloze": "โอ้"
+            },
+            {
+              "text": "ไม่กินเป็นโอเค",
+              "translation": "Not eating is okay.",
+              "cloze": "โอ้"
+            },
+            {
+              "text": "พูดเป็นโอ้",
+              "translation": "Speaking is okay.",
+              "cloze": "โอ้"
+            }
+          ]
+        },
+        {
+          "lemma": "hi",
+          "gloss": "greeting",
+          "pos": "interj",
+          "forms": [
+            "โอ้",
+            "เฮ้",
+            "โอ้",
+            "เฮ้"
+          ],
+          "notes": "used for 'hi' and 'เฮ้'.",
+          "examples": [
+            {
+              "text": "สวัสดี",
+              "translation": "Hello.",
+              "cloze": "โอ้"
+            },
+            {
+              "text": "Hi!",
+              "translation": "Hi!",
+              "cloze": "เฮ้"
+            },
+            {
+              "text": "สวัสดี!",
+              "translation": "Hello!",
+              "cloze": "โอ้"
+            }
+          ]
+        },
+        {
+          "lemma": "um",
+          "gloss": "uh",
+          "pos": "interj",
+          "forms": [
+            "เอ่อ",
+            "เอ่อ",
+            "เอ่อ",
+            "เอ่อ"
+          ],
+          "notes": "used for 'um' and 'เอ่อ'.",
+          "examples": [
+            {
+              "text": "ใช่แล้วเอ่อ",
+              "translation": "Yes, um.",
+              "cloze": "เอ่อ"
+            },
+            {
+              "text": "ไม่ครับเอ่อ",
+              "translation": "No, um.",
+              "cloze": "เอ่อ"
+            },
+            {
+              "text": "โอเคเอ่อ",
+              "translation": "Okay, um.",
+              "cloze": "เอ่อ"
+            }
+          ]
+        },
+        {
+          "lemma": "hi",
+          "gloss": "greeting",
+          "pos": "pron",
+          "forms": [
+            "hi",
+            "ใช่",
+            "โอ้",
+            "โอ้"
+          ],
+          "notes": "used for 'hi', 'ใช่', 'โอ้', 'โอ้'.",
+          "examples": [
+            {
+              "text": "Hi, I'm Thai.",
+              "translation": "Hi, I'm Thai.",
+              "cloze": "hi"
+            },
+            {
+              "text": "ใช่, ฉันไทยครับ",
+              "translation": "Yes, I'm Thai.",
+              "cloze": "ใช่"
+            },
+            {
+              "text": "โอ้, ฉันชอบ",
+              "translation": "Oh, I like.",
+              "cloze": "โอ้"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 6,
+        "examples": 18,
+        "threePerWord": 1,
+        "clozeOk": 0.5,
+        "avgLen": 3.111111111111111
+      }
+    },
+    {
+      "lang": "th",
+      "kind": "intermediate",
+      "ms": 63688.127792000014,
+      "error": "Error: AI reply was unusable: Error: unterminated JSON in reply",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "th",
+      "kind": "mine",
+      "ms": 10879.700458000007,
+      "words": [
+        {
+          "lemma": "ลืม",
+          "gloss": "forget, lose (oneself)",
+          "pos": "v",
+          "forms": [
+            "ลืม",
+            "ลืมไป"
+          ],
+          "notes": "Used for forgetting things or being absent-minded.",
+          "examples": [
+            {
+              "text": "เมื่อวานฉันลืมกระเป๋าเงินไว้ที่ร้านกาแฟ",
+              "translation": "Yesterday I left my wallet at the coffee shop.",
+              "cloze": "กระเป๋าเงิน"
+            },
+            {
+              "text": "เธอลืมโทรศัพท์ของเธอไว้บนโต๊ะทำงาน",
+              "translation": "She forgot her phone on her office desk.",
+              "cloze": "โทรศัพท์"
+            },
+            {
+              "text": "เขาลืมเธอไว้ที่ประชุม",
+              "translation": "He forgot to tell her about the meeting.",
+              "cloze": "เธอ"
+            },
+            {
+              "text": "ฉันลืมคำสั่งตามสั่งของเขา",
+              "translation": "I forgot his instructions.",
+              "cloze": "คำสั่ง"
+            },
+            {
+              "text": "อย่าลืมพ่อแม่ของคุณ",
+              "translation": "Don't forget your parents.",
+              "cloze": "พ่อแม่"
+            }
+          ]
+        },
+        {
+          "lemma": "ร้าน",
+          "gloss": "shop, store, café",
+          "pos": "n",
+          "forms": [
+            "ร้าน",
+            "ร้านขายยา",
+            "ร้านขายของชำ"
+          ],
+          "notes": "Can refer to shops, food shops, or cafés depending on context.",
+          "examples": [
+            {
+              "text": "เมื่อวานฉันลืมกระเป๋าเงินไว้ที่ร้านกาแฟ",
+              "translation": "Yesterday I left my wallet at the coffee shop.",
+              "cloze": "ร้านกาแฟ"
+            },
+            {
+              "text": "ฉันไปร้านขายของชำเพื่อซื้อผัก",
+              "translation": "I went to the grocery store to buy vegetables.",
+              "cloze": "ร้านขายของชำ"
+            },
+            {
+              "text": "เธอย้ายร้านขายยาเก่าให้เพื่อนใหม่",
+              "translation": "She moved the pharmacy shop to a new friend.",
+              "cloze": "ร้านขายยา"
+            },
+            {
+              "text": "มีร้านขายยาใกล้บ้านของฉัน",
+              "translation": "There is a pharmacy near my home.",
+              "cloze": "ร้าน"
+            },
+            {
+              "text": "ร้านกาแฟของเรามีบรรยากาศดี",
+              "translation": "Our coffee shop has a nice atmosphere.",
+              "cloze": "ร้านกาแฟ"
+            }
+          ]
+        },
+        {
+          "lemma": "กาแฟ",
+          "gloss": "coffee",
+          "pos": "n",
+          "forms": [
+            "กาแฟ",
+            "กาแฟดำ",
+            "กาแฟดำมocha",
+            "กาแฟมocha",
+            "กาแฟมochaดำ",
+            "ชา",
+            "ชาเขียว",
+            "ชาดำ",
+            "ชาดำมocha",
+            "ชามocha"
+          ],
+          "notes": "A hot beverage made from coffee beans.",
+          "examples": [
+            {
+              "text": "เมื่อวานฉันลืมกระเป๋าเงินไว้ที่ร้านกาแฟ",
+              "translation": "Yesterday I left my wallet at the coffee shop.",
+              "cloze": "ร้านกาแฟ"
+            },
+            {
+              "text": "ฉันชอบดื่มกาแฟดำ",
+              "translation": "I like drinking black coffee.",
+              "cloze": "กาแฟ"
+            },
+            {
+              "text": "เขาสั่งกาแฟมocha",
+              "translation": "He ordered a latte (latte style of coffee).",
+              "cloze": "กาแฟมocha"
+            },
+            {
+              "text": "ผมซื้อกาแฟดำมocha",
+              "translation": "I bought a black coffee (black latte).",
+              "cloze": "กาแฟดำ"
+            },
+            {
+              "text": "วันนี้ฉันไปร้านกาแฟ",
+              "translation": "Today I went to a coffee shop.",
+              "cloze": "ร้าน"
+            },
+            {
+              "text": "เธอชอบกาแฟมocha",
+              "translation": "She likes lattes.",
+              "cloze": "กาแฟ"
+            },
+            {
+              "text": "มีกาแฟมochaขายที่นั่น",
+              "translation": "There is lattes sold there.",
+              "cloze": "กาแฟ"
+            },
+            {
+              "text": "เธอซื้อกาแฟ",
+              "translation": "She bought coffee.",
+              "cloze": "กาแฟ"
+            },
+            {
+              "text": "เธอซื้อกาแฟดำ",
+              "translation": "She bought black coffee.",
+              "cloze": "กาแฟดำ"
+            },
+            {
+              "text": "เธอซื้อชา",
+              "translation": "She bought tea.",
+              "cloze": "ชา"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 3,
+        "examples": 20,
+        "threePerWord": 0,
+        "clozeOk": 1,
+        "avgLen": 6.45,
+        "keptOriginal": 1
+      }
+    }
+  ]
+}

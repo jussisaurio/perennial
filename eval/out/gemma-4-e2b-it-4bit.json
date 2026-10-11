@@ -1,0 +1,1369 @@
+{
+  "model": "mlx-community/gemma-4-e2b-it-4bit",
+  "results": [
+    {
+      "lang": "es",
+      "kind": "beginner",
+      "ms": 38542.946166999995,
+      "words": [
+        {
+          "lemma": "de",
+          "gloss": "of; from",
+          "pos": "prep",
+          "forms": [
+            "de",
+            "la",
+            "los",
+            "del",
+            "de",
+            "y"
+          ],
+          "notes": "Used for possession or origin.",
+          "examples": [
+            {
+              "text": "Es de mi casa.",
+              "translation": "It is from my house.",
+              "cloze": "de"
+            },
+            {
+              "text": "El libro es de Juan.",
+              "translation": "The book is from Juan.",
+              "cloze": "de"
+            },
+            {
+              "text": "La llave es de oro.",
+              "translation": "The key is of gold.",
+              "cloze": "de"
+            }
+          ]
+        },
+        {
+          "lemma": "que",
+          "gloss": "that; what",
+          "pos": "pron",
+          "forms": [
+            "que",
+            "qu",
+            "cual",
+            "que"
+          ],
+          "notes": "Used for comparison or introducing clauses.",
+          "examples": [
+            {
+              "text": "Yo sé que es cierto.",
+              "translation": "I know that it is true.",
+              "cloze": "que"
+            },
+            {
+              "text": "Dime que sí.",
+              "translation": "Tell me that yes.",
+              "cloze": "que"
+            },
+            {
+              "text": "Pienso que es mal.",
+              "translation": "I think that it is bad.",
+              "cloze": "que"
+            }
+          ]
+        },
+        {
+          "lemma": "no",
+          "gloss": "not",
+          "pos": "adv",
+          "forms": [
+            "no"
+          ],
+          "notes": "Negates a verb or statement.",
+          "examples": [
+            {
+              "text": "No voy a ir hoy.",
+              "translation": "I am not going to go today.",
+              "cloze": "no"
+            },
+            {
+              "text": "No quiero agua.",
+              "translation": "I do not want water.",
+              "cloze": "no"
+            },
+            {
+              "text": "No es bien.",
+              "translation": "It is not good.",
+              "cloze": "no"
+            }
+          ]
+        },
+        {
+          "lemma": "a",
+          "gloss": "to; at",
+          "pos": "prep",
+          "forms": [
+            "a",
+            "ante",
+            "a"
+          ],
+          "notes": "Indicates direction or recipient.",
+          "examples": [
+            {
+              "text": "Voy a la casa.",
+              "translation": "I go to the house.",
+              "cloze": "a"
+            },
+            {
+              "text": "Ve a mi amigo.",
+              "translation": "Go to my friend.",
+              "cloze": "a"
+            },
+            {
+              "text": "Pasa a la puerta.",
+              "translation": "Pass to the door.",
+              "cloze": "a"
+            }
+          ]
+        },
+        {
+          "lemma": "la",
+          "gloss": "the (feminine)",
+          "pos": "det",
+          "forms": [
+            "la",
+            "las"
+          ],
+          "notes": "Feminine definite article.",
+          "examples": [
+            {
+              "text": "La mesa es grande.",
+              "translation": "The table is big.",
+              "cloze": "la"
+            },
+            {
+              "text": "Ve la flor roja.",
+              "translation": "See the red flower.",
+              "cloze": "la"
+            },
+            {
+              "text": "La luz es muy clara.",
+              "translation": "The light is very clear.",
+              "cloze": "la"
+            }
+          ]
+        },
+        {
+          "lemma": "el",
+          "gloss": "the (masculine)",
+          "pos": "det",
+          "forms": [
+            "el"
+          ],
+          "notes": "Masculine definite article.",
+          "examples": [
+            {
+              "text": "El sol es fuerte.",
+              "translation": "The sun is strong.",
+              "cloze": "el"
+            },
+            {
+              "text": "Dame el vaso.",
+              "translation": "Give me the glass.",
+              "cloze": "el"
+            },
+            {
+              "text": "El coche es azul.",
+              "translation": "The car is blue.",
+              "cloze": "el"
+            }
+          ]
+        },
+        {
+          "lemma": "y",
+          "gloss": "and",
+          "pos": "conj",
+          "forms": [
+            "y"
+          ],
+          "notes": "Connects words or ideas.",
+          "examples": [
+            {
+              "text": "Agua y pan.",
+              "translation": "Water and bread.",
+              "cloze": "y"
+            },
+            {
+              "text": "Yo y tú.",
+              "translation": "Me and you.",
+              "cloze": "y"
+            },
+            {
+              "text": "Paz y amor.",
+              "translation": "Peace and love.",
+              "cloze": "y"
+            }
+          ]
+        },
+        {
+          "lemma": "es",
+          "gloss": "is",
+          "pos": "verb",
+          "forms": [
+            "es"
+          ],
+          "notes": "Third-person singular of 'ser' (to be).",
+          "examples": [
+            {
+              "text": "El sol es grande.",
+              "translation": "The sun is big.",
+              "cloze": "es"
+            },
+            {
+              "text": "La vida es bella.",
+              "translation": "Life is beautiful.",
+              "cloze": "es"
+            },
+            {
+              "text": "El agua es fría.",
+              "translation": "The water is cold.",
+              "cloze": "es"
+            }
+          ]
+        },
+        {
+          "lemma": "en",
+          "gloss": "in",
+          "pos": "prep",
+          "forms": [
+            "en"
+          ],
+          "notes": "Indicates location.",
+          "examples": [
+            {
+              "text": "El libro está en la mesa.",
+              "translation": "The book is in the table.",
+              "cloze": "en"
+            },
+            {
+              "text": "Estoy en casa.",
+              "translation": "I am in the house.",
+              "cloze": "en"
+            },
+            {
+              "text": "La llave es en la caja.",
+              "translation": "The key is in the box.",
+              "cloze": "en"
+            }
+          ]
+        },
+        {
+          "lemma": "lo",
+          "gloss": "it",
+          "pos": "pron",
+          "forms": [
+            "lo"
+          ],
+          "notes": "Direct object pronoun.",
+          "examples": [
+            {
+              "text": "Yo lo veo.",
+              "translation": "I see it.",
+              "cloze": "lo"
+            },
+            {
+              "text": "Lo tengo aquí.",
+              "translation": "I have it here.",
+              "cloze": "lo"
+            },
+            {
+              "text": "Lo quiero mucho.",
+              "translation": "I want it much.",
+              "cloze": "lo"
+            }
+          ]
+        },
+        {
+          "lemma": "un",
+          "gloss": "a; one",
+          "pos": "det",
+          "forms": [
+            "un"
+          ],
+          "notes": "Masculine indefinite article.",
+          "examples": [
+            {
+              "text": "Un libro es mío.",
+              "translation": "A book is mine.",
+              "cloze": "un"
+            },
+            {
+              "text": "Quiero un café.",
+              "translation": "I want a coffee.",
+              "cloze": "un"
+            },
+            {
+              "text": "Es un día soleado.",
+              "translation": "It is a sunny day.",
+              "cloze": "un"
+            }
+          ]
+        },
+        {
+          "lemma": "por",
+          "gloss": "for; by",
+          "pos": "prep",
+          "forms": [
+            "por"
+          ],
+          "notes": "Indicates purpose or duration.",
+          "examples": [
+            {
+              "text": "Trabajo por dinero.",
+              "translation": "I work for money.",
+              "cloze": "por"
+            },
+            {
+              "text": "Es por amor.",
+              "translation": "It is for love.",
+              "cloze": "por"
+            },
+            {
+              "text": "Gracias por tu ayuda.",
+              "translation": "Thanks for your help.",
+              "cloze": "por"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 0.75,
+        "avgLen": 3.861111111111111
+      }
+    },
+    {
+      "lang": "es",
+      "kind": "intermediate",
+      "ms": 11291.594708000004,
+      "error": "Error: AI reply was unusable: SyntaxError: JSON Parse error: Expected '}'",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "es",
+      "kind": "mine",
+      "ms": 10264.764167000001,
+      "error": "Error: AI reply was unusable: Error: expected {\"words\": [...]}",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "ja",
+      "kind": "beginner",
+      "ms": 15720.452917000002,
+      "words": [
+        {
+          "lemma": "は",
+          "gloss": "topic marker; emphasis",
+          "pos": "particle",
+          "forms": [
+            "は"
+          ],
+          "notes": "Marks the topic of a sentence.",
+          "examples": []
+        },
+        {
+          "lemma": "を",
+          "gloss": "direct object marker",
+          "pos": "particle",
+          "forms": [
+            "を"
+          ],
+          "notes": "Marks the direct object of a verb.",
+          "examples": []
+        },
+        {
+          "lemma": "の",
+          "gloss": "possessive marker; modifier",
+          "pos": "particle",
+          "forms": [
+            "の"
+          ],
+          "notes": "Shows possession or connection between nouns.",
+          "examples": [
+            {
+              "text": "これは私",
+              "translation": "This is me.",
+              "cloze": ""
+            },
+            {
+              "text": "私の本",
+              "translation": "My book.",
+              "cloze": ""
+            },
+            {
+              "text": "あなたの名前",
+              "translation": "Your name.",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "と",
+          "gloss": "and; with",
+          "pos": "particle",
+          "forms": [
+            "と"
+          ],
+          "notes": "Connects items or lists things.",
+          "examples": [
+            {
+              "text": "私と友達",
+              "translation": "Me and friend.",
+              "cloze": ""
+            },
+            {
+              "text": "それとあれ",
+              "translation": "That and that.",
+              "cloze": ""
+            },
+            {
+              "text": "彼と私",
+              "translation": "He and I.",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "人",
+          "gloss": "person; people",
+          "pos": "noun",
+          "forms": [
+            "人"
+          ],
+          "notes": "General word for a person or people.",
+          "examples": [
+            {
+              "text": "その人",
+              "translation": "That person.",
+              "cloze": ""
+            },
+            {
+              "text": "多くの人",
+              "translation": "Many people.",
+              "cloze": ""
+            },
+            {
+              "text": "日本人",
+              "translation": "Japanese person.",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "知",
+          "gloss": "to know; knowledge",
+          "pos": "verb",
+          "forms": [
+            "知"
+          ],
+          "notes": "Means to have knowledge or understand.",
+          "examples": [
+            {
+              "text": "私は知る",
+              "translation": "I know.",
+              "cloze": ""
+            },
+            {
+              "text": "事実を知る",
+              "translation": "To know the fact.",
+              "cloze": ""
+            },
+            {
+              "text": "秘密を知る",
+              "translation": "To know the secret.",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "言",
+          "gloss": "to say; word",
+          "pos": "verb",
+          "forms": [
+            "言"
+          ],
+          "notes": "Means to speak or state something.",
+          "examples": [
+            {
+              "text": "話す",
+              "translation": "To talk.",
+              "cloze": ""
+            },
+            {
+              "text": "言葉を言う",
+              "translation": "To say words.",
+              "cloze": ""
+            },
+            {
+              "text": "意見を言う",
+              "translation": "To give an opinion.",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "行",
+          "gloss": "to go; line; way",
+          "pos": "verb",
+          "forms": [
+            "行"
+          ],
+          "notes": "Means to travel or go somewhere.",
+          "examples": [
+            {
+              "text": "行く",
+              "translation": "To go.",
+              "cloze": ""
+            },
+            {
+              "text": "場所へ行く",
+              "translation": "To go to the place.",
+              "cloze": ""
+            },
+            {
+              "text": "道を行く",
+              "translation": "To go along the road.",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "こと",
+          "gloss": "thing; fact",
+          "pos": "noun",
+          "forms": [
+            "こと"
+          ],
+          "notes": "Used to turn a verb into a noun (e.g., 'suru' to 'suru koto').",
+          "examples": [
+            {
+              "text": "話すこと",
+              "translation": "The act of talking.",
+              "cloze": ""
+            },
+            {
+              "text": "事実のこと",
+              "translation": "The thing/fact.",
+              "cloze": ""
+            },
+            {
+              "text": "大事なこと",
+              "translation": "Important thing.",
+              "cloze": ""
+            }
+          ]
+        },
+        {
+          "lemma": "事",
+          "gloss": "matter; affair",
+          "pos": "noun",
+          "forms": [
+            "事"
+          ],
+          "notes": "Refers to a situation or matter of fact.",
+          "examples": [
+            {
+              "text": "重要な事",
+              "translation": "Important matter.",
+              "cloze": ""
+            },
+            {
+              "text": "その事",
+              "translation": "That matter.",
+              "cloze": ""
+            },
+            {
+              "text": "特別な事",
+              "translation": "A special matter.",
+              "cloze": ""
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 10,
+        "examples": 24,
+        "threePerWord": 0.8,
+        "clozeOk": 0,
+        "avgLen": 2.5833333333333335
+      }
+    },
+    {
+      "lang": "ja",
+      "kind": "intermediate",
+      "ms": 21750.729792,
+      "words": [
+        {
+          "lemma": "月",
+          "gloss": "month",
+          "pos": "",
+          "forms": [
+            "ヶ月",
+            "月"
+          ],
+          "examples": [
+            {
+              "text": "この部屋は一ヶ月間使った。",
+              "translation": "I used this room for one month.",
+              "cloze": "一ヶ月"
+            },
+            {
+              "text": "私は三ヶ月待った。",
+              "translation": "I waited for three months.",
+              "cloze": "三ヶ月"
+            },
+            {
+              "text": "彼は一ヶ月の経験がある。",
+              "translation": "He has one month of experience.",
+              "cloze": "一ヶ月"
+            }
+          ]
+        },
+        {
+          "lemma": "多",
+          "gloss": "many; much",
+          "pos": "",
+          "forms": [
+            "多"
+          ],
+          "examples": [
+            {
+              "text": "たくさんの情報がある。",
+              "translation": "There is a lot of information.",
+              "cloze": "多"
+            },
+            {
+              "text": "彼は多すぎる考えだ。",
+              "translation": "He has too many thoughts.",
+              "cloze": "多"
+            },
+            {
+              "text": "多量の雨が降った。",
+              "translation": "A large amount of rain fell.",
+              "cloze": "多"
+            }
+          ]
+        },
+        {
+          "lemma": "一人",
+          "gloss": "one person",
+          "pos": "",
+          "forms": [
+            "１人",
+            "一人"
+          ],
+          "examples": [
+            {
+              "text": "一人で旅行する。",
+              "translation": "To travel alone.",
+              "cloze": "一人"
+            },
+            {
+              "text": "一人で考えた。",
+              "translation": "I thought alone.",
+              "cloze": "一人"
+            },
+            {
+              "text": "一人でいるのは大変だ。",
+              "translation": "It is tough to be alone.",
+              "cloze": "一人"
+            }
+          ]
+        },
+        {
+          "lemma": "番号",
+          "gloss": "number; serial number",
+          "pos": "",
+          "forms": [
+            "番号"
+          ],
+          "examples": [
+            {
+              "text": "電話番号を教えてください。",
+              "translation": "Please tell me the phone number.",
+              "cloze": "番号"
+            },
+            {
+              "text": "彼の番号は間違っている。",
+              "translation": "His number is wrong.",
+              "cloze": "番号"
+            },
+            {
+              "text": "確認のために番号をメモした。",
+              "translation": "I wrote down the number for confirmation.",
+              "cloze": "番号"
+            }
+          ]
+        },
+        {
+          "lemma": "状態",
+          "gloss": "condition; state",
+          "pos": "",
+          "forms": [
+            "状態"
+          ],
+          "examples": [
+            {
+              "text": "現在の状態を報告して。",
+              "translation": "Report the current condition.",
+              "cloze": "状態"
+            },
+            {
+              "text": "彼の健康状態はどうか。",
+              "translation": "What is his health condition?",
+              "cloze": "状態"
+            },
+            {
+              "text": "この問題の状態が変わった。",
+              "translation": "The condition of this problem changed.",
+              "cloze": "状態"
+            }
+          ]
+        },
+        {
+          "lemma": "来い",
+          "gloss": "come",
+          "pos": "",
+          "forms": [
+            "来い"
+          ],
+          "notes": "命令形 (command form).",
+          "examples": [
+            {
+              "text": "ここに来い。",
+              "translation": "Come here.",
+              "cloze": "来い"
+            },
+            {
+              "text": "早く来い。",
+              "translation": "Come quickly.",
+              "cloze": "来い"
+            },
+            {
+              "text": "私に会いに来い。",
+              "translation": "Come to meet me.",
+              "cloze": "来い"
+            }
+          ]
+        },
+        {
+          "lemma": "開",
+          "gloss": "open; start",
+          "pos": "",
+          "forms": [
+            "開"
+          ],
+          "examples": [
+            {
+              "text": "ドアを開けてください。",
+              "translation": "Please open the door.",
+              "cloze": "開"
+            },
+            {
+              "text": "会議を開始する。",
+              "translation": "To start the meeting.",
+              "cloze": "開"
+            },
+            {
+              "text": "窓を開けて風を通す。",
+              "translation": "Open the window and let the wind in.",
+              "cloze": "開"
+            }
+          ]
+        },
+        {
+          "lemma": "上手",
+          "gloss": "skillful; good at",
+          "pos": "",
+          "forms": [
+            "上手"
+          ],
+          "examples": [
+            {
+              "text": "彼は話が上手だ。",
+              "translation": "He is good at speaking.",
+              "cloze": "上手"
+            },
+            {
+              "text": "運転が上手な人。",
+              "translation": "A person who is good at driving.",
+              "cloze": "上手"
+            },
+            {
+              "text": "彼女は料理が上手だ。",
+              "translation": "She is good at cooking.",
+              "cloze": "上手"
+            }
+          ]
+        },
+        {
+          "lemma": "済",
+          "gloss": "finished; settled",
+          "pos": "",
+          "forms": [
+            "済"
+          ],
+          "notes": "Often used in compound verbs (e.g., 済ませる).",
+          "examples": [
+            {
+              "text": "仕事を済ませた。",
+              "translation": "I finished the work.",
+              "cloze": "済"
+            },
+            {
+              "text": "食事を済ませてから休む。",
+              "translation": "Rest after finishing the meal.",
+              "cloze": "済"
+            },
+            {
+              "text": "手続きを済ませましょう。",
+              "translation": "Let's finish the procedures.",
+              "cloze": "済"
+            }
+          ]
+        },
+        {
+          "lemma": "場合",
+          "gloss": "case; situation",
+          "pos": "",
+          "forms": [
+            "場合"
+          ],
+          "examples": [
+            {
+              "text": "そのような場合がある。",
+              "translation": "There are such cases.",
+              "cloze": "場合"
+            },
+            {
+              "text": "特別な場合を考える。",
+              "translation": "Consider a special case.",
+              "cloze": "場合"
+            },
+            {
+              "text": "その場合の対処法。",
+              "translation": "The countermeasure for that case.",
+              "cloze": "場合"
+            }
+          ]
+        },
+        {
+          "lemma": "刑務",
+          "gloss": "prison",
+          "pos": "",
+          "forms": [
+            "刑務"
+          ],
+          "examples": [
+            {
+              "text": "彼は刑務所に入った。",
+              "translation": "He entered the prison.",
+              "cloze": "刑務"
+            },
+            {
+              "text": "刑務所の規則は厳しい。",
+              "translation": "The prison rules are strict.",
+              "cloze": "刑務"
+            },
+            {
+              "text": "刑務収容について話す。",
+              "translation": "To talk about prison confinement.",
+              "cloze": "刑務"
+            }
+          ]
+        },
+        {
+          "lemma": "今度",
+          "gloss": "next time",
+          "pos": "",
+          "forms": [
+            "今度"
+          ],
+          "examples": [
+            {
+              "text": "今度、一緒に行きましょう。",
+              "translation": "Let's go together next time.",
+              "cloze": "今度"
+            },
+            {
+              "text": "今度こそ成功させたい。",
+              "translation": "I want to make it successful this time.",
+              "cloze": "今度"
+            },
+            {
+              "text": "今度こそ感謝を伝えたい。",
+              "translation": "I want to express my gratitude this time.",
+              "cloze": "今度"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 36,
+        "threePerWord": 1,
+        "clozeOk": 0.9722222222222222,
+        "avgLen": 6.111111111111111,
+        "inVocab": 0.21818181818181817
+      }
+    },
+    {
+      "lang": "ja",
+      "kind": "mine",
+      "ms": 10805.48599999999,
+      "error": "Error: AI reply was unusable: SyntaxError: JSON Parse error: Property name must be a string literal",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "fi",
+      "kind": "beginner",
+      "ms": 40820.574917000005,
+      "error": "Error: AI reply was unusable: SyntaxError: JSON Parse error: Expected '}'",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "fi",
+      "kind": "intermediate",
+      "ms": 29440.075666999997,
+      "error": "Error: AI reply was unusable: SyntaxError: JSON Parse error: Expected '}'",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "fi",
+      "kind": "mine",
+      "ms": 11366.433374999993,
+      "error": "Error: AI reply was unusable: Error: expected {\"words\": [...]}",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "ar",
+      "kind": "beginner",
+      "ms": 17004.747499999998,
+      "words": [
+        {
+          "lemma": "فِي",
+          "gloss": "in; at",
+          "pos": "prep",
+          "forms": [
+            "في"
+          ],
+          "notes": "Preposition.",
+          "examples": [
+            {
+              "text": "أنا في البيت.",
+              "translation": "I am in the house.",
+              "cloze": "في"
+            },
+            {
+              "text": "الكتاب في الحقيبة.",
+              "translation": "The book is in the bag.",
+              "cloze": "في"
+            },
+            {
+              "text": "نحن في المدرسة.",
+              "translation": "We are in the school.",
+              "cloze": "في"
+            }
+          ]
+        },
+        {
+          "lemma": "لَا",
+          "gloss": "no; not",
+          "pos": "particle",
+          "forms": [
+            "لا"
+          ],
+          "notes": "Negation particle.",
+          "examples": [
+            {
+              "text": "أنا لا أريد.",
+              "translation": "I do not want.",
+              "cloze": "لا"
+            },
+            {
+              "text": "هو لا يأتي.",
+              "translation": "He does not come.",
+              "cloze": "لا"
+            },
+            {
+              "text": "لا يوجد ماء.",
+              "translation": "There is no water.",
+              "cloze": "لا"
+            }
+          ]
+        },
+        {
+          "lemma": "مِنْ",
+          "gloss": "from",
+          "pos": "prep",
+          "forms": [
+            "من"
+          ],
+          "notes": "Preposition.",
+          "examples": [
+            {
+              "text": "أنا من مصر.",
+              "translation": "I am from Egypt.",
+              "cloze": "من"
+            },
+            {
+              "text": "الكتاب من هنا.",
+              "translation": "The book is from here.",
+              "cloze": "من"
+            },
+            {
+              "text": "هو من السوق.",
+              "translation": "He is from the market.",
+              "cloze": "من"
+            }
+          ]
+        },
+        {
+          "lemma": "أَنَا",
+          "gloss": "I",
+          "pos": "pron",
+          "forms": [
+            "أنا"
+          ],
+          "notes": "First-person singular pronoun.",
+          "examples": [
+            {
+              "text": "أنا طالب.",
+              "translation": "I am a student.",
+              "cloze": "أنا"
+            },
+            {
+              "text": "أنا سعيد.",
+              "translation": "I am happy.",
+              "cloze": "أنا"
+            },
+            {
+              "text": "أنا أعمل.",
+              "translation": "I work.",
+              "cloze": "أنا"
+            }
+          ]
+        },
+        {
+          "lemma": "هَذَا",
+          "gloss": "this",
+          "pos": "det",
+          "forms": [
+            "هذا"
+          ],
+          "notes": "Demonstrative pronoun (masculine, singular).",
+          "examples": [
+            {
+              "text": "هذا قلمي.",
+              "translation": "This is my pen.",
+              "cloze": "هذا"
+            },
+            {
+              "text": "هذا باب.",
+              "translation": "This is the door.",
+              "cloze": "هذا"
+            },
+            {
+              "text": "هذا كتاب جديد.",
+              "translation": "This is a new book.",
+              "cloze": "هذا"
+            }
+          ]
+        },
+        {
+          "lemma": "و",
+          "gloss": "and",
+          "pos": "conj",
+          "forms": [
+            "و"
+          ],
+          "notes": "Conjunction.",
+          "examples": [
+            {
+              "text": "أنا و صديقي.",
+              "translation": "I and my friend.",
+              "cloze": "و"
+            },
+            {
+              "text": "البيت و الحديقة.",
+              "translation": "The house and the garden.",
+              "cloze": "و"
+            },
+            {
+              "text": "هو و أنا.",
+              "translation": "He and I.",
+              "cloze": "و"
+            }
+          ]
+        },
+        {
+          "lemma": "حَال",
+          "gloss": "condition; state",
+          "pos": "noun",
+          "forms": [
+            "حَال"
+          ],
+          "notes": "General noun.",
+          "examples": [
+            {
+              "text": "هذا هو الحال.",
+              "translation": "This is the condition.",
+              "cloze": "حَال"
+            },
+            {
+              "text": "نرى الحال.",
+              "translation": "We see the condition.",
+              "cloze": "حَال"
+            },
+            {
+              "text": "ما هو الحال؟",
+              "translation": "What is the condition?",
+              "cloze": "حَال"
+            }
+          ]
+        },
+        {
+          "lemma": "هَلْ",
+          "gloss": "question particle",
+          "pos": "particle",
+          "forms": [
+            "هل"
+          ],
+          "notes": "Question particle.",
+          "examples": [
+            {
+              "text": "هل أنت هنا؟",
+              "translation": "Are you here?",
+              "cloze": "هل"
+            },
+            {
+              "text": "هل تفهم؟",
+              "translation": "Do you understand?",
+              "cloze": "هل"
+            },
+            {
+              "text": "هل تريد شيئًا؟",
+              "translation": "Do you want something?",
+              "cloze": "هل"
+            }
+          ]
+        },
+        {
+          "lemma": "عَلَى",
+          "gloss": "on; upon",
+          "pos": "prep",
+          "forms": [
+            "على"
+          ],
+          "notes": "Preposition.",
+          "examples": [
+            {
+              "text": "الكتاب على الطاولة.",
+              "translation": "The book is on the table.",
+              "cloze": "على"
+            },
+            {
+              "text": "نكتب على الورق.",
+              "translation": "We write on the paper.",
+              "cloze": "على"
+            },
+            {
+              "text": "الماء على النار.",
+              "translation": "The water is on the fire.",
+              "cloze": "على"
+            }
+          ]
+        }
+      ],
+      "checks": {
+        "words": 9,
+        "examples": 27,
+        "threePerWord": 1,
+        "clozeOk": 0.8888888888888888,
+        "avgLen": 2.740740740740741
+      }
+    },
+    {
+      "lang": "ar",
+      "kind": "intermediate",
+      "ms": 32313.290083,
+      "words": [
+        {
+          "lemma": "الوحيد",
+          "gloss": "The only one; solitary",
+          "pos": "",
+          "forms": [
+            "الوحيد",
+            "وحيد"
+          ],
+          "notes": "Masculine singular.",
+          "examples": []
+        },
+        {
+          "lemma": "قتل",
+          "gloss": "To kill; murder",
+          "pos": "",
+          "forms": [
+            "قتل",
+            "قاتل"
+          ],
+          "notes": "Verb (past tense).",
+          "examples": []
+        },
+        {
+          "lemma": "إنهم",
+          "gloss": "They (plural)",
+          "pos": "",
+          "forms": [
+            "إنهم"
+          ],
+          "notes": "Pronoun (plural, masculine).",
+          "examples": []
+        },
+        {
+          "lemma": "الشخص",
+          "gloss": "Person; individual",
+          "pos": "",
+          "forms": [
+            "الشخص",
+            "أشخاص"
+          ],
+          "notes": "Masculine noun.",
+          "examples": []
+        },
+        {
+          "lemma": "رأيت",
+          "gloss": "I saw",
+          "pos": "",
+          "forms": [
+            "رأيت"
+          ],
+          "notes": "Verb (past tense).",
+          "examples": []
+        },
+        {
+          "lemma": "عزيزتي",
+          "gloss": "My dear (female)",
+          "pos": "",
+          "forms": [
+            "عزيزتي"
+          ],
+          "notes": "Feminine noun/vocative.",
+          "examples": []
+        },
+        {
+          "lemma": "طوال",
+          "gloss": "Throughout; for a long time",
+          "pos": "",
+          "forms": [
+            "طوال"
+          ],
+          "notes": "Adverb/Preposition.",
+          "examples": []
+        },
+        {
+          "lemma": "به",
+          "gloss": "With it; in it",
+          "pos": "",
+          "forms": [
+            "به"
+          ],
+          "notes": "Preposition.",
+          "examples": []
+        },
+        {
+          "lemma": "الشرطة",
+          "gloss": "The police",
+          "pos": "",
+          "forms": [
+            "الشرطة"
+          ],
+          "notes": "Feminine noun.",
+          "examples": []
+        },
+        {
+          "lemma": "الأن",
+          "gloss": "Now",
+          "pos": "",
+          "forms": [
+            "الأن"
+          ],
+          "notes": "Adverb.",
+          "examples": []
+        },
+        {
+          "lemma": "أحب",
+          "gloss": "I love",
+          "pos": "",
+          "forms": [
+            "أحب"
+          ],
+          "notes": "Verb (present tense).",
+          "examples": []
+        },
+        {
+          "lemma": "الذي",
+          "gloss": "Who; that (masc. singular)",
+          "pos": "",
+          "forms": [
+            "الذي"
+          ],
+          "notes": "Relative pronoun.",
+          "examples": []
+        }
+      ],
+      "checks": {
+        "words": 12,
+        "examples": 0,
+        "threePerWord": 0,
+        "clozeOk": 0,
+        "avgLen": 0,
+        "inVocab": 0
+      }
+    },
+    {
+      "lang": "ar",
+      "kind": "mine",
+      "ms": 14670.375500000024,
+      "error": "Error: AI reply was unusable: Error: expected {\"words\": [...]}",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "th",
+      "kind": "beginner",
+      "ms": 45170.09625000003,
+      "error": "Error: AI reply was unusable: SyntaxError: JSON Parse error: Expected '}'",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "th",
+      "kind": "intermediate",
+      "ms": 5855.0463329999475,
+      "error": "Error: AI reply was unusable: Error: unterminated JSON in reply",
+      "words": [],
+      "checks": {}
+    },
+    {
+      "lang": "th",
+      "kind": "mine",
+      "ms": 9351.412125000032,
+      "error": "Error: AI reply was unusable: SyntaxError: JSON Parse error: Expected '}'",
+      "words": [],
+      "checks": {}
+    }
+  ]
+}

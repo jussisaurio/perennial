@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["bun"],
+    "lib": ["ES2023", "DOM"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["index.ts", "mock-llm.ts", "src", "test"]
+}
