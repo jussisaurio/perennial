@@ -10,7 +10,6 @@ test("smoke: landing → start learning → a session → progress survives a re
   await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15000 });
   await page.getByRole("button", { name: /today's session/ }).click();
   await expect(page.locator(".kicker")).toBeVisible();
-  await page.screenshot({ path: "/private/tmp/claude-501/-Users-jussi-projects-ankee/ae055b8d-f3a9-42de-96f9-f2e197695733/scratchpad/shots/smoke-session.png" });
   // Answer "I knew it" on the first new word: that records a review.
   await page.getByRole("button", { name: /I knew it/ }).click();
   await page.getByRole("button", { name: "End session" }).click();

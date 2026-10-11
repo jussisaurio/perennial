@@ -24,12 +24,14 @@ export const fail = (status: number, code: string, extra: Record<string, unknown
 export function securityHeaders(connect: string[], https: boolean): Record<string, string> {
   const csp = [
     "default-src 'self'",
-    "script-src 'self'",
+    // The device database (SQLite) runs as WebAssembly.
+    "script-src 'self' 'wasm-unsafe-eval'",
     // React sets style attributes; the garden sets transforms inline.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    "font-src 'self'",
-    `connect-src 'self' ${connect.join(" ")}`.trim(),
+    "font-src 'self' data:",
+    // data: — the device database ships its WebAssembly inline and fetches it.
+    `connect-src 'self' data: ${connect.join(" ")}`.trim(),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "frame-ancestors 'none'",
