@@ -30,3 +30,5 @@ The 3D walk uses software WebGL in headless Chrome, so its frame times are worse
 ## Baseline (2026-10-11, M-series laptop)
 
 Server, 100 learners for 20 s: no errors; write p95 8 ms; write → synced back p95 11 ms; ~30 writes/s; RSS 181 → 196 MB. CPU is spread out: Better Auth's session lookup (kysely query building, pg row parsing) is the largest app-side cost.
+
+UI, CPU 4× slower, 200 words studied: Today, the word list and sessions have no long tasks over 70 ms. The garden blocks the main thread for ~0.5 s when it opens (≈ 0.13 s at full speed) and has ~8 900 DOM nodes; the profile shows mostly browser style/layout work, not our JavaScript. With 2000-word decks this grows: see #41.
