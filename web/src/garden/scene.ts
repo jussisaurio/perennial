@@ -5,6 +5,7 @@
 import * as THREE from "three";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
+import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -242,6 +243,8 @@ export class GardenScene {
   private glows: THREE.Object3D[] = [];
   private sun!: THREE.Sprite;
   private sunDir = new THREE.Vector3();
+  /** The sunflower's position and frame (null: not chosen yet). */
+  private flower = { x: 0, z: 0, uv: null as THREE.InstancedBufferAttribute | null, params: null as THREE.InstancedBufferAttribute | null, face: null as boolean | null };
   private selected: PlacedPlant | null = null;
   private time: TimeOfDay = "day";
   private lastLabels = "";
@@ -251,10 +254,14 @@ export class GardenScene {
   private cb: SceneCallbacks;
   private reducedMotion: boolean;
 
-  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean) {
+  /** The course language, for the odd sign written in it. */
+  private lang: string;
+
+  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang = "") {
     this.layout = layout;
     this.cb = cb;
     this.reducedMotion = reducedMotion;
+    this.lang = lang;
     THREE.ColorManagement.enabled = false;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -452,6 +459,37 @@ export class GardenScene {
     for (const sx of [-0.55, 0.55]) for (const sz of [-0.15, 0.15]) plank(0.06, 0.42, 0.06, sx, 0.21, sz);
     bench.position.set(L.pond.x + 0.2, 0, L.pond.z - L.pond.r - 0.75);
     this.scene.add(bench);
+
+    // Two notice boards whose text changes each day: one on the back fence, one by the bench.
+    const signs = pickSigns(this.lang);
+    const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
+      const g = new THREE.Group();
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.48), mat(T.pixelTexture(T.notice(line.text)), { side: THREE.DoubleSide }));
+      board.position.y = 0.95;
+      if (line.upsideDown) board.rotation.z = Math.PI;
+      g.add(board);
+      for (const sx of [-0.45, 0.45]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.86, 0.06), mat(woodTex));
+        post.position.set(sx, 0.43, -0.03);
+        g.add(post);
+      }
+      g.position.set(x, 0, z);
+      g.rotation.y = turn;
+      this.scene.add(g);
+    };
+    noticeBoard(signs.fence, L.gate.x, b.minZ + 0.25, 0);
+    noticeBoard(signs.bench, bench.position.x + 1.05, bench.position.z - 0.05, 0.35);
+
+    // One sunflower in the far right corner, by the back fence. Unlike every other
+    // sprite, it does not look at you: from the garden you see the back of its head,
+    // and only from the back path, with the sun behind you, its face.
+    this.flower.x = b.maxX - 1;
+    this.flower.z = b.minZ + 0.45;
+    const flowerMesh = sprites(T.pixelTexture(T.sunflower()), [{ x: this.flower.x, y: 0, z: this.flower.z, u: 0.5, v: 0, uw: 0.5, vh: 1, phase: 1.3, droop: 0, scale: 1, index: -5 }], 0.85, 1.7);
+    this.flower.uv = flowerMesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
+    this.flower.params = flowerMesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
+    this.mats.add(flowerMesh.material);
+    this.scene.add(flowerMesh);
 
     // Wild bits: tufts, flowers, mushrooms, stones. Thick outside, a few by the fence and pond.
     const decorTex = T.pixelTexture(T.decor());
@@ -734,6 +772,12 @@ export class GardenScene {
     const [sx, sy, sz] = t === "day" ? [-0.5, 0.55, -0.7] : t === "dusk" ? [-0.95, 0.12, -0.3] : [0.6, 0.45, -0.65];
     this.sunDir.set(sx, sy, sz).normalize();
     for (const bf of this.butterflies) bf.mesh.visible = t !== "night";
+    // The sunflower droops a little at dusk.
+    const fp = this.flower.params;
+    if (fp) {
+      fp.setY(0, t === "dusk" ? 0.14 : 0);
+      fp.needsUpdate = true;
+    }
   }
 
   private detail: Detail = "normal";
@@ -893,6 +937,15 @@ export class GardenScene {
       const h = ((14 + 120 * p.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
       this.marker.position.set(p.x, 0.28 + h + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
       this.marker.quaternion.copy(this.camera.quaternion);
+    }
+
+    // The sunflower shows its face only to someone standing in its sun (and never at night).
+    const fl = this.flower;
+    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sunDir.x, this.sunDir.z, this.time === "night");
+    if (fl.uv && face !== fl.face) {
+      fl.face = face;
+      fl.uv.setX(0, face ? 0 : 0.5);
+      fl.uv.needsUpdate = true;
     }
 
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, 200);
