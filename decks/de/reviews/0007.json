@@ -1,0 +1,9 @@
+{
+  "file": "source/0007.json",
+  "sha256": "308112260a046d6003664f5753cbc622965455484d18eefca073585b7fca1982",
+  "author": "claude-agent:de-author-2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-0007-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "Re-checked 6 edited entries (Stimme, unglaublich, Verzeihung, fangen, Partner, Finger); all fixes correct; 100/100 ok."
+}
