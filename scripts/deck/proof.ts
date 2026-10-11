@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { Deck, manifestKey, SourceWord } from "../../web/src/deck/schema.ts";
 import { auditDeck, frequencyRanks, loadAllow } from "./audit.ts";
+import { locate } from "../../web/src/content/text.ts";
 import { deckDir, wholeWordCount } from "./lib.ts";
 
 export const Ledger = z.object({
@@ -71,7 +72,7 @@ function card(lang: string, num: string, s: ReturnType<typeof ledgerState>[numbe
     ...w.sentences.map((x, i) => {
       const n = x.text.split(/\s+/).filter(Boolean).length;
       const auto = [n > 12 ? `${n} words` : "", wholeWordCount(x.text, x.cloze) !== 1 ? "cloze not exactly once" : "", w.forms.some((f) => f.toLowerCase() === x.cloze.toLowerCase()) ? "" : "cloze not in forms"].filter(Boolean);
-      return `s${i + 1}. ${x.text.replace(x.cloze, `[${x.cloze}]`)}\n    → ${x.translation}${auto.length ? `\n    ⚠ ${auto.join("; ")}` : ""}`;
+      return `s${i + 1}. ${bracket(x.text, x.cloze)}\n    → ${x.translation}${auto.length ? `\n    ⚠ ${auto.join("; ")}` : ""}`;
     }),
     ...(flags.length ? ["", ...flags.map((f) => `⚑ ${f}`)] : []),
     "",
@@ -154,4 +155,10 @@ if (import.meta.main) {
     console.error(`unknown command ${cmd}`);
     process.exit(2);
   }
+}
+
+/** The sentence with its cloze in [brackets], at the whole-word match the app uses. */
+function bracket(text: string, cloze: string) {
+  const i = locate(text, cloze);
+  return i < 0 ? text : `${text.slice(0, i)}[${cloze}]${text.slice(i + cloze.length)}`;
 }

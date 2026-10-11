@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Deck, manifestKey, SourceWord } from "../../web/src/deck/schema.ts";
 import { auditDeck, frequencyRanks, loadAllow } from "./audit.ts";
+import { locate } from "../../web/src/content/text.ts";
 import { deckDir, wholeWordCount } from "./lib.ts";
 
 const [lang, num, ...rest] = process.argv.slice(2);
@@ -38,7 +39,8 @@ for (const w of source) {
     const c = wholeWordCount(s.text, s.cloze);
     if (c !== 1) marks.push(c === 0 ? "cloze not found as a whole word" : `cloze appears ${c}×`);
     if (!w.forms.some((f) => f.toLowerCase() === s.cloze.toLowerCase())) marks.push(`cloze "${s.cloze}" not in forms`);
-    const bold = s.text.replace(s.cloze, `**${s.cloze}**`);
+    const at = locate(s.text, s.cloze);
+    const bold = at < 0 ? s.text : `${s.text.slice(0, at)}**${s.cloze}**${s.text.slice(at + s.cloze.length)}`;
     lines.push(`- ${bold} — _${s.translation}_${marks.length ? `  ⚠ ${marks.join("; ")}` : ""}`);
   }
   const flagged = flags.length > 0 || lines.some((l) => l.includes("⚠"));
