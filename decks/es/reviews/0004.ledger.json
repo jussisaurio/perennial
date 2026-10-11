@@ -1,0 +1,506 @@
+{
+  "file": "source/0004.json",
+  "reviewer": "claude-agent:es-proofreader-0004-2026-10-11",
+  "entries": {
+    "historia|noun|": {
+      "hash": "33904fdf221eaae9",
+      "verdict": "ok",
+      "at": "2026-10-11T14:21:51.199Z"
+    },
+    "entender|verb|": {
+      "hash": "a6845d15ef67198b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:21:56.518Z"
+    },
+    "dentro|adv|": {
+      "hash": "08c5306383d98e9b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:09.214Z"
+    },
+    "casi|adv|": {
+      "hash": "2298ce2a15b59a34",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:21.224Z"
+    },
+    "puerta|noun|": {
+      "hash": "5a4b89216216be67",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:23.618Z"
+    },
+    "significar|verb|": {
+      "hash": "f020487b3e499c4c",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:26.690Z"
+    },
+    "semana|noun|": {
+      "hash": "2560948aefdde8c8",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:29.157Z"
+    },
+    "hacia|prep|": {
+      "hash": "3cadb92dcfaac7bb",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:32.106Z"
+    },
+    "junto|adj|": {
+      "hash": "6b544718c917f9e9",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:35.255Z"
+    },
+    "niño|noun|": {
+      "hash": "ae01704739a615b2",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:37.722Z"
+    },
+    "pronto|adv|": {
+      "hash": "542f237fca868498",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:40.880Z"
+    },
+    "tío|noun|": {
+      "hash": "5846a44ae5e83425",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:43.567Z"
+    },
+    "suerte|noun|": {
+      "hash": "8a06b601219a4d50",
+      "verdict": "ok",
+      "at": "2026-10-11T14:32:36.354Z"
+    },
+    "ciudad|noun|": {
+      "hash": "5cdef10e410bef39",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:50.242Z"
+    },
+    "siquiera|adv|": {
+      "hash": "b7fb601e59e1f133",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:53.416Z"
+    },
+    "feliz|adj|": {
+      "hash": "0ed436a112fead06",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:55.954Z"
+    },
+    "minuto|noun|": {
+      "hash": "fc12c4492269aa66",
+      "verdict": "ok",
+      "at": "2026-10-11T14:22:58.626Z"
+    },
+    "cuánto|det|": {
+      "hash": "48d3b0370875d661",
+      "verdict": "ok",
+      "at": "2026-10-11T14:32:39.356Z"
+    },
+    "os|pron|": {
+      "hash": "76ead780ec1df1c5",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:07.524Z"
+    },
+    "muerte|noun|": {
+      "hash": "b53a13508bf23c87",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:10.601Z"
+    },
+    "dejar|verb|": {
+      "hash": "53c3d16b81f24c05",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:12.988Z"
+    },
+    "realidad|noun|": {
+      "hash": "9930bbb25ecc15bd",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:15.661Z"
+    },
+    "dar|verb|": {
+      "hash": "fcbb386c6bb980d9",
+      "verdict": "ok",
+      "at": "2026-10-11T14:35:06.591Z"
+    },
+    "importante|adj|": {
+      "hash": "5e3d7d92ed6f8a12",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:23.565Z"
+    },
+    "corazón|noun|": {
+      "hash": "b4126fc603ddd30b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:26.614Z"
+    },
+    "miedo|noun|": {
+      "hash": "e5034905cbe2fef2",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:29.740Z"
+    },
+    "jefe|noun|": {
+      "hash": "ab96503bb8d64d76",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:32.385Z"
+    },
+    "agua|noun|": {
+      "hash": "19bdde2ef721c10e",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:35.365Z"
+    },
+    "justo|adj|": {
+      "hash": "da15418299226e1b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:39.019Z"
+    },
+    "esposo|noun|": {
+      "hash": "bed1b242e9d30da6",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:42.079Z"
+    },
+    "mano|noun|": {
+      "hash": "96db9f725d171ebc",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:44.696Z"
+    },
+    "ojo|noun|": {
+      "hash": "a7d95ec395da448a",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:47.194Z"
+    },
+    "adelante|adv|": {
+      "hash": "2088bfa81ef10be4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:50.137Z"
+    },
+    "encontrar|verb|": {
+      "hash": "3e91f556f88f0325",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:52.685Z"
+    },
+    "cinco|num|": {
+      "hash": "1fb3e26655718f3d",
+      "verdict": "ok",
+      "at": "2026-10-11T14:23:55.092Z"
+    },
+    "ninguno|det|": {
+      "hash": "87296bf425ce6431",
+      "verdict": "ok",
+      "at": "2026-10-11T14:32:49.933Z"
+    },
+    "cara|noun|": {
+      "hash": "9cb5c521c7dc3c0a",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:03.996Z"
+    },
+    "cuidado|noun|": {
+      "hash": "4959b507ff075949",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:06.936Z"
+    },
+    "bajo|adj|": {
+      "hash": "a65f1eca95daecb7",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:09.890Z"
+    },
+    "cerca|adv|": {
+      "hash": "9b363b93b48e4d69",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:12.571Z"
+    },
+    "viejo|adj|": {
+      "hash": "e8aad8647eb083d0",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:15.286Z"
+    },
+    "bastante|adv|": {
+      "hash": "654578355e0dd645",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:18.751Z"
+    },
+    "fin|noun|": {
+      "hash": "c1a2f80a305d694a",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:21.637Z"
+    },
+    "tomar|verb|": {
+      "hash": "c46bd8d1bbf98185",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:24.930Z"
+    },
+    "único|adj|": {
+      "hash": "cfe4e503c70a1760",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:27.732Z"
+    },
+    "escuchar|verb|": {
+      "hash": "b351864a82cd82b4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:30.496Z"
+    },
+    "suficiente|adj|": {
+      "hash": "ff4d97a0fd2354dd",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:33.325Z"
+    },
+    "punto|noun|": {
+      "hash": "a96456d1348737db",
+      "verdict": "ok",
+      "at": "2026-10-11T14:32:52.585Z"
+    },
+    "cuándo|adv|": {
+      "hash": "4a4fc337dc429851",
+      "verdict": "ok",
+      "at": "2026-10-11T14:32:55.655Z"
+    },
+    "seguir|verb|": {
+      "hash": "30c9e1a3681fbbe0",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:46.493Z"
+    },
+    "equipo|noun|": {
+      "hash": "4fd03d42b15ea352",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:49.153Z"
+    },
+    "llegar|verb|": {
+      "hash": "c3eee9d9a0a6a23a",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:52.433Z"
+    },
+    "incluso|adv|": {
+      "hash": "6858a062556f1874",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:55.204Z"
+    },
+    "doctor|noun|": {
+      "hash": "0f869afde47eb3a4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:24:57.968Z"
+    },
+    "difícil|adj|": {
+      "hash": "b296e6218fd20266",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:01.339Z"
+    },
+    "aunque|conj|": {
+      "hash": "c3728607d9cc7f9d",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:04.377Z"
+    },
+    "coche|noun|": {
+      "hash": "c12ae6c107a22929",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:08.363Z"
+    },
+    "clase|noun|": {
+      "hash": "3bf3198d999f7016",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:11.144Z"
+    },
+    "cuatro|num|": {
+      "hash": "de38b7ea120b42b3",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:13.923Z"
+    },
+    "pequeño|adj|": {
+      "hash": "ff208a07f4558d57",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:16.898Z"
+    },
+    "llamar|verb|": {
+      "hash": "245e7e85386a70f7",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:20.221Z"
+    },
+    "allá|adv|": {
+      "hash": "5244786a5c2fe41f",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:23.351Z"
+    },
+    "último|adj|": {
+      "hash": "0407a16966a35e23",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:26.988Z"
+    },
+    "arriba|adv|": {
+      "hash": "e4343907ebe4e0e4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:04.185Z"
+    },
+    "tierra|noun|": {
+      "hash": "44203b07d52ed6fe",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:07.799Z"
+    },
+    "guerra|noun|": {
+      "hash": "86cb2752da91a4f5",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:42.495Z"
+    },
+    "igual|adj|": {
+      "hash": "8d2844266a723da4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:49.630Z"
+    },
+    "loco|adj|": {
+      "hash": "cfa84967e84089c5",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:53.201Z"
+    },
+    "sangre|noun|": {
+      "hash": "37e4132d5ed56245",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:56.499Z"
+    },
+    "vuelta|noun|": {
+      "hash": "db6fa239252e30b1",
+      "verdict": "ok",
+      "at": "2026-10-11T14:25:59.693Z"
+    },
+    "trabajar|verb|": {
+      "hash": "a329f2d7aa3e5b9b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:02.864Z"
+    },
+    "juego|noun|": {
+      "hash": "5e29d4bd86e59a77",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:06.225Z"
+    },
+    "cuerpo|noun|": {
+      "hash": "b4a0bd3b5384574c",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:10.024Z"
+    },
+    "e|conj|": {
+      "hash": "6b657528aae1576c",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:10.511Z"
+    },
+    "entrar|verb|": {
+      "hash": "a812252e1af940f6",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:18.325Z"
+    },
+    "oportunidad|noun|": {
+      "hash": "14b413291f17bb2f",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:21.629Z"
+    },
+    "teléfono|noun|": {
+      "hash": "714297a16d0578e5",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:29.872Z"
+    },
+    "final|noun|": {
+      "hash": "7467047c137ec1aa",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:32.925Z"
+    },
+    "listo|adj|": {
+      "hash": "f98929e93483a1b5",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:36.966Z"
+    },
+    "fiesta|noun|": {
+      "hash": "9adba0da05c3dc17",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:40.914Z"
+    },
+    "auto|noun|": {
+      "hash": "e18e0b3c7c31b1fd",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:13.158Z"
+    },
+    "vivir|verb|": {
+      "hash": "ae737c3d7d5e0125",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:52.605Z"
+    },
+    "posible|adj|": {
+      "hash": "562e4799f866dcf7",
+      "verdict": "ok",
+      "at": "2026-10-11T14:26:55.746Z"
+    },
+    "número|noun|": {
+      "hash": "69f17f2c98dbcd6e",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:15.679Z"
+    },
+    "mes|noun|": {
+      "hash": "39d6f6a7678c1f87",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:04.198Z"
+    },
+    "exactamente|adv|": {
+      "hash": "e222e7f6cb9b6b41",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:08.654Z"
+    },
+    "culpa|noun|": {
+      "hash": "99ff8c698f306fb5",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:11.981Z"
+    },
+    "abajo|adv|": {
+      "hash": "1c16bbded94326f2",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:18.923Z"
+    },
+    "escuela|noun|": {
+      "hash": "f3f32e439175f506",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:22.538Z"
+    },
+    "fuerte|adj|": {
+      "hash": "1cf18b7ad19ffa9f",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:26.331Z"
+    },
+    "ello|pron|": {
+      "hash": "60c16c22ea897900",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:29.745Z"
+    },
+    "pregunta|noun|": {
+      "hash": "e3232f0e17d5369b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:18.331Z"
+    },
+    "atrás|adv|": {
+      "hash": "2ec0d668561c1e84",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:39.394Z"
+    },
+    "malo|adj|": {
+      "hash": "a17031628bebe2a4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:42.755Z"
+    },
+    "capitán|noun|": {
+      "hash": "000c1f113ee58c44",
+      "verdict": "ok",
+      "at": "2026-10-11T14:35:11.914Z"
+    },
+    "bebé|noun|": {
+      "hash": "d5c3ff06903d1beb",
+      "verdict": "ok",
+      "at": "2026-10-11T14:27:52.473Z"
+    },
+    "segundo|adj|": {
+      "hash": "c35275664e097db4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:26.926Z"
+    },
+    "mayor|adj|": {
+      "hash": "ed437bb1c9ee756d",
+      "verdict": "ok",
+      "at": "2026-10-11T14:28:20.845Z"
+    },
+    "comida|noun|": {
+      "hash": "26398bffdf012e49",
+      "verdict": "ok",
+      "at": "2026-10-11T14:33:29.633Z"
+    },
+    "morir|verb|": {
+      "hash": "9a2730caf04f31b8",
+      "verdict": "ok",
+      "at": "2026-10-11T14:28:29.953Z"
+    }
+  }
+}

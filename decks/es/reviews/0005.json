@@ -1,0 +1,9 @@
+{
+  "file": "source/0005.json",
+  "sha256": "6bc495d2a4812aeee6cb1bfa08e4e9311c0998192b81ceb484a0ca99700c93ee",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0005-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "Two passes: 14 fixes (adj/noun POS misuse, gloss sense coverage, variety, unnatural translations) applied and re-checked; all 100 entries ok."
+}

@@ -8,6 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
+import { focusPlant } from "./gardenFocus";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -18,6 +19,10 @@ function greeting(): string {
 let animated = false;
 
 export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onAddWords: () => void; onWalk: () => void }) {
+  const view = (id: string) => {
+    focusPlant(id);
+    onWalk();
+  };
   const [stagger] = useState(() => !animated);
   useEffect(() => {
     animated = true;
@@ -51,7 +56,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </div>
       </header>
 
-      <Garden data={garden} />
+      <Garden data={garden} onView={view} />
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
