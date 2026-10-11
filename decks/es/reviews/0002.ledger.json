@@ -1,0 +1,533 @@
+{
+  "file": "source/0002.json",
+  "reviewer": "claude-agent:es-proofreader-0002-2026-10-11",
+  "entries": {
+    "tu|det|": {
+      "hash": "a5c4988d67ced1fa",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:57.912Z"
+    },
+    "le|pron|": {
+      "hash": "1b3a1828535e194f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:23.895Z"
+    },
+    "esto|pron|": {
+      "hash": "e0463c8f204d01e6",
+      "verdict": "fix",
+      "note": "s1: replace '¿Qué es [esto]?' / 'What is this?' with '¿Para qué sirve [esto]?' / 'What is this for?' because the original duplicates a sentence of 'qué'.",
+      "at": "2026-10-11T13:50:31.375Z"
+    },
+    "ahora|adv|": {
+      "hash": "7e8893b2e27f390a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:35.533Z"
+    },
+    "así|adv|": {
+      "hash": "5d65fd28fed8a027",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:39.093Z"
+    },
+    "algo|pron|": {
+      "hash": "7052405fc4370a79",
+      "verdict": "fix",
+      "note": "s4: replace 'Estoy [algo] cansado.' / 'I'm a bit tired.' with '¿Sabes [algo] de ella?' / 'Do you know anything about her?' because s4 uses algo as an adverb ('a bit'), not the glossed pronoun; the new line also covers the 'anything' sense. Keep the note about 'algo cansado'.",
+      "at": "2026-10-11T13:50:45.502Z"
+    },
+    "bueno|adj|": {
+      "hash": "f2ef0d349ed719eb",
+      "verdict": "fix",
+      "note": "s2: replace 'Es una [buena] idea.' / 'It's a good idea.' with 'La comida está muy [buena].' / 'The food is very good.' because the original duplicates a sentence of 'un'.",
+      "at": "2026-10-11T13:50:50.864Z"
+    },
+    "él|pron|": {
+      "hash": "37e9273adbd4116a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:53.983Z"
+    },
+    "cuando|conj|": {
+      "hash": "9c2ba234df0c7172",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:56.900Z"
+    },
+    "nos|pron|": {
+      "hash": "96e2f19241819f17",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:03.341Z"
+    },
+    "nada|pron|": {
+      "hash": "15649a3053fc9297",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:07.125Z"
+    },
+    "cómo|adv|": {
+      "hash": "066337b856de090e",
+      "verdict": "fix",
+      "note": "s1: replace '¿[Cómo] estás?' / 'How are you?' with '¿[Cómo] vas al trabajo?' / 'How do you get to work?' (duplicates a sentence of 'estar'); s2: replace '¿[Cómo] te llamas?' / 'What's your name?' with '¿[Cómo] se dice «gracias» en inglés?' / 'How do you say \"gracias\" in English?' (duplicates a sentence of 'te').",
+      "at": "2026-10-11T13:55:22.270Z"
+    },
+    "o|conj|": {
+      "hash": "b023881aa061c094",
+      "verdict": "fix",
+      "note": "s3: cloze is wrong: it marks the final letter of 'Llego' ('Lleg[o]'). The cloze must be the standalone word: 'Llego en dos [o] tres días.' (set the cloze explicitly to the second whole-word 'o', not the first substring match).",
+      "at": "2026-10-11T13:51:17.076Z"
+    },
+    "ella|pron|": {
+      "hash": "e1d73f2195e4b10a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:20.003Z"
+    },
+    "hacer|verb|": {
+      "hash": "2e2f74653268203e",
+      "verdict": "fix",
+      "note": "s4: replace '¿Qué estás [haciendo]?' / 'What are you doing?' with 'Esta noche [hago] yo la cena.' / 'I'm making dinner tonight.' because s4 has the same meaning and translation as s1, and no sentence shows the 'to make' sense of the gloss.",
+      "at": "2026-10-11T13:57:47.945Z"
+    },
+    "gracias|interj|": {
+      "hash": "96cc9860d333e7da",
+      "verdict": "fix",
+      "note": "s2: replace '[Gracias] por todo.' / 'Thanks for everything.' with '[Gracias] por tu ayuda.' / 'Thanks for your help.' because the original duplicates a sentence of 'por'.",
+      "at": "2026-10-11T13:51:29.725Z"
+    },
+    "vez|noun|": {
+      "hash": "6bd8916256da3a4e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:32.970Z"
+    },
+    "solo|adv|": {
+      "hash": "98f08a971110bc52",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:35.849Z"
+    },
+    "porque|conj|": {
+      "hash": "1e651f133b2ab435",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:38.834Z"
+    },
+    "creer|verb|": {
+      "hash": "1e396dbd80fea989",
+      "verdict": "fix",
+      "note": "s1: replace '[Creo] que sí.' / 'I think so.' with '[Creo] que va a llover.' / 'I think it's going to rain.' because the original duplicates a sentence of 'sí' (keep the note).",
+      "at": "2026-10-11T13:51:43.625Z"
+    },
+    "ese|det|": {
+      "hash": "a2f366b182f33b6b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:47.815Z"
+    },
+    "usted|pron|": {
+      "hash": "7ad9c302e48286ab",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:50.996Z"
+    },
+    "entonces|adv|": {
+      "hash": "d3eb520832617151",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:55.963Z"
+    },
+    "hola|interj|": {
+      "hash": "3e542e5e4c749b79",
+      "verdict": "fix",
+      "note": "s3: replace 'Dile [hola] de mi parte.' / 'Say hi to him for me.' with '[Hola], ¿está Ana?' / 'Hello, is Ana there?' because 'decir hola de mi parte' is calqued from English (natives say 'Salúdalo de mi parte' / 'Dale saludos'), and 'dile' is not specifically 'him'.",
+      "at": "2026-10-11T13:52:01.752Z"
+    },
+    "verdad|noun|": {
+      "hash": "758c0bcb05c7ec2f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:05.196Z"
+    },
+    "casa|noun|": {
+      "hash": "2cbae6158512f1b7",
+      "verdict": "fix",
+      "note": "s1: replace 'Estoy en [casa].' / 'I'm at home.' with 'Los domingos me quedo en [casa].' / 'On Sundays I stay home.' because the original duplicates a sentence of 'en'.",
+      "at": "2026-10-11T13:57:47.863Z"
+    },
+    "tan|adv|": {
+      "hash": "96d59410c87afe30",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:12.838Z"
+    },
+    "quién|pron|": {
+      "hash": "74a233335c60f733",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:15.938Z"
+    },
+    "tiempo|noun|": {
+      "hash": "dd7a3396fd765a41",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:18.945Z"
+    },
+    "dos|num|": {
+      "hash": "b17a348f9c6bf7a6",
+      "verdict": "fix",
+      "note": "s1: replace 'Tengo [dos] hermanos.' / 'I have two brothers.' with 'Quiero [dos] cafés, por favor.' / 'I'd like two coffees, please.' because the original duplicates a sentence of 'tener'.",
+      "at": "2026-10-11T13:52:23.276Z"
+    },
+    "nunca|adv|": {
+      "hash": "7f64a9f14e93821a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:26.744Z"
+    },
+    "dónde|adv|": {
+      "hash": "0f442304dd71d357",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:30.229Z"
+    },
+    "favor|noun|": {
+      "hash": "ba5e33897970d368",
+      "verdict": "fix",
+      "note": "s1: replace 'Por [favor], ven aquí.' / 'Please come here.' with 'Por [favor], cierra la puerta.' / 'Please close the door.' because the original duplicates a sentence of 'por'.",
+      "at": "2026-10-11T13:55:55.307Z"
+    },
+    "mucho|det|": {
+      "hash": "e4b11d2d21a26cd7",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:37.356Z"
+    },
+    "mí|pron|": {
+      "hash": "c9e5b24e29b46088",
+      "verdict": "fix",
+      "note": "s3: replace 'Habla de [mí].' / 'He's talking about me.' with 'Siempre habla de [mí].' / 'He's always talking about me.' because the bare 'Habla de mí' reads just as easily as the command 'Talk about me', and the fuller line is more natural.",
+      "at": "2026-10-11T13:52:42.503Z"
+    },
+    "sentir|verb|": {
+      "hash": "b5bb237e90e3493d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:46.940Z"
+    },
+    "señor|noun|": {
+      "hash": "fa3e8b86fc12b127",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:50.397Z"
+    },
+    "mejor|adj|": {
+      "hash": "ceb1b46d541c458e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:54.342Z"
+    },
+    "decir|verb|": {
+      "hash": "ec37dba08e272312",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:57.581Z"
+    },
+    "también|adv|": {
+      "hash": "812c808aa1857739",
+      "verdict": "fix",
+      "note": "s1: replace 'Yo [también].' / 'Me too.' with 'Mi hermano [también] viene.' / 'My brother is coming too.' because the original duplicates a sentence of 'yo'.",
+      "at": "2026-10-11T13:53:01.023Z"
+    },
+    "sobre|prep|": {
+      "hash": "804c1278cb630067",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:04.649Z"
+    },
+    "sin|prep|": {
+      "hash": "3d0de0f60b8cb82a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:07.939Z"
+    },
+    "ti|pron|": {
+      "hash": "34de0036fb23312f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:11.397Z"
+    },
+    "ver|verb|": {
+      "hash": "2d9d9f73aea53ce0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:15.364Z"
+    },
+    "hombre|noun|": {
+      "hash": "fa47ccde4082d377",
+      "verdict": "fix",
+      "note": "s1: replace 'Es un [hombre] muy bueno.' / 'He's a very good man.' with 'Mi abuelo era un [hombre] muy alto.' / 'My grandfather was a very tall man.' because it nearly repeats bueno s1 'Es un buen hombre.' (same sentence a few cards apart).",
+      "at": "2026-10-11T13:53:21.191Z"
+    },
+    "vida|noun|": {
+      "hash": "3cca607d5e036d88",
+      "verdict": "fix",
+      "note": "s4: replace 'Los médicos salvan [vidas].' / 'Doctors save lives.' with 'Tenemos [vidas] muy diferentes.' / 'We have very different lives.' because s3 already uses 'salvar la vida' (no variety) and 'salvan' is flagged rare.",
+      "at": "2026-10-11T13:53:28.035Z"
+    },
+    "alguien|pron|": {
+      "hash": "dc3d1921d52218b6",
+      "verdict": "fix",
+      "note": "s1: replace '[Alguien] está en la puerta.' with 'Hay [alguien] en la puerta.' (translation unchanged: 'Someone is at the door.') because natives use 'hay' for an indefinite subject; 'Alguien está en…' sounds translated.",
+      "at": "2026-10-11T13:53:32.311Z"
+    },
+    "cosa|noun|": {
+      "hash": "d03c167e85807cb5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:39.170Z"
+    },
+    "siempre|adv|": {
+      "hash": "7b5ecece38b554b5",
+      "verdict": "fix",
+      "note": "s2: replace 'Te querré para [siempre].' / 'I'll love you forever.' with 'Vamos a ser amigos para [siempre].' / 'We're going to be friends forever.' because 'querré' (irregular future) is rare and hard for beginners.",
+      "at": "2026-10-11T13:53:43.774Z"
+    },
+    "hasta|prep|": {
+      "hash": "563b1b1de077b8ad",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:47.316Z"
+    },
+    "ahí|adv|": {
+      "hash": "3354e4cdcfd61ad3",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:50.438Z"
+    },
+    "año|noun|": {
+      "hash": "9ac49d3ea13c085f",
+      "verdict": "fix",
+      "note": "s2: replace 'Feliz [año] nuevo.' / 'Happy New Year.' with '¡Feliz [año] nuevo!' / 'Happy New Year!' because a greeting/wish needs exclamation marks (¡ !) in Spanish.",
+      "at": "2026-10-11T13:53:56.872Z"
+    },
+    "antes|adv|": {
+      "hash": "fd7b308c6babf479",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:02.065Z"
+    },
+    "ni|conj|": {
+      "hash": "a15901fd6763265a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:05.887Z"
+    },
+    "poco|det|": {
+      "hash": "d061dccffbe5e4d3",
+      "verdict": "fix",
+      "note": "s1: replace 'Habla un [poco] más alto.' / 'Speak a little louder.' with 'Tengo [poco] dinero.' / 'I don't have much money.' because s1 and s4 both use adverbial 'un poco', not the glossed determiner; the new line shows masculine singular 'poco' before a noun.",
+      "at": "2026-10-11T13:57:47.904Z"
+    },
+    "día|noun|": {
+      "hash": "5045da68e774e138",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:14.775Z"
+    },
+    "uno|num|": {
+      "hash": "d6b8ad5d8338973c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:18.604Z"
+    },
+    "noche|noun|": {
+      "hash": "1993ba5e04771197",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:22.414Z"
+    },
+    "otro|det|": {
+      "hash": "691189059156e132",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:25.870Z"
+    },
+    "acuerdo|noun|": {
+      "hash": "7b2ec9f96bf06fdd",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:29.748Z"
+    },
+    "trabajo|noun|": {
+      "hash": "e49cd4f35273cff0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:33.080Z"
+    },
+    "nosotros|pron|": {
+      "hash": "98c6c5e443c31581",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:36.660Z"
+    },
+    "parecer|verb|": {
+      "hash": "a2ca097ba9eaed45",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:41.977Z"
+    },
+    "gente|noun|": {
+      "hash": "627c268931a7bbec",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:46.197Z"
+    },
+    "padre|noun|": {
+      "hash": "b3461e26839b9a2d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:49.849Z"
+    },
+    "mirar|verb|": {
+      "hash": "e4f427d2fd3e537f",
+      "verdict": "fix",
+      "note": "s3: replace 'Me [miró] y sonrió.' / 'He looked at me and smiled.' with 'Nadie me [miró].' / 'Nobody looked at me.' because 'sonrió' is rare (outside top 10000) and distracts beginners.",
+      "at": "2026-10-11T13:54:57.844Z"
+    },
+    "mismo|adj|": {
+      "hash": "8e3ea97cc1b0295b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:01.614Z"
+    },
+    "nadie|pron|": {
+      "hash": "3eb4ff9e3c0243f8",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:05.703Z"
+    },
+    "hablar|verb|": {
+      "hash": "63002c1974aba84e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:09.527Z"
+    },
+    "ellos|pron|": {
+      "hash": "ea22174b670d5ab1",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:14.676Z"
+    },
+    "tal|adj|": {
+      "hash": "db99dcd447740a02",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:22.229Z"
+    },
+    "pasar|verb|": {
+      "hash": "951b4dd0c419931c",
+      "verdict": "fix",
+      "note": "s4: replace '¿Qué ha [pasado] aquí?' / 'What has happened here?' with '¿Me [pasas] la sal?' / 'Can you pass me the salt?' because s1, s2 and s4 are all 'what happened' questions, and no sentence shows the glossed 'to pass' sense.",
+      "at": "2026-10-11T13:55:29.085Z"
+    },
+    "fuera|adv|": {
+      "hash": "1b1d8a376d79d54d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:33.354Z"
+    },
+    "después|adv|": {
+      "hash": "2d6d10bcdaadeb02",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:36.922Z"
+    },
+    "desde|prep|": {
+      "hash": "d38f10aef07b476e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:41.115Z"
+    },
+    "dinero|noun|": {
+      "hash": "76876d692063eb76",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:44.879Z"
+    },
+    "mundo|noun|": {
+      "hash": "c03c12169c7ac1ee",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:48.818Z"
+    },
+    "claro|adv|": {
+      "hash": "f08636740c8aaf50",
+      "verdict": "ok",
+      "at": "2026-10-11T13:55:55.268Z"
+    },
+    "momento|noun|": {
+      "hash": "0b18869257a7d9f2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:03.077Z"
+    },
+    "mañana|adv|": {
+      "hash": "551cf651203b667f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:07.331Z"
+    },
+    "mañana|noun|": {
+      "hash": "b965d4984c586ef0",
+      "verdict": "fix",
+      "note": "s3: replace 'Por las [mañanas] corro.' / 'I run in the mornings.' with 'Trabajo por las [mañanas].' / 'I work in the mornings.' because 'corro' is flagged rare and the fronted word order is less neutral for beginners.",
+      "at": "2026-10-11T13:56:12.626Z"
+    },
+    "madre|noun|": {
+      "hash": "659353ee56d5c296",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:16.441Z"
+    },
+    "valer|verb|": {
+      "hash": "161daf3dca77275e",
+      "verdict": "fix",
+      "note": "s4: replace '[Valió] la pena.' / 'It was worth it.' with 'Antes esta casa [valía] mucho más.' / 'This house used to be worth much more.' because s3 and s4 repeat the same idiom 'valer la pena'; the new line adds the plain 'be worth' sense and the imperfect form.",
+      "at": "2026-10-11T13:56:22.512Z"
+    },
+    "lugar|noun|": {
+      "hash": "cd17d321d8033b41",
+      "verdict": "fix",
+      "note": "s3: replace 'Hay [lugares] muy bonitos aquí.' / 'There are very nice places here.' with 'Me gusta visitar [lugares] nuevos.' / 'I like visiting new places.' because s3 repeats s1's 'muy bonito' framing (no variety of context).",
+      "at": "2026-10-11T13:56:28.712Z"
+    },
+    "donde|adv|": {
+      "hash": "39b4419b7ad63352",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:32.454Z"
+    },
+    "seguro|adj|": {
+      "hash": "11cf7fa7904d2cc9",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:37.701Z"
+    },
+    "esperar|verb|": {
+      "hash": "5adc39c9a88c7ae0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:41.878Z"
+    },
+    "nuevo|adj|": {
+      "hash": "afce5f3b4a882fb8",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:45.791Z"
+    },
+    "hijo|noun|": {
+      "hash": "c4f395f397f1e806",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:49.637Z"
+    },
+    "allí|adv|": {
+      "hash": "281feeaf705a0242",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:53.298Z"
+    },
+    "menos|adv|": {
+      "hash": "e022fc81011a8299",
+      "verdict": "ok",
+      "at": "2026-10-11T13:56:57.649Z"
+    },
+    "tipo|noun|": {
+      "hash": "c5a5bbd7a84de84d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:57:03.939Z"
+    },
+    "amigo|noun|": {
+      "hash": "c7d6ac7496d58caf",
+      "verdict": "ok",
+      "at": "2026-10-11T13:57:08.079Z"
+    },
+    "grande|adj|": {
+      "hash": "698106cbeea4c049",
+      "verdict": "ok",
+      "at": "2026-10-11T13:57:12.386Z"
+    },
+    "nuestro|det|": {
+      "hash": "95dbf134d3b470c1",
+      "verdict": "fix",
+      "note": "s2 translation: replace 'Our house is near.' with 'Our house is nearby.' because bare 'is near' is unnatural English.",
+      "at": "2026-10-11T13:57:17.441Z"
+    },
+    "mujer|noun|": {
+      "hash": "7bc877b9414cf796",
+      "verdict": "ok",
+      "at": "2026-10-11T13:57:21.579Z"
+    },
+    "mamá|noun|": {
+      "hash": "24afbce04008c6f8",
+      "verdict": "ok",
+      "at": "2026-10-11T13:57:25.821Z"
+    },
+    "luego|adv|": {
+      "hash": "2f5c1b3585be1d43",
+      "verdict": "fix",
+      "note": "s1: replace '[Luego] te llamo.' / 'I'll call you later.' with 'Ahora no puedo, [luego] hablamos.' / 'I can't now, we'll talk later.' because it has the same meaning and translation as después s1 'Te llamo después.' (ambiguous cloze across cards); s2: replace 'Primero estudio y [luego] salgo.' / 'First I study and then I go out.' with 'Cenamos y [luego] vimos una película.' / 'We had dinner and then watched a movie.' because it mirrors después s3 'Primero comemos y después hablamos.'.",
+      "at": "2026-10-11T13:57:33.735Z"
+    },
+    "papá|noun|": {
+      "hash": "736dccf2af7ed8c4",
+      "verdict": "ok",
+      "at": "2026-10-11T13:57:38.311Z"
+    },
+    "hoy|adv|": {
+      "hash": "94017f38ea4350cd",
+      "verdict": "ok",
+      "at": "2026-10-11T13:57:47.822Z"
+    }
+  }
+}
