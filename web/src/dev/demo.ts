@@ -32,6 +32,9 @@ export async function seedDemo(lang: "es" | "de", count: number, days = 90): Pro
   const r = rng(count * 31 + days);
   const mutations: unknown[] = [{ type: "course.upsert", row: { lang, minutes: 7 } }];
   const words = deck.words.slice(0, count);
+  // The server takes at most QUOTA.reviewsPerDay (5000) reviews a day; keep a
+  // whole-deck demo under it with fewer reviews per word.
+  const perWord = Math.min(40, Math.floor(4800 / Math.max(1, words.length)));
   words.forEach((w, i) => {
     // Common words were met first; the newest ones only in the last days.
     let ts = now - days * DAY_MS * Math.pow(1 - i / Math.max(1, words.length), 1.3) + r() * DAY_MS * 0.5;
@@ -39,7 +42,7 @@ export async function seedDemo(lang: "es" | "de", count: number, days = 90): Pro
     // About 1 in 6 words stopped getting practice at some point.
     const stopAt = r() < 0.17 ? ts + (now - ts) * (0.3 + r() * 0.5) : now;
     const log: { ts: number; grade: Grade }[] = [];
-    for (let n = 0; n < 40 && ts < stopAt; n++) {
+    for (let n = 0; n < perWord && ts < stopAt; n++) {
       const x = r();
       const grade: Grade = x < 0.06 ? 1 : x < 0.16 ? 2 : x < 0.92 ? 3 : 4;
       log.push({ ts: Math.round(ts), grade });

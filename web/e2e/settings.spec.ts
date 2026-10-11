@@ -45,6 +45,7 @@ test("deleting the account removes it, signs out, and says goodbye", async ({ pa
   // Back on the landing page, signed out, with one goodbye.
   await expect(page.getByText("Your garden is gone. Thank you for growing it.")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("¡Buena suerte!")).toBeVisible();
-  expect(await page.evaluate(async () => (await fetch("/api/me")).status)).toBe(401);
+  // From the test side with the page's cookies: the app reloads itself as the user changes.
+  expect((await page.request.get("/api/me")).status()).toBe(401);
   await expect(page.getByRole("button", { name: /Start learning/ })).toBeVisible();
 });
