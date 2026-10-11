@@ -24,6 +24,19 @@ describe("sign-in codes per address", () => {
   });
 });
 
+describe("asking for a code again", () => {
+  test("sends the same code, so any of the emails works", async () => {
+    const email = unique("twice");
+    const outbox = (t.app.mailer as OutboxMailer).outbox;
+    await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
+    await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
+    const codes = outbox.filter((m) => m.to === email).map((m) => m.subject.match(/\d{6}/)![0]);
+    expect(codes).toHaveLength(2);
+    expect(codes[1]).toBe(codes[0]);
+    expect((await t.call("/api/auth/sign-in/email-otp", { email, otp: codes[0] })).status).toBe(200);
+  });
+});
+
 describe("bot check (Turnstile)", () => {
   test("when configured, new users and codes need a token", async () => {
     const guarded = await startApp({ turnstile: { secretKey: "1x0000000000000000000000000000000AA", siteKey: "1x00000000000000000000AA" } });

@@ -38,6 +38,12 @@ test("words from a text use AI words; the limit is clear before anything is sent
   await page.getByRole("button", { name: /Learn 6 words · uses 6 AI words/ }).click();
   await expect(page.getByText(/Added 6 words/)).toBeVisible();
   await expectServerRows(page, "user_word", 6);
+
+  // Your own words are easy to find again (newest first; one batch shares a time).
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByRole("combobox").selectOption("mine");
+  await expect(page.locator(".word-row")).toHaveCount(6);
+  for (const w of ["zorro", "búho", "lince", "nutria", "tejón", "garza"]) await expect(page.locator(".word-row strong", { hasText: w })).toHaveCount(1);
 });
 
 test("Perennial AI can write new sentences for a word, and undo removes them", async ({ page }) => {

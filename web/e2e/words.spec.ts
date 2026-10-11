@@ -28,3 +28,17 @@ test("course words: search the upcoming words, pause and resume, never show (wit
   await page.getByRole("button", { name: "Undo" }).click();
   await expectServerRows(page, "word_state", 0);
 });
+
+test("keyboard: Enter starts today's session, / focuses the word search", async ({ page }) => {
+  await startCourse(page);
+  await page.locator("body").click({ position: { x: 5, y: 5 } }); // nothing focused
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".kicker")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.locator("h1").click();
+  await page.keyboard.press("/");
+  await expect(page.getByRole("searchbox")).toBeFocused();
+  await page.keyboard.type("x");
+  await expect(page.getByRole("searchbox")).toHaveValue("x"); // the slash itself isn't typed
+});

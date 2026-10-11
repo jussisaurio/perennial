@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "bun test src",
     "e2e": "playwright test",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "perf": "bun perf/ui.ts"
   },
   "dependencies": {
     "@fontsource-variable/onest": "^5.3.1",
