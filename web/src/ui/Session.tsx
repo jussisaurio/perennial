@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { forgotLine, summaryHeadline } from "../content/voice";
+import { firstPlantsLine, forgotLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
 import { ActiveClock } from "../core/clock";
@@ -710,6 +710,7 @@ function Summary({
         </div>
       </div>
       <Garden data={garden} highlight={practised} compact />
+      {garden && counts.intros > 0 && garden.total === counts.intros && <p className="muted small first-plants">{firstPlantsLine(garden.total)}</p>}
       {stats && (
         <p>
           {stats.known > 0 ? (

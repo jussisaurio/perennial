@@ -145,8 +145,8 @@ export interface TodayVisitors {
   snailDay: number | null;
 }
 
-/** A dev-only override: "all", or a list of visitor ids. */
-export type VisitorOverride = "all" | VisitorId[] | null;
+/** A dev-only override: "all", or a list of visitor ids (the strip-only ones too). */
+export type VisitorOverride = "all" | (VisitorId | StripVisitorId)[] | null;
 
 /** Who visits today. Seeded by the calendar date, so a visitor stays all day. */
 export function visitorsFor(facts: LearnerFacts, now: Date = new Date(), override: VisitorOverride = null): TodayVisitors {
@@ -188,6 +188,32 @@ export function milestoneLine(before: number, now: number): string | null {
   if (!hit) return null;
   const arrives = VISITORS.some((v) => v.unlock === hit);
   return arrives ? `You know ${hit} words. Someone has arrived in the garden.` : `You know ${hit} words. The garden noticed.`;
+}
+
+// ---- Strip-only visitors: the worm (#58) and the mole (#61) ----
+
+/** Visitors that live only in the 2D strip: the worm in an empty garden, the mole at the far right end. */
+export type StripVisitorId = "worm" | "mole";
+
+export const STRIP_VISITORS: Record<StripVisitorId, { words: Record<string, string>; gloss: string }> = {
+  worm: { words: { es: "el gusano", de: "der Wurm" }, gloss: "worm" },
+  mole: { words: { es: "el topo", de: "der Maulwurf" }, gloss: "mole" },
+};
+
+/** The mole looks up at the end of the strip on about one day in this many. */
+export const MOLE_ONE_IN = 4;
+
+/** Is the mole at the end of the strip today? Stable all day; the dev override can bring it. */
+export function moleVisits(now: Date = new Date(), override: VisitorOverride = null): boolean {
+  if (override) return override === "all" || override.includes("mole");
+  return rareDay(MOLE_ONE_IN, "visitor-mole", now);
+}
+
+/** A strip visitor's word for this course, or null when the course has none. */
+export function stripVisitor(id: StripVisitorId, lang: string): { id: StripVisitorId; word: string; gloss: string } | null {
+  const v = STRIP_VISITORS[id];
+  const word = v.words[lang];
+  return word ? { id, word, gloss: v.gloss } : null;
 }
 
 /** A visitor as the garden shows it: its word in the course language, if there is one. */

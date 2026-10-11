@@ -290,6 +290,31 @@ section { margin-bottom: 1.25rem; }
 }
 .visitor-tip i { font: italic 1.05rem/1.2 var(--display); }
 .visitor-tip span { color: var(--muted); }
+.visitor-tip em { display: block; font-style: normal; color: var(--ink-2); font-size: 0.78rem; }
+/* The plant hears its name (#60): a short hop on tap; the neighbour's mistake is late and slow. */
+.garden .perk { transform-box: fill-box; transform-origin: 50% 100%; animation: perk 0.4s var(--ease); }
+.garden .perk.late { animation: perk 1.3s ease-out 0.12s both; }
+@keyframes perk { 35% { transform: scale(1.04); } }
+/* A plant that sleeps at night (#62). */
+.garden .snore { font: italic 600 13px var(--display); fill: var(--ink-2); animation: snore 4.5s ease-in-out infinite; transform-box: fill-box; }
+@keyframes snore { 0% { opacity: 0; transform: translate(0, 4px); } 30% { opacity: 0.85; } 100% { opacity: 0; transform: translate(6px, -14px); } }
+/* The first word's post at the far left (#61). */
+.keepsake-board { fill: var(--card); stroke: var(--soil-2); stroke-width: 1.2; }
+.keepsake text { font: italic 11.5px var(--display); fill: var(--ink-2); }
+/* The mole at the far right end (#61): up while you are at the end, down when you scroll away. */
+.mole { position: absolute; overflow: hidden; pointer-events: none; }
+.mole-body { position: absolute; inset: 0; transform: translateY(100%); transition: transform 0.3s var(--ease); }
+.mole.up .mole-body { transform: none; transition: transform 0.45s var(--ease) 0.35s; pointer-events: auto; }
+.mole-hill { position: absolute; left: 0; bottom: 0; display: block; }
+/* The empty garden (#58): a stake, a watering can and a worm. */
+.garden-stake {
+  position: absolute; width: 128px; padding: 0.35rem 0.5rem 0.3rem; text-align: center; border-radius: 4px;
+  background: color-mix(in oklab, var(--card), var(--sun) 12%); border: 1.5px solid var(--soil-2); box-shadow: 0 6px 14px -10px rgb(0 0 0 / 0.5);
+  font: 0.86rem/1.15 var(--display); color: var(--ink-2);
+}
+.garden-stake small { display: block; margin-top: 0.15rem; font: italic 0.72rem var(--display); color: var(--muted); }
+.garden-stake::after { content: ""; position: absolute; left: 50%; top: 100%; width: 4px; height: 30px; margin-left: -2px; background: var(--soil-2); border-radius: 0 0 1px 1px; }
+.words-empty { margin: 2rem 0; text-align: center; font: 1.1rem var(--display); color: var(--ink-2); }
 
 /* ---------- session ---------- */
 .session { max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
@@ -403,7 +428,8 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-  .garden .sway, .garden .glow, .garden .firefly, .play::after, .blank { animation: none !important; }
+  .garden .sway, .garden .glow, .garden .firefly, .garden .perk, .garden .snore, .play::after, .blank { animation: none !important; }
+  .garden .snore { opacity: 0.7; }
 }
 
 .growth-strip { display: flex; justify-content: space-between; gap: 0.25rem; margin: 1.5rem 0 2rem; padding: 0 0.25rem; }

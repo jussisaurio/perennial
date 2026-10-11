@@ -7,13 +7,16 @@ import {
   fencePickets,
   learnerFacts,
   milestoneLine,
+  moleVisits,
   NO_FACTS,
   snailFraction,
+  STRIP_VISITORS,
   VISITORS,
   visitorsFor,
   visitorViews,
   welcomeBack,
   type LearnerFacts,
+  type StripVisitorId,
   type TodayVisitors,
   type VisitorId,
   type VisitorOverride,
@@ -27,7 +30,7 @@ export function devVisitorOverride(): VisitorOverride {
   const v = new URLSearchParams(location.search).get("visitors");
   if (!v) return null;
   if (v === "all") return "all";
-  return v.split(",").filter((id): id is VisitorId => VISITORS.some((d) => d.id === id));
+  return v.split(",").filter((id): id is VisitorId | StripVisitorId => VISITORS.some((d) => d.id === id) || id in STRIP_VISITORS);
 }
 
 export interface LearnerVisitors {
@@ -40,6 +43,8 @@ export interface LearnerVisitors {
   milestone: string | null;
   /** Words the learner knows (lemmas) for the frog to croak: nouns once there are a few. */
   known: string[];
+  /** The mole looks up at the far right end of the strip today. */
+  mole: boolean;
 }
 
 /** How many of `words` were known just before `t` (ms): the reading reviews before `t`, replayed. */
@@ -75,13 +80,14 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
     welcome: welcomeBack(facts, now),
     milestone: milestoneLine(before, known.length),
     known,
+    mole: moleVisits(now, devVisitorOverride()),
   };
 }
 
 /** Visitors for a garden with no learner behind it (the landing page): the snail at the gate, and whoever drops by today. */
 export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitors {
   const today = visitorsFor(NO_FACTS, now, devVisitorOverride());
-  return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [] };
+  return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()) };
 }
 
 /** Where the snail is along the whole fence of this garden (0 at the gate), for the 2D strip. */

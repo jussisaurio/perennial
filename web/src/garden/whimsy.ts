@@ -71,3 +71,70 @@ export function sunflowerFaces(flowerX: number, flowerZ: number, camX: number, c
   if (d < 1e-6 || s < 1e-6) return false;
   return (dx * sunX + dz * sunZ) / (d * s) > 0.5;
 }
+
+// ---- A plant that sleeps at night (#62) ----
+
+/** The strip's sleeper snores only late at night (real clock). */
+export const isSleepyHour = (now: Date = new Date()): boolean => now.getHours() >= 22 || now.getHours() < 5;
+
+/** The verb "to sleep" per course language, for the sleeper's card in the walk. */
+export const SLEEP_VERB: Record<string, string> = { es: "dormir", de: "schlafen" };
+
+/**
+ * Tonight's sleeper: one blooming plant, picked by the date. The ids are
+ * sorted first, so the strip and the walk agree whatever order they keep.
+ */
+export function sleeperId(bloomIds: readonly string[], now: Date = new Date()): string | null {
+  if (!bloomIds.length) return null;
+  return daily([...bloomIds].sort(), "sleeper", now);
+}
+
+/** The line on the sleeper's card: the snore first, then the verb it teaches. */
+export function snoreLine(lang: string): string {
+  const verb = SLEEP_VERB[lang];
+  return verb ? `Zzz... (${verb} = to sleep)` : "Zzz...";
+}
+
+// ---- The plant hears its name (#60) ----
+
+/** A perk: how long it takes to grow and to settle back (s). Under half a second in all. */
+export const PERK = { rise: 0.15, fall: 0.25 } as const;
+/** The neighbour's mistake: it starts a moment late and settles back slowly. */
+export const NEIGHBOUR = { delay: 0.12, rise: 0.2, fall: 1.1 } as const;
+/** How much a perking plant grows (fraction of its height). */
+export const PERK_SCALE = 0.04;
+/** On about one listen in this many, the neighbour perks up too, as if you called it. */
+export const NEIGHBOUR_PERK = 30;
+
+/** Does the neighbour think you called it this time? */
+export const neighbourPerks = (rand: () => number = Math.random): boolean => rand() * NEIGHBOUR_PERK < 1;
+
+/** The plant nearest to plant `i` (index), or -1 when it is alone. */
+export function nearestPlant(plants: readonly { x: number; z: number }[], i: number): number {
+  const p = plants[i];
+  if (!p) return -1;
+  let best = -1;
+  let bestD = Infinity;
+  for (let k = 0; k < plants.length; k++) {
+    if (k === i) continue;
+    const d = Math.hypot(plants[k].x - p.x, plants[k].z - p.z);
+    if (d < bestD) [best, bestD] = [k, d];
+  }
+  return best;
+}
+
+/** How far a perk has grown (0 to 1) `t` seconds after it began: up quickly, then down. 0 before and after. */
+export function perkEnvelope(t: number, rise: number, fall: number): number {
+  if (t <= 0 || t >= rise + fall) return 0;
+  return t < rise ? Math.sin((t / rise) * (Math.PI / 2)) : 0.5 + 0.5 * Math.cos(((t - rise) / fall) * Math.PI);
+}
+
+// ---- The first-word keepsake (#61) ----
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** The keepsake post's text: the first word and the day it was planted, e.g. "casa · 3 Oct". */
+export function keepsakeLabel(lemma: string, at: number): string {
+  const d = new Date(at);
+  return `${lemma} · ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}

@@ -235,6 +235,59 @@ export const MOTH_CLOSED: PixelArt = {
   pal: MOTH_PAL,
 };
 
+// ---- The 2D strip only: the empty garden (#58) and the end of the strip (#61) ----
+
+/** A pink worm asleep on the soil, head on the right, eye closed. */
+export const WORM_ASLEEP: PixelArt = {
+  rows: [
+    "...............oooo.",
+    ".ooo..........oPPPPo",
+    "oPPPoo......ooPPPPPo",
+    "oPpPPPoooooopPPeePPo",
+    ".ooPPpPPpPPPPPpPPoo.",
+    "...oooooooooooooo...",
+  ],
+  pal: { o: "#6a3a34", P: "#eaa29a", p: "#c8786e", e: "#2a1410" },
+};
+
+/** A small zinc watering can, spout up and to the left. Not a visitor: just there. */
+export const WATERING_CAN: PixelArt = {
+  rows: [
+    "........oooo......",
+    ".......o....o.....",
+    "RR.....o....o.....",
+    "RRs...oooooooooo..",
+    "..ss..oGlGGGGGGo..",
+    "...ssoGGlGGGGGGGo.",
+    "....sGGGlGGGGGGGoo",
+    ".....oGGlGGGGGGGo.",
+    "......oGGGGGGGGo..",
+    "......oDDDDDDDDo..",
+    ".......oooooooo...",
+  ],
+  pal: { o: INK, G: "#7f9fb8", l: "#c4d8e6", D: "#557590", s: "#6a8aa4", R: "#557590" },
+};
+
+/** A mole looking up out of its hole, holding one seed. */
+export const MOLE: PixelArt = {
+  rows: [
+    "....oooooo....",
+    "...oMMMMMMo...",
+    "..oMmMMMMmMo..",
+    "..oMeMMMMeMo..",
+    "..oMMMppMMMo..",
+    "..oMMMppMMMo..",
+    "..ooMMMMMMoo..",
+    ".ohhoMMMMohho.",
+    ".ohhhoSSohhho.",
+    "..ooooSSoooo..",
+    "..oMMMMMMMMo..",
+    "..oMMMMMMMMo..",
+    "..oMMMMMMMMo..",
+  ],
+  pal: { o: INK, M: "#4f4650", m: "#6c6270", e: "#151015", p: "#f0a0a8", h: "#f2bcae", S: "#e0b860" },
+};
+
 /** One rect per run of same-coloured pixels in a row: few elements for SVG. */
 export function runs(art: PixelArt): { x: number; y: number; w: number; fill: string }[] {
   const out: { x: number; y: number; w: number; fill: string }[] = [];

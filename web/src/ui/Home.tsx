@@ -8,7 +8,8 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
-import { doneTodayNote, greetingAside, startNote } from "../content/voice";
+import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
+import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { walkPlants } from "./GardenWalk";
 import { learnerVisitors, snailAlong } from "./visitors";
@@ -68,7 +69,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </div>
       </header>
 
-      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code }} />
+      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code, mole: visitors.mole }} />
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
@@ -140,7 +141,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <p className="muted small">Recall rate: how often you remembered a word when it came back on a later day. It needs at least 20 such answers.</p>
           <div className="activity" role="img" aria-label="Reviews per day, last 30 days">
             {stats.days.map((d, i) => (
-              <div key={d.day} className={i === 29 ? "today" : undefined} title={`${new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" })}: ${d.reviews} reviews`} style={{ height: `${Math.max(4, (d.reviews / max) * 100)}%` }} />
+              <div key={d.day} className={i === 29 ? "today" : undefined} title={d.reviews ? `${new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" })}: ${plural(d.reviews, "review")}` : restDayLine(new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" }))} style={{ height: `${Math.max(4, (d.reviews / max) * 100)}%` }} />
             ))}
           </div>
           <div className="activity-cap">

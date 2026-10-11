@@ -123,6 +123,42 @@ export const sendingLabel = (now = new Date()) => (rareDay(6, "by-bee", now) ? "
 export const savedLine = (now = new Date()) => (rareDay(4, "saved", now) ? "All changes are saved. The gardener wrote them down." : "All changes are saved.");
 export const errorLine = (now = new Date()) => (rareDay(3, "leaf", now) ? "Something went wrong. Try again. A leaf fell in the machine." : "Something went wrong. Try again.");
 export const SOUND_OFF_ASIDE = "The birds will sing quietly to themselves.";
+/** The walk switched itself to low quality (seen once per device). */
+export const SLOW_DEVICE_NOTICE = "The garden was slow on this device, so it now uses bigger pixels. You can change this at the top. The plants do not mind.";
+/** The Today activity chart's tooltip for a day with no reviews. */
+export const restDayLine = (date: string) => `${date}: rest day. Plants grow on rest days too.`;
+
+// ---- The empty garden (#58): bare soil, never "nothing here" ----
+
+/** The walk's card when there are no plants yet. */
+export const EMPTY_WALK = { title: "Just soil for now. Very good soil.", body: "Each word you learn grows into a plant here.", cta: "Plant my first words" } as const;
+/** The worm asleep in an empty strip, under its word. */
+export const WORM_LINE = "Waiting.";
+/** "Reserved", per course language, small under the stake's English. */
+const RESERVED: Record<string, string> = { es: "Reservado", de: "Reserviert" };
+
+/** The stake in an empty strip: the clear line in English, and the course language's word small below. */
+export function reservedStake(langName: string, code: string): { line: string; local?: string } {
+  return { line: `Reserved for ${langName} words`, local: RESERVED[code] };
+}
+
+export type WordsFilter = "all" | "known" | "learning" | "new" | "suspended" | "mine";
+
+/** The Words list with no rows: what is missing first, a small wink for some. */
+export function wordsEmptyLine(filter: WordsFilter, searching: boolean): string {
+  if (searching) return "No word here. Maybe it is still a seed.";
+  return {
+    all: "No words yet. Your first session plants them.",
+    known: "No flowers yet. They are coming.",
+    learning: "No words in progress right now.",
+    new: "No new words left in the course.",
+    suspended: "No paused words. Everyone is awake.",
+    mine: "No words from your texts yet.",
+  }[filter];
+}
+
+/** Under the garden on the first session's summary. */
+export const firstPlantsLine = (n: number) => (n === 1 ? "Your first plant." : `Your first ${n} plants.`);
 
 /** Shown once on the landing page after an account is deleted. */
 export function farewell(lang: string | null): { line: string; wish?: string } {
