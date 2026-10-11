@@ -11,7 +11,9 @@ import { useLearner, type Learner } from "../data/learner";
 import { track } from "../observability";
 import { groupOf, layout, THIRSTY, type GardenPlant, type Layout, type PlacedPlant } from "../garden/world";
 import type { Detail, GardenScene, Label, TimeOfDay, WalkVisitors } from "../garden/scene";
-import { loadingLine, plantLine } from "../content/voice";
+import { EMPTY_WALK, loadingLine, plantLine, reservedStake, SLOW_DEVICE_NOTICE } from "../content/voice";
+import { keepsakeLabel, sleeperId, snoreLine } from "../garden/whimsy";
+import { firstWord, type FirstWord } from "./Garden";
 import { takeFocus } from "./gardenFocus";
 import { stageFor, WordPlant } from "./plant";
 import { speak } from "./speech";
@@ -24,6 +26,8 @@ import { frogCroak } from "../garden/visitors";
 export interface WalkSource {
   plants: GardenPlant[];
   seeds: number;
+  /** The first word, for its keepsake stake beside its plant (#61). */
+  first?: FirstWord | null;
 }
 
 const growthOf = (s: number) => Math.min(1, Math.log1p(s) / Math.log1p(120));
@@ -41,7 +45,7 @@ export function walkPlants(l: Learner, now = Date.now()): WalkSource {
     const known = m.s >= KNOWN_STABILITY && m.reps >= 2;
     plants.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, s: m.s, r: recall(m, now), stage: stageFor(m.s, known), growth: growthOf(m.s), listen: strong(w.id, "listen"), write: strong(w.id, "write") });
   }
-  return { plants, seeds: l.fresh().length };
+  return { plants, seeds: l.fresh().length, first: firstWord(l) };
 }
 
 /** A believable garden for visitors: the deck's common words at a spread of stages. */
@@ -147,8 +151,20 @@ export function GardenWalk({
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
-    if (source && !data) setData({ l: layout(source.plants), seeds: source.seeds, visitors: { list: visitors?.views ?? [] } });
-  }, [source, data, visitors]);
+    if (!source || data) return;
+    const l = layout(source.plants);
+    const first = source.first && l.plants.some((p) => p.id === source.first!.id) ? { id: source.first.id, text: keepsakeLabel(source.first.lemma, source.first.at) } : null;
+    setData({
+      l,
+      seeds: source.seeds,
+      visitors: {
+        list: visitors?.views ?? [],
+        keepsake: first,
+        reserved: l.plants.length ? null : reservedStake(language(lang).name, lang).line,
+        sleeper: sleeperId(l.plants.filter((p) => p.stage === "bloom").map((p) => p.id)),
+      },
+    });
+  }, [source, data, visitors, lang]);
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -211,7 +227,7 @@ export function GardenWalk({
       if (now < start + 3000) raf = requestAnimationFrame(tick);
       else if (frames / 3 < 40 && !document.hidden) {
         setDetail("low");
-        setNotice("The garden was slow on this device, so it now uses low quality. You can change this at the top.");
+        setNotice(SLOW_DEVICE_NOTICE);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -437,10 +453,10 @@ export function GardenWalk({
 
       {data && stats.total === 0 && onWater && (
         <div className="gw-card gw-empty">
-          <strong>Your garden is empty</strong>
-          <p className="small">Each word you learn grows into a plant here.</p>
+          <strong>{EMPTY_WALK.title}</strong>
+          <p className="small">{EMPTY_WALK.body}</p>
           <button className="primary" onClick={onWater}>
-            Learn my first words
+            {EMPTY_WALK.cta}
           </button>
         </div>
       )}
@@ -475,11 +491,23 @@ export function GardenWalk({
               </span>
               <span className="muted small gw-bed">In the bed for {groupOf(selected.pos).toLowerCase()}.</span>
               <span className="small gw-flavour">{personality(selected)}</span>
+              {time === "night" && selected.id === data?.visitors.sleeper && (
+                <span className="small gw-flavour gw-snore">
+                  {snoreLine(lang)}
+                </span>
+              )}
             </div>
           </div>
           <div className="row">
             {sound && (
-              <button className="gw-btn gw-listen" onClick={() => void speak(selected.lemma, tag)}>
+              <button
+                className="gw-btn gw-listen"
+                onClick={() => {
+                  // The plant hears its name and perks up for a moment (#60).
+                  scene.current?.nod(selected);
+                  void speak(selected.lemma, tag);
+                }}
+              >
                 🔊 Listen
               </button>
             )}

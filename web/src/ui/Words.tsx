@@ -13,6 +13,7 @@ import { StageGlyph } from "./Garden";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
 import { recall, wordState, type WordState } from "./stats";
+import { wordsEmptyLine } from "../content/voice";
 
 type Filter = "all" | WordState | "suspended" | "mine";
 type Lexeme = Word;
@@ -112,6 +113,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
         </select>
       </div>
       <p className="muted small">{plural(rows.length, "word")}</p>
+      {learner && rows.length === 0 && <p className="words-empty">{wordsEmptyLine(filter, !!q.trim())}</p>}
       <VirtualWords
         rows={rows}
         render={({ l, mem }) => (

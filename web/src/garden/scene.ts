@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
-import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
+import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { fencePickets, fencePoint, GATE_HALF, gnomePose, gnomeTag, snailLap, SNAIL_SIGN, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
 import { daily, rareDay } from "../ui/whimsy";
 
@@ -28,6 +28,12 @@ export interface Label {
 /** Who visits the walk today. */
 export interface WalkVisitors {
   list: VisitorView[];
+  /** The first word's plant and its stake text, e.g. "casa · 3 Oct" (#61). */
+  keepsake?: { id: string; text: string } | null;
+  /** The stake in an empty garden, e.g. "Reserved for Spanish words" (#58). */
+  reserved?: string | null;
+  /** Tonight's sleeping bloom (#62): three z's drift up from it at night. */
+  sleeper?: string | null;
 }
 
 export interface SceneCallbacks {
@@ -115,6 +121,7 @@ const PLANT_VERT = /* glsl */ `
   uniform float uFogNear;
   uniform float uFogFar;
   uniform float uSelected;
+  uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uLowSize;
   varying vec2 vLow;
   varying vec2 vHi;
@@ -128,7 +135,9 @@ const PLANT_VERT = /* glsl */ `
     return (vec2(idx - r * cols, r) * cell + q * cell) / size;
   }
   void main() {
-    vec2 p = position.xy * iParams.z;
+    // A plant that hears its name grows a few percent for a moment.
+    float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
+    vec2 p = position.xy * iParams.z * (1.0 + perk);
     float h = position.y / ${SPRITE_H.toFixed(1)};
     float a = iParams.y + uSway * sin(uTime * 1.4 + iParams.x) * 0.07 * h + uSway * sin(uTime * 3.1 + iParams.x * 2.0) * 0.015;
     p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
@@ -177,6 +186,7 @@ function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: numbe
       uFog: { value: new THREE.Color() },
       uTint: { value: new THREE.Color(1, 1, 1) },
       uSelected: { value: -1 },
+      uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
     },
     vertexShader: PLANT_VERT,
     fragmentShader: PLANT_FRAG,
@@ -240,6 +250,34 @@ interface VisitorSprite {
   pos: THREE.InstancedBufferAttribute;
   uv: THREE.InstancedBufferAttribute;
 }
+
+// Three z's drifting up from the sleeping bloom (#62). All the motion is in the
+// shader, so a frame costs one uniform. With reduced motion they stay still.
+const SNORE_VERT = /* glsl */ `
+  attribute float phase;
+  uniform float uTime;
+  uniform float uMove;
+  uniform float uScale;
+  varying float vA;
+  void main() {
+    float k = uMove > 0.5 ? fract(uTime / 3.6 + phase / 3.0) : 0.15 + phase * 0.3;
+    vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
+    vec3 p = position + right * (0.1 + k * 0.2 + sin(k * 6.28) * 0.03) + vec3(0.0, k * 0.5, 0.0);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    gl_Position = projectionMatrix * mv;
+    gl_PointSize = clamp((0.13 + 0.06 * k) * uScale / -mv.z, 3.0, 72.0);
+    vA = uMove > 0.5 ? smoothstep(0.0, 0.15, k) * (1.0 - smoothstep(0.65, 1.0, k)) : 0.9;
+  }
+`;
+const SNORE_FRAG = /* glsl */ `
+  uniform sampler2D uMap;
+  varying float vA;
+  void main() {
+    vec4 c = texture2D(uMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
+    if (c.a < 0.5 || vA < 0.02) discard;
+    gl_FragColor = vec4(c.rgb, vA);
+  }
+`;
 
 /** The moth's loop round its lantern (m), and the height of the middle of the lantern glass. */
 const MOTH_R = 0.24;
@@ -315,6 +353,12 @@ export class GardenScene {
   private heron = { t: 0, dir: 0, tx: 0, tz: 0 };
   /** The moth's loop round its lantern: angle, radius, and a bump into the glass every 6 to 9 s. */
   private moth = { cx: 0, cz: 0, a: 0, r: MOTH_R, bump: -1, next: 7, n: 0 };
+  /** Plant materials, for the perk uniform. */
+  private plantMats: THREE.ShaderMaterial[] = [];
+  /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
+  private perk = { i: -1, at: 0, n: -1 };
+  /** The sleeping bloom's z's, shown at night. */
+  private snore: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
 
   private layout: Layout;
@@ -569,6 +613,48 @@ export class GardenScene {
       this.scene.add(g);
     }
     this.buildVisitors(bench.position);
+
+    // Small stakes (#58, #61): one in an empty garden, and the first word's, forever, in front of its plant.
+    const stake = (text: string, x: number, z: number, w: number, y: number, turn = 0) => {
+      const g = new THREE.Group();
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.4), mat(T.pixelTexture(T.notice(text)), { side: THREE.DoubleSide }));
+      board.position.y = y;
+      g.add(board);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.04, y, 0.04), mat(woodTex));
+      post.position.set(0, y / 2, -0.03);
+      g.add(post);
+      g.position.set(x, 0, z);
+      g.rotation.y = turn;
+      this.scene.add(g);
+    };
+    const first = L.beds[0];
+    // Front right of the empty bed, where the card in the middle does not hide it.
+    if (this.visitors.reserved && !L.plants.length) stake(this.visitors.reserved, first.x + first.w / 2 - 0.32, first.z + first.d / 2 - 0.3, 0.64, 0.56, -0.3);
+    const kept = this.visitors.keepsake ? L.plants.find((p) => p.id === this.visitors.keepsake!.id) : undefined;
+    if (kept) {
+      const bed = L.beds[kept.bed];
+      stake(this.visitors.keepsake!.text, kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
+    }
+    const sleeper = this.visitors.sleeper ? L.plants.find((p) => p.id === this.visitors.sleeper) : undefined;
+    if (sleeper) {
+      const top = 0.28 + ((14 + 120 * sleeper.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z]), 3));
+      geo.setAttribute("phase", new THREE.BufferAttribute(new Float32Array([0, 1, 2]), 1));
+      this.snore = new THREE.Points(
+        geo,
+        new THREE.ShaderMaterial({
+          uniforms: { uTime: { value: 0 }, uMove: { value: this.reducedMotion ? 0 : 1 }, uScale: { value: 400 }, uMap: { value: T.pixelTexture(T.snoreZ()) } },
+          vertexShader: SNORE_VERT,
+          fragmentShader: SNORE_FRAG,
+          transparent: true,
+          depthWrite: false,
+        }),
+      );
+      this.snore.frustumCulled = false;
+      this.snore.visible = false;
+      this.scene.add(this.snore);
+    }
 
     // One sunflower in the far right corner, by the back fence. Unlike every other
     // sprite, it does not look at you: from the garden you see the back of its head,
@@ -980,6 +1066,7 @@ export class GardenScene {
       (tex as THREE.Texture<unknown>).image = { width: c.width, height: c.height };
       const m = plantMaterial(tex, pool, c.height);
       this.mats.add(m);
+      this.plantMats.push(m);
       return m;
     });
 
@@ -1149,6 +1236,7 @@ export class GardenScene {
       if (s.v.id === "gnome") this.gnomeCell(s);
     }
     if (this.gnome.glow) this.gnome.glow.visible = dark;
+    if (this.snore) this.snore.visible = t === "night";
     if (!dark && this.saying?.id === "frog") this.saying = null;
     // The sunflower droops a little at dusk.
     const fp = this.flower.params;
@@ -1175,6 +1263,34 @@ export class GardenScene {
     this.renderer.setSize(Math.round((cssW * dpr) / scale), Math.round((cssH * dpr) / scale), false);
     this.camera.aspect = cssW / cssH;
     this.camera.updateProjectionMatrix();
+    // Framebuffer pixels per metre at 1 m, for the z's point size.
+    if (this.snore) this.snore.material.uniforms.uScale.value = Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
+  }
+
+  /**
+   * The plant hears its name (#60): it perks up for a moment. On about one
+   * listen in 30 its nearest neighbour perks up too, a little late, as if it
+   * thought you called it. Nothing moves with reduced motion.
+   */
+  nod(p: PlacedPlant) {
+    if (this.reducedMotion) return;
+    const i = this.layout.plants.indexOf(p);
+    if (i < 0) return;
+    this.perk.i = i;
+    this.perk.at = this.elapsed;
+    this.perk.n = neighbourPerks() ? nearestPlant(this.layout.plants, i) : -1;
+  }
+
+  /** Grows the perking plants a little, then lets them settle. No allocations: it runs every frame. */
+  private tickPerk() {
+    const k = this.perk;
+    if (k.i < 0) return;
+    const t = this.elapsed - k.at;
+    const done = t > Math.max(PERK.rise + PERK.fall, NEIGHBOUR.delay + NEIGHBOUR.rise + NEIGHBOUR.fall);
+    const a = done ? 0 : perkEnvelope(t, PERK.rise, PERK.fall) * PERK_SCALE;
+    const b = done || k.n < 0 ? 0 : perkEnvelope(t - NEIGHBOUR.delay, NEIGHBOUR.rise, NEIGHBOUR.fall) * PERK_SCALE;
+    for (const m of this.plantMats) m.uniforms.uPerk.value.set(done ? -1 : k.i, a, done ? -1 : k.n, b);
+    if (done) k.i = -1;
   }
 
   look(dx: number, dy: number) {
@@ -1300,6 +1416,8 @@ export class GardenScene {
     }
     this.fireflies.material.uniforms.uTime.value = t;
     this.fireflies.material.uniforms.uMove.value = motion;
+    if (this.snore?.visible) this.snore.material.uniforms.uTime.value = t;
+    this.tickPerk();
     if (motion) {
       this.water.offset.set((t * 0.02) % 1, Math.sin(t * 0.3) * 0.03);
       for (const c of this.clouds) c.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), dt * 0.004);

@@ -104,9 +104,36 @@ test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known wor
 
 test("the garden tab opens the garden; an empty garden offers the first session", async ({ page }) => {
   await startCourse(page);
+  // The empty strip is not empty: a stake, and a worm that says its word (#58).
+  await expect(page.locator(".garden-stake")).toHaveText("Reserved for Spanish wordsReservado");
+  await page.getByRole("button", { name: "el gusano · worm" }).hover();
+  await expect(page.getByRole("tooltip")).toHaveText("el gusano · wormWaiting.");
   await page.getByRole("tab", { name: "Garden" }).click();
-  await expect(page.getByText("Your garden is empty")).toBeVisible({ timeout: 15000 });
-  await expect(page.getByRole("button", { name: "Learn my first words" })).toBeVisible();
+  await expect(page.getByText("Just soil for now. Very good soil.")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("button", { name: "Plant my first words" })).toBeVisible();
+});
+
+test("the ends of the strip: the first word's post at the left, the mole at the right (#61)", async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 800 });
+  // The dev override brings the mole today, whatever the date.
+  await page.goto("/?demo=es&visitors=all#/today");
+  const strip = page.locator(".garden-scroll");
+  await expect(page.locator(".garden.scrolls")).toBeVisible({ timeout: 30_000 });
+  const width = () => strip.evaluate((el) => el.scrollWidth);
+  await expect.poll(async () => {
+    const a = await width();
+    await page.waitForTimeout(500);
+    return a === (await width()) && a > 2000;
+  }, { timeout: 30_000 }).toBe(true);
+  // The strip opens at the right end, where the mole looks up and says its word.
+  const mole = page.getByRole("button", { name: "el topo · mole" });
+  await expect(page.locator(".mole.up")).toHaveCount(1);
+  await mole.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("el topo · mole");
+  // At the far left: the first word and the day it was planted. The mole has gone down.
+  await strip.evaluate((el) => (el.scrollLeft = 0));
+  await expect(page.locator(".keepsake text")).toHaveText(/^\S+ · \d{1,2} [A-Z][a-z]{2}$/);
+  await expect(page.locator(".mole.up")).toHaveCount(0);
 });
 
 test("2D garden: a big garden scrolls; arrows page through it; a plant opens in the 3D garden", async ({ page }) => {
@@ -134,8 +161,13 @@ test("2D garden: a big garden scrolls; arrows page through it; a plant opens in 
   await expect(page.getByRole("button", { name: "Later words" })).toBeEnabled();
 
   // A click opens the card; its link opens the plant in 3D.
+  // The plant nearest the middle (between two plants there is a small gap).
   const box = (await strip.boundingBox())!;
-  await page.mouse.click(box.x + box.width / 2, box.y + 150);
+  const [px, py] = await page.locator(".garden svg > g[transform] rect").evaluateAll((els, mid) => {
+    const r = els.map((e) => e.getBoundingClientRect()).sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0];
+    return [r.x + r.width / 2, r.bottom - 20];
+  }, box.x + box.width / 2);
+  await page.mouse.click(px, py);
   const card = page.locator(".plant-tip");
   await expect(card).toBeVisible();
   const word = (await card.locator("strong").textContent())!;

@@ -5,10 +5,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import { KNOWN_STABILITY, recall, type Learner } from "../data/learner";
-import { plantLine } from "../content/voice";
+import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
+import { language } from "../content/languages";
 import { Plant as WordPlantShape, stageFor } from "./plant";
-import { CAT_ASLEEP, runs, SNAIL, type PixelArt } from "../garden/visitorArt";
-import type { VisitorView } from "../garden/visitors";
+import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
+import { stripVisitor, type VisitorView } from "../garden/visitors";
+import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
+import { today } from "./whimsy";
 
 interface Plant {
   id: string;
@@ -38,6 +41,29 @@ export interface GardenData {
   plants: Plant[];
   total: number;
   seeds: number;
+  /** The learner's first word and when it was planted, for the keepsake post at the far left. */
+  first?: FirstWord | null;
+}
+
+export interface FirstWord {
+  id: string;
+  lemma: string;
+  /** The first review (ms). */
+  at: number;
+}
+
+/** The first word the learner ever practised that is still in the garden, or null. */
+export function firstWord(l: Learner): FirstWord | null {
+  let best: { id: string; at: number } | null = null;
+  for (const r of l.reviews) {
+    if (r.skill !== "read") continue;
+    const at = Date.parse(r.reviewed_at);
+    if (best && at >= best.at) continue;
+    const id = l.resolve(r.word_id);
+    const w = l.words.get(id);
+    if (w && w.status !== "ignored") best = { id, at };
+  }
+  return best ? { id: best.id, lemma: l.words.get(best.id)!.lemma, at: best.at } : null;
 }
 
 /** The learner's garden: every word with progress is a plant. */
@@ -54,7 +80,7 @@ export function gardenFromLearner(l: Learner, now = Date.now()): GardenData {
     plants.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, s: m.s, r: recall(m, now), listen: strong("listen"), write: strong("write"), order: w.rank });
   }
   plants.sort((a, b) => a.order - b.order);
-  return { plants, total: plants.length, seeds: l.fresh().length };
+  return { plants, total: plants.length, seeds: l.fresh().length, first: firstWord(l) };
 }
 
 /**
@@ -111,8 +137,8 @@ export function Garden({
   highlight?: Set<string>;
   compact?: boolean;
   showcase?: boolean;
-  /** Today's visitors drawn in the strip: the snail on the soil line, the cat asleep at the right end. */
-  visitors?: { views: VisitorView[]; snailAt: number; lang: string } | null;
+  /** Today's visitors drawn in the strip: the snail on the soil line, the cat asleep at the right end, the mole past it. */
+  visitors?: { views: VisitorView[]; snailAt: number; lang: string; mole?: boolean } | null;
   /** Offered in the plant card: open this plant in the 3D garden. */
   onView?: (id: string) => void;
 }) {
@@ -124,7 +150,9 @@ export function Garden({
   // Hover intent: with a card open, switching to another plant waits a moment,
   // so the pointer can cross other plants on its way to the card's button.
   const switching = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const [visitorTip, setVisitorTip] = useState<{ v: VisitorView; x: number } | null>(null);
+  const [visitorTip, setVisitorTip] = useState<{ v: TipVisitor; x: number; line?: string } | null>(null);
+  // A tapped plant hops (#60); `n` restarts the animation on every tap. Rarely the neighbour hops too.
+  const [perk, setPerk] = useState<{ id: string; n: number; neighbour: string | null } | null>(null);
   const show = (h: { p: Plant; x: number; y: number }, now = false) => {
     clearTimeout(switching.current);
     setVisitorTip(null);
@@ -154,15 +182,20 @@ export function Garden({
   // Room at the right end for the cat, so it does not sleep on the newest plant.
   const catRoom = cat ? 46 : 0;
   const scrolls = n * SPACING + pad * 2 + catRoom > width;
-  const fullWidth = scrolls ? n * SPACING + pad * 2 + catRoom : width;
+  // Only a strip that scrolls has ends to find (#61): the first word's post at the far left, the mole past the seeds.
+  const first = scrolls && !showcase ? data?.first : null;
+  const mole = scrolls && visitors?.mole ? stripVisitor("mole", visitors.lang) : null;
+  const keepRoom = first ? 92 : 0;
+  const moleRoom = mole ? 56 : 0;
+  const fullWidth = scrolls ? n * SPACING + pad * 2 + catRoom + keepRoom + moleRoom : width;
 
   const layout = useMemo(() => {
     // Small gardens cluster in the middle instead of scattering across the width.
     const spacing = scrolls ? SPACING : n ? Math.min(34, (width - pad * 2 - catRoom) / n) : width;
-    const offset = scrolls ? pad : (width - catRoom - spacing * n) / 2;
+    const offset = scrolls ? pad + keepRoom : (width - catRoom - spacing * n) / 2;
     const scale = Math.max(0.42, Math.min(1.05, spacing / 20));
     return plants.map((p, i) => ({ p, x: offset + spacing * (i + 0.5) + (hash(p.id, 17) - 0.5) * spacing * 0.8, y: GROUND + hash(p.id, 19) * 4, scale }));
-  }, [plants, n, scrolls, width, catRoom]);
+  }, [plants, n, scrolls, width, catRoom, keepRoom]);
 
   // Open where the newest growth is, or on today's words after a session, and
   // keep following it while words sync in, until the learner scrolls.
@@ -195,6 +228,18 @@ export function Garden({
   const label = data ? `Word garden: ${blooming} known, ${data.total - blooming} learning, ${data.seeds} new.` : "Word garden";
   const from = scrolls ? Math.max(0, scrollX - OVERSCAN) : 0;
   const to = scrolls ? Math.min(fullWidth, scrollX + width + OVERSCAN) : width;
+  // Late at night one bloom snores (#62): the same one all day, the same as in the walk.
+  const day = today();
+  const sleeper = useMemo(() => sleeperId(plants.filter((p) => p.s >= KNOWN_STABILITY).map((p) => p.id)), [plants, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const snoring = sleeper && isSleepyHour() ? sleeper : null;
+  const empty = !!data && data.total === 0 && !showcase;
+  const stake = empty && visitors ? reservedStake(language(visitors.lang).name, visitors.lang) : null;
+  const worm = empty && visitors ? stripVisitor("worm", visitors.lang) : null;
+  const tap = (l: { p: Plant; x: number; y: number }, i: number) => {
+    show(l, true);
+    const next = neighbourPerks() ? ((visible[i + 1] ?? visible[i - 1])?.p.id ?? null) : null;
+    setPerk((o) => ({ id: l.p.id, n: (o?.n ?? 0) + 1, neighbour: next }));
+  };
 
   return (
     <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} onPointerLeave={hide}>
@@ -209,15 +254,19 @@ export function Garden({
           {Array.from({ length: 6 }, (_, i) => (
             <circle key={i} className="firefly" cx={scrollX + (width / 6) * (i + 0.5)} cy={40 + (i % 3) * 30} r={1.8} style={{ animationDelay: `${i * 1.3}s` }} />
           ))}
-          {visible.map(({ p, x, y, scale }) => (
-            <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={() => show({ p, x, y })} onClick={() => show({ p, x, y }, true)}>
+          {visible.map(({ p, x, y, scale }, i) => (
+            <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={() => show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
               <g className="sway" style={{ animationDelay: `${-hash(p.id, 23) * 6}s`, animationDuration: `${5 + hash(p.id, 29) * 4}s` }}>
-                <PlantShape p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
+                <g key={perk?.id === p.id ? `perk${perk.n}` : perk?.neighbour === p.id ? `late${perk.n}` : "still"} className={perk?.id === p.id ? "perk" : perk?.neighbour === p.id ? "perk late" : undefined}>
+                  <PlantShape p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
+                </g>
+                {snoring === p.id && <Snore y={-(16 + 118 * Math.min(1, Math.log1p(p.s) / Math.log1p(120))) * scale + 4} />}
                 {/* generous invisible hit area */}
                 <rect x={-8} y={-140 * scale} width={16} height={140 * scale} fill="transparent" />
               </g>
             </g>
           ))}
+          {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, first.at)} />}
           <path d={`M0 ${GROUND + 4} Q ${fullWidth * 0.25} ${GROUND - 3} ${fullWidth * 0.5} ${GROUND + 3} T ${fullWidth} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
           {Array.from({ length: Math.ceil((to - from) / 38) }, (_, k) => {
             const i = Math.floor(from / 38) + k;
@@ -229,6 +278,7 @@ export function Garden({
             const sy = GROUND + 14 + hash(`seed${i}`, 41) * 12;
             return <ellipse key={i} className="seed" cx={sx} cy={sy} rx={2.6} ry={1.7} transform={`rotate(${hash(`seed${i}`, 43) * 180} ${sx} ${sy})`} />;
           })}
+          {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>
         {snail && (
           <VisitorMark
@@ -248,7 +298,7 @@ export function Garden({
             v={cat}
             art={CAT_ASLEEP}
             scale={2}
-            x={fullWidth - 30}
+            x={fullWidth - moleRoom - 30}
             onShow={(x) => {
               setHover(null);
               setVisitorTip({ v: cat, x });
@@ -256,14 +306,43 @@ export function Garden({
             onHide={() => setVisitorTip(null)}
           />
         )}
+        {worm && (
+          <VisitorMark
+            v={worm}
+            art={WORM_ASLEEP}
+            scale={2}
+            x={width / 2 + 44}
+            onShow={(x) => setVisitorTip({ v: worm, x, line: WORM_LINE })}
+            onHide={() => setVisitorTip(null)}
+          />
+        )}
+        {mole && (
+          <MoleHole
+            v={mole}
+            x={fullWidth - 38}
+            up={atEnd}
+            onShow={(x) => {
+              setHover(null);
+              setVisitorTip({ v: mole, x });
+            }}
+            onHide={() => setVisitorTip(null)}
+          />
+        )}
+        {stake && (
+          <div className="garden-stake" style={{ left: width / 2 - 64, top: GROUND - 74 }}>
+            <span>{stake.line}</span>
+            {stake.local && <small lang={visitors?.lang}>{stake.local}</small>}
+          </div>
+        )}
       </div>
       {visitorTip && (
-        <div className="visitor-tip" role="tooltip" style={{ left: Math.min(width - 150, Math.max(8, visitorTip.x - scrollX - 60)), top: GROUND - 58 }}>
+        <div className="visitor-tip" role="tooltip" style={{ left: Math.min(width - 150, Math.max(8, visitorTip.x - scrollX - 60)), top: GROUND - (visitorTip.line ? 78 : 58) }}>
           <i lang={visitors?.lang}>{visitorTip.v.word}</i>
           <span> · {visitorTip.v.gloss}</span>
+          {visitorTip.line && <em>{visitorTip.line}</em>}
         </div>
       )}
-      {data && data.total === 0 && <p className="garden-empty">Your words will grow here.</p>}
+      {data && data.total === 0 && !stake && <p className="garden-empty">Your words will grow here.</p>}
       {hover && (
         <div className={onView ? "plant-tip interactive" : "plant-tip"} style={{ left: Math.min(width - 170, Math.max(8, hover.x - scrollX - 80)), top: 8 }} role="status" onPointerEnter={() => clearTimeout(switching.current)}>
           <strong>{hover.p.lemma}</strong>
@@ -309,11 +388,14 @@ export function Garden({
   );
 }
 
+/** What a strip tooltip needs: a word and its gloss. */
+type TipVisitor = { id: string; word: string | null; gloss: string };
+
 /**
  * A visitor in the strip, standing on the soil line: a small pixel sprite in a
  * button, so it can be focused and tapped. Hover, focus or tap shows its word.
  */
-function VisitorMark({ v, art, x, scale, onShow, onHide }: { v: VisitorView; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void }) {
+function VisitorMark({ v, art, x, scale, onShow, onHide, top }: { v: TipVisitor; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void; top?: number }) {
   const w = art.rows[0].length;
   const h = art.rows.length;
   return (
@@ -321,7 +403,7 @@ function VisitorMark({ v, art, x, scale, onShow, onHide }: { v: VisitorView; art
       type="button"
       className={`garden-visitor visitor-${v.id}`}
       aria-label={`${v.word} · ${v.gloss}`}
-      style={{ left: x - (w * scale) / 2, top: GROUND + 4 - h * scale }}
+      style={{ left: x - (w * scale) / 2, top: top ?? GROUND + 4 - h * scale }}
       onPointerEnter={() => onShow(x)}
       onPointerLeave={onHide}
       onFocus={() => onShow(x)}
@@ -334,6 +416,62 @@ function VisitorMark({ v, art, x, scale, onShow, onHide }: { v: VisitorView; art
         ))}
       </svg>
     </button>
+  );
+}
+
+/** Pixel art as SVG rects, standing on (x, y): for things in the strip that are not buttons. */
+function PixelSprite({ art, x, y, scale }: { art: PixelArt; x: number; y: number; scale: number }) {
+  const w = art.rows[0].length;
+  const h = art.rows.length;
+  return (
+    <g transform={`translate(${(x - (w * scale) / 2).toFixed(1)} ${(y - h * scale).toFixed(1)}) scale(${scale})`} shapeRendering="crispEdges" aria-hidden="true">
+      {runs(art).map((r, i) => (
+        <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />
+      ))}
+    </g>
+  );
+}
+
+/** One small "z" drifting up from a sleeping bloom (still, with reduced motion). */
+function Snore({ y }: { y: number }) {
+  return (
+    <text className="snore" x={7} y={y} aria-hidden="true">
+      z
+    </text>
+  );
+}
+
+/** The first word's post at the far left of the strip: the word and the day it was planted. */
+function Keepsake({ x, text }: { x: number; text: string }) {
+  return (
+    <g className="keepsake" transform={`translate(${x.toFixed(1)} ${GROUND + 3})`}>
+      <title>Your first word</title>
+      <rect x={-1.5} y={-34} width={3} height={36} fill="var(--soil-2)" />
+      <rect x={-40} y={-50} width={80} height={19} rx={3} className="keepsake-board" />
+      <text x={0} y={-36.5} textAnchor="middle">
+        {text}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * The mole at the far right end: it looks up, holding one seed, while you are
+ * at the end of the strip, and goes back down when you scroll away.
+ */
+function MoleHole({ v, x, up, onShow, onHide }: { v: TipVisitor; x: number; up: boolean; onShow: (x: number) => void; onHide: () => void }) {
+  const scale = 2;
+  const w = MOLE.rows[0].length * scale;
+  const h = MOLE.rows.length * scale;
+  return (
+    <div className={up ? "mole up" : "mole"} style={{ left: x - w / 2 - 6, top: GROUND + 9 - h, width: w + 12, height: h }}>
+      <div className="mole-body" inert={!up}>
+        <VisitorMark v={v} art={MOLE} scale={scale} x={w / 2 + 6} top={0} onShow={() => onShow(x)} onHide={onHide} />
+      </div>
+      <svg className="mole-hill" width={w + 12} height={7} viewBox={`0 0 ${w + 12} 7`} aria-hidden="true">
+        <path d={`M0 7 Q ${(w + 12) / 2} -3 ${w + 12} 7 Z`} fill="color-mix(in oklab, var(--soil-2), var(--ink) 22%)" />
+      </svg>
+    </div>
   );
 }
 

@@ -519,6 +519,14 @@ export function lantern(): HTMLCanvasElement {
   return c;
 }
 
+/** A pixel "z" for the sleeping bloom (#62), pale with a dark edge so it shows on the night sky. */
+export function snoreZ(): HTMLCanvasElement {
+  const rows = ["oooooooo", "oZZZZZZo", "ooooZZoo", "..oZZo..", ".oZZo...", "ooZZoooo", "oZZZZZZo", "oooooooo"];
+  const [c, ctx] = canvas(8, 8);
+  rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "Z" ? "#eef2ff" : "#2a2f4a")));
+  return c;
+}
+
 /** A soft round glow in a few hard rings, for additive light pools and halos. */
 export function glow(): HTMLCanvasElement {
   const [c, ctx] = canvas(32, 32);
