@@ -246,6 +246,7 @@ section { margin-bottom: 1.25rem; }
 @media (hover: none) { .garden-arrows { display: none; } }
 @media (hover: hover) { .swipe-hint { display: none; } }
 .garden.scrolls .garden-scroll { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+.plant-tip .tip-flavour { font-style: italic; color: var(--muted); font-size: 0.78rem; }
 .plant-tip.interactive { pointer-events: auto; cursor: auto; }
 .plant-tip button { margin-top: 0.3rem; padding: 0.2rem 0; align-self: flex-start; }
 .garden .stem { fill: none; stroke: var(--stem); transition: stroke 0.6s; }
@@ -599,6 +600,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .gw-word { font: 700 1.9rem/1 var(--pixel); letter-spacing: 0.01em; }
 .gw-gloss { font-size: 1.05rem; }
 .gw-card .muted { color: var(--gw-muted); }
+.gw-flavour { font-style: italic; color: var(--gw-muted); }
 .gw-card .row { gap: 0.5rem; flex-wrap: wrap; }
 .gw-card button.secondary, .gw-card button.ghost, .gw-empty button.primary { font-family: var(--pixel); border-radius: 0; }
 .gw-night .gw-card button.ghost { color: var(--gw-ink); }
@@ -656,3 +658,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 
 /* The bot check, when it needs to ask (data/captcha.ts). */
 .captcha { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 50; }
+
+/* The garden's small voice (content/voice.ts) */
+.greeting-aside { margin: 0.2rem 0 0; color: var(--muted); font-style: italic; }
+.headline-small { margin-top: -0.4rem; }

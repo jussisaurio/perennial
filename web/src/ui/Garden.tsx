@@ -5,6 +5,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import { KNOWN_STABILITY, recall, type Learner } from "../data/learner";
+import { plantLine } from "../content/voice";
 import { Plant as WordPlantShape, stageFor } from "./plant";
 
 interface Plant {
@@ -228,6 +229,7 @@ export function Garden({
             {hover.p.listen && " · listening ✓"}
             {hover.p.write && " · writing ✓"}
           </em>
+          {!showcase && <span className="tip-flavour">{plantLine(hover.p.lemma, hover.p.r < 0.7 ? "thirsty" : hover.p.s >= 200 ? "old" : hover.p.s >= KNOWN_STABILITY ? "bloom" : hover.p.s >= 3 ? "bud" : "sprout")}</span>}
           {onView && (
             <button className="ghost small" onClick={() => onView(hover.p.id)}>
               View in garden →
