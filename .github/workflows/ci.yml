@@ -51,6 +51,28 @@ jobs:
         working-directory: web
         run: bunx vite build
 
+
+  security:
+    name: Dependency audit and static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      # Known vulnerabilities in what we ship (dev tools are updated by Dependabot).
+      - name: Audit dependencies
+        run: |
+          for dir in web server scripts; do
+            (cd $dir && bun install --frozen-lockfile && bun audit --audit-level=high) || exit 1
+          done
+      # Semgrep OSS (CodeQL needs Advanced Security on a private repo).
+      - name: Semgrep
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep semgrep scan --error --metrics=off \
+            --config p/typescript --config p/javascript --config p/secrets \
+            --exclude node_modules --exclude dist --exclude decks
+
   decks:
     name: Decks (schema, up to date, compatibility, replay)
     runs-on: ubuntu-latest
@@ -76,7 +98,9 @@ jobs:
         run: bun test scripts/deck web/src/deck
       # Prints the diff report (added / edited / retired). Fails on broken
       # invariants, a stale deck.json, or more than 5% of words retired.
-      - name: Check decks against main
+      - name: Audit decks (duplicates, rare words, order)
+        run: bun scripts/deck/audit.ts
+      - name: Check decks against main (approvals, ledgers, compatibility)
         run: bun scripts/deck/check.ts --base origin/main
         env:
           DECK_ALLOW_BIG_CHANGE: ${{ contains(github.event.pull_request.labels.*.name, 'deck-big-change') && '1' || '' }}
@@ -89,7 +113,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -101,7 +125,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
@@ -119,7 +143,7 @@ jobs:
 
       - name: Upload report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |

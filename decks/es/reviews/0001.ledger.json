@@ -1,0 +1,206 @@
+{
+  "file": "source/0001.json",
+  "reviewer": "claude-agent:es-proofreader-0001-2026-10-11",
+  "entries": {
+    "de|prep|": {
+      "hash": "0696c9943634a344",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:50.685Z"
+    },
+    "que|conj|": {
+      "hash": "037c39d44d79929b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:53.897Z"
+    },
+    "no|adv|": {
+      "hash": "cb7daad04566d50c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:56.627Z"
+    },
+    "a|prep|": {
+      "hash": "d81ab78f5451c11d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:59.777Z"
+    },
+    "el|det|": {
+      "hash": "9d3e6ea2d5c425e5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:03.283Z"
+    },
+    "ser|verb|": {
+      "hash": "efbafaea40056385",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:12.110Z"
+    },
+    "y|conj|": {
+      "hash": "3c56b966ef2bc6a8",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:17.328Z"
+    },
+    "en|prep|": {
+      "hash": "149b60227bb866e5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:20.123Z"
+    },
+    "lo|pron|": {
+      "hash": "9bb099ffedc872a5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:25.473Z"
+    },
+    "un|det|": {
+      "hash": "272ab4c15b7f553d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:28.171Z"
+    },
+    "por|prep|": {
+      "hash": "6616e94fcc1ea409",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:15.491Z"
+    },
+    "qué|pron|": {
+      "hash": "f0550df124dee5fa",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:37.403Z"
+    },
+    "me|pron|": {
+      "hash": "1f25403d560af00c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:44.598Z"
+    },
+    "te|pron|": {
+      "hash": "15696c8acabaae49",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:48.406Z"
+    },
+    "se|pron|": {
+      "hash": "df080051a4ee2b14",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:18.346Z"
+    },
+    "con|prep|": {
+      "hash": "1e020e9ef782d51c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:58.276Z"
+    },
+    "estar|verb|": {
+      "hash": "bbcdcdcf5b9c6d5a",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:21.531Z"
+    },
+    "para|prep|": {
+      "hash": "86242554463bbb0c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:06.137Z"
+    },
+    "mi|det|": {
+      "hash": "b3007d9182894c32",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:08.879Z"
+    },
+    "si|conj|": {
+      "hash": "e1772eb03aa8b2cb",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:11.462Z"
+    },
+    "bien|adv|": {
+      "hash": "dd3259532baec695",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:14.152Z"
+    },
+    "pero|conj|": {
+      "hash": "e2cc25ff252a7c50",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:16.823Z"
+    },
+    "yo|pron|": {
+      "hash": "1e31dac12d969185",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:20.246Z"
+    },
+    "eso|pron|": {
+      "hash": "16f2d69b45599dd2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:23.478Z"
+    },
+    "sí|adv|": {
+      "hash": "4dfa4c34c4240926",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:26.627Z"
+    },
+    "haber|verb|": {
+      "hash": "be0ae7cf231c9482",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:30.820Z"
+    },
+    "tener|verb|": {
+      "hash": "7b0abe204474f4de",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:35.841Z"
+    },
+    "su|det|": {
+      "hash": "3e345ac25d92c939",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:24.482Z"
+    },
+    "tú|pron|": {
+      "hash": "86f028ff91a3968b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:46.487Z"
+    },
+    "aquí|adv|": {
+      "hash": "c345ea930507456c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:49.387Z"
+    },
+    "ir|verb|": {
+      "hash": "448d3f6aa7780358",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:27.759Z"
+    },
+    "como|adv|": {
+      "hash": "a24373d516660acc",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:30.948Z"
+    },
+    "más|adv|": {
+      "hash": "d0133151e02ffa1a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:06.866Z"
+    },
+    "este|det|": {
+      "hash": "f633338390c6cd1a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:10.156Z"
+    },
+    "ya|adv|": {
+      "hash": "1553884448ca51a6",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:14.086Z"
+    },
+    "todo|pron|": {
+      "hash": "1e6175421fdcbb85",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:37.365Z"
+    },
+    "muy|adv|": {
+      "hash": "9a998febfe908130",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:24.885Z"
+    },
+    "poder|verb|": {
+      "hash": "3db67a4decd44bb6",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:40.069Z"
+    },
+    "saber|verb|": {
+      "hash": "dc18ee124cd5ce9b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:32.981Z"
+    },
+    "querer|verb|": {
+      "hash": "f6cef55cb84dfbd4",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:43.001Z"
+    }
+  }
+}

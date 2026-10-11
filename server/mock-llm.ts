@@ -1,6 +1,5 @@
-// Fake OpenAI-compatible endpoint for developing Perennial offline.
-//   bun mock-llm.ts   ->  OpenAI base URL http://localhost:8788/v1, or
-//                         ANTHROPIC_BASE_URL=http://localhost:8788 for the server
+// Fake Anthropic Messages endpoint for developing and testing Perennial offline.
+//   bun mock-llm.ts   ->  start the server with ANTHROPIC_BASE_URL=http://localhost:8788
 // Returns structurally valid PLACEHOLDER content (fixed templates, fake glosses)
 // for each prompt Perennial sends. It tests plumbing, not language quality.
 

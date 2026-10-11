@@ -451,15 +451,15 @@
         "cloze": "hat"
       },
       {
-        "text": "Wir haben keine Zeit.",
-        "translation": "We don't have time.",
-        "cloze": "haben"
+        "text": "Wir hatten keine Zeit.",
+        "translation": "We didn't have time.",
+        "cloze": "hatten"
       }
     ]
   },
   {
     "lemma": "ja",
-    "gloss": "yes",
+    "gloss": "yes; (adds emphasis)",
     "pos": "particle",
     "forms": [
       "ja"
@@ -776,6 +776,7 @@
     "forms": [
       "noch"
     ],
+    "notes": "noch nicht = not yet.",
     "sentences": [
       {
         "text": "Ich bin noch müde.",
@@ -788,8 +789,8 @@
         "cloze": "Noch"
       },
       {
-        "text": "Bist du noch da?",
-        "translation": "Are you still there?",
+        "text": "Ich bin noch nicht fertig.",
+        "translation": "I'm not done yet.",
         "cloze": "noch"
       }
     ]
@@ -803,9 +804,9 @@
     ],
     "sentences": [
       {
-        "text": "Wenn du willst, komm mit.",
-        "translation": "If you want, come along.",
-        "cloze": "Wenn"
+        "text": "Komm mit, wenn du willst.",
+        "translation": "Come along if you want.",
+        "cloze": "wenn"
       },
       {
         "text": "Ruf mich an, wenn du da bist.",
@@ -854,12 +855,12 @@
   },
   {
     "lemma": "mal",
-    "gloss": "just (softens a request); times",
+    "gloss": "just (softens a request); ever, once",
     "pos": "particle",
     "forms": [
       "mal"
     ],
-    "notes": "Komm mal her! = Come here a second! Drei mal zwei = three times two.",
+    "notes": "Komm mal her! = Come here a second! Warst du schon mal hier? = Have you ever been here?",
     "sentences": [
       {
         "text": "Komm mal her!",
@@ -929,9 +930,9 @@
         "cloze": "Guten"
       },
       {
-        "text": "Er ist ein guter Lehrer.",
-        "translation": "He's a good teacher.",
-        "cloze": "guter"
+        "text": "Sie spricht gut Deutsch.",
+        "translation": "She speaks German well.",
+        "cloze": "gut"
       }
     ]
   },

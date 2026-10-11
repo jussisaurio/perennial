@@ -8,6 +8,7 @@
 // out disposes it and makes a new one; queued writes carry no user id, so they
 // are sent for whoever is signed in when they upload.
 
+import * as Sentry from "@sentry/react";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { NonRetriableError, startOfflineExecutor, type OfflineExecutor } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
@@ -81,9 +82,12 @@ export async function createStore(userId: string) {
   const executor: OfflineExecutor = startOfflineExecutor({
     collections,
     mutationFns: {
-      write: async ({ transaction, idempotencyKey }) => {
+      // Traced (sampled, see observability.ts): the time from sending a write
+      // to seeing it come back through sync is the latency learners feel.
+      write: ({ transaction, idempotencyKey }) => Sentry.startSpan({ name: "sync write", op: "sync.write" }, async (span) => {
         const mutations = transaction.mutations.map(toServer).filter((m): m is NonNullable<typeof m> => !!m);
         if (!mutations.length) return;
+        span.setAttribute("mutations", mutations.length);
         const res = await fetch("/api/write", {
           method: "POST",
           headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION, "idempotency-key": idempotencyKey },
@@ -93,13 +97,15 @@ export async function createStore(userId: string) {
           reloadNeeded.dispatchEvent(new Event("reload"));
           throw new HttpError(426, "please reload");
         }
-        if (res.status === 422) throw new NonRetriableError(`rejected: ${await res.text()}`);
+        // Invalid, or over a storage limit: retrying would never succeed.
+        if (res.status === 422 || res.status === 413 || (res.status === 429 && (await res.clone().text()).includes('"quota"'))) throw new NonRetriableError(`rejected: ${await res.text()}`);
         if (!res.ok) throw new HttpError(res.status, `HTTP ${res.status}`);
         const { txid } = (await res.json()) as { txid: number };
         // Keep the optimistic rows until Electric echoes the write back.
         const tables = new Set(transaction.mutations.map((m) => m.collection.id as Table));
-        await Promise.all([...tables].map((t) => collections[t]?.utils.awaitTxId(txid, 15_000).catch(() => {})));
-      },
+        const echoed = await Promise.all([...tables].map((t) => collections[t]?.utils.awaitTxId(txid, 15_000).then(() => true, () => false)));
+        span.setAttribute("echoed", echoed.every(Boolean));
+      }),
     },
     // A session that expired offline, or an app that must reload first: keep
     // the queued writes and try again later instead of dropping them.

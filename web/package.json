@@ -24,8 +24,6 @@
     "@tanstack/react-db": "0.5.8",
     "@tanstack/react-virtual": "^3.14.14",
     "better-auth": "1.7.7",
-    "dexie": "^4.4.6",
-    "dexie-react-hooks": "^4.4.0",
     "posthog-js": "1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

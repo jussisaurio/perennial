@@ -53,6 +53,6 @@ export async function seedDemo(lang: "es" | "de", count: number, days = 90): Pro
 
 /** Throw the demo learner away (it is anonymous, so this deletes it). */
 export async function removeDemo(): Promise<void> {
-  await fetch("/api/account/delete", { method: "POST" }).catch(() => {});
+  await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).catch(() => {});
   await authClient.signOut().catch(() => {});
 }

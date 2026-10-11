@@ -3,10 +3,15 @@
 // Error reporting is set up in instrument.ts (preloaded, see package.json).
 
 import { createApp } from "./src/app";
-import { loadConfig } from "./src/config";
+import { configProblems, loadConfig } from "./src/config";
 import { log } from "./src/log";
 
 const config = loadConfig();
+const problems = configProblems(config);
+if (problems.length) {
+  for (const p of problems) log.error("configuration", { problem: p });
+  process.exit(1);
+}
 const sql = new Bun.SQL(config.databaseUrl, { max: 10, idleTimeout: 30 });
 const app = createApp(config, sql);
 

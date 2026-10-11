@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "native": "en",
-  "version": 2,
+  "version": 4,
   "words": [
     {
       "id": "de.w.cmn8thykat",
@@ -204,7 +204,7 @@
     {
       "id": "de.w.d4x642zc8s",
       "lemma": "ja",
-      "gloss": "yes",
+      "gloss": "yes; (adds emphasis)",
       "pos": "particle",
       "rank": 16,
       "forms": [
@@ -336,7 +336,8 @@
       "rank": 28,
       "forms": [
         "noch"
-      ]
+      ],
+      "notes": "noch nicht = not yet."
     },
     {
       "id": "de.w.j922pkzv68",
@@ -369,13 +370,13 @@
     {
       "id": "de.w.ej1ff02pkz",
       "lemma": "mal",
-      "gloss": "just (softens a request); times",
+      "gloss": "just (softens a request); ever, once",
       "pos": "particle",
       "rank": 31,
       "forms": [
         "mal"
       ],
-      "notes": "Komm mal her! = Come here a second! Drei mal zwei = three times two."
+      "notes": "Komm mal her! = Come here a second! Warst du schon mal hier? = Have you ever been here?"
     },
     {
       "id": "de.w.ak88gwsd5s",
@@ -495,6 +496,2065 @@
         "meiner",
         "meines"
       ]
+    },
+    {
+      "id": "de.w.t14cg475mg",
+      "lemma": "an",
+      "gloss": "at; on; to",
+      "pos": "prep",
+      "rank": 41,
+      "forms": [
+        "an",
+        "am",
+        "ans"
+      ],
+      "notes": "an + dem = am, an + das = ans. am Montag = on Monday."
+    },
+    {
+      "id": "de.w.fgtkdnkt25",
+      "lemma": "da",
+      "gloss": "there; here (present)",
+      "pos": "adv",
+      "rank": 42,
+      "forms": [
+        "da"
+      ],
+      "notes": "Ich bin da = I'm here. At the start of a clause it can also mean 'since, because'."
+    },
+    {
+      "id": "de.w.qe5qywdgk2",
+      "lemma": "als",
+      "gloss": "than; as; when (in the past)",
+      "pos": "conj",
+      "rank": 43,
+      "forms": [
+        "als"
+      ],
+      "notes": "als + past = when (a single event or period in the past; for repeated events use wenn): Als ich klein war..."
+    },
+    {
+      "id": "de.w.mpkywc4meh",
+      "lemma": "dann",
+      "gloss": "then",
+      "pos": "adv",
+      "rank": 44,
+      "forms": [
+        "dann"
+      ]
+    },
+    {
+      "id": "de.w.f18gkjxn3e",
+      "lemma": "aus",
+      "gloss": "out of; from",
+      "pos": "prep",
+      "rank": 45,
+      "forms": [
+        "aus"
+      ],
+      "notes": "Takes the dative: aus dem Haus."
+    },
+    {
+      "id": "de.w.pnxyb0ym6f",
+      "lemma": "um",
+      "gloss": "around; at (a time); about",
+      "pos": "prep",
+      "rank": 46,
+      "forms": [
+        "um"
+      ],
+      "notes": "um ... zu = in order to: Ich komme, um zu helfen."
+    },
+    {
+      "id": "de.w.5tkvvf40q4",
+      "lemma": "doch",
+      "gloss": "yes (after a negative question); but; really",
+      "pos": "particle",
+      "rank": 47,
+      "forms": [
+        "doch"
+      ],
+      "notes": "Answers a negative question with yes: Kommst du nicht? – Doch! Also softens or stresses: Komm doch!"
+    },
+    {
+      "id": "de.w.rf2tk66685",
+      "lemma": "alle",
+      "gloss": "all; everyone; everything (alles)",
+      "pos": "pron",
+      "rank": 48,
+      "forms": [
+        "alle",
+        "alles",
+        "allen",
+        "aller"
+      ],
+      "notes": "alles = everything, alle = everyone, all."
+    },
+    {
+      "id": "de.w.g5n724je2c",
+      "lemma": "kein",
+      "gloss": "no; not a; not any",
+      "pos": "det",
+      "rank": 49,
+      "forms": [
+        "kein",
+        "keine",
+        "keinen",
+        "keinem",
+        "keiner"
+      ],
+      "notes": "Used instead of nicht ein: Ich habe kein Auto."
+    },
+    {
+      "id": "de.w.vvz5zmwfw1",
+      "lemma": "oder",
+      "gloss": "or",
+      "pos": "conj",
+      "rank": 50,
+      "forms": [
+        "oder"
+      ],
+      "notes": "At the end of a sentence: ..., oder? = ..., right?"
+    },
+    {
+      "id": "de.w.18zfw8hvet",
+      "lemma": "nach",
+      "gloss": "to; after",
+      "pos": "prep",
+      "rank": 51,
+      "forms": [
+        "nach"
+      ],
+      "notes": "nach Hause = (going) home. Used for cities and countries: nach Berlin."
+    },
+    {
+      "id": "de.w.zxcgfwngx6",
+      "lemma": "nichts",
+      "gloss": "nothing",
+      "pos": "pron",
+      "rank": 52,
+      "forms": [
+        "nichts"
+      ]
+    },
+    {
+      "id": "de.w.e1hjhvpakj",
+      "lemma": "man",
+      "gloss": "one; you; people (in general)",
+      "pos": "pron",
+      "rank": 53,
+      "forms": [
+        "man"
+      ],
+      "notes": "Used with the er/sie form of the verb: man sagt (people say)."
+    },
+    {
+      "id": "de.w.g75vqsztk6",
+      "lemma": "müssen",
+      "gloss": "must; to have to",
+      "pos": "verb",
+      "rank": 54,
+      "forms": [
+        "müssen",
+        "muss",
+        "musst",
+        "müsst",
+        "musste",
+        "mussten",
+        "gemusst",
+        "müsste"
+      ],
+      "notes": "nicht müssen = not have to (not 'must not')."
+    },
+    {
+      "id": "de.w.c6npss6fq8",
+      "lemma": "wollen",
+      "gloss": "to want",
+      "pos": "verb",
+      "rank": 55,
+      "forms": [
+        "wollen",
+        "will",
+        "willst",
+        "wollt",
+        "wollte",
+        "wollten",
+        "gewollt"
+      ],
+      "notes": "ich will, er will (no -t)."
+    },
+    {
+      "id": "de.w.5gmfs06h7s",
+      "lemma": "gehen",
+      "gloss": "to go; to walk",
+      "pos": "verb",
+      "rank": 56,
+      "forms": [
+        "gehen",
+        "gehe",
+        "gehst",
+        "geht",
+        "ging",
+        "gingen",
+        "gegangen",
+        "geh"
+      ],
+      "notes": "Past: ging, ist gegangen. Wie geht's? = How are you? Das geht nicht = That's not possible."
+    },
+    {
+      "id": "de.w.c06vct8kgz",
+      "lemma": "wo",
+      "gloss": "where",
+      "pos": "adv",
+      "rank": 57,
+      "forms": [
+        "wo"
+      ]
+    },
+    {
+      "id": "de.w.72bwdy6e8q",
+      "lemma": "etwas",
+      "gloss": "something; a little",
+      "pos": "pron",
+      "rank": 58,
+      "forms": [
+        "etwas"
+      ],
+      "notes": "Often shortened to was in speech: Ich habe was gehört."
+    },
+    {
+      "id": "de.w.befckve24e",
+      "lemma": "mehr",
+      "gloss": "more",
+      "pos": "adv",
+      "rank": 59,
+      "forms": [
+        "mehr"
+      ],
+      "notes": "nicht mehr = not anymore; kein ... mehr = no more ..."
+    },
+    {
+      "id": "de.w.qgg8e18jxg",
+      "lemma": "bei",
+      "gloss": "at; with; near",
+      "pos": "prep",
+      "rank": 60,
+      "forms": [
+        "bei",
+        "beim"
+      ],
+      "notes": "bei + dem = beim. bei mir = at my place."
+    },
+    {
+      "id": "de.w.dsphrxahz7",
+      "lemma": "also",
+      "gloss": "so; well; therefore",
+      "pos": "adv",
+      "rank": 61,
+      "forms": [
+        "also"
+      ],
+      "notes": "Not English 'also' (that is auch)."
+    },
+    {
+      "id": "de.w.j9406cgc1x",
+      "lemma": "bitte",
+      "gloss": "please; you're welcome",
+      "pos": "particle",
+      "rank": 62,
+      "forms": [
+        "bitte"
+      ],
+      "notes": "Bitte? = Pardon? Bitte schön = here you are; you're welcome."
+    },
+    {
+      "id": "de.w.s3pkc43jbq",
+      "lemma": "immer",
+      "gloss": "always",
+      "pos": "adv",
+      "rank": 63,
+      "forms": [
+        "immer"
+      ],
+      "notes": "immer noch = still; für immer = forever."
+    },
+    {
+      "id": "de.w.kdhqn32csw",
+      "lemma": "warum",
+      "gloss": "why",
+      "pos": "adv",
+      "rank": 64,
+      "forms": [
+        "warum"
+      ]
+    },
+    {
+      "id": "de.w.g8404pzy6g",
+      "lemma": "vor",
+      "gloss": "in front of; before; ago",
+      "pos": "prep",
+      "rank": 65,
+      "forms": [
+        "vor"
+      ],
+      "notes": "vor zwei Jahren = two years ago."
+    },
+    {
+      "id": "de.w.5wfrh7m3q8",
+      "lemma": "los",
+      "gloss": "off; going; wrong (in Was ist los?)",
+      "pos": "adv",
+      "rank": 66,
+      "forms": [
+        "los"
+      ],
+      "notes": "Was ist los? = What's wrong? / What's going on? Los! = Go!"
+    },
+    {
+      "id": "de.w.x69x734k59",
+      "lemma": "wieder",
+      "gloss": "again; back",
+      "pos": "adv",
+      "rank": 67,
+      "forms": [
+        "wieder"
+      ],
+      "notes": "Not wider (against)."
+    },
+    {
+      "id": "de.w.bsc7eehe5r",
+      "lemma": "sagen",
+      "gloss": "to say; to tell",
+      "pos": "verb",
+      "rank": 68,
+      "forms": [
+        "sagen",
+        "sage",
+        "sagst",
+        "sagt",
+        "sagte",
+        "sagten",
+        "gesagt",
+        "sag"
+      ]
+    },
+    {
+      "id": "de.w.gke5x2bw81",
+      "lemma": "machen",
+      "gloss": "to do; to make",
+      "pos": "verb",
+      "rank": 69,
+      "forms": [
+        "machen",
+        "mache",
+        "machst",
+        "macht",
+        "machte",
+        "machten",
+        "gemacht",
+        "mach"
+      ]
+    },
+    {
+      "id": "de.w.0amaqh9x5q",
+      "lemma": "danke",
+      "gloss": "thank you; thanks",
+      "pos": "interj",
+      "rank": 70,
+      "forms": [
+        "danke"
+      ],
+      "notes": "Danke schön / vielen Dank = thank you very much."
+    },
+    {
+      "id": "de.w.jpwsj73d78",
+      "lemma": "sehr",
+      "gloss": "very; very much",
+      "pos": "adv",
+      "rank": 71,
+      "forms": [
+        "sehr"
+      ]
+    },
+    {
+      "id": "de.w.4q1y6frsp8",
+      "lemma": "denn",
+      "gloss": "then; so (in questions, shows interest)",
+      "pos": "particle",
+      "rank": 72,
+      "forms": [
+        "denn"
+      ],
+      "notes": "In questions it shows interest: Was ist denn los? As a conjunction it means 'because'."
+    },
+    {
+      "id": "de.w.swmvvrmj32",
+      "lemma": "Mann",
+      "gloss": "man; husband",
+      "pos": "noun",
+      "rank": 73,
+      "forms": [
+        "Mann",
+        "Mannes",
+        "Männer",
+        "Männern"
+      ],
+      "notes": "Plural: Männer. mein Mann = my husband.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.b0cj4c6rhg",
+      "lemma": "tun",
+      "gloss": "to do",
+      "pos": "verb",
+      "rank": 74,
+      "forms": [
+        "tun",
+        "tue",
+        "tust",
+        "tut",
+        "tat",
+        "taten",
+        "getan"
+      ],
+      "notes": "Es tut mir leid = I'm sorry. Es tut weh = It hurts."
+    },
+    {
+      "id": "de.w.vrsn5521jz",
+      "lemma": "sehen",
+      "gloss": "to see",
+      "pos": "verb",
+      "rank": 75,
+      "forms": [
+        "sehen",
+        "sehe",
+        "siehst",
+        "sieht",
+        "seht",
+        "sah",
+        "sahen",
+        "gesehen",
+        "sieh"
+      ],
+      "notes": "Irregular: du siehst, er sieht. Past: sah, hat gesehen."
+    },
+    {
+      "id": "de.w.b71pqn6avh",
+      "lemma": "vielleicht",
+      "gloss": "maybe; perhaps",
+      "pos": "adv",
+      "rank": 76,
+      "forms": [
+        "vielleicht"
+      ]
+    },
+    {
+      "id": "de.w.806fc87kd1",
+      "lemma": "wer",
+      "gloss": "who",
+      "pos": "pron",
+      "rank": 77,
+      "forms": [
+        "wer",
+        "wen",
+        "wem"
+      ],
+      "notes": "wen = who(m) (direct object), wem = to whom."
+    },
+    {
+      "id": "de.w.xw22xmpy26",
+      "lemma": "ihr",
+      "gloss": "her; their; (Ihr) your (formal)",
+      "pos": "det",
+      "rank": 78,
+      "forms": [
+        "ihr",
+        "ihre",
+        "ihren",
+        "ihrem",
+        "ihrer"
+      ],
+      "notes": "Capitalized Ihr means formal 'your'."
+    },
+    {
+      "id": "de.w.hhkh3yghdy",
+      "lemma": "dieser",
+      "gloss": "this; that",
+      "pos": "det",
+      "rank": 79,
+      "forms": [
+        "dieser",
+        "diese",
+        "dieses",
+        "diesen",
+        "diesem"
+      ]
+    },
+    {
+      "id": "de.w.1vp5a3fjch",
+      "lemma": "ihr",
+      "gloss": "you (plural, informal)",
+      "pos": "pron",
+      "rank": 80,
+      "forms": [
+        "ihr",
+        "euch"
+      ],
+      "notes": "Use ihr when talking to two or more friends. euch = you (as object)."
+    },
+    {
+      "id": "de.w.rhxy7fxeys",
+      "lemma": "kommen",
+      "gloss": "to come",
+      "pos": "verb",
+      "rank": 81,
+      "forms": [
+        "kommen",
+        "komme",
+        "kommst",
+        "kommt",
+        "kam",
+        "kamen",
+        "gekommen",
+        "komm"
+      ],
+      "notes": "Past: kam, ist gekommen."
+    },
+    {
+      "id": "de.w.881hd043xn",
+      "lemma": "über",
+      "gloss": "over; above; about",
+      "pos": "prep",
+      "rank": 82,
+      "forms": [
+        "über",
+        "übers"
+      ],
+      "notes": "über + das = übers."
+    },
+    {
+      "id": "de.w.2z14my9c73",
+      "lemma": "geben",
+      "gloss": "to give",
+      "pos": "verb",
+      "rank": 83,
+      "forms": [
+        "geben",
+        "gebe",
+        "gibst",
+        "gibt",
+        "gab",
+        "gaben",
+        "gegeben",
+        "gib"
+      ],
+      "notes": "es gibt = there is, there are. Irregular: du gibst, er gibt."
+    },
+    {
+      "id": "de.w.xvf998jbny",
+      "lemma": "dein",
+      "gloss": "your (informal)",
+      "pos": "det",
+      "rank": 84,
+      "forms": [
+        "dein",
+        "deine",
+        "deinen",
+        "deinem",
+        "deiner"
+      ]
+    },
+    {
+      "id": "de.w.b02c0tv69y",
+      "lemma": "sollen",
+      "gloss": "should; to be supposed to",
+      "pos": "verb",
+      "rank": 85,
+      "forms": [
+        "sollen",
+        "soll",
+        "sollst",
+        "sollt",
+        "sollte",
+        "solltest",
+        "sollten"
+      ],
+      "notes": "sollte = should, ought to."
+    },
+    {
+      "id": "de.w.2rxxgh5nag",
+      "lemma": "nie",
+      "gloss": "never",
+      "pos": "adv",
+      "rank": 86,
+      "forms": [
+        "nie"
+      ],
+      "notes": "noch nie = never (before)."
+    },
+    {
+      "id": "de.w.fxx6hzey8a",
+      "lemma": "wirklich",
+      "gloss": "really; truly",
+      "pos": "adv",
+      "rank": 87,
+      "forms": [
+        "wirklich"
+      ]
+    },
+    {
+      "id": "de.w.xwhhzrky68",
+      "lemma": "viel",
+      "gloss": "much; a lot; (viele) many",
+      "pos": "adj",
+      "rank": 88,
+      "forms": [
+        "viel",
+        "viele",
+        "vielen",
+        "vieles"
+      ],
+      "notes": "viel = much, viele = many. Vielen Dank = thanks a lot. More: mehr."
+    },
+    {
+      "id": "de.w.jxaazxs8ps",
+      "lemma": "weg",
+      "gloss": "away; gone",
+      "pos": "adv",
+      "rank": 89,
+      "forms": [
+        "weg"
+      ],
+      "notes": "Not der Weg (the way, path)."
+    },
+    {
+      "id": "de.w.dgbjhw9r1x",
+      "lemma": "einfach",
+      "gloss": "simple; easy; just",
+      "pos": "adj",
+      "rank": 90,
+      "forms": [
+        "einfach",
+        "einfache",
+        "einfachen"
+      ]
+    },
+    {
+      "id": "de.w.xjgtfg4zt4",
+      "lemma": "Leben",
+      "gloss": "life",
+      "pos": "noun",
+      "rank": 91,
+      "forms": [
+        "Leben",
+        "Lebens"
+      ],
+      "notes": "leben (lowercase) = to live.",
+      "gender": "n"
+    },
+    {
+      "id": "de.w.ycm6yeefy4",
+      "lemma": "Zeit",
+      "gloss": "time",
+      "pos": "noun",
+      "rank": 92,
+      "forms": [
+        "Zeit",
+        "Zeiten"
+      ],
+      "notes": "Plural: Zeiten. Hast du Zeit? = Are you free?",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.7kw69m4pq3",
+      "lemma": "weil",
+      "gloss": "because",
+      "pos": "conj",
+      "rank": 93,
+      "forms": [
+        "weil"
+      ],
+      "notes": "Sends the verb to the end: weil ich müde bin."
+    },
+    {
+      "id": "de.w.pgaa83xcx8",
+      "lemma": "heute",
+      "gloss": "today",
+      "pos": "adv",
+      "rank": 94,
+      "forms": [
+        "heute"
+      ],
+      "notes": "heute Abend = this evening, tonight."
+    },
+    {
+      "id": "de.w.13wt1zfeqr",
+      "lemma": "damit",
+      "gloss": "so that",
+      "pos": "conj",
+      "rank": 95,
+      "forms": [
+        "damit"
+      ],
+      "notes": "Sends the verb to the end. Also an adverb 'with it': Hör auf damit! = Stop it!"
+    },
+    {
+      "id": "de.w.3nzm4an248",
+      "lemma": "ganz",
+      "gloss": "whole; quite; completely",
+      "pos": "adj",
+      "rank": 96,
+      "forms": [
+        "ganz",
+        "ganze",
+        "ganzen",
+        "ganzes"
+      ]
+    },
+    {
+      "id": "de.w.0n902h0p8k",
+      "lemma": "sicher",
+      "gloss": "sure; safe; certainly",
+      "pos": "adj",
+      "rank": 97,
+      "forms": [
+        "sicher",
+        "sichere",
+        "sicheren",
+        "sicherer"
+      ]
+    },
+    {
+      "id": "de.w.1h3a5j1vqq",
+      "lemma": "Frau",
+      "gloss": "woman; wife; Mrs",
+      "pos": "noun",
+      "rank": 98,
+      "forms": [
+        "Frau",
+        "Frauen"
+      ],
+      "notes": "Plural: Frauen. Frau Müller = Mrs Müller. meine Frau = my wife.",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.keevrwqs21",
+      "lemma": "nun",
+      "gloss": "now; well",
+      "pos": "adv",
+      "rank": 99,
+      "forms": [
+        "nun"
+      ]
+    },
+    {
+      "id": "de.w.y1faj0rajy",
+      "lemma": "bis",
+      "gloss": "until; by; to",
+      "pos": "prep",
+      "rank": 100,
+      "forms": [
+        "bis"
+      ],
+      "notes": "Bis bald! = See you soon! bis zu = up to."
+    },
+    {
+      "id": "de.w.bhrxkqerw2",
+      "lemma": "zurück",
+      "gloss": "back",
+      "pos": "adv",
+      "rank": 101,
+      "forms": [
+        "zurück"
+      ]
+    },
+    {
+      "id": "de.w.pxm0zvdjtb",
+      "lemma": "lassen",
+      "gloss": "to let; to leave",
+      "pos": "verb",
+      "rank": 102,
+      "forms": [
+        "lassen",
+        "lasse",
+        "lässt",
+        "lasst",
+        "ließ",
+        "ließen",
+        "gelassen",
+        "lass"
+      ],
+      "notes": "Irregular: du lässt, er lässt. Lass mich in Ruhe! = Leave me alone! Lass uns gehen = Let's go."
+    },
+    {
+      "id": "de.w.qvtavjqe29",
+      "lemma": "hallo",
+      "gloss": "hello; hi",
+      "pos": "interj",
+      "rank": 103,
+      "forms": [
+        "hallo"
+      ]
+    },
+    {
+      "id": "de.w.t0havqsgjq",
+      "lemma": "Gott",
+      "gloss": "God; god",
+      "pos": "noun",
+      "rank": 104,
+      "forms": [
+        "Gott",
+        "Gottes",
+        "Götter"
+      ],
+      "notes": "Plural: Götter. Mein Gott! = My God! Gott sei Dank = Thank God.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.82zbpm2cd0",
+      "lemma": "sein",
+      "gloss": "his; its",
+      "pos": "det",
+      "rank": 105,
+      "forms": [
+        "sein",
+        "seine",
+        "seinen",
+        "seinem",
+        "seiner"
+      ],
+      "notes": "Not the verb sein (to be)."
+    },
+    {
+      "id": "de.w.c4mztkqnf8",
+      "lemma": "zwei",
+      "gloss": "two",
+      "pos": "num",
+      "rank": 106,
+      "forms": [
+        "zwei"
+      ],
+      "notes": "On the phone, zwo is often said for zwei."
+    },
+    {
+      "id": "de.w.rm7wmkqsvq",
+      "lemma": "genau",
+      "gloss": "exactly; precisely",
+      "pos": "adv",
+      "rank": 107,
+      "forms": [
+        "genau"
+      ]
+    },
+    {
+      "id": "de.w.7semhtjvva",
+      "lemma": "klar",
+      "gloss": "clear; sure; of course",
+      "pos": "adj",
+      "rank": 108,
+      "forms": [
+        "klar",
+        "klare",
+        "klaren"
+      ],
+      "notes": "Alles klar? = Everything OK? Klar! = Sure!"
+    },
+    {
+      "id": "de.w.fe2nnzk5vy",
+      "lemma": "morgen",
+      "gloss": "tomorrow",
+      "pos": "adv",
+      "rank": 109,
+      "forms": [
+        "morgen"
+      ],
+      "notes": "der Morgen (capitalised) = the morning: Guten Morgen!"
+    },
+    {
+      "id": "de.w.t9kx7kkwkf",
+      "lemma": "Leute",
+      "gloss": "people",
+      "pos": "noun",
+      "rank": 110,
+      "forms": [
+        "Leute",
+        "Leuten"
+      ],
+      "notes": "Plural only: die Leute."
+    },
+    {
+      "id": "de.w.0t0rchkvgr",
+      "lemma": "Vater",
+      "gloss": "father",
+      "pos": "noun",
+      "rank": 111,
+      "forms": [
+        "Vater",
+        "Vaters",
+        "Väter",
+        "Vätern"
+      ],
+      "notes": "Plural: Väter. Papa = dad.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.xt1grebqb7",
+      "lemma": "schön",
+      "gloss": "beautiful; nice",
+      "pos": "adj",
+      "rank": 112,
+      "forms": [
+        "schön",
+        "schöne",
+        "schönen",
+        "schöner",
+        "schönes"
+      ]
+    },
+    {
+      "id": "de.w.kt85gxekx8",
+      "lemma": "glauben",
+      "gloss": "to believe; to think",
+      "pos": "verb",
+      "rank": 113,
+      "forms": [
+        "glauben",
+        "glaube",
+        "glaubst",
+        "glaubt",
+        "glaubte",
+        "geglaubt"
+      ],
+      "notes": "glauben an = to believe in."
+    },
+    {
+      "id": "de.w.dek3skxnqd",
+      "lemma": "ab",
+      "gloss": "from (a time on); off",
+      "pos": "prep",
+      "rank": 114,
+      "forms": [
+        "ab"
+      ],
+      "notes": "ab Montag = from Monday on. ab und zu = now and then."
+    },
+    {
+      "id": "de.w.h7cfz94qtc",
+      "lemma": "gerade",
+      "gloss": "just; right now",
+      "pos": "adv",
+      "rank": 115,
+      "forms": [
+        "gerade"
+      ]
+    },
+    {
+      "id": "de.w.g29gz550f3",
+      "lemma": "Tag",
+      "gloss": "day",
+      "pos": "noun",
+      "rank": 116,
+      "forms": [
+        "Tag",
+        "Tage",
+        "Tagen",
+        "Tages"
+      ],
+      "notes": "Plural: Tage. Guten Tag! = Hello!",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.hm2bb86jzz",
+      "lemma": "reden",
+      "gloss": "to talk",
+      "pos": "verb",
+      "rank": 117,
+      "forms": [
+        "reden",
+        "rede",
+        "redest",
+        "redet",
+        "redete",
+        "geredet"
+      ],
+      "notes": "reden über = to talk about."
+    },
+    {
+      "id": "de.w.gnwv6hyzx9",
+      "lemma": "wohl",
+      "gloss": "probably; well",
+      "pos": "adv",
+      "rank": 118,
+      "forms": [
+        "wohl"
+      ],
+      "notes": "Er ist wohl krank = He's probably sick. Ich fühle mich wohl = I feel good."
+    },
+    {
+      "id": "de.w.7z6zmn67me",
+      "lemma": "lieben",
+      "gloss": "to love",
+      "pos": "verb",
+      "rank": 119,
+      "forms": [
+        "lieben",
+        "liebe",
+        "liebst",
+        "liebt",
+        "liebte",
+        "geliebt"
+      ],
+      "notes": "die Liebe = love (noun)."
+    },
+    {
+      "id": "de.w.hakqkcbecx",
+      "lemma": "unser",
+      "gloss": "our",
+      "pos": "det",
+      "rank": 120,
+      "forms": [
+        "unser",
+        "unsere",
+        "unseren",
+        "unserem",
+        "unserer"
+      ]
+    },
+    {
+      "id": "de.w.zy7r7vccn7",
+      "lemma": "jemand",
+      "gloss": "someone; anyone",
+      "pos": "pron",
+      "rank": 121,
+      "forms": [
+        "jemand",
+        "jemanden",
+        "jemandem"
+      ]
+    },
+    {
+      "id": "de.w.e2jk0hes5v",
+      "lemma": "Geld",
+      "gloss": "money",
+      "pos": "noun",
+      "rank": 122,
+      "forms": [
+        "Geld"
+      ],
+      "gender": "n"
+    },
+    {
+      "id": "de.w.z3sd3vrnws",
+      "lemma": "durch",
+      "gloss": "through; by",
+      "pos": "prep",
+      "rank": 123,
+      "forms": [
+        "durch"
+      ],
+      "notes": "Takes the accusative: durch den Park."
+    },
+    {
+      "id": "de.w.e6r8908tjx",
+      "lemma": "ob",
+      "gloss": "whether; if",
+      "pos": "conj",
+      "rank": 124,
+      "forms": [
+        "ob"
+      ],
+      "notes": "Sends the verb to the end: Ich weiß nicht, ob er kommt."
+    },
+    {
+      "id": "de.w.sry27kvz5a",
+      "lemma": "Mutter",
+      "gloss": "mother",
+      "pos": "noun",
+      "rank": 125,
+      "forms": [
+        "Mutter",
+        "Mütter",
+        "Müttern"
+      ],
+      "notes": "Plural: Mütter. Mama = mom.",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.8mqdfjvxwd",
+      "lemma": "raus",
+      "gloss": "out",
+      "pos": "adv",
+      "rank": 126,
+      "forms": [
+        "raus"
+      ],
+      "notes": "Spoken short form of heraus / hinaus."
+    },
+    {
+      "id": "de.w.gyrxjnhg27",
+      "lemma": "paar",
+      "gloss": "a few; a couple (ein paar)",
+      "pos": "det",
+      "rank": 127,
+      "forms": [
+        "paar"
+      ],
+      "notes": "ein paar (lowercase) = a few. das Paar (capitalised) = the pair, the couple."
+    },
+    {
+      "id": "de.w.ezzrq087g8",
+      "lemma": "passieren",
+      "gloss": "to happen",
+      "pos": "verb",
+      "rank": 128,
+      "forms": [
+        "passieren",
+        "passiert",
+        "passierte"
+      ],
+      "notes": "Past with sein: Was ist passiert?"
+    },
+    {
+      "id": "de.w.1nrfnbb534",
+      "lemma": "denken",
+      "gloss": "to think",
+      "pos": "verb",
+      "rank": 129,
+      "forms": [
+        "denken",
+        "denke",
+        "denkst",
+        "denkt",
+        "dachte",
+        "dachten",
+        "gedacht"
+      ],
+      "notes": "denken an = to think of. Past: dachte, hat gedacht."
+    },
+    {
+      "id": "de.w.qbjthmd3ah",
+      "lemma": "wieso",
+      "gloss": "why; how come",
+      "pos": "adv",
+      "rank": 130,
+      "forms": [
+        "wieso"
+      ]
+    },
+    {
+      "id": "de.w.fa6xaxrp8a",
+      "lemma": "selbst",
+      "gloss": "myself, yourself, etc.; even",
+      "pos": "pron",
+      "rank": 131,
+      "forms": [
+        "selbst"
+      ],
+      "notes": "Also selber in speech. selbst wenn = even if."
+    },
+    {
+      "id": "de.w.rpp4tptmch",
+      "lemma": "gehören",
+      "gloss": "to belong",
+      "pos": "verb",
+      "rank": 132,
+      "forms": [
+        "gehören",
+        "gehört",
+        "gehörte",
+        "gehöre"
+      ],
+      "notes": "Takes the dative: Das gehört mir. gehören zu = to be part of."
+    },
+    {
+      "id": "de.w.x1csdwnsay",
+      "lemma": "mögen",
+      "gloss": "to like",
+      "pos": "verb",
+      "rank": 133,
+      "forms": [
+        "mögen",
+        "mag",
+        "magst",
+        "mögt",
+        "mochte",
+        "gemocht",
+        "möchte",
+        "möchtest"
+      ],
+      "notes": "möchte = would like: Ich möchte einen Kaffee."
+    },
+    {
+      "id": "de.w.450sqz4c20",
+      "lemma": "ohne",
+      "gloss": "without",
+      "pos": "prep",
+      "rank": 134,
+      "forms": [
+        "ohne"
+      ],
+      "notes": "Takes the accusative: ohne dich."
+    },
+    {
+      "id": "de.w.9zfvk6q17q",
+      "lemma": "hören",
+      "gloss": "to hear; to listen",
+      "pos": "verb",
+      "rank": 135,
+      "forms": [
+        "hören",
+        "höre",
+        "hörst",
+        "hört",
+        "hörte",
+        "gehört",
+        "hör"
+      ],
+      "notes": "Hör mal! = Listen! zuhören = to listen (to someone)."
+    },
+    {
+      "id": "de.w.1t31ykcy28",
+      "lemma": "her",
+      "gloss": "here (toward the speaker); ago",
+      "pos": "adv",
+      "rank": 136,
+      "forms": [
+        "her"
+      ],
+      "notes": "Komm her! = Come here! Das ist lange her = That was a long time ago. Opposite: hin."
+    },
+    {
+      "id": "de.w.4sxtvsje4w",
+      "lemma": "andere",
+      "gloss": "other; different",
+      "pos": "adj",
+      "rank": 137,
+      "forms": [
+        "andere",
+        "anderen",
+        "anderer",
+        "anderes",
+        "anderem"
+      ],
+      "notes": "anders (adverb) = differently."
+    },
+    {
+      "id": "de.w.t9zm610x5d",
+      "lemma": "helfen",
+      "gloss": "to help",
+      "pos": "verb",
+      "rank": 138,
+      "forms": [
+        "helfen",
+        "helfe",
+        "hilfst",
+        "hilft",
+        "half",
+        "geholfen",
+        "hilf"
+      ],
+      "notes": "Takes the dative: Ich helfe dir. Irregular: du hilfst, er hilft."
+    },
+    {
+      "id": "de.w.w2mk3qn5y4",
+      "lemma": "Nacht",
+      "gloss": "night",
+      "pos": "noun",
+      "rank": 139,
+      "forms": [
+        "Nacht",
+        "Nächte",
+        "Nächten"
+      ],
+      "notes": "Plural: Nächte. Gute Nacht! = Good night!",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.td9ep8tenv",
+      "lemma": "finden",
+      "gloss": "to find; to think (an opinion)",
+      "pos": "verb",
+      "rank": 140,
+      "forms": [
+        "finden",
+        "finde",
+        "findest",
+        "findet",
+        "fand",
+        "fanden",
+        "gefunden"
+      ],
+      "notes": "Ich finde das gut = I think that's good."
+    },
+    {
+      "id": "de.w.w9pzeem42c",
+      "lemma": "lange",
+      "gloss": "for a long time; long",
+      "pos": "adv",
+      "rank": 141,
+      "forms": [
+        "lange"
+      ],
+      "notes": "lang (adjective) = long: ein langer Tag."
+    },
+    {
+      "id": "de.w.2qpev68rxs",
+      "lemma": "natürlich",
+      "gloss": "of course; naturally",
+      "pos": "adv",
+      "rank": 142,
+      "forms": [
+        "natürlich"
+      ]
+    },
+    {
+      "id": "de.w.vjz2yd4z61",
+      "lemma": "gar",
+      "gloss": "at all (gar nicht, gar nichts)",
+      "pos": "particle",
+      "rank": 143,
+      "forms": [
+        "gar"
+      ],
+      "notes": "Makes a negative stronger: gar nicht = not at all."
+    },
+    {
+      "id": "de.w.29s505peva",
+      "lemma": "dort",
+      "gloss": "there",
+      "pos": "adv",
+      "rank": 144,
+      "forms": [
+        "dort"
+      ]
+    },
+    {
+      "id": "de.w.vmak85nh7w",
+      "lemma": "weiter",
+      "gloss": "further; on (keep going)",
+      "pos": "adv",
+      "rank": 145,
+      "forms": [
+        "weiter"
+      ],
+      "notes": "Und weiter? = And then what? weitermachen = to keep going."
+    },
+    {
+      "id": "de.w.ezr7snkxc1",
+      "lemma": "seit",
+      "gloss": "since; for (a time)",
+      "pos": "prep",
+      "rank": 146,
+      "forms": [
+        "seit"
+      ],
+      "notes": "Used with the present tense: Ich wohne seit zwei Jahren hier = I've lived here for two years."
+    },
+    {
+      "id": "de.w.cn40xvtp3f",
+      "lemma": "gleich",
+      "gloss": "right away; in a moment",
+      "pos": "adv",
+      "rank": 147,
+      "forms": [
+        "gleich"
+      ],
+      "notes": "As an adjective it means 'same': die gleiche Farbe."
+    },
+    {
+      "id": "de.w.2p6y20vkys",
+      "lemma": "recht",
+      "gloss": "right (recht haben = to be right)",
+      "pos": "adj",
+      "rank": 148,
+      "forms": [
+        "recht"
+      ],
+      "notes": "Du hast recht = You're right. Ist dir das recht? = Is that OK with you?"
+    },
+    {
+      "id": "de.w.wn06cb9tv5",
+      "lemma": "richtig",
+      "gloss": "right; correct; really",
+      "pos": "adj",
+      "rank": 149,
+      "forms": [
+        "richtig",
+        "richtige",
+        "richtigen"
+      ]
+    },
+    {
+      "id": "de.w.hbtjdcv70y",
+      "lemma": "Ordnung",
+      "gloss": "order (in Ordnung = OK)",
+      "pos": "noun",
+      "rank": 150,
+      "forms": [
+        "Ordnung"
+      ],
+      "notes": "In Ordnung! = OK! All right!",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.6g13t24hwd",
+      "lemma": "davon",
+      "gloss": "of it; about it; from it",
+      "pos": "adv",
+      "rank": 151,
+      "forms": [
+        "davon"
+      ],
+      "notes": "da + von. Ich weiß nichts davon = I don't know anything about it."
+    },
+    {
+      "id": "de.w.enad9w5h2d",
+      "lemma": "dafür",
+      "gloss": "for it; for that",
+      "pos": "adv",
+      "rank": 152,
+      "forms": [
+        "dafür"
+      ],
+      "notes": "da + für. Ich bin dafür = I'm for it."
+    },
+    {
+      "id": "de.w.zypnfs347e",
+      "lemma": "wegen",
+      "gloss": "because of",
+      "pos": "prep",
+      "rank": 153,
+      "forms": [
+        "wegen"
+      ],
+      "notes": "Takes the genitive (in speech often the dative): wegen des Wetters."
+    },
+    {
+      "id": "de.w.5h4b5jfggp",
+      "lemma": "Haus",
+      "gloss": "house",
+      "pos": "noun",
+      "rank": 154,
+      "forms": [
+        "Haus",
+        "Hauses",
+        "Häuser",
+        "Häusern",
+        "Hause"
+      ],
+      "notes": "Plural: Häuser. zu Hause = at home, nach Hause = (going) home.",
+      "gender": "n"
+    },
+    {
+      "id": "de.w.8jwa3eg9cd",
+      "lemma": "Mädchen",
+      "gloss": "girl",
+      "pos": "noun",
+      "rank": 155,
+      "forms": [
+        "Mädchen"
+      ],
+      "notes": "Neuter: das Mädchen. Plural: die Mädchen.",
+      "gender": "n"
+    },
+    {
+      "id": "de.w.yxfvn6a38c",
+      "lemma": "hin",
+      "gloss": "there (away from the speaker)",
+      "pos": "adv",
+      "rank": 156,
+      "forms": [
+        "hin"
+      ],
+      "notes": "Wo gehst du hin? = Where are you going? hin und her = back and forth. Opposite: her."
+    },
+    {
+      "id": "de.w.0kbmdt1hg4",
+      "lemma": "Abend",
+      "gloss": "evening",
+      "pos": "noun",
+      "rank": 157,
+      "forms": [
+        "Abend",
+        "Abende",
+        "Abenden"
+      ],
+      "notes": "Plural: Abende. Guten Abend! = Good evening! heute Abend = tonight.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.51gwb3egxq",
+      "lemma": "drei",
+      "gloss": "three",
+      "pos": "num",
+      "rank": 158,
+      "forms": [
+        "drei"
+      ]
+    },
+    {
+      "id": "de.w.xd37v796z2",
+      "lemma": "Freund",
+      "gloss": "friend; boyfriend",
+      "pos": "noun",
+      "rank": 159,
+      "forms": [
+        "Freund",
+        "Freunde",
+        "Freunden",
+        "Freundes"
+      ],
+      "notes": "Plural: Freunde. mein Freund often means 'my boyfriend'. Freundin = female friend, girlfriend.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.vejdvtn2t1",
+      "lemma": "warten",
+      "gloss": "to wait",
+      "pos": "verb",
+      "rank": 160,
+      "forms": [
+        "warten",
+        "warte",
+        "wartest",
+        "wartet",
+        "wartete",
+        "gewartet"
+      ],
+      "notes": "warten auf = to wait for."
+    },
+    {
+      "id": "de.w.pvd5xcbqjw",
+      "lemma": "Mensch",
+      "gloss": "person; human being",
+      "pos": "noun",
+      "rank": 161,
+      "forms": [
+        "Mensch",
+        "Menschen"
+      ],
+      "notes": "Plural: Menschen = people. Accusative and dative: den/dem Menschen. Mensch! = Wow! / Man!",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.aqzhazkjbj",
+      "lemma": "essen",
+      "gloss": "to eat",
+      "pos": "verb",
+      "rank": 162,
+      "forms": [
+        "essen",
+        "esse",
+        "isst",
+        "esst",
+        "aß",
+        "aßen",
+        "gegessen",
+        "iss"
+      ],
+      "notes": "Irregular: du isst, er isst. Past: aß, hat gegessen. das Essen = food, meal."
+    },
+    {
+      "id": "de.w.90s0z1tg08",
+      "lemma": "Angst",
+      "gloss": "fear",
+      "pos": "noun",
+      "rank": 163,
+      "forms": [
+        "Angst",
+        "Ängste"
+      ],
+      "notes": "Angst haben (vor) = to be afraid (of). Plural: Ängste.",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.grhckrea4y",
+      "lemma": "bleiben",
+      "gloss": "to stay",
+      "pos": "verb",
+      "rank": 164,
+      "forms": [
+        "bleiben",
+        "bleibe",
+        "bleibst",
+        "bleibt",
+        "blieb",
+        "blieben",
+        "geblieben",
+        "bleib"
+      ],
+      "notes": "Past: blieb, ist geblieben."
+    },
+    {
+      "id": "de.w.th6n8r0vzr",
+      "lemma": "zusammen",
+      "gloss": "together",
+      "pos": "adv",
+      "rank": 165,
+      "forms": [
+        "zusammen"
+      ],
+      "notes": "Zusammen oder getrennt? = One bill or separate? (in a restaurant)"
+    },
+    {
+      "id": "de.w.tnj6ca2men",
+      "lemma": "Welt",
+      "gloss": "world",
+      "pos": "noun",
+      "rank": 166,
+      "forms": [
+        "Welt",
+        "Welten"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "de.w.pf4ca6f42y",
+      "lemma": "unter",
+      "gloss": "under; below; among",
+      "pos": "prep",
+      "rank": 167,
+      "forms": [
+        "unter"
+      ]
+    },
+    {
+      "id": "de.w.3fvehgwcqe",
+      "lemma": "schnell",
+      "gloss": "fast; quick; quickly",
+      "pos": "adj",
+      "rank": 168,
+      "forms": [
+        "schnell",
+        "schnelle",
+        "schnellen",
+        "schneller"
+      ]
+    },
+    {
+      "id": "de.w.emzrbsgkn1",
+      "lemma": "tot",
+      "gloss": "dead",
+      "pos": "adj",
+      "rank": 169,
+      "forms": [
+        "tot",
+        "tote",
+        "toten"
+      ],
+      "notes": "der Tod = death. sterben = to die."
+    },
+    {
+      "id": "de.w.z31h1m8bvq",
+      "lemma": "dürfen",
+      "gloss": "may; to be allowed to",
+      "pos": "verb",
+      "rank": 170,
+      "forms": [
+        "dürfen",
+        "darf",
+        "darfst",
+        "dürft",
+        "durfte",
+        "durften",
+        "dürfte"
+      ],
+      "notes": "nicht dürfen = must not."
+    },
+    {
+      "id": "de.w.z7kg731bdc",
+      "lemma": "erst",
+      "gloss": "only (not until); first",
+      "pos": "adv",
+      "rank": 171,
+      "forms": [
+        "erst"
+      ],
+      "notes": "erst morgen = not until tomorrow. erst fünf = only five."
+    },
+    {
+      "id": "de.w.h4j4j97cz6",
+      "lemma": "stimmen",
+      "gloss": "to be right; to be true",
+      "pos": "verb",
+      "rank": 172,
+      "forms": [
+        "stimmen",
+        "stimmt",
+        "stimmte"
+      ],
+      "notes": "Das stimmt = That's right. Stimmt so! = Keep the change!"
+    },
+    {
+      "id": "de.w.wa7ekac1wn",
+      "lemma": "nehmen",
+      "gloss": "to take",
+      "pos": "verb",
+      "rank": 173,
+      "forms": [
+        "nehmen",
+        "nehme",
+        "nimmst",
+        "nimmt",
+        "nahm",
+        "nahmen",
+        "genommen",
+        "nimm"
+      ],
+      "notes": "Irregular: du nimmst, er nimmt. Past: nahm, hat genommen."
+    },
+    {
+      "id": "de.w.7kjkw7ne8f",
+      "lemma": "Kind",
+      "gloss": "child",
+      "pos": "noun",
+      "rank": 174,
+      "forms": [
+        "Kind",
+        "Kinder",
+        "Kindern",
+        "Kindes"
+      ],
+      "notes": "Plural: Kinder.",
+      "gender": "n"
+    },
+    {
+      "id": "de.w.e1z8q40zmn",
+      "lemma": "bringen",
+      "gloss": "to bring; to take (somewhere)",
+      "pos": "verb",
+      "rank": 175,
+      "forms": [
+        "bringen",
+        "bringe",
+        "bringst",
+        "bringt",
+        "brachte",
+        "brachten",
+        "gebracht"
+      ],
+      "notes": "Past: brachte, hat gebracht."
+    },
+    {
+      "id": "de.w.s1sxtkgjv6",
+      "lemma": "genug",
+      "gloss": "enough",
+      "pos": "adv",
+      "rank": 176,
+      "forms": [
+        "genug"
+      ]
+    },
+    {
+      "id": "de.w.t4xc6yjqsr",
+      "lemma": "brauchen",
+      "gloss": "to need",
+      "pos": "verb",
+      "rank": 177,
+      "forms": [
+        "brauchen",
+        "brauche",
+        "brauchst",
+        "braucht",
+        "brauchte",
+        "brauchten",
+        "gebraucht"
+      ]
+    },
+    {
+      "id": "de.w.c69xzdtbv0",
+      "lemma": "gegen",
+      "gloss": "against; around (a time)",
+      "pos": "prep",
+      "rank": 178,
+      "forms": [
+        "gegen"
+      ],
+      "notes": "Takes the accusative. gegen acht = around eight."
+    },
+    {
+      "id": "de.w.3n7f1eh9br",
+      "lemma": "Moment",
+      "gloss": "moment",
+      "pos": "noun",
+      "rank": 179,
+      "forms": [
+        "Moment",
+        "Momente"
+      ],
+      "notes": "Moment mal! = Wait a minute! im Moment = at the moment.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.r7d2j7thrt",
+      "lemma": "Junge",
+      "gloss": "boy",
+      "pos": "noun",
+      "rank": 180,
+      "forms": [
+        "Junge",
+        "Jungen",
+        "Jungs"
+      ],
+      "notes": "Other cases and plural: Jungen (in speech the plural is often Jungs).",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.mytdp619r7",
+      "lemma": "stehen",
+      "gloss": "to stand; to be (written)",
+      "pos": "verb",
+      "rank": 181,
+      "forms": [
+        "stehen",
+        "stehe",
+        "stehst",
+        "steht",
+        "stand",
+        "standen",
+        "gestanden"
+      ],
+      "notes": "Das steht dir = That suits you. Past: stand, hat gestanden."
+    },
+    {
+      "id": "de.w.3nezjdph7y",
+      "lemma": "sonst",
+      "gloss": "otherwise; else",
+      "pos": "adv",
+      "rank": 182,
+      "forms": [
+        "sonst"
+      ]
+    },
+    {
+      "id": "de.w.3bqcb5k8ve",
+      "lemma": "Musik",
+      "gloss": "music",
+      "pos": "noun",
+      "rank": 183,
+      "forms": [
+        "Musik"
+      ],
+      "gender": "f"
+    },
+    {
+      "id": "de.w.j5y5n34341",
+      "lemma": "Arbeit",
+      "gloss": "work; job",
+      "pos": "noun",
+      "rank": 184,
+      "forms": [
+        "Arbeit"
+      ],
+      "notes": "zur Arbeit gehen = to go to work. arbeiten = to work.",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.c74rgq1jrx",
+      "lemma": "fragen",
+      "gloss": "to ask",
+      "pos": "verb",
+      "rank": 185,
+      "forms": [
+        "fragen",
+        "frage",
+        "fragst",
+        "fragt",
+        "fragte",
+        "gefragt",
+        "frag"
+      ],
+      "notes": "die Frage = the question. fragen nach = to ask about."
+    },
+    {
+      "id": "de.w.d87jf4rbe4",
+      "lemma": "Herr",
+      "gloss": "Mr; gentleman; lord",
+      "pos": "noun",
+      "rank": 186,
+      "forms": [
+        "Herr",
+        "Herrn",
+        "Herren"
+      ],
+      "notes": "Herr Weber = Mr Weber. Other cases: Herrn. Plural: Herren.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.6nr58y8mv3",
+      "lemma": "dabei",
+      "gloss": "with it; there; at the same time",
+      "pos": "adv",
+      "rank": 187,
+      "forms": [
+        "dabei"
+      ],
+      "notes": "da + bei. Ich bin dabei = I'm in."
+    },
+    {
+      "id": "de.w.rt28c67xx3",
+      "lemma": "heißen",
+      "gloss": "to be called; to mean",
+      "pos": "verb",
+      "rank": 188,
+      "forms": [
+        "heißen",
+        "heiße",
+        "heißt",
+        "hieß",
+        "geheißen"
+      ],
+      "notes": "Wie heißt du? = What's your name? Das heißt = that means."
+    },
+    {
+      "id": "de.w.880tw9meq8",
+      "lemma": "Familie",
+      "gloss": "family",
+      "pos": "noun",
+      "rank": 189,
+      "forms": [
+        "Familie",
+        "Familien"
+      ],
+      "notes": "Plural: Familien.",
+      "gender": "f"
+    },
+    {
+      "id": "de.w.vsdx1jxs5y",
+      "lemma": "niemand",
+      "gloss": "nobody; no one",
+      "pos": "pron",
+      "rank": 190,
+      "forms": [
+        "niemand",
+        "niemanden",
+        "niemandem"
+      ]
+    },
+    {
+      "id": "de.w.5nw30hvv58",
+      "lemma": "sofort",
+      "gloss": "immediately; right away",
+      "pos": "adv",
+      "rank": 191,
+      "forms": [
+        "sofort"
+      ]
+    },
+    {
+      "id": "de.w.crap9kvrm8",
+      "lemma": "bevor",
+      "gloss": "before",
+      "pos": "conj",
+      "rank": 192,
+      "forms": [
+        "bevor"
+      ],
+      "notes": "Sends the verb to the end. Before a noun, use vor: vor dem Essen."
+    },
+    {
+      "id": "de.w.m4rhzt5sxb",
+      "lemma": "Jahr",
+      "gloss": "year",
+      "pos": "noun",
+      "rank": 193,
+      "forms": [
+        "Jahr",
+        "Jahre",
+        "Jahren",
+        "Jahres"
+      ],
+      "notes": "Plural: Jahre. vor zwei Jahren = two years ago.",
+      "gender": "n"
+    },
+    {
+      "id": "de.w.m3r3cmy95c",
+      "lemma": "einmal",
+      "gloss": "once; one time",
+      "pos": "adv",
+      "rank": 194,
+      "forms": [
+        "einmal"
+      ],
+      "notes": "Often shortened to mal. noch einmal = once more. auf einmal = suddenly."
+    },
+    {
+      "id": "de.w.4z5je0s6ar",
+      "lemma": "Problem",
+      "gloss": "problem",
+      "pos": "noun",
+      "rank": 195,
+      "forms": [
+        "Problem",
+        "Probleme",
+        "Problemen"
+      ],
+      "notes": "Plural: Probleme.",
+      "gender": "n"
+    },
+    {
+      "id": "de.w.tnt5rqkt3w",
+      "lemma": "Sohn",
+      "gloss": "son",
+      "pos": "noun",
+      "rank": 196,
+      "forms": [
+        "Sohn",
+        "Söhne",
+        "Söhnen"
+      ],
+      "notes": "Plural: Söhne.",
+      "gender": "m"
+    },
+    {
+      "id": "de.w.4qfz0nec0w",
+      "lemma": "wann",
+      "gloss": "when",
+      "pos": "adv",
+      "rank": 197,
+      "forms": [
+        "wann"
+      ],
+      "notes": "Use wann in direct and indirect questions (Ich weiß nicht, wann ...). When \"when\" links two clauses (whenever / at the time that), use wenn or als."
+    },
+    {
+      "id": "de.w.jxc0cgb3rk",
+      "lemma": "fertig",
+      "gloss": "ready; finished",
+      "pos": "adj",
+      "rank": 198,
+      "forms": [
+        "fertig"
+      ],
+      "notes": "fertig sein = to be done. In speech also 'exhausted'."
+    },
+    {
+      "id": "de.w.zmfdshqd1r",
+      "lemma": "allein",
+      "gloss": "alone; by oneself",
+      "pos": "adv",
+      "rank": 199,
+      "forms": [
+        "allein"
+      ],
+      "notes": "Also alleine in speech."
+    },
+    {
+      "id": "de.w.p3jtb4xz6y",
+      "lemma": "sprechen",
+      "gloss": "to speak; to talk",
+      "pos": "verb",
+      "rank": 200,
+      "forms": [
+        "sprechen",
+        "spreche",
+        "sprichst",
+        "spricht",
+        "sprecht",
+        "sprach",
+        "gesprochen",
+        "sprich"
+      ],
+      "notes": "Irregular: du sprichst, er spricht. Past: sprach, hat gesprochen."
     }
   ],
   "sentences": [
@@ -856,11 +2916,19 @@
       "cloze": "hat"
     },
     {
+      "id": "de.s.6tysdkd67t",
+      "wordId": "de.w.4wwwkaz42g",
+      "text": "Wir hatten keine Zeit.",
+      "translation": "We didn't have time.",
+      "cloze": "hatten"
+    },
+    {
       "id": "de.s.j28rddzs8w",
       "wordId": "de.w.4wwwkaz42g",
       "text": "Wir haben keine Zeit.",
       "translation": "We don't have time.",
-      "cloze": "haben"
+      "cloze": "haben",
+      "retired": true
     },
     {
       "id": "de.s.wqj8cjpm4s",
@@ -1152,18 +3220,26 @@
       "cloze": "Noch"
     },
     {
+      "id": "de.s.22xvx6hr7f",
+      "wordId": "de.w.28n9h5qmn1",
+      "text": "Ich bin noch nicht fertig.",
+      "translation": "I'm not done yet.",
+      "cloze": "noch"
+    },
+    {
       "id": "de.s.5pb2e9yvvk",
       "wordId": "de.w.28n9h5qmn1",
       "text": "Bist du noch da?",
       "translation": "Are you still there?",
-      "cloze": "noch"
+      "cloze": "noch",
+      "retired": true
     },
     {
-      "id": "de.s.wf45x51a73",
+      "id": "de.s.tps9whs4c6",
       "wordId": "de.w.j922pkzv68",
-      "text": "Wenn du willst, komm mit.",
-      "translation": "If you want, come along.",
-      "cloze": "Wenn"
+      "text": "Komm mit, wenn du willst.",
+      "translation": "Come along if you want.",
+      "cloze": "wenn"
     },
     {
       "id": "de.s.45tjrkdyga",
@@ -1178,6 +3254,14 @@
       "text": "Was ist, wenn es regnet?",
       "translation": "What if it rains?",
       "cloze": "wenn"
+    },
+    {
+      "id": "de.s.wf45x51a73",
+      "wordId": "de.w.j922pkzv68",
+      "text": "Wenn du willst, komm mit.",
+      "translation": "If you want, come along.",
+      "cloze": "Wenn",
+      "retired": true
     },
     {
       "id": "de.s.rpa53g2qw7",
@@ -1257,11 +3341,19 @@
       "cloze": "Guten"
     },
     {
+      "id": "de.s.5qb5caxw86",
+      "wordId": "de.w.a1rr7dkp4m",
+      "text": "Sie spricht gut Deutsch.",
+      "translation": "She speaks German well.",
+      "cloze": "gut"
+    },
+    {
       "id": "de.s.z4d2dg6rx5",
       "wordId": "de.w.a1rr7dkp4m",
       "text": "Er ist ein guter Lehrer.",
       "translation": "He's a good teacher.",
-      "cloze": "guter"
+      "cloze": "guter",
+      "retired": true
     },
     {
       "id": "de.s.z5bfbt3jjt",
@@ -1409,6 +3501,3942 @@
       "text": "Hast du meinen Schlüssel?",
       "translation": "Do you have my key?",
       "cloze": "meinen"
+    },
+    {
+      "id": "de.s.vwbtp9tnb8",
+      "wordId": "de.w.t14cg475mg",
+      "text": "Sie wartet an der Tür.",
+      "translation": "She's waiting at the door.",
+      "cloze": "an"
+    },
+    {
+      "id": "de.s.2vb0vx6w9j",
+      "wordId": "de.w.t14cg475mg",
+      "text": "Wir sehen uns am Montag.",
+      "translation": "See you on Monday.",
+      "cloze": "am"
+    },
+    {
+      "id": "de.s.fdhjxxbpj8",
+      "wordId": "de.w.t14cg475mg",
+      "text": "Er geht ans Fenster.",
+      "translation": "He goes to the window.",
+      "cloze": "ans"
+    },
+    {
+      "id": "de.s.fth74h9aw0",
+      "wordId": "de.w.t14cg475mg",
+      "text": "Ich schreibe einen Brief an meine Oma.",
+      "translation": "I'm writing a letter to my grandma.",
+      "cloze": "an"
+    },
+    {
+      "id": "de.s.2j3f552bt0",
+      "wordId": "de.w.fgtkdnkt25",
+      "text": "Ist deine Mutter da?",
+      "translation": "Is your mother there?",
+      "cloze": "da"
+    },
+    {
+      "id": "de.s.8xz1q5kr5f",
+      "wordId": "de.w.fgtkdnkt25",
+      "text": "Da ist der Bus!",
+      "translation": "There's the bus!",
+      "cloze": "Da"
+    },
+    {
+      "id": "de.s.4tzjzs7yb6",
+      "wordId": "de.w.fgtkdnkt25",
+      "text": "Ich bin gleich da.",
+      "translation": "I'll be there in a minute.",
+      "cloze": "da"
+    },
+    {
+      "id": "de.s.npnh4gfwdv",
+      "wordId": "de.w.qe5qywdgk2",
+      "text": "Er ist älter als ich.",
+      "translation": "He's older than me.",
+      "cloze": "als"
+    },
+    {
+      "id": "de.s.rcr121ax2x",
+      "wordId": "de.w.qe5qywdgk2",
+      "text": "Ich arbeite als Lehrer.",
+      "translation": "I work as a teacher.",
+      "cloze": "als"
+    },
+    {
+      "id": "de.s.w9ar6nbtb5",
+      "wordId": "de.w.qe5qywdgk2",
+      "text": "Als ich jung war, wohnte ich in Wien.",
+      "translation": "When I was young, I lived in Vienna.",
+      "cloze": "Als"
+    },
+    {
+      "id": "de.s.010bn9fx2e",
+      "wordId": "de.w.mpkywc4meh",
+      "text": "Und dann?",
+      "translation": "And then?",
+      "cloze": "dann"
+    },
+    {
+      "id": "de.s.ads1xr14fm",
+      "wordId": "de.w.mpkywc4meh",
+      "text": "Erst essen wir, dann gehen wir.",
+      "translation": "First we eat, then we go.",
+      "cloze": "dann"
+    },
+    {
+      "id": "de.s.56znmxk70f",
+      "wordId": "de.w.mpkywc4meh",
+      "text": "Dann bis morgen!",
+      "translation": "See you tomorrow, then!",
+      "cloze": "Dann"
+    },
+    {
+      "id": "de.s.6c4k1g9gjd",
+      "wordId": "de.w.f18gkjxn3e",
+      "text": "Ich komme aus Deutschland.",
+      "translation": "I'm from Germany.",
+      "cloze": "aus"
+    },
+    {
+      "id": "de.s.2pwqw7bbtc",
+      "wordId": "de.w.f18gkjxn3e",
+      "text": "Er trinkt aus der Flasche.",
+      "translation": "He's drinking from the bottle.",
+      "cloze": "aus"
+    },
+    {
+      "id": "de.s.k4n8c2nj8v",
+      "wordId": "de.w.f18gkjxn3e",
+      "text": "Sie geht aus dem Haus.",
+      "translation": "She goes out of the house.",
+      "cloze": "aus"
+    },
+    {
+      "id": "de.s.s33j3vxpnr",
+      "wordId": "de.w.pnxyb0ym6f",
+      "text": "Der Film beginnt um acht Uhr.",
+      "translation": "The movie starts at eight o'clock.",
+      "cloze": "um"
+    },
+    {
+      "id": "de.s.fvzmrwy3ne",
+      "wordId": "de.w.pnxyb0ym6f",
+      "text": "Wir laufen um den See.",
+      "translation": "We're walking around the lake.",
+      "cloze": "um"
+    },
+    {
+      "id": "de.s.rkh9tx26hh",
+      "wordId": "de.w.pnxyb0ym6f",
+      "text": "Es geht um Geld.",
+      "translation": "It's about money.",
+      "cloze": "um"
+    },
+    {
+      "id": "de.s.9hxq6j9w6m",
+      "wordId": "de.w.5tkvvf40q4",
+      "text": "Hast du keinen Hunger? – Doch!",
+      "translation": "Aren't you hungry? – Yes, I am!",
+      "cloze": "Doch"
+    },
+    {
+      "id": "de.s.gfszx1mqkj",
+      "wordId": "de.w.5tkvvf40q4",
+      "text": "Komm doch mit!",
+      "translation": "Why don't you come along?",
+      "cloze": "doch"
+    },
+    {
+      "id": "de.s.n8z7x19pm2",
+      "wordId": "de.w.5tkvvf40q4",
+      "text": "Das ist doch klar.",
+      "translation": "But that's obvious!",
+      "cloze": "doch"
+    },
+    {
+      "id": "de.s.6rzspj3kqw",
+      "wordId": "de.w.rf2tk66685",
+      "text": "Alle sind hier.",
+      "translation": "Everyone is here.",
+      "cloze": "Alle"
+    },
+    {
+      "id": "de.s.qchnjmcgdn",
+      "wordId": "de.w.rf2tk66685",
+      "text": "Ist alles gut?",
+      "translation": "Is everything OK?",
+      "cloze": "alles"
+    },
+    {
+      "id": "de.s.dbhbrs39ag",
+      "wordId": "de.w.rf2tk66685",
+      "text": "Danke an alle!",
+      "translation": "Thanks, everyone!",
+      "cloze": "alle"
+    },
+    {
+      "id": "de.s.d8yafa9kn8",
+      "wordId": "de.w.rf2tk66685",
+      "text": "Ich habe alles gegessen.",
+      "translation": "I ate everything.",
+      "cloze": "alles"
+    },
+    {
+      "id": "de.s.58v6npcvg6",
+      "wordId": "de.w.g5n724je2c",
+      "text": "Ich habe kein Auto.",
+      "translation": "I don't have a car.",
+      "cloze": "kein"
+    },
+    {
+      "id": "de.s.dv48y07q12",
+      "wordId": "de.w.g5n724je2c",
+      "text": "Das ist keine gute Idee.",
+      "translation": "That's not a good idea.",
+      "cloze": "keine"
+    },
+    {
+      "id": "de.s.89jdgtq29y",
+      "wordId": "de.w.g5n724je2c",
+      "text": "Er hat keinen Hunger.",
+      "translation": "He's not hungry.",
+      "cloze": "keinen"
+    },
+    {
+      "id": "de.s.43ry8wh6zq",
+      "wordId": "de.w.g5n724je2c",
+      "text": "Kein Problem!",
+      "translation": "No problem!",
+      "cloze": "Kein"
+    },
+    {
+      "id": "de.s.0gd6k862jb",
+      "wordId": "de.w.vvz5zmwfw1",
+      "text": "Tee oder Kaffee?",
+      "translation": "Tea or coffee?",
+      "cloze": "oder"
+    },
+    {
+      "id": "de.s.jk3wjmkqzh",
+      "wordId": "de.w.vvz5zmwfw1",
+      "text": "Kommst du heute oder morgen?",
+      "translation": "Are you coming today or tomorrow?",
+      "cloze": "oder"
+    },
+    {
+      "id": "de.s.txs27b8xxy",
+      "wordId": "de.w.vvz5zmwfw1",
+      "text": "Das ist gut, oder?",
+      "translation": "That's good, isn't it?",
+      "cloze": "oder"
+    },
+    {
+      "id": "de.s.pa6w7j9jen",
+      "wordId": "de.w.18zfw8hvet",
+      "text": "Ich gehe nach Hause.",
+      "translation": "I'm going home.",
+      "cloze": "nach"
+    },
+    {
+      "id": "de.s.qkj015k254",
+      "wordId": "de.w.18zfw8hvet",
+      "text": "Nach dem Essen trinken wir Kaffee.",
+      "translation": "After the meal we drink coffee.",
+      "cloze": "Nach"
+    },
+    {
+      "id": "de.s.vkbrxrstdc",
+      "wordId": "de.w.18zfw8hvet",
+      "text": "Wir fliegen nach Spanien.",
+      "translation": "We're flying to Spain.",
+      "cloze": "nach"
+    },
+    {
+      "id": "de.s.ysqmw2j4p8",
+      "wordId": "de.w.zxcgfwngx6",
+      "text": "Ich habe nichts gesagt.",
+      "translation": "I didn't say anything.",
+      "cloze": "nichts"
+    },
+    {
+      "id": "de.s.jvawkb6q7x",
+      "wordId": "de.w.zxcgfwngx6",
+      "text": "Nichts ist passiert.",
+      "translation": "Nothing happened.",
+      "cloze": "Nichts"
+    },
+    {
+      "id": "de.s.nyye27jjf8",
+      "wordId": "de.w.zxcgfwngx6",
+      "text": "Das macht nichts.",
+      "translation": "It doesn't matter.",
+      "cloze": "nichts"
+    },
+    {
+      "id": "de.s.8fgmzjvm2d",
+      "wordId": "de.w.e1hjhvpakj",
+      "text": "Das macht man nicht.",
+      "translation": "You don't do that.",
+      "cloze": "man"
+    },
+    {
+      "id": "de.s.pp09xt6qdt",
+      "wordId": "de.w.e1hjhvpakj",
+      "text": "Man weiß nie.",
+      "translation": "You never know.",
+      "cloze": "Man"
+    },
+    {
+      "id": "de.s.knq957vhfv",
+      "wordId": "de.w.e1hjhvpakj",
+      "text": "Wie sagt man das auf Deutsch?",
+      "translation": "How do you say that in German?",
+      "cloze": "man"
+    },
+    {
+      "id": "de.s.xx6xc348xh",
+      "wordId": "de.w.g75vqsztk6",
+      "text": "Ich muss arbeiten.",
+      "translation": "I have to work.",
+      "cloze": "muss"
+    },
+    {
+      "id": "de.s.3zkr8mt7kq",
+      "wordId": "de.w.g75vqsztk6",
+      "text": "Du musst das essen.",
+      "translation": "You have to eat that.",
+      "cloze": "musst"
+    },
+    {
+      "id": "de.s.nk721mf9ez",
+      "wordId": "de.w.g75vqsztk6",
+      "text": "Wir müssen morgen früh aufstehen.",
+      "translation": "We have to get up early tomorrow.",
+      "cloze": "müssen"
+    },
+    {
+      "id": "de.s.v38vfhycg4",
+      "wordId": "de.w.g75vqsztk6",
+      "text": "Er musste lange warten.",
+      "translation": "He had to wait a long time.",
+      "cloze": "musste"
+    },
+    {
+      "id": "de.s.0gxkdjx2w3",
+      "wordId": "de.w.c6npss6fq8",
+      "text": "Ich will nach Hause.",
+      "translation": "I want to go home.",
+      "cloze": "will"
+    },
+    {
+      "id": "de.s.57q0dppqyb",
+      "wordId": "de.w.c6npss6fq8",
+      "text": "Willst du einen Kaffee?",
+      "translation": "Do you want a coffee?",
+      "cloze": "Willst"
+    },
+    {
+      "id": "de.s.hdytvmg0n3",
+      "wordId": "de.w.c6npss6fq8",
+      "text": "Wir wollen tanzen.",
+      "translation": "We want to dance.",
+      "cloze": "wollen"
+    },
+    {
+      "id": "de.s.f87cqt1bbe",
+      "wordId": "de.w.c6npss6fq8",
+      "text": "Sie wollte nicht kommen.",
+      "translation": "She didn't want to come.",
+      "cloze": "wollte"
+    },
+    {
+      "id": "de.s.w0ez8jp690",
+      "wordId": "de.w.5gmfs06h7s",
+      "text": "Ich gehe jetzt ins Bett.",
+      "translation": "I'm going to bed now.",
+      "cloze": "gehe"
+    },
+    {
+      "id": "de.s.bdksr10zw1",
+      "wordId": "de.w.5gmfs06h7s",
+      "text": "Gehst du zu Fuß zur Arbeit?",
+      "translation": "Do you walk to work?",
+      "cloze": "Gehst"
+    },
+    {
+      "id": "de.s.kjp3n5bvc1",
+      "wordId": "de.w.5gmfs06h7s",
+      "text": "Wir gingen zusammen nach Hause.",
+      "translation": "We walked home together.",
+      "cloze": "gingen"
+    },
+    {
+      "id": "de.s.9b6ph69q5z",
+      "wordId": "de.w.5gmfs06h7s",
+      "text": "Er ist früh gegangen.",
+      "translation": "He left early.",
+      "cloze": "gegangen"
+    },
+    {
+      "id": "de.s.b55hc9k66d",
+      "wordId": "de.w.5gmfs06h7s",
+      "text": "Das geht nicht.",
+      "translation": "That's not possible.",
+      "cloze": "geht",
+      "retired": true
+    },
+    {
+      "id": "de.s.4hg9r5a7md",
+      "wordId": "de.w.c06vct8kgz",
+      "text": "Wo bist du?",
+      "translation": "Where are you?",
+      "cloze": "Wo"
+    },
+    {
+      "id": "de.s.xbptgmfp57",
+      "wordId": "de.w.c06vct8kgz",
+      "text": "Wo wohnst du?",
+      "translation": "Where do you live?",
+      "cloze": "Wo"
+    },
+    {
+      "id": "de.s.wbwpy04r27",
+      "wordId": "de.w.c06vct8kgz",
+      "text": "Ich weiß nicht, wo er ist.",
+      "translation": "I don't know where he is.",
+      "cloze": "wo"
+    },
+    {
+      "id": "de.s.tnfahrym5e",
+      "wordId": "de.w.72bwdy6e8q",
+      "text": "Ich möchte etwas trinken.",
+      "translation": "I'd like something to drink.",
+      "cloze": "etwas"
+    },
+    {
+      "id": "de.s.tqavyh8eqq",
+      "wordId": "de.w.72bwdy6e8q",
+      "text": "Hast du etwas gesagt?",
+      "translation": "Did you say something?",
+      "cloze": "etwas"
+    },
+    {
+      "id": "de.s.h6ff063eas",
+      "wordId": "de.w.72bwdy6e8q",
+      "text": "Etwas Milch, bitte.",
+      "translation": "A little milk, please.",
+      "cloze": "Etwas"
+    },
+    {
+      "id": "de.s.pzcx40kpjx",
+      "wordId": "de.w.befckve24e",
+      "text": "Ich will mehr.",
+      "translation": "I want more.",
+      "cloze": "mehr"
+    },
+    {
+      "id": "de.s.jxesmw88b1",
+      "wordId": "de.w.befckve24e",
+      "text": "Ich habe kein Geld mehr.",
+      "translation": "I don't have any money left.",
+      "cloze": "mehr"
+    },
+    {
+      "id": "de.s.70w5cqg93m",
+      "wordId": "de.w.befckve24e",
+      "text": "Er arbeitet mehr als ich.",
+      "translation": "He works more than I do.",
+      "cloze": "mehr"
+    },
+    {
+      "id": "de.s.d9cv48150r",
+      "wordId": "de.w.qgg8e18jxg",
+      "text": "Ich wohne bei meinen Eltern.",
+      "translation": "I live with my parents.",
+      "cloze": "bei"
+    },
+    {
+      "id": "de.s.1nws5spgvt",
+      "wordId": "de.w.qgg8e18jxg",
+      "text": "Wir essen heute bei mir.",
+      "translation": "We're eating at my place today.",
+      "cloze": "bei"
+    },
+    {
+      "id": "de.s.k3naj65hct",
+      "wordId": "de.w.qgg8e18jxg",
+      "text": "Er ist beim Arzt.",
+      "translation": "He's at the doctor's.",
+      "cloze": "beim"
+    },
+    {
+      "id": "de.s.vngy1nxfad",
+      "wordId": "de.w.dsphrxahz7",
+      "text": "Also, was machen wir?",
+      "translation": "So, what are we doing?",
+      "cloze": "Also"
+    },
+    {
+      "id": "de.s.qsdhrnf188",
+      "wordId": "de.w.dsphrxahz7",
+      "text": "Es regnet, also bleiben wir hier.",
+      "translation": "It's raining, so we're staying here.",
+      "cloze": "also"
+    },
+    {
+      "id": "de.s.gj74f7r8rx",
+      "wordId": "de.w.dsphrxahz7",
+      "text": "Also gut.",
+      "translation": "All right, then.",
+      "cloze": "Also"
+    },
+    {
+      "id": "de.s.9f4f2etqr4",
+      "wordId": "de.w.j9406cgc1x",
+      "text": "Ein Wasser, bitte.",
+      "translation": "A water, please.",
+      "cloze": "bitte"
+    },
+    {
+      "id": "de.s.dj0n7eckm4",
+      "wordId": "de.w.j9406cgc1x",
+      "text": "Danke! – Bitte!",
+      "translation": "Thanks! – You're welcome!",
+      "cloze": "Bitte"
+    },
+    {
+      "id": "de.s.0cm1synqx9",
+      "wordId": "de.w.j9406cgc1x",
+      "text": "Bitte setz dich.",
+      "translation": "Please sit down.",
+      "cloze": "Bitte"
+    },
+    {
+      "id": "de.s.2z4njk0crv",
+      "wordId": "de.w.s3pkc43jbq",
+      "text": "Er kommt immer zu spät.",
+      "translation": "He's always late.",
+      "cloze": "immer"
+    },
+    {
+      "id": "de.s.et43eja5qb",
+      "wordId": "de.w.s3pkc43jbq",
+      "text": "Ich liebe dich für immer.",
+      "translation": "I'll love you forever.",
+      "cloze": "immer"
+    },
+    {
+      "id": "de.s.4fb5an9yf1",
+      "wordId": "de.w.s3pkc43jbq",
+      "text": "Morgens trinke ich immer Tee.",
+      "translation": "I always drink tea in the morning.",
+      "cloze": "immer"
+    },
+    {
+      "id": "de.s.x2g5w35za4",
+      "wordId": "de.w.s3pkc43jbq",
+      "text": "Immer mit der Ruhe!",
+      "translation": "Take it easy!",
+      "cloze": "Immer",
+      "retired": true
+    },
+    {
+      "id": "de.s.2wydgjkm82",
+      "wordId": "de.w.kdhqn32csw",
+      "text": "Warum nicht?",
+      "translation": "Why not?",
+      "cloze": "Warum"
+    },
+    {
+      "id": "de.s.wfetqk98gj",
+      "wordId": "de.w.kdhqn32csw",
+      "text": "Warum weinst du?",
+      "translation": "Why are you crying?",
+      "cloze": "Warum"
+    },
+    {
+      "id": "de.s.yvzqb84rqp",
+      "wordId": "de.w.kdhqn32csw",
+      "text": "Ich weiß nicht, warum.",
+      "translation": "I don't know why.",
+      "cloze": "warum"
+    },
+    {
+      "id": "de.s.tty825vqa2",
+      "wordId": "de.w.g8404pzy6g",
+      "text": "Das Auto steht vor dem Haus.",
+      "translation": "The car is in front of the house.",
+      "cloze": "vor"
+    },
+    {
+      "id": "de.s.932jfqvkyh",
+      "wordId": "de.w.g8404pzy6g",
+      "text": "Ich war vor zwei Jahren in Rom.",
+      "translation": "I was in Rome two years ago.",
+      "cloze": "vor"
+    },
+    {
+      "id": "de.s.jq502817kt",
+      "wordId": "de.w.g8404pzy6g",
+      "text": "Wasch dir vor dem Essen die Hände.",
+      "translation": "Wash your hands before eating.",
+      "cloze": "vor"
+    },
+    {
+      "id": "de.s.1dzqcq185j",
+      "wordId": "de.w.5wfrh7m3q8",
+      "text": "Was ist los?",
+      "translation": "What's wrong?",
+      "cloze": "los"
+    },
+    {
+      "id": "de.s.0f1bj4e23w",
+      "wordId": "de.w.5wfrh7m3q8",
+      "text": "Los geht's!",
+      "translation": "Here we go!",
+      "cloze": "Los"
+    },
+    {
+      "id": "de.s.268kv1y3bs",
+      "wordId": "de.w.5wfrh7m3q8",
+      "text": "Wir müssen los.",
+      "translation": "We have to go.",
+      "cloze": "los"
+    },
+    {
+      "id": "de.s.c0h0afzepj",
+      "wordId": "de.w.x69x734k59",
+      "text": "Er ist wieder da.",
+      "translation": "He's back.",
+      "cloze": "wieder"
+    },
+    {
+      "id": "de.s.w1pf0w5vss",
+      "wordId": "de.w.x69x734k59",
+      "text": "Mach das nie wieder!",
+      "translation": "Never do that again!",
+      "cloze": "wieder"
+    },
+    {
+      "id": "de.s.tf5n0kg1er",
+      "wordId": "de.w.x69x734k59",
+      "text": "Es regnet schon wieder.",
+      "translation": "It's raining again.",
+      "cloze": "wieder"
+    },
+    {
+      "id": "de.s.53pfx7nqvd",
+      "wordId": "de.w.bsc7eehe5r",
+      "text": "Was sagst du?",
+      "translation": "What are you saying?",
+      "cloze": "sagst"
+    },
+    {
+      "id": "de.s.xw2zq9s9g5",
+      "wordId": "de.w.bsc7eehe5r",
+      "text": "Er sagt nichts.",
+      "translation": "He's not saying anything.",
+      "cloze": "sagt"
+    },
+    {
+      "id": "de.s.jebnpxdcdz",
+      "wordId": "de.w.bsc7eehe5r",
+      "text": "Ich habe es dir gesagt.",
+      "translation": "I told you.",
+      "cloze": "gesagt"
+    },
+    {
+      "id": "de.s.nwn8ah5hzm",
+      "wordId": "de.w.bsc7eehe5r",
+      "text": "Sag mir die Wahrheit.",
+      "translation": "Tell me the truth.",
+      "cloze": "Sag"
+    },
+    {
+      "id": "de.s.nsb3twwzc8",
+      "wordId": "de.w.gke5x2bw81",
+      "text": "Was machst du heute?",
+      "translation": "What are you doing today?",
+      "cloze": "machst"
+    },
+    {
+      "id": "de.s.qsakv6f6wk",
+      "wordId": "de.w.gke5x2bw81",
+      "text": "Ich mache das Abendessen.",
+      "translation": "I'm making dinner.",
+      "cloze": "mache"
+    },
+    {
+      "id": "de.s.t7zfrhv695",
+      "wordId": "de.w.gke5x2bw81",
+      "text": "Wer hat das gemacht?",
+      "translation": "Who did that?",
+      "cloze": "gemacht"
+    },
+    {
+      "id": "de.s.pnzc2x6wjr",
+      "wordId": "de.w.gke5x2bw81",
+      "text": "Mach dir keine Sorgen.",
+      "translation": "Don't worry.",
+      "cloze": "Mach"
+    },
+    {
+      "id": "de.s.zksnjt9w59",
+      "wordId": "de.w.0amaqh9x5q",
+      "text": "Danke für den Kaffee.",
+      "translation": "Thanks for the coffee.",
+      "cloze": "Danke"
+    },
+    {
+      "id": "de.s.perstgt7ha",
+      "wordId": "de.w.0amaqh9x5q",
+      "text": "Danke, gut.",
+      "translation": "Fine, thanks.",
+      "cloze": "Danke"
+    },
+    {
+      "id": "de.s.1wcmddnpkx",
+      "wordId": "de.w.0amaqh9x5q",
+      "text": "Danke schön!",
+      "translation": "Thank you very much!",
+      "cloze": "Danke"
+    },
+    {
+      "id": "de.s.axe20mm5sn",
+      "wordId": "de.w.jpwsj73d78",
+      "text": "Das ist sehr gut.",
+      "translation": "That's very good.",
+      "cloze": "sehr"
+    },
+    {
+      "id": "de.s.pjc1xnnks9",
+      "wordId": "de.w.jpwsj73d78",
+      "text": "Danke sehr!",
+      "translation": "Thank you very much!",
+      "cloze": "sehr"
+    },
+    {
+      "id": "de.s.n0pg71006k",
+      "wordId": "de.w.jpwsj73d78",
+      "text": "Ich vermisse dich sehr.",
+      "translation": "I miss you very much.",
+      "cloze": "sehr"
+    },
+    {
+      "id": "de.s.ryny0ftk2f",
+      "wordId": "de.w.4q1y6frsp8",
+      "text": "Was ist denn los?",
+      "translation": "What's the matter?",
+      "cloze": "denn"
+    },
+    {
+      "id": "de.s.xhnt41h21f",
+      "wordId": "de.w.4q1y6frsp8",
+      "text": "Wo bist du denn?",
+      "translation": "So where are you?",
+      "cloze": "denn"
+    },
+    {
+      "id": "de.s.hvpkeq6xha",
+      "wordId": "de.w.4q1y6frsp8",
+      "text": "Kommst du denn nicht mit?",
+      "translation": "Aren't you coming, then?",
+      "cloze": "denn"
+    },
+    {
+      "id": "de.s.ndpe2y4xy8",
+      "wordId": "de.w.4q1y6frsp8",
+      "text": "Wie heißt du denn?",
+      "translation": "So what's your name?",
+      "cloze": "denn",
+      "retired": true
+    },
+    {
+      "id": "de.s.wz4kzfyc43",
+      "wordId": "de.w.swmvvrmj32",
+      "text": "Wer ist der Mann?",
+      "translation": "Who is that man?",
+      "cloze": "Mann"
+    },
+    {
+      "id": "de.s.rdbx2vaddn",
+      "wordId": "de.w.swmvvrmj32",
+      "text": "Mein Mann kocht heute.",
+      "translation": "My husband is cooking today.",
+      "cloze": "Mann"
+    },
+    {
+      "id": "de.s.8cb603rz30",
+      "wordId": "de.w.swmvvrmj32",
+      "text": "Zwei Männer stehen vor der Tür.",
+      "translation": "Two men are standing at the door.",
+      "cloze": "Männer"
+    },
+    {
+      "id": "de.s.89dmc27wm4",
+      "wordId": "de.w.b0cj4c6rhg",
+      "text": "Was tust du da?",
+      "translation": "What are you doing there?",
+      "cloze": "tust"
+    },
+    {
+      "id": "de.s.yd81pynsc3",
+      "wordId": "de.w.b0cj4c6rhg",
+      "text": "Sie tat alles für ihre Kinder.",
+      "translation": "She did everything for her children.",
+      "cloze": "tat"
+    },
+    {
+      "id": "de.s.vwk99m2n8j",
+      "wordId": "de.w.b0cj4c6rhg",
+      "text": "Ich habe nichts getan!",
+      "translation": "I didn't do anything!",
+      "cloze": "getan"
+    },
+    {
+      "id": "de.s.xhb6hvm6cf",
+      "wordId": "de.w.b0cj4c6rhg",
+      "text": "Was soll ich tun?",
+      "translation": "What should I do?",
+      "cloze": "tun"
+    },
+    {
+      "id": "de.s.c07p7zc6h3",
+      "wordId": "de.w.b0cj4c6rhg",
+      "text": "Mein Kopf tut weh.",
+      "translation": "My head hurts.",
+      "cloze": "tut",
+      "retired": true
+    },
+    {
+      "id": "de.s.28rc0wy04y",
+      "wordId": "de.w.vrsn5521jz",
+      "text": "Ich sehe nichts.",
+      "translation": "I can't see anything.",
+      "cloze": "sehe"
+    },
+    {
+      "id": "de.s.cnyytqf62j",
+      "wordId": "de.w.vrsn5521jz",
+      "text": "Siehst du das?",
+      "translation": "Do you see that?",
+      "cloze": "Siehst"
+    },
+    {
+      "id": "de.s.zpm18basb1",
+      "wordId": "de.w.vrsn5521jz",
+      "text": "Hast du meinen Hund gesehen?",
+      "translation": "Have you seen my dog?",
+      "cloze": "gesehen"
+    },
+    {
+      "id": "de.s.4e6hwx09zc",
+      "wordId": "de.w.vrsn5521jz",
+      "text": "Wir sehen uns morgen.",
+      "translation": "See you tomorrow.",
+      "cloze": "sehen"
+    },
+    {
+      "id": "de.s.s1zx7mvsnk",
+      "wordId": "de.w.b71pqn6avh",
+      "text": "Vielleicht morgen.",
+      "translation": "Maybe tomorrow.",
+      "cloze": "Vielleicht"
+    },
+    {
+      "id": "de.s.qk8rgdx26a",
+      "wordId": "de.w.b71pqn6avh",
+      "text": "Er kommt vielleicht später.",
+      "translation": "He might come later.",
+      "cloze": "vielleicht"
+    },
+    {
+      "id": "de.s.gg6zh1bynq",
+      "wordId": "de.w.b71pqn6avh",
+      "text": "Vielleicht hast du recht.",
+      "translation": "Maybe you're right.",
+      "cloze": "Vielleicht"
+    },
+    {
+      "id": "de.s.npqy5de7fw",
+      "wordId": "de.w.806fc87kd1",
+      "text": "Wer ist das?",
+      "translation": "Who is that?",
+      "cloze": "Wer"
+    },
+    {
+      "id": "de.s.kyckkvq9ef",
+      "wordId": "de.w.806fc87kd1",
+      "text": "Wen liebst du?",
+      "translation": "Who do you love?",
+      "cloze": "Wen"
+    },
+    {
+      "id": "de.s.ydxknjyh6s",
+      "wordId": "de.w.806fc87kd1",
+      "text": "Wem gehört das Auto?",
+      "translation": "Whose car is this?",
+      "cloze": "Wem"
+    },
+    {
+      "id": "de.s.zzys4sn3m8",
+      "wordId": "de.w.806fc87kd1",
+      "text": "Wer hat angerufen?",
+      "translation": "Who called?",
+      "cloze": "Wer"
+    },
+    {
+      "id": "de.s.jh9v3bdw7k",
+      "wordId": "de.w.xw22xmpy26",
+      "text": "Das ist ihr Auto.",
+      "translation": "That's her car.",
+      "cloze": "ihr"
+    },
+    {
+      "id": "de.s.sdfhn1p833",
+      "wordId": "de.w.xw22xmpy26",
+      "text": "Die Kinder lieben ihre Oma.",
+      "translation": "The children love their grandma.",
+      "cloze": "ihre"
+    },
+    {
+      "id": "de.s.jgee0hssww",
+      "wordId": "de.w.xw22xmpy26",
+      "text": "Sie sucht ihren Schlüssel.",
+      "translation": "She's looking for her key.",
+      "cloze": "ihren"
+    },
+    {
+      "id": "de.s.b0sgkhj1rh",
+      "wordId": "de.w.xw22xmpy26",
+      "text": "Ich spreche mit ihrer Mutter.",
+      "translation": "I'm talking to her mother.",
+      "cloze": "ihrer"
+    },
+    {
+      "id": "de.s.pgfy00q02p",
+      "wordId": "de.w.hhkh3yghdy",
+      "text": "Dieser Film ist toll.",
+      "translation": "This movie is great.",
+      "cloze": "Dieser"
+    },
+    {
+      "id": "de.s.py06a12rwf",
+      "wordId": "de.w.hhkh3yghdy",
+      "text": "Ich nehme diese Tasche.",
+      "translation": "I'll take this bag.",
+      "cloze": "diese"
+    },
+    {
+      "id": "de.s.4t9m53d63s",
+      "wordId": "de.w.hhkh3yghdy",
+      "text": "Kennst du diesen Mann?",
+      "translation": "Do you know this man?",
+      "cloze": "diesen"
+    },
+    {
+      "id": "de.s.emwcqcsjsz",
+      "wordId": "de.w.hhkh3yghdy",
+      "text": "Dieses Jahr fahren wir nach Italien.",
+      "translation": "This year we're going to Italy.",
+      "cloze": "Dieses"
+    },
+    {
+      "id": "de.s.3mf59rwtxf",
+      "wordId": "de.w.1vp5a3fjch",
+      "text": "Seid ihr müde?",
+      "translation": "Are you guys tired?",
+      "cloze": "ihr"
+    },
+    {
+      "id": "de.s.6f3vjmm201",
+      "wordId": "de.w.1vp5a3fjch",
+      "text": "Was macht ihr heute?",
+      "translation": "What are you all doing today?",
+      "cloze": "ihr"
+    },
+    {
+      "id": "de.s.dfg9ntvbqg",
+      "wordId": "de.w.1vp5a3fjch",
+      "text": "Ich liebe euch.",
+      "translation": "I love you all.",
+      "cloze": "euch"
+    },
+    {
+      "id": "de.s.nbr9ywhs8a",
+      "wordId": "de.w.rhxy7fxeys",
+      "text": "Ich komme gleich.",
+      "translation": "I'll be right there.",
+      "cloze": "komme"
+    },
+    {
+      "id": "de.s.ebexnwvded",
+      "wordId": "de.w.rhxy7fxeys",
+      "text": "Woher kommst du?",
+      "translation": "Where are you from?",
+      "cloze": "kommst"
+    },
+    {
+      "id": "de.s.4vzxx34pjg",
+      "wordId": "de.w.rhxy7fxeys",
+      "text": "Der Bus kommt nicht.",
+      "translation": "The bus isn't coming.",
+      "cloze": "kommt"
+    },
+    {
+      "id": "de.s.0g00ydp6em",
+      "wordId": "de.w.rhxy7fxeys",
+      "text": "Er kam zu spät.",
+      "translation": "He was late.",
+      "cloze": "kam"
+    },
+    {
+      "id": "de.s.13brzje7wp",
+      "wordId": "de.w.881hd043xn",
+      "text": "Wir reden über dich.",
+      "translation": "We're talking about you.",
+      "cloze": "über"
+    },
+    {
+      "id": "de.s.d510dxe534",
+      "wordId": "de.w.881hd043xn",
+      "text": "Die Lampe hängt über dem Tisch.",
+      "translation": "The lamp hangs above the table.",
+      "cloze": "über"
+    },
+    {
+      "id": "de.s.qnshdqp6mp",
+      "wordId": "de.w.881hd043xn",
+      "text": "Er geht über die Straße.",
+      "translation": "He's crossing the street.",
+      "cloze": "über"
+    },
+    {
+      "id": "de.s.cr7r18me5d",
+      "wordId": "de.w.881hd043xn",
+      "text": "Er fährt übers Wochenende weg.",
+      "translation": "He's going away for the weekend.",
+      "cloze": "übers"
+    },
+    {
+      "id": "de.s.cgahzevtry",
+      "wordId": "de.w.2z14my9c73",
+      "text": "Gibst du mir das Salz?",
+      "translation": "Can you pass me the salt?",
+      "cloze": "Gibst"
+    },
+    {
+      "id": "de.s.h6whzwqs7b",
+      "wordId": "de.w.2z14my9c73",
+      "text": "Was gibt es heute zum Essen?",
+      "translation": "What's for dinner today?",
+      "cloze": "gibt"
+    },
+    {
+      "id": "de.s.qce93y6e4y",
+      "wordId": "de.w.2z14my9c73",
+      "text": "Ich habe ihm das Geld gegeben.",
+      "translation": "I gave him the money.",
+      "cloze": "gegeben"
+    },
+    {
+      "id": "de.s.7dpjs2yykr",
+      "wordId": "de.w.2z14my9c73",
+      "text": "Gib mir eine Minute.",
+      "translation": "Give me a minute.",
+      "cloze": "Gib"
+    },
+    {
+      "id": "de.s.mv2c56d8as",
+      "wordId": "de.w.xvf998jbny",
+      "text": "Ist das dein Hund?",
+      "translation": "Is that your dog?",
+      "cloze": "dein"
+    },
+    {
+      "id": "de.s.gkwyj76vvw",
+      "wordId": "de.w.xvf998jbny",
+      "text": "Wie heißt deine Schwester?",
+      "translation": "What's your sister's name?",
+      "cloze": "deine"
+    },
+    {
+      "id": "de.s.bq24bwgf3t",
+      "wordId": "de.w.xvf998jbny",
+      "text": "Ich habe deinen Brief gelesen.",
+      "translation": "I read your letter.",
+      "cloze": "deinen"
+    },
+    {
+      "id": "de.s.e9wq31njpc",
+      "wordId": "de.w.xvf998jbny",
+      "text": "Wir fahren mit deinem Auto.",
+      "translation": "We're going in your car.",
+      "cloze": "deinem"
+    },
+    {
+      "id": "de.s.zvznbnry4f",
+      "wordId": "de.w.b02c0tv69y",
+      "text": "Wann soll ich kommen?",
+      "translation": "When am I supposed to come?",
+      "cloze": "soll"
+    },
+    {
+      "id": "de.s.26ze3xaaan",
+      "wordId": "de.w.b02c0tv69y",
+      "text": "Du sollst nicht lügen.",
+      "translation": "You shouldn't lie.",
+      "cloze": "sollst"
+    },
+    {
+      "id": "de.s.dzt7tcdbwa",
+      "wordId": "de.w.b02c0tv69y",
+      "text": "Wir sollten gehen.",
+      "translation": "We should go.",
+      "cloze": "sollten"
+    },
+    {
+      "id": "de.s.f0fre0m3kt",
+      "wordId": "de.w.b02c0tv69y",
+      "text": "Das solltest du wissen.",
+      "translation": "You should know that.",
+      "cloze": "solltest"
+    },
+    {
+      "id": "de.s.9ezaawf9sv",
+      "wordId": "de.w.b02c0tv69y",
+      "text": "Was soll ich machen?",
+      "translation": "What should I do?",
+      "cloze": "soll",
+      "retired": true
+    },
+    {
+      "id": "de.s.0vb19063fn",
+      "wordId": "de.w.2rxxgh5nag",
+      "text": "Er hat nie Zeit.",
+      "translation": "He never has time.",
+      "cloze": "nie"
+    },
+    {
+      "id": "de.s.tz9x2shw7v",
+      "wordId": "de.w.2rxxgh5nag",
+      "text": "Das mache ich nie wieder.",
+      "translation": "I'll never do that again.",
+      "cloze": "nie"
+    },
+    {
+      "id": "de.s.cmrvx6a30z",
+      "wordId": "de.w.2rxxgh5nag",
+      "text": "Nie im Leben!",
+      "translation": "Not in a million years!",
+      "cloze": "Nie"
+    },
+    {
+      "id": "de.s.9v99tej6p8",
+      "wordId": "de.w.fxx6hzey8a",
+      "text": "Ist das wirklich wahr?",
+      "translation": "Is that really true?",
+      "cloze": "wirklich"
+    },
+    {
+      "id": "de.s.7y9w0v0r30",
+      "wordId": "de.w.fxx6hzey8a",
+      "text": "Ich weiß es wirklich nicht.",
+      "translation": "I really don't know.",
+      "cloze": "wirklich"
+    },
+    {
+      "id": "de.s.b360e5mb5g",
+      "wordId": "de.w.fxx6hzey8a",
+      "text": "Das ist wirklich schön.",
+      "translation": "That's really nice.",
+      "cloze": "wirklich"
+    },
+    {
+      "id": "de.s.e8557faaz5",
+      "wordId": "de.w.xwhhzrky68",
+      "text": "Ich habe viel Arbeit.",
+      "translation": "I have a lot of work.",
+      "cloze": "viel"
+    },
+    {
+      "id": "de.s.bz87zq7jvx",
+      "wordId": "de.w.xwhhzrky68",
+      "text": "Hier sind viele Leute.",
+      "translation": "There are a lot of people here.",
+      "cloze": "viele"
+    },
+    {
+      "id": "de.s.2dj45sek7v",
+      "wordId": "de.w.xwhhzrky68",
+      "text": "Vielen Dank!",
+      "translation": "Thanks a lot!",
+      "cloze": "Vielen"
+    },
+    {
+      "id": "de.s.2k39pceptw",
+      "wordId": "de.w.xwhhzrky68",
+      "text": "Du isst zu viel.",
+      "translation": "You eat too much.",
+      "cloze": "viel"
+    },
+    {
+      "id": "de.s.8pm50g1btz",
+      "wordId": "de.w.xwhhzrky68",
+      "text": "Viele Leute sind hier.",
+      "translation": "Lots of people are here.",
+      "cloze": "Viele",
+      "retired": true
+    },
+    {
+      "id": "de.s.h80atn27p1",
+      "wordId": "de.w.jxaazxs8ps",
+      "text": "Mein Schlüssel ist weg.",
+      "translation": "My key is gone.",
+      "cloze": "weg"
+    },
+    {
+      "id": "de.s.mqy5hqwbgh",
+      "wordId": "de.w.jxaazxs8ps",
+      "text": "Geh weg!",
+      "translation": "Go away!",
+      "cloze": "weg"
+    },
+    {
+      "id": "de.s.yr1e7gkbyj",
+      "wordId": "de.w.jxaazxs8ps",
+      "text": "Wir sind morgen weg.",
+      "translation": "We'll be away tomorrow.",
+      "cloze": "weg"
+    },
+    {
+      "id": "de.s.4tjg6nj2qv",
+      "wordId": "de.w.dgbjhw9r1x",
+      "text": "Das Rezept ist sehr einfach.",
+      "translation": "The recipe is very simple.",
+      "cloze": "einfach"
+    },
+    {
+      "id": "de.s.fn2qvsr39y",
+      "wordId": "de.w.dgbjhw9r1x",
+      "text": "Das ist keine einfache Frage.",
+      "translation": "That's not an easy question.",
+      "cloze": "einfache"
+    },
+    {
+      "id": "de.s.xqyyh5t1z1",
+      "wordId": "de.w.dgbjhw9r1x",
+      "text": "Er ist einfach gegangen.",
+      "translation": "He just left.",
+      "cloze": "einfach"
+    },
+    {
+      "id": "de.s.b1nq046dv4",
+      "wordId": "de.w.dgbjhw9r1x",
+      "text": "Komm einfach vorbei.",
+      "translation": "Just drop by.",
+      "cloze": "einfach"
+    },
+    {
+      "id": "de.s.7vqtzd3ef5",
+      "wordId": "de.w.dgbjhw9r1x",
+      "text": "Die Frage ist einfach.",
+      "translation": "The question is easy.",
+      "cloze": "einfach",
+      "retired": true
+    },
+    {
+      "id": "de.s.scr76q3kyk",
+      "wordId": "de.w.xjgtfg4zt4",
+      "text": "Das Leben ist schön.",
+      "translation": "Life is beautiful.",
+      "cloze": "Leben"
+    },
+    {
+      "id": "de.s.fphzx5s226",
+      "wordId": "de.w.xjgtfg4zt4",
+      "text": "Er hat mir das Leben gerettet.",
+      "translation": "He saved my life.",
+      "cloze": "Leben"
+    },
+    {
+      "id": "de.s.7mr6d794z4",
+      "wordId": "de.w.xjgtfg4zt4",
+      "text": "Die Liebe meines Lebens.",
+      "translation": "The love of my life.",
+      "cloze": "Lebens"
+    },
+    {
+      "id": "de.s.1d8azzrzkk",
+      "wordId": "de.w.ycm6yeefy4",
+      "text": "Hast du heute Zeit?",
+      "translation": "Are you free today?",
+      "cloze": "Zeit"
+    },
+    {
+      "id": "de.s.c5n9j6a3sr",
+      "wordId": "de.w.ycm6yeefy4",
+      "text": "Wir haben keine Zeit mehr.",
+      "translation": "We're out of time.",
+      "cloze": "Zeit"
+    },
+    {
+      "id": "de.s.4a9090sqky",
+      "wordId": "de.w.ycm6yeefy4",
+      "text": "Es ist Zeit zu gehen.",
+      "translation": "It's time to go.",
+      "cloze": "Zeit"
+    },
+    {
+      "id": "de.s.6v90zjbt85",
+      "wordId": "de.w.ycm6yeefy4",
+      "text": "Wir hatten schwere Zeiten.",
+      "translation": "We had hard times.",
+      "cloze": "Zeiten"
+    },
+    {
+      "id": "de.s.s9bt0934a5",
+      "wordId": "de.w.7kw69m4pq3",
+      "text": "Ich bleibe zu Hause, weil ich krank bin.",
+      "translation": "I'm staying home because I'm sick.",
+      "cloze": "weil"
+    },
+    {
+      "id": "de.s.bff3paqwkr",
+      "wordId": "de.w.7kw69m4pq3",
+      "text": "Warum? – Weil ich es will.",
+      "translation": "Why? – Because I want to.",
+      "cloze": "Weil"
+    },
+    {
+      "id": "de.s.yjdcfaqsh7",
+      "wordId": "de.w.7kw69m4pq3",
+      "text": "Er lacht, weil er glücklich ist.",
+      "translation": "He's laughing because he's happy.",
+      "cloze": "weil"
+    },
+    {
+      "id": "de.s.pvg8g5hf65",
+      "wordId": "de.w.pgaa83xcx8",
+      "text": "Heute ist Montag.",
+      "translation": "Today is Monday.",
+      "cloze": "Heute"
+    },
+    {
+      "id": "de.s.hrjcasrf94",
+      "wordId": "de.w.pgaa83xcx8",
+      "text": "Ich habe heute keine Zeit.",
+      "translation": "I don't have time today.",
+      "cloze": "heute"
+    },
+    {
+      "id": "de.s.sjcazv13kk",
+      "wordId": "de.w.pgaa83xcx8",
+      "text": "Wir gehen heute ins Kino.",
+      "translation": "We're going to the movies today.",
+      "cloze": "heute"
+    },
+    {
+      "id": "de.s.cnd9x13fqb",
+      "wordId": "de.w.13wt1zfeqr",
+      "text": "Ich spreche langsam, damit du mich verstehst.",
+      "translation": "I speak slowly so that you understand me.",
+      "cloze": "damit"
+    },
+    {
+      "id": "de.s.tznzb0q6x9",
+      "wordId": "de.w.13wt1zfeqr",
+      "text": "Ich gebe dir Geld, damit du dir etwas kaufst.",
+      "translation": "I'll give you money so you can buy yourself something.",
+      "cloze": "damit"
+    },
+    {
+      "id": "de.s.rppkk22cbg",
+      "wordId": "de.w.13wt1zfeqr",
+      "text": "Schreib es auf, damit du es nicht vergisst.",
+      "translation": "Write it down so you don't forget it.",
+      "cloze": "damit"
+    },
+    {
+      "id": "de.s.4jbmp8z7st",
+      "wordId": "de.w.3nzm4an248",
+      "text": "Das ist ganz einfach.",
+      "translation": "That's really simple.",
+      "cloze": "ganz"
+    },
+    {
+      "id": "de.s.mpj3ngd1ht",
+      "wordId": "de.w.3nzm4an248",
+      "text": "Ich habe den ganzen Tag gearbeitet.",
+      "translation": "I worked all day.",
+      "cloze": "ganzen"
+    },
+    {
+      "id": "de.s.wp5e8zxe7d",
+      "wordId": "de.w.3nzm4an248",
+      "text": "Die ganze Familie ist hier.",
+      "translation": "The whole family is here.",
+      "cloze": "ganze"
+    },
+    {
+      "id": "de.s.map2agdf1r",
+      "wordId": "de.w.0n902h0p8k",
+      "text": "Bist du sicher?",
+      "translation": "Are you sure?",
+      "cloze": "sicher"
+    },
+    {
+      "id": "de.s.ejh4p2jaym",
+      "wordId": "de.w.0n902h0p8k",
+      "text": "Hier bist du sicher.",
+      "translation": "You're safe here.",
+      "cloze": "sicher"
+    },
+    {
+      "id": "de.s.pmdytft3q6",
+      "wordId": "de.w.0n902h0p8k",
+      "text": "Er kommt sicher bald.",
+      "translation": "He'll certainly be here soon.",
+      "cloze": "sicher"
+    },
+    {
+      "id": "de.s.n52pzrjerm",
+      "wordId": "de.w.0n902h0p8k",
+      "text": "Ist das ein sicherer Ort?",
+      "translation": "Is this a safe place?",
+      "cloze": "sicherer"
+    },
+    {
+      "id": "de.s.9nwp28d7yj",
+      "wordId": "de.w.1h3a5j1vqq",
+      "text": "Die Frau dort ist meine Lehrerin.",
+      "translation": "The woman over there is my teacher.",
+      "cloze": "Frau"
+    },
+    {
+      "id": "de.s.dqzecwkayh",
+      "wordId": "de.w.1h3a5j1vqq",
+      "text": "Er liebt seine Frau.",
+      "translation": "He loves his wife.",
+      "cloze": "Frau"
+    },
+    {
+      "id": "de.s.kwbgnk5gth",
+      "wordId": "de.w.1h3a5j1vqq",
+      "text": "Guten Tag, Frau Schmidt!",
+      "translation": "Hello, Mrs Schmidt!",
+      "cloze": "Frau"
+    },
+    {
+      "id": "de.s.4034qxdf3x",
+      "wordId": "de.w.1h3a5j1vqq",
+      "text": "Viele Frauen arbeiten hier.",
+      "translation": "Many women work here.",
+      "cloze": "Frauen"
+    },
+    {
+      "id": "de.s.f8resbdgc1",
+      "wordId": "de.w.keevrwqs21",
+      "text": "Was nun?",
+      "translation": "Now what?",
+      "cloze": "nun"
+    },
+    {
+      "id": "de.s.qmtjqhawwh",
+      "wordId": "de.w.keevrwqs21",
+      "text": "Nun, ich weiß es nicht.",
+      "translation": "Well, I don't know.",
+      "cloze": "Nun"
+    },
+    {
+      "id": "de.s.68zye8skgc",
+      "wordId": "de.w.keevrwqs21",
+      "text": "Wir müssen nun gehen.",
+      "translation": "We have to go now.",
+      "cloze": "nun"
+    },
+    {
+      "id": "de.s.f5dh31q0mj",
+      "wordId": "de.w.keevrwqs21",
+      "text": "Es ist nun mal so.",
+      "translation": "That's just the way it is.",
+      "cloze": "nun",
+      "retired": true
+    },
+    {
+      "id": "de.s.3nrh9ch1pz",
+      "wordId": "de.w.y1faj0rajy",
+      "text": "Bis morgen!",
+      "translation": "See you tomorrow!",
+      "cloze": "Bis"
+    },
+    {
+      "id": "de.s.ee4f6wyvnf",
+      "wordId": "de.w.y1faj0rajy",
+      "text": "Ich arbeite bis sechs Uhr.",
+      "translation": "I work until six o'clock.",
+      "cloze": "bis"
+    },
+    {
+      "id": "de.s.za61try2x3",
+      "wordId": "de.w.y1faj0rajy",
+      "text": "Von Montag bis Freitag.",
+      "translation": "From Monday to Friday.",
+      "cloze": "bis"
+    },
+    {
+      "id": "de.s.1eawheh144",
+      "wordId": "de.w.bhrxkqerw2",
+      "text": "Ich bin gleich zurück.",
+      "translation": "I'll be right back.",
+      "cloze": "zurück"
+    },
+    {
+      "id": "de.s.a2wx3xgxzd",
+      "wordId": "de.w.bhrxkqerw2",
+      "text": "Er ist noch nicht zurück.",
+      "translation": "He isn't back yet.",
+      "cloze": "zurück"
+    },
+    {
+      "id": "de.s.y2jkgba1eg",
+      "wordId": "de.w.bhrxkqerw2",
+      "text": "Gib mir mein Geld zurück!",
+      "translation": "Give me my money back!",
+      "cloze": "zurück"
+    },
+    {
+      "id": "de.s.ktjg6pcxqj",
+      "wordId": "de.w.pxm0zvdjtb",
+      "text": "Lass mich in Ruhe!",
+      "translation": "Leave me alone!",
+      "cloze": "Lass"
+    },
+    {
+      "id": "de.s.y20v1dqb8c",
+      "wordId": "de.w.pxm0zvdjtb",
+      "text": "Er lässt seine Tasche im Auto.",
+      "translation": "He's leaving his bag in the car.",
+      "cloze": "lässt"
+    },
+    {
+      "id": "de.s.xae57n8r38",
+      "wordId": "de.w.pxm0zvdjtb",
+      "text": "Ich habe mein Handy zu Hause gelassen.",
+      "translation": "I left my phone at home.",
+      "cloze": "gelassen"
+    },
+    {
+      "id": "de.s.b73g45xfjc",
+      "wordId": "de.w.pxm0zvdjtb",
+      "text": "Lasst uns gehen!",
+      "translation": "Let's go!",
+      "cloze": "Lasst"
+    },
+    {
+      "id": "de.s.m25bmdq2hr",
+      "wordId": "de.w.qvtavjqe29",
+      "text": "Hallo, wie geht's?",
+      "translation": "Hi, how are you?",
+      "cloze": "Hallo"
+    },
+    {
+      "id": "de.s.dhnmnv1r6a",
+      "wordId": "de.w.qvtavjqe29",
+      "text": "Hallo, ist da jemand?",
+      "translation": "Hello, is anyone there?",
+      "cloze": "Hallo"
+    },
+    {
+      "id": "de.s.m2w9s7kwc2",
+      "wordId": "de.w.qvtavjqe29",
+      "text": "Sag deiner Mutter Hallo von mir.",
+      "translation": "Say hello to your mother for me.",
+      "cloze": "Hallo"
+    },
+    {
+      "id": "de.s.xamx0vfngk",
+      "wordId": "de.w.qvtavjqe29",
+      "text": "Sag Hallo zu deiner Mutter.",
+      "translation": "Say hello to your mother.",
+      "cloze": "Hallo",
+      "retired": true
+    },
+    {
+      "id": "de.s.v94s4f3hfn",
+      "wordId": "de.w.t0havqsgjq",
+      "text": "Oh mein Gott!",
+      "translation": "Oh my God!",
+      "cloze": "Gott"
+    },
+    {
+      "id": "de.s.w8j3v8e9pk",
+      "wordId": "de.w.t0havqsgjq",
+      "text": "Gott sei Dank!",
+      "translation": "Thank God!",
+      "cloze": "Gott"
+    },
+    {
+      "id": "de.s.spjdrva5sf",
+      "wordId": "de.w.t0havqsgjq",
+      "text": "Glaubst du an Gott?",
+      "translation": "Do you believe in God?",
+      "cloze": "Gott"
+    },
+    {
+      "id": "de.s.nxbf4nyysy",
+      "wordId": "de.w.t0havqsgjq",
+      "text": "Die alten Griechen hatten viele Götter.",
+      "translation": "The ancient Greeks had many gods.",
+      "cloze": "Götter"
+    },
+    {
+      "id": "de.s.zej29f99gx",
+      "wordId": "de.w.82zbpm2cd0",
+      "text": "Das ist sein Auto.",
+      "translation": "That's his car.",
+      "cloze": "sein"
+    },
+    {
+      "id": "de.s.22vr56d340",
+      "wordId": "de.w.82zbpm2cd0",
+      "text": "Seine Frau ist Ärztin.",
+      "translation": "His wife is a doctor.",
+      "cloze": "Seine"
+    },
+    {
+      "id": "de.s.g7t8bp3kfa",
+      "wordId": "de.w.82zbpm2cd0",
+      "text": "Er sucht seinen Hund.",
+      "translation": "He's looking for his dog.",
+      "cloze": "seinen"
+    },
+    {
+      "id": "de.s.vwrt0z4n7j",
+      "wordId": "de.w.82zbpm2cd0",
+      "text": "Er wohnt bei seiner Mutter.",
+      "translation": "He lives with his mother.",
+      "cloze": "seiner"
+    },
+    {
+      "id": "de.s.ydptx66sdj",
+      "wordId": "de.w.c4mztkqnf8",
+      "text": "Ich habe zwei Brüder.",
+      "translation": "I have two brothers.",
+      "cloze": "zwei"
+    },
+    {
+      "id": "de.s.a5cea80gtp",
+      "wordId": "de.w.c4mztkqnf8",
+      "text": "Zwei Kaffee, bitte.",
+      "translation": "Two coffees, please.",
+      "cloze": "Zwei"
+    },
+    {
+      "id": "de.s.65w8fe23f7",
+      "wordId": "de.w.c4mztkqnf8",
+      "text": "Es ist zwei Uhr.",
+      "translation": "It's two o'clock.",
+      "cloze": "zwei"
+    },
+    {
+      "id": "de.s.eregqs73yk",
+      "wordId": "de.w.rm7wmkqsvq",
+      "text": "Genau, das meine ich.",
+      "translation": "Exactly, that's what I mean.",
+      "cloze": "Genau"
+    },
+    {
+      "id": "de.s.kgm1c8qgea",
+      "wordId": "de.w.rm7wmkqsvq",
+      "text": "Das weiß ich nicht genau.",
+      "translation": "I don't know exactly.",
+      "cloze": "genau"
+    },
+    {
+      "id": "de.s.y2f32q29wn",
+      "wordId": "de.w.rm7wmkqsvq",
+      "text": "Es ist genau acht Uhr.",
+      "translation": "It's exactly eight o'clock.",
+      "cloze": "genau"
+    },
+    {
+      "id": "de.s.bwnf9fw372",
+      "wordId": "de.w.7semhtjvva",
+      "text": "Alles klar?",
+      "translation": "Everything OK?",
+      "cloze": "klar"
+    },
+    {
+      "id": "de.s.3skawrz8yp",
+      "wordId": "de.w.7semhtjvva",
+      "text": "Klar, kein Problem.",
+      "translation": "Sure, no problem.",
+      "cloze": "Klar"
+    },
+    {
+      "id": "de.s.3xva3dkbk7",
+      "wordId": "de.w.7semhtjvva",
+      "text": "Das Wasser ist sehr klar.",
+      "translation": "The water is very clear.",
+      "cloze": "klar"
+    },
+    {
+      "id": "de.s.se1czstfvw",
+      "wordId": "de.w.7semhtjvva",
+      "text": "Ich brauche einen klaren Kopf.",
+      "translation": "I need a clear head.",
+      "cloze": "klaren"
+    },
+    {
+      "id": "de.s.xrzdcsgsbw",
+      "wordId": "de.w.fe2nnzk5vy",
+      "text": "Ich komme morgen.",
+      "translation": "I'll come tomorrow.",
+      "cloze": "morgen"
+    },
+    {
+      "id": "de.s.c8e3858p25",
+      "wordId": "de.w.fe2nnzk5vy",
+      "text": "Morgen ist Samstag.",
+      "translation": "Tomorrow is Saturday.",
+      "cloze": "Morgen"
+    },
+    {
+      "id": "de.s.e3436dra59",
+      "wordId": "de.w.fe2nnzk5vy",
+      "text": "Was machen wir morgen Abend?",
+      "translation": "What are we doing tomorrow evening?",
+      "cloze": "morgen"
+    },
+    {
+      "id": "de.s.pjfy5p3k5x",
+      "wordId": "de.w.t9kx7kkwkf",
+      "text": "Die Leute hier sind nett.",
+      "translation": "The people here are nice.",
+      "cloze": "Leute"
+    },
+    {
+      "id": "de.s.8b71xx3hhk",
+      "wordId": "de.w.t9kx7kkwkf",
+      "text": "Hallo, Leute!",
+      "translation": "Hi, guys!",
+      "cloze": "Leute"
+    },
+    {
+      "id": "de.s.khsy4ggfgm",
+      "wordId": "de.w.t9kx7kkwkf",
+      "text": "Ich spreche nicht gern mit fremden Leuten.",
+      "translation": "I don't like talking to strangers.",
+      "cloze": "Leuten"
+    },
+    {
+      "id": "de.s.cdtwz98v07",
+      "wordId": "de.w.0t0rchkvgr",
+      "text": "Mein Vater ist Arzt.",
+      "translation": "My father is a doctor.",
+      "cloze": "Vater"
+    },
+    {
+      "id": "de.s.7sjvcakw8q",
+      "wordId": "de.w.0t0rchkvgr",
+      "text": "Das ist das Auto meines Vaters.",
+      "translation": "That's my father's car.",
+      "cloze": "Vaters"
+    },
+    {
+      "id": "de.s.g6znynch86",
+      "wordId": "de.w.0t0rchkvgr",
+      "text": "Ich vermisse meinen Vater.",
+      "translation": "I miss my father.",
+      "cloze": "Vater"
+    },
+    {
+      "id": "de.s.6s83q940xh",
+      "wordId": "de.w.0t0rchkvgr",
+      "text": "Viele Väter arbeiten zu viel.",
+      "translation": "Many fathers work too much.",
+      "cloze": "Väter"
+    },
+    {
+      "id": "de.s.kct403782v",
+      "wordId": "de.w.xt1grebqb7",
+      "text": "Das Wetter ist schön.",
+      "translation": "The weather is nice.",
+      "cloze": "schön"
+    },
+    {
+      "id": "de.s.1f32pthzyx",
+      "wordId": "de.w.xt1grebqb7",
+      "text": "Schönes Wochenende!",
+      "translation": "Have a nice weekend!",
+      "cloze": "Schönes"
+    },
+    {
+      "id": "de.s.5dc16p08gc",
+      "wordId": "de.w.xt1grebqb7",
+      "text": "Sie hat schöne Augen.",
+      "translation": "She has beautiful eyes.",
+      "cloze": "schöne"
+    },
+    {
+      "id": "de.s.fcpskeg9rt",
+      "wordId": "de.w.kt85gxekx8",
+      "text": "Ich glaube, er hat recht.",
+      "translation": "I think he's right.",
+      "cloze": "glaube"
+    },
+    {
+      "id": "de.s.mc0vhzhd8z",
+      "wordId": "de.w.kt85gxekx8",
+      "text": "Glaubst du mir?",
+      "translation": "Do you believe me?",
+      "cloze": "Glaubst"
+    },
+    {
+      "id": "de.s.k7hp941zf5",
+      "wordId": "de.w.kt85gxekx8",
+      "text": "Das glaubt dir niemand.",
+      "translation": "Nobody will believe you.",
+      "cloze": "glaubt"
+    },
+    {
+      "id": "de.s.v4jdm9q2vz",
+      "wordId": "de.w.kt85gxekx8",
+      "text": "Ich habe ihm nicht geglaubt.",
+      "translation": "I didn't believe him.",
+      "cloze": "geglaubt"
+    },
+    {
+      "id": "de.s.s9ffegcp9w",
+      "wordId": "de.w.dek3skxnqd",
+      "text": "Ab morgen mache ich Sport.",
+      "translation": "Starting tomorrow, I'm going to exercise.",
+      "cloze": "Ab"
+    },
+    {
+      "id": "de.s.z6npbnnd43",
+      "wordId": "de.w.dek3skxnqd",
+      "text": "Ab Montag habe ich Urlaub.",
+      "translation": "From Monday I'm on vacation.",
+      "cloze": "Ab"
+    },
+    {
+      "id": "de.s.13d74t29kf",
+      "wordId": "de.w.dek3skxnqd",
+      "text": "Der Film ist ab zwölf Jahren.",
+      "translation": "The film is for ages twelve and up.",
+      "cloze": "ab"
+    },
+    {
+      "id": "de.s.8bcevwsbss",
+      "wordId": "de.w.dek3skxnqd",
+      "text": "Ab heute ist alles anders.",
+      "translation": "From today on, everything is different.",
+      "cloze": "Ab",
+      "retired": true
+    },
+    {
+      "id": "de.s.k0ap4hp95n",
+      "wordId": "de.w.h7cfz94qtc",
+      "text": "Ich habe gerade keine Zeit.",
+      "translation": "I don't have time right now.",
+      "cloze": "gerade"
+    },
+    {
+      "id": "de.s.arh1kh6gkk",
+      "wordId": "de.w.h7cfz94qtc",
+      "text": "Sie ist gerade nach Hause gekommen.",
+      "translation": "She just got home.",
+      "cloze": "gerade"
+    },
+    {
+      "id": "de.s.qspkcq2zg6",
+      "wordId": "de.w.h7cfz94qtc",
+      "text": "Was machst du gerade?",
+      "translation": "What are you doing right now?",
+      "cloze": "gerade"
+    },
+    {
+      "id": "de.s.aykp6pmjx8",
+      "wordId": "de.w.g29gz550f3",
+      "text": "Guten Tag!",
+      "translation": "Hello!",
+      "cloze": "Tag"
+    },
+    {
+      "id": "de.s.pbccmagj53",
+      "wordId": "de.w.g29gz550f3",
+      "text": "Ich arbeite jeden Tag.",
+      "translation": "I work every day.",
+      "cloze": "Tag"
+    },
+    {
+      "id": "de.s.gz4dv533as",
+      "wordId": "de.w.g29gz550f3",
+      "text": "Wir bleiben drei Tage.",
+      "translation": "We're staying three days.",
+      "cloze": "Tage"
+    },
+    {
+      "id": "de.s.wrjv0c522z",
+      "wordId": "de.w.g29gz550f3",
+      "text": "Nach zwei Tagen kam er zurück.",
+      "translation": "He came back after two days.",
+      "cloze": "Tagen"
+    },
+    {
+      "id": "de.s.gna9q8f2gx",
+      "wordId": "de.w.hm2bb86jzz",
+      "text": "Wir müssen reden.",
+      "translation": "We need to talk.",
+      "cloze": "reden"
+    },
+    {
+      "id": "de.s.h441mtmrth",
+      "wordId": "de.w.hm2bb86jzz",
+      "text": "Worüber redest du?",
+      "translation": "What are you talking about?",
+      "cloze": "redest"
+    },
+    {
+      "id": "de.s.nm4dmhpb90",
+      "wordId": "de.w.hm2bb86jzz",
+      "text": "Er redet die ganze Zeit.",
+      "translation": "He talks all the time.",
+      "cloze": "redet"
+    },
+    {
+      "id": "de.s.m7e6shj295",
+      "wordId": "de.w.hm2bb86jzz",
+      "text": "Wir haben lange geredet.",
+      "translation": "We talked for a long time.",
+      "cloze": "geredet"
+    },
+    {
+      "id": "de.s.askkd7zcyc",
+      "wordId": "de.w.gnwv6hyzx9",
+      "text": "Er ist wohl krank.",
+      "translation": "He's probably sick.",
+      "cloze": "wohl"
+    },
+    {
+      "id": "de.s.3de5byayvw",
+      "wordId": "de.w.gnwv6hyzx9",
+      "text": "Ich fühle mich hier wohl.",
+      "translation": "I feel at home here.",
+      "cloze": "wohl"
+    },
+    {
+      "id": "de.s.en70pyrcj7",
+      "wordId": "de.w.gnwv6hyzx9",
+      "text": "Das wird wohl so sein.",
+      "translation": "That's probably how it is.",
+      "cloze": "wohl"
+    },
+    {
+      "id": "de.s.gpwbc49x0z",
+      "wordId": "de.w.7z6zmn67me",
+      "text": "Ich liebe dieses Lied.",
+      "translation": "I love this song.",
+      "cloze": "liebe"
+    },
+    {
+      "id": "de.s.4tmt9gkban",
+      "wordId": "de.w.7z6zmn67me",
+      "text": "Liebst du mich?",
+      "translation": "Do you love me?",
+      "cloze": "Liebst"
+    },
+    {
+      "id": "de.s.f3e51ygznt",
+      "wordId": "de.w.7z6zmn67me",
+      "text": "Sie liebt ihre Kinder.",
+      "translation": "She loves her children.",
+      "cloze": "liebt"
+    },
+    {
+      "id": "de.s.tm5261w4h9",
+      "wordId": "de.w.7z6zmn67me",
+      "text": "Er hat sie sehr geliebt.",
+      "translation": "He loved her very much.",
+      "cloze": "geliebt"
+    },
+    {
+      "id": "de.s.wp5jkx33w1",
+      "wordId": "de.w.hakqkcbecx",
+      "text": "Das ist unser Haus.",
+      "translation": "This is our house.",
+      "cloze": "unser"
+    },
+    {
+      "id": "de.s.cndrqgj9b6",
+      "wordId": "de.w.hakqkcbecx",
+      "text": "Unsere Kinder sind schon groß.",
+      "translation": "Our children are grown up now.",
+      "cloze": "Unsere"
+    },
+    {
+      "id": "de.s.jaza65fbg6",
+      "wordId": "de.w.hakqkcbecx",
+      "text": "Kennst du unseren Lehrer?",
+      "translation": "Do you know our teacher?",
+      "cloze": "unseren"
+    },
+    {
+      "id": "de.s.54crz26w5h",
+      "wordId": "de.w.hakqkcbecx",
+      "text": "Wir wohnen bei unserer Oma.",
+      "translation": "We live with our grandma.",
+      "cloze": "unserer"
+    },
+    {
+      "id": "de.s.f4jdmysvjg",
+      "wordId": "de.w.zy7r7vccn7",
+      "text": "Ich habe es jemandem erzählt.",
+      "translation": "I told someone.",
+      "cloze": "jemandem"
+    },
+    {
+      "id": "de.s.kggk2m81r7",
+      "wordId": "de.w.zy7r7vccn7",
+      "text": "Jemand hat angerufen.",
+      "translation": "Someone called.",
+      "cloze": "Jemand"
+    },
+    {
+      "id": "de.s.qm2q49ctyy",
+      "wordId": "de.w.zy7r7vccn7",
+      "text": "Kennst du jemanden hier?",
+      "translation": "Do you know anyone here?",
+      "cloze": "jemanden"
+    },
+    {
+      "id": "de.s.dkxxsd7bk2",
+      "wordId": "de.w.zy7r7vccn7",
+      "text": "Ist da jemand?",
+      "translation": "Is someone there?",
+      "cloze": "jemand",
+      "retired": true
+    },
+    {
+      "id": "de.s.r9wbt4a4pm",
+      "wordId": "de.w.e2jk0hes5v",
+      "text": "Ich habe kein Geld.",
+      "translation": "I have no money.",
+      "cloze": "Geld"
+    },
+    {
+      "id": "de.s.pvz865chb3",
+      "wordId": "de.w.e2jk0hes5v",
+      "text": "Wie viel Geld brauchst du?",
+      "translation": "How much money do you need?",
+      "cloze": "Geld"
+    },
+    {
+      "id": "de.s.yyhc8nm9mf",
+      "wordId": "de.w.e2jk0hes5v",
+      "text": "Geld ist nicht alles.",
+      "translation": "Money isn't everything.",
+      "cloze": "Geld"
+    },
+    {
+      "id": "de.s.a9wcqk5xw9",
+      "wordId": "de.w.z3sd3vrnws",
+      "text": "Wir gehen durch den Park.",
+      "translation": "We're walking through the park.",
+      "cloze": "durch"
+    },
+    {
+      "id": "de.s.90eh1hggec",
+      "wordId": "de.w.z3sd3vrnws",
+      "text": "Ich habe ihn durch einen Freund kennengelernt.",
+      "translation": "I met him through a friend.",
+      "cloze": "durch"
+    },
+    {
+      "id": "de.s.f81w6nnsvq",
+      "wordId": "de.w.z3sd3vrnws",
+      "text": "Er schaut durch das Fenster.",
+      "translation": "He's looking through the window.",
+      "cloze": "durch"
+    },
+    {
+      "id": "de.s.np36dghsm5",
+      "wordId": "de.w.e6r8908tjx",
+      "text": "Ich weiß nicht, ob er kommt.",
+      "translation": "I don't know if he's coming.",
+      "cloze": "ob"
+    },
+    {
+      "id": "de.s.fwb49r3jfd",
+      "wordId": "de.w.e6r8908tjx",
+      "text": "Weißt du, ob sie zu Hause ist?",
+      "translation": "Do you know if she's at home?",
+      "cloze": "ob"
+    },
+    {
+      "id": "de.s.4rb7xwhysp",
+      "wordId": "de.w.e6r8908tjx",
+      "text": "Frag ihn, ob er Hunger hat.",
+      "translation": "Ask him if he's hungry.",
+      "cloze": "ob"
+    },
+    {
+      "id": "de.s.zmy8p450aw",
+      "wordId": "de.w.sry27kvz5a",
+      "text": "Meine Mutter heißt Maria.",
+      "translation": "My mother's name is Maria.",
+      "cloze": "Mutter"
+    },
+    {
+      "id": "de.s.3265kg2zv0",
+      "wordId": "de.w.sry27kvz5a",
+      "text": "Ich telefoniere jeden Tag mit meiner Mutter.",
+      "translation": "I talk to my mother on the phone every day.",
+      "cloze": "Mutter"
+    },
+    {
+      "id": "de.s.m54wwn8d8k",
+      "wordId": "de.w.sry27kvz5a",
+      "text": "Alle Mütter lieben ihre Kinder.",
+      "translation": "All mothers love their children.",
+      "cloze": "Mütter"
+    },
+    {
+      "id": "de.s.h6cwam6nah",
+      "wordId": "de.w.8mqdfjvxwd",
+      "text": "Raus hier!",
+      "translation": "Get out of here!",
+      "cloze": "Raus"
+    },
+    {
+      "id": "de.s.txnzwhqhsv",
+      "wordId": "de.w.8mqdfjvxwd",
+      "text": "Ich muss mal raus.",
+      "translation": "I need to get out for a bit.",
+      "cloze": "raus"
+    },
+    {
+      "id": "de.s.9gx4z3m44j",
+      "wordId": "de.w.8mqdfjvxwd",
+      "text": "Komm raus!",
+      "translation": "Come out!",
+      "cloze": "raus"
+    },
+    {
+      "id": "de.s.t62033256h",
+      "wordId": "de.w.gyrxjnhg27",
+      "text": "Ich brauche ein paar Minuten.",
+      "translation": "I need a few minutes.",
+      "cloze": "paar"
+    },
+    {
+      "id": "de.s.de4hw3p208",
+      "wordId": "de.w.gyrxjnhg27",
+      "text": "Ich habe ein paar Fragen.",
+      "translation": "I have a few questions.",
+      "cloze": "paar"
+    },
+    {
+      "id": "de.s.zc4kvkqf0a",
+      "wordId": "de.w.gyrxjnhg27",
+      "text": "Heute kommen ein paar Freunde.",
+      "translation": "A few friends are coming today.",
+      "cloze": "paar"
+    },
+    {
+      "id": "de.s.76bhts2ab3",
+      "wordId": "de.w.gyrxjnhg27",
+      "text": "Wir bleiben ein paar Tage.",
+      "translation": "We're staying a few days.",
+      "cloze": "paar",
+      "retired": true
+    },
+    {
+      "id": "de.s.8qjphanh6g",
+      "wordId": "de.w.gyrxjnhg27",
+      "text": "Ein paar Freunde kommen heute.",
+      "translation": "A few friends are coming today.",
+      "cloze": "paar",
+      "retired": true
+    },
+    {
+      "id": "de.s.epnyndxy3p",
+      "wordId": "de.w.ezzrq087g8",
+      "text": "Was ist passiert?",
+      "translation": "What happened?",
+      "cloze": "passiert"
+    },
+    {
+      "id": "de.s.5j7sd4m4xs",
+      "wordId": "de.w.ezzrq087g8",
+      "text": "Das kann jedem passieren.",
+      "translation": "That can happen to anyone.",
+      "cloze": "passieren"
+    },
+    {
+      "id": "de.s.bhtr6g89p8",
+      "wordId": "de.w.ezzrq087g8",
+      "text": "Es passierte in der Nacht.",
+      "translation": "It happened at night.",
+      "cloze": "passierte"
+    },
+    {
+      "id": "de.s.xc36wpgppg",
+      "wordId": "de.w.1nrfnbb534",
+      "text": "Was denkst du?",
+      "translation": "What do you think?",
+      "cloze": "denkst"
+    },
+    {
+      "id": "de.s.020ng8dyf8",
+      "wordId": "de.w.1nrfnbb534",
+      "text": "Ich denke oft an dich.",
+      "translation": "I often think of you.",
+      "cloze": "denke"
+    },
+    {
+      "id": "de.s.3qabqan7xt",
+      "wordId": "de.w.1nrfnbb534",
+      "text": "Das dachte ich auch.",
+      "translation": "That's what I thought too.",
+      "cloze": "dachte"
+    },
+    {
+      "id": "de.s.q08y5621mw",
+      "wordId": "de.w.1nrfnbb534",
+      "text": "Daran habe ich nicht gedacht.",
+      "translation": "I didn't think of that.",
+      "cloze": "gedacht"
+    },
+    {
+      "id": "de.s.adk9rats9m",
+      "wordId": "de.w.qbjthmd3ah",
+      "text": "Wieso weißt du das?",
+      "translation": "How come you know that?",
+      "cloze": "Wieso"
+    },
+    {
+      "id": "de.s.txpfmkvdjw",
+      "wordId": "de.w.qbjthmd3ah",
+      "text": "Wieso kommst du so spät?",
+      "translation": "How come you're so late?",
+      "cloze": "Wieso"
+    },
+    {
+      "id": "de.s.5q7qe657w4",
+      "wordId": "de.w.qbjthmd3ah",
+      "text": "Wieso fragst du?",
+      "translation": "Why do you ask?",
+      "cloze": "Wieso"
+    },
+    {
+      "id": "de.s.bkjy4jt6y0",
+      "wordId": "de.w.qbjthmd3ah",
+      "text": "Wieso nicht?",
+      "translation": "Why not?",
+      "cloze": "Wieso",
+      "retired": true
+    },
+    {
+      "id": "de.s.8nbw9m58md",
+      "wordId": "de.w.qbjthmd3ah",
+      "text": "Wieso bist du so spät?",
+      "translation": "How come you're so late?",
+      "cloze": "Wieso",
+      "retired": true
+    },
+    {
+      "id": "de.s.wxsh20hfw5",
+      "wordId": "de.w.fa6xaxrp8a",
+      "text": "Ich habe das selbst gemacht.",
+      "translation": "I made that myself.",
+      "cloze": "selbst"
+    },
+    {
+      "id": "de.s.t02rgb69sx",
+      "wordId": "de.w.fa6xaxrp8a",
+      "text": "Mach es doch selbst!",
+      "translation": "Do it yourself!",
+      "cloze": "selbst"
+    },
+    {
+      "id": "de.s.1whhqgsbaj",
+      "wordId": "de.w.fa6xaxrp8a",
+      "text": "Selbst ich weiß das.",
+      "translation": "Even I know that.",
+      "cloze": "Selbst"
+    },
+    {
+      "id": "de.s.6pswtf016r",
+      "wordId": "de.w.rpp4tptmch",
+      "text": "Das Buch gehört mir.",
+      "translation": "The book is mine.",
+      "cloze": "gehört"
+    },
+    {
+      "id": "de.s.fxpt71j6n0",
+      "wordId": "de.w.rpp4tptmch",
+      "text": "Wem gehören die Schuhe?",
+      "translation": "Whose shoes are these?",
+      "cloze": "gehören"
+    },
+    {
+      "id": "de.s.83q0x32f22",
+      "wordId": "de.w.rpp4tptmch",
+      "text": "Das Haus gehörte meinem Opa.",
+      "translation": "The house belonged to my grandpa.",
+      "cloze": "gehörte"
+    },
+    {
+      "id": "de.s.6sqf1yhnjs",
+      "wordId": "de.w.x1csdwnsay",
+      "text": "Ich mag Schokolade.",
+      "translation": "I like chocolate.",
+      "cloze": "mag"
+    },
+    {
+      "id": "de.s.n1fb6fxz4p",
+      "wordId": "de.w.x1csdwnsay",
+      "text": "Magst du Hunde?",
+      "translation": "Do you like dogs?",
+      "cloze": "Magst"
+    },
+    {
+      "id": "de.s.pshd0m18yq",
+      "wordId": "de.w.x1csdwnsay",
+      "text": "Ich möchte einen Kaffee, bitte.",
+      "translation": "I'd like a coffee, please.",
+      "cloze": "möchte"
+    },
+    {
+      "id": "de.s.k4q797krd8",
+      "wordId": "de.w.x1csdwnsay",
+      "text": "Was möchtest du trinken?",
+      "translation": "What would you like to drink?",
+      "cloze": "möchtest"
+    },
+    {
+      "id": "de.s.5vvw1s2jvn",
+      "wordId": "de.w.450sqz4c20",
+      "text": "Kaffee ohne Zucker, bitte.",
+      "translation": "Coffee without sugar, please.",
+      "cloze": "ohne"
+    },
+    {
+      "id": "de.s.tg16zpkd9n",
+      "wordId": "de.w.450sqz4c20",
+      "text": "Ich gehe nicht ohne dich.",
+      "translation": "I'm not going without you.",
+      "cloze": "ohne"
+    },
+    {
+      "id": "de.s.zmty6wvmyj",
+      "wordId": "de.w.450sqz4c20",
+      "text": "Ohne Geld geht es nicht.",
+      "translation": "It doesn't work without money.",
+      "cloze": "Ohne"
+    },
+    {
+      "id": "de.s.ak2ppp5vz4",
+      "wordId": "de.w.9zfvk6q17q",
+      "text": "Hörst du das?",
+      "translation": "Do you hear that?",
+      "cloze": "Hörst"
+    },
+    {
+      "id": "de.s.516t7cqr0e",
+      "wordId": "de.w.9zfvk6q17q",
+      "text": "Ich höre dich nicht.",
+      "translation": "I can't hear you.",
+      "cloze": "höre"
+    },
+    {
+      "id": "de.s.7c1yjdv6mt",
+      "wordId": "de.w.9zfvk6q17q",
+      "text": "Hast du das gehört?",
+      "translation": "Did you hear that?",
+      "cloze": "gehört"
+    },
+    {
+      "id": "de.s.szchrajwdk",
+      "wordId": "de.w.9zfvk6q17q",
+      "text": "Hör mal, ich habe eine Idee.",
+      "translation": "Listen, I have an idea.",
+      "cloze": "Hör"
+    },
+    {
+      "id": "de.s.psfz676pm4",
+      "wordId": "de.w.1t31ykcy28",
+      "text": "Komm her!",
+      "translation": "Come here!",
+      "cloze": "her"
+    },
+    {
+      "id": "de.s.53yt314ebb",
+      "wordId": "de.w.1t31ykcy28",
+      "text": "Gib das her!",
+      "translation": "Give me that!",
+      "cloze": "her"
+    },
+    {
+      "id": "de.s.1je724wam5",
+      "wordId": "de.w.1t31ykcy28",
+      "text": "Das ist lange her.",
+      "translation": "That was a long time ago.",
+      "cloze": "her"
+    },
+    {
+      "id": "de.s.4y2jakx3r5",
+      "wordId": "de.w.1t31ykcy28",
+      "text": "Wo kommst du her?",
+      "translation": "Where are you from?",
+      "cloze": "her",
+      "retired": true
+    },
+    {
+      "id": "de.s.rbehx2tvmc",
+      "wordId": "de.w.4sxtvsje4w",
+      "text": "Wo sind die anderen?",
+      "translation": "Where are the others?",
+      "cloze": "anderen"
+    },
+    {
+      "id": "de.s.84b8y2dsra",
+      "wordId": "de.w.4sxtvsje4w",
+      "text": "Ich habe eine andere Idee.",
+      "translation": "I have a different idea.",
+      "cloze": "andere"
+    },
+    {
+      "id": "de.s.p2zexezy92",
+      "wordId": "de.w.4sxtvsje4w",
+      "text": "Das ist etwas anderes.",
+      "translation": "That's something else.",
+      "cloze": "anderes"
+    },
+    {
+      "id": "de.s.cdn4c7deyr",
+      "wordId": "de.w.t9zm610x5d",
+      "text": "Kann ich Ihnen helfen?",
+      "translation": "Can I help you?",
+      "cloze": "helfen"
+    },
+    {
+      "id": "de.s.v1ktqhmbz1",
+      "wordId": "de.w.t9zm610x5d",
+      "text": "Hilfst du mir?",
+      "translation": "Will you help me?",
+      "cloze": "Hilfst"
+    },
+    {
+      "id": "de.s.ab740kqw30",
+      "wordId": "de.w.t9zm610x5d",
+      "text": "Sie hilft ihrer Mutter.",
+      "translation": "She's helping her mother.",
+      "cloze": "hilft"
+    },
+    {
+      "id": "de.s.59dsmtzxm5",
+      "wordId": "de.w.t9zm610x5d",
+      "text": "Das hat mir sehr geholfen.",
+      "translation": "That helped me a lot.",
+      "cloze": "geholfen"
+    },
+    {
+      "id": "de.s.tbdajxcakq",
+      "wordId": "de.w.w2mk3qn5y4",
+      "text": "Gute Nacht!",
+      "translation": "Good night!",
+      "cloze": "Nacht"
+    },
+    {
+      "id": "de.s.hdcrvx4kwh",
+      "wordId": "de.w.w2mk3qn5y4",
+      "text": "Ich habe letzte Nacht schlecht geschlafen.",
+      "translation": "I slept badly last night.",
+      "cloze": "Nacht"
+    },
+    {
+      "id": "de.s.pwpczgdcgg",
+      "wordId": "de.w.w2mk3qn5y4",
+      "text": "Die Nächte sind hier sehr kalt.",
+      "translation": "The nights here are very cold.",
+      "cloze": "Nächte"
+    },
+    {
+      "id": "de.s.kx5ghrk05q",
+      "wordId": "de.w.td9ep8tenv",
+      "text": "Ich finde meinen Schlüssel nicht.",
+      "translation": "I can't find my key.",
+      "cloze": "finde"
+    },
+    {
+      "id": "de.s.kh30qqfqdh",
+      "wordId": "de.w.td9ep8tenv",
+      "text": "Wie findest du das Kleid?",
+      "translation": "What do you think of the dress?",
+      "cloze": "findest"
+    },
+    {
+      "id": "de.s.mk326nttps",
+      "wordId": "de.w.td9ep8tenv",
+      "text": "Hast du deine Brille gefunden?",
+      "translation": "Did you find your glasses?",
+      "cloze": "gefunden"
+    },
+    {
+      "id": "de.s.24yeqtj7cn",
+      "wordId": "de.w.td9ep8tenv",
+      "text": "Er fand das sehr lustig.",
+      "translation": "He found that very funny.",
+      "cloze": "fand"
+    },
+    {
+      "id": "de.s.2a65r8pnzm",
+      "wordId": "de.w.w9pzeem42c",
+      "text": "Ich habe lange gewartet.",
+      "translation": "I waited a long time.",
+      "cloze": "lange"
+    },
+    {
+      "id": "de.s.hss0vheyvf",
+      "wordId": "de.w.w9pzeem42c",
+      "text": "Wie lange dauert das?",
+      "translation": "How long does that take?",
+      "cloze": "lange"
+    },
+    {
+      "id": "de.s.rcvks22kb3",
+      "wordId": "de.w.w9pzeem42c",
+      "text": "Ich kenne ihn schon lange.",
+      "translation": "I've known him for a long time.",
+      "cloze": "lange"
+    },
+    {
+      "id": "de.s.nmqjrpg2m0",
+      "wordId": "de.w.2qpev68rxs",
+      "text": "Natürlich komme ich!",
+      "translation": "Of course I'm coming!",
+      "cloze": "Natürlich"
+    },
+    {
+      "id": "de.s.z7x75tpxrf",
+      "wordId": "de.w.2qpev68rxs",
+      "text": "Ja, natürlich.",
+      "translation": "Yes, of course.",
+      "cloze": "natürlich"
+    },
+    {
+      "id": "de.s.z7xd02cp9s",
+      "wordId": "de.w.2qpev68rxs",
+      "text": "Du hast natürlich recht.",
+      "translation": "Of course you're right.",
+      "cloze": "natürlich"
+    },
+    {
+      "id": "de.s.2j9mmkkpsf",
+      "wordId": "de.w.2qpev68rxs",
+      "text": "Das ist ganz natürlich.",
+      "translation": "That's completely natural.",
+      "cloze": "natürlich",
+      "retired": true
+    },
+    {
+      "id": "de.s.r834j52k6m",
+      "wordId": "de.w.vjz2yd4z61",
+      "text": "Das ist gar nicht schlecht.",
+      "translation": "That's not bad at all.",
+      "cloze": "gar"
+    },
+    {
+      "id": "de.s.xz60hha82d",
+      "wordId": "de.w.vjz2yd4z61",
+      "text": "Ich habe gar nichts gesagt.",
+      "translation": "I didn't say anything at all.",
+      "cloze": "gar"
+    },
+    {
+      "id": "de.s.t5b4sxy85f",
+      "wordId": "de.w.vjz2yd4z61",
+      "text": "Ich habe gar keine Zeit.",
+      "translation": "I have no time at all.",
+      "cloze": "gar"
+    },
+    {
+      "id": "de.s.ttrkehj69g",
+      "wordId": "de.w.29s505peva",
+      "text": "Wer wohnt dort?",
+      "translation": "Who lives there?",
+      "cloze": "dort"
+    },
+    {
+      "id": "de.s.tpp1qg4et8",
+      "wordId": "de.w.29s505peva",
+      "text": "Dort ist der Bahnhof.",
+      "translation": "There's the train station.",
+      "cloze": "Dort"
+    },
+    {
+      "id": "de.s.5ng4jmtwma",
+      "wordId": "de.w.29s505peva",
+      "text": "Ich war noch nie dort.",
+      "translation": "I've never been there.",
+      "cloze": "dort"
+    },
+    {
+      "id": "de.s.d8h86q5p2z",
+      "wordId": "de.w.vmak85nh7w",
+      "text": "Mach weiter!",
+      "translation": "Keep going!",
+      "cloze": "weiter"
+    },
+    {
+      "id": "de.s.y5wh59rs2h",
+      "wordId": "de.w.vmak85nh7w",
+      "text": "Wir müssen weiter.",
+      "translation": "We have to keep going.",
+      "cloze": "weiter"
+    },
+    {
+      "id": "de.s.528ejrr6qf",
+      "wordId": "de.w.vmak85nh7w",
+      "text": "Er ging einfach weiter.",
+      "translation": "He just kept walking.",
+      "cloze": "weiter"
+    },
+    {
+      "id": "de.s.35zjf6gg26",
+      "wordId": "de.w.ezr7snkxc1",
+      "text": "Ich wohne seit zwei Jahren hier.",
+      "translation": "I've been living here for two years.",
+      "cloze": "seit"
+    },
+    {
+      "id": "de.s.s5c0n7ypkt",
+      "wordId": "de.w.ezr7snkxc1",
+      "text": "Seit wann bist du hier?",
+      "translation": "How long have you been here?",
+      "cloze": "Seit"
+    },
+    {
+      "id": "de.s.cypzxd0q4f",
+      "wordId": "de.w.ezr7snkxc1",
+      "text": "Ich bin seit Montag krank.",
+      "translation": "I've been sick since Monday.",
+      "cloze": "seit"
+    },
+    {
+      "id": "de.s.efp7kg2dfr",
+      "wordId": "de.w.ezr7snkxc1",
+      "text": "Ich warte seit einer Stunde.",
+      "translation": "I've been waiting for an hour.",
+      "cloze": "seit",
+      "retired": true
+    },
+    {
+      "id": "de.s.w0r9sw1phg",
+      "wordId": "de.w.cn40xvtp3f",
+      "text": "Bis gleich!",
+      "translation": "See you soon!",
+      "cloze": "gleich"
+    },
+    {
+      "id": "de.s.cjnapj48dp",
+      "wordId": "de.w.cn40xvtp3f",
+      "text": "Ich bin gleich wieder da.",
+      "translation": "I'll be right back.",
+      "cloze": "gleich"
+    },
+    {
+      "id": "de.s.72t64wv45g",
+      "wordId": "de.w.cn40xvtp3f",
+      "text": "Der Film fängt gleich an.",
+      "translation": "The movie is about to start.",
+      "cloze": "gleich"
+    },
+    {
+      "id": "de.s.2sft29qs4k",
+      "wordId": "de.w.2p6y20vkys",
+      "text": "Du hast recht.",
+      "translation": "You're right.",
+      "cloze": "recht"
+    },
+    {
+      "id": "de.s.s1bam02g16",
+      "wordId": "de.w.2p6y20vkys",
+      "text": "Ist dir das recht?",
+      "translation": "Is that OK with you?",
+      "cloze": "recht"
+    },
+    {
+      "id": "de.s.zqhj5rb6c2",
+      "wordId": "de.w.2p6y20vkys",
+      "text": "Er hat immer recht.",
+      "translation": "He's always right.",
+      "cloze": "recht"
+    },
+    {
+      "id": "de.s.jfw003gc2n",
+      "wordId": "de.w.wn06cb9tv5",
+      "text": "Das ist richtig.",
+      "translation": "That's right.",
+      "cloze": "richtig"
+    },
+    {
+      "id": "de.s.b6e6evq3rg",
+      "wordId": "de.w.wn06cb9tv5",
+      "text": "Ist das der richtige Weg?",
+      "translation": "Is this the right way?",
+      "cloze": "richtige"
+    },
+    {
+      "id": "de.s.zzw40byz37",
+      "wordId": "de.w.wn06cb9tv5",
+      "text": "Das hast du richtig gemacht.",
+      "translation": "You did that right.",
+      "cloze": "richtig"
+    },
+    {
+      "id": "de.s.dvxhensfna",
+      "wordId": "de.w.wn06cb9tv5",
+      "text": "Es war richtig kalt.",
+      "translation": "It was really cold.",
+      "cloze": "richtig"
+    },
+    {
+      "id": "de.s.wn0vbjg3j5",
+      "wordId": "de.w.hbtjdcv70y",
+      "text": "In Ordnung!",
+      "translation": "All right!",
+      "cloze": "Ordnung"
+    },
+    {
+      "id": "de.s.s2bp3k4f0k",
+      "wordId": "de.w.hbtjdcv70y",
+      "text": "Ist alles in Ordnung?",
+      "translation": "Is everything OK?",
+      "cloze": "Ordnung"
+    },
+    {
+      "id": "de.s.qkpshd4k7a",
+      "wordId": "de.w.hbtjdcv70y",
+      "text": "Er hält sein Zimmer in Ordnung.",
+      "translation": "He keeps his room tidy.",
+      "cloze": "Ordnung"
+    },
+    {
+      "id": "de.s.xwtj5zb93d",
+      "wordId": "de.w.6g13t24hwd",
+      "text": "Ich weiß nichts davon.",
+      "translation": "I don't know anything about it.",
+      "cloze": "davon"
+    },
+    {
+      "id": "de.s.0a05xz01xg",
+      "wordId": "de.w.6g13t24hwd",
+      "text": "Möchtest du etwas davon?",
+      "translation": "Would you like some of it?",
+      "cloze": "davon"
+    },
+    {
+      "id": "de.s.077v7js91e",
+      "wordId": "de.w.6g13t24hwd",
+      "text": "Davon habe ich genug.",
+      "translation": "I've had enough of that.",
+      "cloze": "Davon"
+    },
+    {
+      "id": "de.s.pkt3prjdyh",
+      "wordId": "de.w.enad9w5h2d",
+      "text": "Danke dafür!",
+      "translation": "Thanks for that!",
+      "cloze": "dafür"
+    },
+    {
+      "id": "de.s.fxfg2tkbrk",
+      "wordId": "de.w.enad9w5h2d",
+      "text": "Ich bin dafür.",
+      "translation": "I'm for it.",
+      "cloze": "dafür"
+    },
+    {
+      "id": "de.s.9ce09208w4",
+      "wordId": "de.w.enad9w5h2d",
+      "text": "Dafür habe ich keine Zeit.",
+      "translation": "I don't have time for that.",
+      "cloze": "Dafür"
+    },
+    {
+      "id": "de.s.0spf13yr0m",
+      "wordId": "de.w.zypnfs347e",
+      "text": "Wegen des Regens bleiben wir zu Hause.",
+      "translation": "Because of the rain we're staying home.",
+      "cloze": "Wegen"
+    },
+    {
+      "id": "de.s.k5bffkx9yv",
+      "wordId": "de.w.zypnfs347e",
+      "text": "Ich bin wegen dir hier.",
+      "translation": "I'm here because of you.",
+      "cloze": "wegen"
+    },
+    {
+      "id": "de.s.ssx9s5f078",
+      "wordId": "de.w.zypnfs347e",
+      "text": "Der Zug hat wegen eines Unfalls Verspätung.",
+      "translation": "The train is late because of an accident.",
+      "cloze": "wegen"
+    },
+    {
+      "id": "de.s.z2wxgrv5nj",
+      "wordId": "de.w.5h4b5jfggp",
+      "text": "Das Haus ist sehr alt.",
+      "translation": "The house is very old.",
+      "cloze": "Haus"
+    },
+    {
+      "id": "de.s.v1j5gjfc6j",
+      "wordId": "de.w.5h4b5jfggp",
+      "text": "Ich bin müde und gehe nach Hause.",
+      "translation": "I'm tired and I'm going home.",
+      "cloze": "Hause"
+    },
+    {
+      "id": "de.s.2sz06nsjfh",
+      "wordId": "de.w.5h4b5jfggp",
+      "text": "Die Häuser hier sind teuer.",
+      "translation": "The houses here are expensive.",
+      "cloze": "Häuser"
+    },
+    {
+      "id": "de.s.z61zb8nm40",
+      "wordId": "de.w.5h4b5jfggp",
+      "text": "Wir wohnen in einem großen Haus.",
+      "translation": "We live in a big house.",
+      "cloze": "Haus"
+    },
+    {
+      "id": "de.s.3ynb578py2",
+      "wordId": "de.w.8jwa3eg9cd",
+      "text": "Das Mädchen heißt Lena.",
+      "translation": "The girl's name is Lena.",
+      "cloze": "Mädchen"
+    },
+    {
+      "id": "de.s.243087z8nx",
+      "wordId": "de.w.8jwa3eg9cd",
+      "text": "Die Mädchen spielen im Garten.",
+      "translation": "The girls are playing in the garden.",
+      "cloze": "Mädchen"
+    },
+    {
+      "id": "de.s.gbzmkt8rxm",
+      "wordId": "de.w.8jwa3eg9cd",
+      "text": "Sie ist ein nettes Mädchen.",
+      "translation": "She's a nice girl.",
+      "cloze": "Mädchen"
+    },
+    {
+      "id": "de.s.5gx1vf0x1a",
+      "wordId": "de.w.yxfvn6a38c",
+      "text": "Wo gehst du hin?",
+      "translation": "Where are you going?",
+      "cloze": "hin"
+    },
+    {
+      "id": "de.s.n6s2ty93eq",
+      "wordId": "de.w.yxfvn6a38c",
+      "text": "Wie komme ich da hin?",
+      "translation": "How do I get there?",
+      "cloze": "hin"
+    },
+    {
+      "id": "de.s.k94ga082sk",
+      "wordId": "de.w.yxfvn6a38c",
+      "text": "Er läuft hin und her.",
+      "translation": "He walks back and forth.",
+      "cloze": "hin"
+    },
+    {
+      "id": "de.s.87br4hjjxk",
+      "wordId": "de.w.0kbmdt1hg4",
+      "text": "Guten Abend!",
+      "translation": "Good evening!",
+      "cloze": "Abend"
+    },
+    {
+      "id": "de.s.pmge3yjpy2",
+      "wordId": "de.w.0kbmdt1hg4",
+      "text": "Was machst du heute Abend?",
+      "translation": "What are you doing tonight?",
+      "cloze": "Abend"
+    },
+    {
+      "id": "de.s.726k0srgkn",
+      "wordId": "de.w.0kbmdt1hg4",
+      "text": "Am Abend lese ich gern.",
+      "translation": "In the evening I like to read.",
+      "cloze": "Abend"
+    },
+    {
+      "id": "de.s.1385nn5mmj",
+      "wordId": "de.w.0kbmdt1hg4",
+      "text": "Die Abende sind jetzt lang.",
+      "translation": "The evenings are long now.",
+      "cloze": "Abende"
+    },
+    {
+      "id": "de.s.n3pxjq8w7e",
+      "wordId": "de.w.51gwb3egxq",
+      "text": "Ich habe drei Kinder.",
+      "translation": "I have three children.",
+      "cloze": "drei"
+    },
+    {
+      "id": "de.s.cyns19f37y",
+      "wordId": "de.w.51gwb3egxq",
+      "text": "Wir warten seit drei Stunden.",
+      "translation": "We've been waiting for three hours.",
+      "cloze": "drei"
+    },
+    {
+      "id": "de.s.e6h0bca7n5",
+      "wordId": "de.w.51gwb3egxq",
+      "text": "Drei Bier, bitte.",
+      "translation": "Three beers, please.",
+      "cloze": "Drei"
+    },
+    {
+      "id": "de.s.zm7ps8tswe",
+      "wordId": "de.w.xd37v796z2",
+      "text": "Er ist mein bester Freund.",
+      "translation": "He's my best friend.",
+      "cloze": "Freund"
+    },
+    {
+      "id": "de.s.hhbrxvd6v8",
+      "wordId": "de.w.xd37v796z2",
+      "text": "Das sind meine Freunde.",
+      "translation": "These are my friends.",
+      "cloze": "Freunde"
+    },
+    {
+      "id": "de.s.ykjz8zcxb1",
+      "wordId": "de.w.xd37v796z2",
+      "text": "Ich gehe mit Freunden essen.",
+      "translation": "I'm going out to eat with friends.",
+      "cloze": "Freunden"
+    },
+    {
+      "id": "de.s.y3kbwcz3w1",
+      "wordId": "de.w.xd37v796z2",
+      "text": "Hast du einen Freund?",
+      "translation": "Do you have a boyfriend?",
+      "cloze": "Freund"
+    },
+    {
+      "id": "de.s.2mxfwzjswe",
+      "wordId": "de.w.vejdvtn2t1",
+      "text": "Warte auf mich!",
+      "translation": "Wait for me!",
+      "cloze": "Warte"
+    },
+    {
+      "id": "de.s.r2s7s5h86g",
+      "wordId": "de.w.vejdvtn2t1",
+      "text": "Wie lange wartest du schon?",
+      "translation": "How long have you been waiting?",
+      "cloze": "wartest"
+    },
+    {
+      "id": "de.s.q9v678wcnt",
+      "wordId": "de.w.vejdvtn2t1",
+      "text": "Er wartet vor dem Kino.",
+      "translation": "He's waiting outside the cinema.",
+      "cloze": "wartet"
+    },
+    {
+      "id": "de.s.fcbmnrb9ag",
+      "wordId": "de.w.vejdvtn2t1",
+      "text": "Ich habe eine Stunde gewartet.",
+      "translation": "I waited for an hour.",
+      "cloze": "gewartet"
+    },
+    {
+      "id": "de.s.znfcqhtn3j",
+      "wordId": "de.w.pvd5xcbqjw",
+      "text": "Er ist ein guter Mensch.",
+      "translation": "He's a good person.",
+      "cloze": "Mensch"
+    },
+    {
+      "id": "de.s.2z4a435gbe",
+      "wordId": "de.w.pvd5xcbqjw",
+      "text": "Viele Menschen leben in der Stadt.",
+      "translation": "Many people live in the city.",
+      "cloze": "Menschen"
+    },
+    {
+      "id": "de.s.1xsxagp396",
+      "wordId": "de.w.pvd5xcbqjw",
+      "text": "Ich mag diesen Menschen nicht.",
+      "translation": "I don't like this person.",
+      "cloze": "Menschen"
+    },
+    {
+      "id": "de.s.69pkgv0vgv",
+      "wordId": "de.w.pvd5xcbqjw",
+      "text": "Mensch, bist du groß geworden!",
+      "translation": "Wow, you've grown!",
+      "cloze": "Mensch",
+      "retired": true
+    },
+    {
+      "id": "de.s.mnr50eycyh",
+      "wordId": "de.w.aqzhazkjbj",
+      "text": "Was isst du gern?",
+      "translation": "What do you like to eat?",
+      "cloze": "isst"
+    },
+    {
+      "id": "de.s.5eye27fm58",
+      "wordId": "de.w.aqzhazkjbj",
+      "text": "Wir essen um sieben.",
+      "translation": "We eat at seven.",
+      "cloze": "essen"
+    },
+    {
+      "id": "de.s.bdrpha8c2k",
+      "wordId": "de.w.aqzhazkjbj",
+      "text": "Ich habe schon gegessen.",
+      "translation": "I've already eaten.",
+      "cloze": "gegessen"
+    },
+    {
+      "id": "de.s.vrpt9s88k3",
+      "wordId": "de.w.aqzhazkjbj",
+      "text": "Iss dein Gemüse!",
+      "translation": "Eat your vegetables!",
+      "cloze": "Iss"
+    },
+    {
+      "id": "de.s.s661rbr3at",
+      "wordId": "de.w.90s0z1tg08",
+      "text": "Ich habe Angst.",
+      "translation": "I'm scared.",
+      "cloze": "Angst"
+    },
+    {
+      "id": "de.s.4hw9vcsp55",
+      "wordId": "de.w.90s0z1tg08",
+      "text": "Hast du Angst vor Hunden?",
+      "translation": "Are you afraid of dogs?",
+      "cloze": "Angst"
+    },
+    {
+      "id": "de.s.jpwptxzsrn",
+      "wordId": "de.w.90s0z1tg08",
+      "text": "Keine Angst!",
+      "translation": "Don't be afraid!",
+      "cloze": "Angst"
+    },
+    {
+      "id": "de.s.mbf4zbve8w",
+      "wordId": "de.w.90s0z1tg08",
+      "text": "Er spricht über seine Ängste.",
+      "translation": "He talks about his fears.",
+      "cloze": "Ängste"
+    },
+    {
+      "id": "de.s.sg99qqcac2",
+      "wordId": "de.w.grhckrea4y",
+      "text": "Ich bleibe zu Hause.",
+      "translation": "I'm staying at home.",
+      "cloze": "bleibe"
+    },
+    {
+      "id": "de.s.s8ws5fbd11",
+      "wordId": "de.w.grhckrea4y",
+      "text": "Wie lange bleibst du?",
+      "translation": "How long are you staying?",
+      "cloze": "bleibst"
+    },
+    {
+      "id": "de.s.6m0hxa6jze",
+      "wordId": "de.w.grhckrea4y",
+      "text": "Bleib hier!",
+      "translation": "Stay here!",
+      "cloze": "Bleib"
+    },
+    {
+      "id": "de.s.e2eyevmn0d",
+      "wordId": "de.w.grhckrea4y",
+      "text": "Wir sind zwei Wochen geblieben.",
+      "translation": "We stayed for two weeks.",
+      "cloze": "geblieben"
+    },
+    {
+      "id": "de.s.xw4g0zvsqy",
+      "wordId": "de.w.th6n8r0vzr",
+      "text": "Wir wohnen zusammen.",
+      "translation": "We live together.",
+      "cloze": "zusammen"
+    },
+    {
+      "id": "de.s.a2h85q0kh8",
+      "wordId": "de.w.th6n8r0vzr",
+      "text": "Alles zusammen, bitte.",
+      "translation": "One bill, please.",
+      "cloze": "zusammen"
+    },
+    {
+      "id": "de.s.bd5zh76wx0",
+      "wordId": "de.w.th6n8r0vzr",
+      "text": "Lass uns zusammen essen.",
+      "translation": "Let's eat together.",
+      "cloze": "zusammen"
+    },
+    {
+      "id": "de.s.n1439yzbaj",
+      "wordId": "de.w.tnj6ca2men",
+      "text": "Die Welt ist klein.",
+      "translation": "It's a small world.",
+      "cloze": "Welt"
+    },
+    {
+      "id": "de.s.hde59ve0rc",
+      "wordId": "de.w.tnj6ca2men",
+      "text": "Er ist um die ganze Welt gereist.",
+      "translation": "He's traveled around the whole world.",
+      "cloze": "Welt"
+    },
+    {
+      "id": "de.s.3ygfv334v4",
+      "wordId": "de.w.tnj6ca2men",
+      "text": "Das ist die beste Pizza der Welt.",
+      "translation": "That's the best pizza in the world.",
+      "cloze": "Welt"
+    },
+    {
+      "id": "de.s.d37w4h4yvh",
+      "wordId": "de.w.tnj6ca2men",
+      "text": "Wir leben in verschiedenen Welten.",
+      "translation": "We live in different worlds.",
+      "cloze": "Welten"
+    },
+    {
+      "id": "de.s.sn542b0tq9",
+      "wordId": "de.w.pf4ca6f42y",
+      "text": "Die Katze schläft unter dem Tisch.",
+      "translation": "The cat is sleeping under the table.",
+      "cloze": "unter"
+    },
+    {
+      "id": "de.s.dhzz33qfvy",
+      "wordId": "de.w.pf4ca6f42y",
+      "text": "Das bleibt unter uns.",
+      "translation": "That stays between us.",
+      "cloze": "unter"
+    },
+    {
+      "id": "de.s.7my2x059m8",
+      "wordId": "de.w.pf4ca6f42y",
+      "text": "Kinder unter zwölf Jahren zahlen nichts.",
+      "translation": "Children under twelve pay nothing.",
+      "cloze": "unter"
+    },
+    {
+      "id": "de.s.sc7decvjm5",
+      "wordId": "de.w.3fvehgwcqe",
+      "text": "Komm schnell!",
+      "translation": "Come quickly!",
+      "cloze": "schnell"
+    },
+    {
+      "id": "de.s.fxqwkh3s7v",
+      "wordId": "de.w.3fvehgwcqe",
+      "text": "Das Auto ist sehr schnell.",
+      "translation": "The car is very fast.",
+      "cloze": "schnell"
+    },
+    {
+      "id": "de.s.bkc717dy7d",
+      "wordId": "de.w.3fvehgwcqe",
+      "text": "Er läuft schneller als ich.",
+      "translation": "He runs faster than me.",
+      "cloze": "schneller"
+    },
+    {
+      "id": "de.s.q5dxab1tds",
+      "wordId": "de.w.emzrbsgkn1",
+      "text": "Der Fisch ist tot.",
+      "translation": "The fish is dead.",
+      "cloze": "tot"
+    },
+    {
+      "id": "de.s.k4danzdwv8",
+      "wordId": "de.w.emzrbsgkn1",
+      "text": "Sein Vater ist seit zwei Jahren tot.",
+      "translation": "His father died two years ago.",
+      "cloze": "tot"
+    },
+    {
+      "id": "de.s.egz06qa33w",
+      "wordId": "de.w.emzrbsgkn1",
+      "text": "Wir fanden einen toten Vogel.",
+      "translation": "We found a dead bird.",
+      "cloze": "toten"
+    },
+    {
+      "id": "de.s.tf0h4rzpbn",
+      "wordId": "de.w.z31h1m8bvq",
+      "text": "Darf ich reinkommen?",
+      "translation": "May I come in?",
+      "cloze": "Darf"
+    },
+    {
+      "id": "de.s.v6687xg8hq",
+      "wordId": "de.w.z31h1m8bvq",
+      "text": "Du darfst hier nicht rauchen.",
+      "translation": "You're not allowed to smoke here.",
+      "cloze": "darfst"
+    },
+    {
+      "id": "de.s.r9jnrntahg",
+      "wordId": "de.w.z31h1m8bvq",
+      "text": "Wir dürfen nicht zu spät kommen.",
+      "translation": "We mustn't be late.",
+      "cloze": "dürfen"
+    },
+    {
+      "id": "de.s.p0a6jvra6t",
+      "wordId": "de.w.z31h1m8bvq",
+      "text": "Als Kind durfte ich nie fernsehen.",
+      "translation": "As a child, I was never allowed to watch TV.",
+      "cloze": "durfte"
+    },
+    {
+      "id": "de.s.hm9612wmd1",
+      "wordId": "de.w.z7kg731bdc",
+      "text": "Er kommt erst morgen.",
+      "translation": "He's not coming until tomorrow.",
+      "cloze": "erst"
+    },
+    {
+      "id": "de.s.ph8g8xvgcj",
+      "wordId": "de.w.z7kg731bdc",
+      "text": "Sie ist erst fünf Jahre alt.",
+      "translation": "She's only five years old.",
+      "cloze": "erst"
+    },
+    {
+      "id": "de.s.0wph3a03f4",
+      "wordId": "de.w.z7kg731bdc",
+      "text": "Erst essen wir, dann gehen wir spazieren.",
+      "translation": "First we eat, then we go for a walk.",
+      "cloze": "Erst"
+    },
+    {
+      "id": "de.s.tt1jr334dn",
+      "wordId": "de.w.z7kg731bdc",
+      "text": "Ich bin erst seit gestern hier.",
+      "translation": "I've only been here since yesterday.",
+      "cloze": "erst",
+      "retired": true
+    },
+    {
+      "id": "de.s.qxs75yzr28",
+      "wordId": "de.w.h4j4j97cz6",
+      "text": "Das stimmt nicht!",
+      "translation": "That's not true!",
+      "cloze": "stimmt"
+    },
+    {
+      "id": "de.s.psj3rv16we",
+      "wordId": "de.w.h4j4j97cz6",
+      "text": "Die Zahlen stimmen nicht.",
+      "translation": "The numbers aren't right.",
+      "cloze": "stimmen"
+    },
+    {
+      "id": "de.s.efk6ye3dg6",
+      "wordId": "de.w.h4j4j97cz6",
+      "text": "Am Ende stimmte alles.",
+      "translation": "In the end, everything was right.",
+      "cloze": "stimmte"
+    },
+    {
+      "id": "de.s.bts183e9xy",
+      "wordId": "de.w.wa7ekac1wn",
+      "text": "Ich nehme den Bus.",
+      "translation": "I'm taking the bus.",
+      "cloze": "nehme"
+    },
+    {
+      "id": "de.s.xcwvmdhgyt",
+      "wordId": "de.w.wa7ekac1wn",
+      "text": "Nimmst du Zucker?",
+      "translation": "Do you take sugar?",
+      "cloze": "Nimmst"
+    },
+    {
+      "id": "de.s.0whjm4zsk7",
+      "wordId": "de.w.wa7ekac1wn",
+      "text": "Wer hat mein Handy genommen?",
+      "translation": "Who took my phone?",
+      "cloze": "genommen"
+    },
+    {
+      "id": "de.s.e1p2w4ek7n",
+      "wordId": "de.w.wa7ekac1wn",
+      "text": "Er nahm meine Hand.",
+      "translation": "He took my hand.",
+      "cloze": "nahm"
+    },
+    {
+      "id": "de.s.rh4dqzgtkt",
+      "wordId": "de.w.7kjkw7ne8f",
+      "text": "Das Kind weint.",
+      "translation": "The child is crying.",
+      "cloze": "Kind"
+    },
+    {
+      "id": "de.s.rbdpq23wfy",
+      "wordId": "de.w.7kjkw7ne8f",
+      "text": "Wie viele Kinder haben Sie?",
+      "translation": "How many children do you have?",
+      "cloze": "Kinder"
+    },
+    {
+      "id": "de.s.ykmt3t666n",
+      "wordId": "de.w.7kjkw7ne8f",
+      "text": "Als Kind war ich oft krank.",
+      "translation": "As a child I was often sick.",
+      "cloze": "Kind"
+    },
+    {
+      "id": "de.s.5vttkbnckk",
+      "wordId": "de.w.7kjkw7ne8f",
+      "text": "Sie spielt gern mit den Kindern.",
+      "translation": "She likes playing with the children.",
+      "cloze": "Kindern"
+    },
+    {
+      "id": "de.s.xqac86g2xy",
+      "wordId": "de.w.e1z8q40zmn",
+      "text": "Ich bringe dich nach Hause.",
+      "translation": "I'll take you home.",
+      "cloze": "bringe"
+    },
+    {
+      "id": "de.s.6e9c83fgn8",
+      "wordId": "de.w.e1z8q40zmn",
+      "text": "Bringst du mir ein Glas Wasser?",
+      "translation": "Will you bring me a glass of water?",
+      "cloze": "Bringst"
+    },
+    {
+      "id": "de.s.aw9h0ef4tg",
+      "wordId": "de.w.e1z8q40zmn",
+      "text": "Er hat Blumen gebracht.",
+      "translation": "He brought flowers.",
+      "cloze": "gebracht"
+    },
+    {
+      "id": "de.s.wjm41g41c3",
+      "wordId": "de.w.e1z8q40zmn",
+      "text": "Das bringt nichts.",
+      "translation": "That's pointless.",
+      "cloze": "bringt"
+    },
+    {
+      "id": "de.s.d48cev7735",
+      "wordId": "de.w.s1sxtkgjv6",
+      "text": "Ich habe genug.",
+      "translation": "I've had enough.",
+      "cloze": "genug"
+    },
+    {
+      "id": "de.s.am96fvvadv",
+      "wordId": "de.w.s1sxtkgjv6",
+      "text": "Haben wir genug Geld?",
+      "translation": "Do we have enough money?",
+      "cloze": "genug"
+    },
+    {
+      "id": "de.s.nmqrat28m1",
+      "wordId": "de.w.s1sxtkgjv6",
+      "text": "Das ist nicht gut genug.",
+      "translation": "That's not good enough.",
+      "cloze": "genug"
+    },
+    {
+      "id": "de.s.ppmyxeeyax",
+      "wordId": "de.w.t4xc6yjqsr",
+      "text": "Ich brauche deine Hilfe.",
+      "translation": "I need your help.",
+      "cloze": "brauche"
+    },
+    {
+      "id": "de.s.pc0xbejjc2",
+      "wordId": "de.w.t4xc6yjqsr",
+      "text": "Brauchst du etwas?",
+      "translation": "Do you need anything?",
+      "cloze": "Brauchst"
+    },
+    {
+      "id": "de.s.kht7w4t98x",
+      "wordId": "de.w.t4xc6yjqsr",
+      "text": "Er braucht mehr Zeit.",
+      "translation": "He needs more time.",
+      "cloze": "braucht"
+    },
+    {
+      "id": "de.s.b1w01kj860",
+      "wordId": "de.w.t4xc6yjqsr",
+      "text": "Wir brauchten ein neues Auto.",
+      "translation": "We needed a new car.",
+      "cloze": "brauchten"
+    },
+    {
+      "id": "de.s.4t5jsa5s18",
+      "wordId": "de.w.t4xc6yjqsr",
+      "text": "Wir brauchen ein neues Auto.",
+      "translation": "We need a new car.",
+      "cloze": "brauchen",
+      "retired": true
+    },
+    {
+      "id": "de.s.6vfvz4syb5",
+      "wordId": "de.w.c69xzdtbv0",
+      "text": "Ich bin gegen den Plan.",
+      "translation": "I'm against the plan.",
+      "cloze": "gegen"
+    },
+    {
+      "id": "de.s.gmyw03zmy2",
+      "wordId": "de.w.c69xzdtbv0",
+      "text": "Er ist gegen die Tür gelaufen.",
+      "translation": "He walked into the door.",
+      "cloze": "gegen"
+    },
+    {
+      "id": "de.s.h2y1h4vgxn",
+      "wordId": "de.w.c69xzdtbv0",
+      "text": "Ich komme gegen acht.",
+      "translation": "I'll come around eight.",
+      "cloze": "gegen"
+    },
+    {
+      "id": "de.s.perg9ce6ea",
+      "wordId": "de.w.3n7f1eh9br",
+      "text": "Einen Moment, bitte.",
+      "translation": "One moment, please.",
+      "cloze": "Moment"
+    },
+    {
+      "id": "de.s.8n9115zmds",
+      "wordId": "de.w.3n7f1eh9br",
+      "text": "Im Moment habe ich keine Zeit.",
+      "translation": "I don't have time at the moment.",
+      "cloze": "Moment"
+    },
+    {
+      "id": "de.s.ct2nvs0ywt",
+      "wordId": "de.w.3n7f1eh9br",
+      "text": "Das waren schöne Momente.",
+      "translation": "Those were beautiful moments.",
+      "cloze": "Momente"
+    },
+    {
+      "id": "de.s.9xnxh45ja2",
+      "wordId": "de.w.r7d2j7thrt",
+      "text": "Der Junge ist zehn Jahre alt.",
+      "translation": "The boy is ten years old.",
+      "cloze": "Junge"
+    },
+    {
+      "id": "de.s.a9m9w0a18h",
+      "wordId": "de.w.r7d2j7thrt",
+      "text": "Die Jungen spielen Fußball.",
+      "translation": "The boys are playing soccer.",
+      "cloze": "Jungen"
+    },
+    {
+      "id": "de.s.4bfw9yv5qy",
+      "wordId": "de.w.r7d2j7thrt",
+      "text": "Na, Jungs, alles klar?",
+      "translation": "Hey guys, everything OK?",
+      "cloze": "Jungs"
+    },
+    {
+      "id": "de.s.0yjtjc69n2",
+      "wordId": "de.w.r7d2j7thrt",
+      "text": "Sie hat einen kleinen Jungen.",
+      "translation": "She has a little boy.",
+      "cloze": "Jungen"
+    },
+    {
+      "id": "de.s.y3g1amwnp5",
+      "wordId": "de.w.mytdp619r7",
+      "text": "Ich stehe vor der Tür.",
+      "translation": "I'm standing outside the door.",
+      "cloze": "stehe"
+    },
+    {
+      "id": "de.s.5gr61qmd05",
+      "wordId": "de.w.mytdp619r7",
+      "text": "Was steht im Brief?",
+      "translation": "What does the letter say?",
+      "cloze": "steht"
+    },
+    {
+      "id": "de.s.rm8gh7391s",
+      "wordId": "de.w.mytdp619r7",
+      "text": "Die Farbe steht dir gut.",
+      "translation": "That color suits you.",
+      "cloze": "steht"
+    },
+    {
+      "id": "de.s.dm270vncpp",
+      "wordId": "de.w.mytdp619r7",
+      "text": "Wir standen lange im Regen.",
+      "translation": "We stood in the rain for a long time.",
+      "cloze": "standen"
+    },
+    {
+      "id": "de.s.9ve97z8gdp",
+      "wordId": "de.w.3nezjdph7y",
+      "text": "Sonst noch etwas?",
+      "translation": "Anything else?",
+      "cloze": "Sonst"
+    },
+    {
+      "id": "de.s.03549beny6",
+      "wordId": "de.w.3nezjdph7y",
+      "text": "Beeil dich, sonst kommen wir zu spät.",
+      "translation": "Hurry up, or we'll be late.",
+      "cloze": "sonst"
+    },
+    {
+      "id": "de.s.fnwnrkjfrm",
+      "wordId": "de.w.3nezjdph7y",
+      "text": "Wer sonst?",
+      "translation": "Who else?",
+      "cloze": "sonst"
+    },
+    {
+      "id": "de.s.s4f7s8vhg5",
+      "wordId": "de.w.3bqcb5k8ve",
+      "text": "Ich höre gern Musik.",
+      "translation": "I like listening to music.",
+      "cloze": "Musik"
+    },
+    {
+      "id": "de.s.dceeyzykc8",
+      "wordId": "de.w.3bqcb5k8ve",
+      "text": "Die Musik ist zu laut.",
+      "translation": "The music is too loud.",
+      "cloze": "Musik"
+    },
+    {
+      "id": "de.s.g0k8p16pzc",
+      "wordId": "de.w.3bqcb5k8ve",
+      "text": "Welche Musik magst du?",
+      "translation": "What music do you like?",
+      "cloze": "Musik"
+    },
+    {
+      "id": "de.s.7nxgnq5dv5",
+      "wordId": "de.w.j5y5n34341",
+      "text": "Ich gehe zur Arbeit.",
+      "translation": "I'm going to work.",
+      "cloze": "Arbeit"
+    },
+    {
+      "id": "de.s.4v9m3e60mg",
+      "wordId": "de.w.j5y5n34341",
+      "text": "Die Arbeit macht mir Spaß.",
+      "translation": "I enjoy the work.",
+      "cloze": "Arbeit"
+    },
+    {
+      "id": "de.s.pqc465csce",
+      "wordId": "de.w.j5y5n34341",
+      "text": "Er sucht Arbeit.",
+      "translation": "He's looking for work.",
+      "cloze": "Arbeit"
+    },
+    {
+      "id": "de.s.qb0qw04wje",
+      "wordId": "de.w.c74rgq1jrx",
+      "text": "Darf ich dich etwas fragen?",
+      "translation": "Can I ask you something?",
+      "cloze": "fragen"
+    },
+    {
+      "id": "de.s.zfmks0kxg5",
+      "wordId": "de.w.c74rgq1jrx",
+      "text": "Frag deinen Vater.",
+      "translation": "Ask your father.",
+      "cloze": "Frag"
+    },
+    {
+      "id": "de.s.paky3zaeg1",
+      "wordId": "de.w.c74rgq1jrx",
+      "text": "Er fragt nach dem Weg.",
+      "translation": "He's asking for directions.",
+      "cloze": "fragt"
+    },
+    {
+      "id": "de.s.6k8537x8gs",
+      "wordId": "de.w.c74rgq1jrx",
+      "text": "Hast du sie schon gefragt?",
+      "translation": "Have you asked her yet?",
+      "cloze": "gefragt"
+    },
+    {
+      "id": "de.s.ek4fqqkxcc",
+      "wordId": "de.w.d87jf4rbe4",
+      "text": "Guten Morgen, Herr Weber!",
+      "translation": "Good morning, Mr Weber!",
+      "cloze": "Herr"
+    },
+    {
+      "id": "de.s.qe66kyjj6b",
+      "wordId": "de.w.d87jf4rbe4",
+      "text": "Ich spreche mit Herrn Weber.",
+      "translation": "I'm talking to Mr Weber.",
+      "cloze": "Herrn"
+    },
+    {
+      "id": "de.s.026g3epz20",
+      "wordId": "de.w.d87jf4rbe4",
+      "text": "Meine Damen und Herren!",
+      "translation": "Ladies and gentlemen!",
+      "cloze": "Herren"
+    },
+    {
+      "id": "de.s.hp9z202jj4",
+      "wordId": "de.w.6nr58y8mv3",
+      "text": "Ich bin dabei!",
+      "translation": "I'm in!",
+      "cloze": "dabei"
+    },
+    {
+      "id": "de.s.k5dqvawek1",
+      "wordId": "de.w.6nr58y8mv3",
+      "text": "Hast du deinen Pass dabei?",
+      "translation": "Do you have your passport with you?",
+      "cloze": "dabei"
+    },
+    {
+      "id": "de.s.jb9h8hdj55",
+      "wordId": "de.w.6nr58y8mv3",
+      "text": "Sie kocht und hört dabei Musik.",
+      "translation": "She cooks and listens to music at the same time.",
+      "cloze": "dabei"
+    },
+    {
+      "id": "de.s.nddbhfw7ye",
+      "wordId": "de.w.6nr58y8mv3",
+      "text": "Was ist schon dabei?",
+      "translation": "What's the big deal?",
+      "cloze": "dabei",
+      "retired": true
+    },
+    {
+      "id": "de.s.ytf9szqagq",
+      "wordId": "de.w.rt28c67xx3",
+      "text": "Ich heiße Anna.",
+      "translation": "My name is Anna.",
+      "cloze": "heiße"
+    },
+    {
+      "id": "de.s.6bx4fnnp8p",
+      "wordId": "de.w.rt28c67xx3",
+      "text": "Was heißt das auf Englisch?",
+      "translation": "What does that mean in English?",
+      "cloze": "heißt"
+    },
+    {
+      "id": "de.s.fbzt7kt1zf",
+      "wordId": "de.w.rt28c67xx3",
+      "text": "Wie hieß der Film?",
+      "translation": "What was the movie called?",
+      "cloze": "hieß"
+    },
+    {
+      "id": "de.s.fkv2m76hr7",
+      "wordId": "de.w.880tw9meq8",
+      "text": "Meine Familie wohnt in München.",
+      "translation": "My family lives in Munich.",
+      "cloze": "Familie"
+    },
+    {
+      "id": "de.s.t6vddfekkw",
+      "wordId": "de.w.880tw9meq8",
+      "text": "Hast du eine große Familie?",
+      "translation": "Do you have a big family?",
+      "cloze": "Familie"
+    },
+    {
+      "id": "de.s.e53e6fb0s3",
+      "wordId": "de.w.880tw9meq8",
+      "text": "Viele Familien haben zwei Kinder.",
+      "translation": "Many families have two children.",
+      "cloze": "Familien"
+    },
+    {
+      "id": "de.s.3vhw651zpr",
+      "wordId": "de.w.vsdx1jxs5y",
+      "text": "Niemand ist zu Hause.",
+      "translation": "Nobody's home.",
+      "cloze": "Niemand"
+    },
+    {
+      "id": "de.s.yx0a2jd5e4",
+      "wordId": "de.w.vsdx1jxs5y",
+      "text": "Ich kenne hier niemanden.",
+      "translation": "I don't know anyone here.",
+      "cloze": "niemanden"
+    },
+    {
+      "id": "de.s.nb12eh4kqc",
+      "wordId": "de.w.vsdx1jxs5y",
+      "text": "Sag es niemandem!",
+      "translation": "Don't tell anyone!",
+      "cloze": "niemandem"
+    },
+    {
+      "id": "de.s.1bar3pe73k",
+      "wordId": "de.w.5nw30hvv58",
+      "text": "Komm sofort her!",
+      "translation": "Come here right now!",
+      "cloze": "sofort"
+    },
+    {
+      "id": "de.s.ekzrhv8qym",
+      "wordId": "de.w.5nw30hvv58",
+      "text": "Ich mache das sofort.",
+      "translation": "I'll do it right away.",
+      "cloze": "sofort"
+    },
+    {
+      "id": "de.s.t993jy2jrq",
+      "wordId": "de.w.5nw30hvv58",
+      "text": "Der Arzt kommt sofort.",
+      "translation": "The doctor is coming right away.",
+      "cloze": "sofort"
+    },
+    {
+      "id": "de.s.4gcjt2hmgb",
+      "wordId": "de.w.crap9kvrm8",
+      "text": "Ruf mich an, bevor du kommst.",
+      "translation": "Call me before you come.",
+      "cloze": "bevor"
+    },
+    {
+      "id": "de.s.srmzkv4zdv",
+      "wordId": "de.w.crap9kvrm8",
+      "text": "Bevor wir essen, waschen wir uns die Hände.",
+      "translation": "Before we eat, we wash our hands.",
+      "cloze": "Bevor"
+    },
+    {
+      "id": "de.s.c9w7r7db8r",
+      "wordId": "de.w.crap9kvrm8",
+      "text": "Ich lese immer, bevor ich schlafen gehe.",
+      "translation": "I always read before I go to bed.",
+      "cloze": "bevor"
+    },
+    {
+      "id": "de.s.v9mnw9yy8h",
+      "wordId": "de.w.crap9kvrm8",
+      "text": "Ich lese, bevor ich schlafe.",
+      "translation": "I read before I go to sleep.",
+      "cloze": "bevor",
+      "retired": true
+    },
+    {
+      "id": "de.s.mnsxbnsvrb",
+      "wordId": "de.w.m4rhzt5sxb",
+      "text": "Ich bin dreißig Jahre alt.",
+      "translation": "I'm thirty years old.",
+      "cloze": "Jahre"
+    },
+    {
+      "id": "de.s.60kd9vjneh",
+      "wordId": "de.w.m4rhzt5sxb",
+      "text": "Frohes neues Jahr!",
+      "translation": "Happy New Year!",
+      "cloze": "Jahr"
+    },
+    {
+      "id": "de.s.kgpk1n95nv",
+      "wordId": "de.w.m4rhzt5sxb",
+      "text": "Wir wohnen seit vielen Jahren hier.",
+      "translation": "We've lived here for many years.",
+      "cloze": "Jahren"
+    },
+    {
+      "id": "de.s.0wdsrwzc69",
+      "wordId": "de.w.m3r3cmy95c",
+      "text": "Ich war einmal in Paris.",
+      "translation": "I was in Paris once.",
+      "cloze": "einmal"
+    },
+    {
+      "id": "de.s.wa4mh1ah6b",
+      "wordId": "de.w.m3r3cmy95c",
+      "text": "Noch einmal, bitte.",
+      "translation": "Once more, please.",
+      "cloze": "einmal"
+    },
+    {
+      "id": "de.s.t9230ccqnn",
+      "wordId": "de.w.m3r3cmy95c",
+      "text": "Es war einmal ein König.",
+      "translation": "Once upon a time there was a king.",
+      "cloze": "einmal"
+    },
+    {
+      "id": "de.s.w50469xhcm",
+      "wordId": "de.w.4z5je0s6ar",
+      "text": "Das ist nicht mein Problem.",
+      "translation": "That's not my problem.",
+      "cloze": "Problem"
+    },
+    {
+      "id": "de.s.6vvw2yqky5",
+      "wordId": "de.w.4z5je0s6ar",
+      "text": "Wir haben ein großes Problem.",
+      "translation": "We have a big problem.",
+      "cloze": "Problem"
+    },
+    {
+      "id": "de.s.5z69bqbpje",
+      "wordId": "de.w.4z5je0s6ar",
+      "text": "Er hat Probleme mit seinem Chef.",
+      "translation": "He has problems with his boss.",
+      "cloze": "Probleme"
+    },
+    {
+      "id": "de.s.fsw09bnv9c",
+      "wordId": "de.w.tnt5rqkt3w",
+      "text": "Mein Sohn ist acht Jahre alt.",
+      "translation": "My son is eight years old.",
+      "cloze": "Sohn"
+    },
+    {
+      "id": "de.s.r6qx6r1p77",
+      "wordId": "de.w.tnt5rqkt3w",
+      "text": "Sie hat zwei Söhne.",
+      "translation": "She has two sons.",
+      "cloze": "Söhne"
+    },
+    {
+      "id": "de.s.evhp7jc3vd",
+      "wordId": "de.w.tnt5rqkt3w",
+      "text": "Ich bin stolz auf meinen Sohn.",
+      "translation": "I'm proud of my son.",
+      "cloze": "Sohn"
+    },
+    {
+      "id": "de.s.vaj28jyyf2",
+      "wordId": "de.w.4qfz0nec0w",
+      "text": "Wann kommst du?",
+      "translation": "When are you coming?",
+      "cloze": "Wann"
+    },
+    {
+      "id": "de.s.a6mxszp3g2",
+      "wordId": "de.w.4qfz0nec0w",
+      "text": "Bis wann hast du Zeit?",
+      "translation": "Until what time are you free?",
+      "cloze": "wann"
+    },
+    {
+      "id": "de.s.4nw0svha0z",
+      "wordId": "de.w.4qfz0nec0w",
+      "text": "Ich weiß nicht, wann der Zug fährt.",
+      "translation": "I don't know when the train leaves.",
+      "cloze": "wann"
+    },
+    {
+      "id": "de.s.56h8df8kyd",
+      "wordId": "de.w.jxc0cgb3rk",
+      "text": "Ich bin fertig mit der Arbeit.",
+      "translation": "I'm done with work.",
+      "cloze": "fertig"
+    },
+    {
+      "id": "de.s.8s4zjjpdn5",
+      "wordId": "de.w.jxc0cgb3rk",
+      "text": "Das Essen ist fertig!",
+      "translation": "Dinner's ready!",
+      "cloze": "fertig"
+    },
+    {
+      "id": "de.s.paj9yj1exx",
+      "wordId": "de.w.jxc0cgb3rk",
+      "text": "Nach der Arbeit bin ich total fertig.",
+      "translation": "After work I'm completely exhausted.",
+      "cloze": "fertig"
+    },
+    {
+      "id": "de.s.pp63xy9jdh",
+      "wordId": "de.w.zmfdshqd1r",
+      "text": "Ich wohne allein.",
+      "translation": "I live alone.",
+      "cloze": "allein"
+    },
+    {
+      "id": "de.s.qp9mmgfd1z",
+      "wordId": "de.w.zmfdshqd1r",
+      "text": "Lass mich nicht allein!",
+      "translation": "Don't leave me alone!",
+      "cloze": "allein"
+    },
+    {
+      "id": "de.s.5p0t5sc5m2",
+      "wordId": "de.w.zmfdshqd1r",
+      "text": "Das schaffe ich allein.",
+      "translation": "I can do that by myself.",
+      "cloze": "allein"
+    },
+    {
+      "id": "de.s.4anp57zsrk",
+      "wordId": "de.w.p3jtb4xz6y",
+      "text": "Sprichst du Deutsch?",
+      "translation": "Do you speak German?",
+      "cloze": "Sprichst"
+    },
+    {
+      "id": "de.s.23fxjhdcbt",
+      "wordId": "de.w.p3jtb4xz6y",
+      "text": "Ich spreche ein bisschen Englisch.",
+      "translation": "I speak a little English.",
+      "cloze": "spreche"
+    },
+    {
+      "id": "de.s.hvecm11dsf",
+      "wordId": "de.w.p3jtb4xz6y",
+      "text": "Er spricht zu schnell.",
+      "translation": "He speaks too fast.",
+      "cloze": "spricht"
+    },
+    {
+      "id": "de.s.1kw6yeawn7",
+      "wordId": "de.w.p3jtb4xz6y",
+      "text": "Hast du mit ihr gesprochen?",
+      "translation": "Have you talked to her?",
+      "cloze": "gesprochen"
     }
   ]
 }

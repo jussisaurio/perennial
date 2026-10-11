@@ -1,0 +1,45 @@
+# Dependabot updates merge themselves once CI passes, except major versions
+# (those wait for a person). Branch protection isn't available on this plan,
+# so instead of GitHub's auto-merge: label the PR, then merge after green CI.
+# PRs that change workflow files can't be merged with GITHUB_TOKEN; they stay open.
+name: Dependabot auto-merge
+
+on:
+  pull_request:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  label:
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v2
+      - if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        run: gh pr edit "$PR" --add-label automerge --repo "$GITHUB_REPOSITORY"
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  merge:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge if labelled
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --json number,labels,headRefOid \
+            -q ".[] | select(.headRefOid == \"$SHA\") | select(any(.labels[]; .name == \"automerge\")) | .number")
+          [ -n "$pr" ] && gh pr merge "$pr" --squash --delete-branch --repo "$GITHUB_REPOSITORY" || echo "nothing to merge"

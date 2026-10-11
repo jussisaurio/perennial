@@ -8,7 +8,7 @@ import { z } from "zod";
 import { AIService, ExamplesIn, MineIn } from "./ai";
 import { createAuth } from "./auth";
 import type { Config } from "./config";
-import { fail, HttpError, json, securityHeaders, serveStatic, versionAtLeast } from "./http";
+import { fail, HttpError, json, readJson, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { addLogContext, log, withLogContext } from "./log";
 import { createMailer, OutboxMailer } from "./mail";
 import { handleWrite, proxyShape } from "./sync";
@@ -18,8 +18,9 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
   const { auth, pool } = createAuth(config, sql, mailer);
   const ai = deps.ai ?? new AIService(sql, config);
   const headers = securityHeaders(
-    [config.observability.sentryDsn ? "https://*.ingest.sentry.io https://*.ingest.de.sentry.io" : "", config.observability.posthogHost ?? ""].filter(Boolean),
+    [...new Set(config.observability.connect)],
     config.appUrl.startsWith("https://"),
+    !!config.turnstile.siteKey,
   );
 
   async function session(req: Request) {
@@ -38,7 +39,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
     if (!versionAtLeast(req.headers.get("x-perennial-version"), config.minClientVersion)) throw new HttpError(426, "please_reload", { minVersion: config.minClientVersion });
   }
   const body = async <T extends z.ZodType>(req: Request, schema: T): Promise<z.infer<T>> => {
-    const r = schema.safeParse(await req.json().catch(() => null));
+    const r = schema.safeParse(await readJson(req, 64 * 1024));
     if (!r.success) throw new HttpError(422, "bad_request", { issues: r.error.issues.slice(0, 5) });
     return r.data;
   };
@@ -101,9 +102,36 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
     };
   }
 
+  /**
+   * The only Better Auth endpoints the app uses (web/src/data/auth.ts). The
+   * rest (passwords, email change, account linking, session lists, user
+   * updates...) stay unreachable, whatever a future Better Auth enables.
+   */
+  const authEndpoints: Record<string, string[]> = {
+    "/api/auth/get-session": ["GET"],
+    "/api/auth/sign-out": ["POST"],
+    "/api/auth/sign-in/anonymous": ["POST"],
+    "/api/auth/email-otp/send-verification-otp": ["POST"],
+    "/api/auth/sign-in/email-otp": ["POST"],
+  };
+
+  const appOrigin = new URL(config.appUrl).origin;
+  /**
+   * Cookie sessions: a state-changing request must come from our own page.
+   * Browsers send Origin on every POST; a form or another site can't fake it,
+   * and a JSON body can't be sent cross-origin without a preflight we don't allow.
+   */
+  function requireSameOrigin(req: Request) {
+    const origin = req.headers.get("origin");
+    const site = req.headers.get("sec-fetch-site");
+    if (origin ? origin !== appOrigin : site !== null && site !== "same-origin") throw new HttpError(403, "cross_origin");
+    if (!(req.headers.get("content-type") ?? "").startsWith("application/json")) throw new HttpError(415, "json_only");
+  }
+
   async function route(req: Request): Promise<Response> {
     const url = new URL(req.url);
-    if (url.pathname.startsWith("/api/auth/")) return auth.handler(req);
+    if (url.pathname.startsWith("/api/auth/")) return authEndpoints[url.pathname]?.includes(req.method) ? auth.handler(req) : fail(404, "not_found");
+    if (req.method !== "GET" && req.method !== "HEAD" && url.pathname.startsWith("/api/")) requireSameOrigin(req);
     const r = routes[url.pathname];
     if (r) {
       const h = r[req.method];

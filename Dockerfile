@@ -1,6 +1,6 @@
 # One image runs the web app and the API. Build: docker build -t perennial .
 # The Railway "web" service runs the default command; the "housekeeping" cron
-# service runs `bun src/housekeeping.ts`; migrations run before each deploy.
+# service runs `bun --preload ./instrument.ts src/housekeeping.ts`; migrations run before each deploy.
 
 FROM oven/bun:1.3.14 AS web
 WORKDIR /app/web
@@ -12,8 +12,9 @@ COPY decks/ /app/decks/
 ARG VITE_SENTRY_DSN=""
 ARG VITE_POSTHOG_KEY=""
 ARG VITE_POSTHOG_HOST=""
+ARG VITE_TURNSTILE_SITE_KEY=""
 ARG VITE_RELEASE="dev"
-ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST VITE_RELEASE=$VITE_RELEASE
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY VITE_RELEASE=$VITE_RELEASE
 RUN bunx vite build
 
 FROM oven/bun:1.3.14-slim

@@ -167,7 +167,7 @@
       "sido",
       "sea"
     ],
-    "notes": "Use ser for identity and lasting traits, estar for states and places.",
+    "notes": "Use ser for identity and lasting traits, estar for states and places. Preterite fui, fue, fueron are shared with ir (Fue un buen día = It was a good day; Fue a casa = He went home).",
     "sentences": [
       {
         "text": "Soy estudiante.",
@@ -318,9 +318,9 @@
         "cloze": "por"
       },
       {
-        "text": "Por favor, ven aquí.",
-        "translation": "Please come here.",
-        "cloze": "Por"
+        "text": "Te lo envío por correo.",
+        "translation": "I'll send it to you by mail.",
+        "cloze": "por"
       },
       {
         "text": "Camino por el parque.",
@@ -425,8 +425,8 @@
         "cloze": "se"
       },
       {
-        "text": "Ella se va mañana.",
-        "translation": "She's leaving tomorrow.",
+        "text": "Ella se mira en el espejo.",
+        "translation": "She looks at herself in the mirror.",
         "cloze": "se"
       }
     ]
@@ -495,9 +495,9 @@
         "cloze": "está"
       },
       {
-        "text": "Estamos listos.",
-        "translation": "We're ready.",
-        "cloze": "Estamos"
+        "text": "La tienda estaba cerrada.",
+        "translation": "The shop was closed.",
+        "cloze": "estaba"
       }
     ]
   },
@@ -806,8 +806,8 @@
         "cloze": "sus"
       },
       {
-        "text": "¿Es su coche?",
-        "translation": "Is it his car?",
+        "text": "Señora, ¿es su coche?",
+        "translation": "Ma'am, is this your car?",
         "cloze": "su"
       }
     ]
@@ -881,12 +881,12 @@
       "ido",
       "vaya"
     ],
-    "notes": "ir a + verb = going to: voy a comer (I'm going to eat). vamos also means 'let's go'.",
+    "notes": "ir a + verb = going to: voy a comer (I'm going to eat). vamos also means 'let's go'. fui and fue are also forms of ser (fue un buen día = it was a good day).",
     "sentences": [
       {
-        "text": "Voy a casa.",
-        "translation": "I'm going home.",
-        "cloze": "Voy"
+        "text": "Ayer fui al médico.",
+        "translation": "Yesterday I went to the doctor.",
+        "cloze": "fui"
       },
       {
         "text": "¿Adónde vas?",
@@ -912,7 +912,7 @@
     "forms": [
       "como"
     ],
-    "notes": "With an accent, cómo means 'how'.",
+    "notes": "With an accent, cómo means 'how'. Como is also the yo form of comer: como pan (I eat bread).",
     "sentences": [
       {
         "text": "Eres como tu padre.",
@@ -920,7 +920,7 @@
         "cloze": "como"
       },
       {
-        "text": "Haz como yo.",
+        "text": "Hazlo como yo.",
         "translation": "Do as I do.",
         "cloze": "como"
       },
@@ -1019,6 +1019,7 @@
       "todos",
       "todas"
     ],
+    "notes": "Also before a noun: toda la semana (all week), todos mis amigos (all my friends).",
     "sentences": [
       {
         "text": "Todo está bien.",
@@ -1026,8 +1027,8 @@
         "cloze": "Todo"
       },
       {
-        "text": "Todos mis amigos están aquí.",
-        "translation": "All my friends are here.",
+        "text": "Todos quieren venir.",
+        "translation": "Everyone wants to come.",
         "cloze": "Todos"
       },
       {
@@ -1085,9 +1086,9 @@
         "cloze": "Puedo"
       },
       {
-        "text": "No puedo dormir.",
-        "translation": "I can't sleep.",
-        "cloze": "puedo"
+        "text": "Ayer no pudo venir.",
+        "translation": "He couldn't come yesterday.",
+        "cloze": "pudo"
       },
       {
         "text": "¿Me puedes ayudar?",
@@ -1153,9 +1154,9 @@
     ],
     "sentences": [
       {
-        "text": "Quiero ir a casa.",
-        "translation": "I want to go home.",
-        "cloze": "Quiero"
+        "text": "Ella quería ir a casa.",
+        "translation": "She wanted to go home.",
+        "cloze": "quería"
       },
       {
         "text": "¿Quieres algo?",

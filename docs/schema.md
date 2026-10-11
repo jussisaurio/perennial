@@ -40,19 +40,19 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
 
 ## Postgres
 
-**Auth:** Better Auth's tables `user` (with `is_anonymous`), `account`, `session` and `verification`. `account` has one row per sign-in method (`provider_id`, `account_id`), so social login is config, not a schema change.
+**Auth:** Better Auth's tables `user` (with `"isAnonymous"`; Better Auth's own camelCase column names are kept), `account`, `session` and `verification`. User ids are `uuid`. `account` has one row per sign-in method (`provider_id`, `account_id`), so social login is config, not a schema change.
 
 **Synced per user** with ElectricSQL (Postgres to client over HTTP "shapes", always filtered `where user_id = $session` by our proxy) into TanStack DB collections on the client. Writes go through our own endpoints, queued offline by TanStack DB's offline transactions. Composite keys keep their Postgres primary key; the client keys rows by the non-user part (`lang`, `word_id`), so linking an account doesn't make every local row resync.
 
 ```sql
 create table course (            -- one per language; settings edited per column
-  user_id text not null references "user" on delete cascade,
+  user_id uuid not null references "user" on delete cascade,
   lang text not null, minutes smallint not null default 7, retention real not null default 0.9,
   primary key (user_id, lang));
 
 create table review (
   id uuid primary key,           -- made on the client: idempotent retries and merges
-  user_id text not null references "user" on delete cascade,
+  user_id uuid not null references "user" on delete cascade,
   lang text not null, word_id text not null,
   skill text not null check (skill in ('read', 'listen', 'write')),
   grade smallint not null check (grade between 1 and 4),
@@ -61,20 +61,20 @@ create table review (
 create index on review (user_id, word_id);
 
 create table word_state (        -- newest updated_at wins
-  user_id text not null references "user" on delete cascade, word_id text not null,
+  user_id uuid not null references "user" on delete cascade, word_id text not null,
   status text not null check (status in ('queued', 'paused', 'ignored')),
   queued_at timestamptz,         -- queued words come before frequency words
   updated_at timestamptz not null, primary key (user_id, word_id));
 
 create table user_word (         -- words from the learner's own texts
-  id uuid primary key, user_id text not null references "user" on delete cascade,
+  id uuid primary key, user_id uuid not null references "user" on delete cascade,
   lang text not null, lemma text not null, gloss text not null, pos text,
   forms jsonb not null default '[]', notes text,
   deck_id text);                 -- set when a deck version adds the same word: one plant, not two
 create index on user_word (user_id);
 
 create table user_sentence (     -- from own texts, or AI-written for any word
-  id uuid primary key, user_id text not null references "user" on delete cascade,
+  id uuid primary key, user_id uuid not null references "user" on delete cascade,
   word_id text not null, text text not null, translation text not null, cloze text not null,
   origin text not null check (origin in ('own-text', 'ai')), model text);
 create index on user_sentence (user_id, word_id);
