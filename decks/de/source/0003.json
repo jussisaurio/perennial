@@ -27,7 +27,7 @@
   },
   {
     "lemma": "natürlich",
-    "gloss": "of course; natural",
+    "gloss": "of course; naturally",
     "pos": "adv",
     "forms": [
       "natürlich"
@@ -44,8 +44,8 @@
         "cloze": "natürlich"
       },
       {
-        "text": "Das ist ganz natürlich.",
-        "translation": "That's completely natural.",
+        "text": "Du hast natürlich recht.",
+        "translation": "Of course you're right.",
         "cloze": "natürlich"
       }
     ]
@@ -147,8 +147,8 @@
         "cloze": "Seit"
       },
       {
-        "text": "Ich warte seit einer Stunde.",
-        "translation": "I've been waiting for an hour.",
+        "text": "Ich bin seit Montag krank.",
+        "translation": "I've been sick since Monday.",
         "cloze": "seit"
       }
     ]
@@ -583,9 +583,9 @@
         "cloze": "Menschen"
       },
       {
-        "text": "Mensch, bist du groß geworden!",
-        "translation": "Wow, you've grown!",
-        "cloze": "Mensch"
+        "text": "Ich mag diesen Menschen nicht.",
+        "translation": "I don't like this person.",
+        "cloze": "Menschen"
       }
     ]
   },
@@ -894,9 +894,9 @@
         "cloze": "erst"
       },
       {
-        "text": "Ich bin erst seit gestern hier.",
-        "translation": "I've only been here since yesterday.",
-        "cloze": "erst"
+        "text": "Erst essen wir, dann gehen wir spazieren.",
+        "translation": "First we eat, then we go for a walk.",
+        "cloze": "Erst"
       }
     ]
   },
@@ -1073,6 +1073,7 @@
       "brauchst",
       "braucht",
       "brauchte",
+      "brauchten",
       "gebraucht"
     ],
     "sentences": [
@@ -1092,9 +1093,9 @@
         "cloze": "braucht"
       },
       {
-        "text": "Wir brauchen ein neues Auto.",
-        "translation": "We need a new car.",
-        "cloze": "brauchen"
+        "text": "Wir brauchten ein neues Auto.",
+        "translation": "We needed a new car.",
+        "cloze": "brauchten"
       }
     ]
   },
@@ -1387,8 +1388,8 @@
         "cloze": "dabei"
       },
       {
-        "text": "Was ist schon dabei?",
-        "translation": "What's the big deal?",
+        "text": "Sie kocht und hört dabei Musik.",
+        "translation": "She cooks and listens to music at the same time.",
         "cloze": "dabei"
       }
     ]
@@ -1523,8 +1524,8 @@
         "cloze": "Bevor"
       },
       {
-        "text": "Ich lese, bevor ich schlafe.",
-        "translation": "I read before I go to sleep.",
+        "text": "Ich lese immer, bevor ich schlafen gehe.",
+        "translation": "I always read before I go to bed.",
         "cloze": "bevor"
       }
     ]
@@ -1650,7 +1651,7 @@
     "forms": [
       "wann"
     ],
-    "notes": "Use wann in questions. In statements, 'when' is usually wenn or als.",
+    "notes": "Use wann in direct and indirect questions (Ich weiß nicht, wann ...). When \"when\" links two clauses (whenever / at the time that), use wenn or als.",
     "sentences": [
       {
         "text": "Wann kommst du?",

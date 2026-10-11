@@ -65,7 +65,7 @@
     "forms": [
       "als"
     ],
-    "notes": "als + past = when (one time in the past): Als ich klein war...",
+    "notes": "als + past = when (a single event or period in the past; for repeated events use wenn): Als ich klein war...",
     "sentences": [
       {
         "text": "Er ist älter als ich.",
@@ -177,12 +177,12 @@
       },
       {
         "text": "Komm doch mit!",
-        "translation": "Why don't you come along!",
+        "translation": "Why don't you come along?",
         "cloze": "doch"
       },
       {
         "text": "Das ist doch klar.",
-        "translation": "That's obvious.",
+        "translation": "But that's obvious!",
         "cloze": "doch"
       }
     ]
@@ -456,9 +456,9 @@
         "cloze": "gehe"
       },
       {
-        "text": "Das geht nicht.",
-        "translation": "That's not possible.",
-        "cloze": "geht"
+        "text": "Gehst du zu Fuß zur Arbeit?",
+        "translation": "Do you walk to work?",
+        "cloze": "Gehst"
       },
       {
         "text": "Wir gingen zusammen nach Hause.",
@@ -648,9 +648,9 @@
         "cloze": "immer"
       },
       {
-        "text": "Immer mit der Ruhe!",
-        "translation": "Take it easy!",
-        "cloze": "Immer"
+        "text": "Morgens trinke ich immer Tee.",
+        "translation": "I always drink tea in the morning.",
+        "cloze": "immer"
       }
     ]
   },
@@ -884,7 +884,7 @@
   },
   {
     "lemma": "denn",
-    "gloss": "then (in questions); because",
+    "gloss": "then; so (in questions, shows interest)",
     "pos": "particle",
     "forms": [
       "denn"
@@ -902,8 +902,8 @@
         "cloze": "denn"
       },
       {
-        "text": "Wie heißt du denn?",
-        "translation": "So what's your name?",
+        "text": "Kommst du denn nicht mit?",
+        "translation": "Aren't you coming, then?",
         "cloze": "denn"
       }
     ]
@@ -959,9 +959,9 @@
         "cloze": "tust"
       },
       {
-        "text": "Mein Kopf tut weh.",
-        "translation": "My head hurts.",
-        "cloze": "tut"
+        "text": "Sie tat alles für ihre Kinder.",
+        "translation": "She did everything for her children.",
+        "cloze": "tat"
       },
       {
         "text": "Ich habe nichts getan!",
@@ -1326,8 +1326,8 @@
     "notes": "sollte = should, ought to.",
     "sentences": [
       {
-        "text": "Was soll ich machen?",
-        "translation": "What should I do?",
+        "text": "Wann soll ich kommen?",
+        "translation": "When am I supposed to come?",
         "cloze": "soll"
       },
       {
@@ -1375,7 +1375,7 @@
   },
   {
     "lemma": "wirklich",
-    "gloss": "really; real",
+    "gloss": "really; truly",
     "pos": "adv",
     "forms": [
       "wirklich"
@@ -1416,9 +1416,9 @@
         "cloze": "viel"
       },
       {
-        "text": "Viele Leute sind hier.",
-        "translation": "Lots of people are here.",
-        "cloze": "Viele"
+        "text": "Hier sind viele Leute.",
+        "translation": "There are a lot of people here.",
+        "cloze": "viele"
       },
       {
         "text": "Vielen Dank!",
@@ -1469,8 +1469,8 @@
     ],
     "sentences": [
       {
-        "text": "Die Frage ist einfach.",
-        "translation": "The question is easy.",
+        "text": "Das Rezept ist sehr einfach.",
+        "translation": "The recipe is very simple.",
         "cloze": "einfach"
       },
       {
@@ -1680,7 +1680,7 @@
       },
       {
         "text": "Er kommt sicher bald.",
-        "translation": "He'll surely come soon.",
+        "translation": "He'll certainly be here soon.",
         "cloze": "sicher"
       },
       {
@@ -1742,8 +1742,8 @@
         "cloze": "Nun"
       },
       {
-        "text": "Es ist nun mal so.",
-        "translation": "That's just the way it is.",
+        "text": "Wir müssen nun gehen.",
+        "translation": "We have to go now.",
         "cloze": "nun"
       }
     ]
@@ -1856,8 +1856,8 @@
         "cloze": "Hallo"
       },
       {
-        "text": "Sag Hallo zu deiner Mutter.",
-        "translation": "Say hello to your mother.",
+        "text": "Sag deiner Mutter Hallo von mir.",
+        "translation": "Say hello to your mother for me.",
         "cloze": "Hallo"
       }
     ]
@@ -2188,15 +2188,15 @@
         "cloze": "Ab"
       },
       {
-        "text": "Ab heute ist alles anders.",
-        "translation": "From today on, everything is different.",
-        "cloze": "Ab"
+        "text": "Der Film ist ab zwölf Jahren.",
+        "translation": "The film is for ages twelve and up.",
+        "cloze": "ab"
       }
     ]
   },
   {
     "lemma": "gerade",
-    "gloss": "just; right now; straight",
+    "gloss": "just; right now",
     "pos": "adv",
     "forms": [
       "gerade"
@@ -2397,9 +2397,9 @@
     ],
     "sentences": [
       {
-        "text": "Ist da jemand?",
-        "translation": "Is someone there?",
-        "cloze": "jemand"
+        "text": "Ich habe es jemandem erzählt.",
+        "translation": "I told someone.",
+        "cloze": "jemandem"
       },
       {
         "text": "Jemand hat angerufen.",
@@ -2561,12 +2561,12 @@
         "cloze": "paar"
       },
       {
-        "text": "Wir bleiben ein paar Tage.",
-        "translation": "We're staying a few days.",
+        "text": "Ich habe ein paar Fragen.",
+        "translation": "I have a few questions.",
         "cloze": "paar"
       },
       {
-        "text": "Ein paar Freunde kommen heute.",
+        "text": "Heute kommen ein paar Freunde.",
         "translation": "A few friends are coming today.",
         "cloze": "paar"
       }
@@ -2646,12 +2646,12 @@
     ],
     "sentences": [
       {
-        "text": "Wieso nicht?",
-        "translation": "Why not?",
+        "text": "Wieso weißt du das?",
+        "translation": "How come you know that?",
         "cloze": "Wieso"
       },
       {
-        "text": "Wieso bist du so spät?",
+        "text": "Wieso kommst du so spät?",
         "translation": "How come you're so late?",
         "cloze": "Wieso"
       },
@@ -2833,8 +2833,8 @@
         "cloze": "her"
       },
       {
-        "text": "Wo kommst du her?",
-        "translation": "Where are you from?",
+        "text": "Gib das her!",
+        "translation": "Give me that!",
         "cloze": "her"
       },
       {

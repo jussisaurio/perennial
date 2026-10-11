@@ -8,10 +8,9 @@
       "at": "2026-10-11T13:50:03.456Z"
     },
     "natürlich|adv|": {
-      "hash": "633b89c89c720a9f",
-      "verdict": "fix",
-      "note": "gloss: change 'of course; natural' to 'of course; naturally' (pos is adv; 'natural' is the adjective sense); s3: replace 'Das ist ganz [natürlich].' / 'That's completely natural.' with 'Du hast [natürlich] recht.' / 'Of course you're right.' because s3 uses natürlich as a predicative adjective, not as the adverb",
-      "at": "2026-10-11T13:50:32.656Z"
+      "hash": "0ba0ebab03f8f0bc",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:26.458Z"
     },
     "gar|particle|": {
       "hash": "9ee1799f19a62e28",
@@ -29,10 +28,9 @@
       "at": "2026-10-11T13:50:48.753Z"
     },
     "seit|prep|": {
-      "hash": "3d17246175d02280",
-      "verdict": "fix",
-      "note": "s3: replace 'Ich warte [seit] einer Stunde.' / 'I've been waiting for an hour.' with 'Ich bin [seit] Montag krank.' / 'I've been sick since Monday.' because s1 and s3 both show the 'for + duration' pattern and no sentence shows the glossed 'since + point in time' sense",
-      "at": "2026-10-11T13:50:53.919Z"
+      "hash": "c049f9d5d7d46d92",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:30.679Z"
     },
     "gleich|adv|": {
       "hash": "42d5e99e197ce580",
@@ -105,10 +103,9 @@
       "at": "2026-10-11T13:51:42.419Z"
     },
     "mensch|noun|": {
-      "hash": "748c075e327ee65f",
-      "verdict": "fix",
-      "note": "s3: replace '[Mensch], bist du groß geworden!' / 'Wow, you've grown!' with 'Ich mag diesen [Menschen] nicht.' / 'I don't like this person.' because s3 uses the interjection (Mensch! = wow), not the glossed sense 'person'; the replacement also shows the weak accusative singular -en that the notes mention (keep the interjection in notes only)",
-      "at": "2026-10-11T13:51:49.835Z"
+      "hash": "528ca28a6f375f5e",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:36.326Z"
     },
     "essen|verb|": {
       "hash": "ad4a970bc2f597af",
@@ -156,10 +153,9 @@
       "at": "2026-10-11T13:52:19.325Z"
     },
     "erst|adv|": {
-      "hash": "5b0683824841c5bc",
-      "verdict": "fix",
-      "note": "s3: replace 'Ich bin [erst] seit gestern hier.' / 'I've only been here since yesterday.' with '[Erst] essen wir, dann gehen wir spazieren.' / 'First we eat, then we go for a walk.' because the gloss lists 'first' but no sentence shows it, and s3 repeats the 'not until/only (time)' sense of s1",
-      "at": "2026-10-11T13:52:24.422Z"
+      "hash": "8a7aa2a773a7ba7f",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:39.458Z"
     },
     "stimmen|verb|": {
       "hash": "e0b1473f2351a4fc",
@@ -187,10 +183,9 @@
       "at": "2026-10-11T13:52:40.949Z"
     },
     "brauchen|verb|": {
-      "hash": "0d2914c13e22c27d",
-      "verdict": "fix",
-      "note": "s4: replace 'Wir [brauchen] ein neues Auto.' / 'We need a new car.' with 'Wir [brauchten] ein neues Auto.' / 'We needed a new car.' (and add 'brauchten' to forms) because all four sentences are present tense; variety needs one past form",
-      "at": "2026-10-11T13:52:45.454Z"
+      "hash": "07b98db4dae66940",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:42.210Z"
     },
     "gegen|prep|": {
       "hash": "4fb5625a1f11276e",
@@ -238,10 +233,9 @@
       "at": "2026-10-11T13:53:18.952Z"
     },
     "dabei|adv|": {
-      "hash": "6f7d81854a20ec5f",
-      "verdict": "fix",
-      "note": "s3: replace 'Was ist schon [dabei]?' / 'What's the big deal?' with 'Sie kocht und hört [dabei] Musik.' / 'She cooks and listens to music at the same time.' because s3 is an opaque idiom outside the gloss, while the glossed sense 'at the same time' has no sentence",
-      "at": "2026-10-11T13:53:24.743Z"
+      "hash": "5ed62ecc3d1ca7c1",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:44.830Z"
     },
     "heißen|verb|": {
       "hash": "1f67d13d3db4264a",
@@ -264,10 +258,9 @@
       "at": "2026-10-11T13:53:37.620Z"
     },
     "bevor|conj|": {
-      "hash": "8275094c10f91b18",
-      "verdict": "fix",
-      "note": "s3: replace 'Ich lese, [bevor] ich schlafe.' with 'Ich lese immer, [bevor] ich schlafen gehe.' / 'I always read before I go to bed.' because 'bevor ich schlafe' is unidiomatic (natives say 'bevor ich schlafen gehe' / 'einschlafe'), and the current translation 'go to sleep' does not match 'schlafe'",
-      "at": "2026-10-11T13:53:42.846Z"
+      "hash": "caf0544846dc6dbd",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:47.557Z"
     },
     "jahr|noun|": {
       "hash": "5871ef70161ec905",
@@ -290,10 +283,9 @@
       "at": "2026-10-11T13:53:57.991Z"
     },
     "wann|adv|": {
-      "hash": "0cdfac8e6526c98d",
-      "verdict": "fix",
-      "note": "notes: replace 'Use wann in questions. In statements, 'when' is usually wenn or als.' with 'Use wann in direct and indirect questions (Ich weiß nicht, wann ...). When ''when'' links two clauses (whenever / at the time that), use wenn or als.' because s3 is a statement that correctly uses wann, so the current note contradicts it",
-      "at": "2026-10-11T13:54:03.013Z"
+      "hash": "38a080f9783b09c0",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:50.152Z"
     },
     "fertig|adj|": {
       "hash": "d76127473ca743d3",

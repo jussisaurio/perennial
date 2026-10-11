@@ -73,16 +73,14 @@
       "at": "2026-10-11T13:50:45.427Z"
     },
     "haben|verb|": {
-      "hash": "1ef44b1a6017ff0b",
-      "verdict": "fix",
-      "note": "s4: replace 'Wir [haben] keine Zeit.' / 'We don't have time.' with 'Wir [hatten] keine Zeit.' / 'We didn't have time.' because s1 already uses Zeit in the present; this adds a past form for variety.",
-      "at": "2026-10-11T13:50:49.731Z"
+      "hash": "bf05bba4dbf74e6d",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:26.530Z"
     },
     "ja|particle|": {
-      "hash": "6018cfd94866278b",
-      "verdict": "fix",
-      "note": "s3 uses the emphasis-particle sense, which the gloss does not cover; gloss: change 'yes' to 'yes; (adds emphasis)' (both senses are very common). Alternatively replace s3 with 'Hast du Zeit? – [Ja].' / 'Do you have time? – Yes.' and keep the gloss.",
-      "at": "2026-10-11T13:50:55.307Z"
+      "hash": "da287ffa9343319b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:30.926Z"
     },
     "in|prep|": {
       "hash": "e8b6852711313581",
@@ -140,16 +138,14 @@
       "at": "2026-10-11T13:51:30.551Z"
     },
     "noch|adv|": {
-      "hash": "02628f6b7cb25bf7",
-      "verdict": "fix",
-      "note": "s3: replace 'Bist du [noch] da?' / 'Are you still there?' with 'Ich bin [noch] nicht fertig.' / 'I'm not done yet.' because s1 and s3 both show 'still' and the glossed 'yet' sense (noch nicht) is never shown; notes: add 'noch nicht = not yet.'",
-      "at": "2026-10-11T13:51:35.843Z"
+      "hash": "508dc53590427db9",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:34.100Z"
     },
     "wenn|conj|": {
-      "hash": "8b55d87190c95a06",
-      "verdict": "fix",
-      "note": "s1: replace 'Wenn du willst, komm mit.' / 'If you want, come along.' with 'Komm mit, [wenn] du willst.' / 'Come along if you want.' because a fronted wenn-clause followed by a bare imperative sounds awkward; the imperative-first order is what natives say.",
-      "at": "2026-10-11T13:51:41.023Z"
+      "hash": "37e62e8d4d1a03bc",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:41.207Z"
     },
     "können|verb|": {
       "hash": "e5bd84493851dfda",
@@ -157,10 +153,9 @@
       "at": "2026-10-11T13:51:46.442Z"
     },
     "mal|particle|": {
-      "hash": "a75ec5fc98505d92",
-      "verdict": "fix",
-      "note": "gloss: replace 'just (softens a request); times' with 'just (softens a request); ever, once' because the multiplication sense is rare in everyday speech while 'schon mal' (ever) is very common; notes: replace 'Drei mal zwei = three times two.' with 'Warst du schon mal hier? = Have you ever been here?' (keep 'Komm mal her! = Come here a second!'). Sentences are fine.",
-      "at": "2026-10-11T13:51:57.601Z"
+      "hash": "821b54d94a1f3811",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:44.639Z"
     },
     "nur|adv|": {
       "hash": "240ed58522a52a0b",
@@ -168,10 +163,9 @@
       "at": "2026-10-11T13:52:00.358Z"
     },
     "gut|adj|": {
-      "hash": "f90efc0a4bc2adb1",
-      "verdict": "fix",
-      "note": "s3: replace 'Er ist ein [guter] Lehrer.' / 'He's a good teacher.' with 'Sie spricht [gut] Deutsch.' / 'She speaks German well.' because the glossed 'well' sense is never shown, and 'ein guter …' already appears in the ein entry ('Er ist ein guter Freund').",
-      "at": "2026-10-11T13:52:04.960Z"
+      "hash": "f60bbd5ad548c333",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:47.282Z"
     },
     "schon|adv|": {
       "hash": "6d6e6ea6d8c218dd",

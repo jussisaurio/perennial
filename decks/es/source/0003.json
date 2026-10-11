@@ -301,9 +301,9 @@
         "cloze": "Aún"
       },
       {
-        "text": "Es aún mejor.",
-        "translation": "It's even better.",
-        "cloze": "aún"
+        "text": "Aún tengo hambre.",
+        "translation": "I'm still hungry.",
+        "cloze": "Aún"
       }
     ]
   },
@@ -450,9 +450,9 @@
         "cloze": "Algún"
       },
       {
-        "text": "Algunos amigos vienen hoy.",
+        "text": "Hoy vienen algunos amigos.",
         "translation": "Some friends are coming today.",
-        "cloze": "Algunos"
+        "cloze": "algunos"
       }
     ]
   },
@@ -469,8 +469,8 @@
     "notes": "tanto ... como = as much ... as. Also an adverb: No comas tanto (Don't eat so much).",
     "sentences": [
       {
-        "text": "Te quiero tanto.",
-        "translation": "I love you so much.",
+        "text": "Hace tanto calor hoy.",
+        "translation": "It's so hot today.",
         "cloze": "tanto"
       },
       {
@@ -544,8 +544,8 @@
     "notes": "Irregular: vengo, vine. ¡Ven! = Come! ¡Venga! = Come on!",
     "sentences": [
       {
-        "text": "¡Ven aquí!",
-        "translation": "Come here!",
+        "text": "¡Ven conmigo!",
+        "translation": "Come with me!",
         "cloze": "Ven"
       },
       {
@@ -1174,9 +1174,9 @@
         "cloze": "cariño"
       },
       {
-        "text": "Cariño, ¿dónde estás?",
-        "translation": "Honey, where are you?",
-        "cloze": "Cariño"
+        "text": "Los niños necesitan cariño.",
+        "translation": "Children need affection.",
+        "cloze": "cariño"
       }
     ]
   },
@@ -1558,8 +1558,8 @@
     ],
     "sentences": [
       {
-        "text": "Estoy contra la guerra.",
-        "translation": "I'm against the war.",
+        "text": "Pon la mesa contra la pared.",
+        "translation": "Put the table against the wall.",
         "cloze": "contra"
       },
       {
@@ -1678,9 +1678,9 @@
         "cloze": "muerta"
       },
       {
-        "text": "Las flores están muertas.",
-        "translation": "The flowers are dead.",
-        "cloze": "muertas"
+        "text": "Encontramos dos pájaros muertos.",
+        "translation": "We found two dead birds.",
+        "cloze": "muertos"
       }
     ]
   },
@@ -1761,8 +1761,8 @@
         "cloze": "ayuda"
       },
       {
-        "text": "¿Necesitas ayuda?",
-        "translation": "Do you need help?",
+        "text": "Pedí ayuda a un vecino.",
+        "translation": "I asked a neighbor for help.",
         "cloze": "ayuda"
       }
     ]

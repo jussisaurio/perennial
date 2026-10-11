@@ -13,10 +13,9 @@
       "at": "2026-10-11T13:50:09.840Z"
     },
     "als|conj|": {
-      "hash": "cae3bf3bee4402c5",
-      "verdict": "fix",
-      "note": "notes: replace 'als + past = when (one time in the past): Als ich klein war...' with 'als + past = when (a single event or period in the past; for repeated events use wenn): Als ich klein war...' because the note's own example (and s3) is a period, not one time, and the wenn contrast is the real trap",
-      "at": "2026-10-11T13:50:14.781Z"
+      "hash": "cc95cf404037d261",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:26.912Z"
     },
     "dann|adv|": {
       "hash": "8951fcee29b2af67",
@@ -34,10 +33,9 @@
       "at": "2026-10-11T13:50:24.226Z"
     },
     "doch|particle|": {
-      "hash": "4ba4e4714df14830",
-      "verdict": "fix",
-      "note": "s3 translation: replace 'That's obvious.' with 'But that's obvious!' because the plain translation drops the meaning doch adds (stressing that it should already be known); s2 translation: replace 'Why don't you come along!' with 'Why don't you come along?' (it is phrased as a question in English)",
-      "at": "2026-10-11T13:50:30.549Z"
+      "hash": "2d114fe3868ff486",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:30.829Z"
     },
     "alle|pron|": {
       "hash": "6ff80f27344562f6",
@@ -80,10 +78,9 @@
       "at": "2026-10-11T13:50:57.981Z"
     },
     "gehen|verb|": {
-      "hash": "9af862292e30e960",
-      "verdict": "fix",
-      "note": "s2: replace 'Das [geht] nicht.' → 'That's not possible.' with '[Gehst] du zu Fuß zur Arbeit?' → 'Do you walk to work?' because 'Das geht nicht' is an idiom outside the gloss (go; walk), already covered in notes, and no sentence shows the 'walk' sense or the du form",
-      "at": "2026-10-11T13:51:04.031Z"
+      "hash": "3a0a865aa11172ad",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:34.394Z"
     },
     "wo|adv|": {
       "hash": "5201a6bbb8a91b95",
@@ -116,10 +113,9 @@
       "at": "2026-10-11T13:51:21.085Z"
     },
     "immer|adv|": {
-      "hash": "a09d051e26f474e6",
-      "verdict": "fix",
-      "note": "s3: replace '[Immer] mit der Ruhe!' → 'Take it easy!' with 'Morgens trinke ich [immer] Tee.' → 'I always drink tea in the morning.' because 'Immer mit der Ruhe' is a fixed idiom where immer does not mean 'always', and with s2 (für immer) only one sentence shows the glossed sense",
-      "at": "2026-10-11T13:51:25.842Z"
+      "hash": "d6fa08502eea899b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:37.034Z"
     },
     "warum|adv|": {
       "hash": "5cae541712b4fa90",
@@ -162,10 +158,9 @@
       "at": "2026-10-11T13:51:52.486Z"
     },
     "denn|particle|": {
-      "hash": "0f8f5a149a0ae578",
-      "verdict": "fix",
-      "note": "gloss: replace 'then (in questions); because' with 'then; so (in questions, shows interest)' because no sentence (and the pos 'particle') covers the conjunction 'because', which stays mentioned in notes; s3: replace 'Wie heißt du [denn]?' → 'So what's your name?' with 'Kommst du [denn] nicht mit?' → 'Aren't you coming, then?' for variety (s1-s3 are all W-questions of the same shape)",
-      "at": "2026-10-11T13:52:00.397Z"
+      "hash": "b5e91b85fa974b55",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:40.375Z"
     },
     "mann|noun|": {
       "hash": "b8c6f7cf2589556f",
@@ -173,10 +168,9 @@
       "at": "2026-10-11T13:52:05.232Z"
     },
     "tun|verb|": {
-      "hash": "0ac09cf4239d29eb",
-      "verdict": "fix",
-      "note": "s2: replace 'Mein Kopf [tut] weh.' → 'My head hurts.' with 'Sie [tat] alles für ihre Kinder.' → 'She did everything for her children.' because in 'weh tun' tun does not mean 'to do' (the idiom is already in notes), and this adds the simple past form tat",
-      "at": "2026-10-11T13:52:10.865Z"
+      "hash": "019e1df0b797c8d2",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:44.153Z"
     },
     "sehen|verb|": {
       "hash": "1013a2ad3ea43d14",
@@ -229,10 +223,9 @@
       "at": "2026-10-11T13:52:46.136Z"
     },
     "sollen|verb|": {
-      "hash": "c773d21acb3eac7d",
-      "verdict": "fix",
-      "note": "s1: replace 'Was [soll] ich machen?' → 'What should I do?' with 'Wann [soll] ich kommen?' → 'When am I supposed to come?' because it nearly duplicates tun s4 ('Was soll ich tun?' → 'What should I do?', same English) and no sentence shows the 'be supposed to' sense",
-      "at": "2026-10-11T13:52:52.454Z"
+      "hash": "a7e72d11e77257fd",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:46.633Z"
     },
     "nie|adv|": {
       "hash": "a29f0f5795e642c1",
@@ -240,16 +233,14 @@
       "at": "2026-10-11T13:52:56.788Z"
     },
     "wirklich|adv|": {
-      "hash": "0b2f1aa1b968b804",
-      "verdict": "fix",
-      "note": "gloss: replace 'really; real' with 'really; truly' because 'real' is the adjective sense, which the pos (adv) and the sentences do not cover",
-      "at": "2026-10-11T13:53:00.653Z"
+      "hash": "ef2ecac18dc70d87",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:49.187Z"
     },
     "viel|adj|": {
-      "hash": "f7a287cb95a7ba81",
-      "verdict": "fix",
-      "note": "s2: replace '[Viele] Leute sind hier.' → 'Lots of people are here.' with 'Hier sind [viele] Leute.' → 'There are a lot of people here.' because the original word order mirrors English; natives say 'Hier sind viele Leute'",
-      "at": "2026-10-11T13:53:05.574Z"
+      "hash": "dddf7989b201a2a2",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:51.886Z"
     },
     "weg|adv|": {
       "hash": "ab60482db3ee0ebc",
@@ -257,10 +248,9 @@
       "at": "2026-10-11T13:53:08.483Z"
     },
     "einfach|adj|": {
-      "hash": "bda33464e66f0564",
-      "verdict": "fix",
-      "note": "s1: replace 'Die Frage ist [einfach].' → 'The question is easy.' with 'Das Rezept ist sehr [einfach].' → 'The recipe is very simple.' because s1 and s2 both describe a question as easy (no variety) and no sentence shows the 'simple' sense",
-      "at": "2026-10-11T13:53:36.561Z"
+      "hash": "194e869644090c4b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:54.711Z"
     },
     "leben|noun|": {
       "hash": "a9e54d8b0deb8606",
@@ -293,10 +283,9 @@
       "at": "2026-10-11T13:53:36.601Z"
     },
     "sicher|adj|": {
-      "hash": "594016c57acf5eb8",
-      "verdict": "fix",
-      "note": "s3 translation: replace 'He'll surely come soon.' with 'He'll certainly be here soon.' because 'surely come soon' is stilted English and the gloss word is 'certainly'",
-      "at": "2026-10-11T13:53:40.957Z"
+      "hash": "798d29d62baa37d0",
+      "verdict": "ok",
+      "at": "2026-10-11T14:04:57.350Z"
     },
     "frau|noun|": {
       "hash": "504b74055e584c36",
@@ -304,10 +293,9 @@
       "at": "2026-10-11T13:53:44.250Z"
     },
     "nun|adv|": {
-      "hash": "6cfa7f480aca212a",
-      "verdict": "fix",
-      "note": "s3: replace 'Es ist [nun] mal so.' → 'That's just the way it is.' with 'Wir müssen [nun] gehen.' → 'We have to go now.' because in 'nun mal' nun is a particle meaning neither 'now' nor 'well', and no sentence shows the plain 'now' sense",
-      "at": "2026-10-11T13:53:49.229Z"
+      "hash": "457e54019ae9f91e",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:00.769Z"
     },
     "bis|prep|": {
       "hash": "93e86f1f0e6331f1",
@@ -325,10 +313,9 @@
       "at": "2026-10-11T13:54:01.957Z"
     },
     "hallo|interj|": {
-      "hash": "64a6975264592fc1",
-      "verdict": "fix",
-      "note": "s3: replace 'Sag [Hallo] zu deiner Mutter.' → 'Say hello to your mother.' with 'Sag deiner Mutter [Hallo] von mir.' → 'Say hello to your mother for me.' because 'Hallo sagen zu' is a calque of English; the natural German uses a dative object",
-      "at": "2026-10-11T13:54:07.155Z"
+      "hash": "46ab2562d73f09cd",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:04.356Z"
     },
     "gott|noun|": {
       "hash": "d81607f596c43e71",
@@ -381,16 +368,14 @@
       "at": "2026-10-11T13:54:47.888Z"
     },
     "ab|prep|": {
-      "hash": "cb70640485e96121",
-      "verdict": "fix",
-      "note": "s3: replace '[Ab] heute ist alles anders.' → 'From today on, everything is different.' with 'Der Film ist [ab] zwölf Jahren.' → 'The film is for ages twelve and up.' because s1-s3 are all 'Ab + day word' with the same meaning (no variety); the new sentence shows another very common use of the preposition",
-      "at": "2026-10-11T13:54:54.662Z"
+      "hash": "6eaa62343ebb057b",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:08.427Z"
     },
     "gerade|adv|": {
-      "hash": "ba607fda0150a532",
-      "verdict": "fix",
-      "note": "gloss: replace 'just; right now; straight' with 'just; right now' because 'straight' is the adjective sense (eine gerade Linie), which the pos (adv) and the sentences do not cover",
-      "at": "2026-10-11T13:54:59.528Z"
+      "hash": "1615275b3dade023",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:11.485Z"
     },
     "tag|noun|": {
       "hash": "55132b435688f2fc",
@@ -418,10 +403,9 @@
       "at": "2026-10-11T13:55:24.371Z"
     },
     "jemand|pron|": {
-      "hash": "c9704623ad4ca6c8",
-      "verdict": "fix",
-      "note": "s1: replace 'Ist da [jemand]?' → 'Is someone there?' with 'Ich habe es [jemandem] erzählt.' → 'I told someone.' because s1 nearly duplicates hallo s2 ('Hallo, ist da jemand?'), and this adds the dative form jemandem",
-      "at": "2026-10-11T13:55:30.505Z"
+      "hash": "6dabd45d17c3a3c6",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:14.884Z"
     },
     "geld|noun|": {
       "hash": "e83b4ad539222a6b",
@@ -449,10 +433,9 @@
       "at": "2026-10-11T13:55:52.052Z"
     },
     "paar|det|": {
-      "hash": "58cd3df187e7fac6",
-      "verdict": "fix",
-      "note": "s2: replace 'Wir bleiben ein [paar] Tage.' → 'We're staying a few days.' with 'Ich habe ein [paar] Fragen.' → 'I have a few questions.' because it nearly duplicates Tag s3 ('Wir bleiben drei Tage.'); s3: replace 'Ein [paar] Freunde kommen heute.' with 'Heute kommen ein [paar] Freunde.' (translation unchanged) because natives put the time first here",
-      "at": "2026-10-11T13:55:58.745Z"
+      "hash": "863e8270216533b1",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:17.702Z"
     },
     "passieren|verb|": {
       "hash": "1f1357c64a704ebb",
@@ -465,10 +448,9 @@
       "at": "2026-10-11T13:56:06.674Z"
     },
     "wieso|adv|": {
-      "hash": "aa2ad912b9fbe94e",
-      "verdict": "fix",
-      "note": "s1: replace '[Wieso] nicht?' → 'Why not?' with '[Wieso] weißt du das?' → 'How come you know that?' because it duplicates warum s1 ('Warum nicht?' → 'Why not?'), making the cloze ambiguous; s2: replace '[Wieso] bist du so spät?' with '[Wieso] kommst du so spät?' (translation unchanged) because 'so spät sein' for a person is non-standard; natives say 'so spät kommen' or 'so spät dran sein'",
-      "at": "2026-10-11T13:56:13.242Z"
+      "hash": "e072773917d3289d",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:20.691Z"
     },
     "selbst|pron|": {
       "hash": "5bf9ca0703139538",
@@ -496,10 +478,9 @@
       "at": "2026-10-11T13:56:33.404Z"
     },
     "her|adv|": {
-      "hash": "11af45a0ba1cc3ae",
-      "verdict": "fix",
-      "note": "s2: replace 'Wo kommst du [her]?' → 'Where are you from?' with 'Gib das [her]!' → 'Give me that!' because it duplicates kommen s2 ('Woher kommst du?' → 'Where are you from?'), same meaning and same English",
-      "at": "2026-10-11T13:56:38.753Z"
+      "hash": "3563dc04dc4a2e4d",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:24.394Z"
     },
     "andere|adj|": {
       "hash": "2dc80bccaad4675d",

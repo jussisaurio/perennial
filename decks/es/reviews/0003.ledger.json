@@ -48,10 +48,9 @@
       "at": "2026-10-11T13:50:58.411Z"
     },
     "aún|adv|": {
-      "hash": "4c7f3152a35b9efa",
-      "verdict": "fix",
-      "note": "s3: replace 'Es [aún] mejor.' / 'It's even better.' with '[Aún] tengo hambre.' / 'I'm still hungry.' because s3 uses the 'even' sense (aún + comparative), which is outside the gloss 'still; yet' and seems to contradict the note that 'even' is aun without accent, confusing learners.",
-      "at": "2026-10-11T13:51:08.596Z"
+      "hash": "28f1ea2060d800f8",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:14.528Z"
     },
     "mío|pron|": {
       "hash": "12dd817b7eb846dd",
@@ -74,16 +73,14 @@
       "at": "2026-10-11T13:51:20.665Z"
     },
     "alguno|det|": {
-      "hash": "436defd72f2ae4e5",
-      "verdict": "fix",
-      "note": "s3: replace '[Algunos] amigos vienen hoy.' with 'Hoy vienen [algunos] amigos.' (translation unchanged: 'Some friends are coming today.') because a new-information subject goes after the verb in natural Spanish; the preverbal order sounds contrastive (some of the friends, not others).",
-      "at": "2026-10-11T13:51:25.706Z"
+      "hash": "4be7d9edef0f0e91",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:17.409Z"
     },
     "tanto|det|": {
-      "hash": "37e2b62ae678e28d",
-      "verdict": "fix",
-      "note": "s1: replace 'Te quiero [tanto].' / 'I love you so much.' with 'Hace [tanto] calor hoy.' / 'It's so hot today.' because the entry is pos det, but s1 and s4 both use tanto as an adverb; s4 already covers the adverb use mentioned in the notes, so s1 should show the masculine singular determiner before a noun.",
-      "at": "2026-10-11T13:51:31.276Z"
+      "hash": "66324933a44a86c2",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:20.679Z"
     },
     "serio|adj|": {
       "hash": "f66035217928ffc5",
@@ -91,10 +88,9 @@
       "at": "2026-10-11T13:51:34.260Z"
     },
     "venir|verb|": {
-      "hash": "2a34287d05726128",
-      "verdict": "fix",
-      "note": "s1: replace '¡[Ven] aquí!' / 'Come here!' with '¡[Ven] conmigo!' / 'Come with me!' because '¡Ven aquí!' is also a sentence of the 'aquí' entry (shared-sentence flag).",
-      "at": "2026-10-11T13:51:38.878Z"
+      "hash": "82004ea6df17f58c",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:23.944Z"
     },
     "idea|noun|": {
       "hash": "4b7906fae5ec7c4f",
@@ -197,10 +193,9 @@
       "at": "2026-10-11T13:52:54.197Z"
     },
     "cariño|noun|": {
-      "hash": "ae56b9c2e850ebcf",
-      "verdict": "fix",
-      "note": "s3: replace '[Cariño], ¿dónde estás?' / 'Honey, where are you?' with 'Los niños necesitan [cariño].' / 'Children need affection.' because s1 and s3 both show the pet-name use; the main gloss sense 'affection' appears only in s2, so the set lacks variety.",
-      "at": "2026-10-11T13:52:58.911Z"
+      "hash": "b1a80e06359710af",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:26.706Z"
     },
     "cualquier|det|": {
       "hash": "bf82e0035af651ae",
@@ -268,10 +263,9 @@
       "at": "2026-10-11T13:53:43.027Z"
     },
     "contra|prep|": {
-      "hash": "6d8a32c367fd9edf",
-      "verdict": "fix",
-      "note": "s1: replace 'Estoy [contra] la guerra.' / 'I'm against the war.' with 'Se apoyó [contra] la pared.' / 'He leaned against the wall.' because natives say 'estoy en contra de' for opposing something (bare 'estar contra' sounds off for a beginner model), and the physical sense adds variety to s2/s3.",
-      "at": "2026-10-11T13:53:49.234Z"
+      "hash": "bd00a859cbd97f9e",
+      "verdict": "ok",
+      "at": "2026-10-11T14:07:57.040Z"
     },
     "camino|noun|": {
       "hash": "0722140437129b68",
@@ -289,10 +283,9 @@
       "at": "2026-10-11T13:54:01.122Z"
     },
     "muerto|adj|": {
-      "hash": "cc594bd6c5eb05a7",
-      "verdict": "fix",
-      "note": "s3: replace 'Las flores están [muertas].' / 'The flowers are dead.' with 'Encontramos dos pájaros [muertos].' / 'We found two dead birds.' because s1 and s3 repeat the same 'X está muerto' pattern (and natives would call flowers 'secas' or 'marchitas'); the new line adds the attributive use and the masculine plural.",
-      "at": "2026-10-11T13:54:12.092Z"
+      "hash": "a955f0b9fc88e9dc",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:36.885Z"
     },
     "rápido|adj|": {
       "hash": "e9dc546ed05da8f5",
@@ -305,10 +298,9 @@
       "at": "2026-10-11T13:54:20.292Z"
     },
     "ayuda|noun|": {
-      "hash": "98c5b43bb6d10abc",
-      "verdict": "fix",
-      "note": "s3: replace '¿Necesitas [ayuda]?' / 'Do you need help?' with 'Pedí [ayuda] a un vecino.' / 'I asked a neighbor for help.' because s1 and s3 both use 'necesitar ayuda'; the new line adds a different context (pedir ayuda).",
-      "at": "2026-10-11T13:54:25.787Z"
+      "hash": "29414e5d2b70ac94",
+      "verdict": "ok",
+      "at": "2026-10-11T14:05:40.202Z"
     }
   }
 }

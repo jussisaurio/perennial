@@ -1,0 +1,9 @@
+{
+  "file": "source/0003.json",
+  "sha256": "c50e7d9f970168e4268b70cf66708b43690dde410d40e997a104facf93aef74f",
+  "author": "claude-agent:de-author-2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-0003-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "60/60 ok after re-check; 8 fixes applied as noted (natürlich gloss+s3 adverb, seit since+point in time, Mensch s3 target sense, erst 'first' sense, brauchen past form, dabei 'at the same time', bevor idiomatic s3, wann notes)"
+}

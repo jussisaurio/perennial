@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "native": "en",
-  "version": 3,
+  "version": 4,
   "words": [
     {
       "id": "de.w.cmn8thykat",
@@ -204,7 +204,7 @@
     {
       "id": "de.w.d4x642zc8s",
       "lemma": "ja",
-      "gloss": "yes",
+      "gloss": "yes; (adds emphasis)",
       "pos": "particle",
       "rank": 16,
       "forms": [
@@ -336,7 +336,8 @@
       "rank": 28,
       "forms": [
         "noch"
-      ]
+      ],
+      "notes": "noch nicht = not yet."
     },
     {
       "id": "de.w.j922pkzv68",
@@ -369,13 +370,13 @@
     {
       "id": "de.w.ej1ff02pkz",
       "lemma": "mal",
-      "gloss": "just (softens a request); times",
+      "gloss": "just (softens a request); ever, once",
       "pos": "particle",
       "rank": 31,
       "forms": [
         "mal"
       ],
-      "notes": "Komm mal her! = Come here a second! Drei mal zwei = three times two."
+      "notes": "Komm mal her! = Come here a second! Warst du schon mal hier? = Have you ever been here?"
     },
     {
       "id": "de.w.ak88gwsd5s",
@@ -529,7 +530,7 @@
       "forms": [
         "als"
       ],
-      "notes": "als + past = when (one time in the past): Als ich klein war..."
+      "notes": "als + past = when (a single event or period in the past; for repeated events use wenn): Als ich klein war..."
     },
     {
       "id": "de.w.mpkywc4meh",
@@ -877,7 +878,7 @@
     {
       "id": "de.w.4q1y6frsp8",
       "lemma": "denn",
-      "gloss": "then (in questions); because",
+      "gloss": "then; so (in questions, shows interest)",
       "pos": "particle",
       "rank": 72,
       "forms": [
@@ -1093,7 +1094,7 @@
     {
       "id": "de.w.fxx6hzey8a",
       "lemma": "wirklich",
-      "gloss": "really; real",
+      "gloss": "really; truly",
       "pos": "adv",
       "rank": 87,
       "forms": [
@@ -1439,7 +1440,7 @@
     {
       "id": "de.w.h7cfz94qtc",
       "lemma": "gerade",
-      "gloss": "just; right now; straight",
+      "gloss": "just; right now",
       "pos": "adv",
       "rank": 115,
       "forms": [
@@ -1798,7 +1799,7 @@
     {
       "id": "de.w.2qpev68rxs",
       "lemma": "natürlich",
-      "gloss": "of course; natural",
+      "gloss": "of course; naturally",
       "pos": "adv",
       "rank": 142,
       "forms": [
@@ -2255,6 +2256,7 @@
         "brauchst",
         "braucht",
         "brauchte",
+        "brauchten",
         "gebraucht"
       ]
     },
@@ -2512,7 +2514,7 @@
       "forms": [
         "wann"
       ],
-      "notes": "Use wann in questions. In statements, 'when' is usually wenn or als."
+      "notes": "Use wann in direct and indirect questions (Ich weiß nicht, wann ...). When \"when\" links two clauses (whenever / at the time that), use wenn or als."
     },
     {
       "id": "de.w.jxc0cgb3rk",
@@ -2914,11 +2916,19 @@
       "cloze": "hat"
     },
     {
+      "id": "de.s.6tysdkd67t",
+      "wordId": "de.w.4wwwkaz42g",
+      "text": "Wir hatten keine Zeit.",
+      "translation": "We didn't have time.",
+      "cloze": "hatten"
+    },
+    {
       "id": "de.s.j28rddzs8w",
       "wordId": "de.w.4wwwkaz42g",
       "text": "Wir haben keine Zeit.",
       "translation": "We don't have time.",
-      "cloze": "haben"
+      "cloze": "haben",
+      "retired": true
     },
     {
       "id": "de.s.wqj8cjpm4s",
@@ -3210,18 +3220,26 @@
       "cloze": "Noch"
     },
     {
+      "id": "de.s.22xvx6hr7f",
+      "wordId": "de.w.28n9h5qmn1",
+      "text": "Ich bin noch nicht fertig.",
+      "translation": "I'm not done yet.",
+      "cloze": "noch"
+    },
+    {
       "id": "de.s.5pb2e9yvvk",
       "wordId": "de.w.28n9h5qmn1",
       "text": "Bist du noch da?",
       "translation": "Are you still there?",
-      "cloze": "noch"
+      "cloze": "noch",
+      "retired": true
     },
     {
-      "id": "de.s.wf45x51a73",
+      "id": "de.s.tps9whs4c6",
       "wordId": "de.w.j922pkzv68",
-      "text": "Wenn du willst, komm mit.",
-      "translation": "If you want, come along.",
-      "cloze": "Wenn"
+      "text": "Komm mit, wenn du willst.",
+      "translation": "Come along if you want.",
+      "cloze": "wenn"
     },
     {
       "id": "de.s.45tjrkdyga",
@@ -3236,6 +3254,14 @@
       "text": "Was ist, wenn es regnet?",
       "translation": "What if it rains?",
       "cloze": "wenn"
+    },
+    {
+      "id": "de.s.wf45x51a73",
+      "wordId": "de.w.j922pkzv68",
+      "text": "Wenn du willst, komm mit.",
+      "translation": "If you want, come along.",
+      "cloze": "Wenn",
+      "retired": true
     },
     {
       "id": "de.s.rpa53g2qw7",
@@ -3315,11 +3341,19 @@
       "cloze": "Guten"
     },
     {
+      "id": "de.s.5qb5caxw86",
+      "wordId": "de.w.a1rr7dkp4m",
+      "text": "Sie spricht gut Deutsch.",
+      "translation": "She speaks German well.",
+      "cloze": "gut"
+    },
+    {
       "id": "de.s.z4d2dg6rx5",
       "wordId": "de.w.a1rr7dkp4m",
       "text": "Er ist ein guter Lehrer.",
       "translation": "He's a good teacher.",
-      "cloze": "guter"
+      "cloze": "guter",
+      "retired": true
     },
     {
       "id": "de.s.z5bfbt3jjt",
@@ -3612,14 +3646,14 @@
       "id": "de.s.gfszx1mqkj",
       "wordId": "de.w.5tkvvf40q4",
       "text": "Komm doch mit!",
-      "translation": "Why don't you come along!",
+      "translation": "Why don't you come along?",
       "cloze": "doch"
     },
     {
       "id": "de.s.n8z7x19pm2",
       "wordId": "de.w.5tkvvf40q4",
       "text": "Das ist doch klar.",
-      "translation": "That's obvious.",
+      "translation": "But that's obvious!",
       "cloze": "doch"
     },
     {
@@ -3826,11 +3860,11 @@
       "cloze": "gehe"
     },
     {
-      "id": "de.s.b55hc9k66d",
+      "id": "de.s.bdksr10zw1",
       "wordId": "de.w.5gmfs06h7s",
-      "text": "Das geht nicht.",
-      "translation": "That's not possible.",
-      "cloze": "geht"
+      "text": "Gehst du zu Fuß zur Arbeit?",
+      "translation": "Do you walk to work?",
+      "cloze": "Gehst"
     },
     {
       "id": "de.s.kjp3n5bvc1",
@@ -3845,6 +3879,14 @@
       "text": "Er ist früh gegangen.",
       "translation": "He left early.",
       "cloze": "gegangen"
+    },
+    {
+      "id": "de.s.b55hc9k66d",
+      "wordId": "de.w.5gmfs06h7s",
+      "text": "Das geht nicht.",
+      "translation": "That's not possible.",
+      "cloze": "geht",
+      "retired": true
     },
     {
       "id": "de.s.4hg9r5a7md",
@@ -3987,11 +4029,19 @@
       "cloze": "immer"
     },
     {
+      "id": "de.s.4fb5an9yf1",
+      "wordId": "de.w.s3pkc43jbq",
+      "text": "Morgens trinke ich immer Tee.",
+      "translation": "I always drink tea in the morning.",
+      "cloze": "immer"
+    },
+    {
       "id": "de.s.x2g5w35za4",
       "wordId": "de.w.s3pkc43jbq",
       "text": "Immer mit der Ruhe!",
       "translation": "Take it easy!",
-      "cloze": "Immer"
+      "cloze": "Immer",
+      "retired": true
     },
     {
       "id": "de.s.2wydgjkm82",
@@ -4190,11 +4240,19 @@
       "cloze": "denn"
     },
     {
+      "id": "de.s.hvpkeq6xha",
+      "wordId": "de.w.4q1y6frsp8",
+      "text": "Kommst du denn nicht mit?",
+      "translation": "Aren't you coming, then?",
+      "cloze": "denn"
+    },
+    {
       "id": "de.s.ndpe2y4xy8",
       "wordId": "de.w.4q1y6frsp8",
       "text": "Wie heißt du denn?",
       "translation": "So what's your name?",
-      "cloze": "denn"
+      "cloze": "denn",
+      "retired": true
     },
     {
       "id": "de.s.wz4kzfyc43",
@@ -4225,11 +4283,11 @@
       "cloze": "tust"
     },
     {
-      "id": "de.s.c07p7zc6h3",
+      "id": "de.s.yd81pynsc3",
       "wordId": "de.w.b0cj4c6rhg",
-      "text": "Mein Kopf tut weh.",
-      "translation": "My head hurts.",
-      "cloze": "tut"
+      "text": "Sie tat alles für ihre Kinder.",
+      "translation": "She did everything for her children.",
+      "cloze": "tat"
     },
     {
       "id": "de.s.vwk99m2n8j",
@@ -4244,6 +4302,14 @@
       "text": "Was soll ich tun?",
       "translation": "What should I do?",
       "cloze": "tun"
+    },
+    {
+      "id": "de.s.c07p7zc6h3",
+      "wordId": "de.w.b0cj4c6rhg",
+      "text": "Mein Kopf tut weh.",
+      "translation": "My head hurts.",
+      "cloze": "tut",
+      "retired": true
     },
     {
       "id": "de.s.28rc0wy04y",
@@ -4512,10 +4578,10 @@
       "cloze": "deinem"
     },
     {
-      "id": "de.s.9ezaawf9sv",
+      "id": "de.s.zvznbnry4f",
       "wordId": "de.w.b02c0tv69y",
-      "text": "Was soll ich machen?",
-      "translation": "What should I do?",
+      "text": "Wann soll ich kommen?",
+      "translation": "When am I supposed to come?",
       "cloze": "soll"
     },
     {
@@ -4538,6 +4604,14 @@
       "text": "Das solltest du wissen.",
       "translation": "You should know that.",
       "cloze": "solltest"
+    },
+    {
+      "id": "de.s.9ezaawf9sv",
+      "wordId": "de.w.b02c0tv69y",
+      "text": "Was soll ich machen?",
+      "translation": "What should I do?",
+      "cloze": "soll",
+      "retired": true
     },
     {
       "id": "de.s.0vb19063fn",
@@ -4589,11 +4663,11 @@
       "cloze": "viel"
     },
     {
-      "id": "de.s.8pm50g1btz",
+      "id": "de.s.bz87zq7jvx",
       "wordId": "de.w.xwhhzrky68",
-      "text": "Viele Leute sind hier.",
-      "translation": "Lots of people are here.",
-      "cloze": "Viele"
+      "text": "Hier sind viele Leute.",
+      "translation": "There are a lot of people here.",
+      "cloze": "viele"
     },
     {
       "id": "de.s.2dj45sek7v",
@@ -4608,6 +4682,14 @@
       "text": "Du isst zu viel.",
       "translation": "You eat too much.",
       "cloze": "viel"
+    },
+    {
+      "id": "de.s.8pm50g1btz",
+      "wordId": "de.w.xwhhzrky68",
+      "text": "Viele Leute sind hier.",
+      "translation": "Lots of people are here.",
+      "cloze": "Viele",
+      "retired": true
     },
     {
       "id": "de.s.h80atn27p1",
@@ -4631,10 +4713,10 @@
       "cloze": "weg"
     },
     {
-      "id": "de.s.7vqtzd3ef5",
+      "id": "de.s.4tjg6nj2qv",
       "wordId": "de.w.dgbjhw9r1x",
-      "text": "Die Frage ist einfach.",
-      "translation": "The question is easy.",
+      "text": "Das Rezept ist sehr einfach.",
+      "translation": "The recipe is very simple.",
       "cloze": "einfach"
     },
     {
@@ -4657,6 +4739,14 @@
       "text": "Komm einfach vorbei.",
       "translation": "Just drop by.",
       "cloze": "einfach"
+    },
+    {
+      "id": "de.s.7vqtzd3ef5",
+      "wordId": "de.w.dgbjhw9r1x",
+      "text": "Die Frage ist einfach.",
+      "translation": "The question is easy.",
+      "cloze": "einfach",
+      "retired": true
     },
     {
       "id": "de.s.scr76q3kyk",
@@ -4809,7 +4899,7 @@
       "id": "de.s.pmdytft3q6",
       "wordId": "de.w.0n902h0p8k",
       "text": "Er kommt sicher bald.",
-      "translation": "He'll surely come soon.",
+      "translation": "He'll certainly be here soon.",
       "cloze": "sicher"
     },
     {
@@ -4862,11 +4952,19 @@
       "cloze": "Nun"
     },
     {
+      "id": "de.s.68zye8skgc",
+      "wordId": "de.w.keevrwqs21",
+      "text": "Wir müssen nun gehen.",
+      "translation": "We have to go now.",
+      "cloze": "nun"
+    },
+    {
       "id": "de.s.f5dh31q0mj",
       "wordId": "de.w.keevrwqs21",
       "text": "Es ist nun mal so.",
       "translation": "That's just the way it is.",
-      "cloze": "nun"
+      "cloze": "nun",
+      "retired": true
     },
     {
       "id": "de.s.3nrh9ch1pz",
@@ -4953,11 +5051,19 @@
       "cloze": "Hallo"
     },
     {
+      "id": "de.s.m2w9s7kwc2",
+      "wordId": "de.w.qvtavjqe29",
+      "text": "Sag deiner Mutter Hallo von mir.",
+      "translation": "Say hello to your mother for me.",
+      "cloze": "Hallo"
+    },
+    {
       "id": "de.s.xamx0vfngk",
       "wordId": "de.w.qvtavjqe29",
       "text": "Sag Hallo zu deiner Mutter.",
       "translation": "Say hello to your mother.",
-      "cloze": "Hallo"
+      "cloze": "Hallo",
+      "retired": true
     },
     {
       "id": "de.s.v94s4f3hfn",
@@ -5219,11 +5325,19 @@
       "cloze": "Ab"
     },
     {
+      "id": "de.s.13d74t29kf",
+      "wordId": "de.w.dek3skxnqd",
+      "text": "Der Film ist ab zwölf Jahren.",
+      "translation": "The film is for ages twelve and up.",
+      "cloze": "ab"
+    },
+    {
       "id": "de.s.8bcevwsbss",
       "wordId": "de.w.dek3skxnqd",
       "text": "Ab heute ist alles anders.",
       "translation": "From today on, everything is different.",
-      "cloze": "Ab"
+      "cloze": "Ab",
+      "retired": true
     },
     {
       "id": "de.s.k0ap4hp95n",
@@ -5380,11 +5494,11 @@
       "cloze": "unserer"
     },
     {
-      "id": "de.s.dkxxsd7bk2",
+      "id": "de.s.f4jdmysvjg",
       "wordId": "de.w.zy7r7vccn7",
-      "text": "Ist da jemand?",
-      "translation": "Is someone there?",
-      "cloze": "jemand"
+      "text": "Ich habe es jemandem erzählt.",
+      "translation": "I told someone.",
+      "cloze": "jemandem"
     },
     {
       "id": "de.s.kggk2m81r7",
@@ -5399,6 +5513,14 @@
       "text": "Kennst du jemanden hier?",
       "translation": "Do you know anyone here?",
       "cloze": "jemanden"
+    },
+    {
+      "id": "de.s.dkxxsd7bk2",
+      "wordId": "de.w.zy7r7vccn7",
+      "text": "Ist da jemand?",
+      "translation": "Is someone there?",
+      "cloze": "jemand",
+      "retired": true
     },
     {
       "id": "de.s.r9wbt4a4pm",
@@ -5513,18 +5635,34 @@
       "cloze": "paar"
     },
     {
+      "id": "de.s.de4hw3p208",
+      "wordId": "de.w.gyrxjnhg27",
+      "text": "Ich habe ein paar Fragen.",
+      "translation": "I have a few questions.",
+      "cloze": "paar"
+    },
+    {
+      "id": "de.s.zc4kvkqf0a",
+      "wordId": "de.w.gyrxjnhg27",
+      "text": "Heute kommen ein paar Freunde.",
+      "translation": "A few friends are coming today.",
+      "cloze": "paar"
+    },
+    {
       "id": "de.s.76bhts2ab3",
       "wordId": "de.w.gyrxjnhg27",
       "text": "Wir bleiben ein paar Tage.",
       "translation": "We're staying a few days.",
-      "cloze": "paar"
+      "cloze": "paar",
+      "retired": true
     },
     {
       "id": "de.s.8qjphanh6g",
       "wordId": "de.w.gyrxjnhg27",
       "text": "Ein paar Freunde kommen heute.",
       "translation": "A few friends are coming today.",
-      "cloze": "paar"
+      "cloze": "paar",
+      "retired": true
     },
     {
       "id": "de.s.epnyndxy3p",
@@ -5576,16 +5714,16 @@
       "cloze": "gedacht"
     },
     {
-      "id": "de.s.bkjy4jt6y0",
+      "id": "de.s.adk9rats9m",
       "wordId": "de.w.qbjthmd3ah",
-      "text": "Wieso nicht?",
-      "translation": "Why not?",
+      "text": "Wieso weißt du das?",
+      "translation": "How come you know that?",
       "cloze": "Wieso"
     },
     {
-      "id": "de.s.8nbw9m58md",
+      "id": "de.s.txpfmkvdjw",
       "wordId": "de.w.qbjthmd3ah",
-      "text": "Wieso bist du so spät?",
+      "text": "Wieso kommst du so spät?",
       "translation": "How come you're so late?",
       "cloze": "Wieso"
     },
@@ -5595,6 +5733,22 @@
       "text": "Wieso fragst du?",
       "translation": "Why do you ask?",
       "cloze": "Wieso"
+    },
+    {
+      "id": "de.s.bkjy4jt6y0",
+      "wordId": "de.w.qbjthmd3ah",
+      "text": "Wieso nicht?",
+      "translation": "Why not?",
+      "cloze": "Wieso",
+      "retired": true
+    },
+    {
+      "id": "de.s.8nbw9m58md",
+      "wordId": "de.w.qbjthmd3ah",
+      "text": "Wieso bist du so spät?",
+      "translation": "How come you're so late?",
+      "cloze": "Wieso",
+      "retired": true
     },
     {
       "id": "de.s.wxsh20hfw5",
@@ -5723,10 +5877,10 @@
       "cloze": "her"
     },
     {
-      "id": "de.s.4y2jakx3r5",
+      "id": "de.s.53yt314ebb",
       "wordId": "de.w.1t31ykcy28",
-      "text": "Wo kommst du her?",
-      "translation": "Where are you from?",
+      "text": "Gib das her!",
+      "translation": "Give me that!",
       "cloze": "her"
     },
     {
@@ -5735,6 +5889,14 @@
       "text": "Das ist lange her.",
       "translation": "That was a long time ago.",
       "cloze": "her"
+    },
+    {
+      "id": "de.s.4y2jakx3r5",
+      "wordId": "de.w.1t31ykcy28",
+      "text": "Wo kommst du her?",
+      "translation": "Where are you from?",
+      "cloze": "her",
+      "retired": true
     },
     {
       "id": "de.s.rbehx2tvmc",
@@ -5870,11 +6032,19 @@
       "cloze": "natürlich"
     },
     {
+      "id": "de.s.z7xd02cp9s",
+      "wordId": "de.w.2qpev68rxs",
+      "text": "Du hast natürlich recht.",
+      "translation": "Of course you're right.",
+      "cloze": "natürlich"
+    },
+    {
       "id": "de.s.2j9mmkkpsf",
       "wordId": "de.w.2qpev68rxs",
       "text": "Das ist ganz natürlich.",
       "translation": "That's completely natural.",
-      "cloze": "natürlich"
+      "cloze": "natürlich",
+      "retired": true
     },
     {
       "id": "de.s.r834j52k6m",
@@ -5954,11 +6124,19 @@
       "cloze": "Seit"
     },
     {
+      "id": "de.s.cypzxd0q4f",
+      "wordId": "de.w.ezr7snkxc1",
+      "text": "Ich bin seit Montag krank.",
+      "translation": "I've been sick since Monday.",
+      "cloze": "seit"
+    },
+    {
       "id": "de.s.efp7kg2dfr",
       "wordId": "de.w.ezr7snkxc1",
       "text": "Ich warte seit einer Stunde.",
       "translation": "I've been waiting for an hour.",
-      "cloze": "seit"
+      "cloze": "seit",
+      "retired": true
     },
     {
       "id": "de.s.w0r9sw1phg",
@@ -6304,11 +6482,19 @@
       "cloze": "Menschen"
     },
     {
+      "id": "de.s.1xsxagp396",
+      "wordId": "de.w.pvd5xcbqjw",
+      "text": "Ich mag diesen Menschen nicht.",
+      "translation": "I don't like this person.",
+      "cloze": "Menschen"
+    },
+    {
       "id": "de.s.69pkgv0vgv",
       "wordId": "de.w.pvd5xcbqjw",
       "text": "Mensch, bist du groß geworden!",
       "translation": "Wow, you've grown!",
-      "cloze": "Mensch"
+      "cloze": "Mensch",
+      "retired": true
     },
     {
       "id": "de.s.mnr50eycyh",
@@ -6549,11 +6735,19 @@
       "cloze": "erst"
     },
     {
+      "id": "de.s.0wph3a03f4",
+      "wordId": "de.w.z7kg731bdc",
+      "text": "Erst essen wir, dann gehen wir spazieren.",
+      "translation": "First we eat, then we go for a walk.",
+      "cloze": "Erst"
+    },
+    {
       "id": "de.s.tt1jr334dn",
       "wordId": "de.w.z7kg731bdc",
       "text": "Ich bin erst seit gestern hier.",
       "translation": "I've only been here since yesterday.",
-      "cloze": "erst"
+      "cloze": "erst",
+      "retired": true
     },
     {
       "id": "de.s.qxs75yzr28",
@@ -6703,11 +6897,19 @@
       "cloze": "braucht"
     },
     {
+      "id": "de.s.b1w01kj860",
+      "wordId": "de.w.t4xc6yjqsr",
+      "text": "Wir brauchten ein neues Auto.",
+      "translation": "We needed a new car.",
+      "cloze": "brauchten"
+    },
+    {
       "id": "de.s.4t5jsa5s18",
       "wordId": "de.w.t4xc6yjqsr",
       "text": "Wir brauchen ein neues Auto.",
       "translation": "We need a new car.",
-      "cloze": "brauchen"
+      "cloze": "brauchen",
+      "retired": true
     },
     {
       "id": "de.s.6vfvz4syb5",
@@ -6934,11 +7136,19 @@
       "cloze": "dabei"
     },
     {
+      "id": "de.s.jb9h8hdj55",
+      "wordId": "de.w.6nr58y8mv3",
+      "text": "Sie kocht und hört dabei Musik.",
+      "translation": "She cooks and listens to music at the same time.",
+      "cloze": "dabei"
+    },
+    {
       "id": "de.s.nddbhfw7ye",
       "wordId": "de.w.6nr58y8mv3",
       "text": "Was ist schon dabei?",
       "translation": "What's the big deal?",
-      "cloze": "dabei"
+      "cloze": "dabei",
+      "retired": true
     },
     {
       "id": "de.s.ytf9szqagq",
@@ -7039,11 +7249,19 @@
       "cloze": "Bevor"
     },
     {
+      "id": "de.s.c9w7r7db8r",
+      "wordId": "de.w.crap9kvrm8",
+      "text": "Ich lese immer, bevor ich schlafen gehe.",
+      "translation": "I always read before I go to bed.",
+      "cloze": "bevor"
+    },
+    {
       "id": "de.s.v9mnw9yy8h",
       "wordId": "de.w.crap9kvrm8",
       "text": "Ich lese, bevor ich schlafe.",
       "translation": "I read before I go to sleep.",
-      "cloze": "bevor"
+      "cloze": "bevor",
+      "retired": true
     },
     {
       "id": "de.s.mnsxbnsvrb",

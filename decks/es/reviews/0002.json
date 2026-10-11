@@ -1,0 +1,9 @@
+{
+  "file": "source/0002.json",
+  "sha256": "2e4ef7427edac95018eb61e53c4407c5f4b7a3de176cb77d7fd3772480519464",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0002-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "Re-check of 26 fixed entries: all ok (editor's gracias substitution accepted); o s3 cloze confirmed correct (proof.ts display used naive replace, app/build use whole-word match); 100/100 ok."
+}

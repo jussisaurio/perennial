@@ -1,0 +1,9 @@
+{
+  "file": "source/0003.json",
+  "sha256": "b772870828ceb259b332779f288849b0f6ebb3398d019cdd54eebf9ded39356e",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0003-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "All 60 entries ok; one fix (contra s1 replaced rare-word 'apoyó' sentence with 'Pon la mesa contra la pared.') applied and re-checked."
+}

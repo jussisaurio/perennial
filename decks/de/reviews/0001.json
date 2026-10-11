@@ -1,9 +1,9 @@
 {
   "file": "source/0001.json",
-  "sha256": "a5348e93aee2492a38d165800e0f22edde7c930545527ada87bc3c9aae2c2fb8",
+  "sha256": "7a96f749713731ef8854927e4db316cc01cebf5e914e076c344de3a004a8bf70",
   "author": "claude-agent:deck-pipeline-2026-10-11",
-  "reviewer": "claude-agent:de-proofreader-2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-0001-2026-10-11",
   "reviewedAt": "2026-10-11",
   "verdict": "approved",
-  "notes": "4 findings (mit naturalness, sich gloss + missing true-reflexive sentence, auf sense), all fixed"
+  "notes": "40/40 ok; 6 fixes (haben s4 past, ja gloss emphasis, noch s3 'noch nicht'+notes, wenn s1 order, mal gloss/notes ever, gut s3 adverbial) applied by editor and re-checked"
 }

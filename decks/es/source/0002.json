@@ -73,8 +73,8 @@
     "notes": "For a thing or idea with no noun after it. Before a noun use este, esta.",
     "sentences": [
       {
-        "text": "¿Qué es esto?",
-        "translation": "What is this?",
+        "text": "¿Para qué sirve esto?",
+        "translation": "What is this for?",
         "cloze": "esto"
       },
       {
@@ -165,8 +165,8 @@
         "cloze": "algo"
       },
       {
-        "text": "Estoy algo cansado.",
-        "translation": "I'm a bit tired.",
+        "text": "¿Sabes algo de ella?",
+        "translation": "Do you know anything about her?",
         "cloze": "algo"
       }
     ]
@@ -190,8 +190,8 @@
         "cloze": "buen"
       },
       {
-        "text": "Es una buena idea.",
-        "translation": "It's a good idea.",
+        "text": "La comida está muy buena.",
+        "translation": "The food is very good.",
         "cloze": "buena"
       },
       {
@@ -324,13 +324,13 @@
     "notes": "Without the accent, como means 'like' or 'as'.",
     "sentences": [
       {
-        "text": "¿Cómo estás?",
-        "translation": "How are you?",
+        "text": "¿Cómo vas al trabajo?",
+        "translation": "How do you get to work?",
         "cloze": "Cómo"
       },
       {
-        "text": "¿Cómo te llamas?",
-        "translation": "What's your name?",
+        "text": "¿Cómo se dice «gracias» en inglés?",
+        "translation": "How do you say \"gracias\" in English?",
         "cloze": "Cómo"
       },
       {
@@ -429,9 +429,9 @@
         "cloze": "hice"
       },
       {
-        "text": "¿Qué estás haciendo?",
-        "translation": "What are you doing?",
-        "cloze": "haciendo"
+        "text": "Esta noche hago yo la cena.",
+        "translation": "I'm making dinner tonight.",
+        "cloze": "hago"
       }
     ]
   },
@@ -449,8 +449,8 @@
         "cloze": "gracias"
       },
       {
-        "text": "Gracias por todo.",
-        "translation": "Thanks for everything.",
+        "text": "Gracias por esperar.",
+        "translation": "Thanks for waiting.",
         "cloze": "Gracias"
       },
       {
@@ -564,8 +564,8 @@
     "notes": "Creo que sí = I think so. Creo que no = I don't think so.",
     "sentences": [
       {
-        "text": "Creo que sí.",
-        "translation": "I think so.",
+        "text": "Creo que va a llover.",
+        "translation": "I think it's going to rain.",
         "cloze": "Creo"
       },
       {
@@ -689,9 +689,9 @@
         "cloze": "Hola"
       },
       {
-        "text": "Dile hola de mi parte.",
-        "translation": "Say hi to him for me.",
-        "cloze": "hola"
+        "text": "Hola, ¿está Ana?",
+        "translation": "Hello, is Ana there?",
+        "cloze": "Hola"
       }
     ]
   },
@@ -734,8 +734,8 @@
     "gender": "f",
     "sentences": [
       {
-        "text": "Estoy en casa.",
-        "translation": "I'm at home.",
+        "text": "Los domingos me quedo en casa.",
+        "translation": "On Sundays I stay home.",
         "cloze": "casa"
       },
       {
@@ -856,8 +856,8 @@
     "notes": "los dos = both.",
     "sentences": [
       {
-        "text": "Tengo dos hermanos.",
-        "translation": "I have two brothers.",
+        "text": "Quiero dos cafés, por favor.",
+        "translation": "I'd like two coffees, please.",
         "cloze": "dos"
       },
       {
@@ -936,8 +936,8 @@
     "gender": "m",
     "sentences": [
       {
-        "text": "Por favor, ven aquí.",
-        "translation": "Please come here.",
+        "text": "Por favor, cierra la puerta.",
+        "translation": "Please close the door.",
         "cloze": "favor"
       },
       {
@@ -1006,8 +1006,8 @@
         "cloze": "mí"
       },
       {
-        "text": "Habla de mí.",
-        "translation": "He's talking about me.",
+        "text": "Siempre habla de mí.",
+        "translation": "He's always talking about me.",
         "cloze": "mí"
       }
     ]
@@ -1170,8 +1170,8 @@
     ],
     "sentences": [
       {
-        "text": "Yo también.",
-        "translation": "Me too.",
+        "text": "Mi hermano también viene.",
+        "translation": "My brother is coming too.",
         "cloze": "también"
       },
       {
@@ -1316,8 +1316,8 @@
     "gender": "m",
     "sentences": [
       {
-        "text": "Es un hombre muy bueno.",
-        "translation": "He's a very good man.",
+        "text": "Mi abuelo era un hombre muy alto.",
+        "translation": "My grandfather was a very tall man.",
         "cloze": "hombre"
       },
       {
@@ -1358,8 +1358,8 @@
         "cloze": "vida"
       },
       {
-        "text": "Los médicos salvan vidas.",
-        "translation": "Doctors save lives.",
+        "text": "Tenemos vidas muy diferentes.",
+        "translation": "We have very different lives.",
         "cloze": "vidas"
       }
     ]
@@ -1373,9 +1373,9 @@
     ],
     "sentences": [
       {
-        "text": "Alguien está en la puerta.",
+        "text": "Hay alguien en la puerta.",
         "translation": "Someone is at the door.",
-        "cloze": "Alguien"
+        "cloze": "alguien"
       },
       {
         "text": "¿Hay alguien aquí?",
@@ -1436,8 +1436,8 @@
         "cloze": "Siempre"
       },
       {
-        "text": "Te querré para siempre.",
-        "translation": "I'll love you forever.",
+        "text": "Vamos a ser amigos para siempre.",
+        "translation": "We're going to be friends forever.",
         "cloze": "siempre"
       },
       {
@@ -1521,8 +1521,8 @@
         "cloze": "años"
       },
       {
-        "text": "Feliz año nuevo.",
-        "translation": "Happy New Year.",
+        "text": "¡Feliz año nuevo!",
+        "translation": "Happy New Year!",
         "cloze": "año"
       },
       {
@@ -1602,8 +1602,8 @@
     "notes": "un poco = a little: un poco de agua.",
     "sentences": [
       {
-        "text": "Habla un poco más alto.",
-        "translation": "Speak a little louder.",
+        "text": "Tengo poco dinero.",
+        "translation": "I don't have much money.",
         "cloze": "poco"
       },
       {
@@ -1962,8 +1962,8 @@
         "cloze": "miras"
       },
       {
-        "text": "Me miró y sonrió.",
-        "translation": "He looked at me and smiled.",
+        "text": "Nadie me miró.",
+        "translation": "Nobody looked at me.",
         "cloze": "miró"
       },
       {
@@ -2158,9 +2158,9 @@
         "cloze": "Pasamos"
       },
       {
-        "text": "¿Qué ha pasado aquí?",
-        "translation": "What has happened here?",
-        "cloze": "pasado"
+        "text": "¿Me pasas la sal?",
+        "translation": "Can you pass me the salt?",
+        "cloze": "pasas"
       }
     ]
   },
@@ -2396,8 +2396,8 @@
         "cloze": "mañana"
       },
       {
-        "text": "Por las mañanas corro.",
-        "translation": "I run in the mornings.",
+        "text": "Trabajo por las mañanas.",
+        "translation": "I work in the mornings.",
         "cloze": "mañanas"
       }
     ]
@@ -2458,9 +2458,9 @@
         "cloze": "vale"
       },
       {
-        "text": "Valió la pena.",
-        "translation": "It was worth it.",
-        "cloze": "Valió"
+        "text": "Antes esta casa valía mucho más.",
+        "translation": "This house used to be worth much more.",
+        "cloze": "valía"
       }
     ]
   },
@@ -2486,8 +2486,8 @@
         "cloze": "lugar"
       },
       {
-        "text": "Hay lugares muy bonitos aquí.",
-        "translation": "There are very nice places here.",
+        "text": "Me gusta visitar lugares nuevos.",
+        "translation": "I like visiting new places.",
         "cloze": "lugares"
       }
     ]
@@ -2810,7 +2810,7 @@
       },
       {
         "text": "Nuestra casa está cerca.",
-        "translation": "Our house is near.",
+        "translation": "Our house is nearby.",
         "cloze": "Nuestra"
       },
       {
@@ -2883,13 +2883,13 @@
     "notes": "Hasta luego = see you later. desde luego = of course.",
     "sentences": [
       {
-        "text": "Luego te llamo.",
-        "translation": "I'll call you later.",
-        "cloze": "Luego"
+        "text": "Ahora no puedo, luego hablamos.",
+        "translation": "I can't now, we'll talk later.",
+        "cloze": "luego"
       },
       {
-        "text": "Primero estudio y luego salgo.",
-        "translation": "First I study and then I go out.",
+        "text": "Cenamos y luego vimos una película.",
+        "translation": "We had dinner and then watched a movie.",
         "cloze": "luego"
       },
       {
