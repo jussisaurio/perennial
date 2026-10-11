@@ -1,0 +1,9 @@
+{
+  "file": "source/0008.json",
+  "sha256": "79a1ac24b90e1d801b0a62b6ba681a4e613a3f1263c1cdac7a4f047ed82276c7",
+  "author": "claude-agent:de-author-2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-0008-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "All 100 entries proofread against docs/decks.md checklist; all ok, no open fixes."
+}
