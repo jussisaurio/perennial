@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "native": "en",
-  "version": 1,
+  "version": 2,
   "words": [
     {
       "id": "de.w.cmn8thykat",
@@ -238,7 +238,7 @@
     {
       "id": "de.w.e8yzqyvc3j",
       "lemma": "sich",
-      "gloss": "himself; herself; themselves",
+      "gloss": "oneself (reflexive: himself, herself, itself, themselves)",
       "pos": "pron",
       "rank": 19,
       "forms": [
@@ -264,7 +264,8 @@
       "rank": 21,
       "forms": [
         "auf"
-      ]
+      ],
+      "notes": "warten auf = to wait for. Auf Wiedersehen! = Goodbye!"
     },
     {
       "id": "de.w.69xvzxsw8w",
@@ -904,10 +905,10 @@
       "cloze": "ins"
     },
     {
-      "id": "de.s.csjan4zjr5",
+      "id": "de.s.t1yarzhjt7",
       "wordId": "de.w.21vzm8ebh8",
-      "text": "Ich komme mit dir.",
-      "translation": "I'm coming with you.",
+      "text": "Ich fahre mit dem Bus.",
+      "translation": "I'm taking the bus.",
       "cloze": "mit"
     },
     {
@@ -923,6 +924,14 @@
       "text": "Mit wem sprichst du?",
       "translation": "Who are you talking to?",
       "cloze": "Mit"
+    },
+    {
+      "id": "de.s.csjan4zjr5",
+      "wordId": "de.w.21vzm8ebh8",
+      "text": "Ich komme mit dir.",
+      "translation": "I'm coming with you.",
+      "cloze": "mit",
+      "retired": true
     },
     {
       "id": "de.s.xj3kqcdag5",
@@ -943,6 +952,13 @@
       "wordId": "de.w.e8yzqyvc3j",
       "text": "Wie fühlt sie sich?",
       "translation": "How does she feel?",
+      "cloze": "sich"
+    },
+    {
+      "id": "de.s.vrd4vv59kr",
+      "wordId": "de.w.e8yzqyvc3j",
+      "text": "Er sieht sich im Spiegel.",
+      "translation": "He sees himself in the mirror.",
       "cloze": "sich"
     },
     {
@@ -974,10 +990,10 @@
       "cloze": "auf"
     },
     {
-      "id": "de.s.qv4z1r75gx",
+      "id": "de.s.dm54rf0g2p",
       "wordId": "de.w.btwkqa050a",
-      "text": "Ich warte auf dich.",
-      "translation": "I'm waiting for you.",
+      "text": "Die Katze springt auf das Bett.",
+      "translation": "The cat jumps onto the bed.",
       "cloze": "auf"
     },
     {
@@ -986,6 +1002,14 @@
       "text": "Auf Wiedersehen!",
       "translation": "Goodbye!",
       "cloze": "Auf"
+    },
+    {
+      "id": "de.s.qv4z1r75gx",
+      "wordId": "de.w.btwkqa050a",
+      "text": "Ich warte auf dich.",
+      "translation": "I'm waiting for you.",
+      "cloze": "auf",
+      "retired": true
     },
     {
       "id": "de.s.qhg99c1y67",
