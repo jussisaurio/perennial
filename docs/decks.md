@@ -4,6 +4,10 @@ Every word and sentence in a deck is written by one author and checked by a
 different proofreader. CI enforces this: a source file without a valid
 approval, or changed after it was approved, fails the build.
 
+## Word order
+
+Words are taught in frequency order: the corpus rank in a subtitle word list (FrequencyWords). Frequency is objective, the same for every language, and easy to keep up as decks grow. We do not reorder by "ease". To make early words easier, write sentences that use only words already met (the audit reports comprehensibility), not a different order. `audit.ts` warns when a word sits far from its corpus rank.
+
 ## Roles
 
 - **Author**: writes source entries (`decks/<lang>/source/NNNN.json`), by hand or with `scripts/deck/generate.ts`. Model output counts as authored by the person or agent that ran it.
