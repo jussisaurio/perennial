@@ -41,8 +41,8 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
   const snailDay = visitors?.today.snailDay ?? null;
   const snailAt = useMemo(() => (learner ? snailAlong(walkPlants(learner).plants, snailDay) : 0), [learner, snailDay]);
-  // After a break, a kind line instead of the usual aside.
-  const aside = visitors?.welcome ?? greetingAside();
+  // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
+  const aside = visitors?.milestone ?? visitors?.welcome ?? greetingAside();
   if (!learner || !stats) return <div className="page home" />;
   const course = learner.course;
   const ready = stats.seeds;

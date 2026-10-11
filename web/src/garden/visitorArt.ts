@@ -108,6 +108,133 @@ export const BIRD_HOP: PixelArt = {
   pal: BIRD_PAL,
 };
 
+const FROG_PAL = { o: INK, G: "#5aa83c", g: "#3e7e2c", L: "#cfe39a", W: "#fff8e7", E: INK, m: "#24461a", P: "#fffbe0" };
+const FROG_ROWS = [
+  "..ooo....ooo..",
+  ".oWEWo..oWEWo.",
+  ".oGGGGooGGGGo.",
+  "oGGgGGGGGGgGGo",
+  "oGGGGGGGGGGGGo",
+  "oGmmmmmmmmmmGo",
+  "oGGLLLLLLLLGGo",
+  "oGgLLLLLLLLgGo",
+  "oGGGoLLLLoGGGo",
+  "oGGgoooooogGGo",
+  ".oooo....oooo.",
+];
+
+/** A green frog sitting on a lily pad, looking at you. */
+export const FROG: PixelArt = { rows: FROG_ROWS, pal: FROG_PAL };
+/** The frog croaking: its throat puffs up pale. */
+export const FROG_CROAK: PixelArt = {
+  rows: FROG_ROWS.map((r, y) => (y === 6 || y === 7 || y === 8 ? "oPPPPPPPPPPPPo" : y === 9 ? "oGGgPPPPPPgGGo" : r)),
+  pal: FROG_PAL,
+};
+/** Eyes closed: it talks in its sleep. */
+export const FROG_ASLEEP: PixelArt = { rows: FROG_ROWS.map((r, y) => (y === 1 ? ".oGmGo..oGmGo." : r)), pal: FROG_PAL };
+
+// The gnome: a red hat, a white beard, a blue coat. Column 15 holds its
+// lantern (two pixels, "L"), hanging from the hand at column 14.
+const GNOME_HAT = [".......oo.......", "......oRRo......", "......oRRo......", ".....oRRRRo.....", ".....oRRRRo.....", "....oRRRRRRo....", "....oRrRRRRo....", "...oRRRRRRRRo...", "...oDDDDDDDDo..."];
+const GNOME_LEGS = [".oBBBBBBBBBBBBoL", ".oKKKKKKKKKKKKoL", ".oBBBBBBBBBBBBo.", "..oBBBBooBBBBo..", "..oNNNo..oNNNo..", "..ooooo..ooooo.."];
+const GNOME_PAL = { o: INK, R: "#d63c32", r: "#ee6a50", D: "#9a2a24", S: "#f0c8a0", e: INK, p: "#e0907a", W: "#f6f1e8", H: "#d8cfbf", B: "#3e6eb8", K: "#5a3a20", N: "#6a4428" };
+const gnome = (face: string[]): string[] => [...GNOME_HAT, ...face, ...GNOME_LEGS];
+const GNOME_FRONT_ROWS = gnome([
+  "...oSSSSSSSSo...",
+  "...oSeSSSSeSo...",
+  "...oWSSppSSWo...",
+  "..oWWWWppWWWWo..",
+  "..oWWWWWWWWWWo..",
+  "..oBWWWWWWWWBo..",
+  ".oBBBWWWWWWBBBo.",
+  ".SBBBBWWWWBBBBS.",
+]);
+const GNOME_SIDE_ROWS = gnome([
+  "...oSSSSSHHHo...",
+  "...oSeSSSHHHo...",
+  "..ppSSSSSHHHo...",
+  "..oWWWWWBBBBo...",
+  "..oWWWWWBBBBo...",
+  "..oWWWWBBBBBo...",
+  "..oWWWBBBBBBBo..",
+  "..oSBBBBBBBBBBS.",
+]);
+const GNOME_BACK_ROWS = gnome([
+  "...oHHHHHHHHo...",
+  "...oHHHHHHHHo...",
+  "...oWHHHHHHWo...",
+  "..oBWBBBBBBWBo..",
+  "..oBBBBBBBBBBo..",
+  "..oBBBBBBBBBBo..",
+  ".oBBBBBBBBBBBBo.",
+  ".SBBBBBBBBBBBBS.",
+]);
+/** Its back to you, but the head turned: one eye and the nose over the shoulder. */
+const GNOME_PEEK_ROWS = gnome([
+  "...oHHHHHSSSo...",
+  "...oHHHHHSeSo...",
+  "...oWHHHHSSSpp..",
+  "..oBWBBBBWWWBo..",
+  "..oBBBBBBBBBBo..",
+  "..oBBBBBBBBBBo..",
+  ".oBBBBBBBBBBBBo.",
+  ".SBBBBBBBBBBBBS.",
+]);
+/** The gnome in four poses, with its lantern unlit (by day) or lit. */
+export function gnomeArt(pose: "front" | "side" | "back" | "peek", lit: boolean): PixelArt {
+  const rows = { front: GNOME_FRONT_ROWS, side: GNOME_SIDE_ROWS, back: GNOME_BACK_ROWS, peek: GNOME_PEEK_ROWS }[pose];
+  return { rows, pal: { ...GNOME_PAL, L: lit ? "#ffe680" : "#4a4048" } };
+}
+
+// A softer outline than the other visitors: the neck is thin, and black lines would hide it.
+const HERON_PAL = { o: "#555e68", W: "#eef1f3", G: "#9aa4ad", g: "#6b7680", k: "#1a1d22", y: "#e0b040", e: "#1a1d22" };
+const HERON_BODY = [
+  "......ooo.......",
+  ".....oWWWo......",
+  "....oWeWWkkk....",
+  "yyyyoWWWWo.kk...",
+  ".....oWWWo......",
+  "......oWWo......",
+  "......oWWo......",
+  ".......oWWo.....",
+  ".......oWWo.....",
+  "......oWWo......",
+  "......oWWo......",
+  ".....oWWGo......",
+  ".....oWGGGoo....",
+  "....oWGGGGGGoo..",
+  "....oWGGgGGGGGo.",
+  "....oWGGggGGGGGo",
+  ".....oGGggggGGGo",
+  ".....oGGGggggGo.",
+  "......oGGGGGGgo.",
+  ".......ooGGGgo..",
+  "........o.oo....",
+];
+/** A tall grey heron standing still, looking left at the water. */
+export const HERON: PixelArt = {
+  rows: [...HERON_BODY, "........y.y.....", "........y.y.....", "........y.y.....", "........y.y.....", "........y.y.....", "........y.y.....", ".......yy.yy...."],
+  pal: HERON_PAL,
+};
+/** Mid-step: one leg lifted and bent. */
+export const HERON_STEP: PixelArt = {
+  rows: [...HERON_BODY, "........y.y.....", "........y..y....", "........y...y...", "........y..y....", "........y.......", "........y.......", ".......yy......."],
+  pal: HERON_PAL,
+};
+
+// Pale wings with darker edges, so it still shows against a lantern's glow.
+const MOTH_PAL = { a: "#4a3c2e", o: "#4a3c2e", d: "#8a7656", M: "#f6eed6", m: "#a8946e" };
+/** A pale moth, wings open. */
+export const MOTH_OPEN: PixelArt = {
+  rows: ["...a...a...", "....a.a....", ".dMMMoMMMd.", "dMMmMoMmMMd", "dMMMMoMMMMd", ".dMMMoMMMd.", "..dmd.dmd.."],
+  pal: MOTH_PAL,
+};
+/** Wings up. */
+export const MOTH_CLOSED: PixelArt = {
+  rows: ["...a...a...", "....a.a....", "....MoM....", "....MoM....", "...dMoMd...", "....dod....", ".....o....."],
+  pal: MOTH_PAL,
+};
+
 /** One rect per run of same-coloured pixels in a row: few elements for SVG. */
 export function runs(art: PixelArt): { x: number; y: number; w: number; fill: string }[] {
   const out: { x: number; y: number; w: number; fill: string }[] = [];

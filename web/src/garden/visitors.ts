@@ -4,10 +4,10 @@
 // the Words list, Next plant or the session summary: they are just for fun.
 // Pure functions, so they are easy to test. Rules: docs/voice.md and issue #69.
 
-import { rareDay } from "../ui/whimsy";
+import { daily, rareDay } from "../ui/whimsy";
 import type { Layout } from "./world";
 
-export type VisitorId = "snail" | "cat" | "toadstool" | "bird";
+export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird";
 
 /** What we know about the learner, from review dates only. */
 export interface LearnerFacts {
@@ -17,7 +17,7 @@ export interface LearnerFacts {
   lastBeforeToday: number | null;
   /** The last review on a day before the day of `lastBeforeToday` (ms). */
   prevBeforeLast: number | null;
-  /** Words the learner knows. For later visitors (frog, gnome). */
+  /** Words the learner knows. The gnome and the frog come once there are enough. */
   known: number;
 }
 
@@ -34,23 +34,44 @@ export interface VisitorDef {
   words: Record<string, string>;
   /** Plain English, shown small next to the word. */
   gloss: string;
-  /** Rare visitors count toward the cap of two at once. */
+  /**
+   * Rare visitors come by chance and count toward the cap of two at once.
+   * Residents (snail, gnome, frog, moth) live in the garden once they come:
+   * the same place every day (the frog and the moth only at dusk and night).
+   * Like the snail and the butterflies in #69, they do not count.
+   */
   rare: boolean;
   /** "approach": the tag shows when you come near. "tap": only when you tap it (small or moving things). */
   tag: "approach" | "tap";
   /** Is it here today? Stable for the whole calendar day. */
   schedule: (c: Ctx) => boolean;
+  /** It moves in once the learner knows this many words (and the Today screen says so that day). */
+  unlock?: number;
 }
 
 /** A break this long (in calendar days) brings the cat. */
 export const CAT_BREAK = 5;
-/** At most this many rare visitors at once. The snail does not count. */
+/** At most this many rare visitors at once. Residents (the snail, gnome, frog and moth) do not count. */
 export const RARE_CAP = 2;
+/** Known words that bring the gnome, and the frog. */
+export const GNOME_KNOWN = 50;
+export const FROG_KNOWN = 150;
 
-/** In priority order: when more than two rare visitors are due, the first ones stay. */
+/**
+ * Residents first, then rare visitors in priority order: when more than two
+ * are due, the first ones stay. The cat (after a break) comes first, then the
+ * monthly heron, so a one-day-in-two bird never keeps the heron away.
+ */
 export const VISITORS: readonly VisitorDef[] = [
   { id: "snail", words: { es: "el caracol", de: "die Schnecke" }, gloss: "snail", rare: false, tag: "tap", schedule: () => true },
+  // At a bed corner, a different one each day.
+  { id: "gnome", words: { es: "el gnomo", de: "der Gartenzwerg" }, gloss: "gnome", rare: false, tag: "approach", unlock: GNOME_KNOWN, schedule: ({ facts }) => facts.known >= GNOME_KNOWN },
+  // On a lily pad, at dusk and night only.
+  { id: "frog", words: { es: "la rana", de: "der Frosch" }, gloss: "frog", rare: false, tag: "approach", unlock: FROG_KNOWN, schedule: ({ facts }) => facts.known >= FROG_KNOWN },
+  // Round one lantern, at dusk and night only. Small and moving: tap only.
+  { id: "moth", words: { es: "la polilla", de: "die Motte" }, gloss: "moth", rare: false, tag: "tap", schedule: () => true },
   { id: "cat", words: { es: "el gato", de: "die Katze" }, gloss: "cat", rare: true, tag: "approach", schedule: ({ facts, now }) => catBreak(facts, now) !== null },
+  { id: "heron", words: { es: "la garza", de: "der Reiher" }, gloss: "heron", rare: true, tag: "approach", schedule: ({ now }) => now.getDate() === heronDay(now.getFullYear(), now.getMonth()) },
   {
     id: "toadstool",
     words: { es: "la seta", de: "der Pilz" },
@@ -64,6 +85,16 @@ export const VISITORS: readonly VisitorDef[] = [
 ];
 
 export const visitor = (id: VisitorId): VisitorDef => VISITORS.find((v) => v.id === id)!;
+
+/** The heron's one day this month (1-based). The same for everyone, so people can ask "did you see the heron?". */
+export function heronDay(year: number, month: number): number {
+  const days = new Date(year, month + 1, 0).getDate();
+  return daily(
+    Array.from({ length: days }, (_, i) => i + 1),
+    "visitor-heron",
+    new Date(year, month, 1),
+  );
+}
 
 /** The local calendar day as a whole number, the same all day and safe across clock changes. */
 export function dayNumber(t: number | Date): number {
@@ -142,6 +173,23 @@ export function welcomeBack(facts: LearnerFacts, now: Date = new Date()): string
   return null;
 }
 
+/** Known-word counts that get one line on the Today screen, on the day they are crossed. */
+export const MILESTONES = [25, 50, 100, FROG_KNOWN, 200, 500] as const;
+
+/**
+ * The Today screen line on the day the learner's known words cross a
+ * milestone: `before` at the start of the day, `now` at the moment. When a
+ * visitor moves in at that count, the line says so, but never who: you find
+ * it yourself. Null on every other day.
+ */
+export function milestoneLine(before: number, now: number): string | null {
+  let hit = 0;
+  for (const m of MILESTONES) if (before < m && now >= m) hit = m;
+  if (!hit) return null;
+  const arrives = VISITORS.some((v) => v.unlock === hit);
+  return arrives ? `You know ${hit} words. Someone has arrived in the garden.` : `You know ${hit} words. The garden noticed.`;
+}
+
 /** A visitor as the garden shows it: its word in the course language, if there is one. */
 export interface VisitorView {
   id: VisitorId;
@@ -160,6 +208,51 @@ export function visitorViews(present: readonly VisitorId[], lang: string, isKnow
     const word = v.words[lang] ?? null;
     return { id, word, gloss: v.gloss, known: !!word && isKnown(word.slice(word.indexOf(" ") + 1)), tag: v.tag };
   });
+}
+
+// ---- The shy gnome (#54) ----
+
+/** Distances (m): it faces you from afar, turns its back up close, and peeks when you are right behind it. */
+export const GNOME_FACE = 4;
+export const GNOME_BACK = 2.5;
+export const GNOME_PEEK = 1.2;
+/** How long its tag comes back when it peeks (s). */
+export const GNOME_PEEK_TAG = 1.6;
+
+export type GnomePose = "front" | "side" | "back" | "peek";
+
+/** The gnome's pose for a viewer `d` metres away: front, turning (side), back, or peeking over its shoulder. */
+export function gnomePose(d: number): GnomePose {
+  return d > GNOME_FACE ? "front" : d > GNOME_BACK ? "side" : d > GNOME_PEEK ? "back" : "peek";
+}
+
+/**
+ * How much of its tag shows (0 to 1): all of it while it faces you, less as it
+ * turns away, none from behind, and all again for a moment when it peeks.
+ * `peeking`: seconds since it began to peek.
+ */
+export function gnomeTag(d: number, peeking: number): number {
+  if (d > GNOME_FACE) return 1;
+  if (d > GNOME_BACK) return (d - GNOME_BACK) / (GNOME_FACE - GNOME_BACK);
+  if (d > GNOME_PEEK) return 0;
+  return peeking < GNOME_PEEK_TAG ? 1 : 0;
+}
+
+// ---- The frog (#57) ----
+
+/** What a frog says, per course language. */
+export const CROAK: Record<string, string> = { es: "croac", de: "quak" };
+
+/**
+ * What the frog croaks on its `tap`-th tap today: its sound and one word the
+ * learner knows (never its own name), e.g. "croac… casa". A different word on
+ * most taps, in the same order all day.
+ */
+export function frogCroak(known: readonly string[], lang: string, tap: number, now: Date = new Date()): string {
+  const sound = CROAK[lang] ?? "croak";
+  const own = (visitor("frog").words[lang] ?? "").split(" ").pop()!.toLowerCase();
+  const pool = known.filter((w) => w.toLowerCase() !== own);
+  return pool.length ? `${sound}… ${daily(pool, `frog-croak-${tap}`, now)}` : `${sound}…`;
 }
 
 // ---- The snail's long trip (#55) ----

@@ -19,6 +19,7 @@ import { SoundToggle, useSound } from "./Sound";
 import { KNOWN_STABILITY, recall } from "./stats";
 import { plural } from "./format";
 import { learnerVisitors, type LearnerVisitors } from "./visitors";
+import { frogCroak } from "../garden/visitors";
 
 export interface WalkSource {
   plants: GardenPlant[];
@@ -166,6 +167,8 @@ export function GardenWalk({
         return setFailed(e instanceof Error ? e.message : String(e));
       }
       scene.current = s;
+      // Dev builds only: the scene, for screenshot scripts.
+      if (import.meta.env.DEV) (window as unknown as { __garden: unknown }).__garden = s;
       s.setTime(time);
       s.setDetail(detail);
       const r = el.getBoundingClientRect();
@@ -303,6 +306,7 @@ export function GardenWalk({
 
   // Drag to look; a click or tap without dragging picks a plant.
   const drag = useRef<{ x: number; y: number; moved: number; id: number } | null>(null);
+  const croaks = useRef(0);
   const onPointerDown = (e: React.PointerEvent) => {
     drag.current = { x: e.clientX, y: e.clientY, moved: 0, id: e.pointerId };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -328,6 +332,13 @@ export function GardenWalk({
     // A visitor first: its tag shows for a moment and, with sound on, it says its word. No card.
     const v = scene.current.pickVisitor(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (v) {
+      // The frog croaks one of your known words instead (never its own name), in a bubble and, with sound on, aloud.
+      if (v.id === "frog" && v.word) {
+        const croak = frogCroak(visitors?.known ?? [], lang, croaks.current++);
+        scene.current.say("frog", croak);
+        if (sound) void speak(croak, tag);
+        return;
+      }
       scene.current.tapVisitor(v.id);
       if (sound && v.word) void speak(v.word, tag);
       return;
@@ -375,13 +386,17 @@ export function GardenWalk({
       />
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
-          l.kind === "visitor" && !l.known ? (
-            <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+          l.kind === "say" ? (
+            <span key={l.id} className="gw-say" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+              {l.text}
+            </span>
+          ) : l.kind === "visitor" && !l.known ? (
+            <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               <i>{l.text}</i>
               <small lang="en"> · {l.gloss}</small>
             </span>
           ) : (
-            <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: 0.35 + l.near * 0.65 }}>
+            <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" ? l.near : 0.35 + l.near * 0.65 }}>
               {l.known && <LeafMark />}
               {l.text}
             </span>
