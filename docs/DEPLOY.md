@@ -200,6 +200,9 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 | `MIN_CLIENT_VERSION` | `0.0.0` | Clients with an older `web/package.json` version get "please reload" instead of writing. Raise it only when the write format changes. |
 | `ANONYMOUS_RETENTION_DAYS` | `60` | Used by housekeeping. Keep the value equal on both services. |
 | `SENTRY_DSN` | not set | Server error reports (web and housekeeping). |
+| `TURNSTILE_SECRET_KEY` | not set | Server half of the bot check (see `VITE_TURNSTILE_SITE_KEY`). Recommended before launch. |
+| `CLIENT_IP_HEADERS` | `x-real-ip,x-forwarded-for` | Headers our proxy sets with the client IP, for rate limits. Railway sets `X-Real-IP`. Behind Cloudflare, use `cf-connecting-ip`. If no header gives an IP, all clients share one rate-limit bucket: check the logs for Better Auth's warning after the first deploy. |
+| `CODES_PER_EMAIL_15MIN`, `CODES_PER_EMAIL_DAY` | `3`, `10` | Sign-in codes one address can receive, whatever the IP (email bombing). Extra requests get the normal answer but no email. |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | |
 | `POSTHOG_HOST` | not set | Optional. An extra origin for the CSP `connect-src`, for example a PostHog reverse proxy. Normally not needed: see `VITE_POSTHOG_HOST`. |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` or `silent` |
@@ -209,6 +212,7 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 | Variable | Default | Notes |
 |---|---|---|
 | `VITE_SENTRY_DSN` | empty (off) | Browser error reports (`@sentry/react`). The server reads the same variable at runtime and allows its ingest host (any region) in the CSP `connect-src`. |
+| `VITE_TURNSTILE_SITE_KEY` | empty (off) | Cloudflare Turnstile bot check before a new anonymous user and before a sign-in code. Set together with `TURNSTILE_SECRET_KEY` (the server refuses to start with only one). The server then allows `challenges.cloudflare.com` in the CSP.
 | `VITE_POSTHOG_KEY` | empty (off) | Turns on PostHog: no cookies, no autocapture, no session replay, Do Not Track respected, five named events. |
 | `VITE_POSTHOG_HOST` | `https://eu.i.posthog.com` | The PostHog host. When `VITE_POSTHOG_KEY` is set, the server allows this host in the CSP `connect-src`. |
 | `VITE_RELEASE` | `dev` | Release name in browser error reports. Set it to `${{RAILWAY_GIT_COMMIT_SHA}}` so that it matches the server's release. |

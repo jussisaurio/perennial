@@ -32,12 +32,14 @@ export async function readJson(req: Request, limit = 256 * 1024): Promise<unknow
 
 export const fail = (status: number, code: string, extra: Record<string, unknown> = {}) => json({ error: code, ...extra }, status);
 
-/** Extra origins the page may talk to (error reporting, analytics), from config. */
-export function securityHeaders(connect: string[], https: boolean): Record<string, string> {
+/** Extra origins the page may talk to (error reporting, analytics), from config.
+ *  turnstile: the bot check loads a script and an iframe from Cloudflare. */
+export function securityHeaders(connect: string[], https: boolean, turnstile = false): Record<string, string> {
+  const cf = turnstile ? " https://challenges.cloudflare.com" : "";
   const csp = [
     "default-src 'self'",
     // The device database (SQLite) runs as WebAssembly.
-    "script-src 'self' 'wasm-unsafe-eval'",
+    `script-src 'self' 'wasm-unsafe-eval'${cf}`,
     // React sets style attributes; the garden sets transforms inline.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
@@ -46,6 +48,7 @@ export function securityHeaders(connect: string[], https: boolean): Record<strin
     `connect-src 'self' data: ${connect.join(" ")}`.trim(),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
+    `frame-src ${cf ? cf.trim() : "'none'"}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

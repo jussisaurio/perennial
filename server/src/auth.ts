@@ -9,7 +9,7 @@
 
 import type { SQL } from "bun";
 import { betterAuth } from "better-auth";
-import { anonymous, emailOTP } from "better-auth/plugins";
+import { anonymous, captcha, emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
 import type { Config } from "./config";
 import { log } from "./log";
@@ -60,7 +60,7 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
     },
     advanced: {
       database: { generateId: "uuid" },
-      ipAddress: { ipAddressHeaders: ["x-forwarded-for", "x-real-ip"] },
+      ipAddress: { ipAddressHeaders: config.clientIpHeaders },
     },
     plugins: [
       emailOTP({
@@ -68,6 +68,8 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
         expiresIn: 10 * 60,
         allowedAttempts: 5,
         async sendVerificationOTP({ email, otp }) {
+          // The response is the same either way, so a capped address learns nothing.
+          if (!(await mayMail(sql, config, email))) return log.warn("sign-in code not sent: per-email limit", {});
           await mailer.send(email, `${otp} is your Perennial code`, `Your sign-in code is ${otp}.\n\nIt works for 10 minutes. If you did not ask for it, you can ignore this email.`);
         },
       }),
@@ -77,9 +79,28 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
           log.info("anonymous user linked", { from: anonymousUser.user.id, to: newUser.user.id });
         },
       }),
+      // Bot check where accounts and emails are created (the client sends the
+      // token in x-captcha-response).
+      ...(config.turnstile.secretKey
+        ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstile.secretKey, endpoints: CAPTCHA_ENDPOINTS })]
+        : []),
     ],
   });
   return { auth, pool };
+}
+
+export const CAPTCHA_ENDPOINTS = ["/sign-in/anonymous", "/email-otp/send-verification-otp"];
+
+/** Records a code for this address, unless it already had its share (per 15 minutes and per day). */
+async function mayMail(sql: SQL, config: Config, email: string) {
+  const hash = new Bun.CryptoHasher("sha256").update(email.trim().toLowerCase()).digest("hex");
+  const [{ short, day }] = await sql`select
+      count(*) filter (where sent_at > now() - interval '15 minutes')::int as short,
+      count(*)::int as day
+    from mail_log where email_hash = ${hash} and sent_at > now() - interval '1 day'`;
+  if (short >= config.codesPerEmail.short || day >= config.codesPerEmail.day) return false;
+  await sql`insert into mail_log (email_hash) values (${hash})`;
+  return true;
 }
 
 export type Auth = ReturnType<typeof createAuth>["auth"];

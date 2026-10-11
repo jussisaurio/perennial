@@ -20,6 +20,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
   const headers = securityHeaders(
     [...new Set(config.observability.connect)],
     config.appUrl.startsWith("https://"),
+    !!config.turnstile.siteKey,
   );
 
   async function session(req: Request) {

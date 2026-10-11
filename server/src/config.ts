@@ -29,6 +29,12 @@ export interface Config {
   /** Server reports go to sentryDsn. connect lists the origins the browser
    *  may send reports and analytics to (CSP connect-src). */
   observability: { sentryDsn?: string; connect: string[] };
+  /** Bot check (Cloudflare Turnstile) on new anonymous users and sign-in codes. Off without a secret. */
+  turnstile: { secretKey?: string; siteKey?: string };
+  /** Headers that carry the client IP, set by our proxy (rate limits). The first usable one wins. */
+  clientIpHeaders: string[];
+  /** Sign-in codes per email address: per 15 minutes, and per day. */
+  codesPerEmail: { short: number; day: number };
 
   /** AI words per learner per month. */
   freeCredits: number;
@@ -71,6 +77,11 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
         .map(origin)
         .filter((o): o is string => !!o),
     },
+    turnstile: { secretKey: env.TURNSTILE_SECRET_KEY, siteKey: env.VITE_TURNSTILE_SITE_KEY },
+    // Railway's edge sets X-Real-IP to the connecting address. X-Forwarded-For
+    // can carry client-made entries; Better Auth trusts it only with one value.
+    clientIpHeaders: (env.CLIENT_IP_HEADERS ?? "x-real-ip,x-forwarded-for").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean),
+    codesPerEmail: { short: num(env.CODES_PER_EMAIL_15MIN, 3), day: num(env.CODES_PER_EMAIL_DAY, 10) },
     freeCredits: num(env.FREE_CREDITS, 25),
     monthlyBudgetUsd: num(env.MONTHLY_BUDGET_USD, 200),
     aiRequestsPerMinute: num(env.AI_RPM, 20),
@@ -95,6 +106,7 @@ export function configProblems(c: Config): string[] {
   if (!c.appUrl.startsWith("https://")) out.push("APP_URL must be the public https URL");
   if (c.databaseUrl.includes("@localhost:55432/")) out.push("DATABASE_URL must be set");
   if (!c.electric.secret) out.push("ELECTRIC_SECRET must be set (and match the Electric service)");
+  if (!!c.turnstile.secretKey !== !!c.turnstile.siteKey) out.push("TURNSTILE_SECRET_KEY and VITE_TURNSTILE_SITE_KEY must be set together");
   return out;
 }
 

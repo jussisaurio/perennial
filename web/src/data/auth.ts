@@ -5,6 +5,7 @@
 import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { track } from "../observability";
+import { captchaHeaders } from "./captcha";
 
 export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
 
@@ -26,7 +27,7 @@ export function useUser(): { user: SessionUser | null; pending: boolean } {
 export async function ensureUser(): Promise<SessionUser> {
   const s = await authClient.getSession();
   if (s.data?.user) return toUser(s.data.user);
-  const r = await authClient.signIn.anonymous();
+  const r = await authClient.signIn.anonymous({ fetchOptions: { headers: await captchaHeaders() } });
   if (r.error || !r.data) throw new Error(r.error?.message ?? "Could not start a session");
   return toUser(r.data.user);
 }
@@ -40,7 +41,7 @@ export class AuthError extends Error {
 }
 
 export async function sendCode(email: string) {
-  const r = await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
+  const r = await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in", fetchOptions: { headers: await captchaHeaders() } });
   if (r.error) throw new AuthError(r.error.code ?? "send_failed", r.error.status === 429 ? "Too many codes. Wait a few minutes, then try again." : "Could not send the code. Check the email address.");
 }
 
