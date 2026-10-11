@@ -29,9 +29,10 @@ Postgres + Electric         learner data; Electric streams each learner's rows t
   - **Writes:** `POST /api/write` takes a batch of mutations, checks them, scopes them to the session user, and applies them in one transaction. It returns the Postgres transaction id.
   - **Perennial AI:** task endpoints (`/api/ai/mine`, `/api/ai/examples`) through the Anthropic SDK. Each word costs one AI word from a monthly allowance (`FREE_CREDITS`). A global monthly budget (`MONTHLY_BUDGET_USD`) pauses AI for everyone when it is reached.
   - Also: `/health`, account deletion, structured JSON logs with request ids, Sentry (`server/instrument.ts`). All settings: `server/src/config.ts`.
+- **Observability in the browser** (`web/src/observability.ts`): Sentry error reports and privacy-first PostHog events (no cookies, no autocapture, no session replay). Both are off unless their keys are set at build time.
 - **Client** (`web/src/data/`): each synced table is a TanStack DB collection fed by an Electric shape, kept in SQLite (OPFS) on the device where the browser allows it. Writes apply on the device at once, wait in an offline queue (IndexedDB), and go to `/api/write` when there is a connection. Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
 
-Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Railway + PlanetScale Postgres). Data model: [docs/schema.md](docs/schema.md). Design and research: [DESIGN.md](DESIGN.md).
+Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Railway + PlanetScale Postgres). Data model: [docs/schema.md](docs/schema.md). Deck content process: [docs/decks.md](docs/decks.md). Design and research: [DESIGN.md](DESIGN.md).
 
 ## Run locally
 
@@ -62,6 +63,7 @@ The same options are in Settings → Developer tools. They are not in production
 ## Test
 
 ```sh
+cd web && bun run lint                 # oxlint --deny-warnings (CI fails on any warning)
 cd web && bun test src                 # unit: FSRS (checked against ts-fsrs), planner, answer checking, text, deck schema
 bun test scripts/deck web/src/deck     # decks: build, invariants, compatibility, replay
 docker compose up -d                   # needed by the next two
@@ -71,7 +73,7 @@ cd web && bun run e2e                  # Playwright: starts its own server, mock
 
 ## Decks
 
-The shared course is static JSON in `decks/<lang>/`. The format and the rules are in [docs/schema.md](docs/schema.md).
+The shared course is static JSON in `decks/<lang>/`. The format and the rules are in [docs/schema.md](docs/schema.md). **Every source file needs a proofreader who is not its author:** the process, the checklist and the approval records (`reviews/NNNN.json`, enforced by CI) are in [docs/decks.md](docs/decks.md).
 
 - `source/0001.json`, `0002.json`, …: the words, written by people or drafted by a model. No ids. At most 100 words per file. The order is the frequency rank.
 - `ids.json`: the id manifest: `(lemma, pos, sense)` → word id, and `(word id, sentence)` → sentence id. Committed. Edit it by hand only to keep an id when you fix a typo in a lemma.
@@ -81,7 +83,8 @@ The shared course is static JSON in `decks/<lang>/`. The format and the rules ar
 ```sh
 cd scripts && bun install && cd ..
 bun scripts/deck/build.ts es                   # after you edit the source: assign ids, write deck.json and ids.json
-bun scripts/deck/check.ts --base origin/main   # what CI runs: schema, up to date, compatibility, diff report
+bun scripts/deck/review.ts es 0001 --author … --reviewer …   # proofreader approves a source file (see docs/decks.md)
+bun scripts/deck/check.ts --base origin/main   # what CI runs: schema, approvals, up to date, compatibility, diff report
 ```
 
 A word removed from the source stays in `deck.json` with `retired: true`, so its reviews are kept. A sentence whose text changes gets a new id, and the old one is retired. CI fails when more than 5% of a deck's words are retired. To approve, add the `deck-big-change` label to the PR (locally: `DECK_ALLOW_BIG_CHANGE=1`).
@@ -93,4 +96,4 @@ ANTHROPIC_API_KEY=… bun scripts/deck/generate.ts es --count 200    # model: DE
 bun server/mock-llm.ts & bun scripts/deck/generate.ts es --count 20 --mock   # plumbing only: placeholder words
 ```
 
-It takes the next lemmas from the OpenSubtitles frequency list ([hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords)), writes the entries through the Message Batches API, validates them, and appends them to the source. Read the diff before you run `build.ts`.
+It takes the next lemmas from the OpenSubtitles frequency list ([hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords)), writes the entries through the Message Batches API, validates them, and appends them to the source. Read the diff before you run `build.ts`. Model drafts still need a proofreader.

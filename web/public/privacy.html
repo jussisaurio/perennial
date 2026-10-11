@@ -59,6 +59,7 @@
         <tr><td>Session data: a session id, its expiry date, the IP address and the browser name (user agent) of the device that signed in</td><td>To keep you signed in and to protect accounts from abuse</td><td>Our server</td></tr>
         <tr><td>Perennial AI use: how many AI words you used this month, and a log of each AI request (task, model, size, cost, time, success). The log does not contain your text.</td><td>To apply the monthly limit and to control our costs</td><td>Our server</td></tr>
         <tr><td>Server logs: the address of each request, the result, the time, and your user id</td><td>To find and fix problems</td><td>Our hosting provider</td></tr>
+        <tr><td>Error reports and usage events (only if we turn them on, see below)</td><td>To find errors and to see which parts of the app help people</td><td>Sentry and PostHog</td></tr>
       </table>
       <p>You can start without an account. In that case we make an anonymous account with no email address. If you add your email later, we move your progress into that account.</p>
 
@@ -75,8 +76,8 @@
         <li><strong>PlanetScale</strong> runs our database (Postgres), where your account and learning data are stored.</li>
         <li><strong>Resend</strong> sends the email with your sign-in code. It gets your email address and the code.</li>
         <li><strong>Anthropic</strong> runs the AI model for Perennial AI. It gets only the text that you choose to send: the words you tap, the sentences they come from, the words you ask for new sentences for, and a list of words you already know. It does not get your email address or your name. We use Perennial AI only when you start it. Anonymous learners cannot use it.</li>
-        <li><strong>Sentry</strong> (only if we turn it on) gets error reports from our server when something breaks. A report can contain the request address and your user id.</li>
-        <li><strong>PostHog</strong> (only if we turn it on) gets usage analytics, for example which screens people use. [Describe what is sent if you turn it on.]</li>
+        <li><strong>Sentry</strong> (only if we turn it on) gets error reports from our server and from the app when something breaks. A report contains technical details (the error, the page or request address, your browser and device type), and your user id. It does not contain your email address.</li>
+        <li><strong>PostHog</strong> (only if we turn it on) gets a few named events, so that we can see if the app works for people: a course started (language and minutes per day), a session finished (how many answers and new words), an email added, the garden opened, and words added. Each event has your user id, not your email address. PostHog does not set cookies here, does not record your screen, and does not collect clicks automatically. If your browser sends “Do Not Track”, the app sends no events.</li>
       </ul>
       <p>[List the countries where these services store data, and the legal basis for transfers, if you need to.]</p>
 

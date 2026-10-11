@@ -24,7 +24,7 @@ This runbook deploys Perennial on **Railway** with a **PlanetScale Postgres** da
 | `electric` | Docker image `electricsql/electric:1.8.1` | Reads changes from Postgres (logical replication) and serves shapes to `web`. Private only. |
 | `housekeeping` | This repo, `Dockerfile`, config `railway.housekeeping.json` | Runs `bun src/housekeeping.ts` once a day, then exits. |
 
-Third-party services: Resend (sign-in email), Anthropic (Perennial AI), Sentry (server errors, optional), PostHog (optional, not wired in the client yet).
+Third-party services: Resend (sign-in email), Anthropic (Perennial AI), Sentry (server and browser errors, optional), PostHog (a few product events, optional).
 
 ## 1. Accounts and secrets the owner must create
 
@@ -37,8 +37,8 @@ Create these before you start. Keep every secret in a password manager.
 | Railway | A project (paid plan) connected to the GitHub repo | Hosting |
 | Resend | A verified sending domain and an API key ("Sending access" only) | `RESEND_API_KEY`, `MAIL_FROM` |
 | Anthropic | An API key in a workspace with a monthly spend limit | `ANTHROPIC_API_KEY` |
-| Sentry (optional) | A project of type "Bun" | `SENTRY_DSN` |
-| PostHog (optional) | A project | `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `POSTHOG_HOST` |
+| Sentry (optional) | One project for the server (platform "Bun") and one for the browser (platform "React"). In each project's security settings, turn on **Prevent storing of IP addresses**. Use the EU region if your users are mostly in the EU. | `SENTRY_DSN`, `VITE_SENTRY_DSN` |
+| PostHog (optional) | A project (EU or US cloud) | `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `POSTHOG_HOST` |
 
 Generate these yourself:
 
@@ -166,7 +166,7 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 
 1. **New → GitHub Repo** → this repo. Name the service `web`. Branch: `main`.
 2. Railway reads `railway.json`: Dockerfile build, pre-deploy migration (`bun src/migrate.ts`), healthcheck `/health` (it also checks the database), restart on failure.
-3. **Settings → Deploy:** turn on **Wait for CI** if CI is green on `main` (see "Known gaps" below).
+3. **Settings → Deploy:** turn on **Wait for CI**, so that a red build on `main` does not deploy.
 4. **Networking:** generate a Railway domain for a first test. Target port: `8080`.
 5. Variables:
 
@@ -199,19 +199,21 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 |---|---|---|
 | `MIN_CLIENT_VERSION` | `0.0.0` | Clients with an older `web/package.json` version get "please reload" instead of writing. Raise it only when the write format changes. |
 | `ANONYMOUS_RETENTION_DAYS` | `60` | Used by housekeeping. Keep the value equal on both services. |
-| `SENTRY_DSN` | not set | Server error reports. Also allows the Sentry ingest host in the CSP. |
+| `SENTRY_DSN` | not set | Server error reports. **Also needed for browser reports:** only when it is set does the CSP allow the Sentry ingest hosts (`*.ingest.sentry.io`, `*.ingest.de.sentry.io`). |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | |
-| `POSTHOG_HOST` | not set | Only adds the host to the CSP `connect-src`. Set it to the same value as `VITE_POSTHOG_HOST`. |
+| `POSTHOG_HOST` | not set | Adds the host to the CSP `connect-src`. **Required when PostHog is on**, with the same value as `VITE_POSTHOG_HOST` (for example `https://eu.i.posthog.com`). Without it the browser blocks the events. |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` or `silent` |
 
 **Build arguments** (Railway passes service variables with these names to the Docker build; changing one needs a rebuild)
 
 | Variable | Default | Notes |
 |---|---|---|
-| `VITE_SENTRY_DSN` | empty | Browser error reports. **Not used by the client code yet.** |
-| `VITE_POSTHOG_KEY` | empty | **Not used by the client code yet.** |
-| `VITE_POSTHOG_HOST` | empty | **Not used by the client code yet.** |
-| `VITE_RELEASE` | `dev` | Release name for the client. Set it to `${{RAILWAY_GIT_COMMIT_SHA}}` if you use it. |
+| `VITE_SENTRY_DSN` | empty (off) | Browser error reports (`@sentry/react`). Needs `SENTRY_DSN` on the server too (CSP). |
+| `VITE_POSTHOG_KEY` | empty (off) | Turns on PostHog: no cookies, no autocapture, no session replay, Do Not Track respected, five named events. |
+| `VITE_POSTHOG_HOST` | `https://eu.i.posthog.com` (in the client) | Set it explicitly, and set `POSTHOG_HOST` to the same value. |
+| `VITE_RELEASE` | `dev` | Release name in browser error reports. Set it to `${{RAILWAY_GIT_COMMIT_SHA}}` so that it matches the server's release. |
+
+These values end up in the public JavaScript. That is expected: a Sentry DSN and a PostHog project key are not secrets.
 
 **Do not set in production:** `PERENNIAL_DEV` (turns on dev mode), `ANTHROPIC_BASE_URL` (for the mock model only), `LOG_PRETTY`. `NODE_ENV` and `PERENNIAL_STATIC` come from the Dockerfile. The release name comes from `RAILWAY_GIT_COMMIT_SHA`, which Railway sets.
 
@@ -278,7 +280,8 @@ Do these in order. Tick each one.
 - [ ] `housekeeping`: run it once by hand (**Deployments → Run now**, or redeploy). The log shows a `housekeeping` line with counts.
 - [ ] Settings → Delete my account works for a test account. Its rows are gone from `review`, `course` and `"user"`.
 - [ ] `/privacy.html` and `/terms.html` are reviewed and the placeholders are filled in.
-- [ ] Sentry (if used): trigger a test error, or check that the project receives events.
+- [ ] Sentry (if used): the server and browser projects receive events. The browser console shows no CSP errors (`Refused to connect`).
+- [ ] PostHog (if used): a `course_started` event arrives after you start a course in a private window (with Do Not Track off).
 - [ ] Anthropic console: monthly spend limit set. Railway: usage alert set.
 - [ ] PlanetScale: backup retention set (see 7).
 
@@ -351,7 +354,8 @@ Also rotate a secret when a person with access leaves.
 **Every day in the first week, then weekly:**
 
 - **Railway logs** (`web`): search for `"level":"error"`. Each line has `reqId`, and `userId` when the user is known. The same id is in the `X-Request-Id` header and in Sentry.
-- **Sentry:** new issues on the server.
+- **Sentry:** new issues on the server and in the browser.
+- **PostHog:** the funnel `course_started` → `session_finished` → `email_added`.
 - **Railway metrics:** memory and CPU of `web` and `electric`. Electric's memory grows with the number of active shapes (five per learner).
 - **Electric volume usage** (Railway → `electric` → volume).
 - **Replication lag and WAL held by the slot:**
@@ -384,6 +388,5 @@ These are not problems in this runbook, but you should know them:
 
 - **Dev mode depends on `RESEND_API_KEY`.** If the key is missing, the server turns on dev mode silently. Step 5 has a check for it.
 - **`BETTER_AUTH_SECRET` has a public default.** The server starts without it. Always set it.
-- **The client does not use `VITE_SENTRY_DSN` or `VITE_POSTHOG_*` yet.** Setting them changes nothing.
+- **Sentry US-region DSNs are blocked by the CSP.** The server allows `*.ingest.sentry.io` and `*.ingest.de.sentry.io`. A DSN host like `o123.ingest.us.sentry.io` matches neither, so browser reports fail. Use an EU-region Sentry org, or fix `server/src/app.ts` first.
 - **Housekeeping does not load Sentry** (it does not use `--preload ./instrument.ts`). Its errors appear only in the Railway log and as a failed cron run.
-- **CI is out of date.** It still starts `stripe-mock` and does not start Postgres or Electric, so the server tests and e2e tests fail in CI. Fix CI before you turn on "Wait for CI".
