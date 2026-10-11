@@ -291,8 +291,13 @@ export function sign(label: string): HTMLCanvasElement {
   do ctx.font = `bold ${size}px ui-monospace, Menlo, monospace`;
   while (ctx.measureText(label).width > 116 && --size > 7);
   ctx.fillText(label, 64, 21);
-  // Threshold the anti-aliased text so it stays crisp pixels.
-  const img = ctx.getImageData(0, 0, 128, 40);
+  crispText(ctx, 128, 40);
+  return c;
+}
+
+/** Threshold anti-aliased text on a sign so it stays crisp pixels. */
+function crispText(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const img = ctx.getImageData(0, 0, w, h);
   for (let i = 0; i < img.data.length; i += 4) {
     const dark = img.data[i] < 140;
     if (dark) {
@@ -306,6 +311,40 @@ export function sign(label: string): HTMLCanvasElement {
     }
   }
   ctx.putImageData(img, 0, 0);
+}
+
+/** A taller notice board for a short sentence: up to two lines, as large as fits. */
+export function notice(text: string): HTMLCanvasElement {
+  const W = 160;
+  const H = 64;
+  const [c, ctx] = canvas(W, H);
+  px(ctx, 0, 0, "#7a4f2c", W, H);
+  px(ctx, 2, 2, "#c99257", W - 4, H - 4);
+  px(ctx, 2, 2, "#ddb07a", W - 4, 2);
+  px(ctx, 2, H / 2, "#b8834b", W - 4, 1);
+  ctx.fillStyle = "#3b2414";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const font = (size: number) => (ctx.font = `bold ${size}px ui-monospace, Menlo, monospace`);
+  const fits = (lines: string[]) => lines.every((l) => ctx.measureText(l).width <= W - 14);
+  // Every way to break the words into one or two lines; keep the one with the biggest text.
+  const words = text.split(" ");
+  const options = [[text], ...words.slice(1).map((_, i) => [words.slice(0, i + 1).join(" "), words.slice(i + 1).join(" ")])];
+  let best = { size: 0, lines: [text] };
+  for (const lines of options)
+    for (let size = lines.length === 1 ? 22 : 18; size > 7; size--) {
+      font(size);
+      if (fits(lines)) {
+        // At the same size, two balanced lines read better than one long and one short.
+        const longest = (ls: string[]) => Math.max(...ls.map((l) => l.length));
+        if (size > best.size || (size === best.size && lines.length === best.lines.length && longest(lines) < longest(best.lines))) best = { size, lines };
+        break;
+      }
+    }
+  font(best.size || 8);
+  const step = best.size + 4;
+  best.lines.forEach((l, i) => ctx.fillText(l, W / 2, H / 2 + 1 + (i - (best.lines.length - 1) / 2) * step));
+  crispText(ctx, W, H);
   return c;
 }
 
@@ -508,6 +547,66 @@ export function sun(kind: "day" | "dusk" | "night"): HTMLCanvasElement {
   if (kind === "night") {
     px(ctx, 10, 14, "#cfc8ac", 2, 2);
     px(ctx, 13, 21, "#cfc8ac", 3, 2);
+  }
+  return c;
+}
+
+/**
+ * The sunflower, two frames of 32×64 side by side: its face (left, a small
+ * calm smile) and the back of its head (right). No text.
+ */
+export function sunflower(): HTMLCanvasElement {
+  const [c, ctx] = canvas(64, 64);
+  for (const [ox, face] of [
+    [0, true],
+    [32, false],
+  ] as const) {
+    const r = rng(51); // the same ragged petals on both sides
+    // Stem and two leaves.
+    px(ctx, ox + 15, 22, "#3f7d36", 2, 42);
+    px(ctx, ox + 16, 22, "#4e9140", 1, 42);
+    for (let i = 0; i < 6; i++) {
+      const col = i < 4 ? "#5fa44a" : "#4e9140";
+      px(ctx, ox + 13 - i, 46 - Math.floor(i / 2), col, 2, 2);
+      px(ctx, ox + 17 + i, 38 - Math.floor(i / 2), col, 2, 2);
+    }
+    // Petals: a ragged ring, lit from the top left.
+    const cx = ox + 15.5;
+    const cy = 12.5;
+    for (let y = 0; y < 26; y++)
+      for (let x = ox; x < ox + 32; x++) {
+        const dx = x - cx;
+        const dy = y - cy;
+        const d = Math.hypot(dx, dy);
+        const edge = 11 + Math.cos(Math.atan2(dy, dx) * 10) * 1.6 + r() * 0.6;
+        if (d > edge || d < 6) continue;
+        const light = (-dx - dy) / d;
+        const shade = light > 0.3 ? 0 : light > -0.4 ? 1 : 2;
+        px(ctx, x, y, (face ? ["#ffe066", "#f8c537", "#e0a020"] : ["#e8c040", "#d0a028", "#b08018"])[shade]);
+      }
+    for (let y = 0; y < 26; y++)
+      for (let x = ox; x < ox + 32; x++) {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d >= 7.5) continue;
+        if (face) px(ctx, x, y, d > 6.2 ? "#5a3216" : r() < 0.2 ? "#8a5428" : "#6e4020");
+        else {
+          // The green back of the head, with bracts in a star.
+          const a = Math.atan2(y - cy, x - cx);
+          px(ctx, x, y, Math.cos(a * 8) > 0.6 && d > 3 ? "#3f7d36" : d > 6.2 ? "#36692e" : "#5a9a48");
+        }
+      }
+    if (face) {
+      // Closed, content eyes, rosy cheeks and a small calm smile.
+      const ink = "#2b1608";
+      px(ctx, ox + 12, 10, ink, 2, 1);
+      px(ctx, ox + 18, 10, ink, 2, 1);
+      for (const x of [11, 14, 17, 20]) px(ctx, ox + x, 11, ink);
+      px(ctx, ox + 11, 13, "#d0603a");
+      px(ctx, ox + 20, 13, "#d0603a");
+      px(ctx, ox + 13, 15, ink);
+      px(ctx, ox + 14, 16, ink, 4, 1);
+      px(ctx, ox + 18, 15, ink);
+    } else px(ctx, ox + 15, 13, "#3f7d36", 2, 9); // the stem joins the middle of the back
   }
   return c;
 }

@@ -136,7 +136,7 @@ export function GardenWalk({ lang, source, onExit, onWater, focus }: { lang: str
       if (!mod.webglAvailable()) return setFailed("Your browser cannot show 3D graphics.");
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-        s = new mod.GardenScene(canvas.current!, data.l, { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]) }, reduced);
+        s = new mod.GardenScene(canvas.current!, data.l, { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]) }, reduced, lang);
       } catch (e) {
         return setFailed(e instanceof Error ? e.message : String(e));
       }
