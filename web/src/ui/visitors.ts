@@ -38,7 +38,7 @@ export interface LearnerVisitors {
   welcome: string | null;
   /** The Today screen line on the day a known-word milestone is crossed, or null. */
   milestone: string | null;
-  /** The words the learner knows (lemmas), for the frog to croak. */
+  /** Words the learner knows (lemmas) for the frog to croak: nouns once there are a few. */
   known: string[];
 }
 
@@ -51,13 +51,17 @@ export function knownAt(reviews: readonly ReviewRow[], t: number, retention: num
 }
 
 export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
-  const known: string[] = [];
+  const knownAll: string[] = [];
+  const knownNouns: string[] = [];
   const lemmas = new Set<string>();
   for (const w of l.words.values())
     if (wordState(l.memory.get(`${w.id}:read`)) === "known") {
-      known.push(w.lemma);
+      knownAll.push(w.lemma);
+      if (w.pos === "noun") knownNouns.push(w.lemma);
       lemmas.add(w.lemma.toLowerCase());
     }
+  // The frog croaks things: "croac… casa" is a joke, "croac… no" is not.
+  const known = knownNouns.length >= 5 ? knownNouns : knownAll;
   const times = l.reviews.map((r) => Date.parse(r.reviewed_at));
   const facts = learnerFacts(times, known.length, now);
   const today = visitorsFor(facts, now, devVisitorOverride());
