@@ -1,0 +1,1390 @@
+{
+  "lang": "de",
+  "native": "en",
+  "version": 1,
+  "words": [
+    {
+      "id": "de.w.cmn8thykat",
+      "lemma": "ich",
+      "gloss": "I",
+      "pos": "pron",
+      "rank": 1,
+      "forms": [
+        "ich",
+        "mich",
+        "mir"
+      ],
+      "notes": "mich = me (direct object), mir = to me."
+    },
+    {
+      "id": "de.w.g4n2pzrqqa",
+      "lemma": "sein",
+      "gloss": "to be",
+      "pos": "verb",
+      "rank": 2,
+      "forms": [
+        "sein",
+        "bin",
+        "bist",
+        "ist",
+        "sind",
+        "seid",
+        "war",
+        "warst",
+        "waren",
+        "gewesen"
+      ]
+    },
+    {
+      "id": "de.w.hy97s5w9ry",
+      "lemma": "sie",
+      "gloss": "she; they",
+      "pos": "pron",
+      "rank": 3,
+      "forms": [
+        "sie",
+        "ihr",
+        "ihnen"
+      ],
+      "notes": "Capitalized Sie means formal 'you'."
+    },
+    {
+      "id": "de.w.t1vc2x9nbk",
+      "lemma": "das",
+      "gloss": "that; this (thing)",
+      "pos": "pron",
+      "rank": 4,
+      "forms": [
+        "das"
+      ],
+      "notes": "Also the neuter form of der (the)."
+    },
+    {
+      "id": "de.w.wp465f8vny",
+      "lemma": "du",
+      "gloss": "you (informal)",
+      "pos": "pron",
+      "rank": 5,
+      "forms": [
+        "du",
+        "dich",
+        "dir"
+      ],
+      "notes": "dich = you (direct object), dir = to you."
+    },
+    {
+      "id": "de.w.kj64hw30ky",
+      "lemma": "nicht",
+      "gloss": "not",
+      "pos": "adv",
+      "rank": 6,
+      "forms": [
+        "nicht"
+      ]
+    },
+    {
+      "id": "de.w.16rfax1676",
+      "lemma": "der",
+      "gloss": "the",
+      "pos": "det",
+      "rank": 7,
+      "forms": [
+        "der",
+        "die",
+        "das",
+        "den",
+        "dem",
+        "des"
+      ],
+      "notes": "der (masculine), die (feminine and plural), das (neuter)."
+    },
+    {
+      "id": "de.w.hssj5zzfvc",
+      "lemma": "und",
+      "gloss": "and",
+      "pos": "conj",
+      "rank": 8,
+      "forms": [
+        "und"
+      ]
+    },
+    {
+      "id": "de.w.53dr04jhrp",
+      "lemma": "es",
+      "gloss": "it",
+      "pos": "pron",
+      "rank": 9,
+      "forms": [
+        "es"
+      ],
+      "notes": "es gibt = there is, there are."
+    },
+    {
+      "id": "de.w.v6rfx2m8zv",
+      "lemma": "wir",
+      "gloss": "we",
+      "pos": "pron",
+      "rank": 10,
+      "forms": [
+        "wir",
+        "uns"
+      ],
+      "notes": "uns = us."
+    },
+    {
+      "id": "de.w.h169xtc36z",
+      "lemma": "zu",
+      "gloss": "to; at",
+      "pos": "prep",
+      "rank": 11,
+      "forms": [
+        "zu",
+        "zum",
+        "zur"
+      ],
+      "notes": "zu Hause = at home. Before an adjective, zu means 'too': zu groß (too big)."
+    },
+    {
+      "id": "de.w.7xfv7467rx",
+      "lemma": "was",
+      "gloss": "what",
+      "pos": "pron",
+      "rank": 12,
+      "forms": [
+        "was"
+      ]
+    },
+    {
+      "id": "de.w.fsvzv52npw",
+      "lemma": "ein",
+      "gloss": "a; an",
+      "pos": "det",
+      "rank": 13,
+      "forms": [
+        "ein",
+        "eine",
+        "einen",
+        "einem",
+        "einer",
+        "eines"
+      ]
+    },
+    {
+      "id": "de.w.ewent3pkfy",
+      "lemma": "er",
+      "gloss": "he; it",
+      "pos": "pron",
+      "rank": 14,
+      "forms": [
+        "er",
+        "ihn",
+        "ihm"
+      ],
+      "notes": "ihn = him (direct object), ihm = to him."
+    },
+    {
+      "id": "de.w.4wwwkaz42g",
+      "lemma": "haben",
+      "gloss": "to have",
+      "pos": "verb",
+      "rank": 15,
+      "forms": [
+        "haben",
+        "habe",
+        "hast",
+        "hat",
+        "habt",
+        "hatte",
+        "hattest",
+        "hatten",
+        "gehabt"
+      ],
+      "notes": "Also forms the past: Ich habe gegessen (I ate)."
+    },
+    {
+      "id": "de.w.d4x642zc8s",
+      "lemma": "ja",
+      "gloss": "yes",
+      "pos": "particle",
+      "rank": 16,
+      "forms": [
+        "ja"
+      ],
+      "notes": "Also adds emphasis: Das ist ja toll! (That's really great!)"
+    },
+    {
+      "id": "de.w.b12a79kp8n",
+      "lemma": "in",
+      "gloss": "in; into",
+      "pos": "prep",
+      "rank": 17,
+      "forms": [
+        "in",
+        "im",
+        "ins"
+      ],
+      "notes": "in + dem = im, in + das = ins."
+    },
+    {
+      "id": "de.w.21vzm8ebh8",
+      "lemma": "mit",
+      "gloss": "with",
+      "pos": "prep",
+      "rank": 18,
+      "forms": [
+        "mit"
+      ]
+    },
+    {
+      "id": "de.w.e8yzqyvc3j",
+      "lemma": "sich",
+      "gloss": "himself; herself; themselves",
+      "pos": "pron",
+      "rank": 19,
+      "forms": [
+        "sich"
+      ],
+      "notes": "Used with many verbs: sich freuen (to be happy), sich setzen (to sit down)."
+    },
+    {
+      "id": "de.w.8fymg2tabd",
+      "lemma": "so",
+      "gloss": "so; like this",
+      "pos": "adv",
+      "rank": 20,
+      "forms": [
+        "so"
+      ]
+    },
+    {
+      "id": "de.w.btwkqa050a",
+      "lemma": "auf",
+      "gloss": "on; onto",
+      "pos": "prep",
+      "rank": 21,
+      "forms": [
+        "auf"
+      ]
+    },
+    {
+      "id": "de.w.69xvzxsw8w",
+      "lemma": "für",
+      "gloss": "for",
+      "pos": "prep",
+      "rank": 22,
+      "forms": [
+        "für"
+      ]
+    },
+    {
+      "id": "de.w.exgvbsatwq",
+      "lemma": "hier",
+      "gloss": "here",
+      "pos": "adv",
+      "rank": 23,
+      "forms": [
+        "hier"
+      ]
+    },
+    {
+      "id": "de.w.cz1hrf36jj",
+      "lemma": "aber",
+      "gloss": "but",
+      "pos": "conj",
+      "rank": 24,
+      "forms": [
+        "aber"
+      ]
+    },
+    {
+      "id": "de.w.hymaxbbb4e",
+      "lemma": "wie",
+      "gloss": "how; like",
+      "pos": "adv",
+      "rank": 25,
+      "forms": [
+        "wie"
+      ]
+    },
+    {
+      "id": "de.w.10s6zwpjq8",
+      "lemma": "nein",
+      "gloss": "no",
+      "pos": "particle",
+      "rank": 26,
+      "forms": [
+        "nein"
+      ]
+    },
+    {
+      "id": "de.w.f6etcx4a5b",
+      "lemma": "dass",
+      "gloss": "that",
+      "pos": "conj",
+      "rank": 27,
+      "forms": [
+        "dass"
+      ],
+      "notes": "Sends the verb to the end: Ich weiß, dass du müde bist."
+    },
+    {
+      "id": "de.w.28n9h5qmn1",
+      "lemma": "noch",
+      "gloss": "still; yet; another",
+      "pos": "adv",
+      "rank": 28,
+      "forms": [
+        "noch"
+      ]
+    },
+    {
+      "id": "de.w.j922pkzv68",
+      "lemma": "wenn",
+      "gloss": "if; when",
+      "pos": "conj",
+      "rank": 29,
+      "forms": [
+        "wenn"
+      ]
+    },
+    {
+      "id": "de.w.jgrb6t0x2x",
+      "lemma": "können",
+      "gloss": "can; to be able to",
+      "pos": "verb",
+      "rank": 30,
+      "forms": [
+        "können",
+        "kann",
+        "kannst",
+        "könnt",
+        "konnte",
+        "konntest",
+        "konnten",
+        "gekonnt",
+        "könnte"
+      ]
+    },
+    {
+      "id": "de.w.ej1ff02pkz",
+      "lemma": "mal",
+      "gloss": "just (softens a request); times",
+      "pos": "particle",
+      "rank": 31,
+      "forms": [
+        "mal"
+      ],
+      "notes": "Komm mal her! = Come here a second! Drei mal zwei = three times two."
+    },
+    {
+      "id": "de.w.ak88gwsd5s",
+      "lemma": "nur",
+      "gloss": "only; just",
+      "pos": "adv",
+      "rank": 32,
+      "forms": [
+        "nur"
+      ]
+    },
+    {
+      "id": "de.w.a1rr7dkp4m",
+      "lemma": "gut",
+      "gloss": "good; well",
+      "pos": "adj",
+      "rank": 33,
+      "forms": [
+        "gut",
+        "gute",
+        "guten",
+        "guter",
+        "gutes",
+        "gutem",
+        "besser",
+        "beste"
+      ]
+    },
+    {
+      "id": "de.w.d0mka7zg9t",
+      "lemma": "schon",
+      "gloss": "already",
+      "pos": "adv",
+      "rank": 34,
+      "forms": [
+        "schon"
+      ]
+    },
+    {
+      "id": "de.w.d367sa67e6",
+      "lemma": "auch",
+      "gloss": "also; too",
+      "pos": "adv",
+      "rank": 35,
+      "forms": [
+        "auch"
+      ]
+    },
+    {
+      "id": "de.w.w600nf76v6",
+      "lemma": "jetzt",
+      "gloss": "now",
+      "pos": "adv",
+      "rank": 36,
+      "forms": [
+        "jetzt"
+      ]
+    },
+    {
+      "id": "de.w.57qtec5cxa",
+      "lemma": "von",
+      "gloss": "from; of",
+      "pos": "prep",
+      "rank": 37,
+      "forms": [
+        "von",
+        "vom"
+      ],
+      "notes": "von + dem = vom."
+    },
+    {
+      "id": "de.w.a6b9z8a47v",
+      "lemma": "werden",
+      "gloss": "to become; will (future)",
+      "pos": "verb",
+      "rank": 38,
+      "forms": [
+        "werden",
+        "werde",
+        "wirst",
+        "wird",
+        "werdet",
+        "wurde",
+        "wurden",
+        "geworden",
+        "würde"
+      ],
+      "notes": "werden + verb = future: Ich werde kommen (I will come)."
+    },
+    {
+      "id": "de.w.2tkzwx0ggx",
+      "lemma": "wissen",
+      "gloss": "to know (a fact)",
+      "pos": "verb",
+      "rank": 39,
+      "forms": [
+        "wissen",
+        "weiß",
+        "weißt",
+        "wisst",
+        "wusste",
+        "wussten",
+        "gewusst"
+      ]
+    },
+    {
+      "id": "de.w.3nascdk7k0",
+      "lemma": "mein",
+      "gloss": "my",
+      "pos": "det",
+      "rank": 40,
+      "forms": [
+        "mein",
+        "meine",
+        "meinen",
+        "meinem",
+        "meiner",
+        "meines"
+      ]
+    }
+  ],
+  "sentences": [
+    {
+      "id": "de.s.3xexzcp53e",
+      "wordId": "de.w.cmn8thykat",
+      "text": "Ich bin müde.",
+      "translation": "I'm tired.",
+      "cloze": "Ich"
+    },
+    {
+      "id": "de.s.d0z6bzkdfy",
+      "wordId": "de.w.cmn8thykat",
+      "text": "Kannst du mir helfen?",
+      "translation": "Can you help me?",
+      "cloze": "mir"
+    },
+    {
+      "id": "de.s.wkqqyttnq6",
+      "wordId": "de.w.cmn8thykat",
+      "text": "Er liebt mich.",
+      "translation": "He loves me.",
+      "cloze": "mich"
+    },
+    {
+      "id": "de.s.z9dv0ybcvq",
+      "wordId": "de.w.g4n2pzrqqa",
+      "text": "Ich bin hier.",
+      "translation": "I'm here.",
+      "cloze": "bin"
+    },
+    {
+      "id": "de.s.47jarjgb6k",
+      "wordId": "de.w.g4n2pzrqqa",
+      "text": "Das ist gut.",
+      "translation": "That's good.",
+      "cloze": "ist"
+    },
+    {
+      "id": "de.s.0gwc0j9604",
+      "wordId": "de.w.g4n2pzrqqa",
+      "text": "Wir sind Freunde.",
+      "translation": "We're friends.",
+      "cloze": "sind"
+    },
+    {
+      "id": "de.s.hnx0pzxcsn",
+      "wordId": "de.w.g4n2pzrqqa",
+      "text": "Wo warst du?",
+      "translation": "Where were you?",
+      "cloze": "warst"
+    },
+    {
+      "id": "de.s.505fjdaqfn",
+      "wordId": "de.w.hy97s5w9ry",
+      "text": "Sie ist meine Schwester.",
+      "translation": "She's my sister.",
+      "cloze": "Sie"
+    },
+    {
+      "id": "de.s.a6tactdf5w",
+      "wordId": "de.w.hy97s5w9ry",
+      "text": "Wo sind sie?",
+      "translation": "Where are they?",
+      "cloze": "sie"
+    },
+    {
+      "id": "de.s.9c6wggf3bp",
+      "wordId": "de.w.hy97s5w9ry",
+      "text": "Ich sehe sie morgen.",
+      "translation": "I'll see her tomorrow.",
+      "cloze": "sie"
+    },
+    {
+      "id": "de.s.cdjz8ngsfp",
+      "wordId": "de.w.hy97s5w9ry",
+      "text": "Ich helfe ihr.",
+      "translation": "I'm helping her.",
+      "cloze": "ihr"
+    },
+    {
+      "id": "de.s.1qy3zea938",
+      "wordId": "de.w.t1vc2x9nbk",
+      "text": "Das ist mein Haus.",
+      "translation": "That's my house.",
+      "cloze": "Das"
+    },
+    {
+      "id": "de.s.n5591qqce7",
+      "wordId": "de.w.t1vc2x9nbk",
+      "text": "Was ist das?",
+      "translation": "What is that?",
+      "cloze": "das"
+    },
+    {
+      "id": "de.s.bnf0bsdrys",
+      "wordId": "de.w.t1vc2x9nbk",
+      "text": "Das weiß ich nicht.",
+      "translation": "I don't know that.",
+      "cloze": "Das"
+    },
+    {
+      "id": "de.s.xkj3fn745q",
+      "wordId": "de.w.wp465f8vny",
+      "text": "Wie heißt du?",
+      "translation": "What's your name?",
+      "cloze": "du"
+    },
+    {
+      "id": "de.s.d8erms3q6p",
+      "wordId": "de.w.wp465f8vny",
+      "text": "Ich liebe dich.",
+      "translation": "I love you.",
+      "cloze": "dich"
+    },
+    {
+      "id": "de.s.s9eemdm88p",
+      "wordId": "de.w.wp465f8vny",
+      "text": "Wie geht es dir?",
+      "translation": "How are you?",
+      "cloze": "dir"
+    },
+    {
+      "id": "de.s.5gxjyhbna6",
+      "wordId": "de.w.wp465f8vny",
+      "text": "Du bist nett.",
+      "translation": "You're nice.",
+      "cloze": "Du"
+    },
+    {
+      "id": "de.s.p3pa3n460h",
+      "wordId": "de.w.kj64hw30ky",
+      "text": "Ich weiß es nicht.",
+      "translation": "I don't know.",
+      "cloze": "nicht"
+    },
+    {
+      "id": "de.s.pvhb4qp7k3",
+      "wordId": "de.w.kj64hw30ky",
+      "text": "Das ist nicht gut.",
+      "translation": "That's not good.",
+      "cloze": "nicht"
+    },
+    {
+      "id": "de.s.8my6q348wy",
+      "wordId": "de.w.kj64hw30ky",
+      "text": "Nicht jetzt!",
+      "translation": "Not now!",
+      "cloze": "Nicht"
+    },
+    {
+      "id": "de.s.dq73ebm5dw",
+      "wordId": "de.w.16rfax1676",
+      "text": "Der Mann ist hier.",
+      "translation": "The man is here.",
+      "cloze": "Der"
+    },
+    {
+      "id": "de.s.9habj5jxqq",
+      "wordId": "de.w.16rfax1676",
+      "text": "Die Frau heißt Anna.",
+      "translation": "The woman's name is Anna.",
+      "cloze": "Die"
+    },
+    {
+      "id": "de.s.apj9jec4d3",
+      "wordId": "de.w.16rfax1676",
+      "text": "Ich sehe den Hund.",
+      "translation": "I see the dog.",
+      "cloze": "den"
+    },
+    {
+      "id": "de.s.rk478btd66",
+      "wordId": "de.w.16rfax1676",
+      "text": "Das Kind schläft.",
+      "translation": "The child is sleeping.",
+      "cloze": "Das"
+    },
+    {
+      "id": "de.s.rjapgeafpj",
+      "wordId": "de.w.hssj5zzfvc",
+      "text": "Brot und Wasser, bitte.",
+      "translation": "Bread and water, please.",
+      "cloze": "und"
+    },
+    {
+      "id": "de.s.gz3awxn62q",
+      "wordId": "de.w.hssj5zzfvc",
+      "text": "Ich habe einen Bruder und eine Schwester.",
+      "translation": "I have a brother and a sister.",
+      "cloze": "und"
+    },
+    {
+      "id": "de.s.kd1yr5edrh",
+      "wordId": "de.w.hssj5zzfvc",
+      "text": "Und du?",
+      "translation": "And you?",
+      "cloze": "Und"
+    },
+    {
+      "id": "de.s.q0t46g65ax",
+      "wordId": "de.w.53dr04jhrp",
+      "text": "Es ist kalt.",
+      "translation": "It's cold.",
+      "cloze": "Es"
+    },
+    {
+      "id": "de.s.m4ygcqwngy",
+      "wordId": "de.w.53dr04jhrp",
+      "text": "Ich mag es.",
+      "translation": "I like it.",
+      "cloze": "es"
+    },
+    {
+      "id": "de.s.3cv7ht7mzj",
+      "wordId": "de.w.53dr04jhrp",
+      "text": "Es tut mir leid.",
+      "translation": "I'm sorry.",
+      "cloze": "Es"
+    },
+    {
+      "id": "de.s.r1vfntrgak",
+      "wordId": "de.w.53dr04jhrp",
+      "text": "Gibt es hier Kaffee?",
+      "translation": "Is there coffee here?",
+      "cloze": "es"
+    },
+    {
+      "id": "de.s.5d0hvm5t2m",
+      "wordId": "de.w.v6rfx2m8zv",
+      "text": "Wir sind müde.",
+      "translation": "We're tired.",
+      "cloze": "Wir"
+    },
+    {
+      "id": "de.s.0nkcdhvjjv",
+      "wordId": "de.w.v6rfx2m8zv",
+      "text": "Wo sind wir?",
+      "translation": "Where are we?",
+      "cloze": "wir"
+    },
+    {
+      "id": "de.s.d9p4b70c5b",
+      "wordId": "de.w.v6rfx2m8zv",
+      "text": "Kommst du mit uns?",
+      "translation": "Are you coming with us?",
+      "cloze": "uns"
+    },
+    {
+      "id": "de.s.5m6nh11sj4",
+      "wordId": "de.w.h169xtc36z",
+      "text": "Ich gehe zu meiner Mutter.",
+      "translation": "I'm going to my mother's.",
+      "cloze": "zu"
+    },
+    {
+      "id": "de.s.embwxhfh35",
+      "wordId": "de.w.h169xtc36z",
+      "text": "Ich bin zu Hause.",
+      "translation": "I'm at home.",
+      "cloze": "zu"
+    },
+    {
+      "id": "de.s.kf9gq11y2b",
+      "wordId": "de.w.h169xtc36z",
+      "text": "Wir gehen zum Arzt.",
+      "translation": "We're going to the doctor.",
+      "cloze": "zum"
+    },
+    {
+      "id": "de.s.6028mh4136",
+      "wordId": "de.w.7xfv7467rx",
+      "text": "Was machst du?",
+      "translation": "What are you doing?",
+      "cloze": "Was"
+    },
+    {
+      "id": "de.s.mj1tmt6g3x",
+      "wordId": "de.w.7xfv7467rx",
+      "text": "Was willst du?",
+      "translation": "What do you want?",
+      "cloze": "Was"
+    },
+    {
+      "id": "de.s.a4ahem5yre",
+      "wordId": "de.w.7xfv7467rx",
+      "text": "Ich weiß, was du meinst.",
+      "translation": "I know what you mean.",
+      "cloze": "was"
+    },
+    {
+      "id": "de.s.kag4ax58w7",
+      "wordId": "de.w.fsvzv52npw",
+      "text": "Ich habe einen Hund.",
+      "translation": "I have a dog.",
+      "cloze": "einen"
+    },
+    {
+      "id": "de.s.m3df5eqwjm",
+      "wordId": "de.w.fsvzv52npw",
+      "text": "Das ist eine gute Idee.",
+      "translation": "That's a good idea.",
+      "cloze": "eine"
+    },
+    {
+      "id": "de.s.kmhq9zmznr",
+      "wordId": "de.w.fsvzv52npw",
+      "text": "Er ist ein guter Freund.",
+      "translation": "He's a good friend.",
+      "cloze": "ein"
+    },
+    {
+      "id": "de.s.72jwds8v93",
+      "wordId": "de.w.ewent3pkfy",
+      "text": "Er ist mein Bruder.",
+      "translation": "He's my brother.",
+      "cloze": "Er"
+    },
+    {
+      "id": "de.s.bsrw9brhv8",
+      "wordId": "de.w.ewent3pkfy",
+      "text": "Wo ist er?",
+      "translation": "Where is he?",
+      "cloze": "er"
+    },
+    {
+      "id": "de.s.3gq372g4t7",
+      "wordId": "de.w.ewent3pkfy",
+      "text": "Ich kenne ihn.",
+      "translation": "I know him.",
+      "cloze": "ihn"
+    },
+    {
+      "id": "de.s.sr2cgz2a1z",
+      "wordId": "de.w.ewent3pkfy",
+      "text": "Gib ihm das Buch.",
+      "translation": "Give him the book.",
+      "cloze": "ihm"
+    },
+    {
+      "id": "de.s.m5aq2zzb78",
+      "wordId": "de.w.4wwwkaz42g",
+      "text": "Ich habe Zeit.",
+      "translation": "I have time.",
+      "cloze": "habe"
+    },
+    {
+      "id": "de.s.n4e44ymq8h",
+      "wordId": "de.w.4wwwkaz42g",
+      "text": "Hast du Hunger?",
+      "translation": "Are you hungry?",
+      "cloze": "Hast"
+    },
+    {
+      "id": "de.s.ebcracfqkd",
+      "wordId": "de.w.4wwwkaz42g",
+      "text": "Sie hat zwei Kinder.",
+      "translation": "She has two children.",
+      "cloze": "hat"
+    },
+    {
+      "id": "de.s.j28rddzs8w",
+      "wordId": "de.w.4wwwkaz42g",
+      "text": "Wir haben keine Zeit.",
+      "translation": "We don't have time.",
+      "cloze": "haben"
+    },
+    {
+      "id": "de.s.wqj8cjpm4s",
+      "wordId": "de.w.d4x642zc8s",
+      "text": "Ja, bitte.",
+      "translation": "Yes, please.",
+      "cloze": "Ja"
+    },
+    {
+      "id": "de.s.a41s3mba3n",
+      "wordId": "de.w.d4x642zc8s",
+      "text": "Ja, das stimmt.",
+      "translation": "Yes, that's right.",
+      "cloze": "Ja"
+    },
+    {
+      "id": "de.s.c80v1ngman",
+      "wordId": "de.w.d4x642zc8s",
+      "text": "Das ist ja toll!",
+      "translation": "That's really great!",
+      "cloze": "ja"
+    },
+    {
+      "id": "de.s.9pmbbkr911",
+      "wordId": "de.w.b12a79kp8n",
+      "text": "Ich wohne in Berlin.",
+      "translation": "I live in Berlin.",
+      "cloze": "in"
+    },
+    {
+      "id": "de.s.mks9h1y79r",
+      "wordId": "de.w.b12a79kp8n",
+      "text": "Er ist im Haus.",
+      "translation": "He's in the house.",
+      "cloze": "im"
+    },
+    {
+      "id": "de.s.nawfdrrkwn",
+      "wordId": "de.w.b12a79kp8n",
+      "text": "Wir gehen ins Kino.",
+      "translation": "We're going to the movies.",
+      "cloze": "ins"
+    },
+    {
+      "id": "de.s.csjan4zjr5",
+      "wordId": "de.w.21vzm8ebh8",
+      "text": "Ich komme mit dir.",
+      "translation": "I'm coming with you.",
+      "cloze": "mit"
+    },
+    {
+      "id": "de.s.9y3h86jh0d",
+      "wordId": "de.w.21vzm8ebh8",
+      "text": "Kaffee mit Milch, bitte.",
+      "translation": "Coffee with milk, please.",
+      "cloze": "mit"
+    },
+    {
+      "id": "de.s.dv152qj0cv",
+      "wordId": "de.w.21vzm8ebh8",
+      "text": "Mit wem sprichst du?",
+      "translation": "Who are you talking to?",
+      "cloze": "Mit"
+    },
+    {
+      "id": "de.s.xj3kqcdag5",
+      "wordId": "de.w.e8yzqyvc3j",
+      "text": "Er freut sich.",
+      "translation": "He's happy.",
+      "cloze": "sich"
+    },
+    {
+      "id": "de.s.jgzzx6jys2",
+      "wordId": "de.w.e8yzqyvc3j",
+      "text": "Sie setzt sich.",
+      "translation": "She sits down.",
+      "cloze": "sich"
+    },
+    {
+      "id": "de.s.4wzscqpea8",
+      "wordId": "de.w.e8yzqyvc3j",
+      "text": "Wie fühlt sie sich?",
+      "translation": "How does she feel?",
+      "cloze": "sich"
+    },
+    {
+      "id": "de.s.040aq94gbf",
+      "wordId": "de.w.8fymg2tabd",
+      "text": "Das ist so gut!",
+      "translation": "That's so good!",
+      "cloze": "so"
+    },
+    {
+      "id": "de.s.y923c60jzc",
+      "wordId": "de.w.8fymg2tabd",
+      "text": "Mach es so.",
+      "translation": "Do it like this.",
+      "cloze": "so"
+    },
+    {
+      "id": "de.s.zwqye884t2",
+      "wordId": "de.w.8fymg2tabd",
+      "text": "So ist das Leben.",
+      "translation": "That's life.",
+      "cloze": "So"
+    },
+    {
+      "id": "de.s.yyb3fwh8em",
+      "wordId": "de.w.btwkqa050a",
+      "text": "Das Buch liegt auf dem Tisch.",
+      "translation": "The book is on the table.",
+      "cloze": "auf"
+    },
+    {
+      "id": "de.s.qv4z1r75gx",
+      "wordId": "de.w.btwkqa050a",
+      "text": "Ich warte auf dich.",
+      "translation": "I'm waiting for you.",
+      "cloze": "auf"
+    },
+    {
+      "id": "de.s.b7g5vrwgg8",
+      "wordId": "de.w.btwkqa050a",
+      "text": "Auf Wiedersehen!",
+      "translation": "Goodbye!",
+      "cloze": "Auf"
+    },
+    {
+      "id": "de.s.qhg99c1y67",
+      "wordId": "de.w.69xvzxsw8w",
+      "text": "Das ist für dich.",
+      "translation": "This is for you.",
+      "cloze": "für"
+    },
+    {
+      "id": "de.s.tn7v45s728",
+      "wordId": "de.w.69xvzxsw8w",
+      "text": "Danke für alles.",
+      "translation": "Thanks for everything.",
+      "cloze": "für"
+    },
+    {
+      "id": "de.s.jrfhcg21pm",
+      "wordId": "de.w.69xvzxsw8w",
+      "text": "Für wen ist das?",
+      "translation": "Who is that for?",
+      "cloze": "Für"
+    },
+    {
+      "id": "de.s.tnf1pzdbaa",
+      "wordId": "de.w.exgvbsatwq",
+      "text": "Hier ist dein Kaffee.",
+      "translation": "Here's your coffee.",
+      "cloze": "Hier"
+    },
+    {
+      "id": "de.s.d9cm3e4jdf",
+      "wordId": "de.w.exgvbsatwq",
+      "text": "Wohnst du hier?",
+      "translation": "Do you live here?",
+      "cloze": "hier"
+    },
+    {
+      "id": "de.s.abdabqnyaq",
+      "wordId": "de.w.exgvbsatwq",
+      "text": "Es ist schön hier.",
+      "translation": "It's nice here.",
+      "cloze": "hier"
+    },
+    {
+      "id": "de.s.19qkef638t",
+      "wordId": "de.w.cz1hrf36jj",
+      "text": "Es ist teuer, aber gut.",
+      "translation": "It's expensive, but good.",
+      "cloze": "aber"
+    },
+    {
+      "id": "de.s.5drm5q602x",
+      "wordId": "de.w.cz1hrf36jj",
+      "text": "Ich will, aber ich kann nicht.",
+      "translation": "I want to, but I can't.",
+      "cloze": "aber"
+    },
+    {
+      "id": "de.s.r2t6vvvp31",
+      "wordId": "de.w.cz1hrf36jj",
+      "text": "Aber warum?",
+      "translation": "But why?",
+      "cloze": "Aber"
+    },
+    {
+      "id": "de.s.kt197a3hq2",
+      "wordId": "de.w.hymaxbbb4e",
+      "text": "Wie alt bist du?",
+      "translation": "How old are you?",
+      "cloze": "Wie"
+    },
+    {
+      "id": "de.s.nhfxk87ec3",
+      "wordId": "de.w.hymaxbbb4e",
+      "text": "Wie spät ist es?",
+      "translation": "What time is it?",
+      "cloze": "Wie"
+    },
+    {
+      "id": "de.s.ks2vnf8yzf",
+      "wordId": "de.w.hymaxbbb4e",
+      "text": "Er ist wie sein Vater.",
+      "translation": "He's like his father.",
+      "cloze": "wie"
+    },
+    {
+      "id": "de.s.rzhpy4mwj2",
+      "wordId": "de.w.10s6zwpjq8",
+      "text": "Nein, danke.",
+      "translation": "No, thank you.",
+      "cloze": "Nein"
+    },
+    {
+      "id": "de.s.452vndz13r",
+      "wordId": "de.w.10s6zwpjq8",
+      "text": "Nein, das ist falsch.",
+      "translation": "No, that's wrong.",
+      "cloze": "Nein"
+    },
+    {
+      "id": "de.s.174r3ce3as",
+      "wordId": "de.w.10s6zwpjq8",
+      "text": "Oh nein!",
+      "translation": "Oh no!",
+      "cloze": "nein"
+    },
+    {
+      "id": "de.s.xk0jrac86c",
+      "wordId": "de.w.f6etcx4a5b",
+      "text": "Ich weiß, dass du müde bist.",
+      "translation": "I know that you're tired.",
+      "cloze": "dass"
+    },
+    {
+      "id": "de.s.wypkjezedv",
+      "wordId": "de.w.f6etcx4a5b",
+      "text": "Ich glaube, dass er kommt.",
+      "translation": "I think he's coming.",
+      "cloze": "dass"
+    },
+    {
+      "id": "de.s.cxkmr2n3c6",
+      "wordId": "de.w.f6etcx4a5b",
+      "text": "Schön, dass du da bist.",
+      "translation": "I'm glad you're here.",
+      "cloze": "dass"
+    },
+    {
+      "id": "de.s.zc1xmcsjtm",
+      "wordId": "de.w.28n9h5qmn1",
+      "text": "Ich bin noch müde.",
+      "translation": "I'm still tired.",
+      "cloze": "noch"
+    },
+    {
+      "id": "de.s.sgj4fh5fbz",
+      "wordId": "de.w.28n9h5qmn1",
+      "text": "Noch ein Bier, bitte.",
+      "translation": "Another beer, please.",
+      "cloze": "Noch"
+    },
+    {
+      "id": "de.s.5pb2e9yvvk",
+      "wordId": "de.w.28n9h5qmn1",
+      "text": "Bist du noch da?",
+      "translation": "Are you still there?",
+      "cloze": "noch"
+    },
+    {
+      "id": "de.s.wf45x51a73",
+      "wordId": "de.w.j922pkzv68",
+      "text": "Wenn du willst, komm mit.",
+      "translation": "If you want, come along.",
+      "cloze": "Wenn"
+    },
+    {
+      "id": "de.s.45tjrkdyga",
+      "wordId": "de.w.j922pkzv68",
+      "text": "Ruf mich an, wenn du da bist.",
+      "translation": "Call me when you're there.",
+      "cloze": "wenn"
+    },
+    {
+      "id": "de.s.6x49476eqk",
+      "wordId": "de.w.j922pkzv68",
+      "text": "Was ist, wenn es regnet?",
+      "translation": "What if it rains?",
+      "cloze": "wenn"
+    },
+    {
+      "id": "de.s.rpa53g2qw7",
+      "wordId": "de.w.jgrb6t0x2x",
+      "text": "Ich kann nicht schlafen.",
+      "translation": "I can't sleep.",
+      "cloze": "kann"
+    },
+    {
+      "id": "de.s.j5m3s7yxsc",
+      "wordId": "de.w.jgrb6t0x2x",
+      "text": "Kannst du schwimmen?",
+      "translation": "Can you swim?",
+      "cloze": "Kannst"
+    },
+    {
+      "id": "de.s.q19m3mybp3",
+      "wordId": "de.w.jgrb6t0x2x",
+      "text": "Wir können morgen gehen.",
+      "translation": "We can go tomorrow.",
+      "cloze": "können"
+    },
+    {
+      "id": "de.s.84kbags129",
+      "wordId": "de.w.ej1ff02pkz",
+      "text": "Komm mal her!",
+      "translation": "Come here a second!",
+      "cloze": "mal"
+    },
+    {
+      "id": "de.s.s4t838v4sf",
+      "wordId": "de.w.ej1ff02pkz",
+      "text": "Warte mal!",
+      "translation": "Wait a moment!",
+      "cloze": "mal"
+    },
+    {
+      "id": "de.s.0berxawrgb",
+      "wordId": "de.w.ej1ff02pkz",
+      "text": "Sag mal, wo wohnst du?",
+      "translation": "Tell me, where do you live?",
+      "cloze": "mal"
+    },
+    {
+      "id": "de.s.dbc6jt3k90",
+      "wordId": "de.w.ak88gwsd5s",
+      "text": "Ich habe nur zehn Euro.",
+      "translation": "I only have ten euros.",
+      "cloze": "nur"
+    },
+    {
+      "id": "de.s.3m8reqgjpj",
+      "wordId": "de.w.ak88gwsd5s",
+      "text": "Nur ein bisschen.",
+      "translation": "Just a little.",
+      "cloze": "Nur"
+    },
+    {
+      "id": "de.s.jshmq5rmh0",
+      "wordId": "de.w.ak88gwsd5s",
+      "text": "Das ist nur ein Spiel.",
+      "translation": "It's only a game.",
+      "cloze": "nur"
+    },
+    {
+      "id": "de.s.5zd36va4ge",
+      "wordId": "de.w.a1rr7dkp4m",
+      "text": "Das Essen ist gut.",
+      "translation": "The food is good.",
+      "cloze": "gut"
+    },
+    {
+      "id": "de.s.c0c59s23be",
+      "wordId": "de.w.a1rr7dkp4m",
+      "text": "Guten Morgen!",
+      "translation": "Good morning!",
+      "cloze": "Guten"
+    },
+    {
+      "id": "de.s.z4d2dg6rx5",
+      "wordId": "de.w.a1rr7dkp4m",
+      "text": "Er ist ein guter Lehrer.",
+      "translation": "He's a good teacher.",
+      "cloze": "guter"
+    },
+    {
+      "id": "de.s.z5bfbt3jjt",
+      "wordId": "de.w.d0mka7zg9t",
+      "text": "Ich bin schon da.",
+      "translation": "I'm already here.",
+      "cloze": "schon"
+    },
+    {
+      "id": "de.s.2wzwem86jj",
+      "wordId": "de.w.d0mka7zg9t",
+      "text": "Bist du schon fertig?",
+      "translation": "Are you done already?",
+      "cloze": "schon"
+    },
+    {
+      "id": "de.s.rv7sv7kn79",
+      "wordId": "de.w.d0mka7zg9t",
+      "text": "Es ist schon spät.",
+      "translation": "It's already late.",
+      "cloze": "schon"
+    },
+    {
+      "id": "de.s.b1h8z4mp1a",
+      "wordId": "de.w.d367sa67e6",
+      "text": "Ich auch.",
+      "translation": "Me too.",
+      "cloze": "auch"
+    },
+    {
+      "id": "de.s.vb39rxfge4",
+      "wordId": "de.w.d367sa67e6",
+      "text": "Kommst du auch?",
+      "translation": "Are you coming too?",
+      "cloze": "auch"
+    },
+    {
+      "id": "de.s.6hr85emxy5",
+      "wordId": "de.w.d367sa67e6",
+      "text": "Das ist auch gut.",
+      "translation": "That's good too.",
+      "cloze": "auch"
+    },
+    {
+      "id": "de.s.brakg2y5zv",
+      "wordId": "de.w.w600nf76v6",
+      "text": "Ich muss jetzt gehen.",
+      "translation": "I have to go now.",
+      "cloze": "jetzt"
+    },
+    {
+      "id": "de.s.n2qyxyhn5g",
+      "wordId": "de.w.w600nf76v6",
+      "text": "Jetzt verstehe ich.",
+      "translation": "Now I understand.",
+      "cloze": "Jetzt"
+    },
+    {
+      "id": "de.s.a0dn7vyq97",
+      "wordId": "de.w.w600nf76v6",
+      "text": "Wo bist du jetzt?",
+      "translation": "Where are you now?",
+      "cloze": "jetzt"
+    },
+    {
+      "id": "de.s.qsvt119z0j",
+      "wordId": "de.w.57qtec5cxa",
+      "text": "Der Brief ist von meiner Mutter.",
+      "translation": "The letter is from my mother.",
+      "cloze": "von"
+    },
+    {
+      "id": "de.s.v18wy7xyxe",
+      "wordId": "de.w.57qtec5cxa",
+      "text": "Ich komme vom Markt.",
+      "translation": "I'm coming from the market.",
+      "cloze": "vom"
+    },
+    {
+      "id": "de.s.wh6490prcn",
+      "wordId": "de.w.57qtec5cxa",
+      "text": "Er ist ein Freund von mir.",
+      "translation": "He's a friend of mine.",
+      "cloze": "von"
+    },
+    {
+      "id": "de.s.r7s2tn9k8f",
+      "wordId": "de.w.a6b9z8a47v",
+      "text": "Es wird kalt.",
+      "translation": "It's getting cold.",
+      "cloze": "wird"
+    },
+    {
+      "id": "de.s.82tpcq6d83",
+      "wordId": "de.w.a6b9z8a47v",
+      "text": "Ich werde Arzt.",
+      "translation": "I'm going to be a doctor.",
+      "cloze": "werde"
+    },
+    {
+      "id": "de.s.qyfe6bfx54",
+      "wordId": "de.w.a6b9z8a47v",
+      "text": "Wir werden sehen.",
+      "translation": "We'll see.",
+      "cloze": "werden"
+    },
+    {
+      "id": "de.s.4yns3np24y",
+      "wordId": "de.w.2tkzwx0ggx",
+      "text": "Weißt du, wo er ist?",
+      "translation": "Do you know where he is?",
+      "cloze": "Weißt"
+    },
+    {
+      "id": "de.s.tyd16ah3x1",
+      "wordId": "de.w.2tkzwx0ggx",
+      "text": "Das wusste ich nicht.",
+      "translation": "I didn't know that.",
+      "cloze": "wusste"
+    },
+    {
+      "id": "de.s.246xh534kr",
+      "wordId": "de.w.2tkzwx0ggx",
+      "text": "Wir wissen es.",
+      "translation": "We know.",
+      "cloze": "wissen"
+    },
+    {
+      "id": "de.s.hj81jat7jx",
+      "wordId": "de.w.3nascdk7k0",
+      "text": "Das ist mein Bruder.",
+      "translation": "This is my brother.",
+      "cloze": "mein"
+    },
+    {
+      "id": "de.s.ey9nnawnxa",
+      "wordId": "de.w.3nascdk7k0",
+      "text": "Meine Mutter kocht gut.",
+      "translation": "My mother cooks well.",
+      "cloze": "Meine"
+    },
+    {
+      "id": "de.s.sxv4rcs6ab",
+      "wordId": "de.w.3nascdk7k0",
+      "text": "Hast du meinen Schlüssel?",
+      "translation": "Do you have my key?",
+      "cloze": "meinen"
+    }
+  ]
+}

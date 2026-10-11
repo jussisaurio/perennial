@@ -1,0 +1,1439 @@
+{
+  "lang": "es",
+  "native": "en",
+  "version": 1,
+  "words": [
+    {
+      "id": "es.w.93eb423hjf",
+      "lemma": "de",
+      "gloss": "of; from",
+      "pos": "prep",
+      "rank": 1,
+      "forms": [
+        "de"
+      ]
+    },
+    {
+      "id": "es.w.1107t4p6be",
+      "lemma": "que",
+      "gloss": "that; than",
+      "pos": "conj",
+      "rank": 2,
+      "forms": [
+        "que"
+      ]
+    },
+    {
+      "id": "es.w.9d49qaw0sg",
+      "lemma": "no",
+      "gloss": "no; not",
+      "pos": "adv",
+      "rank": 3,
+      "forms": [
+        "no"
+      ]
+    },
+    {
+      "id": "es.w.6xajhxxh9w",
+      "lemma": "a",
+      "gloss": "to; at",
+      "pos": "prep",
+      "rank": 4,
+      "forms": [
+        "a",
+        "al"
+      ],
+      "notes": "Before a person it has no English equivalent: Veo a Ana (I see Ana). a + el = al."
+    },
+    {
+      "id": "es.w.pfmwabf0g3",
+      "lemma": "el",
+      "gloss": "the",
+      "pos": "det",
+      "rank": 5,
+      "forms": [
+        "el",
+        "la",
+        "los",
+        "las"
+      ],
+      "notes": "el (masculine), la (feminine); plural los, las."
+    },
+    {
+      "id": "es.w.cjvnms9pdf",
+      "lemma": "ser",
+      "gloss": "to be (who or what something is)",
+      "pos": "verb",
+      "rank": 6,
+      "forms": [
+        "ser",
+        "soy",
+        "eres",
+        "es",
+        "somos",
+        "sois",
+        "son",
+        "era",
+        "eras",
+        "éramos",
+        "eran",
+        "fui",
+        "fue",
+        "fueron",
+        "sido",
+        "sea"
+      ],
+      "notes": "Use ser for identity and lasting traits, estar for states and places."
+    },
+    {
+      "id": "es.w.243gxj2kc3",
+      "lemma": "y",
+      "gloss": "and",
+      "pos": "conj",
+      "rank": 7,
+      "forms": [
+        "y"
+      ]
+    },
+    {
+      "id": "es.w.dfpag10d7t",
+      "lemma": "en",
+      "gloss": "in; on; at",
+      "pos": "prep",
+      "rank": 8,
+      "forms": [
+        "en"
+      ]
+    },
+    {
+      "id": "es.w.n5a4za0g46",
+      "lemma": "lo",
+      "gloss": "it; him",
+      "pos": "pron",
+      "rank": 9,
+      "forms": [
+        "lo",
+        "la",
+        "los",
+        "las"
+      ],
+      "notes": "Object pronoun: lo (him, it), la (her, it), los and las (them)."
+    },
+    {
+      "id": "es.w.m3hges55tf",
+      "lemma": "un",
+      "gloss": "a; an",
+      "pos": "det",
+      "rank": 10,
+      "forms": [
+        "un",
+        "una",
+        "unos",
+        "unas"
+      ],
+      "notes": "Plural unos, unas means 'some'."
+    },
+    {
+      "id": "es.w.1bpk83ksvz",
+      "lemma": "por",
+      "gloss": "for; by; through",
+      "pos": "prep",
+      "rank": 11,
+      "forms": [
+        "por"
+      ]
+    },
+    {
+      "id": "es.w.nezgvf2g0g",
+      "lemma": "qué",
+      "gloss": "what",
+      "pos": "pron",
+      "rank": 12,
+      "forms": [
+        "qué"
+      ],
+      "notes": "Without the accent, que means 'that'."
+    },
+    {
+      "id": "es.w.svwn05w7m2",
+      "lemma": "me",
+      "gloss": "me; myself",
+      "pos": "pron",
+      "rank": 13,
+      "forms": [
+        "me"
+      ]
+    },
+    {
+      "id": "es.w.4p4k36nt6m",
+      "lemma": "te",
+      "gloss": "you; yourself (informal)",
+      "pos": "pron",
+      "rank": 14,
+      "forms": [
+        "te"
+      ]
+    },
+    {
+      "id": "es.w.dgn1yfj0mc",
+      "lemma": "se",
+      "gloss": "himself; herself; themselves",
+      "pos": "pron",
+      "rank": 15,
+      "forms": [
+        "se"
+      ],
+      "notes": "Also in se llama (is called) and in general statements: ¿Cómo se dice? (How do you say it?)"
+    },
+    {
+      "id": "es.w.csgh57rp5q",
+      "lemma": "con",
+      "gloss": "with",
+      "pos": "prep",
+      "rank": 16,
+      "forms": [
+        "con",
+        "conmigo",
+        "contigo"
+      ],
+      "notes": "conmigo = with me, contigo = with you."
+    },
+    {
+      "id": "es.w.j8zz1mhk62",
+      "lemma": "estar",
+      "gloss": "to be (how or where something is)",
+      "pos": "verb",
+      "rank": 17,
+      "forms": [
+        "estar",
+        "estoy",
+        "estás",
+        "está",
+        "estamos",
+        "estáis",
+        "están",
+        "estaba",
+        "estaban",
+        "estuvo",
+        "estado",
+        "esté"
+      ],
+      "notes": "Use estar for states and places, ser for identity."
+    },
+    {
+      "id": "es.w.svs1zec411",
+      "lemma": "para",
+      "gloss": "for; in order to",
+      "pos": "prep",
+      "rank": 18,
+      "forms": [
+        "para"
+      ]
+    },
+    {
+      "id": "es.w.j3akx81ta0",
+      "lemma": "mi",
+      "gloss": "my",
+      "pos": "det",
+      "rank": 19,
+      "forms": [
+        "mi",
+        "mis"
+      ],
+      "notes": "Without the accent; mí (with an accent) means 'me'."
+    },
+    {
+      "id": "es.w.syd52td7dw",
+      "lemma": "si",
+      "gloss": "if",
+      "pos": "conj",
+      "rank": 20,
+      "forms": [
+        "si"
+      ],
+      "notes": "With an accent, sí means 'yes'."
+    },
+    {
+      "id": "es.w.8t72hrqq45",
+      "lemma": "bien",
+      "gloss": "well; fine",
+      "pos": "adv",
+      "rank": 21,
+      "forms": [
+        "bien"
+      ]
+    },
+    {
+      "id": "es.w.egsw7rk5hc",
+      "lemma": "pero",
+      "gloss": "but",
+      "pos": "conj",
+      "rank": 22,
+      "forms": [
+        "pero"
+      ]
+    },
+    {
+      "id": "es.w.bpwttz0r78",
+      "lemma": "yo",
+      "gloss": "I",
+      "pos": "pron",
+      "rank": 23,
+      "forms": [
+        "yo"
+      ],
+      "notes": "Often left out: soy = I am."
+    },
+    {
+      "id": "es.w.01wcay9z7v",
+      "lemma": "eso",
+      "gloss": "that",
+      "pos": "pron",
+      "rank": 24,
+      "forms": [
+        "eso"
+      ]
+    },
+    {
+      "id": "es.w.nn1g0jcea2",
+      "lemma": "sí",
+      "gloss": "yes",
+      "pos": "adv",
+      "rank": 25,
+      "forms": [
+        "sí"
+      ],
+      "notes": "Without the accent, si means 'if'."
+    },
+    {
+      "id": "es.w.scq4x8fea3",
+      "lemma": "haber",
+      "gloss": "to have (done); there is (hay)",
+      "pos": "verb",
+      "rank": 26,
+      "forms": [
+        "haber",
+        "he",
+        "has",
+        "ha",
+        "hemos",
+        "han",
+        "hay",
+        "había",
+        "habido"
+      ],
+      "notes": "hay = there is, there are. With a past participle: he comido (I have eaten)."
+    },
+    {
+      "id": "es.w.jw719whjyk",
+      "lemma": "tener",
+      "gloss": "to have",
+      "pos": "verb",
+      "rank": 27,
+      "forms": [
+        "tener",
+        "tengo",
+        "tienes",
+        "tiene",
+        "tenemos",
+        "tenéis",
+        "tienen",
+        "tenía",
+        "tuve",
+        "tuvo",
+        "tenido"
+      ],
+      "notes": "tener que = to have to. Also for age and feelings: tengo hambre (I'm hungry)."
+    },
+    {
+      "id": "es.w.zz2m002522",
+      "lemma": "su",
+      "gloss": "his; her; their; your (formal)",
+      "pos": "det",
+      "rank": 28,
+      "forms": [
+        "su",
+        "sus"
+      ]
+    },
+    {
+      "id": "es.w.bs0nhvxqm9",
+      "lemma": "tú",
+      "gloss": "you (informal)",
+      "pos": "pron",
+      "rank": 29,
+      "forms": [
+        "tú"
+      ],
+      "notes": "Without the accent, tu means 'your'."
+    },
+    {
+      "id": "es.w.k4ynpfwbwh",
+      "lemma": "aquí",
+      "gloss": "here",
+      "pos": "adv",
+      "rank": 30,
+      "forms": [
+        "aquí"
+      ]
+    },
+    {
+      "id": "es.w.g9nry8b4ee",
+      "lemma": "ir",
+      "gloss": "to go",
+      "pos": "verb",
+      "rank": 31,
+      "forms": [
+        "ir",
+        "voy",
+        "vas",
+        "va",
+        "vamos",
+        "vais",
+        "van",
+        "iba",
+        "fui",
+        "fue",
+        "ido",
+        "vaya"
+      ],
+      "notes": "ir a + verb = going to: voy a comer (I'm going to eat). vamos also means 'let's go'."
+    },
+    {
+      "id": "es.w.zf2dqt66xa",
+      "lemma": "como",
+      "gloss": "like; as",
+      "pos": "adv",
+      "rank": 32,
+      "forms": [
+        "como"
+      ],
+      "notes": "With an accent, cómo means 'how'."
+    },
+    {
+      "id": "es.w.w2d88fbenr",
+      "lemma": "más",
+      "gloss": "more",
+      "pos": "adv",
+      "rank": 33,
+      "forms": [
+        "más"
+      ]
+    },
+    {
+      "id": "es.w.rb2m4dd2se",
+      "lemma": "este",
+      "gloss": "this",
+      "pos": "det",
+      "rank": 34,
+      "forms": [
+        "este",
+        "esta",
+        "estos",
+        "estas"
+      ]
+    },
+    {
+      "id": "es.w.7b12ys7sdp",
+      "lemma": "ya",
+      "gloss": "already; now",
+      "pos": "adv",
+      "rank": 35,
+      "forms": [
+        "ya"
+      ]
+    },
+    {
+      "id": "es.w.vy0jxazx05",
+      "lemma": "todo",
+      "gloss": "everything; all",
+      "pos": "pron",
+      "rank": 36,
+      "forms": [
+        "todo",
+        "toda",
+        "todos",
+        "todas"
+      ]
+    },
+    {
+      "id": "es.w.m9y7bxtt7r",
+      "lemma": "muy",
+      "gloss": "very",
+      "pos": "adv",
+      "rank": 37,
+      "forms": [
+        "muy"
+      ]
+    },
+    {
+      "id": "es.w.k4w7z80mve",
+      "lemma": "poder",
+      "gloss": "can; to be able to",
+      "pos": "verb",
+      "rank": 38,
+      "forms": [
+        "poder",
+        "puedo",
+        "puedes",
+        "puede",
+        "podemos",
+        "podéis",
+        "pueden",
+        "podía",
+        "pudo",
+        "podido"
+      ]
+    },
+    {
+      "id": "es.w.dgabfmd0dk",
+      "lemma": "saber",
+      "gloss": "to know (a fact); to know how to",
+      "pos": "verb",
+      "rank": 39,
+      "forms": [
+        "saber",
+        "sé",
+        "sabes",
+        "sabe",
+        "sabemos",
+        "sabéis",
+        "saben",
+        "sabía",
+        "supe",
+        "sabido"
+      ]
+    },
+    {
+      "id": "es.w.8n82dxyja6",
+      "lemma": "querer",
+      "gloss": "to want; to love",
+      "pos": "verb",
+      "rank": 40,
+      "forms": [
+        "querer",
+        "quiero",
+        "quieres",
+        "quiere",
+        "queremos",
+        "queréis",
+        "quieren",
+        "quería",
+        "quiso",
+        "querido"
+      ]
+    }
+  ],
+  "sentences": [
+    {
+      "id": "es.s.vd1nrqcz90",
+      "wordId": "es.w.93eb423hjf",
+      "text": "Soy de México.",
+      "translation": "I'm from Mexico.",
+      "cloze": "de"
+    },
+    {
+      "id": "es.s.zs21rk9q0n",
+      "wordId": "es.w.93eb423hjf",
+      "text": "Es el coche de mi padre.",
+      "translation": "It's my father's car.",
+      "cloze": "de"
+    },
+    {
+      "id": "es.s.jk621vrrww",
+      "wordId": "es.w.93eb423hjf",
+      "text": "¿De dónde eres?",
+      "translation": "Where are you from?",
+      "cloze": "De"
+    },
+    {
+      "id": "es.s.shjr8b3729",
+      "wordId": "es.w.93eb423hjf",
+      "text": "Quiero un vaso de agua.",
+      "translation": "I want a glass of water.",
+      "cloze": "de"
+    },
+    {
+      "id": "es.s.xxjjxne5ac",
+      "wordId": "es.w.1107t4p6be",
+      "text": "Creo que tienes razón.",
+      "translation": "I think you're right.",
+      "cloze": "que"
+    },
+    {
+      "id": "es.s.78r1d4e89y",
+      "wordId": "es.w.1107t4p6be",
+      "text": "Dice que no puede venir.",
+      "translation": "He says he can't come.",
+      "cloze": "que"
+    },
+    {
+      "id": "es.s.8zfdjdxwmn",
+      "wordId": "es.w.1107t4p6be",
+      "text": "Es más alto que yo.",
+      "translation": "He's taller than me.",
+      "cloze": "que"
+    },
+    {
+      "id": "es.s.9vetfv4dhp",
+      "wordId": "es.w.9d49qaw0sg",
+      "text": "Ella no está aquí.",
+      "translation": "She isn't here.",
+      "cloze": "no"
+    },
+    {
+      "id": "es.s.n2v3jdxpkw",
+      "wordId": "es.w.9d49qaw0sg",
+      "text": "No, gracias.",
+      "translation": "No, thank you.",
+      "cloze": "No"
+    },
+    {
+      "id": "es.s.5prf6ty0jg",
+      "wordId": "es.w.9d49qaw0sg",
+      "text": "No me gusta el café.",
+      "translation": "I don't like coffee.",
+      "cloze": "No"
+    },
+    {
+      "id": "es.s.rb4710kqh9",
+      "wordId": "es.w.6xajhxxh9w",
+      "text": "Voy a la playa.",
+      "translation": "I'm going to the beach.",
+      "cloze": "a"
+    },
+    {
+      "id": "es.s.0d71evrzdr",
+      "wordId": "es.w.6xajhxxh9w",
+      "text": "Llego a las ocho.",
+      "translation": "I arrive at eight.",
+      "cloze": "a"
+    },
+    {
+      "id": "es.s.bgjq19r1eb",
+      "wordId": "es.w.6xajhxxh9w",
+      "text": "Vamos al cine.",
+      "translation": "Let's go to the movies.",
+      "cloze": "al"
+    },
+    {
+      "id": "es.s.gmggrdd7tz",
+      "wordId": "es.w.6xajhxxh9w",
+      "text": "Veo a mi madre.",
+      "translation": "I see my mother.",
+      "cloze": "a"
+    },
+    {
+      "id": "es.s.p1ma1h0pe2",
+      "wordId": "es.w.pfmwabf0g3",
+      "text": "El perro come mucho.",
+      "translation": "The dog eats a lot.",
+      "cloze": "El"
+    },
+    {
+      "id": "es.s.rkj2rk7z73",
+      "wordId": "es.w.pfmwabf0g3",
+      "text": "La casa es grande.",
+      "translation": "The house is big.",
+      "cloze": "La"
+    },
+    {
+      "id": "es.s.ddw1h026cf",
+      "wordId": "es.w.pfmwabf0g3",
+      "text": "¿Dónde están los niños?",
+      "translation": "Where are the children?",
+      "cloze": "los"
+    },
+    {
+      "id": "es.s.vs405aaby8",
+      "wordId": "es.w.pfmwabf0g3",
+      "text": "Me gustan las flores.",
+      "translation": "I like the flowers.",
+      "cloze": "las"
+    },
+    {
+      "id": "es.s.w88ng6v9b5",
+      "wordId": "es.w.cjvnms9pdf",
+      "text": "Soy estudiante.",
+      "translation": "I'm a student.",
+      "cloze": "Soy"
+    },
+    {
+      "id": "es.s.dmqp9cz5rc",
+      "wordId": "es.w.cjvnms9pdf",
+      "text": "¿Quién es ella?",
+      "translation": "Who is she?",
+      "cloze": "es"
+    },
+    {
+      "id": "es.s.e6v730hvy6",
+      "wordId": "es.w.cjvnms9pdf",
+      "text": "Somos amigos.",
+      "translation": "We're friends.",
+      "cloze": "Somos"
+    },
+    {
+      "id": "es.s.mk05d6t74z",
+      "wordId": "es.w.cjvnms9pdf",
+      "text": "Fue un buen día.",
+      "translation": "It was a good day.",
+      "cloze": "Fue"
+    },
+    {
+      "id": "es.s.560cvsyv68",
+      "wordId": "es.w.243gxj2kc3",
+      "text": "Tengo un perro y un gato.",
+      "translation": "I have a dog and a cat.",
+      "cloze": "y"
+    },
+    {
+      "id": "es.s.0rnpqme13a",
+      "wordId": "es.w.243gxj2kc3",
+      "text": "Pan y agua, por favor.",
+      "translation": "Bread and water, please.",
+      "cloze": "y"
+    },
+    {
+      "id": "es.s.8128phbcfb",
+      "wordId": "es.w.243gxj2kc3",
+      "text": "¿Y tú?",
+      "translation": "And you?",
+      "cloze": "Y"
+    },
+    {
+      "id": "es.s.dvw72d1j7v",
+      "wordId": "es.w.dfpag10d7t",
+      "text": "Vivo en Madrid.",
+      "translation": "I live in Madrid.",
+      "cloze": "en"
+    },
+    {
+      "id": "es.s.w09j9c89wa",
+      "wordId": "es.w.dfpag10d7t",
+      "text": "El libro está en la mesa.",
+      "translation": "The book is on the table.",
+      "cloze": "en"
+    },
+    {
+      "id": "es.s.8zd4w28yeh",
+      "wordId": "es.w.dfpag10d7t",
+      "text": "Estoy en casa.",
+      "translation": "I'm at home.",
+      "cloze": "en"
+    },
+    {
+      "id": "es.s.r7rebsc40h",
+      "wordId": "es.w.n5a4za0g46",
+      "text": "Lo sé.",
+      "translation": "I know.",
+      "cloze": "Lo"
+    },
+    {
+      "id": "es.s.2wy639y6de",
+      "wordId": "es.w.n5a4za0g46",
+      "text": "¿Lo quieres?",
+      "translation": "Do you want it?",
+      "cloze": "Lo"
+    },
+    {
+      "id": "es.s.nhxw2as33m",
+      "wordId": "es.w.n5a4za0g46",
+      "text": "Lo veo mañana.",
+      "translation": "I'll see him tomorrow.",
+      "cloze": "Lo"
+    },
+    {
+      "id": "es.s.64vvxm0ks2",
+      "wordId": "es.w.n5a4za0g46",
+      "text": "La llamo luego.",
+      "translation": "I'll call her later.",
+      "cloze": "La"
+    },
+    {
+      "id": "es.s.j1g1ea85eh",
+      "wordId": "es.w.m3hges55tf",
+      "text": "Tengo un hermano.",
+      "translation": "I have a brother.",
+      "cloze": "un"
+    },
+    {
+      "id": "es.s.sg6zrts2jc",
+      "wordId": "es.w.m3hges55tf",
+      "text": "Es una buena idea.",
+      "translation": "It's a good idea.",
+      "cloze": "una"
+    },
+    {
+      "id": "es.s.8gc71prbpd",
+      "wordId": "es.w.m3hges55tf",
+      "text": "Necesito unos días.",
+      "translation": "I need a few days.",
+      "cloze": "unos"
+    },
+    {
+      "id": "es.s.28epw3gtve",
+      "wordId": "es.w.1bpk83ksvz",
+      "text": "Gracias por todo.",
+      "translation": "Thanks for everything.",
+      "cloze": "por"
+    },
+    {
+      "id": "es.s.atycwn5v5a",
+      "wordId": "es.w.1bpk83ksvz",
+      "text": "Por favor, ven aquí.",
+      "translation": "Please come here.",
+      "cloze": "Por"
+    },
+    {
+      "id": "es.s.bv5d8fgxdf",
+      "wordId": "es.w.1bpk83ksvz",
+      "text": "Camino por el parque.",
+      "translation": "I walk through the park.",
+      "cloze": "por"
+    },
+    {
+      "id": "es.s.g938eeak0n",
+      "wordId": "es.w.nezgvf2g0g",
+      "text": "¿Qué es esto?",
+      "translation": "What is this?",
+      "cloze": "Qué"
+    },
+    {
+      "id": "es.s.1evwrba230",
+      "wordId": "es.w.nezgvf2g0g",
+      "text": "¿Qué quieres?",
+      "translation": "What do you want?",
+      "cloze": "Qué"
+    },
+    {
+      "id": "es.s.4bs9j4d0fk",
+      "wordId": "es.w.nezgvf2g0g",
+      "text": "No sé qué hacer.",
+      "translation": "I don't know what to do.",
+      "cloze": "qué"
+    },
+    {
+      "id": "es.s.n5684mbm8s",
+      "wordId": "es.w.svwn05w7m2",
+      "text": "¿Me ayudas?",
+      "translation": "Can you help me?",
+      "cloze": "Me"
+    },
+    {
+      "id": "es.s.a4bsc5d6fn",
+      "wordId": "es.w.svwn05w7m2",
+      "text": "Me llamo Ana.",
+      "translation": "My name is Ana.",
+      "cloze": "Me"
+    },
+    {
+      "id": "es.s.xn8w18s6vp",
+      "wordId": "es.w.svwn05w7m2",
+      "text": "Ella me quiere.",
+      "translation": "She loves me.",
+      "cloze": "me"
+    },
+    {
+      "id": "es.s.y9jc7a1xmc",
+      "wordId": "es.w.4p4k36nt6m",
+      "text": "Te quiero.",
+      "translation": "I love you.",
+      "cloze": "Te"
+    },
+    {
+      "id": "es.s.ak2db9pt0k",
+      "wordId": "es.w.4p4k36nt6m",
+      "text": "¿Cómo te llamas?",
+      "translation": "What's your name?",
+      "cloze": "te"
+    },
+    {
+      "id": "es.s.0ejxt1c9tf",
+      "wordId": "es.w.4p4k36nt6m",
+      "text": "Te veo mañana.",
+      "translation": "See you tomorrow.",
+      "cloze": "Te"
+    },
+    {
+      "id": "es.s.xrzf9b8ypw",
+      "wordId": "es.w.dgn1yfj0mc",
+      "text": "Se llama Pedro.",
+      "translation": "His name is Pedro.",
+      "cloze": "Se"
+    },
+    {
+      "id": "es.s.cgg8n8p4vn",
+      "wordId": "es.w.dgn1yfj0mc",
+      "text": "¿Cómo se dice?",
+      "translation": "How do you say it?",
+      "cloze": "se"
+    },
+    {
+      "id": "es.s.84ygmhj41p",
+      "wordId": "es.w.dgn1yfj0mc",
+      "text": "Ella se va mañana.",
+      "translation": "She's leaving tomorrow.",
+      "cloze": "se"
+    },
+    {
+      "id": "es.s.qps46e3ejw",
+      "wordId": "es.w.csgh57rp5q",
+      "text": "Vivo con mi madre.",
+      "translation": "I live with my mother.",
+      "cloze": "con"
+    },
+    {
+      "id": "es.s.w530jytare",
+      "wordId": "es.w.csgh57rp5q",
+      "text": "¿Vienes conmigo?",
+      "translation": "Are you coming with me?",
+      "cloze": "conmigo"
+    },
+    {
+      "id": "es.s.ahp8ssn40t",
+      "wordId": "es.w.csgh57rp5q",
+      "text": "Café con leche, por favor.",
+      "translation": "Coffee with milk, please.",
+      "cloze": "con"
+    },
+    {
+      "id": "es.s.t7sfrzsj3x",
+      "wordId": "es.w.j8zz1mhk62",
+      "text": "¿Cómo estás?",
+      "translation": "How are you?",
+      "cloze": "estás"
+    },
+    {
+      "id": "es.s.xbhpt5qw6r",
+      "wordId": "es.w.j8zz1mhk62",
+      "text": "Estoy cansado.",
+      "translation": "I'm tired.",
+      "cloze": "Estoy"
+    },
+    {
+      "id": "es.s.4cbzz201ex",
+      "wordId": "es.w.j8zz1mhk62",
+      "text": "Mi madre está en casa.",
+      "translation": "My mother is at home.",
+      "cloze": "está"
+    },
+    {
+      "id": "es.s.8jke2ktnzv",
+      "wordId": "es.w.j8zz1mhk62",
+      "text": "Estamos listos.",
+      "translation": "We're ready.",
+      "cloze": "Estamos"
+    },
+    {
+      "id": "es.s.yztbpnfymg",
+      "wordId": "es.w.svs1zec411",
+      "text": "Esto es para ti.",
+      "translation": "This is for you.",
+      "cloze": "para"
+    },
+    {
+      "id": "es.s.da4y01zzgm",
+      "wordId": "es.w.svs1zec411",
+      "text": "Necesito dinero para comer.",
+      "translation": "I need money to eat.",
+      "cloze": "para"
+    },
+    {
+      "id": "es.s.0gyer179yf",
+      "wordId": "es.w.svs1zec411",
+      "text": "¿Para qué es esto?",
+      "translation": "What is this for?",
+      "cloze": "Para"
+    },
+    {
+      "id": "es.s.7aega5k0tr",
+      "wordId": "es.w.j3akx81ta0",
+      "text": "Mi casa es tu casa.",
+      "translation": "My house is your house.",
+      "cloze": "Mi"
+    },
+    {
+      "id": "es.s.xh3vk1jg3k",
+      "wordId": "es.w.j3akx81ta0",
+      "text": "Mis padres viven aquí.",
+      "translation": "My parents live here.",
+      "cloze": "Mis"
+    },
+    {
+      "id": "es.s.ywdk5zxnep",
+      "wordId": "es.w.j3akx81ta0",
+      "text": "Es mi amigo.",
+      "translation": "He's my friend.",
+      "cloze": "mi"
+    },
+    {
+      "id": "es.s.mdyygc5f3s",
+      "wordId": "es.w.syd52td7dw",
+      "text": "Si quieres, vamos.",
+      "translation": "If you want, let's go.",
+      "cloze": "Si"
+    },
+    {
+      "id": "es.s.d0tg0sz8tq",
+      "wordId": "es.w.syd52td7dw",
+      "text": "No sé si viene.",
+      "translation": "I don't know if he's coming.",
+      "cloze": "si"
+    },
+    {
+      "id": "es.s.9cqwa5jvc0",
+      "wordId": "es.w.syd52td7dw",
+      "text": "Si llueve, me quedo en casa.",
+      "translation": "If it rains, I'll stay home.",
+      "cloze": "Si"
+    },
+    {
+      "id": "es.s.3m2w827z7s",
+      "wordId": "es.w.8t72hrqq45",
+      "text": "Estoy bien, gracias.",
+      "translation": "I'm fine, thanks.",
+      "cloze": "bien"
+    },
+    {
+      "id": "es.s.spjzqqg62p",
+      "wordId": "es.w.8t72hrqq45",
+      "text": "Hablas muy bien.",
+      "translation": "You speak very well.",
+      "cloze": "bien"
+    },
+    {
+      "id": "es.s.yj7ea2ckvp",
+      "wordId": "es.w.8t72hrqq45",
+      "text": "¿Todo bien?",
+      "translation": "Everything okay?",
+      "cloze": "bien"
+    },
+    {
+      "id": "es.s.n7egctsxn6",
+      "wordId": "es.w.egsw7rk5hc",
+      "text": "Es caro, pero bueno.",
+      "translation": "It's expensive, but good.",
+      "cloze": "pero"
+    },
+    {
+      "id": "es.s.kmyppxy5st",
+      "wordId": "es.w.egsw7rk5hc",
+      "text": "Quiero ir, pero no puedo.",
+      "translation": "I want to go, but I can't.",
+      "cloze": "pero"
+    },
+    {
+      "id": "es.s.vcec9kw6km",
+      "wordId": "es.w.egsw7rk5hc",
+      "text": "Pero ¿por qué?",
+      "translation": "But why?",
+      "cloze": "Pero"
+    },
+    {
+      "id": "es.s.yczh4566d1",
+      "wordId": "es.w.bpwttz0r78",
+      "text": "Yo soy Ana.",
+      "translation": "I'm Ana.",
+      "cloze": "Yo"
+    },
+    {
+      "id": "es.s.1ftqc9xqa2",
+      "wordId": "es.w.bpwttz0r78",
+      "text": "¿Y yo?",
+      "translation": "What about me?",
+      "cloze": "yo"
+    },
+    {
+      "id": "es.s.6a4g49qk5h",
+      "wordId": "es.w.bpwttz0r78",
+      "text": "Yo también.",
+      "translation": "Me too.",
+      "cloze": "Yo"
+    },
+    {
+      "id": "es.s.syyewmb0xb",
+      "wordId": "es.w.01wcay9z7v",
+      "text": "Eso es verdad.",
+      "translation": "That's true.",
+      "cloze": "Eso"
+    },
+    {
+      "id": "es.s.wtdxd16h54",
+      "wordId": "es.w.01wcay9z7v",
+      "text": "No digas eso.",
+      "translation": "Don't say that.",
+      "cloze": "eso"
+    },
+    {
+      "id": "es.s.mt8e0gw1mj",
+      "wordId": "es.w.01wcay9z7v",
+      "text": "¿Por eso estás triste?",
+      "translation": "Is that why you're sad?",
+      "cloze": "eso"
+    },
+    {
+      "id": "es.s.f8bmrpr28j",
+      "wordId": "es.w.nn1g0jcea2",
+      "text": "Sí, claro.",
+      "translation": "Yes, of course.",
+      "cloze": "Sí"
+    },
+    {
+      "id": "es.s.3wk6hv73ta",
+      "wordId": "es.w.nn1g0jcea2",
+      "text": "Creo que sí.",
+      "translation": "I think so.",
+      "cloze": "sí"
+    },
+    {
+      "id": "es.s.hcbf25ebcq",
+      "wordId": "es.w.nn1g0jcea2",
+      "text": "¡Sí, por favor!",
+      "translation": "Yes, please!",
+      "cloze": "Sí"
+    },
+    {
+      "id": "es.s.wzch2hvv0s",
+      "wordId": "es.w.scq4x8fea3",
+      "text": "Hay un problema.",
+      "translation": "There's a problem.",
+      "cloze": "Hay"
+    },
+    {
+      "id": "es.s.3xqa1vw5z3",
+      "wordId": "es.w.scq4x8fea3",
+      "text": "¿Has comido?",
+      "translation": "Have you eaten?",
+      "cloze": "Has"
+    },
+    {
+      "id": "es.s.tpnj2p8xxm",
+      "wordId": "es.w.scq4x8fea3",
+      "text": "No hay nada aquí.",
+      "translation": "There's nothing here.",
+      "cloze": "hay"
+    },
+    {
+      "id": "es.s.hy5kp2rbz8",
+      "wordId": "es.w.scq4x8fea3",
+      "text": "Ella ha llegado.",
+      "translation": "She has arrived.",
+      "cloze": "ha"
+    },
+    {
+      "id": "es.s.g27vkhe9zw",
+      "wordId": "es.w.jw719whjyk",
+      "text": "Tengo dos hermanos.",
+      "translation": "I have two brothers.",
+      "cloze": "Tengo"
+    },
+    {
+      "id": "es.s.namfn8masw",
+      "wordId": "es.w.jw719whjyk",
+      "text": "¿Tienes hambre?",
+      "translation": "Are you hungry?",
+      "cloze": "Tienes"
+    },
+    {
+      "id": "es.s.rmyaentyqz",
+      "wordId": "es.w.jw719whjyk",
+      "text": "Ella tiene veinte años.",
+      "translation": "She's twenty years old.",
+      "cloze": "tiene"
+    },
+    {
+      "id": "es.s.27mw80jrzy",
+      "wordId": "es.w.jw719whjyk",
+      "text": "Tenemos que irnos.",
+      "translation": "We have to go.",
+      "cloze": "Tenemos"
+    },
+    {
+      "id": "es.s.sb6wtcfh4w",
+      "wordId": "es.w.zz2m002522",
+      "text": "Su casa es bonita.",
+      "translation": "Her house is pretty.",
+      "cloze": "Su"
+    },
+    {
+      "id": "es.s.ce61drdjyv",
+      "wordId": "es.w.zz2m002522",
+      "text": "Ellos viven con sus padres.",
+      "translation": "They live with their parents.",
+      "cloze": "sus"
+    },
+    {
+      "id": "es.s.hg24jst92f",
+      "wordId": "es.w.zz2m002522",
+      "text": "¿Es su coche?",
+      "translation": "Is it his car?",
+      "cloze": "su"
+    },
+    {
+      "id": "es.s.8n7vj3zxmh",
+      "wordId": "es.w.bs0nhvxqm9",
+      "text": "Tú eres mi amigo.",
+      "translation": "You're my friend.",
+      "cloze": "Tú"
+    },
+    {
+      "id": "es.s.91n6fhjfhy",
+      "wordId": "es.w.bs0nhvxqm9",
+      "text": "¿Tú qué piensas?",
+      "translation": "What do you think?",
+      "cloze": "Tú"
+    },
+    {
+      "id": "es.s.4t4rkcctzz",
+      "wordId": "es.w.bs0nhvxqm9",
+      "text": "Hazlo tú.",
+      "translation": "You do it.",
+      "cloze": "tú"
+    },
+    {
+      "id": "es.s.eexqzxxm9a",
+      "wordId": "es.w.k4ynpfwbwh",
+      "text": "Ven aquí.",
+      "translation": "Come here.",
+      "cloze": "aquí"
+    },
+    {
+      "id": "es.s.8xmrx30txs",
+      "wordId": "es.w.k4ynpfwbwh",
+      "text": "Aquí está tu café.",
+      "translation": "Here's your coffee.",
+      "cloze": "Aquí"
+    },
+    {
+      "id": "es.s.waqpeg8s1p",
+      "wordId": "es.w.k4ynpfwbwh",
+      "text": "¿Vives aquí?",
+      "translation": "Do you live here?",
+      "cloze": "aquí"
+    },
+    {
+      "id": "es.s.nnr3etw4e7",
+      "wordId": "es.w.g9nry8b4ee",
+      "text": "Voy a casa.",
+      "translation": "I'm going home.",
+      "cloze": "Voy"
+    },
+    {
+      "id": "es.s.q62cbgwzw3",
+      "wordId": "es.w.g9nry8b4ee",
+      "text": "¿Adónde vas?",
+      "translation": "Where are you going?",
+      "cloze": "vas"
+    },
+    {
+      "id": "es.s.0fqy1g7kc4",
+      "wordId": "es.w.g9nry8b4ee",
+      "text": "Vamos a comer.",
+      "translation": "Let's eat.",
+      "cloze": "Vamos"
+    },
+    {
+      "id": "es.s.6bd91djcdt",
+      "wordId": "es.w.g9nry8b4ee",
+      "text": "Quiero ir contigo.",
+      "translation": "I want to go with you.",
+      "cloze": "ir"
+    },
+    {
+      "id": "es.s.18rsw65b15",
+      "wordId": "es.w.zf2dqt66xa",
+      "text": "Eres como tu padre.",
+      "translation": "You're like your father.",
+      "cloze": "como"
+    },
+    {
+      "id": "es.s.j0h34v3jah",
+      "wordId": "es.w.zf2dqt66xa",
+      "text": "Haz como yo.",
+      "translation": "Do as I do.",
+      "cloze": "como"
+    },
+    {
+      "id": "es.s.ceetnj513c",
+      "wordId": "es.w.zf2dqt66xa",
+      "text": "Como siempre, llegas tarde.",
+      "translation": "As always, you're late.",
+      "cloze": "Como"
+    },
+    {
+      "id": "es.s.nx9an6ms1q",
+      "wordId": "es.w.w2d88fbenr",
+      "text": "Quiero más agua.",
+      "translation": "I want more water.",
+      "cloze": "más"
+    },
+    {
+      "id": "es.s.95e975xffp",
+      "wordId": "es.w.w2d88fbenr",
+      "text": "Un poco más, por favor.",
+      "translation": "A little more, please.",
+      "cloze": "más"
+    },
+    {
+      "id": "es.s.ac18k74nd2",
+      "wordId": "es.w.w2d88fbenr",
+      "text": "Es más grande.",
+      "translation": "It's bigger.",
+      "cloze": "más"
+    },
+    {
+      "id": "es.s.svp6zspx9g",
+      "wordId": "es.w.rb2m4dd2se",
+      "text": "Este libro es bueno.",
+      "translation": "This book is good.",
+      "cloze": "Este"
+    },
+    {
+      "id": "es.s.wxxz5mn1zq",
+      "wordId": "es.w.rb2m4dd2se",
+      "text": "Esta noche salimos.",
+      "translation": "We're going out tonight.",
+      "cloze": "Esta"
+    },
+    {
+      "id": "es.s.afvx3xqpq8",
+      "wordId": "es.w.rb2m4dd2se",
+      "text": "Me gustan estos zapatos.",
+      "translation": "I like these shoes.",
+      "cloze": "estos"
+    },
+    {
+      "id": "es.s.d49jqa9fkz",
+      "wordId": "es.w.7b12ys7sdp",
+      "text": "Ya lo sé.",
+      "translation": "I already know.",
+      "cloze": "Ya"
+    },
+    {
+      "id": "es.s.4k3nbr1dvd",
+      "wordId": "es.w.7b12ys7sdp",
+      "text": "Ya es tarde.",
+      "translation": "It's already late.",
+      "cloze": "Ya"
+    },
+    {
+      "id": "es.s.p13mrh3m6m",
+      "wordId": "es.w.7b12ys7sdp",
+      "text": "¡Ya voy!",
+      "translation": "I'm coming!",
+      "cloze": "Ya"
+    },
+    {
+      "id": "es.s.fvvetxt2en",
+      "wordId": "es.w.vy0jxazx05",
+      "text": "Todo está bien.",
+      "translation": "Everything is fine.",
+      "cloze": "Todo"
+    },
+    {
+      "id": "es.s.84d6fpw998",
+      "wordId": "es.w.vy0jxazx05",
+      "text": "Todos mis amigos están aquí.",
+      "translation": "All my friends are here.",
+      "cloze": "Todos"
+    },
+    {
+      "id": "es.s.4ztdv3h6e5",
+      "wordId": "es.w.vy0jxazx05",
+      "text": "Trabajo toda la semana.",
+      "translation": "I work all week.",
+      "cloze": "toda"
+    },
+    {
+      "id": "es.s.281ztb1f6a",
+      "wordId": "es.w.m9y7bxtt7r",
+      "text": "Estoy muy cansado.",
+      "translation": "I'm very tired.",
+      "cloze": "muy"
+    },
+    {
+      "id": "es.s.tx6vyck6s6",
+      "wordId": "es.w.m9y7bxtt7r",
+      "text": "Es muy bonito.",
+      "translation": "It's very pretty.",
+      "cloze": "muy"
+    },
+    {
+      "id": "es.s.87gygfaspe",
+      "wordId": "es.w.m9y7bxtt7r",
+      "text": "Muy bien, gracias.",
+      "translation": "Very well, thanks.",
+      "cloze": "Muy"
+    },
+    {
+      "id": "es.s.f8m243b8xv",
+      "wordId": "es.w.k4w7z80mve",
+      "text": "¿Puedo entrar?",
+      "translation": "Can I come in?",
+      "cloze": "Puedo"
+    },
+    {
+      "id": "es.s.b3eg782hws",
+      "wordId": "es.w.k4w7z80mve",
+      "text": "No puedo dormir.",
+      "translation": "I can't sleep.",
+      "cloze": "puedo"
+    },
+    {
+      "id": "es.s.97fej9k7d4",
+      "wordId": "es.w.k4w7z80mve",
+      "text": "¿Me puedes ayudar?",
+      "translation": "Can you help me?",
+      "cloze": "puedes"
+    },
+    {
+      "id": "es.s.r91wxbymrz",
+      "wordId": "es.w.k4w7z80mve",
+      "text": "Aquí no se puede fumar.",
+      "translation": "You can't smoke here.",
+      "cloze": "puede"
+    },
+    {
+      "id": "es.s.h6ne45m8ej",
+      "wordId": "es.w.dgabfmd0dk",
+      "text": "No sé.",
+      "translation": "I don't know.",
+      "cloze": "sé"
+    },
+    {
+      "id": "es.s.9mar4dyv8f",
+      "wordId": "es.w.dgabfmd0dk",
+      "text": "¿Sabes nadar?",
+      "translation": "Can you swim?",
+      "cloze": "Sabes"
+    },
+    {
+      "id": "es.s.y8m3323v05",
+      "wordId": "es.w.dgabfmd0dk",
+      "text": "Ella sabe la verdad.",
+      "translation": "She knows the truth.",
+      "cloze": "sabe"
+    },
+    {
+      "id": "es.s.7xxmnzqb2t",
+      "wordId": "es.w.8n82dxyja6",
+      "text": "Quiero ir a casa.",
+      "translation": "I want to go home.",
+      "cloze": "Quiero"
+    },
+    {
+      "id": "es.s.tahrqknbp5",
+      "wordId": "es.w.8n82dxyja6",
+      "text": "¿Quieres algo?",
+      "translation": "Do you want anything?",
+      "cloze": "Quieres"
+    },
+    {
+      "id": "es.s.r2571zcqf5",
+      "wordId": "es.w.8n82dxyja6",
+      "text": "Te quiero mucho.",
+      "translation": "I love you very much.",
+      "cloze": "quiero"
+    }
+  ]
+}

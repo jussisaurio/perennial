@@ -1,0 +1,1129 @@
+[
+  {
+    "lemma": "ich",
+    "gloss": "I",
+    "pos": "pron",
+    "forms": [
+      "ich",
+      "mich",
+      "mir"
+    ],
+    "notes": "mich = me (direct object), mir = to me.",
+    "sentences": [
+      {
+        "text": "Ich bin müde.",
+        "translation": "I'm tired.",
+        "cloze": "Ich"
+      },
+      {
+        "text": "Kannst du mir helfen?",
+        "translation": "Can you help me?",
+        "cloze": "mir"
+      },
+      {
+        "text": "Er liebt mich.",
+        "translation": "He loves me.",
+        "cloze": "mich"
+      }
+    ]
+  },
+  {
+    "lemma": "sein",
+    "gloss": "to be",
+    "pos": "verb",
+    "forms": [
+      "sein",
+      "bin",
+      "bist",
+      "ist",
+      "sind",
+      "seid",
+      "war",
+      "warst",
+      "waren",
+      "gewesen"
+    ],
+    "sentences": [
+      {
+        "text": "Ich bin hier.",
+        "translation": "I'm here.",
+        "cloze": "bin"
+      },
+      {
+        "text": "Das ist gut.",
+        "translation": "That's good.",
+        "cloze": "ist"
+      },
+      {
+        "text": "Wir sind Freunde.",
+        "translation": "We're friends.",
+        "cloze": "sind"
+      },
+      {
+        "text": "Wo warst du?",
+        "translation": "Where were you?",
+        "cloze": "warst"
+      }
+    ]
+  },
+  {
+    "lemma": "sie",
+    "gloss": "she; they",
+    "pos": "pron",
+    "forms": [
+      "sie",
+      "ihr",
+      "ihnen"
+    ],
+    "notes": "Capitalized Sie means formal 'you'.",
+    "sentences": [
+      {
+        "text": "Sie ist meine Schwester.",
+        "translation": "She's my sister.",
+        "cloze": "Sie"
+      },
+      {
+        "text": "Wo sind sie?",
+        "translation": "Where are they?",
+        "cloze": "sie"
+      },
+      {
+        "text": "Ich sehe sie morgen.",
+        "translation": "I'll see her tomorrow.",
+        "cloze": "sie"
+      },
+      {
+        "text": "Ich helfe ihr.",
+        "translation": "I'm helping her.",
+        "cloze": "ihr"
+      }
+    ]
+  },
+  {
+    "lemma": "das",
+    "gloss": "that; this (thing)",
+    "pos": "pron",
+    "forms": [
+      "das"
+    ],
+    "notes": "Also the neuter form of der (the).",
+    "sentences": [
+      {
+        "text": "Das ist mein Haus.",
+        "translation": "That's my house.",
+        "cloze": "Das"
+      },
+      {
+        "text": "Was ist das?",
+        "translation": "What is that?",
+        "cloze": "das"
+      },
+      {
+        "text": "Das weiß ich nicht.",
+        "translation": "I don't know that.",
+        "cloze": "Das"
+      }
+    ]
+  },
+  {
+    "lemma": "du",
+    "gloss": "you (informal)",
+    "pos": "pron",
+    "forms": [
+      "du",
+      "dich",
+      "dir"
+    ],
+    "notes": "dich = you (direct object), dir = to you.",
+    "sentences": [
+      {
+        "text": "Wie heißt du?",
+        "translation": "What's your name?",
+        "cloze": "du"
+      },
+      {
+        "text": "Ich liebe dich.",
+        "translation": "I love you.",
+        "cloze": "dich"
+      },
+      {
+        "text": "Wie geht es dir?",
+        "translation": "How are you?",
+        "cloze": "dir"
+      },
+      {
+        "text": "Du bist nett.",
+        "translation": "You're nice.",
+        "cloze": "Du"
+      }
+    ]
+  },
+  {
+    "lemma": "nicht",
+    "gloss": "not",
+    "pos": "adv",
+    "forms": [
+      "nicht"
+    ],
+    "sentences": [
+      {
+        "text": "Ich weiß es nicht.",
+        "translation": "I don't know.",
+        "cloze": "nicht"
+      },
+      {
+        "text": "Das ist nicht gut.",
+        "translation": "That's not good.",
+        "cloze": "nicht"
+      },
+      {
+        "text": "Nicht jetzt!",
+        "translation": "Not now!",
+        "cloze": "Nicht"
+      }
+    ]
+  },
+  {
+    "lemma": "der",
+    "gloss": "the",
+    "pos": "det",
+    "forms": [
+      "der",
+      "die",
+      "das",
+      "den",
+      "dem",
+      "des"
+    ],
+    "notes": "der (masculine), die (feminine and plural), das (neuter).",
+    "sentences": [
+      {
+        "text": "Der Mann ist hier.",
+        "translation": "The man is here.",
+        "cloze": "Der"
+      },
+      {
+        "text": "Die Frau heißt Anna.",
+        "translation": "The woman's name is Anna.",
+        "cloze": "Die"
+      },
+      {
+        "text": "Ich sehe den Hund.",
+        "translation": "I see the dog.",
+        "cloze": "den"
+      },
+      {
+        "text": "Das Kind schläft.",
+        "translation": "The child is sleeping.",
+        "cloze": "Das"
+      }
+    ]
+  },
+  {
+    "lemma": "und",
+    "gloss": "and",
+    "pos": "conj",
+    "forms": [
+      "und"
+    ],
+    "sentences": [
+      {
+        "text": "Brot und Wasser, bitte.",
+        "translation": "Bread and water, please.",
+        "cloze": "und"
+      },
+      {
+        "text": "Ich habe einen Bruder und eine Schwester.",
+        "translation": "I have a brother and a sister.",
+        "cloze": "und"
+      },
+      {
+        "text": "Und du?",
+        "translation": "And you?",
+        "cloze": "Und"
+      }
+    ]
+  },
+  {
+    "lemma": "es",
+    "gloss": "it",
+    "pos": "pron",
+    "forms": [
+      "es"
+    ],
+    "notes": "es gibt = there is, there are.",
+    "sentences": [
+      {
+        "text": "Es ist kalt.",
+        "translation": "It's cold.",
+        "cloze": "Es"
+      },
+      {
+        "text": "Ich mag es.",
+        "translation": "I like it.",
+        "cloze": "es"
+      },
+      {
+        "text": "Es tut mir leid.",
+        "translation": "I'm sorry.",
+        "cloze": "Es"
+      },
+      {
+        "text": "Gibt es hier Kaffee?",
+        "translation": "Is there coffee here?",
+        "cloze": "es"
+      }
+    ]
+  },
+  {
+    "lemma": "wir",
+    "gloss": "we",
+    "pos": "pron",
+    "forms": [
+      "wir",
+      "uns"
+    ],
+    "notes": "uns = us.",
+    "sentences": [
+      {
+        "text": "Wir sind müde.",
+        "translation": "We're tired.",
+        "cloze": "Wir"
+      },
+      {
+        "text": "Wo sind wir?",
+        "translation": "Where are we?",
+        "cloze": "wir"
+      },
+      {
+        "text": "Kommst du mit uns?",
+        "translation": "Are you coming with us?",
+        "cloze": "uns"
+      }
+    ]
+  },
+  {
+    "lemma": "zu",
+    "gloss": "to; at",
+    "pos": "prep",
+    "forms": [
+      "zu",
+      "zum",
+      "zur"
+    ],
+    "notes": "zu Hause = at home. Before an adjective, zu means 'too': zu groß (too big).",
+    "sentences": [
+      {
+        "text": "Ich gehe zu meiner Mutter.",
+        "translation": "I'm going to my mother's.",
+        "cloze": "zu"
+      },
+      {
+        "text": "Ich bin zu Hause.",
+        "translation": "I'm at home.",
+        "cloze": "zu"
+      },
+      {
+        "text": "Wir gehen zum Arzt.",
+        "translation": "We're going to the doctor.",
+        "cloze": "zum"
+      }
+    ]
+  },
+  {
+    "lemma": "was",
+    "gloss": "what",
+    "pos": "pron",
+    "forms": [
+      "was"
+    ],
+    "sentences": [
+      {
+        "text": "Was machst du?",
+        "translation": "What are you doing?",
+        "cloze": "Was"
+      },
+      {
+        "text": "Was willst du?",
+        "translation": "What do you want?",
+        "cloze": "Was"
+      },
+      {
+        "text": "Ich weiß, was du meinst.",
+        "translation": "I know what you mean.",
+        "cloze": "was"
+      }
+    ]
+  },
+  {
+    "lemma": "ein",
+    "gloss": "a; an",
+    "pos": "det",
+    "forms": [
+      "ein",
+      "eine",
+      "einen",
+      "einem",
+      "einer",
+      "eines"
+    ],
+    "sentences": [
+      {
+        "text": "Ich habe einen Hund.",
+        "translation": "I have a dog.",
+        "cloze": "einen"
+      },
+      {
+        "text": "Das ist eine gute Idee.",
+        "translation": "That's a good idea.",
+        "cloze": "eine"
+      },
+      {
+        "text": "Er ist ein guter Freund.",
+        "translation": "He's a good friend.",
+        "cloze": "ein"
+      }
+    ]
+  },
+  {
+    "lemma": "er",
+    "gloss": "he; it",
+    "pos": "pron",
+    "forms": [
+      "er",
+      "ihn",
+      "ihm"
+    ],
+    "notes": "ihn = him (direct object), ihm = to him.",
+    "sentences": [
+      {
+        "text": "Er ist mein Bruder.",
+        "translation": "He's my brother.",
+        "cloze": "Er"
+      },
+      {
+        "text": "Wo ist er?",
+        "translation": "Where is he?",
+        "cloze": "er"
+      },
+      {
+        "text": "Ich kenne ihn.",
+        "translation": "I know him.",
+        "cloze": "ihn"
+      },
+      {
+        "text": "Gib ihm das Buch.",
+        "translation": "Give him the book.",
+        "cloze": "ihm"
+      }
+    ]
+  },
+  {
+    "lemma": "haben",
+    "gloss": "to have",
+    "pos": "verb",
+    "forms": [
+      "haben",
+      "habe",
+      "hast",
+      "hat",
+      "habt",
+      "hatte",
+      "hattest",
+      "hatten",
+      "gehabt"
+    ],
+    "notes": "Also forms the past: Ich habe gegessen (I ate).",
+    "sentences": [
+      {
+        "text": "Ich habe Zeit.",
+        "translation": "I have time.",
+        "cloze": "habe"
+      },
+      {
+        "text": "Hast du Hunger?",
+        "translation": "Are you hungry?",
+        "cloze": "Hast"
+      },
+      {
+        "text": "Sie hat zwei Kinder.",
+        "translation": "She has two children.",
+        "cloze": "hat"
+      },
+      {
+        "text": "Wir haben keine Zeit.",
+        "translation": "We don't have time.",
+        "cloze": "haben"
+      }
+    ]
+  },
+  {
+    "lemma": "ja",
+    "gloss": "yes",
+    "pos": "particle",
+    "forms": [
+      "ja"
+    ],
+    "notes": "Also adds emphasis: Das ist ja toll! (That's really great!)",
+    "sentences": [
+      {
+        "text": "Ja, bitte.",
+        "translation": "Yes, please.",
+        "cloze": "Ja"
+      },
+      {
+        "text": "Ja, das stimmt.",
+        "translation": "Yes, that's right.",
+        "cloze": "Ja"
+      },
+      {
+        "text": "Das ist ja toll!",
+        "translation": "That's really great!",
+        "cloze": "ja"
+      }
+    ]
+  },
+  {
+    "lemma": "in",
+    "gloss": "in; into",
+    "pos": "prep",
+    "forms": [
+      "in",
+      "im",
+      "ins"
+    ],
+    "notes": "in + dem = im, in + das = ins.",
+    "sentences": [
+      {
+        "text": "Ich wohne in Berlin.",
+        "translation": "I live in Berlin.",
+        "cloze": "in"
+      },
+      {
+        "text": "Er ist im Haus.",
+        "translation": "He's in the house.",
+        "cloze": "im"
+      },
+      {
+        "text": "Wir gehen ins Kino.",
+        "translation": "We're going to the movies.",
+        "cloze": "ins"
+      }
+    ]
+  },
+  {
+    "lemma": "mit",
+    "gloss": "with",
+    "pos": "prep",
+    "forms": [
+      "mit"
+    ],
+    "sentences": [
+      {
+        "text": "Ich komme mit dir.",
+        "translation": "I'm coming with you.",
+        "cloze": "mit"
+      },
+      {
+        "text": "Kaffee mit Milch, bitte.",
+        "translation": "Coffee with milk, please.",
+        "cloze": "mit"
+      },
+      {
+        "text": "Mit wem sprichst du?",
+        "translation": "Who are you talking to?",
+        "cloze": "Mit"
+      }
+    ]
+  },
+  {
+    "lemma": "sich",
+    "gloss": "himself; herself; themselves",
+    "pos": "pron",
+    "forms": [
+      "sich"
+    ],
+    "notes": "Used with many verbs: sich freuen (to be happy), sich setzen (to sit down).",
+    "sentences": [
+      {
+        "text": "Er freut sich.",
+        "translation": "He's happy.",
+        "cloze": "sich"
+      },
+      {
+        "text": "Sie setzt sich.",
+        "translation": "She sits down.",
+        "cloze": "sich"
+      },
+      {
+        "text": "Wie fühlt sie sich?",
+        "translation": "How does she feel?",
+        "cloze": "sich"
+      }
+    ]
+  },
+  {
+    "lemma": "so",
+    "gloss": "so; like this",
+    "pos": "adv",
+    "forms": [
+      "so"
+    ],
+    "sentences": [
+      {
+        "text": "Das ist so gut!",
+        "translation": "That's so good!",
+        "cloze": "so"
+      },
+      {
+        "text": "Mach es so.",
+        "translation": "Do it like this.",
+        "cloze": "so"
+      },
+      {
+        "text": "So ist das Leben.",
+        "translation": "That's life.",
+        "cloze": "So"
+      }
+    ]
+  },
+  {
+    "lemma": "auf",
+    "gloss": "on; onto",
+    "pos": "prep",
+    "forms": [
+      "auf"
+    ],
+    "sentences": [
+      {
+        "text": "Das Buch liegt auf dem Tisch.",
+        "translation": "The book is on the table.",
+        "cloze": "auf"
+      },
+      {
+        "text": "Ich warte auf dich.",
+        "translation": "I'm waiting for you.",
+        "cloze": "auf"
+      },
+      {
+        "text": "Auf Wiedersehen!",
+        "translation": "Goodbye!",
+        "cloze": "Auf"
+      }
+    ]
+  },
+  {
+    "lemma": "für",
+    "gloss": "for",
+    "pos": "prep",
+    "forms": [
+      "für"
+    ],
+    "sentences": [
+      {
+        "text": "Das ist für dich.",
+        "translation": "This is for you.",
+        "cloze": "für"
+      },
+      {
+        "text": "Danke für alles.",
+        "translation": "Thanks for everything.",
+        "cloze": "für"
+      },
+      {
+        "text": "Für wen ist das?",
+        "translation": "Who is that for?",
+        "cloze": "Für"
+      }
+    ]
+  },
+  {
+    "lemma": "hier",
+    "gloss": "here",
+    "pos": "adv",
+    "forms": [
+      "hier"
+    ],
+    "sentences": [
+      {
+        "text": "Hier ist dein Kaffee.",
+        "translation": "Here's your coffee.",
+        "cloze": "Hier"
+      },
+      {
+        "text": "Wohnst du hier?",
+        "translation": "Do you live here?",
+        "cloze": "hier"
+      },
+      {
+        "text": "Es ist schön hier.",
+        "translation": "It's nice here.",
+        "cloze": "hier"
+      }
+    ]
+  },
+  {
+    "lemma": "aber",
+    "gloss": "but",
+    "pos": "conj",
+    "forms": [
+      "aber"
+    ],
+    "sentences": [
+      {
+        "text": "Es ist teuer, aber gut.",
+        "translation": "It's expensive, but good.",
+        "cloze": "aber"
+      },
+      {
+        "text": "Ich will, aber ich kann nicht.",
+        "translation": "I want to, but I can't.",
+        "cloze": "aber"
+      },
+      {
+        "text": "Aber warum?",
+        "translation": "But why?",
+        "cloze": "Aber"
+      }
+    ]
+  },
+  {
+    "lemma": "wie",
+    "gloss": "how; like",
+    "pos": "adv",
+    "forms": [
+      "wie"
+    ],
+    "sentences": [
+      {
+        "text": "Wie alt bist du?",
+        "translation": "How old are you?",
+        "cloze": "Wie"
+      },
+      {
+        "text": "Wie spät ist es?",
+        "translation": "What time is it?",
+        "cloze": "Wie"
+      },
+      {
+        "text": "Er ist wie sein Vater.",
+        "translation": "He's like his father.",
+        "cloze": "wie"
+      }
+    ]
+  },
+  {
+    "lemma": "nein",
+    "gloss": "no",
+    "pos": "particle",
+    "forms": [
+      "nein"
+    ],
+    "sentences": [
+      {
+        "text": "Nein, danke.",
+        "translation": "No, thank you.",
+        "cloze": "Nein"
+      },
+      {
+        "text": "Nein, das ist falsch.",
+        "translation": "No, that's wrong.",
+        "cloze": "Nein"
+      },
+      {
+        "text": "Oh nein!",
+        "translation": "Oh no!",
+        "cloze": "nein"
+      }
+    ]
+  },
+  {
+    "lemma": "dass",
+    "gloss": "that",
+    "pos": "conj",
+    "forms": [
+      "dass"
+    ],
+    "notes": "Sends the verb to the end: Ich weiß, dass du müde bist.",
+    "sentences": [
+      {
+        "text": "Ich weiß, dass du müde bist.",
+        "translation": "I know that you're tired.",
+        "cloze": "dass"
+      },
+      {
+        "text": "Ich glaube, dass er kommt.",
+        "translation": "I think he's coming.",
+        "cloze": "dass"
+      },
+      {
+        "text": "Schön, dass du da bist.",
+        "translation": "I'm glad you're here.",
+        "cloze": "dass"
+      }
+    ]
+  },
+  {
+    "lemma": "noch",
+    "gloss": "still; yet; another",
+    "pos": "adv",
+    "forms": [
+      "noch"
+    ],
+    "sentences": [
+      {
+        "text": "Ich bin noch müde.",
+        "translation": "I'm still tired.",
+        "cloze": "noch"
+      },
+      {
+        "text": "Noch ein Bier, bitte.",
+        "translation": "Another beer, please.",
+        "cloze": "Noch"
+      },
+      {
+        "text": "Bist du noch da?",
+        "translation": "Are you still there?",
+        "cloze": "noch"
+      }
+    ]
+  },
+  {
+    "lemma": "wenn",
+    "gloss": "if; when",
+    "pos": "conj",
+    "forms": [
+      "wenn"
+    ],
+    "sentences": [
+      {
+        "text": "Wenn du willst, komm mit.",
+        "translation": "If you want, come along.",
+        "cloze": "Wenn"
+      },
+      {
+        "text": "Ruf mich an, wenn du da bist.",
+        "translation": "Call me when you're there.",
+        "cloze": "wenn"
+      },
+      {
+        "text": "Was ist, wenn es regnet?",
+        "translation": "What if it rains?",
+        "cloze": "wenn"
+      }
+    ]
+  },
+  {
+    "lemma": "können",
+    "gloss": "can; to be able to",
+    "pos": "verb",
+    "forms": [
+      "können",
+      "kann",
+      "kannst",
+      "könnt",
+      "konnte",
+      "konntest",
+      "konnten",
+      "gekonnt",
+      "könnte"
+    ],
+    "sentences": [
+      {
+        "text": "Ich kann nicht schlafen.",
+        "translation": "I can't sleep.",
+        "cloze": "kann"
+      },
+      {
+        "text": "Kannst du schwimmen?",
+        "translation": "Can you swim?",
+        "cloze": "Kannst"
+      },
+      {
+        "text": "Wir können morgen gehen.",
+        "translation": "We can go tomorrow.",
+        "cloze": "können"
+      }
+    ]
+  },
+  {
+    "lemma": "mal",
+    "gloss": "just (softens a request); times",
+    "pos": "particle",
+    "forms": [
+      "mal"
+    ],
+    "notes": "Komm mal her! = Come here a second! Drei mal zwei = three times two.",
+    "sentences": [
+      {
+        "text": "Komm mal her!",
+        "translation": "Come here a second!",
+        "cloze": "mal"
+      },
+      {
+        "text": "Warte mal!",
+        "translation": "Wait a moment!",
+        "cloze": "mal"
+      },
+      {
+        "text": "Sag mal, wo wohnst du?",
+        "translation": "Tell me, where do you live?",
+        "cloze": "mal"
+      }
+    ]
+  },
+  {
+    "lemma": "nur",
+    "gloss": "only; just",
+    "pos": "adv",
+    "forms": [
+      "nur"
+    ],
+    "sentences": [
+      {
+        "text": "Ich habe nur zehn Euro.",
+        "translation": "I only have ten euros.",
+        "cloze": "nur"
+      },
+      {
+        "text": "Nur ein bisschen.",
+        "translation": "Just a little.",
+        "cloze": "Nur"
+      },
+      {
+        "text": "Das ist nur ein Spiel.",
+        "translation": "It's only a game.",
+        "cloze": "nur"
+      }
+    ]
+  },
+  {
+    "lemma": "gut",
+    "gloss": "good; well",
+    "pos": "adj",
+    "forms": [
+      "gut",
+      "gute",
+      "guten",
+      "guter",
+      "gutes",
+      "gutem",
+      "besser",
+      "beste"
+    ],
+    "sentences": [
+      {
+        "text": "Das Essen ist gut.",
+        "translation": "The food is good.",
+        "cloze": "gut"
+      },
+      {
+        "text": "Guten Morgen!",
+        "translation": "Good morning!",
+        "cloze": "Guten"
+      },
+      {
+        "text": "Er ist ein guter Lehrer.",
+        "translation": "He's a good teacher.",
+        "cloze": "guter"
+      }
+    ]
+  },
+  {
+    "lemma": "schon",
+    "gloss": "already",
+    "pos": "adv",
+    "forms": [
+      "schon"
+    ],
+    "sentences": [
+      {
+        "text": "Ich bin schon da.",
+        "translation": "I'm already here.",
+        "cloze": "schon"
+      },
+      {
+        "text": "Bist du schon fertig?",
+        "translation": "Are you done already?",
+        "cloze": "schon"
+      },
+      {
+        "text": "Es ist schon spät.",
+        "translation": "It's already late.",
+        "cloze": "schon"
+      }
+    ]
+  },
+  {
+    "lemma": "auch",
+    "gloss": "also; too",
+    "pos": "adv",
+    "forms": [
+      "auch"
+    ],
+    "sentences": [
+      {
+        "text": "Ich auch.",
+        "translation": "Me too.",
+        "cloze": "auch"
+      },
+      {
+        "text": "Kommst du auch?",
+        "translation": "Are you coming too?",
+        "cloze": "auch"
+      },
+      {
+        "text": "Das ist auch gut.",
+        "translation": "That's good too.",
+        "cloze": "auch"
+      }
+    ]
+  },
+  {
+    "lemma": "jetzt",
+    "gloss": "now",
+    "pos": "adv",
+    "forms": [
+      "jetzt"
+    ],
+    "sentences": [
+      {
+        "text": "Ich muss jetzt gehen.",
+        "translation": "I have to go now.",
+        "cloze": "jetzt"
+      },
+      {
+        "text": "Jetzt verstehe ich.",
+        "translation": "Now I understand.",
+        "cloze": "Jetzt"
+      },
+      {
+        "text": "Wo bist du jetzt?",
+        "translation": "Where are you now?",
+        "cloze": "jetzt"
+      }
+    ]
+  },
+  {
+    "lemma": "von",
+    "gloss": "from; of",
+    "pos": "prep",
+    "forms": [
+      "von",
+      "vom"
+    ],
+    "notes": "von + dem = vom.",
+    "sentences": [
+      {
+        "text": "Der Brief ist von meiner Mutter.",
+        "translation": "The letter is from my mother.",
+        "cloze": "von"
+      },
+      {
+        "text": "Ich komme vom Markt.",
+        "translation": "I'm coming from the market.",
+        "cloze": "vom"
+      },
+      {
+        "text": "Er ist ein Freund von mir.",
+        "translation": "He's a friend of mine.",
+        "cloze": "von"
+      }
+    ]
+  },
+  {
+    "lemma": "werden",
+    "gloss": "to become; will (future)",
+    "pos": "verb",
+    "forms": [
+      "werden",
+      "werde",
+      "wirst",
+      "wird",
+      "werdet",
+      "wurde",
+      "wurden",
+      "geworden",
+      "würde"
+    ],
+    "notes": "werden + verb = future: Ich werde kommen (I will come).",
+    "sentences": [
+      {
+        "text": "Es wird kalt.",
+        "translation": "It's getting cold.",
+        "cloze": "wird"
+      },
+      {
+        "text": "Ich werde Arzt.",
+        "translation": "I'm going to be a doctor.",
+        "cloze": "werde"
+      },
+      {
+        "text": "Wir werden sehen.",
+        "translation": "We'll see.",
+        "cloze": "werden"
+      }
+    ]
+  },
+  {
+    "lemma": "wissen",
+    "gloss": "to know (a fact)",
+    "pos": "verb",
+    "forms": [
+      "wissen",
+      "weiß",
+      "weißt",
+      "wisst",
+      "wusste",
+      "wussten",
+      "gewusst"
+    ],
+    "sentences": [
+      {
+        "text": "Weißt du, wo er ist?",
+        "translation": "Do you know where he is?",
+        "cloze": "Weißt"
+      },
+      {
+        "text": "Das wusste ich nicht.",
+        "translation": "I didn't know that.",
+        "cloze": "wusste"
+      },
+      {
+        "text": "Wir wissen es.",
+        "translation": "We know.",
+        "cloze": "wissen"
+      }
+    ]
+  },
+  {
+    "lemma": "mein",
+    "gloss": "my",
+    "pos": "det",
+    "forms": [
+      "mein",
+      "meine",
+      "meinen",
+      "meinem",
+      "meiner",
+      "meines"
+    ],
+    "sentences": [
+      {
+        "text": "Das ist mein Bruder.",
+        "translation": "This is my brother.",
+        "cloze": "mein"
+      },
+      {
+        "text": "Meine Mutter kocht gut.",
+        "translation": "My mother cooks well.",
+        "cloze": "Meine"
+      },
+      {
+        "text": "Hast du meinen Schlüssel?",
+        "translation": "Do you have my key?",
+        "cloze": "meinen"
+      }
+    ]
+  }
+]
