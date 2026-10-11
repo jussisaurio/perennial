@@ -84,6 +84,10 @@ That is about 27. Add 14 for each extra `web` replica. Check the limit with `sho
 
 ### 2.3 Create the database role
 
+With the CLI (`brew install planetscale/tap/pscale`, `pscale auth login`): `pscale role create <db> main perennial --inherited-roles postgres --with-replication --format json` prints the role's `database_url` once (direct port 5432, `sslmode=verify-full`). Use it as is for `web` and `housekeeping`; for `electric`, change `sslmode` to `require` and set the CA file (3.2). Cluster parameters: `pscale branch resize <db> main --parameters pgconf.max_connections=50 --parameters pgconf.max_slot_wal_keep_size=4096 --parameters pgconf.sync_replication_slots=on --parameters pgconf.hot_standby_feedback=on --wait` (`wal_level`, slots and senders are already right by default; check with `pscale branch parameters list <db> main --namespace pgconf`).
+
+In the dashboard instead:
+
 **Rule: Electric must connect as the role that owns the tables.** Electric creates its publication and adds tables to it. Postgres allows this only for the table owner. PlanetScale does not let you change table ownership later. So the role that runs the migrations must be the same role that Electric uses.
 
 Do this:
@@ -149,7 +153,8 @@ Services refer to them as `${{shared.DATABASE_URL}}` and `${{shared.ELECTRIC_SEC
 
 | Variable | Value | Notes |
 |---|---|---|
-| `DATABASE_URL` | `${{shared.DATABASE_URL}}` | Direct port 5432, `sslmode=require`, the table-owner role |
+| `DATABASE_URL` | the role's URL with **`sslmode=require`** | Direct port 5432, the table-owner role. Electric rejects `sslmode=verify-full`; it verifies the server with the CA file below instead. |
+| `ELECTRIC_DATABASE_CA_CERTIFICATE_FILE` | `/etc/ssl/certs/ca-certificates.crt` | The image's system CA bundle (PlanetScale uses a public CA), so `require` still checks the server's identity. |
 | `ELECTRIC_SECRET` | `${{shared.ELECTRIC_SECRET}}` | Electric rejects shape requests without it |
 | `ELECTRIC_STORAGE_DIR` | `/var/lib/electric/persistent` | On the volume, so shapes survive restarts |
 | `ELECTRIC_PORT` | `3000` | `web` connects to this port |
