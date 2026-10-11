@@ -1,0 +1,314 @@
+{
+  "file": "source/0003.json",
+  "reviewer": "claude-agent:es-proofreader-0003-2026-10-11",
+  "entries": {
+    "tres|num|": {
+      "hash": "4d08d495465d5d07",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:00.025Z"
+    },
+    "necesitar|verb|": {
+      "hash": "1000cf9b53cb3103",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:03.392Z"
+    },
+    "oír|verb|": {
+      "hash": "26674446d8512652",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:33.966Z"
+    },
+    "gustar|verb|": {
+      "hash": "6cd9ac476dbc24e1",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:36.978Z"
+    },
+    "parte|noun|": {
+      "hash": "3472ab61d41b2df1",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:43.778Z"
+    },
+    "nombre|noun|": {
+      "hash": "86dc0b494e52769b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:47.484Z"
+    },
+    "mal|adv|": {
+      "hash": "9c0f187749473138",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:50.451Z"
+    },
+    "deber|verb|": {
+      "hash": "ef5faf755ff991fe",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:53.994Z"
+    },
+    "realmente|adv|": {
+      "hash": "6e0e3e28fc500cc5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:58.411Z"
+    },
+    "aún|adv|": {
+      "hash": "4c7f3152a35b9efa",
+      "verdict": "fix",
+      "note": "s3: replace 'Es [aún] mejor.' / 'It's even better.' with '[Aún] tengo hambre.' / 'I'm still hungry.' because s3 uses the 'even' sense (aún + comparative), which is outside the gloss 'still; yet' and seems to contradict the note that 'even' is aun without accent, confusing learners.",
+      "at": "2026-10-11T13:51:08.596Z"
+    },
+    "mío|pron|": {
+      "hash": "12dd817b7eb846dd",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:11.685Z"
+    },
+    "cada|det|": {
+      "hash": "5bb395b644f83e14",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:14.518Z"
+    },
+    "importar|verb|": {
+      "hash": "29006b91946fa6ed",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:17.215Z"
+    },
+    "razón|noun|": {
+      "hash": "0ccc3019a137b56c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:20.665Z"
+    },
+    "alguno|det|": {
+      "hash": "436defd72f2ae4e5",
+      "verdict": "fix",
+      "note": "s3: replace '[Algunos] amigos vienen hoy.' with 'Hoy vienen [algunos] amigos.' (translation unchanged: 'Some friends are coming today.') because a new-information subject goes after the verb in natural Spanish; the preverbal order sounds contrastive (some of the friends, not others).",
+      "at": "2026-10-11T13:51:25.706Z"
+    },
+    "tanto|det|": {
+      "hash": "37e2b62ae678e28d",
+      "verdict": "fix",
+      "note": "s1: replace 'Te quiero [tanto].' / 'I love you so much.' with 'Hace [tanto] calor hoy.' / 'It's so hot today.' because the entry is pos det, but s1 and s4 both use tanto as an adverb; s4 already covers the adverb use mentioned in the notes, so s1 should show the masculine singular determiner before a noun.",
+      "at": "2026-10-11T13:51:31.276Z"
+    },
+    "serio|adj|": {
+      "hash": "f66035217928ffc5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:34.260Z"
+    },
+    "venir|verb|": {
+      "hash": "2a34287d05726128",
+      "verdict": "fix",
+      "note": "s1: replace '¡[Ven] aquí!' / 'Come here!' with '¡[Ven] conmigo!' / 'Come with me!' because '¡Ven aquí!' is also a sentence of the 'aquí' entry (shared-sentence flag).",
+      "at": "2026-10-11T13:51:38.878Z"
+    },
+    "idea|noun|": {
+      "hash": "4b7906fae5ec7c4f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:42.334Z"
+    },
+    "tarde|adv|": {
+      "hash": "04d762abb5db571c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:46.497Z"
+    },
+    "tarde|noun|": {
+      "hash": "baa457a2ade4b937",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:51.811Z"
+    },
+    "problema|noun|": {
+      "hash": "5a26ff0ade0a0c4c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:54.866Z"
+    },
+    "hora|noun|": {
+      "hash": "2a772521d16ac90a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:57.786Z"
+    },
+    "cierto|adj|": {
+      "hash": "8a80c70c2bb92208",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:02.749Z"
+    },
+    "quien|pron|": {
+      "hash": "d17913d63ab28104",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:05.931Z"
+    },
+    "demasiado|adv|": {
+      "hash": "5b9d3e3f6eaecd93",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:09.216Z"
+    },
+    "amor|noun|": {
+      "hash": "9361bcf16861c0bf",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:12.275Z"
+    },
+    "entre|prep|": {
+      "hash": "5035e787441ce852",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:15.906Z"
+    },
+    "familia|noun|": {
+      "hash": "cb7ad12e8b77b41e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:18.932Z"
+    },
+    "policía|noun|": {
+      "hash": "c717eb6c331ac163",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:22.544Z"
+    },
+    "ustedes|pron|": {
+      "hash": "21088e6f97907a3c",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:25.129Z"
+    },
+    "chico|noun|": {
+      "hash": "5c8c6296620747cd",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:29.017Z"
+    },
+    "cuenta|noun|": {
+      "hash": "7319811785617669",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:33.046Z"
+    },
+    "todavía|adv|": {
+      "hash": "66f7eeb67752821a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:36.591Z"
+    },
+    "salir|verb|": {
+      "hash": "3cde0572584496c1",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:42.726Z"
+    },
+    "hermano|noun|": {
+      "hash": "4567fe9a30414a31",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:46.099Z"
+    },
+    "pensar|verb|": {
+      "hash": "0c3416018223a220",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:50.577Z"
+    },
+    "cabeza|noun|": {
+      "hash": "798a81bfe907590e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:54.197Z"
+    },
+    "cariño|noun|": {
+      "hash": "ae56b9c2e850ebcf",
+      "verdict": "fix",
+      "note": "s3: replace '[Cariño], ¿dónde estás?' / 'Honey, where are you?' with 'Los niños necesitan [cariño].' / 'Children need affection.' because s1 and s3 both show the pet-name use; the main gloss sense 'affection' appears only in s2, so the set lacks variety.",
+      "at": "2026-10-11T13:52:58.911Z"
+    },
+    "cualquier|det|": {
+      "hash": "bf82e0035af651ae",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:02.297Z"
+    },
+    "forma|noun|": {
+      "hash": "38c095b2d9f042b9",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:05.388Z"
+    },
+    "mientras|conj|": {
+      "hash": "190512bcf37fed49",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:08.726Z"
+    },
+    "lado|noun|": {
+      "hash": "603839a32b709263",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:12.269Z"
+    },
+    "caso|noun|": {
+      "hash": "e4548b910d341798",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:15.612Z"
+    },
+    "primero|adj|": {
+      "hash": "f912e6cc13a58811",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:19.455Z"
+    },
+    "genial|adj|": {
+      "hash": "95d686393564f3a2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:22.275Z"
+    },
+    "suponer|verb|": {
+      "hash": "987ef60361f807c4",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:26.365Z"
+    },
+    "pues|conj|": {
+      "hash": "a4e97210e6dec138",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:29.627Z"
+    },
+    "adiós|interj|": {
+      "hash": "e939b3639988bf39",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:32.488Z"
+    },
+    "persona|noun|": {
+      "hash": "111dc3394ef81706",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:35.543Z"
+    },
+    "volver|verb|": {
+      "hash": "a7c8ff37b67b6b2f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:39.677Z"
+    },
+    "quizá|adv|": {
+      "hash": "62d6a6b5da073d78",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:43.027Z"
+    },
+    "contra|prep|": {
+      "hash": "6d8a32c367fd9edf",
+      "verdict": "fix",
+      "note": "s1: replace 'Estoy [contra] la guerra.' / 'I'm against the war.' with 'Se apoyó [contra] la pared.' / 'He leaned against the wall.' because natives say 'estoy en contra de' for opposing something (bare 'estar contra' sounds off for a beginner model), and the physical sense adds variety to s2/s3.",
+      "at": "2026-10-11T13:53:49.234Z"
+    },
+    "camino|noun|": {
+      "hash": "0722140437129b68",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:54.970Z"
+    },
+    "durante|prep|": {
+      "hash": "8af111eb44d4cbe1",
+      "verdict": "ok",
+      "at": "2026-10-11T13:53:57.982Z"
+    },
+    "manera|noun|": {
+      "hash": "051a3224c3c9a44d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:01.122Z"
+    },
+    "muerto|adj|": {
+      "hash": "cc594bd6c5eb05a7",
+      "verdict": "fix",
+      "note": "s3: replace 'Las flores están [muertas].' / 'The flowers are dead.' with 'Encontramos dos pájaros [muertos].' / 'We found two dead birds.' because s1 and s3 repeat the same 'X está muerto' pattern (and natives would call flowers 'secas' or 'marchitas'); the new line adds the attributive use and the masculine plural.",
+      "at": "2026-10-11T13:54:12.092Z"
+    },
+    "rápido|adj|": {
+      "hash": "e9dc546ed05da8f5",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:16.320Z"
+    },
+    "cuál|pron|": {
+      "hash": "77d4f006bf855755",
+      "verdict": "ok",
+      "at": "2026-10-11T13:54:20.292Z"
+    },
+    "ayuda|noun|": {
+      "hash": "98c5b43bb6d10abc",
+      "verdict": "fix",
+      "note": "s3: replace '¿Necesitas [ayuda]?' / 'Do you need help?' with 'Pedí [ayuda] a un vecino.' / 'I asked a neighbor for help.' because s1 and s3 both use 'necesitar ayuda'; the new line adds a different context (pedir ayuda).",
+      "at": "2026-10-11T13:54:25.787Z"
+    }
+  }
+}
