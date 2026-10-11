@@ -1,0 +1,9 @@
+{
+  "file": "source/0004.json",
+  "sha256": "86e4bcc63b21d7776f0dc96b6a576d0be6794869fe5307ab1c0916175be5dbb0",
+  "author": "claude-agent:de-author-2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-0004-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "100/100 entries ok after one fix round (egal s2 US spelling 'color')"
+}
