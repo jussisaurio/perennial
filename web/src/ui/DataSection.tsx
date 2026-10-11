@@ -33,7 +33,7 @@ function exportCSV(l: Learner) {
   download(`perennial-words-${l.lang}-${stamp()}.csv`, "text/csv", rows.map((r) => r.map(csvCell).join(",")).join("\n"));
 }
 
-function DeleteAccount() {
+function DeleteAccount({ lang }: { lang: string }) {
   const [typed, setTyped] = useState("");
   const [error, setError] = useState("");
   return (
@@ -48,7 +48,7 @@ function DeleteAccount() {
           <input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
         </label>
         <div className="row">
-          <button className="fail" disabled={typed.trim().toLowerCase() !== "delete"} onClick={() => void deleteAccount().catch((e) => setError(e instanceof Error ? e.message : String(e)))}>
+          <button className="fail" disabled={typed.trim().toLowerCase() !== "delete"} onClick={() => void deleteAccount(lang).catch((e) => setError(e instanceof Error ? e.message : String(e)))}>
             Delete my account
           </button>
         </div>
@@ -75,7 +75,7 @@ export function DataSection({ lang }: { lang: string }) {
           Download my words (CSV)
         </button>
       </div>
-      {user && <DeleteAccount />}
+      {user && <DeleteAccount lang={lang} />}
     </div>
   );
 }

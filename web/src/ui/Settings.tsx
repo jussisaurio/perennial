@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
+import { savedLine, SOUND_OFF_ASIDE } from "../content/voice";
 import { saveCourse, useLearner, useStore } from "../data/learner";
 import type { CourseRow } from "../data/rows";
 import { useSound } from "./Sound";
@@ -52,7 +53,9 @@ function SoundSetting() {
           </button>
         ))}
       </div>
-      <p className="muted small">When sound is off, Perennial does not speak words or sentences, and there are no listening exercises. This setting is only for this device.</p>
+      <p className="muted small">
+        When sound is off, Perennial does not speak words or sentences, and there are no listening exercises. This setting is only for this device.{!on && ` ${SOUND_OFF_ASIDE}`}
+      </p>
     </div>
   );
 }
@@ -90,7 +93,7 @@ function SavedStatus() {
   }, [store]);
   return (
     <p className="muted small" role="status">
-      {pending ? `${pending} ${pending === 1 ? "change is" : "changes are"} saved on this device and will upload when you are online.` : "All changes are saved."}
+      {pending ? `${pending} ${pending === 1 ? "change is" : "changes are"} saved on this device and will upload when you are online.` : savedLine()}
     </p>
   );
 }

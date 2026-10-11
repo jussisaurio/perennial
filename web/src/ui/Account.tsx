@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { errorLine, sendingLabel } from "../content/voice";
 import { apiMessage, getMe, resetDate, type Me } from "../data/ai";
 import { AuthError, sendCode, signInWithCode, signOut, useUser } from "../data/auth";
 import { CheckIcon } from "./icons";
@@ -38,7 +39,7 @@ export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof AuthError ? e.message : "Something went wrong. Try again.");
+      setError(e instanceof AuthError ? e.message : errorLine());
     } finally {
       setBusy(false);
     }
@@ -62,7 +63,7 @@ export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
         </label>
         <div className="row">
           <button className="primary" type="submit" disabled={busy || !email.includes("@")}>
-            {busy ? "Sending…" : cta}
+            {busy ? sendingLabel() : cta}
           </button>
         </div>
         {error && (

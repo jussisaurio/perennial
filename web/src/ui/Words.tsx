@@ -137,7 +137,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
       />
       {deleted && (
         <div className="toast" role="status">
-          {deleted.source === "deck" ? `“${deleted.lemma}” will not come up again.` : `Deleted “${deleted.lemma}”.`}
+          {deleted.source === "deck" ? `“${deleted.lemma}” will not come up again.` : `Deleted “${deleted.lemma}”. Goodbye, little plant.`}
           {deleted.source === "deck" && (
             <button
               className="ghost"

@@ -117,3 +117,14 @@ export function forgotLine(retry: boolean, now = new Date()): string {
   const wink = daily([null, null, "Forgetting is part of it.", "It happens to every plant.", "Roots grow under the ground first.", null], "forgot", now);
   return wink ? `${next} ${wink}` : next;
 }
+
+/** Small asides in quiet system copy (#68): the clear part never changes. */
+export const sendingLabel = (now = new Date()) => (rareDay(6, "by-bee", now) ? "Sending… by bee" : "Sending…");
+export const savedLine = (now = new Date()) => (rareDay(4, "saved", now) ? "All changes are saved. The gardener wrote them down." : "All changes are saved.");
+export const errorLine = (now = new Date()) => (rareDay(3, "leaf", now) ? "Something went wrong. Try again. A leaf fell in the machine." : "Something went wrong. Try again.");
+export const SOUND_OFF_ASIDE = "The birds will sing quietly to themselves.";
+
+/** Shown once on the landing page after an account is deleted. */
+export function farewell(lang: string | null): { line: string; wish?: string } {
+  return { line: "Your garden is gone. Thank you for growing it.", wish: lang === "de" ? "Viel Glück." : lang === "es" ? "¡Buena suerte!" : undefined };
+}

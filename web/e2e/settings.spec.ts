@@ -32,3 +32,19 @@ test("anonymous learners are invited to add an email; after that the account car
   await expect(page.getByText("Your words sync on all your devices")).toBeVisible();
   await expect(page.getByText(/AI words left this month/)).toBeVisible();
 });
+
+test("deleting the account removes it, signs out, and says goodbye", async ({ page }) => {
+  await startCourse(page);
+  await addEmail(page);
+  await page.getByRole("tab", { name: "Settings" }).click();
+  await page.getByText("Delete my account").first().click();
+  const confirm = page.getByRole("button", { name: "Delete my account" });
+  await expect(confirm).toBeDisabled(); // needs the word typed
+  await page.getByRole("textbox").last().fill("delete");
+  await confirm.click();
+  // Back on the landing page, signed out, with one goodbye.
+  await expect(page.getByText("Your garden is gone. Thank you for growing it.")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("¡Buena suerte!")).toBeVisible();
+  expect(await page.evaluate(async () => (await fetch("/api/me")).status)).toBe(401);
+  await expect(page.getByRole("button", { name: /Start learning/ })).toBeVisible();
+});

@@ -2,6 +2,7 @@
 // for each language. "Start learning" makes an anonymous account and the
 // course in one step; nothing to set up, no email needed yet.
 
+import { farewell } from "../content/voice";
 import { useEffect, useMemo, useState } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
 import { ensureUser } from "../data/auth";
@@ -47,6 +48,20 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   const draft = readDraft();
   const [lang, setLang] = useState(() => draft.lang ?? "es");
   const [minutes, setMinutes] = useState(draft.minutes ?? 7);
+  // After "Delete my account": a goodbye on the landing page, for a short
+  // while (the app reloads once as the user changes), then never again.
+  const [goodbye] = useState(() => {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("perennial-farewell") ?? "null") as { lang: string | null; at: number } | null;
+      if (!saved || Date.now() - saved.at > 20_000) {
+        sessionStorage.removeItem("perennial-farewell");
+        return null;
+      }
+      return farewell(saved.lang);
+    } catch {
+      return null;
+    }
+  });
   const [linking, setLinking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -77,6 +92,11 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       <span className="wordmark">
         <SproutMark size={26} /> perennial
       </span>
+      {goodbye && (
+        <p className="farewell" role="status">
+          {goodbye.line} {goodbye.wish && <em>{goodbye.wish}</em>}
+        </p>
+      )}
       <h1 style={{ marginTop: "2rem" }}>Grow a language, a few minutes a day.</h1>
       <p className="lede">
         Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, in real sentences. You choose how many minutes per day. Missed days do not pile up.
