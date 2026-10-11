@@ -36,17 +36,18 @@ Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Railway + PlanetScale Postgres). Da
 
 ## Run locally
 
-Needs [Bun](https://bun.sh) and Docker.
+Needs [Bun](https://bun.sh) and Docker. One command:
 
 ```sh
-docker compose up -d                                  # Postgres (:55432) + Electric (:30009)
-cd server && bun install && bun run migrate && bun run dev   # API on :8787
-cd web && bun install && bun dev                      # app on :5173 (proxies /api to :8787)
+bun run dev          # Postgres + Electric, migrations, API (:8787) and app (http://localhost:5173)
+bun run dev:ai       # the same, plus a mock model so Perennial AI works without a key
 ```
 
-No keys are needed. Without `RESEND_API_KEY`, the server is in dev mode: sign-in codes are printed in the server log as `[mail] sign-in code for you@example.com: 123456`.
+It installs dependencies on first run. Ctrl-C stops the API and the app; `docker compose down` stops the database.
 
-**Perennial AI without a key:** run `bun server/mock-llm.ts` (port 8788), and start the server with `ANTHROPIC_API_KEY=x ANTHROPIC_BASE_URL=http://localhost:8788 bun run dev`. The mock returns placeholder words, not real language.
+No keys are needed. Without `RESEND_API_KEY`, the server is in dev mode: sign-in codes are printed in the output as `[mail] sign-in code for you@example.com: 123456`.
+
+**Perennial AI without a key:** `bun run dev:ai`. The mock returns placeholder words, not real language.
 
 **Start over:** `docker compose down -v`, then migrate again. Also clear the site data in the browser.
 
