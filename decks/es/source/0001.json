@@ -140,7 +140,7 @@
       },
       {
         "text": "Me gustan las flores.",
-        "translation": "I like the flowers.",
+        "translation": "I like flowers.",
         "cloze": "las"
       }
     ]
@@ -534,7 +534,7 @@
       "mi",
       "mis"
     ],
-    "notes": "Without the accent; mí (with an accent) means 'me'.",
+    "notes": "With an accent, mí means 'me': para mí (for me).",
     "sentences": [
       {
         "text": "Mi casa es tu casa.",
@@ -613,8 +613,8 @@
     ],
     "sentences": [
       {
-        "text": "Es caro, pero bueno.",
-        "translation": "It's expensive, but good.",
+        "text": "Es caro, pero es muy bueno.",
+        "translation": "It's expensive, but it's very good.",
         "cloze": "pero"
       },
       {

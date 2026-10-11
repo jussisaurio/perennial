@@ -1,0 +1,9 @@
+{
+  "file": "source/0001.json",
+  "sha256": "a5348e93aee2492a38d165800e0f22edde7c930545527ada87bc3c9aae2c2fb8",
+  "author": "claude-agent:deck-pipeline-2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "4 findings (mit naturalness, sich gloss + missing true-reflexive sentence, auf sense), all fixed"
+}

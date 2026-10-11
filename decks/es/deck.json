@@ -1,7 +1,7 @@
 {
   "lang": "es",
   "native": "en",
-  "version": 1,
+  "version": 2,
   "words": [
     {
       "id": "es.w.93eb423hjf",
@@ -240,7 +240,7 @@
         "mi",
         "mis"
       ],
-      "notes": "Without the accent; mí (with an accent) means 'me'."
+      "notes": "With an accent, mí means 'me': para mí (for me)."
     },
     {
       "id": "es.w.syd52td7dw",
@@ -648,7 +648,7 @@
       "id": "es.s.vs405aaby8",
       "wordId": "es.w.pfmwabf0g3",
       "text": "Me gustan las flores.",
-      "translation": "I like the flowers.",
+      "translation": "I like flowers.",
       "cloze": "las"
     },
     {
@@ -1009,10 +1009,10 @@
       "cloze": "bien"
     },
     {
-      "id": "es.s.n7egctsxn6",
+      "id": "es.s.0sswsb75qe",
       "wordId": "es.w.egsw7rk5hc",
-      "text": "Es caro, pero bueno.",
-      "translation": "It's expensive, but good.",
+      "text": "Es caro, pero es muy bueno.",
+      "translation": "It's expensive, but it's very good.",
       "cloze": "pero"
     },
     {
@@ -1028,6 +1028,14 @@
       "text": "Pero ¿por qué?",
       "translation": "But why?",
       "cloze": "Pero"
+    },
+    {
+      "id": "es.s.n7egctsxn6",
+      "wordId": "es.w.egsw7rk5hc",
+      "text": "Es caro, pero bueno.",
+      "translation": "It's expensive, but good.",
+      "cloze": "pero",
+      "retired": true
     },
     {
       "id": "es.s.yczh4566d1",

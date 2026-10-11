@@ -520,8 +520,8 @@
     ],
     "sentences": [
       {
-        "text": "Ich komme mit dir.",
-        "translation": "I'm coming with you.",
+        "text": "Ich fahre mit dem Bus.",
+        "translation": "I'm taking the bus.",
         "cloze": "mit"
       },
       {
@@ -538,7 +538,7 @@
   },
   {
     "lemma": "sich",
-    "gloss": "himself; herself; themselves",
+    "gloss": "oneself (reflexive: himself, herself, itself, themselves)",
     "pos": "pron",
     "forms": [
       "sich"
@@ -558,6 +558,11 @@
       {
         "text": "Wie fühlt sie sich?",
         "translation": "How does she feel?",
+        "cloze": "sich"
+      },
+      {
+        "text": "Er sieht sich im Spiegel.",
+        "translation": "He sees himself in the mirror.",
         "cloze": "sich"
       }
     ]
@@ -594,6 +599,7 @@
     "forms": [
       "auf"
     ],
+    "notes": "warten auf = to wait for. Auf Wiedersehen! = Goodbye!",
     "sentences": [
       {
         "text": "Das Buch liegt auf dem Tisch.",
@@ -601,8 +607,8 @@
         "cloze": "auf"
       },
       {
-        "text": "Ich warte auf dich.",
-        "translation": "I'm waiting for you.",
+        "text": "Die Katze springt auf das Bett.",
+        "translation": "The cat jumps onto the bed.",
         "cloze": "auf"
       },
       {
