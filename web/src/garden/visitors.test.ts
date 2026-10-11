@@ -5,7 +5,14 @@ import {
   dayNumber,
   fencePickets,
   fencePoint,
+  frogCroak,
+  GNOME_PEEK_TAG,
+  gnomePose,
+  gnomeTag,
+  heronDay,
   learnerFacts,
+  milestoneLine,
+  MILESTONES,
   NO_FACTS,
   RARE_CAP,
   snailFraction,
@@ -90,8 +97,134 @@ describe("who visits today", () => {
   });
 
   test("the dev override shows everyone, or only the ones asked for", () => {
-    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "cat", "toadstool", "bird"]);
+    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "gnome", "frog", "moth", "cat", "heron", "toadstool", "bird"]);
     expect(visitorsFor(NO_FACTS, days[0], ["cat"]).present).toEqual(["cat"]);
+  });
+});
+
+describe("residents: the gnome, the frog and the moth", () => {
+  const knows = (known: number) => ({ ...NO_FACTS, known });
+  test("the gnome comes at 50 known words, the frog at 150, and they stay", () => {
+    for (const d of days) {
+      expect(visitorsFor(knows(49), d).present).not.toContain("gnome");
+      expect(visitorsFor(knows(50), d).present).toContain("gnome");
+      expect(visitorsFor(knows(149), d).present).not.toContain("frog");
+      expect(visitorsFor(knows(150), d).present).toContain("frog");
+      // The moth is at its lantern every evening (the walk shows it at dusk and night only).
+      expect(visitorsFor(NO_FACTS, d).present).toContain("moth");
+    }
+  });
+
+  test("residents do not count toward the cap: two rare visitors can still come", () => {
+    const f: LearnerFacts = { ...knows(500), firstReview: days[0].getTime() - 400 * 86_400_000 };
+    let both = 0;
+    for (const d of days) {
+      const t = visitorsFor({ ...f, lastBeforeToday: d.getTime() - 10 * 86_400_000 }, d);
+      expect(t.present).toEqual(expect.arrayContaining(["snail", "gnome", "frog", "moth", "cat"]));
+      const rare = t.present.filter((id) => visitor(id).rare);
+      expect(rare.length).toBeLessThanOrEqual(RARE_CAP);
+      if (rare.length === 2) both++;
+    }
+    expect(both).toBeGreaterThan(100);
+  });
+});
+
+describe("the heron (one day a month)", () => {
+  test("exactly one day in each month, the same for everyone, and it stays all day", () => {
+    for (let m = 0; m < 24; m++) {
+      const y = 2026 + Math.floor(m / 12);
+      const month = m % 12;
+      const len = new Date(y, month + 1, 0).getDate();
+      const on = Array.from({ length: len }, (_, i) => new Date(y, month, i + 1, 9)).filter((d) => visitor("heron").schedule({ facts: NO_FACTS, now: d }));
+      expect(on.length).toBe(1);
+      expect(on[0].getDate()).toBe(heronDay(y, month));
+      expect(visitor("heron").schedule({ facts: NO_FACTS, now: new Date(y, month, heronDay(y, month), 23, 50) })).toBe(true);
+    }
+  });
+
+  test("not always the same day of the month", () => {
+    const set = new Set(Array.from({ length: 12 }, (_, m) => heronDay(2026, m)));
+    expect(set.size).toBeGreaterThan(4);
+  });
+
+  test("on its day it comes before the toadstool and the bird; with the cat, the others wait", () => {
+    const d = new Date(2026, 4, heronDay(2026, 4), 12);
+    expect(visitorsFor(NO_FACTS, d).present).toContain("heron");
+    const away: LearnerFacts = { ...NO_FACTS, firstReview: d.getTime() - 100 * 86_400_000, lastBeforeToday: d.getTime() - 10 * 86_400_000 };
+    const t = visitorsFor(away, d);
+    expect(t.present.filter((id) => visitor(id).rare)).toEqual(["cat", "heron"]);
+  });
+});
+
+describe("the shy gnome", () => {
+  test("faces you from afar, turns, shows its back, then peeks", () => {
+    expect(gnomePose(9)).toBe("front");
+    expect(gnomePose(4.01)).toBe("front");
+    expect(gnomePose(3.2)).toBe("side");
+    expect(gnomePose(2.5)).toBe("back");
+    expect(gnomePose(1.5)).toBe("back");
+    expect(gnomePose(1.2)).toBe("peek");
+    expect(gnomePose(0.4)).toBe("peek");
+  });
+
+  test("its tag: full while it faces you, fading as it turns, gone from behind, back for a moment when it peeks", () => {
+    expect(gnomeTag(6, 0)).toBe(1);
+    expect(gnomeTag(3.25, 0)).toBeCloseTo(0.5);
+    expect(gnomeTag(2.6, 0)).toBeGreaterThan(0);
+    expect(gnomeTag(2.6, 0)).toBeLessThan(0.1);
+    expect(gnomeTag(2, 0)).toBe(0);
+    expect(gnomeTag(1, 0.2)).toBe(1);
+    expect(gnomeTag(1, GNOME_PEEK_TAG + 0.1)).toBe(0);
+  });
+});
+
+describe("the frog's croak", () => {
+  const now = new Date(2026, 9, 11, 20);
+  test("its sound, then one word the learner knows", () => {
+    expect(frogCroak(["casa"], "es", 0, now)).toBe("croac… casa");
+    expect(frogCroak(["Haus"], "de", 3, now)).toBe("quak… Haus");
+  });
+
+  test("never its own name, in any case", () => {
+    for (let tap = 0; tap < 50; tap++) {
+      expect(frogCroak(["rana", "casa", "Rana"], "es", tap, now)).toBe("croac… casa");
+      expect(frogCroak(["Frosch", "Haus"], "de", tap, now)).toBe("quak… Haus");
+    }
+    expect(frogCroak(["rana"], "es", 0, now)).toBe("croac…");
+    expect(frogCroak([], "es", 0, now)).toBe("croac…");
+  });
+
+  test("different words over a few taps, the same order all day", () => {
+    const known = ["casa", "perro", "agua", "sol", "mesa", "libro", "calle", "noche"];
+    const said = new Set(Array.from({ length: 12 }, (_, i) => frogCroak(known, "es", i, now)));
+    expect(said.size).toBeGreaterThan(3);
+    for (const w of said) expect(known).toContain(w.replace("croac… ", ""));
+    expect(frogCroak(known, "es", 5, new Date(2026, 9, 11, 23))).toBe(frogCroak(known, "es", 5, now));
+  });
+});
+
+describe("the milestone line", () => {
+  test("only on the day a milestone is crossed", () => {
+    expect(milestoneLine(49, 50)).toBe("You know 50 words. Someone has arrived in the garden.");
+    expect(milestoneLine(40, 55)).toBe("You know 50 words. Someone has arrived in the garden.");
+    expect(milestoneLine(50, 52)).toBeNull(); // crossed on an earlier day
+    expect(milestoneLine(30, 30)).toBeNull();
+    expect(milestoneLine(0, 0)).toBeNull();
+    // Words forgotten today: no line.
+    expect(milestoneLine(51, 49)).toBeNull();
+  });
+
+  test("the frog's count says someone arrived too; other counts only notice", () => {
+    expect(milestoneLine(149, 150)).toBe("You know 150 words. Someone has arrived in the garden.");
+    expect(milestoneLine(24, 25)).toBe("You know 25 words. The garden noticed.");
+    expect(milestoneLine(99, 101)).toBe("You know 100 words. The garden noticed.");
+    expect(milestoneLine(498, 503)).toBe("You know 500 words. The garden noticed.");
+    // Two at once (a big import): the higher one.
+    expect(milestoneLine(20, 60)).toBe("You know 50 words. Someone has arrived in the garden.");
+  });
+
+  test("plain and calm: no exclamation marks", () => {
+    for (const m of MILESTONES) expect(milestoneLine(m - 1, m)).not.toMatch(/!/);
   });
 });
 

@@ -65,6 +65,43 @@ test("visitors: the snail and the cat in the 2D strip say their word; they are n
   expect(errors).toEqual([]);
 });
 
+test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known word", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  // The dev override brings every visitor; the dev-only scene handle lets the test stand by the pond.
+  await page.goto("/?demo=es:30&visitors=all#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  const time = page.getByRole("button", { name: /^Time of day: / });
+  while ((await time.getAttribute("aria-label")) !== "Time of day: Evening") await time.click();
+  await page.waitForFunction(() => "__garden" in window);
+  await page.evaluate(() => {
+    type Sprite = { v: { id: string }; x: number; z: number };
+    const s = (window as unknown as { __garden: { visitorSprites: Sprite[]; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
+    const frog = s.visitorSprites.find((o) => o.v.id === "frog")!;
+    // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
+    const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
+    s.x = frog.x + Math.sin(a) * 1.3;
+    s.z = frog.z + Math.cos(a) * 1.3;
+    s.yaw = a;
+    s.pitch = -0.45;
+  });
+  const tag = page.locator(".gw-tag", { hasText: "la rana" });
+  await expect(tag).toHaveText("la rana · frog");
+  const box = (await tag.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height + 25);
+  // Its sound and a word (the demo learner's words); never its own name.
+  await expect(page.locator(".gw-say")).toHaveText(/^croac…/);
+  await expect(page.locator(".gw-say")).not.toHaveText(/rana/);
+  // By day the frog is gone, and so is its tag.
+  await time.click();
+  await time.click();
+  await expect(time).toHaveAttribute("aria-label", "Time of day: Day");
+  await expect(page.locator(".gw-tag", { hasText: "la rana" })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test("the garden tab opens the garden; an empty garden offers the first session", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Garden" }).click();

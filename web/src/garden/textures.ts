@@ -615,13 +615,53 @@ export function sunflower(): HTMLCanvasElement {
 // ---- Visitors ---------------------------------------------------------------
 
 /** Visitor cells (32×32 each, standing on the bottom row), in this order. */
-export const VISITOR_CELL = { snail: 0, catAsleep: 1, catAwake: 2, toadstool: 3, bird: 4, birdHop: 5 } as const;
-export const VISITOR_CELLS = 6;
+export const VISITOR_CELL = {
+  snail: 0,
+  catAsleep: 1,
+  catAwake: 2,
+  toadstool: 3,
+  bird: 4,
+  birdHop: 5,
+  frog: 6,
+  frogCroak: 7,
+  frogAsleep: 8,
+  gnomeFront: 9,
+  gnomeSide: 10,
+  gnomeBack: 11,
+  gnomePeek: 12,
+  /** The same four poses with the lantern lit, for dusk and night. */
+  gnomeFrontLit: 13,
+  gnomeSideLit: 14,
+  gnomeBackLit: 15,
+  gnomePeekLit: 16,
+  heron: 17,
+  heronStep: 18,
+  mothOpen: 19,
+  mothClosed: 20,
+} as const;
+export const VISITOR_CELLS = 21;
 
-/** The garden visitors in one small atlas (drawn once): snail, cat asleep and with one eye open, toadstool, bird perched and hopping. */
+/** The garden visitors in one small atlas (drawn once), in VISITOR_CELL order. */
 export function visitors(): HTMLCanvasElement {
   const [c, ctx] = canvas(32 * VISITOR_CELLS, 32);
-  [Art.SNAIL, Art.CAT_ASLEEP, Art.CAT_AWAKE, Art.TOADSTOOL, Art.BIRD, Art.BIRD_HOP].forEach((art, i) => {
+  const poses = ["front", "side", "back", "peek"] as const;
+  [
+    Art.SNAIL,
+    Art.CAT_ASLEEP,
+    Art.CAT_AWAKE,
+    Art.TOADSTOOL,
+    Art.BIRD,
+    Art.BIRD_HOP,
+    Art.FROG,
+    Art.FROG_CROAK,
+    Art.FROG_ASLEEP,
+    ...poses.map((p) => Art.gnomeArt(p, false)),
+    ...poses.map((p) => Art.gnomeArt(p, true)),
+    Art.HERON,
+    Art.HERON_STEP,
+    Art.MOTH_OPEN,
+    Art.MOTH_CLOSED,
+  ].forEach((art, i) => {
     const w = art.rows[0].length;
     const ox = i * 32 + Math.floor((32 - w) / 2);
     const oy = 32 - art.rows.length - (art === Art.BIRD_HOP ? 2 : 0);

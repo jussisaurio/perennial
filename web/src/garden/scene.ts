@@ -6,19 +6,20 @@ import * as THREE from "three";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
-import { fencePickets, fencePoint, GATE_HALF, snailPicket, type VisitorId, type VisitorView } from "./visitors";
-import { daily } from "../ui/whimsy";
+import { fencePickets, fencePoint, GATE_HALF, gnomePose, gnomeTag, snailPicket, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
+import { daily, rareDay } from "../ui/whimsy";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
-/** A name over a plant, or a visitor's tag (kind "visitor"), in screen fractions. */
+/** A name over a plant, a visitor's tag (kind "visitor"), or what a visitor says (kind "say"), in screen fractions. */
 export interface Label {
   id: string;
   text: string;
   x: number;
   y: number;
+  /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor";
+  kind?: "visitor" | "say";
   gloss?: string;
   /** A visitor whose noun the learner knows: plant-label styling with a tiny leaf. */
   known?: boolean;
@@ -227,6 +228,27 @@ function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRI
   return mesh;
 }
 
+/** One visitor's sprite. `hit`: the drawn part's middle height and half width and height, as fractions of the cell. `top`: where its tag sits. */
+interface VisitorSprite {
+  v: VisitorView;
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  h: number;
+  hit: [number, number, number];
+  top: number;
+  mesh: THREE.Mesh;
+  pos: THREE.InstancedBufferAttribute;
+  uv: THREE.InstancedBufferAttribute;
+}
+
+/** The moth's loop round its lantern (m), and the height of the middle of the lantern glass. */
+const MOTH_R = 0.24;
+const LANTERN_GLASS_Y = 1.02;
+/** How far away a visitor's tag shows on approach (m). The gnome adds its own rules (gnomeTag). */
+const TAG_RANGE: Partial<Record<VisitorId, number>> = { heron: 2.5, gnome: 7 };
+
 export class GardenScene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -273,11 +295,25 @@ export class GardenScene {
   private tmp = new THREE.Vector3();
   /** Visitor sprites: their own materials, tinted with the time of day but never swaying or selected. */
   private still = new Set<THREE.ShaderMaterial>();
-  private visitorSprites: { v: VisitorView; x: number; y: number; z: number; w: number; h: number; mesh: THREE.Mesh; pos: THREE.InstancedBufferAttribute; uv: THREE.InstancedBufferAttribute }[] = [];
+  private visitorSprites: VisitorSprite[] = [];
   private tapped: { id: VisitorId; until: number } | null = null;
+  /** A visitor's speech bubble (the frog's croak). */
+  private saying: { id: VisitorId; text: string; until: number } | null = null;
   private catAwake = false;
   /** The bird hops away when you come close (t: 0..1 while hopping, 1 once gone) and comes back when you walk off. */
   private bird = { t: -1, dx: 0, dz: 0 };
+  /** Lantern spots, for the moth. */
+  private lanternSpots: [number, number][] = [];
+  /** The lily pads, for the frog. */
+  private pads: [number, number][] = [];
+  /** The frog: puffed up until `croak` (elapsed s); asleep all day on about one day in 25. */
+  private frog = { croak: 0, puffed: false, asleep: false };
+  /** The gnome's pose, when it began to peek, its lantern (lit at dusk and night) and the lantern's small glow. */
+  private gnome = { pose: "front" as GnomePose, peekAt: 0, lit: false, glow: null as THREE.Sprite | null };
+  /** The heron: t is 0 at home, 1 one step back; dir is +1 while stepping back, -1 while stepping home. */
+  private heron = { t: 0, dir: 0, tx: 0, tz: 0 };
+  /** The moth's loop round its lantern: angle, radius, and a bump into the glass every 6 to 9 s. */
+  private moth = { cx: 0, cz: 0, a: 0, r: MOTH_R, bump: -1, next: 7, n: 0 };
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
 
   private layout: Layout;
@@ -408,6 +444,7 @@ export class GardenScene {
       const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), mat(padTex, { alphaTest: 0.5 }));
       pad.rotation.set(-Math.PI / 2, 0, a);
       pad.position.set(L.pond.x + Math.cos(a) * L.pond.r * 0.55, 0.07, L.pond.z + Math.sin(a) * L.pond.r * 0.55);
+      this.pads.push([pad.position.x, pad.position.z]);
       this.scene.add(pad);
     }
 
@@ -458,6 +495,7 @@ export class GardenScene {
       }
     spots.set("gate-l", [L.gate.x - 1.6, L.gate.z - 0.4]);
     spots.set("gate-r", [L.gate.x + 1.6, L.gate.z - 0.4]);
+    this.lanternSpots = [...spots.values()];
     const lanternTex = T.pixelTexture(T.lantern());
     const lanternItems = (u: number): SpriteItem[] => [...spots.values()].map(([x, z]) => ({ x, y: 0, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
     this.unlit = sprites(lanternTex, lanternItems(0), 0.42, 1.26);
@@ -637,8 +675,10 @@ export class GardenScene {
 
   /**
    * Today's visitors (garden/visitors.ts): the snail on the fence rail, the cat
-   * on the bench, a toadstool by a bed, a bird on a sign or the fence. One small
-   * texture for all of them; each is a one-instance sprite mesh.
+   * on the bench, a toadstool by a bed, a bird on a sign or the fence, the gnome
+   * at a bed corner, the frog on a lily pad, the heron at the pond's edge, the
+   * moth at a lantern. One small texture for all of them; each is a
+   * one-instance sprite mesh.
    */
   private buildVisitors(bench: THREE.Vector3) {
     if (!this.visitors.list.length) return;
@@ -647,9 +687,47 @@ export class GardenScene {
     const tex = T.pixelTexture(T.visitors());
     const RAIL = 0.53; // the top of the fence's upper rail
     const cellU = 1 / T.VISITOR_CELLS;
+    // The frog's pad: the one nearest the gate, where you come in.
+    const pad = this.pads.reduce((a, p) => (Math.hypot(p[0] - L.gate.x, p[1] - L.gate.z) < Math.hypot(a[0] - L.gate.x, a[1] - L.gate.z) ? p : a), this.pads[0]);
     for (const v of this.visitors.list) {
       let x: number, y: number, z: number, cell: number, size: number;
-      if (v.id === "snail") {
+      // Defaults for the drawn part (the lower half of the cell) and the tag just above it.
+      let hit: [number, number, number] = [0.2, 0.4, 0.3];
+      let top = v.id === "cat" ? 0.45 : 0.55;
+      if (v.id === "frog") {
+        this.frog.asleep = rareDay(25, "frog-asleep");
+        [x, y, z] = [pad[0], 0.075, pad[1]];
+        [cell, size, hit, top] = [this.frog.asleep ? T.VISITOR_CELL.frogAsleep : T.VISITOR_CELL.frog, 0.42, [0.17, 0.25, 0.2], 0.42];
+      } else if (v.id === "gnome") {
+        // A bed corner chosen by the date; never the front-left one, where the bed's sign is.
+        const bed = daily(L.beds, "visitor-gnome-bed");
+        const [sx, sz] = daily(
+          [
+            [1, 1],
+            [1, -1],
+            [-1, -1],
+          ],
+          "visitor-gnome-corner",
+        );
+        [x, y, z] = [bed.x + sx * (bed.w / 2 + 0.2), 0.0, bed.z + sz * (bed.d / 2 + 0.2)];
+        [cell, size, hit, top] = [T.VISITOR_CELL.gnomeFront, 0.56, [0.36, 0.25, 0.38], 0.78];
+        const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glow()), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+        glow.scale.set(0.3, 0.3, 1);
+        glow.visible = false;
+        this.gnome.glow = glow;
+        this.scene.add(glow);
+      } else if (v.id === "heron") {
+        // On the stones at the pond's edge, a little round from the frog's pad, looking at it.
+        const a = Math.atan2(pad[1] - L.pond.z, pad[0] - L.pond.x) - 0.6;
+        [x, y, z] = [L.pond.x + Math.cos(a) * (L.pond.r + 0.12), 0.0, L.pond.z + Math.sin(a) * (L.pond.r + 0.12)];
+        [cell, size, hit, top] = [T.VISITOR_CELL.heron, 1.05, [0.44, 0.22, 0.44], 0.92];
+      } else if (v.id === "moth") {
+        const [lx, lz] = daily(this.lanternSpots, "visitor-moth-lantern");
+        [this.moth.cx, this.moth.cz] = [lx, lz];
+        // With reduced motion it sits on the lantern's roof; otherwise tick() moves it.
+        [x, y, z] = [lx, 1.235, lz];
+        [cell, size, hit, top] = [this.reducedMotion ? T.VISITOR_CELL.mothClosed : T.VISITOR_CELL.mothOpen, 0.36, [0.1, 0.3, 0.2], 0.3];
+      } else if (v.id === "snail") {
         const p = fencePoint(L, snailPicket(this.visitors.snailDay ?? 0, fencePickets(L)));
         // A few centimetres inside the fence, so it sits on the rail and not in it.
         [x, y, z] = [p.x + p.dz * 0.06, RAIL, p.z - p.dx * 0.06];
@@ -684,8 +762,20 @@ export class GardenScene {
       this.scene.add(mesh);
       const pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
       const uv = mesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
-      this.visitorSprites.push({ v, x, y, z, w: size, h: size, mesh, pos, uv });
+      this.visitorSprites.push({ v, x, y, z, w: size, h: size, hit, top, mesh, pos, uv });
     }
+  }
+
+  private setCell(s: VisitorSprite, cell: number) {
+    const u = cell / T.VISITOR_CELLS;
+    if (s.uv.getX(0) === u) return;
+    s.uv.setX(0, u);
+    s.uv.needsUpdate = true;
+  }
+
+  private gnomeCell(s: VisitorSprite) {
+    const g = this.gnome;
+    this.setCell(s, (g.lit ? T.VISITOR_CELL.gnomeFrontLit : T.VISITOR_CELL.gnomeFront) + ["front", "side", "back", "peek"].indexOf(g.pose));
   }
 
   /** The visitor under a point on the canvas (CSS pixels), if any. */
@@ -698,12 +788,12 @@ export class GardenScene {
     let bestDepth = Infinity;
     for (const s of this.visitorSprites) {
       if (!s.mesh.visible) continue;
-      // The drawn part fills about the lower half of the cell.
-      this.tmp.set(s.pos.getX(0), s.pos.getY(0) + s.h * 0.2, s.pos.getZ(0)).applyMatrix4(this.camera.matrixWorldInverse);
+      const [cy, hx, hy] = s.hit;
+      this.tmp.set(s.pos.getX(0), s.pos.getY(0) + s.h * cy, s.pos.getZ(0)).applyMatrix4(this.camera.matrixWorldInverse);
       const depth = -this.tmp.z;
       if (depth < 0.2 || depth > 14) continue;
-      const rw = Math.max(0.04, (s.w * 0.4) / depth / tx);
-      const rh = Math.max(0.05, (s.h * 0.3) / depth / ty);
+      const rw = Math.max(0.04, (s.w * hx) / depth / tx);
+      const rh = Math.max(0.05, (s.h * hy) / depth / ty);
       if (Math.abs(nx - this.tmp.x / depth / tx) < rw && Math.abs(ny - this.tmp.y / depth / ty) < rh && depth < bestDepth) {
         best = s.v;
         bestDepth = depth;
@@ -717,11 +807,91 @@ export class GardenScene {
     this.tapped = { id, until: this.elapsed + 4 };
   }
 
-  /** Visitors react to you: the cat opens one eye, the bird hops away. No allocations here: it runs every frame. */
+  /** A visitor says something in a small bubble for a few seconds (the frog's croak). */
+  say(id: VisitorId, text: string) {
+    this.saying = { id, text, until: this.elapsed + 3.2 };
+    if (this.tapped?.id === id) this.tapped = null;
+    if (id !== "frog" || this.frog.asleep) return;
+    // Its throat puffs up while it croaks.
+    this.frog.croak = this.elapsed + 0.7;
+    this.frog.puffed = true;
+    const s = this.visitorSprites.find((o) => o.v.id === "frog");
+    if (s) this.setCell(s, T.VISITOR_CELL.frogCroak);
+  }
+
+  /**
+   * Visitors react to you: the cat opens one eye, the bird hops away, the gnome
+   * turns its back, the heron steps back. The moth goes round its lantern. No
+   * allocations here: it runs every frame.
+   */
   private tickVisitors(dt: number) {
     for (const s of this.visitorSprites) {
       const d = Math.hypot(s.x - this.x, s.z - this.z);
-      if (s.v.id === "cat") {
+      if (s.v.id === "gnome") {
+        const g = this.gnome;
+        const pose = gnomePose(d);
+        if (pose !== g.pose) {
+          if (pose === "peek") g.peekAt = this.elapsed;
+          g.pose = pose;
+          this.gnomeCell(s);
+        }
+        if (g.glow?.visible) {
+          // The lantern hangs 7.5 px right of the middle and 4.5 px up in its cell, on the side facing the camera.
+          const e = this.camera.matrixWorldInverse.elements;
+          const k = 1 / Math.max(1e-6, Math.hypot(e[0], e[8]));
+          const off = (7.5 / 32) * s.w;
+          g.glow.position.set(s.x + e[0] * k * off, s.y + (4.5 / 32) * s.h, s.z + e[8] * k * off);
+        }
+      } else if (s.v.id === "frog") {
+        if (this.frog.puffed && this.elapsed > this.frog.croak) {
+          this.frog.puffed = false;
+          this.setCell(s, T.VISITOR_CELL.frog);
+        }
+      } else if (s.v.id === "heron") {
+        // One slow step back when you come within 1.5 m; back home once you are well away. With reduced motion it just stays.
+        const hr = this.heron;
+        if (this.reducedMotion) continue;
+        if (hr.dir === 0 && hr.t === 0 && d < 1.5) {
+          const k = 0.5 / Math.max(d, 0.01);
+          ({ x: hr.tx, z: hr.tz } = collide(this.layout, s.x + (s.x - this.x) * k, s.z + (s.z - this.z) * k, 0.12));
+          hr.dir = 1;
+        } else if (hr.dir === 0 && hr.t === 1 && d > 4) hr.dir = -1;
+        if (hr.dir !== 0) {
+          hr.t = Math.max(0, Math.min(1, hr.t + (hr.dir * dt) / 1.4));
+          const e = hr.t * hr.t * (3 - 2 * hr.t);
+          s.pos.setXYZ(0, s.x + (hr.tx - s.x) * e, s.y, s.z + (hr.tz - s.z) * e);
+          s.pos.needsUpdate = true;
+          this.setCell(s, hr.t > 0.15 && hr.t < 0.85 ? T.VISITOR_CELL.heronStep : T.VISITOR_CELL.heron);
+          if (hr.t === 0 || hr.t === 1) hr.dir = 0;
+        }
+      } else if (s.v.id === "moth") {
+        if (!s.mesh.visible || this.reducedMotion) continue;
+        const m = this.moth;
+        let resting = false;
+        if (m.bump < 0) {
+          m.a += dt * 2.4;
+          m.r += (MOTH_R - m.r) * Math.min(1, dt * 3);
+          if (this.elapsed > m.next) m.bump = 0;
+        } else {
+          // Into the glass, 10 cm back, a short rest, then round again.
+          m.bump += dt;
+          const k = m.bump;
+          if (k < 0.35) {
+            m.a += dt * 1.2;
+            m.r = MOTH_R + (0.09 - MOTH_R) * (k / 0.35);
+          } else if (k < 0.55) m.r = 0.09 + 0.1 * ((k - 0.35) / 0.2);
+          else if (k < 1.25) resting = true;
+          else {
+            m.bump = -1;
+            m.n++;
+            const f = Math.sin(m.n * 12.9898) * 43758.5453;
+            m.next = this.elapsed + 6 + 3 * (f - Math.floor(f));
+          }
+        }
+        s.pos.setXYZ(0, m.cx + Math.cos(m.a) * m.r, LANTERN_GLASS_Y - 0.03 + Math.sin(m.a * 2.3) * 0.05, m.cz + Math.sin(m.a) * m.r);
+        s.pos.needsUpdate = true;
+        this.setCell(s, !resting && Math.sin(this.elapsed * 28) > 0 ? T.VISITOR_CELL.mothOpen : T.VISITOR_CELL.mothClosed);
+      } else if (s.v.id === "cat") {
         const awake = d < 2.4;
         if (awake !== this.catAwake) {
           this.catAwake = awake;
@@ -759,6 +929,7 @@ export class GardenScene {
       }
     }
     if (this.tapped && this.elapsed > this.tapped.until) this.tapped = null;
+    if (this.saying && this.elapsed > this.saying.until) this.saying = null;
   }
 
   async loadPlants(): Promise<void> {
@@ -945,6 +1116,16 @@ export class GardenScene {
     const [sx, sy, sz] = t === "day" ? [-0.5, 0.55, -0.7] : t === "dusk" ? [-0.95, 0.12, -0.3] : [0.6, 0.45, -0.65];
     this.sunDir.set(sx, sy, sz).normalize();
     for (const bf of this.butterflies) bf.mesh.visible = t !== "night";
+    // The frog and the moth come out at dusk; the gnome lights its lantern when the others come on.
+    this.gnome.lit = dark;
+    for (const s of this.visitorSprites) {
+      if (s.v.id === "frog" || s.v.id === "moth") s.mesh.visible = dark;
+      // The moth is always in its lantern's light.
+      if (s.v.id === "moth") (s.mesh.material as THREE.ShaderMaterial).uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
+      if (s.v.id === "gnome") this.gnomeCell(s);
+    }
+    if (this.gnome.glow) this.gnome.glow.visible = dark;
+    if (!dark && this.saying?.id === "frog") this.saying = null;
     // The sunflower droops a little at dusk.
     const fp = this.flower.params;
     if (fp) {
@@ -1128,6 +1309,12 @@ export class GardenScene {
     this.labels();
   }
 
+  /** Projects the point just above a visitor's drawn part into `tmp`. False when it is out of view. */
+  private projectTag(s: VisitorSprite): boolean {
+    const v = this.tmp.set(s.pos.getX(0), s.pos.getY(0) + s.h * s.top, s.pos.getZ(0)).project(this.camera);
+    return v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1;
+  }
+
   /** Names over the nearest plants, as DOM text so they stay crisp and readable. */
   private labels() {
     const v = this.tmp;
@@ -1144,26 +1331,29 @@ export class GardenScene {
       if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
       out.push({ id: p.id, text: p.lemma, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / 3.2 });
     }
-    // One visitor tag at most: the one you tapped, or the nearest within 1.5 m that shows its name on approach.
-    let tapped: (typeof this.visitorSprites)[number] | null = null;
-    let nearest: (typeof this.visitorSprites)[number] | null = null;
-    let nearD = 1.5;
+    // What a visitor says (the frog's croak) takes the place of its tag.
+    const say = this.saying;
+    let sayer: VisitorSprite | null = null;
+    if (say) for (const s of this.visitorSprites) if (s.v.id === say.id && s.mesh.visible) sayer = s;
+    if (say && sayer && this.projectTag(sayer)) out.push({ id: `say:${say.id}`, text: say.text, kind: "say", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 });
+    // One visitor tag at most: the one you tapped, or the nearest in view that shows its name on approach
+    // (within 1.5 m; the heron 2.5 m; the gnome while it faces you).
+    let tag: VisitorSprite | null = null;
+    let tagShow = 1;
+    let nearD = Infinity;
     for (const s of this.visitorSprites) {
-      if (!s.v.word || !s.mesh.visible) continue;
-      if (this.tapped?.id === s.v.id) tapped = s;
+      if (!s.v.word || !s.mesh.visible || s === sayer) continue;
+      if (this.tapped?.id === s.v.id) {
+        if (this.projectTag(s)) [tag, tagShow] = [s, 1];
+        break;
+      }
+      if (s.v.tag !== "approach") continue;
       const d = Math.hypot(s.x - this.x, s.z - this.z);
-      if (s.v.tag === "approach" && d < nearD) [nearest, nearD] = [s, d];
+      const show = s.v.id === "gnome" ? gnomeTag(d, this.elapsed - this.gnome.peekAt) : 1;
+      if (show > 0 && d < (TAG_RANGE[s.v.id] ?? 1.5) && d < nearD && this.projectTag(s)) [tag, tagShow, nearD] = [s, show, d];
     }
-    for (let i = 0; i < 2; i++) {
-      const tag = i === 0 ? tapped : nearest;
-      if (!tag) continue;
-      // Just above the drawn part of the sprite (it fills the lower part of its cell).
-      v.set(tag.pos.getX(0), tag.pos.getY(0) + tag.h * (tag.v.id === "cat" ? 0.45 : 0.55), tag.pos.getZ(0)).project(this.camera);
-      if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
-      out.push({ id: `visitor:${tag.v.id}`, text: tag.v.word!, gloss: tag.v.gloss, known: tag.v.known, kind: "visitor", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 });
-      break;
-    }
-    const key = out.map((l) => `${l.id}${l.x.toFixed(3)}${l.y.toFixed(3)}`).join();
+    if (tag && this.projectTag(tag)) out.push({ id: `visitor:${tag.v.id}`, text: tag.v.word!, gloss: tag.v.gloss, known: tag.v.known, kind: "visitor", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: tagShow });
+    const key = out.map((l) => `${l.id}${l.text}${l.x.toFixed(3)}${l.y.toFixed(3)}${l.near.toFixed(2)}`).join();
     if (key !== this.lastLabels) {
       this.lastLabels = key;
       this.cb.onLabels(out);
