@@ -1,76 +1,51 @@
 import { afterAll, expect, test } from "bun:test";
-import { startApp, stopMockLLM } from "./helpers";
+import { startApp, stopMockLLM, unique } from "./helpers";
 
 const t = await startApp();
-const tight = await startApp({ monthlyBudgetUsd: 0.000001 });
-afterAll(() => (t.stop(), tight.stop(), stopMockLLM()));
+afterAll(async () => (await t.stop(), stopMockLLM()));
 
-const batch = (cursor: number) => ({ lang: "es", language: "Spanish", native: "English", cursor, next: cursor + 3, forms: ["casa", "perro", "gato"].map((f) => `${f}${cursor}`) });
+const item = (f: string) => ({ form: f, sentence: `Veo un ${f} aquí.` });
 
-test("course batches are generated once and shared by every learner", async () => {
-  const a = await t.signIn("a@example.com");
-  const b = await t.signIn("b@example.com");
-  const first = await t.call("/api/ai/course-batch", batch(0), a);
-  expect(first.status).toBe(200);
-  expect(first.body).toMatchObject({ cached: false, next: 3, model: "claude-haiku-4-5" });
-  expect(first.body.words).toHaveLength(3);
-  expect(first.body.words[0].examples.length).toBeGreaterThan(0);
-  const spent = t.app.ai.spentThisMonth();
-  expect(spent).toBeGreaterThan(0);
-
-  const second = await t.call("/api/ai/course-batch", batch(0), b);
-  expect(second.body.cached).toBe(true);
-  expect(second.body.words).toEqual(first.body.words);
-  expect(t.app.ai.spentThisMonth()).toBe(spent); // no new model call
-
-  // Course batches don't spend personal credits.
-  expect((await t.call("/api/me", undefined, a)).body.credits.used).toBe(0);
-});
-
-test("concurrent requests for the same new batch make one model call", async () => {
-  const a = await t.signIn("c@example.com");
-  const before = t.app.ai.modelCalls;
-  const [x, y] = await Promise.all([t.call("/api/ai/course-batch", batch(10), a), t.call("/api/ai/course-batch", batch(10), a)]);
-  expect([x.body.cached, y.body.cached].sort()).toEqual([false, true]);
-  expect(t.app.ai.modelCalls - before).toBe(1);
-});
-
-test("words from your own text spend credits until they run out", async () => {
-  const u = await t.signIn("miner@example.com");
-  const item = (f: string) => ({ form: f, sentence: `Veo un ${f} aquí.` });
-  const r = await t.call("/api/ai/mine", { lang: "es", language: "Spanish", native: "English", items: [item("zorro"), item("búho")], known: ["ver"] }, u);
+test("words from your own text spend AI words until they run out", async () => {
+  const cookie = await t.signIn(unique("miner"));
+  const r = await t.call("/api/ai/mine", { lang: "es", items: [item("zorro"), item("búho")], known: ["ver"] }, cookie);
   expect(r.status).toBe(200);
-  expect(r.body.words[0].examples[0].text).toBe("Veo un zorro aquí."); // original sentence kept
+  expect(r.body.words[0].examples[0].text).toBe("Veo un zorro aquí."); // the learner's own sentence is kept
   expect(r.body.credits).toMatchObject({ used: 2, left: 23 });
 
   const many = Array.from({ length: 15 }, (_, i) => item(`w${i}`));
-  await t.call("/api/ai/mine", { lang: "es", language: "Spanish", native: "English", items: many, known: [] }, u);
-  const out = await t.call("/api/ai/mine", { lang: "es", language: "Spanish", native: "English", items: many, known: [] }, u);
+  await t.call("/api/ai/mine", { lang: "es", items: many, known: [] }, cookie);
+  const out = await t.call("/api/ai/mine", { lang: "es", items: many, known: [] }, cookie);
   expect(out.status).toBe(402);
-  expect(out.body).toMatchObject({ error: "out_of_credits", left: 8, needed: 15, plan: "free" });
+  expect(out.body).toMatchObject({ error: "out_of_credits", left: 8, needed: 15 });
 });
 
-test("bad input is rejected before any model call", async () => {
-  const u = await t.signIn("bad@example.com");
-  const before = t.app.ai.spentThisMonth();
-  const r = await t.call("/api/ai/mine", { lang: "spanish!", language: "Spanish", native: "English", items: [], known: [] }, u);
-  expect(r.status).toBe(400);
-  // Outside the MVP scope: refused before any model call.
-  const fr = await t.call("/api/ai/course-batch", { lang: "fr", language: "French", native: "English", cursor: 0, next: 3, forms: ["le"] }, u);
-  expect(fr.status).toBe(400);
-  const fromGerman = await t.call("/api/ai/course-batch", { lang: "es", language: "Spanish", native: "German", cursor: 0, next: 3, forms: ["de"] }, u);
-  expect(fromGerman.status).toBe(400);
-  expect((await t.call("/api/ai/mine", { lang: "es" })).status).toBe(401);
-  expect(t.app.ai.spentThisMonth()).toBe(before);
+test("every model call is logged with its cost and prompt version", async () => {
+  const cookie = await t.signIn(unique("logged"));
+  const id = (await t.me(cookie)).id;
+  await t.call("/api/ai/examples", { lang: "de", words: [{ lemma: "Haus", gloss: "house", seen: [] }], known: [] }, cookie);
+  const [row] = await t.sql`select task, model, prompt_version, ok, usd from ai_request where user_id = ${id}`;
+  expect(row).toMatchObject({ task: "examples", model: "claude-haiku-4-5", ok: true });
+  expect(row.prompt_version).toBeTruthy();
+  expect(Number(row.usd)).toBeGreaterThan(0);
 });
 
-test("past the monthly budget, AI pauses for everyone", async () => {
-  const u = await tight.signIn("budget@example.com");
-  expect((await tight.call("/api/ai/course-batch", batch(0), u)).status).toBe(200); // first call spends the budget
-  const r = await tight.call("/api/ai/course-batch", batch(3), u);
+test("AI needs an account: anonymous learners and bad input are refused before any model call", async () => {
+  const anon = await t.anonymous();
+  expect((await t.call("/api/ai/mine", { lang: "es", items: [item("x")], known: [] }, anon)).status).toBe(403);
+  const cookie = await t.signIn(unique("bad"));
+  const before = await t.app.ai.spentThisMonth();
+  expect((await t.call("/api/ai/mine", { lang: "fr", items: [item("le")], known: [] }, cookie)).status).toBe(422);
+  expect(await t.app.ai.spentThisMonth()).toBe(before);
+});
+
+test("past the monthly budget, AI pauses for everyone and says until when", async () => {
+  const tight = await startApp({ monthlyBudgetUsd: 0 });
+  const cookie = await tight.signIn(unique("paused"));
+  const r = await tight.call("/api/ai/mine", { lang: "es", items: [item("lobo")], known: [] }, cookie);
   expect(r.status).toBe(503);
   expect(r.body.error).toBe("paused");
   expect(r.body.until).toMatch(/^\d{4}-\d{2}-01$/);
-  // Cached content still flows.
-  expect((await tight.call("/api/ai/course-batch", batch(0), u)).status).toBe(200);
+  expect((await tight.me(cookie)).credits.used).toBe(0); // nothing charged
+  await tight.stop();
 });

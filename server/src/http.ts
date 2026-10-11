@@ -1,0 +1,73 @@
+// HTTP helpers: JSON responses, security headers, static files with the
+// right caching, and the minimum client version check.
+
+import { join, normalize } from "node:path";
+
+export const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", ...headers } });
+
+export class HttpError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly extra: Record<string, unknown>;
+  constructor(status: number, code: string, extra: Record<string, unknown> = {}) {
+    super(code);
+    this.status = status;
+    this.code = code;
+    this.extra = extra;
+  }
+}
+
+export const fail = (status: number, code: string, extra: Record<string, unknown> = {}) => json({ error: code, ...extra }, status);
+
+/** Extra origins the page may talk to (error reporting, analytics), from config. */
+export function securityHeaders(connect: string[], https: boolean): Record<string, string> {
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self'",
+    // React sets style attributes; the garden sets transforms inline.
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    `connect-src 'self' ${connect.join(" ")}`.trim(),
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+  return {
+    "content-security-policy": csp,
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "cross-origin-opener-policy": "same-origin",
+    ...(https ? { "strict-transport-security": "max-age=31536000; includeSubDomains" } : {}),
+  };
+}
+
+/**
+ * Serve the built web app. Hashed assets are immutable; everything else
+ * (index.html, the service worker, the manifest) must revalidate so a deploy
+ * reaches users. Unknown paths fall back to index.html (hash routing).
+ */
+export async function serveStatic(dir: string, pathname: string): Promise<Response> {
+  const rel = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, "");
+  const file = Bun.file(join(dir, rel === "/" ? "index.html" : rel));
+  if (rel !== "/" && (await file.exists())) {
+    const immutable = rel.startsWith("/assets/") || rel.startsWith("/decks/");
+    return new Response(file, { headers: { "cache-control": immutable ? "public, max-age=31536000, immutable" : "no-cache" } });
+  }
+  const index = Bun.file(join(dir, "index.html"));
+  return (await index.exists()) ? new Response(index, { headers: { "cache-control": "no-cache" } }) : new Response("not found", { status: 404 });
+}
+
+/** "1.4.2" → comparable tuple. Unknown or missing versions count as 0.0.0. */
+export function versionAtLeast(version: string | null, min: string): boolean {
+  const parse = (v: string) => v.split(".").map((n) => Number.parseInt(n, 10) || 0);
+  const [a, b] = [parse(version ?? "0"), parse(min)];
+  for (let i = 0; i < 3; i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return true;
+}

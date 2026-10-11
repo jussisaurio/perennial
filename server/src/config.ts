@@ -1,68 +1,66 @@
 // All server configuration comes from the environment. Anything without a
 // production value falls back to a safe local-development default.
 
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const env = process.env;
 const num = (v: string | undefined, d: number) => (v === undefined || v === "" ? d : Number(v));
 
 export interface Config {
   port: number;
-  dbPath: string;
+  databaseUrl: string;
+  /** The built web app (served by this process in production). */
   staticDir: string;
-  /** Public URL of the web app, used in emails and Stripe redirects. */
+  /** Public URL of the web app: emails, auth callbacks, cookie origin. */
   appUrl: string;
-  /** Secret used to hash login codes and sessions. */
+  /** Signs sessions and cookies (Better Auth). */
   secret: string;
-  /** Dev mode: login codes go to an in-memory outbox (readable at /api/dev/outbox). */
+  /** Dev mode: sign-in codes go to an in-memory outbox (readable at /api/dev/outbox). */
   dev: boolean;
+  /** Build identifier (git sha) for logs and error reports. */
+  release: string;
+  /** Clients older than this get "please reload" instead of writing. */
+  minClientVersion: string;
 
+  electric: { url: string; secret?: string };
   anthropic: { apiKey?: string; baseURL?: string; model: string };
-  stripe: { secretKey?: string; webhookSecret?: string; priceMonthly?: string; priceYearly?: string; host?: string; port?: number; protocol?: "http" | "https"; labelMonthly?: string; labelYearly?: string };
   mail: { resendKey?: string; from: string };
+  observability: { sentryDsn?: string; posthogHost?: string };
 
-  plans: Record<Plan, { credits: number }>;
+  /** AI words per learner per month. */
+  freeCredits: number;
   /** Hard stop for AI spend across all users, per calendar month. */
   monthlyBudgetUsd: number;
-  /** New (uncached) shared course batches one user may trigger per day. */
-  courseBatchesPerUserPerDay: number;
-  /** AI requests per user per minute. */
+  /** AI requests per user per minute (per instance). */
   aiRequestsPerMinute: number;
+  /** Anonymous learners with no activity for this long are deleted. */
+  anonymousRetentionDays: number;
 }
-
-export type Plan = "free" | "pro";
 
 export function loadConfig(overrides: Partial<Config> = {}): Config {
   const dev = env.PERENNIAL_DEV === "1" || !env.RESEND_API_KEY;
   return {
     port: num(env.PORT, 8787),
-    dbPath: env.PERENNIAL_DB ?? join(import.meta.dir, "../perennial.db"),
-    staticDir: env.PERENNIAL_STATIC ?? join(import.meta.dir, "../../web/dist"),
+    databaseUrl: env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:55432/perennial",
+    staticDir: env.PERENNIAL_STATIC ?? fileURLToPath(new URL("../../web/dist", import.meta.url)),
     appUrl: (env.APP_URL ?? "http://localhost:5173").replace(/\/$/, ""),
-    secret: env.PERENNIAL_SECRET ?? "dev-secret-change-me",
+    secret: env.BETTER_AUTH_SECRET ?? "dev-secret-change-me-dev-secret-change-me",
     dev,
+    release: env.RAILWAY_GIT_COMMIT_SHA ?? env.RELEASE ?? "dev",
+    minClientVersion: env.MIN_CLIENT_VERSION ?? "0.0.0",
+    electric: { url: (env.ELECTRIC_URL ?? "http://localhost:30009").replace(/\/$/, ""), secret: env.ELECTRIC_SECRET },
     anthropic: {
       apiKey: env.ANTHROPIC_API_KEY,
       baseURL: env.ANTHROPIC_BASE_URL,
       // Priced for per-user generation; change here to trade cost for quality.
       model: env.PERENNIAL_MODEL ?? "claude-haiku-4-5",
     },
-    stripe: {
-      secretKey: env.STRIPE_SECRET_KEY,
-      webhookSecret: env.STRIPE_WEBHOOK_SECRET,
-      priceMonthly: env.STRIPE_PRICE_MONTHLY,
-      priceYearly: env.STRIPE_PRICE_YEARLY,
-      host: env.STRIPE_HOST,
-      port: env.STRIPE_PORT ? Number(env.STRIPE_PORT) : undefined,
-      protocol: env.STRIPE_PROTOCOL as "http" | "https" | undefined,
-      labelMonthly: env.PRICE_LABEL_MONTHLY ?? "$6 / month",
-      labelYearly: env.PRICE_LABEL_YEARLY ?? "$48 / year",
-    },
     mail: { resendKey: env.RESEND_API_KEY, from: env.MAIL_FROM ?? "Perennial <hello@perennial.local>" },
-    plans: { free: { credits: num(env.FREE_CREDITS, 25) }, pro: { credits: num(env.PRO_CREDITS, 2000) } },
+    observability: { sentryDsn: env.SENTRY_DSN, posthogHost: env.POSTHOG_HOST },
+    freeCredits: num(env.FREE_CREDITS, 25),
     monthlyBudgetUsd: num(env.MONTHLY_BUDGET_USD, 200),
-    courseBatchesPerUserPerDay: num(env.COURSE_BATCHES_PER_DAY, 20),
     aiRequestsPerMinute: num(env.AI_RPM, 20),
+    anonymousRetentionDays: num(env.ANONYMOUS_RETENTION_DAYS, 60),
     ...overrides,
   };
 }
