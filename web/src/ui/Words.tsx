@@ -1,12 +1,11 @@
-import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { db, write } from "../db/db";
-import type { Course, Example, Lexeme, MemoryRow } from "../model";
-import { currentAuthor, type Author } from "../ai/backend";
-import { rewriteExamples, undoRewrite, type Rewrite } from "../content/builder";
-import { hostedMessage, refreshMe } from "../hosted/api";
-import { useAccount } from "./Account";
+import { apiMessage, moreExamples } from "../data/ai";
+import { useUser } from "../data/auth";
+import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
+import type { UserSentenceRow } from "../data/rows";
+import type { MemoryRow } from "../model";
+import { useMe } from "./Account";
 import { AddScreen } from "./Add";
 import { StageGlyph } from "./Garden";
 import { PlusIcon } from "./icons";
@@ -14,11 +13,12 @@ import { plural, relTime } from "./format";
 import { recall, wordState, type WordState } from "./stats";
 
 type Filter = "all" | WordState | "suspended";
+type Lexeme = Word;
 const SKILL_ORDER = ["read", "listen", "write"];
 
-export function WordsScreen({ course, adding, onAdd, onBack }: { course: Course; adding: boolean; onAdd: () => void; onBack: () => void }) {
-  if (adding) return <AddScreen course={course} onBack={onBack} />;
-  return <WordList course={course} onAdd={onAdd} />;
+export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; adding: boolean; onAdd: () => void; onBack: () => void }) {
+  if (adding) return <AddScreen lang={lang} onBack={onBack} />;
+  return <WordList lang={lang} onAdd={onAdd} />;
 }
 
 /**
@@ -48,7 +48,9 @@ function VirtualWords<T extends { l: Lexeme }>({ rows, render }: { rows: T[]; re
   );
 }
 
-function WordList({ course, onAdd }: { course: Course; onAdd: () => void }) {
+function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
+  const learner = useLearner(lang);
+  const store = useStore();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [open, setOpen] = useState<string | null>(null);
@@ -58,27 +60,31 @@ function WordList({ course, onAdd }: { course: Course; onAdd: () => void }) {
     const t = setTimeout(() => setDeleted(null), 7000);
     return () => clearTimeout(t);
   }, [deleted]);
-  const lexemes = useLiveQuery(() => db.lexemes.where("courseId").equals(course.id).toArray(), [course.id]);
-  const memory = useLiveQuery(() => db.memory.where("courseId").equals(course.id).toArray(), [course.id]);
-
   const rows = useMemo(() => {
-    if (!lexemes || !memory) return [];
+    if (!learner) return [];
     const byLex = new Map<string, MemoryRow[]>();
-    for (const m of memory) byLex.set(m.lexemeId, [...(byLex.get(m.lexemeId) ?? []), m]);
+    for (const m of learner.memories) byLex.set(m.lexemeId, [...(byLex.get(m.lexemeId) ?? []), m]);
     const needle = q.trim().toLocaleLowerCase();
-    return lexemes
-      .filter((l) => !l.deleted && l.status !== "ignored")
+    // "New" lists what comes next from the course; the other filters, what you have grown.
+    const notStarted = () =>
+      [...learner.words.values()]
+        .filter((w) => !byLex.get(w.id)?.some((m) => m.reps > 0))
+        .sort((a, b) => a.rank - b.rank)
+        .slice(0, 500);
+    const base = filter === "new" ? notStarted() : learner.studied;
+    return base
+      .filter((l) => l.status !== "ignored")
       .map((l) => {
         const mem = byLex.get(l.id) ?? [];
         return { l, mem, state: wordState(mem.find((m) => m.skill === "read")) };
       })
       .filter(({ l, state }) => {
-        if (filter === "suspended") return l.status === "suspended";
+        if (filter === "suspended") return l.status === "paused";
         if (filter !== "all" && state !== filter) return false;
         return !needle || l.lemma.toLocaleLowerCase().includes(needle) || l.gloss.toLocaleLowerCase().includes(needle) || l.forms.some((f) => f.includes(needle));
       })
       .sort((a, b) => (a.l.rank ?? 1e9) - (b.l.rank ?? 1e9) || a.l.lemma.localeCompare(b.l.lemma));
-  }, [lexemes, memory, q, filter]);
+  }, [learner, q, filter]);
 
   return (
     <div className="page">
@@ -104,7 +110,7 @@ function WordList({ course, onAdd }: { course: Course; onAdd: () => void }) {
         render={({ l, mem }) => (
           <>
             <button className="word-row" onClick={() => setOpen(open === l.id ? null : l.id)} aria-expanded={open === l.id}>
-              <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "suspended"} />
+              <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "paused"} />
               <strong>{l.lemma}</strong>
               <span className="gl">{l.gloss}</span>
               <span className="skills">
@@ -118,22 +124,24 @@ function WordList({ course, onAdd }: { course: Course; onAdd: () => void }) {
                   ))}
               </span>
             </button>
-            {open === l.id && <WordDetail course={course} lexeme={l} memory={mem} onDeleted={() => setDeleted(l)} />}
+            {open === l.id && learner && <WordDetail learner={learner} lexeme={l} memory={mem} onDeleted={() => setDeleted(l)} />}
           </>
         )}
       />
       {deleted && (
         <div className="toast" role="status">
-          Deleted “{deleted.lemma}”.
-          <button
-            className="ghost"
-            onClick={() => {
-              void write<Lexeme>("lexemes", { id: deleted.id, deleted: 0 });
-              setDeleted(null);
-            }}
-          >
-            Undo
-          </button>
+          {deleted.source === "deck" ? `“${deleted.lemma}” will not come up again.` : `Deleted “${deleted.lemma}”.`}
+          {deleted.source === "deck" && (
+            <button
+              className="ghost"
+              onClick={() => {
+                void setWordStatus(store, deleted.id, "active");
+                setDeleted(null);
+              }}
+            >
+              Undo
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -143,96 +151,108 @@ function WordList({ course, onAdd }: { course: Course; onAdd: () => void }) {
 const SKILL_NAME: Record<string, string> = { read: "Reading", listen: "Listening", write: "Writing" };
 
 /** Who wrote a sentence, in plain words. */
-function authorLabel(e: Example): { text: string; warn?: boolean } {
-  if (e.source === "mined") return { text: "From your text" };
-  if (e.source === "manual") return { text: "Added by you" };
-  if (e.source === "import") return { text: "From your Anki deck" };
-  if (e.origin === "hosted") return { text: "Written by Perennial AI" };
-  if (e.origin === "own" || e.origin === "local") return { text: `Written by ${e.model}` };
-  return { text: "Written by AI" };
+function authorLabel(e: Sentence): { text: string; warn?: boolean } {
+  if (e.origin === "own-text") return { text: "From your text" };
+  if (e.origin === "ai") return { text: "Written for you by Perennial AI" };
+  return { text: "From the course" };
 }
 
-/** "Write new sentences" with the current AI, with the cost shown first and an undo after. */
-function RewriteButton({ course, lexemeIds, label }: { course: Course; lexemeIds: string[]; label: string }) {
-  const [author, setAuthor] = useState<Author | null | undefined>(undefined);
-  const { me } = useAccount();
+/** "Write new sentences" with Perennial AI, with the cost shown first and an undo after. */
+function RewriteButton({ learner, word, label }: { learner: Learner; word: Word; label: string }) {
+  const store = useStore();
+  const { user } = useUser();
+  const { me, refresh } = useMe();
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<Rewrite | null>(null);
+  const [done, setDone] = useState<string[] | null>(null);
   const [error, setError] = useState("");
-  useEffect(() => {
-    void currentAuthor().then(setAuthor);
-  }, []);
-  if (author === undefined) return null;
-  if (!author) return <span className="muted small">Connect an AI model in Settings to write new sentences.</span>;
-  const hosted = author.origin === "hosted";
-  const left = hosted && me ? me.credits.left : Infinity;
-  const n = lexemeIds.length;
+  if (!user || user.anonymous) return <span className="muted small">Add your email in Settings to have Perennial AI write new sentences.</span>;
+  const left = me ? me.credits.left : Infinity;
   const run = async () => {
     setBusy(true);
     setError("");
     try {
-      setDone(await rewriteExamples(course, lexemeIds));
+      const seen = learner.sentences(word.id).map((s) => s.text).slice(-6);
+      const known = learner.studied.slice(0, 400).map((w) => w.lemma);
+      const r = await moreExamples(learner.lang, [{ lemma: word.lemma, gloss: word.gloss, seen }], known);
+      const rows: UserSentenceRow[] = r.examples
+        .filter((e) => e.text.includes(e.cloze) && e.cloze.length < e.text.length)
+        .map((e) => ({ id: crypto.randomUUID(), user_id: store.userId, word_id: word.id, text: e.text, translation: e.translation, cloze: e.cloze, origin: "ai", model: r.model, created_at: new Date().toISOString() }));
+      await store.write(() => {
+        for (const row of rows) store.collections.user_sentence.insert(row as UserSentenceRow & Record<string, unknown>);
+      });
+      setDone(rows.map((row) => row.id));
     } catch (e) {
-      setError(hostedMessage(e));
+      setError(apiMessage(e));
     } finally {
       setBusy(false);
-      if (hosted) void refreshMe().catch(() => {});
+      refresh();
     }
   };
   if (done)
     return (
       <span className="small">
-        {done.added.length ? `Wrote ${plural(done.added.length, "new sentence")}.` : "No new sentences this time."}{" "}
-        <button className="ghost" onClick={() => void undoRewrite(done).then(() => setDone(null))}>
+        {done.length ? `Wrote ${plural(done.length, "new sentence")}.` : "No new sentences this time."}{" "}
+        <button
+          className="ghost"
+          onClick={() => {
+            void store.write(() => {
+              for (const id of done) if (store.collections.user_sentence.has(id)) store.collections.user_sentence.delete(id);
+            });
+            setDone(null);
+          }}
+        >
           Undo
         </button>
       </span>
     );
   return (
     <span className="row">
-      <button className="secondary" disabled={busy || n > left} onClick={() => void run()}>
+      <button className="secondary" disabled={busy || left < 1} onClick={() => void run()}>
         {busy ? "Writing…" : label}
       </button>
-      <span className="muted small">
-        {hosted ? `With Perennial AI · uses ${plural(n, "AI word")}${n > left ? ` (you have ${left})` : ""}` : `With ${author.model}`}. Your own sentences stay.
-      </span>
+      <span className="muted small">With Perennial AI · uses 1 AI word{left < 1 ? " (you have none left this month)" : ""}. The course sentences stay.</span>
       {error && <span className="error">{error}</span>}
     </span>
   );
 }
 
-function WordDetail({ course, lexeme, memory, onDeleted }: { course: Course; lexeme: Lexeme; memory: MemoryRow[]; onDeleted: () => void }) {
-  const examples = useLiveQuery(() => db.examples.where("lexemeId").equals(lexeme.id).toArray(), [lexeme.id]);
+function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; lexeme: Lexeme; memory: MemoryRow[]; onDeleted: () => void }) {
+  const store = useStore();
+  const examples = learner.sentences(lexeme.id);
+  const mine = lexeme.source === "user";
   const [gloss, setGloss] = useState(lexeme.gloss);
   const [notes, setNotes] = useState(lexeme.notes ?? "");
-  const [showNotes, setShowNotes] = useState(!!lexeme.notes);
   const [saved, setSaved] = useState(false);
   const save = async () => {
-    if (gloss === lexeme.gloss && (notes || undefined) === lexeme.notes) return;
-    await write<Lexeme>("lexemes", { id: lexeme.id, gloss, notes: notes || undefined });
+    if (!mine || (gloss === lexeme.gloss && notes === (lexeme.notes ?? ""))) return;
+    await store.write(() =>
+      store.collections.user_word.update(lexeme.id, (d) => {
+        d.gloss = gloss;
+        d.notes = notes || null;
+      }),
+    );
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+  const paused = lexeme.status === "paused";
 
   return (
     <div className="detail">
-      <div className="form">
-        {saved && <span className="ok small">Saved ✓</span>}
-        <label>
-          Meaning
-          <input value={gloss} onChange={(e) => setGloss(e.target.value)} onBlur={() => void save()} />
-        </label>
-        {showNotes ? (
+      {mine ? (
+        <div className="form">
+          {saved && <span className="ok small">Saved ✓</span>}
+          <label>
+            Meaning
+            <input value={gloss} onChange={(e) => setGloss(e.target.value)} onBlur={() => void save()} />
+          </label>
           <label>
             Note
-            <input value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => void save()} autoFocus={!lexeme.notes} />
+            <input value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={() => void save()} placeholder="optional" />
           </label>
-        ) : (
-          <button className="ghost link" onClick={() => setShowNotes(true)}>
-            + Add a note
-          </button>
-        )}
-      </div>
+        </div>
+      ) : (
+        lexeme.notes && <p className="muted small">{lexeme.notes}</p>
+      )}
       {memory.some((m) => m.reps > 0) ? (
         <ul className="schedule">
           {memory
@@ -249,40 +269,37 @@ function WordDetail({ course, lexeme, memory, onDeleted }: { course: Course; lex
         <p className="muted small">Not started. It will come in a session as a new word.</p>
       )}
       <ul className="examples">
-        {examples
-          ?.filter((e) => !e.deleted)
-          .map((e) => {
-            const by = authorLabel(e);
-            return (
-              <li key={e.id}>
-                <span>{e.text}</span> <span className="muted">— {e.translation}</span>
-                <span className={by.warn ? "author warn" : "author"}>{by.text}</span>
-                <button className="ghost small" onClick={() => void write<Example>("examples", { id: e.id, deleted: Date.now() })} aria-label="Remove sentence">
+        {examples.map((e) => {
+          const by = authorLabel(e);
+          return (
+            <li key={e.id}>
+              <span>{e.text}</span> <span className="muted">— {e.translation}</span>
+              <span className={by.warn ? "author warn" : "author"}>{by.text}</span>
+              {e.origin !== "deck" && (
+                <button className="ghost small" onClick={() => void store.write(() => store.collections.user_sentence.delete(e.id))} aria-label="Remove sentence">
                   remove
                 </button>
-              </li>
-            );
-          })}
+              )}
+            </li>
+          );
+        })}
       </ul>
-      <RewriteButton course={course} lexemeIds={[lexeme.id]} label="Write new sentences" />
+      <RewriteButton learner={learner} word={lexeme} label="Write new sentences" />
       <div className="row">
-        <button
-          className="secondary"
-          title="Paused words do not appear in sessions until you resume them"
-          onClick={() => void write<Lexeme>("lexemes", { id: lexeme.id, status: lexeme.status === "suspended" ? "active" : "suspended" })}
-        >
-          {lexeme.status === "suspended" ? "Resume" : "Pause"}
+        <button className="secondary" title="Paused words do not appear in sessions until you resume them" onClick={() => void setWordStatus(store, lexeme.id, paused ? "active" : "paused")}>
+          {paused ? "Resume" : "Pause"}
         </button>
         <button
           className="ghost"
           onClick={() => {
-            void write<Lexeme>("lexemes", { id: lexeme.id, deleted: Date.now() });
+            if (mine) void store.write(() => store.collections.user_word.delete(lexeme.id));
+            else void setWordStatus(store, lexeme.id, "ignored");
             onDeleted();
           }}
         >
-          Delete
+          {mine ? "Delete" : "Never show this word"}
         </button>
-        {lexeme.status === "suspended" && <span className="muted small">Paused. It does not appear in sessions.</span>}
+        {paused && <span className="muted small">Paused. It does not appear in sessions.</span>}
       </div>
     </div>
   );

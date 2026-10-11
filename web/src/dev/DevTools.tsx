@@ -1,37 +1,28 @@
 // Developer tools in Settings. Only in `vite dev`; not in production builds.
 
 import { useState } from "react";
-import { demoSize, removeDemo, seedDemo } from "./demo";
+import { removeDemo, seedDemo } from "./demo";
 
 export default function DevTools() {
   const [lang, setLang] = useState<"es" | "de">("es");
   const [count, setCount] = useState(150);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState("");
-  const run = async (fn: () => Promise<unknown>, msg: string) => {
-    setBusy(true);
-    setDone("");
-    await fn();
-    setBusy(false);
-    setDone(msg);
-  };
-  const max = demoSize(lang);
   return (
     <section>
       <h2>Developer tools</h2>
       <div className="form">
         <p className="muted small">
-          Only in dev mode. A demo course has a made-up review history of 90 days. It stays on this device and does not sync. You can also open <code>?demo=es:150</code> or <code>?demo=off</code>.
+          Only in dev mode. Makes a new anonymous learner with a made-up review history of 90 days, replacing the current one. You can also open <code>?demo=es:150</code> or <code>?demo=off</code>.
         </p>
         <div className="row">
           <select value={lang} onChange={(e) => setLang(e.target.value as "es" | "de")} aria-label="Demo language">
             <option value="es">Spanish</option>
             <option value="de">German</option>
           </select>
-          <select value={Math.min(count, max)} onChange={(e) => setCount(Number(e.target.value))} aria-label="Words studied">
-            {[10, 50, 150, max].map((n) => (
+          <select value={count} onChange={(e) => setCount(Number(e.target.value))} aria-label="Words studied">
+            {[10, 30, 150, 10_000].map((n) => (
               <option key={n} value={n}>
-                {n === max ? `All ${max} words studied` : `${n} words studied`}
+                {n === 10_000 ? "All words studied" : `${n} words studied`}
               </option>
             ))}
           </select>
@@ -40,26 +31,25 @@ export default function DevTools() {
           <button
             className="primary"
             disabled={busy}
-            onClick={() =>
-              void run(async () => {
-                await seedDemo(lang, count);
-                // The app picks its course when it starts, so start it again.
+            onClick={() => {
+              setBusy(true);
+              try {
+                localStorage.setItem("perennial-course", lang);
+              } catch {
+                /* private mode */
+              }
+              void seedDemo(lang, count).then(() => {
                 location.hash = "#/garden";
                 location.reload();
-              }, "")
-            }
+              });
+            }}
           >
-            {busy ? "Working…" : "Make demo course and open the garden"}
+            {busy ? "Working…" : "Make demo learner and open the garden"}
           </button>
-          <button className="ghost" disabled={busy} onClick={() => void run(() => removeDemo(), "Demo courses removed.")}>
-            Remove demo courses
+          <button className="ghost" disabled={busy} onClick={() => void removeDemo().then(() => location.reload())}>
+            Delete demo learner
           </button>
         </div>
-        {done && (
-          <p className="small" role="status">
-            {done}
-          </p>
-        )}
       </div>
     </section>
   );

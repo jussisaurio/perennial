@@ -31,7 +31,14 @@ export async function proxyShape(req: Request, userId: string, config: Config): 
   origin.searchParams.set("where", def.where);
   origin.searchParams.set("params[1]", userId);
   if (config.electric.secret) origin.searchParams.set("secret", config.electric.secret);
-  const res = await fetch(origin, { signal: req.signal });
+  let res: Response;
+  try {
+    res = await fetch(origin, { signal: req.signal });
+  } catch (e) {
+    // The browser cancelled the long poll (navigation, a new shape): nothing to report.
+    if (req.signal.aborted) return new Response(null, { status: 499 });
+    throw e;
+  }
   const headers = new Headers(res.headers);
   headers.delete("content-encoding"); // fetch already decompressed the body
   headers.delete("content-length");

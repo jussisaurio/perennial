@@ -1,12 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import { startAutoSync } from "./db/sync";
 import "./index.css";
 import { initTheme } from "./ui/theme";
 
 initTheme();
-startAutoSync();
 void navigator.storage?.persist?.();
 
 async function boot() {

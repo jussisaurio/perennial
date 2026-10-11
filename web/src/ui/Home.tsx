@@ -1,13 +1,9 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect, useState } from "react";
-import { aiMode, type AIMode } from "../ai/backend";
-import { SignIn, useAccount } from "./Account";
-import { hostedMessage } from "../hosted/api";
-import { ensurePool, freshLexemes, frequencyList } from "../content/builder";
+import { useEffect, useMemo, useState } from "react";
 import { language } from "../content/languages";
-import { db } from "../db/db";
-import type { Course } from "../model";
-import { Garden } from "./Garden";
+import { useUser } from "../data/auth";
+import { useLearner } from "../data/learner";
+import { SignIn } from "./Account";
+import { Garden, gardenFromLearner } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 
@@ -19,50 +15,27 @@ function greeting(): string {
 // The entrance animation plays once per visit, not on every tab switch.
 let animated = false;
 
-export function Home({ course, onStart, onAddWords, onWalk }: { course: Course; onStart: (minutes: number) => void; onAddWords: () => void; onWalk: () => void }) {
+export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onAddWords: () => void; onWalk: () => void }) {
   const [stagger] = useState(() => !animated);
   useEffect(() => {
     animated = true;
   }, []);
-  const { signedIn } = useAccount();
-  const [mode, setMode] = useState<AIMode | null | undefined>(undefined);
-  useEffect(() => {
-    void aiMode().then(setMode);
-  }, [signedIn]);
-  const stats = useLiveQuery(() => courseStats(course.id, course.lang), [course.id, course.lang]);
-  const ready = useLiveQuery(async () => (await freshLexemes(course.id)).length, [course.id]);
-  const started = useLiveQuery(() => db.memory.where("courseId").equals(course.id).count(), [course.id]);
-  const [prep, setPrep] = useState<string | null>(null);
-
-  // Keep a pool of words generated ahead of time.
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      // Needed for the coverage estimate even on devices without AI.
-      void frequencyList(course.lang).catch(() => {});
-      if (!(await aiMode())) return;
-      setPrep("Preparing new words…");
-      try {
-        await ensurePool(course);
-        if (!cancelled) setPrep(null);
-      } catch (e) {
-        if (!cancelled) setPrep(`Could not prepare new words: ${hostedMessage(e)}`);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course.id, signedIn]);
-
-  const canStart = (ready ?? 0) > 0 || (started ?? 0) > 0;
-  const doneToday = !!stats && stats.minutesToday >= course.minutes;
+  const { user } = useUser();
+  const learner = useLearner(code);
+  const stats = useMemo(() => (learner ? courseStats(learner) : undefined), [learner]);
+  const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
+  if (!learner || !stats) return <div className="page home" />;
+  const course = learner.course;
+  const ready = stats.seeds;
+  const started = stats.known + stats.learning;
+  const canStart = ready > 0 || started > 0;
+  const doneToday = stats.minutesToday >= course.minutes;
   // Picked up partway through the day: offer the rest, not the full session again.
-  const left = stats ? Math.max(0, Math.round(course.minutes - stats.minutesToday)) : course.minutes;
-  const partial = !!stats && stats.minutesToday >= 0.5 && !doneToday;
+  const left = Math.max(0, Math.round(course.minutes - stats.minutesToday));
+  const partial = stats.minutesToday >= 0.5 && !doneToday;
   const sessionMinutes = doneToday ? 5 : partial ? Math.max(2, left) : course.minutes;
-  const max = Math.max(1, ...(stats?.days.map((d) => d.reviews) ?? [1]));
-  const lang = language(course.lang).name;
+  const max = Math.max(1, ...stats.days.map((d) => d.reviews));
+  const lang = language(code).name;
 
   return (
     <div className={stagger ? "page home stagger" : "page home"}>
@@ -75,24 +48,18 @@ export function Home({ course, onStart, onAddWords, onWalk }: { course: Course; 
         </div>
       </header>
 
-      <Garden courseId={course.id} />
+      <Garden data={garden} />
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
 
-      {!canStart && !prep && mode === null && (
-        // Nothing to learn yet and no AI: offer the two real ways forward.
-        <div className="panel form empty-start">
-          <strong>There are no words to learn yet.</strong>
-          <p className="muted small">Perennial AI prepares the most common words for you, with example sentences and audio. It is free to start.</p>
-          <SignIn cta="Get free words with my email" />
-          <div className="row">
-            <span className="muted small">Or without AI:</span>
-            <button className="secondary" onClick={onAddWords}>
-              Type my own words
-            </button>
-          </div>
-        </div>
+      {user?.anonymous && started >= 10 && (
+        // A gentle nudge once there is something worth keeping.
+        <details className="panel more keep-garden">
+          <summary>Keep your garden safe: add your email</summary>
+          <p className="muted small">Your garden is saved in this browser. With your email, it is also kept in your account and on all your devices.</p>
+          <SignIn cta="Send me a code" />
+        </details>
       )}
 
       <div className="start-row">
@@ -105,29 +72,22 @@ export function Home({ course, onStart, onAddWords, onWalk }: { course: Course; 
         </button>
         <p className="start-note">
           {!canStart
-            ? prep ?? (mode === null ? "" : "Preparing your first words…")
-            : prep ??
-              (started === 0
-                ? `${ready} new words are ready. Each word has example sentences and audio.`
-                : doneToday
-                  ? "You did your minutes for today. More practice is a bonus."
-                  : partial
-                    ? ""
-                    : "Missed days do not pile up. We choose the most useful practice for your time.")}
+            ? "You have learned every word in the course. Add words from your own texts to keep growing."
+            : started === 0
+              ? `${ready} words are ready, most common first. Each word has example sentences and audio.`
+              : doneToday
+                ? "You did your minutes for today. More practice is a bonus."
+                : partial
+                  ? ""
+                  : "Missed days do not pile up. We choose the most useful practice for your time."}
         </p>
       </div>
 
-      {stats && stats.known + stats.learning > 0 && (
+      {started > 0 && (
         <div className="progress-line">
           {stats.known > 0 ? (
             <p>
-              You know <strong>{stats.known}</strong> {stats.known === 1 ? "word" : "words"}.
-              {stats.coverage !== null && stats.coverage >= 0.01 && (
-                <>
-                  {" "}
-                  They make up about <strong>{Math.round(stats.coverage * 100)}%</strong> of the words people use in everyday {lang}.
-                </>
-              )}
+              You know <strong>{stats.known}</strong> {stats.known === 1 ? "word" : "words"} of {lang}, most common first.
             </p>
           ) : (
             <p>
@@ -137,13 +97,13 @@ export function Home({ course, onStart, onAddWords, onWalk }: { course: Course; 
           <details className="more">
             <summary>What does "know" mean?</summary>
             <p className="muted small">
-              A word counts as known when you remembered it at least twice and you will most likely still remember it a week from now. The percentage counts how often these words appear in film and TV subtitles. Common words like "the" count a lot, so the number grows fast at first.
+              A word counts as known when you remembered it at least twice and you will most likely still remember it a week from now. The course starts with the words people use most in everyday speech, so each word you learn is one you will hear often.
             </p>
           </details>
         </div>
       )}
 
-      {stats && stats.days.some((d) => d.reviews) && (
+      {stats.days.some((d) => d.reviews) && (
         <details className="more">
           <summary>More progress</summary>
           <div className="stats">

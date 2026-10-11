@@ -2,12 +2,10 @@
 // memory stability, flowers open once a word is known, and plants droop as
 // recall fades — until the next session waters them. Nothing ever dies.
 
-import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { freshLexemes } from "../content/builder";
-import { db } from "../db/db";
+import type { LoadedDeck } from "../data/deck";
+import { KNOWN_STABILITY, recall, type Learner } from "../data/learner";
 import { Plant as WordPlantShape, stageFor } from "./plant";
-import { KNOWN_STABILITY, recall } from "./stats";
 
 interface Plant {
   id: string;
@@ -34,32 +32,41 @@ export type { Plant };
 const H = 210;
 const GROUND = H - 34;
 
-function useGarden(courseId: string) {
-  return useLiveQuery(async () => {
-    const [memory, lexemes, fresh] = await Promise.all([
-      db.memory.where("courseId").equals(courseId).toArray(),
-      db.lexemes.where("courseId").equals(courseId).toArray(),
-      freshLexemes(courseId),
-    ]);
-    const byLex = new Map(lexemes.map((l) => [l.id, l]));
-    const now = Date.now();
-    const plants: Plant[] = [];
-    const skills = new Map<string, { listen: boolean; write: boolean }>();
-    for (const m of memory) {
-      if (m.skill === "read" || m.reps === 0 || m.s < KNOWN_STABILITY) continue;
-      const cur = skills.get(m.lexemeId) ?? { listen: false, write: false };
-      cur[m.skill] = true;
-      skills.set(m.lexemeId, cur);
-    }
-    for (const m of memory) {
-      const l = byLex.get(m.lexemeId);
-      if (m.skill !== "read" || m.reps === 0 || !l || l.deleted || l.status === "ignored") continue;
-      const sk = skills.get(l.id);
-      plants.push({ id: l.id, lemma: l.lemma, gloss: l.gloss, s: m.s, r: recall(m, now), listen: !!sk?.listen, write: !!sk?.write, order: l.rank ?? 1e6 + l.addedAt / 1e9 });
-    }
-    plants.sort((a, b) => a.order - b.order);
-    return { plants: plants.slice(0, MAX_PLANTS), total: plants.length, seeds: fresh.length };
-  }, [courseId]);
+export interface GardenData {
+  plants: Plant[];
+  total: number;
+  seeds: number;
+}
+
+/** The learner's garden: every word with progress is a plant. */
+export function gardenFromLearner(l: Learner, now = Date.now()): GardenData {
+  const plants: Plant[] = [];
+  for (const m of l.memories) {
+    if (m.skill !== "read" || m.reps === 0) continue;
+    const w = l.words.get(m.lexemeId);
+    if (!w || w.status === "ignored") continue;
+    const strong = (skill: string) => {
+      const x = l.memory.get(`${w.id}:${skill}`);
+      return !!x && x.reps > 0 && x.s >= KNOWN_STABILITY;
+    };
+    plants.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, s: m.s, r: recall(m, now), listen: strong("listen"), write: strong("write"), order: w.rank });
+  }
+  plants.sort((a, b) => a.order - b.order);
+  return { plants: plants.slice(0, MAX_PLANTS), total: plants.length, seeds: l.fresh().length };
+}
+
+/**
+ * A made-up but believable garden for the landing page: the deck's most common
+ * words at a spread of stages, so newcomers see what learning will look like.
+ */
+export function showcaseGarden(deck: LoadedDeck, count = 64): GardenData {
+  const plants = deck.words.slice(0, count).map((w, i) => {
+    const h = hash(w.id, 7);
+    // Mostly blooming, some budding, a few sprouts; common words grew longest.
+    const s = h < 0.15 ? 1 + h * 10 : h < 0.35 ? 3 + h * 8 : 8 + (1 - i / count) * 120 * h;
+    return { id: w.id, lemma: w.lemma, gloss: w.gloss, s, r: 0.92, listen: s > 60, write: s > 90, order: w.rank };
+  });
+  return { plants, total: plants.length, seeds: Math.max(0, deck.words.length - count) };
 }
 
 function PlantShape({ p, scale, highlighted }: { p: Plant; scale: number; highlighted: boolean }) {
@@ -79,8 +86,7 @@ function PlantShape({ p, scale, highlighted }: { p: Plant; scale: number; highli
   );
 }
 
-export function Garden({ courseId, highlight, compact }: { courseId: string; highlight?: Set<string>; compact?: boolean }) {
-  const data = useGarden(courseId);
+export function Garden({ data, highlight, compact, showcase }: { data: GardenData | null | undefined; highlight?: Set<string>; compact?: boolean; showcase?: boolean }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
   const [hover, setHover] = useState<{ p: Plant; x: number; y: number } | null>(null);
@@ -152,13 +158,13 @@ export function Garden({ courseId, highlight, compact }: { courseId: string; hig
           <strong>{hover.p.lemma}</strong>
           <span>{hover.p.gloss}</span>
           <em>
-            {hover.p.s >= KNOWN_STABILITY ? "known" : "learning"} · {hover.p.r >= 0.85 ? "fresh in memory" : "ready for practice"}
+            {showcase ? (hover.p.s >= KNOWN_STABILITY ? "in bloom" : hover.p.s >= 3 ? "budding" : "a new sprout") : `${hover.p.s >= KNOWN_STABILITY ? "known" : "learning"} · ${hover.p.r >= 0.85 ? "fresh in memory" : "ready for practice"}`}
             {hover.p.listen && " · listening ✓"}
             {hover.p.write && " · writing ✓"}
           </em>
         </div>
       )}
-      {data && !compact && (
+      {data && !compact && !showcase && (
         <div className="garden-legend">
           <span>
             <b>{blooming}</b> known

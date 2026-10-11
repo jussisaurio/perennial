@@ -1,7 +1,7 @@
 // Dev-only URL switches, handled before the app renders.
-//   ?demo=es        a Spanish demo course with every demo word studied
-//   ?demo=de:120    a German demo course with 120 words studied
-//   ?demo=off       remove all demo courses
+//   ?demo=es        an anonymous Spanish learner with every deck word studied
+//   ?demo=de:120    a German learner with 120 words studied
+//   ?demo=off       delete the demo learner
 
 import { removeDemo, seedDemo } from "./demo";
 
@@ -15,6 +15,11 @@ export async function devBoot(): Promise<void> {
   if (demo === "off") return removeDemo();
   const [lang, n] = demo.split(":");
   if (lang !== "es" && lang !== "de") return console.warn(`[demo] unknown language "${lang}": use es or de`);
-  const id = await seedDemo(lang, n ? Number(n) : Infinity);
-  console.info(`[demo] seeded ${id}`);
+  try {
+    localStorage.setItem("perennial-course", lang);
+  } catch {
+    /* private mode */
+  }
+  await seedDemo(lang, n ? Number(n) : Infinity);
+  console.info(`[demo] seeded ${lang}`);
 }

@@ -90,6 +90,15 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
         return m ? json({ code: m.subject.match(/\d{6}/)?.[0], subject: m.subject }) : fail(404, "no_mail");
       },
     };
+    // The signed-in learner's rows, as stored on the server (tests check what really arrived).
+    routes["/api/dev/rows"] = {
+      GET: async (req) => {
+        const user = await requireUser(req);
+        const table = new URL(req.url).searchParams.get("table");
+        if (!table || !["course", "review", "word_state", "user_word", "user_sentence"].includes(table)) throw new HttpError(400, "unknown_table");
+        return json(await sql`select * from ${sql(table)} where user_id = ${user.id}`);
+      },
+    };
   }
 
   async function route(req: Request): Promise<Response> {
@@ -124,8 +133,9 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
           res = fail(500, "internal_error", { requestId: id });
         }
       }
-      // Shapes are long polls: logging every one would drown everything else.
-      if (url.pathname !== "/api/shape" || res.status >= 400) {
+      // Shapes are long polls (held open until data changes, then cancelled by
+      // the browser as 499): logging them would drown everything else.
+      if (url.pathname !== "/api/shape" || (res.status >= 400 && res.status !== 499)) {
         log.info("request", { method: req.method, path: url.pathname, status: res.status, ms: Math.round(performance.now() - started) });
       }
       const out = new Response(res.body, res);

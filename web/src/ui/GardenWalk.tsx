@@ -5,10 +5,9 @@
 import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { db } from "../db/db";
-import type { Course } from "../model";
-import { freshLexemes } from "../content/builder";
 import { language } from "../content/languages";
+import type { LoadedDeck } from "../data/deck";
+import { useLearner, type Learner } from "../data/learner";
 import { groupOf, layout, THIRSTY, type GardenPlant, type Layout, type PlacedPlant } from "../garden/world";
 import type { Detail, GardenScene, TimeOfDay } from "../garden/scene";
 import { stageFor, WordPlant } from "./plant";
@@ -17,41 +16,46 @@ import { SoundToggle, useSound } from "./Sound";
 import { KNOWN_STABILITY, recall } from "./stats";
 import { plural } from "./format";
 
-async function loadPlants(courseId: string): Promise<{ plants: GardenPlant[]; seeds: number }> {
-  const [memory, lexemes, fresh] = await Promise.all([
-    db.memory.where("courseId").equals(courseId).toArray(),
-    db.lexemes.where("courseId").equals(courseId).toArray(),
-    freshLexemes(courseId),
-  ]);
-  const byLex = new Map(lexemes.map((l) => [l.id, l]));
-  const strong = new Map<string, { listen: boolean; write: boolean }>();
-  for (const m of memory) {
-    if (m.skill === "read" || m.reps === 0 || m.s < KNOWN_STABILITY) continue;
-    const cur = strong.get(m.lexemeId) ?? { listen: false, write: false };
-    cur[m.skill] = true;
-    strong.set(m.lexemeId, cur);
-  }
-  const now = Date.now();
+export interface WalkSource {
+  plants: GardenPlant[];
+  seeds: number;
+}
+
+const growthOf = (s: number) => Math.min(1, Math.log1p(s) / Math.log1p(120));
+
+/** The learner's own garden: every word with progress is a plant. */
+export function walkPlants(l: Learner, now = Date.now()): WalkSource {
+  const strong = (id: string, skill: string) => {
+    const m = l.memory.get(`${id}:${skill}`);
+    return !!m && m.reps > 0 && m.s >= KNOWN_STABILITY;
+  };
   const plants: GardenPlant[] = [];
-  for (const m of memory) {
-    const l = byLex.get(m.lexemeId);
-    if (m.skill !== "read" || m.reps === 0 || !l || l.deleted || l.status === "ignored") continue;
+  for (const m of l.memories) {
+    const w = l.words.get(m.lexemeId);
+    if (m.skill !== "read" || m.reps === 0 || !w || w.status === "ignored") continue;
     const known = m.s >= KNOWN_STABILITY && m.reps >= 2;
-    plants.push({
-      id: l.id,
-      lemma: l.lemma,
-      gloss: l.gloss,
-      pos: l.pos ?? "",
-      rank: l.rank ?? 1e6 + l.addedAt / 1e9,
-      s: m.s,
-      r: recall(m, now),
-      stage: stageFor(m.s, known),
-      growth: Math.min(1, Math.log1p(m.s) / Math.log1p(120)),
-      listen: !!strong.get(l.id)?.listen,
-      write: !!strong.get(l.id)?.write,
-    });
+    plants.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, s: m.s, r: recall(m, now), stage: stageFor(m.s, known), growth: growthOf(m.s), listen: strong(w.id, "listen"), write: strong(w.id, "write") });
   }
-  return { plants, seeds: fresh.length };
+  return { plants, seeds: l.fresh().length };
+}
+
+/** A believable garden for visitors: the deck's common words at a spread of stages. */
+export function showcaseWalkPlants(deck: LoadedDeck, count = 160): WalkSource {
+  const plants = deck.words.slice(0, count).map((w, i) => {
+    let h = 0;
+    for (const ch of w.id) h = (h * 31 + ch.charCodeAt(0)) % 1000;
+    const x = h / 1000;
+    const s = x < 0.15 ? 1 + x * 10 : x < 0.35 ? 3 + x * 8 : 8 + (1 - i / count) * 120 * x;
+    return { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos, rank: w.rank, s, r: 0.95, stage: stageFor(s, s >= KNOWN_STABILITY), growth: growthOf(s), listen: false, write: false };
+  });
+  return { plants, seeds: 0 };
+}
+
+/** The walk-in garden for the signed-in learner. */
+export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: () => void }) {
+  const learner = useLearner(lang);
+  const source = useMemo(() => (learner ? walkPlants(learner) : null), [learner]);
+  return <GardenWalk lang={lang} source={source} onExit={onExit} onWater={onWater} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -84,7 +88,8 @@ function stageText(p: PlantView): string {
 
 type PlantView = PlacedPlant;
 
-export function GardenWalk({ course, onExit, onWater }: { course: Course; onExit: () => void; onWater: () => void }) {
+/** Without onWater it is view-only (the landing page): no watering, no sessions. */
+export function GardenWalk({ lang, source, onExit, onWater }: { lang: string; source: WalkSource | null; onExit: () => void; onWater?: () => void }) {
   const [data, setData] = useState<{ l: Layout; seeds: number } | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -108,12 +113,12 @@ export function GardenWalk({ course, onExit, onWater }: { course: Course; onExit
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<GardenScene | null>(null);
-  const tag = language(course.lang).tag;
+  const tag = language(lang).tag;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
-    void loadPlants(course.id).then(({ plants, seeds }) => setData({ l: layout(plants), seeds }));
-  }, [course.id]);
+    if (source && !data) setData({ l: layout(source.plants), seeds: source.seeds });
+  }, [source, data]);
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -365,7 +370,7 @@ export function GardenWalk({ course, onExit, onWater }: { course: Course; onExit
         </div>
       )}
 
-      {data && stats.total === 0 && (
+      {data && stats.total === 0 && onWater && (
         <div className="gw-card gw-empty">
           <strong>Your garden is empty</strong>
           <p className="small">Each word you learn grows into a plant here.</p>
@@ -396,7 +401,7 @@ export function GardenWalk({ course, onExit, onWater }: { course: Course; onExit
           <div className="gw-card-body">
             <WordPlant word={selected.lemma} s={selected.s} known={selected.stage === "bloom"} size={72} />
             <div>
-              <strong className="gw-word" lang={course.lang}>
+              <strong className="gw-word" lang={lang}>
                 {selected.lemma}
               </strong>
               <span className="gw-gloss">{selected.gloss}</span>
@@ -429,7 +434,7 @@ export function GardenWalk({ course, onExit, onWater }: { course: Course; onExit
             Next plant →
           </button>
         )}
-        {stats.thirsty > 0 && !selected && (
+        {onWater && stats.thirsty > 0 && !selected && (
           <button className="gw-btn gw-water" onClick={onWater}>
             💧 Water {plural(stats.thirsty, "thirsty plant")}
           </button>

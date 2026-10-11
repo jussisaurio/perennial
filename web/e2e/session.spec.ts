@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { advance, grade, kicker, startCourse, startSession, store } from "./helpers";
+import { advance, expectServerRows, grade, kicker, serverRows, startCourse, startSession } from "./helpers";
 
 async function continueIntros(page: Page, n: number) {
   for (let i = 0; i < n; i++) {
@@ -27,10 +27,11 @@ test("double-clicking Show does not grade the unseen answer", async ({ page }) =
   await continueIntros(page, 4);
   await page.getByRole("button", { name: /Show answer/ }).dblclick();
   await expect(page.getByRole("button", { name: /I remembered/ })).toBeVisible();
-  expect(await store(page, "reviews")).toHaveLength(0);
+  await page.waitForTimeout(1500); // give a wrong write time to arrive, if there were one
+  expect(await serverRows(page, "review")).toHaveLength(0);
 });
 
-test("Forgot is acknowledged, retried with its own label, and undo reverts it", async ({ page }) => {
+test("Forgot is acknowledged, retried with its own label, and undo reverts it on the server too", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   await continueIntros(page, 4);
@@ -39,12 +40,12 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it", 
   await page.waitForTimeout(450); // past the double-click guard
   await page.getByRole("button", { name: /I forgot/ }).click();
   await expect(page.getByRole("status")).toHaveText(/see this word again soon/);
+  await expectServerRows(page, "review", 1);
 
-  // Undo brings the same card back and tombstones the review.
+  // Undo brings the same card back and deletes the review.
   await page.getByRole("button", { name: "Undo" }).click();
-  await expect(page.locator(".prompt b")).toHaveText(checked);
-  const reviews = await store<{ deleted?: number }>(page, "reviews");
-  expect(reviews.filter((r) => !r.deleted)).toHaveLength(0);
+  await expect(page.locator(".prompt b")).toHaveText(new RegExp(`^${checked}$`, "i"));
+  await expectServerRows(page, "review", 0);
 
   // Forget again for real, then the retry arrives labelled as such.
   await grade(page, "1");
@@ -55,20 +56,21 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it", 
     else await grade(page, "2");
   }
   await expect(kicker(page)).toHaveText(/try again/);
-  await expect(page.locator(".prompt b")).toHaveText(checked);
+  // The same word, perhaps in another sentence (so maybe capitalised).
+  await expect(page.locator(".prompt b")).toHaveText(new RegExp(`^${checked}$`, "i"));
 });
 
-test("'I knew it' skips the quick check, says so, and is undoable", async ({ page }) => {
+test("'I knew it' skips the quick check, says so, is stored as 'known', and is undoable", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   await advance(page, "k");
   await expect(page.getByRole("status")).toContainText("You will see this word again in about a week");
-  const reviews = await store<{ grade: number }>(page, "reviews");
-  expect(reviews.map((r) => r.grade)).toEqual([4]);
+  await expectServerRows(page, "review", 1);
+  const [r] = await serverRows<{ grade: number; kind: string }>(page, "review");
+  expect(r).toMatchObject({ grade: 4, kind: "known" });
   await advance(page, "z");
   await expect(kicker(page)).toHaveText(/new word/);
-  const after = await store<{ deleted?: number }>(page, "reviews");
-  expect(after.every((r) => r.deleted)).toBe(true);
+  await expectServerRows(page, "review", 0);
 });
 
 test("leaving after doing something shows the summary", async ({ page }) => {

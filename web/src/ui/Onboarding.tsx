@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
-import { aiMode } from "../ai/backend";
-import { COURSE_LANGUAGES, NATIVE_LANGUAGE } from "../content/languages";
-import { uid, write } from "../db/db";
-import type { Course } from "../model";
-import { GrowthStrip } from "./Garden";
-import { SproutMark } from "./icons";
-import { SignIn, useAccount } from "./Account";
+// The first screen: what Perennial is, shown with a garden you can hover,
+// for each language. "Start learning" makes an anonymous account and the
+// course in one step; nothing to set up, no email needed yet.
+
+import { useEffect, useMemo, useState } from "react";
+import { COURSE_LANGUAGES } from "../content/languages";
+import { ensureUser } from "../data/auth";
+import { useDeck } from "../data/learner";
+import { APP_VERSION } from "../version";
+import { SignIn } from "./Account";
+import { Garden, GrowthStrip, showcaseGarden } from "./Garden";
+import { GardenWalk, showcaseWalkPlants } from "./GardenWalk";
+
+import { FlowerIcon, SproutMark } from "./icons";
 
 // Choices survive a reload before "Start learning" (a per-browser convenience).
 const DRAFT_KEY = "perennial-onboarding";
@@ -25,65 +31,76 @@ function saveDraft(d: Draft) {
   }
 }
 
-export function Onboarding({ onCreated }: { onCreated: (id: string) => void }) {
+/** The first write: an anonymous account (if there is none yet) and the course. */
+export async function startCourse(lang: string, minutes: number) {
+  await ensureUser();
+  const res = await fetch("/api/write", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION },
+    body: JSON.stringify({ mutations: [{ type: "course.upsert", row: { lang, minutes } }] }),
+  });
+  if (!res.ok) throw new Error(`Could not start (${res.status})`);
+}
+
+export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) => void; signedIn: boolean }) {
   const draft = readDraft();
   const [lang, setLang] = useState(() => draft.lang ?? "es");
   const [minutes, setMinutes] = useState(draft.minutes ?? 7);
-  useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
-  // Decided once, so the section stays (showing "Connected") after setup succeeds.
-  const [showAI, setShowAI] = useState(false);
   const [linking, setLinking] = useState(false);
-  const { signedIn, me } = useAccount();
-  useEffect(() => {
-    void aiMode().then((m) => setShowAI(!m));
-  }, []);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [walking, setWalking] = useState(false);
+  useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
+  const deck = useDeck(lang);
+  const showcase = useMemo(() => (deck ? showcaseGarden(deck) : null), [deck]);
+  const name = COURSE_LANGUAGES.find((l) => l.code === lang)?.name ?? lang;
+  const walkSource = useMemo(() => (deck && walking ? showcaseWalkPlants(deck) : null), [deck, walking]);
 
-  const create = async () => {
-    const id = uid();
-    await write<Course>("courses", { id, lang, native: NATIVE_LANGUAGE, minutes, retention: 0.9, createdAt: Date.now(), freqCursor: 0 });
-    onCreated(id);
+  const start = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await startCourse(lang, minutes);
+      onStarted(lang);
+    } catch {
+      setError("Could not start. Check your internet connection and try again.");
+      setBusy(false);
+    }
   };
 
+  if (walking) return <GardenWalk lang={lang} source={walkSource} onExit={() => setWalking(false)} />;
+
   return (
-    <div className="page narrow stagger">
-      {(
-        <>
-          <span className="wordmark">
-            <SproutMark size={26} /> perennial
-          </span>
-          <h1 style={{ marginTop: "2rem" }}>Grow a language, a few minutes a day.</h1>
-          <p className="lede">
-            Every word starts as a seed. It grows each time you remember it. You learn the most common words first, in real sentences. You choose how many minutes per day. Missed days do not pile up.
-          </p>
-          <GrowthStrip />
-          <button className="ghost link" onClick={() => setLinking(!linking)} aria-expanded={linking}>
-            I already use Perennial on another device →
-          </button>
-          {linking && (
-            <section className="panel">
-              <h2 style={{ marginTop: 0 }}>Sign in</h2>
-              <p className="muted small">Sign in with the same email as on your other device. Your words appear here after a moment.</p>
-              <SignIn cta="Sign in" />
-            </section>
-          )}
-        </>
-      )}
+    <div className="page narrow stagger landing">
+      <span className="wordmark">
+        <SproutMark size={26} /> perennial
+      </span>
+      <h1 style={{ marginTop: "2rem" }}>Grow a language, a few minutes a day.</h1>
+      <p className="lede">
+        Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, in real sentences. You choose how many minutes per day. Missed days do not pile up.
+      </p>
+
+      <div className="choice lang-choice landing-langs" role="radiogroup" aria-label="Language to learn">
+        {COURSE_LANGUAGES.map((l) => (
+          <label key={l.code}>
+            <input type="radio" name="lang" value={l.code} checked={lang === l.code} onChange={() => setLang(l.code)} />
+            <span>
+              <strong>{l.name}</strong>
+              <span className="muted small">{l.blurb}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <figure className="landing-garden" aria-label={`A ${name} garden after a few months`}>
+        <Garden data={showcase} showcase />
+        <figcaption className="muted small">A {name} garden after a few months of practice. Point at a plant to see its word.</figcaption>
+      </figure>
+      <button className="walk-link" onClick={() => setWalking(true)}>
+        <FlowerIcon size={18} /> Walk through this garden in 3D
+      </button>
+      <GrowthStrip />
+
       <section className="form">
-        <div className="form-label">
-          I want to learn
-          <div className="choice lang-choice" role="radiogroup" aria-label="Language to learn">
-            {COURSE_LANGUAGES.map((l) => (
-              <label key={l.code}>
-                <input type="radio" name="lang" value={l.code} checked={lang === l.code} onChange={() => setLang(l.code)} />
-                <span>
-                  <strong>{l.name}</strong>
-                  <span className="muted small">{l.blurb}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-          <span className="muted small">Lessons are in English. More languages will come later.</span>
-        </div>
         <label>
           Time per day
           <div className="chips" role="radiogroup" aria-label="Minutes per day">
@@ -94,34 +111,34 @@ export function Onboarding({ onCreated }: { onCreated: (id: string) => void }) {
             ))}
           </div>
         </label>
+        <span className="muted small">Lessons are in English. More languages will come later.</span>
       </section>
-      {showAI && !linking && (
-        <section>
-          <h2>Turn on AI</h2>
-          <p className="muted small">The AI writes example sentences at your level.</p>
-          <div className="panel form">
-            <div>
-              <strong>Perennial AI</strong>
-              <p className="muted small" style={{ margin: "0.2rem 0 0" }}>
-                Free to start. Nothing to set up. Your words also sync on all your devices.
-              </p>
-            </div>
-            {signedIn ? (
-              <p className="inline-choice">
-                Signed in as <strong>{me?.email}</strong>. Perennial AI is on.
-              </p>
-            ) : (
-              <SignIn cta="Start free with my email" />
-            )}
-          </div>
-          {!signedIn && <p className="muted small">Without AI, the app has no ready words: you type each word yourself.</p>}
-        </section>
-      )}
       <div className="row" style={{ marginTop: "1.5rem" }}>
-        <button className="primary wide" onClick={() => void create()}>
-          Start learning
+        <button className="primary wide" onClick={() => void start()} disabled={busy}>
+          {busy ? "Starting…" : `Start learning ${name}`}
         </button>
       </div>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <p className="muted small">Free. No account needed to start. Add your email later to keep your garden on all your devices.</p>
+
+      {!signedIn && (
+        <>
+          <button className="ghost link" onClick={() => setLinking(!linking)} aria-expanded={linking}>
+            I already use Perennial →
+          </button>
+          {linking && (
+            <section className="panel">
+              <h2 style={{ marginTop: 0 }}>Sign in</h2>
+              <p className="muted small">Sign in with your email. Your garden appears here after a moment.</p>
+              <SignIn cta="Sign in" />
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }
