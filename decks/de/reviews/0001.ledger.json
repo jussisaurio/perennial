@@ -1,0 +1,212 @@
+{
+  "file": "source/0001.json",
+  "reviewer": "claude-agent:de-proofreader-0001-2026-10-11",
+  "entries": {
+    "ich|pron|": {
+      "hash": "97f6f5156572ea32",
+      "verdict": "ok",
+      "at": "2026-10-11T13:49:57.292Z"
+    },
+    "sein|verb|": {
+      "hash": "289b8465b5e01ad7",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:00.977Z"
+    },
+    "sie|pron|": {
+      "hash": "e08d58a9f473a451",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:05.153Z"
+    },
+    "das|pron|": {
+      "hash": "c3cd4c6463753be2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:09.431Z"
+    },
+    "du|pron|": {
+      "hash": "827304d9dbe33ae9",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:12.297Z"
+    },
+    "nicht|adv|": {
+      "hash": "be777f2305950349",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:15.551Z"
+    },
+    "der|det|": {
+      "hash": "a92aa05f500f4920",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:18.617Z"
+    },
+    "und|conj|": {
+      "hash": "75abd2c6a0984ba6",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:21.943Z"
+    },
+    "es|pron|": {
+      "hash": "7e31f75ec37f8bb2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:25.510Z"
+    },
+    "wir|pron|": {
+      "hash": "6b9085e852b138c6",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:29.048Z"
+    },
+    "zu|prep|": {
+      "hash": "33bcad91c4428542",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:32.822Z"
+    },
+    "was|pron|": {
+      "hash": "b066a4ebc953e30a",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:38.047Z"
+    },
+    "ein|det|": {
+      "hash": "7eb7135ca2323f03",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:42.571Z"
+    },
+    "er|pron|": {
+      "hash": "683aa84e5ff71000",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:45.427Z"
+    },
+    "haben|verb|": {
+      "hash": "1ef44b1a6017ff0b",
+      "verdict": "fix",
+      "note": "s4: replace 'Wir [haben] keine Zeit.' / 'We don't have time.' with 'Wir [hatten] keine Zeit.' / 'We didn't have time.' because s1 already uses Zeit in the present; this adds a past form for variety.",
+      "at": "2026-10-11T13:50:49.731Z"
+    },
+    "ja|particle|": {
+      "hash": "6018cfd94866278b",
+      "verdict": "fix",
+      "note": "s3 uses the emphasis-particle sense, which the gloss does not cover; gloss: change 'yes' to 'yes; (adds emphasis)' (both senses are very common). Alternatively replace s3 with 'Hast du Zeit? – [Ja].' / 'Do you have time? – Yes.' and keep the gloss.",
+      "at": "2026-10-11T13:50:55.307Z"
+    },
+    "in|prep|": {
+      "hash": "e8b6852711313581",
+      "verdict": "ok",
+      "at": "2026-10-11T13:50:58.721Z"
+    },
+    "mit|prep|": {
+      "hash": "5193b23005f54e98",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:02.496Z"
+    },
+    "sich|pron|": {
+      "hash": "2064a97ed875a5e7",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:06.137Z"
+    },
+    "so|adv|": {
+      "hash": "ad73d28449bd0b83",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:08.831Z"
+    },
+    "auf|prep|": {
+      "hash": "9dc5178ecbbd7c44",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:12.446Z"
+    },
+    "für|prep|": {
+      "hash": "72343e7fe58edeb0",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:15.145Z"
+    },
+    "hier|adv|": {
+      "hash": "950a17349341adca",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:18.127Z"
+    },
+    "aber|conj|": {
+      "hash": "696271f134c271c6",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:21.644Z"
+    },
+    "wie|adv|": {
+      "hash": "f4773844f746e402",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:24.711Z"
+    },
+    "nein|particle|": {
+      "hash": "676eeb2927de5f7e",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:27.557Z"
+    },
+    "dass|conj|": {
+      "hash": "39d6c888011a671f",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:30.551Z"
+    },
+    "noch|adv|": {
+      "hash": "02628f6b7cb25bf7",
+      "verdict": "fix",
+      "note": "s3: replace 'Bist du [noch] da?' / 'Are you still there?' with 'Ich bin [noch] nicht fertig.' / 'I'm not done yet.' because s1 and s3 both show 'still' and the glossed 'yet' sense (noch nicht) is never shown; notes: add 'noch nicht = not yet.'",
+      "at": "2026-10-11T13:51:35.843Z"
+    },
+    "wenn|conj|": {
+      "hash": "8b55d87190c95a06",
+      "verdict": "fix",
+      "note": "s1: replace 'Wenn du willst, komm mit.' / 'If you want, come along.' with 'Komm mit, [wenn] du willst.' / 'Come along if you want.' because a fronted wenn-clause followed by a bare imperative sounds awkward; the imperative-first order is what natives say.",
+      "at": "2026-10-11T13:51:41.023Z"
+    },
+    "können|verb|": {
+      "hash": "e5bd84493851dfda",
+      "verdict": "ok",
+      "at": "2026-10-11T13:51:46.442Z"
+    },
+    "mal|particle|": {
+      "hash": "a75ec5fc98505d92",
+      "verdict": "fix",
+      "note": "gloss: replace 'just (softens a request); times' with 'just (softens a request); ever, once' because the multiplication sense is rare in everyday speech while 'schon mal' (ever) is very common; notes: replace 'Drei mal zwei = three times two.' with 'Warst du schon mal hier? = Have you ever been here?' (keep 'Komm mal her! = Come here a second!'). Sentences are fine.",
+      "at": "2026-10-11T13:51:57.601Z"
+    },
+    "nur|adv|": {
+      "hash": "240ed58522a52a0b",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:00.358Z"
+    },
+    "gut|adj|": {
+      "hash": "f90efc0a4bc2adb1",
+      "verdict": "fix",
+      "note": "s3: replace 'Er ist ein [guter] Lehrer.' / 'He's a good teacher.' with 'Sie spricht [gut] Deutsch.' / 'She speaks German well.' because the glossed 'well' sense is never shown, and 'ein guter …' already appears in the ein entry ('Er ist ein guter Freund').",
+      "at": "2026-10-11T13:52:04.960Z"
+    },
+    "schon|adv|": {
+      "hash": "6d6e6ea6d8c218dd",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:08.269Z"
+    },
+    "auch|adv|": {
+      "hash": "cd1e67df0ed18ba4",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:10.972Z"
+    },
+    "jetzt|adv|": {
+      "hash": "5d0996c1844a714d",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:14.367Z"
+    },
+    "von|prep|": {
+      "hash": "82eb4c1beac43be2",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:18.555Z"
+    },
+    "werden|verb|": {
+      "hash": "d9c36cd016042af3",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:22.898Z"
+    },
+    "wissen|verb|": {
+      "hash": "429a533dabd89b56",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:27.733Z"
+    },
+    "mein|det|": {
+      "hash": "6f000897d2c478ab",
+      "verdict": "ok",
+      "at": "2026-10-11T13:52:31.188Z"
+    }
+  }
+}
