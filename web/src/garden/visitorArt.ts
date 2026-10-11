@@ -159,30 +159,9 @@ const GNOME_SIDE_ROWS = gnome([
   "..oWWWBBBBBBBo..",
   "..oSBBBBBBBBBBS.",
 ]);
-const GNOME_BACK_ROWS = gnome([
-  "...oHHHHHHHHo...",
-  "...oHHHHHHHHo...",
-  "...oWHHHHHHWo...",
-  "..oBWBBBBBBWBo..",
-  "..oBBBBBBBBBBo..",
-  "..oBBBBBBBBBBo..",
-  ".oBBBBBBBBBBBBo.",
-  ".SBBBBBBBBBBBBS.",
-]);
-/** Its back to you, but the head turned: one eye and the nose over the shoulder. */
-const GNOME_PEEK_ROWS = gnome([
-  "...oHHHHHSSSo...",
-  "...oHHHHHSeSo...",
-  "...oWHHHHSSSpp..",
-  "..oBWBBBBWWWBo..",
-  "..oBBBBBBBBBBo..",
-  "..oBBBBBBBBBBo..",
-  ".oBBBBBBBBBBBBo.",
-  ".SBBBBBBBBBBBBS.",
-]);
-/** The gnome in four poses, with its lantern unlit (by day) or lit. */
-export function gnomeArt(pose: "front" | "side" | "back" | "peek", lit: boolean): PixelArt {
-  const rows = { front: GNOME_FRONT_ROWS, side: GNOME_SIDE_ROWS, back: GNOME_BACK_ROWS, peek: GNOME_PEEK_ROWS }[pose];
+/** The gnome facing you or looking away, with its lantern unlit (by day) or lit. */
+export function gnomeArt(pose: "front" | "side", lit: boolean): PixelArt {
+  const rows = { front: GNOME_FRONT_ROWS, side: GNOME_SIDE_ROWS }[pose];
   return { rows, pal: { ...GNOME_PAL, L: lit ? "#ffe680" : "#4a4048" } };
 }
 

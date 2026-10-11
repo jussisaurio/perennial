@@ -6,7 +6,8 @@ import {
   fencePickets,
   fencePoint,
   frogCroak,
-  GNOME_PEEK_TAG,
+  GNOME_CAUGHT,
+  GNOME_TURN,
   gnomePose,
   gnomeTag,
   heronDay,
@@ -15,8 +16,9 @@ import {
   MILESTONES,
   NO_FACTS,
   RARE_CAP,
-  snailFraction,
-  snailPicket,
+  snailLap,
+  SNAIL_SIGN,
+  PICKETS_PER_M,
   VISITORS,
   visitor,
   visitorsFor,
@@ -156,25 +158,18 @@ describe("the heron (one day a month)", () => {
   });
 });
 
-describe("the shy gnome", () => {
-  test("faces you from afar, turns, shows its back, then peeks", () => {
-    expect(gnomePose(9)).toBe("front");
-    expect(gnomePose(4.01)).toBe("front");
-    expect(gnomePose(3.2)).toBe("side");
-    expect(gnomePose(2.5)).toBe("back");
-    expect(gnomePose(1.5)).toBe("back");
-    expect(gnomePose(1.2)).toBe("peek");
-    expect(gnomePose(0.4)).toBe("peek");
+describe("the gnome plays statues", () => {
+  test("faces you while you look; looks away when you don't; caught for a moment when you look back", () => {
+    expect(gnomePose("front", true, 0, 5)).toBe("front");
+    expect(gnomePose("front", false, 1, 0)).toBe("front"); // a quick glance away is not enough
+    expect(gnomePose("front", false, GNOME_TURN + 0.1, 0)).toBe("side");
+    expect(gnomePose("side", true, 0, 0.2)).toBe("side"); // caught
+    expect(gnomePose("side", true, 0, GNOME_CAUGHT + 0.1)).toBe("front");
   });
 
-  test("its tag: full while it faces you, fading as it turns, gone from behind, back for a moment when it peeks", () => {
-    expect(gnomeTag(6, 0)).toBe(1);
-    expect(gnomeTag(3.25, 0)).toBeCloseTo(0.5);
-    expect(gnomeTag(2.6, 0)).toBeGreaterThan(0);
-    expect(gnomeTag(2.6, 0)).toBeLessThan(0.1);
-    expect(gnomeTag(2, 0)).toBe(0);
-    expect(gnomeTag(1, 0.2)).toBe(1);
-    expect(gnomeTag(1, GNOME_PEEK_TAG + 0.1)).toBe(0);
+  test("its name shows only while it faces you", () => {
+    expect(gnomeTag("front")).toBe(1);
+    expect(gnomeTag("side")).toBe(0);
   });
 });
 
@@ -277,27 +272,26 @@ describe("the cat (after a break)", () => {
   });
 });
 
-describe("the snail's long trip", () => {
+describe("the snail's daily lap", () => {
   const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `w${i}`, gloss: "", pos: i % 2 ? "noun" : "verb", rank: i, s: 10, r: 0.9, stage: "bud", growth: 0.5, listen: false, write: false });
   const l = layout(Array.from({ length: 80 }, (_, i) => plant(i)));
   const pickets = fencePickets(l);
 
-  test("one picket per calendar day since the first review, starting at the gate", () => {
-    const first = at(2026, 2, 1, 21);
-    expect(visitorsFor(facts([first], at(2026, 2, 1, 23)), new Date(at(2026, 2, 1, 23))).snailDay).toBe(0);
-    expect(visitorsFor(facts([first], at(2026, 2, 2, 7)), new Date(at(2026, 2, 2, 7))).snailDay).toBe(1);
-    // Calendar days, not study days: a long break still moves it.
-    expect(visitorsFor(facts([first], at(2026, 2, 15)), new Date(at(2026, 2, 15))).snailDay).toBe(14);
-    // A new learner's snail waits at the gate.
-    expect(visitorsFor(NO_FACTS, new Date()).snailDay).toBeNull();
+  test("one lap a day: at the gate at midnight, halfway at noon, nearly round by night", () => {
+    expect(snailLap(new Date(2026, 2, 1, 0, 0))).toBe(0);
+    expect(snailLap(new Date(2026, 2, 1, 12, 0))).toBeCloseTo(0.5, 5);
+    expect(snailLap(new Date(2026, 2, 1, 23, 59))).toBeGreaterThan(0.99);
+    expect(snailLap(new Date(2026, 2, 1, 23, 59, 59, 999))).toBeLessThan(1);
   });
 
-  test("wraps round after the length of the fence", () => {
-    expect(snailPicket(0, pickets)).toBe(0);
-    expect(snailPicket(pickets - 1, pickets)).toBe(pickets - 1);
-    expect(snailPicket(pickets, pickets)).toBe(0);
-    expect(snailPicket(pickets + 3, pickets)).toBe(3);
-    expect(snailFraction(pickets / 2, pickets)).toBeCloseTo(0.5, 1);
+  test("about snail speed: a millimetre or so a second", () => {
+    const metresPerSecond = pickets / PICKETS_PER_M / 86_400;
+    expect(metresPerSecond).toBeGreaterThan(0.0002);
+    expect(metresPerSecond).toBeLessThan(0.005);
+  });
+
+  test("the lap record on the gate sign", () => {
+    expect(SNAIL_SIGN).toBe("Snail fastest lap: 23h 59min");
   });
 
   test("the picket is on the fence, starting by the gate and going round", () => {

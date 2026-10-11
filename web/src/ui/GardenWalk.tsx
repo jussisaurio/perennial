@@ -147,7 +147,7 @@ export function GardenWalk({
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
-    if (source && !data) setData({ l: layout(source.plants), seeds: source.seeds, visitors: { list: visitors?.views ?? [], snailDay: visitors?.today.snailDay ?? null } });
+    if (source && !data) setData({ l: layout(source.plants), seeds: source.seeds, visitors: { list: visitors?.views ?? [] } });
   }, [source, data, visitors]);
 
   useEffect(() => {

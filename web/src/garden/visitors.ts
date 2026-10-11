@@ -141,8 +141,6 @@ export function catBreak(f: LearnerFacts, now: Date): number | null {
 export interface TodayVisitors {
   /** Who is in the garden today, in VISITORS order. */
   present: VisitorId[];
-  /** Calendar days since the first review (0 on that day), or null for a new learner. */
-  snailDay: number | null;
 }
 
 /** A dev-only override: "all", or a list of visitor ids. */
@@ -150,8 +148,7 @@ export type VisitorOverride = "all" | VisitorId[] | null;
 
 /** Who visits today. Seeded by the calendar date, so a visitor stays all day. */
 export function visitorsFor(facts: LearnerFacts, now: Date = new Date(), override: VisitorOverride = null): TodayVisitors {
-  const snailDay = facts.firstReview === null ? null : Math.max(0, dayNumber(now) - dayNumber(facts.firstReview));
-  if (override) return { present: VISITORS.filter((v) => override === "all" || override.includes(v.id)).map((v) => v.id), snailDay };
+  if (override) return { present: VISITORS.filter((v) => override === "all" || override.includes(v.id)).map((v) => v.id) };
   const present: VisitorId[] = [];
   let rare = 0;
   for (const v of VISITORS) {
@@ -160,7 +157,7 @@ export function visitorsFor(facts: LearnerFacts, now: Date = new Date(), overrid
     if (v.rare) rare++;
     present.push(v.id);
   }
-  return { present, snailDay };
+  return { present };
 }
 
 /** The Today screen line after a break, or null. Never counts days, never guilt (docs/voice.md rule 5). */
@@ -212,31 +209,26 @@ export function visitorViews(present: readonly VisitorId[], lang: string, isKnow
 
 // ---- The shy gnome (#54) ----
 
-/** Distances (m): it faces you from afar, turns its back up close, and peeks when you are right behind it. */
-export const GNOME_FACE = 4;
-export const GNOME_BACK = 2.5;
-export const GNOME_PEEK = 1.2;
-/** How long its tag comes back when it peeks (s). */
-export const GNOME_PEEK_TAG = 1.6;
-
-export type GnomePose = "front" | "side" | "back" | "peek";
-
-/** The gnome's pose for a viewer `d` metres away: front, turning (side), back, or peeking over its shoulder. */
-export function gnomePose(d: number): GnomePose {
-  return d > GNOME_FACE ? "front" : d > GNOME_BACK ? "side" : d > GNOME_PEEK ? "back" : "peek";
-}
-
 /**
- * How much of its tag shows (0 to 1): all of it while it faces you, less as it
- * turns away, none from behind, and all again for a moment when it peeks.
- * `peeking`: seconds since it began to peek.
+ * The gnome plays "statues": it always faces you while you look at it. Look
+ * away for a few seconds and it turns to look at something else; look back
+ * and you catch it, still glancing away for a moment, before it turns back.
  */
-export function gnomeTag(d: number, peeking: number): number {
-  if (d > GNOME_FACE) return 1;
-  if (d > GNOME_BACK) return (d - GNOME_BACK) / (GNOME_FACE - GNOME_BACK);
-  if (d > GNOME_PEEK) return 0;
-  return peeking < GNOME_PEEK_TAG ? 1 : 0;
+/** Seconds out of view before it looks away. */
+export const GNOME_TURN = 2.5;
+/** Seconds you see it still looking away after you look back. */
+export const GNOME_CAUGHT = 0.7;
+
+export type GnomePose = "front" | "side";
+
+/** Its next pose: `outFor` = seconds out of view so far, `backFor` = seconds since it came back into view. */
+export function gnomePose(pose: GnomePose, inView: boolean, outFor: number, backFor: number): GnomePose {
+  if (!inView) return outFor > GNOME_TURN ? "side" : pose;
+  return pose === "side" && backFor < GNOME_CAUGHT ? "side" : "front";
 }
+
+/** Its name shows while it faces you (and you are near enough; see TAG_RANGE). */
+export const gnomeTag = (pose: GnomePose): number => (pose === "front" ? 1 : 0);
 
 // ---- The frog (#57) ----
 
@@ -262,6 +254,19 @@ export const PICKETS_PER_M = 4;
 /** Half the width of the gate opening, in metres. */
 export const GATE_HALF = 1.1;
 
+/** The board at the gate, where each lap starts and ends. */
+export const SNAIL_SIGN = "Snail fastest lap: 23h 59min";
+
+/**
+ * The snail does one lap of the fence a day, starting at the gate at midnight:
+ * about snail speed (a millimetre or so a second), so it is somewhere new on
+ * each visit and creeps visibly if you watch it for a minute.
+ */
+export function snailLap(now: Date = new Date()): number {
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return Math.min(0.99999, (now.getTime() - midnight) / 86_400_000);
+}
+
 /** The fence as one path from the right gate post, round the garden, to the left gate post. */
 export function fencePath(l: Layout): [number, number][] {
   const b = l.bounds;
@@ -282,15 +287,6 @@ export function fencePickets(l: Layout): number {
   return Math.max(1, Math.floor(len * PICKETS_PER_M));
 }
 
-/** One picket per calendar day, starting at the gate; back at the gate after a full lap. */
-export function snailPicket(day: number, pickets: number): number {
-  return ((day % pickets) + pickets) % pickets;
-}
-
-/** The snail's place along the whole fence, 0 at the gate to almost 1 at the end of a lap. */
-export function snailFraction(day: number, pickets: number): number {
-  return snailPicket(day, pickets) / pickets;
-}
 
 /** The point on the fence at `picket`, and the direction of the fence there (for "inside"). */
 export function fencePoint(l: Layout, picket: number): { x: number; z: number; dx: number; dz: number } {

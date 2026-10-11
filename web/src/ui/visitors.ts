@@ -4,11 +4,10 @@
 import { deriveMemory, wordState, type Learner } from "../data/learner";
 import type { ReviewRow } from "../data/rows";
 import {
-  fencePickets,
   learnerFacts,
   milestoneLine,
   NO_FACTS,
-  snailFraction,
+  snailLap,
   VISITORS,
   visitorsFor,
   visitorViews,
@@ -19,7 +18,6 @@ import {
   type VisitorOverride,
   type VisitorView,
 } from "../garden/visitors";
-import { layout as gardenLayout, type GardenPlant } from "../garden/world";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
 export function devVisitorOverride(): VisitorOverride {
@@ -85,6 +83,6 @@ export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitor
 }
 
 /** Where the snail is along the whole fence of this garden (0 at the gate), for the 2D strip. */
-export function snailAlong(plants: GardenPlant[], snailDay: number | null): number {
-  return snailDay === null ? 0 : snailFraction(snailDay, fencePickets(gardenLayout(plants)));
+export function snailAlong(): number {
+  return snailLap();
 }

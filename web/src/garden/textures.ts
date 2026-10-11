@@ -627,24 +627,20 @@ export const VISITOR_CELL = {
   frogAsleep: 8,
   gnomeFront: 9,
   gnomeSide: 10,
-  gnomeBack: 11,
-  gnomePeek: 12,
-  /** The same four poses with the lantern lit, for dusk and night. */
-  gnomeFrontLit: 13,
-  gnomeSideLit: 14,
-  gnomeBackLit: 15,
-  gnomePeekLit: 16,
-  heron: 17,
-  heronStep: 18,
-  mothOpen: 19,
-  mothClosed: 20,
+  /** The same two poses with the lantern lit, for dusk and night. */
+  gnomeFrontLit: 11,
+  gnomeSideLit: 12,
+  heron: 13,
+  heronStep: 14,
+  mothOpen: 15,
+  mothClosed: 16,
 } as const;
-export const VISITOR_CELLS = 21;
+export const VISITOR_CELLS = 17;
 
 /** The garden visitors in one small atlas (drawn once), in VISITOR_CELL order. */
 export function visitors(): HTMLCanvasElement {
   const [c, ctx] = canvas(32 * VISITOR_CELLS, 32);
-  const poses = ["front", "side", "back", "peek"] as const;
+  const poses = ["front", "side"] as const;
   [
     Art.SNAIL,
     Art.CAT_ASLEEP,

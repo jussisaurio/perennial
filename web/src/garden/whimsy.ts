@@ -18,7 +18,7 @@ export interface SignLine {
  */
 export const SIGN_POOL: readonly SignLine[] = [
   { text: "Please walk slowly. Words are growing." },
-  { text: "No running. (Shift is OK.)" },
+  { text: "No running during your Shift." },
   { text: "Do not feed the verbs." },
   { text: "Quiet, please. Words sleeping." },
   { text: "Snail crossing" },

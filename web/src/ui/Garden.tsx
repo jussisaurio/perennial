@@ -234,7 +234,7 @@ export function Garden({
           <VisitorMark
             v={snail}
             art={SNAIL}
-            scale={1.5}
+            scale={2.2}
             x={pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2)}
             onShow={(x) => {
               setHover(null);
