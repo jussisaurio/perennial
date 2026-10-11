@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { language } from "../content/languages";
 import type { LoadedDeck } from "../data/deck";
 import { useLearner, type Learner } from "../data/learner";
+import { track } from "../observability";
 import { groupOf, layout, THIRSTY, type GardenPlant, type Layout, type PlacedPlant } from "../garden/world";
 import type { Detail, GardenScene, TimeOfDay } from "../garden/scene";
 import { stageFor, WordPlant } from "./plant";
@@ -53,6 +54,7 @@ export function showcaseWalkPlants(deck: LoadedDeck, count = 160): WalkSource {
 
 /** The walk-in garden for the signed-in learner. */
 export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: () => void }) {
+  useEffect(() => track("garden_opened"), []);
   const learner = useLearner(lang);
   const source = useMemo(() => (learner ? walkPlants(learner) : null), [learner]);
   return <GardenWalk lang={lang} source={source} onExit={onExit} onWater={onWater} />;

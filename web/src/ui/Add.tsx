@@ -11,6 +11,7 @@ import type { UserSentenceRow, UserWordRow, WordStateRow } from "../data/rows";
 import { language } from "../content/languages";
 import { formKey, tokenize } from "../content/text";
 import { useMe } from "./Account";
+import { track } from "../observability";
 
 // "queued": in the course but not started yet. "added": picked by the learner.
 type Status = "known" | "learning" | "queued" | "added" | "unknown" | "ignored";
@@ -92,6 +93,7 @@ function MineText({ learner }: { learner: Learner }) {
         });
       }
       const n = picked.size;
+      track("words_added", { fromCourse: inCourse.length, withAI: needAI.length });
       setPicked(new Map());
       setResult(`Added ${n} ${n === 1 ? "word" : "words"} (marked ✓). You will see them first in your next session.`);
     } catch (e) {

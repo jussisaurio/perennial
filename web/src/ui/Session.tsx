@@ -13,6 +13,7 @@ import { WordPlant } from "./plant";
 import { hasVoice, isSoundOn, speak, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats, wordState } from "./stats";
+import { track } from "../observability";
 
 type Lexeme = Word;
 type Example = Sentence;
@@ -673,6 +674,7 @@ function Summary({
   onExit: () => void;
 }) {
   const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
+  useEffect(() => track("session_finished", { ended, answers: counts.answers, newWords: counts.intros }), []); // eslint-disable-line react-hooks/exhaustive-deps
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   useKeys(useMemo(() => ({ Enter: onExit }), [onExit]));
   const did = counts.answers + counts.intros > 0;

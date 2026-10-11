@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
+import { identify } from "./observability";
 import { StoreContext, useCourses } from "./data/learner";
 import { createStore, reloadNeeded, type Store } from "./data/store";
 import { Home } from "./ui/Home";
@@ -111,6 +112,7 @@ export default function App() {
     if (firstUser.current === undefined) firstUser.current = id;
     else if (firstUser.current !== null && firstUser.current !== id) location.reload();
     else firstUser.current = id;
+    if (id) identify(id);
   }, [user?.id, pending]);
   if (pending) return null;
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;

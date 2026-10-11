@@ -4,6 +4,7 @@
 
 import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
+import { track } from "../observability";
 
 export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
 
@@ -44,8 +45,10 @@ export async function sendCode(email: string) {
 }
 
 export async function signInWithCode(email: string, otp: string): Promise<SessionUser> {
+  const wasAnonymous = !!(await authClient.getSession()).data?.user?.isAnonymous;
   const r = await authClient.signIn.emailOtp({ email, otp });
   if (r.error || !r.data) throw new AuthError(r.error?.code ?? "sign_in_failed", r.error?.status === 429 ? "Too many tries. Wait a few minutes." : "That code is not correct, or it has expired.");
+  if (wasAnonymous) track("email_added");
   return toUser(r.data.user);
 }
 

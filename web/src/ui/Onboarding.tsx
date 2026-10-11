@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
 import { ensureUser } from "../data/auth";
 import { useDeck } from "../data/learner";
+import { track } from "../observability";
 import { APP_VERSION } from "../version";
 import { SignIn } from "./Account";
 import { Garden, GrowthStrip, showcaseGarden } from "./Garden";
@@ -61,6 +62,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
     setError("");
     try {
       await startCourse(lang, minutes);
+      track("course_started", { lang, minutes });
       onStarted(lang);
     } catch {
       setError("Could not start. Check your internet connection and try again.");
