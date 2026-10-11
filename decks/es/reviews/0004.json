@@ -1,0 +1,9 @@
+{
+  "file": "source/0004.json",
+  "sha256": "72adcdda2b173e9886bee0db8c6cd972aff0057a79a626a41c91203b5fa85327",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0004-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "100/100 ok after re-check; dar forms/s4 and capitán s4 fixes verified"
+}
