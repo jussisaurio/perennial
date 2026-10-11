@@ -19,11 +19,8 @@
     "@tanstack/react-virtual": "^3.14.14",
     "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",
-    "fflate": "^0.8.3",
-    "fzstd": "^0.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "sql.js": "^1.14.2",
     "three": "^0.186.1"
   },
   "devDependencies": {
@@ -32,7 +29,6 @@
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
-    "@types/sql.js": "^1.4.11",
     "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",

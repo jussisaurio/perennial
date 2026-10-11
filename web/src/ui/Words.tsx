@@ -4,7 +4,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { db, write } from "../db/db";
 import type { Course, Example, Lexeme, MemoryRow } from "../model";
 import { currentAuthor, type Author } from "../ai/backend";
-import { rewriteExamples, undoRewrite, wordsWithLocalSentences, type Rewrite } from "../content/builder";
+import { rewriteExamples, undoRewrite, type Rewrite } from "../content/builder";
 import { hostedMessage, refreshMe } from "../hosted/api";
 import { useAccount } from "./Account";
 import { AddScreen } from "./Add";
@@ -19,24 +19,6 @@ const SKILL_ORDER = ["read", "listen", "write"];
 export function WordsScreen({ course, adding, onAdd, onBack }: { course: Course; adding: boolean; onAdd: () => void; onBack: () => void }) {
   if (adding) return <AddScreen course={course} onBack={onBack} />;
   return <WordList course={course} onAdd={onAdd} />;
-}
-
-/** Offer to replace a local model's sentences once a better AI is available. */
-function LocalSentencesBanner({ course }: { course: Course }) {
-  const ids = useLiveQuery(() => wordsWithLocalSentences(course.id), [course.id]);
-  const [author, setAuthor] = useState<Author | null | undefined>(undefined);
-  useEffect(() => {
-    void currentAuthor().then(setAuthor);
-  }, []);
-  if (!ids?.length || !author || author.origin === "local") return null;
-  return (
-    <div className="banner">
-      <p className="small">
-        {ids.length === 1 ? "1 word has" : `${ids.length} words have`} sentences written by a model on your computer. Small local models often make mistakes. Replace them with sentences from {author.origin === "hosted" ? "Perennial AI" : author.model}?
-      </p>
-      <RewriteButton course={course} lexemeIds={ids} label="Replace these sentences" />
-    </div>
-  );
 }
 
 /**
@@ -106,7 +88,6 @@ function WordList({ course, onAdd }: { course: Course; onAdd: () => void }) {
           <PlusIcon size={18} /> Add words
         </button>
       </div>
-      <LocalSentencesBanner course={course} />
       <div className="row">
         <input className="search" placeholder="Search words or meanings" value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}>
@@ -167,8 +148,7 @@ function authorLabel(e: Example): { text: string; warn?: boolean } {
   if (e.source === "manual") return { text: "Added by you" };
   if (e.source === "import") return { text: "From your Anki deck" };
   if (e.origin === "hosted") return { text: "Written by Perennial AI" };
-  if (e.origin === "own") return { text: `Written by ${e.model}` };
-  if (e.origin === "local") return { text: `Written by ${e.model} on your computer`, warn: true };
+  if (e.origin === "own" || e.origin === "local") return { text: `Written by ${e.model}` };
   return { text: "Written by AI" };
 }
 

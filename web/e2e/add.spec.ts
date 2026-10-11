@@ -21,25 +21,3 @@ test("paste text: unstudied words are new, picks are added, message resets", asy
   await page.locator(".reader .tok", { hasText: "zorro" }).click();
   await expect(page.getByText(/Added 1 word/)).toHaveCount(0);
 });
-
-test("by hand: Enter submits; re-adding a deleted word brings it back", async ({ page }) => {
-  await startCourse(page);
-  await openAdd(page);
-  await page.getByPlaceholder("word", { exact: true }).fill("mariposa");
-  await page.getByPlaceholder("meaning").fill("butterfly");
-  await page.getByPlaceholder("meaning").press("Enter");
-  await expect(page.getByText("Added “mariposa”.")).toBeVisible();
-
-  await page.getByRole("button", { name: "← Words" }).click();
-  // The list is virtual: rows far down are not in the page until you scroll or search.
-  await page.getByPlaceholder("Search words or meanings").fill("mariposa");
-  await page.locator(".word-row", { hasText: "mariposa" }).click();
-  await page.getByRole("button", { name: "Delete" }).click();
-
-  await openAdd(page);
-  await page.getByPlaceholder("word", { exact: true }).fill("mariposa");
-  await page.getByPlaceholder("meaning").fill("butterfly");
-  await page.getByRole("button", { name: "Add", exact: true }).click();
-  const lex = await store<{ lemma: string; deleted?: number }>(page, "lexemes");
-  expect(lex.find((l) => l.lemma === "mariposa")?.deleted).toBeFalsy();
-});

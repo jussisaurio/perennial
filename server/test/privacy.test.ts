@@ -46,14 +46,6 @@ test("an undone deletion is not compacted", async () => {
   expect(JSON.stringify(await pull(`Session ${token}`))).toContain("perro");
 });
 
-test("sync-code users can erase their server data", async () => {
-  const key = "Bearer erase-me-please-123";
-  await t.call("/sync", { cursor: 0, ops: [op("s1", Date.now(), "lexemes", "x", { lemma: "hola" })] }, undefined, { authorization: key });
-  const r = await t.call("/api/sync/delete", {}, undefined, { authorization: key });
-  expect(r.body).toMatchObject({ ok: true, removed: 1 });
-  expect(await pull(key)).toEqual([]);
-});
-
 test("sessions expire after 90 days without use", async () => {
   const token = await t.signIn("idle@example.com");
   const req = new Request("http://x", { headers: { authorization: `Session ${token}` } });

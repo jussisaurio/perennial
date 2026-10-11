@@ -43,6 +43,7 @@ export interface Example extends Synced {
   source: "llm" | "mined" | "manual" | "import";
   createdAt: number;
   /** Who wrote it, for AI-written sentences: where the model ran and its name. */
+  // Older data can also hold "local" (local models are no longer supported); it reads as "own".
   origin?: "hosted" | "own" | "local";
   model?: string;
 }

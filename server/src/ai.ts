@@ -12,7 +12,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { Database } from "bun:sqlite";
 import { z } from "zod";
-import { frequencyBatchPrompt, minePrompt, moreExamplesPrompt, type GenLexeme } from "../../web/src/ai/prompts";
+import { frequencyBatchPrompt, minePrompt, moreExamplesPrompt, type GenLexeme } from "./prompts";
 import type { User } from "./auth";
 import { PRICES, type Config } from "./config";
 import { day, period } from "./db";

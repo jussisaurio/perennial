@@ -32,16 +32,3 @@ test("export downloads everything, including the review log", async ({ page }) =
   expect(data.reviews).toHaveLength(1);
   expect(data.reviews[0].grade).toBe(4);
 });
-
-test("deleting a course needs its name typed, and says it cannot be undone", async ({ page }) => {
-  await startCourse(page);
-  const lang = (await page.getByRole("heading", { level: 1 }).locator("em").textContent())!;
-  await page.getByRole("tab", { name: "Settings" }).click();
-  await page.locator("summary", { hasText: `Delete the ${lang} course` }).click();
-  await expect(page.getByText("You cannot undo this.")).toBeVisible();
-  const del = page.getByRole("button", { name: `Delete the ${lang} course` });
-  await expect(del).toBeDisabled();
-  await page.getByLabel(/to confirm/).fill(lang);
-  await del.click();
-  await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
-});

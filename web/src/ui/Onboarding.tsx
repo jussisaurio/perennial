@@ -6,7 +6,6 @@ import type { Course } from "../model";
 import { GrowthStrip } from "./Garden";
 import { SproutMark } from "./icons";
 import { SignIn, useAccount } from "./Account";
-import { AISettings, SyncSettings } from "./Settings";
 
 // Choices survive a reload before "Start learning" (a per-browser convenience).
 const DRAFT_KEY = "perennial-onboarding";
@@ -26,13 +25,10 @@ function saveDraft(d: Draft) {
   }
 }
 
-export function Onboarding({ existing = [], onCreated, onCancel }: { existing?: Course[]; onCreated: (id: string) => void; onCancel?: () => void }) {
-  const adding = !!onCancel;
-  const taken = new Set(existing.map((c) => c.lang));
-  const open = COURSE_LANGUAGES.filter((l) => !taken.has(l.code));
+export function Onboarding({ onCreated }: { onCreated: (id: string) => void }) {
   const draft = readDraft();
-  const [lang, setLang] = useState(() => (draft.lang && !taken.has(draft.lang) ? draft.lang : (open[0]?.code ?? "es")));
-  const [minutes, setMinutes] = useState(draft.minutes ?? existing[0]?.minutes ?? 7);
+  const [lang, setLang] = useState(() => draft.lang ?? "es");
+  const [minutes, setMinutes] = useState(draft.minutes ?? 7);
   useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
   // Decided once, so the section stays (showing "Connected") after setup succeeds.
   const [showAI, setShowAI] = useState(false);
@@ -47,24 +43,10 @@ export function Onboarding({ existing = [], onCreated, onCancel }: { existing?: 
     await write<Course>("courses", { id, lang, native: NATIVE_LANGUAGE, minutes, retention: 0.9, createdAt: Date.now(), freqCursor: 0 });
     onCreated(id);
   };
-  const langName = COURSE_LANGUAGES.find((l) => l.code === lang)?.name ?? lang;
-
-  if (adding && open.length === 0)
-    return (
-      <div className="page narrow">
-        <h1>Add a language</h1>
-        <p className="lede">You are already learning every language Perennial offers now: {COURSE_LANGUAGES.map((l) => l.name).join(" and ")}. More languages will come later.</p>
-        <button className="secondary" onClick={onCancel}>
-          Back
-        </button>
-      </div>
-    );
 
   return (
     <div className="page narrow stagger">
-      {adding ? (
-        <h1>Add a language</h1>
-      ) : (
+      {(
         <>
           <span className="wordmark">
             <SproutMark size={26} /> perennial
@@ -82,11 +64,6 @@ export function Onboarding({ existing = [], onCreated, onCancel }: { existing?: 
               <h2 style={{ marginTop: 0 }}>Sign in</h2>
               <p className="muted small">Sign in with the same email as on your other device. Your words appear here after a moment.</p>
               <SignIn cta="Sign in" />
-              <details className="more">
-                <summary>I use a sync code instead</summary>
-                <p className="muted small">On your other device, open Settings → Sync and copy your sync code.</p>
-                <SyncSettings mode="link" />
-              </details>
             </section>
           )}
         </>
@@ -96,11 +73,11 @@ export function Onboarding({ existing = [], onCreated, onCancel }: { existing?: 
           I want to learn
           <div className="choice lang-choice" role="radiogroup" aria-label="Language to learn">
             {COURSE_LANGUAGES.map((l) => (
-              <label key={l.code} className={taken.has(l.code) ? "disabled" : undefined}>
-                <input type="radio" name="lang" value={l.code} checked={lang === l.code} disabled={taken.has(l.code)} onChange={() => setLang(l.code)} />
+              <label key={l.code}>
+                <input type="radio" name="lang" value={l.code} checked={lang === l.code} onChange={() => setLang(l.code)} />
                 <span>
                   <strong>{l.name}</strong>
-                  <span className="muted small">{taken.has(l.code) ? "You are already learning this" : l.blurb}</span>
+                  <span className="muted small">{l.blurb}</span>
                 </span>
               </label>
             ))}
@@ -137,25 +114,13 @@ export function Onboarding({ existing = [], onCreated, onCancel }: { existing?: 
               <SignIn cta="Start free with my email" />
             )}
           </div>
-          {!signedIn && (
-            <details className="more" style={{ marginTop: "0.75rem" }}>
-              <summary>Use my own API key or a local model</summary>
-              <p className="muted small">You can use OpenAI, Anthropic, or a model on your own computer (Ollama).</p>
-              <AISettings />
-            </details>
-          )}
           {!signedIn && <p className="muted small">Without AI, the app has no ready words: you type each word yourself.</p>}
         </section>
       )}
       <div className="row" style={{ marginTop: "1.5rem" }}>
         <button className="primary wide" onClick={() => void create()}>
-          {adding ? `Add ${langName}` : "Start learning"}
+          Start learning
         </button>
-        {onCancel && (
-          <button className="ghost" onClick={onCancel}>
-            Cancel
-          </button>
-        )}
       </div>
     </div>
   );

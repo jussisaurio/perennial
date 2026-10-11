@@ -1,14 +1,9 @@
-// Op-log sync. Push unsent ops, pull everything after our cursor, repeat until
-// caught up. Reviews are append-only and content is per-field LWW, so there is
+// Op-log sync for signed-in accounts. Push unsent ops, pull everything after
+// our cursor, repeat until caught up. Reviews are append-only and content is per-field LWW, so there is
 // nothing to resolve by hand and never a "full sync".
 
 import { getSession, onAccountChange } from "../hosted/api";
 import { applyRemote, db, getMeta, recompute, recomputeCourse, setLocalChangeListener, setMeta, type Op } from "./db";
-
-export interface SyncConfig {
-  url: string; // e.g. https://perennial.example.com
-  key: string; // shared secret identifying this learner's data
-}
 
 export type SyncStatus = { state: "off" } | { state: "idle"; at: number } | { state: "syncing" } | { state: "error"; message: string };
 
@@ -24,48 +19,19 @@ export const onStatus = (fn: (s: SyncStatus) => void) => {
   return () => void listeners.delete(fn);
 };
 
-export const getSyncConfig = () => getMeta<SyncConfig | null>("sync", null);
-
 /**
- * Moving to another sync space (a new code, or signing in to an account) means
- * everything local must be sent there too: the server ignores duplicates.
+ * Signing in to an account means everything local must be sent there too:
+ * the server ignores duplicates.
  */
 export async function resetSyncState(): Promise<void> {
   await db.ops.toCollection().modify({ sent: 0 });
   await setMeta("cursor", 0);
 }
 
-export async function setSyncConfig(cfg: SyncConfig | null): Promise<void> {
-  await setMeta("sync", cfg);
-  await resetSyncState();
-  if (cfg || (await getSession())) void sync();
-  else setStatus({ state: "off" });
-}
-
-/** Signed in: sync under the account. Otherwise use the sync code, if any. */
+/** Data leaves the device only for a signed-in account. */
 async function target(): Promise<{ url: string; auth: string } | null> {
   const session = await getSession();
-  if (session) return { url: location.origin, auth: `Session ${session.token}` };
-  const cfg = await getSyncConfig();
-  return cfg ? { url: cfg.url, auth: `Bearer ${cfg.key}` } : null;
-}
-
-/** Erase everything this sync code stored on the server, then stop syncing. */
-export async function deleteSyncedData(): Promise<number> {
-  const cfg = await getSyncConfig();
-  if (!cfg) return 0;
-  const res = await fetch(`${cfg.url.replace(/\/$/, "")}/api/sync/delete`, { method: "POST", headers: { authorization: `Bearer ${cfg.key}` } });
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-  const { removed } = (await res.json()) as { removed: number };
-  await setSyncConfig(null);
-  return removed;
-}
-
-export function newSyncKey(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(15));
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  const chars = [...bytes].map((b) => alphabet[b % alphabet.length]).join("");
-  return chars.match(/.{5}/g)!.join("-");
+  return session ? { url: location.origin, auth: `Session ${session.token}` } : null;
 }
 
 const BATCH = 500;
@@ -121,7 +87,7 @@ export function startAutoSync(): void {
     }, wait);
   });
   setInterval(() => void sync(), 60_000);
-  // A newly linked device has nothing yet: check often until its courses arrive.
+  // A newly signed-in device has nothing yet: check often until its courses arrive.
   setInterval(() => {
     void (async () => {
       if ((await target()) && (await db.courses.count()) === 0) void sync();

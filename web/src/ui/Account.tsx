@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCachedMe, getSession, hostedMessage, onAccountChange, openBillingPortal, refreshMe, requestCode, resetDate, signOut, startCheckout, verifyCode, type Me } from "../hosted/api";
+import { getCachedMe, getSession, hostedMessage, onAccountChange, refreshMe, requestCode, resetDate, signOut, verifyCode, type Me } from "../hosted/api";
 import { CheckIcon } from "./icons";
 
 /** Current account state, kept fresh when anything signs in, out, or changes plan. */
@@ -111,67 +111,8 @@ export function Credits({ me }: { me: Me }) {
   );
 }
 
-export function UpgradeOffer({ me }: { me: Me }) {
-  const [error, setError] = useState("");
-  const [chosen, setChosen] = useState<"month" | "year" | null>(null);
-  const [busy, setBusy] = useState(false);
-  if (me.plan === "pro" || !me.billing) return null;
-  const price = chosen === "year" ? me.billing.yearly : me.billing.monthly;
-  const go = async () => {
-    if (!chosen) return;
-    setBusy(true);
-    setError("");
-    try {
-      await startCheckout(chosen);
-    } catch (e) {
-      setError(hostedMessage(e));
-      setBusy(false);
-    }
-  };
-  return (
-    <div className="upgrade">
-      <strong>Perennial Pro</strong>
-      <ul>
-        <li>{me.plans.pro.toLocaleString("en")} AI words a month for cards from your own texts</li>
-        <li>New example sentences for your words, made automatically</li>
-        <li>Your payment pays for the AI and keeps Perennial free of ads</li>
-      </ul>
-      {chosen ? (
-        <div className="confirm">
-          <p className="small">
-            <strong>{price}</strong>, renews every {chosen}. You pay on Stripe, a payment company. You can cancel at any time in Settings → Manage subscription.
-          </p>
-          <div className="row">
-            <button className="primary" disabled={busy} onClick={() => void go()}>
-              {busy ? "Opening Stripe…" : "Continue to payment"}
-            </button>
-            <button className="ghost" onClick={() => setChosen(null)}>
-              Back
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="row">
-          {me.billing.yearly && (
-            <button className="primary" onClick={() => setChosen("year")}>
-              Pro · {me.billing.yearly}
-            </button>
-          )}
-          {me.billing.monthly && (
-            <button className="secondary" onClick={() => setChosen("month")}>
-              {me.billing.monthly}
-            </button>
-          )}
-        </div>
-      )}
-      {error && <p className="error">{error}</p>}
-    </div>
-  );
-}
-
 export function AccountPanel() {
   const { signedIn, me } = useAccount();
-  const [error, setError] = useState("");
   if (signedIn === null) return null;
   if (!signedIn)
     return (
@@ -186,7 +127,7 @@ export function AccountPanel() {
         <CheckIcon size={18} />
         <div>
           <strong>{me?.email ?? "Signed in"}</strong>
-          <span className="muted small">{me?.plan === "pro" ? "Perennial Pro" : "Free plan"} · words sync on all your devices</span>
+          <span className="muted small">Your words sync on all your devices</span>
         </div>
         <button className="ghost" onClick={() => void signOut()} title="Your words stay on this device. Sign in again to sync them.">
           Sign out
@@ -194,15 +135,6 @@ export function AccountPanel() {
       </div>
       <p className="muted small">If you sign out, your words stay on this device. Sign in again to sync them.</p>
       {me && <Credits me={me} />}
-      {me && <UpgradeOffer me={me} />}
-      {me?.plan === "pro" && me.billing && (
-        <div className="row">
-          <button className="secondary" onClick={() => void openBillingPortal().catch((e) => setError(hostedMessage(e)))}>
-            Manage subscription
-          </button>
-        </div>
-      )}
-      {error && <p className="error">{error}</p>}
     </div>
   );
 }

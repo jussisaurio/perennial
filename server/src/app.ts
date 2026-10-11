@@ -41,18 +41,15 @@ export function createApp(config: Config, deps: { anthropic?: Anthropic; mailer?
     return !!o && typeof o.id === "string" && typeof o.hlc === "string" && typeof o.table === "string" && typeof o.rowId === "string";
   };
 
-  /** Signed-in users sync under their account; otherwise a shared sync code names the space. */
+  /** Data syncs only under a signed-in account. */
   function syncNamespace(req: Request): string | null {
     const user = auth.authenticate(req);
-    if (user) return `user:${user.id}`;
-    const key = req.headers.get("authorization")?.match(/^Bearer\s+(\S+)$/i)?.[1] ?? "";
-    if (key.length < 12) return null;
-    return new Bun.CryptoHasher("sha256").update(`perennial:${key}`).digest("hex");
+    return user ? `user:${user.id}` : null;
   }
 
   async function handleSync(req: Request): Promise<Response> {
     const ns = syncNamespace(req);
-    if (!ns) return fail(401, "missing or short sync key");
+    if (!ns) return fail(401, "sign in to sync");
     if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY) return fail(413, "body too large");
     const body = (await req.json().catch(() => null)) as { cursor?: number; ops?: unknown[] } | null;
     if (!body || !Array.isArray(body.ops) || !body.ops.every(isOp)) return fail(400, "bad request");
@@ -104,16 +101,6 @@ export function createApp(config: Config, deps: { anthropic?: Anthropic; mailer?
     "/health": { GET: () => new Response("ok") },
     "/sync": { POST: handleSync },
     "/api/sync": { POST: handleSync },
-    "/api/sync/delete": {
-      // Without an account, the sync code is the only key to the data: let it erase it.
-      POST: (req) => {
-        const key = req.headers.get("authorization")?.match(/^Bearer\s+(\S+)$/i)?.[1] ?? "";
-        if (key.length < 12) return fail(401, "missing or short sync key");
-        const ns = new Bun.CryptoHasher("sha256").update(`perennial:${key}`).digest("hex");
-        const removed = db.query("DELETE FROM ops WHERE ns = ?").run(ns).changes;
-        return json({ ok: true, removed });
-      },
-    },
 
     "/api/auth/code": {
       POST: route(z.object({ email: z.string() }), async (_u, { email }) => {

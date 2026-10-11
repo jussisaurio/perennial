@@ -440,11 +440,6 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 .credits { display: grid; gap: 0.4rem; }
 .credits-bar { height: 6px; border-radius: 3px; background: var(--paper-2); overflow: hidden; max-width: 22rem; }
 .credits-bar div { height: 100%; background: linear-gradient(90deg, var(--leaf), var(--sun)); border-radius: 3px; transition: width 0.6s var(--ease); }
-.upgrade { background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 1rem 1.1rem; display: grid; gap: 0.6rem; box-shadow: var(--shadow); }
-.upgrade strong { font: 1.3rem/1.2 var(--display); font-weight: 400; }
-.upgrade ul { margin: 0; padding-left: 1.1rem; color: var(--ink-2); font-size: 0.92rem; display: grid; gap: 0.2rem; }
-.upgrade li::marker { color: var(--leaf); }
-.upgrade.compact { background: none; border: none; box-shadow: none; padding: 0; }
 .choice { display: grid; gap: 0.5rem; }
 .choice label { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.75rem 0.9rem; border: 1px solid var(--line); border-radius: 14px; background: var(--card); cursor: pointer; color: var(--ink); font-size: 0.95rem; }
 .choice label:has(input:checked) { border-color: var(--ink-2); box-shadow: 0 0 0 3px var(--sun-soft); }
@@ -473,7 +468,6 @@ button.undo:disabled { opacity: 0.35; }
 .progress-line p { margin: 0; }
 .progress-line { display: grid; gap: 0.2rem; }
 .credits-bar.empty { background: var(--persimmon-soft); }
-.upgrade .confirm { display: grid; gap: 0.5rem; padding: 0.75rem; border-radius: 12px; background: var(--paper-2); }
 button.tok { font: inherit; color: inherit; padding: 0.08em 0.12em; border: none; border-radius: 5px; background: none; display: inline; line-height: inherit; gap: 0; }
 button.tok:active { transform: none; }
 .tok.picked, .legend.picked { background: var(--leaf); color: #fff; }

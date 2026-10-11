@@ -1,9 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useState, type ReactNode } from "react";
-import { aiMode, canRefreshInBackground } from "./ai/backend";
-import { refreshMe } from "./hosted/api";
-import { ensurePool, refreshExamples } from "./content/builder";
-import { language } from "./content/languages";
+import { aiMode } from "./ai/backend";
+import { ensurePool } from "./content/builder";
 import { db, getMeta, setMeta } from "./db/db";
 import { Home } from "./ui/Home";
 import { FlowerIcon, GearIcon, HomeIcon, ListIcon, SproutMark } from "./ui/icons";
@@ -13,8 +11,8 @@ import { SessionScreen } from "./ui/Session";
 import { SettingsScreen } from "./ui/Settings";
 import { WordsScreen } from "./ui/Words";
 
-type Route = "/today" | "/garden" | "/words" | "/words/add" | "/settings" | "/session" | "/new-language";
-const ROUTES: Route[] = ["/today", "/garden", "/words", "/words/add", "/settings", "/session", "/new-language"];
+type Route = "/today" | "/garden" | "/words" | "/words/add" | "/settings" | "/session";
+const ROUTES: Route[] = ["/today", "/garden", "/words", "/words/add", "/settings", "/session"];
 
 const TABS: { route: Route; label: string; icon: ReactNode }[] = [
   { route: "/today", label: "Today", icon: <HomeIcon /> },
@@ -50,31 +48,9 @@ export default function App() {
   const [route, go] = useRoute();
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
 
-  const [notice, setNotice] = useState<string | null>(null);
   useEffect(() => {
     void getMeta<string | null>("course", null).then(setCourseId);
-    // Back from Stripe Checkout. The webhook can take a moment, so poll briefly.
-    const billing = new URLSearchParams(location.search).get("billing");
-    if (billing) {
-      history.replaceState(null, "", location.pathname + location.hash);
-      if (billing === "success") {
-        setNotice("Thank you! Turning on Pro…");
-        void (async () => {
-          for (let i = 0; i < 10; i++) {
-            const me = await refreshMe().catch(() => null);
-            if (me?.plan === "pro") return setNotice("Pro is on. Thank you for supporting Perennial.");
-            await new Promise((r) => setTimeout(r, 1500));
-          }
-          setNotice("Payment received. Pro turns on in a few minutes.");
-        })();
-      }
-    }
   }, []);
-  useEffect(() => {
-    if (!notice || notice.endsWith("…")) return;
-    const t = setTimeout(() => setNotice(null), 6000);
-    return () => clearTimeout(t);
-  }, [notice]);
   const selectCourse = (id: string) => {
     setCourseId(id);
     void setMeta("course", id);
@@ -83,15 +59,13 @@ export default function App() {
   if (!courses) return null;
   const course = courses.find((c) => c.id === courseId) ?? courses[0];
 
-  if (!course || route === "/new-language")
+  if (!course)
     return (
       <Onboarding
-        existing={courses}
         onCreated={(id) => {
           selectCourse(id);
           go("/today", { replace: true });
         }}
-        onCancel={course ? () => history.back() : undefined}
       />
     );
 
@@ -106,7 +80,6 @@ export default function App() {
           void (async () => {
             if (!(await aiMode())) return;
             await ensurePool(course);
-            if (await canRefreshInBackground()) await refreshExamples(course);
           })().catch(() => {});
         }}
       />
@@ -130,16 +103,6 @@ export default function App() {
         <span className="wordmark">
           <SproutMark /> perennial
         </span>
-        {courses.length > 1 && (
-          <select className="course-pick" aria-label="Language" value={course.id} onChange={(e) => (e.target.value === "+" ? go("/new-language") : selectCourse(e.target.value))}>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {language(c.lang).name}
-              </option>
-            ))}
-            <option value="+">+ Add a language</option>
-          </select>
-        )}
         <div className="tabs" role="tablist">
           {TABS.map((t) => {
             const on = route === t.route || (t.route === "/words" && route === "/words/add");
@@ -164,12 +127,7 @@ export default function App() {
         />
       )}
       {(route === "/words" || route === "/words/add") && <WordsScreen course={course} adding={route === "/words/add"} onAdd={() => go("/words/add")} onBack={() => go("/words")} />}
-      {route === "/settings" && <SettingsScreen course={course} onAddLanguage={() => go("/new-language")} />}
-      {notice && (
-        <div className="toast" role="status">
-          {notice}
-        </div>
-      )}
+      {route === "/settings" && <SettingsScreen course={course} />}
     </div>
   );
 }

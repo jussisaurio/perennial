@@ -89,16 +89,6 @@ export async function deleteAccount() {
   await clearSession();
 }
 
-export async function startCheckout(interval: "month" | "year") {
-  const { url } = await api<{ url: string }>("/billing/checkout", { interval });
-  location.assign(url);
-}
-
-export async function openBillingPortal() {
-  const { url } = await api<{ url: string }>("/billing/portal", {});
-  location.assign(url);
-}
-
 const formatDate = (iso: string) => {
   const d = new Date(`${iso}T00:00:00`);
   return isNaN(d.getTime()) ? "next month" : d.toLocaleDateString("en", { month: "long", day: "numeric" });

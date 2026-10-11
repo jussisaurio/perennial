@@ -2,8 +2,8 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useEffect, useMemo, useState } from "react";
 import { aiMode, type AIMode } from "../ai/backend";
 import { hostedMessage, refreshMe, resetDate } from "../hosted/api";
-import { UpgradeOffer, useAccount } from "./Account";
-import { addManual, addMined } from "../content/builder";
+import { useAccount } from "./Account";
+import { addMined } from "../content/builder";
 import { language } from "../content/languages";
 import { formKey, tokenize } from "../content/text";
 import { db, stableId, writeMany } from "../db/db";
@@ -136,106 +136,12 @@ function MineText({ course, mode }: { course: Course; mode: AIMode | null }) {
                 {left > 0 ? `Select ${picked.size - left} fewer, ` : ""}
                 wait until {resetDate()}, type words yourself below (free), or use your own API key in Settings.
               </p>
-              {me && <UpgradeOffer me={me} />}
             </div>
           )}
           {!mode && <p className="muted small">To add words from a text, sign in or connect an AI model in Settings.</p>}
         </>
       )}
     </section>
-  );
-}
-
-function ManualAdd({ course }: { course: Course }) {
-  const [w, setW] = useState({ lemma: "", gloss: "", sentence: "", translation: "" });
-  const [msg, setMsg] = useState("");
-  return (
-    <section>
-      <h2>Type a word</h2>
-      <form
-        className="form"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (!w.lemma || !w.gloss) return;
-          await addManual(course, w);
-          setMsg(`Added “${w.lemma}”.`);
-          setW({ lemma: "", gloss: "", sentence: "", translation: "" });
-        }}
-      >
-        <div className="row">
-          <input placeholder="word" value={w.lemma} onChange={(e) => setW({ ...w, lemma: e.target.value })} />
-          <input placeholder="meaning" value={w.gloss} onChange={(e) => setW({ ...w, gloss: e.target.value })} />
-        </div>
-        <details className="more">
-          <summary>Add an example sentence</summary>
-          <div className="form">
-            <input placeholder="example sentence" value={w.sentence} onChange={(e) => setW({ ...w, sentence: e.target.value })} />
-            <input placeholder="translation of the sentence" value={w.translation} onChange={(e) => setW({ ...w, translation: e.target.value })} />
-          </div>
-        </details>
-        <div className="row">
-          <button className="primary" type="submit" disabled={!w.lemma || !w.gloss}>
-            Add
-          </button>
-          <span className="muted small">{msg}</span>
-        </div>
-      </form>
-    </section>
-  );
-}
-
-function ImportApkg({ course }: { course: Course }) {
-  const [state, setState] = useState<string>("");
-  const [preview, setPreview] = useState<{ front: string; back: string; tags: string }[] | null>(null);
-  const [existing, setExisting] = useState(0);
-  return (
-    <details className="more">
-      <summary>Import an Anki deck</summary>
-      <p className="muted small">The first field of each card becomes the word, and the second field becomes the meaning. Your Anki review history is not imported. Words that are already in your course are not changed.</p>
-      <input
-        type="file"
-        accept=".apkg,.colpkg"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          setState("Reading…");
-          try {
-            const { readApkg, existingNotes } = await import("../content/apkg");
-            const { notes } = await readApkg(file);
-            setPreview(notes);
-            const dup = (await existingNotes(course, notes)).size;
-            setExisting(dup);
-            setState(`Found ${notes.length} cards.${dup ? ` ${dup} of them are already in your course and will be skipped.` : ""}`);
-          } catch (err) {
-            setState(`Could not read this file: ${err instanceof Error ? err.message : err}`);
-          }
-        }}
-      />
-      {preview && (
-        <>
-          <ul className="examples">
-            {preview.slice(0, 5).map((n, i) => (
-              <li key={i}>
-                <strong>{n.front}</strong> <span className="muted">— {n.back}</span>
-              </li>
-            ))}
-          </ul>
-          <button
-            className="primary"
-            disabled={preview.length === existing}
-            onClick={async () => {
-              const { importNotes } = await import("../content/apkg");
-              const r = await importNotes(course, preview);
-              setPreview(null);
-              setState(`Imported ${r.added} words.${r.skipped ? ` Skipped ${r.skipped} that were already in your course.` : ""}`);
-            }}
-          >
-            Import {preview.length - existing} new {preview.length - existing === 1 ? "word" : "words"}
-          </button>
-        </>
-      )}
-      <span className="muted small"> {state}</span>
-    </details>
   );
 }
 
@@ -251,8 +157,6 @@ export function AddScreen({ course, onBack }: { course: Course; onBack: () => vo
       </button>
       <h1>Add words</h1>
       <MineText course={course} mode={mode} />
-      <ManualAdd course={course} />
-      <ImportApkg course={course} />
     </div>
   );
 }

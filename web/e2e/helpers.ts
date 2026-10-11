@@ -1,5 +1,4 @@
 import { expect, type Page } from "@playwright/test";
-import { MOCK_LLM_URL } from "../playwright.config";
 
 /** Read a whole IndexedDB object store from the app's database. */
 export function store<T = Record<string, unknown>>(page: Page, name: string): Promise<T[]> {
@@ -18,24 +17,24 @@ export function store<T = Record<string, unknown>>(page: Page, name: string): Pr
   );
 }
 
-/** Fill the AI form with the mock provider and connect. */
-export async function connectMockAI(page: Page) {
-  // The own-key form sits behind a disclosure, which renders after an async check.
-  const own = page.getByText("Use my own API key or a local model");
-  const service = page.getByLabel("Service");
-  await expect(own.or(service).first()).toBeVisible();
-  if (!(await service.isVisible())) await own.click();
-  await page.getByLabel("Service").selectOption("Ollama (local)");
-  await page.getByText("Address and format").click();
-  await page.getByLabel("Address (URL)").fill(MOCK_LLM_URL);
-  await page.getByRole("button", { name: "Connect" }).click();
-  await expect(page.getByText("Connected", { exact: true })).toBeVisible();
+export const newEmail = (prefix = "learner") => `${prefix}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+
+/** Sign in with an email code, read from the dev server's outbox. */
+export async function signIn(page: Page, address: string, cta: string) {
+  await page.getByLabel("Email").fill(address);
+  await page.getByRole("button", { name: cta }).click();
+  await expect(page.getByText("We sent a 6-digit code")).toBeVisible();
+  const { code } = await (await page.request.get(`/api/dev/outbox?email=${encodeURIComponent(address)}`)).json();
+  await page.getByLabel("Code", { exact: true }).fill(code);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 
 /** First-run onboarding through to a home screen with words ready. */
-export async function startCourse(page: Page) {
+export async function startCourse(page: Page, address = newEmail()) {
   await page.goto("/");
-  await connectMockAI(page);
+  // Perennial AI (the mock model behind the dev server) prepares the words.
+  await signIn(page, address, "Start free with my email");
+  await expect(page.getByText(`Signed in as ${address}`)).toBeVisible();
   await page.getByRole("button", { name: "Start learning" }).click();
   await expect(page.getByText(/new words are ready/)).toBeVisible();
 }

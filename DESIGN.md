@@ -47,7 +47,7 @@ web/ (Vite + React + TS PWA)
   content/   frequency lists, tokenizer, course builder, text mining
   ui/        screens
 server/ (Bun + bun:sqlite)
-  POST /sync — push ops, pull ops since cursor. Namespaced by sync key.
+  POST /api/sync — push ops, pull ops since cursor. Namespaced by account.
 ```
 
 ### Data model
@@ -70,14 +70,15 @@ ops in arrival order with an auto-increment sequence. Applying an op:
 - `reviews` — insert if new (ids are unique; append-only).
 - other tables — per-field last-writer-wins by HLC.
 
-Identity is a random **sync key** shown as a code. Enter it on another device to
-link the two. There are no accounts.
+Signing in is the sync: data leaves the device only for a signed-in account.
+(Planned: replace the hand-rolled op log with an established local-first sync
+library, with Postgres on the server.)
 
 ### AI
 
-`ai/llm.ts` speaks two dialects: OpenAI chat completions (OpenAI, OpenRouter,
-Groq, Together, Ollama, LM Studio…) and Anthropic messages. The user supplies a
-base URL, model and key. All prompts request JSON, and responses are validated.
+Only the server talks to a model (Perennial AI, via the Anthropic SDK with
+structured outputs). The prompts live in `server/src/prompts.ts`. The client
+calls three endpoints: course batch, words from a text, and new sentences.
 
 ## The garden
 

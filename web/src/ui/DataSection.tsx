@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { db, write } from "../db/db";
+import { db } from "../db/db";
 import { deleteAccount, hostedMessage } from "../hosted/api";
 import { language } from "../content/languages";
-import type { Course } from "../model";
 import { useAccount } from "./Account";
 
 function download(name: string, type: string, body: string) {
@@ -35,30 +34,6 @@ async function exportCSV() {
   const rows = [["language", "word", "meaning", "part of speech", "notes", "reviews", "status"]];
   for (const l of lexemes) if (!l.deleted && l.status !== "ignored") rows.push([lang.get(l.courseId) ?? "", l.lemma, l.gloss, l.pos ?? "", l.notes ?? "", String(count.get(l.id) ?? 0), l.status ?? "active"]);
   download(`perennial-words-${stamp()}.csv`, "text/csv", rows.map((r) => r.map(csvCell).join(",")).join("\n"));
-}
-
-function RemoveCourse({ course }: { course: Course }) {
-  const name = language(course.lang).name;
-  const [typed, setTyped] = useState("");
-  return (
-    <details className="more danger">
-      <summary>Delete the {name} course</summary>
-      <div className="form">
-        <p className="small">
-          This deletes all your {name} words and progress on all your devices. <strong>You cannot undo this.</strong> Download your data first if you want to keep a copy.
-        </p>
-        <label>
-          Type <strong>{name}</strong> to confirm
-          <input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
-        </label>
-        <div className="row">
-          <button className="fail" disabled={typed.trim().toLowerCase() !== name.toLowerCase()} onClick={() => void write<Course>("courses", { id: course.id, deleted: Date.now() })}>
-            Delete the {name} course
-          </button>
-        </div>
-      </div>
-    </details>
-  );
 }
 
 function DeleteAccount() {
@@ -96,12 +71,12 @@ function DeleteAccount() {
   );
 }
 
-export function DataSection({ course }: { course: Course | undefined }) {
+export function DataSection() {
   const { signedIn } = useAccount();
   return (
     <div className="form">
       <p className="muted small">
-        Your words and progress are stored in this browser. {signedIn ? "Because you are signed in, a copy is also kept on the Perennial server to sync your devices." : "Nothing leaves this device unless you turn on sync."} When the AI makes cards, the words and sentences are sent to the AI service. Word lists come from FrequencyWords (film and TV subtitles).
+        Your words and progress are stored in this browser. {signedIn ? "Because you are signed in, a copy is also kept on the Perennial server to sync your devices." : "Nothing leaves this device until you sign in."} When the AI makes cards, the words and sentences are sent to the AI service. Word lists come from FrequencyWords (film and TV subtitles).
       </p>
       <div className="row">
         <button className="secondary" onClick={() => void exportJSON()}>
@@ -111,7 +86,6 @@ export function DataSection({ course }: { course: Course | undefined }) {
           Download my words (CSV)
         </button>
       </div>
-      {course && <RemoveCourse course={course} />}
       {signedIn && <DeleteAccount />}
     </div>
   );

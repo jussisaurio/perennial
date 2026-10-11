@@ -2,7 +2,7 @@
 // sentences. Runs in the background to keep a small pool of words ready.
 
 import { generateCourseBatch, mineWords, moreExamples, type Author } from "../ai/backend";
-import type { GenLexeme } from "../ai/prompts";
+import type { GenLexeme } from "../ai/backend";
 import { db, stableId, uid, writeMany } from "../db/db";
 import type { Course, Example, Lexeme } from "../model";
 import { language } from "./languages";
@@ -134,8 +134,7 @@ export async function buildNextBatch(course: Course): Promise<number> {
     if (!covered.has(f)) forms.push(f);
   }
   if (!forms.length) return 0;
-  const known = await knownLemmas(course.id);
-  const { words, next, by } = await generateCourseBatch(course, { forms, cursor: course.freqCursor ?? 0, next: cursor }, { known, existing: existing.map((l) => l.lemma) });
+  const { words, next, by } = await generateCourseBatch(course, { forms, cursor: course.freqCursor ?? 0, next: cursor });
   const saved = await saveGenerated(course, words, () => ({}), "llm", rankOf, by);
   await writeMany<Course>("courses", [{ id: course.id, freqCursor: next }]);
   return saved.length;
@@ -245,13 +244,6 @@ export async function undoRewrite(r: Rewrite): Promise<void> {
   await writeMany<Example>("examples", [...r.added.map((id) => ({ id, deleted: Date.now() })), ...r.removed.map((id) => ({ id, deleted: 0 }))]);
 }
 
-/** Words whose AI sentences were written by a model on the learner's computer. */
-export async function wordsWithLocalSentences(courseId: string): Promise<string[]> {
-  const ids = new Set<string>();
-  for (const e of await db.examples.where("courseId").equals(courseId).toArray()) if (!e.deleted && e.origin === "local") ids.add(e.lexemeId);
-  return [...ids];
-}
-
 /** Words picked from pasted text: their original sentence becomes the first example. */
 export async function addMined(course: Course, items: { form: string; sentence: string }[]): Promise<Lexeme[]> {
   const freq = await db.freq.get(course.lang);
@@ -261,14 +253,3 @@ export async function addMined(course: Course, items: { form: string; sentence: 
   return saveGenerated(course, words, () => ({ picked: now }), "mined", rankOf, by);
 }
 
-/** Manual entry when no AI provider is configured. */
-export async function addManual(course: Course, w: { lemma: string; gloss: string; sentence?: string; translation?: string }): Promise<void> {
-  const gen: GenLexeme = {
-    lemma: w.lemma,
-    gloss: w.gloss,
-    pos: "",
-    forms: [w.lemma],
-    examples: w.sentence ? [{ text: w.sentence, translation: w.translation ?? "", cloze: "" }] : [],
-  };
-  await saveGenerated(course, [gen], () => ({ picked: Date.now() }), "manual");
-}
