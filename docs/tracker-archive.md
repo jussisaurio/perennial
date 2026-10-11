@@ -1,7 +1,11 @@
-# Tracker
+# Tracker archive
 
-Every question, suggestion, and piece of food for thought from Jussi, with its
-status. Updated as items are addressed.
+**Archived on 2026-10-11.** New questions, suggestions and bugs are GitHub
+issues: https://github.com/jussisaurio/perennial/issues. The items that were
+still open here became issues #1–#12.
+
+This file keeps the history: every question and suggestion from the first
+weeks of the project, and what was done about it.
 
 Status: **done** · **in progress** · **open** · **answered** (question, no code change)
 
