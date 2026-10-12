@@ -25,6 +25,8 @@ export default defineConfig({
       }),
     VitePWA({
       registerType: "autoUpdate",
+      // main.tsx registers it (src/serviceWorker.ts), so a refused registration is handled.
+      injectRegister: false,
       manifest: {
         name: "Perennial",
         short_name: "Perennial",
