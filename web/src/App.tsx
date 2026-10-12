@@ -263,10 +263,10 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
             // Same daily minutes as the course they have; changeable in Settings.
             // Refused (by the server, or another tab is the writer): the new course is
             // rolled back, so go back to the one they came from and say why.
-            // Counted once the server has it (offline, that is when the queue sends it).
-            const minutes = course.minutes;
-            void saveCourse(store, l, { minutes }).then(
-              () => track("course_started", { lang: l, minutes, another: true }),
+            // Counted once the server has it (offline: when the queue sends it). A tab closed
+            // before then loses the event, though the course is still sent: a slight undercount.
+            void saveCourse(store, l, { minutes: course.minutes }).then(
+              () => track("course_started", { lang: l, minutes: course.minutes, another: true }),
               (e) => {
                 console.error("course not saved", e);
                 choose(previous);
