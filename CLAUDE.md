@@ -5,7 +5,8 @@ How we write and merge code here. It applies to every session and every agent. T
 ## Code standard
 
 - **Fix the cause, not the symptom.** If you don't know why something fails, find out before you change code. Reproduce it first, in the user's real setup: the same browser, timezone, clock and data.
-- **No silent fallbacks.** A default, `??`, `||`, `catch {}`, retry or timeout must have a reason, written in a short comment. Do not hide a case that "should not happen": let it fail loudly, or handle it on purpose. Remember that `"" ?? x` is `""`.
+- **No silent fallbacks.** A default, `??`, `||`, `catch {}`, retry or timeout must have a reason, written in a short comment. Do not hide a case that "should not happen". Let it fail loudly, or handle it on purpose. `??` keeps an empty string and `||` replaces it: pick the one you mean.
+- **Do not silence the checks.** No `@ts-ignore`, `as any`, lint-disable comments, `test.skip` or loosened assertions, unless a short comment says why the check is wrong here. Reviewers flag each new one.
 - **No speculative code.** Handle only the cases that exist. No options, flags, layers or "just in case" timers for situations nobody has seen.
 - **One way to do each thing.** Before you add a helper, search for one that already exists. A constant or rule lives in one place.
 - **Delete, don't keep.** No commented-out code, unused exports, or dead branches. Git keeps the history.
@@ -16,26 +17,29 @@ How we write and merge code here. It applies to every session and every agent. T
 
 - A test for a fix must **fail without the fix**. Run it against the old code once to check.
 - Test behaviour, not the code's own structure. A test that passes whether or not the bug exists is deleted, not kept as "coverage".
-- **A failing CI test is never just re-run.** Find the cause (read the log, check whether the retry failed the same way, reproduce locally) and fix it in its own PR.
-- Tests that depend on time pin the clock (`page.clock.setFixedTime`); tests that depend on layout pin the viewport.
+- **A failing CI test is never just re-run.** Find the cause: read the log, check if a retry fails the same way, reproduce it locally. If this PR caused it, fix it here. If it is an older flaky test, fix it in a separate PR first. Then start `scripts/merge-when-green.sh` again.
+- Tests that depend on time pin the clock: `page.clock.setFixedTime` in e2e, and a fixed `now` passed in for unit tests. Tests that depend on layout pin the viewport.
 
 ## Before merge: an independent review
 
-Every PR gets a review from a fresh agent that did not write the code. It gets the diff (`gh pr diff <n>`) and this file. It reports must-fix and optional findings with file:line and a failing scenario. The author fixes each finding, or writes in the PR why not.
+Every PR gets a review from a fresh agent that did not write the code. It gets the diff (`gh pr diff <n>`), the linked issue and this file. It reports must-fix and optional findings with file:line and a failing scenario. The author fixes each finding, or writes in the PR why not. The PR description ends with `Reviewed: <depth>, <n> must-fix fixed, <n> declined (reasons above)`.
 
 How deep, by risk:
 
 | PR touches | Review |
 |---|---|
 | Docs or tests only | One quick pass |
-| App code (web/, server/) | A normal review: correctness, then the code standard above |
+| App code or tooling (web/, server/, scripts/) | A normal review: correctness, then the code standard above |
+| CI, Docker, deploy (.github/, Dockerfile, docker-compose.yml) | A deep review |
 | Auth, sync, writes, data model, migrations, security, money (AI spend) | A deep review, and a second agent checks each finding before it is acted on |
+
+Deck content (decks/) also follows the proofreader process in docs/decks.md.
 
 Then merge when CI is green: `scripts/merge-when-green.sh <pr>` in the background (add `--git` for PRs that touch .github/workflows). Do not watch CI in the foreground.
 
-## Every week or so: a cleanup sweep
+## Every week: a cleanup sweep
 
-Per-PR reviews catch local problems, not slow drift across files. Once a week, or after a busy run of features, agents sweep the code (split by directory) for duplication, dead code, needless fallbacks and tangled modules. These are refactors with no behaviour change, in small PRs, reviewed like any other.
+Per-PR reviews catch local problems, not slow drift across files. Once a week, open a P2 issue "Cleanup sweep <date>" and run it. Agents split the code by directory and look for duplication, dead code, needless fallbacks and tangled modules. These are refactors with no behaviour change, in small PRs, reviewed like any other.
 
 ## Product rules that code reviews also check
 
