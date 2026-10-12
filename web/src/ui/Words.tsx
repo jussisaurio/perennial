@@ -10,7 +10,7 @@ import { useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
 import { AddScreen } from "./Add";
-import { StageGlyph } from "./Garden";
+import { StageGlyph } from "./StageGlyph";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
 import { recall, wordState, type WordState } from "./stats";
