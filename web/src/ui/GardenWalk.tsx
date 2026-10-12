@@ -187,8 +187,10 @@ export function GardenWalk({
       scene.current = s;
       // Dev builds only: the scene, for screenshot scripts.
       if (import.meta.env.DEV) (window as unknown as { __garden: unknown }).__garden = s;
-      s.setTime(time);
-      s.setDetail(detail);
+      // The current choices, not the ones from when loading began: the scene
+      // module loads asynchronously, and the viewer may have changed them since.
+      s.setTime(timeNow.current);
+      s.setDetail(detailNow.current);
       const r = el.getBoundingClientRect();
       s.resize(r.width, r.height);
       ro.observe(el);
@@ -214,8 +216,16 @@ export function GardenWalk({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  useEffect(() => scene.current?.setTime(time), [time]);
-  useEffect(() => scene.current?.setDetail(detail), [detail]);
+  const timeNow = useRef(time);
+  const detailNow = useRef(detail);
+  useEffect(() => {
+    timeNow.current = time;
+    scene.current?.setTime(time);
+  }, [time]);
+  useEffect(() => {
+    detailNow.current = detail;
+    scene.current?.setDetail(detail);
+  }, [detail]);
 
   // If the viewer never chose a quality and the garden runs slowly, switch to low quality once.
   useEffect(() => {

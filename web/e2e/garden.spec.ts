@@ -66,6 +66,9 @@ test("visitors: the snail and the cat in the 2D strip say their word; they are n
 });
 
 test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known word", async ({ page }) => {
+  // Midday, so the walk opens by day and the switch to evening happens while it may
+  // still be loading (a time chosen during loading used to be lost: no frog by dusk).
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
