@@ -102,9 +102,11 @@ test("adding many AI words: a batch that fails after others were saved says what
   // The count is unknown (so nothing blocks); the first batch is answered, the second is busy.
   await page.route("**/api/me", (route) => route.fulfill({ status: 500, body: "" }));
   let calls = 0;
+  const sent: number[] = [];
   await page.route("**/api/ai/mine", async (route) => {
-    if (++calls > 1) return route.fulfill({ status: 503, json: { error: "busy" } });
     const { items } = route.request().postDataJSON() as { items: { form: string; sentence: string }[] };
+    sent.push(items.length);
+    if (++calls === 2) return route.fulfill({ status: 503, json: { error: "busy" } });
     const words = items.map(({ form, sentence }) => ({ lemma: form, gloss: "a test word", pos: "noun", forms: [form], examples: [{ text: sentence, translation: "x", cloze: form }] }));
     await route.fulfill({ json: { words, model: "mock", credits: { used: items.length, limit: 100, left: 100 - items.length } } });
   });
@@ -115,6 +117,9 @@ test("adding many AI words: a batch that fails after others were saved says what
   await page.getByRole("button", { name: /Learn 16 words · uses 16 AI words/ }).click();
   await expect(page.getByText(/Added 15 words \(marked ✓\)\. The rest could not be added: Perennial AI is very busy now/)).toBeVisible();
   await expectServerRows(page, "user_word", 15);
-  // Only the one that failed is still selected.
-  await expect(page.getByRole("button", { name: /Learn 1 word · uses 1 AI word/ })).toBeVisible();
+  // Only the one that failed is still selected, and trying again sends only it.
+  await page.getByRole("button", { name: /Learn 1 word · uses 1 AI word/ }).click();
+  await expect(page.getByText(/Added 1 word \(marked ✓\)/)).toBeVisible();
+  expect(sent).toEqual([15, 1, 1]);
+  await expectServerRows(page, "user_word", 16);
 });

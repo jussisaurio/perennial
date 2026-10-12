@@ -110,6 +110,8 @@ function MineText({ learner }: { learner: Learner }) {
       if (!done.length) setResult(`Could not add the words: ${apiMessage(e)}`);
       else {
         // Some were saved: unselect them and say so, so trying again sends only the rest.
+        const fromCourse = done.filter((f) => inCourse.includes(f)).length;
+        track("words_added", { fromCourse, withAI: done.length - fromCourse, partial: true });
         setPicked((p) => new Map([...p].filter(([form]) => !done.includes(form))));
         setResult(`Added ${done.length} ${done.length === 1 ? "word" : "words"} (marked ✓). The rest could not be added: ${apiMessage(e)}`);
       }
