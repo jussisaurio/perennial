@@ -36,6 +36,20 @@ test("start a second language from the top bar, switch back, and nothing new is 
   await expect(page.locator(".course-switch-button")).toHaveText(/Spanish/);
 });
 
+test("a second language the server refuses: the learner is told, and stays where they were", async ({ page }) => {
+  await startCourse(page);
+  // A permanent refusal (422), as from a server that does not know the language yet.
+  await page.route("**/api/write", (route) =>
+    route.request().postData()?.includes("course.upsert") ? route.fulfill({ status: 422, json: { error: "invalid" } }) : route.fallback(),
+  );
+  const switcher = page.locator(".course-switch-button");
+  await switcher.click();
+  await page.getByRole("menuitem", { name: /German/ }).click();
+  await page.getByRole("button", { name: "Start German" }).click();
+  await expect(page.getByRole("alert")).toHaveText("Could not start German. Please try again later.");
+  await expect(switcher).toHaveText(/Spanish/);
+});
+
 test("the language menu closes on Escape and on a click outside", async ({ page }) => {
   await startCourse(page);
   const switcher = page.locator(".course-switch-button");

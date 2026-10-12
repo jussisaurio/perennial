@@ -3,6 +3,7 @@ import { signOut, useUser } from "./data/auth";
 import { identify, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useStore } from "./data/learner";
 import { cleanUpForgotten } from "./data/device";
+import { language } from "./content/languages";
 import { reloadNeeded } from "./data/http";
 import { createStore, type Store } from "./data/store";
 import { Home } from "./ui/Home";
@@ -182,6 +183,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
   const [sessionExtra, setSessionExtra] = useState(false);
+  const [startError, setStartError] = useState("");
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
   const store = useStore();
   const choose = (lang: string) => {
@@ -233,12 +235,19 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           courses={courses}
           current={lang}
           onSwitch={(l) => {
+            setStartError("");
             choose(l);
             go("/today");
           }}
           onStart={(l) => {
+            setStartError("");
             // Same daily minutes as the course they have; changeable in Settings.
-            void saveCourse(store, l, { minutes: course.minutes }).catch(() => {});
+            // Refused (by the server, or another tab writes): the new course is
+            // rolled back and the old one shows again, so say why.
+            void saveCourse(store, l, { minutes: course.minutes }).catch((e) => {
+              console.error("course not saved", e);
+              setStartError(`Could not start ${language(l).name}. Please try again later.`);
+            });
             track("course_started", { lang: l, minutes: course.minutes, another: true });
             choose(l);
             go("/today");
@@ -256,6 +265,11 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           })}
         </div>
       </nav>
+      {startError && (
+        <p className="error" role="alert">
+          {startError}
+        </p>
+      )}
       {route === "/today" && (
         <Home
           lang={lang}
