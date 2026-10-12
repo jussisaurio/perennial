@@ -8,7 +8,7 @@ import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, type VisitorId, type VisitorView } from "./visitors";
-import { SceneVisitors } from "./sceneVisitors";
+import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
 import { boardBox, DECOR_KINDS, pickScenery, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 
 export type TimeOfDay = "day" | "dusk" | "night";
@@ -284,6 +284,16 @@ interface BuildCtx {
   rand: () => number;
 }
 
+/** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */
+function signBoard(c: BuildCtx, tex: THREE.Texture, w: number, h: number): THREE.Group {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(tex)));
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(c.woodTex));
+  back.rotation.y = Math.PI;
+  g.add(back);
+  return g;
+}
+
 export class GardenScene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -472,7 +482,7 @@ export class GardenScene {
       // Just outside the front-left corner, turned toward the path, so it never hides a plant.
       const sx = bed.x - bed.w / 2 - 0.3;
       const sz = bed.z + bed.d / 2 + 0.3;
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.3), mat(signTex, { side: THREE.DoubleSide }));
+      const board = signBoard(c, signTex, 0.96, 0.3);
       board.position.set(sx, 0.78, sz);
       board.rotation.y = 0.5;
       this.scene.add(board);
@@ -654,7 +664,7 @@ export class GardenScene {
     if (this.visitors.list.some((v) => v.id === "cat")) signs.bench = { text: "Bench: taken" };
     const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
       const g = new THREE.Group();
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.48), mat(T.pixelTexture(T.notice(line.text)), { side: THREE.DoubleSide }));
+      const board = signBoard(c, T.pixelTexture(T.notice(line.text)), 1.2, 0.48);
       board.position.y = 0.95;
       if (line.upsideDown) board.rotation.z = Math.PI;
       g.add(board);
@@ -670,13 +680,13 @@ export class GardenScene {
       this.hitBoxes.push(boardBox(x, z, 1.2, 1.19, turn));
     };
     noticeBoard(signs.fence, L.gate.x, b.minZ + 0.25, 0);
-    noticeBoard(signs.bench, bench.position.x + 1.05, bench.position.z - 0.05, 0.35);
+    noticeBoard(signs.bench, bench.position.x + BENCH_SIGN.dx, bench.position.z + BENCH_SIGN.dz, 0.35);
     // Just outside the gate, facing in: the walk stops at the gateway, and the sign admits it.
     noticeBoard({ text: "Mind the invisible wall" }, L.gate.x, b.maxZ + 1.6, Math.PI);
     // The snail's finish line (where it set off), on a small board just inside the gate, facing the garden.
     if (this.visitors.list.some((v) => v.id === "snail")) {
       const g = new THREE.Group();
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.4), mat(T.pixelTexture(T.notice(SNAIL_SIGN)), { side: THREE.DoubleSide }));
+      const board = signBoard(c, T.pixelTexture(T.notice(SNAIL_SIGN)), 1.0, 0.4);
       board.position.y = 0.62;
       g.add(board);
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), mat(woodTex));
@@ -695,7 +705,7 @@ export class GardenScene {
     // Small stakes (#58, #61): one in an empty garden, and the first word's, forever, in front of its plant.
     const stake = (text: string, x: number, z: number, w: number, y: number, turn = 0) => {
       const g = new THREE.Group();
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.4), mat(T.pixelTexture(T.notice(text)), { side: THREE.DoubleSide }));
+      const board = signBoard(c, T.pixelTexture(T.notice(text)), w, w * 0.4);
       board.position.y = y;
       g.add(board);
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.04, y, 0.04), mat(woodTex));

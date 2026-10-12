@@ -42,6 +42,12 @@ export interface VisitorWorld {
   sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => THREE.Mesh;
 }
 
+/**
+ * Where the bench's notice board stands, from the bench (it turns 0.35 rad toward
+ * the bench). Far enough right that its 1.2 m board clears the 1.3 m bench.
+ */
+export const BENCH_SIGN = { dx: 1.45, dz: -0.05 };
+
 /** Where things are, for placing visitors: the bench, the lily pads and the lantern spots. */
 export interface VisitorSpots {
   bench: THREE.Vector3;
@@ -174,7 +180,7 @@ export class SceneVisitors {
           [b.maxX - 0.06, RAIL, (b.maxZ + first.z) / 2],
           [b.minX + 0.06, RAIL, first.z - 1],
         ];
-        if (!this.list.some((o) => o.id === "cat")) spots.push([bench.x + 1.05, 1.19, bench.z - 0.05]);
+        if (!this.list.some((o) => o.id === "cat")) spots.push([bench.x + BENCH_SIGN.dx, 1.19, bench.z + BENCH_SIGN.dz]);
         [x, y, z] = daily(spots, "visitor-bird-spot");
         [cell, size] = [T.VISITOR_CELL.bird, 0.5];
       }
