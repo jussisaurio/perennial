@@ -37,3 +37,11 @@ test("a second run while one holds the lock skips, and runs again once it is fre
   }
   expect(await housekeeping(t.sql, t.config)).not.toEqual({ skipped: true });
 });
+
+test("per-IP rate-limit counters older than an hour are deleted", async () => {
+  const old = `198.51.100.${Math.floor(Math.random() * 200)}/sign-in/anonymous-${unique("old")}`;
+  const fresh = `198.51.100.${Math.floor(Math.random() * 200)}/sign-in/anonymous-${unique("fresh")}`;
+  await t.sql`insert into "rateLimit" (key, count, "lastRequest") values (${old}, 3, ${Date.now() - 2 * 3_600_000}), (${fresh}, 1, ${Date.now()})`;
+  await housekeeping(t.sql, t.config);
+  expect((await t.sql`select key from "rateLimit" where key in ${t.sql([old, fresh])}`).map((r: { key: string }) => r.key)).toEqual([fresh]);
+});

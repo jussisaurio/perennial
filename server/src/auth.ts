@@ -124,7 +124,8 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
 
 /** Records a code for this address, unless it already had its share (per 15 minutes and per day). */
 async function mayMail(sql: SQL, config: Config, email: string) {
-  const hash = new Bun.CryptoHasher("sha256").update(email.trim().toLowerCase()).digest("hex");
+  // Keyed with the server secret: without it, a guessed address can't be checked against the log.
+  const hash = new Bun.CryptoHasher("sha256", config.secret).update(email.trim().toLowerCase()).digest("hex");
   const [{ short, day }] = await sql`select
       count(*) filter (where sent_at > now() - interval '15 minutes')::int as short,
       count(*)::int as day

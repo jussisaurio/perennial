@@ -9,12 +9,16 @@ import { releaseOf } from "./src/config";
  * request bodies (sign-in codes, emails) or user details, whatever the SDK
  * collected. dataCollection below already asks for none of these.
  */
+/** Sessions, and who and where the learner is: their IP (any proxy's header) and browser. */
+const PRIVATE_HEADER = /cookie|authorization|(^|-)ip$|forwarded|user-agent/i;
+
 export function scrub<E extends Sentry.Event>(event: E): E {
   if (event.request) {
     delete event.request.cookies;
     delete event.request.data;
+    delete event.request.env; // REMOTE_ADDR
     const headers = event.request.headers;
-    if (headers) for (const k of Object.keys(headers)) if (/cookie|authorization/i.test(k)) delete headers[k];
+    if (headers) for (const k of Object.keys(headers)) if (PRIVATE_HEADER.test(k)) delete headers[k];
   }
   if (event.user) event.user = { id: event.user.id };
   return event;
@@ -42,7 +46,10 @@ if (process.env.SENTRY_DSN) {
     dataCollection: {
       userInfo: false,
       cookies: false,
-      httpHeaders: { request: { deny: ["cookie", "authorization"] }, response: { deny: ["set-cookie"] } },
+      httpHeaders: {
+        request: { deny: ["cookie", "authorization", "x-real-ip", "x-forwarded-for", "forwarded", "cf-connecting-ip", "true-client-ip", "x-perennial-client-ip", "user-agent"] },
+        response: { deny: ["set-cookie"] },
+      },
       httpBodies: [],
       databaseQueryData: false,
       genAI: { inputs: false, outputs: false },
