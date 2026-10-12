@@ -175,7 +175,8 @@ function MineText({ learner }: { learner: Learner }) {
           {tooMany && canAI && me && (
             <div className="credit-note">
               <p className="small">
-                You selected {needAI.length} words that are not in the course, but you have only {me.credits.left} AI {me.credits.left === 1 ? "word" : "words"} left this month.{" "}
+                You selected {needAI.length} {needAI.length === 1 ? "word that is" : "words that are"} not in the course, but you have{" "}
+                {me.credits.left === 0 ? "no AI words" : `only ${me.credits.left} AI ${me.credits.left === 1 ? "word" : "words"}`} left this month.{" "}
                 {me.credits.left > 0 ? `Select ${needAI.length - me.credits.left} fewer, or wait until ${resetDate()}.` : `Wait until ${resetDate()}.`}
               </p>
             </div>
