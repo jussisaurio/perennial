@@ -229,6 +229,17 @@ test("the walk switches off swipe-back navigation while it is open, and only the
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.locator(".gw")).toBeVisible();
   expect(await rootOverscroll()).toEqual(["none", "none"]);
+  // Safari ignores that: there only a handled wheel stops it, over the canvas and the panels alike.
+  await page.evaluate(() => {
+    (window as unknown as { prevented: boolean[] }).prevented = [];
+    document.addEventListener("wheel", (e) => (window as unknown as { prevented: boolean[] }).prevented.push(e.defaultPrevented));
+  });
+  for (const target of [page.locator(".gw canvas"), page.locator(".gw-top")]) {
+    const box = (await target.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(-200, 0);
+  }
+  await expect.poll(() => page.evaluate(() => (window as unknown as { prevented: boolean[] }).prevented)).toEqual([true, true]);
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.locator(".gw")).toHaveCount(0);
   expect(await rootOverscroll()).toEqual(["auto", "auto"]);
