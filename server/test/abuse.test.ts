@@ -1,7 +1,6 @@
 // Abuse protection: email bombing and bot signups.
 
 import { afterAll, describe, expect, test } from "bun:test";
-import type { OutboxMailer } from "../src/mail";
 import { startApp, stopMockLLM, unique } from "./helpers";
 
 const t = await startApp({ codesPerEmail: { short: 3, day: 10 } });
@@ -10,7 +9,7 @@ afterAll(async () => (await t.stop(), stopMockLLM()));
 describe("sign-in codes per address", () => {
   test("an address gets a few codes, then silence, from any IP", async () => {
     const email = unique("victim");
-    const outbox = (t.app.mailer as OutboxMailer).outbox;
+    const outbox = t.mailer.outbox;
     for (let i = 0; i < 5; i++) {
       const res = await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, undefined, { "x-real-ip": `203.0.113.${i}` });
       expect(res.status).toBe(200); // the same answer: the caller can't tell
@@ -27,9 +26,9 @@ describe("sign-in codes per address", () => {
 describe("asking for a code again", () => {
   test("sends the same code, so any of the emails works", async () => {
     const email = unique("twice");
-    const outbox = (t.app.mailer as OutboxMailer).outbox;
-    await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
-    await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
+    const outbox = t.mailer.outbox;
+    await t.sendCode(email);
+    await t.sendCode(email);
     const codes = outbox.filter((m) => m.to === email).map((m) => m.subject.match(/\d{6}/)![0]);
     expect(codes).toHaveLength(2);
     expect(codes[1]).toBe(codes[0]);

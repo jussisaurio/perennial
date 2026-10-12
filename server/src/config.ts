@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 const num = (v: string | undefined, d: number) => (v === undefined || v === "" ? d : Number(v));
 
+const DEFAULT_SECRET = "dev-secret-change-me-dev-secret-change-me";
+
 export interface Config {
   port: number;
   databaseUrl: string;
@@ -56,7 +58,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     databaseUrl: env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:25432/perennial",
     staticDir: env.PERENNIAL_STATIC ?? fileURLToPath(new URL("../../web/dist", import.meta.url)),
     appUrl: (env.APP_URL ?? "http://localhost:5173").replace(/\/$/, ""),
-    secret: env.BETTER_AUTH_SECRET ?? "dev-secret-change-me-dev-secret-change-me",
+    secret: env.BETTER_AUTH_SECRET ?? DEFAULT_SECRET,
     production,
     dev,
     release: env.RAILWAY_GIT_COMMIT_SHA ?? env.RELEASE ?? "dev",
@@ -89,8 +91,6 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     ...overrides,
   };
 }
-
-const DEFAULT_SECRET = "dev-secret-change-me-dev-secret-change-me";
 
 /**
  * Production must be configured, not defaulted: refuse to start rather than

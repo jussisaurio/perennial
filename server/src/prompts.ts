@@ -1,6 +1,6 @@
 // Prompts for Perennial AI (personal extras). The course itself is static decks.
 
-export interface GenSentence {
+interface GenSentence {
   text: string;
   translation: string;
   cloze: string;

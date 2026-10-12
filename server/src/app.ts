@@ -11,11 +11,11 @@ import type { Config } from "./config";
 import { fail, HttpError, json, readJson, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { addLogContext, event, log, traceId, withLogContext } from "./log";
 import { createMailer, OutboxMailer } from "./mail";
-import { handleWrite, proxyShape } from "./sync";
+import { handleWrite, LEARNER_TABLES, proxyShape } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
 /** A service worker that unregisters itself and sends its open tabs to `appUrl` (same path and hash). */
-export const handoffWorker = (appUrl: string) => `self.addEventListener("install", () => self.skipWaiting());
+const handoffWorker = (appUrl: string) => `self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil((async () => {
   await self.registration.unregister();
   for (const c of await self.clients.matchAll({ type: "window" })) {
@@ -28,10 +28,10 @@ self.addEventListener("activate", (e) => e.waitUntil((async () => {
 /** A request slower than this (ms) is logged as a warning. */
 const SLOW_MS = 1000;
 
-export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {}) {
+export function createApp(config: Config, sql: SQL) {
   const mailer = createMailer(config);
   const { auth, pool } = createAuth(config, sql, mailer);
-  const ai = deps.ai ?? new AIService(sql, config);
+  const ai = new AIService(sql, config);
   const headers = securityHeaders(
     [...new Set(config.observability.connect)],
     config.appUrl.startsWith("https://"),
@@ -114,7 +114,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
       GET: async (req) => {
         const user = await requireUser(req);
         const table = new URL(req.url).searchParams.get("table");
-        if (!table || !["course", "review", "word_state", "user_word", "user_sentence"].includes(table)) throw new HttpError(400, "unknown_table");
+        if (!table || !LEARNER_TABLES.includes(table)) throw new HttpError(400, "unknown_table");
         return json(await sql`select * from ${sql(table)} where user_id = ${user.id}`);
       },
     };
@@ -220,5 +220,3 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
 
   return { fetch, auth, ai, mailer, close: () => pool.end() };
 }
-
-export type App = ReturnType<typeof createApp>;

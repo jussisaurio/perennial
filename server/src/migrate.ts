@@ -8,6 +8,7 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { SQL } from "bun";
+import { loadConfig } from "./config";
 import { log } from "./log";
 
 const DIR = join(import.meta.dir, "../migrations");
@@ -32,8 +33,7 @@ export async function migrate(sql: SQL): Promise<string[]> {
 }
 
 if (import.meta.main) {
-  const url = process.env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:25432/perennial";
-  const sql = new Bun.SQL(url);
+  const sql = new Bun.SQL(loadConfig().databaseUrl);
   const applied = await migrate(sql);
   console.log(applied.length ? `applied ${applied.join(", ")}` : "up to date");
   await sql.close();

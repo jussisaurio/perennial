@@ -16,6 +16,7 @@ export async function mockLLM(): Promise<string> {
   if (!mockProc) {
     mockPort = 20000 + Math.floor(Math.random() * 20000);
     mockProc = Bun.spawn(["bun", "mock-llm.ts"], { cwd: `${import.meta.dir}/..`, env: { ...process.env, PORT: String(mockPort) }, stdout: "ignore" });
+    // Wait for it to listen (up to 2.5 s); a mock that never starts fails the first AI test.
     for (let i = 0; i < 50; i++) {
       try {
         await fetch(`http://localhost:${mockPort}/v1/messages`, { method: "OPTIONS" });
@@ -52,6 +53,7 @@ export async function startApp(overrides: Partial<Config> = {}) {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const text = await res.text();
+    // Tests read whatever JSON a route returns.
     let parsed: any = null;
     try {
       parsed = JSON.parse(text);
@@ -70,11 +72,13 @@ export async function startApp(overrides: Partial<Config> = {}) {
     return [...jar.values()].join("; ");
   }
 
+  const sendCode = (email: string, cookie?: string) => call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, cookie);
+  /** The sign-in code in the latest email to this address. */
+  const codeFor = (email: string) => mailer.latest(email)!.subject.match(/\d{6}/)![0];
   const signIn = async (email: string, cookie?: string) => {
-    const sent = await call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, cookie);
+    const sent = await sendCode(email, cookie);
     if (sent.status !== 200) throw new Error(`send code: ${sent.status} ${JSON.stringify(sent.body)}`);
-    const otp = mailer.latest(email)!.subject.match(/\d{6}/)![0];
-    const r = await call("/api/auth/sign-in/email-otp", { email, otp }, cookie);
+    const r = await call("/api/auth/sign-in/email-otp", { email, otp: codeFor(email) }, cookie);
     if (r.status !== 200) throw new Error(`sign in: ${r.status} ${JSON.stringify(r.body)}`);
     return r.cookie!;
   };
@@ -92,6 +96,8 @@ export async function startApp(overrides: Partial<Config> = {}) {
     sql,
     url,
     call,
+    sendCode,
+    codeFor,
     signIn,
     anonymous,
     write,

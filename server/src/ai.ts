@@ -20,7 +20,7 @@ import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenWord } from "./
 import { LIMITS } from "./sync";
 
 /** "2026-10": credits and the spend budget reset each calendar month (UTC). */
-export const period = (d = new Date()) => d.toISOString().slice(0, 7);
+const period = () => new Date().toISOString().slice(0, 7);
 
 // ---------- model output schemas (structured outputs guarantee the shape) ----------
 
@@ -90,10 +90,10 @@ export class AIService {
   private readonly sql: SQL;
   private readonly config: Config;
 
-  constructor(sql: SQL, config: Config, client?: Anthropic) {
+  constructor(sql: SQL, config: Config) {
     this.sql = sql;
     this.config = config;
-    this.client = client ?? new Anthropic({ apiKey: config.anthropic.apiKey, baseURL: config.anthropic.baseURL });
+    this.client = new Anthropic({ apiKey: config.anthropic.apiKey, baseURL: config.anthropic.baseURL });
   }
 
   get enabled() {
@@ -164,9 +164,10 @@ export class AIService {
     }
     const model = this.config.anthropic.model;
     const started = performance.now();
+    const ms = () => Math.round(performance.now() - started);
     const record = (ok: boolean, usage?: { input_tokens: number; output_tokens: number }, usd = 0) =>
       this.sql`insert into ai_request (user_id, task, model, prompt_version, input_tokens, output_tokens, usd, ms, ok)
-        values (${userId}, ${task}, ${model}, ${PROMPT_VERSION}, ${usage?.input_tokens ?? null}, ${usage?.output_tokens ?? null}, ${usd}, ${Math.round(performance.now() - started)}, ${ok})`.catch((err) =>
+        values (${userId}, ${task}, ${model}, ${PROMPT_VERSION}, ${usage?.input_tokens ?? null}, ${usage?.output_tokens ?? null}, ${usd}, ${ms()}, ${ok})`.catch((err) =>
         log.error("ai_request log failed", { err }),
       );
     let res;
@@ -180,19 +181,20 @@ export class AIService {
       }));
     } catch (e) {
       await record(false);
-      event({ aiTask: task, aiModel: model, aiOk: false, aiMs: Math.round(performance.now() - started) });
+      event({ aiTask: task, aiModel: model, aiOk: false, aiMs: ms() });
       if (e instanceof Anthropic.RateLimitError) throw new HttpError(503, "busy");
       if (e instanceof Anthropic.APIConnectionError) throw new HttpError(502, "ai_unreachable");
       if (e instanceof Anthropic.APIError) throw new HttpError(502, "ai_error", { status: e.status });
       throw e;
     }
+    // A model missing from PRICES is billed at the top price, so the budget stop comes early, not late.
     const [pin, pout] = PRICES[model] ?? [5, 25];
     const usd = (res.usage.input_tokens * pin + res.usage.output_tokens * pout) / 1_000_000;
     await this.sql`insert into ai_spend (period, usd) values (${period()}, ${usd})
       on conflict (period) do update set usd = ai_spend.usd + excluded.usd`;
     const ok = res.stop_reason !== "refusal" && !!res.parsed_output;
     await record(ok, res.usage, usd);
-    event({ aiTask: task, aiModel: model, aiOk: ok, aiUsd: usd, aiTokensIn: res.usage.input_tokens, aiTokensOut: res.usage.output_tokens, aiMs: Math.round(performance.now() - started) });
+    event({ aiTask: task, aiModel: model, aiOk: ok, aiUsd: usd, aiTokensIn: res.usage.input_tokens, aiTokensOut: res.usage.output_tokens, aiMs: ms() });
     if (!ok) throw new HttpError(502, "bad_output");
     return res.parsed_output as z.infer<T>;
   }
