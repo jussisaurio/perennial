@@ -1,10 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { expectServerRows, serverRows, startCourse } from "./helpers";
-
-async function openAdd(page: Page) {
-  await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("button", { name: "Add words" }).click();
-}
+import { expect, test } from "@playwright/test";
+import { expectServerRows, openAdd, serverRows, startCourse } from "./helpers";
 
 test("paste text: course words are queued for free; other words need an email", async ({ page }) => {
   await startCourse(page);

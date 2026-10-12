@@ -38,11 +38,6 @@ export default function DevTools() {
             disabled={busy}
             onClick={() => {
               setBusy(true);
-              try {
-                localStorage.setItem("perennial-course", lang);
-              } catch {
-                /* private mode */
-              }
               void seedDemo(lang, count).then(() => {
                 location.hash = "#/garden";
                 location.reload();

@@ -1,11 +1,10 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { advance, startCourse, startSession } from "./helpers";
+import { advance, openAdd, startCourse, startSession } from "./helpers";
 
 test("the browser Back button moves between screens instead of leaving the app", async ({ page }) => {
   await startCourse(page);
-  await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("button", { name: "Add words" }).click();
+  await openAdd(page);
   await expect(page).toHaveURL(/#\/words\/add$/);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Words" })).toBeVisible();

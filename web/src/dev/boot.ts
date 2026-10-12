@@ -16,11 +16,6 @@ export async function devBoot(): Promise<void> {
   if (demo === "off") return removeDemo();
   const [lang, n] = demo.split(":");
   if (!DECK_LANGS.includes(lang as DeckLang)) return console.warn(`[demo] unknown language "${lang}": use ${DECK_LANGS.join(" or ")}`);
-  try {
-    localStorage.setItem("perennial-course", lang);
-  } catch {
-    /* private mode */
-  }
   await seedDemo(lang as DeckLang, n ? Number(n) : Infinity);
   console.info(`[demo] seeded ${lang}`);
 }

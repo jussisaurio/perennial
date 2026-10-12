@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { settledGardenWidth, startCourse } from "./helpers";
+import { plantNearMiddle, settledGardenWidth, startCourse } from "./helpers";
 
 test("walk-in garden: every word is a plant; next plant, listen, time of day, and back", async ({ page }) => {
   const errors: string[] = [];
@@ -157,14 +157,8 @@ test("2D garden: a big garden scrolls; arrows page through it; a plant opens in 
   await expect.poll(scrollLeft).toBeLessThan(max - 300);
   await expect(page.getByRole("button", { name: "Later words" })).toBeEnabled();
 
-  // A click opens the card; its link opens the plant in 3D.
-  // The plant nearest the middle (between two plants there is a small gap).
-  const box = (await strip.boundingBox())!;
-  const [px, py] = await page.locator(".garden svg > g[transform] rect").evaluateAll((els, mid) => {
-    const r = els.map((e) => e.getBoundingClientRect()).sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0];
-    return [r.x + r.width / 2, r.bottom - 20];
-  }, box.x + box.width / 2);
-  await page.mouse.click(px, py);
+  // A click on a plant opens its card; its link opens the plant in 3D.
+  await page.mouse.click(...(await plantNearMiddle(page)));
   const card = page.locator(".plant-tip");
   await expect(card).toBeVisible();
   const word = (await card.locator("strong").textContent())!;
