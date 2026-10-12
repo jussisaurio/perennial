@@ -43,7 +43,6 @@
         "@fontsource-variable/onest": "^5.3.1",
         "@fontsource/gloock": "^5.3.0",
         "@fontsource/pixelify-sans": "^5.3.0",
-        "@journeyapps/wa-sqlite": "2.0.7",
         "@sentry/react": "11",
         "@tanstack/browser-db-sqlite-persistence": "0.2.33",
         "@tanstack/electric-db-collection": "0.5.9",
@@ -293,7 +292,7 @@
 
     "@isaacs/cliui": ["@isaacs/cliui@9.0.0", "", {}, "sha512-AokJm4tuBHillT+FpMtxQ60n8ObyXBatq7jD2/JA9dxbDDokKQm8KMht5ibGzLVU9IJDIKK4TPKgMHEYMn3lMg=="],
 
-    "@journeyapps/wa-sqlite": ["@journeyapps/wa-sqlite@2.0.7", "", {}, "sha512-mc6xUricl4QB2s8QTRGS+FofSr1cjwDtf6dPXAdMBuGWodjfEgkSJGDPWQ7zVqgc7hMfXYLT7WIfEBAxara8YA=="],
+    "@journeyapps/wa-sqlite": ["@journeyapps/wa-sqlite@1.7.2", "", {}, "sha512-EVRMzqHtHgJBFcTGOgQ5/YlxrYFSXLFFztC5yo6+jQx2mqFR+a1kkLV4IirquiBzIonjmYXfBtvZ26fmI8r9Nw=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
@@ -1252,8 +1251,6 @@
     "@sentry/bundler-plugins/@sentry/core": ["@sentry/core@10.76.2", "", { "dependencies": { "@sentry/conventions": "^0.16.0" } }, "sha512-vndrQalRiwYatTkjlLWvyf69KocXIb9TKJ4A9oiyWguL8PJYtqIRTlRe4OpkpjLrxS18fvRdV0jEm29c/9p3hQ=="],
 
     "@sentry/node/@sentry/bundler-plugins": ["@sentry/bundler-plugins@11.6.0", "", { "dependencies": { "@sentry/core": "11.6.0", "dotenv": "^17.4.2", "glob": "^13.0.6", "magic-string": "~0.30.8 || ^1.0.0", "oxc-parser": "^0.152.0", "sentry": "^0.45.0", "supports-color": "^8.1.1" }, "peerDependencies": { "@babel/core": "^7.18.5", "rollup": ">=3.2.0", "webpack": ">=5.1.0" }, "optionalPeers": ["@babel/core", "rollup", "webpack"] }, "sha512-qHKQgOQaayRuwDCWWoAkEMkJe13RZwrpAH5Y5edL3d5XD2Gd7uenA6lPdXFw3qP1slezeSYErV0GAdcVYMo8fg=="],
-
-    "@tanstack/browser-db-sqlite-persistence/@journeyapps/wa-sqlite": ["@journeyapps/wa-sqlite@1.7.2", "", {}, "sha512-EVRMzqHtHgJBFcTGOgQ5/YlxrYFSXLFFztC5yo6+jQx2mqFR+a1kkLV4IirquiBzIonjmYXfBtvZ26fmI8r9Nw=="],
 
     "better-call/@better-auth/utils": ["@better-auth/utils@0.5.0", "", { "dependencies": { "@noble/hashes": "^2.0.1" } }, "sha512-BL8W4EfIZFwlu0r54m3v1ztjDhu6dDe/amLTm0xybmbZaNgYUqhD3SjpAsnq0q8YD6/ki4iwIgxJNLP/N3TxiA=="],
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advance, startCourse, startSession } from "./helpers";
+import { advance, expectServerRows, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   await page.goto("/");
@@ -49,4 +49,16 @@ test("offline: practice still works, a quiet note says so, and it goes when the 
   await advance(page, "1");
   await context.setOffline(false);
   await expect(note).toHaveCount(0);
+});
+
+test("the device keeps a copy: with the server's data stream down, the learner's course still comes back", async ({ page, context }) => {
+  await startCourse(page);
+  // Sent and confirmed, so the course is not waiting in the offline queue: only the copy can bring it back.
+  await expectServerRows(page, "course", 1);
+  // Closed, not reloaded: the old page's SQLite workers stop before the new page opens the copy (#186).
+  await page.close();
+  const again = await context.newPage();
+  await again.route("**/api/shape**", (route) => route.abort());
+  await again.goto("/");
+  await expect(again.locator(".course-switch-button")).toHaveText(/Spanish/);
 });
