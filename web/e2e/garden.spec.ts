@@ -81,8 +81,8 @@ test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known wor
   await page.waitForFunction(() => "__garden" in window);
   await page.evaluate(() => {
     type Sprite = { v: { id: string }; x: number; z: number };
-    const s = (window as unknown as { __garden: { visitorSprites: Sprite[]; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
-    const frog = s.visitorSprites.find((o) => o.v.id === "frog")!;
+    const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
+    const frog = s.guests.sprites.find((o) => o.v.id === "frog")!;
     // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
     const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
     s.x = frog.x + Math.sin(a) * 1.3;
