@@ -722,3 +722,11 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .settling { min-height: 60vh; display: grid; place-items: center; color: var(--leaf); opacity: 0; animation: settle-in 0.4s var(--ease) 0.3s forwards; }
 @keyframes settle-in { to { opacity: 0.7; } }
 @media (prefers-reduced-motion: reduce) { .settling { animation: none; opacity: 0.7; } }
+
+/* Open in a second tab: one calm message across the page instead of the app (see WriterOnly in App). */
+.other-tab {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.75rem 1rem;
+  margin: 2rem 0; padding: 1.25rem 1rem; text-align: center;
+  background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.other-tab p { margin: 0; max-width: 34rem; }
