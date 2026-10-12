@@ -30,6 +30,9 @@ test("anonymous learners are invited to add an email; after that the account car
   await expect(page.getByText("All changes are saved.")).toBeVisible();
   await addEmail(page);
   await expect(page.getByText("Your words sync on all your devices")).toBeVisible();
+  // Progress lives on the server (no on-device copy since offline mode was removed, #188).
+  await expect(page.getByText(/Your progress is saved on the Perennial server/)).toBeVisible();
+  await expect(page.getByText(/saved on this device and on the Perennial server/)).toHaveCount(0);
   await expect(page.getByText(/AI words left this month/)).toBeVisible();
 });
 

@@ -69,7 +69,7 @@ export function DataSection({ lang }: { lang: string }) {
   return (
     <div className="form">
       <p className="muted small">
-        Your progress is saved on this device and on the Perennial server, so you can continue on any device {user?.anonymous ? "after you add your email" : "where you sign in"}.{ai && " When Perennial AI makes cards for you, those words and sentences are sent to the AI service (Anthropic)."} See the{" "}
+        Your progress is saved on the Perennial server, so you can continue on any device {user?.anonymous ? "after you add your email" : "where you sign in"}.{ai && " When Perennial AI makes cards for you, those words and sentences are sent to the AI service (Anthropic)."} See the{" "}
         <a href="/privacy.html">privacy policy</a>.
       </p>
       <div className="row">
