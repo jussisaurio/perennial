@@ -3,7 +3,7 @@
 // recall fades — until the next session waters them. Nothing ever dies.
 // The plants themselves come from garden/plants.ts, shared with the walk.
 
-import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, type PointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
@@ -21,6 +21,12 @@ export { GrowthStrip } from "./plant";
 type Plant = GardenPlant;
 const H = 210;
 const GROUND = H - 34;
+
+/**
+ * Hover is for mice and pens. A touch "enters" on touchdown and "leaves" on
+ * lift, before its click (#113): the card would close under the finger.
+ */
+const hovers = (e: PointerEvent) => e.pointerType !== "touch";
 
 export interface GardenData extends PlantSource {
   total: number;
@@ -167,7 +173,7 @@ export const Garden = memo(function Garden({
   };
 
   return (
-    <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} onPointerLeave={hide}>
+    <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} onPointerLeave={(e) => hovers(e) && hide()}>
       <div className="garden-scroll" ref={scroller} onScroll={scrolls ? onScroll : undefined}>
         <svg width={fullWidth} height={H} viewBox={`0 0 ${fullWidth} ${H}`} role="img" aria-label={label}>
           <defs>
@@ -180,7 +186,7 @@ export const Garden = memo(function Garden({
             <circle key={i} className="firefly" cx={scrollX + (width / 6) * (i + 0.5)} cy={40 + (i % 3) * 30} r={1.8} style={{ animationDelay: `${i * 1.3}s` }} />
           ))}
           {visible.map(({ p, x, y, scale }, i) => (
-            <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={() => show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
+            <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={(e) => hovers(e) && show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
               <g className="sway" style={{ animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: `${5 + hash01(p.id, 29) * 4}s` }}>
                 <g key={perk?.id === p.id ? `perk${perk.n}` : perk?.neighbour === p.id ? `late${perk.n}` : "still"} className={perk?.id === p.id ? "perk" : perk?.neighbour === p.id ? "perk late" : undefined}>
                   <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
@@ -329,8 +335,8 @@ function VisitorMark({ v, art, x, scale, onShow, onHide, top }: { v: TipVisitor;
       className={`garden-visitor visitor-${v.id}`}
       aria-label={`${v.word} · ${v.gloss}`}
       style={{ left: x - (w * scale) / 2, top: top ?? GROUND + 4 - h * scale }}
-      onPointerEnter={() => onShow(x)}
-      onPointerLeave={onHide}
+      onPointerEnter={(e) => hovers(e) && onShow(x)}
+      onPointerLeave={(e) => hovers(e) && onHide()}
       onFocus={() => onShow(x)}
       onBlur={onHide}
       onClick={() => onShow(x)}
