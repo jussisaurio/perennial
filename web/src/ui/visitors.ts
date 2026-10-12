@@ -2,6 +2,7 @@
 // known words. Visitor words are never reviews, stats or Words list entries.
 
 import { deriveMemory, readMemory, wordState, type Learner, type MemoryRow, type Word } from "../data/learner";
+import { startOfDay } from "../core/day";
 import type { ReviewRow } from "../data/rows";
 import {
   learnerFacts,
@@ -79,7 +80,7 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
   const facts = learnerFacts(times, count, now);
   const today = visitorsFor(facts, now, devVisitorOverride());
   // Known at the start of today. Only worth a replay when there are reviews today.
-  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dayStart = startOfDay(now);
   const before = times.some((t) => t >= dayStart) ? knownAt(l.reviews, dayStart, l.course.retention, l.resolve, l.words) : count;
   return {
     facts,

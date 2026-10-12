@@ -2,7 +2,7 @@
 // gives us N minutes and we spend them where they buy the most memory.
 
 import type { FSRS, Grade } from "./fsrs";
-import { DAY_MS } from "./fsrs";
+import { DAY_MS } from "./day";
 import type { MemoryRow } from "../data/learner";
 import type { Skill } from "../data/rows";
 

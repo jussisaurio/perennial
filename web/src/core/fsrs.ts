@@ -5,6 +5,7 @@
 // "I already know this word". Grade 2 is supported for completeness.
 
 import { hash32 } from "../lib/seed";
+import { DAY_MS } from "./day";
 
 export type Grade = 1 | 2 | 3 | 4;
 
@@ -15,7 +16,6 @@ export const DEFAULT_W: readonly number[] = [
 
 const S_MIN = 0.001;
 const S_MAX = 36500;
-const DAY_MS = 86_400_000;
 
 export interface Memory {
   s: number; // stability, days: time for R to drop from 1 to 0.9
@@ -141,5 +141,3 @@ export function replay(
   const days = fuzz(fsrs.interval(m.s, retention), `${seed}:${sorted.length}`);
   return { ...m, lastTs: last.ts, due: last.ts + days * DAY_MS, reps: sorted.length, lapses };
 }
-
-export { DAY_MS };

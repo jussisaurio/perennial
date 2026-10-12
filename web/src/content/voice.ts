@@ -3,7 +3,7 @@
 // the UI; these are the wink after it. Simple words, no idioms, no "!".
 
 import { hash32 } from "../lib/seed";
-import { daily, rareDay } from "../ui/whimsy";
+import { daily, rareDay } from "../core/day";
 
 /** One line per plant, chosen by the word, so a plant always says the same thing. */
 export const PLANT_LINES = {

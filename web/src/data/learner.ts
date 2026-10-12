@@ -5,11 +5,12 @@
 import { courseOrder } from "../content/order";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { DAY_MS, replay, type Grade } from "../core/fsrs";
+import { DAY_MS } from "../core/day";
+import { replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
 import { loadDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
-import type { CourseRow, ReviewRow, Skill, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
+import { COURSE_DEFAULTS, type CourseRow, type ReviewRow, type Skill, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
 
 /** Harder skills unlock once reading is established (read stability in days). */
@@ -294,6 +295,6 @@ export function saveCourse(store: Store, lang: string, patch: Partial<Pick<Cours
       c.update(lang, (d) => {
         Object.assign(d, patch);
       });
-    else c.insert({ user_id: store.userId, lang, minutes: patch.minutes ?? 7, retention: patch.retention ?? 0.9, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
+    else c.insert({ user_id: store.userId, lang, minutes: patch.minutes ?? COURSE_DEFAULTS.minutes, retention: patch.retention ?? COURSE_DEFAULTS.retention, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
   });
 }

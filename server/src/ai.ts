@@ -12,6 +12,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { SQL } from "bun";
 import { z } from "zod";
 import { PRICES, type Config } from "./config";
+import { Lang, LANGUAGE } from "./course";
 import { HttpError } from "./http";
 import { log } from "./log";
 import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenWord } from "./prompts";
@@ -69,9 +70,6 @@ function fitWord(w: z.infer<typeof WordOut>): GenWord | null {
 // ---------- request schemas (untrusted input from the app) ----------
 
 const short = (max: number) => z.string().trim().min(1).max(max);
-// MVP scope: English speakers learning Spanish or German.
-const Lang = z.enum(["es", "de"]);
-const LANGUAGE = { es: "Spanish", de: "German" } as const;
 
 export const MineIn = z.object({
   lang: Lang,

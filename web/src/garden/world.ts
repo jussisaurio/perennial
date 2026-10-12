@@ -2,6 +2,7 @@
 // of word per row of beds (nouns, verbs, …), the most common words nearest
 // the gate. Pure functions, so the layout is stable and testable.
 
+import { toPos, type Pos } from "../deck/schema";
 import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
 
@@ -53,19 +54,19 @@ const BED_D = BED_ROWS * SPACING + MARGIN * 2;
 const PATH = 1.9;
 const CAPACITY = BED_COLS * BED_ROWS;
 
-const GROUPS: { label: string; pos: string[] }[] = [
+const GROUPS: { label: string; pos: readonly Pos[] }[] = [
   { label: "Nouns", pos: ["noun"] },
   { label: "Verbs", pos: ["verb"] },
-  { label: "Adjectives", pos: ["adj", "adjective"] },
-  { label: "Adverbs", pos: ["adv", "adverb"] },
-  { label: "Small words", pos: ["pron", "prep", "conj", "det", "num", "particle", "pronoun", "preposition", "conjunction", "determiner", "article", "number"] },
+  { label: "Adjectives", pos: ["adj"] },
+  { label: "Adverbs", pos: ["adv"] },
+  { label: "Small words", pos: ["pron", "prep", "conj", "det", "num", "particle"] },
   { label: "Phrases", pos: ["phrase"] },
 ];
 const OTHER = "Other words";
 
 export function groupOf(pos: string): string {
-  const p = pos.trim().toLowerCase();
-  return GROUPS.find((g) => g.pos.includes(p))?.label ?? OTHER;
+  const p = toPos(pos);
+  return (p && GROUPS.find((g) => g.pos.includes(p))?.label) || OTHER;
 }
 
 /** Which way a word's plant leans when it leans at all: 1 to the right, -1 to the left, the same in every view. */

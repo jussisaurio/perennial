@@ -9,7 +9,28 @@ import { z } from "zod";
 export const DECK_LANGS = ["es", "de"] as const;
 export type DeckLang = (typeof DECK_LANGS)[number];
 
-const POS = ["noun", "verb", "adj", "adv", "pron", "prep", "conj", "det", "num", "particle", "phrase", "interj"] as const;
+/** Parts of speech, as decks spell them. Groupings (garden beds, course order) are built from these. */
+export const POS = ["noun", "verb", "adj", "adv", "pron", "prep", "conj", "det", "num", "particle", "phrase", "interj"] as const;
+export type Pos = (typeof POS)[number];
+
+/** Spelled-out names, as an AI-written word of the learner's own may have them. */
+const POS_NAMES: Record<string, Pos> = {
+  adjective: "adj",
+  adverb: "adv",
+  pronoun: "pron",
+  preposition: "prep",
+  conjunction: "conj",
+  determiner: "det",
+  article: "det",
+  number: "num",
+  interjection: "interj",
+};
+
+/** A part of speech as decks spell it ("Adjective" → "adj"), or null when it is none of them. */
+export function toPos(s: string | null | undefined): Pos | null {
+  const p = (s ?? "").trim().toLowerCase();
+  return (POS as readonly string[]).includes(p) ? (p as Pos) : (POS_NAMES[p] ?? null);
+}
 
 /** Ten lowercase base32 characters (no i, l, o, u to avoid confusion). */
 export const ID_BODY = /^[0-9abcdefghjkmnpqrstvwxyz]{10}$/;

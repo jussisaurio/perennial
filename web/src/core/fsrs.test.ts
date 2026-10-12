@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createEmptyCard, fsrs as tsFsrs, Rating, type Grade as TsGrade } from "ts-fsrs";
-import { DAY_MS, FSRS, replay, type Grade } from "./fsrs";
+import { DAY_MS } from "./day";
+import { FSRS, replay, type Grade } from "./fsrs";
 
 const f = new FSRS();
 

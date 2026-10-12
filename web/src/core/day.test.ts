@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { daily, rareDay } from "./whimsy";
+import { daily, rareDay, startOfDay, today } from "./day";
 
 const pool = ["a", "b", "c", "d", "e"];
 
@@ -21,4 +21,15 @@ test("rareDay is rare", () => {
   const year = Array.from({ length: 365 }, (_, d) => rareDay(30, "visitor", new Date(2026, 0, 1 + d))).filter(Boolean).length;
   expect(year).toBeGreaterThan(3);
   expect(year).toBeLessThan(30);
+});
+
+test("today keeps its unpadded format: it seeds daily pools", () => {
+  expect(today(new Date(2026, 0, 5, 13))).toBe("2026-1-5");
+  expect(today(new Date(2026, 9, 11))).toBe("2026-10-11");
+});
+
+test("startOfDay is local midnight", () => {
+  const t = new Date(2026, 2, 29, 15, 30).getTime();
+  expect(startOfDay(t)).toBe(new Date(2026, 2, 29).getTime());
+  expect(startOfDay(new Date(t))).toBe(new Date(t).setHours(0, 0, 0, 0));
 });

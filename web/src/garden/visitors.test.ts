@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
+import { dayNumber } from "../core/day";
 import { layout, type GardenPlant } from "./world";
 import {
   catBreak,
-  dayNumber,
   fencePickets,
   fencePoint,
   frogCroak,

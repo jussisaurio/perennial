@@ -7,6 +7,7 @@ import { MAX_NEW_PER_DAY, plan, Session as Runner, type Task } from "../core/ses
 import { fsrs as scheduler } from "../core/scheduler";
 import { language } from "../content/languages";
 import { locate } from "../content/text";
+import { startOfDay } from "../core/day";
 import { hash32 } from "../lib/seed";
 import { readMemory, recordReview, undoReview, useLearner, useStore, wordState, type Learner, type Sentence, type Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
@@ -726,7 +727,7 @@ function Summary({
 
 /** New words introduced today: their first reading review happened today. */
 function newWordsToday(l: Learner): number {
-  const startOfDay = new Date().setHours(0, 0, 0, 0);
+  const dayStart = startOfDay();
   const first = new Map<string, number>();
   for (const r of l.reviews) {
     if (r.skill !== "read") continue;
@@ -735,5 +736,5 @@ function newWordsToday(l: Learner): number {
     const prev = first.get(id);
     if (prev === undefined || t < prev) first.set(id, t);
   }
-  return [...first.values()].filter((t) => t >= startOfDay).length;
+  return [...first.values()].filter((t) => t >= dayStart).length;
 }

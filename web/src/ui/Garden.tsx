@@ -14,7 +14,7 @@ import { plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type
 import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { stripVisitor, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
-import { today } from "./whimsy";
+import { today } from "../core/day";
 
 export { GrowthStrip } from "./plant";
 

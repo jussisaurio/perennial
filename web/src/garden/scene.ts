@@ -8,7 +8,7 @@ import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { fencePickets, fencePoint, GATE_HALF, gnomePose, gnomeTag, snailLap, SNAIL_SIGN, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
-import { daily, rareDay } from "../ui/whimsy";
+import { daily, rareDay } from "../core/day";
 import { boardBox, DECOR_KINDS, pickScenery, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 
 export type TimeOfDay = "day" | "dusk" | "night";

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { DAY_MS, FSRS } from "./fsrs";
+import { DAY_MS } from "./day";
+import { FSRS } from "./fsrs";
 import { plan, Session, type Task } from "./session";
 import type { MemoryRow } from "../data/learner";
 import type { Skill } from "../data/rows";

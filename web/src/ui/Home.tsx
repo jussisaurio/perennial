@@ -14,7 +14,7 @@ import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { learnerVisitors } from "./visitors";
 import { snailLap } from "../garden/visitors";
-import { today } from "./whimsy";
+import { today } from "../core/day";
 
 function greeting(): string {
   const h = new Date().getHours();

@@ -1,6 +1,6 @@
 # Perennial's voice
 
-A serene garden with quirks. The humour is quiet, often hidden, and it rewards attention. These rules apply to every string in the app and every creature in the gardens. Helpers for rotating lines and rare events: `web/src/ui/whimsy.ts`.
+A serene garden with quirks. The humour is quiet, often hidden, and it rewards attention. These rules apply to every string in the app and every creature in the gardens. Helpers for rotating lines and rare events: `web/src/core/day.ts` (`daily`, `rareDay`).
 
 1. The garden is funny, not the app. Plants, animals and weather have small opinions; the UI never cracks jokes about itself or the user. Good: 'A bee noticed.' Bad: 'Wow, look at you go, language legend!'
 2. Clear sentence first, wink second. The wink can be deleted and the meaning stays. Good: 'Something went wrong. Try again. A leaf fell in the machine.' Bad: 'Oops, the gnomes ate your request!'
