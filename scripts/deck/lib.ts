@@ -5,7 +5,8 @@
 import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { Deck, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
+import { Deck, ID_ALPHABET, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
+import { locate } from "../../web/src/content/text.ts";
 
 export const ROOT = join(import.meta.dir, "../..");
 export const deckDir = (lang: string) => join(ROOT, "decks", lang);
@@ -18,15 +19,14 @@ export const Manifest = z.object({
 export type Manifest = z.infer<typeof Manifest>;
 
 /** Alias file: { duplicateWordId: targetWordId }, written by hand. */
-export const Aliases = z.record(z.string(), z.string());
+const Aliases = z.record(z.string(), z.string());
 
-export const sentenceKey = (wordId: string, text: string) => `${wordId}|${text.normalize("NFC")}`;
+const sentenceKey = (wordId: string, text: string) => `${wordId}|${text.normalize("NFC")}`;
 
-const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 /** Ten random base32 characters (32 divides 256, so `& 31` is unbiased). */
-export function randomBody(): string {
+function randomBody(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(10));
-  return Array.from(bytes, (b) => ALPHABET[b & 31]).join("");
+  return Array.from(bytes, (b) => ID_ALPHABET[b & 31]).join("");
 }
 
 export type BuildInput = {
@@ -153,9 +153,23 @@ export function sentenceFlags(s: { text: string; cloze: string }, forms: readonl
   return flags;
 }
 
+/** The sentence with its cloze between `open` and `close`, at the whole-word match the app uses. */
+export function markCloze(text: string, cloze: string, open: string, close: string): string {
+  const i = locate(text, cloze);
+  return i < 0 ? text : `${text.slice(0, i)}${open}${cloze}${close}${text.slice(i + cloze.length)}`;
+}
+
 export const toJson = (v: unknown) => JSON.stringify(v, null, 2) + "\n";
 
+/** The value after `--name` in a command line, or undefined when the flag is absent. */
+export function flagValue(args: readonly string[], name: string): string | undefined {
+  const i = args.indexOf(`--${name}`);
+  return i >= 0 ? args[i + 1] : undefined;
+}
+
 // ---- Files ------------------------------------------------------------------
+
+export const sourcePath = (lang: string, num: string) => join(deckDir(lang), "source", `${num}.json`);
 
 export function sourceFiles(lang: string): string[] {
   const dir = join(deckDir(lang), "source");
@@ -184,7 +198,7 @@ export function readSource(lang: string): { words: SourceWord[]; errors: string[
   return { words, errors };
 }
 
-export function readJson<T>(path: string, schema: z.ZodType<T>, fallback: T): T {
+function readJson<T>(path: string, schema: z.ZodType<T>, fallback: T): T {
   return existsSync(path) ? schema.parse(JSON.parse(readFileSync(path, "utf8"))) : fallback;
 }
 

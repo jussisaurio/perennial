@@ -3,10 +3,9 @@
 
 import { expect, test } from "bun:test";
 import { resolveWordId } from "./resolve";
-import { compatibility, deckProblems, type Deck, type DeckSentence, type DeckWord } from "./schema";
+import { compatibility, deckProblems, ID_ALPHABET, type Deck, type DeckSentence, type DeckWord } from "./schema";
 
-const ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
-const body = (n: number) => n.toString(32).padStart(10, "0").replace(/[0-9a-v]/g, (c) => ALPHABET[parseInt(c, 32)]);
+const body = (n: number) => n.toString(32).padStart(10, "0").replace(/[0-9a-v]/g, (c) => ID_ALPHABET[parseInt(c, 32)]);
 
 function word(n: number): DeckWord {
   return { id: `es.w.${body(n)}`, lemma: `palabra${n}`, gloss: `word ${n}`, pos: "noun", rank: n + 1, forms: [`palabra${n}`] };

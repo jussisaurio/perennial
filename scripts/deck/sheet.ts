@@ -6,10 +6,10 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { Deck, manifestKey, SourceWord } from "../../web/src/deck/schema.ts";
-import { auditDeck, frequencyRanks, loadAllow } from "./audit.ts";
-import { locate } from "../../web/src/content/text.ts";
-import { deckDir, sentenceFlags } from "./lib.ts";
+import { Deck, manifestKey } from "../../web/src/deck/schema.ts";
+import { auditDeck, findingsByLemma, frequencyRanks, loadAllow } from "./audit.ts";
+import { readEntries } from "./proof.ts";
+import { deckDir, markCloze, sentenceFlags } from "./lib.ts";
 
 const [lang, num, ...rest] = process.argv.slice(2);
 if (!lang || !num) {
@@ -17,14 +17,12 @@ if (!lang || !num) {
   process.exit(2);
 }
 const onlyFlagged = rest.includes("--only-flagged");
-const source = SourceWord.array().parse(JSON.parse(readFileSync(join(deckDir(lang), "source", `${num}.json`), "utf8")));
+const source = readEntries(lang, num);
 const deck = Deck(lang).parse(JSON.parse(readFileSync(join(deckDir(lang), "deck.json"), "utf8")));
 const ranks = await frequencyRanks(lang);
 const { findings, words } = auditDeck(lang, deck, ranks, loadAllow(lang));
-const statsBy = new Map(words.map((w) => [manifestKey(w as never) + "", w]));
 const deckBy = new Map(deck.words.filter((w) => !w.retired).map((w) => [manifestKey(w), w]));
-const findingsBy = new Map<string, string[]>();
-for (const f of findings) if (f.lemma) findingsBy.set(f.lemma.toLowerCase(), [...(findingsBy.get(f.lemma.toLowerCase()) ?? []), `${f.code}: ${f.message}`]);
+const findingsBy = findingsByLemma(findings);
 
 const out: string[] = [`# Proofreading sheet: decks/${lang}/source/${num}.json`, "", `${source.length} words. Checklist: docs/decks.md. Flags are hints, not verdicts.`, ""];
 for (const w of source) {
@@ -34,9 +32,7 @@ for (const w of source) {
   const lines: string[] = [];
   for (const s of w.sentences) {
     const marks = sentenceFlags(s, w.forms);
-    const at = locate(s.text, s.cloze);
-    const bold = at < 0 ? s.text : `${s.text.slice(0, at)}**${s.cloze}**${s.text.slice(at + s.cloze.length)}`;
-    lines.push(`- ${bold} — _${s.translation}_${marks.length ? `  ⚠ ${marks.join("; ")}` : ""}`);
+    lines.push(`- ${markCloze(s.text, s.cloze, "**", "**")} — _${s.translation}_${marks.length ? `  ⚠ ${marks.join("; ")}` : ""}`);
   }
   const flagged = flags.length > 0 || lines.some((l) => l.includes("⚠"));
   if (onlyFlagged && !flagged) continue;
@@ -44,5 +40,4 @@ for (const w of source) {
   out.push(`## ${w.lemma}${w.sense ? ` (${w.sense})` : ""} — ${w.gloss}`, "", `${meta.join(" · ")}  `, `forms: ${w.forms.join(", ")}${w.notes ? `  \nnotes: ${w.notes}` : ""}`, "", ...lines, "");
   if (flags.length) out.push(...flags.map((f) => `> ⚑ ${f}`), "");
 }
-void statsBy;
 console.log(out.join("\n"));

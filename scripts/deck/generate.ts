@@ -16,10 +16,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { DECK_LANGS, SourceWord, manifestKey } from "../../web/src/deck/schema.ts";
-import { WORDS_PER_FILE, deckDir, readSource, sourceFiles, toJson, wholeWordCount } from "./lib.ts";
+import { SourceWord, isDeckLang, manifestKey } from "../../web/src/deck/schema.ts";
+import { language } from "../../web/src/content/languages.ts";
+import { frequencyListUrl } from "./audit.ts";
+import { MAX_SENTENCE_WORDS, WORDS_PER_FILE, deckDir, flagValue, readSource, sourceFiles, toJson, wholeWordCount } from "./lib.ts";
 
 if (process.env.CI) {
   console.error("generate.ts calls a paid API and must not run in CI.");
@@ -29,19 +31,16 @@ if (process.env.CI) {
 // ---- Arguments ---------------------------------------------------------------
 
 const args = process.argv.slice(2);
-const flag = (name: string) => {
-  const i = args.indexOf(`--${name}`);
-  return i >= 0 ? args[i + 1] : undefined;
-};
-const lang = args[0] as (typeof DECK_LANGS)[number];
+const flag = (name: string) => flagValue(args, name);
+const lang = args[0];
 const count = Number(flag("count"));
 const group = Number(flag("group") ?? 10);
 const mock = args.includes("--mock");
-if (!(DECK_LANGS as readonly string[]).includes(lang) || !(count > 0)) {
+if (!isDeckLang(lang) || !(count > 0)) {
   console.error("usage: bun scripts/deck/generate.ts <es|de> --count <n> [--from <rank>] [--group <n>] [--mock]");
   process.exit(2);
 }
-const LANG_NAME = { es: "Spanish", de: "German" }[lang];
+const LANG_NAME = language(lang).name;
 const GENDERS = { es: "m or f (mf for nouns used for both, like estudiante)", de: "m, f or n" }[lang];
 const MODEL = mock ? "mock" : (process.env.DECK_MODEL ?? "claude-sonnet-4-5");
 
@@ -70,7 +69,7 @@ const LemmaList = z.object({
 });
 
 async function frequencyForms(): Promise<string[]> {
-  const url = `https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/${lang}/${lang}_50k.txt`;
+  const url = frequencyListUrl(lang);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return (await res.text())
@@ -198,7 +197,7 @@ function problems(w: SourceWord): string[] {
   if (w.pos === "noun" && !w.gender) out.push("noun without gender");
   if (w.pos === "noun" && lang === "es" && w.gender === "n") out.push("Spanish has no neuter nouns");
   for (const s of w.sentences) {
-    if (s.text.split(/\s+/).length > 12) out.push(`sentence over 12 words: ${s.text}`);
+    if (s.text.split(/\s+/).length > MAX_SENTENCE_WORDS) out.push(`sentence over ${MAX_SENTENCE_WORDS} words: ${s.text}`);
     if (wholeWordCount(s.text, s.cloze) !== 1) out.push(`cloze "${s.cloze}" is not exactly once in: ${s.text}`);
   }
   return out;
@@ -247,7 +246,7 @@ function append(words: SourceWord[]) {
   mkdirSync(dir, { recursive: true });
   const files = sourceFiles(lang);
   let file = files.at(-1);
-  let current: SourceWord[] = file && existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : [];
+  let current: SourceWord[] = file ? JSON.parse(readFileSync(file, "utf8")) : [];
   let n = files.length;
   if (!file) file = join(dir, `${String(++n).padStart(4, "0")}.json`);
   for (const w of words) {
@@ -268,7 +267,7 @@ function text(m: Anthropic.Message): string {
 
 /** A JSON schema output format without the client-side parse helper (batches take plain params). */
 function format(schema: z.ZodType): Anthropic.JSONOutputFormat {
-  const f = zodOutputFormat(schema as never);
+  const f = zodOutputFormat(schema);
   return { type: f.type, schema: f.schema };
 }
 
