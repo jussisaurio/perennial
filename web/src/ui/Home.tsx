@@ -8,8 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
-import { canPractise } from "../data/practice";
-import { mayListen } from "./speech";
+import { DAILY_MINUTES } from "../data/practice";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
 import { plural } from "./format";
@@ -42,9 +41,6 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const day = today(new Date(now));
   const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  // The same planner the session uses: is there anything to practise right now?
-  // Only not when there are no words at all (every word paused or ignored).
-  const canStart = useMemo(() => (learner ? canPractise(learner, mayListen(language(code).tag), now) : false), [learner, now, code]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
@@ -54,11 +50,13 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const course = learner.course;
   const ready = stats.seeds;
   const started = stats.known + stats.learning;
-  const doneToday = stats.minutesToday >= course.minutes;
+  // Every chunk is planned on its own with no daily cap, so it must stay 5 minutes:
+  // a 20-minute chunk would plant 48 new words at once.
+  const doneToday = stats.minutesToday >= DAILY_MINUTES;
   // Picked up partway through the day: offer the rest, not the full session again.
-  const left = Math.max(0, Math.round(course.minutes - stats.minutesToday));
+  const left = Math.max(0, Math.round(DAILY_MINUTES - stats.minutesToday));
   const partial = stats.minutesToday >= 0.5 && !doneToday;
-  const sessionMinutes = doneToday ? 5 : partial ? Math.max(2, left) : course.minutes;
+  const sessionMinutes = partial ? Math.max(2, left) : DAILY_MINUTES;
   const max = Math.max(1, ...stats.days.map((d) => d.reviews));
   const lang = language(code).name;
 
@@ -89,27 +87,15 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
       )}
 
       <div className="start-row">
-        {canStart && <Shortcut keyName="Enter" run={() => onStart(sessionMinutes)} />}
-        <button className="start" disabled={!canStart} onClick={() => onStart(sessionMinutes)} aria-keyshortcuts="Enter">
+        <Shortcut keyName="Enter" run={() => onStart(sessionMinutes)} />
+        <button className="start" onClick={() => onStart(sessionMinutes)} aria-keyshortcuts="Enter">
           <span className="clock" aria-hidden="true">
             <SeedIcon size={20} />
           </span>
-          {!canStart ? "All done for today" : doneToday ? "Practice more" : partial ? "Finish today's session" : "Start today's session"}
-          {canStart && <small>{sessionMinutes} min</small>}
+          {doneToday ? "Practice more" : partial ? "Finish today's session" : "Start today's session"}
+          <small>{sessionMinutes} min</small>
         </button>
-        <p className="start-note">
-          {!canStart
-            ? ready === 0
-              ? "You have learned every word in the course. Add words from your own texts to keep growing."
-              : "Every word that needs practice has had it, and today's new words are planted."
-            : started === 0
-              ? `${ready} words are ready, most common first. Each word has example sentences and audio.`
-              : doneToday
-                ? doneTodayNote()
-                : partial
-                  ? ""
-                  : startNote()}
-        </p>
+        <p className="start-note">{started === 0 ? `${ready} words are ready, most common first. Each word has example sentences and audio.` : doneToday ? doneTodayNote() : partial ? "" : startNote()}</p>
       </div>
 
       {started > 0 && (
@@ -161,7 +147,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   );
 }
 
-/** Enter starts the session (only while it can start). */
+/** Enter starts the session. */
 function Shortcut({ keyName, run }: { keyName: string; run: () => void }) {
   useShortcut(keyName, run);
   return null;

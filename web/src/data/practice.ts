@@ -7,7 +7,7 @@ import { fsrs as scheduler } from "../core/scheduler";
 import type { Learner } from "./learner";
 
 /** Words with a correct answer (grade 2 or better, or "Already know it") today. */
-function answeredToday(l: Learner, now = Date.now()): Set<string> {
+function answeredToday(l: Learner, now: number): Set<string> {
   const dayStart = startOfDay(now);
   const done = new Set<string>();
   for (const r of l.reviews) if (r.grade >= 2 && Date.parse(r.reviewed_at) >= dayStart) done.add(l.resolve(r.word_id));
@@ -27,7 +27,5 @@ export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = D
   });
 }
 
-/** Is there anything to practise now: a new word, or any word already learned? */
-export function canPractise(l: Learner, voice: boolean, now = Date.now()): boolean {
-  return sessionPlan(l, 5, voice, now).queue.length > 0;
-}
+/** Everyone practises 5 minutes a day, and 5 more whenever they like. `course.minutes` is no longer used. */
+export const DAILY_MINUTES = 5;

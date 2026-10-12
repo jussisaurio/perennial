@@ -13,6 +13,7 @@ import { CourseSwitcher } from "./ui/CourseSwitcher";
 import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
 import { SessionScreen } from "./ui/Session";
+import { DAILY_MINUTES } from "./data/practice";
 import { SettingsScreen } from "./ui/Settings";
 import { WordsScreen } from "./ui/Words";
 
@@ -190,7 +191,8 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const noDeck = deckFailed && route !== "/settings";
 
   if (route === "/session" && !noDeck)
-    return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} onExit={() => go("/today", { replace: true })} />;
+    // No minutes chosen (the walk's "Water", or a reload on the session screen): a fresh 5 minutes.
+    return <SessionScreen lang={lang} minutes={sessionMinutes ?? DAILY_MINUTES} onExit={() => go("/today", { replace: true })} />;
 
   if (route === "/garden" && !noDeck)
     return (

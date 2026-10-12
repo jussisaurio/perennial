@@ -13,6 +13,7 @@ import { courseStats } from "./stats";
 import { useSessionRunner, type Card, type Ended } from "./useSessionRunner";
 import { useKeys } from "./useShortcut";
 import { track } from "../observability";
+import { DAILY_MINUTES } from "../data/practice";
 
 /** The correct answer with the letters to look at marked. */
 function Marked({ text, at }: { text: string; at: Set<number> }) {
@@ -89,7 +90,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
         </button>
       </header>
       {done ? (
-        <Summary learner={learner} counts={counts} practised={practised} ended={ended} onMore={() => void start(5)} onExit={onExit} />
+        <Summary learner={learner} counts={counts} practised={practised} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} onDone={finish} />
       ) : null}
