@@ -5,7 +5,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { configProblems, loadConfig } from "../src/config";
 import { securityHeaders } from "../src/http";
 import { QUOTA } from "../src/sync";
-import { review, startApp, stopMockLLM, unique } from "./helpers";
+import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
@@ -14,13 +14,13 @@ afterAll(async () => (await t.stop(), stopMockLLM()));
 async function aliceWithData() {
   const alice = await t.signIn(unique("alice"));
   const aliceId = (await t.me(alice)).id;
-  const r = review("es.w.aaaaaaaaaa");
+  const r = review(W.a);
   const wordId = crypto.randomUUID();
   const sentenceId = crypto.randomUUID();
   await t.write(alice, [
     r,
     { type: "course.upsert", row: { lang: "es", minutes: 9 } },
-    { type: "word_state.upsert", row: { word_id: "es.w.bbbbbbbbbb", status: "paused", updated_at: new Date().toISOString() } },
+    { type: "word_state.upsert", row: { word_id: W.b, status: "paused", updated_at: new Date().toISOString() } },
     { type: "user_word.upsert", row: { id: wordId, lang: "es", lemma: "zorro", gloss: "fox", forms: ["zorro"] } },
     { type: "user_sentence.insert", row: { id: sentenceId, word_id: wordId, text: "Veo un zorro.", translation: "I see a fox.", cloze: "zorro", origin: "own-text" } },
   ]);
@@ -60,13 +60,13 @@ describe("writes: every mutation is scoped to the session's user", () => {
     const before = Object.fromEntries(await Promise.all(TABLES.map(async (tb) => [tb, await count(tb, aliceId)])));
     const mallory = await t.signIn(unique("mallory"));
     const res = await t.write(mallory, [
-      { type: "review.insert", row: { ...review("x").row, id: reviewId, grade: 1 } },
+      { type: "review.insert", row: { ...review(W.a).row, id: reviewId, grade: 1 } },
       { type: "review.delete", id: reviewId },
       { type: "user_word.upsert", row: { id: wordId, lang: "es", lemma: "hacked", gloss: "hacked", forms: [] } },
       { type: "user_word.delete", id: wordId },
       { type: "user_sentence.insert", row: { id: sentenceId, word_id: wordId, text: "x y", translation: "x", cloze: "x", origin: "ai" } },
       { type: "user_sentence.delete", id: sentenceId },
-      { type: "word_state.delete", word_id: "es.w.bbbbbbbbbb", updated_at: new Date().toISOString() },
+      { type: "word_state.delete", word_id: W.b, updated_at: new Date().toISOString() },
     ]);
     expect(res.status).toBe(200); // accepted, but none of it touches Alice
     const after = Object.fromEntries(await Promise.all(TABLES.map(async (tb) => [tb, await count(tb, aliceId)])));
@@ -81,14 +81,14 @@ describe("writes: every mutation is scoped to the session's user", () => {
     const mallory = await t.signIn(unique("mallory"));
     const malloryId = (await t.me(mallory)).id;
     const { aliceId } = await aliceWithData();
-    const r = review("es.w.cccccccccc");
+    const r = review(W.c);
     await t.write(mallory, [{ ...r, row: { ...r.row, user_id: aliceId } }]);
     const [row] = await t.sql`select user_id from review where id = ${r.row.id}`;
     expect(row.user_id).toBe(malloryId);
   });
 
   test("no session, no writes", async () => {
-    expect((await t.call("/api/write", { mutations: [review("x")] })).status).toBe(401);
+    expect((await t.call("/api/write", { mutations: [review(W.a)] })).status).toBe(401);
   });
 });
 
@@ -112,7 +112,7 @@ describe("accounts and AI", () => {
 describe("state changes only from our own page", () => {
   test("cross-origin and non-JSON posts are refused", async () => {
     const cookie = await t.signIn(unique("csrf"));
-    const body = { mutations: [review("es.w.dddddddddd")] };
+    const body = { mutations: [review(W.d)] };
     expect((await t.call("/api/write", body, cookie, { origin: "https://evil.example" })).status).toBe(403);
     expect((await t.call("/api/account/delete", {}, cookie, { origin: "https://evil.example" })).status).toBe(403);
     // No Origin, but the browser says it's another site.
@@ -192,5 +192,43 @@ describe("production configuration fails closed", () => {
     expect(configProblems(prod({ ...good, BETTER_AUTH_SECRET: undefined })).join()).toContain("BETTER_AUTH_SECRET");
     expect(configProblems(prod({ ...good, BETTER_AUTH_SECRET: "short" })).join()).toContain("BETTER_AUTH_SECRET");
     expect(configProblems(prod({ ...good, APP_URL: "http://perennial.example" })).join()).toContain("APP_URL");
+  });
+});
+
+describe("writes only point at real words", () => {
+  const ownWord = () => ({ type: "user_word.upsert", row: { id: crypto.randomUUID(), lang: "es", lemma: "zorro", gloss: "fox", forms: ["zorro"] } });
+
+  test("made-up words are refused, the whole batch with them", async () => {
+    const cookie = await t.signIn(unique("garbage"));
+    const res = await t.write(cookie, [review(W.a), review("sdfjdslkfjdslfjdsklfdjsl")]);
+    expect(res.status).toBe(422);
+    expect(res.body).toMatchObject({ error: "unknown_word", word_id: "sdfjdslkfjdslfjdsklfdjsl" });
+    expect(await count("review", (await t.me(cookie)).id)).toBe(0);
+    expect((await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: "es.w.zzzzzzzzzz", status: "paused", updated_at: new Date().toISOString() } }])).status).toBe(422);
+  });
+
+  test("a form from your own text can be hidden ('never show'), but not studied", async () => {
+    const cookie = await t.signIn(unique("form"));
+    const state = (word_id: string, status: string) => ({ type: "word_state.upsert", row: { word_id, status, updated_at: new Date().toISOString() } });
+    expect((await t.write(cookie, [state("form:es:zorro", "ignored")])).status).toBe(200);
+    expect((await t.write(cookie, [state("form:es:zorro", "queued")])).status).toBe(422);
+    expect((await t.write(cookie, [state("form:xx:zorro", "ignored")])).status).toBe(422);
+    expect((await t.write(cookie, [review("form:es:zorro")])).status).toBe(422);
+  });
+
+  test("a deck word counts only in its own language", async () => {
+    const cookie = await t.signIn(unique("lang"));
+    expect((await t.write(cookie, [review(W.a, { lang: "de" })])).status).toBe(422);
+    expect((await t.write(cookie, [review(W.a)])).status).toBe(200);
+  });
+
+  test("your own words count, saved before or in the same batch; someone else's do not", async () => {
+    const cookie = await t.signIn(unique("own"));
+    const w = ownWord();
+    expect((await t.write(cookie, [w, review(w.row.id)])).status).toBe(200);
+    expect((await t.write(cookie, [review(w.row.id)])).status).toBe(200);
+    const mallory = await t.signIn(unique("mallory"));
+    expect((await t.write(mallory, [review(w.row.id)])).status).toBe(422);
+    expect((await t.write(mallory, [{ type: "user_sentence.insert", row: { id: crypto.randomUUID(), word_id: w.row.id, text: "Veo un zorro.", translation: "I see a fox.", cloze: "zorro", origin: "own-text" } }])).status).toBe(422);
   });
 });

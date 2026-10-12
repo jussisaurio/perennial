@@ -4,7 +4,7 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { scrub } from "../instrument";
-import { review, startApp, stopMockLLM, unique } from "./helpers";
+import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
@@ -41,15 +41,15 @@ describe("account linking needs the account's code", () => {
     const aliceEmail = unique("alice");
     const alice = await t.signIn(aliceEmail);
     const aliceId = (await t.me(alice)).id;
-    await t.write(alice, [review("es.w.aaaaaaaaaa")]);
+    await t.write(alice, [review(W.a)]);
     const mallory = await t.anonymous();
     const malloryId = (await t.me(mallory)).id;
-    await t.write(mallory, [review("es.w.mmmmmmmmmm")]);
+    await t.write(mallory, [review(W.m)]);
     return { aliceEmail, aliceId, mallory, malloryId };
   }
   async function untouched(aliceId: string, malloryId: string) {
-    expect((await t.sql`select word_id from review where user_id = ${aliceId}`).map((r: { word_id: string }) => r.word_id)).toEqual(["es.w.aaaaaaaaaa"]);
-    expect((await t.sql`select word_id from review where user_id = ${malloryId}`).map((r: { word_id: string }) => r.word_id)).toEqual(["es.w.mmmmmmmmmm"]);
+    expect((await t.sql`select word_id from review where user_id = ${aliceId}`).map((r: { word_id: string }) => r.word_id)).toEqual([W.a]);
+    expect((await t.sql`select word_id from review where user_id = ${malloryId}`).map((r: { word_id: string }) => r.word_id)).toEqual([W.m]);
     expect((await t.sql`select 1 from "user" where id = ${malloryId}`).length).toBe(1);
   }
 
@@ -89,7 +89,7 @@ describe("no secrets in logs", () => {
     const codes: string[] = [];
     try {
       const anon = await t.anonymous();
-      await t.write(anon, [review("es.w.llllllllll")]);
+      await t.write(anon, [review(W.l)]);
       await sendCode(email, anon);
       codes.push(codeFor(email));
       await t.call("/api/auth/sign-in/email-otp", { email, otp: codes[0] === "000000" ? "111111" : "000000" }, anon);

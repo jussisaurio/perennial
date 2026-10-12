@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "bun:test";
 import { housekeeping } from "../src/housekeeping";
-import { review, startApp, stopMockLLM, unique } from "./helpers";
+import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
@@ -8,7 +8,7 @@ afterAll(async () => (await t.stop(), stopMockLLM()));
 test("inactive anonymous learners are deleted with their data; active ones and accounts stay", async () => {
   const idle = await t.anonymous();
   const idleId = (await t.me(idle)).id;
-  await t.write(idle, [review("es.w.aaaaaaaaaa")]);
+  await t.write(idle, [review(W.a)]);
   const active = await t.anonymous();
   const activeId = (await t.me(active)).id;
   const account = await t.signIn(unique("kept"));

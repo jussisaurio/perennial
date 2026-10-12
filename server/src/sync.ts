@@ -4,6 +4,7 @@
 // carries the Postgres transaction id, which the client waits to see in the
 // stream before dropping its optimistic state.
 
+import { deckWords, isDeckWord } from "./words";
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import type { SQL } from "bun";
 import { z } from "zod";
@@ -139,11 +140,44 @@ async function checkQuota(tx: SQL, userId: string, mutations: Mutation[]) {
   if (adds.review) over("reviewsPerDay", Number((await tx`select count(*) as n from review where user_id = ${userId} and received_at > now() - interval '1 day'`)[0].n) + adds.review, QUOTA.reviewsPerDay);
 }
 
+/**
+ * "Never show me this" for a form in your own text (Add screen): word_state
+ * `form:<lang>:<form>`, only ever ignored, never studied or counted.
+ */
+function ignoredForm(id: string, status: string): boolean {
+  const m = /^form:([a-z]{2}):(.{1,60})$/u.exec(id);
+  return !!m && status === "ignored" && deckWords().has(m[1]);
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Every word a review, word state or sentence points at must exist: a deck word
+ * (in the review's language) or one of this learner's own words, saved before
+ * or in this batch. Otherwise the whole batch is refused (422 unknown_word).
+ */
+async function checkWords(tx: SQL, userId: string, mutations: Mutation[]) {
+  const own = new Set(mutations.flatMap((m) => (m.type === "user_word.upsert" ? [m.row.id] : [])));
+  const refs: { id: string; lang?: string }[] = [];
+  for (const m of mutations) {
+    if (m.type === "review.insert") refs.push({ id: m.row.word_id, lang: m.row.lang });
+    else if (m.type === "word_state.upsert" && !ignoredForm(m.row.word_id, m.row.status)) refs.push({ id: m.row.word_id });
+    else if (m.type === "user_sentence.insert") refs.push({ id: m.row.word_id });
+  }
+  const unknown = refs.filter((r) => !own.has(r.id) && !isDeckWord(r.id, r.lang)).map((r) => r.id);
+  if (!unknown.length) return;
+  const candidates = [...new Set(unknown)].filter((id) => UUID.test(id));
+  const found = candidates.length ? new Set((await tx`select id from user_word where user_id = ${userId} and id in ${tx(candidates)}`).map((r: { id: string }) => r.id)) : new Set<string>();
+  const missing = unknown.find((id) => !found.has(id));
+  if (missing) throw new HttpError(422, "unknown_word", { word_id: missing.slice(0, 120) });
+}
+
 export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Promise<number> {
   const now = new Date();
   for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw new HttpError(422, "review_from_the_future");
   return sql.begin(async (tx) => {
     await checkQuota(tx, userId, mutations);
+    await checkWords(tx, userId, mutations);
     // The txid must be read inside the writing transaction.
     const [{ txid }] = await tx`select pg_current_xact_id()::xid::text as txid`;
     for (const m of mutations) {

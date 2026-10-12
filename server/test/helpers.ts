@@ -105,6 +105,10 @@ export async function startApp(overrides: Partial<Config> = {}) {
   };
 }
 
+/** Real Spanish deck word ids (writes refuse made-up ones), by short name: W.a, W.b, … */
+const ES_IDS = (JSON.parse(await Bun.file(new URL("../../decks/es/deck.json", import.meta.url)).text()) as { words: { id: string }[] }).words.map((w) => w.id);
+export const W = Object.fromEntries("abcdefghijklm".split("").map((k, i) => [k, ES_IDS[i]])) as Record<string, string>;
+
 export const review = (wordId: string, extra: Record<string, unknown> = {}) => ({
   type: "review.insert",
   row: { id: crypto.randomUUID(), lang: "es", word_id: wordId, skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 4000, ...extra },
