@@ -9,11 +9,11 @@
     <style>
       :root {
         --paper: #f3eee4; --card: #fbf8f1; --ink: #1d1b16; --ink-2: #47423a; --muted: #877f71;
-        --line: #ddd3c1; --accent: #dc5636; --note: #f8e6bd;
+        --line: #ddd3c1; --accent: #dc5636;
         color-scheme: light dark;
       }
       @media (prefers-color-scheme: dark) {
-        :root { --paper: #10130e; --card: #1b2017; --ink: #efe9da; --ink-2: #c9c2b0; --muted: #8d9482; --line: #2c3326; --accent: #ff7b58; --note: #3a3220; }
+        :root { --paper: #10130e; --card: #1b2017; --ink: #efe9da; --ink-2: #c9c2b0; --muted: #8d9482; --line: #2c3326; --accent: #ff7b58; }
       }
       * { box-sizing: border-box; }
       body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -27,7 +27,6 @@
       a { color: var(--accent); }
       .back { font-size: 0.95rem; text-decoration: none; }
       .muted { color: var(--muted); font-size: 0.95rem; }
-      .draft { background: var(--note); border: 1px solid var(--line); border-radius: 12px; padding: 0.75rem 1rem; margin: 1rem 0 1.5rem; color: var(--ink); }
       table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
       th, td { text-align: left; vertical-align: top; padding: 0.5rem 0.5rem 0.5rem 0; border-bottom: 1px solid var(--line); }
       th { color: var(--ink); font-weight: 600; }
@@ -38,10 +37,9 @@
     <main>
       <a class="back" href="/">← Back to Perennial</a>
       <h1>Privacy policy</h1>
-      <p class="muted">Last updated: [DATE]</p>
-      <div class="draft"><strong>Draft — review before launch.</strong> This text describes what the app does today. A person who knows the law in your country must check it before you publish it.</div>
+      <p class="muted">Last updated: 12 October 2026</p>
 
-      <p>Perennial is an app for learning words in a new language. This page tells you what data we keep, why we keep it, who else sees it, and how you can delete it. We wrote it in simple English. If something is not clear, write to us (see <a href="#contact">Contact</a>).</p>
+      <p>Perennial is an app for learning words in a new language. It is run by Jussi Saurio, a private person in Finland (“we”). This page tells you what data we keep, why we keep it, who else sees it, and how you can delete it. We wrote it in simple English. If something is not clear, write to us (see <a href="#contact">Contact</a>).</p>
 
       <h2>The short version</h2>
       <ul>
@@ -73,15 +71,27 @@
       <h2>Who else processes your data</h2>
       <p>We use these services to run Perennial. Each one gets only the data it needs.</p>
       <ul>
-        <li><strong>Railway</strong> runs our server and keeps its logs.</li>
-        <li><strong>PlanetScale</strong> runs our database (Postgres), where your account and learning data are stored.</li>
-        <li><strong>Resend</strong> sends the email with your sign-in code. It gets your email address and the code.</li>
-        <li><strong>Anthropic</strong> runs the AI model for Perennial AI. It gets only the text that you choose to send: the words you tap, the sentences they come from, the words you ask for new sentences for, and a list of words you already know. It does not get your email address or your name. We use Perennial AI only when you start it. Anonymous learners cannot use it.</li>
-        <li><strong>Sentry</strong> (only if we turn it on) gets error reports from our server and from the app when something breaks. A report contains technical details (the error, the page or request address, your browser and device type), and your user id. Before a report leaves our server, we remove cookies, sign-in codes, the content of requests, and everything about you except your user id. It does not contain your email address. When something breaks in the app, Sentry also keeps a short replay of the screen around that moment, with all text and everything you typed hidden and images left out, so it shows where things went wrong but not what you read or wrote. Warnings and errors from our server are also sent to Sentry as log lines (ids and timings, not your content).</li>
+        <li><strong>Railway</strong> runs our server and keeps its logs. Location: Amsterdam, the Netherlands.</li>
+        <li><strong>PlanetScale</strong> runs our database (Postgres), where your account and learning data are stored. Location: the Netherlands (on Google Cloud).</li>
+        <li><strong>Resend</strong> sends the email with your sign-in code. It gets your email address and the code. Location: Ireland (on Amazon Web Services).</li>
+        <li><strong>Anthropic</strong> runs the AI model for Perennial AI. It gets only the text that you choose to send: the words you tap, the sentences they come from, the words you ask for new sentences for, and a list of words you already know. It does not get your email address or your name. We use Perennial AI only when you start it. Anonymous learners cannot use it. Location: the United States.</li>
+        <li><strong>Sentry</strong> (only if we turn it on) gets error reports from our server and from the app when something breaks. A report contains technical details (the error, the page or request address, your browser and device type), and your user id. Before a report leaves our server, we remove cookies, sign-in codes, the content of requests, and everything about you except your user id. It does not contain your email address. When something breaks in the app, Sentry also keeps a short replay of the screen around that moment, with all text and everything you typed hidden and images left out, so it shows where things went wrong but not what you read or wrote. Warnings and errors from our server are also sent to Sentry as log lines (ids and timings, not your content). Location: Germany (Sentry’s EU region).</li>
+        <li><strong>Cloudflare</strong> sits in front of our website. It passes the traffic between your browser and our server and protects the site from attacks, so it sees your IP address and the requests your browser sends. Location: worldwide, often in a data center near you.</li>
         <li><strong>Cloudflare Turnstile</strong> (only if we turn it on) checks that a person, not a program, is starting a new account or asking for a sign-in code. To do this, Cloudflare gets your IP address and technical details from your browser. It does not get your email address or your learning data.</li>
-        <li><strong>PostHog</strong> (only if we turn it on) gets a few named events, so that we can see if the app works for people: a course started (language and minutes per day), a session finished (how many answers and new words), an email added, the garden opened, and words added. Each event has your user id, not your email address. PostHog does not set cookies here, does not record your screen, and does not collect clicks automatically. If your browser sends “Do Not Track”, the app sends no events.</li>
+        <li><strong>PostHog</strong> (only if we turn it on) gets a few named events, so that we can see if the app works for people: a course started (language and minutes per day), a session finished (how many answers and new words), an email added, the garden opened, and words added. Each event has your user id, not your email address. PostHog does not set cookies here, does not record your screen, and does not collect clicks automatically. If your browser sends “Do Not Track”, the app sends no events. Location: Frankfurt, Germany (PostHog’s EU cloud).</li>
       </ul>
-      <p>[List the countries where these services store data, and the legal basis for transfers, if you need to.]</p>
+      <p>All these companies are based in the United States, even when they keep the data in the EU. This means that some data can go to the United States. Anthropic and Cloudflare also process data there. To protect your data when it leaves the EU:</p>
+      <ul>
+        <li>Railway, PlanetScale, Sentry, PostHog and Cloudflare take part in the <a href="https://www.dataprivacyframework.gov/list">EU-U.S. Data Privacy Framework</a>. The European Commission has decided that this framework gives adequate protection.</li>
+        <li>For Anthropic and Resend, we use the standard contractual clauses of the European Commission, which are part of their data processing terms.</li>
+      </ul>
+
+      <h2>Why we are allowed to use your data</h2>
+      <p>The GDPR (the EU data protection law) lets us use your data for these reasons:</p>
+      <ul>
+        <li><strong>To give you the service you asked for</strong> (GDPR article 6(1)(b)): your learning data, your email address, your session, and Perennial AI.</li>
+        <li><strong>Our legitimate interest</strong> (GDPR article 6(1)(f)) in keeping the service safe, working and affordable: abuse protection, server logs, error reports, usage events, and the AI limits. We keep this data small, and you can object to it (see below).</li>
+      </ul>
 
       <h2>How long we keep data</h2>
       <ul>
@@ -90,7 +100,7 @@
         <li><strong>AI request logs:</strong> deleted after 180 days.</li>
         <li><strong>Abuse protection:</strong> the counters for an IP address end after one hour at most. The scrambled email addresses with the times of sign-in codes are deleted after 2 days.</li>
         <li><strong>Sign-in codes</strong> work for 10 minutes and are deleted after they expire. <strong>Sessions</strong> end after 90 days without use and are then deleted.</li>
-        <li><strong>Backups</strong> of the database are kept for [N] days. Deleted data leaves the backups when they expire.</li>
+        <li><strong>Backups</strong> of the database are made every 12 hours and kept for 2 days. Deleted data leaves the backups when they expire.</li>
       </ul>
 
       <h2>Your choices and rights</h2>
@@ -98,17 +108,19 @@
         <li><strong>Download your data:</strong> Settings → Your data → “Download all my data (JSON)”. The file has your data for the language you are learning now; switch the course to download another language.</li>
         <li><strong>Delete your account:</strong> Settings → Your data → “Delete my account”. This deletes your account and all your learning data on our server at once. It cannot be undone.</li>
         <li><strong>Correct your data:</strong> you can edit or delete your own words in the app. For other changes, write to us.</li>
-        <li>Depending on where you live, you can have more rights, for example to object or to complain to a data protection authority. [Add the details that apply to you.]</li>
+        <li><strong>Your other rights:</strong> under the GDPR, you can ask us for a copy of your data, and ask us to correct it, delete it, or stop or limit how we use it. You can also object when we use your data because of our legitimate interest. Write to us (see <a href="#contact">Contact</a>). We answer within one month.</li>
+        <li><strong>Complain:</strong> if you think we use your data in a wrong way, you can complain to a data protection authority. In Finland, this is the <a href="https://tietosuoja.fi/en/home">Office of the Data Protection Ombudsman</a> (Tietosuojavaltuutetun toimisto). You can also complain to the authority in the EU country where you live or work. <a href="https://www.edpb.europa.eu/about-edpb/our-members_en">Here is a list of the authorities</a>. Please write to us first; we want to fix the problem.</li>
       </ul>
 
       <h2>Children</h2>
-      <p>Perennial is not made for children under [13/16]. Do not use it if you are younger.</p>
+      <p>Perennial is not made for children under 13. Do not use it if you are younger.</p>
 
       <h2>Changes</h2>
       <p>If we change this policy, we will update the date at the top. If a change is important, we will tell you in the app.</p>
 
       <h2 id="contact">Contact</h2>
-      <p>[Name of the person or company that runs Perennial]<br />[Postal address]<br />Email: <a href="mailto:privacy@example.com">[privacy@example.com]</a></p>
+      <p>Jussi Saurio, Finland. Jussi is responsible for your data (the “controller” in the GDPR).<br />Email: <a href="mailto:hello@playperennial.com">hello@playperennial.com</a>. Use this address for all privacy requests.</p>
+      <p class="muted">We are not lawyers. If something on this page is not clear, write to us and we will explain it.</p>
     </main>
   </body>
 </html>

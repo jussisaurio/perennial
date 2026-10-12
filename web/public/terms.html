@@ -9,11 +9,11 @@
     <style>
       :root {
         --paper: #f3eee4; --card: #fbf8f1; --ink: #1d1b16; --ink-2: #47423a; --muted: #877f71;
-        --line: #ddd3c1; --accent: #dc5636; --note: #f8e6bd;
+        --line: #ddd3c1; --accent: #dc5636;
         color-scheme: light dark;
       }
       @media (prefers-color-scheme: dark) {
-        :root { --paper: #10130e; --card: #1b2017; --ink: #efe9da; --ink-2: #c9c2b0; --muted: #8d9482; --line: #2c3326; --accent: #ff7b58; --note: #3a3220; }
+        :root { --paper: #10130e; --card: #1b2017; --ink: #efe9da; --ink-2: #c9c2b0; --muted: #8d9482; --line: #2c3326; --accent: #ff7b58; }
       }
       * { box-sizing: border-box; }
       body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
@@ -27,17 +27,15 @@
       a { color: var(--accent); }
       .back { font-size: 0.95rem; text-decoration: none; }
       .muted { color: var(--muted); font-size: 0.95rem; }
-      .draft { background: var(--note); border: 1px solid var(--line); border-radius: 12px; padding: 0.75rem 1rem; margin: 1rem 0 1.5rem; color: var(--ink); }
     </style>
   </head>
   <body>
     <main>
       <a class="back" href="/">← Back to Perennial</a>
       <h1>Terms of use</h1>
-      <p class="muted">Last updated: [DATE]</p>
-      <div class="draft"><strong>Draft — review before launch.</strong> A person who knows the law in your country must check this text before you publish it.</div>
+      <p class="muted">Last updated: 12 October 2026</p>
 
-      <p>These terms apply when you use Perennial, an app for learning words in a new language. Perennial is run by [name of the person or company] (“we”). When you use the app, you agree to these terms. Please also read our <a href="/privacy.html">privacy policy</a>.</p>
+      <p>These terms apply when you use Perennial, an app for learning words in a new language. Perennial is run by Jussi Saurio, a private person in Finland (“we”). When you use the app, you agree to these terms. Please also read our <a href="/privacy.html">privacy policy</a>.</p>
 
       <h2>The service</h2>
       <ul>
@@ -73,16 +71,27 @@
       <p>You can stop at any time. To delete your account and your data, go to Settings → Your data → “Delete my account”. Download your data first if you want a copy.</p>
 
       <h2>No warranty</h2>
-      <p>We provide Perennial “as is”. We do our best to keep it working and your data safe, but we cannot promise that the service will always be available or free of errors. [Add the limitation of liability that applies in your country.]</p>
+      <p>We provide Perennial “as is”. We do our best to keep it working and your data safe, but we cannot promise that the service will always be available or free of errors.</p>
+
+      <h2>Liability</h2>
+      <p>Perennial is free. So, as far as the law allows, we are not responsible for loss that comes from using the app or from not being able to use it. For example, lost progress, lost time, or an AI mistake.</p>
+      <p>This does not limit our responsibility when we cause harm on purpose or through gross negligence. It also does not take away any right that consumer law gives you and that a contract cannot remove.</p>
 
       <h2>Changes to these terms</h2>
       <p>If we change these terms, we will update the date at the top. If a change is important, we will tell you in the app before it starts.</p>
 
       <h2>Law</h2>
-      <p>[Country] law applies to these terms. [Add the courts or the consumer rules that apply.]</p>
+      <p>Finnish law applies to these terms. If you live in another country, you also keep the protection that the consumer law of your country gives you and that a contract cannot remove.</p>
+      <p>If you have a problem, please write to us first. Most problems are easy to fix. If we cannot agree:</p>
+      <ul>
+        <li>If you live in Finland, the <a href="https://www.kkv.fi/en/consumer-affairs/consumer-advisory-services/">Consumer Advisory Services</a> can give you advice. You can then take the case to the <a href="https://www.kuluttajariita.fi/en/">Consumer Disputes Board</a> (Kuluttajariitalautakunta). It is free, but it accepts cases only in Finnish or Swedish.</li>
+        <li>If you live in another EU country, the <a href="https://commission.europa.eu/topics/consumers/consumer-rights-and-complaints/resolve-your-consumer-complaint/european-consumer-centres-network-ecc-net_en">European Consumer Centre</a> in your country can help.</li>
+        <li>You can also take the case to a court in Finland or in the country where you live.</li>
+      </ul>
 
       <h2 id="contact">Contact</h2>
-      <p>[Name]<br />[Postal address]<br />Email: <a href="mailto:hello@example.com">[hello@example.com]</a></p>
+      <p>Jussi Saurio, Finland<br />Email: <a href="mailto:hello@playperennial.com">hello@playperennial.com</a></p>
+      <p class="muted">We are not lawyers. If something on this page is not clear, write to us and we will explain it.</p>
     </main>
   </body>
 </html>
