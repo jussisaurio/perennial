@@ -19,7 +19,7 @@ test("sound off: nothing is spoken, speaker buttons hide, and the icon and Setti
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   const before = await spoken();
-  await page.keyboard.press("Space"); // next card: no autoplay now
+  await page.keyboard.press("1"); // "New to me": next card, no autoplay now
   await page.waitForTimeout(2000);
   expect(await spoken()).toBe(before);
   await expect(page.getByRole("button", { name: "Play audio" })).toHaveCount(0);

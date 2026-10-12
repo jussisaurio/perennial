@@ -194,7 +194,8 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
   }, [word.lemma, example, tag]);
   const isNew = () => onDone(null);
   const knewIt = () => onDone(null, { alreadyKnown: true });
-  useKeys({ " ": isNew, Enter: isNew, n: isNew, k: knewIt, r: play });
+  // Answers are always 1 / ← (the left button) and 2 / → (the right one).
+  useKeys({ "1": isNew, ArrowLeft: isNew, "2": knewIt, ArrowRight: knewIt, r: play });
   return (
     <main className="card">
       <Kicker kind="intro" />
@@ -217,17 +218,17 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
       <div className="question">
         <p className="prompt">Is this word new to you?</p>
         <div className="answers">
-          <button className="answer-btn" onClick={knewIt}>
-            <strong>
-              I knew it <kbd>K</kbd>
-            </strong>
-            <span>Skip the quick check. Back in about a week.</span>
-          </button>
           <button className="answer-btn primary" onClick={isNew}>
             <strong>
-              New to me <kbd>Space</kbd>
+              New to me <kbd>1</kbd>
             </strong>
             <span>Learn it now. A quick check comes in a moment.</span>
+          </button>
+          <button className="answer-btn" onClick={knewIt}>
+            <strong>
+              I knew it <kbd>2</kbd>
+            </strong>
+            <span>Skip the quick check. Back in about a week.</span>
           </button>
         </div>
       </div>
@@ -265,7 +266,7 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
   }, [revealed, listen, audioText, tag]);
   useKeys(
     revealed
-      ? { "1": () => grade(1), ArrowLeft: () => grade(1), "2": () => grade(3), "3": () => grade(3), "4": () => grade(3), ArrowRight: () => grade(3), " ": () => grade(3), Enter: () => grade(3), r: play }
+      ? { "1": () => grade(1), ArrowLeft: () => grade(1), "2": () => grade(3), ArrowRight: () => grade(3), r: play }
       : { " ": reveal, Enter: reveal, r: play },
   );
   // Grades are about the word; on a listening card that means "did I catch it".
@@ -429,10 +430,9 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
 }
 
 const SHORTCUTS: [string, string][] = [
-  ["Space / Enter", "Show answer, then I remembered"],
-  ["1 or ←", "I forgot"],
-  ["2, 3 or →", "I remembered"],
-  ["K", "New word: I knew it"],
+  ["Space / Enter", "Show answer, Check, Next"],
+  ["1 or ←", "The left answer: New to me, I forgot"],
+  ["2 or →", "The right answer: I knew it, I remembered"],
   ["R", "Play the audio again"],
   ["Z", "Undo the last answer"],
   ["Esc", "End the session"],

@@ -13,7 +13,7 @@ test("the browser Back button moves between screens instead of leaving the app",
   await expect(page.getByRole("button", { name: /today's session/ })).toBeVisible();
 
   await startSession(page);
-  await advance(page, "Space");
+  await advance(page, "1");
   await page.goBack(); // leaving a session with Back returns home, answers kept
   await expect(page.getByRole("button", { name: /today's session/ })).toBeVisible();
 });
@@ -21,7 +21,7 @@ test("the browser Back button moves between screens instead of leaving the app",
 test("export downloads everything, including the review log", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
-  await advance(page, "k"); // one review: "I knew it"
+  await advance(page, "2"); // one review: "I knew it"
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /Done/ }).click();
   await page.getByRole("tab", { name: "Settings" }).click();
