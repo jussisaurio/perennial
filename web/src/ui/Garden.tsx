@@ -16,9 +16,6 @@ import { stripVisitor, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
 
-export { GrowthStrip } from "./plant";
-
-type Plant = GardenPlant;
 const H = 210;
 const GROUND = H - 34;
 
@@ -28,7 +25,7 @@ const GROUND = H - 34;
  */
 const hovers = (e: PointerEvent) => e.pointerType !== "touch";
 
-export interface GardenData extends PlantSource {
+interface GardenData extends PlantSource {
   total: number;
 }
 
@@ -53,9 +50,9 @@ const OVERSCAN = 160;
  * Small gardens (the landing page, a first week) fit the width. Bigger ones
  * become a strip you pan sideways, in course order, so the newest growth is
  * at the right, where it opens; only the plants in view are drawn, so 2000
- * words cost the same as 200.
+ * words cost the same as 200. Memoised: on the landing page a chip tap must
+ * not redraw every plant.
  */
-/** Memoised: on the landing page a chip tap must not redraw every plant. */
 export const Garden = memo(function Garden({
   data,
   highlight,
@@ -77,18 +74,23 @@ export const Garden = memo(function Garden({
   const scroller = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
   const [scrollX, setScrollX] = useState(0);
-  const [hover, setHover] = useState<{ p: Plant; x: number; y: number } | null>(null);
+  const [hover, setHover] = useState<{ p: GardenPlant; x: number; y: number } | null>(null);
   // Hover intent: with a card open, switching to another plant waits a moment,
   // so the pointer can cross other plants on its way to the card's button.
   const switching = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [visitorTip, setVisitorTip] = useState<{ v: TipVisitor; x: number; line?: string } | null>(null);
   // A tapped plant hops (#60); `n` restarts the animation on every tap. Rarely the neighbour hops too.
   const [perk, setPerk] = useState<{ id: string; n: number; neighbour: string | null } | null>(null);
-  const show = (h: { p: Plant; x: number; y: number }, now = false) => {
+  const show = (h: { p: GardenPlant; x: number; y: number }, now = false) => {
     clearTimeout(switching.current);
     setVisitorTip(null);
     if (now || !hover) setHover(h);
     else switching.current = setTimeout(() => setHover(h), 160);
+  };
+  // A visitor's word replaces the plant card.
+  const showVisitor = (v: TipVisitor) => (x: number) => {
+    setHover(null);
+    setVisitorTip({ v, x });
   };
   const hide = () => {
     clearTimeout(switching.current);
@@ -161,12 +163,12 @@ export const Garden = memo(function Garden({
   const to = scrolls ? Math.min(fullWidth, scrollX + width + OVERSCAN) : width;
   // Late at night one bloom snores (#62): the same one all day, the same as in the walk.
   const day = today();
-  const sleeper = useMemo(() => sleeperId(plants.filter((p) => p.stage === "bloom").map((p) => p.id)), [plants, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sleeper = useMemo(() => sleeperId(plants.filter((p) => p.stage === "bloom").map((p) => p.id)), [plants, day]); // eslint-disable-line react-hooks/exhaustive-deps -- a new sleeper each day
   const snoring = sleeper && isSleepyHour() ? sleeper : null;
   const empty = !!data && data.total === 0 && !showcase;
   const stake = empty && visitors ? reservedStake(language(visitors.lang).name, visitors.lang) : null;
   const worm = empty && visitors ? stripVisitor("worm", visitors.lang) : null;
-  const tap = (l: { p: Plant; x: number; y: number }, i: number) => {
+  const tap = (l: { p: GardenPlant; x: number; y: number }, i: number) => {
     show(l, true);
     const next = neighbourPerks() ? ((visible[i + 1] ?? visible[i - 1])?.p.id ?? null) : null;
     setPerk((o) => ({ id: l.p.id, n: (o?.n ?? 0) + 1, neighbour: next }));
@@ -217,10 +219,7 @@ export const Garden = memo(function Garden({
             art={SNAIL}
             scale={2.2}
             x={pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2)}
-            onShow={(x) => {
-              setHover(null);
-              setVisitorTip({ v: snail, x });
-            }}
+            onShow={showVisitor(snail)}
             onHide={() => setVisitorTip(null)}
           />
         )}
@@ -230,10 +229,7 @@ export const Garden = memo(function Garden({
             art={CAT_ASLEEP}
             scale={2}
             x={fullWidth - moleRoom - 30}
-            onShow={(x) => {
-              setHover(null);
-              setVisitorTip({ v: cat, x });
-            }}
+            onShow={showVisitor(cat)}
             onHide={() => setVisitorTip(null)}
           />
         )}
@@ -252,10 +248,7 @@ export const Garden = memo(function Garden({
             v={mole}
             x={fullWidth - 38}
             up={atEnd}
-            onShow={(x) => {
-              setHover(null);
-              setVisitorTip({ v: mole, x });
-            }}
+            onShow={showVisitor(mole)}
             onHide={() => setVisitorTip(null)}
           />
         )}
@@ -342,9 +335,7 @@ function VisitorMark({ v, art, x, scale, onShow, onHide, top }: { v: TipVisitor;
       onClick={() => onShow(x)}
     >
       <svg width={w * scale} height={h * scale} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" aria-hidden="true">
-        {runs(art).map((r, i) => (
-          <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />
-        ))}
+        <PixelRects art={art} />
       </svg>
     </button>
   );
@@ -356,11 +347,14 @@ function PixelSprite({ art, x, y, scale }: { art: PixelArt; x: number; y: number
   const h = art.rows.length;
   return (
     <g transform={`translate(${(x - (w * scale) / 2).toFixed(1)} ${(y - h * scale).toFixed(1)}) scale(${scale})`} shapeRendering="crispEdges" aria-hidden="true">
-      {runs(art).map((r, i) => (
-        <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />
-      ))}
+      <PixelRects art={art} />
     </g>
   );
+}
+
+/** Pixel art as SVG rects, one per run of same-coloured pixels in a row. */
+function PixelRects({ art }: { art: PixelArt }) {
+  return runs(art).map((r, i) => <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />);
 }
 
 /** One small "z" drifting up from a sleeping bloom (still, with reduced motion). */

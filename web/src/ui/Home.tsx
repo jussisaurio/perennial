@@ -40,13 +40,14 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const now = useNow();
   // Today's numbers and visitors change with the calendar day, not every minute.
   const day = today(new Date(now));
-  const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  // The same planner the session uses: is there anything to practise right now?
-  const available = useMemo(() => (learner ? canPractise(learner, mayListen(language(code).tag), now) : false), [learner, now, code]);
+  // The same planner the session uses: is there anything to practise right now? Not
+  // when nothing is due and today's new words are in (or the course is learned).
+  const canStart = useMemo(() => (learner ? canPractise(learner, mayListen(language(code).tag), now) : false), [learner, now, code]);
   // Past the day's limits, practice is still allowed: "Keep going".
-  const more = useMemo(() => !available && !!learner && canPractise(learner, mayListen(language(code).tag), now, true), [available, learner, now, code]);
-  const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const more = useMemo(() => !canStart && !!learner && canPractise(learner, mayListen(language(code).tag), now, true), [canStart, learner, now, code]);
+  const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
   // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
@@ -55,8 +56,6 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const course = learner.course;
   const ready = stats.seeds;
   const started = stats.known + stats.learning;
-  // Nothing due and today's new words are in (or the course is learned): no session to offer.
-  const canStart = available;
   const doneToday = stats.minutesToday >= course.minutes;
   // Picked up partway through the day: offer the rest, not the full session again.
   const left = Math.max(0, Math.round(course.minutes - stats.minutesToday));

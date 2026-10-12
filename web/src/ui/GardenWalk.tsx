@@ -24,13 +24,8 @@ import { useGardenScene, useWalkInput } from "./useGardenScene";
 import { learnerVisitors, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
 
-export type WalkSource = PlantSource;
-
-/** The learner's own garden: the same plants as the 2D garden. */
-export const walkPlants = plantsFromLearner;
-
 /** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
-export function showcaseWalkPlants(deck: LoadedDeck, count = 160): WalkSource {
+export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
   return { ...showcasePlants(deck, count), seeds: 0 };
 }
 
@@ -38,7 +33,8 @@ export function showcaseWalkPlants(deck: LoadedDeck, count = 160): WalkSource {
 export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: () => void }) {
   useEffect(() => track("garden_opened"), []);
   const learner = useLearner(lang);
-  const source = useMemo(() => (learner ? walkPlants(learner) : null), [learner]);
+  // The learner's own garden: the same plants as the 2D garden.
+  const source = useMemo(() => (learner ? plantsFromLearner(learner) : null), [learner]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
   const [focus] = useState(takeFocus);
   return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} onWater={onWater} focus={focus} />;
@@ -67,11 +63,9 @@ const TIME_LABEL: Record<TimeOfDay, string> = { day: "Day", dusk: "Evening", nig
 const NEXT_TIME: Record<TimeOfDay, TimeOfDay> = { day: "dusk", dusk: "night", night: "day" };
 
 /** The plant's one line of personality (the same every time for this word, and the same as in the 2D garden). */
-function personality(p: PlantView): string {
+function personality(p: PlacedPlant): string {
   return plantLine(p.lemma, plantMood(p));
 }
-
-type PlantView = PlacedPlant;
 
 /** Without onWater it is view-only (the landing page): no watering, no sessions. */
 export function GardenWalk({
@@ -83,7 +77,7 @@ export function GardenWalk({
   focus,
 }: {
   lang: string;
-  source: WalkSource | null;
+  source: PlantSource | null;
   /** Today's visitors (snail, cat, ...): a snapshot is taken when the garden opens. */
   visitors?: LearnerVisitors | null;
   onExit: () => void;

@@ -13,7 +13,7 @@ const between = (r: () => number, a: number, b: number) => a + r() * (b - a);
 type FlowerType = "daisy" | "star" | "cup" | "bell" | "cluster" | "spike" | "pom";
 type LeafShape = "oval" | "lance" | "round" | "heart";
 
-export interface Genome {
+interface Genome {
   flower: FlowerType;
   petals: number;
   petalShape: "round" | "pointed" | "long";
@@ -72,7 +72,7 @@ export function genome(word: string): Genome {
 
 export type Stage = "sprout" | "bud" | "bloom";
 
-/** For a card that knows only stability and whether the word is known: plantStage's rule (data/learner.ts). */
+/** For a card that knows only stability and whether the word is known: plantStage's rule (core/memory.ts). */
 function stageFor(s: number, known: boolean): Stage {
   return known ? "bloom" : s >= BUD_S ? "bud" : "sprout";
 }
@@ -263,8 +263,10 @@ export function StripPlant({ p, scale, highlighted }: { p: GardenPlant; scale: n
   );
 }
 
-/** The landing page's row of one word growing up, from a seed to an old bloom. */
-/** Memoised: it never changes, so a parent's re-render must not redraw it. */
+/**
+ * The landing page's row of one word growing up, from a seed to an old bloom.
+ * Memoised: it never changes, so a parent's re-render must not redraw it.
+ */
 export const GrowthStrip = memo(function GrowthStrip() {
   const stages: { label: string; s: number; reps: number }[] = [
     { label: "new word", s: 0, reps: 0 },

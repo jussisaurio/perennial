@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { useFeatures } from "../data/server";
 import { errorLine, sendingLabel } from "../content/voice";
-import { apiMessage, getMe, resetDate, type Me } from "../data/ai";
+import { getMe, resetDate, type Me } from "../data/ai";
 import { AuthError, sendCode, signInWithCode, signOut, useUser } from "../data/auth";
 import { CheckIcon } from "./icons";
-
-export { apiMessage };
 
 /** Account details from the server (credits), refreshed when the user changes. */
 export function useMe(): { me: Me | null; refresh: () => void } {
@@ -19,6 +17,7 @@ export function useMe(): { me: Me | null; refresh: () => void } {
     let alive = true;
     void getMe()
       .then((m) => alive && setMe(m))
+      // A failed fetch leaves `me` null, the same as while it loads.
       .catch(() => {});
     return () => {
       alive = false;
@@ -27,7 +26,7 @@ export function useMe(): { me: Me | null; refresh: () => void } {
   return { me: id ? me : null, refresh: () => setTick((t) => t + 1) };
 }
 
-export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
+export function SignIn({ cta }: { cta: string }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
@@ -108,7 +107,7 @@ export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
   );
 }
 
-export function Credits({ me }: { me: Me }) {
+function Credits({ me }: { me: Me }) {
   const { ai } = useFeatures();
   if (!ai) return null; // No AI on this server, so no AI words to count.
   // The bar shows what is left, like a fuel gauge: empty means used up.

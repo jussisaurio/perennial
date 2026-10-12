@@ -5,17 +5,17 @@
 import { COURSE_DEFAULTS } from "../data/rows";
 import { farewell } from "../content/voice";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { COURSE_LANGUAGES } from "../content/languages";
+import { COURSE_LANGUAGES, language } from "../content/languages";
 import { ensureUser } from "../data/auth";
 import { postWrite } from "../data/http";
 import { loadDeck } from "../data/deck";
 import { useDeck } from "../data/learner";
 import { track } from "../observability";
 import { SignIn } from "./Account";
-import { Garden, GrowthStrip, showcaseGarden } from "./Garden";
+import { Garden, showcaseGarden } from "./Garden";
 import { GardenWalk, showcaseWalkPlants } from "./GardenWalk";
 import { showcaseVisitors } from "./visitors";
-
+import { GrowthStrip } from "./plant";
 import { FlowerIcon, SproutMark } from "./icons";
 
 // Choices survive a reload before "Start learning" (a per-browser convenience).
@@ -101,11 +101,12 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   const [lastShown, setLastShown] = useState(fresh);
   if (fresh && fresh !== lastShown) setLastShown(fresh);
   const showcase = fresh ?? lastShown;
-  // Load every course's deck early, so switching language is instant.
+  // Load every course's deck early, so switching language is instant. A failed
+  // early load is not an error: useDeck loads the deck again when it is chosen.
   useEffect(() => {
     for (const l of COURSE_LANGUAGES) void loadDeck(l.code).catch(() => {});
   }, []);
-  const name = COURSE_LANGUAGES.find((l) => l.code === lang)?.name ?? lang;
+  const name = language(lang).name;
   const walkSource = useMemo(() => (deck && walking ? showcaseWalkPlants(deck) : null), [deck, walking]);
 
   const start = async () => {
@@ -195,7 +196,6 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
         </p>
       )}
       <p className="muted small">Free. No account needed to start. Add your email later to keep your garden on all your devices.</p>
-
     </div>
   );
 }

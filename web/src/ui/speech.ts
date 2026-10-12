@@ -71,7 +71,7 @@ let generation = 0;
 const IOS = typeof navigator !== "undefined" && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
 
 /** "Play slowly": iOS squeezes the rate scale, so it needs a lower value to sound clearly slower. */
-export const SLOW_RATE = IOS ? 0.5 : 0.65;
+const SLOW_RATE = IOS ? 0.5 : 0.65;
 
 async function utter(text: string, tag: string, rate: number, gen: number): Promise<void> {
   // WebKit (iOS Safari) ignores a new utterance's settings, rate included, when

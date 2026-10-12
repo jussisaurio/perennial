@@ -82,7 +82,6 @@ function Appearance() {
   );
 }
 
-/** Signed in: the account is the sync. Shows its status, nothing to set up. */
 /** Whether the device has changes the server hasn't received yet (offline, for example). */
 function SavedStatus() {
   const store = useStore();

@@ -19,6 +19,9 @@ import { wordsEmptyLine } from "../content/voice";
 type Filter = "all" | WordState | "suspended" | "mine";
 const SKILL_ORDER = ["read", "listen", "write"];
 
+/** The skills practised at least once, reading first. */
+const practisedSkills = (memory: MemoryRow[]) => memory.filter((m) => m.reps > 0).sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill));
+
 export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; adding: boolean; onAdd: () => void; onBack: () => void }) {
   if (adding) return <AddScreen lang={lang} onBack={onBack} />;
   return <WordList lang={lang} onAdd={onAdd} />;
@@ -126,14 +129,11 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
               <strong>{l.lemma}</strong>
               <span className="gl">{l.gloss}</span>
               <span className="skills">
-                {mem
-                  .filter((m) => m.reps > 0)
-                  .sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill))
-                  .map((m) => (
-                    <span key={m.skill} className={`pip ${m.skill}`} title={`${m.skill}: ${Math.round(recall(m) * 100)}% recall`}>
-                      {m.skill} {Math.round(recall(m) * 100)}%
-                    </span>
-                  ))}
+                {practisedSkills(mem).map((m) => (
+                  <span key={m.skill} className={`pip ${m.skill}`} title={`${m.skill}: ${Math.round(recall(m) * 100)}% recall`}>
+                    {m.skill} {Math.round(recall(m) * 100)}%
+                  </span>
+                ))}
               </span>
             </button>
             {open === l.id && learner && <WordDetail learner={learner} word={l} memory={mem} onDeleted={() => setDeleted(l)} />}
@@ -163,14 +163,14 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
 const SKILL_NAME: Record<string, string> = { read: "Reading", listen: "Listening", write: "Writing" };
 
 /** Who wrote a sentence, in plain words. */
-function authorLabel(e: Sentence): { text: string; warn?: boolean } {
-  if (e.origin === "own-text") return { text: "From your text" };
-  if (e.origin === "ai") return { text: "Written for you by Perennial AI" };
-  return { text: "From the course" };
+function authorLabel(e: Sentence): string {
+  if (e.origin === "own-text") return "From your text";
+  if (e.origin === "ai") return "Written for you by Perennial AI";
+  return "From the course";
 }
 
 /** "Write new sentences" with Perennial AI, with the cost shown first and an undo after. */
-function RewriteButton({ learner, word, label }: { learner: Learner; word: Word; label: string }) {
+function RewriteButton({ learner, word }: { learner: Learner; word: Word }) {
   const { ai } = useFeatures();
   const store = useStore();
   const { user } = useUser();
@@ -222,7 +222,7 @@ function RewriteButton({ learner, word, label }: { learner: Learner; word: Word;
   return (
     <span className="row">
       <button className="secondary" disabled={busy || left < 1} onClick={() => void run()}>
-        {busy ? "Writing…" : label}
+        {busy ? "Writing…" : "Write new sentences"}
       </button>
       <span className="muted small">With Perennial AI · uses 1 AI word{left < 1 ? " (you have none left this month)" : ""}. The course sentences stay.</span>
       {error && <span className="error">{error}</span>}
@@ -250,6 +250,7 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
     setTimeout(() => setSaved(false), 2000);
   };
   const paused = word.status === "paused";
+  const practised = practisedSkills(memory);
 
   return (
     <div className="detail">
@@ -268,39 +269,33 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
       ) : (
         word.notes && <p className="muted small">{word.notes}</p>
       )}
-      {memory.some((m) => m.reps > 0) ? (
+      {practised.length ? (
         <ul className="schedule">
-          {memory
-            .filter((m) => m.reps > 0)
-            .sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill))
-            .map((m) => (
-              <li key={m.skill}>
-                <strong>{SKILL_NAME[m.skill]}:</strong> next review {m.due <= now ? "now" : relTime(m.due)} · {plural(m.reps, "review")}
-                {m.lapses > 0 && ` · missed ${plural(m.lapses, "time")}`}
-              </li>
-            ))}
+          {practised.map((m) => (
+            <li key={m.skill}>
+              <strong>{SKILL_NAME[m.skill]}:</strong> next review {m.due <= now ? "now" : relTime(m.due)} · {plural(m.reps, "review")}
+              {m.lapses > 0 && ` · missed ${plural(m.lapses, "time")}`}
+            </li>
+          ))}
         </ul>
       ) : (
         <p className="muted small">Not started. It will come in a session as a new word.</p>
       )}
-      {memory.some((m) => m.reps > 0) && <SchedulingDetails memory={memory} reviews={learner.reviewsByWord.get(word.id) ?? []} now={now} />}
+      {practised.length > 0 && <SchedulingDetails practised={practised} reviews={learner.reviewsByWord.get(word.id) ?? []} now={now} />}
       <ul className="examples">
-        {examples.map((e) => {
-          const by = authorLabel(e);
-          return (
-            <li key={e.id}>
-              <span>{e.text}</span> <span className="muted">— {e.translation}</span>
-              <span className={by.warn ? "author warn" : "author"}>{by.text}</span>
-              {e.origin !== "deck" && (
-                <button className="ghost small" onClick={() => void store.write(() => store.collections.user_sentence.delete(e.id))} aria-label="Remove sentence">
-                  remove
-                </button>
-              )}
-            </li>
-          );
-        })}
+        {examples.map((e) => (
+          <li key={e.id}>
+            <span>{e.text}</span> <span className="muted">— {e.translation}</span>
+            <span className="author">{authorLabel(e)}</span>
+            {e.origin !== "deck" && (
+              <button className="ghost small" onClick={() => void store.write(() => store.collections.user_sentence.delete(e.id))} aria-label="Remove sentence">
+                remove
+              </button>
+            )}
+          </li>
+        ))}
       </ul>
-      <RewriteButton learner={learner} word={word} label="Write new sentences" />
+      <RewriteButton learner={learner} word={word} />
       <div className="row">
         <button className="secondary" title="Paused words do not appear in sessions until you resume them" onClick={() => void setWordStatus(store, word.id, paused ? "active" : "paused")}>
           {paused ? "Resume" : "Pause"}
@@ -324,8 +319,7 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
 const GRADE: Record<number, string> = { 1: "forgot", 2: "hard", 3: "remembered", 4: "easy" };
 
 /** The numbers behind the schedule (FSRS), for learners who want them. */
-function SchedulingDetails({ memory, reviews, now }: { memory: MemoryRow[]; reviews: ReviewRow[]; now: number }) {
-  const practised = memory.filter((m) => m.reps > 0).sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill));
+function SchedulingDetails({ practised, reviews, now }: { practised: MemoryRow[]; reviews: ReviewRow[]; now: number }) {
   return (
     <details className="more scheduling">
       <summary>Scheduling details</summary>

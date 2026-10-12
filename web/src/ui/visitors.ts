@@ -25,7 +25,7 @@ import {
 import { sceneryViews, type SceneryViews } from "../garden/scenery";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
-export function devVisitorOverride(): VisitorOverride {
+function devVisitorOverride(): VisitorOverride {
   if (!import.meta.env.DEV) return null;
   const v = new URLSearchParams(location.search).get("visitors");
   if (!v) return null;

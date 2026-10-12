@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { firstPlantsLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
@@ -185,13 +185,12 @@ function Actions({ children }: { children: ReactNode }) {
 
 function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
   const { word, example } = card;
-  const play = () => void speakAll(example ? [word.lemma, example.text] : [word.lemma], tag);
+  const play = useCallback(() => void speakAll(example ? [word.lemma, example.text] : [word.lemma], tag), [word.lemma, example, tag]);
   // The sentence follows the word; leaving the card cuts both off, so it never plays over the next one.
   useEffect(() => {
     play();
     return stopSpeaking;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [word.lemma, example, tag]);
+  }, [play]);
   const isNew = () => onDone(null);
   const knewIt = () => onDone(null, { alreadyKnown: true });
   // Answers are always 1 / ← (the left button) and 2 / → (the right one).
@@ -480,6 +479,7 @@ function Summary({
   onExit: () => void;
 }) {
   const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
+  // Once per summary: an Undo from here changes the counts, but it also leaves the summary.
   useEffect(() => track("session_finished", { ended, answers: counts.answers, newWords: counts.intros }), []); // eslint-disable-line react-hooks/exhaustive-deps
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   useKeys(useMemo(() => ({ Enter: onExit }), [onExit]));
