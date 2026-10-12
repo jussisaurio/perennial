@@ -1,6 +1,7 @@
 // What a learner leaves on this device: their SQLite copy (OPFS) and their
 // queue of writes not yet sent (IndexedDB). Both are per user. Signing out or
-// deleting the account forgets them here.
+// deleting the account forgets them here. Also the course this device shows
+// (keepCourse, at the end): per device, not per user, and kept on sign-out.
 //
 // The app reloads right after a sign-out, and an open database cannot be
 // deleted, so forgetting is two steps: clear the queue now (so nothing more
@@ -165,3 +166,20 @@ export function cleanUpForgotten(): Promise<void> {
   })().catch((e) => console.warn("[device] cleanup failed", e));
   return cleaning;
 }
+
+// The course this device shows: a per-device convenience, not synced.
+const COURSE_KEY = "perennial-course";
+export const keepCourse = (lang: string) => {
+  try {
+    localStorage.setItem(COURSE_KEY, lang);
+  } catch {
+    /* private mode: the first course shows */
+  }
+};
+export const readCourse = () => {
+  try {
+    return localStorage.getItem(COURSE_KEY);
+  } catch {
+    return null;
+  }
+};
