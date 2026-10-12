@@ -2,7 +2,8 @@
 // only their own rows); writes come in as batches of mutations, are checked,
 // scoped to the session's user, and applied in one transaction. The response
 // carries the Postgres transaction id, which the client waits to see in the
-// stream before dropping its optimistic state.
+// stream before dropping its optimistic state, and whether any row changed (if
+// none did, no echo will come: the client must not wait for one).
 
 import { deckWords, isDeckWord } from "./words";
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
@@ -53,6 +54,8 @@ export async function proxyShape(req: Request, userId: string, config: Config): 
 // ---------- writes ----------
 
 const DAY = 86_400_000;
+/** Text limits for learner rows. Perennial AI output is held to the same ones (ai.ts). */
+export const LIMITS = { lemma: 60, gloss: 120, pos: 20, form: 60, forms: 40, notes: 300, text: 400, translation: 400, cloze: 60 };
 const lang = z.enum(["es", "de"]);
 const wordId = z.string().min(1).max(120);
 const ts = z.coerce.date();
@@ -87,11 +90,11 @@ const Mutation = z.discriminatedUnion("type", [
     row: z.object({
       id: z.uuid(),
       lang,
-      lemma: z.string().trim().min(1).max(60),
-      gloss: z.string().trim().min(1).max(120),
-      pos: z.string().max(20).nullish(),
-      forms: z.array(z.string().max(60)).max(40),
-      notes: z.string().max(300).nullish(),
+      lemma: z.string().trim().min(1).max(LIMITS.lemma),
+      gloss: z.string().trim().min(1).max(LIMITS.gloss),
+      pos: z.string().max(LIMITS.pos).nullish(),
+      forms: z.array(z.string().max(LIMITS.form)).max(LIMITS.forms),
+      notes: z.string().max(LIMITS.notes).nullish(),
       deck_id: z.string().max(120).nullish(),
     }),
   }),
@@ -101,9 +104,9 @@ const Mutation = z.discriminatedUnion("type", [
     row: z.object({
       id: z.uuid(),
       word_id: wordId,
-      text: z.string().trim().min(1).max(400),
-      translation: z.string().trim().min(1).max(400),
-      cloze: z.string().trim().min(1).max(60),
+      text: z.string().trim().min(1).max(LIMITS.text),
+      translation: z.string().trim().min(1).max(LIMITS.translation),
+      cloze: z.string().trim().min(1).max(LIMITS.cloze),
       origin: z.enum(["own-text", "ai"]),
       model: z.string().max(80).nullish(),
     }),
@@ -172,77 +175,90 @@ async function checkWords(tx: SQL, userId: string, mutations: Mutation[]) {
   if (missing) throw new HttpError(422, "unknown_word", { word_id: missing.slice(0, 120) });
 }
 
-export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Promise<number> {
+/**
+ * Applies a batch in one transaction. `changed` is false when no statement
+ * touched a row (a retried insert, an older state, a delete of nothing): no
+ * change reaches the stream, so there is no txid echo to wait for.
+ */
+export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Promise<{ txid: number; changed: boolean }> {
   const now = new Date();
   for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw new HttpError(422, "review_from_the_future");
   return sql.begin(async (tx) => {
+    // Linking an anonymous learner (auth.ts mergeUsers) locks this row and ends
+    // the anonymous sessions. A write racing it waits here, then finds no
+    // session and is refused, instead of adding rows that the anonymous user's
+    // deletion would take with it. A write that got here first is moved over.
+    const [user] = await tx`select id from "user" where id = ${userId} for share`;
+    if (!user || !(await tx`select 1 from session where "userId" = ${userId} limit 1`).length) throw new HttpError(401, "sign_in_required");
     await checkQuota(tx, userId, mutations);
     await checkWords(tx, userId, mutations);
     // The txid must be read inside the writing transaction.
     const [{ txid }] = await tx`select pg_current_xact_id()::xid::text as txid`;
+    let rows = 0;
+    const run = async (q: Promise<{ count: number }>) => void (rows += (await q).count);
     for (const m of mutations) {
       switch (m.type) {
         case "review.insert": {
           const r = m.row;
           // Insert-only: a reused id never overwrites anything, least of all another user's row.
-          await tx`insert into review (id, user_id, lang, word_id, skill, grade, kind, reviewed_at, duration_ms, sentence_id)
+          await run(tx`insert into review (id, user_id, lang, word_id, skill, grade, kind, reviewed_at, duration_ms, sentence_id)
             values (${r.id}, ${userId}, ${r.lang}, ${r.word_id}, ${r.skill}, ${r.grade}, ${r.kind}, ${clamp(r.reviewed_at, now)}, ${r.duration_ms}, ${r.sentence_id ?? null})
-            on conflict (id) do nothing`;
+            on conflict (id) do nothing`);
           break;
         }
         case "review.delete":
-          await tx`delete from review where id = ${m.id} and user_id = ${userId}`;
+          await run(tx`delete from review where id = ${m.id} and user_id = ${userId}`);
           break;
         case "course.upsert": {
           const r = m.row;
           // Only the columns sent change, so two devices editing different settings both win.
-          await tx`insert into course (user_id, lang, minutes, retention) values (${userId}, ${r.lang}, ${r.minutes ?? 7}, ${r.retention ?? 0.9})
+          await run(tx`insert into course (user_id, lang, minutes, retention) values (${userId}, ${r.lang}, ${r.minutes ?? 7}, ${r.retention ?? 0.9})
             on conflict (user_id, lang) do update set
               minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
-              retention = coalesce(${r.retention ?? null}::real, course.retention)`;
+              retention = coalesce(${r.retention ?? null}::real, course.retention)`);
           break;
         }
         case "word_state.upsert": {
           const r = m.row;
           const at = clamp(r.updated_at, now);
-          await tx`insert into word_state (user_id, word_id, status, queued_at, updated_at) values (${userId}, ${r.word_id}, ${r.status}, ${r.queued_at ?? null}, ${at})
+          await run(tx`insert into word_state (user_id, word_id, status, queued_at, updated_at) values (${userId}, ${r.word_id}, ${r.status}, ${r.queued_at ?? null}, ${at})
             on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
-            where excluded.updated_at > word_state.updated_at`;
+            where excluded.updated_at > word_state.updated_at`);
           break;
         }
         case "word_state.delete":
-          await tx`delete from word_state where user_id = ${userId} and word_id = ${m.word_id} and updated_at <= ${clamp(m.updated_at, now)}`;
+          await run(tx`delete from word_state where user_id = ${userId} and word_id = ${m.word_id} and updated_at <= ${clamp(m.updated_at, now)}`);
           break;
         case "user_word.upsert": {
           const r = m.row;
-          await tx`insert into user_word (id, user_id, lang, lemma, gloss, pos, forms, notes, deck_id)
+          await run(tx`insert into user_word (id, user_id, lang, lemma, gloss, pos, forms, notes, deck_id)
             values (${r.id}, ${userId}, ${r.lang}, ${r.lemma}, ${r.gloss}, ${r.pos ?? null}, ${JSON.stringify(r.forms)}::jsonb, ${r.notes ?? null}, ${r.deck_id ?? null})
             on conflict (id) do update set lemma = excluded.lemma, gloss = excluded.gloss, pos = excluded.pos, forms = excluded.forms, notes = excluded.notes, deck_id = excluded.deck_id
-            where user_word.user_id = ${userId}`;
+            where user_word.user_id = ${userId}`);
           break;
         }
         case "user_word.delete":
-          await tx`delete from user_sentence where word_id = ${m.id}::text and user_id = ${userId}`;
-          await tx`delete from user_word where id = ${m.id} and user_id = ${userId}`;
+          await run(tx`delete from user_sentence where word_id = ${m.id}::text and user_id = ${userId}`);
+          await run(tx`delete from user_word where id = ${m.id} and user_id = ${userId}`);
           break;
         case "user_sentence.insert": {
           const r = m.row;
-          await tx`insert into user_sentence (id, user_id, word_id, text, translation, cloze, origin, model)
+          await run(tx`insert into user_sentence (id, user_id, word_id, text, translation, cloze, origin, model)
             values (${r.id}, ${userId}, ${r.word_id}, ${r.text}, ${r.translation}, ${r.cloze}, ${r.origin}, ${r.model ?? null})
-            on conflict (id) do nothing`;
+            on conflict (id) do nothing`);
           break;
         }
         case "user_sentence.delete":
-          await tx`delete from user_sentence where id = ${m.id} and user_id = ${userId}`;
+          await run(tx`delete from user_sentence where id = ${m.id} and user_id = ${userId}`);
           break;
       }
     }
-    return Number(txid);
+    return { txid: Number(txid), changed: rows > 0 };
   });
 }
 
 export async function handleWrite(req: Request, sql: SQL, userId: string): Promise<Response> {
   const body = WriteBatch.safeParse(await readJson(req, 512 * 1024));
   if (!body.success) throw new HttpError(422, "bad_request", { issues: body.error.issues.slice(0, 5) });
-  return json({ txid: await applyWrites(sql, userId, body.data.mutations) });
+  return json(await applyWrites(sql, userId, body.data.mutations));
 }

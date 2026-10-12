@@ -51,6 +51,27 @@ test("anonymous progress moves into the account on sign-in, merged with what it 
   expect((await t.sql`select 1 from "user" where id = ${anonId}`).length).toBe(0); // anonymous user gone
 });
 
+test("a write racing the sign-in is moved into the account or refused, never silently lost", async () => {
+  const email = unique("race");
+  await t.signIn(email);
+  const anon = await t.anonymous();
+  await t.write(anon, [review(W.e)]);
+  // Code sent first, so the writes race only the linking itself.
+  await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, anon);
+  const otp = t.mailer.latest(email)!.subject.match(/\d{6}/)![0];
+  const racing = Array.from({ length: 5 }, (_, i) => review([W.f, W.g, W.h, W.i, W.j][i]));
+  const [link, ...writes] = await Promise.all([t.call("/api/auth/sign-in/email-otp", { email, otp }, anon), ...racing.map((r) => t.write(anon, [r]))]);
+  expect(link.status).toBe(200);
+  const accountId = (await t.me(link.cookie!)).id;
+  const kept = new Set((await t.sql`select id from review where user_id = ${accountId}`).map((r: { id: string }) => r.id));
+  writes.forEach((w, i) => {
+    expect([200, 401]).toContain(w.status);
+    if (w.status === 200) expect(kept.has(racing[i].row.id)).toBe(true);
+  });
+  // After linking, the anonymous cookie can't write rows that would vanish.
+  expect((await t.write(anon, [review(W.k)])).status).toBe(401);
+});
+
 test("deleting an account removes everything", async () => {
   const cookie = await t.signIn(unique("delete"));
   const id = (await t.me(cookie)).id;

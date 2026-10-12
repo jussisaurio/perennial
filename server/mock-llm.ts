@@ -18,7 +18,10 @@ function entry(form: string, sentence?: string) {
     { text: `¿Dónde está ${form}?`, translation: `Where is "${form}"?`, cloze: form },
     { text: `Me gusta ${form} mucho.`, translation: `I like "${form}" a lot.`, cloze: form },
   ].slice(0, 3);
-  return { lemma: form, gloss: `[mock] ${form}`, pos: "mock", forms: [form], notes: "Placeholder from mock-llm.ts — not real content.", examples };
+  // Test hooks: output longer than /api/write takes (the server must clamp or drop it).
+  const gloss = form.startsWith("longgloss") ? "g".repeat(200) : `[mock] ${form}`;
+  const notes = form.startsWith("longnote") ? "n".repeat(1000) : "Placeholder from mock-llm.ts — not real content.";
+  return { lemma: form, gloss, pos: "mock", forms: [form], notes, examples };
 }
 
 // A valid deck source entry (scripts/deck/generate.ts --mock).
