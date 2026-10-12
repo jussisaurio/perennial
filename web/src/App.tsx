@@ -119,9 +119,10 @@ function OfflineNote() {
 }
 
 function ReloadBanner() {
-  const [needed, setNeeded] = useState(false);
+  const [needed, setNeeded] = useState(reloadNeeded.needed);
   useEffect(() => {
     const on = () => setNeeded(true);
+    if (reloadNeeded.needed) on();
     reloadNeeded.addEventListener("reload", on);
     return () => reloadNeeded.removeEventListener("reload", on);
   }, []);

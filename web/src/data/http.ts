@@ -19,8 +19,17 @@ export class ApiError extends Error {
   }
 }
 
-/** Ask the user to reload when the server needs a newer app. */
-export const reloadNeeded = new EventTarget();
+/**
+ * Ask the user to reload when the server needs a newer app. `needed` stays
+ * true: the first check at start can fire before the note is on screen.
+ */
+export const reloadNeeded = new (class extends EventTarget {
+  needed = false;
+  constructor() {
+    super();
+    this.addEventListener("reload", () => (this.needed = true));
+  }
+})();
 
 export interface WriteResult {
   txid: number;
