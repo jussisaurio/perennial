@@ -16,7 +16,7 @@ import { PRICES, type Config } from "./config";
 import { Lang, LANGUAGE } from "./course";
 import { HttpError } from "./http";
 import { event, log } from "./log";
-import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenWord } from "./prompts";
+import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, SENTENCES_PER_WORD, type GenWord } from "./prompts";
 import { ensureRoom, LIMITS } from "./sync";
 
 /** "2026-10": credits and the spend budget reset each calendar month (UTC). */
@@ -54,7 +54,7 @@ function fitSentence<E extends z.infer<typeof SentenceOut>>(e: E): E | null {
 /** A word /api/write would refuse, or one with no usable sentence, is dropped (and not charged). Notes and pos are cut short. */
 function fitWord(w: z.infer<typeof WordOut>): GenWord | null {
   const lemma = fits(w.lemma, LIMITS.lemma), gloss = fits(w.gloss, LIMITS.gloss);
-  const examples = w.examples.map(fitSentence).filter((e) => e !== null);
+  const examples = w.examples.map(fitSentence).filter((e) => e !== null).slice(0, SENTENCES_PER_WORD);
   if (!lemma || !gloss || !examples.length) return null;
   const forms = w.forms.map((f) => f.trim()).filter((f) => f && f.length <= LIMITS.form).slice(0, LIMITS.forms);
   const notes = w.notes.trim();
@@ -203,9 +203,9 @@ export class AIService {
 
   /** Words the learner picked from their own text. One credit per word returned. */
   async mine(userId: string, input: z.infer<typeof MineIn>) {
-    // Nothing is charged for words the app could not save: each brings up to 3 sentences.
+    // Nothing is charged for words the app could not save (fitWord keeps SENTENCES_PER_WORD each).
     await ensureRoom(this.sql, userId, "user_word", input.items.length);
-    await ensureRoom(this.sql, userId, "user_sentence", 3 * input.items.length);
+    await ensureRoom(this.sql, userId, "user_sentence", SENTENCES_PER_WORD * input.items.length);
     const words = await this.spend(userId, input.items.length, async () => {
       const p = minePrompt(LANGUAGE[input.lang], "English", input.items, input.known);
       const out = await this.generate(userId, "mine", WordsOut, p.system, p.user);
@@ -217,11 +217,23 @@ export class AIService {
 
   /** New sentences for words the learner chose. One credit per word that got any. */
   async examples(userId: string, input: z.infer<typeof ExamplesIn>) {
-    await ensureRoom(this.sql, userId, "user_sentence", 3 * input.words.length);
+    await ensureRoom(this.sql, userId, "user_sentence", SENTENCES_PER_WORD * input.words.length);
     const examples = await this.spend(userId, input.words.length, async () => {
       const p = moreExamplesPrompt(LANGUAGE[input.lang], "English", input.words, input.known);
       const out = await this.generate(userId, "examples", SentencesOut, p.system, p.user);
-      const value = out.examples.map((e) => fitSentence({ ...e, lemma: e.lemma.trim() })).filter((e) => e !== null);
+      // Only words that were asked for, SENTENCES_PER_WORD each: what ensureRoom made room for, and what is charged.
+      const asked = new Set(input.words.map((w) => w.lemma.trim().toLowerCase()));
+      const perWord = new Map<string, number>();
+      const value = out.examples
+        .map((e) => fitSentence({ ...e, lemma: e.lemma.trim() }))
+        .filter((e) => e !== null)
+        .filter((e) => {
+          const key = e.lemma.toLowerCase();
+          const n = perWord.get(key) ?? 0;
+          if (!asked.has(key) || n >= SENTENCES_PER_WORD) return false;
+          perWord.set(key, n + 1);
+          return true;
+        });
       return { value, items: new Set(value.map((e) => e.lemma)).size };
     });
     return { examples, credits: await this.credits(userId), model: this.config.anthropic.model };

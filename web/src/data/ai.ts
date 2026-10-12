@@ -76,7 +76,7 @@ export function apiMessage(e: unknown): string {
     case "ai_off":
       return "Perennial AI is not available on this server.";
     case "quota":
-      return "You have too many of your own words and sentences to add more. Delete some on the Words screen first.";
+      return "You have too many of your own words and sentences to add more. Delete some on the Words screen (From my texts) first.";
     case "slow_down":
       return "Too many requests. Wait a moment and try again.";
     case "account_required":

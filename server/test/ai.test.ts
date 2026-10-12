@@ -1,4 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
+import { SENTENCES_PER_WORD } from "../src/prompts";
 import { QUOTA } from "../src/sync";
 import { startApp, stopMockLLM, unique } from "./helpers";
 
@@ -98,4 +99,32 @@ test("at the own-words limit, AI is refused before any model call and nothing is
   expect((await t.sql`select 1 from ai_request where user_id = ${id}`).length).toBe(0);
   // One more still fits.
   expect((await t.call("/api/ai/mine", { lang: "es", items: [item("zorro")], known: [] }, cookie)).status).toBe(200);
+});
+
+// The room check above counts SENTENCES_PER_WORD per word: the server must hold the model to it.
+test("the AI's sentences are held to what was asked: 3 per word, only words asked for", async () => {
+  const cookie = await t.signIn(unique("chatty"));
+  const mined = await t.call("/api/ai/mine", { lang: "es", items: [item("chattya")], known: [] }, cookie);
+  expect(mined.body.words[0].examples).toHaveLength(SENTENCES_PER_WORD);
+  const more = await t.call("/api/ai/examples", { lang: "es", words: [{ lemma: "chattyb", gloss: "x", seen: [] }], known: [] }, cookie);
+  expect(more.status).toBe(200);
+  expect(more.body.examples).toHaveLength(SENTENCES_PER_WORD);
+  expect(more.body.examples.every((e: { lemma: string }) => e.lemma === "chattyb")).toBe(true);
+  expect((await t.me(cookie)).credits.used).toBe(2);
+});
+
+test("at the own-sentences limit, new sentences are refused before any model call", async () => {
+  const cookie = await t.signIn(unique("fullsent"));
+  const id = (await t.me(cookie)).id;
+  const saved = QUOTA.user_sentence;
+  QUOTA.user_sentence = SENTENCES_PER_WORD; // room for one word's sentences, not two
+  try {
+    const r = await t.call("/api/ai/examples", { lang: "es", words: [{ lemma: "gato", gloss: "cat", seen: [] }, { lemma: "perro", gloss: "dog", seen: [] }], known: [] }, cookie);
+    expect(r.status).toBe(429);
+    expect(r.body).toMatchObject({ error: "quota", table: "user_sentence" });
+    expect((await t.me(cookie)).credits.used).toBe(0);
+    expect((await t.sql`select 1 from ai_request where user_id = ${id}`).length).toBe(0);
+  } finally {
+    QUOTA.user_sentence = saved;
+  }
 });
