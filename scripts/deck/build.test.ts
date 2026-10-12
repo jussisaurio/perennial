@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { compatibility, type SourceWord } from "../../web/src/deck/schema.ts";
+import { compatibility, ID_ALPHABET, type SourceWord } from "../../web/src/deck/schema.ts";
 import { buildDeck, wholeWordCount, type Manifest } from "./lib.ts";
 
 const src = (lemma: string, extra: Partial<SourceWord> = {}): SourceWord => ({
@@ -32,7 +32,7 @@ test("first build assigns ids, ranks and version 1", () => {
 test("random ids are well formed", () => {
   const r = buildDeck({ lang: "de", source: [src("Haus")], manifest: empty(), prev: null });
   expect(r.errors).toEqual([]);
-  expect(r.deck.words[0].id).toMatch(/^de\.w\.[0-9abcdefghjkmnpqrstvwxyz]{10}$/);
+  expect(r.deck.words[0].id).toMatch(new RegExp(`^de\\.w\\.[${ID_ALPHABET}]{10}$`));
 });
 
 test("rebuilding is idempotent; edits keep ids and bump the version", () => {
