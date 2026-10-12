@@ -3,7 +3,7 @@
 
 export type Verdict = "exact" | "accent" | "typo" | "wrong";
 
-export function normalize(s: string): string {
+function normalize(s: string): string {
   return s
     .normalize("NFC")
     .toLocaleLowerCase()
@@ -12,8 +12,15 @@ export function normalize(s: string): string {
     .trim();
 }
 
-export function stripMarks(s: string): string {
+function stripMarks(s: string): string {
   return s.normalize("NFD").replace(/\p{M}/gu, "").normalize("NFC");
+}
+
+/** Index of the first difference between two strings, as letters. */
+function firstDiff(a: string[], b: string[]): number {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return i;
 }
 
 /**
@@ -30,8 +37,7 @@ export function differences(given: string, expected: string): Set<number> {
       if (ch !== g[i]) out.add(i);
     });
   } else {
-    let i = 0;
-    while (i < g.length && i < el.length && g[i] === el[i]) i++;
+    const i = firstDiff(g, el);
     if (i < e.length) out.add(i);
   }
   return out;
@@ -40,7 +46,7 @@ export function differences(given: string, expected: string): Set<number> {
 /** German without an umlaut keyboard: ae, oe, ue, ss are the standard spellings. */
 const germanSpelling = (s: string) => s.replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
 
-export function levenshtein(a: string, b: string): number {
+function levenshtein(a: string, b: string): number {
   const x = [...a];
   const y = [...b];
   let prev = Array.from({ length: y.length + 1 }, (_, i) => i);
@@ -61,13 +67,6 @@ export function levenshtein(a: string, b: string): number {
  * with a warning, like a missing Spanish accent.
  */
 const MARKS_ARE_LETTERS = /^(fi|sv|no|da|et|hu|tr|is|pl|cs|sk|sl|hr|sr|lt|lv|ro|vi)/;
-
-/** Index of the first difference between two strings (after a single edit). */
-function firstDiff(a: string[], b: string[]): number {
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) i++;
-  return i;
-}
 
 export function check(given: string, expected: string | string[], lang = ""): Verdict {
   const options = Array.isArray(expected) ? expected : [expected];

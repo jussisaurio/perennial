@@ -31,7 +31,15 @@ export const reloadNeeded = new (class extends EventTarget {
   }
 })();
 
-export interface WriteResult {
+/** A response's JSON body, or an ApiError when the request failed. */
+export async function readResponse(res: Response): Promise<Record<string, unknown>> {
+  // An error page (from a proxy, say) has no JSON body: the status still says what failed.
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) throw new ApiError(res.status, String(data.error ?? `http_${res.status}`), data);
+  return data;
+}
+
+interface WriteResult {
   txid: number;
   /** False when the write changed nothing, so no echo will come through sync. */
   changed: boolean;
@@ -44,8 +52,7 @@ export async function postWrite(mutations: unknown[], opts: { idempotencyKey?: s
     headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION, "idempotency-key": opts.idempotencyKey ?? crypto.randomUUID() },
     body: JSON.stringify({ mutations }),
   });
-  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (res.status === 426) reloadNeeded.dispatchEvent(new Event("reload"));
-  if (!res.ok) throw new ApiError(res.status, String(data.error ?? `http_${res.status}`), data);
+  const data = await readResponse(res);
   return { txid: Number(data.txid), changed: data.changed !== false };
 }

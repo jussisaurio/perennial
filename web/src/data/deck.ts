@@ -74,7 +74,8 @@ async function load(lang: string): Promise<LoadedDeck> {
     if (!loader) throw new Error(`no deck for ${lang}`);
     const raw = await loader();
     const deck = index(raw, lang);
-    // Keep a last good copy, in case a future version fails to load.
+    // Keep a last good copy, in case a future version fails to load. Best
+    // effort: no Cache API (not a secure context) or no space means no copy.
     void caches?.open(CACHE).then((c) => c.put(url, new Response(JSON.stringify(raw)))).catch(() => {});
     return deck;
   } catch (e) {

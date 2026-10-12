@@ -26,7 +26,7 @@ export function newWordsToday(l: Learner, now = Date.now()): number {
  * this many new words beyond today's limit, plus reviews due in the next days
  * (early, so worth a little less, but no harm).
  */
-export const EXTRA_NEW = 10;
+const EXTRA_NEW = 10;
 
 /** The nudge next to "Keep going": a reason, not a rule. */
 export const KEEP_GOING_NOTE = "More is fine. New words come back for review over the next days, so tomorrow's session may take a little longer.";

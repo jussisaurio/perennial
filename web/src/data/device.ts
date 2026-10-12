@@ -13,25 +13,30 @@
 export const outboxName = (userId: string) => `perennial-outbox-${userId}`;
 export const databaseName = (userId: string) => `perennial-${userId}.sqlite`;
 
-const FORGET_KEY = "perennial-forget";
-
-function forgetList(): string[] {
+/** A list kept in localStorage. Unreadable entries are dropped. */
+function readList<T>(key: string, valid: (x: unknown) => x is T): T[] {
   try {
-    const v = JSON.parse(localStorage.getItem(FORGET_KEY) ?? "[]") as unknown;
-    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+    const v = JSON.parse(localStorage.getItem(key) ?? "[]") as unknown;
+    return Array.isArray(v) ? v.filter(valid) : [];
   } catch {
+    // No storage, or not JSON: nothing was kept.
     return [];
   }
 }
 
-function saveForgetList(ids: string[]) {
+function saveList(key: string, list: unknown[]) {
   try {
-    if (ids.length) localStorage.setItem(FORGET_KEY, JSON.stringify(ids));
-    else localStorage.removeItem(FORGET_KEY);
+    if (list.length) localStorage.setItem(key, JSON.stringify(list));
+    else localStorage.removeItem(key);
   } catch {
-    // No storage: nothing to remember; the files stay until the browser clears them.
+    // No storage: nothing is remembered. Forgotten files stay until the
+    // browser clears them, and an anonymous queue is not carried over.
   }
 }
+
+const FORGET_KEY = "perennial-forget";
+const forgetList = () => readList(FORGET_KEY, (x): x is string => typeof x === "string");
+const saveForgetList = (ids: string[]) => saveList(FORGET_KEY, ids);
 
 /** Open stores register how to empty their queue, so a sign-out can stop uploads at once. */
 const openOutboxes = new Map<string, () => Promise<void>>();
@@ -106,10 +111,10 @@ async function deleteLocalStorageOutbox(userId: string): Promise<boolean> {
   try {
     const prefix = `${outboxName(userId)}:`;
     for (const k of Object.keys(localStorage)) if (k.startsWith(prefix)) localStorage.removeItem(k);
-    return true;
   } catch {
-    return true;
+    // No storage: no queue was kept there.
   }
+  return true;
 }
 
 // An anonymous learner who signs in keeps their progress (the server merges
@@ -117,23 +122,12 @@ async function deleteLocalStorageOutbox(userId: string): Promise<boolean> {
 const ADOPT_KEY = "perennial-adopt";
 type Adoption = { from: string; to: string };
 
-function adoptions(): Adoption[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(ADOPT_KEY) ?? "[]") as unknown;
-    return Array.isArray(v) ? v.filter((a): a is Adoption => typeof a?.from === "string" && typeof a?.to === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveAdoptions(list: Adoption[]) {
-  try {
-    if (list.length) localStorage.setItem(ADOPT_KEY, JSON.stringify(list));
-    else localStorage.removeItem(ADOPT_KEY);
-  } catch {
-    // No storage: the anonymous queue is not carried over.
-  }
-}
+const isAdoption = (a: unknown): a is Adoption => {
+  const x = a as Partial<Adoption> | null;
+  return typeof x?.from === "string" && typeof x?.to === "string";
+};
+const adoptions = () => readList(ADOPT_KEY, isAdoption);
+const saveAdoptions = (list: Adoption[]) => saveList(ADOPT_KEY, list);
 
 /** The anonymous user `from` became the account `to`: its queued writes are theirs. */
 export function adoptOnDevice(from: string, to: string) {

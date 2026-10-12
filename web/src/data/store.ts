@@ -19,10 +19,8 @@ import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineE
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, databaseName, keepOnDevice, outboxName, registerOutbox } from "./device";
-import { ApiError, postWrite, reloadNeeded } from "./http";
+import { ApiError, postWrite } from "./http";
 import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
-
-export { reloadNeeded };
 
 type Persistence = Awaited<ReturnType<typeof openPersistence>>;
 
@@ -60,10 +58,9 @@ function makeCollection<T extends object>(table: string, getKey: (row: T) => str
     },
   });
   if (!persisted) return createCollection(options);
-  return createCollection(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    persisted.persistedCollectionOptions({ ...(options as any), persistence: persisted.persistence, schemaVersion: SCHEMA_VERSION, initialRender: { strategy: "network-first", networkTimeoutMs: 1500 } }) as any,
-  ) as unknown as ReturnType<typeof createCollection<T & Record<string, unknown>>>;
+  const persistedOptions = persisted.persistedCollectionOptions({ ...options, persistence: persisted.persistence, schemaVersion: SCHEMA_VERSION, initialRender: { strategy: "network-first", networkTimeoutMs: 1500 } });
+  // Its type allows a schema, which these collections never have: the same collection type either way.
+  return createCollection(persistedOptions as unknown as typeof options);
 }
 
 /** This user's queue of unsent writes: their own IndexedDB database (or localStorage keys). */
@@ -191,7 +188,7 @@ export async function createStore(userId: string) {
         if (!result.changed) return;
         // Keep the optimistic rows until Electric echoes the write back.
         const tables = new Set(transaction.mutations.map((m) => m.collection.id as Table));
-        const echoed = await Promise.all([...tables].map((t) => collections[t]?.utils.awaitTxId(result.txid, 15_000).then(() => true, () => false)));
+        const echoed = await Promise.all([...tables].map((t) => collections[t].utils.awaitTxId(result.txid, 15_000).then(() => true, () => false)));
         span.setAttribute("echoed", echoed.every(Boolean));
       }),
     },
@@ -240,18 +237,15 @@ type Collection = Pick<ReturnType<typeof createCollection>, "subscriberCount" | 
 /**
  * Clean up a collection once no live query reads it. The screens' live queries
  * outlive them by a moment (TanStack collects them on its own timer); a source
- * cleaned up under one logs "TanStack DB error 152". The page reloads on a
- * change of user anyway, so the fallback only matters if a query never lets go.
+ * cleaned up under one logs "TanStack DB error 152".
  */
-function cleanUpWhenUnused(c: Collection, fallbackMs = 5_000) {
+function cleanUpWhenUnused(c: Collection) {
   if (c.subscriberCount === 0) return void c.cleanup();
-  const done = () => {
+  const off = c.on("subscribers:change", (e) => {
+    if (e.subscriberCount > 0) return;
     off();
-    clearTimeout(timer);
     void c.cleanup();
-  };
-  const off = c.on("subscribers:change", (e) => e.subscriberCount === 0 && done());
-  const timer = setTimeout(done, fallbackMs);
+  });
 }
 
 /** One local change → the server's mutation format (see server/src/sync.ts). `at`: when it was made. */

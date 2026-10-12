@@ -2,9 +2,7 @@
 // a real account (not anonymous). Each word costs one AI word from the
 // monthly allowance.
 
-import { ApiError } from "./http";
-
-export { ApiError };
+import { ApiError, readResponse } from "./http";
 
 export interface GenExample {
   text: string;
@@ -36,15 +34,13 @@ export interface Me {
   ai: boolean;
 }
 
-export async function api<T>(path: string, body?: unknown): Promise<T> {
+async function api<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`/api${path}`, {
     method: body === undefined ? "GET" : "POST",
     headers: body === undefined ? {} : { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!res.ok) throw new ApiError(res.status, String(data.error ?? `http_${res.status}`), data);
-  return data as T;
+  return (await readResponse(res)) as T;
 }
 
 export const getMe = () => api<Me>("/me");
@@ -54,13 +50,15 @@ export const mineWords = (lang: string, items: { form: string; sentence: string 
 export const moreExamples = (lang: string, words: { lemma: string; gloss: string; seen: string[] }[], known: string[]) =>
   api<{ examples: (GenExample & { lemma: string })[]; credits: Credits; model: string }>("/ai/examples", { lang, words, known });
 
+const longDate = (d: Date) => d.toLocaleDateString("en", { month: "long", day: "numeric" });
+
 /** First day of next month, when AI words reset. */
 export const resetDate = () => {
   const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth() + 1, 1).toLocaleDateString("en", { month: "long", day: "numeric" });
+  return longDate(new Date(d.getFullYear(), d.getMonth() + 1, 1));
 };
 
-const formatDate = (iso: string) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en", { month: "long", day: "numeric" }) : "next month");
+const formatDate = (iso: string) => (iso ? longDate(new Date(`${iso}T00:00:00`)) : "next month");
 
 /** Plain-language text for errors the learner can act on. */
 export function apiMessage(e: unknown): string {
