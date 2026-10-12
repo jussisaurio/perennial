@@ -1,4 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
+import { QUOTA } from "../src/sync";
 import { startApp, stopMockLLM, unique } from "./helpers";
 
 const t = await startApp();
@@ -81,4 +82,20 @@ test("a failed model call gives the credits back", async () => {
   expect(r.status).toBe(502);
   expect((await broken.me(cookie)).credits.used).toBe(0);
   await broken.stop();
+});
+
+// #174: AI words are charged before the app writes them. Words that could not be
+// saved (the learner is at their own-words limit) are refused first: nothing charged.
+test("at the own-words limit, AI is refused before any model call and nothing is charged", async () => {
+  const cookie = await t.signIn(unique("full"));
+  const id = (await t.me(cookie)).id;
+  await t.sql`insert into user_word (id, user_id, lang, lemma, gloss, forms)
+    select gen_random_uuid(), ${id}, 'es', 'w' || n, 'g', '[]'::jsonb from generate_series(1, ${QUOTA.user_word - 1}) n`;
+  const r = await t.call("/api/ai/mine", { lang: "es", items: [item("zorro"), item("búho")], known: [] }, cookie);
+  expect(r.status).toBe(429);
+  expect(r.body).toMatchObject({ error: "quota", table: "user_word" });
+  expect((await t.me(cookie)).credits.used).toBe(0);
+  expect((await t.sql`select 1 from ai_request where user_id = ${id}`).length).toBe(0);
+  // One more still fits.
+  expect((await t.call("/api/ai/mine", { lang: "es", items: [item("zorro")], known: [] }, cookie)).status).toBe(200);
 });

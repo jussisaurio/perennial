@@ -17,7 +17,7 @@ import { Lang, LANGUAGE } from "./course";
 import { HttpError } from "./http";
 import { event, log } from "./log";
 import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenWord } from "./prompts";
-import { LIMITS } from "./sync";
+import { ensureRoom, LIMITS } from "./sync";
 
 /** "2026-10": credits and the spend budget reset each calendar month (UTC). */
 const period = () => new Date().toISOString().slice(0, 7);
@@ -203,6 +203,9 @@ export class AIService {
 
   /** Words the learner picked from their own text. One credit per word returned. */
   async mine(userId: string, input: z.infer<typeof MineIn>) {
+    // Nothing is charged for words the app could not save: each brings up to 3 sentences.
+    await ensureRoom(this.sql, userId, "user_word", input.items.length);
+    await ensureRoom(this.sql, userId, "user_sentence", 3 * input.items.length);
     const words = await this.spend(userId, input.items.length, async () => {
       const p = minePrompt(LANGUAGE[input.lang], "English", input.items, input.known);
       const out = await this.generate(userId, "mine", WordsOut, p.system, p.user);
@@ -214,6 +217,7 @@ export class AIService {
 
   /** New sentences for words the learner chose. One credit per word that got any. */
   async examples(userId: string, input: z.infer<typeof ExamplesIn>) {
+    await ensureRoom(this.sql, userId, "user_sentence", 3 * input.words.length);
     const examples = await this.spend(userId, input.words.length, async () => {
       const p = moreExamplesPrompt(LANGUAGE[input.lang], "English", input.words, input.known);
       const out = await this.generate(userId, "examples", SentencesOut, p.system, p.user);
