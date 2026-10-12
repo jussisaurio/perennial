@@ -18,8 +18,8 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   const word = await page.locator(".word").textContent();
   await continueIntros(page, 4);
   await expect(kicker(page)).toHaveText(/quick check/);
-  // The prompt may capitalise it ("What does De mean?").
-  await expect(page.locator(".prompt")).toContainText(word!.trim(), { ignoreCase: true });
+  // About the same word, though the prompt may show another form of it ("vez" → "What does veces mean?").
+  await expect(page.locator("main.card")).toHaveAttribute("data-lemma", word!.trim());
 });
 
 test("double-clicking Show does not grade the unseen answer", async ({ page }) => {
@@ -37,6 +37,7 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
   await startSession(page);
   await continueIntros(page, 4);
   const checked = (await page.locator(".prompt b").textContent())!;
+  const lemma = (await page.locator("main.card").getAttribute("data-lemma"))!;
   await page.keyboard.press("Space");
   await page.waitForTimeout(450); // past the double-click guard
   await page.getByRole("button", { name: /I forgot/ }).click();
@@ -57,8 +58,8 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
     else await grade(page, "2");
   }
   await expect(kicker(page)).toHaveText(/try again/);
-  // The same word, perhaps in another sentence (so maybe capitalised).
-  await expect(page.locator(".prompt b")).toHaveText(new RegExp(`^${checked}$`, "i"));
+  // The same word, perhaps in another sentence and so another form of it.
+  await expect(page.locator("main.card")).toHaveAttribute("data-lemma", lemma);
 });
 
 test("'I knew it' skips the quick check, says so, is stored as 'known', and is undoable", async ({ page }) => {

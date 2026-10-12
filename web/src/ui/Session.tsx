@@ -36,7 +36,15 @@ function chooseExample(l: Learner, wordId: string): Example | undefined {
   for (const r of l.reviewsByWord.get(wordId) ?? []) if (r.sentence_id) seen.set(r.sentence_id, (seen.get(r.sentence_id) ?? 0) + 1);
   const min = Math.min(...examples.map((e) => seen.get(e.id) ?? 0));
   const least = examples.filter((e) => (seen.get(e.id) ?? 0) === min);
-  return least[Math.floor(Math.random() * least.length)];
+  // Ties broken by the word and how often it was reviewed, not at random: the
+  // next review still gets another sentence, and Undo brings back the same card.
+  return least[hashString(`${wordId}:${l.reviewsByWord.get(wordId)?.length ?? 0}`) % least.length];
+}
+
+function hashString(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
 }
 
 /** The correct answer with the letters to look at marked. */
@@ -102,7 +110,8 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   const shownAt = useRef(0);
   const serial = useRef(0);
   // One entry per card answered, so Undo can revert what that answer recorded.
-  const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string }[]>([]);
+  // Each entry keeps the card's word and sentence, so Undo shows exactly that card again.
+  const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; lexemeId: string; example?: Example }[]>([]);
 
   const start = useCallback(
     async (mins: number) => {
@@ -133,7 +142,8 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
     [!!learner, tag],
   );
 
-  const advance = async (r: Runner) => {
+  /** Show the next card. `again`: the card being undone, so it comes back with the same sentence. */
+  const advance = async (r: Runner, again?: { lexemeId: string; example?: Example }) => {
     stopSpeaking();
     const now = clock.current.tick(Date.now());
     const task = r.next(now);
@@ -146,7 +156,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
     const l = live.current!;
     const lexeme = l.words.get(task.lexemeId);
     if (!lexeme) return advance(r);
-    const example = chooseExample(l, lexeme.id);
+    const example = again?.lexemeId === lexeme.id ? again.example : chooseExample(l, lexeme.id);
     const read = l.memory.get(memKey(lexeme.id, "read"));
     shownAt.current = clock.current.elapsed;
     serial.current++;
@@ -216,7 +226,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       if (last.intro) counts.current.intros--;
       if (last.practised) practised.current.delete(last.practised);
       flash("Undone.");
-      await advance(runner);
+      await advance(runner, last);
     } finally {
       busy.current = false;
     }
@@ -241,7 +251,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: lexeme.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       if (opts.alreadyKnown) flash("OK. No quick check now. You will see this word again in about a week.");
-      setUndoStack((s) => [...s, { reviewId, review: false, intro: true }]);
+      setUndoStack((s) => [...s, { reviewId, review: false, intro: true, lexemeId: lexeme.id, example }]);
     } else if (grade) {
       // Tests of words planted this session aren't "watering" an existing plant.
       const counted = !task.isNew;
@@ -259,7 +269,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       }
       const retry = runner.report(task, { grade });
       if (grade === 1) flash(forgotLine(retry));
-      setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? lexeme.id : undefined }]);
+      setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? lexeme.id : undefined, lexemeId: lexeme.id, example }]);
     }
   };
 
@@ -471,7 +481,7 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
   // Grades are about the word; on a listening card that means "did I catch it".
   const [no, yes] = listen ? ["Did not understand", "Understood"] : ["I forgot", "I remembered"];
   return (
-    <main className="card">
+    <main className="card" data-lemma={lexeme.lemma}>
       <Kicker kind={kicker} />
       <p className="prompt">
         {listen ? (
