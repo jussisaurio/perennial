@@ -78,12 +78,18 @@ function MineText({ learner }: { learner: Learner }) {
     if (tooMany) return;
     setBusy(true);
     setResult(null);
+    // Saved so far: AI words go in batches, and a later batch can fail after earlier ones were saved.
+    const done: string[] = [];
     try {
-      for (const f of inCourse) await setWordStatus(store, statusOf.get(f)!.wordId!, "queued");
+      for (const f of inCourse) {
+        await setWordStatus(store, statusOf.get(f)!.wordId!, "queued");
+        done.push(f);
+      }
       const items = ai ? needAI.map((form) => ({ form, sentence: picked.get(form)! })) : [];
       const known = learner.studied.slice(0, 400).map((w) => w.lemma);
       for (let i = 0; i < items.length; i += 15) {
-        const r = await mineWords(learner.lang, items.slice(i, i + 15), known);
+        const batch = items.slice(i, i + 15);
+        const r = await mineWords(learner.lang, batch, known);
         const now = new Date().toISOString();
         await store.write(() => {
           for (const w of r.words) {
@@ -95,12 +101,18 @@ function MineText({ learner }: { learner: Learner }) {
             });
           }
         });
+        done.push(...batch.map((b) => b.form));
       }
       track("words_added", { fromCourse: inCourse.length, withAI: items.length });
       setPicked(new Map());
       setResult(`Added ${adding} ${adding === 1 ? "word" : "words"} (marked ✓). You will see them first in your next session.`);
     } catch (e) {
-      setResult(`Could not add the words: ${apiMessage(e)}`);
+      if (!done.length) setResult(`Could not add the words: ${apiMessage(e)}`);
+      else {
+        // Some were saved: unselect them and say so, so trying again sends only the rest.
+        setPicked((p) => new Map([...p].filter(([form]) => !done.includes(form))));
+        setResult(`Added ${done.length} ${done.length === 1 ? "word" : "words"} (marked ✓). The rest could not be added: ${apiMessage(e)}`);
+      }
     } finally {
       setBusy(false);
       refresh();

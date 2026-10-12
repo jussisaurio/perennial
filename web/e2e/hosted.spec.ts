@@ -93,3 +93,28 @@ test("when the AI word count cannot load, nothing is blocked and the server says
   await page.getByRole("button", { name: "Write new sentences" }).click();
   await expect(page.locator(".detail .error")).toHaveText("You used all your AI words for this month.");
 });
+
+// #161: AI words go in batches of 15. If a later batch fails, the earlier ones are saved:
+// say how many, and unselect them so trying again sends only the rest.
+test("adding many AI words: a batch that fails after others were saved says what was added", async ({ page }) => {
+  await startCourse(page);
+  await addEmail(page);
+  // The count is unknown (so nothing blocks); the first batch is answered, the second is busy.
+  await page.route("**/api/me", (route) => route.fulfill({ status: 500, body: "" }));
+  let calls = 0;
+  await page.route("**/api/ai/mine", async (route) => {
+    if (++calls > 1) return route.fulfill({ status: 503, json: { error: "busy" } });
+    const { items } = route.request().postDataJSON() as { items: { form: string; sentence: string }[] };
+    const words = items.map(({ form, sentence }) => ({ lemma: form, gloss: "a test word", pos: "noun", forms: [form], examples: [{ text: sentence, translation: "x", cloze: form }] }));
+    await route.fulfill({ json: { words, model: "mock", credits: { used: items.length, limit: 100, left: 100 - items.length } } });
+  });
+  const forms = Array.from({ length: 16 }, (_, i) => `xz${String.fromCharCode(97 + i)}po`);
+  await openAdd(page);
+  await page.getByPlaceholder(/Paste .* text here/).fill(forms.join(" "));
+  for (const w of forms) await page.locator(".reader .tok", { hasText: w }).click();
+  await page.getByRole("button", { name: /Learn 16 words · uses 16 AI words/ }).click();
+  await expect(page.getByText(/Added 15 words \(marked ✓\)\. The rest could not be added: Perennial AI is very busy now/)).toBeVisible();
+  await expectServerRows(page, "user_word", 15);
+  // Only the one that failed is still selected.
+  await expect(page.getByRole("button", { name: /Learn 1 word · uses 1 AI word/ })).toBeVisible();
+});
