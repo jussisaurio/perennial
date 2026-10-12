@@ -69,6 +69,26 @@ test("visitors: the snail and the cat in the 2D strip say their word; they are n
   expect(errors).toEqual([]);
 });
 
+test("a visitor in the 2D strip shows the app's focus ring when reached with Tab, in light and dark", async ({ page }) => {
+  await page.goto("/?demo=es:30&visitors=all#/today");
+  const snail = page.getByRole("button", { name: "el caracol · snail" });
+  await expect(snail).toBeAttached({ timeout: 30_000 });
+  // The persimmon ring every other control has (index.css :focus-visible).
+  for (const [scheme, persimmon] of [["light", "rgb(220, 86, 54)"], ["dark", "rgb(255, 123, 88)"]] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await expect(page.locator("html")).toHaveAttribute("data-theme", scheme);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    // Tab, as a keyboard user does, so the browser applies :focus-visible.
+    for (let i = 0; i < 60 && !(await snail.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
+    await expect(snail).toBeFocused();
+    const ring = await snail.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, color: s.outlineColor };
+    });
+    expect(ring).toEqual({ style: "solid", color: persimmon });
+  }
+});
+
 test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known word", async ({ page }) => {
   // Midday, so the walk opens by day and the switch to evening happens while it may
   // still be loading (a time chosen during loading used to be lost: no frog by dusk).
