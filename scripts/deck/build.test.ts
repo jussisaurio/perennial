@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { compatibility, ID_ALPHABET, type SourceWord } from "../../web/src/deck/schema.ts";
-import { buildDeck, wholeWordCount, type Manifest } from "./lib.ts";
+import { buildDeck, wholeWordCount, wordCount, type Manifest } from "./lib.ts";
 
 const src = (lemma: string, extra: Partial<SourceWord> = {}): SourceWord => ({
   lemma,
@@ -123,4 +123,9 @@ test("wholeWordCount is Unicode aware", () => {
   expect(wholeWordCount("Ich weiß, dass du müde bist.", "dass")).toBe(1);
   expect(wholeWordCount("Él está aquí.", "está")).toBe(1);
   expect(wholeWordCount("Ella está aquí.", "est")).toBe(0);
+});
+
+test("wordCount ignores spaces at the ends and doubled spaces", () => {
+  expect(wordCount(" Hola, ¿qué tal? ")).toBe(3);
+  expect(wordCount("uno  dos")).toBe(2);
 });
