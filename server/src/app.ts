@@ -182,8 +182,14 @@ export function createApp(config: Config, sql: SQL) {
     // A browser that still has the old worker asks for /sw.js to update it: here, or
     // on an old address, where that worker serves the page from cache (so the redirect
     // below never reaches it). Not a redirect: a worker script that redirects fails
-    // the update. no-cache: a CDN must not keep it.
-    if (url.pathname === "/sw.js") return new Response(retiringWorker(config.appUrl), { headers: { "content-type": "text/javascript", "cache-control": "no-cache" } });
+    // the update. no-cache: a CDN must not keep it. Logged with the host, so we can
+    // see when old workers stop asking and retiringWorker can go.
+    if (url.pathname === "/sw.js") {
+      return withLogContext({ reqId: id }, () => {
+        log.info("request", { method: req.method, path: url.pathname, host: url.host, status: 200 });
+        return new Response(retiringWorker(config.appUrl), { headers: { "content-type": "text/javascript", "cache-control": "no-cache" } });
+      });
+    }
     if (isAlias(url.host)) return new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } });
     const started = performance.now();
     return withLogContext({ reqId: id, traceId: traceId() }, async () => {

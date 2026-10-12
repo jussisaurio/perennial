@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { startCourse } from "./helpers";
+import { advance, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   await page.goto("/");
@@ -36,4 +36,13 @@ test("a deck that cannot load, with no copy kept: the learner is told, not left 
   await page.unroute(deckFile);
   await page.getByRole("button", { name: "Reload" }).click();
   await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15_000 });
+});
+
+test("connection lost mid-session: practice continues", async ({ page, context }) => {
+  await startCourse(page);
+  await startSession(page);
+  await context.setOffline(true);
+  // The answer goes into the write queue; the session takes it with no connection.
+  await advance(page, "1");
+  await context.setOffline(false);
 });

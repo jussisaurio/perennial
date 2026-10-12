@@ -63,10 +63,10 @@ export function securityHeaders(connect: string[], https: boolean, turnstile = f
 
 /**
  * Serve the built web app. Hashed assets are immutable; everything else
- * (index.html, the manifest) must revalidate so a deploy
- * reaches users. Unknown paths fall back to index.html (hash routing), but a
- * missing file (a path with an extension, e.g. last release's hashed chunk) is
- * a 404: the old client then reloads instead of parsing HTML as JavaScript.
+ * (index.html, the manifest) must revalidate so a deploy reaches users.
+ * Unknown paths fall back to index.html (hash routing), but a missing file (a
+ * path with an extension, e.g. last release's hashed chunk) is a 404: the old
+ * client then reloads instead of parsing HTML as JavaScript.
  */
 export async function serveStatic(dir: string, pathname: string): Promise<Response> {
   let decoded: string;
