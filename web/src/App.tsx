@@ -98,6 +98,26 @@ function WriterOnly({ store, children }: { store: Store; children: ReactNode }) 
   );
 }
 
+const onOnlineChange = (fn: () => void) => {
+  window.addEventListener("online", fn);
+  window.addEventListener("offline", fn);
+  return () => {
+    window.removeEventListener("online", fn);
+    window.removeEventListener("offline", fn);
+  };
+};
+
+/** Offline, the app still works (answers are kept on this device): say so, quietly. */
+function OfflineNote() {
+  const online = useSyncExternalStore(onOnlineChange, () => navigator.onLine);
+  if (online) return null;
+  return (
+    <p className="offline-note" role="status">
+      Offline. Practice still works and syncs later.
+    </p>
+  );
+}
+
 function ReloadBanner() {
   const [needed, setNeeded] = useState(false);
   useEffect(() => {
@@ -140,6 +160,7 @@ export default function App() {
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
   return (
     <StoreProvider key={user.id} userId={user.id}>
+      <OfflineNote />
       <Main route={route} go={go} />
       <ReloadBanner />
     </StoreProvider>

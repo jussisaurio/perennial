@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { advance, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   const errors: string[] = [];
@@ -17,4 +18,17 @@ test("smoke: landing → start learning → a session → progress survives a re
   await page.reload();
   await expect(page.getByText(/You are learning|You know/)).toBeVisible({ timeout: 15000 });
   console.log("ERRORS", JSON.stringify(errors));
+});
+
+test("offline: practice still works, a quiet note says so, and it goes when the connection is back", async ({ page, context }) => {
+  await startCourse(page);
+  const note = page.getByRole("status").filter({ hasText: "Offline. Practice still works" });
+  await expect(note).toHaveCount(0);
+  await context.setOffline(true);
+  await expect(note).toBeVisible();
+  // The note is true: a session starts and takes an answer with no connection.
+  await startSession(page);
+  await advance(page, "1");
+  await context.setOffline(false);
+  await expect(note).toHaveCount(0);
 });
