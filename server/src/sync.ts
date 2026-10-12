@@ -5,6 +5,7 @@
 // stream before dropping its optimistic state, and whether any row changed (if
 // none did, no echo will come: the client must not wait for one).
 
+import * as Sentry from "@sentry/bun";
 import { deckWords, isDeckWord } from "./words";
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import type { SQL } from "bun";
@@ -260,5 +261,9 @@ export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[
 export async function handleWrite(req: Request, sql: SQL, userId: string): Promise<Response> {
   const body = WriteBatch.safeParse(await readJson(req, 512 * 1024));
   if (!body.success) throw new HttpError(422, "bad_request", { issues: body.error.issues.slice(0, 5) });
-  return json(await applyWrites(sql, userId, body.data.mutations));
+  // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
+  const result = await Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: body.data.mutations.length } }, () =>
+    applyWrites(sql, userId, body.data.mutations),
+  );
+  return json(result);
 }

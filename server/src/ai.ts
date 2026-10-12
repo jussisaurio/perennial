@@ -7,6 +7,7 @@
 // - Every model call adds to a monthly spend total; past the budget, AI pauses
 //   for everyone until the next month. Every call is logged in ai_request.
 
+import * as Sentry from "@sentry/bun";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { SQL } from "bun";
@@ -172,13 +173,13 @@ export class AIService {
       );
     let res;
     try {
-      res = await this.client.messages.parse({
+      res = await Sentry.startSpan({ name: `ai ${task}`, op: "ai.generate", attributes: { model } }, () => this.client.messages.parse({
         model,
         max_tokens: 16000,
         system,
         messages: [{ role: "user", content: user }],
         output_config: { format: zodOutputFormat(schema) },
-      });
+      }));
     } catch (e) {
       await record(false);
       if (e instanceof Anthropic.RateLimitError) throw new HttpError(503, "busy");

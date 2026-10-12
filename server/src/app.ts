@@ -13,6 +13,9 @@ import { addLogContext, log, withLogContext } from "./log";
 import { createMailer, OutboxMailer } from "./mail";
 import { handleWrite, proxyShape } from "./sync";
 
+/** A request slower than this (ms) is logged as a warning. */
+const SLOW_MS = 1000;
+
 export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {}) {
   const mailer = createMailer(config);
   const { auth, pool } = createAuth(config, sql, mailer);
@@ -171,8 +174,12 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
       }
       // Shapes are long polls (held open until data changes, then cancelled by
       // the browser as 499): logging them would drown everything else.
+      const ms = Math.round(performance.now() - started);
       if (url.pathname !== "/api/shape" || (res.status >= 400 && res.status !== 499)) {
-        log.info("request", { method: req.method, path: url.pathname, status: res.status, ms: Math.round(performance.now() - started) });
+        // Slow requests stand out (warn) so they can be searched and alerted on. Live shape
+        // polls wait ~20 s by design and AI calls take seconds, so neither counts.
+        const slow = ms > SLOW_MS && url.pathname !== "/api/shape" && !url.pathname.startsWith("/api/ai/");
+        (slow ? log.warn : log.info)(slow ? "slow request" : "request", { method: req.method, path: url.pathname, status: res.status, ms });
       }
       const out = new Response(res.body, res);
       out.headers.set("x-request-id", id);
