@@ -75,7 +75,7 @@ test("when the AI word count cannot load, nothing is blocked and the server says
 
   // 7 words, 6 left: the server refuses, and says why.
   await page.getByRole("button", { name: /Learn 7 words · uses 7 AI words/ }).click();
-  await expect(page.getByText("Could not add the words: You used all your AI words for this month.")).toBeVisible();
+  await expect(page.getByText(/Could not add the words: You have only 6 AI words left this month\. Select fewer words, or wait until/)).toBeVisible();
   await expectServerRows(page, "user_word", 0);
   await page.locator(".reader .tok", { hasText: "ciervo" }).click();
   await page.getByRole("button", { name: /Learn 6 words · uses 6 AI words/ }).click();
