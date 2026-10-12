@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { firstPlantsLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
-import { MAX_NEW_PER_DAY } from "../core/session";
-import { KEEP_GOING_NOTE } from "../data/practice";
 import { locate } from "../content/text";
 import type { Learner, Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
@@ -37,7 +35,7 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
   );
 }
 
-export function SessionScreen({ lang, onExit, minutes, extra = false }: { lang: string; onExit: () => void; minutes: number; extra?: boolean }) {
+export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit: () => void; minutes: number }) {
   const [help, setHelp] = useState(false);
   const [pops, setPops] = useState<{ id: number; word: string; s: number; known: boolean }[]>([]);
   const [note, setNote] = useState<string | null>(null);
@@ -56,8 +54,7 @@ export function SessionScreen({ lang, onExit, minutes, extra = false }: { lang: 
     noteTimer.current = setTimeout(() => setNote(null), 1800);
   };
 
-  const { learner, tag, runner, card, done, active, ended, newLimitReached, counts, practised, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
-    extra,
+  const { learner, tag, runner, card, done, active, ended, counts, practised, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
     lang,
     minutes,
     onExit,
@@ -92,7 +89,7 @@ export function SessionScreen({ lang, onExit, minutes, extra = false }: { lang: 
         </button>
       </header>
       {done ? (
-        <Summary learner={learner} counts={counts} practised={practised} ended={ended} newLimitReached={newLimitReached} onMore={() => void start(5)} onKeepGoing={() => void start(5, true)} onExit={onExit} />
+        <Summary learner={learner} counts={counts} practised={practised} ended={ended} onMore={() => void start(5)} onExit={onExit} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} onDone={finish} />
       ) : null}
@@ -463,19 +460,14 @@ function Summary({
   counts,
   practised,
   ended,
-  newLimitReached,
   onMore,
-  onKeepGoing,
   onExit,
 }: {
   learner: Learner | null;
   counts: { reviews: number; intros: number; answers: number };
   practised: Set<string>;
   ended: Ended;
-  newLimitReached: boolean;
   onMore: () => void;
-  /** Past the day's limits: allowed, with a word about tomorrow (data/practice.ts). */
-  onKeepGoing: () => void;
   onExit: () => void;
 }) {
   const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
@@ -490,9 +482,7 @@ function Summary({
     ended === "user"
       ? "You can continue later. Your answers are saved."
       : ended === "empty"
-        ? newLimitReached
-          ? `That is today's ${MAX_NEW_PER_DAY} new words, and no other words need practice now. ${KEEP_GOING_NOTE}`
-          : `Every plant has water. ${KEEP_GOING_NOTE}`
+        ? "Every plant has water."
         : null;
   return (
     <main className="card summary">
@@ -526,14 +516,9 @@ function Summary({
         </p>
       )}
       <div className="actions static">
-        {ended === "time" && (
+        {ended !== "user" && (
           <button className="secondary" onClick={onMore}>
             Practice 5 more minutes
-          </button>
-        )}
-        {ended === "empty" && (
-          <button className="secondary" onClick={onKeepGoing} title={KEEP_GOING_NOTE}>
-            Keep going
           </button>
         )}
         <button className="primary" onClick={onExit}>

@@ -1,32 +1,37 @@
 import { expect, test } from "bun:test";
-import { MAX_NEW_PER_DAY } from "../core/session";
+import { DAY_MS } from "../core/day";
+import type { MemoryRow } from "../core/memory";
 import type { Learner } from "./learner";
-import { canPractise, newWordsToday } from "./practice";
+import { canPractise, sessionPlan } from "./practice";
 
 const now = new Date(2026, 9, 12, 15).getTime();
-// A learner with `fresh` unseen words and `metToday` words first met today (nothing due).
-function learner(fresh: number, metToday: number): Learner {
-  const reviews = Array.from({ length: metToday }, (_, i) => ({ word_id: `w${i}`, skill: "read", reviewed_at: new Date(now - 60_000 * (i + 1)).toISOString() }));
+const due = (id: string): MemoryRow => ({ key: `${id}:read`, wordId: id, skill: "read", s: 5, d: 5, lastTs: now - 10 * DAY_MS, due: now - 5 * DAY_MS, reps: 3, lapses: 0 });
+
+// A learner with `fresh` unseen words, `learned` words all due, and these reviews.
+function learner(fresh: number, learned: string[], reviews: { word_id: string; grade: number; reviewed_at: string }[] = []): Learner {
   return {
-    reviews,
-    resolve: (id: string) => id,
+    reviews: reviews.map((r) => ({ ...r, skill: "read" })),
+    resolve: (id: string) => (id === "alias" ? "a" : id),
     words: new Map(),
-    memories: [],
+    memories: learned.map(due),
     fresh: () => Array.from({ length: fresh }, (_, i) => `f${i}`),
   } as unknown as Learner;
 }
+const at = (t: number) => new Date(t).toISOString();
+const words = (l: Learner) => sessionPlan(l, 5, false, now).queue.map((t) => t.wordId);
 
-test("new words met today are counted from the first reading review", () => {
-  expect(newWordsToday(learner(0, 3), now)).toBe(3);
+test("a word answered correctly today (by any of its ids) is not planned again today", () => {
+  const l = learner(0, ["a", "b", "c", "d"], [
+    { word_id: "alias", grade: 3, reviewed_at: at(now - 3_600_000) }, // "a", this afternoon
+    { word_id: "b", grade: 1, reviewed_at: at(now - 3_600_000) }, // forgotten today: still due
+    { word_id: "c", grade: 3, reviewed_at: at(now - DAY_MS) }, // yesterday
+    { word_id: "d", grade: 4, reviewed_at: at(now - 60_000) }, // "Already know it" today
+  ]);
+  expect(words(l).sort()).toEqual(["b", "c"]);
 });
 
-test("Today offers a session only when the session would have something", () => {
-  expect(canPractise(learner(10, 0), false, now)).toBe(true); // new words to plant
-  expect(canPractise(learner(10, MAX_NEW_PER_DAY), false, now)).toBe(false); // today's new words are in, nothing due
-  expect(canPractise(learner(0, 0), false, now)).toBe(false); // course learned, nothing due
-});
-
-test("past the day's limits you can keep going (never blocked), when there is anything at all", () => {
-  expect(canPractise(learner(10, MAX_NEW_PER_DAY), false, now, true)).toBe(true); // more new words, beyond the limit
-  expect(canPractise(learner(0, 0), false, now, true)).toBe(false); // truly nothing: no words left, nothing coming due
+test("there is always something to practise once there is any word", () => {
+  expect(canPractise(learner(10, []), false, now)).toBe(true); // new words to plant
+  expect(canPractise(learner(0, ["a"]), false, now)).toBe(true); // course learned: practise what you know
+  expect(canPractise(learner(0, []), false, now)).toBe(false); // no words at all
 });

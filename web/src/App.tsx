@@ -159,7 +159,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const { courses, ready } = useCourses();
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
-  const [sessionExtra, setSessionExtra] = useState(false);
   const [startError, setStartError] = useState("");
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
   const deckFailed = useDeck(course?.lang).failed;
@@ -191,7 +190,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const noDeck = deckFailed && route !== "/settings";
 
   if (route === "/session" && !noDeck)
-    return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} extra={sessionExtra} onExit={() => go("/today", { replace: true })} />;
+    return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} onExit={() => go("/today", { replace: true })} />;
 
   if (route === "/garden" && !noDeck)
     return (
@@ -200,7 +199,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
         onExit={() => (history.length > 1 ? history.back() : go("/today", { replace: true }))}
         onWater={() => {
           setSessionMinutes(null);
-          setSessionExtra(false);
           go("/session");
         }}
       />
@@ -261,9 +259,8 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
       {route === "/today" && !noDeck && (
         <Home
           lang={lang}
-          onStart={(m, extra = false) => {
+          onStart={(m) => {
             setSessionMinutes(m);
-            setSessionExtra(extra);
             go("/session");
           }}
           onWalk={() => go("/garden")}

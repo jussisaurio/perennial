@@ -8,7 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
-import { canPractise, KEEP_GOING_NOTE } from "../data/practice";
+import { canPractise } from "../data/practice";
 import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
@@ -26,7 +26,7 @@ function greeting(): string {
 // The entrance animation plays once per visit, not on every tab switch.
 let animated = false;
 
-export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number, extra?: boolean) => void; onWalk: () => void }) {
+export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onWalk: () => void }) {
   const view = (id: string) => {
     focusPlant(id);
     onWalk();
@@ -42,11 +42,9 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const day = today(new Date(now));
   const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  // The same planner the session uses: is there anything to practise right now? Not
-  // when nothing is due and today's new words are in (or the course is learned).
+  // The same planner the session uses: is there anything to practise right now?
+  // Only not when there are no words at all (every word paused or ignored).
   const canStart = useMemo(() => (learner ? canPractise(learner, mayListen(language(code).tag), now) : false), [learner, now, code]);
-  // Past the day's limits, practice is still allowed: "Keep going".
-  const more = useMemo(() => !canStart && !!learner && canPractise(learner, mayListen(language(code).tag), now, true), [canStart, learner, now, code]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
@@ -112,14 +110,6 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
                   ? ""
                   : startNote()}
         </p>
-        {more && (
-          <div className="keep-going">
-            <button className="secondary" onClick={() => onStart(5, true)}>
-              Keep going
-            </button>
-            <p className="muted small">{KEEP_GOING_NOTE}</p>
-          </div>
-        )}
       </div>
 
       {started > 0 && (

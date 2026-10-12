@@ -731,7 +731,3 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 
 /* A deck that could not load (see DeckFailed in App): the reason, then Reload. */
 .deck-failed { display: grid; gap: 1rem; justify-items: start; }
-
-/* "Keep going" under "All done for today": quiet, with its reason. */
-.keep-going { display: grid; gap: 0.3rem; justify-items: start; margin-top: 0.6rem; }
-.keep-going p { margin: 0; max-width: 34rem; }

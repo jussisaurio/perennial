@@ -47,7 +47,7 @@ interface Feedback {
   pop: (word: string, s: number, known: boolean) => void;
 }
 
-export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, clearNote, pop }: { lang: string; minutes: number; extra?: boolean; onExit: () => void } & Feedback) {
+export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop }: { lang: string; minutes: number; onExit: () => void } & Feedback) {
   const learner = useLearner(lang);
   // Answers update the learner live; reads in event handlers use the latest.
   const live = useRef(learner);
@@ -62,7 +62,6 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
   const [active, setActive] = useState(0);
   const counts = useRef({ reviews: 0, intros: 0, answers: 0 });
   const [ended, setEnded] = useState<Ended>("time");
-  const [newLimitReached, setNewLimitReached] = useState(false);
   const practised = useRef(new Set<string>());
   // Time on a "New to me" card: it records no review, so its time rides on the word's
   // quick check. Otherwise "minutes today" misses it and the day looks unfinished.
@@ -74,13 +73,12 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
   const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; wordId: string; example?: Sentence; carried?: number }[]>([]);
 
   const start = useCallback(
-    async (mins: number, more = extra) => {
+    async (mins: number) => {
       // No voice, or sound turned off: no listening exercises.
       const l = live.current;
       if (!l) return;
       const voice = isSoundOn() && (await hasVoice(tag));
-      const p = sessionPlan(l, mins, voice, Date.now(), more);
-      setNewLimitReached(p.newLimitReached);
+      const p = sessionPlan(l, mins, voice, Date.now());
       const r = new Runner(p, mins * 60_000);
       clock.current = new ActiveClock(Date.now());
       setActive(0);
@@ -238,7 +236,6 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
     done,
     active,
     ended,
-    newLimitReached,
     /** What this session did so far, for the summary. */
     counts: counts.current,
     practised: practised.current,
