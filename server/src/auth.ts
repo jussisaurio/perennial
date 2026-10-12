@@ -15,7 +15,7 @@ import type { Config } from "./config";
 import { event, log } from "./log";
 import type { Mailer } from "./mail";
 
-export async function mergeUsers(sql: SQL, from: string, to: string) {
+async function mergeUsers(sql: SQL, from: string, to: string) {
   if (from === to) return;
   await sql.begin(async (tx) => {
     // Better Auth deletes the anonymous user after this transaction, and its
@@ -113,14 +113,12 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
       // Bot check where accounts and emails are created (the client sends the
       // token in x-captcha-response).
       ...(config.turnstile.secretKey
-        ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstile.secretKey, endpoints: CAPTCHA_ENDPOINTS })]
+        ? [captcha({ provider: "cloudflare-turnstile", secretKey: config.turnstile.secretKey, endpoints: ["/sign-in/anonymous", "/email-otp/send-verification-otp"] })]
         : []),
     ],
   });
   return { auth, pool };
 }
-
-export const CAPTCHA_ENDPOINTS = ["/sign-in/anonymous", "/email-otp/send-verification-otp"];
 
 /** Records a code for this address, unless it already had its share (per 15 minutes and per day). */
 async function mayMail(sql: SQL, config: Config, email: string) {
@@ -133,5 +131,3 @@ async function mayMail(sql: SQL, config: Config, email: string) {
   await sql`insert into mail_log (email_hash) values (${hash})`;
   return true;
 }
-
-export type Auth = ReturnType<typeof createAuth>["auth"];

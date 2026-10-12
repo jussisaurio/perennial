@@ -7,9 +7,9 @@ export interface Mailer {
 
 /** Development: keep messages in memory so tests and the local app can read them. */
 export class OutboxMailer implements Mailer {
-  readonly outbox: { to: string; subject: string; text: string; at: number }[] = [];
+  readonly outbox: { to: string; subject: string; text: string }[] = [];
   async send(to: string, subject: string, text: string) {
-    this.outbox.push({ to, subject, text, at: Date.now() });
+    this.outbox.push({ to, subject, text });
     const code = subject.match(/\d{6}/)?.[0];
     console.log(code ? `[mail] sign-in code for ${to}: ${code}` : `[mail] to=${to} subject=${JSON.stringify(subject)}\n${text}`);
   }
@@ -18,7 +18,7 @@ export class OutboxMailer implements Mailer {
   }
 }
 
-export class ResendMailer implements Mailer {
+class ResendMailer implements Mailer {
   private readonly resend: Resend;
   constructor(
     apiKey: string,

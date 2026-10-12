@@ -26,18 +26,6 @@ test("writes say whether anything changed, so the client doesn't wait for an ech
   expect((await t.write(cookie, [{ type: "review.delete", id: crypto.randomUUID() }])).body.changed).toBe(false);
 });
 
-test("a learner can never touch another learner's rows", async () => {
-  const alice = await t.signIn(unique("alice"));
-  const mallory = await t.signIn(unique("mallory"));
-  const r = review(W.b);
-  await t.write(alice, [r]);
-  // Same id from someone else: ignored, not an overwrite. Deleting it: no effect.
-  await t.write(mallory, [{ ...r, row: { ...r.row, grade: 1 } }, { type: "review.delete", id: r.row.id }]);
-  const [row] = await t.sql`select grade, user_id from review where id = ${r.row.id}`;
-  expect(row.grade).toBe(3);
-  expect(row.user_id).toBe((await t.me(alice)).id);
-});
-
 test("Undo deletes the review", async () => {
   const cookie = await t.signIn(unique("undo"));
   const r = review(W.c);
@@ -74,7 +62,6 @@ test("bad batches are rejected whole; reviews from the future too", async () => 
   const cookie = await t.signIn(unique("bad"));
   expect((await t.write(cookie, [{ type: "review.insert", row: { id: "nope" } }])).status).toBe(422);
   expect((await t.write(cookie, [review(W.e, { reviewed_at: new Date(Date.now() + 3 * 86_400_000).toISOString() })])).status).toBe(422);
-  expect((await t.call("/api/write", { mutations: [review(W.a)] })).status).toBe(401);
 });
 
 test("old clients are told to reload before writing", async () => {

@@ -9,8 +9,21 @@ import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
 
-const codeFor = (email: string) => t.mailer.latest(email)!.subject.match(/\d{6}/)![0];
-const sendCode = (email: string, cookie?: string) => t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, cookie);
+const { codeFor, sendCode } = t;
+
+/** Run `fn` at log level `level`, with all console output going to `capture`. */
+async function withConsole(level: string, capture: (...args: unknown[]) => void, fn: () => Promise<void>) {
+  const saved = { log: console.log, error: console.error, warn: console.warn, level: process.env.LOG_LEVEL };
+  console.log = console.error = console.warn = capture;
+  process.env.LOG_LEVEL = level;
+  try {
+    await fn();
+  } finally {
+    Object.assign(console, { log: saved.log, error: saved.error, warn: saved.warn });
+    if (saved.level === undefined) delete process.env.LOG_LEVEL;
+    else process.env.LOG_LEVEL = saved.level;
+  }
+}
 
 describe("auth endpoints: an allow-list", () => {
   const used = ["GET /get-session", "POST /sign-out", "POST /sign-in/anonymous", "POST /email-otp/send-verification-otp", "POST /sign-in/email-otp"];
@@ -80,14 +93,10 @@ describe("account linking needs the account's code", () => {
 describe("no secrets in logs", () => {
   test("sign-in, linking and failures log no tokens, codes or emails", async () => {
     const lines: string[] = [];
-    const saved = { log: console.log, error: console.error, warn: console.warn, level: process.env.LOG_LEVEL };
-    const capture = (...args: unknown[]) => void lines.push(args.map(String).join(" "));
-    console.log = console.error = console.warn = capture;
-    process.env.LOG_LEVEL = "debug";
     const email = unique("logs");
     let cookie = "";
     const codes: string[] = [];
-    try {
+    await withConsole("debug", (...args) => void lines.push(args.map(String).join(" ")), async () => {
       const anon = await t.anonymous();
       await t.write(anon, [review(W.l)]);
       await sendCode(email, anon);
@@ -99,11 +108,7 @@ describe("no secrets in logs", () => {
       await t.call("/api/auth/sign-out", {}, cookie);
       // Better Auth's own logger: only the message and errors get through.
       (await t.app.auth.$context).logger.error("probe", { email }, new Error("boom"));
-    } finally {
-      Object.assign(console, { log: saved.log, error: saved.error, warn: saved.warn });
-      if (saved.level === undefined) delete process.env.LOG_LEVEL;
-      else process.env.LOG_LEVEL = saved.level;
-    }
+    });
     // The dev outbox prints codes on purpose (it is never used in production).
     const logged = lines.filter((l) => !l.startsWith("[mail]"));
     expect(logged.some((l) => l.includes('"msg":"request"'))).toBe(true);
@@ -118,8 +123,6 @@ describe("no secrets in logs", () => {
 describe("wide events", () => {
   test("each request's one line says what happened: signup, code, sign-in, linking, new course, writes", async () => {
     const lines: Record<string, unknown>[] = [];
-    const saved = { log: console.log, error: console.error, warn: console.warn, level: process.env.LOG_LEVEL };
-    process.env.LOG_LEVEL = "info";
     const capture = (...args: unknown[]) => {
       try {
         lines.push(JSON.parse(String(args[0])));
@@ -127,21 +130,16 @@ describe("wide events", () => {
         // [mail] lines from the dev outbox
       }
     };
-    console.log = console.error = console.warn = capture;
     const email = unique("events");
     let anonId = "";
-    try {
+    await withConsole("info", capture, async () => {
       const anon = await t.anonymous();
       await t.write(anon, [{ type: "course.upsert", row: { lang: "de", minutes: 5 } }, review(W.l)]);
       await t.write(anon, [{ type: "course.upsert", row: { lang: "de", minutes: 9 } }]);
       anonId = String(lines.find((l) => l.signup === "anonymous")?.userId ?? "");
       await sendCode(email, anon);
       await t.signIn(email, anon);
-    } finally {
-      Object.assign(console, { log: saved.log, error: saved.error, warn: saved.warn });
-      if (saved.level === undefined) delete process.env.LOG_LEVEL;
-      else process.env.LOG_LEVEL = saved.level;
-    }
+    });
     const requests = lines.filter((l) => l.msg === "request");
     const at = (path: string) => requests.filter((l) => l.path === path);
     // Anonymous start: a user, a session, and the user id on that same line.

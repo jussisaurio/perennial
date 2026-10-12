@@ -15,7 +15,7 @@ test("email code sign-in: a cookie session, no password", async () => {
 
 test("a wrong code does not sign in", async () => {
   const email = unique("wrong");
-  await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
+  await t.sendCode(email);
   const r = await t.call("/api/auth/sign-in/email-otp", { email, otp: "000000" });
   expect(r.status).not.toBe(200);
 });
@@ -57,8 +57,8 @@ test("a write racing the sign-in is moved into the account or refused, never sil
   const anon = await t.anonymous();
   await t.write(anon, [review(W.e)]);
   // Code sent first, so the writes race only the linking itself.
-  await t.call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, anon);
-  const otp = t.mailer.latest(email)!.subject.match(/\d{6}/)![0];
+  await t.sendCode(email, anon);
+  const otp = t.codeFor(email);
   const racing = Array.from({ length: 5 }, (_, i) => review([W.f, W.g, W.h, W.i, W.j][i]));
   const [link, ...writes] = await Promise.all([t.call("/api/auth/sign-in/email-otp", { email, otp }, anon), ...racing.map((r) => t.write(anon, [r]))]);
   expect(link.status).toBe(200);

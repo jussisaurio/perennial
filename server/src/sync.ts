@@ -16,24 +16,17 @@ import { HttpError, json, readJson } from "./http";
 import { event } from "./log";
 
 /** Tables a learner can read, each scoped to their user id. */
-const SHAPES: Record<string, { where: string }> = {
-  course: { where: "user_id = $1" },
-  review: { where: "user_id = $1" },
-  word_state: { where: "user_id = $1" },
-  user_word: { where: "user_id = $1" },
-  user_sentence: { where: "user_id = $1" },
-};
+export const LEARNER_TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
 
 export async function proxyShape(req: Request, userId: string, config: Config): Promise<Response> {
   const url = new URL(req.url);
   const table = url.searchParams.get("table") ?? "";
-  const def = SHAPES[table];
-  if (!def) throw new HttpError(400, "unknown_shape");
+  if (!LEARNER_TABLES.includes(table)) throw new HttpError(400, "unknown_shape");
   const origin = new URL(`${config.electric.url}/v1/shape`);
   for (const [k, v] of url.searchParams) if (ELECTRIC_PROTOCOL_QUERY_PARAMS.includes(k)) origin.searchParams.set(k, v);
   // The shape definition is always ours, never the client's.
   origin.searchParams.set("table", table);
-  origin.searchParams.set("where", def.where);
+  origin.searchParams.set("where", "user_id = $1");
   origin.searchParams.set("params[1]", userId);
   if (config.electric.secret) origin.searchParams.set("secret", config.electric.secret);
   let res: Response;
@@ -115,8 +108,8 @@ const Mutation = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("user_sentence.delete"), id: z.uuid() }),
 ]);
-export const WriteBatch = z.object({ mutations: z.array(Mutation).min(1).max(500) });
-export type Mutation = z.infer<typeof Mutation>;
+const WriteBatch = z.object({ mutations: z.array(Mutation).min(1).max(500) });
+type Mutation = z.infer<typeof Mutation>;
 
 /** A device clock can be wrong: never accept times from the future (with a little slack). */
 const clamp = (d: Date, now: Date) => (d.getTime() > now.getTime() ? now : d);
@@ -182,7 +175,7 @@ async function checkWords(tx: SQL, userId: string, mutations: Mutation[]) {
  * touched a row (a retried insert, an older state, a delete of nothing): no
  * change reaches the stream, so there is no txid echo to wait for.
  */
-export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Promise<{ txid: number; changed: boolean }> {
+async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Promise<{ txid: number; changed: boolean }> {
   const now = new Date();
   for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw new HttpError(422, "review_from_the_future");
   return sql.begin(async (tx) => {
@@ -270,11 +263,11 @@ export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[
 export async function handleWrite(req: Request, sql: SQL, userId: string): Promise<Response> {
   const body = WriteBatch.safeParse(await readJson(req, 512 * 1024));
   if (!body.success) throw new HttpError(422, "bad_request", { issues: body.error.issues.slice(0, 5) });
-  // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
   const types: Record<string, number> = {};
   for (const m of body.data.mutations) types[m.type] = (types[m.type] ?? 0) + 1;
   // "review.insert:3 course.upsert:1": what the batch was, searchable as text.
   event({ writes: body.data.mutations.length, writeTypes: Object.entries(types).map(([k, n]) => `${k}:${n}`).join(" ") });
+  // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
   const result = await Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: body.data.mutations.length } }, () =>
     applyWrites(sql, userId, body.data.mutations),
   );
