@@ -29,6 +29,18 @@ test("course words: search the upcoming words, pause and resume, never show (wit
   await expectServerRows(page, "word_state", 0);
 });
 
+test("empty lists say what is missing, with a small wink (#58)", async ({ page }) => {
+  await startCourse(page);
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByRole("combobox").selectOption("suspended");
+  await expect(page.getByText("No paused words. Everyone is awake.")).toBeVisible();
+  await page.getByRole("combobox").selectOption("known");
+  await expect(page.getByText("No flowers yet. They are coming.")).toBeVisible();
+  await page.getByRole("combobox").selectOption("new");
+  await page.getByPlaceholder("Search words or meanings").fill("qqzzxx");
+  await expect(page.getByText("No word here. Maybe it is still a seed.")).toBeVisible();
+});
+
 test("keyboard: Enter starts today's session, / focuses the word search", async ({ page }) => {
   await startCourse(page);
   await page.locator("body").click({ position: { x: 5, y: 5 } }); // nothing focused

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectServerRows, startCourse } from "./helpers";
+import { addEmail, expectServerRows, startCourse } from "./helpers";
 
 test("landing: the garden shows real words per language; start without an account", async ({ page }) => {
   await page.goto("/");
@@ -24,4 +24,23 @@ test("landing: walk through the showcase garden in 3D, view only", async ({ page
   await expect(page.getByRole("button", { name: /Water/ })).toHaveCount(0); // no learning here
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
+});
+
+test("no flicker: after Start, and after signing in, the landing page never comes back", async ({ page }) => {
+  // Count every time the landing page appears (MutationObserver, so a single frame counts).
+  await page.addInitScript(() => {
+    const w = window as unknown as { __landings: number };
+    w.__landings = 0;
+    let shown = false;
+    new MutationObserver(() => {
+      const now = !!document.querySelector(".landing");
+      if (now && !shown) w.__landings++;
+      shown = now;
+    }).observe(document, { subtree: true, childList: true });
+  });
+  const landings = () => page.evaluate(() => (window as unknown as { __landings: number }).__landings);
+  await startCourse(page);
+  expect(await landings()).toBe(1); // only before Start
+  await addEmail(page);
+  expect(await landings()).toBe(0); // the page after the sign-in reload never showed it
 });

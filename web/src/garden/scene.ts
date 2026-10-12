@@ -5,12 +5,43 @@
 import * as THREE from "three";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
+import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
+import { fencePickets, fencePoint, GATE_HALF, gnomePose, gnomeTag, snailLap, SNAIL_SIGN, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
+import { daily, rareDay } from "../ui/whimsy";
+import { boardBox, DECOR_KINDS, pickScenery, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
+/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery"), or what a visitor says (kind "say"), in screen fractions. */
+export interface Label {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
+  near: number;
+  kind?: "visitor" | "scenery" | "say";
+  gloss?: string;
+  /** A visitor whose noun the learner knows: plant-label styling with a tiny leaf. */
+  known?: boolean;
+}
+
+/** Who visits the walk today. */
+export interface WalkVisitors {
+  list: VisitorView[];
+  /** The first word's plant and its stake text, e.g. "casa · 3 Oct" (#61). */
+  keepsake?: { id: string; text: string } | null;
+  /** The stake in an empty garden, e.g. "Reserved for Spanish words" (#58). */
+  reserved?: string | null;
+  /** Tonight's sleeping bloom (#62): three z's drift up from it at night. */
+  sleeper?: string | null;
+  /** Words for the garden itself (#74): shown when you tap the sunflower, a tree, the pond... */
+  scenery?: SceneryViews;
+}
+
 export interface SceneCallbacks {
   onSelect: (p: PlacedPlant | null) => void;
-  onLabels: (labels: { id: string; text: string; x: number; y: number; near: number }[]) => void;
+  onLabels: (labels: Label[]) => void;
   onProgress?: (done: number, total: number) => void;
 }
 
@@ -93,6 +124,7 @@ const PLANT_VERT = /* glsl */ `
   uniform float uFogNear;
   uniform float uFogFar;
   uniform float uSelected;
+  uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uLowSize;
   varying vec2 vLow;
   varying vec2 vHi;
@@ -106,7 +138,9 @@ const PLANT_VERT = /* glsl */ `
     return (vec2(idx - r * cols, r) * cell + q * cell) / size;
   }
   void main() {
-    vec2 p = position.xy * iParams.z;
+    // A plant that hears its name grows a few percent for a moment.
+    float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
+    vec2 p = position.xy * iParams.z * (1.0 + perk);
     float h = position.y / ${SPRITE_H.toFixed(1)};
     float a = iParams.y + uSway * sin(uTime * 1.4 + iParams.x) * 0.07 * h + uSway * sin(uTime * 3.1 + iParams.x * 2.0) * 0.015;
     p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
@@ -155,6 +189,7 @@ function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: numbe
       uFog: { value: new THREE.Color() },
       uTint: { value: new THREE.Color(1, 1, 1) },
       uSelected: { value: -1 },
+      uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
     },
     vertexShader: PLANT_VERT,
     fragmentShader: PLANT_FRAG,
@@ -204,6 +239,55 @@ function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRI
   return mesh;
 }
 
+/** One visitor's sprite. `hit`: the drawn part's middle height and half width and height, as fractions of the cell. `top`: where its tag sits. */
+interface VisitorSprite {
+  v: VisitorView;
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  h: number;
+  hit: [number, number, number];
+  top: number;
+  mesh: THREE.Mesh;
+  pos: THREE.InstancedBufferAttribute;
+  uv: THREE.InstancedBufferAttribute;
+}
+
+// Three z's drifting up from the sleeping bloom (#62). All the motion is in the
+// shader, so a frame costs one uniform. With reduced motion they stay still.
+const SNORE_VERT = /* glsl */ `
+  attribute float phase;
+  uniform float uTime;
+  uniform float uMove;
+  uniform float uScale;
+  varying float vA;
+  void main() {
+    float k = uMove > 0.5 ? fract(uTime / 3.6 + phase / 3.0) : 0.15 + phase * 0.3;
+    vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
+    vec3 p = position + right * (0.1 + k * 0.2 + sin(k * 6.28) * 0.03) + vec3(0.0, k * 0.5, 0.0);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    gl_Position = projectionMatrix * mv;
+    gl_PointSize = clamp((0.13 + 0.06 * k) * uScale / -mv.z, 3.0, 72.0);
+    vA = uMove > 0.5 ? smoothstep(0.0, 0.15, k) * (1.0 - smoothstep(0.65, 1.0, k)) : 0.9;
+  }
+`;
+const SNORE_FRAG = /* glsl */ `
+  uniform sampler2D uMap;
+  varying float vA;
+  void main() {
+    vec4 c = texture2D(uMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
+    if (c.a < 0.5 || vA < 0.02) discard;
+    gl_FragColor = vec4(c.rgb, vA);
+  }
+`;
+
+/** The moth's loop round its lantern (m), and the height of the middle of the lantern glass. */
+const MOTH_R = 0.24;
+const LANTERN_GLASS_Y = 1.02;
+/** How far away a visitor's tag shows on approach (m). The gnome adds its own rules (gnomeTag). */
+const TAG_RANGE: Partial<Record<VisitorId, number>> = { heron: 2.5, gnome: 7 };
+
 export class GardenScene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -242,19 +326,64 @@ export class GardenScene {
   private glows: THREE.Object3D[] = [];
   private sun!: THREE.Sprite;
   private sunDir = new THREE.Vector3();
+  /** The sunflower's position and frame (null: not chosen yet). */
+  private flower = { x: 0, z: 0, uv: null as THREE.InstancedBufferAttribute | null, params: null as THREE.InstancedBufferAttribute | null, face: null as boolean | null };
   private selected: PlacedPlant | null = null;
   private time: TimeOfDay = "day";
   private lastLabels = "";
+  private tmp = new THREE.Vector3();
+  /** Visitor sprites: their own materials, tinted with the time of day but never swaying or selected. */
+  private still = new Set<THREE.ShaderMaterial>();
+  private visitorSprites: VisitorSprite[] = [];
+  /** The snail's lap: when it last moved, and the fence length in pickets. */
+  private snailTick = 0;
+  private snailPickets = 1;
+  private tapped: { id: VisitorId; until: number } | null = null;
+  /** What a tap can name in the garden itself (#74), built once. The clouds and the sun are read at tap time. */
+  private hitBoxes: HitBox[] = [];
+  private hitDiscs: HitDisc[] = [];
+  private hillProfile: number[] = [];
+  /** The tapped scenery word and where its tag sits (it follows the sun or a cloud). */
+  private sceneryTap: { view: SceneryView; hit: SceneryHit; until: number } | null = null;
+  /** A visitor's speech bubble (the frog's croak). */
+  private saying: { id: VisitorId; text: string; until: number } | null = null;
+  private catAwake = false;
+  /** The bird hops away when you come close (t: 0..1 while hopping, 1 once gone) and comes back when you walk off. */
+  private bird = { t: -1, dx: 0, dz: 0 };
+  /** Lantern spots, for the moth. */
+  private lanternSpots: [number, number][] = [];
+  /** The lily pads, for the frog. */
+  private pads: [number, number][] = [];
+  /** The frog: puffed up until `croak` (elapsed s); asleep all day on about one day in 25. */
+  private frog = { croak: 0, puffed: false, asleep: false };
+  /** The gnome's pose, when it left / came back into view, its lantern (lit at dusk and night) and the lantern's small glow. */
+  private gnome = { pose: "front" as GnomePose, inView: true, changedAt: 0, lit: false, glow: null as THREE.Sprite | null };
+  /** The heron: t is 0 at home, 1 one step back; dir is +1 while stepping back, -1 while stepping home. */
+  private heron = { t: 0, dir: 0, tx: 0, tz: 0 };
+  /** The moth's loop round its lantern: angle, radius, and a bump into the glass every 6 to 9 s. */
+  private moth = { cx: 0, cz: 0, a: 0, r: MOTH_R, bump: -1, next: 7, n: 0 };
+  /** Plant materials, for the perk uniform. */
+  private plantMats: THREE.ShaderMaterial[] = [];
+  /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
+  private perk = { i: -1, at: 0, n: -1 };
+  /** The sleeping bloom's z's, shown at night. */
+  private snore: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
 
   private layout: Layout;
   private cb: SceneCallbacks;
   private reducedMotion: boolean;
 
-  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean) {
+  /** The course language, for the odd sign written in it. */
+  private lang: string;
+  private visitors: WalkVisitors;
+
+  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang = "", visitors: WalkVisitors = { list: [] }) {
     this.layout = layout;
     this.cb = cb;
     this.reducedMotion = reducedMotion;
+    this.lang = lang;
+    this.visitors = visitors;
     THREE.ColorManagement.enabled = false;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -310,6 +439,7 @@ export class GardenScene {
       const box = new THREE.Mesh(new THREE.BoxGeometry(bed.w, H, bed.d), [mat(sideD), mat(sideD), mat(top), mat(top), mat(side), mat(side)]);
       box.position.set(bed.x, H / 2, bed.z);
       this.scene.add(box);
+      this.hitBoxes.push({ id: "bed", min: [bed.x - bed.w / 2, 0, bed.z - bed.d / 2], max: [bed.x + bed.w / 2, H, bed.z + bed.d / 2], tag: null });
       // A sign on a post at the front-left corner, facing the path.
       const signTex = T.pixelTexture(T.sign(bed.label));
       // Just outside the front-left corner, turned toward the path, so it never hides a plant.
@@ -319,8 +449,10 @@ export class GardenScene {
       board.position.set(sx, 0.78, sz);
       board.rotation.y = 0.5;
       this.scene.add(board);
+      this.hitBoxes.push(boardBox(sx, sz, 0.96, 0.93, 0.5));
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.66, 0.06), mat(woodTex));
-      post.position.set(sx - 0.02, 0.33, sz - 0.03);
+      // Behind the board (it faces the path), never in its plane.
+      post.position.set(sx - Math.sin(0.5) * 0.06, 0.33, sz - Math.cos(0.5) * 0.06);
       this.scene.add(post);
     }
 
@@ -335,6 +467,7 @@ export class GardenScene {
       m.position.set((x1 + x2) / 2, 0.4, (z1 + z2) / 2);
       m.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
       this.scene.add(m);
+      this.hitBoxes.push({ id: "fence", min: [Math.min(x1, x2) - 0.05, 0, Math.min(z1, z2) - 0.05], max: [Math.max(x1, x2) + 0.05, 0.8, Math.max(z1, z2) + 0.05], tag: null });
     };
     const gateHalf = 1.1;
     fence(b.minX, b.minZ, b.maxX, b.minZ);
@@ -351,6 +484,9 @@ export class GardenScene {
     const beam = new THREE.Mesh(new THREE.BoxGeometry(gateHalf * 2 + 0.5, 0.16, 0.2), mat(woodTex));
     beam.position.set(L.gate.x, 2.1, b.maxZ);
     this.scene.add(beam);
+    const gateTag: [number, number, number] = [L.gate.x, 2.26, b.maxZ];
+    for (const sx of [-1, 1]) this.hitBoxes.push({ id: "gate", min: [L.gate.x + sx * gateHalf - 0.1, 0, b.maxZ - 0.1], max: [L.gate.x + sx * gateHalf + 0.1, 2.1, b.maxZ + 0.1], tag: gateTag });
+    this.hitBoxes.push({ id: "gate", min: [L.gate.x - gateHalf - 0.25, 2.0, b.maxZ - 0.1], max: [L.gate.x + gateHalf + 0.25, 2.18, b.maxZ + 0.1], tag: gateTag });
 
     // The pond by the gate, with lily pads.
     this.water = T.pixelTexture(T.water(), true);
@@ -359,6 +495,7 @@ export class GardenScene {
     pond.rotation.x = -Math.PI / 2;
     pond.position.set(L.pond.x, 0.04, L.pond.z);
     this.scene.add(pond);
+    this.hitDiscs.push({ id: "pond", x: L.pond.x, y: 0.045, z: L.pond.z, r: L.pond.r + 0.18, tagY: 0.3 });
     const rim = new THREE.Mesh(new THREE.RingGeometry(L.pond.r, L.pond.r + 0.18, 20), mat(T.pixelTexture(T.path(), true), { color: 0xb0aaa0 }));
     rim.rotation.x = -Math.PI / 2;
     rim.position.set(L.pond.x, 0.045, L.pond.z);
@@ -369,6 +506,8 @@ export class GardenScene {
       const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), mat(padTex, { alphaTest: 0.5 }));
       pad.rotation.set(-Math.PI / 2, 0, a);
       pad.position.set(L.pond.x + Math.cos(a) * L.pond.r * 0.55, 0.07, L.pond.z + Math.sin(a) * L.pond.r * 0.55);
+      this.pads.push([pad.position.x, pad.position.z]);
+      this.hitDiscs.push({ id: "lily", x: pad.position.x, y: 0.07, z: pad.position.z, r: 0.2, tagY: 0.14 });
       this.scene.add(pad);
     }
 
@@ -405,6 +544,10 @@ export class GardenScene {
         index: -2,
       });
     }
+    for (const t of trees) {
+      const k = TREE_KINDS[Math.round(t.u * 4)];
+      this.hitBoxes.push(spriteBox(k.id, t.x, 0, t.z, k.half * t.scale, k.top * t.scale));
+    }
     const treeMesh = sprites(treeTex, trees);
     this.mats.add(treeMesh.material);
     this.scene.add(treeMesh);
@@ -419,6 +562,8 @@ export class GardenScene {
       }
     spots.set("gate-l", [L.gate.x - 1.6, L.gate.z - 0.4]);
     spots.set("gate-r", [L.gate.x + 1.6, L.gate.z - 0.4]);
+    this.lanternSpots = [...spots.values()];
+    for (const [x, z] of this.lanternSpots) this.hitBoxes.push(spriteBox("lantern", x, 0, z, 0.13, 1.26));
     const lanternTex = T.pixelTexture(T.lantern());
     const lanternItems = (u: number): SpriteItem[] => [...spots.values()].map(([x, z]) => ({ x, y: 0, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
     this.unlit = sprites(lanternTex, lanternItems(0), 0.42, 1.26);
@@ -452,6 +597,105 @@ export class GardenScene {
     for (const sx of [-0.55, 0.55]) for (const sz of [-0.15, 0.15]) plank(0.06, 0.42, 0.06, sx, 0.21, sz);
     bench.position.set(L.pond.x + 0.2, 0, L.pond.z - L.pond.r - 0.75);
     this.scene.add(bench);
+    {
+      const { x, z } = bench.position;
+      this.hitBoxes.push({ id: "bench", min: [x - 0.68, 0, z - 0.25], max: [x + 0.68, 0.8, z + 0.22], tag: [x, 0.88, z] });
+    }
+
+    // Two notice boards whose text changes each day: one on the back fence, one by the bench.
+    const signs = pickSigns(this.lang);
+    if (this.visitors.list.some((v) => v.id === "cat")) signs.bench = { text: "Bench: taken" };
+    const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
+      const g = new THREE.Group();
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.48), mat(T.pixelTexture(T.notice(line.text)), { side: THREE.DoubleSide }));
+      board.position.y = 0.95;
+      if (line.upsideDown) board.rotation.z = Math.PI;
+      g.add(board);
+      for (const sx of [-0.45, 0.45]) {
+        // Behind the board with a gap: a post in the board's plane fights it and shows through the text.
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.86, 0.06), mat(woodTex));
+        post.position.set(sx, 0.43, -0.06);
+        g.add(post);
+      }
+      g.position.set(x, 0, z);
+      g.rotation.y = turn;
+      this.scene.add(g);
+      this.hitBoxes.push(boardBox(x, z, 1.2, 1.19, turn));
+    };
+    noticeBoard(signs.fence, L.gate.x, b.minZ + 0.25, 0);
+    noticeBoard(signs.bench, bench.position.x + 1.05, bench.position.z - 0.05, 0.35);
+    // Just outside the gate, facing in: the walk stops at the gateway, and the sign admits it.
+    noticeBoard({ text: "Mind the invisible wall" }, L.gate.x, b.maxZ + 1.6, Math.PI);
+    // The snail's finish line (where it set off), on a small board just inside the gate, facing the garden.
+    if (this.visitors.list.some((v) => v.id === "snail")) {
+      const g = new THREE.Group();
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.4), mat(T.pixelTexture(T.notice(SNAIL_SIGN)), { side: THREE.DoubleSide }));
+      board.position.y = 0.62;
+      g.add(board);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), mat(woodTex));
+      post.position.set(0, 0.25, -0.05);
+      g.add(post);
+      g.position.set(L.gate.x + GATE_HALF + 1.7, 0, b.maxZ - 0.3);
+      g.rotation.y = Math.PI - 0.25;
+      this.scene.add(g);
+      this.hitBoxes.push(boardBox(g.position.x, g.position.z, 1.0, 0.82, g.rotation.y));
+    }
+    this.buildVisitors(bench.position);
+
+    // Small stakes (#58, #61): one in an empty garden, and the first word's, forever, in front of its plant.
+    const stake = (text: string, x: number, z: number, w: number, y: number, turn = 0) => {
+      const g = new THREE.Group();
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 0.4), mat(T.pixelTexture(T.notice(text)), { side: THREE.DoubleSide }));
+      board.position.y = y;
+      g.add(board);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.04, y, 0.04), mat(woodTex));
+      post.position.set(0, y / 2, -0.03);
+      g.add(post);
+      g.position.set(x, 0, z);
+      g.rotation.y = turn;
+      this.scene.add(g);
+      this.hitBoxes.push(boardBox(x, z, w, y + w * 0.2, turn));
+    };
+    const first = L.beds[0];
+    // Front right of the empty bed, where the card in the middle does not hide it.
+    if (this.visitors.reserved && !L.plants.length) stake(this.visitors.reserved, first.x + first.w / 2 - 0.32, first.z + first.d / 2 - 0.3, 0.64, 0.56, -0.3);
+    const kept = this.visitors.keepsake ? L.plants.find((p) => p.id === this.visitors.keepsake!.id) : undefined;
+    if (kept) {
+      const bed = L.beds[kept.bed];
+      stake(this.visitors.keepsake!.text, kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
+    }
+    const sleeper = this.visitors.sleeper ? L.plants.find((p) => p.id === this.visitors.sleeper) : undefined;
+    if (sleeper) {
+      const top = 0.28 + ((14 + 120 * sleeper.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z]), 3));
+      geo.setAttribute("phase", new THREE.BufferAttribute(new Float32Array([0, 1, 2]), 1));
+      this.snore = new THREE.Points(
+        geo,
+        new THREE.ShaderMaterial({
+          uniforms: { uTime: { value: 0 }, uMove: { value: this.reducedMotion ? 0 : 1 }, uScale: { value: 400 }, uMap: { value: T.pixelTexture(T.snoreZ()) } },
+          vertexShader: SNORE_VERT,
+          fragmentShader: SNORE_FRAG,
+          transparent: true,
+          depthWrite: false,
+        }),
+      );
+      this.snore.frustumCulled = false;
+      this.snore.visible = false;
+      this.scene.add(this.snore);
+    }
+
+    // One sunflower in the far right corner, by the back fence. Unlike every other
+    // sprite, it does not look at you: from the garden you see the back of its head,
+    // and only from the back path, with the sun behind you, its face.
+    this.flower.x = b.maxX - 1;
+    this.flower.z = b.minZ + 0.45;
+    const flowerMesh = sprites(T.pixelTexture(T.sunflower()), [{ x: this.flower.x, y: 0, z: this.flower.z, u: 0.5, v: 0, uw: 0.5, vh: 1, phase: 1.3, droop: 0, scale: 1, index: -5 }], 0.85, 1.7);
+    this.hitBoxes.push(spriteBox("sunflower", this.flower.x, 0, this.flower.z, 0.24, 1.62));
+    this.flower.uv = flowerMesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
+    this.flower.params = flowerMesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
+    this.mats.add(flowerMesh.material);
+    this.scene.add(flowerMesh);
 
     // Wild bits: tufts, flowers, mushrooms, stones. Thick outside, a few by the fence and pond.
     const decorTex = T.pixelTexture(T.decor());
@@ -475,6 +719,10 @@ export class GardenScene {
       const a = rand() * Math.PI * 2;
       put(L.pond.x + Math.cos(a) * (L.pond.r + 0.3), L.pond.z + Math.sin(a) * (L.pond.r + 0.3), [3, 3, 0, 2][i % 4], 0.38);
     }
+    for (const it of decor) {
+      const k = DECOR_KINDS[Math.round(it.u * 4)];
+      if (k) this.hitBoxes.push(spriteBox(k.id, it.x, Math.max(0, it.y), it.z, k.half * it.scale, k.top * it.scale));
+    }
     const decorMesh = sprites(decorTex, decor);
     this.mats.add(decorMesh.material);
     this.scene.add(decorMesh);
@@ -489,6 +737,7 @@ export class GardenScene {
     hillRing.position.y = 10;
     hillRing.renderOrder = -1;
     this.scene.add(hillRing);
+    this.hillProfile = T.hillProfile();
     const cloudTex = T.pixelTexture(T.cloud());
     for (let i = 0; i < 9; i++) {
       const c = new THREE.Mesh(new THREE.PlaneGeometry(22, 11), new THREE.MeshBasicMaterial({ map: cloudTex, alphaTest: 0.5, fog: false, depthWrite: false }));
@@ -542,12 +791,323 @@ export class GardenScene {
     this.sun.renderOrder = -1;
     this.scene.add(this.sun);
 
-    this.marker = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.28), new THREE.MeshBasicMaterial({ map: T.pixelTexture(T.marker()), alphaTest: 0.5, depthTest: false }));
-    this.marker.renderOrder = 5;
+    // Always on top: no depth test, and in the transparent pass with the highest
+    // renderOrder, because the far hills and clouds draw in that pass after the
+    // opaque one (and a mesh without a depth test writes no depth to stop them).
+    this.marker = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.28, 0.28),
+      new THREE.MeshBasicMaterial({ map: T.pixelTexture(T.marker()), alphaTest: 0.5, transparent: true, depthTest: false, depthWrite: false }),
+    );
+    this.marker.renderOrder = 10;
     this.marker.visible = false;
     this.scene.add(this.marker);
 
     this.setTime(this.time);
+  }
+
+  /**
+   * Today's visitors (garden/visitors.ts): the snail on the fence rail, the cat
+   * on the bench, a toadstool by a bed, a bird on a sign or the fence, the gnome
+   * at a bed corner, the frog on a lily pad, the heron at the pond's edge, the
+   * moth at a lantern. One small texture for all of them; each is a
+   * one-instance sprite mesh.
+   */
+  private buildVisitors(bench: THREE.Vector3) {
+    if (!this.visitors.list.length) return;
+    const L = this.layout;
+    const b = L.bounds;
+    const tex = T.pixelTexture(T.visitors());
+    const RAIL = 0.53; // the top of the fence's upper rail
+    const cellU = 1 / T.VISITOR_CELLS;
+    // The frog's pad: the one nearest the gate, where you come in.
+    const pad = this.pads.reduce((a, p) => (Math.hypot(p[0] - L.gate.x, p[1] - L.gate.z) < Math.hypot(a[0] - L.gate.x, a[1] - L.gate.z) ? p : a), this.pads[0]);
+    for (const v of this.visitors.list) {
+      let x: number, y: number, z: number, cell: number, size: number;
+      // Defaults for the drawn part (the lower half of the cell) and the tag just above it.
+      let hit: [number, number, number] = [0.2, 0.4, 0.3];
+      let top = v.id === "cat" ? 0.45 : 0.55;
+      if (v.id === "frog") {
+        this.frog.asleep = rareDay(25, "frog-asleep");
+        [x, y, z] = [pad[0], 0.075, pad[1]];
+        [cell, size, hit, top] = [this.frog.asleep ? T.VISITOR_CELL.frogAsleep : T.VISITOR_CELL.frog, 0.42, [0.17, 0.25, 0.2], 0.42];
+      } else if (v.id === "gnome") {
+        // A bed corner chosen by the date; never the front-left one, where the bed's sign is.
+        const bed = daily(L.beds, "visitor-gnome-bed");
+        const [sx, sz] = daily(
+          [
+            [1, 1],
+            [1, -1],
+            [-1, -1],
+          ],
+          "visitor-gnome-corner",
+        );
+        [x, y, z] = [bed.x + sx * (bed.w / 2 + 0.2), 0.0, bed.z + sz * (bed.d / 2 + 0.2)];
+        [cell, size, hit, top] = [T.VISITOR_CELL.gnomeFront, 0.56, [0.36, 0.25, 0.38], 0.78];
+        const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glow()), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+        glow.scale.set(0.3, 0.3, 1);
+        glow.visible = false;
+        this.gnome.glow = glow;
+        this.scene.add(glow);
+      } else if (v.id === "heron") {
+        // On the stones at the pond's edge, a little round from the frog's pad, looking at it.
+        const a = Math.atan2(pad[1] - L.pond.z, pad[0] - L.pond.x) - 0.6;
+        [x, y, z] = [L.pond.x + Math.cos(a) * (L.pond.r + 0.12), 0.0, L.pond.z + Math.sin(a) * (L.pond.r + 0.12)];
+        [cell, size, hit, top] = [T.VISITOR_CELL.heron, 1.05, [0.44, 0.22, 0.44], 0.92];
+      } else if (v.id === "moth") {
+        const [lx, lz] = daily(this.lanternSpots, "visitor-moth-lantern");
+        [this.moth.cx, this.moth.cz] = [lx, lz];
+        // With reduced motion it sits on the lantern's roof; otherwise tick() moves it.
+        [x, y, z] = [lx, 1.235, lz];
+        [cell, size, hit, top] = [this.reducedMotion ? T.VISITOR_CELL.mothClosed : T.VISITOR_CELL.mothOpen, 0.36, [0.1, 0.3, 0.2], 0.3];
+      } else if (v.id === "snail") {
+        this.snailPickets = fencePickets(L);
+        const p = fencePoint(L, snailLap() * this.snailPickets);
+        // A few centimetres inside the fence, so it sits on the rail and not in it.
+        [x, y, z] = [p.x + p.dz * 0.06, RAIL, p.z - p.dx * 0.06];
+        [cell, size] = [T.VISITOR_CELL.snail, 0.7];
+      } else if (v.id === "cat") {
+        [x, y, z] = [bench.x + 0.18, 0.45, bench.z + 0.02];
+        [cell, size] = [T.VISITOR_CELL.catAsleep, 0.95];
+      } else if (v.id === "toadstool") {
+        const bed = daily(L.beds, "visitor-toadstool-bed");
+        const along = daily([-0.3, -0.1, 0.15, 0.35], "visitor-toadstool-z");
+        [x, y, z] = [bed.x + bed.w / 2 + 0.16, 0.0, bed.z + along * bed.d];
+        [cell, size] = [T.VISITOR_CELL.toadstool, 0.6];
+      } else {
+        // On a sign or the fence rail.
+        const first = L.beds[0];
+        const spots: [number, number, number][] = [
+          [L.gate.x, 1.19, b.minZ + 0.25],
+          [first.x - first.w / 2 - 0.3, 0.93, first.z + first.d / 2 + 0.3],
+          [b.maxX - 0.06, RAIL, (b.maxZ + first.z) / 2],
+          [b.minX + 0.06, RAIL, first.z - 1],
+        ];
+        if (!this.visitors.list.some((o) => o.id === "cat")) spots.push([bench.x + 1.05, 1.19, bench.z - 0.05]);
+        [x, y, z] = daily(spots, "visitor-bird-spot");
+        [cell, size] = [T.VISITOR_CELL.bird, 0.5];
+      }
+      const mesh = sprites(tex, [{ x, y, z, u: cell * cellU, v: 0, uw: cellU, vh: 1, phase: 0, droop: 0, scale: 1, index: -6 }], size, size);
+      const m = mesh.material as THREE.ShaderMaterial;
+      m.uniforms.uSway.value = 0;
+      m.uniforms.uFogNear.value = FOG_NEAR;
+      m.uniforms.uFogFar.value = FOG_FAR;
+      this.still.add(m);
+      this.scene.add(mesh);
+      const pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
+      const uv = mesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
+      this.visitorSprites.push({ v, x, y, z, w: size, h: size, hit, top, mesh, pos, uv });
+    }
+  }
+
+  private setCell(s: VisitorSprite, cell: number) {
+    const u = cell / T.VISITOR_CELLS;
+    if (s.uv.getX(0) === u) return;
+    s.uv.setX(0, u);
+    s.uv.needsUpdate = true;
+  }
+
+  private gnomeCell(s: VisitorSprite) {
+    const g = this.gnome;
+    this.setCell(s, (g.lit ? T.VISITOR_CELL.gnomeFrontLit : T.VISITOR_CELL.gnomeFront) + (g.pose === "side" ? 1 : 0));
+  }
+
+  /** The visitor under a point on the canvas (CSS pixels), if any. */
+  pickVisitor(cssX: number, cssY: number, cssW: number, cssH: number): VisitorView | null {
+    const nx = (cssX / cssW) * 2 - 1;
+    const ny = -(cssY / cssH) * 2 + 1;
+    const ty = Math.tan((this.camera.fov * Math.PI) / 360);
+    const tx = ty * this.camera.aspect;
+    let best: VisitorView | null = null;
+    let bestDepth = Infinity;
+    for (const s of this.visitorSprites) {
+      if (!s.mesh.visible) continue;
+      const [cy, hx, hy] = s.hit;
+      this.tmp.set(s.pos.getX(0), s.pos.getY(0) + s.h * cy, s.pos.getZ(0)).applyMatrix4(this.camera.matrixWorldInverse);
+      const depth = -this.tmp.z;
+      if (depth < 0.2 || depth > 14) continue;
+      const rw = Math.max(0.04, (s.w * hx) / depth / tx);
+      const rh = Math.max(0.05, (s.h * hy) / depth / ty);
+      if (Math.abs(nx - this.tmp.x / depth / tx) < rw && Math.abs(ny - this.tmp.y / depth / ty) < rh && depth < bestDepth) {
+        best = s.v;
+        bestDepth = depth;
+      }
+    }
+    return best;
+  }
+
+  /** Show a visitor's tag for a few seconds (after a tap). */
+  tapVisitor(id: VisitorId) {
+    this.tapped = { id, until: this.elapsed + 4 };
+    this.sceneryTap = null;
+  }
+
+  /**
+   * The scenery under a point on the canvas (CSS pixels), with its word, or
+   * null. Ask only after the plants and visitors: they come first. One ray
+   * through volumes built with the garden; it runs on a tap, not every frame.
+   */
+  pickScenery(cssX: number, cssY: number, cssW: number, cssH: number): { view: SceneryView; hit: SceneryHit } | null {
+    const words = this.visitors.scenery;
+    if (!words) return null;
+    const c = this.camera;
+    const d = this.tmp.set((cssX / cssW) * 2 - 1, -(cssY / cssH) * 2 + 1, 0.5).unproject(c).sub(c.position).normalize();
+    const world: SceneryWorld = {
+      boxes: this.hitBoxes,
+      discs: this.hitDiscs,
+      bounds: this.layout.bounds,
+      far: FOG_FAR,
+      hills: { radius: 150, bottom: -7, top: 27, profile: this.hillProfile, rows: 64, repeat: 4 },
+      sunDir: this.sunDir,
+      night: this.time === "night",
+      sunRadius: 0.045,
+      clouds: this.clouds.map((m) => m.position),
+      cloudHalf: [8.8, 5],
+    };
+    const hit = pickScenery({ ox: c.position.x, oy: c.position.y, oz: c.position.z, dx: d.x, dy: d.y, dz: d.z }, world, (id) => !!words[id]);
+    return hit ? { view: words[hit.id]!, hit } : null;
+  }
+
+  /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
+  tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
+    this.sceneryTap = { ...s, until: this.elapsed + 4 };
+    this.tapped = null;
+  }
+
+  /** A visitor says something in a small bubble for a few seconds (the frog's croak). */
+  say(id: VisitorId, text: string) {
+    this.saying = { id, text, until: this.elapsed + 3.2 };
+    if (this.tapped?.id === id) this.tapped = null;
+    if (id !== "frog" || this.frog.asleep) return;
+    // Its throat puffs up while it croaks.
+    this.frog.croak = this.elapsed + 0.7;
+    this.frog.puffed = true;
+    const s = this.visitorSprites.find((o) => o.v.id === "frog");
+    if (s) this.setCell(s, T.VISITOR_CELL.frogCroak);
+  }
+
+  /**
+   * Visitors react to you: the cat opens one eye, the bird hops away, the gnome
+   * looks away when you do, the heron steps back. The moth goes round its lantern. No
+   * allocations here: it runs every frame.
+   */
+  private tickVisitors(dt: number) {
+    for (const s of this.visitorSprites) {
+      const d = Math.hypot(s.x - this.x, s.z - this.z);
+      if (s.v.id === "gnome") {
+        const g = this.gnome;
+        // In view: in front of the camera and inside the screen (a little margin).
+        const p = this.tmp.set(s.x, s.y, s.z).project(this.camera);
+        const inView = p.z < 1 && Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95;
+        if (inView !== g.inView) [g.inView, g.changedAt] = [inView, this.elapsed];
+        const since = this.elapsed - g.changedAt;
+        const pose = gnomePose(g.pose, inView, inView ? 0 : since, inView ? since : 0);
+        if (pose !== g.pose) {
+          g.pose = pose;
+          this.gnomeCell(s);
+        }
+        if (g.glow?.visible) {
+          // The lantern hangs 7.5 px right of the middle and 4.5 px up in its cell, on the side facing the camera.
+          const e = this.camera.matrixWorldInverse.elements;
+          const k = 1 / Math.max(1e-6, Math.hypot(e[0], e[8]));
+          const off = (7.5 / 32) * s.w;
+          g.glow.position.set(s.x + e[0] * k * off, s.y + (4.5 / 32) * s.h, s.z + e[8] * k * off);
+        }
+      } else if (s.v.id === "frog") {
+        if (this.frog.puffed && this.elapsed > this.frog.croak) {
+          this.frog.puffed = false;
+          this.setCell(s, T.VISITOR_CELL.frog);
+        }
+      } else if (s.v.id === "snail") {
+        // One lap a day: recompute its place twice a second (it moves about a millimetre in that time).
+        if (this.elapsed - this.snailTick < 0.5) continue;
+        this.snailTick = this.elapsed;
+        const p = fencePoint(this.layout, snailLap() * this.snailPickets);
+        [s.x, s.z] = [p.x + p.dz * 0.06, p.z - p.dx * 0.06];
+        s.pos.setXYZ(0, s.x, s.y, s.z);
+        s.pos.needsUpdate = true;
+      } else if (s.v.id === "heron") {
+        // One slow step back when you come within 1.5 m; back home once you are well away. With reduced motion it just stays.
+        const hr = this.heron;
+        if (this.reducedMotion) continue;
+        if (hr.dir === 0 && hr.t === 0 && d < 1.5) {
+          const k = 0.5 / Math.max(d, 0.01);
+          ({ x: hr.tx, z: hr.tz } = collide(this.layout, s.x + (s.x - this.x) * k, s.z + (s.z - this.z) * k, 0.12));
+          hr.dir = 1;
+        } else if (hr.dir === 0 && hr.t === 1 && d > 4) hr.dir = -1;
+        if (hr.dir !== 0) {
+          hr.t = Math.max(0, Math.min(1, hr.t + (hr.dir * dt) / 1.4));
+          const e = hr.t * hr.t * (3 - 2 * hr.t);
+          s.pos.setXYZ(0, s.x + (hr.tx - s.x) * e, s.y, s.z + (hr.tz - s.z) * e);
+          s.pos.needsUpdate = true;
+          this.setCell(s, hr.t > 0.15 && hr.t < 0.85 ? T.VISITOR_CELL.heronStep : T.VISITOR_CELL.heron);
+          if (hr.t === 0 || hr.t === 1) hr.dir = 0;
+        }
+      } else if (s.v.id === "moth") {
+        if (!s.mesh.visible || this.reducedMotion) continue;
+        const m = this.moth;
+        let resting = false;
+        if (m.bump < 0) {
+          m.a += dt * 2.4;
+          m.r += (MOTH_R - m.r) * Math.min(1, dt * 3);
+          if (this.elapsed > m.next) m.bump = 0;
+        } else {
+          // Into the glass, 10 cm back, a short rest, then round again.
+          m.bump += dt;
+          const k = m.bump;
+          if (k < 0.35) {
+            m.a += dt * 1.2;
+            m.r = MOTH_R + (0.09 - MOTH_R) * (k / 0.35);
+          } else if (k < 0.55) m.r = 0.09 + 0.1 * ((k - 0.35) / 0.2);
+          else if (k < 1.25) resting = true;
+          else {
+            m.bump = -1;
+            m.n++;
+            const f = Math.sin(m.n * 12.9898) * 43758.5453;
+            m.next = this.elapsed + 6 + 3 * (f - Math.floor(f));
+          }
+        }
+        s.pos.setXYZ(0, m.cx + Math.cos(m.a) * m.r, LANTERN_GLASS_Y - 0.03 + Math.sin(m.a * 2.3) * 0.05, m.cz + Math.sin(m.a) * m.r);
+        s.pos.needsUpdate = true;
+        this.setCell(s, !resting && Math.sin(this.elapsed * 28) > 0 ? T.VISITOR_CELL.mothOpen : T.VISITOR_CELL.mothClosed);
+      } else if (s.v.id === "cat") {
+        const awake = d < 2.4;
+        if (awake !== this.catAwake) {
+          this.catAwake = awake;
+          s.uv.setX(0, (awake ? T.VISITOR_CELL.catAwake : T.VISITOR_CELL.catAsleep) / T.VISITOR_CELLS);
+          s.uv.needsUpdate = true;
+        }
+      } else if (s.v.id === "bird") {
+        const bd = this.bird;
+        if (bd.t < 0 && d < 1) {
+          // Away from you, a little to the side.
+          const k = 1 / Math.max(d, 0.01);
+          bd.dx = (s.x - this.x) * k;
+          bd.dz = (s.z - this.z) * k;
+          bd.t = this.reducedMotion ? 1 : 0;
+          if (this.tapped?.id === "bird") this.tapped = null;
+          s.uv.setX(0, T.VISITOR_CELL.birdHop / T.VISITOR_CELLS);
+          s.uv.needsUpdate = true;
+        }
+        if (bd.t >= 0 && bd.t < 1) {
+          bd.t = Math.min(1, bd.t + dt / 0.7);
+          const e = bd.t * 2.2;
+          s.pos.setXYZ(0, s.x + bd.dx * e - bd.dz * e * 0.3, s.y + Math.sin(Math.min(1, bd.t * 1.6) * Math.PI) * 0.25 + bd.t * bd.t * 1.6, s.z + bd.dz * e + bd.dx * e * 0.3);
+          s.pos.needsUpdate = true;
+        }
+        if (bd.t >= 1 && s.mesh.visible) s.mesh.visible = false;
+        // It comes back to the same spot once you are well away.
+        if (bd.t >= 1 && d > 6) {
+          bd.t = -1;
+          s.pos.setXYZ(0, s.x, s.y, s.z);
+          s.pos.needsUpdate = true;
+          s.uv.setX(0, T.VISITOR_CELL.bird / T.VISITOR_CELLS);
+          s.uv.needsUpdate = true;
+          s.mesh.visible = true;
+        }
+      }
+    }
+    if (this.tapped && this.elapsed > this.tapped.until) this.tapped = null;
+    if (this.saying && this.elapsed > this.saying.until) this.saying = null;
   }
 
   async loadPlants(): Promise<void> {
@@ -574,6 +1134,7 @@ export class GardenScene {
       (tex as THREE.Texture<unknown>).image = { width: c.width, height: c.height };
       const m = plantMaterial(tex, pool, c.height);
       this.mats.add(m);
+      this.plantMats.push(m);
       return m;
     });
 
@@ -715,7 +1276,7 @@ export class GardenScene {
     this.hillMat.needsUpdate = true;
     const tint = new THREE.Color(...s.tint);
     for (const m of this.basic) m.color.copy(tint);
-    for (const mat of this.mats) {
+    for (const mat of [...this.mats, ...this.still]) {
       mat.uniforms.uTint.value.copy(tint);
       mat.uniforms.uFog.value.copy(fog);
       mat.uniforms.uFogNear.value = FOG_NEAR;
@@ -734,6 +1295,23 @@ export class GardenScene {
     const [sx, sy, sz] = t === "day" ? [-0.5, 0.55, -0.7] : t === "dusk" ? [-0.95, 0.12, -0.3] : [0.6, 0.45, -0.65];
     this.sunDir.set(sx, sy, sz).normalize();
     for (const bf of this.butterflies) bf.mesh.visible = t !== "night";
+    // The frog and the moth come out at dusk; the gnome lights its lantern when the others come on.
+    this.gnome.lit = dark;
+    for (const s of this.visitorSprites) {
+      if (s.v.id === "frog" || s.v.id === "moth") s.mesh.visible = dark;
+      // The moth is always in its lantern's light.
+      if (s.v.id === "moth") (s.mesh.material as THREE.ShaderMaterial).uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
+      if (s.v.id === "gnome") this.gnomeCell(s);
+    }
+    if (this.gnome.glow) this.gnome.glow.visible = dark;
+    if (this.snore) this.snore.visible = t === "night";
+    if (!dark && this.saying?.id === "frog") this.saying = null;
+    // The sunflower droops a little at dusk.
+    const fp = this.flower.params;
+    if (fp) {
+      fp.setY(0, t === "dusk" ? 0.14 : 0);
+      fp.needsUpdate = true;
+    }
   }
 
   private detail: Detail = "normal";
@@ -753,6 +1331,34 @@ export class GardenScene {
     this.renderer.setSize(Math.round((cssW * dpr) / scale), Math.round((cssH * dpr) / scale), false);
     this.camera.aspect = cssW / cssH;
     this.camera.updateProjectionMatrix();
+    // Framebuffer pixels per metre at 1 m, for the z's point size.
+    if (this.snore) this.snore.material.uniforms.uScale.value = Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
+  }
+
+  /**
+   * The plant hears its name (#60): it perks up for a moment. On about one
+   * listen in 30 its nearest neighbour perks up too, a little late, as if it
+   * thought you called it. Nothing moves with reduced motion.
+   */
+  nod(p: PlacedPlant) {
+    if (this.reducedMotion) return;
+    const i = this.layout.plants.indexOf(p);
+    if (i < 0) return;
+    this.perk.i = i;
+    this.perk.at = this.elapsed;
+    this.perk.n = neighbourPerks() ? nearestPlant(this.layout.plants, i) : -1;
+  }
+
+  /** Grows the perking plants a little, then lets them settle. No allocations: it runs every frame. */
+  private tickPerk() {
+    const k = this.perk;
+    if (k.i < 0) return;
+    const t = this.elapsed - k.at;
+    const done = t > Math.max(PERK.rise + PERK.fall, NEIGHBOUR.delay + NEIGHBOUR.rise + NEIGHBOUR.fall);
+    const a = done ? 0 : perkEnvelope(t, PERK.rise, PERK.fall) * PERK_SCALE;
+    const b = done || k.n < 0 ? 0 : perkEnvelope(t - NEIGHBOUR.delay, NEIGHBOUR.rise, NEIGHBOUR.fall) * PERK_SCALE;
+    for (const m of this.plantMats) m.uniforms.uPerk.value.set(done ? -1 : k.i, a, done ? -1 : k.n, b);
+    if (done) k.i = -1;
   }
 
   look(dx: number, dy: number) {
@@ -800,6 +1406,7 @@ export class GardenScene {
 
   select(p: PlacedPlant | null, walkTo = false) {
     this.selected = p;
+    if (p) this.sceneryTap = null;
     const index = p ? this.layout.plants.indexOf(p) : -1;
     for (const mat of this.mats) mat.uniforms.uSelected.value = index;
     this.marker.visible = !!p;
@@ -878,6 +1485,8 @@ export class GardenScene {
     }
     this.fireflies.material.uniforms.uTime.value = t;
     this.fireflies.material.uniforms.uMove.value = motion;
+    if (this.snore?.visible) this.snore.material.uniforms.uTime.value = t;
+    this.tickPerk();
     if (motion) {
       this.water.offset.set((t * 0.02) % 1, Math.sin(t * 0.3) * 0.03);
       for (const c of this.clouds) c.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), dt * 0.004);
@@ -895,28 +1504,80 @@ export class GardenScene {
       this.marker.quaternion.copy(this.camera.quaternion);
     }
 
+    // The sunflower shows its face only to someone standing in its sun (and never at night).
+    const fl = this.flower;
+    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sunDir.x, this.sunDir.z, this.time === "night");
+    if (fl.uv && face !== fl.face) {
+      fl.face = face;
+      fl.uv.setX(0, face ? 0 : 0.5);
+      fl.uv.needsUpdate = true;
+    }
+
+    if (this.visitorSprites.length) this.tickVisitors(dt);
+
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, 200);
     this.renderer.render(this.scene, this.camera);
     this.labels();
   }
 
+  /** Projects the point just above a visitor's drawn part into `tmp`. False when it is out of view. */
+  private projectTag(s: VisitorSprite): boolean {
+    const v = this.tmp.set(s.pos.getX(0), s.pos.getY(0) + s.h * s.top, s.pos.getZ(0)).project(this.camera);
+    return v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1;
+  }
+
   /** Names over the nearest plants, as DOM text so they stay crisp and readable. */
   private labels() {
-    const v = new THREE.Vector3();
+    const v = this.tmp;
     const near: { p: PlacedPlant; d: number }[] = [];
     for (const p of this.layout.plants) {
       const d = Math.hypot(p.x - this.x, p.z - this.z);
       if (d < 3.2) near.push({ p, d });
     }
     near.sort((a, b) => a.d - b.d);
-    const out: { id: string; text: string; x: number; y: number; near: number }[] = [];
+    const out: Label[] = [];
     for (const { p, d } of near.slice(0, 10)) {
       const h = ((14 + 120 * p.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
       v.set(p.x, 0.28 + h + 0.12, p.z).project(this.camera);
       if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
       out.push({ id: p.id, text: p.lemma, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / 3.2 });
     }
-    const key = out.map((l) => `${l.id}${l.x.toFixed(3)}${l.y.toFixed(3)}`).join();
+    // What a visitor says (the frog's croak) takes the place of its tag.
+    const say = this.saying;
+    let sayer: VisitorSprite | null = null;
+    if (say) for (const s of this.visitorSprites) if (s.v.id === say.id && s.mesh.visible) sayer = s;
+    if (say && sayer && this.projectTag(sayer)) out.push({ id: `say:${say.id}`, text: say.text, kind: "say", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 });
+    // A tapped scenery word (#74) is the one tag while it shows: no visitor tag beside it.
+    const st = this.sceneryTap;
+    if (st && this.elapsed > st.until) this.sceneryTap = null;
+    else if (st) {
+      const h = st.hit;
+      if (h.follow === "sun") v.copy(this.camera.position).addScaledVector(this.sunDir, 200).y += 200 * SUN_TAG;
+      else if (h.follow) v.set(this.clouds[h.follow.cloud].position.x, h.y, this.clouds[h.follow.cloud].position.z);
+      else v.set(h.x, h.y, h.z);
+      v.project(this.camera);
+      if (v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1)
+        out.push({ id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 });
+    }
+    // One visitor tag at most: the one you tapped, or the nearest in view that shows its name on approach
+    // (within 1.5 m; the heron 2.5 m; the gnome up to 7 m, while it faces you).
+    let tag: VisitorSprite | null = null;
+    let tagShow = 1;
+    let nearD = Infinity;
+    for (const s of this.visitorSprites) {
+      if (this.sceneryTap) break;
+      if (!s.v.word || !s.mesh.visible || s === sayer) continue;
+      if (this.tapped?.id === s.v.id) {
+        if (this.projectTag(s)) [tag, tagShow] = [s, 1];
+        break;
+      }
+      if (s.v.tag !== "approach") continue;
+      const d = Math.hypot(s.x - this.x, s.z - this.z);
+      const show = s.v.id === "gnome" ? gnomeTag(this.gnome.pose) : 1;
+      if (show > 0 && d < (TAG_RANGE[s.v.id] ?? 1.5) && d < nearD && this.projectTag(s)) [tag, tagShow, nearD] = [s, show, d];
+    }
+    if (tag && this.projectTag(tag)) out.push({ id: `visitor:${tag.v.id}`, text: tag.v.word!, gloss: tag.v.gloss, known: tag.v.known, kind: "visitor", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: tagShow });
+    const key = out.map((l) => `${l.id}${l.text}${l.x.toFixed(3)}${l.y.toFixed(3)}${l.near.toFixed(2)}`).join();
     if (key !== this.lastLabels) {
       this.lastLabels = key;
       this.cb.onLabels(out);

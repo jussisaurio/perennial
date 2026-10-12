@@ -230,7 +230,7 @@ section { margin-bottom: 1.25rem; }
 /* ---------- garden ---------- */
 .garden { position: relative; margin: 0.5rem -16px 0; }
 .garden svg { display: block; overflow: visible; }
-.garden-scroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
+.garden-scroll { position: relative; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
 .garden-scroll::-webkit-scrollbar { display: none; }
 .garden-arrows { margin-left: auto; display: inline-flex; gap: 0.35rem; }
 .garden-arrow {
@@ -281,6 +281,40 @@ section { margin-bottom: 1.25rem; }
 .plant-tip strong { font: 1.15rem/1.2 var(--display); }
 .plant-tip em { font-style: normal; color: var(--muted); font-size: 0.75rem; }
 .garden.compact { margin-top: 1rem; }
+.garden-visitor { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; line-height: 0; border-radius: 4px; }
+.garden-visitor:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.garden-visitor svg { display: block; }
+.visitor-tip {
+  position: absolute; padding: 0.3rem 0.6rem; border-radius: 10px; pointer-events: none; white-space: nowrap; z-index: 2;
+  background: var(--card); border: 1px solid var(--line); box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.45); font-size: 0.82rem; animation: rise 0.18s var(--ease);
+}
+.visitor-tip i { font: italic 1.05rem/1.2 var(--display); }
+.visitor-tip span { color: var(--muted); }
+.visitor-tip em { display: block; font-style: normal; color: var(--ink-2); font-size: 0.78rem; }
+/* The plant hears its name (#60): a short hop on tap; the neighbour's mistake is late and slow. */
+.garden .perk { transform-box: fill-box; transform-origin: 50% 100%; animation: perk 0.4s var(--ease); }
+.garden .perk.late { animation: perk 1.3s ease-out 0.12s both; }
+@keyframes perk { 35% { transform: scale(1.04); } }
+/* A plant that sleeps at night (#62). */
+.garden .snore { font: italic 600 13px var(--display); fill: var(--ink-2); animation: snore 4.5s ease-in-out infinite; transform-box: fill-box; }
+@keyframes snore { 0% { opacity: 0; transform: translate(0, 4px); } 30% { opacity: 0.85; } 100% { opacity: 0; transform: translate(6px, -14px); } }
+/* The first word's post at the far left (#61). */
+.keepsake-board { fill: var(--card); stroke: var(--soil-2); stroke-width: 1.2; }
+.keepsake text { font: italic 11.5px var(--display); fill: var(--ink-2); }
+/* The mole at the far right end (#61): up while you are at the end, down when you scroll away. */
+.mole { position: absolute; overflow: hidden; pointer-events: none; }
+.mole-body { position: absolute; inset: 0; transform: translateY(100%); transition: transform 0.3s var(--ease); }
+.mole.up .mole-body { transform: none; transition: transform 0.45s var(--ease) 0.35s; pointer-events: auto; }
+.mole-hill { position: absolute; left: 0; bottom: 0; display: block; }
+/* The empty garden (#58): a stake, a watering can and a worm. */
+.garden-stake {
+  position: absolute; width: 128px; padding: 0.35rem 0.5rem 0.3rem; text-align: center; border-radius: 4px;
+  background: color-mix(in oklab, var(--card), var(--sun) 12%); border: 1.5px solid var(--soil-2); box-shadow: 0 6px 14px -10px rgb(0 0 0 / 0.5);
+  font: 0.86rem/1.15 var(--display); color: var(--ink-2);
+}
+.garden-stake small { display: block; margin-top: 0.15rem; font: italic 0.72rem var(--display); color: var(--muted); }
+.garden-stake::after { content: ""; position: absolute; left: 50%; top: 100%; width: 4px; height: 30px; margin-left: -2px; background: var(--soil-2); border-radius: 0 0 1px 1px; }
+.words-empty { margin: 2rem 0; text-align: center; font: 1.1rem var(--display); color: var(--ink-2); }
 
 /* ---------- session ---------- */
 .session { max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
@@ -394,7 +428,8 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-  .garden .sway, .garden .glow, .garden .firefly, .play::after, .blank { animation: none !important; }
+  .garden .sway, .garden .glow, .garden .firefly, .garden .perk, .garden .snore, .play::after, .blank { animation: none !important; }
+  .garden .snore { opacity: 0.7; }
 }
 
 .growth-strip { display: flex; justify-content: space-between; gap: 0.25rem; margin: 1.5rem 0 2rem; padding: 0 0.25rem; }
@@ -587,6 +622,25 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 }
 .gw-label::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 4px; height: 4px; margin-left: -2px; background: #2b1d12; }
 .gw-label.on { color: var(--accent); font-size: 1.15rem; }
+/* A visitor tag, unlike a plant label: a small paper tag, the word in italic, the English small. Decorative (aria-hidden). */
+.gw-tag {
+  position: absolute; transform: translate(-50%, calc(-100% - 7px)); white-space: nowrap;
+  padding: 0.18rem 0.5rem 0.22rem; background: #fff4dc; color: #3a2416; border: 2px solid #3a2416;
+  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28); font: italic 1.12rem/1.1 var(--display);
+}
+.gw-tag small { font: 500 0.78rem/1 var(--pixel); letter-spacing: 0.03em; color: #7a5a40; }
+.gw-tag::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -4px; border: 4px solid transparent; border-top-color: #3a2416; }
+/* What a visitor says (the frog's croak): a small speech bubble in the course language, no gloss. */
+.gw-say {
+  position: absolute; transform: translate(-50%, calc(-100% - 9px)); white-space: nowrap;
+  padding: 0.2rem 0.55rem 0.24rem; background: #fffdf6; color: #3a2416; border: 2px solid #3a2416; border-radius: 10px;
+  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28); font: italic 1.12rem/1.1 var(--display);
+  animation: gw-say-in 160ms steps(3) both;
+}
+.gw-say::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -2px; width: 6px; height: 6px; background: #fffdf6; border: 2px solid #3a2416; border-top: 0; border-left: 0; transform: translateY(-3px) rotate(45deg); }
+@keyframes gw-say-in { from { opacity: 0; transform: translate(-50%, calc(-100% - 3px)); } }
+@media (prefers-reduced-motion: reduce) { .gw-say { animation: none; } }
+.gw-leaf { display: inline-block; margin-right: 3px; vertical-align: -1px; filter: drop-shadow(1px 1px 0 #2b1d12); }
 
 .gw-card {
   position: absolute; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%);
@@ -662,3 +716,9 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 /* The garden's small voice (content/voice.ts) */
 .greeting-aside { margin: 0.2rem 0 0; color: var(--muted); font-style: italic; }
 .headline-small { margin-top: -0.4rem; }
+.farewell { margin: 1.5rem 0 0; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink-2); }
+
+/* Between screens: nothing for a fast load, a quietly growing sprout for a slow one. */
+.settling { min-height: 60vh; display: grid; place-items: center; color: var(--leaf); opacity: 0; animation: settle-in 0.4s var(--ease) 0.3s forwards; }
+@keyframes settle-in { to { opacity: 0.7; } }
+@media (prefers-reduced-motion: reduce) { .settling { animation: none; opacity: 0.7; } }

@@ -1,0 +1,9 @@
+{
+  "file": "source/0010.json",
+  "sha256": "04a538ec654af29901f5ce2732d9e8bd128902220dbf9d6b8c3ba792ff08cbb7",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0010-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "Re-checked 7 fixed entries (red, responsable, trago, cabo, herido, príncipe, huella); all 100 entries ok."
+}

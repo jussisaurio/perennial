@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 import { Plant } from "../ui/plant";
 import type { PlacedPlant } from "./world";
+import * as Art from "./visitorArt";
 
 function rng(seed: number): () => number {
   let a = seed >>> 0;
@@ -167,6 +168,25 @@ export function sky(s: Sky, stars: boolean): HTMLCanvasElement {
 }
 
 /** Two layers of rolling hills with dithered edges, for a ring around the world. */
+/** One layer of the far hills: the ridge's row (0 = top) in each of the texture's 256 columns. */
+export function hillLine(base: number, seed: number): number[] {
+  const r = rng(seed);
+  const ph = r() * 10;
+  return Array.from({ length: 256 }, (_, x) => {
+    // Periodic in x so the ring repeats without a seam.
+    const a = (x / 256) * Math.PI * 2;
+    return base - 9 * Math.sin(a * 2 + ph) - 5 * Math.sin(a * 5 + ph * 2) - 2 * Math.sin(a * 11 + ph);
+  });
+}
+
+/** The top of the hills (the higher of the two ridges) per column, as a texture row. Day and night share the shape. */
+export function hillProfile(): number[] {
+  const a = hillLine(30, 1);
+  const b = hillLine(42, 2);
+  // One pixel above the ridge on even columns (see hills()).
+  return a.map((h, x) => Math.min(Math.floor(h), Math.floor(b[x])) - (x % 2 === 0 ? 1 : 0));
+}
+
 export function hills(night: boolean): HTMLCanvasElement {
   const [c, ctx] = canvas(256, 64);
   const layers: [string, string, number, number][] = night
@@ -179,13 +199,9 @@ export function hills(night: boolean): HTMLCanvasElement {
         ["#6fae6a", "#64a160", 42, 2],
       ];
   for (const [color, shade, base, seed] of layers) {
-    const r = rng(seed);
-    const ph = r() * 10;
+    const line = hillLine(base, seed);
     for (let x = 0; x < 256; x++) {
-      // Periodic in x so the ring repeats without a seam.
-      const a = (x / 256) * Math.PI * 2;
-      const h = base - 9 * Math.sin(a * 2 + ph) - 5 * Math.sin(a * 5 + ph * 2) - 2 * Math.sin(a * 11 + ph);
-      const y0 = Math.floor(h);
+      const y0 = Math.floor(line[x]);
       px(ctx, x, y0, color, 1, 64 - y0);
       for (let y = y0 + 2; y < 64; y += 3) if ((x + y) % 4 === 0) px(ctx, x, y, shade);
       if (x % 2 === 0) px(ctx, x, y0 - 1, color);
@@ -291,8 +307,13 @@ export function sign(label: string): HTMLCanvasElement {
   do ctx.font = `bold ${size}px ui-monospace, Menlo, monospace`;
   while (ctx.measureText(label).width > 116 && --size > 7);
   ctx.fillText(label, 64, 21);
-  // Threshold the anti-aliased text so it stays crisp pixels.
-  const img = ctx.getImageData(0, 0, 128, 40);
+  crispText(ctx, 128, 40);
+  return c;
+}
+
+/** Threshold anti-aliased text on a sign so it stays crisp pixels. */
+function crispText(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const img = ctx.getImageData(0, 0, w, h);
   for (let i = 0; i < img.data.length; i += 4) {
     const dark = img.data[i] < 140;
     if (dark) {
@@ -306,6 +327,40 @@ export function sign(label: string): HTMLCanvasElement {
     }
   }
   ctx.putImageData(img, 0, 0);
+}
+
+/** A taller notice board for a short sentence: up to two lines, as large as fits. */
+export function notice(text: string): HTMLCanvasElement {
+  const W = 160;
+  const H = 64;
+  const [c, ctx] = canvas(W, H);
+  px(ctx, 0, 0, "#7a4f2c", W, H);
+  px(ctx, 2, 2, "#c99257", W - 4, H - 4);
+  px(ctx, 2, 2, "#ddb07a", W - 4, 2);
+  px(ctx, 2, H / 2, "#b8834b", W - 4, 1);
+  ctx.fillStyle = "#3b2414";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const font = (size: number) => (ctx.font = `bold ${size}px ui-monospace, Menlo, monospace`);
+  const fits = (lines: string[]) => lines.every((l) => ctx.measureText(l).width <= W - 14);
+  // Every way to break the words into one or two lines; keep the one with the biggest text.
+  const words = text.split(" ");
+  const options = [[text], ...words.slice(1).map((_, i) => [words.slice(0, i + 1).join(" "), words.slice(i + 1).join(" ")])];
+  let best = { size: 0, lines: [text] };
+  for (const lines of options)
+    for (let size = lines.length === 1 ? 22 : 18; size > 7; size--) {
+      font(size);
+      if (fits(lines)) {
+        // At the same size, two balanced lines read better than one long and one short.
+        const longest = (ls: string[]) => Math.max(...ls.map((l) => l.length));
+        if (size > best.size || (size === best.size && lines.length === best.lines.length && longest(lines) < longest(best.lines))) best = { size, lines };
+        break;
+      }
+    }
+  font(best.size || 8);
+  const step = best.size + 4;
+  best.lines.forEach((l, i) => ctx.fillText(l, W / 2, H / 2 + 1 + (i - (best.lines.length - 1) / 2) * step));
+  crispText(ctx, W, H);
   return c;
 }
 
@@ -446,12 +501,11 @@ export function decor(): HTMLCanvasElement {
     px(ctx, x, 62 - h, col, 1, 3);
     px(ctx, x, 63 - h, "#f0a020");
   }
-  // 2: mushrooms
+  // 2: mushrooms. Plain brown on purpose: the red, spotted toadstool is a
+  // visitor with a name (visitors.ts), and decor never looks like a visitor.
   const shroom = (x: number, w: number, h: number) => {
-    px(ctx, x - 1, 64 - h, "#f4ecdc", 3, h);
-    for (let y = 0; y < Math.ceil(w / 2); y++) px(ctx, x - w / 2 + y, 64 - h - y, "#d9443d", w - y * 2, 1);
-    px(ctx, x - 2, 63 - h, "#fff8e7");
-    px(ctx, x + 1, 62 - h, "#fff8e7");
+    px(ctx, x - 1, 64 - h, "#ece2cf", 3, h);
+    for (let y = 0; y < Math.ceil(w / 2); y++) px(ctx, x - w / 2 + y, 64 - h - y, y === 0 ? "#8a5a3c" : "#a8714a", w - y * 2, 1);
   };
   shroom(74, 10, 6);
   shroom(84, 7, 4);
@@ -477,6 +531,14 @@ export function lantern(): HTMLCanvasElement {
     if (lit) px(ctx, ox + 6, 7, "#fffbe0", 4, 4);
     px(ctx, ox + 4, 13, "#2b2230", 8, 1);
   }
+  return c;
+}
+
+/** A pixel "z" for the sleeping bloom (#62), pale with a dark edge so it shows on the night sky. */
+export function snoreZ(): HTMLCanvasElement {
+  const rows = ["oooooooo", "oZZZZZZo", "ooooZZoo", "..oZZo..", ".oZZo...", "ooZZoooo", "oZZZZZZo", "oooooooo"];
+  const [c, ctx] = canvas(8, 8);
+  rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "Z" ? "#eef2ff" : "#2a2f4a")));
   return c;
 }
 
@@ -509,5 +571,120 @@ export function sun(kind: "day" | "dusk" | "night"): HTMLCanvasElement {
     px(ctx, 10, 14, "#cfc8ac", 2, 2);
     px(ctx, 13, 21, "#cfc8ac", 3, 2);
   }
+  return c;
+}
+
+/**
+ * The sunflower, two frames of 32×64 side by side: its face (left, a small
+ * calm smile) and the back of its head (right). No text.
+ */
+export function sunflower(): HTMLCanvasElement {
+  const [c, ctx] = canvas(64, 64);
+  for (const [ox, face] of [
+    [0, true],
+    [32, false],
+  ] as const) {
+    const r = rng(51); // the same ragged petals on both sides
+    // Stem and two leaves.
+    px(ctx, ox + 15, 22, "#3f7d36", 2, 42);
+    px(ctx, ox + 16, 22, "#4e9140", 1, 42);
+    for (let i = 0; i < 6; i++) {
+      const col = i < 4 ? "#5fa44a" : "#4e9140";
+      px(ctx, ox + 13 - i, 46 - Math.floor(i / 2), col, 2, 2);
+      px(ctx, ox + 17 + i, 38 - Math.floor(i / 2), col, 2, 2);
+    }
+    // Petals: a ragged ring, lit from the top left.
+    const cx = ox + 15.5;
+    const cy = 12.5;
+    for (let y = 0; y < 26; y++)
+      for (let x = ox; x < ox + 32; x++) {
+        const dx = x - cx;
+        const dy = y - cy;
+        const d = Math.hypot(dx, dy);
+        const edge = 11 + Math.cos(Math.atan2(dy, dx) * 10) * 1.6 + r() * 0.6;
+        if (d > edge || d < 6) continue;
+        const light = (-dx - dy) / d;
+        const shade = light > 0.3 ? 0 : light > -0.4 ? 1 : 2;
+        px(ctx, x, y, (face ? ["#ffe066", "#f8c537", "#e0a020"] : ["#e8c040", "#d0a028", "#b08018"])[shade]);
+      }
+    for (let y = 0; y < 26; y++)
+      for (let x = ox; x < ox + 32; x++) {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d >= 7.5) continue;
+        if (face) px(ctx, x, y, d > 6.2 ? "#5a3216" : r() < 0.2 ? "#8a5428" : "#6e4020");
+        else {
+          // The green back of the head, with bracts in a star.
+          const a = Math.atan2(y - cy, x - cx);
+          px(ctx, x, y, Math.cos(a * 8) > 0.6 && d > 3 ? "#3f7d36" : d > 6.2 ? "#36692e" : "#5a9a48");
+        }
+      }
+    if (face) {
+      // Closed, content eyes, rosy cheeks and a small calm smile.
+      const ink = "#2b1608";
+      px(ctx, ox + 12, 10, ink, 2, 1);
+      px(ctx, ox + 18, 10, ink, 2, 1);
+      for (const x of [11, 14, 17, 20]) px(ctx, ox + x, 11, ink);
+      px(ctx, ox + 11, 13, "#d0603a");
+      px(ctx, ox + 20, 13, "#d0603a");
+      px(ctx, ox + 13, 15, ink);
+      px(ctx, ox + 14, 16, ink, 4, 1);
+      px(ctx, ox + 18, 15, ink);
+    } else px(ctx, ox + 15, 13, "#3f7d36", 2, 9); // the stem joins the middle of the back
+  }
+  return c;
+}
+
+
+// ---- Visitors ---------------------------------------------------------------
+
+/** Visitor cells (32×32 each, standing on the bottom row), in this order. */
+export const VISITOR_CELL = {
+  snail: 0,
+  catAsleep: 1,
+  catAwake: 2,
+  toadstool: 3,
+  bird: 4,
+  birdHop: 5,
+  frog: 6,
+  frogCroak: 7,
+  frogAsleep: 8,
+  gnomeFront: 9,
+  gnomeSide: 10,
+  /** The same two poses with the lantern lit, for dusk and night. */
+  gnomeFrontLit: 11,
+  gnomeSideLit: 12,
+  heron: 13,
+  heronStep: 14,
+  mothOpen: 15,
+  mothClosed: 16,
+} as const;
+export const VISITOR_CELLS = 17;
+
+/** The garden visitors in one small atlas (drawn once), in VISITOR_CELL order. */
+export function visitors(): HTMLCanvasElement {
+  const [c, ctx] = canvas(32 * VISITOR_CELLS, 32);
+  const poses = ["front", "side"] as const;
+  [
+    Art.SNAIL,
+    Art.CAT_ASLEEP,
+    Art.CAT_AWAKE,
+    Art.TOADSTOOL,
+    Art.BIRD,
+    Art.BIRD_HOP,
+    Art.FROG,
+    Art.FROG_CROAK,
+    Art.FROG_ASLEEP,
+    ...poses.map((p) => Art.gnomeArt(p, false)),
+    ...poses.map((p) => Art.gnomeArt(p, true)),
+    Art.HERON,
+    Art.HERON_STEP,
+    Art.MOTH_OPEN,
+    Art.MOTH_CLOSED,
+  ].forEach((art, i) => {
+    const w = art.rows[0].length;
+    const ox = i * 32 + Math.floor((32 - w) / 2);
+    const oy = 32 - art.rows.length - (art === Art.BIRD_HOP ? 2 : 0);
+    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  });
   return c;
 }

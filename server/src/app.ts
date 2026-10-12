@@ -151,7 +151,12 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
       try {
         res = await route(req);
       } catch (e) {
-        if (e instanceof HttpError) res = fail(e.status, e.code, e.extra);
+        if (e instanceof HttpError) {
+          res = fail(e.status, e.code, e.extra);
+          // The rest of a too-large body is never read: close the connection so
+          // the client does not send its next request down the broken socket.
+          if (e.status === 413) res.headers.set("connection", "close");
+        }
         else {
           log.error("unhandled error", { err: e, path: url.pathname });
           Sentry.withScope((scope) => {

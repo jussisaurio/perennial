@@ -20,9 +20,9 @@ This runbook deploys Perennial on **Railway** with a **PlanetScale Postgres** da
 
 | Railway service | Source | Job |
 |---|---|---|
-| `web` | This repo, `Dockerfile`, config `railway.json` | Serves the web app, the API, auth, and the Electric proxy (`/api/shape`). Runs migrations before each deploy. |
+| `web` (service name `perennial`) | This repo, `Dockerfile`, defined in `.railway/railway.ts` | Serves the web app, the API, auth, and the Electric proxy (`/api/shape`). Runs migrations before each deploy. |
 | `electric` | Docker image `electricsql/electric:1.8.1` | Reads changes from Postgres (logical replication) and serves shapes to `web`. Private only. |
-| `housekeeping` | This repo, `Dockerfile`, config `railway.housekeeping.json` | Runs `bun --preload ./instrument.ts src/housekeeping.ts` once a day (errors go to Sentry), then exits. |
+| `housekeeping` | This repo, `Dockerfile`, defined in `.railway/railway.ts` | Runs `bun --preload ./instrument.ts src/housekeeping.ts` once a day (errors go to Sentry), then exits. |
 
 Third-party services: Resend (sign-in email), Anthropic (Perennial AI), Sentry (server and browser errors, optional), PostHog (a few product events, optional).
 
@@ -84,6 +84,10 @@ That is about 27. Add 14 for each extra `web` replica. Check the limit with `sho
 
 ### 2.3 Create the database role
 
+With the CLI (`brew install planetscale/tap/pscale`, `pscale auth login`): `pscale role create <db> main perennial --inherited-roles postgres --with-replication --format json` prints the role's `database_url` once (direct port 5432, `sslmode=verify-full`). Use it as is for `web` and `housekeeping`; for `electric`, change `sslmode` to `require` and set the CA file (3.2). Cluster parameters: `pscale branch resize <db> main --parameters pgconf.max_connections=50 --parameters pgconf.max_slot_wal_keep_size=4096 --parameters pgconf.sync_replication_slots=on --parameters pgconf.hot_standby_feedback=on --wait` (`wal_level`, slots and senders are already right by default; check with `pscale branch parameters list <db> main --namespace pgconf`).
+
+In the dashboard instead:
+
 **Rule: Electric must connect as the role that owns the tables.** Electric creates its publication and adds tables to it. Postgres allows this only for the table owner. PlanetScale does not let you change table ownership later. So the role that runs the migrations must be the same role that Electric uses.
 
 Do this:
@@ -104,6 +108,9 @@ postgresql://perennial.<id>:<password>@<host>.psdb.cloud:5432/postgres?sslmode=r
 Copy the exact host, user and database name from the PlanetScale **Connect** page.
 
 ### 2.4 Check (after the first deploy)
+
+After every deploy, run the live security check: `bun scripts/live-check.ts <APP_URL>` (headers, closed dev and unused auth endpoints, no file leaks, cross-user isolation, CSRF, limits; it cleans up after itself).
+
 
 ```sql
 show wal_level;                                         -- logical
@@ -149,7 +156,8 @@ Services refer to them as `${{shared.DATABASE_URL}}` and `${{shared.ELECTRIC_SEC
 
 | Variable | Value | Notes |
 |---|---|---|
-| `DATABASE_URL` | `${{shared.DATABASE_URL}}` | Direct port 5432, `sslmode=require`, the table-owner role |
+| `DATABASE_URL` | the role's URL with **`sslmode=require`** | Direct port 5432, the table-owner role. Electric rejects `sslmode=verify-full`; it verifies the server with the CA file below instead. |
+| `ELECTRIC_DATABASE_CA_CERTIFICATE_FILE` | `/etc/ssl/certs/ca-certificates.crt` | The image's system CA bundle (PlanetScale uses a public CA), so `require` still checks the server's identity. |
 | `ELECTRIC_SECRET` | `${{shared.ELECTRIC_SECRET}}` | Electric rejects shape requests without it |
 | `ELECTRIC_STORAGE_DIR` | `/var/lib/electric/persistent` | On the volume, so shapes survive restarts |
 | `ELECTRIC_PORT` | `3000` | `web` connects to this port |
@@ -165,8 +173,8 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 ### 3.3 Service `web`
 
 1. **New → GitHub Repo** → this repo. Name the service `web`. Branch: `main`.
-2. Railway reads `railway.json`: Dockerfile build, pre-deploy migration (`bun src/migrate.ts`), healthcheck `/health` (it also checks the database), restart on failure.
-3. **Settings → Deploy:** turn on **Wait for CI**, so that a red build on `main` does not deploy.
+2. `.railway/railway.ts` (Railway Infrastructure as Code) defines the build and deploy settings: Dockerfile build, pre-deploy migration (`bun src/migrate.ts`), healthcheck `/health` (it also checks the database), restart on failure, and Wait for CI. Apply changes with `railway config plan` then `railway config apply`. Variables are not in the file: set them in Railway.
+3. Wait for CI is on (`checkSuites: true` in `.railway/railway.ts`), so a red build on `main` does not deploy.
 4. **Networking:** generate a Railway domain for a first test. Target port: `8080`.
 5. Variables:
 
@@ -224,7 +232,7 @@ These values end up in the public JavaScript. That is expected: a Sentry DSN and
 ### 3.4 Service `housekeeping`
 
 1. **New → GitHub Repo** → this repo again. Name the service `housekeeping`.
-2. **Settings → Config-as-code → Railway config file:** `/railway.housekeeping.json`. This file sets the start command `bun --preload ./instrument.ts src/housekeeping.ts`, the cron schedule `17 3 * * *` (daily, 03:17 UTC), and no healthcheck. Without it, the service uses `railway.json` and its healthcheck fails, because the job does not serve HTTP.
+2. `.railway/railway.ts` sets the start command `bun --preload ./instrument.ts src/housekeeping.ts`, the cron schedule `17 3 * * *` (daily, 03:17 UTC) and no healthcheck (the job does not serve HTTP). Nothing to set in the dashboard.
 3. No domain.
 4. Variables:
 

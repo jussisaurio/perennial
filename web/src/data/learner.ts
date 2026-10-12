@@ -76,10 +76,11 @@ export function useDeck(lang: string | undefined): LoadedDeck | null {
   return deck?.lang === lang ? deck : null;
 }
 
-export function useCourses(): CourseRow[] {
+/** The learner's courses, and whether they have loaded: "none yet" is not "none". */
+export function useCourses(): { courses: CourseRow[]; ready: boolean } {
   const store = useStore();
-  const { data } = useLiveQuery((q) => q.from({ c: store.collections.course }));
-  return (data ?? []) as CourseRow[];
+  const { data, isReady } = useLiveQuery((q) => q.from({ c: store.collections.course }));
+  return { courses: (data ?? []) as CourseRow[], ready: isReady };
 }
 
 // ---------- derivation ----------

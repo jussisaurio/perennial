@@ -1,0 +1,9 @@
+{
+  "file": "source/0008.json",
+  "sha256": "bf2ad3dd909ea3ef18e3a435e5c5f40539e6ab43028a9b90d3fb4b214cba7a34",
+  "author": "claude-agent:es-author-2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-0008-2026-10-11",
+  "reviewedAt": "2026-10-11",
+  "verdict": "approved",
+  "notes": "100/100 entries ok after one fix round (15 fixes: senses, calques, frame duplicates, form variety); editor's extra salida s1 change accepted"
+}

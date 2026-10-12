@@ -57,8 +57,15 @@ export async function signOut() {
   await authClient.signOut();
 }
 
-export async function deleteAccount() {
+/** Deletes the account on the server and signs out. `lang` picks the goodbye's language. */
+export async function deleteAccount(lang?: string) {
   const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
   if (!res.ok) throw new Error(`Could not delete the account (${res.status})`);
+  try {
+    // One goodbye on the landing page (see Onboarding).
+    sessionStorage.setItem("perennial-farewell", JSON.stringify({ lang: lang ?? null, at: Date.now() }));
+  } catch {
+    // No storage: no goodbye line. Fine.
+  }
   await authClient.signOut().catch(() => {});
 }
