@@ -2,6 +2,10 @@
 // a real account (not anonymous). Each word costs one AI word from the
 // monthly allowance.
 
+import { ApiError } from "./http";
+
+export { ApiError };
+
 export interface GenExample {
   text: string;
   translation: string;
@@ -30,18 +34,6 @@ export interface Me {
   anonymous: boolean;
   credits: Credits;
   ai: boolean;
-}
-
-export class ApiError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly detail: Record<string, unknown>;
-  constructor(status: number, code: string, detail: Record<string, unknown> = {}) {
-    super(code);
-    this.status = status;
-    this.code = code;
-    this.detail = detail;
-  }
 }
 
 export async function api<T>(path: string, body?: unknown): Promise<T> {

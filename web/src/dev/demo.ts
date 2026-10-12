@@ -4,9 +4,9 @@
 
 import { DAY_MS, replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
-import { authClient, ensureUser } from "../data/auth";
+import { ensureUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
-import { APP_VERSION } from "../version";
+import { ApiError, postWrite } from "../data/http";
 
 function rng(seed: number): () => number {
   let a = seed >>> 0;
@@ -19,13 +19,14 @@ function rng(seed: number): () => number {
 }
 
 async function post(mutations: unknown[]) {
-  const res = await fetch("/api/write", { method: "POST", headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION }, body: JSON.stringify({ mutations }) });
-  if (!res.ok) throw new Error(`demo upload failed: ${res.status} ${await res.text()}`);
+  await postWrite(mutations).catch((e: unknown) => {
+    throw new Error(`demo upload failed: ${e instanceof ApiError ? `${e.status} ${e.code}` : String(e)}`);
+  });
 }
 
 /** A fresh anonymous learner with `count` words studied over `days` days. */
 export async function seedDemo(lang: "es" | "de", count: number, days = 90): Promise<void> {
-  await authClient.signOut().catch(() => {});
+  await signOut();
   await ensureUser();
   const deck = await loadDeck(lang);
   const now = Date.now();
@@ -57,5 +58,5 @@ export async function seedDemo(lang: "es" | "de", count: number, days = 90): Pro
 /** Throw the demo learner away (it is anonymous, so this deletes it). */
 export async function removeDemo(): Promise<void> {
   await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).catch(() => {});
-  await authClient.signOut().catch(() => {});
+  await signOut();
 }

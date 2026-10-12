@@ -6,6 +6,7 @@ import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { track } from "../observability";
 import { captchaHeaders } from "./captcha";
+import { adoptOnDevice, clearOutboxNow, forgetOnDevice, keepOnDevice } from "./device";
 
 export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
 
@@ -21,6 +22,13 @@ const toUser = (u: { id: string; email: string; isAnonymous?: boolean | null }):
 export function useUser(): { user: SessionUser | null; pending: boolean } {
   const { data, isPending } = authClient.useSession();
   return { user: data?.user ? toUser(data.user) : null, pending: isPending };
+}
+
+/** The signed-in user's id as the auth client last saw it (no request), or null. */
+export function sessionUserId(): string | null {
+  const atom = (authClient.$store.atoms as Record<string, { get(): unknown } | undefined>).session;
+  const s = atom?.get() as { data?: { user?: { id?: string } } | null } | undefined;
+  return s?.data?.user?.id ?? null;
 }
 
 /** The current user, creating an anonymous one if there is none. */
@@ -46,19 +54,35 @@ export async function sendCode(email: string) {
 }
 
 export async function signInWithCode(email: string, otp: string): Promise<SessionUser> {
-  const wasAnonymous = !!(await authClient.getSession()).data?.user?.isAnonymous;
+  const before = (await authClient.getSession()).data?.user;
   const r = await authClient.signIn.emailOtp({ email, otp });
   if (r.error || !r.data) throw new AuthError(r.error?.code ?? "sign_in_failed", r.error?.status === 429 ? "Too many tries. Wait a few minutes." : "That code is not correct, or it has expired.");
-  if (wasAnonymous) track("email_added");
+  if (before?.isAnonymous) {
+    track("email_added");
+    // Their progress moves into the account on the server; their unsent writes follow here.
+    adoptOnDevice(before.id, r.data.user.id);
+  }
   return toUser(r.data.user);
 }
 
+/** Signs out, and forgets this user's data on this device (see device.ts). */
 export async function signOut() {
-  await authClient.signOut();
+  const userId = (await authClient.getSession()).data?.user?.id;
+  if (userId) forgetOnDevice(userId);
+  const r = await authClient.signOut().catch((e: unknown) => ({ error: e }));
+  if (r.error) {
+    // Still signed in: keep their data.
+    if (userId) keepOnDevice(userId);
+    console.warn("[auth] sign-out failed", r.error);
+    return;
+  }
+  // Nothing more uploads for them from this tab.
+  if (userId) await clearOutboxNow(userId);
 }
 
 /** Deletes the account on the server and signs out. `lang` picks the goodbye's language. */
 export async function deleteAccount(lang?: string) {
+  const userId = (await authClient.getSession()).data?.user?.id;
   const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
   if (!res.ok) throw new Error(`Could not delete the account (${res.status})`);
   try {
@@ -67,5 +91,8 @@ export async function deleteAccount(lang?: string) {
   } catch {
     // No storage: no goodbye line. Fine.
   }
+  // The account is gone: forget its data here, even if signing out fails.
+  if (userId) forgetOnDevice(userId);
   await authClient.signOut().catch(() => {});
+  if (userId) await clearOutboxNow(userId);
 }

@@ -9,6 +9,7 @@ import { DAY_MS, replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
 import type { MemoryRow } from "../model";
 import { loadDeck, type LoadedDeck } from "./deck";
+import { postWrite } from "./http";
 import type { CourseRow, ReviewRow, Skill, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
 import type { Store } from "./store";
 
@@ -241,8 +242,14 @@ export function recordReview(store: Store, r: Omit<ReviewRow, "id" | "user_id" |
 }
 
 export function undoReview(store: Store, id: string) {
-  if (!store.collections.review.has(id)) return;
-  void store.write(() => store.collections.review.delete(id)).catch((e) => console.error("undo not saved", e));
+  if (store.collections.review.has(id)) {
+    void store.write(() => store.collections.review.delete(id)).catch((e) => console.error("undo not saved", e));
+    return;
+  }
+  // Saved, but not back through sync yet (its echo can be slow): there is no
+  // row to delete here, so ask the server directly. Its delete syncs back.
+  if (!store.isWriter()) return;
+  void postWrite([{ type: "review.delete", id }]).catch((e) => console.error("undo not saved", e));
 }
 
 export function setWordStatus(store: Store, wordId: string, status: Word["status"]) {
