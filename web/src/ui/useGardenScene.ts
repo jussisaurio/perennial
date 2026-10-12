@@ -164,8 +164,11 @@ export function useWalkInput({
     const el = wrap.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      if ((e.target as HTMLElement).closest(".gw-card, .gw-top, .gw-bottom")) return;
+      // Nothing in the walk scrolls, so every wheel is ours. This also stops the
+      // trackpad's swipe-back gesture, over the panels too: Safari ignores
+      // overscroll-behavior for it (WebKit bug 240183).
       e.preventDefault();
+      if ((e.target as HTMLElement).closest(".gw-card, .gw-top, .gw-bottom")) return;
       const s = scene.current;
       if (!s) return;
       const k = e.deltaMode === 1 ? 16 : 1; // lines to pixels
