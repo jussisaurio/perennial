@@ -2,8 +2,8 @@
 // Probes headers, closed dev/auth endpoints, file leaks, cross-user isolation,
 // CSRF and limits, using two throwaway anonymous users that it deletes at the end.
 //
-//   bun scripts/live-check.ts https://perennial-production.up.railway.app
-const BASE = process.argv[2] ?? "https://perennial-production.up.railway.app";
+//   bun scripts/live-check.ts https://playperennial.com
+const BASE = process.argv[2] ?? "https://playperennial.com";
 // A real deck word: the server refuses reviews of words that don't exist.
 const WORD = (JSON.parse(await Bun.file(new URL("../decks/es/deck.json", import.meta.url)).text()) as { words: { id: string }[] }).words[0].id;
 const ORIGIN = BASE;
