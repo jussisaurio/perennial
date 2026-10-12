@@ -3,6 +3,7 @@
 // that is added to every line logged while handling it.
 
 import { AsyncLocalStorage } from "node:async_hooks";
+import * as Sentry from "@sentry/bun";
 
 type Level = "debug" | "info" | "warn" | "error";
 type Fields = Record<string, unknown>;
@@ -15,6 +16,12 @@ function write(level: Level, msg: string, fields: Fields = {}) {
   if (fields.err instanceof Error) line.err = { message: fields.err.message, stack: fields.err.stack };
   const out = pretty ? `${String(line.ts).slice(11, 19)} ${level.padEnd(5)} ${msg} ${JSON.stringify({ ...line, ts: undefined, level: undefined, msg: undefined })}` : JSON.stringify(line);
   (level === "error" || level === "warn" ? console.error : console.log)(out);
+  // Warnings and errors go to Sentry logs too (a no-op without SENTRY_DSN). The
+  // fields are ours: ids, paths, timings; never request bodies or emails.
+  if (level === "warn" || level === "error") {
+    const { ts: _ts, level: _level, msg: _msg, err, ...attrs } = line;
+    Sentry.logger[level](msg, { ...attrs, ...(err ? { err: JSON.stringify(err) } : {}) });
+  }
 }
 
 export const log = {

@@ -21,6 +21,11 @@ ARG VITE_POSTHOG_HOST=""
 ARG VITE_TURNSTILE_SITE_KEY=""
 # The commit this app was built from (Railway provides it), compared with the
 # server's release so open tabs learn about a new deploy (web/src/data/server.ts).
+# Source-map upload to Sentry during the build (optional; build stage only, so
+# the token never reaches the final image).
+ARG SENTRY_AUTH_TOKEN=""
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
 ARG RAILWAY_GIT_COMMIT_SHA="dev"
 ARG VITE_RELEASE="${RAILWAY_GIT_COMMIT_SHA}"
 ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY VITE_RELEASE=$VITE_RELEASE
