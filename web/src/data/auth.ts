@@ -38,10 +38,16 @@ export function sessionUserId(): string | null {
   return s?.data?.user?.id ?? null;
 }
 
+/** The signed-in user (asks the server), or null. */
+export async function currentUser(): Promise<SessionUser | null> {
+  const s = await authClient.getSession();
+  return s.data?.user ? toUser(s.data.user) : null;
+}
+
 /** The current user, creating an anonymous one if there is none. */
 export async function ensureUser(): Promise<SessionUser> {
-  const s = await authClient.getSession();
-  if (s.data?.user) return toUser(s.data.user);
+  const user = await currentUser();
+  if (user) return user;
   const r = await authClient.signIn.anonymous({ fetchOptions: { headers: await captchaHeaders() } });
   if (r.error || !r.data) throw new Error(r.error?.message ?? "Could not start a session");
   return toUser(r.data.user);
