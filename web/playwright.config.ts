@@ -32,7 +32,8 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] }, testIgnore: /layout\.spec|garden-touch\.spec/ },
     { name: "phone", use: { ...devices["Pixel 7"] }, testMatch: /layout\.spec/ },
     // Touch on iOS (#113): WebKit, for the one spec about it, so CI time barely grows.
-    { name: "iphone", use: { ...devices["iPhone 15"] }, testMatch: /garden-touch\.spec/ },
+    // No --mute-audio: it is a Chromium flag, and WebKit on Linux will not start with it.
+    { name: "iphone", use: { ...devices["iPhone 15"], launchOptions: { args: [] } }, testMatch: /garden-touch\.spec/ },
   ],
   webServer: [
     { command: `PORT=${LLM} bun ../server/mock-llm.ts`, port: LLM, reuseExistingServer: false },
