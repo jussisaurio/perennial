@@ -64,8 +64,11 @@ const formatDate = (iso: string) => (iso ? longDate(new Date(`${iso}T00:00:00`))
 export function apiMessage(e: unknown): string {
   if (!(e instanceof ApiError)) return e instanceof Error ? e.message : String(e);
   switch (e.code) {
-    case "out_of_credits":
-      return "You used all your AI words for this month.";
+    case "out_of_credits": {
+      // The server says how many are left: with an unknown count the app lets a learner ask for more.
+      const left = Number(e.detail.left);
+      return left > 0 ? `You have only ${left} AI words left this month. Select fewer words, or wait until ${resetDate()}.` : "You used all your AI words for this month.";
+    }
     case "busy":
       return "Perennial AI is very busy now. Try again in a few minutes.";
     case "paused":

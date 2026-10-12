@@ -7,7 +7,7 @@ import { useUser } from "../data/auth";
 import { recall, wordState, type MemoryRow, type WordState } from "../core/memory";
 import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import type { ReviewRow, UserSentenceRow } from "../data/rows";
-import { useMe } from "./Account";
+import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
 import { AddScreen } from "./Add";
@@ -180,7 +180,7 @@ function RewriteButton({ learner, word }: { learner: Learner; word: Word }) {
   const [error, setError] = useState("");
   if (!ai) return null; // Not on this server (data/server.ts).
   if (!user || user.anonymous) return <span className="muted small">Add your email in Settings to have Perennial AI write new sentences.</span>;
-  const left = me ? me.credits.left : Infinity;
+  const none = tooFewCredits(me, 1);
   const run = async () => {
     setBusy(true);
     setError("");
@@ -221,10 +221,10 @@ function RewriteButton({ learner, word }: { learner: Learner; word: Word }) {
     );
   return (
     <span className="row">
-      <button className="secondary" disabled={busy || left < 1} onClick={() => void run()}>
+      <button className="secondary" disabled={busy || none} onClick={() => void run()}>
         {busy ? "Writing…" : "Write new sentences"}
       </button>
-      <span className="muted small">With Perennial AI · uses 1 AI word{left < 1 ? " (you have none left this month)" : ""}. The course sentences stay.</span>
+      <span className="muted small">With Perennial AI · uses 1 AI word{none ? " (you have none left this month)" : ""}. The course sentences stay.</span>
       {error && <span className="error">{error}</span>}
     </span>
   );

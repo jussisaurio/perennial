@@ -12,7 +12,7 @@ import { setWordStatus, useLearner, useStore, type Learner } from "../data/learn
 import type { UserSentenceRow, UserWordRow, WordStateRow } from "../data/rows";
 import { language } from "../content/languages";
 import { formKey, tokenize } from "../content/text";
-import { useMe } from "./Account";
+import { tooFewCredits, useMe } from "./Account";
 import { track } from "../observability";
 
 // "queued": in the course but not started yet. "added": picked by the learner.
@@ -62,9 +62,8 @@ function MineText({ learner }: { learner: Learner }) {
   const inCourse = [...picked.keys()].filter((f) => statusOf.get(f)?.wordId);
   const needAI = [...picked.keys()].filter((f) => !statusOf.get(f)?.wordId);
   const canAI = ai && !!user && !user.anonymous;
-  const left = me ? me.credits.left : 0;
   // Without Perennial AI on this server, only course words can be added.
-  const tooMany = ai && needAI.length > 0 && (!canAI || needAI.length > left);
+  const tooMany = ai && needAI.length > 0 && (!canAI || tooFewCredits(me, needAI.length));
   const adding = ai ? picked.size : inCourse.length;
 
   const toggle = (form: string, index: number) => {
@@ -172,11 +171,12 @@ function MineText({ learner }: { learner: Learner }) {
             </button>
           </div>
           {result && <p className="small">{result}</p>}
-          {tooMany && canAI && (
+          {/* `me` is known here: tooFewCredits blocks only on a known count. */}
+          {tooMany && canAI && me && (
             <div className="credit-note">
               <p className="small">
-                You selected {needAI.length} words that are not in the course, but you have only {left} AI {left === 1 ? "word" : "words"} left this month.{" "}
-                {left > 0 ? `Select ${needAI.length - left} fewer, or ` : ""}wait until {resetDate()}.
+                You selected {needAI.length} words that are not in the course, but you have only {me.credits.left} AI {me.credits.left === 1 ? "word" : "words"} left this month.{" "}
+                {me.credits.left > 0 ? `Select ${needAI.length - me.credits.left} fewer, or ` : ""}wait until {resetDate()}.
               </p>
             </div>
           )}
