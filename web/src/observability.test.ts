@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from "bun:test";
 
-const calls: { init?: [string, Record<string, unknown>]; captured: [string, unknown, unknown][]; aliases: string[]; inits: number } = { captured: [], aliases: [], inits: 0 };
+const calls: { init?: [string, Record<string, unknown>]; captured: [string, unknown, unknown][]; aliases: string[]; inits: number; registered: Record<string, unknown>[] } = { captured: [], aliases: [], inits: 0, registered: [] };
 mock.module("posthog-js", () => ({
   default: {
     init: (key: string, config: Record<string, unknown>) => {
@@ -9,6 +9,7 @@ mock.module("posthog-js", () => ({
     },
     capture: (event: string, props: unknown, options?: unknown) => void calls.captured.push([event, props, options]),
     alias: (id: string) => void calls.aliases.push(id),
+    register: (props: Record<string, unknown>) => void calls.registered.push(props),
   },
 }));
 let sentryOptions: Record<string, unknown> | undefined;
@@ -35,6 +36,10 @@ test("Sentry: an unset release is named as the server names it, never empty", ()
   expect(sentryOptions?.release).toBe("dev");
 });
 
+test("Sentry: the browser never asks Sentry to work out the learner's IP", () => {
+  expect(sentryOptions?.dataCollection).toMatchObject({ userInfo: false });
+});
+
 describe("PostHog", () => {
   test("starts at identify, as that learner, on the EU host; earlier events wait and then go", async () => {
     track("course_started", { lang: "es" });
@@ -44,6 +49,7 @@ describe("PostHog", () => {
     identify("user-1"); // StrictMode runs the effect twice: one start
     await new Promise((r) => setTimeout(r, 0));
     expect(calls.inits).toBe(1);
+    expect(calls.registered).toContainEqual({ $geoip_disable: true }); // no location from the IP
     const [key, config] = calls.init!;
     expect(key).toBe("phc_test");
     expect(config).toMatchObject({

@@ -13,6 +13,8 @@ export function initObservability() {
   const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
   if (dsn) {
     Sentry.init({
+      // Not the learner's IP: by default Sentry works it out from the connection.
+      dataCollection: { userInfo: false },
       dsn,
       release: RELEASE,
       environment: import.meta.env.MODE,
@@ -68,6 +70,8 @@ function startPostHog(userId: string) {
       respect_dnt: true,
       person_profiles: "identified_only",
     });
+    // No location from the IP (PostHog's GeoIP): only the named events (privacy.html).
+    ph.register({ $geoip_disable: true });
     posthog = ph;
     for (const [event, props, timestamp] of waiting) ph.capture(event, props, { timestamp });
     waiting = [];
