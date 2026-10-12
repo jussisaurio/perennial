@@ -6,6 +6,7 @@ import { COURSE_DEFAULTS } from "../data/rows";
 import { farewell } from "../content/voice";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES, language } from "../content/languages";
+import { isDeckLang } from "../deck/schema";
 import { ensureUser } from "../data/auth";
 import { postWrite } from "../data/http";
 import { loadDeck } from "../data/deck";
@@ -73,7 +74,8 @@ export async function startCourse(lang: string, minutes: number) {
 
 export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) => void; signedIn: boolean }) {
   const draft = readDraft();
-  const [lang, setLang] = useState(() => draft.lang ?? "es");
+  // The draft may name a language this build lacks (saved by a newer build in another tab): start from Spanish then.
+  const [lang, setLang] = useState<string>(() => (draft.lang && isDeckLang(draft.lang) ? draft.lang : "es"));
   const [minutes, setMinutes] = useState(draft.minutes ?? COURSE_DEFAULTS.minutes);
   // After "Delete my account": a goodbye on the landing page, for a short
   // while (the app reloads once as the user changes), then never again.
