@@ -103,7 +103,7 @@ test("time on a new-word card counts toward today's minutes", async ({ page }) =
   await expect(kicker(page)).toHaveText(/quick check/);
   await reveal(page);
   await grade(page, "2");
-  await expect.poll(async () => (await serverRows<{ word_id: string; duration_ms: number }>(page, "review")).length).toBeGreaterThan(0);
+  await expect.poll(async () => (await serverRows(page, "review")).length).toBeGreaterThan(0);
   const [first] = await serverRows<{ duration_ms: number }>(page, "review");
   expect(first.duration_ms).toBeGreaterThanOrEqual(20_000);
 });
