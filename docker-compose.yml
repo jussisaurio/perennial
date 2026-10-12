@@ -8,7 +8,9 @@ services:
       POSTGRES_USER: perennial
       POSTGRES_PASSWORD: perennial
       POSTGRES_DB: perennial
-    ports: ["55432:5432"]
+    # Below 32768: Linux hands out 32768-60999 as source ports for outgoing
+    # connections, and one of those once took our port on a CI runner.
+    ports: ["25432:5432"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U perennial"]
       interval: 2s
