@@ -155,6 +155,13 @@ let cleaning: Promise<void> | null = null;
 /** Delete the files of users who signed out here. Runs once per start, before any store opens. */
 export function cleanUpForgotten(): Promise<void> {
   cleaning ??= (async () => {
+    // The queue all users once shared: never replayed (it could belong to
+    // anyone), so it goes. Deleting a database that does not exist is a no-op.
+    try {
+      indexedDB.deleteDatabase("offline-transactions");
+    } catch {
+      // No IndexedDB: nothing to delete.
+    }
     const ids = forgetList();
     if (!ids.length) return;
     const left: string[] = [];

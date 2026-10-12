@@ -11,7 +11,7 @@
 
 import { useSyncExternalStore } from "react";
 import { APP_VERSION } from "../version";
-import { reloadNeeded } from "./store";
+import { reloadNeeded } from "./http";
 
 export interface Features {
   /** Perennial AI (words from your own texts, new sentences). */

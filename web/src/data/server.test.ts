@@ -1,7 +1,7 @@
 import { expect, mock, test } from "bun:test";
 
-// server.ts imports the store (for the reload signal), which needs Vite; only the pure parts are tested here.
-mock.module("./store", () => ({ reloadNeeded: new EventTarget() }));
+// Only the pure parts are tested here.
+mock.module("./http", () => ({ reloadNeeded: new EventTarget() }));
 const { newDeploy, versionAtLeast } = await import("./server");
 
 test("a new deploy: a different real release than the one this app was built from", () => {
