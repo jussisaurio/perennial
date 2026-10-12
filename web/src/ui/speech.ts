@@ -57,10 +57,12 @@ export async function hasVoice(tag: string): Promise<boolean> {
   return !!pick(tag);
 }
 
-/** Speak `text`. Does nothing while sound is off. */
-export async function speak(text: string, tag: string, rate = 1): Promise<void> {
-  if (typeof speechSynthesis === "undefined" || !soundOn) return;
-  await ready;
+// Bumped by every new request and by stopSpeaking(), so audio that was still
+// waiting (for voices, or for the previous part of a sequence) never starts
+// after the card it belongs to has gone.
+let generation = 0;
+
+function utter(text: string, tag: string, rate: number): Promise<void> {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = tag;
@@ -74,6 +76,23 @@ export async function speak(text: string, tag: string, rate = 1): Promise<void> 
   });
 }
 
+/** Speak `text`. Does nothing while sound is off. */
+export function speak(text: string, tag: string, rate = 1): Promise<void> {
+  return speakAll([text], tag, rate);
+}
+
+/** Speak the texts one after another. Stops early when stopSpeaking() or another speak call comes first. */
+export async function speakAll(texts: string[], tag: string, rate = 1): Promise<void> {
+  if (typeof speechSynthesis === "undefined" || !soundOn) return;
+  const gen = ++generation;
+  await ready;
+  for (const text of texts) {
+    if (gen !== generation || !soundOn) return;
+    await utter(text, tag, rate);
+  }
+}
+
 export function stopSpeaking(): void {
+  generation++;
   if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
 }

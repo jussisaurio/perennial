@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { firstPlantsLine, forgotLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
@@ -11,9 +11,10 @@ import { memKey, recordReview, undoReview, useLearner, useStore, type Learner, t
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
-import { hasVoice, isSoundOn, speak, stopSpeaking } from "./speech";
+import { hasVoice, isSoundOn, speak, speakAll, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats, wordState } from "./stats";
+import { useKeys } from "./useShortcut";
 import { track } from "../observability";
 
 type Lexeme = Word;
@@ -68,25 +69,6 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
   );
 }
 
-function useKeys(map: Record<string, () => void>) {
-  const ref = useRef(map);
-  useLayoutEffect(() => {
-    ref.current = map;
-  });
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const fn = ref.current[e.key];
-      if (fn) {
-        e.preventDefault();
-        fn();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-}
-
 export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit: () => void; minutes: number }) {
   const learner = useLearner(lang);
   // Answers update the learner live; reads in event handlers use the latest.
@@ -138,8 +120,9 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       setDone(false);
       await advance(r);
     },
+    // `advance` reads only refs and stable setters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [!!learner, tag],
+    [tag],
   );
 
   /** Show the next card. `again`: the card being undone, so it comes back with the same sentence. */
@@ -155,7 +138,11 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
     }
     const l = live.current!;
     const lexeme = l.words.get(task.lexemeId);
-    if (!lexeme) return advance(r);
+    if (!lexeme) {
+      // The word is gone (deleted on another device): pass over it, and keep it out of Undo.
+      r.skip();
+      return advance(r);
+    }
     const example = again?.lexemeId === lexeme.id ? again.example : chooseExample(l, lexeme.id);
     const read = l.memory.get(memKey(lexeme.id, "read"));
     shownAt.current = clock.current.elapsed;
@@ -166,10 +153,15 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
     setCard({ task, lexeme, example, s: read?.reps ? read.s : 0, known: wordState(read) === "known" });
   };
 
+  // Plan once, as soon as the learner has loaded. Later changes (every answer
+  // updates the learner) must not replan a session that is under way.
+  const started = useRef(false);
   useEffect(() => {
+    if (started.current || !learner) return;
+    started.current = true;
     void start(minutes);
-    return () => stopSpeaking();
-  }, [start, minutes]);
+  }, [learner, start, minutes]);
+  useEffect(() => () => stopSpeaking(), []);
 
   useEffect(() => {
     const t = setInterval(() => setActive(clock.current.tick(Date.now())), 1000);
@@ -270,20 +262,14 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       const retry = runner.report(task, { grade });
       if (grade === 1) flash(forgotLine(retry));
       setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? lexeme.id : undefined, lexemeId: lexeme.id, example }]);
+    } else {
+      // Passed over without an answer ("Can't listen now"): nothing to undo, so
+      // Undo steps back over this card to the last answer.
+      runner.skip();
     }
   };
 
   useKeys({ z: () => void undo(), Escape: () => (help ? setHelp(false) : exit()), "?": () => setHelp((h) => !h) });
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z" && !(e.target instanceof HTMLInputElement)) {
-        e.preventDefault();
-        void undo();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
 
   if (!runner) return <div className="session center muted">Preparing…</div>;
 
@@ -402,13 +388,13 @@ function Actions({ children }: { children: ReactNode }) {
 
 function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
   const { lexeme, example } = card;
-  const play = () =>
-    void (async () => {
-      await speak(lexeme.lemma, tag);
-      if (example) await speak(example.text, tag);
-    })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(play, [lexeme.lemma, example, tag]);
+  const play = () => void speakAll(example ? [lexeme.lemma, example.text] : [lexeme.lemma], tag);
+  // The sentence follows the word; leaving the card cuts both off, so it never plays over the next one.
+  useEffect(() => {
+    play();
+    return stopSpeaking;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lexeme.lemma, example, tag]);
   const isNew = () => onDone(null);
   const knewIt = () => onDone(null, { alreadyKnown: true });
   useKeys({ " ": isNew, Enter: isNew, n: isNew, k: knewIt, r: play });
@@ -644,7 +630,7 @@ const SHORTCUTS: [string, string][] = [
   ["2, 3 or →", "I remembered"],
   ["K", "New word: I knew it"],
   ["R", "Play the audio again"],
-  ["Z or ⌘Z", "Undo the last answer"],
+  ["Z", "Undo the last answer"],
   ["Esc", "End the session"],
   ["?", "Show or hide this list"],
 ];

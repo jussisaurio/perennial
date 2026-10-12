@@ -35,10 +35,10 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const { user } = useUser();
   const learner = useLearner(code);
   const now = useNow();
-  const stats = useMemo(() => (learner ? courseStats(learner) : undefined), [learner]);
-  const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  // Today's visitors change with the calendar day, not every minute.
+  // Today's numbers and visitors change with the calendar day, not every minute.
   const day = today(new Date(now));
+  const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailAlong();
