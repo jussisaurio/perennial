@@ -41,6 +41,11 @@ export function initObservability() {
         autocapture: false,
         capture_pageview: false,
         disable_session_recording: true,
+        // Off in code, whatever the PostHog project settings say: named events only.
+        enable_heatmaps: false,
+        capture_performance: false,
+        capture_dead_clicks: false,
+        capture_exceptions: false,
         respect_dnt: true,
         person_profiles: "identified_only",
       });
