@@ -61,3 +61,31 @@ test("Perennial AI can write new sentences for a word, and undo removes them", a
   await expect(detail.locator(".examples li")).toHaveCount(before);
   await expectServerRows(page, "user_sentence", 0);
 });
+
+test("when the AI word count cannot load, nothing is blocked and the server says when they run out", async ({ page }) => {
+  await startCourse(page);
+  await addEmail(page);
+  await page.route("**/api/me", (route) => route.fulfill({ status: 500, body: "" }));
+
+  // The count is unknown: no count is shown, and AI words can still be picked.
+  await openAdd(page);
+  await page.getByPlaceholder(/Paste .* text here/).fill("zorro búho lince nutria tejón garza ciervo");
+  for (const w of ["zorro", "búho", "lince", "nutria", "tejón", "garza", "ciervo"]) await page.locator(".reader .tok", { hasText: w }).click();
+  await expect(page.getByText(/AI words? left this month/)).toHaveCount(0);
+
+  // 7 words, 6 left: the server refuses, and says why.
+  await page.getByRole("button", { name: /Learn 7 words · uses 7 AI words/ }).click();
+  await expect(page.getByText("Could not add the words: You used all your AI words for this month.")).toBeVisible();
+  await expectServerRows(page, "user_word", 0);
+  await page.locator(".reader .tok", { hasText: "ciervo" }).click();
+  await page.getByRole("button", { name: /Learn 6 words · uses 6 AI words/ }).click();
+  await expect(page.getByText(/Added 6 words/)).toBeVisible();
+
+  // The Words screen follows the same rule: allowed, and the server says no.
+  await page.getByRole("button", { name: /← Words/ }).click();
+  await page.getByRole("combobox").selectOption("new");
+  await page.locator(".word-row").first().click();
+  await expect(page.getByText(/you have none left/)).toHaveCount(0);
+  await page.getByRole("button", { name: "Write new sentences" }).click();
+  await expect(page.locator(".detail .error")).toHaveText("You used all your AI words for this month.");
+});

@@ -26,6 +26,15 @@ export function useMe(): { me: Me | null; refresh: () => void } {
   return { me: id ? me : null, refresh: () => setTick((t) => t + 1) };
 }
 
+/**
+ * True when the learner has fewer than `needed` AI words left. While the count
+ * is unknown (loading, or the fetch failed) nothing is blocked: the server
+ * checks credits on every AI request and says when they ran out.
+ */
+export function tooFewCredits(me: Me | null, needed: number): boolean {
+  return me !== null && me.credits.left < needed;
+}
+
 export function SignIn({ cta }: { cta: string }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
