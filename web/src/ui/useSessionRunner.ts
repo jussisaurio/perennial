@@ -64,11 +64,14 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
   const [ended, setEnded] = useState<Ended>("time");
   const [newLimitReached, setNewLimitReached] = useState(false);
   const practised = useRef(new Set<string>());
+  // Time on a "New to me" card: it records no review, so its time rides on the word's
+  // quick check. Otherwise "minutes today" misses it and the day looks unfinished.
+  const introMs = useRef(new Map<string, number>());
   const shownAt = useRef(0);
   const serial = useRef(0);
   // One entry per card answered, so Undo can revert what that answer recorded.
   // Each entry keeps the card's word and sentence, so Undo shows exactly that card again.
-  const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; wordId: string; example?: Sentence }[]>([]);
+  const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; wordId: string; example?: Sentence; carried?: number }[]>([]);
 
   const start = useCallback(
     async (mins: number, more = extra) => {
@@ -168,6 +171,9 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
       if (!last.intro) counts.current.answers--;
       if (last.intro) counts.current.intros--;
       if (last.practised) practised.current.delete(last.practised);
+      // Undoing a quick check gives the intro's time back to the next one; undoing the intro drops it.
+      if (last.carried !== undefined) introMs.current.set(last.wordId, last.carried);
+      if (last.intro) introMs.current.delete(last.wordId);
       flash("Undone.");
       await advance(runner, last);
     } finally {
@@ -192,6 +198,7 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
       counts.current.intros++;
       pop(word.lemma, 0, false);
       const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: word.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
+      if (!opts.alreadyKnown) introMs.current.set(word.id, ms);
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       // No note: the button already said what happens ("Back in about a week").
       setUndoStack((s) => [...s, { reviewId, review: false, intro: true, wordId: word.id, example }]);
@@ -202,7 +209,9 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
       counts.current.answers++;
       const fresh = !practised.current.has(word.id);
       practised.current.add(word.id);
-      const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms), sentence_id: example?.id ?? null });
+      const carried = introMs.current.get(word.id);
+      introMs.current.delete(word.id);
+      const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), sentence_id: example?.id ?? null });
       if (grade >= 3) {
         // The new review shows up in the learner on the next render; let it land first.
         setTimeout(() => {
@@ -212,7 +221,7 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
       }
       const retry = runner.report(task, { grade });
       if (grade === 1) flash(forgotLine(retry));
-      setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example }]);
+      setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
     } else {
       // Passed over without an answer ("Can't listen now"): nothing to undo, so
       // Undo steps back over this card to the last answer.

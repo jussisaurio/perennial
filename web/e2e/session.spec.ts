@@ -91,3 +91,19 @@ test("leaving after doing something shows the summary", async ({ page }) => {
   await page.getByRole("button", { name: /Done/ }).click();
   await expect(page.getByRole("button", { name: /today's session/ })).toBeVisible();
 });
+
+// #189: minutes are the only unit, so every second counts, the new-word card's too.
+test("time on a new-word card counts toward today's minutes", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  await startSession(page);
+  await expect(kicker(page)).toHaveText(/new word/);
+  await page.clock.runFor(20_000); // reading the first new word (second by second: the session clock caps jumps)
+  await continueIntros(page, 4);
+  await expect(kicker(page)).toHaveText(/quick check/);
+  await reveal(page);
+  await grade(page, "2");
+  await expect.poll(async () => (await serverRows<{ word_id: string; duration_ms: number }>(page, "review")).length).toBeGreaterThan(0);
+  const [first] = await serverRows<{ duration_ms: number }>(page, "review");
+  expect(first.duration_ms).toBeGreaterThanOrEqual(20_000);
+});
