@@ -57,7 +57,7 @@ function start(name: keyof typeof COLORS, cmd: string[], cwd: string, env: Recor
   children.push(child);
 }
 
-const aiEnv = AI ? { ANTHROPIC_API_KEY: "mock", ANTHROPIC_BASE_URL: "http://localhost:8788" } : {};
+const aiEnv: Record<string, string> = AI ? { ANTHROPIC_API_KEY: "mock", ANTHROPIC_BASE_URL: "http://localhost:8788" } : {};
 if (AI) start("ai", ["bun", "mock-llm.ts"], join(ROOT, "server"), { PORT: "8788" });
 start("api", ["bun", "run", "dev"], join(ROOT, "server"), aiEnv);
 start("web", ["bun", "run", "dev"], join(ROOT, "web"));
