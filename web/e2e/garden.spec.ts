@@ -4,8 +4,10 @@ import { settledGardenWidth, startCourse } from "./helpers";
 test("walk-in garden: every word is a plant; next plant, listen, time of day, and back", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
-  // Pin the quality: software rendering here is slow and would switch to low by itself.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  // Pin low quality. CI draws WebGL in software: at normal quality every frame is
+  // slow, and each click waits for frames (about 2.5 s a click), so the test ran into
+  // its timeout. Low is also what the app picks by itself on a slow device.
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page).toHaveURL(/#\/garden$/);
@@ -26,17 +28,19 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
   await time.click();
   await expect(time).not.toHaveText(before!);
 
-  // Quality toggles and is remembered; trackpad swipes look around instead of scrolling.
-  await page.getByRole("button", { name: "Quality: Normal quality" }).click();
-  await expect(page.getByRole("button", { name: "Quality: Low quality" })).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem("garden-quality"))).toBe("low");
+  // Trackpad swipes look around instead of scrolling.
   await page.mouse.move(400, 300);
   await page.mouse.wheel(-200, 50);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
-  // Escape closes the card first, then leaves the garden.
+  // Escape closes the card first.
   await page.keyboard.press("Escape");
   await expect(card).toBeHidden();
+  // Quality toggles and is remembered (last: normal quality is slow to draw here).
+  await page.getByRole("button", { name: "Quality: Low quality" }).click();
+  await expect(page.getByRole("button", { name: "Quality: Normal quality" })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("garden-quality"))).toBe("normal");
+  // A second Escape leaves the garden.
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/#\/today$/);
   expect(errors).toEqual([]);
