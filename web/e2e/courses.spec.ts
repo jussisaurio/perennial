@@ -50,6 +50,22 @@ test("a second language the server refuses: the learner is told, and stays where
   await expect(switcher).toHaveText(/Spanish/);
 });
 
+test("a course in a language this build lacks (started on a newer build) is left out, not a stuck screen", async ({ page, browser }) => {
+  await startCourse(page, "German");
+  // The same learner on a second device (no local copy yet). The server only
+  // takes known languages, so pretend: sync there says the one course is French.
+  const other = await browser.newPage({ storageState: await page.context().storageState() });
+  await other.route(/\/api\/shape\?.*table=course/, async (route) => {
+    const res = await route.fetch();
+    await route.fulfill({ response: res, body: (await res.text()).replaceAll('"lang":"de"', '"lang":"fr"') });
+  });
+  await other.goto("/");
+  // No course this build can teach: the start page, until the reload banner brings the new version.
+  await expect(other.getByRole("heading", { name: /Grow a language/ })).toBeVisible({ timeout: 15_000 });
+  await other.unrouteAll({ behavior: "ignoreErrors" });
+  await other.close();
+});
+
 test("the language menu closes on Escape and on a click outside", async ({ page }) => {
   await startCourse(page);
   const switcher = page.locator(".course-switch-button");

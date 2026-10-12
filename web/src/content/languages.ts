@@ -24,7 +24,11 @@ export const COURSE_LANGUAGES: (Language & { blurb: string })[] = DECK_LANGS.map
  */
 export const teachable = <T extends { lang: string }>(courses: T[]): T[] => courses.filter((c) => isDeckLang(c.lang));
 
-/** A course language. Codes come from `teachable` courses or from COURSE_LANGUAGES, so any other code is a bug. */
+/**
+ * A course language. Codes are checked where they enter: synced courses by
+ * `teachable`, the onboarding draft by isDeckLang, choices from COURSE_LANGUAGES.
+ * So any other code is a bug.
+ */
 export function language(code: string): Language {
   const l = COURSE_LANGUAGES.find((x) => x.code === code);
   if (!l) throw new Error(`no course language "${code}"`);

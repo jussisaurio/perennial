@@ -17,6 +17,14 @@ test("landing: the garden shows real words per language; start without an accoun
   await expectServerRows(page, "course", 1);
 });
 
+test("landing: a saved choice of a language this build does not have falls back to Spanish", async ({ page }) => {
+  // Another tab with a newer build (localStorage is shared per site) saved a language this build lacks.
+  await page.addInitScript(() => localStorage.setItem("perennial-onboarding", JSON.stringify({ lang: "fr" })));
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Spanish/ })).toBeChecked();
+});
+
 test("landing: walk through the showcase garden in 3D, view only", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Walk through this garden in 3D" }).click();
