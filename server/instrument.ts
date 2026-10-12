@@ -2,6 +2,7 @@
 // instrument Bun.serve and fetch. Does nothing without SENTRY_DSN.
 
 import * as Sentry from "@sentry/bun";
+import { releaseOf } from "./src/config";
 
 /**
  * Last line of defence before an event leaves: no cookies, auth headers,
@@ -23,7 +24,7 @@ if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     environment: process.env.RAILWAY_ENVIRONMENT_NAME ?? process.env.NODE_ENV ?? "development",
-    release: process.env.RAILWAY_GIT_COMMIT_SHA ?? process.env.RELEASE,
+    release: releaseOf(process.env),
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
     // SDK 11 streams spans by default, and then skips beforeSendTransaction and
     // ignoreTransactions below (our scrub and the shape filter). Keep whole transactions.
