@@ -247,13 +247,19 @@ The job deletes anonymous learners with no activity for that many days (their da
 
 ### 4.1 Domain for the app
 
-1. `web` → **Settings → Networking → Custom Domain** → `perennial.example`. Target port `8080`.
-2. At your DNS provider, add the records that Railway shows (a `CNAME`, and a `TXT` record for verification). For the apex domain, use a `CNAME`-flattening or `ALIAS` record, or use `www` or `app` instead.
-3. Wait until Railway shows the certificate as active.
-4. Set `APP_URL=https://perennial.example` on `web` and redeploy.
-5. Open the app only on this domain. Better Auth rejects requests from other origins, so the Railway domain stops working for sign-in. You can remove it.
+Production uses `playperennial.com`, with DNS and the CDN at Cloudflare (Free plan).
 
-When `APP_URL` starts with `https://`, the server sends HSTS. Before launch, change `og:image` and `twitter:image` in `web/index.html` to absolute URLs (`https://perennial.example/og.png`).
+1. Add the domain and `www` on Railway: `railway domain playperennial.com --service perennial`, and the same for `www.playperennial.com`. Each one prints a `CNAME` and a `TXT` record.
+2. In Cloudflare, add these records as **DNS only** (grey cloud). Cloudflare flattens the `CNAME` at the apex.
+3. Wait until `railway domain status <domain> --service perennial` shows `CERTIFICATE_STATUS_TYPE_VALID`. Railway cannot get its certificate while the record is proxied.
+4. In Cloudflare, set **SSL/TLS** to **Full (strict)** and turn on **Always Use HTTPS**. Then set the two `CNAME` records to **Proxied** (orange cloud).
+5. On `web`, set `APP_URL=https://playperennial.com` and `CLIENT_IP_HEADERS=cf-connecting-ip`. Behind Cloudflare, `X-Real-IP` is the IP of Cloudflare, not of the learner.
+
+Better Auth accepts requests only from `APP_URL`. So the server redirects `www` and the Railway domain to `APP_URL` (308, path kept).
+
+The CDN caches the hashed files in `/assets/` for one year. `index.html`, the service worker and other top-level files revalidate on each load (`no-cache`). `/api` answers are `no-store`. A deploy therefore needs no cache purge.
+
+When `APP_URL` starts with `https://`, the server sends HSTS.
 
 ### 4.2 Sending domain in Resend
 
