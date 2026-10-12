@@ -59,6 +59,10 @@ export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
 
 /** Throw the demo learner away (it is anonymous, so this deletes it). */
 export async function removeDemo(): Promise<void> {
-  await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).catch(() => {});
+  // If the delete fails (offline), signing out still forgets the learner here, and
+  // housekeeping deletes an idle anonymous learner later: say so, then go on.
+  await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).catch((e: unknown) =>
+    console.warn("[demo] could not delete the demo learner on the server", e),
+  );
   await signOut();
 }
