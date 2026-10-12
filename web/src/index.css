@@ -452,6 +452,11 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .scheduling th, .scheduling td { text-align: left; padding: 0.15rem 0.9rem 0.15rem 0; font-variant-numeric: tabular-nums; }
 .scheduling th { color: var(--muted); font-weight: 600; }
 .review-log { color: var(--muted); list-style: none; padding: 0; margin: 0.25rem 0; max-height: 12rem; overflow-y: auto; }
+.offline-note {
+  /* In the flow at the top, so it never covers the navigation or the page. */
+  width: fit-content; max-width: calc(100% - 32px); margin: max(8px, env(safe-area-inset-top)) auto 0; padding: 0.3rem 0.8rem; border-radius: 999px;
+  background: var(--card); color: var(--ink-2); border: 1px solid var(--line); font-size: 0.82rem; text-align: center;
+}
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: max(24px, env(safe-area-inset-bottom));
   display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem 0.4rem 1rem; border-radius: 999px;
