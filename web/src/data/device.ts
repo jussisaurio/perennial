@@ -62,7 +62,6 @@ export function keepOnDevice(userId: string) {
   saveForgetList(forgetList().filter((id) => id !== userId));
 }
 
-/** Empty an open store's queue now (best effort). */
 /** The open store's sync for a user: signing out stops it before the server ends the session. */
 const openSyncs = new Map<string, () => void>();
 
@@ -80,6 +79,7 @@ export function stopSyncNow(userId: string): boolean {
   return !!stop;
 }
 
+/** Empty an open store's queue now (best effort). */
 export async function clearOutboxNow(userId: string) {
   try {
     await openOutboxes.get(userId)?.();

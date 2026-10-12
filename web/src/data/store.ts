@@ -49,6 +49,8 @@ function makeCollection<T extends object>(table: string, getKey: (row: T) => str
       url: `${location.origin}/api/shape`,
       params: { table },
       signal: sync,
+      // The abort reaches the stream, but not a prefetch it already chained: refuse new requests too.
+      fetchClient: (input, init) => (sync.aborted ? Promise.reject(new DOMException("sync stopped", "AbortError")) : fetch(input, init)),
       parser: { timestamptz: (v: string) => v },
       // Signed out, or signed in as someone else: this store is being replaced. Stop quietly.
       onError: (e) => {
