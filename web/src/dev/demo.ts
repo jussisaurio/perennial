@@ -7,6 +7,7 @@ import { fsrs } from "../core/scheduler";
 import { ensureUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
 import { ApiError, postWrite } from "../data/http";
+import { memKey } from "../data/learner";
 import { rng } from "../lib/seed";
 
 async function post(mutations: unknown[]) {
@@ -39,7 +40,7 @@ export async function seedDemo(lang: "es" | "de", count: number, days = 90): Pro
       const grade: Grade = x < 0.06 ? 1 : x < 0.16 ? 2 : x < 0.92 ? 3 : 4;
       log.push({ ts: Math.round(ts), grade });
       mutations.push({ type: "review.insert", row: { id: crypto.randomUUID(), lang, word_id: w.id, skill: "read", grade, kind: "review", reviewed_at: new Date(ts).toISOString(), duration_ms: 2500 + Math.round(r() * 5000) } });
-      const st = replay(fsrs, log, 0.9, `${w.id}:read`)!;
+      const st = replay(fsrs, log, 0.9, memKey(w.id, "read"))!;
       ts = st.due + (st.due - ts) * r() * 0.3;
     }
   });

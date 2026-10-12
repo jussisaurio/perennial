@@ -16,7 +16,6 @@ import { plural, relTime } from "./format";
 import { wordsEmptyLine } from "../content/voice";
 
 type Filter = "all" | WordState | "suspended" | "mine";
-type Lexeme = Word;
 const SKILL_ORDER = ["read", "listen", "write"];
 
 export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; adding: boolean; onAdd: () => void; onBack: () => void }) {
@@ -29,7 +28,7 @@ export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; add
  * scrolls as fast as one of 10. Rows measure themselves: an open word detail
  * is taller than a closed row.
  */
-function VirtualWords<T extends { l: Lexeme }>({ rows, render }: { rows: T[]; render: (row: T) => ReactNode }) {
+function VirtualWords<T extends { l: Word }>({ rows, render }: { rows: T[]; render: (row: T) => ReactNode }) {
   const list = useRef<HTMLUListElement>(null);
   const [offset, setOffset] = useState(0);
   // Banners above the list can appear later, so keep the offset current. It
@@ -59,7 +58,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
   useShortcut("/", () => search.current?.focus());
   const [filter, setFilter] = useState<Filter>("all");
   const [open, setOpen] = useState<string | null>(null);
-  const [deleted, setDeleted] = useState<Lexeme | null>(null);
+  const [deleted, setDeleted] = useState<Word | null>(null);
   useEffect(() => {
     if (!deleted) return;
     const t = setTimeout(() => setDeleted(null), 7000);
@@ -67,8 +66,8 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
   }, [deleted]);
   const rows = useMemo(() => {
     if (!learner) return [];
-    const byLex = new Map<string, MemoryRow[]>();
-    for (const m of learner.memories) byLex.set(m.lexemeId, [...(byLex.get(m.lexemeId) ?? []), m]);
+    const byWord = new Map<string, MemoryRow[]>();
+    for (const m of learner.memories) byWord.set(m.wordId, [...(byWord.get(m.wordId) ?? []), m]);
     const needle = q.trim().toLocaleLowerCase();
     // "New" lists what comes next from the course; the other filters, what you have grown.
     // Every word not started yet, paused ones too: the course in learning order, then your own words.
@@ -77,7 +76,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
         ...courseOrder(learner.deck).map((w) => learner.words.get(w.id)!),
         ...[...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => a.rank - b.rank),
       ]
-        .filter((w) => w && !byLex.get(w.id)?.some((m) => m.reps > 0))
+        .filter((w) => w && !byWord.get(w.id)?.some((m) => m.reps > 0))
         .slice(0, 500);
     // Words from your own texts, newest first (user words are ranked in the order added).
     const mine = () => [...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => b.rank - a.rank);
@@ -85,7 +84,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
     return base
       .filter((l) => l.status !== "ignored")
       .map((l) => {
-        const mem = byLex.get(l.id) ?? [];
+        const mem = byWord.get(l.id) ?? [];
         return { l, mem, state: wordState(mem.find((m) => m.skill === "read")) };
       })
       .filter(({ l, state }) => {
@@ -136,7 +135,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
                   ))}
               </span>
             </button>
-            {open === l.id && learner && <WordDetail learner={learner} lexeme={l} memory={mem} onDeleted={() => setDeleted(l)} />}
+            {open === l.id && learner && <WordDetail learner={learner} word={l} memory={mem} onDeleted={() => setDeleted(l)} />}
           </>
         )}
       />
@@ -230,18 +229,18 @@ function RewriteButton({ learner, word, label }: { learner: Learner; word: Word;
   );
 }
 
-function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; lexeme: Lexeme; memory: MemoryRow[]; onDeleted: () => void }) {
+function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; word: Word; memory: MemoryRow[]; onDeleted: () => void }) {
   const store = useStore();
   const now = useNow();
-  const examples = learner.sentences(lexeme.id);
-  const mine = lexeme.source === "user";
-  const [gloss, setGloss] = useState(lexeme.gloss);
-  const [notes, setNotes] = useState(lexeme.notes ?? "");
+  const examples = learner.sentences(word.id);
+  const mine = word.source === "user";
+  const [gloss, setGloss] = useState(word.gloss);
+  const [notes, setNotes] = useState(word.notes ?? "");
   const [saved, setSaved] = useState(false);
   const save = async () => {
-    if (!mine || (gloss === lexeme.gloss && notes === (lexeme.notes ?? ""))) return;
+    if (!mine || (gloss === word.gloss && notes === (word.notes ?? ""))) return;
     await store.write(() =>
-      store.collections.user_word.update(lexeme.id, (d) => {
+      store.collections.user_word.update(word.id, (d) => {
         d.gloss = gloss;
         d.notes = notes || null;
       }),
@@ -249,7 +248,7 @@ function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; 
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
-  const paused = lexeme.status === "paused";
+  const paused = word.status === "paused";
 
   return (
     <div className="detail">
@@ -266,7 +265,7 @@ function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; 
           </label>
         </div>
       ) : (
-        lexeme.notes && <p className="muted small">{lexeme.notes}</p>
+        word.notes && <p className="muted small">{word.notes}</p>
       )}
       {memory.some((m) => m.reps > 0) ? (
         <ul className="schedule">
@@ -283,7 +282,7 @@ function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; 
       ) : (
         <p className="muted small">Not started. It will come in a session as a new word.</p>
       )}
-      {memory.some((m) => m.reps > 0) && <SchedulingDetails memory={memory} reviews={learner.reviewsByWord.get(lexeme.id) ?? []} now={now} />}
+      {memory.some((m) => m.reps > 0) && <SchedulingDetails memory={memory} reviews={learner.reviewsByWord.get(word.id) ?? []} now={now} />}
       <ul className="examples">
         {examples.map((e) => {
           const by = authorLabel(e);
@@ -300,16 +299,16 @@ function WordDetail({ learner, lexeme, memory, onDeleted }: { learner: Learner; 
           );
         })}
       </ul>
-      <RewriteButton learner={learner} word={lexeme} label="Write new sentences" />
+      <RewriteButton learner={learner} word={word} label="Write new sentences" />
       <div className="row">
-        <button className="secondary" title="Paused words do not appear in sessions until you resume them" onClick={() => void setWordStatus(store, lexeme.id, paused ? "active" : "paused")}>
+        <button className="secondary" title="Paused words do not appear in sessions until you resume them" onClick={() => void setWordStatus(store, word.id, paused ? "active" : "paused")}>
           {paused ? "Resume" : "Pause"}
         </button>
         <button
           className="ghost"
           onClick={() => {
-            if (mine) void store.write(() => store.collections.user_word.delete(lexeme.id));
-            else void setWordStatus(store, lexeme.id, "ignored");
+            if (mine) void store.write(() => store.collections.user_word.delete(word.id));
+            else void setWordStatus(store, word.id, "ignored");
             onDeleted();
           }}
         >

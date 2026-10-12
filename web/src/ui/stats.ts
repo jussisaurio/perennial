@@ -1,5 +1,5 @@
 import { DAY_MS } from "../core/fsrs";
-import { wordState, type Learner } from "../data/learner";
+import { readMemory, wordState, type Learner } from "../data/learner";
 
 export interface CourseStats {
   known: number;
@@ -15,7 +15,7 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
   let known = 0;
   let learning = 0;
   for (const w of l.words.values()) {
-    const st = wordState(l.memory.get(`${w.id}:read`));
+    const st = wordState(readMemory(l, w.id));
     if (st === "known") known++;
     else if (st === "learning") learning++;
   }

@@ -8,7 +8,7 @@ import { fsrs as scheduler } from "../core/scheduler";
 import { language } from "../content/languages";
 import { locate } from "../content/text";
 import { hash32 } from "../lib/seed";
-import { memKey, recordReview, undoReview, useLearner, useStore, wordState, type Learner, type Sentence, type Word } from "../data/learner";
+import { readMemory, recordReview, undoReview, useLearner, useStore, wordState, type Learner, type Sentence, type Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
@@ -18,20 +18,17 @@ import { courseStats } from "./stats";
 import { useKeys } from "./useShortcut";
 import { track } from "../observability";
 
-type Lexeme = Word;
-type Example = Sentence;
-
 interface Card {
   task: Task;
-  lexeme: Lexeme;
-  example?: Example;
+  word: Word;
+  example?: Sentence;
   /** Reading-memory stability and whether the word counts as known, for its plant. */
   s: number;
   known: boolean;
 }
 
 /** Pick the sentence the learner has seen least, so no two reviews look the same. */
-function chooseExample(l: Learner, wordId: string): Example | undefined {
+function chooseExample(l: Learner, wordId: string): Sentence | undefined {
   const examples = l.sentences(wordId);
   if (!examples.length) return undefined;
   const seen = new Map<string, number>();
@@ -88,7 +85,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   const serial = useRef(0);
   // One entry per card answered, so Undo can revert what that answer recorded.
   // Each entry keeps the card's word and sentence, so Undo shows exactly that card again.
-  const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; lexemeId: string; example?: Example }[]>([]);
+  const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; wordId: string; example?: Sentence }[]>([]);
 
   const start = useCallback(
     async (mins: number) => {
@@ -102,7 +99,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       const p = plan({
         now: Date.now(),
         budgetMs: mins * 60_000,
-        memories: memories.filter((m) => !suspended.has(m.lexemeId)),
+        memories: memories.filter((m) => !suspended.has(m.wordId)),
         fresh,
         fsrs: scheduler,
         newToday: newWordsToday(l),
@@ -121,7 +118,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   );
 
   /** Show the next card. `again`: the card being undone, so it comes back with the same sentence. */
-  const advance = async (r: Runner, again?: { lexemeId: string; example?: Example }) => {
+  const advance = async (r: Runner, again?: { wordId: string; example?: Sentence }) => {
     stopSpeaking();
     const now = clock.current.tick(Date.now());
     const task = r.next(now);
@@ -132,20 +129,20 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       return;
     }
     const l = live.current!;
-    const lexeme = l.words.get(task.lexemeId);
-    if (!lexeme) {
+    const word = l.words.get(task.wordId);
+    if (!word) {
       // The word is gone (deleted on another device): pass over it, and keep it out of Undo.
       r.skip();
       return advance(r);
     }
-    const example = again?.lexemeId === lexeme.id ? again.example : chooseExample(l, lexeme.id);
-    const read = l.memory.get(memKey(lexeme.id, "read"));
+    const example = again?.wordId === word.id ? again.example : chooseExample(l, word.id);
+    const read = readMemory(l, word.id);
     shownAt.current = clock.current.elapsed;
     serial.current++;
     setDone(false);
     // A focused button from the last card would also receive Space/Enter.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    setCard({ task, lexeme, example, s: read?.reps ? read.s : 0, known: wordState(read) === "known" });
+    setCard({ task, word, example, s: read?.reps ? read.s : 0, known: wordState(read) === "known" });
   };
 
   // Plan once, as soon as the learner has loaded. Later changes (every answer
@@ -231,32 +228,32 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
 
   const record = async (runner: Runner, card: Card, grade: Grade | null, opts: { alreadyKnown?: boolean }) => {
     const ms = Math.min(clock.current.tick(Date.now()) - shownAt.current, 60_000);
-    const { task, lexeme, example } = card;
+    const { task, word, example } = card;
     if (task.kind === "intro") {
       counts.current.intros++;
-      pop(lexeme.lemma, 0, false);
-      const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: lexeme.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
+      pop(word.lemma, 0, false);
+      const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: word.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       if (opts.alreadyKnown) flash("OK. No quick check now. You will see this word again in about a week.");
-      setUndoStack((s) => [...s, { reviewId, review: false, intro: true, lexemeId: lexeme.id, example }]);
+      setUndoStack((s) => [...s, { reviewId, review: false, intro: true, wordId: word.id, example }]);
     } else if (grade) {
       // Tests of words planted this session aren't "watering" an existing plant.
       const counted = !task.isNew;
       if (counted) counts.current.reviews++;
       counts.current.answers++;
-      const fresh = !practised.current.has(lexeme.id);
-      practised.current.add(lexeme.id);
-      const reviewId = recordReview(store, { lang, word_id: lexeme.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms), sentence_id: example?.id ?? null });
+      const fresh = !practised.current.has(word.id);
+      practised.current.add(word.id);
+      const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms), sentence_id: example?.id ?? null });
       if (grade >= 3) {
         // The new review shows up in the learner on the next render; let it land first.
         setTimeout(() => {
-          const read = live.current?.memory.get(memKey(lexeme.id, "read"));
-          pop(lexeme.lemma, read?.s ?? 0, wordState(read) === "known");
+          const read = live.current ? readMemory(live.current, word.id) : undefined;
+          pop(word.lemma, read?.s ?? 0, wordState(read) === "known");
         }, 0);
       }
       const retry = runner.report(task, { grade });
       if (grade === 1) flash(forgotLine(retry));
-      setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? lexeme.id : undefined, lexemeId: lexeme.id, example }]);
+      setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example }]);
     } else {
       // Passed over without an answer ("Can't listen now"): nothing to undo, so
       // Undo steps back over this card to the last answer.
@@ -302,7 +299,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
       {card && !done && (
         <div className="card-plant" key={`plant-${serial.current}`} aria-hidden="true">
-          <WordPlant word={card.lexeme.lemma} s={card.s} known={card.known} size={76} />
+          <WordPlant word={card.word.lemma} s={card.s} known={card.known} size={76} />
         </div>
       )}
       {pops.map((p) => (
@@ -364,15 +361,15 @@ function Kicker({ kind }: { kind: keyof typeof KICKERS }) {
   );
 }
 
-function Meaning({ lexeme }: { lexeme: Lexeme }) {
+function Meaning({ word }: { word: Word }) {
   return (
     <div className="meaning">
       <div>
-        <strong>{lexeme.lemma}</strong>
-        {lexeme.pos && <span className="pos">{lexeme.pos}</span>}
-        {lexeme.gloss}
+        <strong>{word.lemma}</strong>
+        {word.pos && <span className="pos">{word.pos}</span>}
+        {word.gloss}
       </div>
-      {lexeme.notes && <div className="muted small">{lexeme.notes}</div>}
+      {word.notes && <div className="muted small">{word.notes}</div>}
     </div>
   );
 }
@@ -382,14 +379,14 @@ function Actions({ children }: { children: ReactNode }) {
 }
 
 function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
-  const { lexeme, example } = card;
-  const play = () => void speakAll(example ? [lexeme.lemma, example.text] : [lexeme.lemma], tag);
+  const { word, example } = card;
+  const play = () => void speakAll(example ? [word.lemma, example.text] : [word.lemma], tag);
   // The sentence follows the word; leaving the card cuts both off, so it never plays over the next one.
   useEffect(() => {
     play();
     return stopSpeaking;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lexeme.lemma, example, tag]);
+  }, [word.lemma, example, tag]);
   const isNew = () => onDone(null);
   const knewIt = () => onDone(null, { alreadyKnown: true });
   useKeys({ " ": isNew, Enter: isNew, n: isNew, k: knewIt, r: play });
@@ -397,13 +394,13 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
     <main className="card">
       <Kicker kind="intro" />
       <div className="word">
-        {lexeme.lemma} <Speaker text={lexeme.lemma} tag={tag} />
+        {word.lemma} <Speaker text={word.lemma} tag={tag} />
       </div>
       <div className="gloss">
-        {lexeme.pos && <span className="pos">{lexeme.pos}</span>}
-        {lexeme.gloss}
+        {word.pos && <span className="pos">{word.pos}</span>}
+        {word.gloss}
       </div>
-      {lexeme.notes && <p className="hint">{lexeme.notes}</p>}
+      {word.notes && <p className="hint">{word.notes}</p>}
       {example && (
         <div className="example">
           <p className="sentence" lang={tag}>
@@ -434,7 +431,7 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
 }
 
 function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS }) {
-  const { lexeme, example } = card;
+  const { word, example } = card;
   const [revealed, setRevealed] = useState(false);
   const revealedAt = useRef(0);
   const reveal = () => {
@@ -446,7 +443,7 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
   const grade = (g: Grade) => {
     if (Date.now() - revealedAt.current >= GUARD_MS) onDone(g);
   };
-  const audioText = example?.text ?? lexeme.lemma;
+  const audioText = example?.text ?? word.lemma;
   const play = () => void speak(audioText, tag);
   useEffect(() => {
     if (listen) void speak(audioText, tag);
@@ -462,14 +459,14 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
   // Grades are about the word; on a listening card that means "did I catch it".
   const [no, yes] = listen ? ["Did not understand", "Understood"] : ["I forgot", "I remembered"];
   return (
-    <main className="card" data-lemma={lexeme.lemma}>
+    <main className="card" data-lemma={word.lemma}>
       <Kicker kind={kicker} />
       <p className="prompt">
         {listen ? (
           "Listen. What does the sentence mean?"
         ) : (
           <>
-            What does <b lang={tag}>{example?.cloze || lexeme.lemma}</b> mean?
+            What does <b lang={tag}>{example?.cloze || word.lemma}</b> mean?
           </>
         )}
       </p>
@@ -489,13 +486,13 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
           {revealed && <Speaker text={example.text} tag={tag} slow />}
         </p>
       ) : (
-        <div className="word">{lexeme.lemma}</div>
+        <div className="word">{word.lemma}</div>
       )}
       {revealed ? (
         <>
           <div className="reveal">
             {example && <p className="translation">{example.translation}</p>}
-            <Meaning lexeme={lexeme} />
+            <Meaning word={word} />
           </div>
           <Actions>
             <button className="fail" onClick={() => grade(1)}>
@@ -524,8 +521,8 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
 }
 
 function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; lang: string; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS }) {
-  const { lexeme, example } = card;
-  const target = example?.cloze ?? lexeme.lemma;
+  const { word, example } = card;
+  const target = example?.cloze ?? word.lemma;
   const [value, setValue] = useState("");
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -540,7 +537,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
     const v = check(value, target, lang);
     checkedAt.current = Date.now();
     setVerdict(v);
-    void speak(example?.text ?? lexeme.lemma, tag);
+    void speak(example?.text ?? word.lemma, tag);
   };
 
   return (
@@ -553,10 +550,10 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
           <p className="sentence" lang={tag}>
             <Highlight text={example.text} part={example.cloze} blank={!verdict} />
           </p>
-          <p className="hint">Meaning: {lexeme.gloss}</p>
+          <p className="hint">Meaning: {word.gloss}</p>
         </>
       ) : (
-        <div className="word">{lexeme.gloss}</div>
+        <div className="word">{word.gloss}</div>
       )}
       <form
         onSubmit={(e) => {
@@ -596,7 +593,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
               Correct answer: <strong>{target}</strong>
             </span>
           )}
-          <Meaning lexeme={lexeme} />
+          <Meaning word={word} />
         </div>
       )}
       <Actions>

@@ -14,7 +14,7 @@ import { z } from "zod";
 import { PRICES, type Config } from "./config";
 import { HttpError } from "./http";
 import { log } from "./log";
-import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenLexeme } from "./prompts";
+import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenWord } from "./prompts";
 import { LIMITS } from "./sync";
 
 /** "2026-10": credits and the spend budget reset each calendar month (UTC). */
@@ -24,19 +24,19 @@ export const period = (d = new Date()) => d.toISOString().slice(0, 7);
 
 // The model sees the /api/write limits as hints (structured outputs can't
 // enforce string lengths, and a zod .max() would fail the whole answer over
-// one long note). fitLexeme/fitExample then hold every item to them.
+// one long note). fitWord/fitSentence then hold every item to them.
 const str = (maxLength: number) => z.string().meta({ maxLength });
-const ExampleOut = z.object({ text: str(LIMITS.text), translation: str(LIMITS.translation), cloze: str(LIMITS.cloze) });
-const LexemeOut = z.object({
+const SentenceOut = z.object({ text: str(LIMITS.text), translation: str(LIMITS.translation), cloze: str(LIMITS.cloze) });
+const WordOut = z.object({
   lemma: str(LIMITS.lemma),
   gloss: str(LIMITS.gloss),
   pos: str(LIMITS.pos),
   forms: z.array(str(LIMITS.form)).meta({ maxItems: LIMITS.forms }),
   notes: str(LIMITS.notes),
-  examples: z.array(ExampleOut),
+  examples: z.array(SentenceOut),
 });
-const WordsOut = z.object({ words: z.array(LexemeOut) });
-const ExamplesOut = z.object({ examples: z.array(ExampleOut.extend({ lemma: str(LIMITS.lemma) })) });
+const WordsOut = z.object({ words: z.array(WordOut) });
+const SentencesOut = z.object({ examples: z.array(SentenceOut.extend({ lemma: str(LIMITS.lemma) })) });
 
 /** Required text that doesn't fit is dropped (null): cutting a gloss or a sentence would change what it says. */
 const fits = (s: string, max: number) => {
@@ -44,15 +44,15 @@ const fits = (s: string, max: number) => {
   return t && t.length <= max ? t : null;
 };
 
-function fitExample<E extends z.infer<typeof ExampleOut>>(e: E): E | null {
+function fitSentence<E extends z.infer<typeof SentenceOut>>(e: E): E | null {
   const text = fits(e.text, LIMITS.text), translation = fits(e.translation, LIMITS.translation), cloze = fits(e.cloze, LIMITS.cloze);
   return text && translation && cloze ? { ...e, text, translation, cloze } : null;
 }
 
 /** A word /api/write would refuse, or one with no usable sentence, is dropped (and not charged). Notes and pos are cut short. */
-function fitLexeme(w: z.infer<typeof LexemeOut>): GenLexeme | null {
+function fitWord(w: z.infer<typeof WordOut>): GenWord | null {
   const lemma = fits(w.lemma, LIMITS.lemma), gloss = fits(w.gloss, LIMITS.gloss);
-  const examples = w.examples.map(fitExample).filter((e) => e !== null);
+  const examples = w.examples.map(fitSentence).filter((e) => e !== null);
   if (!lemma || !gloss || !examples.length) return null;
   const forms = w.forms.map((f) => f.trim()).filter((f) => f && f.length <= LIMITS.form).slice(0, LIMITS.forms);
   const notes = w.notes.trim();
@@ -204,7 +204,7 @@ export class AIService {
     const words = await this.spend(userId, input.items.length, async () => {
       const p = minePrompt(LANGUAGE[input.lang], "English", input.items, input.known);
       const out = await this.generate(userId, "mine", WordsOut, p.system, p.user);
-      const value = out.words.map(fitLexeme).filter((w) => w !== null).slice(0, input.items.length);
+      const value = out.words.map(fitWord).filter((w) => w !== null).slice(0, input.items.length);
       return { value, items: value.length };
     });
     return { words, credits: await this.credits(userId), model: this.config.anthropic.model };
@@ -214,8 +214,8 @@ export class AIService {
   async examples(userId: string, input: z.infer<typeof ExamplesIn>) {
     const examples = await this.spend(userId, input.words.length, async () => {
       const p = moreExamplesPrompt(LANGUAGE[input.lang], "English", input.words, input.known);
-      const out = await this.generate(userId, "examples", ExamplesOut, p.system, p.user);
-      const value = out.examples.map((e) => fitExample({ ...e, lemma: e.lemma.trim() })).filter((e) => e !== null);
+      const out = await this.generate(userId, "examples", SentencesOut, p.system, p.user);
+      const value = out.examples.map((e) => fitSentence({ ...e, lemma: e.lemma.trim() })).filter((e) => e !== null);
       return { value, items: new Set(value.map((e) => e.lemma)).size };
     });
     return { examples, credits: await this.credits(userId), model: this.config.anthropic.model };

@@ -7,8 +7,8 @@ import type { MemoryRow } from "../data/learner";
 import type { Skill } from "../data/rows";
 
 export type Task =
-  | { kind: "intro"; lexemeId: string }
-  | { kind: "review"; lexemeId: string; skill: Skill; isNew?: boolean; retry?: boolean };
+  | { kind: "intro"; wordId: string }
+  | { kind: "review"; wordId: string; skill: Skill; isNew?: boolean; retry?: boolean };
 
 interface Costs {
   intro: number; // ms for intro + its follow-up test
@@ -23,7 +23,7 @@ export interface PlanInput {
   now: number;
   budgetMs: number;
   memories: MemoryRow[];
-  /** Not-yet-introduced lexemes, best first. */
+  /** Not-yet-introduced words, best first. */
   fresh: string[];
   fsrs: FSRS;
   costs?: Costs;
@@ -57,23 +57,23 @@ export function plan(input: PlanInput): Plan {
   // One skill per word per session: practising "listen" right after "read" for
   // the same word mostly measures short-term memory. A skill never practised
   // yet has no memory to save, so it never competes with real reviews.
-  const byLexeme = new Map<string, { m: MemoryRow; r: number }>();
+  const byWord = new Map<string, { m: MemoryRow; r: number }>();
   const unlocked = new Map<string, MemoryRow>();
   for (const m of memories) {
     if (m.reps === 0) {
-      if (!unlocked.has(m.lexemeId)) unlocked.set(m.lexemeId, m);
+      if (!unlocked.has(m.wordId)) unlocked.set(m.wordId, m);
       continue;
     }
     if (m.due > horizon) continue;
     const r = fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s);
-    const cur = byLexeme.get(m.lexemeId);
-    if (!cur || r < cur.r) byLexeme.set(m.lexemeId, { m, r });
+    const cur = byWord.get(m.wordId);
+    if (!cur || r < cur.r) byWord.set(m.wordId, { m, r });
   }
 
   // Triage order: items still likely to be recalled first. A word at R=0.85
   // is saved cheaply today; one at R=0.3 is mostly gone and costs the same
   // to relearn tomorrow. This is what makes a week-long break painless.
-  const due = [...byLexeme.values()].sort((a, b) => b.r - a.r);
+  const due = [...byWord.values()].sort((a, b) => b.r - a.r);
   const dueCost = due.reduce((sum, { m }) => sum + costs[m.skill], 0);
 
   // New words fill the time left over. Keep a trickle (1–2) coming even during
@@ -89,12 +89,12 @@ export function plan(input: PlanInput): Plan {
   // that have no real review in this session.
   const spare = free - newCount * costs.intro;
   const newSkills = [...unlocked.values()]
-    .filter((m) => !byLexeme.has(m.lexemeId))
+    .filter((m) => !byWord.has(m.wordId))
     .slice(0, Math.max(0, Math.min(maxNewSkills, Math.floor(spare / costs.write))));
 
-  const reviews: Task[] = due.map(({ m }) => ({ kind: "review", lexemeId: m.lexemeId, skill: m.skill }));
-  const intros: Task[] = fresh.slice(0, newCount).map((lexemeId) => ({ kind: "intro", lexemeId }));
-  const skills: Task[] = newSkills.map((m) => ({ kind: "review", lexemeId: m.lexemeId, skill: m.skill, isNew: true }));
+  const reviews: Task[] = due.map(({ m }) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
+  const intros: Task[] = fresh.slice(0, newCount).map((wordId) => ({ kind: "intro", wordId }));
+  const skills: Task[] = newSkills.map((m) => ({ kind: "review", wordId: m.wordId, skill: m.skill, isNew: true }));
 
   // Interleave: spread intros through the first part of the session so new
   // material doesn't all land at the end (and get cut off by the timer).
@@ -175,14 +175,14 @@ export class Session {
     if (task.kind === "intro") {
       if (!outcome.alreadyKnown) {
         this.followUps.push({
-          task: { kind: "review", lexemeId: task.lexemeId, skill: "read", isNew: true },
+          task: { kind: "review", wordId: task.wordId, skill: "read", isNew: true },
           at: this.served + FOLLOW_UP_GAP,
         });
       }
       return false;
     }
     if (outcome.grade === 1) {
-      const key = `${task.lexemeId}:${task.skill}`;
+      const key = `${task.wordId}:${task.skill}`;
       const n = this.retries.get(key) ?? 0;
       if (n < MAX_RETRIES) {
         this.retries.set(key, n + 1);

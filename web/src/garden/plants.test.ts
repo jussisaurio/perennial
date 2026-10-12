@@ -64,7 +64,7 @@ describe("garden plants", () => {
 
   test("the learner's plants use the shared stage, dots and order", () => {
     const now = Date.now();
-    const row = (id: string, skill: MemoryRow["skill"], s: number, reps: number): MemoryRow => ({ key: `${id}:${skill}`, courseId: "", lexemeId: id, skill, s, d: 5, lastTs: now, due: now, reps, lapses: 0 });
+    const row = (id: string, skill: MemoryRow["skill"], s: number, reps: number): MemoryRow => ({ key: `${id}:${skill}`, wordId: id, skill, s, d: 5, lastTs: now, due: now, reps, lapses: 0 });
     const memories = [row("w2", "read", 9, 1), row("w1", "read", 9, 2), row("w1", "listen", 8, 2), row("w1", "write", 8, 1), row("w0", "read", 0, 0)];
     const l = {
       words: new Map(words.map((w) => [w.id, { ...w, source: "deck", status: "active" }])),

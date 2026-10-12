@@ -1,7 +1,7 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { deriveMemory, wordState, type Learner, type MemoryRow, type Word } from "../data/learner";
+import { deriveMemory, readMemory, wordState, type Learner, type MemoryRow, type Word } from "../data/learner";
 import type { ReviewRow } from "../data/rows";
 import {
   learnerFacts,
@@ -51,7 +51,7 @@ export interface LearnerVisitors {
 export function knownAt(reviews: readonly ReviewRow[], t: number, retention: number, resolve: (id: string) => string, words: { has: (id: string) => boolean }): number {
   const before = reviews.filter((r) => r.skill === "read" && Date.parse(r.reviewed_at) < t);
   let n = 0;
-  for (const m of deriveMemory(before, retention, resolve)) if (m.skill === "read" && words.has(m.lexemeId) && wordState(m) === "known") n++;
+  for (const m of deriveMemory(before, retention, resolve)) if (m.skill === "read" && words.has(m.wordId) && wordState(m) === "known") n++;
   return n;
 }
 
@@ -64,7 +64,7 @@ export function knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, 
   const nouns: string[] = [];
   const lemmas = new Set<string>();
   for (const w of words)
-    if (wordState(memory.get(`${w.id}:read`)) === "known") {
+    if (wordState(readMemory({ memory }, w.id)) === "known") {
       all.push(w.lemma);
       if (w.pos === "noun") nouns.push(w.lemma);
       lemmas.add(w.lemma.toLowerCase());

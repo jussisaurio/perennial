@@ -42,9 +42,8 @@ export interface Word {
 
 /** Derived from reviews; never stored or synced. `reps === 0` means unlocked but not yet practised. */
 export interface MemoryRow {
-  key: string; // `${lexemeId}:${skill}`
-  courseId: string;
-  lexemeId: string;
+  key: string; // `${wordId}:${skill}`
+  wordId: string;
   skill: Skill;
   s: number;
   d: number;
@@ -81,6 +80,11 @@ export function recall(m: MemoryRow, now = Date.now()): number {
 }
 
 export const memKey = (wordId: string, skill: Skill) => `${wordId}:${skill}`;
+
+/** A word's reading memory, which decides its state and its plant. */
+export function readMemory<M>(l: { memory: { get: (key: string) => M | undefined } }, wordId: string): M | undefined {
+  return l.memory.get(memKey(wordId, "read"));
+}
 
 // ---------- the store in React ----------
 
@@ -149,7 +153,7 @@ export function deriveMemory(reviews: ReviewRow[], retention: number, resolve: (
   for (const [key, g] of groups) {
     const st = replay(fsrs, g.list, retention, key);
     if (!st) continue;
-    const row: MemoryRow = { key, courseId: "", lexemeId: g.wordId, skill: g.skill, ...st };
+    const row: MemoryRow = { key, wordId: g.wordId, skill: g.skill, ...st };
     rows.push(row);
     if (g.skill === "read") read.set(g.wordId, row);
   }
@@ -158,7 +162,7 @@ export function deriveMemory(reviews: ReviewRow[], retention: number, resolve: (
     if (r.reps < 2) continue;
     for (const skill of ["listen", "write"] as const) {
       if (r.s >= UNLOCK[skill] && !groups.has(memKey(wordId, skill))) {
-        rows.push({ key: memKey(wordId, skill), courseId: "", lexemeId: wordId, skill, s: 0, d: 0, lastTs: r.lastTs, due: r.lastTs, reps: 0, lapses: 0 });
+        rows.push({ key: memKey(wordId, skill), wordId, skill, s: 0, d: 0, lastTs: r.lastTs, due: r.lastTs, reps: 0, lapses: 0 });
       }
     }
   }
@@ -216,7 +220,7 @@ export function useLearner(lang: string | undefined): Learner | null {
       reviewsByWord.set(id, [...(reviewsByWord.get(id) ?? []), r]);
     }
     // Reviews for words this build doesn't know (a newer deck on another device) are kept, not shown.
-    const memories = deriveMemory(langReviews, course.retention, resolve).filter((m) => words.has(m.lexemeId));
+    const memories = deriveMemory(langReviews, course.retention, resolve).filter((m) => words.has(m.wordId));
     const memory = new Map(memories.map((m) => [m.key, m]));
 
     const sentencesBy = new Map<string, Sentence[]>();
@@ -229,7 +233,7 @@ export function useLearner(lang: string | undefined): Learner | null {
       ...(sentencesBy.get(wordId) ?? []),
     ];
 
-    const started = new Set(memories.map((m) => m.lexemeId));
+    const started = new Set(memories.map((m) => m.wordId));
     const studied = [...words.values()].filter((w) => started.has(w.id) || w.source === "user" || w.status === "queued" || w.status === "paused");
     const fresh = () => {
       const open = (w: Word) => !started.has(w.id) && w.status !== "ignored" && w.status !== "paused" && sentences(w.id).length > 0;

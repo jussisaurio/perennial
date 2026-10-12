@@ -1,18 +1,18 @@
 // Prompts for Perennial AI (personal extras). The course itself is static decks.
 
-export interface GenExample {
+export interface GenSentence {
   text: string;
   translation: string;
   cloze: string;
 }
 
-export interface GenLexeme {
+export interface GenWord {
   lemma: string;
   gloss: string;
   pos: string;
   forms: string[];
   notes?: string;
-  examples: GenExample[];
+  examples: GenSentence[];
 }
 
 /** Bump when a prompt changes, so ai_request rows show which version wrote what. */
