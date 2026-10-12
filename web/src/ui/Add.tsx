@@ -176,7 +176,7 @@ function MineText({ learner }: { learner: Learner }) {
             <div className="credit-note">
               <p className="small">
                 You selected {needAI.length} words that are not in the course, but you have only {me.credits.left} AI {me.credits.left === 1 ? "word" : "words"} left this month.{" "}
-                {me.credits.left > 0 ? `Select ${needAI.length - me.credits.left} fewer, or ` : ""}wait until {resetDate()}.
+                {me.credits.left > 0 ? `Select ${needAI.length - me.credits.left} fewer, or wait until ${resetDate()}.` : `Wait until ${resetDate()}.`}
               </p>
             </div>
           )}

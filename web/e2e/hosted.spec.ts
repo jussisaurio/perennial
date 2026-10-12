@@ -38,6 +38,13 @@ test("words from a text use AI words; the limit is clear before anything is sent
   await expect(page.getByText(/Added 6 words/)).toBeVisible();
   await expectServerRows(page, "user_word", 6);
 
+  // None left: the note says when they come back, as a sentence of its own.
+  await page.reload();
+  await openAdd(page);
+  await page.getByPlaceholder(/Paste .* text here/).fill("ciervo");
+  await page.locator(".reader .tok", { hasText: "ciervo" }).click();
+  await expect(page.getByText(/you have only 0 AI words left this month\. Wait until /)).toBeVisible();
+
   // Your own words are easy to find again (newest first; one batch shares a time).
   await page.getByRole("tab", { name: "Words" }).click();
   await page.getByRole("combobox").selectOption("mine");
