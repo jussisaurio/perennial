@@ -49,3 +49,36 @@ test("past the monthly budget, AI pauses for everyone and says until when", asyn
   expect((await tight.me(cookie)).credits.used).toBe(0); // nothing charged
   await tight.stop();
 });
+
+test("parallel requests can't spend more than the allowance", async () => {
+  const cookie = await t.signIn(unique("burst"));
+  // 25 credits, 6 requests of 5 words at once: at most 5 can be granted.
+  const batch = (n: number) => Array.from({ length: 5 }, (_, i) => item(`p${n}x${i}`));
+  const all = await Promise.all(Array.from({ length: 6 }, (_, n) => t.call("/api/ai/mine", { lang: "es", items: batch(n), known: [] }, cookie)));
+  const granted = all.filter((r) => r.status === 200).reduce((sum, r) => sum + r.body.words.length, 0);
+  expect(granted).toBeLessThanOrEqual(25);
+  expect(all.filter((r) => r.status === 402).length).toBeGreaterThanOrEqual(1);
+  expect((await t.me(cookie)).credits.used).toBe(granted);
+});
+
+test("AI output is held to the /api/write limits: long notes are cut, words that can't fit are dropped and not charged", async () => {
+  const cookie = await t.signIn(unique("long"));
+  const r = await t.call("/api/ai/mine", { lang: "es", items: [item("longnote"), item("longgloss"), item("gato")], known: [] }, cookie);
+  expect(r.status).toBe(200);
+  expect(r.body.words.map((w: { lemma: string }) => w.lemma)).toEqual(["longnote", "gato"]);
+  expect(r.body.words[0].notes.length).toBeLessThanOrEqual(300);
+  expect(r.body.credits.used).toBe(2);
+  // What came back is accepted by /api/write.
+  const w = r.body.words[0];
+  const saved = await t.write(cookie, [{ type: "user_word.upsert", row: { id: crypto.randomUUID(), lang: "es", lemma: w.lemma, gloss: w.gloss, pos: w.pos, forms: w.forms, notes: w.notes } }]);
+  expect(saved.status).toBe(200);
+});
+
+test("a failed model call gives the credits back", async () => {
+  const broken = await startApp({ anthropic: { apiKey: "test-key", baseURL: "http://localhost:1", model: "claude-haiku-4-5" } });
+  const cookie = await broken.signIn(unique("refund"));
+  const r = await broken.call("/api/ai/mine", { lang: "es", items: [item("lobo")], known: [] }, cookie);
+  expect(r.status).toBe(502);
+  expect((await broken.me(cookie)).credits.used).toBe(0);
+  await broken.stop();
+});

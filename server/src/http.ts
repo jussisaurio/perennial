@@ -71,7 +71,13 @@ export function securityHeaders(connect: string[], https: boolean, turnstile = f
  * a 404: the old client then reloads instead of parsing HTML as JavaScript.
  */
 export async function serveStatic(dir: string, pathname: string): Promise<Response> {
-  const rel = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, "");
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return new Response("bad request", { status: 400 }); // malformed percent-encoding, e.g. /%E0
+  }
+  const rel = normalize(decoded).replace(/^(\.\.[/\\])+/, "");
   const file = Bun.file(join(dir, rel === "/" ? "index.html" : rel));
   if (rel !== "/" && (await file.exists())) {
     const immutable = rel.startsWith("/assets/") || rel.startsWith("/decks/");

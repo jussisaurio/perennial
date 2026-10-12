@@ -15,23 +15,56 @@ import { PRICES, type Config } from "./config";
 import { HttpError } from "./http";
 import { log } from "./log";
 import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenLexeme } from "./prompts";
+import { LIMITS } from "./sync";
 
 /** "2026-10": credits and the spend budget reset each calendar month (UTC). */
 export const period = (d = new Date()) => d.toISOString().slice(0, 7);
 
 // ---------- model output schemas (structured outputs guarantee the shape) ----------
 
-const ExampleOut = z.object({ text: z.string(), translation: z.string(), cloze: z.string() });
+// The model sees the /api/write limits as hints (structured outputs can't
+// enforce string lengths, and a zod .max() would fail the whole answer over
+// one long note). fitLexeme/fitExample then hold every item to them.
+const str = (maxLength: number) => z.string().meta({ maxLength });
+const ExampleOut = z.object({ text: str(LIMITS.text), translation: str(LIMITS.translation), cloze: str(LIMITS.cloze) });
 const LexemeOut = z.object({
-  lemma: z.string(),
-  gloss: z.string(),
-  pos: z.string(),
-  forms: z.array(z.string()),
-  notes: z.string(),
+  lemma: str(LIMITS.lemma),
+  gloss: str(LIMITS.gloss),
+  pos: str(LIMITS.pos),
+  forms: z.array(str(LIMITS.form)).meta({ maxItems: LIMITS.forms }),
+  notes: str(LIMITS.notes),
   examples: z.array(ExampleOut),
 });
 const WordsOut = z.object({ words: z.array(LexemeOut) });
-const ExamplesOut = z.object({ examples: z.array(ExampleOut.extend({ lemma: z.string() })) });
+const ExamplesOut = z.object({ examples: z.array(ExampleOut.extend({ lemma: str(LIMITS.lemma) })) });
+
+/** Required text that doesn't fit is dropped (null): cutting a gloss or a sentence would change what it says. */
+const fits = (s: string, max: number) => {
+  const t = s.trim();
+  return t && t.length <= max ? t : null;
+};
+
+function fitExample<E extends z.infer<typeof ExampleOut>>(e: E): E | null {
+  const text = fits(e.text, LIMITS.text), translation = fits(e.translation, LIMITS.translation), cloze = fits(e.cloze, LIMITS.cloze);
+  return text && translation && cloze ? { ...e, text, translation, cloze } : null;
+}
+
+/** A word /api/write would refuse, or one with no usable sentence, is dropped (and not charged). Notes and pos are cut short. */
+function fitLexeme(w: z.infer<typeof LexemeOut>): GenLexeme | null {
+  const lemma = fits(w.lemma, LIMITS.lemma), gloss = fits(w.gloss, LIMITS.gloss);
+  const examples = w.examples.map(fitExample).filter((e) => e !== null);
+  if (!lemma || !gloss || !examples.length) return null;
+  const forms = w.forms.map((f) => f.trim()).filter((f) => f && f.length <= LIMITS.form).slice(0, LIMITS.forms);
+  const notes = w.notes.trim();
+  return {
+    lemma,
+    gloss,
+    pos: w.pos.trim().slice(0, LIMITS.pos),
+    forms,
+    notes: notes.length > LIMITS.notes ? `${notes.slice(0, LIMITS.notes - 1)}…` : notes || undefined,
+    examples,
+  };
+}
 
 // ---------- request schemas (untrusted input from the app) ----------
 
@@ -50,8 +83,6 @@ export const ExamplesIn = z.object({
   words: z.array(z.object({ lemma: short(60), gloss: short(120), seen: z.array(short(400)).max(8) })).min(1).max(8),
   known: z.array(short(40)).max(400),
 });
-
-const toGen = (w: z.infer<typeof LexemeOut>): GenLexeme => ({ ...w, notes: w.notes.trim() || undefined });
 
 export class AIService {
   private readonly client: Anthropic;
@@ -79,14 +110,34 @@ export class AIService {
     return { used, limit, left: Math.max(0, limit - used), period: period() };
   }
 
-  private async charge(userId: string, credits: number) {
-    await this.sql`insert into ai_usage (user_id, period, used) values (${userId}, ${period()}, ${credits})
-      on conflict (user_id, period) do update set used = ai_usage.used + excluded.used`;
+  /**
+   * Takes `n` credits up front, in one statement, so parallel requests can't
+   * all pass a check and then all spend.
+   */
+  private async reserve(userId: string, n: number, at: string) {
+    await this.sql`insert into ai_usage (user_id, period, used) values (${userId}, ${at}, 0) on conflict (user_id, period) do nothing`;
+    const ok = await this.sql`update ai_usage set used = used + ${n}
+      where user_id = ${userId} and period = ${at} and used + ${n} <= ${this.config.freeCredits} returning used`;
+    if (!ok.length) throw new HttpError(402, "out_of_credits", { ...(await this.credits(userId)), needed: n });
   }
 
-  private async requireCredits(userId: string, cost: number) {
-    const c = await this.credits(userId);
-    if (c.left < cost) throw new HttpError(402, "out_of_credits", { ...c, needed: cost });
+  private async refund(userId: string, n: number, at: string) {
+    if (n > 0) await this.sql`update ai_usage set used = greatest(0, used - ${n}) where user_id = ${userId} and period = ${at}`;
+  }
+
+  /** Reserve `cost`, run the task, keep one credit per item it returned (at most `cost`), give back the rest. */
+  private async spend<T>(userId: string, cost: number, task: () => Promise<{ value: T; items: number }>): Promise<T> {
+    const at = period();
+    await this.reserve(userId, cost, at);
+    let kept = 0;
+    try {
+      this.rateLimit(userId);
+      const r = await task();
+      kept = Math.min(cost, r.items);
+      return r.value;
+    } finally {
+      await this.refund(userId, cost - kept, at);
+    }
   }
 
   async spentThisMonth(): Promise<number> {
@@ -148,23 +199,25 @@ export class AIService {
 
   // ---------- tasks ----------
 
-  /** Words the learner picked from their own text. One credit per word. */
+  /** Words the learner picked from their own text. One credit per word returned. */
   async mine(userId: string, input: z.infer<typeof MineIn>) {
-    await this.requireCredits(userId, input.items.length);
-    this.rateLimit(userId);
-    const p = minePrompt(LANGUAGE[input.lang], "English", input.items, input.known);
-    const out = await this.generate(userId, "mine", WordsOut, p.system, p.user);
-    await this.charge(userId, input.items.length);
-    return { words: out.words.map(toGen), credits: await this.credits(userId), model: this.config.anthropic.model };
+    const words = await this.spend(userId, input.items.length, async () => {
+      const p = minePrompt(LANGUAGE[input.lang], "English", input.items, input.known);
+      const out = await this.generate(userId, "mine", WordsOut, p.system, p.user);
+      const value = out.words.map(fitLexeme).filter((w) => w !== null).slice(0, input.items.length);
+      return { value, items: value.length };
+    });
+    return { words, credits: await this.credits(userId), model: this.config.anthropic.model };
   }
 
-  /** New sentences for words the learner chose. One credit per word. */
+  /** New sentences for words the learner chose. One credit per word that got any. */
   async examples(userId: string, input: z.infer<typeof ExamplesIn>) {
-    await this.requireCredits(userId, input.words.length);
-    this.rateLimit(userId);
-    const p = moreExamplesPrompt(LANGUAGE[input.lang], "English", input.words, input.known);
-    const out = await this.generate(userId, "examples", ExamplesOut, p.system, p.user);
-    await this.charge(userId, input.words.length);
-    return { examples: out.examples, credits: await this.credits(userId), model: this.config.anthropic.model };
+    const examples = await this.spend(userId, input.words.length, async () => {
+      const p = moreExamplesPrompt(LANGUAGE[input.lang], "English", input.words, input.known);
+      const out = await this.generate(userId, "examples", ExamplesOut, p.system, p.user);
+      const value = out.examples.map((e) => fitExample({ ...e, lemma: e.lemma.trim() })).filter((e) => e !== null);
+      return { value, items: new Set(value.map((e) => e.lemma)).size };
+    });
+    return { examples, credits: await this.credits(userId), model: this.config.anthropic.model };
   }
 }

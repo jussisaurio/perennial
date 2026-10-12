@@ -15,6 +15,17 @@ test("writes return the Postgres transaction id; review inserts are idempotent",
   expect((await t.sql`select count(*)::int as n from review where user_id = ${id}`)[0].n).toBe(1);
 });
 
+test("writes say whether anything changed, so the client doesn't wait for an echo that won't come", async () => {
+  const cookie = await t.signIn(unique("noop"));
+  const r = review(W.i);
+  expect((await t.write(cookie, [r])).body).toMatchObject({ changed: true });
+  const again = await t.write(cookie, [r]); // a retried insert
+  expect(again.status).toBe(200);
+  expect(again.body).toMatchObject({ changed: false });
+  expect(typeof again.body.txid).toBe("number");
+  expect((await t.write(cookie, [{ type: "review.delete", id: crypto.randomUUID() }])).body.changed).toBe(false);
+});
+
 test("a learner can never touch another learner's rows", async () => {
   const alice = await t.signIn(unique("alice"));
   const mallory = await t.signIn(unique("mallory"));
