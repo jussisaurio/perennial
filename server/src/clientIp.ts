@@ -24,8 +24,10 @@ export function clientIp(h: Headers, headers: string[]): string | null {
     if (name === "cf-connecting-ip") {
       const peer = h.get("x-real-ip")?.trim();
       if (!peer) continue;
+      // Cloudflare always sends cf-connecting-ip; without it, the edge's own IP (one shared bucket).
       return fromCloudflare(peer) ? (h.get(name)?.trim() || peer) : peer;
     }
+    // The first value: Railway's edge overwrites X-Forwarded-For, so it can't be prepended to.
     const v = h.get(name)?.split(",")[0]?.trim();
     if (v) return v;
   }

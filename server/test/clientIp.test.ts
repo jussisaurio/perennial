@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { afterAll } from "bun:test";
 import { CLIENT_IP_HEADER, clientIp, fromCloudflare, withClientIp } from "../src/clientIp";
+import { startApp, stopMockLLM } from "./helpers";
 
 const behindCloudflare = ["cf-connecting-ip"];
 const h = (o: Record<string, string>) => new Headers(o);
@@ -33,4 +35,15 @@ describe("client IP for rate limits (#101)", () => {
     const none = new Request("https://perennial.example/", { headers: { [CLIENT_IP_HEADER]: "1.1.1.1" } });
     expect(withClientIp(none, ["x-real-ip"]).headers.get(CLIENT_IP_HEADER)).toBe(""); // unknown: not the client's claim
   });
+});
+
+// The wiring: Better Auth (rate limits, the IP stored on sessions) reads the computed IP.
+const t = await startApp({ clientIpHeaders: behindCloudflare });
+afterAll(async () => (await t.stop(), stopMockLLM()));
+
+test("Better Auth sees the computed IP: a direct request can't choose its own", async () => {
+  const r = await t.call("/api/auth/sign-in/anonymous", {}, undefined, { "x-real-ip": "198.51.100.9", "cf-connecting-ip": "10.9.9.9" });
+  expect(r.status).toBe(200);
+  const [row] = await t.sql`select "ipAddress" from session order by "createdAt" desc limit 1`;
+  expect(row.ipAddress).toBe("198.51.100.9");
 });
