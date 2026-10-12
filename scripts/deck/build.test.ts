@@ -125,7 +125,7 @@ test("wholeWordCount is Unicode aware", () => {
   expect(wholeWordCount("Ella está aquí.", "est")).toBe(0);
 });
 
-test("a sentence's word count ignores spaces at the ends (generate and the flags agree)", () => {
+test("wordCount ignores spaces at the ends and doubled spaces", () => {
   expect(wordCount(" Hola, ¿qué tal? ")).toBe(3);
   expect(wordCount("uno  dos")).toBe(2);
 });
