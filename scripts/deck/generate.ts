@@ -21,7 +21,7 @@ import { join } from "node:path";
 import { SourceWord, isDeckLang, manifestKey } from "../../web/src/deck/schema.ts";
 import { language } from "../../web/src/content/languages.ts";
 import { frequencyListUrl } from "./audit.ts";
-import { MAX_SENTENCE_WORDS, WORDS_PER_FILE, deckDir, flagValue, readSource, sourceFiles, toJson, wholeWordCount } from "./lib.ts";
+import { MAX_SENTENCE_WORDS, WORDS_PER_FILE, deckDir, flagValue, readSource, sourceFiles, toJson, wholeWordCount, wordCount } from "./lib.ts";
 
 if (process.env.CI) {
   console.error("generate.ts calls a paid API and must not run in CI.");
@@ -197,7 +197,7 @@ function problems(w: SourceWord): string[] {
   if (w.pos === "noun" && !w.gender) out.push("noun without gender");
   if (w.pos === "noun" && lang === "es" && w.gender === "n") out.push("Spanish has no neuter nouns");
   for (const s of w.sentences) {
-    if (s.text.split(/\s+/).length > MAX_SENTENCE_WORDS) out.push(`sentence over ${MAX_SENTENCE_WORDS} words: ${s.text}`);
+    if (wordCount(s.text) > MAX_SENTENCE_WORDS) out.push(`sentence over ${MAX_SENTENCE_WORDS} words: ${s.text}`);
     if (wholeWordCount(s.text, s.cloze) !== 1) out.push(`cloze "${s.cloze}" is not exactly once in: ${s.text}`);
   }
   return out;
