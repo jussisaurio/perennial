@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
 import { identify, track } from "./observability";
-import { saveCourse, StoreContext, useCourses, useStore } from "./data/learner";
+import { saveCourse, StoreContext, useCourses, useDeck, useStore } from "./data/learner";
 import { cleanUpForgotten } from "./data/device";
 import { language } from "./content/languages";
 import { reloadNeeded } from "./data/http";
@@ -147,6 +147,20 @@ function ReloadBanner() {
   );
 }
 
+/** The deck could not load and no copy was kept (say, offline before it was ever saved). */
+function DeckFailed({ lang }: { lang: string }) {
+  return (
+    <div className="page narrow deck-failed">
+      <p className="error" role="alert">
+        Could not load the {language(lang).name} words. Check your internet connection, then reload.
+      </p>
+      <button className="primary" onClick={() => location.reload()}>
+        Reload
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const { user, pending } = useUser();
   const [route, go] = useRoute();
@@ -185,6 +199,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const [sessionExtra, setSessionExtra] = useState(false);
   const [startError, setStartError] = useState("");
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
+  const deckFailed = useDeck(course?.lang).failed;
   const store = useStore();
   const choose = (lang: string) => {
     setChosen(lang);
@@ -208,11 +223,14 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
       />
     );
   const lang = course.lang;
+  // Every screen but Settings needs the deck: without it they would wait forever.
+  // The top bar stays, so the learner can still switch language or open Settings.
+  const noDeck = deckFailed && route !== "/settings";
 
-  if (route === "/session")
+  if (route === "/session" && !noDeck)
     return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} extra={sessionExtra} onExit={() => go("/today", { replace: true })} />;
 
-  if (route === "/garden")
+  if (route === "/garden" && !noDeck)
     return (
       <LearnerGardenWalk
         lang={lang}
@@ -272,7 +290,8 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           {startError}
         </p>
       )}
-      {route === "/today" && (
+      {noDeck && <DeckFailed lang={lang} />}
+      {route === "/today" && !noDeck && (
         <Home
           lang={lang}
           onStart={(m, extra = false) => {
@@ -283,7 +302,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           onWalk={() => go("/garden")}
         />
       )}
-      {(route === "/words" || route === "/words/add") && <WordsScreen lang={lang} adding={route === "/words/add"} onAdd={() => go("/words/add")} onBack={() => go("/words")} />}
+      {(route === "/words" || route === "/words/add") && !noDeck && <WordsScreen lang={lang} adding={route === "/words/add"} onAdd={() => go("/words/add")} onBack={() => go("/words")} />}
       {route === "/settings" && <SettingsScreen lang={lang} onSignedOut={() => void signOut()} />}
     </div>
   );

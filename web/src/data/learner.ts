@@ -46,17 +46,27 @@ export function useStore(): Store {
   return s;
 }
 
-export function useDeck(lang: string | undefined): LoadedDeck | null {
+/** A language's deck (null while it loads), and whether it could not load at all (no saved copy either). */
+export function useDeck(lang: string | undefined): { deck: LoadedDeck | null; failed: boolean } {
   const [deck, setDeck] = useState<LoadedDeck | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   useEffect(() => {
     if (!lang) return;
     let alive = true;
-    void loadDeck(lang).then((d) => alive && setDeck(d));
+    loadDeck(lang).then(
+      (d) => {
+        if (!alive) return;
+        setDeck(d);
+        setFailed(null);
+      },
+      // Logged once, where it fails (loadDeck).
+      () => alive && setFailed(lang),
+    );
     return () => {
       alive = false;
     };
   }, [lang]);
-  return deck?.lang === lang ? deck : null;
+  return { deck: deck?.lang === lang ? deck : null, failed: !!lang && failed === lang };
 }
 
 /** The learner's courses, and whether they have loaded: "none yet" is not "none". */
@@ -102,7 +112,8 @@ const userWordToWord = (u: UserWordRow, i: number, status: Word["status"]): Word
 /** Everything the screens need about one language, kept live. Null while loading. */
 export function useLearner(lang: string | undefined): Learner | null {
   const store = useStore();
-  const deck = useDeck(lang);
+  // A deck that fails to load leaves this null: the app shows that error (Main in App.tsx).
+  const { deck } = useDeck(lang);
   const c = store.collections;
   const { data: courses, isReady: r1 } = useLiveQuery((q) => q.from({ c: c.course }));
   const { data: reviews, isReady: r2 } = useLiveQuery((q) => q.from({ r: c.review }));

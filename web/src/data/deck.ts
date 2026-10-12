@@ -61,7 +61,11 @@ export function loadDeck(lang: string): Promise<LoadedDeck> {
   if (!p) {
     p = load(lang);
     memo.set(lang, p);
-    p.catch(() => memo.delete(lang));
+    // Not kept: the next call tries again.
+    p.catch((e) => {
+      memo.delete(lang);
+      console.error(`[deck] ${lang}: could not load`, e);
+    });
   }
   return p;
 }
