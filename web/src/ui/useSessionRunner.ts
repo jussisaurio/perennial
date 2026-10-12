@@ -60,9 +60,11 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
   // Active time only: paused while the tab is hidden or the learner is idle.
   const clock = useRef(new ActiveClock(Date.now()));
   const [active, setActive] = useState(0);
-  const counts = useRef({ reviews: 0, intros: 0, answers: 0 });
+  const counts = useRef({ intros: 0, answers: 0 });
   const [ended, setEnded] = useState<Ended>("time");
+  // Words answered this session, and the new words shown (a seed is planted once it has an answer).
   const practised = useRef(new Set<string>());
+  const introduced = useRef(new Set<string>());
   // Time on a "New to me" card: it records no review, so its time rides on the word's
   // quick check. Otherwise "minutes today" misses it and the day looks unfinished.
   const introMs = useRef(new Map<string, number>());
@@ -70,7 +72,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
   const serial = useRef(0);
   // One entry per card answered, so Undo can revert what that answer recorded.
   // Each entry keeps the card's word and sentence, so Undo shows exactly that card again.
-  const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; wordId: string; example?: Sentence; carried?: number }[]>([]);
+  const [undoStack, setUndoStack] = useState<{ reviewId?: string; intro: boolean; practised?: string; wordId: string; example?: Sentence; carried?: number }[]>([]);
 
   const start = useCallback(
     async (mins: number) => {
@@ -165,9 +167,11 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
       if (!runner.undo()) return;
       setUndoStack((s) => s.slice(0, -1));
       if (last.reviewId) undoReview(store, last.reviewId);
-      if (last.review) counts.current.reviews--;
       if (!last.intro) counts.current.answers--;
-      if (last.intro) counts.current.intros--;
+      if (last.intro) {
+        counts.current.intros--;
+        introduced.current.delete(last.wordId);
+      }
       if (last.practised) practised.current.delete(last.practised);
       // Undoing a quick check gives the intro's time back to the next one; undoing the intro drops it.
       if (last.carried !== undefined) introMs.current.set(last.wordId, last.carried);
@@ -194,16 +198,14 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
     const { task, word, example } = card;
     if (task.kind === "intro") {
       counts.current.intros++;
+      introduced.current.add(word.id);
       pop(word.lemma, 0, false);
       const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: word.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       if (!opts.alreadyKnown) introMs.current.set(word.id, ms);
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       // No note: the button already said what happens ("Back in about a week").
-      setUndoStack((s) => [...s, { reviewId, review: false, intro: true, wordId: word.id, example }]);
+      setUndoStack((s) => [...s, { reviewId, intro: true, wordId: word.id, example }]);
     } else if (grade) {
-      // Tests of words planted this session aren't "watering" an existing plant.
-      const counted = !task.isNew;
-      if (counted) counts.current.reviews++;
       counts.current.answers++;
       const fresh = !practised.current.has(word.id);
       practised.current.add(word.id);
@@ -220,7 +222,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
       }
       const retry = runner.report(task, { grade });
       if (grade === 1) flash(forgotLine(retry));
-      setUndoStack((s) => [...s, { reviewId, review: counted, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
+      setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
     } else {
       // Passed over without an answer ("Can't listen now"): nothing to undo, so
       // Undo steps back over this card to the last answer.
@@ -239,6 +241,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
     /** What this session did so far, for the summary. */
     counts: counts.current,
     practised: practised.current,
+    introduced: introduced.current,
     /** Changes with every card shown, so each card mounts fresh. */
     serial: serial.current,
     canUndo: undoStack.length > 0,

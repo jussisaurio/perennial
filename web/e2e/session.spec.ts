@@ -85,11 +85,10 @@ test("leaving after doing something shows the summary", async ({ page }) => {
   await startSession(page);
   await advance(page, "1");
   await page.getByRole("button", { name: "End session" }).click();
-  await expect(page.locator(".summary h1")).not.toHaveText("Nothing to practice now."); // the headline rotates daily
+  await expect(page.locator(".summary h1")).toHaveText("You saw 1 new word."); // no answer yet, so not planted
   await expect(page.getByText("session paused")).toBeVisible(); // not "complete" when you leave early
-  await expect(page.getByText("new word", { exact: true })).toBeVisible(); // singular
   await page.getByRole("button", { name: /Done/ }).click();
-  await expect(page.getByRole("button", { name: /today's session/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
 });
 
 // #189: minutes are the only unit, so every second counts, the new-word card's too.

@@ -29,3 +29,16 @@ export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = D
 
 /** Everyone practises 5 minutes a day, and 5 more whenever they like. `course.minutes` is no longer used. */
 export const DAILY_MINUTES = 5;
+
+/** What Today offers now: the day's 5 minutes, the rest of them, or (once they are done) 5 more. */
+export function nextChunk(l: Learner, now = Date.now()): { state: "start" | "finish" | "done"; minutes: number } {
+  const dayStart = startOfDay(now);
+  let ms = 0;
+  for (const r of l.reviews) if (Date.parse(r.reviewed_at) >= dayStart) ms += r.duration_ms;
+  const left = DAILY_MINUTES - ms / 60_000;
+  // Under a minute left counts as done: a 1-minute "session" is not worth a button.
+  if (left < 1) return { state: "done", minutes: DAILY_MINUTES };
+  // Half a minute in is a start, not a session to finish.
+  if (ms < 30_000) return { state: "start", minutes: DAILY_MINUTES };
+  return { state: "finish", minutes: Math.round(left) };
+}

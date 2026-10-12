@@ -88,22 +88,9 @@ export function greetingAside(now = new Date()): string | null {
   return daily(["The flowers are closing.", "The lanterns are coming on.", "The garden is getting quiet."], "aside-evening", now);
 }
 
-/** The default start note: the promise first, a garden wink sometimes. */
-export function startNote(now = new Date()): string {
-  return daily(
-    [
-      "Missed days do not pile up. We choose the most useful practice for your time.",
-      "Missed days do not pile up. Plants are patient.",
-      "A few minutes. The garden does the rest.",
-      "Missed days do not pile up. We pick the words that need you most.",
-    ],
-    "start-note",
-    now,
-  );
-}
-
+/** Under "The garden is watered for today.": a quiet wink, never a count or a quota. */
 export function doneTodayNote(now = new Date()): string {
-  return daily(["You did your minutes for today. More practice is a bonus.", "Today is done. The plants are busy growing.", "Extra practice is fine. The plants will not tell anyone."], "done-today", now);
+  return daily(["The plants are busy growing now.", "Extra practice is fine. The plants will not tell anyone.", "The roots grow while you rest.", "The worms are busy under the soil."], "done-today", now);
 }
 
 /** After "I forgot": what happens next, then (sometimes) a kind word. */
@@ -154,6 +141,13 @@ export function wordsEmptyLine(filter: WordsFilter, searching: boolean): string 
 
 /** Under the garden on the first session's summary. */
 export const firstPlantsLine = (n: number) => (n === 1 ? "Your first plant." : `Your first ${n} plants.`);
+
+/** The summary's first line, in the past tense, leaving out a part that is zero: "You planted 3 seeds and watered 21 plants." */
+export function didLine(seeds: number, watered: number): string {
+  const count = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
+  const parts = [seeds > 0 && `planted ${count(seeds, "seed")}`, watered > 0 && `watered ${count(watered, "plant")}`].filter(Boolean);
+  return `You ${parts.join(" and ")}.`;
+}
 
 /** Shown once on the landing page after an account is deleted. */
 export function farewell(lang: string | null): { line: string; wish?: string } {

@@ -1,20 +1,20 @@
 # Perennial — design notes
 
 Perennial is a spaced-repetition app for going from zero to fluent in a language, in
-5–10 minutes a day. It takes Anki's core idea (retrieval practice, scheduled
+5 minutes a day. It takes Anki's core idea (retrieval practice, scheduled
 by a memory model) and drops most of what grew around it.
 
 ## What's wrong with Anki (and what we do instead)
 
 | Anki problem | Source of pain | Perennial |
 |---|---|---|
-| **Backlog after missed days.** A wall of "437 due" after a week off makes people quit. | Due-count queue. You "owe" the app reviews. | **Time-boxed sessions.** You pick "7 minutes"; the app spends them on the highest-value items. There is no due count. Overdue items are sorted so the cheapest saves come first, and new words slow down by themselves when there's a backlog. |
+| **Backlog after missed days.** A wall of "437 due" after a week off makes people quit. | Due-count queue. You "owe" the app reviews. | **Time-boxed sessions.** Every day is 5 minutes, and "Practise 5 more minutes" is always there. The app spends each 5 minutes on the highest-value items. There is no due count. Overdue items are sorted so the cheapest saves come first, and new words slow down by themselves when there's a backlog. |
 | **Boring, grindy reviews.** The same static card 40 times. People memorize the card layout, not the word. | One card = one fixed front/back. | **Memory is per word × skill, not per card.** Each review shows a *different* example sentence for the word (from the static deck, or AI-written on request). Exercises rotate between reading, listening and typing. |
 | **Card creation friction.** Note types, HTML templates, fields, finding sentences, recording audio. | Anki is a generic flashcard engine. Language learning is bolted on through add-ons. | **No card creation for the common case.** Pick a language, and the course is built from a real frequency list (OpenSubtitles). The sentences ship in static decks, drafted with a model and reviewed, using earlier (more frequent) words where possible. Or paste any text and tap the words you don't know. Audio comes from the browser's speech synthesis. |
 | **Recognition-only decks.** Research (Nakata) shows receptive retrieval mostly builds receptive knowledge. | Default "Basic" note type is L2→L1. | **Three skills per word:** *read* (L2 sentence → meaning), *listen* (audio only → meaning), *write* (L1 meaning + cloze → type the word). Writing unlocks once reading is stable. Each skill has its own memory state. |
 | **SM-2 and "ease hell".** Pressing Again repeatedly locks ease at 130%. Learning steps, graduating intervals and easy bonuses confuse people. | 1987 algorithm, with options layered on for 20 years. | **FSRS-6 only.** One setting: desired retention. No learning steps — FSRS models same-day reviews itself. |
 | **4 grading buttons.** Users press Hard when they actually forgot, which breaks FSRS. | | **2 buttons: Forgot / Got it.** Typed exercises are graded automatically. |
-| **Too many options.** Presets, deck hierarchy, filtered decks, burying toggles, gather/sort orders. | | **One course per language. One setting (minutes per day).** Siblings are never shown in the same session. |
+| **Too many options.** Presets, deck hierarchy, filtered decks, burying toggles, gather/sort orders. | | **One course per language, 5 minutes a day, nothing to set up.** Siblings are never shown in the same session. |
 | **Sync: forced one-way "full sync", media that won't sync, last-writer-wins on whole objects.** | Schema-level change counter. Mutable card state is synced as rows. | **Event-sourced sync.** Reviews are an append-only log, so they merge without conflict, and scheduling state is *recomputed* from the log. Other rows have simple, per-table merge rules (newest `updated_at` wins; settings change per column). There is no "full sync". |
 | **Dated Qt UI, AnkiMobile costs $25, AnkiDroid differs.** | Three separate clients. | **One web app.** It runs in the browser, and you can add it to the home screen on phone and desktop. |
 | **No sense of progress.** Stats are dense graphs. | | **A garden that grows.** Every word you study is a plant: it sprouts, buds and blooms once you know it. Today counts the words you know and the words you are learning. |

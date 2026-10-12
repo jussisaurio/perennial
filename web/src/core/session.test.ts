@@ -34,6 +34,7 @@ describe("plan", () => {
     const due = Array.from({ length: 20 }, (_, i) => mem(`d${i}`, "read", 12, 10));
     const p = chunk({ memories: due, fresh: words(40) });
     expect(p.newCount).toBe(5); // (300 s - 20 × 8 s) / 25 s
+    expect(p.due).toBe(20);
     expect(p.queue[0].kind).toBe("review");
     // All 20 due reviews are in, whatever the timer cuts later.
     expect(ids(p.queue).filter((id) => id.startsWith("d"))).toHaveLength(20);
@@ -70,7 +71,7 @@ describe("plan", () => {
     expect(chunk({ budgetMs: 7 * 60_000, memories: some, fresh: ["n1", "n2"] }).newCount).toBe(2);
   });
 
-  test("no stacking: every chunk is sized by its own minutes, and a binge comes back as reviews, not more new words", () => {
+  test("each chunk is sized by its own minutes, and a binge comes back as reviews, not more new words", () => {
     // Chunk after chunk on one day: never more new words than fit in 5 minutes,
     // and words answered in an earlier chunk are not asked again.
     const first = chunk({ fresh: words(100) });
@@ -134,7 +135,7 @@ describe("Session", () => {
       { kind: "intro", wordId: "n" },
       ...["a", "b", "c", "d", "e"].map((id) => ({ kind: "review" as const, wordId: id, skill: "read" as Skill })),
     ];
-    const s = new Session({ queue, newCount: 1 }, 60_000);
+    const s = new Session({ queue }, 60_000);
     const served: string[] = [];
     let t: Task | null;
     while ((t = s.next(served.length * 1000))) {
@@ -147,7 +148,7 @@ describe("Session", () => {
     expect(served).toContain("review:n");
     expect(served.filter((x) => x === "review:a").length).toBe(2);
 
-    const s2 = new Session({ queue, newCount: 1 }, 1000);
+    const s2 = new Session({ queue }, 1000);
     const first = s2.next(0)!;
     s2.report(first, {});
     // Out of time: only the promised test of the introduced word remains.
@@ -162,7 +163,7 @@ describe("Session undo", () => {
       { kind: "intro", wordId: "n" },
       ...["a", "b", "c", "d"].map((id) => ({ kind: "review" as const, wordId: id, skill: "read" as Skill })),
     ];
-    const s = new Session({ queue, newCount: 1 }, 600_000);
+    const s = new Session({ queue }, 600_000);
     const intro = s.next(0)!;
     s.report(intro, {});
     const a = s.next(0)!;
@@ -184,14 +185,14 @@ describe("Session undo", () => {
   });
 
   test("nothing to undo at the start", () => {
-    const s = new Session({ queue: [{ kind: "intro", wordId: "x" }], newCount: 1 }, 1000);
+    const s = new Session({ queue: [{ kind: "intro", wordId: "x" }] }, 1000);
     s.next(0);
     expect(s.undo()).toBe(false);
   });
 
   test("undo steps over a skipped card: answer a, skip l, undo brings back a", () => {
     const queue: Task[] = ["a", "l", "c"].map((id) => ({ kind: "review" as const, wordId: id, skill: (id === "l" ? "listen" : "read") as Skill }));
-    const s = new Session({ queue, newCount: 0 }, 600_000);
+    const s = new Session({ queue }, 600_000);
     const a = s.next(0)!;
     s.report(a, { grade: 1 }); // answered (and its retry scheduled)
     expect(s.next(0)!.wordId).toBe("l");
@@ -211,7 +212,7 @@ describe("Session undo", () => {
 
   test("a skipped first card leaves nothing to undo", () => {
     const queue: Task[] = ["l", "c"].map((id) => ({ kind: "review" as const, wordId: id, skill: "read" as Skill }));
-    const s = new Session({ queue, newCount: 0 }, 600_000);
+    const s = new Session({ queue }, 600_000);
     s.next(0);
     s.skip();
     s.next(0);

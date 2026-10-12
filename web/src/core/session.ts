@@ -32,6 +32,8 @@ export interface PlanInput {
 export interface Plan {
   queue: Task[];
   newCount: number;
+  /** Words due now (step 1): what still needs water today. */
+  due: number;
 }
 
 /** Review items due up to this far ahead count as due now, since the next session may be a day away. */
@@ -131,7 +133,7 @@ export function plan(input: PlanInput): Plan {
     queue.push(...again.map((m): Task => ({ kind: "review", wordId: m.wordId, skill: m.skill })));
   }
 
-  return { queue, newCount };
+  return { queue, newCount, due: due.length };
 }
 
 /** Each word's first memory in `order`, the words in that order too. */
@@ -169,7 +171,7 @@ export class Session {
   private history: Snapshot[] = [];
   readonly budgetMs: number;
 
-  constructor(plan: Plan, budgetMs: number) {
+  constructor(plan: Pick<Plan, "queue">, budgetMs: number) {
     this.queue = [...plan.queue];
     this.budgetMs = budgetMs;
   }

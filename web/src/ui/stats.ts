@@ -9,7 +9,6 @@ interface CourseStats {
   seeds: number;
   retention30: number | null;
   days: { day: number; reviews: number }[]; // last 30 days
-  minutesToday: number;
 }
 
 export function courseStats(l: Learner, now = Date.now()): CourseStats {
@@ -46,6 +45,5 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
     const idx = 29 - Math.floor((startOfToday + DAY_MS - 1 - r.ts) / DAY_MS);
     if (idx >= 0 && idx < 30) days[idx].reviews++;
   }
-  const minutesToday = reviews.filter((r) => r.ts >= startOfToday).reduce((s, r) => s + r.duration_ms, 0) / 60_000;
-  return { known, learning, seeds: l.fresh().length, retention30: total >= 20 ? pass / total : null, days, minutesToday };
+  return { known, learning, seeds: l.fresh().length, retention30: total >= 20 ? pass / total : null, days };
 }

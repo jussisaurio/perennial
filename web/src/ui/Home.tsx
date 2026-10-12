@@ -8,9 +8,10 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
-import { DAILY_MINUTES } from "../data/practice";
+import { DAILY_MINUTES, nextChunk, sessionPlan } from "../data/practice";
+import { mayListen } from "./speech";
 import { Settling } from "./Settling";
-import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
+import { doneTodayNote, greetingAside, restDayLine } from "../content/voice";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { learnerVisitors } from "./visitors";
@@ -41,22 +42,19 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const day = today(new Date(now));
   const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
+  const chunk = useMemo(() => (learner ? nextChunk(learner, now) : null), [learner, now]);
+  // The same planner the session uses, for what the day's minutes are for.
+  const plan = useMemo(() => (learner && chunk ? sessionPlan(learner, chunk.minutes, mayListen(language(code).tag), now) : null), [learner, chunk, now, code]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
   // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
   const aside = visitors?.milestone ?? visitors?.welcome ?? greetingAside();
-  if (!learner || !stats) return <Settling />;
+  if (!learner || !stats || !chunk || !plan) return <Settling />;
   const course = learner.course;
   const ready = stats.seeds;
   const started = stats.known + stats.learning;
-  // Every chunk is planned on its own with no daily cap, so it must stay 5 minutes:
-  // a 20-minute chunk would plant 48 new words at once.
-  const doneToday = stats.minutesToday >= DAILY_MINUTES;
-  // Picked up partway through the day: offer the rest, not the full session again.
-  const left = Math.max(0, Math.round(DAILY_MINUTES - stats.minutesToday));
-  const partial = stats.minutesToday >= 0.5 && !doneToday;
-  const sessionMinutes = partial ? Math.max(2, left) : DAILY_MINUTES;
+  const start = () => onStart(chunk.minutes);
   const max = Math.max(1, ...stats.days.map((d) => d.reviews));
   const lang = language(code).name;
 
@@ -87,15 +85,28 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
       )}
 
       <div className="start-row">
-        <Shortcut keyName="Enter" run={() => onStart(sessionMinutes)} />
-        <button className="start" onClick={() => onStart(sessionMinutes)} aria-keyshortcuts="Enter">
+        {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. */}
+        {chunk.state === "done" && <p className="watered">{plan.due ? `${plural(plan.due, "plant")} still ${plan.due === 1 ? "needs" : "need"} water.` : "The garden is watered for today."}</p>}
+        <Shortcut keyName="Enter" run={start} />
+        <button className="start" onClick={start} aria-keyshortcuts="Enter">
           <span className="clock" aria-hidden="true">
             <SeedIcon size={20} />
           </span>
-          {doneToday ? "Practice more" : partial ? "Finish today's session" : "Start today's session"}
-          <small>{sessionMinutes} min</small>
+          {chunk.state === "done" ? `Practise ${DAILY_MINUTES} more minutes` : chunk.state === "finish" ? `Finish today's ${DAILY_MINUTES} minutes` : `Today's ${DAILY_MINUTES} minutes`}
+          {chunk.state === "finish" && <small>· {chunk.minutes} min</small>}
         </button>
-        <p className="start-note">{started === 0 ? `${ready} words are ready, most common first. Each word has example sentences and audio.` : doneToday ? doneTodayNote() : partial ? "" : startNote()}</p>
+        <p className="start-note">
+          {chunk.state === "done"
+            ? doneTodayNote()
+            : started === 0
+              ? `${ready} seeds are ready to plant, the most common words first. Each word has example sentences and audio.`
+              : ready === 0
+                ? "Every seed in the course is planted. Today is for growing them."
+                : plan.newCount > 2
+                  ? "Water your plants, then plant a few new seeds."
+                  : "Today is mostly watering. Missed days do not pile up."}
+        </p>
+        {user && course.minutes !== DAILY_MINUTES && <FiveMinutesNote userId={user.id} />}
       </div>
 
       {started > 0 && (
@@ -145,6 +156,30 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
       )}
     </div>
   );
+}
+
+/**
+ * For learners who chose another daily length before it was 5 minutes for everyone
+ * (`course.minutes`): what changed, said once per user on this device.
+ */
+function FiveMinutesNote({ userId }: { userId: string }) {
+  const key = `perennial-five-minutes-note:${userId}`;
+  const [show] = useState(() => {
+    try {
+      return localStorage.getItem(key) === null;
+    } catch {
+      return false; // storage blocked: a once-only note cannot know it was shown, so skip it
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, "seen");
+    } catch {
+      /* storage blocked: see above */
+    }
+  }, [key]);
+  if (!show) return null;
+  return <p className="muted small five-minutes-note">Perennial is now 5 minutes at a time. Practise more whenever you like: your plants will drink it up.</p>;
 }
 
 /** Enter starts the session. */

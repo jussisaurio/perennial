@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import {
+  didLine,
   doneTodayNote,
   EMPTY_WALK,
   firstPlantsLine,
@@ -10,7 +11,6 @@ import {
   reservedStake,
   restDayLine,
   SLOW_DEVICE_NOTICE,
-  startNote,
   summaryHeadline,
   WORM_LINE,
   wordsEmptyLine,
@@ -23,7 +23,7 @@ const FILTERS: WordsFilter[] = ["all", "known", "learning", "new", "suspended", 
 const days = Array.from({ length: 60 }, (_, d) => new Date(2026, 8, 1 + d, [8, 14, 20, 23][d % 4]));
 const english = [
   ...Object.values(PLANT_LINES).flat(),
-  ...days.flatMap((d) => [loadingLine(d), startNote(d), doneTodayNote(d), forgotLine(true, d), greetingAside(d) ?? ""]),
+  ...days.flatMap((d) => [loadingLine(d), doneTodayNote(d), forgotLine(true, d), greetingAside(d) ?? ""]),
   ...days.map((d) => summaryHeadline("es", d)).flatMap((h) => (h.small ? [h.small] : [h.line])),
   ...Object.values(EMPTY_WALK),
   WORM_LINE,
@@ -60,4 +60,7 @@ test("quiet copy: the clear part comes first, the wink after (#58, #68)", () => 
   expect(reservedStake("French", "fr").local).toBeUndefined();
   expect(firstPlantsLine(1)).toBe("Your first plant.");
   expect(firstPlantsLine(5)).toBe("Your first 5 plants.");
+  expect(didLine(3, 21)).toBe("You planted 3 seeds and watered 21 plants.");
+  expect(didLine(1, 0)).toBe("You planted 1 seed.");
+  expect(didLine(0, 1)).toBe("You watered 1 plant.");
 });
