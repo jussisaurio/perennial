@@ -2,8 +2,9 @@ Copyright (c) 2026 Jussi Saurio. All rights reserved.
 
 The course content in this folder (words, glosses, notes, example sentences
 and their translations) is not covered by the MIT license of the code. You may
-read it here, but you may not copy or publish it elsewhere without permission.
+read it and fork it on GitHub, as GitHub's terms allow, but you may not copy,
+publish or use it elsewhere without permission.
 
-Word frequency ranks come from FrequencyWords by Hermit Dave
-(https://github.com/hermitdave/FrequencyWords), built from OpenSubtitles 2018,
-licensed CC BY-SA 4.0.
+The order of the words is based on word frequencies from FrequencyWords by
+Hermit Dave (https://github.com/hermitdave/FrequencyWords), built from
+OpenSubtitles 2018, licensed CC BY-SA 4.0.

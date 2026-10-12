@@ -32,7 +32,7 @@ Postgres + Electric         learner data; Electric streams each learner's rows t
 - **Observability in the browser** (`web/src/observability.ts`): Sentry error reports and privacy-first PostHog events (no cookies, no autocapture, no session replay). Both are off unless their keys are set at build time.
 - **Client** (`web/src/data/`): each synced table is a TanStack DB collection fed by an Electric shape, kept in SQLite (OPFS) on the device where the browser allows it. `@journeyapps/wa-sqlite` is pinned to 1.7.2 because `@tanstack/browser-db-sqlite-persistence` declares (and tests against) `^1.4.1`; move to 2.x only when that peer range does. Writes apply on the device at once, wait in an offline queue (IndexedDB), and go to `/api/write` when there is a connection. Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
 
-License: the code is [MIT](LICENSE). The course content in `decks/` is not ([decks/LICENSE](decks/LICENSE)). Word frequency data: [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave, from OpenSubtitles 2018, CC BY-SA 4.0.
+License: the code is [MIT](LICENSE). The course content in `decks/` is not ([decks/LICENSE](decks/LICENSE)). The order of the words is based on word frequencies from [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018, CC BY-SA 4.0).
 
 Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Railway + PlanetScale Postgres). Data model: [docs/schema.md](docs/schema.md). Deck content process: [docs/decks.md](docs/decks.md). Design and research: [DESIGN.md](DESIGN.md).
 
