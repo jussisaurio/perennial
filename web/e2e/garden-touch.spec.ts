@@ -31,7 +31,7 @@ test("iPhone: a tapped plant's card stays open, and its link opens the 3D garden
   await expect(card).toBeVisible();
   const word = (await card.locator("strong").textContent())!;
   // Before #113 the lift closed the card, so this click fell through to the plant beneath.
-  const link = (await card.locator("button").boundingBox())!;
+  const link = (await card.getByRole("button", { name: /View in garden/ }).boundingBox())!;
   await fingerTap(page, link.x + link.width / 2, link.y + link.height / 2);
   await expect(page.getByRole("dialog", { name: `The plant for ${word}` })).toBeVisible({ timeout: 20_000 });
 });
