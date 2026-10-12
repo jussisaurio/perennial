@@ -15,6 +15,8 @@ const LANTERN_GLASS_Y = 1.02;
 /** How far away a visitor's tag shows on approach (m). The gnome adds its own rules (gnomeTag). */
 const TAG_RANGE: Partial<Record<VisitorId, number>> = { heron: 2.5, gnome: 7 };
 
+type SpriteMesh = THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
+
 /** One visitor's sprite. `hit`: the drawn part's middle height and half width and height, as fractions of the cell. `top`: where its tag sits. */
 interface VisitorSprite {
   v: VisitorView;
@@ -25,7 +27,7 @@ interface VisitorSprite {
   h: number;
   hit: [number, number, number];
   top: number;
-  mesh: THREE.Mesh;
+  mesh: SpriteMesh;
   pos: THREE.InstancedBufferAttribute;
   uv: THREE.InstancedBufferAttribute;
 }
@@ -39,7 +41,7 @@ export interface VisitorWorld {
   /** Seconds since the garden opened. */
   elapsed: () => number;
   /** A one-instance, camera-facing sprite of `size` metres from `tex`, showing the strip u..u+uw. */
-  sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => THREE.Mesh;
+  sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => SpriteMesh;
 }
 
 /**
@@ -185,7 +187,7 @@ export class SceneVisitors {
         [cell, size] = [T.VISITOR_CELL.bird, 0.5];
       }
       const mesh = this.world.sprite(tex, x, y, z, cell * cellU, cellU, size);
-      this.mats.add(mesh.material as THREE.ShaderMaterial);
+      this.mats.add(mesh.material);
       this.world.scene.add(mesh);
       const pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
       const uv = mesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
@@ -211,7 +213,7 @@ export class SceneVisitors {
     for (const s of this.sprites) {
       if (s.v.id === "frog" || s.v.id === "moth") s.mesh.visible = dark;
       // The moth is always in its lantern's light.
-      if (s.v.id === "moth") (s.mesh.material as THREE.ShaderMaterial).uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
+      if (s.v.id === "moth") s.mesh.material.uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
       if (s.v.id === "gnome") this.gnomeCell(s);
     }
     if (this.gnome.glow) this.gnome.glow.visible = dark;
@@ -356,8 +358,7 @@ export class SceneVisitors {
         const awake = d < 2.4;
         if (awake !== this.catAwake) {
           this.catAwake = awake;
-          s.uv.setX(0, (awake ? T.VISITOR_CELL.catAwake : T.VISITOR_CELL.catAsleep) / T.VISITOR_CELLS);
-          s.uv.needsUpdate = true;
+          this.setCell(s, awake ? T.VISITOR_CELL.catAwake : T.VISITOR_CELL.catAsleep);
         }
       } else if (s.v.id === "bird") {
         const bd = this.bird;
@@ -368,8 +369,7 @@ export class SceneVisitors {
           bd.dz = (s.z - z) * k;
           bd.t = reducedMotion ? 1 : 0;
           if (this.tapped?.id === "bird") this.tapped = null;
-          s.uv.setX(0, T.VISITOR_CELL.birdHop / T.VISITOR_CELLS);
-          s.uv.needsUpdate = true;
+          this.setCell(s, T.VISITOR_CELL.birdHop);
         }
         if (bd.t >= 0 && bd.t < 1) {
           bd.t = Math.min(1, bd.t + dt / 0.7);
@@ -383,8 +383,7 @@ export class SceneVisitors {
           bd.t = -1;
           s.pos.setXYZ(0, s.x, s.y, s.z);
           s.pos.needsUpdate = true;
-          s.uv.setX(0, T.VISITOR_CELL.bird / T.VISITOR_CELLS);
-          s.uv.needsUpdate = true;
+          this.setCell(s, T.VISITOR_CELL.bird);
           s.mesh.visible = true;
         }
       }

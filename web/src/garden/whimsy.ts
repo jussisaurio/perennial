@@ -79,7 +79,7 @@ export function sunflowerFaces(flowerX: number, flowerZ: number, camX: number, c
 export const isSleepyHour = (now: Date = new Date()): boolean => now.getHours() >= 22 || now.getHours() < 5;
 
 /** The verb "to sleep" per course language, for the sleeper's card in the walk. */
-export const SLEEP_VERB: PerLang<string> = { es: "dormir", de: "schlafen" };
+const SLEEP_VERB: PerLang<string> = { es: "dormir", de: "schlafen" };
 
 /**
  * Tonight's sleeper: one blooming plant, picked by the date. The ids are

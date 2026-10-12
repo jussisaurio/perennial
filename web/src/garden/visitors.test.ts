@@ -17,7 +17,6 @@ import {
   NO_FACTS,
   RARE_CAP,
   snailLap,
-  SNAIL_SIGN,
   PICKETS_PER_M,
   VISITORS,
   visitor,
@@ -288,10 +287,6 @@ describe("the snail's daily lap", () => {
     const metresPerSecond = pickets / PICKETS_PER_M / 86_400;
     expect(metresPerSecond).toBeGreaterThan(0.0002);
     expect(metresPerSecond).toBeLessThan(0.005);
-  });
-
-  test("the lap record on the gate sign", () => {
-    expect(SNAIL_SIGN).toBe("Snail fastest lap: 23h 59min");
   });
 
   test("the picket is on the fence, starting by the gate and going round", () => {

@@ -157,9 +157,16 @@ export function sky(s: Sky, stars: boolean): HTMLCanvasElement {
   return c;
 }
 
-/** Two layers of rolling hills with dithered edges, for a ring around the world. */
+/** Rows in the far hills' texture. */
+export const HILL_ROWS = 64;
+/** The two ridges of the far hills, back to front: the row of the middle of each, and its seed. */
+const RIDGES = [
+  { base: 30, seed: 1 },
+  { base: 42, seed: 2 },
+] as const;
+
 /** One layer of the far hills: the ridge's row (0 = top) in each of the texture's 256 columns. */
-export function hillLine(base: number, seed: number): number[] {
+function hillLine(base: number, seed: number): number[] {
   const r = rng(seed);
   const ph = r() * 10;
   return Array.from({ length: 256 }, (_, x) => {
@@ -171,32 +178,34 @@ export function hillLine(base: number, seed: number): number[] {
 
 /** The top of the hills (the higher of the two ridges) per column, as a texture row. Day and night share the shape. */
 export function hillProfile(): number[] {
-  const a = hillLine(30, 1);
-  const b = hillLine(42, 2);
+  const [a, b] = RIDGES.map((r) => hillLine(r.base, r.seed));
   // One pixel above the ridge on even columns (see hills()).
   return a.map((h, x) => Math.min(Math.floor(h), Math.floor(b[x])) - (x % 2 === 0 ? 1 : 0));
 }
 
+/** Two layers of rolling hills with dithered edges, for a ring around the world. */
 export function hills(night: boolean): HTMLCanvasElement {
-  const [c, ctx] = canvas(256, 64);
-  const layers: [string, string, number, number][] = night
+  const [c, ctx] = canvas(256, HILL_ROWS);
+  // Colour and shade for each ridge, in RIDGES order.
+  const colors: [string, string][] = night
     ? [
-        ["#2a3566", "#24305d", 30, 1],
-        ["#1c2a4c", "#182444", 42, 2],
+        ["#2a3566", "#24305d"],
+        ["#1c2a4c", "#182444"],
       ]
     : [
-        ["#9ccfa0", "#8fc595", 30, 1],
-        ["#6fae6a", "#64a160", 42, 2],
+        ["#9ccfa0", "#8fc595"],
+        ["#6fae6a", "#64a160"],
       ];
-  for (const [color, shade, base, seed] of layers) {
+  RIDGES.forEach(({ base, seed }, i) => {
+    const [color, shade] = colors[i];
     const line = hillLine(base, seed);
     for (let x = 0; x < 256; x++) {
       const y0 = Math.floor(line[x]);
-      px(ctx, x, y0, color, 1, 64 - y0);
-      for (let y = y0 + 2; y < 64; y += 3) if ((x + y) % 4 === 0) px(ctx, x, y, shade);
+      px(ctx, x, y0, color, 1, HILL_ROWS - y0);
+      for (let y = y0 + 2; y < HILL_ROWS; y += 3) if ((x + y) % 4 === 0) px(ctx, x, y, shade);
       if (x % 2 === 0) px(ctx, x, y0 - 1, color);
     }
-  }
+  });
   return c;
 }
 
@@ -283,18 +292,26 @@ export function butterfly(hue: number): HTMLCanvasElement {
   return c;
 }
 
-/** A wooden sign board with a label, in a chunky pixel font size. */
-export function sign(label: string): HTMLCanvasElement {
-  const [c, ctx] = canvas(128, 40);
-  px(ctx, 0, 0, "#7a4f2c", 128, 40);
-  px(ctx, 2, 2, "#c99257", 124, 36);
-  px(ctx, 2, 2, "#ddb07a", 124, 2);
-  px(ctx, 2, 20, "#b8834b", 124, 1);
+/** A blank wooden board, w×h: a dark frame, a lit top edge and a seam across the middle. Set up for centred text in dark ink. */
+function board(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const [c, ctx] = canvas(w, h);
+  px(ctx, 0, 0, "#7a4f2c", w, h);
+  px(ctx, 2, 2, "#c99257", w - 4, h - 4);
+  px(ctx, 2, 2, "#ddb07a", w - 4, 2);
+  px(ctx, 2, h / 2, "#b8834b", w - 4, 1);
   ctx.fillStyle = "#3b2414";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  return [c, ctx];
+}
+
+const boardFont = (size: number) => `bold ${size}px ui-monospace, Menlo, monospace`;
+
+/** A wooden sign board with a label, in a chunky pixel font size. */
+export function sign(label: string): HTMLCanvasElement {
+  const [c, ctx] = board(128, 40);
   let size = 16;
-  do ctx.font = `bold ${size}px ui-monospace, Menlo, monospace`;
+  do ctx.font = boardFont(size);
   while (ctx.measureText(label).width > 116 && --size > 7);
   ctx.fillText(label, 64, 21);
   crispText(ctx, 128, 40);
@@ -323,15 +340,8 @@ function crispText(ctx: CanvasRenderingContext2D, w: number, h: number) {
 export function notice(text: string): HTMLCanvasElement {
   const W = 160;
   const H = 64;
-  const [c, ctx] = canvas(W, H);
-  px(ctx, 0, 0, "#7a4f2c", W, H);
-  px(ctx, 2, 2, "#c99257", W - 4, H - 4);
-  px(ctx, 2, 2, "#ddb07a", W - 4, 2);
-  px(ctx, 2, H / 2, "#b8834b", W - 4, 1);
-  ctx.fillStyle = "#3b2414";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  const font = (size: number) => (ctx.font = `bold ${size}px ui-monospace, Menlo, monospace`);
+  const [c, ctx] = board(W, H);
+  const font = (size: number) => (ctx.font = boardFont(size));
   const fits = (lines: string[]) => lines.every((l) => ctx.measureText(l).width <= W - 14);
   // Every way to break the words into one or two lines; keep the one with the biggest text.
   const words = text.split(" ");
@@ -404,7 +414,7 @@ export function marker(): HTMLCanvasElement {
 
 export const ATLAS = 2048;
 /** SVG units per sprite: the same frame for every plant keeps sizes comparable. */
-export const VIEW_W = 100;
+const VIEW_W = 100;
 export const VIEW_H = 200;
 export const LOW_W = 32;
 export const LOW_H = 64;
@@ -624,7 +634,6 @@ export function sunflower(): HTMLCanvasElement {
   return c;
 }
 
-
 // ---- Visitors ---------------------------------------------------------------
 
 /** Visitor cells (32×32 each, standing on the bottom row), in this order. */
@@ -648,7 +657,7 @@ export const VISITOR_CELL = {
   mothOpen: 15,
   mothClosed: 16,
 } as const;
-export const VISITOR_CELLS = 17;
+export const VISITOR_CELLS = Object.keys(VISITOR_CELL).length;
 
 /** The garden visitors in one small atlas (drawn once), in VISITOR_CELL order. */
 export function visitors(): HTMLCanvasElement {
