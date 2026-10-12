@@ -231,7 +231,7 @@ export function useWalkInput({
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
-    // The scene ref lives as long as the screen.
+    // The refs live as long as the screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onExit]);
 

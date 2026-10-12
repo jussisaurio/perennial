@@ -480,7 +480,7 @@ function Summary({
 }) {
   const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
   // Once per summary: an Undo from here changes the counts, but it also leaves the summary.
-  useEffect(() => track("session_finished", { ended, answers: counts.answers, newWords: counts.intros }), []); // eslint-disable-line react-hooks/exhaustive-deps -- once, on open
+  useEffect(() => track("session_finished", { ended, answers: counts.answers, newWords: counts.intros }), []); // eslint-disable-line react-hooks/exhaustive-deps
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   useKeys(useMemo(() => ({ Enter: onExit }), [onExit]));
   const did = counts.answers + counts.intros > 0;
