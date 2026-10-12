@@ -44,6 +44,33 @@ test("a change of user does not clean up data under live queries (#112)", async 
   expect(cleanedUnder).toEqual([]);
 });
 
+// #137: signing out while a table is still loading must not fail it (a 401 from the ended
+// session marked the collection failed, and every live query on it logged an error).
+test("signing out stops syncing first: no failed tables, no 401s", async ({ page }) => {
+  const errors: string[] = [];
+  const unauthorized: string[] = [];
+  page.on("console", (m) => /entered error state|Live Query Error/.test(m.text()) && errors.push(m.text()));
+  page.on("response", (r) => r.url().includes("/api/shape") && r.status() === 401 && unauthorized.push(r.url()));
+  await startCourse(page);
+  await addEmail(page);
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page.getByRole("button", { name: /Start learning/ })).toBeVisible();
+  expect(errors).toEqual([]);
+  expect(unauthorized).toEqual([]);
+});
+
+test("a sign-out that fails reloads, still signed in and syncing", async ({ page }) => {
+  await startCourse(page);
+  const email = await addEmail(page);
+  await page.route("**/api/auth/sign-out", (route) => route.fulfill({ status: 500, json: {} }));
+  const reloaded = page.waitForEvent("load");
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await reloaded;
+  // Sync runs again after the reload (the sign-out had stopped it).
+  await page.waitForResponse((r) => r.url().includes("/api/shape") && r.status() === 200);
+  await expect(page.getByText(email)).toBeVisible();
+});
+
 test("deleting the account removes it, signs out, and says goodbye", async ({ page }) => {
   await startCourse(page);
   await addEmail(page);

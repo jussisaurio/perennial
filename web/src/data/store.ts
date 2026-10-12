@@ -18,7 +18,7 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineExecutor, type LeaderElection, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { sessionUserId } from "./auth";
-import { adopted, adoptedBy, cleanUpForgotten, databaseName, keepOnDevice, outboxName, registerOutbox } from "./device";
+import { adopted, adoptedBy, cleanUpForgotten, databaseName, keepOnDevice, outboxName, registerOutbox, registerSync } from "./device";
 import { ApiError, postWrite } from "./http";
 import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
 
@@ -41,13 +41,14 @@ async function openPersistence(userId: string) {
 /** Bump when a synced table's shape changes: the device copy is dropped and synced again. */
 const SCHEMA_VERSION = 1;
 
-function makeCollection<T extends object>(table: string, getKey: (row: T) => string, persisted: Persistence) {
+function makeCollection<T extends object>(table: string, getKey: (row: T) => string, persisted: Persistence, sync: AbortSignal) {
   const options = electricCollectionOptions<T & Record<string, unknown>>({
     id: table,
     getKey: getKey as (row: T & Record<string, unknown>) => string,
     shapeOptions: {
       url: `${location.origin}/api/shape`,
       params: { table },
+      signal: sync,
       parser: { timestamptz: (v: string) => v },
       // Signed out, or signed in as someone else: this store is being replaced. Stop quietly.
       onError: (e) => {
@@ -146,12 +147,15 @@ export async function createStore(userId: string) {
   await cleanUpForgotten();
   keepOnDevice(userId);
   const persisted = await openPersistence(userId);
+  // Stopped before a sign-out reaches the server (stopSyncNow): a stream still loading
+  // would otherwise get a 401 and mark its collection failed.
+  const sync = new AbortController();
   const collections = {
-    course: makeCollection<CourseRow>("course", (r) => r.lang, persisted),
-    review: makeCollection<ReviewRow>("review", (r) => r.id, persisted),
-    word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, persisted),
-    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, persisted),
-    user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, persisted),
+    course: makeCollection<CourseRow>("course", (r) => r.lang, persisted, sync.signal),
+    review: makeCollection<ReviewRow>("review", (r) => r.id, persisted, sync.signal),
+    word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, persisted, sync.signal),
+    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, persisted, sync.signal),
+    user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, persisted, sync.signal),
   };
   type Table = keyof typeof collections;
 
@@ -204,6 +208,7 @@ export async function createStore(userId: string) {
   });
   await executor.waitForInit();
   const unregister = registerOutbox(userId, () => executor.clearOutbox());
+  const unregisterSync = registerSync(userId, () => sync.abort());
   if (import.meta.env.DEV) (window as unknown as { __store: unknown }).__store = { userId, collections };
 
   /** Apply changes on the device now; send them to the server when possible. */
@@ -228,6 +233,7 @@ export async function createStore(userId: string) {
     pendingWrites: () => executor.getPendingCount(),
     dispose() {
       unregister();
+      unregisterSync();
       writerListeners.clear();
       executor.dispose();
       for (const c of Object.values(collections)) cleanUpWhenUnused(c);
