@@ -16,7 +16,7 @@ by a memory model) and drops most of what grew around it.
 | **4 grading buttons.** Users press Hard when they actually forgot, which breaks FSRS. | | **2 buttons: Forgot / Got it.** Typed exercises are graded automatically. |
 | **Too many options.** Presets, deck hierarchy, filtered decks, burying toggles, gather/sort orders. | | **One course per language. One setting (minutes per day).** Siblings are never shown in the same session. |
 | **Sync: forced one-way "full sync", media that won't sync, last-writer-wins on whole objects.** | Schema-level change counter. Mutable card state is synced as rows. | **Event-sourced sync.** Reviews are an append-only log, so they merge without conflict, and scheduling state is *recomputed* from the log. Other rows have simple, per-table merge rules (newest `updated_at` wins; settings change per column). There is no "full sync". |
-| **Dated Qt UI, AnkiMobile costs $25, AnkiDroid differs.** | Three separate clients. | **One PWA.** It works offline and installs on phone and desktop. |
+| **Dated Qt UI, AnkiMobile costs $25, AnkiDroid differs.** | Three separate clients. | **One web app.** It runs in the browser, and you can add it to the home screen on phone and desktop. |
 | **No sense of progress.** Stats are dense graphs. | | **A garden that grows.** Every word you study is a plant: it sprouts, buds and blooms once you know it. Today counts the words you know and the words you are learning. |
 
 ## Research we lean on
@@ -42,9 +42,9 @@ by a memory model) and drops most of what grew around it.
 
 ```
 decks/<lang>/         static decks (JSON): the shared course, versioned with the code, checked by CI
-web/ (Vite + React + TS PWA)
+web/ (Vite + React + TS)
   core/      pure, tested logic: FSRS, memory from reviews, session planner, answer checking, days
-  data/      TanStack DB collections + Electric shapes, offline write queue, auth, learner model
+  data/      TanStack DB collections + Electric shapes, write queue, auth, learner model
   deck/      deck schema and id resolution (shared with scripts/deck)
   content/   course languages, tokenizer, course order, Perennial's lines
   garden/    the walk-in 3D garden
@@ -68,8 +68,8 @@ The full model is in [docs/schema.md](docs/schema.md). In short:
 
 ### Sync
 
-- **Reads:** Electric streams Postgres changes over HTTP "shapes". The server proxies `/api/shape` and always sets the shape itself: one table, `where user_id = <session user>`. On the client each table is a TanStack DB collection, kept in SQLite (OPFS) where the browser allows it, so the app opens offline.
-- **Writes:** a change applies on the device at once and goes into an offline queue (IndexedDB). The queue sends batches to `POST /api/write`. The server validates each mutation, stamps the session's `user_id`, and applies the batch in one transaction. It returns the transaction id; the client keeps its optimistic rows until Electric streams that transaction back.
+- **Reads:** Electric streams Postgres changes over HTTP "shapes". The server proxies `/api/shape` and always sets the shape itself: one table, `where user_id = <session user>`. On the client each table is a TanStack DB collection in memory, synced again on each start.
+- **Writes:** a change applies on the device at once and goes into a queue (IndexedDB). The queue sends batches to `POST /api/write`. The server validates each mutation, stamps the session's `user_id`, and applies the batch in one transaction. It returns the transaction id; the client keeps its optimistic rows until Electric streams that transaction back.
 - **Merge rules:** reviews are insert-only (`on conflict do nothing`; Undo is a delete); `word_state` changes only when `updated_at` is newer; `course` changes only the columns sent. Times from the future are clamped to the server's time.
 - **Old clients:** writes carry the app version. Below `MIN_CLIENT_VERSION` the server answers "please reload", and the queued writes are kept. Schema changes go expand, then contract.
 - **Accounts:** the first write creates an anonymous user. Signing in with an email code links it to the real account: the server moves the rows in one transaction (newer state wins), then Better Auth deletes the anonymous user.

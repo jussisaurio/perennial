@@ -38,14 +38,12 @@ export function securityHeaders(connect: string[], https: boolean, turnstile = f
   const cf = turnstile ? " https://challenges.cloudflare.com" : "";
   const csp = [
     "default-src 'self'",
-    // The device database (SQLite) runs as WebAssembly.
-    `script-src 'self' 'wasm-unsafe-eval'${cf}`,
+    `script-src 'self'${cf}`,
     // React sets style attributes; the garden sets transforms inline.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    // data: — the device database ships its WebAssembly inline and fetches it.
-    `connect-src 'self' data: ${connect.join(" ")}`.trim(),
+    `connect-src 'self' ${connect.join(" ")}`.trim(),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     `frame-src ${cf ? cf.trim() : "'none'"}`,
@@ -65,10 +63,10 @@ export function securityHeaders(connect: string[], https: boolean, turnstile = f
 
 /**
  * Serve the built web app. Hashed assets are immutable; everything else
- * (index.html, the service worker, the manifest) must revalidate so a deploy
- * reaches users. Unknown paths fall back to index.html (hash routing), but a
- * missing file (a path with an extension, e.g. last release's hashed chunk) is
- * a 404: the old client then reloads instead of parsing HTML as JavaScript.
+ * (index.html, the manifest) must revalidate so a deploy reaches users.
+ * Unknown paths fall back to index.html (hash routing), but a missing file (a
+ * path with an extension, e.g. last release's hashed chunk) is a 404: the old
+ * client then reloads instead of parsing HTML as JavaScript.
  */
 export async function serveStatic(dir: string, pathname: string): Promise<Response> {
   let decoded: string;

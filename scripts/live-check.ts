@@ -43,7 +43,7 @@ const home = await req("/");
 ok(home.status === 200, "home page serves");
 const csp = home.headers.get("content-security-policy") ?? "";
 ok(csp.includes("default-src 'self'") && csp.includes("frame-ancestors 'none'"), "CSP with default-src self and frame-ancestors none");
-ok(!/unsafe-eval'/.test(csp.replace("wasm-unsafe-eval", "")), "CSP has no unsafe-eval (only wasm-unsafe-eval)");
+ok(!csp.includes("unsafe-eval"), "CSP has no unsafe-eval");
 ok((home.headers.get("strict-transport-security") ?? "").includes("max-age"), "HSTS");
 ok(home.headers.get("x-content-type-options") === "nosniff", "nosniff");
 ok((await req("/health")).status === 200, "/health 200");

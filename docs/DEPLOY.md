@@ -275,7 +275,7 @@ Production uses `playperennial.com`, with DNS and the CDN at Cloudflare (Free pl
 
 Better Auth accepts requests only from `APP_URL`. So the server redirects `www` and the Railway domain to `APP_URL` (308, path kept).
 
-The CDN caches the hashed files in `/assets/` for one year. `index.html`, the service worker and other top-level files revalidate on each load (`no-cache`). `/api` answers are `no-store`. A deploy therefore needs no cache purge.
+The CDN caches the hashed files in `/assets/` for one year. `index.html`, `/sw.js` and other top-level files revalidate on each load (`no-cache`). `/api` answers are `no-store`. A deploy therefore needs no cache purge.
 
 When `APP_URL` starts with `https://`, the server sends HSTS.
 
@@ -310,7 +310,7 @@ Do these in order. Tick each one.
 - [ ] Browser, private window: start learning (anonymous), do a few reviews, reload. The progress stays.
 - [ ] Add your email, enter the code from the email. The progress stays.
 - [ ] Second browser: sign in with the same email. The same progress appears within a few seconds.
-- [ ] Go offline (DevTools → Network → Offline), do reviews, go online. The reviews arrive (check on the second device).
+- [ ] Lose the connection during a session (DevTools → Network → Offline), do reviews, go online. The reviews arrive (check on the second device).
 - [ ] Perennial AI: add words from a short text. The credit count goes down. `select task, ok, usd from ai_request order by id desc limit 5;` shows the call.
 - [ ] `select slot_name, active, failover from pg_replication_slots;` shows `electric_slot_default` with `active` and `failover` both `t`. If `failover` is `f`, do 2.5.
 - [ ] `housekeeping`: run it once by hand (**Deployments → Run now**, or redeploy). The log shows a `housekeeping` line with counts.

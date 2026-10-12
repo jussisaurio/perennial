@@ -1,5 +1,5 @@
 // Loading a language's static deck. Decks are bundled as lazy, content-hashed
-// chunks (so the service worker caches them for offline use) and validated
+// chunks (so browsers and the CDN keep them for good) and validated
 // defensively: a bad entry is skipped, never fatal. If a whole deck fails to
 // load, the last good copy kept in the Cache API is used instead.
 

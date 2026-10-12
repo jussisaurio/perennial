@@ -38,15 +38,11 @@ test("a deck that cannot load, with no copy kept: the learner is told, not left 
   await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15_000 });
 });
 
-test("offline: practice still works, a quiet note says so, and it goes when the connection is back", async ({ page, context }) => {
+test("connection lost mid-session: practice continues", async ({ page, context }) => {
   await startCourse(page);
-  const note = page.getByRole("status").filter({ hasText: "Offline. Practice still works" });
-  await expect(note).toHaveCount(0);
-  await context.setOffline(true);
-  await expect(note).toBeVisible();
-  // The note is true: a session starts and takes an answer with no connection.
   await startSession(page);
+  await context.setOffline(true);
+  // The answer goes into the write queue; the session takes it with no connection.
   await advance(page, "1");
   await context.setOffline(false);
-  await expect(note).toHaveCount(0);
 });

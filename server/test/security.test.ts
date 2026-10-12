@@ -190,7 +190,7 @@ describe("production configuration fails closed", () => {
   test("the CSP allows exactly the configured report and analytics hosts", () => {
     const c = prod({ ...good, VITE_SENTRY_DSN: "https://abc@o12.ingest.us.sentry.io/34", VITE_POSTHOG_KEY: "phc_x", VITE_POSTHOG_HOST: "https://us.i.posthog.com" });
     expect(c.observability.connect).toEqual(["https://o12.ingest.us.sentry.io", "https://us.i.posthog.com"]);
-    expect(securityHeaders(c.observability.connect, true)["content-security-policy"]).toContain("connect-src 'self' data: https://o12.ingest.us.sentry.io https://us.i.posthog.com");
+    expect(securityHeaders(c.observability.connect, true)["content-security-policy"]).toContain("connect-src 'self' https://o12.ingest.us.sentry.io https://us.i.posthog.com");
     expect(prod(good).observability.connect).toEqual([]);
     // The Docker build passes an unset host as "": still the EU default.
     expect(prod({ ...good, VITE_POSTHOG_KEY: "phc_x", VITE_POSTHOG_HOST: "" }).observability.connect).toEqual(["https://eu.i.posthog.com"]);
