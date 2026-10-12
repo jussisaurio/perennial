@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
+import { stemHeight } from "../ui/plant";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, type VisitorId, type VisitorView } from "./visitors";
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
@@ -77,7 +78,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 
 /** A plant sprite's drawn height in metres. 14 + 120 × growth is the plant's height in SVG units (ui/plant.tsx). */
 function plantHeight(growth: number): number {
-  return ((14 + 120 * growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
+  return (stemHeight(growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
 }
 
 // The vertex shader part every sprite shares: the fog and selection inputs,
@@ -1393,6 +1394,7 @@ export function webglAvailable(): boolean {
     const c = document.createElement("canvas");
     return !!c.getContext("webgl2");
   } catch {
+    // Some browsers throw here (WebGL turned off by policy) instead of returning null: same answer.
     return false;
   }
 }

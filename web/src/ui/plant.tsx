@@ -45,6 +45,9 @@ const FAMILIES: [number, number, number, number][] = [
 
 const hsl = (h: number, s: number, l: number) => `hsl(${Math.round(h)} ${Math.round(s)}% ${Math.round(l)}%)`;
 
+/** A plant's height in drawing units before its genome and scale: a seedling is 14, a full-grown plant 134. */
+export const stemHeight = (growth: number) => 14 + 120 * growth;
+
 export function genome(word: string): Genome {
   const r = rng(hash32(word.normalize("NFC").toLowerCase()));
   const [h0, h1, s, l] = pick(r, FAMILIES);
@@ -176,7 +179,7 @@ function Flower({ g, r, open }: { g: Genome; r: number; open: boolean }): ReactN
  */
 export function Plant({ word, growth, stage, scale = 1 }: { word: string; growth: number; stage: Stage; scale?: number }) {
   const g = genome(word);
-  const h = (14 + 120 * growth) * g.height * scale;
+  const h = stemHeight(growth) * g.height * scale;
   const bend = g.curve * 10 * scale;
   const leafLen = 11 * scale;
   const leafW = 5 * scale;
@@ -240,7 +243,7 @@ export function WordPlant({ word, s, known, size = 96, className }: { word: stri
   const stage = stageFor(s, known);
   const growth = growthOf(s);
   // Frame the view box around this plant so a sprout fills it as well as a tall bloom.
-  const h = (14 + 120 * growth) * genome(word).height * 1.05 + (stage === "sprout" ? 12 : 22);
+  const h = stemHeight(growth) * genome(word).height * 1.05 + (stage === "sprout" ? 12 : 22);
   const side = Math.max(44, h + 10);
   return (
     <svg className={className} width={size} height={size} viewBox={`${-side / 2} ${-(side - 8)} ${side} ${side}`} role="img" aria-label={`${word}: ${stageLabel(stage)}`}>
