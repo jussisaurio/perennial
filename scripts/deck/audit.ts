@@ -20,12 +20,12 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DECK_LANGS, Deck, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
+import { language } from "../../web/src/content/languages.ts";
 import { formKey, tokenize } from "../../web/src/content/text.ts";
 import { ROOT, deckDir } from "./lib.ts";
 
-export type Level = "error" | "warn";
 export interface Finding {
-  level: Level;
+  level: "error" | "warn";
   code: string;
   lemma?: string;
   message: string;
@@ -44,16 +44,18 @@ export interface WordStats {
   rareTokens: string[];
 }
 
-const TAG: Record<string, string> = { es: "es-ES", de: "de-DE" };
-export const RARE_RANK = 10_000;
+const RARE_RANK = 10_000;
 const FREE_TOP = 100;
+
+/** The OpenSubtitles frequency list (hermitdave/FrequencyWords): "form count" lines, most frequent first. */
+export const frequencyListUrl = (lang: string) => `https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/${lang}/${lang}_50k.txt`;
 
 /** Corpus frequency ranks (form → 1-based rank), cached under scripts/.cache. */
 export async function frequencyRanks(lang: string): Promise<Map<string, number>> {
   const dir = join(ROOT, "scripts", ".cache");
   const path = join(dir, `${lang}_50k.txt`);
   if (!existsSync(path)) {
-    const res = await fetch(`https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/${lang}/${lang}_50k.txt`);
+    const res = await fetch(frequencyListUrl(lang));
     if (!res.ok) throw new Error(`frequency list for ${lang}: HTTP ${res.status}`);
     mkdirSync(dir, { recursive: true });
     writeFileSync(path, await res.text());
@@ -147,7 +149,7 @@ export function auditDeck(lang: string, deck: Deck, ranks: Map<string, number>, 
     let compSum = 0;
     const list = byWord.get(w.id) ?? [];
     for (const s of list) {
-      const toks = tokenize(s.text, TAG[lang] ?? lang)
+      const toks = tokenize(s.text, language(lang).tag)
         // Names (capitalised mid-sentence; German nouns excepted) are free.
         .filter((t) => t.word && !/^\d+$/.test(t.text) && !(lang !== "de" && t.index > 0 && /^\p{Lu}/u.test(t.text)))
         .map((t) => formKey(t.text))
@@ -168,6 +170,13 @@ export function auditDeck(lang: string, deck: Deck, ranks: Map<string, number>, 
     else if (s.freqRank > Math.max(500, s.rank * 4)) findings.push({ level: "warn", code: "rank-drift", lemma: s.lemma, message: `deck rank ${s.rank} but corpus rank ${s.freqRank}: introduced too early?` });
   }
   return { findings, words };
+}
+
+/** Findings by lowercased lemma, as "code: message" lines for the proofreader. */
+export function findingsByLemma(findings: Finding[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const f of findings) if (f.lemma) map.set(f.lemma.toLowerCase(), [...(map.get(f.lemma.toLowerCase()) ?? []), `${f.code}: ${f.message}`]);
+  return map;
 }
 
 export function loadAllow(lang: string): Set<string> {

@@ -9,7 +9,7 @@ import { toPos, type Pos } from "../deck/schema";
 export type WordKind = "noun" | "verb" | "other" | "function";
 
 /** Grammar rather than things, actions or qualities. */
-export const FUNCTION_POS: ReadonlySet<Pos> = new Set<Pos>(["prep", "conj", "det", "pron", "particle", "interj"]);
+const FUNCTION_POS: ReadonlySet<Pos> = new Set<Pos>(["prep", "conj", "det", "pron", "particle", "interj"]);
 
 export function kindOf(pos: string | null | undefined): WordKind {
   const p = toPos(pos);
@@ -20,22 +20,22 @@ export function kindOf(pos: string | null | undefined): WordKind {
 }
 
 /** One turn each, repeated: 2 nouns, a verb, a describing word, a grammar word in every 5. */
-export const PATTERN: readonly WordKind[] = ["noun", "verb", "noun", "other", "function"];
+const PATTERN: readonly WordKind[] = ["noun", "verb", "noun", "other", "function"];
 
 /**
  * Interleave by kind following PATTERN; within a kind, the given order stays.
  * A kind that has run out gives its turn to the next kind in the pattern.
  */
-export function introOrder<T>(items: readonly T[], kind: (item: T) => WordKind, pattern: readonly WordKind[] = PATTERN): T[] {
+export function introOrder<T>(items: readonly T[], kind: (item: T) => WordKind): T[] {
   const queues = new Map<WordKind, T[]>();
-  for (const k of pattern) queues.set(k, []);
-  for (const i of items) (queues.get(kind(i)) ?? queues.get("other")!).push(i);
+  for (const k of PATTERN) queues.set(k, []);
+  for (const i of items) queues.get(kind(i))!.push(i); // every kind is in PATTERN
   const next = new Map<WordKind, number>([...queues.keys()].map((k) => [k, 0]));
   const out: T[] = [];
   for (let turn = 0; out.length < items.length; turn++) {
     // This turn's kind, or the next one in the pattern that still has words.
-    for (let step = 0; step < pattern.length; step++) {
-      const k = pattern[(turn + step) % pattern.length];
+    for (let step = 0; step < PATTERN.length; step++) {
+      const k = PATTERN[(turn + step) % PATTERN.length];
       const q = queues.get(k)!;
       const at = next.get(k)!;
       if (at < q.length) {

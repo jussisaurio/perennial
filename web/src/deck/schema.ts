@@ -8,6 +8,7 @@ import { z } from "zod";
 
 export const DECK_LANGS = ["es", "de"] as const;
 export type DeckLang = (typeof DECK_LANGS)[number];
+export const isDeckLang = (s: string): s is DeckLang => (DECK_LANGS as readonly string[]).includes(s);
 
 /** Parts of speech, as decks spell them. Groupings (garden beds, course order) are built from these. */
 export const POS = ["noun", "verb", "adj", "adv", "pron", "prep", "conj", "det", "num", "particle", "phrase", "interj"] as const;
@@ -32,16 +33,16 @@ export function toPos(s: string | null | undefined): Pos | null {
   return (POS as readonly string[]).includes(p) ? (p as Pos) : (POS_NAMES[p] ?? null);
 }
 
-/** Ten lowercase base32 characters (no i, l, o, u to avoid confusion). */
-export const ID_BODY = /^[0-9abcdefghjkmnpqrstvwxyz]{10}$/;
-export const wordId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.w\\.[0-9abcdefghjkmnpqrstvwxyz]{10}$`));
-export const sentenceId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.s\\.[0-9abcdefghjkmnpqrstvwxyz]{10}$`));
+/** Id bodies are ten of these: lowercase base32 without i, l, o, u, to avoid confusion. */
+export const ID_ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
+const wordId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.w\\.[${ID_ALPHABET}]{10}$`));
+const sentenceId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.s\\.[${ID_ALPHABET}]{10}$`));
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 
 // ---- Source (what authors write) -----------------------------------------
 
-export const SourceSentence = z.object({
+const SourceSentence = z.object({
   text: text(200),
   translation: text(240),
   cloze: text(60),

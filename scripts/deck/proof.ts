@@ -16,9 +16,8 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { z } from "zod";
 import { Deck, manifestKey, SourceWord } from "../../web/src/deck/schema.ts";
-import { auditDeck, frequencyRanks, loadAllow } from "./audit.ts";
-import { locate } from "../../web/src/content/text.ts";
-import { deckDir, sentenceFlags } from "./lib.ts";
+import { auditDeck, findingsByLemma, frequencyRanks, loadAllow } from "./audit.ts";
+import { deckDir, flagValue, markCloze, sentenceFlags, sourcePath, toJson } from "./lib.ts";
 
 export const Ledger = z.object({
   file: z.string(),
@@ -28,8 +27,7 @@ export const Ledger = z.object({
 export type Ledger = z.infer<typeof Ledger>;
 
 export const entryHash = (w: SourceWord) => createHash("sha256").update(JSON.stringify(w)).digest("hex").slice(0, 16);
-export const ledgerPath = (lang: string, num: string) => join(deckDir(lang), "reviews", `${num}.ledger.json`);
-export const sourcePath = (lang: string, num: string) => join(deckDir(lang), "source", `${num}.json`);
+const ledgerPath = (lang: string, num: string) => join(deckDir(lang), "reviews", `${num}.ledger.json`);
 
 export function readEntries(lang: string, num: string): SourceWord[] {
   return SourceWord.array().parse(JSON.parse(readFileSync(sourcePath(lang, num), "utf8")));
@@ -60,6 +58,7 @@ export function ledgerProblems(lang: string, num: string): string[] {
 
 function card(lang: string, num: string, s: ReturnType<typeof ledgerState>[number], flags: string[], index: number, total: number): string {
   const w = s.w;
+  const target = s.key.split("|").filter(Boolean).join("|");
   const lines = [
     `Entry ${index + 1} of ${total} in decks/${lang}/source/${num}.json — state: ${s.state}`,
     s.rec?.note ? `Previous note: ${s.rec.note}` : "",
@@ -71,33 +70,28 @@ function card(lang: string, num: string, s: ReturnType<typeof ledgerState>[numbe
     "",
     ...w.sentences.map((x, i) => {
       const auto = sentenceFlags(x, w.forms);
-      return `s${i + 1}. ${bracket(x.text, x.cloze)}\n    → ${x.translation}${auto.length ? `\n    ⚠ ${auto.join("; ")}` : ""}`;
+      return `s${i + 1}. ${markCloze(x.text, x.cloze, "[", "]")}\n    → ${x.translation}${auto.length ? `\n    ⚠ ${auto.join("; ")}` : ""}`;
     }),
     ...(flags.length ? ["", ...flags.map((f) => `⚑ ${f}`)] : []),
     "",
     `Judge every line against docs/decks.md, then:`,
-    `  bun scripts/deck/proof.ts mark ${lang} ${num} "${s.key.split("|").filter(Boolean).join("|")}" ok --reviewer <you>`,
-    `  bun scripts/deck/proof.ts mark ${lang} ${num} "${s.key.split("|").filter(Boolean).join("|")}" fix --reviewer <you> --note "s2: …"`,
+    `  bun scripts/deck/proof.ts mark ${lang} ${num} "${target}" ok --reviewer <you>`,
+    `  bun scripts/deck/proof.ts mark ${lang} ${num} "${target}" fix --reviewer <you> --note "s2: …"`,
   ];
   return lines.filter((l, i, a) => l !== "" || a[i - 1] !== "").join("\n");
 }
 
 async function flagsFor(lang: string): Promise<Map<string, string[]>> {
   const deckPath = join(deckDir(lang), "deck.json");
-  const map = new Map<string, string[]>();
-  if (!existsSync(deckPath)) return map;
+  if (!existsSync(deckPath)) return new Map();
   const deck = Deck(lang).parse(JSON.parse(readFileSync(deckPath, "utf8")));
   const { findings } = auditDeck(lang, deck, await frequencyRanks(lang), loadAllow(lang));
-  for (const f of findings) if (f.lemma) map.set(f.lemma.toLowerCase(), [...(map.get(f.lemma.toLowerCase()) ?? []), `${f.code}: ${f.message}`]);
-  return map;
+  return findingsByLemma(findings);
 }
 
 if (import.meta.main) {
   const [cmd, lang, num, ...rest] = process.argv.slice(2);
-  const flag = (name: string) => {
-    const i = rest.indexOf(`--${name}`);
-    return i >= 0 ? rest[i + 1] : undefined;
-  };
+  const flag = (name: string) => flagValue(rest, name);
   if (!cmd || !lang || !num) {
     console.error("usage: proof.ts next|mark|status <lang> <NNNN> …");
     process.exit(2);
@@ -142,7 +136,7 @@ if (import.meta.main) {
     const m = matches[0];
     next.entries[m.key] = { hash: m.hash, verdict, ...(flag("note") ? { note: flag("note") } : {}), at: new Date().toISOString() };
     mkdirSync(join(deckDir(lang), "reviews"), { recursive: true });
-    writeFileSync(ledgerPath(lang, num), `${JSON.stringify(next, null, 2)}\n`);
+    writeFileSync(ledgerPath(lang, num), toJson(next));
     const done = ledgerState(entries, next).filter((s) => s.state === "ok").length;
     console.log(`${m.w.lemma}: ${verdict}. Progress: ${done}/${entries.length} ok.`);
   } else if (cmd === "status") {
@@ -154,10 +148,4 @@ if (import.meta.main) {
     console.error(`unknown command ${cmd}`);
     process.exit(2);
   }
-}
-
-/** The sentence with its cloze in [brackets], at the whole-word match the app uses. */
-function bracket(text: string, cloze: string) {
-  const i = locate(text, cloze);
-  return i < 0 ? text : `${text.slice(0, i)}[${cloze}]${text.slice(i + cloze.length)}`;
 }
