@@ -53,7 +53,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
   const dev = !production && (env.PERENNIAL_DEV === "1" || !env.RESEND_API_KEY);
   return {
     port: num(env.PORT, 8787),
-    databaseUrl: env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:55432/perennial",
+    databaseUrl: env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:25432/perennial",
     staticDir: env.PERENNIAL_STATIC ?? fileURLToPath(new URL("../../web/dist", import.meta.url)),
     appUrl: (env.APP_URL ?? "http://localhost:5173").replace(/\/$/, ""),
     secret: env.BETTER_AUTH_SECRET ?? "dev-secret-change-me-dev-secret-change-me",
@@ -104,7 +104,7 @@ export function configProblems(c: Config): string[] {
   if (!c.mail.resendKey) out.push("RESEND_API_KEY must be set (sign-in codes are sent by email)");
   if (!c.mail.from || c.mail.from.includes("perennial.local")) out.push("MAIL_FROM must be set to an address on your sending domain");
   if (!c.appUrl.startsWith("https://")) out.push("APP_URL must be the public https URL");
-  if (c.databaseUrl.includes("@localhost:55432/")) out.push("DATABASE_URL must be set");
+  if (c.databaseUrl.includes("@localhost:25432/")) out.push("DATABASE_URL must be set");
   if (!c.electric.secret) out.push("ELECTRIC_SECRET must be set (and match the Electric service)");
   if (!!c.turnstile.secretKey !== !!c.turnstile.siteKey) out.push("TURNSTILE_SECRET_KEY and VITE_TURNSTILE_SITE_KEY must be set together");
   return out;

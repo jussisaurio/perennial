@@ -32,7 +32,7 @@ export async function migrate(sql: SQL): Promise<string[]> {
 }
 
 if (import.meta.main) {
-  const url = process.env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:55432/perennial";
+  const url = process.env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:25432/perennial";
   const sql = new Bun.SQL(url);
   const applied = await migrate(sql);
   console.log(applied.length ? `applied ${applied.join(", ")}` : "up to date");
