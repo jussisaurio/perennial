@@ -13,6 +13,7 @@ test("dev demo data: ?demo=es gives a garden with a review history", async ({ pa
 test("dev demo: a delete the server refuses is reported", async ({ page }) => {
   const warnings: string[] = [];
   page.on("console", (m) => m.type() === "warning" && warnings.push(m.text()));
+  await startCourse(page); // an anonymous learner, so the delete is really sent
   await page.route("**/api/account/delete", (route) => route.fulfill({ status: 500, json: { error: "internal_error" } }));
   await page.goto("/?demo=off");
   await expect(page.getByRole("heading", { name: "Grow a language, a few minutes a day." })).toBeVisible();
@@ -48,10 +49,27 @@ test("dev demo: when sign-out fails, the demo writes nothing into the account", 
   await startCourse(page);
   await addEmail(page);
   const before = (await serverRows(page, "review")).length;
-  const errors: string[] = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.route("**/api/auth/sign-out", (route) => route.fulfill({ status: 500, json: {} }));
+  // Wait for the demo to finish either way, then count: on the old code it wrote its reviews here.
+  const done = page.waitForEvent("console", (m) => /\[demo\] (seeded|could not seed) es/.test(m.text()));
   await page.goto("/?demo=es:5");
-  await expect.poll(() => errors.some((e) => e.includes("[demo] could not seed es") && e.includes("still signed in"))).toBe(true);
+  await done;
   expect((await serverRows(page, "review")).length).toBe(before);
+});
+
+test("dev demo: a failed session check deletes nothing", async ({ page }) => {
+  await startCourse(page);
+  const email = await addEmail(page);
+  // Every session check fails while the demo decides; then it either deletes or says it won't.
+  await page.route("**/api/auth/get-session", (route) => route.fulfill({ status: 500, json: {} }));
+  const acted = Promise.race([
+    page.waitForResponse("**/api/account/delete"),
+    page.waitForEvent("console", (m) => m.text().includes("[demo] not signed in as a demo learner")),
+  ]);
+  await page.goto("/?demo=off#/settings");
+  await acted;
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  expect((await page.request.get("/api/me")).status()).toBe(200);
+  await page.goto("/#/settings");
+  await expect(page.getByText(email)).toBeVisible();
 });

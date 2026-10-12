@@ -24,10 +24,11 @@ const DAYS = 90;
 
 /** A fresh anonymous learner with `count` words studied over the last `DAYS` days. The app opens on this course. */
 export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
-  keepCourse(lang);
+  const before = await currentUser();
   await signOut();
-  // signOut only warns when it fails: then this is the old user, maybe a real account.
-  if (!(await ensureUser()).anonymous) throw new Error("still signed in to an account: sign out first, so the demo does not write into it");
+  // signOut only warns when it fails: then this is still the old user, maybe a real account.
+  if ((await ensureUser()).id === before?.id) throw new Error("sign-out failed, so the demo would write into the learner who is signed in");
+  keepCourse(lang);
   const deck = await loadDeck(lang);
   const now = Date.now();
   const r = rng(count * 31 + DAYS);
@@ -57,8 +58,8 @@ export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
 
 /** Throw the demo learner away. Only an anonymous one: a real account is never deleted here. */
 export async function removeDemo(): Promise<void> {
-  const user = await currentUser();
-  if (user && !user.anonymous) return console.warn("[demo] signed in to an account, not a demo learner: nothing deleted");
+  // Only a learner known to be anonymous: no session, or a failed session check, deletes nothing.
+  if (!(await currentUser())?.anonymous) return console.warn("[demo] not signed in as a demo learner: nothing deleted");
   // If the delete fails, say so and sign out anyway: this device forgets the learner,
   // and a leftover anonymous row in a dev database does no harm.
   const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).catch((e: unknown) => e);
