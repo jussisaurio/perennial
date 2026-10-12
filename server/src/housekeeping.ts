@@ -4,7 +4,8 @@
 // - Anonymous learners with no activity for N days are deleted (their rows
 //   cascade). Activity = a session renewed, which happens daily while in use.
 // - AI request logs older than 180 days are deleted.
-// - Expired sign-in codes and sessions, and the per-email code log, are deleted.
+// - Expired sign-in codes and sessions, the per-email code log, and per-IP
+//   rate-limit counters older than an hour (the longest window) are deleted.
 
 import type { SQL } from "bun";
 import type { Config } from "./config";
@@ -28,7 +29,9 @@ export async function housekeeping(sql: SQL, config: Config) {
     const codes = await sql`delete from "verification" where "expiresAt" < now()`;
     const sessions = await sql`delete from "session" where "expiresAt" < now()`;
     await sql`delete from mail_log where sent_at < now() - interval '2 days'`;
-    const result = { anonymousUsers: anonymous.count, aiRequests: logs.count, codes: codes.count, sessions: sessions.count };
+    // Per-IP rate-limit counters (Better Auth, key = IP + path): none lasts more than an hour.
+    const rateLimits = await sql`delete from "rateLimit" where "lastRequest" < ${Date.now() - 3_600_000}`;
+    const result = { anonymousUsers: anonymous.count, aiRequests: logs.count, codes: codes.count, sessions: sessions.count, rateLimits: rateLimits.count };
     // The job's one wide line: what it removed and how long it took.
     log.info("housekeeping", { ...result, ms: Math.round(performance.now() - t0) });
     return result;

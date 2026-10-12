@@ -23,6 +23,17 @@ describe("sign-in codes per address", () => {
   });
 });
 
+describe("the per-email code log", () => {
+  test("keeps a keyed hash: a guessed address can't be checked against it without the server secret", async () => {
+    const email = unique("hashed");
+    await t.sendCode(email);
+    const keyed = new Bun.CryptoHasher("sha256", t.config.secret).update(email).digest("hex");
+    const plain = new Bun.CryptoHasher("sha256").update(email).digest("hex");
+    expect((await t.sql`select 1 from mail_log where email_hash = ${keyed}`).length).toBe(1);
+    expect((await t.sql`select 1 from mail_log where email_hash = ${plain}`).length).toBe(0);
+  });
+});
+
 describe("asking for a code again", () => {
   test("sends the same code, so any of the emails works", async () => {
     const email = unique("twice");

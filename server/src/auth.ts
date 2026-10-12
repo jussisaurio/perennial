@@ -12,6 +12,7 @@ import { betterAuth } from "better-auth";
 import { anonymous, captcha, emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
 import type { Config } from "./config";
+import { CLIENT_IP_HEADER } from "./clientIp";
 import { event, log } from "./log";
 import type { Mailer } from "./mail";
 
@@ -84,7 +85,8 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
     },
     advanced: {
       database: { generateId: "uuid" },
-      ipAddress: { ipAddressHeaders: config.clientIpHeaders },
+      // Worked out from CLIENT_IP_HEADERS by clientIp.ts (cf-connecting-ip only via Cloudflare).
+      ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] },
     },
     plugins: [
       emailOTP({
@@ -122,7 +124,8 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
 
 /** Records a code for this address, unless it already had its share (per 15 minutes and per day). */
 async function mayMail(sql: SQL, config: Config, email: string) {
-  const hash = new Bun.CryptoHasher("sha256").update(email.trim().toLowerCase()).digest("hex");
+  // Keyed with the server secret: without it, a guessed address can't be checked against the log.
+  const hash = new Bun.CryptoHasher("sha256", config.secret).update(email.trim().toLowerCase()).digest("hex");
   const [{ short, day }] = await sql`select
       count(*) filter (where sent_at > now() - interval '15 minutes')::int as short,
       count(*)::int as day

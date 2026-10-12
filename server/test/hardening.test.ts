@@ -169,13 +169,14 @@ describe("error reports", () => {
     const event = scrub<import("@sentry/bun").Event>({
       request: {
         url: "https://perennial.example/api/auth/sign-in/email-otp",
-        headers: { Cookie: "better-auth.session_token=abc", authorization: "Bearer abc", "user-agent": "test" },
+        headers: { Cookie: "better-auth.session_token=abc", authorization: "Bearer abc", "user-agent": "test", "x-real-ip": "198.51.100.9", "cf-connecting-ip": "203.0.113.7", "cf-connecting-ipv6": "2001:db8::7", "x-forwarded-for": "203.0.113.7", "x-perennial-client-ip": "203.0.113.7", "sec-ch-ua-platform": '"macOS"', "x-request-id": "r1" },
         cookies: { "better-auth.session_token": "abc" },
         data: { email: "alice@example.com", otp: "123456" },
       },
       user: { id: "u1", email: "alice@example.com", ip_address: "1.2.3.4" },
     });
-    expect(event.request).toEqual({ url: "https://perennial.example/api/auth/sign-in/email-otp", headers: { "user-agent": "test" } });
+    // No session, no IP (from any proxy), no browser: only the request id is kept.
+    expect(event.request).toEqual({ url: "https://perennial.example/api/auth/sign-in/email-otp", headers: { "x-request-id": "r1" } });
     expect(event.user).toEqual({ id: "u1" });
   });
 });

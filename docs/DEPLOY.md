@@ -227,7 +227,7 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 | `ANONYMOUS_RETENTION_DAYS` | `60` | Used by housekeeping. Keep the value equal on both services. |
 | `SENTRY_DSN` | not set | Server error reports (web and housekeeping). |
 | `TURNSTILE_SECRET_KEY` | not set | Server half of the bot check (see `VITE_TURNSTILE_SITE_KEY`). Recommended before launch. |
-| `CLIENT_IP_HEADERS` | `x-real-ip,x-forwarded-for` | Headers our proxy sets with the client IP, for rate limits. Railway sets `X-Real-IP`. Behind Cloudflare, use `cf-connecting-ip`. If no header gives an IP, all clients share one rate-limit bucket: check the logs for Better Auth's warning after the first deploy. |
+| `CLIENT_IP_HEADERS` | `x-real-ip,x-forwarded-for` | Headers our proxy sets with the client IP, for rate limits. Railway sets `X-Real-IP`. Behind Cloudflare, use `cf-connecting-ip`: the server trusts it only when `X-Real-IP` is one of Cloudflare's IP ranges (server/src/clientIp.ts), and otherwise uses `X-Real-IP`, so a request that skips Cloudflare can't choose its own IP. If no header gives an IP, all clients share one rate-limit bucket: check the logs for Better Auth's warning after the first deploy. |
 | `CODES_PER_EMAIL_15MIN`, `CODES_PER_EMAIL_DAY` | `3`, `10` | Sign-in codes one address can receive, whatever the IP (email bombing). Extra requests get the normal answer but no email. |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | |
 | `POSTHOG_HOST` | not set | Optional. An extra origin for the CSP `connect-src`, for example a PostHog reverse proxy. Normally not needed: see `VITE_POSTHOG_HOST`. |
@@ -378,7 +378,7 @@ After you change a variable, Railway asks you to deploy the change. Deploy all s
 |---|---|---|
 | Database password | PlanetScale → **Roles** → `perennial` → **Reset credentials**. Update the shared `DATABASE_URL`. Redeploy `electric`, `web`, `housekeeping`. | Errors for about one or two minutes, between the reset and the redeploy. Electric reconnects to the same slot. For no downtime: create a second role first. But the new role does not own the tables, so Electric must keep the old role (or use manual publication, see 2.4). |
 | `ELECTRIC_SECRET` | Generate a new value. Update the shared variable. Redeploy `electric` and `web` together. | Sync pauses for a short time. Clients retry by themselves. |
-| `BETTER_AUTH_SECRET` | New value on `web`, redeploy. **Only when it leaked.** | **Every learner is signed out.** Learners with an email sign in again. **Anonymous learners lose access to their progress** (it stays on the server until housekeeping deletes it). |
+| `BETTER_AUTH_SECRET` | New value on `web`, redeploy. **Only when it leaked.** | **Every learner is signed out.** Learners with an email sign in again. **Anonymous learners lose access to their progress** (it stays on the server until housekeeping deletes it). The per-email sign-in code limits start again for up to a day (the code log is keyed with this secret). |
 | `RESEND_API_KEY` | Create a new key in Resend, update `web`, redeploy, then delete the old key. | None, if you do it in this order. |
 | `ANTHROPIC_API_KEY` | Same order as Resend. | None. |
 | `SENTRY_DSN`, `VITE_SENTRY_DSN` | Sentry → project → **Client Keys (DSN)** → create a new key. Update the variable (`SENTRY_DSN` on `web` and `housekeeping`; `VITE_SENTRY_DSN` on `web`, which rebuilds the app), redeploy, then disable the old key. A DSN only lets someone send reports, so rotate it when it is abused. | None, if you do it in this order. |

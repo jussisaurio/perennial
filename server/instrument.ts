@@ -9,12 +9,19 @@ import { releaseOf } from "./src/config";
  * request bodies (sign-in codes, emails) or user details, whatever the SDK
  * collected. dataCollection below already asks for none of these.
  */
+/**
+ * Request headers Sentry never gets: sessions, and who and where the learner is (their IP
+ * from any proxy, their browser). Matched as substrings, like Sentry's own deny list.
+ */
+const PRIVATE_HEADERS = ["cookie", "authorization", "x-real-ip", "forwarded", "cf-connecting-ip", "true-client-ip", "x-perennial-client-ip", "user-agent", "sec-ch-ua"];
+const isPrivateHeader = (name: string) => PRIVATE_HEADERS.some((p) => name.toLowerCase().includes(p));
+
 export function scrub<E extends Sentry.Event>(event: E): E {
   if (event.request) {
     delete event.request.cookies;
     delete event.request.data;
     const headers = event.request.headers;
-    if (headers) for (const k of Object.keys(headers)) if (/cookie|authorization/i.test(k)) delete headers[k];
+    if (headers) for (const k of Object.keys(headers)) if (isPrivateHeader(k)) delete headers[k];
   }
   if (event.user) event.user = { id: event.user.id };
   return event;
@@ -42,7 +49,10 @@ if (process.env.SENTRY_DSN) {
     dataCollection: {
       userInfo: false,
       cookies: false,
-      httpHeaders: { request: { deny: ["cookie", "authorization"] }, response: { deny: ["set-cookie"] } },
+      httpHeaders: {
+        request: { deny: PRIVATE_HEADERS },
+        response: { deny: ["set-cookie"] },
+      },
       httpBodies: [],
       databaseQueryData: false,
       genAI: { inputs: false, outputs: false },
