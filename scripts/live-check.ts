@@ -4,6 +4,8 @@
 //
 //   bun scripts/live-check.ts https://perennial-production.up.railway.app
 const BASE = process.argv[2] ?? "https://perennial-production.up.railway.app";
+// A real deck word: the server refuses reviews of words that don't exist.
+const WORD = (JSON.parse(await Bun.file(new URL("../decks/es/deck.json", import.meta.url)).text()) as { words: { id: string }[] }).words[0].id;
 const ORIGIN = BASE;
 let fails = 0;
 const ok = (cond: boolean, what: string, detail = "") => {
@@ -74,14 +76,14 @@ for (const p of ["/api/auth/list-sessions", "/api/auth/update-user", "/api/auth/
 
 // 5. Cross-user isolation
 const reviewId = crypto.randomUUID();
-const wA = await req("/api/write", { cookie: A.cookie, headers: { "x-perennial-version": "9.9.9" }, body: { mutations: [{ type: "review.insert", row: { id: reviewId, lang: "es", word_id: "es.w.aaaaaaaaaa", skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 3000 } }] } });
+const wA = await req("/api/write", { cookie: A.cookie, headers: { "x-perennial-version": "9.9.9" }, body: { mutations: [{ type: "review.insert", row: { id: reviewId, lang: "es", word_id: WORD, skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 3000 } }] } });
 ok(wA.status === 200, "user A can write", String(wA.status));
 for (const extra of ["", "&where=true", `&where=user_id%3D'${A.id}'`, `&params[1]=${A.id}`, `&subset__where=user_id%3D'${A.id}'`]) {
   const r = await req(`/api/shape?table=review&offset=-1${extra}`, { cookie: B.cookie });
   ok(!r.text.includes(A.id!) && !r.text.includes(reviewId), `B cannot read A's reviews${extra ? ` via ${decodeURIComponent(extra)}` : ""}`, String(r.status));
 }
 for (const t of ["user", "session", "account", "verification", "ai_request", "mail_log"]) ok((await req(`/api/shape?table=${t}&offset=-1`, { cookie: B.cookie })).status === 400, `shape refuses table ${t}`);
-const wB = await req("/api/write", { cookie: B.cookie, headers: { "x-perennial-version": "9.9.9" }, body: { mutations: [{ type: "review.delete", id: reviewId }, { type: "review.insert", row: { id: reviewId, lang: "es", word_id: "x", skill: "read", grade: 1, reviewed_at: new Date().toISOString(), duration_ms: 1 } }] } });
+const wB = await req("/api/write", { cookie: B.cookie, headers: { "x-perennial-version": "9.9.9" }, body: { mutations: [{ type: "review.delete", id: reviewId }, { type: "review.insert", row: { id: reviewId, lang: "es", word_id: WORD, skill: "read", grade: 1, reviewed_at: new Date().toISOString(), duration_ms: 1 } }] } });
 const stillA = await req("/api/shape?table=review&offset=-1", { cookie: A.cookie });
 ok(stillA.text.includes(reviewId) && /"grade":"?3/.test(stillA.text), "B cannot delete or overwrite A's review", `B write ${wB.status}`);
 
@@ -95,6 +97,7 @@ ok((await req("/api/account/delete", { cookie: A.cookie, raw: "a=1", headers: { 
   ok(r.status === 413 || r.status === "ECONNRESET", "oversized body refused", String(r.status));
 }
 ok([400, 422].includes((await req("/api/write", { cookie: A.cookie, body: { mutations: [{ type: "drop.table", sql: "drop table review" }] } })).status), "unknown mutation type refused");
+ok((await req("/api/write", { cookie: A.cookie, body: { mutations: [{ type: "review.insert", row: { id: crypto.randomUUID(), lang: "es", word_id: "sdfjdslkfjdslfjdsklfdjsl", skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 1000 } }] } })).status === 422, "made-up words refused");
 
 // Clean up: delete both throwaway accounts.
 for (const u of [A, B]) await req("/api/account/delete", { cookie: u.cookie, body: {} });
