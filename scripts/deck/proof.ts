@@ -18,7 +18,7 @@ import { z } from "zod";
 import { Deck, manifestKey, SourceWord } from "../../web/src/deck/schema.ts";
 import { auditDeck, frequencyRanks, loadAllow } from "./audit.ts";
 import { locate } from "../../web/src/content/text.ts";
-import { deckDir, wholeWordCount } from "./lib.ts";
+import { deckDir, sentenceFlags } from "./lib.ts";
 
 export const Ledger = z.object({
   file: z.string(),
@@ -70,8 +70,7 @@ function card(lang: string, num: string, s: ReturnType<typeof ledgerState>[numbe
     w.notes ? `notes: ${w.notes}` : "",
     "",
     ...w.sentences.map((x, i) => {
-      const n = x.text.split(/\s+/).filter(Boolean).length;
-      const auto = [n > 12 ? `${n} words` : "", wholeWordCount(x.text, x.cloze) !== 1 ? "cloze not exactly once" : "", w.forms.some((f) => f.toLowerCase() === x.cloze.toLowerCase()) ? "" : "cloze not in forms"].filter(Boolean);
+      const auto = sentenceFlags(x, w.forms);
       return `s${i + 1}. ${bracket(x.text, x.cloze)}\n    → ${x.translation}${auto.length ? `\n    ⚠ ${auto.join("; ")}` : ""}`;
     }),
     ...(flags.length ? ["", ...flags.map((f) => `⚑ ${f}`)] : []),

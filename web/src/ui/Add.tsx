@@ -7,7 +7,8 @@ import { useMemo, useState } from "react";
 import { apiMessage, mineWords, resetDate } from "../data/ai";
 import { useFeatures } from "../data/server";
 import { useUser } from "../data/auth";
-import { setWordStatus, useLearner, useStore, wordState, type Learner } from "../data/learner";
+import { readMemory, wordState } from "../core/memory";
+import { setWordStatus, useLearner, useStore, type Learner } from "../data/learner";
 import type { UserSentenceRow, UserWordRow, WordStateRow } from "../data/rows";
 import { language } from "../content/languages";
 import { formKey, tokenize } from "../content/text";
@@ -27,7 +28,7 @@ const formStateId = (lang: string, form: string) => `form:${lang}:${form}`;
 function statusMap(l: Learner): Map<string, { status: Status; wordId?: string }> {
   const map = new Map<string, { status: Status; wordId?: string }>();
   for (const w of l.words.values()) {
-    const st = wordState(l.memory.get(`${w.id}:read`));
+    const st = wordState(readMemory(l, w.id));
     const status: Status = w.status === "ignored" ? "ignored" : st !== "new" ? st : w.status === "queued" || w.source === "user" ? "added" : "queued";
     for (const f of w.forms) {
       const cur = map.get(f);

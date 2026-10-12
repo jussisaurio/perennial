@@ -20,6 +20,8 @@ describe("garden layout", () => {
     expect(groupOf("Noun")).toBe("Nouns");
     expect(groupOf("prep")).toBe("Small words");
     expect(groupOf("")).toBe("Other words");
+    expect(groupOf("Adjective")).toBe("Adjectives"); // an AI-written word of your own may spell it out
+    expect(groupOf("interj")).toBe("Other words");
     const l = layout([plant(1), plant(2, "verb"), plant(3, "adj")]);
     expect(l.beds.map((b) => b.label)).toEqual(["Nouns", "Verbs", "Adjectives"]);
     expect(new Set(l.beds.map((b) => b.z)).size).toBe(3);

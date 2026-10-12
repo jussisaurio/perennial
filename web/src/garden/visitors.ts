@@ -4,7 +4,8 @@
 // the Words list, Next plant or the session summary: they are just for fun.
 // Pure functions, so they are easy to test. Rules: docs/voice.md and issue #69.
 
-import { daily, rareDay } from "../ui/whimsy";
+import { daily, DAY_MS, dayNumber, rareDay, startOfDay } from "../core/day";
+import { bareNoun, inLang, nounView, type NounDef, type NounView, type NounWords, type PerLang } from "./nouns";
 import type { Layout } from "./world";
 
 export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird";
@@ -28,12 +29,8 @@ interface Ctx {
   now: Date;
 }
 
-export interface VisitorDef {
+export interface VisitorDef extends NounDef {
   id: VisitorId;
-  /** The noun with its article, per course language. */
-  words: Record<string, string>;
-  /** Plain English, shown small next to the word. */
-  gloss: string;
   /**
    * Rare visitors come by chance and count toward the cap of two at once.
    * Residents (snail, gnome, frog, moth) live in the garden once they come:
@@ -94,12 +91,6 @@ export function heronDay(year: number, month: number): number {
     "visitor-heron",
     new Date(year, month, 1),
   );
-}
-
-/** The local calendar day as a whole number, the same all day and safe across clock changes. */
-export function dayNumber(t: number | Date): number {
-  const d = new Date(t);
-  return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86_400_000);
 }
 
 /** The facts visitorsFor needs, from the learner's review times (ms, any order). */
@@ -192,7 +183,7 @@ export function milestoneLine(before: number, now: number): string | null {
 /** Visitors that live only in the 2D strip: the worm in an empty garden, the mole at the far right end. */
 export type StripVisitorId = "worm" | "mole";
 
-export const STRIP_VISITORS: Record<StripVisitorId, { words: Record<string, string>; gloss: string }> = {
+export const STRIP_VISITORS: Record<StripVisitorId, { words: NounWords; gloss: string }> = {
   worm: { words: { es: "el gusano", de: "der Wurm" }, gloss: "worm" },
   mole: { words: { es: "el topo", de: "der Maulwurf" }, gloss: "mole" },
 };
@@ -209,18 +200,13 @@ export function moleVisits(now: Date = new Date(), override: VisitorOverride = n
 /** A strip visitor's word for this course, or null when the course has none. */
 export function stripVisitor(id: StripVisitorId, lang: string): { id: StripVisitorId; word: string; gloss: string } | null {
   const v = STRIP_VISITORS[id];
-  const word = v.words[lang];
+  const word = inLang(v.words, lang);
   return word ? { id, word, gloss: v.gloss } : null;
 }
 
 /** A visitor as the garden shows it: its word in the course language, if there is one. */
-export interface VisitorView {
+export interface VisitorView extends NounView {
   id: VisitorId;
-  /** Article and noun, e.g. "el caracol". Null for a course with no visitor words. */
-  word: string | null;
-  gloss: string;
-  /** The learner knows this noun as one of their own words: it gets plant-label styling. */
-  known: boolean;
   tag: "approach" | "tap";
 }
 
@@ -228,8 +214,7 @@ export interface VisitorView {
 export function visitorViews(present: readonly VisitorId[], lang: string, isKnown: (noun: string) => boolean = () => false): VisitorView[] {
   return present.map((id) => {
     const v = visitor(id);
-    const word = v.words[lang] ?? null;
-    return { id, word, gloss: v.gloss, known: !!word && isKnown(word.slice(word.indexOf(" ") + 1)), tag: v.tag };
+    return { id, ...nounView(v, lang, isKnown), tag: v.tag };
   });
 }
 
@@ -259,7 +244,7 @@ export const gnomeTag = (pose: GnomePose): number => (pose === "front" ? 1 : 0);
 // ---- The frog (#57) ----
 
 /** What a frog says, per course language. */
-export const CROAK: Record<string, string> = { es: "croac", de: "quak" };
+export const CROAK: PerLang<string> = { es: "croac", de: "quak" };
 
 /**
  * What the frog croaks on its `tap`-th tap today: its sound and one word the
@@ -267,8 +252,8 @@ export const CROAK: Record<string, string> = { es: "croac", de: "quak" };
  * most taps, in the same order all day.
  */
 export function frogCroak(known: readonly string[], lang: string, tap: number, now: Date = new Date()): string {
-  const sound = CROAK[lang] ?? "croak";
-  const own = (visitor("frog").words[lang] ?? "").split(" ").pop()!.toLowerCase();
+  const sound = inLang(CROAK, lang) ?? "croak";
+  const own = bareNoun(inLang(visitor("frog").words, lang) ?? "").toLowerCase();
   const pool = known.filter((w) => w.toLowerCase() !== own);
   return pool.length ? `${sound}… ${daily(pool, `frog-croak-${tap}`, now)}` : `${sound}…`;
 }
@@ -289,8 +274,7 @@ export const SNAIL_SIGN = "Snail fastest lap: 23h 59min";
  * each visit and creeps visibly if you watch it for a minute.
  */
 export function snailLap(now: Date = new Date()): number {
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  return Math.min(0.99999, (now.getTime() - midnight) / 86_400_000);
+  return Math.min(0.99999, (now.getTime() - startOfDay(now)) / DAY_MS);
 }
 
 /** The fence as one path from the right gate post, round the garden, to the left gate post. */

@@ -218,7 +218,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
             setSessionExtra(extra);
             go("/session");
           }}
-          onAddWords={() => go("/words/add")}
           onWalk={() => go("/garden")}
         />
       )}

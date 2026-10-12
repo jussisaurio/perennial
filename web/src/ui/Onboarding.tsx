@@ -2,6 +2,7 @@
 // for each language. "Start learning" makes an anonymous account and the
 // course in one step; nothing to set up, no email needed yet.
 
+import { COURSE_DEFAULTS } from "../data/rows";
 import { farewell } from "../content/voice";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
@@ -73,7 +74,7 @@ export async function startCourse(lang: string, minutes: number) {
 export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) => void; signedIn: boolean }) {
   const draft = readDraft();
   const [lang, setLang] = useState(() => draft.lang ?? "es");
-  const [minutes, setMinutes] = useState(draft.minutes ?? 7);
+  const [minutes, setMinutes] = useState(draft.minutes ?? COURSE_DEFAULTS.minutes);
   // After "Delete my account": a goodbye on the landing page, for a short
   // while (the app reloads once as the user changes), then never again.
   const [goodbye] = useState(() => {

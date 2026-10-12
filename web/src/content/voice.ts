@@ -2,7 +2,8 @@
 // screens alive without repeating. The clear sentence always comes first in
 // the UI; these are the wink after it. Simple words, no idioms, no "!".
 
-import { daily, rareDay } from "../ui/whimsy";
+import { hash32 } from "../lib/seed";
+import { daily, rareDay } from "../core/day";
 
 /** One line per plant, chosen by the word, so a plant always says the same thing. */
 export const PLANT_LINES = {
@@ -34,15 +35,9 @@ export const PLANT_LINES = {
   thirsty: ["It is looking at the watering can.", "It would like some practice.", "A little tired. Not sad."],
 } as const;
 
-function hashWord(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) >>> 0;
-  return h;
-}
-
 export function plantLine(word: string, kind: keyof typeof PLANT_LINES): string {
   const pool = PLANT_LINES[kind];
-  return pool[hashWord(word) % pool.length];
+  return pool[hash32(word) % pool.length];
 }
 
 /** The 3D garden's loading line: the verb changes, the percent stays. */

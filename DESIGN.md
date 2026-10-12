@@ -17,7 +17,7 @@ by a memory model) and drops most of what grew around it.
 | **Too many options.** Presets, deck hierarchy, filtered decks, burying toggles, gather/sort orders. | | **One course per language. One setting (minutes per day).** Siblings are never shown in the same session. |
 | **Sync: forced one-way "full sync", media that won't sync, last-writer-wins on whole objects.** | Schema-level change counter. Mutable card state is synced as rows. | **Event-sourced sync.** Reviews are an append-only log, so they merge without conflict, and scheduling state is *recomputed* from the log. Other rows have simple, per-table merge rules (newest `updated_at` wins; settings change per column). There is no "full sync". |
 | **Dated Qt UI, AnkiMobile costs $25, AnkiDroid differs.** | Three separate clients. | **One PWA.** It works offline and installs on phone and desktop. |
-| **No sense of progress.** Stats are dense graphs. | | **"You know ~1,240 words ≈ 82% of everyday speech."** Coverage is computed from the frequency list. |
+| **No sense of progress.** Stats are dense graphs. | | **A garden that grows.** Every word you study is a plant: it sprouts, buds and blooms once you know it. Today counts the words you know and the words you are learning. |
 
 ## Research we lean on
 
@@ -43,10 +43,10 @@ by a memory model) and drops most of what grew around it.
 ```
 decks/<lang>/         static decks (JSON): the shared course, versioned with the code, checked by CI
 web/ (Vite + React + TS PWA)
-  core/      pure, tested logic: FSRS, session planner, answer checking
+  core/      pure, tested logic: FSRS, memory from reviews, session planner, answer checking, days
   data/      TanStack DB collections + Electric shapes, offline write queue, auth, learner model
   deck/      deck schema and id resolution (shared with scripts/deck)
-  content/   languages, tokenizer, coverage
+  content/   course languages, tokenizer, course order, Perennial's lines
   garden/    the walk-in 3D garden
   ui/        screens
 server/ (Bun + Postgres via Bun.sql)

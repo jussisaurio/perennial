@@ -6,6 +6,8 @@
 // Pure data and hit tests, so they are easy to test. The scene builds the hit
 // volumes once; a tap casts one ray through them.
 
+import { nounLemma, nounView, type NounDef, type NounView } from "./nouns";
+
 export type SceneryId =
   | "sunflower"
   | "tree"
@@ -30,17 +32,8 @@ export type SceneryId =
   | "moon"
   | "sky";
 
-export interface SceneryDef {
-  /** The noun with its article, per course language. */
-  words: Record<string, string>;
-  /** Plain English, shown small next to the word. */
-  gloss: string;
-  /** The deck lemma when it is not the noun after the article (a plural). */
-  lemma?: Record<string, string>;
-}
-
 /** Spain Spanish; plain nouns, not species names. Signs and notice boards are all "el letrero". */
-export const SCENERY: Record<SceneryId, SceneryDef> = {
+export const SCENERY: Record<SceneryId, NounDef> = {
   sunflower: { words: { es: "el girasol", de: "die Sonnenblume" }, gloss: "sunflower" },
   // The round, leafy trees outside the fence.
   tree: { words: { es: "el árbol", de: "der Baum" }, gloss: "tree" },
@@ -69,31 +62,23 @@ export const SCENERY: Record<SceneryId, SceneryDef> = {
 };
 
 /** A scenery word as the garden shows it. */
-export interface SceneryView {
+export interface SceneryView extends NounView {
   id: SceneryId;
   /** Article and noun, e.g. "el girasol". */
   word: string;
-  gloss: string;
-  /** The learner knows this noun as one of their own words: plant-label styling with a tiny leaf. */
-  known: boolean;
 }
 
 export type SceneryViews = Partial<Record<SceneryId, SceneryView>>;
 
 /** The deck lemma behind a scenery word: the noun after the article, or the singular for a plural. */
-export function sceneryLemma(id: SceneryId, lang: string): string | null {
-  const d = SCENERY[id];
-  const word = d.words[lang];
-  if (!word) return null;
-  return d.lemma?.[lang] ?? word.slice(word.indexOf(" ") + 1);
-}
+export const sceneryLemma = (id: SceneryId, lang: string): string | null => nounLemma(SCENERY[id], lang);
 
 /** Every scenery word for this course (none for a course without them). `isKnown` gets the bare lemma ("sol", not "el sol"). */
 export function sceneryViews(lang: string, isKnown: (lemma: string) => boolean = () => false): SceneryViews {
   const out: SceneryViews = {};
   for (const id of Object.keys(SCENERY) as SceneryId[]) {
-    const word = SCENERY[id].words[lang];
-    if (word) out[id] = { id, word, gloss: SCENERY[id].gloss, known: isKnown(sceneryLemma(id, lang)!) };
+    const v = nounView(SCENERY[id], lang, isKnown);
+    if (v.word) out[id] = { ...v, id, word: v.word };
   }
   return out;
 }

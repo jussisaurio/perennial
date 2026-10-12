@@ -2,7 +2,8 @@
 // and a sunflower that only looks at you when you stand in its sun.
 // Pure functions, so they are easy to test.
 
-import { daily, rareDay } from "../ui/whimsy";
+import { daily, rareDay } from "../core/day";
+import { inLang, type PerLang } from "./nouns";
 
 export interface SignLine {
   text: string;
@@ -41,7 +42,7 @@ export const BENCH_LINES: readonly SignLine[] = [{ text: "Bench: for sitting." }
 export const FENCE_LINES: readonly SignLine[] = [{ text: "Fence: keeps the words in." }, { text: "End of garden. For now." }];
 
 /** About one day in four, one sign is in the language you are learning. */
-export const LOCAL_LINES: Record<string, readonly string[]> = {
+export const LOCAL_LINES: PerLang<readonly string[]> = {
   es: ["Silencio, por favor", "Agua: sí", "Despacio, por favor", "Prohibido pisar la tierra"],
   de: ["Bitte leise", "Kein Eis", "Langsam gehen, bitte", "Erde nicht betreten"],
 };
@@ -50,7 +51,7 @@ export const LOCAL_LINES: Record<string, readonly string[]> = {
 export function pickSigns(lang: string, now = new Date()): { fence: SignLine; bench: SignLine } {
   const fencePool = [...SIGN_POOL, ...FENCE_LINES];
   const benchPool = [...SIGN_POOL, ...BENCH_LINES];
-  const local = LOCAL_LINES[lang];
+  const local = inLang(LOCAL_LINES, lang);
   const fence: SignLine = local && rareDay(4, "sign-lang", now) ? { text: daily(local, "sign-local", now), lang } : daily(fencePool, "sign-fence", now);
   let bench = daily(benchPool, "sign-bench", now);
   if (bench.text === fence.text) bench = benchPool[(benchPool.indexOf(bench) + 1) % benchPool.length];
@@ -78,7 +79,7 @@ export function sunflowerFaces(flowerX: number, flowerZ: number, camX: number, c
 export const isSleepyHour = (now: Date = new Date()): boolean => now.getHours() >= 22 || now.getHours() < 5;
 
 /** The verb "to sleep" per course language, for the sleeper's card in the walk. */
-export const SLEEP_VERB: Record<string, string> = { es: "dormir", de: "schlafen" };
+export const SLEEP_VERB: PerLang<string> = { es: "dormir", de: "schlafen" };
 
 /**
  * Tonight's sleeper: one blooming plant, picked by the date. The ids are
@@ -91,7 +92,7 @@ export function sleeperId(bloomIds: readonly string[], now: Date = new Date()): 
 
 /** The line on the sleeper's card: the snore first, then the verb it teaches. */
 export function snoreLine(lang: string): string {
-  const verb = SLEEP_VERB[lang];
+  const verb = inLang(SLEEP_VERB, lang);
   return verb ? `Zzz... (${verb} = to sleep)` : "Zzz...";
 }
 

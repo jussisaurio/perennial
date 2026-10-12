@@ -11,6 +11,7 @@ import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import type { SQL } from "bun";
 import { z } from "zod";
 import type { Config } from "./config";
+import { COURSE_DEFAULTS, Lang } from "./course";
 import { HttpError, json, readJson } from "./http";
 
 /** Tables a learner can read, each scoped to their user id. */
@@ -57,7 +58,6 @@ export async function proxyShape(req: Request, userId: string, config: Config): 
 const DAY = 86_400_000;
 /** Text limits for learner rows. Perennial AI output is held to the same ones (ai.ts). */
 export const LIMITS = { lemma: 60, gloss: 120, pos: 20, form: 60, forms: 40, notes: 300, text: 400, translation: 400, cloze: 60 };
-const lang = z.enum(["es", "de"]);
 const wordId = z.string().min(1).max(120);
 const ts = z.coerce.date();
 
@@ -66,7 +66,7 @@ const Mutation = z.discriminatedUnion("type", [
     type: z.literal("review.insert"),
     row: z.object({
       id: z.uuid(),
-      lang,
+      lang: Lang,
       word_id: wordId,
       skill: z.enum(["read", "listen", "write"]),
       grade: z.number().int().min(1).max(4),
@@ -79,7 +79,7 @@ const Mutation = z.discriminatedUnion("type", [
   z.object({ type: z.literal("review.delete"), id: z.uuid() }), // Undo
   z.object({
     type: z.literal("course.upsert"),
-    row: z.object({ lang, minutes: z.number().int().min(1).max(120).optional(), retention: z.number().min(0.7).max(0.99).optional() }),
+    row: z.object({ lang: Lang, minutes: z.number().int().min(1).max(120).optional(), retention: z.number().min(0.7).max(0.99).optional() }),
   }),
   z.object({
     type: z.literal("word_state.upsert"),
@@ -90,7 +90,7 @@ const Mutation = z.discriminatedUnion("type", [
     type: z.literal("user_word.upsert"),
     row: z.object({
       id: z.uuid(),
-      lang,
+      lang: Lang,
       lemma: z.string().trim().min(1).max(LIMITS.lemma),
       gloss: z.string().trim().min(1).max(LIMITS.gloss),
       pos: z.string().max(LIMITS.pos).nullish(),
@@ -213,7 +213,7 @@ export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[
         case "course.upsert": {
           const r = m.row;
           // Only the columns sent change, so two devices editing different settings both win.
-          await run(tx`insert into course (user_id, lang, minutes, retention) values (${userId}, ${r.lang}, ${r.minutes ?? 7}, ${r.retention ?? 0.9})
+          await run(tx`insert into course (user_id, lang, minutes, retention) values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention})
             on conflict (user_id, lang) do update set
               minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
               retention = coalesce(${r.retention ?? null}::real, course.retention)`);

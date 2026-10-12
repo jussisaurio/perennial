@@ -3,12 +3,13 @@
 // is anything to do (Today must not offer a session that ends at once).
 
 import { MAX_NEW_PER_DAY, plan, type Plan } from "../core/session";
+import { startOfDay } from "../core/day";
 import { fsrs as scheduler } from "../core/scheduler";
 import type { Learner } from "./learner";
 
 /** New words first met today (the daily new-word limit counts these). */
 export function newWordsToday(l: Learner, now = Date.now()): number {
-  const startOfDay = new Date(now).setHours(0, 0, 0, 0);
+  const dayStart = startOfDay(now);
   const first = new Map<string, number>();
   for (const r of l.reviews) {
     if (r.skill !== "read") continue;
@@ -17,7 +18,7 @@ export function newWordsToday(l: Learner, now = Date.now()): number {
     const prev = first.get(id);
     if (prev === undefined || t < prev) first.set(id, t);
   }
-  return [...first.values()].filter((t) => t >= startOfDay).length;
+  return [...first.values()].filter((t) => t >= dayStart).length;
 }
 
 /**
@@ -38,7 +39,7 @@ export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = D
   return plan({
     now,
     budgetMs: minutes * 60_000,
-    memories: l.memories.filter((m) => (voice || m.skill !== "listen") && !suspended.has(m.lexemeId)),
+    memories: l.memories.filter((m) => (voice || m.skill !== "listen") && !suspended.has(m.wordId)),
     fresh: l.fresh(),
     fsrs: scheduler,
     newToday,

@@ -1,7 +1,7 @@
 // A word's plant stage as a small glyph for lists: the same stage the gardens
 // show (plantStage), so a word blooms in the list exactly when it blooms there.
 
-import { plantStage } from "../data/learner";
+import { plantStage } from "../core/memory";
 import { stageLabel } from "../garden/plants";
 
 /** Small per-word status glyph for lists. */

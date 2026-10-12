@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { Deck, manifestKey, SourceWord } from "../../web/src/deck/schema.ts";
 import { auditDeck, frequencyRanks, loadAllow } from "./audit.ts";
 import { locate } from "../../web/src/content/text.ts";
-import { deckDir, wholeWordCount } from "./lib.ts";
+import { deckDir, sentenceFlags } from "./lib.ts";
 
 const [lang, num, ...rest] = process.argv.slice(2);
 if (!lang || !num) {
@@ -33,12 +33,7 @@ for (const w of source) {
   const flags = [...(findingsBy.get(w.lemma.toLowerCase()) ?? [])];
   const lines: string[] = [];
   for (const s of w.sentences) {
-    const n = s.text.split(/\s+/).filter(Boolean).length;
-    const marks: string[] = [];
-    if (n > 12) marks.push(`${n} words`);
-    const c = wholeWordCount(s.text, s.cloze);
-    if (c !== 1) marks.push(c === 0 ? "cloze not found as a whole word" : `cloze appears ${c}×`);
-    if (!w.forms.some((f) => f.toLowerCase() === s.cloze.toLowerCase())) marks.push(`cloze "${s.cloze}" not in forms`);
+    const marks = sentenceFlags(s, w.forms);
     const at = locate(s.text, s.cloze);
     const bold = at < 0 ? s.text : `${s.text.slice(0, at)}**${s.cloze}**${s.text.slice(at + s.cloze.length)}`;
     lines.push(`- ${bold} — _${s.translation}_${marks.length ? `  ⚠ ${marks.join("; ")}` : ""}`);
