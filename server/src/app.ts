@@ -52,7 +52,10 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
         return json({ ok: true, release: config.release });
       },
     },
-    "/api/version": { GET: () => json({ release: config.release, minClientVersion: config.minClientVersion }) },
+    // This server: its release, the oldest app version it accepts writes from,
+    // and what it can do right now, so the app shows only what works
+    // (web/src/data/server.ts). Public: it says nothing about the user.
+    "/api/server": { GET: () => json({ release: config.release, minClientVersion: config.minClientVersion, features: { ai: ai.enabled } }, 200, { "cache-control": "no-cache" }) },
 
     "/api/shape": { GET: async (req) => proxyShape(req, (await requireUser(req)).id, config) },
     "/api/write": {

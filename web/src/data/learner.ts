@@ -9,6 +9,7 @@ import { DAY_MS, replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
 import type { MemoryRow } from "../model";
 import { loadDeck, type LoadedDeck } from "./deck";
+import { postWrite } from "./http";
 import type { CourseRow, ReviewRow, Skill, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
 import type { Store } from "./store";
 
@@ -42,10 +43,25 @@ export interface Word {
 
 export type WordState = "new" | "learning" | "known";
 
-export function wordState(read: MemoryRow | undefined): WordState {
+export function wordState(read: Pick<MemoryRow, "s" | "reps"> | undefined): WordState {
   if (!read || read.reps === 0) return "new";
   return read.s >= KNOWN_STABILITY && read.reps >= 2 ? "known" : "learning";
 }
+
+/** Read stability (days) at which a learning word shows a bud instead of a sprout. */
+export const BUD_S = 3;
+/** Read stability (days) of a word known for ages: its plant talks like an old-timer. */
+export const OLD_S = 200;
+export type PlantStage = "seed" | "sprout" | "bud" | "bloom";
+
+/** A word's plant from its reading memory: the one definition every garden, list and card uses. It blooms exactly when the word is known. */
+export function plantStage(read: Pick<MemoryRow, "s" | "reps"> | undefined): PlantStage {
+  const st = wordState(read);
+  return st === "new" ? "seed" : st === "known" ? "bloom" : read!.s >= BUD_S ? "bud" : "sprout";
+}
+
+/** A listening or writing memory strong enough for its dot on the plant: known by the same rule as reading. */
+export const isStrong = (m: Pick<MemoryRow, "s" | "reps"> | undefined): boolean => wordState(m) === "known";
 
 export function recall(m: MemoryRow, now = Date.now()): number {
   return m.reps ? fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s) : 0;
@@ -226,8 +242,14 @@ export function recordReview(store: Store, r: Omit<ReviewRow, "id" | "user_id" |
 }
 
 export function undoReview(store: Store, id: string) {
-  if (!store.collections.review.has(id)) return;
-  void store.write(() => store.collections.review.delete(id)).catch((e) => console.error("undo not saved", e));
+  if (store.collections.review.has(id)) {
+    void store.write(() => store.collections.review.delete(id)).catch((e) => console.error("undo not saved", e));
+    return;
+  }
+  // Saved, but not back through sync yet (its echo can be slow): there is no
+  // row to delete here, so ask the server directly. Its delete syncs back.
+  if (!store.isWriter()) return;
+  void postWrite([{ type: "review.delete", id }]).catch((e) => console.error("undo not saved", e));
 }
 
 export function setWordStatus(store: Store, wordId: string, status: Word["status"]) {

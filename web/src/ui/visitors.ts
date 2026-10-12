@@ -1,8 +1,9 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { deriveMemory, wordState, type Learner } from "../data/learner";
+import { deriveMemory, wordState, type Learner, type Word } from "../data/learner";
 import type { ReviewRow } from "../data/rows";
+import type { MemoryRow } from "../model";
 import {
   learnerFacts,
   milestoneLine,
@@ -56,31 +57,39 @@ export function knownAt(reviews: readonly ReviewRow[], t: number, retention: num
   return n;
 }
 
-export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
-  const knownAll: string[] = [];
-  const knownNouns: string[] = [];
+/**
+ * The learner's known words: how many (all of them, for unlocks and
+ * milestones), their lemmas (lower case), and what the frog may croak.
+ */
+export function knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, memory: { get: (key: string) => Pick<MemoryRow, "s" | "reps"> | undefined }): { count: number; lemmas: Set<string>; croaks: string[] } {
+  const all: string[] = [];
+  const nouns: string[] = [];
   const lemmas = new Set<string>();
-  for (const w of l.words.values())
-    if (wordState(l.memory.get(`${w.id}:read`)) === "known") {
-      knownAll.push(w.lemma);
-      if (w.pos === "noun") knownNouns.push(w.lemma);
+  for (const w of words)
+    if (wordState(memory.get(`${w.id}:read`)) === "known") {
+      all.push(w.lemma);
+      if (w.pos === "noun") nouns.push(w.lemma);
       lemmas.add(w.lemma.toLowerCase());
     }
-  // The frog croaks things: "croac… casa" is a joke, "croac… no" is not.
-  const known = knownNouns.length >= 5 ? knownNouns : knownAll;
+  // The frog croaks things: "croac… casa" is a joke, "croac… no" is not. Only its pool is nouns; the count is every known word.
+  return { count: all.length, lemmas, croaks: nouns.length >= 5 ? nouns : all };
+}
+
+export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
+  const { count, lemmas, croaks } = knownWords(l.words.values(), l.memory);
   const times = l.reviews.map((r) => Date.parse(r.reviewed_at));
-  const facts = learnerFacts(times, known.length, now);
+  const facts = learnerFacts(times, count, now);
   const today = visitorsFor(facts, now, devVisitorOverride());
   // Known at the start of today. Only worth a replay when there are reviews today.
   const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const before = times.some((t) => t >= dayStart) ? knownAt(l.reviews, dayStart, l.course.retention, l.resolve, l.words) : known.length;
+  const before = times.some((t) => t >= dayStart) ? knownAt(l.reviews, dayStart, l.course.retention, l.resolve, l.words) : count;
   return {
     facts,
     today,
     views: visitorViews(today.present, l.lang, (noun) => lemmas.has(noun.toLowerCase())),
     welcome: welcomeBack(facts, now),
-    milestone: milestoneLine(before, known.length),
-    known,
+    milestone: milestoneLine(before, count),
+    known: croaks,
     mole: moleVisits(now, devVisitorOverride()),
     scenery: sceneryViews(l.lang, (lemma) => lemmas.has(lemma.toLowerCase())),
   };

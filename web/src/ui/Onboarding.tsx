@@ -3,12 +3,12 @@
 // course in one step; nothing to set up, no email needed yet.
 
 import { farewell } from "../content/voice";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
 import { ensureUser } from "../data/auth";
+import { postWrite } from "../data/http";
 import { useDeck } from "../data/learner";
 import { track } from "../observability";
-import { APP_VERSION } from "../version";
 import { SignIn } from "./Account";
 import { Garden, GrowthStrip, showcaseGarden } from "./Garden";
 import { GardenWalk, showcaseWalkPlants } from "./GardenWalk";
@@ -34,24 +34,39 @@ function saveDraft(d: Draft) {
   }
 }
 
-/** The first write: an anonymous account (if there is none yet) and the course. */
 /**
  * A course being started: set before the first write, so the app shows a calm
  * loading screen (not this page again) while the new account and its course
- * arrive, even though signing in remounts everything in between.
+ * arrive, even though signing in remounts everything in between. Kept outside
+ * React for that reason, and observable, so a failure brings this page back
+ * with its error.
  */
-export let startingCourse: string | null = null;
-export const courseArrived = () => void (startingCourse = null);
+type Starting = { lang: string | null; error: string };
+let starting: Starting = { lang: null, error: "" };
+const startingListeners = new Set<() => void>();
+function setStarting(next: Starting) {
+  starting = next;
+  for (const l of startingListeners) l();
+}
+const subscribeStarting = (l: () => void) => {
+  startingListeners.add(l);
+  return () => void startingListeners.delete(l);
+};
+export const useStartingCourse = () => useSyncExternalStore(subscribeStarting, () => starting);
+export const courseArrived = () => {
+  if (starting.lang) setStarting({ lang: null, error: "" });
+};
 
+/** The first write: an anonymous account (if there is none yet) and the course. */
 export async function startCourse(lang: string, minutes: number) {
-  startingCourse = lang;
-  await ensureUser();
-  const res = await fetch("/api/write", {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION },
-    body: JSON.stringify({ mutations: [{ type: "course.upsert", row: { lang, minutes } }] }),
-  });
-  if (!res.ok) throw new Error(`Could not start (${res.status})`);
+  setStarting({ lang, error: "" });
+  try {
+    await ensureUser();
+    await postWrite([{ type: "course.upsert", row: { lang, minutes } }]);
+  } catch (e) {
+    setStarting({ lang: null, error: "Could not start. Check your internet connection and try again." });
+    throw e;
+  }
 }
 
 export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) => void; signedIn: boolean }) {
@@ -74,7 +89,8 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   });
   const [linking, setLinking] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  // Shared, not local: a failed start may come back as a new copy of this page.
+  const { error } = useStartingCourse();
   const [walking, setWalking] = useState(false);
   useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
   const deck = useDeck(lang);
@@ -84,14 +100,12 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
 
   const start = async () => {
     setBusy(true);
-    setError("");
     try {
       await startCourse(lang, minutes);
       track("course_started", { lang, minutes });
       onStarted(lang);
     } catch {
-      courseArrived();
-      setError("Could not start. Check your internet connection and try again.");
+      // startCourse set the error (shown by whichever copy of this page is up).
       setBusy(false);
     }
   };

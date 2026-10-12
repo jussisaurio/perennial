@@ -1,118 +1,40 @@
 // The word garden: every word you've started is a plant. Height follows
 // memory stability, flowers open once a word is known, and plants droop as
 // recall fades — until the next session waters them. Nothing ever dies.
+// The plants themselves come from garden/plants.ts, shared with the walk.
 
-import { courseOrder } from "../content/order";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
-import { KNOWN_STABILITY, recall, type Learner } from "../data/learner";
+import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
 import { language } from "../content/languages";
-import { Plant as WordPlantShape, stageFor } from "./plant";
+import { StripPlant } from "./plant";
+import { hash, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
 import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { stripVisitor, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "./whimsy";
 
-interface Plant {
-  id: string;
-  lemma: string;
-  gloss: string;
-  s: number;
-  r: number;
-  listen: boolean;
-  write: boolean;
-  order: number;
-}
+export { GrowthStrip } from "./plant";
 
-function hash(str: string, salt = 0): number {
-  let h = 2166136261 ^ salt;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 10007) / 10007;
-}
-
-export type { Plant };
+type Plant = GardenPlant;
 const H = 210;
 const GROUND = H - 34;
 
-export interface GardenData {
-  plants: Plant[];
+export interface GardenData extends PlantSource {
   total: number;
-  seeds: number;
-  /** The learner's first word and when it was planted, for the keepsake post at the far left. */
-  first?: FirstWord | null;
 }
 
-export interface FirstWord {
-  id: string;
-  lemma: string;
-  /** The first review (ms). */
-  at: number;
-}
+const counted = (g: PlantSource): GardenData => ({ ...g, total: g.plants.length });
 
-/** The first word the learner ever practised that is still in the garden, or null. */
-export function firstWord(l: Learner): FirstWord | null {
-  let best: { id: string; at: number } | null = null;
-  for (const r of l.reviews) {
-    if (r.skill !== "read") continue;
-    const at = Date.parse(r.reviewed_at);
-    if (best && at >= best.at) continue;
-    const id = l.resolve(r.word_id);
-    const w = l.words.get(id);
-    if (w && w.status !== "ignored") best = { id, at };
-  }
-  return best ? { id: best.id, lemma: l.words.get(best.id)!.lemma, at: best.at } : null;
-}
-
-/** The learner's garden: every word with progress is a plant. */
+/** The learner's garden for the strip: the same plants as the walk. */
 export function gardenFromLearner(l: Learner, now = Date.now()): GardenData {
-  const plants: Plant[] = [];
-  for (const m of l.memories) {
-    if (m.skill !== "read" || m.reps === 0) continue;
-    const w = l.words.get(m.lexemeId);
-    if (!w || w.status === "ignored") continue;
-    const strong = (skill: string) => {
-      const x = l.memory.get(`${w.id}:${skill}`);
-      return !!x && x.reps > 0 && x.s >= KNOWN_STABILITY;
-    };
-    plants.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, s: m.s, r: recall(m, now), listen: strong("listen"), write: strong("write"), order: w.rank });
-  }
-  plants.sort((a, b) => a.order - b.order);
-  return { plants, total: plants.length, seeds: l.fresh().length, first: firstWord(l) };
+  return counted(plantsFromLearner(l, now));
 }
 
-/**
- * A made-up but believable garden for the landing page: the deck's most common
- * words at a spread of stages, so newcomers see what learning will look like.
- */
+/** The landing page's strip: the same words, at the same stages, as the landing page's walk. */
 export function showcaseGarden(deck: LoadedDeck, count = 64): GardenData {
-  const plants = courseOrder(deck).slice(0, count).map((w, i) => {
-    const h = hash(w.id, 7);
-    // Mostly blooming, some budding, a few sprouts; common words grew longest.
-    const s = h < 0.15 ? 1 + h * 10 : h < 0.35 ? 3 + h * 8 : 8 + (1 - i / count) * 120 * h;
-    return { id: w.id, lemma: w.lemma, gloss: w.gloss, s, r: 0.92, listen: s > 60, write: s > 90, order: w.rank };
-  });
-  return { plants, total: plants.length, seeds: Math.max(0, deck.words.length - count) };
-}
-
-function PlantShape({ p, scale, highlighted }: { p: Plant; scale: number; highlighted: boolean }) {
-  const growth = Math.min(1, Math.log1p(p.s) / Math.log1p(120));
-  const h = (16 + 118 * growth) * scale;
-  const dir = hash(p.id, 9) > 0.5 ? 1 : -1;
-  // Lean a little as recall fades, as a hint, never a punishment: plants stay
-  // green and never lean more than 18°, however long the break.
-  const droop = dir * Math.max(0, Math.min(1, (0.9 - p.r) / 0.4)) * 18;
-  return (
-    <g transform={`rotate(${droop.toFixed(1)})`}>
-      {highlighted && <circle className="glow" cy={-h} r={14 * scale} />}
-      <WordPlantShape word={p.lemma} growth={growth} stage={stageFor(p.s, p.s >= KNOWN_STABILITY)} scale={scale} />
-      {p.listen && <circle cx={4 * scale} cy={-h * 0.45} r={2.4 * scale} fill="var(--sky)" />}
-      {p.write && <circle cx={-4 * scale} cy={-h * 0.62} r={2.4 * scale} fill="var(--persimmon)" />}
-    </g>
-  );
+  return counted(showcasePlants(deck, count));
 }
 
 /** Width per plant when the garden scrolls: every plant stays a real, tappable flower. */
@@ -225,13 +147,13 @@ export function Garden({
 
   const visible = scrolls ? layout.filter((l) => l.x > scrollX - OVERSCAN && l.x < scrollX + width + OVERSCAN) : layout;
   const seeds = Math.min(data?.seeds ?? 0, 24);
-  const blooming = data?.plants.filter((p) => p.s >= KNOWN_STABILITY).length ?? 0;
+  const blooming = data?.plants.filter((p) => p.stage === "bloom").length ?? 0;
   const label = data ? `Word garden: ${blooming} known, ${data.total - blooming} learning, ${data.seeds} new.` : "Word garden";
   const from = scrolls ? Math.max(0, scrollX - OVERSCAN) : 0;
   const to = scrolls ? Math.min(fullWidth, scrollX + width + OVERSCAN) : width;
   // Late at night one bloom snores (#62): the same one all day, the same as in the walk.
   const day = today();
-  const sleeper = useMemo(() => sleeperId(plants.filter((p) => p.s >= KNOWN_STABILITY).map((p) => p.id)), [plants, day]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sleeper = useMemo(() => sleeperId(plants.filter((p) => p.stage === "bloom").map((p) => p.id)), [plants, day]); // eslint-disable-line react-hooks/exhaustive-deps
   const snoring = sleeper && isSleepyHour() ? sleeper : null;
   const empty = !!data && data.total === 0 && !showcase;
   const stake = empty && visitors ? reservedStake(language(visitors.lang).name, visitors.lang) : null;
@@ -259,9 +181,9 @@ export function Garden({
             <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={() => show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
               <g className="sway" style={{ animationDelay: `${-hash(p.id, 23) * 6}s`, animationDuration: `${5 + hash(p.id, 29) * 4}s` }}>
                 <g key={perk?.id === p.id ? `perk${perk.n}` : perk?.neighbour === p.id ? `late${perk.n}` : "still"} className={perk?.id === p.id ? "perk" : perk?.neighbour === p.id ? "perk late" : undefined}>
-                  <PlantShape p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
+                  <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
                 </g>
-                {snoring === p.id && <Snore y={-(16 + 118 * Math.min(1, Math.log1p(p.s) / Math.log1p(120))) * scale + 4} />}
+                {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
                 {/* generous invisible hit area */}
                 <rect x={-8} y={-140 * scale} width={16} height={140 * scale} fill="transparent" />
               </g>
@@ -349,11 +271,11 @@ export function Garden({
           <strong>{hover.p.lemma}</strong>
           <span>{hover.p.gloss}</span>
           <em>
-            {showcase ? (hover.p.s >= KNOWN_STABILITY ? "in bloom" : hover.p.s >= 3 ? "budding" : "a new sprout") : `${hover.p.s >= KNOWN_STABILITY ? "known" : "learning"} · ${hover.p.r >= 0.85 ? "fresh in memory" : "ready for practice"}`}
+            {showcase ? stageLabel(hover.p.stage) : `${hover.p.stage === "bloom" ? "known" : "learning"} · ${hover.p.r >= THIRSTY ? "fresh in memory" : "ready for practice"}`}
             {hover.p.listen && " · listening ✓"}
             {hover.p.write && " · writing ✓"}
           </em>
-          {!showcase && <span className="tip-flavour">{plantLine(hover.p.lemma, hover.p.r < 0.7 ? "thirsty" : hover.p.s >= 200 ? "old" : hover.p.s >= KNOWN_STABILITY ? "bloom" : hover.p.s >= 3 ? "bud" : "sprout")}</span>}
+          {!showcase && <span className="tip-flavour">{plantLine(hover.p.lemma, plantMood(hover.p))}</span>}
           {onView && (
             <button className="ghost small" onClick={() => onView(hover.p.id)}>
               View in garden →
@@ -488,67 +410,3 @@ function SproutArrow() {
   );
 }
 
-export function GrowthStrip() {
-  const stages: { label: string; s: number }[] = [
-    { label: "new word", s: 0 },
-    { label: "first review", s: 1.2 },
-    { label: "learning", s: 4 },
-    { label: "known", s: 30 },
-    { label: "known well", s: 200 },
-  ];
-  return (
-    <div className="growth-strip" aria-label="Each word grows from a seed to a flower as you remember it">
-      {stages.map((st, i) => (
-        <figure key={st.label} style={{ animationDelay: `${0.15 + i * 0.12}s` }}>
-          <svg width="72" height="150" viewBox="-36 -170 72 182" aria-hidden="true" className="garden-mini">
-            <path d="M-34 4 Q0 -3 34 4 V12 H-34Z" fill="var(--soil-1)" />
-            {st.s === 0 ? (
-              <ellipse className="seed" cx="0" cy="6" rx="4" ry="2.6" />
-            ) : (
-              <g className="sway" style={{ animationDelay: `${-i}s` }}>
-                <PlantShape p={{ id: `demo${i + 2}`, lemma: ["", "casa", "mañana", "Blume", "perennial"][i], gloss: "", s: st.s, r: 1, listen: st.s > 100, write: st.s > 100, order: 0 }} scale={1.25} highlighted={false} />
-              </g>
-            )}
-          </svg>
-          <figcaption>{st.label}</figcaption>
-        </figure>
-      ))}
-    </div>
-  );
-}
-
-/** Small per-word status glyph for lists. */
-export function StageGlyph({ s, reps, suspended }: { s: number; reps: number; suspended?: boolean }) {
-  const stage = suspended ? "suspended" : reps === 0 ? "seed" : s >= KNOWN_STABILITY ? "bloom" : s >= 3 ? "bud" : "sprout";
-  return (
-    <svg className="glyph" viewBox="0 0 24 24" role="img" aria-label={stage}>
-      {stage === "seed" && (
-        <>
-          <path d="M5 19.5h14" stroke="var(--soil-2)" strokeWidth="2" strokeLinecap="round" />
-          <ellipse cx="12" cy="16.5" rx="3.4" ry="2.4" fill="var(--sun)" opacity="0.85" />
-        </>
-      )}
-      {stage === "suspended" && (
-        <g stroke="var(--muted)" strokeWidth="2.2" strokeLinecap="round">
-          <path d="M9.5 8v8M14.5 8v8" />
-        </g>
-      )}
-      {(stage === "sprout" || stage === "bud" || stage === "bloom") && <path d="M12 21v-10" stroke="var(--stem)" strokeWidth="1.8" strokeLinecap="round" />}
-      {stage === "sprout" && (
-        <>
-          <path d="M12 12c0-3 2.5-5 5.5-5 0 3-2.5 5-5.5 5z" fill="var(--leaf-2)" />
-          <path d="M12 13c0-2.6-2-4.3-4.6-4.3 0 2.6 2 4.3 4.6 4.3z" fill="var(--leaf-2)" />
-        </>
-      )}
-      {stage === "bud" && <ellipse cx="12" cy="8" rx="3.4" ry="4.6" fill="var(--petal-2)" />}
-      {stage === "bloom" && (
-        <g transform="translate(12 8)">
-          {[0, 72, 144, 216, 288].map((a) => (
-            <ellipse key={a} rx="2" ry="3.6" fill="var(--petal-1)" transform={`rotate(${a}) translate(0 -3.4)`} />
-          ))}
-          <circle r="2.2" fill="var(--sun)" />
-        </g>
-      )}
-    </svg>
-  );
-}

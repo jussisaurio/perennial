@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from "react";
 import { apiMessage, mineWords, resetDate } from "../data/ai";
+import { useFeatures } from "../data/server";
 import { useUser } from "../data/auth";
 import { setWordStatus, useLearner, useStore, wordState, type Learner } from "../data/learner";
 import type { UserSentenceRow, UserWordRow, WordStateRow } from "../data/rows";
@@ -42,6 +43,7 @@ function MineText({ learner }: { learner: Learner }) {
   const store = useStore();
   const { user } = useUser();
   const { me, refresh } = useMe();
+  const { ai } = useFeatures();
   const tag = language(learner.lang).tag;
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<Map<string, string>>(new Map()); // form -> sentence
@@ -58,9 +60,11 @@ function MineText({ learner }: { learner: Learner }) {
   // Words the course has are free; the rest need Perennial AI.
   const inCourse = [...picked.keys()].filter((f) => statusOf.get(f)?.wordId);
   const needAI = [...picked.keys()].filter((f) => !statusOf.get(f)?.wordId);
-  const canAI = !!user && !user.anonymous;
+  const canAI = ai && !!user && !user.anonymous;
   const left = me ? me.credits.left : 0;
-  const tooMany = needAI.length > 0 && (!canAI || needAI.length > left);
+  // Without Perennial AI on this server, only course words can be added.
+  const tooMany = ai && needAI.length > 0 && (!canAI || needAI.length > left);
+  const adding = ai ? picked.size : inCourse.length;
 
   const toggle = (form: string, index: number) => {
     const next = new Map(picked);
@@ -76,7 +80,7 @@ function MineText({ learner }: { learner: Learner }) {
     setResult(null);
     try {
       for (const f of inCourse) await setWordStatus(store, statusOf.get(f)!.wordId!, "queued");
-      const items = needAI.map((form) => ({ form, sentence: picked.get(form)! }));
+      const items = ai ? needAI.map((form) => ({ form, sentence: picked.get(form)! })) : [];
       const known = learner.studied.slice(0, 400).map((w) => w.lemma);
       for (let i = 0; i < items.length; i += 15) {
         const r = await mineWords(learner.lang, items.slice(i, i + 15), known);
@@ -92,8 +96,8 @@ function MineText({ learner }: { learner: Learner }) {
           }
         });
       }
-      const n = picked.size;
-      track("words_added", { fromCourse: inCourse.length, withAI: needAI.length });
+      const n = adding;
+      track("words_added", { fromCourse: inCourse.length, withAI: items.length });
       setPicked(new Map());
       setResult(`Added ${n} ${n === 1 ? "word" : "words"} (marked ✓). You will see them first in your next session.`);
     } catch (e) {
@@ -156,11 +160,11 @@ function MineText({ learner }: { learner: Learner }) {
             })}
           </div>
           <div className="row">
-            <button className="primary" disabled={!picked.size || busy || tooMany} onClick={() => void add()}>
+            <button className="primary" disabled={!adding || busy || tooMany} onClick={() => void add()}>
               {busy
                 ? "Adding…"
-                : picked.size
-                  ? `Learn ${picked.size} ${picked.size === 1 ? "word" : "words"}${needAI.length ? ` · uses ${needAI.length} AI ${needAI.length === 1 ? "word" : "words"}` : ""}`
+                : adding
+                  ? `Learn ${adding} ${adding === 1 ? "word" : "words"}${ai && needAI.length ? ` · uses ${needAI.length} AI ${needAI.length === 1 ? "word" : "words"}` : ""}`
                   : "Select words to learn"}
             </button>
             <button className="ghost" disabled={!picked.size} onClick={() => void ignore()} title="Names and other words you never want to learn">
@@ -175,6 +179,11 @@ function MineText({ learner }: { learner: Learner }) {
                 {left > 0 ? `Select ${needAI.length - left} fewer, or ` : ""}wait until {resetDate()}.
               </p>
             </div>
+          )}
+          {!ai && needAI.length > 0 && (
+            <p className="muted small">
+              {needAI.length === 1 ? "1 selected word is" : `${needAI.length} selected words are`} not in the course yet, so {needAI.length === 1 ? "it" : "they"} cannot be added. You can mark {needAI.length === 1 ? "it" : "them"} “never new”.
+            </p>
           )}
           {tooMany && !canAI && <p className="muted small">Some of these words are not in the course. To have Perennial AI make cards for them, add your email in Settings.</p>}
         </>

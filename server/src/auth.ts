@@ -16,7 +16,14 @@ import { log } from "./log";
 import type { Mailer } from "./mail";
 
 export async function mergeUsers(sql: SQL, from: string, to: string) {
+  if (from === to) return;
   await sql.begin(async (tx) => {
+    // Better Auth deletes the anonymous user after this transaction, and its
+    // rows go with it. So: wait for writes already in progress (they lock the
+    // row too, sync.ts applyWrites) and move their rows, and end the anonymous
+    // sessions so a write arriving later is refused, not lost.
+    await tx`select id from "user" where id = ${from} for update`;
+    await tx`delete from session where "userId" = ${from}`;
     // Rows with a globally unique id (made on the client): just change the owner.
     await tx`update review set user_id = ${to} where user_id = ${from}`;
     await tx`update user_word set user_id = ${to} where user_id = ${from}`;

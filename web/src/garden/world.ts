@@ -21,7 +21,7 @@ export interface GardenPlant {
 export interface PlacedPlant extends GardenPlant {
   x: number;
   z: number;
-  /** Lean in radians as recall fades. Never more than ~18°, nothing ever dies. */
+  /** Lean in radians for the shader as recall fades (droopFor). Never more than 18°, nothing ever dies. */
   droop: number;
   phase: number;
   bed: number;
@@ -76,13 +76,24 @@ export function hash(str: string, salt = 0): number {
   return (h >>> 0) / 4294967296;
 }
 
-/** Same lean as the 2D garden: a hint below 90% recall, capped at 18°. */
-export function droopFor(id: string, r: number): number {
-  const dir = hash(id, 9) > 0.5 ? 1 : -1;
-  return dir * Math.max(0, Math.min(1, (0.9 - r) / 0.4)) * ((18 * Math.PI) / 180);
+/** Which way a word's plant leans when it leans at all: 1 to the right, -1 to the left, the same in every view. */
+export function leanDir(id: string): 1 | -1 {
+  return hash(id, 9) > 0.5 ? 1 : -1;
 }
 
-export const THIRSTY = 0.85;
+/**
+ * How far a plant leans as recall fades, in degrees, positive to the right as
+ * you look at it (SVG's rotate). A hint below 90% recall, never a punishment:
+ * plants stay green and never lean more than 18°, however long the break.
+ */
+export function leanDeg(id: string, r: number): number {
+  return leanDir(id) * Math.max(0, Math.min(1, (0.9 - r) / 0.4)) * 18;
+}
+
+/** The same lean as the 2D garden (leanDeg), in radians for the sprite shader, where positive turns the top to the left. */
+export function droopFor(id: string, r: number): number {
+  return (-leanDeg(id, r) * Math.PI) / 180;
+}
 
 export function layout(plants: GardenPlant[]): Layout {
   const byGroup = new Map<string, GardenPlant[]>();

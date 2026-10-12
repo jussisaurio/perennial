@@ -4,9 +4,12 @@ import App from "./App";
 import "./index.css";
 import { initObservability, reactErrorHandler } from "./observability";
 import { initTheme } from "./ui/theme";
+import { loadServerInfo } from "./data/server";
 
 initTheme();
 initObservability();
+// What the server can do, and whether this app is still new enough for it.
+loadServerInfo();
 void navigator.storage?.persist?.();
 
 // After a deploy, this page may ask for last release's code chunks, which are

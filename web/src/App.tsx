@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
 import { identify } from "./observability";
 import { StoreContext, useCourses } from "./data/learner";
+import { cleanUpForgotten } from "./data/device";
 import { createStore, reloadNeeded, type Store } from "./data/store";
 import { Home } from "./ui/Home";
 import { FlowerIcon, GearIcon, HomeIcon, ListIcon, SproutMark } from "./ui/icons";
 import { LearnerGardenWalk } from "./ui/GardenWalk";
-import { courseArrived, Onboarding, startingCourse } from "./ui/Onboarding";
+import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
 import { SessionScreen } from "./ui/Session";
 import { SettingsScreen } from "./ui/Settings";
@@ -78,8 +79,22 @@ function StoreProvider({ userId, children }: { userId: string; children: ReactNo
   // Keyed by user: a new user remounts every screen, so none holds the old store.
   return (
     <StoreContext.Provider key={store.userId} value={store}>
-      {children}
+      <WriterOnly store={store}>{children}</WriterOnly>
     </StoreContext.Provider>
+  );
+}
+
+/** One tab writes (see tabLock in store.ts); another tab says so instead of losing answers. */
+function WriterOnly({ store, children }: { store: Store; children: ReactNode }) {
+  const writer = useSyncExternalStore(store.onWriterChange, store.isWriter);
+  if (writer) return children;
+  return (
+    <div className="other-tab" role="status">
+      <p>Perennial is open in another tab. Use that tab, or close it and reload here.</p>
+      <button className="primary" onClick={() => location.reload()}>
+        Reload
+      </button>
+    </div>
   );
 }
 
@@ -105,7 +120,9 @@ export default function App() {
   const { user, pending } = useUser();
   const [route, go] = useRoute();
   // Signing in, out, or linking an anonymous learner to an account changes the
-  // user: start clean with a reload. Queued writes are kept and upload after.
+  // user: start clean with a reload. Queued writes belong to their user: an
+  // anonymous learner's move to the account they sign in to, a signed-out
+  // learner's are dropped (see data/device.ts).
   const firstUser = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     if (pending) return;
@@ -115,6 +132,10 @@ export default function App() {
     else firstUser.current = id;
     if (id) identify(id);
   }, [user?.id, pending]);
+  // Signed out: delete what earlier learners left on this device (see device.ts).
+  useEffect(() => {
+    if (!pending && !user) void cleanUpForgotten();
+  }, [pending, user]);
   if (pending) return <Settling />;
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
   return (
@@ -130,10 +151,13 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
-  if (course && startingCourse) courseArrived();
+  const starting = useStartingCourse().lang;
+  useEffect(() => {
+    if (course && starting) courseArrived();
+  }, [course, starting]);
 
   // Still loading, or a course was just started and is on its way: not the landing page.
-  if (!course && (!ready || startingCourse)) return <Settling />;
+  if (!course && (!ready || starting)) return <Settling />;
   if (!course)
     return (
       <Onboarding

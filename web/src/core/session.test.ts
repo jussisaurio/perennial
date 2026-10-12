@@ -133,4 +133,33 @@ describe("Session undo", () => {
     s.next(0);
     expect(s.undo()).toBe(false);
   });
+
+  test("undo steps over a skipped card: answer a, skip l, undo brings back a", () => {
+    const queue: Task[] = ["a", "l", "c"].map((id) => ({ kind: "review" as const, lexemeId: id, skill: (id === "l" ? "listen" : "read") as Skill }));
+    const s = new Session({ queue, dueCount: 3, newCount: 0, newLimitReached: false }, 600_000);
+    const a = s.next(0)!;
+    s.report(a, { grade: 1 }); // answered (and its retry scheduled)
+    expect(s.next(0)!.lexemeId).toBe("l");
+    s.skip(); // "Can't listen now": no answer recorded
+    expect(s.next(0)!.lexemeId).toBe("c");
+    expect(s.undo()).toBe(true);
+    expect(s.next(0)!.lexemeId).toBe("a"); // not "l": the answer being undone is a's
+    s.report(a, { grade: 3 });
+    const rest: string[] = [];
+    let t: Task | null;
+    while ((t = s.next(0))) {
+      rest.push(`${t.lexemeId}${t.kind === "review" && t.retry ? "*" : ""}`);
+      s.report(t, { grade: 3 });
+    }
+    expect(rest).toEqual(["l", "c"]); // the skipped card comes back; a's undone failure no longer retries
+  });
+
+  test("a skipped first card leaves nothing to undo", () => {
+    const queue: Task[] = ["l", "c"].map((id) => ({ kind: "review" as const, lexemeId: id, skill: "read" as Skill }));
+    const s = new Session({ queue, dueCount: 2, newCount: 0, newLimitReached: false }, 600_000);
+    s.next(0);
+    s.skip();
+    s.next(0);
+    expect(s.undo()).toBe(false);
+  });
 });

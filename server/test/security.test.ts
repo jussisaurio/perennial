@@ -232,3 +232,17 @@ describe("writes only point at real words", () => {
     expect((await t.write(mallory, [{ type: "user_sentence.insert", row: { id: crypto.randomUUID(), word_id: w.row.id, text: "Veo un zorro.", translation: "I see a fox.", cloze: "zorro", origin: "own-text" } }])).status).toBe(422);
   });
 });
+
+describe("the server describes itself", () => {
+  test("/api/server: release, minimum app version and features, public and user-free", async () => {
+    const res = await t.call("/api/server");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ release: t.config.release, minClientVersion: t.config.minClientVersion, features: { ai: true } });
+    const off = await startApp({ anthropic: { apiKey: undefined, model: "claude-haiku-4-5" } });
+    try {
+      expect((await off.call("/api/server")).body.features).toEqual({ ai: false });
+    } finally {
+      await off.stop();
+    }
+  });
+});

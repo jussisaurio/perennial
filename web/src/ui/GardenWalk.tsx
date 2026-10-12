@@ -1,65 +1,37 @@
 // The garden you can walk in. Every word you have started is a plant in a
 // raised bed; walk the paths, read the names, click a plant to hear it.
-// The three.js scene loads only when this screen opens.
+// The three.js scene loads only when this screen opens. The plants come from
+// garden/plants.ts, shared with the 2D garden, so a word looks the same in both.
 
-import { courseOrder } from "../content/order";
 import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { language } from "../content/languages";
 import type { LoadedDeck } from "../data/deck";
-import { useLearner, type Learner } from "../data/learner";
+import { useLearner } from "../data/learner";
 import { track } from "../observability";
-import { groupOf, layout, THIRSTY, type GardenPlant, type Layout, type PlacedPlant } from "../garden/world";
+import { groupOf, layout, type Layout, type PlacedPlant } from "../garden/world";
+import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, GardenScene, Label, TimeOfDay, WalkVisitors } from "../garden/scene";
 import { EMPTY_WALK, loadingLine, plantLine, reservedStake, SLOW_DEVICE_NOTICE } from "../content/voice";
 import { keepsakeLabel, sleeperId, snoreLine } from "../garden/whimsy";
-import { firstWord, type FirstWord } from "./Garden";
 import { takeFocus } from "./gardenFocus";
-import { stageFor, WordPlant } from "./plant";
+import { WordPlant } from "./plant";
 import { speak } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
-import { KNOWN_STABILITY, recall } from "./stats";
 import { plural } from "./format";
 import { learnerVisitors, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
 import { sceneryViews } from "../garden/scenery";
 
-export interface WalkSource {
-  plants: GardenPlant[];
-  seeds: number;
-  /** The first word, for its keepsake stake beside its plant (#61). */
-  first?: FirstWord | null;
-}
+export type WalkSource = PlantSource;
 
-const growthOf = (s: number) => Math.min(1, Math.log1p(s) / Math.log1p(120));
+/** The learner's own garden: the same plants as the 2D garden. */
+export const walkPlants = plantsFromLearner;
 
-/** The learner's own garden: every word with progress is a plant. */
-export function walkPlants(l: Learner, now = Date.now()): WalkSource {
-  const strong = (id: string, skill: string) => {
-    const m = l.memory.get(`${id}:${skill}`);
-    return !!m && m.reps > 0 && m.s >= KNOWN_STABILITY;
-  };
-  const plants: GardenPlant[] = [];
-  for (const m of l.memories) {
-    const w = l.words.get(m.lexemeId);
-    if (m.skill !== "read" || m.reps === 0 || !w || w.status === "ignored") continue;
-    const known = m.s >= KNOWN_STABILITY && m.reps >= 2;
-    plants.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, s: m.s, r: recall(m, now), stage: stageFor(m.s, known), growth: growthOf(m.s), listen: strong(w.id, "listen"), write: strong(w.id, "write") });
-  }
-  return { plants, seeds: l.fresh().length, first: firstWord(l) };
-}
-
-/** A believable garden for visitors: the deck's common words at a spread of stages. */
+/** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
 export function showcaseWalkPlants(deck: LoadedDeck, count = 160): WalkSource {
-  const plants = courseOrder(deck).slice(0, count).map((w, i) => {
-    let h = 0;
-    for (const ch of w.id) h = (h * 31 + ch.charCodeAt(0)) % 1000;
-    const x = h / 1000;
-    const s = x < 0.15 ? 1 + x * 10 : x < 0.35 ? 3 + x * 8 : 8 + (1 - i / count) * 120 * x;
-    return { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos, rank: w.rank, s, r: 0.95, stage: stageFor(s, s >= KNOWN_STABILITY), growth: growthOf(s), listen: false, write: false };
-  });
-  return { plants, seeds: 0 };
+  return { ...showcasePlants(deck, count), seeds: 0 };
 }
 
 /** The walk-in garden for the signed-in learner. */
@@ -94,17 +66,9 @@ function savedDetail(): Detail | null {
 const TIME_LABEL: Record<TimeOfDay, string> = { day: "Day", dusk: "Evening", night: "Night" };
 const NEXT_TIME: Record<TimeOfDay, TimeOfDay> = { day: "dusk", dusk: "night", night: "day" };
 
-function stageText(p: PlantView): string {
-  if (p.stage === "bloom") return "In bloom: you know this word.";
-  if (p.stage === "bud") return "Budding: you almost know this word.";
-  return "A new sprout: you are learning this word.";
-}
-
-/** The plant's one line of personality (the same every time for this word). */
+/** The plant's one line of personality (the same every time for this word, and the same as in the 2D garden). */
 function personality(p: PlantView): string {
-  if (p.r < THIRSTY) return plantLine(p.lemma, "thirsty");
-  if (p.s >= 200) return plantLine(p.lemma, "old");
-  return plantLine(p.lemma, p.stage === "bloom" ? "bloom" : p.stage === "bud" ? "bud" : "sprout");
+  return plantLine(p.lemma, plantMood(p));
 }
 
 type PlantView = PlacedPlant;
@@ -510,7 +474,7 @@ export function GardenWalk({
               </strong>
               <span className="gw-gloss">{selected.gloss}</span>
               <span className="muted small">
-                {stageText(selected)} {selected.r < THIRSTY ? "It is a little thirsty: practise it soon." : `You remember it ${Math.round(selected.r * 100)}% of the time.`}
+                {stageSentence(selected.stage)} {selected.r < THIRSTY ? "It is a little thirsty: practise it soon." : `You remember it ${Math.round(selected.r * 100)}% of the time.`}
               </span>
               <span className="muted small gw-bed">In the bed for {groupOf(selected.pos).toLowerCase()}.</span>
               <span className="small gw-flavour">{personality(selected)}</span>

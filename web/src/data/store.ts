@@ -4,27 +4,25 @@
 // offline queue: they apply instantly on the device, are stored in IndexedDB,
 // and are sent to /api/write when there is a connection.
 //
-// A store belongs to one user. Signing in (which can change the user id) or
-// out disposes it and makes a new one; queued writes carry no user id, so they
-// are sent for whoever is signed in when they upload.
+// A store belongs to one user, and so do its SQLite copy and its queue (see
+// device.ts): a write queued by one learner is never sent while another is
+// signed in, except that an anonymous learner's queue moves to the account
+// they sign in to. Signing in or out disposes the store and makes a new one.
+//
+// One tab writes: the queue is shared by the user's tabs, so only the tab
+// holding the user's Web Lock may write. Other tabs ask the learner to use
+// that one (see `writer` below and App).
 
 import * as Sentry from "@sentry/react";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { NonRetriableError, startOfflineExecutor, type OfflineExecutor } from "@tanstack/offline-transactions";
+import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineExecutor, type LeaderElection, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
-import { APP_VERSION } from "../version";
+import { sessionUserId } from "./auth";
+import { adopted, adoptedBy, cleanUpForgotten, databaseName, keepOnDevice, outboxName, registerOutbox } from "./device";
+import { ApiError, postWrite, reloadNeeded } from "./http";
 import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
 
-class HttpError extends Error {
-  readonly status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
-
-/** Ask the user to reload when the server needs a newer app. */
-export const reloadNeeded = new EventTarget();
+export { reloadNeeded };
 
 type Persistence = Awaited<ReturnType<typeof openPersistence>>;
 
@@ -34,7 +32,7 @@ async function openPersistence(userId: string) {
   if (!("storage" in navigator) || typeof navigator.storage.getDirectory !== "function" || !window.isSecureContext) return null;
   try {
     const { createBrowserWASQLitePersistence, openBrowserWASQLiteOPFSDatabase, persistedCollectionOptions } = await import("@tanstack/browser-db-sqlite-persistence");
-    const database = await openBrowserWASQLiteOPFSDatabase({ databaseName: `perennial-${userId}.sqlite` });
+    const database = await openBrowserWASQLiteOPFSDatabase({ databaseName: databaseName(userId) });
     return { persistence: createBrowserWASQLitePersistence({ database }), persistedCollectionOptions };
   } catch (e) {
     console.warn("[store] local persistence unavailable", e);
@@ -68,7 +66,83 @@ function makeCollection<T extends object>(table: string, getKey: (row: T) => str
   ) as unknown as ReturnType<typeof createCollection<T & Record<string, unknown>>>;
 }
 
+/** This user's queue of unsent writes: their own IndexedDB database (or localStorage keys). */
+async function outboxStorage(userId: string): Promise<StorageAdapter | undefined> {
+  if ((await IndexedDBAdapter.probe()).available) return new IndexedDBAdapter(outboxName(userId));
+  if (LocalStorageAdapter.probe().available) return new LocalStorageAdapter(`${outboxName(userId)}:`);
+  // No storage at all: the executor finds none either, and writes go straight to the server.
+  return undefined;
+}
+
+/** An anonymous learner who signed in: move their unsent writes into the account's queue. */
+async function adoptQueues(userId: string, target: StorageAdapter) {
+  for (const from of adoptedBy(userId)) {
+    try {
+      const source = await outboxStorage(from);
+      if (source) {
+        for (const key of await source.keys()) {
+          const value = await source.get(key);
+          if (value !== null) await target.set(key, value);
+        }
+        await source.clear();
+      }
+      adopted(from);
+    } catch (e) {
+      // Left in place; tried again on the next start.
+      console.warn("[store] could not move queued writes", e);
+    }
+  }
+}
+
+/**
+ * The user's Web Lock: the tab holding it sends the queue. A tab that opens
+ * while another holds it waits a moment (a reload, or React's development
+ * double mount, releases it quickly), then reports "not the writer" but stays
+ * in line, and becomes the writer if the other tab closes.
+ */
+function tabLock(name: string): LeaderElection | undefined {
+  if (typeof navigator === "undefined" || !("locks" in navigator)) return undefined;
+  let leader = false;
+  let release: (() => void) | null = null;
+  const abort = new AbortController();
+  const listeners = new Set<(isLeader: boolean) => void>();
+  const set = (v: boolean) => {
+    if (leader === v) return;
+    leader = v;
+    for (const l of listeners) l(v);
+  };
+  return {
+    requestLeadership: () =>
+      new Promise<boolean>((resolve) => {
+        if (leader) return resolve(true);
+        const timer = setTimeout(() => resolve(false), 2500);
+        navigator.locks
+          .request(name, { mode: "exclusive", signal: abort.signal }, () => {
+            clearTimeout(timer);
+            set(true);
+            resolve(true);
+            return new Promise<void>((done) => (release = done));
+          })
+          .catch(() => resolve(false));
+      }),
+    releaseLeadership: () => {
+      abort.abort();
+      release?.();
+      release = null;
+      set(false);
+    },
+    isLeader: () => leader,
+    onLeadershipChange: (cb) => {
+      listeners.add(cb);
+      return () => void listeners.delete(cb);
+    },
+  };
+}
+
 export async function createStore(userId: string) {
+  // Files of learners who signed out here go first; this learner is using theirs again.
+  await cleanUpForgotten();
+  keepOnDevice(userId);
   const persisted = await openPersistence(userId);
   const collections = {
     course: makeCollection<CourseRow>("course", (r) => r.lang, persisted),
@@ -79,45 +153,62 @@ export async function createStore(userId: string) {
   };
   type Table = keyof typeof collections;
 
+  // Whether this tab may write. Without a queue (no storage) every tab sends directly.
+  let writer = true;
+  const writerListeners = new Set<() => void>();
+  const setWriter = (v: boolean) => {
+    if (writer === v) return;
+    writer = v;
+    for (const l of writerListeners) l();
+  };
+
+  const storage = await outboxStorage(userId);
+  if (storage) await adoptQueues(userId, storage);
   const executor: OfflineExecutor = startOfflineExecutor({
     collections,
+    storage,
+    leaderElection: tabLock(`perennial-writer-${userId}`),
+    onLeadershipChange: setWriter,
     mutationFns: {
       // Traced (sampled, see observability.ts): the time from sending a write
       // to seeing it come back through sync is the latency learners feel.
       write: ({ transaction, idempotencyKey }) => Sentry.startSpan({ name: "sync write", op: "sync.write" }, async (span) => {
-        const mutations = transaction.mutations.map(toServer).filter((m): m is NonNullable<typeof m> => !!m);
+        const at = typeof transaction.metadata?.at === "string" ? transaction.metadata.at : undefined;
+        const mutations = transaction.mutations.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
         if (!mutations.length) return;
+        // Signed in as someone else since (in another tab): keep these for their owner.
+        const current = sessionUserId();
+        if (current && current !== userId) throw new ApiError(401, "other_user");
         span.setAttribute("mutations", mutations.length);
-        const res = await fetch("/api/write", {
-          method: "POST",
-          headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION, "idempotency-key": idempotencyKey },
-          body: JSON.stringify({ mutations }),
-        });
-        if (res.status === 426) {
-          reloadNeeded.dispatchEvent(new Event("reload"));
-          throw new HttpError(426, "please reload");
+        let result;
+        try {
+          result = await postWrite(mutations, { idempotencyKey });
+        } catch (e) {
+          if (e instanceof ApiError && e.permanent) throw new NonRetriableError(`rejected: ${e.code}`);
+          throw e;
         }
-        // Invalid, or over a storage limit: retrying would never succeed.
-        if (res.status === 422 || res.status === 413 || (res.status === 429 && (await res.clone().text()).includes('"quota"'))) throw new NonRetriableError(`rejected: ${await res.text()}`);
-        if (!res.ok) throw new HttpError(res.status, `HTTP ${res.status}`);
-        const { txid } = (await res.json()) as { txid: number };
+        // Nothing changed (say, a repeat of an earlier write): no echo will come.
+        if (!result.changed) return;
         // Keep the optimistic rows until Electric echoes the write back.
         const tables = new Set(transaction.mutations.map((m) => m.collection.id as Table));
-        const echoed = await Promise.all([...tables].map((t) => collections[t]?.utils.awaitTxId(txid, 15_000).then(() => true, () => false)));
+        const echoed = await Promise.all([...tables].map((t) => collections[t]?.utils.awaitTxId(result.txid, 15_000).then(() => true, () => false)));
         span.setAttribute("echoed", echoed.every(Boolean));
       }),
     },
     // A session that expired offline, or an app that must reload first: keep
-    // the queued writes and try again later instead of dropping them.
-    shouldRetry: (err) => (err instanceof HttpError && (err.status === 401 || err.status === 426) ? true : undefined),
+    // the queued writes (they are this user's) and try again later.
+    shouldRetry: (err) => (err instanceof ApiError && (err.status === 401 || err.status === 426) ? true : undefined),
     onStorageFailure: (d) => console.warn("[store] offline queue storage:", d.code, d.message),
   });
   await executor.waitForInit();
+  const unregister = registerOutbox(userId, () => executor.clearOutbox());
   if (import.meta.env.DEV) (window as unknown as { __store: unknown }).__store = { userId, collections };
 
   /** Apply changes on the device now; send them to the server when possible. */
   function write(mutate: () => void) {
-    const tx = executor.createOfflineTransaction({ mutationFnName: "write", autoCommit: false });
+    if (!writer) return Promise.reject(new Error("Perennial is open in another tab"));
+    // Stamped when the change is made, not when it uploads: an old offline change must not win over a newer one.
+    const tx = executor.createOfflineTransaction({ mutationFnName: "write", autoCommit: false, metadata: { at: new Date().toISOString() } });
     tx.mutate(mutate);
     return tx.commit();
   }
@@ -126,8 +217,16 @@ export async function createStore(userId: string) {
     userId,
     collections,
     write,
+    /** Whether this tab may write (see tabLock). For useSyncExternalStore. */
+    isWriter: () => writer,
+    onWriterChange: (cb: () => void) => {
+      writerListeners.add(cb);
+      return () => void writerListeners.delete(cb);
+    },
     pendingWrites: () => executor.getPendingCount(),
     dispose() {
+      unregister();
+      writerListeners.clear();
       executor.dispose();
       for (const c of Object.values(collections)) void c.cleanup();
     },
@@ -136,8 +235,8 @@ export async function createStore(userId: string) {
 
 export type Store = Awaited<ReturnType<typeof createStore>>;
 
-/** One local change → the server's mutation format (see server/src/sync.ts). */
-function toServer(m: PendingMutation) {
+/** One local change → the server's mutation format (see server/src/sync.ts). `at`: when it was made. */
+function toServer(m: PendingMutation, at?: string) {
   const row = m.modified as Record<string, unknown>;
   const old = m.original as Record<string, unknown>;
   const strip = ({ user_id: _u, created_at: _c, received_at: _r, ...rest }: Record<string, unknown>) => rest;
@@ -147,7 +246,7 @@ function toServer(m: PendingMutation) {
     case "course":
       return m.type === "delete" ? null : { type: "course.upsert", row: m.type === "update" ? { lang: row.lang, ...(m.changes as object) } : strip(row) };
     case "word_state":
-      return m.type === "delete" ? { type: "word_state.delete", word_id: old.word_id, updated_at: new Date().toISOString() } : { type: "word_state.upsert", row: strip(row) };
+      return m.type === "delete" ? { type: "word_state.delete", word_id: old.word_id, updated_at: at ?? new Date().toISOString() } : { type: "word_state.upsert", row: strip(row) };
     case "user_word":
       return m.type === "delete" ? { type: "user_word.delete", id: old.id } : { type: "user_word.upsert", row: strip(row) };
     case "user_sentence":

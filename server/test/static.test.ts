@@ -24,3 +24,7 @@ test("assets, app routes and missing files", async () => {
   expect((await serveStatic(dir, "/assets/index-old999.js")).status).toBe(404);
   expect((await serveStatic(dir, "/decks/es/deck.json")).status).toBe(404);
 });
+
+test("malformed percent-encoding is a bad request, not a server error", async () => {
+  for (const path of ["/%E0", "/assets/%zz.js", "/%"]) expect((await serveStatic(dir, path)).status).toBe(400);
+});
