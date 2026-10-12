@@ -44,3 +44,22 @@ test("no flicker: after Start, and after signing in, the landing page never come
   await addEmail(page);
   expect(await landings()).toBe(0); // the page after the sign-in reload never showed it
 });
+
+test("coming back to the tab keeps the sign-in form as it was", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("Email").fill("back@example.com");
+  // Better Auth checks the session again when the tab comes back, but at most once
+  // per 5 s after the last check: wait past that, then hide and show the tab.
+  await page.waitForTimeout(5_500);
+  const recheck = page.waitForResponse((r) => r.url().includes("/api/auth/get-session"));
+  await page.evaluate(() => {
+    const set = (v: string) => Object.defineProperty(document, "visibilityState", { configurable: true, get: () => v });
+    set("hidden");
+    document.dispatchEvent(new Event("visibilitychange"));
+    set("visible");
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await recheck;
+  await expect(page.getByLabel("Email")).toHaveValue("back@example.com");
+});

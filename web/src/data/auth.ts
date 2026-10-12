@@ -19,9 +19,16 @@ export interface SessionUser {
 const toUser = (u: { id: string; email: string; isAnonymous?: boolean | null }): SessionUser => ({ id: u.id, email: u.isAnonymous ? null : u.email, anonymous: !!u.isAnonymous });
 
 /** The signed-in user (anonymous or not), or null. Re-renders on sign-in/out. */
+// Pending means the first session check, nothing later. Better Auth checks the
+// session again whenever the tab comes back, and while it does, it reports
+// isPending if there is no session yet (signed out, or waiting for a sign-in
+// code). App shows a loading screen while pending, which would wipe the page.
+let sessionKnown = false;
+
 export function useUser(): { user: SessionUser | null; pending: boolean } {
   const { data, isPending } = authClient.useSession();
-  return { user: data?.user ? toUser(data.user) : null, pending: isPending };
+  if (!isPending) sessionKnown = true;
+  return { user: data?.user ? toUser(data.user) : null, pending: isPending && !sessionKnown };
 }
 
 /** The signed-in user's id as the auth client last saw it (no request), or null. */
