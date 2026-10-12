@@ -11,15 +11,29 @@ mock.module("posthog-js", () => ({
     alias: (id: string) => void calls.aliases.push(id),
   },
 }));
-// As the Docker build sets them: a key, and an unset host passed as "". Read once, at import.
-const saved = { key: process.env.VITE_POSTHOG_KEY, host: process.env.VITE_POSTHOG_HOST };
-process.env.VITE_POSTHOG_KEY = "phc_test";
-process.env.VITE_POSTHOG_HOST = "";
-const { identify, linkAccount, track } = await import("./observability");
-for (const [k, v] of [["VITE_POSTHOG_KEY", saved.key], ["VITE_POSTHOG_HOST", saved.host]] as const) {
+let sentryOptions: Record<string, unknown> | undefined;
+mock.module("@sentry/react", () => ({
+  init: (options: Record<string, unknown>) => void (sentryOptions = options),
+  browserTracingIntegration: () => ({}),
+  replayIntegration: () => ({}),
+  consoleLoggingIntegration: () => ({}),
+  setUser: () => {},
+  reactErrorHandler: () => {},
+}));
+// As the Docker build sets them: keys, and an unset host and release passed as "".
+const env = { VITE_POSTHOG_KEY: "phc_test", VITE_POSTHOG_HOST: "", VITE_SENTRY_DSN: "https://key@sentry.test/1", VITE_RELEASE: "" };
+const saved = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
+Object.assign(process.env, env);
+const { identify, initObservability, linkAccount, track } = await import("./observability");
+initObservability();
+for (const [k, v] of Object.entries(saved)) {
   if (v === undefined) delete process.env[k];
   else process.env[k] = v;
 }
+
+test("Sentry: an unset release is named as the server names it, never empty", () => {
+  expect(sentryOptions?.release).toBe("dev");
+});
 
 describe("PostHog", () => {
   test("starts at identify, as that learner, on the EU host; earlier events wait and then go", async () => {

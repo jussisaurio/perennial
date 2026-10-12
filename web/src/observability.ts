@@ -5,7 +5,7 @@
 
 import * as Sentry from "@sentry/react";
 import type { PostHog } from "posthog-js";
-import { APP_VERSION } from "./version";
+import { RELEASE } from "./version";
 
 let posthog: PostHog | null = null;
 
@@ -14,7 +14,7 @@ export function initObservability() {
   if (dsn) {
     Sentry.init({
       dsn,
-      release: (import.meta.env.VITE_RELEASE as string | undefined) ?? APP_VERSION,
+      release: RELEASE,
       environment: import.meta.env.MODE,
       integrations: [
         Sentry.browserTracingIntegration(),
