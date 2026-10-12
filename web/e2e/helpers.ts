@@ -16,11 +16,12 @@ export async function expectServerRows(page: Page, table: string, n: number | ((
 /** Enter an email, read the code from the dev server's outbox, sign in. */
 export async function signIn(page: Page, address: string, cta: string) {
   await page.getByLabel("Email").fill(address);
-  await page.getByRole("button", { name: cta }).click();
+  await page.locator("form").getByRole("button", { name: cta }).click();
   await expect(page.getByText("We sent a 6-digit code")).toBeVisible();
   const { code } = await (await page.request.get(`/api/dev/outbox?email=${encodeURIComponent(address)}`)).json();
   await page.getByLabel("Code", { exact: true }).fill(code);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  // The form's button, not the Sign in button in the landing page header.
+  await page.locator("form").getByRole("button", { name: "Sign in", exact: true }).click();
 }
 
 /** First run: the landing page, then "Start learning", as an anonymous learner. */
