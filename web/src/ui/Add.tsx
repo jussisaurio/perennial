@@ -97,10 +97,9 @@ function MineText({ learner }: { learner: Learner }) {
           }
         });
       }
-      const n = adding;
       track("words_added", { fromCourse: inCourse.length, withAI: items.length });
       setPicked(new Map());
-      setResult(`Added ${n} ${n === 1 ? "word" : "words"} (marked ✓). You will see them first in your next session.`);
+      setResult(`Added ${adding} ${adding === 1 ? "word" : "words"} (marked ✓). You will see them first in your next session.`);
     } catch (e) {
       setResult(`Could not add the words: ${apiMessage(e)}`);
     } finally {

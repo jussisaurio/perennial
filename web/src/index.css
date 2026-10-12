@@ -270,10 +270,6 @@ section { margin-bottom: 1.25rem; }
 .plant-tip .tip-flavour { font-style: italic; color: var(--muted); font-size: 0.78rem; }
 .plant-tip.interactive { pointer-events: auto; cursor: auto; }
 .plant-tip button { margin-top: 0.3rem; padding: 0.2rem 0; align-self: flex-start; }
-.garden .stem { fill: none; stroke: var(--stem); transition: stroke 0.6s; }
-.garden .thirsty .stem { stroke: var(--stem-dry); }
-.garden .leaf { fill: var(--leaf-2); }
-.garden .thirsty .leaf { fill: color-mix(in oklab, var(--leaf-2), var(--stem-dry) 55%); }
 .garden .tuft { stroke: var(--leaf-2); stroke-width: 1.3; stroke-linecap: round; fill: none; opacity: 0.7; }
 .garden .seed { fill: var(--ink-2); opacity: 0.45; }
 .garden .glow { fill: var(--sun); opacity: 0.35; animation: glow 2.4s var(--ease) infinite; transform-box: fill-box; transform-origin: center; }
@@ -338,7 +334,7 @@ section { margin-bottom: 1.25rem; }
 .words-empty { margin: 2rem 0; text-align: center; font: 1.1rem var(--display); color: var(--ink-2); }
 
 /* ---------- session ---------- */
-.session { max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
+.session { position: relative; max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
 .session-bar { display: flex; align-items: center; gap: 0.8rem; padding: 1rem 0 0.25rem; }
 .vine { position: relative; flex: 1; height: 18px; display: flex; align-items: center; }
 .vine::before { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--line); border-radius: 2px; }
@@ -355,9 +351,9 @@ section { margin-bottom: 1.25rem; }
 }
 .kicker.read { background: var(--leaf-soft); color: var(--leaf); }
 .kicker.listen { background: var(--sky-soft); color: var(--sky); }
-.kicker.write { background: var(--persimmon-soft); color: var(--persimmon); }
-.kicker.intro { background: var(--sun-soft); color: color-mix(in oklab, var(--sun), var(--ink) 45%); }
-:root[data-theme="dark"] .kicker.intro { color: var(--sun); }
+.kicker.write, .kicker.retry { background: var(--persimmon-soft); color: var(--persimmon); }
+.kicker.intro, .kicker.check, .kicker.newListen, .kicker.newWrite { background: var(--sun-soft); color: color-mix(in oklab, var(--sun), var(--ink) 45%); }
+:root[data-theme="dark"] .kicker.intro, :root[data-theme="dark"] .kicker.check, :root[data-theme="dark"] .kicker.newListen, :root[data-theme="dark"] .kicker.newWrite { color: var(--sun); }
 
 .word { font: clamp(2.8rem, 10vw, 4.2rem)/1.05 var(--display); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; word-break: break-word; }
 .gloss { font-size: 1.3rem; color: var(--ink-2); }
@@ -374,7 +370,7 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .meaning { background: var(--card); border: 1px solid var(--line-soft); border-radius: 14px; padding: 0.85rem 1rem; display: grid; gap: 0.25rem; box-shadow: var(--shadow); }
 .meaning strong { font: 1.25rem/1.2 var(--display); font-weight: 400; margin-right: 0.35rem; }
 .speaker { display: inline-flex; gap: 0.1rem; vertical-align: middle; }
-.speaker button { padding: 0.35rem; border-radius: 50%; color: var(--muted); }
+.speaker button { padding: 0.35rem; border-radius: 50%; color: var(--muted); min-width: 40px; min-height: 40px; }
 .speaker button:hover { color: var(--ink); background: var(--paper-2); }
 .listen { display: flex; align-items: center; gap: 1.25rem; padding: 2.5rem 0 1rem; }
 .play {
@@ -448,8 +444,6 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .growth-strip figure { margin: 0; display: grid; justify-items: center; gap: 0.25rem; animation: rise 0.6s var(--ease) both; }
 .growth-strip figcaption { font-size: 0.74rem; color: var(--muted); white-space: nowrap; }
 .garden-mini { overflow: visible; }
-.garden-mini .stem { fill: none; stroke: var(--stem); }
-.garden-mini .leaf { fill: var(--leaf-2); }
 .garden-mini .seed { fill: var(--ink-2); opacity: 0.5; }
 .garden-mini .sway { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 5s ease-in-out infinite; }
 .prompt { font-size: 1.05rem; color: var(--ink-2); margin: 0; }
@@ -459,8 +453,6 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
   .start small { margin-left: auto; }
 }
 .row > select { width: auto; flex: none; }
-.kicker.check, .kicker.newListen, .kicker.newWrite { background: var(--sun-soft); color: color-mix(in oklab, var(--sun), var(--ink) 45%); }
-:root[data-theme="dark"] .kicker.check, :root[data-theme="dark"] .kicker.newListen, :root[data-theme="dark"] .kicker.newWrite { color: var(--sun); }
 /* A quiet note above the answer buttons: never wider than the screen (a too-wide
    note made the page scroll sideways on phones), and it never moves the layout. */
 .session-note {
@@ -470,8 +462,6 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
   box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.45); animation: rise 0.25s var(--ease); z-index: 70;
 }
 .session-bar button.icon:disabled { opacity: 0.25; }
-.kicker.retry { background: var(--persimmon-soft); color: var(--persimmon); }
-.speaker button { min-width: 40px; min-height: 40px; }
 .schedule { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.2rem; font-size: 0.88rem; color: var(--muted); }
 .schedule strong { color: var(--ink-2); font-weight: 600; }
 .scheduling table { border-collapse: collapse; margin: 0.4rem 0; }
@@ -513,7 +503,8 @@ details.danger { margin-top: 2.5rem; }
    than the Add words button, so the button touched the filter row below (#116). */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .page-head h1 { margin: 0; }
-.progress-line { font-size: 1.15rem; color: var(--ink-2); margin: 0.5rem 0 1.25rem; }
+.progress-line { display: grid; gap: 0.2rem; font-size: 1.15rem; color: var(--ink-2); margin: 0.5rem 0 1.25rem; }
+.progress-line p { margin: 0; }
 .progress-line strong { font: 1.6rem/1 var(--display); color: var(--ink); font-weight: 400; }
 details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-columns: repeat(2, 1fr); max-width: 24rem; }
 .credits { display: grid; gap: 0.4rem; }
@@ -524,7 +515,7 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 .choice label:has(input:checked) { border-color: var(--ink-2); box-shadow: 0 0 0 3px var(--sun-soft); }
 .choice input { width: auto; margin-top: 0.2rem; accent-color: var(--persimmon); }
 .choice span { display: grid; gap: 0.1rem; }
-.growth-strip svg, .garden svg { display: block; }
+.growth-strip svg { display: block; }
 .question { margin-top: auto; display: grid; gap: 0.6rem; padding-top: 1.5rem; }
 .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; position: sticky; bottom: 0; padding-bottom: max(1rem, env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--paper) 25%); }
 .answer-btn { flex-direction: column; align-items: flex-start; text-align: left; gap: 0.25rem; padding: 0.85rem 1rem; border-radius: 16px; border: 1px solid var(--line); background: var(--card); }
@@ -542,9 +533,6 @@ button.undo:disabled { opacity: 0.35; }
 .shortcut-help dl div { display: grid; grid-template-columns: 9rem 1fr; gap: 0.75rem; align-items: center; }
 .shortcut-help dd { margin: 0; color: var(--ink-2); font-size: 0.92rem; }
 .shortcut-help kbd { opacity: 0.8; font-size: 0.75rem; }
-.session { position: relative; }
-.progress-line p { margin: 0; }
-.progress-line { display: grid; gap: 0.2rem; }
 .credits-bar.empty { background: var(--persimmon-soft); }
 button.tok { font: inherit; color: inherit; padding: 0.08em 0.12em; border: none; border-radius: 5px; background: none; display: inline; line-height: inherit; gap: 0; }
 button.tok:active { transform: none; }
@@ -552,19 +540,16 @@ button.tok:active { transform: none; }
 .tok.picked::before { content: "✓ "; font-size: 0.8em; }
 .tok.added, .legend.added { background: var(--leaf-soft); color: var(--leaf); }
 .tok.added::after { content: " ✓"; font-size: 0.8em; }
-.legend-row .legend { margin-left: 0.3rem; }
 .credit-note { display: grid; gap: 0.75rem; padding: 0.85rem 1rem; border-radius: 14px; background: var(--sun-soft); }
 @media (max-width: 640px) { .app { padding-bottom: calc(9rem + env(safe-area-inset-bottom)); } }
 .lang-choice { grid-template-columns: 1fr 1fr; }
 .lang-choice strong { font: 1.2rem/1.2 var(--display); font-weight: 400; }
-.choice label.disabled { opacity: 0.55; cursor: default; }
 @media (max-width: 420px) { .lang-choice { grid-template-columns: 1fr; } }
 .warn { color: color-mix(in oklab, var(--sun), var(--ink) 40%); }
 :root[data-theme="dark"] .warn { color: var(--sun); }
 .answer.warn { border-color: var(--sun); background: var(--sun-soft); }
 mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; padding: 0 0.05em; font-weight: 700; }
 .examples .author { display: block; font-size: 0.75rem; color: var(--muted); }
-.examples .author.warn { color: color-mix(in oklab, var(--sun), var(--ink) 40%); }
 .card-plant { position: absolute; top: 58px; right: 8px; pointer-events: none; animation: rise 0.4s var(--ease) both; }
 .plant-pop { position: absolute; right: 18px; bottom: 100px; pointer-events: none; z-index: 60; transform-origin: 50% 100%; animation: plant-pop 1.3s var(--ease) forwards; }
 @keyframes plant-pop {
@@ -576,7 +561,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 @media (max-width: 480px) { .card-plant { top: 54px; right: 2px; transform: scale(0.85); transform-origin: top right; } }
 
 /* ---- Walk-in garden: a 90s game in a cosy frame ---------------------- */
-.walk-link { display: inline-flex; align-items: center; gap: 0.45rem; margin: -0.4rem 0 1rem; padding: 0.35rem 0.2rem; color: var(--moss, var(--ink)); font-weight: 600; background: none; border: 0; }
+.walk-link { display: inline-flex; align-items: center; gap: 0.45rem; margin: -0.4rem 0 1rem; padding: 0.35rem 0.2rem; color: var(--ink); font-weight: 600; background: none; border: 0; }
 .walk-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .gw {
@@ -591,7 +576,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
   --water: #5bb4f0;
   --pixel: "Pixelify Sans", ui-monospace, monospace;
   position: fixed; inset: 0; overflow: hidden; background: #1a1430; color: var(--gw-ink);
-  touch-action: none; user-select: none; -webkit-user-select: none;
+  touch-action: none; user-select: none; -webkit-user-select: none; overscroll-behavior: none;
 }
 .gw-night { --panel: #1d2350; --panel-2: #262e66; --edge: #0a0d24; --edge-hi: #5a67b8; --gw-ink: #f5ecd0; --gw-muted: #aab3e6; }
 .gw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; cursor: grab; outline: none; }
@@ -626,7 +611,8 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .gw-night .gw-water { background: #24507a; color: #e6f4ff; --panel-2: #1c4166; --edge-hi: #4d86bd; }
 
 .gw-top { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; gap: 14px; align-items: center; justify-content: space-between; z-index: 3; }
-.gw-stats { font: 500 0.95rem/1.2 var(--pixel); padding: 0.55rem 0.8rem; text-align: center; min-width: 0; }
+/* Numbers in the pixel font are hard to read at this size (5 looks like 8). */
+.gw-stats { font: 600 0.95rem/1.2 var(--ui); font-variant-numeric: tabular-nums; padding: 0.55rem 0.8rem; text-align: center; min-width: 0; }
 .gw-seeds { color: var(--gw-muted); }
 .gw-bottom { position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); right: 16px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; z-index: 3; }
 
@@ -698,7 +684,6 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 }
 @media (prefers-reduced-motion: reduce) { .gw-card, .gw-hint { animation: none; } }
 .gw-fallback { padding-top: 3rem; }
-.gw-card .row { align-items: center; }
 .gw-spacer { flex: 1; }
 .gw-listen { background: var(--accent); --panel-2: #f0c419; --edge-hi: #fff2a8; color: #2b1d12; }
 @media (max-width: 560px) {
@@ -711,15 +696,12 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
   .gw-empty { top: 50%; }
 }
 @keyframes gw-drop { from { transform: translate(-50%, -16px); opacity: 0; } }
-.gw { overscroll-behavior: none; }
 .gw-tools { display: flex; gap: 14px; }
 /* A tiny grid that shows the pixel size: 2×2, 3×3 or 4×4 squares. */
 .gw-px { width: 14px; height: 14px; display: inline-block; background: conic-gradient(currentColor 25%, transparent 0 50%, currentColor 0 75%, transparent 0) 0 0 / var(--cell) var(--cell); opacity: 0.85; }
 .gw-px-low { --cell: 7px; }
 .gw-px-normal { --cell: 3.5px; }
 @media (max-width: 560px) { .gw-tool-label { display: none; } .gw-tools { gap: 10px; } }
-/* Numbers in the pixel font are hard to read at this size (5 looks like 8). */
-.gw-stats { font-family: var(--ui); font-weight: 600; font-variant-numeric: tabular-nums; }
 /* The pixel font turns "fi" into a glyph that reads as "A". The font shorthand resets this, so set it on every element. */
 .gw, .gw * { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
 .gw-icon { min-width: 44px; justify-content: center; padding: 0.6rem; }

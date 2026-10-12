@@ -12,7 +12,7 @@ import { keepsakeLabel, sleeperId } from "../garden/whimsy";
 import { layout, type Layout, type PlacedPlant } from "../garden/world";
 import type { LearnerVisitors } from "./visitors";
 
-export interface WalkData {
+interface WalkData {
   l: Layout;
   seeds: number;
   visitors: WalkVisitors;
@@ -231,6 +231,7 @@ export function useWalkInput({
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
+    // The scene ref lives as long as the screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onExit]);
 

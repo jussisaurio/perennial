@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
 /** The current time, refreshed every minute: keeps "now" out of render. */
-export function useNow(intervalMs = 60_000): number {
+export function useNow(): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    const t = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(t);
-  }, [intervalMs]);
+  }, []);
   return now;
 }

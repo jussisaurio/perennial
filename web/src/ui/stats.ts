@@ -2,7 +2,7 @@ import { DAY_MS, startOfDay } from "../core/day";
 import { readMemory, wordState } from "../core/memory";
 import type { Learner } from "../data/learner";
 
-export interface CourseStats {
+interface CourseStats {
   known: number;
   learning: number;
   /** Words in the deck not started yet. */
