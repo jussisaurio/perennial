@@ -9,6 +9,7 @@ dist/
 *.db-shm
 *.db-wal
 *.sqlite*
+*.dump
 
 # Secrets and local config
 .env
