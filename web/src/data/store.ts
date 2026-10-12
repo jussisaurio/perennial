@@ -1,13 +1,13 @@
 // The learner's synced data. Each table is a TanStack DB collection fed by an
-// Electric shape (through our auth proxy) and, where the browser allows it,
-// kept in SQLite on the device so the app opens offline. Writes go through an
-// offline queue: they apply instantly on the device, are stored in IndexedDB,
-// and are sent to /api/write when there is a connection.
+// Electric shape (through our auth proxy), held in memory. Writes go through a
+// queue (TanStack DB's offline transactions): they apply instantly on the
+// device, are stored in IndexedDB, and are sent to /api/write, with retries,
+// until the server has them.
 //
-// A store belongs to one user, and so do its SQLite copy and its queue (see
-// device.ts): a write queued by one learner is never sent while another is
-// signed in, except that an anonymous learner's queue moves to the account
-// they sign in to. Signing in or out disposes the store and makes a new one.
+// A store belongs to one user, and so does its queue (see device.ts): a write
+// queued by one learner is never sent while another is signed in, except that
+// an anonymous learner's queue moves to the account they sign in to. Signing
+// in or out disposes the store and makes a new one.
 //
 // One tab writes: the queue is shared by the user's tabs, so only the tab
 // holding the user's Web Lock may write. Other tabs ask the learner to use
@@ -18,30 +18,11 @@ import { electricCollectionOptions } from "@tanstack/electric-db-collection";
 import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineExecutor, type LeaderElection, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { sessionUserId } from "./auth";
-import { adopted, adoptedBy, cleanUpForgotten, databaseName, keepOnDevice, outboxName, registerOutbox, registerSync } from "./device";
+import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync } from "./device";
 import { ApiError, postWrite } from "./http";
 import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
 
-type Persistence = Awaited<ReturnType<typeof openPersistence>>;
-
-async function openPersistence(userId: string) {
-  // OPFS SQLite needs a secure context and a modern browser; without it the
-  // app still works, it just loads from the network on each start.
-  if (!("storage" in navigator) || typeof navigator.storage.getDirectory !== "function" || !window.isSecureContext) return null;
-  try {
-    const { createBrowserWASQLitePersistence, openBrowserWASQLiteOPFSDatabase, persistedCollectionOptions } = await import("@tanstack/browser-db-sqlite-persistence");
-    const database = await openBrowserWASQLiteOPFSDatabase({ databaseName: databaseName(userId) });
-    return { persistence: createBrowserWASQLitePersistence({ database }), persistedCollectionOptions };
-  } catch (e) {
-    console.warn("[store] local persistence unavailable", e);
-    return null;
-  }
-}
-
-/** Bump when a synced table's shape changes: the device copy is dropped and synced again. */
-const SCHEMA_VERSION = 1;
-
-function makeCollection<T extends object>(table: string, getKey: (row: T) => string, persisted: Persistence, sync: AbortSignal) {
+function makeCollection<T extends object>(table: string, getKey: (row: T) => string, sync: AbortSignal) {
   const options = electricCollectionOptions<T & Record<string, unknown>>({
     id: table,
     getKey: getKey as (row: T & Record<string, unknown>) => string,
@@ -60,15 +41,7 @@ function makeCollection<T extends object>(table: string, getKey: (row: T) => str
       },
     },
   });
-  if (!persisted) return createCollection(options);
-  // Type arguments given, schema `never`: these collections have no schema, and inference would assume one.
-  const persistedOptions = persisted.persistedCollectionOptions<T & Record<string, unknown>, string | number, never, (typeof options)["utils"]>({
-    ...options,
-    persistence: persisted.persistence,
-    schemaVersion: SCHEMA_VERSION,
-    initialRender: { strategy: "network-first", networkTimeoutMs: 1500 },
-  });
-  return createCollection(persistedOptions);
+  return createCollection(options);
 }
 
 /** This user's queue of unsent writes: their own IndexedDB database (or localStorage keys). */
@@ -145,19 +118,18 @@ function tabLock(name: string): LeaderElection | undefined {
 }
 
 export async function createStore(userId: string) {
-  // Files of learners who signed out here go first; this learner is using theirs again.
+  // Queues of learners who signed out here go first; this learner is using theirs again.
   await cleanUpForgotten();
   keepOnDevice(userId);
-  const persisted = await openPersistence(userId);
   // Stopped before a sign-out reaches the server (stopSyncNow): a stream still loading
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();
   const collections = {
-    course: makeCollection<CourseRow>("course", (r) => r.lang, persisted, sync.signal),
-    review: makeCollection<ReviewRow>("review", (r) => r.id, persisted, sync.signal),
-    word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, persisted, sync.signal),
-    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, persisted, sync.signal),
-    user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, persisted, sync.signal),
+    course: makeCollection<CourseRow>("course", (r) => r.lang, sync.signal),
+    review: makeCollection<ReviewRow>("review", (r) => r.id, sync.signal),
+    word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, sync.signal),
+    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, sync.signal),
+    user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, sync.signal),
   };
   type Table = keyof typeof collections;
 

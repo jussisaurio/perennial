@@ -191,13 +191,15 @@ describe("one address for the app", () => {
     }
   });
 
-  test("a browser stuck on an old address gets a worker that moves it to APP_URL", async () => {
-    for (const alias of [`www.${host}`, "perennial-production.up.railway.app"]) {
-      const res = await t.app.fetch(new Request(`https://${alias}/sw.js`));
+  test("a browser with the old service worker, here or on an old address, gets one that removes itself and its caches", async () => {
+    for (const origin of [t.config.appUrl, `https://www.${host}`, "https://perennial-production.up.railway.app"]) {
+      const res = await t.app.fetch(new Request(`${origin}/sw.js`));
       expect(res.status).toBe(200);
       expect(res.headers.get("content-type")).toBe("text/javascript");
+      expect(res.headers.get("cache-control")).toBe("no-cache");
       const js = await res.text();
       expect(js).toContain("registration.unregister()");
+      expect(js).toContain("caches.delete(name)");
       expect(js).toContain(JSON.stringify(t.config.appUrl));
     }
   });

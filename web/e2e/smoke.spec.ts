@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advance, startCourse, startSession } from "./helpers";
+import { startCourse } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   await page.goto("/");
@@ -36,17 +36,4 @@ test("a deck that cannot load, with no copy kept: the learner is told, not left 
   await page.unroute(deckFile);
   await page.getByRole("button", { name: "Reload" }).click();
   await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15_000 });
-});
-
-test("offline: practice still works, a quiet note says so, and it goes when the connection is back", async ({ page, context }) => {
-  await startCourse(page);
-  const note = page.getByRole("status").filter({ hasText: "Offline. Practice still works" });
-  await expect(note).toHaveCount(0);
-  await context.setOffline(true);
-  await expect(note).toBeVisible();
-  // The note is true: a session starts and takes an answer with no connection.
-  await startSession(page);
-  await advance(page, "1");
-  await context.setOffline(false);
-  await expect(note).toHaveCount(0);
 });

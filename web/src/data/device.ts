@@ -1,18 +1,17 @@
-// What a learner leaves on this device: their SQLite copy (OPFS) and their
-// queue of writes not yet sent (IndexedDB). Both are per user. Signing out or
-// deleting the account forgets them here. Also the course this device shows
-// (keepCourse, at the end): per device, not per user, and kept on sign-out.
+// What a learner leaves on this device: their queue of writes not yet sent
+// (IndexedDB). It is per user. Signing out or deleting the account forgets it
+// here. Also the course this device shows (keepCourse, at the end): per device,
+// not per user, and kept on sign-out.
 //
 // The app reloads right after a sign-out, and an open database cannot be
 // deleted, so forgetting is two steps: clear the queue now (so nothing more
-// uploads), and remember to delete the files on the next start, before any
-// store opens. Deletion is best effort and tried again on each start.
+// uploads), and remember to delete it on the next start, before any store
+// opens. Deletion is best effort and tried again on each start.
 //
 // One exception: an anonymous learner who signs in with email keeps their
 // queue (see adoptOnDevice).
 
 export const outboxName = (userId: string) => `perennial-outbox-${userId}`;
-export const databaseName = (userId: string) => `perennial-${userId}.sqlite`;
 
 /** A list kept in localStorage. Unreadable entries are dropped. */
 function readList<T>(key: string, valid: (x: unknown) => x is T): T[] {
@@ -30,7 +29,7 @@ function saveList(key: string, list: unknown[]) {
     if (list.length) localStorage.setItem(key, JSON.stringify(list));
     else localStorage.removeItem(key);
   } catch {
-    // No storage: nothing is remembered. Forgotten files stay until the
+    // No storage: nothing is remembered. Forgotten queues stay until the
     // browser clears them, and an anonymous queue is not carried over.
   }
 }
@@ -103,26 +102,9 @@ function deleteIndexedDB(name: string): Promise<boolean> {
   });
 }
 
-async function deleteOPFSDatabase(name: string): Promise<boolean> {
-  if (!("storage" in navigator) || typeof navigator.storage.getDirectory !== "function") return true;
-  try {
-    const root = await navigator.storage.getDirectory();
-    let ok = true;
-    // SQLite's journal files sit next to the database (see OPFSCoopSyncVFS).
-    for (const suffix of ["", "-journal", "-wal"]) {
-      await root.removeEntry(name + suffix).catch((e: unknown) => {
-        if ((e as { name?: string }).name !== "NotFoundError") ok = false;
-      });
-    }
-    return ok;
-  } catch {
-    return false;
-  }
-}
-
 async function deleteAll(userId: string): Promise<boolean> {
-  const [a, b, c] = await Promise.all([deleteIndexedDB(outboxName(userId)), deleteOPFSDatabase(databaseName(userId)), deleteLocalStorageOutbox(userId)]);
-  return a && b && c;
+  const [a, b] = await Promise.all([deleteIndexedDB(outboxName(userId)), deleteLocalStorageOutbox(userId)]);
+  return a && b;
 }
 
 async function deleteLocalStorageOutbox(userId: string): Promise<boolean> {
@@ -164,7 +146,7 @@ export function adopted(from: string) {
 
 let cleaning: Promise<void> | null = null;
 
-/** Delete the files of users who signed out here. Runs once per start, before any store opens. */
+/** Delete the queues of users who signed out here. Runs once per start, before any store opens. */
 export function cleanUpForgotten(): Promise<void> {
   cleaning ??= (async () => {
     // The queue all users once shared: never replayed (it could belong to

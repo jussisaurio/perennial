@@ -15,9 +15,18 @@ import { createMailer, OutboxMailer } from "./mail";
 import { handleWrite, LEARNER_TABLES, proxyShape } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
-/** A service worker that unregisters itself and sends its open tabs to `appUrl` (same path and hash). */
-const handoffWorker = (appUrl: string) => `self.addEventListener("install", () => self.skipWaiting());
+/**
+ * The app had a service worker until #188 (offline mode, removed for now), and a
+ * browser keeps a worker until it fetches a new /sw.js. This one removes itself:
+ * it deletes the caches the old worker made (Workbox's precache and "pages"),
+ * unregisters, and loads each open tab again from the network at `appUrl` (same
+ * path and hash). On APP_URL that is a reload; on an old address, a move there.
+ * Kept while browsers may still have the old worker; a new one for offline mode
+ * (#188) would replace it.
+ */
+const retiringWorker = (appUrl: string) => `self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil((async () => {
+  for (const name of await caches.keys()) if (name.startsWith("workbox-") || name === "pages") await caches.delete(name);
   await self.registration.unregister();
   for (const c of await self.clients.matchAll({ type: "window" })) {
     const u = new URL(c.url);
@@ -170,15 +179,12 @@ export function createApp(config: Config, sql: SQL) {
     const req = withClientIp(incoming, config.clientIpHeaders);
     const id = req.headers.get("x-request-id")?.slice(0, 64) || crypto.randomUUID();
     const url = new URL(req.url);
-    if (isAlias(url.host)) {
-      // A browser that opened an old address while it still served the app keeps that
-      // address's service worker, which serves the page from cache: the redirect never
-      // reaches it, and its API calls are redirected to another origin, which the CSP
-      // blocks. Its update check fetches /sw.js, so answer that with a worker that
-      // removes itself and moves open tabs to APP_URL.
-      if (url.pathname === "/sw.js") return new Response(handoffWorker(config.appUrl), { headers: { "content-type": "text/javascript", "cache-control": "no-cache" } });
-      return new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } });
-    }
+    // A browser that still has the old worker asks for /sw.js to update it: here, or
+    // on an old address, where that worker serves the page from cache (so the redirect
+    // below never reaches it). Not a redirect: a worker script that redirects fails
+    // the update. no-cache: a CDN must not keep it.
+    if (url.pathname === "/sw.js") return new Response(retiringWorker(config.appUrl), { headers: { "content-type": "text/javascript", "cache-control": "no-cache" } });
+    if (isAlias(url.host)) return new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } });
     const started = performance.now();
     return withLogContext({ reqId: id, traceId: traceId() }, async () => {
       let res: Response;

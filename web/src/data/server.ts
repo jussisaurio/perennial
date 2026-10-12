@@ -1,7 +1,7 @@
 // What the server says about itself (GET /api/server): what it can do right
 // now, so the app shows only features that work; the oldest app version it
 // accepts; and its release. Asked at start and again when the tab comes back
-// (at most every few minutes); the last answer is kept for offline starts.
+// (at most every few minutes); the last answer is kept for the next start.
 // Until it is known, every feature counts as off (no buttons that then vanish).
 //
 // A newer release on the server than the one this app was built from means a

@@ -2,7 +2,7 @@
 
 ## Principles
 
-- **Decks are content, not user data.** They are versioned JSON files in the repo, shipped as static assets and cached offline. Sync never touches them.
+- **Decks are content, not user data.** They are versioned JSON files in the repo, shipped as static assets. Sync never touches them.
 - **Words and sentences have stable, opaque ids** (`es.w.k7m2q9xd4f`: 10 base32 characters, drawn at random and recorded in a manifest). An id is never reused, and user data refers to words only by id.
 - **Reviews are events.** Memory, unlocks, the garden and the active course are derived on the client from reviews.
 - **The server stamps `user_id` from the session** and scopes every write to it. Clients never send `user_id`.
@@ -28,7 +28,7 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
    - Retired entries are kept.
    - The PR gets a diff report (added, edited, retired). Large changes, for example more than 5% of words retired, fail unless explicitly approved.
 3. **Replay test:** review logs written against the previous deck version replay against the new one with no crash and no orphaned progress.
-4. **Defensive client:** the client validates the deck on load and skips invalid entries instead of crashing. If the deck fails to load as a whole, the client keeps the last good version that the service worker cached.
+4. **Defensive client:** the client validates the deck on load and skips invalid entries instead of crashing. If the deck fails to load as a whole, the client uses the last good version it kept (Cache API).
 
 ```jsonc
 // decks/es/deck.json → { lang, native, version, words: [...], sentences: [...] }

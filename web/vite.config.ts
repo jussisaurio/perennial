@@ -1,7 +1,6 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
 import pkg from "./package.json" with { type: "json" };
 
 // Source maps for readable error reports: uploaded to Sentry during the
@@ -23,30 +22,6 @@ export default defineConfig({
         sourcemaps: { filesToDeleteAfterUpload: ["./dist/**/*.map"] },
         telemetry: false,
       }),
-    VitePWA({
-      registerType: "autoUpdate",
-      // main.tsx registers it (src/serviceWorker.ts), so a refused registration is handled.
-      injectRegister: false,
-      manifest: {
-        name: "Perennial",
-        short_name: "Perennial",
-        description: "Learn a language a few minutes a day.",
-        theme_color: "#1d1b18",
-        background_color: "#f7f5f0",
-        display: "standalone",
-        icons: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" }],
-      },
-      workbox: {
-        // Hashed files are precached: they never change, so offline works.
-        globPatterns: ["**/*.{js,css,svg,wasm,json}"],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        // The page itself comes from the network whenever there is one, so every load
-        // runs the current release. The cached copy is only for offline. (Served from
-        // the precache first, each load ran the release before, and nothing reloads.)
-        navigateFallback: null,
-        runtimeCaching: [{ urlPattern: ({ request }) => request.mode === "navigate", handler: "NetworkFirst", options: { cacheName: "pages", networkTimeoutSeconds: 4 } }],
-      },
-    }),
   ],
   server: {
     // Decks live in ../decks (shared with the server and the deck scripts).
