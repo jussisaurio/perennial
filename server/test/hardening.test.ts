@@ -130,3 +130,21 @@ describe("error reports", () => {
     expect(event.user).toEqual({ id: "u1" });
   });
 });
+
+describe("one address for the app", () => {
+  const host = new URL(t.config.appUrl).host;
+  test("www and Railway's domain redirect to APP_URL, path and query kept", async () => {
+    for (const alias of [`www.${host}`, "perennial-production.up.railway.app"]) {
+      const res = await t.app.fetch(new Request(`https://${alias}/garden?x=1`));
+      expect(res.status).toBe(308);
+      expect(res.headers.get("location")).toBe(`${t.config.appUrl}/garden?x=1`);
+    }
+  });
+
+  test("API answers are never cached by a CDN", async () => {
+    const res = await t.app.fetch(new Request(`${t.config.appUrl}/api/server`));
+    expect(res.headers.get("cache-control")).toBe("no-cache");
+    const missing = await t.app.fetch(new Request(`${t.config.appUrl}/api/nope`));
+    expect(missing.headers.get("cache-control")).toBe("no-store");
+  });
+});
