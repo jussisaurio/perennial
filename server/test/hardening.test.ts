@@ -141,6 +141,17 @@ describe("one address for the app", () => {
     }
   });
 
+  test("a browser stuck on an old address gets a worker that moves it to APP_URL", async () => {
+    for (const alias of [`www.${host}`, "perennial-production.up.railway.app"]) {
+      const res = await t.app.fetch(new Request(`https://${alias}/sw.js`));
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toBe("text/javascript");
+      const js = await res.text();
+      expect(js).toContain("registration.unregister()");
+      expect(js).toContain(JSON.stringify(t.config.appUrl));
+    }
+  });
+
   test("API answers are never cached by a CDN", async () => {
     const res = await t.app.fetch(new Request(`${t.config.appUrl}/api/server`));
     expect(res.headers.get("cache-control")).toBe("no-cache");

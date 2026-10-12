@@ -14,6 +14,17 @@ import { createMailer, OutboxMailer } from "./mail";
 import { handleWrite, proxyShape } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
+/** A service worker that unregisters itself and sends its open tabs to `appUrl` (same path and hash). */
+export const handoffWorker = (appUrl: string) => `self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (e) => e.waitUntil((async () => {
+  await self.registration.unregister();
+  for (const c of await self.clients.matchAll({ type: "window" })) {
+    const u = new URL(c.url);
+    c.navigate(${JSON.stringify(appUrl)} + u.pathname + u.search + u.hash);
+  }
+})()));
+`;
+
 /** A request slower than this (ms) is logged as a warning. */
 const SLOW_MS = 1000;
 
@@ -157,7 +168,15 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
   async function fetch(req: Request): Promise<Response> {
     const id = req.headers.get("x-request-id")?.slice(0, 64) || crypto.randomUUID();
     const url = new URL(req.url);
-    if (isAlias(url.host)) return new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } });
+    if (isAlias(url.host)) {
+      // A browser that opened an old address while it still served the app keeps that
+      // address's service worker, which serves the page from cache: the redirect never
+      // reaches it, and its API calls are redirected to another origin, which the CSP
+      // blocks. Its update check fetches /sw.js, so answer that with a worker that
+      // removes itself and moves open tabs to APP_URL.
+      if (url.pathname === "/sw.js") return new Response(handoffWorker(config.appUrl), { headers: { "content-type": "text/javascript", "cache-control": "no-cache" } });
+      return new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } });
+    }
     const started = performance.now();
     return withLogContext({ reqId: id }, async () => {
       let res: Response;
