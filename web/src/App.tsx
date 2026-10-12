@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
-import { identify } from "./observability";
-import { StoreContext, useCourses } from "./data/learner";
+import { identify, track } from "./observability";
+import { saveCourse, StoreContext, useCourses, useStore } from "./data/learner";
 import { cleanUpForgotten } from "./data/device";
 import { createStore, reloadNeeded, type Store } from "./data/store";
 import { Home } from "./ui/Home";
 import { FlowerIcon, GearIcon, HomeIcon, ListIcon, SproutMark } from "./ui/icons";
 import { LearnerGardenWalk } from "./ui/GardenWalk";
+import { CourseSwitcher } from "./ui/CourseSwitcher";
 import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
 import { SessionScreen } from "./ui/Session";
@@ -45,6 +46,13 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
 }
 
 const COURSE_KEY = "perennial-course";
+const keepCourse = (lang: string) => {
+  try {
+    localStorage.setItem(COURSE_KEY, lang);
+  } catch {
+    /* private mode */
+  }
+};
 const readCourse = () => {
   try {
     return localStorage.getItem(COURSE_KEY);
@@ -174,6 +182,11 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
   const [sessionExtra, setSessionExtra] = useState(false);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
+  const store = useStore();
+  const choose = (lang: string) => {
+    setChosen(lang);
+    keepCourse(lang);
+  };
   const starting = useStartingCourse().lang;
   useEffect(() => {
     if (course && starting) courseArrived();
@@ -186,12 +199,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
       <Onboarding
         signedIn
         onStarted={(lang) => {
-          setChosen(lang);
-          try {
-            localStorage.setItem(COURSE_KEY, lang);
-          } catch {
-            /* private mode */
-          }
+          choose(lang);
           go("/today", { replace: true });
         }}
       />
@@ -220,6 +228,21 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
         <span className="wordmark">
           <SproutMark /> perennial
         </span>
+        <CourseSwitcher
+          courses={courses}
+          current={lang}
+          onSwitch={(l) => {
+            choose(l);
+            go("/today");
+          }}
+          onStart={(l) => {
+            // Same daily minutes as the course they have; changeable in Settings.
+            void saveCourse(store, l, { minutes: course.minutes }).catch(() => {});
+            track("course_started", { lang: l, minutes: course.minutes, another: true });
+            choose(l);
+            go("/today");
+          }}
+        />
         <div className="tabs" role="tablist">
           {TABS.map((t) => {
             const on = route === t.route || (t.route === "/words" && route === "/words/add");

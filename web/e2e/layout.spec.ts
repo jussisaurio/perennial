@@ -43,3 +43,17 @@ test("phone: the new-version note fits the screen and its text", async ({ page }
   expect(box.width).toBeGreaterThan(viewport.width * 0.75);
   expect(await note.evaluate((e) => e.scrollWidth <= e.clientWidth && e.scrollHeight <= e.clientHeight)).toBe(true);
 });
+
+// #124: the language menu and its "start a new one?" question stay on screen.
+test("phone: the language menu fits the screen", async ({ page }) => {
+  await startCourse(page);
+  await page.locator(".course-switch-button").click();
+  const viewport = page.viewportSize()!;
+  for (const step of ["menu", "ask"]) {
+    if (step === "ask") await page.getByRole("menuitem", { name: /German/ }).click();
+    const box = (await page.getByRole("menu").boundingBox())!;
+    expect(box.x, step).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width, step).toBeLessThanOrEqual(viewport.width);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

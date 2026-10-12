@@ -161,6 +161,32 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
 .landing-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .landing-signin { margin-top: 1.25rem; }
 .wordmark { display: inline-flex; align-items: center; gap: 0.35rem; font: 1.55rem/1 var(--display); letter-spacing: -0.02em; }
+/* The language: a garden per course (ui/CourseSwitcher.tsx). */
+.course-switch { position: relative; }
+.course-switch-button, .course-switch-label { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.8rem; border-radius: 999px; font-weight: 600; font-size: 0.92rem; }
+.course-switch-button { border: 1px solid var(--line); background: var(--card); }
+.course-switch-button[aria-expanded="true"] { border-color: var(--ink); }
+.course-switch-label { color: var(--muted); }
+.caret { font-size: 0.7em; color: var(--muted); }
+.course-menu {
+  position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; width: max-content; min-width: 13rem; max-width: calc(100vw - 32px);
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 0.4rem; box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.35);
+  animation: rise 0.2s var(--ease) both;
+}
+.course-menu-head { margin: 0.35rem 0.6rem 0.2rem; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.course-item { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.55rem 0.6rem; border-radius: 10px; text-align: left; }
+.course-item > span:first-child { display: inline-flex; align-items: center; gap: 0.35rem; }
+.course-item:hover, .course-item:focus-visible { background: var(--paper-2); }
+.course-item[aria-checked="true"] { font-weight: 600; }
+.course-ask { padding: 0.5rem 0.6rem; max-width: 18rem; }
+/* Phones: the menu spans the top bar, so it never leaves the screen. */
+@media (max-width: 640px) {
+  nav.top { position: relative; }
+  .course-switch { position: static; }
+  .course-menu { left: 0; right: 0; top: 100%; width: auto; max-width: none; }
+  .course-ask { max-width: none; }
+}
+.course-ask p { margin: 0 0 0.75rem; }
 .tabs { display: flex; gap: 0.15rem; margin-left: auto; background: var(--paper-2); padding: 0.25rem; border-radius: 999px; }
 .tab { padding: 0.45rem 0.95rem; color: var(--muted); font-weight: 500; font-size: 0.92rem; }
 .tab svg { display: none; }
