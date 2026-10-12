@@ -263,12 +263,16 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
             // Same daily minutes as the course they have; changeable in Settings.
             // Refused (by the server, or another tab is the writer): the new course is
             // rolled back, so go back to the one they came from and say why.
-            void saveCourse(store, l, { minutes: course.minutes }).catch((e) => {
-              console.error("course not saved", e);
-              choose(previous);
-              setStartError(`Could not start ${language(l).name}. Please try again later.`);
-            });
-            track("course_started", { lang: l, minutes: course.minutes, another: true });
+            // Counted once the server has it (offline: when the queue sends it). A tab closed
+            // before then loses the event, though the course is still sent: a slight undercount.
+            void saveCourse(store, l, { minutes: course.minutes }).then(
+              () => track("course_started", { lang: l, minutes: course.minutes, another: true }),
+              (e) => {
+                console.error("course not saved", e);
+                choose(previous);
+                setStartError(`Could not start ${language(l).name}. Please try again later.`);
+              },
+            );
             choose(l);
             go("/today");
           }}
