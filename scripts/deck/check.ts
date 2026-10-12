@@ -13,6 +13,10 @@ import { reviewProblems } from "./reviews.ts";
 const args = process.argv.slice(2);
 const baseAt = args.indexOf("--base");
 const base = baseAt >= 0 ? args[baseAt + 1] : "origin/main";
+if (!base || base.startsWith("--")) {
+  console.error("usage: bun scripts/deck/check.ts [--base <git ref>]  (--base needs a ref)");
+  process.exit(2);
+}
 const MAX_RETIRED_SHARE = 0.05;
 const allowBig = process.env.DECK_ALLOW_BIG_CHANGE === "1";
 
