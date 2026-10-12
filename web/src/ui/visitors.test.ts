@@ -5,7 +5,7 @@ import { milestoneLine } from "../garden/visitors";
 // The deck loader needs Vite (import.meta.glob); these tests never load a deck.
 mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")), deckLangs: () => [] }));
 const { deriveMemory, wordState } = await import("../data/learner");
-const { knownAt } = await import("./visitors");
+const { knownAt, knownWords } = await import("./visitors");
 
 const DAY = 86_400_000;
 const start = new Date(2026, 0, 1, 9).getTime();
@@ -54,5 +54,30 @@ describe("known words at the start of a day (for the milestone line)", () => {
     // The same for 25: the line shows only on that day.
     expect(milestoneLine(24, 25)).not.toBeNull();
     expect(milestoneLine(25, 25)).toBeNull();
+  });
+});
+
+describe("known words for unlocks, milestones and the frog", () => {
+  const known = { s: 30, reps: 4 };
+  const memoryOf = (ids: string[]) => new Map(ids.map((id) => [`${id}:read`, known]));
+  const word = (i: number, pos: string) => ({ id: `${pos}${i}`, lemma: `${pos}-${i}`, pos });
+
+  test("counts every known word, though the frog croaks only nouns once there are five", () => {
+    const words = [...Array.from({ length: 6 }, (_, i) => word(i, "noun")), ...Array.from({ length: 30 }, (_, i) => word(i, "verb"))];
+    const k = knownWords(words, memoryOf(words.map((w) => w.id)));
+    expect(k.count).toBe(36);
+    expect(k.croaks).toHaveLength(6);
+    expect(k.croaks.every((l) => l.startsWith("noun"))).toBe(true);
+    // 36 known words cross the 25 milestone, which the six nouns alone would not.
+    expect(milestoneLine(0, k.count)).not.toBeNull();
+  });
+
+  test("with few nouns the frog croaks any known word; words not known yet count for nothing", () => {
+    const words = [word(0, "noun"), word(1, "verb"), word(2, "verb")];
+    const memory = new Map([...memoryOf(["noun0", "verb1"]), ["verb2:read", { s: 30, reps: 1 }]]);
+    const k = knownWords(words, memory);
+    expect(k.count).toBe(2);
+    expect(k.croaks).toEqual(["noun-0", "verb-1"]);
+    expect(k.lemmas).toEqual(new Set(["noun-0", "verb-1"]));
   });
 });

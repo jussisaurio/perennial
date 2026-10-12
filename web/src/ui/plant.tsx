@@ -3,6 +3,8 @@
 // Growth follows memory stability: sprout → bud → bloom.
 
 import type { ReactNode } from "react";
+import { BUD_S, OLD_S, plantStage } from "../data/learner";
+import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
 
 /** Small, fast, seedable PRNG (mulberry32). */
 function rng(seed: string): () => number {
@@ -85,8 +87,9 @@ export function genome(word: string): Genome {
 
 export type Stage = "sprout" | "bud" | "bloom";
 
-export function stageFor(s: number, known: boolean): Stage {
-  return known ? "bloom" : s >= 3 ? "bud" : "sprout";
+/** For a card that knows only stability and whether the word is known: plantStage's rule (data/learner.ts). */
+function stageFor(s: number, known: boolean): Stage {
+  return known ? "bloom" : s >= BUD_S ? "bud" : "sprout";
 }
 
 /** Point and tangent angle on the quadratic stem curve at t (0 = base, 1 = top). */
@@ -250,14 +253,64 @@ export function Plant({ word, growth, stage, scale = 1 }: { word: string; growth
 /** A word's plant on a little mound of soil, framed to fit, for cards and pops. */
 export function WordPlant({ word, s, known, size = 96, className }: { word: string; s: number; known: boolean; size?: number; className?: string }) {
   const stage = stageFor(s, known);
-  const growth = Math.min(1, Math.log1p(s) / Math.log1p(120));
+  const growth = growthOf(s);
   // Frame the view box around this plant so a sprout fills it as well as a tall bloom.
   const h = (14 + 120 * growth) * genome(word).height * 1.05 + (stage === "sprout" ? 12 : 22);
   const side = Math.max(44, h + 10);
   return (
-    <svg className={className} width={size} height={size} viewBox={`${-side / 2} ${-(side - 8)} ${side} ${side}`} role="img" aria-label={`${word}: ${stage === "bloom" ? "in bloom" : stage === "bud" ? "budding" : "a new sprout"}`}>
+    <svg className={className} width={size} height={size} viewBox={`${-side / 2} ${-(side - 8)} ${side} ${side}`} role="img" aria-label={`${word}: ${stageLabel(stage)}`}>
       <ellipse cx={0} cy={3} rx={side * 0.3} ry={side * 0.06} fill="var(--soil-1)" />
       <Plant word={word} growth={growth} stage={stage} scale={1.05} />
     </svg>
+  );
+}
+
+/** A plant as the 2D garden draws it: leaning as recall fades (the walk's lean too), with dots for listening and writing. */
+export function StripPlant({ p, scale, highlighted }: { p: GardenPlant; scale: number; highlighted: boolean }) {
+  const h = (16 + 118 * p.growth) * scale;
+  return (
+    <g transform={`rotate(${leanDeg(p.id, p.r).toFixed(1)})`}>
+      {highlighted && <circle className="glow" cy={-h} r={14 * scale} />}
+      <Plant word={p.lemma} growth={p.growth} stage={p.stage} scale={scale} />
+      {p.listen && <circle cx={4 * scale} cy={-h * 0.45} r={2.4 * scale} fill="var(--sky)" />}
+      {p.write && <circle cx={-4 * scale} cy={-h * 0.62} r={2.4 * scale} fill="var(--persimmon)" />}
+    </g>
+  );
+}
+
+/** The landing page's row of one word growing up, from a seed to an old bloom. */
+export function GrowthStrip() {
+  const stages: { label: string; s: number; reps: number }[] = [
+    { label: "new word", s: 0, reps: 0 },
+    { label: "first review", s: 1.2, reps: 1 },
+    { label: "learning", s: 4, reps: 2 },
+    { label: "known", s: 30, reps: 4 },
+    { label: "known well", s: OLD_S, reps: 8 },
+  ];
+  return (
+    <div className="growth-strip" aria-label="Each word grows from a seed to a flower as you remember it">
+      {stages.map((st, i) => {
+        const stage = plantStage(st);
+        return (
+          <figure key={st.label} style={{ animationDelay: `${0.15 + i * 0.12}s` }}>
+            <svg width="72" height="150" viewBox="-36 -170 72 182" aria-hidden="true" className="garden-mini">
+              <path d="M-34 4 Q0 -3 34 4 V12 H-34Z" fill="var(--soil-1)" />
+              {stage === "seed" ? (
+                <ellipse className="seed" cx="0" cy="6" rx="4" ry="2.6" />
+              ) : (
+                <g className="sway" style={{ animationDelay: `${-i}s` }}>
+                  <StripPlant
+                    p={{ id: `demo${i + 2}`, lemma: ["", "casa", "mañana", "Blume", "perennial"][i], gloss: "", pos: "", rank: 0, s: st.s, r: 1, stage, growth: growthOf(st.s), listen: st.s >= OLD_S, write: st.s >= OLD_S }}
+                    scale={1.25}
+                    highlighted={false}
+                  />
+                </g>
+              )}
+            </svg>
+            <figcaption>{st.label}</figcaption>
+          </figure>
+        );
+      })}
+    </div>
   );
 }
