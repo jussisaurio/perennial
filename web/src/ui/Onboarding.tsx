@@ -2,13 +2,13 @@
 // for each language. "Start learning" makes an anonymous account and the
 // course in one step; nothing to set up, no email needed yet.
 
-import { COURSE_DEFAULTS } from "../data/rows";
 import { farewell } from "../content/voice";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES, language } from "../content/languages";
 import { isDeckLang } from "../deck/schema";
 import { ensureUser } from "../data/auth";
 import { postWrite } from "../data/http";
+import { DAILY_MINUTES } from "../data/practice";
 import { loadDeck } from "../data/deck";
 import { useDeck } from "../data/learner";
 import { track } from "../observability";
@@ -19,9 +19,10 @@ import { showcaseVisitors } from "./visitors";
 import { GrowthStrip } from "./plant";
 import { FlowerIcon, SproutMark } from "./icons";
 
-// Choices survive a reload before "Start learning" (a per-browser convenience).
+// The language choice survives a reload before "Start learning" (a per-browser convenience).
+// Drafts saved by older builds also have `minutes`, which is no longer read.
 const DRAFT_KEY = "perennial-onboarding";
-type Draft = { lang?: string; minutes?: number };
+type Draft = { lang?: string };
 function readDraft(): Draft {
   try {
     return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "{}") as Draft;
@@ -61,11 +62,12 @@ export const courseArrived = () => {
 };
 
 /** The first write: an anonymous account (if there is none yet) and the course. */
-export async function startCourse(lang: string, minutes: number) {
+export async function startCourse(lang: string) {
   setStarting({ lang, error: "" });
   try {
     await ensureUser();
-    await postWrite([{ type: "course.upsert", row: { lang, minutes } }]);
+    // The app no longer reads `minutes` (5 a day for everyone); older app versions still do.
+    await postWrite([{ type: "course.upsert", row: { lang, minutes: DAILY_MINUTES } }]);
   } catch (e) {
     setStarting({ lang: null, error: "Could not start. Check your internet connection and try again." });
     throw e;
@@ -76,7 +78,6 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   const draft = readDraft();
   // The draft may name a language this build lacks (saved by a newer build in another tab): start from Spanish then.
   const [lang, setLang] = useState<string>(() => (draft.lang && isDeckLang(draft.lang) ? draft.lang : "es"));
-  const [minutes, setMinutes] = useState(draft.minutes ?? COURSE_DEFAULTS.minutes);
   // After "Delete my account": a goodbye on the landing page, for a short
   // while (the app reloads once as the user changes), then never again.
   const [goodbye] = useState(() => {
@@ -96,7 +97,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   // Shared, not local: a failed start may come back as a new copy of this page.
   const { error } = useStartingCourse();
   const [walking, setWalking] = useState(false);
-  useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
+  useEffect(() => saveDraft({ lang }), [lang]);
   // A deck that fails to load only leaves the showcase without its garden: starting needs no deck.
   const { deck } = useDeck(lang);
   const fresh = useMemo(() => (deck ? showcaseGarden(deck) : null), [deck]);
@@ -115,8 +116,8 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   const start = async () => {
     setBusy(true);
     try {
-      await startCourse(lang, minutes);
-      track("course_started", { lang, minutes });
+      await startCourse(lang);
+      track("course_started", { lang });
       onStarted(lang);
     } catch {
       // startCourse set the error (shown by whichever copy of this page is up).
@@ -150,9 +151,9 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
           {goodbye.line} {goodbye.wish && <em>{goodbye.wish}</em>}
         </p>
       )}
-      <h1 style={{ marginTop: "2rem" }}>Grow a language, a few minutes a day.</h1>
+      <h1 style={{ marginTop: "2rem" }}>Grow a language, {DAILY_MINUTES} minutes a day.</h1>
       <p className="lede">
-        Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, in real sentences. You choose how many minutes per day. Missed days do not pile up.
+        Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, in real sentences. Missed days do not pile up.
       </p>
 
       <div className="choice lang-choice landing-langs" role="radiogroup" aria-label="Language to learn">
@@ -175,19 +176,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       </button>
       <GrowthStrip />
 
-      <section className="form">
-        <label>
-          Time per day
-          <div className="chips" role="radiogroup" aria-label="Minutes per day">
-            {[5, 7, 10, 15].map((m) => (
-              <button key={m} role="radio" aria-checked={m === minutes} className={m === minutes ? "chip on" : "chip"} onClick={() => setMinutes(m)}>
-                {m} min
-              </button>
-            ))}
-          </div>
-        </label>
-        <span className="muted small">Lessons are in English. More languages will come later.</span>
-      </section>
+      <p className="muted small">Lessons are in English. More languages will come later.</p>
       <div className="row" style={{ marginTop: "1.5rem" }}>
         <button className="primary wide" onClick={() => void start()} disabled={busy}>
           {busy ? "Starting…" : `Start learning ${name}`}

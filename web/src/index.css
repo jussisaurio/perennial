@@ -230,8 +230,11 @@ section { margin-bottom: 1.25rem; }
   width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center;
   background: var(--sun); color: #2a2111; font: 1rem/1 var(--display);
 }
-.start small { font-weight: 400; opacity: 0.65; font-size: 0.9rem; }
+.start small { font-weight: 400; opacity: 0.65; font-size: 0.9rem; white-space: nowrap; }
 .start-note { color: var(--muted); font-size: 0.92rem; max-width: 22rem; }
+/* Today, once the day's minutes are done: the plain fact, above "Practice 5 more minutes". */
+.start-row .watered { flex-basis: 100%; margin: 0 0 -0.4rem; font: 1.3rem/1.3 var(--display); }
+.start-row .five-minutes-note { flex-basis: 100%; margin: -0.6rem 0 0; max-width: 34rem; }
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 2rem; border-top: 1px solid var(--line); }
 .stat { padding: 1rem 1rem 0.5rem 0; }
@@ -398,9 +401,6 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 
 .summary { text-align: left; }
 .summary h1 { margin-top: 0.5rem; }
-.summary .tally { display: flex; gap: 2rem; margin: 0.5rem 0 0.25rem; }
-.summary .tally div { font: 2.6rem/1 var(--display); }
-.summary .tally span { display: block; font: 0.8rem var(--ui); color: var(--muted); margin-top: 0.3rem; }
 
 /* ---------- words ---------- */
 .search { flex: 1; }
@@ -450,7 +450,7 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .prompt { font-size: 1.05rem; color: var(--ink-2); margin: 0; }
 .prompt b { font-weight: 650; color: var(--ink); }
 @media (max-width: 560px) {
-  .start { width: 100%; justify-content: flex-start; }
+  .start { width: 100%; justify-content: flex-start; text-align: left; }
   .start small { margin-left: auto; }
 }
 .row > select { width: auto; flex: none; }
@@ -731,7 +731,3 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 
 /* A deck that could not load (see DeckFailed in App): the reason, then Reload. */
 .deck-failed { display: grid; gap: 1rem; justify-items: start; }
-
-/* "Keep going" under "All done for today": quiet, with its reason. */
-.keep-going { display: grid; gap: 0.3rem; justify-items: start; margin-top: 0.6rem; }
-.keep-going p { margin: 0; max-width: 34rem; }

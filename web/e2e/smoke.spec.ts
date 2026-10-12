@@ -5,8 +5,8 @@ test("smoke: landing → start learning → a session → progress survives a re
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
   await page.getByRole("button", { name: /Start learning Spanish/ }).click();
-  await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15000 });
-  await page.getByRole("button", { name: /today's session/ }).click();
+  await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15000 });
+  await page.getByRole("button", { name: /today's 5 minutes/i }).click();
   await expect(page.locator(".kicker")).toBeVisible();
   // Answer "I knew it" on the first new word: that records a review.
   await page.getByRole("button", { name: /I knew it/ }).click();
@@ -35,7 +35,7 @@ test("a deck that cannot load, with no copy kept: the learner is told, not left 
   // Once the deck can load again, Reload brings the words back.
   await page.unroute(deckFile);
   await page.getByRole("button", { name: "Reload" }).click();
-  await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15_000 });
 });
 
 test("connection lost mid-session: practice continues", async ({ page, context }) => {

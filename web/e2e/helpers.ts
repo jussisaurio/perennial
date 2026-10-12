@@ -29,7 +29,7 @@ export async function startCourse(page: Page, language: "Spanish" | "German" = "
   await page.goto("/");
   if (language !== "Spanish") await page.getByRole("radio", { name: new RegExp(language) }).check();
   await page.getByRole("button", { name: `Start learning ${language}` }).click();
-  await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15_000 });
 }
 
 /** Add an email to the anonymous learner from Settings. */
@@ -49,7 +49,7 @@ export async function openAdd(page: Page) {
 }
 
 export async function startSession(page: Page) {
-  await page.getByRole("button", { name: /today's session/ }).click();
+  await page.getByRole("button", { name: /today's 5 minutes/i }).click();
   await expect(page.locator(".kicker")).toBeVisible();
 }
 

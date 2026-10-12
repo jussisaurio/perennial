@@ -11,6 +11,7 @@ import { keepCourse } from "../data/device";
 import { ApiError, postWrite } from "../data/http";
 import { memKey } from "../core/memory";
 import { COURSE_DEFAULTS } from "../data/rows";
+import { DAILY_MINUTES } from "../data/practice";
 import type { DeckLang } from "../deck/schema";
 import { rng } from "../lib/seed";
 
@@ -32,7 +33,7 @@ export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
   const deck = await loadDeck(lang);
   const now = Date.now();
   const r = rng(count * 31 + DAYS);
-  const mutations: unknown[] = [{ type: "course.upsert", row: { lang, minutes: 7 } }];
+  const mutations: unknown[] = [{ type: "course.upsert", row: { lang, minutes: DAILY_MINUTES } }];
   const words = deck.words.slice(0, count);
   // The server takes at most QUOTA.reviewsPerDay (5000) reviews a day; keep a
   // whole-deck demo under it with fewer reviews per word.

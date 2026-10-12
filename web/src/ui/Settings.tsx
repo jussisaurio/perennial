@@ -18,16 +18,6 @@ function CourseSettings({ course }: { course: CourseRow }) {
   };
   return (
     <div className="form">
-      <label>
-        Time per day
-        <select value={course.minutes} onChange={(e) => void saveCourse(store, course.lang, { minutes: Number(e.target.value) })}>
-          {[3, 5, 7, 10, 15, 20, 30].map((m) => (
-            <option key={m} value={m}>
-              {m} minutes
-            </option>
-          ))}
-        </select>
-      </label>
       <details className="more">
         <summary>How often to review</summary>
         <label className="form">

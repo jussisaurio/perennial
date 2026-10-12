@@ -20,7 +20,7 @@ test("start a second language from the top bar, switch back, and nothing new is 
   await page.getByRole("button", { name: "Start German" }).click();
 
   await expect(switcher).toHaveText(/German/);
-  await expect(page.getByText(/words are ready/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15_000 });
   await expectServerRows(page, "course", 2);
 
   // Two gardens, every language started: switching only.

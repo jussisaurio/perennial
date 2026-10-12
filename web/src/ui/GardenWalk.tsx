@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { language } from "../content/languages";
 import type { LoadedDeck } from "../data/deck";
 import { useLearner } from "../data/learner";
+import { nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { groupOf, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
@@ -30,14 +31,17 @@ export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
 }
 
 /** The walk-in garden for the signed-in learner. */
-export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: () => void }) {
+export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: (minutes: number) => void }) {
   useEffect(() => track("garden_opened"), []);
   const learner = useLearner(lang);
   // The learner's own garden: the same plants as the 2D garden.
   const source = useMemo(() => (learner ? plantsFromLearner(learner) : null), [learner]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
   const [focus] = useState(takeFocus);
-  return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} onWater={onWater} focus={focus} />;
+  // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done.
+  // Until the learner loads there are no plants (`source` is null), so nothing to water either.
+  const water = learner ? () => onWater(nextChunk(learner).minutes) : undefined;
+  return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} onWater={water} focus={focus} />;
 }
 
 function initialTime(): TimeOfDay {

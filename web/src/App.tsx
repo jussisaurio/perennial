@@ -13,6 +13,7 @@ import { CourseSwitcher } from "./ui/CourseSwitcher";
 import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
 import { SessionScreen } from "./ui/Session";
+import { DAILY_MINUTES } from "./data/practice";
 import { SettingsScreen } from "./ui/Settings";
 import { WordsScreen } from "./ui/Words";
 
@@ -159,7 +160,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const { courses, ready } = useCourses();
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
-  const [sessionExtra, setSessionExtra] = useState(false);
   const [startError, setStartError] = useState("");
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
   const deckFailed = useDeck(course?.lang).failed;
@@ -191,16 +191,16 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const noDeck = deckFailed && route !== "/settings";
 
   if (route === "/session" && !noDeck)
-    return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} extra={sessionExtra} onExit={() => go("/today", { replace: true })} />;
+    // No minutes chosen: the page was reloaded on the session screen, so a fresh 5 minutes.
+    return <SessionScreen lang={lang} minutes={sessionMinutes ?? DAILY_MINUTES} onExit={() => go("/today", { replace: true })} />;
 
   if (route === "/garden" && !noDeck)
     return (
       <LearnerGardenWalk
         lang={lang}
         onExit={() => (history.length > 1 ? history.back() : go("/today", { replace: true }))}
-        onWater={() => {
-          setSessionMinutes(null);
-          setSessionExtra(false);
+        onWater={(m) => {
+          setSessionMinutes(m);
           go("/session");
         }}
       />
@@ -223,13 +223,12 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           onStart={(l) => {
             setStartError("");
             const previous = course.lang;
-            // Same daily minutes as the course they have; changeable in Settings.
             // Refused (by the server, or another tab is the writer): the new course is
             // rolled back, so go back to the one they came from and say why.
             // Counted once the server has it (offline: when the queue sends it). A tab closed
             // before then loses the event, though the course is still sent: a slight undercount.
-            void saveCourse(store, l, { minutes: course.minutes }).then(
-              () => track("course_started", { lang: l, minutes: course.minutes, another: true }),
+            void saveCourse(store, l, {}).then(
+              () => track("course_started", { lang: l, another: true }),
               (e) => {
                 console.error("course not saved", e);
                 choose(previous);
@@ -261,9 +260,8 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
       {route === "/today" && !noDeck && (
         <Home
           lang={lang}
-          onStart={(m, extra = false) => {
+          onStart={(m) => {
             setSessionMinutes(m);
-            setSessionExtra(extra);
             go("/session");
           }}
           onWalk={() => go("/garden")}

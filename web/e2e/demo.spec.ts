@@ -7,7 +7,7 @@ test("dev demo data: ?demo=es gives a garden with a review history", async ({ pa
   const reviews = await serverRows<{ word_id: string }>(page, "review");
   expect(new Set(reviews.map((r) => r.word_id)).size).toBe(30);
   await page.goto("/?demo=off");
-  await expect(page.getByRole("heading", { name: "Grow a language, a few minutes a day." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Grow a language, 5 minutes a day." })).toBeVisible();
 });
 
 test("dev demo: a delete the server refuses is reported", async ({ page }) => {
@@ -16,7 +16,7 @@ test("dev demo: a delete the server refuses is reported", async ({ page }) => {
   await startCourse(page); // an anonymous learner, so the delete is really sent
   await page.route("**/api/account/delete", (route) => route.fulfill({ status: 500, json: { error: "internal_error" } }));
   await page.goto("/?demo=off");
-  await expect(page.getByRole("heading", { name: "Grow a language, a few minutes a day." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Grow a language, 5 minutes a day." })).toBeVisible();
   await expect.poll(() => warnings.some((w) => w.includes("could not delete the demo learner on the server: 500"))).toBe(true);
 });
 
@@ -25,7 +25,7 @@ test("dev demo: a seed that fails is reported, and the app still opens", async (
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.route("**/api/write", (route) => route.fulfill({ status: 422, json: { error: "invalid" } }));
   await page.goto("/?demo=es:5");
-  await expect(page.getByRole("heading", { name: "Grow a language, a few minutes a day." })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole("heading", { name: "Grow a language, 5 minutes a day." })).toBeVisible({ timeout: 20000 });
   expect(errors.some((e) => e.includes("[demo] could not seed es"))).toBe(true);
 });
 

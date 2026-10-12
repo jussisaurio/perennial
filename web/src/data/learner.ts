@@ -9,6 +9,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deriveMemory, type MemoryRow } from "../core/memory";
 import { loadDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
+import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
 
@@ -216,13 +217,14 @@ export function setWordStatus(store: Store, wordId: string, status: Word["status
   });
 }
 
-export function saveCourse(store: Store, lang: string, patch: Partial<Pick<CourseRow, "minutes" | "retention">>) {
+export function saveCourse(store: Store, lang: string, patch: Partial<Pick<CourseRow, "retention">>) {
   const c = store.collections.course;
   return store.write(() => {
     if (c.has(lang))
       c.update(lang, (d) => {
         Object.assign(d, patch);
       });
-    else c.insert({ user_id: store.userId, lang, minutes: patch.minutes ?? COURSE_DEFAULTS.minutes, retention: patch.retention ?? COURSE_DEFAULTS.retention, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
+    // The app no longer reads `minutes` (5 a day for everyone); older app versions still do.
+    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
   });
 }

@@ -1,5 +1,7 @@
-// Time-boxed session planning. There is no "due count" to clear: the learner
-// gives us N minutes and we spend them where they buy the most memory.
+// Time-boxed session planning. There is no "due count" to clear: each chunk of
+// practice gets N minutes, and we spend them where they buy the most memory.
+// Every chunk is planned on its own, so "Practice 5 more minutes" is just
+// another chunk, not a special mode with its own limits.
 
 import type { FSRS, Grade } from "./fsrs";
 import { DAY_MS } from "./day";
@@ -23,40 +25,49 @@ export interface PlanInput {
   /** Not-yet-introduced words, best first. */
   fresh: string[];
   fsrs: FSRS;
-  /** New words per day (not per session, so "practise more" can't stack them). */
-  maxNewPerDay?: number;
-  /** New words already introduced today. */
-  newToday?: number;
-  /** Review items due up to this far ahead, since the next session may be a day away. */
-  lookaheadMs?: number;
+  /** Words answered correctly today: not quizzed again until tomorrow. */
+  answeredToday: ReadonlySet<string>;
 }
 
 export interface Plan {
   queue: Task[];
   newCount: number;
-  /** True when the daily new-word limit (not the timer) is what keeps the session short. */
-  newLimitReached: boolean;
+  /** Words due now (step 1): what still needs water today. */
+  due: number;
 }
 
-export const MAX_NEW_PER_DAY = 15;
+/** Review items due up to this far ahead count as due now, since the next session may be a day away. */
+const DUE_HORIZON_MS = 6 * 3_600_000;
 
+/**
+ * One chunk of practice, filled in this order:
+ * 1. due reviews, the ones still most likely to be saved first;
+ * 2. new words in the time left (a trickle even during a backlog);
+ * 3. the first practice of newly unlocked skills;
+ * 4. reviews due within a day, soonest first;
+ * 5. any other learned word, weakest first.
+ * Steps 4 and 5 make sure a chunk is never empty once anything is learned.
+ * They are not sized to the budget: the timer, not the queue, ends the chunk.
+ */
 export function plan(input: PlanInput): Plan {
-  const { now, budgetMs, memories, fresh, fsrs } = input;
-  const newLeftToday = Math.max(0, (input.maxNewPerDay ?? MAX_NEW_PER_DAY) - (input.newToday ?? 0));
-  const horizon = now + (input.lookaheadMs ?? 6 * 3_600_000);
+  const { now, budgetMs, memories, fresh, fsrs, answeredToday } = input;
+  const recall = (m: MemoryRow) => fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s);
 
   // One skill per word per session: practising "listen" right after "read" for
   // the same word mostly measures short-term memory. A skill never practised
   // yet has no memory to save, so it never competes with real reviews.
   const byWord = new Map<string, { m: MemoryRow; r: number }>();
   const unlocked = new Map<string, MemoryRow>();
+  const learned: MemoryRow[] = [];
   for (const m of memories) {
+    if (answeredToday.has(m.wordId)) continue;
     if (m.reps === 0) {
       if (!unlocked.has(m.wordId)) unlocked.set(m.wordId, m);
       continue;
     }
-    if (m.due > horizon) continue;
-    const r = fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s);
+    learned.push(m);
+    if (m.due > now + DUE_HORIZON_MS) continue;
+    const r = recall(m);
     const cur = byWord.get(m.wordId);
     if (!cur || r < cur.r) byWord.set(m.wordId, { m, r });
   }
@@ -73,8 +84,7 @@ export function plan(input: PlanInput): Plan {
   const free = budgetMs - dueCost;
   let byTime = Math.floor(Math.max(0, free) / COSTS.intro);
   if (byTime === 0 && dueCost < 3 * budgetMs) byTime = dueCost < 1.5 * budgetMs ? 2 : 1;
-  const newCount = Math.min(byTime, newLeftToday, fresh.length);
-  const newLimitReached = byTime > newCount && newCount === newLeftToday && fresh.length > newCount;
+  const newCount = Math.min(byTime, fresh.length);
 
   // Newly unlocked skills: a small trickle with the leftover time, for words
   // that have no real review in this session.
@@ -83,9 +93,23 @@ export function plan(input: PlanInput): Plan {
     .filter((m) => !byWord.has(m.wordId))
     .slice(0, Math.max(0, Math.min(MAX_NEW_SKILLS, Math.floor(spare / COSTS.write))));
 
+  // Early reviews for the rest of the time: what comes due soonest, then the
+  // weakest of everything else. Practising early is worth a little less, never harm.
+  const taken = new Set([...byWord.keys(), ...newSkills.map((m) => m.wordId)]);
+  const soon = firstPerWord(
+    learned.filter((m) => !taken.has(m.wordId) && m.due <= now + DAY_MS),
+    (a, b) => a.due - b.due,
+  );
+  for (const m of soon) taken.add(m.wordId);
+  const weakest = firstPerWord(
+    learned.filter((m) => !taken.has(m.wordId)),
+    (a, b) => recall(a) - recall(b),
+  );
+
   const reviews: Task[] = due.map(({ m }) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
   const intros: Task[] = fresh.slice(0, newCount).map((wordId) => ({ kind: "intro", wordId }));
   const skills: Task[] = newSkills.map((m) => ({ kind: "review", wordId: m.wordId, skill: m.skill, isNew: true }));
+  const early: Task[] = [...soon, ...weakest].map((m) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
 
   // Interleave: spread intros through the first part of the session so new
   // material doesn't all land at the end (and get cut off by the timer).
@@ -97,9 +121,25 @@ export function plan(input: PlanInput): Plan {
     queue.push(intro);
   }
   while (ri < reviews.length) queue.push(reviews[ri++]);
-  queue.push(...skills);
+  queue.push(...skills, ...early);
 
-  return { queue, newCount, newLimitReached };
+  // Every learned word was already answered today and no new words are left
+  // (a small course, practised a lot): a second try today beats an empty chunk.
+  if (!queue.length) {
+    const again = firstPerWord(
+      memories.filter((m) => m.reps > 0),
+      (a, b) => recall(a) - recall(b),
+    );
+    queue.push(...again.map((m): Task => ({ kind: "review", wordId: m.wordId, skill: m.skill })));
+  }
+
+  return { queue, newCount, due: due.length };
+}
+
+/** Each word's first memory in `order`, the words in that order too. */
+function firstPerWord(memories: MemoryRow[], order: (a: MemoryRow, b: MemoryRow) => number): MemoryRow[] {
+  const seen = new Set<string>();
+  return [...memories].sort(order).filter((m) => !seen.has(m.wordId) && !!seen.add(m.wordId));
 }
 
 export interface Outcome {
@@ -131,7 +171,7 @@ export class Session {
   private history: Snapshot[] = [];
   readonly budgetMs: number;
 
-  constructor(plan: Plan, budgetMs: number) {
+  constructor(plan: Pick<Plan, "queue">, budgetMs: number) {
     this.queue = [...plan.queue];
     this.budgetMs = budgetMs;
   }
