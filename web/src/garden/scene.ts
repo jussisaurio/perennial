@@ -43,7 +43,7 @@ export interface WalkVisitors {
 export interface SceneCallbacks {
   onSelect: (p: PlacedPlant | null) => void;
   onLabels: (labels: Label[]) => void;
-  onProgress?: (done: number, total: number) => void;
+  onProgress: (done: number, total: number) => void;
 }
 
 export interface Input {
@@ -56,10 +56,10 @@ const EYE = 1.05;
 const SPRITE_W = 1.0;
 const SPRITE_H = 2.0;
 const WALK = 3.6;
-/** Width of the framebuffer, in pixels, for each level of detail. */
 /**
- * Normal renders at about screen resolution on most screens (the textures
- * keep the pixel-art look). Low uses big pixels, for slow devices.
+ * Width of the framebuffer, in pixels, for each level of detail. Normal
+ * renders at about screen resolution on most screens (the textures keep the
+ * pixel-art look). Low uses big pixels, for slow devices.
  */
 export const DETAIL = { normal: 2160, low: 760 } as const;
 export type Detail = keyof typeof DETAIL;
@@ -67,28 +67,64 @@ const FOG_NEAR = 14;
 const FOG_FAR = 46;
 /** Plant sprites a little under life size: the tallest bloom stands about eye height. */
 const PLANT_SCALE = 0.85;
+/** Height of the raised beds: plants stand on their soil. */
+const BED_H = 0.28;
+/** How far away the sun (or moon) is drawn, along its direction from the eye. */
+const SUN_DIST = 200;
+/** The far hills: a ring of this radius and height, its middle this high, the texture repeated this often round it. */
+const HILLS = { radius: 150, height: 34, y: 10, repeat: 4 };
+const UP = new THREE.Vector3(0, 1, 0);
 
-const SPRITE_VERT = /* glsl */ `
-  attribute vec3 iPos;
-  attribute vec4 iUv;
-  attribute vec4 iParams; // phase, droop, scale, index
+/** A plant sprite's drawn height in metres. 14 + 120 × growth is the plant's height in SVG units (ui/plant.tsx). */
+function plantHeight(growth: number): number {
+  return ((14 + 120 * growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
+}
+
+// The vertex shader part every sprite shares: the fog and selection inputs,
+// and billboard(), which sways the quad in the wind, leans it by `droop`, then
+// turns it to face the camera around the vertical axis only, like Doom's
+// sprites. It returns the view-space position.
+const BILLBOARD = /* glsl */ `
   uniform float uTime;
   uniform float uSway;
   uniform float uFogNear;
   uniform float uFogFar;
   uniform float uSelected;
-  varying vec2 vUv;
   varying float vFog;
   varying float vSel;
-  void main() {
-    vec2 p = position.xy * iParams.z;
+  vec4 billboard(vec3 at, vec2 p, float phase, float droop) {
     float h = position.y / ${SPRITE_H.toFixed(1)};
-    float a = iParams.y + uSway * sin(uTime * 1.4 + iParams.x) * 0.07 * h + uSway * sin(uTime * 3.1 + iParams.x * 2.0) * 0.015;
+    float a = droop + uSway * sin(uTime * 1.4 + phase) * 0.07 * h + uSway * sin(uTime * 3.1 + phase * 2.0) * 0.015;
     p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
-    // Turn to face the camera around the vertical axis only, like Doom's sprites.
     vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
-    vec3 world = iPos + right * p.x + vec3(0.0, p.y, 0.0);
-    vec4 mv = viewMatrix * vec4(world, 1.0);
+    vec3 world = at + right * p.x + vec3(0.0, p.y, 0.0);
+    return viewMatrix * vec4(world, 1.0);
+  }
+`;
+
+// The fragment shader part every sprite shares: time-of-day tint, a pulse
+// when selected, and fog.
+const SHADE = /* glsl */ `
+  uniform vec3 uFog;
+  uniform vec3 uTint;
+  uniform float uTime;
+  varying float vFog;
+  varying float vSel;
+  vec4 shade(vec4 c) {
+    vec3 col = c.rgb * uTint;
+    col = mix(col, min(vec3(1.0), col * 1.35 + 0.08), vSel * (0.6 + 0.4 * sin(uTime * 5.0)));
+    return vec4(mix(col, uFog, vFog), 1.0);
+  }
+`;
+
+const SPRITE_VERT = /* glsl */ `
+  attribute vec3 iPos;
+  attribute vec4 iUv;
+  attribute vec4 iParams; // phase, droop, scale, index
+  varying vec2 vUv;
+  ${BILLBOARD}
+  void main() {
+    vec4 mv = billboard(iPos, position.xy * iParams.z, iParams.x, iParams.y);
     gl_Position = projectionMatrix * mv;
     vUv = iUv.xy + uv * iUv.zw;
     vFog = smoothstep(uFogNear, uFogFar, -mv.z);
@@ -98,21 +134,14 @@ const SPRITE_VERT = /* glsl */ `
 
 const SPRITE_FRAG = /* glsl */ `
   uniform sampler2D uMap;
-  uniform vec3 uFog;
-  uniform vec3 uTint;
-  uniform float uTime;
   varying vec2 vUv;
-  varying float vFog;
-  varying float vSel;
+  ${SHADE}
   void main() {
     vec4 c = texture2D(uMap, vUv);
     if (c.a < 0.5) discard;
-    vec3 col = c.rgb * uTint;
-    col = mix(col, min(vec3(1.0), col * 1.35 + 0.08), vSel * (0.6 + 0.4 * sin(uTime * 5.0)));
-    gl_FragColor = vec4(mix(col, uFog, vFog), 1.0);
+    gl_FragColor = shade(c);
   }
 `;
-
 
 // Plants: like other sprites, but each samples its small sprite, or its
 // full-size one once the streamer has put it in a pool slot (iCell.y >= 0).
@@ -120,18 +149,12 @@ const PLANT_VERT = /* glsl */ `
   attribute vec3 iPos;
   attribute vec4 iParams; // phase, droop, scale, index
   attribute vec2 iCell; // low cell, high slot (-1: none yet)
-  uniform float uTime;
-  uniform float uSway;
-  uniform float uFogNear;
-  uniform float uFogFar;
-  uniform float uSelected;
   uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uLowSize;
   varying vec2 vLow;
   varying vec2 vHi;
   varying float vHasHi;
-  varying float vFog;
-  varying float vSel;
+  ${BILLBOARD}
   vec2 cellUv(float idx, float cols, vec2 cell, vec2 size) {
     // Half a texel in from the edge, so nearest sampling never reads the neighbour.
     vec2 q = clamp(vec2(uv.x, 1.0 - uv.y), 0.5 / cell, 1.0 - 0.5 / cell);
@@ -141,13 +164,7 @@ const PLANT_VERT = /* glsl */ `
   void main() {
     // A plant that hears its name grows a few percent for a moment.
     float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
-    vec2 p = position.xy * iParams.z * (1.0 + perk);
-    float h = position.y / ${SPRITE_H.toFixed(1)};
-    float a = iParams.y + uSway * sin(uTime * 1.4 + iParams.x) * 0.07 * h + uSway * sin(uTime * 3.1 + iParams.x * 2.0) * 0.015;
-    p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
-    vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
-    vec3 world = iPos + right * p.x + vec3(0.0, p.y, 0.0);
-    vec4 mv = viewMatrix * vec4(world, 1.0);
+    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk), iParams.x, iParams.y);
     gl_Position = projectionMatrix * mv;
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
@@ -160,20 +177,14 @@ const PLANT_VERT = /* glsl */ `
 const PLANT_FRAG = /* glsl */ `
   uniform sampler2D uLow;
   uniform sampler2D uHi;
-  uniform vec3 uFog;
-  uniform vec3 uTint;
-  uniform float uTime;
   varying vec2 vLow;
   varying vec2 vHi;
   varying float vHasHi;
-  varying float vFog;
-  varying float vSel;
+  ${SHADE}
   void main() {
     vec4 c = vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
     if (c.a < 0.5) discard;
-    vec3 col = c.rgb * uTint;
-    col = mix(col, min(vec3(1.0), col * 1.35 + 0.08), vSel * (0.6 + 0.4 * sin(uTime * 5.0)));
-    gl_FragColor = vec4(mix(col, uFog, vFog), 1.0);
+    gl_FragColor = shade(c);
   }
 `;
 
@@ -203,8 +214,8 @@ function spriteMaterial(map: THREE.Texture): THREE.ShaderMaterial {
       uMap: { value: map },
       uTime: { value: 0 },
       uSway: { value: 1 },
-      uFogNear: { value: 10 },
-      uFogFar: { value: 40 },
+      uFogNear: { value: FOG_NEAR },
+      uFogFar: { value: FOG_FAR },
       uFog: { value: new THREE.Color() },
       uTint: { value: new THREE.Color(1, 1, 1) },
       uSelected: { value: -1 },
@@ -214,15 +225,26 @@ function spriteMaterial(map: THREE.Texture): THREE.ShaderMaterial {
   });
 }
 
-/** Instanced camera-facing quads, bottom-centre anchored, from one atlas. */
-type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
-function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H) {
+/** A w×h quad standing on its bottom edge. */
+function standingQuad(w: number, h: number): THREE.PlaneGeometry {
   const quad = new THREE.PlaneGeometry(w, h);
   quad.translate(0, h / 2, 0);
+  return quad;
+}
+
+/** Instanced geometry that shares `quad`'s vertices; the caller adds the per-instance attributes. */
+function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeometry {
   const geo = new THREE.InstancedBufferGeometry();
   geo.index = quad.index;
   geo.setAttribute("position", quad.getAttribute("position"));
   geo.setAttribute("uv", quad.getAttribute("uv"));
+  return geo;
+}
+
+/** Instanced camera-facing quads, bottom-centre anchored, from one atlas. */
+type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
+function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H) {
+  const geo = instanced(standingQuad(w, h));
   const pos = new Float32Array(items.length * 3);
   const uv = new Float32Array(items.length * 4);
   const params = new Float32Array(items.length * 4);
@@ -324,16 +346,16 @@ export class GardenScene {
   private hillMat!: THREE.MeshBasicMaterial;
   private fireflies!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private butterflies: { mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>; cx: number; cz: number; r: number; ph: number; tex: THREE.Texture }[] = [];
-  private clouds: THREE.Mesh[] = [];
+  private clouds: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
   private marker!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private water!: THREE.Texture;
-  private lit!: THREE.Mesh;
-  private unlit!: THREE.Mesh;
+  private lit!: ReturnType<typeof sprites>;
+  private unlit!: ReturnType<typeof sprites>;
   private glows: THREE.Object3D[] = [];
   private sun!: THREE.Sprite;
   private sunDir = new THREE.Vector3();
-  /** The sunflower's position and frame (null: not chosen yet). */
-  private flower = { x: 0, z: 0, uv: null as THREE.InstancedBufferAttribute | null, params: null as THREE.InstancedBufferAttribute | null, face: null as boolean | null };
+  /** The sunflower: where it stands, its sprite's frame and lean, and which side it shows (null: not drawn yet). */
+  private flower!: { x: number; z: number; uv: THREE.InstancedBufferAttribute; params: THREE.InstancedBufferAttribute; face: boolean | null };
   private selected: PlacedPlant | null = null;
   private time: TimeOfDay = "day";
   private lastLabels = "";
@@ -366,7 +388,7 @@ export class GardenScene {
   /** Today's visitors in the walk (sceneVisitors.ts). */
   private guests: SceneVisitors;
 
-  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang = "", visitors: WalkVisitors = { list: [] }) {
+  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: string, visitors: WalkVisitors) {
     this.layout = layout;
     this.cb = cb;
     this.reducedMotion = reducedMotion;
@@ -390,10 +412,7 @@ export class GardenScene {
         elapsed: () => this.elapsed,
         sprite: (tex, x, y, z, u, uw, size) => {
           const mesh = sprites(tex, [{ x, y, z, u, v: 0, uw, vh: 1, phase: 0, droop: 0, scale: 1, index: -6 }], size, size);
-          const m = mesh.material;
-          m.uniforms.uSway.value = 0;
-          m.uniforms.uFogNear.value = FOG_NEAR;
-          m.uniforms.uFogFar.value = FOG_FAR;
+          mesh.material.uniforms.uSway.value = 0;
           return mesh;
         },
       },
@@ -463,21 +482,18 @@ export class GardenScene {
   /** Raised beds: wooden sides, soil on top, and a sign for each. */
   private buildBeds(c: BuildCtx) {
     const { L, mat, woodTex } = c;
-    // Raised beds: wooden sides, soil on top.
     const soilTex = T.pixelTexture(T.soil(), true);
     for (const bed of L.beds) {
-      const H = 0.28;
       const side = woodTex.clone();
       side.repeat.set(bed.w / 1.2, 1);
       const sideD = woodTex.clone();
       sideD.repeat.set(bed.d / 1.2, 1);
       const top = soilTex.clone();
       top.repeat.set(bed.w / 1.0, bed.d / 1.0);
-      const box = new THREE.Mesh(new THREE.BoxGeometry(bed.w, H, bed.d), [mat(sideD), mat(sideD), mat(top), mat(top), mat(side), mat(side)]);
-      box.position.set(bed.x, H / 2, bed.z);
+      const box = new THREE.Mesh(new THREE.BoxGeometry(bed.w, BED_H, bed.d), [mat(sideD), mat(sideD), mat(top), mat(top), mat(side), mat(side)]);
+      box.position.set(bed.x, BED_H / 2, bed.z);
       this.scene.add(box);
-      this.hitBoxes.push({ id: "bed", min: [bed.x - bed.w / 2, 0, bed.z - bed.d / 2], max: [bed.x + bed.w / 2, H, bed.z + bed.d / 2], tag: null });
-      // A sign on a post at the front-left corner, facing the path.
+      this.hitBoxes.push({ id: "bed", min: [bed.x - bed.w / 2, 0, bed.z - bed.d / 2], max: [bed.x + bed.w / 2, BED_H, bed.z + bed.d / 2], tag: null });
       const signTex = T.pixelTexture(T.sign(bed.label));
       // Just outside the front-left corner, turned toward the path, so it never hides a plant.
       const sx = bed.x - bed.w / 2 - 0.3;
@@ -497,7 +513,6 @@ export class GardenScene {
   /** The picket fence, with an arch over the gate. */
   private buildFence(c: BuildCtx) {
     const { L, b, mat, woodTex } = c;
-    // Picket fence with a gap for the gate.
     const fenceTex = T.pixelTexture(T.picket(), true);
     const fence = (x1: number, z1: number, x2: number, z2: number) => {
       const len = Math.hypot(x2 - x1, z2 - z1);
@@ -510,24 +525,23 @@ export class GardenScene {
       this.scene.add(m);
       this.hitBoxes.push({ id: "fence", min: [Math.min(x1, x2) - 0.05, 0, Math.min(z1, z2) - 0.05], max: [Math.max(x1, x2) + 0.05, 0.8, Math.max(z1, z2) + 0.05], tag: null });
     };
-    const gateHalf = 1.1;
     fence(b.minX, b.minZ, b.maxX, b.minZ);
     fence(b.minX, b.minZ, b.minX, b.maxZ);
     fence(b.maxX, b.minZ, b.maxX, b.maxZ);
-    fence(b.minX, b.maxZ, L.gate.x - gateHalf, b.maxZ);
-    fence(L.gate.x + gateHalf, b.maxZ, b.maxX, b.maxZ);
+    fence(b.minX, b.maxZ, L.gate.x - GATE_HALF, b.maxZ);
+    fence(L.gate.x + GATE_HALF, b.maxZ, b.maxX, b.maxZ);
     // An arch over the gate.
     for (const s of [-1, 1]) {
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.1, 0.14), mat(woodTex));
-      post.position.set(L.gate.x + s * gateHalf, 1.05, b.maxZ);
+      post.position.set(L.gate.x + s * GATE_HALF, 1.05, b.maxZ);
       this.scene.add(post);
     }
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(gateHalf * 2 + 0.5, 0.16, 0.2), mat(woodTex));
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(GATE_HALF * 2 + 0.5, 0.16, 0.2), mat(woodTex));
     beam.position.set(L.gate.x, 2.1, b.maxZ);
     this.scene.add(beam);
     const gateTag: [number, number, number] = [L.gate.x, 2.26, b.maxZ];
-    for (const sx of [-1, 1]) this.hitBoxes.push({ id: "gate", min: [L.gate.x + sx * gateHalf - 0.1, 0, b.maxZ - 0.1], max: [L.gate.x + sx * gateHalf + 0.1, 2.1, b.maxZ + 0.1], tag: gateTag });
-    this.hitBoxes.push({ id: "gate", min: [L.gate.x - gateHalf - 0.25, 2.0, b.maxZ - 0.1], max: [L.gate.x + gateHalf + 0.25, 2.18, b.maxZ + 0.1], tag: gateTag });
+    for (const sx of [-1, 1]) this.hitBoxes.push({ id: "gate", min: [L.gate.x + sx * GATE_HALF - 0.1, 0, b.maxZ - 0.1], max: [L.gate.x + sx * GATE_HALF + 0.1, 2.1, b.maxZ + 0.1], tag: gateTag });
+    this.hitBoxes.push({ id: "gate", min: [L.gate.x - GATE_HALF - 0.25, 2.0, b.maxZ - 0.1], max: [L.gate.x + GATE_HALF + 0.25, 2.18, b.maxZ + 0.1], tag: gateTag });
   }
 
   /** The pond by the gate, with lily pads. */
@@ -560,7 +574,7 @@ export class GardenScene {
   private buildTrees(c: BuildCtx) {
     const { L, b, w, d, rand } = c;
     const treeTex = T.pixelTexture(T.trees());
-    const trees: Parameters<typeof sprites>[1] = [];
+    const trees: SpriteItem[] = [];
     const perimeter = 2 * (w + d);
     const count = Math.round(perimeter / 2.2);
     for (let i = 0; i < count; i++) {
@@ -613,16 +627,16 @@ export class GardenScene {
     this.lanternSpots = [...spots.values()];
     for (const [x, z] of this.lanternSpots) this.hitBoxes.push(spriteBox("lantern", x, 0, z, 0.13, 1.26));
     const lanternTex = T.pixelTexture(T.lantern());
-    const lanternItems = (u: number): SpriteItem[] => [...spots.values()].map(([x, z]) => ({ x, y: 0, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
+    const lanternItems = (u: number): SpriteItem[] => this.lanternSpots.map(([x, z]) => ({ x, y: 0, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
     this.unlit = sprites(lanternTex, lanternItems(0), 0.42, 1.26);
     this.lit = sprites(lanternTex, lanternItems(0.5), 0.42, 1.26);
     for (const m of [this.unlit, this.lit]) {
-      this.mats.add(m.material as THREE.ShaderMaterial);
+      this.mats.add(m.material);
       this.scene.add(m);
     }
     const glowTex = T.pixelTexture(T.glow());
     const additive = { map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false } as const;
-    for (const [x, z] of spots.values()) {
+    for (const [x, z] of this.lanternSpots) {
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...additive }));
       halo.scale.set(1.1, 1.1, 1);
       halo.position.set(x, 1.12, z);
@@ -637,7 +651,6 @@ export class GardenScene {
   /** A bench by the pond, for sitting and admiring. Returns where it stands. */
   private buildBench(c: BuildCtx): THREE.Group {
     const { L, mat, woodTex } = c;
-    // A bench by the pond, for sitting and admiring.
     const bench = new THREE.Group();
     const plank = (w: number, h: number, dd: number, x: number, y: number, z: number) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, dd), mat(woodTex));
@@ -719,14 +732,15 @@ export class GardenScene {
     const first = L.beds[0];
     // Front right of the empty bed, where the card in the middle does not hide it.
     if (this.visitors.reserved && !L.plants.length) stake(this.visitors.reserved, first.x + first.w / 2 - 0.32, first.z + first.d / 2 - 0.3, 0.64, 0.56, -0.3);
-    const kept = this.visitors.keepsake ? L.plants.find((p) => p.id === this.visitors.keepsake!.id) : undefined;
-    if (kept) {
+    const keepsake = this.visitors.keepsake;
+    const kept = keepsake ? L.plants.find((p) => p.id === keepsake.id) : undefined;
+    if (keepsake && kept) {
       const bed = L.beds[kept.bed];
-      stake(this.visitors.keepsake!.text, kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
+      stake(keepsake.text, kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
     }
     const sleeper = this.visitors.sleeper ? L.plants.find((p) => p.id === this.visitors.sleeper) : undefined;
     if (sleeper) {
-      const top = 0.28 + ((14 + 120 * sleeper.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
+      const top = BED_H + plantHeight(sleeper.growth);
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z]), 3));
       geo.setAttribute("phase", new THREE.BufferAttribute(new Float32Array([0, 1, 2]), 1));
@@ -752,20 +766,19 @@ export class GardenScene {
     // One sunflower in the far right corner, by the back fence. Unlike every other
     // sprite, it does not look at you: from the garden you see the back of its head,
     // and only from the back path, with the sun behind you, its face.
-    this.flower.x = b.maxX - 1;
-    this.flower.z = b.minZ + 0.45;
-    const flowerMesh = sprites(T.pixelTexture(T.sunflower()), [{ x: this.flower.x, y: 0, z: this.flower.z, u: 0.5, v: 0, uw: 0.5, vh: 1, phase: 1.3, droop: 0, scale: 1, index: -5 }], 0.85, 1.7);
-    this.hitBoxes.push(spriteBox("sunflower", this.flower.x, 0, this.flower.z, 0.24, 1.62));
-    this.flower.uv = flowerMesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
-    this.flower.params = flowerMesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
+    const x = b.maxX - 1;
+    const z = b.minZ + 0.45;
+    const flowerMesh = sprites(T.pixelTexture(T.sunflower()), [{ x, y: 0, z, u: 0.5, v: 0, uw: 0.5, vh: 1, phase: 1.3, droop: 0, scale: 1, index: -5 }], 0.85, 1.7);
+    this.hitBoxes.push(spriteBox("sunflower", x, 0, z, 0.24, 1.62));
+    const geo = flowerMesh.geometry;
+    this.flower = { x, z, uv: geo.getAttribute("iUv") as THREE.InstancedBufferAttribute, params: geo.getAttribute("iParams") as THREE.InstancedBufferAttribute, face: null };
     this.mats.add(flowerMesh.material);
     this.scene.add(flowerMesh);
   }
 
-  /** Wild bits: tufts, flowers, mushrooms, stones. */
+  /** Wild bits: tufts, flowers, mushrooms, stones. Thick outside, a few by the fence and pond. */
   private buildDecor(c: BuildCtx) {
     const { L, b, w, d, cx, cz, rand } = c;
-    // Wild bits: tufts, flowers, mushrooms, stones. Thick outside, a few by the fence and pond.
     const decorTex = T.pixelTexture(T.decor());
     const decor: SpriteItem[] = [];
     const put = (x: number, z: number, kind: number, scale = 0.42, y = 0.01) => decor.push({ x, y, z, u: kind * 0.25, v: 0, uw: 0.25, vh: 1, phase: rand() * 6, droop: 0, scale, index: -4 });
@@ -804,8 +817,8 @@ export class GardenScene {
     dome.renderOrder = -2;
     this.scene.add(dome);
     this.hillMat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, fog: false, depthWrite: false });
-    const hillRing = new THREE.Mesh(new THREE.CylinderGeometry(150, 150, 34, 32, 1, true), this.hillMat);
-    hillRing.position.y = 10;
+    const hillRing = new THREE.Mesh(new THREE.CylinderGeometry(HILLS.radius, HILLS.radius, HILLS.height, 32, 1, true), this.hillMat);
+    hillRing.position.y = HILLS.y;
     hillRing.renderOrder = -1;
     this.scene.add(hillRing);
     this.hillProfile = T.hillProfile();
@@ -906,7 +919,7 @@ export class GardenScene {
       discs: this.hitDiscs,
       bounds: this.layout.bounds,
       far: FOG_FAR,
-      hills: { radius: 150, bottom: -7, top: 27, profile: this.hillProfile, rows: 64, repeat: 4 },
+      hills: { radius: HILLS.radius, bottom: HILLS.y - HILLS.height / 2, top: HILLS.y + HILLS.height / 2, profile: this.hillProfile, rows: T.HILL_ROWS, repeat: HILLS.repeat },
       sunDir: this.sunDir,
       night: this.time === "night",
       sunRadius: 0.045,
@@ -931,7 +944,7 @@ export class GardenScene {
   async loadPlants(): Promise<void> {
     const plants = this.layout.plants;
     if (!plants.length) return;
-    this.cb.onProgress?.(0, plants.length);
+    this.cb.onProgress(0, plants.length);
     const sheets = await T.lowSheets(plants);
     if (this.disposed) return;
 
@@ -962,16 +975,12 @@ export class GardenScene {
       const k = `${p.bed}:${Math.floor(i / T.LOW_PER_SHEET)}`;
       groups.set(k, [...(groups.get(k) ?? []), i]);
     });
-    const quad = new THREE.PlaneGeometry(SPRITE_W, SPRITE_H);
-    quad.translate(0, SPRITE_H / 2, 0);
-    const baseY = 0.28 - (4 / T.VIEW_H) * SPRITE_H * PLANT_SCALE; // the SVG frame has 4 units below the base
+    const quad = standingQuad(SPRITE_W, SPRITE_H);
+    const baseY = BED_H - (4 / T.VIEW_H) * SPRITE_H * PLANT_SCALE; // the SVG frame has 4 units below the base
     for (const idx of groups.values()) {
       const sheet = Math.floor(idx[0] / T.LOW_PER_SHEET);
       const bed = this.layout.beds[plants[idx[0]].bed];
-      const geo = new THREE.InstancedBufferGeometry();
-      geo.index = quad.index;
-      geo.setAttribute("position", quad.getAttribute("position"));
-      geo.setAttribute("uv", quad.getAttribute("uv"));
+      const geo = instanced(quad);
       const pos = new Float32Array(idx.length * 3);
       const params = new Float32Array(idx.length * 4);
       const cells = new Float32Array(idx.length * 2);
@@ -996,7 +1005,7 @@ export class GardenScene {
       idx.forEach((pi, k) => (this.hiRef[pi] = { attr: cellAttr, i: k }));
     }
     this.setTime(this.time);
-    this.cb.onProgress?.(plants.length, plants.length);
+    this.cb.onProgress(plants.length, plants.length);
   }
 
   private setSlot(plant: number, slot: number) {
@@ -1089,7 +1098,7 @@ export class GardenScene {
     this.skyMat.needsUpdate = true;
     this.hillMat.map?.dispose();
     const hills = T.pixelTexture(T.hills(t === "night"), true);
-    hills.repeat.set(4, 1);
+    hills.repeat.set(HILLS.repeat, 1);
     this.hillMat.map = hills;
     this.hillMat.needsUpdate = true;
     const tint = new THREE.Color(...s.tint);
@@ -1097,12 +1106,10 @@ export class GardenScene {
     for (const mat of [...this.mats, ...this.guests.mats]) {
       mat.uniforms.uTint.value.copy(tint);
       mat.uniforms.uFog.value.copy(fog);
-      mat.uniforms.uFogNear.value = FOG_NEAR;
-      mat.uniforms.uFogFar.value = FOG_FAR;
     }
-    for (const c of this.clouds) (c.material as THREE.MeshBasicMaterial).color.set(t === "night" ? 0x39406a : t === "dusk" ? 0xffd2c0 : 0xffffff);
-    this.fireflies.visible = t !== "day";
+    for (const c of this.clouds) c.material.color.set(t === "night" ? 0x39406a : t === "dusk" ? 0xffd2c0 : 0xffffff);
     const dark = t !== "day";
+    this.fireflies.visible = dark;
     this.lit.visible = dark;
     this.unlit.visible = !dark;
     for (const g of this.glows) g.visible = dark;
@@ -1116,11 +1123,8 @@ export class GardenScene {
     this.guests.setDark(dark);
     if (this.snore) this.snore.visible = t === "night";
     // The sunflower droops a little at dusk.
-    const fp = this.flower.params;
-    if (fp) {
-      fp.setY(0, t === "dusk" ? 0.14 : 0);
-      fp.needsUpdate = true;
-    }
+    this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
+    this.flower.params.needsUpdate = true;
   }
 
   private detail: Detail = "normal";
@@ -1194,17 +1198,18 @@ export class GardenScene {
     const v = new THREE.Vector3();
     let best: PlacedPlant | null = null;
     let bestDepth = Infinity;
-    const halfW = Math.tan((this.camera.fov * Math.PI) / 360) * this.camera.aspect;
+    const halfH = Math.tan((this.camera.fov * Math.PI) / 360);
+    const halfW = halfH * this.camera.aspect;
     for (const p of this.layout.plants) {
-      const h = ((14 + 120 * p.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
-      v.set(p.x, 0.28 + h * 0.55, p.z).applyMatrix4(this.camera.matrixWorldInverse);
+      const h = plantHeight(p.growth);
+      v.set(p.x, BED_H + h * 0.55, p.z).applyMatrix4(this.camera.matrixWorldInverse);
       const depth = -v.z;
       if (depth < 0.2 || depth > 30) continue;
       const sx = v.x / depth / halfW;
-      const sy = v.y / depth / Math.tan((this.camera.fov * Math.PI) / 360);
+      const sy = v.y / depth / halfH;
       // Hit box: a bit wider than the stem, as tall as the plant.
       const rw = Math.max(0.03, 0.22 / depth / halfW);
-      const rh = Math.max(0.04, (h * 0.6) / depth / Math.tan((this.camera.fov * Math.PI) / 360));
+      const rh = Math.max(0.04, (h * 0.6) / depth / halfH);
       if (Math.abs(nx - sx) < rw && Math.abs(ny - sy) < rh && depth < bestDepth) {
         best = p;
         bestDepth = depth;
@@ -1227,7 +1232,7 @@ export class GardenScene {
       while (yaw - this.yaw < -Math.PI) yaw += Math.PI * 2;
       // Look at the flower head, not the stem, so the view stays nearly level
       // and the plant sits above the card at the bottom of the screen.
-      const top = 0.28 + ((14 + 120 * p.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
+      const top = BED_H + plantHeight(p.growth);
       const pitch = Math.max(-0.18, Math.min(0.05, Math.atan2(top - EYE, Math.hypot(p.x - v.x, p.z - v.z))));
       if (this.reducedMotion) {
         [this.x, this.z, this.yaw, this.pitch] = [v.x, v.z, yaw, pitch];
@@ -1298,7 +1303,7 @@ export class GardenScene {
     this.tickPerk();
     if (motion) {
       this.water.offset.set((t * 0.02) % 1, Math.sin(t * 0.3) * 0.03);
-      for (const c of this.clouds) c.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), dt * 0.004);
+      for (const c of this.clouds) c.position.applyAxisAngle(UP, dt * 0.004);
     }
     for (const bf of this.butterflies) {
       const a = t * 0.7 * motion + bf.ph;
@@ -1308,15 +1313,14 @@ export class GardenScene {
     }
     if (this.selected) {
       const p = this.selected;
-      const h = ((14 + 120 * p.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
-      this.marker.position.set(p.x, 0.28 + h + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
+      this.marker.position.set(p.x, BED_H + plantHeight(p.growth) + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
       this.marker.quaternion.copy(this.camera.quaternion);
     }
 
     // The sunflower shows its face only to someone standing in its sun (and never at night).
     const fl = this.flower;
     const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sunDir.x, this.sunDir.z, this.time === "night");
-    if (fl.uv && face !== fl.face) {
+    if (face !== fl.face) {
       fl.face = face;
       fl.uv.setX(0, face ? 0 : 0.5);
       fl.uv.needsUpdate = true;
@@ -1324,7 +1328,7 @@ export class GardenScene {
 
     if (this.guests.any) this.guests.tick(dt, this.x, this.z);
 
-    this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, 200);
+    this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
     this.renderer.render(this.scene, this.camera);
     this.labels();
   }
@@ -1340,8 +1344,7 @@ export class GardenScene {
     near.sort((a, b) => a.d - b.d);
     const out: Label[] = [];
     for (const { p, d } of near.slice(0, 10)) {
-      const h = ((14 + 120 * p.growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
-      v.set(p.x, 0.28 + h + 0.12, p.z).project(this.camera);
+      v.set(p.x, BED_H + plantHeight(p.growth) + 0.12, p.z).project(this.camera);
       if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
       out.push({ id: p.id, text: p.lemma, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / 3.2 });
     }
@@ -1351,7 +1354,7 @@ export class GardenScene {
     if (st && this.elapsed > st.until) this.sceneryTap = null;
     else if (st) {
       const h = st.hit;
-      if (h.follow === "sun") v.copy(this.camera.position).addScaledVector(this.sunDir, 200).y += 200 * SUN_TAG;
+      if (h.follow === "sun") v.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST).y += SUN_DIST * SUN_TAG;
       else if (h.follow) v.set(this.clouds[h.follow.cloud].position.x, h.y, this.clouds[h.follow.cloud].position.z);
       else v.set(h.x, h.y, h.z);
       v.project(this.camera);

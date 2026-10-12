@@ -47,11 +47,11 @@ export interface VisitorDef extends NounDef {
 }
 
 /** A break this long (in calendar days) brings the cat. */
-export const CAT_BREAK = 5;
+const CAT_BREAK = 5;
 /** At most this many rare visitors at once. Residents (the snail, gnome, frog and moth) do not count. */
 export const RARE_CAP = 2;
 /** Known words that bring the gnome, and the frog. */
-export const GNOME_KNOWN = 50;
+const GNOME_KNOWN = 50;
 export const FROG_KNOWN = 150;
 
 /**
@@ -244,7 +244,7 @@ export const gnomeTag = (pose: GnomePose): number => (pose === "front" ? 1 : 0);
 // ---- The frog (#57) ----
 
 /** What a frog says, per course language. */
-export const CROAK: PerLang<string> = { es: "croac", de: "quak" };
+const CROAK: PerLang<string> = { es: "croac", de: "quak" };
 
 /**
  * What the frog croaks on its `tap`-th tap today: its sound and one word the
@@ -278,7 +278,7 @@ export function snailLap(now: Date = new Date()): number {
 }
 
 /** The fence as one path from the right gate post, round the garden, to the left gate post. */
-export function fencePath(l: Layout): [number, number][] {
+function fencePath(l: Layout): [number, number][] {
   const b = l.bounds;
   return [
     [l.gate.x + GATE_HALF, b.maxZ],
@@ -296,7 +296,6 @@ export function fencePickets(l: Layout): number {
   for (let i = 1; i < path.length; i++) len += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
   return Math.max(1, Math.floor(len * PICKETS_PER_M));
 }
-
 
 /** The point on the fence at `picket`, and the direction of the fence there (for "inside"). */
 export function fencePoint(l: Layout, picket: number): { x: number; z: number; dx: number; dz: number } {

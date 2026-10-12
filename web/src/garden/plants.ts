@@ -61,7 +61,7 @@ export function stageSentence(stage: PlantStage): string {
 }
 
 /** The first word the learner ever practised that is still in the garden, or null. */
-export function firstWord(l: Learner): FirstWord | null {
+function firstWord(l: Learner): FirstWord | null {
   let best: { id: string; at: number } | null = null;
   for (const r of l.reviews) {
     if (r.skill !== "read") continue;

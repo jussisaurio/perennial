@@ -109,7 +109,7 @@ export interface HitBox {
 }
 
 /** The ray in a turned box's own frame (the box turned back by `turn` round its middle). */
-export function unturn(r: Ray, b: HitBox): Ray {
+function unturn(r: Ray, b: HitBox): Ray {
   if (!b.turn) return r;
   const cx = (b.min[0] + b.max[0]) / 2;
   const cz = (b.min[2] + b.max[2]) / 2;
@@ -245,7 +245,7 @@ export interface SceneryHit {
 /** How far over the sun's middle its tag sits, as a fraction of its distance. */
 export const SUN_TAG = 0.03;
 /** The tag sits this far over the top of a cloud's middle. */
-export const CLOUD_TAG = 5;
+const CLOUD_TAG = 5;
 
 /**
  * The scenery a ray meets first. Things in the garden (boxes, discs and the
