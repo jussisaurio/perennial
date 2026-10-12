@@ -2,6 +2,7 @@
 // of word per row of beds (nouns, verbs, …), the most common words nearest
 // the gate. Pure functions, so the layout is stable and testable.
 
+import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
 
 export interface GardenPlant {
@@ -67,18 +68,9 @@ export function groupOf(pos: string): string {
   return GROUPS.find((g) => g.pos.includes(p))?.label ?? OTHER;
 }
 
-export function hash(str: string, salt = 0): number {
-  let h = 2166136261 ^ salt;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) / 4294967296;
-}
-
 /** Which way a word's plant leans when it leans at all: 1 to the right, -1 to the left, the same in every view. */
 export function leanDir(id: string): 1 | -1 {
-  return hash(id, 9) > 0.5 ? 1 : -1;
+  return hash01(id, 9) > 0.5 ? 1 : -1;
 }
 
 /**
@@ -131,14 +123,14 @@ export function layout(plants: GardenPlant[]): Layout {
         // Fill from the front (the gate side) so the most common words are seen first.
         const c = i % BED_COLS;
         const rr = Math.floor(i / BED_COLS);
-        const jx = (hash(p.id, 1) - 0.5) * 0.2;
-        const jz = (hash(p.id, 2) - 0.5) * 0.2;
+        const jx = (hash01(p.id, 1) - 0.5) * 0.2;
+        const jz = (hash01(p.id, 2) - 0.5) * 0.2;
         placed.push({
           ...p,
           x: x - BED_W / 2 + MARGIN + (c + 0.5) * SPACING + jx,
           z: z + BED_D / 2 - MARGIN - (rr + 0.5) * SPACING + jz,
           droop: droopFor(p.id, p.r),
-          phase: hash(p.id, 3) * Math.PI * 2,
+          phase: hash01(p.id, 3) * Math.PI * 2,
           bed: bedIndex,
         });
       });

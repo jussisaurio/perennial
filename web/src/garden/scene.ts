@@ -3,6 +3,7 @@
 // to face you. Loaded only when the garden is opened.
 
 import * as THREE from "three";
+import { rng } from "../lib/seed";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
@@ -514,8 +515,7 @@ export class GardenScene {
     // Trees and bushes outside the fence.
     const treeTex = T.pixelTexture(T.trees());
     const trees: Parameters<typeof sprites>[1] = [];
-    let seed = 1;
-    const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    const rand = rng(1);
     const perimeter = 2 * (w + d);
     const count = Math.round(perimeter / 2.2);
     for (let i = 0; i < count; i++) {

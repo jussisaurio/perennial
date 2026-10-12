@@ -7,6 +7,7 @@ import { MAX_NEW_PER_DAY, plan, Session as Runner, type Task } from "../core/ses
 import { fsrs as scheduler } from "../core/scheduler";
 import { language } from "../content/languages";
 import { locate } from "../content/text";
+import { hash32 } from "../lib/seed";
 import { memKey, recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
@@ -39,13 +40,7 @@ function chooseExample(l: Learner, wordId: string): Example | undefined {
   const least = examples.filter((e) => (seen.get(e.id) ?? 0) === min);
   // Ties broken by the word and how often it was reviewed, not at random: the
   // next review still gets another sentence, and Undo brings back the same card.
-  return least[hashString(`${wordId}:${l.reviewsByWord.get(wordId)?.length ?? 0}`) % least.length];
-}
-
-function hashString(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
-  return h >>> 0;
+  return least[hash32(`${wordId}:${l.reviewsByWord.get(wordId)?.length ?? 0}`) % least.length];
 }
 
 /** The correct answer with the letters to look at marked. */

@@ -9,7 +9,8 @@ import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
 import { language } from "../content/languages";
 import { StripPlant } from "./plant";
-import { hash, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
+import { hash01 } from "../lib/seed";
+import { plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
 import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { stripVisitor, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
@@ -117,7 +118,7 @@ export function Garden({
     const spacing = scrolls ? SPACING : n ? Math.min(34, (width - pad * 2 - catRoom) / n) : width;
     const offset = scrolls ? pad + keepRoom : (width - catRoom - spacing * n) / 2;
     const scale = Math.max(0.42, Math.min(1.05, spacing / 20));
-    return plants.map((p, i) => ({ p, x: offset + spacing * (i + 0.5) + (hash(p.id, 17) - 0.5) * spacing * 0.8, y: GROUND + hash(p.id, 19) * 4, scale }));
+    return plants.map((p, i) => ({ p, x: offset + spacing * (i + 0.5) + (hash01(p.id, 17) - 0.5) * spacing * 0.8, y: GROUND + hash01(p.id, 19) * 4, scale }));
   }, [plants, n, scrolls, width, catRoom, keepRoom]);
 
   // Open where the newest growth is, or on today's words after a session, and
@@ -179,7 +180,7 @@ export function Garden({
           ))}
           {visible.map(({ p, x, y, scale }, i) => (
             <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={() => show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
-              <g className="sway" style={{ animationDelay: `${-hash(p.id, 23) * 6}s`, animationDuration: `${5 + hash(p.id, 29) * 4}s` }}>
+              <g className="sway" style={{ animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: `${5 + hash01(p.id, 29) * 4}s` }}>
                 <g key={perk?.id === p.id ? `perk${perk.n}` : perk?.neighbour === p.id ? `late${perk.n}` : "still"} className={perk?.id === p.id ? "perk" : perk?.neighbour === p.id ? "perk late" : undefined}>
                   <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
                 </g>
@@ -193,13 +194,13 @@ export function Garden({
           <path d={`M0 ${GROUND + 4} Q ${fullWidth * 0.25} ${GROUND - 3} ${fullWidth * 0.5} ${GROUND + 3} T ${fullWidth} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
           {Array.from({ length: Math.ceil((to - from) / 38) }, (_, k) => {
             const i = Math.floor(from / 38) + k;
-            const gx = (i + hash(String(i), 31)) * 38;
+            const gx = (i + hash01(String(i), 31)) * 38;
             return <path key={i} className="tuft" d={`M${gx} ${GROUND + 6} l -3 -7 M${gx} ${GROUND + 6} l 0 -9 M${gx} ${GROUND + 6} l 3 -6`} />;
           })}
           {Array.from({ length: seeds }, (_, i) => {
-            const sx = (scrolls ? fullWidth - width : 0) + 24 + hash(`seed${i}`, 37) * (width - 48);
-            const sy = GROUND + 14 + hash(`seed${i}`, 41) * 12;
-            return <ellipse key={i} className="seed" cx={sx} cy={sy} rx={2.6} ry={1.7} transform={`rotate(${hash(`seed${i}`, 43) * 180} ${sx} ${sy})`} />;
+            const sx = (scrolls ? fullWidth - width : 0) + 24 + hash01(`seed${i}`, 37) * (width - 48);
+            const sy = GROUND + 14 + hash01(`seed${i}`, 41) * 12;
+            return <ellipse key={i} className="seed" cx={sx} cy={sy} rx={2.6} ry={1.7} transform={`rotate(${hash01(`seed${i}`, 43) * 180} ${sx} ${sy})`} />;
           })}
           {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>

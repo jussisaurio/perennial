@@ -1,14 +1,7 @@
 // Small helpers for Perennial's quiet jokes: a line that changes each day (and
 // stays put while you look at it), and rare events that most visits never see.
 
-function hash(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
+import { hash32 as hash } from "../lib/seed";
 
 /** The local calendar day, e.g. "2026-10-11". */
 export function today(now = new Date()): string {

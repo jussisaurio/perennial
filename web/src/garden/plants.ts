@@ -7,10 +7,11 @@ import { courseOrder } from "../content/order";
 import type { PLANT_LINES } from "../content/voice";
 import type { LoadedDeck } from "../data/deck";
 import { isStrong, OLD_S, plantStage, recall, type Learner, type PlantStage } from "../data/learner";
+import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
-import { hash, leanDeg, leanDir, type GardenPlant } from "./world";
+import { leanDeg, leanDir, type GardenPlant } from "./world";
 
-export { hash, leanDeg, leanDir, type GardenPlant };
+export { leanDeg, leanDir, type GardenPlant };
 
 /** Below this recall a plant is thirsty: its card asks for practice and it says so. */
 export const THIRSTY = 0.85;
@@ -111,7 +112,7 @@ export function showcasePlants(deck: LoadedDeck, count: number): PlantSource {
   const plants = courseOrder(deck)
     .slice(0, count)
     .map((w, i): GardenPlant => {
-      const h = hash(w.id, 7);
+      const h = hash01(w.id, 7);
       // Mostly blooming, some budding, a few sprouts; common words grew longest.
       // Over a fixed span, not `count`, so a word is as tall in a small showcase as in a big one.
       const s = h < 0.15 ? 1 + h * 10 : h < 0.35 ? 3 + h * 8 : 8 + (1 - Math.min(i, SHOWCASE_SPAN) / SHOWCASE_SPAN) * 120 * h;

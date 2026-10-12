@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { rng } from "../lib/seed";
 import { isSleepyHour, keepsakeLabel, NEIGHBOUR, NEIGHBOUR_PERK, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId, snoreLine } from "./whimsy";
 import { MOLE_ONE_IN, moleVisits, stripVisitor, visitorsFor, NO_FACTS } from "./visitors";
 
@@ -45,8 +46,7 @@ describe("the plant hears its name (#60)", () => {
 
   test("the neighbour's mistake is rare: about one listen in 30", () => {
     expect(NEIGHBOUR_PERK).toBeGreaterThanOrEqual(25);
-    let seed = 7;
-    const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    const rand = rng(7);
     const hits = Array.from({ length: 30_000 }, () => neighbourPerks(rand)).filter(Boolean).length;
     expect(hits).toBeGreaterThan(700);
     expect(hits).toBeLessThan(1300);
