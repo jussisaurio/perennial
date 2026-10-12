@@ -73,7 +73,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     // variables to the build and the running server, so the CSP follows them.
     observability: {
       sentryDsn: env.SENTRY_DSN,
-      connect: [env.VITE_SENTRY_DSN, env.VITE_POSTHOG_KEY ? (env.VITE_POSTHOG_HOST ?? "https://eu.i.posthog.com") : undefined, env.POSTHOG_HOST]
+      connect: [env.VITE_SENTRY_DSN, env.VITE_POSTHOG_KEY ? env.VITE_POSTHOG_HOST || "https://eu.i.posthog.com" : undefined, env.POSTHOG_HOST]
         .map(origin)
         .filter((o): o is string => !!o),
     },

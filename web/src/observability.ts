@@ -32,38 +32,55 @@ export function initObservability() {
       ignoreErrors: [/AbortError/, /The user aborted a request/],
     });
   }
-  const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
-  if (key) {
-    void import("posthog-js").then(({ default: ph }) => {
-      ph.init(key, {
-        api_host: (import.meta.env.VITE_POSTHOG_HOST as string | undefined) ?? "https://eu.i.posthog.com",
-        persistence: "memory",
-        autocapture: false,
-        capture_pageview: false,
-        disable_session_recording: true,
-        // Off in code, whatever the PostHog project settings say: named events only.
-        enable_heatmaps: false,
-        capture_performance: false,
-        capture_dead_clicks: false,
-        capture_exceptions: false,
-        respect_dnt: true,
-        person_profiles: "identified_only",
-      });
-      posthog = ph;
+}
+
+// PostHog starts once the learner is known (identify), with their id as the
+// distinct id: no cookies (memory persistence), and still one person per
+// learner, not a new one each page load. Events before that wait in a queue.
+const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
+// `||`, not `??`: the Docker build passes an unset host as "".
+const POSTHOG_HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || "https://eu.i.posthog.com";
+let waiting: [Event, Record<string, unknown>][] = [];
+
+function startPostHog(userId: string) {
+  if (!POSTHOG_KEY || posthog) return;
+  void import("posthog-js").then(({ default: ph }) => {
+    ph.init(POSTHOG_KEY, {
+      api_host: POSTHOG_HOST,
+      persistence: "memory",
+      bootstrap: { distinctID: userId, isIdentifiedID: true },
+      autocapture: false,
+      capture_pageview: false,
+      disable_session_recording: true,
+      // Off in code, whatever the PostHog project settings say: named events only,
+      // no scripts loaded from PostHog (the CSP allows none), no flags or surveys.
+      enable_heatmaps: false,
+      capture_performance: false,
+      capture_dead_clicks: false,
+      capture_exceptions: false,
+      disable_external_dependency_loading: true,
+      disable_surveys: true,
+      advanced_disable_flags: true,
+      respect_dnt: true,
+      person_profiles: "identified_only",
     });
-  }
+    posthog = ph;
+    for (const [event, props] of waiting) ph.capture(event, props);
+    waiting = [];
+  });
 }
 
 /** The handful of product events we look at (see #16). */
 export type Event = "course_started" | "session_finished" | "email_added" | "garden_opened" | "words_added";
 
 export function track(event: Event, props: Record<string, unknown> = {}) {
-  posthog?.capture(event, props);
+  if (posthog) posthog.capture(event, props);
+  else if (POSTHOG_KEY && waiting.length < 50) waiting.push([event, props]);
 }
 
-/** Tie events to the learner (an id only, never the email). */
+/** Tie events to the learner (an id only, never the email). A new user reloads the app (App.tsx). */
 export function identify(userId: string) {
-  posthog?.identify(userId);
+  startPostHog(userId);
   Sentry.setUser({ id: userId });
 }
 
