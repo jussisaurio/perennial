@@ -92,7 +92,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <span className="clock" aria-hidden="true">
             <SeedIcon size={20} />
           </span>
-          {chunk.state === "done" ? `Practise ${DAILY_MINUTES} more minutes` : chunk.state === "finish" ? `Finish today's ${DAILY_MINUTES} minutes` : `Today's ${DAILY_MINUTES} minutes`}
+          {chunk.state === "done" ? `Practice ${DAILY_MINUTES} more minutes` : chunk.state === "finish" ? `Finish today's ${DAILY_MINUTES} minutes` : `Today's ${DAILY_MINUTES} minutes`}
           {chunk.state === "finish" && <small>· {chunk.minutes} min</small>}
         </button>
         <p className="start-note">
@@ -183,7 +183,7 @@ function FiveMinutesNote({ userId }: { userId: string }) {
     }
   }, [key]);
   if (!show) return null;
-  return <p className="muted small five-minutes-note">Perennial is now 5 minutes at a time. Practise more whenever you like: your plants will drink it up.</p>;
+  return <p className="muted small five-minutes-note">Perennial is now 5 minutes at a time. Practice more whenever you like: your plants will drink it up.</p>;
 }
 
 /** Enter starts the session. */

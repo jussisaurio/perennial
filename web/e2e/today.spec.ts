@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { advance, grade, kicker, reveal, startCourse } from "./helpers";
 
-// #189: 5 minutes a day for everyone, and "Practise 5 more minutes" whenever the learner wants.
+// #189: 5 minutes a day for everyone, and "Practice 5 more minutes" whenever the learner wants.
 test.use({ viewport: { width: 1280, height: 900 } });
 
 const MORNING = new Date("2026-10-01T10:00:00");
@@ -68,7 +68,7 @@ test("done for the day (under a minute left counts): watered, and 5 more minutes
   await startCourse(page);
   await answered(page, { count: 8, minutes: 4.25 });
   await expect(page.getByText("The garden is watered for today.")).toBeVisible();
-  await expect(startButton(page)).toHaveText("Practise 5 more minutes");
+  await expect(startButton(page)).toHaveText("Practice 5 more minutes");
   await expect(page.locator("body")).not.toHaveText(NEVER);
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
@@ -81,7 +81,7 @@ test("done for the day (under a minute left counts): watered, and 5 more minutes
   await expect(page.locator("main.summary")).toContainText(/You (know|started) \d+ words?/);
   await expect(page.locator("body")).not.toHaveText(NEVER);
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
-  await page.getByRole("button", { name: "Practise 5 more minutes" }).click();
+  await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
   // Each chunk has its own summary: the seed from the last one is not counted again.
   await expect(kicker(page)).toHaveText("new word");
@@ -97,7 +97,7 @@ test("done, but plants are still due: say how many, not 'watered'", async ({ pag
   await answered(page, { from: 10, count: 5, minutes: 5 });
   await expect(page.getByText("10 plants still need water.")).toBeVisible();
   await expect(page.getByText("The garden is watered for today.")).toHaveCount(0);
-  await expect(startButton(page)).toHaveText("Practise 5 more minutes");
+  await expect(startButton(page)).toHaveText("Practice 5 more minutes");
 });
 
 test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", async ({ page }) => {
@@ -115,7 +115,7 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
   await advance(page, "2"); // "I knew it": one seed planted
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
-  await page.getByRole("button", { name: "Practise 5 more minutes" }).click();
+  await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
   // Said once: not again on the next visit.
   await page.goto("/#/today");

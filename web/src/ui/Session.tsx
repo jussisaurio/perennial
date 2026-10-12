@@ -518,7 +518,7 @@ function Summary({
       )}
       <div className="actions static">
         <button className="secondary" onClick={onMore}>
-          Practise {DAILY_MINUTES} more minutes
+          Practice {DAILY_MINUTES} more minutes
         </button>
         <button className="primary" onClick={onExit}>
           Done <kbd>Enter</kbd>

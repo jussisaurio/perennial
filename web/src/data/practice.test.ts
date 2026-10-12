@@ -42,7 +42,7 @@ test("today's 5 minutes: start, finish the rest, and done once under a minute is
   expect(spent(20_000)).toEqual({ state: "start", minutes: 5 }); // a few seconds is not a session to finish
   expect(spent(60_000, 60_000)).toEqual({ state: "finish", minutes: 3 });
   expect(spent(4 * 60_000 + 5_000)).toEqual({ state: "done", minutes: 5 }); // 55 s left counts as done
-  expect(spent(9 * 60_000)).toEqual({ state: "done", minutes: 5 }); // after "Practise 5 more minutes" too
+  expect(spent(9 * 60_000)).toEqual({ state: "done", minutes: 5 }); // after "Practice 5 more minutes" too
   // Yesterday's minutes do not count today.
   const yesterday = learner(10, [], [{ word_id: "w", grade: 3, reviewed_at: at(now - DAY_MS), duration_ms: 5 * 60_000 }]);
   expect(nextChunk(yesterday, now)).toEqual({ state: "start", minutes: 5 });

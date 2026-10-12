@@ -1,6 +1,6 @@
 // Time-boxed session planning. There is no "due count" to clear: each chunk of
 // practice gets N minutes, and we spend them where they buy the most memory.
-// Every chunk is planned on its own, so "Practise 5 more minutes" is just
+// Every chunk is planned on its own, so "Practice 5 more minutes" is just
 // another chunk, not a special mode with its own limits.
 
 import type { FSRS, Grade } from "./fsrs";
