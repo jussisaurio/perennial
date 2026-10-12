@@ -12,7 +12,7 @@ import { betterAuth } from "better-auth";
 import { anonymous, captcha, emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
 import type { Config } from "./config";
-import { log } from "./log";
+import { event, log } from "./log";
 import type { Mailer } from "./mail";
 
 export async function mergeUsers(sql: SQL, from: string, to: string) {
@@ -73,6 +73,15 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
         log[level](`auth: ${message}`, { err: args.find((a) => a instanceof Error) });
       },
     },
+    // Wide-event facts for the request's log line (log.ts): who signed up, and how they signed in.
+    databaseHooks: {
+      user: { create: { after: async (user) => event({ signup: user.isAnonymous ? "anonymous" : "email" }) } },
+      session: {
+        create: {
+          after: async (session, ctx) => event({ userId: session.userId, signin: ctx?.path === "/sign-in/anonymous" ? "anonymous" : ctx?.path === "/sign-in/email-otp" ? "email" : (ctx?.path ?? "other") }),
+        },
+      },
+    },
     advanced: {
       database: { generateId: "uuid" },
       ipAddress: { ipAddressHeaders: config.clientIpHeaders },
@@ -87,14 +96,18 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
         resendStrategy: "reuse",
         async sendVerificationOTP({ email, otp }) {
           // The response is the same either way, so a capped address learns nothing.
-          if (!(await mayMail(sql, config, email))) return log.warn("sign-in code not sent: per-email limit", {});
+          if (!(await mayMail(sql, config, email))) {
+            event({ otp: "capped" });
+            return log.warn("sign-in code not sent: per-email limit", {});
+          }
+          event({ otp: "sent" });
           await mailer.send(email, `${otp} is your Perennial code`, `Your sign-in code is ${otp}.\n\nIt works for 10 minutes. If you did not ask for it, you can ignore this email.`);
         },
       }),
       anonymous({
         async onLinkAccount({ anonymousUser, newUser }) {
           await mergeUsers(sql, anonymousUser.user.id, newUser.user.id);
-          log.info("anonymous user linked", { from: anonymousUser.user.id, to: newUser.user.id });
+          event({ linkedFrom: anonymousUser.user.id });
         },
       }),
       // Bot check where accounts and emails are created (the client sends the

@@ -1,6 +1,12 @@
 // Structured logging: one JSON object per line on stdout, which every host
 // (Railway included) collects and makes searchable. Each request gets an id
 // that is added to every line logged while handling it.
+//
+// Wide events ("canonical log lines"): what happens during a request is added
+// to its context with event(), not logged on its own line. The request's one
+// line at the end (app.ts) then says it all: who, what happened, status, time,
+// and the trace id to open the same request in Sentry. docs/DEPLOY.md lists
+// the fields. Ids, counts and small enums only: never emails, codes or bodies.
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import * as Sentry from "@sentry/bun";
@@ -38,4 +44,22 @@ export const withLogContext = <T>(fields: Fields, fn: () => T): T => context.run
 export function addLogContext(fields: Fields) {
   const store = context.getStore();
   if (store) Object.assign(store, fields);
+}
+
+/**
+ * Something that happened in this request (or job): it goes on the request's
+ * line, and on its Sentry trace, so traces can be filtered by it too.
+ */
+export function event(fields: Fields) {
+  addLogContext(fields);
+  const span = Sentry.getActiveSpan();
+  if (!span) return;
+  const attrs = Object.fromEntries(Object.entries(fields).filter(([, v]) => ["string", "number", "boolean"].includes(typeof v))) as Record<string, string | number | boolean>;
+  Sentry.getRootSpan(span).setAttributes(attrs);
+}
+
+/** The trace this code runs in, to find a log line's request in Sentry (none without Sentry). */
+export function traceId(): string | undefined {
+  if (!Sentry.isInitialized()) return undefined;
+  return Sentry.getActiveSpan()?.spanContext().traceId ?? Sentry.getCurrentScope().getPropagationContext().traceId;
 }
