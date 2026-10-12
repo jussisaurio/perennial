@@ -64,11 +64,11 @@ Electric reads changes through logical replication. In the PlanetScale dashboard
 | `max_replication_slots` | `10` or more | Electric uses one slot. |
 | `max_wal_senders` | `10` or more | Not less than `max_replication_slots`. |
 | `max_slot_wal_keep_size` | `4096` (MB) | Limits the WAL that a stopped Electric can hold back. Without a limit, the disk can fill up. |
-| `sync_replication_slots` | `on` | The slot survives a failover (HA clusters). Electric creates its slot with `failover = true`. |
+| `sync_replication_slots` | `on` | Copies slots that have `failover = true` to the standby, so they survive a failover (HA clusters). Electric does not set this flag itself: see 2.5. |
 | `hot_standby_feedback` | `on` | Required with `sync_replication_slots`. |
 | `max_connections` | 60 or more if possible | See the connection budget below. |
 
-PlanetScale warns you if it finds a logical slot without failover support. Electric's slot has failover support when `sync_replication_slots` is on.
+PlanetScale warns you if it finds a logical slot without failover support, and holds cluster changes on the branch until you fix it. Electric 1.8.1 creates its slot with `failover = false`, so you must turn it on once after Electric first starts (2.5).
 
 **Connection budget** (direct connections, one `web` replica):
 
@@ -117,7 +117,7 @@ show wal_level;                                         -- logical
 select rolname, rolreplication from pg_roles where rolname like 'perennial%';   -- t
 select tablename, tableowner from pg_tables where schemaname = 'public';        -- your role
 select * from pg_publication_tables;                    -- Electric adds tables when shapes are first used
-select slot_name, active, failover from pg_replication_slots;                   -- electric_slot_default, t, t
+select slot_name, active, failover from pg_replication_slots;                   -- electric_slot_default, t, t (failover f: do 2.5)
 ```
 
 **Alternative (manual publication).** If you must run migrations as a different role, run Electric in manual mode. Set `ELECTRIC_MANUAL_TABLE_PUBLISHING=true` on `electric` and, as the table owner:
@@ -130,6 +130,24 @@ grant select on course, review, word_state, user_word, user_sentence to <electri
 ```
 
 The migrations already set `replica identity full` on these tables. Every future synced table must be added to the publication by hand.
+
+### 2.5 Turn on failover for Electric's slot
+
+Do this after Electric first starts, and again each time Electric creates a new slot (for example after a restore, 7.3). Without it, a failover to the standby loses the slot, and Electric must start again from nothing.
+
+`ALTER_REPLICATION_SLOT` works only on a replication connection, and only when no client uses the slot. The script stops Electric's replication connection and changes the slot before Electric connects again. Sync stops for about one second. Electric then continues from the same slot, so no changes are lost.
+
+```sh
+U=$(railway variables --service perennial --kv | grep '^DATABASE_URL=' | cut -d= -f2-); export PGSSLROOTCERT=/etc/ssl/cert.pem
+case "$U" in *\?*) R="$U&replication=database";; *) R="$U?replication=database";; esac
+for i in 1 2 3 4 5 6 7 8; do
+  psql "$U" -Atc "select pg_terminate_backend(active_pid) from pg_replication_slots where slot_name='electric_slot_default' and active" >/dev/null
+  psql "$R" -c "ALTER_REPLICATION_SLOT electric_slot_default (FAILOVER true)" && break
+done
+psql "$U" -Atc "select slot_name, active, failover from pg_replication_slots"   # electric_slot_default|t|t
+```
+
+If Electric always connects first, stop `electric` in Railway, run only the `ALTER_REPLICATION_SLOT` line, then start `electric` again.
 
 ## 3. Railway project
 
@@ -294,7 +312,7 @@ Do these in order. Tick each one.
 - [ ] Second browser: sign in with the same email. The same progress appears within a few seconds.
 - [ ] Go offline (DevTools → Network → Offline), do reviews, go online. The reviews arrive (check on the second device).
 - [ ] Perennial AI: add words from a short text. The credit count goes down. `select task, ok, usd from ai_request order by id desc limit 5;` shows the call.
-- [ ] `select slot_name, active from pg_replication_slots;` shows an active `electric_slot_default`.
+- [ ] `select slot_name, active, failover from pg_replication_slots;` shows `electric_slot_default` with `active` and `failover` both `t`. If `failover` is `f`, do 2.5.
 - [ ] `housekeeping`: run it once by hand (**Deployments → Run now**, or redeploy). The log shows a `housekeeping` line with counts.
 - [ ] Settings → Delete my account works for a test account. Its rows are gone from `review`, `course` and `"user"`.
 - [ ] `/privacy.html` and `/terms.html` are reviewed and the placeholders are filled in.
@@ -345,7 +363,7 @@ A restore always creates a **new branch**. It does not overwrite the current one
 1. **Backups** → choose a backup (or a point in time) → **Restore to new branch**. Use the same cluster size.
 2. On the new branch: set the cluster parameters from 2.2 again (check `show wal_level;`). Reset the password of the `perennial` role (roles are copied, passwords are not).
 3. Update the shared `DATABASE_URL` in Railway to the new branch. Or promote the new branch to production in PlanetScale, if you want to keep the old host name.
-4. Clear Electric's state, because its shapes and its replication position belong to the old database: stop `electric`, delete and re-create its volume (same mount path), then start it. Electric creates a new slot and publication on the new branch.
+4. Clear Electric's state, because its shapes and its replication position belong to the old database: stop `electric`, delete and re-create its volume (same mount path), then start it. Electric creates a new slot and publication on the new branch. Turn on failover for the new slot (2.5).
 5. Redeploy `web` and `housekeeping`.
 6. Check with the queries in 2.4 and the browser checks in 5.
 7. On the old branch, drop the replication slot (`select pg_drop_replication_slot('electric_slot_default');`) or delete the branch. An unused slot holds WAL and uses disk.
