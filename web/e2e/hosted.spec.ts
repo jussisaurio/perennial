@@ -5,7 +5,7 @@ test("progress made before adding an email stays, and another device signs in to
   const one = await browser.newPage();
   await startCourse(one);
   await startSession(one);
-  await advance(one, "k"); // "I knew it": one review, still anonymous
+  await advance(one, "2"); // "I knew it": one review, still anonymous
   await expectServerRows(one, "review", 1);
   await one.getByRole("button", { name: "End session" }).click();
   await one.getByRole("button", { name: /Done/ }).click();

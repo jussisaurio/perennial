@@ -4,7 +4,7 @@ import { advance, expectServerRows, grade, kicker, reveal, serverRows, startCour
 async function continueIntros(page: Page, n: number) {
   for (let i = 0; i < n; i++) {
     await expect(kicker(page)).toHaveText(/new word/);
-    await advance(page, "Space");
+    await advance(page, "1");
   }
 }
 
@@ -59,7 +59,7 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
   for (let i = 0; i < 8; i++) {
     const k = (await kicker(page).textContent()) ?? "";
     if (k.includes("try again")) break;
-    if (k.includes("new word") && !k.includes("quick")) await advance(page, "Space");
+    if (k.includes("new word") && !k.includes("quick")) await advance(page, "1");
     else await grade(page, "2");
   }
   await expect(kicker(page)).toHaveText(/try again/);
@@ -70,7 +70,7 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
 test("'I knew it' skips the quick check (no extra note: the button said so), is stored as 'known', and is undoable", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
-  await advance(page, "k");
+  await advance(page, "2");
   await expect(page.locator(".session-note")).toHaveCount(0); // the button already promised "Back in about a week"
   await expectServerRows(page, "review", 1);
   const [r] = await serverRows<{ grade: number; kind: string }>(page, "review");
@@ -83,7 +83,7 @@ test("'I knew it' skips the quick check (no extra note: the button said so), is 
 test("leaving after doing something shows the summary", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
-  await advance(page, "Space");
+  await advance(page, "1");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.locator(".summary h1")).not.toHaveText("Nothing to practice now."); // the headline rotates daily
   await expect(page.getByText("session paused")).toBeVisible(); // not "complete" when you leave early
