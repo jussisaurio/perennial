@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
 import type { DeckLang } from "../deck/schema";
-import { removeDemo, seedDemo } from "./demo";
 
 export default function DevTools() {
   const [lang, setLang] = useState<DeckLang>("es");
@@ -36,17 +35,16 @@ export default function DevTools() {
           <button
             className="primary"
             disabled={busy}
+            // Through the boot path (dev/boot.ts): seeding here would race the reload
+            // that follows its sign-out (App reloads on every change of user).
             onClick={() => {
               setBusy(true);
-              void seedDemo(lang, count).then(() => {
-                location.hash = "#/garden";
-                location.reload();
-              });
+              location.href = `/?demo=${lang}:${count}#/garden`;
             }}
           >
             {busy ? "Working…" : "Make demo learner and open the garden"}
           </button>
-          <button className="ghost" disabled={busy} onClick={() => void removeDemo().then(() => location.reload())}>
+          <button className="ghost" disabled={busy} onClick={() => (location.href = "/?demo=off#/today")}>
             Delete demo learner
           </button>
         </div>
