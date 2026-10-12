@@ -58,9 +58,14 @@ function makeCollection<T extends object>(table: string, getKey: (row: T) => str
     },
   });
   if (!persisted) return createCollection(options);
-  const persistedOptions = persisted.persistedCollectionOptions({ ...options, persistence: persisted.persistence, schemaVersion: SCHEMA_VERSION, initialRender: { strategy: "network-first", networkTimeoutMs: 1500 } });
-  // Its type allows a schema, which these collections never have: the same collection type either way.
-  return createCollection(persistedOptions as unknown as typeof options);
+  // Type arguments given, schema `never`: these collections have no schema, and inference would assume one.
+  const persistedOptions = persisted.persistedCollectionOptions<T & Record<string, unknown>, string | number, never, (typeof options)["utils"]>({
+    ...options,
+    persistence: persisted.persistence,
+    schemaVersion: SCHEMA_VERSION,
+    initialRender: { strategy: "network-first", networkTimeoutMs: 1500 },
+  });
+  return createCollection(persistedOptions);
 }
 
 /** This user's queue of unsent writes: their own IndexedDB database (or localStorage keys). */
