@@ -3,7 +3,7 @@ import type { ReviewRow } from "../data/rows";
 import { milestoneLine } from "../garden/visitors";
 
 // The deck loader needs Vite (import.meta.glob); these tests never load a deck.
-mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")), deckLangs: () => [] }));
+mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")) }));
 const { deriveMemory, wordState } = await import("../data/learner");
 const { knownAt, knownWords } = await import("./visitors");
 

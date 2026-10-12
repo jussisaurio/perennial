@@ -1,8 +1,5 @@
 import { DAY_MS } from "../core/fsrs";
-import type { Learner } from "../data/learner";
-
-export { KNOWN_STABILITY, recall, wordState, type WordState } from "../data/learner";
-import { wordState } from "../data/learner";
+import { wordState, type Learner } from "../data/learner";
 
 export interface CourseStats {
   known: number;

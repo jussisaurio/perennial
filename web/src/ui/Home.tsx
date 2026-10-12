@@ -12,7 +12,8 @@ import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
-import { learnerVisitors, snailAlong } from "./visitors";
+import { learnerVisitors } from "./visitors";
+import { snailLap } from "../garden/visitors";
 import { today } from "./whimsy";
 
 function greeting(): string {
@@ -23,7 +24,7 @@ function greeting(): string {
 // The entrance animation plays once per visit, not on every tab switch.
 let animated = false;
 
-export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onAddWords: () => void; onWalk: () => void }) {
+export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onWalk: () => void }) {
   const view = (id: string) => {
     focusPlant(id);
     onWalk();
@@ -41,7 +42,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
-  const snailAt = snailAlong();
+  const snailAt = snailLap();
   // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
   const aside = visitors?.milestone ?? visitors?.welcome ?? greetingAside();
   if (!learner || !stats) return <Settling />;

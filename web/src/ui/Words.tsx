@@ -4,9 +4,8 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { apiMessage, moreExamples } from "../data/ai";
 import { useFeatures } from "../data/server";
 import { useUser } from "../data/auth";
-import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
+import { recall, setWordStatus, useLearner, useStore, wordState, type Learner, type MemoryRow, type Sentence, type Word, type WordState } from "../data/learner";
 import type { ReviewRow, UserSentenceRow } from "../data/rows";
-import type { MemoryRow } from "../model";
 import { useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
@@ -14,7 +13,6 @@ import { AddScreen } from "./Add";
 import { StageGlyph } from "./StageGlyph";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
-import { recall, wordState, type WordState } from "./stats";
 import { wordsEmptyLine } from "../content/voice";
 
 type Filter = "all" | WordState | "suspended" | "mine";

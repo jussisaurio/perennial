@@ -8,13 +8,13 @@ import { fsrs as scheduler } from "../core/scheduler";
 import { language } from "../content/languages";
 import { locate } from "../content/text";
 import { hash32 } from "../lib/seed";
-import { memKey, recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
+import { memKey, recordReview, undoReview, useLearner, useStore, wordState, type Learner, type Sentence, type Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
 import { hasVoice, isSoundOn, speak, speakAll, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
-import { courseStats, wordState } from "./stats";
+import { courseStats } from "./stats";
 import { useKeys } from "./useShortcut";
 import { track } from "../observability";
 

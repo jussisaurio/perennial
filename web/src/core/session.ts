@@ -3,20 +3,21 @@
 
 import type { FSRS, Grade } from "./fsrs";
 import { DAY_MS } from "./fsrs";
-import type { MemoryRow, Skill } from "../model";
+import type { MemoryRow } from "../data/learner";
+import type { Skill } from "../data/rows";
 
 export type Task =
   | { kind: "intro"; lexemeId: string }
   | { kind: "review"; lexemeId: string; skill: Skill; isNew?: boolean; retry?: boolean };
 
-export interface Costs {
+interface Costs {
   intro: number; // ms for intro + its follow-up test
   read: number;
   listen: number;
   write: number;
 }
 
-export const DEFAULT_COSTS: Costs = { intro: 25_000, read: 8_000, listen: 10_000, write: 14_000 };
+const DEFAULT_COSTS: Costs = { intro: 25_000, read: 8_000, listen: 10_000, write: 14_000 };
 
 export interface PlanInput {
   now: number;

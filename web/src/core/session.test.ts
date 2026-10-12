@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { DAY_MS, FSRS } from "./fsrs";
 import { plan, Session, type Task } from "./session";
-import type { MemoryRow, Skill } from "../model";
+import type { MemoryRow } from "../data/learner";
+import type { Skill } from "../data/rows";
 
 const fsrs = new FSRS();
 const now = Date.UTC(2026, 5, 1);

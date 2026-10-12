@@ -1,15 +1,13 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { deriveMemory, wordState, type Learner, type Word } from "../data/learner";
+import { deriveMemory, wordState, type Learner, type MemoryRow, type Word } from "../data/learner";
 import type { ReviewRow } from "../data/rows";
-import type { MemoryRow } from "../model";
 import {
   learnerFacts,
   milestoneLine,
   moleVisits,
   NO_FACTS,
-  snailLap,
   STRIP_VISITORS,
   VISITORS,
   visitorsFor,
@@ -99,9 +97,4 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
 export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitors {
   const today = visitorsFor(NO_FACTS, now, devVisitorOverride());
   return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
-}
-
-/** Where the snail is along the whole fence of this garden (0 at the gate), for the 2D strip. */
-export function snailAlong(): number {
-  return snailLap();
 }

@@ -44,12 +44,12 @@ export interface Layout {
   pond: { x: number; z: number; r: number };
 }
 
-export const SPACING = 0.62;
-export const BED_COLS = 6;
-export const BED_ROWS = 5;
+const SPACING = 0.62;
+const BED_COLS = 6;
+const BED_ROWS = 5;
 const MARGIN = 0.32;
-export const BED_W = BED_COLS * SPACING + MARGIN * 2;
-export const BED_D = BED_ROWS * SPACING + MARGIN * 2;
+const BED_W = BED_COLS * SPACING + MARGIN * 2;
+const BED_D = BED_ROWS * SPACING + MARGIN * 2;
 const PATH = 1.9;
 const CAPACITY = BED_COLS * BED_ROWS;
 

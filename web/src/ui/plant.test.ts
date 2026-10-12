@@ -1,7 +1,7 @@
 import { expect, mock, test } from "bun:test";
 
 // The stage rule lives with the learner model, whose deck loader needs Vite (import.meta.glob).
-mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")), deckLangs: () => [] }));
+mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")) }));
 const { genome } = await import("./plant");
 
 test("a word always grows the same plant; different words grow different ones", () => {

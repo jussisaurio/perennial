@@ -215,7 +215,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
             setSessionMinutes(m);
             go("/session");
           }}
-          onAddWords={() => go("/words/add")}
           onWalk={() => go("/garden")}
         />
       )}

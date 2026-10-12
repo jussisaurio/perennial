@@ -7,7 +7,6 @@ import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { DAY_MS, replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
-import type { MemoryRow } from "../model";
 import { loadDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
 import type { CourseRow, ReviewRow, Skill, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
@@ -39,6 +38,20 @@ export interface Word {
   rank: number;
   source: "deck" | "user";
   status: "active" | "paused" | "ignored" | "queued";
+}
+
+/** Derived from reviews; never stored or synced. `reps === 0` means unlocked but not yet practised. */
+export interface MemoryRow {
+  key: string; // `${lexemeId}:${skill}`
+  courseId: string;
+  lexemeId: string;
+  skill: Skill;
+  s: number;
+  d: number;
+  lastTs: number;
+  due: number;
+  reps: number;
+  lapses: number;
 }
 
 export type WordState = "new" | "learning" | "known";

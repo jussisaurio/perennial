@@ -89,6 +89,3 @@ async function load(lang: string): Promise<LoadedDeck> {
     throw e;
   }
 }
-
-/** Deck languages bundled with this build. */
-export const deckLangs = () => Object.keys(loaders).map((k) => k.split("/").at(-2)!);
