@@ -186,6 +186,8 @@ describe("production configuration fails closed", () => {
     expect(c.observability.connect).toEqual(["https://o12.ingest.us.sentry.io", "https://us.i.posthog.com"]);
     expect(securityHeaders(c.observability.connect, true)["content-security-policy"]).toContain("connect-src 'self' data: https://o12.ingest.us.sentry.io https://us.i.posthog.com");
     expect(prod(good).observability.connect).toEqual([]);
+    // The Docker build passes an unset host as "": still the EU default.
+    expect(prod({ ...good, VITE_POSTHOG_KEY: "phc_x", VITE_POSTHOG_HOST: "" }).observability.connect).toEqual(["https://eu.i.posthog.com"]);
   });
 
   test("default or short auth secret refuses to start", () => {

@@ -40,11 +40,15 @@ export function initObservability() {
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
 // `||`, not `??`: the Docker build passes an unset host as "".
 const POSTHOG_HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || "https://eu.i.posthog.com";
-let waiting: [Event, Record<string, unknown>][] = [];
+// Queued with the time they happened, so they keep it when they are sent.
+let waiting: [Event, Record<string, unknown>, Date][] = [];
+let started = false;
 
 function startPostHog(userId: string) {
-  if (!POSTHOG_KEY || posthog) return;
-  void import("posthog-js").then(({ default: ph }) => {
+  // `started`, not `posthog`: a second identify() can come before the import resolves.
+  if (!POSTHOG_KEY || started) return;
+  started = true;
+  import("posthog-js").then(({ default: ph }) => {
     ph.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
       persistence: "memory",
@@ -65,9 +69,11 @@ function startPostHog(userId: string) {
       person_profiles: "identified_only",
     });
     posthog = ph;
-    for (const [event, props] of waiting) ph.capture(event, props);
+    for (const [event, props, timestamp] of waiting) ph.capture(event, props, { timestamp });
     waiting = [];
-  });
+  })
+    // Analytics never breaks the app. A missing chunk after a deploy reloads the page (main.tsx).
+    .catch(() => {});
 }
 
 /** The handful of product events we look at (see #16). */
@@ -75,13 +81,23 @@ export type Event = "course_started" | "session_finished" | "email_added" | "gar
 
 export function track(event: Event, props: Record<string, unknown> = {}) {
   if (posthog) posthog.capture(event, props);
-  else if (POSTHOG_KEY && waiting.length < 50) waiting.push([event, props]);
+  // Few events come before identify (onboarding); 50 only bounds a queue that never starts.
+  else if (POSTHOG_KEY && waiting.length < 50) waiting.push([event, props, new Date()]);
 }
 
 /** Tie events to the learner (an id only, never the email). A new user reloads the app (App.tsx). */
 export function identify(userId: string) {
   startPostHog(userId);
   Sentry.setUser({ id: userId });
+}
+
+/**
+ * An anonymous learner signed in to an account: the account's id becomes the
+ * same PostHog person, so their story continues after the reload. (PostHog
+ * keeps them apart if the account already has events of its own.)
+ */
+export function linkAccount(accountId: string) {
+  posthog?.alias(accountId);
 }
 
 export const reactErrorHandler = Sentry.reactErrorHandler;

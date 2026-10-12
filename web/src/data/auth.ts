@@ -4,7 +4,7 @@
 
 import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
-import { track } from "../observability";
+import { linkAccount, track } from "../observability";
 import { captchaHeaders } from "./captcha";
 import { adoptOnDevice, clearOutboxNow, forgetOnDevice, keepOnDevice } from "./device";
 
@@ -66,6 +66,7 @@ export async function signInWithCode(email: string, otp: string): Promise<Sessio
   if (r.error || !r.data) throw new AuthError(r.error?.code ?? "sign_in_failed", r.error?.status === 429 ? "Too many tries. Wait a few minutes." : "That code is not correct, or it has expired.");
   if (before?.isAnonymous) {
     track("email_added");
+    linkAccount(r.data.user.id);
     // Their progress moves into the account on the server; their unsent writes follow here.
     adoptOnDevice(before.id, r.data.user.id);
   }
