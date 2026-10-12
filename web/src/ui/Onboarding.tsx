@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
 import { ensureUser } from "../data/auth";
 import { postWrite } from "../data/http";
+import { loadDeck } from "../data/deck";
 import { useDeck } from "../data/learner";
 import { track } from "../observability";
 import { SignIn } from "./Account";
@@ -94,7 +95,15 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   const [walking, setWalking] = useState(false);
   useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
   const deck = useDeck(lang);
-  const showcase = useMemo(() => (deck ? showcaseGarden(deck) : null), [deck]);
+  const fresh = useMemo(() => (deck ? showcaseGarden(deck) : null), [deck]);
+  // While another language's deck loads, keep showing the last garden: no gap, no jump.
+  const [lastShown, setLastShown] = useState(fresh);
+  if (fresh && fresh !== lastShown) setLastShown(fresh);
+  const showcase = fresh ?? lastShown;
+  // Load every course's deck early, so switching language is instant.
+  useEffect(() => {
+    for (const l of COURSE_LANGUAGES) void loadDeck(l.code).catch(() => {});
+  }, []);
   const name = COURSE_LANGUAGES.find((l) => l.code === lang)?.name ?? lang;
   const walkSource = useMemo(() => (deck && walking ? showcaseWalkPlants(deck) : null), [deck, walking]);
 

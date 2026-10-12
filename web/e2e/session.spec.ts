@@ -62,11 +62,11 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
   await expect(page.locator("main.card")).toHaveAttribute("data-lemma", lemma);
 });
 
-test("'I knew it' skips the quick check, says so, is stored as 'known', and is undoable", async ({ page }) => {
+test("'I knew it' skips the quick check (no extra note: the button said so), is stored as 'known', and is undoable", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   await advance(page, "k");
-  await expect(page.getByRole("status")).toContainText("You will see this word again in about a week");
+  await expect(page.locator(".session-note")).toHaveCount(0); // the button already promised "Back in about a week"
   await expectServerRows(page, "review", 1);
   const [r] = await serverRows<{ grade: number; kind: string }>(page, "review");
   expect(r).toMatchObject({ grade: 4, kind: "known" });

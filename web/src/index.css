@@ -451,10 +451,13 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 :root[data-theme="dark"] .kicker.check, :root[data-theme="dark"] .kicker.newListen, :root[data-theme="dark"] .kicker.newWrite { color: var(--sun); }
 .intro-hint { margin-top: auto; padding-top: 1.5rem; }
 .intro-hint + .actions { margin-top: 0; padding-top: 0.75rem; }
+/* A quiet note above the answer buttons: never wider than the screen (a too-wide
+   note made the page scroll sideways on phones), and it never moves the layout. */
 .session-note {
   position: fixed; left: 50%; bottom: max(110px, calc(env(safe-area-inset-bottom) + 100px)); transform: translateX(-50%);
-  background: var(--ink); color: var(--paper); padding: 0.55rem 1rem; border-radius: 999px; font-size: 0.9rem;
-  box-shadow: 0 12px 30px -14px rgb(0 0 0 / 0.6); animation: rise 0.25s var(--ease); z-index: 70; white-space: nowrap;
+  width: max-content; max-width: min(28rem, calc(100vw - 32px)); text-align: center; pointer-events: none;
+  background: var(--card); color: var(--ink-2); border: 1px solid var(--line); padding: 0.45rem 0.9rem; border-radius: 14px; font-size: 0.86rem;
+  box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.45); animation: rise 0.25s var(--ease); z-index: 70;
 }
 .session-bar button.icon:disabled { opacity: 0.25; }
 .kicker.retry { background: var(--persimmon-soft); color: var(--persimmon); }

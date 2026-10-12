@@ -2,7 +2,7 @@
 // "casa" looks the same in the garden, on its cards, and on every device.
 // Growth follows memory stability: sprout → bud → bloom.
 
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { BUD_S, OLD_S, plantStage } from "../data/learner";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
 
@@ -279,7 +279,8 @@ export function StripPlant({ p, scale, highlighted }: { p: GardenPlant; scale: n
 }
 
 /** The landing page's row of one word growing up, from a seed to an old bloom. */
-export function GrowthStrip() {
+/** Memoised: it never changes, so a parent's re-render must not redraw it. */
+export const GrowthStrip = memo(function GrowthStrip() {
   const stages: { label: string; s: number; reps: number }[] = [
     { label: "new word", s: 0, reps: 0 },
     { label: "first review", s: 1.2, reps: 1 },
@@ -313,4 +314,4 @@ export function GrowthStrip() {
       })}
     </div>
   );
-}
+});

@@ -3,15 +3,15 @@ import { firstPlantsLine, forgotLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
 import { ActiveClock } from "../core/clock";
-import { MAX_NEW_PER_DAY, plan, Session as Runner, type Task } from "../core/session";
-import { fsrs as scheduler } from "../core/scheduler";
+import { MAX_NEW_PER_DAY, Session as Runner, type Task } from "../core/session";
+import { sessionPlan } from "../data/practice";
 import { language } from "../content/languages";
 import { locate } from "../content/text";
 import { memKey, recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
-import { hasVoice, isSoundOn, speak, speakAll, stopSpeaking } from "./speech";
+import { hasVoice, isSoundOn, speak, speakAll, stopSpeaking, speakSlowly } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats, wordState } from "./stats";
 import { useKeys } from "./useShortcut";
@@ -101,17 +101,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       const l = live.current;
       if (!l) return;
       const voice = isSoundOn() && (await hasVoice(tag));
-      const memories = l.memories.filter((m) => voice || m.skill !== "listen");
-      const suspended = new Set([...l.words.values()].filter((w) => w.status === "paused" || w.status === "ignored").map((w) => w.id));
-      const fresh = l.fresh();
-      const p = plan({
-        now: Date.now(),
-        budgetMs: mins * 60_000,
-        memories: memories.filter((m) => !suspended.has(m.lexemeId)),
-        fresh,
-        fsrs: scheduler,
-        newToday: newWordsToday(l),
-      });
+      const p = sessionPlan(l, mins, voice);
       setNewLimitReached(p.newLimitReached);
       const r = new Runner(p, mins * 60_000);
       clock.current = new ActiveClock(Date.now());
@@ -202,7 +192,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   const flash = (text: string) => {
     setNote(text);
     clearTimeout(noteTimer.current);
-    noteTimer.current = setTimeout(() => setNote(null), 2200);
+    noteTimer.current = setTimeout(() => setNote(null), 1800);
   };
 
   const undo = async () => {
@@ -242,7 +232,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       pop(lexeme.lemma, 0, false);
       const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: lexeme.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
-      if (opts.alreadyKnown) flash("OK. No quick check now. You will see this word again in about a week.");
+      // No note: the button already said what happens ("Back in about a week").
       setUndoStack((s) => [...s, { reviewId, review: false, intro: true, lexemeId: lexeme.id, example }]);
     } else if (grade) {
       // Tests of words planted this session aren't "watering" an existing plant.
@@ -338,7 +328,7 @@ function Speaker({ text, tag, slow }: { text: string; tag: string; slow?: boolea
         <SpeakerIcon size={18} />
       </button>
       {slow && (
-        <button onClick={() => void speak(text, tag, 0.65)} aria-label="Play slowly" title="Play slowly">
+        <button onClick={() => void speakSlowly(text, tag)} aria-label="Play slowly" title="Play slowly">
           <SnailIcon size={18} />
         </button>
       )}
@@ -484,7 +474,7 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
           <button className="play" onClick={play} aria-label="Play again">
             <SpeakerIcon size={34} />
           </button>
-          <button className="ghost" onClick={() => void speak(audioText, tag, 0.65)}>
+          <button className="ghost" onClick={() => void speakSlowly(audioText, tag)}>
             <SnailIcon size={18} /> slower
           </button>
         </div>
@@ -732,16 +722,3 @@ function Summary({
   );
 }
 
-/** New words introduced today: their first reading review happened today. */
-function newWordsToday(l: Learner): number {
-  const startOfDay = new Date().setHours(0, 0, 0, 0);
-  const first = new Map<string, number>();
-  for (const r of l.reviews) {
-    if (r.skill !== "read") continue;
-    const id = l.resolve(r.word_id);
-    const t = Date.parse(r.reviewed_at);
-    const prev = first.get(id);
-    if (prev === undefined || t < prev) first.set(id, t);
-  }
-  return [...first.values()].filter((t) => t >= startOfDay).length;
-}

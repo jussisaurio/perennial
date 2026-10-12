@@ -3,7 +3,7 @@
 // recall fades — until the next session waters them. Nothing ever dies.
 // The plants themselves come from garden/plants.ts, shared with the walk.
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
@@ -48,7 +48,8 @@ const OVERSCAN = 160;
  * at the right, where it opens; only the plants in view are drawn, so 2000
  * words cost the same as 200.
  */
-export function Garden({
+/** Memoised: on the landing page a chip tap must not redraw every plant. */
+export const Garden = memo(function Garden({
   data,
   highlight,
   compact,
@@ -309,7 +310,7 @@ export function Garden({
       )}
     </div>
   );
-}
+});
 
 /** What a strip tooltip needs: a word and its gloss. */
 type TipVisitor = { id: string; word: string | null; gloss: string };
