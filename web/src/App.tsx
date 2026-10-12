@@ -47,7 +47,6 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
   return [route, go];
 }
 
-
 /** One store per signed-in user; a new user (sign-in, sign-out) gets a fresh one. */
 function StoreProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const [store, setStore] = useState<Store | null>(null);

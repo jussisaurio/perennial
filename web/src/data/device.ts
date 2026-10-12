@@ -1,6 +1,7 @@
 // What a learner leaves on this device: their SQLite copy (OPFS) and their
 // queue of writes not yet sent (IndexedDB). Both are per user. Signing out or
-// deleting the account forgets them here.
+// deleting the account forgets them here. Also the course this device shows
+// (keepCourse, at the end): per device, not per user, and kept on sign-out.
 //
 // The app reloads right after a sign-out, and an open database cannot be
 // deleted, so forgetting is two steps: clear the queue now (so nothing more
