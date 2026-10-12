@@ -389,7 +389,7 @@ Also rotate a secret when a person with access leaves.
 
 **Every day in the first week, then weekly:**
 
-- **Railway logs** (`web`): search for `"level":"error"`. Each line has `reqId`, and `userId` when the user is known. The same id is in the `X-Request-Id` header and in Sentry.
+- **Railway logs** (`web`): search for `@level:error`. Each line has `reqId`, and `userId` when the user is known. The same id is in the `X-Request-Id` header and in Sentry. See "Reading the request log" below.
 - **Sentry:** new issues on the server and in the browser.
 - **PostHog:** the funnel `course_started` → `session_finished` → `email_added`.
 - **Railway metrics:** memory and CPU of `web` and `electric`. Electric's memory grows with the number of active shapes (five per learner).
@@ -411,6 +411,26 @@ Also rotate a secret when a person with access leaves.
 - **Sign-ups and email:** Resend dashboard for bounces and complaints. Many sends to one address can mean abuse (the server allows 3 codes per 5 minutes per client).
 - **Housekeeping:** one `housekeeping` log line each day. If it is missing, the cron did not run.
 - **Health:** add an external uptime check on `https://<domain>/health` (for example Better Stack or UptimeRobot).
+
+### Reading the request log
+
+Each request writes **one** JSON line when it ends (`"msg":"request"`, or `"slow request"` over 1 s). What happened during the request is on that line, not on lines of its own ("wide events", `server/src/log.ts`). Long-poll shape requests are left out unless they fail. Lines carry ids, counts and short values only: never emails, codes or request bodies.
+
+| Field | On | Meaning |
+|---|---|---|
+| `reqId`, `traceId` | every line | The request; `traceId` opens the same request in Sentry (Performance → search by trace id). Only sampled requests have a full trace there (10 %), but any error from the request has the same id. |
+| `method`, `path`, `status`, `ms` | every request | |
+| `userId` | known users | Set by the session, or by the sign-in itself |
+| `signup` | new user | `anonymous` (Start learning) or `email` (first email sign-in) |
+| `signin` | new session | `anonymous` or `email` |
+| `linkedFrom` | email sign-in from an anonymous learner | The anonymous user whose data moved to `userId` |
+| `otp` | code request | `sent`, or `capped` (per-email limit; also a warning line) |
+| `courseStarted` | `/api/write` | Language(s) of a course this write created |
+| `writes`, `writeTypes`, `writeChanged` | `/api/write` | Batch size, e.g. `review.insert:3 course.upsert:1`, and whether anything changed |
+| `aiTask`, `aiModel`, `aiOk`, `aiUsd`, `aiTokensIn`, `aiTokensOut`, `aiMs` | `/api/ai/*` | The model call (the same is in the `ai_request` table) |
+| `accountDeleted` | `/api/account/delete` | `true` |
+
+Railway search examples: `@signup:email`, `@courseStarted:de`, `@otp:capped`, `@userId:<id>` (one learner's story), `@status:500`. The same fields are attributes on the request's Sentry trace. The housekeeping job writes one `housekeeping` line with its counts and `ms`.
 
 **Set alerts:** Railway usage limit and alert, Anthropic spend limit, PlanetScale storage, Sentry issue alerts to email.
 

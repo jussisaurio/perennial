@@ -15,7 +15,7 @@ import { z } from "zod";
 import { PRICES, type Config } from "./config";
 import { Lang, LANGUAGE } from "./course";
 import { HttpError } from "./http";
-import { log } from "./log";
+import { event, log } from "./log";
 import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, type GenWord } from "./prompts";
 import { LIMITS } from "./sync";
 
@@ -180,6 +180,7 @@ export class AIService {
       }));
     } catch (e) {
       await record(false);
+      event({ aiTask: task, aiModel: model, aiOk: false, aiMs: Math.round(performance.now() - started) });
       if (e instanceof Anthropic.RateLimitError) throw new HttpError(503, "busy");
       if (e instanceof Anthropic.APIConnectionError) throw new HttpError(502, "ai_unreachable");
       if (e instanceof Anthropic.APIError) throw new HttpError(502, "ai_error", { status: e.status });
@@ -191,7 +192,7 @@ export class AIService {
       on conflict (period) do update set usd = ai_spend.usd + excluded.usd`;
     const ok = res.stop_reason !== "refusal" && !!res.parsed_output;
     await record(ok, res.usage, usd);
-    log.info("ai call", { task, model, usd, ms: Math.round(performance.now() - started), ok });
+    event({ aiTask: task, aiModel: model, aiOk: ok, aiUsd: usd, aiTokensIn: res.usage.input_tokens, aiTokensOut: res.usage.output_tokens, aiMs: Math.round(performance.now() - started) });
     if (!ok) throw new HttpError(502, "bad_output");
     return res.parsed_output as z.infer<T>;
   }

@@ -115,6 +115,49 @@ describe("no secrets in logs", () => {
   });
 });
 
+describe("wide events", () => {
+  test("each request's one line says what happened: signup, code, sign-in, linking, new course, writes", async () => {
+    const lines: Record<string, unknown>[] = [];
+    const saved = { log: console.log, error: console.error, warn: console.warn, level: process.env.LOG_LEVEL };
+    process.env.LOG_LEVEL = "info";
+    const capture = (...args: unknown[]) => {
+      try {
+        lines.push(JSON.parse(String(args[0])));
+      } catch {
+        // [mail] lines from the dev outbox
+      }
+    };
+    console.log = console.error = console.warn = capture;
+    const email = unique("events");
+    let anonId = "";
+    try {
+      const anon = await t.anonymous();
+      await t.write(anon, [{ type: "course.upsert", row: { lang: "de", minutes: 5 } }, review(W.l)]);
+      await t.write(anon, [{ type: "course.upsert", row: { lang: "de", minutes: 9 } }]);
+      anonId = String(lines.find((l) => l.signup === "anonymous")?.userId ?? "");
+      await sendCode(email, anon);
+      await t.signIn(email, anon);
+    } finally {
+      Object.assign(console, { log: saved.log, error: saved.error, warn: saved.warn });
+      if (saved.level === undefined) delete process.env.LOG_LEVEL;
+      else process.env.LOG_LEVEL = saved.level;
+    }
+    const requests = lines.filter((l) => l.msg === "request");
+    const at = (path: string) => requests.filter((l) => l.path === path);
+    // Anonymous start: a user, a session, and the user id on that same line.
+    expect(at("/api/auth/sign-in/anonymous")[0]).toMatchObject({ signup: "anonymous", signin: "anonymous", status: 200 });
+    expect(anonId).not.toBe("");
+    // The first write starts the course; the second only changes it.
+    const [first, second] = at("/api/write");
+    expect(first).toMatchObject({ userId: anonId, courseStarted: "de", writes: 2, writeTypes: "course.upsert:1 review.insert:1", writeChanged: true });
+    expect(second.courseStarted).toBeUndefined();
+    expect(at("/api/auth/email-otp/send-verification-otp").at(-1)).toMatchObject({ otp: "sent" });
+    // Email sign-in from the anonymous session: a new user, signed in, linked.
+    expect(at("/api/auth/sign-in/email-otp").at(-1)).toMatchObject({ signup: "email", signin: "email", linkedFrom: anonId, status: 200 });
+    for (const l of requests) expect(JSON.stringify(l)).not.toContain(email);
+  });
+});
+
 describe("error reports", () => {
   test("cookies, auth headers, bodies and user details are scrubbed", () => {
     const event = scrub<import("@sentry/bun").Event>({

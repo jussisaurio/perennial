@@ -13,6 +13,7 @@ import { z } from "zod";
 import type { Config } from "./config";
 import { COURSE_DEFAULTS, Lang } from "./course";
 import { HttpError, json, readJson } from "./http";
+import { event } from "./log";
 
 /** Tables a learner can read, each scoped to their user id. */
 const SHAPES: Record<string, { where: string }> = {
@@ -197,6 +198,7 @@ export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[
     const [{ txid }] = await tx`select pg_current_xact_id()::xid::text as txid`;
     let rows = 0;
     const run = async (q: Promise<{ count: number }>) => void (rows += (await q).count);
+    const started: string[] = [];
     for (const m of mutations) {
       switch (m.type) {
         case "review.insert": {
@@ -213,10 +215,14 @@ export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[
         case "course.upsert": {
           const r = m.row;
           // Only the columns sent change, so two devices editing different settings both win.
-          await run(tx`insert into course (user_id, lang, minutes, retention) values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention})
+          const res = await tx`insert into course (user_id, lang, minutes, retention) values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention})
             on conflict (user_id, lang) do update set
               minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
-              retention = coalesce(${r.retention ?? null}::real, course.retention)`);
+              retention = coalesce(${r.retention ?? null}::real, course.retention)
+            returning (xmax = 0) as inserted`;
+          rows += res.count;
+          // xmax = 0: a new row, not an update. A new course is a learner starting a language.
+          if (res[0]?.inserted) started.push(r.lang);
           break;
         }
         case "word_state.upsert": {
@@ -254,7 +260,10 @@ export async function applyWrites(sql: SQL, userId: string, mutations: Mutation[
           break;
       }
     }
-    return { txid: Number(txid), changed: rows > 0 };
+    return { txid: Number(txid), changed: rows > 0, started };
+  }).then(({ started, ...result }) => {
+    if (started.length) event({ courseStarted: started.join(",") });
+    return result;
   });
 }
 
@@ -262,8 +271,13 @@ export async function handleWrite(req: Request, sql: SQL, userId: string): Promi
   const body = WriteBatch.safeParse(await readJson(req, 512 * 1024));
   if (!body.success) throw new HttpError(422, "bad_request", { issues: body.error.issues.slice(0, 5) });
   // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
+  const types: Record<string, number> = {};
+  for (const m of body.data.mutations) types[m.type] = (types[m.type] ?? 0) + 1;
+  // "review.insert:3 course.upsert:1": what the batch was, searchable as text.
+  event({ writes: body.data.mutations.length, writeTypes: Object.entries(types).map(([k, n]) => `${k}:${n}`).join(" ") });
   const result = await Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: body.data.mutations.length } }, () =>
     applyWrites(sql, userId, body.data.mutations),
   );
+  event({ writeChanged: result.changed });
   return json(result);
 }

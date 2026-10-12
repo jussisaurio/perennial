@@ -15,6 +15,7 @@ const LOCK = 727_002;
 export async function housekeeping(sql: SQL, config: Config) {
   const [{ locked }] = await sql`select pg_try_advisory_lock(${LOCK}) as locked`;
   if (!locked) return { skipped: true };
+  const t0 = performance.now();
   try {
     const cutoff = new Date(Date.now() - config.anonymousRetentionDays * 86_400_000);
     const anonymous = await sql`delete from "user" u where u."isAnonymous" and u."createdAt" < ${cutoff}
@@ -24,7 +25,8 @@ export async function housekeeping(sql: SQL, config: Config) {
     const sessions = await sql`delete from "session" where "expiresAt" < now()`;
     await sql`delete from mail_log where sent_at < now() - interval '2 days'`;
     const result = { anonymousUsers: anonymous.count, aiRequests: logs.count, codes: codes.count, sessions: sessions.count };
-    log.info("housekeeping", result);
+    // The job's one wide line: what it removed and how long it took.
+    log.info("housekeeping", { ...result, ms: Math.round(performance.now() - t0) });
     return result;
   } finally {
     await sql`select pg_advisory_unlock(${LOCK})`;

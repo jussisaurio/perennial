@@ -9,7 +9,7 @@ import { AIService, ExamplesIn, MineIn } from "./ai";
 import { createAuth } from "./auth";
 import type { Config } from "./config";
 import { fail, HttpError, json, readJson, securityHeaders, serveStatic, versionAtLeast } from "./http";
-import { addLogContext, log, withLogContext } from "./log";
+import { addLogContext, event, log, traceId, withLogContext } from "./log";
 import { createMailer, OutboxMailer } from "./mail";
 import { handleWrite, proxyShape } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
@@ -94,7 +94,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
         const user = await requireUser(req);
         // Everything the learner has cascades from the user row.
         await sql`delete from "user" where id = ${user.id}`;
-        log.info("account deleted");
+        event({ accountDeleted: true });
         return json({ ok: true });
       },
     },
@@ -178,7 +178,7 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
       return new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } });
     }
     const started = performance.now();
-    return withLogContext({ reqId: id }, async () => {
+    return withLogContext({ reqId: id, traceId: traceId() }, async () => {
       let res: Response;
       try {
         res = await route(req);
