@@ -116,7 +116,7 @@ await cdp.send("Profiler.setSamplingInterval", { interval: 500 });
 
 // Seed the demo learner at full speed; measure with the CPU slowed.
 await page.goto(`${BASE}/?demo=es#/today`);
-await page.getByRole("button", { name: /today's session/ }).waitFor({ timeout: 60_000 });
+await page.getByRole("button", { name: /today's 5 minutes/i }).waitFor({ timeout: 60_000 });
 await cdp.send("Emulation.setCPUThrottlingRate", { rate: CPU });
 
 const results: Result[] = [];
@@ -129,7 +129,7 @@ const scroll = async () => {
 
 results.push(await measure(page, cdp, "Today: cold load", async () => {
   await page.goto(`${BASE}/#/today`);
-  await page.getByRole("button", { name: /today's session/ }).waitFor();
+  await page.getByRole("button", { name: /today's 5 minutes/i }).waitFor();
   await page.waitForTimeout(1000);
 }));
 results.push(await measure(page, cdp, "Garden: open and scroll", async () => {
@@ -144,7 +144,7 @@ results.push(await measure(page, cdp, "Words: open and scroll", async () => {
 }));
 results.push(await measure(page, cdp, "Session: 10 cards", async () => {
   await page.goto(`${BASE}/#/today`);
-  await page.getByRole("button", { name: /today's session/ }).click();
+  await page.getByRole("button", { name: /today's 5 minutes/i }).click();
   await page.locator(".kicker").waitFor();
   for (let n = 0; n < 10; n++) {
     await page.keyboard.press("Space");

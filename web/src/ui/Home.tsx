@@ -97,12 +97,16 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </button>
         <p className="start-note">
           {chunk.state === "done"
-            ? doneTodayNote()
+            ? plan.due
+              ? "" // no wink under a count of thirsty plants: it would read as if all is well
+              : doneTodayNote()
             : started === 0
               ? `${ready} seeds are ready to plant, the most common words first. Each word has example sentences and audio.`
               : ready === 0
                 ? "Every seed in the course is planted. Today is for growing them."
-                : plan.newCount > 2
+                : plan.due === 0
+                  ? "Every plant has water. Today is for new seeds."
+                  : plan.newCount > 2
                   ? "Water your plants, then plant a few new seeds."
                   : "Today is mostly watering. Missed days do not pile up."}
         </p>

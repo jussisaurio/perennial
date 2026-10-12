@@ -36,7 +36,7 @@ export function nextChunk(l: Learner, now = Date.now()): { state: "start" | "fin
   let ms = 0;
   for (const r of l.reviews) if (Date.parse(r.reviewed_at) >= dayStart) ms += r.duration_ms;
   const left = DAILY_MINUTES - ms / 60_000;
-  // Under a minute left counts as done: a 1-minute "session" is not worth a button.
+  // Under a minute left counts as done: a session that short is not worth a button.
   if (left < 1) return { state: "done", minutes: DAILY_MINUTES };
   // Half a minute in is a start, not a session to finish.
   if (ms < 30_000) return { state: "start", minutes: DAILY_MINUTES };

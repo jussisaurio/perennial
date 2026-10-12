@@ -1,7 +1,7 @@
 {
   "name": "Perennial",
   "short_name": "Perennial",
-  "description": "Learn a language a few minutes a day.",
+  "description": "Learn a language 5 minutes a day.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

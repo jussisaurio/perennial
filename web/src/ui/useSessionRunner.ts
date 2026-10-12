@@ -82,6 +82,12 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
       const voice = isSoundOn() && (await hasVoice(tag));
       const p = sessionPlan(l, mins, voice, Date.now());
       const r = new Runner(p, mins * 60_000);
+      // Each chunk is its own session: its own summary, and nothing to undo from the last one.
+      counts.current = { intros: 0, answers: 0 };
+      practised.current = new Set();
+      introduced.current = new Set();
+      introMs.current = new Map();
+      setUndoStack([]);
       clock.current = new ActiveClock(Date.now());
       setActive(0);
       setRunner(r);

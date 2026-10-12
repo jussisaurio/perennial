@@ -6,7 +6,7 @@ test.use({ viewport: { width: 1280, height: 900 } });
 
 const MORNING = new Date("2026-10-01T10:00:00");
 /** Never shown: no limits, no "nothing left", no minutes setting, no "Keep going". */
-const NEVER = /limit|reached|15|Keep going|Nothing to practi[cs]e/;
+const NEVER = /limit|reached|15 (min|new)|Keep going|Nothing to practi[cs]e/;
 const startButton = (page: Page) => page.locator("button.start");
 const timeLeft = (page: Page) => page.locator(".time-left");
 
@@ -54,6 +54,7 @@ test("first day: 5 minutes a day, no minutes to choose, and the day's button", a
 test("partway through the day: finish the rest of today's 5 minutes", async ({ page }) => {
   await page.clock.setFixedTime(MORNING);
   await startCourse(page);
+  await answered(page, { from: 20, count: 3, minutes: 0.5, daysAgo: 10 }); // due again by now
   await answered(page, { count: 4, minutes: 2 });
   await expect(startButton(page)).toHaveText(/^Finish today's 5 minutes\s*· 3 min$/);
   await expect(page.getByText("Water your plants, then plant a few new seeds.")).toBeVisible();
@@ -82,6 +83,11 @@ test("done for the day (under a minute left counts): watered, and 5 more minutes
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
   await page.getByRole("button", { name: "Practise 5 more minutes" }).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
+  // Each chunk has its own summary: the seed from the last one is not counted again.
+  await expect(kicker(page)).toHaveText("new word");
+  await advance(page, "2");
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
 });
 
 test("done, but plants are still due: say how many, not 'watered'", async ({ page }) => {
