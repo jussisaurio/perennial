@@ -48,6 +48,12 @@ export interface Config {
   anonymousRetentionDays: number;
 }
 
+/**
+ * The deployed commit, or "dev". `||`: a build or host can pass an unset value as "".
+ * The app uses the same rule (web/src/version.ts), so both name the same release.
+ */
+export const releaseOf = (env: Record<string, string | undefined>) => env.RAILWAY_GIT_COMMIT_SHA || env.RELEASE || "dev";
+
 export function loadConfig(overrides: Partial<Config> = {}): Config {
   const env = process.env;
   const production = env.NODE_ENV === "production";
@@ -61,7 +67,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     secret: env.BETTER_AUTH_SECRET ?? DEFAULT_SECRET,
     production,
     dev,
-    release: env.RAILWAY_GIT_COMMIT_SHA ?? env.RELEASE ?? "dev",
+    release: releaseOf(env),
     minClientVersion: env.MIN_CLIENT_VERSION ?? "0.0.0",
     electric: { url: (env.ELECTRIC_URL ?? "http://localhost:30009").replace(/\/$/, ""), secret: env.ELECTRIC_SECRET },
     anthropic: {

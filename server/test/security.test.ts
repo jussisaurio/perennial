@@ -2,7 +2,7 @@
 // only come from our own page, and production refuses unsafe configuration.
 
 import { afterAll, describe, expect, test } from "bun:test";
-import { configProblems, loadConfig } from "../src/config";
+import { configProblems, loadConfig, releaseOf } from "../src/config";
 import { securityHeaders } from "../src/http";
 import { QUOTA } from "../src/sync";
 import { review, startApp, stopMockLLM, unique, W } from "./helpers";
@@ -148,6 +148,13 @@ describe("limits", () => {
       QUOTA.user_word = saved;
     }
   });
+});
+
+test("the release is the commit, or \"dev\" when unset or empty (as the app says)", () => {
+  expect(releaseOf({ RAILWAY_GIT_COMMIT_SHA: "abc123" })).toBe("abc123");
+  expect(releaseOf({ RAILWAY_GIT_COMMIT_SHA: "", RELEASE: "" })).toBe("dev");
+  expect(releaseOf({ RELEASE: "r9" })).toBe("r9");
+  expect(releaseOf({})).toBe("dev");
 });
 
 describe("production configuration fails closed", () => {
