@@ -25,3 +25,15 @@ test("inactive anonymous learners are deleted with their data; active ones and a
   expect((await t.sql`select 1 from "user" where id = ${activeId}`).length).toBe(1);
   expect((await t.sql`select 1 from "user" where id = ${accountId}`).length).toBe(1);
 });
+
+test("a second run while one holds the lock skips, and runs again once it is free", async () => {
+  const other = await t.sql.reserve(); // the first run's connection
+  try {
+    expect((await other`select pg_try_advisory_lock(727002) as locked`)[0].locked).toBe(true);
+    expect(await housekeeping(t.sql, t.config)).toEqual({ skipped: true });
+    await other`select pg_advisory_unlock(727002)`;
+  } finally {
+    other.release();
+  }
+  expect(await housekeeping(t.sql, t.config)).not.toEqual({ skipped: true });
+});
