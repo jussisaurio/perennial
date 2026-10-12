@@ -6,7 +6,7 @@ import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { linkAccount, track } from "../observability";
 import { captchaHeaders } from "./captcha";
-import { adoptOnDevice, clearOutboxNow, forgetOnDevice, keepOnDevice } from "./device";
+import { adoptOnDevice, clearOutboxNow, forgetOnDevice, keepOnDevice, stopSyncNow } from "./device";
 
 export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
 
@@ -82,12 +82,18 @@ export async function signInWithCode(email: string, otp: string): Promise<Sessio
 /** Signs out, and forgets this user's data on this device (see device.ts). */
 export async function signOut() {
   const userId = (await authClient.getSession()).data?.user?.id;
-  if (userId) forgetOnDevice(userId);
+  let stopped = false;
+  if (userId) {
+    forgetOnDevice(userId);
+    // Stop syncing first: a table still loading would get a 401 once the session ends.
+    stopped = stopSyncNow(userId);
+  }
   const r = await authClient.signOut().catch((e: unknown) => ({ error: e }));
   if (r.error) {
-    // Still signed in: keep their data.
+    // Still signed in: keep their data, and reload so a stopped sync starts again.
     if (userId) keepOnDevice(userId);
     console.warn("[auth] sign-out failed", r.error);
+    if (stopped) location.reload();
     return;
   }
   // Nothing more uploads for them from this tab.
