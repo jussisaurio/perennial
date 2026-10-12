@@ -241,11 +241,13 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           }}
           onStart={(l) => {
             setStartError("");
+            const previous = course.lang;
             // Same daily minutes as the course they have; changeable in Settings.
-            // Refused (by the server, or another tab writes): the new course is
-            // rolled back and the old one shows again, so say why.
+            // Refused (by the server, or another tab is the writer): the new course is
+            // rolled back, so go back to the one they came from and say why.
             void saveCourse(store, l, { minutes: course.minutes }).catch((e) => {
               console.error("course not saved", e);
+              choose(previous);
               setStartError(`Could not start ${language(l).name}. Please try again later.`);
             });
             track("course_started", { lang: l, minutes: course.minutes, another: true });
