@@ -165,3 +165,20 @@ export function cleanUpForgotten(): Promise<void> {
   })().catch((e) => console.warn("[device] cleanup failed", e));
   return cleaning;
 }
+
+// The course this device shows: a per-device convenience, not synced.
+const COURSE_KEY = "perennial-course";
+export const keepCourse = (lang: string) => {
+  try {
+    localStorage.setItem(COURSE_KEY, lang);
+  } catch {
+    /* private mode: the first course shows */
+  }
+};
+export const readCourse = () => {
+  try {
+    return localStorage.getItem(COURSE_KEY);
+  } catch {
+    return null;
+  }
+};

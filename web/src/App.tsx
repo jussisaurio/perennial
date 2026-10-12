@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import { signOut, useUser } from "./data/auth";
 import { identify, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useStore } from "./data/learner";
-import { cleanUpForgotten } from "./data/device";
+import { cleanUpForgotten, keepCourse, readCourse } from "./data/device";
 import { language } from "./content/languages";
 import { reloadNeeded } from "./data/http";
 import { createStore, type Store } from "./data/store";
@@ -47,21 +47,6 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
   return [route, go];
 }
 
-const COURSE_KEY = "perennial-course";
-const keepCourse = (lang: string) => {
-  try {
-    localStorage.setItem(COURSE_KEY, lang);
-  } catch {
-    /* private mode */
-  }
-};
-const readCourse = () => {
-  try {
-    return localStorage.getItem(COURSE_KEY);
-  } catch {
-    return null;
-  }
-};
 
 /** One store per signed-in user; a new user (sign-in, sign-out) gets a fresh one. */
 function StoreProvider({ userId, children }: { userId: string; children: ReactNode }) {

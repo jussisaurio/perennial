@@ -7,6 +7,7 @@ import { replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
 import { ensureUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
+import { keepCourse } from "../data/device";
 import { ApiError, postWrite } from "../data/http";
 import { memKey } from "../core/memory";
 import { COURSE_DEFAULTS } from "../data/rows";
@@ -23,11 +24,7 @@ const DAYS = 90;
 
 /** A fresh anonymous learner with `count` words studied over the last `DAYS` days. The app opens on this course. */
 export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
-  try {
-    localStorage.setItem("perennial-course", lang);
-  } catch {
-    /* private mode */
-  }
+  keepCourse(lang);
   await signOut();
   await ensureUser();
   const deck = await loadDeck(lang);
