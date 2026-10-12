@@ -25,3 +25,21 @@ test("phone: Add words keeps clear of the filter dropdown", async ({ page }) => 
   expect(apart, `Add words ${JSON.stringify(add)} vs filter ${JSON.stringify(sel)}`).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test("phone: the new-version note fits the screen and its text", async ({ page }) => {
+  await startCourse(page);
+  // What the app does when the server asks for a newer app (see data/http.ts).
+  await page.evaluate(async () => {
+    const http = await import(/* @vite-ignore */ "/src/data/http.ts");
+    http.reloadNeeded.dispatchEvent(new Event("reload"));
+  });
+  const note = page.getByRole("status").filter({ hasText: "A new version of Perennial is ready" });
+  await expect(note.getByRole("button", { name: "Reload" })).toBeVisible();
+  const viewport = page.viewportSize()!;
+  const box = (await note.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+  // Not squeezed into a narrow column (it was half the screen wide, #115).
+  expect(box.width).toBeGreaterThan(viewport.width * 0.75);
+  expect(await note.evaluate((e) => e.scrollWidth <= e.clientWidth && e.scrollHeight <= e.clientHeight)).toBe(true);
+});

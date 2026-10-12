@@ -128,7 +128,7 @@ function ReloadBanner() {
   if (!needed) return null;
   return (
     <div className="toast" role="status">
-      A new version of Perennial is ready. Your recent answers are saved on this device.
+      <span>A new version of Perennial is ready. Your recent answers are saved on this device.</span>
       <button className="ghost" onClick={() => location.reload()}>
         Reload
       </button>
