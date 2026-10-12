@@ -9,6 +9,17 @@ import * as T from "./textures";
 import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
 import { collide, type Layout } from "./world";
 
+/**
+ * Point a visitor's sprite at its texture cell; upload only when it changes (tick runs
+ * every frame). The attribute stores float32, so compare with the float32 value.
+ */
+export function showCell(uv: THREE.BufferAttribute, cell: number) {
+  const u = Math.fround(cell / T.VISITOR_CELLS);
+  if (uv.getX(0) === u) return;
+  uv.setX(0, u);
+  uv.needsUpdate = true;
+}
+
 /** The moth's loop round its lantern (m), and the height of the middle of the lantern glass. */
 const MOTH_R = 0.24;
 const LANTERN_GLASS_Y = 1.02;
@@ -195,16 +206,9 @@ export class SceneVisitors {
     }
   }
 
-  private setCell(s: VisitorSprite, cell: number) {
-    const u = cell / T.VISITOR_CELLS;
-    if (s.uv.getX(0) === u) return;
-    s.uv.setX(0, u);
-    s.uv.needsUpdate = true;
-  }
-
   private gnomeCell(s: VisitorSprite) {
     const g = this.gnome;
-    this.setCell(s, (g.lit ? T.VISITOR_CELL.gnomeFrontLit : T.VISITOR_CELL.gnomeFront) + (g.pose === "side" ? 1 : 0));
+    showCell(s.uv, (g.lit ? T.VISITOR_CELL.gnomeFrontLit : T.VISITOR_CELL.gnomeFront) + (g.pose === "side" ? 1 : 0));
   }
 
   /** The frog and the moth come out at dusk; the gnome lights its lantern when the others come on. */
@@ -265,7 +269,7 @@ export class SceneVisitors {
     this.frog.croak = now + 0.7;
     this.frog.puffed = true;
     const s = this.sprites.find((o) => o.v.id === "frog");
-    if (s) this.setCell(s, T.VISITOR_CELL.frogCroak);
+    if (s) showCell(s.uv, T.VISITOR_CELL.frogCroak);
   }
 
   /**
@@ -300,7 +304,7 @@ export class SceneVisitors {
       } else if (s.v.id === "frog") {
         if (this.frog.puffed && elapsed > this.frog.croak) {
           this.frog.puffed = false;
-          this.setCell(s, T.VISITOR_CELL.frog);
+          showCell(s.uv, T.VISITOR_CELL.frog);
         }
       } else if (s.v.id === "snail") {
         // One lap a day: recompute its place twice a second (it moves about a millimetre in that time).
@@ -324,7 +328,7 @@ export class SceneVisitors {
           const e = hr.t * hr.t * (3 - 2 * hr.t);
           s.pos.setXYZ(0, s.x + (hr.tx - s.x) * e, s.y, s.z + (hr.tz - s.z) * e);
           s.pos.needsUpdate = true;
-          this.setCell(s, hr.t > 0.15 && hr.t < 0.85 ? T.VISITOR_CELL.heronStep : T.VISITOR_CELL.heron);
+          showCell(s.uv, hr.t > 0.15 && hr.t < 0.85 ? T.VISITOR_CELL.heronStep : T.VISITOR_CELL.heron);
           if (hr.t === 0 || hr.t === 1) hr.dir = 0;
         }
       } else if (s.v.id === "moth") {
@@ -353,12 +357,12 @@ export class SceneVisitors {
         }
         s.pos.setXYZ(0, m.cx + Math.cos(m.a) * m.r, LANTERN_GLASS_Y - 0.03 + Math.sin(m.a * 2.3) * 0.05, m.cz + Math.sin(m.a) * m.r);
         s.pos.needsUpdate = true;
-        this.setCell(s, !resting && Math.sin(elapsed * 28) > 0 ? T.VISITOR_CELL.mothOpen : T.VISITOR_CELL.mothClosed);
+        showCell(s.uv, !resting && Math.sin(elapsed * 28) > 0 ? T.VISITOR_CELL.mothOpen : T.VISITOR_CELL.mothClosed);
       } else if (s.v.id === "cat") {
         const awake = d < 2.4;
         if (awake !== this.catAwake) {
           this.catAwake = awake;
-          this.setCell(s, awake ? T.VISITOR_CELL.catAwake : T.VISITOR_CELL.catAsleep);
+          showCell(s.uv, awake ? T.VISITOR_CELL.catAwake : T.VISITOR_CELL.catAsleep);
         }
       } else if (s.v.id === "bird") {
         const bd = this.bird;
@@ -369,7 +373,7 @@ export class SceneVisitors {
           bd.dz = (s.z - z) * k;
           bd.t = reducedMotion ? 1 : 0;
           if (this.tapped?.id === "bird") this.tapped = null;
-          this.setCell(s, T.VISITOR_CELL.birdHop);
+          showCell(s.uv, T.VISITOR_CELL.birdHop);
         }
         if (bd.t >= 0 && bd.t < 1) {
           bd.t = Math.min(1, bd.t + dt / 0.7);
@@ -383,7 +387,7 @@ export class SceneVisitors {
           bd.t = -1;
           s.pos.setXYZ(0, s.x, s.y, s.z);
           s.pos.needsUpdate = true;
-          this.setCell(s, T.VISITOR_CELL.bird);
+          showCell(s.uv, T.VISITOR_CELL.bird);
           s.mesh.visible = true;
         }
       }
