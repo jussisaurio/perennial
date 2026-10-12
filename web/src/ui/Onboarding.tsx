@@ -124,9 +124,23 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
 
   return (
     <div className="page narrow stagger landing">
-      <span className="wordmark">
-        <SproutMark size={26} /> perennial
-      </span>
+      <header className="landing-top">
+        <span className="wordmark">
+          <SproutMark size={26} /> perennial
+        </span>
+        {!signedIn && (
+          <button className="secondary small" onClick={() => setLinking(!linking)} aria-expanded={linking}>
+            Sign in
+          </button>
+        )}
+      </header>
+      {!signedIn && linking && (
+        <section className="panel landing-signin">
+          <h2 style={{ marginTop: 0 }}>Sign in</h2>
+          <p className="muted small">Sign in with your email. Your garden appears here after a moment.</p>
+          <SignIn cta="Sign in" />
+        </section>
+      )}
       {goodbye && (
         <p className="farewell" role="status">
           {goodbye.line} {goodbye.wish && <em>{goodbye.wish}</em>}
@@ -182,20 +196,6 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       )}
       <p className="muted small">Free. No account needed to start. Add your email later to keep your garden on all your devices.</p>
 
-      {!signedIn && (
-        <>
-          <button className="ghost link" onClick={() => setLinking(!linking)} aria-expanded={linking}>
-            I already use Perennial →
-          </button>
-          {linking && (
-            <section className="panel">
-              <h2 style={{ marginTop: 0 }}>Sign in</h2>
-              <p className="muted small">Sign in with your email. Your garden appears here after a moment.</p>
-              <SignIn cta="Sign in" />
-            </section>
-          )}
-        </>
-      )}
     </div>
   );
 }

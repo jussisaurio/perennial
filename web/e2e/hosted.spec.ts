@@ -14,7 +14,7 @@ test("progress made before adding an email stays, and another device signs in to
 
   const two = await (await browser.newContext()).newPage();
   await two.goto("/");
-  await two.getByRole("button", { name: /I already use Perennial/ }).click();
+  await two.getByRole("button", { name: "Sign in", exact: true }).click();
   await signIn(two, address, "Sign in");
   await expect(two.getByText(/You are learning|You know/)).toBeVisible({ timeout: 15_000 });
 });

@@ -158,6 +158,8 @@ input[type="file"] { padding: 0.5rem; }
 /* ---------- app shell ---------- */
 .app { max-width: 52rem; margin: 0 auto; padding: 0 16px 6rem; }
 nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75rem; }
+.landing-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.landing-signin { margin-top: 1.25rem; }
 .wordmark { display: inline-flex; align-items: center; gap: 0.35rem; font: 1.55rem/1 var(--display); letter-spacing: -0.02em; }
 .tabs { display: flex; gap: 0.15rem; margin-left: auto; background: var(--paper-2); padding: 0.25rem; border-radius: 999px; }
 .tab { padding: 0.45rem 0.95rem; color: var(--muted); font-weight: 500; font-size: 0.92rem; }
