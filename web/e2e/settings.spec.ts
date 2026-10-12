@@ -33,6 +33,17 @@ test("anonymous learners are invited to add an email; after that the account car
   await expect(page.getByText(/AI words left this month/)).toBeVisible();
 });
 
+test("a change of user does not clean up data under live queries (#112)", async ({ page }) => {
+  // TanStack DB error 152: a source collection cleaned up while a live query reads it. Sentry gets every one.
+  const cleanedUnder: string[] = [];
+  page.on("console", (m) => /manually cleaned up|error 152/.test(m.text()) && cleanedUnder.push(m.text()));
+  await startCourse(page);
+  await addEmail(page);
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page.getByRole("button", { name: /Start learning/ })).toBeVisible();
+  expect(cleanedUnder).toEqual([]);
+});
+
 test("deleting the account removes it, signs out, and says goodbye", async ({ page }) => {
   await startCourse(page);
   await addEmail(page);
