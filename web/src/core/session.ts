@@ -10,14 +10,11 @@ export type Task =
   | { kind: "intro"; wordId: string }
   | { kind: "review"; wordId: string; skill: Skill; isNew?: boolean; retry?: boolean };
 
-interface Costs {
-  intro: number; // ms for intro + its follow-up test
-  read: number;
-  listen: number;
-  write: number;
-}
+/** Time per task, ms. `intro` covers the intro and its follow-up test. */
+const COSTS: Record<"intro" | Skill, number> = { intro: 25_000, read: 8_000, listen: 10_000, write: 14_000 };
 
-const DEFAULT_COSTS: Costs = { intro: 25_000, read: 8_000, listen: 10_000, write: 14_000 };
+/** First practice of a newly unlocked skill (listening, writing), per session. */
+const MAX_NEW_SKILLS = 4;
 
 export interface PlanInput {
   now: number;
@@ -26,20 +23,16 @@ export interface PlanInput {
   /** Not-yet-introduced words, best first. */
   fresh: string[];
   fsrs: FSRS;
-  costs?: Costs;
   /** New words per day (not per session, so "practise more" can't stack them). */
   maxNewPerDay?: number;
   /** New words already introduced today. */
   newToday?: number;
-  /** First practice of a newly unlocked skill (listening, writing), per session. */
-  maxNewSkills?: number;
   /** Review items due up to this far ahead, since the next session may be a day away. */
   lookaheadMs?: number;
 }
 
 export interface Plan {
   queue: Task[];
-  dueCount: number; // for the planner's own accounting; not shown as a to-do number
   newCount: number;
   /** True when the daily new-word limit (not the timer) is what keeps the session short. */
   newLimitReached: boolean;
@@ -49,9 +42,7 @@ export const MAX_NEW_PER_DAY = 15;
 
 export function plan(input: PlanInput): Plan {
   const { now, budgetMs, memories, fresh, fsrs } = input;
-  const costs = input.costs ?? DEFAULT_COSTS;
   const newLeftToday = Math.max(0, (input.maxNewPerDay ?? MAX_NEW_PER_DAY) - (input.newToday ?? 0));
-  const maxNewSkills = input.maxNewSkills ?? 4;
   const horizon = now + (input.lookaheadMs ?? 6 * 3_600_000);
 
   // One skill per word per session: practising "listen" right after "read" for
@@ -74,23 +65,23 @@ export function plan(input: PlanInput): Plan {
   // is saved cheaply today; one at R=0.3 is mostly gone and costs the same
   // to relearn tomorrow. This is what makes a week-long break painless.
   const due = [...byWord.values()].sort((a, b) => b.r - a.r);
-  const dueCost = due.reduce((sum, { m }) => sum + costs[m.skill], 0);
+  const dueCost = due.reduce((sum, { m }) => sum + COSTS[m.skill], 0);
 
   // New words fill the time left over. Keep a trickle (1–2) coming even during
   // a backlog so sessions never become pure catch-up, unless the backlog is
   // truly large.
   const free = budgetMs - dueCost;
-  let byTime = Math.floor(Math.max(0, free) / costs.intro);
+  let byTime = Math.floor(Math.max(0, free) / COSTS.intro);
   if (byTime === 0 && dueCost < 3 * budgetMs) byTime = dueCost < 1.5 * budgetMs ? 2 : 1;
   const newCount = Math.min(byTime, newLeftToday, fresh.length);
   const newLimitReached = byTime > newCount && newCount === newLeftToday && fresh.length > newCount;
 
   // Newly unlocked skills: a small trickle with the leftover time, for words
   // that have no real review in this session.
-  const spare = free - newCount * costs.intro;
+  const spare = free - newCount * COSTS.intro;
   const newSkills = [...unlocked.values()]
     .filter((m) => !byWord.has(m.wordId))
-    .slice(0, Math.max(0, Math.min(maxNewSkills, Math.floor(spare / costs.write))));
+    .slice(0, Math.max(0, Math.min(MAX_NEW_SKILLS, Math.floor(spare / COSTS.write))));
 
   const reviews: Task[] = due.map(({ m }) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
   const intros: Task[] = fresh.slice(0, newCount).map((wordId) => ({ kind: "intro", wordId }));
@@ -108,7 +99,7 @@ export function plan(input: PlanInput): Plan {
   while (ri < reviews.length) queue.push(reviews[ri++]);
   queue.push(...skills);
 
-  return { queue, dueCount: due.length, newCount, newLimitReached };
+  return { queue, newCount, newLimitReached };
 }
 
 export interface Outcome {
@@ -120,11 +111,6 @@ const FOLLOW_UP_GAP = 3;
 const RETRY_GAP = 4;
 const MAX_RETRIES = 2;
 
-/**
- * Runs a planned queue against the clock. When time is up, only follow-ups
- * that were promised (tests of just-introduced words, retries of forgotten
- * ones) are still served.
- */
 interface Snapshot {
   queue: Task[];
   followUps: { task: Task; at: number }[];
@@ -132,6 +118,11 @@ interface Snapshot {
   served: number;
 }
 
+/**
+ * Runs a planned queue against the clock. When time is up, only follow-ups
+ * that were promised (tests of just-introduced words, retries of forgotten
+ * ones) are still served.
+ */
 export class Session {
   private queue: Task[];
   private followUps: { task: Task; at: number }[] = [];
@@ -218,9 +209,5 @@ export class Session {
    */
   skip(): void {
     this.history.pop();
-  }
-
-  get remaining(): number {
-    return this.queue.length + this.followUps.length;
   }
 }

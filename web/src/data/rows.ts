@@ -2,7 +2,6 @@
 // ISO strings; numbers and JSON are parsed by Electric.
 
 export type Skill = "read" | "listen" | "write";
-export const SKILLS: Skill[] = ["read", "listen", "write"];
 
 /** A new course's settings until the learner changes them (the server and the course table use the same). */
 export const COURSE_DEFAULTS = { minutes: 7, retention: 0.9 } as const;

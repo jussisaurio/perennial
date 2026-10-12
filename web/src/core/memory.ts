@@ -9,9 +9,9 @@ import { fsrs } from "./scheduler";
 import type { ReviewRow, Skill } from "../data/rows";
 
 /** Harder skills unlock once reading is established (read stability in days). */
-export const UNLOCK: Record<Exclude<Skill, "read">, number> = { listen: 4, write: 10 };
+const UNLOCK: Record<Exclude<Skill, "read">, number> = { listen: 4, write: 10 };
 /** A word counts as known once its reading memory is stable for a week, recalled at least twice. */
-export const KNOWN_STABILITY = 7;
+const KNOWN_STABILITY = 7;
 
 /** Derived from reviews; never stored or synced. `reps === 0` means unlocked but not yet practised. */
 export interface MemoryRow {
