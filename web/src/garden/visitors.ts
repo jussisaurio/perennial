@@ -252,8 +252,8 @@ const CROAK: PerLang<string> = { es: "croac", de: "quak" };
  * most taps, in the same order all day.
  */
 export function frogCroak(known: readonly string[], lang: string, tap: number, now: Date = new Date()): string {
-  // inLang is null only for a language with no deck, which never reaches the walk (useCourses
-  // keeps teachable courses): the fallbacks only keep the types simple.
+  // lang is a deck language here (synced courses pass `teachable`, the landing page's draft
+  // passes isDeckLang), so inLang is never null: the fallbacks only keep the types simple.
   const sound = inLang(CROAK, lang) ?? "croak";
   const own = bareNoun(inLang(visitor("frog").words, lang) ?? "").toLowerCase();
   const pool = known.filter((w) => w.toLowerCase() !== own);

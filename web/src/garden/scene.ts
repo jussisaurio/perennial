@@ -76,7 +76,7 @@ const SUN_DIST = 200;
 const HILLS = { radius: 150, height: 34, y: 10, repeat: 4 };
 const UP = new THREE.Vector3(0, 1, 0);
 
-/** A plant sprite's drawn height in metres. 14 + 120 × growth is the plant's height in SVG units (ui/plant.tsx). */
+/** A plant sprite's drawn height in metres, from its height in SVG units (stemHeight, ui/plant.tsx). */
 function plantHeight(growth: number): number {
   return (stemHeight(growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
 }
@@ -1394,7 +1394,7 @@ export function webglAvailable(): boolean {
     const c = document.createElement("canvas");
     return !!c.getContext("webgl2");
   } catch {
-    // Some browsers throw here (WebGL turned off by policy) instead of returning null: same answer.
+    // getContext can throw instead of returning null in some browsers: either way, no WebGL.
     return false;
   }
 }
