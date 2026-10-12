@@ -95,14 +95,15 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   const { error } = useStartingCourse();
   const [walking, setWalking] = useState(false);
   useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
-  const deck = useDeck(lang);
+  // A deck that fails to load only leaves the showcase without its garden: starting needs no deck.
+  const { deck } = useDeck(lang);
   const fresh = useMemo(() => (deck ? showcaseGarden(deck) : null), [deck]);
   // While another language's deck loads, keep showing the last garden: no gap, no jump.
   const [lastShown, setLastShown] = useState(fresh);
   if (fresh && fresh !== lastShown) setLastShown(fresh);
   const showcase = fresh ?? lastShown;
   // Load every course's deck early, so switching language is instant. A failed
-  // early load is not an error: useDeck loads the deck again when it is chosen.
+  // early load is logged (loadDeck); useDeck loads the deck again when it is chosen.
   useEffect(() => {
     for (const l of COURSE_LANGUAGES) void loadDeck(l.code).catch(() => {});
   }, []);
