@@ -5,6 +5,7 @@
 import { createApp } from "./src/app";
 import { configProblems, loadConfig } from "./src/config";
 import { log } from "./src/log";
+import { watchEventLoop } from "./src/watchdog";
 
 const config = loadConfig();
 const problems = configProblems(config);
@@ -14,6 +15,8 @@ if (problems.length) {
 }
 const sql = new Bun.SQL(config.databaseUrl, { max: 10, idleTimeout: 30 });
 const app = createApp(config, sql);
+
+watchEventLoop();
 
 const server = Bun.serve({
   port: config.port,

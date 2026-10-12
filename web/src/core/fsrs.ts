@@ -4,6 +4,9 @@
 // Perennial only uses grades 1 (forgot) and 3 (got it) from the UI, plus 4 for
 // "I already know this word". Grade 2 is supported for completeness.
 
+import { hash32 } from "../lib/seed";
+import { DAY_MS } from "./day";
+
 export type Grade = 1 | 2 | 3 | 4;
 
 export const DEFAULT_W: readonly number[] = [
@@ -13,7 +16,6 @@ export const DEFAULT_W: readonly number[] = [
 
 const S_MIN = 0.001;
 const S_MAX = 36500;
-const DAY_MS = 86_400_000;
 
 export interface Memory {
   s: number; // stability, days: time for R to drop from 1 to 0.9
@@ -100,21 +102,19 @@ export interface Scheduled extends Memory {
   lapses: number;
 }
 
-/** Small deterministic hash so fuzz is identical on every device replaying the log. */
-function hash01(str: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 100000) / 100000;
+/**
+ * Deterministic so fuzz is identical on every device replaying the log. Keep
+ * the `% 100000` form: changing it would move every learner's due dates.
+ */
+function fuzz01(str: string): number {
+  return (hash32(str) % 100000) / 100000;
 }
 
 /** Spread reviews out a bit so words learned together don't stay clumped. */
 export function fuzz(days: number, seed: string): number {
   if (days < 2.5) return days;
   const pct = days < 7 ? 0.15 : days < 20 ? 0.1 : 0.05;
-  return days * (1 + (hash01(seed) * 2 - 1) * pct);
+  return days * (1 + (fuzz01(seed) * 2 - 1) * pct);
 }
 
 /**
@@ -141,5 +141,3 @@ export function replay(
   const days = fuzz(fsrs.interval(m.s, retention), `${seed}:${sorted.length}`);
   return { ...m, lastTs: last.ts, due: last.ts + days * DAY_MS, reps: sorted.length, lapses };
 }
-
-export { DAY_MS };

@@ -10,19 +10,19 @@ import { language } from "../content/languages";
 import type { LoadedDeck } from "../data/deck";
 import { useLearner } from "../data/learner";
 import { track } from "../observability";
-import { groupOf, layout, type Layout, type PlacedPlant } from "../garden/world";
+import { groupOf, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
-import type { Detail, GardenScene, Label, TimeOfDay, WalkVisitors } from "../garden/scene";
-import { EMPTY_WALK, loadingLine, plantLine, reservedStake, SLOW_DEVICE_NOTICE } from "../content/voice";
-import { keepsakeLabel, sleeperId, snoreLine } from "../garden/whimsy";
+import type { Detail, TimeOfDay } from "../garden/scene";
+import { EMPTY_WALK, loadingLine, plantLine, SLOW_DEVICE_NOTICE } from "../content/voice";
+import { snoreLine } from "../garden/whimsy";
 import { takeFocus } from "./gardenFocus";
 import { WordPlant } from "./plant";
 import { speak } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { plural } from "./format";
+import { useGardenScene, useWalkInput } from "./useGardenScene";
 import { learnerVisitors, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
-import { sceneryViews } from "../garden/scenery";
 
 export type WalkSource = PlantSource;
 
@@ -90,14 +90,8 @@ export function GardenWalk({
   onWater?: () => void;
   focus?: string | null;
 }) {
-  const [data, setData] = useState<{ l: Layout; seeds: number; visitors: WalkVisitors } | null>(null);
-  const [progress, setProgress] = useState<[number, number] | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
-  const [selected, setSelected] = useState<PlantView | null>(null);
-  const [labels, setLabels] = useState<Label[]>([]);
   const [time, setTime] = useState<TimeOfDay>(initialTime);
   const [hint, setHint] = useState(true);
-  const [ready, setReady] = useState(false);
   const [detail, setDetail] = useState<Detail>(() => savedDetail() ?? "normal");
   const [notice, setNotice] = useState("");
   const [sound] = useSound();
@@ -112,85 +106,9 @@ export function GardenWalk({
   };
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
-  const scene = useRef<GardenScene | null>(null);
   const tag = language(lang).tag;
-
-  // A snapshot of the garden when it opens: it does not change while you walk.
-  useEffect(() => {
-    if (!source || data) return;
-    const l = layout(source.plants);
-    const first = source.first && l.plants.some((p) => p.id === source.first!.id) ? { id: source.first.id, text: keepsakeLabel(source.first.lemma, source.first.at) } : null;
-    setData({
-      l,
-      seeds: source.seeds,
-      visitors: {
-        list: visitors?.views ?? [],
-        keepsake: first,
-        reserved: l.plants.length ? null : reservedStake(language(lang).name, lang).line,
-        sleeper: sleeperId(l.plants.filter((p) => p.stage === "bloom").map((p) => p.id)),
-        scenery: visitors?.scenery ?? sceneryViews(lang),
-      },
-    });
-  }, [source, data, visitors, lang]);
-
-  useEffect(() => {
-    if (!data || !canvas.current || !wrap.current) return;
-    let alive = true;
-    let s: GardenScene | null = null;
-    const el = wrap.current;
-    const ro = new ResizeObserver(([e]) => s?.resize(e.contentRect.width, e.contentRect.height));
-    void (async () => {
-      const mod = await import("../garden/scene");
-      if (!alive) return;
-      if (!mod.webglAvailable()) return setFailed("Your browser cannot show 3D graphics.");
-      try {
-        const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-        s = new mod.GardenScene(canvas.current!, data.l, { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]) }, reduced, lang, data.visitors);
-      } catch (e) {
-        return setFailed(e instanceof Error ? e.message : String(e));
-      }
-      scene.current = s;
-      // Dev builds only: the scene, for screenshot scripts.
-      if (import.meta.env.DEV) (window as unknown as { __garden: unknown }).__garden = s;
-      // The current choices, not the ones from when loading began: the scene
-      // module loads asynchronously, and the viewer may have changed them since.
-      s.setTime(timeNow.current);
-      s.setDetail(detailNow.current);
-      const r = el.getBoundingClientRect();
-      s.resize(r.width, r.height);
-      ro.observe(el);
-      s.start();
-      setReady(true);
-      // Opened from "View in garden": walk to that plant and show its card.
-      const target = focus ? data.l.plants.find((p) => p.id === focus) : undefined;
-      if (target) {
-        s.select(target, true);
-        setHint(false);
-      }
-      await s.loadPlants();
-      if (alive) setProgress(null);
-    })();
-    return () => {
-      alive = false;
-      ro.disconnect();
-      s?.dispose();
-      scene.current = null;
-      setReady(false);
-    };
-    // The scene is built once per snapshot; time changes go through setTime below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
-
-  const timeNow = useRef(time);
-  const detailNow = useRef(detail);
-  useEffect(() => {
-    timeNow.current = time;
-    scene.current?.setTime(time);
-  }, [time]);
-  useEffect(() => {
-    detailNow.current = detail;
-    scene.current?.setDetail(detail);
-  }, [detail]);
+  const { data, scene, ready, failed, progress, labels, selected } = useGardenScene({ lang, source, visitors, focus, time, detail, wrap, canvas, onFocused: () => setHint(false) });
+  const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => setHint(false) });
 
   // If the viewer never chose a quality and the garden runs slowly, switch to low quality once.
   useEffect(() => {
@@ -216,111 +134,16 @@ export function GardenWalk({
     return () => clearTimeout(t);
   }, [notice]);
 
-  // Trackpad: two-finger swipe looks around, pinch walks forward and back.
-  useEffect(() => {
-    const el = wrap.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      if ((e.target as HTMLElement).closest(".gw-card, .gw-top, .gw-bottom")) return;
-      e.preventDefault();
-      const s = scene.current;
-      if (!s) return;
-      const k = e.deltaMode === 1 ? 16 : 1; // lines to pixels
-      if (e.ctrlKey) s.step(-e.deltaY * k * 0.02);
-      else s.look(-e.deltaX * k, -e.deltaY * k);
-      setHint(false);
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, []);
-
   useEffect(() => {
     if (!hint) return;
     const t = setTimeout(() => setHint(false), 9000);
     return () => clearTimeout(t);
   }, [hint]);
 
-  // Keyboard: W A S D or arrows walk (left and right arrows turn), Shift runs.
-  useEffect(() => {
-    const keys = new Set<string>();
-    let turning = 0;
-    const update = () => {
-      const s = scene.current;
-      if (!s) return;
-      const k = (c: string) => keys.has(c);
-      s.input.move.y = (k("KeyW") || k("ArrowUp") ? 1 : 0) - (k("KeyS") || k("ArrowDown") ? 1 : 0);
-      s.input.move.x = (k("KeyD") ? 1 : 0) - (k("KeyA") ? 1 : 0);
-      s.input.run = k("ShiftLeft") || k("ShiftRight");
-      const turn = (k("ArrowLeft") || k("KeyQ") ? 1 : 0) - (k("ArrowRight") || k("KeyE") ? 1 : 0);
-      cancelAnimationFrame(turning);
-      if (turn) {
-        const step = () => {
-          scene.current?.turn(turn * 0.035);
-          turning = requestAnimationFrame(step);
-        };
-        step();
-      }
-    };
-    const WALK_KEYS = ["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "ShiftLeft", "ShiftRight"];
-    const down = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.code === "Escape") {
-        if (scene.current && selectedRef.current) scene.current.select(null);
-        else onExit();
-        return;
-      }
-      if (!WALK_KEYS.includes(e.code)) return;
-      e.preventDefault();
-      keys.add(e.code);
-      setHint(false);
-      update();
-    };
-    const up = (e: KeyboardEvent) => {
-      keys.delete(e.code);
-      update();
-    };
-    const blur = () => {
-      keys.clear();
-      update();
-    };
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-    window.addEventListener("blur", blur);
-    return () => {
-      cancelAnimationFrame(turning);
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-      window.removeEventListener("blur", blur);
-    };
-  }, [onExit]);
-
-  const selectedRef = useRef<PlantView | null>(null);
-  selectedRef.current = selected;
-
-  // Drag to look; a click or tap without dragging picks a plant.
-  const drag = useRef<{ x: number; y: number; moved: number; id: number } | null>(null);
   const croaks = useRef(0);
-  const onPointerDown = (e: React.PointerEvent) => {
-    drag.current = { x: e.clientX, y: e.clientY, moved: 0, id: e.pointerId };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    const d = drag.current;
-    if (!d || d.id !== e.pointerId) return;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    d.moved += Math.abs(dx) + Math.abs(dy);
-    d.x = e.clientX;
-    d.y = e.clientY;
-    if (d.moved > 4) {
-      scene.current?.look(dx, dy);
-      setHint(false);
-    }
-  };
+  // A click or tap (not a drag) picks a visitor, a plant or the garden itself.
   const onPointerUp = (e: React.PointerEvent) => {
-    const d = drag.current;
-    drag.current = null;
-    if (!d || d.moved > 6 || !scene.current || !wrap.current) return;
+    if (!endDrag() || !scene.current || !wrap.current) return;
     const r = wrap.current.getBoundingClientRect();
     // A visitor first: its tag shows for a moment and, with sound on, it says its word. No card.
     const v = scene.current.pickVisitor(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
@@ -385,7 +208,7 @@ export function GardenWalk({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerCancel={() => (drag.current = null)}
+        onPointerCancel={onPointerCancel}
       />
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
@@ -522,7 +345,7 @@ export function GardenWalk({
         )}
       </div>
 
-      <Joystick onMove={(x, y) => scene.current && ((scene.current.input.move.x = x), (scene.current.input.move.y = y), setHint(false))} />
+      <Joystick onMove={stick} />
     </div>
   );
 }

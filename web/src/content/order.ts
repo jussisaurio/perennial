@@ -4,15 +4,18 @@
 // so, der) but things you can picture and actions: a fixed pattern of parts of
 // speech, each kind still in frequency order.
 
+import { toPos, type Pos } from "../deck/schema";
+
 export type WordKind = "noun" | "verb" | "other" | "function";
 
 /** Grammar rather than things, actions or qualities. */
-export const FUNCTION_POS = new Set(["prep", "conj", "det", "pron", "particle", "interj"]);
+export const FUNCTION_POS: ReadonlySet<Pos> = new Set<Pos>(["prep", "conj", "det", "pron", "particle", "interj"]);
 
 export function kindOf(pos: string | null | undefined): WordKind {
-  if (pos === "noun") return "noun";
-  if (pos === "verb") return "verb";
-  if (pos && FUNCTION_POS.has(pos)) return "function";
+  const p = toPos(pos);
+  if (p === "noun") return "noun";
+  if (p === "verb") return "verb";
+  if (p && FUNCTION_POS.has(p)) return "function";
   return "other"; // adjectives, adverbs, numbers, phrases
 }
 

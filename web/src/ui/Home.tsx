@@ -8,12 +8,15 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
+import { canPractise, KEEP_GOING_NOTE } from "../data/practice";
+import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
-import { learnerVisitors, snailAlong } from "./visitors";
-import { today } from "./whimsy";
+import { learnerVisitors } from "./visitors";
+import { snailLap } from "../garden/visitors";
+import { today } from "../core/day";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -23,7 +26,7 @@ function greeting(): string {
 // The entrance animation plays once per visit, not on every tab switch.
 let animated = false;
 
-export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onAddWords: () => void; onWalk: () => void }) {
+export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number, extra?: boolean) => void; onWalk: () => void }) {
   const view = (id: string) => {
     focusPlant(id);
     onWalk();
@@ -39,16 +42,21 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const day = today(new Date(now));
   const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
+  // The same planner the session uses: is there anything to practise right now?
+  const available = useMemo(() => (learner ? canPractise(learner, mayListen(language(code).tag), now) : false), [learner, now, code]);
+  // Past the day's limits, practice is still allowed: "Keep going".
+  const more = useMemo(() => !available && !!learner && canPractise(learner, mayListen(language(code).tag), now, true), [available, learner, now, code]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
-  const snailAt = snailAlong();
+  const snailAt = snailLap();
   // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
   const aside = visitors?.milestone ?? visitors?.welcome ?? greetingAside();
   if (!learner || !stats) return <Settling />;
   const course = learner.course;
   const ready = stats.seeds;
   const started = stats.known + stats.learning;
-  const canStart = ready > 0 || started > 0;
+  // Nothing due and today's new words are in (or the course is learned): no session to offer.
+  const canStart = available;
   const doneToday = stats.minutesToday >= course.minutes;
   // Picked up partway through the day: offer the rest, not the full session again.
   const left = Math.max(0, Math.round(course.minutes - stats.minutesToday));
@@ -89,12 +97,14 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <span className="clock" aria-hidden="true">
             <SeedIcon size={20} />
           </span>
-          {doneToday ? "Practice more" : partial ? "Finish today's session" : "Start today's session"}
-          <small>{sessionMinutes} min</small>
+          {!canStart ? "All done for today" : doneToday ? "Practice more" : partial ? "Finish today's session" : "Start today's session"}
+          {canStart && <small>{sessionMinutes} min</small>}
         </button>
         <p className="start-note">
           {!canStart
-            ? "You have learned every word in the course. Add words from your own texts to keep growing."
+            ? ready === 0
+              ? "You have learned every word in the course. Add words from your own texts to keep growing."
+              : "Every word that needs practice has had it, and today's new words are planted."
             : started === 0
               ? `${ready} words are ready, most common first. Each word has example sentences and audio.`
               : doneToday
@@ -103,6 +113,14 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
                   ? ""
                   : startNote()}
         </p>
+        {more && (
+          <div className="keep-going">
+            <button className="secondary" onClick={() => onStart(5, true)}>
+              Keep going
+            </button>
+            <p className="muted small">{KEEP_GOING_NOTE}</p>
+          </div>
+        )}
       </div>
 
       {started > 0 && (

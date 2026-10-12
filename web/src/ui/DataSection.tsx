@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useFeatures } from "../data/server";
 import { deleteAccount, useUser } from "../data/auth";
-import { useLearner, wordState, type Learner } from "../data/learner";
+import { readMemory, wordState } from "../core/memory";
+import { useLearner, type Learner } from "../data/learner";
 import { language } from "../content/languages";
 
 function download(name: string, type: string, body: string) {
@@ -31,7 +32,7 @@ function exportCSV(l: Learner) {
   const rows = [["language", "word", "meaning", "part of speech", "notes", "reviews", "state", "status"]];
   for (const w of l.studied) {
     if (w.status === "ignored") continue;
-    rows.push([language(l.lang).name, w.lemma, w.gloss, w.pos ?? "", w.notes ?? "", String(l.reviewsByWord.get(w.id)?.length ?? 0), wordState(l.memory.get(`${w.id}:read`)), w.status]);
+    rows.push([language(l.lang).name, w.lemma, w.gloss, w.pos ?? "", w.notes ?? "", String(l.reviewsByWord.get(w.id)?.length ?? 0), wordState(readMemory(l, w.id)), w.status]);
   }
   download(`perennial-words-${l.lang}-${stamp()}.csv`, "text/csv", rows.map((r) => r.map(csvCell).join(",")).join("\n"));
 }

@@ -3,6 +3,7 @@
 //   ?demo=de:120    a German learner with 120 words studied
 //   ?demo=off       delete the demo learner
 
+import { DECK_LANGS, type DeckLang } from "../deck/schema";
 import { removeDemo, seedDemo } from "./demo";
 
 export async function devBoot(): Promise<void> {
@@ -14,12 +15,12 @@ export async function devBoot(): Promise<void> {
   history.replaceState(null, "", location.pathname + (rest ? `?${rest}` : "") + (location.hash || "#/today"));
   if (demo === "off") return removeDemo();
   const [lang, n] = demo.split(":");
-  if (lang !== "es" && lang !== "de") return console.warn(`[demo] unknown language "${lang}": use es or de`);
+  if (!DECK_LANGS.includes(lang as DeckLang)) return console.warn(`[demo] unknown language "${lang}": use ${DECK_LANGS.join(" or ")}`);
   try {
     localStorage.setItem("perennial-course", lang);
   } catch {
     /* private mode */
   }
-  await seedDemo(lang, n ? Number(n) : Infinity);
+  await seedDemo(lang as DeckLang, n ? Number(n) : Infinity);
   console.info(`[demo] seeded ${lang}`);
 }

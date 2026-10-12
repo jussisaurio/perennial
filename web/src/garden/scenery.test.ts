@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { DECK_LANGS } from "../deck/schema";
 import { VISITORS, STRIP_VISITORS } from "./visitors";
 import {
   boardBox,
@@ -38,7 +39,7 @@ describe("scenery words", () => {
 
   test("no duplicates, and no word a visitor already has", () => {
     const visitorWords = [...VISITORS.map((v) => v.words), ...Object.values(STRIP_VISITORS).map((v) => v.words)];
-    for (const lang of ["es", "de"]) {
+    for (const lang of DECK_LANGS) {
       const words = ids.map((id) => SCENERY[id].words[lang]);
       expect(new Set(words).size).toBe(words.length);
       for (const w of visitorWords) expect(words).not.toContain(w[lang]);

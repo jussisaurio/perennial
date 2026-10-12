@@ -1,8 +1,6 @@
-import { DAY_MS } from "../core/fsrs";
+import { DAY_MS, startOfDay } from "../core/day";
+import { readMemory, wordState } from "../core/memory";
 import type { Learner } from "../data/learner";
-
-export { KNOWN_STABILITY, recall, wordState, type WordState } from "../data/learner";
-import { wordState } from "../data/learner";
 
 export interface CourseStats {
   known: number;
@@ -18,11 +16,11 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
   let known = 0;
   let learning = 0;
   for (const w of l.words.values()) {
-    const st = wordState(l.memory.get(`${w.id}:read`));
+    const st = wordState(readMemory(l, w.id));
     if (st === "known") known++;
     else if (st === "learning") learning++;
   }
-  const startOfToday = new Date(now).setHours(0, 0, 0, 0);
+  const startOfToday = startOfDay(now);
   const reviews = l.reviews.map((r) => ({ ...r, ts: Date.parse(r.reviewed_at) })).sort((a, b) => a.ts - b.ts);
   const recent = reviews.filter((r) => r.ts > now - 30 * DAY_MS);
   // Retention = pass rate on reviews of items that had already been seen on an earlier day.

@@ -57,10 +57,37 @@ export async function advance(page: Page, key: string) {
   await expect(root).not.toHaveAttribute("data-card", before!);
 }
 
+/** Reveal the answer and wait until the double-click guard lets a grade through. */
+export async function reveal(page: Page) {
+  await page.keyboard.press("Space");
+  await expect(page.getByRole("button", { name: /I remembered|Understood/ })).toBeVisible();
+  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
+}
+
 /** Reveal the answer and grade it (waiting past the double-click guard). */
 export async function grade(page: Page, key: "1" | "2") {
-  await page.keyboard.press("Space");
-  await page.getByRole("button", { name: /I remembered/ }).waitFor();
-  await page.waitForTimeout(450);
+  await reveal(page);
   await advance(page, key);
+}
+
+/**
+ * Wait until the garden strip stops growing (the demo learner's words sync in
+ * over a moment) and is wider than `min` pixels. Returns the strip's width.
+ */
+export async function settledGardenWidth(page: Page, min = 2000) {
+  const strip = page.locator(".garden-scroll");
+  const width = () => strip.evaluate((el) => el.scrollWidth);
+  let last = -1;
+  await expect
+    .poll(
+      async () => {
+        const w = await width();
+        const settled = w === last && w > min;
+        last = w;
+        return settled;
+      },
+      { timeout: 30_000, intervals: [500] },
+    )
+    .toBe(true);
+  return last;
 }

@@ -139,6 +139,20 @@ export function wholeWordCount(text: string, cloze: string): number {
   return [...text.matchAll(new RegExp(`(?<![\\p{L}\\p{M}])${escape(cloze)}(?![\\p{L}\\p{M}])`, "gu"))].length;
 }
 
+/** Words a sentence may have before the proofreader is asked to look at its length. */
+export const MAX_SENTENCE_WORDS = 12;
+
+/** Automatic hints on one sentence for the proofreader: too long, the cloze not exactly once, the cloze not a listed form. */
+export function sentenceFlags(s: { text: string; cloze: string }, forms: readonly string[]): string[] {
+  const flags: string[] = [];
+  const n = s.text.split(/\s+/).filter(Boolean).length;
+  if (n > MAX_SENTENCE_WORDS) flags.push(`${n} words`);
+  const c = wholeWordCount(s.text, s.cloze);
+  if (c !== 1) flags.push(c === 0 ? "cloze not found as a whole word" : `cloze appears ${c}×`);
+  if (!forms.some((f) => f.toLowerCase() === s.cloze.toLowerCase())) flags.push(`cloze "${s.cloze}" not in forms`);
+  return flags;
+}
+
 export const toJson = (v: unknown) => JSON.stringify(v, null, 2) + "\n";
 
 // ---- Files ------------------------------------------------------------------

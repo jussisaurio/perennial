@@ -2,21 +2,16 @@
 // 90-day review history over the deck, so the garden, progress and sessions
 // can be tried without weeks of practice. Uploaded through the normal write API.
 
-import { DAY_MS, replay, type Grade } from "../core/fsrs";
+import { DAY_MS } from "../core/day";
+import { replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
 import { ensureUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
 import { ApiError, postWrite } from "../data/http";
-
-function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(a ^ (a >>> 15), a | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+import { memKey } from "../core/memory";
+import { COURSE_DEFAULTS } from "../data/rows";
+import type { DeckLang } from "../deck/schema";
+import { rng } from "../lib/seed";
 
 async function post(mutations: unknown[]) {
   await postWrite(mutations).catch((e: unknown) => {
@@ -25,7 +20,7 @@ async function post(mutations: unknown[]) {
 }
 
 /** A fresh anonymous learner with `count` words studied over `days` days. */
-export async function seedDemo(lang: "es" | "de", count: number, days = 90): Promise<void> {
+export async function seedDemo(lang: DeckLang, count: number, days = 90): Promise<void> {
   await signOut();
   await ensureUser();
   const deck = await loadDeck(lang);
@@ -48,7 +43,7 @@ export async function seedDemo(lang: "es" | "de", count: number, days = 90): Pro
       const grade: Grade = x < 0.06 ? 1 : x < 0.16 ? 2 : x < 0.92 ? 3 : 4;
       log.push({ ts: Math.round(ts), grade });
       mutations.push({ type: "review.insert", row: { id: crypto.randomUUID(), lang, word_id: w.id, skill: "read", grade, kind: "review", reviewed_at: new Date(ts).toISOString(), duration_ms: 2500 + Math.round(r() * 5000) } });
-      const st = replay(fsrs, log, 0.9, `${w.id}:read`)!;
+      const st = replay(fsrs, log, COURSE_DEFAULTS.retention, memKey(w.id, "read"))!;
       ts = st.due + (st.due - ts) * r() * 0.3;
     }
   });

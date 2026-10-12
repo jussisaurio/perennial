@@ -1,13 +1,9 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import { isStrong, plantStage, wordState, type MemoryRow } from "../core/memory";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
-import type { MemoryRow } from "../model";
-
-// The learner model's deck loader needs Vite (import.meta.glob); these tests never load a deck.
-mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")), deckLangs: () => [] }));
-const { plantStage, isStrong, wordState } = await import("../data/learner");
-const { plantMood, plantsFromLearner, showcasePlants, stageLabel, stageSentence, leanDeg, THIRSTY } = await import("./plants");
-const { droopFor } = await import("./world");
+import { leanDeg, plantMood, plantsFromLearner, showcasePlants, stageLabel, stageSentence, THIRSTY } from "./plants";
+import { droopFor } from "./world";
 
 describe("one definition of a word's stage", () => {
   test("a plant blooms exactly when its word is known", () => {
@@ -65,7 +61,7 @@ describe("garden plants", () => {
 
   test("the learner's plants use the shared stage, dots and order", () => {
     const now = Date.now();
-    const row = (id: string, skill: MemoryRow["skill"], s: number, reps: number): MemoryRow => ({ key: `${id}:${skill}`, courseId: "", lexemeId: id, skill, s, d: 5, lastTs: now, due: now, reps, lapses: 0 });
+    const row = (id: string, skill: MemoryRow["skill"], s: number, reps: number): MemoryRow => ({ key: `${id}:${skill}`, wordId: id, skill, s, d: 5, lastTs: now, due: now, reps, lapses: 0 });
     const memories = [row("w2", "read", 9, 1), row("w1", "read", 9, 2), row("w1", "listen", 8, 2), row("w1", "write", 8, 1), row("w0", "read", 0, 0)];
     const l = {
       words: new Map(words.map((w) => [w.id, { ...w, source: "deck", status: "active" }])),

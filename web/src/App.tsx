@@ -150,6 +150,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const { courses, ready } = useCourses();
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
+  const [sessionExtra, setSessionExtra] = useState(false);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
   const starting = useStartingCourse().lang;
   useEffect(() => {
@@ -176,7 +177,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const lang = course.lang;
 
   if (route === "/session")
-    return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} onExit={() => go("/today", { replace: true })} />;
+    return <SessionScreen lang={lang} minutes={sessionMinutes ?? course.minutes} extra={sessionExtra} onExit={() => go("/today", { replace: true })} />;
 
   if (route === "/garden")
     return (
@@ -185,6 +186,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
         onExit={() => (history.length > 1 ? history.back() : go("/today", { replace: true }))}
         onWater={() => {
           setSessionMinutes(null);
+          setSessionExtra(false);
           go("/session");
         }}
       />
@@ -211,11 +213,11 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
       {route === "/today" && (
         <Home
           lang={lang}
-          onStart={(m) => {
+          onStart={(m, extra = false) => {
             setSessionMinutes(m);
+            setSessionExtra(extra);
             go("/session");
           }}
-          onAddWords={() => go("/words/add")}
           onWalk={() => go("/garden")}
         />
       )}

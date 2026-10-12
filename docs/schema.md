@@ -1,4 +1,4 @@
-# Data model (draft for review)
+# Data model
 
 ## Principles
 

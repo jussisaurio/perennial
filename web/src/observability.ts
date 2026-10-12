@@ -16,8 +16,16 @@ export function initObservability() {
       dsn,
       release: (import.meta.env.VITE_RELEASE as string | undefined) ?? APP_VERSION,
       environment: import.meta.env.MODE,
-      integrations: [Sentry.browserTracingIntegration()],
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        // Replays only around errors, and blind: all text and inputs masked,
+        // media blocked, so no words, names or emails are ever recorded.
+        Sentry.replayIntegration({ maskAllText: true, maskAllInputs: true, blockAllMedia: true }),
+        Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
+      ],
       tracesSampleRate: 0.1,
+      replaysSessionSampleRate: 0,
+      replaysOnErrorSampleRate: 1,
       // Same-origin API only: never send trace headers to other services.
       tracePropagationTargets: [/^\//],
       // Long polls are cancelled by design; not errors.

@@ -1,15 +1,15 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { deriveMemory, wordState, type Learner, type Word } from "../data/learner";
+import { deriveMemory, readMemory, wordState, type MemoryRow } from "../core/memory";
+import type { Learner, Word } from "../data/learner";
+import { startOfDay } from "../core/day";
 import type { ReviewRow } from "../data/rows";
-import type { MemoryRow } from "../model";
 import {
   learnerFacts,
   milestoneLine,
   moleVisits,
   NO_FACTS,
-  snailLap,
   STRIP_VISITORS,
   VISITORS,
   visitorsFor,
@@ -53,7 +53,7 @@ export interface LearnerVisitors {
 export function knownAt(reviews: readonly ReviewRow[], t: number, retention: number, resolve: (id: string) => string, words: { has: (id: string) => boolean }): number {
   const before = reviews.filter((r) => r.skill === "read" && Date.parse(r.reviewed_at) < t);
   let n = 0;
-  for (const m of deriveMemory(before, retention, resolve)) if (m.skill === "read" && words.has(m.lexemeId) && wordState(m) === "known") n++;
+  for (const m of deriveMemory(before, retention, resolve)) if (m.skill === "read" && words.has(m.wordId) && wordState(m) === "known") n++;
   return n;
 }
 
@@ -66,7 +66,7 @@ export function knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, 
   const nouns: string[] = [];
   const lemmas = new Set<string>();
   for (const w of words)
-    if (wordState(memory.get(`${w.id}:read`)) === "known") {
+    if (wordState(readMemory({ memory }, w.id)) === "known") {
       all.push(w.lemma);
       if (w.pos === "noun") nouns.push(w.lemma);
       lemmas.add(w.lemma.toLowerCase());
@@ -81,7 +81,7 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
   const facts = learnerFacts(times, count, now);
   const today = visitorsFor(facts, now, devVisitorOverride());
   // Known at the start of today. Only worth a replay when there are reviews today.
-  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dayStart = startOfDay(now);
   const before = times.some((t) => t >= dayStart) ? knownAt(l.reviews, dayStart, l.course.retention, l.resolve, l.words) : count;
   return {
     facts,
@@ -99,9 +99,4 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
 export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitors {
   const today = visitorsFor(NO_FACTS, now, devVisitorOverride());
   return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
-}
-
-/** Where the snail is along the whole fence of this garden (0 at the gate), for the 2D strip. */
-export function snailAlong(): number {
-  return snailLap();
 }

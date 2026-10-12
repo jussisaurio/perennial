@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { startCourse } from "./helpers";
+import { settledGardenWidth, startCourse } from "./helpers";
 
 test("walk-in garden: every word is a plant; next plant, listen, time of day, and back", async ({ page }) => {
   const errors: string[] = [];
@@ -81,8 +81,8 @@ test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known wor
   await page.waitForFunction(() => "__garden" in window);
   await page.evaluate(() => {
     type Sprite = { v: { id: string }; x: number; z: number };
-    const s = (window as unknown as { __garden: { visitorSprites: Sprite[]; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
-    const frog = s.visitorSprites.find((o) => o.v.id === "frog")!;
+    const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
+    const frog = s.guests.sprites.find((o) => o.v.id === "frog")!;
     // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
     const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
     s.x = frog.x + Math.sin(a) * 1.3;
@@ -122,12 +122,7 @@ test("the ends of the strip: the first word's post at the left, the mole at the 
   await page.goto("/?demo=es&visitors=all#/today");
   const strip = page.locator(".garden-scroll");
   await expect(page.locator(".garden.scrolls")).toBeVisible({ timeout: 30_000 });
-  const width = () => strip.evaluate((el) => el.scrollWidth);
-  await expect.poll(async () => {
-    const a = await width();
-    await page.waitForTimeout(500);
-    return a === (await width()) && a > 2000;
-  }, { timeout: 30_000 }).toBe(true);
+  await settledGardenWidth(page);
   // The strip opens at the right end, where the mole looks up and says its word.
   const mole = page.getByRole("button", { name: "el topo · mole" });
   await expect(page.locator(".mole.up")).toHaveCount(1);
@@ -146,12 +141,7 @@ test("2D garden: a big garden scrolls; arrows page through it; a plant opens in 
   await expect(page.locator(".garden.scrolls")).toBeVisible({ timeout: 30_000 });
   const scrollLeft = () => strip.evaluate((el) => el.scrollLeft);
   // The demo learner's words sync in over a moment: wait until the garden stops growing.
-  const width = () => strip.evaluate((el) => el.scrollWidth);
-  await expect.poll(async () => {
-    const a = await width();
-    await page.waitForTimeout(500);
-    return a === (await width()) && a > 2000;
-  }, { timeout: 30_000 }).toBe(true);
+  await settledGardenWidth(page);
   const max = await strip.evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(await scrollLeft()).toBeGreaterThan(max - 2); // opens on the newest growth
   // Only plants in view are drawn, however big the garden.

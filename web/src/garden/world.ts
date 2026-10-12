@@ -2,6 +2,8 @@
 // of word per row of beds (nouns, verbs, …), the most common words nearest
 // the gate. Pure functions, so the layout is stable and testable.
 
+import { toPos, type Pos } from "../deck/schema";
+import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
 
 export interface GardenPlant {
@@ -43,42 +45,33 @@ export interface Layout {
   pond: { x: number; z: number; r: number };
 }
 
-export const SPACING = 0.62;
-export const BED_COLS = 6;
-export const BED_ROWS = 5;
+const SPACING = 0.62;
+const BED_COLS = 6;
+const BED_ROWS = 5;
 const MARGIN = 0.32;
-export const BED_W = BED_COLS * SPACING + MARGIN * 2;
-export const BED_D = BED_ROWS * SPACING + MARGIN * 2;
+const BED_W = BED_COLS * SPACING + MARGIN * 2;
+const BED_D = BED_ROWS * SPACING + MARGIN * 2;
 const PATH = 1.9;
 const CAPACITY = BED_COLS * BED_ROWS;
 
-const GROUPS: { label: string; pos: string[] }[] = [
+const GROUPS: { label: string; pos: readonly Pos[] }[] = [
   { label: "Nouns", pos: ["noun"] },
   { label: "Verbs", pos: ["verb"] },
-  { label: "Adjectives", pos: ["adj", "adjective"] },
-  { label: "Adverbs", pos: ["adv", "adverb"] },
-  { label: "Small words", pos: ["pron", "prep", "conj", "det", "num", "particle", "pronoun", "preposition", "conjunction", "determiner", "article", "number"] },
+  { label: "Adjectives", pos: ["adj"] },
+  { label: "Adverbs", pos: ["adv"] },
+  { label: "Small words", pos: ["pron", "prep", "conj", "det", "num", "particle"] },
   { label: "Phrases", pos: ["phrase"] },
 ];
 const OTHER = "Other words";
 
 export function groupOf(pos: string): string {
-  const p = pos.trim().toLowerCase();
-  return GROUPS.find((g) => g.pos.includes(p))?.label ?? OTHER;
-}
-
-export function hash(str: string, salt = 0): number {
-  let h = 2166136261 ^ salt;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) / 4294967296;
+  const p = toPos(pos);
+  return (p && GROUPS.find((g) => g.pos.includes(p))?.label) || OTHER;
 }
 
 /** Which way a word's plant leans when it leans at all: 1 to the right, -1 to the left, the same in every view. */
 export function leanDir(id: string): 1 | -1 {
-  return hash(id, 9) > 0.5 ? 1 : -1;
+  return hash01(id, 9) > 0.5 ? 1 : -1;
 }
 
 /**
@@ -131,14 +124,14 @@ export function layout(plants: GardenPlant[]): Layout {
         // Fill from the front (the gate side) so the most common words are seen first.
         const c = i % BED_COLS;
         const rr = Math.floor(i / BED_COLS);
-        const jx = (hash(p.id, 1) - 0.5) * 0.2;
-        const jz = (hash(p.id, 2) - 0.5) * 0.2;
+        const jx = (hash01(p.id, 1) - 0.5) * 0.2;
+        const jz = (hash01(p.id, 2) - 0.5) * 0.2;
         placed.push({
           ...p,
           x: x - BED_W / 2 + MARGIN + (c + 0.5) * SPACING + jx,
           z: z + BED_D / 2 - MARGIN - (rr + 0.5) * SPACING + jz,
           droop: droopFor(p.id, p.r),
-          phase: hash(p.id, 3) * Math.PI * 2,
+          phase: hash01(p.id, 3) * Math.PI * 2,
           bed: bedIndex,
         });
       });

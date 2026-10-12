@@ -2,11 +2,13 @@
 // for each language. "Start learning" makes an anonymous account and the
 // course in one step; nothing to set up, no email needed yet.
 
+import { COURSE_DEFAULTS } from "../data/rows";
 import { farewell } from "../content/voice";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
 import { ensureUser } from "../data/auth";
 import { postWrite } from "../data/http";
+import { loadDeck } from "../data/deck";
 import { useDeck } from "../data/learner";
 import { track } from "../observability";
 import { SignIn } from "./Account";
@@ -72,7 +74,7 @@ export async function startCourse(lang: string, minutes: number) {
 export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) => void; signedIn: boolean }) {
   const draft = readDraft();
   const [lang, setLang] = useState(() => draft.lang ?? "es");
-  const [minutes, setMinutes] = useState(draft.minutes ?? 7);
+  const [minutes, setMinutes] = useState(draft.minutes ?? COURSE_DEFAULTS.minutes);
   // After "Delete my account": a goodbye on the landing page, for a short
   // while (the app reloads once as the user changes), then never again.
   const [goodbye] = useState(() => {
@@ -94,7 +96,15 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   const [walking, setWalking] = useState(false);
   useEffect(() => saveDraft({ lang, minutes }), [lang, minutes]);
   const deck = useDeck(lang);
-  const showcase = useMemo(() => (deck ? showcaseGarden(deck) : null), [deck]);
+  const fresh = useMemo(() => (deck ? showcaseGarden(deck) : null), [deck]);
+  // While another language's deck loads, keep showing the last garden: no gap, no jump.
+  const [lastShown, setLastShown] = useState(fresh);
+  if (fresh && fresh !== lastShown) setLastShown(fresh);
+  const showcase = fresh ?? lastShown;
+  // Load every course's deck early, so switching language is instant.
+  useEffect(() => {
+    for (const l of COURSE_LANGUAGES) void loadDeck(l.code).catch(() => {});
+  }, []);
   const name = COURSE_LANGUAGES.find((l) => l.code === lang)?.name ?? lang;
   const walkSource = useMemo(() => (deck && walking ? showcaseWalkPlants(deck) : null), [deck, walking]);
 
