@@ -20,8 +20,10 @@ function exportJSON(l: Learner) {
 }
 
 const csvCell = (v: unknown) => {
-  const s = v === undefined || v === null ? "" : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  let s = v === undefined || v === null ? "" : String(v);
+  // A spreadsheet would run a cell that starts like a formula; a leading quote keeps it text.
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
 function exportCSV(l: Learner) {

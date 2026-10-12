@@ -210,6 +210,15 @@ export class Session {
     return true;
   }
 
+  /**
+   * The card just served was passed over without an answer (no sound, or its
+   * word is gone): forget its snapshot so that Undo steps over it, back to the
+   * last answered card, instead of re-serving it.
+   */
+  skip(): void {
+    this.history.pop();
+  }
+
   get remaining(): number {
     return this.queue.length + this.followUps.length;
   }
