@@ -21,11 +21,7 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      - name: Install (web)
-        working-directory: web
-        run: bun install --frozen-lockfile
-      - name: Install (server)
-        working-directory: server
+      - name: Install (all workspaces)
         run: bun install --frozen-lockfile
 
       - name: Typecheck (web)
@@ -63,9 +59,8 @@ jobs:
       # Known vulnerabilities in what we ship (dev tools are updated by Dependabot).
       - name: Audit dependencies
         run: |
-          for dir in web server scripts; do
-            (cd $dir && bun install --frozen-lockfile && bun audit --audit-level=high) || exit 1
-          done
+          bun install --frozen-lockfile
+          bun audit --audit-level=high
       # Semgrep OSS (CodeQL needs Advanced Security on a private repo).
       - name: Semgrep
         run: |
@@ -84,11 +79,7 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      - name: Install (web, for the deck schema)
-        working-directory: web
-        run: bun install --frozen-lockfile
-      - name: Install (scripts)
-        working-directory: scripts
+      - name: Install (all workspaces)
         run: bun install --frozen-lockfile
 
       - name: Typecheck (scripts)
@@ -122,18 +113,14 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install (web)
-        working-directory: web
-        run: bun install --frozen-lockfile
-      - name: Install (server)
-        working-directory: server
+      - name: Install (all workspaces)
         run: bun install --frozen-lockfile
 
       - name: Cache Playwright browsers
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Playwright browsers
         working-directory: web
         run: bunx playwright install --with-deps chromium

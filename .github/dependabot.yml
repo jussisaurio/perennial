@@ -1,18 +1,11 @@
 # Weekly dependency updates, grouped so they arrive as a few PRs, not dozens.
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: /web
+  # Bun workspaces (web, server, scripts) share one bun.lock at the root.
+  - package-ecosystem: bun
+    directory: /
     schedule: { interval: weekly }
-    groups: { web: { patterns: ["*"] } }
-  - package-ecosystem: npm
-    directory: /server
-    schedule: { interval: weekly }
-    groups: { server: { patterns: ["*"] } }
-  - package-ecosystem: npm
-    directory: /scripts
-    schedule: { interval: weekly }
-    groups: { scripts: { patterns: ["*"] } }
+    groups: { dependencies: { patterns: ["*"] } }
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
