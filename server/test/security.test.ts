@@ -48,7 +48,7 @@ describe("reads: shapes only ever contain your own rows", () => {
 
   test("tables outside the allow-list are refused", async () => {
     const mallory = await t.signIn(unique("mallory"));
-    for (const table of ["user", "session", "account", "verification", "ai_usage", "ai_request", "public.user"]) {
+    for (const table of ["user", "session", "account", "verification", "ai_usage", "ai_request", "public.user", "toString", "__proto__", "constructor"]) {
       expect((await t.call(`/api/shape?table=${table}&offset=-1`, undefined, mallory)).status).toBe(400);
     }
   });

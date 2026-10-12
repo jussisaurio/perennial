@@ -16,7 +16,7 @@ describe("sign-in codes per address", () => {
     }
     expect(outbox.filter((m) => m.to === email)).toHaveLength(3);
     // Case and spaces don't make a new address.
-    await t.call("/api/auth/email-otp/send-verification-otp", { email: email.toUpperCase(), type: "sign-in" });
+    await t.sendCode(email.toUpperCase());
     expect(outbox.filter((m) => m.to.toLowerCase() === email)).toHaveLength(3);
     // Other addresses are unaffected.
     await t.signIn(unique("bystander"));
@@ -41,7 +41,7 @@ describe("bot check (Turnstile)", () => {
     const guarded = await startApp({ turnstile: { secretKey: "1x0000000000000000000000000000000AA", siteKey: "1x00000000000000000000AA" } });
     try {
       expect((await guarded.call("/api/auth/sign-in/anonymous", {})).status).toBeGreaterThanOrEqual(400);
-      expect((await guarded.call("/api/auth/email-otp/send-verification-otp", { email: unique("bot"), type: "sign-in" })).status).toBeGreaterThanOrEqual(400);
+      expect((await guarded.sendCode(unique("bot"))).status).toBeGreaterThanOrEqual(400);
       const page = await fetch(guarded.url + "/health");
       expect(page.headers.get("content-security-policy")).toContain("frame-src https://challenges.cloudflare.com");
     } finally {
