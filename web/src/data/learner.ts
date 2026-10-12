@@ -2,6 +2,7 @@
 // follows from them. Memory (FSRS stability, due dates, unlocks) is derived
 // from the review log (core/memory.ts); nothing derived is stored or synced.
 
+import { teachable } from "../content/languages";
 import { courseOrder } from "../content/order";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
@@ -62,7 +63,7 @@ export function useDeck(lang: string | undefined): LoadedDeck | null {
 export function useCourses(): { courses: CourseRow[]; ready: boolean } {
   const store = useStore();
   const { data, isReady } = useLiveQuery((q) => q.from({ c: store.collections.course }));
-  return { courses: (data ?? []) as CourseRow[], ready: isReady };
+  return { courses: teachable((data ?? []) as CourseRow[]), ready: isReady };
 }
 
 // ---------- derivation ----------

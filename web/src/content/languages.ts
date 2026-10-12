@@ -2,7 +2,7 @@
 // language. `tag` is the BCP 47 tag used for speech synthesis and word
 // segmentation.
 
-import { DECK_LANGS, type DeckLang } from "../deck/schema";
+import { DECK_LANGS, isDeckLang, type DeckLang } from "../deck/schema";
 
 export interface Language {
   code: string;
@@ -17,5 +17,16 @@ const COURSES: Record<DeckLang, Omit<Language, "code"> & { blurb: string }> = {
 
 export const COURSE_LANGUAGES: (Language & { blurb: string })[] = DECK_LANGS.map((code) => ({ code, ...COURSES[code] }));
 
-export const language = (code: string): Language =>
-  COURSE_LANGUAGES.find((l) => l.code === code) ?? { code, name: code, tag: code };
+/**
+ * The courses this build can teach. A course in a newer language can sync here
+ * from another device before this app reloads to the new version. This build
+ * has no deck for it, so the course waits until then.
+ */
+export const teachable = <T extends { lang: string }>(courses: T[]): T[] => courses.filter((c) => isDeckLang(c.lang));
+
+/** A course language. Codes come from `teachable` courses or from COURSE_LANGUAGES, so any other code is a bug. */
+export function language(code: string): Language {
+  const l = COURSE_LANGUAGES.find((x) => x.code === code);
+  if (!l) throw new Error(`no course language "${code}"`);
+  return l;
+}
