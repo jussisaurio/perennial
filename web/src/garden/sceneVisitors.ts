@@ -9,6 +9,17 @@ import * as T from "./textures";
 import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
 import { collide, type Layout } from "./world";
 
+/**
+ * Point a visitor's sprite at its texture cell; upload only when it changes (tick runs
+ * every frame). The attribute stores float32, so compare with the float32 value.
+ */
+export function showCell(uv: THREE.BufferAttribute, cell: number) {
+  const u = Math.fround(cell / T.VISITOR_CELLS);
+  if (uv.getX(0) === u) return;
+  uv.setX(0, u);
+  uv.needsUpdate = true;
+}
+
 /** The moth's loop round its lantern (m), and the height of the middle of the lantern glass. */
 const MOTH_R = 0.24;
 const LANTERN_GLASS_Y = 1.02;
@@ -196,10 +207,7 @@ export class SceneVisitors {
   }
 
   private setCell(s: VisitorSprite, cell: number) {
-    const u = cell / T.VISITOR_CELLS;
-    if (s.uv.getX(0) === u) return;
-    s.uv.setX(0, u);
-    s.uv.needsUpdate = true;
+    showCell(s.uv, cell);
   }
 
   private gnomeCell(s: VisitorSprite) {
