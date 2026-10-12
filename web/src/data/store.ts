@@ -228,12 +228,31 @@ export async function createStore(userId: string) {
       unregister();
       writerListeners.clear();
       executor.dispose();
-      for (const c of Object.values(collections)) void c.cleanup();
+      for (const c of Object.values(collections)) cleanUpWhenUnused(c);
     },
   };
 }
 
 export type Store = Awaited<ReturnType<typeof createStore>>;
+
+type Collection = Pick<ReturnType<typeof createCollection>, "subscriberCount" | "on" | "cleanup">;
+
+/**
+ * Clean up a collection once no live query reads it. The screens' live queries
+ * outlive them by a moment (TanStack collects them on its own timer); a source
+ * cleaned up under one logs "TanStack DB error 152". The page reloads on a
+ * change of user anyway, so the fallback only matters if a query never lets go.
+ */
+function cleanUpWhenUnused(c: Collection, fallbackMs = 5_000) {
+  if (c.subscriberCount === 0) return void c.cleanup();
+  const done = () => {
+    off();
+    clearTimeout(timer);
+    void c.cleanup();
+  };
+  const off = c.on("subscribers:change", (e) => e.subscriberCount === 0 && done());
+  const timer = setTimeout(done, fallbackMs);
+}
 
 /** One local change → the server's mutation format (see server/src/sync.ts). `at`: when it was made. */
 function toServer(m: PendingMutation, at?: string) {
