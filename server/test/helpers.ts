@@ -16,15 +16,16 @@ export async function mockLLM(): Promise<string> {
   if (!mockProc) {
     mockPort = 20000 + Math.floor(Math.random() * 20000);
     mockProc = Bun.spawn(["bun", "mock-llm.ts"], { cwd: `${import.meta.dir}/..`, env: { ...process.env, PORT: String(mockPort) }, stdout: "ignore" });
-    // Wait for it to listen (up to 2.5 s); a mock that never starts fails the first AI test.
-    for (let i = 0; i < 50; i++) {
-      try {
-        await fetch(`http://localhost:${mockPort}/v1/messages`, { method: "OPTIONS" });
-        break;
-      } catch {
-        await Bun.sleep(50);
-      }
+    // Wait for it to listen (up to 2.5 s); a mock that never starts says so here,
+    // not later as a puzzling AI test failure.
+    let up = false;
+    for (let i = 0; i < 50 && !up; i++) {
+      up = await fetch(`http://localhost:${mockPort}/v1/messages`, { method: "OPTIONS" }).then(
+        () => true,
+        () => Bun.sleep(50).then(() => false), // not listening yet
+      );
     }
+    if (!up) throw new Error(`mock LLM did not start on port ${mockPort} within 2.5 s`);
   }
   return `http://localhost:${mockPort}`;
 }
