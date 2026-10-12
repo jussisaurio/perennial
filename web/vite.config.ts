@@ -34,7 +34,16 @@ export default defineConfig({
         display: "standalone",
         icons: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" }],
       },
-      workbox: { globPatterns: ["**/*.{js,css,html,svg,wasm,json}"], maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 },
+      workbox: {
+        // Hashed files are precached: they never change, so offline works.
+        globPatterns: ["**/*.{js,css,svg,wasm,json}"],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // The page itself comes from the network whenever there is one, so every load
+        // runs the current release. The cached copy is only for offline. (Served from
+        // the precache first, each load ran the release before, and nothing reloads.)
+        navigateFallback: null,
+        runtimeCaching: [{ urlPattern: ({ request }) => request.mode === "navigate", handler: "NetworkFirst", options: { cacheName: "pages", networkTimeoutSeconds: 4 } }],
+      },
     }),
   ],
   server: {
