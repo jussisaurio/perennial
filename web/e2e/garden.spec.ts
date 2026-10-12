@@ -175,6 +175,9 @@ test("2D garden: a big garden scrolls; arrows page through it; a plant opens in 
 test("the garden itself teaches: tap the sunflower for its word; a plant still opens its card (#74)", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
+  // A fixed day and hour: the snail walks the fence over the day (snailLap) and, from
+  // about 09:19 to 09:35, stands between us and the sunflower; visitors change by day.
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
   await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
