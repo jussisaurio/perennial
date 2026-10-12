@@ -31,8 +31,8 @@ test("a second run while one holds the lock skips, and runs again once it is fre
   try {
     expect((await other`select pg_try_advisory_lock(727002) as locked`)[0].locked).toBe(true);
     expect(await housekeeping(t.sql, t.config)).toEqual({ skipped: true });
-    await other`select pg_advisory_unlock(727002)`;
   } finally {
+    await other`select pg_advisory_unlock(727002)`;
     other.release();
   }
   expect(await housekeeping(t.sql, t.config)).not.toEqual({ skipped: true });

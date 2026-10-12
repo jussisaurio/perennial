@@ -12,6 +12,10 @@ import { log } from "./log";
 
 const LOCK = 727_002;
 
+/**
+ * `sql` must be a one-connection pool (the cron passes max: 1): the lock is per
+ * connection, so on a bigger pool the unlock could run on another one and leak it.
+ */
 export async function housekeeping(sql: SQL, config: Config) {
   const [{ locked }] = await sql`select pg_try_advisory_lock(${LOCK}) as locked`;
   if (!locked) return { skipped: true };
