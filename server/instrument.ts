@@ -20,12 +20,19 @@ export function scrub<E extends Sentry.Event>(event: E): E {
   return event;
 }
 
+/** What Sentry is told from the environment. `||`: a host can pass an unset value as "". */
+export function sentrySettings(env: Record<string, string | undefined>) {
+  return {
+    environment: env.RAILWAY_ENVIRONMENT_NAME || env.NODE_ENV || "development",
+    release: releaseOf(env),
+    tracesSampleRate: Number(env.SENTRY_TRACES_SAMPLE_RATE || 0.1),
+  };
+}
+
 if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
-    environment: process.env.RAILWAY_ENVIRONMENT_NAME ?? process.env.NODE_ENV ?? "development",
-    release: releaseOf(process.env),
-    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
+    ...sentrySettings(process.env),
     // SDK 11 streams spans by default, and then skips beforeSendTransaction and
     // ignoreTransactions below (our scrub and the shape filter). Keep whole transactions.
     traceLifecycle: "static",

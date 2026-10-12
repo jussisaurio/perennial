@@ -438,15 +438,6 @@ Railway search examples: `@signup:email`, `@courseStarted:de`, `@otp:capped`, `@
 
 Never copy production secrets to a laptop. For local work, use `docker compose up -d` (see the README). The local server uses dev defaults for everything.
 
-## Known gaps (as of this writing)
-
-These are not problems in this runbook, but you should know them:
-
-- **Dev mode depends on `RESEND_API_KEY`.** If the key is missing, the server turns on dev mode silently. Step 5 has a check for it.
-- **`BETTER_AUTH_SECRET` has a public default.** The server starts without it. Always set it.
-- **Sentry US-region DSNs are blocked by the CSP.** The server allows `*.ingest.sentry.io` and `*.ingest.de.sentry.io`. A DSN host like `o123.ingest.us.sentry.io` matches neither, so browser reports fail. Use an EU-region Sentry org, or fix `server/src/app.ts` first.
-- **Housekeeping does not load Sentry** (it does not use `--preload ./instrument.ts`). Its errors appear only in the Railway log and as a failed cron run.
-
 ## Continuous deployment and rollback
 
 Every merge to `main` deploys to production by itself: Railway builds `main` after CI passes (`checkSuites: true` in `.railway/railway.ts`), runs the migrations before the switch (pre-deploy command), and only moves traffic once `/health` (which checks the database) answers. A red CI run on `main` never deploys. After a deploy, run `bun scripts/live-check.ts <APP_URL>`.
