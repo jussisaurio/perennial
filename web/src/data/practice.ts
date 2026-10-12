@@ -2,7 +2,7 @@
 // a session plan, so the session and the Today screen agree on whether there
 // is anything to do (Today must not offer a session that ends at once).
 
-import { plan, type Plan } from "../core/session";
+import { MAX_NEW_PER_DAY, plan, type Plan } from "../core/session";
 import { fsrs as scheduler } from "../core/scheduler";
 import type { Learner } from "./learner";
 
@@ -20,8 +20,20 @@ export function newWordsToday(l: Learner, now = Date.now()): number {
   return [...first.values()].filter((t) => t >= startOfDay).length;
 }
 
-/** The session plan for `minutes`; `voice`: listening exercises possible. */
-export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = Date.now()): Plan {
+/**
+ * "Keep going" after the day's practice: more is allowed, never blocked. Up to
+ * this many new words beyond today's limit, plus reviews due in the next days
+ * (early, so worth a little less, but no harm).
+ */
+export const EXTRA_NEW = 10;
+
+/** The nudge next to "Keep going": a reason, not a rule. */
+export const KEEP_GOING_NOTE = "More is fine. New words come back for review over the next days, so tomorrow's session may take a little longer.";
+const EXTRA_LOOKAHEAD_MS = 3 * 86_400_000;
+
+/** The session plan for `minutes`; `voice`: listening exercises possible; `extra`: keep going past the day's limits. */
+export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = Date.now(), extra = false): Plan {
+  const newToday = newWordsToday(l, now);
   const suspended = new Set([...l.words.values()].filter((w) => w.status === "paused" || w.status === "ignored").map((w) => w.id));
   return plan({
     now,
@@ -29,11 +41,12 @@ export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = D
     memories: l.memories.filter((m) => (voice || m.skill !== "listen") && !suspended.has(m.lexemeId)),
     fresh: l.fresh(),
     fsrs: scheduler,
-    newToday: newWordsToday(l, now),
+    newToday,
+    ...(extra ? { maxNewPerDay: Math.max(MAX_NEW_PER_DAY, newToday) + EXTRA_NEW, lookaheadMs: EXTRA_LOOKAHEAD_MS } : {}),
   });
 }
 
-/** Is there anything to practise now (a word due, or a new word still allowed today)? */
-export function canPractise(l: Learner, voice: boolean, now = Date.now()): boolean {
-  return sessionPlan(l, 5, voice, now).queue.length > 0;
+/** Is there anything to practise now (a word due, or a new word still allowed today)? With `extra`: if you keep going. */
+export function canPractise(l: Learner, voice: boolean, now = Date.now(), extra = false): boolean {
+  return sessionPlan(l, 5, voice, now, extra).queue.length > 0;
 }

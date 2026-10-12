@@ -8,7 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
-import { canPractise } from "../data/practice";
+import { canPractise, KEEP_GOING_NOTE } from "../data/practice";
 import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine, startNote } from "../content/voice";
@@ -25,7 +25,7 @@ function greeting(): string {
 // The entrance animation plays once per visit, not on every tab switch.
 let animated = false;
 
-export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onAddWords: () => void; onWalk: () => void }) {
+export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number, extra?: boolean) => void; onAddWords: () => void; onWalk: () => void }) {
   const view = (id: string) => {
     focusPlant(id);
     onWalk();
@@ -43,6 +43,8 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
   // The same planner the session uses: is there anything to practise right now?
   const available = useMemo(() => (learner ? canPractise(learner, mayListen(language(code).tag), now) : false), [learner, now, code]);
+  // Past the day's limits, practice is still allowed: "Keep going".
+  const more = useMemo(() => !available && !!learner && canPractise(learner, mayListen(language(code).tag), now, true), [available, learner, now, code]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailAlong();
@@ -101,7 +103,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           {!canStart
             ? ready === 0
               ? "You have learned every word in the course. Add words from your own texts to keep growing."
-              : "Every word that needs practice has had it, and today's new words are planted. Come back tomorrow."
+              : "Every word that needs practice has had it, and today's new words are planted."
             : started === 0
               ? `${ready} words are ready, most common first. Each word has example sentences and audio.`
               : doneToday
@@ -110,6 +112,14 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
                   ? ""
                   : startNote()}
         </p>
+        {more && (
+          <div className="keep-going">
+            <button className="secondary" onClick={() => onStart(5, true)}>
+              Keep going
+            </button>
+            <p className="muted small">{KEEP_GOING_NOTE}</p>
+          </div>
+        )}
       </div>
 
       {started > 0 && (

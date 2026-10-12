@@ -25,3 +25,8 @@ test("Today offers a session only when the session would have something", () => 
   expect(canPractise(learner(10, MAX_NEW_PER_DAY), false, now)).toBe(false); // today's new words are in, nothing due
   expect(canPractise(learner(0, 0), false, now)).toBe(false); // course learned, nothing due
 });
+
+test("past the day's limits you can keep going (never blocked), when there is anything at all", () => {
+  expect(canPractise(learner(10, MAX_NEW_PER_DAY), false, now, true)).toBe(true); // more new words, beyond the limit
+  expect(canPractise(learner(0, 0), false, now, true)).toBe(false); // truly nothing: no words left, nothing coming due
+});

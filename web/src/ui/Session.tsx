@@ -4,7 +4,7 @@ import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
 import { ActiveClock } from "../core/clock";
 import { MAX_NEW_PER_DAY, Session as Runner, type Task } from "../core/session";
-import { sessionPlan } from "../data/practice";
+import { KEEP_GOING_NOTE, sessionPlan } from "../data/practice";
 import { language } from "../content/languages";
 import { locate } from "../content/text";
 import { memKey, recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
@@ -69,7 +69,7 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
   );
 }
 
-export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit: () => void; minutes: number }) {
+export function SessionScreen({ lang, onExit, minutes, extra = false }: { lang: string; onExit: () => void; minutes: number; extra?: boolean }) {
   const learner = useLearner(lang);
   // Answers update the learner live; reads in event handlers use the latest.
   const live = useRef(learner);
@@ -96,12 +96,12 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   const [undoStack, setUndoStack] = useState<{ reviewId?: string; review: boolean; intro: boolean; practised?: string; lexemeId: string; example?: Example }[]>([]);
 
   const start = useCallback(
-    async (mins: number) => {
+    async (mins: number, more = extra) => {
       // No voice, or sound turned off: no listening exercises.
       const l = live.current;
       if (!l) return;
       const voice = isSoundOn() && (await hasVoice(tag));
-      const p = sessionPlan(l, mins, voice);
+      const p = sessionPlan(l, mins, voice, Date.now(), more);
       setNewLimitReached(p.newLimitReached);
       const r = new Runner(p, mins * 60_000);
       clock.current = new ActiveClock(Date.now());
@@ -285,7 +285,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
         </button>
       </header>
       {done ? (
-        <Summary learner={learner} counts={counts.current} practised={practised.current} ended={ended} newLimitReached={newLimitReached} onMore={() => void start(5)} onExit={onExit} />
+        <Summary learner={learner} counts={counts.current} practised={practised.current} ended={ended} newLimitReached={newLimitReached} onMore={() => void start(5)} onKeepGoing={() => void start(5, true)} onExit={onExit} />
       ) : card ? (
         <CardView key={serial.current} card={card} tag={tag} lang={lang} onDone={finish} />
       ) : null}
@@ -652,6 +652,7 @@ function Summary({
   ended,
   newLimitReached,
   onMore,
+  onKeepGoing,
   onExit,
 }: {
   learner: Learner | null;
@@ -660,6 +661,8 @@ function Summary({
   ended: "time" | "empty" | "user";
   newLimitReached: boolean;
   onMore: () => void;
+  /** Past the day's limits: allowed, with a word about tomorrow (data/practice.ts). */
+  onKeepGoing: () => void;
   onExit: () => void;
 }) {
   const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
@@ -674,8 +677,8 @@ function Summary({
       ? "You can continue later. Your answers are saved."
       : ended === "empty"
         ? newLimitReached
-          ? `That is all for today: ${MAX_NEW_PER_DAY} new words is the daily limit, and no other words need practice now. More new words tomorrow.`
-          : "Every plant has water. Come back tomorrow."
+          ? `That is today's ${MAX_NEW_PER_DAY} new words, and no other words need practice now. ${KEEP_GOING_NOTE}`
+          : `Every plant has water. ${KEEP_GOING_NOTE}`
         : null;
   return (
     <main className="card summary">
@@ -712,6 +715,11 @@ function Summary({
         {ended === "time" && (
           <button className="secondary" onClick={onMore}>
             Practice 5 more minutes
+          </button>
+        )}
+        {ended === "empty" && (
+          <button className="secondary" onClick={onKeepGoing} title={KEEP_GOING_NOTE}>
+            Keep going
           </button>
         )}
         <button className="primary" onClick={onExit}>

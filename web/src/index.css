@@ -733,3 +733,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
   background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); box-shadow: var(--shadow);
 }
 .other-tab p { margin: 0; max-width: 34rem; }
+
+/* "Keep going" under "All done for today": quiet, with its reason. */
+.keep-going { display: grid; gap: 0.3rem; justify-items: start; margin-top: 0.6rem; }
+.keep-going p { margin: 0; max-width: 34rem; }
