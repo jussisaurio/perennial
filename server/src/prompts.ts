@@ -1,4 +1,8 @@
+
 // Prompts for Perennial AI (personal extras). The course itself is static decks.
+
+/** Sentences per word the AI writes: asked for in the prompts, enforced in ai.ts. */
+export const SENTENCES_PER_WORD = 3;
 
 interface GenSentence {
   text: string;
@@ -37,7 +41,7 @@ export function moreExamplesPrompt(lang: string, native: string, words: { lemma:
   return {
     system: TEACHER(lang, native),
     user:
-      `Write 3 NEW example sentences for each of these words. Make them different from the sentences the learner has already seen (listed), ` +
+      `Write ${SENTENCES_PER_WORD} NEW example sentences for each of these words. Make them different from the sentences the learner has already seen (listed), ` +
       `and use the word in varied contexts and inflections.\n\n` +
       words.map((w) => `- ${w.lemma} (${w.gloss}); already seen: ${w.seen.map((s) => `"${s}"`).join(" ")}`).join("\n") +
       `\n\n${knownClause(known)}\n\n` +
@@ -51,7 +55,7 @@ export function minePrompt(lang: string, native: string, items: { form: string; 
     system: TEACHER(lang, native),
     user:
       `The learner found these words while reading and wants to learn them. For each, give a dictionary entry. ` +
-      `The first example MUST be the original sentence exactly as given (text unchanged), with its ${native} translation; then add 2 more sentences of your own.\n\n` +
+      `The first example MUST be the original sentence exactly as given (text unchanged), with its ${native} translation; then add ${SENTENCES_PER_WORD - 1} more sentences of your own.\n\n` +
       items.map((i) => `- "${i.form}" in: ${i.sentence}`).join("\n") +
       `\n\n${knownClause(known)}\n\n` +
       `"forms": the given form and the lemma, lowercase. "cloze" is the exact substring of "text" that realizes the word.\n` +

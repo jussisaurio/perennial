@@ -75,6 +75,8 @@ export function apiMessage(e: unknown): string {
       return `Perennial AI is paused until ${formatDate(String(e.detail.until ?? ""))} because it reached its monthly cost limit.`;
     case "ai_off":
       return "Perennial AI is not available on this server.";
+    case "quota":
+      return "You have too many of your own words and sentences to add more. Delete some on the Words screen (From my texts) first.";
     case "slow_down":
       return "Too many requests. Wait a moment and try again.";
     case "account_required":

@@ -121,6 +121,15 @@ const clamp = (d: Date, now: Date) => (d.getTime() > now.getTime() ? now : d);
  */
 export const QUOTA = { user_word: 5_000, user_sentence: 25_000, word_state: 50_000, reviewsPerDay: 5_000 };
 
+/**
+ * Refuse (429 quota) when `n` more rows would not fit. The AI routes ask before they
+ * call the model: their words are charged before the app writes them.
+ */
+export async function ensureRoom(sql: SQL, userId: string, table: "user_word" | "user_sentence", n: number) {
+  const [{ count }] = await sql`select count(*)::int as count from ${sql(table)} where user_id = ${userId}`;
+  if (count + n > QUOTA[table]) throw new HttpError(429, "quota", { table, limit: QUOTA[table] });
+}
+
 async function checkQuota(tx: SQL, userId: string, mutations: Mutation[]) {
   const adds = { user_word: 0, user_sentence: 0, word_state: 0, review: 0 };
   for (const m of mutations) {
@@ -132,8 +141,8 @@ async function checkQuota(tx: SQL, userId: string, mutations: Mutation[]) {
   const over = (table: keyof typeof QUOTA, n: number, limit: number) => {
     if (n > limit) throw new HttpError(429, "quota", { table, limit });
   };
-  if (adds.user_word) over("user_word", Number((await tx`select count(*) as n from user_word where user_id = ${userId}`)[0].n) + adds.user_word, QUOTA.user_word);
-  if (adds.user_sentence) over("user_sentence", Number((await tx`select count(*) as n from user_sentence where user_id = ${userId}`)[0].n) + adds.user_sentence, QUOTA.user_sentence);
+  if (adds.user_word) await ensureRoom(tx, userId, "user_word", adds.user_word);
+  if (adds.user_sentence) await ensureRoom(tx, userId, "user_sentence", adds.user_sentence);
   if (adds.word_state) over("word_state", Number((await tx`select count(*) as n from word_state where user_id = ${userId}`)[0].n) + adds.word_state, QUOTA.word_state);
   if (adds.review) over("reviewsPerDay", Number((await tx`select count(*) as n from review where user_id = ${userId} and received_at > now() - interval '1 day'`)[0].n) + adds.review, QUOTA.reviewsPerDay);
 }

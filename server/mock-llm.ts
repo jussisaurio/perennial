@@ -17,7 +17,9 @@ function entry(form: string, sentence?: string) {
     { text: `Yo veo ${form} aquí.`, translation: `I see "${form}" here.`, cloze: form },
     { text: `¿Dónde está ${form}?`, translation: `Where is "${form}"?`, cloze: form },
     { text: `Me gusta ${form} mucho.`, translation: `I like "${form}" a lot.`, cloze: form },
-  ].slice(0, 3);
+    { text: `Hay ${form} allí.`, translation: `There is "${form}" there.`, cloze: form },
+    { text: `Busco ${form} hoy.`, translation: `I look for "${form}" today.`, cloze: form },
+  ].slice(0, form.startsWith("chatty") ? 5 : 3); // test hook: more sentences than asked for
   // Test hooks: output longer than /api/write takes (the server must clamp or drop it).
   const gloss = form.startsWith("longgloss") ? "g".repeat(200) : `[mock] ${form}`;
   const notes = form.startsWith("longnote") ? "n".repeat(1000) : "Placeholder from mock-llm.ts — not real content.";
@@ -42,7 +44,14 @@ function reply(prompt: string): unknown {
   if (mined.length) return { words: mined.map(([, f, s]) => entry(f, s)) };
   const more = [...prompt.matchAll(/^- (\S+) \(/gm)];
   if (more.length)
-    return { examples: more.flatMap(([, l]) => [1, 2, 3].map((i) => ({ lemma: l, text: `Frase nueva ${i} con ${l}.`, translation: `New sentence ${i} with ${l}.`, cloze: l }))) };
+    return {
+      examples: more.flatMap(([, l]) => {
+        // Test hook: a chatty model writes 5 per word and one for a word nobody asked for.
+        const n = l.startsWith("chatty") ? 5 : 3;
+        const own = Array.from({ length: n }, (_, k) => ({ lemma: l, text: `Frase nueva ${k + 1} con ${l}.`, translation: `New sentence ${k + 1} with ${l}.`, cloze: l }));
+        return l.startsWith("chatty") ? [...own, { lemma: "stray", text: "Frase con stray.", translation: "A sentence with stray.", cloze: "stray" }] : own;
+      }),
+    };
   return {};
 }
 
