@@ -43,6 +43,11 @@ export async function addEmail(page: Page, address = newEmail()) {
   return address;
 }
 
+export async function openAdd(page: Page) {
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByRole("button", { name: "Add words" }).click();
+}
+
 export async function startSession(page: Page) {
   await page.getByRole("button", { name: /today's session/ }).click();
   await expect(page.locator(".kicker")).toBeVisible();
@@ -91,4 +96,13 @@ export async function settledGardenWidth(page: Page, min = 2000) {
     )
     .toBe(true);
   return last;
+}
+
+/** A point on the strip's plant nearest the middle, a little above its foot (between two plants there is a small gap). */
+export async function plantNearMiddle(page: Page) {
+  const box = (await page.locator(".garden-scroll").boundingBox())!;
+  return page.locator(".garden svg > g[transform] rect").evaluateAll((els, mid) => {
+    const r = els.map((e) => e.getBoundingClientRect()).sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0];
+    return [r.x + r.width / 2, r.bottom - 20] as const;
+  }, box.x + box.width / 2);
 }

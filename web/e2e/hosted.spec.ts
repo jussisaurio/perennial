@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addEmail, advance, expectServerRows, newEmail, signIn, startCourse, startSession } from "./helpers";
+import { addEmail, advance, expectServerRows, newEmail, openAdd, signIn, startCourse, startSession } from "./helpers";
 
 test("progress made before adding an email stays, and another device signs in to the same garden", async ({ browser }) => {
   const one = await browser.newPage();
@@ -22,8 +22,7 @@ test("progress made before adding an email stays, and another device signs in to
 test("words from a text use AI words; the limit is clear before anything is sent", async ({ page }) => {
   await startCourse(page);
   await addEmail(page, newEmail("miner"));
-  await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("button", { name: "Add words" }).click();
+  await openAdd(page);
   await page.getByPlaceholder(/Paste .* text here/).fill("zorro búho lince nutria tejón garza ciervo");
   await expect(page.getByText(/you have 6 of 6 AI words left this month/)).toBeVisible();
   for (const w of ["zorro", "búho", "lince", "nutria", "tejón", "garza", "ciervo"]) await page.locator(".reader .tok", { hasText: w }).click();

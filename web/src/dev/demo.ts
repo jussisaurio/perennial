@@ -19,13 +19,20 @@ async function post(mutations: unknown[]) {
   });
 }
 
-/** A fresh anonymous learner with `count` words studied over `days` days. */
-export async function seedDemo(lang: DeckLang, count: number, days = 90): Promise<void> {
+const DAYS = 90;
+
+/** A fresh anonymous learner with `count` words studied over the last `DAYS` days. The app opens on this course. */
+export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
+  try {
+    localStorage.setItem("perennial-course", lang);
+  } catch {
+    /* private mode */
+  }
   await signOut();
   await ensureUser();
   const deck = await loadDeck(lang);
   const now = Date.now();
-  const r = rng(count * 31 + days);
+  const r = rng(count * 31 + DAYS);
   const mutations: unknown[] = [{ type: "course.upsert", row: { lang, minutes: 7 } }];
   const words = deck.words.slice(0, count);
   // The server takes at most QUOTA.reviewsPerDay (5000) reviews a day; keep a
@@ -33,7 +40,7 @@ export async function seedDemo(lang: DeckLang, count: number, days = 90): Promis
   const perWord = Math.min(40, Math.floor(4800 / Math.max(1, words.length)));
   words.forEach((w, i) => {
     // Common words were met first; the newest ones only in the last days.
-    let ts = now - days * DAY_MS * Math.pow(1 - i / Math.max(1, words.length), 1.3) + r() * DAY_MS * 0.5;
+    let ts = now - DAYS * DAY_MS * Math.pow(1 - i / Math.max(1, words.length), 1.3) + r() * DAY_MS * 0.5;
     ts = Math.min(ts, now - DAY_MS * 0.1 * r());
     // About 1 in 6 words stopped getting practice at some point.
     const stopAt = r() < 0.17 ? ts + (now - ts) * (0.3 + r() * 0.5) : now;

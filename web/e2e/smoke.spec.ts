@@ -2,9 +2,6 @@ import { expect, test } from "@playwright/test";
 import { advance, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
-  const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(String(e)));
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
   await page.getByRole("button", { name: /Start learning Spanish/ }).click();
@@ -17,7 +14,6 @@ test("smoke: landing → start learning → a session → progress survives a re
   await page.getByRole("button", { name: /^Done/ }).click();
   await page.reload();
   await expect(page.getByText(/You are learning|You know/)).toBeVisible({ timeout: 15000 });
-  console.log("ERRORS", JSON.stringify(errors));
 });
 
 test("offline: practice still works, a quiet note says so, and it goes when the connection is back", async ({ page, context }) => {
