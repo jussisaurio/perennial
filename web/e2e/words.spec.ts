@@ -64,3 +64,18 @@ test("word detail: scheduling details show stability, difficulty, recall and the
   await expect(details.locator("tbody tr").first()).toContainText("%");
   await expect(details.locator(".review-log li").first()).toBeVisible();
 });
+
+// Adding words from a text needs Perennial AI: with it off on the server, the feature is hidden.
+test("with Perennial AI off, Add words is hidden, and its address shows the word list", async ({ page }) => {
+  await page.route("**/api/server", async (route) => {
+    const res = await route.fetch();
+    await route.fulfill({ response: res, json: { ...(await res.json()), features: { ai: false } } });
+  });
+  await startCourse(page);
+  await page.getByRole("tab", { name: "Words" }).click();
+  await expect(page.getByRole("heading", { name: "Words" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add words" })).toHaveCount(0);
+  await page.goto("/#/words/add");
+  await expect(page.getByRole("heading", { name: "Words" })).toBeVisible();
+  await expect(page.getByPlaceholder(/Paste .* text here/)).toHaveCount(0);
+});

@@ -23,8 +23,11 @@ const SKILL_ORDER = ["read", "listen", "write"];
 const practisedSkills = (memory: MemoryRow[]) => memory.filter((m) => m.reps > 0).sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill));
 
 export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; adding: boolean; onAdd: () => void; onBack: () => void }) {
-  if (adding) return <AddScreen lang={lang} onBack={onBack} />;
-  return <WordList lang={lang} onAdd={onAdd} />;
+  // Adding words from a text needs Perennial AI (the server says if it is on): without it, the
+  // course words in a text are few, and the rest can't be added. Hidden until it is on.
+  const { ai } = useFeatures();
+  if (adding && ai) return <AddScreen lang={lang} onBack={onBack} />;
+  return <WordList lang={lang} onAdd={ai ? onAdd : undefined} />;
 }
 
 /**
@@ -54,7 +57,7 @@ function VirtualWords<T extends { l: Word }>({ rows, render }: { rows: T[]; rend
   );
 }
 
-function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
+function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
   const learner = useLearner(lang);
   const store = useStore();
   const [q, setQ] = useState("");
@@ -103,9 +106,11 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
     <div className="page">
       <div className="page-head">
         <h1>Words</h1>
-        <button className="primary" onClick={onAdd}>
-          <PlusIcon size={18} /> Add words
-        </button>
+        {onAdd && (
+          <button className="primary" onClick={onAdd}>
+            <PlusIcon size={18} /> Add words
+          </button>
+        )}
       </div>
       <div className="row">
         <input ref={search} className="search" type="search" placeholder="Search words or meanings (/)" aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
