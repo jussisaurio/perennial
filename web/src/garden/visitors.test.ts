@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { dayNumber } from "../core/day";
 import { layout, type GardenPlant } from "./world";
 import {
   catBreak,
@@ -302,9 +301,5 @@ describe("the snail's daily lap", () => {
     // Never in the gate opening.
     const last = fencePoint(l, pickets - 1);
     expect(last.x).toBeLessThan(l.gate.x - 1);
-  });
-
-  test("dayNumber counts calendar days across a clock change", () => {
-    expect(dayNumber(at(2026, 2, 30, 1)) - dayNumber(at(2026, 2, 28, 23))).toBe(2);
   });
 });

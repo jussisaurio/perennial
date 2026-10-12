@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { daily, rareDay, startOfDay, today } from "./day";
+import { daily, dayNumber, rareDay, startOfDay, today } from "./day";
 
 const pool = ["a", "b", "c", "d", "e"];
 
@@ -32,4 +32,9 @@ test("startOfDay is local midnight", () => {
   const t = new Date(2026, 2, 29, 15, 30).getTime();
   expect(startOfDay(t)).toBe(new Date(2026, 2, 29).getTime());
   expect(startOfDay(new Date(t))).toBe(new Date(t).setHours(0, 0, 0, 0));
+});
+
+test("dayNumber counts calendar days across a clock change", () => {
+  const at = (y: number, m: number, d: number, h: number) => new Date(y, m, d, h).getTime();
+  expect(dayNumber(at(2026, 2, 30, 1)) - dayNumber(at(2026, 2, 28, 23))).toBe(2);
 });
