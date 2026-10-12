@@ -49,14 +49,20 @@ ok(home.headers.get("x-content-type-options") === "nosniff", "nosniff");
 ok((await req("/health")).status === 200, "/health 200");
 
 // 2. Things that must not be public
-for (const p of ["/api/dev/outbox", "/api/dev/rows?table=review"]) ok([401, 403, 404].includes((await req(p)).status), `dev endpoint closed: ${p}`, String((await req(p)).status));
+for (const p of ["/api/dev/outbox", "/api/dev/rows?table=review"]) {
+  const r = await req(p);
+  ok([401, 403, 404].includes(r.status), `dev endpoint closed: ${p}`, String(r.status));
+}
 for (const p of ["/.env", "/.git/config", "/server/src/config.ts", "/../../etc/passwd", "/assets/../../server/.env", "/package.json"]) {
   const r = await req(p);
   const leaked = /DATABASE_URL|BETTER_AUTH|\[core\]|root:x:|"dependencies"/.test(r.text);
   ok(!leaked, `no file leak: ${p}`, `${r.status}`);
 }
 const assets = (home.text.match(/\/assets\/[^"']+\.js/g) ?? []).slice(0, 3);
-for (const a of assets) ok((await req(a + ".map")).status !== 200 || !(await req(a + ".map")).text.includes('"sources"'), `no source map: ${a}.map`);
+for (const a of assets) {
+  const r = await req(a + ".map");
+  ok(r.status !== 200 || !r.text.includes('"sources"'), `no source map: ${a}.map`, String(r.status));
+}
 ok((await req("/api/shape?table=review&offset=-1")).status === 401, "shape needs a session");
 ok((await req("/api/me")).status === 401, "/api/me needs a session");
 ok([401, 403].includes((await req("/api/ai/examples", { body: { lang: "es", words: [], known: [] } })).status), "AI needs a session");
