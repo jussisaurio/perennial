@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useFeatures } from "../data/server";
 import { errorLine, sendingLabel } from "../content/voice";
 import { apiMessage, getMe, resetDate, type Me } from "../data/ai";
 import { AuthError, sendCode, signInWithCode, signOut, useUser } from "../data/auth";
@@ -108,6 +109,8 @@ export function SignIn({ cta = "Send me a code" }: { cta?: string }) {
 }
 
 export function Credits({ me }: { me: Me }) {
+  const { ai } = useFeatures();
+  if (!ai) return null; // No AI on this server, so no AI words to count.
   // The bar shows what is left, like a fuel gauge: empty means used up.
   const pct = Math.min(100, (me.credits.left / Math.max(1, me.credits.limit)) * 100);
   return (
@@ -126,12 +129,13 @@ export function Credits({ me }: { me: Me }) {
 export function AccountPanel() {
   const { user } = useUser();
   const { me } = useMe();
+  const { ai } = useFeatures();
   if (!user) return null;
   if (user.anonymous)
     return (
       <div className="form">
         <p className="small">
-          <strong>Keep your garden safe.</strong> Add your email to keep your words on all your devices and to use Perennial AI. Your progress stays.
+          <strong>Keep your garden safe.</strong> Add your email to keep your words on all your devices{ai && " and to use Perennial AI"}. Your progress stays.
         </p>
         <SignIn cta="Send me a code" />
       </div>

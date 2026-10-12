@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { courseOrder } from "../content/order";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { apiMessage, moreExamples } from "../data/ai";
+import { useFeatures } from "../data/server";
 import { useUser } from "../data/auth";
 import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import type { ReviewRow, UserSentenceRow } from "../data/rows";
@@ -172,12 +173,14 @@ function authorLabel(e: Sentence): { text: string; warn?: boolean } {
 
 /** "Write new sentences" with Perennial AI, with the cost shown first and an undo after. */
 function RewriteButton({ learner, word, label }: { learner: Learner; word: Word; label: string }) {
+  const { ai } = useFeatures();
   const store = useStore();
   const { user } = useUser();
   const { me, refresh } = useMe();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string[] | null>(null);
   const [error, setError] = useState("");
+  if (!ai) return null; // Not on this server (data/server.ts).
   if (!user || user.anonymous) return <span className="muted small">Add your email in Settings to have Perennial AI write new sentences.</span>;
   const left = me ? me.credits.left : Infinity;
   const run = async () => {
