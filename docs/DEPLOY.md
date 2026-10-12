@@ -438,13 +438,6 @@ Railway search examples: `@signup:email`, `@courseStarted:de`, `@otp:capped`, `@
 
 Never copy production secrets to a laptop. For local work, use `docker compose up -d` (see the README). The local server uses dev defaults for everything.
 
-## Known gaps (as of this writing)
-
-These are not problems in this runbook, but you should know them:
-
-- **Dev mode depends on `RESEND_API_KEY`.** If the key is missing, the server turns on dev mode silently. Step 5 has a check for it.
-- **`BETTER_AUTH_SECRET` has a public default.** The server starts without it. Always set it.
-
 ## Continuous deployment and rollback
 
 Every merge to `main` deploys to production by itself: Railway builds `main` after CI passes (`checkSuites: true` in `.railway/railway.ts`), runs the migrations before the switch (pre-deploy command), and only moves traffic once `/health` (which checks the database) answers. A red CI run on `main` never deploys. After a deploy, run `bun scripts/live-check.ts <APP_URL>`.
