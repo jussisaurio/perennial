@@ -480,8 +480,10 @@ details.more > summary:hover { color: var(--ink); }
 details.more[open] > :not(summary) { margin-top: 0.75rem; animation: rise 0.25s var(--ease); }
 details.danger { margin-top: 2.5rem; }
 .error { color: var(--persimmon); font-size: 0.9rem; margin: 0; }
-.page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-.page-head h1 { margin-bottom: 0.5rem; }
+/* The space below sits on the whole head, not the h1: on phones the h1 is shorter
+   than the Add words button, so the button touched the filter row below (#116). */
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.page-head h1 { margin: 0; }
 .progress-line { font-size: 1.15rem; color: var(--ink-2); margin: 0.5rem 0 1.25rem; }
 .progress-line strong { font: 1.6rem/1 var(--display); color: var(--ink); font-weight: 400; }
 details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-columns: repeat(2, 1fr); max-width: 24rem; }
