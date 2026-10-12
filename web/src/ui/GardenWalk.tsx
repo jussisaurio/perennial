@@ -2,6 +2,7 @@
 // raised bed; walk the paths, read the names, click a plant to hear it.
 // The three.js scene loads only when this screen opens.
 
+import { courseOrder } from "../content/order";
 import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -51,7 +52,7 @@ export function walkPlants(l: Learner, now = Date.now()): WalkSource {
 
 /** A believable garden for visitors: the deck's common words at a spread of stages. */
 export function showcaseWalkPlants(deck: LoadedDeck, count = 160): WalkSource {
-  const plants = deck.words.slice(0, count).map((w, i) => {
+  const plants = courseOrder(deck).slice(0, count).map((w, i) => {
     let h = 0;
     for (const ch of w.id) h = (h * 31 + ch.charCodeAt(0)) % 1000;
     const x = h / 1000;

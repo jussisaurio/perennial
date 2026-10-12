@@ -2,6 +2,7 @@
 // memory stability, flowers open once a word is known, and plants droop as
 // recall fades — until the next session waters them. Nothing ever dies.
 
+import { courseOrder } from "../content/order";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import { KNOWN_STABILITY, recall, type Learner } from "../data/learner";
@@ -88,7 +89,7 @@ export function gardenFromLearner(l: Learner, now = Date.now()): GardenData {
  * words at a spread of stages, so newcomers see what learning will look like.
  */
 export function showcaseGarden(deck: LoadedDeck, count = 64): GardenData {
-  const plants = deck.words.slice(0, count).map((w, i) => {
+  const plants = courseOrder(deck).slice(0, count).map((w, i) => {
     const h = hash(w.id, 7);
     // Mostly blooming, some budding, a few sprouts; common words grew longest.
     const s = h < 0.15 ? 1 + h * 10 : h < 0.35 ? 3 + h * 8 : 8 + (1 - i / count) * 120 * h;

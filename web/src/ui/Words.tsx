@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { courseOrder } from "../content/order";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { apiMessage, moreExamples } from "../data/ai";
 import { useUser } from "../data/auth";
@@ -71,10 +72,13 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
     for (const m of learner.memories) byLex.set(m.lexemeId, [...(byLex.get(m.lexemeId) ?? []), m]);
     const needle = q.trim().toLocaleLowerCase();
     // "New" lists what comes next from the course; the other filters, what you have grown.
+    // Every word not started yet, paused ones too: the course in learning order, then your own words.
     const notStarted = () =>
-      [...learner.words.values()]
-        .filter((w) => !byLex.get(w.id)?.some((m) => m.reps > 0))
-        .sort((a, b) => a.rank - b.rank)
+      [
+        ...courseOrder(learner.deck).map((w) => learner.words.get(w.id)!),
+        ...[...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => a.rank - b.rank),
+      ]
+        .filter((w) => w && !byLex.get(w.id)?.some((m) => m.reps > 0))
         .slice(0, 500);
     // Words from your own texts, newest first (user words are ranked in the order added).
     const mine = () => [...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => b.rank - a.rank);
@@ -90,7 +94,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd: () => void }) {
         if (filter !== "all" && filter !== "mine" && state !== filter) return false;
         return !needle || l.lemma.toLocaleLowerCase().includes(needle) || l.gloss.toLocaleLowerCase().includes(needle) || l.forms.some((f) => f.includes(needle));
       })
-      .sort((a, b) => (filter === "mine" ? 0 : (a.l.rank ?? 1e9) - (b.l.rank ?? 1e9) || a.l.lemma.localeCompare(b.l.lemma)));
+      .sort((a, b) => (filter === "mine" || filter === "new" ? 0 : (a.l.rank ?? 1e9) - (b.l.rank ?? 1e9) || a.l.lemma.localeCompare(b.l.lemma)));
   }, [learner, q, filter]);
 
   return (

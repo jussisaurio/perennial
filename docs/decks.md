@@ -6,7 +6,9 @@ approval, or changed after it was approved, fails the build.
 
 ## Word order
 
-Words are taught in frequency order: the corpus rank in a subtitle word list (FrequencyWords). Frequency is objective, the same for every language, and easy to keep up as decks grow. We do not reorder by "ease". To make early words easier, write sentences that use only words already met (the audit reports comprehensibility), not a different order. `audit.ts` warns when a word sits far from its corpus rank.
+Decks are in frequency order: the corpus rank in a subtitle word list (FrequencyWords). Frequency is objective, the same for every language, and easy to keep up as decks grow. `audit.ts` warns when a word sits far from its corpus rank.
+
+The app introduces them in a slightly different order, decided in one place (`courseOrder` in `web/src/content/order.ts`): the kinds of words take turns (noun, verb, noun, a describing word, a grammar word, and again), each kind still in frequency order. Without it, the first sessions would be all grammar words and abstract adverbs (*de, que, no, el* / *ich, nicht, so, der*). Decks are never reordered for this; to make early words easier, write sentences that use words already met.
 
 ## Roles
 
