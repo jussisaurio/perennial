@@ -12,6 +12,7 @@ import { fail, HttpError, json, readJson, securityHeaders, serveStatic, versionA
 import { addLogContext, log, withLogContext } from "./log";
 import { createMailer, OutboxMailer } from "./mail";
 import { handleWrite, proxyShape } from "./sync";
+import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
 /** A request slower than this (ms) is logged as a warning. */
 const SLOW_MS = 1000;
@@ -180,6 +181,8 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
         // polls wait ~20 s by design and AI calls take seconds, so neither counts.
         const slow = ms > SLOW_MS && url.pathname !== "/api/shape" && !url.pathname.startsWith("/api/ai/");
         (slow ? log.warn : log.info)(slow ? "slow request" : "request", { method: req.method, path: url.pathname, status: res.status, ms });
+        // Grouped by route: API paths carry no ids; every static file is one route.
+        if (slow && ms > VERY_SLOW_MS) reportVerySlow(req.method, url.pathname.startsWith("/api/") ? url.pathname : "static", res.status, ms);
       }
       const out = new Response(res.body, res);
       out.headers.set("x-request-id", id);
