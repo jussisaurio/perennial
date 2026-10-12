@@ -52,7 +52,7 @@ export interface Config {
  * The deployed commit, or "dev". `||`: a build or host can pass an unset value as "".
  * The app uses the same rule (web/src/version.ts), so both name the same release.
  */
-export const releaseOf = (env: Record<string, string | undefined>) => env.RAILWAY_GIT_COMMIT_SHA || env.RELEASE || "dev";
+export const releaseOf = (env: Record<string, string | undefined>) => env.RAILWAY_GIT_COMMIT_SHA || "dev";
 
 export function loadConfig(overrides: Partial<Config> = {}): Config {
   const env = process.env;

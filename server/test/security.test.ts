@@ -152,8 +152,7 @@ describe("limits", () => {
 
 test("the release is the commit, or \"dev\" when unset or empty (as the app says)", () => {
   expect(releaseOf({ RAILWAY_GIT_COMMIT_SHA: "abc123" })).toBe("abc123");
-  expect(releaseOf({ RAILWAY_GIT_COMMIT_SHA: "", RELEASE: "" })).toBe("dev");
-  expect(releaseOf({ RELEASE: "r9" })).toBe("r9");
+  expect(releaseOf({ RAILWAY_GIT_COMMIT_SHA: "" })).toBe("dev");
   expect(releaseOf({})).toBe("dev");
 });
 
