@@ -5,12 +5,15 @@ import "./index.css";
 import { initObservability, reactErrorHandler } from "./observability";
 import { initTheme } from "./ui/theme";
 import { loadServerInfo } from "./data/server";
+import { registerServiceWorker } from "./serviceWorker";
 
 initTheme();
 initObservability();
 // What the server can do, and whether this app is still new enough for it.
 loadServerInfo();
 void navigator.storage?.persist?.();
+// Production only: dev has no built /sw.js.
+if (import.meta.env.PROD) addEventListener("load", () => void registerServiceWorker());
 
 // After a deploy, this page may ask for last release's code chunks, which are
 // gone: load the new release instead (once a minute at most, so never a loop).
