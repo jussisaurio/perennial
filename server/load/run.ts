@@ -21,6 +21,8 @@ const SECONDS = arg("seconds", 30);
 const PORT = 18900 + Math.floor(Math.random() * 1000);
 const BASE = `http://localhost:${PORT}`;
 const OUT = join(import.meta.dir, "out");
+// Real deck words: the server refuses reviews of words that don't exist.
+const DECK_IDS = (JSON.parse(await Bun.file(join(import.meta.dir, "../../decks/es/deck.json")).text()) as { words: { id: string }[] }).words.map((w) => w.id);
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
@@ -123,7 +125,7 @@ async function learner(n: number) {
     await Bun.sleep(2000 + Math.random() * 3000);
     const batch = Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => ({
       type: "review.insert",
-      row: { id: crypto.randomUUID(), lang: "es", word_id: `es.w.load${String(n).padStart(3, "0")}${String(word++ % 100).padStart(3, "0")}`, skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 4000 },
+      row: { id: crypto.randomUUID(), lang: "es", word_id: DECK_IDS[(n * 37 + word++) % DECK_IDS.length], skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 4000 },
     }));
     const t = performance.now();
     for (const m of batch) sent.set(m.row.id, t);
