@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { plantNearMiddle, settledGardenWidth, startCourse } from "./helpers";
+import { plantNearMiddle, scrollHandled, settledGardenWidth, startCourse } from "./helpers";
 
 test("walk-in garden: every word is a plant; next plant, listen, time of day, and back", async ({ page }) => {
   const errors: string[] = [];
@@ -156,6 +156,7 @@ test("2D garden: a big garden scrolls; arrows page through it; a plant opens in 
   await page.getByRole("button", { name: "Earlier words" }).click();
   await expect.poll(scrollLeft).toBeLessThan(max - 300);
   await expect(page.getByRole("button", { name: "Later words" })).toBeEnabled();
+  await scrollHandled(page);
 
   // A click on a plant opens its card; its link opens the plant in 3D.
   await page.mouse.click(...(await plantNearMiddle(page)));

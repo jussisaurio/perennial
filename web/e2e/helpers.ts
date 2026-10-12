@@ -99,6 +99,12 @@ export async function settledGardenWidth(page: Page, min = 2000) {
 }
 
 /** A point on the strip's plant nearest the middle, a little above its foot (between two plants there is a small gap). */
+/**
+ * The strip handles a scroll on the next frame (its onScroll closes any open card), so
+ * a click before then has its card closed at once. Wait for those frames after paging.
+ */
+export const scrollHandled = (page: Page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
 export async function plantNearMiddle(page: Page) {
   const box = (await page.locator(".garden-scroll").boundingBox())!;
   return page.locator(".garden svg > g[transform] rect").evaluateAll((els, mid) => {
