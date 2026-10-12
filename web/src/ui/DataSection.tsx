@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useFeatures } from "../data/server";
 import { deleteAccount, useUser } from "../data/auth";
-import { readMemory, useLearner, wordState, type Learner } from "../data/learner";
+import { readMemory, wordState } from "../core/memory";
+import { useLearner, type Learner } from "../data/learner";
 import { language } from "../content/languages";
 
 function download(name: string, type: string, body: string) {

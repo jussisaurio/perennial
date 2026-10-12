@@ -6,7 +6,8 @@
 import { courseOrder } from "../content/order";
 import type { PLANT_LINES } from "../content/voice";
 import type { LoadedDeck } from "../data/deck";
-import { isStrong, memKey, OLD_S, plantStage, recall, type Learner, type PlantStage } from "../data/learner";
+import { isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "../core/memory";
+import type { Learner } from "../data/learner";
 import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
 import { leanDeg, leanDir, type GardenPlant } from "./world";

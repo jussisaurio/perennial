@@ -1,12 +1,9 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import { isStrong, plantStage, wordState, type MemoryRow } from "../core/memory";
 import type { LoadedDeck } from "../data/deck";
-import type { Learner, MemoryRow } from "../data/learner";
-
-// The learner model's deck loader needs Vite (import.meta.glob); these tests never load a deck.
-mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")) }));
-const { plantStage, isStrong, wordState } = await import("../data/learner");
-const { plantMood, plantsFromLearner, showcasePlants, stageLabel, stageSentence, leanDeg, THIRSTY } = await import("./plants");
-const { droopFor } = await import("./world");
+import type { Learner } from "../data/learner";
+import { leanDeg, plantMood, plantsFromLearner, showcasePlants, stageLabel, stageSentence, THIRSTY } from "./plants";
+import { droopFor } from "./world";
 
 describe("one definition of a word's stage", () => {
   test("a plant blooms exactly when its word is known", () => {

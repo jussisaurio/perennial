@@ -1,5 +1,6 @@
 import { DAY_MS, startOfDay } from "../core/day";
-import { readMemory, wordState, type Learner } from "../data/learner";
+import { readMemory, wordState } from "../core/memory";
+import type { Learner } from "../data/learner";
 
 export interface CourseStats {
   known: number;
@@ -47,4 +48,18 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
   }
   const minutesToday = reviews.filter((r) => r.ts >= startOfToday).reduce((s, r) => s + r.duration_ms, 0) / 60_000;
   return { known, learning, seeds: l.fresh().length, retention30: total >= 20 ? pass / total : null, days, minutesToday };
+}
+
+/** New words introduced today: their first reading review happened today. */
+export function newWordsToday(l: Learner): number {
+  const dayStart = startOfDay();
+  const first = new Map<string, number>();
+  for (const r of l.reviews) {
+    if (r.skill !== "read") continue;
+    const id = l.resolve(r.word_id);
+    const t = Date.parse(r.reviewed_at);
+    const prev = first.get(id);
+    if (prev === undefined || t < prev) first.set(id, t);
+  }
+  return [...first.values()].filter((t) => t >= dayStart).length;
 }

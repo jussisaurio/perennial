@@ -8,7 +8,7 @@ import { fsrs } from "../core/scheduler";
 import { ensureUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
 import { ApiError, postWrite } from "../data/http";
-import { memKey } from "../data/learner";
+import { memKey } from "../core/memory";
 import { COURSE_DEFAULTS } from "../data/rows";
 import type { DeckLang } from "../deck/schema";
 import { rng } from "../lib/seed";

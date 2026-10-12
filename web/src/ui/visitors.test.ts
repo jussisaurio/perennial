@@ -1,11 +1,8 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import { deriveMemory, wordState } from "../core/memory";
 import type { ReviewRow } from "../data/rows";
 import { milestoneLine } from "../garden/visitors";
-
-// The deck loader needs Vite (import.meta.glob); these tests never load a deck.
-mock.module("../data/deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks in tests")) }));
-const { deriveMemory, wordState } = await import("../data/learner");
-const { knownAt, knownWords } = await import("./visitors");
+import { knownAt, knownWords } from "./visitors";
 
 const DAY = 86_400_000;
 const start = new Date(2026, 0, 1, 9).getTime();

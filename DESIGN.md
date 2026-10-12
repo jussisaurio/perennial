@@ -43,7 +43,7 @@ by a memory model) and drops most of what grew around it.
 ```
 decks/<lang>/         static decks (JSON): the shared course, versioned with the code, checked by CI
 web/ (Vite + React + TS PWA)
-  core/      pure, tested logic: FSRS, session planner, answer checking
+  core/      pure, tested logic: FSRS, memory from reviews, session planner, answer checking, days
   data/      TanStack DB collections + Electric shapes, offline write queue, auth, learner model
   deck/      deck schema and id resolution (shared with scripts/deck)
   content/   course languages, tokenizer, course order, Perennial's lines

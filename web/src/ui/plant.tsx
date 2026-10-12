@@ -3,7 +3,7 @@
 // Growth follows memory stability: sprout → bud → bloom.
 
 import type { ReactNode } from "react";
-import { BUD_S, OLD_S, plantStage } from "../data/learner";
+import { BUD_S, OLD_S, plantStage } from "../core/memory";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
 import { hash32, rng } from "../lib/seed";
 

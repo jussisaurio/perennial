@@ -1,7 +1,8 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { deriveMemory, readMemory, wordState, type Learner, type MemoryRow, type Word } from "../data/learner";
+import { deriveMemory, readMemory, wordState, type MemoryRow } from "../core/memory";
+import type { Learner, Word } from "../data/learner";
 import { startOfDay } from "../core/day";
 import type { ReviewRow } from "../data/rows";
 import {

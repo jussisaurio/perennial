@@ -3,7 +3,7 @@
 
 import type { FSRS, Grade } from "./fsrs";
 import { DAY_MS } from "./day";
-import type { MemoryRow } from "../data/learner";
+import type { MemoryRow } from "./memory";
 import type { Skill } from "../data/rows";
 
 export type Task =
