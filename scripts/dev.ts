@@ -24,11 +24,10 @@ function run(cmd: string[], cwd = ROOT) {
 
 console.log("▸ Postgres + Electric");
 run(["docker", "compose", "up", "-d", "--wait"]);
-for (const dir of ["server", "web"]) {
-  if (!existsSync(join(ROOT, dir, "node_modules"))) {
-    console.log(`▸ installing ${dir}`);
-    run(["bun", "install"], join(ROOT, dir));
-  }
+// One install at the root covers every workspace (web, server, scripts).
+if (["node_modules", "web/node_modules", "server/node_modules"].some((d) => !existsSync(join(ROOT, d)))) {
+  console.log("▸ installing dependencies");
+  run(["bun", "install"]);
 }
 console.log("▸ migrations");
 run(["bun", "src/migrate.ts"], join(ROOT, "server"));

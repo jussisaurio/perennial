@@ -1,6 +1,7 @@
 {
   "name": "perennial",
   "private": true,
+  "workspaces": ["web", "server", "scripts"],
   "scripts": {
     "dev": "bun scripts/dev.ts",
     "dev:ai": "bun scripts/dev.ts --ai"

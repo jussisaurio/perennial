@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { advance, expectServerRows, grade, kicker, serverRows, startCourse, startSession } from "./helpers";
+import { advance, expectServerRows, grade, kicker, reveal, serverRows, startCourse, startSession } from "./helpers";
 
 async function continueIntros(page: Page, n: number) {
   for (let i = 0; i < n; i++) {
@@ -26,10 +26,16 @@ test("double-clicking Show does not grade the unseen answer", async ({ page }) =
   await startCourse(page);
   await startSession(page);
   await continueIntros(page, 4);
+  const card = await page.locator(".session").getAttribute("data-card");
   await page.getByRole("button", { name: /Show answer/ }).dblclick();
   await expect(page.getByRole("button", { name: /I remembered/ })).toBeVisible();
-  await page.waitForTimeout(1500); // give a wrong write time to arrive, if there were one
-  expect(await serverRows(page, "review")).toHaveLength(0);
+  await expect(page.locator(".session")).toHaveAttribute("data-card", card!); // still the same card
+  // Grade "I forgot" for real. Writes upload in order, so once that one is on
+  // the server, a stray "I remembered" from the double-click would be too.
+  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
+  await page.getByRole("button", { name: /I forgot/ }).click();
+  await expect.poll(async () => (await serverRows<{ grade: number }>(page, "review")).some((r) => r.grade === 1), { timeout: 15_000 }).toBe(true);
+  expect(await serverRows(page, "review")).toHaveLength(1);
 });
 
 test("Forgot is acknowledged, retried with its own label, and undo reverts it on the server too", async ({ page }) => {
@@ -38,8 +44,7 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
   await continueIntros(page, 4);
   const checked = (await page.locator(".prompt b").textContent())!;
   const lemma = (await page.locator("main.card").getAttribute("data-lemma"))!;
-  await page.keyboard.press("Space");
-  await page.waitForTimeout(450); // past the double-click guard
+  await reveal(page);
   await page.getByRole("button", { name: /I forgot/ }).click();
   await expect(page.getByRole("status")).toHaveText(/see this word again soon/);
   await expectServerRows(page, "review", 1);

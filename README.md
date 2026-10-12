@@ -30,7 +30,7 @@ Postgres + Electric         learner data; Electric streams each learner's rows t
   - **Perennial AI:** task endpoints (`/api/ai/mine`, `/api/ai/examples`) through the Anthropic SDK. Each word costs one AI word from a monthly allowance (`FREE_CREDITS`). A global monthly budget (`MONTHLY_BUDGET_USD`) pauses AI for everyone when it is reached.
   - Also: `/health`, account deletion, structured JSON logs with request ids, Sentry (`server/instrument.ts`). All settings: `server/src/config.ts`.
 - **Observability in the browser** (`web/src/observability.ts`): Sentry error reports and privacy-first PostHog events (no cookies, no autocapture, no session replay). Both are off unless their keys are set at build time.
-- **Client** (`web/src/data/`): each synced table is a TanStack DB collection fed by an Electric shape, kept in SQLite (OPFS) on the device where the browser allows it. Writes apply on the device at once, wait in an offline queue (IndexedDB), and go to `/api/write` when there is a connection. Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
+- **Client** (`web/src/data/`): each synced table is a TanStack DB collection fed by an Electric shape, kept in SQLite (OPFS) on the device where the browser allows it. `@journeyapps/wa-sqlite` is pinned to 1.7.2 because `@tanstack/browser-db-sqlite-persistence` declares (and tests against) `^1.4.1`; move to 2.x only when that peer range does. Writes apply on the device at once, wait in an offline queue (IndexedDB), and go to `/api/write` when there is a connection. Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
 
 Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Railway + PlanetScale Postgres). Data model: [docs/schema.md](docs/schema.md). Deck content process: [docs/decks.md](docs/decks.md). Design and research: [DESIGN.md](DESIGN.md).
 
@@ -43,7 +43,7 @@ bun run dev          # Postgres + Electric, migrations, API (:8787) and app (htt
 bun run dev:ai       # the same, plus a mock model so Perennial AI works without a key
 ```
 
-It installs dependencies on first run. Ctrl-C stops the API and the app; `docker compose down` stops the database.
+It installs dependencies on first run. `web`, `server` and `scripts` are Bun workspaces with one lockfile (`bun.lock`), so `bun install` at the repo root installs all of them; package scripts still run from each folder (`cd web && bun run build`). Ctrl-C stops the API and the app; `docker compose down` stops the database.
 
 No keys are needed. Without `RESEND_API_KEY`, the server is in dev mode: sign-in codes are printed in the output as `[mail] sign-in code for you@example.com: 123456`.
 
@@ -82,7 +82,7 @@ The shared course is static JSON in `decks/<lang>/`. The format and the rules ar
 - `deck.json`: the published deck. Generated and committed.
 
 ```sh
-cd scripts && bun install && cd ..
+bun install                                    # once, at the repo root (all workspaces)
 bun scripts/deck/build.ts es                   # after you edit the source: assign ids, write deck.json and ids.json
 bun scripts/deck/review.ts es 0001 --author … --reviewer …   # proofreader approves a source file (see docs/decks.md)
 bun scripts/deck/check.ts --base origin/main   # what CI runs: schema, approvals, up to date, compatibility, diff report

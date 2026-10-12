@@ -441,6 +441,13 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
   const grade = (g: Grade) => {
     if (Date.now() - revealedAt.current >= GUARD_MS) onDone(g);
   };
+  // Exposed as data-armed so tests can wait for the guard instead of sleeping.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!revealed) return;
+    const t = setTimeout(() => setArmed(true), GUARD_MS);
+    return () => clearTimeout(t);
+  }, [revealed]);
   const audioText = example?.text ?? lexeme.lemma;
   const play = () => void speak(audioText, tag);
   useEffect(() => {
@@ -457,7 +464,7 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
   // Grades are about the word; on a listening card that means "did I catch it".
   const [no, yes] = listen ? ["Did not understand", "Understood"] : ["I forgot", "I remembered"];
   return (
-    <main className="card" data-lemma={lexeme.lemma}>
+    <main className="card" data-lemma={lexeme.lemma} data-armed={armed || undefined}>
       <Kicker kind={kicker} />
       <p className="prompt">
         {listen ? (

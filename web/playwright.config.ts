@@ -1,10 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // Ports are offset from the dev defaults so the suite can run beside `bun dev`.
+// E2E_PORT_OFFSET shifts them again, so two checkouts can run the suite at once.
 // Needs Postgres + Electric: `docker compose up -d` at the repo root.
-const WEB = 5181;
-const API = 18787;
-const LLM = 18788;
+const OFFSET = Number(process.env.E2E_PORT_OFFSET ?? 0);
+const WEB = 5181 + OFFSET;
+const API = 18787 + OFFSET;
+const LLM = 18788 + OFFSET;
 const SERVER_ENV = [`PORT=${API}`, "PERENNIAL_DEV=1", "LOG_LEVEL=warn", `APP_URL=http://localhost:${WEB}`, "ANTHROPIC_API_KEY=test", `ANTHROPIC_BASE_URL=http://localhost:${LLM}`, "FREE_CREDITS=6"].join(" ");
 
 export default defineConfig({
@@ -13,6 +15,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   // One retry on CI: software WebGL on shared runners can be slow to start.
   retries: process.env.CI ? 1 : 0,
+  // Every test makes its own learner, so tests run in any order and at once.
+  // CI runners have 2 vCPUs, which Playwright would turn into 1 worker; the
+  // tests mostly wait on the network, so 2 per runner (CI also shards the suite).
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL: `http://localhost:${WEB}`,
