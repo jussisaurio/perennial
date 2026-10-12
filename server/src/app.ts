@@ -149,9 +149,15 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
     return serveStatic(config.staticDir, url.pathname);
   }
 
+  // Other names for the app send people to the one in APP_URL (sign-in works
+  // only there): www, and Railway's own domain once a custom domain is set.
+  const appHost = new URL(config.appUrl).host;
+  const isAlias = (host: string) => host !== appHost && (host === `www.${appHost}` || host.endsWith(".up.railway.app"));
+
   async function fetch(req: Request): Promise<Response> {
     const id = req.headers.get("x-request-id")?.slice(0, 64) || crypto.randomUUID();
     const url = new URL(req.url);
+    if (isAlias(url.host)) return new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } });
     const started = performance.now();
     return withLogContext({ reqId: id }, async () => {
       let res: Response;
@@ -186,6 +192,8 @@ export function createApp(config: Config, sql: SQL, deps: { ai?: AIService } = {
       }
       const out = new Response(res.body, res);
       out.headers.set("x-request-id", id);
+      // API answers are per user and live: a CDN in front must never keep them.
+      if (url.pathname.startsWith("/api/") && !out.headers.has("cache-control")) out.headers.set("cache-control", "no-store");
       for (const [k, v] of Object.entries(headers)) if (!out.headers.has(k)) out.headers.set(k, v);
       return out;
     });
