@@ -227,7 +227,7 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 | `ANONYMOUS_RETENTION_DAYS` | `60` | Used by housekeeping. Keep the value equal on both services. |
 | `SENTRY_DSN` | not set | Server error reports (web and housekeeping). |
 | `TURNSTILE_SECRET_KEY` | not set | Server half of the bot check (see `VITE_TURNSTILE_SITE_KEY`). Recommended before launch. |
-| `CLIENT_IP_HEADERS` | `x-real-ip,x-forwarded-for` | Headers our proxy sets with the client IP, for rate limits. Railway sets `X-Real-IP`. Behind Cloudflare, use `cf-connecting-ip`. If no header gives an IP, all clients share one rate-limit bucket: check the logs for Better Auth's warning after the first deploy. |
+| `CLIENT_IP_HEADERS` | `x-real-ip,x-forwarded-for` | Headers our proxy sets with the client IP, for rate limits. Railway sets `X-Real-IP`. Behind Cloudflare, use `cf-connecting-ip`: the server trusts it only when `X-Real-IP` is one of Cloudflare's IP ranges (server/src/clientIp.ts), and otherwise uses `X-Real-IP`, so a request that skips Cloudflare can't choose its own IP. If no header gives an IP, all clients share one rate-limit bucket: check the logs for Better Auth's warning after the first deploy. |
 | `CODES_PER_EMAIL_15MIN`, `CODES_PER_EMAIL_DAY` | `3`, `10` | Sign-in codes one address can receive, whatever the IP (email bombing). Extra requests get the normal answer but no email. |
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | |
 | `POSTHOG_HOST` | not set | Optional. An extra origin for the CSP `connect-src`, for example a PostHog reverse proxy. Normally not needed: see `VITE_POSTHOG_HOST`. |

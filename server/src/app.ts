@@ -7,6 +7,7 @@ import type { SQL } from "bun";
 import { z } from "zod";
 import { AIService, ExamplesIn, MineIn } from "./ai";
 import { createAuth } from "./auth";
+import { withClientIp } from "./clientIp";
 import type { Config } from "./config";
 import { fail, HttpError, json, readJson, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { addLogContext, event, log, traceId, withLogContext } from "./log";
@@ -165,7 +166,8 @@ export function createApp(config: Config, sql: SQL) {
   const appHost = new URL(config.appUrl).host;
   const isAlias = (host: string) => host !== appHost && (host === `www.${appHost}` || host.endsWith(".up.railway.app"));
 
-  async function fetch(req: Request): Promise<Response> {
+  async function fetch(incoming: Request): Promise<Response> {
+    const req = withClientIp(incoming, config.clientIpHeaders);
     const id = req.headers.get("x-request-id")?.slice(0, 64) || crypto.randomUUID();
     const url = new URL(req.url);
     if (isAlias(url.host)) {

@@ -12,6 +12,7 @@ import { betterAuth } from "better-auth";
 import { anonymous, captcha, emailOTP } from "better-auth/plugins";
 import { Pool } from "pg";
 import type { Config } from "./config";
+import { CLIENT_IP_HEADER } from "./clientIp";
 import { event, log } from "./log";
 import type { Mailer } from "./mail";
 
@@ -84,7 +85,8 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
     },
     advanced: {
       database: { generateId: "uuid" },
-      ipAddress: { ipAddressHeaders: config.clientIpHeaders },
+      // Worked out from CLIENT_IP_HEADERS by clientIp.ts (cf-connecting-ip only via Cloudflare).
+      ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] },
     },
     plugins: [
       emailOTP({
