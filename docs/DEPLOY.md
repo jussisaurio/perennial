@@ -444,8 +444,6 @@ These are not problems in this runbook, but you should know them:
 
 - **Dev mode depends on `RESEND_API_KEY`.** If the key is missing, the server turns on dev mode silently. Step 5 has a check for it.
 - **`BETTER_AUTH_SECRET` has a public default.** The server starts without it. Always set it.
-- **Sentry US-region DSNs are blocked by the CSP.** The server allows `*.ingest.sentry.io` and `*.ingest.de.sentry.io`. A DSN host like `o123.ingest.us.sentry.io` matches neither, so browser reports fail. Use an EU-region Sentry org, or fix `server/src/app.ts` first.
-- **Housekeeping does not load Sentry** (it does not use `--preload ./instrument.ts`). Its errors appear only in the Railway log and as a failed cron run.
 
 ## Continuous deployment and rollback
 

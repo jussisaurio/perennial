@@ -3,7 +3,7 @@
 // logs and error reports carry no tokens, codes or emails.
 
 import { afterAll, describe, expect, test } from "bun:test";
-import { scrub } from "../instrument";
+import { scrub, sentrySettings } from "../instrument";
 import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 
 const t = await startApp();
@@ -153,6 +153,14 @@ describe("wide events", () => {
     // Email sign-in from the anonymous session: a new user, signed in, linked.
     expect(at("/api/auth/sign-in/email-otp").at(-1)).toMatchObject({ signup: "email", signin: "email", linkedFrom: anonId, status: 200 });
     for (const l of requests) expect(JSON.stringify(l)).not.toContain(email);
+  });
+});
+
+describe("Sentry settings", () => {
+  test("unset or empty values fall back, never \"\" or a 0 trace rate", () => {
+    expect(sentrySettings({ RAILWAY_ENVIRONMENT_NAME: "", NODE_ENV: "", SENTRY_TRACES_SAMPLE_RATE: "", RAILWAY_GIT_COMMIT_SHA: "" })).toEqual({ environment: "development", release: "dev", tracesSampleRate: 0.1 });
+    expect(sentrySettings({ RAILWAY_ENVIRONMENT_NAME: "production", SENTRY_TRACES_SAMPLE_RATE: "0.25", RAILWAY_GIT_COMMIT_SHA: "abc" })).toEqual({ environment: "production", release: "abc", tracesSampleRate: 0.25 });
+    expect(sentrySettings({ NODE_ENV: "production" }).environment).toBe("production");
   });
 });
 
