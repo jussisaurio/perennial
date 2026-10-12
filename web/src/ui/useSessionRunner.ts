@@ -211,7 +211,8 @@ export function useSessionRunner({ lang, minutes, extra = false, onExit, flash, 
       practised.current.add(word.id);
       const carried = introMs.current.get(word.id);
       introMs.current.delete(word.id);
-      const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), // ?? 0: no intro for this word in this session sentence_id: example?.id ?? null });
+      // ?? 0: no intro for this word in this session.
+      const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), sentence_id: example?.id ?? null });
       if (grade >= 3) {
         // The new review shows up in the learner on the next render; let it land first.
         setTimeout(() => {
