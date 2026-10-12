@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { serverRows } from "./helpers";
+import { addEmail, serverRows, startCourse } from "./helpers";
 
 test("dev demo data: ?demo=es gives a garden with a review history", async ({ page }) => {
   await page.goto("/?demo=es:30#/garden");
@@ -33,4 +33,25 @@ test("dev tools: the demo button opens the demo learner's garden", async ({ page
   await page.getByLabel("Words studied").selectOption("10");
   await page.getByRole("button", { name: "Make demo learner and open the garden" }).click();
   await expect(page.getByText(/10 plants · \d+ in bloom/)).toBeVisible({ timeout: 20000 });
+});
+
+// #171: the demo only ever touches an anonymous demo learner, never a real account.
+test("dev demo: ?demo=off leaves a real account alone", async ({ page }) => {
+  await startCourse(page);
+  const email = await addEmail(page);
+  await page.goto("/?demo=off#/settings");
+  await expect(page.getByText(email)).toBeVisible();
+  expect((await page.request.get("/api/me")).status()).toBe(200);
+});
+
+test("dev demo: when sign-out fails, the demo writes nothing into the account", async ({ page }) => {
+  await startCourse(page);
+  await addEmail(page);
+  const before = (await serverRows(page, "review")).length;
+  const errors: string[] = [];
+  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  await page.route("**/api/auth/sign-out", (route) => route.fulfill({ status: 500, json: {} }));
+  await page.goto("/?demo=es:5");
+  await expect.poll(() => errors.some((e) => e.includes("[demo] could not seed es") && e.includes("still signed in"))).toBe(true);
+  expect((await serverRows(page, "review")).length).toBe(before);
 });

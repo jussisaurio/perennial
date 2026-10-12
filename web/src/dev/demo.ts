@@ -5,7 +5,7 @@
 import { DAY_MS } from "../core/day";
 import { replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
-import { ensureUser, signOut } from "../data/auth";
+import { currentUser, ensureUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
 import { keepCourse } from "../data/device";
 import { ApiError, postWrite } from "../data/http";
@@ -26,7 +26,8 @@ const DAYS = 90;
 export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
   keepCourse(lang);
   await signOut();
-  await ensureUser();
+  // signOut only warns when it fails: then this is the old user, maybe a real account.
+  if (!(await ensureUser()).anonymous) throw new Error("still signed in to an account: sign out first, so the demo does not write into it");
   const deck = await loadDeck(lang);
   const now = Date.now();
   const r = rng(count * 31 + DAYS);
@@ -54,8 +55,10 @@ export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
   for (let i = 0; i < mutations.length; i += 500) await post(mutations.slice(i, i + 500));
 }
 
-/** Throw the demo learner away (it is anonymous, so this deletes it). */
+/** Throw the demo learner away. Only an anonymous one: a real account is never deleted here. */
 export async function removeDemo(): Promise<void> {
+  const user = await currentUser();
+  if (user && !user.anonymous) return console.warn("[demo] signed in to an account, not a demo learner: nothing deleted");
   // If the delete fails, say so and sign out anyway: this device forgets the learner,
   // and a leftover anonymous row in a dev database does no harm.
   const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).catch((e: unknown) => e);
