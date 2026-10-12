@@ -10,7 +10,7 @@
 // refused with 426 until it reloads).
 
 import { useSyncExternalStore } from "react";
-import { APP_VERSION } from "../version";
+import { APP_VERSION, RELEASE } from "../version";
 import { reloadNeeded } from "./http";
 
 export interface Features {
@@ -65,11 +65,8 @@ async function load() {
   }
 }
 
-/** The commit this app was built from ("dev" locally). */
-const BUILT = (import.meta.env.VITE_RELEASE as string | undefined) || "dev";
-
 /** A different, real release on the server than the one this app came from. */
-export function newDeploy(serverRelease: string, built = BUILT): boolean {
+export function newDeploy(serverRelease: string, built = RELEASE): boolean {
   return built !== "dev" && serverRelease !== "dev" && !!serverRelease && serverRelease !== built;
 }
 
