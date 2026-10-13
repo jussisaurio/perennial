@@ -83,6 +83,11 @@ function timeline(m: GrowthMoment) {
   return { plantEnd, watered, growStart, growMs, growEnd, blooms, sparkleStart, end: blooms ? Math.max(end, sparkleStart + T.sparkle) : end };
 }
 
+/** When the moment's chime should sound (ms): as the seed lands, or as the first drop reaches the soil. */
+export function chimeDelay(m: GrowthMoment): number {
+  return m.planted ? T.seedFall : T.canIn + T.tip - 30 + T.drop;
+}
+
 const easeIn = (t: number) => t * t;
 export const easeOut = (t: number) => 1 - (1 - t) ** 3;
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
