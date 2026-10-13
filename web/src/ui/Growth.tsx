@@ -85,6 +85,7 @@ function timeline(m: GrowthMoment) {
 
 const easeIn = (t: number) => t * t;
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 /** Like easeOut, but overshoots a little and settles: a springy stretch upward. */
 const easeOutBack = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1) ** 2;
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
@@ -145,7 +146,8 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
   const g = phase(e, tl.growStart, tl.growMs);
   // Height and form share one pace, so leaves and bud come as the stem rises.
   // Only the height springs: an overshooting form would open a bud's flower for a moment.
-  const form = FORM[m.from.stage] + (FORM[m.to.stage] - FORM[m.from.stage]) * easeOut(g);
+  // A first bloom opens across the middle of its time, so the reveal is seen, not over in a blink.
+  const form = FORM[m.from.stage] + (FORM[m.to.stage] - FORM[m.from.stage]) * (tl.blooms ? easeInOut(g) : easeOut(g));
   const from = m.from.stage === "seed" ? 0 : growthOf(m.from.s);
   const growth = Math.max(0, from + (growthOf(m.to.s) - from) * easeOutBack(g));
   // Planting: the seed falls in, then the soil gives a little and settles.

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { genome, Plant } from "./plant";
+import { genome, Plant, PlantForm } from "./plant";
 
 test("a word always grows the same plant; different words grow different ones", () => {
   expect(genome("casa")).toEqual(genome("casa"));
@@ -17,7 +17,10 @@ test("a bud stays green: a word's flower colour shows only when it blooms (#207)
     const draw = (stage: "sprout" | "bud" | "bloom") => renderToStaticMarkup(createElement(Plant, { word, growth: 0.5, stage }));
     expect(draw("sprout")).not.toContain(petal);
     expect(draw("bud")).not.toContain(petal);
+    expect(draw("bud")).not.toContain(genome(word).petalEdge);
     expect(draw("bud")).toContain(genome(word).bud);
+    // On the way from sprout to bud, nothing of the flower shows either.
+    expect(renderToStaticMarkup(createElement(PlantForm, { word, growth: 0.5, form: 1.9 }))).not.toContain(petal);
     expect(draw("bloom")).toContain(petal);
   }
 });

@@ -69,7 +69,7 @@ export function genome(word: string): Genome {
     opposite: r() > 0.6,
     leaf: hsl(leafHue, between(r, 32, 50), between(r, 52, 62)),
     // From leafHue only, with no new draws from r, so every other trait stays as it was.
-    bud: hsl(leafHue + 8, 42, 68),
+    bud: hsl(leafHue + 8, 46, 60),
     budEdge: hsl(leafHue, 36, 44),
     stem: hsl(leafHue - 6, 35, 40),
     curve: between(r, -1, 1),
