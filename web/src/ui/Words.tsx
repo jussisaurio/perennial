@@ -85,7 +85,8 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
         ...courseOrder(learner.deck).map((w) => learner.words.get(w.id)!),
         ...[...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => a.rank - b.rank),
       ].filter((w) => !listed.has(w.id) && !byWord.get(w.id)?.some((m) => m.reps > 0));
-      return [...next, ...others].slice(0, 500);
+      // The next 500 are plenty to browse; the few others always stay, so a word paused here stays in view.
+      return [...next.slice(0, 500), ...others];
     };
     // Words from your own texts, newest first (user words are ranked in the order added).
     const mine = () => [...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => b.rank - a.rank);
