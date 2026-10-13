@@ -129,3 +129,38 @@ test("with 'Next card right away' the summary does not replay (#216)", async ({ 
   await expect(garden.locator("circle.glow")).toHaveCount(1);
   await expect(garden).not.toHaveAttribute("data-replaying", "true");
 });
+
+/** Counts notes started by the page's Web Audio, instead of playing them. */
+async function countNotes(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { notes: number; AudioContext: unknown };
+    w.notes = 0;
+    const Real = window.AudioContext;
+    w.AudioContext = class extends Real {
+      createOscillator() {
+        const o = super.createOscillator();
+        const start = o.start.bind(o);
+        o.start = (when?: number) => {
+          w.notes++;
+          start(when);
+        };
+        return o;
+      }
+    };
+  });
+  return () => page.evaluate(() => (window as unknown as { notes: number }).notes);
+}
+
+test("a good answer chimes the word's note; a wrong one and sound off stay silent (#215)", async ({ page }) => {
+  const notes = await countNotes(page);
+  await startCourse(page);
+  await page.locator("button.start").click();
+  for (let i = 0; i < 4; i++) await answer(page, "1"); // four seeds planted: four chimes (two oscillators each)
+  await expect.poll(notes).toBe(8);
+  await expect(kicker(page)).toHaveText(/quick check/);
+  await answer(page, "1"); // I forgot: no chime
+  expect(await notes()).toBe(8);
+  await page.getByRole("button", { name: "Mute sound" }).click();
+  await answer(page, "2"); // remembered, but the sound is off
+  expect(await notes()).toBe(8);
+});

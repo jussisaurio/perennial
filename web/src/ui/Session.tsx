@@ -8,6 +8,7 @@ import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
 import { Growth, growthOn, grows, type GrowthMoment, type PlantLook } from "./Growth";
+import { chime } from "./chime";
 import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats } from "./stats";
@@ -55,6 +56,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
         resolve();
       };
       setGrowing(m);
+      chime(m.word);
     });
   };
   // Any tap or key skips the moment. Listening starts after the answer's own
