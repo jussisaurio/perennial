@@ -97,6 +97,25 @@ test("a known word's page can be shared as a picture (#225)", async ({ page }) =
   // A PNG, 1080 × 1350 (width and height are at bytes 16–23).
   expect(png.subarray(1, 4).toString()).toBe("PNG");
   expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1080, 1350]);
-  await file.saveAs("/private/tmp/claude-501/-Users-jussi-projects-ankee/53cda574-db3d-4bad-bffc-f3f1c692bc7d/scratchpad/shared-page.png");
   await expect(page.getByRole("button", { name: "Picture saved. Share it from your files." })).toBeVisible();
+});
+
+test("a long word and a long meaning stay on the picture's card", async ({ page }) => {
+  await startCourse(page);
+  // The paper beside the card (x < 100 or x > 980) stays bare where the text is: no letters run off the card.
+  const inked = await page.evaluate(async () => {
+    const { pageImage } = await import(/* @vite-ignore */ "/src/ui/pageImage.ts");
+    const gloss = "to pass (a test); bestehen aus = to consist of; bestehen auf = to insist on"; // the longest in the decks
+    const img = await createImageBitmap(await pageImage({ lemma: "definitivamente", gloss, latin: "Definitiva perennis", rare: "Rare: golden", s: 30, stage: "bloom" }));
+    const ctx = new OffscreenCanvas(img.width, img.height).getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const [r, g, b] = ctx.getImageData(5, 760, 1, 1).data;
+    let n = 0;
+    for (const x of [40, 990]) {
+      const d = ctx.getImageData(x, 740, 50, 480).data;
+      for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - r) + Math.abs(d[i + 1] - g) + Math.abs(d[i + 2] - b) > 60) n++;
+    }
+    return n;
+  });
+  expect(inked).toBe(0);
 });

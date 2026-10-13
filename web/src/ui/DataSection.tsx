@@ -4,13 +4,7 @@ import { deleteAccount, useUser } from "../data/auth";
 import { readMemory, wordState } from "../core/memory";
 import { useLearner, type Learner } from "../data/learner";
 import { language } from "../content/languages";
-
-function download(name: string, type: string, body: string) {
-  const url = URL.createObjectURL(new Blob([body], { type }));
-  const a = Object.assign(document.createElement("a"), { href: url, download: name });
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
+import { download } from "./files";
 
 const stamp = () => new Date().toISOString().slice(0, 10);
 
@@ -18,7 +12,7 @@ const stamp = () => new Date().toISOString().slice(0, 10);
 function exportJSON(l: Learner) {
   const words = l.studied.map((w) => ({ ...w, sentences: l.sentences(w.id) }));
   const data = { app: "perennial", version: 2, exportedAt: new Date().toISOString(), language: l.lang, course: l.course, words, reviews: l.reviews, wordStates: [...l.states.values()] };
-  download(`perennial-${l.lang}-${stamp()}.json`, "application/json", JSON.stringify(data, null, 2));
+  download(`perennial-${l.lang}-${stamp()}.json`, new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
 }
 
 const csvCell = (v: unknown) => {
@@ -34,7 +28,7 @@ function exportCSV(l: Learner) {
     if (w.status === "ignored") continue;
     rows.push([language(l.lang).name, w.lemma, w.gloss, w.pos ?? "", w.notes ?? "", String(l.reviewsByWord.get(w.id)?.length ?? 0), wordState(readMemory(l, w.id)), w.status]);
   }
-  download(`perennial-words-${l.lang}-${stamp()}.csv`, "text/csv", rows.map((r) => r.map(csvCell).join(",")).join("\n"));
+  download(`perennial-words-${l.lang}-${stamp()}.csv`, new Blob([rows.map((r) => r.map(csvCell).join(",")).join("\n")], { type: "text/csv" }));
 }
 
 function DeleteAccount({ lang }: { lang: string }) {
