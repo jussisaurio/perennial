@@ -19,11 +19,10 @@ import { DAILY_MINUTES } from "../data/practice";
 import { plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
-import { broughtVisitor } from "./visitors";
+import { broughtVisitor, gardenBrought } from "./visitors";
 import { sessionVisit, type SessionVisit } from "../garden/sessionVisitor";
 import { GARDEN_VISITOR_ART } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
-import { gardenBrought } from "./visitors";
 import { startOfDay, today } from "../core/day";
 import { visitor, VISITORS, type VisitorView, visitorViews } from "../garden/visitors";
 
@@ -555,13 +554,16 @@ function watcherFor(l: Learner, start: number): { visit: SessionVisit; view: Vis
   return visit ? { visit, view: visitorViews([visit.id], l.lang)[0], start } : null;
 }
 
-/** A visitor peeking in at the corner while the learner practises (#210). Its word on hover or tap, nothing more. */
+/**
+ * A visitor sitting by the card's plant while the learner practises (#210). Only a picture:
+ * it takes no taps, so it never gets in the way of an answer.
+ */
 function Watcher({ view }: { view: VisitorView }) {
   const art = GARDEN_VISITOR_ART[visitor(view.id).garden!]!;
   const w = art.rows[0].length;
   const h = art.rows.length;
   return (
-    <div className="session-watcher" title={`${view.word} · ${view.gloss}`} aria-label={`${view.word} · ${view.gloss}`} role="img">
+    <div className="session-watcher" aria-label={`${view.word} · ${view.gloss}`} role="img">
       <svg width={w * 2.2} height={h * 2.2} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" aria-hidden="true">
         <PixelRects art={art} />
       </svg>
