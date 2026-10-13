@@ -272,6 +272,7 @@ Production uses `playperennial.com`, with DNS and the CDN at Cloudflare (Free pl
 3. Wait until `railway domain status <domain> --service perennial` shows `CERTIFICATE_STATUS_TYPE_VALID`. Railway cannot get its certificate while the record is proxied.
 4. In Cloudflare, set **SSL/TLS** to **Full (strict)** and turn on **Always Use HTTPS**. Then set the two `CNAME` records to **Proxied** (orange cloud).
 5. On `web`, set `APP_URL=https://playperennial.com` and `CLIENT_IP_HEADERS=cf-connecting-ip`. Behind Cloudflare, `X-Real-IP` is the IP of Cloudflare, not of the learner.
+6. In Cloudflare, under **Caching → Configuration**, set **Browser Cache TTL** to **Respect Existing Headers**. With any other value Cloudflare replaces our `no-cache` with its own max-age (4 hours by default), so browsers keep an old `/sw.js` and `index.html` after a deploy. Check: `curl -sI https://playperennial.com/sw.js | grep -i cache-control` shows `no-cache`.
 
 Better Auth accepts requests only from `APP_URL`. So the server redirects `www` and the Railway domain to `APP_URL` (308, path kept).
 
