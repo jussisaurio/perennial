@@ -14,18 +14,25 @@ let mockProc: ReturnType<typeof Bun.spawn> | null = null;
 /** One mock LLM process per test file. */
 export async function mockLLM(): Promise<string> {
   if (!mockProc) {
-    mockPort = 20000 + Math.floor(Math.random() * 20000);
-    mockProc = Bun.spawn(["bun", "mock-llm.ts"], { cwd: `${import.meta.dir}/..`, env: { ...process.env, PORT: String(mockPort) }, stdout: "ignore" });
-    // Wait for it to listen (up to 2.5 s); a mock that never starts says so here,
-    // not later as a puzzling AI test failure.
-    let up = false;
-    for (let i = 0; i < 50 && !up; i++) {
-      up = await fetch(`http://localhost:${mockPort}/v1/messages`, { method: "OPTIONS" }).then(
-        () => true,
-        () => Bun.sleep(50).then(() => false), // not listening yet
-      );
-    }
-    if (!up) throw new Error(`mock LLM did not start on port ${mockPort} within 2.5 s`);
+    // Port 0: the system picks a free one, and the mock prints it once it listens.
+    // (A random port could be taken: CI once failed with "Is port 34900 in use?".)
+    const proc = Bun.spawn(["bun", "mock-llm.ts"], { cwd: `${import.meta.dir}/..`, env: { ...process.env, PORT: "0" }, stdout: "pipe" });
+    mockProc = proc;
+    const port = await Promise.race([
+      (async () => {
+        let text = "";
+        for await (const chunk of proc.stdout) {
+          text += new TextDecoder().decode(chunk);
+          const m = text.match(/localhost:(\d+)/);
+          if (m) return Number(m[1]);
+        }
+        return null; // the mock exited before listening
+      })(),
+      Bun.sleep(5000).then(() => null),
+    ]);
+    // A mock that never starts says so here, not later as a puzzling AI test failure.
+    if (!port) throw new Error("mock LLM did not start within 5 s");
+    mockPort = port;
   }
   return `http://localhost:${mockPort}`;
 }
