@@ -35,8 +35,8 @@ export function toPos(s: string | null | undefined): Pos | null {
 
 /**
  * Garden words (#209): things a learner can bring into the garden by learning
- * the word for them. Every course marks one word for each (`garden` on a deck
- * word). Learners meet them in this order, early and steadily (content/order.ts).
+ * the word for them. Every course names one word for each in decks/<lang>/garden.json;
+ * the build sets `garden` on that deck word. Learners meet them in this order, early and steadily (content/order.ts).
  * Ids are stable: progress and garden art are keyed by them.
  */
 export const GARDEN_WORDS = [
@@ -69,8 +69,6 @@ export const SourceWord = z.object({
   forms: z.array(text(60)).min(1).max(40),
   notes: z.string().trim().max(300).optional(),
   gender: z.enum(["m", "f", "n", "mf"]).optional(),
-  /** This word brings that thing into the garden; the course places it, not its rank. */
-  garden: z.enum(GARDEN_WORDS).optional(),
   sentences: z.array(SourceSentence).min(3).max(8),
 });
 export type SourceWord = z.infer<typeof SourceWord>;
@@ -88,6 +86,7 @@ export const DeckWord = (lang: string) =>
     forms: z.array(text(60)).min(1),
     notes: z.string().optional(),
     gender: z.enum(["m", "f", "n", "mf"]).optional(),
+    /** This word brings that thing into the garden; the course places it, not its rank. */
     garden: z.enum(GARDEN_WORDS).optional(),
     retired: z.boolean().optional(),
     aliasOf: wordId(lang).optional(),

@@ -174,7 +174,6 @@
     ],
     "notes": "luna de miel = honeymoon.",
     "gender": "f",
-    "garden": "moon",
     "sentences": [
       {
         "text": "Mira la luna.",
@@ -2199,7 +2198,6 @@
       "estrellas"
     ],
     "gender": "f",
-    "garden": "star",
     "sentences": [
       {
         "text": "Mira las estrellas.",

@@ -1,0 +1,102 @@
+[
+  {
+    "garden": "cat",
+    "word": "Katze|noun"
+  },
+  {
+    "garden": "bird",
+    "word": "Vogel|noun"
+  },
+  {
+    "garden": "dog",
+    "word": "Hund|noun"
+  },
+  {
+    "garden": "sun",
+    "word": "Sonne|noun"
+  },
+  {
+    "garden": "fish",
+    "word": "Fisch|noun"
+  },
+  {
+    "garden": "rain",
+    "word": "Regen|noun"
+  },
+  {
+    "garden": "butterfly",
+    "word": "Schmetterling|noun"
+  },
+  {
+    "garden": "moon",
+    "word": "Mond|noun"
+  },
+  {
+    "garden": "frog",
+    "word": "Frosch|noun"
+  },
+  {
+    "garden": "bee",
+    "word": "Biene|noun"
+  },
+  {
+    "garden": "snow",
+    "word": "Schnee|noun"
+  },
+  {
+    "garden": "snail",
+    "word": "Schnecke|noun"
+  },
+  {
+    "garden": "star",
+    "word": "Stern|noun"
+  },
+  {
+    "garden": "mouse",
+    "word": "Maus|noun"
+  },
+  {
+    "garden": "wind",
+    "word": "Wind|noun"
+  },
+  {
+    "garden": "duck",
+    "word": "Ente|noun"
+  },
+  {
+    "garden": "cloud",
+    "word": "Wolke|noun"
+  },
+  {
+    "garden": "rabbit",
+    "word": "Kaninchen|noun"
+  },
+  {
+    "garden": "owl",
+    "word": "Eule|noun"
+  },
+  {
+    "garden": "fox",
+    "word": "Fuchs|noun"
+  },
+  {
+    "garden": "rainbow",
+    "word": "Regenbogen|noun"
+  },
+  {
+    "garden": "spider",
+    "word": "Spinne|noun"
+  },
+  {
+    "garden": "hedgehog",
+    "word": "Igel|noun"
+  },
+  {
+    "garden": "squirrel",
+    "word": "Eichhörnchen|noun"
+  },
+  {
+    "garden": "ant",
+    "word": "Ameise|noun"
+  }
+]

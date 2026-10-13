@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { Deck, GARDEN_WORDS } from "../deck/schema";
-import { courseOrder, deckKind, introOrder, kindOf, type WordKind } from "./order";
+import { courseOrder, deckKind, introOrder, kindOf, nextWords, type WordKind } from "./order";
 
 const kind = (s: string): WordKind => ({ n: "noun", v: "verb", o: "other", f: "function" })[s[0] as "n" | "v" | "o" | "f"] as WordKind;
 
@@ -70,6 +70,25 @@ describe("courseOrder", () => {
   });
 
   for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
+    const course = courseOrder({ words: Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf) });
+
+    test(`${lang}: a new learner meets cat 3rd and bird 12th`, () => {
+      const next = nextWords(course, () => true);
+      expect(next).toEqual([...course]);
+      expect([next[2].garden, next[11].garden]).toEqual(["cat", "bird"]);
+    });
+
+    test(`${lang}: a learner at course word 300 with no garden word yet gets one garden word, then 4 others, until caught up`, () => {
+      const done = new Set(course.slice(0, 300).filter((w) => !w.garden).map((w) => w.id));
+      const next = nextWords(course, (w) => !done.has(w.id));
+      const behind = course.slice(0, 300).filter((w) => w.garden).length; // 12: places 3, 12, 39, … 282
+      expect(behind).toBe(12);
+      expect(next.slice(0, behind * 5).map((w) => !!w.garden)).toEqual(Array.from({ length: behind * 5 }, (_, i) => i % 5 === 0));
+      // The garden words come in garden order; the others in course order, from word 301 on.
+      expect(next.filter((w) => w.garden).slice(0, behind).map((w) => w.garden)).toEqual(GARDEN_WORDS.slice(0, behind));
+      expect(next.filter((w) => !w.garden).slice(0, 10)).toEqual(course.slice(300).filter((w) => !w.garden).slice(0, 10));
+    });
+
     test(`${lang}: every garden word is in the course once; cat comes 3rd and bird 12th`, () => {
       const words = Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf);
       expect(words.filter((w) => w.garden).map((w) => w.garden).sort()).toEqual([...GARDEN_WORDS].sort());

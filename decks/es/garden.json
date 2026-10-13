@@ -1,0 +1,102 @@
+[
+  {
+    "garden": "cat",
+    "word": "gato|noun"
+  },
+  {
+    "garden": "bird",
+    "word": "pájaro|noun"
+  },
+  {
+    "garden": "dog",
+    "word": "perro|noun"
+  },
+  {
+    "garden": "sun",
+    "word": "sol|noun"
+  },
+  {
+    "garden": "fish",
+    "word": "pez|noun"
+  },
+  {
+    "garden": "rain",
+    "word": "lluvia|noun"
+  },
+  {
+    "garden": "butterfly",
+    "word": "mariposa|noun"
+  },
+  {
+    "garden": "moon",
+    "word": "luna|noun"
+  },
+  {
+    "garden": "frog",
+    "word": "rana|noun"
+  },
+  {
+    "garden": "bee",
+    "word": "abeja|noun"
+  },
+  {
+    "garden": "snow",
+    "word": "nieve|noun"
+  },
+  {
+    "garden": "snail",
+    "word": "caracol|noun"
+  },
+  {
+    "garden": "star",
+    "word": "estrella|noun"
+  },
+  {
+    "garden": "mouse",
+    "word": "ratón|noun"
+  },
+  {
+    "garden": "wind",
+    "word": "viento|noun"
+  },
+  {
+    "garden": "duck",
+    "word": "pato|noun"
+  },
+  {
+    "garden": "cloud",
+    "word": "nube|noun"
+  },
+  {
+    "garden": "rabbit",
+    "word": "conejo|noun"
+  },
+  {
+    "garden": "owl",
+    "word": "búho|noun"
+  },
+  {
+    "garden": "fox",
+    "word": "zorro|noun"
+  },
+  {
+    "garden": "rainbow",
+    "word": "arcoíris|noun"
+  },
+  {
+    "garden": "spider",
+    "word": "araña|noun"
+  },
+  {
+    "garden": "hedgehog",
+    "word": "erizo|noun"
+  },
+  {
+    "garden": "squirrel",
+    "word": "ardilla|noun"
+  },
+  {
+    "garden": "ant",
+    "word": "hormiga|noun"
+  }
+]

@@ -8,7 +8,6 @@
       "lluvias"
     ],
     "gender": "f",
-    "garden": "rain",
     "sentences": [
       {
         "text": "Me gusta la lluvia.",
@@ -35,7 +34,6 @@
       "nieve"
     ],
     "gender": "f",
-    "garden": "snow",
     "sentences": [
       {
         "text": "Mira, hay nieve en el jardín.",
@@ -64,7 +62,6 @@
     ],
     "notes": "Fish as food is pescado.",
     "gender": "m",
-    "garden": "fish",
     "sentences": [
       {
         "text": "Tengo un pez de colores.",
@@ -92,7 +89,6 @@
       "pájaros"
     ],
     "gender": "m",
-    "garden": "bird",
     "sentences": [
       {
         "text": "Hay un pájaro en el árbol.",
@@ -120,7 +116,6 @@
       "conejos"
     ],
     "gender": "m",
-    "garden": "rabbit",
     "sentences": [
       {
         "text": "Mi hermana tiene un conejo blanco.",
@@ -148,7 +143,6 @@
       "nubes"
     ],
     "gender": "f",
-    "garden": "cloud",
     "sentences": [
       {
         "text": "Hoy no hay ni una nube.",
@@ -177,7 +171,6 @@
     ],
     "notes": "Also a computer mouse.",
     "gender": "m",
-    "garden": "mouse",
     "sentences": [
       {
         "text": "El gato busca al ratón.",
@@ -205,7 +198,6 @@
       "patos"
     ],
     "gender": "m",
-    "garden": "duck",
     "sentences": [
       {
         "text": "Hay patos en el lago.",
@@ -233,7 +225,6 @@
       "arañas"
     ],
     "gender": "f",
-    "garden": "spider",
     "sentences": [
       {
         "text": "Hay una araña en el baño.",
@@ -261,7 +252,6 @@
       "zorros"
     ],
     "gender": "m",
-    "garden": "fox",
     "sentences": [
       {
         "text": "Vi un zorro cerca de la casa.",
@@ -289,7 +279,6 @@
       "ranas"
     ],
     "gender": "f",
-    "garden": "frog",
     "sentences": [
       {
         "text": "Hay una rana en el agua.",
@@ -317,7 +306,6 @@
       "abejas"
     ],
     "gender": "f",
-    "garden": "bee",
     "sentences": [
       {
         "text": "Cuidado, hay una abeja.",
@@ -345,7 +333,6 @@
       "mariposas"
     ],
     "gender": "f",
-    "garden": "butterfly",
     "sentences": [
       {
         "text": "Una mariposa entró por la ventana.",
@@ -373,7 +360,6 @@
       "hormigas"
     ],
     "gender": "f",
-    "garden": "ant",
     "sentences": [
       {
         "text": "Hay hormigas en el azúcar.",
@@ -401,7 +387,6 @@
       "ardillas"
     ],
     "gender": "f",
-    "garden": "squirrel",
     "sentences": [
       {
         "text": "La ardilla sube al árbol.",
@@ -429,7 +414,6 @@
       "caracoles"
     ],
     "gender": "m",
-    "garden": "snail",
     "sentences": [
       {
         "text": "Un caracol sube por la pared.",
@@ -457,7 +441,6 @@
       "búhos"
     ],
     "gender": "m",
-    "garden": "owl",
     "sentences": [
       {
         "text": "Un búho vive en ese árbol.",
@@ -485,7 +468,6 @@
       "erizos"
     ],
     "gender": "m",
-    "garden": "hedgehog",
     "sentences": [
       {
         "text": "Un erizo duerme bajo las hojas.",
@@ -513,7 +495,6 @@
     ],
     "notes": "Also written arco iris. The plural is the same: los arcoíris.",
     "gender": "m",
-    "garden": "rainbow",
     "sentences": [
       {
         "text": "¡Mira, un arcoíris!",

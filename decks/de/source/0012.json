@@ -8,7 +8,6 @@
       "Katzen"
     ],
     "gender": "f",
-    "garden": "cat",
     "sentences": [
       {
         "text": "Die Katze schläft auf dem Sofa.",
@@ -37,7 +36,6 @@
       "Fischen"
     ],
     "gender": "m",
-    "garden": "fish",
     "sentences": [
       {
         "text": "Ich esse gern Fisch.",
@@ -67,7 +65,6 @@
     ],
     "notes": "Plural: Vögel.",
     "gender": "m",
-    "garden": "bird",
     "sentences": [
       {
         "text": "Ein Vogel sitzt auf dem Dach.",
@@ -94,7 +91,6 @@
       "Mond"
     ],
     "gender": "m",
-    "garden": "moon",
     "sentences": [
       {
         "text": "Siehst du den Mond?",
@@ -121,7 +117,6 @@
       "Regen"
     ],
     "gender": "m",
-    "garden": "rain",
     "sentences": [
       {
         "text": "Ich mag den Regen.",
@@ -148,7 +143,6 @@
       "Schnee"
     ],
     "gender": "m",
-    "garden": "snow",
     "sentences": [
       {
         "text": "Im Garten liegt Schnee.",
@@ -177,7 +171,6 @@
       "Sternen"
     ],
     "gender": "m",
-    "garden": "star",
     "sentences": [
       {
         "text": "Heute sieht man viele Sterne.",
@@ -206,7 +199,6 @@
     ],
     "notes": "Plural: Mäuse. Also a computer mouse.",
     "gender": "f",
-    "garden": "mouse",
     "sentences": [
       {
         "text": "Die Katze fängt eine Maus.",
@@ -234,7 +226,6 @@
       "Wolken"
     ],
     "gender": "f",
-    "garden": "cloud",
     "sentences": [
       {
         "text": "Heute ist keine Wolke am Himmel.",
@@ -263,7 +254,6 @@
     ],
     "notes": "Plural: Füchse.",
     "gender": "m",
-    "garden": "fox",
     "sentences": [
       {
         "text": "Ich habe einen Fuchs gesehen.",
@@ -292,7 +282,6 @@
     ],
     "notes": "Plural: Frösche.",
     "gender": "m",
-    "garden": "frog",
     "sentences": [
       {
         "text": "Im Wasser sitzt ein Frosch.",
@@ -320,7 +309,6 @@
       "Enten"
     ],
     "gender": "f",
-    "garden": "duck",
     "sentences": [
       {
         "text": "Auf dem See schwimmen Enten.",
@@ -348,7 +336,6 @@
     ],
     "notes": "The plural is the same: die Kaninchen.",
     "gender": "n",
-    "garden": "rabbit",
     "sentences": [
       {
         "text": "Mein Bruder hat ein Kaninchen.",
@@ -376,7 +363,6 @@
       "Bienen"
     ],
     "gender": "f",
-    "garden": "bee",
     "sentences": [
       {
         "text": "Vorsicht, eine Biene!",
@@ -404,7 +390,6 @@
       "Spinnen"
     ],
     "gender": "f",
-    "garden": "spider",
     "sentences": [
       {
         "text": "Da ist eine Spinne an der Wand.",
@@ -432,7 +417,6 @@
     ],
     "notes": "The plural is the same: die Eichhörnchen.",
     "gender": "n",
-    "garden": "squirrel",
     "sentences": [
       {
         "text": "Das Eichhörnchen springt von Baum zu Baum.",
@@ -460,7 +444,6 @@
       "Ameisen"
     ],
     "gender": "f",
-    "garden": "ant",
     "sentences": [
       {
         "text": "In der Küche sind Ameisen.",
@@ -488,7 +471,6 @@
       "Schmetterlinge"
     ],
     "gender": "m",
-    "garden": "butterfly",
     "sentences": [
       {
         "text": "Ein Schmetterling fliegt durch den Garten.",
@@ -516,7 +498,6 @@
       "Schnecken"
     ],
     "gender": "f",
-    "garden": "snail",
     "sentences": [
       {
         "text": "Eine Schnecke sitzt auf dem Salat.",
@@ -544,7 +525,6 @@
       "Eulen"
     ],
     "gender": "f",
-    "garden": "owl",
     "sentences": [
       {
         "text": "In dem Baum wohnt eine Eule.",
@@ -571,7 +551,6 @@
       "Regenbogen"
     ],
     "gender": "m",
-    "garden": "rainbow",
     "sentences": [
       {
         "text": "Schau mal, ein Regenbogen!",
@@ -599,7 +578,6 @@
     ],
     "notes": "The plural is the same: die Igel.",
     "gender": "m",
-    "garden": "hedgehog",
     "sentences": [
       {
         "text": "Im Garten wohnt ein Igel.",

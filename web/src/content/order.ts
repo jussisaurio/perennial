@@ -85,3 +85,34 @@ export function courseOrder<W extends DeckWord>(deck: { words: readonly W[] }): 
   }
   return order as readonly W[];
 }
+
+/** A learner behind on garden words gets one of them in every this many new words. */
+const CATCH_UP = 5;
+
+/**
+ * The words a learner meets next: the course, minus words they can't get now
+ * (`open` false). A garden word comes at its place, but never closer than
+ * CATCH_UP words after the last one. A learner who was past their places when
+ * garden words came to the course gets them one in every CATCH_UP new words,
+ * not all in a row. A new learner gets the course as it is: its garden places
+ * are further apart.
+ */
+export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean): W[] {
+  const out: W[] = [];
+  const due: W[] = [];
+  let since = CATCH_UP - 1; // other words since the last garden word
+  for (const w of course) {
+    if (!open(w)) continue;
+    if (w.garden) {
+      due.push(w);
+      continue;
+    }
+    if (due.length && since >= CATCH_UP - 1) {
+      out.push(due.shift()!);
+      since = 0;
+    }
+    out.push(w);
+    since++;
+  }
+  return [...out, ...due];
+}

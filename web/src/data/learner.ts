@@ -3,7 +3,7 @@
 // from the review log (core/memory.ts); nothing derived is stored or synced.
 
 import { teachable } from "../content/languages";
-import { courseOrder } from "../content/order";
+import { courseOrder, nextWords } from "../content/order";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deriveMemory, type MemoryRow } from "../core/memory";
@@ -172,7 +172,7 @@ export function useLearner(lang: string | undefined): Learner | null {
         .sort((a, b) => (stateMap.get(a.id)?.queued_at ?? "").localeCompare(stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
       const pickedIds = new Set(picked.map((w) => w.id));
       // Your own choices first, as you made them; then the course, kinds of words taking turns (content/order.ts).
-      const course = courseOrder(deck).filter((w) => open(words.get(w.id)!) && !pickedIds.has(w.id));
+      const course = nextWords(courseOrder(deck), (w) => open(words.get(w.id)!) && !pickedIds.has(w.id));
       return [...picked.map((w) => w.id), ...course.map((w) => w.id)];
     };
     return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, states: stateMap, sentences, fresh, resolve };
