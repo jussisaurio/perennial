@@ -18,12 +18,22 @@ export function noteFor(word: string): number {
 
 let audio: AudioContext | null = null;
 
-/** Plays the word's note once, quietly. Only with sound on. */
-export function chime(word: string): void {
+/**
+ * Called inside the answer's own tap or key press, before anything awaits.
+ * Safari lets a page start audio only there; the chime itself plays a moment
+ * later. Also wakes audio that iOS paused (a call, the app in the background).
+ */
+export function wakeAudio(): void {
   if (!isSoundOn()) return;
-  // Made on the first chime, which always follows an answer (a tap or key): browsers allow audio then.
   audio ??= new AudioContext();
-  const now = audio.currentTime;
+  if (audio.state !== "running") audio.resume().catch((e: unknown) => console.warn("[chime] audio would not start", e));
+}
+
+/** Plays the word's note once, quietly, `delay` seconds from now. Only with sound on, after wakeAudio. */
+export function chime(word: string, delay = 0): void {
+  if (!isSoundOn() || !audio) return;
+  const now = audio.currentTime + delay;
+  const note = noteFor(word);
   const gain = audio.createGain();
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(0.07, now + 0.015);
@@ -36,7 +46,7 @@ export function chime(word: string): void {
   ] as const) {
     const osc = audio.createOscillator();
     osc.type = "sine";
-    osc.frequency.value = noteFor(word) * mult;
+    osc.frequency.value = note * mult;
     const g = audio.createGain();
     g.gain.value = level;
     osc.connect(g).connect(gain);

@@ -161,6 +161,9 @@ test("a good answer chimes the word's note; a wrong one and sound off stay silen
   await answer(page, "1"); // I forgot: no chime
   expect(await notes()).toBe(8);
   await page.getByRole("button", { name: "Mute sound" }).click();
-  await answer(page, "2"); // remembered, but the sound is off
+  await reveal(page);
+  await page.keyboard.press("2"); // remembered: the plant is watered, but the sound is off
+  await expect(moment(page)).toHaveAttribute("data-kind", "water");
+  await expect(moment(page)).toHaveCount(0);
   expect(await notes()).toBe(8);
 });

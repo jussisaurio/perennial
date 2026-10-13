@@ -12,6 +12,7 @@ import { Session as Runner, type Task } from "../core/session";
 import { recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import { hash32 } from "../lib/seed";
 import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
+import { wakeAudio } from "./chime";
 import { sessionPlan } from "../data/practice";
 import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
 
@@ -166,6 +167,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const finish = async (grade: Grade | null, opts: { alreadyKnown?: boolean } = {}) => {
     if (!runner || !card || busy.current) return;
     busy.current = true;
+    // Still inside the answer's tap or key press: the only time Safari lets audio start.
+    wakeAudio();
     clearNote();
     try {
       const moment = await record(runner, card, grade, opts);
