@@ -99,8 +99,12 @@ test("the summary replays what grew this chunk, then rests; a tap ends it (#216)
   await page.getByRole("button", { name: "End session" }).click();
   const garden = page.locator("main.summary .garden");
   await expect(garden).toHaveAttribute("data-replaying", "true");
+  // The plant's glow sits at its top: low while it regrows, high once it has.
+  const glowTop = () => garden.locator("circle.glow").first().evaluate((c) => Number(c.getAttribute("cy")));
+  const during = await glowTop();
   await page.clock.runFor(2_100);
   await expect(garden).not.toHaveAttribute("data-replaying", "true");
+  expect(await glowTop()).toBeLessThan(during - 10); // SVG y grows downward: a taller plant has a smaller cy
   // Again, ended by a tap this time: the clock stays stopped, so only the tap can end it.
   await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
   await page.clock.resume();
@@ -110,5 +114,18 @@ test("the summary replays what grew this chunk, then rests; a tap ends it (#216)
   await page.getByRole("button", { name: "End session" }).click();
   await expect(garden).toHaveAttribute("data-replaying", "true");
   await page.mouse.click(5, 5);
+  await expect(garden).not.toHaveAttribute("data-replaying", "true");
+});
+
+test("with 'Next card right away' the summary does not replay (#216)", async ({ page }) => {
+  await startCourse(page);
+  await page.goto("/#/settings");
+  await page.getByRole("radio", { name: "Next card right away" }).click();
+  await page.goto("/");
+  await page.locator("button.start").click();
+  await answer(page, "2");
+  await page.getByRole("button", { name: "End session" }).click();
+  const garden = page.locator("main.summary .garden");
+  await expect(garden.locator("circle.glow")).toHaveCount(1);
   await expect(garden).not.toHaveAttribute("data-replaying", "true");
 });

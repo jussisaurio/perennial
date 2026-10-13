@@ -71,11 +71,10 @@ export const Garden = memo(function Garden({
   visitors?: { views: VisitorView[]; snailAt: number; lang: string; mole?: boolean } | null;
   /** Offered in the plant card: open this plant in the 3D garden. */
   onView?: (id: string) => void;
-  /** Plants to grow again from these looks, one after another (the summary, #216). Keep it stable: a new list starts again. */
+  /** Plants to grow again from these looks (the summary, #216). The caller decides whether it plays (the setting, reduced motion). */
   replay?: readonly { id: string; from: PlantLook }[] | null;
 }) {
   const wrap = useRef<HTMLDivElement>(null);
-  const replaying = useReplay(replay);
   const scroller = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
   const [scrollX, setScrollX] = useState(0);
@@ -134,6 +133,19 @@ export const Garden = memo(function Garden({
     const scale = Math.max(0.42, Math.min(1.05, spacing / 20));
     return plants.map((p, i) => ({ p, x: offset + spacing * (i + 0.5) + (hash01(p.id, 17) - 0.5) * spacing * 0.8, y: GROUND + hash01(p.id, 19) * 4, scale }));
   }, [plants, n, scrolls, width, catRoom, keepRoom]);
+
+  // Only the replayed plants on screen once the strip has scrolled to this
+  // session's words (the same centre as below), left to right: in a long
+  // garden, off-screen plants would spend the replay's time unseen.
+  const replayInView = useMemo(() => {
+    if (!replay?.length) return null;
+    const xs = new Map(layout.map((l) => [l.p.id, l.x]));
+    const lit = highlight?.size ? layout.filter((l) => highlight.has(l.p.id)) : [];
+    const centre = scrolls && lit.length ? lit.reduce((a, l) => a + l.x, 0) / lit.length : null;
+    const seen = replay.filter((r) => xs.has(r.id) && (centre === null || Math.abs(xs.get(r.id)! - centre) <= width / 2));
+    return seen.length ? [...seen].sort((a, b) => xs.get(a.id)! - xs.get(b.id)!) : null;
+  }, [replay, layout, highlight, scrolls, width]);
+  const replaying = useReplay(replayInView);
 
   // Open where the newest growth is, or on today's words after a session, and
   // keep following it while words sync in, until the learner scrolls.
@@ -424,31 +436,37 @@ const REPLAY_MS = 2000;
 
 /**
  * The summary's replay (#216): the plants watered or planted this chunk grow
- * again, in turn, from how they looked before. About two seconds; a tap on the
- * garden ends it. Off with reduced motion (the "Growing plants" setting is
- * checked by whoever passes the list).
+ * again, in turn, from how they looked before. About two seconds; a tap
+ * anywhere ends it.
  */
-function useReplay(replay: readonly { id: string; from: PlantLook }[] | null | undefined) {
+function useReplay(replay: readonly { id: string; from: PlantLook }[] | null) {
   // Starts at 0, not null, so the first frame already shows the old looks rather than flashing the new ones.
-  const [elapsed, setElapsed] = useState<number | null>(() => (replay?.length && !reducedMotion() ? 0 : null));
-  const order = useMemo(() => new Map((replay ?? []).map((r, i) => [r.id, { i, from: r.from }])), [replay]);
+  const [elapsed, setElapsed] = useState<number | null>(() => (replay?.length ? 0 : null));
+  // Keyed by the ids, not the list: the strip's width settles just after it opens, and the same plants must not start again.
+  const key = replay?.map((r) => r.id).join(" ") ?? "";
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `replay` changes only with `key` here (see above)
+  const order = useMemo(() => new Map((replay ?? []).map((r, i) => [r.id, { i, from: r.from }])), [key]);
   const gap = order.size > 1 ? Math.min(250, (REPLAY_MS - REPLAY_GROW_MS) / (order.size - 1)) : 0;
   const total = REPLAY_GROW_MS + gap * Math.max(0, order.size - 1);
   useEffect(() => {
-    if (!order.size || reducedMotion()) return;
+    if (!order.size) return;
     let raf = 0;
     const t0 = performance.now();
-    const tick = (now: number) => {
-      const e = now - t0;
-      setElapsed(e >= total ? null : e);
-      if (e < total) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
     const stop = () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener("pointerdown", stop);
       setElapsed(null);
     };
-    window.addEventListener("pointerdown", stop, { once: true });
+    const tick = (now: number) => {
+      const e = now - t0;
+      if (e >= total) stop();
+      else {
+        setElapsed(e);
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    window.addEventListener("pointerdown", stop);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("pointerdown", stop);
