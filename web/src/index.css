@@ -736,3 +736,33 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 
 /* A deck that could not load (see DeckFailed in App): the reason, then Reload. */
 .deck-failed { display: grid; gap: 1rem; justify-items: start; }
+
+/* ---- Field guide (#211): pressed flowers on paper, pencil sketches for words still growing ---- */
+.words-view { margin: 0.2rem 0 0.4rem; }
+.guide-head { padding: 1.2rem 0 0.5rem; }
+.guide-head h2 { font: 1.4rem/1.2 var(--display); margin: 0 0 0.3rem; }
+.guide-head p { margin: 0; }
+/* Columns are set inline from the measured width (FieldGuide.tsx: CARD_MIN, GAP). */
+.guide-grid { display: grid; gap: 13px; padding-bottom: 13px; }
+.guide-entry {
+  display: grid; justify-items: center; align-content: start; gap: 0.15rem; padding: 0.7rem 0.5rem 0.8rem; border-radius: 6px;
+  text-align: center;
+}
+.guide-entry strong { font: 1.15rem/1.2 var(--display); font-weight: 400; overflow-wrap: anywhere; }
+.guide-entry .gl { font-size: 0.82rem; color: var(--muted); line-height: 1.3; }
+/* Pressed: a paper card with a little tilt, as if mounted by hand. */
+.guide-entry.pressed, .guide-sheet.pressed { background: var(--card); border: 1px solid var(--line); box-shadow: 0 6px 16px -12px rgb(0 0 0 / 0.45); }
+.guide-entry.pressed:nth-child(3n + 1) { transform: rotate(-0.6deg); }
+.guide-entry.pressed:nth-child(3n + 2) { transform: rotate(0.5deg); }
+/* A sketch: pencil grey, faint, the flower not drawn in yet. */
+.guide-entry.sketch, .guide-sheet.sketch { background: transparent; border: 1px dashed var(--line); }
+.guide-entry.sketch svg, .guide-sheet.sketch svg { filter: grayscale(1) contrast(0.9); opacity: 0.5; }
+.guide-rare { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--persimmon); margin-top: 0.15rem; }
+/* No padding on the dialog itself: a click with the dialog as its target is then on the backdrop (FieldGuide.tsx). */
+.guide-page { width: min(34rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: none; border-radius: 14px; background: var(--paper); color: var(--ink); overflow-y: auto; }
+.guide-page-body { padding: 1rem; }
+.guide-page::backdrop { background: rgb(0 0 0 / 0.4); }
+.guide-sheet { display: grid; justify-items: center; gap: 0.2rem; padding: 1rem; border-radius: 8px; text-align: center; }
+.guide-sheet h2 { font: 2rem/1.1 var(--display); margin: 0.2rem 0 0; }
+.guide-sheet .gl { margin: 0; color: var(--ink-2); }
+.guide-close { display: block; margin: 0.8rem auto 0; }

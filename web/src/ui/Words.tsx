@@ -11,6 +11,7 @@ import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
 import { AddScreen } from "./Add";
+import { drawnRows, FieldGuide } from "./FieldGuide";
 import { StageGlyph } from "./StageGlyph";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
@@ -64,6 +65,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
   const search = useRef<HTMLInputElement>(null);
   useShortcut("/", () => search.current?.focus());
   const [filter, setFilter] = useState<Filter>("all");
+  const [view, setView] = useState<WordsView>(savedView);
   const [open, setOpen] = useState<string | null>(null);
   const [deleted, setDeleted] = useState<Word | null>(null);
   useEffect(() => {
@@ -101,6 +103,8 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
       })
       .sort((a, b) => (filter === "mine" || filter === "new" ? 0 : (a.l.rank ?? 1e9) - (b.l.rank ?? 1e9) || a.l.lemma.localeCompare(b.l.lemma)));
   }, [learner, q, filter]);
+  // The flowers view draws only words that have started growing; the count says what is on screen.
+  const shown = useMemo(() => (view === "guide" ? drawnRows(rows) : rows), [view, rows]);
 
   return (
     <div className="page">
@@ -123,28 +127,68 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           <option value="mine">From my texts</option>
         </select>
       </div>
-      <p className="muted small">{plural(rows.length, "word")}</p>
+      <div className="chips words-view" role="radiogroup" aria-label="Show words as">
+        {(["list", "guide"] as const).map((v) => (
+          <button
+            key={v}
+            role="radio"
+            aria-checked={view === v}
+            className={view === v ? "chip on" : "chip"}
+            onClick={() => {
+              // A word open in one view must not pop up in the other.
+              setOpen(null);
+              setView(v);
+              saveView(v);
+            }}
+          >
+            {v === "list" ? "List" : "Flowers"}
+          </button>
+        ))}
+      </div>
+      <p className="muted small">{plural(shown.length, "word")}</p>
       {learner && rows.length === 0 && <p className="words-empty">{wordsEmptyLine(filter, !!q.trim())}</p>}
-      <VirtualWords
-        rows={rows}
-        render={({ l, mem }) => (
-          <>
-            <button className="word-row" onClick={() => setOpen(open === l.id ? null : l.id)} aria-expanded={open === l.id}>
-              <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "paused"} />
-              <strong>{l.lemma}</strong>
-              <span className="gl">{l.gloss}</span>
-              <span className="skills">
-                {practisedSkills(mem).map((m) => (
-                  <span key={m.skill} className={`pip ${m.skill}`} title={`${m.skill}: ${Math.round(recall(m) * 100)}% recall`}>
-                    {m.skill} {Math.round(recall(m) * 100)}%
-                  </span>
-                ))}
-              </span>
-            </button>
-            {open === l.id && learner && <WordDetail learner={learner} word={l} memory={mem} onDeleted={() => setDeleted(l)} />}
-          </>
-        )}
-      />
+      {learner && rows.length > 0 && shown.length === 0 && <p className="words-empty">Words you have not started yet have no flower to show. They are in the List.</p>}
+      {view === "guide" ? (
+        <FieldGuide
+          rows={shown}
+          open={open}
+          onOpen={setOpen}
+          detail={({ l, mem }) =>
+            learner && (
+              <WordDetail
+                learner={learner}
+                word={l}
+                memory={mem}
+                onDeleted={() => {
+                  setOpen(null);
+                  setDeleted(l);
+                }}
+              />
+            )
+          }
+        />
+      ) : (
+        <VirtualWords
+          rows={rows}
+          render={({ l, mem }) => (
+            <>
+              <button className="word-row" onClick={() => setOpen(open === l.id ? null : l.id)} aria-expanded={open === l.id}>
+                <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "paused"} />
+                <strong>{l.lemma}</strong>
+                <span className="gl">{l.gloss}</span>
+                <span className="skills">
+                  {practisedSkills(mem).map((m) => (
+                    <span key={m.skill} className={`pip ${m.skill}`} title={`${m.skill}: ${Math.round(recall(m) * 100)}% recall`}>
+                      {m.skill} {Math.round(recall(m) * 100)}%
+                    </span>
+                  ))}
+                </span>
+              </button>
+              {open === l.id && learner && <WordDetail learner={learner} word={l} memory={mem} onDeleted={() => setDeleted(l)} />}
+            </>
+          )}
+        />
+      )}
       {deleted && (
         <div className="toast" role="status">
           {deleted.source === "deck" ? `“${deleted.lemma}” will not come up again.` : `Deleted “${deleted.lemma}”. Goodbye, little plant.`}
@@ -163,6 +207,24 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
       )}
     </div>
   );
+}
+
+type WordsView = "list" | "guide";
+// Which view the learner last chose: a per-device convenience, so storage may be missing.
+const VIEW_KEY = "words-view";
+function savedView(): WordsView {
+  try {
+    return localStorage.getItem(VIEW_KEY) === "guide" ? "guide" : "list";
+  } catch {
+    return "list"; // No storage: the list, the default.
+  }
+}
+function saveView(v: WordsView): void {
+  try {
+    localStorage.setItem(VIEW_KEY, v);
+  } catch {
+    // Not saved; it still applies until the screen closes.
+  }
 }
 
 const SKILL_NAME: Record<string, string> = { read: "Reading", listen: "Listening", write: "Writing" };
