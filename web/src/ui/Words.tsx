@@ -142,6 +142,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
       {learner && rows.length > 0 && shown.length === 0 && <p className="words-empty">Words you have not started yet have no flower to show. They are in the List.</p>}
       {view === "guide" ? (
         <FieldGuide
+          lang={lang}
           rows={shown}
           open={open}
           onOpen={setOpen}

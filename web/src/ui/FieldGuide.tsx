@@ -10,6 +10,7 @@ import type { Word } from "../data/learner";
 import { WordPlant, rareOf, type Rare } from "./plant";
 import { giftLink } from "../data/gift";
 import { track } from "../observability";
+import { useLatinNames } from "../content/latin";
 
 export interface GuideRow {
   l: Word;
@@ -53,7 +54,7 @@ const GAP = 13;
  * Only the rows of cards near the screen are in the DOM (like the list): a
  * thousand plants are too many to draw at once on a phone.
  */
-export function FieldGuide({ rows, open, onOpen, detail }: { rows: GuideRow[]; open: string | null; onOpen: (id: string | null) => void; detail: (row: GuideRow) => ReactNode }) {
+export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string; rows: GuideRow[]; open: string | null; onOpen: (id: string | null) => void; detail: (row: GuideRow) => ReactNode }) {
   const wrap = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(360);
   useEffect(() => {
@@ -114,7 +115,7 @@ export function FieldGuide({ rows, open, onOpen, detail }: { rows: GuideRow[]; o
           </div>
         );
       })}
-      {shown && <GuidePage row={shown} onClose={() => onOpen(null)} detail={detail(shown)} />}
+      {shown && <GuidePage lang={lang} row={shown} onClose={() => onOpen(null)} detail={detail(shown)} />}
     </div>
   );
 }
@@ -161,7 +162,7 @@ function GiveSeed({ word }: { word: Word }) {
 }
 
 /** One entry, opened: the plant large, and the word's details. A native dialog: Escape closes it and focus stays inside. */
-function GuidePage({ row, onClose, detail }: { row: GuideRow; onClose: () => void; detail: ReactNode }) {
+function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow; onClose: () => void; detail: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -170,6 +171,8 @@ function GuidePage({ row, onClose, detail }: { row: GuideRow; onClose: () => voi
   const read = row.mem.find((m) => m.skill === "read");
   const stage = plantStage(read);
   const rare = stage === "bloom" ? rareOf(row.l.lemma) : null;
+  // A known word's botanical name (#212), when its course has one.
+  const latin = useLatinNames(lang)?.[`${row.l.lemma}|${row.l.pos}`];
   return (
     // The dialog itself has no padding, so a click whose target is the dialog is on the backdrop: it closes.
     <dialog ref={ref} className="guide-page" onClose={onClose} aria-label={row.l.lemma} onClick={(e) => e.target === ref.current && ref.current?.close()}>
@@ -177,6 +180,7 @@ function GuidePage({ row, onClose, detail }: { row: GuideRow; onClose: () => voi
         <div className={stage === "bloom" ? "guide-sheet pressed" : "guide-sheet sketch"}>
           <WordPlant word={row.l.lemma} s={read?.reps ? read.s : 0} stage={stage} size={180} />
           <h2>{row.l.lemma}</h2>
+          {stage === "bloom" && latin && <p className="guide-latin">{latin}</p>}
           <p className="gl">{row.l.gloss}</p>
           {rare && <p className="guide-rare">{RARE_LABEL[rare]}</p>}
           {stage !== "bloom" && <p className="muted small">Still growing. Its flower shows when you know the word.</p>}

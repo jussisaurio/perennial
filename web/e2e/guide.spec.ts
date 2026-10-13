@@ -44,6 +44,12 @@ test("the field guide: pressed flowers for known words, sketches for growing one
   await expect(sheet).toBeVisible();
   await expect(sheet.getByText("Tengo un perro.")).toBeVisible();
   await page.keyboard.press("Escape");
+  // A known word's page also has its botanical name (#212).
+  await bloom.filter({ hasText: "casa" }).click();
+  await expect(page.getByRole("dialog", { name: "casa" }).locator(".guide-latin")).toHaveText("Casa domestica");
+  await page.keyboard.press("Escape");
+  await bloom.filter({ hasText: "perro" }).click();
+  await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
 
   // A tap inside the page, even on its edge, keeps it open; a tap outside closes it.
