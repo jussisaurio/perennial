@@ -1,0 +1,516 @@
+[
+  {
+    "lemma": "lluvia",
+    "gloss": "rain",
+    "pos": "noun",
+    "forms": [
+      "lluvia",
+      "lluvias"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Me gusta la lluvia.",
+        "translation": "I like the rain.",
+        "cloze": "lluvia"
+      },
+      {
+        "text": "Volvimos a casa bajo la lluvia.",
+        "translation": "We came home in the rain.",
+        "cloze": "lluvia"
+      },
+      {
+        "text": "Este año hubo pocas lluvias.",
+        "translation": "There was little rain this year.",
+        "cloze": "lluvias"
+      }
+    ]
+  },
+  {
+    "lemma": "nieve",
+    "gloss": "snow",
+    "pos": "noun",
+    "forms": [
+      "nieve"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Mira, hay nieve en el jardín.",
+        "translation": "Look, there's snow in the garden.",
+        "cloze": "nieve"
+      },
+      {
+        "text": "Los niños juegan en la nieve.",
+        "translation": "The children are playing in the snow.",
+        "cloze": "nieve"
+      },
+      {
+        "text": "Este invierno no hubo nieve.",
+        "translation": "There was no snow this winter.",
+        "cloze": "nieve"
+      }
+    ]
+  },
+  {
+    "lemma": "pez",
+    "gloss": "fish (alive)",
+    "pos": "noun",
+    "forms": [
+      "pez",
+      "peces"
+    ],
+    "notes": "Fish as food is pescado.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Tengo un pez de colores.",
+        "translation": "I have a goldfish.",
+        "cloze": "pez"
+      },
+      {
+        "text": "Hay muchos peces en el río.",
+        "translation": "There are lots of fish in the river.",
+        "cloze": "peces"
+      },
+      {
+        "text": "¿Le diste de comer al pez?",
+        "translation": "Did you feed the fish?",
+        "cloze": "pez"
+      }
+    ]
+  },
+  {
+    "lemma": "pájaro",
+    "gloss": "bird",
+    "pos": "noun",
+    "forms": [
+      "pájaro",
+      "pájaros"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Hay un pájaro en el árbol.",
+        "translation": "There's a bird in the tree.",
+        "cloze": "pájaro"
+      },
+      {
+        "text": "Los pájaros cantan por la mañana.",
+        "translation": "The birds sing in the morning.",
+        "cloze": "pájaros"
+      },
+      {
+        "text": "¿Ves ese pájaro azul?",
+        "translation": "Do you see that blue bird?",
+        "cloze": "pájaro"
+      }
+    ]
+  },
+  {
+    "lemma": "conejo",
+    "gloss": "rabbit",
+    "pos": "noun",
+    "forms": [
+      "conejo",
+      "conejos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Mi hermana tiene un conejo blanco.",
+        "translation": "My sister has a white rabbit.",
+        "cloze": "conejo"
+      },
+      {
+        "text": "Los conejos corren muy rápido.",
+        "translation": "Rabbits run very fast.",
+        "cloze": "conejos"
+      },
+      {
+        "text": "El conejo se escondió en el jardín.",
+        "translation": "The rabbit hid in the garden.",
+        "cloze": "conejo"
+      }
+    ]
+  },
+  {
+    "lemma": "nube",
+    "gloss": "cloud",
+    "pos": "noun",
+    "forms": [
+      "nube",
+      "nubes"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Hoy no hay ni una nube.",
+        "translation": "There isn't a single cloud today.",
+        "cloze": "nube"
+      },
+      {
+        "text": "Mira esa nube, parece un perro.",
+        "translation": "Look at that cloud, it looks like a dog.",
+        "cloze": "nube"
+      },
+      {
+        "text": "Las nubes negras traen lluvia.",
+        "translation": "Dark clouds bring rain.",
+        "cloze": "nubes"
+      }
+    ]
+  },
+  {
+    "lemma": "ratón",
+    "gloss": "mouse",
+    "pos": "noun",
+    "forms": [
+      "ratón",
+      "ratones"
+    ],
+    "notes": "Also a computer mouse.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "El gato busca al ratón.",
+        "translation": "The cat is looking for the mouse.",
+        "cloze": "ratón"
+      },
+      {
+        "text": "Hay un ratón en la cocina.",
+        "translation": "There's a mouse in the kitchen.",
+        "cloze": "ratón"
+      },
+      {
+        "text": "No me gustan los ratones.",
+        "translation": "I don't like mice.",
+        "cloze": "ratones"
+      }
+    ]
+  },
+  {
+    "lemma": "pato",
+    "gloss": "duck",
+    "pos": "noun",
+    "forms": [
+      "pato",
+      "patos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Hay patos en el lago.",
+        "translation": "There are ducks on the lake.",
+        "cloze": "patos"
+      },
+      {
+        "text": "Vamos a darles pan a los patos.",
+        "translation": "Let's give the ducks some bread.",
+        "cloze": "patos"
+      },
+      {
+        "text": "Ese pato no deja de mirarme.",
+        "translation": "That duck won't stop looking at me.",
+        "cloze": "pato"
+      }
+    ]
+  },
+  {
+    "lemma": "araña",
+    "gloss": "spider",
+    "pos": "noun",
+    "forms": [
+      "araña",
+      "arañas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Hay una araña en el baño.",
+        "translation": "There's a spider in the bathroom.",
+        "cloze": "araña"
+      },
+      {
+        "text": "No mates a la araña.",
+        "translation": "Don't kill the spider.",
+        "cloze": "araña"
+      },
+      {
+        "text": "Les tengo miedo a las arañas.",
+        "translation": "I'm scared of spiders.",
+        "cloze": "arañas"
+      }
+    ]
+  },
+  {
+    "lemma": "zorro",
+    "gloss": "fox",
+    "pos": "noun",
+    "forms": [
+      "zorro",
+      "zorros"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Vi un zorro cerca de la casa.",
+        "translation": "I saw a fox near the house.",
+        "cloze": "zorro"
+      },
+      {
+        "text": "El zorro tiene la cola larga.",
+        "translation": "The fox has a long tail.",
+        "cloze": "zorro"
+      },
+      {
+        "text": "Los zorros salen de noche.",
+        "translation": "Foxes come out at night.",
+        "cloze": "zorros"
+      }
+    ]
+  },
+  {
+    "lemma": "rana",
+    "gloss": "frog",
+    "pos": "noun",
+    "forms": [
+      "rana",
+      "ranas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Hay una rana en el agua.",
+        "translation": "There's a frog in the water.",
+        "cloze": "rana"
+      },
+      {
+        "text": "Por la noche se oyen las ranas.",
+        "translation": "At night you can hear the frogs.",
+        "cloze": "ranas"
+      },
+      {
+        "text": "La rana saltó muy alto.",
+        "translation": "The frog jumped very high.",
+        "cloze": "rana"
+      }
+    ]
+  },
+  {
+    "lemma": "abeja",
+    "gloss": "bee",
+    "pos": "noun",
+    "forms": [
+      "abeja",
+      "abejas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Cuidado, hay una abeja.",
+        "translation": "Careful, there's a bee.",
+        "cloze": "abeja"
+      },
+      {
+        "text": "Las abejas hacen miel.",
+        "translation": "Bees make honey.",
+        "cloze": "abejas"
+      },
+      {
+        "text": "No tengas miedo, es solo una abeja.",
+        "translation": "Don't be scared, it's just a bee.",
+        "cloze": "abeja"
+      }
+    ]
+  },
+  {
+    "lemma": "mariposa",
+    "gloss": "butterfly",
+    "pos": "noun",
+    "forms": [
+      "mariposa",
+      "mariposas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Una mariposa entró por la ventana.",
+        "translation": "A butterfly came in through the window.",
+        "cloze": "mariposa"
+      },
+      {
+        "text": "Mira cuántas mariposas hay en las flores.",
+        "translation": "Look how many butterflies there are on the flowers.",
+        "cloze": "mariposas"
+      },
+      {
+        "text": "La mariposa es amarilla.",
+        "translation": "The butterfly is yellow.",
+        "cloze": "mariposa"
+      }
+    ]
+  },
+  {
+    "lemma": "hormiga",
+    "gloss": "ant",
+    "pos": "noun",
+    "forms": [
+      "hormiga",
+      "hormigas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Hay hormigas en el azúcar.",
+        "translation": "There are ants in the sugar.",
+        "cloze": "hormigas"
+      },
+      {
+        "text": "Una hormiga me subió por la pierna.",
+        "translation": "An ant climbed up my leg.",
+        "cloze": "hormiga"
+      },
+      {
+        "text": "Las hormigas trabajan todo el día.",
+        "translation": "Ants work all day.",
+        "cloze": "hormigas"
+      }
+    ]
+  },
+  {
+    "lemma": "ardilla",
+    "gloss": "squirrel",
+    "pos": "noun",
+    "forms": [
+      "ardilla",
+      "ardillas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "La ardilla sube al árbol.",
+        "translation": "The squirrel climbs the tree.",
+        "cloze": "ardilla"
+      },
+      {
+        "text": "En el parque hay muchas ardillas.",
+        "translation": "There are lots of squirrels in the park.",
+        "cloze": "ardillas"
+      },
+      {
+        "text": "Una ardilla me robó la galleta.",
+        "translation": "A squirrel stole my cookie.",
+        "cloze": "ardilla"
+      }
+    ]
+  },
+  {
+    "lemma": "caracol",
+    "gloss": "snail",
+    "pos": "noun",
+    "forms": [
+      "caracol",
+      "caracoles"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Un caracol sube por la pared.",
+        "translation": "A snail is climbing up the wall.",
+        "cloze": "caracol"
+      },
+      {
+        "text": "Después de la lluvia salen los caracoles.",
+        "translation": "Snails come out after the rain.",
+        "cloze": "caracoles"
+      },
+      {
+        "text": "Vas más lento que un caracol.",
+        "translation": "You're slower than a snail.",
+        "cloze": "caracol"
+      }
+    ]
+  },
+  {
+    "lemma": "búho",
+    "gloss": "owl",
+    "pos": "noun",
+    "forms": [
+      "búho",
+      "búhos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Un búho vive en ese árbol.",
+        "translation": "An owl lives in that tree.",
+        "cloze": "búho"
+      },
+      {
+        "text": "Los búhos duermen de día.",
+        "translation": "Owls sleep during the day.",
+        "cloze": "búhos"
+      },
+      {
+        "text": "Anoche oí un búho.",
+        "translation": "Last night I heard an owl.",
+        "cloze": "búho"
+      }
+    ]
+  },
+  {
+    "lemma": "erizo",
+    "gloss": "hedgehog",
+    "pos": "noun",
+    "forms": [
+      "erizo",
+      "erizos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Un erizo duerme bajo las hojas.",
+        "translation": "A hedgehog is sleeping under the leaves.",
+        "cloze": "erizo"
+      },
+      {
+        "text": "¿Has visto alguna vez un erizo?",
+        "translation": "Have you ever seen a hedgehog?",
+        "cloze": "erizo"
+      },
+      {
+        "text": "Los erizos comen insectos.",
+        "translation": "Hedgehogs eat insects.",
+        "cloze": "erizos"
+      }
+    ]
+  },
+  {
+    "lemma": "arcoíris",
+    "gloss": "rainbow",
+    "pos": "noun",
+    "forms": [
+      "arcoíris"
+    ],
+    "notes": "Also written arco iris. The plural is the same: los arcoíris.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "¡Mira, un arcoíris!",
+        "translation": "Look, a rainbow!",
+        "cloze": "arcoíris"
+      },
+      {
+        "text": "Después de la lluvia salió un arcoíris.",
+        "translation": "After the rain, a rainbow came out.",
+        "cloze": "arcoíris"
+      },
+      {
+        "text": "El arcoíris tiene siete colores.",
+        "translation": "A rainbow has seven colors.",
+        "cloze": "arcoíris"
+      }
+    ]
+  }
+]

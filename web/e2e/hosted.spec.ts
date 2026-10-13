@@ -23,9 +23,9 @@ test("words from a text use AI words; the limit is clear before anything is sent
   await startCourse(page);
   await addEmail(page, newEmail("miner"));
   await openAdd(page);
-  await page.getByPlaceholder(/Paste .* text here/).fill("zorro búho lince nutria tejón garza ciervo");
+  await page.getByPlaceholder(/Paste .* text here/).fill("lobo castor lince nutria tejón garza ciervo");
   await expect(page.getByText(/you have 6 of 6 AI words left this month/)).toBeVisible();
-  for (const w of ["zorro", "búho", "lince", "nutria", "tejón", "garza", "ciervo"]) await page.locator(".reader .tok", { hasText: w }).click();
+  for (const w of ["lobo", "castor", "lince", "nutria", "tejón", "garza", "ciervo"]) await page.locator(".reader .tok", { hasText: w }).click();
 
   // 7 picked, 6 left: the app says exactly that, and nothing is sent.
   await expect(page.getByRole("button", { name: /Learn 7 words · uses 7 AI words/ })).toBeDisabled();
@@ -46,7 +46,7 @@ test("words from a text use AI words; the limit is clear before anything is sent
   await page.getByRole("tab", { name: "Words" }).click();
   await page.getByRole("combobox").selectOption("mine");
   await expect(page.locator(".word-row")).toHaveCount(6);
-  for (const w of ["zorro", "búho", "lince", "nutria", "tejón", "garza"]) await expect(page.locator(".word-row strong", { hasText: w })).toHaveCount(1);
+  for (const w of ["lobo", "castor", "lince", "nutria", "tejón", "garza"]) await expect(page.locator(".word-row strong", { hasText: w })).toHaveCount(1);
 });
 
 test("Perennial AI can write new sentences for a word, and undo removes them", async ({ page }) => {
@@ -73,8 +73,8 @@ test("when the AI word count cannot load, nothing is blocked and the server says
 
   // The count is unknown: no count is shown, and AI words can still be picked.
   await openAdd(page);
-  await page.getByPlaceholder(/Paste .* text here/).fill("zorro búho lince nutria tejón garza ciervo");
-  for (const w of ["zorro", "búho", "lince", "nutria", "tejón", "garza", "ciervo"]) await page.locator(".reader .tok", { hasText: w }).click();
+  await page.getByPlaceholder(/Paste .* text here/).fill("lobo castor lince nutria tejón garza ciervo");
+  for (const w of ["lobo", "castor", "lince", "nutria", "tejón", "garza", "ciervo"]) await page.locator(".reader .tok", { hasText: w }).click();
   await expect(page.getByText(/AI words? left this month/)).toHaveCount(0);
 
   // 7 words, 6 left: the server refuses, and says why.

@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "native": "en",
-  "version": 28,
+  "version": 29,
   "words": [
     {
       "id": "de.w.cmn8thykat",
@@ -5305,7 +5305,8 @@
         "Hundes"
       ],
       "notes": "Plural: Hunde.",
-      "gender": "m"
+      "gender": "m",
+      "garden": "dog"
     },
     {
       "id": "de.w.z0sm86f6ze",
@@ -9098,7 +9099,8 @@
       "forms": [
         "Sonne"
       ],
-      "gender": "f"
+      "gender": "f",
+      "garden": "sun"
     },
     {
       "id": "de.w.1yaf6qphwk",
@@ -11763,7 +11765,8 @@
       "forms": [
         "Wind"
       ],
-      "gender": "m"
+      "gender": "m",
+      "garden": "wind"
     },
     {
       "id": "de.w.47tvqaenf5",
@@ -12614,6 +12617,295 @@
         "vorwärts"
       ],
       "notes": "Vorwärts! = Forward! / Let's go!"
+    },
+    {
+      "id": "de.w.71f1fexxz6",
+      "lemma": "Katze",
+      "gloss": "cat",
+      "pos": "noun",
+      "rank": 1001,
+      "forms": [
+        "Katze",
+        "Katzen"
+      ],
+      "gender": "f",
+      "garden": "cat"
+    },
+    {
+      "id": "de.w.evw99w622g",
+      "lemma": "Fisch",
+      "gloss": "fish",
+      "pos": "noun",
+      "rank": 1002,
+      "forms": [
+        "Fisch",
+        "Fische",
+        "Fischen"
+      ],
+      "gender": "m",
+      "garden": "fish"
+    },
+    {
+      "id": "de.w.76hftw7adq",
+      "lemma": "Vogel",
+      "gloss": "bird",
+      "pos": "noun",
+      "rank": 1003,
+      "forms": [
+        "Vogel",
+        "Vögel",
+        "Vogels"
+      ],
+      "notes": "Plural: Vögel.",
+      "gender": "m",
+      "garden": "bird"
+    },
+    {
+      "id": "de.w.r2435np9sg",
+      "lemma": "Mond",
+      "gloss": "moon",
+      "pos": "noun",
+      "rank": 1004,
+      "forms": [
+        "Mond"
+      ],
+      "gender": "m",
+      "garden": "moon"
+    },
+    {
+      "id": "de.w.3mww2xrmq4",
+      "lemma": "Regen",
+      "gloss": "rain",
+      "pos": "noun",
+      "rank": 1005,
+      "forms": [
+        "Regen"
+      ],
+      "gender": "m",
+      "garden": "rain"
+    },
+    {
+      "id": "de.w.d3x6v490p6",
+      "lemma": "Schnee",
+      "gloss": "snow",
+      "pos": "noun",
+      "rank": 1006,
+      "forms": [
+        "Schnee"
+      ],
+      "gender": "m",
+      "garden": "snow"
+    },
+    {
+      "id": "de.w.89ez6zb65g",
+      "lemma": "Stern",
+      "gloss": "star",
+      "pos": "noun",
+      "rank": 1007,
+      "forms": [
+        "Stern",
+        "Sterne",
+        "Sternen"
+      ],
+      "gender": "m",
+      "garden": "star"
+    },
+    {
+      "id": "de.w.xfg7gagzbc",
+      "lemma": "Maus",
+      "gloss": "mouse",
+      "pos": "noun",
+      "rank": 1008,
+      "forms": [
+        "Maus",
+        "Mäuse"
+      ],
+      "notes": "Plural: Mäuse. Also a computer mouse.",
+      "gender": "f",
+      "garden": "mouse"
+    },
+    {
+      "id": "de.w.hc3x66akdg",
+      "lemma": "Wolke",
+      "gloss": "cloud",
+      "pos": "noun",
+      "rank": 1009,
+      "forms": [
+        "Wolke",
+        "Wolken"
+      ],
+      "gender": "f",
+      "garden": "cloud"
+    },
+    {
+      "id": "de.w.0fwrcczdt7",
+      "lemma": "Fuchs",
+      "gloss": "fox",
+      "pos": "noun",
+      "rank": 1010,
+      "forms": [
+        "Fuchs",
+        "Füchse"
+      ],
+      "notes": "Plural: Füchse.",
+      "gender": "m",
+      "garden": "fox"
+    },
+    {
+      "id": "de.w.s66krmw9qq",
+      "lemma": "Frosch",
+      "gloss": "frog",
+      "pos": "noun",
+      "rank": 1011,
+      "forms": [
+        "Frosch",
+        "Frösche"
+      ],
+      "notes": "Plural: Frösche.",
+      "gender": "m",
+      "garden": "frog"
+    },
+    {
+      "id": "de.w.tfw7e85mky",
+      "lemma": "Ente",
+      "gloss": "duck",
+      "pos": "noun",
+      "rank": 1012,
+      "forms": [
+        "Ente",
+        "Enten"
+      ],
+      "gender": "f",
+      "garden": "duck"
+    },
+    {
+      "id": "de.w.ns2r3vgqkt",
+      "lemma": "Kaninchen",
+      "gloss": "rabbit",
+      "pos": "noun",
+      "rank": 1013,
+      "forms": [
+        "Kaninchen"
+      ],
+      "notes": "The plural is the same: die Kaninchen.",
+      "gender": "n",
+      "garden": "rabbit"
+    },
+    {
+      "id": "de.w.ngbek46mt0",
+      "lemma": "Biene",
+      "gloss": "bee",
+      "pos": "noun",
+      "rank": 1014,
+      "forms": [
+        "Biene",
+        "Bienen"
+      ],
+      "gender": "f",
+      "garden": "bee"
+    },
+    {
+      "id": "de.w.1kpv3430rt",
+      "lemma": "Spinne",
+      "gloss": "spider",
+      "pos": "noun",
+      "rank": 1015,
+      "forms": [
+        "Spinne",
+        "Spinnen"
+      ],
+      "gender": "f",
+      "garden": "spider"
+    },
+    {
+      "id": "de.w.wxzqr752ve",
+      "lemma": "Eichhörnchen",
+      "gloss": "squirrel",
+      "pos": "noun",
+      "rank": 1016,
+      "forms": [
+        "Eichhörnchen"
+      ],
+      "notes": "The plural is the same: die Eichhörnchen.",
+      "gender": "n",
+      "garden": "squirrel"
+    },
+    {
+      "id": "de.w.83eevsbjvc",
+      "lemma": "Ameise",
+      "gloss": "ant",
+      "pos": "noun",
+      "rank": 1017,
+      "forms": [
+        "Ameise",
+        "Ameisen"
+      ],
+      "gender": "f",
+      "garden": "ant"
+    },
+    {
+      "id": "de.w.0ayd86a45w",
+      "lemma": "Schmetterling",
+      "gloss": "butterfly",
+      "pos": "noun",
+      "rank": 1018,
+      "forms": [
+        "Schmetterling",
+        "Schmetterlinge"
+      ],
+      "gender": "m",
+      "garden": "butterfly"
+    },
+    {
+      "id": "de.w.2qq5jcqqsv",
+      "lemma": "Schnecke",
+      "gloss": "snail",
+      "pos": "noun",
+      "rank": 1019,
+      "forms": [
+        "Schnecke",
+        "Schnecken"
+      ],
+      "gender": "f",
+      "garden": "snail"
+    },
+    {
+      "id": "de.w.v2ft9f2vmk",
+      "lemma": "Eule",
+      "gloss": "owl",
+      "pos": "noun",
+      "rank": 1020,
+      "forms": [
+        "Eule",
+        "Eulen"
+      ],
+      "gender": "f",
+      "garden": "owl"
+    },
+    {
+      "id": "de.w.04qdba9872",
+      "lemma": "Regenbogen",
+      "gloss": "rainbow",
+      "pos": "noun",
+      "rank": 1021,
+      "forms": [
+        "Regenbogen"
+      ],
+      "gender": "m",
+      "garden": "rainbow"
+    },
+    {
+      "id": "de.w.fjk56xnqh2",
+      "lemma": "Igel",
+      "gloss": "hedgehog",
+      "pos": "noun",
+      "rank": 1022,
+      "forms": [
+        "Igel"
+      ],
+      "notes": "The plural is the same: die Igel.",
+      "gender": "m",
+      "garden": "hedgehog"
     }
   ],
   "sentences": [
@@ -35926,6 +36218,468 @@
       "translation": "Forward!",
       "cloze": "Vorwärts",
       "retired": true
+    },
+    {
+      "id": "de.s.jaykn72f6f",
+      "wordId": "de.w.71f1fexxz6",
+      "text": "Die Katze schläft auf dem Sofa.",
+      "translation": "The cat is sleeping on the sofa.",
+      "cloze": "Katze"
+    },
+    {
+      "id": "de.s.xehq30pcne",
+      "wordId": "de.w.71f1fexxz6",
+      "text": "Hast du eine Katze?",
+      "translation": "Do you have a cat?",
+      "cloze": "Katze"
+    },
+    {
+      "id": "de.s.rme7nt7rjs",
+      "wordId": "de.w.71f1fexxz6",
+      "text": "Wir haben zwei Katzen.",
+      "translation": "We have two cats.",
+      "cloze": "Katzen"
+    },
+    {
+      "id": "de.s.46xm2d7b97",
+      "wordId": "de.w.evw99w622g",
+      "text": "Ich esse gern Fisch.",
+      "translation": "I like eating fish.",
+      "cloze": "Fisch"
+    },
+    {
+      "id": "de.s.h0eajge7qv",
+      "wordId": "de.w.evw99w622g",
+      "text": "Im See gibt es viele Fische.",
+      "translation": "There are lots of fish in the lake.",
+      "cloze": "Fische"
+    },
+    {
+      "id": "de.s.0tc9hr40ss",
+      "wordId": "de.w.evw99w622g",
+      "text": "Wir haben heute einen Fisch gefangen.",
+      "translation": "We caught a fish today.",
+      "cloze": "Fisch"
+    },
+    {
+      "id": "de.s.mzn0kpk46j",
+      "wordId": "de.w.76hftw7adq",
+      "text": "Ein Vogel sitzt auf dem Dach.",
+      "translation": "A bird is sitting on the roof.",
+      "cloze": "Vogel"
+    },
+    {
+      "id": "de.s.nnwcqgr14b",
+      "wordId": "de.w.76hftw7adq",
+      "text": "Am Morgen singen die Vögel.",
+      "translation": "In the morning the birds sing.",
+      "cloze": "Vögel"
+    },
+    {
+      "id": "de.s.8740jbx9mf",
+      "wordId": "de.w.76hftw7adq",
+      "text": "Was ist das für ein Vogel?",
+      "translation": "What kind of bird is that?",
+      "cloze": "Vogel"
+    },
+    {
+      "id": "de.s.97wb8a7hxr",
+      "wordId": "de.w.r2435np9sg",
+      "text": "Siehst du den Mond?",
+      "translation": "Can you see the moon?",
+      "cloze": "Mond"
+    },
+    {
+      "id": "de.s.nx8gxc9e3y",
+      "wordId": "de.w.r2435np9sg",
+      "text": "Der Mond ist heute sehr hell.",
+      "translation": "The moon is very bright tonight.",
+      "cloze": "Mond"
+    },
+    {
+      "id": "de.s.v633qk34vs",
+      "wordId": "de.w.r2435np9sg",
+      "text": "Heute Nacht kann man den Mond nicht sehen.",
+      "translation": "You can't see the moon tonight.",
+      "cloze": "Mond"
+    },
+    {
+      "id": "de.s.nh7xwp6aas",
+      "wordId": "de.w.3mww2xrmq4",
+      "text": "Ich mag den Regen.",
+      "translation": "I like the rain.",
+      "cloze": "Regen"
+    },
+    {
+      "id": "de.s.3hj8ydk61h",
+      "wordId": "de.w.3mww2xrmq4",
+      "text": "Wir sind im Regen nach Hause gelaufen.",
+      "translation": "We walked home in the rain.",
+      "cloze": "Regen"
+    },
+    {
+      "id": "de.s.eg1tg49aps",
+      "wordId": "de.w.3mww2xrmq4",
+      "text": "Nach dem Regen riecht der Garten gut.",
+      "translation": "After the rain, the garden smells good.",
+      "cloze": "Regen"
+    },
+    {
+      "id": "de.s.4g7t4666sw",
+      "wordId": "de.w.d3x6v490p6",
+      "text": "Im Garten liegt Schnee.",
+      "translation": "There's snow in the garden.",
+      "cloze": "Schnee"
+    },
+    {
+      "id": "de.s.fzx2ht861x",
+      "wordId": "de.w.d3x6v490p6",
+      "text": "Die Kinder spielen im Schnee.",
+      "translation": "The children are playing in the snow.",
+      "cloze": "Schnee"
+    },
+    {
+      "id": "de.s.smawfjx8k4",
+      "wordId": "de.w.d3x6v490p6",
+      "text": "Letzten Winter gab es keinen Schnee.",
+      "translation": "There was no snow last winter.",
+      "cloze": "Schnee"
+    },
+    {
+      "id": "de.s.keftj9dzmb",
+      "wordId": "de.w.89ez6zb65g",
+      "text": "Heute sieht man viele Sterne.",
+      "translation": "You can see lots of stars tonight.",
+      "cloze": "Sterne"
+    },
+    {
+      "id": "de.s.aqr4yh9yyz",
+      "wordId": "de.w.89ez6zb65g",
+      "text": "Jeder Stern ist eine Sonne.",
+      "translation": "Every star is a sun.",
+      "cloze": "Stern"
+    },
+    {
+      "id": "de.s.gh3c9d1tph",
+      "wordId": "de.w.89ez6zb65g",
+      "text": "Heute schlafen wir unter den Sternen.",
+      "translation": "Tonight we're sleeping under the stars.",
+      "cloze": "Sternen"
+    },
+    {
+      "id": "de.s.r9cnadtcve",
+      "wordId": "de.w.xfg7gagzbc",
+      "text": "Die Katze fängt eine Maus.",
+      "translation": "The cat catches a mouse.",
+      "cloze": "Maus"
+    },
+    {
+      "id": "de.s.qff2amk9mq",
+      "wordId": "de.w.xfg7gagzbc",
+      "text": "In der Küche ist eine Maus!",
+      "translation": "There's a mouse in the kitchen!",
+      "cloze": "Maus"
+    },
+    {
+      "id": "de.s.zehadyeeh0",
+      "wordId": "de.w.xfg7gagzbc",
+      "text": "Mäuse mögen Käse.",
+      "translation": "Mice like cheese.",
+      "cloze": "Mäuse"
+    },
+    {
+      "id": "de.s.aqxrqshx6t",
+      "wordId": "de.w.hc3x66akdg",
+      "text": "Heute ist keine Wolke am Himmel.",
+      "translation": "There isn't a cloud in the sky today.",
+      "cloze": "Wolke"
+    },
+    {
+      "id": "de.s.9rqmbg6yrj",
+      "wordId": "de.w.hc3x66akdg",
+      "text": "Die Wolke sieht aus wie ein Hund.",
+      "translation": "The cloud looks like a dog.",
+      "cloze": "Wolke"
+    },
+    {
+      "id": "de.s.akwp6wbs8q",
+      "wordId": "de.w.hc3x66akdg",
+      "text": "Dunkle Wolken bringen Regen.",
+      "translation": "Dark clouds bring rain.",
+      "cloze": "Wolken"
+    },
+    {
+      "id": "de.s.p7zdr9g0tf",
+      "wordId": "de.w.0fwrcczdt7",
+      "text": "Ich habe einen Fuchs gesehen.",
+      "translation": "I saw a fox.",
+      "cloze": "Fuchs"
+    },
+    {
+      "id": "de.s.cjy6825rbd",
+      "wordId": "de.w.0fwrcczdt7",
+      "text": "Der Fuchs kommt nachts in den Garten.",
+      "translation": "The fox comes into the garden at night.",
+      "cloze": "Fuchs"
+    },
+    {
+      "id": "de.s.2apbvryabq",
+      "wordId": "de.w.0fwrcczdt7",
+      "text": "Füchse sind sehr klug.",
+      "translation": "Foxes are very clever.",
+      "cloze": "Füchse"
+    },
+    {
+      "id": "de.s.tfsz7pntvp",
+      "wordId": "de.w.s66krmw9qq",
+      "text": "Im Wasser sitzt ein Frosch.",
+      "translation": "A frog is sitting in the water.",
+      "cloze": "Frosch"
+    },
+    {
+      "id": "de.s.g9rbz1kw8h",
+      "wordId": "de.w.s66krmw9qq",
+      "text": "Nachts hört man die Frösche.",
+      "translation": "At night you can hear the frogs.",
+      "cloze": "Frösche"
+    },
+    {
+      "id": "de.s.rbmf2apa8h",
+      "wordId": "de.w.s66krmw9qq",
+      "text": "Der Frosch springt sehr weit.",
+      "translation": "The frog jumps very far.",
+      "cloze": "Frosch"
+    },
+    {
+      "id": "de.s.v75b20np09",
+      "wordId": "de.w.tfw7e85mky",
+      "text": "Auf dem See schwimmen Enten.",
+      "translation": "Ducks are swimming on the lake.",
+      "cloze": "Enten"
+    },
+    {
+      "id": "de.s.9yjf6ejrm0",
+      "wordId": "de.w.tfw7e85mky",
+      "text": "Wir geben den Enten Brot.",
+      "translation": "We're giving the ducks bread.",
+      "cloze": "Enten"
+    },
+    {
+      "id": "de.s.0yx6arb0sv",
+      "wordId": "de.w.tfw7e85mky",
+      "text": "Die Ente schaut mich an.",
+      "translation": "The duck is looking at me.",
+      "cloze": "Ente"
+    },
+    {
+      "id": "de.s.z3ej73jj92",
+      "wordId": "de.w.ns2r3vgqkt",
+      "text": "Mein Bruder hat ein Kaninchen.",
+      "translation": "My brother has a rabbit.",
+      "cloze": "Kaninchen"
+    },
+    {
+      "id": "de.s.x02b2npc2s",
+      "wordId": "de.w.ns2r3vgqkt",
+      "text": "Kaninchen fressen gern Gras.",
+      "translation": "Rabbits like eating grass.",
+      "cloze": "Kaninchen"
+    },
+    {
+      "id": "de.s.96xrw5nveq",
+      "wordId": "de.w.ns2r3vgqkt",
+      "text": "Das Kaninchen läuft in den Garten.",
+      "translation": "The rabbit runs into the garden.",
+      "cloze": "Kaninchen"
+    },
+    {
+      "id": "de.s.y7jrz0dz9v",
+      "wordId": "de.w.ngbek46mt0",
+      "text": "Vorsicht, eine Biene!",
+      "translation": "Careful, a bee!",
+      "cloze": "Biene"
+    },
+    {
+      "id": "de.s.fderee8v99",
+      "wordId": "de.w.ngbek46mt0",
+      "text": "Bienen machen Honig.",
+      "translation": "Bees make honey.",
+      "cloze": "Bienen"
+    },
+    {
+      "id": "de.s.8pvyttqw8y",
+      "wordId": "de.w.ngbek46mt0",
+      "text": "Mich hat eine Biene gestochen.",
+      "translation": "A bee stung me.",
+      "cloze": "Biene"
+    },
+    {
+      "id": "de.s.x6tmgbcxkx",
+      "wordId": "de.w.1kpv3430rt",
+      "text": "Da ist eine Spinne an der Wand.",
+      "translation": "There's a spider on the wall.",
+      "cloze": "Spinne"
+    },
+    {
+      "id": "de.s.hg5fkxed2y",
+      "wordId": "de.w.1kpv3430rt",
+      "text": "Spinnen machen mir keine Angst.",
+      "translation": "Spiders don't scare me.",
+      "cloze": "Spinnen"
+    },
+    {
+      "id": "de.s.w7dkdmsmky",
+      "wordId": "de.w.1kpv3430rt",
+      "text": "Lass die Spinne in Ruhe.",
+      "translation": "Leave the spider alone.",
+      "cloze": "Spinne"
+    },
+    {
+      "id": "de.s.fbsn4bn3s3",
+      "wordId": "de.w.wxzqr752ve",
+      "text": "Das Eichhörnchen springt von Baum zu Baum.",
+      "translation": "The squirrel jumps from tree to tree.",
+      "cloze": "Eichhörnchen"
+    },
+    {
+      "id": "de.s.zpf1vb34yt",
+      "wordId": "de.w.wxzqr752ve",
+      "text": "Im Park gibt es viele Eichhörnchen.",
+      "translation": "There are lots of squirrels in the park.",
+      "cloze": "Eichhörnchen"
+    },
+    {
+      "id": "de.s.m0ejn3zd5g",
+      "wordId": "de.w.wxzqr752ve",
+      "text": "Ein Eichhörnchen sitzt vor dem Fenster.",
+      "translation": "A squirrel is sitting outside the window.",
+      "cloze": "Eichhörnchen"
+    },
+    {
+      "id": "de.s.y3sd94q0st",
+      "wordId": "de.w.83eevsbjvc",
+      "text": "In der Küche sind Ameisen.",
+      "translation": "There are ants in the kitchen.",
+      "cloze": "Ameisen"
+    },
+    {
+      "id": "de.s.ak1w36c959",
+      "wordId": "de.w.83eevsbjvc",
+      "text": "Eine Ameise läuft über meine Hand.",
+      "translation": "An ant is walking over my hand.",
+      "cloze": "Ameise"
+    },
+    {
+      "id": "de.s.7c1t0qzvzg",
+      "wordId": "de.w.83eevsbjvc",
+      "text": "Ameisen sind sehr stark.",
+      "translation": "Ants are very strong.",
+      "cloze": "Ameisen"
+    },
+    {
+      "id": "de.s.1xvzbyz9az",
+      "wordId": "de.w.0ayd86a45w",
+      "text": "Ein Schmetterling fliegt durch den Garten.",
+      "translation": "A butterfly is flying through the garden.",
+      "cloze": "Schmetterling"
+    },
+    {
+      "id": "de.s.p3fgqrbdn3",
+      "wordId": "de.w.0ayd86a45w",
+      "text": "Schau, wie viele Schmetterlinge!",
+      "translation": "Look how many butterflies!",
+      "cloze": "Schmetterlinge"
+    },
+    {
+      "id": "de.s.bbv04qm658",
+      "wordId": "de.w.0ayd86a45w",
+      "text": "Der Schmetterling ist gelb.",
+      "translation": "The butterfly is yellow.",
+      "cloze": "Schmetterling"
+    },
+    {
+      "id": "de.s.d8xh20rc1v",
+      "wordId": "de.w.2qq5jcqqsv",
+      "text": "Eine Schnecke sitzt auf dem Salat.",
+      "translation": "A snail is sitting on the lettuce.",
+      "cloze": "Schnecke"
+    },
+    {
+      "id": "de.s.fhmdpjx24m",
+      "wordId": "de.w.2qq5jcqqsv",
+      "text": "Nach dem Regen kommen die Schnecken.",
+      "translation": "The snails come out after the rain.",
+      "cloze": "Schnecken"
+    },
+    {
+      "id": "de.s.e4zwa2twh6",
+      "wordId": "de.w.2qq5jcqqsv",
+      "text": "Du bist langsam wie eine Schnecke.",
+      "translation": "You're as slow as a snail.",
+      "cloze": "Schnecke"
+    },
+    {
+      "id": "de.s.7cdewa4r5f",
+      "wordId": "de.w.v2ft9f2vmk",
+      "text": "In dem Baum wohnt eine Eule.",
+      "translation": "An owl lives in that tree.",
+      "cloze": "Eule"
+    },
+    {
+      "id": "de.s.g3apddgdva",
+      "wordId": "de.w.v2ft9f2vmk",
+      "text": "Eulen schlafen am Tag.",
+      "translation": "Owls sleep during the day.",
+      "cloze": "Eulen"
+    },
+    {
+      "id": "de.s.ebg8cjgmev",
+      "wordId": "de.w.v2ft9f2vmk",
+      "text": "Letzte Nacht habe ich eine Eule gehört.",
+      "translation": "Last night I heard an owl.",
+      "cloze": "Eule"
+    },
+    {
+      "id": "de.s.dat5bsfjdc",
+      "wordId": "de.w.04qdba9872",
+      "text": "Schau mal, ein Regenbogen!",
+      "translation": "Look, a rainbow!",
+      "cloze": "Regenbogen"
+    },
+    {
+      "id": "de.s.w2nvja5hq1",
+      "wordId": "de.w.04qdba9872",
+      "text": "Nach dem Regen kam ein Regenbogen.",
+      "translation": "After the rain, a rainbow appeared.",
+      "cloze": "Regenbogen"
+    },
+    {
+      "id": "de.s.kvsbthdkvt",
+      "wordId": "de.w.04qdba9872",
+      "text": "Ein Regenbogen hat sieben Farben.",
+      "translation": "A rainbow has seven colors.",
+      "cloze": "Regenbogen"
+    },
+    {
+      "id": "de.s.xt07knmbj4",
+      "wordId": "de.w.fjk56xnqh2",
+      "text": "Im Garten wohnt ein Igel.",
+      "translation": "A hedgehog lives in the garden.",
+      "cloze": "Igel"
+    },
+    {
+      "id": "de.s.02k45rzpx2",
+      "wordId": "de.w.fjk56xnqh2",
+      "text": "Der Igel schläft im Winter.",
+      "translation": "The hedgehog sleeps in winter.",
+      "cloze": "Igel"
+    },
+    {
+      "id": "de.s.tdd00gagnt",
+      "wordId": "de.w.fjk56xnqh2",
+      "text": "Hast du schon mal einen Igel gesehen?",
+      "translation": "Have you ever seen a hedgehog?",
+      "cloze": "Igel"
     }
   ]
 }

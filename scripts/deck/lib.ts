@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { Deck, ID_ALPHABET, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
+import { Deck, GARDEN_WORDS, ID_ALPHABET, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
 import { locate } from "../../web/src/content/text.ts";
 
 export const ROOT = join(import.meta.dir, "../..");
@@ -21,6 +21,14 @@ export type Manifest = z.infer<typeof Manifest>;
 /** Alias file: { duplicateWordId: targetWordId }, written by hand. */
 const Aliases = z.record(z.string(), z.string());
 
+/**
+ * Garden file: which word brings which garden thing (#209), the word as
+ * "lemma|pos" or "lemma|pos|sense". Apart from the source, so adding one does
+ * not change an approved source file. A list, so a thing or a word named twice is seen.
+ */
+const Garden = z.array(z.object({ garden: z.enum(GARDEN_WORDS), word: z.string() }));
+export type Garden = z.infer<typeof Garden>;
+
 const sentenceKey = (wordId: string, text: string) => `${wordId}|${text.normalize("NFC")}`;
 
 /** Ten random base32 characters (32 divides 256, so `& 31` is unbiased). */
@@ -35,13 +43,14 @@ export type BuildInput = {
   manifest: Manifest;
   prev: Deck | null;
   aliases?: Record<string, string>;
+  garden?: Garden;
   /** Injectable for tests. */
   newBody?: () => string;
 };
 
 export type BuildResult = { deck: Deck; manifest: Manifest; errors: string[]; warnings: string[] };
 
-export function buildDeck({ lang, source, manifest, prev, aliases = {}, newBody = randomBody }: BuildInput): BuildResult {
+export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden = [], newBody = randomBody }: BuildInput): BuildResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const prevWords = new Map(prev?.words.map((w) => [w.id, w]));
@@ -90,9 +99,19 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, newBody 
     liveSentences.set(id, list);
   });
 
+  // Garden words name a live source word each. A thing named twice is a deck problem (deckProblems).
+  const live = new Map(words.map((w) => [manifestKey(w), w]));
+  for (const g of garden) {
+    const [lemma, pos, sense] = g.word.split("|");
+    const w = live.get(manifestKey({ lemma, pos, sense }));
+    if (!w) errors.push(`garden.json: "${g.word}" (${g.garden}) is not a live word in the source`);
+    else if (w.garden) errors.push(`garden.json: "${g.word}" is named for both "${w.garden}" and "${g.garden}"`);
+    else w.garden = g.garden;
+  }
+
   // Words and sentences that left the source stay in the deck, retired.
   const liveIds = new Set(words.map((w) => w.id));
-  for (const w of prev?.words ?? []) if (!liveIds.has(w.id)) words.push({ ...w, retired: true, aliasOf: undefined });
+  for (const w of prev?.words ?? []) if (!liveIds.has(w.id)) words.push({ ...w, retired: true, aliasOf: undefined, garden: undefined });
   for (const w of words) {
     const target = aliases[w.id];
     if (target) w.aliasOf = target;
@@ -205,12 +224,19 @@ function readJson<T>(path: string, schema: z.ZodType<T>, fallback: T): T {
   return existsSync(path) ? schema.parse(JSON.parse(readFileSync(path, "utf8"))) : fallback;
 }
 
+/** Every course names its garden words (#209), so a missing file is a mistake, not "none". */
+function readGarden(path: string): Garden {
+  if (!existsSync(path)) throw new Error(`${path.slice(ROOT.length + 1)} is missing: every course names its garden words (docs/decks.md)`);
+  return Garden.parse(JSON.parse(readFileSync(path, "utf8")));
+}
+
 export function readDeckFiles(lang: string) {
   const dir = deckDir(lang);
   return {
     manifest: readJson(join(dir, "ids.json"), Manifest, { words: {}, sentences: {} }),
     prev: readJson<Deck | null>(join(dir, "deck.json"), Deck(lang), null),
     aliases: readJson(join(dir, "aliases.json"), Aliases, {}),
+    garden: readGarden(join(dir, "garden.json")),
   };
 }
 

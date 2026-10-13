@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { compatibility, ID_ALPHABET, type SourceWord } from "../../web/src/deck/schema.ts";
-import { buildDeck, wholeWordCount, wordCount, type Manifest } from "./lib.ts";
+import { compatibility, ID_ALPHABET, type Deck, type SourceWord } from "../../web/src/deck/schema.ts";
+import { buildDeck, wholeWordCount, wordCount, type Garden, type Manifest } from "./lib.ts";
 
 const src = (lemma: string, extra: Partial<SourceWord> = {}): SourceWord => ({
   lemma,
@@ -103,6 +103,24 @@ test("duplicates and invalid content are errors", () => {
   const bad = src("casa");
   bad.sentences[1] = { ...bad.sentences[1], cloze: "perro" };
   expect(buildDeck({ lang: "es", source: [bad], manifest: empty(), prev: null, newBody: counter() }).errors.join()).toMatch(/is not in/);
+});
+
+test("garden.json marks deck words; a missing, retired or doubly named word, or a thing named twice, is an error", () => {
+  const build = (source: SourceWord[], garden: Garden, prev: { deck: Deck; manifest: Manifest } | null = null) =>
+    buildDeck({ lang: "es", source, manifest: prev?.manifest ?? empty(), prev: prev?.deck ?? null, garden, newBody: counter() });
+  const ok = build([src("gata"), src("casa")], [{ garden: "cat", word: "gata|noun" }]);
+  expect(ok.errors).toEqual([]);
+  expect(ok.deck.words.map((w) => w.garden)).toEqual(["cat", undefined]);
+
+  expect(build([src("casa")], [{ garden: "cat", word: "gata|noun" }]).errors).toEqual(['garden.json: "gata|noun" (cat) is not a live word in the source']);
+  // gata left the source: retired, so it can't bring the cat.
+  expect(build([src("casa")], [{ garden: "cat", word: "gata|noun" }], ok).errors).toEqual(['garden.json: "gata|noun" (cat) is not a live word in the source']);
+  // ... and once it leaves the garden file too, the retired word brings nothing.
+  const retired = build([src("casa")], [], ok);
+  expect(retired.errors).toEqual([]);
+  expect(retired.deck.words.find((w) => w.lemma === "gata")).toMatchObject({ retired: true, garden: undefined });
+  expect(build([src("gata")], [{ garden: "cat", word: "gata|noun" }, { garden: "bird", word: "gata|noun" }]).errors).toEqual(['garden.json: "gata|noun" is named for both "cat" and "bird"']);
+  expect(build([src("gata"), src("michi")], [{ garden: "cat", word: "gata|noun" }, { garden: "cat", word: "michi|noun" }]).errors).toEqual(['two live words bring the garden "cat"']);
 });
 
 test("warnings: ambiguous clozes and a single repeated form", () => {

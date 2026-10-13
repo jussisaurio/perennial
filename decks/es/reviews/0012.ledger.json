@@ -1,0 +1,101 @@
+{
+  "file": "source/0012.json",
+  "reviewer": "claude-agent:es-proofreader-0012-2026-10-13",
+  "entries": {
+    "lluvia|noun|": {
+      "hash": "8cce4b43fc3b63e8",
+      "verdict": "ok",
+      "at": "2026-10-13T06:07:54.299Z"
+    },
+    "nieve|noun|": {
+      "hash": "5aa566ebe49b7c56",
+      "verdict": "ok",
+      "at": "2026-10-13T06:07:56.987Z"
+    },
+    "pez|noun|": {
+      "hash": "45d60211263ae035",
+      "verdict": "ok",
+      "at": "2026-10-13T06:07:59.864Z"
+    },
+    "pájaro|noun|": {
+      "hash": "f766baa174b29ace",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:02.414Z"
+    },
+    "conejo|noun|": {
+      "hash": "e9107774e7e30c20",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:05.534Z"
+    },
+    "nube|noun|": {
+      "hash": "4c1eaed10bb230a2",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:08.517Z"
+    },
+    "ratón|noun|": {
+      "hash": "031c5fea2db056f2",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:11.056Z"
+    },
+    "pato|noun|": {
+      "hash": "e0309af2d6097036",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:13.682Z"
+    },
+    "araña|noun|": {
+      "hash": "9c64aaa93e52eae2",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:17.434Z"
+    },
+    "zorro|noun|": {
+      "hash": "537a27ba2cd82160",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:20.274Z"
+    },
+    "rana|noun|": {
+      "hash": "4300f799ec148871",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:23.110Z"
+    },
+    "abeja|noun|": {
+      "hash": "03ca46e7189e0fd5",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:26.372Z"
+    },
+    "mariposa|noun|": {
+      "hash": "0cfb8751b9b3b22e",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:28.990Z"
+    },
+    "hormiga|noun|": {
+      "hash": "9a2b84ec253e86b9",
+      "verdict": "ok",
+      "at": "2026-10-13T06:11:01.146Z"
+    },
+    "ardilla|noun|": {
+      "hash": "0c4ff875ad5a7ff9",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:36.957Z"
+    },
+    "caracol|noun|": {
+      "hash": "927e696d8c1a9e6b",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:39.577Z"
+    },
+    "búho|noun|": {
+      "hash": "f8d681f39e114e14",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:42.365Z"
+    },
+    "erizo|noun|": {
+      "hash": "3d0914a5bd3f8144",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:45.209Z"
+    },
+    "arcoíris|noun|": {
+      "hash": "fe16ff401373ec7d",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:49.128Z"
+    }
+  }
+}

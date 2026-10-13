@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
-import { courseOrder, deckKind, introOrder, kindOf, type WordKind } from "./order";
+import { Deck, GARDEN_WORDS, type GardenWord } from "../deck/schema";
+import { courseOrder, deckKind, introOrder, kindOf, nextWords, notStartedWords, sinceGarden, type WordKind } from "./order";
 
 const kind = (s: string): WordKind => ({ n: "noun", v: "verb", o: "other", f: "function" })[s[0] as "n" | "v" | "o" | "f"] as WordKind;
 
@@ -42,4 +43,92 @@ describe("courseOrder", () => {
     expect(order.map((w) => w.id)).toEqual(["b", "d", "c", "a"]);
     expect(courseOrder(deck)).toBe(order); // memoized for this deck
   });
+
+  test("garden words come 3rd, 12th, then every 27th, in garden order; the rest keep their pattern", () => {
+    const pos = ["noun", "verb", "noun", "adj", "det"];
+    const others = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, pos: pos[i % 5], rank: i + 1 }));
+    // Ranks and deck order say nothing: the garden list decides (cat, bird, dog, ...).
+    const garden = [
+      { id: "dog", pos: "noun", rank: 5, garden: "dog" as const },
+      { id: "cat", pos: "noun", rank: 900, garden: "cat" as const },
+      { id: "bird", pos: "noun", rank: 30, garden: "bird" as const },
+    ];
+    const order = courseOrder({ words: [...garden, ...others] }).map((w) => w.id);
+    expect([order.indexOf("cat"), order.indexOf("bird"), order.indexOf("dog")]).toEqual([2, 11, 38]);
+    expect(order.filter((id) => !["cat", "bird", "dog"].includes(id))).toEqual(introOrder(others, deckKind).map((w) => w.id));
+  });
+
+  test("a deck shorter than the garden slots keeps every word, garden words last", () => {
+    const words = [
+      { id: "n1", pos: "noun", rank: 1 },
+      { id: "bird", pos: "noun", rank: 2, garden: "bird" as const },
+      { id: "v1", pos: "verb", rank: 3 },
+      { id: "cat", pos: "noun", rank: 4, garden: "cat" as const },
+      { id: "n2", pos: "noun", rank: 5 },
+    ];
+    expect(courseOrder({ words }).map((w) => w.id)).toEqual(["n1", "v1", "cat", "n2", "bird"]);
+  });
+
+  for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
+    const course = courseOrder({ words: Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf) });
+
+    test(`${lang}: a new learner meets cat 3rd and bird 12th`, () => {
+      const next = nextWords(course, () => true, sinceGarden([]));
+      expect(next).toEqual([...course]);
+      expect([next[2].garden, next[11].garden]).toEqual(["cat", "bird"]);
+    });
+
+    test(`${lang}: a learner at course word 300 with no garden word yet gets one garden word, then 4 others, until caught up`, () => {
+      const done = new Set(course.slice(0, 300).filter((w) => !w.garden).map((w) => w.id));
+      const next = nextWords(course, (w) => !done.has(w.id), sinceGarden([...done].map((_, i) => ({ first: i }))));
+      const behind = course.slice(0, 300).filter((w) => w.garden).length; // 12: places 3, 12, 39, … 282
+      expect(behind).toBe(12);
+      expect(next.slice(0, behind * 5).map((w) => !!w.garden)).toEqual(Array.from({ length: behind * 5 }, (_, i) => i % 5 === 0));
+      // The garden words come in garden order; the others in course order, from word 301 on.
+      expect(next.filter((w) => w.garden).slice(0, behind).map((w) => w.garden)).toEqual(GARDEN_WORDS.slice(0, behind));
+      expect(next.filter((w) => !w.garden).slice(0, 10)).toEqual(course.slice(300).filter((w) => !w.garden).slice(0, 10));
+    });
+
+    // A review backlog gives sessions only 1 or 2 new words (core/session.ts plan), and each
+    // session works its new words out again, as learner.ts fresh() does, from the review history.
+    for (const newCount of [1, 2]) {
+      test(`${lang}: sessions of ${newCount} new word(s) keep the spacing: a garden word only after 4 other new words`, () => {
+        const started = new Map<string, { garden?: GardenWord; first: number }>();
+        for (const w of course.slice(0, 300)) if (!w.garden) started.set(w.id, { first: started.size });
+        const met: boolean[] = [];
+        while (met.length < 60) {
+          for (const w of nextWords(course, (x) => !started.has(x.id), sinceGarden(started.values())).slice(0, newCount)) {
+            started.set(w.id, { garden: w.garden, first: started.size });
+            met.push(!!w.garden);
+          }
+        }
+        expect(met.slice(0, 60)).toEqual(Array.from({ length: 60 }, (_, i) => i % 5 === 0));
+      });
+    }
+
+    test(`${lang}: the Words list's New starts with exactly what sessions bring next, for a learner past garden places`, () => {
+      type W = (typeof course)[number] & { source: "deck"; status: string };
+      const words = new Map<string, W>(course.map((w) => [w.id, { ...w, source: "deck", status: "active" }]));
+      // 300 other words practised, no garden word yet; one upcoming word is paused.
+      const practised = course.slice(0, 300).filter((w) => !w.garden);
+      const done = new Set(practised.map((w) => w.id));
+      const memories = practised.map((w) => ({ wordId: w.id, reps: 1 }));
+      const paused = course[310].id;
+      const upcoming = () => nextWords(course, (w) => !done.has(w.id) && w.id !== paused, sinceGarden(practised.map((_, i) => ({ first: i })))).map((w) => words.get(w.id)!);
+
+      const ids = notStartedWords({ deck: { words: course }, words, memories, upcoming }).map((w) => w.id);
+      const next = upcoming().map((w) => w.id);
+      expect(next.length).toBeGreaterThan(500); // the list shows the next 500
+      expect(ids.slice(0, 500)).toEqual(next.slice(0, 500));
+      expect(ids.slice(500)).toEqual([paused]); // paused words come after, never in between
+      expect(words.get(ids[0])!.garden).toBe("cat"); // the first garden word they passed
+    });
+
+    test(`${lang}: every garden word is in the course once; cat comes 3rd and bird 12th`, () => {
+      const words = Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf);
+      expect(words.filter((w) => w.garden).map((w) => w.garden).sort()).toEqual([...GARDEN_WORDS].sort());
+      const order = courseOrder({ words });
+      expect([order[2].garden, order[11].garden]).toEqual(["cat", "bird"]);
+    });
+  }
 });

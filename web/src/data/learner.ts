@@ -3,7 +3,7 @@
 // from the review log (core/memory.ts); nothing derived is stored or synced.
 
 import { teachable } from "../content/languages";
-import { courseOrder } from "../content/order";
+import { courseOrder, nextWords, sinceGarden } from "../content/order";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deriveMemory, type MemoryRow } from "../core/memory";
@@ -92,7 +92,9 @@ export interface Learner {
   reviewsByWord: Map<string, ReviewRow[]>;
   states: Map<string, WordStateRow>;
   sentences(wordId: string): Sentence[];
-  /** Words not started yet, best first: picked words, then the deck in frequency order. */
+  /** Words a session can introduce next, best first: picked words, then the course (content/order.ts). */
+  upcoming(): Word[];
+  /** The ids of upcoming(). */
   fresh(): string[];
   /** Resolve deck aliases to the word that counts. */
   resolve(id: string): string;
@@ -165,17 +167,23 @@ export function useLearner(lang: string | undefined): Learner | null {
 
     const started = new Set(memories.map((m) => m.wordId));
     const studied = [...words.values()].filter((w) => started.has(w.id) || w.source === "user" || w.status === "queued" || w.status === "paused");
-    const fresh = () => {
+    // Every started word has reviews: memories come from them.
+    const firstReview = (id: string) => Math.min(...reviewsByWord.get(id)!.map((r) => Date.parse(r.reviewed_at)));
+    // Sessions and the Words list's "New" both read this one order.
+    const upcoming = () => {
       const open = (w: Word) => !started.has(w.id) && w.status !== "ignored" && w.status !== "paused" && sentences(w.id).length > 0;
       const picked = [...words.values()]
         .filter((w) => open(w) && (w.status === "queued" || w.source === "user"))
         .sort((a, b) => (stateMap.get(a.id)?.queued_at ?? "").localeCompare(stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
       const pickedIds = new Set(picked.map((w) => w.id));
+      // Garden words keep their spacing from one session to the next.
+      const since = sinceGarden([...started].map((id) => ({ garden: deck.byId.get(id)?.garden, first: firstReview(id) })));
       // Your own choices first, as you made them; then the course, kinds of words taking turns (content/order.ts).
-      const course = courseOrder(deck).filter((w) => open(words.get(w.id)!) && !pickedIds.has(w.id));
-      return [...picked.map((w) => w.id), ...course.map((w) => w.id)];
+      const course = nextWords(courseOrder(deck), (w) => open(words.get(w.id)!) && !pickedIds.has(w.id), since);
+      return [...picked, ...course.map((w) => words.get(w.id)!)];
     };
-    return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, states: stateMap, sentences, fresh, resolve };
+    const fresh = () => upcoming().map((w) => w.id);
+    return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, states: stateMap, sentences, upcoming, fresh, resolve };
   }, [ready, deck, courses, reviews, states, userWords, userSentences, lang]);
 }
 

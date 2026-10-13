@@ -10,6 +10,8 @@ Decks are in frequency order: the corpus rank in a subtitle word list (Frequency
 
 The app introduces them in a slightly different order, decided in one place (`courseOrder` in `web/src/content/order.ts`): the kinds of words take turns (noun, verb, noun, a describing word, a grammar word, and again), each kind still in frequency order. Without it, the first sessions would be all grammar words and abstract adverbs (*de, que, no, el* / *ich, nicht, so, der*). Decks are never reordered for this; to make early words easier, write sentences that use words already met.
 
+Garden words are the exception (#209). `decks/<lang>/garden.json` names the word that brings each garden thing (`GARDEN_WORDS` in `web/src/deck/schema.ts`): a cat, rain, a fox. The course places them early and steadily, not by rank, and the audit does not flag their rank. The file lives apart from the source, so naming a word does not change an approved source file. The build fails when a named word is not a live source word, or when one word or one thing is named twice.
+
 ## Roles
 
 - **Author**: writes source entries (`decks/<lang>/source/NNNN.json`), by hand or with `scripts/deck/generate.ts`. Model output counts as authored by the person or agent that ran it.

@@ -3,8 +3,12 @@
 // are not all grammar words and abstract adverbs (de, que, no, el / ich, nicht,
 // so, der) but things you can picture and actions: a fixed pattern of parts of
 // speech, each kind still in frequency order.
+//
+// Garden words (#209) are the exception: they come at fixed places, early and
+// steadily, so a new learner soon sees that learning a word brings something
+// into the garden.
 
-import { toPos, type Pos } from "../deck/schema";
+import { GARDEN_WORDS, toPos, type GardenWord, type Pos } from "../deck/schema";
 
 export type WordKind = "noun" | "verb" | "other" | "function";
 
@@ -51,7 +55,13 @@ export function introOrder<T>(items: readonly T[], kind: (item: T) => WordKind):
 /** For deck words (anything with a part of speech). */
 export const deckKind = (w: { pos?: string | null }) => kindOf(w.pos);
 
-type DeckWord = { id: string; pos?: string | null; rank: number };
+/**
+ * Where the n-th garden word goes in the course (0-based): the 3rd word, so the
+ * first session shows the idea; the 12th, so it reads as a rule; then every 27th.
+ */
+const gardenSlot = (n: number) => (n === 0 ? 2 : 11 + (n - 1) * 27);
+
+type DeckWord = { id: string; pos?: string | null; rank: number; garden?: GardenWord };
 const orders = new WeakMap<object, readonly DeckWord[]>();
 
 /**
@@ -62,8 +72,78 @@ const orders = new WeakMap<object, readonly DeckWord[]>();
 export function courseOrder<W extends DeckWord>(deck: { words: readonly W[] }): readonly W[] {
   let order = orders.get(deck);
   if (!order) {
-    order = introOrder([...deck.words].sort((a, b) => a.rank - b.rank), deckKind);
+    const byRank = [...deck.words].sort((a, b) => a.rank - b.rank);
+    const garden = byRank.filter((w) => w.garden).sort((a, b) => GARDEN_WORDS.indexOf(a.garden!) - GARDEN_WORDS.indexOf(b.garden!));
+    const rest = introOrder(byRank.filter((w) => !w.garden), deckKind);
+    const out: W[] = [];
+    let g = 0;
+    let r = 0;
+    // A deck shorter than the slots (a test deck) gets its last garden words at the end.
+    while (out.length < byRank.length) out.push(g < garden.length && (out.length === gardenSlot(g) || r === rest.length) ? garden[g++] : rest[r++]);
+    order = out;
     orders.set(deck, order);
   }
   return order as readonly W[];
+}
+
+/** A learner behind on garden words gets one of them in every this many new words. */
+const CATCH_UP = 5;
+
+/**
+ * Other new words the learner started after their last garden word, from the
+ * time of each word's first review. Sessions take only a few new words at a
+ * time, so the spacing below must carry over from one session to the next.
+ * Before any garden word there is nothing to keep a distance from: Infinity.
+ */
+export function sinceGarden(started: Iterable<{ garden?: GardenWord; first: number }>): number {
+  const words = [...started];
+  const last = Math.max(...words.filter((w) => w.garden).map((w) => w.first));
+  if (last === -Infinity) return Infinity;
+  return words.filter((w) => !w.garden && w.first > last).length;
+}
+
+/**
+ * The words a learner meets next: the course, minus words they can't get now
+ * (`open` false). A garden word comes at its place, but never before CATCH_UP - 1
+ * other new words since the last one (`since`: sinceGarden). A learner who was
+ * past their places when garden words came to the course gets them one in every
+ * CATCH_UP new words, not all in a row. A new learner gets the course as it is:
+ * its garden places are further apart.
+ */
+export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean, since: number): W[] {
+  const out: W[] = [];
+  const due: W[] = [];
+  for (const w of course) {
+    if (!open(w)) continue;
+    if (w.garden) {
+      due.push(w);
+      continue;
+    }
+    if (due.length && since >= CATCH_UP - 1) {
+      out.push(due.shift()!);
+      since = 0;
+    }
+    out.push(w);
+    since++;
+  }
+  return [...out, ...due];
+}
+
+type ListWord = { id: string; source: "deck" | "user"; rank: number };
+
+/**
+ * The Words list's "New": what comes next, in the order sessions bring it
+ * (`upcoming`, learner.ts), then the other words not practised yet (paused ones
+ * too). Those come after it, so they never change that order.
+ */
+export function notStartedWords<W extends ListWord>(l: { upcoming(): W[]; words: Map<string, W>; memories: readonly { wordId: string; reps: number }[]; deck: { words: readonly DeckWord[] } }): W[] {
+  const practised = new Set(l.memories.filter((m) => m.reps > 0).map((m) => m.wordId));
+  const next = l.upcoming();
+  const listed = new Set(next.map((w) => w.id));
+  const others = [
+    ...courseOrder(l.deck).map((w) => l.words.get(w.id)!),
+    ...[...l.words.values()].filter((w) => w.source === "user").sort((a, b) => a.rank - b.rank),
+  ].filter((w) => !listed.has(w.id) && !practised.has(w.id));
+  // The next 500 are plenty to browse; the few others always stay, so a word paused here stays in view.
+  return [...next.slice(0, 500), ...others];
 }

@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { courseOrder } from "../content/order";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { apiMessage, moreExamples } from "../data/ai";
 import { useFeatures } from "../data/server";
 import { useUser } from "../data/auth";
 import { recall, wordState, type MemoryRow, type WordState } from "../core/memory";
+import { notStartedWords } from "../content/order";
 import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
@@ -78,18 +78,10 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
     const byWord = new Map<string, MemoryRow[]>();
     for (const m of learner.memories) byWord.set(m.wordId, [...(byWord.get(m.wordId) ?? []), m]);
     const needle = q.trim().toLocaleLowerCase();
-    // "New" lists what comes next from the course; the other filters, what you have grown.
-    // Every word not started yet, paused ones too: the course in learning order, then your own words.
-    const notStarted = () =>
-      [
-        ...courseOrder(learner.deck).map((w) => learner.words.get(w.id)!),
-        ...[...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => a.rank - b.rank),
-      ]
-        .filter((w) => w && !byWord.get(w.id)?.some((m) => m.reps > 0))
-        .slice(0, 500);
+    // "New" lists what comes next (learner.ts); the other filters, what you have grown.
     // Words from your own texts, newest first (user words are ranked in the order added).
     const mine = () => [...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => b.rank - a.rank);
-    const base = filter === "new" ? notStarted() : filter === "mine" ? mine() : learner.studied;
+    const base = filter === "new" ? notStartedWords(learner) : filter === "mine" ? mine() : learner.studied;
     return base
       .filter((l) => l.status !== "ignored")
       .map((l) => {

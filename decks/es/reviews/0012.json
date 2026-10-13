@@ -1,0 +1,9 @@
+{
+  "file": "source/0012.json",
+  "sha256": "cef2c5fcd0898ef405400c42835dde9ea1971711aa641719c77742aed4dd5375",
+  "author": "claude-agent:garden-author-2026-10-13",
+  "reviewer": "claude-agent:es-proofreader-0012-2026-10-13",
+  "reviewedAt": "2026-10-13",
+  "verdict": "approved",
+  "notes": "19 garden nouns (animals, weather) checked one by one; one fix applied (hormiga s2: me subió por la pierna); all ok."
+}

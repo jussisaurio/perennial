@@ -1,0 +1,116 @@
+{
+  "file": "source/0012.json",
+  "reviewer": "claude-agent:de-proofreader-0012-2026-10-13",
+  "entries": {
+    "katze|noun|": {
+      "hash": "c858f7cf87e0acaa",
+      "verdict": "ok",
+      "at": "2026-10-13T06:07:53.673Z"
+    },
+    "fisch|noun|": {
+      "hash": "e9fbba7fa14e0994",
+      "verdict": "ok",
+      "at": "2026-10-13T06:07:56.922Z"
+    },
+    "vogel|noun|": {
+      "hash": "86be4a2ef41b3b0f",
+      "verdict": "ok",
+      "at": "2026-10-13T06:07:59.335Z"
+    },
+    "mond|noun|": {
+      "hash": "1c01d10186f0251c",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:02.302Z"
+    },
+    "regen|noun|": {
+      "hash": "405ecc25d41a9ba1",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:06.501Z"
+    },
+    "schnee|noun|": {
+      "hash": "5a7f3e894c7ebe95",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:08.895Z"
+    },
+    "stern|noun|": {
+      "hash": "ceb878b9329d33d8",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:12.942Z"
+    },
+    "maus|noun|": {
+      "hash": "596fb705083e8f89",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:15.282Z"
+    },
+    "wolke|noun|": {
+      "hash": "8f5b9317340eacfa",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:17.574Z"
+    },
+    "fuchs|noun|": {
+      "hash": "2e9908d7ce088691",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:20.181Z"
+    },
+    "frosch|noun|": {
+      "hash": "a5bd342c4bf3518f",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:23.110Z"
+    },
+    "ente|noun|": {
+      "hash": "0889ef8b887ef55d",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:25.555Z"
+    },
+    "kaninchen|noun|": {
+      "hash": "1396130e49dc2c90",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:28.886Z"
+    },
+    "biene|noun|": {
+      "hash": "1173ec86f90b5902",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:31.371Z"
+    },
+    "spinne|noun|": {
+      "hash": "d2894ddd049ac631",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:33.959Z"
+    },
+    "eichhörnchen|noun|": {
+      "hash": "68155e6768bd0ead",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:36.356Z"
+    },
+    "ameise|noun|": {
+      "hash": "7ed419947b094a55",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:38.746Z"
+    },
+    "schmetterling|noun|": {
+      "hash": "2ffc307e1339543f",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:42.021Z"
+    },
+    "schnecke|noun|": {
+      "hash": "1dd823fcfff21ec7",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:46.025Z"
+    },
+    "eule|noun|": {
+      "hash": "dd3f6d358fdbdd01",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:48.697Z"
+    },
+    "regenbogen|noun|": {
+      "hash": "20a6147f77faf7b7",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:51.486Z"
+    },
+    "igel|noun|": {
+      "hash": "b0d76f82cfe08401",
+      "verdict": "ok",
+      "at": "2026-10-13T06:08:54.918Z"
+    }
+  }
+}
