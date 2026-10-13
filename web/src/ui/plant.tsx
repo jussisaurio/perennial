@@ -19,6 +19,9 @@ interface Genome {
   petalShape: "round" | "pointed" | "long";
   petal: string; // colour
   petalEdge: string;
+  /** A closed bud: green, from the leaf hue, so the flower's colour is a surprise until it blooms (#207). */
+  bud: string;
+  budEdge: string;
   center: string;
   leafShape: LeafShape;
   leaves: number;
@@ -65,6 +68,9 @@ export function genome(word: string): Genome {
     leaves: Math.round(between(r, 2, 5)),
     opposite: r() > 0.6,
     leaf: hsl(leafHue, between(r, 32, 50), between(r, 52, 62)),
+    // From leafHue only, with no new draws from r, so every other trait stays as it was.
+    bud: hsl(leafHue + 8, 46, 60),
+    budEdge: hsl(leafHue, 36, 44),
     stem: hsl(leafHue - 6, 35, 40),
     curve: between(r, -1, 1),
     height: between(r, 0.78, 1.18),
@@ -122,8 +128,8 @@ function petalPath(shape: Genome["petalShape"], len: number, w: number): string 
 
 function Flower({ g, r, open }: { g: Genome; r: number; open: boolean }): ReactNode {
   if (!open) {
-    // A closed bud in the flower's colour.
-    return <path d={`M0 0 C ${-r * 0.7} ${-r * 0.4} ${-r * 0.55} ${-r * 1.5} 0 ${-r * 1.8} C ${r * 0.55} ${-r * 1.5} ${r * 0.7} ${-r * 0.4} 0 0Z`} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.6} />;
+    // A closed bud, still green: the flower's colour shows only when it opens.
+    return <path d={`M0 0 C ${-r * 0.7} ${-r * 0.4} ${-r * 0.55} ${-r * 1.5} 0 ${-r * 1.8} C ${r * 0.55} ${-r * 1.5} ${r * 0.7} ${-r * 0.4} 0 0Z`} fill={g.bud} stroke={g.budEdge} strokeWidth={0.6} />;
   }
   const ring = (n: number, len: number, w: number, shape = g.petalShape) =>
     Array.from({ length: n }, (_, i) => <path key={i} d={petalPath(shape, len, w)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} transform={`rotate(${(i * 360) / n})`} />);

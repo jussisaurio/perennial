@@ -63,6 +63,8 @@ const T = {
   dropGap: 70,
   canOut: 200,
   grow: 520,
+  /** Opening into bloom shows the flower for the first time (#207): a little longer, so it can be seen. */
+  bloom: 760,
   hold: 80,
   sparkle: 380,
 };
@@ -72,25 +74,27 @@ function timeline(m: GrowthMoment) {
   const rises = FORM[m.to.stage] > FORM[m.from.stage] || height(m.to) > height(m.from);
   const watered = !m.planted;
   const growStart = m.planted ? plantEnd - 40 : T.canIn + T.tip + 30;
-  const growEnd = rises ? growStart + T.grow : plantEnd;
-  // The word is now known: a little sparkle as the flower opens.
+  // The word is now known: the flower opens for the first time, with a little sparkle.
   const blooms = m.to.stage === "bloom" && m.from.stage !== "bloom";
+  const growMs = blooms ? T.bloom : T.grow;
+  const growEnd = rises ? growStart + growMs : plantEnd;
   const sparkleStart = growEnd - 160;
   const end = Math.max(plantEnd, growEnd) + T.hold;
-  return { plantEnd, watered, growStart, growEnd, blooms, sparkleStart, end: blooms ? Math.max(end, sparkleStart + T.sparkle) : end };
+  return { plantEnd, watered, growStart, growMs, growEnd, blooms, sparkleStart, end: blooms ? Math.max(end, sparkleStart + T.sparkle) : end };
 }
 
 const easeIn = (t: number) => t * t;
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 /** Like easeOut, but overshoots a little and settles: a springy stretch upward. */
 const easeOutBack = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1) ** 2;
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const phase = (e: number, start: number, length: number) => clamp01((e - start) / length);
 
-function WateringCan({ e, side, growStart }: { e: number; side: number; growStart: number }) {
+function WateringCan({ e, side, growStart, growMs }: { e: number; side: number; growStart: number; growMs: number }) {
   const k = side / 90;
-  const shown = phase(e, 0, T.canIn) * (1 - phase(e, growStart + T.grow * 0.45, T.canOut));
-  const tip = 28 * phase(e, T.canIn, T.tip) * (1 - 0.65 * phase(e, growStart + T.grow * 0.45, T.canOut));
+  const shown = phase(e, 0, T.canIn) * (1 - phase(e, growStart + growMs * 0.45, T.canOut));
+  const tip = 28 * phase(e, T.canIn, T.tip) * (1 - 0.65 * phase(e, growStart + growMs * 0.45, T.canOut));
   const slide = (1 - phase(e, 0, T.canIn)) * -10;
   // The spout's end once tipped, where the drops start.
   const sx = -0.17 * side;
@@ -139,10 +143,11 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
 
   // One frame for the whole moment, sized for the larger plant, so growing shows.
   const side = Math.max(plantFrame(m.word, m.from.s, m.from.stage), plantFrame(m.word, m.to.s, m.to.stage));
-  const g = phase(e, tl.growStart, T.grow);
+  const g = phase(e, tl.growStart, tl.growMs);
   // Height and form share one pace, so leaves and bud come as the stem rises.
   // Only the height springs: an overshooting form would open a bud's flower for a moment.
-  const form = FORM[m.from.stage] + (FORM[m.to.stage] - FORM[m.from.stage]) * easeOut(g);
+  // A first bloom opens across the middle of its time, so the reveal is seen, not over in a blink.
+  const form = FORM[m.from.stage] + (FORM[m.to.stage] - FORM[m.from.stage]) * (tl.blooms ? easeInOut(g) : easeOut(g));
   const from = m.from.stage === "seed" ? 0 : growthOf(m.from.s);
   const growth = Math.max(0, from + (growthOf(m.to.s) - from) * easeOutBack(g));
   // Planting: the seed falls in, then the soil gives a little and settles.
@@ -173,7 +178,7 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
             const r = side * (0.06 + 0.12 * Math.sqrt(sparkle));
             return <circle key={i} cx={top.x + Math.cos(a) * r} cy={top.y + Math.sin(a) * r} r={side * 0.014 * (1 - sparkle * 0.5)} fill="var(--sun)" opacity={1 - sparkle} />;
           })}
-        {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} />}
+        {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} growMs={tl.growMs} />}
       </svg>
     </div>
   );
