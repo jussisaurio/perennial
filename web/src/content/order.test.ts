@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { Deck, GARDEN_WORDS, type GardenWord } from "../deck/schema";
-import { courseOrder, deckKind, introOrder, kindOf, nextWords, sinceGarden, type WordKind } from "./order";
+import { courseOrder, deckKind, introOrder, kindOf, nextWords, notStartedWords, sinceGarden, type WordKind } from "./order";
 
 const kind = (s: string): WordKind => ({ n: "noun", v: "verb", o: "other", f: "function" })[s[0] as "n" | "v" | "o" | "f"] as WordKind;
 
@@ -105,6 +105,24 @@ describe("courseOrder", () => {
         expect(met.slice(0, 60)).toEqual(Array.from({ length: 60 }, (_, i) => i % 5 === 0));
       });
     }
+
+    test(`${lang}: the Words list's New starts with exactly what sessions bring next, for a learner past garden places`, () => {
+      type W = (typeof course)[number] & { source: "deck"; status: string };
+      const words = new Map<string, W>(course.map((w) => [w.id, { ...w, source: "deck", status: "active" }]));
+      // 300 other words practised, no garden word yet; one upcoming word is paused.
+      const practised = course.slice(0, 300).filter((w) => !w.garden);
+      const done = new Set(practised.map((w) => w.id));
+      const memories = practised.map((w) => ({ wordId: w.id, reps: 1 }));
+      const paused = course[310].id;
+      const upcoming = () => nextWords(course, (w) => !done.has(w.id) && w.id !== paused, sinceGarden(practised.map((_, i) => ({ first: i })))).map((w) => words.get(w.id)!);
+
+      const ids = notStartedWords({ deck: { words: course }, words, memories, upcoming }).map((w) => w.id);
+      const next = upcoming().map((w) => w.id);
+      expect(next.length).toBeGreaterThan(500); // the list shows the next 500
+      expect(ids.slice(0, 500)).toEqual(next.slice(0, 500));
+      expect(ids.slice(500)).toEqual([paused]); // paused words come after, never in between
+      expect(words.get(ids[0])!.garden).toBe("cat"); // the first garden word they passed
+    });
 
     test(`${lang}: every garden word is in the course once; cat comes 3rd and bird 12th`, () => {
       const words = Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf);

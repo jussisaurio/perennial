@@ -128,3 +128,22 @@ export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W)
   }
   return [...out, ...due];
 }
+
+type ListWord = { id: string; source: "deck" | "user"; rank: number };
+
+/**
+ * The Words list's "New": what comes next, in the order sessions bring it
+ * (`upcoming`, learner.ts), then the other words not practised yet (paused ones
+ * too). Those come after it, so they never change that order.
+ */
+export function notStartedWords<W extends ListWord>(l: { upcoming(): W[]; words: Map<string, W>; memories: readonly { wordId: string; reps: number }[]; deck: { words: readonly DeckWord[] } }): W[] {
+  const practised = new Set(l.memories.filter((m) => m.reps > 0).map((m) => m.wordId));
+  const next = l.upcoming();
+  const listed = new Set(next.map((w) => w.id));
+  const others = [
+    ...courseOrder(l.deck).map((w) => l.words.get(w.id)!),
+    ...[...l.words.values()].filter((w) => w.source === "user").sort((a, b) => a.rank - b.rank),
+  ].filter((w) => !listed.has(w.id) && !practised.has(w.id));
+  // The next 500 are plenty to browse; the few others always stay, so a word paused here stays in view.
+  return [...next.slice(0, 500), ...others];
+}
