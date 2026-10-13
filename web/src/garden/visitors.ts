@@ -55,8 +55,9 @@ export interface VisitorDef extends NounDef {
 const CAT_BREAK = 5;
 /** At most this many rare visitors at once. Residents (the snail, gnome, frog and moth) do not count. */
 export const RARE_CAP = 2;
-/** Known words that bring the gnome. */
+/** Known words that bring the gnome, and the frog for learners who knew 150 words before it had a word of its own (#209). */
 const GNOME_KNOWN = 50;
+const FROG_KNOWN = 150;
 
 /**
  * Residents first, then rare visitors in priority order: when more than two
@@ -69,7 +70,7 @@ export const VISITORS: readonly VisitorDef[] = [
   // At a bed corner, a different one each day.
   { id: "gnome", words: { es: "el gnomo", de: "der Gartenzwerg" }, gloss: "gnome", rare: false, tag: "approach", unlock: GNOME_KNOWN, schedule: ({ facts }) => facts.known >= GNOME_KNOWN },
   // On a lily pad, at dusk and night only.
-  { id: "frog", words: { es: "la rana", de: "der Frosch" }, gloss: "frog", rare: false, tag: "approach", garden: "frog", schedule: ({ facts }) => facts.garden.has("frog") },
+  { id: "frog", words: { es: "la rana", de: "der Frosch" }, gloss: "frog", rare: false, tag: "approach", garden: "frog", schedule: ({ facts }) => facts.garden.has("frog") || facts.known >= FROG_KNOWN },
   // Round one lantern, at dusk and night only. Small and moving: tap only.
   { id: "moth", words: { es: "la polilla", de: "die Motte" }, gloss: "moth", rare: false, tag: "tap", schedule: () => true },
   // Learn its word and it lives here; before that it still comes after a long break (#17's secret cat).

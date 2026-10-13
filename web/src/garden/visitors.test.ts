@@ -104,11 +104,13 @@ describe("who visits today", () => {
 
 describe("residents: the gnome, the frog and the moth", () => {
   const knows = (known: number) => ({ ...NO_FACTS, known });
-  test("the gnome comes at 50 known words and stays; the frog comes with its word, not a count", () => {
+  test("the gnome comes at 50 known words and stays; the frog with its word, or at 150 known words as before #209", () => {
     for (const d of days) {
       expect(visitorsFor(knows(49), d).present).not.toContain("gnome");
       expect(visitorsFor(knows(50), d).present).toContain("gnome");
-      expect(visitorsFor(knows(500), d).present).not.toContain("frog");
+      expect(visitorsFor(knows(149), d).present).not.toContain("frog");
+      expect(visitorsFor(knows(150), d).present).toContain("frog"); // a learner who had it keeps it
+      expect(visitorsFor({ ...NO_FACTS, garden: new Set(["frog"]) }, d).present).toContain("frog");
       // The moth is at its lantern every evening (the walk shows it at dusk and night only).
       expect(visitorsFor(NO_FACTS, d).present).toContain("moth");
     }
