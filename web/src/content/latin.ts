@@ -16,6 +16,7 @@ export function useLatinNames(lang: string): Record<string, string> | null {
     let alive = true;
     load().then(
       (n) => alive && setNames({ lang, names: n }),
+      // Flavour, not content: a page without its Latin name is still complete, so a note in the log is enough.
       (e: unknown) => console.warn("[latin] names did not load", e),
     );
     return () => {
