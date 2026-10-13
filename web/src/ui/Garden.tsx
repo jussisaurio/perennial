@@ -12,7 +12,7 @@ import { FORM, plantHeight, StripPlant } from "./plant";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
 import { growthOf, leanDeg, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
-import { BIRD, CAT_ASLEEP, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
+import { BIRD, BUTTERFLY, BUTTERFLY_CLOSED, CAT_ASLEEP, DOG, FISHBOWL, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
 import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
@@ -117,10 +117,7 @@ export const Garden = memo(function Garden({
   const n = plants.length;
   const pad = 18;
   const view = (id: VisitorId) => visitors?.views.find((v) => v.id === id && v.word);
-  const snail = view("snail");
   const cat = view("cat");
-  const bird = view("bird");
-  const frog = view("frog");
   // A garden-word visitor (#209) lives at its word's plant (#235), when the garden has it.
   // Without that plant (the cat after a break, the frog at 150 words, a word set aside) it keeps its old spot.
   const homePlant = (v: VisitorView) => {
@@ -241,11 +238,11 @@ export const Garden = memo(function Garden({
           })}
           {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>
-        {[snail, cat, bird, frog].map((v) => {
+        {(["snail", "cat", "bird", "frog", "dog", "fish", "butterfly"] as const).map(view).map((v) => {
           if (!v) return null;
           const home = layout.find((l) => l.p.id === homePlant(v)?.id);
           const at = home ? atPlant(v.id, home, isSleepyHour()) : null;
-          // No plant of its own: the snail on the soil, the cat asleep at the right end; the bird and frog only in the walk.
+          // No plant of its own: the snail on the soil, the cat asleep at the right end; the bird, frog and fish only in the walk; the dog and butterfly stay away.
           if (!at && v.id !== "snail" && v.id !== "cat") return null;
           const spot = at ?? (v.id === "snail" ? { art: SNAIL, scale: 2.2, x: pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2) } : { art: CAT_ASLEEP, scale: 2, x: fullWidth - moleRoom - 30 });
           return <VisitorMark key={v.id} v={v} art={spot.art} scale={spot.scale} x={spot.x} top={spot.top} at={home?.p.id} onShow={showVisitor(v)} onHide={() => setVisitorTip(null)} />;
@@ -336,7 +333,9 @@ type TipVisitor = { id: string; word: string | null; gloss: string };
  * Where a garden-word visitor sits at its word's plant (#235), in strip pixels:
  * the cat curled up at its foot, the snail partway up its stem, the bird on
  * top, the frog beside it (asleep by day, as in the walk it only comes out at
- * night). Points on the stem follow the plant's lean, as recall fades. `top`
+ * night), the dog sitting by it, the fish in a bowl at its foot, and the
+ * butterfly on its flower (wings closed late at night). Points on the stem
+ * follow the plant's lean, as recall fades. `top`
  * is the sprite's top edge (default: on the soil).
  */
 function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale: number }, night: boolean): { art: PixelArt; scale: number; x: number; top?: number } | null {
@@ -358,6 +357,16 @@ function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale
     }
     case "frog":
       return { art: night ? FROG : FROG_ASLEEP, scale: 1.4, x: l.x - 11 };
+    // Garden words sit side by side at the strip's right end (they rank last in the deck), cat after
+    // perro and before pez: the dog sits on the left of its plant and the fish's bowl on the right.
+    case "dog":
+      return { art: DOG, scale: 1.3, x: l.x - 12 };
+    case "fish":
+      return { art: FISHBOWL, scale: 1.2, x: l.x + 11 };
+    case "butterfly": {
+      const p = onStem(1);
+      return { art: night ? BUTTERFLY_CLOSED : BUTTERFLY, scale: 1.4, x: p.x, top: p.y - tall(BUTTERFLY, 1.4) + 3 };
+    }
     default:
       return null;
   }

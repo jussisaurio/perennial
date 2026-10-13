@@ -9,6 +9,7 @@ import * as T from "./textures";
 import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, visitor, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
 import { collide, type Layout } from "./world";
 import { THIRSTY } from "./plants";
+import { KOI } from "./visitorArt";
 
 /**
  * Point a visitor's sprite at its texture cell; upload only when it changes (tick runs
@@ -20,6 +21,16 @@ export function showCell(uv: THREE.BufferAttribute, cell: number) {
   uv.setX(0, u);
   uv.needsUpdate = true;
 }
+
+/** The fish's circle in the pond, as a fraction of the pond's radius (it passes under the lily pads), and its speed (rad/s). */
+const FISH_R = 0.45;
+const FISH_SPEED = 0.2;
+/** The part of the fish's cell that holds its art: the bottom rows of a 32-row cell (textures.ts). */
+const FISH_VH = KOI.rows.length / 32;
+/** How long each frame of the dog's tail wag shows (s). */
+const WAG_S = 0.3;
+/** How near you come before the dog wags its tail (m). */
+const WAG_RANGE = 2.4;
 
 /** The moth's loop round its lantern (m), and the height of the middle of the lantern glass. */
 const MOTH_R = 0.24;
@@ -58,6 +69,8 @@ export interface VisitorWorld {
   plantTop: (p: { lemma: string; growth: number }) => number;
   /** A one-instance, camera-facing sprite of `size` metres from `tex`, showing the strip u..u+uw. */
   sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => SpriteMesh;
+  /** The same, lying flat and centred on x, y, z, showing the bottom `vh` of the strip (size × size·vh metres). Turn it with iParams.y. */
+  lying: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, vh: number, size: number) => SpriteMesh;
 }
 
 /**
@@ -109,6 +122,8 @@ export class SceneVisitors {
   private heron = { t: 0, dir: 0, tx: 0, tz: 0 };
   /** The moth's loop round its lantern: angle, radius, and a bump into the glass every 6 to 9 s. */
   private moth = { cx: 0, cz: 0, a: 0, r: MOTH_R, bump: -1, next: 7, n: 0 };
+  /** The fish's place on its circle round the pond, and its sprite's heading. */
+  private fish = { a: 0, heading: null as THREE.InstancedBufferAttribute | null };
 
   private world: VisitorWorld;
   private list: VisitorView[];
@@ -127,8 +142,9 @@ export class SceneVisitors {
    * Today's visitors (garden/visitors.ts): the snail on the fence rail, the cat
    * on the bench, a toadstool by a bed, a bird on a sign or the fence, the gnome
    * at a bed corner, the frog on a lily pad, the heron at the pond's edge, the
-   * moth at a lantern. One small texture for all of them; each is a
-   * one-instance sprite mesh.
+   * moth at a lantern, the dog and the butterfly at their word's plant, the
+   * fish in the pond. One small texture for all of them; each is a
+   * one-instance sprite mesh (the fish's lies flat).
    */
   build({ bench, pads, lanterns }: VisitorSpots) {
     if (!this.list.length) return;
@@ -197,6 +213,21 @@ export class SceneVisitors {
         // Curled up at the foot of its word's plant; or asleep on the bench.
         [x, y, z] = home ? [home.x + 0.2, this.world.bedTop, home.z + 0.12] : [bench.x + 0.18, 0.45, bench.z + 0.02];
         [cell, size] = [T.VISITOR_CELL.catAsleep, 0.95];
+      } else if (v.id === "dog") {
+        // Sitting beside its word's plant, looking at it. A word set aside has no plant: then it stays away.
+        if (!home) continue;
+        [x, y, z] = [home.x - 0.24, this.world.bedTop, home.z + 0.12];
+        [cell, size, hit, top] = [T.VISITOR_CELL.dog, 0.7, [0.25, 0.3, 0.27], 0.55];
+      } else if (v.id === "butterfly") {
+        // Resting on top of its word's plant (low by the stem when the plant droops); tick() lifts it now and then.
+        if (!home) continue;
+        [x, y, z] = [home.x + 0.03, home.r < THIRSTY ? this.world.bedTop + 0.12 : this.world.plantTop(home), home.z + 0.06];
+        [cell, size, hit, top] = [T.VISITOR_CELL.butterfly, 0.5, [0.17, 0.22, 0.2], 0.4];
+      } else if (v.id === "fish") {
+        // In the pond, whatever its plant: just under the lily pads, on its circle (tick() swims it round).
+        const r = L.pond.r * FISH_R;
+        [x, y, z] = [L.pond.x + r, 0.05, L.pond.z];
+        [cell, size, hit, top] = [T.VISITOR_CELL.fish, 0.68, [0, 0.3, 0.2], 0.2];
       } else if (v.id === "toadstool") {
         const bed = daily(L.beds, "visitor-toadstool-bed");
         const along = daily([-0.3, -0.1, 0.15, 0.35], "visitor-toadstool-z");
@@ -216,7 +247,12 @@ export class SceneVisitors {
         [x, y, z] = home ? [home.x, home.r < THIRSTY ? this.world.bedTop : this.world.plantTop(home) + 0.02, home.z + 0.05] : daily(spots, "visitor-bird-spot");
         [cell, size] = [T.VISITOR_CELL.bird, 0.5];
       }
-      const mesh = this.world.sprite(tex, x, y, z, cell * cellU, cellU, size);
+      const mesh = v.id === "fish" ? this.world.lying(tex, x, y, z, cell * cellU, cellU, FISH_VH, size) : this.world.sprite(tex, x, y, z, cell * cellU, cellU, size);
+      if (v.id === "fish") {
+        // Head first along its circle (tick() keeps it so as it swims).
+        this.fish.heading = mesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
+        this.fish.heading.setY(0, Math.PI / 2);
+      }
       this.mats.add(mesh.material);
       this.world.scene.add(mesh);
       const pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
@@ -230,11 +266,12 @@ export class SceneVisitors {
     showCell(s.uv, (g.lit ? T.VISITOR_CELL.gnomeFrontLit : T.VISITOR_CELL.gnomeFront) + (g.pose === "side" ? 1 : 0));
   }
 
-  /** The frog and the moth come out at dusk; the gnome lights its lantern when the others come on. */
+  /** The frog and the moth come out at dusk, and the butterfly goes; the gnome lights its lantern when the others come on. */
   setDark(dark: boolean) {
     this.gnome.lit = dark;
     for (const s of this.sprites) {
       if (s.v.id === "frog" || s.v.id === "moth") s.mesh.visible = dark;
+      if (s.v.id === "butterfly") s.mesh.visible = !dark;
       // The moth is always in its lantern's light.
       if (s.v.id === "moth") s.mesh.material.uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
       if (s.v.id === "gnome") this.gnomeCell(s);
@@ -410,6 +447,28 @@ export class SceneVisitors {
           showCell(s.uv, T.VISITOR_CELL.bird);
           s.mesh.visible = true;
         }
+      } else if (s.v.id === "dog") {
+        // It wags its tail while you are near. With reduced motion it just sits.
+        const wag = !reducedMotion && d < WAG_RANGE && Math.floor(elapsed / WAG_S) % 2 === 1;
+        showCell(s.uv, wag ? T.VISITOR_CELL.dogWag : T.VISITOR_CELL.dog);
+      } else if (s.v.id === "butterfly") {
+        // Now and then it lifts off its flower, flapping, and settles again. With reduced motion it rests, wings open.
+        if (!s.mesh.visible || reducedMotion) continue;
+        const lift = Math.max(0, Math.sin(elapsed * 0.7));
+        s.pos.setXYZ(0, s.x + Math.sin(elapsed * 1.7) * 0.04 * lift, s.y + lift * 0.1, s.z);
+        s.pos.needsUpdate = true;
+        showCell(s.uv, lift > 0 && Math.sin(elapsed * 9) > 0.3 ? T.VISITOR_CELL.butterflyClosed : T.VISITOR_CELL.butterfly);
+      } else if (s.v.id === "fish") {
+        // One slow circle round the pond, head first. With reduced motion it stays where it is.
+        const f = this.fish;
+        if (reducedMotion || !f.heading) continue;
+        f.a += dt * FISH_SPEED;
+        const r = layout.pond.r * FISH_R;
+        [s.x, s.z] = [layout.pond.x + Math.cos(f.a) * r, layout.pond.z + Math.sin(f.a) * r];
+        s.pos.setXYZ(0, s.x, s.y, s.z);
+        s.pos.needsUpdate = true;
+        f.heading.setY(0, f.a + Math.PI / 2);
+        f.heading.needsUpdate = true;
       }
     }
     if (this.tapped && elapsed > this.tapped.until) this.tapped = null;

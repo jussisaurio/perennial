@@ -52,16 +52,26 @@ describe("visitor words", () => {
 
 describe("who visits today", () => {
   test("garden-word visitors come once their word is learned, every day, and do not count toward the cap (#209)", () => {
-    const learned: LearnerFacts = { ...NO_FACTS, garden: new Set(["snail", "frog", "cat", "bird"]) };
+    const learned: LearnerFacts = { ...NO_FACTS, garden: new Set(["snail", "frog", "cat", "bird", "dog", "fish", "butterfly"]) };
     for (const d of days) {
       const none = visitorsFor(NO_FACTS, d).present;
-      for (const id of ["snail", "frog", "bird"] as const) expect(none).not.toContain(id);
+      for (const id of ["snail", "frog", "bird", "dog", "fish", "butterfly"] as const) expect(none).not.toContain(id);
       const t = visitorsFor(learned, d).present;
-      expect(t).toEqual(expect.arrayContaining(["snail", "frog", "cat", "bird"]));
+      expect(t).toEqual(expect.arrayContaining(["snail", "frog", "cat", "bird", "dog", "fish", "butterfly"]));
       expect(t.filter((id) => visitor(id).rare).length).toBeLessThanOrEqual(RARE_CAP);
     }
     // One word, one visitor.
     expect(visitorsFor({ ...NO_FACTS, garden: new Set(["cat"]) }, days[0]).present.filter((id) => visitor(id).garden)).toEqual(["cat"]);
+    expect(visitorsFor({ ...NO_FACTS, garden: new Set(["dog", "sun"]) }, days[0]).present.filter((id) => visitor(id).garden)).toEqual(["dog"]);
+  });
+
+  test("perro, pez and mariposa bring the dog, the fish and the butterfly, with their words (#209 phase B)", () => {
+    for (const g of ["dog", "fish", "butterfly"] as const) {
+      expect(VISITORS.find((d) => d.garden === g)?.id).toBe(g);
+      expect(visitorsFor({ ...NO_FACTS, garden: new Set([g]) }, days[0]).present).toContain(g);
+    }
+    expect(visitorViews(["dog", "fish", "butterfly"], "es").map((v) => v.word)).toEqual(["el perro", "el pez", "la mariposa"]);
+    expect(visitorViews(["dog", "fish", "butterfly"], "de").map((v) => v.word)).toEqual(["der Hund", "der Fisch", "der Schmetterling"]);
   });
 
   test("a visitor stays all day", () => {
@@ -96,7 +106,7 @@ describe("who visits today", () => {
   });
 
   test("the dev override shows everyone, or only the ones asked for", () => {
-    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "gnome", "frog", "moth", "cat", "heron", "toadstool", "bird"]);
+    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "gnome", "frog", "moth", "cat", "heron", "toadstool", "bird", "dog", "fish", "butterfly"]);
     expect(visitorsFor(NO_FACTS, days[0], ["cat"]).present).toEqual(["cat"]);
   });
 });

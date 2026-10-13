@@ -60,3 +60,21 @@ test("a wrong first answer does not bring the cat; the first good one does, with
   }
   throw new Error("gato's retry never came");
 });
+
+test("a learner who knows perro, pez and mariposa: the dog, the fish and the butterfly are at their plants", async ({ page }) => {
+  await startCourse(page);
+  // "I knew it" on each, days ago: a good reading answer brings the visitor.
+  const ids = await page.evaluate(async () => {
+    const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
+    const { loadDeck } = await import(/* @vite-ignore */ "/src/data/deck.ts");
+    const words: { id: string; lemma: string }[] = (await loadDeck("es")).words;
+    const ids: Record<string, string> = {};
+    for (const lemma of ["perro", "pez", "mariposa"]) ids[lemma] = words.find((w) => w.lemma === lemma)!.id;
+    const at = new Date(Date.now() - 12 * 86_400_000).toISOString();
+    await postWrite(Object.values(ids).map((word_id) => ({ type: "review.insert", row: { id: crypto.randomUUID(), lang: "es", word_id, skill: "read", grade: 4, kind: "known", reviewed_at: at, duration_ms: 4000, sentence_id: null } })));
+    return ids;
+  });
+  await expect(page.getByRole("button", { name: "el perro · dog" })).toHaveAttribute("data-at", ids.perro);
+  await expect(page.getByRole("button", { name: "el pez · fish" })).toHaveAttribute("data-at", ids.pez);
+  await expect(page.getByRole("button", { name: "la mariposa · butterfly" })).toHaveAttribute("data-at", ids.mariposa);
+});

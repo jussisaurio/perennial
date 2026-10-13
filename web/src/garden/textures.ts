@@ -656,6 +656,12 @@ export const VISITOR_CELL = {
   heronStep: 14,
   mothOpen: 15,
   mothClosed: 16,
+  dog: 17,
+  dogWag: 18,
+  /** Seen from above: it lies flat in the pond (sceneVisitors.ts). */
+  fish: 19,
+  butterfly: 20,
+  butterflyClosed: 21,
 } as const;
 export const VISITOR_CELLS = Object.keys(VISITOR_CELL).length;
 
@@ -679,6 +685,11 @@ export function visitors(): HTMLCanvasElement {
     Art.HERON_STEP,
     Art.MOTH_OPEN,
     Art.MOTH_CLOSED,
+    Art.DOG,
+    Art.DOG_WAG,
+    Art.KOI,
+    Art.BUTTERFLY,
+    Art.BUTTERFLY_CLOSED,
   ].forEach((art, i) => {
     const w = art.rows[0].length;
     const ox = i * 32 + Math.floor((32 - w) / 2);

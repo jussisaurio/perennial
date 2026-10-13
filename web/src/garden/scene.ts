@@ -133,6 +133,30 @@ const SPRITE_VERT = /* glsl */ `
   }
 `;
 
+// A sprite lying flat (the fish in the pond): centred on iPos, its +x turned
+// toward (cos a, sin a) on the ground, where a is iParams.y.
+const LYING_VERT = /* glsl */ `
+  attribute vec3 iPos;
+  attribute vec4 iUv;
+  attribute vec4 iParams; // phase, heading, scale, index
+  uniform float uFogNear;
+  uniform float uFogFar;
+  uniform float uSelected;
+  varying vec2 vUv;
+  varying float vFog;
+  varying float vSel;
+  void main() {
+    vec2 p = position.xy * iParams.z;
+    float a = iParams.y;
+    // Local y goes to the far side, so the quad's front faces up.
+    vec4 mv = viewMatrix * vec4(iPos + vec3(p.x * cos(a) + p.y * sin(a), 0.0, p.x * sin(a) - p.y * cos(a)), 1.0);
+    gl_Position = projectionMatrix * mv;
+    vUv = iUv.xy + uv * iUv.zw;
+    vFog = smoothstep(uFogNear, uFogFar, -mv.z);
+    vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
+  }
+`;
+
 const SPRITE_FRAG = /* glsl */ `
   uniform sampler2D uMap;
   varying vec2 vUv;
@@ -209,7 +233,7 @@ function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: numbe
   });
 }
 
-function spriteMaterial(map: THREE.Texture): THREE.ShaderMaterial {
+function spriteMaterial(map: THREE.Texture, vertexShader: string): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: {
       uMap: { value: map },
@@ -221,7 +245,7 @@ function spriteMaterial(map: THREE.Texture): THREE.ShaderMaterial {
       uTint: { value: new THREE.Color(1, 1, 1) },
       uSelected: { value: -1 },
     },
-    vertexShader: SPRITE_VERT,
+    vertexShader,
     fragmentShader: SPRITE_FRAG,
   });
 }
@@ -242,10 +266,10 @@ function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeometry {
   return geo;
 }
 
-/** Instanced camera-facing quads, bottom-centre anchored, from one atlas. */
+/** Instanced camera-facing quads, bottom-centre anchored, from one atlas. `lying`: flat on the ground instead, centred, turned by `droop` (LYING_VERT). */
 type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
-function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H) {
-  const geo = instanced(standingQuad(w, h));
+function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, lying = false) {
+  const geo = instanced(lying ? new THREE.PlaneGeometry(w, h) : standingQuad(w, h));
   const pos = new Float32Array(items.length * 3);
   const uv = new Float32Array(items.length * 4);
   const params = new Float32Array(items.length * 4);
@@ -258,7 +282,7 @@ function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRI
   geo.setAttribute("iUv", new THREE.InstancedBufferAttribute(uv, 4));
   geo.setAttribute("iParams", new THREE.InstancedBufferAttribute(params, 4));
   geo.instanceCount = items.length;
-  const mesh = new THREE.Mesh(geo, spriteMaterial(map));
+  const mesh = new THREE.Mesh(geo, spriteMaterial(map, lying ? LYING_VERT : SPRITE_VERT));
   mesh.frustumCulled = false;
   return mesh;
 }
@@ -419,6 +443,7 @@ export class GardenScene {
           mesh.material.uniforms.uSway.value = 0;
           return mesh;
         },
+        lying: (tex, x, y, z, u, uw, vh, size) => sprites(tex, [{ x, y, z, u, v: 0, uw, vh, phase: 0, droop: 0, scale: 1, index: -6 }], size, size * vh, true),
       },
       visitors.list,
     );
