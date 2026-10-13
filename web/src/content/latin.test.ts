@@ -5,13 +5,17 @@ import latinEs from "../../../decks/es/latin.json";
 import latinDe from "../../../decks/de/latin.json";
 
 // Latin names (#212): flavour text for the field guide, "<Word> <epithet>".
+// German keeps the lemma's own case, because a capital makes another word
+// (weg "away", Weg "path"). In Spanish a capital never does, so the genus
+// gets one, like a botanical name.
+const capitalise = (lemma: string) => lemma[0].toUpperCase() + lemma.slice(1);
 const decks = [
-  ["es", deckEs, latinEs],
-  ["de", deckDe, latinDe],
+  ["es", deckEs, latinEs, capitalise],
+  ["de", deckDe, latinDe, (lemma: string) => lemma],
 ] as const;
 
 describe("Latin names", () => {
-  for (const [lang, deck, latin] of decks) {
+  for (const [lang, deck, latin, genusOf] of decks) {
     const names = Object.entries(latin as Record<string, string>);
     const deckKeys = new Set((deck.words as { lemma: string; pos: string }[]).map((w) => `${w.lemma}|${w.pos}`));
 
@@ -21,9 +25,8 @@ describe("Latin names", () => {
 
     test(`${lang}: every name is "<Word> <epithet>", the genus is the word itself`, () => {
       for (const [key, name] of names) {
-        expect(name).toMatch(/^\p{Lu}[\p{L}\-']* [a-z]{4,14}$/u);
-        const lemma = key.split("|")[0];
-        expect(name.split(" ")[0]).toBe(lemma[0].toUpperCase() + lemma.slice(1));
+        expect(name).toMatch(/^\p{L}[\p{L}\-']* [a-z]{4,14}$/u);
+        expect(name.split(" ")[0]).toBe(genusOf(key.split("|")[0]));
       }
     });
 
