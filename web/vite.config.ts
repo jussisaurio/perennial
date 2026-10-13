@@ -18,7 +18,8 @@ export default defineConfig({
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        release: { name: process.env.VITE_RELEASE },
+        // || "dev": the release the app reports (src/version.ts), so maps match its errors even when the build passes an empty value.
+        release: { name: process.env.VITE_RELEASE || "dev" },
         sourcemaps: { filesToDeleteAfterUpload: ["./dist/**/*.map"] },
         telemetry: false,
       }),
