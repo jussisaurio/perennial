@@ -55,7 +55,8 @@ function reply(prompt: string): unknown {
   return {};
 }
 
-Bun.serve({
+// PORT=0 lets the system pick a free port; the line below says which (server tests read it).
+const server = Bun.serve({
   port: PORT,
   async fetch(req) {
     if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -83,4 +84,4 @@ Bun.serve({
     return Response.json({ choices: [{ message: { role: "assistant", content: text } }] }, { headers: cors });
   },
 });
-console.log(`mock LLM on http://localhost:${PORT} (OpenAI: /v1/chat/completions, Anthropic: /v1/messages)`);
+console.log(`mock LLM on http://localhost:${server.port} (OpenAI: /v1/chat/completions, Anthropic: /v1/messages)`);
