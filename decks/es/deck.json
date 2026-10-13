@@ -12972,7 +12972,7 @@
       ]
     },
     {
-      "id": "es.w.ncckathane",
+      "id": "es.w.agezqg0ys3",
       "lemma": "lluvia",
       "gloss": "rain",
       "pos": "noun",
@@ -12985,7 +12985,7 @@
       "garden": "rain"
     },
     {
-      "id": "es.w.z45n961vhm",
+      "id": "es.w.xwys08qnya",
       "lemma": "nieve",
       "gloss": "snow",
       "pos": "noun",
@@ -12997,7 +12997,7 @@
       "garden": "snow"
     },
     {
-      "id": "es.w.kkv9jdaf91",
+      "id": "es.w.n877s20yh3",
       "lemma": "pez",
       "gloss": "fish (alive)",
       "pos": "noun",
@@ -13011,7 +13011,7 @@
       "garden": "fish"
     },
     {
-      "id": "es.w.z3b1stpx6p",
+      "id": "es.w.2wbb1z5q3c",
       "lemma": "pájaro",
       "gloss": "bird",
       "pos": "noun",
@@ -13024,7 +13024,7 @@
       "garden": "bird"
     },
     {
-      "id": "es.w.ds8q7kw7t5",
+      "id": "es.w.qxvm045by2",
       "lemma": "conejo",
       "gloss": "rabbit",
       "pos": "noun",
@@ -13037,7 +13037,7 @@
       "garden": "rabbit"
     },
     {
-      "id": "es.w.2mmrwcextp",
+      "id": "es.w.rq66k1f1v8",
       "lemma": "nube",
       "gloss": "cloud",
       "pos": "noun",
@@ -13050,7 +13050,7 @@
       "garden": "cloud"
     },
     {
-      "id": "es.w.15sqnq9b21",
+      "id": "es.w.82hqemrf51",
       "lemma": "ratón",
       "gloss": "mouse",
       "pos": "noun",
@@ -13064,7 +13064,7 @@
       "garden": "mouse"
     },
     {
-      "id": "es.w.5eef1ccvkg",
+      "id": "es.w.m3rdn8n89b",
       "lemma": "pato",
       "gloss": "duck",
       "pos": "noun",
@@ -13077,7 +13077,7 @@
       "garden": "duck"
     },
     {
-      "id": "es.w.mfca2tjj9q",
+      "id": "es.w.8rdjs574mk",
       "lemma": "araña",
       "gloss": "spider",
       "pos": "noun",
@@ -13090,7 +13090,7 @@
       "garden": "spider"
     },
     {
-      "id": "es.w.fj2ye3s705",
+      "id": "es.w.aepq3xj5sr",
       "lemma": "zorro",
       "gloss": "fox",
       "pos": "noun",
@@ -13103,7 +13103,7 @@
       "garden": "fox"
     },
     {
-      "id": "es.w.4g2gpdsba1",
+      "id": "es.w.1q7qthkr00",
       "lemma": "rana",
       "gloss": "frog",
       "pos": "noun",
@@ -13116,7 +13116,7 @@
       "garden": "frog"
     },
     {
-      "id": "es.w.0avm4zr2ey",
+      "id": "es.w.tm4y1zxfhd",
       "lemma": "abeja",
       "gloss": "bee",
       "pos": "noun",
@@ -13129,7 +13129,7 @@
       "garden": "bee"
     },
     {
-      "id": "es.w.52sqs4nmb7",
+      "id": "es.w.s2qb0x9v4e",
       "lemma": "mariposa",
       "gloss": "butterfly",
       "pos": "noun",
@@ -13142,7 +13142,7 @@
       "garden": "butterfly"
     },
     {
-      "id": "es.w.bb28r35xy5",
+      "id": "es.w.qcm4a4r2m2",
       "lemma": "hormiga",
       "gloss": "ant",
       "pos": "noun",
@@ -13155,7 +13155,7 @@
       "garden": "ant"
     },
     {
-      "id": "es.w.9y05xrnra2",
+      "id": "es.w.wrzd09sfw5",
       "lemma": "ardilla",
       "gloss": "squirrel",
       "pos": "noun",
@@ -13168,7 +13168,7 @@
       "garden": "squirrel"
     },
     {
-      "id": "es.w.k62jr72v7m",
+      "id": "es.w.dbnfk7k4mx",
       "lemma": "caracol",
       "gloss": "snail",
       "pos": "noun",
@@ -13181,7 +13181,7 @@
       "garden": "snail"
     },
     {
-      "id": "es.w.9wpd78ft07",
+      "id": "es.w.j1aq9xfgpk",
       "lemma": "búho",
       "gloss": "owl",
       "pos": "noun",
@@ -13194,7 +13194,7 @@
       "garden": "owl"
     },
     {
-      "id": "es.w.5h5359y5z4",
+      "id": "es.w.4m64sk87s8",
       "lemma": "erizo",
       "gloss": "hedgehog",
       "pos": "noun",
@@ -13207,7 +13207,7 @@
       "garden": "hedgehog"
     },
     {
-      "id": "es.w.zn4r2tt03p",
+      "id": "es.w.zcpzzy5gfj",
       "lemma": "arcoíris",
       "gloss": "rainbow",
       "pos": "noun",
@@ -37424,400 +37424,400 @@
       "cloze": "varios"
     },
     {
-      "id": "es.s.hjkf7gp9pr",
-      "wordId": "es.w.ncckathane",
+      "id": "es.s.q9n55jqgty",
+      "wordId": "es.w.agezqg0ys3",
       "text": "Me gusta la lluvia.",
       "translation": "I like the rain.",
       "cloze": "lluvia"
     },
     {
-      "id": "es.s.vcw7mccdmd",
-      "wordId": "es.w.ncckathane",
+      "id": "es.s.yhjdge1em9",
+      "wordId": "es.w.agezqg0ys3",
       "text": "Volvimos a casa bajo la lluvia.",
       "translation": "We came home in the rain.",
       "cloze": "lluvia"
     },
     {
-      "id": "es.s.dsbfwgc0vh",
-      "wordId": "es.w.ncckathane",
+      "id": "es.s.0mn2254sfg",
+      "wordId": "es.w.agezqg0ys3",
       "text": "Este año hubo pocas lluvias.",
       "translation": "There was little rain this year.",
       "cloze": "lluvias"
     },
     {
-      "id": "es.s.73qmq8gcg0",
-      "wordId": "es.w.z45n961vhm",
+      "id": "es.s.vr97qdxjsn",
+      "wordId": "es.w.xwys08qnya",
       "text": "Mira, hay nieve en el jardín.",
       "translation": "Look, there's snow in the garden.",
       "cloze": "nieve"
     },
     {
-      "id": "es.s.6zq9yd39mb",
-      "wordId": "es.w.z45n961vhm",
+      "id": "es.s.fnxkpbzsyz",
+      "wordId": "es.w.xwys08qnya",
       "text": "Los niños juegan en la nieve.",
       "translation": "The children are playing in the snow.",
       "cloze": "nieve"
     },
     {
-      "id": "es.s.at7vjx1nmg",
-      "wordId": "es.w.z45n961vhm",
+      "id": "es.s.k10vn5nap4",
+      "wordId": "es.w.xwys08qnya",
       "text": "Este invierno no hubo nieve.",
       "translation": "There was no snow this winter.",
       "cloze": "nieve"
     },
     {
-      "id": "es.s.sr7twjrq89",
-      "wordId": "es.w.kkv9jdaf91",
+      "id": "es.s.z90a2d33he",
+      "wordId": "es.w.n877s20yh3",
       "text": "Tengo un pez de colores.",
       "translation": "I have a goldfish.",
       "cloze": "pez"
     },
     {
-      "id": "es.s.jrmvwcvyrx",
-      "wordId": "es.w.kkv9jdaf91",
+      "id": "es.s.2ptbtmqqvz",
+      "wordId": "es.w.n877s20yh3",
       "text": "Hay muchos peces en el río.",
       "translation": "There are lots of fish in the river.",
       "cloze": "peces"
     },
     {
-      "id": "es.s.knf6vdvrh4",
-      "wordId": "es.w.kkv9jdaf91",
+      "id": "es.s.9y1wtdf4dv",
+      "wordId": "es.w.n877s20yh3",
       "text": "¿Le diste de comer al pez?",
       "translation": "Did you feed the fish?",
       "cloze": "pez"
     },
     {
-      "id": "es.s.29feyr2gtr",
-      "wordId": "es.w.z3b1stpx6p",
+      "id": "es.s.4h4h65nrbc",
+      "wordId": "es.w.2wbb1z5q3c",
       "text": "Hay un pájaro en el árbol.",
       "translation": "There's a bird in the tree.",
       "cloze": "pájaro"
     },
     {
-      "id": "es.s.sws61rjtsf",
-      "wordId": "es.w.z3b1stpx6p",
+      "id": "es.s.e2xq0thn40",
+      "wordId": "es.w.2wbb1z5q3c",
       "text": "Los pájaros cantan por la mañana.",
       "translation": "The birds sing in the morning.",
       "cloze": "pájaros"
     },
     {
-      "id": "es.s.yw8kpym8df",
-      "wordId": "es.w.z3b1stpx6p",
+      "id": "es.s.3pkkg338p9",
+      "wordId": "es.w.2wbb1z5q3c",
       "text": "¿Ves ese pájaro azul?",
       "translation": "Do you see that blue bird?",
       "cloze": "pájaro"
     },
     {
-      "id": "es.s.dwpv7a67cs",
-      "wordId": "es.w.ds8q7kw7t5",
+      "id": "es.s.y8xth72nvx",
+      "wordId": "es.w.qxvm045by2",
       "text": "Mi hermana tiene un conejo blanco.",
       "translation": "My sister has a white rabbit.",
       "cloze": "conejo"
     },
     {
-      "id": "es.s.ydrgksmyv4",
-      "wordId": "es.w.ds8q7kw7t5",
+      "id": "es.s.rea2s1axs1",
+      "wordId": "es.w.qxvm045by2",
       "text": "Los conejos corren muy rápido.",
       "translation": "Rabbits run very fast.",
       "cloze": "conejos"
     },
     {
-      "id": "es.s.80cp5jky28",
-      "wordId": "es.w.ds8q7kw7t5",
+      "id": "es.s.gs9b8y3wen",
+      "wordId": "es.w.qxvm045by2",
       "text": "El conejo se escondió en el jardín.",
       "translation": "The rabbit hid in the garden.",
       "cloze": "conejo"
     },
     {
-      "id": "es.s.7sg9cyyycy",
-      "wordId": "es.w.2mmrwcextp",
+      "id": "es.s.2rtqxhp7k0",
+      "wordId": "es.w.rq66k1f1v8",
       "text": "Hoy no hay ni una nube.",
       "translation": "There isn't a single cloud today.",
       "cloze": "nube"
     },
     {
-      "id": "es.s.0jhdypq0gq",
-      "wordId": "es.w.2mmrwcextp",
+      "id": "es.s.gxa01vxxex",
+      "wordId": "es.w.rq66k1f1v8",
       "text": "Mira esa nube, parece un perro.",
       "translation": "Look at that cloud, it looks like a dog.",
       "cloze": "nube"
     },
     {
-      "id": "es.s.e1btz3488h",
-      "wordId": "es.w.2mmrwcextp",
+      "id": "es.s.rawsqxxh05",
+      "wordId": "es.w.rq66k1f1v8",
       "text": "Las nubes negras traen lluvia.",
       "translation": "Dark clouds bring rain.",
       "cloze": "nubes"
     },
     {
-      "id": "es.s.d3ep7x871t",
-      "wordId": "es.w.15sqnq9b21",
+      "id": "es.s.2a7qpgbd9z",
+      "wordId": "es.w.82hqemrf51",
       "text": "El gato busca al ratón.",
       "translation": "The cat is looking for the mouse.",
       "cloze": "ratón"
     },
     {
-      "id": "es.s.x686t726de",
-      "wordId": "es.w.15sqnq9b21",
+      "id": "es.s.nd4batgs7m",
+      "wordId": "es.w.82hqemrf51",
       "text": "Hay un ratón en la cocina.",
       "translation": "There's a mouse in the kitchen.",
       "cloze": "ratón"
     },
     {
-      "id": "es.s.hkefm14t49",
-      "wordId": "es.w.15sqnq9b21",
+      "id": "es.s.mfp6vt54af",
+      "wordId": "es.w.82hqemrf51",
       "text": "No me gustan los ratones.",
       "translation": "I don't like mice.",
       "cloze": "ratones"
     },
     {
-      "id": "es.s.x2z7n6zyp1",
-      "wordId": "es.w.5eef1ccvkg",
+      "id": "es.s.q81cd88w84",
+      "wordId": "es.w.m3rdn8n89b",
       "text": "Hay patos en el lago.",
       "translation": "There are ducks on the lake.",
       "cloze": "patos"
     },
     {
-      "id": "es.s.8evaezpbhd",
-      "wordId": "es.w.5eef1ccvkg",
+      "id": "es.s.hye71y9h85",
+      "wordId": "es.w.m3rdn8n89b",
       "text": "Vamos a darles pan a los patos.",
       "translation": "Let's give the ducks some bread.",
       "cloze": "patos"
     },
     {
-      "id": "es.s.82mzgfarxk",
-      "wordId": "es.w.5eef1ccvkg",
+      "id": "es.s.3qg93cdbbd",
+      "wordId": "es.w.m3rdn8n89b",
       "text": "Ese pato no deja de mirarme.",
       "translation": "That duck won't stop looking at me.",
       "cloze": "pato"
     },
     {
-      "id": "es.s.dczs1dswqq",
-      "wordId": "es.w.mfca2tjj9q",
+      "id": "es.s.vcwczptny0",
+      "wordId": "es.w.8rdjs574mk",
       "text": "Hay una araña en el baño.",
       "translation": "There's a spider in the bathroom.",
       "cloze": "araña"
     },
     {
-      "id": "es.s.v72z40yjv5",
-      "wordId": "es.w.mfca2tjj9q",
+      "id": "es.s.q9k3z4j605",
+      "wordId": "es.w.8rdjs574mk",
       "text": "No mates a la araña.",
       "translation": "Don't kill the spider.",
       "cloze": "araña"
     },
     {
-      "id": "es.s.p7fhbhtgbg",
-      "wordId": "es.w.mfca2tjj9q",
+      "id": "es.s.a6tq6wapat",
+      "wordId": "es.w.8rdjs574mk",
       "text": "Les tengo miedo a las arañas.",
       "translation": "I'm scared of spiders.",
       "cloze": "arañas"
     },
     {
-      "id": "es.s.fyn5a5a5t4",
-      "wordId": "es.w.fj2ye3s705",
+      "id": "es.s.mqm3mekh0c",
+      "wordId": "es.w.aepq3xj5sr",
       "text": "Vi un zorro cerca de la casa.",
       "translation": "I saw a fox near the house.",
       "cloze": "zorro"
     },
     {
-      "id": "es.s.j2ewvkvktg",
-      "wordId": "es.w.fj2ye3s705",
+      "id": "es.s.99qnm1e6w5",
+      "wordId": "es.w.aepq3xj5sr",
       "text": "El zorro tiene la cola larga.",
       "translation": "The fox has a long tail.",
       "cloze": "zorro"
     },
     {
-      "id": "es.s.36n40dej33",
-      "wordId": "es.w.fj2ye3s705",
+      "id": "es.s.dkmvfqqxpr",
+      "wordId": "es.w.aepq3xj5sr",
       "text": "Los zorros salen de noche.",
       "translation": "Foxes come out at night.",
       "cloze": "zorros"
     },
     {
-      "id": "es.s.k975knrd4n",
-      "wordId": "es.w.4g2gpdsba1",
+      "id": "es.s.qgayznshnx",
+      "wordId": "es.w.1q7qthkr00",
       "text": "Hay una rana en el agua.",
       "translation": "There's a frog in the water.",
       "cloze": "rana"
     },
     {
-      "id": "es.s.sfe99jka1v",
-      "wordId": "es.w.4g2gpdsba1",
+      "id": "es.s.rzse9fme3x",
+      "wordId": "es.w.1q7qthkr00",
       "text": "Por la noche se oyen las ranas.",
       "translation": "At night you can hear the frogs.",
       "cloze": "ranas"
     },
     {
-      "id": "es.s.xfnfsat402",
-      "wordId": "es.w.4g2gpdsba1",
+      "id": "es.s.ateebt8fh0",
+      "wordId": "es.w.1q7qthkr00",
       "text": "La rana saltó muy alto.",
       "translation": "The frog jumped very high.",
       "cloze": "rana"
     },
     {
-      "id": "es.s.3nv3t1ebj0",
-      "wordId": "es.w.0avm4zr2ey",
+      "id": "es.s.9gjbx85bah",
+      "wordId": "es.w.tm4y1zxfhd",
       "text": "Cuidado, hay una abeja.",
       "translation": "Careful, there's a bee.",
       "cloze": "abeja"
     },
     {
-      "id": "es.s.a725ej0n1n",
-      "wordId": "es.w.0avm4zr2ey",
+      "id": "es.s.xavz76jsty",
+      "wordId": "es.w.tm4y1zxfhd",
       "text": "Las abejas hacen miel.",
       "translation": "Bees make honey.",
       "cloze": "abejas"
     },
     {
-      "id": "es.s.ng2xtfk4ck",
-      "wordId": "es.w.0avm4zr2ey",
+      "id": "es.s.m91s281779",
+      "wordId": "es.w.tm4y1zxfhd",
       "text": "No tengas miedo, es solo una abeja.",
       "translation": "Don't be scared, it's just a bee.",
       "cloze": "abeja"
     },
     {
-      "id": "es.s.641s7vqq93",
-      "wordId": "es.w.52sqs4nmb7",
+      "id": "es.s.3tfv9fsj1f",
+      "wordId": "es.w.s2qb0x9v4e",
       "text": "Una mariposa entró por la ventana.",
       "translation": "A butterfly came in through the window.",
       "cloze": "mariposa"
     },
     {
-      "id": "es.s.wqgctyaps6",
-      "wordId": "es.w.52sqs4nmb7",
+      "id": "es.s.7yxrmfhg42",
+      "wordId": "es.w.s2qb0x9v4e",
       "text": "Mira cuántas mariposas hay en las flores.",
       "translation": "Look how many butterflies there are on the flowers.",
       "cloze": "mariposas"
     },
     {
-      "id": "es.s.zz8yfac90c",
-      "wordId": "es.w.52sqs4nmb7",
+      "id": "es.s.0n4xn57vhh",
+      "wordId": "es.w.s2qb0x9v4e",
       "text": "La mariposa es amarilla.",
       "translation": "The butterfly is yellow.",
       "cloze": "mariposa"
     },
     {
-      "id": "es.s.pda2c5wwse",
-      "wordId": "es.w.bb28r35xy5",
+      "id": "es.s.tx9fg68feq",
+      "wordId": "es.w.qcm4a4r2m2",
       "text": "Hay hormigas en el azúcar.",
       "translation": "There are ants in the sugar.",
       "cloze": "hormigas"
     },
     {
-      "id": "es.s.14hydtp3qe",
-      "wordId": "es.w.bb28r35xy5",
-      "text": "Una hormiga subió por mi pierna.",
+      "id": "es.s.me2gz6zrnt",
+      "wordId": "es.w.qcm4a4r2m2",
+      "text": "Una hormiga me subió por la pierna.",
       "translation": "An ant climbed up my leg.",
       "cloze": "hormiga"
     },
     {
-      "id": "es.s.stgbcbhc0c",
-      "wordId": "es.w.bb28r35xy5",
+      "id": "es.s.99t4j4m8nw",
+      "wordId": "es.w.qcm4a4r2m2",
       "text": "Las hormigas trabajan todo el día.",
       "translation": "Ants work all day.",
       "cloze": "hormigas"
     },
     {
-      "id": "es.s.d4y7zzrtyr",
-      "wordId": "es.w.9y05xrnra2",
+      "id": "es.s.y05xkcdekf",
+      "wordId": "es.w.wrzd09sfw5",
       "text": "La ardilla sube al árbol.",
       "translation": "The squirrel climbs the tree.",
       "cloze": "ardilla"
     },
     {
-      "id": "es.s.81w0p1ktts",
-      "wordId": "es.w.9y05xrnra2",
+      "id": "es.s.xnyq47f299",
+      "wordId": "es.w.wrzd09sfw5",
       "text": "En el parque hay muchas ardillas.",
       "translation": "There are lots of squirrels in the park.",
       "cloze": "ardillas"
     },
     {
-      "id": "es.s.0tvm4fj3wx",
-      "wordId": "es.w.9y05xrnra2",
+      "id": "es.s.9cna4nxw8m",
+      "wordId": "es.w.wrzd09sfw5",
       "text": "Una ardilla me robó la galleta.",
       "translation": "A squirrel stole my cookie.",
       "cloze": "ardilla"
     },
     {
-      "id": "es.s.30n3vh9gab",
-      "wordId": "es.w.k62jr72v7m",
+      "id": "es.s.yr4hqhvpy8",
+      "wordId": "es.w.dbnfk7k4mx",
       "text": "Un caracol sube por la pared.",
       "translation": "A snail is climbing up the wall.",
       "cloze": "caracol"
     },
     {
-      "id": "es.s.y22w8w6eb4",
-      "wordId": "es.w.k62jr72v7m",
+      "id": "es.s.h4ycmbr682",
+      "wordId": "es.w.dbnfk7k4mx",
       "text": "Después de la lluvia salen los caracoles.",
       "translation": "Snails come out after the rain.",
       "cloze": "caracoles"
     },
     {
-      "id": "es.s.2htkcjkw7g",
-      "wordId": "es.w.k62jr72v7m",
+      "id": "es.s.gqra1d7pc1",
+      "wordId": "es.w.dbnfk7k4mx",
       "text": "Vas más lento que un caracol.",
       "translation": "You're slower than a snail.",
       "cloze": "caracol"
     },
     {
-      "id": "es.s.225xgh1dv6",
-      "wordId": "es.w.9wpd78ft07",
+      "id": "es.s.qwr1nvymtj",
+      "wordId": "es.w.j1aq9xfgpk",
       "text": "Un búho vive en ese árbol.",
       "translation": "An owl lives in that tree.",
       "cloze": "búho"
     },
     {
-      "id": "es.s.tfhmg81bmb",
-      "wordId": "es.w.9wpd78ft07",
+      "id": "es.s.z46jfaxve5",
+      "wordId": "es.w.j1aq9xfgpk",
       "text": "Los búhos duermen de día.",
       "translation": "Owls sleep during the day.",
       "cloze": "búhos"
     },
     {
-      "id": "es.s.bz9032pex8",
-      "wordId": "es.w.9wpd78ft07",
+      "id": "es.s.f4c3ht2n9v",
+      "wordId": "es.w.j1aq9xfgpk",
       "text": "Anoche oí un búho.",
       "translation": "Last night I heard an owl.",
       "cloze": "búho"
     },
     {
-      "id": "es.s.nqwp7bw17g",
-      "wordId": "es.w.5h5359y5z4",
+      "id": "es.s.rpjv3tv71b",
+      "wordId": "es.w.4m64sk87s8",
       "text": "Un erizo duerme bajo las hojas.",
       "translation": "A hedgehog is sleeping under the leaves.",
       "cloze": "erizo"
     },
     {
-      "id": "es.s.mgha77sbx4",
-      "wordId": "es.w.5h5359y5z4",
+      "id": "es.s.zfz56hmjhs",
+      "wordId": "es.w.4m64sk87s8",
       "text": "¿Has visto alguna vez un erizo?",
       "translation": "Have you ever seen a hedgehog?",
       "cloze": "erizo"
     },
     {
-      "id": "es.s.pzf0gtsm9j",
-      "wordId": "es.w.5h5359y5z4",
+      "id": "es.s.9ffjz9m8et",
+      "wordId": "es.w.4m64sk87s8",
       "text": "Los erizos comen insectos.",
       "translation": "Hedgehogs eat insects.",
       "cloze": "erizos"
     },
     {
-      "id": "es.s.jt6tdej0bz",
-      "wordId": "es.w.zn4r2tt03p",
+      "id": "es.s.nc2agfjrn8",
+      "wordId": "es.w.zcpzzy5gfj",
       "text": "¡Mira, un arcoíris!",
       "translation": "Look, a rainbow!",
       "cloze": "arcoíris"
     },
     {
-      "id": "es.s.2k4zzph0rb",
-      "wordId": "es.w.zn4r2tt03p",
+      "id": "es.s.ebbaf5rr33",
+      "wordId": "es.w.zcpzzy5gfj",
       "text": "Después de la lluvia salió un arcoíris.",
       "translation": "After the rain, a rainbow came out.",
       "cloze": "arcoíris"
     },
     {
-      "id": "es.s.71n37ax1sh",
-      "wordId": "es.w.zn4r2tt03p",
+      "id": "es.s.0hwzcnzwz6",
+      "wordId": "es.w.zcpzzy5gfj",
       "text": "El arcoíris tiene siete colores.",
       "translation": "A rainbow has seven colors.",
       "cloze": "arcoíris"
