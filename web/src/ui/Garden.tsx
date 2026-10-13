@@ -9,6 +9,7 @@ import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
 import { language } from "../content/languages";
 import { FORM, StripPlant } from "./plant";
+import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
 import { growthOf, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
 import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
@@ -206,7 +207,7 @@ export const Garden = memo(function Garden({
           ))}
           {visible.map(({ p, x, y, scale }, i) => (
             <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={(e) => hovers(e) && show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
-              <g className="sway" style={{ animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: `${5 + hash01(p.id, 29) * 4}s` }}>
+              <g className="sway" style={{ animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: meaningOf(p.lemma)?.kind === "dance" ? "1.4s" : `${5 + hash01(p.id, 29) * 4}s` }}>
                 <g key={perk?.id === p.id ? `perk${perk.n}` : perk?.neighbour === p.id ? `late${perk.n}` : "still"} className={perk?.id === p.id ? "perk" : perk?.neighbour === p.id ? "perk late" : undefined}>
                   <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
                 </g>
