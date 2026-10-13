@@ -65,8 +65,16 @@ export async function advance(page: Page, key: string) {
 
 /** Reveal the answer and wait until the double-click guard lets an answer through. */
 export async function reveal(page: Page) {
-  await page.keyboard.press("Space");
-  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
+  const card = page.locator("main.card");
+  await expect(card).toBeVisible();
+  // A card starts listening for keys just after it appears, so a Space pressed
+  // in that moment (or while the session is still preparing, after a page
+  // load) is not heard: press again until it shows. A second Space does
+  // nothing once the answer is showing.
+  await expect(async () => {
+    await page.keyboard.press("Space");
+    await expect(card).toHaveAttribute("data-armed", "true", { timeout: 1000 });
+  }).toPass();
 }
 
 /** Answer any card: show its answer or meaning, wait past the double-click guard, then press `key` (1 = left, 2 = right). */
