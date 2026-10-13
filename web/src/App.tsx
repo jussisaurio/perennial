@@ -215,7 +215,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
 
   if (route === "/session" && !noDeck)
     // No minutes chosen: the page was reloaded on the session screen, so a fresh 5 minutes.
-    return <SessionScreen lang={lang} minutes={sessionMinutes ?? DAILY_MINUTES} onExit={() => go("/today", { replace: true })} />;
+    return <SessionScreen lang={lang} minutes={sessionMinutes ?? DAILY_MINUTES} onExit={() => go("/today", { replace: true })} onWalk={() => go("/garden", { replace: true })} />;
 
   if (route === "/garden" && !noDeck)
     return (

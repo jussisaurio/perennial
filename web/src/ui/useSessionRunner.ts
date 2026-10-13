@@ -78,6 +78,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const introduced = useRef(new Set<string>());
   /** Each word's plant as it looked before its first answer this chunk, for the summary's replay (#216). */
   const before = useRef(new Map<string, PlantLook>());
+  /** Words whose visitor (#209) came this chunk, for the summary's hint (#232). */
+  const arrived = useRef<string[]>([]);
   // Time on a "New to me" card: it records no review, so its time rides on the word's
   // quick check. Otherwise "minutes today" misses it and the day looks unfinished.
   const introMs = useRef(new Map<string, number>());
@@ -100,6 +102,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       practised.current = new Set();
       introduced.current = new Set();
       before.current = new Map();
+      arrived.current = [];
       introMs.current = new Map();
       setUndoStack([]);
       clock.current = new ActiveClock(Date.now());
@@ -248,6 +251,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     // The first visitor of all: no other garden word with art has brought its visitor yet.
     const before = l.deck.words.some((w) => w.id !== wordId && w.garden && GARDEN_VISITOR_ART[w.garden] && broughtVisitor(l, w.id));
     if (!before) flash(`You learned ${lemma}. A ${def.gloss} came to see.`, 4000);
+    arrived.current.push(wordId);
     return art;
   };
 
@@ -313,6 +317,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     counts: counts.current,
     practised: practised.current,
     before: before.current,
+    arrived: arrived.current,
     introduced: introduced.current,
     /** Changes with every card shown, so each card mounts fresh. */
     serial: serial.current,
