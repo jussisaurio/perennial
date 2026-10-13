@@ -7,6 +7,7 @@ import type { Learner, Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
+import { Growth, grows, type GrowthMoment } from "./Growth";
 import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats } from "./stats";
@@ -40,15 +41,41 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
 
 export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit: () => void; minutes: number }) {
   const [help, setHelp] = useState(false);
-  const [pops, setPops] = useState<{ id: number; word: string; s: number; known: boolean }[]>([]);
   const [note, setNote] = useState<string | null>(null);
 
-  // The word's own plant pops up and grows when you plant or remember it.
-  const pop = (word: string, s: number, known: boolean) => {
-    const id = Date.now() + Math.random();
-    setPops((p) => [...p, { id, word, s, known }]);
-    setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1300);
+  // The word's plant is planted or grows before the next card (#200).
+  const [growing, setGrowing] = useState<GrowthMoment | null>(null);
+  const grown = useRef<(() => void) | null>(null);
+  const grow = (m: GrowthMoment) => {
+    if (!grows(m)) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      grown.current = () => {
+        grown.current = null;
+        setGrowing(null);
+        resolve();
+      };
+      setGrowing(m);
+    });
   };
+  // Any tap or key skips the moment. Listening starts after the answer's own
+  // click or key press is over, so that one never skips it.
+  useEffect(() => {
+    if (!growing) return;
+    const skip = () => grown.current?.();
+    // The next card's keys are listening by the time this key bubbles on, so
+    // the key is used up here: Space must not also show the next card's answer.
+    // Escape still ends the session.
+    const skipKey = (e: KeyboardEvent) => {
+      skip();
+      if (e.key !== "Escape") e.preventDefault();
+    };
+    window.addEventListener("click", skip, true);
+    window.addEventListener("keydown", skipKey, true);
+    return () => {
+      window.removeEventListener("click", skip, true);
+      window.removeEventListener("keydown", skipKey, true);
+    };
+  }, [growing]);
 
   const noteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const flash = (text: string) => {
@@ -63,7 +90,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
     onExit,
     flash,
     clearNote: () => setNote(null),
-    pop,
+    grow,
   });
 
   useKeys({ z: () => void undo(), Escape: () => (help ? setHelp(false) : exit()), "?": () => setHelp((h) => !h) });
@@ -74,7 +101,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   const overtime = runner.timeUp(active);
 
   return (
-    <div className="session" data-card={serial}>
+    <div className={growing ? "session growing" : "session"} data-card={serial}>
       <header className="session-bar">
         <button className="icon" onClick={exit} aria-label="End session" title="End session">
           <CloseIcon />
@@ -104,14 +131,11 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
       {card && !done && (
         <div className="card-plant" key={`plant-${serial}`} aria-hidden="true">
-          <WordPlant word={card.word.lemma} s={card.s} known={card.known} size={76} />
+          <WordPlant word={card.word.lemma} s={card.s} stage={card.stage} size={76} />
         </div>
       )}
-      {pops.map((p) => (
-        <div key={p.id} className="plant-pop" aria-hidden="true">
-          <WordPlant word={p.word} s={p.s} known={p.known} size={84} />
-        </div>
-      ))}
+      {/* ?.: a tap may already have ended the moment. */}
+      {growing && <Growth m={growing} onDone={() => grown.current?.()} />}
     </div>
   );
 }

@@ -288,7 +288,7 @@ export function GardenWalk({
             ×
           </button>
           <div className="gw-card-body">
-            <WordPlant word={selected.lemma} s={selected.s} known={selected.stage === "bloom"} size={72} />
+            <WordPlant word={selected.lemma} s={selected.s} stage={selected.stage} size={72} />
             <div>
               <strong className="gw-word" lang={lang}>
                 {selected.lemma}

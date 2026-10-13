@@ -7,20 +7,21 @@ import { forgotLine } from "../content/voice";
 import { language } from "../content/languages";
 import { ActiveClock } from "../core/clock";
 import type { Grade } from "../core/fsrs";
-import { readMemory, wordState } from "../core/memory";
+import { plantStage, readMemory, type PlantStage } from "../core/memory";
 import { Session as Runner, type Task } from "../core/session";
 import { recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import { hash32 } from "../lib/seed";
 import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
 import { sessionPlan } from "../data/practice";
+import { growthOn, type GrowthMoment } from "./Growth";
 
 export interface Card {
   task: Task;
   word: Word;
   example?: Sentence;
-  /** Reading-memory stability and whether the word counts as known, for its plant. */
+  /** Reading-memory stability and the word's plant stage, for its plant. */
   s: number;
-  known: boolean;
+  stage: PlantStage;
 }
 
 export type Ended = "time" | "empty" | "user";
@@ -43,15 +44,21 @@ interface Feedback {
   flash: (text: string) => void;
   /** A note is about the previous card: clear it when the next answer comes. */
   clearNote: () => void;
-  /** The word's own plant pops up and grows. */
-  pop: (word: string, s: number, known: boolean) => void;
+  /** The word's plant is planted or grows; the next card waits until this resolves. */
+  grow: (m: GrowthMoment) => Promise<void>;
 }
 
-export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop }: { lang: string; minutes: number; onExit: () => void } & Feedback) {
+export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow }: { lang: string; minutes: number; onExit: () => void } & Feedback) {
   const learner = useLearner(lang);
   // Answers update the learner live; reads in event handlers use the latest.
   const live = useRef(learner);
   live.current = learner;
+  // An answer reaches the learner on a later render: whoever waits for that hears of each new learner.
+  const learnerChanged = useRef(new Set<() => void>());
+  useEffect(() => {
+    for (const fn of learnerChanged.current) fn();
+    learnerChanged.current.clear();
+  }, [learner]);
   const store = useStore();
   const tag = language(lang).tag;
   const [runner, setRunner] = useState<Runner | null>(null);
@@ -124,7 +131,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
     setDone(false);
     // A focused button from the last card would also receive Space/Enter.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    setCard({ task, word, example, s: read?.reps ? read.s : 0, known: wordState(read) === "known" });
+    setCard({ task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read) });
   };
 
   // Plan once, as soon as the learner has loaded. Later changes (every answer
@@ -158,7 +165,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
     busy.current = true;
     clearNote();
     try {
-      await record(runner, card, grade, opts);
+      const moment = await record(runner, card, grade, opts);
+      if (moment) await grow(moment);
       await advance(runner);
     } finally {
       busy.current = false;
@@ -199,41 +207,64 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, pop 
     } else onExit();
   };
 
-  const record = async (runner: Runner, card: Card, grade: Grade | null, opts: { alreadyKnown?: boolean }) => {
+  /**
+   * The word's reading memory once it has more than `reps` reviews, that is,
+   * once the answer just given has reached the learner. It arrives within a
+   * render or two; if not, undefined, and the moment is skipped rather than
+   * holding up the next card.
+   */
+  const readAfter = async (wordId: string, reps: number) => {
+    for (let i = 0; i < 3; i++) {
+      const read = live.current ? readMemory(live.current, wordId) : undefined;
+      if (read && read.reps > reps) return read;
+      await new Promise<void>((resolve) => {
+        learnerChanged.current.add(resolve);
+        setTimeout(resolve, 150);
+      });
+    }
+    return undefined;
+  };
+
+  /** Records the answer. Returns the plant's moment, if the answer plants or waters it. */
+  const record = async (runner: Runner, card: Card, grade: Grade | null, opts: { alreadyKnown?: boolean }): Promise<GrowthMoment | null> => {
     const ms = Math.min(clock.current.tick(Date.now()) - shownAt.current, 60_000);
     const { task, word, example } = card;
     if (task.kind === "intro") {
       counts.current.intros++;
       introduced.current.add(word.id);
-      pop(word.lemma, 0, false);
       const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: word.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       if (!opts.alreadyKnown) introMs.current.set(word.id, ms);
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       // No note: the button already said what happens ("Back in about a week").
       setUndoStack((s) => [...s, { reviewId, intro: true, wordId: word.id, example }]);
+      if (!growthOn()) return null;
+      const seed = { s: 0, stage: "seed" as const };
+      if (!opts.alreadyKnown) return { word: word.lemma, from: seed, to: seed, planted: true };
+      const read = await readAfter(word.id, 0);
+      return read ? { word: word.lemma, from: seed, to: { s: read.s, stage: plantStage(read) }, planted: true } : null;
     } else if (grade) {
       counts.current.answers++;
       const fresh = !practised.current.has(word.id);
       practised.current.add(word.id);
       const carried = introMs.current.get(word.id);
       introMs.current.delete(word.id);
+      // ?? 0: no read review yet (a new word's quick check).
+      const repsBefore = (live.current && readMemory(live.current, word.id)?.reps) ?? 0;
       // ?? 0: no intro for this word in this session.
       const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), sentence_id: example?.id ?? null });
-      if (grade >= 3) {
-        // The new review shows up in the learner on the next render; let it land first.
-        setTimeout(() => {
-          const read = live.current ? readMemory(live.current, word.id) : undefined;
-          pop(word.lemma, read?.s ?? 0, wordState(read) === "known");
-        }, 0);
-      }
       const retry = runner.report(task, { grade });
       if (grade === 1) flash(forgotLine(retry));
       setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
+      // Only reading memory grows the plant, and only a remembered word grows.
+      if (grade < 3 || task.skill !== "read" || !growthOn()) return null;
+      const read = await readAfter(word.id, repsBefore);
+      return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false } : null;
     } else {
       // Passed over without an answer ("Can't listen now"): nothing to undo, so
       // Undo steps back over this card to the last answer.
       runner.skip();
     }
+    return null;
   };
 
   return {

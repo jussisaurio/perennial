@@ -15,6 +15,7 @@ import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt
 import { stripVisitor, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
+import { reducedMotion } from "./Growth";
 
 const H = 210;
 const GROUND = H - 34;
@@ -147,7 +148,7 @@ export const Garden = memo(function Garden({
   // Swipe on touch, two-finger scroll on trackpads, and arrows on desktop.
   const atStart = scrollX <= 4;
   const atEnd = scrollX >= fullWidth - width - 4;
-  const page = (dir: -1 | 1) => scroller.current?.scrollBy({ left: dir * width * 0.7, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  const page = (dir: -1 | 1) => scroller.current?.scrollBy({ left: dir * width * 0.7, behavior: reducedMotion() ? "auto" : "smooth" });
 
   const onScroll = () => {
     const x = scroller.current?.scrollLeft ?? 0;
