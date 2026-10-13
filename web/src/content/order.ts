@@ -3,8 +3,12 @@
 // are not all grammar words and abstract adverbs (de, que, no, el / ich, nicht,
 // so, der) but things you can picture and actions: a fixed pattern of parts of
 // speech, each kind still in frequency order.
+//
+// Garden words (#209) are the exception: they come at fixed places, early and
+// steadily, so a new learner soon sees that learning a word brings something
+// into the garden.
 
-import { toPos, type Pos } from "../deck/schema";
+import { GARDEN_WORDS, toPos, type GardenWord, type Pos } from "../deck/schema";
 
 export type WordKind = "noun" | "verb" | "other" | "function";
 
@@ -51,7 +55,13 @@ export function introOrder<T>(items: readonly T[], kind: (item: T) => WordKind):
 /** For deck words (anything with a part of speech). */
 export const deckKind = (w: { pos?: string | null }) => kindOf(w.pos);
 
-type DeckWord = { id: string; pos?: string | null; rank: number };
+/**
+ * Where the n-th garden word goes in the course (0-based): the 3rd word, so the
+ * first session shows the idea; the 12th, so it reads as a rule; then every 27th.
+ */
+const gardenSlot = (n: number) => (n === 0 ? 2 : 11 + (n - 1) * 27);
+
+type DeckWord = { id: string; pos?: string | null; rank: number; garden?: GardenWord };
 const orders = new WeakMap<object, readonly DeckWord[]>();
 
 /**
@@ -62,7 +72,15 @@ const orders = new WeakMap<object, readonly DeckWord[]>();
 export function courseOrder<W extends DeckWord>(deck: { words: readonly W[] }): readonly W[] {
   let order = orders.get(deck);
   if (!order) {
-    order = introOrder([...deck.words].sort((a, b) => a.rank - b.rank), deckKind);
+    const byRank = [...deck.words].sort((a, b) => a.rank - b.rank);
+    const garden = byRank.filter((w) => w.garden).sort((a, b) => GARDEN_WORDS.indexOf(a.garden!) - GARDEN_WORDS.indexOf(b.garden!));
+    const rest = introOrder(byRank.filter((w) => !w.garden), deckKind);
+    const out: W[] = [];
+    let g = 0;
+    let r = 0;
+    // A deck shorter than the slots (a test deck) gets its last garden words at the end.
+    while (out.length < byRank.length) out.push(g < garden.length && (out.length === gardenSlot(g) || r === rest.length) ? garden[g++] : rest[r++]);
+    order = out;
     orders.set(deck, order);
   }
   return order as readonly W[];

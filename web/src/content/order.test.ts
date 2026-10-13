@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
+import { Deck, GARDEN_WORDS } from "../deck/schema";
 import { courseOrder, deckKind, introOrder, kindOf, type WordKind } from "./order";
 
 const kind = (s: string): WordKind => ({ n: "noun", v: "verb", o: "other", f: "function" })[s[0] as "n" | "v" | "o" | "f"] as WordKind;
@@ -42,4 +43,38 @@ describe("courseOrder", () => {
     expect(order.map((w) => w.id)).toEqual(["b", "d", "c", "a"]);
     expect(courseOrder(deck)).toBe(order); // memoized for this deck
   });
+
+  test("garden words come 3rd, 12th, then every 27th, in garden order; the rest keep their pattern", () => {
+    const pos = ["noun", "verb", "noun", "adj", "det"];
+    const others = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, pos: pos[i % 5], rank: i + 1 }));
+    // Ranks and deck order say nothing: the garden list decides (cat, bird, dog, ...).
+    const garden = [
+      { id: "dog", pos: "noun", rank: 5, garden: "dog" as const },
+      { id: "cat", pos: "noun", rank: 900, garden: "cat" as const },
+      { id: "bird", pos: "noun", rank: 30, garden: "bird" as const },
+    ];
+    const order = courseOrder({ words: [...garden, ...others] }).map((w) => w.id);
+    expect([order.indexOf("cat"), order.indexOf("bird"), order.indexOf("dog")]).toEqual([2, 11, 38]);
+    expect(order.filter((id) => !["cat", "bird", "dog"].includes(id))).toEqual(introOrder(others, deckKind).map((w) => w.id));
+  });
+
+  test("a deck shorter than the garden slots keeps every word, garden words last", () => {
+    const words = [
+      { id: "n1", pos: "noun", rank: 1 },
+      { id: "bird", pos: "noun", rank: 2, garden: "bird" as const },
+      { id: "v1", pos: "verb", rank: 3 },
+      { id: "cat", pos: "noun", rank: 4, garden: "cat" as const },
+      { id: "n2", pos: "noun", rank: 5 },
+    ];
+    expect(courseOrder({ words }).map((w) => w.id)).toEqual(["n1", "v1", "cat", "n2", "bird"]);
+  });
+
+  for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
+    test(`${lang}: every garden word is in the course once; cat comes 3rd and bird 12th`, () => {
+      const words = Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf);
+      expect(words.filter((w) => w.garden).map((w) => w.garden).sort()).toEqual([...GARDEN_WORDS].sort());
+      const order = courseOrder({ words });
+      expect([order[2].garden, order[11].garden]).toEqual(["cat", "bird"]);
+    });
+  }
 });

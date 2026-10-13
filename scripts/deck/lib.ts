@@ -73,7 +73,7 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, newBody 
     if (seenKeys.has(key)) errors.push(`source word ${i + 1} (${src.lemma}): duplicate of an earlier word; add a "sense" to tell them apart`);
     seenKeys.add(key);
     const id = assign(next.words, key, "w", (id) => !!prevWords.get(id)?.retired);
-    words.push(clean({ id, lemma: src.lemma, gloss: src.gloss, pos: src.pos, sense: src.sense, rank: i + 1, forms: src.forms, notes: src.notes, gender: src.gender }));
+    words.push(clean({ id, lemma: src.lemma, gloss: src.gloss, pos: src.pos, sense: src.sense, rank: i + 1, forms: src.forms, notes: src.notes, gender: src.gender, garden: src.garden }));
     const texts = new Set<string>();
     const list: DeckSentence[] = [];
     for (const s of src.sentences) {

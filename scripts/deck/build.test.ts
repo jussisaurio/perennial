@@ -105,6 +105,14 @@ test("duplicates and invalid content are errors", () => {
   expect(buildDeck({ lang: "es", source: [bad], manifest: empty(), prev: null, newBody: counter() }).errors.join()).toMatch(/is not in/);
 });
 
+test("garden words reach the deck, one word per garden thing", () => {
+  const ok = buildDeck({ lang: "es", source: [src("gata", { garden: "cat" }), src("casa")], manifest: empty(), prev: null, newBody: counter() });
+  expect(ok.errors).toEqual([]);
+  expect(ok.deck.words.map((w) => w.garden)).toEqual(["cat", undefined]);
+  const two = buildDeck({ lang: "es", source: [src("gata", { garden: "cat" }), src("michi", { garden: "cat" })], manifest: empty(), prev: null, newBody: counter() });
+  expect(two.errors).toEqual(['two live words bring the garden "cat"']);
+});
+
 test("warnings: ambiguous clozes and a single repeated form", () => {
   const w = src("a", { pos: "prep", forms: ["a", "al"], gender: undefined });
   w.sentences = [

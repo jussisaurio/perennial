@@ -33,6 +33,18 @@ export function toPos(s: string | null | undefined): Pos | null {
   return (POS as readonly string[]).includes(p) ? (p as Pos) : (POS_NAMES[p] ?? null);
 }
 
+/**
+ * Garden words (#209): things a learner can bring into the garden by learning
+ * the word for them. Every course marks one word for each (`garden` on a deck
+ * word). Learners meet them in this order, early and steadily (content/order.ts).
+ * Ids are stable: progress and garden art are keyed by them.
+ */
+export const GARDEN_WORDS = [
+  "cat", "bird", "dog", "sun", "fish", "rain", "butterfly", "moon", "frog", "bee", "snow", "snail", "star",
+  "mouse", "wind", "duck", "cloud", "rabbit", "owl", "fox", "rainbow", "spider", "hedgehog", "squirrel", "ant",
+] as const;
+export type GardenWord = (typeof GARDEN_WORDS)[number];
+
 /** Id bodies are ten of these: lowercase base32 without i, l, o, u, to avoid confusion. */
 export const ID_ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 const wordId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.w\\.[${ID_ALPHABET}]{10}$`));
@@ -57,6 +69,8 @@ export const SourceWord = z.object({
   forms: z.array(text(60)).min(1).max(40),
   notes: z.string().trim().max(300).optional(),
   gender: z.enum(["m", "f", "n", "mf"]).optional(),
+  /** This word brings that thing into the garden; the course places it, not its rank. */
+  garden: z.enum(GARDEN_WORDS).optional(),
   sentences: z.array(SourceSentence).min(3).max(8),
 });
 export type SourceWord = z.infer<typeof SourceWord>;
@@ -74,6 +88,7 @@ export const DeckWord = (lang: string) =>
     forms: z.array(text(60)).min(1),
     notes: z.string().optional(),
     gender: z.enum(["m", "f", "n", "mf"]).optional(),
+    garden: z.enum(GARDEN_WORDS).optional(),
     retired: z.boolean().optional(),
     aliasOf: wordId(lang).optional(),
   });
@@ -115,6 +130,7 @@ export function deckProblems(deck: Deck): string[] {
   const sentenceIds = new Set<string>();
   const live = new Map<string, number>();
   const keys = new Set<string>();
+  const garden = new Set<string>();
   for (const s of deck.sentences) {
     if (sentenceIds.has(s.id)) out.push(`duplicate sentence id ${s.id}`);
     sentenceIds.add(s.id);
@@ -135,6 +151,10 @@ export function deckProblems(deck: Deck): string[] {
     const key = manifestKey(w);
     if (keys.has(key)) out.push(`two live words share lemma, part of speech and sense: ${key}`);
     keys.add(key);
+    if (w.garden) {
+      if (garden.has(w.garden)) out.push(`two live words bring the garden "${w.garden}"`);
+      garden.add(w.garden);
+    }
     if ((live.get(w.id) ?? 0) < 3) out.push(`word ${w.id} (${w.lemma}) has fewer than 3 live sentences`);
   }
   return out;

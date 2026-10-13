@@ -11,16 +11,18 @@
 //   - a form listed under two words, unless allowed in decks/<lang>/audit-allow.json
 //     ({ "forms": ["fui", "fue"] }) because it really belongs to both
 // Ease and order (warnings and the per-word table):
-//   - frequency rank of each word in the subtitle corpus vs its deck rank (drift)
+//   - frequency rank of each word in the subtitle corpus vs its deck rank (drift);
+//     not for garden words, which the course places early on purpose
 //   - rare words in sentences: forms outside the corpus top 10 000 (learners won't know them)
 //   - comprehensibility: share of a sentence's other words that the learner
-//     already met (deck words ranked earlier, plus the 100 most frequent forms)
+//     already met (words earlier in the course, plus the 100 most frequent forms)
 //   - cognates: lemmas that look like their English gloss (easy wins)
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DECK_LANGS, Deck, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
 import { language } from "../../web/src/content/languages.ts";
+import { courseOrder } from "../../web/src/content/order.ts";
 import { formKey, tokenize } from "../../web/src/content/text.ts";
 import { ROOT, deckDir } from "./lib.ts";
 
@@ -141,8 +143,12 @@ export function auditDeck(lang: string, deck: Deck, ranks: Map<string, number>, 
   }
 
   // Ease and order.
-  const metBy = new Map<string, number>(); // form → rank of the word that introduces it
-  for (const w of live) for (const f of w.forms) if (!metBy.has(formKey(f))) metBy.set(formKey(f), w.rank);
+  const course = courseOrder({ words: live });
+  const metAt = new Map(course.map((w, i) => [w.id, i])); // word → its place in the course
+  const metBy = new Map<string, number>(); // form → place of the first word that introduces it
+  course.forEach((w, i) => {
+    for (const f of w.forms) if (!metBy.has(formKey(f))) metBy.set(formKey(f), i);
+  });
   const words: WordStats[] = live.map((w) => {
     const freqRank = Math.min(...w.forms.map((f) => ranks.get(formKey(f)) ?? Infinity));
     const rare = new Set<string>();
@@ -158,16 +164,17 @@ export function auditDeck(lang: string, deck: Deck, ranks: Map<string, number>, 
       for (const t of toks) {
         const r = ranks.get(t);
         if (r === undefined || r > RARE_RANK) rare.add(t);
-        if ((metBy.get(t) ?? Infinity) < w.rank || (r !== undefined && r <= FREE_TOP)) known++;
+        if ((metBy.get(t) ?? Infinity) < metAt.get(w.id)! || (r !== undefined && r <= FREE_TOP)) known++;
       }
       compSum += toks.length ? known / toks.length : 1;
     }
     return { rank: w.rank, id: w.id, lemma: w.lemma, pos: w.pos, freqRank: Number.isFinite(freqRank) ? freqRank : null, cognate: isCognate(w.lemma, w.gloss), comprehensible: list.length ? compSum / list.length : 0, rareTokens: [...rare] };
   });
+  const placed = new Set(live.filter((w) => w.garden).map((w) => w.id));
   for (const s of words) {
     if (s.rareTokens.length) findings.push({ level: "warn", code: "rare-word", lemma: s.lemma, message: `sentences use words outside the top ${RARE_RANK}: ${s.rareTokens.slice(0, 6).join(", ")}` });
     if (s.freqRank === null) findings.push({ level: "warn", code: "not-in-corpus", lemma: s.lemma, message: `none of its forms is in the frequency list: is it common?` });
-    else if (s.freqRank > Math.max(500, s.rank * 4)) findings.push({ level: "warn", code: "rank-drift", lemma: s.lemma, message: `deck rank ${s.rank} but corpus rank ${s.freqRank}: introduced too early?` });
+    else if (!placed.has(s.id) && s.freqRank > Math.max(500, s.rank * 4)) findings.push({ level: "warn", code: "rank-drift", lemma: s.lemma, message: `deck rank ${s.rank} but corpus rank ${s.freqRank}: introduced too early?` });
   }
   return { findings, words };
 }
