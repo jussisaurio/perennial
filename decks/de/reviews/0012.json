@@ -1,0 +1,9 @@
+{
+  "file": "source/0012.json",
+  "sha256": "b8f63a714388c4e2f42bc15c84dac9ecf3fd6fbd6dc22021578db2f4fb804289",
+  "author": "claude-agent:garden-author-2026-10-13",
+  "reviewer": "claude-agent:de-proofreader-0012-2026-10-13",
+  "reviewedAt": "2026-10-13",
+  "verdict": "approved",
+  "notes": "22 garden nouns: genders, plurals, cases, clozes and translations checked; all ok"
+}
