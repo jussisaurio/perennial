@@ -1,0 +1,621 @@
+[
+  {
+    "lemma": "Katze",
+    "gloss": "cat",
+    "pos": "noun",
+    "forms": [
+      "Katze",
+      "Katzen"
+    ],
+    "gender": "f",
+    "garden": "cat",
+    "sentences": [
+      {
+        "text": "Die Katze schläft auf dem Sofa.",
+        "translation": "The cat is sleeping on the sofa.",
+        "cloze": "Katze"
+      },
+      {
+        "text": "Hast du eine Katze?",
+        "translation": "Do you have a cat?",
+        "cloze": "Katze"
+      },
+      {
+        "text": "Wir haben zwei Katzen.",
+        "translation": "We have two cats.",
+        "cloze": "Katzen"
+      }
+    ]
+  },
+  {
+    "lemma": "Fisch",
+    "gloss": "fish",
+    "pos": "noun",
+    "forms": [
+      "Fisch",
+      "Fische",
+      "Fischen"
+    ],
+    "gender": "m",
+    "garden": "fish",
+    "sentences": [
+      {
+        "text": "Ich esse gern Fisch.",
+        "translation": "I like eating fish.",
+        "cloze": "Fisch"
+      },
+      {
+        "text": "Im See gibt es viele Fische.",
+        "translation": "There are lots of fish in the lake.",
+        "cloze": "Fische"
+      },
+      {
+        "text": "Wir haben heute einen Fisch gefangen.",
+        "translation": "We caught a fish today.",
+        "cloze": "Fisch"
+      }
+    ]
+  },
+  {
+    "lemma": "Vogel",
+    "gloss": "bird",
+    "pos": "noun",
+    "forms": [
+      "Vogel",
+      "Vögel",
+      "Vogels"
+    ],
+    "notes": "Plural: Vögel.",
+    "gender": "m",
+    "garden": "bird",
+    "sentences": [
+      {
+        "text": "Ein Vogel sitzt auf dem Dach.",
+        "translation": "A bird is sitting on the roof.",
+        "cloze": "Vogel"
+      },
+      {
+        "text": "Am Morgen singen die Vögel.",
+        "translation": "In the morning the birds sing.",
+        "cloze": "Vögel"
+      },
+      {
+        "text": "Was ist das für ein Vogel?",
+        "translation": "What kind of bird is that?",
+        "cloze": "Vogel"
+      }
+    ]
+  },
+  {
+    "lemma": "Mond",
+    "gloss": "moon",
+    "pos": "noun",
+    "forms": [
+      "Mond"
+    ],
+    "gender": "m",
+    "garden": "moon",
+    "sentences": [
+      {
+        "text": "Siehst du den Mond?",
+        "translation": "Can you see the moon?",
+        "cloze": "Mond"
+      },
+      {
+        "text": "Der Mond ist heute sehr hell.",
+        "translation": "The moon is very bright tonight.",
+        "cloze": "Mond"
+      },
+      {
+        "text": "Heute Nacht kann man den Mond nicht sehen.",
+        "translation": "You can't see the moon tonight.",
+        "cloze": "Mond"
+      }
+    ]
+  },
+  {
+    "lemma": "Regen",
+    "gloss": "rain",
+    "pos": "noun",
+    "forms": [
+      "Regen"
+    ],
+    "gender": "m",
+    "garden": "rain",
+    "sentences": [
+      {
+        "text": "Ich mag den Regen.",
+        "translation": "I like the rain.",
+        "cloze": "Regen"
+      },
+      {
+        "text": "Wir sind im Regen nach Hause gelaufen.",
+        "translation": "We walked home in the rain.",
+        "cloze": "Regen"
+      },
+      {
+        "text": "Nach dem Regen riecht der Garten gut.",
+        "translation": "After the rain, the garden smells good.",
+        "cloze": "Regen"
+      }
+    ]
+  },
+  {
+    "lemma": "Schnee",
+    "gloss": "snow",
+    "pos": "noun",
+    "forms": [
+      "Schnee"
+    ],
+    "gender": "m",
+    "garden": "snow",
+    "sentences": [
+      {
+        "text": "Im Garten liegt Schnee.",
+        "translation": "There's snow in the garden.",
+        "cloze": "Schnee"
+      },
+      {
+        "text": "Die Kinder spielen im Schnee.",
+        "translation": "The children are playing in the snow.",
+        "cloze": "Schnee"
+      },
+      {
+        "text": "Letzten Winter gab es keinen Schnee.",
+        "translation": "There was no snow last winter.",
+        "cloze": "Schnee"
+      }
+    ]
+  },
+  {
+    "lemma": "Stern",
+    "gloss": "star",
+    "pos": "noun",
+    "forms": [
+      "Stern",
+      "Sterne",
+      "Sternen"
+    ],
+    "gender": "m",
+    "garden": "star",
+    "sentences": [
+      {
+        "text": "Heute sieht man viele Sterne.",
+        "translation": "You can see lots of stars tonight.",
+        "cloze": "Sterne"
+      },
+      {
+        "text": "Jeder Stern ist eine Sonne.",
+        "translation": "Every star is a sun.",
+        "cloze": "Stern"
+      },
+      {
+        "text": "Heute schlafen wir unter den Sternen.",
+        "translation": "Tonight we're sleeping under the stars.",
+        "cloze": "Sternen"
+      }
+    ]
+  },
+  {
+    "lemma": "Maus",
+    "gloss": "mouse",
+    "pos": "noun",
+    "forms": [
+      "Maus",
+      "Mäuse"
+    ],
+    "notes": "Plural: Mäuse. Also a computer mouse.",
+    "gender": "f",
+    "garden": "mouse",
+    "sentences": [
+      {
+        "text": "Die Katze fängt eine Maus.",
+        "translation": "The cat catches a mouse.",
+        "cloze": "Maus"
+      },
+      {
+        "text": "In der Küche ist eine Maus!",
+        "translation": "There's a mouse in the kitchen!",
+        "cloze": "Maus"
+      },
+      {
+        "text": "Mäuse mögen Käse.",
+        "translation": "Mice like cheese.",
+        "cloze": "Mäuse"
+      }
+    ]
+  },
+  {
+    "lemma": "Wolke",
+    "gloss": "cloud",
+    "pos": "noun",
+    "forms": [
+      "Wolke",
+      "Wolken"
+    ],
+    "gender": "f",
+    "garden": "cloud",
+    "sentences": [
+      {
+        "text": "Heute ist keine Wolke am Himmel.",
+        "translation": "There isn't a cloud in the sky today.",
+        "cloze": "Wolke"
+      },
+      {
+        "text": "Die Wolke sieht aus wie ein Hund.",
+        "translation": "The cloud looks like a dog.",
+        "cloze": "Wolke"
+      },
+      {
+        "text": "Dunkle Wolken bringen Regen.",
+        "translation": "Dark clouds bring rain.",
+        "cloze": "Wolken"
+      }
+    ]
+  },
+  {
+    "lemma": "Fuchs",
+    "gloss": "fox",
+    "pos": "noun",
+    "forms": [
+      "Fuchs",
+      "Füchse"
+    ],
+    "notes": "Plural: Füchse.",
+    "gender": "m",
+    "garden": "fox",
+    "sentences": [
+      {
+        "text": "Ich habe einen Fuchs gesehen.",
+        "translation": "I saw a fox.",
+        "cloze": "Fuchs"
+      },
+      {
+        "text": "Der Fuchs kommt nachts in den Garten.",
+        "translation": "The fox comes into the garden at night.",
+        "cloze": "Fuchs"
+      },
+      {
+        "text": "Füchse sind sehr klug.",
+        "translation": "Foxes are very clever.",
+        "cloze": "Füchse"
+      }
+    ]
+  },
+  {
+    "lemma": "Frosch",
+    "gloss": "frog",
+    "pos": "noun",
+    "forms": [
+      "Frosch",
+      "Frösche"
+    ],
+    "notes": "Plural: Frösche.",
+    "gender": "m",
+    "garden": "frog",
+    "sentences": [
+      {
+        "text": "Im Wasser sitzt ein Frosch.",
+        "translation": "A frog is sitting in the water.",
+        "cloze": "Frosch"
+      },
+      {
+        "text": "Nachts hört man die Frösche.",
+        "translation": "At night you can hear the frogs.",
+        "cloze": "Frösche"
+      },
+      {
+        "text": "Der Frosch springt sehr weit.",
+        "translation": "The frog jumps very far.",
+        "cloze": "Frosch"
+      }
+    ]
+  },
+  {
+    "lemma": "Ente",
+    "gloss": "duck",
+    "pos": "noun",
+    "forms": [
+      "Ente",
+      "Enten"
+    ],
+    "gender": "f",
+    "garden": "duck",
+    "sentences": [
+      {
+        "text": "Auf dem See schwimmen Enten.",
+        "translation": "Ducks are swimming on the lake.",
+        "cloze": "Enten"
+      },
+      {
+        "text": "Wir geben den Enten Brot.",
+        "translation": "We're giving the ducks bread.",
+        "cloze": "Enten"
+      },
+      {
+        "text": "Die Ente schaut mich an.",
+        "translation": "The duck is looking at me.",
+        "cloze": "Ente"
+      }
+    ]
+  },
+  {
+    "lemma": "Kaninchen",
+    "gloss": "rabbit",
+    "pos": "noun",
+    "forms": [
+      "Kaninchen"
+    ],
+    "notes": "The plural is the same: die Kaninchen.",
+    "gender": "n",
+    "garden": "rabbit",
+    "sentences": [
+      {
+        "text": "Mein Bruder hat ein Kaninchen.",
+        "translation": "My brother has a rabbit.",
+        "cloze": "Kaninchen"
+      },
+      {
+        "text": "Kaninchen fressen gern Gras.",
+        "translation": "Rabbits like eating grass.",
+        "cloze": "Kaninchen"
+      },
+      {
+        "text": "Das Kaninchen läuft in den Garten.",
+        "translation": "The rabbit runs into the garden.",
+        "cloze": "Kaninchen"
+      }
+    ]
+  },
+  {
+    "lemma": "Biene",
+    "gloss": "bee",
+    "pos": "noun",
+    "forms": [
+      "Biene",
+      "Bienen"
+    ],
+    "gender": "f",
+    "garden": "bee",
+    "sentences": [
+      {
+        "text": "Vorsicht, eine Biene!",
+        "translation": "Careful, a bee!",
+        "cloze": "Biene"
+      },
+      {
+        "text": "Bienen machen Honig.",
+        "translation": "Bees make honey.",
+        "cloze": "Bienen"
+      },
+      {
+        "text": "Mich hat eine Biene gestochen.",
+        "translation": "A bee stung me.",
+        "cloze": "Biene"
+      }
+    ]
+  },
+  {
+    "lemma": "Spinne",
+    "gloss": "spider",
+    "pos": "noun",
+    "forms": [
+      "Spinne",
+      "Spinnen"
+    ],
+    "gender": "f",
+    "garden": "spider",
+    "sentences": [
+      {
+        "text": "Da ist eine Spinne an der Wand.",
+        "translation": "There's a spider on the wall.",
+        "cloze": "Spinne"
+      },
+      {
+        "text": "Spinnen machen mir keine Angst.",
+        "translation": "Spiders don't scare me.",
+        "cloze": "Spinnen"
+      },
+      {
+        "text": "Lass die Spinne in Ruhe.",
+        "translation": "Leave the spider alone.",
+        "cloze": "Spinne"
+      }
+    ]
+  },
+  {
+    "lemma": "Eichhörnchen",
+    "gloss": "squirrel",
+    "pos": "noun",
+    "forms": [
+      "Eichhörnchen"
+    ],
+    "notes": "The plural is the same: die Eichhörnchen.",
+    "gender": "n",
+    "garden": "squirrel",
+    "sentences": [
+      {
+        "text": "Das Eichhörnchen springt von Baum zu Baum.",
+        "translation": "The squirrel jumps from tree to tree.",
+        "cloze": "Eichhörnchen"
+      },
+      {
+        "text": "Im Park gibt es viele Eichhörnchen.",
+        "translation": "There are lots of squirrels in the park.",
+        "cloze": "Eichhörnchen"
+      },
+      {
+        "text": "Ein Eichhörnchen sitzt vor dem Fenster.",
+        "translation": "A squirrel is sitting outside the window.",
+        "cloze": "Eichhörnchen"
+      }
+    ]
+  },
+  {
+    "lemma": "Ameise",
+    "gloss": "ant",
+    "pos": "noun",
+    "forms": [
+      "Ameise",
+      "Ameisen"
+    ],
+    "gender": "f",
+    "garden": "ant",
+    "sentences": [
+      {
+        "text": "In der Küche sind Ameisen.",
+        "translation": "There are ants in the kitchen.",
+        "cloze": "Ameisen"
+      },
+      {
+        "text": "Eine Ameise läuft über meine Hand.",
+        "translation": "An ant is walking over my hand.",
+        "cloze": "Ameise"
+      },
+      {
+        "text": "Ameisen sind sehr stark.",
+        "translation": "Ants are very strong.",
+        "cloze": "Ameisen"
+      }
+    ]
+  },
+  {
+    "lemma": "Schmetterling",
+    "gloss": "butterfly",
+    "pos": "noun",
+    "forms": [
+      "Schmetterling",
+      "Schmetterlinge"
+    ],
+    "gender": "m",
+    "garden": "butterfly",
+    "sentences": [
+      {
+        "text": "Ein Schmetterling fliegt durch den Garten.",
+        "translation": "A butterfly is flying through the garden.",
+        "cloze": "Schmetterling"
+      },
+      {
+        "text": "Schau, wie viele Schmetterlinge!",
+        "translation": "Look how many butterflies!",
+        "cloze": "Schmetterlinge"
+      },
+      {
+        "text": "Der Schmetterling ist gelb.",
+        "translation": "The butterfly is yellow.",
+        "cloze": "Schmetterling"
+      }
+    ]
+  },
+  {
+    "lemma": "Schnecke",
+    "gloss": "snail",
+    "pos": "noun",
+    "forms": [
+      "Schnecke",
+      "Schnecken"
+    ],
+    "gender": "f",
+    "garden": "snail",
+    "sentences": [
+      {
+        "text": "Eine Schnecke sitzt auf dem Salat.",
+        "translation": "A snail is sitting on the lettuce.",
+        "cloze": "Schnecke"
+      },
+      {
+        "text": "Nach dem Regen kommen die Schnecken.",
+        "translation": "The snails come out after the rain.",
+        "cloze": "Schnecken"
+      },
+      {
+        "text": "Du bist langsam wie eine Schnecke.",
+        "translation": "You're as slow as a snail.",
+        "cloze": "Schnecke"
+      }
+    ]
+  },
+  {
+    "lemma": "Eule",
+    "gloss": "owl",
+    "pos": "noun",
+    "forms": [
+      "Eule",
+      "Eulen"
+    ],
+    "gender": "f",
+    "garden": "owl",
+    "sentences": [
+      {
+        "text": "In dem Baum wohnt eine Eule.",
+        "translation": "An owl lives in that tree.",
+        "cloze": "Eule"
+      },
+      {
+        "text": "Eulen schlafen am Tag.",
+        "translation": "Owls sleep during the day.",
+        "cloze": "Eulen"
+      },
+      {
+        "text": "Letzte Nacht habe ich eine Eule gehört.",
+        "translation": "Last night I heard an owl.",
+        "cloze": "Eule"
+      }
+    ]
+  },
+  {
+    "lemma": "Regenbogen",
+    "gloss": "rainbow",
+    "pos": "noun",
+    "forms": [
+      "Regenbogen"
+    ],
+    "gender": "m",
+    "garden": "rainbow",
+    "sentences": [
+      {
+        "text": "Schau mal, ein Regenbogen!",
+        "translation": "Look, a rainbow!",
+        "cloze": "Regenbogen"
+      },
+      {
+        "text": "Nach dem Regen kam ein Regenbogen.",
+        "translation": "After the rain, a rainbow appeared.",
+        "cloze": "Regenbogen"
+      },
+      {
+        "text": "Ein Regenbogen hat sieben Farben.",
+        "translation": "A rainbow has seven colors.",
+        "cloze": "Regenbogen"
+      }
+    ]
+  },
+  {
+    "lemma": "Igel",
+    "gloss": "hedgehog",
+    "pos": "noun",
+    "forms": [
+      "Igel"
+    ],
+    "notes": "The plural is the same: die Igel.",
+    "gender": "m",
+    "garden": "hedgehog",
+    "sentences": [
+      {
+        "text": "Im Garten wohnt ein Igel.",
+        "translation": "A hedgehog lives in the garden.",
+        "cloze": "Igel"
+      },
+      {
+        "text": "Der Igel schläft im Winter.",
+        "translation": "The hedgehog sleeps in winter.",
+        "cloze": "Igel"
+      },
+      {
+        "text": "Hast du schon mal einen Igel gesehen?",
+        "translation": "Have you ever seen a hedgehog?",
+        "cloze": "Igel"
+      }
+    ]
+  }
+]

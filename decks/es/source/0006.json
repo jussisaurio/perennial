@@ -2398,6 +2398,7 @@
     ],
     "notes": "hace sol = it's sunny.",
     "gender": "m",
+    "garden": "sun",
     "sentences": [
       {
         "text": "Hace sol.",

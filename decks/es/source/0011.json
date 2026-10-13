@@ -217,6 +217,7 @@
     ],
     "notes": "hace viento = it's windy.",
     "gender": "m",
+    "garden": "wind",
     "sentences": [
       {
         "text": "Hace mucho viento.",

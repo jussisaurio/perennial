@@ -808,6 +808,7 @@
       "Wind"
     ],
     "gender": "m",
+    "garden": "wind",
     "sentences": [
       {
         "text": "Der Wind ist heute stark.",
