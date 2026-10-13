@@ -6,7 +6,7 @@
 
 import { join } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
-import { DECK_LANGS, Deck, compatibility, deckProblems } from "../../web/src/deck/schema.ts";
+import { DECK_LANGS, Deck, GARDEN_WORDS, compatibility, deckProblems } from "../../web/src/deck/schema.ts";
 import { ROOT, buildDeck, deckDir, readDeckFiles, readSource, toJson } from "./lib.ts";
 import { reviewProblems } from "./reviews.ts";
 
@@ -53,6 +53,9 @@ for (const lang of DECK_LANGS) {
   }
   const deck = parsed.data;
   for (const p of deckProblems(deck)) fail(p);
+  // Every course brings every garden thing (#209).
+  const named = new Set(deck.words.filter((w) => !w.retired && !w.aliasOf).map((w) => w.garden));
+  for (const g of GARDEN_WORDS) if (!named.has(g)) fail(`no live word brings the garden "${g}": name one in decks/${lang}/garden.json`);
 
   // 2. Every source file proofread by someone other than its author, as it is now.
   for (const p of reviewProblems(lang)) fail(p);

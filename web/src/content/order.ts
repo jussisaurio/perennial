@@ -90,17 +90,29 @@ export function courseOrder<W extends DeckWord>(deck: { words: readonly W[] }): 
 const CATCH_UP = 5;
 
 /**
- * The words a learner meets next: the course, minus words they can't get now
- * (`open` false). A garden word comes at its place, but never closer than
- * CATCH_UP words after the last one. A learner who was past their places when
- * garden words came to the course gets them one in every CATCH_UP new words,
- * not all in a row. A new learner gets the course as it is: its garden places
- * are further apart.
+ * Other new words the learner started after their last garden word, from the
+ * time of each word's first review. Sessions take only a few new words at a
+ * time, so the spacing below must carry over from one session to the next.
+ * Before any garden word there is nothing to keep a distance from: Infinity.
  */
-export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean): W[] {
+export function sinceGarden(started: Iterable<{ garden?: GardenWord; first: number }>): number {
+  const words = [...started];
+  const last = Math.max(...words.filter((w) => w.garden).map((w) => w.first));
+  if (last === -Infinity) return Infinity;
+  return words.filter((w) => !w.garden && w.first > last).length;
+}
+
+/**
+ * The words a learner meets next: the course, minus words they can't get now
+ * (`open` false). A garden word comes at its place, but never before CATCH_UP - 1
+ * other new words since the last one (`since`: sinceGarden). A learner who was
+ * past their places when garden words came to the course gets them one in every
+ * CATCH_UP new words, not all in a row. A new learner gets the course as it is:
+ * its garden places are further apart.
+ */
+export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean, since: number): W[] {
   const out: W[] = [];
   const due: W[] = [];
-  let since = CATCH_UP - 1; // other words since the last garden word
   for (const w of course) {
     if (!open(w)) continue;
     if (w.garden) {

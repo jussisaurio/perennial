@@ -115,6 +115,10 @@ test("garden.json marks deck words; a missing, retired or doubly named word, or 
   expect(build([src("casa")], [{ garden: "cat", word: "gata|noun" }]).errors).toEqual(['garden.json: "gata|noun" (cat) is not a live word in the source']);
   // gata left the source: retired, so it can't bring the cat.
   expect(build([src("casa")], [{ garden: "cat", word: "gata|noun" }], ok).errors).toEqual(['garden.json: "gata|noun" (cat) is not a live word in the source']);
+  // ... and once it leaves the garden file too, the retired word brings nothing.
+  const retired = build([src("casa")], [], ok);
+  expect(retired.errors).toEqual([]);
+  expect(retired.deck.words.find((w) => w.lemma === "gata")).toMatchObject({ retired: true, garden: undefined });
   expect(build([src("gata")], [{ garden: "cat", word: "gata|noun" }, { garden: "bird", word: "gata|noun" }]).errors).toEqual(['garden.json: "gata|noun" is named for both "cat" and "bird"']);
   expect(build([src("gata"), src("michi")], [{ garden: "cat", word: "gata|noun" }, { garden: "cat", word: "michi|noun" }]).errors).toEqual(['two live words bring the garden "cat"']);
 });

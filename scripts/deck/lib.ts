@@ -111,7 +111,7 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden =
 
   // Words and sentences that left the source stay in the deck, retired.
   const liveIds = new Set(words.map((w) => w.id));
-  for (const w of prev?.words ?? []) if (!liveIds.has(w.id)) words.push({ ...w, retired: true, aliasOf: undefined });
+  for (const w of prev?.words ?? []) if (!liveIds.has(w.id)) words.push({ ...w, retired: true, aliasOf: undefined, garden: undefined });
   for (const w of words) {
     const target = aliases[w.id];
     if (target) w.aliasOf = target;
@@ -224,13 +224,19 @@ function readJson<T>(path: string, schema: z.ZodType<T>, fallback: T): T {
   return existsSync(path) ? schema.parse(JSON.parse(readFileSync(path, "utf8"))) : fallback;
 }
 
+/** Every course names its garden words (#209), so a missing file is a mistake, not "none". */
+function readGarden(path: string): Garden {
+  if (!existsSync(path)) throw new Error(`${path.slice(ROOT.length + 1)} is missing: every course names its garden words (docs/decks.md)`);
+  return Garden.parse(JSON.parse(readFileSync(path, "utf8")));
+}
+
 export function readDeckFiles(lang: string) {
   const dir = deckDir(lang);
   return {
     manifest: readJson(join(dir, "ids.json"), Manifest, { words: {}, sentences: {} }),
     prev: readJson<Deck | null>(join(dir, "deck.json"), Deck(lang), null),
     aliases: readJson(join(dir, "aliases.json"), Aliases, {}),
-    garden: readJson(join(dir, "garden.json"), Garden, []),
+    garden: readGarden(join(dir, "garden.json")),
   };
 }
 
