@@ -76,8 +76,9 @@ test("an answer undone takes its visitor away: no line for it", async ({ page })
       await expect(kicker(page)).toHaveText(/quick check/);
       continue;
     }
+    const serial = await page.locator(".session").getAttribute("data-card");
     await page.keyboard.press("2"); // the cat comes
-    await expect(page.getByRole("status")).toHaveText("You learned gato. A cat came to see.");
+    await expect(page.locator(".session")).not.toHaveAttribute("data-card", serial!); // the answer is in
     await page.keyboard.press("z"); // undone
     await expect(page.locator("main.card")).toHaveAttribute("data-lemma", "gato");
     await reveal(page);

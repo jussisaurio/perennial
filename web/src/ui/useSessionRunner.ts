@@ -16,7 +16,6 @@ import { wakeAudio } from "./chime";
 import { sessionPlan } from "../data/practice";
 import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
 import { GARDEN_VISITOR_ART, type PixelArt } from "../garden/visitorArt";
-import { VISITORS } from "../garden/visitors";
 import { broughtVisitor } from "./visitors";
 
 export interface Card {
@@ -239,18 +238,14 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
 
   /**
    * A garden word (#209) with a visitor: its first good answer brings the
-   * visitor. Returns the art for the growth moment; the very first visitor of
-   * all also gets one plain line, so the learner sees why it came.
+   * visitor. Returns the art for the growth moment, where it hops in; the
+   * summary then says it came. No line during the session: it would stay after
+   * the visitor left and cover the next card.
    */
-  const visitorArrives = (wordId: string, lemma: string): PixelArt | undefined => {
-    const l = live.current;
-    const garden = l?.deck.byId.get(wordId)?.garden;
+  const visitorArrives = (wordId: string): PixelArt | undefined => {
+    const garden = live.current?.deck.byId.get(wordId)?.garden;
     const art = garden && GARDEN_VISITOR_ART[garden];
-    const def = garden && VISITORS.find((v) => v.garden === garden);
-    if (!l || !art || !def) return undefined;
-    // The first visitor of all: no other garden word with art has brought its visitor yet.
-    const before = l.deck.words.some((w) => w.id !== wordId && w.garden && GARDEN_VISITOR_ART[w.garden] && broughtVisitor(l, w.id));
-    if (!before) flash(`You learned ${lemma}. A ${def.gloss} came to see.`, 4000);
+    if (!art) return undefined;
     arrived.current.push(wordId);
     return art;
   };
@@ -269,7 +264,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       // No note: the button already said what happens ("Back in about a week").
       setUndoStack((s) => [...s, { reviewId, intro: true, wordId: word.id, example }]);
       // "I knew it" starts the word: a garden word's visitor comes now.
-      const visitor = opts.alreadyKnown ? visitorArrives(word.id, word.lemma) : undefined;
+      const visitor = opts.alreadyKnown ? visitorArrives(word.id) : undefined;
       if (!growthOn()) return null;
       const seed = { s: 0, stage: "seed" as const };
       if (!opts.alreadyKnown) return { word: word.lemma, from: seed, to: seed, planted: true };
@@ -293,7 +288,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       // Only reading memory grows the plant, and only a remembered word grows.
       if (grade < 3 || task.skill !== "read") return null;
       // The first good answer to a word (a wrong one earlier does not count): a garden word's visitor comes now.
-      const visitor = brought ? undefined : visitorArrives(word.id, word.lemma);
+      const visitor = brought ? undefined : visitorArrives(word.id);
       if (!growthOn()) return null;
       const read = await readAfter(word.id, repsBefore);
       return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false, visitor } : null;

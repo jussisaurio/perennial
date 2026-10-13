@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { answer, kicker, reveal, startCourse, startSession } from "./helpers";
 
 // #209: learn a garden word, and its visitor comes. The cat is the course's 3rd word,
-// so a new learner meets it, and the one line that says why, in the first 5 minutes.
+// so a new learner meets it in the first 5 minutes; the summary says it came.
 
 test("a new learner learns 'gato' in the first session, and the cat comes to the garden", async ({ page }) => {
   await startCourse(page);
@@ -21,14 +21,19 @@ test("a new learner learns 'gato' in the first session, and the cat comes to the
   for (let i = 0; i < 4; i++) {
     await expect(kicker(page)).toHaveText(/quick check/);
     const isGato = (await page.locator("main.card").getAttribute("data-lemma")) === "gato";
+    const serial = await page.locator(".session").getAttribute("data-card");
     await reveal(page);
     await page.keyboard.press("2"); // I remembered
     if (isGato) {
-      await expect(page.getByRole("status")).toHaveText("You learned gato. A cat came to see.");
+      // No line over the next card while it comes; the summary says it (#209).
+      await expect(page.locator(".session")).not.toHaveAttribute("data-card", serial!);
+      // Counted once, not awaited: a line that fades after 4 s would pass a waiting check.
+      expect(await page.getByRole("status").count()).toBe(0);
       break;
     }
   }
   await page.getByRole("button", { name: "End session" }).click();
+  await expect(page.getByText("A cat came to the garden.")).toBeVisible();
   await page.getByRole("button", { name: /^Done/ }).click();
   // Back on Today, the cat is in the garden strip, at gato's plant (#235).
   const gato = await page.evaluate(async () => {
@@ -38,7 +43,7 @@ test("a new learner learns 'gato' in the first session, and the cat comes to the
   await expect(page.getByRole("button", { name: "el gato · cat" })).toHaveAttribute("data-at", gato);
 });
 
-test("a wrong first answer does not bring the cat; the first good one does, with its line", async ({ page }) => {
+test("a wrong first answer does not bring the cat; the first good one does", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   for (let i = 0; i < 4; i++) await answer(page, "1"); // four new words, gato among them
@@ -48,13 +53,13 @@ test("a wrong first answer does not bring the cat; the first good one does, with
     const isGato = (await page.locator("main.card").getAttribute("data-lemma")) === "gato";
     await reveal(page);
     if (isGato && !k.includes("try again")) {
-      await page.keyboard.press("1"); // I forgot: no cat, no line
-      await expect(page.getByRole("status")).not.toHaveText(/came to see/);
+      await page.keyboard.press("1"); // I forgot: no cat
       continue;
     }
     await page.keyboard.press("2");
     if (isGato) {
-      await expect(page.getByRole("status")).toHaveText("You learned gato. A cat came to see.");
+      await page.getByRole("button", { name: "End session" }).click();
+      await expect(page.getByText("A cat came to the garden.")).toBeVisible();
       return;
     }
   }
