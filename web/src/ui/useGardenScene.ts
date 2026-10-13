@@ -78,8 +78,14 @@ export function useGardenScene({
     const el = wrap.current;
     const ro = new ResizeObserver(([e]) => s?.resize(e.contentRect.width, e.contentRect.height));
     void (async () => {
-      const mod = await import("../garden/scene");
-      if (!alive) return;
+      const mod = await import("../garden/scene").catch((e: unknown) => {
+        // The chunk did not load twice within a minute (main.tsx reloads only once): say so, not a garden stuck loading.
+        console.error("[garden] the 3D garden's code did not load", e);
+        return "failed" as const;
+      });
+      // undefined: this tab runs a release whose chunk is gone after a deploy; main.tsx is reloading the page.
+      if (!alive || !mod) return;
+      if (mod === "failed") return setFailed("The garden could not load. Reload the page to try again.");
       if (!mod.webglAvailable()) return setFailed("Your browser cannot show 3D graphics.");
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
