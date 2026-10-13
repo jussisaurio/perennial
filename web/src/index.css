@@ -776,3 +776,7 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-latin { margin: -0.1rem 0 0.1rem; font: italic 1rem/1.3 var(--display); color: var(--muted); }
 /* The summary's one line of garden news (#232): quiet, above the buttons. */
 .garden-news { margin: 0.4rem 0 0; color: var(--ink-2); }
+
+/* A visitor watching the session (#210): at the bottom-left corner, above the answers; it never takes a tap from them. */
+.session-watcher { position: fixed; left: 12px; bottom: max(96px, calc(env(safe-area-inset-bottom) + 90px)); z-index: 5; pointer-events: auto; animation: watcher-in 0.7s var(--ease) both; }
+@keyframes watcher-in { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
