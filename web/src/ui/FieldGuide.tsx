@@ -11,6 +11,7 @@ import { WordPlant, rareOf, type Rare } from "./plant";
 import { giftLink } from "../data/gift";
 import { track } from "../observability";
 import { useLatinNames } from "../content/latin";
+import { pageImage, type PageImage } from "./pageImage";
 
 export interface GuideRow {
   l: Word;
@@ -125,6 +126,50 @@ export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string;
  * friend's garden. The phone's share sheet where there is one, otherwise the
  * link is copied. Only on a known word, and only when the learner chooses it.
  */
+/**
+ * "Share a picture of this page" (#225): the pressed flower as an image, through
+ * the phone's share sheet, or downloaded where files cannot be shared. Only when
+ * the learner chooses it; nothing about them is on the picture.
+ */
+function SharePicture({ page }: { page: PageImage }) {
+  const [state, setState] = useState<"idle" | "making" | "saved">("idle");
+  const share = async () => {
+    setState("making");
+    const blob = await pageImage(page).catch((e: unknown) => {
+      console.warn("[guide] the picture could not be made", e);
+      return null;
+    });
+    if (!blob) return setState("idle");
+    const file = new File([blob], `perennial-${page.lemma}.png`, { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      const shared = await navigator.share({ files: [file] }).then(
+        () => true,
+        (e: unknown) => {
+          // Closing the share sheet is a choice, not an error.
+          if (!(e instanceof DOMException && e.name === "AbortError")) console.warn("[guide] share failed", e);
+          return false;
+        },
+      );
+      if (shared) track("page_shared", {});
+      return setState("idle");
+    }
+    // No sharing files here (most desktop browsers): save the picture instead.
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    track("page_shared", {});
+    setState("saved");
+  };
+  return (
+    <button className="ghost give-seed" disabled={state === "making"} onClick={() => void share()}>
+      {state === "making" ? "Making the picture…" : state === "saved" ? "Picture saved. Share it from your files." : "Share a picture of this page"}
+    </button>
+  );
+}
+
 function GiveSeed({ word }: { word: Word }) {
   const [copied, setCopied] = useState(false);
   // Only deck words: a learner's own words are theirs alone, and not in a friend's deck.
@@ -184,7 +229,12 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
           <p className="gl">{row.l.gloss}</p>
           {rare && <p className="guide-rare">{RARE_LABEL[rare]}</p>}
           {stage !== "bloom" && <p className="muted small">Still growing. Its flower shows when you know the word.</p>}
-          {stage === "bloom" && <GiveSeed word={row.l} />}
+          {stage === "bloom" && (
+            <div className="guide-share">
+              <GiveSeed word={row.l} />
+              <SharePicture page={{ lemma: row.l.lemma, gloss: row.l.gloss, latin, rare: rare ? RARE_LABEL[rare] : undefined, s: read?.s ?? 0, stage }} />
+            </div>
+          )}
         </div>
         {detail}
         {/* Focus starts here, not on the first control in the details. */}

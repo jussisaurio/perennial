@@ -78,3 +78,25 @@ test("the field guide: pressed flowers for known words, sketches for growing one
   await expect(page.getByRole("radio", { name: "Flowers" })).toHaveAttribute("aria-checked", "true");
   await expect(page.getByRole("heading", { name: "In bloom" })).toBeVisible();
 });
+
+test("a known word's page can be shared as a picture (#225)", async ({ page }) => {
+  await startCourse(page);
+  await history(page, ["perro"], []);
+  await page.reload();
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByRole("radio", { name: "Flowers" }).click();
+  await page.locator(".guide-entry.pressed", { hasText: "perro" }).click();
+  // No file sharing in this browser: the picture is saved instead.
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Share a picture of this page" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("perennial-perro.png");
+  const path = await file.path();
+  const { readFileSync } = await import("node:fs");
+  const png = readFileSync(path);
+  // A PNG, 1080 × 1350 (width and height are at bytes 16–23).
+  expect(png.subarray(1, 4).toString()).toBe("PNG");
+  expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1080, 1350]);
+  await file.saveAs("/private/tmp/claude-501/-Users-jussi-projects-ankee/53cda574-db3d-4bad-bffc-f3f1c692bc7d/scratchpad/shared-page.png");
+  await expect(page.getByRole("button", { name: "Picture saved. Share it from your files." })).toBeVisible();
+});

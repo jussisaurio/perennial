@@ -776,3 +776,6 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-latin { margin: -0.1rem 0 0.1rem; font: italic 1rem/1.3 var(--display); color: var(--muted); }
 /* The summary's one line of garden news (#232): quiet, above the buttons. */
 .garden-news { margin: 0.4rem 0 0; color: var(--ink-2); }
+
+/* A known word's page: give its seed, or share a picture of it (#213, #225). */
+.guide-share { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.2rem 0.6rem; margin-top: 0.3rem; }
