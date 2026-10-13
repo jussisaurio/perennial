@@ -411,6 +411,8 @@ export class GardenScene {
         layout,
         reducedMotion,
         elapsed: () => this.elapsed,
+        bedTop: BED_H,
+        plantTop: (growth) => BED_H + plantHeight(growth),
         sprite: (tex, x, y, z, u, uw, size) => {
           const mesh = sprites(tex, [{ x, y, z, u, v: 0, uw, vh: 1, phase: 0, droop: 0, scale: 1, index: -6 }], size, size);
           mesh.material.uniforms.uSway.value = 0;

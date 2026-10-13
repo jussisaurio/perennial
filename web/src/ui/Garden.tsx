@@ -12,9 +12,9 @@ import { FORM, StripPlant } from "./plant";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
 import { growthOf, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
-import { CAT_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
+import { BIRD, CAT_ASLEEP, FROG, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
-import { stripVisitor, type VisitorView } from "../garden/visitors";
+import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
 import { easeOut, easeOutBack, reducedMotion, type PlantLook } from "./Growth";
@@ -116,10 +116,20 @@ export const Garden = memo(function Garden({
   const plants = useMemo(() => data?.plants ?? [], [data]);
   const n = plants.length;
   const pad = 18;
-  const snail = visitors?.views.find((v) => v.id === "snail" && v.word);
-  const cat = visitors?.views.find((v) => v.id === "cat" && v.word);
+  const view = (id: VisitorId) => visitors?.views.find((v) => v.id === id && v.word);
+  const snail = view("snail");
+  const cat = view("cat");
+  const bird = view("bird");
+  const frog = view("frog");
+  // A garden-word visitor (#209) lives at its word's plant (#235). One that came another way
+  // (the cat after a break, the frog at 150 words) has no plant here, and keeps its old spot.
+  const homePlant = (v: VisitorView | undefined) => (v && plantsHere(v.id)) || undefined;
+  const plantsHere = (id: VisitorId) => {
+    const g = visitor(id).garden;
+    return g ? data?.plants.find((p) => p.garden === g) : undefined;
+  };
   // Room at the right end for the cat, so it does not sleep on the newest plant.
-  const catRoom = cat ? 46 : 0;
+  const catRoom = cat && !homePlant(cat) ? 46 : 0;
   const scrolls = n * SPACING + pad * 2 + catRoom > width;
   // Only a strip that scrolls has ends to find (#61): the first word's post at the far left, the mole past the seeds.
   const first = scrolls && !showcase ? data?.first : null;
@@ -232,26 +242,15 @@ export const Garden = memo(function Garden({
           })}
           {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>
-        {snail && (
-          <VisitorMark
-            v={snail}
-            art={SNAIL}
-            scale={2.2}
-            x={pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2)}
-            onShow={showVisitor(snail)}
-            onHide={() => setVisitorTip(null)}
-          />
-        )}
-        {cat && (
-          <VisitorMark
-            v={cat}
-            art={CAT_ASLEEP}
-            scale={2}
-            x={fullWidth - moleRoom - 30}
-            onShow={showVisitor(cat)}
-            onHide={() => setVisitorTip(null)}
-          />
-        )}
+        {[snail, cat, bird, frog].map((v) => {
+          if (!v) return null;
+          const home = layout.find((l) => l.p.id === homePlant(v)?.id);
+          const at = home ? atPlant(v.id, home) : null;
+          // No plant of its own: the snail on the soil, the cat asleep at the right end; the bird and frog only in the walk.
+          if (!at && v.id !== "snail" && v.id !== "cat") return null;
+          const spot = at ?? (v.id === "snail" ? { art: SNAIL, scale: 2.2, x: pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2) } : { art: CAT_ASLEEP, scale: 2, x: fullWidth - moleRoom - 30 });
+          return <VisitorMark key={v.id} v={v} art={spot.art} scale={spot.scale} x={spot.x} top={spot.top} at={home?.p.id} onShow={showVisitor(v)} onHide={() => setVisitorTip(null)} />;
+        })}
         {worm && (
           <VisitorMark
             v={worm}
@@ -338,7 +337,29 @@ type TipVisitor = { id: string; word: string | null; gloss: string };
  * A visitor in the strip, standing on the soil line: a small pixel sprite in a
  * button, so it can be focused and tapped. Hover, focus or tap shows its word.
  */
-function VisitorMark({ v, art, x, scale, onShow, onHide, top }: { v: TipVisitor; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void; top?: number }) {
+/**
+ * Where a garden-word visitor sits at its word's plant (#235), in strip pixels:
+ * the cat curled up at its foot, the snail halfway up its stem, the bird on
+ * top, the frog beside it. `top` is the sprite's top edge (default: on the soil).
+ */
+function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale: number }): { art: PixelArt; scale: number; x: number; top?: number } | null {
+  const stem = (16 + 118 * l.p.growth) * l.scale;
+  const tall = (art: PixelArt, scale: number) => art.rows.length * scale;
+  switch (id) {
+    case "cat":
+      return { art: CAT_ASLEEP, scale: 2, x: l.x + 14 };
+    case "snail":
+      return { art: SNAIL, scale: 1.8, x: l.x + 5, top: l.y - stem * 0.45 - tall(SNAIL, 1.8) };
+    case "bird":
+      return { art: BIRD, scale: 1.6, x: l.x + 3, top: l.y - stem - tall(BIRD, 1.6) + 4 };
+    case "frog":
+      return { art: FROG, scale: 1.8, x: l.x - 14 };
+    default:
+      return null;
+  }
+}
+
+function VisitorMark({ v, art, x, scale, onShow, onHide, top, at }: { v: TipVisitor; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void; top?: number; at?: string }) {
   const w = art.rows[0].length;
   const h = art.rows.length;
   return (
@@ -346,6 +367,8 @@ function VisitorMark({ v, art, x, scale, onShow, onHide, top }: { v: TipVisitor;
       type="button"
       className={`garden-visitor visitor-${v.id}`}
       aria-label={`${v.word} · ${v.gloss}`}
+      // The plant it lives at (#235), when it has one.
+      data-at={at}
       style={{ left: x - (w * scale) / 2, top: top ?? GROUND + 4 - h * scale }}
       onPointerEnter={(e) => hovers(e) && onShow(x)}
       onPointerLeave={(e) => hovers(e) && onHide()}

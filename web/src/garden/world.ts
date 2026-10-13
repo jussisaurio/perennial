@@ -5,6 +5,7 @@
 import { toPos, type Pos } from "../deck/schema";
 import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
+import type { GardenWord } from "../deck/schema";
 
 export interface GardenPlant {
   id: string;
@@ -18,6 +19,8 @@ export interface GardenPlant {
   growth: number;
   listen: boolean;
   write: boolean;
+  /** A garden word's plant (#209): its visitor lives here once it has come. */
+  garden?: GardenWord;
 }
 
 export interface PlacedPlant extends GardenPlant {

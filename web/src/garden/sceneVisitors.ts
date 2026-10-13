@@ -6,7 +6,7 @@
 import * as THREE from "three";
 import { daily, rareDay } from "../core/day";
 import * as T from "./textures";
-import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
+import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, visitor, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
 import { collide, type Layout } from "./world";
 
 /**
@@ -51,6 +51,10 @@ export interface VisitorWorld {
   reducedMotion: boolean;
   /** Seconds since the garden opened. */
   elapsed: () => number;
+  /** The height (metres) of a bed's soil, where a visitor at its plant sits. */
+  bedTop: number;
+  /** The height (metres) of the top of a plant of this growth, standing in its bed. */
+  plantTop: (growth: number) => number;
   /** A one-instance, camera-facing sprite of `size` metres from `tex`, showing the strip u..u+uw. */
   sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => SpriteMesh;
 }
@@ -134,12 +138,16 @@ export class SceneVisitors {
     const pad = pads.reduce((a, p) => (Math.hypot(p[0] - L.gate.x, p[1] - L.gate.z) < Math.hypot(a[0] - L.gate.x, a[1] - L.gate.z) ? p : a), pads[0]);
     for (const v of this.list) {
       let x: number, y: number, z: number, cell: number, size: number;
+      // A garden-word visitor (#209) lives at its word's plant (#235); one that came another way keeps its spot below.
+      const g = visitor(v.id).garden;
+      const home = g ? L.plants.find((p) => p.garden === g) : undefined;
       // Defaults for the drawn part (the lower half of the cell) and the tag just above it.
       let hit: [number, number, number] = [0.2, 0.4, 0.3];
       let top = v.id === "cat" ? 0.45 : 0.55;
       if (v.id === "frog") {
         this.frog.asleep = rareDay(25, "frog-asleep");
-        [x, y, z] = [pad[0], 0.075, pad[1]];
+        // By its word's plant, on the bed's edge; or on the lily pad nearest the gate.
+        [x, y, z] = home ? [home.x - 0.14, this.world.bedTop, home.z + 0.1] : [pad[0], 0.075, pad[1]];
         [cell, size, hit, top] = [this.frog.asleep ? T.VISITOR_CELL.frogAsleep : T.VISITOR_CELL.frog, 0.42, [0.17, 0.25, 0.2], 0.42];
       } else if (v.id === "gnome") {
         // A bed corner chosen by the date; never the front-left one, where the bed's sign is.
@@ -170,6 +178,11 @@ export class SceneVisitors {
         // With reduced motion it sits on the lantern's roof; otherwise tick() moves it.
         [x, y, z] = [lx, 1.235, lz];
         [cell, size, hit, top] = [this.world.reducedMotion ? T.VISITOR_CELL.mothClosed : T.VISITOR_CELL.mothOpen, 0.36, [0.1, 0.3, 0.2], 0.3];
+      } else if (v.id === "snail" && home) {
+        // Halfway up its word's plant.
+        // In front of the stem, so the plant does not hide it.
+        [x, y, z] = [home.x + 0.05, this.world.bedTop + (this.world.plantTop(home.growth) - this.world.bedTop) * 0.45, home.z + 0.09];
+        [cell, size] = [T.VISITOR_CELL.snail, 0.62];
       } else if (v.id === "snail") {
         this.snailPickets = fencePickets(L);
         const p = fencePoint(L, snailLap() * this.snailPickets);
@@ -177,7 +190,8 @@ export class SceneVisitors {
         [x, y, z] = [p.x + p.dz * 0.06, RAIL, p.z - p.dx * 0.06];
         [cell, size] = [T.VISITOR_CELL.snail, 0.7];
       } else if (v.id === "cat") {
-        [x, y, z] = [bench.x + 0.18, 0.45, bench.z + 0.02];
+        // Curled up at the foot of its word's plant; or asleep on the bench.
+        [x, y, z] = home ? [home.x + 0.2, this.world.bedTop, home.z + 0.12] : [bench.x + 0.18, 0.45, bench.z + 0.02];
         [cell, size] = [T.VISITOR_CELL.catAsleep, 0.95];
       } else if (v.id === "toadstool") {
         const bed = daily(L.beds, "visitor-toadstool-bed");
@@ -194,7 +208,8 @@ export class SceneVisitors {
           [b.minX + 0.06, RAIL, first.z - 1],
         ];
         if (!this.list.some((o) => o.id === "cat")) spots.push([bench.x + BENCH_SIGN.dx, 1.19, bench.z + BENCH_SIGN.dz]);
-        [x, y, z] = daily(spots, "visitor-bird-spot");
+        // On top of its word's plant; or on a sign or the fence.
+        [x, y, z] = home ? [home.x, this.world.plantTop(home.growth) + 0.02, home.z] : daily(spots, "visitor-bird-spot");
         [cell, size] = [T.VISITOR_CELL.bird, 0.5];
       }
       const mesh = this.world.sprite(tex, x, y, z, cell * cellU, cellU, size);
