@@ -62,11 +62,18 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   useEffect(() => {
     if (!growing) return;
     const skip = () => grown.current?.();
+    // The next card's keys are listening by the time this key bubbles on, so
+    // the key is used up here: Space must not also show the next card's answer.
+    // Escape still ends the session.
+    const skipKey = (e: KeyboardEvent) => {
+      skip();
+      if (e.key !== "Escape") e.preventDefault();
+    };
     window.addEventListener("click", skip, true);
-    window.addEventListener("keydown", skip, true);
+    window.addEventListener("keydown", skipKey, true);
     return () => {
       window.removeEventListener("click", skip, true);
-      window.removeEventListener("keydown", skip, true);
+      window.removeEventListener("keydown", skipKey, true);
     };
   }, [growing]);
 
@@ -127,6 +134,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
           <WordPlant word={card.word.lemma} s={card.s} stage={card.stage} size={76} />
         </div>
       )}
+      {/* ?.: a tap may already have ended the moment. */}
       {growing && <Growth m={growing} onDone={() => grown.current?.()} />}
     </div>
   );
