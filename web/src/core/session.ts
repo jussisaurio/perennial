@@ -156,6 +156,8 @@ interface Snapshot {
   followUps: { task: Task; at: number }[];
   retries: Map<string, number>;
   served: number;
+  /** Whether time was up when this snapshot's `next()` chose its card. */
+  late: boolean;
 }
 
 /**
@@ -169,6 +171,8 @@ export class Session {
   private retries = new Map<string, number>();
   private served = 0;
   private history: Snapshot[] = [];
+  /** Set by undo: the next `next()` chooses as it did the first time, so the undone card comes back even if time has run out since (#195). */
+  private replayLate: boolean | undefined;
   readonly budgetMs: number;
 
   constructor(plan: Pick<Plan, "queue">, budgetMs: number) {
@@ -182,14 +186,16 @@ export class Session {
   }
 
   next(activeMs: number): Task | null {
-    this.history.push({ queue: [...this.queue], followUps: [...this.followUps], retries: new Map(this.retries), served: this.served });
+    const late = this.replayLate ?? this.timeUp(activeMs);
+    this.replayLate = undefined;
+    this.history.push({ queue: [...this.queue], followUps: [...this.followUps], retries: new Map(this.retries), served: this.served, late });
     if (this.history.length > 50) this.history.shift();
     const ready = this.followUps.findIndex((f) => f.at <= this.served);
     if (ready >= 0) {
       this.served++;
       return this.followUps.splice(ready, 1)[0].task;
     }
-    if (!this.timeUp(activeMs) && this.queue.length) {
+    if (!late && this.queue.length) {
       this.served++;
       return this.queue.shift()!;
     }
@@ -239,6 +245,7 @@ export class Session {
     this.followUps = prev.followUps;
     this.retries = prev.retries;
     this.served = prev.served;
+    this.replayLate = prev.late;
     return true;
   }
 

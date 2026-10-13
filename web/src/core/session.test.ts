@@ -184,6 +184,18 @@ describe("Session undo", () => {
     expect(rest).toContain("n"); // the intro's quick check is still owed
   });
 
+  test("undo after time ran out brings the last card back (#195)", () => {
+    const queue: Task[] = ["a", "b"].map((id) => ({ kind: "review" as const, wordId: id, skill: "read" as Skill }));
+    const s = new Session({ queue }, 60_000);
+    const a = s.next(0)!;
+    s.report(a, { grade: 3 });
+    expect(s.next(60_000)).toBeNull(); // time is up: the summary shows
+    expect(s.undo()).toBe(true);
+    expect(s.next(60_000)?.wordId).toBe("a"); // served again although time is still up
+    s.report(a, { grade: 3 });
+    expect(s.next(60_000)).toBeNull(); // and then the session ends as before
+  });
+
   test("nothing to undo at the start", () => {
     const s = new Session({ queue: [{ kind: "intro", wordId: "x" }] }, 1000);
     s.next(0);
