@@ -11,6 +11,7 @@ import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
 import { AddScreen } from "./Add";
+import { FieldGuide } from "./FieldGuide";
 import { StageGlyph } from "./StageGlyph";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
@@ -64,6 +65,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
   const search = useRef<HTMLInputElement>(null);
   useShortcut("/", () => search.current?.focus());
   const [filter, setFilter] = useState<Filter>("all");
+  const [view, setView] = useState<WordsView>(savedView);
   const [open, setOpen] = useState<string | null>(null);
   const [deleted, setDeleted] = useState<Word | null>(null);
   useEffect(() => {
@@ -123,8 +125,27 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           <option value="mine">From my texts</option>
         </select>
       </div>
+      <div className="chips words-view" role="radiogroup" aria-label="Show words as">
+        {(["list", "guide"] as const).map((v) => (
+          <button
+            key={v}
+            role="radio"
+            aria-checked={view === v}
+            className={view === v ? "chip on" : "chip"}
+            onClick={() => {
+              setView(v);
+              saveView(v);
+            }}
+          >
+            {v === "list" ? "List" : "Field guide"}
+          </button>
+        ))}
+      </div>
       <p className="muted small">{plural(rows.length, "word")}</p>
       {learner && rows.length === 0 && <p className="words-empty">{wordsEmptyLine(filter, !!q.trim())}</p>}
+      {view === "guide" ? (
+        <FieldGuide rows={rows} open={open} onOpen={setOpen} detail={({ l, mem }) => learner && <WordDetail learner={learner} word={l} memory={mem} onDeleted={() => setDeleted(l)} />} />
+      ) : (
       <VirtualWords
         rows={rows}
         render={({ l, mem }) => (
@@ -145,6 +166,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           </>
         )}
       />
+      )}
       {deleted && (
         <div className="toast" role="status">
           {deleted.source === "deck" ? `“${deleted.lemma}” will not come up again.` : `Deleted “${deleted.lemma}”. Goodbye, little plant.`}
@@ -163,6 +185,24 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
       )}
     </div>
   );
+}
+
+type WordsView = "list" | "guide";
+// Which view the learner last chose: a per-device convenience, so storage may be missing.
+const VIEW_KEY = "words-view";
+function savedView(): WordsView {
+  try {
+    return localStorage.getItem(VIEW_KEY) === "guide" ? "guide" : "list";
+  } catch {
+    return "list"; // No storage: the list, the default.
+  }
+}
+function saveView(v: WordsView): void {
+  try {
+    localStorage.setItem(VIEW_KEY, v);
+  } catch {
+    // Not saved; it still applies until the screen closes.
+  }
 }
 
 const SKILL_NAME: Record<string, string> = { read: "Reading", listen: "Listening", write: "Writing" };
