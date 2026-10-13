@@ -20,6 +20,7 @@ import { plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { VISITORS } from "../garden/visitors";
+import { broughtVisitor } from "./visitors";
 
 /** The correct answer with the letters to look at marked. */
 function Marked({ text, at }: { text: string; at: Set<number> }) {
@@ -515,7 +516,8 @@ const RARE_NEWS: Record<Rare, string> = { golden: "with a golden flower", twin: 
  * flower that opened, then any flower that opened for the first time.
  */
 function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[]): { line: string; wordId: string } | null {
-  for (const id of arrived) {
+  // Checked against the learner now: an answer undone after its visitor came takes the visitor away again.
+  for (const id of arrived.filter((x) => broughtVisitor(l, x))) {
     const garden = l.deck.byId.get(id)?.garden;
     const v = garden && VISITORS.find((x) => x.garden === garden);
     if (v) return { line: `A ${v.gloss} came to the garden.`, wordId: id };
@@ -526,8 +528,9 @@ function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[
     const rare = word && rareOf(word.lemma);
     if (word && rare) return { line: `${word.lemma} opened ${RARE_NEWS[rare]}.`, wordId: id };
   }
+  // "today", not "for the first time": a word known once, forgotten and learned again opens again.
   const first = opened.length ? l.words.get(opened[0][0]) : undefined;
-  return first ? { line: `${first.lemma} opened for the first time.`, wordId: first.id } : null;
+  return first ? { line: `${first.lemma} opened today.`, wordId: first.id } : null;
 }
 
 function Summary({
@@ -611,7 +614,7 @@ function Summary({
         <p className="garden-news">
           {news.line}{" "}
           <button
-            className="ghost"
+            className="ghost link"
             onClick={() => {
               focusPlant(news.wordId);
               onWalk();

@@ -30,6 +30,8 @@ test("a visitor that came this chunk: one line, and its link opens the walk", as
   await expect(news(page)).toContainText("A cat came to the garden.");
   await news(page).getByRole("button", { name: "See it in the garden →" }).click();
   await expect(page).toHaveURL(/#\/garden/);
+  // The walk opens on gato's plant: its card is up.
+  await expect(page.getByRole("dialog", { name: "The plant for gato" })).toBeVisible({ timeout: 15_000 });
 });
 
 test("a rare flower that opened: its line; a plain review: no line", async ({ page }) => {
@@ -59,5 +61,30 @@ test("a flower that opened for the first time: its line", async ({ page }) => {
   await expect(page.locator("main.card")).toHaveAttribute("data-lemma", "casa");
   await answer(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
-  await expect(news(page)).toContainText("casa opened for the first time.");
+  await expect(news(page)).toContainText("casa opened today.");
+});
+
+test("an answer undone takes its visitor away: no line for it", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  for (let i = 0; i < 4; i++) await answer(page, "1");
+  for (let i = 0; i < 4; i++) {
+    const isGato = (await page.locator("main.card").getAttribute("data-lemma")) === "gato";
+    await reveal(page);
+    if (!isGato) {
+      await page.keyboard.press("2");
+      await expect(kicker(page)).toHaveText(/quick check/);
+      continue;
+    }
+    await page.keyboard.press("2"); // the cat comes
+    await expect(page.getByRole("status")).toHaveText("You learned gato. A cat came to see.");
+    await page.keyboard.press("z"); // undone
+    await expect(page.locator("main.card")).toHaveAttribute("data-lemma", "gato");
+    await reveal(page);
+    await page.keyboard.press("1"); // forgotten this time: no cat
+    break;
+  }
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(page.locator("main.summary")).toBeVisible();
+  await expect(page.getByText("A cat came to the garden.")).toHaveCount(0);
 });
