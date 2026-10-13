@@ -117,3 +117,19 @@ test("time on a new-word card counts toward today's minutes", async ({ page }) =
   const [first] = await serverRows<{ duration_ms: number }>(page, "review");
   expect(first.duration_ms).toBeGreaterThanOrEqual(20_000);
 });
+
+test("on the summary, Enter on a focused button presses that button, not Done (#239)", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  await answer(page, "2");
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.getByRole("button", { name: "Practice 5 more minutes" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".time-left")).toHaveText("5 min left"); // a new chunk, not Today
+  // With nothing focused, Enter is still Done.
+  await answer(page, "2");
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.locator("main.summary h1").click();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: /today's 5 minutes|Practice 5 more minutes/i })).toBeVisible();
+});
