@@ -6,8 +6,9 @@
 import * as THREE from "three";
 import { daily, rareDay } from "../core/day";
 import * as T from "./textures";
-import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
+import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, visitor, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
 import { collide, type Layout } from "./world";
+import { THIRSTY } from "./plants";
 
 /**
  * Point a visitor's sprite at its texture cell; upload only when it changes (tick runs
@@ -51,6 +52,10 @@ export interface VisitorWorld {
   reducedMotion: boolean;
   /** Seconds since the garden opened. */
   elapsed: () => number;
+  /** The height (metres) of a bed's soil, where a visitor at its plant sits. */
+  bedTop: number;
+  /** The height (metres) of the top of this plant (its word, growth and genome), standing in its bed. */
+  plantTop: (p: { lemma: string; growth: number }) => number;
   /** A one-instance, camera-facing sprite of `size` metres from `tex`, showing the strip u..u+uw. */
   sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => SpriteMesh;
 }
@@ -88,6 +93,8 @@ export class SceneVisitors {
   /** The snail's lap: when it last moved, and the fence length in pickets. */
   private snailTick = 0;
   private snailPickets = 1;
+  /** The snail lives on its word's plant (#235), or walks the fence rail: only then does tick() move it. */
+  private snailOnFence = false;
   private tapped: { id: VisitorId; until: number } | null = null;
   /** A visitor's speech bubble (the frog's croak). */
   private saying: { id: VisitorId; text: string; until: number } | null = null;
@@ -134,12 +141,16 @@ export class SceneVisitors {
     const pad = pads.reduce((a, p) => (Math.hypot(p[0] - L.gate.x, p[1] - L.gate.z) < Math.hypot(a[0] - L.gate.x, a[1] - L.gate.z) ? p : a), pads[0]);
     for (const v of this.list) {
       let x: number, y: number, z: number, cell: number, size: number;
+      // A garden-word visitor (#209) lives at its word's plant (#235); one that came another way keeps its spot below.
+      const g = visitor(v.id).garden;
+      const home = g ? L.plants.find((p) => p.garden === g) : undefined;
       // Defaults for the drawn part (the lower half of the cell) and the tag just above it.
       let hit: [number, number, number] = [0.2, 0.4, 0.3];
       let top = v.id === "cat" ? 0.45 : 0.55;
       if (v.id === "frog") {
         this.frog.asleep = rareDay(25, "frog-asleep");
-        [x, y, z] = [pad[0], 0.075, pad[1]];
+        // Beside its word's plant, in its bed; or on the lily pad nearest the gate.
+        [x, y, z] = home ? [home.x - 0.14, this.world.bedTop, home.z + 0.1] : [pad[0], 0.075, pad[1]];
         [cell, size, hit, top] = [this.frog.asleep ? T.VISITOR_CELL.frogAsleep : T.VISITOR_CELL.frog, 0.42, [0.17, 0.25, 0.2], 0.42];
       } else if (v.id === "gnome") {
         // A bed corner chosen by the date; never the front-left one, where the bed's sign is.
@@ -170,14 +181,21 @@ export class SceneVisitors {
         // With reduced motion it sits on the lantern's roof; otherwise tick() moves it.
         [x, y, z] = [lx, 1.235, lz];
         [cell, size, hit, top] = [this.world.reducedMotion ? T.VISITOR_CELL.mothClosed : T.VISITOR_CELL.mothOpen, 0.36, [0.1, 0.3, 0.2], 0.3];
+      } else if (v.id === "snail" && home) {
+        // Partway up the stem, in front of it so the plant does not hide it; on the soil when the plant droops.
+        const up = home.r < THIRSTY ? 0 : (this.world.plantTop(home) - this.world.bedTop) * 0.45;
+        [x, y, z] = [home.x + 0.05, this.world.bedTop + up, home.z + 0.09];
+        [cell, size] = [T.VISITOR_CELL.snail, 0.62];
       } else if (v.id === "snail") {
+        this.snailOnFence = true;
         this.snailPickets = fencePickets(L);
         const p = fencePoint(L, snailLap() * this.snailPickets);
         // A few centimetres inside the fence, so it sits on the rail and not in it.
         [x, y, z] = [p.x + p.dz * 0.06, RAIL, p.z - p.dx * 0.06];
         [cell, size] = [T.VISITOR_CELL.snail, 0.7];
       } else if (v.id === "cat") {
-        [x, y, z] = [bench.x + 0.18, 0.45, bench.z + 0.02];
+        // Curled up at the foot of its word's plant; or asleep on the bench.
+        [x, y, z] = home ? [home.x + 0.2, this.world.bedTop, home.z + 0.12] : [bench.x + 0.18, 0.45, bench.z + 0.02];
         [cell, size] = [T.VISITOR_CELL.catAsleep, 0.95];
       } else if (v.id === "toadstool") {
         const bed = daily(L.beds, "visitor-toadstool-bed");
@@ -194,7 +212,8 @@ export class SceneVisitors {
           [b.minX + 0.06, RAIL, first.z - 1],
         ];
         if (!this.list.some((o) => o.id === "cat")) spots.push([bench.x + BENCH_SIGN.dx, 1.19, bench.z + BENCH_SIGN.dz]);
-        [x, y, z] = daily(spots, "visitor-bird-spot");
+        // On top of its word's plant (at its foot when the plant droops, thirsty); or on a sign or the fence.
+        [x, y, z] = home ? [home.x, home.r < THIRSTY ? this.world.bedTop : this.world.plantTop(home) + 0.02, home.z + 0.05] : daily(spots, "visitor-bird-spot");
         [cell, size] = [T.VISITOR_CELL.bird, 0.5];
       }
       const mesh = this.world.sprite(tex, x, y, z, cell * cellU, cellU, size);
@@ -308,7 +327,8 @@ export class SceneVisitors {
         }
       } else if (s.v.id === "snail") {
         // One lap a day: recompute its place twice a second (it moves about a millimetre in that time).
-        if (elapsed - this.snailTick < 0.5) continue;
+        // A snail at its plant (#235) stays there.
+        if (!this.snailOnFence || elapsed - this.snailTick < 0.5) continue;
         this.snailTick = elapsed;
         const p = fencePoint(layout, snailLap() * this.snailPickets);
         [s.x, s.z] = [p.x + p.dz * 0.06, p.z - p.dx * 0.06];

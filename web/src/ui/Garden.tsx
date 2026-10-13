@@ -8,13 +8,13 @@ import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
 import { language } from "../content/languages";
-import { FORM, StripPlant } from "./plant";
+import { FORM, plantHeight, StripPlant } from "./plant";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
-import { growthOf, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
-import { CAT_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
+import { growthOf, leanDeg, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
+import { BIRD, CAT_ASLEEP, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
-import { stripVisitor, type VisitorView } from "../garden/visitors";
+import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
 import { easeOut, easeOutBack, reducedMotion, type PlantLook } from "./Growth";
@@ -69,7 +69,7 @@ export const Garden = memo(function Garden({
   highlight?: Set<string>;
   compact?: boolean;
   showcase?: boolean;
-  /** Today's visitors drawn in the strip: the snail on the soil line, the cat asleep at the right end, the mole past it. */
+  /** Today's visitors drawn in the strip: garden-word visitors at their word's plant (#235); otherwise the snail on the soil line and the cat asleep at the right end; the mole past it. */
   visitors?: { views: VisitorView[]; snailAt: number; lang: string; mole?: boolean } | null;
   /** Offered in the plant card: open this plant in the 3D garden. */
   onView?: (id: string) => void;
@@ -116,10 +116,19 @@ export const Garden = memo(function Garden({
   const plants = useMemo(() => data?.plants ?? [], [data]);
   const n = plants.length;
   const pad = 18;
-  const snail = visitors?.views.find((v) => v.id === "snail" && v.word);
-  const cat = visitors?.views.find((v) => v.id === "cat" && v.word);
-  // Room at the right end for the cat, so it does not sleep on the newest plant.
-  const catRoom = cat ? 46 : 0;
+  const view = (id: VisitorId) => visitors?.views.find((v) => v.id === id && v.word);
+  const snail = view("snail");
+  const cat = view("cat");
+  const bird = view("bird");
+  const frog = view("frog");
+  // A garden-word visitor (#209) lives at its word's plant (#235), when the garden has it.
+  // Without that plant (the cat after a break, the frog at 150 words, a word set aside) it keeps its old spot.
+  const homePlant = (v: VisitorView) => {
+    const g = visitor(v.id).garden;
+    return g ? plants.find((p) => p.garden === g) : undefined;
+  };
+  // Room at the right end for a cat with no plant of its own, so it does not sleep on the newest plant.
+  const catRoom = cat && !homePlant(cat) ? 46 : 0;
   const scrolls = n * SPACING + pad * 2 + catRoom > width;
   // Only a strip that scrolls has ends to find (#61): the first word's post at the far left, the mole past the seeds.
   const first = scrolls && !showcase ? data?.first : null;
@@ -232,26 +241,15 @@ export const Garden = memo(function Garden({
           })}
           {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>
-        {snail && (
-          <VisitorMark
-            v={snail}
-            art={SNAIL}
-            scale={2.2}
-            x={pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2)}
-            onShow={showVisitor(snail)}
-            onHide={() => setVisitorTip(null)}
-          />
-        )}
-        {cat && (
-          <VisitorMark
-            v={cat}
-            art={CAT_ASLEEP}
-            scale={2}
-            x={fullWidth - moleRoom - 30}
-            onShow={showVisitor(cat)}
-            onHide={() => setVisitorTip(null)}
-          />
-        )}
+        {[snail, cat, bird, frog].map((v) => {
+          if (!v) return null;
+          const home = layout.find((l) => l.p.id === homePlant(v)?.id);
+          const at = home ? atPlant(v.id, home, isSleepyHour()) : null;
+          // No plant of its own: the snail on the soil, the cat asleep at the right end; the bird and frog only in the walk.
+          if (!at && v.id !== "snail" && v.id !== "cat") return null;
+          const spot = at ?? (v.id === "snail" ? { art: SNAIL, scale: 2.2, x: pad + (visitors?.snailAt ?? 0) * (fullWidth - pad * 2) } : { art: CAT_ASLEEP, scale: 2, x: fullWidth - moleRoom - 30 });
+          return <VisitorMark key={v.id} v={v} art={spot.art} scale={spot.scale} x={spot.x} top={spot.top} at={home?.p.id} onShow={showVisitor(v)} onHide={() => setVisitorTip(null)} />;
+        })}
         {worm && (
           <VisitorMark
             v={worm}
@@ -335,10 +333,41 @@ export const Garden = memo(function Garden({
 type TipVisitor = { id: string; word: string | null; gloss: string };
 
 /**
+ * Where a garden-word visitor sits at its word's plant (#235), in strip pixels:
+ * the cat curled up at its foot, the snail partway up its stem, the bird on
+ * top, the frog beside it (asleep by day, as in the walk it only comes out at
+ * night). Points on the stem follow the plant's lean, as recall fades. `top`
+ * is the sprite's top edge (default: on the soil).
+ */
+function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale: number }, night: boolean): { art: PixelArt; scale: number; x: number; top?: number } | null {
+  const h = plantHeight(l.p.lemma, l.p.growth, l.scale);
+  const lean = (leanDeg(l.p.id, l.p.r) * Math.PI) / 180;
+  // A point at fraction t up the stem: StripPlant rotates the whole plant about its foot.
+  const onStem = (t: number) => ({ x: l.x + Math.sin(lean) * h * t, y: l.y - Math.cos(lean) * h * t });
+  const tall = (art: PixelArt, scale: number) => art.rows.length * scale;
+  switch (id) {
+    case "cat":
+      return { art: CAT_ASLEEP, scale: 1.5, x: l.x + 11 };
+    case "snail": {
+      const p = onStem(0.45);
+      return { art: SNAIL, scale: 1.8, x: p.x + 5, top: p.y - tall(SNAIL, 1.8) };
+    }
+    case "bird": {
+      const p = onStem(1);
+      return { art: BIRD, scale: 1.6, x: p.x + 3, top: p.y - tall(BIRD, 1.6) + 4 };
+    }
+    case "frog":
+      return { art: night ? FROG : FROG_ASLEEP, scale: 1.4, x: l.x - 11 };
+    default:
+      return null;
+  }
+}
+
+/**
  * A visitor in the strip, standing on the soil line: a small pixel sprite in a
  * button, so it can be focused and tapped. Hover, focus or tap shows its word.
  */
-function VisitorMark({ v, art, x, scale, onShow, onHide, top }: { v: TipVisitor; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void; top?: number }) {
+function VisitorMark({ v, art, x, scale, onShow, onHide, top, at }: { v: TipVisitor; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void; top?: number; at?: string }) {
   const w = art.rows[0].length;
   const h = art.rows.length;
   return (
@@ -346,6 +375,8 @@ function VisitorMark({ v, art, x, scale, onShow, onHide, top }: { v: TipVisitor;
       type="button"
       className={`garden-visitor visitor-${v.id}`}
       aria-label={`${v.word} · ${v.gloss}`}
+      // The plant it lives at (#235), when it has one.
+      data-at={at}
       style={{ left: x - (w * scale) / 2, top: top ?? GROUND + 4 - h * scale }}
       onPointerEnter={(e) => hovers(e) && onShow(x)}
       onPointerLeave={(e) => hovers(e) && onHide()}

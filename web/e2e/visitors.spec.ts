@@ -30,8 +30,12 @@ test("a new learner learns 'gato' in the first session, and the cat comes to the
   }
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /^Done/ }).click();
-  // Back on Today, the cat is in the garden strip.
-  await expect(page.getByRole("button", { name: "el gato · cat" })).toBeAttached();
+  // Back on Today, the cat is in the garden strip, at gato's plant (#235).
+  const gato = await page.evaluate(async () => {
+    const { loadDeck } = await import(/* @vite-ignore */ "/src/data/deck.ts");
+    return (await loadDeck("es")).words.find((w: { lemma: string }) => w.lemma === "gato")!.id as string;
+  });
+  await expect(page.getByRole("button", { name: "el gato · cat" })).toHaveAttribute("data-at", gato);
 });
 
 test("a wrong first answer does not bring the cat; the first good one does, with its line", async ({ page }) => {

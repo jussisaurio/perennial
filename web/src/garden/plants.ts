@@ -95,6 +95,7 @@ export function plantsFromLearner(l: Learner, now = Date.now()): PlantSource {
       growth: growthOf(m.s),
       listen: isStrong(l.memory.get(memKey(w.id, "listen"))),
       write: isStrong(l.memory.get(memKey(w.id, "write"))),
+      garden: w.garden,
     });
   }
   plants.sort((a, b) => a.rank - b.rank);
@@ -119,7 +120,7 @@ export function showcasePlants(deck: LoadedDeck, count: number): PlantSource {
       const s = h < 0.15 ? 1 + h * 10 : h < 0.35 ? 3 + h * 8 : 8 + (1 - Math.min(i, SHOWCASE_SPAN) / SHOWCASE_SPAN) * 120 * h;
       // Every showcase word has been practised a few times, so the stage follows stability alone.
       const stage = plantStage({ s, reps: 3 }) as Stage;
-      return { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, s, r, stage, growth: growthOf(s), listen: s > 60, write: s > 90 };
+      return { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, s, r, stage, growth: growthOf(s), listen: s > 60, write: s > 90, garden: w.garden };
     });
   return { plants, seeds: Math.max(0, deck.words.length - count) };
 }

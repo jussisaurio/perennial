@@ -12,6 +12,7 @@ import { postWrite } from "./http";
 import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
+import type { GardenWord } from "../deck/schema";
 
 export interface Sentence {
   id: string;
@@ -34,6 +35,8 @@ export interface Word {
   rank: number;
   source: "deck" | "user";
   status: "active" | "paused" | "ignored" | "queued";
+  /** A garden word (#209): learning it brings this thing into the garden. */
+  garden?: GardenWord;
 }
 
 // ---------- the store in React ----------
@@ -135,7 +138,7 @@ export function useLearner(lang: string | undefined): Learner | null {
     const words = new Map<string, Word>();
     for (const w of deck.byId.values()) {
       if (w.retired || w.aliasOf) continue;
-      words.set(w.id, { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos, forms: w.forms, notes: w.notes, gender: w.gender, rank: w.rank, source: "deck", status: statusOf(w.id) });
+      words.set(w.id, { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos, forms: w.forms, notes: w.notes, gender: w.gender, rank: w.rank, source: "deck", status: statusOf(w.id), garden: w.garden });
     }
     const mine = ((userWords as UserWordRow[] | undefined) ?? []).filter((u) => u.lang === lang).sort((a, b) => a.created_at.localeCompare(b.created_at));
     mine.forEach((u, i) => {
