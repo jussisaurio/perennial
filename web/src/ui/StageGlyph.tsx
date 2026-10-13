@@ -27,7 +27,8 @@ export function StageGlyph({ s, reps, suspended }: { s: number; reps: number; su
           <path d="M12 13c0-2.6-2-4.3-4.6-4.3 0 2.6 2 4.3 4.6 4.3z" fill="var(--leaf-2)" />
         </>
       )}
-      {stage === "bud" && <ellipse cx="12" cy="8" rx="3.4" ry="4.6" fill="var(--petal-2)" />}
+      {/* Green like a closed bud in the garden: the colour comes with the bloom (#207). */}
+      {stage === "bud" && <ellipse cx="12" cy="8" rx="3.4" ry="4.6" fill="var(--leaf-2)" stroke="var(--stem)" strokeWidth="0.8" />}
       {stage === "bloom" && (
         <g transform="translate(12 8)">
           {[0, 72, 144, 216, 288].map((a) => (
