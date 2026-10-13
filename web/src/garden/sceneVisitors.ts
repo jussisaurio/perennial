@@ -114,8 +114,8 @@ export class SceneVisitors {
   private catAwake = false;
   /** The bird hops away when you come close (t: 0..1 while hopping, 1 once gone) and comes back when you walk off. */
   private bird = { t: -1, dx: 0, dz: 0 };
-  /** The frog: puffed up until `croak` (elapsed s); asleep all day on about one day in 25. */
-  private frog = { croak: 0, puffed: false, asleep: false };
+  /** The frog: puffed up until `croak` (elapsed s); asleep by day, as in the strip, and all day on about one day in 25. */
+  private frog = { croak: 0, puffed: false, asleep: false, dark: false };
   /** The gnome's pose, when it left / came back into view, its lantern (lit at dusk and night) and the lantern's small glow. */
   private gnome = { pose: "front" as GnomePose, inView: true, changedAt: 0, lit: false, glow: null as THREE.Sprite | null };
   /** The heron: t is 0 at home, 1 one step back; dir is +1 while stepping back, -1 while stepping home. */
@@ -169,7 +169,7 @@ export class SceneVisitors {
         this.frog.asleep = rareDay(25, "frog-asleep");
         // Beside its word's plant, in its bed; or on the lily pad nearest the gate.
         [x, y, z] = home ? [home.x - 0.14, this.world.bedTop, home.z + 0.1] : [pad[0], 0.075, pad[1]];
-        [cell, size, hit, top] = [this.frog.asleep ? T.VISITOR_CELL.frogAsleep : T.VISITOR_CELL.frog, 0.42, [0.17, 0.25, 0.2], 0.42];
+        [cell, size, hit, top] = [this.frogAwake() ? T.VISITOR_CELL.frog : T.VISITOR_CELL.frogAsleep, 0.42, [0.17, 0.25, 0.2], 0.42];
       } else if (v.id === "gnome") {
         // A bed corner chosen by the date; never the front-left one, where the bed's sign is.
         const bed = daily(L.beds, "visitor-gnome-bed");
@@ -268,11 +268,14 @@ export class SceneVisitors {
     showCell(s.uv, (g.lit ? T.VISITOR_CELL.gnomeFrontLit : T.VISITOR_CELL.gnomeFront) + (g.pose === "side" ? 1 : 0));
   }
 
-  /** The frog and the moth come out at dusk; the butterfly goes at night, like the garden's own; the gnome lights its lantern when the others come on. */
+  /** The frog wakes at dusk; the moth comes out then; the butterfly goes at night, like the garden's own; the gnome lights its lantern when the others come on. */
   setDark(dark: boolean, night: boolean) {
     this.gnome.lit = dark;
+    this.frog.dark = dark;
     for (const s of this.sprites) {
-      if (s.v.id === "frog" || s.v.id === "moth") s.mesh.visible = dark;
+      if (s.v.id === "moth") s.mesh.visible = dark;
+      // Always there: the strip shows it too, and a learner who brought it looks for it.
+      if (s.v.id === "frog") showCell(s.uv, this.frogAwake() ? T.VISITOR_CELL.frog : T.VISITOR_CELL.frogAsleep);
       if (s.v.id === "butterfly") s.mesh.visible = !night;
       // The moth is always in its lantern's light.
       if (s.v.id === "moth") s.mesh.material.uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
@@ -317,12 +320,17 @@ export class SceneVisitors {
     this.tapped = null;
   }
 
+  /** Awake at dusk and night, except on its sleepy days. Only then does a tap make it croak. */
+  frogAwake(): boolean {
+    return this.frog.dark && !this.frog.asleep;
+  }
+
   /** A visitor says something in a small bubble for a few seconds (the frog's croak). */
   say(id: VisitorId, text: string) {
     const now = this.world.elapsed();
     this.saying = { id, text, until: now + 3.2 };
     if (this.tapped?.id === id) this.tapped = null;
-    if (id !== "frog" || this.frog.asleep) return;
+    if (id !== "frog" || !this.frogAwake()) return;
     // Its throat puffs up while it croaks.
     this.frog.croak = now + 0.7;
     this.frog.puffed = true;

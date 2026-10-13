@@ -146,8 +146,9 @@ export function GardenWalk({
     // A visitor first: its tag shows for a moment and, with sound on, it says its word. No card.
     const v = scene.current.pickVisitor(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (v) {
-      // The frog croaks one of your known words instead (never its own name), in a bubble and, with sound on, aloud.
-      if (v.id === "frog" && v.word) {
+      // An awake frog croaks one of your known words instead (never its own name), in a bubble and, with sound on, aloud.
+      // Asleep (by day), it is tapped like any visitor: its tag and its word.
+      if (v.id === "frog" && v.word && scene.current.frogAwake()) {
         const croak = frogCroak(visitors?.known ?? [], lang, croaks.current++);
         scene.current.say("frog", croak);
         if (sound) void speak(croak, tag);

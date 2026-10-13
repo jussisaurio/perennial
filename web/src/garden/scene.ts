@@ -965,6 +965,10 @@ export class GardenScene {
     this.guests.untap();
   }
 
+  frogAwake(): boolean {
+    return this.guests.frogAwake();
+  }
+
   /** A visitor says something in a small bubble for a few seconds (the frog's croak). */
   say(id: VisitorId, text: string) {
     this.guests.say(id, text);
