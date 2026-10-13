@@ -19,8 +19,12 @@ import { DAILY_MINUTES } from "../data/practice";
 import { plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
-import { VISITORS } from "../garden/visitors";
-import { broughtVisitor } from "./visitors";
+import { broughtVisitor, gardenBrought } from "./visitors";
+import { sessionVisit, type SessionVisit } from "../garden/sessionVisitor";
+import { GARDEN_VISITOR_ART } from "../garden/visitorArt";
+import { PixelRects } from "./pixel";
+import { startOfDay, today } from "../core/day";
+import { visitor, VISITORS, type VisitorView, visitorViews } from "../garden/visitors";
 
 /** The correct answer with the letters to look at marked. */
 function Marked({ text, at }: { text: string; at: Set<number> }) {
@@ -98,6 +102,11 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
     grow,
   });
 
+  // Sometimes a visitor the learner has brought comes to watch this chunk (#210). Worked
+  // out when a chunk starts (a new runner), from the learner as it is then.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- once per chunk, not on every answer
+  const watching = useMemo(() => (runner && learner ? watcherFor(learner, serial) : null), [runner]);
+
   useKeys({ z: () => void undo(), Escape: () => (help ? setHelp(false) : exit()), "?": () => setHelp((h) => !h) });
 
   if (!runner) return <div className="session center muted">Preparing…</div>;
@@ -141,6 +150,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       )}
       {/* ?.: a tap may already have ended the moment. */}
       {growing && <Growth m={growing} onDone={() => grown.current?.()} />}
+      {watching && card && !done && serial - watching.start >= watching.visit.from - 1 && serial - watching.start < watching.visit.to - 1 && <Watcher view={watching.view} />}
     </div>
   );
 }
@@ -531,6 +541,34 @@ function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[
   // "today", not "for the first time": a word known once, forgotten and learned again opens again.
   const first = opened.length ? l.words.get(opened[0][0]) : undefined;
   return first ? { line: `${first.lemma} opened today.`, wordId: first.id } : null;
+}
+
+/** This chunk's watching visitor (#210), if any: who, from which card, and the serial the chunk began at. */
+function watcherFor(l: Learner, start: number): { visit: SessionVisit; view: VisitorView; start: number } | null {
+  if (!growthOn()) return null; // A visitor moving in the corner is motion: it follows the setting and reduced motion.
+  const garden = gardenBrought(l);
+  const brought = VISITORS.filter((v) => v.garden && garden.has(v.garden) && GARDEN_VISITOR_ART[v.garden]).map((v) => v.id);
+  const dayStart = startOfDay();
+  const todays = l.reviews.filter((r) => Date.parse(r.reviewed_at) >= dayStart).length;
+  const visit = sessionVisit(today(), todays, brought);
+  return visit ? { visit, view: visitorViews([visit.id], l.lang)[0], start } : null;
+}
+
+/**
+ * A visitor sitting by the card's plant while the learner practises (#210). Only a picture:
+ * it takes no taps, so it never gets in the way of an answer.
+ */
+function Watcher({ view }: { view: VisitorView }) {
+  const art = GARDEN_VISITOR_ART[visitor(view.id).garden!]!;
+  const w = art.rows[0].length;
+  const h = art.rows.length;
+  return (
+    <div className="session-watcher" aria-label={`${view.word} · ${view.gloss}`} role="img">
+      <svg width={w * 2.2} height={h * 2.2} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" aria-hidden="true">
+        <PixelRects art={art} />
+      </svg>
+    </div>
+  );
 }
 
 function Summary({

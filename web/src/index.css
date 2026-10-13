@@ -776,3 +776,10 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-latin { margin: -0.1rem 0 0.1rem; font: italic 1rem/1.3 var(--display); color: var(--muted); }
 /* The summary's one line of garden news (#232): quiet, above the buttons. */
 .garden-news { margin: 0.4rem 0 0; color: var(--ink-2); }
+
+/* A visitor watching the session (#210): at the bottom-left corner, above the answers; it never takes a tap from them. */
+/* Sits at the foot of the card's plant (.card-plant: 76px at top 58px, right 8px), on its left. */
+.session-watcher { position: absolute; top: calc(58px + 76px); right: calc(8px + 76px); transform: translateY(-100%); pointer-events: none; animation: watcher-in 0.7s var(--ease) both; }
+.session.growing .session-watcher { visibility: hidden; }
+@keyframes watcher-in { from { transform: translate(14px, -100%); opacity: 0; } to { transform: translateY(-100%); opacity: 1; } }
+@media (max-width: 480px) { .session-watcher { top: calc(54px + 65px); right: calc(2px + 65px); } }
