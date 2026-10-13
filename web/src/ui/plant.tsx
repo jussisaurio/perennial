@@ -5,7 +5,7 @@
 import { memo, type ReactNode } from "react";
 import { OLD_S, plantStage, type PlantStage } from "../core/memory";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
-import { hash32, rng } from "../lib/seed";
+import { hash01, hash32, rng } from "../lib/seed";
 
 const pick = <T,>(r: () => number, items: readonly T[]): T => items[Math.floor(r() * items.length)];
 const between = (r: () => number, a: number, b: number) => a + r() * (b - a);
@@ -79,6 +79,40 @@ export function genome(word: string): Genome {
   };
 }
 
+/**
+ * Rare flowers (#208): about 1 word in 40 grows something special. It is
+ * picked from the word with its own hash, so it is the same for every learner
+ * and changes nothing else about the plant. It shows only once the word blooms.
+ */
+export type Rare = "golden" | "twin" | "bee" | "striped";
+const RARE_ONE_IN = 40;
+const RARE_SALT = 0x5eed;
+
+export function rareOf(word: string): Rare | null {
+  const key = word.normalize("NFC").toLowerCase();
+  if (hash32(key, RARE_SALT) % RARE_ONE_IN !== 0) return null;
+  // Stripes need separate petals to sit on.
+  const g = genome(word);
+  const kinds: readonly Rare[] = g.flower === "daisy" || g.flower === "star" ? ["golden", "twin", "bee", "striped"] : ["golden", "twin", "bee"];
+  // hash01 (the high bits): the low bits of this hash are tied to the rare check above.
+  return kinds[Math.floor(hash01(key, RARE_SALT + 1) * kinds.length)];
+}
+
+const GOLD = { petal: hsl(45, 92, 60), petalEdge: hsl(36, 80, 42), center: hsl(28, 65, 32) };
+
+/** A small bee that lives on a rare plant, drawn around (0, 0). */
+function Bee({ size }: { size: number }) {
+  return (
+    <g transform={`scale(${size / 10})`}>
+      <ellipse cx={-1.5} cy={-3.6} rx={2.6} ry={1.8} fill="#fff" opacity={0.75} transform="rotate(-25 -1.5 -3.6)" />
+      <ellipse cx={1.8} cy={-3.4} rx={2.4} ry={1.6} fill="#fff" opacity={0.75} transform="rotate(20 1.8 -3.4)" />
+      <ellipse rx={4.2} ry={2.9} fill="hsl(46 92% 55%)" stroke="hsl(30 40% 18%)" strokeWidth={0.5} />
+      <path d="M-1.2 -2.8 V2.8 M1.4 -2.7 V2.7" stroke="hsl(30 40% 18%)" strokeWidth={1.1} />
+      <circle cx={4.1} cy={-0.4} r={1.3} fill="hsl(30 40% 18%)" />
+    </g>
+  );
+}
+
 export type Stage = "sprout" | "bud" | "bloom";
 
 /**
@@ -126,13 +160,18 @@ function petalPath(shape: Genome["petalShape"], len: number, w: number): string 
   return `M0 0 C ${w * 1.2} ${-len * 0.1} ${w * 1.1} ${-len} 0 ${-len} C ${-w * 1.1} ${-len} ${-w * 1.2} ${-len * 0.1} 0 0Z`;
 }
 
-function Flower({ g, r, open }: { g: Genome; r: number; open: boolean }): ReactNode {
+function Flower({ g, r, open, striped = false }: { g: Genome; r: number; open: boolean; striped?: boolean }): ReactNode {
   if (!open) {
     // A closed bud, still green: the flower's colour shows only when it opens.
     return <path d={`M0 0 C ${-r * 0.7} ${-r * 0.4} ${-r * 0.55} ${-r * 1.5} 0 ${-r * 1.8} C ${r * 0.55} ${-r * 1.5} ${r * 0.7} ${-r * 0.4} 0 0Z`} fill={g.bud} stroke={g.budEdge} strokeWidth={0.6} />;
   }
   const ring = (n: number, len: number, w: number, shape = g.petalShape) =>
-    Array.from({ length: n }, (_, i) => <path key={i} d={petalPath(shape, len, w)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} transform={`rotate(${(i * 360) / n})`} />);
+    Array.from({ length: n }, (_, i) => (
+      <g key={i} transform={`rotate(${(i * 360) / n})`}>
+        <path d={petalPath(shape, len, w)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} />
+        {striped && <path d={`M0 ${-len * 0.15} L0 ${-len * 0.85}`} stroke="#fff" strokeOpacity={0.7} strokeWidth={Math.max(0.6, w * 0.34)} strokeLinecap="round" />}
+      </g>
+    ));
   switch (g.flower) {
     case "daisy":
       return (
@@ -204,7 +243,9 @@ export function Plant({ word, growth, stage, scale = 1 }: { word: string; growth
  * opens into the flower.
  */
 export function PlantForm({ word, growth, form, scale = 1 }: { word: string; growth: number; form: number; scale?: number }) {
-  const g = genome(word);
+  const rare = rareOf(word);
+  const g = rare === "golden" ? { ...genome(word), ...GOLD } : genome(word);
+  const striped = rare === "striped";
   const h = stemHeight(growth) * g.height * scale;
   const bend = g.curve * 10 * scale;
   const leafLen = 11 * scale;
@@ -262,17 +303,41 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
         <g key={`b${i}`}>
           <path d={`M${p.x} ${p.y} Q ${p.x + side * len * 0.6} ${p.y - len * 0.1} ${ex} ${ey}`} fill="none" stroke={g.stem} strokeWidth={Math.max(1, 1.4 * scale)} strokeLinecap="round" />
           <g transform={`translate(${ex} ${ey}) rotate(${side * 20})`}>
-            <Flower g={g} r={flowerR * 0.6 * u} open />
+            <Flower g={g} r={flowerR * 0.6 * u} open striped={striped} />
           </g>
         </g>,
       );
     }
+  if (u > 0 && rare === "twin") {
+    // The stem forks near the top: a second head as big as the first, side by
+    // side, away from the highest side branch (branch i leans to i % 2 ? 1 : -1).
+    const p = onStem(h, bend, 0.84);
+    const side = g.branches ? ((g.branches - 1) % 2 ? -1 : 1) : g.lean > 0 ? -1 : 1;
+    const len = h * 0.2 * u;
+    const ex = p.x + side * len * 0.75;
+    const ey = p.y - len * 0.85;
+    branches.push(
+      <g key="twin">
+        <path d={`M${p.x} ${p.y} Q ${p.x + side * len * 0.7} ${p.y - len * 0.05} ${ex} ${ey}`} fill="none" stroke={g.stem} strokeWidth={Math.max(1.1, 1.8 * scale)} strokeLinecap="round" />
+        <g transform={`translate(${ex} ${ey}) rotate(${side * 25})`}>
+          <Flower g={g} r={flowerR * u} open striped={striped} />
+        </g>
+      </g>,
+    );
+  }
 
   // The bud swells after the first leaves, then opens: it shrinks into the
   // flower's heart while the petals unfurl.
   const bud = clamp01((q - 0.3) / 0.7) * (1 - u);
   return (
     <g>
+      {u > 0 && rare === "golden" && (
+        // A soft glow behind the whole flower head (drawn first) and a glint: gold, not just yellow.
+        <g transform={`translate(${top.x} ${top.y})`} opacity={u}>
+          <circle r={flowerR * 2.3} fill={GOLD.petal} opacity={0.22} />
+          <path d={`M${flowerR * 1.5} ${-flowerR * 1.9} l0 ${flowerR * 0.9} M${flowerR * 1.05} ${-flowerR * 1.45} l${flowerR * 0.9} 0`} stroke="#fff" strokeWidth={Math.max(0.8, flowerR * 0.16)} strokeLinecap="round" />
+        </g>
+      )}
       {branches}
       <path d={`M0 0 Q ${bend} ${-h / 2} ${top.x} ${top.y}`} fill="none" stroke={g.stem} strokeWidth={lerp(sproutStroke, Math.max(1.3, 2.1 * scale), q)} strokeLinecap="round" />
       {q < 1 &&
@@ -282,8 +347,13 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
       {leaves}
       <g transform={`translate(${top.x} ${top.y}) rotate(${g.lean})`}>
         {bud > 0 && <Flower g={g} r={flowerR * bud} open={false} />}
-        {u > 0 && (u < 1 ? <g transform={`rotate(${(1 - u) * -50}) scale(${u})`}><Flower g={g} r={flowerR} open /></g> : <Flower g={g} r={flowerR} open />)}
+        {u > 0 && (u < 1 ? <g transform={`rotate(${(1 - u) * -50}) scale(${u})`}><Flower g={g} r={flowerR} open striped={striped} /></g> : <Flower g={g} r={flowerR} open striped={striped} />)}
       </g>
+      {u > 0 && rare === "bee" && (
+        <g transform={`translate(${top.x + flowerR * 1.9} ${top.y - flowerR * 1.4}) scale(${u})`}>
+          <Bee size={flowerR * 1.4} />
+        </g>
+      )}
     </g>
   );
 }
