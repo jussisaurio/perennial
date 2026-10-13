@@ -68,10 +68,9 @@
       "at": "2026-10-13T06:08:28.990Z"
     },
     "hormiga|noun|": {
-      "hash": "25c8b7028f7b30d7",
-      "verdict": "fix",
-      "note": "s2: 'Una hormiga subió por mi pierna.' -> 'Una [hormiga] me subió por la pierna.' (Spanish uses the article plus a dative pronoun for body parts; 'mi pierna' sounds translated). Translation stays 'An ant climbed up my leg.'",
-      "at": "2026-10-13T06:08:33.612Z"
+      "hash": "9a2b84ec253e86b9",
+      "verdict": "ok",
+      "at": "2026-10-13T06:11:01.146Z"
     },
     "ardilla|noun|": {
       "hash": "0c4ff875ad5a7ff9",
