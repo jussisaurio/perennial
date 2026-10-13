@@ -3,7 +3,7 @@
 // Growth follows memory stability: sprout → bud → bloom.
 
 import { memo, type ReactNode } from "react";
-import { BUD_S, OLD_S, plantStage } from "../core/memory";
+import { OLD_S, plantStage, type PlantStage } from "../core/memory";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
 import { hash32, rng } from "../lib/seed";
 
@@ -75,9 +75,19 @@ export function genome(word: string): Genome {
 
 export type Stage = "sprout" | "bud" | "bloom";
 
-/** For a card that knows only stability and whether the word is known: plantStage's rule (core/memory.ts). */
-function stageFor(s: number, known: boolean): Stage {
-  return known ? "bloom" : s >= BUD_S ? "bud" : "sprout";
+/**
+ * A plant's form as one number, so it can grow smoothly from one stage into
+ * the next: 0 seed, 1 sprout, 2 bud, 3 bloom. Whole numbers draw the stages.
+ */
+export const FORM: Record<PlantStage, number> = { seed: 0, sprout: 1, bud: 2, bloom: 3 };
+
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** Where the top of the word's stem is, where its flower sits: as Plant draws it. */
+export function plantTop(word: string, growth: number, scale = 1): { x: number; y: number } {
+  const g = genome(word);
+  return onStem(stemHeight(growth) * g.height * scale, g.curve * 10 * scale, 1);
 }
 
 /** Point and tangent angle on the quadratic stem curve at t (0 = base, 1 = top). */
@@ -178,77 +188,113 @@ function Flower({ g, r, open }: { g: Genome; r: number; open: boolean }): ReactN
  * height; `stage` decides leaves, bud, or flower.
  */
 export function Plant({ word, growth, stage, scale = 1 }: { word: string; growth: number; stage: Stage; scale?: number }) {
+  return <PlantForm word={word} growth={growth} form={FORM[stage]} scale={scale} />;
+}
+
+/**
+ * The plant at any `form` between two stages (see FORM). In between, each part
+ * grows, opens or fades on its own schedule, so the change reads as growing:
+ * the stem rises out of the seed, leaves unfold one by one, the bud swells and
+ * opens into the flower.
+ */
+export function PlantForm({ word, growth, form, scale = 1 }: { word: string; growth: number; form: number; scale?: number }) {
   const g = genome(word);
   const h = stemHeight(growth) * g.height * scale;
   const bend = g.curve * 10 * scale;
   const leafLen = 11 * scale;
   const leafW = 5 * scale;
   const flowerR = 6.5 * scale * (0.9 + growth * 0.5);
+  const sproutStroke = Math.max(1.2, 1.9 * scale);
 
-  if (stage === "sprout") {
-    const top = onStem(h, bend, 1);
+  if (form <= 1) {
+    // Seed → sprout: the stem rises out of the seed, and its two leaves unfold.
+    const p = clamp01(form);
+    const sh = h * p;
+    const top = onStem(sh, bend * p, 1);
     return (
       <g>
-        <path d={`M0 0 Q ${bend} ${-h / 2} ${top.x} ${top.y}`} fill="none" stroke={g.stem} strokeWidth={Math.max(1.2, 1.9 * scale)} strokeLinecap="round" />
-        {[-1, 1].map((side) => (
-          // Even a sprout carries its word's leaf shape and colour.
-          <path key={side} d={leafPath(g.leafShape, leafLen * 0.9, leafW)} fill={g.leaf} transform={`translate(${top.x} ${top.y}) rotate(${side * (48 + g.curve * 14)})`} />
-        ))}
+        {p < 1 && <ellipse cx={0} cy={-1.2 * scale} rx={3.4 * scale} ry={2.3 * scale} fill="var(--ink-2)" opacity={0.55 * (1 - p * p)} />}
+        {p > 0 && (
+          <>
+            <path d={`M0 0 Q ${bend * p} ${-sh / 2} ${top.x} ${top.y}`} fill="none" stroke={g.stem} strokeWidth={sproutStroke} strokeLinecap="round" />
+            {[-1, 1].map((side) => (
+              // Even a sprout carries its word's leaf shape and colour.
+              <path key={side} d={leafPath(g.leafShape, leafLen * 0.9 * p, leafW * p)} fill={g.leaf} transform={`translate(${top.x} ${top.y}) rotate(${side * (48 + g.curve * 14) * p})`} />
+            ))}
+          </>
+        )}
       </g>
     );
   }
 
+  // Sprout → bud (q), then bud → bloom (u).
+  const q = clamp01(form - 1);
+  const u = clamp01(form - 2);
+  const top = onStem(h, bend, 1);
+
   const leaves: ReactNode[] = [];
   for (let i = 0; i < g.leaves; i++) {
     const t = 0.2 + (i / Math.max(1, g.leaves)) * 0.6;
+    // Lower leaves first; every leaf is full grown by the bud.
+    const k = clamp01(q * 1.6 - (i / Math.max(1, g.leaves)) * 0.6);
+    if (k === 0) continue;
     const p = onStem(h, bend, t);
     const sides = g.opposite ? [-1, 1] : [i % 2 ? 1 : -1];
     for (const side of sides)
-      leaves.push(<path key={`${i}${side}`} d={leafPath(g.leafShape, leafLen * (1 - t * 0.35), leafW)} fill={g.leaf} transform={`translate(${p.x} ${p.y}) rotate(${p.angle + side * 52})`} />);
+      leaves.push(<path key={`${i}${side}`} d={leafPath(g.leafShape, leafLen * (1 - t * 0.35) * k, leafW * k)} fill={g.leaf} transform={`translate(${p.x} ${p.y}) rotate(${p.angle + side * 52})`} />);
   }
 
   const branches: ReactNode[] = [];
-  if (stage === "bloom")
+  if (u > 0)
     for (let i = 0; i < g.branches; i++) {
       const p = onStem(h, bend, 0.55 + i * 0.15);
       const side = i % 2 ? 1 : -1;
-      const len = h * 0.28;
+      const len = h * 0.28 * u;
       const ex = p.x + side * len * 0.7;
       const ey = p.y - len * 0.7;
       branches.push(
         <g key={`b${i}`}>
           <path d={`M${p.x} ${p.y} Q ${p.x + side * len * 0.6} ${p.y - len * 0.1} ${ex} ${ey}`} fill="none" stroke={g.stem} strokeWidth={Math.max(1, 1.4 * scale)} strokeLinecap="round" />
           <g transform={`translate(${ex} ${ey}) rotate(${side * 20})`}>
-            <Flower g={g} r={flowerR * 0.6} open />
+            <Flower g={g} r={flowerR * 0.6 * u} open />
           </g>
         </g>,
       );
     }
 
-  const top = onStem(h, bend, 1);
+  // The bud swells after the first leaves, then opens: it shrinks into the
+  // flower's heart while the petals unfurl.
+  const bud = clamp01((q - 0.3) / 0.7) * (1 - u);
   return (
     <g>
       {branches}
-      <path d={`M0 0 Q ${bend} ${-h / 2} ${top.x} ${top.y}`} fill="none" stroke={g.stem} strokeWidth={Math.max(1.3, 2.1 * scale)} strokeLinecap="round" />
+      <path d={`M0 0 Q ${bend} ${-h / 2} ${top.x} ${top.y}`} fill="none" stroke={g.stem} strokeWidth={lerp(sproutStroke, Math.max(1.3, 2.1 * scale), q)} strokeLinecap="round" />
+      {q < 1 &&
+        [-1, 1].map((side) => (
+          <path key={side} d={leafPath(g.leafShape, leafLen * 0.9 * (1 - q), leafW * (1 - q))} fill={g.leaf} transform={`translate(${top.x} ${top.y}) rotate(${side * (48 + g.curve * 14)})`} />
+        ))}
       {leaves}
       <g transform={`translate(${top.x} ${top.y}) rotate(${g.lean})`}>
-        <Flower g={g} r={flowerR} open={stage === "bloom"} />
+        {bud > 0 && <Flower g={g} r={flowerR * bud} open={false} />}
+        {u > 0 && (u < 1 ? <g transform={`rotate(${(1 - u) * -50}) scale(${u})`}><Flower g={g} r={flowerR} open /></g> : <Flower g={g} r={flowerR} open />)}
       </g>
     </g>
   );
 }
 
-/** A word's plant on a little mound of soil, framed to fit, for cards and pops. */
-export function WordPlant({ word, s, known, size = 96, className }: { word: string; s: number; known: boolean; size?: number; className?: string }) {
-  const stage = stageFor(s, known);
-  const growth = growthOf(s);
-  // Frame the view box around this plant so a sprout fills it as well as a tall bloom.
-  const h = stemHeight(growth) * genome(word).height * 1.05 + (stage === "sprout" ? 12 : 22);
-  const side = Math.max(44, h + 10);
+/** The side of the square that frames a word's plant at stability `s` and `stage`, so a sprout fills it as well as a tall bloom. */
+export function plantFrame(word: string, s: number, stage: PlantStage): number {
+  const h = stemHeight(growthOf(s)) * genome(word).height * 1.05 + (stage === "seed" || stage === "sprout" ? 12 : 22);
+  return Math.max(44, h + 10);
+}
+
+/** A word's plant on a little mound of soil, framed to fit, for cards. */
+export function WordPlant({ word, s, stage, size = 96, className }: { word: string; s: number; stage: PlantStage; size?: number; className?: string }) {
+  const side = plantFrame(word, s, stage);
   return (
     <svg className={className} width={size} height={size} viewBox={`${-side / 2} ${-(side - 8)} ${side} ${side}`} role="img" aria-label={`${word}: ${stageLabel(stage)}`}>
       <ellipse cx={0} cy={3} rx={side * 0.3} ry={side * 0.06} fill="var(--soil-1)" />
-      <Plant word={word} growth={growth} stage={stage} scale={1.05} />
+      <PlantForm word={word} growth={growthOf(s)} form={FORM[stage]} scale={1.05} />
     </svg>
   );
 }

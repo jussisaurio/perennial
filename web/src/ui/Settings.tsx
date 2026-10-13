@@ -3,6 +3,7 @@ import { savedLine, SOUND_OFF_ASIDE } from "../content/voice";
 import { saveCourse, useLearner, useStore } from "../data/learner";
 import type { CourseRow } from "../data/rows";
 import { useSound } from "./Sound";
+import { growthSetting, reducedMotion, setGrowthSetting } from "./Growth";
 import { AccountPanel } from "./Account";
 import { DataSection } from "./DataSection";
 import { getThemePref, setThemePref, type ThemePref } from "./theme";
@@ -28,6 +29,29 @@ function CourseSettings({ course }: { course: CourseRow }) {
           </span>
         </label>
       </details>
+    </div>
+  );
+}
+
+function GrowthSetting() {
+  const [on, setOn] = useState(growthSetting);
+  const set = (v: boolean) => {
+    setGrowthSetting(v);
+    setOn(v);
+  };
+  return (
+    <div className="form">
+      <div className="chips" role="radiogroup" aria-label="Growing plants">
+        {[true, false].map((v) => (
+          <button key={String(v)} role="radio" aria-checked={on === v} className={on === v ? "chip on" : "chip"} onClick={() => set(v)}>
+            {v ? "Show plants growing" : "Next card right away"}
+          </button>
+        ))}
+      </div>
+      <p className="muted small">
+        After a good answer, the word's plant gets water and grows. A new word's seed goes into the soil. It takes about a second, and a tap skips it. This setting is only for this device.
+        {on && reducedMotion() && " Your device asks for less motion, so the plants do not move."}
+      </p>
     </div>
   );
 }
@@ -107,6 +131,10 @@ export function SettingsScreen({ lang }: { lang: string; onSignedOut?: () => voi
       <section>
         <h2>Colors</h2>
         <Appearance />
+      </section>
+      <section>
+        <h2>Growing plants</h2>
+        <GrowthSetting />
       </section>
       <section>
         <h2>Sound</h2>

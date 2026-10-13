@@ -547,13 +547,13 @@ button.tok:active { transform: none; }
 mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; padding: 0 0.05em; font-weight: 700; }
 .examples .author { display: block; font-size: 0.75rem; color: var(--muted); }
 .card-plant { position: absolute; top: 58px; right: 8px; pointer-events: none; animation: rise 0.4s var(--ease) both; }
-.plant-pop { position: absolute; right: 18px; bottom: 100px; pointer-events: none; z-index: 60; transform-origin: 50% 100%; animation: plant-pop 1.3s var(--ease) forwards; }
-@keyframes plant-pop {
-  0% { transform: translateY(10px) scale(0.55); opacity: 0; }
-  20% { opacity: 1; }
-  55% { transform: translateY(-30px) scale(1.08); opacity: 1; }
-  100% { transform: translateY(-60px) scale(1); opacity: 0; }
-}
+/* The plant's moment after a good answer (Growth.tsx): where the answer buttons were, which step aside for it. */
+.growth { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); height: 132px; pointer-events: none; z-index: 60; }
+.growth svg { display: block; overflow: visible; }
+.session .actions, .session .question { transition: opacity 0.12s var(--ease); }
+.session.growing .actions, .session.growing .question { opacity: 0; pointer-events: none; }
+/* The corner plant would show the old form beside the growing one. Its "rise" animation holds its opacity, so hide it this way. */
+.session.growing .card-plant { visibility: hidden; }
 @media (max-width: 480px) { .card-plant { top: 54px; right: 2px; transform: scale(0.85); transform-origin: top right; } }
 
 /* ---- Walk-in garden: a 90s game in a cosy frame ---------------------- */
