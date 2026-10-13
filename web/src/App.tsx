@@ -163,7 +163,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
   const [startError, setStartError] = useState("");
-  // A friend's seed came with this visit (#213). Only then is GiftArrival drawn: its learner queries cost every learner time.
+  // A friend's seed is kept on this device (#213): only then is GiftArrival drawn, as its learner queries cost time (#230).
   const [giftHere] = useState(() => pendingGift() !== null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
   const deckFailed = useDeck(course?.lang).failed;

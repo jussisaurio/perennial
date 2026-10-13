@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { clearGift, pendingGift, type Gift } from "../data/gift";
-import { setWordStatus, useDeck, useLearner, useStore } from "../data/learner";
+import { plantGift, useDeck, useLearner, useStore } from "../data/learner";
 import { readMemory } from "../core/memory";
 import { language } from "../content/languages";
 import { track } from "../observability";
@@ -33,9 +33,9 @@ export function GiftCard({ lang }: { lang: string }) {
 }
 
 /**
- * In the app, above Today, on a visit that brought a seed (App only renders it
- * then: the learner queries below are not free). `courses` are the learner's
- * languages; `onStart` starts a course, as the language menu does.
+ * In the app, above Today, while a seed is kept on this device (App only renders
+ * it then: the learner queries below are not free, #230). `courses` are the
+ * learner's languages; `onStart` starts a course, as the language menu does.
  */
 export function GiftArrival({ courses, onStart }: { courses: string[]; onStart: (lang: string) => void }) {
   const [gift, setGift] = useState(pendingGift);
@@ -45,7 +45,8 @@ export function GiftArrival({ courses, onStart }: { courses: string[]; onStart: 
     if (word === "gone") clearGift();
   }, [word]);
   if (!gift || !word || word === "gone") return null;
-  if (courses.includes(gift.lang)) return <Planted gift={gift} word={word} />;
+  // "OK" on the note unmounts Planted, and with it its learner queries.
+  if (courses.includes(gift.lang)) return <Planted gift={gift} word={word} onDone={() => setGift(null)} />;
   return (
     <div className="gift-card" role="note">
       <p>
@@ -69,29 +70,39 @@ export function GiftArrival({ courses, onStart }: { courses: string[]; onStart: 
   );
 }
 
-/** The seed's course exists: queue the word once its learner has loaded, and say so. */
-function Planted({ gift, word }: { gift: Gift; word: { lemma: string; gloss: string } }) {
+/**
+ * The seed's course exists: plant it once the learner has loaded, and say what
+ * happened. A word the learner set aside ("never show", "pause") stays that way.
+ */
+function Planted({ gift, word, onDone }: { gift: Gift; word: { lemma: string; gloss: string }; onDone: () => void }) {
   const learner = useLearner(gift.lang);
   const store = useStore();
-  const [hidden, setHidden] = useState(false);
-  const planted = useRef(false);
+  const tried = useRef(false);
   useEffect(() => {
-    if (!learner || planted.current) return; // Waiting for its words to load.
-    planted.current = true;
-    // Queue it unless it has started. Queuing a word that has in fact started (when
-    // this first look is older than the server, #229) does nothing: started words are never new.
-    if (!readMemory(learner, gift.wordId)?.reps && learner.words.get(gift.wordId)?.status !== "queued") void setWordStatus(store, gift.wordId, "queued");
-    track("seed_planted", { lang: gift.lang });
-    clearGift();
+    if (!learner || tried.current) return; // Waiting for its words to load.
+    tried.current = true;
+    if (readMemory(learner, gift.wordId)?.reps) return clearGift(); // Already growing: nothing to plant.
+    void plantGift(store, gift.wordId).then(
+      (planted) => {
+        if (planted) track("seed_planted", { lang: gift.lang });
+        clearGift();
+      },
+      // Kept on this device, so the next visit tries again.
+      (e: unknown) => console.error("[seed] not planted", e),
+    );
   }, [learner, gift, store]);
-  if (!learner || hidden) return null;
-  // Live: the first data after a page load can be older than the server's (#229),
-  // so "already growing" is read again as the learner's reviews arrive.
-  const growing = !!readMemory(learner, gift.wordId)?.reps;
+  if (!learner) return null;
+  // Live: the first data after a page load can be older than the server's (#229).
+  const status = learner.words.get(gift.wordId)?.status;
+  const line = readMemory(learner, gift.wordId)?.reps
+    ? `You already grow ${word.lemma}. Your friend has good taste.`
+    : status === "ignored" || status === "paused"
+      ? `A friend gave you a seed: ${word.lemma}. You set this word aside, so it stays that way.`
+      : `Your friend's seed is planted: ${word.lemma} (${word.gloss}). You will meet it soon.`;
   return (
     <p className="gift-card" role="status">
-      {growing ? `You already grow ${word.lemma}. Your friend has good taste.` : `Your friend's seed comes next: ${word.lemma} (${word.gloss}).`}{" "}
-      <button className="ghost" onClick={() => setHidden(true)}>
+      {line}{" "}
+      <button className="ghost" onClick={onDone}>
         OK
       </button>
     </p>

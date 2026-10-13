@@ -131,14 +131,25 @@ function GiveSeed({ word }: { word: Word }) {
   const give = async () => {
     const url = giftLink(word.id);
     const text = `I grew “${word.lemma}” in Perennial. Here is a seed for you.`;
-    track("seed_shared", {});
     if (navigator.share) {
-      // Closing the share sheet rejects too: that is not an error.
-      await navigator.share({ text, url }).catch(() => {});
-      return;
+      const shared = await navigator.share({ text, url }).then(
+        () => true,
+        (e: unknown) => {
+          // Closing the share sheet is a choice, not an error. Anything else: copy the link instead.
+          if (e instanceof DOMException && e.name === "AbortError") return null;
+          console.warn("[seed] share failed; copying the link instead", e);
+          return false;
+        },
+      );
+      if (shared) track("seed_shared", {});
+      if (shared !== false) return;
     }
+    if (!navigator.clipboard) return console.warn("[seed] no share sheet and no clipboard here");
     await navigator.clipboard.writeText(`${text} ${url}`).then(
-      () => setCopied(true),
+      () => {
+        setCopied(true);
+        track("seed_shared", {});
+      },
       (e: unknown) => console.warn("[seed] could not copy the link", e),
     );
   };

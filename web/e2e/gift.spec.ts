@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { answer, expectServerRows, kicker, startCourse, startSession } from "./helpers";
+import { answer, expectServerRows, kicker, serverRows, startCourse, startSession } from "./helpers";
 
 // #213: a friend's seed. The link holds only a deck word; the friend's course takes it as the next new word.
 
@@ -23,17 +23,17 @@ test("a new visitor with a seed link: the landing page says so, and the seed is 
   await expect(page.getByRole("note")).toContainText(`A friend gave you a seed: ${seed.lemma}`);
   await expect(page.getByRole("note")).toContainText("It will be your first plant.");
   await page.getByRole("button", { name: "Start learning German" }).click();
-  await expect(page.getByRole("status")).toContainText(`Your friend's seed comes next: ${seed.lemma}`);
+  await expect(page.getByRole("status")).toContainText(`Your friend's seed is planted: ${seed.lemma}`);
   await startSession(page);
   await expect(kicker(page)).toHaveText(/new word/);
   await expect(page.locator(".word")).toContainText(seed.lemma);
 });
 
-test("a learner with that course already: the seed comes next; with another course only: a card offers to start it", async ({ page }) => {
+test("a learner with that course already: the seed is planted first; with another course only: a card offers to start it", async ({ page }) => {
   await startCourse(page); // Spanish
   const es = await farWord(page, "es");
   await page.goto(`/?seed=${es.id}`);
-  await expect(page.getByRole("status")).toContainText(`Your friend's seed comes next: ${es.lemma}`);
+  await expect(page.getByRole("status")).toContainText(`Your friend's seed is planted: ${es.lemma}`);
   await startSession(page);
   await expect(page.locator(".word")).toContainText(es.lemma);
   await answer(page, "2"); // I knew it: now it grows
@@ -88,4 +88,20 @@ test("the whole loop: a known word's page gives a seed link, and a friend's firs
   await friend.getByRole("button", { name: "Start learning Spanish" }).click();
   await startSession(friend);
   await expect(friend.locator(".word")).toContainText(lemma);
+});
+
+test("a word the learner chose never to see stays that way, even when a friend sends it (#213)", async ({ page }) => {
+  await startCourse(page);
+  const es = await farWord(page, "es");
+  // "Never show this word", as the Words screen saves it.
+  await page.evaluate(async (wordId) => {
+    const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
+    const now = new Date().toISOString();
+    await postWrite([{ type: "word_state.upsert", row: { word_id: wordId, status: "ignored", queued_at: null, updated_at: now } }]);
+  }, es.id);
+  await page.goto(`/?seed=${es.id}`);
+  await expect(page.getByRole("status")).toContainText("You set this word aside, so it stays that way.");
+  await expect.poll(async () => (await serverRows<{ word_id: string; status: string }>(page, "word_state")).find((r) => r.word_id === es.id)?.status).toBe("ignored");
+  await startSession(page);
+  await expect(page.locator(".word")).not.toContainText(es.lemma);
 });
