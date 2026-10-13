@@ -9,7 +9,7 @@ import { bareNoun, inLang, nounView, type NounDef, type NounView, type NounWords
 import type { Layout } from "./world";
 import type { GardenWord } from "../deck/schema";
 
-export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird";
+export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird" | "dog" | "fish" | "butterfly";
 
 /** What we know about the learner, from review dates only. */
 export interface LearnerFacts {
@@ -62,8 +62,8 @@ const FROG_KNOWN = 150;
 /**
  * Residents first, then rare visitors in priority order: when more than two
  * are due, the first ones stay. The monthly heron comes before the mushroom.
- * Garden-word visitors (#209: snail, frog, cat, bird) live here once their
- * word is learned, and do not count toward the cap.
+ * Garden-word visitors (#209: snail, frog, cat, bird, dog, fish, butterfly)
+ * live here once their word is learned, and do not count toward the cap.
  */
 export const VISITORS: readonly VisitorDef[] = [
   { id: "snail", words: { es: "el caracol", de: "die Schnecke" }, gloss: "snail", rare: false, tag: "tap", garden: "snail", schedule: ({ facts }) => facts.garden.has("snail") },
@@ -86,6 +86,12 @@ export const VISITORS: readonly VisitorDef[] = [
     schedule: ({ now }) => rareDay(now.getMonth() >= 8 && now.getMonth() <= 10 ? 3 : 7, "visitor-toadstool", now),
   },
   { id: "bird", words: { es: "el pájaro", de: "der Vogel" }, gloss: "bird", rare: false, tag: "tap", garden: "bird", schedule: ({ facts }) => facts.garden.has("bird") },
+  // Sits beside its word's plant, and wags its tail when you come near.
+  { id: "dog", words: { es: "el perro", de: "der Hund" }, gloss: "dog", rare: false, tag: "approach", garden: "dog", schedule: ({ facts }) => facts.garden.has("dog") },
+  // Swims round the pond in the walk; the strip has no pond, so there it has a bowl by its plant. Small and moving: tap only.
+  { id: "fish", words: { es: "el pez", de: "der Fisch" }, gloss: "fish", rare: false, tag: "tap", garden: "fish", schedule: ({ facts }) => facts.garden.has("fish") },
+  // On top of its word's plant; in the walk not at night.
+  { id: "butterfly", words: { es: "la mariposa", de: "der Schmetterling" }, gloss: "butterfly", rare: false, tag: "tap", garden: "butterfly", schedule: ({ facts }) => facts.garden.has("butterfly") },
 ];
 
 export const visitor = (id: VisitorId): VisitorDef => VISITORS.find((v) => v.id === id)!;
