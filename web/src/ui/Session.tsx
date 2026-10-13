@@ -6,7 +6,7 @@ import { locate } from "../content/text";
 import type { Learner, Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
-import { WordPlant } from "./plant";
+import { rareOf, WordPlant, type Rare } from "./plant";
 import { chimeDelay, Growth, growthOn, grows, type GrowthMoment, type PlantLook } from "./Growth";
 import { chime } from "./chime";
 import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
@@ -18,6 +18,8 @@ import { track } from "../observability";
 import { DAILY_MINUTES } from "../data/practice";
 import { plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
+import { focusPlant } from "./gardenFocus";
+import { VISITORS } from "../garden/visitors";
 
 /** The correct answer with the letters to look at marked. */
 function Marked({ text, at }: { text: string; at: Set<number> }) {
@@ -40,7 +42,7 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
   );
 }
 
-export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit: () => void; minutes: number }) {
+export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string; onExit: () => void; onWalk: () => void; minutes: number }) {
   const [help, setHelp] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -86,7 +88,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
     noteTimer.current = setTimeout(() => setNote(null), ms);
   };
 
-  const { learner, tag, runner, card, done, active, ended, counts, practised, introduced, before, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
+  const { learner, tag, runner, card, done, active, ended, counts, practised, introduced, before, arrived, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
     lang,
     minutes,
     onExit,
@@ -121,7 +123,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
         </button>
       </header>
       {done ? (
-        <Summary learner={learner} counts={counts} practised={practised} introduced={introduced} before={before} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} />
+        <Summary learner={learner} counts={counts} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} onWalk={onWalk} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} onDone={finish} />
       ) : null}
@@ -505,24 +507,51 @@ function ShortcutHelp({ onClose }: { onClose: () => void }) {
   );
 }
 
+const RARE_NEWS: Record<Rare, string> = { golden: "with a golden flower", twin: "with two flowers", bee: "with a bee on it", striped: "with striped petals" };
+
+/**
+ * One line of real news from this chunk for the summary (#232), or null on a
+ * plain day: never a routine prompt. A visitor that came first, then a rare
+ * flower that opened, then any flower that opened for the first time.
+ */
+function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[]): { line: string; wordId: string } | null {
+  for (const id of arrived) {
+    const garden = l.deck.byId.get(id)?.garden;
+    const v = garden && VISITORS.find((x) => x.garden === garden);
+    if (v) return { line: `A ${v.gloss} came to the garden.`, wordId: id };
+  }
+  const opened = [...before].filter(([id, look]) => look.stage !== "bloom" && plantStage(readMemory(l, id)) === "bloom");
+  for (const [id] of opened) {
+    const word = l.words.get(id);
+    const rare = word && rareOf(word.lemma);
+    if (word && rare) return { line: `${word.lemma} opened ${RARE_NEWS[rare]}.`, wordId: id };
+  }
+  const first = opened.length ? l.words.get(opened[0][0]) : undefined;
+  return first ? { line: `${first.lemma} opened for the first time.`, wordId: first.id } : null;
+}
+
 function Summary({
   learner,
   counts,
   practised,
   introduced,
   before,
+  arrived,
   ended,
   onMore,
   onExit,
+  onWalk,
 }: {
   learner: Learner | null;
   counts: { intros: number; answers: number };
   practised: Set<string>;
   introduced: Set<string>;
   before: Map<string, PlantLook>;
+  arrived: string[];
   ended: Ended;
   onMore: () => void;
   onExit: () => void;
+  onWalk: () => void;
 }) {
   const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
   // Once per summary: an Undo from here changes the counts, but it also leaves the summary.
@@ -536,6 +565,8 @@ function Summary({
   const met = introduced.size - seeds;
   const did = seeds + watered > 0;
   const highlight = useMemo(() => new Set([...practised, ...introduced]), [practised, introduced]);
+  // News worth a look in the garden (#232), worked out once, as the summary opens.
+  const [news] = useState(() => (learner ? gardenNews(learner, before, arrived) : null));
   // Worked out once, when the summary opens: later syncs update the learner, and must not start the replay again.
   const [replay] = useState(() => {
     if (!learner || !growthOn()) return null;
@@ -574,6 +605,20 @@ function Summary({
           ) : (
             <>You started {stats.learning} {stats.learning === 1 ? "word" : "words"}. A word counts as known when you still remember it a week later.</>
           )}
+        </p>
+      )}
+      {news && (
+        <p className="garden-news">
+          {news.line}{" "}
+          <button
+            className="ghost"
+            onClick={() => {
+              focusPlant(news.wordId);
+              onWalk();
+            }}
+          >
+            See it in the garden →
+          </button>
         </p>
       )}
       <div className="actions static">

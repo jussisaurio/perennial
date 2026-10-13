@@ -774,3 +774,6 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* While the plant's moment plays at the bottom, a note (a visitor's first line, #209) sits above it, not on it. */
 .session.growing .session-note { bottom: max(156px, calc(env(safe-area-inset-bottom) + 150px)); }
 .guide-latin { margin: -0.1rem 0 0.1rem; font: italic 1rem/1.3 var(--display); color: var(--muted); }
+/* The summary's one line of garden news (#232): quiet, above the buttons. */
+.garden-news { margin: 0.4rem 0 0; color: var(--ink-2); }
+.garden-news .ghost { padding-inline: 0.4rem; }
