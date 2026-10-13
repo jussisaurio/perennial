@@ -5,7 +5,7 @@
 import { memo, type ReactNode } from "react";
 import { OLD_S, plantStage, type PlantStage } from "../core/memory";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
-import { hash32, rng } from "../lib/seed";
+import { hash01, hash32, rng } from "../lib/seed";
 
 const pick = <T,>(r: () => number, items: readonly T[]): T => items[Math.floor(r() * items.length)];
 const between = (r: () => number, a: number, b: number) => a + r() * (b - a);
@@ -94,7 +94,8 @@ export function rareOf(word: string): Rare | null {
   // Stripes need separate petals to sit on.
   const g = genome(word);
   const kinds: readonly Rare[] = g.flower === "daisy" || g.flower === "star" ? ["golden", "twin", "bee", "striped"] : ["golden", "twin", "bee"];
-  return kinds[hash32(key, RARE_SALT + 1) % kinds.length];
+  // hash01 (the high bits): the low bits of this hash are tied to the rare check above.
+  return kinds[Math.floor(hash01(key, RARE_SALT + 1) * kinds.length)];
 }
 
 const GOLD = { petal: hsl(45, 92, 60), petalEdge: hsl(36, 80, 42), center: hsl(28, 65, 32) };
@@ -308,9 +309,10 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
       );
     }
   if (u > 0 && rare === "twin") {
-    // The stem forks near the top: a second head as big as the first, side by side.
+    // The stem forks near the top: a second head as big as the first, side by
+    // side, away from the highest side branch (branch i leans to i % 2 ? 1 : -1).
     const p = onStem(h, bend, 0.84);
-    const side = g.lean > 0 ? -1 : 1;
+    const side = g.branches ? ((g.branches - 1) % 2 ? -1 : 1) : g.lean > 0 ? -1 : 1;
     const len = h * 0.2 * u;
     const ex = p.x + side * len * 0.75;
     const ey = p.y - len * 0.85;
@@ -329,6 +331,13 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
   const bud = clamp01((q - 0.3) / 0.7) * (1 - u);
   return (
     <g>
+      {u > 0 && rare === "golden" && (
+        // A soft glow behind the whole flower head (drawn first) and a glint: gold, not just yellow.
+        <g transform={`translate(${top.x} ${top.y})`} opacity={u}>
+          <circle r={flowerR * 2.3} fill={GOLD.petal} opacity={0.22} />
+          <path d={`M${flowerR * 1.5} ${-flowerR * 1.9} l0 ${flowerR * 0.9} M${flowerR * 1.05} ${-flowerR * 1.45} l${flowerR * 0.9} 0`} stroke="#fff" strokeWidth={Math.max(0.8, flowerR * 0.16)} strokeLinecap="round" />
+        </g>
+      )}
       {branches}
       <path d={`M0 0 Q ${bend} ${-h / 2} ${top.x} ${top.y}`} fill="none" stroke={g.stem} strokeWidth={lerp(sproutStroke, Math.max(1.3, 2.1 * scale), q)} strokeLinecap="round" />
       {q < 1 &&
@@ -336,13 +345,6 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
           <path key={side} d={leafPath(g.leafShape, leafLen * 0.9 * (1 - q), leafW * (1 - q))} fill={g.leaf} transform={`translate(${top.x} ${top.y}) rotate(${side * (48 + g.curve * 14)})`} />
         ))}
       {leaves}
-      {u > 0 && rare === "golden" && (
-        // A soft glow behind the flower and a glint: gold, not just yellow.
-        <g transform={`translate(${top.x} ${top.y})`} opacity={u}>
-          <circle r={flowerR * 2.3} fill={GOLD.petal} opacity={0.22} />
-          <path d={`M${flowerR * 1.5} ${-flowerR * 1.9} l0 ${flowerR * 0.9} M${flowerR * 1.05} ${-flowerR * 1.45} l${flowerR * 0.9} 0`} stroke="#fff" strokeWidth={Math.max(0.8, flowerR * 0.16)} strokeLinecap="round" />
-        </g>
-      )}
       <g transform={`translate(${top.x} ${top.y}) rotate(${g.lean})`}>
         {bud > 0 && <Flower g={g} r={flowerR * bud} open={false} />}
         {u > 0 && (u < 1 ? <g transform={`rotate(${(1 - u) * -50}) scale(${u})`}><Flower g={g} r={flowerR} open striped={striped} /></g> : <Flower g={g} r={flowerR} open striped={striped} />)}
