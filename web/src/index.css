@@ -777,8 +777,10 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* The summary's one line of garden news (#232): quiet, above the buttons. */
 .garden-news { margin: 0.4rem 0 0; color: var(--ink-2); }
 
-/* A visitor watching the session (#210): at the bottom-left corner, above the answers; it never takes a tap from them. */
-/* Sits at the foot of the card's plant (.card-plant: 76px at top 58px, right 8px), on its left. */
+/* A known word's page: give its seed, or share a picture of it (#213, #225). */
+.guide-share { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.2rem 0.6rem; margin-top: 0.3rem; }
+
+/* A visitor watching the session (#210): at the foot of the card's plant (.card-plant: 76px at top 58px, right 8px), on its left. It takes no taps. */
 .session-watcher { position: absolute; top: calc(58px + 76px); right: calc(8px + 76px); transform: translateY(-100%); pointer-events: none; animation: watcher-in 0.7s var(--ease) both; }
 .session.growing .session-watcher { visibility: hidden; }
 @keyframes watcher-in { from { transform: translate(14px, -100%); opacity: 0; } to { transform: translateY(-100%); opacity: 1; } }

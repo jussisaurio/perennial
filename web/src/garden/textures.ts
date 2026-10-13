@@ -8,6 +8,7 @@ import { rng } from "../lib/seed";
 import { Plant } from "../ui/plant";
 import type { PlacedPlant } from "./world";
 import * as Art from "./visitorArt";
+import { loadImage } from "../ui/files";
 
 function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement("canvas");
@@ -434,15 +435,6 @@ function plantMarkup(p: PlacedPlant): string {
 /** A nested <svg> per cell clips each plant to its own cell. */
 const cell = (p: PlacedPlant, x: number, y: number, w: number, h: number) =>
   `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${-VIEW_W / 2} ${-VIEW_H + 4} ${VIEW_W} ${VIEW_H}">${plantMarkup(p)}</svg>`;
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
 
 async function rasterise(width: number, height: number, body: string): Promise<HTMLCanvasElement> {
   const img = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${body}</svg>`)}`);

@@ -81,7 +81,7 @@ function startPostHog(userId: string) {
 }
 
 /** The handful of product events we look at (see #16). */
-export type Event = "course_started" | "session_finished" | "email_added" | "garden_opened" | "words_added" | "seed_shared" | "seed_planted";
+export type Event = "course_started" | "session_finished" | "email_added" | "garden_opened" | "words_added" | "seed_shared" | "seed_planted" | "page_shared";
 
 export function track(event: Event, props: Record<string, unknown> = {}) {
   if (posthog) posthog.capture(event, props);

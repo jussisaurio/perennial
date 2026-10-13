@@ -11,6 +11,8 @@ import { WordPlant, rareOf, type Rare } from "./plant";
 import { giftLink } from "../data/gift";
 import { track } from "../observability";
 import { useLatinNames } from "../content/latin";
+import { pageImage, type PageImage } from "./pageImage";
+import { download } from "./files";
 
 export interface GuideRow {
   l: Word;
@@ -121,6 +123,53 @@ export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string;
 }
 
 /**
+ * "Share a picture of this page" (#225): the pressed flower as an image, through
+ * the phone's share sheet, or downloaded where files cannot be shared. Only when
+ * the learner chooses it; nothing about them is on the picture.
+ */
+function SharePicture({ page }: { page: PageImage }) {
+  // Made when the page opens: Safari opens the share sheet only straight from a tap, not after waiting for the picture.
+  const [file, setFile] = useState<File | "failed" | null>(null);
+  const [saved, setSaved] = useState(false);
+  const { lemma, gloss, latin, rare, s, stage } = page;
+  useEffect(() => {
+    let live = true;
+    pageImage({ lemma, gloss, latin, rare, s, stage }).then(
+      (blob) => live && setFile(new File([blob], `perennial-${lemma}.png`, { type: "image/png" })),
+      (e: unknown) => {
+        console.warn("[guide] the picture could not be made", e);
+        if (live) setFile("failed");
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [lemma, gloss, latin, rare, s, stage]);
+  if (file === "failed") return <p className="muted small">Could not make a picture of this page.</p>;
+  const share = (f: File) => {
+    if (navigator.canShare?.({ files: [f] })) {
+      void navigator.share({ files: [f] }).then(
+        () => track("page_shared", {}),
+        (e: unknown) => {
+          // Closing the share sheet is a choice, not an error.
+          if (!(e instanceof DOMException && e.name === "AbortError")) console.warn("[guide] share failed", e);
+        },
+      );
+      return;
+    }
+    // No sharing files here (most desktop browsers): save the picture instead.
+    download(f.name, f);
+    track("page_shared", {});
+    setSaved(true);
+  };
+  return (
+    <button className="ghost give-seed" disabled={!file} onClick={() => file && share(file)}>
+      {!file ? "Making the picture…" : saved ? "Picture saved. Share it from your files." : "Share a picture of this page"}
+    </button>
+  );
+}
+
+/**
  * "Give this seed to a friend" (#213): a link that plants this word first in a
  * friend's garden. The phone's share sheet where there is one, otherwise the
  * link is copied. Only on a known word, and only when the learner chooses it.
@@ -171,6 +220,8 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
   const read = row.mem.find((m) => m.skill === "read");
   const stage = plantStage(read);
   const rare = stage === "bloom" ? rareOf(row.l.lemma) : null;
+  // A word not started yet has no stability to draw.
+  const s = read?.reps ? read.s : 0;
   // A known word's botanical name (#212), when its course has one.
   const latin = useLatinNames(lang)?.[`${row.l.lemma}|${row.l.pos}`];
   return (
@@ -178,13 +229,18 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
     <dialog ref={ref} className="guide-page" onClose={onClose} aria-label={row.l.lemma} onClick={(e) => e.target === ref.current && ref.current?.close()}>
       <div className="guide-page-body">
         <div className={stage === "bloom" ? "guide-sheet pressed" : "guide-sheet sketch"}>
-          <WordPlant word={row.l.lemma} s={read?.reps ? read.s : 0} stage={stage} size={180} />
+          <WordPlant word={row.l.lemma} s={s} stage={stage} size={180} />
           <h2>{row.l.lemma}</h2>
           {stage === "bloom" && latin && <p className="guide-latin">{latin}</p>}
           <p className="gl">{row.l.gloss}</p>
           {rare && <p className="guide-rare">{RARE_LABEL[rare]}</p>}
           {stage !== "bloom" && <p className="muted small">Still growing. Its flower shows when you know the word.</p>}
-          {stage === "bloom" && <GiveSeed word={row.l} />}
+          {stage === "bloom" && (
+            <div className="guide-share">
+              <GiveSeed word={row.l} />
+              <SharePicture page={{ lemma: row.l.lemma, gloss: row.l.gloss, latin, rare: rare ? RARE_LABEL[rare] : undefined, s, stage }} />
+            </div>
+          )}
         </div>
         {detail}
         {/* Focus starts here, not on the first control in the details. */}
