@@ -74,6 +74,7 @@ test("the language menu closes on Escape and on a click outside", async ({ page 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await switcher.click();
-  await page.locator("h1, h2").first().click();
+  // The heading's top-left corner: its middle can sit under the open menu when the greeting is short ("Hello." at night).
+  await page.locator("h1, h2").first().click({ position: { x: 4, y: 4 } });
   await expect(page.getByRole("menu")).toHaveCount(0);
 });
