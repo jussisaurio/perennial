@@ -15,6 +15,7 @@ import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
 import { wakeAudio } from "./chime";
 import { sessionPlan } from "../data/practice";
 import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
+import { GARDEN_VISITOR_ART, type PixelArt } from "../garden/visitorArt";
 
 export interface Card {
   task: Task;
@@ -41,8 +42,8 @@ function chooseExample(l: Learner, wordId: string): Sentence | undefined {
 }
 
 interface Feedback {
-  /** A short note for a moment ("Undone."). */
-  flash: (text: string) => void;
+  /** A short note for a moment ("Undone."); `ms` for a longer one. */
+  flash: (text: string, ms?: number) => void;
   /** A note is about the previous card: clear it when the next answer comes. */
   clearNote: () => void;
   /** The word's plant is planted or grows; the next card waits until this resolves. */
@@ -231,6 +232,21 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     return undefined;
   };
 
+  /**
+   * A garden word (#209) with a visitor: its first good answer brings the
+   * visitor. Returns the art for the growth moment; the very first visitor of
+   * all also gets one plain line, so the learner sees why it came.
+   */
+  const visitorArrives = (wordId: string, lemma: string): PixelArt | undefined => {
+    const l = live.current;
+    const garden = l?.deck.byId.get(wordId)?.garden;
+    const visitor = garden && GARDEN_VISITOR_ART[garden];
+    if (!l || !visitor) return undefined;
+    const before = l.deck.words.some((w) => w.id !== wordId && w.garden && GARDEN_VISITOR_ART[w.garden] && readMemory(l, w.id)?.reps);
+    if (!before) flash(`You learned ${lemma}. ${visitor.noun[0].toUpperCase()}${visitor.noun.slice(1)} came to see.`, 4000);
+    return visitor.art;
+  };
+
   /** Records the answer. Returns the plant's moment, if the answer plants or waters it. */
   const record = async (runner: Runner, card: Card, grade: Grade | null, opts: { alreadyKnown?: boolean }): Promise<GrowthMoment | null> => {
     const ms = Math.min(clock.current.tick(Date.now()) - shownAt.current, 60_000);
@@ -244,11 +260,13 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       // No note: the button already said what happens ("Back in about a week").
       setUndoStack((s) => [...s, { reviewId, intro: true, wordId: word.id, example }]);
+      // "I knew it" starts the word: a garden word's visitor comes now.
+      const visitor = opts.alreadyKnown ? visitorArrives(word.id, word.lemma) : undefined;
       if (!growthOn()) return null;
       const seed = { s: 0, stage: "seed" as const };
       if (!opts.alreadyKnown) return { word: word.lemma, from: seed, to: seed, planted: true };
       const read = await readAfter(word.id, 0);
-      return read ? { word: word.lemma, from: seed, to: { s: read.s, stage: plantStage(read) }, planted: true } : null;
+      return read ? { word: word.lemma, from: seed, to: { s: read.s, stage: plantStage(read) }, planted: true, visitor } : null;
     } else if (grade) {
       counts.current.answers++;
       const fresh = !practised.current.has(word.id);
@@ -263,9 +281,12 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       if (grade === 1) flash(forgotLine(retry));
       setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
       // Only reading memory grows the plant, and only a remembered word grows.
-      if (grade < 3 || task.skill !== "read" || !growthOn()) return null;
+      if (grade < 3 || task.skill !== "read") return null;
+      // The first good answer to a word starts it: a garden word's visitor comes now.
+      const visitor = repsBefore === 0 ? visitorArrives(word.id, word.lemma) : undefined;
+      if (!growthOn()) return null;
       const read = await readAfter(word.id, repsBefore);
-      return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false } : null;
+      return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false, visitor } : null;
     } else {
       // Passed over without an answer ("Can't listen now"): nothing to undo, so
       // Undo steps back over this card to the last answer.

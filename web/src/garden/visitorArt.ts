@@ -3,6 +3,8 @@
 // walk (textures.ts) and as SVG rects in the 2D strip (Garden.tsx), so both
 // show the same animals.
 
+import type { GardenWord } from "../deck/schema";
+
 export interface PixelArt {
   rows: string[];
   pal: Record<string, string>;
@@ -282,3 +284,14 @@ export function runs(art: PixelArt): { x: number; y: number; w: number; fill: st
   });
   return out;
 }
+
+/**
+ * Garden words (#209) whose visitor has art so far, and how a session names it
+ * when it first comes. The rest arrive with their art (#209 phase B).
+ */
+export const GARDEN_VISITOR_ART: Partial<Record<GardenWord, { art: PixelArt; noun: string }>> = {
+  cat: { art: CAT_AWAKE, noun: "a cat" },
+  bird: { art: BIRD, noun: "a bird" },
+  frog: { art: FROG, noun: "a frog" },
+  snail: { art: SNAIL, noun: "a snail" },
+};

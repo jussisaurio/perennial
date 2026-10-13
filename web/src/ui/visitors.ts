@@ -23,6 +23,7 @@ import {
   type VisitorView,
 } from "../garden/visitors";
 import { sceneryViews, type SceneryViews } from "../garden/scenery";
+import type { GardenWord } from "../deck/schema";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
 function devVisitorOverride(): VisitorOverride {
@@ -78,7 +79,10 @@ export function knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, 
 export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
   const { count, lemmas, croaks } = knownWords(l.words.values(), l.memory);
   const times = l.reviews.map((r) => Date.parse(r.reviewed_at));
-  const facts = learnerFacts(times, count, now);
+  // Garden words (#209) the learner has started: each brings its visitor.
+  const garden = new Set<GardenWord>();
+  for (const w of l.deck.words) if (w.garden && readMemory(l, w.id)?.reps) garden.add(w.garden);
+  const facts = learnerFacts(times, count, now, garden);
   const today = visitorsFor(facts, now, devVisitorOverride());
   // Known at the start of today. Only worth a replay when there are reviews today.
   const dayStart = startOfDay(now);
@@ -97,6 +101,8 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
 
 /** Visitors for a garden with no learner behind it (the landing page): the snail at the gate, and whoever drops by today. */
 export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitors {
-  const today = visitorsFor(NO_FACTS, now, devVisitorOverride());
-  return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
+  // A garden a few months in: its learner knows the words for the garden-word visitors.
+  const facts = { ...NO_FACTS, garden: new Set<GardenWord>(VISITORS.flatMap((v) => (v.garden ? [v.garden] : []))) };
+  const today = visitorsFor(facts, now, devVisitorOverride());
+  return { facts, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
 }
