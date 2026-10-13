@@ -371,7 +371,6 @@ function PixelSprite({ art, x, y, scale }: { art: PixelArt; x: number; y: number
   );
 }
 
-
 /** One small "z" drifting up from a sleeping bloom (still, with reduced motion). */
 function Snore({ y }: { y: number }) {
   return (
@@ -426,7 +425,6 @@ function SproutArrow() {
     </svg>
   );
 }
-
 
 /** Each replayed plant grows for this long, starting one after another, all within REPLAY_MS. */
 const REPLAY_GROW_MS = 450;

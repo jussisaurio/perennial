@@ -101,7 +101,7 @@ export function heronDay(year: number, month: number): number {
 }
 
 /** The facts visitorsFor needs, from the learner's review times (ms, any order). */
-export function learnerFacts(reviews: Iterable<number>, known: number, now: Date | number = Date.now(), garden: ReadonlySet<GardenWord> = new Set()): LearnerFacts {
+export function learnerFacts(reviews: Iterable<number>, known: number, now: Date | number, garden: ReadonlySet<GardenWord>): LearnerFacts {
   const today = dayNumber(now);
   let first: number | null = null;
   let last: number | null = null;

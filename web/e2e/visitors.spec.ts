@@ -6,7 +6,8 @@ import { answer, kicker, reveal, startCourse, startSession } from "./helpers";
 
 test("a new learner learns 'gato' in the first session, and the cat comes to the garden", async ({ page }) => {
   await startCourse(page);
-  // A new garden has no cat yet.
+  // A new garden has no cat yet (once the strip is drawn, so this is not true by default).
+  await expect(page.locator(".garden")).toBeVisible();
   await expect(page.getByRole("button", { name: "el gato · cat" })).toHaveCount(0);
   await startSession(page);
   let sawGato = false;
@@ -31,4 +32,27 @@ test("a new learner learns 'gato' in the first session, and the cat comes to the
   await page.getByRole("button", { name: /^Done/ }).click();
   // Back on Today, the cat is in the garden strip.
   await expect(page.getByRole("button", { name: "el gato · cat" })).toBeAttached();
+});
+
+test("a wrong first answer does not bring the cat; the first good one does, with its line", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  for (let i = 0; i < 4; i++) await answer(page, "1"); // four new words, gato among them
+  // Quick checks: forget gato, remember the others; then gato's retry comes back.
+  for (let i = 0; i < 12; i++) {
+    const k = (await kicker(page).textContent()) ?? "";
+    const isGato = (await page.locator("main.card").getAttribute("data-lemma")) === "gato";
+    await reveal(page);
+    if (isGato && !k.includes("try again")) {
+      await page.keyboard.press("1"); // I forgot: no cat, no line
+      await expect(page.getByRole("status")).not.toHaveText(/came to see/);
+      continue;
+    }
+    await page.keyboard.press("2");
+    if (isGato) {
+      await expect(page.getByRole("status")).toHaveText("You learned gato. A cat came to see.");
+      return;
+    }
+  }
+  throw new Error("gato's retry never came");
 });

@@ -27,7 +27,7 @@ import {
 
 const at = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m, d, h, min).getTime();
 const days = Array.from({ length: 365 }, (_, d) => new Date(2026, 0, 1 + d, 12));
-const facts = (reviews: number[], now: number, known = 0) => learnerFacts(reviews, known, now);
+const facts = (reviews: number[], now: number, known = 0) => learnerFacts(reviews, known, now, new Set());
 
 describe("visitor words", () => {
   test("every visitor has a Spanish and a German word with its article, and a plain gloss", () => {
@@ -71,7 +71,6 @@ describe("who visits today", () => {
       expect(visitorsFor(NO_FACTS, morning)).toEqual(visitorsFor(NO_FACTS, night));
     }
   });
-
 
   test("the toadstool comes about one day in seven, and more often in autumn", () => {
     const has = (d: Date) => visitorsFor(NO_FACTS, d).present.includes("toadstool");

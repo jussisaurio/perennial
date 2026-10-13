@@ -16,6 +16,8 @@ import { wakeAudio } from "./chime";
 import { sessionPlan } from "../data/practice";
 import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
 import { GARDEN_VISITOR_ART, type PixelArt } from "../garden/visitorArt";
+import { VISITORS } from "../garden/visitors";
+import { broughtVisitor } from "./visitors";
 
 export interface Card {
   task: Task;
@@ -240,11 +242,13 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const visitorArrives = (wordId: string, lemma: string): PixelArt | undefined => {
     const l = live.current;
     const garden = l?.deck.byId.get(wordId)?.garden;
-    const visitor = garden && GARDEN_VISITOR_ART[garden];
-    if (!l || !visitor) return undefined;
-    const before = l.deck.words.some((w) => w.id !== wordId && w.garden && GARDEN_VISITOR_ART[w.garden] && readMemory(l, w.id)?.reps);
-    if (!before) flash(`You learned ${lemma}. ${visitor.noun[0].toUpperCase()}${visitor.noun.slice(1)} came to see.`, 4000);
-    return visitor.art;
+    const art = garden && GARDEN_VISITOR_ART[garden];
+    const def = garden && VISITORS.find((v) => v.garden === garden);
+    if (!l || !art || !def) return undefined;
+    // The first visitor of all: no other garden word with art has brought its visitor yet.
+    const before = l.deck.words.some((w) => w.id !== wordId && w.garden && GARDEN_VISITOR_ART[w.garden] && broughtVisitor(l, w.id));
+    if (!before) flash(`You learned ${lemma}. A ${def.gloss} came to see.`, 4000);
+    return art;
   };
 
   /** Records the answer. Returns the plant's moment, if the answer plants or waters it. */
@@ -275,6 +279,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       introMs.current.delete(word.id);
       // ?? 0: no read review yet (a new word's quick check).
       const repsBefore = (live.current && readMemory(live.current, word.id)?.reps) ?? 0;
+      // Read before this answer is recorded: did the word already bring its visitor?
+      const brought = !!live.current && broughtVisitor(live.current, word.id);
       // ?? 0: no intro for this word in this session.
       const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), sentence_id: example?.id ?? null });
       const retry = runner.report(task, { grade });
@@ -282,8 +288,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
       // Only reading memory grows the plant, and only a remembered word grows.
       if (grade < 3 || task.skill !== "read") return null;
-      // The first good answer to a word starts it: a garden word's visitor comes now.
-      const visitor = repsBefore === 0 ? visitorArrives(word.id, word.lemma) : undefined;
+      // The first good answer to a word (a wrong one earlier does not count): a garden word's visitor comes now.
+      const visitor = brought ? undefined : visitorArrives(word.id, word.lemma);
       if (!growthOn()) return null;
       const read = await readAfter(word.id, repsBefore);
       return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false, visitor } : null;
