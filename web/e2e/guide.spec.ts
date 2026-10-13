@@ -27,26 +27,48 @@ test("the field guide: pressed flowers for known words, sketches for growing one
   await history(page, ["perro", "casa"], ["mañana"]);
   await page.reload();
   await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("radio", { name: "Field guide" }).click();
+  await page.getByRole("radio", { name: "Flowers" }).click();
 
-  const bloom = page.locator("section", { has: page.getByRole("heading", { name: "In bloom" }) });
-  const growing = page.locator("section", { has: page.getByRole("heading", { name: "Still growing" }) });
-  await expect(bloom.locator(".guide-entry.pressed")).toHaveCount(2);
-  await expect(bloom.getByRole("button", { name: /perro/ })).toContainText("Rare: twin heads");
-  await expect(growing.locator(".guide-entry.sketch")).toHaveCount(1);
-  await expect(growing.getByRole("button", { name: /mañana/ })).not.toContainText("Rare");
+  await expect(page.getByRole("heading", { name: "In bloom" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Still growing" })).toBeVisible();
+  const bloom = page.locator(".guide-entry.pressed");
+  await expect(bloom).toHaveCount(2);
+  await expect(bloom.filter({ hasText: "perro" })).toContainText("Rare: twin heads");
+  const growing = page.locator(".guide-entry.sketch");
+  await expect(growing).toHaveCount(1);
+  await expect(growing.filter({ hasText: "mañana" })).not.toContainText("Rare");
 
   // A page for the word, with its details; Escape closes it.
-  await bloom.getByRole("button", { name: /perro/ }).click();
+  await bloom.filter({ hasText: "perro" }).click();
   const sheet = page.getByRole("dialog", { name: "perro" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByText("Tengo un perro.")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
 
+  // A tap inside the page, even on its edge, keeps it open; a tap outside closes it.
+  await bloom.filter({ hasText: "perro" }).click();
+  const box = (await sheet.boundingBox())!;
+  await page.mouse.click(box.x + 4, box.y + box.height / 2);
+  await expect(sheet).toBeVisible();
+  await page.mouse.click(5, 5);
+  await expect(sheet).toHaveCount(0);
+
+  // A word open in the list does not pop up when switching to the flowers.
+  await page.getByRole("radio", { name: "List" }).click();
+  await page.getByRole("button", { name: /casa/ }).click();
+  await page.getByRole("radio", { name: "Flowers" }).click();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+
+  // Only started words are drawn, and the count says so: "New" has nothing to draw.
+  await page.locator(".row select").first().selectOption("new");
+  await expect(page.getByText("Words you have not started yet have no flower to show.")).toBeVisible();
+  await expect(page.getByText("0 words")).toBeVisible();
+  await page.locator(".row select").first().selectOption("all");
+
   // The view is remembered on this device.
   await page.reload();
   await page.getByRole("tab", { name: "Words" }).click();
-  await expect(page.getByRole("radio", { name: "Field guide" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("radio", { name: "Flowers" })).toHaveAttribute("aria-checked", "true");
   await expect(page.getByRole("heading", { name: "In bloom" })).toBeVisible();
 });

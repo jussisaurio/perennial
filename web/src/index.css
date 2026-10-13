@@ -739,12 +739,14 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 
 /* ---- Field guide (#211): pressed flowers on paper, pencil sketches for words still growing ---- */
 .words-view { margin: 0.2rem 0 0.4rem; }
-.guide section { margin: 1.2rem 0 1.6rem; }
-.guide h2 { font: 1.4rem/1.2 var(--display); margin: 0 0 0.3rem; }
-.guide-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.8rem; margin-top: 0.7rem; }
+.guide-head { padding: 1.2rem 0 0.5rem; }
+.guide-head h2 { font: 1.4rem/1.2 var(--display); margin: 0 0 0.3rem; }
+.guide-head p { margin: 0; }
+/* Columns are set inline from the measured width (FieldGuide.tsx: CARD_MIN, GAP). */
+.guide-grid { display: grid; gap: 13px; padding-bottom: 13px; }
 .guide-entry {
   display: grid; justify-items: center; align-content: start; gap: 0.15rem; padding: 0.7rem 0.5rem 0.8rem; border-radius: 6px;
-  text-align: center; content-visibility: auto; contain-intrinsic-size: 0 11rem;
+  text-align: center;
 }
 .guide-entry strong { font: 1.15rem/1.2 var(--display); font-weight: 400; overflow-wrap: anywhere; }
 .guide-entry .gl { font-size: 0.82rem; color: var(--muted); line-height: 1.3; }
@@ -756,7 +758,9 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-entry.sketch, .guide-sheet.sketch { background: transparent; border: 1px dashed var(--line); }
 .guide-entry.sketch svg, .guide-sheet.sketch svg { filter: grayscale(1) contrast(0.9); opacity: 0.5; }
 .guide-rare { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--persimmon); margin-top: 0.15rem; }
-.guide-page { width: min(34rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 1rem; border: none; border-radius: 14px; background: var(--paper); color: var(--ink); overflow-y: auto; }
+/* No padding on the dialog itself: a click with the dialog as its target is then on the backdrop (FieldGuide.tsx). */
+.guide-page { width: min(34rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: none; border-radius: 14px; background: var(--paper); color: var(--ink); overflow-y: auto; }
+.guide-page-body { padding: 1rem; }
 .guide-page::backdrop { background: rgb(0 0 0 / 0.4); }
 .guide-sheet { display: grid; justify-items: center; gap: 0.2rem; padding: 1rem; border-radius: 8px; text-align: center; }
 .guide-sheet h2 { font: 2rem/1.1 var(--display); margin: 0.2rem 0 0; }
