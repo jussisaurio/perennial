@@ -135,6 +135,108 @@ export const FROG_CROAK: PixelArt = {
 /** Eyes closed: it talks in its sleep. */
 export const FROG_ASLEEP: PixelArt = { rows: FROG_ROWS.map((r, y) => (y === 1 ? ".oGmGo..oGmGo." : r)), pal: FROG_PAL };
 
+const DOG_PAL = { o: INK, B: "#c08a52", b: "#9a6636", E: "#6e4424", w: "#f4e6cc", n: INK, e: INK, R: "#d0503a" };
+const DOG_ROWS = [
+  "........oooooo....",
+  ".......oBBBBBBo...",
+  "......oEEBBBBBBo..",
+  ".....oEEEBBBBeBo..",
+  ".....oEEEBBBBBBooo",
+  ".....oEEEBBBBBwwno",
+  ".....oEEoBBBBwwwwo",
+  "......ooBBBBwwwoo.",
+  ".......oRRRRRRo...",
+  "......oBBBBBwwo...",
+  ".....oBBBBBBwwo...",
+  "....oBBBBBBBwwo...",
+  "...oBBBBBBBBwwo...",
+  "...oBBbBBBBowwo...",
+  "...oBBbBBwwowwo...",
+  "...oooooooooooo...",
+];
+
+/** A tan dog sitting, facing right (it sits left of its plant, looking at it), its tail up. */
+export const DOG: PixelArt = {
+  rows: DOG_ROWS.map((r, y) => (y === 10 ? ".oo" + r.slice(3) : y === 11 ? ".oBo" + r.slice(4) : y === 12 ? "..o" + r.slice(3) : r)),
+  pal: DOG_PAL,
+};
+/** The same dog, its tail swept down: two frames make a wag. */
+export const DOG_WAG: PixelArt = {
+  rows: DOG_ROWS.map((r, y) => (y === 13 ? ".ooo" + r.slice(4) : y === 14 ? "oBBB" + r.slice(4) : y === 15 ? "ooo" + r.slice(3) : r)),
+  pal: DOG_PAL,
+};
+
+// A small round bowl: pale glass with a soft outline, water, one orange fish.
+const BOWL_PAL = { o: "#5a7a90", g: "#e4f1f6", h: "#ffffff", W: "#8cc4dc", w: "#b4dcea", F: "#f08a3a", f: "#c8602a", e: INK, s: "#c8b48a" };
+/** A tiny fishbowl with a goldfish: the fish's home in the strip, where there is no pond. */
+export const FISHBOWL: PixelArt = {
+  rows: [
+    "...oooooooo...",
+    "....oggggo....",
+    "..oogggggggo..",
+    ".ohgggggggggo.",
+    "ohwwwwwwwwwwwo",
+    "ohWWWWWWWWWWWo",
+    "oWWWFFFWWfWWWo",
+    "oWWFeFFFffWWWo",
+    "oWWWFFFWWfWWWo",
+    ".oWWWWWWWWWWo.",
+    "..oosssssoo...",
+    "....oooooo....",
+  ],
+  pal: BOWL_PAL,
+};
+
+/** A goldfish seen from above, head to the right: it swims in the pond in the walk. */
+export const KOI: PixelArt = {
+  rows: [
+    "...........oo...",
+    "T.....ooooFFoo..",
+    "TT..ooFFFWWFFFo.",
+    ".TTTFFFWWWFFFFeo",
+    ".TTTFFFFWWFFFFeo",
+    "TT..ooFFFFFWFFo.",
+    "T.....ooooFFoo..",
+    "...........oo...",
+  ],
+  pal: { o: "#a0502a", F: "#e8803c", W: "#f4e2c8", T: "#e8a060", e: INK },
+};
+
+const BUTTERFLY_PAL = { o: INK, a: INK, O: "#f0a040", d: "#c0602a", w: "#fff8e7", b: INK };
+/** A butterfly resting, wings open: orange with dark edges and white spots. */
+export const BUTTERFLY: PixelArt = {
+  rows: [
+    "...a.....a...",
+    "....a...a....",
+    ".ooo..b..ooo.",
+    "oOOOoobooOOOo",
+    "oOwOOoboOOwOo",
+    "oOOOOoboOOOOo",
+    ".odOOoboOOdo.",
+    "..ooooboooo..",
+    "..oOdobodOo..",
+    "..oOOoboOOo..",
+    "...oo.b.oo...",
+  ],
+  pal: BUTTERFLY_PAL,
+};
+/** Wings up and closed, seen edge on: mid-flap, or asleep at night. */
+export const BUTTERFLY_CLOSED: PixelArt = {
+  rows: [
+    "...a.....a...",
+    "....a...a....",
+    ".....oOo.....",
+    ".....oOo.....",
+    "....oOOOo....",
+    "....oOObo....",
+    "....odObo....",
+    "....odobo....",
+    ".....odo.....",
+    "......b......",
+  ],
+  pal: BUTTERFLY_PAL,
+};
+
 // The gnome: a red hat, a white beard, a blue coat. Column 15 holds its
 // lantern (two pixels, "L"), hanging from the hand at column 14.
 const GNOME_HAT = [".......oo.......", "......oRRo......", "......oRRo......", ".....oRRRRo.....", ".....oRRRRo.....", "....oRRRRRRo....", "....oRrRRRRo....", "...oRRRRRRRRo...", "...oDDDDDDDDo..."];
@@ -285,5 +387,5 @@ export function runs(art: PixelArt): { x: number; y: number; w: number; fill: st
   return out;
 }
 
-/** Garden words (#209) whose visitor has art so far. The rest arrive with their art (#209 phase B). */
-export const GARDEN_VISITOR_ART: Partial<Record<GardenWord, PixelArt>> = { cat: CAT_AWAKE, bird: BIRD, frog: FROG, snail: SNAIL };
+/** Garden words (#209) whose visitor has art so far. The rest arrive with their art (#209 phase B). The fish comes in its bowl. */
+export const GARDEN_VISITOR_ART: Partial<Record<GardenWord, PixelArt>> = { cat: CAT_AWAKE, bird: BIRD, frog: FROG, snail: SNAIL, dog: DOG, fish: FISHBOWL, butterfly: BUTTERFLY };
