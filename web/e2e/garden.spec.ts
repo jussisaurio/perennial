@@ -89,7 +89,7 @@ test("a visitor in the 2D strip shows the app's focus ring when reached with Tab
   }
 });
 
-test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known word", async ({ page }) => {
+test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, and by day it sleeps", async ({ page }) => {
   // Midday, so the walk opens by day and the switch to evening happens while it may
   // still be loading (a time chosen during loading used to be lost: no frog by dusk).
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
@@ -121,11 +121,12 @@ test("visitors in the walk: the frog's tag at dusk, and a tap croaks a known wor
   // Its sound and a word (the demo learner's words); never its own name.
   await expect(page.locator(".gw-say")).toHaveText(/^croac…/);
   await expect(page.locator(".gw-say")).not.toHaveText(/rana/);
-  // By day the frog is gone, and so is its tag.
+  // By day it stays, asleep on its pad, as in the strip: a learner who brought it finds it (#209).
   await time.click();
   await time.click();
   await expect(time).toHaveAttribute("aria-label", "Time of day: Day");
-  await expect(page.locator(".gw-tag", { hasText: "la rana" })).toHaveCount(0);
+  await expect(tag).toHaveText("la rana · frog");
+  expect(await page.evaluate(() => (window as unknown as { __garden: { frogAwake(): boolean } }).__garden.frogAwake())).toBe(false);
   expect(errors).toEqual([]);
 });
 
