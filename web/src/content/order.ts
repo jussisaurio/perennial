@@ -57,9 +57,18 @@ export const deckKind = (w: { pos?: string | null }) => kindOf(w.pos);
 
 /**
  * Where the n-th garden word goes in the course (0-based): the 3rd word, so the
- * first session shows the idea; the 12th, so it reads as a rule; then every 27th.
+ * first session shows the idea; the 12th, so it reads as a rule; then with gaps
+ * that start at 27 words and shrink by 2 each time, to no fewer than 12. New
+ * words slow down as reviews fill the 5 minutes (12 on day one, about 2 a day
+ * by day 30), so even gaps in words would be ever longer gaps in days; these
+ * keep a new garden word about once a week for the first two months.
  */
-const gardenSlot = (n: number) => (n === 0 ? 2 : 11 + (n - 1) * 27);
+export function gardenSlot(n: number): number {
+  if (n === 0) return 2;
+  let slot = 11;
+  for (let i = 1; i < n; i++) slot += Math.max(12, 27 - 2 * (i - 1));
+  return slot;
+}
 
 type DeckWord = { id: string; pos?: string | null; rank: number; garden?: GardenWord };
 const orders = new WeakMap<object, readonly DeckWord[]>();

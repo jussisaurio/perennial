@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { Deck, GARDEN_WORDS, type GardenWord } from "../deck/schema";
-import { courseOrder, deckKind, introOrder, kindOf, nextWords, notStartedWords, sinceGarden, type WordKind } from "./order";
+import { courseOrder, deckKind, gardenSlot, introOrder, kindOf, nextWords, notStartedWords, sinceGarden, type WordKind } from "./order";
 
 const kind = (s: string): WordKind => ({ n: "noun", v: "verb", o: "other", f: "function" })[s[0] as "n" | "v" | "o" | "f"] as WordKind;
 
@@ -44,7 +44,15 @@ describe("courseOrder", () => {
     expect(courseOrder(deck)).toBe(order); // memoized for this deck
   });
 
-  test("garden words come 3rd, 12th, then every 27th, in garden order; the rest keep their pattern", () => {
+  test("garden places: 3rd, 12th, then gaps that start at 27 words and shrink by 2 to a floor of 12", () => {
+    const places = Array.from({ length: 25 }, (_, n) => gardenSlot(n) + 1);
+    expect(places.slice(0, 6)).toEqual([3, 12, 39, 64, 87, 108]);
+    const gaps = places.slice(2).map((p, i) => p - places[i + 1]);
+    for (let i = 1; i < gaps.length; i++) expect(gaps[i]).toBe(Math.max(12, gaps[i - 1] - 2));
+    expect(gaps.at(-1)).toBe(12);
+  });
+
+  test("garden words come at their places, in garden order; the rest keep their pattern", () => {
     const pos = ["noun", "verb", "noun", "adj", "det"];
     const others = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, pos: pos[i % 5], rank: i + 1 }));
     // Ranks and deck order say nothing: the garden list decides (cat, bird, dog, ...).
@@ -81,8 +89,8 @@ describe("courseOrder", () => {
     test(`${lang}: a learner at course word 300 with no garden word yet gets one garden word, then 4 others, until caught up`, () => {
       const done = new Set(course.slice(0, 300).filter((w) => !w.garden).map((w) => w.id));
       const next = nextWords(course, (w) => !done.has(w.id), sinceGarden([...done].map((_, i) => ({ first: i }))));
-      const behind = course.slice(0, 300).filter((w) => w.garden).length; // 12: places 3, 12, 39, … 282
-      expect(behind).toBe(12);
+      const behind = course.slice(0, 300).filter((w) => w.garden).length;
+      expect(behind).toBe(Array.from({ length: 25 }, (_, n) => gardenSlot(n)).filter((s) => s < 300).length); // 20: places 3, 12, 39, … 292
       expect(next.slice(0, behind * 5).map((w) => !!w.garden)).toEqual(Array.from({ length: behind * 5 }, (_, i) => i % 5 === 0));
       // The garden words come in garden order; the others in course order, from word 301 on.
       expect(next.filter((w) => w.garden).slice(0, behind).map((w) => w.garden)).toEqual(GARDEN_WORDS.slice(0, behind));
