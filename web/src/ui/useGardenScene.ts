@@ -47,7 +47,8 @@ export function useGardenScene({
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
+  // `retry`: loading again can help (its code did not load), so the page offers it; an installed app has no reload button.
+  const [failed, setFailed] = useState<{ text: string; retry?: true } | null>(null);
   const [selected, setSelected] = useState<PlacedPlant | null>(null);
   const [labels, setLabels] = useState<Label[]>([]);
   const [ready, setReady] = useState(false);
@@ -78,14 +79,20 @@ export function useGardenScene({
     const el = wrap.current;
     const ro = new ResizeObserver(([e]) => s?.resize(e.contentRect.width, e.contentRect.height));
     void (async () => {
-      const mod = await import("../garden/scene");
-      if (!alive) return;
-      if (!mod.webglAvailable()) return setFailed("Your browser cannot show 3D graphics.");
+      const mod = await import("../garden/scene").catch((e: unknown) => {
+        // main.tsx did not reload (it reloads at most once a minute): say so, not a garden stuck loading.
+        console.error("[garden] the 3D garden's code did not load", e);
+        return "failed" as const;
+      });
+      // undefined: this tab runs a release whose chunk is gone after a deploy; main.tsx is reloading the page.
+      if (!alive || !mod) return;
+      if (mod === "failed") return setFailed({ text: "The garden could not load.", retry: true });
+      if (!mod.webglAvailable()) return setFailed({ text: "Your browser cannot show 3D graphics." });
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
         s = new mod.GardenScene(canvas.current!, data.l, { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]) }, reduced, lang, data.visitors);
       } catch (e) {
-        return setFailed(e instanceof Error ? e.message : String(e));
+        return setFailed({ text: e instanceof Error ? e.message : String(e) });
       }
       scene.current = s;
       // Dev builds only: the scene, for screenshot scripts.

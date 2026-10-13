@@ -188,10 +188,15 @@ export function GardenWalk({
     return (
       <div className="gw-fallback page">
         <h1>Your garden</h1>
-        <p>{failed}</p>
+        <p>{failed.text}</p>
         <p className="muted">You can still see all your words in the Words list, and the small garden on the Today screen.</p>
         <div className="row">
-          <button className="primary" onClick={onExit}>
+          {failed.retry && (
+            <button className="primary" onClick={() => location.reload()}>
+              Try again
+            </button>
+          )}
+          <button className={failed.retry ? "ghost" : "primary"} onClick={onExit}>
             Back
           </button>
         </div>
