@@ -16,6 +16,8 @@ import { SessionScreen } from "./ui/Session";
 import { DAILY_MINUTES } from "./data/practice";
 import { SettingsScreen } from "./ui/Settings";
 import { WordsScreen } from "./ui/Words";
+import { GiftArrival } from "./ui/Gift";
+import { pendingGift } from "./data/gift";
 
 type Route = "/today" | "/garden" | "/words" | "/words/add" | "/settings" | "/session";
 const ROUTES: Route[] = ["/today", "/garden", "/words", "/words/add", "/settings", "/session"];
@@ -161,6 +163,8 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
   const [startError, setStartError] = useState("");
+  // A friend's seed came with this visit (#213). Only then is GiftArrival drawn: its learner queries cost every learner time.
+  const [giftHere] = useState(() => pendingGift() !== null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
   const deckFailed = useDeck(course?.lang).failed;
   const store = useStore();
@@ -186,6 +190,25 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
       />
     );
   const lang = course.lang;
+  /** Start a course in another language: from the language menu, or a friend's seed (#213). */
+  const startAnother = (l: string) => {
+    setStartError("");
+    const previous = course.lang;
+    // Refused (by the server, or another tab is the writer): the new course is
+    // rolled back, so go back to the one they came from and say why.
+    // Counted once the server has it (offline: when the queue sends it). A tab closed
+    // before then loses the event, though the course is still sent: a slight undercount.
+    void saveCourse(store, l, {}).then(
+      () => track("course_started", { lang: l, another: true }),
+      (e) => {
+        console.error("course not saved", e);
+        choose(previous);
+        setStartError(`Could not start ${language(l).name}. Please try again later.`);
+      },
+    );
+    choose(l);
+    go("/today");
+  };
   // Every screen but Settings needs the deck: without it they would wait forever.
   // The top bar stays, so the learner can still switch language or open Settings.
   const noDeck = deckFailed && route !== "/settings";
@@ -220,24 +243,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
             choose(l);
             go("/today");
           }}
-          onStart={(l) => {
-            setStartError("");
-            const previous = course.lang;
-            // Refused (by the server, or another tab is the writer): the new course is
-            // rolled back, so go back to the one they came from and say why.
-            // Counted once the server has it (offline: when the queue sends it). A tab closed
-            // before then loses the event, though the course is still sent: a slight undercount.
-            void saveCourse(store, l, {}).then(
-              () => track("course_started", { lang: l, another: true }),
-              (e) => {
-                console.error("course not saved", e);
-                choose(previous);
-                setStartError(`Could not start ${language(l).name}. Please try again later.`);
-              },
-            );
-            choose(l);
-            go("/today");
-          }}
+          onStart={startAnother}
         />
         <div className="tabs" role="tablist">
           {TABS.map((t) => {
@@ -257,6 +263,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
         </p>
       )}
       {noDeck && <DeckFailed lang={lang} />}
+      {route === "/today" && giftHere && <GiftArrival courses={courses.map((c) => c.lang)} onStart={startAnother} />}
       {route === "/today" && !noDeck && (
         <Home
           lang={lang}
