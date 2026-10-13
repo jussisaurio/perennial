@@ -69,14 +69,8 @@ export async function reveal(page: Page) {
   await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
 }
 
-/** Answer a new-word card: show its meaning, then "New to me" ("1") or "I knew it" ("2"). */
-export async function answerIntro(page: Page, key: "1" | "2") {
-  await reveal(page);
-  await advance(page, key);
-}
-
-/** Reveal the answer and grade it (waiting past the double-click guard). */
-export async function grade(page: Page, key: "1" | "2") {
+/** Answer any card: show its answer or meaning, wait past the double-click guard, then press `key` (1 = left, 2 = right). */
+export async function answer(page: Page, key: "1" | "2") {
   await reveal(page);
   await advance(page, key);
 }

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { answerIntro, startCourse, startSession } from "./helpers";
+import { answer, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   await page.goto("/");
@@ -45,6 +45,6 @@ test("connection lost mid-session: practice continues", async ({ page, context }
   await startSession(page);
   await context.setOffline(true);
   // The answer goes into the write queue; the session takes it with no connection.
-  await answerIntro(page, "1");
+  await answer(page, "1");
   await context.setOffline(false);
 });

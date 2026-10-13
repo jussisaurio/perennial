@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { answerIntro, startCourse, startSession } from "./helpers";
+import { answer, startCourse, startSession } from "./helpers";
 
 test("sound off: nothing is spoken, speaker buttons hide, and the icon and Settings agree", async ({ page }) => {
   // Count what would be spoken instead of speaking it.
@@ -19,7 +19,7 @@ test("sound off: nothing is spoken, speaker buttons hide, and the icon and Setti
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   const before = await spoken();
-  await answerIntro(page, "1"); // "New to me": next card, no autoplay now
+  await answer(page, "1"); // "New to me": next card, no autoplay now
   // No event to wait for when nothing is spoken. Autoplay can wait up to 1.5 s for voices (speech.ts).
   await page.waitForTimeout(2000);
   expect(await spoken()).toBe(before);

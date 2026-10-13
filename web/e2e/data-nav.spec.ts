@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { answerIntro, openAdd, startCourse, startSession } from "./helpers";
+import { answer, openAdd, startCourse, startSession } from "./helpers";
 
 test("the browser Back button moves between screens instead of leaving the app", async ({ page }) => {
   await startCourse(page);
@@ -12,7 +12,7 @@ test("the browser Back button moves between screens instead of leaving the app",
   await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
 
   await startSession(page);
-  await answerIntro(page, "1");
+  await answer(page, "1");
   await page.goBack(); // leaving a session with Back returns home, answers kept
   await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
 });
@@ -20,7 +20,7 @@ test("the browser Back button moves between screens instead of leaving the app",
 test("export downloads everything, including the review log", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
-  await answerIntro(page, "2"); // one review: "I knew it"
+  await answer(page, "2"); // one review: "I knew it"
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /Done/ }).click();
   await page.getByRole("tab", { name: "Settings" }).click();

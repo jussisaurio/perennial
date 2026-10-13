@@ -450,7 +450,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
 }
 
 const SHORTCUTS: [string, string][] = [
-  ["Space / Enter", "Show answer, Check, Next"],
+  ["Space / Enter", "Show the answer or meaning, Check, Next"],
   ["1 or ←", "The left answer: New to me, I forgot"],
   ["2 or →", "The right answer: I knew it, I remembered"],
   ["R", "Play the audio again"],

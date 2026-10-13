@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { answerIntro, advance, expectServerRows, grade, kicker, reveal, serverRows, startCourse, startSession } from "./helpers";
+import { advance, answer, expectServerRows, kicker, reveal, serverRows, startCourse, startSession } from "./helpers";
 
 async function continueIntros(page: Page, n: number) {
   for (let i = 0; i < n; i++) {
     await expect(kicker(page)).toHaveText(/new word/);
-    await answerIntro(page, "1");
+    await answer(page, "1");
   }
 }
 
@@ -20,6 +20,7 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   await expect(page.locator(".session")).toHaveAttribute("data-card", front!);
   await expect(page.getByRole("button", { name: /I knew it/ })).toHaveCount(0);
   await reveal(page);
+  await expect(page.locator(".session")).toHaveAttribute("data-card", front!); // still the same card: the early "2" did not answer it
   await expect(page.locator(".gloss")).toBeVisible();
   // Then it asks a question whose answers say what happens next.
   await expect(page.getByText("Is this word new to you?")).toBeVisible();
@@ -65,12 +66,12 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
   await expectServerRows(page, "review", 0);
 
   // Forget again for real, then the retry arrives labelled as such.
-  await grade(page, "1");
+  await answer(page, "1");
   for (let i = 0; i < 8; i++) {
     const k = (await kicker(page).textContent()) ?? "";
     if (k.includes("try again")) break;
-    if (k.includes("new word") && !k.includes("quick")) await answerIntro(page, "1");
-    else await grade(page, "2");
+    if (k.includes("new word") && !k.includes("quick")) await answer(page, "1");
+    else await answer(page, "2");
   }
   await expect(kicker(page)).toHaveText(/try again/);
   // The same word, perhaps in another sentence and so another form of it.
@@ -80,7 +81,7 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
 test("'I knew it' skips the quick check (no extra note: the button said so), is stored as 'known', and is undoable", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
-  await answerIntro(page, "2");
+  await answer(page, "2");
   await expect(page.locator(".session-note")).toHaveCount(0); // the button already promised "Back in about a week"
   await expectServerRows(page, "review", 1);
   const [r] = await serverRows<{ grade: number; kind: string }>(page, "review");
@@ -93,7 +94,7 @@ test("'I knew it' skips the quick check (no extra note: the button said so), is 
 test("leaving after doing something shows the summary", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
-  await answerIntro(page, "1");
+  await answer(page, "1");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.locator(".summary h1")).toHaveText("You saw 1 new word."); // no answer yet, so not planted
   await expect(page.getByText("session paused")).toBeVisible(); // not "complete" when you leave early
@@ -111,7 +112,7 @@ test("time on a new-word card counts toward today's minutes", async ({ page }) =
   await continueIntros(page, 4);
   await expect(kicker(page)).toHaveText(/quick check/);
   await reveal(page);
-  await grade(page, "2");
+  await answer(page, "2");
   await expect.poll(async () => (await serverRows(page, "review")).length).toBeGreaterThan(0);
   const [first] = await serverRows<{ duration_ms: number }>(page, "review");
   expect(first.duration_ms).toBeGreaterThanOrEqual(20_000);
