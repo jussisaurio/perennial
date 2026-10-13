@@ -357,15 +357,17 @@ function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale
     }
     case "frog":
       return { art: night ? FROG : FROG_ASLEEP, scale: 1.4, x: l.x - 11 };
-    // Garden words sit side by side at the strip's right end (they rank last in the deck), cat after
-    // perro and before pez: the dog sits on the left of its plant and the fish's bowl on the right.
+    // Early in the course, the garden words are the learner's highest-ranked words, so their plants
+    // stand side by side at the strip's right end: perro, then gato, then pez. So the dog sits on the
+    // left of its plant and the fish's bowl on the right, and neither covers the cat.
     case "dog":
       return { art: DOG, scale: 1.3, x: l.x - 12 };
     case "fish":
       return { art: FISHBOWL, scale: 1.2, x: l.x + 11 };
     case "butterfly": {
       const p = onStem(1);
-      return { art: night ? BUTTERFLY_CLOSED : BUTTERFLY, scale: 1.4, x: p.x, top: p.y - tall(BUTTERFLY, 1.4) + 3 };
+      const art = night ? BUTTERFLY_CLOSED : BUTTERFLY;
+      return { art, scale: 1.4, x: p.x, top: p.y - tall(art, 1.4) + 3 };
     }
     default:
       return null;

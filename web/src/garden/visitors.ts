@@ -90,7 +90,7 @@ export const VISITORS: readonly VisitorDef[] = [
   { id: "dog", words: { es: "el perro", de: "der Hund" }, gloss: "dog", rare: false, tag: "approach", garden: "dog", schedule: ({ facts }) => facts.garden.has("dog") },
   // Swims round the pond in the walk; the strip has no pond, so there it has a bowl by its plant. Small and moving: tap only.
   { id: "fish", words: { es: "el pez", de: "der Fisch" }, gloss: "fish", rare: false, tag: "tap", garden: "fish", schedule: ({ facts }) => facts.garden.has("fish") },
-  // On top of its word's plant; in the walk by day only.
+  // On top of its word's plant; in the walk not at night.
   { id: "butterfly", words: { es: "la mariposa", de: "der Schmetterling" }, gloss: "butterfly", rare: false, tag: "tap", garden: "butterfly", schedule: ({ facts }) => facts.garden.has("butterfly") },
 ];
 

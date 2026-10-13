@@ -124,6 +124,8 @@ export class SceneVisitors {
   private moth = { cx: 0, cz: 0, a: 0, r: MOTH_R, bump: -1, next: 7, n: 0 };
   /** The fish's place on its circle round the pond, and its sprite's heading. */
   private fish = { a: 0, heading: null as THREE.InstancedBufferAttribute | null };
+  /** The butterfly is off its flower (tick() moves it only then). */
+  private butterflyUp = false;
 
   private world: VisitorWorld;
   private list: VisitorView[];
@@ -266,12 +268,12 @@ export class SceneVisitors {
     showCell(s.uv, (g.lit ? T.VISITOR_CELL.gnomeFrontLit : T.VISITOR_CELL.gnomeFront) + (g.pose === "side" ? 1 : 0));
   }
 
-  /** The frog and the moth come out at dusk, and the butterfly goes; the gnome lights its lantern when the others come on. */
-  setDark(dark: boolean) {
+  /** The frog and the moth come out at dusk; the butterfly goes at night, like the garden's own; the gnome lights its lantern when the others come on. */
+  setDark(dark: boolean, night: boolean) {
     this.gnome.lit = dark;
     for (const s of this.sprites) {
       if (s.v.id === "frog" || s.v.id === "moth") s.mesh.visible = dark;
-      if (s.v.id === "butterfly") s.mesh.visible = !dark;
+      if (s.v.id === "butterfly") s.mesh.visible = !night;
       // The moth is always in its lantern's light.
       if (s.v.id === "moth") s.mesh.material.uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
       if (s.v.id === "gnome") this.gnomeCell(s);
@@ -455,8 +457,12 @@ export class SceneVisitors {
         // Now and then it lifts off its flower, flapping, and settles again. With reduced motion it rests, wings open.
         if (!s.mesh.visible || reducedMotion) continue;
         const lift = Math.max(0, Math.sin(elapsed * 0.7));
-        s.pos.setXYZ(0, s.x + Math.sin(elapsed * 1.7) * 0.04 * lift, s.y + lift * 0.1, s.z);
-        s.pos.needsUpdate = true;
+        // At rest: one write to land it back on its flower, then none until it lifts again.
+        if (lift > 0 || this.butterflyUp) {
+          s.pos.setXYZ(0, s.x + Math.sin(elapsed * 1.7) * 0.04 * lift, s.y + lift * 0.1, s.z);
+          s.pos.needsUpdate = true;
+          this.butterflyUp = lift > 0;
+        }
         showCell(s.uv, lift > 0 && Math.sin(elapsed * 9) > 0.3 ? T.VISITOR_CELL.butterflyClosed : T.VISITOR_CELL.butterfly);
       } else if (s.v.id === "fish") {
         // One slow circle round the pond, head first. With reduced motion it stays where it is.

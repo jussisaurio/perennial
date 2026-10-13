@@ -1149,7 +1149,7 @@ export class GardenScene {
     const [sx, sy, sz] = t === "day" ? [-0.5, 0.55, -0.7] : t === "dusk" ? [-0.95, 0.12, -0.3] : [0.6, 0.45, -0.65];
     this.sunDir.set(sx, sy, sz).normalize();
     for (const bf of this.butterflies) bf.mesh.visible = t !== "night";
-    this.guests.setDark(dark);
+    this.guests.setDark(dark, t === "night");
     if (this.snore) this.snore.visible = t === "night";
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
