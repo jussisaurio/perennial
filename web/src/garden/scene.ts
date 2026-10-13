@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { collide, viewpoint, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
-import { stemHeight } from "../ui/plant";
+import { plantHeight as plantHeightOf, stemHeight } from "../ui/plant";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, type VisitorId, type VisitorView } from "./visitors";
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
@@ -412,7 +412,8 @@ export class GardenScene {
         reducedMotion,
         elapsed: () => this.elapsed,
         bedTop: BED_H,
-        plantTop: (growth) => BED_H + plantHeight(growth),
+        // The plant's own drawn height (its genome and meaning too), as its sprite shows it.
+        plantTop: (p) => BED_H + (plantHeightOf(p.lemma, p.growth, 1) / T.VIEW_H) * SPRITE_H * PLANT_SCALE,
         sprite: (tex, x, y, z, u, uw, size) => {
           const mesh = sprites(tex, [{ x, y, z, u, v: 0, uw, vh: 1, phase: 0, droop: 0, scale: 1, index: -6 }], size, size);
           mesh.material.uniforms.uSway.value = 0;

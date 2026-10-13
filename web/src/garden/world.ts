@@ -2,10 +2,9 @@
 // of word per row of beds (nouns, verbs, …), the most common words nearest
 // the gate. Pure functions, so the layout is stable and testable.
 
-import { toPos, type Pos } from "../deck/schema";
+import { toPos, type GardenWord, type Pos } from "../deck/schema";
 import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
-import type { GardenWord } from "../deck/schema";
 
 export interface GardenPlant {
   id: string;
