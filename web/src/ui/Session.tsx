@@ -13,7 +13,7 @@ import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats } from "./stats";
 import { useSessionRunner, type Card, type Ended } from "./useSessionRunner";
-import { useKeys } from "./useShortcut";
+import { useKeys, useShortcut } from "./useShortcut";
 import { track } from "../observability";
 import { DAILY_MINUTES } from "../data/practice";
 import { plantStage, readMemory } from "../core/memory";
@@ -560,7 +560,8 @@ function Summary({
   // Once per summary: an Undo from here changes the counts, but it also leaves the summary.
   useEffect(() => track("session_finished", { ended, answers: counts.answers, newWords: counts.intros }), []); // eslint-disable-line react-hooks/exhaustive-deps
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  useKeys(useMemo(() => ({ Enter: onExit }), [onExit]));
+  // Enter is Done, unless a button has focus: then Enter presses that button (#239).
+  useShortcut("Enter", onExit);
   // A new word is a planted seed once it has an answer: its quick check, or "I knew it".
   // Watered: plants that were already in the garden before this session.
   const seeds = learner ? [...introduced].filter((id) => readMemory(learner, id)?.reps).length : 0;
