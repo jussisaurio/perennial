@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { addEmail, advance, expectServerRows, newEmail, openAdd, signIn, startCourse, startSession } from "./helpers";
+import { answerIntro, addEmail, expectServerRows, newEmail, openAdd, signIn, startCourse, startSession } from "./helpers";
 
 test("progress made before adding an email stays, and another device signs in to the same garden", async ({ browser }) => {
   const one = await browser.newPage();
   await startCourse(one);
   await startSession(one);
-  await advance(one, "2"); // "I knew it": one review, still anonymous
+  await answerIntro(one, "2"); // "I knew it": one review, still anonymous
   await expectServerRows(one, "review", 1);
   await one.getByRole("button", { name: "End session" }).click();
   await one.getByRole("button", { name: /Done/ }).click();

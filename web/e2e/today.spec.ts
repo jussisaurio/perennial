@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { advance, grade, kicker, reveal, startCourse } from "./helpers";
+import { answerIntro, grade, kicker, reveal, startCourse } from "./helpers";
 
 // #189: 5 minutes a day for everyone, and "Practice 5 more minutes" whenever the learner wants.
 test.use({ viewport: { width: 1280, height: 900 } });
@@ -75,7 +75,7 @@ test("done for the day (under a minute left counts): watered, and 5 more minutes
 
   // Plant one seed ("I knew it" answers it at once), stop: the summary says what happened, and offers 5 more minutes again.
   await expect(kicker(page)).toHaveText("new word");
-  await advance(page, "2");
+  await answerIntro(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
   await expect(page.locator("main.summary")).toContainText(/You (know|started) \d+ words?/);
@@ -85,7 +85,7 @@ test("done for the day (under a minute left counts): watered, and 5 more minutes
   await expect(timeLeft(page)).toHaveText("5 min left");
   // Each chunk has its own summary: the seed from the last one is not counted again.
   await expect(kicker(page)).toHaveText("new word");
-  await advance(page, "2");
+  await answerIntro(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
 });
@@ -112,7 +112,7 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
   await expect(startButton(page)).toHaveText("Today's 5 minutes");
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
-  await advance(page, "2"); // "I knew it": one seed planted
+  await answerIntro(page, "2"); // "I knew it": one seed planted
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
   await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
@@ -169,7 +169,7 @@ test.describe("time running out never cuts the card on screen", () => {
     expect(await card(page)).toBe(shown);
     await expect(kicker(page)).toHaveText("new word");
     await expect(page.locator(".word")).toHaveText(word);
-    await advance(page, "1");
+    await answerIntro(page, "1");
     await expect(kicker(page)).toHaveText(/quick check/);
     await expect(page.locator("main.card")).toHaveAttribute("data-lemma", word);
     await reveal(page);
@@ -183,7 +183,7 @@ test.describe("time running out never cuts the card on screen", () => {
     await startButton(page).click();
     for (let i = 0; i < 4; i++) {
       await expect(kicker(page)).toHaveText("new word");
-      await advance(page, "1");
+      await answerIntro(page, "1");
     }
     await expect(kicker(page)).toHaveText(/quick check/);
     const lemma = (await page.locator("main.card").getAttribute("data-lemma"))!;

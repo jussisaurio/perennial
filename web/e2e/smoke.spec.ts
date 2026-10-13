@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { advance, startCourse, startSession } from "./helpers";
+import { answerIntro, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   await page.goto("/");
@@ -9,6 +9,8 @@ test("smoke: landing → start learning → a session → progress survives a re
   await page.getByRole("button", { name: /today's 5 minutes/i }).click();
   await expect(page.locator(".kicker")).toBeVisible();
   // Answer "I knew it" on the first new word: that records a review.
+  await page.getByRole("button", { name: /Show meaning/ }).click();
+  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
   await page.getByRole("button", { name: /I knew it/ }).click();
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /^Done/ }).click();
@@ -43,6 +45,6 @@ test("connection lost mid-session: practice continues", async ({ page, context }
   await startSession(page);
   await context.setOffline(true);
   // The answer goes into the write queue; the session takes it with no connection.
-  await advance(page, "1");
+  await answerIntro(page, "1");
   await context.setOffline(false);
 });

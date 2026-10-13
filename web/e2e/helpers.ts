@@ -63,11 +63,16 @@ export async function advance(page: Page, key: string) {
   await expect(root).not.toHaveAttribute("data-card", before!);
 }
 
-/** Reveal the answer and wait until the double-click guard lets a grade through. */
+/** Reveal the answer and wait until the double-click guard lets an answer through. */
 export async function reveal(page: Page) {
   await page.keyboard.press("Space");
-  await expect(page.getByRole("button", { name: /I remembered|Understood/ })).toBeVisible();
   await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
+}
+
+/** Answer a new-word card: show its meaning, then "New to me" ("1") or "I knew it" ("2"). */
+export async function answerIntro(page: Page, key: "1" | "2") {
+  await reveal(page);
+  await advance(page, key);
 }
 
 /** Reveal the answer and grade it (waiting past the double-click guard). */
