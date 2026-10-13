@@ -90,7 +90,7 @@ describe("courseOrder", () => {
       const done = new Set(course.slice(0, 300).filter((w) => !w.garden).map((w) => w.id));
       const next = nextWords(course, (w) => !done.has(w.id), sinceGarden([...done].map((_, i) => ({ first: i }))));
       const behind = course.slice(0, 300).filter((w) => w.garden).length;
-      expect(behind).toBe(Array.from({ length: 25 }, (_, n) => gardenSlot(n)).filter((s) => s < 300).length); // 20: places 3, 12, 39, … 292
+      expect(behind).toBe(20); // places 3, 12, 39, … 292
       expect(next.slice(0, behind * 5).map((w) => !!w.garden)).toEqual(Array.from({ length: behind * 5 }, (_, i) => i % 5 === 0));
       // The garden words come in garden order; the others in course order, from word 301 on.
       expect(next.filter((w) => w.garden).slice(0, behind).map((w) => w.garden)).toEqual(GARDEN_WORDS.slice(0, behind));
@@ -137,6 +137,9 @@ describe("courseOrder", () => {
       expect(words.filter((w) => w.garden).map((w) => w.garden).sort()).toEqual([...GARDEN_WORDS].sort());
       const order = courseOrder({ words });
       expect([order[2].garden, order[11].garden]).toEqual(["cat", "bird"]);
+      // The shrinking gaps (#236), in the real course: the 4th garden word at 64 (not 66), the snail at 196, the ant at 352.
+      const at = (g: GardenWord) => order.findIndex((w) => w.garden === g) + 1;
+      expect([at("sun"), at("snail"), at("ant")]).toEqual([64, 196, 352]);
     });
   }
 });
