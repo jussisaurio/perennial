@@ -389,7 +389,8 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
   background: linear-gradient(transparent, var(--paper) 35%);
 }
 .actions button { padding: 0.9rem 1.5rem; font-size: 1.05rem; font-weight: 600; }
-@media (max-width: 480px) { .actions button { flex: 1; } }
+/* Two answers side by side on a phone: less side padding, so "I remembered" fits on one line down to 320 px (#202). */
+@media (max-width: 480px) { .actions button { flex: 1; padding-inline: 0.6rem; text-wrap: balance; } }
 .answer { font-size: 1.5rem; padding: 0.85rem 1.1rem; border-radius: 14px; border-width: 1.5px; }
 .answer.ok { border-color: var(--leaf); background: var(--leaf-soft); }
 .answer.bad { border-color: var(--persimmon); background: var(--persimmon-soft); animation: shake 0.35s; }
@@ -442,8 +443,12 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 }
 
 .growth-strip { display: flex; justify-content: space-between; gap: 0.25rem; margin: 1.5rem 0 2rem; padding: 0 0.25rem; }
-.growth-strip figure { margin: 0; display: grid; justify-items: center; gap: 0.25rem; animation: rise 0.6s var(--ease) both; }
+.growth-strip figure { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: start; gap: 0.25rem; animation: rise 0.6s var(--ease) both; flex: 1 1 0; min-width: 0; }
+/* Five plants at 72 px don't fit a 320 px phone: they shrink to share the row, all to the same size, instead of pushing the page sideways. */
+.growth-strip svg { width: 100%; max-width: 72px; height: auto; }
 .growth-strip figcaption { font-size: 0.74rem; color: var(--muted); white-space: nowrap; }
+/* Narrow phones: a caption wraps under its own plant instead of running into the next. */
+@media (max-width: 400px) { .growth-strip figcaption { white-space: normal; text-align: center; max-width: 100%; } }
 .garden-mini { overflow: visible; }
 .garden-mini .seed { fill: var(--ink-2); opacity: 0.5; }
 .garden-mini .sway { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 5s ease-in-out infinite; }
