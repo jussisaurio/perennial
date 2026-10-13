@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { startCourse } from "./helpers";
+import { answer, reveal, startCourse } from "./helpers";
 
 test("phone: bottom tab bar and no horizontal scroll", async ({ page }) => {
   await startCourse(page);
@@ -56,4 +56,31 @@ test("phone: the language menu fits the screen", async ({ page }) => {
     expect(box.x + box.width, step).toBeLessThanOrEqual(viewport.width);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("small phone (320 px): the landing page, the answer buttons and the Words search all fit (#202, #120)", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const fits = () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+  await page.goto("/");
+  // The five-plant strip shares the row: its last plant ends on the screen.
+  // (A phone browser widens the page to fit overflow, so scrollWidth alone can't tell.)
+  const last = page.locator(".growth-strip figure").last();
+  await expect(last).toBeVisible();
+  expect(await last.evaluate((e) => e.getBoundingClientRect().right)).toBeLessThanOrEqual(320);
+  await startCourse(page);
+  await page.locator("button.start").click();
+  for (let i = 0; i < 4; i++) await answer(page, "1");
+  await reveal(page);
+  // "I remembered" on one line: as tall as "I forgot".
+  await expect(page.locator(".actions button").nth(1)).toContainText("I remembered");
+  const [forgot, remembered] = await page.locator(".actions button").evaluateAll((bs) => bs.map((b) => b.getBoundingClientRect().height));
+  expect(remembered).toBe(forgot);
+  expect(remembered).toBeLessThan(64);
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.getByRole("button", { name: /^Done/ }).click();
+  await page.getByRole("tab", { name: "Words" }).click();
+  // The search box keeps the row to itself, so its placeholder is not cut.
+  const search = page.locator(".search");
+  expect(await search.evaluate((e) => e.getBoundingClientRect().width)).toBeGreaterThan(260);
+  expect(await fits()).toBe(true);
 });

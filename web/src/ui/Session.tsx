@@ -384,21 +384,21 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const grade: Grade = verdict && passes(verdict) ? 3 : 1;
-  const checkedAt = useRef(0);
+  // Checking shows the answer: Enter pressed twice must not also move on past it.
+  const { reveal, guarded, armed } = useReveal();
 
   const submit = () => {
     if (verdict) {
-      if (Date.now() - checkedAt.current >= GUARD_MS) onDone(grade);
+      guarded(() => onDone(grade))();
       return;
     }
-    const v = check(value, target, lang);
-    checkedAt.current = Date.now();
-    setVerdict(v);
+    setVerdict(check(value, target, lang));
+    reveal();
     void speak(example?.text ?? word.lemma, tag);
   };
 
   return (
-    <main className="card">
+    <main className="card" data-armed={armed || undefined}>
       <Kicker kind={kicker} />
       <p className="prompt">Type the missing word.</p>
       {example ? (
