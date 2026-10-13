@@ -112,7 +112,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           </button>
         )}
       </div>
-      <div className="row search-row">
+      <div className="row">
         <input ref={search} className="search" type="search" placeholder="Search words or meanings (/)" aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}>
           <option value="all">All</option>

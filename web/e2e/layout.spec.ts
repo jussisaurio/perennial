@@ -72,6 +72,7 @@ test("small phone (320 px): the landing page, the answer buttons and the Words s
   for (let i = 0; i < 4; i++) await answer(page, "1");
   await reveal(page);
   // "I remembered" on one line: as tall as "I forgot".
+  await expect(page.locator(".actions button").nth(1)).toContainText("I remembered");
   const [forgot, remembered] = await page.locator(".actions button").evaluateAll((bs) => bs.map((b) => b.getBoundingClientRect().height));
   expect(remembered).toBe(forgot);
   expect(remembered).toBeLessThan(64);
