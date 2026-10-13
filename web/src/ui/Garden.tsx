@@ -8,14 +8,14 @@ import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
 import { language } from "../content/languages";
-import { StripPlant } from "./plant";
+import { FORM, StripPlant } from "./plant";
 import { hash01 } from "../lib/seed";
-import { plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
+import { growthOf, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
 import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { stripVisitor, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
-import { reducedMotion } from "./Growth";
+import { easeOut, easeOutBack, reducedMotion, type PlantLook } from "./Growth";
 
 const H = 210;
 const GROUND = H - 34;
@@ -61,6 +61,7 @@ export const Garden = memo(function Garden({
   showcase,
   onView,
   visitors,
+  replay,
 }: {
   data: GardenData | null | undefined;
   highlight?: Set<string>;
@@ -70,8 +71,11 @@ export const Garden = memo(function Garden({
   visitors?: { views: VisitorView[]; snailAt: number; lang: string; mole?: boolean } | null;
   /** Offered in the plant card: open this plant in the 3D garden. */
   onView?: (id: string) => void;
+  /** Plants to grow again from these looks, one after another (the summary, #216). Keep it stable: a new list starts again. */
+  replay?: readonly { id: string; from: PlantLook }[] | null;
 }) {
   const wrap = useRef<HTMLDivElement>(null);
+  const replaying = useReplay(replay);
   const scroller = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
   const [scrollX, setScrollX] = useState(0);
@@ -176,7 +180,7 @@ export const Garden = memo(function Garden({
   };
 
   return (
-    <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} onPointerLeave={(e) => hovers(e) && hide()}>
+    <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} data-replaying={replaying.on || undefined} onPointerLeave={(e) => hovers(e) && hide()}>
       <div className="garden-scroll" ref={scroller} onScroll={scrolls ? onScroll : undefined}>
         <svg width={fullWidth} height={H} viewBox={`0 0 ${fullWidth} ${H}`} role="img" aria-label={label}>
           <defs>
@@ -192,7 +196,7 @@ export const Garden = memo(function Garden({
             <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={(e) => hovers(e) && show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
               <g className="sway" style={{ animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: `${5 + hash01(p.id, 29) * 4}s` }}>
                 <g key={perk?.id === p.id ? `perk${perk.n}` : perk?.neighbour === p.id ? `late${perk.n}` : "still"} className={perk?.id === p.id ? "perk" : perk?.neighbour === p.id ? "perk late" : undefined}>
-                  <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} />
+                  <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
                 </g>
                 {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
                 {/* generous invisible hit area */}
@@ -413,3 +417,51 @@ function SproutArrow() {
   );
 }
 
+
+/** Each replayed plant grows for this long, starting one after another, all within REPLAY_MS. */
+const REPLAY_GROW_MS = 450;
+const REPLAY_MS = 2000;
+
+/**
+ * The summary's replay (#216): the plants watered or planted this chunk grow
+ * again, in turn, from how they looked before. About two seconds; a tap on the
+ * garden ends it. Off with reduced motion (the "Growing plants" setting is
+ * checked by whoever passes the list).
+ */
+function useReplay(replay: readonly { id: string; from: PlantLook }[] | null | undefined) {
+  // Starts at 0, not null, so the first frame already shows the old looks rather than flashing the new ones.
+  const [elapsed, setElapsed] = useState<number | null>(() => (replay?.length && !reducedMotion() ? 0 : null));
+  const order = useMemo(() => new Map((replay ?? []).map((r, i) => [r.id, { i, from: r.from }])), [replay]);
+  const gap = order.size > 1 ? Math.min(250, (REPLAY_MS - REPLAY_GROW_MS) / (order.size - 1)) : 0;
+  const total = REPLAY_GROW_MS + gap * Math.max(0, order.size - 1);
+  useEffect(() => {
+    if (!order.size || reducedMotion()) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const e = now - t0;
+      setElapsed(e >= total ? null : e);
+      if (e < total) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      setElapsed(null);
+    };
+    window.addEventListener("pointerdown", stop, { once: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointerdown", stop);
+    };
+  }, [order, total]);
+  return {
+    on: elapsed !== null,
+    look(p: GardenPlant): { growth: number; form: number } | undefined {
+      const r = order.get(p.id);
+      if (elapsed === null || !r) return undefined;
+      const t = Math.min(1, Math.max(0, (elapsed - r.i * gap) / REPLAY_GROW_MS));
+      const fromGrowth = r.from.stage === "seed" ? 0 : growthOf(r.from.s);
+      return { growth: Math.max(0, fromGrowth + (p.growth - fromGrowth) * easeOutBack(t)), form: FORM[r.from.stage] + (FORM[p.stage] - FORM[r.from.stage]) * easeOut(t) };
+    },
+  };
+}

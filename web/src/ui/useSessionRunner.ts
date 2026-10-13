@@ -13,7 +13,7 @@ import { recordReview, undoReview, useLearner, useStore, type Learner, type Sent
 import { hash32 } from "../lib/seed";
 import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
 import { sessionPlan } from "../data/practice";
-import { growthOn, type GrowthMoment } from "./Growth";
+import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
 
 export interface Card {
   task: Task;
@@ -72,6 +72,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   // Words answered this session, and the new words shown (a seed is planted once it has an answer).
   const practised = useRef(new Set<string>());
   const introduced = useRef(new Set<string>());
+  /** Each word's plant as it looked before its first answer this chunk, for the summary's replay (#216). */
+  const before = useRef(new Map<string, PlantLook>());
   // Time on a "New to me" card: it records no review, so its time rides on the word's
   // quick check. Otherwise "minutes today" misses it and the day looks unfinished.
   const introMs = useRef(new Map<string, number>());
@@ -93,6 +95,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       counts.current = { intros: 0, answers: 0 };
       practised.current = new Set();
       introduced.current = new Set();
+      before.current = new Map();
       introMs.current = new Map();
       setUndoStack([]);
       clock.current = new ActiveClock(Date.now());
@@ -229,6 +232,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const record = async (runner: Runner, card: Card, grade: Grade | null, opts: { alreadyKnown?: boolean }): Promise<GrowthMoment | null> => {
     const ms = Math.min(clock.current.tick(Date.now()) - shownAt.current, 60_000);
     const { task, word, example } = card;
+    if (!before.current.has(word.id)) before.current.set(word.id, { s: card.s, stage: card.stage });
     if (task.kind === "intro") {
       counts.current.intros++;
       introduced.current.add(word.id);
@@ -278,6 +282,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     /** What this session did so far, for the summary. */
     counts: counts.current,
     practised: practised.current,
+    before: before.current,
     introduced: introduced.current,
     /** Changes with every card shown, so each card mounts fresh. */
     serial: serial.current,

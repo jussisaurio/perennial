@@ -7,7 +7,7 @@ import type { Learner, Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { WordPlant } from "./plant";
-import { Growth, grows, type GrowthMoment } from "./Growth";
+import { Growth, growthOn, grows, type GrowthMoment, type PlantLook } from "./Growth";
 import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats } from "./stats";
@@ -15,7 +15,7 @@ import { useSessionRunner, type Card, type Ended } from "./useSessionRunner";
 import { useKeys } from "./useShortcut";
 import { track } from "../observability";
 import { DAILY_MINUTES } from "../data/practice";
-import { readMemory } from "../core/memory";
+import { plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 
 /** The correct answer with the letters to look at marked. */
@@ -84,7 +84,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
     noteTimer.current = setTimeout(() => setNote(null), 1800);
   };
 
-  const { learner, tag, runner, card, done, active, ended, counts, practised, introduced, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
+  const { learner, tag, runner, card, done, active, ended, counts, practised, introduced, before, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
     lang,
     minutes,
     onExit,
@@ -119,7 +119,7 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
         </button>
       </header>
       {done ? (
-        <Summary learner={learner} counts={counts} practised={practised} introduced={introduced} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} />
+        <Summary learner={learner} counts={counts} practised={practised} introduced={introduced} before={before} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} onDone={finish} />
       ) : null}
@@ -508,6 +508,7 @@ function Summary({
   counts,
   practised,
   introduced,
+  before,
   ended,
   onMore,
   onExit,
@@ -516,6 +517,7 @@ function Summary({
   counts: { intros: number; answers: number };
   practised: Set<string>;
   introduced: Set<string>;
+  before: Map<string, PlantLook>;
   ended: Ended;
   onMore: () => void;
   onExit: () => void;
@@ -532,6 +534,17 @@ function Summary({
   const met = introduced.size - seeds;
   const did = seeds + watered > 0;
   const highlight = useMemo(() => new Set([...practised, ...introduced]), [practised, introduced]);
+  // Worked out once, when the summary opens: later syncs update the learner, and must not start the replay again.
+  const [replay] = useState(() => {
+    if (!learner || !growthOn()) return null;
+    const grew = [...before].flatMap(([id, from]) => {
+      const read = readMemory(learner, id);
+      const word = learner.words.get(id);
+      if (!read || !word) return [];
+      return grows({ word: word.lemma, from, to: { s: read.s, stage: plantStage(read) }, planted: false }) ? [{ id, from }] : [];
+    });
+    return grew.length ? grew : null;
+  });
   const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? ""));
   const title = ended === "user" ? "Session paused" : "Session complete";
   const why = ended === "user" ? "You can continue later. Your answers are saved." : ended === "empty" ? "Every plant has water." : null;
@@ -548,7 +561,7 @@ function Summary({
         </p>
       )}
       {why && <p className="muted">{why}</p>}
-      <Garden data={garden} highlight={highlight} compact />
+      <Garden data={garden} highlight={highlight} replay={replay} compact />
       {garden && seeds > 0 && garden.total === seeds && <p className="muted small first-plants">{firstPlantsLine(garden.total)}</p>}
       {stats && (
         <p>

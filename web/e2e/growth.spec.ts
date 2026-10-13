@@ -88,3 +88,27 @@ test("the setting 'Next card right away' skips the moment", async ({ page }) => 
   await page.goto("/#/settings");
   await expect(page.getByRole("radio", { name: "Next card right away" })).toHaveAttribute("aria-checked", "true");
 });
+
+test("the summary replays what grew this chunk, then rests; a tap ends it (#216)", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  await page.locator("button.start").click();
+  await answer(page, "2"); // I knew it: a seed that springs up to a bud
+  await expect(moment(page)).toHaveCount(0);
+  await freeze(page);
+  await page.getByRole("button", { name: "End session" }).click();
+  const garden = page.locator("main.summary .garden");
+  await expect(garden).toHaveAttribute("data-replaying", "true");
+  await page.clock.runFor(2_100);
+  await expect(garden).not.toHaveAttribute("data-replaying", "true");
+  // Again, ended by a tap this time: the clock stays stopped, so only the tap can end it.
+  await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
+  await page.clock.resume();
+  await answer(page, "2");
+  await expect(moment(page)).toHaveCount(0);
+  await freeze(page);
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(garden).toHaveAttribute("data-replaying", "true");
+  await page.mouse.click(5, 5);
+  await expect(garden).not.toHaveAttribute("data-replaying", "true");
+});
