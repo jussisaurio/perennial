@@ -8,6 +8,8 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { plantStage, type MemoryRow, type PlantStage } from "../core/memory";
 import type { Word } from "../data/learner";
 import { WordPlant, rareOf, type Rare } from "./plant";
+import { giftLink } from "../data/gift";
+import { track } from "../observability";
 
 export interface GuideRow {
   l: Word;
@@ -117,6 +119,47 @@ export function FieldGuide({ rows, open, onOpen, detail }: { rows: GuideRow[]; o
   );
 }
 
+/**
+ * "Give this seed to a friend" (#213): a link that plants this word first in a
+ * friend's garden. The phone's share sheet where there is one, otherwise the
+ * link is copied. Only on a known word, and only when the learner chooses it.
+ */
+function GiveSeed({ word }: { word: Word }) {
+  const [copied, setCopied] = useState(false);
+  // Only deck words: a learner's own words are theirs alone, and not in a friend's deck.
+  if (word.source !== "deck") return null;
+  const give = async () => {
+    const url = giftLink(word.id);
+    const text = `I grew “${word.lemma}” in Perennial. Here is a seed for you.`;
+    if (navigator.share) {
+      const shared = await navigator.share({ text, url }).then(
+        () => true,
+        (e: unknown) => {
+          // Closing the share sheet is a choice, not an error. Anything else: copy the link instead.
+          if (e instanceof DOMException && e.name === "AbortError") return null;
+          console.warn("[seed] share failed; copying the link instead", e);
+          return false;
+        },
+      );
+      if (shared) track("seed_shared", {});
+      if (shared !== false) return;
+    }
+    if (!navigator.clipboard) return console.warn("[seed] no share sheet and no clipboard here");
+    await navigator.clipboard.writeText(`${text} ${url}`).then(
+      () => {
+        setCopied(true);
+        track("seed_shared", {});
+      },
+      (e: unknown) => console.warn("[seed] could not copy the link", e),
+    );
+  };
+  return (
+    <button className="ghost give-seed" onClick={() => void give()}>
+      {copied ? "Link copied. Send it to a friend." : "Give this seed to a friend"}
+    </button>
+  );
+}
+
 /** One entry, opened: the plant large, and the word's details. A native dialog: Escape closes it and focus stays inside. */
 function GuidePage({ row, onClose, detail }: { row: GuideRow; onClose: () => void; detail: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -137,6 +180,7 @@ function GuidePage({ row, onClose, detail }: { row: GuideRow; onClose: () => voi
           <p className="gl">{row.l.gloss}</p>
           {rare && <p className="guide-rare">{RARE_LABEL[rare]}</p>}
           {stage !== "bloom" && <p className="muted small">Still growing. Its flower shows when you know the word.</p>}
+          {stage === "bloom" && <GiveSeed word={row.l} />}
         </div>
         {detail}
         {/* Focus starts here, not on the first control in the details. */}

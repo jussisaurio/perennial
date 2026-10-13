@@ -18,6 +18,8 @@ import { GardenWalk, showcaseWalkPlants } from "./GardenWalk";
 import { showcaseVisitors } from "./visitors";
 import { GrowthStrip } from "./plant";
 import { FlowerIcon, SproutMark } from "./icons";
+import { pendingGift } from "../data/gift";
+import { GiftCard } from "./Gift";
 
 // The language choice survives a reload before "Start learning" (a per-browser convenience).
 // Drafts saved by older builds also have `minutes`, which is no longer read.
@@ -77,7 +79,8 @@ export async function startCourse(lang: string) {
 export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) => void; signedIn: boolean }) {
   const draft = readDraft();
   // The draft may name a language this build lacks (saved by a newer build in another tab): start from Spanish then.
-  const [lang, setLang] = useState<string>(() => (draft.lang && isDeckLang(draft.lang) ? draft.lang : "es"));
+  // A friend's seed (#213) picks its language first.
+  const [lang, setLang] = useState<string>(() => pendingGift()?.lang ?? (draft.lang && isDeckLang(draft.lang) ? draft.lang : "es"));
   // After "Delete my account": a goodbye on the landing page, for a short
   // while (the app reloads once as the user changes), then never again.
   const [goodbye] = useState(() => {
@@ -177,6 +180,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       <GrowthStrip />
 
       <p className="muted small">Lessons are in English. More languages will come later.</p>
+      <GiftCard lang={lang} />
       <div className="row" style={{ marginTop: "1.5rem" }}>
         <button className="primary wide" onClick={() => void start()} disabled={busy}>
           {busy ? "Starting…" : `Start learning ${name}`}

@@ -225,6 +225,23 @@ export function setWordStatus(store: Store, wordId: string, status: Word["status
   });
 }
 
+/**
+ * A friend's gifted seed (#213): queue the word, but only where the learner has
+ * no say on it yet. The row is written as older than anything (updated_at at
+ * the epoch), so the server keeps any row it already has: a "never show",
+ * "pause" or queue the learner chose, even one this device has not synced yet
+ * (#229). Returns false when this device already has a row for the word.
+ */
+export function plantGift(store: Store, wordId: string): Promise<boolean> {
+  const c = store.collections.word_state;
+  if (c.has(wordId)) return Promise.resolve(false);
+  return store
+    .write(() => {
+      c.insert({ user_id: store.userId, word_id: wordId, status: "queued", queued_at: new Date().toISOString(), updated_at: new Date(0).toISOString() } as WordStateRow & Record<string, unknown>);
+    })
+    .then(() => true);
+}
+
 export function saveCourse(store: Store, lang: string, patch: Partial<Pick<CourseRow, "retention">>) {
   const c = store.collections.course;
   return store.write(() => {

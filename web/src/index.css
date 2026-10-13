@@ -766,3 +766,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-sheet h2 { font: 2rem/1.1 var(--display); margin: 0.2rem 0 0; }
 .guide-sheet .gl { margin: 0; color: var(--ink-2); }
 .guide-close { display: block; margin: 0.8rem auto 0; }
+
+/* A friend's gifted seed (#213): a quiet note, not a banner. */
+.gift-card { margin: 0.6rem 0 1rem; padding: 0.7rem 0.9rem; border: 1px dashed var(--line); border-radius: 12px; background: var(--card); color: var(--ink-2); }
+.gift-card p { margin: 0 0 0.5rem; }
+.gift-card .row { gap: 0.5rem; }
