@@ -23,6 +23,7 @@ import {
   type VisitorView,
 } from "../garden/visitors";
 import { sceneryViews, type SceneryViews } from "../garden/scenery";
+import type { GardenWord } from "../deck/schema";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
 function devVisitorOverride(): VisitorOverride {
@@ -75,10 +76,26 @@ export function knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, 
   return { count: all.length, lemmas, croaks: nouns.length >= 5 ? nouns : all };
 }
 
+/**
+ * A garden word brings its visitor (#209) once it has a good reading answer:
+ * a remembered one, or "I knew it". A wrong first answer does not count, so the
+ * visitor and its line come with the first good one.
+ */
+export function broughtVisitor(l: Pick<Learner, "reviewsByWord">, wordId: string): boolean {
+  return (l.reviewsByWord.get(wordId) ?? []).some((r) => r.skill === "read" && r.grade >= 3);
+}
+
+/** The garden words (#209) whose visitors the learner has brought. */
+export function gardenBrought(l: Pick<Learner, "reviewsByWord" | "deck">): Set<GardenWord> {
+  const garden = new Set<GardenWord>();
+  for (const w of l.deck.words) if (w.garden && broughtVisitor(l, w.id)) garden.add(w.garden);
+  return garden;
+}
+
 export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
   const { count, lemmas, croaks } = knownWords(l.words.values(), l.memory);
   const times = l.reviews.map((r) => Date.parse(r.reviewed_at));
-  const facts = learnerFacts(times, count, now);
+  const facts = learnerFacts(times, count, now, gardenBrought(l));
   const today = visitorsFor(facts, now, devVisitorOverride());
   // Known at the start of today. Only worth a replay when there are reviews today.
   const dayStart = startOfDay(now);
@@ -97,6 +114,8 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
 
 /** Visitors for a garden with no learner behind it (the landing page): the snail at the gate, and whoever drops by today. */
 export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitors {
-  const today = visitorsFor(NO_FACTS, now, devVisitorOverride());
-  return { facts: NO_FACTS, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
+  // A garden a few months in: its learner knows the words for the garden-word visitors.
+  const facts = { ...NO_FACTS, garden: new Set<GardenWord>(VISITORS.flatMap((v) => (v.garden ? [v.garden] : []))) };
+  const today = visitorsFor(facts, now, devVisitorOverride());
+  return { facts, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
 }

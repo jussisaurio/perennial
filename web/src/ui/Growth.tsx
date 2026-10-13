@@ -6,6 +6,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FORM, PlantForm, plantFrame, plantTop, stemHeight } from "./plant";
 import { growthOf } from "../garden/plants";
 import type { PlantStage } from "../core/memory";
+import type { PixelArt } from "../garden/visitorArt";
+import { PixelRects } from "./pixel";
 
 export interface PlantLook {
   s: number;
@@ -18,6 +20,8 @@ export interface GrowthMoment {
   to: PlantLook;
   /** A new word: its seed is planted first. */
   planted: boolean;
+  /** A garden word's visitor (#209), arriving with this first good answer. */
+  visitor?: PixelArt;
 }
 
 // Showing the moment is a per-device choice, like sound.
@@ -125,6 +129,23 @@ function WateringCan({ e, side, growStart, growMs }: { e: number; side: number; 
   );
 }
 
+/** A garden word's visitor (#209) hops in along the soil from the left, and stops beside the plant. */
+function Visitor({ art, e, side, until }: { art: PixelArt; e: number; side: number; until: number }) {
+  const w = art.rows[0].length;
+  const h = art.rows.length;
+  // About a third of the frame wide, whatever the plant's size: it should read as an animal, not a crumb.
+  const k = (side * 0.34) / w;
+  const t = clamp01(e / Math.max(1, until));
+  const x = -side * 0.95 + side * 0.6 * easeOut(t);
+  // Three small hops on the way in.
+  const hop = Math.abs(Math.sin(t * Math.PI * 3)) * side * 0.04 * (1 - t);
+  return (
+    <g transform={`translate(${x - (w * k) / 2} ${3 - h * k - hop}) scale(${k})`} shapeRendering="crispEdges">
+      <PixelRects art={art} />
+    </g>
+  );
+}
+
 /** The moment itself, drawn frame by frame. Calls `onDone` once, when it ends. */
 export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
   const [e, setE] = useState(0);
@@ -183,6 +204,7 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
             const r = side * (0.06 + 0.12 * Math.sqrt(sparkle));
             return <circle key={i} cx={top.x + Math.cos(a) * r} cy={top.y + Math.sin(a) * r} r={side * 0.014 * (1 - sparkle * 0.5)} fill="var(--sun)" opacity={1 - sparkle} />;
           })}
+        {m.visitor && <Visitor art={m.visitor} e={e} side={side} until={tl.growEnd} />}
         {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} growMs={tl.growMs} />}
       </svg>
     </div>

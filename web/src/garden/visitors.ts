@@ -7,6 +7,7 @@
 import { daily, DAY_MS, dayNumber, rareDay, startOfDay } from "../core/day";
 import { bareNoun, inLang, nounView, type NounDef, type NounView, type NounWords, type PerLang } from "./nouns";
 import type { Layout } from "./world";
+import type { GardenWord } from "../deck/schema";
 
 export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird";
 
@@ -20,9 +21,11 @@ export interface LearnerFacts {
   prevBeforeLast: number | null;
   /** Words the learner knows. The gnome and the frog come once there are enough. */
   known: number;
+  /** Garden words (#209) the learner has started: learning the word brings its visitor. */
+  garden: ReadonlySet<GardenWord>;
 }
 
-export const NO_FACTS: LearnerFacts = { firstReview: null, lastBeforeToday: null, prevBeforeLast: null, known: 0 };
+export const NO_FACTS: LearnerFacts = { firstReview: null, lastBeforeToday: null, prevBeforeLast: null, known: 0, garden: new Set() };
 
 interface Ctx {
   facts: LearnerFacts;
@@ -44,30 +47,34 @@ export interface VisitorDef extends NounDef {
   schedule: (c: Ctx) => boolean;
   /** It moves in once the learner knows this many words (and the Today screen says so that day). */
   unlock?: number;
+  /** It moves in once the learner has started this garden word (#209): learn "gato", and the cat comes. */
+  garden?: GardenWord;
 }
 
 /** A break this long (in calendar days) brings the cat. */
 const CAT_BREAK = 5;
 /** At most this many rare visitors at once. Residents (the snail, gnome, frog and moth) do not count. */
 export const RARE_CAP = 2;
-/** Known words that bring the gnome, and the frog. */
+/** Known words that bring the gnome, and the frog for learners who knew 150 words before it had a word of its own (#209). */
 const GNOME_KNOWN = 50;
-export const FROG_KNOWN = 150;
+const FROG_KNOWN = 150;
 
 /**
  * Residents first, then rare visitors in priority order: when more than two
- * are due, the first ones stay. The cat (after a break) comes first, then the
- * monthly heron, so a one-day-in-two bird never keeps the heron away.
+ * are due, the first ones stay. The monthly heron comes before the mushroom.
+ * Garden-word visitors (#209: snail, frog, cat, bird) live here once their
+ * word is learned, and do not count toward the cap.
  */
 export const VISITORS: readonly VisitorDef[] = [
-  { id: "snail", words: { es: "el caracol", de: "die Schnecke" }, gloss: "snail", rare: false, tag: "tap", schedule: () => true },
+  { id: "snail", words: { es: "el caracol", de: "die Schnecke" }, gloss: "snail", rare: false, tag: "tap", garden: "snail", schedule: ({ facts }) => facts.garden.has("snail") },
   // At a bed corner, a different one each day.
   { id: "gnome", words: { es: "el gnomo", de: "der Gartenzwerg" }, gloss: "gnome", rare: false, tag: "approach", unlock: GNOME_KNOWN, schedule: ({ facts }) => facts.known >= GNOME_KNOWN },
   // On a lily pad, at dusk and night only.
-  { id: "frog", words: { es: "la rana", de: "der Frosch" }, gloss: "frog", rare: false, tag: "approach", unlock: FROG_KNOWN, schedule: ({ facts }) => facts.known >= FROG_KNOWN },
+  { id: "frog", words: { es: "la rana", de: "der Frosch" }, gloss: "frog", rare: false, tag: "approach", garden: "frog", schedule: ({ facts }) => facts.garden.has("frog") || facts.known >= FROG_KNOWN },
   // Round one lantern, at dusk and night only. Small and moving: tap only.
   { id: "moth", words: { es: "la polilla", de: "die Motte" }, gloss: "moth", rare: false, tag: "tap", schedule: () => true },
-  { id: "cat", words: { es: "el gato", de: "die Katze" }, gloss: "cat", rare: true, tag: "approach", schedule: ({ facts, now }) => catBreak(facts, now) !== null },
+  // Learn its word and it lives here; before that it still comes after a long break (#17's secret cat).
+  { id: "cat", words: { es: "el gato", de: "die Katze" }, gloss: "cat", rare: false, tag: "approach", garden: "cat", schedule: ({ facts, now }) => facts.garden.has("cat") || catBreak(facts, now) !== null },
   { id: "heron", words: { es: "la garza", de: "der Reiher" }, gloss: "heron", rare: true, tag: "approach", schedule: ({ now }) => now.getDate() === heronDay(now.getFullYear(), now.getMonth()) },
   {
     id: "toadstool",
@@ -78,7 +85,7 @@ export const VISITORS: readonly VisitorDef[] = [
     // Autumn (September to November) is mushroom season.
     schedule: ({ now }) => rareDay(now.getMonth() >= 8 && now.getMonth() <= 10 ? 3 : 7, "visitor-toadstool", now),
   },
-  { id: "bird", words: { es: "el pájaro", de: "der Vogel" }, gloss: "bird", rare: true, tag: "tap", schedule: ({ now }) => rareDay(2, "visitor-bird", now) },
+  { id: "bird", words: { es: "el pájaro", de: "der Vogel" }, gloss: "bird", rare: false, tag: "tap", garden: "bird", schedule: ({ facts }) => facts.garden.has("bird") },
 ];
 
 export const visitor = (id: VisitorId): VisitorDef => VISITORS.find((v) => v.id === id)!;
@@ -94,7 +101,7 @@ export function heronDay(year: number, month: number): number {
 }
 
 /** The facts visitorsFor needs, from the learner's review times (ms, any order). */
-export function learnerFacts(reviews: Iterable<number>, known: number, now: Date | number = Date.now()): LearnerFacts {
+export function learnerFacts(reviews: Iterable<number>, known: number, now: Date | number, garden: ReadonlySet<GardenWord>): LearnerFacts {
   const today = dayNumber(now);
   let first: number | null = null;
   let last: number | null = null;
@@ -107,7 +114,7 @@ export function learnerFacts(reviews: Iterable<number>, known: number, now: Date
     const lastDay = dayNumber(last);
     for (const t of reviews) if (dayNumber(t) < lastDay && (prev === null || t > prev)) prev = t;
   }
-  return { firstReview: first, lastBeforeToday: last, prevBeforeLast: prev, known };
+  return { firstReview: first, lastBeforeToday: last, prevBeforeLast: prev, known, garden };
 }
 
 /**
@@ -162,7 +169,7 @@ export function welcomeBack(facts: LearnerFacts, now: Date = new Date()): string
 }
 
 /** Known-word counts that get one line on the Today screen, on the day they are crossed. */
-export const MILESTONES = [25, 50, 100, FROG_KNOWN, 200, 500] as const;
+export const MILESTONES = [25, 50, 100, 150, 200, 500] as const;
 
 /**
  * The Today screen line on the day the learner's known words cross a

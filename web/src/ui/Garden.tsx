@@ -12,7 +12,8 @@ import { FORM, StripPlant } from "./plant";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
 import { growthOf, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
-import { CAT_ASLEEP, MOLE, runs, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
+import { CAT_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
+import { PixelRects } from "./pixel";
 import { stripVisitor, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
@@ -370,11 +371,6 @@ function PixelSprite({ art, x, y, scale }: { art: PixelArt; x: number; y: number
   );
 }
 
-/** Pixel art as SVG rects, one per run of same-coloured pixels in a row. */
-function PixelRects({ art }: { art: PixelArt }) {
-  return runs(art).map((r, i) => <rect key={i} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />);
-}
-
 /** One small "z" drifting up from a sleeping bloom (still, with reduced motion). */
 function Snore({ y }: { y: number }) {
   return (
@@ -429,7 +425,6 @@ function SproutArrow() {
     </svg>
   );
 }
-
 
 /** Each replayed plant grows for this long, starting one after another, all within REPLAY_MS. */
 const REPLAY_GROW_MS = 450;

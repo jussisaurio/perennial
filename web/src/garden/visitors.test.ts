@@ -27,7 +27,7 @@ import {
 
 const at = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m, d, h, min).getTime();
 const days = Array.from({ length: 365 }, (_, d) => new Date(2026, 0, 1 + d, 12));
-const facts = (reviews: number[], now: number, known = 0) => learnerFacts(reviews, known, now);
+const facts = (reviews: number[], now: number, known = 0) => learnerFacts(reviews, known, now, new Set());
 
 describe("visitor words", () => {
   test("every visitor has a Spanish and a German word with its article, and a plain gloss", () => {
@@ -51,12 +51,17 @@ describe("visitor words", () => {
 });
 
 describe("who visits today", () => {
-  test("the snail is always there and does not count toward the cap", () => {
+  test("garden-word visitors come once their word is learned, every day, and do not count toward the cap (#209)", () => {
+    const learned: LearnerFacts = { ...NO_FACTS, garden: new Set(["snail", "frog", "cat", "bird"]) };
     for (const d of days) {
-      const t = visitorsFor(NO_FACTS, d);
-      expect(t.present[0]).toBe("snail");
-      expect(t.present.filter((id) => visitor(id).rare).length).toBeLessThanOrEqual(RARE_CAP);
+      const none = visitorsFor(NO_FACTS, d).present;
+      for (const id of ["snail", "frog", "bird"] as const) expect(none).not.toContain(id);
+      const t = visitorsFor(learned, d).present;
+      expect(t).toEqual(expect.arrayContaining(["snail", "frog", "cat", "bird"]));
+      expect(t.filter((id) => visitor(id).rare).length).toBeLessThanOrEqual(RARE_CAP);
     }
+    // One word, one visitor.
+    expect(visitorsFor({ ...NO_FACTS, garden: new Set(["cat"]) }, days[0]).present.filter((id) => visitor(id).garden)).toEqual(["cat"]);
   });
 
   test("a visitor stays all day", () => {
@@ -65,12 +70,6 @@ describe("who visits today", () => {
       const night = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 55);
       expect(visitorsFor(NO_FACTS, morning)).toEqual(visitorsFor(NO_FACTS, night));
     }
-  });
-
-  test("the bird comes about one day in two", () => {
-    const n = days.filter((d) => visitorsFor(NO_FACTS, d).present.includes("bird")).length;
-    expect(n).toBeGreaterThan(365 * 0.35);
-    expect(n).toBeLessThan(365 * 0.65);
   });
 
   test("the toadstool comes about one day in seven, and more often in autumn", () => {
@@ -104,19 +103,20 @@ describe("who visits today", () => {
 
 describe("residents: the gnome, the frog and the moth", () => {
   const knows = (known: number) => ({ ...NO_FACTS, known });
-  test("the gnome comes at 50 known words, the frog at 150, and they stay", () => {
+  test("the gnome comes at 50 known words and stays; the frog with its word, or at 150 known words as before #209", () => {
     for (const d of days) {
       expect(visitorsFor(knows(49), d).present).not.toContain("gnome");
       expect(visitorsFor(knows(50), d).present).toContain("gnome");
       expect(visitorsFor(knows(149), d).present).not.toContain("frog");
-      expect(visitorsFor(knows(150), d).present).toContain("frog");
+      expect(visitorsFor(knows(150), d).present).toContain("frog"); // a learner who had it keeps it
+      expect(visitorsFor({ ...NO_FACTS, garden: new Set(["frog"]) }, d).present).toContain("frog");
       // The moth is at its lantern every evening (the walk shows it at dusk and night only).
       expect(visitorsFor(NO_FACTS, d).present).toContain("moth");
     }
   });
 
   test("residents do not count toward the cap: two rare visitors can still come", () => {
-    const f: LearnerFacts = { ...knows(500), firstReview: days[0].getTime() - 400 * 86_400_000 };
+    const f: LearnerFacts = { ...knows(500), firstReview: days[0].getTime() - 400 * 86_400_000, garden: new Set(["snail", "frog", "cat", "bird"]) };
     let both = 0;
     for (const d of days) {
       const t = visitorsFor({ ...f, lastBeforeToday: d.getTime() - 10 * 86_400_000 }, d);
@@ -125,7 +125,8 @@ describe("residents: the gnome, the frog and the moth", () => {
       expect(rare.length).toBeLessThanOrEqual(RARE_CAP);
       if (rare.length === 2) both++;
     }
-    expect(both).toBeGreaterThan(100);
+    // The rare ones now are the heron (a day a month) and the mushroom (about a day a week): some days bring both.
+    expect(both).toBeGreaterThan(0);
   });
 });
 
@@ -147,12 +148,10 @@ describe("the heron (one day a month)", () => {
     expect(set.size).toBeGreaterThan(4);
   });
 
-  test("on its day it comes before the toadstool and the bird; with the cat, the others wait", () => {
+  test("on its day it comes, before the toadstool", () => {
     const d = new Date(2026, 4, heronDay(2026, 4), 12);
     expect(visitorsFor(NO_FACTS, d).present).toContain("heron");
-    const away: LearnerFacts = { ...NO_FACTS, firstReview: d.getTime() - 100 * 86_400_000, lastBeforeToday: d.getTime() - 10 * 86_400_000 };
-    const t = visitorsFor(away, d);
-    expect(t.present.filter((id) => visitor(id).rare)).toEqual(["cat", "heron"]);
+    expect(visitorsFor(NO_FACTS, d).present.filter((id) => visitor(id).rare)[0]).toBe("heron");
   });
 });
 
@@ -207,8 +206,9 @@ describe("the milestone line", () => {
     expect(milestoneLine(51, 49)).toBeNull();
   });
 
-  test("the frog's count says someone arrived too; other counts only notice", () => {
-    expect(milestoneLine(149, 150)).toBe("You know 150 words. Someone has arrived in the garden.");
+  test("the gnome's count says someone arrived too; other counts only notice", () => {
+    expect(milestoneLine(49, 50)).toBe("You know 50 words. Someone has arrived in the garden.");
+    expect(milestoneLine(149, 150)).toBe("You know 150 words. The garden noticed.");
     expect(milestoneLine(24, 25)).toBe("You know 25 words. The garden noticed.");
     expect(milestoneLine(99, 101)).toBe("You know 100 words. The garden noticed.");
     expect(milestoneLine(498, 503)).toBe("You know 500 words. The garden noticed.");

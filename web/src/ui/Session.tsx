@@ -80,10 +80,10 @@ export function SessionScreen({ lang, onExit, minutes }: { lang: string; onExit:
   }, [growing]);
 
   const noteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const flash = (text: string) => {
+  const flash = (text: string, ms = 1800) => {
     setNote(text);
     clearTimeout(noteTimer.current);
-    noteTimer.current = setTimeout(() => setNote(null), 1800);
+    noteTimer.current = setTimeout(() => setNote(null), ms);
   };
 
   const { learner, tag, runner, card, done, active, ended, counts, practised, introduced, before, serial, canUndo, start, finish, undo, exit } = useSessionRunner({

@@ -771,3 +771,5 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gift-card { margin: 0.6rem 0 1rem; padding: 0.7rem 0.9rem; border: 1px dashed var(--line); border-radius: 12px; background: var(--card); color: var(--ink-2); }
 .gift-card p { margin: 0 0 0.5rem; }
 .gift-card .row { gap: 0.5rem; }
+/* While the plant's moment plays at the bottom, a note (a visitor's first line, #209) sits above it, not on it. */
+.session.growing .session-note { bottom: max(156px, calc(env(safe-area-inset-bottom) + 150px)); }
