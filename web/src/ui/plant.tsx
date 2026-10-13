@@ -6,7 +6,7 @@ import { memo, type ReactNode } from "react";
 import { OLD_S, plantStage, type PlantStage } from "../core/memory";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
 import { hash01, hash32, rng } from "../lib/seed";
-import { FIRE, meaningOf, sizeOf } from "./meaning";
+import { GOLD_COLOURS as GOLD, meaningOf, sizeOf } from "./meaning";
 
 const pick = <T,>(r: () => number, items: readonly T[]): T => items[Math.floor(r() * items.length)];
 const between = (r: () => number, a: number, b: number) => a + r() * (b - a);
@@ -99,7 +99,6 @@ export function rareOf(word: string): Rare | null {
   return kinds[Math.floor(hash01(key, RARE_SALT + 1) * kinds.length)];
 }
 
-const GOLD = { petal: hsl(45, 92, 60), petalEdge: hsl(36, 80, 42), center: hsl(28, 65, 32) };
 
 /** A small bee that lives on a rare plant, drawn around (0, 0). */
 function Bee({ size }: { size: number }) {
@@ -127,8 +126,12 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /** Where the top of the word's stem is, where its flower sits: as Plant draws it. */
 export function plantTop(word: string, growth: number, scale = 1): { x: number; y: number } {
-  const g = genome(word);
-  return onStem(stemHeight(growth) * g.height * sizeOf(meaningOf(word)) * scale, g.curve * 10 * scale, 1);
+  return onStem(plantHeight(word, growth, scale), genome(word).curve * 10 * scale, 1);
+}
+
+/** How tall the word's stem is drawn: its growth, its genome, and a big or small meaning (#214). The one place for it. */
+export function plantHeight(word: string, growth: number, scale = 1): number {
+  return stemHeight(growth) * genome(word).height * sizeOf(meaningOf(word)) * scale;
 }
 
 /** Point and tangent angle on the quadratic stem curve at t (0 = base, 1 = top). */
@@ -173,10 +176,10 @@ function Flower({ g, r, open, striped = false, crazy = false }: { g: Genome; r: 
       const turn = (i * 360) / n + (crazy ? (wild - 0.5) * 50 : 0);
       const l = crazy ? len * (0.6 + wild * 0.8) : len;
       return (
-      <g key={i} transform={`rotate(${turn})`}>
-        <path d={petalPath(shape, l, w)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} />
-        {striped && <path d={`M0 ${-l * 0.15} L0 ${-l * 0.85}`} stroke="#fff" strokeOpacity={0.7} strokeWidth={Math.max(0.6, w * 0.34)} strokeLinecap="round" />}
-      </g>
+        <g key={i} transform={`rotate(${turn})`}>
+          <path d={petalPath(shape, l, w)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} />
+          {striped && <path d={`M0 ${-l * 0.15} L0 ${-l * 0.85}`} stroke="#fff" strokeOpacity={0.7} strokeWidth={Math.max(0.6, w * 0.34)} strokeLinecap="round" />}
+        </g>
       );
     });
   switch (g.flower) {
@@ -257,7 +260,6 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
     ...genome(word),
     ...(rare === "golden" && GOLD),
     ...(meaning?.kind === "colour" && { petal: meaning.petal, petalEdge: meaning.petalEdge, center: meaning.center }),
-    ...(meaning?.kind === "fire" && FIRE),
     // Asleep: the flower stays closed, in its own colours, and nods. Happy: it faces straight up.
     ...(meaning?.kind === "sleep" && { lean: 70 }),
     ...(meaning?.kind === "happy" && { lean: 0 }),
@@ -268,7 +270,7 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
   const crazy = meaning?.kind === "crazy";
   const asleep = meaning?.kind === "sleep";
   const leafTurn = meaning?.kind === "happy" ? 34 : 52;
-  const h = stemHeight(growth) * g.height * sizeOf(meaning) * scale;
+  const h = plantHeight(word, growth, scale);
   const bend = g.curve * 10 * scale;
   const leafLen = 11 * scale;
   const leafW = 5 * scale;
@@ -378,7 +380,17 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
       {leaves}
       <g transform={`translate(${top.x} ${top.y}) rotate(${g.lean})`}>
         {bud > 0 && <Flower g={g} r={flowerR * bud} open={false} />}
-        {u > 0 && (u < 1 ? <g transform={`rotate(${(1 - u) * -50}) scale(${u})`}><Flower g={g} r={flowerR} open striped={striped} crazy={crazy} /></g> : asleep ? <Flower g={{ ...g, bud: g.petal, budEdge: g.petalEdge }} r={flowerR * 1.2} open={false} /> : <Flower g={g} r={flowerR} open striped={striped} crazy={crazy} />)}
+        {u > 0 &&
+          (asleep ? (
+            // Asleep, also while it blooms: the closed head grows in its own colours over the green bud, and never opens.
+            <Flower g={{ ...g, bud: g.petal, budEdge: g.petalEdge }} r={flowerR * 1.2 * u} open={false} />
+          ) : u < 1 ? (
+            <g transform={`rotate(${(1 - u) * -50}) scale(${u})`}>
+              <Flower g={g} r={flowerR} open striped={striped} crazy={crazy} />
+            </g>
+          ) : (
+            <Flower g={g} r={flowerR} open striped={striped} crazy={crazy} />
+          ))}
       </g>
       {u > 0 && meaning?.kind === "fall" && (
         // "caer": one petal has fallen to the ground beside the plant.
@@ -395,7 +407,7 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
 
 /** The side of the square that frames a word's plant at stability `s` and `stage`, so a sprout fills it as well as a tall bloom. */
 export function plantFrame(word: string, s: number, stage: PlantStage): number {
-  const h = stemHeight(growthOf(s)) * genome(word).height * sizeOf(meaningOf(word)) * 1.05 + (stage === "seed" || stage === "sprout" ? 12 : 22);
+  const h = plantHeight(word, growthOf(s), 1.05) + (stage === "seed" || stage === "sprout" ? 12 : 22);
   return Math.max(44, h + 10);
 }
 
@@ -413,7 +425,7 @@ export function WordPlant({ word, s, stage, size = 96, className }: { word: stri
 /** A plant as the 2D garden draws it: leaning as recall fades (the walk's lean too), with dots for listening and writing. */
 export function StripPlant({ p, scale, highlighted, look }: { p: GardenPlant; scale: number; highlighted: boolean; look?: { growth: number; form: number } }) {
   // The glow and the dots follow the plant as drawn, also mid-replay.
-  const h = (16 + 118 * (look?.growth ?? p.growth)) * scale;
+  const h = (16 + 118 * (look?.growth ?? p.growth)) * sizeOf(meaningOf(p.lemma)) * scale;
   return (
     <g transform={`rotate(${leanDeg(p.id, p.r).toFixed(1)})`}>
       {highlighted && <circle className="glow" cy={-h} r={14 * scale} />}

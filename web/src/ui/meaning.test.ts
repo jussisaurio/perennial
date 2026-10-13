@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import es from "../../../decks/es/deck.json";
 import de from "../../../decks/de/deck.json";
 import { MEANING_WORDS, meaningOf } from "./meaning";
-import { genome, Plant, plantTop, stemHeight } from "./plant";
+import { genome, Plant, PlantForm, plantTop, stemHeight } from "./plant";
 
 const draw = (word: string, stage: "bud" | "bloom") => renderToStaticMarkup(createElement(Plant, { word, growth: 0.6, stage }));
 
@@ -29,8 +29,9 @@ test("frío has frost on its leaves, agua has drops", () => {
   expect(draw("casa", "bloom")).not.toContain("hsl(208 70% 62%)");
 });
 
-test("sleepy words sleep: every head stays closed, in its own colours", () => {
-  // cansado (daisy) and sueño (star) would open into rings of petals if awake.
+test("sleepy words sleep: every head stays closed, in its own colours, also while they bloom", () => {
+  // cansado (daisy), sueño (star) and müde (pom) would open into many petals if awake; dormir and
+  // schlafen are cup flowers, one shape either way, so they are here for the colour check.
   for (const word of ["dormir", "schlafen", "cansado", "müde", "sueño"]) {
     const g = genome(word);
     const markup = draw(word, "bloom");
@@ -38,6 +39,10 @@ test("sleepy words sleep: every head stays closed, in its own colours", () => {
     expect(markup.split(`fill="${g.petal}"`).length - 1).toBe(1 + g.branches);
     expect(markup).not.toContain(g.bud); // petal colour, not bud green
   }
+  // Mid-bloom (the growth moment and the summary replay): still closed, never a ring of petals.
+  const g = genome("cansado");
+  const mid = renderToStaticMarkup(createElement(PlantForm, { word: "cansado", growth: 0.6, form: 2.5 }));
+  expect(mid.split(`fill="${g.petal}"`).length - 1).toBe(1 + g.branches);
 });
 
 test("loco scrambles its petals: they are not all the same length", () => {
