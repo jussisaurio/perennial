@@ -183,71 +183,14 @@ function Actions({ children }: { children: ReactNode }) {
   return <div className="actions">{children}</div>;
 }
 
-function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
-  const { word, example } = card;
-  const play = useCallback(() => void speakAll(example ? [word.lemma, example.text] : [word.lemma], tag), [word.lemma, example, tag]);
-  // The sentence follows the word; leaving the card cuts both off, so it never plays over the next one.
-  useEffect(() => {
-    play();
-    return stopSpeaking;
-  }, [play]);
-  const isNew = () => onDone(null);
-  const knewIt = () => onDone(null, { alreadyKnown: true });
-  // Answers are always 1 / ← (the left button) and 2 / → (the right one).
-  useKeys({ "1": isNew, ArrowLeft: isNew, "2": knewIt, ArrowRight: knewIt, r: play });
-  return (
-    <main className="card">
-      <Kicker kind="intro" />
-      <div className="word">
-        {word.lemma} <Speaker text={word.lemma} tag={tag} />
-      </div>
-      <div className="gloss">
-        {word.pos && <span className="pos">{word.pos}</span>}
-        {word.gloss}
-      </div>
-      {word.notes && <p className="hint">{word.notes}</p>}
-      {example && (
-        <div className="example">
-          <p className="sentence" lang={tag}>
-            <Highlight text={example.text} part={example.cloze} /> <Speaker text={example.text} tag={tag} slow />
-          </p>
-          <p className="translation">{example.translation}</p>
-        </div>
-      )}
-      <div className="question">
-        <p className="prompt">Is this word new to you?</p>
-        <div className="answers">
-          <button className="answer-btn primary" onClick={isNew}>
-            <strong>
-              New to me <kbd>1</kbd>
-            </strong>
-            <span>Learn it now. A quick check comes in a moment.</span>
-          </button>
-          <button className="answer-btn" onClick={knewIt}>
-            <strong>
-              I knew it <kbd>2</kbd>
-            </strong>
-            <span>Skip the quick check. Back in about a week.</span>
-          </button>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS }) {
-  const { word, example } = card;
+/**
+ * A card's answer, hidden until shown. Answers given within GUARD_MS of showing
+ * are ignored: "Show" sits where the answer buttons appear, so a double-click
+ * or double-tap would otherwise answer a card nobody has read.
+ */
+function useReveal() {
   const [revealed, setRevealed] = useState(false);
-  const revealedAt = useRef(0);
-  const reveal = () => {
-    revealedAt.current = Date.now();
-    setRevealed(true);
-  };
-  // "Show answer" sits where the grade buttons appear; ignore a double-click
-  // or double-tap so nobody grades an answer they haven't read.
-  const grade = (g: Grade) => {
-    if (Date.now() - revealedAt.current >= GUARD_MS) onDone(g);
-  };
+  const reveal = () => setRevealed(true);
   // Exposed as data-armed so tests can wait for the guard instead of sleeping.
   const [armed, setArmed] = useState(false);
   useEffect(() => {
@@ -255,6 +198,84 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
     const t = setTimeout(() => setArmed(true), GUARD_MS);
     return () => clearTimeout(t);
   }, [revealed]);
+  const guarded = (answer: () => void) => () => {
+    if (armed) answer();
+  };
+  return { revealed, reveal, guarded, armed };
+}
+
+// The meaning stays hidden until the learner has tried to recall it: once an
+// answer is in view, "I knew it" is too easy to believe (#196).
+function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
+  const { word, example } = card;
+  const { revealed, reveal, guarded, armed } = useReveal();
+  const play = useCallback(() => void speakAll(example ? [word.lemma, example.text] : [word.lemma], tag), [word.lemma, example, tag]);
+  // The sentence follows the word; leaving the card cuts both off, so it never plays over the next one.
+  useEffect(() => {
+    play();
+    return stopSpeaking;
+  }, [play]);
+  const isNew = guarded(() => onDone(null));
+  const knewIt = guarded(() => onDone(null, { alreadyKnown: true }));
+  // Answers are always 1 / ← (the left button) and 2 / → (the right one).
+  useKeys(revealed ? { "1": isNew, ArrowLeft: isNew, "2": knewIt, ArrowRight: knewIt, r: play } : { " ": reveal, Enter: reveal, r: play });
+  return (
+    <main className="card" data-armed={armed || undefined}>
+      <Kicker kind="intro" />
+      <div className="word">
+        {word.lemma} <Speaker text={word.lemma} tag={tag} />
+      </div>
+      {revealed && (
+        <div className="gloss">
+          {word.pos && <span className="pos">{word.pos}</span>}
+          {word.gloss}
+        </div>
+      )}
+      {revealed && word.notes && <p className="hint">{word.notes}</p>}
+      {example && (
+        <div className="example">
+          <p className="sentence" lang={tag}>
+            <Highlight text={example.text} part={example.cloze} /> <Speaker text={example.text} tag={tag} slow />
+          </p>
+          {revealed && <p className="translation">{example.translation}</p>}
+        </div>
+      )}
+      {revealed ? (
+        <div className="question">
+          <p className="prompt">Is this word new to you?</p>
+          <div className="answers">
+            <button className="answer-btn primary" onClick={isNew}>
+              <strong>
+                New to me <kbd>1</kbd>
+              </strong>
+              <span>Learn it now. A quick check comes in a moment.</span>
+            </button>
+            <button className="answer-btn" onClick={knewIt}>
+              <strong>
+                I knew it <kbd>2</kbd>
+              </strong>
+              <span>Skip the quick check. Back in about a week.</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="prompt">Do you know what it means? Think first, then look.</p>
+          <Actions>
+            <button className="primary wide" onClick={reveal}>
+              Show meaning <kbd>Space</kbd>
+            </button>
+          </Actions>
+        </>
+      )}
+    </main>
+  );
+}
+
+function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS }) {
+  const { word, example } = card;
+  const { revealed, reveal, guarded, armed } = useReveal();
+  const grade = (g: Grade) => guarded(() => onDone(g))();
   const audioText = example?.text ?? word.lemma;
   const play = () => void speak(audioText, tag);
   useEffect(() => {
@@ -429,7 +450,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
 }
 
 const SHORTCUTS: [string, string][] = [
-  ["Space / Enter", "Show answer, Check, Next"],
+  ["Space / Enter", "Show the answer or meaning, Check, Next"],
   ["1 or ←", "The left answer: New to me, I forgot"],
   ["2 or →", "The right answer: I knew it, I remembered"],
   ["R", "Play the audio again"],
