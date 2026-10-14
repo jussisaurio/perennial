@@ -126,9 +126,9 @@ describe("courseOrder", () => {
 
       const ids = notStartedWords({ deck: { words: course }, words, memories, upcoming }).map((w) => w.id);
       const next = upcoming().map((w) => w.id);
-      expect(next.length).toBeGreaterThan(500); // the list shows the next 500
-      expect(ids.slice(0, 500)).toEqual(next.slice(0, 500));
-      expect(ids.slice(500)).toEqual([paused]); // paused words come after, never in between
+      expect(next.length).toBeGreaterThan(500); // more than the old cap of 500: none are left out (#262)
+      expect(ids.slice(0, next.length)).toEqual(next);
+      expect(ids.slice(next.length)).toEqual([paused]); // paused words come after, never in between
       expect(words.get(ids[0])!.garden).toBe("cat"); // the first garden word they passed
     });
 

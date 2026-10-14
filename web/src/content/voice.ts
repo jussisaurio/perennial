@@ -133,9 +133,10 @@ export type WordsFilter = "all" | "known" | "learning" | "new" | "suspended" | "
 
 /** The Words list with no rows: what is missing first, a small wink for some. */
 export function wordsEmptyLine(filter: WordsFilter, searching: boolean): string {
-  if (searching) return "No word here. Maybe it is still a seed.";
+  // "All" is the whole course, so a search there that finds nothing means the course has no such word.
+  if (searching && filter !== "all") return "No word here. Maybe it is still a seed.";
   return {
-    all: "No words yet. Your first session plants them.",
+    all: "No word like this in the course.",
     known: "No flowers yet. They are coming.",
     learning: "No words in progress right now.",
     new: "No new words left in the course.",

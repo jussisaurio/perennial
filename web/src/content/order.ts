@@ -153,6 +153,6 @@ export function notStartedWords<W extends ListWord>(l: { upcoming(): W[]; words:
     ...courseOrder(l.deck).map((w) => l.words.get(w.id)!),
     ...[...l.words.values()].filter((w) => w.source === "user").sort((a, b) => a.rank - b.rank),
   ].filter((w) => !listed.has(w.id) && !practised.has(w.id));
-  // The next 500 are plenty to browse; the few others always stay, so a word paused here stays in view.
-  return [...next.slice(0, 500), ...others];
+  // All of them, so a search under "New" finds any word not started yet (#262). The others come after, so a word paused here stays in view.
+  return [...next, ...others];
 }

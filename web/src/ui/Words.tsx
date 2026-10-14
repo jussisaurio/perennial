@@ -79,10 +79,11 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
     const byWord = new Map<string, MemoryRow[]>();
     for (const m of learner.memories) byWord.set(m.wordId, [...(byWord.get(m.wordId) ?? []), m]);
     const needle = q.trim().toLocaleLowerCase();
-    // "New" lists what comes next (learner.ts); the other filters, what you have grown.
+    // "New" lists what comes next (learner.ts); "All", the whole course, so a search finds a word not started yet (#262);
+    // the other filters, what you have grown.
     // Words from your own texts, newest first (user words are ranked in the order added).
     const mine = () => [...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => b.rank - a.rank);
-    const base = filter === "new" ? notStartedWords(learner) : filter === "mine" ? mine() : learner.studied;
+    const base = filter === "new" ? notStartedWords(learner) : filter === "mine" ? mine() : filter === "all" ? [...learner.words.values()] : learner.studied;
     return base
       .filter((l) => l.status !== "ignored")
       .map((l) => {
@@ -99,6 +100,8 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
   }, [learner, q, filter, lang]);
   // The flowers view draws only words that have started growing; the count says what is on screen.
   const shown = useMemo(() => (view === "guide" ? drawnRows(rows) : rows), [view, rows]);
+  // "From my texts" only where it can have words: adding is on, or some were added before (#262).
+  const hasMine = useMemo(() => !!learner && [...learner.words.values()].some((w) => w.source === "user"), [learner]);
 
   return (
     <div className="page">
@@ -112,13 +115,13 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
       </div>
       <div className="row">
         <input ref={search} className="search" type="search" placeholder="Search words or meanings (/)" aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
-        <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}>
+        <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} aria-label="Which words">
           <option value="all">All</option>
           <option value="known">Known</option>
           <option value="learning">Learning</option>
           <option value="new">New</option>
           <option value="suspended">Paused</option>
-          <option value="mine">From my texts</option>
+          {(onAdd || hasMine) && <option value="mine">From my texts</option>}
         </select>
       </div>
       <div className="chips words-view" role="radiogroup" aria-label="Show words as">
@@ -171,10 +174,11 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
                 <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "paused"} />
                 <strong>{headword(l, lang)}</strong>
                 <span className="gl">{l.gloss}</span>
+                {/* The skills practised, without a recall number: unlabelled, it read as a score (#262). The number is in Scheduling details. */}
                 <span className="skills">
                   {practisedSkills(mem).map((m) => (
-                    <span key={m.skill} className={`pip ${m.skill}`} title={`${m.skill}: ${Math.round(recall(m) * 100)}% recall`}>
-                      {m.skill} {Math.round(recall(m) * 100)}%
+                    <span key={m.skill} className={`pip ${m.skill}`}>
+                      {m.skill}
                     </span>
                   ))}
                 </span>
@@ -372,7 +376,11 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
         >
           {mine ? "Delete" : "Never show this word"}
         </button>
-        {paused && <span className="muted small">Paused. It does not appear in sessions.</span>}
+        {paused ? (
+          <span className="muted small">Paused. It does not appear in sessions.</span>
+        ) : (
+          !mine && <span className="muted small">Pause: it stays out of sessions until you resume it. Never show: it leaves your course.</span>
+        )}
       </div>
     </div>
   );

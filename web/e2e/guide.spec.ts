@@ -62,9 +62,13 @@ test("the field guide: pressed flowers for known words, sketches for growing one
 
   // A word open in the list does not pop up when switching to the flowers.
   await page.getByRole("radio", { name: "List" }).click();
-  await page.getByRole("button", { name: /casa/ }).click();
+  // The List's All is the whole course (#262): search, as casa is far down it.
+  const search = page.getByPlaceholder("Search words or meanings");
+  await search.fill("casa");
+  await page.locator(".word-row", { has: page.locator('strong:text-is("casa")') }).click();
   await page.getByRole("radio", { name: "Flowers" }).click();
   await expect(page.locator("dialog[open]")).toHaveCount(0);
+  await search.fill("");
 
   // Only started words are drawn, and the count says so: "New" has nothing to draw.
   await page.locator(".row select").first().selectOption("new");
