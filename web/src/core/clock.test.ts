@@ -27,3 +27,14 @@ test("a throttled timer can't credit a big jump", () => {
   c.tick(30_000);
   expect(c.elapsed).toBe(2_000);
 });
+
+test("a paused session counts nothing until it continues", () => {
+  const c = new ActiveClock(0, 45_000, 2_000);
+  c.tick(1000);
+  c.hold(true, 1000);
+  for (let t = 2000; t <= 30_000; t += 1000) c.input(t); // reading the pause screen
+  expect(c.elapsed).toBe(1000);
+  c.hold(false, 30_000);
+  c.tick(31_000);
+  expect(c.elapsed).toBe(2000);
+});

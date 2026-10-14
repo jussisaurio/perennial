@@ -152,6 +152,27 @@ test("leaving after doing something shows the summary", async ({ page }) => {
   await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
 });
 
+// #254: a paused session says what "New to me" words still need, and Continue
+// goes back to the same card, with their quick checks still to come.
+test("a paused session can continue, and keeps its quick checks", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  const first = (await page.locator(".word").textContent())!.trim();
+  await answer(page, "1"); // New to me
+  await expect(kicker(page)).toHaveText(/new word/);
+  const second = (await page.locator(".word").textContent())!.trim();
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(page.locator(".summary")).toContainText("A new word is planted after its quick check. Continue to do it now. If you stop, it comes back as a new word next time.");
+  await expect(page.locator(".summary")).not.toContainText("0 words"); // nothing started yet, though one word was seen
+  await page.getByRole("button", { name: "Continue this session" }).click();
+  await expect(page.locator(".word")).toHaveText(second); // the card it left
+  for (let i = 0; i < 6 && !/quick check/.test((await kicker(page).textContent()) ?? ""); i++) await answer(page, "1");
+  await expect(kicker(page)).toHaveText(/quick check/);
+  await expect(page.locator("main.card")).toHaveAttribute("data-lemma", first);
+  await answer(page, "2");
+  await expectServerRows(page, "review", 1);
+});
+
 // #189: minutes are the only unit, so every second counts, the new-word card's too.
 test("time on a new-word card counts toward today's minutes", async ({ page }) => {
   await page.clock.install();

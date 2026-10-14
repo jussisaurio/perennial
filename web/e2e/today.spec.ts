@@ -78,7 +78,7 @@ test("done for the day (under a minute left counts): watered, and 5 more minutes
   await answer(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
-  await expect(page.locator("main.summary")).toContainText(/You (know|started) \d+ words?/);
+  await expect(page.locator("main.summary")).toContainText(/You know \d+ words?|So far, you have started \d+ words?/);
   await expect(page.locator("body")).not.toHaveText(NEVER);
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
   await page.getByRole("button", { name: "Practice 5 more minutes" }).click();

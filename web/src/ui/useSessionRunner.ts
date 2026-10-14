@@ -213,6 +213,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       if (last.carried !== undefined) introMs.current.set(last.wordId, last.carried);
       if (last.intro) introMs.current.delete(last.wordId);
       flash("Undone.");
+      // Undo from the pause screen goes back into the session.
+      clock.current.hold(false, Date.now());
       await advance(runner, last);
     } finally {
       busy.current = false;
@@ -221,12 +223,19 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
 
   const exit = () => {
     // Leaving after doing something shows what you did, rather than vanishing.
+    // The card stays, unanswered, and the clock waits: Continue brings both back (#254).
     if (undoStack.length && !done) {
       stopSpeaking();
+      clock.current.hold(true, Date.now());
       setEnded("user");
-      setCard(null);
       setDone(true);
     } else onExit();
+  };
+
+  /** Back from the pause screen to the card it left, with the quick checks still to come. */
+  const resume = () => {
+    clock.current.hold(false, Date.now());
+    setDone(false);
   };
 
   /**
@@ -334,5 +343,6 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     finish,
     undo,
     exit,
+    resume,
   };
 }
