@@ -25,7 +25,8 @@ export function RefusedBanner() {
   const [seen, setSeen] = useState(0);
   if (r.count === seen) return null;
   return (
-    <div className="toast" role="alert">
+    // A status, like the other toast: a screen that reports its own failed write (starting a course) keeps the one alert.
+    <div className="toast" role="status">
       <span>{refusedLine(r)}</span>
       <button className="ghost" onClick={() => setSeen(r.count)}>
         OK
