@@ -8,8 +8,11 @@ set -euo pipefail
 pr=$1
 mode=${2:-}
 sha=$(gh pr view "$pr" --json headRefOid -q .headRefOid)
+first=1
 while :; do
-  sleep 30
+  # Check at once, so a PR whose CI already passed merges without waiting.
+  [ $first = 1 ] || sleep 30
+  first=0
   [ "$(gh pr view "$pr" --json headRefOid -q .headRefOid)" = "$sha" ] || { echo "head moved; not merging"; exit 1; }
   runs=$(gh run list --commit "$sha" --workflow CI --json status,conclusion -q '.[]|"\(.status) \(.conclusion)"')
   [ -n "$runs" ] || continue                         # not registered yet
