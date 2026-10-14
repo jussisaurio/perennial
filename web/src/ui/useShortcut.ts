@@ -2,10 +2,15 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 
 /** True for keys that belong to the browser, the OS or a text field, not to a shortcut. */
 function notForUs(e: KeyboardEvent): boolean {
-  if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return true;
+  // With Shift, Cmd/Ctrl+Z is redo: never our undo.
+  if (e.altKey || e.defaultPrevented || ((e.metaKey || e.ctrlKey) && e.shiftKey)) return true;
   const el = e.target as HTMLElement | null;
   return !!el?.closest?.("input, textarea, select, [contenteditable]");
 }
+
+/** The key as a shortcut names it: "z", or "Mod+z" with Cmd or Ctrl held. Only
+ *  a "Mod+" entry takes a Cmd/Ctrl key, so Cmd/Ctrl+R still reloads (#272). */
+const keyName = (e: KeyboardEvent) => (e.metaKey || e.ctrlKey ? `Mod+${e.key}` : e.key);
 
 // Whether the focused element got focus from the keyboard (#256). Not
 // :focus-visible: Chrome marks a clicked button with it at the next key press.
@@ -36,8 +41,8 @@ function pressesFocused(e: KeyboardEvent): boolean {
   return keyboardFocus && !!el?.closest("button, a, summary");
 }
 
-/** A single-key shortcut for a screen. Ignored while typing in a field, with a
- *  modifier held, in a dialog, or when the key would press a focused button or link. */
+/** A shortcut for a screen, named as keyName names it. Ignored while typing in
+ *  a field, in a dialog, or when the key would press a focused button or link. */
 export function useShortcut(key: string, run: () => void) {
   const ref = useRef(run);
   useEffect(() => {
@@ -45,7 +50,7 @@ export function useShortcut(key: string, run: () => void) {
   });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== key || notForUs(e) || pressesFocused(e)) return;
+      if (keyName(e) !== key || notForUs(e) || pressesFocused(e)) return;
       if ((e.target as HTMLElement | null)?.closest("[role=dialog]")) return;
       e.preventDefault();
       ref.current();
@@ -55,8 +60,7 @@ export function useShortcut(key: string, run: () => void) {
   }, [key]);
 }
 
-/** Several single-key shortcuts, keyed by `KeyboardEvent.key`. Ignored while
- *  typing in a field or with a modifier held, so Cmd/Ctrl+R still reloads, and
+/** Several shortcuts, keyed by keyName. Ignored while typing in a field, and
  *  when the key would press a focused button or link. */
 export function useKeys(map: Record<string, () => void>) {
   const ref = useRef(map);
@@ -66,7 +70,7 @@ export function useKeys(map: Record<string, () => void>) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (notForUs(e) || pressesFocused(e)) return;
-      const fn = ref.current[e.key];
+      const fn = ref.current[keyName(e)];
       if (fn) {
         e.preventDefault();
         fn();

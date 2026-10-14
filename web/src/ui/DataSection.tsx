@@ -5,14 +5,17 @@ import { readMemory, wordState } from "../core/memory";
 import { useLearner, type Learner } from "../data/learner";
 import { language } from "../content/languages";
 import { download } from "./files";
+import { plural } from "./format";
 
 const stamp = () => new Date().toISOString().slice(0, 10);
 
 /** Everything Perennial keeps about you for this language, including the full review log. */
-function exportJSON(l: Learner) {
+function exportJSON(l: Learner): string {
   const words = l.studied.map((w) => ({ ...w, sentences: l.sentences(w.id) }));
   const data = { app: "perennial", version: 2, exportedAt: new Date().toISOString(), language: l.lang, course: l.course, words, reviews: l.reviews, wordStates: [...l.states.values()] };
-  download(`perennial-${l.lang}-${stamp()}.json`, new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  const name = `perennial-${l.lang}-${stamp()}.json`;
+  download(name, new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  return `Downloading all your data as ${name}. Look for it in your downloads.`;
 }
 
 const csvCell = (v: unknown) => {
@@ -22,13 +25,15 @@ const csvCell = (v: unknown) => {
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-function exportCSV(l: Learner) {
+function exportCSV(l: Learner): string {
   const rows = [["language", "word", "meaning", "part of speech", "notes", "reviews", "state", "status"]];
   for (const w of l.studied) {
     if (w.status === "ignored") continue;
     rows.push([language(l.lang).name, w.lemma, w.gloss, w.pos ?? "", w.notes ?? "", String(l.reviewsByWord.get(w.id)?.length ?? 0), wordState(readMemory(l, w.id)), w.status]);
   }
-  download(`perennial-words-${l.lang}-${stamp()}.csv`, new Blob([rows.map((r) => r.map(csvCell).join(",")).join("\n")], { type: "text/csv" }));
+  const name = `perennial-words-${l.lang}-${stamp()}.csv`;
+  download(name, new Blob([rows.map((r) => r.map(csvCell).join(",")).join("\n")], { type: "text/csv" }));
+  return `Downloading ${plural(rows.length - 1, "word")} as ${name}. Look for it in your downloads.`;
 }
 
 function DeleteAccount({ lang }: { lang: string }) {
@@ -60,6 +65,8 @@ export function DataSection({ lang }: { lang: string }) {
   const { user } = useUser();
   const { ai } = useFeatures();
   const learner = useLearner(lang);
+  // A download can start without a sign on the page: say that it did (#272).
+  const [saved, setSaved] = useState("");
   return (
     <div className="form">
       <p className="muted small">
@@ -67,13 +74,16 @@ export function DataSection({ lang }: { lang: string }) {
         <a href="/privacy.html">privacy policy</a>.
       </p>
       <div className="row">
-        <button className="secondary" disabled={!learner} onClick={() => learner && exportJSON(learner)}>
+        <button className="secondary" disabled={!learner} onClick={() => learner && setSaved(exportJSON(learner))}>
           Download all my data (JSON)
         </button>
-        <button className="secondary" disabled={!learner} onClick={() => learner && exportCSV(learner)}>
+        <button className="secondary" disabled={!learner} onClick={() => learner && setSaved(exportCSV(learner))}>
           Download my words (CSV)
         </button>
       </div>
+      <p className="muted small" role="status">
+        {saved}
+      </p>
       {user && <DeleteAccount lang={lang} />}
     </div>
   );

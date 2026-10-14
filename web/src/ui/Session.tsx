@@ -113,7 +113,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   // eslint-disable-next-line react-hooks/exhaustive-deps -- once per chunk, not on every answer
   const watching = useMemo(() => (runner && learner ? watcherFor(learner, serial) : null), [runner]);
 
-  useKeys({ z: () => void undo(), Escape: () => (help ? setHelp(false) : exit()), "?": () => setHelp((h) => !h) });
+  useKeys({ z: () => void undo(), "Mod+z": () => void undo(), Escape: () => (help ? setHelp(false) : exit()), "?": () => setHelp((h) => !h) });
 
   if (!runner) return <div className="session center muted">Preparing…</div>;
 
@@ -137,8 +137,8 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
         </div>
         <span className="time-left">{done ? "" : overtime ? "finishing" : `${Math.max(1, Math.ceil((runner.budgetMs - active) / 60_000))} min left`}</span>
         <SoundToggle />
-        <button className="undo" onClick={() => void undo()} disabled={!canUndo} title="Undo last answer (Z)">
-          <UndoIcon size={18} /> Undo
+        <button className="undo" onClick={() => void undo()} disabled={!canUndo} title="Undo last answer (Z)" aria-keyshortcuts="Z Control+Z Meta+Z">
+          <UndoIcon size={18} /> Undo <kbd aria-hidden="true">Z</kbd>
         </button>
       </header>
       {/* During the session and on its summary: in place, never over the answer buttons. */}
@@ -584,7 +584,7 @@ const SHORTCUTS: [string, string][] = [
   ["1 or ←", "The left answer: New to me, I forgot"],
   ["2 or →", "The right answer: I knew it, I remembered"],
   ["R", "Play the audio again"],
-  ["Z", "Undo the last answer"],
+  ["Z", "Undo the last answer. Ctrl+Z and Cmd+Z work too."],
   ["Esc", "End the session"],
   ["?", "Show or hide this list"],
 ];

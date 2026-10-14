@@ -30,4 +30,8 @@ test("export downloads everything, including the review log", async ({ page }) =
   expect(data.words.length).toBe(1);
   expect(data.reviews).toHaveLength(1);
   expect(data.reviews[0]).toMatchObject({ grade: 4, kind: "known" });
+  // The page says a download started (#272).
+  await expect(page.getByText(/^Downloading all your data as perennial-es-.*\.json\. Look for it in your downloads\.$/)).toBeVisible();
+  await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download my words (CSV)" }).click()]);
+  await expect(page.getByText(/^Downloading 1 word as perennial-words-es-.*\.csv\./)).toBeVisible();
 });
