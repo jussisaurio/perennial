@@ -40,7 +40,7 @@ test("first day: 5 minutes a day, no minutes to choose, and the day's button", a
   await expect(page.getByRole("radiogroup", { name: "Minutes per day" })).toHaveCount(0);
   await page.getByRole("button", { name: "Start learning Spanish" }).click();
   await expect(page.getByText(/seeds are ready to plant/)).toBeVisible({ timeout: 15_000 });
-  await expect(startButton(page)).toHaveText("Today's 5 minutes");
+  await expect(startButton(page)).toHaveText("Start today's 5 minutes");
   await expect(page.locator("body")).not.toHaveText(NEVER);
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
@@ -109,7 +109,7 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
   });
   const note = page.getByText("Perennial is now 5 minutes at a time.", { exact: false });
   await expect(note).toBeVisible();
-  await expect(startButton(page)).toHaveText("Today's 5 minutes");
+  await expect(startButton(page)).toHaveText("Start today's 5 minutes");
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
   await answer(page, "2"); // "I knew it": one seed planted
