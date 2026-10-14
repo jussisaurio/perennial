@@ -33,6 +33,9 @@ export function wordState(read: Pick<MemoryRow, "s" | "reps"> | undefined): Word
   return read.s >= KNOWN_STABILITY && read.reps >= 2 ? "known" : "learning";
 }
 
+/** The rule of wordState in words: every screen that explains "known" says it this way (#261). */
+export const KNOWN_RULE = "A word counts as known when you remembered it at least twice and you will most likely still remember it a week from now.";
+
 /** Read stability (days) at which a learning word shows a bud instead of a sprout. */
 export const BUD_S = 3;
 /** Read stability (days) of a word known for ages: its plant talks like an old-timer. */

@@ -17,7 +17,7 @@ import { useSessionRunner, type Card, type Ended } from "./useSessionRunner";
 import { useKeys, useShortcut } from "./useShortcut";
 import { track } from "../observability";
 import { DAILY_MINUTES } from "../data/practice";
-import { plantStage, readMemory } from "../core/memory";
+import { KNOWN_RULE, plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { broughtVisitor, gardenBrought } from "./visitors";
@@ -623,6 +623,8 @@ function Summary({
   const watered = [...practised].filter((id) => !introduced.has(id)).length;
   const met = introduced.size - seeds;
   const did = seeds + watered > 0;
+  // "I knew it" plants a seed that comes back in about a week: it is not known yet, so say what the taps did (#261).
+  const knew = learner ? [...introduced].filter((id) => learner.reviewsByWord.get(id)?.some((r) => r.kind === "known")).length : 0;
   const highlight = useMemo(() => new Set([...practised, ...introduced]), [practised, introduced]);
   // News worth a look in the garden (#232), worked out once, as the summary opens.
   const [news] = useState(() => (learner ? gardenNews(learner, before, arrived) : null));
@@ -663,10 +665,13 @@ function Summary({
               You know <strong>{stats.known}</strong> {stats.known === 1 ? "word" : "words"}.{stats.learning > 0 && <> You are learning {stats.learning} more.</>}
             </>
           ) : (
-            <>You started {stats.learning} {stats.learning === 1 ? "word" : "words"}. A word counts as known when you still remember it a week later.</>
+            <>
+              You started {stats.learning} {stats.learning === 1 ? "word" : "words"}.{knew === 0 && <> {KNOWN_RULE}</>}
+            </>
           )}
         </p>
       )}
+      {knew > 0 && <p className="muted">You said you already knew {plural(knew, "word")}. {knew === 1 ? "It comes" : "They come"} back in about a week. Remember {knew === 1 ? "it" : "them"} then, and {knew === 1 ? "it counts" : "they count"} as known.</p>}
       {news && (
         <p className="garden-news">
           {news.line}{" "}

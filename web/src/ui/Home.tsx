@@ -8,7 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { courseStats } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
-import { DAILY_MINUTES, nextChunk, sessionPlan } from "../data/practice";
+import { chunkLabel, DAILY_MINUTES, nextChunk, sessionPlan } from "../data/practice";
 import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine } from "../content/voice";
@@ -17,6 +17,7 @@ import { focusPlant } from "./gardenFocus";
 import { learnerVisitors } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import { today } from "../core/day";
+import { KNOWN_RULE } from "../core/memory";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -92,7 +93,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <span className="clock" aria-hidden="true">
             <SeedIcon size={20} />
           </span>
-          {chunk.state === "done" ? `Practice ${DAILY_MINUTES} more minutes` : chunk.state === "finish" ? `Finish today's ${DAILY_MINUTES} minutes` : `Today's ${DAILY_MINUTES} minutes`}
+          {chunkLabel(chunk)}
           {chunk.state === "finish" && <small>· {chunk.minutes} min</small>}
         </button>
         <p className="start-note">
@@ -127,7 +128,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <details className="more">
             <summary>What does "know" mean?</summary>
             <p className="muted small">
-              A word counts as known when you remembered it at least twice and you will most likely still remember it a week from now. The course starts with the words people use most in everyday speech, so each word you learn is one you will hear often.
+              {KNOWN_RULE} The course starts with the words people use most in everyday speech, so each word you learn is one you will hear often.
             </p>
           </details>
         </div>

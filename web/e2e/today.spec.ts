@@ -129,17 +129,21 @@ test("the walk's Water button: the rest of today's 5 minutes, then 5 more once d
   await answered(page, { count: 6, minutes: 1, daysAgo: 30 }); // thirsty plants
   await answered(page, { from: 6, count: 3, minutes: 2 });
   await expect(startButton(page)).toContainText("3 min");
-  const water = async () => {
+  // The button says what it starts, as Today does, and never counts thirsty plants (#263).
+  const water = async (label: string) => {
     await page.getByRole("button", { name: "Walk in your garden" }).click();
-    await page.getByRole("button", { name: /Water \d+ thirsty plants?/ }).click({ timeout: 20_000 });
+    const button = page.getByRole("button", { name: `💧 ${label}` });
+    await expect(button).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/thirsty/)).toHaveCount(0);
+    await button.click();
   };
-  await water();
+  await water("Finish today's 5 minutes · 3 min");
   await expect(timeLeft(page)).toHaveText("3 min left");
 
   await page.goto("/#/today");
   await answered(page, { from: 9, count: 3, minutes: 3 });
   await expect(page.getByText("6 plants still need water.")).toBeVisible(); // done for today, the thirsty ones still due
-  await water();
+  await water("Practice 5 more minutes");
   await expect(timeLeft(page)).toHaveText("5 min left");
 });
 

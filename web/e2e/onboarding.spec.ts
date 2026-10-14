@@ -10,6 +10,8 @@ test("landing: the garden shows real words per language; start without an accoun
   await expect(page.getByText("Lessons are in English.")).toBeVisible();
   // The showcase garden: hover a plant to see its word.
   await expect(page.locator(".landing-garden .garden svg g[transform]").first()).toBeVisible();
+  // A sample, so no counts that read as someone's progress (#261).
+  await expect(page.getByRole("img", { name: "A sample word garden. Each word grows from a seed into a flower." })).toBeVisible();
   await page.getByRole("radio", { name: /German/ }).check();
   await expect(page.getByRole("button", { name: "Start learning German" })).toBeVisible();
   await expect(page.getByText("Use my own API key")).toHaveCount(0);
@@ -30,6 +32,11 @@ test("landing: walk through the showcase garden in 3D, view only", async ({ page
   await page.getByRole("button", { name: "Walk through this garden in 3D" }).click();
   await expect(page.getByText(/\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 15000 });
   await expect(page.getByRole("button", { name: /Water/ })).toHaveCount(0); // no learning here
+  // A plant's card gives no made-up recall number (#261).
+  await page.getByRole("button", { name: "Next plant →" }).click();
+  const card = page.getByRole("dialog", { name: /^The plant for / });
+  await expect(card).toContainText(/: you .* this word\./);
+  await expect(card).not.toContainText("%");
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
 });
