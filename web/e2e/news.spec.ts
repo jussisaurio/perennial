@@ -28,7 +28,7 @@ test("a visitor that came this chunk: one line, and its link opens the walk", as
   }
   await page.getByRole("button", { name: "End session" }).click();
   await expect(news(page)).toContainText("A cat came to the garden.");
-  await news(page).getByRole("button", { name: "See it in the garden →" }).click();
+  await news(page).getByRole("button", { name: "See it in the garden" }).click();
   await expect(page).toHaveURL(/#\/garden/);
   // The walk opens on gato's plant: its card is up.
   await expect(page.getByRole("dialog", { name: "The plant for gato" })).toBeVisible({ timeout: 15_000 });
