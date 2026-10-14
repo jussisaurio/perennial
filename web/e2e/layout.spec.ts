@@ -99,7 +99,8 @@ test("small phone: the landing Start, a long card's question, the summary button
   // Short enough that the new-word card scrolls; it opens at the top.
   await page.setViewportSize({ width: 360, height: 520 });
   await reveal(page);
-  const prompt = (await page.getByText("Is this word new to you?").boundingBox())!;
+  // The visible prompt; the screen-reader line repeats its words (#283).
+  const prompt = (await page.locator("p.prompt", { hasText: "Is this word new to you?" }).boundingBox())!;
   const newToMe = (await page.locator(".answers button").first().boundingBox())!;
   expect(prompt.y + prompt.height, "the answers cover the question").toBeLessThanOrEqual(newToMe.y);
   onScreen("I knew it", await page.locator(".answers button").last().boundingBox());
