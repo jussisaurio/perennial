@@ -72,6 +72,17 @@ test("German: nouns come with their article on the card and in Words; an answer 
   await expect(page.locator(`.word-row strong:text-is("${noun}")`)).toBeVisible();
 });
 
+test("the summary says what \"I knew it\" did: back in a week, then known (#261)", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  for (let i = 0; i < 2; i++) {
+    await expect(kicker(page)).toHaveText(/new word/);
+    await answer(page, "2");
+  }
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(page.getByText("You said you already knew 2 words. They come back in about a week. Remember them then, and they count as known.")).toBeVisible();
+});
+
 test("double-clicking Show does not grade the unseen answer", async ({ page }) => {
   await startCourse(page);
   await startSession(page);

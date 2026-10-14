@@ -183,7 +183,8 @@ export const Garden = memo(function Garden({
   const visible = scrolls ? layout.filter((l) => l.x > scrollX - OVERSCAN && l.x < scrollX + width + OVERSCAN) : layout;
   const seeds = Math.min(data?.seeds ?? 0, 24);
   const blooming = data?.plants.filter((p) => p.stage === "bloom").length ?? 0;
-  const label = data ? `Word garden: ${blooming} known, ${data.total - blooming} learning, ${data.seeds} new.` : "Word garden";
+  // The landing page's garden is a sample: counts would read as someone's real progress (#261).
+  const label = showcase ? "A sample word garden. Each word grows from a seed into a flower." : data ? `Word garden: ${blooming} known, ${data.total - blooming} learning, ${data.seeds} new.` : "Word garden";
   const from = scrolls ? Math.max(0, scrollX - OVERSCAN) : 0;
   const to = scrolls ? Math.min(fullWidth, scrollX + width + OVERSCAN) : width;
   // Late at night one bloom snores (#62): the same one all day, the same as in the walk.

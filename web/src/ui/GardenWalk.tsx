@@ -301,7 +301,8 @@ export function GardenWalk({
               </strong>
               <span className="gw-gloss">{selected.gloss}</span>
               <span className="muted small">
-                {stageSentence(selected.stage)} {selected.r < THIRSTY ? "It is a little thirsty: practise it soon." : `You remember it ${Math.round(selected.r * 100)}% of the time.`}
+                {/* No recall number: right after an answer it reads 100%, which looks made up (#261). */}
+                {stageSentence(selected.stage)} {selected.r < THIRSTY && "It is a little thirsty: practise it soon."}
               </span>
               <span className="muted small gw-bed">In the bed for {groupOf(selected.pos).toLowerCase()}.</span>
               <span className="small gw-flavour">{personality(selected)}</span>

@@ -17,6 +17,7 @@ import { focusPlant } from "./gardenFocus";
 import { learnerVisitors } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import { today } from "../core/day";
+import { KNOWN_RULE } from "../core/memory";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -127,7 +128,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <details className="more">
             <summary>What does "know" mean?</summary>
             <p className="muted small">
-              A word counts as known when you remembered it at least twice and you will most likely still remember it a week from now. The course starts with the words people use most in everyday speech, so each word you learn is one you will hear often.
+              {KNOWN_RULE} The course starts with the words people use most in everyday speech, so each word you learn is one you will hear often.
             </p>
           </details>
         </div>
