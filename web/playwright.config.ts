@@ -16,9 +16,10 @@ export default defineConfig({
   // One retry on CI: software WebGL on shared runners can be slow to start.
   retries: process.env.CI ? 1 : 0,
   // Every test makes its own learner, so tests run in any order and at once.
-  // GitHub's runners for public repos have 4 vCPUs; the tests mostly wait on
-  // the network, so 4 per runner (CI also shards the suite).
-  workers: process.env.CI ? 4 : undefined,
+  // GitHub's runners for public repos have 4 vCPUs, but they also run vite, the
+  // API, Postgres and Electric: 4 workers saved ~0–13 s and brought a new
+  // ECONNRESET on the shared server (#287), so 2 per runner (CI also shards the suite).
+  workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL: `http://localhost:${WEB}`,
@@ -28,6 +29,7 @@ export default defineConfig({
     // Only the session screen speaks; keep tests deterministic and silent.
     launchOptions: { args: ["--mute-audio"] },
   },
+  // Each project must also be in a CI matrix entry (.github/workflows/ci.yml), or CI skips it.
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] }, testIgnore: /layout\.spec|garden-touch\.spec/ },
     { name: "phone", use: { ...devices["Pixel 7"] }, testMatch: /layout\.spec/ },
