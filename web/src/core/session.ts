@@ -185,6 +185,14 @@ export class Session {
     return activeMs >= this.budgetMs;
   }
 
+  /**
+   * Why `next()` returned null. Planned cards still queued mean the clock ended
+   * the chunk: new words held back in its last seconds, not an empty queue.
+   */
+  endedBy(activeMs: number): "time" | "empty" {
+    return this.timeUp(activeMs) || this.queue.length ? "time" : "empty";
+  }
+
   next(activeMs: number): Task | null {
     const at = this.replayAt ?? activeMs;
     this.replayAt = undefined;

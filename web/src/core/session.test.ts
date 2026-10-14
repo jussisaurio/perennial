@@ -169,6 +169,25 @@ describe("Session", () => {
     expect(served(45_000)).toBe("review:a"); // 15 s left: a review, not "y"
     expect(served(50_000)).toBe("review:x"); // only new words are left: x's quick check, and the chunk ends
     expect(served(50_000)).toBeNull();
+    // Ended by the clock, though 10 s are left: the summary must not say every plant has water.
+    expect(s.endedBy(50_000)).toBe("time");
+  });
+
+  test("a chunk that served every card ended empty, not by time", () => {
+    const s = new Session({ queue: [{ kind: "review", wordId: "a", skill: "read" }] }, 60_000);
+    s.report(s.next(0)!, { grade: 3 });
+    expect(s.next(10_000)).toBeNull();
+    expect(s.endedBy(10_000)).toBe("empty");
+  });
+
+  test("undo across the last seconds brings back the same new word", () => {
+    const s = new Session({ queue: [{ kind: "intro", wordId: "x" }, { kind: "review", wordId: "a", skill: "read" }] }, 60_000);
+    const x = s.next(30_000)!;
+    expect(x.wordId).toBe("x"); // 30 s left: time for a new word
+    s.report(x, {});
+    s.next(40_000); // 20 s left
+    expect(s.undo()).toBe(true);
+    expect(s.next(40_000)?.wordId).toBe("x"); // chosen as at 30 s, not held back by the 20 s left now
   });
 });
 

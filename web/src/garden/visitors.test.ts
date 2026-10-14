@@ -269,8 +269,8 @@ describe("the cat (after a break)", () => {
     expect(away(1)).toBeNull();
     expect(away(6)).toBeNull();
     // Said on Today, which has no bench: the line makes sense on its own (#270).
-    expect(away(7)).toBe("Welcome back. A cat kept the garden company.");
-    expect(away(30)).toBe("Welcome back. A cat kept the garden company.");
+    expect(away(7)).toBe("Welcome back. A cat sat in the garden while you were away.");
+    expect(away(30)).toBe("Welcome back. A cat sat in the garden while you were away.");
     expect(away(90)).toBe("Welcome back. The garden waited for you.");
     for (const n of [7, 30, 90]) {
       expect(away(n)).not.toMatch(/\d|!|miss/i);

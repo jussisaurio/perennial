@@ -57,6 +57,7 @@ export function loadingLine(now = new Date()): string {
  * learner's answers so far, so each session of the day gets its own pick (#270).
  */
 export function summaryHeadline(lang: string, answers: number, now = new Date()): { line: string; small?: string } {
+  // daily and rareDay pick once per key and day: the answer count in the key makes it once per session.
   const key = (name: string) => `${name}:${answers}`;
   if (rareDay(5, key("praise-" + lang), now)) return lang === "de" ? { line: "Gut gemacht.", small: "Well done." } : { line: "¡Muy bien!", small: "Very good." };
   const night = now.getHours() >= 22 || now.getHours() < 5;

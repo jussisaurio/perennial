@@ -627,6 +627,7 @@ function Summary({
     });
     return grew.length ? grew : null;
   });
+  // ?? only for the type: a summary follows a started session, so the learner has loaded.
   const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? "", learner?.reviews.length ?? 0));
   const title = ended === "user" ? "Session paused" : "Session complete";
   const why = ended === "user" ? "You can continue later. Your answers are saved." : ended === "empty" ? "Every plant has water." : null;

@@ -128,7 +128,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     const now = clock.current.tick(Date.now());
     const task = r.next(now);
     if (!task) {
-      setEnded(r.timeUp(now) ? "time" : "empty");
+      setEnded(r.endedBy(now));
       setCard(null);
       setDone(true);
       return;
