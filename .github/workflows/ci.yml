@@ -103,13 +103,19 @@ jobs:
           DECK_ALLOW_BIG_CHANGE: ${{ contains(github.event.pull_request.labels.*.name, 'deck-big-change') && '1' || '' }}
 
   e2e:
-    name: End-to-end (Playwright ${{ matrix.shard }}/4)
+    name: End-to-end (${{ matrix.label }})
     runs-on: ubuntu-latest
-    # The tests are independent, so the suite splits across runners.
+    # The tests are independent, so the suite splits across runners. WebKit runs
+    # alone: its system packages are slow to install, and only one spec uses it.
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        include:
+          - { label: "Chromium 1/4", browser: chromium, args: "--project=desktop --project=phone --shard=1/4" }
+          - { label: "Chromium 2/4", browser: chromium, args: "--project=desktop --project=phone --shard=2/4" }
+          - { label: "Chromium 3/4", browser: chromium, args: "--project=desktop --project=phone --shard=3/4" }
+          - { label: "Chromium 4/4", browser: chromium, args: "--project=desktop --project=phone --shard=4/4" }
+          - { label: "iPhone, WebKit", browser: webkit, args: "--project=iphone" }
     steps:
       - uses: actions/checkout@v7
       - name: Start Postgres + Electric (in the background)
@@ -130,14 +136,14 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('bun.lock') }}
       # Two steps, so the log shows which part is slow: the system packages (apt) are not cached.
       - name: Install browser system packages
         working-directory: web
-        run: bunx playwright install-deps chromium webkit
+        run: bunx playwright install-deps ${{ matrix.browser }}
       - name: Install Playwright browsers
         working-directory: web
-        run: bunx playwright install chromium webkit
+        run: bunx playwright install ${{ matrix.browser }}
       # Vite pre-bundles dependencies on the first page load; keep that work between runs.
       - name: Cache Vite dependencies
         uses: actions/cache@v6
@@ -153,13 +159,13 @@ jobs:
           echo "Postgres + Electric were not ready after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
       - name: Run e2e
         working-directory: web
-        run: bunx playwright test --shard=${{ matrix.shard }}/4
+        run: bunx playwright test ${{ matrix.args }}
 
       - name: Upload report on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report-${{ matrix.shard }}
+          name: playwright-report-${{ strategy.job-index }}
           path: |
             web/playwright-report/
             web/test-results/
