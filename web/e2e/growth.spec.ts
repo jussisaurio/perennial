@@ -71,6 +71,29 @@ test("a remembered quick check waters the plant; a forgotten one moves straight 
   await expect(moment(page)).toHaveCount(0);
 });
 
+test("after I forgot, remembering the word on its retry still waters it", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  await page.locator("button.start").click();
+  for (let i = 0; i < 4; i++) await answer(page, "1"); // four seeds planted
+  await expect(kicker(page)).toHaveText(/quick check/);
+  const word = await page.locator("main.card").getAttribute("data-lemma");
+  await reveal(page);
+  await page.keyboard.press("1"); // I forgot
+  await expect(moment(page)).toHaveCount(0);
+  // Its retry comes a few cards later; the cards in between are remembered.
+  for (let i = 0; i < 8; i++) {
+    await expect(page.locator("main.card")).toBeVisible();
+    const retry = (await page.locator("main.card").getAttribute("data-lemma")) === word;
+    await reveal(page);
+    await page.keyboard.press("2");
+    // The retry grows the plant by less than a pixel or two, but it is watered all the same.
+    if (retry) return expect(moment(page)).toHaveAttribute("data-kind", "water");
+    await expect(moment(page)).toHaveCount(0);
+  }
+  throw new Error("the forgotten word never came back");
+});
+
 test("the setting 'Next card right away' skips the moment", async ({ page }) => {
   await page.clock.install();
   await startCourse(page);
