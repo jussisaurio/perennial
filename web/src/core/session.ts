@@ -12,8 +12,11 @@ export type Task =
   | { kind: "intro"; wordId: string }
   | { kind: "review"; wordId: string; skill: Skill; isNew?: boolean; retry?: boolean };
 
+/** The time a new word takes: its new-word card and its quick check. */
+export const NEW_WORD_MS = 25_000;
+
 /** Time per task, ms. `intro` covers the intro and its follow-up test. */
-const COSTS: Record<"intro" | Skill, number> = { intro: 25_000, read: 8_000, listen: 10_000, write: 14_000 };
+const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 8_000, listen: 10_000, write: 14_000 };
 
 /** First practice of a newly unlocked skill (listening, writing), per session. */
 const MAX_NEW_SKILLS = 4;
