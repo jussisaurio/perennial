@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export const newEmail = (prefix = "learner") => `${prefix}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
@@ -61,6 +61,12 @@ export async function advance(page: Page, key: string) {
   const before = await root.getAttribute("data-card");
   await page.keyboard.press(key);
   await expect(root).not.toHaveAttribute("data-card", before!);
+}
+
+/** Press Tab until `target` has focus, as a keyboard user reaches a button. */
+export async function tabTo(page: Page, target: Locator) {
+  for (let i = 0; i < 20 && !(await target.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
+  await expect(target).toBeFocused();
 }
 
 /** Reveal the answer and wait until the double-click guard lets an answer through. */
