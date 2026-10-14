@@ -95,7 +95,9 @@ body::before {
 :root[data-theme="dark"] body::before { mix-blend-mode: screen; opacity: 0.1; }
 
 
-h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; text-wrap: balance; }
+/* No single word alone on a paragraph's last line. */
+p, li, figcaption { text-wrap: pretty; }
 h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); margin: 0 0 0.75rem; }
 h2 { font-size: 1.45rem; margin: 2.25rem 0 0.75rem; }
 p { margin: 0.4rem 0; }
@@ -124,7 +126,8 @@ button.primary:hover:not(:disabled) { box-shadow: 0 10px 24px -8px rgb(0 0 0 / 0
 button.primary:disabled { opacity: 1; background: var(--paper-2); color: var(--muted); border-color: var(--line); box-shadow: none; }
 button.secondary { background: var(--card); border-color: var(--line); }
 button.secondary:hover:not(:disabled) { border-color: var(--ink-2); }
-button.fail { background: var(--persimmon-soft); color: var(--persimmon); }
+/* The same lift as "I remembered", so the two answers look equal. */
+button.fail { background: var(--persimmon-soft); color: var(--persimmon); box-shadow: 0 8px 20px -12px var(--persimmon); }
 button.fail:hover:not(:disabled) { background: color-mix(in oklab, var(--persimmon-soft), var(--persimmon) 14%); }
 button.pass { background: var(--leaf); color: #fff; box-shadow: 0 8px 20px -12px var(--leaf); }
 button.pass:hover:not(:disabled) { box-shadow: 0 10px 24px -10px var(--leaf); }
@@ -149,9 +152,12 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink-2); box-shadow: 0 0 0 4px var(--sun-soft); }
 input::placeholder, textarea::placeholder { color: var(--muted); }
 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%236f685b' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.2rem; }
-input[type="range"] { padding: 0; accent-color: var(--persimmon); border: none; background: none; box-shadow: none; }
+/* No margin: the browser's default pushed the track past the content edge. */
+input[type="range"] { padding: 0; margin: 0; accent-color: var(--persimmon); border: none; background: none; box-shadow: none; }
 input[type="file"] { padding: 0.5rem; }
 .form { display: grid; gap: 1rem; }
+/* An email or a code does not need the whole desktop column. */
+.form input { max-width: 26rem; }
 .form label { display: grid; gap: 0.4rem; font-size: 0.88rem; font-weight: 500; color: var(--ink-2); }
 .row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 .row > input { flex: 1; }
@@ -182,6 +188,7 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
 .course-item > span:first-child { display: inline-flex; align-items: center; gap: 0.35rem; }
 .course-item:hover, .course-item:focus-visible { background: var(--paper-2); }
 .course-item[aria-checked="true"] { font-weight: 600; }
+.course-item .small { font-weight: 400; }
 .course-ask { padding: 0.5rem 0.6rem; max-width: 18rem; }
 /* Phones: the menu spans the top bar, so it never leaves the screen. */
 @media (max-width: 640px) {
@@ -229,9 +236,9 @@ section { margin-bottom: 1.25rem; }
 .start {
   position: relative; border-radius: 999px; padding: 1.05rem 1.6rem 1.05rem 1.25rem;
   background: var(--ink); color: var(--paper); font-size: 1.12rem; font-weight: 600; gap: 0.8rem;
-  box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.6);
+  box-shadow: 0 12px 26px -16px rgb(0 0 0 / 0.5);
 }
-.start:hover:not(:disabled) { box-shadow: 0 22px 44px -14px rgb(0 0 0 / 0.7); }
+.start:hover:not(:disabled) { box-shadow: 0 16px 30px -14px rgb(0 0 0 / 0.55); }
 .start .clock {
   width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center;
   background: var(--sun); color: #2a2111; font: 1rem/1 var(--display);
@@ -254,7 +261,8 @@ section { margin-bottom: 1.25rem; }
 
 .activity { display: flex; align-items: flex-end; gap: 3px; height: 40px; margin-top: 1.75rem; }
 .activity div { flex: 1; background: var(--leaf-2); border-radius: 3px 3px 1px 1px; min-height: 3px; transition: height 0.6s var(--ease); }
-.activity div.today { background: var(--persimmon); }
+/* Today in a deeper green: red read as an error. */
+.activity div.today { background: var(--leaf); }
 .activity-cap { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-top: 0.35rem; }
 
 /* ---------- garden ---------- */
@@ -303,7 +311,7 @@ section { margin-bottom: 1.25rem; }
 .garden-legend { display: flex; align-items: center; gap: 1.1rem; font-size: 0.82rem; color: var(--muted); padding: 0.5rem 16px 0; }
 .garden-legend b { color: var(--ink); font-weight: 600; }
 .plant-tip {
-  position: absolute; width: 160px; padding: 0.6rem 0.75rem; border-radius: 12px; pointer-events: none;
+  position: absolute; width: 200px; padding: 0.6rem 0.75rem; border-radius: 12px; pointer-events: none;
   background: var(--card); border: 1px solid var(--line); box-shadow: 0 14px 34px -16px rgb(0 0 0 / 0.45);
   display: grid; gap: 0.1rem; font-size: 0.82rem; animation: rise 0.18s var(--ease);
 }
@@ -470,7 +478,6 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .prompt b { font-weight: 650; color: var(--ink); }
 @media (max-width: 560px) {
   .start { width: 100%; justify-content: flex-start; text-align: left; }
-  .start small { margin-left: auto; }
 }
 .row > select { width: auto; flex: none; }
 /* A quiet note above the answer buttons: never wider than the screen (a too-wide
@@ -584,6 +591,8 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 @media (max-width: 480px) { .card-plant { top: 54px; right: 2px; transform: scale(0.85); transform-origin: top right; } }
 
 /* ---- Walk-in garden: a 90s game in a cosy frame ---------------------- */
+/* Without this the figure keeps the browser's 40 px side margins: caption indented, garden narrowed. */
+.landing-garden { margin-inline: 0; }
 .walk-link { display: inline-flex; align-items: center; gap: 0.45rem; margin: -0.4rem 0 1rem; padding: 0.35rem 0.2rem; color: var(--ink); font-weight: 600; background: none; border: 0; }
 .walk-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
@@ -764,7 +773,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .deck-failed { display: grid; gap: 1rem; justify-items: start; }
 
 /* ---- Field guide (#211): pressed flowers on paper, pencil sketches for words still growing ---- */
-.words-view { margin: 0.2rem 0 0.4rem; }
+/* The same gap as between the search and the filter above it. */
+.words-view { margin: 0.6rem 0 0.4rem; }
 .guide-head { padding: 1.2rem 0 0.5rem; }
 .guide-head h2 { font: 1.4rem/1.2 var(--display); margin: 0 0 0.3rem; }
 .guide-head p { margin: 0; }

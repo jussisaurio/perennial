@@ -20,6 +20,8 @@ import { headword } from "../content/forms";
 
 type Filter = "all" | WordState | "suspended" | "mine";
 const SKILL_ORDER = ["read", "listen", "write"];
+// The "/" shortcut needs a keyboard: touch screens hide key hints (as kbd does in index.css).
+const TOUCH = matchMedia("(hover: none)").matches;
 
 /** The skills practised at least once, reading first. */
 const practisedSkills = (memory: MemoryRow[]) => memory.filter((m) => m.reps > 0).sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill));
@@ -115,7 +117,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
         )}
       </div>
       <div className="row">
-        <input ref={search} className="search" type="search" placeholder="Search words or meanings (/)" aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input ref={search} className="search" type="search" placeholder={TOUCH ? "Search words or meanings" : "Search words or meanings (/)"} aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} aria-label="Which words">
           <option value="all">All</option>
           <option value="known">Known</option>

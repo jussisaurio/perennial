@@ -167,7 +167,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
           {goodbye.line} {goodbye.wish && <em>{goodbye.wish}</em>}
         </p>
       )}
-      <h1 style={{ marginTop: "2rem" }}>Grow a language, {DAILY_MINUTES} minutes a day.</h1>
+      <h1 style={{ marginTop: "2rem" }}>Grow a language, {DAILY_MINUTES}&nbsp;minutes a day.</h1>
       <p className="lede">
         Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, in real sentences. Missed days do not pile up.
       </p>
