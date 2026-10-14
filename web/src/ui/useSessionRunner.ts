@@ -93,6 +93,15 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const introSentence = useRef(new Map<string, string>());
   const shownAt = useRef(0);
   const serial = useRef(0);
+  // On the pause screen (#254): the clock waits, and an answer still finishing
+  // (its growth moment) puts the next card behind the pause screen, not over it.
+  const paused = useRef(false);
+  const pause = (on: boolean) => {
+    paused.current = on;
+    clock.current.hold(on, Date.now());
+  };
+  // session_finished is sent once per chunk: a pause that is continued opens the summary again.
+  const tracked = useRef(false);
   // One entry per card answered, so Undo can revert what that answer recorded.
   // Each entry keeps the card's word and sentence, so Undo shows exactly that card again.
   const [undoStack, setUndoStack] = useState<{ reviewId?: string; intro: boolean; practised?: string; wordId: string; example?: Sentence; carried?: number }[]>([]);
@@ -116,6 +125,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       introSentence.current = new Map();
       setUndoStack([]);
       clock.current = new ActiveClock(Date.now());
+      paused.current = false;
+      tracked.current = false;
       setActive(0);
       setRunner(r);
       setDone(false);
@@ -148,7 +159,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     const read = readMemory(l, word.id);
     shownAt.current = clock.current.elapsed;
     serial.current++;
-    setDone(false);
+    if (!paused.current) setDone(false);
     // A focused button from the last card would also receive Space/Enter.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     setCard({ task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read) });
@@ -188,7 +199,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     clearNote();
     try {
       const moment = await record(runner, card, grade, opts);
-      if (moment) await grow(moment);
+      // Paused meanwhile: the pause screen is up, so no moment over it.
+      if (moment && !paused.current) await grow(moment);
       await advance(runner);
     } finally {
       busy.current = false;
@@ -214,7 +226,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       if (last.intro) introMs.current.delete(last.wordId);
       flash("Undone.");
       // Undo from the pause screen goes back into the session.
-      clock.current.hold(false, Date.now());
+      pause(false);
       await advance(runner, last);
     } finally {
       busy.current = false;
@@ -226,7 +238,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     // The card stays, unanswered, and the clock waits: Continue brings both back (#254).
     if (undoStack.length && !done) {
       stopSpeaking();
-      clock.current.hold(true, Date.now());
+      pause(true);
       setEnded("user");
       setDone(true);
     } else onExit();
@@ -234,9 +246,12 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
 
   /** Back from the pause screen to the card it left, with the quick checks still to come. */
   const resume = () => {
-    clock.current.hold(false, Date.now());
+    pause(false);
     setDone(false);
   };
+
+  /** True the first time a summary opens in this chunk. */
+  const firstSummary = () => !tracked.current && (tracked.current = true);
 
   /**
    * The word's reading memory once it has more than `reps` reviews, that is,
@@ -344,5 +359,6 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     undo,
     exit,
     resume,
+    firstSummary,
   };
 }

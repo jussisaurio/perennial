@@ -106,7 +106,8 @@ test("the summary replays what grew this chunk, then rests; a tap ends it (#216)
   await expect(garden).not.toHaveAttribute("data-replaying", "true");
   expect(await glowTop()).toBeLessThan(during - 10); // SVG y grows downward: a taller plant has a smaller cy
   // Again, ended by a tap this time: the clock stays stopped, so only the tap can end it.
-  await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
+  await page.getByRole("button", { name: "Done" }).click();
+  await page.locator("button.start").click();
   await page.clock.resume();
   await answer(page, "2");
   await expect(moment(page)).toHaveCount(0);
