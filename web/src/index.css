@@ -62,8 +62,8 @@
     --sun-soft: #3a3019;
     --stem: #6fa457;
     --stem-dry: #7e7650;
-    --soil-1: #262a1d;
-    --soil-2: #1d2016;
+    --soil-1: #4a4230;
+    --soil-2: #3a3424;
     --petal-4: #f3ecd9;
     --shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 14px 40px -20px rgb(0 0 0 / 0.8);
     color-scheme: dark;
@@ -104,6 +104,8 @@ p { margin: 0.4rem 0; }
 .big { font-size: 1.3rem; }
 .center { display: grid; place-items: center; min-height: 60dvh; }
 ::selection { background: var(--sun-soft); }
+a { color: var(--ink-2); text-underline-offset: 3px; text-decoration-color: color-mix(in oklab, currentColor, transparent 55%); }
+a:hover { color: var(--ink); }
 
 /* ---------- controls ---------- */
 button {
@@ -118,6 +120,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 :focus-visible { outline: 2.5px solid var(--persimmon); outline-offset: 2px; }
 button.primary { background: var(--ink); color: var(--paper); box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.5); }
 button.primary:hover:not(:disabled) { box-shadow: 0 10px 24px -8px rgb(0 0 0 / 0.6); }
+/* A faded ink button still looked pressable (light) and was dark on grey (dark): a flat, quiet one, in both themes. */
+button.primary:disabled { opacity: 1; background: var(--paper-2); color: var(--muted); border-color: var(--line); box-shadow: none; }
 button.secondary { background: var(--card); border-color: var(--line); }
 button.secondary:hover:not(:disabled) { border-color: var(--ink-2); }
 button.fail { background: var(--persimmon-soft); color: var(--persimmon); }
@@ -191,6 +195,8 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
 .tab { padding: 0.45rem 0.95rem; color: var(--muted); font-weight: 500; font-size: 0.92rem; }
 .tab svg { display: none; }
 .tab.on { color: var(--ink); background: var(--card); box-shadow: 0 2px 8px -4px rgb(0 0 0 / 0.25); }
+/* In the dark the card is almost the bar's colour: lift the chosen tab so it shows. */
+:root[data-theme="dark"] .tab.on { background: color-mix(in oklab, var(--card), var(--ink) 14%); }
 @media (max-width: 640px) {
   .tabs {
     position: fixed; z-index: 50; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom));
@@ -367,6 +373,8 @@ section { margin-bottom: 1.25rem; }
 .translation { color: var(--muted); margin: 0; font-size: 1.05rem; }
 .translation.big { color: var(--ink); font-size: 1.3rem; }
 mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color: inherit; padding: 0 0.08em; font-weight: 600; }
+/* The dark sun-soft is a muddy brown under a word: a see-through sun reads as a highlighter. */
+:root[data-theme="dark"] mark { background: linear-gradient(transparent 58%, color-mix(in oklab, var(--sun), transparent 62%) 58%); }
 .blank { display: inline-block; border-bottom: 2.5px solid var(--persimmon); margin: 0 0.1em; animation: blink 1.6s ease-in-out infinite; }
 @keyframes blink { 50% { border-color: var(--persimmon-soft); } }
 .example { border-top: 1px dashed var(--line); padding-top: 1rem; margin-top: 0.5rem; }
@@ -771,6 +779,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* A sketch: pencil grey, faint, the flower not drawn in yet. */
 .guide-entry.sketch, .guide-sheet.sketch { background: transparent; border: 1px dashed var(--line); }
 .guide-entry.sketch svg, .guide-sheet.sketch svg { filter: grayscale(1) contrast(0.9); opacity: 0.5; }
+/* Grey at half strength nearly vanishes on the dark paper. */
+:root[data-theme="dark"] .guide-entry.sketch svg, :root[data-theme="dark"] .guide-sheet.sketch svg { opacity: 0.85; }
 .guide-rare { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--persimmon); margin-top: 0.15rem; }
 /* No padding on the dialog itself: a click with the dialog as its target is then on the backdrop (FieldGuide.tsx). */
 .guide-page { width: min(34rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: none; border-radius: 14px; background: var(--paper); color: var(--ink); overflow-y: auto; }
