@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { didLine, firstPlantsLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
@@ -262,6 +262,40 @@ function useReveal() {
   return { revealed, reveal, guarded, armed };
 }
 
+/**
+ * What a screen reader says as a card comes or its answer shows (#257). This
+ * hidden line takes focus, so it is read once, from one place (no live region
+ * saying it again), and Tab goes on into the card. Without it, focus drops to
+ * the page when the pressed button goes away. A new line needs a new `key`.
+ */
+function Said({ children }: { children: ReactNode }) {
+  const line = useRef<HTMLParagraphElement>(null);
+  useEffect(() => line.current!.focus({ preventScroll: true }), []);
+  return (
+    <p className="said sr-only" tabIndex={-1} ref={line}>
+      {children}
+    </p>
+  );
+}
+
+/** The meaning as the screen shows it, said in one line: the class set apart, not run into the meaning. */
+function MeaningLine({ word, lang, tag, asked }: { word: Word; lang: string; tag: string; asked?: string }) {
+  const form = asked && otherForm(word, asked);
+  const head = <span lang={tag}>{headword(word, lang)}</span>;
+  return (
+    <>
+      {head}
+      {word.pos && `, ${word.pos}`}: {word.gloss}.
+      {form && (
+        <>
+          {" "}
+          <span lang={tag}>{form}</span> is a form of {head}.
+        </>
+      )}
+    </>
+  );
+}
+
 // The meaning stays hidden until the learner has tried to recall it: once an
 // answer is in view, "I knew it" is too easy to believe (#196).
 function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
@@ -279,6 +313,15 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
   useKeys(revealed ? { "1": isNew, ArrowLeft: isNew, "2": knewIt, ArrowRight: knewIt, r: play } : { " ": reveal, Enter: reveal, r: play });
   return (
     <main className="card" data-armed={armed || undefined}>
+      {revealed ? (
+        <Said key="answer">
+          <MeaningLine word={word} lang={lang} tag={tag} /> Is this word new to you?
+        </Said>
+      ) : (
+        <Said key="question">
+          New word: <span lang={tag}>{headword(word, lang)}</span>.
+        </Said>
+      )}
       <Kicker kind="intro" />
       <div className="word">
         {headword(word, lang)} <Speaker text={word.lemma} tag={tag} />
@@ -352,6 +395,20 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
   const [no, yes] = listen ? ["Did not understand", "Understood"] : ["I forgot", "I remembered"];
   return (
     <main className="card" data-lemma={word.lemma} data-armed={armed || undefined}>
+      {revealed ? (
+        <Said key="answer">
+          {example && `${example.translation} `}
+          <MeaningLine word={word} lang={lang} tag={tag} asked={asked} />
+        </Said>
+      ) : listen ? (
+        // The sentence is only heard here, so the line leaves it out.
+        <Said key="question">Listen. What does the sentence mean?</Said>
+      ) : (
+        <Said key="question">
+          {example && <span lang={tag}>{example.text} </span>}
+          What does <span lang={tag}>{asked}</span> mean?
+        </Said>
+      )}
       <Kicker kind={kicker} />
       <p className="prompt">
         {listen ? (
@@ -419,6 +476,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
   const [value, setValue] = useState("");
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const ids = useId();
   const grade: Grade = verdict && passes(verdict) ? 3 : 1;
   // Checking shows the answer: Enter pressed twice must not also move on past it.
   const { reveal, guarded, armed } = useReveal();
@@ -439,14 +497,18 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
       <p className="prompt">Type the missing word.</p>
       {example ? (
         <>
-          <p className="translation big">{example.translation}</p>
+          <p className="translation big" id={`${ids}-ask`}>
+            {example.translation}
+          </p>
           <p className="sentence" lang={tag}>
             <Highlight text={example.text} part={example.cloze} blank={!verdict} />
           </p>
           <p className="hint">Meaning: {word.gloss}</p>
         </>
       ) : (
-        <div className="word">{word.gloss}</div>
+        <div className="word" id={`${ids}-ask`}>
+          {word.gloss}
+        </div>
       )}
       <form
         onSubmit={(e) => {
@@ -466,8 +528,15 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
           spellCheck={false}
           lang={tag}
           placeholder="missing word"
+          // Focus starts here, so the field says the task (#257).
+          aria-label="Type the missing word"
+          aria-describedby={`${ids}-ask`}
         />
       </form>
+      {/* Focus stays in the field, where Enter checks and moves on, so the result is read from here (#257). */}
+      <p className="sr-only" aria-live="polite">
+        {verdict === "exact" ? "Correct." : verdict && passes(verdict) ? <>Counted as correct. The answer is <span lang={tag}>{target}</span>.</> : verdict && <>Correct answer: <span lang={tag}>{target}</span>.</>}
+      </p>
       {verdict && (
         <div className="feedback">
           {verdict === "exact" && <span className="ok">Correct.</span>}
@@ -661,12 +730,17 @@ function Summary({
   const lost = refused.count > refusedBefore.count;
   // After a refusal, the line above the summary says what was lost: no "saved" here (#253).
   const why = paused ? (lost ? null : "Your answers are saved.") : ended === "empty" ? "Every plant has water." : null;
+  const line = did ? didLine(seeds, watered) : met > 0 ? `You saw ${plural(met, "new word")}.` : "Nothing was planted or watered.";
   return (
     <main className="card summary">
+      {/* Focused once, as the summary opens; a later change to the line updates it in place and is not said again. */}
+      <Said>
+        {title}. {line}
+      </Said>
       <div className="kicker read">
         <SeedIcon size={15} /> {title.toLowerCase()}
       </div>
-      <h1>{did ? didLine(seeds, watered) : met > 0 ? `You saw ${plural(met, "new word")}.` : "Nothing was planted or watered."}</h1>
+      <h1>{line}</h1>
       {did && (
         <p className="muted headline-small">
           {headline.line}

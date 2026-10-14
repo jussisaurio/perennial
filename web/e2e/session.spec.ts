@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { advance, answer, expectServerRows, kicker, reveal, serverRows, startCourse, startSession } from "./helpers";
+import { advance, answer, expectServerRows, kicker, reveal, serverRows, startCourse, startSession, tabTo } from "./helpers";
 
 async function continueIntros(page: Page, n: number) {
   for (let i = 0; i < n; i++) {
@@ -23,7 +23,7 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   await expect(page.locator(".session")).toHaveAttribute("data-card", front!); // still the same card: the early "2" did not answer it
   await expect(page.locator(".gloss")).toBeVisible();
   // Then it asks a question whose answers say what happens next.
-  await expect(page.getByText("Is this word new to you?")).toBeVisible();
+  await expect(page.getByText("Is this word new to you?", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /New to me.*quick check comes in a moment/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /I knew it.*Back in about a week/ })).toBeVisible();
   const word = await page.locator(".word").textContent();
@@ -54,6 +54,7 @@ test("German: nouns come with their article on the card and in Words; an answer 
   await expect(kicker(page)).toHaveText(/new word/);
   const noun = (await page.locator(".word").textContent())!.trim();
   expect(noun).toMatch(/^(der|die|das) \S+$/);
+  await expect(page.locator(".said")).toHaveText(`New word: ${noun}.`); // a screen reader hears the article too
   // Through the new words and their quick checks until one asks about another form of its word.
   // Which sentence a card shows is fixed by the word, so this is the same card every run.
   let form = "";
@@ -64,6 +65,7 @@ test("German: nouns come with their article on the card and in Words; an answer 
   }
   const asked = (await page.locator(".prompt b").textContent())!;
   expect(form).toMatch(new RegExp(`^${asked} is a form of \\S+( \\S+)?\\.$`));
+  await expect(page.locator(".said")).toContainText(form); // and the line it hears says so
 
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /^Done/ }).click();
@@ -147,7 +149,7 @@ test("leaving after doing something shows the summary", async ({ page }) => {
   await answer(page, "1");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.locator(".summary h1")).toHaveText("You saw 1 new word."); // no answer yet, so not planted
-  await expect(page.getByText("session paused")).toBeVisible(); // not "complete" when you leave early
+  await expect(page.getByText("session paused", { exact: true })).toBeVisible(); // not "complete" when you leave early
   await page.getByRole("button", { name: /Done/ }).click();
   await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
 });
@@ -220,7 +222,7 @@ test("on the summary, Enter on a focused button presses that button, not the mai
   await startSession(page);
   await answer(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
-  await page.getByRole("button", { name: "Done" }).focus();
+  await tabTo(page, page.getByRole("button", { name: "Done" }));
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible(); // Today, not Continue
   // With nothing focused, Enter on the pause screen is Continue (#254): Done would drop the quick checks.
@@ -260,4 +262,63 @@ test("an answer the server refuses is reported, not called saved", async ({ page
   await expect(line).toHaveText(/^2 answers were not saved/);
   await expect(page.getByText(/All changes are saved/)).toHaveCount(0);
   expect(await serverRows(page, "review")).toHaveLength(0);
+});
+
+test("Enter or Space on a button reached with Tab presses that button, not the card's key (#256)", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  await answer(page, "1");
+  await expect(kicker(page)).toHaveText(/new word/);
+  const gloss = page.locator(".gloss");
+  // Space on Play audio plays the word, and the meaning stays hidden.
+  await tabTo(page, page.getByRole("button", { name: "Play audio" }).first());
+  await page.keyboard.press("Space");
+  await expect(gloss).toHaveCount(0);
+  // Enter on Undo undoes at once, without showing this card's meaning first.
+  await tabTo(page, page.getByRole("button", { name: "Undo" }));
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".session-note")).toHaveText("Undone.");
+  await expect(gloss).toHaveCount(0);
+  // A mouse click leaves focus on its button, but Space and Enter still mean the card's keys.
+  await page.getByRole("button", { name: "Play audio" }).first().click();
+  await page.keyboard.press("Space");
+  await expect(gloss).toBeVisible();
+  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
+  await advance(page, "1");
+  // Even on a button first reached with Tab: the click makes it the mouse's.
+  await tabTo(page, page.getByRole("button", { name: "Mute sound" }));
+  await page.getByRole("button", { name: "Mute sound" }).click();
+  await page.keyboard.press("Enter");
+  await expect(gloss).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mute sound" })).toHaveAttribute("aria-pressed", "true"); // pressed once, by the click
+  // Enter on End session ends it.
+  await tabTo(page, page.getByRole("button", { name: "End session" }));
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main.summary")).toBeVisible();
+});
+
+test("a screen reader hears each step, and focus stays in the card (#257)", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  // Focus is on the card's hidden line, so a screen reader reads it.
+  const said = page.locator("main.card .said");
+  const word = (await page.locator(".word").textContent())!.trim();
+  await expect(said).toBeFocused();
+  await expect(said).toHaveText(`New word: ${word}.`);
+  await reveal(page);
+  // The Show button is gone: focus moves to the answer's line, not to the page body.
+  await expect(said).toBeFocused();
+  const gloss = await page.locator(".gloss").evaluate((el) => el.lastChild!.textContent!);
+  await expect(said).toContainText(`${word}, `);
+  await expect(said).toContainText(gloss);
+  await advance(page, "1");
+  await expect(said).toBeFocused();
+  const next = (await page.locator(".word").textContent())!.trim();
+  await expect(said).toHaveText(`New word: ${next}.`);
+  // Tab goes on into the card, not back to the top bar.
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Play audio" }).first()).toBeFocused();
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(page.locator("main.summary .said")).toBeFocused();
+  await expect(page.locator("main.summary .said")).toHaveText(/^Session paused\. /);
 });

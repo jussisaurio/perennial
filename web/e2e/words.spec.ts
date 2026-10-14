@@ -73,6 +73,11 @@ test("keyboard: Enter starts today's session, / focuses the word search", async 
   await expect(page.getByRole("searchbox")).toBeFocused();
   await page.keyboard.type("x");
   await expect(page.getByRole("searchbox")).toHaveValue("x"); // the slash itself isn't typed
+  // "/" works while a tab button has focus too: "/" never presses a button (#266).
+  await page.getByRole("tab", { name: "Words" }).click();
+  await expect(page.getByRole("tab", { name: "Words" })).toBeFocused();
+  await page.keyboard.press("/");
+  await expect(page.getByRole("searchbox")).toBeFocused();
 });
 
 test("word detail: scheduling details show stability, difficulty, recall and the review log", async ({ page }) => {

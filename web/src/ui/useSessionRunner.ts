@@ -160,8 +160,6 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     shownAt.current = clock.current.elapsed;
     serial.current++;
     if (!paused.current) setDone(false);
-    // A focused button from the last card would also receive Space/Enter.
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     setCard({ task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read) });
   };
 
