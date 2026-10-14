@@ -33,7 +33,7 @@ test("landing: walk through the showcase garden in 3D, view only", async ({ page
   await expect(page.getByText(/\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 15000 });
   await expect(page.getByRole("button", { name: /Water/ })).toHaveCount(0); // no learning here
   // A plant's card gives no made-up recall number (#261).
-  await page.getByRole("button", { name: "Next plant →" }).click();
+  await page.getByRole("button", { name: "Next plant" }).click();
   const card = page.getByRole("dialog", { name: /^The plant for / });
   await expect(card).toContainText(/: you .* this word\./);
   await expect(card).not.toContainText("%");

@@ -13,12 +13,13 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
   await expect(page).toHaveURL(/#\/garden$/);
   await expect(page.getByText(/30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20000 });
 
-  await page.getByRole("button", { name: "Next plant →" }).click();
+  await page.getByRole("button", { name: "Next plant" }).click();
   const card = page.getByRole("dialog", { name: /^The plant for / });
   await expect(card).toBeVisible();
+  await expect(card).toBeFocused(); // its button went away: focus goes to the card, so a screen reader reads it (#266)
   const first = await card.getAttribute("aria-label");
   await expect(card.getByRole("button", { name: /Listen/ })).toBeVisible();
-  await card.getByRole("button", { name: "Next plant →" }).click();
+  await card.getByRole("button", { name: "Next plant" }).click();
   await expect(card).not.toHaveAttribute("aria-label", first!);
   await page.getByRole("button", { name: "Previous plant" }).click();
   await expect(card).toHaveAttribute("aria-label", first!);
