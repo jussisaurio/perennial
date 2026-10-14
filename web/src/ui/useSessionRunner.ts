@@ -75,6 +75,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const clock = useRef(new ActiveClock(Date.now()));
   const [active, setActive] = useState(0);
   const counts = useRef({ intros: 0, answers: 0 });
+  // Writes the server had refused before this chunk: the summary tells of any new ones (#253).
+  const refusedBefore = useRef(0);
   const [ended, setEnded] = useState<Ended>("time");
   // Words answered this session, and the new words shown (a seed is planted once it has an answer).
   const practised = useRef(new Set<string>());
@@ -104,6 +106,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       const r = new Runner(p, mins * 60_000);
       // Each chunk is its own session: its own summary, and nothing to undo from the last one.
       counts.current = { intros: 0, answers: 0 };
+      refusedBefore.current = store.refused().count;
       practised.current = new Set();
       introduced.current = new Set();
       before.current = new Map();
@@ -318,6 +321,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     ended,
     /** What this session did so far, for the summary. */
     counts: counts.current,
+    refusedBefore: refusedBefore.current,
     practised: practised.current,
     before: before.current,
     arrived: arrived.current,

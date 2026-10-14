@@ -142,6 +142,15 @@ export async function createStore(userId: string) {
     for (const l of writerListeners) l();
   };
 
+  // Writes the server refused for good. They are rolled back on this device, so
+  // the learner must be told (#253): "saved" would be untrue. `code` is the latest reason.
+  let refused: Refused = { count: 0, code: "" };
+  const refusedListeners = new Set<() => void>();
+  const noteRefused = (code: string) => {
+    refused = { count: refused.count + 1, code };
+    for (const l of refusedListeners) l();
+  };
+
   const storage = await outboxStorage(userId);
   if (storage) await adoptQueues(userId, storage);
   const executor: OfflineExecutor = startOfflineExecutor({
@@ -164,7 +173,10 @@ export async function createStore(userId: string) {
         try {
           result = await postWrite(mutations, { idempotencyKey });
         } catch (e) {
-          if (e instanceof ApiError && e.permanent) throw new NonRetriableError(`rejected: ${e.code}`);
+          if (e instanceof ApiError && e.permanent) {
+            noteRefused(e.code);
+            throw new NonRetriableError(`rejected: ${e.code}`);
+          }
           throw e;
         }
         // Nothing changed (say, a repeat of an earlier write): no echo will come.
@@ -205,10 +217,17 @@ export async function createStore(userId: string) {
       return () => void writerListeners.delete(cb);
     },
     pendingWrites: () => executor.getPendingCount(),
+    /** Writes the server refused since this store started. For useSyncExternalStore. */
+    refused: () => refused,
+    onRefused: (cb: () => void) => {
+      refusedListeners.add(cb);
+      return () => void refusedListeners.delete(cb);
+    },
     dispose() {
       unregister();
       unregisterSync();
       writerListeners.clear();
+      refusedListeners.clear();
       executor.dispose();
       for (const c of Object.values(collections)) cleanUpWhenUnused(c);
     },
@@ -216,6 +235,12 @@ export async function createStore(userId: string) {
 }
 
 export type Store = Awaited<ReturnType<typeof createStore>>;
+
+/** How many writes the server refused for good, and the latest reason (the server's error code). */
+export interface Refused {
+  count: number;
+  code: string;
+}
 
 type Collection = Pick<ReturnType<typeof createCollection>, "subscriberCount" | "on" | "cleanup">;
 
