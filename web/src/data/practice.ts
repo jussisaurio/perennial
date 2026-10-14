@@ -38,6 +38,11 @@ function isFirstAnswer(l: Learner, r: ReviewRow): boolean {
 /** Everyone practises 5 minutes a day, and 5 more whenever they like. `course.minutes` is no longer used. */
 export const DAILY_MINUTES = 5;
 
+/** What a button that starts the next chunk says, on Today and in the walk (#263). */
+export function chunkLabel(c: { state: "start" | "finish" | "done" }): string {
+  return c.state === "done" ? `Practice ${DAILY_MINUTES} more minutes` : c.state === "finish" ? `Finish today's ${DAILY_MINUTES} minutes` : `Today's ${DAILY_MINUTES} minutes`;
+}
+
 /** What Today offers now: the day's 5 minutes, the rest of them, or (once they are done) 5 more. */
 export function nextChunk(l: Learner, now = Date.now()): { state: "start" | "finish" | "done"; minutes: number } {
   const dayStart = startOfDay(now);

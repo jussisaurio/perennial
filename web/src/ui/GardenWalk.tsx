@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { language } from "../content/languages";
 import type { LoadedDeck } from "../data/deck";
 import { useLearner } from "../data/learner";
-import { nextChunk } from "../data/practice";
+import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { groupOf, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
@@ -38,10 +38,11 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const source = useMemo(() => (learner ? plantsFromLearner(learner) : null), [learner]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
   const [focus] = useState(takeFocus);
-  // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done.
-  // Until the learner loads there are no plants (`source` is null), so nothing to water either.
-  const water = learner ? () => onWater(nextChunk(learner).minutes) : undefined;
-  return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} onWater={water} focus={focus} />;
+  // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done,
+  // named as Today names it. Until the learner loads there are no plants (`source` is null), so nothing to water either.
+  const chunk = learner ? nextChunk(learner) : null;
+  const water = chunk ? { label: chunkLabel(chunk), start: () => onWater(chunk.minutes) } : undefined;
+  return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} water={water} focus={focus} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -71,13 +72,13 @@ function personality(p: PlacedPlant): string {
   return plantLine(p.lemma, plantMood(p));
 }
 
-/** Without onWater it is view-only (the landing page): no watering, no sessions. */
+/** Without `water` it is view-only (the landing page): no watering, no sessions. */
 export function GardenWalk({
   lang,
   source,
   visitors,
   onExit,
-  onWater,
+  water,
   focus,
 }: {
   lang: string;
@@ -85,7 +86,8 @@ export function GardenWalk({
   /** Today's visitors (snail, cat, ...): a snapshot is taken when the garden opens. */
   visitors?: LearnerVisitors | null;
   onExit: () => void;
-  onWater?: () => void;
+  /** Starts practice; `label` says what it starts. */
+  water?: { label: string; start: () => void };
   focus?: string | null;
 }) {
   const [time, setTime] = useState<TimeOfDay>(initialTime);
@@ -173,7 +175,7 @@ export function GardenWalk({
 
   const stats = useMemo(() => {
     const ps = data?.l.plants ?? [];
-    return { total: ps.length, bloom: ps.filter((p) => p.stage === "bloom").length, thirsty: ps.filter((p) => p.r < THIRSTY).length };
+    return { total: ps.length, bloom: ps.filter((p) => p.stage === "bloom").length };
   }, [data]);
 
   const step = (dir: 1 | -1) => {
@@ -265,11 +267,11 @@ export function GardenWalk({
         </div>
       )}
 
-      {data && stats.total === 0 && onWater && (
+      {data && stats.total === 0 && water && (
         <div className="gw-card gw-empty">
           <strong>{EMPTY_WALK.title}</strong>
           <p className="small">{EMPTY_WALK.body}</p>
-          <button className="primary" onClick={onWater}>
+          <button className="primary" onClick={water.start}>
             {EMPTY_WALK.cta}
           </button>
         </div>
@@ -343,9 +345,10 @@ export function GardenWalk({
             Next plant →
           </button>
         )}
-        {onWater && stats.thirsty > 0 && !selected && (
-          <button className="gw-btn gw-water" onClick={onWater}>
-            💧 Water {plural(stats.thirsty, "thirsty plant")}
+        {/* Named for what it starts, with no count of thirsty plants: Today keeps missed days from piling up, and so does the walk (#263). */}
+        {water && stats.total > 0 && !selected && (
+          <button className="gw-btn gw-water" onClick={water.start}>
+            💧 {water.label}
           </button>
         )}
       </div>
