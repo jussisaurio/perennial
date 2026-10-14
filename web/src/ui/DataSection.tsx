@@ -81,9 +81,11 @@ export function DataSection({ lang }: { lang: string }) {
           Download my words (CSV)
         </button>
       </div>
-      <p className="muted small" role="status">
-        {saved}
-      </p>
+      {saved && (
+        <p className="muted small" role="status">
+          {saved}
+        </p>
+      )}
       {user && <DeleteAccount lang={lang} />}
     </div>
   );

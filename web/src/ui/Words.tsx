@@ -104,6 +104,17 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
   const shown = useMemo(() => (view === "guide" ? drawnRows(rows) : rows), [view, rows]);
   // "From my texts" only where it can have words: adding is on, or some were added before (#262).
   const hasMine = useMemo(() => !!learner && [...learner.words.values()].some((w) => w.source === "user"), [learner]);
+  // A screen reader hears how many words a search finds (#266): once typing
+  // pauses, not on every key, and not when the page opens.
+  const [heard, setHeard] = useState("");
+  const searched = useRef(false);
+  const count = plural(shown.length, "word");
+  useEffect(() => {
+    if (q) searched.current = true;
+    if (!searched.current) return;
+    const t = setTimeout(() => setHeard(`${count} found.`), 700);
+    return () => clearTimeout(t);
+  }, [q, count]);
 
   return (
     <div className="page">
@@ -141,9 +152,9 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           saveView(v);
         }}
       />
-      {/* Live: a screen reader hears how many words a search finds. */}
-      <p className="muted small" aria-live="polite">
-        {plural(shown.length, "word")}
+      <p className="muted small">{plural(shown.length, "word")}</p>
+      <p className="sr-only" aria-live="polite">
+        {heard}
       </p>
       {learner && rows.length === 0 && <p className="words-empty">{wordsEmptyLine(filter, !!q.trim())}</p>}
       {learner && rows.length > 0 && shown.length === 0 && <p className="words-empty">Words you have not started yet have no flower to show. They are in the List.</p>}
