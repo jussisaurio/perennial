@@ -10,6 +10,7 @@ test("target recall changed with the keyboard is saved on the server", async ({ 
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await expect(page.getByText("Target: remember 92% of words")).toBeVisible();
+  await expect(slider).toHaveAttribute("aria-valuetext", "92%"); // read as "92%", not "0.92" (#266)
   await expect.poll(async () => (await serverRows<{ retention: number }>(page, "course"))[0]?.retention).toBeCloseTo(0.92);
 });
 
@@ -21,6 +22,25 @@ test("theme choice uses plain words and applies", async ({ page }) => {
   await page.getByRole("radio", { name: "Light" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(page.getByRole("radio", { name: "Same as my device" })).toBeVisible();
+  // A radio group is one Tab stop, and the arrow keys change the choice (#266).
+  const light = page.getByRole("radio", { name: "Light" });
+  await light.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("radio", { name: "Dark" })).toBeFocused();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(light).toHaveAttribute("tabindex", "-1");
+  // The tabs too, but an arrow only moves focus: Enter opens the tab. Moving
+  // across Garden must not open its full-screen walk, which has no tab bar.
+  await page.getByRole("tab", { name: "Settings" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByRole("tab", { name: "Garden" })).toBeFocused();
+  await expect(page.getByRole("tab", { name: "Settings" })).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("ArrowDown"); // Up and Down are left to the page
+  await expect(page.getByRole("tab", { name: "Garden" })).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("tab", { name: "Today" })).toHaveAttribute("aria-selected", "true");
 });
 
 test("anonymous learners are invited to add an email; after that the account card says words sync", async ({ page }) => {

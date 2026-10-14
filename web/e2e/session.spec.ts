@@ -138,8 +138,14 @@ test("'I knew it' skips the quick check (no extra note: the button said so), is 
   await expectServerRows(page, "review", 1);
   const [r] = await serverRows<{ grade: number; kind: string }>(page, "review");
   expect(r).toMatchObject({ grade: 4, kind: "known" });
+  await expect(page.locator("button.undo kbd")).toHaveText("Z"); // Undo shows its key, as the answers do (#272)
   await advance(page, "z");
   await expect(kicker(page)).toHaveText(/new word/);
+  await expectServerRows(page, "review", 0);
+  // The familiar Ctrl+Z undoes too (#272).
+  await answer(page, "2");
+  await expectServerRows(page, "review", 1);
+  await advance(page, "Control+z");
   await expectServerRows(page, "review", 0);
 });
 
@@ -270,8 +276,8 @@ test("Enter or Space on a button reached with Tab presses that button, not the c
   await answer(page, "1");
   await expect(kicker(page)).toHaveText(/new word/);
   const gloss = page.locator(".gloss");
-  // Space on Play audio plays the word, and the meaning stays hidden.
-  await tabTo(page, page.getByRole("button", { name: "Play audio" }).first());
+  // Space on "Play the word" plays the word, and the meaning stays hidden.
+  await tabTo(page, page.getByRole("button", { name: "Play the word" }));
   await page.keyboard.press("Space");
   await expect(gloss).toHaveCount(0);
   // Enter on Undo undoes at once, without showing this card's meaning first.
@@ -280,7 +286,7 @@ test("Enter or Space on a button reached with Tab presses that button, not the c
   await expect(page.locator(".session-note")).toHaveText("Undone.");
   await expect(gloss).toHaveCount(0);
   // A mouse click leaves focus on its button, but Space and Enter still mean the card's keys.
-  await page.getByRole("button", { name: "Play audio" }).first().click();
+  await page.getByRole("button", { name: "Play the word" }).click();
   await page.keyboard.press("Space");
   await expect(gloss).toBeVisible();
   await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
@@ -317,8 +323,23 @@ test("a screen reader hears each step, and focus stays in the card (#257)", asyn
   await expect(said).toHaveText(`New word: ${next}.`);
   // Tab goes on into the card, not back to the top bar.
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "Play audio" }).first()).toBeFocused();
+  await expect(page.getByRole("button", { name: "Play the word" })).toBeFocused();
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.locator("main.summary .said")).toBeFocused();
   await expect(page.locator("main.summary .said")).toHaveText(/^Session paused\. /);
+});
+
+test("buttons and meanings have names a screen reader reads clearly (#266)", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  // The two speakers say what they play.
+  await expect(page.getByRole("button", { name: "Play the word", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Play the sentence", exact: true })).toBeVisible();
+  // The shown key is not part of the name; the button says its key another way.
+  const show = page.getByRole("button", { name: "Show meaning", exact: true });
+  await expect(show).toHaveAttribute("aria-keyshortcuts", "Space");
+  await reveal(page);
+  // The word class and the meaning are two words, not "nountime".
+  const pos = (await page.locator(".gloss .pos").textContent())!;
+  await expect(page.locator(".gloss")).toHaveText(new RegExp(`^${pos} \\S`));
 });

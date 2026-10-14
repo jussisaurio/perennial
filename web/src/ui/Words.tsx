@@ -10,6 +10,7 @@ import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
+import { RadioChips } from "./arrows";
 import { AddScreen } from "./Add";
 import { drawnRows, FieldGuide } from "./FieldGuide";
 import { StageGlyph } from "./StageGlyph";
@@ -103,6 +104,17 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
   const shown = useMemo(() => (view === "guide" ? drawnRows(rows) : rows), [view, rows]);
   // "From my texts" only where it can have words: adding is on, or some were added before (#262).
   const hasMine = useMemo(() => !!learner && [...learner.words.values()].some((w) => w.source === "user"), [learner]);
+  // A screen reader hears how many words a search finds (#266): once typing
+  // pauses, not on every key, and not when the page opens.
+  const [heard, setHeard] = useState("");
+  const searched = useRef(false);
+  const count = plural(shown.length, "word");
+  useEffect(() => {
+    if (q) searched.current = true;
+    if (!searched.current) return;
+    const t = setTimeout(() => setHeard(`${count} found.`), 700);
+    return () => clearTimeout(t);
+  }, [q, count]);
 
   return (
     <div className="page">
@@ -125,25 +137,25 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           {(onAdd || hasMine) && <option value="mine">From my texts</option>}
         </select>
       </div>
-      <div className="chips words-view" role="radiogroup" aria-label="Show words as">
-        {(["list", "guide"] as const).map((v) => (
-          <button
-            key={v}
-            role="radio"
-            aria-checked={view === v}
-            className={view === v ? "chip on" : "chip"}
-            onClick={() => {
-              // A word open in one view must not pop up in the other.
-              setOpen(null);
-              setView(v);
-              saveView(v);
-            }}
-          >
-            {v === "list" ? "List" : "Flowers"}
-          </button>
-        ))}
-      </div>
+      <RadioChips<WordsView>
+        className="words-view"
+        label="Show words as"
+        options={[
+          ["list", "List"],
+          ["guide", "Flowers"],
+        ]}
+        value={view}
+        onChange={(v) => {
+          // A word open in one view must not pop up in the other.
+          setOpen(null);
+          setView(v);
+          saveView(v);
+        }}
+      />
       <p className="muted small">{plural(shown.length, "word")}</p>
+      <p className="sr-only" aria-live="polite">
+        {heard}
+      </p>
       {learner && rows.length === 0 && <p className="words-empty">{wordsEmptyLine(filter, !!q.trim())}</p>}
       {learner && rows.length > 0 && shown.length === 0 && <p className="words-empty">Words you have not started yet have no flower to show. They are in the List.</p>}
       {view === "guide" ? (

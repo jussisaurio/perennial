@@ -71,6 +71,12 @@ test("the language menu closes on Escape and on a click outside", async ({ page 
   const switcher = page.locator(".course-switch-button");
   await switcher.click();
   await expect(page.getByRole("menu")).toBeVisible();
+  // Focus goes into the menu, and the arrow keys move through it (#266).
+  await expect(page.getByRole("menuitemradio", { name: /Spanish/ })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitem").first()).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByRole("menuitemradio", { name: /Spanish/ })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await switcher.click();

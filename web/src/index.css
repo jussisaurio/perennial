@@ -363,7 +363,7 @@ section { margin-bottom: 1.25rem; }
 
 .word { font: clamp(2.8rem, 10vw, 4.2rem)/1.05 var(--display); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; word-break: break-word; }
 .gloss { font-size: 1.3rem; color: var(--ink-2); }
-.pos { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 0.4rem; }
+.pos { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 0.15rem; }
 .sentence { font-size: 1.35rem; line-height: 1.6; margin: 0.25rem 0 0; }
 .sentence.big { font-size: clamp(1.55rem, 4.5vw, 2rem); line-height: 1.45; }
 .translation { color: var(--muted); margin: 0; font-size: 1.05rem; }
