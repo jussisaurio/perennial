@@ -7,6 +7,8 @@ export class ActiveClock {
   private last: number;
   private lastInput: number;
   private visible = true;
+  /** The learner paused the session: nothing counts until they continue. */
+  private held = false;
   private readonly idleMs: number;
   /** Longest gap credited between ticks, so throttled timers can't add a lump. */
   private readonly maxStepMs: number;
@@ -20,7 +22,7 @@ export class ActiveClock {
 
   tick(now: number): number {
     const step = Math.min(now - this.last, this.maxStepMs);
-    if (this.visible && now - this.lastInput <= this.idleMs && step > 0) this.elapsedMs += step;
+    if (this.visible && !this.held && now - this.lastInput <= this.idleMs && step > 0) this.elapsedMs += step;
     this.last = now;
     return this.elapsedMs;
   }
@@ -35,6 +37,13 @@ export class ActiveClock {
     this.visible = visible;
     // Coming back counts as presence; time away does not.
     if (visible) this.lastInput = now;
+  }
+
+  hold(held: boolean, now: number): void {
+    this.tick(now);
+    this.held = held;
+    // Continuing counts as presence, like coming back to the tab.
+    if (!held) this.lastInput = now;
   }
 
   get elapsed(): number {

@@ -46,7 +46,8 @@ test("a rare flower that opened: its line; a plain review: no line", async ({ pa
   await expect(news(page)).toContainText("perro opened with two flowers.");
 
   // Next chunk: a new word, nothing opens, no visitor: no line.
-  await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
+  await page.getByRole("button", { name: "Done" }).click();
+  await page.locator("button.start").click();
   await answer(page, "1");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.locator("main.summary")).toBeVisible();

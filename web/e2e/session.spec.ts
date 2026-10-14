@@ -152,6 +152,53 @@ test("leaving after doing something shows the summary", async ({ page }) => {
   await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
 });
 
+// #254: a paused session says what "New to me" words still need, and Continue
+// goes back to the same card, with their quick checks still to come.
+test("a paused session can continue, and keeps its quick checks", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  const first = (await page.locator(".word").textContent())!.trim();
+  await answer(page, "1"); // New to me
+  await expect(kicker(page)).toHaveText(/new word/);
+  const second = (await page.locator(".word").textContent())!.trim();
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(page.locator(".summary")).toContainText("A new word is planted after its quick check. Tap Continue: its quick check comes in a few cards. If you stop, it comes back as a new word next time.");
+  await expect(page.locator(".summary")).not.toContainText(/(^|\D)0 words/); // nothing started yet, though one word was seen
+  await expect(page.getByRole("button", { name: "Practice 5 more minutes" })).toHaveCount(0); // Continue is the way on
+  await page.getByRole("button", { name: "Continue this session" }).click();
+  await expect(page.locator(".word")).toHaveText(second); // the card it left
+  for (let i = 0; i < 6 && !/quick check/.test((await kicker(page).textContent()) ?? ""); i++) await answer(page, "1");
+  await expect(kicker(page)).toHaveText(/quick check/);
+  await expect(page.locator("main.card")).toHaveAttribute("data-lemma", first);
+  await answer(page, "2");
+  await expectServerRows(page, "review", 1);
+});
+
+// #254 review: End pressed while an answer is still finishing (its growth moment)
+// must keep the pause screen, and Continue must start the session clock again.
+test("ending the session while an answer finishes keeps the pause, and the clock runs after Continue", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  await startSession(page);
+  await answer(page, "2"); // "I knew it": something to show on the pause screen
+  await reveal(page);
+  // The answer and End in one moment: End lands while the answer is still being recorded.
+  await page.evaluate(() => {
+    for (const key of ["2", "Escape"]) window.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+  });
+  await expect(page.locator("main.summary")).toBeVisible();
+  await page.clock.runFor(1_000);
+  await expect(page.locator("main.summary")).toBeVisible(); // the next card did not come over it
+  const before = new Set((await serverRows<{ id: string }>(page, "review")).map((r) => r.id));
+  await page.getByRole("button", { name: "Continue this session" }).click();
+  await expect(kicker(page)).toBeVisible();
+  await page.clock.runFor(5_000); // reading the card
+  await answer(page, "2");
+  await expect.poll(async () => (await serverRows(page, "review")).length).toBe(before.size + 1);
+  const added = (await serverRows<{ id: string; duration_ms: number }>(page, "review")).find((r) => !before.has(r.id))!;
+  expect(added.duration_ms).toBeGreaterThanOrEqual(4_000);
+});
+
 // #189: minutes are the only unit, so every second counts, the new-word card's too.
 test("time on a new-word card counts toward today's minutes", async ({ page }) => {
   await page.clock.install();
@@ -168,20 +215,22 @@ test("time on a new-word card counts toward today's minutes", async ({ page }) =
   expect(first.duration_ms).toBeGreaterThanOrEqual(20_000);
 });
 
-test("on the summary, Enter on a focused button presses that button, not Done (#239)", async ({ page }) => {
+test("on the summary, Enter on a focused button presses that button, not the main choice (#239)", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   await answer(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
-  await page.getByRole("button", { name: "Practice 5 more minutes" }).focus();
+  await page.getByRole("button", { name: "Done" }).focus();
   await page.keyboard.press("Enter");
-  await expect(page.locator(".time-left")).toHaveText("5 min left"); // a new chunk, not Today
-  // With nothing focused, Enter is still Done.
-  await answer(page, "2");
+  await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible(); // Today, not Continue
+  // With nothing focused, Enter on the pause screen is Continue (#254): Done would drop the quick checks.
+  await startSession(page);
+  await answer(page, "1");
   await page.getByRole("button", { name: "End session" }).click();
   await page.locator("main.summary h1").click();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("button", { name: /today's 5 minutes|Practice 5 more minutes/i })).toBeVisible();
+  await expect(kicker(page)).toBeVisible();
+  await expect(page.locator("main.summary")).toHaveCount(0);
 });
 
 // #253: the server refuses answers dated more than a day ahead. A device clock

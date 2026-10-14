@@ -99,7 +99,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
     noteTimer.current = setTimeout(() => setNote(null), ms);
   };
 
-  const { learner, tag, runner, card, done, active, ended, counts, refusedBefore, practised, introduced, before, arrived, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
+  const { learner, tag, runner, card, done, active, ended, counts, refusedBefore, practised, introduced, before, arrived, serial, canUndo, start, finish, undo, exit, resume, firstSummary } = useSessionRunner({
     lang,
     minutes,
     onExit,
@@ -144,7 +144,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       {/* During the session and on its summary: in place, never over the answer buttons. */}
       <RefusedLine since={refusedBefore} />
       {done ? (
-        <Summary learner={learner} counts={counts} refusedBefore={refusedBefore} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} onWalk={onWalk} />
+        <Summary learner={learner} counts={counts} refusedBefore={refusedBefore} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={finish} />
       ) : null}
@@ -602,8 +602,10 @@ function Summary({
   arrived,
   ended,
   onMore,
+  onContinue,
   onExit,
   onWalk,
+  firstSummary,
 }: {
   learner: Learner | null;
   counts: { intros: number; answers: number };
@@ -614,15 +616,21 @@ function Summary({
   arrived: string[];
   ended: Ended;
   onMore: () => void;
+  onContinue: () => void;
   onExit: () => void;
   onWalk: () => void;
+  firstSummary: () => boolean;
 }) {
   const stats = useMemo(() => (learner ? courseStats(learner) : null), [learner]);
-  // Once per summary: an Undo from here changes the counts, but it also leaves the summary.
-  useEffect(() => track("session_finished", { ended, answers: counts.answers, newWords: counts.intros }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Once per chunk, as its first summary opens: an Undo or Continue from here changes the counts, but also leaves the summary.
+  useEffect(() => {
+    if (firstSummary()) track("session_finished", { ended, answers: counts.answers, newWords: counts.intros });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  // Enter is Done, unless a button has focus: then Enter presses that button (#239).
-  useShortcut("Enter", onExit);
+  // Enter is the main choice, unless a button has focus: then Enter presses that button (#239).
+  // Paused, it is Continue: Done would drop the quick checks still to come (#254).
+  const paused = ended === "user";
+  useShortcut("Enter", paused ? onContinue : onExit);
   // A new word is a planted seed once it has an answer: its quick check, or "I knew it".
   // Watered: plants that were already in the garden before this session.
   const seeds = learner ? [...introduced].filter((id) => readMemory(learner, id)?.reps).length : 0;
@@ -647,11 +655,12 @@ function Summary({
   });
   // ?? only for the type: a summary follows a started session, so the learner has loaded.
   const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? "", learner?.reviews.length ?? 0));
-  const title = ended === "user" ? "Session paused" : "Session complete";
+  const title = paused ? "Session paused" : "Session complete";
   // Live: a refusal can arrive after the summary opens, as the last answers upload.
   const refused = useRefused();
   const lost = refused.count > refusedBefore.count;
-  const why = ended === "user" ? (lost ? "You can continue later." : "You can continue later. Your answers are saved.") : ended === "empty" ? "Every plant has water." : null;
+  // After a refusal, the line above the summary says what was lost: no "saved" here (#253).
+  const why = paused ? (lost ? null : "Your answers are saved.") : ended === "empty" ? "Every plant has water." : null;
   return (
     <main className="card summary">
       <div className="kicker read">
@@ -665,9 +674,18 @@ function Summary({
         </p>
       )}
       {why && <p className="muted">{why}</p>}
+      {/* A paused session drops its promised quick checks unless the learner continues (#254). */}
+      {paused && met > 0 && (
+        <p>
+          {met === 1
+            ? "A new word is planted after its quick check. Tap Continue: its quick check comes in a few cards. If you stop, it comes back as a new word next time."
+            : "New words are planted after their quick check. Tap Continue: their quick checks come in a few cards. If you stop, they come back as new words next time."}
+        </p>
+      )}
       <Garden data={garden} highlight={highlight} replay={replay} compact />
       {garden && seeds > 0 && garden.total === seeds && <p className="muted small first-plants">{firstPlantsLine(garden.total)}</p>}
-      {stats && (
+      {/* The whole course, not this session: "so far" keeps the two apart, and "0 words" would contradict "You saw 1 new word". */}
+      {stats && stats.known + stats.learning > 0 && (
         <p>
           {stats.known > 0 ? (
             <>
@@ -675,7 +693,7 @@ function Summary({
             </>
           ) : (
             <>
-              You started {stats.learning} {stats.learning === 1 ? "word" : "words"}.{knew === 0 && <> {KNOWN_RULE}</>}
+              So far, you have started {stats.learning} {stats.learning === 1 ? "word" : "words"}.{knew === 0 && <> {KNOWN_RULE}</>}
             </>
           )}
         </p>
@@ -696,12 +714,27 @@ function Summary({
         </p>
       )}
       <div className="actions static">
-        <button className="secondary" onClick={onMore}>
-          Practice {DAILY_MINUTES} more minutes
-        </button>
-        <button className="primary" onClick={onExit}>
-          Done <kbd>Enter</kbd>
-        </button>
+        {/* Paused: Continue goes back to the card it left, with the time that was left; a new
+            chunk on top would only confuse. Finished: 5 more minutes always works. */}
+        {paused ? (
+          <>
+            <button className="secondary" onClick={onExit}>
+              Done
+            </button>
+            <button className="primary" onClick={onContinue}>
+              Continue this session <kbd>Enter</kbd>
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="secondary" onClick={onMore}>
+              Practice {DAILY_MINUTES} more minutes
+            </button>
+            <button className="primary" onClick={onExit}>
+              Done <kbd>Enter</kbd>
+            </button>
+          </>
+        )}
       </div>
     </main>
   );

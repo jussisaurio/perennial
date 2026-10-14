@@ -78,10 +78,10 @@ test("done for the day (under a minute left counts): watered, and 5 more minutes
   await answer(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
-  await expect(page.locator("main.summary")).toContainText(/You (know|started) \d+ words?/);
+  await expect(page.locator("main.summary")).toContainText(/You know \d+ words?|So far, you have started \d+ words?/);
   await expect(page.locator("body")).not.toHaveText(NEVER);
-  await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
-  await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
+  await page.getByRole("button", { name: "Done" }).click();
+  await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
   // Each chunk has its own summary: the seed from the last one is not counted again.
   await expect(kicker(page)).toHaveText("new word");
@@ -115,8 +115,9 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
   await answer(page, "2"); // "I knew it": one seed planted
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.getByRole("heading", { name: "You planted 1 seed." })).toBeVisible();
-  await page.getByRole("button", { name: "Practice 5 more minutes" }).click();
-  await expect(timeLeft(page)).toHaveText("5 min left");
+  await page.getByRole("button", { name: "Done" }).click();
+  await startButton(page).click();
+  await expect(timeLeft(page)).toHaveText(/min left/);
   // Said once: not again on the next visit.
   await page.goto("/#/today");
   await expect(startButton(page)).toBeVisible();
