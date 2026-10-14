@@ -22,7 +22,7 @@ How we write and merge code here. It applies to every session and every agent. T
 
 ## Before merge: an independent review
 
-Every PR gets a review from a fresh agent that did not write the code, unless the fix is obvious: you are 99% sure of it, it is small, and its test fails without it. Then say "No review: obvious fix" in the PR. Auth, sync, writes, data, security and AI spend are never obvious enough to skip. It gets the diff (`gh pr diff <n>`), the linked issue and this file. It reports must-fix and optional findings with file:line and a failing scenario. The author fixes each finding, or writes in the PR why not. The PR description ends with `Reviewed: <depth>, <n> must-fix fixed, <n> declined (reasons above)`.
+Every PR gets a review from a fresh agent that did not write the code, unless the fix is obvious. A fix is obvious when it is small, you are sure of it, and something proves it works: a test that fails without it, or, for tooling and CI changes, the CI run itself (timings, test counts). Then say "No review: obvious fix" in the PR. A low-risk PR whose review is slow may merge before the review ends; its findings then go in a follow-up PR. Auth, sync, writes, data, security and AI spend are never obvious enough to skip, and always wait for their review. It gets the diff (`gh pr diff <n>`), the linked issue and this file. It reports must-fix and optional findings with file:line and a failing scenario. The author fixes each finding, or writes in the PR why not. The PR description ends with `Reviewed: <depth>, <n> must-fix fixed, <n> declined (reasons above)`.
 
 How deep, by risk:
 
