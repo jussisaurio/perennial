@@ -7,6 +7,9 @@
 set -euo pipefail
 pr=$1
 mode=${2:-}
+# A PR stacked on another branch merges into that branch, not main (it happened to #291).
+base=$(gh pr view "$pr" --json baseRefName -q .baseRefName)
+[ "$base" = main ] || { echo "PR #$pr targets $base, not main; retarget it first"; exit 1; }
 sha=$(gh pr view "$pr" --json headRefOid -q .headRefOid)
 first=1
 while :; do
