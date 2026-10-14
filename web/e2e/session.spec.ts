@@ -138,8 +138,14 @@ test("'I knew it' skips the quick check (no extra note: the button said so), is 
   await expectServerRows(page, "review", 1);
   const [r] = await serverRows<{ grade: number; kind: string }>(page, "review");
   expect(r).toMatchObject({ grade: 4, kind: "known" });
+  await expect(page.locator("button.undo kbd")).toHaveText("Z"); // Undo shows its key, as the answers do (#272)
   await advance(page, "z");
   await expect(kicker(page)).toHaveText(/new word/);
+  await expectServerRows(page, "review", 0);
+  // The familiar Ctrl+Z undoes too (#272).
+  await answer(page, "2");
+  await expectServerRows(page, "review", 1);
+  await advance(page, "Control+z");
   await expectServerRows(page, "review", 0);
 });
 
