@@ -39,6 +39,10 @@ test("landing: walk through the showcase garden in 3D, view only", async ({ page
   await expect(card).not.toContainText("%");
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
+  // Back where the walk started, not at the top of the page (#273).
+  const link = page.getByRole("button", { name: "Walk through this garden in 3D" });
+  await expect(link).toBeFocused();
+  await expect(link).toBeInViewport();
 });
 
 test("no flicker: after Start, and after signing in, the landing page never comes back", async ({ page }) => {

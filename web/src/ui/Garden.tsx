@@ -283,7 +283,7 @@ export const Garden = memo(function Garden({
       )}
       {data && data.total === 0 && !stake && <p className="garden-empty">Your words will grow here.</p>}
       {hover && (
-        <div className={onView ? "plant-tip interactive" : "plant-tip"} style={{ left: Math.min(width - 170, Math.max(8, hover.x - scrollX - 80)), top: 8 }} role="status" onPointerEnter={() => clearTimeout(switching.current)}>
+        <div className={onView ? "plant-tip interactive" : "plant-tip"} style={{ left: Math.min(width - 210, Math.max(8, hover.x - scrollX - 100)), top: 8 }} role="status" onPointerEnter={() => clearTimeout(switching.current)}>
           <strong>{hover.p.lemma}</strong>
           <span>{hover.p.gloss}</span>
           <em>

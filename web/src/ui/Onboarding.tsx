@@ -3,7 +3,7 @@
 // course in one step; nothing to set up, no email needed yet.
 
 import { farewell } from "../content/voice";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES, language } from "../content/languages";
 import { isDeckLang } from "../deck/schema";
 import { ensureUser } from "../data/auth";
@@ -100,6 +100,8 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   // Shared, not local: a failed start may come back as a new copy of this page.
   const { error } = useStartingCourse();
   const [walking, setWalking] = useState(false);
+  // Back from the 3D walk, the page opens again at its link, not at the top (#273).
+  const backFromWalk = useRef(false);
   useEffect(() => saveDraft({ lang }), [lang]);
   // A deck that fails to load only leaves the showcase without its garden: starting needs no deck.
   const { deck } = useDeck(lang);
@@ -128,7 +130,18 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
     }
   };
 
-  if (walking) return <GardenWalk lang={lang} source={walkSource} visitors={showcaseVisitors(lang)} onExit={() => setWalking(false)} />;
+  if (walking)
+    return (
+      <GardenWalk
+        lang={lang}
+        source={walkSource}
+        visitors={showcaseVisitors(lang)}
+        onExit={() => {
+          backFromWalk.current = true;
+          setWalking(false);
+        }}
+      />
+    );
 
   return (
     <div className="page narrow stagger landing">
@@ -154,7 +167,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
           {goodbye.line} {goodbye.wish && <em>{goodbye.wish}</em>}
         </p>
       )}
-      <h1 style={{ marginTop: "2rem" }}>Grow a language, {DAILY_MINUTES} minutes a day.</h1>
+      <h1 style={{ marginTop: "2rem" }}>Grow a language, {DAILY_MINUTES}&nbsp;minutes a day.</h1>
       <p className="lede">
         Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, in real sentences. Missed days do not pile up.
       </p>
@@ -188,7 +201,16 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
         <Garden data={showcase} showcase />
         <figcaption className="muted small">A {name} garden after a few months of practice. Point at a plant to see its word.</figcaption>
       </figure>
-      <button className="walk-link" onClick={() => setWalking(true)}>
+      <button
+        className="walk-link"
+        ref={(el) => {
+          if (el && backFromWalk.current) {
+            backFromWalk.current = false;
+            el.focus();
+          }
+        }}
+        onClick={() => setWalking(true)}
+      >
         <FlowerIcon size={18} /> Walk through this garden in 3D
       </button>
       <GrowthStrip />
