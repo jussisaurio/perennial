@@ -157,7 +157,7 @@ input[type="range"] { padding: 0; margin: 0; accent-color: var(--persimmon); bor
 input[type="file"] { padding: 0.5rem; }
 .form { display: grid; gap: 1rem; }
 /* An email or a code does not need the whole desktop column. */
-.form input { max-width: 26rem; }
+.form input:not([type="range"]) { max-width: 26rem; }
 .form label { display: grid; gap: 0.4rem; font-size: 0.88rem; font-weight: 500; color: var(--ink-2); }
 .row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 .row > input { flex: 1; }
@@ -283,10 +283,7 @@ section { margin-bottom: 1.25rem; }
 /* Touch screens swipe; the arrows are for mice and keyboards. */
 @media (hover: none) { .garden-arrows { display: none; } }
 @media (hover: hover) { .swipe-hint { display: none; } }
-/* Soft ends when the strip scrolls, and on a desktop, where it runs past the text column (#273). */
-.garden-scroll { --soft-ends: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-.garden.scrolls .garden-scroll { mask-image: var(--soft-ends); }
-@media (min-width: 641px) { .garden-scroll { mask-image: var(--soft-ends); } }
+.garden.scrolls .garden-scroll { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .plant-tip .tip-flavour { font-style: italic; color: var(--muted); font-size: 0.78rem; }
 .plant-tip.interactive { pointer-events: auto; cursor: auto; }
 .plant-tip button { margin-top: 0.3rem; padding: 0.2rem 0; align-self: flex-start; }
