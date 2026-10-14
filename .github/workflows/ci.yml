@@ -97,13 +97,13 @@ jobs:
           DECK_ALLOW_BIG_CHANGE: ${{ contains(github.event.pull_request.labels.*.name, 'deck-big-change') && '1' || '' }}
 
   e2e:
-    name: End-to-end (Playwright ${{ matrix.shard }}/2)
+    name: End-to-end (Playwright ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     # The tests are independent, so the suite splits across runners.
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -131,7 +131,7 @@ jobs:
           for i in $(seq 1 60); do curl -sf localhost:30009/v1/health && break; sleep 1; done
       - name: Run e2e
         working-directory: web
-        run: bunx playwright test --shard=${{ matrix.shard }}/2
+        run: bunx playwright test --shard=${{ matrix.shard }}/4
 
       - name: Upload report on failure
         if: failure()
