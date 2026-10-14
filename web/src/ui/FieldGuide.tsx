@@ -245,7 +245,7 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
         </div>
         {detail}
         {/* Focus starts here, not on the first control in the details. */}
-        <button className="ghost guide-close" autoFocus onClick={() => ref.current?.close()}>
+        <button className="secondary guide-close" autoFocus onClick={() => ref.current?.close()}>
           Close
         </button>
       </div>

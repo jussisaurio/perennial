@@ -391,6 +391,8 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .actions button { padding: 0.9rem 1.5rem; font-size: 1.05rem; font-weight: 600; }
 /* Two answers side by side on a phone: less side padding, so "I remembered" fits on one line down to 320 px (#202). */
 @media (max-width: 480px) { .actions button { flex: 1; padding-inline: 0.6rem; text-wrap: balance; } }
+/* The summary's labels are longer: each button keeps its label on one line, and the second moves to its own row if both do not fit (#264). */
+.summary .actions button { flex: 1 1 auto; white-space: nowrap; }
 .answer { font-size: 1.5rem; padding: 0.85rem 1.1rem; border-radius: 14px; border-width: 1.5px; }
 .answer.ok { border-color: var(--leaf); background: var(--leaf-soft); }
 .answer.bad { border-color: var(--persimmon); background: var(--persimmon-soft); animation: shake 0.35s; }
@@ -522,8 +524,12 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 .choice label:has(input:checked) { border-color: var(--ink-2); box-shadow: 0 0 0 3px var(--sun-soft); }
 .choice input { width: auto; margin-top: 0.2rem; accent-color: var(--persimmon); }
 .choice span { display: grid; gap: 0.1rem; }
-.question { margin-top: auto; display: grid; gap: 0.6rem; padding-top: 1.5rem; }
-.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; position: sticky; bottom: 0; padding-bottom: max(1rem, env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--paper) 25%); }
+/* The question sticks to the screen's foot with its answers, so on a long card the answers never cover it (#264). */
+.question {
+  margin-top: auto; display: grid; gap: 0.6rem; padding: 1.5rem 0 max(1rem, env(safe-area-inset-bottom));
+  position: sticky; bottom: 0; background: linear-gradient(transparent, var(--paper) 1.2rem);
+}
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 .answer-btn { flex-direction: column; align-items: flex-start; text-align: left; gap: 0.25rem; padding: 0.85rem 1rem; border-radius: 16px; border: 1px solid var(--line); background: var(--card); }
 .answer-btn strong { font-size: 1.05rem; display: inline-flex; align-items: center; gap: 0.3rem; }
 .answer-btn span { font-size: 0.82rem; color: var(--muted); font-weight: 400; line-height: 1.35; }
@@ -531,7 +537,6 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 @media (max-width: 420px) { .answers { grid-template-columns: 1fr; } }
 button.undo { padding: 0.35rem 0.7rem; color: var(--ink-2); font-size: 0.88rem; border: 1px solid var(--line); background: var(--card); }
 button.undo:disabled { opacity: 0.35; }
-.actions.static { position: static; background: none; }
 .shortcut-help { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgb(0 0 0 / 0.35); padding: 16px; animation: rise 0.2s var(--ease); }
 .shortcut-help .panel { max-width: 26rem; width: 100%; }
 .shortcut-help h2 { margin-top: 0; }
@@ -774,7 +779,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-sheet { display: grid; justify-items: center; gap: 0.2rem; padding: 1rem; border-radius: 8px; text-align: center; }
 .guide-sheet h2 { font: 2rem/1.1 var(--display); margin: 0.2rem 0 0; }
 .guide-sheet .gl { margin: 0; color: var(--ink-2); }
-.guide-close { display: block; margin: 0.8rem auto 0; }
+/* Close stays in view at the foot of a long page (#264). */
+.guide-close { display: block; margin: 0.8rem auto 0; position: sticky; bottom: 0.8rem; box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.5); }
 
 /* A friend's gifted seed (#213): a quiet note, not a banner. */
 .gift-card { margin: 0.6rem 0 1rem; padding: 0.7rem 0.9rem; border: 1px dashed var(--line); border-radius: 12px; background: var(--card); color: var(--ink-2); }

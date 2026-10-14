@@ -170,15 +170,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
           </label>
         ))}
       </div>
-      <figure className="landing-garden" aria-label={`A ${name} garden after a few months`}>
-        <Garden data={showcase} showcase />
-        <figcaption className="muted small">A {name} garden after a few months of practice. Point at a plant to see its word.</figcaption>
-      </figure>
-      <button className="walk-link" onClick={() => setWalking(true)}>
-        <FlowerIcon size={18} /> Walk through this garden in 3D
-      </button>
-      <GrowthStrip />
-
+      {/* Start sits right under the choice, so a phone shows it without a long scroll (#264). The garden below is for the curious. */}
       <p className="muted small">Lessons are in English. More languages will come later.</p>
       <GiftCard lang={lang} />
       <div className="row" style={{ marginTop: "1.5rem" }}>
@@ -192,6 +184,14 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
         </p>
       )}
       <p className="muted small">Free. No account needed to start. Add your email later to keep your garden on all your devices.</p>
+      <figure className="landing-garden" aria-label={`A ${name} garden after a few months`}>
+        <Garden data={showcase} showcase />
+        <figcaption className="muted small">A {name} garden after a few months of practice. Point at a plant to see its word.</figcaption>
+      </figure>
+      <button className="walk-link" onClick={() => setWalking(true)}>
+        <FlowerIcon size={18} /> Walk through this garden in 3D
+      </button>
+      <GrowthStrip />
     </div>
   );
 }
