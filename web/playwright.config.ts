@@ -16,9 +16,9 @@ export default defineConfig({
   // One retry on CI: software WebGL on shared runners can be slow to start.
   retries: process.env.CI ? 1 : 0,
   // Every test makes its own learner, so tests run in any order and at once.
-  // CI runners have 2 vCPUs, which Playwright would turn into 1 worker; the
-  // tests mostly wait on the network, so 2 per runner (CI also shards the suite).
-  workers: process.env.CI ? 2 : undefined,
+  // GitHub's runners for public repos have 4 vCPUs; the tests mostly wait on
+  // the network, so 4 per runner (CI also shards the suite).
+  workers: process.env.CI ? 4 : undefined,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL: `http://localhost:${WEB}`,
