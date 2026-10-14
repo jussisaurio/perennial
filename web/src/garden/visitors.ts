@@ -170,7 +170,7 @@ export function welcomeBack(facts: LearnerFacts, now: Date = new Date()): string
   // Only on the first day back, not the day after.
   const away = dayNumber(now) - dayNumber(facts.lastBeforeToday);
   if (away >= 60) return "Welcome back. The garden waited for you.";
-  if (away >= 7) return "Welcome back. A cat took the bench. It is fine.";
+  if (away >= 7) return "Welcome back. A cat sat in the garden while you were away.";
   return null;
 }
 

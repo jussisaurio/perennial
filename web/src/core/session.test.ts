@@ -148,12 +148,46 @@ describe("Session", () => {
     expect(served).toContain("review:n");
     expect(served.filter((x) => x === "review:a").length).toBe(2);
 
-    const s2 = new Session({ queue }, 1000);
+    const s2 = new Session({ queue }, 30_000);
     const first = s2.next(0)!;
     s2.report(first, {});
     // Out of time: only the promised test of the introduced word remains.
-    expect(s2.next(5000)).toEqual({ kind: "review", wordId: "n", skill: "read", isNew: true });
-    expect(s2.next(5000)).toBeNull();
+    expect(s2.next(30_000)).toEqual({ kind: "review", wordId: "n", skill: "read", isNew: true });
+    expect(s2.next(30_000)).toBeNull();
+  });
+
+  test("near the end, no new word starts: its quick check would come right after it (#268)", () => {
+    const intro = (id: string): Task => ({ kind: "intro", wordId: id });
+    const review: Task = { kind: "review", wordId: "a", skill: "read" };
+    const s = new Session({ queue: [intro("x"), intro("y"), review, intro("z")] }, 60_000);
+    const served = (at: number) => {
+      const t = s.next(at);
+      if (t) s.report(t, t.kind === "intro" ? {} : { grade: 3 });
+      return t && `${t.kind}:${t.wordId}`;
+    };
+    expect(served(0)).toBe("intro:x");
+    expect(served(45_000)).toBe("review:a"); // 15 s left: a review, not "y"
+    expect(served(50_000)).toBe("review:x"); // only new words are left: x's quick check, and the chunk ends
+    expect(served(50_000)).toBeNull();
+    // Ended by the clock, though 10 s are left: the summary must not say every plant has water.
+    expect(s.endedBy(50_000)).toBe("time");
+  });
+
+  test("a chunk that served every card ended empty, not by time", () => {
+    const s = new Session({ queue: [{ kind: "review", wordId: "a", skill: "read" }] }, 60_000);
+    s.report(s.next(0)!, { grade: 3 });
+    expect(s.next(10_000)).toBeNull();
+    expect(s.endedBy(10_000)).toBe("empty");
+  });
+
+  test("undo across the last seconds brings back the same new word", () => {
+    const s = new Session({ queue: [{ kind: "intro", wordId: "x" }, { kind: "review", wordId: "a", skill: "read" }] }, 60_000);
+    const x = s.next(30_000)!;
+    expect(x.wordId).toBe("x"); // 30 s left: time for a new word
+    s.report(x, {});
+    s.next(40_000); // 20 s left
+    expect(s.undo()).toBe(true);
+    expect(s.next(40_000)?.wordId).toBe("x"); // chosen as at 30 s, not held back by the 20 s left now
   });
 });
 

@@ -24,7 +24,7 @@ const days = Array.from({ length: 60 }, (_, d) => new Date(2026, 8, 1 + d, [8, 1
 const english = [
   ...Object.values(PLANT_LINES).flat(),
   ...days.flatMap((d) => [loadingLine(d), doneTodayNote(d), forgotLine(true, d), greetingAside(d) ?? ""]),
-  ...days.map((d) => summaryHeadline("es", d)).flatMap((h) => (h.small ? [h.small] : [h.line])),
+  ...days.map((d, i) => summaryHeadline("es", i, d)).flatMap((h) => (h.small ? [h.small] : [h.line])),
   ...Object.values(EMPTY_WALK),
   WORM_LINE,
   SLOW_DEVICE_NOTICE,
@@ -47,7 +47,14 @@ test("after 'I forgot', what happens next always comes first", () => {
 });
 
 test("lines rotate across days", () => {
-  expect(new Set(days.map((d) => summaryHeadline("de", d).line)).size).toBeGreaterThan(4);
+  expect(new Set(days.map((d) => summaryHeadline("de", 40, d).line)).size).toBeGreaterThan(4);
+});
+
+test("the summary headline changes between sessions on the same day (#270)", () => {
+  const day = new Date(2026, 9, 14, 15); // a pumpkin day: the same joke on every summary before
+  const lines = [10, 25, 40, 61, 80].map((answers) => summaryHeadline("es", answers, day).line);
+  expect(new Set(lines).size).toBeGreaterThan(3);
+  expect(lines.filter((l) => l.includes("pumpkins")).length).toBeLessThan(3);
 });
 
 test("quiet copy: the clear part comes first, the wink after (#58, #68)", () => {

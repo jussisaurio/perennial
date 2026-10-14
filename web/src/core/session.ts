@@ -156,14 +156,14 @@ interface Snapshot {
   followUps: { task: Task; at: number }[];
   retries: Map<string, number>;
   served: number;
-  /** Whether time was up when this snapshot's `next()` chose its card. */
-  late: boolean;
+  /** The active time this snapshot's `next()` chose its card at. */
+  activeMs: number;
 }
 
 /**
- * Runs a planned queue against the clock. When time is up, only follow-ups
- * that were promised (tests of just-introduced words, retries of forgotten
- * ones) are still served.
+ * Runs a planned queue against the clock. Near the end, no new word is
+ * started. When time is up, only follow-ups that were promised (tests of
+ * just-introduced words, retries of forgotten ones) are still served.
  */
 export class Session {
   private queue: Task[];
@@ -172,7 +172,7 @@ export class Session {
   private served = 0;
   private history: Snapshot[] = [];
   /** Set by undo: the next `next()` chooses as it did the first time, so the undone card comes back even if time has run out since (#195). */
-  private replayLate: boolean | undefined;
+  private replayAt: number | undefined;
   readonly budgetMs: number;
 
   constructor(plan: Pick<Plan, "queue">, budgetMs: number) {
@@ -185,19 +185,33 @@ export class Session {
     return activeMs >= this.budgetMs;
   }
 
+  /**
+   * Why `next()` returned null. Planned cards still queued mean the clock ended
+   * the chunk: new words held back in its last seconds, not an empty queue.
+   */
+  endedBy(activeMs: number): "time" | "empty" {
+    return this.timeUp(activeMs) || this.queue.length ? "time" : "empty";
+  }
+
   next(activeMs: number): Task | null {
-    const late = this.replayLate ?? this.timeUp(activeMs);
-    this.replayLate = undefined;
-    this.history.push({ queue: [...this.queue], followUps: [...this.followUps], retries: new Map(this.retries), served: this.served, late });
+    const at = this.replayAt ?? activeMs;
+    this.replayAt = undefined;
+    this.history.push({ queue: [...this.queue], followUps: [...this.followUps], retries: new Map(this.retries), served: this.served, activeMs: at });
     if (this.history.length > 50) this.history.shift();
     const ready = this.followUps.findIndex((f) => f.at <= this.served);
     if (ready >= 0) {
       this.served++;
       return this.followUps.splice(ready, 1)[0].task;
     }
-    if (!late && this.queue.length) {
-      this.served++;
-      return this.queue.shift()!;
+    if (!this.timeUp(at)) {
+      // A new word's quick check comes a few cards after it. With less time left
+      // than a new word takes, the check would come right after the word (#268):
+      // serve other cards, and start no more new words in this chunk.
+      const i = this.budgetMs - at >= COSTS.intro ? 0 : this.queue.findIndex((t) => t.kind !== "intro");
+      if (i >= 0 && i < this.queue.length) {
+        this.served++;
+        return this.queue.splice(i, 1)[0];
+      }
     }
     // Out of time or queue: drain promised follow-ups immediately.
     if (this.followUps.length) {
@@ -245,7 +259,7 @@ export class Session {
     this.followUps = prev.followUps;
     this.retries = prev.retries;
     this.served = prev.served;
-    this.replayLate = prev.late;
+    this.replayAt = prev.activeMs;
     return true;
   }
 
