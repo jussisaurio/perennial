@@ -14,6 +14,7 @@ import { hash32 } from "../lib/seed";
 import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
 import { wakeAudio } from "./chime";
 import { sessionPlan } from "../data/practice";
+import type { Refused } from "../data/store";
 import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
 import { GARDEN_VISITOR_ART, type PixelArt } from "../garden/visitorArt";
 import { broughtVisitor } from "./visitors";
@@ -76,7 +77,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const [active, setActive] = useState(0);
   const counts = useRef({ intros: 0, answers: 0 });
   // Writes the server had refused before this chunk: the summary tells of any new ones (#253).
-  const refusedBefore = useRef(0);
+  const refusedBefore = useRef<Refused>({ count: 0, clock: 0, seen: 0 });
   const [ended, setEnded] = useState<Ended>("time");
   // Words answered this session, and the new words shown (a seed is planted once it has an answer).
   const practised = useRef(new Set<string>());
@@ -106,7 +107,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       const r = new Runner(p, mins * 60_000);
       // Each chunk is its own session: its own summary, and nothing to undo from the last one.
       counts.current = { intros: 0, answers: 0 };
-      refusedBefore.current = store.refused().count;
+      refusedBefore.current = store.refused();
       practised.current = new Set();
       introduced.current = new Set();
       before.current = new Map();
@@ -120,7 +121,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       setDone(false);
       await advance(r);
     },
-    // `advance` reads only refs and stable setters.
+    // `advance` reads only refs and stable setters; `store` is the same for the session's life (App keys it by user).
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tag],
   );

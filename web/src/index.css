@@ -501,6 +501,11 @@ details.more > summary:hover { color: var(--ink); }
 details.more[open] > :not(summary) { margin-top: 0.75rem; animation: rise 0.25s var(--ease); }
 details.danger { margin-top: 2.5rem; }
 .error { color: var(--persimmon); font-size: 0.9rem; margin: 0; }
+/* Writes the server refused (#253): in place, above the card or in Settings. */
+.refused { margin: 0.5rem 0; }
+/* In a session, clear of the card's plant at the top right (.card-plant). */
+.session > .refused { margin-right: 84px; }
+@media (max-width: 480px) { .session > .refused { margin-right: 66px; } }
 /* The space below sits on the whole head, not the h1: on phones the h1 is shorter
    than the Add words button, so the button touched the filter row below (#116). */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }

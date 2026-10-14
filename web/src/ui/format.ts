@@ -1,6 +1,17 @@
 import { DAY_MS } from "../core/day";
+import type { Refused } from "../data/store";
 
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/** Writes the server refused (#253): what was lost, and what the learner can do about it. */
+export function refusedLine({ count, clock }: Pick<Refused, "count" | "clock">): string {
+  const was = (n: number, one: string) => `${plural(n, one)} ${n === 1 ? "was" : "were"} not saved`;
+  const other = count - clock;
+  const parts = [];
+  if (clock) parts.push(`${was(clock, "answer")}, because the date or time on this device is wrong. Set the correct date and time, then answer again.`);
+  if (other) parts.push(`${was(other, clock ? "other change" : "change")}. The server did not accept ${other === 1 ? "it" : "them"}.`);
+  return parts.join(" ");
+}
 
 const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 

@@ -13,7 +13,8 @@ import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats } from "./stats";
 import { useSessionRunner, type Card, type Ended } from "./useSessionRunner";
-import { refusedLine, useRefused } from "./Refused";
+import { RefusedLine, useRefused } from "./Refused";
+import type { Refused } from "../data/store";
 import { useKeys, useShortcut } from "./useShortcut";
 import { track } from "../observability";
 import { DAILY_MINUTES } from "../data/practice";
@@ -139,6 +140,8 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
           <UndoIcon size={18} /> Undo
         </button>
       </header>
+      {/* During the session and on its summary: in place, never over the answer buttons. */}
+      <RefusedLine since={refusedBefore} />
       {done ? (
         <Summary learner={learner} counts={counts} refusedBefore={refusedBefore} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} onWalk={onWalk} />
       ) : card ? (
@@ -594,7 +597,7 @@ function Summary({
 }: {
   learner: Learner | null;
   counts: { intros: number; answers: number };
-  refusedBefore: number;
+  refusedBefore: Refused;
   practised: Set<string>;
   introduced: Set<string>;
   before: Map<string, PlantLook>;
@@ -635,7 +638,7 @@ function Summary({
   const title = ended === "user" ? "Session paused" : "Session complete";
   // Live: a refusal can arrive after the summary opens, as the last answers upload.
   const refused = useRefused();
-  const lost = refused.count > refusedBefore;
+  const lost = refused.count > refusedBefore.count;
   const why = ended === "user" ? (lost ? "You can continue later." : "You can continue later. Your answers are saved.") : ended === "empty" ? "Every plant has water." : null;
   return (
     <main className="card summary">
@@ -650,11 +653,6 @@ function Summary({
         </p>
       )}
       {why && <p className="muted">{why}</p>}
-      {lost && (
-        <p className="error" role="alert">
-          {refusedLine({ ...refused, count: refused.count - refusedBefore })}
-        </p>
-      )}
       <Garden data={garden} highlight={highlight} replay={replay} compact />
       {garden && seeds > 0 && garden.total === seeds && <p className="muted small first-plants">{firstPlantsLine(garden.total)}</p>}
       {stats && (
