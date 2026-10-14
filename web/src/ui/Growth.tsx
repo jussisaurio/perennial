@@ -48,7 +48,7 @@ export const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)"
 /** Height in drawing units: the moment is only worth a pause if the plant visibly grows. */
 const height = (l: PlantLook) => (l.stage === "seed" ? 0 : stemHeight(growthOf(l.s)));
 
-/** Whether this moment shows anything: a planted seed, a new stage, or a plant that grows taller. */
+/** Whether the plant visibly grew: a planted seed, a new stage, or a plant that grows taller. The summary replays only these. */
 export function grows(m: GrowthMoment): boolean {
   return m.planted || FORM[m.to.stage] > FORM[m.from.stage] || height(m.to) - height(m.from) >= 3;
 }
@@ -81,7 +81,8 @@ function timeline(m: GrowthMoment) {
   // The word is now known: the flower opens for the first time, with a little sparkle.
   const blooms = m.to.stage === "bloom" && m.from.stage !== "bloom";
   const growMs = blooms ? T.bloom : T.grow;
-  const growEnd = rises ? growStart + growMs : plantEnd;
+  // Watered without growing: the moment ends once the water has landed.
+  const growEnd = rises ? growStart + growMs : watered ? growStart : plantEnd;
   const sparkleStart = growEnd - 160;
   const end = Math.max(plantEnd, growEnd) + T.hold;
   return { plantEnd, watered, growStart, growMs, growEnd, blooms, sparkleStart, end: blooms ? Math.max(end, sparkleStart + T.sparkle) : end };

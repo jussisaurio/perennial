@@ -60,8 +60,9 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   // The word's plant is planted or grows before the next card (#200).
   const [growing, setGrowing] = useState<GrowthMoment | null>(null);
   const grown = useRef<(() => void) | null>(null);
+  // Every remembered answer is watered, even when the plant barely grows (a retry
+  // after "I forgot" adds little): the learner sees the answer counted.
   const grow = (m: GrowthMoment) => {
-    if (!grows(m)) return Promise.resolve();
     return new Promise<void>((resolve) => {
       grown.current = () => {
         grown.current = null;
