@@ -23,7 +23,7 @@ test("sound off: nothing is spoken, speaker buttons hide, and the icon and Setti
   // No event to wait for when nothing is spoken. Autoplay can wait up to 1.5 s for voices (speech.ts).
   await page.waitForTimeout(2000);
   expect(await spoken()).toBe(before);
-  await expect(page.getByRole("button", { name: "Play audio" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Play the word" })).toHaveCount(0);
 
   // Settings shows the same choice in words, and can turn it back on.
   await page.getByRole("button", { name: "End session" }).click();

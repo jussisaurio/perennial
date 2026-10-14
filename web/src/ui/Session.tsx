@@ -176,16 +176,17 @@ function CardView({ card, tag, lang, hint, onDone }: { card: Card; tag: string; 
   return <Recall card={card} tag={tag} lang={lang} listen={listen} onDone={onDone} kicker={kicker} hint={hint && kicker === "check"} />;
 }
 
-function Speaker({ text, tag, slow }: { text: string; tag: string; slow?: boolean }) {
+/** Speaker buttons. Their names say what they play, so a screen reader can tell them apart (#266). A sentence can also play slowly. */
+function Speaker({ text, tag, what }: { text: string; tag: string; what: "word" | "sentence" }) {
   const [sound] = useSound();
   if (!sound) return null;
   return (
     <span className="speaker">
-      <button onClick={() => void speak(text, tag)} aria-label="Play audio" title="Play">
+      <button onClick={() => void speak(text, tag)} aria-label={`Play the ${what}`} title={`Play the ${what}`}>
         <SpeakerIcon size={18} />
       </button>
-      {slow && (
-        <button onClick={() => void speakSlowly(text, tag)} aria-label="Play slowly" title="Play slowly">
+      {what === "sentence" && (
+        <button onClick={() => void speakSlowly(text, tag)} aria-label="Play the sentence slowly" title="Play the sentence slowly">
           <SnailIcon size={18} />
         </button>
       )}
@@ -224,7 +225,7 @@ function Meaning({ word, lang, asked }: { word: Word; lang: string; asked?: stri
     <div className="meaning">
       <div>
         <strong>{head}</strong>
-        {word.pos && <span className="pos">{word.pos}</span>}
+        {word.pos && <span className="pos">{word.pos}</span>}{" "}
         {word.gloss}
       </div>
       {form && (
@@ -324,11 +325,11 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
       )}
       <Kicker kind="intro" />
       <div className="word">
-        {headword(word, lang)} <Speaker text={word.lemma} tag={tag} />
+        {headword(word, lang)} <Speaker text={word.lemma} tag={tag} what="word" />
       </div>
       {revealed && (
         <div className="gloss">
-          {word.pos && <span className="pos">{word.pos}</span>}
+          {word.pos && <span className="pos">{word.pos}</span>}{" "}
           {word.gloss}
         </div>
       )}
@@ -336,7 +337,7 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
       {example && (
         <div className="example">
           <p className="sentence" lang={tag}>
-            <Highlight text={example.text} part={example.cloze} /> <Speaker text={example.text} tag={tag} slow />
+            <Highlight text={example.text} part={example.cloze} /> <Speaker text={example.text} tag={tag} what="sentence" />
           </p>
           {revealed && <p className="translation">{example.translation}</p>}
         </div>
@@ -345,15 +346,15 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
         <div className="question">
           <p className="prompt">Is this word new to you?</p>
           <div className="answers">
-            <button className="answer-btn primary" onClick={isNew}>
+            <button className="answer-btn primary" onClick={isNew} aria-keyshortcuts="1">
               <strong>
-                New to me <kbd>1</kbd>
+                New to me <kbd aria-hidden="true">1</kbd>
               </strong>
               <span>Learn it now. A quick check comes in a moment.</span>
             </button>
-            <button className="answer-btn" onClick={knewIt}>
+            <button className="answer-btn" onClick={knewIt} aria-keyshortcuts="2">
               <strong>
-                I knew it <kbd>2</kbd>
+                I knew it <kbd aria-hidden="true">2</kbd>
               </strong>
               <span>Skip the quick check. Back in about a week.</span>
             </button>
@@ -363,8 +364,8 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
         <>
           <p className="prompt">Do you know what it means? Think first, then look.</p>
           <Actions>
-            <button className="primary wide" onClick={reveal}>
-              Show meaning <kbd>Space</kbd>
+            <button className="primary wide" onClick={reveal} aria-keyshortcuts="Space">
+              Show meaning <kbd aria-hidden="true">Space</kbd>
             </button>
           </Actions>
         </>
@@ -433,7 +434,7 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
       ) : example ? (
         <p className="sentence big" lang={tag}>
           <Highlight text={example.text} part={example.cloze} />
-          {revealed && <Speaker text={example.text} tag={tag} slow />}
+          {revealed && <Speaker text={example.text} tag={tag} what="sentence" />}
         </p>
       ) : (
         <div className="word">{word.lemma}</div>
@@ -445,11 +446,11 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
             <Meaning word={word} lang={lang} asked={asked} />
           </div>
           <Actions>
-            <button className="fail" onClick={() => grade(1)}>
-              {no} <kbd>1</kbd>
+            <button className="fail" onClick={() => grade(1)} aria-keyshortcuts="1">
+              {no} <kbd aria-hidden="true">1</kbd>
             </button>
-            <button className="pass" onClick={() => grade(3)}>
-              {yes} <kbd>2</kbd>
+            <button className="pass" onClick={() => grade(3)} aria-keyshortcuts="2">
+              {yes} <kbd aria-hidden="true">2</kbd>
             </button>
           </Actions>
         </>
@@ -461,8 +462,8 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
               Can't listen now
             </button>
           )}
-          <button className="primary wide" onClick={reveal}>
-            Show answer <kbd>Space</kbd>
+          <button className="primary wide" onClick={reveal} aria-keyshortcuts="Space">
+            Show answer <kbd aria-hidden="true">Space</kbd>
           </button>
         </Actions>
       )}
@@ -570,8 +571,8 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
             Count it as wrong
           </button>
         )}
-        <button className={verdict && passes(verdict) ? "pass" : "primary"} onClick={submit}>
-          {verdict ? "Next" : "Check"} <kbd>Enter</kbd>
+        <button className={verdict && passes(verdict) ? "pass" : "primary"} onClick={submit} aria-keyshortcuts="Enter">
+          {verdict ? "Next" : "Check"} <kbd aria-hidden="true">Enter</kbd>
         </button>
       </Actions>
     </main>
@@ -783,7 +784,7 @@ function Summary({
               onWalk();
             }}
           >
-            See it in the garden →
+            See it in the garden <span aria-hidden="true">→</span>
           </button>
         </p>
       )}
@@ -795,8 +796,8 @@ function Summary({
             <button className="secondary" onClick={onExit}>
               Done
             </button>
-            <button className="primary" onClick={onContinue}>
-              Continue this session <kbd>Enter</kbd>
+            <button className="primary" onClick={onContinue} aria-keyshortcuts="Enter">
+              Continue this session <kbd aria-hidden="true">Enter</kbd>
             </button>
           </>
         ) : (
@@ -804,8 +805,8 @@ function Summary({
             <button className="secondary" onClick={onMore}>
               Practice {DAILY_MINUTES} more minutes
             </button>
-            <button className="primary" onClick={onExit}>
-              Done <kbd>Enter</kbd>
+            <button className="primary" onClick={onExit} aria-keyshortcuts="Enter">
+              Done <kbd aria-hidden="true">Enter</kbd>
             </button>
           </>
         )}

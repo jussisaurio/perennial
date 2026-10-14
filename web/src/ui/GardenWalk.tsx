@@ -111,6 +111,14 @@ export function GardenWalk({
   const canvas = useRef<HTMLCanvasElement>(null);
   const tag = language(lang).tag;
   const { data, scene, ready, failed, progress, labels, selected } = useGardenScene({ lang, source, visitors, focus, time, detail, wrap, canvas, onFocused: () => setHint(false) });
+  // A plant chosen from outside its card (the summary's "See it in the garden", a click in
+  // the scene) takes focus to the card, so a screen reader reads it (#266). From the
+  // card's own Next plant, focus stays on that button and the live card body is read.
+  const dialog = useRef<HTMLDivElement>(null);
+  const selectedId = selected?.id;
+  useEffect(() => {
+    if (selectedId && !dialog.current!.contains(document.activeElement)) dialog.current!.focus({ preventScroll: true });
+  }, [selectedId]);
   const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => setHint(false) });
 
   // If the viewer never chose a quality and the garden runs slowly, switch to low quality once.
@@ -294,11 +302,11 @@ export function GardenWalk({
       )}
 
       {selected && (
-        <div className="gw-card" role="dialog" aria-label={`The plant for ${selected.lemma}`}>
+        <div className="gw-card" role="dialog" aria-label={`The plant for ${selected.lemma}`} ref={dialog} tabIndex={-1}>
           <button className="gw-close" onClick={() => scene.current?.select(null)} aria-label="Close">
             ×
           </button>
-          <div className="gw-card-body">
+          <div className="gw-card-body" aria-live="polite">
             <WordPlant word={selected.lemma} s={selected.s} stage={selected.stage} size={72} />
             <div>
               <strong className="gw-word" lang={lang}>
@@ -336,7 +344,7 @@ export function GardenWalk({
               ←
             </button>
             <button className="gw-btn" onClick={() => step(1)}>
-              Next plant →
+              Next plant <span aria-hidden="true">→</span>
             </button>
           </div>
         </div>
@@ -345,7 +353,7 @@ export function GardenWalk({
       <div className="gw-bottom">
         {ready && !selected && stats.total > 0 && (
           <button className="gw-btn" onClick={() => step(1)}>
-            Next plant →
+            Next plant <span aria-hidden="true">→</span>
           </button>
         )}
         {/* Named for what it starts, with no count of thirsty plants: Today keeps missed days from piling up, and so does the walk (#263). */}

@@ -18,6 +18,7 @@ import { DAILY_MINUTES } from "./data/practice";
 import { SettingsScreen } from "./ui/Settings";
 import { WordsScreen } from "./ui/Words";
 import { GiftArrival } from "./ui/Gift";
+import { arrowKeys } from "./ui/arrows";
 import { pendingGift } from "./data/gift";
 
 type Route = "/today" | "/garden" | "/words" | "/words/add" | "/settings" | "/session";
@@ -248,11 +249,11 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           }}
           onStart={startAnother}
         />
-        <div className="tabs" role="tablist">
+        <div className="tabs" role="tablist" onKeyDown={arrowKeys}>
           {TABS.map((t) => {
             const on = route === t.route || (t.route === "/words" && route === "/words/add");
             return (
-              <button key={t.route} role="tab" aria-selected={on} className={on ? "tab on" : "tab"} onClick={() => go(t.route)}>
+              <button key={t.route} role="tab" aria-selected={on} tabIndex={on ? 0 : -1} className={on ? "tab on" : "tab"} onClick={() => go(t.route)}>
                 {t.icon}
                 {t.label}
               </button>

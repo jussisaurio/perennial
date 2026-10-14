@@ -8,6 +8,7 @@ import { AccountPanel } from "./Account";
 import { DataSection } from "./DataSection";
 import { RefusedLine, useRefused } from "./Refused";
 import { getThemePref, setThemePref, type ThemePref } from "./theme";
+import { RadioChips } from "./arrows";
 
 const DevTools = import.meta.env.DEV ? lazy(() => import("../dev/DevTools")) : null;
 
@@ -24,7 +25,7 @@ function CourseSettings({ course }: { course: CourseRow }) {
         <summary>How often to review</summary>
         <label className="form">
           <span>Target: remember {Math.round(retention * 100)}% of words</span>
-          <input type="range" min={0.8} max={0.95} step={0.01} value={retention} onChange={(e) => setRetention(Number(e.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
+          <input type="range" aria-valuetext={`${Math.round(retention * 100)}%`} min={0.8} max={0.95} step={0.01} value={retention} onChange={(e) => setRetention(Number(e.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
           <span className="muted small">
             When a word comes back, this is how sure you are to remember it. 90% is good for most people. A higher number gives you many more reviews. A lower number makes you forget more.
           </span>
@@ -42,13 +43,15 @@ function GrowthSetting() {
   };
   return (
     <div className="form">
-      <div className="chips" role="radiogroup" aria-label="Growing plants">
-        {[true, false].map((v) => (
-          <button key={String(v)} role="radio" aria-checked={on === v} className={on === v ? "chip on" : "chip"} onClick={() => set(v)}>
-            {v ? "Show plants growing" : "Next card right away"}
-          </button>
-        ))}
-      </div>
+      <RadioChips
+        label="Growing plants"
+        options={[
+          [true, "Show plants growing"],
+          [false, "Next card right away"],
+        ]}
+        value={on}
+        onChange={set}
+      />
       <p className="muted small">
         After a good answer, the word's plant gets water and grows. A new word's seed goes into the soil. It takes about a second, and a tap skips it. This setting is only for this device.
         {on && reducedMotion() && " Your device asks for less motion, so the plants do not move."}
@@ -61,13 +64,15 @@ function SoundSetting() {
   const [on, set] = useSound();
   return (
     <div className="form">
-      <div className="chips" role="radiogroup" aria-label="Sound">
-        {[true, false].map((v) => (
-          <button key={String(v)} role="radio" aria-checked={on === v} className={on === v ? "chip on" : "chip"} onClick={() => set(v)}>
-            {v ? "Sound on" : "Sound off"}
-          </button>
-        ))}
-      </div>
+      <RadioChips
+        label="Sound"
+        options={[
+          [true, "Sound on"],
+          [false, "Sound off"],
+        ]}
+        value={on}
+        onChange={set}
+      />
       <p className="muted small">
         When sound is off, Perennial does not speak words or sentences, and there are no listening exercises. This setting is only for this device.{!on && ` ${SOUND_OFF_ASIDE}`}
       </p>
@@ -78,22 +83,19 @@ function SoundSetting() {
 function Appearance() {
   const [pref, setPref] = useState<ThemePref>(getThemePref());
   return (
-    <div className="chips" role="radiogroup" aria-label="Theme">
-      {(["system", "light", "dark"] as ThemePref[]).map((t) => (
-        <button
-          key={t}
-          role="radio"
-          aria-checked={pref === t}
-          className={pref === t ? "chip on" : "chip"}
-          onClick={() => {
-            setThemePref(t);
-            setPref(t);
-          }}
-        >
-          {t === "system" ? "Same as my device" : t === "light" ? "Light" : "Dark"}
-        </button>
-      ))}
-    </div>
+    <RadioChips<ThemePref>
+      label="Theme"
+      options={[
+        ["system", "Same as my device"],
+        ["light", "Light"],
+        ["dark", "Dark"],
+      ]}
+      value={pref}
+      onChange={(t) => {
+        setThemePref(t);
+        setPref(t);
+      }}
+    />
   );
 }
 

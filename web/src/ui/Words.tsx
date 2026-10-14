@@ -10,6 +10,7 @@ import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
+import { RadioChips } from "./arrows";
 import { AddScreen } from "./Add";
 import { drawnRows, FieldGuide } from "./FieldGuide";
 import { StageGlyph } from "./StageGlyph";
@@ -127,25 +128,25 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           {(onAdd || hasMine) && <option value="mine">From my texts</option>}
         </select>
       </div>
-      <div className="chips words-view" role="radiogroup" aria-label="Show words as">
-        {(["list", "guide"] as const).map((v) => (
-          <button
-            key={v}
-            role="radio"
-            aria-checked={view === v}
-            className={view === v ? "chip on" : "chip"}
-            onClick={() => {
-              // A word open in one view must not pop up in the other.
-              setOpen(null);
-              setView(v);
-              saveView(v);
-            }}
-          >
-            {v === "list" ? "List" : "Flowers"}
-          </button>
-        ))}
-      </div>
-      <p className="muted small">{plural(shown.length, "word")}</p>
+      <RadioChips<WordsView>
+        className="words-view"
+        label="Show words as"
+        options={[
+          ["list", "List"],
+          ["guide", "Flowers"],
+        ]}
+        value={view}
+        onChange={(v) => {
+          // A word open in one view must not pop up in the other.
+          setOpen(null);
+          setView(v);
+          saveView(v);
+        }}
+      />
+      {/* Live: a screen reader hears how many words a search finds. */}
+      <p className="muted small" aria-live="polite">
+        {plural(shown.length, "word")}
+      </p>
       {learner && rows.length === 0 && <p className="words-empty">{wordsEmptyLine(filter, !!q.trim())}</p>}
       {learner && rows.length > 0 && shown.length === 0 && <p className="words-empty">Words you have not started yet have no flower to show. They are in the List.</p>}
       {view === "guide" ? (

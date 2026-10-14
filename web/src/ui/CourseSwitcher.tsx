@@ -6,14 +6,18 @@ import { useEffect, useRef, useState } from "react";
 import { COURSE_LANGUAGES, language } from "../content/languages";
 import type { CourseRow } from "../data/rows";
 import { SproutMark } from "./icons";
+import { arrowKeys } from "./arrows";
 
 export function CourseSwitcher({ courses, current, onSwitch, onStart }: { courses: CourseRow[]; current: string; onSwitch: (lang: string) => void; onStart: (lang: string) => void }) {
   const [open, setOpen] = useState(false);
   // A language waiting for "yes, start it".
   const [asking, setAsking] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
+    // Focus goes into the menu, on the language in use, so the arrow keys work at once.
+    menu.current!.querySelector<HTMLElement>("[aria-checked=true]")!.focus();
     // The path, not the target: a click that swaps the menu's content leaves its target detached.
     const close = (e: Event) => {
       if (e instanceof KeyboardEvent ? e.key === "Escape" : !e.composedPath().includes(root.current!)) setOpen(false);
@@ -54,7 +58,7 @@ export function CourseSwitcher({ courses, current, onSwitch, onStart }: { course
         </span>
       </button>
       {open && (
-        <div className="course-menu" role="menu" aria-label="Your languages">
+        <div className="course-menu" role="menu" aria-label="Your languages" ref={menu} onKeyDown={arrowKeys}>
           {asking ? (
             <div className="course-ask">
               <p>

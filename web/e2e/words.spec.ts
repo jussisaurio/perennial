@@ -71,6 +71,7 @@ test("keyboard: Enter starts today's session, / focuses the word search", async 
   await page.locator("h1").click();
   await page.keyboard.press("/");
   await expect(page.getByRole("searchbox")).toBeFocused();
+  await expect(page.getByRole("combobox", { name: "Which words" })).toBeVisible(); // the filter has a name (#266)
   await page.keyboard.type("x");
   await expect(page.getByRole("searchbox")).toHaveValue("x"); // the slash itself isn't typed
   // "/" works while a tab button has focus too: "/" never presses a button (#266).
