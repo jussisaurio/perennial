@@ -84,3 +84,42 @@ test("small phone (320 px): the landing page, the answer buttons and the Words s
   expect(await search.evaluate((e) => e.getBoundingClientRect().width)).toBeGreaterThan(260);
   expect(await fits()).toBe(true);
 });
+
+// #264: on a small phone, the parts that end a screen stay on it.
+test("small phone: the landing Start, a long card's question, the summary buttons and the word page's Close stay on screen", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  const onScreen = (name: string, box: { y: number; height: number } | null) => {
+    expect(box, name).not.toBeNull();
+    expect(box!.y + box!.height, name).toBeLessThanOrEqual(page.viewportSize()!.height);
+  };
+  await page.goto("/");
+  onScreen("Start learning", await page.getByRole("button", { name: "Start learning Spanish" }).boundingBox());
+  await startCourse(page);
+  await page.locator("button.start").click();
+  // Short enough that the new-word card scrolls; it opens at the top.
+  await page.setViewportSize({ width: 360, height: 520 });
+  await reveal(page);
+  const prompt = (await page.getByText("Is this word new to you?").boundingBox())!;
+  const newToMe = (await page.locator(".answers button").first().boundingBox())!;
+  expect(prompt.y + prompt.height, "the answers cover the question").toBeLessThanOrEqual(newToMe.y);
+  onScreen("I knew it", await page.locator(".answers button").last().boundingBox());
+  await page.keyboard.press("2");
+  for (let i = 0; i < 3; i++) await answer(page, "2");
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.getByRole("button", { name: "End session" }).click();
+  const done = page.getByRole("button", { name: /^Done/ });
+  onScreen("Continue this session", await page.getByRole("button", { name: /^Continue this session/ }).boundingBox());
+  onScreen("Done", await done.boundingBox());
+  // Each label on one line: the two buttons are as tall as each other, and as tall as a one-line button.
+  const heights = await page.locator(".summary .actions button").evaluateAll((bs) => bs.map((b) => b.getBoundingClientRect().height));
+  expect(heights[0]).toBe(heights[1]);
+  expect(heights[0]).toBeLessThan(64);
+  await done.click();
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByRole("radio", { name: "Flowers" }).click();
+  await page.locator(".guide-entry").first().click();
+  const dialog = (await page.locator("dialog.guide-page").boundingBox())!;
+  const close = (await page.getByRole("button", { name: "Close", exact: true }).boundingBox())!;
+  expect(close.y + close.height, "Close is inside the word page").toBeLessThanOrEqual(dialog.y + dialog.height);
+  onScreen("Close", close);
+});

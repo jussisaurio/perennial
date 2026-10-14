@@ -713,7 +713,7 @@ function Summary({
           </button>
         </p>
       )}
-      <div className="actions static">
+      <div className="actions">
         {/* Paused: Continue goes back to the card it left, with the time that was left; a new
             chunk on top would only confuse. Finished: 5 more minutes always works. */}
         {paused ? (
