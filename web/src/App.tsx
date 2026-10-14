@@ -12,6 +12,7 @@ import { LearnerGardenWalk } from "./ui/GardenWalk";
 import { CourseSwitcher } from "./ui/CourseSwitcher";
 import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
+import { RefusedBanner, useRefused } from "./ui/Refused";
 import { SessionScreen } from "./ui/Session";
 import { DAILY_MINUTES } from "./data/practice";
 import { SettingsScreen } from "./ui/Settings";
@@ -96,6 +97,7 @@ function WriterOnly({ store, children }: { store: Store; children: ReactNode }) 
 }
 
 function ReloadBanner() {
+  const refused = useRefused().count > 0;
   const [needed, setNeeded] = useState(reloadNeeded.needed);
   useEffect(() => {
     const on = () => setNeeded(true);
@@ -106,7 +108,7 @@ function ReloadBanner() {
   if (!needed) return null;
   return (
     <div className="toast" role="status">
-      <span>A new version of Perennial is ready. Your answers are saved.</span>
+      <span>A new version of Perennial is ready.{!refused && " Your answers are saved."}</span>
       <button className="ghost" onClick={() => location.reload()}>
         Reload
       </button>
@@ -154,6 +156,7 @@ export default function App() {
     <StoreProvider key={user.id} userId={user.id}>
       <Main route={route} go={go} />
       <ReloadBanner />
+      <RefusedBanner />
     </StoreProvider>
   );
 }

@@ -142,6 +142,18 @@ export async function createStore(userId: string) {
     for (const l of writerListeners) l();
   };
 
+  // Writes the server refused for good. They are rolled back on this device, so
+  // the learner must be told (#253): "saved" would be untrue.
+  let refused: Refused = { count: 0, clock: 0, seen: 0 };
+  const refusedListeners = new Set<() => void>();
+  const setRefused = (r: Refused) => {
+    refused = r;
+    for (const l of refusedListeners) l();
+  };
+  // The server refuses answers dated over a day ahead of its clock (server/src/sync.ts): the
+  // learner can fix that one, so it is counted on its own.
+  const noteRefused = (code: string) => setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (code === "review_from_the_future" ? 1 : 0) });
+
   const storage = await outboxStorage(userId);
   if (storage) await adoptQueues(userId, storage);
   const executor: OfflineExecutor = startOfflineExecutor({
@@ -164,7 +176,10 @@ export async function createStore(userId: string) {
         try {
           result = await postWrite(mutations, { idempotencyKey });
         } catch (e) {
-          if (e instanceof ApiError && e.permanent) throw new NonRetriableError(`rejected: ${e.code}`);
+          if (e instanceof ApiError && e.permanent) {
+            noteRefused(e.code);
+            throw new NonRetriableError(`rejected: ${e.code}`);
+          }
           throw e;
         }
         // Nothing changed (say, a repeat of an earlier write): no echo will come.
@@ -205,10 +220,21 @@ export async function createStore(userId: string) {
       return () => void writerListeners.delete(cb);
     },
     pendingWrites: () => executor.getPendingCount(),
+    /** Writes the server refused since this store started. For useSyncExternalStore. */
+    refused: () => refused,
+    /** The learner has been told of every refusal so far. */
+    seeRefused: () => {
+      if (refused.seen !== refused.count) setRefused({ ...refused, seen: refused.count });
+    },
+    onRefused: (cb: () => void) => {
+      refusedListeners.add(cb);
+      return () => void refusedListeners.delete(cb);
+    },
     dispose() {
       unregister();
       unregisterSync();
       writerListeners.clear();
+      refusedListeners.clear();
       executor.dispose();
       for (const c of Object.values(collections)) cleanUpWhenUnused(c);
     },
@@ -216,6 +242,13 @@ export async function createStore(userId: string) {
 }
 
 export type Store = Awaited<ReturnType<typeof createStore>>;
+
+/** Writes the server refused for good: all of them, those refused for a wrong device clock, and how many the learner was told of. */
+export interface Refused {
+  count: number;
+  clock: number;
+  seen: number;
+}
 
 type Collection = Pick<ReturnType<typeof createCollection>, "subscriberCount" | "on" | "cleanup">;
 

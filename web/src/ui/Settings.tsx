@@ -6,6 +6,7 @@ import { useSound } from "./Sound";
 import { growthSetting, reducedMotion, setGrowthSetting } from "./Growth";
 import { AccountPanel } from "./Account";
 import { DataSection } from "./DataSection";
+import { RefusedLine, useRefused } from "./Refused";
 import { getThemePref, setThemePref, type ThemePref } from "./theme";
 
 const DevTools = import.meta.env.DEV ? lazy(() => import("../dev/DevTools")) : null;
@@ -104,10 +105,18 @@ function SavedStatus() {
     const t = setInterval(() => setPending(store.pendingWrites()), 2000);
     return () => clearInterval(t);
   }, [store]);
+  const refused = useRefused().count > 0;
+  const waiting = pending ? `${pending} ${pending === 1 ? "change is" : "changes are"} saved on this device and will upload when you are online.` : null;
   return (
-    <p className="muted small" role="status">
-      {pending ? `${pending} ${pending === 1 ? "change is" : "changes are"} saved on this device and will upload when you are online.` : savedLine()}
-    </p>
+    <>
+      <RefusedLine />
+      {/* "All changes are saved" would be untrue after a refusal. */}
+      {(waiting || !refused) && (
+        <p className="muted small" role="status">
+          {waiting ?? savedLine()}
+        </p>
+      )}
+    </>
   );
 }
 

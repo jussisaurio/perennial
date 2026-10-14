@@ -183,3 +183,32 @@ test("on the summary, Enter on a focused button presses that button, not Done (#
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: /today's 5 minutes|Practice 5 more minutes/i })).toBeVisible();
 });
+
+// #253: the server refuses answers dated more than a day ahead. A device clock
+// that far off loses them, and the app must say so, never "saved".
+test("an answer the server refuses is reported, not called saved", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  // Three days ahead of the server's real clock.
+  await page.clock.setFixedTime(new Date(Date.now() + 3 * 86_400_000));
+  await startCourse(page);
+  await startSession(page);
+  await answer(page, "2"); // "I knew it": a review
+  // Said in place at the top of the session, never in a toast over the answer buttons.
+  const line = page.locator(".refused");
+  await expect(line).toHaveText(/^1 answer was not saved, because the date or time on this device is wrong/);
+  await expect(page.locator(".toast")).toHaveCount(0);
+  await answer(page, "2");
+  await expect(line).toHaveText(/^2 answers were not saved, because the date or time on this device is wrong/);
+  await expect(page.locator(".toast")).toHaveCount(0);
+  await page.getByRole("button", { name: "End session" }).click();
+  await expect(line).toHaveCount(1); // the summary says it once
+  await expect(line).toHaveText(/^2 answers were not saved/);
+  await expect(page.getByText("Your answers are saved")).toHaveCount(0);
+  await page.getByRole("button", { name: /Done/ }).click();
+  await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
+  await expect(page.locator(".toast")).toHaveCount(0); // already told
+  await page.getByRole("tab", { name: "Settings" }).click();
+  await expect(line).toHaveText(/^2 answers were not saved/);
+  await expect(page.getByText(/All changes are saved/)).toHaveCount(0);
+  expect(await serverRows(page, "review")).toHaveLength(0);
+});

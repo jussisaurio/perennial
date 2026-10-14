@@ -14,6 +14,8 @@ import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { courseStats } from "./stats";
 import { useSessionRunner, type Card, type Ended } from "./useSessionRunner";
+import { RefusedLine, useRefused } from "./Refused";
+import type { Refused } from "../data/store";
 import { useKeys, useShortcut } from "./useShortcut";
 import { track } from "../observability";
 import { DAILY_MINUTES } from "../data/practice";
@@ -97,7 +99,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
     noteTimer.current = setTimeout(() => setNote(null), ms);
   };
 
-  const { learner, tag, runner, card, done, active, ended, counts, practised, introduced, before, arrived, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
+  const { learner, tag, runner, card, done, active, ended, counts, refusedBefore, practised, introduced, before, arrived, serial, canUndo, start, finish, undo, exit } = useSessionRunner({
     lang,
     minutes,
     onExit,
@@ -139,8 +141,10 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
           <UndoIcon size={18} /> Undo
         </button>
       </header>
+      {/* During the session and on its summary: in place, never over the answer buttons. */}
+      <RefusedLine since={refusedBefore} />
       {done ? (
-        <Summary learner={learner} counts={counts} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} onWalk={onWalk} />
+        <Summary learner={learner} counts={counts} refusedBefore={refusedBefore} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} onWalk={onWalk} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={finish} />
       ) : null}
@@ -591,6 +595,7 @@ function Watcher({ view }: { view: VisitorView }) {
 function Summary({
   learner,
   counts,
+  refusedBefore,
   practised,
   introduced,
   before,
@@ -602,6 +607,7 @@ function Summary({
 }: {
   learner: Learner | null;
   counts: { intros: number; answers: number };
+  refusedBefore: Refused;
   practised: Set<string>;
   introduced: Set<string>;
   before: Map<string, PlantLook>;
@@ -642,7 +648,10 @@ function Summary({
   // ?? only for the type: a summary follows a started session, so the learner has loaded.
   const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? "", learner?.reviews.length ?? 0));
   const title = ended === "user" ? "Session paused" : "Session complete";
-  const why = ended === "user" ? "You can continue later. Your answers are saved." : ended === "empty" ? "Every plant has water." : null;
+  // Live: a refusal can arrive after the summary opens, as the last answers upload.
+  const refused = useRefused();
+  const lost = refused.count > refusedBefore.count;
+  const why = ended === "user" ? (lost ? "You can continue later." : "You can continue later. Your answers are saved.") : ended === "empty" ? "Every plant has water." : null;
   return (
     <main className="card summary">
       <div className="kicker read">
