@@ -21,6 +21,7 @@ import { WordPlant } from "./plant";
 import { speak } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { plural } from "./format";
+import { useNow } from "./useNow";
 import { useGardenScene, useWalkInput } from "./useGardenScene";
 import { learnerVisitors, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
@@ -39,9 +40,11 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
   const [focus] = useState(takeFocus);
   // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done,
-  // named as Today names it. Until the learner loads there are no plants (`source` is null), so nothing to water either.
-  const chunk = learner ? nextChunk(learner) : null;
-  const water = chunk ? { label: chunkLabel(chunk), start: () => onWater(chunk.minutes) } : undefined;
+  // named as Today names it, and worked out with the clock, so a walk open past midnight starts the new day.
+  // Until the learner loads there are no plants (`source` is null), so nothing to water either.
+  const now = useNow();
+  const chunk = learner ? nextChunk(learner, now) : null;
+  const water = learner && chunk ? { label: chunk.state === "finish" ? `${chunkLabel(chunk)} · ${chunk.minutes} min` : chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
   return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} water={water} focus={focus} />;
 }
 

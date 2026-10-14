@@ -58,7 +58,7 @@ test("empty lists say what is missing, with a small wink (#58)", async ({ page }
   await expect(page.getByText("No flowers yet. They are coming.")).toBeVisible();
   await page.getByRole("combobox").selectOption("new");
   await page.getByPlaceholder("Search words or meanings").fill("qqzzxx");
-  await expect(page.getByText("No word here. Maybe it is still a seed.")).toBeVisible();
+  await expect(page.getByText("No new word like this. Try All.")).toBeVisible(); // New has every word not started: say where else to look (#262)
 });
 
 test("keyboard: Enter starts today's session, / focuses the word search", async ({ page }) => {

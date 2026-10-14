@@ -666,7 +666,7 @@ function Summary({
             </>
           ) : (
             <>
-              You started {stats.learning} {stats.learning === 1 ? "word" : "words"}. {KNOWN_RULE}
+              You started {stats.learning} {stats.learning === 1 ? "word" : "words"}.{knew === 0 && <> {KNOWN_RULE}</>}
             </>
           )}
         </p>

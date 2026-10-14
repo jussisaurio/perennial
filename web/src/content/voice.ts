@@ -131,12 +131,21 @@ export function reservedStake(langName: string, code: string): { line: string; l
 
 export type WordsFilter = "all" | "known" | "learning" | "new" | "suspended" | "mine";
 
+/** A search that finds nothing: under All the course has no such word; elsewhere it may be in another list (#262). */
+const SEARCH_MISS: Record<WordsFilter, string> = {
+  all: "No word like this in the course.",
+  known: "No known word like this. Try All.",
+  learning: "No word like this in progress. Try All.",
+  new: "No new word like this. Try All.",
+  suspended: "No paused word like this. Try All.",
+  mine: "No word like this from your texts. Try All.",
+};
+
 /** The Words list with no rows: what is missing first, a small wink for some. */
 export function wordsEmptyLine(filter: WordsFilter, searching: boolean): string {
-  // "All" is the whole course, so a search there that finds nothing means the course has no such word.
-  if (searching && filter !== "all") return "No word here. Maybe it is still a seed.";
+  // "All" is the whole course, so it is empty only under a search.
+  if (searching || filter === "all") return SEARCH_MISS[filter];
   return {
-    all: "No word like this in the course.",
     known: "No flowers yet. They are coming.",
     learning: "No words in progress right now.",
     new: "No new words left in the course.",

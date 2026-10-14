@@ -83,6 +83,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
     // the other filters, what you have grown.
     // Words from your own texts, newest first (user words are ranked in the order added).
     const mine = () => [...learner.words.values()].filter((w) => w.source === "user").sort((a, b) => b.rank - a.rank);
+    // Every deck word can come in a session: the deck check wants 3 live sentences for each (deckProblems).
     const base = filter === "new" ? notStartedWords(learner) : filter === "mine" ? mine() : filter === "all" ? [...learner.words.values()] : learner.studied;
     return base
       .filter((l) => l.status !== "ignored")
@@ -363,7 +364,7 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
       </ul>
       <RewriteButton learner={learner} word={word} />
       <div className="row">
-        <button className="secondary" title="Paused words do not appear in sessions until you resume them" onClick={() => void setWordStatus(store, word.id, paused ? "active" : "paused")}>
+        <button className="secondary" onClick={() => void setWordStatus(store, word.id, paused ? "active" : "paused")}>
           {paused ? "Resume" : "Pause"}
         </button>
         <button

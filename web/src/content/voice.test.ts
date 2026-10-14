@@ -61,7 +61,7 @@ test("quiet copy: the clear part comes first, the wink after (#58, #68)", () => 
   expect(SLOW_DEVICE_NOTICE.startsWith("The garden was slow on this device, so it now uses bigger pixels.")).toBe(true);
   expect(restDayLine("Oct 3").startsWith("Oct 3: rest day.")).toBe(true);
   for (const f of FILTERS) expect(wordsEmptyLine(f, false)).toMatch(/^No /);
-  expect(wordsEmptyLine("known", true)).toBe("No word here. Maybe it is still a seed.");
+  expect(wordsEmptyLine("new", true)).toBe("No new word like this. Try All.");
   expect(reservedStake("Spanish", "es")).toEqual({ line: "Reserved for Spanish words", local: "Reservado" });
   expect(reservedStake("German", "de").local).toBe("Reserviert");
   expect(reservedStake("French", "fr").local).toBeUndefined();

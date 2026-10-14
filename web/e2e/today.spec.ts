@@ -137,7 +137,7 @@ test("the walk's Water button: the rest of today's 5 minutes, then 5 more once d
     await expect(page.getByText(/thirsty/)).toHaveCount(0);
     await button.click();
   };
-  await water("Finish today's 5 minutes");
+  await water("Finish today's 5 minutes · 3 min");
   await expect(timeLeft(page)).toHaveText("3 min left");
 
   await page.goto("/#/today");
