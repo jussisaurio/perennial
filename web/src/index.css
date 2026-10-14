@@ -617,7 +617,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 
 .gw-top { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; gap: 14px; align-items: center; justify-content: space-between; z-index: 3; }
 /* Numbers in the pixel font are hard to read at this size (5 looks like 8). */
-.gw-stats { font: 600 0.95rem/1.2 var(--ui); font-variant-numeric: tabular-nums; padding: 0.55rem 0.8rem; text-align: center; min-width: 0; }
+/* The padding makes it as tall as the 44 px buttons beside it. */
+.gw-stats { font: 600 0.95rem/1.2 var(--ui); font-variant-numeric: tabular-nums; padding: calc((44px - 1.2em) / 2) 0.8rem; text-align: center; min-width: 0; }
 .gw-seeds { color: var(--gw-muted); }
 .gw-bottom { position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); right: 16px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; z-index: 3; }
 
@@ -710,6 +711,9 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* The pixel font turns "fi" into a glyph that reads as "A". The font shorthand resets this, so set it on every element. */
 .gw, .gw * { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
 .gw-icon { min-width: 44px; justify-content: center; padding: 0.6rem; }
+/* The time and quality labels change with the choice: steady widths, so the buttons beside them do not shift (#274). */
+.gw-glyph { display: inline-block; width: 1em; text-align: center; }
+@media (min-width: 561px) { .gw-time { min-width: 7em; } .gw-quality { min-width: 10.4em; } }
 .gw-icon svg { display: block; }
 @media (max-width: 560px) { .gw-seeds { display: none; } .gw-top { gap: 10px; } }
 

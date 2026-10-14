@@ -245,7 +245,7 @@ export function GardenWalk({
         <div className="gw-tools">
           <SoundToggle className="gw-btn gw-icon" size={21} />
           <button
-            className="gw-btn"
+            className="gw-btn gw-quality"
             onClick={() => chooseDetail(detail === "normal" ? "low" : "normal")}
             title={detail === "normal" ? "Use low quality: bigger pixels, faster on older devices" : "Use normal quality"}
             aria-label={`Quality: ${DETAIL_LABEL[detail]}`}
@@ -253,8 +253,8 @@ export function GardenWalk({
             <span className={`gw-px gw-px-${detail}`} aria-hidden="true" />
             <span className="gw-tool-label">{DETAIL_LABEL[detail]}</span>
           </button>
-          <button className="gw-btn" onClick={() => setTime(NEXT_TIME[time])} title="Change the time of day" aria-label={`Time of day: ${TIME_LABEL[time]}`}>
-            <span aria-hidden="true">{time === "night" ? "☾" : time === "dusk" ? "◐" : "☀"}</span> <span className="gw-tool-label">{TIME_LABEL[time]}</span>
+          <button className="gw-btn gw-time" onClick={() => setTime(NEXT_TIME[time])} title="Change the time of day" aria-label={`Time of day: ${TIME_LABEL[time]}`}>
+            <span className="gw-glyph" aria-hidden="true">{time === "night" ? "☾" : time === "dusk" ? "◐" : "☀"}</span> <span className="gw-tool-label">{TIME_LABEL[time]}</span>
           </button>
         </div>
       </div>

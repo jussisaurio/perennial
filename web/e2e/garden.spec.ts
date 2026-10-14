@@ -25,8 +25,11 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
 
   const time = page.getByRole("button", { name: /^Time of day: / });
   const before = await time.textContent();
+  const width = (await time.boundingBox())!.width;
   await time.click();
   await expect(time).not.toHaveText(before!);
+  // A steady width, so the buttons beside it do not shift (#274).
+  expect((await time.boundingBox())!.width).toBe(width);
 
   // Trackpad swipes look around instead of scrolling.
   await page.mouse.move(400, 300);
