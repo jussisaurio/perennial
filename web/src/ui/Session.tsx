@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { didLine, firstPlantsLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
+import { askedForm, otherForm } from "../content/forms";
 import { locate } from "../content/text";
 import type { Learner, Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
@@ -211,7 +212,9 @@ function Kicker({ kind }: { kind: keyof typeof KICKERS }) {
   );
 }
 
-function Meaning({ word }: { word: Word }) {
+/** The dictionary word, and how the asked form belongs to it ("soy is a form of ser", #259). */
+function Meaning({ word, asked }: { word: Word; asked?: string }) {
+  const form = asked && otherForm(word, asked);
   return (
     <div className="meaning">
       <div>
@@ -219,6 +222,11 @@ function Meaning({ word }: { word: Word }) {
         {word.pos && <span className="pos">{word.pos}</span>}
         {word.gloss}
       </div>
+      {form && (
+        <div className="small form-of">
+          <b>{form}</b> is a form of <b>{word.lemma}</b>.
+        </div>
+      )}
       {word.notes && <div className="muted small">{word.notes}</div>}
     </div>
   );
@@ -319,6 +327,7 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
 
 function Recall({ card, tag, listen, onDone, kicker, hint }: { card: Card; tag: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS; hint: boolean }) {
   const { word, example } = card;
+  const asked = example?.cloze ? askedForm(word, example) : word.lemma;
   const { revealed, reveal, guarded, armed } = useReveal();
   const grade = (g: Grade) => guarded(() => onDone(g))();
   const audioText = example?.text ?? word.lemma;
@@ -344,7 +353,7 @@ function Recall({ card, tag, listen, onDone, kicker, hint }: { card: Card; tag: 
           "Listen. What does the sentence mean?"
         ) : (
           <>
-            What does <b lang={tag}>{example?.cloze || word.lemma}</b> mean?
+            What does <b lang={tag}>{asked}</b> mean?
           </>
         )}
       </p>
@@ -371,7 +380,7 @@ function Recall({ card, tag, listen, onDone, kicker, hint }: { card: Card; tag: 
         <>
           <div className="reveal">
             {example && <p className="translation">{example.translation}</p>}
-            <Meaning word={word} />
+            <Meaning word={word} asked={asked} />
           </div>
           <Actions>
             <button className="fail" onClick={() => grade(1)}>
@@ -472,7 +481,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
               Correct answer: <strong>{target}</strong>
             </span>
           )}
-          <Meaning word={word} />
+          <Meaning word={word} asked={example && askedForm(word, example)} />
         </div>
       )}
       <Actions>
