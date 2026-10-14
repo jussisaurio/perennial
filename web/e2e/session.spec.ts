@@ -27,10 +27,13 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   await expect(page.getByRole("button", { name: /New to me.*quick check comes in a moment/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /I knew it.*Back in about a week/ })).toBeVisible();
   const word = await page.locator(".word").textContent();
+  const sentence = (await page.locator("main.card .sentence").textContent())!.trim();
   await continueIntros(page, 4);
   await expect(kicker(page)).toHaveText(/quick check/);
   // About the same word, though the prompt may show another form of it ("vez" → "What does veces mean?").
   await expect(page.locator("main.card")).toHaveAttribute("data-lemma", word!.trim());
+  // In another sentence than the new-word card: one seen a moment ago proves little (#268).
+  await expect(page.locator("main.card .sentence")).not.toHaveText(sentence);
 });
 
 test("double-clicking Show does not grade the unseen answer", async ({ page }) => {

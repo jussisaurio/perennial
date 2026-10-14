@@ -29,12 +29,16 @@ export interface Card {
 
 export type Ended = "time" | "empty" | "user";
 
-/** Pick the sentence the learner has seen least, so no two reviews look the same. */
-function chooseExample(l: Learner, wordId: string): Sentence | undefined {
+/**
+ * Pick the sentence the learner has seen least, so no two reviews look the same.
+ * `onIntro`: the sentence on this word's new-word card, which records no review (#268).
+ */
+function chooseExample(l: Learner, wordId: string, onIntro: string | undefined): Sentence | undefined {
   const examples = l.sentences(wordId);
   if (!examples.length) return undefined;
   const seen = new Map<string, number>();
   for (const r of l.reviewsByWord.get(wordId) ?? []) if (r.sentence_id) seen.set(r.sentence_id, (seen.get(r.sentence_id) ?? 0) + 1);
+  if (onIntro) seen.set(onIntro, (seen.get(onIntro) ?? 0) + 1);
   const min = Math.min(...examples.map((e) => seen.get(e.id) ?? 0));
   const least = examples.filter((e) => (seen.get(e.id) ?? 0) === min);
   // Ties broken by the word and how often it was reviewed, not at random: the
@@ -82,6 +86,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   // Time on a "New to me" card: it records no review, so its time rides on the word's
   // quick check. Otherwise "minutes today" misses it and the day looks unfinished.
   const introMs = useRef(new Map<string, number>());
+  // The sentence on each new-word card this chunk: its quick check shows another one.
+  const introSentence = useRef(new Map<string, string>());
   const shownAt = useRef(0);
   const serial = useRef(0);
   // One entry per card answered, so Undo can revert what that answer recorded.
@@ -103,6 +109,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       before.current = new Map();
       arrived.current = [];
       introMs.current = new Map();
+      introSentence.current = new Map();
       setUndoStack([]);
       clock.current = new ActiveClock(Date.now());
       setActive(0);
@@ -133,7 +140,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       r.skip();
       return advance(r);
     }
-    const example = again?.wordId === word.id ? again.example : chooseExample(l, word.id);
+    const example = again?.wordId === word.id ? again.example : chooseExample(l, word.id, introSentence.current.get(word.id));
     const read = readMemory(l, word.id);
     shownAt.current = clock.current.elapsed;
     serial.current++;
@@ -260,6 +267,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       introduced.current.add(word.id);
       const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: word.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       if (!opts.alreadyKnown) introMs.current.set(word.id, ms);
+      if (example) introSentence.current.set(word.id, example.id);
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
       // No note: the button already said what happens ("Back in about a week").
       setUndoStack((s) => [...s, { reviewId, intro: true, wordId: word.id, example }]);
