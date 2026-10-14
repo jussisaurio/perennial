@@ -12,7 +12,7 @@
   --card: #fbf8f1;
   --ink: #1d1b16;
   --ink-2: #47423a;
-  --muted: #877f71;
+  --muted: #6f685b; /* 4.8:1 on the paper: helper text must be readable, not just quiet (#273). */
   --line: #ddd3c1;
   --line-soft: #e7dfd0;
   --persimmon: #dc5636;
@@ -148,7 +148,7 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink-2); box-shadow: 0 0 0 4px var(--sun-soft); }
 input::placeholder, textarea::placeholder { color: var(--muted); }
-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23877f71' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.2rem; }
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%236f685b' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.2rem; }
 input[type="range"] { padding: 0; accent-color: var(--persimmon); border: none; background: none; box-shadow: none; }
 input[type="file"] { padding: 0.5rem; }
 .form { display: grid; gap: 1rem; }
