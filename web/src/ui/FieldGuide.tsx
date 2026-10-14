@@ -13,6 +13,7 @@ import { track } from "../observability";
 import { useLatinNames } from "../content/latin";
 import { pageImage, type PageImage } from "./pageImage";
 import { download } from "./files";
+import { headword } from "../content/forms";
 
 export interface GuideRow {
   l: Word;
@@ -29,7 +30,7 @@ export function drawnRows<R extends GuideRow>(rows: readonly R[]): R[] {
 }
 
 /** Memoised, with an id-taking onOpen, so opening one page does not redraw every plant. */
-const Entry = memo(function Entry({ row, onOpen }: { row: GuideRow; onOpen: (id: string) => void }) {
+const Entry = memo(function Entry({ row, lang, onOpen }: { row: GuideRow; lang: string; onOpen: (id: string) => void }) {
   const read = row.mem.find((m) => m.skill === "read");
   const stage = plantStage(read);
   const bloomed = stage === "bloom";
@@ -39,7 +40,7 @@ const Entry = memo(function Entry({ row, onOpen }: { row: GuideRow; onOpen: (id:
       <span aria-hidden="true">
         <WordPlant word={row.l.lemma} s={read?.reps ? read.s : 0} stage={stage} size={104} />
       </span>
-      <strong>{row.l.lemma}</strong>
+      <strong>{headword(row.l, lang)}</strong>
       <span className="gl">{row.l.gloss}</span>
       {rare && <span className="guide-rare">{RARE_LABEL[rare]}</span>}
     </button>
@@ -110,7 +111,7 @@ export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string;
             ) : (
               <div className="guide-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
                 {item.entries.map((r) => (
-                  <Entry key={r.l.id} row={r} onOpen={openCard} />
+                  <Entry key={r.l.id} row={r} lang={lang} onOpen={openCard} />
                 ))}
               </div>
             )}
@@ -226,11 +227,11 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
   const latin = useLatinNames(lang)?.[`${row.l.lemma}|${row.l.pos}`];
   return (
     // The dialog itself has no padding, so a click whose target is the dialog is on the backdrop: it closes.
-    <dialog ref={ref} className="guide-page" onClose={onClose} aria-label={row.l.lemma} onClick={(e) => e.target === ref.current && ref.current?.close()}>
+    <dialog ref={ref} className="guide-page" onClose={onClose} aria-label={headword(row.l, lang)} onClick={(e) => e.target === ref.current && ref.current?.close()}>
       <div className="guide-page-body">
         <div className={stage === "bloom" ? "guide-sheet pressed" : "guide-sheet sketch"}>
           <WordPlant word={row.l.lemma} s={s} stage={stage} size={180} />
-          <h2>{row.l.lemma}</h2>
+          <h2>{headword(row.l, lang)}</h2>
           {stage === "bloom" && latin && <p className="guide-latin">{latin}</p>}
           <p className="gl">{row.l.gloss}</p>
           {rare && <p className="guide-rare">{RARE_LABEL[rare]}</p>}

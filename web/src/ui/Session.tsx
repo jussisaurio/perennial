@@ -328,7 +328,7 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
 
 function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card; tag: string; lang: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS; hint: boolean }) {
   const { word, example } = card;
-  const asked = example?.cloze ? askedForm(word, example) : word.lemma;
+  const asked = askedForm(word, example);
   const { revealed, reveal, guarded, armed } = useReveal();
   const grade = (g: Grade) => guarded(() => onDone(g))();
   const audioText = example?.text ?? word.lemma;
@@ -482,7 +482,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
               Correct answer: <strong>{target}</strong>
             </span>
           )}
-          <Meaning word={word} lang={lang} asked={example && askedForm(word, example)} />
+          <Meaning word={word} lang={lang} asked={askedForm(word, example)} />
         </div>
       )}
       <Actions>

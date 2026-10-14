@@ -15,6 +15,19 @@ test("the asked form loses only the capital the sentence gave it (#259)", () => 
   expect(askedForm(word(de, "sie"), { text: "Können Sie mir helfen?", cloze: "Sie" })).toBe("Sie");
 });
 
+test("a second sentence starts after . ! ? or a dialogue dash; the lemma's case decides, not the forms list (#259)", () => {
+  const ask = (lemma: string, text: string, cloze: string) => askedForm({ lemma }, { text, cloze });
+  expect(ask("doch", "Hast du keinen Hunger? – Doch!", "Doch")).toBe("doch");
+  expect(ask("bitte", "Danke! – Bitte!", "Bitte")).toBe("bitte");
+  expect(ask("gern", "Danke! Gern geschehen.", "Gern")).toBe("gern");
+  expect(ask("jawohl", "„Verstanden?“ „Jawohl!“", "Jawohl")).toBe("jawohl");
+  expect(ask("pues", "¿No quieres? Pues me lo como yo.", "Pues")).toBe("pues");
+  // "fass" (grab) is not in fassen's forms; "Fass" would read as the noun, a barrel.
+  expect(ask("fassen", "Fass das nicht an!", "Fass")).toBe("fass");
+  // A capital after a comma is the word's own.
+  expect(ask("sie", "Ja, Sie haben recht.", "Sie")).toBe("Sie");
+});
+
 test("the answer names the dictionary word only when the asked form is another one (#259)", () => {
   const ich = word(de, "ich");
   expect(otherForm(ich, askedForm(ich, { text: "Gib mir das Buch.", cloze: "mir" }))).toBe("mir");
