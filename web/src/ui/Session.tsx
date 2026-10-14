@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { didLine, firstPlantsLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
-import { askedForm, otherForm } from "../content/forms";
+import { askedForm, headword, otherForm } from "../content/forms";
 import { locate } from "../content/text";
 import type { Learner, Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
@@ -164,12 +164,12 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
 
 function CardView({ card, tag, lang, hint, onDone }: { card: Card; tag: string; lang: string; hint: boolean; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
   const { task } = card;
-  if (task.kind === "intro") return <Intro card={card} tag={tag} onDone={onDone} />;
+  if (task.kind === "intro") return <Intro card={card} tag={tag} lang={lang} onDone={onDone} />;
   if (task.skill === "write") return <Write card={card} tag={tag} lang={lang} onDone={onDone} kicker={task.retry ? "retry" : task.isNew ? "newWrite" : "write"} />;
   const listen = task.skill === "listen";
   // A first "read" review is the check on a word introduced moments ago.
   const kicker = task.retry ? "retry" : task.isNew ? (listen ? "newListen" : "check") : listen ? "listen" : "read";
-  return <Recall card={card} tag={tag} listen={listen} onDone={onDone} kicker={kicker} hint={hint && kicker === "check"} />;
+  return <Recall card={card} tag={tag} lang={lang} listen={listen} onDone={onDone} kicker={kicker} hint={hint && kicker === "check"} />;
 }
 
 function Speaker({ text, tag, slow }: { text: string; tag: string; slow?: boolean }) {
@@ -213,18 +213,19 @@ function Kicker({ kind }: { kind: keyof typeof KICKERS }) {
 }
 
 /** The dictionary word, and how the asked form belongs to it ("soy is a form of ser", #259). */
-function Meaning({ word, asked }: { word: Word; asked?: string }) {
+function Meaning({ word, lang, asked }: { word: Word; lang: string; asked?: string }) {
   const form = asked && otherForm(word, asked);
+  const head = headword(word, lang);
   return (
     <div className="meaning">
       <div>
-        <strong>{word.lemma}</strong>
+        <strong>{head}</strong>
         {word.pos && <span className="pos">{word.pos}</span>}
         {word.gloss}
       </div>
       {form && (
         <div className="small form-of">
-          <b>{form}</b> is a form of <b>{word.lemma}</b>.
+          <b>{form}</b> is a form of <b>{head}</b>.
         </div>
       )}
       {word.notes && <div className="muted small">{word.notes}</div>}
@@ -259,7 +260,7 @@ function useReveal() {
 
 // The meaning stays hidden until the learner has tried to recall it: once an
 // answer is in view, "I knew it" is too easy to believe (#196).
-function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
+function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
   const { word, example } = card;
   const { revealed, reveal, guarded, armed } = useReveal();
   const play = useCallback(() => void speakAll(example ? [word.lemma, example.text] : [word.lemma], tag), [word.lemma, example, tag]);
@@ -276,7 +277,7 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
     <main className="card" data-armed={armed || undefined}>
       <Kicker kind="intro" />
       <div className="word">
-        {word.lemma} <Speaker text={word.lemma} tag={tag} />
+        {headword(word, lang)} <Speaker text={word.lemma} tag={tag} />
       </div>
       {revealed && (
         <div className="gloss">
@@ -325,7 +326,7 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
   );
 }
 
-function Recall({ card, tag, listen, onDone, kicker, hint }: { card: Card; tag: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS; hint: boolean }) {
+function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card; tag: string; lang: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS; hint: boolean }) {
   const { word, example } = card;
   const asked = example?.cloze ? askedForm(word, example) : word.lemma;
   const { revealed, reveal, guarded, armed } = useReveal();
@@ -380,7 +381,7 @@ function Recall({ card, tag, listen, onDone, kicker, hint }: { card: Card; tag: 
         <>
           <div className="reveal">
             {example && <p className="translation">{example.translation}</p>}
-            <Meaning word={word} asked={asked} />
+            <Meaning word={word} lang={lang} asked={asked} />
           </div>
           <Actions>
             <button className="fail" onClick={() => grade(1)}>
@@ -481,7 +482,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
               Correct answer: <strong>{target}</strong>
             </span>
           )}
-          <Meaning word={word} asked={example && askedForm(word, example)} />
+          <Meaning word={word} lang={lang} asked={example && askedForm(word, example)} />
         </div>
       )}
       <Actions>

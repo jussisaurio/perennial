@@ -16,6 +16,7 @@ import { StageGlyph } from "./StageGlyph";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
 import { wordsEmptyLine } from "../content/voice";
+import { headword } from "../content/forms";
 
 type Filter = "all" | WordState | "suspended" | "mine";
 const SKILL_ORDER = ["read", "listen", "write"];
@@ -167,7 +168,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
             <>
               <button className="word-row" onClick={() => setOpen(open === l.id ? null : l.id)} aria-expanded={open === l.id}>
                 <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "paused"} />
-                <strong>{l.lemma}</strong>
+                <strong>{headword(l, lang)}</strong>
                 <span className="gl">{l.gloss}</span>
                 <span className="skills">
                   {practisedSkills(mem).map((m) => (
