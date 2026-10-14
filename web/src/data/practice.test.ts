@@ -47,3 +47,17 @@ test("today's 5 minutes: start, finish the rest, and done once under a minute is
   const yesterday = learner(10, [], [{ word_id: "w", grade: 3, reviewed_at: at(now - DAY_MS), duration_ms: 5 * 60_000 }]);
   expect(nextChunk(yesterday, now)).toEqual({ state: "start", minutes: 5 });
 });
+
+test("a fast learner who answers all of the day's planned cards is done for the day (#255)", () => {
+  // Day one: the planner fills 5 minutes with new words, priced at what a new word usually takes.
+  const planned = sessionPlan(learner(40, []), 5, false, now).queue;
+  const answers = (tasks: typeof planned) => tasks.map((t) => ({ word_id: t.wordId, grade: 3, reviewed_at: at(now - 60_000), duration_ms: 8_000 }));
+  // Each word took 8 s, not the planned 25 s: under 2 real minutes, but every planned card is done.
+  expect(nextChunk(learner(40, [], answers(planned)), now)).toEqual({ state: "done", minutes: 5 });
+  // Half of them is half of the day: the rest is still to do.
+  expect(nextChunk(learner(40, [], answers(planned.slice(0, planned.length / 2))), now)).toEqual({ state: "finish", minutes: 3 });
+  // A plant watered quickly counts as the time a review is planned for, not as a new word.
+  const old = { word_id: "a", grade: 3, reviewed_at: at(now - 10 * DAY_MS), duration_ms: 8_000 };
+  const watered = Array.from({ length: 20 }, () => ({ ...old, reviewed_at: at(now - 60_000), duration_ms: 1_000 }));
+  expect(nextChunk(learner(40, [], [old, ...watered]), now)).toEqual({ state: "finish", minutes: 2 });
+});

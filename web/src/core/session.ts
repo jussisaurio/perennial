@@ -15,6 +15,11 @@ export type Task =
 /** Time per task, ms. `intro` covers the intro and its follow-up test. */
 const COSTS: Record<"intro" | Skill, number> = { intro: 25_000, read: 8_000, listen: 10_000, write: 14_000 };
 
+/** The time the plan gave an answer. A word's first answer ever is its quick check (or "Already know it"): it also pays for the intro. */
+export function plannedMs(skill: Skill, firstAnswer: boolean): number {
+  return firstAnswer ? COSTS.intro : COSTS[skill];
+}
+
 /** First practice of a newly unlocked skill (listening, writing), per session. */
 const MAX_NEW_SKILLS = 4;
 
