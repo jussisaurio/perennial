@@ -47,6 +47,31 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   await expect(hint).toHaveCount(0);
 });
 
+test("German: nouns come with their article on the card and in Words; an answer says whose form was asked (#259, #260)", async ({ page }) => {
+  await startCourse(page, "German");
+  await startSession(page);
+  // The course starts with a noun: its card shows the article.
+  await expect(kicker(page)).toHaveText(/new word/);
+  const noun = (await page.locator(".word").textContent())!.trim();
+  expect(noun).toMatch(/^(der|die|das) \S+$/);
+  // Through the new words and their quick checks until one asks about another form of its word.
+  // Which sentence a card shows is fixed by the word, so this is the same card every run.
+  let form = "";
+  for (let i = 0; i < 30 && !form; i++) {
+    await reveal(page);
+    if ((await page.locator(".form-of").count()) > 0) form = (await page.locator(".form-of").textContent())!;
+    else await advance(page, "1");
+  }
+  const asked = (await page.locator(".prompt b").textContent())!;
+  expect(form).toMatch(new RegExp(`^${asked} is a form of \\S+( \\S+)?\\.$`));
+
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.getByRole("button", { name: /^Done/ }).click();
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByPlaceholder("Search words or meanings").fill(noun.toLowerCase()); // the article finds it too
+  await expect(page.locator(`.word-row strong:text-is("${noun}")`)).toBeVisible();
+});
+
 test("double-clicking Show does not grade the unseen answer", async ({ page }) => {
   await startCourse(page);
   await startSession(page);

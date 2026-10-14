@@ -16,6 +16,7 @@ import { StageGlyph } from "./StageGlyph";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
 import { wordsEmptyLine } from "../content/voice";
+import { headword } from "../content/forms";
 
 type Filter = "all" | WordState | "suspended" | "mine";
 const SKILL_ORDER = ["read", "listen", "write"];
@@ -91,10 +92,11 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
       .filter(({ l, state }) => {
         if (filter === "suspended") return l.status === "paused";
         if (filter !== "all" && filter !== "mine" && state !== filter) return false;
-        return !needle || l.lemma.toLocaleLowerCase().includes(needle) || l.gloss.toLocaleLowerCase().includes(needle) || l.forms.some((f) => f.includes(needle));
+        // The word as the list shows it, so "die katze" finds die Katze (#260).
+        return !needle || headword(l, lang).toLocaleLowerCase().includes(needle) || l.gloss.toLocaleLowerCase().includes(needle) || l.forms.some((f) => f.includes(needle));
       })
       .sort((a, b) => (filter === "mine" || filter === "new" ? 0 : (a.l.rank ?? 1e9) - (b.l.rank ?? 1e9) || a.l.lemma.localeCompare(b.l.lemma)));
-  }, [learner, q, filter]);
+  }, [learner, q, filter, lang]);
   // The flowers view draws only words that have started growing; the count says what is on screen.
   const shown = useMemo(() => (view === "guide" ? drawnRows(rows) : rows), [view, rows]);
 
@@ -167,7 +169,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
             <>
               <button className="word-row" onClick={() => setOpen(open === l.id ? null : l.id)} aria-expanded={open === l.id}>
                 <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "paused"} />
-                <strong>{l.lemma}</strong>
+                <strong>{headword(l, lang)}</strong>
                 <span className="gl">{l.gloss}</span>
                 <span className="skills">
                   {practisedSkills(mem).map((m) => (
