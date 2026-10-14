@@ -42,13 +42,10 @@ jobs:
         run: bun run test
       - name: Wait for Postgres + Electric
         # Started early (above), so the image pulls ran during the other setup. Fail here, not later in the tests.
-        # Both must be ready: Postgres accepts connections, and Electric says "active" (it answers "starting" first).
+        # Electric answers 202 "starting" first, and "active" only once its Postgres connection is up.
         run: |
-          for i in $(seq 1 90); do
-            docker compose exec -T postgres pg_isready -U perennial -q 2>/dev/null && curl -sf localhost:30009/v1/health | grep -q '"active"' && exit 0
-            sleep 1
-          done
-          echo "Electric was not healthy after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
+          for i in $(seq 1 90); do curl -sf localhost:30009/v1/health | grep -q '"active"' && exit 0; sleep 1; done
+          echo "Postgres + Electric were not ready after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
       - name: Server tests (against Postgres + Electric)
         working-directory: server
         run: bun test
@@ -150,13 +147,10 @@ jobs:
 
       - name: Wait for Postgres + Electric
         # Started early (above), so the image pulls ran during the other setup. Fail here, not later in the tests.
-        # Both must be ready: Postgres accepts connections, and Electric says "active" (it answers "starting" first).
+        # Electric answers 202 "starting" first, and "active" only once its Postgres connection is up.
         run: |
-          for i in $(seq 1 90); do
-            docker compose exec -T postgres pg_isready -U perennial -q 2>/dev/null && curl -sf localhost:30009/v1/health | grep -q '"active"' && exit 0
-            sleep 1
-          done
-          echo "Electric was not healthy after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
+          for i in $(seq 1 90); do curl -sf localhost:30009/v1/health | grep -q '"active"' && exit 0; sleep 1; done
+          echo "Postgres + Electric were not ready after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
       - name: Run e2e
         working-directory: web
         run: bunx playwright test --shard=${{ matrix.shard }}/4
