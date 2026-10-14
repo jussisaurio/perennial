@@ -34,6 +34,17 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   await expect(page.locator("main.card")).toHaveAttribute("data-lemma", word!.trim());
   // In another sentence than the new-word card: one seen a moment ago proves little (#268).
   await expect(page.locator("main.card .sentence")).not.toHaveText(sentence);
+  // The hint explains the first few checks, and stays when the answer shows, so the card does not jump (#270).
+  const hint = page.getByText("Think of the meaning first.", { exact: false });
+  await expect(hint).toBeVisible();
+  await reveal(page);
+  await expect(hint).toBeVisible();
+  await advance(page, "2");
+  await answer(page, "2");
+  await answer(page, "2");
+  // The fourth check: no hint any more.
+  await expect(kicker(page)).toHaveText(/quick check/);
+  await expect(hint).toHaveCount(0);
 });
 
 test("double-clicking Show does not grade the unseen answer", async ({ page }) => {

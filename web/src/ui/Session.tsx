@@ -47,6 +47,9 @@ function Highlight({ text, part, blank }: { text: string; part: string; blank?: 
   );
 }
 
+/** How many answers the learner gives before the quick-check hint stops showing. */
+const HINT_ANSWERS = 3;
+
 export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string; onExit: () => void; onWalk: () => void; minutes: number }) {
   const [help, setHelp] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -111,6 +114,9 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
 
   if (!runner) return <div className="session center muted">Preparing…</div>;
 
+  // The quick-check hint is for a learner's first few answers; after that it is noise (#270).
+  const hint = !!learner && learner.reviews.filter((r) => r.kind === "review").length < HINT_ANSWERS;
+
   const elapsed = Math.min(1, active / runner.budgetMs);
   const overtime = runner.timeUp(active);
 
@@ -135,7 +141,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       {done ? (
         <Summary learner={learner} counts={counts} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onExit={onExit} onWalk={onWalk} />
       ) : card ? (
-        <CardView key={serial} card={card} tag={tag} lang={lang} onDone={finish} />
+        <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={finish} />
       ) : null}
       {note && (
         <div className="session-note" role="status">
@@ -155,14 +161,14 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   );
 }
 
-function CardView({ card, tag, lang, onDone }: { card: Card; tag: string; lang: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
+function CardView({ card, tag, lang, hint, onDone }: { card: Card; tag: string; lang: string; hint: boolean; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
   const { task } = card;
   if (task.kind === "intro") return <Intro card={card} tag={tag} onDone={onDone} />;
   if (task.skill === "write") return <Write card={card} tag={tag} lang={lang} onDone={onDone} kicker={task.retry ? "retry" : task.isNew ? "newWrite" : "write"} />;
   const listen = task.skill === "listen";
   // A first "read" review is the check on a word introduced moments ago.
   const kicker = task.retry ? "retry" : task.isNew ? (listen ? "newListen" : "check") : listen ? "listen" : "read";
-  return <Recall card={card} tag={tag} listen={listen} onDone={onDone} kicker={kicker} />;
+  return <Recall card={card} tag={tag} listen={listen} onDone={onDone} kicker={kicker} hint={hint && kicker === "check"} />;
 }
 
 function Speaker({ text, tag, slow }: { text: string; tag: string; slow?: boolean }) {
@@ -311,7 +317,7 @@ function Intro({ card, tag, onDone }: { card: Card; tag: string; onDone: (g: Gra
   );
 }
 
-function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS }) {
+function Recall({ card, tag, listen, onDone, kicker, hint }: { card: Card; tag: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS; hint: boolean }) {
   const { word, example } = card;
   const { revealed, reveal, guarded, armed } = useReveal();
   const grade = (g: Grade) => guarded(() => onDone(g))();
@@ -342,7 +348,8 @@ function Recall({ card, tag, listen, onDone, kicker }: { card: Card; tag: string
           </>
         )}
       </p>
-      {kicker === "check" && !revealed && <p className="hint">Think of the meaning first. Then show the answer and say honestly if you remembered it. Forgetting is normal.</p>}
+      {/* It stays when the answer shows, so the card does not jump. */}
+      {hint && <p className="hint">Think of the meaning first. Then show the answer and say honestly if you remembered it. Forgetting is normal.</p>}
       {listen && !revealed ? (
         <div className="listen">
           <button className="play" onClick={play} aria-label="Play again">
@@ -620,7 +627,7 @@ function Summary({
     });
     return grew.length ? grew : null;
   });
-  const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? ""));
+  const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? "", learner?.reviews.length ?? 0));
   const title = ended === "user" ? "Session paused" : "Session complete";
   const why = ended === "user" ? "You can continue later. Your answers are saved." : ended === "empty" ? "Every plant has water." : null;
   return (

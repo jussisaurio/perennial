@@ -52,12 +52,16 @@ export function loadingLine(now = new Date()): string {
   );
 }
 
-/** The end-of-session headline, from the garden's point of view. */
-export function summaryHeadline(lang: string, now = new Date()): { line: string; small?: string } {
-  if (rareDay(5, "praise-" + lang, now)) return lang === "de" ? { line: "Gut gemacht.", small: "Well done." } : { line: "¡Muy bien!", small: "Very good." };
+/**
+ * The end-of-session headline, from the garden's point of view. `answers`: the
+ * learner's answers so far, so each session of the day gets its own pick (#270).
+ */
+export function summaryHeadline(lang: string, answers: number, now = new Date()): { line: string; small?: string } {
+  const key = (name: string) => `${name}:${answers}`;
+  if (rareDay(5, key("praise-" + lang), now)) return lang === "de" ? { line: "Gut gemacht.", small: "Well done." } : { line: "¡Muy bien!", small: "Very good." };
   const night = now.getHours() >= 22 || now.getHours() < 5;
-  if (night) return { line: daily(["The moon saw that.", "Well done. The owls agree.", "Good work. Very quiet work."], "summary-night", now) };
-  if (now.getMonth() === 9 && rareDay(3, "pumpkin", now)) return { line: "Good work. The pumpkins are jealous." };
+  if (night) return { line: daily(["The moon saw that.", "Well done. The owls agree.", "Good work. Very quiet work."], key("summary-night"), now) };
+  if (now.getMonth() === 9 && rareDay(3, key("pumpkin"), now)) return { line: "Good work. The pumpkins are jealous." };
   return {
     line: daily(
       [
@@ -72,7 +76,7 @@ export function summaryHeadline(lang: string, now = new Date()): { line: string;
         "Nice. The soil feels good about it.",
         "Well done. A worm nodded.",
       ],
-      "summary",
+      key("summary"),
       now,
     ),
   };
