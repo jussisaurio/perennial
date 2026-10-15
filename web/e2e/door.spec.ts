@@ -17,20 +17,20 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
 });
 
-test("the locked door says so, by a tap or its button; without the word 'llave' there is no key", async ({ page }) => {
+test("the locked door says so by its button, to screen readers too; without the word 'llave' there is no key", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   // The demo learner's 30 words are the most common ones: llave is not among them.
   await page.goto("/?demo=es:30#/today");
   await openWalk(page);
   expect(await doorNow(page)).toMatchObject({ state: "locked", key: null });
-  await page.mouse.click(...(await standAtDoor(page, "door")));
-  await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
-  // The line goes after a few seconds. Near the door, a button does the same as a tap, for keyboards and screen readers.
-  await expect(page.locator(".gw-say")).toBeHidden({ timeout: 8000 });
+  // Near the door, a button does what a tap does (the tap is in the next test), for keyboards and screen readers.
+  await standAtDoor(page, "door");
   await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
   await page.getByRole("button", { name: "Try the door" }).click();
   await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
+  // The drawn line is hidden from screen readers; a status says it to them.
+  await expect(page.getByRole("status").filter({ hasText: "Locked." })).toHaveText("Locked. The key must be somewhere.");
   expect(await doorNow(page)).toMatchObject({ state: "locked" });
   expect(errors).toEqual([]);
 });

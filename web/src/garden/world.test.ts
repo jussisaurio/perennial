@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { collide, DOOR_HALF, groupOf, HEDGE, layout, viewpoint, type GardenPlant } from "./world";
+import { collide, DOOR_HALF, groupOf, HEDGE, layout, viewpoint, walk, type GardenPlant } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
@@ -86,5 +86,9 @@ describe("garden layout", () => {
     expect(collide(l, l.gate.x + 2, b.maxZ + 0.3, 0.28, true).z).toBeLessThan(b.maxZ);
     expect(Math.abs(collide(l, l.gate.x + DOOR_HALF + 0.1, b.maxZ + 0.6, 0.28, true).x - l.gate.x)).toBeLessThan(DOOR_HALF);
     expect(collide(l, o.x + o.w, o.z, 0.28, true).x).toBeLessThan(o.x + o.w / 2);
+    // A long step (a ctrl+wheel notch is 2 m) beside the door stops at the hedge; through the door it goes in.
+    const edge = b.maxZ - 0.3;
+    expect(walk(l, l.gate.x + 2, edge, l.gate.x + 2, edge + 2, true).z).toBeLessThan(b.maxZ);
+    expect(walk(l, l.gate.x, edge, l.gate.x, edge + 2, true).z).toBeCloseTo(edge + 2);
   });
 });

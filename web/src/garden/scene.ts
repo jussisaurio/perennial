@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { collide, DOOR_HALF, HEDGE, hedgeSpan, viewpoint, type Layout, type PlacedPlant } from "./world";
+import { DOOR_HALF, HEDGE, hedgeSpan, viewpoint, walk, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf, stemHeight } from "../ui/plant";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
@@ -1119,6 +1119,7 @@ export class GardenScene {
   tapVisitor(id: VisitorId) {
     this.guests.tap(id);
     this.sceneryTap = null;
+    this.line = null;
   }
 
   /**
@@ -1149,6 +1150,7 @@ export class GardenScene {
   tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
     this.sceneryTap = { ...s, until: this.elapsed + 4 };
     this.guests.untap();
+    this.line = null;
   }
 
   frogAwake(): boolean {
@@ -1158,6 +1160,7 @@ export class GardenScene {
   /** A visitor says something in a small bubble for a few seconds (the frog's croak). */
   say(id: VisitorId, text: string) {
     this.guests.say(id, text);
+    this.line = null;
   }
 
   async loadPlants(): Promise<void> {
@@ -1403,7 +1406,7 @@ export class GardenScene {
   /** Walk straight ahead (or back, if negative) by `metres`. */
   step(metres: number) {
     this.glide = null;
-    ({ x: this.x, z: this.z } = collide(this.layout, this.x - Math.sin(this.yaw) * metres, this.z - Math.cos(this.yaw) * metres, undefined, this.door.state === "open"));
+    ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, this.x - Math.sin(this.yaw) * metres, this.z - Math.cos(this.yaw) * metres, this.door.state === "open"));
   }
 
   turn(amount: number) {
@@ -1488,7 +1491,7 @@ export class GardenScene {
       const fz = -Math.cos(this.yaw);
       const nx = this.x + ((fx * move.y + -fz * move.x) / Math.max(1, len)) * speed * dt;
       const nz = this.z + ((fz * move.y + fx * move.x) / Math.max(1, len)) * speed * dt;
-      ({ x: this.x, z: this.z } = collide(this.layout, nx, nz, undefined, this.door.state === "open"));
+      ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, nx, nz, this.door.state === "open"));
       this.bob += dt * speed * 3.2;
     }
     if (this.glide) {

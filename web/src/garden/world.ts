@@ -229,6 +229,18 @@ export function collide(l: Layout, x: number, z: number, rad = 0.28, doorOpen = 
   return { x, z };
 }
 
+/**
+ * Move a walker from (x, z) toward (toX, toZ), in short pieces through collide.
+ * collide sees only where a move ends: one long move (a ctrl+wheel step is 2 m)
+ * could end past the hedge's middle and land in the orchard, beside the door (#315).
+ */
+export function walk(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean): { x: number; z: number } {
+  const n = Math.max(1, Math.ceil(Math.hypot(toX - x, toZ - z) / 0.25));
+  const [dx, dz] = [(toX - x) / n, (toZ - z) / n];
+  for (let i = 0; i < n; i++) ({ x, z } = collide(l, x + dx, z + dz, undefined, doorOpen));
+  return { x, z };
+}
+
 /** Where to stand to look at a plant: on the path in front of its bed. */
 export function viewpoint(l: Layout, p: PlacedPlant): { x: number; z: number; yaw: number } {
   const bed = l.beds[p.bed];

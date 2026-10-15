@@ -41,8 +41,10 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const store = useStore();
   // The door in the hedge (#315): open for good once opened; until then the key lies by it once "key" brought it.
   // Until the learner loads there is no garden to walk (`source` is null), so "locked" is never shown then.
+  // door_open is missing from course rows Electric streams before its first course change after the migration: closed, as it was.
   const door = useMemo(() => {
     const state: DoorState = !learner ? "locked" : learner.course.door_open ? "open" : gardenBrought(learner).has("key") ? "key" : "locked";
+    // A write the server refuses is told by the refused-writes notice (#253); this walk keeps its door open.
     return { state, open: () => void openDoor(store, lang).catch((e) => console.error("door not saved", e)) };
   }, [learner, store, lang]);
   const [focus] = useState(takeFocus);
@@ -244,12 +246,17 @@ export function GardenWalk({
       <canvas
         ref={canvas}
         className="gw-canvas"
+        tabIndex={-1}
         aria-label="Your word garden in 3D. Use W, A, S and D or the arrow keys to walk. Drag to look around. Use the Next plant button to go from plant to plant."
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       />
+      {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. */}
+      <div className="sr-only" role="status">
+        {labels.find((l) => l.kind === "line")?.text}
+      </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
           l.kind === "say" || l.kind === "line" ? (
@@ -375,7 +382,14 @@ export function GardenWalk({
 
       <div className="gw-bottom">
         {doorNear && !selected && (
-          <button className="gw-btn" onClick={() => scene.current?.doorAct(doorNear)}>
+          <button
+            className="gw-btn"
+            onClick={() => {
+              scene.current?.doorAct(doorNear);
+              // An open door has no button: keep keyboard focus in the walk, not lost to the page.
+              if (doorNear === "open") canvas.current?.focus({ preventScroll: true });
+            }}
+          >
             {DOOR_BUTTON[doorNear]}
           </button>
         )}
