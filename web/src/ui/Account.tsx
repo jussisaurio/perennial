@@ -113,7 +113,7 @@ export function SignIn({ cta }: { cta: string }) {
       </form>
     );
 
-  const to = <strong>{email}</strong>;
+  const to = <strong>{email.trim()}</strong>;
   return (
     <form
       className="form"

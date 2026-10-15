@@ -79,7 +79,8 @@ test("the code can be sent again after a short wait, and it is the same code", a
   await expect(page.getByText("We sent a 6-digit code")).toBeVisible();
   const code = await codeFor(page, address);
 
-  await expect(page.getByRole("button", { name: "Send the code again in 30 s" })).toBeDisabled();
+  // The clock still runs: the wait may already show 29 s.
+  await expect(page.getByRole("button", { name: /Send the code again in \d+ s/ })).toBeDisabled();
   await page.clock.fastForward(30_000);
   const again = page.getByRole("button", { name: "Send the code again", exact: true });
   await expect(again).toBeEnabled();
@@ -108,4 +109,24 @@ test("a sign-in with no answer still signs in, when the server did sign in", asy
   await page.clock.fastForward(20_000);
   await reloaded;
   await expect(page.getByText(address)).toBeVisible();
+});
+
+test("a sign-in with no answer, when the server did not sign in, says so and can be tried again", async ({ page }) => {
+  const address = newEmail();
+  await openEmailStep(page, address);
+  await page.getByRole("button", { name: "Send me a code" }).click();
+  await expect(page.getByText("We sent a 6-digit code")).toBeVisible();
+  const code = await codeFor(page, address);
+  await page.getByLabel("Code", { exact: true }).fill(code);
+
+  // The request never reaches the server.
+  let held = false;
+  await page.route("**/api/auth/sign-in/email-otp", () => void (held = true), { times: 1 });
+  await page.locator("form").getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Signing in…" })).toBeVisible();
+  await expect.poll(() => held).toBe(true);
+  await page.clock.fastForward(20_000);
+  await expect(page.getByText("Signing in took too long.")).toBeVisible();
+  // The code was never used, so it still works.
+  await enterCode(page, address, code);
 });

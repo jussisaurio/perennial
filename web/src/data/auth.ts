@@ -76,16 +76,14 @@ class TimedOut extends Error {}
  * request it makes. Uses setTimeout, not AbortSignal.timeout, so tests can
  * move the clock.
  */
-async function withTimeout<T extends { error: unknown }>(step: "send" | "sign-in", path: string, fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
+async function withTimeout<T>(step: "send" | "sign-in", path: string, fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
   const controller = new AbortController();
   const started = performance.now();
   const slow = setTimeout(() => reportSlowAuth(step, path, Math.round(performance.now() - started), protocolOf(path)), SLOW_REPORT_MS);
   const deadline = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
   try {
-    const r = await fn(controller.signal);
-    // An aborted request can come back as an error instead of a throw.
-    if (r.error && controller.signal.aborted) throw new TimedOut();
-    return r;
+    // An abort always throws here (the client has no catchAllError), never comes back as `error`.
+    return await fn(controller.signal);
   } catch (e) {
     if (controller.signal.aborted) throw new TimedOut();
     throw e;
@@ -143,15 +141,18 @@ async function signedInAs(email: string): Promise<SessionUser> {
 
 export async function signInWithCode(email: string, otp: string): Promise<SessionUser> {
   const started = performance.now();
-  // Filled in by the request below; read after a timeout too.
-  const seen: { before?: { id: string; isAnonymous?: boolean | null } } = {};
+  let before;
+  try {
+    before = (await withTimeout("sign-in", "/get-session", (signal) => authClient.getSession({ fetchOptions: { signal } }))).data?.user;
+  } catch (e) {
+    // Nothing was sent yet, so there is nothing to recover.
+    if (e instanceof TimedOut) throw tooLong();
+    throw e;
+  }
   let user: SessionUser;
   let timedOut = false;
   try {
-    const r = await withTimeout("sign-in", "/sign-in/email-otp", async (signal) => {
-      seen.before = (await authClient.getSession({ fetchOptions: { signal } })).data?.user;
-      return authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } });
-    });
+    const r = await withTimeout("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } }));
     if (r.error || !r.data) throw new AuthError(r.error?.code ?? "sign_in_failed", r.error?.status === 429 ? "Too many tries. Wait a few minutes." : "That code is not correct, or it has expired.");
     user = toUser(r.data.user);
   } catch (e) {
@@ -160,7 +161,6 @@ export async function signInWithCode(email: string, otp: string): Promise<Sessio
     user = await signedInAs(email);
     timedOut = true;
   }
-  const before = seen.before;
   if (before?.isAnonymous) {
     track("email_added");
     linkAccount(user.id);
@@ -168,8 +168,9 @@ export async function signInWithCode(email: string, otp: string): Promise<Sessio
     adoptOnDevice(before.id, user.id);
   }
   track("signin_done", { ms: Math.round(performance.now() - started), timedOut });
-  // The lost answer would have told the app the user changed (and so reloaded it, App.tsx). After the adoption above.
-  if (timedOut) authClient.$store.notify("$sessionSignal");
+  // The lost answer would have told the app the user changed. Reload as the
+  // account now (after the adoption above): a session refetch could hang too.
+  if (timedOut) location.reload();
   return user;
 }
 
