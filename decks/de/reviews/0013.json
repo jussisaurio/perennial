@@ -1,0 +1,9 @@
+{
+  "file": "source/0013.json",
+  "sha256": "9fd39cebc73c883fbdc5055d6bedc1fa32d426a7b9cac42ef3b3e0bc7424db1c",
+  "author": "claude-agent:orchard-author-2026-10-15",
+  "reviewer": "claude-agent:de-proofreader-0013-2026-10-15",
+  "reviewedAt": "2026-10-15",
+  "verdict": "approved",
+  "notes": "11 orchard nouns checked one by one. Pfirsich: added dative plural Pfirsichen. All entries ok."
+}

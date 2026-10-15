@@ -1,0 +1,9 @@
+{
+  "file": "source/0013.json",
+  "sha256": "7823500acad4bae14cb36c1deeb4aa240153d9a7b8086c55e1325985842121db",
+  "author": "claude-agent:orchard-author-2026-10-15",
+  "reviewer": "claude-agent:es-proofreader-0013-2026-10-15",
+  "reviewedAt": "2026-10-15",
+  "verdict": "approved",
+  "notes": "10 orchard fruit nouns proofread one by one; all ok, no fixes."
+}
