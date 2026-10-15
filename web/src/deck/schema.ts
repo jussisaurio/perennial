@@ -45,6 +45,9 @@ export const GARDEN_WORDS = [
 ] as const;
 export type GardenWord = (typeof GARDEN_WORDS)[number];
 
+export const ORCHARD_WORDS = ["tree", "apple", "orange", "lemon", "cherry", "pear", "plum", "fig", "olive", "grape", "peach"] as const;
+export type OrchardWord = (typeof ORCHARD_WORDS)[number];
+
 /** Id bodies are ten of these: lowercase base32 without i, l, o, u, to avoid confusion. */
 export const ID_ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 const wordId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.w\\.[${ID_ALPHABET}]{10}$`));
