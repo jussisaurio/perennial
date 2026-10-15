@@ -155,9 +155,14 @@ describe("where the trees stand", () => {
 
   test("a walker cannot pass through a trunk", () => {
     const [t] = placeTrees(area, all);
-    const out = collideTrees([t], t.x + 0.05, t.z);
-    expect(Math.hypot(out.x - t.x, out.z - t.z)).toBeGreaterThanOrEqual(0.5);
-    expect(collideTrees([t], t.x + 3, t.z)).toEqual({ x: t.x + 3, z: t.z });
+    for (const [x, z] of [[t.x + 0.05, t.z], [t.x, t.z]]) {
+      const out = collideTrees([t], x, z, 0.28);
+      expect(Math.hypot(out.x - t.x, out.z - t.z)).toBeCloseTo(t.trunk + 0.28);
+    }
+    expect(collideTrees([t], t.x + 3, t.z, 0.28)).toEqual({ x: t.x + 3, z: t.z });
+    // A new sapling's thin trunk is no invisible wall.
+    const [sapling] = placeTrees(area, orchardTrees([input("apple", 0, LEARNING)], NOW));
+    expect(collideTrees([sapling], sapling.x + 0.35, sapling.z, 0.28)).toEqual({ x: sapling.x + 0.35, z: sapling.z });
   });
 });
 

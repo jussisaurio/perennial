@@ -2,7 +2,7 @@
 // the fence (textures.ts trees()): one atlas, a 96×128 cell per kind and look.
 // The shapes are plain data, so the orchard's hit boxes follow the drawing.
 
-import type { OrchardWord } from "../deck/schema";
+import { ORCHARD_WORDS, type OrchardWord } from "../deck/schema";
 import { rng } from "../lib/seed";
 import { canvas, px } from "./textures";
 
@@ -65,10 +65,10 @@ export function crownBox(kind: OrchardWord): { half: number; top: number } {
   return { half: half / CELL_W, top: (CELL_H_PX - top) / CELL_H_PX };
 }
 
-/** Every kind in every look: a column per kind (in `kinds` order), a row per look (LOOKS). */
-export function orchardAtlas(kinds: readonly OrchardWord[]): HTMLCanvasElement {
-  const [c, ctx] = canvas(CELL_W * kinds.length, CELL_H_PX * LOOKS.length);
-  kinds.forEach((kind, col) =>
+/** Every kind in every look: a column per kind (in ORCHARD_WORDS order), a row per look (LOOKS). */
+export function orchardAtlas(): HTMLCanvasElement {
+  const [c, ctx] = canvas(CELL_W * ORCHARD_WORDS.length, CELL_H_PX * LOOKS.length);
+  ORCHARD_WORDS.forEach((kind, col) =>
     LOOKS.forEach((look, row) => {
       const s = TREE_SHAPES[kind];
       const ox = col * CELL_W;

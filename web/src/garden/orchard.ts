@@ -10,7 +10,7 @@ import { plantStage, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema";
 import { hash01 } from "../lib/seed";
-import { CELL_H_PX, CELL_W, crownBox } from "./orchardArt";
+import { CELL_H_PX, CELL_W, crownBox, TREE_SHAPES } from "./orchardArt";
 import { rayBox, type Ray } from "./scenery";
 import { MONTHS } from "./whimsy";
 
@@ -140,6 +140,8 @@ export interface PlacedTree extends OrchardTree {
   scale: number;
   /** Half the crown's width in metres: the tree's footprint and hit box. */
   half: number;
+  /** Half the trunk's width in metres, for walking into it. */
+  trunk: number;
   /** Sway phase, so trees do not move together. */
   phase: number;
 }
@@ -179,24 +181,26 @@ export function placeTrees(area: OrchardArea, trees: readonly OrchardTree[]): Pl
       z: sz + (hash01(t.kind, 33) - 0.5) * 2 * JITTER,
       scale,
       half: art.half * SPRITE_M.w * scale,
+      trunk: (TREE_SHAPES[t.kind].trunk.w / 2 / CELL_W) * SPRITE_M.w * scale,
       phase: hash01(t.kind, 34) * Math.PI * 2,
     };
   });
 }
 
-const TRUNK_R = 0.25;
-
-/** Keep a walker of radius `rad` out of the trunks (the crowns are above head height only on big trees, so only the trunk blocks). */
-export function collideTrees(trees: readonly PlacedTree[], x: number, z: number, rad = 0.28): { x: number; z: number } {
+/** Keep a walker of radius `rad` out of the trunks, as wide as they are drawn: you walk under a crown, not through a trunk. */
+export function collideTrees(trees: readonly PlacedTree[], x: number, z: number, rad: number): { x: number; z: number } {
   for (const t of trees) {
-    const min = TRUNK_R + rad;
+    const min = t.trunk + rad;
     const dx = x - t.x;
     const dz = z - t.z;
     const d = Math.hypot(dx, dz);
     if (d >= min) continue;
-    const k = min / (d || 1);
-    x = t.x + dx * k;
-    z = t.z + dz * k;
+    // Exactly on the trunk's middle there is no direction to push: step out toward the door.
+    if (d === 0) z = t.z + min;
+    else {
+      x = t.x + (dx * min) / d;
+      z = t.z + (dz * min) / d;
+    }
   }
   return { x, z };
 }
@@ -259,7 +263,7 @@ export interface TreeVisitorSpot {
 /**
  * Which brought visitors sit in the orchard today, and where. Each comes on
  * about one day in two, to a tree chosen for the day; the bee only to a tree in
- * blossom or fruit. A little toward the door (+z), so the tree's sprite never hides it.
+ * blossom or fruit. A little toward the door (+z), so from the door side the tree's sprite does not hide it.
  */
 export function treeVisitorSpots(trees: readonly PlacedTree[], brought: ReadonlySet<GardenWord>, now: Date): TreeVisitorSpot[] {
   const out: TreeVisitorSpot[] = [];

@@ -59,7 +59,7 @@ const TREE_INDEX = -7;
 export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: OrchardTree[]): Orchard {
   const group = new THREE.Group();
   const placed = placeTrees(area, trees);
-  const atlas = T.pixelTexture(orchardAtlas(ORCHARD_WORDS));
+  const atlas = T.pixelTexture(orchardAtlas());
   const own: THREE.Texture[] = [atlas];
   // Half a texel in from the cell's top and bottom, so nearest sampling never reads the row above or below.
   const inset = 0.5 / (CELL_H_PX * LOOKS.length);
