@@ -12,7 +12,7 @@
 //     ({ "forms": ["fui", "fue"] }) because it really belongs to both
 // Ease and order (warnings and the per-word table):
 //   - frequency rank of each word in the subtitle corpus vs its deck rank (drift);
-//     not for garden words, which the course places early on purpose
+//     not for garden and orchard words, which the course places on purpose
 //   - rare words in sentences: forms outside the corpus top 10 000 (learners won't know them)
 //   - comprehensibility: share of a sentence's other words that the learner
 //     already met (words earlier in the course, plus the 100 most frequent forms)
@@ -170,7 +170,7 @@ export function auditDeck(lang: string, deck: Deck, ranks: Map<string, number>, 
     }
     return { rank: w.rank, id: w.id, lemma: w.lemma, pos: w.pos, freqRank: Number.isFinite(freqRank) ? freqRank : null, cognate: isCognate(w.lemma, w.gloss), comprehensible: list.length ? compSum / list.length : 0, rareTokens: [...rare] };
   });
-  const placed = new Set(live.filter((w) => w.garden).map((w) => w.id));
+  const placed = new Set(live.filter((w) => w.garden || w.orchard).map((w) => w.id));
   for (const s of words) {
     if (s.rareTokens.length) findings.push({ level: "warn", code: "rare-word", lemma: s.lemma, message: `sentences use words outside the top ${RARE_RANK}: ${s.rareTokens.slice(0, 6).join(", ")}` });
     if (s.freqRank === null) findings.push({ level: "warn", code: "not-in-corpus", lemma: s.lemma, message: `none of its forms is in the frequency list: is it common?` });

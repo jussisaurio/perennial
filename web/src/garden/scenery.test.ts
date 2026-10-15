@@ -61,7 +61,7 @@ describe("scenery words", () => {
       return ids.filter((id) => deck.has(sceneryLemma(id, lang)!)).sort();
     };
     expect(inDeck("es")).toEqual(["bench", "cloud", "flower", "gate", "moon", "path", "sky", "stone", "sun", "tree"]);
-    expect(inDeck("de")).toEqual(["bench", "cloud", "flower", "moon", "sky", "sun"]);
+    expect(inDeck("de")).toEqual(["bench", "cloud", "flower", "moon", "sky", "sun", "tree"]);
   });
 
   test("known marking: by lemma, like visitors; a course without words has none", () => {

@@ -6,9 +6,9 @@
 //
 // Garden words (#209) are the exception: they come at fixed places, early and
 // steadily, so a new learner soon sees that learning a word brings something
-// into the garden.
+// into the garden. Orchard words (#315) come at fixed places too, after the key.
 
-import { GARDEN_WORDS, toPos, type GardenWord, type Pos } from "../deck/schema";
+import { GARDEN_WORDS, ORCHARD_WORDS, toPos, type GardenWord, type OrchardWord, type Pos } from "../deck/schema";
 
 export type WordKind = "noun" | "verb" | "other" | "function";
 
@@ -70,7 +70,22 @@ export function gardenSlot(n: number): number {
   return slot;
 }
 
-type DeckWord = { id: string; pos?: string | null; rank: number; garden?: GardenWord };
+/**
+ * Where the n-th orchard word goes in the course (0-based): the 70th, a few
+ * words after the key (garden word 4, at 64), so the first tree comes soon after
+ * the door opens; then one every 48 words, about one every few weeks. Every
+ * place is at least 6 words from a garden place (those are 12 apart from 172
+ * on, and these are 6 off that beat), so a new learner meets both where they are:
+ * nextWords never has to push one back.
+ */
+export function orchardSlot(n: number): number {
+  return 69 + 48 * n;
+}
+
+type DeckWord = { id: string; pos?: string | null; rank: number; garden?: GardenWord; orchard?: OrchardWord };
+
+/** Garden and orchard words: the course places them, not their rank. */
+export const placed = (w: { garden?: GardenWord; orchard?: OrchardWord }) => !!(w.garden || w.orchard);
 const orders = new WeakMap<object, readonly DeckWord[]>();
 
 /**
@@ -83,48 +98,54 @@ export function courseOrder<W extends DeckWord>(deck: { words: readonly W[] }): 
   if (!order) {
     const byRank = [...deck.words].sort((a, b) => a.rank - b.rank);
     const garden = byRank.filter((w) => w.garden).sort((a, b) => GARDEN_WORDS.indexOf(a.garden!) - GARDEN_WORDS.indexOf(b.garden!));
-    const rest = introOrder(byRank.filter((w) => !w.garden), deckKind);
+    const orchard = byRank.filter((w) => w.orchard).sort((a, b) => ORCHARD_WORDS.indexOf(a.orchard!) - ORCHARD_WORDS.indexOf(b.orchard!));
+    const rest = introOrder(byRank.filter((w) => !placed(w)), deckKind);
     const out: W[] = [];
     let g = 0;
+    let o = 0;
     let r = 0;
-    // A deck shorter than the slots (a test deck) gets its last garden words at the end.
-    while (out.length < byRank.length) out.push(g < garden.length && (out.length === gardenSlot(g) || r === rest.length) ? garden[g++] : rest[r++]);
+    // A deck shorter than the slots (a test deck) gets its last garden, then orchard words at the end.
+    while (out.length < byRank.length) {
+      if (g < garden.length && (out.length === gardenSlot(g) || r === rest.length)) out.push(garden[g++]);
+      else if (o < orchard.length && (out.length === orchardSlot(o) || r === rest.length)) out.push(orchard[o++]);
+      else out.push(rest[r++]);
+    }
     order = out;
     orders.set(deck, order);
   }
   return order as readonly W[];
 }
 
-/** A learner behind on garden words gets one of them in every this many new words. */
+/** A learner behind on garden or orchard words gets one of them in every this many new words. */
 const CATCH_UP = 5;
 
 /**
- * Other new words the learner started after their last garden word, from the
- * time of each word's first review. Sessions take only a few new words at a
- * time, so the spacing below must carry over from one session to the next.
- * Before any garden word there is nothing to keep a distance from: Infinity.
+ * Other new words the learner started after their last garden or orchard word,
+ * from the time of each word's first review. Sessions take only a few new words
+ * at a time, so the spacing below must carry over from one session to the next.
+ * Before any such word there is nothing to keep a distance from: Infinity.
  */
-export function sinceGarden(started: Iterable<{ garden?: GardenWord; first: number }>): number {
+export function sincePlaced(started: Iterable<{ garden?: GardenWord; orchard?: OrchardWord; first: number }>): number {
   const words = [...started];
-  const last = Math.max(...words.filter((w) => w.garden).map((w) => w.first));
+  const last = Math.max(...words.filter(placed).map((w) => w.first));
   if (last === -Infinity) return Infinity;
-  return words.filter((w) => !w.garden && w.first > last).length;
+  return words.filter((w) => !placed(w) && w.first > last).length;
 }
 
 /**
  * The words a learner meets next: the course, minus words they can't get now
- * (`open` false). A garden word comes at its place, but never before CATCH_UP - 1
- * other new words since the last one (`since`: sinceGarden). A learner who was
- * past their places when garden words came to the course gets them one in every
- * CATCH_UP new words, not all in a row. A new learner gets the course as it is:
- * its garden places are further apart.
+ * (`open` false). A garden or orchard word comes at its place, but never before
+ * CATCH_UP - 1 other new words since the last one (`since`: sincePlaced). A
+ * learner who was past their places when such words came to the course gets
+ * them one in every CATCH_UP new words, not all in a row, in course order. A new
+ * learner gets the course as it is: its places are further apart.
  */
 export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean, since: number): W[] {
   const out: W[] = [];
   const due: W[] = [];
   for (const w of course) {
     if (!open(w)) continue;
-    if (w.garden) {
+    if (placed(w)) {
       due.push(w);
       continue;
     }

@@ -3,7 +3,7 @@
 // from the review log (core/memory.ts); nothing derived is stored or synced.
 
 import { teachable } from "../content/languages";
-import { courseOrder, nextWords, sinceGarden } from "../content/order";
+import { courseOrder, nextWords, sincePlaced } from "../content/order";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { deriveMemory, type MemoryRow } from "../core/memory";
@@ -179,8 +179,13 @@ export function useLearner(lang: string | undefined): Learner | null {
         .filter((w) => open(w) && (w.status === "queued" || w.source === "user"))
         .sort((a, b) => (stateMap.get(a.id)?.queued_at ?? "").localeCompare(stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
       const pickedIds = new Set(picked.map((w) => w.id));
-      // Garden words keep their spacing from one session to the next.
-      const since = sinceGarden([...started].map((id) => ({ garden: deck.byId.get(id)?.garden, first: firstReview(id) })));
+      // Garden and orchard words keep their spacing from one session to the next. Your own words are not in the deck, so they count as other new words.
+      const since = sincePlaced(
+        [...started].map((id) => {
+          const w = deck.byId.get(id);
+          return { garden: w?.garden, orchard: w?.orchard, first: firstReview(id) };
+        }),
+      );
       // Your own choices first, as you made them; then the course, kinds of words taking turns (content/order.ts).
       const course = nextWords(courseOrder(deck), (w) => open(words.get(w.id)!) && !pickedIds.has(w.id), since);
       return [...picked, ...course.map((w) => words.get(w.id)!)];

@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "native": "en",
-  "version": 29,
+  "version": 30,
   "words": [
     {
       "id": "de.w.cmn8thykat",
@@ -6038,7 +6038,8 @@
         "Schlüssel"
       ],
       "notes": "Plural: Schlüssel (same form).",
-      "gender": "m"
+      "gender": "m",
+      "garden": "key"
     },
     {
       "id": "de.w.zt9prmccd3",
@@ -12906,6 +12907,155 @@
       "notes": "The plural is the same: die Igel.",
       "gender": "m",
       "garden": "hedgehog"
+    },
+    {
+      "id": "de.w.pqd95dxhte",
+      "lemma": "Baum",
+      "gloss": "tree",
+      "pos": "noun",
+      "rank": 1023,
+      "forms": [
+        "Baum",
+        "Bäume",
+        "Bäumen"
+      ],
+      "gender": "m",
+      "orchard": "tree"
+    },
+    {
+      "id": "de.w.zgqg5skb99",
+      "lemma": "Apfel",
+      "gloss": "apple",
+      "pos": "noun",
+      "rank": 1024,
+      "forms": [
+        "Apfel",
+        "Äpfel",
+        "Äpfeln"
+      ],
+      "gender": "m",
+      "orchard": "apple"
+    },
+    {
+      "id": "de.w.dqvtwfyxb1",
+      "lemma": "Orange",
+      "gloss": "orange (the fruit)",
+      "pos": "noun",
+      "rank": 1025,
+      "forms": [
+        "Orange",
+        "Orangen"
+      ],
+      "gender": "f",
+      "orchard": "orange"
+    },
+    {
+      "id": "de.w.5hr4kacpvb",
+      "lemma": "Zitrone",
+      "gloss": "lemon",
+      "pos": "noun",
+      "rank": 1026,
+      "forms": [
+        "Zitrone",
+        "Zitronen"
+      ],
+      "gender": "f",
+      "orchard": "lemon"
+    },
+    {
+      "id": "de.w.et9w6vn3dr",
+      "lemma": "Kirsche",
+      "gloss": "cherry",
+      "pos": "noun",
+      "rank": 1027,
+      "forms": [
+        "Kirsche",
+        "Kirschen"
+      ],
+      "gender": "f",
+      "orchard": "cherry"
+    },
+    {
+      "id": "de.w.6yf8akxrrb",
+      "lemma": "Birne",
+      "gloss": "pear",
+      "pos": "noun",
+      "rank": 1028,
+      "forms": [
+        "Birne",
+        "Birnen"
+      ],
+      "notes": "Also a light bulb.",
+      "gender": "f",
+      "orchard": "pear"
+    },
+    {
+      "id": "de.w.dtvt2n3fs3",
+      "lemma": "Pflaume",
+      "gloss": "plum",
+      "pos": "noun",
+      "rank": 1029,
+      "forms": [
+        "Pflaume",
+        "Pflaumen"
+      ],
+      "gender": "f",
+      "orchard": "plum"
+    },
+    {
+      "id": "de.w.5hzg0jazhf",
+      "lemma": "Feige",
+      "gloss": "fig",
+      "pos": "noun",
+      "rank": 1030,
+      "forms": [
+        "Feige",
+        "Feigen"
+      ],
+      "gender": "f",
+      "orchard": "fig"
+    },
+    {
+      "id": "de.w.jqfnmekyfm",
+      "lemma": "Olive",
+      "gloss": "olive",
+      "pos": "noun",
+      "rank": 1031,
+      "forms": [
+        "Olive",
+        "Oliven"
+      ],
+      "notes": "The tree is der Olivenbaum.",
+      "gender": "f",
+      "orchard": "olive"
+    },
+    {
+      "id": "de.w.bzcezeey87",
+      "lemma": "Traube",
+      "gloss": "grape",
+      "pos": "noun",
+      "rank": 1032,
+      "forms": [
+        "Traube",
+        "Trauben"
+      ],
+      "notes": "Also a bunch of grapes. Often called Weintraube.",
+      "gender": "f",
+      "orchard": "grape"
+    },
+    {
+      "id": "de.w.wd336qkxhr",
+      "lemma": "Pfirsich",
+      "gloss": "peach",
+      "pos": "noun",
+      "rank": 1033,
+      "forms": [
+        "Pfirsich",
+        "Pfirsiche",
+        "Pfirsichen"
+      ],
+      "gender": "m",
+      "orchard": "peach"
     }
   ],
   "sentences": [
@@ -36680,6 +36830,244 @@
       "text": "Hast du schon mal einen Igel gesehen?",
       "translation": "Have you ever seen a hedgehog?",
       "cloze": "Igel"
+    },
+    {
+      "id": "de.s.1x59b1211z",
+      "wordId": "de.w.pqd95dxhte",
+      "text": "Die Katze sitzt oben auf dem Baum.",
+      "translation": "The cat is sitting up in the tree.",
+      "cloze": "Baum"
+    },
+    {
+      "id": "de.s.hwtastpj8s",
+      "wordId": "de.w.pqd95dxhte",
+      "text": "Im Garten stehen zwei alte Bäume.",
+      "translation": "There are two old trees in the garden.",
+      "cloze": "Bäume"
+    },
+    {
+      "id": "de.s.z5ptscr7db",
+      "wordId": "de.w.pqd95dxhte",
+      "text": "Vor unserem Haus steht ein großer Baum.",
+      "translation": "There's a big tree in front of our house.",
+      "cloze": "Baum"
+    },
+    {
+      "id": "de.s.2ytw6e8x7y",
+      "wordId": "de.w.pqd95dxhte",
+      "text": "Unter den Bäumen ist es kühl.",
+      "translation": "It's cool under the trees.",
+      "cloze": "Bäumen"
+    },
+    {
+      "id": "de.s.tz5pff542z",
+      "wordId": "de.w.zgqg5skb99",
+      "text": "Ich esse jeden Tag einen Apfel.",
+      "translation": "I eat an apple every day.",
+      "cloze": "Apfel"
+    },
+    {
+      "id": "de.s.4vnmya51v7",
+      "wordId": "de.w.zgqg5skb99",
+      "text": "Die Äpfel sind dieses Jahr sehr süß.",
+      "translation": "The apples are very sweet this year.",
+      "cloze": "Äpfel"
+    },
+    {
+      "id": "de.s.6cmyyenbrd",
+      "wordId": "de.w.zgqg5skb99",
+      "text": "Oma macht Kuchen mit Äpfeln.",
+      "translation": "Grandma makes cake with apples.",
+      "cloze": "Äpfeln"
+    },
+    {
+      "id": "de.s.gatfyt0kzg",
+      "wordId": "de.w.dqvtwfyxb1",
+      "text": "Möchtest du eine Orange?",
+      "translation": "Would you like an orange?",
+      "cloze": "Orange"
+    },
+    {
+      "id": "de.s.60hr535g58",
+      "wordId": "de.w.dqvtwfyxb1",
+      "text": "Ich kaufe ein Kilo Orangen.",
+      "translation": "I'm buying a kilo of oranges.",
+      "cloze": "Orangen"
+    },
+    {
+      "id": "de.s.xb145tm48b",
+      "wordId": "de.w.dqvtwfyxb1",
+      "text": "Diese Orange schmeckt sehr gut.",
+      "translation": "This orange tastes very good.",
+      "cloze": "Orange"
+    },
+    {
+      "id": "de.s.wazw5rj8a7",
+      "wordId": "de.w.5hr4kacpvb",
+      "text": "Ich trinke Tee mit Zitrone.",
+      "translation": "I drink tea with lemon.",
+      "cloze": "Zitrone"
+    },
+    {
+      "id": "de.s.z8902ky80d",
+      "wordId": "de.w.5hr4kacpvb",
+      "text": "Wir brauchen noch zwei Zitronen.",
+      "translation": "We still need two lemons.",
+      "cloze": "Zitronen"
+    },
+    {
+      "id": "de.s.4995r1syzp",
+      "wordId": "de.w.5hr4kacpvb",
+      "text": "Die Zitrone ist sehr sauer.",
+      "translation": "The lemon is very sour.",
+      "cloze": "Zitrone"
+    },
+    {
+      "id": "de.s.r8nttsds0z",
+      "wordId": "de.w.et9w6vn3dr",
+      "text": "Im Juni gibt es Kirschen.",
+      "translation": "There are cherries in June.",
+      "cloze": "Kirschen"
+    },
+    {
+      "id": "de.s.4hr52s7nwe",
+      "wordId": "de.w.et9w6vn3dr",
+      "text": "Auf dem Kuchen liegt eine Kirsche.",
+      "translation": "There's a cherry on the cake.",
+      "cloze": "Kirsche"
+    },
+    {
+      "id": "de.s.tg1ead53w2",
+      "wordId": "de.w.et9w6vn3dr",
+      "text": "Die Kirschen von unserem Baum sind reif.",
+      "translation": "The cherries on our tree are ripe.",
+      "cloze": "Kirschen"
+    },
+    {
+      "id": "de.s.w4armv18ak",
+      "wordId": "de.w.6yf8akxrrb",
+      "text": "Möchtest du eine Birne oder einen Apfel?",
+      "translation": "Would you like a pear or an apple?",
+      "cloze": "Birne"
+    },
+    {
+      "id": "de.s.fhw2wzze00",
+      "wordId": "de.w.6yf8akxrrb",
+      "text": "Die Birnen sind noch hart.",
+      "translation": "The pears are still hard.",
+      "cloze": "Birnen"
+    },
+    {
+      "id": "de.s.9xsg22db9t",
+      "wordId": "de.w.6yf8akxrrb",
+      "text": "Ich habe eine Birne zum Frühstück gegessen.",
+      "translation": "I had a pear for breakfast.",
+      "cloze": "Birne"
+    },
+    {
+      "id": "de.s.t9xqxgbw4r",
+      "wordId": "de.w.dtvt2n3fs3",
+      "text": "Im Herbst essen wir viele Pflaumen.",
+      "translation": "In autumn we eat lots of plums.",
+      "cloze": "Pflaumen"
+    },
+    {
+      "id": "de.s.7dc82m2r3s",
+      "wordId": "de.w.dtvt2n3fs3",
+      "text": "Kannst du mir eine Pflaume geben?",
+      "translation": "Can you give me a plum?",
+      "cloze": "Pflaume"
+    },
+    {
+      "id": "de.s.axmwszj06p",
+      "wordId": "de.w.dtvt2n3fs3",
+      "text": "Diese Pflaume ist noch nicht reif.",
+      "translation": "This plum isn't ripe yet.",
+      "cloze": "Pflaume"
+    },
+    {
+      "id": "de.s.xgf5w6t1f0",
+      "wordId": "de.w.5hzg0jazhf",
+      "text": "Ich habe noch nie eine Feige gegessen.",
+      "translation": "I've never eaten a fig.",
+      "cloze": "Feige"
+    },
+    {
+      "id": "de.s.qgwzjvxws2",
+      "wordId": "de.w.5hzg0jazhf",
+      "text": "Feigen wachsen in warmen Ländern.",
+      "translation": "Figs grow in warm countries.",
+      "cloze": "Feigen"
+    },
+    {
+      "id": "de.s.cjjtvm1nt7",
+      "wordId": "de.w.5hzg0jazhf",
+      "text": "Auf dem Markt gibt es frische Feigen.",
+      "translation": "There are fresh figs at the market.",
+      "cloze": "Feigen"
+    },
+    {
+      "id": "de.s.mpq7yy6sjt",
+      "wordId": "de.w.jqfnmekyfm",
+      "text": "Magst du Oliven?",
+      "translation": "Do you like olives?",
+      "cloze": "Oliven"
+    },
+    {
+      "id": "de.s.51wxmz2jq4",
+      "wordId": "de.w.jqfnmekyfm",
+      "text": "Es ist nur noch eine Olive übrig.",
+      "translation": "There's only one olive left.",
+      "cloze": "Olive"
+    },
+    {
+      "id": "de.s.y6ystctnj1",
+      "wordId": "de.w.jqfnmekyfm",
+      "text": "Wir essen Brot mit Oliven.",
+      "translation": "We're eating bread with olives.",
+      "cloze": "Oliven"
+    },
+    {
+      "id": "de.s.gdxq391hnv",
+      "wordId": "de.w.bzcezeey87",
+      "text": "Ich kaufe Trauben für die Kinder.",
+      "translation": "I'm buying grapes for the kids.",
+      "cloze": "Trauben"
+    },
+    {
+      "id": "de.s.n8x8z4s2te",
+      "wordId": "de.w.bzcezeey87",
+      "text": "Aus Trauben macht man Wein.",
+      "translation": "Wine is made from grapes.",
+      "cloze": "Trauben"
+    },
+    {
+      "id": "de.s.jsh42bdqfz",
+      "wordId": "de.w.bzcezeey87",
+      "text": "Eine Traube ist auf den Boden gefallen.",
+      "translation": "A grape fell on the floor.",
+      "cloze": "Traube"
+    },
+    {
+      "id": "de.s.bzww447wk8",
+      "wordId": "de.w.wd336qkxhr",
+      "text": "Der Pfirsich ist weich und süß.",
+      "translation": "The peach is soft and sweet.",
+      "cloze": "Pfirsich"
+    },
+    {
+      "id": "de.s.zdjktmz8gp",
+      "wordId": "de.w.wd336qkxhr",
+      "text": "Im Sommer esse ich gern Pfirsiche.",
+      "translation": "In summer I like eating peaches.",
+      "cloze": "Pfirsiche"
+    },
+    {
+      "id": "de.s.fk8g5w2mct",
+      "wordId": "de.w.wd336qkxhr",
+      "text": "Sie hat uns einen Pfirsich mitgebracht.",
+      "translation": "She brought us a peach.",
+      "cloze": "Pfirsich"
     }
   ]
 }

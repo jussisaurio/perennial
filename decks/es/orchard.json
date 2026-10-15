@@ -1,0 +1,46 @@
+[
+  {
+    "orchard": "tree",
+    "word": "árbol|noun"
+  },
+  {
+    "orchard": "apple",
+    "word": "manzana|noun"
+  },
+  {
+    "orchard": "orange",
+    "word": "naranja|noun"
+  },
+  {
+    "orchard": "lemon",
+    "word": "limón|noun"
+  },
+  {
+    "orchard": "cherry",
+    "word": "cereza|noun"
+  },
+  {
+    "orchard": "pear",
+    "word": "pera|noun"
+  },
+  {
+    "orchard": "plum",
+    "word": "ciruela|noun"
+  },
+  {
+    "orchard": "fig",
+    "word": "higo|noun"
+  },
+  {
+    "orchard": "olive",
+    "word": "aceituna|noun"
+  },
+  {
+    "orchard": "grape",
+    "word": "uva|noun"
+  },
+  {
+    "orchard": "peach",
+    "word": "melocotón|noun"
+  }
+]

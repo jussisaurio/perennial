@@ -1,7 +1,7 @@
 {
   "lang": "es",
   "native": "en",
-  "version": 27,
+  "version": 28,
   "words": [
     {
       "id": "es.w.93eb423hjf",
@@ -8442,7 +8442,8 @@
         "llaves"
       ],
       "notes": "cerrar con llave = to lock.",
-      "gender": "f"
+      "gender": "f",
+      "garden": "key"
     },
     {
       "id": "es.w.p24f0y52pb",
@@ -10922,7 +10923,8 @@
         "árbol",
         "árboles"
       ],
-      "gender": "m"
+      "gender": "m",
+      "orchard": "tree"
     },
     {
       "id": "es.w.55q9pdz1wk",
@@ -13218,6 +13220,139 @@
       "notes": "Also written arco iris. The plural is the same: los arcoíris.",
       "gender": "m",
       "garden": "rainbow"
+    },
+    {
+      "id": "es.w.hj20gba72h",
+      "lemma": "manzana",
+      "gloss": "apple",
+      "pos": "noun",
+      "rank": 1020,
+      "forms": [
+        "manzana",
+        "manzanas"
+      ],
+      "gender": "f",
+      "orchard": "apple"
+    },
+    {
+      "id": "es.w.5gd1z0kegm",
+      "lemma": "naranja",
+      "gloss": "orange (the fruit)",
+      "pos": "noun",
+      "rank": 1021,
+      "forms": [
+        "naranja",
+        "naranjas"
+      ],
+      "notes": "Also the colour orange: una camisa naranja.",
+      "gender": "f",
+      "orchard": "orange"
+    },
+    {
+      "id": "es.w.5gcbc04kbn",
+      "lemma": "limón",
+      "gloss": "lemon",
+      "pos": "noun",
+      "rank": 1022,
+      "forms": [
+        "limón",
+        "limones"
+      ],
+      "gender": "m",
+      "orchard": "lemon"
+    },
+    {
+      "id": "es.w.hx3889yh0g",
+      "lemma": "cereza",
+      "gloss": "cherry",
+      "pos": "noun",
+      "rank": 1023,
+      "forms": [
+        "cereza",
+        "cerezas"
+      ],
+      "gender": "f",
+      "orchard": "cherry"
+    },
+    {
+      "id": "es.w.v89mw904zt",
+      "lemma": "pera",
+      "gloss": "pear",
+      "pos": "noun",
+      "rank": 1024,
+      "forms": [
+        "pera",
+        "peras"
+      ],
+      "gender": "f",
+      "orchard": "pear"
+    },
+    {
+      "id": "es.w.cb1w9gby6v",
+      "lemma": "ciruela",
+      "gloss": "plum",
+      "pos": "noun",
+      "rank": 1025,
+      "forms": [
+        "ciruela",
+        "ciruelas"
+      ],
+      "gender": "f",
+      "orchard": "plum"
+    },
+    {
+      "id": "es.w.3q81rggn6r",
+      "lemma": "higo",
+      "gloss": "fig",
+      "pos": "noun",
+      "rank": 1026,
+      "forms": [
+        "higo",
+        "higos"
+      ],
+      "gender": "m",
+      "orchard": "fig"
+    },
+    {
+      "id": "es.w.4e18sddqtm",
+      "lemma": "aceituna",
+      "gloss": "olive (the fruit)",
+      "pos": "noun",
+      "rank": 1027,
+      "forms": [
+        "aceituna",
+        "aceitunas"
+      ],
+      "notes": "The tree is el olivo.",
+      "gender": "f",
+      "orchard": "olive"
+    },
+    {
+      "id": "es.w.h9966hk7hr",
+      "lemma": "uva",
+      "gloss": "grape",
+      "pos": "noun",
+      "rank": 1028,
+      "forms": [
+        "uva",
+        "uvas"
+      ],
+      "gender": "f",
+      "orchard": "grape"
+    },
+    {
+      "id": "es.w.rkskk691yc",
+      "lemma": "melocotón",
+      "gloss": "peach",
+      "pos": "noun",
+      "rank": 1029,
+      "forms": [
+        "melocotón",
+        "melocotones"
+      ],
+      "notes": "In much of Latin America: el durazno.",
+      "gender": "m",
+      "orchard": "peach"
     }
   ],
   "sentences": [
@@ -37821,6 +37956,216 @@
       "text": "El arcoíris tiene siete colores.",
       "translation": "A rainbow has seven colors.",
       "cloze": "arcoíris"
+    },
+    {
+      "id": "es.s.nxve1pzasj",
+      "wordId": "es.w.hj20gba72h",
+      "text": "Me como una manzana cada día.",
+      "translation": "I eat an apple every day.",
+      "cloze": "manzana"
+    },
+    {
+      "id": "es.s.yne5ej1twd",
+      "wordId": "es.w.hj20gba72h",
+      "text": "Estas manzanas son muy dulces.",
+      "translation": "These apples are very sweet.",
+      "cloze": "manzanas"
+    },
+    {
+      "id": "es.s.f13wvz32p6",
+      "wordId": "es.w.hj20gba72h",
+      "text": "Mi abuela hace pastel de manzana.",
+      "translation": "My grandmother makes apple cake.",
+      "cloze": "manzana"
+    },
+    {
+      "id": "es.s.4s0vph1ze9",
+      "wordId": "es.w.5gd1z0kegm",
+      "text": "Hay naranjas en la mesa.",
+      "translation": "There are oranges on the table.",
+      "cloze": "naranjas"
+    },
+    {
+      "id": "es.s.p2w4m696fr",
+      "wordId": "es.w.5gd1z0kegm",
+      "text": "Esta naranja está muy buena.",
+      "translation": "This orange is really good.",
+      "cloze": "naranja"
+    },
+    {
+      "id": "es.s.y44yff8y7y",
+      "wordId": "es.w.5gd1z0kegm",
+      "text": "Compré un kilo de naranjas en el mercado.",
+      "translation": "I bought a kilo of oranges at the market.",
+      "cloze": "naranjas"
+    },
+    {
+      "id": "es.s.pjrq4zkkyv",
+      "wordId": "es.w.5gcbc04kbn",
+      "text": "Quiero un té con limón.",
+      "translation": "I'd like a tea with lemon.",
+      "cloze": "limón"
+    },
+    {
+      "id": "es.s.0p2632nyyh",
+      "wordId": "es.w.5gcbc04kbn",
+      "text": "Hay dos limones en la cocina.",
+      "translation": "There are two lemons in the kitchen.",
+      "cloze": "limones"
+    },
+    {
+      "id": "es.s.j0s60nfebw",
+      "wordId": "es.w.5gcbc04kbn",
+      "text": "Ponle un poco de limón al pescado.",
+      "translation": "Put a little lemon on the fish.",
+      "cloze": "limón"
+    },
+    {
+      "id": "es.s.v31bzy9dsj",
+      "wordId": "es.w.hx3889yh0g",
+      "text": "Me encantan las cerezas.",
+      "translation": "I love cherries.",
+      "cloze": "cerezas"
+    },
+    {
+      "id": "es.s.j0bz4hj57c",
+      "wordId": "es.w.hx3889yh0g",
+      "text": "Hay una cereza encima del pastel.",
+      "translation": "There's a cherry on top of the cake.",
+      "cloze": "cereza"
+    },
+    {
+      "id": "es.s.17hacc1x8j",
+      "wordId": "es.w.hx3889yh0g",
+      "text": "Las cerezas del mercado son caras.",
+      "translation": "The cherries at the market are expensive.",
+      "cloze": "cerezas"
+    },
+    {
+      "id": "es.s.57qnv7dpaf",
+      "wordId": "es.w.v89mw904zt",
+      "text": "¿Quieres una pera o una manzana?",
+      "translation": "Do you want a pear or an apple?",
+      "cloze": "pera"
+    },
+    {
+      "id": "es.s.6rp08psw8m",
+      "wordId": "es.w.v89mw904zt",
+      "text": "Las peras todavía están verdes.",
+      "translation": "The pears are still not ripe.",
+      "cloze": "peras"
+    },
+    {
+      "id": "es.s.4nph2vstxb",
+      "wordId": "es.w.v89mw904zt",
+      "text": "Corté la pera en dos.",
+      "translation": "I cut the pear in two.",
+      "cloze": "pera"
+    },
+    {
+      "id": "es.s.bjzshjwxmr",
+      "wordId": "es.w.cb1w9gby6v",
+      "text": "Las ciruelas son mi fruta favorita.",
+      "translation": "Plums are my favourite fruit.",
+      "cloze": "ciruelas"
+    },
+    {
+      "id": "es.s.mkz2bthxx2",
+      "wordId": "es.w.cb1w9gby6v",
+      "text": "Esta ciruela está muy dulce.",
+      "translation": "This plum is very sweet.",
+      "cloze": "ciruela"
+    },
+    {
+      "id": "es.s.tv3x0f5knc",
+      "wordId": "es.w.cb1w9gby6v",
+      "text": "Mi madre compró ciruelas para todos.",
+      "translation": "My mother bought plums for everyone.",
+      "cloze": "ciruelas"
+    },
+    {
+      "id": "es.s.ybwjcgcdsx",
+      "wordId": "es.w.3q81rggn6r",
+      "text": "Nunca he probado un higo.",
+      "translation": "I've never tried a fig.",
+      "cloze": "higo"
+    },
+    {
+      "id": "es.s.jy73c51xpa",
+      "wordId": "es.w.3q81rggn6r",
+      "text": "En verano comemos higos del árbol.",
+      "translation": "In summer we eat figs from the tree.",
+      "cloze": "higos"
+    },
+    {
+      "id": "es.s.wqdvr28935",
+      "wordId": "es.w.3q81rggn6r",
+      "text": "Los higos de mi abuelo son los mejores.",
+      "translation": "My grandfather's figs are the best.",
+      "cloze": "higos"
+    },
+    {
+      "id": "es.s.fj88fsvf99",
+      "wordId": "es.w.4e18sddqtm",
+      "text": "¿Te gustan las aceitunas?",
+      "translation": "Do you like olives?",
+      "cloze": "aceitunas"
+    },
+    {
+      "id": "es.s.8k8qse0ay0",
+      "wordId": "es.w.4e18sddqtm",
+      "text": "Queda una aceituna en el plato.",
+      "translation": "There's one olive left on the plate.",
+      "cloze": "aceituna"
+    },
+    {
+      "id": "es.s.86xerktqrb",
+      "wordId": "es.w.4e18sddqtm",
+      "text": "Las aceitunas negras me gustan más.",
+      "translation": "I like black olives better.",
+      "cloze": "aceitunas"
+    },
+    {
+      "id": "es.s.t7y879zja5",
+      "wordId": "es.w.h9966hk7hr",
+      "text": "Compré uvas para los niños.",
+      "translation": "I bought grapes for the kids.",
+      "cloze": "uvas"
+    },
+    {
+      "id": "es.s.xkpkk9nfhw",
+      "wordId": "es.w.h9966hk7hr",
+      "text": "Se comió la última uva.",
+      "translation": "He ate the last grape.",
+      "cloze": "uva"
+    },
+    {
+      "id": "es.s.nsxc3pktxx",
+      "wordId": "es.w.h9966hk7hr",
+      "text": "El vino se hace con uvas.",
+      "translation": "Wine is made from grapes.",
+      "cloze": "uvas"
+    },
+    {
+      "id": "es.s.4afbnre5yn",
+      "wordId": "es.w.rkskk691yc",
+      "text": "Este melocotón huele muy bien.",
+      "translation": "This peach smells really good.",
+      "cloze": "melocotón"
+    },
+    {
+      "id": "es.s.fnfypgvavf",
+      "wordId": "es.w.rkskk691yc",
+      "text": "En verano hay muchos melocotones.",
+      "translation": "In summer there are lots of peaches.",
+      "cloze": "melocotones"
+    },
+    {
+      "id": "es.s.tx3s8tjycc",
+      "wordId": "es.w.rkskk691yc",
+      "text": "Me comí un melocotón después de comer.",
+      "translation": "I ate a peach after lunch.",
+      "cloze": "melocotón"
     }
   ]
 }

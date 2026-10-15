@@ -12,6 +12,8 @@ The app introduces them in a slightly different order, decided in one place (`co
 
 Garden words are the exception (#209). `decks/<lang>/garden.json` names the word that brings each garden thing (`GARDEN_WORDS` in `web/src/deck/schema.ts`): a cat, rain, a fox. The course places them early and steadily, not by rank, and the audit does not flag their rank. The file lives apart from the source, so naming a word does not change an approved source file. The build fails when a named word is not a live source word, or when one word or one thing is named twice.
 
+Orchard words (#315) work the same way. `decks/<lang>/orchard.json` names the word that plants each orchard tree (`ORCHARD_WORDS`): a tree, an apple, a fig. The course places them steadily after the key. A word names one garden thing or one tree, not both.
+
 ## Roles
 
 - **Author**: writes source entries (`decks/<lang>/source/NNNN.json`), by hand or with `scripts/deck/generate.ts`. Model output counts as authored by the person or agent that ran it.
