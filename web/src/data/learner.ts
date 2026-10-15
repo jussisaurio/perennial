@@ -179,7 +179,7 @@ export function useLearner(lang: string | undefined): Learner | null {
         .filter((w) => open(w) && (w.status === "queued" || w.source === "user"))
         .sort((a, b) => (stateMap.get(a.id)?.queued_at ?? "").localeCompare(stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
       const pickedIds = new Set(picked.map((w) => w.id));
-      // Garden and orchard words keep their spacing from one session to the next. The learner's own words are not in the deck: neither.
+      // Garden and orchard words keep their spacing from one session to the next. Your own words are not in the deck, so they count as other new words.
       const since = sincePlaced(
         [...started].map((id) => {
           const w = deck.byId.get(id);

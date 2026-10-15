@@ -74,7 +74,7 @@ export function gardenSlot(n: number): number {
  * Where the n-th orchard word goes in the course (0-based): the 70th, a few
  * words after the key (garden word 4, at 64), so the first tree comes soon after
  * the door opens; then one every 48 words, about one every few weeks. Every
- * place is at least 6 words from a garden place (those are 12 apart from 184
+ * place is at least 6 words from a garden place (those are 12 apart from 172
  * on, and these are 6 off that beat), so a new learner meets both where they are:
  * nextWords never has to push one back.
  */
@@ -85,7 +85,7 @@ export function orchardSlot(n: number): number {
 type DeckWord = { id: string; pos?: string | null; rank: number; garden?: GardenWord; orchard?: OrchardWord };
 
 /** Garden and orchard words: the course places them, not their rank. */
-const placed = (w: { garden?: GardenWord; orchard?: OrchardWord }) => !!(w.garden || w.orchard);
+export const placed = (w: { garden?: GardenWord; orchard?: OrchardWord }) => !!(w.garden || w.orchard);
 const orders = new WeakMap<object, readonly DeckWord[]>();
 
 /**

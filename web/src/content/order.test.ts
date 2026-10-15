@@ -2,10 +2,7 @@ import { describe, expect, test } from "bun:test";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { Deck, GARDEN_WORDS, ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema";
-import { courseOrder, deckKind, gardenSlot, introOrder, kindOf, nextWords, notStartedWords, orchardSlot, sincePlaced, type WordKind } from "./order";
-
-/** Garden and orchard words: the course places them. */
-const placed = (w: { garden?: GardenWord; orchard?: OrchardWord }) => !!(w.garden || w.orchard);
+import { courseOrder, deckKind, gardenSlot, introOrder, kindOf, nextWords, notStartedWords, orchardSlot, placed, sincePlaced, type WordKind } from "./order";
 
 const kind = (s: string): WordKind => ({ n: "noun", v: "verb", o: "other", f: "function" })[s[0] as "n" | "v" | "o" | "f"] as WordKind;
 
@@ -187,7 +184,8 @@ describe("courseOrder", () => {
     });
 
     // Never break progress: the key and the orchard words came to a course people were already
-    // learning. The course before them is this one with no key and no orchard words placed.
+    // learning. `before` stands in for that course: this one with no key and no orchard words placed.
+    // The new fruit words, last by rank, shift its kinds' turns from about word 800 on, so test learners before that.
     const before = courseOrder({ words: course.map((w) => ({ ...w, garden: w.garden === "key" ? undefined : w.garden, orchard: undefined })) });
 
     test(`${lang}: the course is unchanged before the key's place, so a learner there sees no difference`, () => {
