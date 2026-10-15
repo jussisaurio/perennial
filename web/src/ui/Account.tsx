@@ -3,6 +3,7 @@ import { useFeatures } from "../data/server";
 import { errorLine, sendingLabel } from "../content/voice";
 import { getMe, resetDate, type Me } from "../data/ai";
 import { AuthError, sendCode, signInWithCode, signOut, useUser } from "../data/auth";
+import { track } from "../observability";
 import { CheckIcon } from "./icons";
 
 /** Account details from the server (credits), refreshed when the user changes. */
@@ -35,24 +36,56 @@ export function tooFewCredits(me: Me | null, needed: number): boolean {
   return me !== null && me.credits.left < needed;
 }
 
+// After each send, "Send the code again" waits this long, so a slow email has time to come.
+const RESEND_WAIT_MS = 30_000;
+
+/** What the code step says about the code. */
+type Sent = "sent" | "maybe-sent" | "sent-again" | "have-code";
+
 export function SignIn({ cta }: { cta: string }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
-  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<Sent>("sent");
+  const [busy, setBusy] = useState<"send" | "sign-in" | null>(null);
   const [error, setError] = useState("");
+  const [resendAt, setResendAt] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
 
-  const run = async (fn: () => Promise<unknown>) => {
-    setBusy(true);
+  // Counts down to resendAt, once a second.
+  useEffect(() => {
+    if (now >= resendAt) return;
+    const t = setTimeout(() => setNow(Date.now()), 1000);
+    return () => clearTimeout(t);
+  }, [now, resendAt]);
+  const resendIn = Math.ceil((resendAt - now) / 1000);
+
+  const run = async (what: "send" | "sign-in", fn: () => Promise<unknown>) => {
+    setBusy(what);
     setError("");
     try {
       await fn();
     } catch (e) {
       setError(e instanceof AuthError ? e.message : errorLine());
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
+
+  const send = async (again: boolean) => {
+    const result = await sendCode(email.trim());
+    setSent(result === "maybe-sent" ? "maybe-sent" : again ? "sent-again" : "sent");
+    setResendAt(Date.now() + RESEND_WAIT_MS);
+    setNow(Date.now());
+    if (!again) track("signin_code_shown", { timedOut: result === "maybe-sent" });
+    setStep("code");
+  };
+
+  const alert = error && (
+    <p className="error" role="alert">
+      {error}
+    </p>
+  );
 
   if (step === "email")
     return (
@@ -60,10 +93,7 @@ export function SignIn({ cta }: { cta: string }) {
         className="form"
         onSubmit={(e) => {
           e.preventDefault();
-          void run(async () => {
-            await sendCode(email.trim());
-            setStep("code");
-          });
+          void run("send", () => send(false));
         }}
       >
         <label>
@@ -71,47 +101,49 @@ export function SignIn({ cta }: { cta: string }) {
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required />
         </label>
         <div className="row">
-          <button className="primary" type="submit" disabled={busy || !email.includes("@")}>
+          <button className="primary" type="submit" disabled={!!busy || !email.includes("@")}>
             {busy ? sendingLabel() : cta}
           </button>
+          <button className="ghost" type="button" disabled={!!busy || !email.includes("@")} onClick={() => (setSent("have-code"), setStep("code"), setError(""))}>
+            Enter a code I already have
+          </button>
         </div>
-        {error && (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        )}
+        {alert}
         <p className="muted small">You do not need a password. We send you a code by email.</p>
       </form>
     );
 
+  const to = <strong>{email}</strong>;
   return (
     <form
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        void run(() => signInWithCode(email.trim(), code));
+        void run("sign-in", () => signInWithCode(email.trim(), code));
       }}
     >
-      <p className="muted small">
-        We sent a 6-digit code to <strong>{email}</strong>.
+      <p className="muted small" role="status">
+        {sent === "sent" && <>We sent a 6-digit code to {to}.</>}
+        {sent === "sent-again" && <>We sent the code to {to} again.</>}
+        {sent === "maybe-sent" && <>The code to {to} may still be on its way. If no email comes in a minute, send it again.</>}
+        {sent === "have-code" && <>Enter the 6-digit code we sent to {to}.</>}
       </p>
       <label>
         Code
         <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" autoFocus />
       </label>
       <div className="row">
-        <button className="primary" type="submit" disabled={busy || code.length !== 6}>
-          {busy ? "Signing in…" : "Sign in"}
+        <button className="primary" type="submit" disabled={!!busy || code.length !== 6}>
+          {busy === "sign-in" ? "Signing in…" : "Sign in"}
         </button>
-        <button className="ghost" type="button" onClick={() => (setStep("email"), setCode(""), setError(""))}>
+        <button className="ghost" type="button" disabled={!!busy || resendIn > 0} onClick={() => void run("send", () => send(true))}>
+          {busy === "send" ? sendingLabel() : resendIn > 0 ? `Send the code again in ${resendIn} s` : "Send the code again"}
+        </button>
+        <button className="ghost" type="button" disabled={!!busy} onClick={() => (setStep("email"), setCode(""), setError(""))}>
           Use another email
         </button>
       </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+      {alert}
     </form>
   );
 }
