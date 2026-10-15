@@ -758,6 +758,9 @@ export class GardenScene {
     // Built after setTime when the door opens in this walk: give it the time of day now.
     this.tint();
     // Only the bird has art so far: the owl, squirrel and bee are never in the list (#319). On its orchard days the bird sits there, not in the garden.
+    // Only when the walk starts with the door open: a bird the learner may be looking at does not vanish from the garden as the door opens.
+    if (swing) return;
+    // Visitors that came another way (the gnome, the moth...) have no garden word and never sit in the trees.
     const brought = new Set(this.visitors.list.flatMap((v) => visitor(v.id).garden ?? []));
     for (const spot of treeVisitorSpots(orchard.trees, brought, new Date())) if (spot.who === "bird") this.guests.perchBird(spot.x, spot.y, spot.z);
   }
@@ -1180,7 +1183,8 @@ export class GardenScene {
 
   /** The visitor under a point on the canvas (CSS pixels), if any. */
   pickVisitor(cssX: number, cssY: number, cssW: number, cssH: number): VisitorView | null {
-    return this.guests.pick(cssX, cssY, cssW, cssH);
+    // The hedge hides the visitors on its other side (#315): a bird in the orchard from the garden, the garden's from the orchard.
+    return this.guests.pick(cssX, cssY, cssW, cssH, (x, y, z) => this.behindHedge(x, y, z));
   }
 
   /** Show a visitor's tag for a few seconds (after a tap). */

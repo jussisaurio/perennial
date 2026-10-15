@@ -247,8 +247,8 @@ export function pickTree(r: Ray, hits: readonly TreeHit[]): { hit: TreeHit; t: n
  * `turn` as three's rotation.y of a bench whose seat faces +z (its back toward −z).
  */
 export function orchardBench(a: OrchardArea): { x: number; z: number; turn: number } {
-  // Coming in, you face away from the door; your right is +x when you face −z.
-  return { x: a.x + DOOR_SIDE * (AISLE / 2 + 0.9), z: inFromDoor(a, 1), turn: DOOR_SIDE < 0 ? 0 : Math.PI };
+  // Coming in, you face away from the door; your right is +x when you face −z. Turn 0 puts its back toward −z, the door's side (DOOR_SIDE).
+  return { x: a.x + DOOR_SIDE * (AISLE / 2 + 0.9), z: inFromDoor(a, 1), turn: 0 };
 }
 
 /** The bench's plaque, e.g. "First word planted 3 Oct 2026". */

@@ -160,5 +160,25 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
     return { z: s.z, near: s.layout.orchard.z - s.layout.orchard.d / 2 };
   });
   expect(at.z).toBeGreaterThan(at.near);
+
+  // From inside, the hedge hides the garden: a tap on it, over a plant behind it, picks nothing.
+  const [px, py] = await page.evaluate(
+    () =>
+      new Promise<[number, number]>((done) => {
+        const s = (window as unknown as { __garden: OrchardScene & { layout: { gate: { x: number }; plants: { x: number; z: number }[] } } }).__garden;
+        const near = s.layout.orchard.z - s.layout.orchard.d / 2;
+        Object.assign(s, { x: s.layout.gate.x + 3, z: near + 0.5, yaw: 0, pitch: 0 });
+        const p = s.layout.plants[0];
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const v = new s.tmp.constructor(p.x, 0.5, p.z).project(s.camera);
+            const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+            done([r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
+          }),
+        );
+      }),
+  );
+  await page.mouse.click(px, py);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(errors).toEqual([]);
 });

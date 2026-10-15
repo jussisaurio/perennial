@@ -264,7 +264,6 @@ export function hills(night: boolean): HTMLCanvasElement {
   return c;
 }
 
-/** Trees and bushes for outside the fence: one atlas, 4 cells of 64×128. */
 /** A round blob of leaves centred on (cx, cy), lit from the top left: three shades plus speckle. Returns the pixels it drew. */
 function leafBlob(ctx: CanvasRenderingContext2D, r: () => number, cx: number, cy: number, rad: number, colors: readonly string[]): [number, number][] {
   const out: [number, number][] = [];
@@ -280,6 +279,7 @@ function leafBlob(ctx: CanvasRenderingContext2D, r: () => number, cx: number, cy
   return out;
 }
 
+/** Trees and bushes for outside the fence: one atlas, 4 cells of 64×128. */
 export function trees(): HTMLCanvasElement {
   const [c, ctx] = canvas(256, 128);
   const blob = (r: () => number, cx: number, cy: number, rad: number, colors: string[]) => leafBlob(ctx, r, cx, cy, rad, colors);

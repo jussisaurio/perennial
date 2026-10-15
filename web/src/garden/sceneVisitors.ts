@@ -285,8 +285,8 @@ export class SceneVisitors {
     if (!dark && this.saying?.id === "frog") this.saying = null;
   }
 
-  /** The visitor under a point on the canvas (CSS pixels), if any. */
-  pick(cssX: number, cssY: number, cssW: number, cssH: number): VisitorView | null {
+  /** The visitor under a point on the canvas (CSS pixels), if any. `hidden`: something (the hedge) is between the eye and this point. */
+  pick(cssX: number, cssY: number, cssW: number, cssH: number, hidden: (x: number, y: number, z: number) => boolean): VisitorView | null {
     const camera = this.world.camera;
     const nx = (cssX / cssW) * 2 - 1;
     const ny = -(cssY / cssH) * 2 + 1;
@@ -302,7 +302,7 @@ export class SceneVisitors {
       if (depth < 0.2 || depth > 14) continue;
       const rw = Math.max(0.04, (s.w * hx) / depth / tx);
       const rh = Math.max(0.05, (s.h * hy) / depth / ty);
-      if (Math.abs(nx - this.tmp.x / depth / tx) < rw && Math.abs(ny - this.tmp.y / depth / ty) < rh && depth < bestDepth) {
+      if (Math.abs(nx - this.tmp.x / depth / tx) < rw && Math.abs(ny - this.tmp.y / depth / ty) < rh && depth < bestDepth && !hidden(s.pos.getX(0), s.pos.getY(0) + s.h * cy, s.pos.getZ(0))) {
         best = s.v;
         bestDepth = depth;
       }
