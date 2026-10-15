@@ -263,6 +263,8 @@ export function route(l: Layout, x: number, z: number, toX: number, toZ: number)
 
 /** The point a fraction `k` (0 to 1) of the way along a route, by length. */
 export function along(path: readonly [number, number][], k: number): { x: number; z: number } {
+  // The ends exactly: summing and subtracting leg lengths rounds, and Math.hypot rounds differently per platform.
+  if (k >= 1) return { x: path[path.length - 1][0], z: path[path.length - 1][1] };
   const lens = path.slice(1).map(([x, z], i) => Math.hypot(x - path[i][0], z - path[i][1]));
   let left = k * lens.reduce((a, b) => a + b, 0);
   for (let i = 0; i < lens.length; i++) {
