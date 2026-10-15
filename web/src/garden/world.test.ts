@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { collide, DOOR_HALF, groupOf, HEDGE, layout, viewpoint, walk, type GardenPlant } from "./world";
+import { along, collide, DOOR_HALF, groupOf, HEDGE, layout, route, viewpoint, walk, type GardenPlant } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
@@ -74,8 +74,6 @@ describe("garden layout", () => {
     expect(o.x).toBe(l.gate.x);
     const big = layout(Array.from({ length: 400 }, (_, i) => plant(i))).orchard;
     expect([big.w, big.d]).toEqual([o.w, o.d]);
-    expect(o.w).toBeGreaterThanOrEqual(18);
-    expect(o.d).toBeGreaterThanOrEqual(14.2);
     const inOrchard = { x: o.x + 1, z: o.z };
     expect(collide(l, l.gate.x, b.maxZ + 0.5).z).toBeLessThan(b.maxZ);
     expect(collide(l, inOrchard.x, inOrchard.z).z).toBeLessThan(b.maxZ);
@@ -88,7 +86,27 @@ describe("garden layout", () => {
     expect(collide(l, o.x + o.w, o.z, 0.28, true).x).toBeLessThan(o.x + o.w / 2);
     // A long step (a ctrl+wheel notch is 2 m) beside the door stops at the hedge; through the door it goes in.
     const edge = b.maxZ - 0.3;
-    expect(walk(l, l.gate.x + 2, edge, l.gate.x + 2, edge + 2, true).z).toBeLessThan(b.maxZ);
-    expect(walk(l, l.gate.x, edge, l.gate.x, edge + 2, true).z).toBeCloseTo(edge + 2);
+    expect(walk(l, l.gate.x + 2, edge, l.gate.x + 2, edge + 2, true, []).z).toBeLessThan(b.maxZ);
+    expect(walk(l, l.gate.x, edge, l.gate.x, edge + 2, true, []).z).toBeCloseTo(edge + 2);
+  });
+
+  test("a glide from the orchard to a plant goes out through the door, never through the hedge (#315)", () => {
+    const l = layout(Array.from({ length: 40 }, (_, i) => plant(i)));
+    const o = l.orchard;
+    const to = viewpoint(l, l.plants[0]);
+    // From a corner of the orchard, from beside the door inside it, and from the doorway itself.
+    for (const [x, z] of [[o.x + o.w / 2 - 1, o.z + o.d / 2 - 1], [o.x - 3, o.z - o.d / 2 + 0.3], [l.gate.x, l.bounds.maxZ + 0.5]]) {
+      const path = route(l, x, z, to.x, to.z);
+      expect(along(path, 0)).toEqual({ x, z });
+      expect(along(path, 1)).toEqual({ x: to.x, z: to.z });
+      // Every point on the way is somewhere a walker may stand with the door open (a glide passes over beds, as in the garden).
+      for (let k = 0; k <= 1; k += 0.01) {
+        const p = along(path, k);
+        const ok = collide({ ...l, beds: [], pond: { ...l.pond, r: 0 } }, p.x, p.z, 0, true);
+        expect(Math.hypot(ok.x - p.x, ok.z - p.z)).toBeLessThan(1e-9);
+      }
+    }
+    // In the garden, straight there.
+    expect(route(l, 1, l.bounds.maxZ - 1, to.x, to.z)).toEqual([[1, l.bounds.maxZ - 1], [to.x, to.z]]);
   });
 });

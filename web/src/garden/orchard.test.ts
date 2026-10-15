@@ -3,6 +3,7 @@ import { DAY_MS } from "../core/day";
 import { deriveMemory, type MemoryRow } from "../core/memory";
 import type { ReviewRow } from "../data/rows";
 import { ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema";
+import { HEDGE, layout } from "./world";
 import {
   benchLine,
   collideTrees,
@@ -232,5 +233,36 @@ describe("the bench and the visitors", () => {
     const leavesOnly = trees.filter((t) => t.look === "leaves");
     for (const d of dates) expect(treeVisitorSpots(leavesOnly, new Set<GardenWord>(["bee"]), d)).toEqual([]);
     expect(treeVisitorSpots([], brought, dates[0])).toEqual([]);
+  });
+});
+
+describe("the orchard behind the garden's door", () => {
+  // The orchard where the garden puts it (world.ts layout): the door is in the middle of its side toward the garden.
+  const l = layout([]);
+  const area = l.orchard;
+  const door = { x: l.gate.x, z: l.bounds.maxZ + HEDGE.gap + HEDGE.depth };
+  const placed = placeTrees(area, orchardTrees(ORCHARD_WORDS.map((k) => input(k, 3000, { s: 300, reps: 40, lapses: 0 })), NOW));
+
+  test("the path starts at the door: the bench just inside it, the strip inside the door clear, the rows going away from it", () => {
+    const bench = orchardBench(area);
+    expect(Math.hypot(bench.x - door.x, bench.z - door.z)).toBeLessThan(2.5);
+    for (const t of placed) expect(t.z - t.half).toBeGreaterThan(door.z + 1.5);
+    // The nearest row is near the door; the furthest is near the far hedge.
+    const zs = placed.map((t) => t.z);
+    expect(Math.min(...zs) - door.z).toBeLessThan(5);
+    expect(area.z + area.d / 2 - Math.max(...zs)).toBeLessThan(3);
+  });
+
+  test("the bench's back is to the door, so its plaque faces whoever comes in", () => {
+    // A bench at turn 0 has its seat facing +z, away from a door at −z.
+    expect(orchardBench(area).turn).toBe(0);
+  });
+
+  test("a walker on a trunk's very middle steps out toward the door, and visitors sit on the door side of their tree", () => {
+    const [t] = placed;
+    expect(collideTrees([t], t.x, t.z, 0.28).z).toBeLessThan(t.z);
+    const brought = new Set<GardenWord>(["bird", "owl", "squirrel", "bee"]);
+    const byId = new Map(placed.map((p) => [p.id, p]));
+    for (let i = 0; i < 30; i++) for (const s of treeVisitorSpots(placed, brought, new Date(2026, 9, 1 + i, 12))) expect(s.z).toBeLessThan(byId.get(s.tree)!.z);
   });
 });

@@ -1,10 +1,9 @@
 // The orchard's trees as pixel art (#315), in the style of the trees outside
-// the fence (textures.ts trees()): one atlas, a 96×128 cell per kind and look.
-// The shapes are plain data, so the orchard's hit boxes follow the drawing.
+// the fence (textures.ts trees()): one atlas, a 96×128 cell per kind and look,
+// drawn by textures.ts orchard(). The shapes are plain data, so the orchard's
+// hit boxes follow the drawing, and orchard.ts needs no three.js.
 
-import { ORCHARD_WORDS, type OrchardWord } from "../deck/schema";
-import { rng } from "../lib/seed";
-import { canvas, px } from "./textures";
+import type { OrchardWord } from "../deck/schema";
 
 export const CELL_W = 96;
 export const CELL_H_PX = 128;
@@ -51,7 +50,7 @@ export const TREE_SHAPES: Record<OrchardWord, TreeShape> = {
 };
 
 /** The trellis posts stand this far either side of the middle, from this row down. */
-const TRELLIS = { half: 40, top: 54 };
+export const TRELLIS = { half: 40, top: 54 };
 
 /** The drawn crown: half its width (cell widths) and its top (cell heights from the bottom), for the hit boxes. */
 export function crownBox(kind: OrchardWord): { half: number; top: number } {
@@ -63,83 +62,4 @@ export function crownBox(kind: OrchardWord): { half: number; top: number } {
     top = Math.min(top, TRELLIS.top);
   }
   return { half: half / CELL_W, top: (CELL_H_PX - top) / CELL_H_PX };
-}
-
-/** Every kind in every look: a column per kind (in ORCHARD_WORDS order), a row per look (LOOKS). */
-export function orchardAtlas(): HTMLCanvasElement {
-  const [c, ctx] = canvas(CELL_W * ORCHARD_WORDS.length, CELL_H_PX * LOOKS.length);
-  ORCHARD_WORDS.forEach((kind, col) =>
-    LOOKS.forEach((look, row) => {
-      const s = TREE_SHAPES[kind];
-      const ox = col * CELL_W;
-      const oy = row * CELL_H_PX;
-      const mid = CELL_W / 2;
-      // The same seed in every look, so blossom and fruit sit on the very same tree.
-      const r = rng(70 + col);
-      // Draws in the cell's own pixels.
-      const p = (x: number, y: number, color: string, w = 1, h = 1) => px(ctx, ox + x, oy + y, color, w, h);
-      if (s.trellis) {
-        for (const sx of [-1, 1]) p(mid + sx * TRELLIS.half - 1, TRELLIS.top, "#8a6440", 3, CELL_H_PX - TRELLIS.top);
-        p(mid - TRELLIS.half, TRELLIS.top + 2, "#a37a52", TRELLIS.half * 2, 2);
-        p(mid - TRELLIS.half, TRELLIS.top + 22, "#a37a52", TRELLIS.half * 2, 2);
-      }
-      // The trunk, lit from the left like the trees outside the fence.
-      const tw = s.trunk.w;
-      p(mid - tw / 2, s.trunk.top, "#7a5233", tw, CELL_H_PX - s.trunk.top);
-      p(mid - tw / 2, s.trunk.top, "#946540", 1, CELL_H_PX - s.trunk.top);
-      p(mid + tw / 2 - 1, s.trunk.top, "#5c3b22", 1, CELL_H_PX - s.trunk.top);
-      // The crown: blobs of three shades, light from the top left, with speckle. Its pixels are kept for the flowers and fruit.
-      const crown = new Set<number>();
-      for (const [dx, cy, rad] of s.blobs)
-        for (let y = -rad; y <= rad; y++)
-          for (let x = -rad; x <= rad; x++) {
-            const d = Math.hypot(x, y * 1.1) + r() * 1.6;
-            if (d > rad) continue;
-            const light = (-x - y) / rad;
-            const i = light > 0.45 ? 0 : light > -0.3 ? 1 : 2;
-            const X = mid + dx + x;
-            const Y = cy + y;
-            p(X, Y, r() < 0.08 ? s.leaf[Math.min(2, i + 1)] : s.leaf[i]);
-            crown.add(Y * CELL_W + X);
-          }
-      // Spots well inside the crown, in a fixed order for this tree.
-      const inner = [...crown].filter((k) => [3, -3, CELL_W * 3, -CELL_W * 3].every((o) => crown.has(k + o)));
-      const spot = () => {
-        const k = inner[Math.floor(r() * inner.length)];
-        return [k % CELL_W, Math.floor(k / CELL_W)];
-      };
-      if (look === "blossom")
-        for (let i = 0; i < 90; i++) {
-          const [x, y] = spot();
-          p(x, y, s.blossom[i % s.blossom.length], i % 2 ? 1 : 2, i % 4 ? 1 : 2);
-        }
-      if (look === "fruit") {
-        const f = s.fruit;
-        const [light, dark] = f.color;
-        for (let i = 0; i < f.count; i++) {
-          const [x, y] = spot();
-          if (f.shape === "round" || f.shape === "small") {
-            const n = f.shape === "round" ? 3 : 2;
-            p(x, y, dark, n, n);
-            p(x, y, light, n - 1, n - 1);
-          } else if (f.shape === "pair") {
-            p(x + 1, y - 2, "#4e7a2a", 1, 2);
-            p(x, y, dark, 2, 2);
-            p(x + 2, y + 1, light, 2, 2);
-          } else if (f.shape === "drop") {
-            p(x, y, light, 1, 1);
-            p(x - 1, y + 1, light, 3, 2);
-            p(x + 1, y + 2, dark, 1, 1);
-          } else if (f.shape === "bunch") {
-            for (let k = 0; k < 4; k++) p(x - 3 + k, y + k * 2, k % 2 ? dark : light, 7 - k * 2, 2);
-          } else {
-            p(x - 5, y, dark, 11, 2);
-            p(x - 4, y - 1, light, 9, 1);
-            p(x - 2, y - 2, "#f4efe2", 2, 1);
-          }
-        }
-      }
-    }),
-  );
-  return c;
 }
