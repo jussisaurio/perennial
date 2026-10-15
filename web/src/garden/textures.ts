@@ -178,6 +178,14 @@ export function key(): HTMLCanvasElement {
   return c;
 }
 
+/** A small four-point glint, for the hidden key catching the light (#315). */
+export function glint(): HTMLCanvasElement {
+  const rows = ["....o....", "....o....", "...oWo...", "..oWWWo..", "ooWWWWWoo", "..oWWWo..", "...oWo...", "....o....", "....o...."];
+  const [c, ctx] = canvas(9, 9);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "W" ? "#fffdf0" : "#ffe9a0")));
+  return c;
+}
+
 export interface Sky {
   top: string;
   mid: string;

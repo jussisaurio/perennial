@@ -11,7 +11,7 @@ import type { LoadedDeck } from "../data/deck";
 import { openDoor, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
-import { groupOf, type PlacedPlant } from "../garden/world";
+import { groupOf, keySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, DoorAction, DoorState, TimeOfDay } from "../garden/scene";
 import { EMPTY_WALK, loadingLine, plantLine, SLOW_DEVICE_NOTICE } from "../content/voice";
@@ -39,11 +39,18 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const source = useMemo(() => (learner ? plantsFromLearner(learner) : null), [learner]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
   const store = useStore();
-  // The door in the hedge (#315): open for good once opened; until then the key lies by it once "key" brought it.
+  // The door in the hedge (#315): open for good once opened; until then the key hides in the garden once "key" brought it,
+  // always in the same place for this learner and course.
   // Until the learner loads there is no garden to walk (`source` is null), so "locked" is never shown then.
   // door_open is missing from course rows Electric streams before its first course change after the migration: closed, as it was.
   const door = useMemo(() => {
-    const state: DoorState = !learner ? "locked" : learner.course.door_open ? "open" : gardenBrought(learner).has("key") ? "key" : "locked";
+    const state: DoorState = !learner
+      ? "locked"
+      : learner.course.door_open
+        ? "open"
+        : gardenBrought(learner).has("key")
+          ? { key: keySpot(`${learner.course.user_id}:${lang}`) }
+          : "locked";
     // A write the server refuses is told by the refused-writes notice (#253); this walk keeps its door open.
     return { state, open: () => void openDoor(store, lang).catch((e) => console.error("door not saved", e)) };
   }, [learner, store, lang]);

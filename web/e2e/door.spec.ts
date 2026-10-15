@@ -1,7 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { doorNow, serverRows, standAtDoor } from "./helpers";
+import { doorNow, serverRows, standAtDoor, standByKey } from "./helpers";
 
-// #315: the old door in the hedge. Locked until "key" (llave) brings the key;
+// #315: the old door in the hedge. Locked until "key" (llave) brings the key,
+// which hides somewhere in the garden (a different place for each learner);
 // a tap picks the key up, a tap opens the door, and it stays open for good.
 
 async function openWalk(page: Page) {
@@ -25,7 +26,7 @@ test("the locked door says so by its button, to screen readers too; without the 
   await openWalk(page);
   expect(await doorNow(page)).toMatchObject({ state: "locked", key: null });
   // Near the door, a button does what a tap does (the tap is in the next test), for keyboards and screen readers.
-  await standAtDoor(page, "door");
+  await standAtDoor(page);
   await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
   await page.getByRole("button", { name: "Try the door" }).click();
   await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
@@ -35,7 +36,7 @@ test("the locked door says so by its button, to screen readers too; without the 
   expect(errors).toEqual([]);
 });
 
-test("'llave' brings the key: a tap picks it up, a tap opens the door, and it is still open after a reload", async ({ page }) => {
+test("'llave' brings the key, hidden away from the door: a tap picks it up, a tap opens the door, and it is still open after a reload", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto("/?demo=es:30#/today");
@@ -52,17 +53,25 @@ test("'llave' brings the key: a tap picks it up, a tap opens the door, and it is
   await page.goto("/#/today");
   await openWalk(page);
   expect(await doorNow(page)).toMatchObject({ state: "key", key: true });
+  // Not by the door: a small find somewhere in the garden.
+  expect((await doorNow(page)).keyFromDoor).toBeGreaterThan(4);
 
-  // Tapping the door first: still locked.
-  await page.mouse.click(...(await standAtDoor(page, "door")));
+  // Tapping the door first: still locked, and no hint of the key there.
+  await page.mouse.click(...(await standAtDoor(page)));
   await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
-  // The key: one quiet line, and it is gone from the ground.
-  await page.mouse.click(...(await standAtDoor(page, "key")));
+  await expect(page.getByRole("button", { name: "Try the door" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
+  // By the key, its button shows. A tap: one quiet line, and it is gone from the ground.
+  const key = await standByKey(page);
+  await expect(page.getByRole("button", { name: "Pick up the key" })).toBeVisible();
+  await page.mouse.click(...key);
   await expect(page.locator(".gw-say")).toHaveText("You found the key.");
   expect(await doorNow(page)).toMatchObject({ state: "held", key: false });
-  await expect(page.getByRole("button", { name: "Open the door with the key" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
   // The door opens; with reduced motion (as these tests run) at once, without a swing.
-  await page.mouse.click(...(await standAtDoor(page, "door")));
+  const door = await standAtDoor(page);
+  await expect(page.getByRole("button", { name: "Open the door with the key" })).toBeVisible();
+  await page.mouse.click(...door);
   await expect.poll(async () => (await doorNow(page)).state).toBe("open");
   expect((await doorNow(page)).angle).toBeCloseTo(Math.PI / 2);
   await expect(page.getByRole("button", { name: /door/ })).toHaveCount(0);
@@ -118,8 +127,9 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
   // A mystery: nothing is built behind the hedge while the door is shut.
   expect(await orchardNow(page)).toBeNull();
 
-  await standAtDoor(page, "key");
+  await standByKey(page);
   await page.getByRole("button", { name: "Pick up the key" }).click();
+  await standAtDoor(page);
   await page.getByRole("button", { name: "Open the door with the key" }).click();
   await expect.poll(async () => (await doorNow(page)).state).toBe("open");
 
@@ -151,7 +161,7 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
   await expect(page.locator(".gw-tag")).toContainText(tree(lemma).gloss);
 
   // Walk in from the garden, two metres a step (ctrl and the wheel): through the doorway, past the hedge, into the orchard.
-  await standAtDoor(page, "door");
+  await standAtDoor(page);
   await page.keyboard.down("Control");
   for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -100);
   await page.keyboard.up("Control");

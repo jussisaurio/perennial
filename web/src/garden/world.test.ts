@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { along, collide, DOOR_HALF, groupOf, HEDGE, layout, route, viewpoint, walk, type GardenPlant } from "./world";
+import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keySpot, layout, route, viewpoint, walk, type GardenPlant } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
@@ -108,5 +108,58 @@ describe("garden layout", () => {
     }
     // In the garden, straight there.
     expect(route(l, 1, l.bounds.maxZ - 1, to.x, to.z)).toEqual([[1, l.bounds.maxZ - 1], [to.x, to.z]]);
+  });
+});
+
+describe("the hidden key (#315)", () => {
+  const gardens = [
+    layout([]),
+    layout([plant(1)]),
+    layout(Array.from({ length: 70 }, (_, i) => plant(i, ["noun", "verb", "adj"][i % 3]))),
+    layout(Array.from({ length: 600 }, (_, i) => plant(i, ["noun", "verb", "adj", "adv", "phrase"][i % 5]))),
+  ];
+
+  test("it hides away from the door, wherever its spot", () => {
+    for (const l of gardens)
+      for (const spot of KEY_SPOTS) {
+        const k = keyAt(l, spot);
+        expect(Math.hypot(k.x - l.gate.x, k.z - l.bounds.maxZ)).toBeGreaterThan(4);
+      }
+  });
+
+  test("a learner always gets the same spot, and learners get different ones", () => {
+    expect(keySpot("user-1:es")).toBe(keySpot("user-1:es"));
+    const seen = new Set(Array.from({ length: 200 }, (_, i) => keySpot(`user-${i}:es`)));
+    expect([...seen].sort()).toEqual([...KEY_SPOTS].sort());
+  });
+
+  test("every spot can be walked to from where the walk starts, close enough to pick the key up", () => {
+    for (const l of gardens) {
+      // Walkable points on a 0.25 m grid, joined where a walker steps straight from one to the next.
+      const g = 0.25;
+      const at = (x: number, z: number) => `${Math.round(x / g)},${Math.round(z / g)}`;
+      const start = { x: l.gate.x, z: l.gate.z - 1.2 };
+      const seen = new Set([at(start.x, start.z)]);
+      const reached: { x: number; z: number }[] = [];
+      const todo = [start];
+      while (todo.length) {
+        const p = todo.pop()!;
+        reached.push(p);
+        for (const [dx, dz] of [[g, 0], [-g, 0], [0, g], [0, -g]]) {
+          const to = walk(l, p.x, p.z, p.x + dx, p.z + dz, false, []);
+          if (Math.hypot(to.x - p.x - dx, to.z - p.z - dz) > 1e-9 || seen.has(at(to.x, to.z))) continue;
+          seen.add(at(to.x, to.z));
+          todo.push(to);
+        }
+      }
+      for (const spot of KEY_SPOTS) {
+        const k = keyAt(l, spot);
+        expect(Math.min(...reached.map((p) => Math.hypot(p.x - k.x, p.z - k.z)))).toBeLessThan(1);
+        // On the ground where it can be seen: not in a bed or the pond, and inside the fence.
+        expect(l.beds.some((b) => Math.abs(k.x - b.x) < b.w / 2 && Math.abs(k.z - b.z) < b.d / 2)).toBe(false);
+        expect(Math.hypot(k.x - l.pond.x, k.z - l.pond.z)).toBeGreaterThan(l.pond.r);
+        expect(k.x > l.bounds.minX && k.x < l.bounds.maxX && k.z > l.bounds.minZ && k.z < l.bounds.maxZ).toBe(true);
+      }
+    }
   });
 });

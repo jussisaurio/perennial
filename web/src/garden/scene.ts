@@ -4,9 +4,10 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { along, DOOR_HALF, HEDGE, hedgeSpan, route, viewpoint, walk, type Layout, type PlacedPlant } from "./world";
+import { along, benchAt, DOOR_HALF, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, type KeySpot, type Layout, type PlacedPlant } from "./world";
 import { benchLine, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
+import { gateHedge, hedgeClumps, hedgeCore, orchardHedge, type Clump, type HedgeWall } from "./hedge";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf, stemHeight } from "../ui/plant";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
@@ -16,8 +17,8 @@ import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
-/** The door in the hedge (#315): locked; locked with the key lying by it (its garden word brought it); or open for good. */
-export type DoorState = "locked" | "key" | "open";
+/** The door in the hedge (#315): locked; locked with the key hidden somewhere in the garden (its garden word brought it); or open for good. */
+export type DoorState = "locked" | { key: KeySpot } | "open";
 /** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
 export type DoorAction = "try" | "key" | "open";
 /** The garden's quiet lines at the door. */
@@ -98,12 +99,14 @@ const HILLS = { radius: 150, height: 34, y: 10, repeat: 4 };
 const UP = new THREE.Vector3(0, 1, 0);
 /** The door in the hedge: its height and thickness, how far it swings open (it swings out, into the orchard), and for how long. */
 const DOOR = { h: 2.05, thick: 0.06, open: Math.PI / 2, swing: 1.4 };
-/** Where the key lies, from the middle of the doorway: on the path inside the fence, a little to the left. */
-const KEY_AT = { dx: -0.8, dz: -0.55 };
 /** The keyhole, from the door's hinge (texture door(): its iron plate's middle). */
 const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
 /** Near enough to the door (metres from its middle) to be offered its button. */
 const DOOR_REACH = 2.6;
+/** Near enough to the hidden key to be offered "Pick up the key" (m). */
+const KEY_REACH = 2;
+/** The key's glint: seen from this near (m), a flash this long (s) this often (s). Nothing calls to the learner from across the garden. */
+const GLINT = { near: 7, flash: 0.5, every: 3.2 };
 
 /** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. */
 const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
@@ -308,6 +311,16 @@ function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeome
   return box;
 }
 
+/** Vertex colours from `low` at the bottom to `high` at the top, for an unlit material with vertexColors: shading without lights. */
+function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
+  geo.computeBoundingBox();
+  const { min, max } = geo.boundingBox!;
+  const pos = geo.getAttribute("position");
+  const colors = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) colors.fill(low + ((high - low) * (pos.getY(i) - min.y)) / (max.y - min.y), i * 3, i * 3 + 3);
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+}
+
 /** Instanced geometry that shares `quad`'s vertices; the caller adds the per-instance attributes. */
 function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeometry {
   const geo = new THREE.InstancedBufferGeometry();
@@ -468,15 +481,16 @@ export class GardenScene {
   /** The sleeping bloom's z's, shown at night. */
   private snore: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
   /**
-   * The door in the hedge (#315). "held": the learner picked up the key in this
-   * walk; only "open" is saved. `leaf` turns on its hinge; `swing` is how far
-   * through its swing it is (null: not swinging); `near` is what the viewer was last offered.
+   * The door in the hedge (#315). "key": the key is hidden in the garden;
+   * "held": the learner picked it up in this walk; only "open" is saved. `leaf`
+   * turns on its hinge; `swing` is how far through its swing it is (null: not
+   * swinging); `near` is what the viewer was last offered.
    */
   private door!: {
-    state: DoorState | "held";
+    state: "locked" | "key" | "held" | "open";
     leaf: THREE.Group;
     keyhole: { hole: THREE.Mesh; glow: THREE.Sprite };
-    key: { mesh: THREE.Mesh; x: number; z: number } | null;
+    key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null;
     swing: number | null;
     near: DoorAction | null;
   };
@@ -658,31 +672,52 @@ export class GardenScene {
     fence(L.gate.x + GATE_HALF, b.maxZ, b.maxX, b.maxZ);
   }
 
-  /** A block of hedge from x1 to x2, y1 up to the hedge's top, and z1 to z2. Solid: nothing shows through it. */
-  private hedgeBlock(x1: number, x2: number, y1: number, z1: number, z2: number) {
-    const m = new THREE.Mesh(tiledBox(x2 - x1, HEDGE.height - y1, z2 - z1, 1), this.hedgeMat);
-    m.position.set((x1 + x2) / 2, (y1 + HEDGE.height) / 2, (z1 + z2) / 2);
-    this.scene.add(m);
-    this.hitBoxes.push({ id: "hedge", min: [x1, y1, z1], max: [x2, HEDGE.height, z2], tag: null });
+  /**
+   * Walls of hedge (hedge.ts). Each solid middle is a box, dark in the gaps and
+   * darker low down; nothing shows through it. All their clumps of leaves are one
+   * instanced mesh: one draw call. A tap meets a wall's outline.
+   */
+  private hedgeWalls(walls: HedgeWall[], seed: number) {
+    const clumps: Clump[] = [];
+    walls.forEach((w, i) => {
+      const { min, max } = hedgeCore(w);
+      const geo = tiledBox(max[0] - min[0], max[1] - min[1], max[2] - min[2], 1);
+      shadeUp(geo, 0.42, 0.66);
+      const m = new THREE.Mesh(geo, this.hedgeMat);
+      m.position.set((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
+      this.scene.add(m);
+      this.hitBoxes.push({ id: "hedge", min: [...w.min], max: [...w.max], tag: null });
+      clumps.push(...hedgeClumps(w, seed + i));
+    });
+    // A rounded clump, lit from above: its underside darker.
+    const clump = new THREE.IcosahedronGeometry(1, 1);
+    shadeUp(clump, 0.66, 1);
+    // About as many leaves to the metre as on the solid middle.
+    const uv = clump.getAttribute("uv") as THREE.BufferAttribute;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
+    const mesh = new THREE.InstancedMesh(clump, this.hedgeMat, clumps.length);
+    const m4 = new THREE.Matrix4();
+    const color = new THREE.Color();
+    clumps.forEach((c, i) => {
+      mesh.setMatrixAt(i, m4.makeScale(...c.r).setPosition(...c.at));
+      mesh.setColorAt(i, color.setScalar(c.shade));
+    });
+    this.scene.add(mesh);
   }
 
   /**
    * The tall hedge along the gate side, with the old door set into it (#315),
-   * and the key by it once its word brought it. The hedge is taller than the
+   * and the key hidden in the garden once its word brought it. The hedge is taller than the
    * eye, and nothing is built behind it until the door opens: no angle shows
    * what is there. Through the keyhole there is only a warm light.
    */
   private buildHedge(c: BuildCtx) {
     const { L, b, mat, woodTex } = c;
-    this.hedgeMat = mat(T.pixelTexture(T.hedge(), true));
+    this.hedgeMat = mat(T.pixelTexture(T.hedge(), true), { vertexColors: true });
     const gx = L.gate.x;
     const z0 = b.maxZ + HEDGE.gap;
-    const z1 = z0 + HEDGE.depth;
-    const [left, right] = hedgeSpan(L);
-    this.hedgeBlock(left, gx - DOOR_HALF, 0, z0, z1);
-    this.hedgeBlock(gx + DOOR_HALF, right, 0, z0, z1);
-    // Over the door, the hedge closes into an arch.
-    this.hedgeBlock(gx - DOOR_HALF, gx + DOOR_HALF, DOOR.h, z0, z1);
+    // Left and right of the door, and over it, closing into an arch.
+    this.hedgeWalls(gateHedge(L, DOOR.h), 1);
     // A wooden frame round the door, on the garden side.
     const doorTag: [number, number, number] = [gx, DOOR.h + 0.35, z0];
     for (const s of [-1, 1]) {
@@ -713,17 +748,23 @@ export class GardenScene {
     leaf.add(hole, glow);
     this.scene.add(leaf);
 
-    let key: { mesh: THREE.Mesh; x: number; z: number } | null = null;
-    if (this.visitors.door === "key") {
-      const x = gx + KEY_AT.dx;
-      const z = b.maxZ + KEY_AT.dz;
-      // Lying on the path, turned a little, as if dropped.
+    // The key, at this learner's hiding place, far from the door: a small find.
+    const state = this.visitors.door;
+    let key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
+    if (typeof state === "object") {
+      const { x, z } = keyAt(L, state.key);
+      // Lying on the ground, turned a little, as if dropped.
       const mesh = sprites(T.pixelTexture(T.key()), [{ x, y: 0.03, z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
       this.mats.add(mesh.material);
       this.scene.add(mesh);
-      key = { mesh, x, z };
+      // It catches the light now and then (tick), only when you are near. Not tinted: a glint is bright at dusk too.
+      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glint()), transparent: true, depthWrite: false, fog: false }));
+      glint.position.set(x + 0.08, 0.1, z);
+      glint.visible = false;
+      this.scene.add(glint);
+      key = { mesh, glint, x, z };
     }
-    this.door = { state: this.visitors.door, leaf, keyhole: { hole, glow }, key, swing: null, near: null };
+    this.door = { state: typeof state === "object" ? "key" : state, leaf, keyhole: { hole, glow }, key, swing: null, near: null };
   }
 
   /** Opens the door for good: the swing (none with reduced motion), and what lies behind it is built now. */
@@ -735,11 +776,7 @@ export class GardenScene {
     else d.leaf.rotation.y = DOOR.open;
     // The orchard's own hedge, round the far sides, so it is a walled garden.
     const o = this.layout.orchard;
-    const [x0, x1] = [o.x - o.w / 2, o.x + o.w / 2];
-    const [near, far] = [o.z - o.d / 2, o.z + o.d / 2];
-    this.hedgeBlock(x0 - HEDGE.depth, x0, 0, near, far);
-    this.hedgeBlock(x1, x1 + HEDGE.depth, 0, near, far);
-    this.hedgeBlock(x0 - HEDGE.depth, x1 + HEDGE.depth, 0, far, far + HEDGE.depth);
+    this.hedgeWalls(orchardHedge(this.layout), 4);
     const { trees, firstPlanted } = this.visitors.orchard;
     const orchard = buildOrchard(
       {
@@ -794,7 +831,7 @@ export class GardenScene {
     const z0 = L.bounds.maxZ + HEDGE.gap;
     if (a === "key" && d.state === "key" && d.key) {
       d.state = "held";
-      d.key.mesh.visible = false;
+      d.key.mesh.visible = d.key.glint.visible = false;
       this.showLine(DOOR_LINES.found, [d.key.x, 0.45, d.key.z]);
     } else if (a === "open" && d.state === "held") {
       this.openDoor(true);
@@ -909,17 +946,7 @@ export class GardenScene {
 
   /** Lanterns where paths cross, and two by the door. Lit at dusk and night. */
   private buildLanterns(c: BuildCtx) {
-    const { L } = c;
-    const spots = new Map<string, [number, number]>();
-    for (const bed of L.beds)
-      for (const sx of [-1, 1]) {
-        const x = bed.x + sx * (bed.w / 2 + 0.95);
-        const z = bed.z + bed.d / 2 + 0.95;
-        spots.set(`${x.toFixed(1)},${z.toFixed(1)}`, [x, z]);
-      }
-    spots.set("gate-l", [L.gate.x - 1.6, L.gate.z - 0.4]);
-    spots.set("gate-r", [L.gate.x + 1.6, L.gate.z - 0.4]);
-    this.lanternSpots = [...spots.values()];
+    this.lanternSpots = lanternSpots(c.L);
     for (const [x, z] of this.lanternSpots) this.hitBoxes.push(spriteBox("lantern", x, 0, z, 0.13, 1.26));
     const lanternTex = T.pixelTexture(T.lantern());
     const lanternItems = (u: number): SpriteItem[] => this.lanternSpots.map(([x, z]) => ({ x, y: 0, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
@@ -945,9 +972,9 @@ export class GardenScene {
 
   /** A bench by the pond, for sitting and admiring. Returns where it stands. */
   private buildBench(c: BuildCtx): THREE.Group {
-    const { L } = c;
     const bench = benchModel(c);
-    bench.position.set(L.pond.x + 0.2, 0, L.pond.z - L.pond.r - 0.75);
+    const at = benchAt(c.L);
+    bench.position.set(at.x, 0, at.z);
     this.scene.add(bench);
     {
       const { x, z } = bench.position;
@@ -1047,12 +1074,10 @@ export class GardenScene {
 
   /** The sunflower that turns its back on you. */
   private buildSunflower(c: BuildCtx) {
-    const { b } = c;
     // One sunflower in the far right corner, by the back fence. Unlike every other
     // sprite, it does not look at you: from the garden you see the back of its head,
     // and only from the back path, with the sun behind you, its face.
-    const x = b.maxX - 1;
-    const z = b.minZ + 0.45;
+    const { x, z } = sunflowerAt(c.L);
     const flowerMesh = sprites(T.pixelTexture(T.sunflower()), [{ x, y: 0, z, u: 0.5, v: 0, uw: 0.5, vh: 1, phase: 1.3, droop: 0, scale: 1, index: -5 }], 0.85, 1.7);
     this.hitBoxes.push(spriteBox("sunflower", x, 0, z, 0.24, 1.62));
     const geo = flowerMesh.geometry;
@@ -1088,6 +1113,10 @@ export class GardenScene {
       const a = rand() * Math.PI * 2;
       put(L.pond.x + Math.cos(a) * (L.pond.r + 0.3), L.pond.z + Math.sin(a) * (L.pond.r + 0.3), [3, 3, 0, 2][i % 4], 0.38);
     }
+    // Two stones at the pond's edge by the fence, where the key may hide (#315). Always there, so they give nothing away.
+    // A fixed phase, not rand(): the sky and critters after this keep their random sequence.
+    const stones = keyAt(L, "pond");
+    for (const [dz, scale] of [[-0.32, 0.4], [0.3, 0.32]]) decor.push({ x: stones.x + 0.05, y: 0.01, z: stones.z + dz, u: 0.75, v: 0, uw: 0.25, vh: 1, phase: 0, droop: 0, scale, index: -4 });
     for (const it of decor) {
       const k = DECOR_KINDS[Math.round(it.u * 4)];
       if (k) this.hitBoxes.push(spriteBox(k.id, it.x, Math.max(0, it.y), it.z, k.half * it.scale, k.top * it.scale));
@@ -1651,6 +1680,14 @@ export class GardenScene {
       if (door.swing >= 1) door.swing = null;
     }
 
+    // The hidden key glints now and then when you are near; with reduced motion, a still glint.
+    const key = door.state === "key" ? door.key : null;
+    if (key) {
+      const k = t % GLINT.every;
+      key.glint.visible = Math.hypot(this.x - key.x, this.z - key.z) < GLINT.near && (this.reducedMotion || k < GLINT.flash);
+      key.glint.scale.setScalar(this.reducedMotion ? 0.12 : 0.04 + 0.16 * Math.sin((Math.PI * k) / GLINT.flash));
+    }
+
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
     this.renderer.render(this.scene, this.camera);
     this.labels();
@@ -1712,11 +1749,15 @@ export class GardenScene {
     }
   }
 
-  /** Tell the page what the viewer can do at the shut door when they stand near it (a button for keys and screen readers), and when they leave. */
+  /**
+   * Tell the page what the viewer can do when they stand near the hidden key or
+   * the shut door (a button for keys and screen readers), and when they leave.
+   */
   private reportDoor() {
     const d = this.door;
-    const near = d.state !== "open" && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH;
-    const a: DoorAction | null = !near ? null : d.state === "key" ? "key" : d.state === "held" ? "open" : "try";
+    const nearKey = d.state === "key" && !!d.key && Math.hypot(this.x - d.key.x, this.z - d.key.z) < KEY_REACH;
+    const nearDoor = d.state !== "open" && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH;
+    const a: DoorAction | null = nearKey ? "key" : !nearDoor ? null : d.state === "held" ? "open" : "try";
     if (a === d.near) return;
     d.near = a;
     this.cb.onDoor(a);
