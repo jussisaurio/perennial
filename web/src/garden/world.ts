@@ -4,6 +4,7 @@
 
 import { toPos, type GardenWord, type Pos } from "../deck/schema";
 import { hash01 } from "../lib/seed";
+import { collideTrees, ORCHARD_MIN, type PlacedTree } from "./orchard";
 import type { Stage } from "../ui/plant";
 
 export interface GardenPlant {
@@ -53,12 +54,8 @@ export interface Layout {
 export const HEDGE = { gap: 0.1, depth: 1.0, height: 2.6 } as const;
 /** Half the width of the door in the hedge. */
 export const DOOR_HALF = 0.55;
-/**
- * The orchard behind the hedge: a fixed size, whatever the size of the garden,
- * because its trees' places are worked out from it (garden/orchard.ts needs at
- * least 18 × 14.2 m). The door is in the middle of its side toward the garden.
- */
-const ORCHARD = { w: 18, d: 14.2 } as const;
+/** A walker's radius (m): how close the eye comes to fences, beds, the hedge and trunks. */
+export const WALKER = 0.28;
 
 const SPACING = 0.62;
 const BED_COLS = 6;
@@ -164,7 +161,8 @@ export function layout(plants: GardenPlant[]): Layout {
     bounds,
     gate: { x: 0, z: bounds.maxZ },
     pond: { x: bounds.minX + 2.6, z: bounds.maxZ - 2.4, r: 1.5 },
-    orchard: { x: 0, z: bounds.maxZ + HEDGE.gap + HEDGE.depth + ORCHARD.d / 2, w: ORCHARD.w, d: ORCHARD.d },
+    // A fixed size, whatever the size of the garden: just big enough for a tree of every kind. The door is in the middle of its side toward the garden.
+    orchard: { x: 0, z: bounds.maxZ + HEDGE.gap + HEDGE.depth + ORCHARD_MIN.d / 2, w: ORCHARD_MIN.w, d: ORCHARD_MIN.d },
   };
 }
 
@@ -196,7 +194,7 @@ function nearestIn(rects: Rect[], x: number, z: number): { x: number; z: number 
  * Keep a walker of radius `rad` inside the fence and out of beds and the pond.
  * Once the door is open (#315), the doorway and the orchard behind it are open too.
  */
-export function collide(l: Layout, x: number, z: number, rad = 0.28, doorOpen = false): { x: number; z: number } {
+export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen = false): { x: number; z: number } {
   const b = l.bounds;
   const garden: Rect = [b.minX + rad, b.maxX - rad, b.minZ + rad, b.maxZ - rad];
   const o = l.orchard;
@@ -230,15 +228,52 @@ export function collide(l: Layout, x: number, z: number, rad = 0.28, doorOpen = 
 }
 
 /**
- * Move a walker from (x, z) toward (toX, toZ), in short pieces through collide.
+ * Move a walker from (x, z) toward (toX, toZ), in short pieces through collide,
+ * and round the orchard's trunks (`trees`: none while the door is shut).
  * collide sees only where a move ends: one long move (a ctrl+wheel step is 2 m)
  * could end past the hedge's middle and land in the orchard, beside the door (#315).
  */
-export function walk(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean): { x: number; z: number } {
+export function walk(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean, trees: readonly PlacedTree[]): { x: number; z: number } {
   const n = Math.max(1, Math.ceil(Math.hypot(toX - x, toZ - z) / 0.25));
   const [dx, dz] = [(toX - x) / n, (toZ - z) / n];
-  for (let i = 0; i < n; i++) ({ x, z } = collide(l, x + dx, z + dz, undefined, doorOpen));
+  for (let i = 0; i < n; i++) {
+    ({ x, z } = collide(l, x + dx, z + dz, WALKER, doorOpen));
+    ({ x, z } = collideTrees(trees, x, z, WALKER));
+  }
   return { x, z };
+}
+
+/** How far into the doorway's ends a route steps: clear of the hedge on either side. */
+const DOOR_STEP = 0.5;
+
+/**
+ * The way to a spot in the garden from (x, z): straight there from the garden;
+ * from the orchard or its doorway (#315), out through the door first, so a
+ * glide never goes through the hedge. Corners in order, from (x, z) to the spot.
+ */
+export function route(l: Layout, x: number, z: number, toX: number, toZ: number): [number, number][] {
+  if (z <= l.bounds.maxZ) return [[x, z], [toX, toZ]];
+  const out: [number, number][] = [[x, z]];
+  const near = l.orchard.z - l.orchard.d / 2;
+  // In the orchard: first to just inside the door.
+  if (z > near) out.push([l.gate.x, near + DOOR_STEP]);
+  out.push([l.gate.x, l.bounds.maxZ - DOOR_STEP], [toX, toZ]);
+  return out;
+}
+
+/** The point a fraction `k` (0 to 1) of the way along a route, by length. */
+export function along(path: readonly [number, number][], k: number): { x: number; z: number } {
+  const lens = path.slice(1).map(([x, z], i) => Math.hypot(x - path[i][0], z - path[i][1]));
+  let left = k * lens.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < lens.length; i++) {
+    if (left <= lens[i] || i === lens.length - 1) {
+      // A leg of no length (already at its end) has no direction: its end is the point.
+      const f = lens[i] ? Math.min(1, left / lens[i]) : 1;
+      return { x: path[i][0] + (path[i + 1][0] - path[i][0]) * f, z: path[i][1] + (path[i + 1][1] - path[i][1]) * f };
+    }
+    left -= lens[i];
+  }
+  throw new Error("a route has at least two corners");
 }
 
 /** Where to stand to look at a plant: on the path in front of its bed. */

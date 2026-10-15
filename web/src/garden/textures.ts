@@ -8,6 +8,8 @@ import { rng } from "../lib/seed";
 import { Plant } from "../ui/plant";
 import type { PlacedPlant } from "./world";
 import * as Art from "./visitorArt";
+import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
+import { ORCHARD_WORDS } from "../deck/schema";
 import { loadImage } from "../ui/files";
 
 export function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
@@ -263,19 +265,24 @@ export function hills(night: boolean): HTMLCanvasElement {
 }
 
 /** Trees and bushes for outside the fence: one atlas, 4 cells of 64×128. */
+/** A round blob of leaves centred on (cx, cy), lit from the top left: three shades plus speckle. Returns the pixels it drew. */
+function leafBlob(ctx: CanvasRenderingContext2D, r: () => number, cx: number, cy: number, rad: number, colors: readonly string[]): [number, number][] {
+  const out: [number, number][] = [];
+  for (let y = -rad; y <= rad; y++)
+    for (let x = -rad; x <= rad; x++) {
+      const d = Math.hypot(x, y * 1.1) + r() * 1.6;
+      if (d > rad) continue;
+      const light = (-x - y) / rad;
+      const i = light > 0.45 ? 0 : light > -0.3 ? 1 : 2;
+      px(ctx, cx + x, cy + y, r() < 0.08 ? colors[Math.min(2, i + 1)] : colors[i]);
+      out.push([cx + x, cy + y]);
+    }
+  return out;
+}
+
 export function trees(): HTMLCanvasElement {
   const [c, ctx] = canvas(256, 128);
-  const blob = (r: () => number, cx: number, cy: number, rad: number, colors: string[]) => {
-    for (let y = -rad; y <= rad; y++)
-      for (let x = -rad; x <= rad; x++) {
-        const d = Math.hypot(x, y * 1.1) + r() * 1.6;
-        if (d > rad) continue;
-        // Light from the top left, three shades plus speckle.
-        const light = (-x - y) / rad;
-        const i = light > 0.45 ? 0 : light > -0.3 ? 1 : 2;
-        px(ctx, cx + x, cy + y, r() < 0.08 ? colors[Math.min(2, i + 1)] : colors[i]);
-      }
-  };
+  const blob = (r: () => number, cx: number, cy: number, rad: number, colors: string[]) => leafBlob(ctx, r, cx, cy, rad, colors);
   const trunk = (cx: number, top: number, w: number) => {
     px(ctx, cx - w / 2, top, "#7a5233", w, 128 - top);
     px(ctx, cx - w / 2, top, "#5c3b22", 1, 128 - top);
@@ -309,6 +316,74 @@ export function trees(): HTMLCanvasElement {
   blob(r, 214, 112, 14, ["#6fb556", "#4f9441", "#367233"]);
   blob(r, 236, 114, 12, ["#6fb556", "#4f9441", "#367233"]);
   for (let i = 0; i < 9; i++) px(ctx, 204 + Math.floor(r() * 40), 104 + Math.floor(r() * 16), "#e2474b");
+  return c;
+}
+
+/** The orchard's trees (#315, orchardArt.ts): every kind in every look, a column per kind (in ORCHARD_WORDS order), a row per look (LOOKS). */
+export function orchard(): HTMLCanvasElement {
+  const [c, ctx] = canvas(CELL_W * ORCHARD_WORDS.length, CELL_H_PX * LOOKS.length);
+  ORCHARD_WORDS.forEach((kind, col) =>
+    LOOKS.forEach((look, row) => {
+      const s = TREE_SHAPES[kind];
+      const ox = col * CELL_W;
+      const oy = row * CELL_H_PX;
+      const mid = CELL_W / 2;
+      // The same seed in every look, so blossom and fruit sit on the very same tree.
+      const r = rng(70 + col);
+      // Draws in the cell's own pixels.
+      const p = (x: number, y: number, color: string, w = 1, h = 1) => px(ctx, ox + x, oy + y, color, w, h);
+      if (s.trellis) {
+        for (const sx of [-1, 1]) p(mid + sx * TRELLIS.half - 1, TRELLIS.top, "#8a6440", 3, CELL_H_PX - TRELLIS.top);
+        p(mid - TRELLIS.half, TRELLIS.top + 2, "#a37a52", TRELLIS.half * 2, 2);
+        p(mid - TRELLIS.half, TRELLIS.top + 22, "#a37a52", TRELLIS.half * 2, 2);
+      }
+      // The trunk, lit from the left like the trees outside the fence.
+      const tw = s.trunk.w;
+      p(mid - tw / 2, s.trunk.top, "#7a5233", tw, CELL_H_PX - s.trunk.top);
+      p(mid - tw / 2, s.trunk.top, "#946540", 1, CELL_H_PX - s.trunk.top);
+      p(mid + tw / 2 - 1, s.trunk.top, "#5c3b22", 1, CELL_H_PX - s.trunk.top);
+      // The crown: blobs of three shades, light from the top left, with speckle. Its pixels are kept for the flowers and fruit.
+      const crown = new Set<number>();
+      for (const [dx, cy, rad] of s.blobs) for (const [X, Y] of leafBlob(ctx, r, ox + mid + dx, oy + cy, rad, s.leaf)) crown.add((Y - oy) * CELL_W + (X - ox));
+      // Spots well inside the crown, in a fixed order for this tree.
+      const inner = [...crown].filter((k) => [3, -3, CELL_W * 3, -CELL_W * 3].every((o) => crown.has(k + o)));
+      const spot = () => {
+        const k = inner[Math.floor(r() * inner.length)];
+        return [k % CELL_W, Math.floor(k / CELL_W)];
+      };
+      if (look === "blossom")
+        for (let i = 0; i < 90; i++) {
+          const [x, y] = spot();
+          p(x, y, s.blossom[i % s.blossom.length], i % 2 ? 1 : 2, i % 4 ? 1 : 2);
+        }
+      if (look === "fruit") {
+        const f = s.fruit;
+        const [light, dark] = f.color;
+        for (let i = 0; i < f.count; i++) {
+          const [x, y] = spot();
+          if (f.shape === "round" || f.shape === "small") {
+            const n = f.shape === "round" ? 3 : 2;
+            p(x, y, dark, n, n);
+            p(x, y, light, n - 1, n - 1);
+          } else if (f.shape === "pair") {
+            p(x + 1, y - 2, "#4e7a2a", 1, 2);
+            p(x, y, dark, 2, 2);
+            p(x + 2, y + 1, light, 2, 2);
+          } else if (f.shape === "drop") {
+            p(x, y, light, 1, 1);
+            p(x - 1, y + 1, light, 3, 2);
+            p(x + 1, y + 2, dark, 1, 1);
+          } else if (f.shape === "bunch") {
+            for (let k = 0; k < 4; k++) p(x - 3 + k, y + k * 2, k % 2 ? dark : light, 7 - k * 2, 2);
+          } else {
+            p(x - 5, y, dark, 11, 2);
+            p(x - 4, y - 1, light, 9, 1);
+            p(x - 2, y - 2, "#f4efe2", 2, 1);
+          }
+        }
+      }
+    }),
+  );
   return c;
 }
 

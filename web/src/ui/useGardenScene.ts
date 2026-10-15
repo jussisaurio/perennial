@@ -76,6 +76,7 @@ export function useGardenScene({
         sleeper: sleeperId(l.plants.filter((p) => p.stage === "bloom").map((p) => p.id)),
         scenery: visitors?.scenery ?? sceneryViews(lang),
         door: door.state,
+        orchard: { trees: source.orchard, firstPlanted: source.first ? source.first.at : null },
       },
     });
   }, [source, data, visitors, door.state, lang]);

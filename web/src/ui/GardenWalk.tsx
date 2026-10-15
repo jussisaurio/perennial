@@ -194,6 +194,14 @@ export function GardenWalk({
     const p = scene.current.pick(x, y, r.width, r.height);
     scene.current.select(p);
     if (p) return;
+    // An orchard tree (#315): its word and meaning over it for a moment and, with sound on, its word.
+    const t = scene.current.pickTree(x, y, r.width, r.height);
+    if (t) {
+      scene.current.tapTree(t);
+      setHint(false);
+      if (sound) void speak(t.lemma, tag);
+      return;
+    }
     // The key, or the shut door (#315): its quiet line, or it opens.
     const d = scene.current.pickDoor(x, y, r.width, r.height);
     if (d) {
@@ -263,7 +271,7 @@ export function GardenWalk({
             <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
-          ) : (l.kind === "visitor" || l.kind === "scenery") && !l.known ? (
+          ) : l.kind === "tree" || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
             <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               <i>{l.text}</i>
               <small lang="en"> · {l.gloss}</small>

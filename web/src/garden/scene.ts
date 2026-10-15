@@ -4,11 +4,13 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { DOOR_HALF, HEDGE, hedgeSpan, viewpoint, walk, type Layout, type PlacedPlant } from "./world";
+import { along, DOOR_HALF, HEDGE, hedgeSpan, route, viewpoint, walk, type Layout, type PlacedPlant } from "./world";
+import { benchLine, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
+import { buildOrchard, type Orchard } from "./orchardScene";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf, stemHeight } from "../ui/plant";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
-import { GATE_HALF, SNAIL_SIGN, type VisitorId, type VisitorView } from "./visitors";
+import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
 import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 
@@ -21,12 +23,7 @@ export type DoorAction = "try" | "key" | "open";
 /** The garden's quiet lines at the door. */
 export const DOOR_LINES = { locked: "Locked. The key must be somewhere.", found: "You found the key." } as const;
 
-/** Builds the orchard behind the door, once it is open (#315). Nothing behind the hedge is built before that. */
-export type OrchardBuilder = (scene: THREE.Scene, area: Layout["orchard"]) => { dispose(): void };
-// TODO(#315): the integration step replaces this stub with `import { buildOrchard } from "./orchard"` (track C).
-const buildOrchard: OrchardBuilder = () => ({ dispose: () => {} });
-
-/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery"), what a visitor says (kind "say"), or a quiet line in English from the garden itself (kind "line"), in screen fractions. */
+/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), or a quiet line in English from the garden itself (kind "line"), in screen fractions. */
 export interface Label {
   id: string;
   text: string;
@@ -34,7 +31,7 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "say" | "line";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line";
   gloss?: string;
   /** A visitor whose noun the learner knows: plant-label styling with a tiny leaf. */
   known?: boolean;
@@ -53,6 +50,12 @@ export interface WalkVisitors {
   scenery?: SceneryViews;
   /** The door in the hedge (#315), as the walk opens. */
   door: DoorState;
+  /**
+   * The orchard behind the door (#315): every tree planted so far, and when the
+   * first word was planted, for the bench (null: every word is set aside). Built
+   * only once the door is open.
+   */
+  orchard: { trees: OrchardTree[]; firstPlanted: number | null };
 }
 
 export interface SceneCallbacks {
@@ -101,6 +104,9 @@ const KEY_AT = { dx: -0.8, dz: -0.55 };
 const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
 /** Near enough to the door (metres from its middle) to be offered its button. */
 const DOOR_REACH = 2.6;
+
+/** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. */
+const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
 
 /** A plant sprite's drawn height in metres, from its height in SVG units (stemHeight, ui/plant.tsx). */
 function plantHeight(growth: number): number {
@@ -312,7 +318,7 @@ function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeometry {
 }
 
 /** Instanced camera-facing quads, bottom-centre anchored, from one atlas. `lying`: flat on the ground instead, centred, turned by `droop` (LYING_VERT). */
-type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
+export type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
 function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, lying = false) {
   const geo = instanced(lying ? new THREE.PlaneGeometry(w, h) : standingQuad(w, h));
   const pos = new Float32Array(items.length * 3);
@@ -386,6 +392,20 @@ function signBoard(c: BuildCtx, tex: THREE.Texture, w: number, h: number): THREE
   return g;
 }
 
+/** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
+function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
+  const bench = new THREE.Group();
+  const plank = (w: number, h: number, d: number, x: number, y: number, z: number) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), c.mat(c.woodTex));
+    m.position.set(x, y, z);
+    bench.add(m);
+  };
+  plank(1.3, 0.06, 0.4, 0, 0.42, 0);
+  plank(1.3, 0.28, 0.05, 0, 0.66, -0.2);
+  for (const sx of [-0.55, 0.55]) for (const sz of [-0.15, 0.15]) plank(0.06, 0.42, 0.06, sx, 0.21, sz);
+  return bench;
+}
+
 export class GardenScene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -399,7 +419,8 @@ export class GardenScene {
   private x = 0;
   private z = 0;
   private bob = 0;
-  private glide: { from: [number, number, number]; to: [number, number, number]; pitch: [number, number]; t: number } | null = null;
+  /** A glide to a plant: along `path` (world.ts route), turning from one yaw and pitch to the other, `t` 0 to 1 over `s` seconds. */
+  private glide: { path: [number, number][]; yaw: [number, number]; pitch: [number, number]; t: number; s: number } | null = null;
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
   private mats = new Set<THREE.ShaderMaterial>();
   private chunks: { mesh: THREE.Mesh; center: THREE.Vector3; radius: number }[] = [];
@@ -460,8 +481,17 @@ export class GardenScene {
     near: DoorAction | null;
   };
   private hedgeMat!: THREE.MeshBasicMaterial;
-  /** What the orchard builder made, once the door is open. */
-  private orchard: { dispose(): void } | null = null;
+  /** The orchard behind the door, once it is open (#315). */
+  private orchard: Orchard | null = null;
+  /** The orchard tree tapped last and until when its tag shows. */
+  private treeTap: { tree: PlacedTree; until: number } | null = null;
+  /** What the world is built with, kept for the orchard, which is built when the door opens. */
+  private ctx!: BuildCtx;
+
+  /** The orchard's trees, for walking round their trunks: none while the door is shut. */
+  private get trunks(): readonly PlacedTree[] {
+    return this.orchard?.trees ?? [];
+  }
   /** A quiet line from the garden (the door's), over a point, until a time. */
   private line: { text: string; at: [number, number, number]; until: number } | null = null;
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
@@ -535,6 +565,7 @@ export class GardenScene {
       woodTex: T.pixelTexture(T.wood(), true),
       rand: rng(1),
     };
+    this.ctx = c;
     this.buildGround(c);
     this.buildBeds(c);
     this.buildFence(c);
@@ -545,6 +576,8 @@ export class GardenScene {
     const bench = this.buildBench(c);
     this.buildSigns(c, bench);
     this.guests.build({ bench: bench.position, pads: this.pads, lanterns: this.lanternSpots });
+    // After the visitors: a visitor may sit in the orchard's trees today.
+    if (this.visitors.door === "open") this.openDoor();
     this.buildStakes(c);
     this.buildSunflower(c);
     this.buildDecor(c);
@@ -691,7 +724,6 @@ export class GardenScene {
       key = { mesh, x, z };
     }
     this.door = { state: this.visitors.door, leaf, keyhole: { hole, glow }, key, swing: null, near: null };
-    if (this.visitors.door === "open") this.openDoor();
   }
 
   /** Opens the door for good: the swing (none with reduced motion), and what lies behind it is built now. */
@@ -708,7 +740,26 @@ export class GardenScene {
     this.hedgeBlock(x0 - HEDGE.depth, x0, 0, near, far);
     this.hedgeBlock(x1, x1 + HEDGE.depth, 0, near, far);
     this.hedgeBlock(x0 - HEDGE.depth, x1 + HEDGE.depth, 0, far, far + HEDGE.depth);
-    this.orchard = buildOrchard(this.scene, o);
+    const { trees, firstPlanted } = this.visitors.orchard;
+    const orchard = buildOrchard(
+      {
+        parent: this.scene,
+        sprites,
+        bench: () => benchModel(this.ctx),
+        mat: this.ctx.mat,
+        plaque: firstPlanted === null ? null : benchLine(firstPlanted),
+      },
+      o,
+      trees,
+    );
+    this.orchard = orchard;
+    for (const m of orchard.mats) this.mats.add(m);
+    this.hitBoxes.push(...orchard.scenery);
+    // Built after setTime when the door opens in this walk: give it the time of day now.
+    this.tint();
+    // Only the bird has art so far: the owl, squirrel and bee are never in the list (#319). On its orchard days the bird sits there, not in the garden.
+    const brought = new Set(this.visitors.list.flatMap((v) => visitor(v.id).garden ?? []));
+    for (const spot of treeVisitorSpots(orchard.trees, brought, new Date())) if (spot.who === "bird") this.guests.perchBird(spot.x, spot.y, spot.z);
   }
 
   /** The ray from the eye through a point on the canvas (CSS pixels). */
@@ -753,6 +804,31 @@ export class GardenScene {
   private showLine(text: string, at: [number, number, number]) {
     this.line = { text, at, until: this.elapsed + 4 };
     this.sceneryTap = null;
+    this.treeTap = null;
+    this.guests.untap();
+  }
+
+  /** How far along the ray the nearest hedge is, or Infinity: what lies past it is hidden. */
+  private hedgeAt(r: Ray): number {
+    let t = Infinity;
+    for (const b of this.hitBoxes) if (b.id === "hedge") t = Math.min(t, rayBox(r, b.min, b.max));
+    return t;
+  }
+
+  /** The orchard tree under a point on the canvas (CSS pixels), unless the hedge is in front of it (#315). Ask after the plants and visitors. */
+  pickTree(cssX: number, cssY: number, cssW: number, cssH: number): PlacedTree | null {
+    if (!this.orchard) return null;
+    const r = this.ray(cssX, cssY, cssW, cssH);
+    const got = pickTree(r, this.orchard.hits);
+    if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
+    return this.orchard.trees.find((t) => t.id === got.hit.id)!;
+  }
+
+  /** Show a tree's word and meaning over it for a few seconds (after a tap). One tag at a time. */
+  tapTree(tree: PlacedTree) {
+    this.treeTap = { tree, until: this.elapsed + 4 };
+    this.sceneryTap = null;
+    this.line = null;
     this.guests.untap();
   }
 
@@ -866,16 +942,8 @@ export class GardenScene {
 
   /** A bench by the pond, for sitting and admiring. Returns where it stands. */
   private buildBench(c: BuildCtx): THREE.Group {
-    const { L, mat, woodTex } = c;
-    const bench = new THREE.Group();
-    const plank = (w: number, h: number, dd: number, x: number, y: number, z: number) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, dd), mat(woodTex));
-      m.position.set(x, y, z);
-      bench.add(m);
-    };
-    plank(1.3, 0.06, 0.4, 0, 0.42, 0);
-    plank(1.3, 0.28, 0.05, 0, 0.66, -0.2);
-    for (const sx of [-0.55, 0.55]) for (const sz of [-0.15, 0.15]) plank(0.06, 0.42, 0.06, sx, 0.21, sz);
+    const { L } = c;
+    const bench = benchModel(c);
     bench.position.set(L.pond.x + 0.2, 0, L.pond.z - L.pond.r - 0.75);
     this.scene.add(bench);
     {
@@ -1119,6 +1187,7 @@ export class GardenScene {
   tapVisitor(id: VisitorId) {
     this.guests.tap(id);
     this.sceneryTap = null;
+    this.treeTap = null;
     this.line = null;
   }
 
@@ -1149,6 +1218,7 @@ export class GardenScene {
   /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
   tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
     this.sceneryTap = { ...s, until: this.elapsed + 4 };
+    this.treeTap = null;
     this.guests.untap();
     this.line = null;
   }
@@ -1323,12 +1393,7 @@ export class GardenScene {
     hills.repeat.set(HILLS.repeat, 1);
     this.hillMat.map = hills;
     this.hillMat.needsUpdate = true;
-    const tint = new THREE.Color(...s.tint);
-    for (const m of this.basic) m.color.copy(tint);
-    for (const mat of [...this.mats, ...this.guests.mats]) {
-      mat.uniforms.uTint.value.copy(tint);
-      mat.uniforms.uFog.value.copy(fog);
-    }
+    this.tint();
     for (const c of this.clouds) c.material.color.set(t === "night" ? 0x39406a : t === "dusk" ? 0xffd2c0 : 0xffffff);
     const dark = t !== "day";
     this.fireflies.visible = dark;
@@ -1348,6 +1413,18 @@ export class GardenScene {
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
     this.flower.params.needsUpdate = true;
+  }
+
+  /** Tint everything unlit and every sprite for the time of day, and fog the sprites. */
+  private tint() {
+    const s = T.SKIES[this.time];
+    const tint = new THREE.Color(...s.tint);
+    const fog = new THREE.Color(s.fog);
+    for (const m of this.basic) m.color.copy(tint);
+    for (const mat of [...this.mats, ...this.guests.mats]) {
+      mat.uniforms.uTint.value.copy(tint);
+      mat.uniforms.uFog.value.copy(fog);
+    }
   }
 
   private detail: Detail = "normal";
@@ -1406,7 +1483,7 @@ export class GardenScene {
   /** Walk straight ahead (or back, if negative) by `metres`. */
   step(metres: number) {
     this.glide = null;
-    ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, this.x - Math.sin(this.yaw) * metres, this.z - Math.cos(this.yaw) * metres, this.door.state === "open"));
+    ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, this.x - Math.sin(this.yaw) * metres, this.z - Math.cos(this.yaw) * metres, this.door.state === "open", this.trunks));
   }
 
   turn(amount: number) {
@@ -1433,7 +1510,8 @@ export class GardenScene {
       // Hit box: a bit wider than the stem, as tall as the plant.
       const rw = Math.max(0.03, 0.22 / depth / halfW);
       const rh = Math.max(0.04, (h * 0.6) / depth / halfH);
-      if (Math.abs(nx - sx) < rw && Math.abs(ny - sy) < rh && depth < bestDepth) {
+      // From the orchard (#315), the hedge hides the garden: a tap on it picks no plant behind it.
+      if (Math.abs(nx - sx) < rw && Math.abs(ny - sy) < rh && depth < bestDepth && !this.behindHedge(p.x, BED_H + h * 0.55, p.z)) {
         best = p;
         bestDepth = depth;
       }
@@ -1441,9 +1519,16 @@ export class GardenScene {
     return best;
   }
 
+  /** Is the hedge between the eye and this point? */
+  private behindHedge(x: number, y: number, z: number): boolean {
+    const c = this.camera.position;
+    const d = Math.hypot(x - c.x, y - c.y, z - c.z);
+    return this.hedgeAt({ ox: c.x, oy: c.y, oz: c.z, dx: (x - c.x) / d, dy: (y - c.y) / d, dz: (z - c.z) / d }) < d;
+  }
+
   select(p: PlacedPlant | null, walkTo = false) {
     this.selected = p;
-    if (p) this.sceneryTap = null;
+    if (p) this.sceneryTap = this.treeTap = null;
     const index = p ? this.layout.plants.indexOf(p) : -1;
     for (const mat of this.mats) mat.uniforms.uSelected.value = index;
     this.marker.visible = !!p;
@@ -1459,7 +1544,11 @@ export class GardenScene {
       const pitch = Math.max(-0.18, Math.min(0.05, Math.atan2(top - EYE, Math.hypot(p.x - v.x, p.z - v.z))));
       if (this.reducedMotion) {
         [this.x, this.z, this.yaw, this.pitch] = [v.x, v.z, yaw, pitch];
-      } else this.glide = { from: [this.x, this.z, this.yaw], to: [v.x, v.z, yaw], pitch: [this.pitch, pitch], t: 0 };
+      } else {
+        // From the orchard, out through the door (#315): a longer way, so a little longer.
+        const path = route(this.layout, this.x, this.z, v.x, v.z);
+        this.glide = { path, yaw: [this.yaw, yaw], pitch: [this.pitch, pitch], t: 0, s: path.length > 2 ? 1.8 : 0.9 };
+      }
     }
     this.cb.onSelect(p);
   }
@@ -1491,16 +1580,15 @@ export class GardenScene {
       const fz = -Math.cos(this.yaw);
       const nx = this.x + ((fx * move.y + -fz * move.x) / Math.max(1, len)) * speed * dt;
       const nz = this.z + ((fz * move.y + fx * move.x) / Math.max(1, len)) * speed * dt;
-      ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, nx, nz, this.door.state === "open"));
+      ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, nx, nz, this.door.state === "open", this.trunks));
       this.bob += dt * speed * 3.2;
     }
     if (this.glide) {
       const g = this.glide;
-      g.t = Math.min(1, g.t + dt / 0.9);
+      g.t = Math.min(1, g.t + dt / g.s);
       const e = g.t < 0.5 ? 2 * g.t * g.t : 1 - (-2 * g.t + 2) ** 2 / 2;
-      this.x = g.from[0] + (g.to[0] - g.from[0]) * e;
-      this.z = g.from[1] + (g.to[1] - g.from[1]) * e;
-      this.yaw = g.from[2] + (g.to[2] - g.from[2]) * e;
+      ({ x: this.x, z: this.z } = along(g.path, e));
+      this.yaw = g.yaw[0] + (g.yaw[1] - g.yaw[0]) * e;
       this.pitch = g.pitch[0] + (g.pitch[1] - g.pitch[0]) * e;
       if (g.t >= 1) this.glide = null;
     }
@@ -1599,12 +1687,19 @@ export class GardenScene {
     else if (ln) {
       v.set(...ln.at).project(this.camera);
       // Kept on the screen: standing right at the door, its top is above the view, and the line must still be read.
-      const clamp = (k: number) => Math.max(0.12, Math.min(0.88, k));
-      if (v.z <= 1) line = { id: "line", text: ln.text, kind: "line", x: clamp((v.x + 1) / 2), y: clamp((1 - v.y) / 2), near: 1 };
+      if (v.z <= 1) line = { id: "line", text: ln.text, kind: "line", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
-    // What a visitor says (the frog's croak), the door's line, the scenery word, then one visitor tag at most.
-    const { say, tag } = this.guests.labels(this.x, this.z, !this.sceneryTap && !this.line);
-    for (const l of [say, line, scenery, tag]) if (l) out.push(l);
+    // A tapped orchard tree's word (#315), over its crown; kept on the screen, as a tall tree's top is often above the view.
+    let tree: Label | null = null;
+    const tt = this.treeTap;
+    if (tt && this.elapsed > tt.until) this.treeTap = null;
+    else if (tt) {
+      v.set(tt.tree.x, tt.tree.height + 0.08, tt.tree.z).project(this.camera);
+      if (v.z <= 1) tree = { id: `tree:${tt.tree.id}`, text: tt.tree.lemma, gloss: tt.tree.gloss, kind: "tree", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
+    }
+    // What a visitor says (the frog's croak), the door's line, the scenery word or tree, then one visitor tag at most.
+    const { say, tag } = this.guests.labels(this.x, this.z, !this.sceneryTap && !this.treeTap && !this.line);
+    for (const l of [say, line, scenery, tree, tag]) if (l) out.push(l);
     this.reportDoor();
     const key = out.map((l) => `${l.id}${l.text}${l.x.toFixed(3)}${l.y.toFixed(3)}${l.near.toFixed(2)}`).join();
     if (key !== this.lastLabels) {

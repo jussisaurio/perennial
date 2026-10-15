@@ -95,9 +95,9 @@ export function orchardTrees(input: readonly OrchardInput[], now: number): Orcha
     .sort((a, b) => ORCHARD_WORDS.indexOf(a.kind) - ORCHARD_WORDS.indexOf(b.kind));
 }
 
-/** What orchardInput reads from the learner; words carry `orchard` like they carry `garden`. */
+/** What orchardInput reads from the learner. */
 export type OrchardLearner = Pick<Learner, "memories" | "reviewsByWord"> & {
-  words: ReadonlyMap<string, Pick<Word, "id" | "lemma" | "gloss" | "status"> & { orchard?: OrchardWord }>;
+  words: ReadonlyMap<string, Pick<Word, "id" | "lemma" | "gloss" | "status" | "orchard">>;
 };
 
 /** Every started orchard word, from the learner's reviews, like plantsFromLearner. */
@@ -115,12 +115,20 @@ export function orchardInput(l: OrchardLearner): OrchardInput[] {
 
 // ---- Placement ----
 
-/** The orchard inside its hedge: the middle (x, z), width along x and depth along z. The door is in the middle of the +z side. */
+/** The orchard inside its hedge: the middle (x, z), width along x and depth along z. The door is in the middle of its side toward the garden (DOOR_SIDE). */
 export interface OrchardArea {
   x: number;
   z: number;
   w: number;
   d: number;
+}
+
+/** Which way along z the door is, from anywhere in the orchard: the garden lies toward −z (world.ts layout). Everything placed from the door follows this one sign. */
+const DOOR_SIDE = -1;
+
+/** The z of a line `m` metres in from the door's side of the area. */
+function inFromDoor(a: OrchardArea, m: number): number {
+  return a.z + DOOR_SIDE * (a.d / 2 - m);
 }
 
 /** Room between tree rows and columns, the path up the middle from the door, and the strip inside the door kept for the bench. */
@@ -151,10 +159,9 @@ function slots(a: OrchardArea): [number, number][] {
   const perSide = Math.floor((a.w / 2 - AISLE / 2) / ORCHARD_SPACING);
   const rows = Math.floor((a.d - FRONT) / ORCHARD_SPACING);
   const out: [number, number][] = [];
-  const front = a.z + a.d / 2 - FRONT;
   for (let r = 0; r < rows; r++)
     for (let c = 0; c < perSide; c++)
-      for (const s of [-1, 1]) out.push([a.x + s * (AISLE / 2 + (c + 0.5) * ORCHARD_SPACING), front - (r + 0.5) * ORCHARD_SPACING]);
+      for (const s of [-1, 1]) out.push([a.x + s * (AISLE / 2 + (c + 0.5) * ORCHARD_SPACING), inFromDoor(a, FRONT + (r + 0.5) * ORCHARD_SPACING)]);
   return out;
 }
 
@@ -196,7 +203,7 @@ export function collideTrees(trees: readonly PlacedTree[], x: number, z: number,
     const d = Math.hypot(dx, dz);
     if (d >= min) continue;
     // Exactly on the trunk's middle there is no direction to push: step out toward the door.
-    if (d === 0) z = t.z + min;
+    if (d === 0) z = t.z + DOOR_SIDE * min;
     else {
       x = t.x + (dx * min) / d;
       z = t.z + (dz * min) / d;
@@ -235,9 +242,13 @@ export function pickTree(r: Ray, hits: readonly TreeHit[]): { hit: TreeHit; t: n
 
 // ---- The bench and the visitors ----
 
-/** The bench just inside the door, right of the path, its back to the door. `turn` as three's rotation.y of a bench whose seat faces +z. */
+/**
+ * The bench just inside the door, on your right as you come in, its back to the door.
+ * `turn` as three's rotation.y of a bench whose seat faces +z (its back toward −z).
+ */
 export function orchardBench(a: OrchardArea): { x: number; z: number; turn: number } {
-  return { x: a.x + AISLE / 2 + 0.9, z: a.z + a.d / 2 - 1, turn: Math.PI };
+  // Coming in, you face away from the door; your right is +x when you face −z.
+  return { x: a.x + DOOR_SIDE * (AISLE / 2 + 0.9), z: inFromDoor(a, 1), turn: DOOR_SIDE < 0 ? 0 : Math.PI };
 }
 
 /** The bench's plaque, e.g. "First word planted 3 Oct 2026". */
@@ -263,7 +274,7 @@ export interface TreeVisitorSpot {
 /**
  * Which brought visitors sit in the orchard today, and where. Each comes on
  * about one day in two, to a tree chosen for the day; the bee only to a tree in
- * blossom or fruit. A little toward the door (+z), so from the door side the tree's sprite does not hide it.
+ * blossom or fruit. A little toward the door, so from the door side the tree's sprite does not hide it.
  */
 export function treeVisitorSpots(trees: readonly PlacedTree[], brought: ReadonlySet<GardenWord>, now: Date): TreeVisitorSpot[] {
   const out: TreeVisitorSpot[] = [];
@@ -272,8 +283,9 @@ export function treeVisitorSpots(trees: readonly PlacedTree[], brought: Readonly
     const pool = who === "bee" ? trees.filter((t) => t.look !== "leaves") : trees;
     if (!pool.length) continue;
     const t = daily(pool, `orchard:${who}`, now);
+    // dz: toward the door.
     const [dx, fy, dz] = who === "bird" ? [t.half * 0.5, 0.8, 0.3] : who === "owl" ? [-t.half * 0.3, 0.55, 0.3] : who === "squirrel" ? [0.35, 0, 0.35] : [-t.half * 0.7, 0.5, 0.4];
-    out.push({ who, tree: t.id, x: t.x + dx, y: t.height * fy, z: t.z + dz });
+    out.push({ who, tree: t.id, x: t.x + dx, y: t.height * fy, z: t.z + DOOR_SIDE * dz });
   }
   return out;
 }

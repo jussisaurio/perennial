@@ -320,6 +320,23 @@ export class SceneVisitors {
     this.tapped = null;
   }
 
+  /**
+   * The bird sits somewhere else today: in an orchard tree (#315), and so not in
+   * the garden. It hops off from its new spot as from its old one.
+   */
+  perchBird(x: number, y: number, z: number) {
+    const s = this.sprites.find((o) => o.v.id === "bird");
+    // Not here today (its word not brought, or a dev ?visitors= list without it): nothing to move.
+    if (!s) return;
+    [s.x, s.y, s.z] = [x, y, z];
+    s.pos.setXYZ(0, x, y, z);
+    s.pos.needsUpdate = true;
+    // Perched, whatever it was doing: it may have hopped off from its old spot.
+    this.bird.t = -1;
+    showCell(s.uv, T.VISITOR_CELL.bird);
+    s.mesh.visible = true;
+  }
+
   /** Awake at dusk and night, except on its sleepy days. Only then does a tap make it croak. */
   frogAwake(): boolean {
     return this.frog.dark && !this.frog.asleep;
