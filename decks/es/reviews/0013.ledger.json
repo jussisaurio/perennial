@@ -1,0 +1,56 @@
+{
+  "file": "source/0013.json",
+  "reviewer": "claude-agent:es-proofreader-0013-2026-10-15",
+  "entries": {
+    "manzana|noun|": {
+      "hash": "c12c87a67c103512",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.219Z"
+    },
+    "naranja|noun|": {
+      "hash": "ec089930c6a612bf",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.250Z"
+    },
+    "limón|noun|": {
+      "hash": "fe8c36883da3143a",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.280Z"
+    },
+    "cereza|noun|": {
+      "hash": "33db5cefe5e4a9f4",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.310Z"
+    },
+    "pera|noun|": {
+      "hash": "c05dc370f829b5ef",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.339Z"
+    },
+    "ciruela|noun|": {
+      "hash": "15116393c1a2b265",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.369Z"
+    },
+    "higo|noun|": {
+      "hash": "a7bd51ba8d76d17f",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.399Z"
+    },
+    "aceituna|noun|": {
+      "hash": "43f6d3f4a7e49dc1",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.430Z"
+    },
+    "uva|noun|": {
+      "hash": "2fd77809543160e8",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.460Z"
+    },
+    "melocotón|noun|": {
+      "hash": "c0a436dcd8794ccd",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:12.490Z"
+    }
+  }
+}

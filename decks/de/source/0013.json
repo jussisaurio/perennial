@@ -1,0 +1,310 @@
+[
+  {
+    "lemma": "Baum",
+    "gloss": "tree",
+    "pos": "noun",
+    "forms": [
+      "Baum",
+      "Bäume",
+      "Bäumen"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Die Katze sitzt oben auf dem Baum.",
+        "translation": "The cat is sitting up in the tree.",
+        "cloze": "Baum"
+      },
+      {
+        "text": "Im Garten stehen zwei alte Bäume.",
+        "translation": "There are two old trees in the garden.",
+        "cloze": "Bäume"
+      },
+      {
+        "text": "Vor unserem Haus steht ein großer Baum.",
+        "translation": "There's a big tree in front of our house.",
+        "cloze": "Baum"
+      },
+      {
+        "text": "Unter den Bäumen ist es kühl.",
+        "translation": "It's cool under the trees.",
+        "cloze": "Bäumen"
+      }
+    ]
+  },
+  {
+    "lemma": "Apfel",
+    "gloss": "apple",
+    "pos": "noun",
+    "forms": [
+      "Apfel",
+      "Äpfel",
+      "Äpfeln"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Ich esse jeden Tag einen Apfel.",
+        "translation": "I eat an apple every day.",
+        "cloze": "Apfel"
+      },
+      {
+        "text": "Die Äpfel sind dieses Jahr sehr süß.",
+        "translation": "The apples are very sweet this year.",
+        "cloze": "Äpfel"
+      },
+      {
+        "text": "Oma macht Kuchen mit Äpfeln.",
+        "translation": "Grandma makes cake with apples.",
+        "cloze": "Äpfeln"
+      }
+    ]
+  },
+  {
+    "lemma": "Orange",
+    "gloss": "orange (the fruit)",
+    "pos": "noun",
+    "forms": [
+      "Orange",
+      "Orangen"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Möchtest du eine Orange?",
+        "translation": "Would you like an orange?",
+        "cloze": "Orange"
+      },
+      {
+        "text": "Ich kaufe ein Kilo Orangen.",
+        "translation": "I'm buying a kilo of oranges.",
+        "cloze": "Orangen"
+      },
+      {
+        "text": "Diese Orange schmeckt sehr gut.",
+        "translation": "This orange tastes very good.",
+        "cloze": "Orange"
+      }
+    ]
+  },
+  {
+    "lemma": "Zitrone",
+    "gloss": "lemon",
+    "pos": "noun",
+    "forms": [
+      "Zitrone",
+      "Zitronen"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Ich trinke Tee mit Zitrone.",
+        "translation": "I drink tea with lemon.",
+        "cloze": "Zitrone"
+      },
+      {
+        "text": "Wir brauchen noch zwei Zitronen.",
+        "translation": "We still need two lemons.",
+        "cloze": "Zitronen"
+      },
+      {
+        "text": "Die Zitrone ist sehr sauer.",
+        "translation": "The lemon is very sour.",
+        "cloze": "Zitrone"
+      }
+    ]
+  },
+  {
+    "lemma": "Kirsche",
+    "gloss": "cherry",
+    "pos": "noun",
+    "forms": [
+      "Kirsche",
+      "Kirschen"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Im Juni gibt es Kirschen.",
+        "translation": "There are cherries in June.",
+        "cloze": "Kirschen"
+      },
+      {
+        "text": "Auf dem Kuchen liegt eine Kirsche.",
+        "translation": "There's a cherry on the cake.",
+        "cloze": "Kirsche"
+      },
+      {
+        "text": "Die Kirschen von unserem Baum sind reif.",
+        "translation": "The cherries on our tree are ripe.",
+        "cloze": "Kirschen"
+      }
+    ]
+  },
+  {
+    "lemma": "Birne",
+    "gloss": "pear",
+    "pos": "noun",
+    "forms": [
+      "Birne",
+      "Birnen"
+    ],
+    "notes": "Also a light bulb.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Möchtest du eine Birne oder einen Apfel?",
+        "translation": "Would you like a pear or an apple?",
+        "cloze": "Birne"
+      },
+      {
+        "text": "Die Birnen sind noch hart.",
+        "translation": "The pears are still hard.",
+        "cloze": "Birnen"
+      },
+      {
+        "text": "Ich habe eine Birne zum Frühstück gegessen.",
+        "translation": "I had a pear for breakfast.",
+        "cloze": "Birne"
+      }
+    ]
+  },
+  {
+    "lemma": "Pflaume",
+    "gloss": "plum",
+    "pos": "noun",
+    "forms": [
+      "Pflaume",
+      "Pflaumen"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Im Herbst essen wir viele Pflaumen.",
+        "translation": "In autumn we eat lots of plums.",
+        "cloze": "Pflaumen"
+      },
+      {
+        "text": "Kannst du mir eine Pflaume geben?",
+        "translation": "Can you give me a plum?",
+        "cloze": "Pflaume"
+      },
+      {
+        "text": "Diese Pflaume ist noch nicht reif.",
+        "translation": "This plum isn't ripe yet.",
+        "cloze": "Pflaume"
+      }
+    ]
+  },
+  {
+    "lemma": "Feige",
+    "gloss": "fig",
+    "pos": "noun",
+    "forms": [
+      "Feige",
+      "Feigen"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Ich habe noch nie eine Feige gegessen.",
+        "translation": "I've never eaten a fig.",
+        "cloze": "Feige"
+      },
+      {
+        "text": "Feigen wachsen in warmen Ländern.",
+        "translation": "Figs grow in warm countries.",
+        "cloze": "Feigen"
+      },
+      {
+        "text": "Auf dem Markt gibt es frische Feigen.",
+        "translation": "There are fresh figs at the market.",
+        "cloze": "Feigen"
+      }
+    ]
+  },
+  {
+    "lemma": "Olive",
+    "gloss": "olive",
+    "pos": "noun",
+    "forms": [
+      "Olive",
+      "Oliven"
+    ],
+    "notes": "The tree is der Olivenbaum.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Magst du Oliven?",
+        "translation": "Do you like olives?",
+        "cloze": "Oliven"
+      },
+      {
+        "text": "Es ist nur noch eine Olive übrig.",
+        "translation": "There's only one olive left.",
+        "cloze": "Olive"
+      },
+      {
+        "text": "Wir essen Brot mit Oliven.",
+        "translation": "We're eating bread with olives.",
+        "cloze": "Oliven"
+      }
+    ]
+  },
+  {
+    "lemma": "Traube",
+    "gloss": "grape",
+    "pos": "noun",
+    "forms": [
+      "Traube",
+      "Trauben"
+    ],
+    "notes": "Also a bunch of grapes. Often called Weintraube.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Ich kaufe Trauben für die Kinder.",
+        "translation": "I'm buying grapes for the kids.",
+        "cloze": "Trauben"
+      },
+      {
+        "text": "Aus Trauben macht man Wein.",
+        "translation": "Wine is made from grapes.",
+        "cloze": "Trauben"
+      },
+      {
+        "text": "Eine Traube ist auf den Boden gefallen.",
+        "translation": "A grape fell on the floor.",
+        "cloze": "Traube"
+      }
+    ]
+  },
+  {
+    "lemma": "Pfirsich",
+    "gloss": "peach",
+    "pos": "noun",
+    "forms": [
+      "Pfirsich",
+      "Pfirsiche",
+      "Pfirsichen"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Der Pfirsich ist weich und süß.",
+        "translation": "The peach is soft and sweet.",
+        "cloze": "Pfirsich"
+      },
+      {
+        "text": "Im Sommer esse ich gern Pfirsiche.",
+        "translation": "In summer I like eating peaches.",
+        "cloze": "Pfirsiche"
+      },
+      {
+        "text": "Sie hat uns einen Pfirsich mitgebracht.",
+        "translation": "She brought us a peach.",
+        "cloze": "Pfirsich"
+      }
+    ]
+  }
+]

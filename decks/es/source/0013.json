@@ -1,0 +1,275 @@
+[
+  {
+    "lemma": "manzana",
+    "gloss": "apple",
+    "pos": "noun",
+    "forms": [
+      "manzana",
+      "manzanas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Me como una manzana cada día.",
+        "translation": "I eat an apple every day.",
+        "cloze": "manzana"
+      },
+      {
+        "text": "Estas manzanas son muy dulces.",
+        "translation": "These apples are very sweet.",
+        "cloze": "manzanas"
+      },
+      {
+        "text": "Mi abuela hace pastel de manzana.",
+        "translation": "My grandmother makes apple cake.",
+        "cloze": "manzana"
+      }
+    ]
+  },
+  {
+    "lemma": "naranja",
+    "gloss": "orange (the fruit)",
+    "pos": "noun",
+    "forms": [
+      "naranja",
+      "naranjas"
+    ],
+    "notes": "Also the colour orange: una camisa naranja.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Hay naranjas en la mesa.",
+        "translation": "There are oranges on the table.",
+        "cloze": "naranjas"
+      },
+      {
+        "text": "Esta naranja está muy buena.",
+        "translation": "This orange is really good.",
+        "cloze": "naranja"
+      },
+      {
+        "text": "Compré un kilo de naranjas en el mercado.",
+        "translation": "I bought a kilo of oranges at the market.",
+        "cloze": "naranjas"
+      }
+    ]
+  },
+  {
+    "lemma": "limón",
+    "gloss": "lemon",
+    "pos": "noun",
+    "forms": [
+      "limón",
+      "limones"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Quiero un té con limón.",
+        "translation": "I'd like a tea with lemon.",
+        "cloze": "limón"
+      },
+      {
+        "text": "Hay dos limones en la cocina.",
+        "translation": "There are two lemons in the kitchen.",
+        "cloze": "limones"
+      },
+      {
+        "text": "Ponle un poco de limón al pescado.",
+        "translation": "Put a little lemon on the fish.",
+        "cloze": "limón"
+      }
+    ]
+  },
+  {
+    "lemma": "cereza",
+    "gloss": "cherry",
+    "pos": "noun",
+    "forms": [
+      "cereza",
+      "cerezas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Me encantan las cerezas.",
+        "translation": "I love cherries.",
+        "cloze": "cerezas"
+      },
+      {
+        "text": "Hay una cereza encima del pastel.",
+        "translation": "There's a cherry on top of the cake.",
+        "cloze": "cereza"
+      },
+      {
+        "text": "Las cerezas del mercado son caras.",
+        "translation": "The cherries at the market are expensive.",
+        "cloze": "cerezas"
+      }
+    ]
+  },
+  {
+    "lemma": "pera",
+    "gloss": "pear",
+    "pos": "noun",
+    "forms": [
+      "pera",
+      "peras"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "¿Quieres una pera o una manzana?",
+        "translation": "Do you want a pear or an apple?",
+        "cloze": "pera"
+      },
+      {
+        "text": "Las peras todavía están verdes.",
+        "translation": "The pears are still not ripe.",
+        "cloze": "peras"
+      },
+      {
+        "text": "Corté la pera en dos.",
+        "translation": "I cut the pear in two.",
+        "cloze": "pera"
+      }
+    ]
+  },
+  {
+    "lemma": "ciruela",
+    "gloss": "plum",
+    "pos": "noun",
+    "forms": [
+      "ciruela",
+      "ciruelas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Las ciruelas son mi fruta favorita.",
+        "translation": "Plums are my favourite fruit.",
+        "cloze": "ciruelas"
+      },
+      {
+        "text": "Esta ciruela está muy dulce.",
+        "translation": "This plum is very sweet.",
+        "cloze": "ciruela"
+      },
+      {
+        "text": "Mi madre compró ciruelas para todos.",
+        "translation": "My mother bought plums for everyone.",
+        "cloze": "ciruelas"
+      }
+    ]
+  },
+  {
+    "lemma": "higo",
+    "gloss": "fig",
+    "pos": "noun",
+    "forms": [
+      "higo",
+      "higos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Nunca he probado un higo.",
+        "translation": "I've never tried a fig.",
+        "cloze": "higo"
+      },
+      {
+        "text": "En verano comemos higos del árbol.",
+        "translation": "In summer we eat figs from the tree.",
+        "cloze": "higos"
+      },
+      {
+        "text": "Los higos de mi abuelo son los mejores.",
+        "translation": "My grandfather's figs are the best.",
+        "cloze": "higos"
+      }
+    ]
+  },
+  {
+    "lemma": "aceituna",
+    "gloss": "olive (the fruit)",
+    "pos": "noun",
+    "forms": [
+      "aceituna",
+      "aceitunas"
+    ],
+    "notes": "The tree is el olivo.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "¿Te gustan las aceitunas?",
+        "translation": "Do you like olives?",
+        "cloze": "aceitunas"
+      },
+      {
+        "text": "Queda una aceituna en el plato.",
+        "translation": "There's one olive left on the plate.",
+        "cloze": "aceituna"
+      },
+      {
+        "text": "Las aceitunas negras me gustan más.",
+        "translation": "I like black olives better.",
+        "cloze": "aceitunas"
+      }
+    ]
+  },
+  {
+    "lemma": "uva",
+    "gloss": "grape",
+    "pos": "noun",
+    "forms": [
+      "uva",
+      "uvas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Compré uvas para los niños.",
+        "translation": "I bought grapes for the kids.",
+        "cloze": "uvas"
+      },
+      {
+        "text": "Se comió la última uva.",
+        "translation": "He ate the last grape.",
+        "cloze": "uva"
+      },
+      {
+        "text": "El vino se hace con uvas.",
+        "translation": "Wine is made from grapes.",
+        "cloze": "uvas"
+      }
+    ]
+  },
+  {
+    "lemma": "melocotón",
+    "gloss": "peach",
+    "pos": "noun",
+    "forms": [
+      "melocotón",
+      "melocotones"
+    ],
+    "notes": "In much of Latin America: el durazno.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Este melocotón huele muy bien.",
+        "translation": "This peach smells really good.",
+        "cloze": "melocotón"
+      },
+      {
+        "text": "En verano hay muchos melocotones.",
+        "translation": "In summer there are lots of peaches.",
+        "cloze": "melocotones"
+      },
+      {
+        "text": "Me comí un melocotón después de comer.",
+        "translation": "I ate a peach after lunch.",
+        "cloze": "melocotón"
+      }
+    ]
+  }
+]

@@ -1,0 +1,61 @@
+{
+  "file": "source/0013.json",
+  "reviewer": "claude-agent:de-proofreader-0013-2026-10-15",
+  "entries": {
+    "baum|noun|": {
+      "hash": "489009fd491a065a",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:04.772Z"
+    },
+    "apfel|noun|": {
+      "hash": "cab7b2636883776c",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:09.247Z"
+    },
+    "orange|noun|": {
+      "hash": "e55da60e909b97a8",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:09.455Z"
+    },
+    "zitrone|noun|": {
+      "hash": "549f1044fe0466eb",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:09.663Z"
+    },
+    "kirsche|noun|": {
+      "hash": "9538e5ca9f3000eb",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:09.890Z"
+    },
+    "birne|noun|": {
+      "hash": "18bca92559fc6e28",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:10.106Z"
+    },
+    "pflaume|noun|": {
+      "hash": "1f78e1246cef3149",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:10.313Z"
+    },
+    "feige|noun|": {
+      "hash": "b2bd48d757adcce3",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:10.520Z"
+    },
+    "olive|noun|": {
+      "hash": "88bf0776bf81af56",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:10.723Z"
+    },
+    "traube|noun|": {
+      "hash": "e6727f396691b2af",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:10.940Z"
+    },
+    "pfirsich|noun|": {
+      "hash": "dbdb6a83d5f0da4c",
+      "verdict": "ok",
+      "at": "2026-10-15T15:37:59.942Z"
+    }
+  }
+}
