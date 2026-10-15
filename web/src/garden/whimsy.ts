@@ -132,7 +132,7 @@ export function perkEnvelope(t: number, rise: number, fall: number): number {
 
 // ---- The first-word keepsake (#61) ----
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** The keepsake post's text: the first word and the day it was planted, e.g. "casa · 3 Oct". */
 export function keepsakeLabel(lemma: string, at: number): string {

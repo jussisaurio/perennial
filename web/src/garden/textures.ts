@@ -10,7 +10,7 @@ import type { PlacedPlant } from "./world";
 import * as Art from "./visitorArt";
 import { loadImage } from "../ui/files";
 
-function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+export function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
@@ -28,7 +28,7 @@ export function pixelTexture(c: HTMLCanvasElement, repeat = false): THREE.Canvas
   return t;
 }
 
-const px = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
+export const px = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
 };
