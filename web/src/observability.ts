@@ -81,7 +81,19 @@ function startPostHog(userId: string) {
 }
 
 /** The handful of product events we look at (see #16). */
-export type Event = "course_started" | "session_finished" | "email_added" | "garden_opened" | "words_added" | "seed_shared" | "seed_planted" | "page_shared";
+export type Event =
+  | "course_started"
+  | "session_finished"
+  | "email_added"
+  | "garden_opened"
+  | "words_added"
+  | "seed_shared"
+  | "seed_planted"
+  | "page_shared"
+  // The sign-in steps (#312), to see where people stop.
+  | "signin_code_requested"
+  | "signin_code_shown"
+  | "signin_done";
 
 export function track(event: Event, props: Record<string, unknown> = {}) {
   if (posthog) posthog.capture(event, props);
@@ -102,6 +114,15 @@ export function identify(userId: string) {
  */
 export function linkAccount(accountId: string) {
   posthog?.alias(accountId);
+}
+
+/**
+ * A sign-in request has no answer yet (#312). A real exception, so Sentry also
+ * sends the masked replay of the moments before. Ids and timings only: no email.
+ * `protocol` is the connection's protocol (h3, h2), when the browser shows it.
+ */
+export function reportSlowAuth(step: "send" | "sign-in", path: string, ms: number, protocol: string | undefined) {
+  Sentry.captureException(new Error(`auth request slow: ${step}`), { tags: { step, path, protocol }, extra: { ms } });
 }
 
 export const reactErrorHandler = Sentry.reactErrorHandler;

@@ -159,7 +159,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
         <section className="panel landing-signin">
           <h2 style={{ marginTop: 0 }}>Sign in</h2>
           <p className="muted small">Sign in with your email. Your garden appears here after a moment.</p>
-          <SignIn cta="Sign in" />
+          <SignIn cta="Send me a code" />
         </section>
       )}
       {goodbye && (
