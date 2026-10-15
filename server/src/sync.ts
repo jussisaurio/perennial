@@ -73,7 +73,13 @@ const Mutation = z.discriminatedUnion("type", [
   z.object({ type: z.literal("review.delete"), id: z.uuid() }), // Undo
   z.object({
     type: z.literal("course.upsert"),
-    row: z.object({ lang: Lang, minutes: z.number().int().min(1).max(120).optional(), retention: z.number().min(0.7).max(0.99).optional() }),
+    row: z.object({
+      lang: Lang,
+      minutes: z.number().int().min(1).max(120).optional(),
+      retention: z.number().min(0.7).max(0.99).optional(),
+      // The orchard door (#315). A new course row sends false; only true changes anything.
+      door_open: z.boolean().optional(),
+    }),
   }),
   z.object({
     type: z.literal("word_state.upsert"),
@@ -217,10 +223,13 @@ async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Pro
         case "course.upsert": {
           const r = m.row;
           // Only the columns sent change, so two devices editing different settings both win.
-          const res = await tx`insert into course (user_id, lang, minutes, retention) values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention})
+          // The door only ever opens: a device that still has it closed never shuts it again.
+          const res = await tx`insert into course (user_id, lang, minutes, retention, door_open)
+            values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true})
             on conflict (user_id, lang) do update set
               minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
-              retention = coalesce(${r.retention ?? null}::real, course.retention)
+              retention = coalesce(${r.retention ?? null}::real, course.retention),
+              door_open = course.door_open or excluded.door_open
             returning (xmax = 0) as inserted`;
           rows += res.count;
           // xmax = 0: a new row, not an update. A new course is a learner starting a language.

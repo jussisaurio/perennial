@@ -15,7 +15,8 @@ export type SceneryId =
   | "cherry"
   | "bush"
   | "fence"
-  | "gate"
+  | "door"
+  | "hedge"
   | "bench"
   | "pond"
   | "lily"
@@ -42,7 +43,9 @@ export const SCENERY: Record<SceneryId, NounDef> = {
   cherry: { words: { es: "el cerezo", de: "der Kirschbaum" }, gloss: "cherry tree" },
   bush: { words: { es: "el arbusto", de: "der Busch" }, gloss: "bush" },
   fence: { words: { es: "la valla", de: "der Zaun" }, gloss: "fence" },
-  gate: { words: { es: "la puerta", de: "das Tor" }, gloss: "gate" },
+  // The old door in the hedge (#315), once it is open; the hedge it stands in.
+  door: { words: { es: "la puerta", de: "die Tür" }, gloss: "door" },
+  hedge: { words: { es: "el seto", de: "die Hecke" }, gloss: "hedge" },
   bench: { words: { es: "el banco", de: "die Bank" }, gloss: "bench" },
   pond: { words: { es: "el estanque", de: "der Teich" }, gloss: "pond" },
   lily: { words: { es: "el nenúfar", de: "die Seerose" }, gloss: "water lily" },

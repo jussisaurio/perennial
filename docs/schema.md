@@ -48,6 +48,7 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
 create table course (            -- one per language; settings edited per column
   user_id uuid not null references "user" on delete cascade,
   lang text not null, minutes smallint not null default 7, retention real not null default 0.9,
+  door_open boolean not null default false,  -- the garden's door to the orchard (#315): only ever opens
   primary key (user_id, lang));
 
 create table review (
@@ -90,7 +91,7 @@ Theme and sound are per-device preferences (localStorage), so they don't sync. D
 
 - **Scope:** every write is scoped `where user_id = $session`.
 - **Reviews:** insert with `on conflict (id) do nothing`. A review is never updated; Undo is a delete.
-- **Course:** a PATCH updates only the columns sent, in arrival order.
+- **Course:** a PATCH updates only the columns sent, in arrival order. `door_open` only ever opens: the server ORs it with the stored value.
 - **Word state:** upsert only if the incoming `updated_at` is newer.
 - **Clocks:** `updated_at = least(client, now())`. Reject `reviewed_at` more than 1 day in the future.
 - **Old clients:** below a minimum version, the client gets "please reload". Schema changes go expand, then contract.
@@ -100,7 +101,7 @@ Theme and sound are per-device preferences (localStorage), so they don't sync. D
 - **Before the first write:** the app is local-only. The first write creates an anonymous user and session, then the shapes connect.
 - **Signing in** links the account in Better Auth's `onLinkAccount`, all in one transaction:
   - reviews, user words and sentences: their ids are globally unique, so they just change owner (`update … set user_id`);
-  - word state and course: newer row wins;
+  - word state and course: newer row wins, but an open door on either course stays open;
   - then the anonymous user is deleted.
 - **During the link:** the client keeps its local DB and upload queue, reconnects with the new token, and replays. The server stamps the new `user_id`.
 - **Anonymous users** inactive for 60 days are deleted by a daily job. The cascade removes their rows.

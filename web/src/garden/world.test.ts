@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { collide, groupOf, layout, viewpoint, type GardenPlant } from "./world";
+import { collide, DOOR_HALF, groupOf, HEDGE, layout, viewpoint, walk, type GardenPlant } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
@@ -63,5 +63,32 @@ describe("garden layout", () => {
     expect(collide(l, 1e6, 0).x).toBeLessThan(l.bounds.maxX);
     const v = viewpoint(l, l.plants[0]);
     expect(collide(l, v.x, v.z)).toEqual({ x: v.x, z: v.z });
+  });
+
+  test("the door in the hedge (#315): shut, it stops walkers; open, they walk through it into the orchard, and only through it", () => {
+    const l = layout([plant(1)]);
+    const b = l.bounds;
+    const o = l.orchard;
+    // The orchard is behind the hedge, the door in the middle of its near side; its size is fixed, whatever the garden's.
+    expect(o.z - o.d / 2).toBeGreaterThanOrEqual(b.maxZ + HEDGE.gap + HEDGE.depth);
+    expect(o.x).toBe(l.gate.x);
+    const big = layout(Array.from({ length: 400 }, (_, i) => plant(i))).orchard;
+    expect([big.w, big.d]).toEqual([o.w, o.d]);
+    expect(o.w).toBeGreaterThanOrEqual(18);
+    expect(o.d).toBeGreaterThanOrEqual(14.2);
+    const inOrchard = { x: o.x + 1, z: o.z };
+    expect(collide(l, l.gate.x, b.maxZ + 0.5).z).toBeLessThan(b.maxZ);
+    expect(collide(l, inOrchard.x, inOrchard.z).z).toBeLessThan(b.maxZ);
+    // Open: the doorway and the orchard are walkable.
+    expect(collide(l, l.gate.x, b.maxZ + 0.5, 0.28, true)).toEqual({ x: l.gate.x, z: b.maxZ + 0.5 });
+    expect(collide(l, inOrchard.x, inOrchard.z, 0.28, true)).toEqual(inOrchard);
+    // Beside the door is still hedge, and the orchard has its own edges.
+    expect(collide(l, l.gate.x + 2, b.maxZ + 0.3, 0.28, true).z).toBeLessThan(b.maxZ);
+    expect(Math.abs(collide(l, l.gate.x + DOOR_HALF + 0.1, b.maxZ + 0.6, 0.28, true).x - l.gate.x)).toBeLessThan(DOOR_HALF);
+    expect(collide(l, o.x + o.w, o.z, 0.28, true).x).toBeLessThan(o.x + o.w / 2);
+    // A long step (a ctrl+wheel notch is 2 m) beside the door stops at the hedge; through the door it goes in.
+    const edge = b.maxZ - 0.3;
+    expect(walk(l, l.gate.x + 2, edge, l.gate.x + 2, edge + 2, true).z).toBeLessThan(b.maxZ);
+    expect(walk(l, l.gate.x, edge, l.gate.x, edge + 2, true).z).toBeCloseTo(edge + 2);
   });
 });

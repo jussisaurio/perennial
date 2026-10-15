@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { plantNearMiddle, settledGardenWidth } from "./helpers";
+import { plantNearMiddle, settledGardenWidth, standAtDoor } from "./helpers";
 
 // Runs on the iPhone (WebKit) project only. Playwright's tap sends a whole tap
 // in one go, so React never renders between touchdown and lift; a real finger
@@ -34,4 +34,16 @@ test("iPhone: a tapped plant's card stays open, and its link opens the 3D garden
   const link = (await card.getByRole("button", { name: /View in garden/ }).boundingBox())!;
   await fingerTap(page, link.x + link.width / 2, link.y + link.height / 2);
   await expect(page.getByRole("dialog", { name: `The plant for ${word}` })).toBeVisible({ timeout: 20_000 });
+});
+
+test("iPhone: a finger's tap on the locked door in the walk says it is locked (#315)", async ({ page }) => {
+  // A fixed day and hour: visitors change by day.
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await page.goto("/?demo=es:30#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  await fingerTap(page, ...(await standAtDoor(page, "door")));
+  await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
 });

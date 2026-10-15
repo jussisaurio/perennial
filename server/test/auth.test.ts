@@ -35,7 +35,7 @@ test("anonymous progress moves into the account on sign-in, merged with what it 
   await t.write(anon, [
     review(W.c),
     shared, // the same review id must not be counted twice
-    { type: "course.upsert", row: { lang: "es", minutes: 5 } },
+    { type: "course.upsert", row: { lang: "es", minutes: 5, door_open: true } },
     { type: "word_state.upsert", row: { word_id: W.b, status: "queued", updated_at: new Date().toISOString() } },
   ]);
 
@@ -44,8 +44,9 @@ test("anonymous progress moves into the account on sign-in, merged with what it 
   expect((await t.me(linked)).id).toBe(accountId);
   const reviews = await t.sql`select word_id from review where user_id = ${accountId} order by word_id`;
   expect(reviews.map((r: { word_id: string }) => r.word_id).sort()).toEqual([W.a, W.c].sort());
-  const [course] = await t.sql`select minutes from course where user_id = ${accountId}`;
+  const [course] = await t.sql`select minutes, door_open from course where user_id = ${accountId}`;
   expect(course.minutes).toBe(10); // the account's own settings win
+  expect(course.door_open).toBe(true); // but a door opened without an account stays open (#315)
   const [state] = await t.sql`select status from word_state where user_id = ${accountId} and word_id = ${W.b}`;
   expect(state.status).toBe("queued"); // the newer change wins
   expect((await t.sql`select 1 from "user" where id = ${anonId}`).length).toBe(0); // anonymous user gone

@@ -258,6 +258,15 @@ export function saveCourse(store: Store, lang: string, patch: Partial<Pick<Cours
         Object.assign(d, patch);
       });
     // The app no longer reads `minutes` (5 a day for everyone); older app versions still do.
-    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
+    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, door_open: false, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
+  });
+}
+
+/** The learner opened the garden's door with the key (#315). It stays open, on every device; the server never shuts it again. */
+export function openDoor(store: Store, lang: string) {
+  return store.write(() => {
+    store.collections.course.update(lang, (d) => {
+      d.door_open = true;
+    });
   });
 }

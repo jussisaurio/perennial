@@ -45,7 +45,20 @@ export interface Layout {
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
   gate: { x: number; z: number };
   pond: { x: number; z: number; r: number };
+  /** The old orchard (#315): the walkable ground behind the hedge's door, by its middle. Nothing is built there until the door opens. */
+  orchard: { x: number; z: number; w: number; d: number };
 }
+
+/** The hedge along the gate side (#315): from just behind the fence line, this deep and this tall. Taller than the eye (scene.ts EYE), so nothing behind it shows. */
+export const HEDGE = { gap: 0.1, depth: 1.0, height: 2.6 } as const;
+/** Half the width of the door in the hedge. */
+export const DOOR_HALF = 0.55;
+/**
+ * The orchard behind the hedge: a fixed size, whatever the size of the garden,
+ * because its trees' places are worked out from it (garden/orchard.ts needs at
+ * least 18 × 14.2 m). The door is in the middle of its side toward the garden.
+ */
+const ORCHARD = { w: 18, d: 14.2 } as const;
 
 const SPACING = 0.62;
 const BED_COLS = 6;
@@ -151,14 +164,46 @@ export function layout(plants: GardenPlant[]): Layout {
     bounds,
     gate: { x: 0, z: bounds.maxZ },
     pond: { x: bounds.minX + 2.6, z: bounds.maxZ - 2.4, r: 1.5 },
+    orchard: { x: 0, z: bounds.maxZ + HEDGE.gap + HEDGE.depth + ORCHARD.d / 2, w: ORCHARD.w, d: ORCHARD.d },
   };
 }
 
-/** Keep a walker of radius `rad` inside the fence and out of beds and the pond. */
-export function collide(l: Layout, x: number, z: number, rad = 0.28): { x: number; z: number } {
+/**
+ * Where the hedge runs along the gate side, left to right: a little past the
+ * side fences, and past the orchard's own hedge where the orchard is wider than
+ * the garden. Every line of sight from the garden into the orchard meets it.
+ */
+export function hedgeSpan(l: Layout): [number, number] {
+  const o = l.orchard;
+  return [Math.min(l.bounds.minX - 0.6, o.x - o.w / 2 - HEDGE.depth), Math.max(l.bounds.maxX + 0.6, o.x + o.w / 2 + HEDGE.depth)];
+}
+
+type Rect = [minX: number, maxX: number, minZ: number, maxZ: number];
+
+/** The nearest point to (x, z) in any of the rectangles: the walker slides along their edges. */
+function nearestIn(rects: Rect[], x: number, z: number): { x: number; z: number } {
+  let best = { x, z };
+  let bestD = Infinity;
+  for (const [x0, x1, z0, z1] of rects) {
+    const p = { x: Math.max(x0, Math.min(x1, x)), z: Math.max(z0, Math.min(z1, z)) };
+    const d = Math.hypot(p.x - x, p.z - z);
+    if (d < bestD) [best, bestD] = [p, d];
+  }
+  return best;
+}
+
+/**
+ * Keep a walker of radius `rad` inside the fence and out of beds and the pond.
+ * Once the door is open (#315), the doorway and the orchard behind it are open too.
+ */
+export function collide(l: Layout, x: number, z: number, rad = 0.28, doorOpen = false): { x: number; z: number } {
   const b = l.bounds;
-  x = Math.max(b.minX + rad, Math.min(b.maxX - rad, x));
-  z = Math.max(b.minZ + rad, Math.min(b.maxZ - rad, z));
+  const garden: Rect = [b.minX + rad, b.maxX - rad, b.minZ + rad, b.maxZ - rad];
+  const o = l.orchard;
+  const near = o.z - o.d / 2;
+  const doorway: Rect = [l.gate.x - DOOR_HALF + rad, l.gate.x + DOOR_HALF - rad, b.maxZ - rad, near + rad];
+  const orchard: Rect = [o.x - o.w / 2 + rad, o.x + o.w / 2 - rad, near + rad, o.z + o.d / 2 - rad];
+  ({ x, z } = nearestIn(doorOpen ? [garden, doorway, orchard] : [garden], x, z));
   for (const bed of l.beds) {
     const hw = bed.w / 2 + rad;
     const hd = bed.d / 2 + rad;
@@ -181,6 +226,18 @@ export function collide(l: Layout, x: number, z: number, rad = 0.28): { x: numbe
     x = l.pond.x + dx * k;
     z = l.pond.z + dz * k;
   }
+  return { x, z };
+}
+
+/**
+ * Move a walker from (x, z) toward (toX, toZ), in short pieces through collide.
+ * collide sees only where a move ends: one long move (a ctrl+wheel step is 2 m)
+ * could end past the hedge's middle and land in the orchard, beside the door (#315).
+ */
+export function walk(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean): { x: number; z: number } {
+  const n = Math.max(1, Math.ceil(Math.hypot(toX - x, toZ - z) / 0.25));
+  const [dx, dz] = [(toX - x) / n, (toZ - z) / n];
+  for (let i = 0; i < n; i++) ({ x, z } = collide(l, x + dx, z + dz, undefined, doorOpen));
   return { x, z };
 }
 

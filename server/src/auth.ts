@@ -34,10 +34,10 @@ async function mergeUsers(sql: SQL, from: string, to: string) {
       select ${to}, word_id, status, queued_at, updated_at from word_state where user_id = ${from}
       on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
       where excluded.updated_at > word_state.updated_at`;
-    // A course the real account already has keeps its settings.
-    await tx`insert into course (user_id, lang, minutes, retention, created_at)
-      select ${to}, lang, minutes, retention, created_at from course where user_id = ${from}
-      on conflict (user_id, lang) do nothing`;
+    // A course the real account already has keeps its settings; a door opened on either stays open.
+    await tx`insert into course (user_id, lang, minutes, retention, door_open, created_at)
+      select ${to}, lang, minutes, retention, door_open, created_at from course where user_id = ${from}
+      on conflict (user_id, lang) do update set door_open = course.door_open or excluded.door_open`;
     await tx`insert into ai_usage (user_id, period, used)
       select ${to}, period, used from ai_usage where user_id = ${from}
       on conflict (user_id, period) do update set used = ai_usage.used + excluded.used`;
