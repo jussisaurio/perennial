@@ -53,6 +53,14 @@ test("deckProblems checks aliases and duplicate lemmas", () => {
   expect(deckProblems(toRetired)[0]).toMatch(/alias of retired/);
 });
 
+test("deckProblems: two live words may not plant the same orchard tree", () => {
+  expect(deckProblems(deck([{ ...casa, orchard: "apple" }, { ...perro, orchard: "pear" }]))).toEqual([]);
+  expect(deckProblems(deck([{ ...casa, orchard: "apple" }, { ...perro, orchard: "apple" }]))).toEqual(['two live words plant the orchard "apple"']);
+  // A retired word plants nothing.
+  const d = deck([{ ...casa, orchard: "apple", retired: true }, { ...perro, orchard: "apple" }]);
+  expect(deckProblems({ ...d, sentences: d.sentences.filter((s) => s.wordId !== casa.id) })).toEqual([]);
+});
+
 test("manifestKey ignores case and Unicode normalization", () => {
   expect(manifestKey({ lemma: "Árbol", pos: "noun" })).toBe(manifestKey({ lemma: "árbol", pos: "noun" }));
   expect(manifestKey({ lemma: "banco", pos: "noun", sense: "bench" })).not.toBe(manifestKey({ lemma: "banco", pos: "noun" }));

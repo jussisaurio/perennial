@@ -40,11 +40,17 @@ export function toPos(s: string | null | undefined): Pos | null {
  * Ids are stable: progress and garden art are keyed by them.
  */
 export const GARDEN_WORDS = [
-  "cat", "bird", "dog", "sun", "fish", "rain", "butterfly", "moon", "frog", "bee", "snow", "snail", "star",
+  "cat", "bird", "dog", "key", "sun", "fish", "rain", "butterfly", "moon", "frog", "bee", "snow", "snail", "star",
   "mouse", "wind", "duck", "cloud", "rabbit", "owl", "fox", "rainbow", "spider", "hedgehog", "squirrel", "ant",
 ] as const;
 export type GardenWord = (typeof GARDEN_WORDS)[number];
 
+/**
+ * Orchard words (#315): learning one plants its tree in the orchard behind the
+ * hedge. Every course names one word for each in decks/<lang>/orchard.json, as
+ * for garden words. Learners meet them in this order, steadily (content/order.ts).
+ * Ids are stable: progress and orchard art are keyed by them.
+ */
 export const ORCHARD_WORDS = ["tree", "apple", "orange", "lemon", "cherry", "pear", "plum", "fig", "olive", "grape", "peach"] as const;
 export type OrchardWord = (typeof ORCHARD_WORDS)[number];
 
@@ -91,6 +97,8 @@ export const DeckWord = (lang: string) =>
     gender: z.enum(["m", "f", "n", "mf"]).optional(),
     /** This word brings that thing into the garden; the course places it, not its rank. */
     garden: z.enum(GARDEN_WORDS).optional(),
+    /** This word plants that tree in the orchard; the course places it, not its rank. */
+    orchard: z.enum(ORCHARD_WORDS).optional(),
     retired: z.boolean().optional(),
     aliasOf: wordId(lang).optional(),
   });
@@ -133,6 +141,7 @@ export function deckProblems(deck: Deck): string[] {
   const live = new Map<string, number>();
   const keys = new Set<string>();
   const garden = new Set<string>();
+  const orchard = new Set<string>();
   for (const s of deck.sentences) {
     if (sentenceIds.has(s.id)) out.push(`duplicate sentence id ${s.id}`);
     sentenceIds.add(s.id);
@@ -156,6 +165,10 @@ export function deckProblems(deck: Deck): string[] {
     if (w.garden) {
       if (garden.has(w.garden)) out.push(`two live words bring the garden "${w.garden}"`);
       garden.add(w.garden);
+    }
+    if (w.orchard) {
+      if (orchard.has(w.orchard)) out.push(`two live words plant the orchard "${w.orchard}"`);
+      orchard.add(w.orchard);
     }
     if ((live.get(w.id) ?? 0) < 3) out.push(`word ${w.id} (${w.lemma}) has fewer than 3 live sentences`);
   }

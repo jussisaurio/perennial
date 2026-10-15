@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { compatibility, ID_ALPHABET, type Deck, type SourceWord } from "../../web/src/deck/schema.ts";
-import { buildDeck, wholeWordCount, wordCount, type Garden, type Manifest } from "./lib.ts";
+import { buildDeck, wholeWordCount, wordCount, type Garden, type Manifest, type Orchard } from "./lib.ts";
 
 const src = (lemma: string, extra: Partial<SourceWord> = {}): SourceWord => ({
   lemma,
@@ -121,6 +121,16 @@ test("garden.json marks deck words; a missing, retired or doubly named word, or 
   expect(retired.deck.words.find((w) => w.lemma === "gata")).toMatchObject({ retired: true, garden: undefined });
   expect(build([src("gata")], [{ garden: "cat", word: "gata|noun" }, { garden: "bird", word: "gata|noun" }]).errors).toEqual(['garden.json: "gata|noun" is named for both "cat" and "bird"']);
   expect(build([src("gata"), src("michi")], [{ garden: "cat", word: "gata|noun" }, { garden: "cat", word: "michi|noun" }]).errors).toEqual(['two live words bring the garden "cat"']);
+});
+
+test("orchard.json marks deck words like garden.json; a word names one thing, a tree is planted once", () => {
+  const build = (source: SourceWord[], orchard: Orchard, garden: Garden = []) => buildDeck({ lang: "es", source, manifest: empty(), prev: null, garden, orchard, newBody: counter() });
+  const ok = build([src("manzana"), src("casa")], [{ orchard: "apple", word: "manzana|noun" }]);
+  expect(ok.errors).toEqual([]);
+  expect(ok.deck.words.map((w) => w.orchard)).toEqual(["apple", undefined]);
+  expect(build([src("casa")], [{ orchard: "apple", word: "manzana|noun" }]).errors).toEqual(['orchard.json: "manzana|noun" (apple) is not a live word in the source']);
+  expect(build([src("gata")], [{ orchard: "tree", word: "gata|noun" }], [{ garden: "cat", word: "gata|noun" }]).errors).toEqual(['orchard.json: "gata|noun" is named for both "cat" and "tree"']);
+  expect(build([src("manzana"), src("poma")], [{ orchard: "apple", word: "manzana|noun" }, { orchard: "apple", word: "poma|noun" }]).errors).toEqual(['two live words plant the orchard "apple"']);
 });
 
 test("warnings: ambiguous clozes and a single repeated form", () => {

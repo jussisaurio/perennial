@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { Deck, GARDEN_WORDS, ID_ALPHABET, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
+import { Deck, GARDEN_WORDS, ID_ALPHABET, ORCHARD_WORDS, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
 import { locate } from "../../web/src/content/text.ts";
 
 export const ROOT = join(import.meta.dir, "../..");
@@ -29,6 +29,10 @@ const Aliases = z.record(z.string(), z.string());
 const Garden = z.array(z.object({ garden: z.enum(GARDEN_WORDS), word: z.string() }));
 export type Garden = z.infer<typeof Garden>;
 
+/** Orchard file (#315): which word plants which orchard tree, written like the garden file. */
+const Orchard = z.array(z.object({ orchard: z.enum(ORCHARD_WORDS), word: z.string() }));
+export type Orchard = z.infer<typeof Orchard>;
+
 const sentenceKey = (wordId: string, text: string) => `${wordId}|${text.normalize("NFC")}`;
 
 /** Ten random base32 characters (32 divides 256, so `& 31` is unbiased). */
@@ -44,13 +48,14 @@ export type BuildInput = {
   prev: Deck | null;
   aliases?: Record<string, string>;
   garden?: Garden;
+  orchard?: Orchard;
   /** Injectable for tests. */
   newBody?: () => string;
 };
 
 export type BuildResult = { deck: Deck; manifest: Manifest; errors: string[]; warnings: string[] };
 
-export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden = [], newBody = randomBody }: BuildInput): BuildResult {
+export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden = [], orchard = [], newBody = randomBody }: BuildInput): BuildResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const prevWords = new Map(prev?.words.map((w) => [w.id, w]));
@@ -99,19 +104,22 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden =
     liveSentences.set(id, list);
   });
 
-  // Garden words name a live source word each. A thing named twice is a deck problem (deckProblems).
+  // Garden and orchard words name a live source word each, and a word names one thing.
+  // A thing named twice is a deck problem (deckProblems).
   const live = new Map(words.map((w) => [manifestKey(w), w]));
-  for (const g of garden) {
-    const [lemma, pos, sense] = g.word.split("|");
+  const name = (file: string, word: string, thing: string, set: (w: DeckWord) => void) => {
+    const [lemma, pos, sense] = word.split("|");
     const w = live.get(manifestKey({ lemma, pos, sense }));
-    if (!w) errors.push(`garden.json: "${g.word}" (${g.garden}) is not a live word in the source`);
-    else if (w.garden) errors.push(`garden.json: "${g.word}" is named for both "${w.garden}" and "${g.garden}"`);
-    else w.garden = g.garden;
-  }
+    if (!w) errors.push(`${file}: "${word}" (${thing}) is not a live word in the source`);
+    else if (w.garden || w.orchard) errors.push(`${file}: "${word}" is named for both "${w.garden ?? w.orchard}" and "${thing}"`);
+    else set(w);
+  };
+  for (const g of garden) name("garden.json", g.word, g.garden, (w) => (w.garden = g.garden));
+  for (const o of orchard) name("orchard.json", o.word, o.orchard, (w) => (w.orchard = o.orchard));
 
   // Words and sentences that left the source stay in the deck, retired.
   const liveIds = new Set(words.map((w) => w.id));
-  for (const w of prev?.words ?? []) if (!liveIds.has(w.id)) words.push({ ...w, retired: true, aliasOf: undefined, garden: undefined });
+  for (const w of prev?.words ?? []) if (!liveIds.has(w.id)) words.push({ ...w, retired: true, aliasOf: undefined, garden: undefined, orchard: undefined });
   for (const w of words) {
     const target = aliases[w.id];
     if (target) w.aliasOf = target;
@@ -224,10 +232,10 @@ function readJson<T>(path: string, schema: z.ZodType<T>, fallback: T): T {
   return existsSync(path) ? schema.parse(JSON.parse(readFileSync(path, "utf8"))) : fallback;
 }
 
-/** Every course names its garden words (#209), so a missing file is a mistake, not "none". */
-function readGarden(path: string): Garden {
-  if (!existsSync(path)) throw new Error(`${path.slice(ROOT.length + 1)} is missing: every course names its garden words (docs/decks.md)`);
-  return Garden.parse(JSON.parse(readFileSync(path, "utf8")));
+/** Every course names its garden (#209) and orchard (#315) words, so a missing file is a mistake, not "none". */
+function readNamed<T>(path: string, schema: z.ZodType<T>): T {
+  if (!existsSync(path)) throw new Error(`${path.slice(ROOT.length + 1)} is missing: every course names its garden and orchard words (docs/decks.md)`);
+  return schema.parse(JSON.parse(readFileSync(path, "utf8")));
 }
 
 export function readDeckFiles(lang: string) {
@@ -236,7 +244,8 @@ export function readDeckFiles(lang: string) {
     manifest: readJson(join(dir, "ids.json"), Manifest, { words: {}, sentences: {} }),
     prev: readJson<Deck | null>(join(dir, "deck.json"), Deck(lang), null),
     aliases: readJson(join(dir, "aliases.json"), Aliases, {}),
-    garden: readGarden(join(dir, "garden.json")),
+    garden: readNamed(join(dir, "garden.json"), Garden),
+    orchard: readNamed(join(dir, "orchard.json"), Orchard),
   };
 }
 
