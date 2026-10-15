@@ -124,6 +124,58 @@ export function picket(): HTMLCanvasElement {
   return c;
 }
 
+/** Thick hedge leaves (#315): dense and dark, with no gaps to see through. */
+export function hedge(): HTMLCanvasElement {
+  const c = speckle(11, "#2f6b2f", [
+    ["#245a27", 150],
+    ["#3d7f37", 110],
+    ["#4f9442", 40],
+    ["#1b4620", 50],
+  ]);
+  const ctx = c.getContext("2d")!;
+  const r = rng(12);
+  // Little clusters of leaves catching the light.
+  for (let i = 0; i < 14; i++) {
+    const x = Math.floor(r() * 30);
+    const y = Math.floor(r() * 30);
+    px(ctx, x, y, "#5aa04a", 2, 1);
+    px(ctx, x + 1, y + 1, "#3d7f37");
+  }
+  return c;
+}
+
+/** The old wooden door in the hedge (#315): planks, two iron bands, a ring and a keyhole. The keyhole is drawn dark: a warm light shows through it (scene.ts). */
+export function door(): HTMLCanvasElement {
+  const [c, ctx] = canvas(32, 64);
+  const r = rng(13);
+  px(ctx, 0, 0, "#8a5a32", 32, 64);
+  for (let y = 0; y < 64; y++) for (let x = 0; x < 32; x++) if (r() < 0.16) px(ctx, x, y, r() < 0.5 ? "#7a4e2a" : "#9c6a3d");
+  // Upright planks with dark seams.
+  for (const x of [0, 8, 16, 24]) px(ctx, x, 0, "#5a3820", 1, 64);
+  px(ctx, 31, 0, "#5a3820", 1, 64);
+  // Iron bands with rivets.
+  for (const y of [10, 50]) {
+    px(ctx, 0, y, "#3b3a3a", 32, 3);
+    px(ctx, 0, y, "#5b5a58", 32, 1);
+    for (const x of [3, 11, 19, 27]) px(ctx, x, y + 1, "#8d8a85");
+  }
+  // A ring handle and the keyhole below it, on the latch side.
+  px(ctx, 24, 27, "#3b3a3a", 4, 1);
+  px(ctx, 23, 28, "#3b3a3a", 1, 3);
+  px(ctx, 28, 28, "#3b3a3a", 1, 3);
+  px(ctx, 24, 31, "#3b3a3a", 4, 1);
+  px(ctx, 24, 34, "#3b3a3a", 4, 6);
+  return c;
+}
+
+/** A small old key lying on the ground (#315): a ring, a shaft and a bit. */
+export function key(): HTMLCanvasElement {
+  const rows = [".ooo..........", "o...o.........", "o...ossssssss.", "o...o.....s.s.", ".ooo......s.s."];
+  const [c, ctx] = canvas(14, 5);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "o" ? "#e0b24a" : "#c9962e")));
+  return c;
+}
+
 export interface Sky {
   top: string;
   mid: string;

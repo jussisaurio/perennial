@@ -58,6 +58,31 @@ test("course settings change per column", async () => {
   expect(row.retention).toBeCloseTo(0.85);
 });
 
+test("the orchard door opens for good, per course, and syncs to the learner's devices (#315)", async () => {
+  const cookie = await t.signIn(unique("door"));
+  const id = (await t.me(cookie)).id;
+  const door = async (lang: string) => (await t.sql`select door_open from course where user_id = ${id} and lang = ${lang}`)[0].door_open;
+  // A new course row, as the app inserts it, starts closed.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", minutes: 5, retention: 0.9, door_open: false } }]);
+  expect(await door("es")).toBe(false);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", door_open: true } }]);
+  expect(await door("es")).toBe(true);
+  // A settings change from another device, and a device that still has it closed: it stays open.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", retention: 0.85 } }]);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", door_open: false } }]);
+  expect(await door("es")).toBe(true);
+  // The German garden's door is its own.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "de" } }]);
+  expect(await door("de")).toBe(false);
+  expect((await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", door_open: "yes" } }])).status).toBe(422);
+  // The course shape carries it to the learner's other devices.
+  const res = await t.call("/api/shape?table=course&offset=-1", undefined, cookie);
+  expect(res.status).toBe(200);
+  // Electric sends values as text; the app's Electric client parses them.
+  const rows = (res.body as { value?: { lang: string; door_open: string } }[]).filter((m) => m.value).map((m) => m.value!);
+  expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", "false"], ["es", "true"]]);
+});
+
 test("bad batches are rejected whole; reviews from the future too", async () => {
   const cookie = await t.signIn(unique("bad"));
   expect((await t.write(cookie, [{ type: "review.insert", row: { id: "nope" } }])).status).toBe(422);

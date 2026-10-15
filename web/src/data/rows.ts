@@ -11,6 +11,8 @@ export interface CourseRow {
   lang: string;
   minutes: number;
   retention: number;
+  /** The garden's door to the orchard (#315): opened with the key, and then open for good. */
+  door_open: boolean;
   created_at: string;
 }
 

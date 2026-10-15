@@ -8,12 +8,12 @@ import "@fontsource/pixelify-sans/700.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { language } from "../content/languages";
 import type { LoadedDeck } from "../data/deck";
-import { useLearner } from "../data/learner";
+import { openDoor, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { groupOf, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
-import type { Detail, TimeOfDay } from "../garden/scene";
+import type { Detail, DoorAction, DoorState, TimeOfDay } from "../garden/scene";
 import { EMPTY_WALK, loadingLine, plantLine, SLOW_DEVICE_NOTICE } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
 import { takeFocus } from "./gardenFocus";
@@ -23,7 +23,7 @@ import { SoundToggle, useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
 import { useGardenScene, useWalkInput } from "./useGardenScene";
-import { learnerVisitors, type LearnerVisitors } from "./visitors";
+import { gardenBrought, learnerVisitors, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
 
 /** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
@@ -38,6 +38,13 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   // The learner's own garden: the same plants as the 2D garden.
   const source = useMemo(() => (learner ? plantsFromLearner(learner) : null), [learner]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
+  const store = useStore();
+  // The door in the hedge (#315): open for good once opened; until then the key lies by it once "key" brought it.
+  // Until the learner loads there is no garden to walk (`source` is null), so "locked" is never shown then.
+  const door = useMemo(() => {
+    const state: DoorState = !learner ? "locked" : learner.course.door_open ? "open" : gardenBrought(learner).has("key") ? "key" : "locked";
+    return { state, open: () => void openDoor(store, lang).catch((e) => console.error("door not saved", e)) };
+  }, [learner, store, lang]);
   const [focus] = useState(takeFocus);
   // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done,
   // named as Today names it, and worked out with the clock, so a walk open past midnight starts the new day.
@@ -45,7 +52,7 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const now = useNow();
   const chunk = learner ? nextChunk(learner, now) : null;
   const water = learner && chunk ? { label: chunk.state === "finish" ? `${chunkLabel(chunk)} · ${chunk.minutes} min` : chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
-  return <GardenWalk lang={lang} source={source} visitors={visitors} onExit={onExit} water={water} focus={focus} />;
+  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} onExit={onExit} water={water} focus={focus} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -70,6 +77,12 @@ function savedDetail(): Detail | null {
 const TIME_LABEL: Record<TimeOfDay, string> = { day: "Day", dusk: "Evening", night: "Night" };
 const NEXT_TIME: Record<TimeOfDay, TimeOfDay> = { day: "dusk", dusk: "night", night: "day" };
 
+/** The door's button, for keys and screen readers: what it does, said plainly. */
+const DOOR_BUTTON: Record<DoorAction, string> = { try: "Try the door", key: "Pick up the key", open: "Open the door with the key" };
+
+/** The landing page's walk: the door stays locked, and there is nothing to save. */
+const SHOWCASE_DOOR = { state: "locked" as const, open: () => {} };
+
 /** The plant's one line of personality (the same every time for this word, and the same as in the 2D garden). */
 function personality(p: PlacedPlant): string {
   return plantLine(p.lemma, plantMood(p));
@@ -80,6 +93,7 @@ export function GardenWalk({
   lang,
   source,
   visitors,
+  door = SHOWCASE_DOOR,
   onExit,
   water,
   focus,
@@ -88,6 +102,8 @@ export function GardenWalk({
   source: PlantSource | null;
   /** Today's visitors (snail, cat, ...): a snapshot is taken when the garden opens. */
   visitors?: LearnerVisitors | null;
+  /** The door in the hedge (#315), and how to save it once opened. Without it (the landing page) the door stays locked. */
+  door?: { state: DoorState; open: () => void };
   onExit: () => void;
   /** Starts practice; `label` says what it starts. */
   water?: { label: string; start: () => void };
@@ -110,7 +126,7 @@ export function GardenWalk({
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const tag = language(lang).tag;
-  const { data, scene, ready, failed, progress, labels, selected } = useGardenScene({ lang, source, visitors, focus, time, detail, wrap, canvas, onFocused: () => setHint(false) });
+  const { data, scene, ready, failed, progress, labels, selected, doorNear } = useGardenScene({ lang, source, visitors, door, focus, time, detail, wrap, canvas, onFocused: () => setHint(false) });
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
   // card's own Next plant, focus stays on that button and the live card body is read.
@@ -176,6 +192,13 @@ export function GardenWalk({
     const p = scene.current.pick(x, y, r.width, r.height);
     scene.current.select(p);
     if (p) return;
+    // The key, or the shut door (#315): its quiet line, or it opens.
+    const d = scene.current.pickDoor(x, y, r.width, r.height);
+    if (d) {
+      scene.current.doorAct(d);
+      setHint(false);
+      return;
+    }
     // Nothing else there: the garden itself (#74). Its tag shows for a moment and, with sound on, it says its word.
     const s = scene.current.pickScenery(x, y, r.width, r.height);
     if (!s) return;
@@ -229,8 +252,8 @@ export function GardenWalk({
       />
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
-          l.kind === "say" ? (
-            <span key={l.id} className="gw-say" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+          l.kind === "say" || l.kind === "line" ? (
+            <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
           ) : (l.kind === "visitor" || l.kind === "scenery") && !l.known ? (
@@ -351,6 +374,11 @@ export function GardenWalk({
       )}
 
       <div className="gw-bottom">
+        {doorNear && !selected && (
+          <button className="gw-btn" onClick={() => scene.current?.doorAct(doorNear)}>
+            {DOOR_BUTTON[doorNear]}
+          </button>
+        )}
         {ready && !selected && stats.total > 0 && (
           <button className="gw-btn" onClick={() => step(1)}>
             Next plant <span aria-hidden="true">→</span>

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type PointerEvent, type RefObject } from "
 import { language } from "../content/languages";
 import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
-import type { Detail, GardenScene, Label, TimeOfDay, WalkVisitors } from "../garden/scene";
+import type { Detail, DoorAction, DoorState, GardenScene, Label, TimeOfDay, WalkVisitors } from "../garden/scene";
 import { sceneryViews } from "../garden/scenery";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
 import { layout, type Layout, type PlacedPlant } from "../garden/world";
@@ -22,12 +22,14 @@ interface WalkData {
  * The scene for this garden. A snapshot is taken when the garden opens (it does
  * not change while you walk) and the scene is built once from it; time of day
  * and quality changes go to the running scene. `onFocused`: the scene walked to
- * `focus` and opened its card.
+ * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
+ * save it once it is opened.
  */
 export function useGardenScene({
   lang,
   source,
   visitors,
+  door,
   focus,
   time,
   detail,
@@ -38,6 +40,7 @@ export function useGardenScene({
   lang: string;
   source: PlantSource | null;
   visitors?: LearnerVisitors | null;
+  door: { state: DoorState; open: () => void };
   focus?: string | null;
   time: TimeOfDay;
   detail: Detail;
@@ -52,7 +55,11 @@ export function useGardenScene({
   const [selected, setSelected] = useState<PlacedPlant | null>(null);
   const [labels, setLabels] = useState<Label[]>([]);
   const [ready, setReady] = useState(false);
+  const [doorNear, setDoorNear] = useState<DoorAction | null>(null);
   const scene = useRef<GardenScene | null>(null);
+  // The scene is built once; it saves the door through whatever the page passes now.
+  const openDoor = useRef(door.open);
+  openDoor.current = door.open;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
@@ -68,9 +75,10 @@ export function useGardenScene({
         reserved: l.plants.length ? null : reservedStake(language(lang).name, lang).line,
         sleeper: sleeperId(l.plants.filter((p) => p.stage === "bloom").map((p) => p.id)),
         scenery: visitors?.scenery ?? sceneryViews(lang),
+        door: door.state,
       },
     });
-  }, [source, data, visitors, lang]);
+  }, [source, data, visitors, door.state, lang]);
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -90,7 +98,14 @@ export function useGardenScene({
       if (!mod.webglAvailable()) return setFailed({ text: "Your browser cannot show 3D graphics." });
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-        s = new mod.GardenScene(canvas.current!, data.l, { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]) }, reduced, lang, data.visitors);
+        s = new mod.GardenScene(
+          canvas.current!,
+          data.l,
+          { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]), onDoor: setDoorNear, onDoorOpen: () => openDoor.current() },
+          reduced,
+          lang,
+          data.visitors,
+        );
       } catch (e) {
         return setFailed({ text: e instanceof Error ? e.message : String(e) });
       }
@@ -137,7 +152,7 @@ export function useGardenScene({
     scene.current?.setDetail(detail);
   }, [detail]);
 
-  return { data, scene, ready, failed, progress, labels, selected };
+  return { data, scene, ready, failed, progress, labels, selected, doorNear };
 }
 
 /**
