@@ -14,7 +14,7 @@
 // request through request.ts's bridge.
 
 import * as Sentry from "@sentry/bun";
-import { Cause, Context, Logger, References, type LogLevel } from "effect";
+import { Cause, Context, Layer, Logger, References, type LogLevel } from "effect";
 import { bridgedRequest, inSentryScope, record, RequestContext, type RequestInfo } from "./request";
 
 type Level = "debug" | "info" | "warn" | "error";
@@ -82,12 +82,19 @@ function levelOf(level: LogLevel.LogLevel): Level {
  * fields are the request's context (from the fiber) and Effect.annotateLogs.
  * A failure logged with its cause (Effect's own reports) keeps it as `err`.
  */
-export const logger = Logger.make<unknown, void>(({ logLevel, message, fiber, cause }) => {
+const logger = Logger.make<unknown, void>(({ logLevel, message, fiber, cause }) => {
   const parts = Array.isArray(message) ? message : [message];
   const fields: Fields = { ...fiber.getRef(References.CurrentLogAnnotations) };
   if (cause.reasons.length) fields.err = Cause.squash(cause);
   write(levelOf(logLevel), String(parts[0]), fields, Context.getOrUndefined(fiber.context, RequestContext));
 });
+
+/** Effect logs through `logger` only. */
+export const LoggerLive = Layer.mergeAll(
+  Logger.layer([logger]),
+  // write() filters by LOG_LEVEL; Effect's own default (Info) would drop Effect.logDebug first.
+  Layer.succeed(References.MinimumLogLevel, "All"),
+);
 
 /** The trace a request runs in, to find its log line in Sentry (none without Sentry). Read where the request comes in. */
 export function traceId(): string | undefined {

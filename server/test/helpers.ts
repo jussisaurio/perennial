@@ -1,11 +1,11 @@
 // Test harness: the real app against the local Postgres + Electric
 // (`docker compose up -d`), with a mock model and the dev mail outbox.
 
-import { Context, Effect, Exit, Layer, Logger, Scope } from "effect";
+import { Context, Effect, Exit, Layer, Scope } from "effect";
 import { HttpEffect, HttpServer, HttpServerRequest } from "effect/http";
 import { App, AppLive, BunServerLive, HttpLive } from "../src/app";
 import { AppConfig, loadConfig, type Config } from "../src/config";
-import { logger } from "../src/log";
+import { LoggerLive } from "../src/log";
 import { OutboxMailer } from "../src/mail";
 import { migrate } from "../src/migrate";
 import { Ai, Auth, Database, Mail, ServicesLive } from "../src/services";
@@ -59,7 +59,7 @@ export async function startApp(overrides: Partial<Config> = {}) {
     Layer.provideMerge(ServicesLive),
     Layer.provideMerge(Layer.succeed(Database, sql)),
     Layer.provideMerge(Layer.succeed(AppConfig, config)),
-    Layer.provideMerge(Logger.layer([logger])),
+    Layer.provideMerge(LoggerLive),
   );
   const scope = Effect.runSync(Scope.make());
   const context = await Effect.runPromise(Layer.buildWithScope(layer, scope));
