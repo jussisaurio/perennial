@@ -14,7 +14,7 @@ import { track } from "../observability";
 import { DOOR_LINES, groupOf, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, DoorAction, DoorState, TimeOfDay } from "../garden/scene";
-import { EMPTY_WALK, loadingLine, plantLine, SLOW_DEVICE_NOTICE } from "../content/voice";
+import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
 import { takeFocus } from "./gardenFocus";
 import { WordPlant } from "./plant";
@@ -138,11 +138,9 @@ export function GardenWalk({
   const [time, setTime] = useState<TimeOfDay>(initialTime);
   const [hint, setHint] = useState(true);
   const [detail, setDetail] = useState<Detail>(() => savedDetail() ?? "normal");
-  const [notice, setNotice] = useState("");
   const [sound] = useSound();
   const chooseDetail = (d: Detail) => {
     setDetail(d);
-    setNotice("");
     try {
       localStorage.setItem(QUALITY_KEY, d);
     } catch {
@@ -162,30 +160,6 @@ export function GardenWalk({
     if (selectedId && !dialog.current!.contains(document.activeElement)) dialog.current!.focus({ preventScroll: true });
   }, [selectedId]);
   const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => setHint(false) });
-
-  // If the viewer never chose a quality and the garden runs slowly, switch to low quality once.
-  useEffect(() => {
-    if (!ready || detail !== "normal" || savedDetail()) return;
-    let frames = 0;
-    let raf = 0;
-    let start = 0;
-    const tick = (now: number) => {
-      if (!start) start = now + 1000; // let loading settle first
-      else if (now > start) frames++;
-      if (now < start + 3000) raf = requestAnimationFrame(tick);
-      else if (frames / 3 < 40 && !document.hidden) {
-        setDetail("low");
-        setNotice(SLOW_DEVICE_NOTICE);
-      }
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [ready, detail]);
-  useEffect(() => {
-    if (!notice) return;
-    const t = setTimeout(() => setNotice(""), 8000);
-    return () => clearTimeout(t);
-  }, [notice]);
 
   useEffect(() => {
     if (!hint) return;
@@ -349,13 +323,7 @@ export function GardenWalk({
         </div>
       )}
 
-      {notice && (
-        <div className="gw-hint" role="status">
-          {notice}
-        </div>
-      )}
-
-      {!notice && hint && stats.total > 0 && !selected && (
+      {hint && stats.total > 0 && !selected && (
         <div className="gw-hint">
           <span className="gw-hint-fine">Walk: W A S D or arrow keys · Look: drag or swipe with two fingers · Click a plant to see its word</span>
           <span className="gw-hint-coarse">Walk: use the circle · Look: drag · Tap a plant</span>

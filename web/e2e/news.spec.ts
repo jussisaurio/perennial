@@ -16,6 +16,8 @@ async function nearlyKnown(page: Page, lemma: string) {
 const news = (page: Page) => page.locator(".garden-news");
 
 test("a visitor that came this chunk: one line, and its link opens the walk", async ({ page }) => {
+  // Low quality: CI draws WebGL in software, and normal quality is too slow there (garden.spec.ts).
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
   await startCourse(page);
   await startSession(page);
   for (let i = 0; i < 4; i++) await answer(page, "1");

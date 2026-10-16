@@ -153,6 +153,8 @@ export class GardenScene {
   private time: TimeOfDay = "day";
   private lastLabels = "";
   private tmp = new THREE.Vector3();
+  /** Filled in place every tick: tick allocates nothing (DESIGN.md, Garden code). */
+  private readonly tickFrame: Frame = { dt: 0, elapsed: 0, x: 0, z: 0, yaw: 0 };
   /** What a tap can name in the garden itself (#74), built once. The clouds and the sun are read at tap time. */
   private hitBoxes: HitBox[] = [];
   private hitDiscs: HitDisc[] = [];
@@ -942,7 +944,12 @@ export class GardenScene {
     // critters (fireflies, butterflies, the sleeping bloom's z's), then plants
     // (chunk culling — beds outside the fog are skipped — streaming the
     // plants nearest you, and the perk uniform).
-    const frame: Frame = { dt, elapsed: t, x: this.x, z: this.z, yaw: this.yaw };
+    const frame = this.tickFrame;
+    frame.dt = dt;
+    frame.elapsed = t;
+    frame.x = this.x;
+    frame.z = this.z;
+    frame.yaw = this.yaw;
     for (const part of this.parts) part.tick?.(frame);
     if (this.selected) {
       const p = this.selected;

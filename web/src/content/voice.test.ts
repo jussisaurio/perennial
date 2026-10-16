@@ -10,7 +10,6 @@ import {
   PLANT_LINES,
   reservedStake,
   restDayLine,
-  SLOW_DEVICE_NOTICE,
   summaryHeadline,
   WORM_LINE,
   wordsEmptyLine,
@@ -27,7 +26,6 @@ const english = [
   ...days.map((d, i) => summaryHeadline("es", i, d)).flatMap((h) => (h.small ? [h.small] : [h.line])),
   ...Object.values(EMPTY_WALK),
   WORM_LINE,
-  SLOW_DEVICE_NOTICE,
   restDayLine("Oct 3"),
   reservedStake("Spanish", "es").line,
   firstPlantsLine(1),
@@ -58,7 +56,6 @@ test("the summary headline changes between sessions on the same day (#270)", () 
 });
 
 test("quiet copy: the clear part comes first, the wink after (#58, #68)", () => {
-  expect(SLOW_DEVICE_NOTICE.startsWith("The garden was slow on this device, so it now uses bigger pixels.")).toBe(true);
   expect(restDayLine("Oct 3").startsWith("Oct 3: rest day.")).toBe(true);
   for (const f of FILTERS) expect(wordsEmptyLine(f, false)).toMatch(/^No /);
   expect(wordsEmptyLine("new", true)).toBe("No new word like this. Try All.");
