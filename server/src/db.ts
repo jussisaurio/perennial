@@ -8,28 +8,34 @@ import type { SqlError } from "effect/sql/SqlError";
 import { AppConfig } from "./config";
 
 /**
- * How we connect to `url`.
+ * How every client of ours connects to `url`: the pool, the housekeeping
+ * run's one connection, the tests' own connections.
  *
- * libpq's sslmode=require, which production uses (docs/DEPLOY.md), means TLS
- * without checking the server's certificate, and Bun.SQL kept that meaning.
- * sql-pg 4.0.0 checks the certificate for `require`, so we keep libpq's
- * meaning here. verify-ca and verify-full check it, as before. (sql-pg's
- * `prefer` also checks it, where libpq does not; nothing of ours uses it.)
+ * TLS, by the URL's sslmode, in sql-pg 4.0.0:
+ * - require: TLS without checking the server's certificate. That is libpq's
+ *   meaning, and Bun.SQL's; sql-pg alone would check it, so it is set here.
+ * - verify-full: TLS, certificate and host name checked.
+ * - verify-ca: the same in sql-pg (libpq does not check the host).
+ * - allow, prefer: try TLS, with the certificate checked (libpq does not
+ *   check it), and fall back to plain only if the server has no TLS.
+ * - none: plain, as in local development.
+ * Production uses require or verify-full (docs/DEPLOY.md); both work.
+ *
+ * 30 s to connect, as Bun.SQL had it (sql-pg's own default is 5 s).
  */
 export function connection(url: string): PgClient.PgClientConfig {
+  const connectTimeout = "30 seconds";
   // An unreadable URL is sql-pg's to refuse: it says what is wrong with it.
   const sslmode = URL.parse(url)?.searchParams.get("sslmode");
-  if (sslmode !== "require") return { url: Redacted.make(url) };
+  if (sslmode !== "require") return { url: Redacted.make(url), connectTimeout };
   // Semgrep flags a skipped certificate check. Here it is what the URL asks
   // for (libpq's require); a URL that wants the check says verify-full.
-  return { url: Redacted.make(url), ssl: { rejectUnauthorized: false } }; // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
+  return { url: Redacted.make(url), connectTimeout, ssl: { rejectUnauthorized: false } }; // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
 }
 
-/** The app's pool, as Bun.SQL had it: at most 10 connections, idle ones closed after 30 s, 30 s to connect. */
+/** The app's pool, as Bun.SQL had it: at most 10 connections, idle ones closed after 30 s. */
 export const DatabaseLive = Layer.unwrap(
-  Effect.map(AppConfig, (config) =>
-    PgClient.layer({ ...connection(config.databaseUrl), maxConnections: 10, idleTimeout: "30 seconds", connectTimeout: "30 seconds" }),
-  ),
+  Effect.map(AppConfig, (config) => PgClient.layer({ ...connection(config.databaseUrl), maxConnections: 10, idleTimeout: "30 seconds" })),
 );
 
 /** How many rows a statement touched: the count in Postgres's command tag ("INSERT 0 1", "DELETE 3"). */

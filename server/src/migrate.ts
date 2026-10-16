@@ -24,7 +24,10 @@ const DOLLAR_TAG = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/;
  * its own (Postgres's extended protocol takes one at a time), so a file is split
  * at each `;` that ends a statement: not one inside a comment, a quoted string
  * or identifier, or a dollar-quoted body. Pieces with only comments are dropped.
- * (Backslash escapes in E'' strings are not read: no migration has one.)
+ * It does not read a $ inside an identifier (a$b), nested block comments, or
+ * backslash escapes in E'' strings; no migration has one. A file that does
+ * splits wrongly, so Postgres refuses a piece: the run fails loudly and rolls
+ * back, and nothing is applied.
  */
 export function statements(file: string): string[] {
   const out: string[] = [];
