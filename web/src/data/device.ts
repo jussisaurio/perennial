@@ -12,13 +12,16 @@
 // One exception: an anonymous learner who signs in with email keeps their
 // queue (see adoptOnDevice).
 
+import { Schema } from "effect";
+
 export const outboxName = (userId: string) => `perennial-outbox-${userId}`;
 
 /** A list kept in localStorage. Unreadable entries are dropped. */
-function readList<T>(key: string, valid: (x: unknown) => x is T): T[] {
+function readList<T>(key: string, item: Schema.Schema<T>): T[] {
   try {
-    const v = JSON.parse(localStorage.getItem(key) ?? "[]") as unknown;
-    return Array.isArray(v) ? v.filter(valid) : [];
+    // ?? "[]": nothing kept yet.
+    const v: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
+    return Array.isArray(v) ? v.filter(Schema.is(item)) : [];
   } catch {
     // No storage, or not JSON: nothing was kept.
     return [];
@@ -36,7 +39,7 @@ function saveList(key: string, list: unknown[]) {
 }
 
 const FORGET_KEY = "perennial-forget";
-const forgetList = () => readList(FORGET_KEY, (x): x is string => typeof x === "string");
+const forgetList = () => readList(FORGET_KEY, Schema.String);
 const saveForgetList = (ids: string[]) => saveList(FORGET_KEY, ids);
 
 /** Open stores register how to empty their queue, so a sign-out can stop uploads at once. */
@@ -141,13 +144,10 @@ async function deleteLocalStorageOutbox(userId: string): Promise<boolean> {
 // An anonymous learner who signs in keeps their progress (the server merges
 // it into the account), so their unsent writes move to the account's queue.
 const ADOPT_KEY = "perennial-adopt";
-type Adoption = { from: string; to: string };
+const Adoption = Schema.Struct({ from: Schema.String, to: Schema.String });
+type Adoption = typeof Adoption.Type;
 
-const isAdoption = (a: unknown): a is Adoption => {
-  const x = a as Partial<Adoption> | null;
-  return typeof x?.from === "string" && typeof x?.to === "string";
-};
-const adoptions = () => readList(ADOPT_KEY, isAdoption);
+const adoptions = () => readList(ADOPT_KEY, Adoption);
 const saveAdoptions = (list: Adoption[]) => saveList(ADOPT_KEY, list);
 
 /** The anonymous user `from` became the account `to`: its queued writes are theirs. */
