@@ -13,7 +13,6 @@ import type { SqlError } from "effect/sql/SqlError";
 import { LIMITS, type Credits, type ExamplesIn, type MineIn, type UserId } from "perennial-contract";
 import { AppConfig, PRICES } from "./config";
 import { LANGUAGE } from "./course";
-import { theRow } from "./db";
 import { type ApiError, refuse } from "./http";
 import { Model } from "./model";
 import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, SENTENCES_PER_WORD, type GenWord } from "./prompts";
