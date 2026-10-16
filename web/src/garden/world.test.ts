@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keySpot, layout, route, viewpoint, walk, type GardenPlant } from "./world";
+import { ORCHARD_WORDS } from "../deck/schema";
+import { rng } from "../lib/seed";
+import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
+import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keySpot, layout, route, viewpoint, walk, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
@@ -108,6 +111,101 @@ describe("garden layout", () => {
     }
     // In the garden, straight there.
     expect(route(l, 1, l.bounds.maxZ - 1, to.x, to.z)).toEqual([[1, l.bounds.maxZ - 1], [to.x, to.z]]);
+  });
+});
+
+describe("the way on foot to a tapped spot (#336)", () => {
+  /** Follow a way as the scene does: a short step at a time toward each corner, through walk(). Returns where the walker ends up. */
+  const follow = (l: Layout, way: [number, number][], doorOpen: boolean, trees: readonly PlacedTree[]) => {
+    let [x, z] = way[0];
+    for (const [cx, cz] of way.slice(1))
+      for (let i = 0; i < 5000 && Math.hypot(cx - x, cz - z) > 1e-6; i++) {
+        const k = Math.min(1, 0.06 / Math.hypot(cx - x, cz - z));
+        ({ x, z } = walk(l, x, z, x + (cx - x) * k, z + (cz - z) * k, doorOpen, trees));
+      }
+    return { x, z };
+  };
+  const length = (way: [number, number][]) => way.slice(1).reduce((n, [x, z], i) => n + Math.hypot(x - way[i][0], z - way[i][1]), 0);
+
+  test("straight there when nothing is in the way", () => {
+    const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
+    const bed = l.beds[0];
+    const front = bed.z + bed.d / 2 + 1;
+    expect(wayTo(l, bed.x - 1, front, bed.x + 1.5, front, false, [])).toEqual([[bed.x - 1, front], [bed.x + 1.5, front]]);
+  });
+
+  test("round a bed, by its nearer side, and all the way there", () => {
+    const l = layout(Array.from({ length: 70 }, (_, i) => plant(i, ["noun", "verb"][i % 2])));
+    const bed = l.beds[0];
+    // In front of the bed, a little right of its middle; the spot is right behind it.
+    const [x, z] = [bed.x + 0.5, bed.z + bed.d / 2 + 0.6];
+    const [tx, tz] = [bed.x + 0.5, bed.z - bed.d / 2 - 0.6];
+    const way = wayTo(l, x, z, tx, tz, false, []);
+    expect(way.length).toBeGreaterThan(2);
+    // Round the right side: it is the shorter way.
+    expect(way.slice(1, -1).every(([cx]) => cx > bed.x + bed.w / 2)).toBe(true);
+    expect(length(way)).toBeLessThan(bed.d + bed.w + 2);
+    const end = follow(l, way, false, []);
+    expect(Math.hypot(end.x - tx, end.z - tz)).toBeLessThan(0.02);
+  });
+
+  test("round the pond", () => {
+    const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
+    const p = l.pond;
+    const way = wayTo(l, p.x + p.r + 0.5, p.z, p.x - p.r - 0.5, p.z, false, []);
+    for (let k = 0; k <= 1; k += 0.01) {
+      const q = along(way, k);
+      expect(Math.hypot(q.x - p.x, q.z - p.z)).toBeGreaterThan(p.r + WALKER - 0.02);
+    }
+    const end = follow(l, way, false, []);
+    expect(Math.hypot(end.x - (p.x - p.r - 0.5), end.z - p.z)).toBeLessThan(0.02);
+  });
+
+  test("into the orchard through the open door, and round its trunks", () => {
+    const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
+    const NOW = Date.UTC(2026, 9, 15, 12);
+    const trees = placeTrees(l.orchard, orchardTrees(ORCHARD_WORDS.map((k) => ({ id: k, lemma: k, gloss: k, kind: k, planted: NOW - 3000 * 86_400_000, read: { s: 300, reps: 40, lapses: 0 } })), NOW));
+    const t = trees[0];
+    // From the far side of the garden to just behind a trunk, seen from the door.
+    const behind = { x: t.x, z: t.z + t.trunk + 0.6 };
+    const start = { x: l.bounds.minX + 1, z: l.bounds.maxZ - 1.5 };
+    const way = wayTo(l, start.x, start.z, behind.x, behind.z, true, trees);
+    const near = l.orchard.z - l.orchard.d / 2;
+    // Through the doorway: wherever the way is between the garden and the orchard, it is in the door.
+    for (let k = 0; k <= 1; k += 0.002) {
+      const q = along(way, k);
+      if (q.z > l.bounds.maxZ && q.z < near) expect(Math.abs(q.x - l.gate.x)).toBeLessThan(DOOR_HALF);
+    }
+    const end = follow(l, way, true, trees);
+    expect(Math.hypot(end.x - behind.x, end.z - behind.z)).toBeLessThan(0.02);
+  });
+
+  test("from anywhere to anywhere a walker may stand, in small and big gardens, the way gets there", () => {
+    const NOW = Date.UTC(2026, 9, 15, 12);
+    for (const [count, doorOpen] of [[30, false], [200, true], [600, false]] as const) {
+      const l = layout(Array.from({ length: count }, (_, i) => plant(i, ["noun", "verb", "adj", "adv", "phrase"][i % 5])));
+      const trees = doorOpen ? placeTrees(l.orchard, orchardTrees(ORCHARD_WORDS.map((k) => ({ id: k, lemma: k, gloss: k, kind: k, planted: NOW - 3000 * 86_400_000, read: { s: 300, reps: 40, lapses: 0 } })), NOW)) : [];
+      const rand = rng(count);
+      const b = l.bounds;
+      const o = l.orchard;
+      // A spot a walker may stand on, picked at random: in the garden, or in the orchard behind an open door.
+      const spot = () => {
+        for (;;) {
+          const inOrchard = doorOpen && rand() < 0.3;
+          const x = inOrchard ? o.x - o.w / 2 + rand() * o.w : b.minX + rand() * (b.maxX - b.minX);
+          const z = inOrchard ? o.z - o.d / 2 + rand() * o.d : b.minZ + rand() * (b.maxZ - b.minZ);
+          const p = collide(l, x, z, WALKER, doorOpen);
+          const q = collideTrees(trees, p.x, p.z, WALKER);
+          if (Math.hypot(q.x - x, q.z - z) < 1e-9) return q;
+        }
+      };
+      for (let i = 0; i < 40; i++) {
+        const [from, to] = [spot(), spot()];
+        const way = wayTo(l, from.x, from.z, to.x, to.z, doorOpen, trees);
+        const end = follow(l, way, doorOpen, trees);
+        expect(Math.hypot(end.x - to.x, end.z - to.z)).toBeLessThan(0.05);
+      }
+    }
   });
 });
 
