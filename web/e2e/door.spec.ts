@@ -241,14 +241,18 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
 async function keyWaited(page: Page, daysAgo: number, visitors = "") {
   await page.goto(`/?demo=es:30${visitors}#/today`);
   await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
-  await page.evaluate(async (daysAgo) => {
+  const id = await page.evaluate(async (daysAgo) => {
     const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
     const { loadDeck } = await import(/* @vite-ignore */ "/src/data/deck.ts");
     const llave = (await loadDeck("es")).words.find((w: { lemma: string }) => w.lemma === "llave")!.id as string;
     const at = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
-    await postWrite([{ type: "review.insert", row: { id: crypto.randomUUID(), lang: "es", word_id: llave, skill: "read", grade: 4, kind: "known", reviewed_at: at, duration_ms: 4000, sentence_id: null } }]);
+    const id = crypto.randomUUID();
+    await postWrite([{ type: "review.insert", row: { id, lang: "es", word_id: llave, skill: "read", grade: 4, kind: "known", reviewed_at: at, duration_ms: 4000, sentence_id: null } }]);
+    return id;
   }, daysAgo);
   await page.goto(`/${visitors.replace("&", "?")}#/today`);
+  // The walk takes its snapshot as it opens: wait until the review has synced into the app's own data (#343), not on time.
+  await page.waitForFunction((id) => (window as unknown as { __store?: { collections: { review: { has(k: string): boolean } } } }).__store?.collections.review.has(id), id, { timeout: 20_000 });
   await openWalk(page);
   expect(await doorNow(page)).toMatchObject({ state: "key" });
 }
