@@ -1,4 +1,6 @@
 import { afterAll, expect, test } from "bun:test";
+import { Effect } from "effect";
+import { statements } from "../src/migrate";
 import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 
 const t = await startApp();
@@ -89,6 +91,32 @@ test("a word's forms are stored as a list, which is what the app reads from the 
   expect((await t.write(cookie, [{ type: "user_word.upsert", row: { id, lang: "es", lemma: "zorro", gloss: "fox", forms: ["zorro", "zorros"] } }])).status).toBe(200);
   const [row] = await t.sql<{ kind: string; forms: unknown }>`select jsonb_typeof(forms) as kind, forms from user_word where id = ${id}`;
   expect(row).toEqual({ kind: "array", forms: ["zorro", "zorros"] });
+});
+
+test("migration 0004 turns forms stored as a JSON string into the list, and the stream carries it (#337)", async () => {
+  const cookie = await t.signIn(unique("forms-string"));
+  const user = (await t.me(cookie)).id;
+  const id = crypto.randomUUID();
+  const forms = ["zorro", "zorros"];
+  // As /api/write stored forms before #340: a jsonb string holding the list's JSON text.
+  await t.sql`insert into user_word (id, user_id, lang, lemma, gloss, forms) values (${id}, ${user}, 'es', 'zorro', 'fox', to_jsonb(${JSON.stringify(forms)}::text))`;
+  const read = async () => (await t.sql<{ kind: string; forms: unknown }>`select jsonb_typeof(forms) as kind, forms from user_word where id = ${id}`)[0];
+  expect(await read()).toEqual({ kind: "string", forms: JSON.stringify(forms) });
+  // The learner's stream as an open app has it, up to date before the migration.
+  const shape = (offset: string, handle = "") => t.call(`/api/shape?table=user_word&offset=${offset}${handle && `&handle=${handle}&live=true`}`, undefined, cookie);
+  const start = await shape("-1");
+  expect(start.status).toBe(200);
+
+  const migration = await Bun.file(new URL("../migrations/0004_user_word_forms_list.sql", import.meta.url)).text();
+  // Twice: a rerun (say, a later cleanup migration) changes nothing.
+  for (let i = 0; i < 2; i++) for (const statement of statements(migration)) await Effect.runPromise(t.db.unsafe(statement));
+  expect(await read()).toEqual({ kind: "array", forms });
+
+  // The open app gets the update. Electric sends values as text; the app's Electric client parses them.
+  const live = await shape(start.headers.get("electric-offset")!, start.headers.get("electric-handle")!);
+  expect(live.status).toBe(200);
+  const updates = (live.body as { headers: { operation?: string }; value?: { id: string; forms: string } }[]).filter((m) => m.headers.operation === "update");
+  expect(updates.map((m) => [m.value?.id, JSON.parse(m.value!.forms)])).toEqual([[id, forms]]);
 });
 
 test("bad batches are rejected whole; reviews from the future too", async () => {
