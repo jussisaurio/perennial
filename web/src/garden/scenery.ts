@@ -256,24 +256,7 @@ const CLOUD_TAG = 5;
  * at last the sky. `has` drops things this course has no word for.
  */
 export function pickScenery(r: Ray, w: SceneryWorld, has: (id: SceneryId) => boolean = () => true): SceneryHit | null {
-  let best: SceneryHit | null = null;
-  let bestT = w.far;
-  for (const b of w.boxes) {
-    if (!has(b.id)) continue;
-    const t = rayBox(unturn(r, b), b.min, b.max);
-    if (t >= bestT) continue;
-    bestT = t;
-    best = b.tag
-      ? { id: b.id, x: b.tag[0], y: b.tag[1], z: b.tag[2], follow: null }
-      : { id: b.id, x: r.ox + r.dx * t, y: b.max[1] + 0.05, z: r.oz + r.dz * t, follow: null };
-  }
-  for (const d of w.discs) {
-    if (!has(d.id)) continue;
-    const t = rayDisc(r, d.x, d.y, d.z, d.r);
-    if (t >= bestT) continue;
-    bestT = t;
-    best = { id: d.id, x: d.x, y: d.tagY, z: d.z, follow: null };
-  }
+  const { hit: best, t: bestT } = nearestThing(r, w, has);
   // The ground: path inside the fence, grass outside.
   if (r.dy < 0) {
     const t = -r.oy / r.dy;
@@ -298,6 +281,41 @@ export function pickScenery(r: Ray, w: SceneryWorld, has: (id: SceneryId) => boo
   if (hill && has("hills")) return { id: "hills", x: hill[0], y: hill[1], z: hill[2], follow: null };
   if (r.dy > 0 && has("sky")) return { id: "sky", x: r.ox + r.dx * 200, y: r.oy + r.dy * 200, z: r.oz + r.dz * 200, follow: null };
   return null;
+}
+
+/**
+ * Where the ray meets the ground (#336, tap to walk), when nothing in the
+ * garden (a bed, the fence, the hedge, the pond...) stands in front of it
+ * there, and it is not lost in the fog. Null otherwise.
+ */
+export function groundAt(r: Ray, w: SceneryWorld): { x: number; z: number } | null {
+  if (r.dy >= 0) return null;
+  const t = -r.oy / r.dy;
+  if (t >= nearestThing(r, w, () => true).t) return null;
+  return { x: r.ox + r.dx * t, z: r.oz + r.dz * t };
+}
+
+/** The nearest box or disc the ray meets before the fog, and how far along the ray it is (`w.far` when none). */
+function nearestThing(r: Ray, w: SceneryWorld, has: (id: SceneryId) => boolean): { hit: SceneryHit | null; t: number } {
+  let best: SceneryHit | null = null;
+  let bestT = w.far;
+  for (const b of w.boxes) {
+    if (!has(b.id)) continue;
+    const t = rayBox(unturn(r, b), b.min, b.max);
+    if (t >= bestT) continue;
+    bestT = t;
+    best = b.tag
+      ? { id: b.id, x: b.tag[0], y: b.tag[1], z: b.tag[2], follow: null }
+      : { id: b.id, x: r.ox + r.dx * t, y: b.max[1] + 0.05, z: r.oz + r.dz * t, follow: null };
+  }
+  for (const d of w.discs) {
+    if (!has(d.id)) continue;
+    const t = rayDisc(r, d.x, d.y, d.z, d.r);
+    if (t >= bestT) continue;
+    bestT = t;
+    best = { id: d.id, x: d.x, y: d.tagY, z: d.z, follow: null };
+  }
+  return { hit: best, t: bestT };
 }
 
 // ---- Hit volumes for sprites, from their pixel art ----

@@ -6,6 +6,7 @@ import { VISITORS, STRIP_VISITORS } from "./visitors";
 import {
   boardBox,
   DECOR_KINDS,
+  groundAt,
   hillTopY,
   pickScenery,
   rayBox,
@@ -164,6 +165,16 @@ describe("pickScenery", () => {
     expect(pickScenery(eye(1, -1, 0), world())!.id).toBe("path");
     expect(pickScenery(eye(4, -1, 0), world())!.id).toBe("pond");
     expect(pickScenery(eye(12, -1, 0), world())!.id).toBe("grass");
+  });
+
+  test("the ground a tap walks to (#336): only where nothing stands in front of it, and short of the fog", () => {
+    expect(groundAt(eye(1, -1, 0), world())).toEqual({ x: expect.closeTo(1), z: expect.closeTo(0) });
+    // The pond, and the sunflower in front of the ground behind it.
+    expect(groundAt(eye(4, -1, 0), world())).toBeNull();
+    expect(groundAt(eye(0, -0.1, -1), world())).toBeNull();
+    // Far off in the fog, and the sky.
+    expect(groundAt(eye(1, -0.01, 0), world())).toBeNull();
+    expect(groundAt(eye(1, 0.5, 0), world())).toBeNull();
   });
 
   test("the sky: the sun by day, the moon at night, a cloud, the hills, and the sky itself", () => {
