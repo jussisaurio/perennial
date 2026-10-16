@@ -20,7 +20,8 @@ import { ApiError, decodeBody, errorResponse, json, refuse, securityHeaders, ser
 import { traceId } from "./log";
 import { annotate, event, inSentryScope, promise, RequestContext, sentrySpan, type RequestInfo } from "./request";
 import { Mail, OutboxMailer } from "./mail";
-import { Ai, Auth, Database } from "./services";
+import { Ai } from "./ai";
+import { Auth, Database } from "./services";
 import { LEARNER_TABLES, Sync } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
@@ -179,7 +180,7 @@ export const AppLive = Layer.effect(
       at("/api/me", {
         GET: Effect.gen(function* () {
           const user = yield* requireUser();
-          const credits = yield* promise("Ai.credits", () => ai.credits(user.id));
+          const credits = yield* ai.credits(user.id);
           return json({ id: user.id, email: user.isAnonymous ? null : user.email, anonymous: !!user.isAnonymous, credits, ai: ai.enabled } satisfies Me);
         }),
       }),
@@ -187,14 +188,14 @@ export const AppLive = Layer.effect(
         POST: Effect.gen(function* () {
           const user = yield* requireUser({ real: true });
           const input = yield* body(MineIn);
-          return json(yield* promise("Ai.mine", () => ai.mine(user.id, input)));
+          return json(yield* ai.mine(user.id, input));
         }),
       }),
       at("/api/ai/examples", {
         POST: Effect.gen(function* () {
           const user = yield* requireUser({ real: true });
           const input = yield* body(ExamplesIn);
-          return json(yield* promise("Ai.examples", () => ai.examples(user.id, input)));
+          return json(yield* ai.examples(user.id, input));
         }),
       }),
 

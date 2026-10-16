@@ -9,7 +9,8 @@ import { LoggerLive } from "../src/log";
 import { Mail, OutboxMailer } from "../src/mail";
 import { DatabaseLive } from "../src/db";
 import { Migrations, MigrationsLive } from "../src/migrate";
-import { Ai, Auth, Database, ServicesLive } from "../src/services";
+import { Ai } from "../src/ai";
+import { Auth, Database, ServicesLive } from "../src/services";
 
 process.env.LOG_LEVEL ??= "silent";
 

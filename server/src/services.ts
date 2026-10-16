@@ -5,11 +5,12 @@
 import { PgClient } from "@effect/sql-pg";
 import type { SQL } from "bun";
 import { Context, Effect, Layer } from "effect";
-import { AIService } from "./ai";
+import { AiLive } from "./ai";
 import { createAuth } from "./auth";
 import { AppConfig } from "./config";
 import { Mail, MailLive } from "./mail";
-import { Sync, SyncLive } from "./sync";
+import { ModelLive } from "./model";
+import { SyncLive } from "./sync";
 import { WordsLive } from "./words";
 
 export class Database extends Context.Service<Database, SQL>()("perennial/Database") {}
@@ -44,14 +45,9 @@ const AuthLive = Layer.effect(
   }),
 );
 
-export class Ai extends Context.Service<Ai, AIService>()("perennial/Ai") {}
-
-const AiLive = Layer.effect(
-  Ai,
-  Effect.gen(function* () {
-    return new AIService(yield* Database, yield* AppConfig, yield* Sync);
-  }),
-);
-
 /** Mail, auth, sync, AI and the deck words, on a database and settings from elsewhere. */
-export const ServicesLive = Layer.mergeAll(AuthLive, AiLive).pipe(Layer.provideMerge(SyncLive), Layer.provideMerge(WordsLive), Layer.provideMerge(MailLive));
+export const ServicesLive = Layer.mergeAll(AuthLive, AiLive.pipe(Layer.provide(ModelLive))).pipe(
+  Layer.provideMerge(SyncLive),
+  Layer.provideMerge(WordsLive),
+  Layer.provideMerge(MailLive),
+);

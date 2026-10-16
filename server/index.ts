@@ -10,7 +10,8 @@ import { AppLive, BunServerLive, HttpLive } from "./src/app";
 import { AppConfig, AppConfigFromEnv, ConfigProblems } from "./src/config";
 import { log, LoggerLive } from "./src/log";
 import { DatabaseLive } from "./src/db";
-import { Ai, BunSqlLive, ServicesLive } from "./src/services";
+import { Ai } from "./src/ai";
+import { BunSqlLive, ServicesLive } from "./src/services";
 import { watchEventLoop } from "./src/watchdog";
 
 const Server = Layer.unwrap(Effect.map(AppConfig, (config) => BunServerLive(config.port)));

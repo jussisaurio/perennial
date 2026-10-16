@@ -1,4 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
+import { Effect } from "effect";
 import { SENTENCES_PER_WORD } from "../src/prompts";
 import { QUOTA } from "../src/sync";
 import { startApp, stopMockLLM, unique } from "./helpers";
@@ -36,9 +37,9 @@ test("AI needs an account: anonymous learners and bad input are refused before a
   const anon = await t.anonymous();
   expect((await t.call("/api/ai/mine", { lang: "es", items: [item("x")], known: [] }, anon)).status).toBe(403);
   const cookie = await t.signIn(unique("bad"));
-  const before = await t.app.ai.spentThisMonth();
+  const before = await Effect.runPromise(t.app.ai.spentThisMonth());
   expect((await t.call("/api/ai/mine", { lang: "fr", items: [item("le")], known: [] }, cookie)).status).toBe(422);
-  expect(await t.app.ai.spentThisMonth()).toBe(before);
+  expect(await Effect.runPromise(t.app.ai.spentThisMonth())).toBe(before);
 });
 
 test("past the monthly budget, AI pauses for everyone and says until when", async () => {

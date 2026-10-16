@@ -41,7 +41,6 @@
         "perennial-contract": "workspace:*",
         "pg": "8",
         "resend": "^6.32.1",
-        "zod": "^4.6.5",
       },
       "devDependencies": {
         "@types/bun": "latest",

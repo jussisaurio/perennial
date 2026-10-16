@@ -1,0 +1,131 @@
+{
+  "mine": {
+    "type": "json_schema",
+    "schema": {
+      "$defs": {
+        "__schema0": {
+          "type": "string",
+          "description": "{maxLength: 60}"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "words": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "lemma": {
+                "type": "string",
+                "description": "{maxLength: 60}"
+              },
+              "gloss": {
+                "type": "string",
+                "description": "{maxLength: 120}"
+              },
+              "pos": {
+                "type": "string",
+                "description": "{maxLength: 20}"
+              },
+              "forms": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "description": "{maxItems: 40}"
+              },
+              "notes": {
+                "type": "string",
+                "description": "{maxLength: 300}"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "{maxLength: 400}"
+                    },
+                    "translation": {
+                      "type": "string",
+                      "description": "{maxLength: 400}"
+                    },
+                    "cloze": {
+                      "type": "string",
+                      "description": "{maxLength: 60}"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "text",
+                    "translation",
+                    "cloze"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "lemma",
+              "gloss",
+              "pos",
+              "forms",
+              "notes",
+              "examples"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "words"
+      ],
+      "description": "{$schema: \"https://json-schema.org/draft/2020-12/schema\"}"
+    }
+  },
+  "examples": {
+    "type": "json_schema",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "{maxLength: 400}"
+              },
+              "translation": {
+                "type": "string",
+                "description": "{maxLength: 400}"
+              },
+              "cloze": {
+                "type": "string",
+                "description": "{maxLength: 60}"
+              },
+              "lemma": {
+                "type": "string",
+                "description": "{maxLength: 60}"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "text",
+              "translation",
+              "cloze",
+              "lemma"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "examples"
+      ],
+      "description": "{$schema: \"https://json-schema.org/draft/2020-12/schema\"}"
+    }
+  }
+}

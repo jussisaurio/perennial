@@ -26,7 +26,6 @@
     "effect": "4.0.0",
     "perennial-contract": "workspace:*",
     "pg": "8",
-    "resend": "^6.32.1",
-    "zod": "^4.6.5"
+    "resend": "^6.32.1"
   }
 }
