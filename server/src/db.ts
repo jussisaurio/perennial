@@ -19,7 +19,10 @@ import { AppConfig } from "./config";
 export function connection(url: string): PgClient.PgClientConfig {
   // An unreadable URL is sql-pg's to refuse: it says what is wrong with it.
   const sslmode = URL.parse(url)?.searchParams.get("sslmode");
-  return { url: Redacted.make(url), ...(sslmode === "require" ? { ssl: { rejectUnauthorized: false } } : {}) };
+  if (sslmode !== "require") return { url: Redacted.make(url) };
+  // Semgrep flags a skipped certificate check. Here it is what the URL asks
+  // for (libpq's require); a URL that wants the check says verify-full.
+  return { url: Redacted.make(url), ssl: { rejectUnauthorized: false } }; // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
 }
 
 /** The app's pool, as Bun.SQL had it: at most 10 connections, idle ones closed after 30 s, 30 s to connect. */
