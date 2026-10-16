@@ -6,6 +6,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { serveStatic } from "../src/http";
+import { startApp, stopMockLLM } from "./helpers";
 
 const dir = mkdtempSync(join(tmpdir(), "perennial-static-"));
 mkdirSync(join(dir, "assets"));
@@ -27,4 +28,18 @@ test("assets, app routes and missing files", async () => {
 
 test("malformed percent-encoding is a bad request, not a server error", async () => {
   for (const path of ["/%E0", "/assets/%zz.js", "/%"]) expect((await serveStatic(dir, path)).status).toBe(400);
+});
+
+test("a HEAD request learns the length of what GET would send", async () => {
+  const t = await startApp({ staticDir: dir });
+  try {
+    for (const path of ["/assets/index-abc123.js", "/today", "/assets/index-old999.js", "/%E0", "/sw.js"]) {
+      const get = await fetch(t.url + path);
+      const head = await fetch(t.url + path, { method: "HEAD" });
+      expect({ path, status: head.status, length: head.headers.get("content-length") }).toEqual({ path, status: get.status, length: String((await get.arrayBuffer()).byteLength) });
+    }
+  } finally {
+    await t.stop();
+    stopMockLLM();
+  }
 });

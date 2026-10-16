@@ -54,6 +54,17 @@ const SLOW_MS = 1000;
  */
 const webResponse = (res: Response) => HttpServerResponse.raw(res, { status: res.status });
 
+/**
+ * The answer the edge sends. Effect's Bun server answers HEAD with a new, empty
+ * Response, which Bun would send as content-length: 0: give it the length of
+ * the GET answer, as Bun.serve did.
+ */
+const finish = (req: Request, res: Response) =>
+  Effect.gen(function* () {
+    if (req.method === "HEAD" && !res.headers.has("content-length")) res.headers.set("content-length", String((yield* Effect.promise(() => res.clone().blob())).size));
+    return webResponse(res);
+  });
+
 /** The signed-in learner, as the app's code sees it: decoded from Better Auth's session. */
 const SessionUser = Schema.Struct({ id: UserId, email: Schema.String, isAnonymous: Schema.optional(Schema.NullOr(Schema.Boolean)) });
 
@@ -99,11 +110,17 @@ export const AppLive = Layer.effect(
     const body = <S extends Schema.Decoder<unknown>>(schema: S, limit = 64 * 1024) => RequestContext.use(({ request }) => decodeBody(request, schema, limit));
 
     // The router finds the path; the path's own table picks the method (405
-    // for the others, HEAD included, as before). Every route runs to its end
-    // even when the client goes away: a write, an AI call (credits, spend) or
-    // an account deletion must not stop half-way. (Bun's server interrupts a
-    // request's fiber when its client disconnects; uninterruptible keeps it
-    // going. The shape proxy stops its own upstream fetch: sync.ts.)
+    // for the others, HEAD included, as before).
+    //
+    // Every request runs to its end even when the client goes away: a write,
+    // an AI call (credits, spend), an account deletion or a sign-in that merges
+    // an anonymous learner must not stop half-way. Bun's server interrupts a
+    // request's fiber when its client disconnects. HttpEffect.toHandled makes
+    // the whole request fiber uninterruptible from its start, which keeps
+    // `handle`, Better Auth and static files going; HttpRouter makes a route
+    // interruptible again unless it says `uninterruptible: true`. So never wrap
+    // `handle` or a route in Effect.interruptible or Effect.timeout. (The shape
+    // proxy stops its own upstream fetch: sync.ts.)
     const at = (path: `/${string}`, methods: Methods) =>
       HttpRouter.route(
         "*",
@@ -293,7 +310,7 @@ export const AppLive = Layer.effect(
       // see when old workers stop asking and retiringWorker can go.
       if (url.pathname === "/sw.js") {
         yield* Effect.logInfo("request").pipe(Effect.annotateLogs({ reqId: id, method: req.method, path: url.pathname, host: url.host, status: 200 }));
-        return webResponse(new Response(retiringWorker(config.appUrl), { headers: { "content-type": "text/javascript", "cache-control": "no-cache" } }));
+        return yield* finish(req, new Response(retiringWorker(config.appUrl), { headers: { "content-type": "text/javascript", "cache-control": "no-cache" } }));
       }
       if (isAlias(url.host)) return webResponse(new Response(null, { status: 308, headers: { location: config.appUrl + url.pathname + url.search } }));
 
@@ -322,7 +339,7 @@ export const AppLive = Layer.effect(
       // API answers are per user and live: a CDN in front must never keep them.
       if (url.pathname.startsWith("/api/") && !out.headers.has("cache-control")) out.headers.set("cache-control", "no-store");
       for (const [k, v] of Object.entries(headers)) if (!out.headers.has(k)) out.headers.set(k, v);
-      return webResponse(out);
+      return yield* finish(req, out);
     });
 
     return App.of({ handle });
