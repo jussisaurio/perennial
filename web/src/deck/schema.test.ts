@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
+import { Option, Schema } from "effect";
 import { Deck, compatibility, deckProblems, manifestKey, type DeckWord } from "./schema";
 
+const parses = (schema: Schema.ConstraintDecoder<unknown>, v: unknown) => Option.isSome(Schema.decodeUnknownOption(schema)(v));
 const w = (body: string, lemma: string, extra: Partial<DeckWord> = {}): DeckWord => ({ id: `es.w.${body}`, lemma, gloss: lemma, pos: "noun", rank: 1, forms: [lemma], ...extra });
 const sentences = (word: DeckWord, n = 3) =>
   Array.from({ length: n }, (_, i) => ({ id: `es.s.${word.id.slice(5, 14)}${i}`, wordId: word.id, text: `Mi ${word.lemma} ${i}.`, translation: `My ${word.lemma}.`, cloze: word.lemma }));
@@ -18,14 +20,14 @@ const perro = w("perr000000", "perro");
 
 test("a well-formed deck parses and has no problems", () => {
   const d = deck([casa, perro]);
-  expect(Deck("es").safeParse(d).success).toBe(true);
+  expect(parses(Deck("es"), d)).toBe(true);
   expect(deckProblems(d)).toEqual([]);
 });
 
 test("schema rejects bad ids and a wrong language", () => {
-  expect(Deck("es").safeParse(deck([{ ...casa, id: "es.w.CASA" }])).success).toBe(false);
-  expect(Deck("es").safeParse(deck([{ ...casa, id: "es.w.casa00000i" }])).success).toBe(false); // no i in the alphabet
-  expect(Deck("de").safeParse(deck([casa])).success).toBe(false);
+  expect(parses(Deck("es"), deck([{ ...casa, id: "es.w.CASA" }]))).toBe(false);
+  expect(parses(Deck("es"), deck([{ ...casa, id: "es.w.casa00000i" }]))).toBe(false); // no i in the alphabet
+  expect(parses(Deck("de"), deck([casa]))).toBe(false);
 });
 
 test("deckProblems finds broken invariants", () => {
