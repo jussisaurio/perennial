@@ -12,6 +12,8 @@ COPY web/package.json web/
 COPY server/package.json server/
 COPY scripts/package.json scripts/
 RUN bun install --frozen-lockfile --filter perennial-web
+# The wire contract: the app imports it from source too.
+COPY contract/ contract/
 COPY web/ web/
 WORKDIR /app/web
 COPY decks/ /app/decks/
