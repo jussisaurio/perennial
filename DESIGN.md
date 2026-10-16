@@ -100,31 +100,59 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 ### Garden code
 
 `GardenScene` (`scene.ts`) is a small host: the renderer and camera, the frame
-loop, movement, and a handful of rendering subsystems behind the `Part`
-interface (`scenePart.ts`) — the sky and pond, the hedge, the door and key,
-the orchard, the plants (beds, culling, texture streaming), the critters
-(fireflies, butterflies...), and the visitors (`sceneVisitors.ts`).
+loop, movement, and the rendering subsystems that tick or react to the time of
+day behind the `Part` interface (`scenePart.ts`) — the sky and pond, the door
+and key, the critters (fireflies, butterflies...), and the plants (beds,
+culling, texture streaming). These are the rules a change to the garden's
+rendering code should follow, and the places it still does not (yet):
 
 - **A new Part is for a new rendering technique, never one per thing.** There
-  is one critters part for every small animated effect, one visitors part for
-  every visitor — not one per creature or per visitor. Reach for a Part when
-  something draws itself a genuinely different way (instanced clumps, a
-  streamed texture pool, a point sprite shader); never to give one more
-  object its own file.
+  is one critters part for every small animated effect, not one per creature.
+  Reach for a Part when something draws itself a genuinely different way
+  (instanced clumps, a streamed texture pool, a point sprite shader); never to
+  give one more object its own file.
 - **The host owns every order, each in one table.** Build order (the parts
-  share one random sequence, drawn in a fixed sequence — never reshuffle it),
-  tick order, pick priority (`TAP_PRIORITY`, `pickAny`), and label priority
-  (say, then the one active tag — scenery, tree or the door's line — then a
+  share one random sequence, drawn in a fixed sequence — never reshuffle it);
+  the order `parts` is ticked, disposed and given `Conditions` in; pick
+  priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
+  say, then the one active tag — scenery, tree or the door's line — then a
   visitor's). A Part never reaches into another Part's build or pick order.
-- **`tick` allocates nothing.** It runs every frame; a `Part.tick(dt, elapsed)`
+- **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.
-- **Behaviour gets time only from `dt`/`elapsed` or from `Conditions`**
-  (`{ time, dark }`, what `setTime` broadcasts — weather and the hour will
-  join it later), **never from `Date`, `performance.now()` or `Math.random()`
-  directly.** Build-time placement may still use the seeded `rand()` passed
-  through `BuildCtx`, or the calendar-day helpers in `core/day.ts` (which
-  visitors already used before this): those pick *what* is in the garden
-  today, not how it moves from frame to frame.
+- **Behaviour gets time only from the `Frame` it is ticked with, or from
+  `Conditions`** (`{ time, dark }`, what `setTime` broadcasts — weather and
+  the hour will join it later), **never from `Date`, `performance.now()` or
+  `Math.random()` directly.** Build-time placement may still use the seeded
+  `rand()` passed through `BuildCtx`, or the calendar-day helpers in
+  `core/day.ts` (which visitors already used before this): those pick *what*
+  is in the garden today, not how it moves from frame to frame.
+
+Known exceptions, not yet brought in line:
+- **The hedge and the orchard are not Parts.** They build geometry once and
+  never tick, react to `Conditions` or need disposing beyond the scene's own
+  sweep, so there was nothing to gain by giving them the interface.
+- **Visitors (`sceneVisitors.ts`) predate this interface** and were not
+  reshaped to fit it: a planned redesign of how the garden describes its
+  creatures and visitors may replace both at once, so this PR left it alone.
+- **The ground, fence, outer trees, lanterns, bench, signs and the sunflower
+  stayed host methods**, each still read directly by `setTime`/`tint` rather
+  than through `onConditions` (the lanterns' lit/unlit swap and glow, and the
+  sunflower's dusk droop, in particular). The keyhole's glow, once part of
+  this list, moved to `Door.onConditions` in review.
+- **Two calls still read real time or randomness directly, not from a Frame:**
+  `GardenScene.openDoor` reads `new Date()` once, when the door opens, to
+  place a visitor in a newly-built orchard tree — a one-off placement, not a
+  per-frame behaviour; `whimsy.ts`'s `neighbourPerks` defaults to
+  `Math.random`, and `Plants.nod` (the plant perking up when it hears its
+  name) calls it without passing a seeded `rand()` in its place.
+- **Build order and tick/dispose/condition order are documented but not
+  verified by any check:** nothing stops a future edit from reordering
+  `GardenScene.build()`'s calls (breaking the shared random sequence) or the
+  `parts` array (harmless today, since none of `tick`/`onConditions`/
+  `dispose` currently depends on order, but that could change silently).
+- **Named build-time anchors (a `Spots` object parts return instead of
+  fields another part reads later, e.g. the pond's pads, the lantern spots,
+  the orchard's bird perch) are not in this PR:** #324 carries that.
 
 ## Not yet / later
 
