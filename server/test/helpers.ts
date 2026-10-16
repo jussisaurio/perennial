@@ -63,14 +63,14 @@ export async function startApp(overrides: Partial<Config> = {}) {
     Layer.provideMerge(BunServerLive(0)),
     Layer.provideMerge(AppLive),
     Layer.provideMerge(ServicesLive),
-    Layer.provideMerge(MigrationsLive),
+    // Before the services: Better Auth checks its tables when it starts (production migrates before each deploy).
+    Layer.provideMerge(Layer.effectDiscard(Effect.flatMap(Migrations, (m) => m.run())).pipe(Layer.provide(MigrationsLive))),
     Layer.provideMerge(DatabaseLive),
     Layer.provideMerge(Layer.succeed(AppConfig, config)),
     Layer.provideMerge(LoggerLive),
   );
   const scope = Effect.runSync(Scope.make());
   const context = await Effect.runPromise(Layer.buildWithScope(layer, scope));
-  await Effect.runPromise(Context.get(context, Migrations).run());
   const address = Context.get(context, HttpServer.HttpServer).address;
   if (address._tag === "UnixPathAddress") throw new Error("the test server listens on a port");
   const url = `http://localhost:${address.port}`;
