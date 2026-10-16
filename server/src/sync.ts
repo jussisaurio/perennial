@@ -5,7 +5,6 @@
 // stream before dropping its optimistic state, and whether any row changed (if
 // none did, no echo will come: the client must not wait for one).
 
-import { deckWords, isDeckWord } from "./words";
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import type { SQL } from "bun";
 import type { Mutation, UserId, WordId, WriteResult } from "perennial-contract";
@@ -13,6 +12,7 @@ import type { Config } from "./config";
 import { COURSE_DEFAULTS } from "./course";
 import { refuse } from "./http";
 import { event } from "./log";
+import type { Words } from "./words";
 
 /** Tables a learner can read, each scoped to their user id. */
 export const LEARNER_TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
@@ -89,9 +89,9 @@ async function checkQuota(tx: SQL, userId: UserId, mutations: readonly Mutation[
  * "Never show me this" for a form in your own text (Add screen): word_state
  * `form:<lang>:<form>`, only ever ignored, never studied or counted.
  */
-function ignoredForm(id: string, status: string): boolean {
+function ignoredForm(words: Words["Service"], id: string, status: string): boolean {
   const m = /^form:([a-z]{2}):(.{1,60})$/u.exec(id);
-  return !!m && status === "ignored" && deckWords().has(m[1]);
+  return !!m && status === "ignored" && words.hasDeck(m[1]);
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -101,15 +101,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * (in the review's language) or one of this learner's own words, saved before
  * or in this batch. Otherwise the whole batch is refused (422 unknown_word).
  */
-async function checkWords(tx: SQL, userId: UserId, mutations: readonly Mutation[]) {
+async function checkWords(tx: SQL, words: Words["Service"], userId: UserId, mutations: readonly Mutation[]) {
   const own = new Set<string>(mutations.flatMap((m) => (m.type === "user_word.upsert" ? [m.row.id] : [])));
   const refs: { id: WordId; lang?: string }[] = [];
   for (const m of mutations) {
     if (m.type === "review.insert") refs.push({ id: m.row.word_id, lang: m.row.lang });
-    else if (m.type === "word_state.upsert" && !ignoredForm(m.row.word_id, m.row.status)) refs.push({ id: m.row.word_id });
+    else if (m.type === "word_state.upsert" && !ignoredForm(words, m.row.word_id, m.row.status)) refs.push({ id: m.row.word_id });
     else if (m.type === "user_sentence.insert") refs.push({ id: m.row.word_id });
   }
-  const unknown = refs.filter((r) => !own.has(r.id) && !isDeckWord(r.id, r.lang)).map((r) => r.id);
+  const unknown = refs.filter((r) => !own.has(r.id) && !words.isDeckWord(r.id, r.lang)).map((r) => r.id);
   if (!unknown.length) return;
   const candidates = [...new Set(unknown)].filter((id) => UUID.test(id));
   const found = candidates.length ? new Set((await tx`select id from user_word where user_id = ${userId} and id in ${tx(candidates)}`).map((r: { id: string }) => r.id)) : new Set<string>();
@@ -122,7 +122,7 @@ async function checkWords(tx: SQL, userId: UserId, mutations: readonly Mutation[
  * touched a row (a retried insert, an older state, a delete of nothing): no
  * change reaches the stream, so there is no txid echo to wait for.
  */
-export async function applyWrites(sql: SQL, userId: UserId, mutations: readonly Mutation[]): Promise<WriteResult> {
+export async function applyWrites(sql: SQL, words: Words["Service"], userId: UserId, mutations: readonly Mutation[]): Promise<WriteResult> {
   const now = new Date();
   for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw refuse({ error: "review_from_the_future" });
   return sql.begin(async (tx) => {
@@ -133,7 +133,7 @@ export async function applyWrites(sql: SQL, userId: UserId, mutations: readonly 
     const [user] = await tx`select id from "user" where id = ${userId} for share`;
     if (!user || !(await tx`select 1 from session where "userId" = ${userId} limit 1`).length) throw refuse({ error: "sign_in_required" });
     await checkQuota(tx, userId, mutations);
-    await checkWords(tx, userId, mutations);
+    await checkWords(tx, words, userId, mutations);
     // The txid must be read inside the writing transaction.
     const [{ txid }] = await tx`select pg_current_xact_id()::xid::text as txid`;
     let rows = 0;

@@ -23,6 +23,7 @@ import { Mail, OutboxMailer } from "./mail";
 import { Ai, Auth, Database } from "./services";
 import { applyWrites, LEARNER_TABLES, proxyShape } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
+import { Words } from "./words";
 
 /**
  * The app had a service worker until #188 (offline mode, removed for now), and a
@@ -84,6 +85,7 @@ export const AppLive = Layer.effect(
     const mailer = yield* Mail;
     const auth = yield* Auth;
     const ai = yield* Ai;
+    const words = yield* Words;
     const headers = securityHeaders([...new Set(config.observability.connect)], config.appUrl.startsWith("https://"), !!config.turnstile.siteKey);
 
     const session = Effect.gen(function* () {
@@ -170,7 +172,7 @@ export const AppLive = Layer.effect(
           yield* event({ writes: mutations.length, writeTypes: Object.entries(types).map(([k, n]) => `${k}:${n}`).join(" ") });
           // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
           const result = yield* promise("Sync.applyWrites", () =>
-            Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, () => applyWrites(sql, user.id, mutations)),
+            Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, () => applyWrites(sql, words, user.id, mutations)),
           );
           yield* event({ writeChanged: result.changed });
           return json(result);

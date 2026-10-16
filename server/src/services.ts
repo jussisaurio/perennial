@@ -9,6 +9,7 @@ import { AIService } from "./ai";
 import { createAuth } from "./auth";
 import { AppConfig } from "./config";
 import { Mail, MailLive } from "./mail";
+import { WordsLive } from "./words";
 
 export class Database extends Context.Service<Database, SQL>()("perennial/Database") {}
 
@@ -51,5 +52,5 @@ const AiLive = Layer.effect(
   }),
 );
 
-/** Mail, auth and AI, on a database and settings from elsewhere. */
-export const ServicesLive = Layer.mergeAll(AuthLive, AiLive).pipe(Layer.provideMerge(MailLive));
+/** Mail, auth, AI and the deck words, on a database and settings from elsewhere. */
+export const ServicesLive = Layer.mergeAll(AuthLive, AiLive, WordsLive).pipe(Layer.provideMerge(MailLive));
