@@ -27,6 +27,7 @@ mock.module("../observability", () => ({
   track: (...a: unknown[]) => events.push(["track", ...a]),
   linkAccount: (...a: unknown[]) => events.push(["linkAccount", ...a]),
   reportSlowAuth: (...a: unknown[]) => events.push(["reportSlowAuth", ...a]),
+  reportBadAnswer: () => {},
 }));
 mock.module("./captcha", () => ({ captchaHeaders: () => Promise.resolve({}) }));
 mock.module("./device", () => ({

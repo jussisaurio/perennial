@@ -14,12 +14,27 @@ export class ApiError extends Schema.TaggedError<ApiError>()("ApiError", { body:
   }
 }
 
-/** An error answer that is not one of ours: a proxy's error page, or a code this app does not know yet (a newer server). */
-export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", { status: Schema.Number }) {
+/**
+ * An error answer this app can't read as one of the contract's: a proxy's
+ * error page (no code), or a code or fields from a newer server (the code, when
+ * the body has one).
+ */
+export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", { status: Schema.Number, code: Schema.optional(Schema.String) }) {
+  // As before: the code, else http_<status>. The offline queue's default retry rule reads it (store.ts).
   override get message() {
-    return `http_${this.status}`;
+    return this.code ?? `http_${this.status}`;
   }
 }
+
+/** A success answer that breaks the contract: a bug on one side. `body` is what came, for the callers that can still use part of it. */
+export class BadAnswer extends Schema.TaggedError<BadAnswer>()("BadAnswer", { path: Schema.String, body: Schema.Unknown, cause: Schema.Defect() }) {
+  override get message() {
+    return `bad answer from ${this.path}`;
+  }
+}
+
+/** The code of an error body that is not one of the contract's, if it has one. */
+const SomeCode = Schema.Struct({ error: Schema.String });
 
 /** No answer: offline, or the connection broke. */
 export class NetworkError extends Schema.TaggedError<NetworkError>()("NetworkError", { cause: Schema.Defect() }) {
@@ -62,11 +77,12 @@ const PERMANENT = {
 } as const satisfies Record<ErrorCode, boolean>;
 
 /**
- * Sending it again would never succeed. A code this app does not know yet
- * (from a newer server) is judged by its status: 413 and 422 mean the same as
- * they do for the codes above.
+ * Sending it again would never succeed. An error body this app can't read (a
+ * newer server's) is judged by the rule from before the contract: its status,
+ * and quota by its code.
  */
-export const isPermanent = (e: ApiError | HttpError): boolean => (e._tag === "ApiError" ? PERMANENT[e.body.error] : e.status === 413 || e.status === 422);
+export const isPermanent = (e: ApiError | HttpError): boolean =>
+  e._tag === "ApiError" ? PERMANENT[e.body.error] : e.status === 413 || e.status === 422 || (e.status === 429 && e.code === "quota");
 
 /**
  * Ask the user to reload when the server needs a newer app. `needed` stays
@@ -80,20 +96,17 @@ export const reloadNeeded = new (class extends EventTarget {
   }
 })();
 
-/**
- * A request to our server. A success body that does not fit `schema` is a bug
- * (the server broke the contract), so it is a defect, not a typed error.
- */
+/** A request to our server, its answer checked with `schema` and its errors with the contract. */
 export const request = Effect.fn("Http.request")(function* <S extends Schema.Decoder<unknown>>(schema: S, path: string, init: RequestInit = {}) {
   const res = yield* Effect.tryPromise({ try: (signal) => fetch(path, { ...init, signal }), catch: (cause) => new NetworkError({ cause }) });
   // An error page (from a proxy, say) has no JSON body: null, and the status still says what failed.
   const body = yield* Effect.promise((): Promise<unknown> => res.json().catch(() => null));
-  if (res.ok) return yield* Schema.decodeUnknownEffect(schema)(body).pipe(Effect.orDie);
+  // One rule for every call, whatever the body says: the server needs a newer app.
+  if (res.status === 426) reloadNeeded.dispatchEvent(new Event("reload"));
+  if (res.ok) return yield* Schema.decodeUnknownEffect(schema)(body).pipe(Effect.mapError((cause) => new BadAnswer({ path, body, cause })));
   const error = Schema.decodeUnknownOption(ApiErrorBody)(body);
-  if (Option.isNone(error)) return yield* new HttpError({ status: res.status });
-  // One rule for every call: the server needs a newer app before it takes this.
-  if (error.value.error === "please_reload") reloadNeeded.dispatchEvent(new Event("reload"));
-  return yield* new ApiError({ body: error.value });
+  if (Option.isSome(error)) return yield* new ApiError({ body: error.value });
+  return yield* new HttpError({ status: res.status, code: Option.getOrUndefined(Schema.decodeUnknownOption(SomeCode)(body))?.error });
 });
 
 /** Send changes in the server's mutation format (contract/write.ts). */

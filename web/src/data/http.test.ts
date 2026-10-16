@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
 import { apiMessage } from "./ai";
-import { ApiError, HttpError, isPermanent, NetworkError, postWrite, reloadNeeded } from "./http";
+import { ApiError, BadAnswer, HttpError, isPermanent, NetworkError, postWrite, reloadNeeded } from "./http";
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
@@ -41,11 +41,12 @@ test("a contract error is an ApiError with its fields, and says whether to try a
   expect(isPermanent(await failsWith(ApiError, postWrite([])))).toBe(false);
 });
 
-test("please_reload asks the learner to reload", async () => {
-  expect(reloadNeeded.needed).toBe(false);
-  answer(426, JSON.stringify({ error: "please_reload", minVersion: "9.0.0" }));
-  await failsWith(ApiError, postWrite([]));
-  expect(reloadNeeded.needed).toBe(true);
+test("426 asks the learner to reload, whatever the body says (a proxy's page here)", async () => {
+  let asked = 0;
+  reloadNeeded.addEventListener("reload", () => asked++);
+  answer(426, "<html>Upgrade required</html>", "text/html");
+  await failsWith(HttpError, postWrite([]));
+  expect(asked).toBe(1);
 });
 
 test("an error page from a proxy is an HttpError: only its status is known", async () => {
@@ -55,11 +56,15 @@ test("an error page from a proxy is an HttpError: only its status is known", asy
   expect(isPermanent(e)).toBe(false);
 });
 
-test("a code this app does not know yet (a newer server) is judged by its status", async () => {
+test("a code this app does not know yet (a newer server) keeps its code, and is judged by its status", async () => {
   answer(422, JSON.stringify({ error: "invalid" }));
   const e = await failsWith(HttpError, postWrite([]));
+  expect(e.message).toBe("invalid");
   expect(isPermanent(e)).toBe(true);
   expect(apiMessage(e)).toBe("Something went wrong. Try again later.");
+
+  answer(403, JSON.stringify({ error: "new_code" }));
+  expect(isPermanent(await failsWith(HttpError, postWrite([])))).toBe(false);
 });
 
 test("no connection is a NetworkError with the browser's words", async () => {
@@ -69,11 +74,12 @@ test("no connection is a NetworkError with the browser's words", async () => {
   expect(apiMessage(await failsWith(NetworkError, postWrite([])))).toBe("Failed to fetch");
 });
 
-test("a success answer that breaks the contract fails loudly", async () => {
+test("a success answer that breaks the contract is a BadAnswer; the learner never sees its raw words", async () => {
   answer(200, JSON.stringify({ txid: "42" }));
-  const e = await failure(postWrite([]));
-  expect(e).not.toBeInstanceOf(ApiError);
-  expect(String(e)).toContain("txid");
+  const e = await failsWith(BadAnswer, postWrite([]));
+  expect(e.path).toBe("/api/write");
+  expect(String(e.cause)).toContain("txid");
+  expect(apiMessage(e)).toBe("Something went wrong. Try again later.");
 });
 
 const refused = (body: ApiError["body"]) => apiMessage(new ApiError({ body }));

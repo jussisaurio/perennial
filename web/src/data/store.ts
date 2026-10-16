@@ -15,29 +15,15 @@
 
 import * as Sentry from "@sentry/react";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
+import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
-import { Effect, Exit, Schema } from "effect";
+import { Effect, Exit } from "effect";
 import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
-import { ApiError, HttpError, isPermanent, sendWrite } from "./http";
+import type { ApiError, HttpError } from "./http";
 import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
+import { OtherUser, sendQueued, shouldRetry } from "./send";
 import { tabLock } from "./tabLock";
-
-/** Signed in as someone else since (in another tab): this user's writes wait for them. */
-class OtherUser extends Schema.TaggedError<OtherUser>()("OtherUser", {}) {
-  // The same message as before: the offline queue's default retry rule reads it.
-  override get message() {
-    return "other_user";
-  }
-}
-
-/**
- * A session that expired offline, another user signed in here, or an app that
- * must reload first: keep the queued writes (they are this user's) and try
- * again later.
- */
-const retryLater = (e: unknown) => e instanceof OtherUser || (e instanceof ApiError && (e.body.error === "sign_in_required" || e.body.error === "please_reload"));
 
 function makeCollection<T extends object>(table: string, getKey: (row: T) => string, sync: AbortSignal) {
   const options = electricCollectionOptions<T & Record<string, unknown>>({
@@ -150,17 +136,9 @@ export async function createStore(userId: string, anonymous: boolean) {
               const current = sessionUserId();
               if (current && current !== userId) return yield* new OtherUser();
               span.setAttribute("mutations", mutations.length);
-              const result = yield* sendWrite(mutations, idempotencyKey).pipe(
-                Effect.catchIf(
-                  (e): e is ApiError | HttpError => e._tag !== "NetworkError" && isPermanent(e),
-                  (e) => {
-                    noteRefused(e);
-                    return Effect.fail(new NonRetriableError(`rejected: ${e.message}`));
-                  },
-                ),
-              );
-              // Nothing changed (say, a repeat of an earlier write): no echo will come.
-              if (!result.changed) return;
+              const result = yield* sendQueued(mutations, idempotencyKey, noteRefused);
+              // Nothing changed (say, a repeat of an earlier write), or no answer to read: no echo to wait for.
+              if (!result?.changed) return;
               // Keep the optimistic rows until Electric echoes the write back.
               const tables = new Set(transaction.mutations.map((m) => m.collection.id as Table));
               const echoed = yield* Effect.forEach(
@@ -176,7 +154,7 @@ export async function createStore(userId: string, anonymous: boolean) {
     },
     // A session that expired offline, or an app that must reload first: keep
     // the queued writes (they are this user's) and try again later.
-    shouldRetry: (err) => (retryLater(err) ? true : undefined),
+    shouldRetry,
     onStorageFailure: (d) => console.warn("[store] offline queue storage:", d.code, d.message),
   });
   await executor.waitForInit();

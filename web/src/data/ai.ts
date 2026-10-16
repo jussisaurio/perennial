@@ -4,7 +4,7 @@
 
 import { Effect, Schema } from "effect";
 import { ApiErrorBody, ExamplesOut, Me, MineOut } from "perennial-contract";
-import { ApiError, HttpError, request } from "./http";
+import { ApiError, BadAnswer, HttpError, request } from "./http";
 
 const post = <S extends Schema.Decoder<unknown>>(schema: S, path: string, body: unknown) =>
   Effect.runPromise(request(schema, path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
@@ -62,7 +62,8 @@ const message = ApiErrorBody.match({
 /** Plain-language text for errors the learner can act on. */
 export function apiMessage(e: unknown): string {
   if (e instanceof ApiError) return message(e.body);
-  // A code this app does not know yet, or a proxy's error page.
-  if (e instanceof HttpError) return SOMETHING_WRONG;
+  // A code this app does not know yet, a proxy's error page, or an answer that breaks the contract: never their raw words.
+  if (e instanceof HttpError || e instanceof BadAnswer || Schema.isSchemaError(e)) return SOMETHING_WRONG;
+  // No connection ("Failed to fetch"), or the app's own words ("Perennial is open in another tab").
   return e instanceof Error ? e.message : String(e);
 }
