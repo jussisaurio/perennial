@@ -108,7 +108,7 @@ test("adding many AI words: a batch that fails after others were saved says what
     sent.push(items.length);
     if (++calls === 2) return route.fulfill({ status: 503, json: { error: "busy" } });
     const words = items.map(({ form, sentence }) => ({ lemma: form, gloss: "a test word", pos: "noun", forms: [form], examples: [{ text: sentence, translation: "x", cloze: form }] }));
-    await route.fulfill({ json: { words, model: "mock", credits: { used: items.length, limit: 100, left: 100 - items.length } } });
+    await route.fulfill({ json: { words, model: "mock", credits: { used: items.length, limit: 100, left: 100 - items.length, period: "2026-10" } } });
   });
   const forms = Array.from({ length: 16 }, (_, i) => `xz${String.fromCharCode(97 + i)}po`);
   await openAdd(page);
