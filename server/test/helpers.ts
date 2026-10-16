@@ -54,8 +54,8 @@ export async function startApp(overrides: Partial<Config> = {}) {
   await migrate(sql);
   // The server as index.ts runs it (Effect's Bun server), with these settings and this pool.
   const layer = HttpLive.pipe(
-    Layer.provideMerge(AppLive),
     Layer.provideMerge(BunServerLive(0)),
+    Layer.provideMerge(AppLive),
     Layer.provideMerge(ServicesLive),
     Layer.provideMerge(Layer.succeed(Database, sql)),
     Layer.provideMerge(Layer.succeed(AppConfig, config)),

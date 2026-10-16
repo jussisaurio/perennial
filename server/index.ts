@@ -36,8 +36,9 @@ const Watchdog = Layer.effectDiscard(Effect.acquireRelease(Effect.sync(watchEven
 
 const Main = Layer.mergeAll(Started, Watchdog).pipe(
   Layer.provide(HttpLive),
-  Layer.provideMerge(AppLive),
+  // The server starts listening last, once the app can answer.
   Layer.provideMerge(Server),
+  Layer.provideMerge(AppLive),
   Layer.provideMerge(ServicesLive),
   Layer.provideMerge(DatabaseLive),
   Layer.provideMerge(AppConfigFromEnv),
