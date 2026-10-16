@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useFeatures } from "../data/server";
 import { errorLine, sendingLabel } from "../content/voice";
-import { getMe, resetDate, type Me } from "../data/ai";
+import type { Me } from "perennial-contract";
+import { getMe, resetDate } from "../data/ai";
 import { AuthError, sendCode, signInWithCode, signOut, useUser } from "../data/auth";
 import { track } from "../observability";
 import { CheckIcon } from "./icons";
