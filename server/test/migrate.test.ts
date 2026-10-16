@@ -39,7 +39,7 @@ test("the migrations build a new database, once", async () => {
     const run = Effect.flatMap(Migrations, (m) => m.run()).pipe(
       Effect.provide(MigrationsLive.pipe(Layer.provide(DatabaseLive), Layer.provide(Layer.succeed(AppConfig, loadConfig({ databaseUrl: url.href }))), Layer.provideMerge(LoggerLive))),
     );
-    expect(await Effect.runPromise(run)).toEqual(["0001_init.sql", "0002_mail_log.sql", "0003_course_door.sql"]);
+    expect(await Effect.runPromise(run)).toEqual(["0001_init.sql", "0002_mail_log.sql", "0003_course_door.sql", "0004_user_word_forms_list.sql"]);
     expect(await Effect.runPromise(run)).toEqual([]);
   } finally {
     await onAdmin(Effect.flatMap(PgClient.PgClient, (sql) => sql`drop database ${sql(name)} with (force)`));
