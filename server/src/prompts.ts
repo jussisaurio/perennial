@@ -27,7 +27,7 @@ const TEACHER = (lang: string, native: string) =>
   `Your sentences are natural, idiomatic, and what a native speaker would actually say in everyday life. ` +
   `Glosses and translations are in ${native}.`;
 
-function knownClause(known: string[]): string {
+function knownClause(known: readonly string[]): string {
   if (known.length === 0)
     return "The learner is a complete beginner. Write very short sentences (3–6 words) using only the most basic, high-frequency words.";
   return (
@@ -37,7 +37,7 @@ function knownClause(known: string[]): string {
   );
 }
 
-export function moreExamplesPrompt(lang: string, native: string, words: { lemma: string; gloss: string; seen: string[] }[], known: string[]) {
+export function moreExamplesPrompt(lang: string, native: string, words: readonly { lemma: string; gloss: string; seen: readonly string[] }[], known: readonly string[]) {
   return {
     system: TEACHER(lang, native),
     user:
@@ -50,7 +50,7 @@ export function moreExamplesPrompt(lang: string, native: string, words: { lemma:
   };
 }
 
-export function minePrompt(lang: string, native: string, items: { form: string; sentence: string }[], known: string[]) {
+export function minePrompt(lang: string, native: string, items: readonly { form: string; sentence: string }[], known: readonly string[]) {
   return {
     system: TEACHER(lang, native),
     user:

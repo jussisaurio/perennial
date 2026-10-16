@@ -1,36 +1,59 @@
-// HTTP helpers: JSON responses, security headers, static files with the
-// right caching, and the minimum client version check.
+// HTTP helpers: JSON answers, the one error type and its response, request
+// bodies decoded with the wire contract, security headers, static files with
+// the right caching, and the minimum client version check.
 
 import { join, normalize } from "node:path";
+import { Effect, Schema, SchemaIssue } from "effect";
+import { HttpServerResponse } from "effect/http";
+import { ApiErrorBody, ERROR_STATUS } from "perennial-contract";
 
-export const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
-  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", ...headers } });
+export const json = (body: unknown, status = 200, headers: Record<string, string> = {}) => HttpServerResponse.jsonUnsafe(body, { status, headers });
 
-export class HttpError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly extra: Record<string, unknown>;
-  constructor(status: number, code: string, extra: Record<string, unknown> = {}) {
-    super(code);
-    this.status = status;
-    this.code = code;
-    this.extra = extra;
-  }
+/**
+ * A request the server refuses, with one of the contract's error bodies. Today's
+ * Promise modules (sync.ts, ai.ts) throw it too; request.ts's `promise` keeps
+ * it typed. errorResponse is the one place it becomes a response.
+ */
+export class ApiError extends Schema.TaggedError<ApiError>()("ApiError", { body: ApiErrorBody }) {}
+
+export const refuse = (body: ApiErrorBody) => new ApiError({ body });
+
+export function errorResponse(body: ApiErrorBody) {
+  const res = json(body, ERROR_STATUS[body.error]);
+  // The rest of a too-large body is never read: close the connection so the
+  // client does not send its next request down the broken socket.
+  return body.error === "body_too_large" ? HttpServerResponse.setHeader(res, "connection", "close") : res;
 }
 
 /** Read a JSON body of at most `limit` bytes; bigger bodies are refused before parsing. */
-export async function readJson(req: Request, limit: number): Promise<unknown> {
-  if (Number(req.headers.get("content-length") ?? 0) > limit) throw new HttpError(413, "body_too_large");
-  const text = await req.text();
-  if (text.length > limit) throw new HttpError(413, "body_too_large");
+const readJson = Effect.fn("Http.readJson")(function* (req: Request, limit: number) {
+  if (Number(req.headers.get("content-length") ?? 0) > limit) return yield* refuse({ error: "body_too_large" });
+  // A body that can't be read is a bug or a broken connection: a defect (500), not a refusal.
+  const text = yield* Effect.promise(() => req.text());
+  if (text.length > limit) return yield* refuse({ error: "body_too_large" });
   try {
-    return JSON.parse(text);
+    return JSON.parse(text) as unknown;
   } catch {
-    return null; // not JSON: the caller's schema check refuses it (422)
+    return null; // not JSON: the schema refuses it (422)
   }
-}
+});
 
-export const fail = (status: number, code: string, extra: Record<string, unknown> = {}) => json({ error: code, ...extra }, status);
+const formatIssues = SchemaIssue.makeFormatterStandardSchemaV1();
+
+/** A request body, decoded with its contract schema. 422 bad_request says what was wrong (at most five issues). */
+export const decodeBody = Effect.fn("Http.decodeBody")(function* <S extends Schema.Decoder<unknown>>(req: Request, schema: S, limit: number) {
+  const input = yield* readJson(req, limit);
+  return yield* Schema.decodeUnknownEffect(schema)(input, { errors: "all" }).pipe(
+    Effect.catchTag("SchemaError", (e) =>
+      refuse({
+        error: "bad_request",
+        issues: formatIssues(e.issue)
+          .issues.slice(0, 5)
+          .map((i) => ({ message: i.message, path: (i.path ?? []).map((p) => (typeof p === "object" ? String(p.key) : typeof p === "number" ? p : String(p))) })),
+      }),
+    ),
+  );
+});
 
 /** Extra origins the page may talk to (error reporting, analytics), from config.
  *  turnstile: the bot check loads a script and an iframe from Cloudflare. */

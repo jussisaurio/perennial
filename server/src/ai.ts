@@ -11,13 +11,14 @@ import * as Sentry from "@sentry/bun";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { SQL } from "bun";
+import { LIMITS, type ExamplesIn, type MineIn, type UserId } from "perennial-contract";
 import { z } from "zod";
 import { PRICES, type Config } from "./config";
-import { Lang, LANGUAGE } from "./course";
-import { HttpError } from "./http";
+import { LANGUAGE } from "./course";
+import { refuse } from "./http";
 import { event, log } from "./log";
 import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, SENTENCES_PER_WORD, type GenWord } from "./prompts";
-import { ensureRoom, LIMITS } from "./sync";
+import { ensureRoom } from "./sync";
 
 /** "2026-10": credits and the spend budget reset each calendar month (UTC). */
 const period = () => new Date().toISOString().slice(0, 7);
@@ -68,21 +69,6 @@ function fitWord(w: z.infer<typeof WordOut>): GenWord | null {
   };
 }
 
-// ---------- request schemas (untrusted input from the app) ----------
-
-const short = (max: number) => z.string().trim().min(1).max(max);
-
-export const MineIn = z.object({
-  lang: Lang,
-  items: z.array(z.object({ form: short(60), sentence: short(400) })).min(1).max(15),
-  known: z.array(short(40)).max(400),
-});
-export const ExamplesIn = z.object({
-  lang: Lang,
-  words: z.array(z.object({ lemma: short(60), gloss: short(120), seen: z.array(short(400)).max(8) })).min(1).max(8),
-  known: z.array(short(40)).max(400),
-});
-
 export class AIService {
   private readonly client: Anthropic;
   // Per instance; a burst limit, not accounting (that is in Postgres).
@@ -102,7 +88,7 @@ export class AIService {
 
   // ---------- accounting ----------
 
-  async credits(userId: string) {
+  async credits(userId: UserId) {
     const [row] = await this.sql`select used from ai_usage where user_id = ${userId} and period = ${period()}`;
     const used = Number(row?.used ?? 0);
     const limit = this.config.freeCredits;
@@ -113,19 +99,19 @@ export class AIService {
    * Takes `n` credits up front, in one statement, so parallel requests can't
    * all pass a check and then all spend.
    */
-  private async reserve(userId: string, n: number, at: string) {
+  private async reserve(userId: UserId, n: number, at: string) {
     await this.sql`insert into ai_usage (user_id, period, used) values (${userId}, ${at}, 0) on conflict (user_id, period) do nothing`;
     const ok = await this.sql`update ai_usage set used = used + ${n}
       where user_id = ${userId} and period = ${at} and used + ${n} <= ${this.config.freeCredits} returning used`;
-    if (!ok.length) throw new HttpError(402, "out_of_credits", { ...(await this.credits(userId)), needed: n });
+    if (!ok.length) throw refuse({ error: "out_of_credits", ...(await this.credits(userId)), needed: n });
   }
 
-  private async refund(userId: string, n: number, at: string) {
+  private async refund(userId: UserId, n: number, at: string) {
     if (n > 0) await this.sql`update ai_usage set used = greatest(0, used - ${n}) where user_id = ${userId} and period = ${at}`;
   }
 
   /** Reserve `cost`, run the task, keep one credit per item it returned (at most `cost`), give back the rest. */
-  private async spend<T>(userId: string, cost: number, task: () => Promise<{ value: T; items: number }>): Promise<T> {
+  private async spend<T>(userId: UserId, cost: number, task: () => Promise<{ value: T; items: number }>): Promise<T> {
     const at = period();
     await this.reserve(userId, cost, at);
     let kept = 0;
@@ -144,23 +130,23 @@ export class AIService {
     return Number(row?.usd ?? 0);
   }
 
-  private rateLimit(userId: string) {
+  private rateLimit(userId: UserId) {
     const now = Date.now();
     const times = (this.recent.get(userId) ?? []).filter((t) => now - t < 60_000);
-    if (times.length >= this.config.aiRequestsPerMinute) throw new HttpError(429, "slow_down");
+    if (times.length >= this.config.aiRequestsPerMinute) throw refuse({ error: "slow_down" });
     times.push(now);
     this.recent.set(userId, times);
   }
 
   // ---------- model call ----------
 
-  private async generate<T extends z.ZodType>(userId: string, task: string, schema: T, system: string, user: string): Promise<z.infer<T>> {
-    if (!this.enabled) throw new HttpError(503, "ai_off");
+  private async generate<T extends z.ZodType>(userId: UserId, task: string, schema: T, system: string, user: string): Promise<z.infer<T>> {
+    if (!this.enabled) throw refuse({ error: "ai_off" });
     if ((await this.spentThisMonth()) >= this.config.monthlyBudgetUsd) {
       // A cost stop, not load: say so, and say until when.
       const d = new Date();
       const until = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)).toISOString().slice(0, 10);
-      throw new HttpError(503, "paused", { until });
+      throw refuse({ error: "paused", until });
     }
     const model = this.config.anthropic.model;
     const started = performance.now();
@@ -182,9 +168,9 @@ export class AIService {
     } catch (e) {
       await record(false);
       event({ aiTask: task, aiModel: model, aiOk: false, aiMs: ms() });
-      if (e instanceof Anthropic.RateLimitError) throw new HttpError(503, "busy");
-      if (e instanceof Anthropic.APIConnectionError) throw new HttpError(502, "ai_unreachable");
-      if (e instanceof Anthropic.APIError) throw new HttpError(502, "ai_error", { status: e.status });
+      if (e instanceof Anthropic.RateLimitError) throw refuse({ error: "busy" });
+      if (e instanceof Anthropic.APIConnectionError) throw refuse({ error: "ai_unreachable" });
+      if (e instanceof Anthropic.APIError) throw refuse({ error: "ai_error", status: e.status });
       throw e;
     }
     // A model missing from PRICES is billed at the top price, so the budget stop comes early, not late.
@@ -195,14 +181,14 @@ export class AIService {
     const ok = res.stop_reason !== "refusal" && !!res.parsed_output;
     await record(ok, res.usage, usd);
     event({ aiTask: task, aiModel: model, aiOk: ok, aiUsd: usd, aiTokensIn: res.usage.input_tokens, aiTokensOut: res.usage.output_tokens, aiMs: ms() });
-    if (!ok) throw new HttpError(502, "bad_output");
+    if (!ok) throw refuse({ error: "bad_output" });
     return res.parsed_output as z.infer<T>;
   }
 
   // ---------- tasks ----------
 
   /** Words the learner picked from their own text. One credit per word returned. */
-  async mine(userId: string, input: z.infer<typeof MineIn>) {
+  async mine(userId: UserId, input: MineIn) {
     // Nothing is charged for words the app could not save (fitWord keeps SENTENCES_PER_WORD each).
     await ensureRoom(this.sql, userId, "user_word", input.items.length);
     await ensureRoom(this.sql, userId, "user_sentence", SENTENCES_PER_WORD * input.items.length);
@@ -216,7 +202,7 @@ export class AIService {
   }
 
   /** New sentences for words the learner chose. One credit per word that got any. */
-  async examples(userId: string, input: z.infer<typeof ExamplesIn>) {
+  async examples(userId: UserId, input: ExamplesIn) {
     await ensureRoom(this.sql, userId, "user_sentence", SENTENCES_PER_WORD * input.words.length);
     const examples = await this.spend(userId, input.words.length, async () => {
       const p = moreExamplesPrompt(LANGUAGE[input.lang], "English", input.words, input.known);

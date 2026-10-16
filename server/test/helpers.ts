@@ -1,10 +1,14 @@
 // Test harness: the real app against the local Postgres + Electric
 // (`docker compose up -d`), with a mock model and the dev mail outbox.
 
-import { createApp } from "../src/app";
-import { loadConfig, type Config } from "../src/config";
+import { Context, Effect, Exit, Layer, Logger, Scope } from "effect";
+import { HttpEffect, HttpServer, HttpServerRequest } from "effect/http";
+import { App, AppLive, BunServerLive, HttpLive } from "../src/app";
+import { AppConfig, loadConfig, type Config } from "../src/config";
+import { logger } from "../src/log";
+import { OutboxMailer } from "../src/mail";
 import { migrate } from "../src/migrate";
-import type { OutboxMailer } from "../src/mail";
+import { Ai, Auth, Database, Mail, ServicesLive } from "../src/services";
 
 process.env.LOG_LEVEL ??= "silent";
 
@@ -48,10 +52,24 @@ export async function startApp(overrides: Partial<Config> = {}) {
   const config = loadConfig({ dev: true, anthropic: { apiKey: "test-key", baseURL: await mockLLM(), model: "claude-haiku-4-5" }, ...overrides });
   const sql = new Bun.SQL(config.databaseUrl, { max: 5 });
   await migrate(sql);
-  const app = createApp(config, sql);
-  const server = Bun.serve({ port: 0, fetch: app.fetch, idleTimeout: 0 });
-  const url = `http://localhost:${server.port}`;
-  const mailer = app.mailer as OutboxMailer;
+  // The server as index.ts runs it (Effect's Bun server), with these settings and this pool.
+  const layer = HttpLive.pipe(
+    Layer.provideMerge(AppLive),
+    Layer.provideMerge(BunServerLive(0)),
+    Layer.provideMerge(ServicesLive),
+    Layer.provideMerge(Layer.succeed(Database, sql)),
+    Layer.provideMerge(Layer.succeed(AppConfig, config)),
+    Layer.provideMerge(Logger.layer([logger])),
+  );
+  const scope = Effect.runSync(Scope.make());
+  const context = await Effect.runPromise(Layer.buildWithScope(layer, scope));
+  const address = Context.get(context, HttpServer.HttpServer).address;
+  if (address._tag === "UnixPathAddress") throw new Error("the test server listens on a port");
+  const url = `http://localhost:${address.port}`;
+  const mailer = Context.get(context, Mail);
+  if (!(mailer instanceof OutboxMailer)) throw new Error("tests read sign-in codes from the dev outbox");
+  /** The app's parts that tests reach into, and a fetch that skips the network (no client IP, no abort). */
+  const app = { fetch: HttpEffect.toWebHandlerWith<Layer.Success<typeof layer>, HttpServerRequest.HttpServerRequest | Scope.Scope>(context)(Context.get(context, App).handle), auth: Context.get(context, Auth), ai: Context.get(context, Ai) };
 
   /** A request as the browser would send it: same-origin, with the session cookie. */
   const call = async (path: string, body?: unknown, cookie?: string, headers: Record<string, string> = {}) => {
@@ -112,8 +130,7 @@ export async function startApp(overrides: Partial<Config> = {}) {
     me,
     mailer,
     async stop() {
-      server.stop(true);
-      await app.close();
+      await Effect.runPromise(Scope.close(scope, Exit.void));
       await sql.close();
     },
   };
