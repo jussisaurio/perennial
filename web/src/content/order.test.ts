@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { Schema } from "effect";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { Deck, GARDEN_WORDS, ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema";
@@ -110,7 +111,7 @@ describe("courseOrder", () => {
   });
 
   for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
-    const course = courseOrder({ words: Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf) });
+    const course = courseOrder({ words: Schema.decodeUnknownSync(Deck(lang))(deck).words.filter((w) => !w.retired && !w.aliasOf) });
 
     test(`${lang}: a new learner meets cat 3rd and bird 12th`, () => {
       const next = nextWords(course, () => true, sincePlaced([]));
@@ -166,7 +167,7 @@ describe("courseOrder", () => {
     });
 
     test(`${lang}: every garden word is in the course once; cat comes 3rd and bird 12th`, () => {
-      const words = Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf);
+      const words = Schema.decodeUnknownSync(Deck(lang))(deck).words.filter((w) => !w.retired && !w.aliasOf);
       expect(words.filter((w) => w.garden).map((w) => w.garden).sort()).toEqual([...GARDEN_WORDS].sort());
       const order = courseOrder({ words });
       expect([order[2].garden, order[11].garden]).toEqual(["cat", "bird"]);
@@ -176,7 +177,7 @@ describe("courseOrder", () => {
     });
 
     test(`${lang}: every orchard word is in the course once; the tree comes 70th, soon after the key`, () => {
-      const words = Deck(lang).parse(deck).words.filter((w) => !w.retired && !w.aliasOf);
+      const words = Schema.decodeUnknownSync(Deck(lang))(deck).words.filter((w) => !w.retired && !w.aliasOf);
       expect(words.filter((w) => w.orchard).map((w) => w.orchard).sort()).toEqual([...ORCHARD_WORDS].sort());
       const order = courseOrder({ words });
       const at = (o: OrchardWord) => order.findIndex((w) => w.orchard === o) + 1;

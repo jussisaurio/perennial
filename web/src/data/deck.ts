@@ -3,6 +3,7 @@
 // defensively: a bad entry is skipped, never fatal. If a whole deck fails to
 // load, the last good copy kept in the Cache API is used instead.
 
+import { Option, Schema } from "effect";
 import { DeckSentence, DeckWord, type Deck } from "../deck/schema";
 
 const loaders = import.meta.glob<unknown>("../../../decks/*/deck.json", { import: "default" });
@@ -23,26 +24,26 @@ export interface LoadedDeck {
 function index(raw: unknown, lang: string): LoadedDeck {
   const d = raw as Partial<Deck> | null;
   if (!d || d.lang !== lang || !Array.isArray(d.words) || !Array.isArray(d.sentences)) throw new Error(`deck ${lang}: not a deck`);
-  const W = DeckWord(lang);
-  const S = DeckSentence(lang);
+  const decodeWord = Schema.decodeUnknownOption(DeckWord(lang));
+  const decodeSentence = Schema.decodeUnknownOption(DeckSentence(lang));
   let skipped = 0;
   const byId = new Map<string, DeckWord>();
   for (const w of d.words) {
-    const r = W.safeParse(w);
-    if (r.success) byId.set(r.data.id, r.data);
+    const r = decodeWord(w);
+    if (Option.isSome(r)) byId.set(r.value.id, r.value);
     else skipped++;
   }
   const sentencesByWord = new Map<string, DeckSentence[]>();
   for (const s of d.sentences) {
-    const r = S.safeParse(s);
-    if (!r.success || !r.data.text.includes(r.data.cloze) || !byId.has(r.data.wordId)) {
+    const r = decodeSentence(s);
+    if (Option.isNone(r) || !r.value.text.includes(r.value.cloze) || !byId.has(r.value.wordId)) {
       skipped++;
       continue;
     }
-    if (r.data.retired) continue;
-    const list = sentencesByWord.get(r.data.wordId) ?? [];
-    list.push(r.data);
-    sentencesByWord.set(r.data.wordId, list);
+    if (r.value.retired) continue;
+    const list = sentencesByWord.get(r.value.wordId) ?? [];
+    list.push(r.value);
+    sentencesByWord.set(r.value.wordId, list);
   }
   const resolve = (id: string) => {
     const w = byId.get(id);

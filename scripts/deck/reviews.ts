@@ -3,18 +3,18 @@
 import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { basename, join } from "node:path";
-import { z } from "zod";
-import { deckDir, sourceFiles } from "./lib.ts";
+import { Schema } from "effect";
+import { decode, deckDir, sourceFiles } from "./lib.ts";
 import { ledgerProblems, readLedger } from "./proof.ts";
 
-const Review = z.object({
-  file: z.string(),
-  sha256: z.string().length(64),
-  author: z.string().min(1),
-  reviewer: z.string().min(1),
-  reviewedAt: z.string(),
-  verdict: z.literal("approved"),
-  notes: z.string().optional(),
+const Review = Schema.Struct({
+  file: Schema.String,
+  sha256: Schema.String.check(Schema.isBetweenLength(64, 64)),
+  author: Schema.String.check(Schema.isMinLength(1)),
+  reviewer: Schema.String.check(Schema.isMinLength(1)),
+  reviewedAt: Schema.String,
+  verdict: Schema.Literal("approved"),
+  notes: Schema.optionalKey(Schema.String),
 });
 
 export const sha256File = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -34,7 +34,7 @@ export function reviewProblems(lang: string): string[] {
       out.push(`${where} has no proofreader approval (decks/${lang}/reviews/${num}.json): see docs/decks.md`);
       continue;
     }
-    const r = Review.safeParse(JSON.parse(readFileSync(path, "utf8")));
+    const r = decode(Review, JSON.parse(readFileSync(path, "utf8")));
     if (!r.success) out.push(`decks/${lang}/reviews/${num}.json is not a valid review record`);
     else if (r.data.sha256 !== sha256File(file)) out.push(`${where} changed after it was approved: it needs a new review`);
     else if (samePerson(r.data.author, r.data.reviewer)) out.push(`${where} was approved by its own author`);

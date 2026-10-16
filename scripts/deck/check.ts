@@ -7,7 +7,7 @@
 import { join } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 import { DECK_LANGS, Deck, GARDEN_WORDS, ORCHARD_WORDS, compatibility, deckProblems } from "../../web/src/deck/schema.ts";
-import { ROOT, buildDeck, deckDir, readDeckFiles, readSource, toJson } from "./lib.ts";
+import { ROOT, buildDeck, decode, deckDir, readDeckFiles, readSource, toJson } from "./lib.ts";
 import { reviewProblems } from "./reviews.ts";
 
 const args = process.argv.slice(2);
@@ -46,9 +46,9 @@ for (const lang of DECK_LANGS) {
   }
 
   // 1. Schema and invariants.
-  const parsed = Deck(lang).safeParse(JSON.parse(readFileSync(path, "utf8")));
+  const parsed = decode(Deck(lang), JSON.parse(readFileSync(path, "utf8")));
   if (!parsed.success) {
-    for (const i of parsed.error.issues.slice(0, 20)) fail(`deck.${i.path.join(".")}: ${i.message}`);
+    for (const i of parsed.issues.slice(0, 20)) fail(`deck.${i.path.join(".")}: ${i.message}`);
     continue;
   }
   const deck = parsed.data;
@@ -83,7 +83,7 @@ for (const lang of DECK_LANGS) {
     console.log(`  no deck at ${base}: compatibility check skipped`);
     continue;
   }
-  const prevParsed = Deck(lang).safeParse(JSON.parse(prevText));
+  const prevParsed = decode(Deck(lang), JSON.parse(prevText));
   if (!prevParsed.success) {
     fail(`deck at ${base} doesn't parse with today's schema; a schema change must stay backward compatible`);
     continue;

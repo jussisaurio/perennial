@@ -55,8 +55,8 @@ test("rebuilding is idempotent; edits keep ids and bump the version", () => {
 test("words and sentences leaving the source are retired, not dropped", () => {
   const ids = counter();
   const a = buildDeck({ lang: "es", source: [src("casa"), src("mesa"), src("silla")], manifest: empty(), prev: null, newBody: ids });
-  const casa = src("casa");
-  casa.sentences[0] = { text: "Mi casa es grande.", translation: "My house is big.", cloze: "casa" };
+  const base = src("casa");
+  const casa = { ...base, sentences: base.sentences.map((s, i) => (i === 0 ? { text: "Mi casa es grande.", translation: "My house is big.", cloze: "casa" } : s)) };
   const b = buildDeck({ lang: "es", source: [casa, src("silla"), src("gato")], manifest: a.manifest, prev: a.deck, newBody: ids });
   expect(b.errors).toEqual([]);
   const mesa = b.deck.words.find((w) => w.lemma === "mesa")!;
@@ -100,8 +100,8 @@ test("duplicates and invalid content are errors", () => {
   expect(dup.errors.join()).toMatch(/duplicate of an earlier word/);
   const senses = buildDeck({ lang: "es", source: [src("banco"), src("banco", { sense: "bench" })], manifest: empty(), prev: null, newBody: counter() });
   expect(senses.errors).toEqual([]);
-  const bad = src("casa");
-  bad.sentences[1] = { ...bad.sentences[1], cloze: "perro" };
+  const badBase = src("casa");
+  const bad = { ...badBase, sentences: badBase.sentences.map((s, i) => (i === 1 ? { ...s, cloze: "perro" } : s)) };
   expect(buildDeck({ lang: "es", source: [bad], manifest: empty(), prev: null, newBody: counter() }).errors.join()).toMatch(/is not in/);
 });
 
@@ -134,12 +134,16 @@ test("orchard.json marks deck words like garden.json; a word names one thing, a 
 });
 
 test("warnings: ambiguous clozes and a single repeated form", () => {
-  const w = src("a", { pos: "prep", forms: ["a", "al"], gender: undefined });
-  w.sentences = [
-    { text: "Voy a la casa a las ocho.", translation: "x", cloze: "a" },
-    { text: "Voy a casa.", translation: "x", cloze: "a" },
-    { text: "Llego a tiempo.", translation: "x", cloze: "a" },
-  ];
+  const w = src("a", {
+    pos: "prep",
+    forms: ["a", "al"],
+    gender: undefined,
+    sentences: [
+      { text: "Voy a la casa a las ocho.", translation: "x", cloze: "a" },
+      { text: "Voy a casa.", translation: "x", cloze: "a" },
+      { text: "Llego a tiempo.", translation: "x", cloze: "a" },
+    ],
+  });
   const r = buildDeck({ lang: "es", source: [w], manifest: empty(), prev: null, newBody: counter() });
   expect(r.warnings.join("\n")).toMatch(/occurs 2× as a whole word/);
   expect(r.warnings.join("\n")).toMatch(/vary the forms/);

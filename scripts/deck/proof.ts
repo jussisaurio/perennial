@@ -14,32 +14,38 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import { z } from "zod";
+import { Schema } from "effect";
 import { Deck, manifestKey, SourceWord } from "../../web/src/deck/schema.ts";
 import { auditDeck, findingsByLemma, frequencyRanks, loadAllow } from "./audit.ts";
 import { deckDir, flagValue, markCloze, sentenceFlags, sourcePath, toJson } from "./lib.ts";
 
-export const Ledger = z.object({
-  file: z.string(),
-  reviewer: z.string(),
-  entries: z.record(z.string(), z.object({ hash: z.string(), verdict: z.enum(["ok", "fix"]), note: z.string().optional(), at: z.string() })),
+export const Ledger = Schema.Struct({
+  file: Schema.String,
+  reviewer: Schema.String,
+  // mutableKey: proof.ts mark adds an entry in place.
+  entries: Schema.Record(
+    Schema.String,
+    Schema.mutableKey(
+      Schema.Struct({ hash: Schema.String, verdict: Schema.Literals(["ok", "fix"] as const), note: Schema.optionalKey(Schema.String), at: Schema.String }),
+    ),
+  ),
 });
-export type Ledger = z.infer<typeof Ledger>;
+export interface Ledger extends Schema.Schema.Type<typeof Ledger> {}
 
 export const entryHash = (w: SourceWord) => createHash("sha256").update(JSON.stringify(w)).digest("hex").slice(0, 16);
 const ledgerPath = (lang: string, num: string) => join(deckDir(lang), "reviews", `${num}.ledger.json`);
 
-export function readEntries(lang: string, num: string): SourceWord[] {
-  return SourceWord.array().parse(JSON.parse(readFileSync(sourcePath(lang, num), "utf8")));
+export function readEntries(lang: string, num: string): readonly SourceWord[] {
+  return Schema.decodeUnknownSync(Schema.Array(SourceWord))(JSON.parse(readFileSync(sourcePath(lang, num), "utf8")));
 }
 
 export function readLedger(lang: string, num: string): Ledger | null {
   const p = ledgerPath(lang, num);
-  return existsSync(p) ? Ledger.parse(JSON.parse(readFileSync(p, "utf8"))) : null;
+  return existsSync(p) ? Schema.decodeUnknownSync(Ledger)(JSON.parse(readFileSync(p, "utf8"))) : null;
 }
 
 /** Each entry's state against the ledger. */
-export function ledgerState(entries: SourceWord[], ledger: Ledger | null) {
+export function ledgerState(entries: readonly SourceWord[], ledger: Ledger | null) {
   return entries.map((w) => {
     const key = manifestKey(w);
     const rec = ledger?.entries[key];
@@ -84,7 +90,7 @@ function card(lang: string, num: string, s: ReturnType<typeof ledgerState>[numbe
 async function flagsFor(lang: string): Promise<Map<string, string[]>> {
   const deckPath = join(deckDir(lang), "deck.json");
   if (!existsSync(deckPath)) return new Map();
-  const deck = Deck(lang).parse(JSON.parse(readFileSync(deckPath, "utf8")));
+  const deck = Schema.decodeUnknownSync(Deck(lang))(JSON.parse(readFileSync(deckPath, "utf8")));
   const { findings } = auditDeck(lang, deck, await frequencyRanks(lang), loadAllow(lang));
   return findingsByLemma(findings);
 }

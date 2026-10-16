@@ -4,7 +4,7 @@
 // entries without ids. scripts/deck/build.ts assigns stable ids from the
 // committed manifest and writes the published deck. See docs/schema.md.
 
-import { z } from "zod";
+import { Schema } from "effect";
 
 export const DECK_LANGS = ["es", "de"] as const;
 export type DeckLang = (typeof DECK_LANGS)[number];
@@ -56,75 +56,81 @@ export type OrchardWord = (typeof ORCHARD_WORDS)[number];
 
 /** Id bodies are ten of these: lowercase base32 without i, l, o, u, to avoid confusion. */
 export const ID_ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
-const wordId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.w\\.[${ID_ALPHABET}]{10}$`));
-const sentenceId = (lang: string) => z.string().regex(new RegExp(`^${lang}\\.s\\.[${ID_ALPHABET}]{10}$`));
+const wordId = (lang: string) => Schema.String.check(Schema.isPattern(new RegExp(`^${lang}\\.w\\.[${ID_ALPHABET}]{10}$`)));
+const sentenceId = (lang: string) => Schema.String.check(Schema.isPattern(new RegExp(`^${lang}\\.s\\.[${ID_ALPHABET}]{10}$`)));
 
-const text = (max: number) => z.string().trim().min(1).max(max);
+/** Trims surrounding whitespace, then requires 1 to `max` characters. */
+const text = (max: number) => Schema.Trim.check(Schema.isMinLength(1), Schema.isMaxLength(max));
 
 // ---- Source (what authors write) -----------------------------------------
 
-const SourceSentence = z.object({
+const SourceSentence = Schema.Struct({
   text: text(200),
   translation: text(240),
   cloze: text(60),
 });
 
-export const SourceWord = z.object({
+export const SourceWord = Schema.Struct({
   lemma: text(60),
   gloss: text(120),
-  pos: z.enum(POS),
+  pos: Schema.Literals(POS),
   /** Distinguishes two senses that share lemma and part of speech ("banco": bank / bench). */
-  sense: z.string().trim().max(40).optional(),
-  forms: z.array(text(60)).min(1).max(40),
-  notes: z.string().trim().max(300).optional(),
-  gender: z.enum(["m", "f", "n", "mf"]).optional(),
-  sentences: z.array(SourceSentence).min(3).max(8),
+  sense: Schema.optionalKey(Schema.Trim.check(Schema.isMaxLength(40))),
+  forms: Schema.Array(text(60)).check(Schema.isMinLength(1), Schema.isMaxLength(40)),
+  notes: Schema.optionalKey(Schema.Trim.check(Schema.isMaxLength(300))),
+  gender: Schema.optionalKey(Schema.Literals(["m", "f", "n", "mf"] as const)),
+  sentences: Schema.Array(SourceSentence).check(Schema.isMinLength(3), Schema.isMaxLength(8)),
 });
-export type SourceWord = z.infer<typeof SourceWord>;
+export interface SourceWord extends Schema.Schema.Type<typeof SourceWord> {}
 
 // ---- Published deck (what ships) ------------------------------------------
 
 export const DeckWord = (lang: string) =>
-  z.object({
+  Schema.Struct({
     id: wordId(lang),
     lemma: text(60),
     gloss: text(120),
-    pos: z.enum(POS),
-    sense: z.string().optional(),
-    rank: z.number().int().positive(),
-    forms: z.array(text(60)).min(1),
-    notes: z.string().optional(),
-    gender: z.enum(["m", "f", "n", "mf"]).optional(),
-    /** This word brings that thing into the garden; the course places it, not its rank. */
-    garden: z.enum(GARDEN_WORDS).optional(),
+    pos: Schema.Literals(POS),
+    sense: Schema.optionalKey(Schema.String),
+    rank: Schema.Int.check(Schema.isGreaterThan(0)),
+    forms: Schema.Array(text(60)).check(Schema.isMinLength(1)),
+    notes: Schema.optionalKey(Schema.String),
+    gender: Schema.optionalKey(Schema.Literals(["m", "f", "n", "mf"] as const)),
+    /**
+     * This word brings that thing into the garden; the course places it, not
+     * its rank. `optional`, not `optionalKey`: buildDeck() clears a retired
+     * word's garden/orchard/aliasOf by setting them to undefined in place.
+     */
+    garden: Schema.mutableKey(Schema.optional(Schema.Literals(GARDEN_WORDS))),
     /** This word plants that tree in the orchard; the course places it, not its rank. */
-    orchard: z.enum(ORCHARD_WORDS).optional(),
-    retired: z.boolean().optional(),
-    aliasOf: wordId(lang).optional(),
+    orchard: Schema.mutableKey(Schema.optional(Schema.Literals(ORCHARD_WORDS))),
+    retired: Schema.optionalKey(Schema.Boolean),
+    aliasOf: Schema.mutableKey(Schema.optional(wordId(lang))),
   });
 
 export const DeckSentence = (lang: string) =>
-  z.object({
+  Schema.Struct({
     id: sentenceId(lang),
     wordId: wordId(lang),
     text: text(200),
     translation: text(240),
     cloze: text(60),
-    retired: z.boolean().optional(),
+    retired: Schema.optionalKey(Schema.Boolean),
   });
 
 export const Deck = (lang: string) =>
-  z.object({
-    lang: z.literal(lang),
-    native: z.literal("en"),
-    version: z.number().int().positive(),
-    words: z.array(DeckWord(lang)),
-    sentences: z.array(DeckSentence(lang)),
+  Schema.Struct({
+    lang: Schema.Literal(lang),
+    native: Schema.Literal("en"),
+    // buildDeck() bumps this after a content change: it must stay mutable.
+    version: Schema.mutableKey(Schema.Int.check(Schema.isGreaterThan(0))),
+    words: Schema.Array(DeckWord(lang)),
+    sentences: Schema.Array(DeckSentence(lang)),
   });
 
-export type DeckWord = z.infer<ReturnType<typeof DeckWord>>;
-export type DeckSentence = z.infer<ReturnType<typeof DeckSentence>>;
-export type Deck = z.infer<ReturnType<typeof Deck>>;
+export type DeckWord = Schema.Schema.Type<ReturnType<typeof DeckWord>>;
+export type DeckSentence = Schema.Schema.Type<ReturnType<typeof DeckSentence>>;
+export type Deck = Schema.Schema.Type<ReturnType<typeof Deck>>;
 
 /** Manifest: (lemma, pos, sense) → id, so regenerating content keeps ids. */
 export const manifestKey = (w: { lemma: string; pos: string; sense?: string }) => `${w.lemma.normalize("NFC").toLowerCase()}|${w.pos}|${w.sense ?? ""}`;

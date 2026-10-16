@@ -28,7 +28,7 @@ export interface Word {
   lemma: string;
   gloss: string;
   pos?: string | null;
-  forms: string[];
+  forms: readonly string[];
   notes?: string | null;
   gender?: string;
   /** Frequency order for deck words; user words come after the deck. */

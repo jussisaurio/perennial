@@ -12,7 +12,7 @@
       "name": "perennial-scripts",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.133.0",
-        "zod": "^4.6.5",
+        "effect": "4.0.0",
       },
       "devDependencies": {
         "@types/bun": "^1.4.2",
@@ -49,11 +49,11 @@
         "@tanstack/react-db": "0.5.8",
         "@tanstack/react-virtual": "^3.14.14",
         "better-auth": "1.7.7",
+        "effect": "4.0.0",
         "posthog-js": "1",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
         "three": "^0.186.1",
-        "zod": "^4",
       },
       "devDependencies": {
         "@playwright/test": "^1.64.0",
@@ -501,6 +501,8 @@
     "dompurify": ["dompurify@3.4.16", "", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-sqo+pNp3qRhCIpbgRi1y8Tgk27Bo2Ry7w0dC1NBeNTdZChWjz9Xb/KOoZbRP/R6pQZ80Qw8YhXw13hWWBbMRnQ=="],
 
     "dotenv": ["dotenv@17.4.2", "", {}, "sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw=="],
+
+    "effect": ["effect@4.0.0", "", {}, "sha512-ooc1TG5t+FfzgYnFz2ff6BBKyZ7EwBRVXC7c4RhQUAD6/TZ2gTXXMeb4WX7a19ozQo4J73/QW+S00YAIresoMQ=="],
 
     "electron-to-chromium": ["electron-to-chromium@1.5.452", "", {}, "sha512-cVvk1YBSj6571VmV6hdJTqj94Y79xSu8cj6Y9t6ae4Y4431z8/7EJFvu3rVp90xhfuv9BpPKUmaLfTo4+FOGBg=="],
 

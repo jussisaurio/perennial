@@ -20,6 +20,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { Schema } from "effect";
 import { DECK_LANGS, Deck, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
 import { language } from "../../web/src/content/languages.ts";
 import { courseOrder } from "../../web/src/content/order.ts";
@@ -201,7 +202,7 @@ if (import.meta.main) {
   for (const lang of langs.length ? langs : DECK_LANGS) {
     const path = join(deckDir(lang), "deck.json");
     if (!existsSync(path)) continue;
-    const deck = Deck(lang).parse(JSON.parse(readFileSync(path, "utf8")));
+    const deck = Schema.decodeUnknownSync(Deck(lang))(JSON.parse(readFileSync(path, "utf8")));
     const { findings, words } = auditDeck(lang, deck, await frequencyRanks(lang), loadAllow(lang));
     errors += findings.filter((f) => f.level === "error").length;
     if (json) {

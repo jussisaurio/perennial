@@ -14,14 +14,14 @@
 // Env: ANTHROPIC_API_KEY, DECK_MODEL (default claude-sonnet-4-5), ANTHROPIC_BASE_URL.
 
 import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { z } from "zod";
+import { jsonSchemaOutputFormat } from "@anthropic-ai/sdk/helpers/json-schema";
+import { Schema } from "effect";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { SourceWord, isDeckLang, manifestKey } from "../../web/src/deck/schema.ts";
 import { language } from "../../web/src/content/languages.ts";
 import { frequencyListUrl } from "./audit.ts";
-import { MAX_SENTENCE_WORDS, WORDS_PER_FILE, deckDir, flagValue, readSource, sourceFiles, toJson, wholeWordCount, wordCount } from "./lib.ts";
+import { MAX_SENTENCE_WORDS, WORDS_PER_FILE, decode, deckDir, flagValue, readSource, sourceFiles, toJson, wholeWordCount, wordCount } from "./lib.ts";
 
 if (process.env.CI) {
   console.error("generate.ts calls a paid API and must not run in CI.");
@@ -63,9 +63,9 @@ const client = mock
 // ---- 1. Frequency list → new lemmas ------------------------------------------------
 
 type Lemma = { lemma: string; pos: SourceWord["pos"]; sense?: string };
-const POS = SourceWord.shape.pos;
-const LemmaList = z.object({
-  lemmas: z.array(z.object({ lemma: z.string(), pos: z.string(), sense: z.string().optional() })),
+const POS = SourceWord.fields.pos;
+const LemmaList = Schema.Struct({
+  lemmas: Schema.Array(Schema.Struct({ lemma: Schema.String, pos: Schema.String, sense: Schema.optionalKey(Schema.String) })),
 });
 
 async function frequencyForms(): Promise<string[]> {
@@ -83,7 +83,7 @@ const LEMMA_SYSTEM = `You map ${LANG_NAME} surface forms from a film-subtitle fr
 Rules:
 - Return one entry per distinct lemma, in order of the first form that maps to it.
 - A lemma is the dictionary form: infinitive for verbs, masculine singular for ${lang === "es" ? "adjectives and articles" : "adjectives, der for articles"}, singular for nouns${lang === "de" ? " (capitalized)" : ""}.
-- pos is one of: ${POS.options.join(", ")}.
+- pos is one of: ${POS.literals.join(", ")}.
 - If a form belongs to two different lemmas, use the more common reading.
 - Add "sense" (a few English words) only when one lemma and part of speech has two unrelated meanings that both deserve a card.
 - Skip proper nouns (names, places, brands), profanity and slurs, interjections that are just sounds, English words, typos and fragments.`;
@@ -96,10 +96,10 @@ async function lemmatize(forms: string[]): Promise<Lemma[]> {
     messages: [{ role: "user", content: `Surface forms (most frequent first):\n${forms.join(", ")}\n` }],
     output_config: { format: format(LemmaList) },
   });
-  const parsed = LemmaList.safeParse(JSON.parse(text(res)));
-  if (!parsed.success) throw new Error(`lemmatize: bad output: ${parsed.error.message}`);
+  const parsed = decode(LemmaList, JSON.parse(text(res)));
+  if (!parsed.success) throw new Error(`lemmatize: bad output: ${parsed.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`);
   return parsed.data.lemmas.flatMap((l) => {
-    const pos = POS.safeParse(l.pos);
+    const pos = decode(POS, l.pos);
     return pos.success && l.lemma.trim() ? [{ lemma: l.lemma.trim().normalize("NFC"), pos: pos.data, ...(l.sense ? { sense: l.sense } : {}) }] : [];
   });
 }
@@ -124,7 +124,7 @@ async function newLemmas(): Promise<Lemma[]> {
 
 // ---- 2. Lemmas → source words --------------------------------------------------------
 
-const WordList = z.object({ words: z.array(SourceWord) });
+const WordList = Schema.Struct({ words: Schema.Array(SourceWord) });
 
 function system(): string {
   const knownLemmas = existing.words.slice(0, 500).map((w) => w.lemma);
@@ -221,9 +221,9 @@ async function generate(lemmas: Ranked[]): Promise<Map<number, SourceWord>> {
       }
       for (const l of g) {
         const match = words.find((w) => (w as SourceWord)?.lemma?.normalize("NFC").toLowerCase() === l.lemma.toLowerCase() && (w as SourceWord).pos === l.pos);
-        const parsed = SourceWord.safeParse(match);
+        const parsed = decode(SourceWord, match);
         if (!parsed.success) {
-          console.warn(`  ${l.lemma}: ${match ? `invalid (${parsed.error.issues[0]?.path.join(".")}: ${parsed.error.issues[0]?.message})` : "missing"}`);
+          console.warn(`  ${l.lemma}: ${match ? `invalid (${parsed.issues[0]?.path.join(".")}: ${parsed.issues[0]?.message})` : "missing"}`);
           continue;
         }
         const word: SourceWord = { ...parsed.data, lemma: l.lemma, ...(l.sense ? { sense: l.sense } : {}) };
@@ -265,9 +265,25 @@ function text(m: Anthropic.Message): string {
   return m.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
 }
 
+/** The regex Schema.Trim's "already trimmed" check compiles to: not what a well-formed prompt field should constrain on. */
+const TRIM_PATTERN = "^\\S[\\s\\S]*\\S$|^\\S$|^$";
+
+/** Drops the Trim pattern from every string node, keeping minLength/maxLength. */
+function dropTrimPattern(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(dropTrimPattern);
+  if (node && typeof node === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(node)) if (!(k === "pattern" && v === TRIM_PATTERN)) out[k] = dropTrimPattern(v);
+    return out;
+  }
+  return node;
+}
+
 /** A JSON schema output format without the client-side parse helper (batches take plain params). */
-function format(schema: z.ZodType): Anthropic.JSONOutputFormat {
-  const f = zodOutputFormat(schema);
+function format(schema: Schema.Top): Anthropic.JSONOutputFormat {
+  const jsonSchema = dropTrimPattern(Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.output({ target: "draft-2020-12" }));
+  // Every schema passed here is a Schema.Struct, so this is always an object schema.
+  const f = jsonSchemaOutputFormat(jsonSchema as { type: "object" } & Record<string, unknown>);
   return { type: f.type, schema: f.schema };
 }
 
