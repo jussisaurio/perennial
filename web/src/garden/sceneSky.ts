@@ -39,9 +39,14 @@ export class SkyWater implements Part {
     this.reducedMotion = reducedMotion;
   }
 
-  /** The clouds' current positions, for pickScenery (a tap can meet one). */
+  /** The clouds' current positions, for pickScenery (a tap can meet one). Builds one array; called once per tap, never from tick. */
   get cloudPositions(): THREE.Vector3[] {
     return this.clouds.map((c) => c.position);
+  }
+
+  /** One cloud's current position, by the index pickScenery gave its hit. No allocation: labels() reads this every frame while a cloud's tag shows. */
+  cloudPosition(i: number): THREE.Vector3 {
+    return this.clouds[i].position;
   }
 
   /**

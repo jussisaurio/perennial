@@ -42,7 +42,7 @@ function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
 export class Hedge {
   private mat!: THREE.MeshBasicMaterial;
 
-  /** The hedge material, for the door (sceneDoor.ts) and the orchard hedge built later need nothing from it beyond addWalls. */
+  /** The hedge material, shared by every wall addWalls builds: the gate's now, the orchard's later, once the door opens. */
   build(ctx: BuildCtx) {
     this.mat = ctx.mat(T.pixelTexture(T.hedge(), true), { vertexColors: true });
   }

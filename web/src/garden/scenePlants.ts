@@ -282,11 +282,7 @@ export class Plants {
     );
   }
 
-  /**
-   * The plant hears its name (#60): it perks up for a moment. On about one
-   * listen in 30 its nearest neighbour perks up too, a little late, as if it
-   * thought you called it. Nothing moves with reduced motion.
-   */
+  /** See GardenScene.nod (#60): the public entry point, and what this does. */
   nod(p: PlacedPlant, elapsed: number, reducedMotion: boolean) {
     if (reducedMotion) return;
     const i = this.layout.plants.indexOf(p);

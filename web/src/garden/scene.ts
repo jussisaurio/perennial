@@ -96,6 +96,15 @@ const SUN_DIST = 200;
 /** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. */
 const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
 
+/**
+ * The order GardenScene.labels pushes a tag in, when more than one shows at
+ * once: a visitor's "say" bubble (the frog's croak) first; then whichever of
+ * line/scenery/tree is active (GardenScene.clearTaps keeps at most one of
+ * those three set); a visitor's approach tag last. One table, like
+ * TAP_PRIORITY.
+ */
+const LABEL_PRIORITY = ["say", "line", "scenery", "tree", "tag"] as const;
+
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
   const bench = new THREE.Group();
@@ -417,8 +426,8 @@ export class GardenScene {
   /**
    * A scenery word, an orchard tree, the door's quiet line and a visitor's
    * tag take turns showing: setting one clears whichever of the rest is
-   * named here. One place for the rule GardenWalk.tsx used to half-repeat in
-   * four methods (#323).
+   * named here. One place for the rule this file's own select/tapVisitor/
+   * tapTree/tapScenery/showLine used to half-repeat, each inline (#323).
    */
   private clearTaps(which: { scenery?: boolean; tree?: boolean; line?: boolean; visitor?: boolean }) {
     if (which.scenery) this.sceneryTap = null;
@@ -722,7 +731,7 @@ export class GardenScene {
   /** A visitor says something in a small bubble for a few seconds (the frog's croak). */
   say(id: VisitorId, text: string) {
     this.guests.say(id, text);
-    this.line = null;
+    this.clearTaps({ line: true });
   }
 
   /** Rasterises every plant's sprite, then builds the streaming pool (#323: scenePlants.ts). */
@@ -960,42 +969,48 @@ export class GardenScene {
   private labels() {
     const v = this.tmp;
     const out: Label[] = this.plants.labelsNear(this.x, this.z, v);
+    const tags: Partial<Record<(typeof LABEL_PRIORITY)[number], Label>> = {};
+
     // A tapped scenery word (#74) is the one tag while it shows: no visitor tag beside it.
-    let scenery: Label | null = null;
     const st = this.sceneryTap;
     if (st && this.elapsed > st.until) this.sceneryTap = null;
     else if (st) {
       const h = st.hit;
       if (h.follow === "sun") v.copy(this.camera.position).addScaledVector(this.sky.sunDir, SUN_DIST).y += SUN_DIST * SUN_TAG;
       else if (h.follow) {
-        const cloud = this.sky.cloudPositions[h.follow.cloud];
+        const cloud = this.sky.cloudPosition(h.follow.cloud);
         v.set(cloud.x, h.y, cloud.z);
       }
       else v.set(h.x, h.y, h.z);
       v.project(this.camera);
       if (v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1)
-        scenery = { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 };
+        tags.scenery = { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 };
     }
     // The door's quiet line (#315), while it shows.
-    let line: Label | null = null;
     const ln = this.line;
     if (ln && this.elapsed > ln.until) this.line = null;
     else if (ln) {
       v.set(...ln.at).project(this.camera);
       // Kept on the screen: standing right at the door, its top is above the view, and the line must still be read.
-      if (v.z <= 1) line = { id: "line", text: ln.text, kind: "line", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
+      if (v.z <= 1) tags.line = { id: "line", text: ln.text, kind: "line", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
     // A tapped orchard tree's word (#315), over its crown; kept on the screen, as a tall tree's top is often above the view.
-    let tree: Label | null = null;
     const tt = this.treeTap;
     if (tt && this.elapsed > tt.until) this.treeTap = null;
     else if (tt) {
       v.set(tt.tree.x, tt.tree.height + 0.08, tt.tree.z).project(this.camera);
-      if (v.z <= 1) tree = { id: `tree:${tt.tree.id}`, text: tt.tree.lemma, gloss: tt.tree.gloss, kind: "tree", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
+      if (v.z <= 1) tags.tree = { id: `tree:${tt.tree.id}`, text: tt.tree.lemma, gloss: tt.tree.gloss, kind: "tree", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
-    // What a visitor says (the frog's croak), the door's line, the scenery word or tree, then one visitor tag at most.
-    const { say, tag } = this.guests.labels(this.x, this.z, !this.sceneryTap && !this.treeTap && !this.line);
-    for (const l of [say, line, scenery, tree, tag]) if (l) out.push(l);
+    // A visitor's approach tag shows only while none of line/scenery/tree is active (clearTaps keeps at most one of those three set at a time).
+    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line);
+    const { say, tag } = this.guests.labels(this.x, this.z, !exclusiveActive);
+    if (say) tags.say = say;
+    if (tag) tags.tag = tag;
+    // One table for what shows over what: say (a visitor's bubble) always; then whichever of line/scenery/tree is active; last, a visitor's tag.
+    for (const kind of LABEL_PRIORITY) {
+      const l = tags[kind];
+      if (l) out.push(l);
+    }
     this.reportDoor();
     const key = out.map((l) => `${l.id}${l.text}${l.x.toFixed(3)}${l.y.toFixed(3)}${l.near.toFixed(2)}`).join();
     if (key !== this.lastLabels) {
