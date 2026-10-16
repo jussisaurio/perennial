@@ -1,4 +1,4 @@
-// Many learners at once, on the server as production runs it (instrument.ts
+// Many learners at once (16), on the server as production runs it (instrument.ts
 // preloaded, every request traced): each request's log line and Sentry
 // transaction carry only its own facts, and its spans hang under its own root.
 //
@@ -16,8 +16,9 @@ type Span = { span_id: string; parent_span_id?: string; trace_id: string; op?: s
 type Transaction = { transaction: string; contexts: { trace: Span }; spans: Span[] };
 type Line = Record<string, unknown>;
 
-/** A stand-in for Sentry's ingest: it keeps the transactions it is sent. */
+/** A stand-in for Sentry's ingest: it keeps the transactions it is sent, and what the SDK says it dropped. */
 const transactions: Transaction[] = [];
+const dropped: unknown[] = [];
 const ingest = Bun.serve({
   port: 0,
   async fetch(req) {
@@ -27,7 +28,10 @@ const ingest = Bun.serve({
     for (const [i, header] of lines.entries()) {
       const payload = lines[i + 1];
       if (i % 2 || payload === undefined) continue;
-      if (JSON.parse(header).type === "transaction") transactions.push(JSON.parse(payload));
+      const type = JSON.parse(header).type;
+      if (type === "transaction") transactions.push(JSON.parse(payload));
+      // The SDK sends at most 64 envelopes at once and drops the rest (queue_overflow), then reports them.
+      if (type === "client_report") dropped.push(...(JSON.parse(payload).discarded_events ?? []));
     }
     return new Response("{}");
   },
@@ -78,8 +82,10 @@ async function collect(stream: ReadableStream<Uint8Array>) {
 void collect(server.stdout);
 void collect(server.stderr);
 
-async function until(check: () => boolean) {
-  while (!check()) await Bun.sleep(20);
+/** Wait until `check` is true, or until `ms` have passed (the assertions after it then say what is missing). */
+async function until(check: () => boolean, ms = 60_000) {
+  const end = performance.now() + ms;
+  while (!check() && performance.now() < end) await Bun.sleep(20);
 }
 await until(() => lines.some((l) => l.msg === "perennial server started"));
 const url = String(lines.find((l) => l.msg === "perennial server started")?.url);
@@ -140,10 +146,15 @@ test("no request's facts or spans land on another request's line or trace", asyn
     expect((await send("/api/account/delete", r4, {}, signedIn.cookie)).res.status).toBe(200);
     expected.set(r4, { userId: realId, accountDeleted: true });
   };
-  await Promise.all(Array.from({ length: 40 }, (_, i) => learner(i)));
+  // 16 learners: enough for fibers to wait on the shared pool (without explicit
+  // parents, AI spans land in other transactions), few enough that Sentry's
+  // 64-envelope send buffer does not overflow on a slow CI runner.
+  await Promise.all(Array.from({ length: 16 }, (_, i) => learner(i)));
 
   const requestLine = (r: string) => lines.find((l) => l.reqId === r && l.msg === "request");
   await until(() => [...expected.keys()].every((r) => requestLine(r) && transactions.some((t) => t.contexts.trace.trace_id === requestLine(r)?.traceId)));
+  // A dropped transaction is the test sending too much at once, not a leak: say so.
+  expect(dropped).toEqual([]);
   for (const [r, facts] of expected) {
     const line = requestLine(r);
     for (const [k, v] of Object.entries(facts)) expect({ r, k, v: line?.[k] }).toEqual({ r, k, v });
