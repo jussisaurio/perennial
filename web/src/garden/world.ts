@@ -3,6 +3,7 @@
 // the gate. Pure functions, so the layout is stable and testable.
 
 import { toPos, type GardenWord, type Pos } from "../deck/schema";
+import { dayNumber } from "../core/day";
 import { hash01 } from "../lib/seed";
 import { collideTrees, ORCHARD_MIN, type PlacedTree } from "./orchard";
 import type { Stage } from "../ui/plant";
@@ -200,16 +201,34 @@ export function lanternSpots(l: Layout): [number, number][] {
   return [...spots.values()];
 }
 
-/** Where the key to the door can hide (#315): one place per learner, never by the door. */
 /** The door's quiet lines (#315). Here, not in the scene, so the page can use them without loading three.js. */
-export const DOOR_LINES = { locked: "Locked. The key must be somewhere.", found: "You found the key." } as const;
+export const DOOR_LINES = { locked: "Locked.", found: "You found the key." } as const;
 
+/** Where the key to the door can hide (#315): one place per learner, never by the door. */
 export const KEY_SPOTS = ["bench", "pond", "lantern", "bed", "sunflower"] as const;
 export type KeySpot = (typeof KEY_SPOTS)[number];
 
 /** This learner's hiding place, from a seed that stays the same for them (their id and course): always the same place. */
 export function keySpot(seed: string): KeySpot {
   return KEY_SPOTS[Math.floor(hash01(seed, 315) * KEY_SPOTS.length)];
+}
+
+/**
+ * Help for a learner whose key has waited a while (#334): from the world, late
+ * and gently, never in words. From the third day after the key came, a visitor
+ * here today waits by it (the dog; the bird at dusk and night); from the
+ * seventh, it glints whenever you face it. Calendar days, in local time.
+ */
+const KEY_HELP_DAYS = { visitors: 3, glint: 7 } as const;
+export interface KeyHelp {
+  visitors: boolean;
+  glint: boolean;
+}
+
+/** The help the garden gives today (`now`) for a key that came at `since` (ms). */
+export function keyHelp(since: number, now: number): KeyHelp {
+  const days = dayNumber(now) - dayNumber(since);
+  return { visitors: days >= KEY_HELP_DAYS.visitors, glint: days >= KEY_HELP_DAYS.glint };
 }
 
 /** Where the key lies on the ground in this garden, at its hiding place. */

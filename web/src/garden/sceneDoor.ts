@@ -7,10 +7,10 @@
 // it shows live on the host, which also reads `state`/`key`/`leaf` directly.
 
 import * as THREE from "three";
-import type { DoorAction, DoorState } from "./scene";
+import type { DoorState } from "./scene";
 import type { Conditions, Frame } from "./scenePart";
-import { sprites, type BuildCtx } from "./sceneSprites";
-import { DOOR_HALF, HEDGE, keyAt, type Layout } from "./world";
+import { FOG_FAR, sprites, type BuildCtx } from "./sceneSprites";
+import { DOOR_HALF, HEDGE, keyAt, type KeyHelp, type Layout } from "./world";
 import * as T from "./textures";
 
 /** The door's height and thickness, how far it swings open (it swings out, into the orchard), and for how long. */
@@ -21,14 +21,22 @@ const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
 export const DOOR_REACH = 2.6;
 /** Near enough to the hidden key to be offered "Pick up the key" (m). */
 export const KEY_REACH = 2;
-/** The key's glint: seen from this near (m), a flash this long (s) this often (s). Nothing calls to the learner from across the garden. */
-export const GLINT = { near: 7, flash: 0.5, every: 3.2 };
+/** Facing the key, for its late glint (#334): within this angle of straight ahead (its cosine, about 25°). */
+const FACING = Math.cos(0.44);
+/**
+ * The key's late glint (#334), the help a learner without the dog or the bird
+ * gets: on for `on` s in every `every` s, gently pulsing, and as wide as `size`
+ * times its distance (never under `min` m), so it stays about 25 px on a phone
+ * from anywhere in the garden. Its dark outline keeps it clear on sand and grass.
+ */
+const LATE = { on: 1.4, every: 3.2, size: 0.045, min: 0.18 };
 
 /**
  * The door in the hedge: "key" means the key is hidden in the garden; "held"
  * means the learner picked it up this walk; only "open" is saved. `leaf` turns
  * on its hinge; `swing` is how far through its swing it is (null: not
- * swinging); `near` is what the viewer was last offered (GardenScene.reportDoor).
+ * swinging). `handle`: where its ring handle is, for the glint that shows it
+ * can be used (#334). `help`: the world's help for a key left waiting.
  */
 export class Door {
   private reducedMotion: boolean;
@@ -37,7 +45,9 @@ export class Door {
   keyhole!: { hole: THREE.Mesh; glow: THREE.Sprite };
   key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
   swing: number | null = null;
-  near: DoorAction | null = null;
+  handle!: [number, number, number];
+  /** The world's help for a key left waiting (#334); null without a key. The scene reads it too. */
+  help: KeyHelp | null = null;
 
   constructor(reducedMotion: boolean) {
     this.reducedMotion = reducedMotion;
@@ -90,14 +100,19 @@ export class Door {
       const mesh = sprites(T.pixelTexture(T.key()), [{ x, y: 0.03, z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
       c.mats.add(mesh.material);
       c.scene.add(mesh);
-      // It catches the light now and then (GardenScene.tick), only when you are near. Not tinted: a glint is bright at dusk too.
-      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glint()), transparent: true, depthWrite: false, fog: false }));
-      glint.position.set(x + 0.08, 0.1, z);
+      // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted or fogged: a glint is bright at
+      // dusk too. Drawn over whatever stands in front (a bench leg, a bed): it is the help, so it must not hide.
+      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthTest: false, depthWrite: false, fog: false }));
+      glint.renderOrder = 10;
+      glint.position.set(x, 0.25, z);
       glint.visible = false;
       c.scene.add(glint);
       key = { mesh, glint, x, z };
     }
     this.state = typeof doorState === "object" ? "key" : doorState;
+    this.help = typeof doorState === "object" ? doorState.help : null;
+    // The ring handle, just over the keyhole, on the garden side.
+    this.handle = [gx + DOOR_HALF + KEYHOLE.x, KEYHOLE.y + 0.12, z0 - 0.05];
     this.leaf = leaf;
     this.keyhole = { hole, glow };
     this.key = key;
@@ -108,7 +123,11 @@ export class Door {
     this.keyhole.glow.visible = c.dark && this.state !== "open";
   }
 
-  /** The door swings open, slowing as it goes; the hidden key glints now and then when you are near. */
+  /**
+   * The door swings open, slowing as it goes. A key left waiting a week (#334)
+   * glints now and then whenever you face it, from as far as you can see; in
+   * reach, the scene's own glint shows it instead.
+   */
   tick(f: Frame) {
     if (this.swing !== null) {
       this.swing = Math.min(1, this.swing + f.dt / DOOR.swing);
@@ -118,8 +137,14 @@ export class Door {
     // With reduced motion, a still glint.
     const key = this.state === "key" ? this.key : null;
     if (!key) return;
-    const k = f.elapsed % GLINT.every;
-    key.glint.visible = Math.hypot(f.x - key.x, f.z - key.z) < GLINT.near && (this.reducedMotion || k < GLINT.flash);
-    key.glint.scale.setScalar(this.reducedMotion ? 0.12 : 0.04 + 0.16 * Math.sin((Math.PI * k) / GLINT.flash));
+    const dx = key.x - f.x;
+    const dz = key.z - f.z;
+    const d = Math.hypot(dx, dz);
+    // Forward is -z at yaw 0.
+    const facing = (-Math.sin(f.yaw) * dx - Math.cos(f.yaw) * dz) / d > FACING;
+    const k = f.elapsed % LATE.every;
+    key.glint.visible = !!this.help?.glint && facing && d >= KEY_REACH && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
+    const pulse = this.reducedMotion ? 1 : 0.8 + 0.2 * Math.sin((Math.PI * k) / LATE.on);
+    key.glint.scale.setScalar(Math.max(LATE.min, LATE.size * d) * pulse);
   }
 }

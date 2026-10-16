@@ -82,7 +82,15 @@ export function knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, 
  * visitor and its line come with the first good one.
  */
 export function broughtVisitor(l: Pick<Learner, "reviewsByWord">, wordId: string): boolean {
-  return (l.reviewsByWord.get(wordId) ?? []).some((r) => r.skill === "read" && r.grade >= 3);
+  return broughtAt(l, wordId) !== null;
+}
+
+/** When a garden word brought its visitor: its first good reading answer (ms), or null while it has none. */
+export function broughtAt(l: Pick<Learner, "reviewsByWord">, wordId: string): number | null {
+  let at: number | null = null;
+  // `?? []`: a word never reviewed has no list.
+  for (const r of l.reviewsByWord.get(wordId) ?? []) if (r.skill === "read" && r.grade >= 3 && (at === null || Date.parse(r.reviewed_at) < at)) at = Date.parse(r.reviewed_at);
+  return at;
 }
 
 /** The garden words (#209) whose visitors the learner has brought. */
@@ -90,6 +98,16 @@ export function gardenBrought(l: Pick<Learner, "reviewsByWord" | "deck">): Set<G
   const garden = new Set<GardenWord>();
   for (const w of l.deck.words) if (w.garden && broughtVisitor(l, w.id)) garden.add(w.garden);
   return garden;
+}
+
+/** When the learner brought this garden word's visitor (#334: the key, for the help it gets once it has waited): the earliest of its words' broughtAt, or null. */
+export function gardenBroughtAt(l: Pick<Learner, "reviewsByWord" | "deck">, g: GardenWord): number | null {
+  let at: number | null = null;
+  for (const w of l.deck.words) {
+    const t = w.garden === g ? broughtAt(l, w.id) : null;
+    if (t !== null && (at === null || t < at)) at = t;
+  }
+  return at;
 }
 
 export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {

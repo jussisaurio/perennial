@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
+import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
 import { benchLine, collideTrees, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
@@ -24,11 +24,16 @@ import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites,
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
-/** The door in the hedge (#315): locked; locked with the key hidden somewhere in the garden (its garden word brought it); or open for good. */
-export type DoorState = "locked" | { key: KeySpot } | "open";
+/**
+ * The door in the hedge (#315): locked; locked with the key hidden somewhere in
+ * the garden (its garden word brought it), with the help the world gives once it
+ * has waited a while (#334); or open for good.
+ */
+export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 /** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
 export type DoorAction = "try" | "key" | "open";
-/** The garden's quiet lines at the door. */
+/** What the one action button does to the thing in reach (#334): the door's actions, or sit on the bench and stand up again. */
+export type Reach = DoorAction | "sit" | "stand";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), or a quiet line in English from the garden itself (kind "line"), in screen fractions. */
 export interface Label {
@@ -69,8 +74,8 @@ export interface SceneCallbacks {
   onSelect: (p: PlacedPlant | null) => void;
   onLabels: (labels: Label[]) => void;
   onProgress: (done: number, total: number) => void;
-  /** The viewer came near the shut door (what they can do there), or left it (null). For keyboards and screen readers. */
-  onDoor: (a: DoorAction | null) => void;
+  /** What the action button does now, for the thing in reach (#334), or null with nothing in reach. */
+  onReach: (a: Reach | null) => void;
   /** The learner opened the door with the key: it stays open (saved with the course). */
   onDoorOpen: () => void;
   /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
@@ -91,6 +96,12 @@ const GROUND_REACH = 1.5;
 const DOOR_STAND = 1.4;
 /** A walk to the key stops this short of it (m), so it is still in view, in reach (KEY_REACH). */
 const KEY_STAND = 1;
+/** The thing in reach glints (#334): a flash this long (s), this often (s); more often than the key's late help, as it is right there. */
+const CUE = { flash: 0.5, every: 1.6 };
+/** Near enough to the bench (m, from its middle) to sit on it (#334). */
+const BENCH_REACH = 1.6;
+/** Sitting on the bench (#334): the eye's height, where you sit along the seat (beside the cat's place), and how fast you sit down (per second). */
+const SEAT = { eye: 0.78, dx: -0.3, speed: 2.5 };
 /** How fast the view turns toward where a walk goes: the share of the turn left that it makes per second. */
 const TRIP_TURN = 3;
 /**
@@ -156,6 +167,14 @@ export class GardenScene {
   private stallReported = false;
   /** The ring on the ground where a walk goes. */
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  /** What the action button does now (#334), and the glint on the thing in reach that shows it can be used. */
+  private reach: Reach | null = null;
+  private cue!: THREE.Sprite;
+  /** Sitting on the bench (#334); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
+  private seated = false;
+  private seat = 0;
+  /** The pond's bench, by its middle (world.ts benchAt), worked out once: reportReach runs every frame. */
+  private bench!: { x: number; z: number };
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
   private mats = new Set<THREE.ShaderMaterial>();
   private basic: THREE.MeshBasicMaterial[] = [];
@@ -201,6 +220,11 @@ export class GardenScene {
   private treeTap: { tree: PlacedTree; until: number } | null = null;
   /** What the world is built with, kept for the orchard, which is built when the door opens. */
   private ctx!: BuildCtx;
+
+  /** The help the world gives for a key left waiting (#334), while it still lies in the garden. */
+  private get keyHelp(): KeyHelp | null {
+    return this.door.state === "key" ? this.door.help : null;
+  }
 
   /** The orchard's trees, for walking round their trunks: none while the door is shut. */
   private get trunks(): readonly PlacedTree[] {
@@ -300,6 +324,8 @@ export class GardenScene {
     const bench = this.buildBench(c);
     this.buildSigns(c, bench);
     this.guests.build({ bench: bench.position, pads, lanterns: this.lanternSpots });
+    // A key left waiting a few days (#334): the dog, if it is here today, sits by it.
+    if (this.keyHelp?.visitors && this.door.key) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
     // After the visitors: a visitor may sit in the orchard's trees today.
     if (this.visitors.door === "open") this.openDoor();
     this.buildStakes(c);
@@ -433,6 +459,27 @@ export class GardenScene {
     return Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH;
   }
 
+  /** The action button (#334): do what it shows to the thing in reach. Anything else no longer applies and does nothing. */
+  act(a: Reach) {
+    if (a === "sit" && !this.seated) this.sit();
+    else if (a === "stand") this.standUp();
+    else if (a !== "sit") this.doorAct(a);
+  }
+
+  /** Sit on the bench, facing the pond: a cut to the seat, and the eye sinks (at once, with reduced motion). Any move stands you up. */
+  private sit() {
+    const b = this.bench;
+    this.endTrip();
+    this.glide = null;
+    // The bench faces +z, toward the pond; forward is -z at yaw 0.
+    [this.x, this.z, this.yaw, this.pitch] = [b.x + SEAT.dx, b.z + 0.05, Math.PI, -0.12];
+    this.seated = true;
+  }
+
+  private standUp() {
+    this.seated = false;
+  }
+
   /** A tap on the key or the door (#336): act on it in reach; from farther away, walk up to it first. */
   tapDoor(a: DoorAction) {
     if (this.inReach(a)) return this.doorAct(a);
@@ -449,6 +496,9 @@ export class GardenScene {
     if (a === "key" && d.state === "key" && d.key) {
       d.state = "held";
       d.key.mesh.visible = d.key.glint.visible = false;
+      // Whoever waited by it goes home.
+      this.guests.visit("dog", null);
+      this.guests.visit("bird", null);
       this.showLine(DOOR_LINES.found, [d.key.x, 0.45, d.key.z]);
     } else if (a === "open" && d.state === "held") {
       this.openDoor(true);
@@ -574,6 +624,7 @@ export class GardenScene {
   private buildBench(c: BuildCtx): THREE.Group {
     const bench = benchModel(c);
     const at = benchAt(c.L);
+    this.bench = at;
     bench.position.set(at.x, 0, at.z);
     this.scene.add(bench);
     {
@@ -708,7 +759,7 @@ export class GardenScene {
     this.scene.add(decorMesh);
   }
 
-  /** The marker over the selected plant, always on top of the hills and clouds; and the ring on the ground where a walk goes. */
+  /** The marker over the selected plant, always on top of the hills and clouds; the ring on the ground where a walk goes; the glint on the thing in reach. */
   private buildMarker() {
     // Always on top: no depth test, and in the transparent pass with the highest
     // renderOrder, because the far hills and clouds draw in that pass after the
@@ -725,6 +776,10 @@ export class GardenScene {
     this.spot.rotation.x = -Math.PI / 2;
     this.spot.visible = false;
     this.scene.add(this.spot);
+    // The glint on the thing in reach (#334): not tinted or fogged, as a glint is bright at dusk too.
+    this.cue = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glint()), transparent: true, depthWrite: false, fog: false }));
+    this.cue.visible = false;
+    this.scene.add(this.cue);
   }
 
   /** The visitor under a point on the canvas (CSS pixels), if any. */
@@ -825,6 +880,9 @@ export class GardenScene {
     this.unlit.visible = !dark;
     for (const g of this.glows) g.visible = dark;
     this.guests.setDark(dark, t === "night");
+    // A key left waiting a few days (#334): at dusk and night the bird, if it is here today, lands by it.
+    const help = this.keyHelp;
+    if (help?.visitors && this.door.key) this.guests.visit("bird", dark ? [this.door.key.x + 0.2, 0, this.door.key.z - 0.1] : null);
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
     this.flower.params.needsUpdate = true;
@@ -884,6 +942,7 @@ export class GardenScene {
   step(metres: number) {
     this.glide = null;
     this.endTrip();
+    this.standUp();
     ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, this.x - Math.sin(this.yaw) * metres, this.z - Math.cos(this.yaw) * metres, this.door.state === "open", this.trunks));
   }
 
@@ -920,6 +979,7 @@ export class GardenScene {
     };
     // A glide (Next plant) passes over beds; a tap during one starts from where a walker would stand.
     ({ x: this.x, z: this.z } = free(this.x, this.z));
+    this.standUp();
     const to = free(x, z);
     this.glide = null;
     this.trip = { way: wayTo(this.layout, this.x, this.z, to.x, to.z, open, this.trunks), leg: 1, stop, then, turn: !this.reducedMotion, stuck: 0 };
@@ -1014,6 +1074,7 @@ export class GardenScene {
     this.marker.visible = !!p;
     if (p && walkTo) {
       this.endTrip();
+      this.standUp();
       const v = viewpoint(this.layout, p);
       // Turn the short way round.
       let yaw = v.yaw;
@@ -1057,6 +1118,7 @@ export class GardenScene {
     if (len > 0.01) {
       this.glide = null;
       if (this.trip) this.endTrip();
+      this.standUp();
       const speed = WALK * (run ? 2 : 1) * Math.min(1, len);
       const fx = -Math.sin(this.yaw);
       const fz = -Math.cos(this.yaw);
@@ -1076,7 +1138,10 @@ export class GardenScene {
       if (g.t >= 1) this.glide = null;
     }
 
-    this.camera.position.set(this.x, EYE + Math.sin(this.bob) * 0.035 * motion, this.z);
+    // Sitting down or standing up: the eye sinks or rises over a moment (at once, with reduced motion).
+    const sat = this.seated ? 1 : 0;
+    this.seat = this.reducedMotion ? sat : this.seat + Math.max(-dt * SEAT.speed, Math.min(dt * SEAT.speed, sat - this.seat));
+    this.camera.position.set(this.x, EYE - (EYE - SEAT.eye) * this.seat + Math.sin(this.bob) * 0.035 * motion, this.z);
     this.camera.rotation.set(this.pitch, this.yaw, 0);
     this.camera.updateMatrixWorld();
 
@@ -1096,6 +1161,11 @@ export class GardenScene {
     frame.z = this.z;
     frame.yaw = this.yaw;
     for (const part of this.parts) part.tick?.(frame);
+    // The thing in reach glints now and then (#334); with reduced motion, a still glint.
+    if (this.cue.visible) {
+      const k = t % CUE.every;
+      this.cue.scale.setScalar(this.reducedMotion ? 0.12 : k < CUE.flash ? 0.04 + 0.16 * Math.sin((Math.PI * k) / CUE.flash) : 0);
+    }
     if (this.selected) {
       const p = this.selected;
       this.marker.position.set(p.x, BED_H + plantHeight(p.growth) + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
@@ -1163,7 +1233,7 @@ export class GardenScene {
       const l = tags[kind];
       if (l) out.push(l);
     }
-    this.reportDoor();
+    this.reportReach();
     const key = out.map((l) => `${l.id}${l.text}${l.x.toFixed(3)}${l.y.toFixed(3)}${l.near.toFixed(2)}`).join();
     if (key !== this.lastLabels) {
       this.lastLabels = key;
@@ -1172,17 +1242,24 @@ export class GardenScene {
   }
 
   /**
-   * Tell the page what the viewer can do when they stand near the hidden key or
-   * the shut door (a button for keys and screen readers), and when they leave.
+   * Tell the page what the action button does now (#334): stand up from the
+   * bench, pick up the key, open or try the door, or sit on the bench, for
+   * whichever is in reach (in that order); or nothing. The thing in reach
+   * glints (the cue).
    */
-  private reportDoor() {
+  private reportReach() {
     const d = this.door;
+    const b = this.bench;
     const nearKey = d.state === "key" && this.inReach("key");
     const nearDoor = d.state !== "open" && this.inReach("try");
-    const a: DoorAction | null = nearKey ? "key" : !nearDoor ? null : d.state === "held" ? "open" : "try";
-    if (a === d.near) return;
-    d.near = a;
-    this.cb.onDoor(a);
+    const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH;
+    const a: Reach | null = this.seated ? "stand" : nearKey ? "key" : nearDoor ? (d.state === "held" ? "open" : "try") : nearBench ? "sit" : null;
+    if (a === this.reach) return;
+    this.reach = a;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : a === "try" || a === "open" ? d.handle : a === "sit" ? [b.x, 0.55, b.z + 0.1] : null;
+    this.cue.visible = !!at;
+    if (at) this.cue.position.set(at[0], at[1], at[2]);
+    this.cb.onReach(a);
   }
 
   dispose() {

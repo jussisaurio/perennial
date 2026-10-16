@@ -315,3 +315,71 @@ test("a walking key takes over from a walk under way (#336)", async ({ page }) =
   expect(after.walking).toBe(false);
   expect(Math.hypot(after.x - to.x, after.z - to.z)).toBeGreaterThan(Math.hypot(start.x - to.x, start.z - to.z));
 });
+
+// #334: one action button for what is in reach; its icon changes shape, and a screen reader hears what it does.
+test("by the bench the action button sits you down, facing the pond; it or a step stands you up again", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await page.goto("/?demo=es:30#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  type Bench = { x: number; z: number; seated: boolean; camera: { position: { y: number } }; layout: { pond: { x: number; z: number; r: number } } };
+  const scene = () =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: Bench }).__garden;
+      return { seated: s.seated, eye: s.camera.position.y };
+    });
+  await expect(page.getByRole("button", { name: "Sit on the bench" })).toHaveCount(0);
+  // A step in front of the bench (world.ts benchAt), facing it.
+  await page.evaluate(() => {
+    const s = (window as unknown as { __garden: Bench }).__garden;
+    const p = s.layout.pond;
+    Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+  });
+  const sit = page.getByRole("button", { name: "Sit on the bench" });
+  await expect(sit).toHaveText("");
+  const standing = (await scene()).eye;
+  await sit.click();
+  await expect(page.getByRole("button", { name: "Stand up" })).toBeVisible();
+  // Reduced motion (as these tests run): the eye sinks at once.
+  await expect.poll(async () => (await scene()).eye).toBeLessThan(standing - 0.2);
+  await page.getByRole("button", { name: "Stand up" }).click();
+  await expect(sit).toBeVisible();
+  await expect.poll(async () => (await scene()).eye).toBeCloseTo(standing, 1);
+  // Any step stands you up too.
+  await sit.click();
+  await expect(page.getByRole("button", { name: "Stand up" })).toBeVisible();
+  await page.keyboard.down("KeyS");
+  await page.waitForTimeout(150);
+  await page.keyboard.up("KeyS");
+  expect((await scene()).seated).toBe(false);
+});
+
+test("the controls hint shows in the learner's walk until they first move; the landing page's walk does not use it up (#334)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  const hint = page.locator(".gw-hint");
+  const walkIn = async () => {
+    await page.getByRole("button", { name: "Walk in your garden" }).click();
+    await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+    await page.waitForFunction(() => "__garden" in window);
+  };
+  // The landing page's walk: the hint shows, and moving there does not use up the learner's.
+  await page.goto("/");
+  await page.getByRole("button", { name: "Walk through this garden in 3D" }).click();
+  await expect(hint).toContainText("Walk:", { timeout: 20_000 });
+  await page.keyboard.press("KeyW");
+  await expect(hint).toHaveCount(0);
+  // The learner's own walk: the hint stays until they move, even across walks.
+  await page.goto("/?demo=es:30#/today");
+  await walkIn();
+  await expect(hint).toContainText("Walk:");
+  await page.getByRole("button", { name: "Back" }).click();
+  await walkIn();
+  await expect(hint).toContainText("Walk:");
+  await page.keyboard.press("KeyW");
+  await expect(hint).toHaveCount(0);
+  await page.getByRole("button", { name: "Back" }).click();
+  await walkIn();
+  await expect(hint).toHaveCount(0);
+});
