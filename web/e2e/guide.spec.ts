@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { startCourse } from "./helpers";
 
 // #211: the Words screen as a field guide. Known words are pressed flowers, words still growing are sketches.

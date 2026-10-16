@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { doorNow, serverRows, standAtDoor, standByKey } from "./helpers";
 
 // #315: the old door in the hedge. Locked until "key" (llave) brings the key,

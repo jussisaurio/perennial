@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { plantNearMiddle, settledGardenWidth, startCourse } from "./helpers";
 
 test("walk-in garden: every word is a plant; next plant, listen, time of day, and back", async ({ page }) => {

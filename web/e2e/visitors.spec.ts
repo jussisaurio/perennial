@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { answer, kicker, reveal, startCourse, startSession } from "./helpers";
 
 // #209: learn a garden word, and its visitor comes. The cat is the course's 3rd word,

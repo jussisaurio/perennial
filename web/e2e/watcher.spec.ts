@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { answer, startCourse, startSession } from "./helpers";
 
 // #210: sometimes a visitor the learner has brought comes to watch a chunk, for a few cards.

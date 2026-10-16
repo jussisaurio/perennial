@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { expectServerRows, openAdd, serverRows, startCourse } from "./helpers";
 
 test("paste text: course words are queued for free; other words need an email", async ({ page }) => {

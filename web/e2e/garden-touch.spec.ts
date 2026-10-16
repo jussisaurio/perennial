@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { plantNearMiddle, settledGardenWidth, standAtDoor } from "./helpers";
 
 // Runs on the iPhone (WebKit) project only. Playwright's tap sends a whole tap

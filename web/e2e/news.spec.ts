@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { answer, kicker, reveal, startCourse, startSession } from "./helpers";
 
 // #232: the summary points to the garden only on days with real news.

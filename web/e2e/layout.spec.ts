@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { answer, reveal, startCourse } from "./helpers";
 
 test("phone: bottom tab bar and no horizontal scroll", async ({ page }) => {

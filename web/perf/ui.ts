@@ -107,6 +107,10 @@ const browser = await chromium.launch({ args: ["--mute-audio", "--enable-unsafe-
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: REDUCED ? "reduce" : "no-preference" });
 page.setDefaultTimeout(60_000);
 await page.addInitScript(PROBE);
+// Silent, as in e2e/test.ts: --mute-audio does not reach speechSynthesis on macOS.
+await page.addInitScript(() => {
+  if ("SpeechSynthesis" in window) SpeechSynthesis.prototype.speak = () => {};
+});
 await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
 const cdp = await page.context().newCDPSession(page);
 await cdp.send("Performance.enable");

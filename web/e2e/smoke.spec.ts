@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { answer, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {

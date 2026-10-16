@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { addEmail, serverRows, startCourse } from "./helpers";
 
 test("target recall changed with the keyboard is saved on the server", async ({ page }) => {

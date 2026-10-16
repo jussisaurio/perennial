@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { expectServerRows, startCourse } from "./helpers";
 
 // #124: a garden per language, switched from the top bar. Courses are never deleted.

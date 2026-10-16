@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { answer, startCourse, startSession } from "./helpers";
 
 test("sound off: nothing is spoken, speaker buttons hide, and the icon and Settings agree", async ({ page }) => {
