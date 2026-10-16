@@ -15,13 +15,14 @@
 
 import * as Sentry from "@sentry/react";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineExecutor, type LeaderElection, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
+import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { Effect, Exit, Schema } from "effect";
 import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync } from "./device";
 import { ApiError, HttpError, isPermanent, sendWrite } from "./http";
 import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
+import { tabLock } from "./tabLock";
 
 /** Signed in as someone else since (in another tab): this user's writes wait for them. */
 class OtherUser extends Schema.TaggedError<OtherUser>()("OtherUser", {}) {
@@ -86,51 +87,6 @@ async function adoptQueues(userId: string, target: StorageAdapter) {
       console.warn("[store] could not move queued writes", e);
     }
   }
-}
-
-/**
- * The user's Web Lock: the tab holding it sends the queue. A tab that opens
- * while another holds it waits a moment (a reload, or React's development
- * double mount, releases it quickly), then reports "not the writer" but stays
- * in line, and becomes the writer if the other tab closes.
- */
-function tabLock(name: string): LeaderElection | undefined {
-  if (typeof navigator === "undefined" || !("locks" in navigator)) return undefined;
-  let leader = false;
-  let release: (() => void) | null = null;
-  const abort = new AbortController();
-  const listeners = new Set<(isLeader: boolean) => void>();
-  const set = (v: boolean) => {
-    if (leader === v) return;
-    leader = v;
-    for (const l of listeners) l(v);
-  };
-  return {
-    requestLeadership: () =>
-      new Promise<boolean>((resolve) => {
-        if (leader) return resolve(true);
-        const timer = setTimeout(() => resolve(false), 2500);
-        navigator.locks
-          .request(name, { mode: "exclusive", signal: abort.signal }, () => {
-            clearTimeout(timer);
-            set(true);
-            resolve(true);
-            return new Promise<void>((done) => (release = done));
-          })
-          .catch(() => resolve(false));
-      }),
-    releaseLeadership: () => {
-      abort.abort();
-      release?.();
-      release = null;
-      set(false);
-    },
-    isLeader: () => leader,
-    onLeadershipChange: (cb) => {
-      listeners.add(cb);
-      return () => void listeners.delete(cb);
-    },
-  };
 }
 
 export async function createStore(userId: string) {

@@ -83,7 +83,7 @@ function StoreProvider({ userId, children }: { userId: string; children: ReactNo
   );
 }
 
-/** One tab writes (see tabLock in store.ts); another tab says so instead of losing answers. */
+/** One tab writes (see data/tabLock.ts); another tab says so instead of losing answers. */
 function WriterOnly({ store, children }: { store: Store; children: ReactNode }) {
   const writer = useSyncExternalStore(store.onWriterChange, store.isWriter);
   if (writer) return children;
