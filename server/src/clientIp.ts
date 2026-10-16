@@ -10,8 +10,13 @@ const CLOUDFLARE_V4 = ["173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22", 
 const CLOUDFLARE_V6 = ["2400:cb00::/32", "2606:4700::/32", "2803:f800::/32", "2405:b500::/32", "2405:8100::/32", "2a06:98c0::/29", "2c0f:f248::/32"];
 
 const cloudflare = new BlockList();
-for (const r of CLOUDFLARE_V4) cloudflare.addSubnet(r.split("/")[0], Number(r.split("/")[1]), "ipv4");
-for (const r of CLOUDFLARE_V6) cloudflare.addSubnet(r.split("/")[0], Number(r.split("/")[1]), "ipv6");
+const addSubnet = (cidr: string, type: "ipv4" | "ipv6") => {
+  const [net, bits] = cidr.split("/");
+  if (net === undefined || bits === undefined) throw new Error(`not a CIDR range: ${cidr}`);
+  cloudflare.addSubnet(net, Number(bits), type);
+};
+for (const r of CLOUDFLARE_V4) addSubnet(r, "ipv4");
+for (const r of CLOUDFLARE_V6) addSubnet(r, "ipv6");
 
 export const fromCloudflare = (ip: string) => cloudflare.check(ip, ip.includes(":") ? "ipv6" : "ipv4");
 

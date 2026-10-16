@@ -29,8 +29,8 @@ test("every model call is logged with its cost and prompt version", async () => 
   await t.call("/api/ai/examples", { lang: "de", words: [{ lemma: "Haus", gloss: "house", seen: [] }], known: [] }, cookie);
   const [row] = await t.sql`select task, model, prompt_version, ok, usd from ai_request where user_id = ${id}`;
   expect(row).toMatchObject({ task: "examples", model: "claude-haiku-4-5", ok: true });
-  expect(row.prompt_version).toBeTruthy();
-  expect(Number(row.usd)).toBeGreaterThan(0);
+  expect(row?.prompt_version).toBeTruthy();
+  expect(Number(row?.usd)).toBeGreaterThan(0);
 });
 
 test("AI needs an account: anonymous learners and bad input are refused before any model call", async () => {

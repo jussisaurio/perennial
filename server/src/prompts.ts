@@ -15,7 +15,8 @@ export interface GenWord {
   gloss: string;
   pos: string;
   forms: string[];
-  notes?: string;
+  /** undefined when the model wrote none (the key then drops out of the JSON). */
+  notes?: string | undefined;
   examples: GenSentence[];
 }
 

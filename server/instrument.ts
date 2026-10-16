@@ -23,7 +23,7 @@ export function scrub<E extends Sentry.Event>(event: E): E {
     const headers = event.request.headers;
     if (headers) for (const k of Object.keys(headers)) if (isPrivateHeader(k)) delete headers[k];
   }
-  if (event.user) event.user = { id: event.user.id };
+  if (event.user) event.user = event.user.id === undefined ? {} : { id: event.user.id };
   return event;
 }
 

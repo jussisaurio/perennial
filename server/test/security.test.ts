@@ -28,7 +28,7 @@ async function aliceWithData() {
 }
 
 const TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
-const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.db(table)} where user_id = ${userId}`)[0].n);
+const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.db(table)} where user_id = ${userId}`)[0]?.n);
 
 describe("reads: shapes only ever contain your own rows", () => {
   test.each(TABLES)("%s", async (table) => {
@@ -74,7 +74,7 @@ describe("writes: every mutation is scoped to the session's user", () => {
     const [w] = await t.sql`select lemma, user_id from user_word where id = ${wordId}`;
     expect(w).toMatchObject({ lemma: "zorro", user_id: aliceId });
     const [r] = await t.sql`select grade from review where id = ${reviewId}`;
-    expect(r.grade).toBe(3);
+    expect(r?.grade).toBe(3);
   });
 
   test("a client can't choose whose row it writes", async () => {
@@ -84,7 +84,7 @@ describe("writes: every mutation is scoped to the session's user", () => {
     const r = review(W.c);
     await t.write(mallory, [{ ...r, row: { ...r.row, user_id: aliceId } }]);
     const [row] = await t.sql`select user_id from review where id = ${r.row.id}`;
-    expect(row.user_id).toBe(malloryId);
+    expect(row?.user_id).toBe(malloryId);
   });
 
   test("no session, no writes", async () => {

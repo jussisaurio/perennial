@@ -51,6 +51,9 @@ export function stopMockLLM() {
   mockProc = null;
 }
 
+/** The text before the first `sep` (all of it if there is none): a cookie's name=value, a name. */
+export const before = (text: string, sep: string) => (text.includes(sep) ? text.slice(0, text.indexOf(sep)) : text);
+
 export const unique = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}@example.com`;
 
 export async function startApp(overrides: Partial<Config> = {}) {
@@ -95,7 +98,7 @@ export async function startApp(overrides: Partial<Config> = {}) {
     const res = await fetch(url + path, {
       method: body === undefined ? "GET" : "POST",
       headers: { "content-type": "application/json", origin: config.appUrl, ...(cookie ? { cookie } : {}), ...headers },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? null : JSON.stringify(body),
     });
     const text = await res.text();
     // Tests read whatever JSON a route returns.
@@ -110,10 +113,10 @@ export async function startApp(overrides: Partial<Config> = {}) {
 
   /** Keep the session cookie the server sets (or the one we already had). */
   function cookieOf(res: Response, previous?: string) {
-    const set = res.headers.getSetCookie().map((c) => c.split(";")[0]).filter((c) => !c.endsWith("="));
+    const set = res.headers.getSetCookie().map((c) => before(c, ";")).filter((c) => !c.endsWith("="));
     if (!set.length) return previous;
     const jar = new Map((previous ?? "").split("; ").filter(Boolean).map((c) => [c.split("=")[0], c] as const));
-    for (const c of set) jar.set(c.split("=")[0], c);
+    for (const c of set) jar.set(before(c, "="), c);
     return [...jar.values()].join("; ");
   }
 
@@ -158,7 +161,13 @@ export async function startApp(overrides: Partial<Config> = {}) {
 
 /** Real Spanish deck word ids (writes refuse made-up ones), by short name: W.a, W.b, … */
 const ES_IDS = (JSON.parse(await Bun.file(new URL("../../decks/es/deck.json", import.meta.url)).text()) as { words: { id: string }[] }).words.map((w) => w.id);
-export const W = Object.fromEntries("abcdefghijklm".split("").map((k, i) => [k, ES_IDS[i]])) as Record<string, string>;
+/** The i-th of the 13 deck words below, wrapping around. */
+export const word = (i: number) => {
+  const id = ES_IDS[i % 13];
+  if (id === undefined) throw new Error("the Spanish deck has fewer than 13 words");
+  return id;
+};
+export const W = { a: word(0), b: word(1), c: word(2), d: word(3), e: word(4), f: word(5), g: word(6), h: word(7), i: word(8), j: word(9), k: word(10), l: word(11), m: word(12) };
 
 export const review = (wordId: string, extra: Record<string, unknown> = {}) => ({
   type: "review.insert",

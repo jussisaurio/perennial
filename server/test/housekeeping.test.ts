@@ -36,7 +36,7 @@ test("inactive anonymous learners are deleted with their data; active ones and a
 test("a second run while one holds the lock skips, and runs again once it is free", async () => {
   const other = await t.connection(); // the first run's connection
   try {
-    expect((await other.sql`select pg_try_advisory_lock(727002) as locked`)[0].locked).toBe(true);
+    expect((await other.sql`select pg_try_advisory_lock(727002) as locked`)[0]?.locked).toBe(true);
     expect(await housekeeping()).toEqual({ skipped: true });
   } finally {
     await other.sql`select pg_advisory_unlock(727002)`;

@@ -10,7 +10,7 @@
 
 import { afterAll, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
-import { mockLLM, review, stopMockLLM, unique, W } from "./helpers";
+import { before, mockLLM, review, stopMockLLM, unique, word } from "./helpers";
 
 type Span = { span_id: string; parent_span_id?: string; trace_id: string; op?: string; description?: string; data?: Record<string, unknown> };
 type Transaction = { transaction: string; contexts: { trace: Span }; spans: Span[] };
@@ -22,8 +22,13 @@ const ingest = Bun.serve({
   port: 0,
   async fetch(req) {
     const raw = new Uint8Array(await req.arrayBuffer());
-    const lines = new TextDecoder().decode(req.headers.get("content-encoding") === "gzip" ? gunzipSync(raw) : raw).split("\n");
-    for (let i = 1; i + 1 < lines.length; i += 2) if (JSON.parse(lines[i] ?? "{}").type === "transaction") transactions.push(JSON.parse(lines[i + 1] ?? "{}"));
+    // An envelope: its own header line, then a header and a payload line per item.
+    const lines = new TextDecoder().decode(req.headers.get("content-encoding") === "gzip" ? gunzipSync(raw) : raw).split("\n").slice(1);
+    for (const [i, header] of lines.entries()) {
+      const payload = lines[i + 1];
+      if (i % 2 || payload === undefined) continue;
+      if (JSON.parse(header).type === "transaction") transactions.push(JSON.parse(payload));
+    }
     return new Response("{}");
   },
 });
@@ -85,9 +90,9 @@ async function send(path: string, rid: string, body?: unknown, cookie?: string) 
   const res = await fetch(url + path, {
     method: body === undefined ? "GET" : "POST",
     headers: { "content-type": "application/json", origin: "http://localhost:5173", "x-request-id": rid, ...(cookie ? { cookie } : {}) },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? null : JSON.stringify(body),
   });
-  const set = res.headers.getSetCookie().map((c) => c.split(";")[0] ?? "").filter((c) => !c.endsWith("="));
+  const set = res.headers.getSetCookie().map((c) => before(c, ";")).filter((c) => !c.endsWith("="));
   return { res, cookie: set.length ? set.join("; ") : cookie };
 }
 
@@ -106,7 +111,7 @@ test("no request's facts or spans land on another request's line or trace", asyn
     for (let k = 0; k < 3; k++) {
       const writes = (i % 5) + 1 + k;
       const r = rid("write");
-      const out = await send("/api/write", r, { mutations: Array.from({ length: writes }, (_, j) => review(Object.values(W)[j % 13] ?? "")) }, anon.cookie);
+      const out = await send("/api/write", r, { mutations: Array.from({ length: writes }, (_, j) => review(word(j))) }, anon.cookie);
       expect(out.res.status).toBe(200);
       expected.set(r, { userId: anonId, writes });
     }

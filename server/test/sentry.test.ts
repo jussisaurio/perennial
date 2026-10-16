@@ -6,7 +6,7 @@
 
 import { afterAll, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
-import { mockLLM, review, stopMockLLM, unique, W } from "./helpers";
+import { before, mockLLM, review, stopMockLLM, unique, W, word } from "./helpers";
 
 type Span = { span_id: string; parent_span_id?: string; trace_id: string; op?: string; description?: string; data?: Record<string, unknown> };
 type Transaction = { transaction: string; contexts: { trace: Span }; spans: Span[] };
@@ -20,11 +20,14 @@ const ingest = Bun.serve({
   async fetch(req) {
     const raw = new Uint8Array(await req.arrayBuffer());
     const text = new TextDecoder().decode(req.headers.get("content-encoding") === "gzip" ? gunzipSync(raw) : raw);
-    const lines = text.split("\n");
-    for (let i = 1; i + 1 < lines.length; i += 2) {
-      const type = JSON.parse(lines[i]).type;
-      if (type === "transaction") transactions.push(JSON.parse(lines[i + 1]));
-      if (type === "event") errors.push(JSON.parse(lines[i + 1]));
+    // An envelope: its own header line, then a header and a payload line per item.
+    const lines = text.split("\n").slice(1);
+    for (const [i, header] of lines.entries()) {
+      const payload = lines[i + 1];
+      if (i % 2 || payload === undefined) continue;
+      const type = JSON.parse(header).type;
+      if (type === "transaction") transactions.push(JSON.parse(payload));
+      if (type === "event") errors.push(JSON.parse(payload));
     }
     return new Response("{}");
   },
@@ -72,7 +75,7 @@ const url = await new Promise<string>((resolve, reject) => {
 
 const post = async (path: string, body: unknown, cookie?: string) => {
   const res = await fetch(url + path, { method: "POST", headers: { "content-type": "application/json", origin: "http://localhost:5173", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) });
-  const set = res.headers.getSetCookie().map((c) => c.split(";")[0]).filter((c) => !c.endsWith("="));
+  const set = res.headers.getSetCookie().map((c) => before(c, ";")).filter((c) => !c.endsWith("="));
   return { res, cookie: set.length ? set.join("; ") : cookie };
 };
 
@@ -115,7 +118,7 @@ test("requests at the same time keep their own traces", async () => {
   // Learner i writes i + 1 reviews, all at once: each count must stay with its own trace.
   const learners = await Promise.all(Array.from({ length: 8 }, async () => (await post("/api/auth/sign-in/anonymous", {})).cookie));
   const before = transactions.length;
-  await Promise.all(learners.map((cookie, i) => post("/api/write", { mutations: Array.from({ length: i + 1 }, (_, j) => review(Object.values(W)[j % 13])) }, cookie)));
+  await Promise.all(learners.map((cookie, i) => post("/api/write", { mutations: Array.from({ length: i + 1 }, (_, j) => review(word(j))) }, cookie)));
   await until(() => transactions.slice(before).filter((t) => t.transaction === "POST /api/write").length === learners.length);
   for (const write of transactions.slice(before).filter((t) => t.transaction === "POST /api/write")) {
     const n = write.contexts.trace.data?.writes;

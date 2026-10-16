@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
-import { review, startApp, stopMockLLM, unique, W } from "./helpers";
+import { review, startApp, stopMockLLM, unique, W, word } from "./helpers";
 
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
@@ -45,10 +45,10 @@ test("anonymous progress moves into the account on sign-in, merged with what it 
   const reviews = await t.sql<{ word_id: string }>`select word_id from review where user_id = ${accountId} order by word_id`;
   expect(reviews.map((r) => r.word_id).sort()).toEqual([W.a, W.c].sort());
   const [course] = await t.sql`select minutes, door_open from course where user_id = ${accountId}`;
-  expect(course.minutes).toBe(10); // the account's own settings win
-  expect(course.door_open).toBe(true); // but a door opened without an account stays open (#315)
+  expect(course?.minutes).toBe(10); // the account's own settings win
+  expect(course?.door_open).toBe(true); // but a door opened without an account stays open (#315)
   const [state] = await t.sql`select status from word_state where user_id = ${accountId} and word_id = ${W.b}`;
-  expect(state.status).toBe("queued"); // the newer change wins
+  expect(state?.status).toBe("queued"); // the newer change wins
   expect((await t.sql`select 1 from "user" where id = ${anonId}`).length).toBe(0); // anonymous user gone
 });
 
@@ -60,14 +60,15 @@ test("a write racing the sign-in is moved into the account or refused, never sil
   // Code sent first, so the writes race only the linking itself.
   await t.sendCode(email, anon);
   const otp = t.codeFor(email);
-  const racing = Array.from({ length: 5 }, (_, i) => review([W.f, W.g, W.h, W.i, W.j][i]));
+  // W.f to W.j
+  const racing = Array.from({ length: 5 }, (_, i) => review(word(5 + i)));
   const [link, ...writes] = await Promise.all([t.call("/api/auth/sign-in/email-otp", { email, otp }, anon), ...racing.map((r) => t.write(anon, [r]))]);
   expect(link.status).toBe(200);
   const accountId = (await t.me(link.cookie!)).id;
   const kept = new Set((await t.sql<{ id: string }>`select id from review where user_id = ${accountId}`).map((r) => r.id));
   writes.forEach((w, i) => {
     expect([200, 401]).toContain(w.status);
-    if (w.status === 200) expect(kept.has(racing[i].row.id)).toBe(true);
+    if (w.status === 200) expect(kept.has(racing[i]?.row.id ?? "")).toBe(true);
   });
   // After linking, the anonymous cookie can't write rows that would vanish.
   expect((await t.write(anon, [review(W.k)])).status).toBe(401);

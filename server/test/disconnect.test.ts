@@ -35,7 +35,8 @@ async function lockUser(t: App, userId: string) {
   const conn = await t.connection();
   await conn.sql`begin`;
   await conn.sql`select id from "user" where id = ${userId} for update`;
-  const [{ pid }] = await conn.sql<{ pid: number }>`select pg_backend_pid() as pid`;
+  const pid = (await conn.sql<{ pid: number }>`select pg_backend_pid() as pid`)[0]?.pid;
+  if (pid === undefined) throw new Error("no backend pid");
   return {
     /** Resolves once a server query waits for our lock. */
     waited: () => until(async () => (await t.sql`select 1 from pg_stat_activity where ${pid} = any(pg_blocking_pids(pid))`).length > 0),

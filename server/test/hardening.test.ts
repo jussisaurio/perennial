@@ -4,7 +4,7 @@
 
 import { afterAll, describe, expect, test } from "bun:test";
 import { scrub, sentrySettings } from "../instrument";
-import { review, startApp, stopMockLLM, unique, W } from "./helpers";
+import { before, review, startApp, stopMockLLM, unique, W } from "./helpers";
 
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
@@ -38,7 +38,8 @@ describe("auth endpoints: an allow-list", () => {
     for (const e of ["POST /update-user", "POST /change-email", "POST /change-password", "GET /list-sessions", "POST /revoke-other-sessions", "POST /link-social", "POST /delete-user", "POST /sign-up/email", "POST /sign-in/email", "POST /email-otp/reset-password", "POST /delete-anonymous-user"]) expect(unused).toContain(e);
     for (const e of unused) {
       const [method, path] = e.split(" ");
-      const res = await fetch(`${t.url}/api/auth${path}`, { method, headers: { cookie, origin: t.config.appUrl, "content-type": "application/json" }, body: method === "GET" ? undefined : JSON.stringify({ name: "x", email: "x@example.com", password: "password123" }) });
+      if (method === undefined || path === undefined) throw new Error(`not "METHOD /path": ${e}`);
+      const res = await fetch(`${t.url}/api/auth${path}`, { method, headers: { cookie, origin: t.config.appUrl, "content-type": "application/json" }, body: method === "GET" ? null : JSON.stringify({ name: "x", email: "x@example.com", password: "password123" }) });
       expect({ e, status: res.status }).toEqual({ e, status: 404 });
     }
     // The used ones, with another method, are 404 too.
@@ -113,8 +114,10 @@ describe("no secrets in logs", () => {
     const logged = lines.filter((l) => !l.startsWith("[mail]"));
     expect(logged.some((l) => l.includes('"msg":"request"'))).toBe(true);
     expect(logged.some((l) => l.includes('"msg":"auth: probe"') && l.includes("boom"))).toBe(true);
-    const token = decodeURIComponent(cookie.match(/session_token=([^;]+)/)![1]);
-    for (const secret of [email, token, token.split(".")[0], ...codes]) {
+    const raw = cookie.match(/session_token=([^;]+)/)?.[1];
+    if (raw === undefined) throw new Error("no session cookie");
+    const token = decodeURIComponent(raw);
+    for (const secret of [email, token, before(token, "."), ...codes]) {
       expect(logged.filter((l) => l.includes(secret))).toEqual([]);
     }
   });
@@ -148,7 +151,8 @@ describe("wide events", () => {
     // The first write starts the course; the second only changes it.
     const [first, second] = at("/api/write");
     expect(first).toMatchObject({ userId: anonId, courseStarted: "de", writes: 2, writeTypes: "course.upsert:1 review.insert:1", writeChanged: true });
-    expect(second.courseStarted).toBeUndefined();
+    expect(second).toBeDefined();
+    expect(second?.courseStarted).toBeUndefined();
     expect(at("/api/auth/email-otp/send-verification-otp").at(-1)).toMatchObject({ otp: "sent" });
     // Email sign-in from the anonymous session: a new user, signed in, linked.
     expect(at("/api/auth/sign-in/email-otp").at(-1)).toMatchObject({ signup: "email", signin: "email", linkedFrom: anonId, status: 200 });
