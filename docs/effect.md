@@ -12,7 +12,7 @@ We use [Effect](https://effect.website) where the code does I/O. Errors, timeout
 |---|---|---|
 | Server (`server/`) | Yes | Its whole job is I/O: auth, database, AI spend, a streaming proxy. |
 | Wire contract (`contract/`) | Yes, Schema | One schema for every request body, answer and error code. The server decodes with it; the app will too. |
-| The app's I/O (`web/src/data/*`, later) | Yes | It already has hand-made timeouts, locks and retries. |
+| The app's I/O (`web/src/data/*`) | Yes | Timeouts, the tab lock and the server's errors become types. |
 | Pure code (`core/*`, `content/*`, FSRS, the planner) | No | It is pure and takes `now` as an argument. Effect would only add noise. |
 | React, TanStack DB, Electric wiring | No | They have the shape of their frameworks. Effect starts at the functions they call. |
 | The 3D garden | No | A frame loop gains nothing from fibers. |
@@ -23,6 +23,13 @@ Inside Effect code, plain TypeScript is fine: `null`, `if`, loops. We do not use
 
 - **Effect:** the HTTP edge (`server/src/app.ts`), settings (`config.ts`), logging and the request's context (`log.ts`, `request.ts`), the services and their layers (`services.ts`), and the start and stop of the process (`index.ts`).
 - **Not yet:** `sync.ts`, `ai.ts`, `auth.ts`, `housekeeping.ts` and `migrate.ts` are still Promise code on `Bun.SQL`. The edge calls them through `promise()` in `request.ts`. Part 2 makes them Effect services on `@effect/sql-pg`.
+
+### Where the app is now (#322, part 4)
+
+- **Effect:** `data/http.ts` (one `fetch` wrapper: answers and errors are checked with the contract, and errors are typed), `data/auth.ts` (deadlines for sign-in requests), `data/tabLock.ts` (the Web Lock as a scoped resource), and the write in `data/store.ts`.
+- **At the edge:** each exported function runs its Effect with `Effect.runPromise`. React and TanStack DB still get Promises. `runPromise` rejects with the typed error itself, so `instanceof ApiError` works there.
+- **Plain on purpose:** the voice wait in `ui/speech.ts`, the wait for an answer in `ui/useSessionRunner.ts`, the bot check in `data/captcha.ts`, the deck loader's cache in `data/deck.ts`, and the visibility check in `data/server.ts`. Effect would only add words there.
+- **Not `effect/http`:** a small `fetch` wrapper costs much less in the bundle, and we only need one POST and a few GETs.
 
 ## The patterns, one example each
 
