@@ -239,7 +239,7 @@ Upgrade Electric only on purpose: change the image tag, read the Electric releas
 |---|---|---|
 | `VITE_SENTRY_DSN` | empty (off) | Browser error reports (`@sentry/react`). The server reads the same variable at runtime and allows its ingest host (any region) in the CSP `connect-src`. |
 | `VITE_TURNSTILE_SITE_KEY` | empty (off) | Cloudflare Turnstile bot check before a new anonymous user and before a sign-in code. Set together with `TURNSTILE_SECRET_KEY` (the server refuses to start with only one). The server then allows `challenges.cloudflare.com` in the CSP.
-| `VITE_POSTHOG_KEY` | empty (off) | Turns on PostHog: no cookies, no autocapture, no session replay, Do Not Track respected, five named events. |
+| `VITE_POSTHOG_KEY` | empty (off) | Turns on PostHog: no cookies, no autocapture, no session replay, Do Not Track respected, a few named events. |
 | `VITE_POSTHOG_HOST` | `https://eu.i.posthog.com` | The PostHog host. When `VITE_POSTHOG_KEY` is set, the server allows this host in the CSP `connect-src`. |
 | `VITE_RELEASE` | `dev` | Release name in browser error reports. Set it to `${{RAILWAY_GIT_COMMIT_SHA}}` so that it matches the server's release. |
 
