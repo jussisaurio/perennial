@@ -219,7 +219,7 @@ export function keySpot(seed: string): KeySpot {
  * here today waits by it (the dog; the bird at dusk and night); from the
  * seventh, it glints whenever you face it. Calendar days, in local time.
  */
-export const KEY_HELP_DAYS = { visitors: 3, glint: 7 } as const;
+const KEY_HELP_DAYS = { visitors: 3, glint: 7 } as const;
 export interface KeyHelp {
   visitors: boolean;
   glint: boolean;

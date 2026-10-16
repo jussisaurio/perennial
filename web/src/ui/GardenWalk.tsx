@@ -91,7 +91,8 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   // Until the learner loads there are no plants (`source` is null), so nothing to water either.
   const chunk = learner ? nextChunk(learner, now) : null;
   const water = learner && chunk ? { label: chunk.state === "finish" ? `${chunkLabel(chunk)} · ${chunk.minutes} min` : chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
-  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} onExit={onExit} water={water} focus={focus} onTap={onTap} />;
+  const [hint] = useState(() => ({ show: !hintSeen(), moved: markHintSeen }));
+  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -145,7 +146,11 @@ const KEY_PLACE: Record<KeySpot, string> = {
   sunflower: "Something small glints by the sunflower.",
 };
 
-/** The controls hint shows on the first walk only (#334): it teaches the controls, and they stay the same. */
+/**
+ * The controls hint (#334) shows in the learner's own walk until they first
+ * move: it teaches the controls, and they stay the same. The landing page's
+ * walk shows it each time and never uses it up.
+ */
 const HINT_SEEN_KEY = "garden-hint-seen";
 
 function hintSeen(): boolean {
@@ -156,6 +161,17 @@ function hintSeen(): boolean {
     return false;
   }
 }
+
+function markHintSeen() {
+  try {
+    localStorage.setItem(HINT_SEEN_KEY, "1");
+  } catch {
+    // Not saved: it shows again next time.
+  }
+}
+
+/** The landing page's walk: the hint shows each time, and nothing is saved. */
+const SHOWCASE_HINT = { show: true, moved: () => {} };
 
 /** The landing page's walk: the door stays locked, and there is nothing to save. */
 const SHOWCASE_DOOR = { state: "locked" as const, open: () => {} };
@@ -175,6 +191,7 @@ export function GardenWalk({
   water,
   focus,
   onTap,
+  hint: hintFirst = SHOWCASE_HINT,
 }: {
   lang: string;
   source: PlantSource | null;
@@ -188,9 +205,11 @@ export function GardenWalk({
   focus?: string | null;
   /** A tap met something in the walk (or open ground to walk to), or the action button did something: what, for counting (#335). */
   onTap?: (verb: GardenVerb) => void;
+  /** Whether the controls hint shows, and what to do once the viewer first moves while it shows. */
+  hint?: { show: boolean; moved: () => void };
 }) {
   const [time, setTime] = useState<TimeOfDay>(initialTime);
-  const [hint, setHint] = useState(() => !hintSeen());
+  const [hint, setHint] = useState(hintFirst.show);
   const [detail, setDetail] = useState<Detail>(() => savedDetail() ?? "normal");
   const [sound] = useSound();
   const chooseDetail = (d: Detail) => {
@@ -213,7 +232,7 @@ export function GardenWalk({
   useEffect(() => {
     if (selectedId && !dialog.current!.contains(document.activeElement)) dialog.current!.focus({ preventScroll: true });
   }, [selectedId]);
-  const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => setHint(false) });
+  const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => moved() });
 
   useEffect(() => {
     if (!hint) return;
@@ -263,7 +282,7 @@ export function GardenWalk({
         return;
       case "walk":
         scene.current.walkTo(hit.x, hit.z);
-        setHint(false);
+        moved();
         return;
       case "scenery":
         // The garden itself (#74). Its tag shows for a moment and, with sound on, it says its word.
@@ -282,14 +301,11 @@ export function GardenWalk({
   }, [data]);
 
   const hintShown = hint && stats.total > 0 && !selected;
-  useEffect(() => {
-    if (!hintShown) return;
-    try {
-      localStorage.setItem(HINT_SEEN_KEY, "1");
-    } catch {
-      // Not saved: it shows again next time.
-    }
-  }, [hintShown]);
+  /** The viewer walked or looked: the hint goes and, if they saw it, it has done its job. */
+  const moved = () => {
+    if (hintShown) hintFirst.moved();
+    setHint(false);
+  };
 
   const step = (dir: 1 | -1) => {
     const ps = data?.l.plants;

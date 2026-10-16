@@ -281,8 +281,8 @@ test("a key left a week glints whenever you face it, from afar; a key left a day
   // Facing away: nothing calls from behind you.
   await page.evaluate(() => ((window as unknown as { __garden: { yaw: number } }).__garden.yaw += Math.PI));
   expect(await keyGlints(page)).toBe(false);
-  // No words in the walk say where it is.
-  await expect(page.locator(".gw-say, .gw-hint")).toHaveCount(0);
+  // No words in the walk say where it is: no line from the garden (the controls hint, if it shows, only teaches the controls).
+  await expect(page.locator(".gw-say")).toHaveCount(0);
 });
 
 test("a key left a few days: at dusk the bird waits by it, and by day it is back in its own spot", async ({ page }) => {

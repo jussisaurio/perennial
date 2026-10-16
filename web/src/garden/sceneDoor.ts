@@ -21,10 +21,15 @@ const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
 export const DOOR_REACH = 2.6;
 /** Near enough to the hidden key to be offered "Pick up the key" (m). */
 export const KEY_REACH = 2;
-/** A glint: a flash this long (s), this often (s). */
-export const GLINT = { flash: 0.5, every: 3.2 };
 /** Facing the key, for its late glint (#334): within this angle of straight ahead (its cosine, about 25°). */
 const FACING = Math.cos(0.44);
+/**
+ * The key's late glint (#334), the help a learner without the dog or the bird
+ * gets: on for `on` s in every `every` s, gently pulsing, and as wide as `size`
+ * times its distance (never under `min` m), so it stays about 25 px on a phone
+ * from anywhere in the garden. Its dark outline keeps it clear on sand and grass.
+ */
+const LATE = { on: 1.4, every: 3.2, size: 0.045, min: 0.18 };
 
 /**
  * The door in the hedge: "key" means the key is hidden in the garden; "held"
@@ -41,7 +46,8 @@ export class Door {
   key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
   swing: number | null = null;
   handle!: [number, number, number];
-  private help: KeyHelp | null = null;
+  /** The world's help for a key left waiting (#334); null without a key. The scene reads it too. */
+  help: KeyHelp | null = null;
 
   constructor(reducedMotion: boolean) {
     this.reducedMotion = reducedMotion;
@@ -94,9 +100,11 @@ export class Door {
       const mesh = sprites(T.pixelTexture(T.key()), [{ x, y: 0.03, z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
       c.mats.add(mesh.material);
       c.scene.add(mesh);
-      // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted: a glint is bright at dusk too.
-      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glint()), transparent: true, depthWrite: false, fog: false }));
-      glint.position.set(x + 0.08, 0.1, z);
+      // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted or fogged: a glint is bright at
+      // dusk too. Drawn over whatever stands in front (a bench leg, a bed): it is the help, so it must not hide.
+      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthTest: false, depthWrite: false, fog: false }));
+      glint.renderOrder = 10;
+      glint.position.set(x, 0.25, z);
       glint.visible = false;
       c.scene.add(glint);
       key = { mesh, glint, x, z };
@@ -134,9 +142,9 @@ export class Door {
     const d = Math.hypot(dx, dz);
     // Forward is -z at yaw 0.
     const facing = (-Math.sin(f.yaw) * dx - Math.cos(f.yaw) * dz) / d > FACING;
-    const k = f.elapsed % GLINT.every;
-    key.glint.visible = !!this.help?.glint && facing && d >= KEY_REACH && d < FOG_FAR && (this.reducedMotion || k < GLINT.flash);
-    // Bigger with distance, so it still reads as a glint across the garden.
-    key.glint.scale.setScalar((this.reducedMotion ? 0.12 : 0.04 + 0.16 * Math.sin((Math.PI * k) / GLINT.flash)) * Math.max(1, d / 5));
+    const k = f.elapsed % LATE.every;
+    key.glint.visible = !!this.help?.glint && facing && d >= KEY_REACH && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
+    const pulse = this.reducedMotion ? 1 : 0.8 + 0.2 * Math.sin((Math.PI * k) / LATE.on);
+    key.glint.scale.setScalar(Math.max(LATE.min, LATE.size * d) * pulse);
   }
 }

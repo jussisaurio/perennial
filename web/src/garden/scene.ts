@@ -16,7 +16,7 @@ import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
-import { Door, DOOR, DOOR_REACH, GLINT, KEY_REACH } from "./sceneDoor";
+import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
 import { TAP_PRIORITY, type Conditions, type Frame, type Part, type TapHit } from "./scenePart";
@@ -96,8 +96,8 @@ const GROUND_REACH = 1.5;
 const DOOR_STAND = 1.4;
 /** A walk to the key stops this short of it (m), so it is still in view, in reach (KEY_REACH). */
 const KEY_STAND = 1;
-/** How often the thing in reach glints (s): more often than the key's late help (sceneDoor.ts GLINT), as it is right there. */
-const CUE_EVERY = 1.6;
+/** The thing in reach glints (#334): a flash this long (s), this often (s); more often than the key's late help, as it is right there. */
+const CUE = { flash: 0.5, every: 1.6 };
 /** Near enough to the bench (m, from its middle) to sit on it (#334). */
 const BENCH_REACH = 1.6;
 /** Sitting on the bench (#334): the eye's height, where you sit along the seat (beside the cat's place), and how fast you sit down (per second). */
@@ -223,8 +223,7 @@ export class GardenScene {
 
   /** The help the world gives for a key left waiting (#334), while it still lies in the garden. */
   private get keyHelp(): KeyHelp | null {
-    const d = this.visitors.door;
-    return typeof d === "object" && this.door.state === "key" ? d.help : null;
+    return this.door.state === "key" ? this.door.help : null;
   }
 
   /** The orchard's trees, for walking round their trunks: none while the door is shut. */
@@ -1164,8 +1163,8 @@ export class GardenScene {
     for (const part of this.parts) part.tick?.(frame);
     // The thing in reach glints now and then (#334); with reduced motion, a still glint.
     if (this.cue.visible) {
-      const k = t % CUE_EVERY;
-      this.cue.scale.setScalar(this.reducedMotion ? 0.12 : k < GLINT.flash ? 0.04 + 0.16 * Math.sin((Math.PI * k) / GLINT.flash) : 0);
+      const k = t % CUE.every;
+      this.cue.scale.setScalar(this.reducedMotion ? 0.12 : k < CUE.flash ? 0.04 + 0.16 * Math.sin((Math.PI * k) / CUE.flash) : 0);
     }
     if (this.selected) {
       const p = this.selected;

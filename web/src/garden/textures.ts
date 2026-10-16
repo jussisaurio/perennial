@@ -541,6 +541,27 @@ export function marker(): HTMLCanvasElement {
   return c;
 }
 
+/** The key's late glint (#334): a warm four-point sparkle with a dark outline, so it shows on pale sand and on grass. */
+export function sparkle(): HTMLCanvasElement {
+  const rows = [
+    ".....d.....",
+    "....dyd....",
+    "....dyd....",
+    "...dyWyd...",
+    "..ddyWydd..",
+    "ddyyWWWyydd",
+    "..ddyWydd..",
+    "...dyWyd...",
+    "....dyd....",
+    "....dyd....",
+    ".....d.....",
+  ];
+  const color: Record<string, string> = { d: "#4a2410", y: "#f2a531", W: "#fffbe0" };
+  const [c, ctx] = canvas(11, 11);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, color[ch])));
+  return c;
+}
+
 /** Where a tap sends you (#336): a small pale ring on the ground, seen from above. */
 export function spot(): HTMLCanvasElement {
   const rows = ["...####...", ".##....##.", "#........#", "#........#", ".##....##.", "...####..."];

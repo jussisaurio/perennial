@@ -356,15 +356,30 @@ test("by the bench the action button sits you down, facing the pond; it or a ste
   expect((await scene()).seated).toBe(false);
 });
 
-test("the controls hint shows on the first walk only (#334)", async ({ page }) => {
+test("the controls hint shows in the learner's walk until they first move; the landing page's walk does not use it up (#334)", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  const hint = page.locator(".gw-hint");
+  const walkIn = async () => {
+    await page.getByRole("button", { name: "Walk in your garden" }).click();
+    await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+    await page.waitForFunction(() => "__garden" in window);
+  };
+  // The landing page's walk: the hint shows, and moving there does not use up the learner's.
+  await page.goto("/");
+  await page.getByRole("button", { name: "Walk through this garden in 3D" }).click();
+  await expect(hint).toContainText("Walk:", { timeout: 20_000 });
+  await page.keyboard.press("KeyW");
+  await expect(hint).toHaveCount(0);
+  // The learner's own walk: the hint stays until they move, even across walks.
   await page.goto("/?demo=es:30#/today");
-  await page.getByRole("button", { name: "Walk in your garden" }).click();
-  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator(".gw-hint")).toContainText("Walk:");
+  await walkIn();
+  await expect(hint).toContainText("Walk:");
   await page.getByRole("button", { name: "Back" }).click();
-  await page.getByRole("button", { name: "Walk in your garden" }).click();
-  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => "__garden" in window);
-  await expect(page.locator(".gw-hint")).toHaveCount(0);
+  await walkIn();
+  await expect(hint).toContainText("Walk:");
+  await page.keyboard.press("KeyW");
+  await expect(hint).toHaveCount(0);
+  await page.getByRole("button", { name: "Back" }).click();
+  await walkIn();
+  await expect(hint).toHaveCount(0);
 });
