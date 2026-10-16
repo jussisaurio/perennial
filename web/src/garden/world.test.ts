@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { rng } from "../lib/seed";
 import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
-import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
+import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
@@ -251,6 +251,18 @@ describe("the hidden key (#315)", () => {
         const k = keyAt(l, spot);
         expect(Math.hypot(k.x - l.gate.x, k.z - l.bounds.maxZ)).toBeGreaterThan(4);
       }
+  });
+
+  test("a key left waiting gets help from the world, late: visitors from the third day, a glint from the seventh (#334)", () => {
+    // Late evening when the key came, early morning now: calendar days, not 24-hour spans.
+    const since = new Date(2026, 9, 1, 23, 30).getTime();
+    const on = (day: number, hour: number) => keyHelp(since, new Date(2026, 9, day, hour).getTime());
+    expect(on(1, 23)).toEqual({ visitors: false, glint: false });
+    expect(on(3, 23)).toEqual({ visitors: false, glint: false });
+    expect(on(4, 1)).toEqual({ visitors: true, glint: false });
+    expect(on(7, 23)).toEqual({ visitors: true, glint: false });
+    expect(on(8, 0)).toEqual({ visitors: true, glint: true });
+    expect(on(40, 12)).toEqual({ visitors: true, glint: true });
   });
 
   test("a learner always gets the same spot, and learners get different ones", () => {

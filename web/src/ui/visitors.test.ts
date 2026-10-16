@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { deriveMemory, wordState } from "../core/memory";
 import type { ReviewRow } from "../data/rows";
 import { milestoneLine } from "../garden/visitors";
-import { knownAt, knownWords } from "./visitors";
+import { broughtAt, knownAt, knownWords } from "./visitors";
 
 const DAY = 86_400_000;
 const start = new Date(2026, 0, 1, 9).getTime();
@@ -76,5 +76,15 @@ describe("known words for unlocks, milestones and the frog", () => {
     expect(k.count).toBe(2);
     expect(k.croaks).toEqual(["noun-0", "verb-1"]);
     expect(k.lemmas).toEqual(new Set(["noun-0", "verb-1"]));
+  });
+});
+
+describe("when a garden word brought its visitor", () => {
+  test("its first good reading answer; a wrong one or a listening one does not count", () => {
+    const rows = [{ ...review("llave", 1), grade: 1 }, review("llave", 0, "listen"), review("llave", 5), review("llave", 2)];
+    const l = { reviewsByWord: new Map([["llave", rows]]) };
+    expect(broughtAt(l, "llave")).toBe(start + 2 * DAY);
+    expect(broughtAt(l, "casa")).toBeNull();
+    expect(broughtAt({ reviewsByWord: new Map([["llave", [{ ...review("llave", 1), grade: 2 }]]]) }, "llave")).toBeNull();
   });
 });
