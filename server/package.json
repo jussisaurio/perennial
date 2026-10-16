@@ -19,6 +19,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
     "@effect/platform-bun": "4.0.0",
+    "@effect/sql-pg": "4.0.0",
     "@electric-sql/client": "1.5.28",
     "@sentry/bun": "11",
     "better-auth": "1.7.7",

@@ -7,7 +7,8 @@ import { App, AppLive, BunServerLive, HttpLive } from "../src/app";
 import { AppConfig, loadConfig, type Config } from "../src/config";
 import { LoggerLive } from "../src/log";
 import { OutboxMailer } from "../src/mail";
-import { migrate } from "../src/migrate";
+import { DatabaseLive } from "../src/db";
+import { Migrations, MigrationsLive } from "../src/migrate";
 import { Ai, Auth, Database, Mail, ServicesLive } from "../src/services";
 
 process.env.LOG_LEVEL ??= "silent";
@@ -51,18 +52,20 @@ export const unique = (prefix: string) => `${prefix}-${crypto.randomUUID().slice
 export async function startApp(overrides: Partial<Config> = {}) {
   const config = loadConfig({ dev: true, anthropic: { apiKey: "test-key", baseURL: await mockLLM(), model: "claude-haiku-4-5" }, ...overrides });
   const sql = new Bun.SQL(config.databaseUrl, { max: 5 });
-  await migrate(sql);
   // The server as index.ts runs it (Effect's Bun server), with these settings and this pool.
   const layer = HttpLive.pipe(
     Layer.provideMerge(BunServerLive(0)),
     Layer.provideMerge(AppLive),
     Layer.provideMerge(ServicesLive),
+    Layer.provideMerge(MigrationsLive),
+    Layer.provideMerge(DatabaseLive),
     Layer.provideMerge(Layer.succeed(Database, sql)),
     Layer.provideMerge(Layer.succeed(AppConfig, config)),
     Layer.provideMerge(LoggerLive),
   );
   const scope = Effect.runSync(Scope.make());
   const context = await Effect.runPromise(Layer.buildWithScope(layer, scope));
+  await Effect.runPromise(Context.get(context, Migrations).run());
   const address = Context.get(context, HttpServer.HttpServer).address;
   if (address._tag === "UnixPathAddress") throw new Error("the test server listens on a port");
   const url = `http://localhost:${address.port}`;
