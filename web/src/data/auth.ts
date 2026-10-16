@@ -4,6 +4,8 @@
 
 import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
+import { Clock, Effect, Fiber, Schema } from "effect";
+import { UserId } from "perennial-contract";
 import { linkAccount, reportSlowAuth, track } from "../observability";
 import { captchaHeaders } from "./captcha";
 import { adoptOnDevice, clearOutboxNow, forgetOnDevice, keepOnDevice, stopSyncNow } from "./device";
@@ -11,12 +13,21 @@ import { adoptOnDevice, clearOutboxNow, forgetOnDevice, keepOnDevice, stopSyncNo
 export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
 
 export interface SessionUser {
-  id: string;
+  id: UserId;
   email: string | null;
   anonymous: boolean;
 }
 
-const toUser = (u: { id: string; email: string; isAnonymous?: boolean | null }): SessionUser => ({ id: u.id, email: u.isAnonymous ? null : u.email, anonymous: !!u.isAnonymous });
+/** What the app reads of Better Auth's session user. */
+const AuthUser = Schema.Struct({ id: UserId, email: Schema.String, isAnonymous: Schema.optional(Schema.NullOr(Schema.Boolean)) });
+
+// A session user without these is a bug in Better Auth's answer: it throws, loudly.
+const decodeUser = Schema.decodeUnknownSync(AuthUser);
+
+const toUser = (raw: unknown): SessionUser => {
+  const u = decodeUser(raw);
+  return { id: u.id, email: u.isAnonymous ? null : u.email, anonymous: u.isAnonymous === true };
+};
 
 /** The signed-in user (anonymous or not), or null. Re-renders on sign-in/out. */
 // Pending means the first session check, nothing later. Better Auth checks the
@@ -31,11 +42,13 @@ export function useUser(): { user: SessionUser | null; pending: boolean } {
   return { user: data?.user ? toUser(data.user) : null, pending: isPending && !sessionKnown };
 }
 
+/** The auth client's session store: no session (null) until it knows of one. */
+const SessionAtom = Schema.Struct({ data: Schema.NullOr(Schema.Struct({ user: Schema.Struct({ id: UserId }) })) });
+const decodeSessionAtom = Schema.decodeUnknownSync(SessionAtom);
+
 /** The signed-in user's id as the auth client last saw it (no request), or null. */
-export function sessionUserId(): string | null {
-  const atom = (authClient.$store.atoms as Record<string, { get(): unknown } | undefined>).session;
-  const s = atom?.get() as { data?: { user?: { id?: string } } | null } | undefined;
-  return s?.data?.user?.id ?? null;
+export function sessionUserId(): UserId | null {
+  return decodeSessionAtom(authClient.$store.atoms.session?.get()).data?.user.id ?? null;
 }
 
 /** The signed-in user (asks the server), or null. */
@@ -53,45 +66,31 @@ export async function ensureUser(): Promise<SessionUser> {
   return toUser(r.data.user);
 }
 
-export class AuthError extends Error {
-  readonly code: string;
-  constructor(code: string, message: string) {
-    super(message);
-    this.code = code;
-  }
-}
+/** A refusal the learner can act on: `message` says what to do. */
+export class AuthError extends Schema.TaggedError<AuthError>()("AuthError", { code: Schema.String, message: Schema.String }) {}
 
 // A request can hang with no answer and no error: seen on iPhones, likely
 // HTTP/3 through Cloudflare (#312). The server answers in under a second, so
 // after 20 s we stop waiting: a hung request must not leave the form stuck.
-const AUTH_TIMEOUT_MS = 20_000;
+const AUTH_TIMEOUT = "20 seconds";
 // Halfway there, Sentry gets one report, so we learn how often this happens.
-const SLOW_REPORT_MS = 10_000;
-
-/** No answer within AUTH_TIMEOUT_MS. */
-class TimedOut extends Error {}
+const SLOW_REPORT = "10 seconds";
 
 /**
- * Runs Better Auth requests with a deadline. `fn` passes `signal` to each
- * request it makes. Uses setTimeout, not AbortSignal.timeout, so tests can
- * move the clock.
+ * A Better Auth request with a deadline: it fails with TimeoutError, and its
+ * signal aborts the fetch. Effect's clock and timers, so tests can move time.
  */
-async function withTimeout<T>(step: "send" | "sign-in", path: string, fn: (signal: AbortSignal) => Promise<T>): Promise<T> {
-  const controller = new AbortController();
-  const started = performance.now();
-  const slow = setTimeout(() => reportSlowAuth(step, path, Math.round(performance.now() - started), protocolOf(path)), SLOW_REPORT_MS);
-  const deadline = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
-  try {
-    // An abort always throws here (the client has no catchAllError), never comes back as `error`.
-    return await fn(controller.signal);
-  } catch (e) {
-    if (controller.signal.aborted) throw new TimedOut();
-    throw e;
-  } finally {
-    clearTimeout(slow);
-    clearTimeout(deadline);
-  }
-}
+const timed = <A>(step: "send" | "sign-in", path: string, send: (signal: AbortSignal) => Promise<A>) =>
+  Effect.gen(function* () {
+    const started = yield* Clock.currentTimeMillis;
+    const slow = yield* Effect.sleep(SLOW_REPORT).pipe(
+      Effect.andThen(Clock.currentTimeMillis),
+      Effect.map((now) => reportSlowAuth(step, path, now - started, protocolOf(path))),
+      Effect.forkChild({ startImmediately: true }),
+    );
+    // A failed request (not a refusal: the client has no catchAllError) rejects; the screens say "try again".
+    return yield* Effect.tryPromise(send).pipe(Effect.timeout(AUTH_TIMEOUT), Effect.ensuring(Fiber.interrupt(slow)));
+  });
 
 /**
  * The protocol (h3, h2) of the last finished request to `path`, or else to any
@@ -110,69 +109,63 @@ function protocolOf(path: string): string | undefined {
  * Sends a sign-in code. "maybe-sent" means no answer came in time: the code
  * may still arrive, so the learner can enter it or ask again.
  */
-export async function sendCode(email: string): Promise<"sent" | "maybe-sent"> {
-  track("signin_code_requested");
-  const headers = await captchaHeaders();
-  try {
-    const r = await withTimeout("send", "/email-otp/send-verification-otp", (signal) => authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in", fetchOptions: { headers, signal } }));
-    if (r.error) throw new AuthError(r.error.code ?? "send_failed", r.error.status === 429 ? "Too many codes. Wait a few minutes, then try again." : "Could not send the code. Check the email address.");
-    return "sent";
-  } catch (e) {
-    if (e instanceof TimedOut) return "maybe-sent";
-    throw e;
-  }
-}
+export const sendCode = (email: string): Promise<"sent" | "maybe-sent"> =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      track("signin_code_requested");
+      // The bot check failing rejects; the screens say "try again".
+      const headers = yield* Effect.tryPromise(captchaHeaders);
+      return yield* timed("send", "/email-otp/send-verification-otp", (signal) => authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in", fetchOptions: { headers, signal } })).pipe(
+        Effect.flatMap((r) =>
+          r.error
+            ? Effect.fail(new AuthError({ code: r.error.code ?? "send_failed", message: r.error.status === 429 ? "Too many codes. Wait a few minutes, then try again." : "Could not send the code. Check the email address." }))
+            : Effect.succeed("sent" as const),
+        ),
+        Effect.catchTag("TimeoutError", () => Effect.succeed("maybe-sent" as const)),
+      );
+    }),
+  );
 
-const tooLong = () => new AuthError("timeout", "Signing in took too long. Check your internet connection, then try again. If the code does not work, send the code again.");
+const tooLong = () => new AuthError({ code: "timeout", message: "Signing in took too long. Check your internet connection, then try again. If the code does not work, send the code again." });
+
+/** The session's user, as the server says now. No answer in time is tooLong. */
+const askSession = timed("sign-in", "/get-session", (signal) => authClient.getSession({ fetchOptions: { signal } })).pipe(
+  Effect.map((s) => (s.data?.user ? toUser(s.data.user) : null)),
+  Effect.catchTag("TimeoutError", () => Effect.fail(tooLong())),
+);
 
 /** The user the session now has, if it is the account for `email`; else an AuthError. */
-async function signedInAs(email: string): Promise<SessionUser> {
-  let s;
-  try {
-    s = await withTimeout("sign-in", "/get-session", (signal) => authClient.getSession({ fetchOptions: { signal } }));
-  } catch (e) {
-    if (e instanceof TimedOut) throw tooLong();
-    throw e;
-  }
-  const u = s.data?.user;
-  if (u && !u.isAnonymous && u.email.toLowerCase() === email.toLowerCase()) return toUser(u);
-  throw tooLong();
-}
+const signedInAs = (email: string) =>
+  askSession.pipe(Effect.flatMap((u) => (u && !u.anonymous && u.email?.toLowerCase() === email.toLowerCase() ? Effect.succeed(u) : Effect.fail(tooLong()))));
 
-export async function signInWithCode(email: string, otp: string): Promise<SessionUser> {
-  const started = performance.now();
-  let before;
-  try {
-    before = (await withTimeout("sign-in", "/get-session", (signal) => authClient.getSession({ fetchOptions: { signal } }))).data?.user;
-  } catch (e) {
-    // Nothing was sent yet, so there is nothing to recover.
-    if (e instanceof TimedOut) throw tooLong();
-    throw e;
-  }
-  let user: SessionUser;
-  let timedOut = false;
-  try {
-    const r = await withTimeout("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } }));
-    if (r.error || !r.data) throw new AuthError(r.error?.code ?? "sign_in_failed", r.error?.status === 429 ? "Too many tries. Wait a few minutes." : "That code is not correct, or it has expired.");
-    user = toUser(r.data.user);
-  } catch (e) {
-    if (!(e instanceof TimedOut)) throw e;
-    // The server may have signed us in and only the answer was lost: ask it.
-    user = await signedInAs(email);
-    timedOut = true;
-  }
-  if (before?.isAnonymous) {
-    track("email_added");
-    linkAccount(user.id);
-    // Their progress moves into the account on the server; their unsent writes follow here.
-    adoptOnDevice(before.id, user.id);
-  }
-  track("signin_done", { ms: Math.round(performance.now() - started), timedOut });
-  // The lost answer would have told the app the user changed. Reload as the
-  // account now (after the adoption above): a session refetch could hang too.
-  if (timedOut) location.reload();
-  return user;
-}
+export const signInWithCode = (email: string, otp: string): Promise<SessionUser> =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const started = yield* Clock.currentTimeMillis;
+      // Nothing was sent yet, so there is nothing to recover.
+      const before = yield* askSession;
+      const { user, timedOut } = yield* timed("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } })).pipe(
+        Effect.flatMap((r) =>
+          r.error || !r.data
+            ? Effect.fail(new AuthError({ code: r.error?.code ?? "sign_in_failed", message: r.error?.status === 429 ? "Too many tries. Wait a few minutes." : "That code is not correct, or it has expired." }))
+            : Effect.succeed({ user: toUser(r.data.user), timedOut: false }),
+        ),
+        // The server may have signed us in and only the answer was lost: ask it.
+        Effect.catchTag("TimeoutError", () => signedInAs(email).pipe(Effect.map((user) => ({ user, timedOut: true })))),
+      );
+      if (before?.anonymous) {
+        track("email_added");
+        linkAccount(user.id);
+        // Their progress moves into the account on the server; their unsent writes follow here.
+        adoptOnDevice(before.id, user.id);
+      }
+      track("signin_done", { ms: (yield* Clock.currentTimeMillis) - started, timedOut });
+      // The lost answer would have told the app the user changed. Reload as the
+      // account now (after the adoption above): a session refetch could hang too.
+      if (timedOut) location.reload();
+      return user;
+    }),
+  );
 
 /** Signs out, and forgets this user's data on this device (see device.ts). */
 export async function signOut() {
