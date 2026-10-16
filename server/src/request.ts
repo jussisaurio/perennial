@@ -44,17 +44,18 @@ export function record(ctx: RequestInfo, fields: Fields) {
  * the fiber that released it.
  */
 export const inSentryScope = <T>(ctx: RequestInfo, fn: () => T): T =>
+  // null (Sentry is off): no active span, so nothing is taken from AsyncLocalStorage.
   Sentry.withIsolationScope(ctx.sentry.isolationScope, () => Sentry.withScope(ctx.sentry.scope, () => Sentry.withActiveSpan(ctx.sentry.rootSpan ?? null, fn)));
 
 /**
- * A Sentry span around `effect`, a child of the request's root span (given
- * explicitly, see inSentryScope). It ends when the effect does, marked as an
+ * A Sentry span around `effect`, a child of the request's root span (made in
+ * inSentryScope, which sets the root as the active span). It ends when the effect does, marked as an
  * error if the effect failed, as Sentry.startSpan marks a throw.
  */
 export const sentrySpan = <A, E, R>(options: { name: string; op: string; attributes?: Record<string, string | number | boolean> }, effect: Effect.Effect<A, E, R>) =>
   RequestContext.use((ctx) =>
     Effect.acquireUseRelease(
-      Effect.sync(() => inSentryScope(ctx, () => Sentry.startInactiveSpan({ ...options, parentSpan: ctx.sentry.rootSpan ?? null }))),
+      Effect.sync(() => inSentryScope(ctx, () => Sentry.startInactiveSpan(options))),
       () => effect,
       (span, exit) =>
         Effect.sync(() => {

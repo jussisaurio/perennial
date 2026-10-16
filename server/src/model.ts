@@ -42,12 +42,12 @@ export const ModelLive = Layer.effect(
 
     const ask = Effect.fn("Model.ask")(function* <S extends Shape>(task: string, schema: S, prompt: { readonly system: string; readonly user: string }) {
       const ctx = yield* RequestContext;
-      // The span's parent is the request's root span, given explicitly; the
-      // SDK's HTTP call (Sentry's fetch span) then hangs under it.
+      // In the request's scope, the span's parent is the request's root span
+      // (inSentryScope), and the SDK's HTTP call (Sentry's fetch span) hangs under it.
       const res = yield* Effect.tryPromise({
         try: () =>
           inSentryScope(ctx, () =>
-            Sentry.startSpan({ name: `ai ${task}`, op: "ai.generate", attributes: { model }, parentSpan: ctx.sentry.rootSpan ?? null }, () =>
+            Sentry.startSpan({ name: `ai ${task}`, op: "ai.generate", attributes: { model } }, () =>
               client.messages.parse({
                 model,
                 max_tokens: 16000,
