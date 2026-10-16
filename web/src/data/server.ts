@@ -9,32 +9,29 @@
 // An app older than minClientVersion gets the same banner (writes are also
 // refused with 426 until it reloads).
 
+import { Effect, Option, Schema } from "effect";
+import { ServerInfo } from "perennial-contract";
 import { useSyncExternalStore } from "react";
 import { APP_VERSION, RELEASE } from "../version";
-import { reloadNeeded } from "./http";
+import { reloadNeeded, request } from "./http";
 
-export interface Features {
-  /** Perennial AI (words from your own texts, new sentences). */
-  ai: boolean;
-}
-interface ServerInfo {
-  release: string;
-  minClientVersion: string;
-  features: Features;
-}
+/** What the server can do now. `ai`: Perennial AI (words from your own texts, new sentences). */
+export type Features = ServerInfo["features"];
 
 const KEY = "perennial-server";
 const OFF: Features = { ai: false };
+const Kept = Schema.fromJsonString(ServerInfo);
 
 let features: Features = cached() ?? OFF;
 const listeners = new Set<() => void>();
 let fetched = false;
 
+/** The last answer, kept from an earlier visit. Not there, or not readable (no storage, an old shape): null. */
 function cached(): Features | null {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? "null") as ServerInfo | null;
-    return v?.features ? { ...OFF, ...v.features } : null;
+    return Option.getOrNull(Option.map(Schema.decodeUnknownOption(Kept)(localStorage.getItem(KEY)), (info) => info.features));
   } catch {
+    // No storage (private mode): nothing was kept.
     return null;
   }
 }
@@ -48,21 +45,17 @@ export function versionAtLeast(v: string, min: string): boolean {
 }
 
 async function load() {
+  // Offline, or an error answer: keep the last known one. An answer that breaks the contract rejects (a bug).
+  const info = await Effect.runPromise(request(ServerInfo, "/api/server").pipe(Effect.catch(() => Effect.succeed(null))));
+  if (!info) return;
   try {
-    const res = await fetch("/api/server");
-    if (!res.ok) return;
-    const info = (await res.json()) as ServerInfo;
-    try {
-      localStorage.setItem(KEY, JSON.stringify(info));
-    } catch {
-      // Not kept for next time; fine.
-    }
-    features = { ...OFF, ...info.features };
-    for (const l of listeners) l();
-    if (!versionAtLeast(APP_VERSION, info.minClientVersion) || newDeploy(info.release)) reloadNeeded.dispatchEvent(new Event("reload"));
+    localStorage.setItem(KEY, JSON.stringify(info));
   } catch {
-    // Offline: keep the last known answer.
+    // Not kept for next time; fine.
   }
+  features = info.features;
+  for (const l of listeners) l();
+  if (!versionAtLeast(APP_VERSION, info.minClientVersion) || newDeploy(info.release)) reloadNeeded.dispatchEvent(new Event("reload"));
 }
 
 /** A different, real release on the server than the one this app came from. */

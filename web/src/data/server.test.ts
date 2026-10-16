@@ -1,8 +1,5 @@
-import { expect, mock, test } from "bun:test";
-
-// Only the pure parts are tested here.
-mock.module("./http", () => ({ reloadNeeded: new EventTarget() }));
-const { newDeploy, versionAtLeast } = await import("./server");
+import { expect, test } from "bun:test";
+import { newDeploy, versionAtLeast } from "./server";
 
 test("a new deploy: a different real release than the one this app was built from", () => {
   expect(newDeploy("abc123", "abc123")).toBe(false);
