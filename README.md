@@ -19,11 +19,12 @@ Anki; see [DESIGN.md](DESIGN.md) for what we changed and why.
 decks/<lang>/deck.json      the shared course: static JSON, built into the app
 web/  (Vite + React)        TanStack DB collections fed by Electric shapes; a write queue
 server/  (Bun)              Better Auth, Electric shape proxy, /api/write, Perennial AI, serves web/dist
+contract/                   the wire contract: every request, answer and error code, as Effect Schemas
 Postgres + Electric         learner data; Electric streams each learner's rows to their devices
 ```
 
 - **Decks are content, not user data.** The course is static JSON in `decks/`, built into the app. There is no AI at runtime for the course. Format and rules: [docs/schema.md](docs/schema.md).
-- **Server** (`server/`): Bun, Postgres through `Bun.sql`, plain SQL migrations in `server/migrations/`.
+- **Server** (`server/`): Bun, [Effect](docs/effect.md) for the HTTP edge, settings and logs, Postgres through `Bun.sql`, plain SQL migrations in `server/migrations/`. Where Effect is used and where it is not: [docs/effect.md](docs/effect.md).
   - **Accounts:** [Better Auth](https://better-auth.com). The first write ("Start learning") creates an anonymous user. Signing in with an email code moves the progress into the real account. Anonymous learners with no activity for 60 days are deleted by a daily job (`server/src/housekeeping.ts`).
   - **Reads:** `/api/shape` is an auth proxy in front of [Electric](https://electric-sql.com). The shape is always the server's own (`where user_id = <session user>`), never the client's.
   - **Writes:** `POST /api/write` takes a batch of mutations, checks them, scopes them to the session user, and applies them in one transaction. It returns the Postgres transaction id.
