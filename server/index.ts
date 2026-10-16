@@ -3,11 +3,12 @@
 // Error reporting is set up in instrument.ts (preloaded, see package.json).
 
 import { BunRuntime } from "@effect/platform-bun";
-import { Cause, Effect, Exit, Layer, Logger } from "effect";
+import * as Sentry from "@sentry/bun";
+import { Cause, Effect, Exit, Layer } from "effect";
 import { HttpServer } from "effect/http";
 import { AppLive, BunServerLive, HttpLive } from "./src/app";
-import { AppConfig, AppConfigFromEnv } from "./src/config";
-import { log, logger } from "./src/log";
+import { AppConfig, AppConfigFromEnv, ConfigProblems } from "./src/config";
+import { log, LoggerLive } from "./src/log";
 import { Ai, DatabaseLive, ServicesLive } from "./src/services";
 import { watchEventLoop } from "./src/watchdog";
 
@@ -42,7 +43,7 @@ const Main = Layer.mergeAll(Started, Watchdog).pipe(
   Layer.provideMerge(ServicesLive),
   Layer.provideMerge(DatabaseLive),
   Layer.provideMerge(AppConfigFromEnv),
-  Layer.provide(Logger.layer([logger])),
+  Layer.provide(LoggerLive),
 );
 
 // runMain stops the server on SIGTERM and SIGINT: it stops taking requests,
@@ -50,6 +51,21 @@ const Main = Layer.mergeAll(Started, Watchdog).pipe(
 for (const signal of ["SIGTERM", "SIGINT"] as const) process.on(signal, () => log.info("shutting down", { signal }));
 
 BunRuntime.runMain(Layer.launch(Main), {
-  // A shutdown on a signal is a clean exit.
-  teardown: (exit, onExit) => onExit(Exit.isSuccess(exit) || Cause.hasInterruptsOnly(exit.cause) ? 0 : 1),
+  // We report a failure ourselves (below), as a JSON line and to Sentry.
+  disableErrorReporting: true,
+  teardown: (exit, onExit) => {
+    // A shutdown on a signal is a clean exit.
+    const failed = Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause);
+    if (failed) {
+      // A server that can't start (a busy port, a throw while building a service) or can't stop cleanly.
+      const err = Cause.squash(exit.cause);
+      // Config problems are logged one per line already, and were never sent as exceptions.
+      if (!(err instanceof ConfigProblems)) {
+        log.error("server stopped", { err });
+        Sentry.captureException(err);
+      }
+    }
+    // runMain exits as soon as onExit is called: let the report reach Sentry first.
+    void Sentry.flush(2000).then(() => onExit(failed ? 1 : 0));
+  },
 });

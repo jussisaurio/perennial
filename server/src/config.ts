@@ -3,7 +3,7 @@
 // local-development default.
 
 import { fileURLToPath } from "node:url";
-import { Config as EnvConfig, ConfigProvider, Context, Effect, Layer, Option, Runtime, Schema } from "effect";
+import { Config as EnvConfig, ConfigProvider, Context, Effect, Layer, Option, Schema } from "effect";
 
 /** A number setting: unset or "" is the default. */
 const num = (v: string | undefined, d: number) => (v === undefined || v === "" ? d : Number(v));
@@ -153,10 +153,7 @@ export const loadConfig = (overrides: Partial<Config> = {}): Config => ({ ...Eff
 export class AppConfig extends Context.Service<AppConfig, Config>()("perennial/AppConfig") {}
 
 /** Production refused to start. Each problem is already logged on its own line. */
-class ConfigProblems extends Schema.TaggedError<ConfigProblems>()("ConfigProblems", { problems: Schema.Array(Schema.String) }) {
-  // Effect's runner logs a failure it ends with; these lines are out already.
-  readonly [Runtime.errorReported] = false;
-}
+export class ConfigProblems extends Schema.TaggedError<ConfigProblems>()("ConfigProblems", { problems: Schema.Array(Schema.String) }) {}
 
 /** Settings from the environment. Production with a problem (configProblems) does not start. */
 export const AppConfigFromEnv = Layer.effect(

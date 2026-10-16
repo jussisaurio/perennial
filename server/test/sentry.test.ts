@@ -1,7 +1,8 @@
 // Traces: the server as it runs in production (instrument.ts preloaded), sending
 // to a stand-in Sentry. A request's trace carries its wide-event facts, and the
 // "write batch" and "ai …" spans hang under it, with the model's HTTP call under
-// "ai mine"; the request's log line names the same trace.
+// "ai mine"; the request's log line names the same trace. A server that can't
+// start says why, there too.
 
 import { afterAll, expect, test } from "bun:test";
 import { gunzipSync } from "bun";
@@ -9,9 +10,11 @@ import { mockLLM, review, stopMockLLM, unique, W } from "./helpers";
 
 type Span = { span_id: string; parent_span_id?: string; trace_id: string; op?: string; description?: string; data?: Record<string, unknown> };
 type Transaction = { transaction: string; contexts: { trace: Span }; spans: Span[] };
+type ErrorEvent = { exception?: { values?: { type?: string; value?: string }[] } };
 
-/** A stand-in for Sentry's ingest: it keeps the transactions it is sent. */
+/** A stand-in for Sentry's ingest: it keeps the transactions and error events it is sent. */
 const transactions: Transaction[] = [];
+const errors: ErrorEvent[] = [];
 const ingest = Bun.serve({
   port: 0,
   async fetch(req) {
@@ -19,27 +22,30 @@ const ingest = Bun.serve({
     const text = new TextDecoder().decode(req.headers.get("content-encoding") === "gzip" ? gunzipSync(raw) : raw);
     const lines = text.split("\n");
     for (let i = 1; i + 1 < lines.length; i += 2) {
-      if (JSON.parse(lines[i]).type === "transaction") transactions.push(JSON.parse(lines[i + 1]));
+      const type = JSON.parse(lines[i]).type;
+      if (type === "transaction") transactions.push(JSON.parse(lines[i + 1]));
+      if (type === "event") errors.push(JSON.parse(lines[i + 1]));
     }
     return new Response("{}");
   },
 });
 
+const env = {
+  ...process.env,
+  SENTRY_DSN: `http://public@localhost:${ingest.port}/1`,
+  SENTRY_TRACES_SAMPLE_RATE: "1",
+  PORT: "0",
+  PERENNIAL_DEV: "1",
+  LOG_LEVEL: "info",
+  ANTHROPIC_API_KEY: "test-key",
+  ANTHROPIC_BASE_URL: await mockLLM(),
+};
+/** The server as production starts it. */
+const start = (extra: Record<string, string> = {}) =>
+  Bun.spawn(["bun", "--preload", "./instrument.ts", "index.ts"], { cwd: `${import.meta.dir}/..`, env: { ...env, ...extra }, stdout: "pipe", stderr: "pipe" });
+
 const logLines: Record<string, unknown>[] = [];
-const server = Bun.spawn(["bun", "--preload", "./instrument.ts", "index.ts"], {
-  cwd: `${import.meta.dir}/..`,
-  env: {
-    ...process.env,
-    SENTRY_DSN: `http://public@localhost:${ingest.port}/1`,
-    SENTRY_TRACES_SAMPLE_RATE: "1",
-    PORT: "0",
-    PERENNIAL_DEV: "1",
-    LOG_LEVEL: "info",
-    ANTHROPIC_API_KEY: "test-key",
-    ANTHROPIC_BASE_URL: await mockLLM(),
-  },
-  stdout: "pipe",
-});
+const server = start();
 afterAll(() => (server.kill(), ingest.stop(true), stopMockLLM()));
 
 /** The server's URL, from its start line; then every JSON line it prints, kept. */
@@ -123,3 +129,18 @@ test("requests at the same time keep their own traces", async () => {
 async function until(check: () => boolean) {
   while (!check()) await Bun.sleep(50);
 }
+
+test("a server that can't start says why in Sentry and in its log", async () => {
+  // The same address family as the server's (0.0.0.0), or macOS lets both bind the port.
+  const taken = Bun.serve({ hostname: "0.0.0.0", port: 0, fetch: () => new Response() });
+  try {
+    const failed = start({ PORT: String(taken.port) });
+    expect(await failed.exited).toBe(1);
+    // It waits for Sentry to have the report before it exits.
+    expect(errors.some((e) => JSON.stringify(e.exception).includes(String(taken.port)))).toBe(true);
+    const lines = (await new Response(failed.stderr).text()).split("\n").filter((l) => l.startsWith("{")).map((l) => JSON.parse(l));
+    expect(lines.some((l) => l.level === "error" && l.msg === "server stopped")).toBe(true);
+  } finally {
+    taken.stop(true);
+  }
+}, 30_000);
