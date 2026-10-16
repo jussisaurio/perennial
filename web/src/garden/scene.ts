@@ -17,6 +17,7 @@ import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG
 import { HILLS, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
 import { Door, DOOR, DOOR_REACH, GLINT, KEY_REACH } from "./sceneDoor";
+import { Critters } from "./sceneCritters";
 import type { Conditions } from "./scenePart";
 
 export type TimeOfDay = "day" | "dusk" | "night";
@@ -94,7 +95,7 @@ const FOG_FAR = 46;
 /** Plant sprites a little under life size: the tallest bloom stands about eye height. */
 const PLANT_SCALE = 0.85;
 /** Height of the raised beds: plants stand on their soil. */
-const BED_H = 0.28;
+export const BED_H = 0.28;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
 
@@ -102,7 +103,7 @@ const SUN_DIST = 200;
 const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
 
 /** A plant sprite's drawn height in metres, from its height in SVG units (stemHeight, ui/plant.tsx). */
-function plantHeight(growth: number): number {
+export function plantHeight(growth: number): number {
   return (stemHeight(growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
 }
 
@@ -312,33 +313,6 @@ export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h
   return mesh;
 }
 
-// Three z's drifting up from the sleeping bloom (#62). All the motion is in the
-// shader, so a frame costs one uniform. With reduced motion they stay still.
-const SNORE_VERT = /* glsl */ `
-  attribute float phase;
-  uniform float uTime;
-  uniform float uMove;
-  uniform float uScale;
-  varying float vA;
-  void main() {
-    float k = uMove > 0.5 ? fract(uTime / 3.6 + phase / 3.0) : 0.15 + phase * 0.3;
-    vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
-    vec3 p = position + right * (0.1 + k * 0.2 + sin(k * 6.28) * 0.03) + vec3(0.0, k * 0.5, 0.0);
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    gl_Position = projectionMatrix * mv;
-    gl_PointSize = clamp((0.13 + 0.06 * k) * uScale / -mv.z, 3.0, 72.0);
-    vA = uMove > 0.5 ? smoothstep(0.0, 0.15, k) * (1.0 - smoothstep(0.65, 1.0, k)) : 0.9;
-  }
-`;
-const SNORE_FRAG = /* glsl */ `
-  uniform sampler2D uMap;
-  varying float vA;
-  void main() {
-    vec4 c = texture2D(uMap, vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y));
-    if (c.a < 0.5 || vA < 0.02) discard;
-    gl_FragColor = vec4(c.rgb, vA);
-  }
-`;
 
 /**
  * What every part of the world (#323) is built with: GardenScene.build() makes
@@ -366,6 +340,8 @@ export interface BuildCtx {
   hitDiscs: HitDisc[];
   /** Every sprite shader material a part makes: GardenScene.tick sets their time and sway uniforms, and tints them for the time of day. */
   mats: Set<THREE.ShaderMaterial>;
+  /** Every plain (unlit, untinted-by-default) material a part makes outside of `mat()`, so GardenScene.tint can still tint it for the time of day. */
+  basic: THREE.MeshBasicMaterial[];
 }
 
 /** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */
@@ -421,8 +397,8 @@ export class GardenScene {
   private basic: THREE.MeshBasicMaterial[] = [];
   /** The sky, hills, clouds, sun/moon and the pond (#323). */
   private sky: SkyWater;
-  private fireflies!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
-  private butterflies: { mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>; cx: number; cz: number; r: number; ph: number; tex: THREE.Texture }[] = [];
+  /** Fireflies, butterflies and the sleeping bloom's z's (#323). */
+  private critters: Critters;
   private marker!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private lit!: ReturnType<typeof sprites>;
   private unlit!: ReturnType<typeof sprites>;
@@ -444,8 +420,6 @@ export class GardenScene {
   private plantMats: THREE.ShaderMaterial[] = [];
   /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
   private perk = { i: -1, at: 0, n: -1 };
-  /** The sleeping bloom's z's, shown at night. */
-  private snore: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door = new Door();
   /** The gate's hedge and, once the door opens, the orchard's (#323). */
@@ -491,6 +465,7 @@ export class GardenScene {
     this.z = Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2);
     this.camera.rotation.order = "YXZ";
     this.sky = new SkyWater(this.camera, reducedMotion);
+    this.critters = new Critters(this.camera, reducedMotion);
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
@@ -538,6 +513,7 @@ export class GardenScene {
       hitBoxes: this.hitBoxes,
       hitDiscs: this.hitDiscs,
       mats: this.mats,
+      basic: this.basic,
     };
     this.ctx = c;
     this.buildGround(c);
@@ -556,7 +532,7 @@ export class GardenScene {
     this.buildSunflower(c);
     this.buildDecor(c);
     this.sky.buildSkyAndSun(c);
-    this.buildCritters(c);
+    this.critters.build(c);
     this.buildMarker();
     this.setTime(this.time);
   }
@@ -907,25 +883,7 @@ export class GardenScene {
       stake(keepsake.text, kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
     }
     const sleeper = this.visitors.sleeper ? L.plants.find((p) => p.id === this.visitors.sleeper) : undefined;
-    if (sleeper) {
-      const top = BED_H + plantHeight(sleeper.growth);
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z, sleeper.x, top, sleeper.z]), 3));
-      geo.setAttribute("phase", new THREE.BufferAttribute(new Float32Array([0, 1, 2]), 1));
-      this.snore = new THREE.Points(
-        geo,
-        new THREE.ShaderMaterial({
-          uniforms: { uTime: { value: 0 }, uMove: { value: this.reducedMotion ? 0 : 1 }, uScale: { value: 400 }, uMap: { value: T.pixelTexture(T.snoreZ()) } },
-          vertexShader: SNORE_VERT,
-          fragmentShader: SNORE_FRAG,
-          transparent: true,
-          depthWrite: false,
-        }),
-      );
-      this.snore.frustumCulled = false;
-      this.snore.visible = false;
-      this.scene.add(this.snore);
-    }
+    this.critters.buildSnore(c, sleeper, plantHeight);
   }
 
   /** The sunflower that turns its back on you. */
@@ -980,46 +938,6 @@ export class GardenScene {
     const decorMesh = sprites(decorTex, decor);
     this.mats.add(decorMesh.material);
     this.scene.add(decorMesh);
-  }
-
-  /** Fireflies at night, butterflies by day. */
-  private buildCritters(c: BuildCtx) {
-    const { L, b, w, d, rand } = c;
-    const n = 70;
-    const ff = new Float32Array(n * 3);
-    const ph = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      ff.set([b.minX + rand() * w, 0.3 + rand() * 1.4, b.minZ + rand() * d], i * 3);
-      ph[i] = rand() * 6.28;
-    }
-    const ffGeo = new THREE.BufferGeometry();
-    ffGeo.setAttribute("position", new THREE.BufferAttribute(ff, 3));
-    ffGeo.setAttribute("phase", new THREE.BufferAttribute(ph, 1));
-    this.fireflies = new THREE.Points(
-      ffGeo,
-      new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uMove: { value: 1 } },
-        vertexShader: `attribute float phase; uniform float uTime; uniform float uMove; varying float vA;
-          void main() { vec3 p = position + uMove * vec3(sin(uTime*0.5+phase)*0.6, sin(uTime*0.8+phase*2.0)*0.25, cos(uTime*0.4+phase)*0.6);
-            vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv;
-            gl_PointSize = clamp(14.0 / -mv.z, 2.0, 6.0); vA = 0.5 + 0.5 * sin(uTime * 2.0 + phase * 3.0); }`,
-        fragmentShader: `varying float vA; void main() { if (vA < 0.25) discard; gl_FragColor = vec4(1.0, 0.95, 0.45, 1.0) * vA; }`,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    );
-    this.scene.add(this.fireflies);
-    const blooms = L.plants.filter((p) => p.stage === "bloom");
-    for (let i = 0; i < Math.min(8, 2 + Math.floor(blooms.length / 15)); i++) {
-      const home = blooms.length ? blooms[Math.floor(rand() * blooms.length)] : { x: L.gate.x + rand() * 4 - 2, z: L.gate.z - 3 };
-      const tex = T.pixelTexture(T.butterfly([45, 200, 320, 15, 270][i % 5]));
-      tex.repeat.set(0.5, 1);
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.11), new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide }));
-      this.basic.push(m.material);
-      this.butterflies.push({ mesh: m, cx: home.x, cz: home.z, r: 0.5 + rand() * 1.2, ph: rand() * 6.28, tex });
-      this.scene.add(m);
-    }
   }
 
   /** The marker over the selected plant, always on top of the hills and clouds. */
@@ -1243,15 +1161,13 @@ export class GardenScene {
     const dark = t !== "day";
     const conditions: Conditions = { time: t, dark };
     this.sky.onConditions(conditions);
+    this.critters.onConditions(conditions);
     this.tint();
-    this.fireflies.visible = dark;
     this.lit.visible = dark;
     this.unlit.visible = !dark;
     for (const g of this.glows) g.visible = dark;
     this.door.keyhole.glow.visible = dark && this.door.state !== "open";
-    for (const bf of this.butterflies) bf.mesh.visible = t !== "night";
     this.guests.setDark(dark, t === "night");
-    if (this.snore) this.snore.visible = t === "night";
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
     this.flower.params.needsUpdate = true;
@@ -1287,7 +1203,7 @@ export class GardenScene {
     this.camera.aspect = cssW / cssH;
     this.camera.updateProjectionMatrix();
     // Framebuffer pixels per metre at 1 m, for the z's point size.
-    if (this.snore) this.snore.material.uniforms.uScale.value = Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
+    this.critters.resize(Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360)));
   }
 
   /**
@@ -1450,17 +1366,9 @@ export class GardenScene {
       this.lastStream = t;
       this.stream();
     }
-    this.fireflies.material.uniforms.uTime.value = t;
-    this.fireflies.material.uniforms.uMove.value = motion;
-    if (this.snore?.visible) this.snore.material.uniforms.uTime.value = t;
     this.tickPerk();
     this.sky.tick(dt, t);
-    for (const bf of this.butterflies) {
-      const a = t * 0.7 * motion + bf.ph;
-      bf.mesh.position.set(bf.cx + Math.cos(a) * bf.r, 0.75 + Math.sin(a * 2.3) * 0.25, bf.cz + Math.sin(a * 1.3) * bf.r);
-      bf.mesh.quaternion.copy(this.camera.quaternion);
-      bf.tex.offset.x = motion && Math.sin(t * 18 + bf.ph) > 0 ? 0.5 : 0;
-    }
+    this.critters.tick(dt, t);
     if (this.selected) {
       const p = this.selected;
       this.marker.position.set(p.x, BED_H + plantHeight(p.growth) + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
