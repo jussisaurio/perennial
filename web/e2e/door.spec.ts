@@ -41,6 +41,8 @@ test("the locked door says so by its button, to screen readers too; without the 
   // Near the door, a button does what a tap does (the tap is in the next test), for keyboards and screen readers.
   await standAtDoor(page);
   await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
+  // One action button (#334): only an icon, no words; a screen reader hears what it does.
+  await expect(page.getByRole("button", { name: "Try the door" })).toHaveText("");
   await page.getByRole("button", { name: "Try the door" }).click();
   await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
   // The drawn line is hidden from screen readers; a status says it to them.
@@ -72,8 +74,8 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   // Tapping the door first: still locked, and no hint of the key there.
   await page.mouse.click(...(await standAtDoor(page)));
   await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
-  // A screen reader also hears where it hides: the glint that leads the eye cannot be heard.
-  await expect(page.locator(".sr-only[role=status]")).toHaveText(/^Locked\. The key must be somewhere\. Maybe by the /);
+  // A screen reader also hears where it lies, as a thing in the world (#334): what a seeing learner might spot cannot be heard.
+  await expect(page.locator(".sr-only[role=status]")).toHaveText(/^Locked\. The key must be somewhere\. Something small glints (under|among|by) the /);
   await expect(page.getByRole("button", { name: "Try the door" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
   // From afar (#336), a tap meets the key; but when something stands in front of it, the tap meets that instead, as before.
@@ -233,4 +235,68 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
   await page.mouse.click(px, py);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+/** "I knew it" on llave `daysAgo` days before the pinned clock, then the walk opens (with `visitors`, a dev list of who visits). */
+async function keyWaited(page: Page, daysAgo: number, visitors = "") {
+  await page.goto(`/?demo=es:30${visitors}#/today`);
+  await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
+  await page.evaluate(async (daysAgo) => {
+    const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
+    const { loadDeck } = await import(/* @vite-ignore */ "/src/data/deck.ts");
+    const llave = (await loadDeck("es")).words.find((w: { lemma: string }) => w.lemma === "llave")!.id as string;
+    const at = new Date(Date.now() - daysAgo * 86_400_000).toISOString();
+    await postWrite([{ type: "review.insert", row: { id: crypto.randomUUID(), lang: "es", word_id: llave, skill: "read", grade: 4, kind: "known", reviewed_at: at, duration_ms: 4000, sentence_id: null } }]);
+  }, daysAgo);
+  await page.goto(`/${visitors.replace("&", "?")}#/today`);
+  await openWalk(page);
+  expect(await doorNow(page)).toMatchObject({ state: "key" });
+}
+
+/** Whether the key's own glint shows now, after two frames. */
+const keyGlints = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<boolean>((done) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => done((window as unknown as { __garden: { door: { key: { glint: { visible: boolean } } } } }).__garden.door.key.glint.visible))),
+      ),
+  );
+
+// #334: help for a stuck key hunt comes from the world, late and gently, never as text. The clock is pinned (beforeEach).
+test("a key left a week glints whenever you face it, from afar; a key left a day does not", async ({ page }) => {
+  await keyWaited(page, 1);
+  await keyInTheOpen(page);
+  await standByKey(page, 5);
+  expect(await keyGlints(page)).toBe(false);
+
+  await keyWaited(page, 8);
+  await keyInTheOpen(page);
+  await standByKey(page, 5);
+  // With reduced motion (as these tests run), a still glint.
+  expect(await keyGlints(page)).toBe(true);
+  // Facing away: nothing calls from behind you.
+  await page.evaluate(() => ((window as unknown as { __garden: { yaw: number } }).__garden.yaw += Math.PI));
+  expect(await keyGlints(page)).toBe(false);
+  // No words in the walk say where it is.
+  await expect(page.locator(".gw-say, .gw-hint")).toHaveCount(0);
+});
+
+test("a key left a few days: at dusk the bird waits by it, and by day it is back in its own spot", async ({ page }) => {
+  await keyWaited(page, 4, "&visitors=bird");
+  const birdFromKey = () =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: { door: { key: { x: number; z: number } }; guests: { sprites: { v: { id: string }; x: number; z: number }[] } } }).__garden;
+      const b = s.guests.sprites.find((o) => o.v.id === "bird")!;
+      return Math.hypot(b.x - s.door.key.x, b.z - s.door.key.z);
+    });
+  // Noon: the bird is in its own spot, away from the key.
+  expect(await birdFromKey()).toBeGreaterThan(1);
+  const time = page.getByRole("button", { name: /^Time of day: / });
+  await time.click();
+  await expect(time).toHaveAttribute("aria-label", "Time of day: Evening");
+  expect(await birdFromKey()).toBeLessThan(0.5);
+  await time.click();
+  await time.click();
+  await expect(time).toHaveAttribute("aria-label", "Time of day: Day");
+  expect(await birdFromKey()).toBeGreaterThan(1);
 });

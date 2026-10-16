@@ -745,6 +745,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-glyph { display: inline-block; width: 1em; text-align: center; }
 @media (min-width: 561px) { .gw-time { min-width: 7em; } .gw-quality { min-width: 10.4em; } }
 .gw-icon svg { display: block; }
+/* The action button (#334): only an icon, a little bigger than the rest, for a thumb. */
+.gw-act { min-width: 56px; min-height: 56px; }
 @media (max-width: 560px) { .gw-seeds { display: none; } .gw-top { gap: 10px; } }
 
 /* The bot check, when it needs to ask (data/captcha.ts). */

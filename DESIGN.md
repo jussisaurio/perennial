@@ -116,7 +116,9 @@ rendering code should follow, and the places it still does not (yet):
   the order `parts` is ticked, disposed and given `Conditions` in; pick
   priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
   say, then the one active tag — scenery, tree or the door's line — then a
-  visitor's). A Part never reaches into another Part's build or pick order.
+  visitor's); and what the one action button acts on (`reportReach`: stand
+  up, the key, the door, then the bench). A Part never reaches into another
+  Part's build or pick order.
 - **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.
 - **Behaviour gets time only from the `Frame` it is ticked with, or from

@@ -50,6 +50,8 @@ interface VisitorSprite {
   h: number;
   hit: [number, number, number];
   top: number;
+  /** Its own spot today: where it goes back to after waiting somewhere else (visit). */
+  home: [number, number, number];
   mesh: SpriteMesh;
   pos: THREE.InstancedBufferAttribute;
   uv: THREE.InstancedBufferAttribute;
@@ -259,7 +261,7 @@ export class SceneVisitors {
       this.world.scene.add(mesh);
       const pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
       const uv = mesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
-      this.sprites.push({ v, x, y, z, w: size, h: size, hit, top, mesh, pos, uv });
+      this.sprites.push({ v, x, y, z, w: size, h: size, hit, top, home: [x, y, z], mesh, pos, uv });
     }
   }
 
@@ -322,16 +324,28 @@ export class SceneVisitors {
 
   /**
    * The bird sits somewhere else today: in an orchard tree (#315), and so not in
-   * the garden. It hops off from its new spot as from its old one.
+   * the garden. That is its own spot now: it hops off from it as from its old one.
    */
   perchBird(x: number, y: number, z: number) {
     const s = this.sprites.find((o) => o.v.id === "bird");
     // Not here today (its word not brought, or a dev ?visitors= list without it): nothing to move.
     if (!s) return;
-    [s.x, s.y, s.z] = [x, y, z];
-    s.pos.setXYZ(0, x, y, z);
+    s.home = [x, y, z];
+    this.visit("bird", null);
+  }
+
+  /**
+   * A visitor waits somewhere else for now (#334: by a key left waiting), or
+   * (null) goes back to its own spot. A visitor not here today: nothing to move.
+   */
+  visit(id: VisitorId, at: [number, number, number] | null) {
+    const s = this.sprites.find((o) => o.v.id === id);
+    if (!s) return;
+    [s.x, s.y, s.z] = at ?? s.home;
+    s.pos.setXYZ(0, s.x, s.y, s.z);
     s.pos.needsUpdate = true;
-    // Perched, whatever it was doing: it may have hopped off from its old spot.
+    if (id !== "bird") return;
+    // Settled, whatever it was doing: it may have hopped off from where it was.
     this.bird.t = -1;
     showCell(s.uv, T.VISITOR_CELL.bird);
     s.mesh.visible = true;
