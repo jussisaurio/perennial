@@ -12,13 +12,16 @@
 // One exception: an anonymous learner who signs in with email keeps their
 // queue (see adoptOnDevice).
 
+import { Option, Schema } from "effect";
+
 export const outboxName = (userId: string) => `perennial-outbox-${userId}`;
 
 /** A list kept in localStorage. Unreadable entries are dropped. */
-function readList<T>(key: string, valid: (x: unknown) => x is T): T[] {
+function readList<T>(key: string, item: Schema.Schema<T>): T[] {
   try {
-    const v = JSON.parse(localStorage.getItem(key) ?? "[]") as unknown;
-    return Array.isArray(v) ? v.filter(valid) : [];
+    // ?? "[]": nothing kept yet.
+    const v: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
+    return Array.isArray(v) ? v.filter(Schema.is(item)) : [];
   } catch {
     // No storage, or not JSON: nothing was kept.
     return [];
@@ -36,7 +39,7 @@ function saveList(key: string, list: unknown[]) {
 }
 
 const FORGET_KEY = "perennial-forget";
-const forgetList = () => readList(FORGET_KEY, (x): x is string => typeof x === "string");
+const forgetList = () => readList(FORGET_KEY, Schema.String);
 const saveForgetList = (ids: string[]) => saveList(FORGET_KEY, ids);
 
 /** Open stores register how to empty their queue, so a sign-out can stop uploads at once. */
@@ -56,6 +59,8 @@ export function forgetOnDevice(userId: string) {
   const orphans = list.filter((a) => a.to === userId).map((a) => a.from);
   saveAdoptions(list.filter((a) => a.from !== userId && a.to !== userId));
   saveForgetList([...new Set([...forgetList(), userId, ...orphans])]);
+  // A sign-in from this learner's session that never finished: nothing to carry over now.
+  if (pendingLink()?.from === userId) savePendingLink(null);
 }
 
 export function keepOnDevice(userId: string) {
@@ -141,19 +146,65 @@ async function deleteLocalStorageOutbox(userId: string): Promise<boolean> {
 // An anonymous learner who signs in keeps their progress (the server merges
 // it into the account), so their unsent writes move to the account's queue.
 const ADOPT_KEY = "perennial-adopt";
-type Adoption = { from: string; to: string };
+const Adoption = Schema.Struct({ from: Schema.String, to: Schema.String });
+type Adoption = typeof Adoption.Type;
 
-const isAdoption = (a: unknown): a is Adoption => {
-  const x = a as Partial<Adoption> | null;
-  return typeof x?.from === "string" && typeof x?.to === "string";
-};
-const adoptions = () => readList(ADOPT_KEY, isAdoption);
+const adoptions = () => readList(ADOPT_KEY, Adoption);
 const saveAdoptions = (list: Adoption[]) => saveList(ADOPT_KEY, list);
 
 /** The anonymous user `from` became the account `to`: its queued writes are theirs. */
-export function adoptOnDevice(from: string, to: string) {
+function adoptOnDevice(from: string, to: string) {
   if (from === to) return;
   saveAdoptions([...adoptions().filter((a) => a.from !== from), { from, to }]);
+}
+
+// Signing in from an anonymous session: the anonymous learner's id and the
+// email they sign in with, kept from before the sign-in request until the app
+// first sees that account (#314). The sign-in answer can be lost, or the app
+// can see the account through Better Auth's own session check and reload
+// before the sign-in code finishes.
+const LINK_KEY = "perennial-pending-link";
+const PendingLink = Schema.fromJsonString(Schema.Struct({ from: Schema.String, email: Schema.String }));
+type PendingLink = typeof PendingLink.Type;
+
+const sameEmail = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+function pendingLink(): PendingLink | null {
+  try {
+    // Not there, or not readable: no link.
+    return Option.getOrNull(Schema.decodeUnknownOption(PendingLink)(localStorage.getItem(LINK_KEY)));
+  } catch {
+    // No storage: nothing was recorded.
+    return null;
+  }
+}
+
+function savePendingLink(link: PendingLink | null) {
+  try {
+    if (link) localStorage.setItem(LINK_KEY, JSON.stringify(link));
+    else localStorage.removeItem(LINK_KEY);
+  } catch {
+    // No storage: the queue is not carried over (see saveList).
+  }
+}
+
+/**
+ * About to sign in as `email` from the session `before`. From an anonymous
+ * session, that learner's queue is to follow. From that same account (a try
+ * again after a lost answer, when the server had signed in), the link stays.
+ * Otherwise there is nothing to carry over.
+ */
+export function noteSignIn(before: { id: string; email: string | null; anonymous: boolean } | null, email: string) {
+  if (before?.anonymous) savePendingLink({ from: before.id, email });
+  else if (!(before?.email && sameEmail(before.email, email))) savePendingLink(null);
+}
+
+/** The session is the account `userId` (with `email`) now: a pending sign-in to this account moves the anonymous learner's queue here. */
+export function resolvePendingLink(userId: string, email: string | null) {
+  const link = pendingLink();
+  if (!link || !email || !sameEmail(link.email, email)) return;
+  savePendingLink(null);
+  adoptOnDevice(link.from, userId);
 }
 
 /** Users whose queues `userId` takes over. */

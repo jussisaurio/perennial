@@ -15,12 +15,15 @@
 
 import * as Sentry from "@sentry/react";
 import { electricCollectionOptions } from "@tanstack/electric-db-collection";
-import { IndexedDBAdapter, LocalStorageAdapter, NonRetriableError, startOfflineExecutor, type LeaderElection, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
+import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
+import { Effect, Exit } from "effect";
 import { sessionUserId } from "./auth";
-import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync } from "./device";
-import { ApiError, postWrite } from "./http";
+import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
+import type { ApiError, HttpError } from "./http";
 import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
+import { OtherUser, sendQueued, shouldRetry } from "./send";
+import { tabLock } from "./tabLock";
 
 function makeCollection<T extends object>(table: string, getKey: (row: T) => string, sync: AbortSignal) {
   const options = electricCollectionOptions<T & Record<string, unknown>>({
@@ -72,55 +75,13 @@ async function adoptQueues(userId: string, target: StorageAdapter) {
   }
 }
 
-/**
- * The user's Web Lock: the tab holding it sends the queue. A tab that opens
- * while another holds it waits a moment (a reload, or React's development
- * double mount, releases it quickly), then reports "not the writer" but stays
- * in line, and becomes the writer if the other tab closes.
- */
-function tabLock(name: string): LeaderElection | undefined {
-  if (typeof navigator === "undefined" || !("locks" in navigator)) return undefined;
-  let leader = false;
-  let release: (() => void) | null = null;
-  const abort = new AbortController();
-  const listeners = new Set<(isLeader: boolean) => void>();
-  const set = (v: boolean) => {
-    if (leader === v) return;
-    leader = v;
-    for (const l of listeners) l(v);
-  };
-  return {
-    requestLeadership: () =>
-      new Promise<boolean>((resolve) => {
-        if (leader) return resolve(true);
-        const timer = setTimeout(() => resolve(false), 2500);
-        navigator.locks
-          .request(name, { mode: "exclusive", signal: abort.signal }, () => {
-            clearTimeout(timer);
-            set(true);
-            resolve(true);
-            return new Promise<void>((done) => (release = done));
-          })
-          .catch(() => resolve(false));
-      }),
-    releaseLeadership: () => {
-      abort.abort();
-      release?.();
-      release = null;
-      set(false);
-    },
-    isLeader: () => leader,
-    onLeadershipChange: (cb) => {
-      listeners.add(cb);
-      return () => void listeners.delete(cb);
-    },
-  };
-}
-
-export async function createStore(userId: string) {
+export async function createStore(userId: string, email: string | null) {
   // Queues of learners who signed out here go first; this learner is using theirs again.
   await cleanUpForgotten();
   keepOnDevice(userId);
+  // An account's first start after a sign-in that this tab did not see finish
+  // (#314): the anonymous learner's queue is the account's now. (Anonymous: no email.)
+  resolvePendingLink(userId, email);
   // Stopped before a sign-out reaches the server (stopSyncNow): a stream still loading
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();
@@ -152,7 +113,8 @@ export async function createStore(userId: string) {
   };
   // The server refuses answers dated over a day ahead of its clock (server/src/sync.ts): the
   // learner can fix that one, so it is counted on its own.
-  const noteRefused = (code: string) => setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (code === "review_from_the_future" ? 1 : 0) });
+  const noteRefused = (e: ApiError | HttpError) =>
+    setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (e._tag === "ApiError" && e.body.error === "review_from_the_future" ? 1 : 0) });
 
   const storage = await outboxStorage(userId);
   if (storage) await adoptQueues(userId, storage);
@@ -164,35 +126,35 @@ export async function createStore(userId: string) {
     mutationFns: {
       // Traced (sampled, see observability.ts): the time from sending a write
       // to seeing it come back through sync is the latency learners feel.
-      write: ({ transaction, idempotencyKey }) => Sentry.startSpan({ name: "sync write", op: "sync.write" }, async (span) => {
-        const at = typeof transaction.metadata?.at === "string" ? transaction.metadata.at : undefined;
-        const mutations = transaction.mutations.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
-        if (!mutations.length) return;
-        // Signed in as someone else since (in another tab): keep these for their owner.
-        const current = sessionUserId();
-        if (current && current !== userId) throw new ApiError(401, "other_user");
-        span.setAttribute("mutations", mutations.length);
-        let result;
-        try {
-          result = await postWrite(mutations, { idempotencyKey });
-        } catch (e) {
-          if (e instanceof ApiError && e.permanent) {
-            noteRefused(e.code);
-            throw new NonRetriableError(`rejected: ${e.code}`);
-          }
-          throw e;
-        }
-        // Nothing changed (say, a repeat of an earlier write): no echo will come.
-        if (!result.changed) return;
-        // Keep the optimistic rows until Electric echoes the write back.
-        const tables = new Set(transaction.mutations.map((m) => m.collection.id as Table));
-        const echoed = await Promise.all([...tables].map((t) => collections[t].utils.awaitTxId(result.txid, 15_000).then(() => true, () => false)));
-        span.setAttribute("echoed", echoed.every(Boolean));
-      }),
+      write: ({ transaction, idempotencyKey }) =>
+        Sentry.startSpan({ name: "sync write", op: "sync.write" }, (span) =>
+          Effect.runPromise(
+            Effect.gen(function* () {
+              const at = typeof transaction.metadata?.at === "string" ? transaction.metadata.at : undefined;
+              const mutations = transaction.mutations.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
+              if (!mutations.length) return;
+              const current = sessionUserId();
+              if (current && current !== userId) return yield* new OtherUser();
+              span.setAttribute("mutations", mutations.length);
+              const result = yield* sendQueued(mutations, idempotencyKey, noteRefused);
+              // Nothing changed (say, a repeat of an earlier write), or no answer to read: no echo to wait for.
+              if (!result?.changed) return;
+              // Keep the optimistic rows until Electric echoes the write back.
+              const tables = new Set(transaction.mutations.map((m) => m.collection.id as Table));
+              const echoed = yield* Effect.forEach(
+                tables,
+                // After 15 s without the echo the rows stay as they are; the trace says so.
+                (t) => Effect.tryPromise(() => collections[t].utils.awaitTxId(result.txid, 15_000)).pipe(Effect.exit, Effect.map(Exit.isSuccess)),
+                { concurrency: "unbounded" },
+              );
+              span.setAttribute("echoed", echoed.every(Boolean));
+            }),
+          ),
+        ),
     },
     // A session that expired offline, or an app that must reload first: keep
     // the queued writes (they are this user's) and try again later.
-    shouldRetry: (err) => (err instanceof ApiError && (err.status === 401 || err.status === 426) ? true : undefined),
+    shouldRetry,
     onStorageFailure: (d) => console.warn("[store] offline queue storage:", d.code, d.message),
   });
   await executor.waitForInit();

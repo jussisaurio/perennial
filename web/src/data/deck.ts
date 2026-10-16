@@ -4,7 +4,7 @@
 // load, the last good copy kept in the Cache API is used instead.
 
 import { Option, Schema } from "effect";
-import { DeckSentence, DeckWord, type Deck } from "../deck/schema";
+import { DeckSentence, DeckWord } from "../deck/schema";
 
 const loaders = import.meta.glob<unknown>("../../../decks/*/deck.json", { import: "default" });
 const CACHE = "perennial-decks";
@@ -21,9 +21,14 @@ export interface LoadedDeck {
   skipped: number;
 }
 
+/** The deck's outside: its entries are checked one by one below, so one bad entry does not cost the whole deck. */
+const Envelope = (lang: string) =>
+  Schema.Struct({ lang: Schema.Literal(lang), version: Schema.optionalKey(Schema.Number), words: Schema.Array(Schema.Unknown), sentences: Schema.Array(Schema.Unknown) });
+
 function index(raw: unknown, lang: string): LoadedDeck {
-  const d = raw as Partial<Deck> | null;
-  if (!d || d.lang !== lang || !Array.isArray(d.words) || !Array.isArray(d.sentences)) throw new Error(`deck ${lang}: not a deck`);
+  const envelope = Schema.decodeUnknownOption(Envelope(lang))(raw);
+  if (Option.isNone(envelope)) throw new Error(`deck ${lang}: not a deck`);
+  const d = envelope.value;
   const decodeWord = Schema.decodeUnknownOption(DeckWord(lang));
   const decodeSentence = Schema.decodeUnknownOption(DeckSentence(lang));
   let skipped = 0;

@@ -1,7 +1,9 @@
-// Perennial AI requests (POST /api/ai/mine and /api/ai/examples). The bodies
-// are untrusted input from the app; the server checks them with these.
+// Perennial AI requests (POST /api/ai/mine and /api/ai/examples) and their
+// answers. The request bodies are untrusted input from the app; the server
+// checks them with these. The app checks the answers.
 
 import { Schema } from "effect";
+import { Credits } from "./api";
 import { Lang } from "./course";
 
 /** Trimmed first, then 1 to `max` characters. */
@@ -23,3 +25,26 @@ export const ExamplesIn = Schema.Struct({
   known: list(short(40), 0, 400),
 });
 export type ExamplesIn = typeof ExamplesIn.Type;
+
+/** A sentence Perennial AI wrote, with the part to hide (`cloze`). */
+export const GenSentence = Schema.Struct({ text: Schema.String, translation: Schema.String, cloze: Schema.String });
+export type GenSentence = typeof GenSentence.Type;
+
+/** A word Perennial AI made a card for. */
+export const GenWord = Schema.Struct({
+  lemma: Schema.String,
+  gloss: Schema.String,
+  pos: Schema.String,
+  forms: Schema.Array(Schema.String),
+  notes: Schema.optionalKey(Schema.String),
+  examples: Schema.Array(GenSentence),
+});
+export type GenWord = typeof GenWord.Type;
+
+/** The answer to /api/ai/mine: the words, the credits left, and the model that wrote them. */
+export const MineOut = Schema.Struct({ words: Schema.Array(GenWord), credits: Credits, model: Schema.String });
+export type MineOut = typeof MineOut.Type;
+
+/** The answer to /api/ai/examples. Each sentence says which word it is for. */
+export const ExamplesOut = Schema.Struct({ examples: Schema.Array(Schema.Struct({ ...GenSentence.fields, lemma: Schema.String })), credits: Credits, model: Schema.String });
+export type ExamplesOut = typeof ExamplesOut.Type;

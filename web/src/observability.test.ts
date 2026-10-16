@@ -20,6 +20,9 @@ mock.module("@sentry/react", () => ({
   consoleLoggingIntegration: () => ({}),
   setUser: () => {},
   reactErrorHandler: () => {},
+  // Bun's module mocks last for the whole test run, so every export the app calls
+  // must be here, or a later file that reaches Sentry fails (send.test.ts).
+  captureException: () => {},
 }));
 // As the Docker build sets them: keys, and an unset host and release passed as "".
 const env = { VITE_POSTHOG_KEY: "phc_test", VITE_POSTHOG_HOST: "", VITE_SENTRY_DSN: "https://key@sentry.test/1", VITE_RELEASE: "" };

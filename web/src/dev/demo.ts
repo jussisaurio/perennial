@@ -8,7 +8,7 @@ import { fsrs } from "../core/scheduler";
 import { currentUser, ensureUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
 import { keepCourse } from "../data/device";
-import { ApiError, postWrite } from "../data/http";
+import { postWrite } from "../data/http";
 import { memKey } from "../core/memory";
 import { COURSE_DEFAULTS } from "../data/rows";
 import { DAILY_MINUTES } from "../data/practice";
@@ -17,7 +17,8 @@ import { rng } from "../lib/seed";
 
 async function post(mutations: unknown[]) {
   await postWrite(mutations).catch((e: unknown) => {
-    throw new Error(`demo upload failed: ${e instanceof ApiError ? `${e.status} ${e.code}` : String(e)}`);
+    // "ApiError: bad_request", "HttpError: http_502", …
+    throw new Error(`demo upload failed: ${String(e)}`);
   });
 }
 

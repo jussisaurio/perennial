@@ -125,4 +125,13 @@ export function reportSlowAuth(step: "send" | "sign-in", path: string, ms: numbe
   Sentry.captureException(new Error(`auth request slow: ${step}`), { tags: { step, path, protocol }, extra: { ms } });
 }
 
+/**
+ * Our server answered with a body that breaks the contract (data/http.ts): a
+ * bug on one side, or a server newer than this app. The path and what did not
+ * fit, never the body itself.
+ */
+export function reportBadAnswer(path: string, issue: string) {
+  Sentry.captureException(new Error(`bad answer: ${path}`), { tags: { path }, extra: { issue } });
+}
+
 export const reactErrorHandler = Sentry.reactErrorHandler;
