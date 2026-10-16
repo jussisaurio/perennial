@@ -6,5 +6,6 @@ export * from "./ai";
 export * from "./api";
 export * from "./course";
 export * from "./errors";
+export * from "./garden";
 export * from "./ids";
 export * from "./write";
