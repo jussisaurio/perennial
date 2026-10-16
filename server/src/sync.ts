@@ -5,23 +5,22 @@
 // stream before dropping its optimistic state, and whether any row changed (if
 // none did, no echo will come: the client must not wait for one).
 
-import * as Sentry from "@sentry/bun";
 import { deckWords, isDeckWord } from "./words";
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import type { SQL } from "bun";
-import { z } from "zod";
+import type { Mutation, UserId, WordId, WriteResult } from "perennial-contract";
 import type { Config } from "./config";
-import { COURSE_DEFAULTS, Lang } from "./course";
-import { HttpError, json, readJson } from "./http";
+import { COURSE_DEFAULTS } from "./course";
+import { refuse } from "./http";
 import { event } from "./log";
 
 /** Tables a learner can read, each scoped to their user id. */
 export const LEARNER_TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
 
-export async function proxyShape(req: Request, userId: string, config: Config): Promise<Response> {
+export async function proxyShape(req: Request, userId: UserId, config: Config): Promise<Response> {
   const url = new URL(req.url);
   const table = url.searchParams.get("table") ?? "";
-  if (!LEARNER_TABLES.includes(table)) throw new HttpError(400, "unknown_shape");
+  if (!LEARNER_TABLES.includes(table)) throw refuse({ error: "unknown_shape" });
   const origin = new URL(`${config.electric.url}/v1/shape`);
   for (const [k, v] of url.searchParams) if (ELECTRIC_PROTOCOL_QUERY_PARAMS.includes(k)) origin.searchParams.set(k, v);
   // The shape definition is always ours, never the client's.
@@ -50,73 +49,6 @@ export async function proxyShape(req: Request, userId: string, config: Config): 
 // ---------- writes ----------
 
 const DAY = 86_400_000;
-/** Text limits for learner rows. Perennial AI output is held to the same ones (ai.ts). */
-export const LIMITS = { lemma: 60, gloss: 120, pos: 20, form: 60, forms: 40, notes: 300, text: 400, translation: 400, cloze: 60 };
-const wordId = z.string().min(1).max(120);
-const ts = z.coerce.date();
-
-const Mutation = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("review.insert"),
-    row: z.object({
-      id: z.uuid(),
-      lang: Lang,
-      word_id: wordId,
-      skill: z.enum(["read", "listen", "write"]),
-      grade: z.number().int().min(1).max(4),
-      kind: z.enum(["review", "known"]).default("review"),
-      reviewed_at: ts,
-      duration_ms: z.number().int().min(0).max(3_600_000),
-      sentence_id: z.string().max(120).nullish(),
-    }),
-  }),
-  z.object({ type: z.literal("review.delete"), id: z.uuid() }), // Undo
-  z.object({
-    type: z.literal("course.upsert"),
-    row: z.object({
-      lang: Lang,
-      minutes: z.number().int().min(1).max(120).optional(),
-      retention: z.number().min(0.7).max(0.99).optional(),
-      // The orchard door (#315). A new course row sends false; only true changes anything.
-      door_open: z.boolean().optional(),
-    }),
-  }),
-  z.object({
-    type: z.literal("word_state.upsert"),
-    row: z.object({ word_id: wordId, status: z.enum(["queued", "paused", "ignored"]), queued_at: ts.nullish(), updated_at: ts }),
-  }),
-  z.object({ type: z.literal("word_state.delete"), word_id: wordId, updated_at: ts }),
-  z.object({
-    type: z.literal("user_word.upsert"),
-    row: z.object({
-      id: z.uuid(),
-      lang: Lang,
-      lemma: z.string().trim().min(1).max(LIMITS.lemma),
-      gloss: z.string().trim().min(1).max(LIMITS.gloss),
-      pos: z.string().max(LIMITS.pos).nullish(),
-      forms: z.array(z.string().max(LIMITS.form)).max(LIMITS.forms),
-      notes: z.string().max(LIMITS.notes).nullish(),
-      deck_id: z.string().max(120).nullish(),
-    }),
-  }),
-  z.object({ type: z.literal("user_word.delete"), id: z.uuid() }),
-  z.object({
-    type: z.literal("user_sentence.insert"),
-    row: z.object({
-      id: z.uuid(),
-      word_id: wordId,
-      text: z.string().trim().min(1).max(LIMITS.text),
-      translation: z.string().trim().min(1).max(LIMITS.translation),
-      cloze: z.string().trim().min(1).max(LIMITS.cloze),
-      origin: z.enum(["own-text", "ai"]),
-      model: z.string().max(80).nullish(),
-    }),
-  }),
-  z.object({ type: z.literal("user_sentence.delete"), id: z.uuid() }),
-]);
-const WriteBatch = z.object({ mutations: z.array(Mutation).min(1).max(500) });
-type Mutation = z.infer<typeof Mutation>;
-
 /** A device clock can be wrong: never accept times from the future (with a little slack). */
 const clamp = (d: Date, now: Date) => (d.getTime() > now.getTime() ? now : d);
 
@@ -131,12 +63,12 @@ export const QUOTA = { user_word: 5_000, user_sentence: 25_000, word_state: 50_0
  * Refuse (429 quota) when `n` more rows would not fit. The AI routes ask before they
  * call the model: their words are charged before the app writes them.
  */
-export async function ensureRoom(sql: SQL, userId: string, table: "user_word" | "user_sentence", n: number) {
+export async function ensureRoom(sql: SQL, userId: UserId, table: "user_word" | "user_sentence", n: number) {
   const [{ count }] = await sql`select count(*)::int as count from ${sql(table)} where user_id = ${userId}`;
-  if (count + n > QUOTA[table]) throw new HttpError(429, "quota", { table, limit: QUOTA[table] });
+  if (count + n > QUOTA[table]) throw refuse({ error: "quota", table, limit: QUOTA[table] });
 }
 
-async function checkQuota(tx: SQL, userId: string, mutations: Mutation[]) {
+async function checkQuota(tx: SQL, userId: UserId, mutations: readonly Mutation[]) {
   const adds = { user_word: 0, user_sentence: 0, word_state: 0, review: 0 };
   for (const m of mutations) {
     if (m.type === "user_word.upsert") adds.user_word++;
@@ -145,7 +77,7 @@ async function checkQuota(tx: SQL, userId: string, mutations: Mutation[]) {
     else if (m.type === "review.insert") adds.review++;
   }
   const over = (table: keyof typeof QUOTA, n: number, limit: number) => {
-    if (n > limit) throw new HttpError(429, "quota", { table, limit });
+    if (n > limit) throw refuse({ error: "quota", table, limit });
   };
   if (adds.user_word) await ensureRoom(tx, userId, "user_word", adds.user_word);
   if (adds.user_sentence) await ensureRoom(tx, userId, "user_sentence", adds.user_sentence);
@@ -169,9 +101,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * (in the review's language) or one of this learner's own words, saved before
  * or in this batch. Otherwise the whole batch is refused (422 unknown_word).
  */
-async function checkWords(tx: SQL, userId: string, mutations: Mutation[]) {
-  const own = new Set(mutations.flatMap((m) => (m.type === "user_word.upsert" ? [m.row.id] : [])));
-  const refs: { id: string; lang?: string }[] = [];
+async function checkWords(tx: SQL, userId: UserId, mutations: readonly Mutation[]) {
+  const own = new Set<string>(mutations.flatMap((m) => (m.type === "user_word.upsert" ? [m.row.id] : [])));
+  const refs: { id: WordId; lang?: string }[] = [];
   for (const m of mutations) {
     if (m.type === "review.insert") refs.push({ id: m.row.word_id, lang: m.row.lang });
     else if (m.type === "word_state.upsert" && !ignoredForm(m.row.word_id, m.row.status)) refs.push({ id: m.row.word_id });
@@ -182,7 +114,7 @@ async function checkWords(tx: SQL, userId: string, mutations: Mutation[]) {
   const candidates = [...new Set(unknown)].filter((id) => UUID.test(id));
   const found = candidates.length ? new Set((await tx`select id from user_word where user_id = ${userId} and id in ${tx(candidates)}`).map((r: { id: string }) => r.id)) : new Set<string>();
   const missing = unknown.find((id) => !found.has(id));
-  if (missing) throw new HttpError(422, "unknown_word", { word_id: missing.slice(0, 120) });
+  if (missing) throw refuse({ error: "unknown_word", word_id: missing.slice(0, 120) });
 }
 
 /**
@@ -190,16 +122,16 @@ async function checkWords(tx: SQL, userId: string, mutations: Mutation[]) {
  * touched a row (a retried insert, an older state, a delete of nothing): no
  * change reaches the stream, so there is no txid echo to wait for.
  */
-async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Promise<{ txid: number; changed: boolean }> {
+export async function applyWrites(sql: SQL, userId: UserId, mutations: readonly Mutation[]): Promise<WriteResult> {
   const now = new Date();
-  for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw new HttpError(422, "review_from_the_future");
+  for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw refuse({ error: "review_from_the_future" });
   return sql.begin(async (tx) => {
     // Linking an anonymous learner (auth.ts mergeUsers) locks this row and ends
     // the anonymous sessions. A write racing it waits here, then finds no
     // session and is refused, instead of adding rows that the anonymous user's
     // deletion would take with it. A write that got here first is moved over.
     const [user] = await tx`select id from "user" where id = ${userId} for share`;
-    if (!user || !(await tx`select 1 from session where "userId" = ${userId} limit 1`).length) throw new HttpError(401, "sign_in_required");
+    if (!user || !(await tx`select 1 from session where "userId" = ${userId} limit 1`).length) throw refuse({ error: "sign_in_required" });
     await checkQuota(tx, userId, mutations);
     await checkWords(tx, userId, mutations);
     // The txid must be read inside the writing transaction.
@@ -276,19 +208,4 @@ async function applyWrites(sql: SQL, userId: string, mutations: Mutation[]): Pro
     if (started.length) event({ courseStarted: started.join(",") });
     return result;
   });
-}
-
-export async function handleWrite(req: Request, sql: SQL, userId: string): Promise<Response> {
-  const body = WriteBatch.safeParse(await readJson(req, 512 * 1024));
-  if (!body.success) throw new HttpError(422, "bad_request", { issues: body.error.issues.slice(0, 5) });
-  const types: Record<string, number> = {};
-  for (const m of body.data.mutations) types[m.type] = (types[m.type] ?? 0) + 1;
-  // "review.insert:3 course.upsert:1": what the batch was, searchable as text.
-  event({ writes: body.data.mutations.length, writeTypes: Object.entries(types).map(([k, n]) => `${k}:${n}`).join(" ") });
-  // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
-  const result = await Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: body.data.mutations.length } }, () =>
-    applyWrites(sql, userId, body.data.mutations),
-  );
-  event({ writeChanged: result.changed });
-  return json(result);
 }

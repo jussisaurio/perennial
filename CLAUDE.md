@@ -12,6 +12,7 @@ How we write and merge code here. It applies to every session and every agent. T
 - **Delete, don't keep.** No commented-out code, unused exports, or dead branches. Git keeps the history.
 - **Match the surrounding code**: its naming, comment density and idioms. Comments say *why*, in short, plain English.
 - **Small diffs.** One PR does one thing. A refactor is not mixed with a behaviour change.
+- **Effect for I/O** (server, wire contract, later the app's data layer), with the patterns in [docs/effect.md](docs/effect.md). Not in pure code, React or the garden.
 
 ## Tests
 

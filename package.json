@@ -1,12 +1,15 @@
 {
   "name": "perennial",
   "private": true,
-  "workspaces": ["web", "server", "scripts"],
+  "workspaces": ["contract", "web", "server", "scripts"],
   "scripts": {
     "dev": "bun scripts/dev.ts",
     "dev:ai": "bun scripts/dev.ts --ai"
   },
   "devDependencies": {
     "railway": "^3.13.1"
+  },
+  "overrides": {
+    "@effect/platform-node-shared": "4.0.0"
   }
 }
