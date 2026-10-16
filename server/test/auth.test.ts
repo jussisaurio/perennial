@@ -75,6 +75,31 @@ test("the garden's bowl and shelf (#351) move into the account on sign-in, merge
   ]);
 });
 
+test("a find kept on the account's other device while the sign-in merges the garden is not lost (#351)", async () => {
+  const email = unique("left-race");
+  const today = Math.floor(Date.now() / 86_400_000);
+  const account = await t.signIn(email);
+  const accountId = (await t.me(account)).id;
+  const feather = { n: 1, bowl: { thing: "crumbs", day: today - 9, seen: today - 8, found: true }, kept: ["feather"], hooks: [null, null, null], arranged: 0 };
+  await t.write(account, [{ type: "course.upsert", row: { lang: "es", garden_left: feather } }]);
+  const anon = await t.anonymous();
+  await t.write(anon, [{ type: "course.upsert", row: { lang: "es", garden_left: { n: 0, bowl: null, kept: [], hooks: [null, null, null], arranged: 0 } } }]);
+  // The account's other device keeps a ribbon: its write holds the course row while the sign-in starts merging.
+  const conn = await t.connection();
+  await conn.sql`begin`;
+  const ribbon = { ...feather, kept: ["feather", "ribbon"] };
+  await conn.sql`update course set garden_left = ${JSON.stringify(ribbon)}::jsonb where user_id = ${accountId} and lang = 'es'`;
+  const pid = (await conn.sql<{ pid: number }>`select pg_backend_pid() as pid`)[0]!.pid;
+  const linking = t.signIn(email, anon);
+  // The merge waits for that write.
+  while (!(await t.sql`select 1 from pg_stat_activity where ${pid} = any(pg_blocking_pids(pid))`).length) await Bun.sleep(10);
+  await conn.sql`commit`;
+  await conn.close();
+  await linking;
+  const [row] = await t.sql<{ garden_left: { kept: string[] } }>`select garden_left from course where user_id = ${accountId} and lang = 'es'`;
+  expect(row?.garden_left.kept).toEqual(["feather", "ribbon"]);
+});
+
 test("a write racing the sign-in is moved into the account or refused, never silently lost", async () => {
   const email = unique("race");
   await t.signIn(email);

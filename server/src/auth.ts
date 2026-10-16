@@ -40,9 +40,11 @@ const mergeUsers = Effect.fn("Auth.mergeUsers")(function* (from: string, to: str
         select ${to}, word_id, status, queued_at, updated_at from word_state where user_id = ${from}
         on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
         where excluded.updated_at > word_state.updated_at`;
-      // A course on both: the garden's bowl and shelf (#351) merge as two devices' writes do (garden.ts), the one just used as the newer.
+      // A course on both: the garden's bowl and shelf (#351) merge as two devices' writes do (garden.ts mergeLeft), with the
+      // anonymous one as the write: the newer thing left wins, and on a tie the account's. The account's row is locked as it
+      // is read, so a write from its other device waits and is merged, not overwritten.
       const both = yield* sql<{ lang: string; account: GardenLeft; anon: GardenLeft }>`select f.lang, t.garden_left as account, f.garden_left as anon
-        from course f join course t on t.user_id = ${to} and t.lang = f.lang where f.user_id = ${from}`;
+        from course f join course t on t.user_id = ${to} and t.lang = f.lang where f.user_id = ${from} for update of t`;
       // A course the real account already has keeps its settings; a door opened on either stays open.
       yield* sql`insert into course (user_id, lang, minutes, retention, door_open, garden_left, created_at)
         select ${to}, lang, minutes, retention, door_open, garden_left, created_at from course where user_id = ${from}
