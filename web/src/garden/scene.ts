@@ -249,7 +249,6 @@ export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h
   return mesh;
 }
 
-
 /**
  * What every part of the world (#323) is built with: GardenScene.build() makes
  * one of these and passes it, in a fixed order, to each part's build(). The
