@@ -125,12 +125,18 @@ export function reportSlowAuth(step: "send" | "sign-in", path: string, ms: numbe
   Sentry.captureException(new Error(`auth request slow: ${step}`), { tags: { step, path, protocol }, extra: { ms } });
 }
 
+const badAnswerPaths = new Set<string>();
+
 /**
  * Our server answered with a body that breaks the contract (data/http.ts): a
  * bug on one side, or a server newer than this app. The path and what did not
  * fit, never the body itself.
  */
 export function reportBadAnswer(path: string, issue: string) {
+  // Once per path per page load: a broken answer comes back on every request
+  // (each write, each recheck), and one report says all there is to say.
+  if (badAnswerPaths.has(path)) return;
+  badAnswerPaths.add(path);
   Sentry.captureException(new Error(`bad answer: ${path}`), { tags: { path }, extra: { issue } });
 }
 

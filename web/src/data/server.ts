@@ -47,12 +47,10 @@ export function versionAtLeast(v: string, min: string): boolean {
 
 /** Enough of an answer to know whether this app must reload: what the check needs if the rest can't be read. */
 const MinVersion = Schema.Struct({ minClientVersion: Schema.String });
-let reportedBadAnswer = false;
 
-/** An answer that breaks the contract (a bug, or a newer server): reported once, and still read for the reload check. */
+/** An answer that breaks the contract (a bug, or a newer server): reported, and still read for the reload check. */
 function badAnswer(e: BadAnswer) {
-  if (!reportedBadAnswer) reportBadAnswer(e.path, String(e.cause));
-  reportedBadAnswer = true;
+  reportBadAnswer(e.path, String(e.cause));
   const min = Schema.decodeUnknownOption(MinVersion)(e.body);
   if (Option.isSome(min) && !versionAtLeast(APP_VERSION, min.value.minClientVersion)) reloadNeeded.dispatchEvent(new Event("reload"));
 }

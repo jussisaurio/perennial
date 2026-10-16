@@ -24,7 +24,7 @@ const settle = async () => {
   for (let i = 0; i < 20; i++) await Promise.resolve();
 };
 
-test("an answer this app can't fully read still says when to reload; it is reported once, and never rejects", async () => {
+test("an answer this app can't fully read still says when to reload; it is reported, and never rejects", async () => {
   let asked = 0;
   reloadNeeded.addEventListener("reload", () => asked++);
   let tabBack = () => {};
@@ -47,7 +47,7 @@ test("an answer this app can't fully read still says when to reload; it is repor
     Date.now = () => realNow() + 10 * 60_000;
     tabBack();
     await settle();
-    expect(reports.length).toBe(1);
+    expect(reports.length).toBe(2); // reportBadAnswer itself keeps it to one Sentry event per path
   } finally {
     globalThis.fetch = realFetch;
     Date.now = realNow;
