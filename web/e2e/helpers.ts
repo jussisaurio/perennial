@@ -126,6 +126,7 @@ type DoorScene = {
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
   layout: { gate: { x: number }; bounds: { maxZ: number } };
   door: { state: string; key: { x: number; z: number; mesh: { visible: boolean } } | null; leaf: { rotation: { y: number } } };
+  sceneryWorld(): unknown;
 };
 
 /** Stand 2 m in front of the door, facing it, and return where the door shows on the page (pixels), level, clear of the hint at the top. */
@@ -149,25 +150,34 @@ export function standAtDoor(page: Page) {
 
 /**
  * Stand by the hidden key (it hides in a different place for each learner), on
- * open ground 1.4 m from it with nothing between, looking down at it; return
+ * open ground `metres` from it with nothing between, looking at it; return
  * where it shows on the page (pixels).
  */
-export function standByKey(page: Page) {
-  return page.evaluate(async () => {
+export function standByKey(page: Page, metres = 1.4) {
+  return page.evaluate(async (metres) => {
     const { collide } = await import(/* @vite-ignore */ "/src/garden/world.ts");
+    const { thingAt } = await import(/* @vite-ignore */ "/src/garden/scenery.ts");
     const s = (window as unknown as { __garden: DoorScene }).__garden;
     const k = s.door.key!;
-    // Free ground: where a walker may stand, all the way to the key.
+    const eye = 1.05;
+    // In reach a tap meets the key whatever stands in front of it; from farther, nothing may.
+    const { KEY_REACH } = await import(/* @vite-ignore */ "/src/garden/sceneDoor.ts");
+    // Free ground: where a walker may stand, all the way to the key, and nothing in the garden in front of it.
     const free = (x: number, z: number) => {
       const p = collide(s.layout, x, z);
       return Math.hypot(p.x - x, p.z - z) < 1e-9;
     };
-    const way = Array.from({ length: 16 }, (_, i) => (i / 16) * Math.PI * 2).find((a) =>
-      [0.5, 0.75, 1, 1.2, 1.4].every((d) => free(k.x + Math.sin(a) * d, k.z + Math.cos(a) * d)),
-    );
-    if (way === undefined) throw new Error("no open ground beside the key");
-    // Forward is -z at yaw 0: face back along the way, toward the key.
-    Object.assign(s, { x: k.x + Math.sin(way) * 1.4, z: k.z + Math.cos(way) * 1.4, yaw: way, pitch: -0.55 });
+    const seen = (a: number) => {
+      const [x, z] = [k.x + Math.sin(a) * metres, k.z + Math.cos(a) * metres];
+      const len = Math.hypot(metres, eye - 0.03);
+      const ray = { ox: x, oy: eye, oz: z, dx: (k.x - x) / len, dy: (0.03 - eye) / len, dz: (k.z - z) / len };
+      return thingAt(ray, s.sceneryWorld()) >= len;
+    };
+    const steps = Array.from({ length: Math.round((metres - 0.5) / 0.25) + 1 }, (_, i) => 0.5 + i * 0.25).concat(metres);
+    const way = Array.from({ length: 16 }, (_, i) => (i / 16) * Math.PI * 2).find((a) => steps.every((d) => free(k.x + Math.sin(a) * d, k.z + Math.cos(a) * d)) && (metres <= KEY_REACH || seen(a)));
+    if (way === undefined) throw new Error(`no open ground ${metres} m from the key`);
+    // Forward is -z at yaw 0: face back along the way, toward the key, looking down at it.
+    Object.assign(s, { x: k.x + Math.sin(way) * metres, z: k.z + Math.cos(way) * metres, yaw: way, pitch: -Math.atan2(eye - 0.03, metres) });
     return new Promise<[number, number]>((done) =>
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
@@ -177,7 +187,7 @@ export function standByKey(page: Page) {
         }),
       ),
     );
-  });
+  }, metres);
 }
 
 /** The door as plain data: its state, whether the key lies on the ground (null: none was brought) and how far it is from the door (m), and how far open the door is (radians). */
@@ -192,4 +202,65 @@ export function doorNow(page: Page) {
       angle: d.leaf.rotation.y,
     };
   });
+}
+
+// Tap to walk (#336), through the dev-only scene handle (window.__garden).
+export type WalkScene = {
+  x: number;
+  z: number;
+  yaw: number;
+  trip: unknown;
+  camera: unknown;
+  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
+  layout: { beds: { x: number; z: number; w: number; d: number }[]; plants: { id: string; lemma: string; x: number; z: number; bed: number }[] };
+  pickAny(x: number, y: number, w: number, h: number): { kind: string; p?: { id: string } } | null;
+};
+
+/** Where the walker stands and which way they face, and whether a walk is under way. */
+export const walker = (page: Page) =>
+  page.evaluate(() => {
+    const s = (window as unknown as { __garden: WalkScene }).__garden;
+    return { x: s.x, z: s.z, yaw: s.yaw, walking: !!s.trip };
+  });
+
+/**
+ * Stand in front of the first bed, a little left, and face `off` radians left
+ * of a spot 3 m away on the path in front of it, to the right. Returns where
+ * the spot shows on the page (pixels), the spot, and what a tap there meets.
+ */
+export function aimAtGround(page: Page, off: number) {
+  return page.evaluate(
+    (off) =>
+      new Promise<{ x: number; y: number; to: { x: number; z: number }; kind: string | undefined; yaw: number }>((done) => {
+        const s = (window as unknown as { __garden: WalkScene }).__garden;
+        const bed = s.layout.beds[0];
+        const to = { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 0.9 };
+        const from = { x: bed.x - 1, z: bed.z + bed.d / 2 + 3 };
+        // Forward is -z at yaw 0.
+        const yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z)) + off;
+        Object.assign(s, { ...from, yaw, pitch: -0.35 });
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const v = new s.tmp.constructor(to.x, 0, to.z).project(s.camera);
+            const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+            const [x, y] = [((v.x + 1) / 2) * r.width, ((1 - v.y) / 2) * r.height];
+            done({ x: r.left + x, y: r.top + y, to, kind: s.pickAny(x, y, r.width, r.height)?.kind, yaw });
+          }),
+        );
+      }),
+    off,
+  );
+}
+
+/** Wait until a walk has reached `to` and stopped there. */
+export async function arrives(page: Page, to: { x: number; z: number }) {
+  await expect
+    .poll(
+      async () => {
+        const w = await walker(page);
+        return !w.walking && Math.hypot(w.x - to.x, w.z - to.z) < 0.05;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
 }

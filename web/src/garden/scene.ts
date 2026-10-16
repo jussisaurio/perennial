@@ -4,8 +4,8 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { along, benchAt, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, type KeySpot, type Layout, type PlacedPlant } from "./world";
-import { benchLine, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
+import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
+import { benchLine, collideTrees, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
@@ -13,12 +13,12 @@ import { plantHeight as plantHeightOf } from "../ui/plant";
 import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
-import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
+import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
 import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
-import { Plants } from "./scenePlants";
+import { NAME_NEAR, Plants } from "./scenePlants";
 import { TAP_PRIORITY, type Conditions, type Frame, type Part, type TapHit } from "./scenePart";
 import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 
@@ -73,6 +73,8 @@ export interface SceneCallbacks {
   onDoor: (a: DoorAction | null) => void;
   /** The learner opened the door with the key: it stays open (saved with the course). */
   onDoorOpen: () => void;
+  /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
+  onStall: () => void;
 }
 
 export interface Input {
@@ -83,6 +85,14 @@ export interface Input {
 
 const EYE = 1.05;
 const WALK = 3.6;
+/** Ground nearer than this (m) is in reach (#336): a tap on it names the path, as before; farther ground is walked to. */
+const GROUND_REACH = 1.5;
+/** Where a walk to the door stops: on the path in front of it, in reach of it (sceneDoor.ts DOOR_REACH). */
+const DOOR_STAND = 1.4;
+/** A walk to the key stops this short of it (m), so it is still in view, in reach (KEY_REACH). */
+const KEY_STAND = 1;
+/** How fast the view turns toward where a walk goes: the share of the turn left that it makes per second. */
+const TRIP_TURN = 3;
 /**
  * Width of the framebuffer, in pixels, for each level of detail. Normal
  * renders at about screen resolution on most screens (the textures keep the
@@ -134,6 +144,18 @@ export class GardenScene {
   private bob = 0;
   /** A glide to a plant: along `path` (world.ts route), turning from one yaw and pitch to the other, `t` 0 to 1 over `s` seconds. */
   private glide: { path: [number, number][]; yaw: [number, number]; pitch: [number, number]; t: number; s: number } | null = null;
+  /**
+   * A walk to a tapped spot (#336, world.ts Trip and walkStep). It turns the
+   * view gently toward where it goes while `turn` (never with reduced motion,
+   * and no more once the viewer looks round themselves). On arrival it does
+   * `then` (a plant's card, the door).
+   */
+  private trip: (Trip & { then: (() => void) | null; turn: boolean }) | null = null;
+  /** Where a walk's frame moves the walker (walkStep fills it in place); and whether a stalled walk was reported this time in the garden. */
+  private at = { x: 0, z: 0 };
+  private stallReported = false;
+  /** The ring on the ground where a walk goes. */
+  private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
   private mats = new Set<THREE.ShaderMaterial>();
   private basic: THREE.MeshBasicMaterial[] = [];
@@ -395,15 +417,31 @@ export class GardenScene {
     const z0 = L.bounds.maxZ + HEDGE.gap;
     const toDoor = rayBox(r, [L.gate.x - DOOR_HALF, 0, z0 - 0.05], [L.gate.x + DOOR_HALF, DOOR.h, z0 + DOOR.thick + 0.05]);
     // A small thing on the ground: a generous disc round it, so a finger finds it.
-    // Only within reach, as for its button: a tap across the garden must not pick it up.
-    const reach = d.key && d.state === "key" && Math.hypot(this.x - d.key.x, this.z - d.key.z) < KEY_REACH;
-    const toKey = reach && d.key ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
+    // From farther than its reach too: a tap there walks to it first (tapDoor, #336). There, whatever
+    // stands in front of it (a lantern, the sunflower) is what the tap meets; in reach the key comes first, as it did.
+    const disc = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
+    const toKey = disc < Infinity && !this.inReach("key") && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
     if (toKey <= toDoor) return "key";
     return d.state === "held" ? "open" : "try";
   }
 
-  /** Try the door, pick up the key, or open the door with it: from a tap, or the door's button. Anything else no longer applies and does nothing. */
+  /** Is the viewer near enough to the key (for "key") or the door (the rest) to act on it? */
+  private inReach(a: DoorAction): boolean {
+    const k = this.door.key;
+    if (a === "key") return !!k && Math.hypot(this.x - k.x, this.z - k.z) < KEY_REACH;
+    return Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH;
+  }
+
+  /** A tap on the key or the door (#336): act on it in reach; from farther away, walk up to it first. */
+  tapDoor(a: DoorAction) {
+    if (this.inReach(a)) return this.doorAct(a);
+    const k = this.door.key;
+    if (a === "key" && k) this.goTo(k.x, k.z, KEY_STAND, () => this.doorAct(a));
+    else this.goTo(this.layout.gate.x, this.layout.bounds.maxZ - DOOR_STAND, 0, () => this.doorAct(a));
+  }
+
+  /** Try the door, pick up the key, or open the door with it: from a tap in reach, or the door's button. Anything else no longer applies and does nothing. */
   doorAct(a: DoorAction) {
     const d = this.door;
     const L = this.layout;
@@ -670,7 +708,7 @@ export class GardenScene {
     this.scene.add(decorMesh);
   }
 
-  /** The marker over the selected plant, always on top of the hills and clouds. */
+  /** The marker over the selected plant, always on top of the hills and clouds; and the ring on the ground where a walk goes. */
   private buildMarker() {
     // Always on top: no depth test, and in the transparent pass with the highest
     // renderOrder, because the far hills and clouds draw in that pass after the
@@ -682,6 +720,11 @@ export class GardenScene {
     this.marker.renderOrder = 10;
     this.marker.visible = false;
     this.scene.add(this.marker);
+    // Where a walk goes (#336): flat on the ground, a little above the path so it never flickers into it.
+    this.spot = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), new THREE.MeshBasicMaterial({ map: T.pixelTexture(T.spot()), alphaTest: 0.5, transparent: true, depthWrite: false }));
+    this.spot.rotation.x = -Math.PI / 2;
+    this.spot.visible = false;
+    this.scene.add(this.spot);
   }
 
   /** The visitor under a point on the canvas (CSS pixels), if any. */
@@ -704,7 +747,29 @@ export class GardenScene {
   pickScenery(cssX: number, cssY: number, cssW: number, cssH: number): { view: SceneryView; hit: SceneryHit } | null {
     const words = this.visitors.scenery;
     if (!words) return null;
-    const world: SceneryWorld = {
+    const hit = pickScenery(this.ray(cssX, cssY, cssW, cssH), this.sceneryWorld(), (id) => !!words[id]);
+    return hit ? { view: words[hit.id]!, hit } : null;
+  }
+
+  /**
+   * Open ground a tap walks to (#336), out of reach, inside the fence or the
+   * open orchard, with nothing in front of it; else null. Ask after the
+   * plants, visitors, trees and door, before the scenery: the ground in reach
+   * and the grass outside the fence still name themselves.
+   */
+  pickGround(cssX: number, cssY: number, cssW: number, cssH: number): { x: number; z: number } | null {
+    const g = groundAt(this.ray(cssX, cssY, cssW, cssH), this.sceneryWorld());
+    if (!g || Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH) return null;
+    const b = this.layout.bounds;
+    const o = this.layout.orchard;
+    const inGarden = g.x > b.minX && g.x < b.maxX && g.z > b.minZ && g.z < b.maxZ;
+    const inOrchard = !!this.orchard && Math.abs(g.x - o.x) < o.w / 2 && Math.abs(g.z - o.z) < o.d / 2;
+    return inGarden || inOrchard ? g : null;
+  }
+
+  /** Everything a tap can meet in the garden itself, as it stands now (the clouds and the sun move). */
+  private sceneryWorld(): SceneryWorld {
+    return {
       boxes: this.hitBoxes,
       discs: this.hitDiscs,
       bounds: this.layout.bounds,
@@ -716,8 +781,6 @@ export class GardenScene {
       clouds: this.sky.cloudPositions,
       cloudHalf: [8.8, 5],
     };
-    const hit = pickScenery(this.ray(cssX, cssY, cssW, cssH), world, (id) => !!words[id]);
-    return hit ? { view: words[hit.id]!, hit } : null;
   }
 
   /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
@@ -811,6 +874,8 @@ export class GardenScene {
 
   look(dx: number, dy: number) {
     this.glide = null;
+    // A walk goes on, but the viewer looks where they like now.
+    if (this.trip) this.trip.turn = false;
     this.yaw -= dx * 0.0055;
     this.pitch = Math.max(-0.75, Math.min(0.5, this.pitch - dy * 0.004));
   }
@@ -818,12 +883,86 @@ export class GardenScene {
   /** Walk straight ahead (or back, if negative) by `metres`. */
   step(metres: number) {
     this.glide = null;
+    this.endTrip();
     ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, this.x - Math.sin(this.yaw) * metres, this.z - Math.cos(this.yaw) * metres, this.door.state === "open", this.trunks));
   }
 
   turn(amount: number) {
     this.glide = null;
+    if (this.trip) this.trip.turn = false;
     this.yaw += amount;
+  }
+
+  /** Walk to open ground (#336, a tap on it). */
+  walkTo(x: number, z: number) {
+    this.goTo(x, z, 0, null);
+  }
+
+  /** A tap on a plant (#336): its card opens where you stand when its name shows; from farther away, you walk to it first. */
+  tapPlant(p: PlacedPlant) {
+    if (Math.hypot(p.x - this.x, p.z - this.z) < NAME_NEAR) {
+      // A walk under way stops: the viewer is looking at this plant now.
+      this.endTrip();
+      return this.select(p);
+    }
+    this.select(null);
+    const v = viewpoint(this.layout, p);
+    // On arrival, the short glide that faces the plant, as Next plant does, and its card.
+    this.goTo(v.x, v.z, 0, () => this.select(p, true));
+  }
+
+  /** Walk round whatever is in the way to (x, z), or as near as a walker may stand, then stop `stop` m short and do `then`. */
+  private goTo(x: number, z: number, stop: number, then: (() => void) | null) {
+    const open = this.door.state === "open";
+    const free = (px: number, pz: number) => {
+      const p = collide(this.layout, px, pz, WALKER, open);
+      return collideTrees(this.trunks, p.x, p.z, WALKER);
+    };
+    // A glide (Next plant) passes over beds; a tap during one starts from where a walker would stand.
+    ({ x: this.x, z: this.z } = free(this.x, this.z));
+    const to = free(x, z);
+    this.glide = null;
+    this.trip = { way: wayTo(this.layout, this.x, this.z, to.x, to.z, open, this.trunks), leg: 1, stop, then, turn: !this.reducedMotion, stuck: 0 };
+    this.spot.position.set(to.x, 0.03, to.z);
+    this.spot.visible = true;
+  }
+
+  private endTrip() {
+    this.trip = null;
+    this.spot.visible = false;
+  }
+
+  /**
+   * One frame of a walk (#336): toward the next corner at walking speed (world.ts walkStep).
+   * The view turns gently toward where it goes; with reduced motion it keeps still, and the walk moves at an even pace.
+   */
+  private walkOn(dt: number) {
+    const g = this.trip!;
+    this.at.x = this.x;
+    this.at.z = this.z;
+    const now = walkStep(this.layout, g, this.at, WALK * dt, dt, this.door.state === "open", this.trunks);
+    this.x = this.at.x;
+    this.z = this.at.z;
+    if (now === "arrived") {
+      const then = g.then;
+      this.endTrip();
+      return then?.();
+    }
+    if (now === "stalled") {
+      this.endTrip();
+      // Once per walk in the garden: a broken way is worth one report, not one a tap.
+      if (!this.stallReported) this.cb.onStall();
+      this.stallReported = true;
+      return;
+    }
+    this.bob += dt * WALK * 3.2;
+    const [cx, cz] = g.way[g.leg];
+    if (g.turn && g.stuck === 0) {
+      // Forward is -z at yaw 0; turn the short way round.
+      let d = Math.atan2(-(cx - this.x), -(cz - this.z)) - this.yaw;
+      d -= Math.round(d / (Math.PI * 2)) * Math.PI * 2;
+      this.yaw += d * Math.min(1, dt * TRIP_TURN);
+    }
   }
 
   /** Select the plant under a point on the canvas (CSS pixels), if any. */
@@ -839,11 +978,12 @@ export class GardenScene {
   }
 
   /**
-   * One tap (CSS pixels): the visitor, plant, orchard tree, door or key, or
-   * scenery word it meets, in that order — the chain GardenWalk.tsx used to
-   * run itself, five sequential if-returns (#323). Every pick here is pure
-   * (no side effects), so asking all five and keeping the first match in
-   * TAP_PRIORITY is exactly that chain's short-circuit, as one table instead.
+   * One tap (CSS pixels): the visitor, plant, orchard tree, door or key,
+   * open ground to walk to (#336), or scenery word it meets, in that order —
+   * the chain GardenWalk.tsx used to run itself as sequential if-returns
+   * (#323). Every pick here is pure (no side effects), so asking all of them
+   * and keeping the first match in TAP_PRIORITY is exactly that chain's
+   * short-circuit, as one table instead.
    */
   pickAny(cssX: number, cssY: number, cssW: number, cssH: number): TapHit | null {
     const hits: Partial<Record<TapHit["kind"], TapHit>> = {};
@@ -855,6 +995,8 @@ export class GardenScene {
     if (t) hits.tree = { kind: "tree", t };
     const d = this.pickDoor(cssX, cssY, cssW, cssH);
     if (d) hits.door = { kind: "door", a: d };
+    const g = this.pickGround(cssX, cssY, cssW, cssH);
+    if (g) hits.walk = { kind: "walk", ...g };
     const s = this.pickScenery(cssX, cssY, cssW, cssH);
     if (s) hits.scenery = { kind: "scenery", s };
     for (const kind of TAP_PRIORITY) {
@@ -871,6 +1013,7 @@ export class GardenScene {
     for (const mat of this.mats) mat.uniforms.uSelected.value = index;
     this.marker.visible = !!p;
     if (p && walkTo) {
+      this.endTrip();
       const v = viewpoint(this.layout, p);
       // Turn the short way round.
       let yaw = v.yaw;
@@ -913,6 +1056,7 @@ export class GardenScene {
     const len = Math.hypot(move.x, move.y);
     if (len > 0.01) {
       this.glide = null;
+      if (this.trip) this.endTrip();
       const speed = WALK * (run ? 2 : 1) * Math.min(1, len);
       const fx = -Math.sin(this.yaw);
       const fz = -Math.cos(this.yaw);
@@ -921,6 +1065,7 @@ export class GardenScene {
       ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, nx, nz, this.door.state === "open", this.trunks));
       this.bob += dt * speed * 3.2;
     }
+    if (this.trip) this.walkOn(dt);
     if (this.glide) {
       const g = this.glide;
       g.t = Math.min(1, g.t + dt / g.s);
@@ -1032,8 +1177,8 @@ export class GardenScene {
    */
   private reportDoor() {
     const d = this.door;
-    const nearKey = d.state === "key" && !!d.key && Math.hypot(this.x - d.key.x, this.z - d.key.z) < KEY_REACH;
-    const nearDoor = d.state !== "open" && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH;
+    const nearKey = d.state === "key" && this.inReach("key");
+    const nearDoor = d.state !== "open" && this.inReach("try");
     const a: DoorAction | null = nearKey ? "key" : !nearDoor ? null : d.state === "held" ? "open" : "try";
     if (a === d.near) return;
     d.near = a;

@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
 import { language } from "../content/languages";
+import { reportStalledWalk } from "../observability";
 import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
 import type { Detail, DoorAction, DoorState, GardenScene, Label, TimeOfDay, WalkVisitors } from "../garden/scene";
@@ -102,7 +103,7 @@ export function useGardenScene({
         s = new mod.GardenScene(
           canvas.current!,
           data.l,
-          { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]), onDoor: setDoorNear, onDoorOpen: () => openDoor.current() },
+          { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]), onDoor: setDoorNear, onDoorOpen: () => openDoor.current(), onStall: () => reportStalledWalk(data.l.plants.length) },
           reduced,
           lang,
           data.visitors,

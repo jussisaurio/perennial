@@ -327,6 +327,150 @@ export function route(l: Layout, x: number, z: number, toX: number, toZ: number)
   return out;
 }
 
+/** How far from a bed's corner, the pond or a trunk a way on foot turns: a little more than a walker's radius, so its legs pass clear. */
+const TURN_CLEAR = WALKER + 0.12;
+/** A leg must clear things by a hair less than a walker's radius: a walker that collide pushed against a bed stands exactly a radius from it. */
+const LEG_CLEAR = WALKER - 0.01;
+
+/** Does the segment a→b pass through the rectangle (grown by `pad`)? Touching its edge does not count. */
+function crossesRect(ax: number, az: number, bx: number, bz: number, [x0, x1, z0, z1]: Rect, pad: number): boolean {
+  let t0 = 0;
+  let t1 = 1;
+  const d = [bx - ax, bz - az];
+  const o = [ax, az];
+  const lo = [x0 - pad, z0 - pad];
+  const hi = [x1 + pad, z1 + pad];
+  for (let i = 0; i < 2; i++) {
+    if (Math.abs(d[i]) < 1e-12) {
+      if (o[i] <= lo[i] || o[i] >= hi[i]) return false;
+      continue;
+    }
+    let n = (lo[i] - o[i]) / d[i];
+    let f = (hi[i] - o[i]) / d[i];
+    if (n > f) [n, f] = [f, n];
+    t0 = Math.max(t0, n);
+    t1 = Math.min(t1, f);
+    if (t1 - t0 <= 1e-9) return false;
+  }
+  return true;
+}
+
+/** The distance from (x, z) to the segment a→b. */
+function toSegment(x: number, z: number, ax: number, az: number, bx: number, bz: number): number {
+  const dx = bx - ax;
+  const dz = bz - az;
+  const len = dx * dx + dz * dz;
+  const k = len ? Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / len)) : 0;
+  return Math.hypot(x - ax - dx * k, z - az - dz * k);
+}
+
+/**
+ * The way on foot to a spot (#336, tap to walk): the shortest line of corners
+ * round the beds, the pond, the hedge (through the door when it is open) and
+ * the orchard's trunks, from (x, z) to (toX, toZ). Both ends must be where a
+ * walker may stand (collide, collideTrees). Straight there when nothing is in
+ * the way, which is most taps. Corners in order, from (x, z) to the spot.
+ */
+export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean, trees: readonly PlacedTree[]): [number, number][] {
+  const near = l.orchard.z - l.orchard.d / 2;
+  const [h0, h1] = hedgeSpan(l);
+  const rects: Rect[] = [
+    ...l.beds.map((b): Rect => [b.x - b.w / 2, b.x + b.w / 2, b.z - b.d / 2, b.z + b.d / 2]),
+    // The hedge, either side of the door; across it too while the door is shut.
+    ...(doorOpen
+      ? [[h0, l.gate.x - DOOR_HALF, l.bounds.maxZ, near] as Rect, [l.gate.x + DOOR_HALF, h1, l.bounds.maxZ, near] as Rect]
+      : [[h0, h1, l.bounds.maxZ, near] as Rect]),
+  ];
+  const rounds = [l.pond, ...trees.map((t) => ({ x: t.x, z: t.z, r: t.trunk }))];
+  const clear = (ax: number, az: number, bx: number, bz: number) =>
+    rects.every((r) => !crossesRect(ax, az, bx, bz, r, LEG_CLEAR)) && rounds.every((c) => toSegment(c.x, c.z, ax, az, bx, bz) >= c.r + LEG_CLEAR);
+  if (clear(x, z, toX, toZ)) return [[x, z], [toX, toZ]];
+
+  // Turning points: just off every corner, and round every round thing; only those a walker may stand on.
+  const free = (px: number, pz: number) => {
+    const p = collide(l, px, pz, WALKER, doorOpen);
+    const q = collideTrees(trees, p.x, p.z, WALKER);
+    return Math.hypot(q.x - px, q.z - pz) < 1e-9;
+  };
+  const points: [number, number][] = [[x, z], [toX, toZ]];
+  for (const [x0, x1, z0, z1] of rects)
+    for (const px of [x0 - TURN_CLEAR, x1 + TURN_CLEAR]) for (const pz of [z0 - TURN_CLEAR, z1 + TURN_CLEAR]) if (free(px, pz)) points.push([px, pz]);
+  // Eight points round a circle, far enough out that the octagon's sides clear it too.
+  for (const c of rounds)
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      const r = (c.r + TURN_CLEAR) / Math.cos(Math.PI / 8);
+      if (free(c.x + Math.cos(a) * r, c.z + Math.sin(a) * r)) points.push([c.x + Math.cos(a) * r, c.z + Math.sin(a) * r]);
+    }
+
+  // Dijkstra over the points, joined where a straight leg is clear.
+  const n = points.length;
+  const dist = new Array<number>(n).fill(Infinity);
+  const from = new Array<number>(n).fill(-1);
+  const done = new Array<boolean>(n).fill(false);
+  dist[0] = 0;
+  for (;;) {
+    let u = -1;
+    for (let i = 0; i < n; i++) if (!done[i] && dist[i] < Infinity && (u < 0 || dist[i] < dist[u])) u = i;
+    // Every spot a walker may stand on is reachable from every other (world.test.ts): no way means a bug, so say so.
+    if (u < 0) throw new Error(`no way on foot from ${x.toFixed(2)},${z.toFixed(2)} to ${toX.toFixed(2)},${toZ.toFixed(2)}`);
+    if (u === 1) break;
+    done[u] = true;
+    const [ux, uz] = points[u];
+    for (let v = 0; v < n; v++) {
+      if (done[v]) continue;
+      const d = dist[u] + Math.hypot(points[v][0] - ux, points[v][1] - uz);
+      if (d < dist[v] && clear(ux, uz, points[v][0], points[v][1])) {
+        dist[v] = d;
+        from[v] = u;
+      }
+    }
+  }
+  const way: [number, number][] = [];
+  for (let i = 1; i >= 0; i = from[i]) way.unshift(points[i]);
+  return way;
+}
+
+/** A walk to a tapped spot under way (#336): its way (wayTo), the corner it heads for, how far short of the end it stops (m), and seconds without headway. */
+export interface Trip {
+  way: [number, number][];
+  leg: number;
+  stop: number;
+  stuck: number;
+}
+
+/**
+ * A walk that makes no headway for this long (s) has stalled: something holds
+ * it that wayTo did not plan round. That should never happen, so it is
+ * reported; the walk ends rather than walk into a wall for ever.
+ */
+export const TRIP_STUCK = 0.5;
+
+/**
+ * One frame of a walk: the walker at `at` moves up to `metres` toward the
+ * trip's next corner, through walk()'s collisions (`at` is updated in place).
+ * "arrived" within `stop` of the end, "stalled" after TRIP_STUCK seconds
+ * without headway, else "walking".
+ */
+export function walkStep(l: Layout, t: Trip, at: { x: number; z: number }, metres: number, dt: number, doorOpen: boolean, trees: readonly PlacedTree[]): "walking" | "arrived" | "stalled" {
+  const [cx, cz] = t.way[t.leg];
+  const last = t.leg === t.way.length - 1;
+  const gap = Math.hypot(cx - at.x, cz - at.z);
+  const left = gap - (last ? t.stop : 0);
+  if (left < 1e-3) {
+    if (last) return "arrived";
+    t.leg++;
+    return "walking";
+  }
+  const step = Math.min(left, metres);
+  const k = step / gap;
+  const x0 = at.x;
+  const z0 = at.z;
+  ({ x: at.x, z: at.z } = walk(l, x0, z0, x0 + (cx - x0) * k, z0 + (cz - z0) * k, doorOpen, trees));
+  t.stuck = Math.hypot(at.x - x0, at.z - z0) < step / 4 ? t.stuck + dt : 0;
+  return t.stuck > TRIP_STUCK ? "stalled" : "walking";
+}
+
 /** The point a fraction `k` (0 to 1) of the way along a route, by length. */
 export function along(path: readonly [number, number][], k: number): { x: number; z: number } {
   // The ends exactly: summing and subtracting leg lengths rounds, and Math.hypot rounds differently per platform.

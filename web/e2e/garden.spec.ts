@@ -1,5 +1,5 @@
 import { expect, test } from "./test";
-import { plantNearMiddle, settledGardenWidth, startCourse } from "./helpers";
+import { aimAtGround, arrives, plantNearMiddle, settledGardenWidth, startCourse, walker } from "./helpers";
 
 test("walk-in garden: every word is a plant; next plant, listen, time of day, and back", async ({ page }) => {
   const errors: string[] = [];
@@ -268,4 +268,50 @@ test("the walk switches off swipe-back navigation while it is open, and only the
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.locator(".gw")).toHaveCount(0);
   expect(await rootOverscroll()).toEqual(["auto", "auto"]);
+});
+
+// Tap to walk (#336) with a mouse: a click on the ground walks there. The view
+// turns gently toward where you walk, unless the viewer asked for reduced motion.
+for (const reducedMotion of ["no-preference", "reduce"] as const)
+  test.describe(`motion: ${reducedMotion}`, () => {
+    test.use({ reducedMotion });
+    test(`a click on the ground walks there; the view ${reducedMotion === "reduce" ? "keeps still" : "turns toward it"} (#336)`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on("pageerror", (e) => errors.push(String(e)));
+      await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+      await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+      await page.goto("/?demo=es:30#/today");
+      await page.getByRole("button", { name: "Walk in your garden" }).click();
+      await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+      await page.waitForFunction(() => "__garden" in window);
+      // Facing a little left of the spot.
+      const { x, y, to, kind, yaw } = await aimAtGround(page, 0.4);
+      expect(kind).toBe("walk");
+      await page.mouse.click(x, y);
+      await arrives(page, to);
+      const turned = yaw - (await walker(page)).yaw;
+      if (reducedMotion === "reduce") expect(turned).toBe(0);
+      else expect(turned).toBeGreaterThan(0.2);
+      expect(errors).toEqual([]);
+    });
+  });
+
+test("a walking key takes over from a walk under way (#336)", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await page.goto("/?demo=es:30#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  const { x, y, to } = await aimAtGround(page, 0);
+  const start = await walker(page);
+  await page.mouse.click(x, y);
+  expect((await walker(page)).walking).toBe(true);
+  // S steps back: the walk stops, and you end up farther from where it went.
+  await page.keyboard.down("KeyS");
+  await page.waitForTimeout(500);
+  await page.keyboard.up("KeyS");
+  const after = await walker(page);
+  expect(after.walking).toBe(false);
+  expect(Math.hypot(after.x - to.x, after.z - to.z)).toBeGreaterThan(Math.hypot(start.x - to.x, start.z - to.z));
 });

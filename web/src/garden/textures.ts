@@ -541,6 +541,14 @@ export function marker(): HTMLCanvasElement {
   return c;
 }
 
+/** Where a tap sends you (#336): a small pale ring on the ground, seen from above. */
+export function spot(): HTMLCanvasElement {
+  const rows = ["...####...", ".##....##.", "#........#", "#........#", ".##....##.", "...####..."];
+  const [c, ctx] = canvas(10, 10);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, x, y + 2, "#fff6d8")));
+  return c;
+}
+
 // ---- Word plants --------------------------------------------------------
 //
 // Two levels of detail. Every plant has a small sprite in a "low" sheet,

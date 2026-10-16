@@ -12,6 +12,9 @@ import { boardBox } from "./scenery";
 import type { Layout, PlacedPlant } from "./world";
 import * as T from "./textures";
 
+/** Plants this near you (m) show their names; a tap on one opens its card where you stand, and a tap on one farther away walks to it first (#336). */
+export const NAME_NEAR = 3.2;
+
 // Plants: like other sprites (BILLBOARD, SHADE: sceneSprites.ts), but each
 // samples its small sprite, or its full-size one once the streamer has put
 // it in a pool slot (iCell.y >= 0).
@@ -348,14 +351,14 @@ export class Plants {
     const near: { p: PlacedPlant; d: number }[] = [];
     for (const p of this.layout.plants) {
       const d = Math.hypot(p.x - x, p.z - z);
-      if (d < 3.2) near.push({ p, d });
+      if (d < NAME_NEAR) near.push({ p, d });
     }
     near.sort((a, b) => a.d - b.d);
     const out: Label[] = [];
     for (const { p, d } of near.slice(0, 10)) {
       v.set(p.x, BED_H + plantHeight(p.growth) + 0.12, p.z).project(this.camera);
       if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
-      out.push({ id: p.id, text: p.lemma, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / 3.2 });
+      out.push({ id: p.id, text: p.lemma, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / NAME_NEAR });
     }
     return out;
   }
