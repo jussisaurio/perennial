@@ -54,13 +54,15 @@ export interface UserWordRow {
 
 const Forms = Schema.Array(Schema.String);
 // /api/write once stored `forms` as a jsonb string holding the list's JSON text (#337),
-// so those rows stream a string. A migration fixes them; until then, both shapes are the list.
+// so those rows stream a string. A migration fixes the stored rows, but this stays: during a
+// deploy, the older server can still write string rows after the migration ran.
 const decodeForms = Schema.decodeUnknownOption(Schema.Union([Forms, Schema.fromJsonString(Forms)]));
 
 /**
  * A user_word row as Electric streams it, with `forms` as a list. Forms of any
  * other shape are a bug: the word gets no forms of its own (the learner model
  * then uses the lemma), and `bad` hears the type that came, never the value.
+ * A later edit of that word saves its forms as `[]`.
  */
 export function syncedUserWord<R extends Record<string, unknown>>(row: R, bad: (type: string) => void): R {
   // An update carries only the columns it changed.
