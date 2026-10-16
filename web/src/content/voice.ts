@@ -110,8 +110,6 @@ export const sendingLabel = (now = new Date()) => (rareDay(6, "by-bee", now) ? "
 export const savedLine = (now = new Date()) => (rareDay(4, "saved", now) ? "All changes are saved. The gardener wrote them down." : "All changes are saved.");
 export const errorLine = (now = new Date()) => (rareDay(3, "leaf", now) ? "Something went wrong. Try again. A leaf fell in the machine." : "Something went wrong. Try again.");
 export const SOUND_OFF_ASIDE = "The birds will sing quietly to themselves.";
-/** The walk switched itself to low quality (seen once per device). */
-export const SLOW_DEVICE_NOTICE = "The garden was slow on this device, so it now uses bigger pixels. You can change this at the top. The plants do not mind.";
 /** The Today activity chart's tooltip for a day with no reviews. */
 export const restDayLine = (date: string) => `${date}: rest day. Plants grow on rest days too.`;
 

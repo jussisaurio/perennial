@@ -6,7 +6,7 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
   page.on("pageerror", (e) => errors.push(String(e)));
   // Pin low quality. CI draws WebGL in software: at normal quality every frame is
   // slow, and each click waits for frames (about 2.5 s a click), so the test ran into
-  // its timeout. Low is also what the app picks by itself on a slow device.
+  // its timeout.
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();

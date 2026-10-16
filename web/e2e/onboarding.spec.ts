@@ -28,6 +28,8 @@ test("landing: a saved choice of a language this build does not have falls back 
 });
 
 test("landing: walk through the showcase garden in 3D, view only", async ({ page }) => {
+  // Low quality: CI draws WebGL in software, and normal quality is too slow there (garden.spec.ts).
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
   await page.goto("/");
   await page.getByRole("button", { name: "Walk through this garden in 3D" }).click();
   await expect(page.getByText(/\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 15000 });

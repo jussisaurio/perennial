@@ -125,6 +125,8 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
 });
 
 test("the walk's Water button: the rest of today's 5 minutes, then 5 more once done", async ({ page }) => {
+  // Low quality: CI draws WebGL in software, and normal quality is too slow there (garden.spec.ts).
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
   await page.clock.setFixedTime(MORNING);
   await startCourse(page);
   await answered(page, { count: 6, minutes: 1, daysAgo: 30 }); // thirsty plants
