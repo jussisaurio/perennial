@@ -4,7 +4,7 @@
 
 import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { z } from "zod";
+import { Result, Schema, SchemaIssue } from "effect";
 import { Deck, GARDEN_WORDS, ID_ALPHABET, ORCHARD_WORDS, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
 import { locate } from "../../web/src/content/text.ts";
 
@@ -12,26 +12,42 @@ export const ROOT = join(import.meta.dir, "../..");
 export const deckDir = (lang: string) => join(ROOT, "decks", lang);
 export const WORDS_PER_FILE = 100;
 
-export const Manifest = z.object({
-  words: z.record(z.string(), z.string()),
-  sentences: z.record(z.string(), z.string()),
-});
-export type Manifest = z.infer<typeof Manifest>;
+/**
+ * Decodes `input` against `schema`, reporting every problem (not just the
+ * first), as zod's `safeParse` did for these content-authoring tools.
+ */
+export function decode<S extends Schema.ConstraintDecoder<unknown>>(
+  schema: S,
+  input: unknown,
+): { success: true; data: S["Type"] } | { success: false; issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey>; message: string }> } {
+  const result = Schema.decodeUnknownResult(schema, { errors: "all" })(input);
+  if (Result.isSuccess(result)) return { success: true, data: result.success };
+  const issues = SchemaIssue.makeFormatterStandardSchemaV1()(result.failure.issue).issues;
+  // A path segment is always a plain PropertyKey in practice; normalize the few
+  // Standard Schema forms that allow a `{ key }` wrapper too.
+  return { success: false, issues: issues.map((i) => ({ path: (i.path ?? []).map((p) => (typeof p === "object" ? p.key : p)), message: i.message })) };
+}
 
-/** Alias file: { duplicateWordId: targetWordId }, written by hand. */
-const Aliases = z.record(z.string(), z.string());
+export const Manifest = Schema.Struct({
+  words: Schema.Record(Schema.String, Schema.mutableKey(Schema.String)),
+  sentences: Schema.Record(Schema.String, Schema.mutableKey(Schema.String)),
+});
+export interface Manifest extends Schema.Schema.Type<typeof Manifest> {}
+
+/** Alias file: { duplicateWordId: targetWordId }, written by hand. Read-only, so a plain (readonly-value) record. */
+const Aliases = Schema.Record(Schema.String, Schema.String);
 
 /**
  * Garden file: which word brings which garden thing (#209), the word as
  * "lemma|pos" or "lemma|pos|sense". Apart from the source, so adding one does
  * not change an approved source file. A list, so a thing or a word named twice is seen.
  */
-const Garden = z.array(z.object({ garden: z.enum(GARDEN_WORDS), word: z.string() }));
-export type Garden = z.infer<typeof Garden>;
+const Garden = Schema.Array(Schema.Struct({ garden: Schema.Literals(GARDEN_WORDS), word: Schema.String }));
+export type Garden = Schema.Schema.Type<typeof Garden>;
 
 /** Orchard file (#315): which word plants which orchard tree, written like the garden file. */
-const Orchard = z.array(z.object({ orchard: z.enum(ORCHARD_WORDS), word: z.string() }));
-export type Orchard = z.infer<typeof Orchard>;
+const Orchard = Schema.Array(Schema.Struct({ orchard: Schema.Literals(ORCHARD_WORDS), word: Schema.String }));
+export type Orchard = Schema.Schema.Type<typeof Orchard>;
 
 const sentenceKey = (wordId: string, text: string) => `${wordId}|${text.normalize("NFC")}`;
 
@@ -46,7 +62,7 @@ export type BuildInput = {
   source: SourceWord[];
   manifest: Manifest;
   prev: Deck | null;
-  aliases?: Record<string, string>;
+  aliases?: { readonly [id: string]: string };
   garden?: Garden;
   orchard?: Orchard;
   /** Injectable for tests. */
@@ -139,9 +155,9 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden =
 
   let deck: Deck = { lang: lang as Deck["lang"], native: "en", version: prev?.version ?? 1, words, sentences };
   // Parsing also puts keys in schema order, the same order a read gives.
-  const parsed = Deck(lang).safeParse(deck);
+  const parsed = decode(Deck(lang), deck);
   if (parsed.success) deck = parsed.data;
-  else errors.push(...parsed.error.issues.map((i) => `deck.${i.path.join(".")}: ${i.message}`));
+  else errors.push(...parsed.issues.map((i) => `deck.${i.path.join(".")}: ${i.message}`));
   const content = (d: Deck) => JSON.stringify([d.words, d.sentences]);
   if (prev && content(prev) !== content(deck)) deck.version = prev.version + 1;
   errors.push(...deckProblems(deck));
@@ -220,29 +236,29 @@ export function readSource(lang: string): { words: SourceWord[]; errors: string[
     }
     if (raw.length > WORDS_PER_FILE) errors.push(`${rel}: ${raw.length} words, at most ${WORDS_PER_FILE} per file`);
     raw.forEach((w, i) => {
-      const r = SourceWord.safeParse(w);
+      const r = decode(SourceWord, w);
       if (r.success) words.push(r.data);
-      else errors.push(...r.error.issues.map((is) => `${rel}[${i}] ${(w as { lemma?: string })?.lemma ?? ""}.${is.path.join(".")}: ${is.message}`));
+      else errors.push(...r.issues.map((is) => `${rel}[${i}] ${(w as { lemma?: string })?.lemma ?? ""}.${is.path.join(".")}: ${is.message}`));
     });
   }
   return { words, errors };
 }
 
-function readJson<T>(path: string, schema: z.ZodType<T>, fallback: T): T {
-  return existsSync(path) ? schema.parse(JSON.parse(readFileSync(path, "utf8"))) : fallback;
+function readJson<S extends Schema.ConstraintDecoder<unknown>, F>(path: string, schema: S, fallback: F): S["Type"] | F {
+  return existsSync(path) ? Schema.decodeUnknownSync(schema)(JSON.parse(readFileSync(path, "utf8"))) : fallback;
 }
 
 /** Every course names its garden (#209) and orchard (#315) words, so a missing file is a mistake, not "none". */
-function readNamed<T>(path: string, schema: z.ZodType<T>): T {
+function readNamed<S extends Schema.ConstraintDecoder<unknown>>(path: string, schema: S): S["Type"] {
   if (!existsSync(path)) throw new Error(`${path.slice(ROOT.length + 1)} is missing: every course names its garden and orchard words (docs/decks.md)`);
-  return schema.parse(JSON.parse(readFileSync(path, "utf8")));
+  return Schema.decodeUnknownSync(schema)(JSON.parse(readFileSync(path, "utf8")));
 }
 
 export function readDeckFiles(lang: string) {
   const dir = deckDir(lang);
   return {
     manifest: readJson(join(dir, "ids.json"), Manifest, { words: {}, sentences: {} }),
-    prev: readJson<Deck | null>(join(dir, "deck.json"), Deck(lang), null),
+    prev: readJson(join(dir, "deck.json"), Deck(lang), null),
     aliases: readJson(join(dir, "aliases.json"), Aliases, {}),
     garden: readNamed(join(dir, "garden.json"), Garden),
     orchard: readNamed(join(dir, "orchard.json"), Orchard),

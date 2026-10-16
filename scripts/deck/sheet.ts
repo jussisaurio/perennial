@@ -6,6 +6,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { Schema } from "effect";
 import { Deck, manifestKey } from "../../web/src/deck/schema.ts";
 import { auditDeck, findingsByLemma, frequencyRanks, loadAllow } from "./audit.ts";
 import { readEntries } from "./proof.ts";
@@ -18,7 +19,7 @@ if (!lang || !num) {
 }
 const onlyFlagged = rest.includes("--only-flagged");
 const source = readEntries(lang, num);
-const deck = Deck(lang).parse(JSON.parse(readFileSync(join(deckDir(lang), "deck.json"), "utf8")));
+const deck = Schema.decodeUnknownSync(Deck(lang))(JSON.parse(readFileSync(join(deckDir(lang), "deck.json"), "utf8")));
 const ranks = await frequencyRanks(lang);
 const { findings, words } = auditDeck(lang, deck, ranks, loadAllow(lang));
 const deckBy = new Map(deck.words.filter((w) => !w.retired).map((w) => [manifestKey(w), w]));
