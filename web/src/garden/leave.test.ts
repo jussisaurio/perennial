@@ -89,6 +89,14 @@ describe("resolve: who comes is who lives here", () => {
 });
 
 describe("the calendar day turns over at midnight, local time", () => {
+  test("left just after midnight in a walk that opened the day before: the bowl holds it, with no night counted yet", () => {
+    const opened = dayNumber(new Date(2026, 9, 11, 23, 58));
+    const left = crumbs(dayNumber(new Date(2026, 9, 12, 0, 2)));
+    expect(bowlNow(left, opened, NONE)).toEqual({ kind: "holds", thing: "crumbs" });
+    expect(resolve(left, { day: opened + 1 }, NONE)).toBeNull();
+    expect(resolve(left, { day: opened + 2 }, NONE)?.nights).toBe(1);
+  });
+
   test("left late in the evening: one night by just after midnight, not before", () => {
     const late = crumbs(dayNumber(new Date(2026, 9, 11, 23, 59)));
     expect(resolve(late, { day: dayNumber(new Date(2026, 9, 11, 23, 59, 59)) }, NONE)).toBeNull();

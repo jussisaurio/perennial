@@ -164,10 +164,17 @@ export interface Fruit {
 /** A thing to carry from the basket: the crumbs, or a fruit (a deck word). */
 export type BasketThing = { id: "crumbs" } | Fruit;
 
-/** What the walk is given: the synced value, today's calendar day, the facts the rows need, and what the basket offers. */
+/**
+ * What the walk is given: the synced value and the calendar day as the walk
+ * opened (what came is fixed for the walk), the facts the rows need, and what
+ * the basket offers. `dayNow`: the day when something is left, so a walk open
+ * past midnight leaves it on the new day; the bowl then holds it, and it
+ * counts its first night from there.
+ */
 export interface LeaveWalk {
   left: Left;
   today: number;
+  dayNow: () => number;
   facts: LeaveFacts;
   basket: readonly BasketThing[];
   /** The fruit a word left in the bowl is (any fruit word, known now or not), or null for the crumbs. */

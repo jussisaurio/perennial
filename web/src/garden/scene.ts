@@ -346,7 +346,7 @@ export class GardenScene {
     const dog = this.leaveIt.dogAt();
     if (dog) this.guests.visit("dog", dog);
     // A key left waiting a few days (#334): the dog, if it is here today, sits by it.
-    if (this.keyHelp?.visitors && this.door.key) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
+    if (this.keyHelp?.visitors && this.door.key && !dog) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
     // After the visitors: a visitor may sit in the orchard's trees today.
     if (this.visitors.door === "open") this.openDoor();
     this.buildStakes(c);
@@ -1318,7 +1318,7 @@ export class GardenScene {
    * Tell the page what the action button does now (#334): stand up from the
    * bench, pick up the key, pick up a find (#351), open or try the door, the
    * rest of leave it out's (leave or follow at the bowl, hang on the shelf,
-   * take from the basket), or sit on the bench, for whichever is in reach (in
+   * take from the basket or the shelf), or sit on the bench, for whichever is in reach (in
    * that order); or nothing. The thing in reach glints (the cue).
    */
   private reportReach() {

@@ -136,8 +136,9 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
  * (so what came waits as it is until it is found), the day each row's visitor
  * came, and the basket: the crumbs and the fruits they know, in the orchard's order.
  * `walkedNow`: the value had to be marked as walked today, and must be saved.
+ * `dayNow`: today's calendar day whenever it is asked (core/day.ts).
  */
-export function learnerLeave(l: Learner, now: number): { walk: LeaveWalk; walkedNow: boolean } {
+export function learnerLeave(l: Learner, now: number, dayNow: () => number): { walk: LeaveWalk; walkedNow: boolean } {
   const today = dayNumber(now);
   // Missing from course rows Electric streams before their first course change after the migration: nothing left yet.
   const stored = l.course.garden_left ?? NO_LEFT;
@@ -157,12 +158,12 @@ export function learnerLeave(l: Learner, now: number): { walk: LeaveWalk; walked
     const kind = l.words.get(id)?.orchard;
     return kind && kind !== "tree" ? kind : null;
   };
-  return { walk: { left: seen ?? stored, today, facts: { brought }, basket: basket(fruits), fruitOf }, walkedNow: seen !== null };
+  return { walk: { left: seen ?? stored, today, dayNow, facts: { brought }, basket: basket(fruits), fruitOf }, walkedNow: seen !== null };
 }
 
 /** Leave it out on the landing page: nothing left, the crumbs in the basket, and nothing saved. */
-export function showcaseLeave(now: number): LeaveWalk {
-  return { left: NO_LEFT, today: dayNumber(now), facts: { brought: {} }, basket: basket([]), fruitOf: () => null };
+export function showcaseLeave(now: number, dayNow: () => number): LeaveWalk {
+  return { left: NO_LEFT, today: dayNumber(now), dayNow, facts: { brought: {} }, basket: basket([]), fruitOf: () => null };
 }
 
 /** Visitors for a garden with no learner behind it (the landing page): the snail at the gate, and whoever drops by today. */

@@ -139,7 +139,55 @@ test("with a screen reader: the buttons say what they do, and the status says wh
   await expect(status).toHaveText("Something lies here.");
   await act("Pick it up").click();
   await expect(status).toHaveText("You found la ramita: twig.");
+  // Said in Spanish: the word is marked with its language.
+  await expect(status.locator('span[lang="es"]')).toHaveText("la ramita");
   await standBy(page, "shelf", 1);
   await act("Hang it on the shelf").click();
   await expect.poll(async () => (await leaveNow(page)).left.hooks).toEqual(["twig", null, null]);
+  // Empty-handed by the shelf, nearer it than the basket on its step: take it down again, and hang it again, by the button alone.
+  await page.evaluate(async () => {
+    const { shedAt } = await import(/* @vite-ignore */ "/src/garden/leave.ts");
+    const s = (window as unknown as { __garden: { layout: Parameters<typeof shedAt>[0]; x: number; z: number; yaw: number } }).__garden;
+    const shed = shedAt(s.layout);
+    // Forward is -z at yaw 0: face the shelf (+x).
+    Object.assign(s, { x: shed.x - 0.8, z: shed.z + 0.6, yaw: -Math.PI / 2 });
+  });
+  await act("Take from the shelf").click();
+  await expect(status).toHaveText("You hold la ramita.");
+  expect((await leaveNow(page)).left.hooks).toEqual([null, null, null]);
+  await act("Hang it on the shelf").click();
+  await expect.poll(async () => (await leaveNow(page)).left.hooks).toEqual(["twig", null, null]);
+});
+
+test("a walk open across midnight: what is left after it is left on the new day, and the bowl holds it", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-06-01T23:59:30"));
+  await page.goto("/?demo=es:3#/today");
+  await openWalk(page);
+  await standBy(page, "basket", 0.8);
+  await page.getByRole("button", { name: "Take from the basket" }).click();
+  await page.clock.setFixedTime(new Date("2026-06-02T00:00:30"));
+  await standBy(page, "bowl", 0.8);
+  await page.getByRole("button", { name: "Put it in the bowl" }).click();
+  const day = await page.evaluate(async () => (await import(/* @vite-ignore */ "/src/core/day.ts")).dayNumber(new Date(2026, 5, 2, 0, 0, 30)));
+  await expect.poll(async () => (await savedLeft(page))?.bowl?.day, { timeout: 15_000 }).toBe(day);
+  // The crumbs are in the bowl: no night has passed for them yet.
+  expect((await leaveNow(page)).came).toBeNull();
+});
+
+test("a device clock days ahead: seeing the bowl is saved once, refused, and the clock notice says why", async ({ page }) => {
+  await page.goto("/?demo=es:3#/today");
+  await openWalk(page);
+  await standBy(page, "basket", 0.8);
+  await page.getByRole("button", { name: "Take from the basket" }).click();
+  await standBy(page, "bowl", 0.8);
+  await page.getByRole("button", { name: "Put it in the bowl" }).click();
+  await expect.poll(async () => (await savedLeft(page))?.n, { timeout: 15_000 }).toBe(1);
+  // Three days ahead of the server's real clock: the walk marks the bowl as seen on a day the server refuses.
+  const writes: string[] = [];
+  page.on("request", (r) => r.method() === "POST" && r.url().includes("/api/write") && r.postData()?.includes("garden_left") && writes.push(r.postData()!));
+  await comeBack(page, new Date(Date.now() + 3 * 86_400_000));
+  await expect(page.locator(".toast")).toHaveText(/^1 change in the garden was not saved, because the date or time on this device is wrong/, { timeout: 15_000 });
+  // One write, not one per refusal: a refused write rolls back, and that must not save it again.
+  await page.waitForTimeout(3000);
+  expect(writes).toHaveLength(1);
 });

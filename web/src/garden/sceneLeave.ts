@@ -16,8 +16,8 @@ import { collide, wayTo, WALKER, type Layout } from "./world";
 /** What you hold: something from the basket, or a kept find. One thing at a time; only the find is kept when the walk closes. */
 export type Hand = { from: "basket"; thing: BasketThing } | { from: "shelf"; find: Find };
 
-/** What the action button does here (GardenScene's Reach): take from the basket, leave in the bowl, follow the prints, pick up a find, hang it on the shelf. */
-export type LeaveAct = "take" | "leave" | "follow" | "find" | "hang";
+/** What the action button does here (GardenScene's Reach): take from the basket, leave in the bowl, follow the prints, pick up a find, hang it on the shelf, take a kept thing from the shelf. */
+export type LeaveAct = "take" | "leave" | "follow" | "find" | "hang" | "unhang";
 
 /** A thing a tap or the action button acts on. */
 export type LeaveTarget = { at: "basket"; i: number } | { at: "bowl" } | { at: "find" } | { at: "hook"; hook: number } | { at: "board"; find: Find };
@@ -43,7 +43,11 @@ const BOARD_SLOTS = Object.keys(FINDS).length;
 type SpriteMesh = THREE.Mesh<THREE.InstancedBufferGeometry, THREE.ShaderMaterial>;
 type XZ = { x: number; z: number };
 
-const near = (x: number, z: number, p: XZ, r: number) => Math.hypot(x - p.x, z - p.z) < r;
+const dist = (x: number, z: number, p: XZ) => Math.hypot(x - p.x, z - p.z);
+const near = (x: number, z: number, p: XZ, r: number) => dist(x, z, p) < r;
+
+/** A board target per kind of find, made once (reachAt allocates nothing). */
+const boardTargets = () => Object.fromEntries((Object.keys(FINDS) as Find[]).map((find) => [find, { at: "board", find }])) as Record<Find, LeaveTarget>;
 
 /** A one-thing sprite whose atlas cell can change. */
 interface Thing {
@@ -79,7 +83,7 @@ export class LeaveItOut {
   /** Where things are: the bowl, the basket, where you stand to use the shelf, and what came (null once found). Worked out once; reachAt runs every frame. */
   private spots: { bowl: XZ; basket: XZ; shelf: XZ; find: XZ | null };
   /** Every target the action button can point at, and what reachAt returns, made once: it allocates nothing. */
-  private targets: { find: LeaveTarget; bowl: LeaveTarget; hooks: LeaveTarget[]; basket: LeaveTarget[] };
+  private targets: { find: LeaveTarget; bowl: LeaveTarget; hooks: LeaveTarget[]; basket: LeaveTarget[]; board: Record<Find, LeaveTarget> };
   private reach: { a: LeaveAct; target: LeaveTarget };
 
   constructor(layout: Layout, walk: LeaveWalk) {
@@ -89,7 +93,7 @@ export class LeaveItOut {
     this.now = bowlNow(walk.left, walk.today, walk.facts);
     const s = shedAt(layout);
     this.spots = { bowl: bowlAt(layout), basket: basketAt(layout), shelf: { x: s.x - 0.45, z: s.z }, find: this.waiting() };
-    this.targets = { find: { at: "find" }, bowl: { at: "bowl" }, hooks: [0, 1, 2].map((hook) => ({ at: "hook", hook })), basket: walk.basket.map((_, i) => ({ at: "basket", i })) };
+    this.targets = { find: { at: "find" }, bowl: { at: "bowl" }, hooks: [0, 1, 2].map((hook) => ({ at: "hook", hook })), basket: walk.basket.map((_, i) => ({ at: "basket", i })), board: boardTargets() };
     this.reach = { a: "take", target: this.targets.bowl };
   }
 
@@ -260,11 +264,18 @@ export class LeaveItOut {
       return this.reached("hang", this.targets.hooks[free < 0 ? 0 : free]);
     }
     const items = this.walk.basket;
-    if (this.now.kind === "empty" && near(x, z, basket, REACH)) {
-      const i = hand?.from === "basket" ? items.indexOf(hand.thing) + 1 : 0;
-      // Holding the only thing the basket has: nothing new to take.
-      if (i < items.length) return this.reached("take", this.targets.basket[i]);
+    // Holding the only thing the basket has: nothing new to take.
+    const fromBasket = this.now.kind === "empty" && near(x, z, basket, REACH) && !(hand?.from === "basket" && items.length === 1);
+    // Empty-handed at the shelf: take a kept thing, from the board first, then from a hook, so keys and screen readers can rearrange it too.
+    const hung = this.left.hooks.findIndex((k) => k !== null && isFind(k));
+    const fromShelf = !hand && near(x, z, shelf, SHELF_REACH) ? (this.lying.length ? this.targets.board[this.lying[0]] : hung >= 0 ? this.targets.hooks[hung] : null) : null;
+    // The basket stands on the shed's step, in the shelf's reach: whichever you stand nearer to.
+    if (fromBasket && !(fromShelf && dist(x, z, shelf) < dist(x, z, basket))) {
+      // The next thing, round to the first again.
+      const i = hand?.from === "basket" ? (items.indexOf(hand.thing) + 1) % items.length : 0;
+      return this.reached("take", this.targets.basket[i]);
     }
+    if (fromShelf) return this.reached("unhang", fromShelf);
     return null;
   }
 
@@ -338,7 +349,7 @@ export class LeaveItOut {
         break;
       case "bowl":
         if (this.now.kind !== "empty" || hand?.from !== "basket") return null;
-        change(leave(this.left, hand.thing.id, this.walk.today));
+        change(leave(this.left, hand.thing.id, this.walk.dayNow()));
         this.hand = null;
         done = { did: "leave" };
         break;

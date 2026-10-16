@@ -49,7 +49,7 @@ create table course (            -- one per language; settings edited per column
   user_id uuid not null references "user" on delete cascade,
   lang text not null, minutes smallint not null default 7, retention real not null default 0.9,
   door_open boolean not null default false,  -- the garden's door to the orchard (#315): only ever opens
-  garden_left jsonb not null,    -- leave it out (#351): the bowl and the shed's shelf; ids and day numbers only (contract/garden.ts)
+  garden_left jsonb not null default '{"n": 0, "bowl": null, "kept": [], "hooks": [null, null, null], "arranged": 0}',  -- leave it out (#351): the bowl and the shed's shelf; ids and day numbers only (contract/garden.ts)
   primary key (user_id, lang));
 
 create table review (
