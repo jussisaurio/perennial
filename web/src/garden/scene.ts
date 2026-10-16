@@ -14,6 +14,8 @@ import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
 import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
+import { HILLS, SkyWater } from "./sceneSky";
+import type { Conditions } from "./scenePart";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -94,8 +96,6 @@ const BED_H = 0.28;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
 /** The far hills: a ring of this radius and height, its middle this high, the texture repeated this often round it. */
-const HILLS = { radius: 150, height: 34, y: 10, repeat: 4 };
-const UP = new THREE.Vector3(0, 1, 0);
 /** The door in the hedge: its height and thickness, how far it swings open (it swings out, into the orchard), and for how long. */
 const DOOR = { h: 2.05, thick: 0.06, open: Math.PI / 2, swing: 1.4 };
 /** The keyhole, from the door's hinge (texture door(): its iron plate's middle). */
@@ -378,8 +378,14 @@ const SNORE_FRAG = /* glsl */ `
   }
 `;
 
-/** What every part of the world is built with (GardenScene.build). */
-interface BuildCtx {
+/**
+ * What every part of the world (#323) is built with: GardenScene.build() makes
+ * one of these and passes it, in a fixed order, to each part's build(). The
+ * parts push their own tap targets and materials into the shared scene,
+ * hitBoxes, hitDiscs and mats straight away, rather than handing them back to
+ * be merged.
+ */
+export interface BuildCtx {
   L: Layout;
   b: Layout["bounds"];
   /** The garden inside the fence: width, depth and middle. */
@@ -392,6 +398,10 @@ interface BuildCtx {
   woodTex: THREE.Texture;
   /** One random sequence for the whole world, so it is laid out the same every time. */
   rand: () => number;
+  scene: THREE.Scene;
+  /** What a tap can meet (scenery.ts): every part adds its own boxes and discs here as it builds. */
+  hitBoxes: HitBox[];
+  hitDiscs: HitDisc[];
 }
 
 /** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */
@@ -445,18 +455,14 @@ export class GardenScene {
   private hungry = true;
   private lastStream = -1;
   private basic: THREE.MeshBasicMaterial[] = [];
-  private skyMat!: THREE.MeshBasicMaterial;
-  private hillMat!: THREE.MeshBasicMaterial;
+  /** The sky, hills, clouds, sun/moon and the pond (#323). */
+  private sky: SkyWater;
   private fireflies!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private butterflies: { mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>; cx: number; cz: number; r: number; ph: number; tex: THREE.Texture }[] = [];
-  private clouds: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
   private marker!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  private water!: THREE.Texture;
   private lit!: ReturnType<typeof sprites>;
   private unlit!: ReturnType<typeof sprites>;
   private glows: THREE.Object3D[] = [];
-  private sun!: THREE.Sprite;
-  private sunDir = new THREE.Vector3();
   /** The sunflower: where it stands, its sprite's frame and lean, and which side it shows (null: not drawn yet). */
   private flower!: { x: number; z: number; uv: THREE.InstancedBufferAttribute; params: THREE.InstancedBufferAttribute; face: boolean | null };
   private selected: PlacedPlant | null = null;
@@ -466,13 +472,10 @@ export class GardenScene {
   /** What a tap can name in the garden itself (#74), built once. The clouds and the sun are read at tap time. */
   private hitBoxes: HitBox[] = [];
   private hitDiscs: HitDisc[] = [];
-  private hillProfile: number[] = [];
   /** The tapped scenery word and where its tag sits (it follows the sun or a cloud). */
   private sceneryTap: { view: SceneryView; hit: SceneryHit; until: number } | null = null;
   /** Lantern spots, for the moth. */
   private lanternSpots: [number, number][] = [];
-  /** The lily pads, for the frog. */
-  private pads: [number, number][] = [];
   /** Plant materials, for the perk uniform. */
   private plantMats: THREE.ShaderMaterial[] = [];
   /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
@@ -534,6 +537,7 @@ export class GardenScene {
     const first = layout.beds[0];
     this.z = Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2);
     this.camera.rotation.order = "YXZ";
+    this.sky = new SkyWater(this.camera, reducedMotion);
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
@@ -577,26 +581,29 @@ export class GardenScene {
       },
       woodTex: T.pixelTexture(T.wood(), true),
       rand: rng(1),
+      scene: this.scene,
+      hitBoxes: this.hitBoxes,
+      hitDiscs: this.hitDiscs,
     };
     this.ctx = c;
     this.buildGround(c);
     this.buildBeds(c);
     this.buildFence(c);
     this.buildHedge(c);
-    this.buildPond(c);
+    const { pads } = this.sky.buildPond(c);
     this.buildTrees(c);
     this.buildLanterns(c);
     const bench = this.buildBench(c);
     this.buildSigns(c, bench);
-    this.guests.build({ bench: bench.position, pads: this.pads, lanterns: this.lanternSpots });
+    this.guests.build({ bench: bench.position, pads, lanterns: this.lanternSpots });
     // After the visitors: a visitor may sit in the orchard's trees today.
     if (this.visitors.door === "open") this.openDoor();
     this.buildStakes(c);
     this.buildSunflower(c);
     this.buildDecor(c);
-    this.buildSky(c);
+    this.sky.buildSkyAndSun(c);
     this.buildCritters(c);
-    this.buildSun();
+    this.buildMarker();
     this.setTime(this.time);
   }
 
@@ -873,32 +880,6 @@ export class GardenScene {
     this.guests.untap();
   }
 
-  /** The pond by the gate, with lily pads. */
-  private buildPond(c: BuildCtx) {
-    const { L, mat } = c;
-    this.water = T.pixelTexture(T.water(), true);
-    this.water.repeat.set(2, 2);
-    const pond = new THREE.Mesh(new THREE.CircleGeometry(L.pond.r, 20), mat(this.water));
-    pond.rotation.x = -Math.PI / 2;
-    pond.position.set(L.pond.x, 0.04, L.pond.z);
-    this.scene.add(pond);
-    this.hitDiscs.push({ id: "pond", x: L.pond.x, y: 0.045, z: L.pond.z, r: L.pond.r + 0.18, tagY: 0.3 });
-    const rim = new THREE.Mesh(new THREE.RingGeometry(L.pond.r, L.pond.r + 0.18, 20), mat(T.pixelTexture(T.path(), true), { color: 0xb0aaa0 }));
-    rim.rotation.x = -Math.PI / 2;
-    rim.position.set(L.pond.x, 0.045, L.pond.z);
-    this.scene.add(rim);
-    const padTex = T.pixelTexture(T.lilypad());
-    for (let i = 0; i < 4; i++) {
-      const a = i * 1.9 + 0.4;
-      const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), mat(padTex, { alphaTest: 0.5 }));
-      pad.rotation.set(-Math.PI / 2, 0, a);
-      pad.position.set(L.pond.x + Math.cos(a) * L.pond.r * 0.55, 0.07, L.pond.z + Math.sin(a) * L.pond.r * 0.55);
-      this.pads.push([pad.position.x, pad.position.z]);
-      this.hitDiscs.push({ id: "lily", x: pad.position.x, y: 0.07, z: pad.position.z, r: 0.2, tagY: 0.14 });
-      this.scene.add(pad);
-    }
-  }
-
   /** Trees and bushes outside the fence. */
   private buildTrees(c: BuildCtx) {
     const { L, b, w, d, rand } = c;
@@ -1127,31 +1108,6 @@ export class GardenScene {
     this.scene.add(decorMesh);
   }
 
-  /** Sky dome, far hills, clouds. */
-  private buildSky(c: BuildCtx) {
-    const { rand } = c;
-    this.skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false });
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(240, 16, 12), this.skyMat);
-    dome.renderOrder = -2;
-    this.scene.add(dome);
-    this.hillMat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, fog: false, depthWrite: false });
-    const hillRing = new THREE.Mesh(new THREE.CylinderGeometry(HILLS.radius, HILLS.radius, HILLS.height, 32, 1, true), this.hillMat);
-    hillRing.position.y = HILLS.y;
-    hillRing.renderOrder = -1;
-    this.scene.add(hillRing);
-    this.hillProfile = T.hillProfile();
-    const cloudTex = T.pixelTexture(T.cloud());
-    for (let i = 0; i < 9; i++) {
-      const c = new THREE.Mesh(new THREE.PlaneGeometry(22, 11), new THREE.MeshBasicMaterial({ map: cloudTex, alphaTest: 0.5, fog: false, depthWrite: false }));
-      const a = (i / 9) * Math.PI * 2 + rand();
-      c.position.set(Math.cos(a) * 130, 42 + rand() * 22, Math.sin(a) * 130);
-      c.lookAt(0, c.position.y, 0);
-      c.renderOrder = -1;
-      this.clouds.push(c);
-      this.scene.add(c);
-    }
-  }
-
   /** Fireflies at night, butterflies by day. */
   private buildCritters(c: BuildCtx) {
     const { L, b, w, d, rand } = c;
@@ -1192,13 +1148,8 @@ export class GardenScene {
     }
   }
 
-  /** The sun (or moon), and the marker over the selected plant. */
-  private buildSun() {
-    this.sun = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, depthWrite: false, transparent: true, alphaTest: 0.5 }));
-    this.sun.scale.set(16, 16, 1);
-    this.sun.renderOrder = -1;
-    this.scene.add(this.sun);
-
+  /** The marker over the selected plant, always on top of the hills and clouds. */
+  private buildMarker() {
     // Always on top: no depth test, and in the transparent pass with the highest
     // renderOrder, because the far hills and clouds draw in that pass after the
     // opaque one (and a mesh without a depth test writes no depth to stop them).
@@ -1238,11 +1189,11 @@ export class GardenScene {
       discs: this.hitDiscs,
       bounds: this.layout.bounds,
       far: FOG_FAR,
-      hills: { radius: HILLS.radius, bottom: HILLS.y - HILLS.height / 2, top: HILLS.y + HILLS.height / 2, profile: this.hillProfile, rows: T.HILL_ROWS, repeat: HILLS.repeat },
-      sunDir: this.sunDir,
+      hills: { radius: HILLS.radius, bottom: HILLS.y - HILLS.height / 2, top: HILLS.y + HILLS.height / 2, profile: this.sky.hillProfile, rows: T.HILL_ROWS, repeat: HILLS.repeat },
+      sunDir: this.sky.sunDir,
       night: this.time === "night",
       sunRadius: 0.045,
-      clouds: this.clouds.map((m) => m.position),
+      clouds: this.sky.cloudPositions,
       cloudHalf: [8.8, 5],
     };
     const hit = pickScenery(this.ray(cssX, cssY, cssW, cssH), world, (id) => !!words[id]);
@@ -1415,32 +1366,15 @@ export class GardenScene {
     const s = T.SKIES[t];
     const fog = new THREE.Color(s.fog);
     this.scene.fog = new THREE.Fog(fog, FOG_NEAR, FOG_FAR);
-    this.skyMat.map?.dispose();
-    const skyTex = T.pixelTexture(T.sky(s, t === "night"));
-    // The gradient covers the upper half of the dome; below the horizon it clamps.
-    skyTex.repeat.set(1, 2);
-    skyTex.offset.set(0, -1);
-    this.skyMat.map = skyTex;
-    this.skyMat.needsUpdate = true;
-    this.hillMat.map?.dispose();
-    const hills = T.pixelTexture(T.hills(t === "night"), true);
-    hills.repeat.set(HILLS.repeat, 1);
-    this.hillMat.map = hills;
-    this.hillMat.needsUpdate = true;
-    this.tint();
-    for (const c of this.clouds) c.material.color.set(t === "night" ? 0x39406a : t === "dusk" ? 0xffd2c0 : 0xffffff);
     const dark = t !== "day";
+    const conditions: Conditions = { time: t, dark };
+    this.sky.onConditions(conditions);
+    this.tint();
     this.fireflies.visible = dark;
     this.lit.visible = dark;
     this.unlit.visible = !dark;
     for (const g of this.glows) g.visible = dark;
     this.door.keyhole.glow.visible = dark && this.door.state !== "open";
-    this.sun.material.map?.dispose();
-    this.sun.material.map = T.pixelTexture(T.sun(t));
-    this.sun.material.needsUpdate = true;
-    // High in the south-west by day, low in the west at dusk, the moon in the east at night.
-    const [sx, sy, sz] = t === "day" ? [-0.5, 0.55, -0.7] : t === "dusk" ? [-0.95, 0.12, -0.3] : [0.6, 0.45, -0.65];
-    this.sunDir.set(sx, sy, sz).normalize();
     for (const bf of this.butterflies) bf.mesh.visible = t !== "night";
     this.guests.setDark(dark, t === "night");
     if (this.snore) this.snore.visible = t === "night";
@@ -1646,10 +1580,7 @@ export class GardenScene {
     this.fireflies.material.uniforms.uMove.value = motion;
     if (this.snore?.visible) this.snore.material.uniforms.uTime.value = t;
     this.tickPerk();
-    if (motion) {
-      this.water.offset.set((t * 0.02) % 1, Math.sin(t * 0.3) * 0.03);
-      for (const c of this.clouds) c.position.applyAxisAngle(UP, dt * 0.004);
-    }
+    this.sky.tick(dt, t);
     for (const bf of this.butterflies) {
       const a = t * 0.7 * motion + bf.ph;
       bf.mesh.position.set(bf.cx + Math.cos(a) * bf.r, 0.75 + Math.sin(a * 2.3) * 0.25, bf.cz + Math.sin(a * 1.3) * bf.r);
@@ -1664,7 +1595,7 @@ export class GardenScene {
 
     // The sunflower shows its face only to someone standing in its sun (and never at night).
     const fl = this.flower;
-    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sunDir.x, this.sunDir.z, this.time === "night");
+    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sky.sunDir.x, this.sky.sunDir.z, this.time === "night");
     if (face !== fl.face) {
       fl.face = face;
       fl.uv.setX(0, face ? 0 : 0.5);
@@ -1689,7 +1620,6 @@ export class GardenScene {
       key.glint.scale.setScalar(this.reducedMotion ? 0.12 : 0.04 + 0.16 * Math.sin((Math.PI * k) / GLINT.flash));
     }
 
-    this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
     this.renderer.render(this.scene, this.camera);
     this.labels();
   }
@@ -1715,8 +1645,11 @@ export class GardenScene {
     if (st && this.elapsed > st.until) this.sceneryTap = null;
     else if (st) {
       const h = st.hit;
-      if (h.follow === "sun") v.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST).y += SUN_DIST * SUN_TAG;
-      else if (h.follow) v.set(this.clouds[h.follow.cloud].position.x, h.y, this.clouds[h.follow.cloud].position.z);
+      if (h.follow === "sun") v.copy(this.camera.position).addScaledVector(this.sky.sunDir, SUN_DIST).y += SUN_DIST * SUN_TAG;
+      else if (h.follow) {
+        const cloud = this.sky.cloudPositions[h.follow.cloud];
+        v.set(cloud.x, h.y, cloud.z);
+      }
       else v.set(h.x, h.y, h.z);
       v.project(this.camera);
       if (v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1)
