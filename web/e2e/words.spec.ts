@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { Client } from "pg";
 import { expect, test } from "./test";
 import { expectServerRows, serverRows, startCourse } from "./helpers";
 
@@ -112,4 +114,41 @@ test("with Perennial AI off, Add words is hidden, and its address shows the word
   await page.goto("/#/words/add");
   await expect(page.getByRole("heading", { name: "Words" })).toBeVisible();
   await expect(page.getByPlaceholder(/Paste .* text here/)).toHaveCount(0);
+});
+
+test("a word saved with its forms as a JSON string (#337) is found by search, known in Add, and can be edited", async ({ page }) => {
+  await startCourse(page);
+  const userId = await page.evaluate(() => (window as unknown as { __store: { userId: string } }).__store.userId);
+  // As /api/write stored forms before #340: a jsonb string holding the list's JSON text.
+  // Straight into the dev database (docker-compose.yml), which the e2e server uses.
+  const db = new Client("postgres://perennial:perennial@localhost:25432/perennial");
+  await db.connect();
+  try {
+    await db.query("insert into user_word (id, user_id, lang, lemma, gloss, forms) values ($1, $2, 'es', 'xilofonista', 'xylophonist', to_jsonb($3::text))", [
+      randomUUID(),
+      userId,
+      JSON.stringify(["xilofonista", "xilofonistas"]),
+    ]);
+  } finally {
+    await db.end();
+  }
+
+  // Search reaches the word's forms when the headword and meaning don't match.
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByPlaceholder("Search words or meanings").fill("fonistas");
+  const row = page.locator(".word-row", { has: page.locator('strong:text-is("xilofonista")') });
+  await expect(row).toBeVisible();
+
+  // Add knows the plural as the learner's own word, not as a new one.
+  await page.getByRole("button", { name: "Add words" }).click();
+  await page.getByPlaceholder(/Paste .* text here/).fill("Los xilofonistas tocan.");
+  await expect(page.locator(".reader .tok.added", { hasText: /^xilofonistas$/ })).toBeVisible();
+
+  // An edit sends the forms back as a list, so the server takes it.
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByPlaceholder("Search words or meanings").fill("xilofonista");
+  await row.click();
+  await page.getByLabel("Meaning").fill("xylophone player");
+  await page.getByLabel("Meaning").blur();
+  await expect.poll(async () => (await serverRows<{ gloss: string }>(page, "user_word"))[0]?.gloss).toBe("xylophone player");
 });
