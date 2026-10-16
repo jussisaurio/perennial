@@ -49,7 +49,7 @@ async function openWalk(page: Page) {
 test("iPhone: a finger's tap on the locked door in the walk says it is locked (#315)", async ({ page }) => {
   await openWalk(page);
   await fingerTap(page, ...(await standAtDoor(page)));
-  await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
+  await expect(page.locator(".gw-say")).toHaveText("Locked.");
 });
 
 test("iPhone: tap the ground to walk there (#336)", async ({ page }) => {

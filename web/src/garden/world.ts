@@ -202,7 +202,7 @@ export function lanternSpots(l: Layout): [number, number][] {
 }
 
 /** The door's quiet lines (#315). Here, not in the scene, so the page can use them without loading three.js. */
-export const DOOR_LINES = { locked: "Locked. The key must be somewhere.", found: "You found the key." } as const;
+export const DOOR_LINES = { locked: "Locked.", found: "You found the key." } as const;
 
 /** Where the key to the door can hide (#315): one place per learner, never by the door. */
 export const KEY_SPOTS = ["bench", "pond", "lantern", "bed", "sunflower"] as const;
