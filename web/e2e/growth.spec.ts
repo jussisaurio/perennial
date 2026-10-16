@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { advance, answer, kicker, reveal, startCourse } from "./helpers";
 
 // #200: after a good answer the word's plant is planted or grows, and only then comes the next card.

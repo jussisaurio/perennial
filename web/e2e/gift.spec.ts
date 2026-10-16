@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { answer, expectServerRows, kicker, serverRows, startCourse, startSession } from "./helpers";
 
 // #213: a friend's seed. The link holds only a deck word; the friend's course takes it as the next new word.

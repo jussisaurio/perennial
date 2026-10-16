@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { answer, kicker, reveal, startCourse } from "./helpers";
 
 // #189: 5 minutes a day for everyone, and "Practice 5 more minutes" whenever the learner wants.

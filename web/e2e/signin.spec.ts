@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./test";
 import { newEmail, startCourse } from "./helpers";
 
 // #312: on some phones an auth request gets no answer at all. The form must not stay stuck.

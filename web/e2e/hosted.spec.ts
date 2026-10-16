@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 import { addEmail, answer, expectServerRows, newEmail, openAdd, signIn, startCourse, startSession } from "./helpers";
 
 test("progress made before adding an email stays, and another device signs in to the same garden", async ({ browser }) => {
