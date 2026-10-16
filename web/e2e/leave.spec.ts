@@ -41,6 +41,16 @@ const leaveNow = (page: Page) =>
     return { left: l.left, hand: l.hand?.from ?? null, came: l.came && { guest: l.came.row.guest, find: l.came.find }, prints: !!l.prints?.visible };
   });
 
+/** Stand by the shelf, nearer it than the basket on the shed's step, facing it. */
+const byShelf = (page: Page) =>
+  page.evaluate(async () => {
+    const { shedAt } = await import(/* @vite-ignore */ "/src/garden/leave.ts");
+    const s = (window as unknown as { __garden: { layout: Parameters<typeof shedAt>[0]; x: number; z: number; yaw: number } }).__garden;
+    const shed = shedAt(s.layout);
+    // Forward is -z at yaw 0: face the shelf (+x).
+    Object.assign(s, { x: shed.x - 0.8, z: shed.z + 0.6, yaw: -Math.PI / 2 });
+  });
+
 const savedLeft = async (page: Page) => (await serverRows<{ lang: string; garden_left: LeaveScene["leaveIt"]["left"] }>(page, "course")).find((r) => r.lang === "es")?.garden_left;
 
 test.beforeEach(async ({ page }) => {
@@ -145,13 +155,7 @@ test("with a screen reader: the buttons say what they do, and the status says wh
   await act("Hang it on the shelf").click();
   await expect.poll(async () => (await leaveNow(page)).left.hooks).toEqual(["twig", null, null]);
   // Empty-handed by the shelf, nearer it than the basket on its step: take it down again, and hang it again, by the button alone.
-  await page.evaluate(async () => {
-    const { shedAt } = await import(/* @vite-ignore */ "/src/garden/leave.ts");
-    const s = (window as unknown as { __garden: { layout: Parameters<typeof shedAt>[0]; x: number; z: number; yaw: number } }).__garden;
-    const shed = shedAt(s.layout);
-    // Forward is -z at yaw 0: face the shelf (+x).
-    Object.assign(s, { x: shed.x - 0.8, z: shed.z + 0.6, yaw: -Math.PI / 2 });
-  });
+  await byShelf(page);
   await act("Take from the shelf").click();
   await expect(status).toHaveText("You hold la ramita.");
   expect((await leaveNow(page)).left.hooks).toEqual([null, null, null]);
@@ -190,4 +194,35 @@ test("a device clock days ahead: seeing the bowl is saved once, refused, and the
   // One write, not one per refusal: a refused write rolls back, and that must not save it again.
   await page.waitForTimeout(3000);
   expect(writes).toHaveLength(1);
+});
+
+test("by button alone, with five things kept and three hooks: every thing can hang, and every hook can change", async ({ page }) => {
+  await page.goto("/?demo=es:3#/today");
+  await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
+  // Five finds kept, three of them hung (as weeks of walks would leave it).
+  await page.evaluate(async () => {
+    const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
+    const garden_left = { n: 0, bowl: null, kept: ["feather", "twig", "seed", "acorn", "button"], hooks: ["feather", "twig", "seed"], arranged: 1 };
+    await postWrite([{ type: "course.upsert", row: { lang: "es", garden_left } }]);
+  });
+  await comeBack(page, DAY);
+  await expect.poll(async () => (await leaveNow(page)).left.kept.length, { timeout: 15_000 }).toBe(5);
+  await byShelf(page);
+  const act = (name: string) => page.getByRole("button", { name, exact: true });
+  const hung = new Set<string>();
+  const changed = new Set<number>();
+  let before = (await leaveNow(page)).left.hooks;
+  for (let i = 0; i < 9; i++) {
+    await act("Take from the shelf").click();
+    await act("Hang it on the shelf").click();
+    await expect.poll(async () => (await leaveNow(page)).hand).toBeNull();
+    const now = (await leaveNow(page)).left.hooks;
+    now.forEach((k, h) => {
+      if (k) hung.add(k);
+      if (k !== before[h]) changed.add(h);
+    });
+    before = now;
+  }
+  expect([...hung].sort()).toEqual(["acorn", "button", "feather", "seed", "twig"]);
+  expect([...changed].sort()).toEqual([0, 1, 2]);
 });

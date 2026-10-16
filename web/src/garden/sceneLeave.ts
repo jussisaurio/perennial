@@ -80,6 +80,13 @@ export class LeaveItOut {
   private tex!: THREE.Texture;
   /** The kept things on the board, slot by slot, as refresh last laid them out. */
   private lying: Find[] = [];
+  /**
+   * Where the action button hangs on a full shelf, and which thing on the board
+   * it takes next: each moves on after use and goes round, as the basket's take
+   * does, so keys and screen readers can put every kept thing on every hook.
+   */
+  private nextHook = 0;
+  private nextOnBoard = 0;
   /** Where things are: the bowl, the basket, where you stand to use the shelf, and what came (null once found). Worked out once; reachAt runs every frame. */
   private spots: { bowl: XZ; basket: XZ; shelf: XZ; find: XZ | null };
   /** Every target the action button can point at, and what reachAt returns, made once: it allocates nothing. */
@@ -261,14 +268,14 @@ export class LeaveItOut {
     }
     if (hand?.from === "shelf" && near(x, z, shelf, SHELF_REACH)) {
       const free = this.left.hooks.indexOf(null);
-      return this.reached("hang", this.targets.hooks[free < 0 ? 0 : free]);
+      return this.reached("hang", this.targets.hooks[free < 0 ? this.nextHook : free]);
     }
     const items = this.walk.basket;
     // Holding the only thing the basket has: nothing new to take.
     const fromBasket = this.now.kind === "empty" && near(x, z, basket, REACH) && !(hand?.from === "basket" && items.length === 1);
     // Empty-handed at the shelf: take a kept thing, from the board first, then from a hook, so keys and screen readers can rearrange it too.
     const hung = this.left.hooks.findIndex((k) => k !== null && isFind(k));
-    const fromShelf = !hand && near(x, z, shelf, SHELF_REACH) ? (this.lying.length ? this.targets.board[this.lying[0]] : hung >= 0 ? this.targets.hooks[hung] : null) : null;
+    const fromShelf = !hand && near(x, z, shelf, SHELF_REACH) ? (this.lying.length ? this.targets.board[this.lying[this.nextOnBoard % this.lying.length]] : hung >= 0 ? this.targets.hooks[hung] : null) : null;
     // The basket stands on the shed's step, in the shelf's reach: whichever you stand nearer to.
     if (fromBasket && !(fromShelf && dist(x, z, shelf) < dist(x, z, basket))) {
       // The next thing, round to the first again.
@@ -369,6 +376,7 @@ export class LeaveItOut {
           // Hung over something: that one goes back on the board.
           change(hang(this.left, t.hook, hand.find));
           this.hand = null;
+          this.nextHook = (t.hook + 1) % this.hooks.length;
         } else if (on && isFind(on)) {
           // Taken down, into your hand: to hang on another hook, or to leave on the board.
           change(hang(this.left, t.hook, null));
@@ -379,6 +387,7 @@ export class LeaveItOut {
       }
       case "board":
         this.hand = { from: "shelf", find: t.find };
+        this.nextOnBoard = this.lying.indexOf(t.find) + 1;
         done = { did: "take", hand: this.hand };
         break;
     }
