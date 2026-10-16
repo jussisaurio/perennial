@@ -8,6 +8,7 @@
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import { PgClient } from "@effect/sql-pg";
 import { Clock, Context, Effect, Layer } from "effect";
+import type { SqlError } from "effect/sql/SqlError";
 import type { Mutation, UserId, WordId, WriteResult } from "perennial-contract";
 import { AppConfig } from "./config";
 import { COURSE_DEFAULTS } from "./course";
@@ -64,14 +65,30 @@ export const SyncLive = Layer.effect(
       Effect.catchTag("SqlError", Effect.die),
     );
 
+    /** How many of `ids` are not in the table yet (only those take room). The ids are the rows' keys: a key that exists, whoever's row it is, adds no row. */
+    const newRows = Effect.fnUntraced(function* (ids: ReadonlySet<string>, existing: (ids: string[]) => Effect.Effect<ReadonlyArray<object>, SqlError>) {
+      return ids.size ? ids.size - (yield* existing([...ids])).length : 0;
+    });
+
+    /**
+     * Refuse a batch that would take a table past its quota. Only rows that do
+     * not exist yet count: a resent batch (its answer was lost) or an edit adds
+     * none, so it is never refused at a quota (#292).
+     */
     const checkQuota = Effect.fnUntraced(function* (userId: UserId, mutations: readonly Mutation[]) {
-      const adds = { user_word: 0, user_sentence: 0, word_state: 0, review: 0 };
+      const ids = { user_word: new Set<string>(), user_sentence: new Set<string>(), word_state: new Set<string>(), review: new Set<string>() };
       for (const m of mutations) {
-        if (m.type === "user_word.upsert") adds.user_word++;
-        else if (m.type === "user_sentence.insert") adds.user_sentence++;
-        else if (m.type === "word_state.upsert") adds.word_state++;
-        else if (m.type === "review.insert") adds.review++;
+        if (m.type === "user_word.upsert") ids.user_word.add(m.row.id);
+        else if (m.type === "user_sentence.insert") ids.user_sentence.add(m.row.id);
+        else if (m.type === "word_state.upsert") ids.word_state.add(m.row.word_id);
+        else if (m.type === "review.insert") ids.review.add(m.row.id);
       }
+      const adds = {
+        user_word: yield* newRows(ids.user_word, (list) => sql`select 1 from user_word where id in ${sql.in(list)}`),
+        user_sentence: yield* newRows(ids.user_sentence, (list) => sql`select 1 from user_sentence where id in ${sql.in(list)}`),
+        word_state: yield* newRows(ids.word_state, (list) => sql`select 1 from word_state where user_id = ${userId} and word_id in ${sql.in(list)}`),
+        review: yield* newRows(ids.review, (list) => sql`select 1 from review where id in ${sql.in(list)}`),
+      };
       if (adds.user_word) yield* ensureRoom(userId, "user_word", adds.user_word);
       if (adds.user_sentence) yield* ensureRoom(userId, "user_sentence", adds.user_sentence);
       if (adds.word_state) {
