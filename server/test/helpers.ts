@@ -1,16 +1,19 @@
 // Test harness: the real app against the local Postgres + Electric
 // (`docker compose up -d`), with a mock model and the dev mail outbox.
 
+import { PgClient } from "@effect/sql-pg";
 import { Context, Effect, Exit, Layer, Scope } from "effect";
 import { HttpEffect, HttpServer, HttpServerRequest } from "effect/http";
+import { Reactivity } from "effect/reactivity";
+import type { Row } from "effect/sql/SqlConnection";
+import { Ai } from "../src/ai";
 import { App, AppLive, BunServerLive, HttpLive } from "../src/app";
 import { AppConfig, loadConfig, type Config } from "../src/config";
+import { connection as connectTo, DatabaseLive } from "../src/db";
 import { LoggerLive } from "../src/log";
 import { Mail, OutboxMailer } from "../src/mail";
-import { DatabaseLive } from "../src/db";
 import { Migrations, MigrationsLive } from "../src/migrate";
-import { Ai } from "../src/ai";
-import { Auth, Database, ServicesLive } from "../src/services";
+import { Auth, ServicesLive } from "../src/services";
 
 process.env.LOG_LEVEL ??= "silent";
 
@@ -52,15 +55,13 @@ export const unique = (prefix: string) => `${prefix}-${crypto.randomUUID().slice
 
 export async function startApp(overrides: Partial<Config> = {}) {
   const config = loadConfig({ dev: true, anthropic: { apiKey: "test-key", baseURL: await mockLLM(), model: "claude-haiku-4-5" }, ...overrides });
-  const sql = new Bun.SQL(config.databaseUrl, { max: 5 });
-  // The server as index.ts runs it (Effect's Bun server), with these settings and this pool.
+  // The server as index.ts runs it (Effect's Bun server), with these settings.
   const layer = HttpLive.pipe(
     Layer.provideMerge(BunServerLive(0)),
     Layer.provideMerge(AppLive),
     Layer.provideMerge(ServicesLive),
     Layer.provideMerge(MigrationsLive),
     Layer.provideMerge(DatabaseLive),
-    Layer.provideMerge(Layer.succeed(Database, sql)),
     Layer.provideMerge(Layer.succeed(AppConfig, config)),
     Layer.provideMerge(LoggerLive),
   );
@@ -74,6 +75,20 @@ export async function startApp(overrides: Partial<Config> = {}) {
   if (!(mailer instanceof OutboxMailer)) throw new Error("tests read sign-in codes from the dev outbox");
   /** The app's parts that tests reach into, and a fetch that skips the network (no client IP, no abort). */
   const app = { fetch: HttpEffect.toWebHandlerWith<Layer.Success<typeof layer>, HttpServerRequest.HttpServerRequest | Scope.Scope>(context)(Context.get(context, App).handle), auth: Context.get(context, Auth), ai: Context.get(context, Ai) };
+
+  /** The app's pool, for test queries: t.sql`select …` is a promise of rows; t.db makes identifiers (t.db(table)) and lists (t.db.in(ids)). */
+  const db = Context.get(context, PgClient.PgClient);
+  const sql = <A extends object = Row>(strings: TemplateStringsArray, ...args: unknown[]) => Effect.runPromise(db<A>(strings, ...args));
+
+  /** A connection of its own, for a test that holds a lock or a transaction open meanwhile. */
+  const connection = async () => {
+    const held = Effect.runSync(Scope.make());
+    const client = await Effect.runPromise(PgClient.makeClient(connectTo(config.databaseUrl)).pipe(Effect.provide(Reactivity.layer), Scope.provide(held)));
+    return {
+      sql: <A extends object = Row>(strings: TemplateStringsArray, ...args: unknown[]) => Effect.runPromise(client<A>(strings, ...args)),
+      close: () => Effect.runPromise(Scope.close(held, Exit.void)),
+    };
+  };
 
   /** A request as the browser would send it: same-origin, with the session cookie. */
   const call = async (path: string, body?: unknown, cookie?: string, headers: Record<string, string> = {}) => {
@@ -123,7 +138,9 @@ export async function startApp(overrides: Partial<Config> = {}) {
   return {
     app,
     config,
+    db,
     sql,
+    connection,
     url,
     call,
     sendCode,
@@ -135,7 +152,6 @@ export async function startApp(overrides: Partial<Config> = {}) {
     mailer,
     async stop() {
       await Effect.runPromise(Scope.close(scope, Exit.void));
-      await sql.close();
     },
   };
 }

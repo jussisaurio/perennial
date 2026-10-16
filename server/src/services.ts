@@ -1,9 +1,8 @@
-// The server's dependencies as Effect services, each with the layer that makes
-// it and closes it. They wrap today's modules (Bun.SQL, mail.ts, auth.ts,
-// ai.ts) as they are; #322 part 2 turns those into Effect services too.
+// The app's services, put together: Better Auth (its own Promise API, wrapped
+// here), and the Effect services from their modules (mail, sync, AI, the deck
+// words). Each layer closes what it opened.
 
 import { PgClient } from "@effect/sql-pg";
-import type { SQL } from "bun";
 import { Context, Effect, Layer } from "effect";
 import { AiLive } from "./ai";
 import { createAuth } from "./auth";
@@ -12,20 +11,6 @@ import { Mail, MailLive } from "./mail";
 import { ModelLive } from "./model";
 import { SyncLive } from "./sync";
 import { WordsLive } from "./words";
-
-export class Database extends Context.Service<Database, SQL>()("perennial/Database") {}
-
-/** Bun.SQL, for the modules not yet on sql-pg (db.ts). Tests pass their own (Layer.succeed). */
-export const BunSqlLive = Layer.effect(
-  Database,
-  Effect.gen(function* () {
-    const config = yield* AppConfig;
-    return yield* Effect.acquireRelease(
-      Effect.sync(() => new Bun.SQL(config.databaseUrl, { max: 10, idleTimeout: 30 })),
-      (sql) => Effect.promise(() => sql.close()),
-    );
-  }),
-);
 
 type BetterAuth = ReturnType<typeof createAuth>["auth"];
 export class Auth extends Context.Service<Auth, BetterAuth>()("perennial/Auth") {}

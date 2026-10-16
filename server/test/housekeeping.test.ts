@@ -23,8 +23,8 @@ test("inactive anonymous learners are deleted with their data; active ones and a
 
   // Age everyone; then the active learner renews a session today.
   const old = new Date(Date.now() - 90 * 86_400_000);
-  await t.sql`update "user" set "createdAt" = ${old} where id in ${t.sql([idleId, activeId, accountId])}`;
-  await t.sql`update "session" set "updatedAt" = ${old} where "userId" in ${t.sql([idleId, accountId])}`;
+  await t.sql`update "user" set "createdAt" = ${old} where id in ${t.db.in([idleId, activeId, accountId])}`;
+  await t.sql`update "session" set "updatedAt" = ${old} where "userId" in ${t.db.in([idleId, accountId])}`;
 
   await housekeeping();
   expect((await t.sql`select 1 from "user" where id = ${idleId}`).length).toBe(0);
@@ -34,13 +34,13 @@ test("inactive anonymous learners are deleted with their data; active ones and a
 });
 
 test("a second run while one holds the lock skips, and runs again once it is free", async () => {
-  const other = await t.sql.reserve(); // the first run's connection
+  const other = await t.connection(); // the first run's connection
   try {
-    expect((await other`select pg_try_advisory_lock(727002) as locked`)[0].locked).toBe(true);
+    expect((await other.sql`select pg_try_advisory_lock(727002) as locked`)[0].locked).toBe(true);
     expect(await housekeeping()).toEqual({ skipped: true });
   } finally {
-    await other`select pg_advisory_unlock(727002)`;
-    other.release();
+    await other.sql`select pg_advisory_unlock(727002)`;
+    await other.close();
   }
   expect(await housekeeping()).not.toEqual({ skipped: true });
 });
@@ -50,5 +50,5 @@ test("per-IP rate-limit counters older than an hour are deleted", async () => {
   const fresh = `198.51.100.${Math.floor(Math.random() * 200)}/sign-in/anonymous-${unique("fresh")}`;
   await t.sql`insert into "rateLimit" (key, count, "lastRequest") values (${old}, 3, ${Date.now() - 2 * 3_600_000}), (${fresh}, 1, ${Date.now()})`;
   await housekeeping();
-  expect((await t.sql`select key from "rateLimit" where key in ${t.sql([old, fresh])}`).map((r: { key: string }) => r.key)).toEqual([fresh]);
+  expect((await t.sql<{ key: string }>`select key from "rateLimit" where key in ${t.db.in([old, fresh])}`).map((r) => r.key)).toEqual([fresh]);
 });

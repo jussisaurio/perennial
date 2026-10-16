@@ -65,22 +65,22 @@ export const sentrySpan = <A, E, R>(options: { name: string; op: string; attribu
     ),
   );
 
-// Today's Promise modules (Better Auth and its hooks in auth.ts, sync.ts,
-// ai.ts) call event() and log from their own promise chains, and Sentry finds
-// the active span through AsyncLocalStorage. Effect fibers do not carry
-// AsyncLocalStorage. So `promise` runs them inside a small AsyncLocalStorage
-// scope that holds the request, local to this bridge. It goes when those
-// modules become Effect services (#322, part 2).
+// Better Auth is Promise code: its hooks (auth.ts) call event() and log from
+// its own promise chains, and Sentry's pg spans find their parent through
+// AsyncLocalStorage. Effect fibers do not carry AsyncLocalStorage. So
+// `inBetterAuth` runs it inside a small AsyncLocalStorage scope that holds the
+// request, local to this bridge, set at the start of each call. Nothing else
+// uses the bridge: our own code passes the request through Effect.
 const bridge = new AsyncLocalStorage<RequestInfo>();
 
-/** The request whose Promise code is running now (see `promise`), for log.ts. */
+/** The request whose Better Auth call is running now (see `inBetterAuth`), for log.ts. */
 export const bridgedRequest = () => bridge.getStore();
 
 /**
- * Call a Promise module for this request, as a named effect. It refuses with
- * ApiError (typed); anything else it throws is a bug: a defect, answered 500.
+ * Call Better Auth for this request, as a named effect. A refusal of ours
+ * (ApiError) stays typed; anything else it throws is a bug: a defect, answered 500.
  */
-export const promise = <A>(name: string, run: () => Promise<A>): Effect.Effect<A, ApiError, RequestContext> =>
+export const inBetterAuth = <A>(name: string, run: () => Promise<A>): Effect.Effect<A, ApiError, RequestContext> =>
   RequestContext.use((ctx) =>
     Effect.tryPromise({ try: () => bridge.run(ctx, () => inSentryScope(ctx, run)), catch: (e) => e }).pipe(
       Effect.catch((e) => (e instanceof ApiError ? Effect.fail(e) : Effect.die(e))),

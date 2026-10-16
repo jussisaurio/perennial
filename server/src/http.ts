@@ -10,9 +10,9 @@ import { ApiErrorBody, ERROR_STATUS } from "perennial-contract";
 export const json = (body: unknown, status = 200, headers: Record<string, string> = {}) => HttpServerResponse.jsonUnsafe(body, { status, headers });
 
 /**
- * A request the server refuses, with one of the contract's error bodies. Today's
- * Promise modules (sync.ts, ai.ts) throw it too; request.ts's `promise` keeps
- * it typed. errorResponse is the one place it becomes a response.
+ * A request the server refuses, with one of the contract's error bodies: the
+ * typed failure of the routes and services. errorResponse is the one place it
+ * becomes a response.
  */
 export class ApiError extends Schema.TaggedError<ApiError>()("ApiError", { body: ApiErrorBody }) {}
 

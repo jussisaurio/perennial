@@ -11,7 +11,7 @@ import { AppConfig, AppConfigFromEnv, ConfigProblems } from "./src/config";
 import { log, LoggerLive } from "./src/log";
 import { DatabaseLive } from "./src/db";
 import { Ai } from "./src/ai";
-import { BunSqlLive, ServicesLive } from "./src/services";
+import { ServicesLive } from "./src/services";
 import { watchEventLoop } from "./src/watchdog";
 
 const Server = Layer.unwrap(Effect.map(AppConfig, (config) => BunServerLive(config.port)));
@@ -43,7 +43,6 @@ const Main = Layer.mergeAll(Started, Watchdog).pipe(
   Layer.provideMerge(Server),
   Layer.provideMerge(AppLive),
   Layer.provideMerge(ServicesLive),
-  Layer.provideMerge(BunSqlLive),
   Layer.provideMerge(DatabaseLive),
   Layer.provideMerge(AppConfigFromEnv),
   Layer.provide(LoggerLive),

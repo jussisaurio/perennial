@@ -10,8 +10,8 @@
 //
 // Effect code logs with Effect.logInfo and friends (the `logger` below);
 // the request context comes from the fiber (request.ts). Promise code (Better
-// Auth, sync.ts, ai.ts, scripts) uses `log` and `event`, which find the
-// request through request.ts's bridge.
+// Auth, the scripts) uses `log` and `event`, which find the request through
+// request.ts's bridge (Better Auth only).
 
 import * as Sentry from "@sentry/bun";
 import { Cause, Context, Layer, Logger, References, type LogLevel } from "effect";
@@ -40,7 +40,7 @@ function write(level: Level, msg: string, fields: Fields, ctx: RequestInfo | und
   }
 }
 
-/** For code outside Effect: Better Auth's logger and hooks, sync.ts, ai.ts, the scripts and signal handlers. */
+/** For code outside Effect: Better Auth's logger and hooks, the scripts and signal handlers. */
 export const log = {
   debug: (msg: string, f: Fields = {}) => write("debug", msg, f, bridgedRequest()),
   info: (msg: string, f: Fields = {}) => write("info", msg, f, bridgedRequest()),

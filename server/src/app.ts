@@ -8,6 +8,7 @@
 // adds the headers every answer gets.
 
 import { BunHttpServer } from "@effect/platform-bun";
+import { PgClient } from "@effect/sql-pg";
 import * as Sentry from "@sentry/bun";
 import { Context, Effect, Layer, Schema } from "effect";
 import type { Scope } from "effect";
@@ -18,10 +19,10 @@ import { withClientIp } from "./clientIp";
 import { AppConfig } from "./config";
 import { ApiError, decodeBody, errorResponse, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { traceId } from "./log";
-import { annotate, event, inSentryScope, promise, RequestContext, sentrySpan, type RequestInfo } from "./request";
+import { annotate, event, inBetterAuth, inSentryScope, RequestContext, sentrySpan, type RequestInfo } from "./request";
 import { Mail, OutboxMailer } from "./mail";
 import { Ai } from "./ai";
-import { Auth, Database } from "./services";
+import { Auth } from "./services";
 import { LEARNER_TABLES, Sync } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
@@ -81,7 +82,7 @@ export const AppLive = Layer.effect(
   App,
   Effect.gen(function* () {
     const config = yield* AppConfig;
-    const sql = yield* Database;
+    const sql = yield* PgClient.PgClient;
     const mailer = yield* Mail;
     const auth = yield* Auth;
     const ai = yield* Ai;
@@ -90,7 +91,7 @@ export const AppLive = Layer.effect(
 
     const session = Effect.gen(function* () {
       const { request } = yield* RequestContext;
-      const s = yield* promise("Auth.getSession", () => auth.api.getSession({ headers: request.headers }));
+      const s = yield* inBetterAuth("Auth.getSession", () => auth.api.getSession({ headers: request.headers }));
       if (!s) return null;
       // A session Better Auth hands over without a usable user is a bug: a defect (500).
       const user = yield* Schema.decodeUnknownEffect(SessionUser)(s.user).pipe(Effect.orDie);
@@ -143,7 +144,8 @@ export const AppLive = Layer.effect(
     const routes = [
       at("/health", {
         GET: Effect.gen(function* () {
-          yield* promise("Database.ping", () => sql`select 1`);
+          // A database that does not answer is a 500 (and a Sentry report), as before.
+          yield* Effect.orDie(sql`select 1`);
           return json({ ok: true, release: config.release });
         }),
       }),
@@ -203,7 +205,7 @@ export const AppLive = Layer.effect(
         POST: Effect.gen(function* () {
           const user = yield* requireUser();
           // Everything the learner has cascades from the user row.
-          yield* promise("Database.deleteUser", () => sql`delete from "user" where id = ${user.id}`);
+          yield* Effect.orDie(sql`delete from "user" where id = ${user.id}`);
           yield* event({ accountDeleted: true });
           return json({ ok: true });
         }),
@@ -227,7 +229,7 @@ export const AppLive = Layer.effect(
           const { request } = yield* RequestContext;
           const table = new URL(request.url).searchParams.get("table");
           if (!table || !LEARNER_TABLES.includes(table)) return yield* refuse({ error: "unknown_table" });
-          return json(yield* promise("Database.rows", () => sql`select * from ${sql(table)} where user_id = ${user.id}`));
+          return json(yield* Effect.orDie(sql`select * from ${sql(table)} where user_id = ${user.id}`));
         }),
       }));
     }
@@ -266,7 +268,7 @@ export const AppLive = Layer.effect(
       Effect.gen(function* () {
         if (url.pathname.startsWith("/api/auth/")) {
           if (!authEndpoints[url.pathname]?.includes(req.method)) return yield* refuse({ error: "not_found" });
-          return webResponse(yield* promise("Auth.handler", () => auth.handler(req)));
+          return webResponse(yield* inBetterAuth("Auth.handler", () => auth.handler(req)));
         }
         if (req.method !== "GET" && req.method !== "HEAD" && url.pathname.startsWith("/api/")) yield* requireSameOrigin(req);
         return yield* router.pipe(

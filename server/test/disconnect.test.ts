@@ -32,16 +32,16 @@ function heldUpstream(forward?: string) {
 
 /** Lock a learner's user row in a transaction of our own, so the server's next write to them waits for us. */
 async function lockUser(t: App, userId: string) {
-  const conn = await t.sql.reserve();
-  await conn`begin`;
-  await conn`select id from "user" where id = ${userId} for update`;
-  const [{ pid }] = await conn`select pg_backend_pid() as pid`;
+  const conn = await t.connection();
+  await conn.sql`begin`;
+  await conn.sql`select id from "user" where id = ${userId} for update`;
+  const [{ pid }] = await conn.sql<{ pid: number }>`select pg_backend_pid() as pid`;
   return {
     /** Resolves once a server query waits for our lock. */
     waited: () => until(async () => (await t.sql`select 1 from pg_stat_activity where ${pid} = any(pg_blocking_pids(pid))`).length > 0),
     async release() {
-      await conn`commit`;
-      conn.release();
+      await conn.sql`commit`;
+      await conn.close();
     },
   };
 }

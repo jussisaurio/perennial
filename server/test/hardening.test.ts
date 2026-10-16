@@ -61,8 +61,8 @@ describe("account linking needs the account's code", () => {
     return { aliceEmail, aliceId, mallory, malloryId };
   }
   async function untouched(aliceId: string, malloryId: string) {
-    expect((await t.sql`select word_id from review where user_id = ${aliceId}`).map((r: { word_id: string }) => r.word_id)).toEqual([W.a]);
-    expect((await t.sql`select word_id from review where user_id = ${malloryId}`).map((r: { word_id: string }) => r.word_id)).toEqual([W.m]);
+    expect((await t.sql<{ word_id: string }>`select word_id from review where user_id = ${aliceId}`).map((r) => r.word_id)).toEqual([W.a]);
+    expect((await t.sql<{ word_id: string }>`select word_id from review where user_id = ${malloryId}`).map((r) => r.word_id)).toEqual([W.m]);
     expect((await t.sql`select 1 from "user" where id = ${malloryId}`).length).toBe(1);
   }
 

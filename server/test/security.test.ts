@@ -28,7 +28,7 @@ async function aliceWithData() {
 }
 
 const TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
-const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.sql(table)} where user_id = ${userId}`)[0].n);
+const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.db(table)} where user_id = ${userId}`)[0].n);
 
 describe("reads: shapes only ever contain your own rows", () => {
   test.each(TABLES)("%s", async (table) => {

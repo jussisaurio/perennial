@@ -43,7 +43,7 @@ test("word state: the newer change wins, and the server caps future times", asyn
   expect((await t.sql`select status from word_state where user_id = ${id}`)[0].status).toBe("paused");
   // A device with a fast clock cannot win every later conflict.
   await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "queued", updated_at: at(10 * 86_400_000) } }]);
-  const [row] = await t.sql`select updated_at from word_state where user_id = ${id}`;
+  const [row] = await t.sql<{ updated_at: Date }>`select updated_at from word_state where user_id = ${id}`;
   expect(new Date(row.updated_at).getTime()).toBeLessThanOrEqual(Date.now() + 1000);
 });
 
