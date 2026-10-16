@@ -4,7 +4,7 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import * as Sentry from "@sentry/bun";
-import { Context, Effect } from "effect";
+import { Context, Effect, Exit } from "effect";
 import { ApiError } from "./http";
 
 type Fields = Record<string, unknown>;
@@ -35,9 +35,35 @@ export function record(ctx: RequestInfo, fields: Fields) {
   ctx.sentry.rootSpan?.setAttributes(attrs);
 }
 
-/** Run `fn` with the request's Sentry scopes active, so what it reports or traces belongs to the request. */
+/**
+ * Run `fn` as part of the request's trace: its Sentry scopes, and its root
+ * span as the active span, so what `fn` reports or traces belongs to the
+ * request. All three are given explicitly. Sentry keeps them in
+ * AsyncLocalStorage, and a fiber can run in another request's: a fiber
+ * waiting for a pooled connection or a semaphore resumes in the callback of
+ * the fiber that released it.
+ */
 export const inSentryScope = <T>(ctx: RequestInfo, fn: () => T): T =>
-  Sentry.withIsolationScope(ctx.sentry.isolationScope, () => Sentry.withScope(ctx.sentry.scope, fn));
+  Sentry.withIsolationScope(ctx.sentry.isolationScope, () => Sentry.withScope(ctx.sentry.scope, () => Sentry.withActiveSpan(ctx.sentry.rootSpan ?? null, fn)));
+
+/**
+ * A Sentry span around `effect`, a child of the request's root span (given
+ * explicitly, see inSentryScope). It ends when the effect does, marked as an
+ * error if the effect failed, as Sentry.startSpan marks a throw.
+ */
+export const sentrySpan = <A, E, R>(options: { name: string; op: string; attributes?: Record<string, string | number | boolean> }, effect: Effect.Effect<A, E, R>) =>
+  RequestContext.use((ctx) =>
+    Effect.acquireUseRelease(
+      Effect.sync(() => inSentryScope(ctx, () => Sentry.startInactiveSpan({ ...options, parentSpan: ctx.sentry.rootSpan ?? null }))),
+      () => effect,
+      (span, exit) =>
+        Effect.sync(() => {
+          // 2: Sentry's SPAN_STATUS_ERROR (not exported by @sentry/bun).
+          if (Exit.isFailure(exit)) span.setStatus({ code: 2, message: "internal_error" });
+          span.end();
+        }),
+    ),
+  );
 
 // Today's Promise modules (Better Auth and its hooks in auth.ts, sync.ts,
 // ai.ts) call event() and log from their own promise chains, and Sentry finds

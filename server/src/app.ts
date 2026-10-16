@@ -18,12 +18,11 @@ import { withClientIp } from "./clientIp";
 import { AppConfig } from "./config";
 import { ApiError, decodeBody, errorResponse, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { traceId } from "./log";
-import { annotate, event, inSentryScope, promise, RequestContext, type RequestInfo } from "./request";
+import { annotate, event, inSentryScope, promise, RequestContext, sentrySpan, type RequestInfo } from "./request";
 import { Mail, OutboxMailer } from "./mail";
 import { Ai, Auth, Database } from "./services";
-import { applyWrites, LEARNER_TABLES, proxyShape } from "./sync";
+import { LEARNER_TABLES, Sync } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
-import { Words } from "./words";
 
 /**
  * The app had a service worker until #188 (offline mode, removed for now), and a
@@ -85,7 +84,7 @@ export const AppLive = Layer.effect(
     const mailer = yield* Mail;
     const auth = yield* Auth;
     const ai = yield* Ai;
-    const words = yield* Words;
+    const sync = yield* Sync;
     const headers = securityHeaders([...new Set(config.observability.connect)], config.appUrl.startsWith("https://"), !!config.turnstile.siteKey);
 
     const session = Effect.gen(function* () {
@@ -158,7 +157,7 @@ export const AppLive = Layer.effect(
         GET: Effect.gen(function* () {
           const user = yield* requireUser();
           const { request } = yield* RequestContext;
-          return webResponse(yield* promise("Sync.proxyShape", () => proxyShape(request, user.id, config)));
+          return webResponse(yield* sync.proxyShape(request, user.id));
         }),
       }),
       at("/api/write", {
@@ -171,9 +170,7 @@ export const AppLive = Layer.effect(
           // "review.insert:3 course.upsert:1": what the batch was, searchable as text.
           yield* event({ writes: mutations.length, writeTypes: Object.entries(types).map(([k, n]) => `${k}:${n}`).join(" ") });
           // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
-          const result = yield* promise("Sync.applyWrites", () =>
-            Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, () => applyWrites(sql, words, user.id, mutations)),
-          );
+          const result = yield* sentrySpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, sync.applyWrites(user.id, mutations));
           yield* event({ writeChanged: result.changed });
           return json(result);
         }),

@@ -18,7 +18,8 @@ import { LANGUAGE } from "./course";
 import { refuse } from "./http";
 import { event, log } from "./log";
 import { minePrompt, moreExamplesPrompt, PROMPT_VERSION, SENTENCES_PER_WORD, type GenWord } from "./prompts";
-import { ensureRoom } from "./sync";
+import { Effect } from "effect";
+import type { Sync } from "./sync";
 
 /** "2026-10": credits and the spend budget reset each calendar month (UTC). */
 const period = () => new Date().toISOString().slice(0, 7);
@@ -75,10 +76,12 @@ export class AIService {
   private readonly recent = new Map<string, number[]>();
   private readonly sql: SQL;
   private readonly config: Config;
+  private readonly sync: Sync["Service"];
 
-  constructor(sql: SQL, config: Config) {
+  constructor(sql: SQL, config: Config, sync: Sync["Service"]) {
     this.sql = sql;
     this.config = config;
+    this.sync = sync;
     this.client = new Anthropic({ apiKey: config.anthropic.apiKey, baseURL: config.anthropic.baseURL });
   }
 
@@ -190,8 +193,8 @@ export class AIService {
   /** Words the learner picked from their own text. One credit per word returned. */
   async mine(userId: UserId, input: MineIn) {
     // Nothing is charged for words the app could not save (fitWord keeps SENTENCES_PER_WORD each).
-    await ensureRoom(this.sql, userId, "user_word", input.items.length);
-    await ensureRoom(this.sql, userId, "user_sentence", SENTENCES_PER_WORD * input.items.length);
+    await Effect.runPromise(this.sync.ensureRoom(userId, "user_word", input.items.length));
+    await Effect.runPromise(this.sync.ensureRoom(userId, "user_sentence", SENTENCES_PER_WORD * input.items.length));
     const words = await this.spend(userId, input.items.length, async () => {
       const p = minePrompt(LANGUAGE[input.lang], "English", input.items, input.known);
       const out = await this.generate(userId, "mine", WordsOut, p.system, p.user);
@@ -203,7 +206,7 @@ export class AIService {
 
   /** New sentences for words the learner chose. One credit per word that got any. */
   async examples(userId: UserId, input: ExamplesIn) {
-    await ensureRoom(this.sql, userId, "user_sentence", SENTENCES_PER_WORD * input.words.length);
+    await Effect.runPromise(this.sync.ensureRoom(userId, "user_sentence", SENTENCES_PER_WORD * input.words.length));
     const examples = await this.spend(userId, input.words.length, async () => {
       const p = moreExamplesPrompt(LANGUAGE[input.lang], "English", input.words, input.known);
       const out = await this.generate(userId, "examples", SentencesOut, p.system, p.user);

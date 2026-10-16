@@ -6,47 +6,18 @@
 // none did, no echo will come: the client must not wait for one).
 
 import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
-import type { SQL } from "bun";
+import { PgClient } from "@effect/sql-pg";
+import { Clock, Context, Effect, Layer } from "effect";
 import type { Mutation, UserId, WordId, WriteResult } from "perennial-contract";
-import type { Config } from "./config";
+import { AppConfig } from "./config";
 import { COURSE_DEFAULTS } from "./course";
-import { refuse } from "./http";
-import { event } from "./log";
-import type { Words } from "./words";
+import { rowCount, theRow } from "./db";
+import { type ApiError, refuse } from "./http";
+import { event, inSentryScope, RequestContext } from "./request";
+import { Words } from "./words";
 
 /** Tables a learner can read, each scoped to their user id. */
 export const LEARNER_TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
-
-export async function proxyShape(req: Request, userId: UserId, config: Config): Promise<Response> {
-  const url = new URL(req.url);
-  const table = url.searchParams.get("table") ?? "";
-  if (!LEARNER_TABLES.includes(table)) throw refuse({ error: "unknown_shape" });
-  const origin = new URL(`${config.electric.url}/v1/shape`);
-  for (const [k, v] of url.searchParams) if (ELECTRIC_PROTOCOL_QUERY_PARAMS.includes(k)) origin.searchParams.set(k, v);
-  // The shape definition is always ours, never the client's.
-  origin.searchParams.set("table", table);
-  origin.searchParams.set("where", "user_id = $1");
-  origin.searchParams.set("params[1]", userId);
-  if (config.electric.secret) origin.searchParams.set("secret", config.electric.secret);
-  let res: Response;
-  try {
-    res = await fetch(origin, { signal: req.signal });
-  } catch (e) {
-    // The browser cancelled the long poll (navigation, a new shape): nothing to report.
-    if (req.signal.aborted) return new Response(null, { status: 499 });
-    throw e;
-  }
-  const headers = new Headers(res.headers);
-  headers.delete("content-encoding"); // fetch already decompressed the body
-  headers.delete("content-length");
-  headers.delete("access-control-allow-origin");
-  // Same URL, different user: never let a shared cache serve it to someone else.
-  headers.set("vary", "cookie");
-  headers.set("cache-control", (headers.get("cache-control") ?? "no-cache").replace(/\bpublic\b/, "private").replace(/,?\s*s-maxage=\d+/, ""));
-  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
-}
-
-// ---------- writes ----------
 
 const DAY = 86_400_000;
 /** A device clock can be wrong: never accept times from the future (with a little slack). */
@@ -59,153 +30,215 @@ const clamp = (d: Date, now: Date) => (d.getTime() > now.getTime() ? now : d);
  */
 export const QUOTA = { user_word: 5_000, user_sentence: 25_000, word_state: 50_000, reviewsPerDay: 5_000 };
 
-/**
- * Refuse (429 quota) when `n` more rows would not fit. The AI routes ask before they
- * call the model: their words are charged before the app writes them.
- */
-export async function ensureRoom(sql: SQL, userId: UserId, table: "user_word" | "user_sentence", n: number) {
-  const [{ count }] = await sql`select count(*)::int as count from ${sql(table)} where user_id = ${userId}`;
-  if (count + n > QUOTA[table]) throw refuse({ error: "quota", table, limit: QUOTA[table] });
-}
-
-async function checkQuota(tx: SQL, userId: UserId, mutations: readonly Mutation[]) {
-  const adds = { user_word: 0, user_sentence: 0, word_state: 0, review: 0 };
-  for (const m of mutations) {
-    if (m.type === "user_word.upsert") adds.user_word++;
-    else if (m.type === "user_sentence.insert") adds.user_sentence++;
-    else if (m.type === "word_state.upsert") adds.word_state++;
-    else if (m.type === "review.insert") adds.review++;
-  }
-  const over = (table: keyof typeof QUOTA, n: number, limit: number) => {
-    if (n > limit) throw refuse({ error: "quota", table, limit });
-  };
-  if (adds.user_word) await ensureRoom(tx, userId, "user_word", adds.user_word);
-  if (adds.user_sentence) await ensureRoom(tx, userId, "user_sentence", adds.user_sentence);
-  if (adds.word_state) over("word_state", Number((await tx`select count(*) as n from word_state where user_id = ${userId}`)[0].n) + adds.word_state, QUOTA.word_state);
-  if (adds.review) over("reviewsPerDay", Number((await tx`select count(*) as n from review where user_id = ${userId} and received_at > now() - interval '1 day'`)[0].n) + adds.review, QUOTA.reviewsPerDay);
-}
-
-/**
- * "Never show me this" for a form in your own text (Add screen): word_state
- * `form:<lang>:<form>`, only ever ignored, never studied or counted.
- */
-function ignoredForm(words: Words["Service"], id: string, status: string): boolean {
-  const m = /^form:([a-z]{2}):(.{1,60})$/u.exec(id);
-  return !!m && status === "ignored" && words.hasDeck(m[1]);
-}
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * Every word a review, word state or sentence points at must exist: a deck word
- * (in the review's language) or one of this learner's own words, saved before
- * or in this batch. Otherwise the whole batch is refused (422 unknown_word).
- */
-async function checkWords(tx: SQL, words: Words["Service"], userId: UserId, mutations: readonly Mutation[]) {
-  const own = new Set<string>(mutations.flatMap((m) => (m.type === "user_word.upsert" ? [m.row.id] : [])));
-  const refs: { id: WordId; lang?: string }[] = [];
-  for (const m of mutations) {
-    if (m.type === "review.insert") refs.push({ id: m.row.word_id, lang: m.row.lang });
-    else if (m.type === "word_state.upsert" && !ignoredForm(words, m.row.word_id, m.row.status)) refs.push({ id: m.row.word_id });
-    else if (m.type === "user_sentence.insert") refs.push({ id: m.row.word_id });
+export class Sync extends Context.Service<
+  Sync,
+  {
+    /** Applies a batch for the learner, in one transaction. */
+    readonly applyWrites: (userId: UserId, mutations: readonly Mutation[]) => Effect.Effect<WriteResult, ApiError, RequestContext>;
+    /**
+     * Refuse (429 quota) when `n` more rows would not fit. The AI routes ask before they
+     * call the model: their words are charged before the app writes them.
+     */
+    readonly ensureRoom: (userId: UserId, table: "user_word" | "user_sentence", n: number) => Effect.Effect<void, ApiError>;
+    /** The learner's rows of one table, streamed from Electric. */
+    readonly proxyShape: (req: Request, userId: UserId) => Effect.Effect<Response, ApiError, RequestContext>;
   }
-  const unknown = refs.filter((r) => !own.has(r.id) && !words.isDeckWord(r.id, r.lang)).map((r) => r.id);
-  if (!unknown.length) return;
-  const candidates = [...new Set(unknown)].filter((id) => UUID.test(id));
-  const found = candidates.length ? new Set((await tx`select id from user_word where user_id = ${userId} and id in ${tx(candidates)}`).map((r: { id: string }) => r.id)) : new Set<string>();
-  const missing = unknown.find((id) => !found.has(id));
-  if (missing) throw refuse({ error: "unknown_word", word_id: missing.slice(0, 120) });
-}
+>()("perennial/Sync") {}
 
-/**
- * Applies a batch in one transaction. `changed` is false when no statement
- * touched a row (a retried insert, an older state, a delete of nothing): no
- * change reaches the stream, so there is no txid echo to wait for.
- */
-export async function applyWrites(sql: SQL, words: Words["Service"], userId: UserId, mutations: readonly Mutation[]): Promise<WriteResult> {
-  const now = new Date();
-  for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) throw refuse({ error: "review_from_the_future" });
-  return sql.begin(async (tx) => {
-    // Linking an anonymous learner (auth.ts mergeUsers) locks this row and ends
-    // the anonymous sessions. A write racing it waits here, then finds no
-    // session and is refused, instead of adding rows that the anonymous user's
-    // deletion would take with it. A write that got here first is moved over.
-    const [user] = await tx`select id from "user" where id = ${userId} for share`;
-    if (!user || !(await tx`select 1 from session where "userId" = ${userId} limit 1`).length) throw refuse({ error: "sign_in_required" });
-    await checkQuota(tx, userId, mutations);
-    await checkWords(tx, words, userId, mutations);
-    // The txid must be read inside the writing transaction.
-    const [{ txid }] = await tx`select pg_current_xact_id()::xid::text as txid`;
-    let rows = 0;
-    const run = async (q: Promise<{ count: number }>) => void (rows += (await q).count);
-    const started: string[] = [];
-    for (const m of mutations) {
-      switch (m.type) {
-        case "review.insert": {
-          const r = m.row;
-          // Insert-only: a reused id never overwrites anything, least of all another user's row.
-          await run(tx`insert into review (id, user_id, lang, word_id, skill, grade, kind, reviewed_at, duration_ms, sentence_id)
-            values (${r.id}, ${userId}, ${r.lang}, ${r.word_id}, ${r.skill}, ${r.grade}, ${r.kind}, ${clamp(r.reviewed_at, now)}, ${r.duration_ms}, ${r.sentence_id ?? null})
-            on conflict (id) do nothing`);
-          break;
-        }
-        case "review.delete":
-          await run(tx`delete from review where id = ${m.id} and user_id = ${userId}`);
-          break;
-        case "course.upsert": {
-          const r = m.row;
-          // Only the columns sent change, so two devices editing different settings both win.
-          // The door only ever opens: a device that still has it closed never shuts it again.
-          const res = await tx`insert into course (user_id, lang, minutes, retention, door_open)
-            values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true})
-            on conflict (user_id, lang) do update set
-              minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
-              retention = coalesce(${r.retention ?? null}::real, course.retention),
-              door_open = course.door_open or excluded.door_open
-            returning (xmax = 0) as inserted`;
-          rows += res.count;
-          // xmax = 0: a new row, not an update. A new course is a learner starting a language.
-          if (res[0]?.inserted) started.push(r.lang);
-          break;
-        }
-        case "word_state.upsert": {
-          const r = m.row;
-          const at = clamp(r.updated_at, now);
-          await run(tx`insert into word_state (user_id, word_id, status, queued_at, updated_at) values (${userId}, ${r.word_id}, ${r.status}, ${r.queued_at ?? null}, ${at})
-            on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
-            where excluded.updated_at > word_state.updated_at`);
-          break;
-        }
-        case "word_state.delete":
-          await run(tx`delete from word_state where user_id = ${userId} and word_id = ${m.word_id} and updated_at <= ${clamp(m.updated_at, now)}`);
-          break;
-        case "user_word.upsert": {
-          const r = m.row;
-          await run(tx`insert into user_word (id, user_id, lang, lemma, gloss, pos, forms, notes, deck_id)
-            values (${r.id}, ${userId}, ${r.lang}, ${r.lemma}, ${r.gloss}, ${r.pos ?? null}, ${JSON.stringify(r.forms)}::jsonb, ${r.notes ?? null}, ${r.deck_id ?? null})
-            on conflict (id) do update set lemma = excluded.lemma, gloss = excluded.gloss, pos = excluded.pos, forms = excluded.forms, notes = excluded.notes, deck_id = excluded.deck_id
-            where user_word.user_id = ${userId}`);
-          break;
-        }
-        case "user_word.delete":
-          await run(tx`delete from user_sentence where word_id = ${m.id}::text and user_id = ${userId}`);
-          await run(tx`delete from user_word where id = ${m.id} and user_id = ${userId}`);
-          break;
-        case "user_sentence.insert": {
-          const r = m.row;
-          await run(tx`insert into user_sentence (id, user_id, word_id, text, translation, cloze, origin, model)
-            values (${r.id}, ${userId}, ${r.word_id}, ${r.text}, ${r.translation}, ${r.cloze}, ${r.origin}, ${r.model ?? null})
-            on conflict (id) do nothing`);
-          break;
-        }
-        case "user_sentence.delete":
-          await run(tx`delete from user_sentence where id = ${m.id} and user_id = ${userId}`);
-          break;
+export const SyncLive = Layer.effect(
+  Sync,
+  Effect.gen(function* () {
+    const sql = yield* PgClient.PgClient;
+    const words = yield* Words;
+    const config = yield* AppConfig;
+
+    // A database failure while answering a request is an outage or a bug, never
+    // the learner's doing: a defect (500, with a Sentry report), as before.
+    const ensureRoom = Effect.fn("Sync.ensureRoom")(
+      function* (userId: UserId, table: "user_word" | "user_sentence", n: number) {
+        const { count } = yield* theRow(sql<{ count: number }>`select count(*)::int as count from ${sql(table)} where user_id = ${userId}`);
+        if (count + n > QUOTA[table]) return yield* refuse({ error: "quota", table, limit: QUOTA[table] });
+      },
+      Effect.catchTag("SqlError", Effect.die),
+    );
+
+    const checkQuota = Effect.fnUntraced(function* (userId: UserId, mutations: readonly Mutation[]) {
+      const adds = { user_word: 0, user_sentence: 0, word_state: 0, review: 0 };
+      for (const m of mutations) {
+        if (m.type === "user_word.upsert") adds.user_word++;
+        else if (m.type === "user_sentence.insert") adds.user_sentence++;
+        else if (m.type === "word_state.upsert") adds.word_state++;
+        else if (m.type === "review.insert") adds.review++;
       }
-    }
-    return { txid: Number(txid), changed: rows > 0, started };
-  }).then(({ started, ...result }) => {
-    if (started.length) event({ courseStarted: started.join(",") });
-    return result;
-  });
-}
+      if (adds.user_word) yield* ensureRoom(userId, "user_word", adds.user_word);
+      if (adds.user_sentence) yield* ensureRoom(userId, "user_sentence", adds.user_sentence);
+      if (adds.word_state) {
+        const { n } = yield* theRow(sql<{ n: number }>`select count(*)::int as n from word_state where user_id = ${userId}`);
+        if (n + adds.word_state > QUOTA.word_state) return yield* refuse({ error: "quota", table: "word_state", limit: QUOTA.word_state });
+      }
+      if (adds.review) {
+        const { n } = yield* theRow(sql<{ n: number }>`select count(*)::int as n from review where user_id = ${userId} and received_at > now() - interval '1 day'`);
+        if (n + adds.review > QUOTA.reviewsPerDay) return yield* refuse({ error: "quota", table: "reviewsPerDay", limit: QUOTA.reviewsPerDay });
+      }
+    });
+
+    /**
+     * "Never show me this" for a form in your own text (Add screen): word_state
+     * `form:<lang>:<form>`, only ever ignored, never studied or counted.
+     */
+    const ignoredForm = (id: string, status: string) => {
+      const lang = /^form:([a-z]{2}):(.{1,60})$/u.exec(id)?.[1];
+      return lang !== undefined && status === "ignored" && words.hasDeck(lang);
+    };
+
+    /**
+     * Every word a review, word state or sentence points at must exist: a deck word
+     * (in the review's language) or one of this learner's own words, saved before
+     * or in this batch. Otherwise the whole batch is refused (422 unknown_word).
+     */
+    const checkWords = Effect.fnUntraced(function* (userId: UserId, mutations: readonly Mutation[]) {
+      const own = new Set<string>(mutations.flatMap((m) => (m.type === "user_word.upsert" ? [m.row.id] : [])));
+      const refs: { id: WordId; lang?: string }[] = [];
+      for (const m of mutations) {
+        if (m.type === "review.insert") refs.push({ id: m.row.word_id, lang: m.row.lang });
+        else if (m.type === "word_state.upsert" && !ignoredForm(m.row.word_id, m.row.status)) refs.push({ id: m.row.word_id });
+        else if (m.type === "user_sentence.insert") refs.push({ id: m.row.word_id });
+      }
+      const unknown = refs.filter((r) => !own.has(r.id) && !words.isDeckWord(r.id, r.lang)).map((r) => r.id);
+      if (!unknown.length) return;
+      const candidates = [...new Set(unknown)].filter((id) => UUID.test(id));
+      const found = candidates.length ? new Set((yield* sql<{ id: string }>`select id from user_word where user_id = ${userId} and id in ${sql.in(candidates)}`).map((r) => r.id)) : new Set<string>();
+      const missing = unknown.find((id) => !found.has(id));
+      if (missing) return yield* refuse({ error: "unknown_word", word_id: missing.slice(0, 120) });
+    });
+
+    /**
+     * Applies a batch in one transaction. `changed` is false when no statement
+     * touched a row (a retried insert, an older state, a delete of nothing): no
+     * change reaches the stream, so there is no txid echo to wait for.
+     */
+    const applyWrites = Effect.fn("Sync.applyWrites")(
+      function* (userId: UserId, mutations: readonly Mutation[]) {
+        const now = new Date(yield* Clock.currentTimeMillis);
+        for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) return yield* refuse({ error: "review_from_the_future" });
+        const { started, ...result } = yield* sql.withTransaction(
+          Effect.gen(function* () {
+            // Linking an anonymous learner (auth.ts mergeUsers) locks this row and ends
+            // the anonymous sessions. A write racing it waits here, then finds no
+            // session and is refused, instead of adding rows that the anonymous user's
+            // deletion would take with it. A write that got here first is moved over.
+            const user = yield* sql`select id from "user" where id = ${userId} for share`;
+            if (!user.length || !(yield* sql`select 1 from session where "userId" = ${userId} limit 1`).length) return yield* refuse({ error: "sign_in_required" });
+            yield* checkQuota(userId, mutations);
+            yield* checkWords(userId, mutations);
+            // The txid must be read inside the writing transaction.
+            const { txid } = yield* theRow(sql<{ txid: string }>`select pg_current_xact_id()::xid::text as txid`);
+            let rows = 0;
+            const started: string[] = [];
+            for (const m of mutations) {
+              switch (m.type) {
+                case "review.insert": {
+                  const r = m.row;
+                  // Insert-only: a reused id never overwrites anything, least of all another user's row.
+                  rows += yield* rowCount(sql`insert into review (id, user_id, lang, word_id, skill, grade, kind, reviewed_at, duration_ms, sentence_id)
+                    values (${r.id}, ${userId}, ${r.lang}, ${r.word_id}, ${r.skill}, ${r.grade}, ${r.kind}, ${clamp(r.reviewed_at, now)}, ${r.duration_ms}, ${r.sentence_id ?? null})
+                    on conflict (id) do nothing`);
+                  break;
+                }
+                case "review.delete":
+                  rows += yield* rowCount(sql`delete from review where id = ${m.id} and user_id = ${userId}`);
+                  break;
+                case "course.upsert": {
+                  const r = m.row;
+                  // Only the columns sent change, so two devices editing different settings both win.
+                  // The door only ever opens: a device that still has it closed never shuts it again.
+                  const res = yield* sql<{ inserted: boolean }>`insert into course (user_id, lang, minutes, retention, door_open)
+                    values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true})
+                    on conflict (user_id, lang) do update set
+                      minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
+                      retention = coalesce(${r.retention ?? null}::real, course.retention),
+                      door_open = course.door_open or excluded.door_open
+                    returning (xmax = 0) as inserted`;
+                  rows += res.length;
+                  // xmax = 0: a new row, not an update. A new course is a learner starting a language.
+                  if (res[0]?.inserted) started.push(r.lang);
+                  break;
+                }
+                case "word_state.upsert": {
+                  const r = m.row;
+                  const at = clamp(r.updated_at, now);
+                  rows += yield* rowCount(sql`insert into word_state (user_id, word_id, status, queued_at, updated_at) values (${userId}, ${r.word_id}, ${r.status}, ${r.queued_at ?? null}, ${at})
+                    on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
+                    where excluded.updated_at > word_state.updated_at`);
+                  break;
+                }
+                case "word_state.delete":
+                  rows += yield* rowCount(sql`delete from word_state where user_id = ${userId} and word_id = ${m.word_id} and updated_at <= ${clamp(m.updated_at, now)}`);
+                  break;
+                case "user_word.upsert": {
+                  const r = m.row;
+                  // forms as Bun.SQL stored it: the list's JSON text as a jsonb string.
+                  rows += yield* rowCount(sql`insert into user_word (id, user_id, lang, lemma, gloss, pos, forms, notes, deck_id)
+                    values (${r.id}, ${userId}, ${r.lang}, ${r.lemma}, ${r.gloss}, ${r.pos ?? null}, to_jsonb(${JSON.stringify(r.forms)}::text), ${r.notes ?? null}, ${r.deck_id ?? null})
+                    on conflict (id) do update set lemma = excluded.lemma, gloss = excluded.gloss, pos = excluded.pos, forms = excluded.forms, notes = excluded.notes, deck_id = excluded.deck_id
+                    where user_word.user_id = ${userId}`);
+                  break;
+                }
+                case "user_word.delete":
+                  rows += yield* rowCount(sql`delete from user_sentence where word_id = ${m.id}::text and user_id = ${userId}`);
+                  rows += yield* rowCount(sql`delete from user_word where id = ${m.id} and user_id = ${userId}`);
+                  break;
+                case "user_sentence.insert": {
+                  const r = m.row;
+                  rows += yield* rowCount(sql`insert into user_sentence (id, user_id, word_id, text, translation, cloze, origin, model)
+                    values (${r.id}, ${userId}, ${r.word_id}, ${r.text}, ${r.translation}, ${r.cloze}, ${r.origin}, ${r.model ?? null})
+                    on conflict (id) do nothing`);
+                  break;
+                }
+                case "user_sentence.delete":
+                  rows += yield* rowCount(sql`delete from user_sentence where id = ${m.id} and user_id = ${userId}`);
+                  break;
+              }
+            }
+            return { txid: Number(txid), changed: rows > 0, started };
+          }),
+        );
+        if (started.length) yield* event({ courseStarted: started.join(",") });
+        return result;
+      },
+      Effect.catchTag("SqlError", Effect.die),
+    );
+
+    const proxyShape = Effect.fn("Sync.proxyShape")(function* (req: Request, userId: UserId) {
+      const ctx = yield* RequestContext;
+      const url = new URL(req.url);
+      const table = url.searchParams.get("table") ?? "";
+      if (!LEARNER_TABLES.includes(table)) return yield* refuse({ error: "unknown_shape" });
+      const origin = new URL(`${config.electric.url}/v1/shape`);
+      for (const [k, v] of url.searchParams) if (ELECTRIC_PROTOCOL_QUERY_PARAMS.includes(k)) origin.searchParams.set(k, v);
+      // The shape definition is always ours, never the client's.
+      origin.searchParams.set("table", table);
+      origin.searchParams.set("where", "user_id = $1");
+      origin.searchParams.set("params[1]", userId);
+      if (config.electric.secret) origin.searchParams.set("secret", config.electric.secret);
+      // The request's own signal: when the browser goes, the fetch to Electric stops too.
+      const res = yield* Effect.tryPromise({ try: () => inSentryScope(ctx, () => fetch(origin, { signal: req.signal })), catch: (e) => e }).pipe(
+        // The browser cancelled the long poll (navigation, a new shape): nothing to report. Anything else is a bug or an outage.
+        Effect.catch((e) => (req.signal.aborted ? Effect.succeed(null) : Effect.die(e))),
+      );
+      if (!res) return new Response(null, { status: 499 });
+      const headers = new Headers(res.headers);
+      headers.delete("content-encoding"); // fetch already decompressed the body
+      headers.delete("content-length");
+      headers.delete("access-control-allow-origin");
+      // Same URL, different user: never let a shared cache serve it to someone else.
+      headers.set("vary", "cookie");
+      headers.set("cache-control", (headers.get("cache-control") ?? "no-cache").replace(/\bpublic\b/, "private").replace(/,?\s*s-maxage=\d+/, ""));
+      return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+    });
+
+    return Sync.of({ applyWrites, ensureRoom, proxyShape });
+  }),
+);
