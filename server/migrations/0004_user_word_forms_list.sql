@@ -1,12 +1,17 @@
 -- A learner word's forms as a list (#337). Before #340, /api/write stored them
--- as a jsonb string holding the list's JSON text ('"[\"zorro\"]"'), so the
+-- as a jsonb string holding the list's JSON text ('"[\"zorro\"]"'), so that
 -- string is unwrapped and read as jsonb. Every such string came from
--- JSON.stringify of a list, so it reads as a list (on the dev database, all
--- 4,243 did). Text that is not JSON stops the migration and the deploy, loudly.
+-- JSON.stringify of a list (on the dev database, all 4,243 did).
+--
+-- Only strings that hold a JSON list change. Any other string stays as it is,
+-- so one odd row can't fail this migration and block every later deploy; the
+-- app reads such a row as no forms and reports it (web/src/data/rows.ts).
+-- `is json array` needs Postgres 16 or newer.
 --
 -- Rows only, no schema change. Electric streams the updated rows (user_word
 -- has replica identity full), so open apps get the list. Rerunning it changes
--- nothing: a list is no longer a string. The old server can still write a few
--- string rows during the deploy; the app reads both shapes (#345), and a later
--- migration can run this same update again.
-update user_word set forms = (forms #>> '{}')::jsonb where jsonb_typeof(forms) = 'string';
+-- nothing: the rows it changed are lists now, and the rows it left still fail
+-- the check. The old server can still write a few string rows during the
+-- deploy; the app reads both shapes (#345), and a later migration can run this
+-- same update again.
+update user_word set forms = (forms #>> '{}')::jsonb where jsonb_typeof(forms) = 'string' and (forms #>> '{}') is json array;
