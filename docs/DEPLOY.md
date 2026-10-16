@@ -74,7 +74,7 @@ PlanetScale warns you if it finds a logical slot without failover support, and h
 
 | User | Connections |
 |---|---|
-| `web`: Bun SQL pool | up to 10 |
+| `web`: app pool (`@effect/sql-pg`) | up to 10 |
 | `web`: Better Auth `pg` pool | up to 4 |
 | `electric`: query pool (`ELECTRIC_DB_POOL_SIZE`) | 10 (we set it; the default is 20) |
 | `electric`: replication | 1 |
