@@ -16,9 +16,8 @@ type Span = { span_id: string; parent_span_id?: string; trace_id: string; op?: s
 type Transaction = { transaction: string; contexts: { trace: Span }; spans: Span[] };
 type Line = Record<string, unknown>;
 
-/** A stand-in for Sentry's ingest: it keeps the transactions it is sent, and what the SDK says it dropped. */
+/** A stand-in for Sentry's ingest: it keeps the transactions it is sent. */
 const transactions: Transaction[] = [];
-const dropped: unknown[] = [];
 const ingest = Bun.serve({
   port: 0,
   async fetch(req) {
@@ -28,10 +27,7 @@ const ingest = Bun.serve({
     for (const [i, header] of lines.entries()) {
       const payload = lines[i + 1];
       if (i % 2 || payload === undefined) continue;
-      const type = JSON.parse(header).type;
-      if (type === "transaction") transactions.push(JSON.parse(payload));
-      // The SDK sends at most 64 envelopes at once and drops the rest (queue_overflow), then reports them.
-      if (type === "client_report") dropped.push(...(JSON.parse(payload).discarded_events ?? []));
+      if (JSON.parse(header).type === "transaction") transactions.push(JSON.parse(payload));
     }
     return new Response("{}");
   },
@@ -153,8 +149,11 @@ test("no request's facts or spans land on another request's line or trace", asyn
 
   const requestLine = (r: string) => lines.find((l) => l.reqId === r && l.msg === "request");
   await until(() => [...expected.keys()].every((r) => requestLine(r) && transactions.some((t) => t.contexts.trace.trace_id === requestLine(r)?.traceId)));
-  // A dropped transaction is the test sending too much at once, not a leak: say so.
-  expect(dropped).toEqual([]);
+  // The SDK sends at most 64 envelopes at once and drops the rest (queue_overflow,
+  // which Bun's client does not report). A missing transaction is the test
+  // sending too much at once, not a leak: say so before the per-request checks.
+  const sent = [...expected.keys()].filter((r) => transactions.some((t) => t.contexts.trace.trace_id === requestLine(r)?.traceId)).length;
+  expect(`Sentry sent ${sent} of ${expected.size} transactions`).toBe(`Sentry sent ${expected.size} of ${expected.size} transactions`);
   for (const [r, facts] of expected) {
     const line = requestLine(r);
     for (const [k, v] of Object.entries(facts)) expect({ r, k, v: line?.[k] }).toEqual({ r, k, v });
