@@ -49,6 +49,7 @@ create table course (            -- one per language; settings edited per column
   user_id uuid not null references "user" on delete cascade,
   lang text not null, minutes smallint not null default 7, retention real not null default 0.9,
   door_open boolean not null default false,  -- the garden's door to the orchard (#315): only ever opens
+  garden_left jsonb not null default '{"n": 0, "bowl": null, "kept": [], "hooks": [null, null, null], "arranged": 0}',  -- leave it out (#351): the bowl and the shed's shelf; ids and day numbers only (contract/garden.ts)
   primary key (user_id, lang));
 
 create table review (
@@ -91,7 +92,7 @@ Theme and sound are per-device preferences (localStorage), so they don't sync. D
 
 - **Scope:** every write is scoped `where user_id = $session`.
 - **Reviews:** insert with `on conflict (id) do nothing`. A review is never updated; Undo is a delete.
-- **Course:** a PATCH updates only the columns sent, in arrival order. `door_open` only ever opens: the server ORs it with the stored value.
+- **Course:** a PATCH updates only the columns sent, in arrival order. `door_open` only ever opens: the server ORs it with the stored value. `garden_left` only moves forward: the server merges each write with the stored value (server/src/garden.ts). The newest thing left wins. The day it was seen and "found" only move forward. Kept things only grow. The most rearranged hooks win. A day in the future is refused.
 - **Word state:** upsert only if the incoming `updated_at` is newer.
 - **Clocks:** `updated_at = least(client, now())`. Reject `reviewed_at` more than 1 day in the future.
 - **Old clients:** below a minimum version, the client gets "please reload". Schema changes go expand, then contract.

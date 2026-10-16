@@ -52,6 +52,7 @@ const message = ApiErrorBody.match({
   unknown_table: somethingWrong,
   unknown_word: somethingWrong,
   review_from_the_future: somethingWrong,
+  garden_from_the_future: somethingWrong,
   ai_unreachable: somethingWrong,
   ai_error: somethingWrong,
   bad_output: somethingWrong,

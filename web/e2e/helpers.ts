@@ -264,3 +264,44 @@ export async function arrives(page: Page, to: { x: number; z: number }) {
     )
     .toBe(true);
 }
+
+// Leave it out (#351), through the dev-only scene handle (window.__garden).
+type LeaveThing = "basket" | "bowl" | "shelf" | "find";
+
+/** Where a thing of leave it out (#351) is: x, z, and a height to look at. */
+const leavePlace = (page: Page, what: LeaveThing) =>
+  page.evaluate(async (what) => {
+    const { basketAt, bowlAt, shedAt } = await import(/* @vite-ignore */ "/src/garden/leave.ts");
+    const s = (window as unknown as { __garden: { layout: Parameters<typeof bowlAt>[0]; leaveIt: { findSpot(): { x: number; z: number } } } }).__garden;
+    const L = s.layout;
+    if (what === "basket") return { ...basketAt(L), y: 0.25 };
+    if (what === "bowl") return { ...bowlAt(L), y: 0.05 };
+    if (what === "shelf") return { x: shedAt(L).x, z: shedAt(L).z, y: 1.2 };
+    return { ...s.leaveIt.findSpot()!, y: 0.05 };
+  }, what);
+
+/** Stand `metres` from a thing, on the garden side, facing it; return where it shows on the page (pixels). */
+export async function standByLeave(page: Page, what: LeaveThing, metres: number) {
+  const p = await leavePlace(page, what);
+  return page.evaluate(
+    ({ p, metres }) => {
+      const s = (window as unknown as { __garden: WalkScene }).__garden;
+      // From the middle of the garden's gate side, toward the thing: open path, nothing between.
+      const [fx, fz] = [0, p.z - 1.5];
+      const d = Math.hypot(p.x - fx, p.z - fz);
+      const [x, z] = [p.x - ((p.x - fx) / d) * metres, p.z - ((p.z - fz) / d) * metres];
+      // Forward is -z at yaw 0.
+      Object.assign(s, { x, z, yaw: Math.atan2(-(p.x - x), -(p.z - z)), pitch: -Math.atan2(1.05 - p.y, metres) });
+      return new Promise<[number, number]>((done) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const v = new s.tmp.constructor(p.x, p.y, p.z).project(s.camera);
+            const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+            done([r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
+          }),
+        ),
+      );
+    },
+    { p, metres },
+  );
+}

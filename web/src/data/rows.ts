@@ -2,6 +2,7 @@
 // ISO strings; numbers and JSON are parsed by Electric.
 
 import { Option, Schema } from "effect";
+import type { GardenLeft } from "perennial-contract";
 
 export type Skill = "read" | "listen" | "write";
 
@@ -15,6 +16,12 @@ export interface CourseRow {
   retention: number;
   /** The garden's door to the orchard (#315): opened with the key, and then open for good. */
   door_open: boolean;
+  /**
+   * Leave it out (#351): what was left in the garden's bowl and when, and the
+   * shed's shelf. Missing from course rows Electric streams before their first
+   * course change after the migration.
+   */
+  garden_left?: GardenLeft;
   created_at: string;
 }
 

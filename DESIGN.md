@@ -115,9 +115,10 @@ rendering code should follow, and the places it still does not (yet):
   share one random sequence, drawn in a fixed sequence — never reshuffle it);
   the order `parts` is ticked, disposed and given `Conditions` in; pick
   priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
-  say, then the one active tag — scenery, tree or the door's line — then a
-  visitor's); and what the one action button acts on (`reportReach`: stand
-  up, the key, the door, then the bench). A Part never reaches into another
+  say, then the one active tag — the door's line, a find's word, scenery or
+  tree — then a visitor's); and what the one action button acts on
+  (`reportReach`: stand up, the key, a find at your feet, the door, the
+  bowl, shelf and basket, then the bench). A Part never reaches into another
   Part's build or pick order.
 - **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.
@@ -130,9 +131,12 @@ rendering code should follow, and the places it still does not (yet):
   is in the garden today, not how it moves from frame to frame.
 
 Known exceptions, not yet brought in line:
-- **The hedge and the orchard are not Parts.** They build geometry once and
-  never tick, react to `Conditions` or need disposing beyond the scene's own
-  sweep, so there was nothing to gain by giving them the interface.
+- **The hedge, the orchard and leave it out's bowl and shed (`sceneLeave.ts`,
+  #351) are not Parts.** They build geometry once and never tick, react to
+  `Conditions` or need disposing beyond the scene's own sweep, so there was
+  nothing to gain by giving them the interface. What came for the bowl is
+  worked out from calendar days the page passes in (`garden/leave.ts`
+  `resolve`), never from the clock in the scene.
 - **Visitors (`sceneVisitors.ts`) predate this interface** and were not
   reshaped to fit it: a planned redesign of how the garden describes its
   creatures and visitors may replace both at once, so this PR left it alone.

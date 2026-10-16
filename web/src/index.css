@@ -747,6 +747,9 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-icon svg { display: block; }
 /* The action button (#334): only an icon, a little bigger than the rest, for a thumb. */
 .gw-act { min-width: 56px; min-height: 56px; }
+/* What you hold (#351), beside the action button: the thing itself, on a small paper square. Not a button. */
+.gw-hand { align-self: center; padding: 6px; background: rgb(255 244 220 / 0.85); border: 2px solid #3a2416; box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28); }
+.gw-hand svg { display: block; }
 @media (max-width: 560px) { .gw-seeds { display: none; } .gw-top { gap: 10px; } }
 
 /* The bot check, when it needs to ask (data/captcha.ts). */

@@ -5,15 +5,15 @@
 
 import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { language } from "../content/languages";
 import type { LoadedDeck } from "../data/deck";
-import { openDoor, useLearner, useStore } from "../data/learner";
+import { openDoor, saveLeft, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_LINES, groupOf, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
-import type { Detail, DoorState, Reach, TimeOfDay } from "../garden/scene";
+import type { Detail, DoorState, Label, Reach, TimeOfDay } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
 import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
@@ -24,15 +24,44 @@ import { SoundToggle, useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
 import { useGardenScene, useWalkInput } from "./useGardenScene";
-import { gardenBroughtAt, learnerVisitors, type LearnerVisitors } from "./visitors";
+import { dayNumber } from "../core/day";
+import { gardenBroughtAt, learnerLeave, learnerVisitors, showcaseLeave, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
+import { FINDS, type Left, type LeaveWalk } from "../garden/leave";
+import { CRUMB_BAG, FIND_ART, fruitArt } from "../garden/leaveArt";
+import type { PixelArt } from "../garden/visitorArt";
+import type { Hand, LeaveAct, LeaveDone } from "../garden/sceneLeave";
+import { nounView } from "../garden/nouns";
+import { PixelRects } from "./pixel";
+
+/**
+ * What the walk's status says to a screen reader: the key at their feet; a
+ * find's word and meaning (#351); the prints from the bowl, or something at
+ * their feet; the door's line; what they hold. Things in the world, never instructions (#334).
+ */
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, lang: string): ReactNode {
+  if (reach === "key") return "The key is here.";
+  // The course-language word is marked as such, so a screen reader says it in that language.
+  const found = labels.find((l) => l.kind === "find");
+  if (found)
+    return (
+      <>
+        You found <span lang={lang}>{found.text}</span>: {found.gloss}.
+      </>
+    );
+  if (reach === "follow") return "Small prints lead away from the bowl.";
+  if (reach === "find") return "Something lies here.";
+  const line = spokenLine(labels.find((l) => l.kind === "line")?.text, state);
+  if (line || !held) return line;
+  return <>You hold {held.word ? <span lang={lang}>{held.name}</span> : held.name}.</>;
+}
 
 /** The door's line as a screen reader hears it: the locked line also says where this learner's key lies, once there is one. */
 function spokenLine(line: string | undefined, state: DoorState): string | undefined {
   return line === DOOR_LINES.locked && typeof state === "object" ? `${line} ${KEY_PLACE[state.key]}` : line;
 }
 
-/** What the learner did in the walk, for counting (#335): what a tap met (TapHit kinds), or what the action button did (#334). */
+/** What the learner did in the walk, for counting (#335): what a tap met (TapHit kinds), what the action button did (#334), or what they left or found (#351). */
 type GardenVerb = TapHit["kind"] | Reach;
 
 /** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
@@ -85,6 +114,22 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
     // A write the server refuses is told by the refused-writes notice (#253); this walk keeps its door open.
     return { state, open: () => void openDoor(store, lang).catch((e) => console.error("door not saved", e)) };
   }, [learner, store, lang, now]);
+  // Leave it out (#351): the bowl and the shelf, worked out once, when the walk first has its learner: the walk is a snapshot of
+  // the day it opens. A walk on a day after the night fixes what came, until it is found: saved at once, once per walk. Not again
+  // when the learner changes (a refused write rolls back and would save it again, for ever) or at midnight (it would fix a day
+  // the walk does not show). A write the server refuses is told by the refused-writes notice (#253), as for the door.
+  const [leaveOpened, setLeaveOpened] = useState<{ walk: LeaveWalk; walkedNow: boolean } | null>(null);
+  // Set while rendering (React's way to keep state from a prop's first value): the walk's snapshot never sees it missing.
+  if (learner && !leaveOpened) setLeaveOpened(learnerLeave(learner, now, dayToday));
+  const saveLeftHere = useMemo(() => (left: Left) => void saveLeft(store, lang, left).catch((e) => console.error("garden not saved", e)), [store, lang]);
+  // Effects can run twice (React's strict mode), and this must be one write.
+  const walkSaved = useRef(false);
+  useEffect(() => {
+    if (!leaveOpened?.walkedNow || walkSaved.current) return;
+    walkSaved.current = true;
+    saveLeftHere(leaveOpened.walk.left);
+  }, [leaveOpened, saveLeftHere]);
+  const leave = useMemo(() => leaveOpened && { walk: leaveOpened.walk, save: saveLeftHere }, [leaveOpened, saveLeftHere]);
   const [focus] = useState(takeFocus);
   // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done,
   // named as Today names it, and worked out with the clock, so a walk open past midnight starts the new day.
@@ -92,7 +137,7 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const chunk = learner ? nextChunk(learner, now) : null;
   const water = learner && chunk ? { label: chunk.state === "finish" ? `${chunkLabel(chunk)} · ${chunk.minutes} min` : chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
   const [hint] = useState(() => ({ show: !hintSeen(), moved: markHintSeen }));
-  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
+  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} leave={leave ?? undefined} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -122,7 +167,19 @@ const NEXT_TIME: Record<TimeOfDay, TimeOfDay> = { day: "dusk", dusk: "night", ni
  * does: you find out by pressing it. A screen reader hears what it does, said
  * plainly: mystery must not lock anyone out.
  */
-const REACH_NAME: Record<Reach, string> = { try: "Try the door", key: "Pick up the key", open: "Open the door with the key", sit: "Sit on the bench", stand: "Stand up" };
+const REACH_NAME: Record<Reach, string> = {
+  try: "Try the door",
+  key: "Pick up the key",
+  open: "Open the door with the key",
+  sit: "Sit on the bench",
+  stand: "Stand up",
+  take: "Take from the basket",
+  leave: "Put it in the bowl",
+  follow: "Follow the prints",
+  find: "Pick it up",
+  hang: "Hang it on the shelf",
+  unhang: "Take from the shelf",
+};
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
 const REACH_ICON: Record<Reach, readonly string[]> = {
@@ -131,7 +188,39 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   open: ["..###.......", ".#...#......", ".#...#######", ".#...#..#.#.", "..###...#.#."],
   sit: ["#.......", "#.......", "#.......", "########", "#......#", "#......#"],
   stand: ["...#...", "..###..", ".#####.", "#######", "..###..", "..###..", "..###.."],
+  take: HAND,
+  find: HAND,
+  unhang: HAND,
+  // A bowl.
+  leave: ["#........#", "##########", ".########.", "..######.."],
+  // Prints, one after the other.
+  follow: ["......#.#.", ".......#..", "..........", "..#.#.....", "...#......", "......#.#.", ".......#..", "..#.#.....", "...#......"],
+  // A hook.
+  hang: ["..##..", ".#..#.", ".....#", "....#.", "...#..", "...#..", "#..#..", ".##..."],
 };
+
+/** Leave it out's actions (#351, sceneLeave.ts LeaveAct). */
+const LEAVE_ACTS = new Set<Reach>(["take", "leave", "follow", "find", "hang", "unhang"] satisfies LeaveAct[]);
+
+/** What you hold (#351), drawn small by the action button, and said to screen readers. */
+/** `word`: the name is a word in the course language. */
+type HandView = { art: PixelArt; name: string; word: boolean };
+
+function handView(h: Hand, lang: string): HandView {
+  if (h.from === "shelf") {
+    const v = nounView(FINDS[h.find], lang);
+    // A course with no word for it says its meaning.
+    return v.word ? { art: FIND_ART[h.find], name: v.word, word: true } : { art: FIND_ART[h.find], name: v.gloss, word: false };
+  }
+  const t = h.thing;
+  return "kind" in t ? { art: fruitArt(t.kind), name: t.lemma, word: true } : { art: CRUMB_BAG, name: "the crumbs", word: false };
+}
+
+/** The landing page's walk: the bowl and the crumbs, and nothing saved. */
+const showcaseLeaveNow = (): { walk: LeaveWalk; save: (left: Left) => void } => ({ walk: showcaseLeave(Date.now(), dayToday), save: () => {} });
+
+/** Today's calendar day, read when it is asked: something left after midnight is left on the new day (#351). */
+const dayToday = () => dayNumber(Date.now());
 
 /**
  * Where the key lies, said only to screen readers (#315, #334): what a seeing
@@ -187,6 +276,7 @@ export function GardenWalk({
   source,
   visitors,
   door = SHOWCASE_DOOR,
+  leave: leaveGiven,
   onExit,
   water,
   focus,
@@ -199,6 +289,8 @@ export function GardenWalk({
   visitors?: LearnerVisitors | null;
   /** The door in the hedge (#315), and how to save it once opened. Without it (the landing page) the door stays locked. */
   door?: { state: DoorState; open: () => void };
+  /** Leave it out (#351): the bowl and the shelf, and how to save them. Without it (the landing page) the crumbs can be left, but nothing is saved. */
+  leave?: { walk: LeaveWalk; save: (left: Left) => void };
   onExit: () => void;
   /** Starts practice; `label` says what it starts. */
   water?: { label: string; start: () => void };
@@ -223,7 +315,20 @@ export function GardenWalk({
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const tag = language(lang).tag;
-  const { data, scene, ready, failed, progress, labels, selected, reach } = useGardenScene({ lang, source, visitors, door, focus, time, detail, wrap, canvas, onFocused: () => setHint(false) });
+  const [showcase] = useState(showcaseLeaveNow);
+  const given = leaveGiven ?? showcase;
+  // What the learner leaves and finds is counted (#335). With sound on, a fruit taken from the basket says its word once, and so does a find.
+  const leaveDone = (d: LeaveDone) => {
+    if (d.did === "leave" || d.did === "find") onTap?.(d.did);
+    if (!sound) return;
+    if (d.did === "take" && d.hand.from === "basket" && "kind" in d.hand.thing) void speak(d.hand.thing.lemma, tag);
+    // A course with no word for it has nothing to say.
+    const word = d.did === "find" ? nounView(FINDS[d.find], lang).word : null;
+    if (word) void speak(word, tag);
+  };
+  const leave = { ...given, done: leaveDone };
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand } = useGardenScene({ lang, source, visitors, door, leave, focus, time, detail, wrap, canvas, onFocused: () => setHint(false) });
+  const held = hand && handView(hand, lang);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
   // card's own Next plant, focus stays on that button and the live card body is read.
@@ -278,6 +383,11 @@ export function GardenWalk({
       case "door":
         // The key, or the shut door (#315): its quiet line, or it opens; from afar, once you have walked up to it.
         scene.current.tapDoor(hit.a);
+        setHint(false);
+        return;
+      case "bowl":
+        // Leave it out (#351): the bowl, the basket's things, the shelf, or what came in the night; from afar, once you have walked up to it.
+        scene.current.tapLeave(hit.t);
         setHint(false);
         return;
       case "walk":
@@ -346,9 +456,10 @@ export function GardenWalk({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       />
-      {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet. */}
+      {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
+          and for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold. */}
       <div className="sr-only" role="status">
-        {reach === "key" ? "The key is here." : spokenLine(labels.find((l) => l.kind === "line")?.text, door.state)}
+        {spokenStatus(reach, labels, door.state, held, lang)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
@@ -356,7 +467,7 @@ export function GardenWalk({
             <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
-          ) : l.kind === "tree" || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
+          ) : l.kind === "tree" || l.kind === "find" || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
             <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               <i>{l.text}</i>
               <small lang="en"> · {l.gloss}</small>
@@ -468,15 +579,22 @@ export function GardenWalk({
       )}
 
       <div className="gw-bottom">
+        {held && !selected && (
+          <div className="gw-hand" aria-hidden="true">
+            <ArtIcon art={held.art} />
+          </div>
+        )}
         {reach && !selected && (
           <button
             className="gw-btn gw-icon gw-act"
             aria-label={REACH_NAME[reach]}
             onClick={() => {
               scene.current?.act(reach);
-              onTap?.(reach);
-              // After the door opens or the key is picked up there may be nothing in reach: keep keyboard focus in the walk, not lost to the page.
-              if (reach === "open" || reach === "key") canvas.current?.focus({ preventScroll: true });
+              // Leave it out's verbs are counted when they are done (leaveDone): a press may find nothing left to do.
+              if (!LEAVE_ACTS.has(reach)) onTap?.(reach);
+              // After the door opens, the key or a find is picked up, something is left or hung, or a walk to the prints starts, there may be nothing
+              // in reach: keep keyboard focus in the walk, not lost to the page. Taking from the basket or the shelf keeps the button, for what comes next.
+              if (reach === "open" || reach === "key" || (LEAVE_ACTS.has(reach) && reach !== "take" && reach !== "unhang")) canvas.current?.focus({ preventScroll: true });
             }}
           >
             <PixelIcon rows={REACH_ICON[reach]} />
@@ -507,6 +625,18 @@ function PixelIcon({ rows }: { rows: readonly string[] }) {
   return (
     <svg viewBox={`-1 -1 ${w + 2} ${rows.length + 2}`} width="32" height="32" aria-hidden="true" shapeRendering="crispEdges">
       <path d={d} fill="currentColor" />
+    </svg>
+  );
+}
+
+/** Pixel art in its own colours, as big as the action button's icon. */
+function ArtIcon({ art }: { art: PixelArt }) {
+  const w = art.rows[0].length;
+  const h = art.rows.length;
+  const side = Math.max(w, h);
+  return (
+    <svg viewBox={`${(w - side) / 2 - 1} ${(h - side) / 2 - 1} ${side + 2} ${side + 2}`} width="32" height="32" shapeRendering="crispEdges">
+      <PixelRects art={art} />
     </svg>
   );
 }

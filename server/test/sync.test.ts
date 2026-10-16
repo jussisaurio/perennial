@@ -85,6 +85,42 @@ test("the orchard door opens for good, per course, and syncs to the learner's de
   expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", "false"], ["es", "true"]]);
 });
 
+test("leave it out: the garden's bowl and shelf only move forward, per course, and sync as an object (#351)", async () => {
+  const cookie = await t.signIn(unique("left"));
+  const id = (await t.me(cookie)).id;
+  const today = Math.floor(Date.now() / 86_400_000);
+  const stored = async (lang = "es") => (await t.sql<{ kind: string; left: Record<string, unknown> }>`select jsonb_typeof(garden_left) as kind, garden_left as left from course where user_id = ${id} and lang = ${lang}`)[0];
+  const put = (garden_left: unknown, lang = "es") => t.write(cookie, [{ type: "course.upsert", row: { lang, garden_left } }]);
+  // A new course starts with nothing left.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", minutes: 5, retention: 0.9, door_open: false } }]);
+  expect((await stored())?.left).toEqual({ n: 0, bowl: null, kept: [], hooks: [null, null, null], arranged: 0 });
+  // Crumbs left yesterday, seen today, found and hung.
+  const crumbs = { n: 1, bowl: { thing: "crumbs", day: today - 1, seen: null, found: false }, kept: [], hooks: [null, null, null], arranged: 0 };
+  expect((await put(crumbs)).status).toBe(200);
+  const found = { ...crumbs, bowl: { ...crumbs.bowl, seen: today, found: true }, kept: ["feather"], hooks: [null, "feather", null], arranged: 1 };
+  expect((await put(found)).status).toBe(200);
+  // A device that still has the crumbs unfound, and a settings change: nothing goes back.
+  await put(crumbs);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", retention: 0.85 } }]);
+  const now = await stored();
+  expect(now?.kind).toBe("object");
+  expect(now?.left).toEqual(found);
+  // The German garden's bowl is its own, even as its course row is made.
+  expect((await put(crumbs, "de")).status).toBe(200);
+  expect((await stored("de"))?.left).toEqual(crumbs);
+  // Refused: a day in the future, a thing that is not crumbs or a deck word, too much kept.
+  // A day in the future is a device clock that is wrong: its own code, so the app can say so.
+  const future = await put({ ...crumbs, bowl: { ...crumbs.bowl, day: today + 3 } });
+  expect([future.status, future.body]).toEqual([422, { error: "garden_from_the_future" }]);
+  expect((await put({ ...crumbs, bowl: { ...crumbs.bowl, thing: "my secret note" } })).status).toBe(422);
+  expect((await put({ ...crumbs, kept: Array.from({ length: 33 }, () => "feather") })).status).toBe(422);
+  expect((await stored())?.left).toEqual(found);
+  // The course shape carries it to the learner's other devices.
+  const res = await t.call("/api/shape?table=course&offset=-1", undefined, cookie);
+  const rows = (res.body as { value?: { lang: string; garden_left: string } }[]).filter((m) => m.value).map((m) => m.value!);
+  expect(JSON.parse(rows.find((r) => r.lang === "es")!.garden_left)).toEqual(found);
+});
+
 test("a word's forms are stored as a list, which is what the app reads from the stream", async () => {
   const cookie = await t.signIn(unique("forms"));
   const id = crypto.randomUUID();

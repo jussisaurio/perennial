@@ -8,6 +8,8 @@ import { rng } from "../lib/seed";
 import { Plant } from "../ui/plant";
 import type { PlacedPlant } from "./world";
 import * as Art from "./visitorArt";
+import * as LeaveArt from "./leaveArt";
+import { FRUIT_KINDS, type Find, type FruitKind, type Guest, type WildGuest } from "./leave";
 import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { loadImage } from "../ui/files";
@@ -851,6 +853,61 @@ export function visitors(): HTMLCanvasElement {
     const ox = i * 32 + Math.floor((32 - w) / 2);
     const oy = 32 - art.rows.length - (art === Art.BIRD_HOP ? 2 : 0);
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  });
+  return c;
+}
+
+// ---- Leave it out (#351) ----------------------------------------------------
+
+const FIND_IDS = Object.keys(LeaveArt.FIND_ART) as Find[];
+const GUEST_ART: Record<WildGuest, Art.PixelArt> = { sparrow: Art.SPARROW, mouse: Art.MOUSE, hedgehog: Art.HEDGEHOG, fox: Art.FOX };
+const GUESTS = Object.keys(GUEST_ART) as WildGuest[];
+
+/** Cells of the leave atlas (32×32 each, things standing on the bottom row), in this order. */
+export const LEAVE_CELL = {
+  bowl: 0,
+  bowlCrumbs: 1,
+  bag: 2,
+  basket: 3,
+  guest: (g: WildGuest) => 4 + GUESTS.indexOf(g),
+  find: (f: Find) => 4 + GUESTS.length + FIND_IDS.indexOf(f),
+  fruit: (k: FruitKind) => 4 + GUESTS.length + FIND_IDS.length + FRUIT_KINDS.indexOf(k),
+  bowlFruit: (k: FruitKind) => 4 + GUESTS.length + FIND_IDS.length + FRUIT_KINDS.length + FRUIT_KINDS.indexOf(k),
+};
+export const LEAVE_CELLS = 4 + GUESTS.length + FIND_IDS.length + 2 * FRUIT_KINDS.length;
+
+/** The bowl, the basket and what it offers, the guests and what they leave, in one small atlas (drawn once), in LEAVE_CELL order. */
+export function leaveAtlas(): HTMLCanvasElement {
+  const [c, ctx] = canvas(32 * LEAVE_CELLS, 32);
+  [
+    LeaveArt.BOWL,
+    LeaveArt.BOWL_CRUMBS,
+    LeaveArt.CRUMB_BAG,
+    LeaveArt.BASKET,
+    ...GUESTS.map((g) => GUEST_ART[g]),
+    ...FIND_IDS.map((f) => LeaveArt.FIND_ART[f]),
+    ...FRUIT_KINDS.map(LeaveArt.fruitArt),
+    ...FRUIT_KINDS.map(LeaveArt.bowlFruitArt),
+  ].forEach((art, i) => {
+    const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
+    const oy = 32 - art.rows.length;
+    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  });
+  return c;
+}
+
+/** Pixels per print cell: each guest's prints, seen from above, toes toward the top. */
+export const PRINT_CELL = 8;
+export const PRINT_GUESTS = Object.keys(LeaveArt.PRINT_ROWS) as Guest[];
+
+/** The guests' prints on the path (lying sprites), one cell each, in PRINT_GUESTS order: dark, like damp earth. */
+export function prints(): HTMLCanvasElement {
+  const [c, ctx] = canvas(PRINT_CELL * PRINT_GUESTS.length, PRINT_CELL);
+  PRINT_GUESTS.forEach((g, i) => {
+    const rows = LeaveArt.PRINT_ROWS[g];
+    const ox = i * PRINT_CELL + Math.floor((PRINT_CELL - rows[0].length) / 2);
+    const oy = Math.floor((PRINT_CELL - rows.length) / 2);
+    rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, ox + x, oy + y, "#4a3624")));
   });
   return c;
 }
