@@ -12,8 +12,9 @@
 import { Effect, Option, Schema } from "effect";
 import { ServerInfo } from "perennial-contract";
 import { useSyncExternalStore } from "react";
+import { reportBadAnswer } from "../observability";
 import { APP_VERSION, RELEASE } from "../version";
-import { reloadNeeded, request } from "./http";
+import { reloadNeeded, request, type BadAnswer } from "./http";
 
 /** What the server can do now. `ai`: Perennial AI (words from your own texts, new sentences). */
 export type Features = ServerInfo["features"];
@@ -44,9 +45,26 @@ export function versionAtLeast(v: string, min: string): boolean {
   return true;
 }
 
+/** Enough of an answer to know whether this app must reload: what the check needs if the rest can't be read. */
+const MinVersion = Schema.Struct({ minClientVersion: Schema.String });
+let reportedBadAnswer = false;
+
+/** An answer that breaks the contract (a bug, or a newer server): reported once, and still read for the reload check. */
+function badAnswer(e: BadAnswer) {
+  if (!reportedBadAnswer) reportBadAnswer(e.path, String(e.cause));
+  reportedBadAnswer = true;
+  const min = Schema.decodeUnknownOption(MinVersion)(e.body);
+  if (Option.isSome(min) && !versionAtLeast(APP_VERSION, min.value.minClientVersion)) reloadNeeded.dispatchEvent(new Event("reload"));
+}
+
 async function load() {
-  // Offline, or an error answer: keep the last known one. An answer that breaks the contract rejects (a bug).
-  const info = await Effect.runPromise(request(ServerInfo, "/api/server").pipe(Effect.catch(() => Effect.succeed(null))));
+  const info = await Effect.runPromise(
+    request(ServerInfo, "/api/server").pipe(
+      Effect.catchTag("BadAnswer", (e) => Effect.sync(() => (badAnswer(e), null))),
+      // Offline, or an error answer: keep the last known one.
+      Effect.catch(() => Effect.succeed(null)),
+    ),
+  );
   if (!info) return;
   try {
     localStorage.setItem(KEY, JSON.stringify(info));
