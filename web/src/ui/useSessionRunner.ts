@@ -77,7 +77,7 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
   const [active, setActive] = useState(0);
   const counts = useRef({ intros: 0, answers: 0 });
   // Writes the server had refused before this chunk: the summary tells of any new ones (#253).
-  const refusedBefore = useRef<Refused>({ count: 0, clock: 0, seen: 0 });
+  const refusedBefore = useRef<Refused>({ count: 0, clock: 0, gardenClock: 0, seen: 0 });
   const [ended, setEnded] = useState<Ended>("time");
   // Words answered this session, and the new words shown (a seed is planted once it has an answer).
   const practised = useRef(new Set<string>());

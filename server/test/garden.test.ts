@@ -43,13 +43,14 @@ test("what is kept only grows; the newest arrangement of the hooks wins, holding
   expect(mergeLeft(stored, { ...stored, hooks: [null, null, null], arranged: 0 }).hooks).toEqual(["feather", null, null]);
 });
 
-test("refused: a day in the future, seen before it was left, a bowl without a count", () => {
+test("refused: a day in the future (the device's clock), seen before it was left, a bowl without a count", () => {
   expect(leftProblem(left(1, DAY), NOW)).toBeNull();
   // A learner in UTC+14 is a day ahead of UTC.
   expect(leftProblem(left(1, latestDay(NOW)), NOW)).toBeNull();
-  expect(leftProblem(left(1, DAY + 2), NOW)?.path).toEqual(["garden_left", "bowl", "day"]);
-  expect(leftProblem(left(1, DAY, { seen: DAY - 1 }), NOW)?.path).toEqual(["garden_left", "bowl", "seen"]);
-  expect(leftProblem({ ...NO_LEFT, n: 1 }, NOW)?.path).toEqual(["garden_left", "bowl"]);
-  expect(leftProblem({ ...left(1, DAY), n: 0 }, NOW)?.path).toEqual(["garden_left", "bowl"]);
+  expect(leftProblem(left(1, DAY + 2), NOW)).toBe("clock");
+  expect(leftProblem(left(1, DAY, { seen: DAY + 2 }), NOW)).toBe("clock");
+  expect(leftProblem(left(1, DAY, { seen: DAY - 1 }), NOW)).toMatchObject({ path: ["garden_left", "bowl", "seen"] });
+  expect(leftProblem({ ...NO_LEFT, n: 1 }, NOW)).toMatchObject({ path: ["garden_left", "bowl"] });
+  expect(leftProblem({ ...left(1, DAY), n: 0 }, NOW)).toMatchObject({ path: ["garden_left", "bowl"] });
   expect(leftProblem(NO_LEFT, NOW)).toBeNull();
 });

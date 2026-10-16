@@ -16,11 +16,11 @@ export function useRefused(): Refused {
  * the toast then stays away, so it is not said twice or over the answer buttons.
  * `since`: count only refusals after this point (a session chunk's start).
  */
-export function RefusedLine({ since }: { since?: Pick<Refused, "count" | "clock"> }) {
+export function RefusedLine({ since }: { since?: Pick<Refused, "count" | "clock" | "gardenClock"> }) {
   const store = useStore();
   const r = useRefused();
   // No `since`: every refusal so far.
-  const lost = { count: r.count - (since?.count ?? 0), clock: r.clock - (since?.clock ?? 0) };
+  const lost = { count: r.count - (since?.count ?? 0), clock: r.clock - (since?.clock ?? 0), gardenClock: r.gardenClock - (since?.gardenClock ?? 0) };
   // Before paint, so the toast never shows for a moment first.
   useLayoutEffect(() => {
     if (lost.count) store.seeRefused();

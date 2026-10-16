@@ -109,7 +109,9 @@ test("leave it out: the garden's bowl and shelf only move forward, per course, a
   expect((await put(crumbs, "de")).status).toBe(200);
   expect((await stored("de"))?.left).toEqual(crumbs);
   // Refused: a day in the future, a thing that is not crumbs or a deck word, too much kept.
-  expect((await put({ ...crumbs, bowl: { ...crumbs.bowl, day: today + 3 } })).status).toBe(422);
+  // A day in the future is a device clock that is wrong: its own code, so the app can say so.
+  const future = await put({ ...crumbs, bowl: { ...crumbs.bowl, day: today + 3 } });
+  expect([future.status, future.body]).toEqual([422, { error: "garden_from_the_future" }]);
   expect((await put({ ...crumbs, bowl: { ...crumbs.bowl, thing: "my secret note" } })).status).toBe(422);
   expect((await put({ ...crumbs, kept: Array.from({ length: 33 }, () => "feather") })).status).toBe(422);
   expect((await stored())?.left).toEqual(found);

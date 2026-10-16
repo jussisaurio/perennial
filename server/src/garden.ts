@@ -13,14 +13,18 @@ const DAY_MS = 86_400_000;
  */
 export const latestDay = (now: number): number => Math.floor(now / DAY_MS) + 1;
 
-/** Why a value cannot be right, or null: a day in the future, seen before it was left, or a bowl that does not match the count. */
-export function leftProblem(v: GardenLeft, now: number): Issue | null {
+/**
+ * Why a value cannot be right, or null: a day in the future (a device clock
+ * that is wrong: "clock", which the learner can fix), seen before it was left,
+ * or a bowl that does not match the count.
+ */
+export function leftProblem(v: GardenLeft, now: number): Issue | "clock" | null {
   const at = (path: string[], message: string): Issue => ({ path: ["garden_left", ...path], message });
   const b = v.bowl;
   if ((v.n === 0) !== (b === null)) return at(["bowl"], "a bowl comes with every thing left, and only then");
   if (!b) return null;
-  if (b.day > latestDay(now)) return at(["bowl", "day"], "a day in the future");
-  if (b.seen !== null && (b.seen < b.day || b.seen > latestDay(now))) return at(["bowl", "seen"], "seen before it was left, or in the future");
+  if (b.day > latestDay(now) || (b.seen !== null && b.seen > latestDay(now))) return "clock";
+  if (b.seen !== null && b.seen < b.day) return at(["bowl", "seen"], "seen before it was left");
   return null;
 }
 

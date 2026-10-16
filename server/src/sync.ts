@@ -174,6 +174,7 @@ export const SyncLive = Layer.effect(
                   let left: GardenLeft | null = null;
                   if (r.garden_left) {
                     const issue = leftProblem(r.garden_left, now.getTime());
+                    if (issue === "clock") return yield* refuse({ error: "garden_from_the_future" });
                     if (issue) return yield* refuse({ error: "bad_request", issues: [issue] });
                     const stored = yield* sql<{ garden_left: GardenLeft }>`select garden_left from course where user_id = ${userId} and lang = ${r.lang} for update`;
                     // No row yet: a new course, with nothing left before this.
