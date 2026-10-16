@@ -3,6 +3,7 @@
 
 import { Effect, Schema, SchemaTransformation } from "effect";
 import { Lang } from "./course";
+import { GardenLeft } from "./garden";
 import { WordId } from "./ids";
 
 /** Text limits for learner rows. Perennial AI output is held to the same ones (server/src/ai.ts). */
@@ -44,6 +45,8 @@ export const Mutation = Schema.Union([
       retention: Schema.optionalKey(Schema.Finite.check(Schema.isBetween({ minimum: 0.7, maximum: 0.99 }))),
       // The orchard door (#315). A new course row sends false; only true changes anything.
       door_open: Schema.optionalKey(Schema.Boolean),
+      // Leave it out (#351): the whole value; the server merges it with what it has (server/src/garden.ts).
+      garden_left: Schema.optionalKey(GardenLeft),
     }),
   }),
   Schema.Struct({

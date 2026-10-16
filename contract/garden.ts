@@ -19,16 +19,18 @@ export const LEFT_LIMITS = { kept: 32, hooks: 3 } as const;
  * left (`day`), the first later day the garden was walked (`seen`: the nights
  * away are counted to it), and whether what came for it was found. `kept`:
  * what was found, first find first. `hooks`: what hangs on the shelf's three
- * hooks. Every change only moves it forward (server/src/garden.ts mergeLeft),
- * except the hooks, which the learner arranges as they like.
+ * hooks, and `arranged`: how many times the learner changed them, so the
+ * newest arrangement wins. Every change only moves it forward
+ * (server/src/garden.ts mergeLeft).
  */
 export const GardenLeft = Schema.Struct({
   n: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 1_000_000 })),
   bowl: Schema.NullOr(Schema.Struct({ thing: LeftThing, day: Day, seen: Schema.NullOr(Day), found: Schema.Boolean })),
   kept: Schema.Array(Kept).check(Schema.isMaxLength(LEFT_LIMITS.kept)),
   hooks: Schema.Tuple([Schema.NullOr(Kept), Schema.NullOr(Kept), Schema.NullOr(Kept)]),
+  arranged: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 1_000_000 })),
 });
 export type GardenLeft = typeof GardenLeft.Type;
 
 /** Nothing left yet, nothing kept. */
-export const NO_LEFT: GardenLeft = { n: 0, bowl: null, kept: [], hooks: [null, null, null] };
+export const NO_LEFT: GardenLeft = { n: 0, bowl: null, kept: [], hooks: [null, null, null], arranged: 0 };

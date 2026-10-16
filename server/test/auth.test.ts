@@ -52,6 +52,29 @@ test("anonymous progress moves into the account on sign-in, merged with what it 
   expect((await t.sql`select 1 from "user" where id = ${anonId}`).length).toBe(0); // anonymous user gone
 });
 
+test("the garden's bowl and shelf (#351) move into the account on sign-in, merged with the account's", async () => {
+  const email = unique("left-merge");
+  const today = Math.floor(Date.now() / 86_400_000);
+  const empty = { n: 0, bowl: null, kept: [], hooks: [null, null, null], arranged: 0 };
+  // The account found a feather in its Spanish garden.
+  const account = await t.signIn(email);
+  const accountId = (await t.me(account)).id;
+  const feather = { n: 1, bowl: { thing: "crumbs", day: today - 9, seen: today - 8, found: true }, kept: ["feather"], hooks: ["feather", null, null], arranged: 1 };
+  await t.write(account, [{ type: "course.upsert", row: { lang: "es", garden_left: feather } }]);
+  // Without an account, on another device: crumbs left twice in Spanish, with a button found the first time; and a German bowl.
+  const anon = await t.anonymous();
+  const crumbs = { n: 2, bowl: { thing: "crumbs", day: today - 1, seen: null, found: false }, kept: ["button"], hooks: [null, null, null], arranged: 0 };
+  const de = { ...empty, n: 1, bowl: { thing: "crumbs", day: today, seen: null, found: false } };
+  await t.write(anon, [{ type: "course.upsert", row: { lang: "es", garden_left: crumbs } }, { type: "course.upsert", row: { lang: "de", garden_left: de } }]);
+  await t.signIn(email, anon);
+  const rows = await t.sql<{ lang: string; garden_left: unknown }>`select lang, garden_left from course where user_id = ${accountId} order by lang`;
+  expect(rows.map((r) => [r.lang, r.garden_left])).toEqual([
+    ["de", de],
+    // The newest thing left, everything kept, and the arrangement made last.
+    ["es", { n: 2, bowl: crumbs.bowl, kept: ["feather", "button"], hooks: ["feather", null, null], arranged: 1 }],
+  ]);
+});
+
 test("a write racing the sign-in is moved into the account or refused, never silently lost", async () => {
   const email = unique("race");
   await t.signIn(email);
