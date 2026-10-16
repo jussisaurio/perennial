@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { aimAtGround, arrives, plantNearMiddle, settledGardenWidth, standAtDoor, walker, type WalkScene } from "./helpers";
+import { aimAtGround, arrives, plantNearMiddle, settledGardenWidth, standAtDoor, standByLeave, walker, type WalkScene } from "./helpers";
 
 // Runs on the iPhone (WebKit) project only. Playwright's tap sends a whole tap
 // in one go, so React never renders between touchdown and lift; a real finger
@@ -50,6 +50,16 @@ test("iPhone: a finger's tap on the locked door in the walk says it is locked (#
   await openWalk(page);
   await fingerTap(page, ...(await standAtDoor(page)));
   await expect(page.locator(".gw-say")).toHaveText("Locked.");
+});
+
+test("iPhone: one finger carries the crumbs from the basket to the bowl (#351)", async ({ page }) => {
+  await openWalk(page);
+  const left = () => page.evaluate(() => (window as unknown as { __garden: { leaveIt: { left: { n: number }; hand: unknown } } }).__garden.leaveIt);
+  // A tap on the basket from afar walks up to it and takes the crumbs; a tap on the bowl walks there and leaves them.
+  await fingerTap(page, ...(await standByLeave(page, "basket", 3)));
+  await expect.poll(async () => !!(await left()).hand, { timeout: 15_000 }).toBe(true);
+  await fingerTap(page, ...(await standByLeave(page, "bowl", 3)));
+  await expect.poll(async () => (await left()).left.n, { timeout: 15_000 }).toBe(1);
 });
 
 test("iPhone: tap the ground to walk there (#336)", async ({ page }) => {
