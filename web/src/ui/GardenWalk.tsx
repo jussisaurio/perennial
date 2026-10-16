@@ -11,7 +11,7 @@ import type { LoadedDeck } from "../data/deck";
 import { openDoor, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
-import { groupOf, keySpot, type PlacedPlant } from "../garden/world";
+import { DOOR_LINES, groupOf, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, DoorAction, DoorState, TimeOfDay } from "../garden/scene";
 import { EMPTY_WALK, loadingLine, plantLine, SLOW_DEVICE_NOTICE } from "../content/voice";
@@ -25,6 +25,11 @@ import { useNow } from "./useNow";
 import { useGardenScene, useWalkInput } from "./useGardenScene";
 import { gardenBrought, learnerVisitors, type LearnerVisitors } from "./visitors";
 import { frogCroak } from "../garden/visitors";
+
+/** The door's line as a screen reader hears it: the locked line also says where this learner's key hides, once there is one. */
+function spokenLine(line: string | undefined, state: DoorState): string | undefined {
+  return line === DOOR_LINES.locked && typeof state === "object" ? `${line} ${KEY_HINT[state.key]}` : line;
+}
 
 /** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
 export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
@@ -88,6 +93,18 @@ const NEXT_TIME: Record<TimeOfDay, TimeOfDay> = { day: "dusk", dusk: "night", ni
 
 /** The door's button, for keys and screen readers: what it does, said plainly. */
 const DOOR_BUTTON: Record<DoorAction, string> = { try: "Try the door", key: "Pick up the key", open: "Open the door with the key" };
+
+/**
+ * Where the key hides, said only to screen readers: the glint that leads a seeing
+ * learner to it cannot be heard, and a blind search would keep them out of the orchard.
+ */
+const KEY_HINT: Record<KeySpot, string> = {
+  bench: "Maybe by the bench.",
+  pond: "Maybe by the pond.",
+  lantern: "Maybe by the lantern farthest from the door.",
+  bed: "Maybe by the bed farthest from the door.",
+  sunflower: "Maybe by the sunflower.",
+};
 
 /** The landing page's walk: the door stays locked, and there is nothing to save. */
 const SHOWCASE_DOOR = { state: "locked" as const, open: () => {} };
@@ -268,9 +285,9 @@ export function GardenWalk({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       />
-      {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. */}
+      {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key hides, and when it is at their feet. */}
       <div className="sr-only" role="status">
-        {labels.find((l) => l.kind === "line")?.text}
+        {doorNear === "key" ? "The key is here." : spokenLine(labels.find((l) => l.kind === "line")?.text, door.state)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>

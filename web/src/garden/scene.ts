@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { along, benchAt, DOOR_HALF, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, type KeySpot, type Layout, type PlacedPlant } from "./world";
+import { along, benchAt, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, type KeySpot, type Layout, type PlacedPlant } from "./world";
 import { benchLine, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, hedgeClumps, hedgeCore, orchardHedge, type Clump, type HedgeWall } from "./hedge";
@@ -22,7 +22,6 @@ export type DoorState = "locked" | { key: KeySpot } | "open";
 /** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
 export type DoorAction = "try" | "key" | "open";
 /** The garden's quiet lines at the door. */
-export const DOOR_LINES = { locked: "Locked. The key must be somewhere.", found: "You found the key." } as const;
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), or a quiet line in English from the garden itself (kind "line"), in screen fractions. */
 export interface Label {
@@ -818,7 +817,9 @@ export class GardenScene {
     const z0 = L.bounds.maxZ + HEDGE.gap;
     const toDoor = rayBox(r, [L.gate.x - DOOR_HALF, 0, z0 - 0.05], [L.gate.x + DOOR_HALF, DOOR.h, z0 + DOOR.thick + 0.05]);
     // A small thing on the ground: a generous disc round it, so a finger finds it.
-    const toKey = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
+    // Only within reach, as for its button: a tap across the garden must not pick it up.
+    const reach = d.key && d.state === "key" && Math.hypot(this.x - d.key.x, this.z - d.key.z) < KEY_REACH;
+    const toKey = reach && d.key ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
     if (toKey <= toDoor) return "key";
     return d.state === "held" ? "open" : "try";

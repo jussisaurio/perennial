@@ -59,11 +59,14 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   // Tapping the door first: still locked, and no hint of the key there.
   await page.mouse.click(...(await standAtDoor(page)));
   await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
+  // A screen reader also hears where it hides: the glint that leads the eye cannot be heard.
+  await expect(page.locator(".sr-only[role=status]")).toHaveText(/^Locked\. The key must be somewhere\. Maybe by the /);
   await expect(page.getByRole("button", { name: "Try the door" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
-  // By the key, its button shows. A tap: one quiet line, and it is gone from the ground.
+  // By the key, its button shows, and a screen reader hears that it is here. A tap: one quiet line, and it is gone from the ground.
   const key = await standByKey(page);
   await expect(page.getByRole("button", { name: "Pick up the key" })).toBeVisible();
+  await expect(page.locator(".sr-only[role=status]")).toHaveText("The key is here.");
   await page.mouse.click(...key);
   await expect(page.locator(".gw-say")).toHaveText("You found the key.");
   expect(await doorNow(page)).toMatchObject({ state: "held", key: false });

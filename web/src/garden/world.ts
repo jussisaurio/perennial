@@ -201,6 +201,9 @@ export function lanternSpots(l: Layout): [number, number][] {
 }
 
 /** Where the key to the door can hide (#315): one place per learner, never by the door. */
+/** The door's quiet lines (#315). Here, not in the scene, so the page can use them without loading three.js. */
+export const DOOR_LINES = { locked: "Locked. The key must be somewhere.", found: "You found the key." } as const;
+
 export const KEY_SPOTS = ["bench", "pond", "lantern", "bed", "sunflower"] as const;
 export type KeySpot = (typeof KEY_SPOTS)[number];
 
@@ -220,7 +223,8 @@ export function keyAt(l: Layout, spot: KeySpot): { x: number; z: number } {
     }
     case "pond":
       // Among the stones at the pond's edge, on the side by the fence.
-      return { x: l.pond.x - l.pond.r - 0.25, z: l.pond.z + 0.3 };
+      // Far enough out that no end of the key lies under the pond's rim.
+      return { x: l.pond.x - l.pond.r - 0.35, z: l.pond.z + 0.3 };
     case "lantern": {
       // At the foot of the lantern farthest from the door.
       const [x, z] = lanternSpots(l).reduce((a, b) => (far(b) > far(a) ? b : a));
