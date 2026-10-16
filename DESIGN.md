@@ -93,9 +93,38 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 - **Walk-in garden (`#/garden`):** a retro 3D world in `web/src/garden/`.
   - `world.ts` has the pure layout: raised beds per kind of word, collision, viewpoints.
   - `textures.ts` draws pixel-art textures procedurally and rasterises the SVG plants into atlases.
-  - `scene.ts` is the three.js scene. It renders billboard sprites into a low-resolution framebuffer, which CSS scales up with `image-rendering: pixelated`.
+  - `scene.ts` hosts the three.js scene (see Garden code, below). It renders billboard sprites into a low-resolution framebuffer, which CSS scales up with `image-rendering: pixelated`.
   - The scene is a snapshot taken when the garden opens.
   - three.js loads only on this route.
+
+### Garden code
+
+`GardenScene` (`scene.ts`) is a small host: the renderer and camera, the frame
+loop, movement, and a handful of rendering subsystems behind the `Part`
+interface (`scenePart.ts`) — the sky and pond, the hedge, the door and key,
+the orchard, the plants (beds, culling, texture streaming), the critters
+(fireflies, butterflies...), and the visitors (`sceneVisitors.ts`).
+
+- **A new Part is for a new rendering technique, never one per thing.** There
+  is one critters part for every small animated effect, one visitors part for
+  every visitor — not one per creature or per visitor. Reach for a Part when
+  something draws itself a genuinely different way (instanced clumps, a
+  streamed texture pool, a point sprite shader); never to give one more
+  object its own file.
+- **The host owns every order, each in one table.** Build order (the parts
+  share one random sequence, drawn in a fixed sequence — never reshuffle it),
+  tick order, pick priority (`TAP_PRIORITY`, `pickAny`), and label priority
+  (say, then the one active tag — scenery, tree or the door's line — then a
+  visitor's). A Part never reaches into another Part's build or pick order.
+- **`tick` allocates nothing.** It runs every frame; a `Part.tick(dt, elapsed)`
+  mutates existing buffers and uniforms, never creates one.
+- **Behaviour gets time only from `dt`/`elapsed` or from `Conditions`**
+  (`{ time, dark }`, what `setTime` broadcasts — weather and the hour will
+  join it later), **never from `Date`, `performance.now()` or `Math.random()`
+  directly.** Build-time placement may still use the seeded `rand()` passed
+  through `BuildCtx`, or the calendar-day helpers in `core/day.ts` (which
+  visitors already used before this): those pick *what* is in the garden
+  today, not how it moves from frame to frame.
 
 ## Not yet / later
 
