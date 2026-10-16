@@ -3,10 +3,13 @@
 -- string is unwrapped and read as jsonb. Every such string came from
 -- JSON.stringify of a list (on the dev database, all 4,243 did).
 --
--- Only strings that hold a JSON list change. Any other string stays as it is,
--- so one odd row can't fail this migration and block every later deploy; the
--- app reads such a row as no forms and reports it (web/src/data/rows.ts).
--- `is json array` needs Postgres 16 or newer.
+-- Only strings that are valid jsonb holding a list change. Any other string
+-- stays as it is, so one odd row can't fail this migration and block every
+-- later deploy; the app reads such a row as no forms and reports it
+-- (web/src/data/rows.ts). The check is jsonb's own (`is json` is looser: it
+-- takes \u0000 and lone surrogates, which jsonb refuses), inside a CASE
+-- because Postgres may evaluate AND in any order. pg_input_is_valid needs
+-- Postgres 16 or newer.
 --
 -- Rows only, no schema change. Electric streams the updated rows (user_word
 -- has replica identity full), so open apps get the list. Rerunning it changes
@@ -14,4 +17,4 @@
 -- the check. The old server can still write a few string rows during the
 -- deploy; the app reads both shapes (#345), and a later migration can run this
 -- same update again.
-update user_word set forms = (forms #>> '{}')::jsonb where jsonb_typeof(forms) = 'string' and (forms #>> '{}') is json array;
+update user_word set forms = (forms #>> '{}')::jsonb where jsonb_typeof(forms) = 'string' and case when pg_input_is_valid(forms #>> '{}', 'jsonb') then jsonb_typeof((forms #>> '{}')::jsonb) = 'array' else false end;

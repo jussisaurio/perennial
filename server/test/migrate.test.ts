@@ -56,9 +56,10 @@ test("the migrations build a new database, once", () =>
 test("0004 turns forms stored as a JSON list's text into the list, and leaves any other string as it is (#337)", () =>
   withNewDatabase(async (run, db) => {
     await run();
-    // Rows as /api/write stored them before #340 (a jsonb string holding the list's JSON text), two odd
-    // strings, and a list. Then 0004 runs again, as on a deploy where it is pending.
-    const stored = { list: '["zorro","zorros"]', empty: "[]", notJson: "zorro", notList: '"zorro"' };
+    // Rows as /api/write stored them before #340 (a jsonb string holding the list's JSON text), odd
+    // strings, and a list. Then 0004 runs again, as on a deploy where it is pending. `nul` is what
+    // JSON.stringify(["a\0"]) gives: valid json, but not valid jsonb, like a lone surrogate.
+    const stored = { list: '["zorro","zorros"]', empty: "[]", notJson: "zorro", notList: '"zorro"', nul: '["a\\u0000"]', surrogate: '["\\ud800"]' };
     await db(
       Effect.flatMap(PgClient.PgClient, (sql) =>
         Effect.gen(function* () {
@@ -78,5 +79,7 @@ test("0004 turns forms stored as a JSON list's text into the list, and leaves an
       // Left for the app, which reads them as no forms and reports it once (web/src/data/rows.ts).
       { lemma: "notJson", kind: "string", forms: "zorro" },
       { lemma: "notList", kind: "string", forms: '"zorro"' },
+      { lemma: "nul", kind: "string", forms: stored.nul },
+      { lemma: "surrogate", kind: "string", forms: stored.surrogate },
     ]);
   }));
