@@ -14,18 +14,25 @@
 // that one (see `writer` below and App).
 
 import * as Sentry from "@sentry/react";
-import { electricCollectionOptions } from "@tanstack/electric-db-collection";
+import { electricCollectionOptions, type ElectricCollectionConfig } from "@tanstack/electric-db-collection";
 import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { Effect, Exit } from "effect";
 import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
 import type { ApiError, HttpError } from "./http";
-import type { CourseRow, ReviewRow, UserSentenceRow, UserWordRow, WordStateRow } from "./rows";
+import { reportBadAnswer } from "../observability";
+import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import { OtherUser, sendQueued, shouldRetry } from "./send";
 import { tabLock } from "./tabLock";
 
-function makeCollection<T extends object>(table: string, getKey: (row: T) => string, sync: AbortSignal) {
+/** `transformer`: changes each synced row, or the columns an update changed, before the collection has it. */
+function makeCollection<T extends object>(
+  table: string,
+  getKey: (row: T) => string,
+  sync: AbortSignal,
+  transformer?: ElectricCollectionConfig<T & Record<string, unknown>>["shapeOptions"]["transformer"],
+) {
   const options = electricCollectionOptions<T & Record<string, unknown>>({
     id: table,
     getKey: getKey as (row: T & Record<string, unknown>) => string,
@@ -36,6 +43,7 @@ function makeCollection<T extends object>(table: string, getKey: (row: T) => str
       // The abort reaches the stream, but not a prefetch it already chained: refuse new requests too.
       fetchClient: (input, init) => (sync.aborted ? Promise.reject(new DOMException("sync stopped", "AbortError")) : fetch(input, init)),
       parser: { timestamptz: (v: string) => v },
+      transformer,
       // Signed out, or signed in as someone else: this store is being replaced. Stop quietly.
       onError: (e) => {
         if ((e as { status?: number }).status === 401) return;
@@ -89,7 +97,9 @@ export async function createStore(userId: string, email: string | null) {
     course: makeCollection<CourseRow>("course", (r) => r.lang, sync.signal),
     review: makeCollection<ReviewRow>("review", (r) => r.id, sync.signal),
     word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, sync.signal),
-    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, sync.signal),
+    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, sync.signal, (row) =>
+      syncedUserWord(row, (type) => reportBadAnswer("/api/shape user_word.forms", `forms: ${type}`)),
+    ),
     user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, sync.signal),
   };
   type Table = keyof typeof collections;
