@@ -13,8 +13,8 @@ export const deckDir = (lang: string) => join(ROOT, "decks", lang);
 export const WORDS_PER_FILE = 100;
 
 /**
- * Decodes `input` against `schema`, reporting every problem (not just the
- * first), as zod's `safeParse` did for these content-authoring tools.
+ * Decodes `input` against `schema`, reporting every problem at once (not just
+ * the first one hit), so an author sees every mistake in a file in one pass.
  */
 export function decode<S extends Schema.ConstraintDecoder<unknown>>(
   schema: S,
@@ -24,7 +24,8 @@ export function decode<S extends Schema.ConstraintDecoder<unknown>>(
   if (Result.isSuccess(result)) return { success: true, data: result.success };
   const issues = SchemaIssue.makeFormatterStandardSchemaV1()(result.failure.issue).issues;
   // A path segment is always a plain PropertyKey in practice; normalize the few
-  // Standard Schema forms that allow a `{ key }` wrapper too.
+  // Standard Schema forms that allow a `{ key }` wrapper too. `path` itself is
+  // undefined for an issue on the decoded value as a whole (no property to name).
   return { success: false, issues: issues.map((i) => ({ path: (i.path ?? []).map((p) => (typeof p === "object" ? p.key : p)), message: i.message })) };
 }
 

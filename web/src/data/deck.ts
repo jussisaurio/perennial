@@ -24,18 +24,18 @@ export interface LoadedDeck {
 function index(raw: unknown, lang: string): LoadedDeck {
   const d = raw as Partial<Deck> | null;
   if (!d || d.lang !== lang || !Array.isArray(d.words) || !Array.isArray(d.sentences)) throw new Error(`deck ${lang}: not a deck`);
-  const W = DeckWord(lang);
-  const S = DeckSentence(lang);
+  const decodeWord = Schema.decodeUnknownOption(DeckWord(lang));
+  const decodeSentence = Schema.decodeUnknownOption(DeckSentence(lang));
   let skipped = 0;
   const byId = new Map<string, DeckWord>();
   for (const w of d.words) {
-    const r = Schema.decodeUnknownOption(W)(w);
+    const r = decodeWord(w);
     if (Option.isSome(r)) byId.set(r.value.id, r.value);
     else skipped++;
   }
   const sentencesByWord = new Map<string, DeckSentence[]>();
   for (const s of d.sentences) {
-    const r = Schema.decodeUnknownOption(S)(s);
+    const r = decodeSentence(s);
     if (Option.isNone(r) || !r.value.text.includes(r.value.cloze) || !byId.has(r.value.wordId)) {
       skipped++;
       continue;

@@ -59,7 +59,7 @@ export const ID_ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 const wordId = (lang: string) => Schema.String.check(Schema.isPattern(new RegExp(`^${lang}\\.w\\.[${ID_ALPHABET}]{10}$`)));
 const sentenceId = (lang: string) => Schema.String.check(Schema.isPattern(new RegExp(`^${lang}\\.s\\.[${ID_ALPHABET}]{10}$`)));
 
-/** Trims, then bounds length: zod's `.trim().min(1).max(max)`. */
+/** Trims surrounding whitespace, then requires 1 to `max` characters. */
 const text = (max: number) => Schema.Trim.check(Schema.isMinLength(1), Schema.isMaxLength(max));
 
 // ---- Source (what authors write) -----------------------------------------
