@@ -49,7 +49,7 @@ async function withNewDatabase(body: (run: () => Promise<string[]>, sql: <A>(eff
 
 test("the migrations build a new database, once", () =>
   withNewDatabase(async (run) => {
-    expect(await run()).toEqual(["0001_init.sql", "0002_mail_log.sql", "0003_course_door.sql", "0004_user_word_forms_list.sql"]);
+    expect(await run()).toEqual(["0001_init.sql", "0002_mail_log.sql", "0003_course_door.sql", "0004_user_word_forms_list.sql", "0005_course_garden_left.sql"]);
     expect(await run()).toEqual([]);
   }));
 
