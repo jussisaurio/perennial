@@ -7,7 +7,7 @@ import { rng } from "../lib/seed";
 import { along, benchAt, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, type KeySpot, type Layout, type PlacedPlant } from "./world";
 import { benchLine, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
-import { gateHedge, hedgeClumps, hedgeCore, orchardHedge, type Clump, type HedgeWall } from "./hedge";
+import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf, stemHeight } from "../ui/plant";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
@@ -15,6 +15,7 @@ import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
 import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
+import { Hedge } from "./sceneHedge";
 import type { Conditions } from "./scenePart";
 
 export type TimeOfDay = "day" | "dusk" | "night";
@@ -291,35 +292,6 @@ function standingQuad(w: number, h: number): THREE.PlaneGeometry {
   return quad;
 }
 
-/** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */
-function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeometry {
-  const box = new THREE.BoxGeometry(w, h, d);
-  const uv = box.getAttribute("uv") as THREE.BufferAttribute;
-  // Faces +x, -x, +y, -y, +z, -z, with four corners each: each face's width and height in metres.
-  const sizes = [
-    [d, h],
-    [d, h],
-    [w, d],
-    [w, d],
-    [w, h],
-    [w, h],
-  ];
-  sizes.forEach(([fw, fh], f) => {
-    for (let i = f * 4; i < f * 4 + 4; i++) uv.setXY(i, (uv.getX(i) * fw) / tile, (uv.getY(i) * fh) / tile);
-  });
-  return box;
-}
-
-/** Vertex colours from `low` at the bottom to `high` at the top, for an unlit material with vertexColors: shading without lights. */
-function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
-  geo.computeBoundingBox();
-  const { min, max } = geo.boundingBox!;
-  const pos = geo.getAttribute("position");
-  const colors = new Float32Array(pos.count * 3);
-  for (let i = 0; i < pos.count; i++) colors.fill(low + ((high - low) * (pos.getY(i) - min.y)) / (max.y - min.y), i * 3, i * 3 + 3);
-  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-}
-
 /** Instanced geometry that shares `quad`'s vertices; the caller adds the per-instance attributes. */
 function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeometry {
   const geo = new THREE.InstancedBufferGeometry();
@@ -496,7 +468,8 @@ export class GardenScene {
     swing: number | null;
     near: DoorAction | null;
   };
-  private hedgeMat!: THREE.MeshBasicMaterial;
+  /** The gate's hedge and, once the door opens, the orchard's (#323). */
+  private hedge = new Hedge();
   /** The orchard behind the door, once it is open (#315). */
   private orchard: Orchard | null = null;
   /** The orchard tree tapped last and until when its tag shows. */
@@ -679,39 +652,6 @@ export class GardenScene {
   }
 
   /**
-   * Walls of hedge (hedge.ts). Each solid middle is a box, dark in the gaps and
-   * darker low down; nothing shows through it. All their clumps of leaves are one
-   * instanced mesh: one draw call. A tap meets a wall's outline.
-   */
-  private hedgeWalls(walls: HedgeWall[], seed: number) {
-    const clumps: Clump[] = [];
-    walls.forEach((w, i) => {
-      const { min, max } = hedgeCore(w);
-      const geo = tiledBox(max[0] - min[0], max[1] - min[1], max[2] - min[2], 1);
-      shadeUp(geo, 0.42, 0.66);
-      const m = new THREE.Mesh(geo, this.hedgeMat);
-      m.position.set((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
-      this.scene.add(m);
-      this.hitBoxes.push({ id: "hedge", min: [...w.min], max: [...w.max], tag: null });
-      clumps.push(...hedgeClumps(w, seed + i));
-    });
-    // A rounded clump, lit from above: its underside darker.
-    const clump = new THREE.IcosahedronGeometry(1, 1);
-    shadeUp(clump, 0.66, 1);
-    // About as many leaves to the metre as on the solid middle.
-    const uv = clump.getAttribute("uv") as THREE.BufferAttribute;
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
-    const mesh = new THREE.InstancedMesh(clump, this.hedgeMat, clumps.length);
-    const m4 = new THREE.Matrix4();
-    const color = new THREE.Color();
-    clumps.forEach((c, i) => {
-      mesh.setMatrixAt(i, m4.makeScale(...c.r).setPosition(...c.at));
-      mesh.setColorAt(i, color.setScalar(c.shade));
-    });
-    this.scene.add(mesh);
-  }
-
-  /**
    * The tall hedge along the gate side, with the old door set into it (#315),
    * and the key hidden in the garden once its word brought it. The hedge is taller than the
    * eye, and nothing is built behind it until the door opens: no angle shows
@@ -719,11 +659,11 @@ export class GardenScene {
    */
   private buildHedge(c: BuildCtx) {
     const { L, b, mat, woodTex } = c;
-    this.hedgeMat = mat(T.pixelTexture(T.hedge(), true), { vertexColors: true });
+    this.hedge.build(c);
     const gx = L.gate.x;
     const z0 = b.maxZ + HEDGE.gap;
     // Left and right of the door, and over it, closing into an arch.
-    this.hedgeWalls(gateHedge(L, DOOR.h), 1);
+    this.hedge.addWalls(c, gateHedge(L, DOOR.h), 1);
     // A wooden frame round the door, on the garden side.
     const doorTag: [number, number, number] = [gx, DOOR.h + 0.35, z0];
     for (const s of [-1, 1]) {
@@ -782,7 +722,7 @@ export class GardenScene {
     else d.leaf.rotation.y = DOOR.open;
     // The orchard's own hedge, round the far sides, so it is a walled garden.
     const o = this.layout.orchard;
-    this.hedgeWalls(orchardHedge(this.layout), 4);
+    this.hedge.addWalls(this.ctx, orchardHedge(this.layout), 4);
     const { trees, firstPlanted } = this.visitors.orchard;
     const orchard = buildOrchard(
       {
