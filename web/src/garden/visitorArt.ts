@@ -318,6 +318,63 @@ export const MOTH_CLOSED: PixelArt = {
   pal: MOTH_PAL,
 };
 
+// ---- Guests at the bowl (#351): they come at night, and wait by what they left ----
+
+/** A sparrow: the bird's shape, all brown, with a pale breast. */
+export const SPARROW: PixelArt = { rows: BIRD.rows, pal: { ...BIRD_PAL, B: "#7a5a3a", b: "#a8865a", R: "#d8c8a8" } };
+
+/** A grey mouse, sitting, facing left, its tail out behind. */
+export const MOUSE: PixelArt = {
+  rows: [
+    "..oo..........",
+    ".oPGo.........",
+    ".oGGGooo......",
+    "oGeGGGGGo.....",
+    "pGGGGGGGGo....",
+    ".oGGGGGGGo....",
+    "..oooooooTTTT.",
+  ],
+  pal: { o: INK, G: "#9a8c84", P: "#e8a8a0", e: INK, p: "#e07a80", T: "#c89a90" },
+};
+
+/** A hedgehog curled up asleep, its face on the right. */
+export const HEDGEHOG: PixelArt = {
+  rows: [
+    "...s.s.s.s......",
+    "..sSsSsSsSs.....",
+    ".sSsSsSsSsSs....",
+    "sSsSsSsSsSsSoo..",
+    "sSsSsSsSsSsoFFo.",
+    "sSsSsSsSsSsoFmFo",
+    ".sSsSsSsSsSoFFFn",
+    "..oooooooooooooo",
+  ],
+  pal: { o: INK, S: "#5e4632", s: "#957454", F: "#dcbc94", m: INK, n: INK },
+};
+
+/** A red fox sitting, facing left, its white-tipped tail round its feet. */
+export const FOX: PixelArt = {
+  rows: [
+    "..o.....o.......",
+    ".oOo...oOo......",
+    ".oOOoooOOo......",
+    ".oOOOOOOOo......",
+    "oOeOOOOeOOo.....",
+    "oOOWWWWOOOo.....",
+    ".oWWnWWWOo......",
+    "..oWWWWOo.......",
+    "..oOOOOOOo......",
+    ".oOOWWWOOOo.....",
+    ".oOOWWWOOOo..oo.",
+    ".oOOWWWOOOOooOOo",
+    ".oOOOOOOOOOoOOWo",
+    "..oOOoOOOOOOOWo.",
+    "..oKKoKKoooooo..",
+    "..ooo.ooo.......",
+  ],
+  pal: { o: INK, O: "#e0782c", W: "#f4ecdc", e: INK, n: INK, K: "#3a2416" },
+};
+
 // ---- The 2D strip only: the empty garden (#58) and the end of the strip (#61) ----
 
 /** A pink worm asleep on the soil, head on the right, eye closed. */

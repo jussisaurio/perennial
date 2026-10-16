@@ -20,6 +20,9 @@ import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
 import { TAP_PRIORITY, type Conditions, type Frame, type Part, type TapHit } from "./scenePart";
+import { LEAVE_STAND, LeaveItOut, type Hand, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
+import { FINDS, type Left, type LeaveWalk } from "./leave";
+import { nounView } from "./nouns";
 import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 
 export type TimeOfDay = "day" | "dusk" | "night";
@@ -32,8 +35,8 @@ export type TimeOfDay = "day" | "dusk" | "night";
 export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 /** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
 export type DoorAction = "try" | "key" | "open";
-/** What the one action button does to the thing in reach (#334): the door's actions, or sit on the bench and stand up again. */
-export type Reach = DoorAction | "sit" | "stand";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, or leave it out's (#351). */
+export type Reach = DoorAction | "sit" | "stand" | LeaveAct;
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), or a quiet line in English from the garden itself (kind "line"), in screen fractions. */
 export interface Label {
@@ -43,7 +46,7 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "tree" | "say" | "line";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find";
   gloss?: string;
   /** A visitor whose noun the learner knows: plant-label styling with a tiny leaf. */
   known?: boolean;
@@ -68,6 +71,8 @@ export interface WalkVisitors {
    * only once the door is open.
    */
   orchard: { trees: OrchardTree[]; firstPlanted: number | null };
+  /** Leave it out (#351): the bowl and the shelf as the walk opens, and what the basket offers. */
+  leave: LeaveWalk;
 }
 
 export interface SceneCallbacks {
@@ -76,6 +81,10 @@ export interface SceneCallbacks {
   onProgress: (done: number, total: number) => void;
   /** What the action button does now, for the thing in reach (#334), or null with nothing in reach. */
   onReach: (a: Reach | null) => void;
+  /** Leave it out (#351): what you hold changed; something was taken, left, found or hung; the new value, to save. */
+  onHand: (h: Hand | null) => void;
+  onLeave: (done: LeaveDone) => void;
+  onLeft: (left: Left) => void;
   /** The learner opened the door with the key: it stays open (saved with the course). */
   onDoorOpen: () => void;
   /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
@@ -120,11 +129,11 @@ const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
 /**
  * The order GardenScene.labels pushes a tag in, when more than one shows at
  * once: a visitor's "say" bubble (the frog's croak) first; then whichever of
- * line/scenery/tree is active (GardenScene.clearTaps keeps at most one of
+ * line/find/scenery/tree is active (GardenScene.clearTaps keeps at most one of
  * those three set); a visitor's approach tag last. One table, like
  * TAP_PRIORITY.
  */
-const LABEL_PRIORITY = ["say", "line", "scenery", "tree", "tag"] as const;
+const LABEL_PRIORITY = ["say", "line", "find", "scenery", "tree", "tag"] as const;
 
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
@@ -169,6 +178,12 @@ export class GardenScene {
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   /** What the action button does now (#334), and the glint on the thing in reach that shows it can be used. */
   private reach: Reach | null = null;
+  /** What the action button acts on when it does leave it out's (#351). */
+  private leaveTarget: LeaveTarget | null = null;
+  /** Leave it out (#351): the bowl, the shed and its shelf, and what came in the night. */
+  private leaveIt: LeaveItOut;
+  /** A find's word and meaning over where it lay, for a few seconds after it is picked up. */
+  private foundTap: { word: string; gloss: string; at: [number, number, number]; until: number } | null = null;
   private cue!: THREE.Sprite;
   /** Sitting on the bench (#334); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
   private seated = false;
@@ -263,6 +278,7 @@ export class GardenScene {
     this.critters = new Critters(this.camera, reducedMotion);
     this.plants = new Plants(this.renderer, this.camera, layout, (d, total) => this.cb.onProgress(d, total), (x, y, z) => this.behindHedge(x, y, z));
     this.door = new Door(reducedMotion);
+    this.leaveIt = new LeaveItOut(layout, visitors.leave);
     this.parts = [this.sky, this.door, this.critters, this.plants];
     this.guests = new SceneVisitors(
       {
@@ -324,6 +340,11 @@ export class GardenScene {
     const bench = this.buildBench(c);
     this.buildSigns(c, bench);
     this.guests.build({ bench: bench.position, pads, lanterns: this.lanternSpots });
+    // After the visitors: the dog, if it came for the bowl in the night (#351), waits by what it left.
+    this.leaveIt.build(c);
+    this.scene.add(this.leaveIt.root);
+    const dog = this.leaveIt.dogAt();
+    if (dog) this.guests.visit("dog", dog);
     // A key left waiting a few days (#334): the dog, if it is here today, sits by it.
     if (this.keyHelp?.visitors && this.door.key) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
     // After the visitors: a visitor may sit in the orchard's trees today.
@@ -463,7 +484,48 @@ export class GardenScene {
   act(a: Reach) {
     if (a === "sit" && !this.seated) this.sit();
     else if (a === "stand") this.standUp();
-    else if (a !== "sit") this.doorAct(a);
+    else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
+    else if (a !== "sit" && a === this.reach && this.leaveTarget) this.doLeave(this.leaveTarget);
+  }
+
+  /** The bowl, a thing in the basket, a hook or the shelf's board, or what came in the night, under a point on the canvas (CSS pixels). Ask after the door. */
+  pickLeave(cssX: number, cssY: number, cssW: number, cssH: number): LeaveTarget | null {
+    const r = this.ray(cssX, cssY, cssW, cssH);
+    const got = this.leaveIt.pick(r);
+    if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
+    // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
+    const near = this.leaveIt.standFor(got.target, this.x, this.z).near;
+    return near || thingAt(r, this.sceneryWorld()) >= got.t ? got.target : null;
+  }
+
+  /** A tap on the bowl, the basket, the shelf or a find (#351): act on it in reach; from farther away, walk up to it first. */
+  tapLeave(t: LeaveTarget) {
+    const at = this.leaveIt.standFor(t, this.x, this.z);
+    if (at.near) return this.doLeave(t);
+    this.goTo(at.x, at.z, LEAVE_STAND, () => this.doLeave(t));
+  }
+
+  /**
+   * Do leave it out's action on a thing in reach: take, leave, pick up, hang;
+   * at the bowl, once something came in the night, follow its prints to what it
+   * left. Anything that no longer applies does nothing.
+   */
+  private doLeave(t: LeaveTarget) {
+    const spot = this.leaveIt.findSpot();
+    if (t.at === "bowl" && spot) return this.goTo(spot.x, spot.z, LEAVE_STAND, null);
+    const came = this.leaveIt.came;
+    const done = this.leaveIt.act(t, (left) => this.cb.onLeft(left));
+    if (!done) return;
+    this.cb.onHand(this.leaveIt.hand);
+    if (done.did === "find") {
+      // The dog that brought it goes home.
+      if (came?.row.guest === "dog") this.guests.visit("dog", null);
+      const v = nounView(FINDS[done.find], this.lang);
+      // A course with no word for it shows only its meaning.
+      this.foundTap = { word: v.word ?? v.gloss, gloss: v.gloss, at: done.at, until: this.elapsed + 4 };
+      this.clearTaps({ scenery: true, tree: true, line: true, visitor: true });
+    }
+    this.cb.onLeave(done);
   }
 
   /** Sit on the bench, facing the pond: a cut to the seat, and the eye sinks (at once, with reduced motion). Any move stands you up. */
@@ -510,20 +572,22 @@ export class GardenScene {
   /** Show a quiet line over a point for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
   private showLine(text: string, at: [number, number, number]) {
     this.line = { text, at, until: this.elapsed + 4 };
-    this.clearTaps({ scenery: true, tree: true, visitor: true });
+    this.clearTaps({ scenery: true, tree: true, visitor: true, find: true });
   }
 
   /**
-   * A scenery word, an orchard tree, the door's quiet line and a visitor's
-   * tag take turns showing: setting one clears whichever of the rest is
-   * named here. One place for the rule this file's own select/tapVisitor/
-   * tapTree/tapScenery/showLine used to half-repeat, each inline (#323).
+   * A scenery word, an orchard tree, the door's quiet line, a find's word
+   * (#351) and a visitor's tag take turns showing: setting one clears
+   * whichever of the rest is named here. One place for the rule this file's
+   * own select/tapVisitor/tapTree/tapScenery/showLine used to half-repeat,
+   * each inline (#323).
    */
-  private clearTaps(which: { scenery?: boolean; tree?: boolean; line?: boolean; visitor?: boolean }) {
+  private clearTaps(which: { scenery?: boolean; tree?: boolean; line?: boolean; visitor?: boolean; find?: boolean }) {
     if (which.scenery) this.sceneryTap = null;
     if (which.tree) this.treeTap = null;
     if (which.line) this.line = null;
     if (which.visitor) this.guests.untap();
+    if (which.find) this.foundTap = null;
   }
 
   /** How far along the ray the nearest hedge is, or Infinity: what lies past it is hidden. */
@@ -545,7 +609,7 @@ export class GardenScene {
   /** Show a tree's word and meaning over it for a few seconds (after a tap). One tag at a time. */
   tapTree(tree: PlacedTree) {
     this.treeTap = { tree, until: this.elapsed + 4 };
-    this.clearTaps({ scenery: true, line: true, visitor: true });
+    this.clearTaps({ scenery: true, line: true, visitor: true, find: true });
   }
 
   /** Trees and bushes outside the fence. */
@@ -791,7 +855,7 @@ export class GardenScene {
   /** Show a visitor's tag for a few seconds (after a tap). */
   tapVisitor(id: VisitorId) {
     this.guests.tap(id);
-    this.clearTaps({ scenery: true, tree: true, line: true });
+    this.clearTaps({ scenery: true, tree: true, line: true, find: true });
   }
 
   /**
@@ -841,7 +905,7 @@ export class GardenScene {
   /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
   tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
     this.sceneryTap = { ...s, until: this.elapsed + 4 };
-    this.clearTaps({ tree: true, line: true, visitor: true });
+    this.clearTaps({ tree: true, line: true, visitor: true, find: true });
   }
 
   frogAwake(): boolean {
@@ -894,7 +958,7 @@ export class GardenScene {
     const tint = new THREE.Color(...s.tint);
     const fog = new THREE.Color(s.fog);
     for (const m of this.basic) m.color.copy(tint);
-    for (const mat of [...this.mats, ...this.guests.mats]) {
+    for (const mat of [...this.mats, ...this.guests.mats, ...this.leaveIt.mats]) {
       mat.uniforms.uTint.value.copy(tint);
       mat.uniforms.uFog.value.copy(fog);
     }
@@ -1038,7 +1102,7 @@ export class GardenScene {
   }
 
   /**
-   * One tap (CSS pixels): the visitor, plant, orchard tree, door or key,
+   * One tap (CSS pixels): the visitor, plant, orchard tree, door or key, the bowl and its things (#351),
    * open ground to walk to (#336), or scenery word it meets, in that order —
    * the chain GardenWalk.tsx used to run itself as sequential if-returns
    * (#323). Every pick here is pure (no side effects), so asking all of them
@@ -1055,6 +1119,8 @@ export class GardenScene {
     if (t) hits.tree = { kind: "tree", t };
     const d = this.pickDoor(cssX, cssY, cssW, cssH);
     if (d) hits.door = { kind: "door", a: d };
+    const l = this.pickLeave(cssX, cssY, cssW, cssH);
+    if (l) hits.bowl = { kind: "bowl", t: l };
     const g = this.pickGround(cssX, cssY, cssW, cssH);
     if (g) hits.walk = { kind: "walk", ...g };
     const s = this.pickScenery(cssX, cssY, cssW, cssH);
@@ -1068,7 +1134,7 @@ export class GardenScene {
 
   select(p: PlacedPlant | null, walkTo = false) {
     this.selected = p;
-    if (p) this.clearTaps({ scenery: true, tree: true });
+    if (p) this.clearTaps({ scenery: true, tree: true, find: true });
     const index = p ? this.layout.plants.indexOf(p) : -1;
     for (const mat of this.mats) mat.uniforms.uSelected.value = index;
     this.marker.visible = !!p;
@@ -1223,8 +1289,15 @@ export class GardenScene {
       v.set(tt.tree.x, tt.tree.height + 0.08, tt.tree.z).project(this.camera);
       if (v.z <= 1) tags.tree = { id: `tree:${tt.tree.id}`, text: tt.tree.lemma, gloss: tt.tree.gloss, kind: "tree", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
-    // A visitor's approach tag shows only while none of line/scenery/tree is active (clearTaps keeps at most one of those three set at a time).
-    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line);
+    // A find's word and meaning (#351), over where it lay; kept on the screen.
+    const ft = this.foundTap;
+    if (ft && this.elapsed > ft.until) this.foundTap = null;
+    else if (ft) {
+      v.set(...ft.at).project(this.camera);
+      if (v.z <= 1) tags.find = { id: "find", text: ft.word, gloss: ft.gloss, kind: "find", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
+    }
+    // A visitor's approach tag shows only while none of line/find/scenery/tree is active (clearTaps keeps at most one of those set at a time).
+    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line || this.foundTap);
     const { say, tag } = this.guests.labels(this.x, this.z, !exclusiveActive);
     if (say) tags.say = say;
     if (tag) tags.tag = tag;
@@ -1243,9 +1316,10 @@ export class GardenScene {
 
   /**
    * Tell the page what the action button does now (#334): stand up from the
-   * bench, pick up the key, open or try the door, or sit on the bench, for
-   * whichever is in reach (in that order); or nothing. The thing in reach
-   * glints (the cue).
+   * bench, pick up the key, pick up a find (#351), open or try the door, the
+   * rest of leave it out's (leave or follow at the bowl, hang on the shelf,
+   * take from the basket), or sit on the bench, for whichever is in reach (in
+   * that order); or nothing. The thing in reach glints (the cue).
    */
   private reportReach() {
     const d = this.door;
@@ -1253,10 +1327,16 @@ export class GardenScene {
     const nearKey = d.state === "key" && this.inReach("key");
     const nearDoor = d.state !== "open" && this.inReach("try");
     const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH;
-    const a: Reach | null = this.seated ? "stand" : nearKey ? "key" : nearDoor ? (d.state === "held" ? "open" : "try") : nearBench ? "sit" : null;
-    if (a === this.reach) return;
+    // A find at your feet comes before the door: the gate post's feather lies in the door's reach.
+    const leave = this.seated || nearKey ? null : this.leaveIt.reachAt(this.x, this.z);
+    const mine = leave && (leave.a === "find" || !nearDoor) ? leave : null;
+    const a: Reach | null = this.seated ? "stand" : nearKey ? "key" : mine?.a === "find" ? "find" : nearDoor ? (d.state === "held" ? "open" : "try") : mine ? mine.a : nearBench ? "sit" : null;
+    const target = mine?.target ?? null;
+    // Targets are made once (LeaveItOut.reachAt), so the same target is the same object.
+    if (a === this.reach && target === this.leaveTarget) return;
     this.reach = a;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : a === "try" || a === "open" ? d.handle : a === "sit" ? [b.x, 0.55, b.z + 0.1] : null;
+    this.leaveTarget = target;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : a === "try" || a === "open" ? d.handle : target ? this.leaveIt.cueAt(target) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : null;
     this.cue.visible = !!at;
     if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);

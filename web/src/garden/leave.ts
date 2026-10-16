@@ -7,7 +7,7 @@
 // (contract/garden.ts), never stored, so every device shows the same. Pure.
 
 import { NO_LEFT, type GardenLeft } from "perennial-contract";
-import type { GardenWord, OrchardWord } from "../deck/schema";
+import { ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema";
 import { hash32 } from "../lib/seed";
 import type { NounDef } from "./nouns";
 import { GATE_HALF } from "./visitors";
@@ -18,6 +18,12 @@ export { NO_LEFT };
 
 /** Who comes to the bowl at night. The dog is the garden's own visitor (#209); the others come from the wild. */
 export type Guest = "sparrow" | "mouse" | "dog" | "hedgehog" | "fox";
+/** The guests drawn with the bowl's own art (the dog is drawn as the visitor it is). */
+export type WildGuest = Exclude<Guest, "dog">;
+
+/** A fruit the basket can offer: every orchard word but the plain tree. */
+export type FruitKind = Exclude<OrchardWord, "tree">;
+export const FRUIT_KINDS = ORCHARD_WORDS.filter((k): k is FruitKind => k !== "tree");
 
 /** What a guest leaves, to find and keep. Ids are stable: they sync (contract/garden.ts `kept`). */
 export const FINDS = {
@@ -132,8 +138,9 @@ export function pickUp(left: Left, find: Find): Left {
 
 /** Hang a kept thing on a hook (what hung there goes back on the board), or take it down (null). */
 export function hang(left: Left, hook: number, find: Find | null): Left {
-  const hooks = left.hooks.map((h, i) => (i === hook ? find : h === find ? null : h)) as Left["hooks"];
-  return { ...left, hooks };
+  const put = (h: string | null, i: number) => (i === hook ? find : h === find ? null : h);
+  const [a, b, c] = left.hooks;
+  return { ...left, hooks: [put(a, 0), put(b, 1), put(c, 2)], arranged: left.arranged + 1 };
 }
 
 /** The kept things that hang on no hook: they lie on the shelf's board. */
@@ -147,11 +154,21 @@ export interface Fruit {
   id: string;
   lemma: string;
   gloss: string;
-  kind: Exclude<OrchardWord, "tree">;
+  kind: FruitKind;
 }
 
 /** A thing to carry from the basket: the crumbs, or a fruit (a deck word). */
-export type BasketThing = { id: "crumbs" } | ({ id: string } & Fruit);
+export type BasketThing = { id: "crumbs" } | Fruit;
+
+/** What the walk is given: the synced value, today's calendar day, the facts the rows need, and what the basket offers. */
+export interface LeaveWalk {
+  left: Left;
+  today: number;
+  facts: LeaveFacts;
+  basket: readonly BasketThing[];
+  /** The fruit a word left in the bowl is (any fruit word, known now or not), or null for the crumbs. */
+  fruitOf: (thing: string) => FruitKind | null;
+}
 
 /** The basket: the crumbs, then the first BASKET_FRUITS known fruits (in the order given), never quizzed. */
 export function basket(fruits: readonly Fruit[]): BasketThing[] {
@@ -170,10 +187,10 @@ export function shedAt(l: Layout): { x: number; z: number } {
   return { x: l.bounds.maxX - 0.3, z: l.bounds.maxZ - 2.4 };
 }
 
-/** The basket, on the shed's step at its far end. */
+/** The basket, on the shed's step toward its far end. */
 export function basketAt(l: Layout): { x: number; z: number } {
   const s = shedAt(l);
-  return { x: s.x - 0.75, z: s.z - 0.75 };
+  return { x: s.x - 0.8, z: s.z - 0.5 };
 }
 
 /** Where a find lies. */

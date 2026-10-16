@@ -8,6 +8,8 @@ import { reportStalledWalk } from "../observability";
 import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
 import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkVisitors } from "../garden/scene";
+import type { Left, LeaveWalk } from "../garden/leave";
+import type { Hand, LeaveDone } from "../garden/sceneLeave";
 import { sceneryViews } from "../garden/scenery";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
 import { layout, type Layout, type PlacedPlant } from "../garden/world";
@@ -24,13 +26,15 @@ interface WalkData {
  * not change while you walk) and the scene is built once from it; time of day
  * and quality changes go to the running scene. `onFocused`: the scene walked to
  * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
- * save it once it is opened.
+ * save it once it is opened. `leave`: the bowl and the shelf (#351), how to save
+ * them, and what to do when the learner leaves or finds something.
  */
 export function useGardenScene({
   lang,
   source,
   visitors,
   door,
+  leave,
   focus,
   time,
   detail,
@@ -42,6 +46,7 @@ export function useGardenScene({
   source: PlantSource | null;
   visitors?: LearnerVisitors | null;
   door: { state: DoorState; open: () => void };
+  leave: { walk: LeaveWalk; save: (left: Left) => void; done: (d: LeaveDone) => void };
   focus?: string | null;
   time: TimeOfDay;
   detail: Detail;
@@ -57,10 +62,13 @@ export function useGardenScene({
   const [labels, setLabels] = useState<Label[]>([]);
   const [ready, setReady] = useState(false);
   const [reach, setReach] = useState<Reach | null>(null);
+  const [hand, setHand] = useState<Hand | null>(null);
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
   openDoor.current = door.open;
+  const leaveNow = useRef(leave);
+  leaveNow.current = leave;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
@@ -78,9 +86,10 @@ export function useGardenScene({
         scenery: visitors?.scenery ?? sceneryViews(lang),
         door: door.state,
         orchard: { trees: source.orchard, firstPlanted: source.first ? source.first.at : null },
+        leave: leave.walk,
       },
     });
-  }, [source, data, visitors, door.state, lang]);
+  }, [source, data, visitors, door.state, leave.walk, lang]);
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -103,7 +112,17 @@ export function useGardenScene({
         s = new mod.GardenScene(
           canvas.current!,
           data.l,
-          { onSelect: setSelected, onLabels: setLabels, onProgress: (d, t) => setProgress([d, t]), onReach: setReach, onDoorOpen: () => openDoor.current(), onStall: () => reportStalledWalk(data.l.plants.length) },
+          {
+            onSelect: setSelected,
+            onLabels: setLabels,
+            onProgress: (d, t) => setProgress([d, t]),
+            onReach: setReach,
+            onDoorOpen: () => openDoor.current(),
+            onStall: () => reportStalledWalk(data.l.plants.length),
+            onHand: setHand,
+            onLeave: (d) => leaveNow.current.done(d),
+            onLeft: (left) => leaveNow.current.save(left),
+          },
           reduced,
           lang,
           data.visitors,
@@ -154,7 +173,7 @@ export function useGardenScene({
     scene.current?.setDetail(detail);
   }, [detail]);
 
-  return { data, scene, ready, failed, progress, labels, selected, reach };
+  return { data, scene, ready, failed, progress, labels, selected, reach, hand };
 }
 
 /**
