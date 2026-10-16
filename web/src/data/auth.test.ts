@@ -30,7 +30,8 @@ mock.module("../observability", () => ({
 }));
 mock.module("./captcha", () => ({ captchaHeaders: () => Promise.resolve({}) }));
 mock.module("./device", () => ({
-  adoptOnDevice: (...a: unknown[]) => events.push(["adoptOnDevice", ...a]),
+  recordPendingLink: (...a: unknown[]) => events.push(["recordPendingLink", ...a]),
+  resolvePendingLink: (...a: unknown[]) => events.push(["resolvePendingLink", ...a]),
   clearOutboxNow: () => Promise.resolve(),
   forgetOnDevice: () => {},
   keepOnDevice: () => {},
@@ -111,7 +112,7 @@ test("a wrong code is refused with a line the learner can act on", async () => {
   const e = await signInWithCode("ana@example.com", "123456").catch((x: unknown) => x);
   expect(e).toBeInstanceOf(AuthError);
   expect(e).toHaveProperty("message", "That code is not correct, or it has expired.");
-  expect(events.some((x) => x[0] === "adoptOnDevice")).toBe(false);
+  expect(events.some((x) => x[0] === "resolvePendingLink")).toBe(false);
 });
 
 test("a sign-in answered in time: the anonymous learner's writes go to the account, with no reload", async () => {
@@ -119,7 +120,13 @@ test("a sign-in answered in time: the anonymous learner's writes go to the accou
   server.signIn = () => Promise.resolve({ data: { user: account }, error: null });
   const user = await signInWithCode("ana@example.com", "123456");
   expect(user).toEqual({ id: "acct-1", email: "ana@example.com", anonymous: false });
-  expect(events).toEqual([["track", "email_added"], ["linkAccount", "acct-1"], ["adoptOnDevice", "anon-1", "acct-1"], ["track", "signin_done", { ms: 0, timedOut: false }]]);
+  expect(events).toEqual([
+    ["recordPendingLink", "anon-1"],
+    ["track", "email_added"],
+    ["linkAccount", "acct-1"],
+    ["resolvePendingLink", "acct-1"],
+    ["track", "signin_done", { ms: 0, timedOut: false }],
+  ]);
   expect(reloads).toBe(0);
 });
 
@@ -140,9 +147,10 @@ test("a sign-in whose answer is lost, when the server did sign in: asks the serv
   expect(seen.aborted).toBe(true);
   expect(user).toEqual({ id: "acct-1", email: "ana@example.com", anonymous: false });
   expect(events.filter((e) => e[0] !== "reportSlowAuth")).toEqual([
+    ["recordPendingLink", "anon-1"],
     ["track", "email_added"],
     ["linkAccount", "acct-1"],
-    ["adoptOnDevice", "anon-1", "acct-1"],
+    ["resolvePendingLink", "acct-1"],
     ["track", "signin_done", { ms: 20_000, timedOut: true }],
     ["reload"],
   ]);

@@ -8,7 +8,7 @@ import { Clock, Effect, Fiber, Schema } from "effect";
 import { UserId } from "perennial-contract";
 import { linkAccount, reportSlowAuth, track } from "../observability";
 import { captchaHeaders } from "./captcha";
-import { adoptOnDevice, clearOutboxNow, forgetOnDevice, keepOnDevice, stopSyncNow } from "./device";
+import { clearOutboxNow, forgetOnDevice, keepOnDevice, recordPendingLink, resolvePendingLink, stopSyncNow } from "./device";
 
 export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
 
@@ -144,6 +144,8 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
       const started = yield* Clock.currentTimeMillis;
       // Nothing was sent yet, so there is nothing to recover.
       const before = yield* askSession;
+      // Before the request: the app may see the account before this code does (#314).
+      recordPendingLink(before?.anonymous ? before.id : null);
       const { user, timedOut } = yield* timed("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } })).pipe(
         Effect.flatMap((r) =>
           r.error || !r.data
@@ -157,7 +159,7 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
         track("email_added");
         linkAccount(user.id);
         // Their progress moves into the account on the server; their unsent writes follow here.
-        adoptOnDevice(before.id, user.id);
+        resolvePendingLink(user.id);
       }
       track("signin_done", { ms: (yield* Clock.currentTimeMillis) - started, timedOut });
       // The lost answer would have told the app the user changed. Reload as the

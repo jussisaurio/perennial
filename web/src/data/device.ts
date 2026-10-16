@@ -151,9 +151,38 @@ const adoptions = () => readList(ADOPT_KEY, Adoption);
 const saveAdoptions = (list: Adoption[]) => saveList(ADOPT_KEY, list);
 
 /** The anonymous user `from` became the account `to`: its queued writes are theirs. */
-export function adoptOnDevice(from: string, to: string) {
+function adoptOnDevice(from: string, to: string) {
   if (from === to) return;
   saveAdoptions([...adoptions().filter((a) => a.from !== from), { from, to }]);
+}
+
+// Signing in from an anonymous session: the anonymous learner's id, kept from
+// before the sign-in request until the app first sees the account (#314). The
+// sign-in answer can be lost, or the app can see the account through Better
+// Auth's own session check and reload before the sign-in code finishes.
+const LINK_KEY = "perennial-pending-link";
+
+/** About to sign in from the anonymous learner `anonymousId`'s session; null when the session is not anonymous. */
+export function recordPendingLink(anonymousId: string | null) {
+  try {
+    if (anonymousId) localStorage.setItem(LINK_KEY, anonymousId);
+    else localStorage.removeItem(LINK_KEY);
+  } catch {
+    // No storage: the queue is not carried over (see saveList).
+  }
+}
+
+/** The session is the account `userId` now: a pending sign-in from an anonymous session moves that learner's queue here. */
+export function resolvePendingLink(userId: string) {
+  let from: string | null;
+  try {
+    from = localStorage.getItem(LINK_KEY);
+    localStorage.removeItem(LINK_KEY);
+  } catch {
+    // No storage: nothing was recorded.
+    return;
+  }
+  if (from) adoptOnDevice(from, userId);
 }
 
 /** Users whose queues `userId` takes over. */
