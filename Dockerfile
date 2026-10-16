@@ -7,6 +7,7 @@
 FROM oven/bun:1.3.14 AS web
 WORKDIR /app
 COPY package.json bun.lock ./
+COPY contract/package.json contract/
 COPY web/package.json web/
 COPY server/package.json server/
 COPY scripts/package.json scripts/
@@ -34,10 +35,13 @@ RUN bunx vite build
 FROM oven/bun:1.3.14-slim
 WORKDIR /app
 COPY package.json bun.lock ./
+COPY contract/package.json contract/
 COPY web/package.json web/
 COPY server/package.json server/
 COPY scripts/package.json scripts/
 RUN bun install --frozen-lockfile --production --filter perennial-server
+# The wire contract: the server imports it from source.
+COPY contract/ contract/
 COPY server/ server/
 WORKDIR /app/server
 COPY decks/ /app/decks/

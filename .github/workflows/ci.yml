@@ -34,6 +34,10 @@ jobs:
       - name: Typecheck (server)
         working-directory: server
         run: bun run typecheck
+      - name: Typecheck (contract)
+        # Its own, stricter settings; the server's check reads it with the server's.
+        working-directory: contract
+        run: bun run typecheck
       - name: Lint (web)
         working-directory: web
         run: bun run lint
