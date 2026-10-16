@@ -196,9 +196,9 @@ export const SyncLive = Layer.effect(
                   break;
                 case "user_word.upsert": {
                   const r = m.row;
-                  // forms as Bun.SQL stored it: the list's JSON text as a jsonb string.
+                  // forms is a jsonb list (sql.json), which the app reads as string[] from the stream.
                   rows += yield* rowCount(sql`insert into user_word (id, user_id, lang, lemma, gloss, pos, forms, notes, deck_id)
-                    values (${r.id}, ${userId}, ${r.lang}, ${r.lemma}, ${r.gloss}, ${r.pos ?? null}, to_jsonb(${JSON.stringify(r.forms)}::text), ${r.notes ?? null}, ${r.deck_id ?? null})
+                    values (${r.id}, ${userId}, ${r.lang}, ${r.lemma}, ${r.gloss}, ${r.pos ?? null}, ${sql.json(r.forms)}, ${r.notes ?? null}, ${r.deck_id ?? null})
                     on conflict (id) do update set lemma = excluded.lemma, gloss = excluded.gloss, pos = excluded.pos, forms = excluded.forms, notes = excluded.notes, deck_id = excluded.deck_id
                     where user_word.user_id = ${userId}`);
                   break;

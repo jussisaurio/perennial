@@ -83,6 +83,14 @@ test("the orchard door opens for good, per course, and syncs to the learner's de
   expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", "false"], ["es", "true"]]);
 });
 
+test("a word's forms are stored as a list, which is what the app reads from the stream", async () => {
+  const cookie = await t.signIn(unique("forms"));
+  const id = crypto.randomUUID();
+  expect((await t.write(cookie, [{ type: "user_word.upsert", row: { id, lang: "es", lemma: "zorro", gloss: "fox", forms: ["zorro", "zorros"] } }])).status).toBe(200);
+  const [row] = await t.sql<{ kind: string; forms: unknown }>`select jsonb_typeof(forms) as kind, forms from user_word where id = ${id}`;
+  expect(row).toEqual({ kind: "array", forms: ["zorro", "zorros"] });
+});
+
 test("bad batches are rejected whole; reviews from the future too", async () => {
   const cookie = await t.signIn(unique("bad"));
   expect((await t.write(cookie, [{ type: "review.insert", row: { id: "nope" } }])).status).toBe(422);
