@@ -4,7 +4,7 @@
 // fingerprint so a recurring problem stays one issue. Both are also logged.
 
 import * as Sentry from "@sentry/bun";
-import { log } from "./log";
+import { Effect, Layer, Schedule } from "effect";
 
 /** A request slower than this (ms) is a problem, not just a warning. */
 export const VERY_SLOW_MS = 5000;
@@ -21,17 +21,28 @@ export function reportVerySlow(method: string, route: string, status: number, ms
   });
 }
 
-/** Watch the event loop: a timer that fires late means something held it. */
-export function watchEventLoop(): () => void {
-  let last = performance.now();
-  const timer = setInterval(() => {
-    const now = performance.now();
-    const blocked = Math.round(now - last - TICK_MS);
-    last = now;
-    if (blocked < BLOCKED_MS) return;
-    log.warn("event loop blocked", { ms: blocked });
-    Sentry.captureMessage("Event loop blocked", { level: "warning", fingerprint: ["event-loop-blocked"], extra: { ms: blocked } });
-  }, TICK_MS);
-  timer.unref();
-  return () => clearInterval(timer);
-}
+/**
+ * Watch the event loop: a tick that comes late means something held it. A
+ * worker in the layer's scope, so shutdown stops it.
+ */
+export const WatchdogLive = Layer.effectDiscard(
+  Effect.gen(function* () {
+    // Not a request's problem: report it with the scopes the process started with,
+    // given explicitly (a fiber can run in a request's AsyncLocalStorage).
+    const scopes = { scope: Sentry.getCurrentScope(), isolationScope: Sentry.getIsolationScope() };
+    let last = performance.now();
+    const tick = Effect.gen(function* () {
+      const now = performance.now();
+      const blocked = Math.round(now - last - TICK_MS);
+      last = now;
+      if (blocked < BLOCKED_MS) return;
+      yield* Effect.logWarning("event loop blocked").pipe(Effect.annotateLogs({ ms: blocked }));
+      Sentry.withIsolationScope(scopes.isolationScope, () =>
+        Sentry.withScope(scopes.scope, () =>
+          Sentry.withActiveSpan(null, () => Sentry.captureMessage("Event loop blocked", { level: "warning", fingerprint: ["event-loop-blocked"], extra: { ms: blocked } })),
+        ),
+      );
+    });
+    yield* tick.pipe(Effect.repeat(Schedule.spaced(TICK_MS)), Effect.forkScoped);
+  }),
+);

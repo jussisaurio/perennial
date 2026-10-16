@@ -10,8 +10,8 @@
 //
 // Effect code logs with Effect.logInfo and friends (the `logger` below);
 // the request context comes from the fiber (request.ts). Promise code (Better
-// Auth, sync.ts, ai.ts, scripts) uses `log` and `event`, which find the
-// request through request.ts's bridge.
+// Auth, the scripts) uses `log` and `event`, which find the request through
+// request.ts's bridge (Better Auth only).
 
 import * as Sentry from "@sentry/bun";
 import { Cause, Context, Layer, Logger, References, type LogLevel } from "effect";
@@ -20,10 +20,20 @@ import { bridgedRequest, inSentryScope, record, RequestContext, type RequestInfo
 type Level = "debug" | "info" | "warn" | "error";
 type Fields = Record<string, unknown>;
 
-function write(level: Level, msg: string, fields: Fields, ctx: RequestInfo | undefined) {
+const RANK: Record<Level, number> = { debug: 0, info: 1, warn: 2, error: 3 };
+
+/** LOG_LEVEL (docs/DEPLOY.md): this level and the ones above it are written; silent writes none. */
+function written(level: Level) {
   // Read on every line, not once: tests turn logging up and down around a block.
-  if (process.env.LOG_LEVEL === "silent") return;
-  if (level === "debug" && process.env.LOG_LEVEL !== "debug") return;
+  const min = process.env.LOG_LEVEL;
+  if (min === "silent") return false;
+  // Unset, or a value that is not a level: info, as it always was.
+  const floor = min === "debug" || min === "warn" || min === "error" ? RANK[min] : RANK.info;
+  return RANK[level] >= floor;
+}
+
+function write(level: Level, msg: string, fields: Fields, ctx: RequestInfo | undefined) {
+  if (!written(level)) return;
   const pretty = process.env.LOG_PRETTY === "1";
   const line: Fields & { ts: string } = { ts: new Date().toISOString(), level, msg, ...ctx?.fields, ...fields };
   if (fields.err instanceof Error) line.err = { message: fields.err.message, stack: fields.err.stack };
@@ -40,7 +50,7 @@ function write(level: Level, msg: string, fields: Fields, ctx: RequestInfo | und
   }
 }
 
-/** For code outside Effect: Better Auth's logger and hooks, sync.ts, ai.ts, the scripts and signal handlers. */
+/** For code outside Effect: Better Auth's logger and hooks, the scripts and signal handlers. */
 export const log = {
   debug: (msg: string, f: Fields = {}) => write("debug", msg, f, bridgedRequest()),
   info: (msg: string, f: Fields = {}) => write("info", msg, f, bridgedRequest()),

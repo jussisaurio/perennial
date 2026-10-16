@@ -32,20 +32,28 @@ function deckWord(lemma: string, pos: string) {
   return { lemma, gloss: `[mock] ${lemma}`, pos, forms: [lemma], ...(pos === "noun" ? { gender: "m" } : {}), notes: "Placeholder from mock-llm.ts.", sentences };
 }
 
+/** A capture group the pattern always has. */
+function group(m: RegExpMatchArray, i: number): string {
+  const g = m[i];
+  if (g === undefined) throw new Error(`no group ${i} in ${m[0]}`);
+  return g;
+}
+
 function reply(prompt: string): unknown {
   if (prompt.includes('{"ok": true}')) return { ok: true };
   const surface = prompt.match(/^Surface forms \(most frequent first\):\n(.+)$/m);
-  if (surface) return { lemmas: surface[1].split(", ").map((f) => ({ lemma: f, pos: "noun" })) };
+  if (surface) return { lemmas: group(surface, 1).split(", ").map((f) => ({ lemma: f, pos: "noun" })) };
   const deck = [...prompt.matchAll(/^- lemma: (.+?) \| pos: (\w+)/gm)];
-  if (deck.length) return { words: deck.map(([, l, pos]) => deckWord(l, pos)) };
+  if (deck.length) return { words: deck.map((m) => deckWord(group(m, 1), group(m, 2))) };
   const freq = prompt.match(/in frequency order:\n(.+)\n/);
-  if (freq) return { words: freq[1].split(", ").map((f) => entry(f)) };
+  if (freq) return { words: group(freq, 1).split(", ").map((f) => entry(f)) };
   const mined = [...prompt.matchAll(/^- "(.+?)" in: (.+)$/gm)];
-  if (mined.length) return { words: mined.map(([, f, s]) => entry(f, s)) };
+  if (mined.length) return { words: mined.map((m) => entry(group(m, 1), group(m, 2))) };
   const more = [...prompt.matchAll(/^- (\S+) \(/gm)];
   if (more.length)
     return {
-      examples: more.flatMap(([, l]) => {
+      examples: more.flatMap((m) => {
+        const l = group(m, 1);
         // Test hook: a chatty model writes 5 per word and one for a word nobody asked for.
         const n = l.startsWith("chatty") ? 5 : 3;
         const own = Array.from({ length: n }, (_, k) => ({ lemma: l, text: `Frase nueva ${k + 1} con ${l}.`, translation: `New sentence ${k + 1} with ${l}.`, cloze: l }));

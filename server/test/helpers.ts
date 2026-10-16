@@ -1,14 +1,19 @@
 // Test harness: the real app against the local Postgres + Electric
 // (`docker compose up -d`), with a mock model and the dev mail outbox.
 
+import { PgClient } from "@effect/sql-pg";
 import { Context, Effect, Exit, Layer, Scope } from "effect";
 import { HttpEffect, HttpServer, HttpServerRequest } from "effect/http";
+import { Reactivity } from "effect/reactivity";
+import type { Row } from "effect/sql/SqlConnection";
+import { Ai } from "../src/ai";
 import { App, AppLive, BunServerLive, HttpLive } from "../src/app";
 import { AppConfig, loadConfig, type Config } from "../src/config";
+import { connection as connectTo, DatabaseLive } from "../src/db";
 import { LoggerLive } from "../src/log";
-import { OutboxMailer } from "../src/mail";
-import { migrate } from "../src/migrate";
-import { Ai, Auth, Database, Mail, ServicesLive } from "../src/services";
+import { Mail, OutboxMailer } from "../src/mail";
+import { Migrations, MigrationsLive } from "../src/migrate";
+import { Auth, ServicesLive } from "../src/services";
 
 process.env.LOG_LEVEL ??= "silent";
 
@@ -46,18 +51,21 @@ export function stopMockLLM() {
   mockProc = null;
 }
 
+/** The text before the first `sep` (all of it if there is none): a cookie's name=value, a name. */
+export const before = (text: string, sep: string) => (text.includes(sep) ? text.slice(0, text.indexOf(sep)) : text);
+
 export const unique = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}@example.com`;
 
 export async function startApp(overrides: Partial<Config> = {}) {
   const config = loadConfig({ dev: true, anthropic: { apiKey: "test-key", baseURL: await mockLLM(), model: "claude-haiku-4-5" }, ...overrides });
-  const sql = new Bun.SQL(config.databaseUrl, { max: 5 });
-  await migrate(sql);
-  // The server as index.ts runs it (Effect's Bun server), with these settings and this pool.
+  // The server as index.ts runs it (Effect's Bun server), with these settings.
   const layer = HttpLive.pipe(
     Layer.provideMerge(BunServerLive(0)),
     Layer.provideMerge(AppLive),
     Layer.provideMerge(ServicesLive),
-    Layer.provideMerge(Layer.succeed(Database, sql)),
+    // Before the services: Better Auth checks its tables when it starts (production migrates before each deploy).
+    Layer.provideMerge(Layer.effectDiscard(Effect.flatMap(Migrations, (m) => m.run())).pipe(Layer.provide(MigrationsLive))),
+    Layer.provideMerge(DatabaseLive),
     Layer.provideMerge(Layer.succeed(AppConfig, config)),
     Layer.provideMerge(LoggerLive),
   );
@@ -71,12 +79,26 @@ export async function startApp(overrides: Partial<Config> = {}) {
   /** The app's parts that tests reach into, and a fetch that skips the network (no client IP, no abort). */
   const app = { fetch: HttpEffect.toWebHandlerWith<Layer.Success<typeof layer>, HttpServerRequest.HttpServerRequest | Scope.Scope>(context)(Context.get(context, App).handle), auth: Context.get(context, Auth), ai: Context.get(context, Ai) };
 
+  /** The app's pool, for test queries: t.sql`select …` is a promise of rows; t.db makes identifiers (t.db(table)) and lists (t.db.in(ids)). */
+  const db = Context.get(context, PgClient.PgClient);
+  const sql = <A extends object = Row>(strings: TemplateStringsArray, ...args: unknown[]) => Effect.runPromise(db<A>(strings, ...args));
+
+  /** A connection of its own, for a test that holds a lock or a transaction open meanwhile. */
+  const connection = async () => {
+    const held = Effect.runSync(Scope.make());
+    const client = await Effect.runPromise(PgClient.makeClient(connectTo(config.databaseUrl)).pipe(Effect.provide(Reactivity.layer), Scope.provide(held)));
+    return {
+      sql: <A extends object = Row>(strings: TemplateStringsArray, ...args: unknown[]) => Effect.runPromise(client<A>(strings, ...args)),
+      close: () => Effect.runPromise(Scope.close(held, Exit.void)),
+    };
+  };
+
   /** A request as the browser would send it: same-origin, with the session cookie. */
   const call = async (path: string, body?: unknown, cookie?: string, headers: Record<string, string> = {}) => {
     const res = await fetch(url + path, {
       method: body === undefined ? "GET" : "POST",
       headers: { "content-type": "application/json", origin: config.appUrl, ...(cookie ? { cookie } : {}), ...headers },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? null : JSON.stringify(body),
     });
     const text = await res.text();
     // Tests read whatever JSON a route returns.
@@ -91,10 +113,10 @@ export async function startApp(overrides: Partial<Config> = {}) {
 
   /** Keep the session cookie the server sets (or the one we already had). */
   function cookieOf(res: Response, previous?: string) {
-    const set = res.headers.getSetCookie().map((c) => c.split(";")[0]).filter((c) => !c.endsWith("="));
+    const set = res.headers.getSetCookie().map((c) => before(c, ";")).filter((c) => !c.endsWith("="));
     if (!set.length) return previous;
     const jar = new Map((previous ?? "").split("; ").filter(Boolean).map((c) => [c.split("=")[0], c] as const));
-    for (const c of set) jar.set(c.split("=")[0], c);
+    for (const c of set) jar.set(before(c, "="), c);
     return [...jar.values()].join("; ");
   }
 
@@ -119,7 +141,9 @@ export async function startApp(overrides: Partial<Config> = {}) {
   return {
     app,
     config,
+    db,
     sql,
+    connection,
     url,
     call,
     sendCode,
@@ -131,14 +155,19 @@ export async function startApp(overrides: Partial<Config> = {}) {
     mailer,
     async stop() {
       await Effect.runPromise(Scope.close(scope, Exit.void));
-      await sql.close();
     },
   };
 }
 
 /** Real Spanish deck word ids (writes refuse made-up ones), by short name: W.a, W.b, … */
 const ES_IDS = (JSON.parse(await Bun.file(new URL("../../decks/es/deck.json", import.meta.url)).text()) as { words: { id: string }[] }).words.map((w) => w.id);
-export const W = Object.fromEntries("abcdefghijklm".split("").map((k, i) => [k, ES_IDS[i]])) as Record<string, string>;
+/** The i-th of the 13 deck words below, wrapping around. */
+export const word = (i: number) => {
+  const id = ES_IDS[i % 13];
+  if (id === undefined) throw new Error("the Spanish deck has fewer than 13 words");
+  return id;
+};
+export const W = { a: word(0), b: word(1), c: word(2), d: word(3), e: word(4), f: word(5), g: word(6), h: word(7), i: word(8), j: word(9), k: word(10), l: word(11), m: word(12) };
 
 export const review = (wordId: string, extra: Record<string, unknown> = {}) => ({
   type: "review.insert",

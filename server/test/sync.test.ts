@@ -12,7 +12,7 @@ test("writes return the Postgres transaction id; review inserts are idempotent",
   expect(typeof first.body.txid).toBe("number");
   expect((await t.write(cookie, [r])).status).toBe(200); // a retry changes nothing
   const id = (await t.me(cookie)).id;
-  expect((await t.sql`select count(*)::int as n from review where user_id = ${id}`)[0].n).toBe(1);
+  expect((await t.sql`select count(*)::int as n from review where user_id = ${id}`)[0]?.n).toBe(1);
 });
 
 test("writes say whether anything changed, so the client doesn't wait for an echo that won't come", async () => {
@@ -40,11 +40,11 @@ test("word state: the newer change wins, and the server caps future times", asyn
   const at = (ms: number) => new Date(Date.now() + ms).toISOString();
   await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "paused", updated_at: at(-1000) } }]);
   await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "ignored", updated_at: at(-5000) } }]); // older: loses
-  expect((await t.sql`select status from word_state where user_id = ${id}`)[0].status).toBe("paused");
+  expect((await t.sql`select status from word_state where user_id = ${id}`)[0]?.status).toBe("paused");
   // A device with a fast clock cannot win every later conflict.
   await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "queued", updated_at: at(10 * 86_400_000) } }]);
-  const [row] = await t.sql`select updated_at from word_state where user_id = ${id}`;
-  expect(new Date(row.updated_at).getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+  const [row] = await t.sql<{ updated_at: Date }>`select updated_at from word_state where user_id = ${id}`;
+  expect(row?.updated_at.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
 });
 
 test("course settings change per column", async () => {
@@ -54,14 +54,14 @@ test("course settings change per column", async () => {
   await t.write(cookie, [{ type: "course.upsert", row: { lang: "de", minutes: 12 } }]);
   await t.write(cookie, [{ type: "course.upsert", row: { lang: "de", retention: 0.85 } }]);
   const [row] = await t.sql`select minutes, retention from course where user_id = ${id}`;
-  expect(row.minutes).toBe(12);
-  expect(row.retention).toBeCloseTo(0.85);
+  expect(row?.minutes).toBe(12);
+  expect(row?.retention).toBeCloseTo(0.85);
 });
 
 test("the orchard door opens for good, per course, and syncs to the learner's devices (#315)", async () => {
   const cookie = await t.signIn(unique("door"));
   const id = (await t.me(cookie)).id;
-  const door = async (lang: string) => (await t.sql`select door_open from course where user_id = ${id} and lang = ${lang}`)[0].door_open;
+  const door = async (lang: string) => (await t.sql`select door_open from course where user_id = ${id} and lang = ${lang}`)[0]?.door_open;
   // A new course row, as the app inserts it, starts closed.
   await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", minutes: 5, retention: 0.9, door_open: false } }]);
   expect(await door("es")).toBe(false);
@@ -81,6 +81,14 @@ test("the orchard door opens for good, per course, and syncs to the learner's de
   // Electric sends values as text; the app's Electric client parses them.
   const rows = (res.body as { value?: { lang: string; door_open: string } }[]).filter((m) => m.value).map((m) => m.value!);
   expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", "false"], ["es", "true"]]);
+});
+
+test("a word's forms are stored as a list, which is what the app reads from the stream", async () => {
+  const cookie = await t.signIn(unique("forms"));
+  const id = crypto.randomUUID();
+  expect((await t.write(cookie, [{ type: "user_word.upsert", row: { id, lang: "es", lemma: "zorro", gloss: "fox", forms: ["zorro", "zorros"] } }])).status).toBe(200);
+  const [row] = await t.sql<{ kind: string; forms: unknown }>`select jsonb_typeof(forms) as kind, forms from user_word where id = ${id}`;
+  expect(row).toEqual({ kind: "array", forms: ["zorro", "zorros"] });
 });
 
 test("bad batches are rejected whole; reviews from the future too", async () => {

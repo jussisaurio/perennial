@@ -9,8 +9,10 @@ import { HttpServer } from "effect/http";
 import { AppLive, BunServerLive, HttpLive } from "./src/app";
 import { AppConfig, AppConfigFromEnv, ConfigProblems } from "./src/config";
 import { log, LoggerLive } from "./src/log";
-import { Ai, DatabaseLive, ServicesLive } from "./src/services";
-import { watchEventLoop } from "./src/watchdog";
+import { DatabaseLive } from "./src/db";
+import { Ai } from "./src/ai";
+import { ServicesLive } from "./src/services";
+import { WatchdogLive } from "./src/watchdog";
 
 const Server = Layer.unwrap(Effect.map(AppConfig, (config) => BunServerLive(config.port)));
 
@@ -33,9 +35,7 @@ const Started = Layer.effectDiscard(
   }),
 );
 
-const Watchdog = Layer.effectDiscard(Effect.acquireRelease(Effect.sync(watchEventLoop), (stop) => Effect.sync(stop)));
-
-const Main = Layer.mergeAll(Started, Watchdog).pipe(
+const Main = Layer.mergeAll(Started, WatchdogLive).pipe(
   Layer.provide(HttpLive),
   // The server starts listening last, once the app can answer.
   Layer.provideMerge(Server),

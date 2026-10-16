@@ -28,7 +28,7 @@ async function aliceWithData() {
 }
 
 const TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
-const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.sql(table)} where user_id = ${userId}`)[0].n);
+const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.db(table)} where user_id = ${userId}`)[0]?.n);
 
 describe("reads: shapes only ever contain your own rows", () => {
   test.each(TABLES)("%s", async (table) => {
@@ -74,7 +74,7 @@ describe("writes: every mutation is scoped to the session's user", () => {
     const [w] = await t.sql`select lemma, user_id from user_word where id = ${wordId}`;
     expect(w).toMatchObject({ lemma: "zorro", user_id: aliceId });
     const [r] = await t.sql`select grade from review where id = ${reviewId}`;
-    expect(r.grade).toBe(3);
+    expect(r?.grade).toBe(3);
   });
 
   test("a client can't choose whose row it writes", async () => {
@@ -84,7 +84,7 @@ describe("writes: every mutation is scoped to the session's user", () => {
     const r = review(W.c);
     await t.write(mallory, [{ ...r, row: { ...r.row, user_id: aliceId } }]);
     const [row] = await t.sql`select user_id from review where id = ${r.row.id}`;
-    expect(row.user_id).toBe(malloryId);
+    expect(row?.user_id).toBe(malloryId);
   });
 
   test("no session, no writes", async () => {
@@ -144,6 +144,42 @@ describe("limits", () => {
       const over = await t.write(cookie, [word()]);
       expect(over.status).toBe(429);
       expect(over.body).toMatchObject({ error: "quota", table: "user_word" });
+    } finally {
+      QUOTA.user_word = saved;
+    }
+  });
+
+  // #292: only new rows take room. A resend (the answer to the first send was
+  // lost) and an edit add none, so a learner at a quota is not refused for them.
+  test("at the daily review quota, the same batch sent again is saved, not refused", async () => {
+    const cookie = await t.signIn(unique("resend"));
+    const saved = QUOTA.reviewsPerDay;
+    QUOTA.reviewsPerDay = 1;
+    try {
+      const batch = [review(W.a)];
+      expect((await t.write(cookie, batch)).body).toMatchObject({ changed: true });
+      const again = await t.write(cookie, batch);
+      expect({ status: again.status, body: again.body }).toMatchObject({ status: 200, body: { changed: false } });
+      // A new review is still over the limit.
+      expect((await t.write(cookie, [review(W.b)])).body).toMatchObject({ error: "quota", table: "reviewsPerDay" });
+    } finally {
+      QUOTA.reviewsPerDay = saved;
+    }
+  });
+
+  test("at the own-word quota, an existing word can still be edited", async () => {
+    const cookie = await t.signIn(unique("edit"));
+    const saved = QUOTA.user_word;
+    QUOTA.user_word = 1;
+    try {
+      const word = (gloss: string, id: string) => ({ type: "user_word.upsert", row: { id, lang: "es", lemma: "zorro", gloss, forms: [] } });
+      const id = crypto.randomUUID();
+      expect((await t.write(cookie, [word("fox", id)])).status).toBe(200);
+      const edit = await t.write(cookie, [word("the fox", id)]);
+      expect({ status: edit.status, body: edit.body }).toMatchObject({ status: 200, body: { changed: true } });
+      expect((await t.sql<{ gloss: string }>`select gloss from user_word where id = ${id}`)[0]?.gloss).toBe("the fox");
+      // A new word is still over the limit.
+      expect((await t.write(cookie, [word("hen", crypto.randomUUID())])).body).toMatchObject({ error: "quota", table: "user_word" });
     } finally {
       QUOTA.user_word = saved;
     }

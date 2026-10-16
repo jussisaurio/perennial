@@ -20,6 +20,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { SourceWord, isDeckLang, manifestKey } from "../../web/src/deck/schema.ts";
 import { language } from "../../web/src/content/languages.ts";
+import { modelJsonSchema } from "../../server/src/modelSchema.ts";
 import { frequencyListUrl } from "./audit.ts";
 import { MAX_SENTENCE_WORDS, WORDS_PER_FILE, decode, deckDir, flagValue, readSource, sourceFiles, toJson, wholeWordCount, wordCount } from "./lib.ts";
 
@@ -265,25 +266,9 @@ function text(m: Anthropic.Message): string {
   return m.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
 }
 
-/** The regex Schema.Trim's "already trimmed" check compiles to: not what a well-formed prompt field should constrain on. */
-const TRIM_PATTERN = "^\\S[\\s\\S]*\\S$|^\\S$|^$";
-
-/** Drops the Trim pattern from every string node, keeping minLength/maxLength. */
-function dropTrimPattern(node: unknown): unknown {
-  if (Array.isArray(node)) return node.map(dropTrimPattern);
-  if (node && typeof node === "object") {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(node)) if (!(k === "pattern" && v === TRIM_PATTERN)) out[k] = dropTrimPattern(v);
-    return out;
-  }
-  return node;
-}
-
 /** A JSON schema output format without the client-side parse helper (batches take plain params). */
 function format(schema: Schema.Top): Anthropic.JSONOutputFormat {
-  const jsonSchema = dropTrimPattern(Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.output({ target: "draft-2020-12" }));
-  // Every schema passed here is a Schema.Struct, so this is always an object schema.
-  const f = jsonSchemaOutputFormat(jsonSchema as { type: "object" } & Record<string, unknown>);
+  const f = jsonSchemaOutputFormat(modelJsonSchema(schema));
   return { type: f.type, schema: f.schema };
 }
 

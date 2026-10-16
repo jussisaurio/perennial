@@ -8,6 +8,7 @@
 // adds the headers every answer gets.
 
 import { BunHttpServer } from "@effect/platform-bun";
+import { PgClient } from "@effect/sql-pg";
 import * as Sentry from "@sentry/bun";
 import { Context, Effect, Layer, Schema } from "effect";
 import type { Scope } from "effect";
@@ -18,10 +19,11 @@ import { withClientIp } from "./clientIp";
 import { AppConfig } from "./config";
 import { ApiError, decodeBody, errorResponse, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { traceId } from "./log";
-import { OutboxMailer } from "./mail";
-import { annotate, event, inSentryScope, promise, RequestContext, type RequestInfo } from "./request";
-import { Ai, Auth, Database, Mail } from "./services";
-import { applyWrites, LEARNER_TABLES, proxyShape } from "./sync";
+import { annotate, event, inBetterAuth, inSentryScope, RequestContext, sentrySpan, type RequestInfo } from "./request";
+import { Mail, OutboxMailer } from "./mail";
+import { Ai } from "./ai";
+import { Auth } from "./services";
+import { LEARNER_TABLES, Sync } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
 /**
@@ -80,15 +82,16 @@ export const AppLive = Layer.effect(
   App,
   Effect.gen(function* () {
     const config = yield* AppConfig;
-    const sql = yield* Database;
+    const sql = yield* PgClient.PgClient;
     const mailer = yield* Mail;
     const auth = yield* Auth;
     const ai = yield* Ai;
+    const sync = yield* Sync;
     const headers = securityHeaders([...new Set(config.observability.connect)], config.appUrl.startsWith("https://"), !!config.turnstile.siteKey);
 
     const session = Effect.gen(function* () {
       const { request } = yield* RequestContext;
-      const s = yield* promise("Auth.getSession", () => auth.api.getSession({ headers: request.headers }));
+      const s = yield* inBetterAuth("Auth.getSession", () => auth.api.getSession({ headers: request.headers }));
       if (!s) return null;
       // A session Better Auth hands over without a usable user is a bug: a defect (500).
       const user = yield* Schema.decodeUnknownEffect(SessionUser)(s.user).pipe(Effect.orDie);
@@ -141,7 +144,8 @@ export const AppLive = Layer.effect(
     const routes = [
       at("/health", {
         GET: Effect.gen(function* () {
-          yield* promise("Database.ping", () => sql`select 1`);
+          // A database that does not answer is a 500 (and a Sentry report), as before.
+          yield* Effect.orDie(sql`select 1`);
           return json({ ok: true, release: config.release });
         }),
       }),
@@ -156,7 +160,7 @@ export const AppLive = Layer.effect(
         GET: Effect.gen(function* () {
           const user = yield* requireUser();
           const { request } = yield* RequestContext;
-          return webResponse(yield* promise("Sync.proxyShape", () => proxyShape(request, user.id, config)));
+          return webResponse(yield* sync.proxyShape(request, user.id));
         }),
       }),
       at("/api/write", {
@@ -169,9 +173,7 @@ export const AppLive = Layer.effect(
           // "review.insert:3 course.upsert:1": what the batch was, searchable as text.
           yield* event({ writes: mutations.length, writeTypes: Object.entries(types).map(([k, n]) => `${k}:${n}`).join(" ") });
           // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
-          const result = yield* promise("Sync.applyWrites", () =>
-            Sentry.startSpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, () => applyWrites(sql, user.id, mutations)),
-          );
+          const result = yield* sentrySpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, sync.applyWrites(user.id, mutations));
           yield* event({ writeChanged: result.changed });
           return json(result);
         }),
@@ -180,7 +182,7 @@ export const AppLive = Layer.effect(
       at("/api/me", {
         GET: Effect.gen(function* () {
           const user = yield* requireUser();
-          const credits = yield* promise("Ai.credits", () => ai.credits(user.id));
+          const credits = yield* ai.credits(user.id);
           return json({ id: user.id, email: user.isAnonymous ? null : user.email, anonymous: !!user.isAnonymous, credits, ai: ai.enabled } satisfies Me);
         }),
       }),
@@ -188,14 +190,14 @@ export const AppLive = Layer.effect(
         POST: Effect.gen(function* () {
           const user = yield* requireUser({ real: true });
           const input = yield* body(MineIn);
-          return json(yield* promise("Ai.mine", () => ai.mine(user.id, input)));
+          return json(yield* ai.mine(user.id, input));
         }),
       }),
       at("/api/ai/examples", {
         POST: Effect.gen(function* () {
           const user = yield* requireUser({ real: true });
           const input = yield* body(ExamplesIn);
-          return json(yield* promise("Ai.examples", () => ai.examples(user.id, input)));
+          return json(yield* ai.examples(user.id, input));
         }),
       }),
 
@@ -203,7 +205,7 @@ export const AppLive = Layer.effect(
         POST: Effect.gen(function* () {
           const user = yield* requireUser();
           // Everything the learner has cascades from the user row.
-          yield* promise("Database.deleteUser", () => sql`delete from "user" where id = ${user.id}`);
+          yield* Effect.orDie(sql`delete from "user" where id = ${user.id}`);
           yield* event({ accountDeleted: true });
           return json({ ok: true });
         }),
@@ -227,7 +229,7 @@ export const AppLive = Layer.effect(
           const { request } = yield* RequestContext;
           const table = new URL(request.url).searchParams.get("table");
           if (!table || !LEARNER_TABLES.includes(table)) return yield* refuse({ error: "unknown_table" });
-          return json(yield* promise("Database.rows", () => sql`select * from ${sql(table)} where user_id = ${user.id}`));
+          return json(yield* Effect.orDie(sql`select * from ${sql(table)} where user_id = ${user.id}`));
         }),
       }));
     }
@@ -266,7 +268,7 @@ export const AppLive = Layer.effect(
       Effect.gen(function* () {
         if (url.pathname.startsWith("/api/auth/")) {
           if (!authEndpoints[url.pathname]?.includes(req.method)) return yield* refuse({ error: "not_found" });
-          return webResponse(yield* promise("Auth.handler", () => auth.handler(req)));
+          return webResponse(yield* inBetterAuth("Auth.handler", () => auth.handler(req)));
         }
         if (req.method !== "GET" && req.method !== "HEAD" && url.pathname.startsWith("/api/")) yield* requireSameOrigin(req);
         return yield* router.pipe(

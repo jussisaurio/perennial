@@ -1,4 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
+import { Effect } from "effect";
 import { SENTENCES_PER_WORD } from "../src/prompts";
 import { QUOTA } from "../src/sync";
 import { startApp, stopMockLLM, unique } from "./helpers";
@@ -28,17 +29,17 @@ test("every model call is logged with its cost and prompt version", async () => 
   await t.call("/api/ai/examples", { lang: "de", words: [{ lemma: "Haus", gloss: "house", seen: [] }], known: [] }, cookie);
   const [row] = await t.sql`select task, model, prompt_version, ok, usd from ai_request where user_id = ${id}`;
   expect(row).toMatchObject({ task: "examples", model: "claude-haiku-4-5", ok: true });
-  expect(row.prompt_version).toBeTruthy();
-  expect(Number(row.usd)).toBeGreaterThan(0);
+  expect(row?.prompt_version).toBeTruthy();
+  expect(Number(row?.usd)).toBeGreaterThan(0);
 });
 
 test("AI needs an account: anonymous learners and bad input are refused before any model call", async () => {
   const anon = await t.anonymous();
   expect((await t.call("/api/ai/mine", { lang: "es", items: [item("x")], known: [] }, anon)).status).toBe(403);
   const cookie = await t.signIn(unique("bad"));
-  const before = await t.app.ai.spentThisMonth();
+  const before = await Effect.runPromise(t.app.ai.spentThisMonth());
   expect((await t.call("/api/ai/mine", { lang: "fr", items: [item("le")], known: [] }, cookie)).status).toBe(422);
-  expect(await t.app.ai.spentThisMonth()).toBe(before);
+  expect(await Effect.runPromise(t.app.ai.spentThisMonth())).toBe(before);
 });
 
 test("past the monthly budget, AI pauses for everyone and says until when", async () => {

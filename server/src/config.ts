@@ -15,6 +15,8 @@ export interface Config {
   databaseUrl: string;
   /** The built web app (served by this process in production). */
   staticDir: string;
+  /** decks/: each course's deck.json, whose word ids writes are checked against. */
+  decksDir: string;
   /** Public URL of the web app: emails, auth callbacks, cookie origin. */
   appUrl: string;
   /** Signs sessions and cookies (Better Auth). */
@@ -69,6 +71,7 @@ const env = EnvConfig.all({
   PORT: variable("PORT"),
   DATABASE_URL: variable("DATABASE_URL"),
   PERENNIAL_STATIC: variable("PERENNIAL_STATIC"),
+  PERENNIAL_DECKS: variable("PERENNIAL_DECKS"),
   APP_URL: variable("APP_URL"),
   BETTER_AUTH_SECRET: variable("BETTER_AUTH_SECRET"),
   RAILWAY_GIT_COMMIT_SHA: variable("RAILWAY_GIT_COMMIT_SHA"),
@@ -105,6 +108,7 @@ const settings = env.pipe(
       port: num(env.PORT, 8787),
       databaseUrl: env.DATABASE_URL ?? "postgres://perennial:perennial@localhost:25432/perennial",
       staticDir: env.PERENNIAL_STATIC ?? fileURLToPath(new URL("../../web/dist", import.meta.url)),
+      decksDir: env.PERENNIAL_DECKS ?? fileURLToPath(new URL("../../decks", import.meta.url)),
       appUrl: (env.APP_URL ?? "http://localhost:5173").replace(/\/$/, ""),
       secret: env.BETTER_AUTH_SECRET ?? DEFAULT_SECRET,
       production,

@@ -3,33 +3,46 @@
 // the learner's own words (user_word), so nobody can fill their garden with
 // made-up words through the API.
 
-import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { Context, Effect, Layer, Schema } from "effect";
+import { COURSE_LANGS } from "perennial-contract";
+import { AppConfig } from "./config";
 
-const DECKS = process.env.PERENNIAL_DECKS ?? fileURLToPath(new URL("../../decks", import.meta.url));
+/** The part of decks/<lang>/deck.json read here. */
+const DeckIds = Schema.fromJsonString(Schema.Struct({ words: Schema.Array(Schema.Struct({ id: Schema.String })) }));
 
-let byLang: Map<string, Set<string>> | null = null;
+/** A course's deck is missing or not a deck: the server cannot check writes, so it does not start. */
+export class DeckUnreadable extends Schema.TaggedError<DeckUnreadable>()("DeckUnreadable", { message: Schema.String }) {}
 
-/** Deck word ids by language, read once from decks/<lang>/deck.json. */
-export function deckWords(): Map<string, Set<string>> {
-  if (byLang) return byLang;
-  byLang = new Map();
-  for (const lang of readdirSync(DECKS, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)) {
-    try {
-      const deck = JSON.parse(readFileSync(join(DECKS, lang, "deck.json"), "utf8")) as { words: { id: string }[] };
-      byLang.set(lang, new Set(deck.words.map((w) => w.id)));
-    } catch {
-      // A folder without a built deck: no words for it.
-    }
+export class Words extends Context.Service<
+  Words,
+  {
+    /** A deck word, in `lang` if given (any language otherwise). */
+    readonly isDeckWord: (id: string, lang?: string) => boolean;
+    /** A course language (it has a deck). */
+    readonly hasDeck: (lang: string) => boolean;
   }
-  return byLang;
-}
+>()("perennial/Words") {}
 
-/** A deck word, in `lang` if given (any language otherwise). */
-export function isDeckWord(id: string, lang?: string): boolean {
-  const decks = deckWords();
-  if (lang) return decks.get(lang)?.has(id) ?? false;
-  for (const ids of decks.values()) if (ids.has(id)) return true;
-  return false;
-}
+/** Every course's deck word ids, read once at start. */
+export const WordsLive = Layer.effect(
+  Words,
+  Effect.gen(function* () {
+    const { decksDir } = yield* AppConfig;
+    const byLang = new Map<string, Set<string>>();
+    for (const lang of COURSE_LANGS) {
+      const file = join(decksDir, lang, "deck.json");
+      const text = yield* Effect.tryPromise({ try: () => Bun.file(file).text(), catch: (e) => new DeckUnreadable({ message: `${file}: ${String(e)}` }) });
+      const deck = yield* Schema.decodeUnknownEffect(DeckIds)(text).pipe(Effect.mapError((e) => new DeckUnreadable({ message: `${file}: ${e.message}` })));
+      byLang.set(lang, new Set(deck.words.map((w) => w.id)));
+    }
+    return Words.of({
+      isDeckWord: (id, lang) => {
+        if (lang) return byLang.get(lang)?.has(id) ?? false; // not a course language: not a deck word
+        for (const ids of byLang.values()) if (ids.has(id)) return true;
+        return false;
+      },
+      hasDeck: (lang) => byLang.has(lang),
+    });
+  }),
+);

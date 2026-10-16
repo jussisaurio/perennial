@@ -45,5 +45,5 @@ test("Better Auth sees the computed IP: a direct request can't choose its own", 
   const r = await t.call("/api/auth/sign-in/anonymous", {}, undefined, { "x-real-ip": "198.51.100.9", "cf-connecting-ip": "10.9.9.9" });
   expect(r.status).toBe(200);
   const [row] = await t.sql`select "ipAddress" from session order by "createdAt" desc limit 1`;
-  expect(row.ipAddress).toBe("198.51.100.9");
+  expect(row?.ipAddress).toBe("198.51.100.9");
 });

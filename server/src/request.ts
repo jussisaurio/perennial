@@ -4,7 +4,7 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import * as Sentry from "@sentry/bun";
-import { Context, Effect } from "effect";
+import { Context, Effect, Exit } from "effect";
 import { ApiError } from "./http";
 
 type Fields = Record<string, unknown>;
@@ -35,26 +35,53 @@ export function record(ctx: RequestInfo, fields: Fields) {
   ctx.sentry.rootSpan?.setAttributes(attrs);
 }
 
-/** Run `fn` with the request's Sentry scopes active, so what it reports or traces belongs to the request. */
+/**
+ * Run `fn` as part of the request's trace: its Sentry scopes, and its root
+ * span as the active span, so what `fn` reports or traces belongs to the
+ * request. All three are given explicitly. Sentry keeps them in
+ * AsyncLocalStorage, and a fiber can run in another request's: a fiber
+ * waiting for a pooled connection or a semaphore resumes in the callback of
+ * the fiber that released it.
+ */
 export const inSentryScope = <T>(ctx: RequestInfo, fn: () => T): T =>
-  Sentry.withIsolationScope(ctx.sentry.isolationScope, () => Sentry.withScope(ctx.sentry.scope, fn));
+  // null (Sentry is off): no active span, so nothing is taken from AsyncLocalStorage.
+  Sentry.withIsolationScope(ctx.sentry.isolationScope, () => Sentry.withScope(ctx.sentry.scope, () => Sentry.withActiveSpan(ctx.sentry.rootSpan ?? null, fn)));
 
-// Today's Promise modules (Better Auth and its hooks in auth.ts, sync.ts,
-// ai.ts) call event() and log from their own promise chains, and Sentry finds
-// the active span through AsyncLocalStorage. Effect fibers do not carry
-// AsyncLocalStorage. So `promise` runs them inside a small AsyncLocalStorage
-// scope that holds the request, local to this bridge. It goes when those
-// modules become Effect services (#322, part 2).
+/**
+ * A Sentry span around `effect`, a child of the request's root span (made in
+ * inSentryScope, which sets the root as the active span). It ends when the effect does, marked as an
+ * error if the effect failed, as Sentry.startSpan marks a throw.
+ */
+export const sentrySpan = <A, E, R>(options: { name: string; op: string; attributes?: Record<string, string | number | boolean> }, effect: Effect.Effect<A, E, R>) =>
+  RequestContext.use((ctx) =>
+    Effect.acquireUseRelease(
+      Effect.sync(() => inSentryScope(ctx, () => Sentry.startInactiveSpan(options))),
+      () => effect,
+      (span, exit) =>
+        Effect.sync(() => {
+          // 2: Sentry's SPAN_STATUS_ERROR (not exported by @sentry/bun).
+          if (Exit.isFailure(exit)) span.setStatus({ code: 2, message: "internal_error" });
+          span.end();
+        }),
+    ),
+  );
+
+// Better Auth is Promise code: its hooks (auth.ts) call event() and log from
+// its own promise chains, and Sentry's pg spans find their parent through
+// AsyncLocalStorage. Effect fibers do not carry AsyncLocalStorage. So
+// `inBetterAuth` runs it inside a small AsyncLocalStorage scope that holds the
+// request, local to this bridge, set at the start of each call. Nothing else
+// uses the bridge: our own code passes the request through Effect.
 const bridge = new AsyncLocalStorage<RequestInfo>();
 
-/** The request whose Promise code is running now (see `promise`), for log.ts. */
+/** The request whose Better Auth call is running now (see `inBetterAuth`), for log.ts. */
 export const bridgedRequest = () => bridge.getStore();
 
 /**
- * Call a Promise module for this request, as a named effect. It refuses with
- * ApiError (typed); anything else it throws is a bug: a defect, answered 500.
+ * Call Better Auth for this request, as a named effect. A refusal of ours
+ * (ApiError) stays typed; anything else it throws is a bug: a defect, answered 500.
  */
-export const promise = <A>(name: string, run: () => Promise<A>): Effect.Effect<A, ApiError, RequestContext> =>
+export const inBetterAuth = <A>(name: string, run: () => Promise<A>): Effect.Effect<A, ApiError, RequestContext> =>
   RequestContext.use((ctx) =>
     Effect.tryPromise({ try: () => bridge.run(ctx, () => inSentryScope(ctx, run)), catch: (e) => e }).pipe(
       Effect.catch((e) => (e instanceof ApiError ? Effect.fail(e) : Effect.die(e))),

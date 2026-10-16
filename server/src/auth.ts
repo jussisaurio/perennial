@@ -7,45 +7,52 @@
 // then deletes the anonymous user. We move the learner's data first, in one
 // transaction, merging with what the real account already has.
 
-import type { SQL } from "bun";
+import { PgClient } from "@effect/sql-pg";
 import { betterAuth } from "better-auth";
 import { anonymous, captcha, emailOTP } from "better-auth/plugins";
+import { Effect } from "effect";
 import { Pool } from "pg";
 import type { Config } from "./config";
 import { CLIENT_IP_HEADER } from "./clientIp";
+import { theRow } from "./db";
 import { event, log } from "./log";
 import type { Mailer } from "./mail";
 
-async function mergeUsers(sql: SQL, from: string, to: string) {
+const mergeUsers = Effect.fn("Auth.mergeUsers")(function* (from: string, to: string) {
   if (from === to) return;
-  await sql.begin(async (tx) => {
-    // Better Auth deletes the anonymous user after this transaction, and its
-    // rows go with it. So: wait for writes already in progress (they lock the
-    // row too, sync.ts applyWrites) and move their rows, and end the anonymous
-    // sessions so a write arriving later is refused, not lost.
-    await tx`select id from "user" where id = ${from} for update`;
-    await tx`delete from session where "userId" = ${from}`;
-    // Rows with a globally unique id (made on the client): just change the owner.
-    await tx`update review set user_id = ${to} where user_id = ${from}`;
-    await tx`update user_word set user_id = ${to} where user_id = ${from}`;
-    await tx`update user_sentence set user_id = ${to} where user_id = ${from}`;
-    // Rows with a natural key: the newer one wins.
-    await tx`insert into word_state (user_id, word_id, status, queued_at, updated_at)
-      select ${to}, word_id, status, queued_at, updated_at from word_state where user_id = ${from}
-      on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
-      where excluded.updated_at > word_state.updated_at`;
-    // A course the real account already has keeps its settings; a door opened on either stays open.
-    await tx`insert into course (user_id, lang, minutes, retention, door_open, created_at)
-      select ${to}, lang, minutes, retention, door_open, created_at from course where user_id = ${from}
-      on conflict (user_id, lang) do update set door_open = course.door_open or excluded.door_open`;
-    await tx`insert into ai_usage (user_id, period, used)
-      select ${to}, period, used from ai_usage where user_id = ${from}
-      on conflict (user_id, period) do update set used = ai_usage.used + excluded.used`;
-  });
-}
+  const sql = yield* PgClient.PgClient;
+  yield* sql.withTransaction(
+    Effect.gen(function* () {
+      // Better Auth deletes the anonymous user after this transaction, and its
+      // rows go with it. So: wait for writes already in progress (they lock the
+      // row too, sync.ts applyWrites) and move their rows, and end the anonymous
+      // sessions so a write arriving later is refused, not lost.
+      yield* sql`select id from "user" where id = ${from} for update`;
+      yield* sql`delete from session where "userId" = ${from}`;
+      // Rows with a globally unique id (made on the client): just change the owner.
+      yield* sql`update review set user_id = ${to} where user_id = ${from}`;
+      yield* sql`update user_word set user_id = ${to} where user_id = ${from}`;
+      yield* sql`update user_sentence set user_id = ${to} where user_id = ${from}`;
+      // Rows with a natural key: the newer one wins.
+      yield* sql`insert into word_state (user_id, word_id, status, queued_at, updated_at)
+        select ${to}, word_id, status, queued_at, updated_at from word_state where user_id = ${from}
+        on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
+        where excluded.updated_at > word_state.updated_at`;
+      // A course the real account already has keeps its settings; a door opened on either stays open.
+      yield* sql`insert into course (user_id, lang, minutes, retention, door_open, created_at)
+        select ${to}, lang, minutes, retention, door_open, created_at from course where user_id = ${from}
+        on conflict (user_id, lang) do update set door_open = course.door_open or excluded.door_open`;
+      yield* sql`insert into ai_usage (user_id, period, used)
+        select ${to}, period, used from ai_usage where user_id = ${from}
+        on conflict (user_id, period) do update set used = ai_usage.used + excluded.used`;
+    }),
+  );
+});
 
-export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
-  // Better Auth has no adapter for Bun's Postgres client; it gets a small pg pool.
+export function createAuth(config: Config, sql: PgClient.PgClient, mailer: Mailer) {
+  /** Our queries, from Better Auth's Promise callbacks; a failure rejects, as a throw did. */
+  const run = <A, E>(effect: Effect.Effect<A, E, PgClient.PgClient>) => Effect.runPromise(Effect.provideService(effect, PgClient.PgClient, sql));
+  // Better Auth has no adapter for sql-pg (and sql-pg cannot share a pg pool); it gets a small pg pool of its own.
   const pool = new Pool({ connectionString: config.databaseUrl, max: 4 });
   const auth = betterAuth({
     database: pool,
@@ -98,17 +105,17 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
         resendStrategy: "reuse",
         async sendVerificationOTP({ email, otp }) {
           // The response is the same either way, so a capped address learns nothing.
-          if (!(await mayMail(sql, config, email))) {
+          if (!(await run(mayMail(config, email)))) {
             event({ otp: "capped" });
             return log.warn("sign-in code not sent: per-email limit", {});
           }
           event({ otp: "sent" });
-          await mailer.send(email, `${otp} is your Perennial code`, `Your sign-in code is ${otp}.\n\nIt works for 10 minutes. If you did not ask for it, you can ignore this email.`);
+          await Effect.runPromise(mailer.send(email, `${otp} is your Perennial code`, `Your sign-in code is ${otp}.\n\nIt works for 10 minutes. If you did not ask for it, you can ignore this email.`));
         },
       }),
       anonymous({
         async onLinkAccount({ anonymousUser, newUser }) {
-          await mergeUsers(sql, anonymousUser.user.id, newUser.user.id);
+          await run(mergeUsers(anonymousUser.user.id, newUser.user.id));
           event({ linkedFrom: anonymousUser.user.id });
         },
       }),
@@ -123,14 +130,15 @@ export function createAuth(config: Config, sql: SQL, mailer: Mailer) {
 }
 
 /** Records a code for this address, unless it already had its share (per 15 minutes and per day). */
-async function mayMail(sql: SQL, config: Config, email: string) {
+const mayMail = Effect.fn("Auth.mayMail")(function* (config: Config, email: string) {
+  const sql = yield* PgClient.PgClient;
   // Keyed with the server secret: without it, a guessed address can't be checked against the log.
   const hash = new Bun.CryptoHasher("sha256", config.secret).update(email.trim().toLowerCase()).digest("hex");
-  const [{ short, day }] = await sql`select
+  const { short, day } = yield* theRow(sql<{ short: number; day: number }>`select
       count(*) filter (where sent_at > now() - interval '15 minutes')::int as short,
       count(*)::int as day
-    from mail_log where email_hash = ${hash} and sent_at > now() - interval '1 day'`;
+    from mail_log where email_hash = ${hash} and sent_at > now() - interval '1 day'`);
   if (short >= config.codesPerEmail.short || day >= config.codesPerEmail.day) return false;
-  await sql`insert into mail_log (email_hash) values (${hash})`;
+  yield* sql`insert into mail_log (email_hash) values (${hash})`;
   return true;
-}
+});
