@@ -4,6 +4,7 @@ import { serverRows, standByLeave as standBy } from "./helpers";
 // #351, leave it out: carry crumbs from the basket on the shed's step to the
 // bowl by the gate; after a night, prints lead from the bowl to what a guest
 // left; pick it up and hang it on the shed's shelf. Days are calendar days.
+// On the pinned day, with crumbs, the sparrow leaves a twig (garden/leave.ts: a seed of the day and the thing).
 
 /** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
 type LeaveScene = {
@@ -48,7 +49,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
 });
 
-test("day 1, three plants: carry the crumbs to the bowl by tapping; the next day prints lead to a feather; pick it up, hang it, and it stays after a reload", async ({ page }) => {
+test("day 1, three plants: carry the crumbs to the bowl by tapping; the next day prints lead to what the sparrow left; pick it up, hang it, and it stays after a reload", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto("/?demo=es:3#/today");
@@ -74,27 +75,27 @@ test("day 1, three plants: carry the crumbs to the bowl by tapping; the next day
   await comeBack(page, new Date("2026-06-01T23:58:00"));
   expect((await leaveNow(page)).came).toBeNull();
 
-  // The next morning, one night later: a sparrow came; prints lead from the bowl to its feather.
+  // The next morning, one night later: a sparrow came; prints lead from the bowl to what it left.
   await comeBack(page, daysLater(1));
-  expect(await leaveNow(page)).toMatchObject({ came: { guest: "sparrow", find: "feather" }, prints: true });
+  expect(await leaveNow(page)).toMatchObject({ came: { guest: "sparrow", find: "twig" }, prints: true });
   // Walking the garden that day fixes what came, on every device.
   await expect.poll(async () => (await savedLeft(page))?.bowl?.seen, { timeout: 15_000 }).not.toBeNull();
-  // Follow the prints by tapping the bowl: you walk to the feather. Tap it to pick it up.
+  // Follow the prints by tapping the bowl: you walk to the twig. Tap it to pick it up.
   await page.mouse.click(...(await standBy(page, "bowl", 0.8)));
   await expect(page.getByRole("button", { name: "Pick it up" })).toBeVisible({ timeout: 15_000 });
   await page.mouse.click(...(await standBy(page, "find", 1.2)));
   // Its word and meaning, once, over where it lay.
-  await expect(page.locator(".gw-tag").filter({ hasText: "la pluma" })).toBeVisible();
-  expect(await leaveNow(page)).toMatchObject({ came: null, prints: false, hand: "shelf", left: { kept: ["feather"] } });
+  await expect(page.locator(".gw-tag").filter({ hasText: "la ramita" })).toBeVisible();
+  expect(await leaveNow(page)).toMatchObject({ came: null, prints: false, hand: "shelf", left: { kept: ["twig"] } });
   // Hang it on the shelf: tap a hook.
   await page.mouse.click(...(await standBy(page, "shelf", 1.2)));
-  await expect.poll(async () => (await leaveNow(page)).left.hooks.includes("feather"), { timeout: 15_000 }).toBe(true);
-  await expect.poll(async () => (await savedLeft(page))?.hooks.includes("feather"), { timeout: 15_000 }).toBe(true);
+  await expect.poll(async () => (await leaveNow(page)).left.hooks.includes("twig"), { timeout: 15_000 }).toBe(true);
+  await expect.poll(async () => (await savedLeft(page))?.hooks.includes("twig"), { timeout: 15_000 }).toBe(true);
 
-  // Weeks later, after a reload: the feather is still on the shelf, and nothing else came, as nothing was left.
+  // Weeks later, after a reload: the twig is still on the shelf, and nothing else came, as nothing was left.
   await comeBack(page, daysLater(20));
-  expect(await leaveNow(page)).toMatchObject({ came: null, left: { kept: ["feather"] } });
-  expect((await leaveNow(page)).left.hooks).toContain("feather");
+  expect(await leaveNow(page)).toMatchObject({ came: null, left: { kept: ["twig"] } });
+  expect((await leaveNow(page)).left.hooks).toContain("twig");
   expect(errors).toEqual([]);
 });
 
@@ -137,8 +138,8 @@ test("with a screen reader: the buttons say what they do, and the status says wh
   await expect(act("Pick it up")).toBeVisible({ timeout: 15_000 });
   await expect(status).toHaveText("Something lies here.");
   await act("Pick it up").click();
-  await expect(status).toHaveText("You found la pluma: feather.");
+  await expect(status).toHaveText("You found la ramita: twig.");
   await standBy(page, "shelf", 1);
   await act("Hang it on the shelf").click();
-  await expect.poll(async () => (await leaveNow(page)).left.hooks).toEqual(["feather", null, null]);
+  await expect.poll(async () => (await leaveNow(page)).left.hooks).toEqual(["twig", null, null]);
 });

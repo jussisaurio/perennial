@@ -25,10 +25,16 @@ describe("resolve: the more nights away, the stranger the guest", () => {
     expect(bowlNow(crumbs(), DAY(), NONE)).toEqual({ kind: "holds", thing: "crumbs" });
   });
 
-  test("1 night: a sparrow, and a feather by the gate post", () => {
-    expect(after(1)).toMatchObject({ row: { guest: "sparrow", at: "post" }, find: "feather", nights: 1 });
+  test("1 night: a sparrow, and a feather, a twig or a seed by the gate post", () => {
+    expect(after(1)).toMatchObject({ row: { guest: "sparrow", at: "post" }, nights: 1 });
+    expect(["feather", "twig", "seed"]).toContain(after(1)!.find);
     // Two nights are still the first tier.
     expect(after(2)?.row.guest).toBe("sparrow");
+  });
+
+  test("a learner who comes back every day does not find the same thing every time", () => {
+    const finds = new Set(Array.from({ length: 30 }, (_, i) => after(1, NONE, crumbs(DAY() + i))!.find));
+    expect([...finds].sort()).toEqual(["feather", "seed", "twig"]);
   });
 
   test("3 nights: the mouse, with an acorn or a button by the shed", () => {
@@ -101,10 +107,12 @@ describe("the calendar day turns over at midnight, local time", () => {
 });
 
 describe("nothing is lost: a find waits, the same, until it is picked up", () => {
-  test("once the garden is walked after the night, the nights stop counting: the feather is still a feather weeks later", () => {
+  test("once the garden is walked after the night, the nights stop counting: the sparrow's find is still there weeks later", () => {
     const seen = walked(crumbs(), DAY() + 1)!;
     expect(seen.bowl!.seen).toBe(DAY() + 1);
-    expect(resolve(seen, { day: DAY() + 30 }, NONE)).toMatchObject({ find: "feather", nights: 1 });
+    const first = resolve(seen, { day: DAY() + 1 }, NONE)!;
+    expect(resolve(seen, { day: DAY() + 30 }, NONE)).toEqual(first);
+    expect(first.row.guest).toBe("sparrow");
     // Walked again: nothing changes.
     expect(walked(seen, DAY() + 5)).toBeNull();
   });

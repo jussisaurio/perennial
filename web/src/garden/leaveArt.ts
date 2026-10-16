@@ -60,6 +60,14 @@ export const FIND_ART: Record<Find, PixelArt> = {
     rows: ["....oo", "...oFo", "..oFfo", "..oFfo", ".oFfo.", ".oFfo.", "oFfo..", "oFo...", "oo....", ".s....", "s....."],
     pal: { o: "#5a4a3a", F: "#e4d8c0", f: "#a08a6a", s: "#6a5a44" },
   },
+  twig: {
+    rows: ["......o.", ".....oTo", "..o.oTo.", ".oTooTo.", "..oTTo..", "..oTo...", ".oTo....", "oTo.....", ".o......"],
+    pal: { o: "#4a3020", T: "#8a6a44" },
+  },
+  seed: {
+    rows: [".oo.", "oSso", "oSso", "oSso", "oSso", ".oo."],
+    pal: { o: "#2a2420", S: "#5a524a", s: "#c8c0b0" },
+  },
   acorn: {
     rows: ["..s...", ".oooo.", "oCcCCo", "oooooo", "oNNNNo", "oNnNNo", ".oNNo.", "..oo.."],
     pal: { o: INK, s: "#5a3a20", C: "#8a6a3c", c: "#6e522c", N: "#c08a4a", n: "#e8bc7a" },

@@ -28,6 +28,8 @@ export const FRUIT_KINDS = ORCHARD_WORDS.filter((k): k is FruitKind => k !== "tr
 /** What a guest leaves, to find and keep. Ids are stable: they sync (contract/garden.ts `kept`). */
 export const FINDS = {
   feather: { words: { es: "la pluma", de: "die Feder" }, gloss: "feather" },
+  twig: { words: { es: "la ramita", de: "der Zweig" }, gloss: "twig" },
+  seed: { words: { es: "la semilla", de: "der Samen" }, gloss: "seed" },
   acorn: { words: { es: "la bellota", de: "die Eichel" }, gloss: "acorn" },
   button: { words: { es: "el botón", de: "der Knopf" }, gloss: "button" },
   bone: { words: { es: "el hueso", de: "der Knochen" }, gloss: "bone" },
@@ -58,10 +60,12 @@ export interface Row {
 /**
  * The bowl's table. More rows (other places, seasons, the garden's other
  * visitors) are more lines here. The dog shares the three-night tier with the
- * mouse once it lives in the garden: the seed picks one of the two.
+ * mouse once it lives in the garden: the seed picks one of the two. The
+ * sparrow, who comes most, leaves one of three things, so a learner who comes
+ * back every day does not find the same one every time.
  */
 export const ROWS: readonly Row[] = [
-  { nights: 1, guest: "sparrow", finds: ["feather"], at: "post" },
+  { nights: 1, guest: "sparrow", finds: ["feather", "twig", "seed"], at: "post" },
   { nights: 3, guest: "mouse", finds: ["acorn", "button"], at: "shed" },
   { nights: 3, needs: "dog", guest: "dog", finds: ["bone"], at: "hedge" },
   { nights: 14, guest: "hedgehog", finds: ["leaf"], at: "corner" },

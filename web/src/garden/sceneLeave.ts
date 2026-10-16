@@ -7,7 +7,7 @@
 // action button, and when it reports what is in reach.
 
 import * as THREE from "three";
-import { basketAt, bowlAt, bowlNow, findAt, hang, isFind, leave, onBoard, pickUp, shedAt, type BasketThing, type BowlNow, type Find, type Left, type LeaveWalk, type Outcome } from "./leave";
+import { basketAt, bowlAt, bowlNow, findAt, FINDS, hang, isFind, leave, onBoard, pickUp, shedAt, type BasketThing, type BowlNow, type Find, type Left, type LeaveWalk, type Outcome } from "./leave";
 import { rayBox, type Ray } from "./scenery";
 import { sprites, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
@@ -37,8 +37,8 @@ const GUEST_SIZE = { sparrow: 0.5, mouse: 0.45, hedgehog: 0.7, fox: 1.1 } as con
 const PRINT = { size: 0.14, step: 0.32, side: 0.05 };
 /** The shed: its back wall is this tall, the shelf's board and the hooks this high, the hooks this far apart along the wall. */
 const SHED = { h: 1.7, half: 0.8, depth: 0.7, step: 0.08, board: 0.92, hook: 1.38, gap: 0.45 };
-/** The board holds this many kept things in a row. */
-const BOARD_SLOTS = 6;
+/** The board has room for every kind of find, in a row: nothing kept is ever out of sight. */
+const BOARD_SLOTS = Object.keys(FINDS).length;
 
 type SpriteMesh = THREE.Mesh<THREE.InstancedBufferGeometry, THREE.ShaderMaterial>;
 type XZ = { x: number; z: number };
