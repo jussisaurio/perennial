@@ -16,6 +16,7 @@ import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
 import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
+import { Door, DOOR, DOOR_REACH, GLINT, KEY_REACH } from "./sceneDoor";
 import type { Conditions } from "./scenePart";
 
 export type TimeOfDay = "day" | "dusk" | "night";
@@ -96,17 +97,6 @@ const PLANT_SCALE = 0.85;
 const BED_H = 0.28;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
-/** The far hills: a ring of this radius and height, its middle this high, the texture repeated this often round it. */
-/** The door in the hedge: its height and thickness, how far it swings open (it swings out, into the orchard), and for how long. */
-const DOOR = { h: 2.05, thick: 0.06, open: Math.PI / 2, swing: 1.4 };
-/** The keyhole, from the door's hinge (texture door(): its iron plate's middle). */
-const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
-/** Near enough to the door (metres from its middle) to be offered its button. */
-const DOOR_REACH = 2.6;
-/** Near enough to the hidden key to be offered "Pick up the key" (m). */
-const KEY_REACH = 2;
-/** The key's glint: seen from this near (m), a flash this long (s) this often (s). Nothing calls to the learner from across the garden. */
-const GLINT = { near: 7, flash: 0.5, every: 3.2 };
 
 /** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. */
 const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
@@ -303,7 +293,7 @@ function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeometry {
 
 /** Instanced camera-facing quads, bottom-centre anchored, from one atlas. `lying`: flat on the ground instead, centred, turned by `droop` (LYING_VERT). */
 export type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
-function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, lying = false) {
+export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, lying = false) {
   const geo = instanced(lying ? new THREE.PlaneGeometry(w, h) : standingQuad(w, h));
   const pos = new Float32Array(items.length * 3);
   const uv = new Float32Array(items.length * 4);
@@ -374,6 +364,8 @@ export interface BuildCtx {
   /** What a tap can meet (scenery.ts): every part adds its own boxes and discs here as it builds. */
   hitBoxes: HitBox[];
   hitDiscs: HitDisc[];
+  /** Every sprite shader material a part makes: GardenScene.tick sets their time and sway uniforms, and tints them for the time of day. */
+  mats: Set<THREE.ShaderMaterial>;
 }
 
 /** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */
@@ -454,20 +446,8 @@ export class GardenScene {
   private perk = { i: -1, at: 0, n: -1 };
   /** The sleeping bloom's z's, shown at night. */
   private snore: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
-  /**
-   * The door in the hedge (#315). "key": the key is hidden in the garden;
-   * "held": the learner picked it up in this walk; only "open" is saved. `leaf`
-   * turns on its hinge; `swing` is how far through its swing it is (null: not
-   * swinging); `near` is what the viewer was last offered.
-   */
-  private door!: {
-    state: "locked" | "key" | "held" | "open";
-    leaf: THREE.Group;
-    keyhole: { hole: THREE.Mesh; glow: THREE.Sprite };
-    key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null;
-    swing: number | null;
-    near: DoorAction | null;
-  };
+  /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
+  private door = new Door();
   /** The gate's hedge and, once the door opens, the orchard's (#323). */
   private hedge = new Hedge();
   /** The orchard behind the door, once it is open (#315). */
@@ -557,6 +537,7 @@ export class GardenScene {
       scene: this.scene,
       hitBoxes: this.hitBoxes,
       hitDiscs: this.hitDiscs,
+      mats: this.mats,
     };
     this.ctx = c;
     this.buildGround(c);
@@ -658,59 +639,12 @@ export class GardenScene {
    * what is there. Through the keyhole there is only a warm light.
    */
   private buildHedge(c: BuildCtx) {
-    const { L, b, mat, woodTex } = c;
+    const { L } = c;
     this.hedge.build(c);
-    const gx = L.gate.x;
-    const z0 = b.maxZ + HEDGE.gap;
     // Left and right of the door, and over it, closing into an arch.
     this.hedge.addWalls(c, gateHedge(L, DOOR.h), 1);
-    // A wooden frame round the door, on the garden side.
-    const doorTag: [number, number, number] = [gx, DOOR.h + 0.35, z0];
-    for (const s of [-1, 1]) {
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, DOOR.h + 0.14, 0.2), mat(woodTex));
-      post.position.set(gx + s * (DOOR_HALF + 0.06), (DOOR.h + 0.14) / 2, z0);
-      this.scene.add(post);
-      this.hitBoxes.push({ id: "door", min: [gx + s * (DOOR_HALF + 0.06) - 0.06, 0, z0 - 0.1], max: [gx + s * (DOOR_HALF + 0.06) + 0.06, DOOR.h + 0.14, z0 + 0.1], tag: doorTag });
-    }
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(DOOR_HALF * 2 + 0.36, 0.14, 0.22), mat(woodTex));
-    beam.position.set(gx, DOOR.h + 0.14, z0);
-    this.scene.add(beam);
-    this.hitBoxes.push({ id: "door", min: [gx - DOOR_HALF - 0.18, DOOR.h + 0.07, z0 - 0.11], max: [gx + DOOR_HALF + 0.18, DOOR.h + 0.21, z0 + 0.11], tag: doorTag });
-
-    // The door turns on its hinge, at the right as you face it from the garden.
-    const leaf = new THREE.Group();
-    leaf.position.set(gx + DOOR_HALF, 0, z0 + DOOR.thick / 2 + 0.02);
-    const face = mat(T.pixelTexture(T.door()));
-    const planks = new THREE.Mesh(new THREE.BoxGeometry(DOOR_HALF * 2, DOOR.h, DOOR.thick), [mat(woodTex), mat(woodTex), mat(woodTex), mat(woodTex), face, face]);
-    planks.position.set(-DOOR_HALF, DOOR.h / 2, 0);
-    leaf.add(planks);
-    // Warm light through the keyhole, the same by day and night (it is not tinted); at dusk and night a soft glow round it too.
-    const hole = new THREE.Mesh(new THREE.PlaneGeometry(0.035, 0.09), new THREE.MeshBasicMaterial({ color: 0xffd27a, fog: false }));
-    hole.rotation.y = Math.PI;
-    hole.position.set(KEYHOLE.x, KEYHOLE.y, -DOOR.thick / 2 - 0.004);
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glow()), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-    glow.scale.set(0.32, 0.32, 1);
-    glow.position.set(KEYHOLE.x, KEYHOLE.y, -DOOR.thick / 2 - 0.03);
-    leaf.add(hole, glow);
-    this.scene.add(leaf);
-
-    // The key, at this learner's hiding place, far from the door: a small find.
-    const state = this.visitors.door;
-    let key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
-    if (typeof state === "object") {
-      const { x, z } = keyAt(L, state.key);
-      // Lying on the ground, turned a little, as if dropped.
-      const mesh = sprites(T.pixelTexture(T.key()), [{ x, y: 0.03, z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
-      this.mats.add(mesh.material);
-      this.scene.add(mesh);
-      // It catches the light now and then (tick), only when you are near. Not tinted: a glint is bright at dusk too.
-      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glint()), transparent: true, depthWrite: false, fog: false }));
-      glint.position.set(x + 0.08, 0.1, z);
-      glint.visible = false;
-      this.scene.add(glint);
-      key = { mesh, glint, x, z };
-    }
-    this.door = { state: typeof state === "object" ? "key" : state, leaf, keyhole: { hole, glow }, key, swing: null, near: null };
+    // The door frame, its leaf, the keyhole's light, and the key, if this walk has it.
+    this.door.build(c, L, this.visitors.door);
   }
 
   /** Opens the door for good: the swing (none with reduced motion), and what lies behind it is built now. */
