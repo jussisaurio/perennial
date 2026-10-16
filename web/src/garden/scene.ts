@@ -19,7 +19,7 @@ import { Hedge } from "./sceneHedge";
 import { Door, DOOR, DOOR_REACH, GLINT, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { Plants } from "./scenePlants";
-import type { Conditions } from "./scenePart";
+import { TAP_PRIORITY, type Conditions, type TapHit } from "./scenePart";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -588,7 +588,7 @@ export class GardenScene {
       this.showLine(DOOR_LINES.found, [d.key.x, 0.45, d.key.z]);
     } else if (a === "open" && d.state === "held") {
       this.openDoor(true);
-      this.line = null;
+      this.clearTaps({ line: true });
       this.cb.onDoorOpen();
     } else if (a === "try" && d.state !== "open") this.showLine(DOOR_LINES.locked, [L.gate.x, 1.5, z0]);
   }
@@ -596,9 +596,20 @@ export class GardenScene {
   /** Show a quiet line over a point for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
   private showLine(text: string, at: [number, number, number]) {
     this.line = { text, at, until: this.elapsed + 4 };
-    this.sceneryTap = null;
-    this.treeTap = null;
-    this.guests.untap();
+    this.clearTaps({ scenery: true, tree: true, visitor: true });
+  }
+
+  /**
+   * A scenery word, an orchard tree, the door's quiet line and a visitor's
+   * tag take turns showing: setting one clears whichever of the rest is
+   * named here. One place for the rule GardenWalk.tsx used to half-repeat in
+   * four methods (#323).
+   */
+  private clearTaps(which: { scenery?: boolean; tree?: boolean; line?: boolean; visitor?: boolean }) {
+    if (which.scenery) this.sceneryTap = null;
+    if (which.tree) this.treeTap = null;
+    if (which.line) this.line = null;
+    if (which.visitor) this.guests.untap();
   }
 
   /** How far along the ray the nearest hedge is, or Infinity: what lies past it is hidden. */
@@ -620,9 +631,7 @@ export class GardenScene {
   /** Show a tree's word and meaning over it for a few seconds (after a tap). One tag at a time. */
   tapTree(tree: PlacedTree) {
     this.treeTap = { tree, until: this.elapsed + 4 };
-    this.sceneryTap = null;
-    this.line = null;
-    this.guests.untap();
+    this.clearTaps({ scenery: true, line: true, visitor: true });
   }
 
   /** Trees and bushes outside the fence. */
@@ -858,9 +867,7 @@ export class GardenScene {
   /** Show a visitor's tag for a few seconds (after a tap). */
   tapVisitor(id: VisitorId) {
     this.guests.tap(id);
-    this.sceneryTap = null;
-    this.treeTap = null;
-    this.line = null;
+    this.clearTaps({ scenery: true, tree: true, line: true });
   }
 
   /**
@@ -890,9 +897,7 @@ export class GardenScene {
   /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
   tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
     this.sceneryTap = { ...s, until: this.elapsed + 4 };
-    this.treeTap = null;
-    this.guests.untap();
-    this.line = null;
+    this.clearTaps({ tree: true, line: true, visitor: true });
   }
 
   frogAwake(): boolean {
@@ -1004,9 +1009,35 @@ export class GardenScene {
     return this.hedgeAt({ ox: c.x, oy: c.y, oz: c.z, dx: (x - c.x) / d, dy: (y - c.y) / d, dz: (z - c.z) / d }) < d;
   }
 
+  /**
+   * One tap (CSS pixels): the visitor, plant, orchard tree, door or key, or
+   * scenery word it meets, in that order — the chain GardenWalk.tsx used to
+   * run itself, five sequential if-returns (#323). Every pick here is pure
+   * (no side effects), so asking all five and keeping the first match in
+   * TAP_PRIORITY is exactly that chain's short-circuit, as one table instead.
+   */
+  pickAny(cssX: number, cssY: number, cssW: number, cssH: number): TapHit | null {
+    const hits: Partial<Record<TapHit["kind"], TapHit>> = {};
+    const v = this.pickVisitor(cssX, cssY, cssW, cssH);
+    if (v) hits.visitor = { kind: "visitor", v };
+    const p = this.pick(cssX, cssY, cssW, cssH);
+    if (p) hits.plant = { kind: "plant", p };
+    const t = this.pickTree(cssX, cssY, cssW, cssH);
+    if (t) hits.tree = { kind: "tree", t };
+    const d = this.pickDoor(cssX, cssY, cssW, cssH);
+    if (d) hits.door = { kind: "door", a: d };
+    const s = this.pickScenery(cssX, cssY, cssW, cssH);
+    if (s) hits.scenery = { kind: "scenery", s };
+    for (const kind of TAP_PRIORITY) {
+      const hit = hits[kind];
+      if (hit) return hit;
+    }
+    return null;
+  }
+
   select(p: PlacedPlant | null, walkTo = false) {
     this.selected = p;
-    if (p) this.sceneryTap = this.treeTap = null;
+    if (p) this.clearTaps({ scenery: true, tree: true });
     const index = p ? this.layout.plants.indexOf(p) : -1;
     for (const mat of this.mats) mat.uniforms.uSelected.value = index;
     this.marker.visible = !!p;

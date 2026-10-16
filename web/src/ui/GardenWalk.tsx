@@ -194,51 +194,50 @@ export function GardenWalk({
   }, [hint]);
 
   const croaks = useRef(0);
-  // A click or tap (not a drag) picks a visitor, a plant or the garden itself.
+  // A click or tap (not a drag) picks a visitor, a plant, an orchard tree, the
+  // door or key, or the garden itself, in that order (one dispatcher, #323):
+  // whichever it meets first wins, and tapping anything but a plant (or
+  // nothing) still syncs the selection, exactly as the old five-step chain did.
   const onPointerUp = (e: React.PointerEvent) => {
     if (!endDrag() || !scene.current || !wrap.current) return;
     const r = wrap.current.getBoundingClientRect();
-    // A visitor first: its tag shows for a moment and, with sound on, it says its word. No card.
-    const v = scene.current.pickVisitor(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
-    if (v) {
-      // An awake frog croaks one of your known words instead (never its own name), in a bubble and, with sound on, aloud.
-      // Asleep (by day), it is tapped like any visitor: its tag and its word.
-      if (v.id === "frog" && v.word && scene.current.frogAwake()) {
-        const croak = frogCroak(visitors?.known ?? [], lang, croaks.current++);
-        scene.current.say("frog", croak);
-        if (sound) void speak(croak, tag);
+    const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
+    if (hit?.kind !== "visitor") scene.current.select(hit?.kind === "plant" ? hit.p : null);
+    switch (hit?.kind) {
+      case "visitor":
+        // An awake frog croaks one of your known words instead (never its own name), in a bubble and, with sound on, aloud.
+        // Asleep (by day), it is tapped like any visitor: its tag and its word. No card.
+        if (hit.v.id === "frog" && hit.v.word && scene.current.frogAwake()) {
+          const croak = frogCroak(visitors?.known ?? [], lang, croaks.current++);
+          scene.current.say("frog", croak);
+          if (sound) void speak(croak, tag);
+          return;
+        }
+        scene.current.tapVisitor(hit.v.id);
+        if (sound && hit.v.word) void speak(hit.v.word, tag);
         return;
-      }
-      scene.current.tapVisitor(v.id);
-      if (sound && v.word) void speak(v.word, tag);
-      return;
+      case "plant":
+        return; // select() above already opened its card
+      case "tree":
+        // An orchard tree (#315): its word and meaning over it for a moment and, with sound on, its word.
+        scene.current.tapTree(hit.t);
+        setHint(false);
+        if (sound) void speak(hit.t.lemma, tag);
+        return;
+      case "door":
+        // The key, or the shut door (#315): its quiet line, or it opens.
+        scene.current.doorAct(hit.a);
+        setHint(false);
+        return;
+      case "scenery":
+        // The garden itself (#74). Its tag shows for a moment and, with sound on, it says its word.
+        scene.current.tapScenery(hit.s);
+        setHint(false);
+        if (sound) void speak(hit.s.view.word, tag);
+        return;
+      default:
+        return; // nothing there: already deselected above
     }
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
-    const p = scene.current.pick(x, y, r.width, r.height);
-    scene.current.select(p);
-    if (p) return;
-    // An orchard tree (#315): its word and meaning over it for a moment and, with sound on, its word.
-    const t = scene.current.pickTree(x, y, r.width, r.height);
-    if (t) {
-      scene.current.tapTree(t);
-      setHint(false);
-      if (sound) void speak(t.lemma, tag);
-      return;
-    }
-    // The key, or the shut door (#315): its quiet line, or it opens.
-    const d = scene.current.pickDoor(x, y, r.width, r.height);
-    if (d) {
-      scene.current.doorAct(d);
-      setHint(false);
-      return;
-    }
-    // Nothing else there: the garden itself (#74). Its tag shows for a moment and, with sound on, it says its word.
-    const s = scene.current.pickScenery(x, y, r.width, r.height);
-    if (!s) return;
-    scene.current.tapScenery(s);
-    setHint(false);
-    if (sound) void speak(s.view.word, tag);
   };
 
   const stats = useMemo(() => {
