@@ -18,6 +18,9 @@ while :; do
   first=0
   [ "$(gh pr view "$pr" --json headRefOid -q .headRefOid)" = "$sha" ] || { echo "head moved; not merging"; exit 1; }
   runs=$(gh run list --commit "$sha" --workflow CI --json status,conclusion -q '.[]|"\(.status) \(.conclusion)"')
+  # GitHub runs no CI for a PR that conflicts with its base: say so, don't wait forever.
+  # (UNKNOWN is GitHub still computing; it settles within seconds.)
+  [ "$(gh pr view "$pr" --json mergeable -q .mergeable)" = CONFLICTING ] && { echo "PR #$pr conflicts with $base; rebase it first"; exit 1; }
   [ -n "$runs" ] || continue                         # not registered yet
   echo "$runs" | grep -q "completed failure\|completed cancelled" && { echo "CI failed"; exit 1; }
   echo "$runs" | grep -vq "completed success" && continue   # still running
