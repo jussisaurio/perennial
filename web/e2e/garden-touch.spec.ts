@@ -44,6 +44,6 @@ test("iPhone: a finger's tap on the locked door in the walk says it is locked (#
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
-  await fingerTap(page, ...(await standAtDoor(page, "door")));
+  await fingerTap(page, ...(await standAtDoor(page)));
   await expect(page.locator(".gw-say")).toHaveText("Locked. The key must be somewhere.");
 });

@@ -128,30 +128,68 @@ type DoorScene = {
   door: { state: string; key: { x: number; z: number; mesh: { visible: boolean } } | null; leaf: { rotation: { y: number } } };
 };
 
-/** Stand 2 m in front of the door, facing it, and return where the door or the key shows on the page (pixels): level for the door, looking down for the key, clear of the hint at the top. */
-export function standAtDoor(page: Page, target: "door" | "key") {
-  return page.evaluate((target) => {
+/** Stand 2 m in front of the door, facing it, and return where the door shows on the page (pixels), level, clear of the hint at the top. */
+export function standAtDoor(page: Page) {
+  return page.evaluate(() => {
     const s = (window as unknown as { __garden: DoorScene }).__garden;
     const gx = s.layout.gate.x;
     const maxZ = s.layout.bounds.maxZ;
-    Object.assign(s, { x: gx, z: maxZ - 2, yaw: Math.PI, pitch: target === "door" ? 0 : -0.45 });
-    const [x, y, z] = target === "door" ? [gx - 0.2, 1, maxZ + 0.1] : [s.door.key!.x, 0.03, s.door.key!.z];
+    Object.assign(s, { x: gx, z: maxZ - 2, yaw: Math.PI, pitch: 0 });
     return new Promise<[number, number]>((done) =>
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
-          const v = new s.tmp.constructor(x, y, z).project(s.camera);
+          const v = new s.tmp.constructor(gx - 0.2, 1, maxZ + 0.1).project(s.camera);
           const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
           done([r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
         }),
       ),
     );
-  }, target);
+  });
 }
 
-/** The door as plain data: its state, whether the key lies on the ground (null: none was brought), and how far open it is (radians). */
+/**
+ * Stand by the hidden key (it hides in a different place for each learner), on
+ * open ground 1.4 m from it with nothing between, looking down at it; return
+ * where it shows on the page (pixels).
+ */
+export function standByKey(page: Page) {
+  return page.evaluate(async () => {
+    const { collide } = await import(/* @vite-ignore */ "/src/garden/world.ts");
+    const s = (window as unknown as { __garden: DoorScene }).__garden;
+    const k = s.door.key!;
+    // Free ground: where a walker may stand, all the way to the key.
+    const free = (x: number, z: number) => {
+      const p = collide(s.layout, x, z);
+      return Math.hypot(p.x - x, p.z - z) < 1e-9;
+    };
+    const way = Array.from({ length: 16 }, (_, i) => (i / 16) * Math.PI * 2).find((a) =>
+      [0.5, 0.75, 1, 1.2, 1.4].every((d) => free(k.x + Math.sin(a) * d, k.z + Math.cos(a) * d)),
+    );
+    if (way === undefined) throw new Error("no open ground beside the key");
+    // Forward is -z at yaw 0: face back along the way, toward the key.
+    Object.assign(s, { x: k.x + Math.sin(way) * 1.4, z: k.z + Math.cos(way) * 1.4, yaw: way, pitch: -0.55 });
+    return new Promise<[number, number]>((done) =>
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const v = new s.tmp.constructor(k.x, 0.03, k.z).project(s.camera);
+          const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+          done([r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
+        }),
+      ),
+    );
+  });
+}
+
+/** The door as plain data: its state, whether the key lies on the ground (null: none was brought) and how far it is from the door (m), and how far open the door is (radians). */
 export function doorNow(page: Page) {
   return page.evaluate(() => {
-    const d = (window as unknown as { __garden: DoorScene }).__garden.door;
-    return { state: d.state, key: d.key && d.key.mesh.visible, angle: d.leaf.rotation.y };
+    const s = (window as unknown as { __garden: DoorScene }).__garden;
+    const d = s.door;
+    return {
+      state: d.state,
+      key: d.key && d.key.mesh.visible,
+      keyFromDoor: d.key && Math.hypot(d.key.x - s.layout.gate.x, d.key.z - s.layout.bounds.maxZ),
+      angle: d.leaf.rotation.y,
+    };
   });
 }

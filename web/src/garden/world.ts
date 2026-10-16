@@ -176,6 +176,72 @@ export function hedgeSpan(l: Layout): [number, number] {
   return [Math.min(l.bounds.minX - 0.6, o.x - o.w / 2 - HEDGE.depth), Math.max(l.bounds.maxX + 0.6, o.x + o.w / 2 + HEDGE.depth)];
 }
 
+/** The bench by the pond, for sitting and admiring: its middle. It faces the pond. */
+export function benchAt(l: Layout): { x: number; z: number } {
+  return { x: l.pond.x + 0.2, z: l.pond.z - l.pond.r - 0.75 };
+}
+
+/** The sunflower, in the far right corner by the back fence. */
+export function sunflowerAt(l: Layout): { x: number; z: number } {
+  return { x: l.bounds.maxX - 1, z: l.bounds.minZ + 0.45 };
+}
+
+/** Lanterns where paths cross (by each bed's front corners), and two by the door. */
+export function lanternSpots(l: Layout): [number, number][] {
+  const spots = new Map<string, [number, number]>();
+  for (const bed of l.beds)
+    for (const sx of [-1, 1]) {
+      const x = bed.x + sx * (bed.w / 2 + 0.95);
+      const z = bed.z + bed.d / 2 + 0.95;
+      spots.set(`${x.toFixed(1)},${z.toFixed(1)}`, [x, z]);
+    }
+  spots.set("gate-l", [l.gate.x - 1.6, l.gate.z - 0.4]);
+  spots.set("gate-r", [l.gate.x + 1.6, l.gate.z - 0.4]);
+  return [...spots.values()];
+}
+
+/** Where the key to the door can hide (#315): one place per learner, never by the door. */
+/** The door's quiet lines (#315). Here, not in the scene, so the page can use them without loading three.js. */
+export const DOOR_LINES = { locked: "Locked. The key must be somewhere.", found: "You found the key." } as const;
+
+export const KEY_SPOTS = ["bench", "pond", "lantern", "bed", "sunflower"] as const;
+export type KeySpot = (typeof KEY_SPOTS)[number];
+
+/** This learner's hiding place, from a seed that stays the same for them (their id and course): always the same place. */
+export function keySpot(seed: string): KeySpot {
+  return KEY_SPOTS[Math.floor(hash01(seed, 315) * KEY_SPOTS.length)];
+}
+
+/** Where the key lies on the ground in this garden, at its hiding place. */
+export function keyAt(l: Layout, spot: KeySpot): { x: number; z: number } {
+  const far = (p: [number, number]) => Math.hypot(p[0] - l.gate.x, p[1] - l.gate.z);
+  switch (spot) {
+    case "bench": {
+      // Half under the seat, at its front.
+      const b = benchAt(l);
+      return { x: b.x + 0.35, z: b.z + 0.18 };
+    }
+    case "pond":
+      // Among the stones at the pond's edge, on the side by the fence.
+      // Far enough out that no end of the key lies under the pond's rim.
+      return { x: l.pond.x - l.pond.r - 0.35, z: l.pond.z + 0.3 };
+    case "lantern": {
+      // At the foot of the lantern farthest from the door.
+      const [x, z] = lanternSpots(l).reduce((a, b) => (far(b) > far(a) ? b : a));
+      return { x: x + 0.2, z: z + 0.12 };
+    }
+    case "bed": {
+      // By the back left corner of the bed farthest from the door.
+      const bed = l.beds.reduce((a, b) => (far([b.x - b.w / 2, b.z - b.d / 2]) > far([a.x - a.w / 2, a.z - a.d / 2]) ? b : a));
+      return { x: bed.x - bed.w / 2 - 0.2, z: bed.z - bed.d / 2 - 0.2 };
+    }
+    case "sunflower": {
+      const f = sunflowerAt(l);
+      return { x: f.x - 0.3, z: f.z + 0.2 };
+    }
+  }
+}
+
 type Rect = [minX: number, maxX: number, minZ: number, maxZ: number];
 
 /** The nearest point to (x, z) in any of the rectangles: the walker slides along their edges. */
