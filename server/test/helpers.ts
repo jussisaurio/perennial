@@ -6,10 +6,10 @@ import { HttpEffect, HttpServer, HttpServerRequest } from "effect/http";
 import { App, AppLive, BunServerLive, HttpLive } from "../src/app";
 import { AppConfig, loadConfig, type Config } from "../src/config";
 import { LoggerLive } from "../src/log";
-import { OutboxMailer } from "../src/mail";
+import { Mail, OutboxMailer } from "../src/mail";
 import { DatabaseLive } from "../src/db";
 import { Migrations, MigrationsLive } from "../src/migrate";
-import { Ai, Auth, Database, Mail, ServicesLive } from "../src/services";
+import { Ai, Auth, Database, ServicesLive } from "../src/services";
 
 process.env.LOG_LEVEL ??= "silent";
 

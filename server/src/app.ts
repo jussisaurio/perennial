@@ -18,9 +18,9 @@ import { withClientIp } from "./clientIp";
 import { AppConfig } from "./config";
 import { ApiError, decodeBody, errorResponse, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { traceId } from "./log";
-import { OutboxMailer } from "./mail";
 import { annotate, event, inSentryScope, promise, RequestContext, type RequestInfo } from "./request";
-import { Ai, Auth, Database, Mail } from "./services";
+import { Mail, OutboxMailer } from "./mail";
+import { Ai, Auth, Database } from "./services";
 import { applyWrites, LEARNER_TABLES, proxyShape } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 

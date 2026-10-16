@@ -2,17 +2,18 @@
 // it and closes it. They wrap today's modules (Bun.SQL, mail.ts, auth.ts,
 // ai.ts) as they are; #322 part 2 turns those into Effect services too.
 
+import { PgClient } from "@effect/sql-pg";
 import type { SQL } from "bun";
 import { Context, Effect, Layer } from "effect";
 import { AIService } from "./ai";
 import { createAuth } from "./auth";
 import { AppConfig } from "./config";
-import { createMailer, type Mailer } from "./mail";
+import { Mail, MailLive } from "./mail";
 
 export class Database extends Context.Service<Database, SQL>()("perennial/Database") {}
 
-/** The app's Postgres pool. Tests pass their own (Layer.succeed). */
-export const DatabaseLive = Layer.effect(
+/** Bun.SQL, for the modules not yet on sql-pg (db.ts). Tests pass their own (Layer.succeed). */
+export const BunSqlLive = Layer.effect(
   Database,
   Effect.gen(function* () {
     const config = yield* AppConfig;
@@ -23,10 +24,6 @@ export const DatabaseLive = Layer.effect(
   }),
 );
 
-export class Mail extends Context.Service<Mail, Mailer>()("perennial/Mail") {}
-
-const MailLive = Layer.effect(Mail, Effect.map(AppConfig, createMailer));
-
 type BetterAuth = ReturnType<typeof createAuth>["auth"];
 export class Auth extends Context.Service<Auth, BetterAuth>()("perennial/Auth") {}
 
@@ -35,7 +32,7 @@ const AuthLive = Layer.effect(
   Auth,
   Effect.gen(function* () {
     const config = yield* AppConfig;
-    const sql = yield* Database;
+    const sql = yield* PgClient.PgClient;
     const mailer = yield* Mail;
     const { auth } = yield* Effect.acquireRelease(
       Effect.sync(() => createAuth(config, sql, mailer)),
