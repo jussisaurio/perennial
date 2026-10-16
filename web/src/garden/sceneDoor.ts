@@ -1,19 +1,22 @@
 // The old door in the hedge, and the key that unlocks it (#315, #323). This
-// part only builds the door's meshes (the frame, the leaf on its hinge, the
-// keyhole's light, and the key lying in the garden). GardenScene still owns
-// picking it, acting on a tap and ticking its swing and glint: the door's
-// state (locked/key/held/open) is cross-cutting — the tap chain, the quiet
-// line it shows and the orchard it reveals all live on the host.
+// part builds the door's meshes (the frame, the leaf on its hinge, the
+// keyhole's light, and the key lying in the garden), swings the leaf open,
+// and ticks the key's glint. GardenScene still owns picking the door, acting
+// on a tap, and opening it (which reveals the orchard): the door's state
+// (locked/key/held/open) is cross-cutting — the tap chain and the quiet line
+// it shows live on the host, which also reads `state`/`key`/`leaf` directly.
 
 import * as THREE from "three";
-import { sprites, type BuildCtx, type DoorAction, type DoorState } from "./scene";
+import type { DoorAction, DoorState } from "./scene";
+import type { Conditions, Frame } from "./scenePart";
+import { sprites, type BuildCtx } from "./sceneSprites";
 import { DOOR_HALF, HEDGE, keyAt, type Layout } from "./world";
 import * as T from "./textures";
 
 /** The door's height and thickness, how far it swings open (it swings out, into the orchard), and for how long. */
 export const DOOR = { h: 2.05, thick: 0.06, open: Math.PI / 2, swing: 1.4 };
 /** The keyhole, from the door's hinge (texture door(): its iron plate's middle). */
-export const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
+const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
 /** Near enough to the door (metres from its middle) to be offered its button. */
 export const DOOR_REACH = 2.6;
 /** Near enough to the hidden key to be offered "Pick up the key" (m). */
@@ -28,12 +31,17 @@ export const GLINT = { near: 7, flash: 0.5, every: 3.2 };
  * swinging); `near` is what the viewer was last offered (GardenScene.reportDoor).
  */
 export class Door {
+  private reducedMotion: boolean;
   state: "locked" | "key" | "held" | "open" = "locked";
   leaf!: THREE.Group;
   keyhole!: { hole: THREE.Mesh; glow: THREE.Sprite };
   key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
   swing: number | null = null;
   near: DoorAction | null = null;
+
+  constructor(reducedMotion: boolean) {
+    this.reducedMotion = reducedMotion;
+  }
 
   /**
    * The door frame, its leaf, the keyhole's light, and the key at this
@@ -93,5 +101,25 @@ export class Door {
     this.leaf = leaf;
     this.keyhole = { hole, glow };
     this.key = key;
+  }
+
+  /** Warm light through the keyhole shows at dusk and night, until the door opens for good. */
+  onConditions(c: Conditions) {
+    this.keyhole.glow.visible = c.dark && this.state !== "open";
+  }
+
+  /** The door swings open, slowing as it goes; the hidden key glints now and then when you are near. */
+  tick(f: Frame) {
+    if (this.swing !== null) {
+      this.swing = Math.min(1, this.swing + f.dt / DOOR.swing);
+      this.leaf.rotation.y = DOOR.open * (1 - (1 - this.swing) ** 3);
+      if (this.swing >= 1) this.swing = null;
+    }
+    // With reduced motion, a still glint.
+    const key = this.state === "key" ? this.key : null;
+    if (!key) return;
+    const k = f.elapsed % GLINT.every;
+    key.glint.visible = Math.hypot(f.x - key.x, f.z - key.z) < GLINT.near && (this.reducedMotion || k < GLINT.flash);
+    key.glint.scale.setScalar(this.reducedMotion ? 0.12 : 0.04 + 0.16 * Math.sin((Math.PI * k) / GLINT.flash));
   }
 }

@@ -9,17 +9,18 @@ import { benchLine, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTre
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
-import { plantHeight as plantHeightOf, stemHeight } from "../ui/plant";
+import { plantHeight as plantHeightOf } from "../ui/plant";
 import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
 import { boardBox, DECOR_KINDS, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
-import { Door, DOOR, DOOR_REACH, GLINT, KEY_REACH } from "./sceneDoor";
+import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { Plants } from "./scenePlants";
-import { TAP_PRIORITY, type Conditions, type TapHit } from "./scenePart";
+import { TAP_PRIORITY, type Conditions, type Frame, type Part, type TapHit } from "./scenePart";
+import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -81,8 +82,6 @@ export interface Input {
 }
 
 const EYE = 1.05;
-export const SPRITE_W = 1.0;
-export const SPRITE_H = 2.0;
 const WALK = 3.6;
 /**
  * Width of the framebuffer, in pixels, for each level of detail. Normal
@@ -91,203 +90,11 @@ const WALK = 3.6;
  */
 export const DETAIL = { normal: 2160, low: 760 } as const;
 export type Detail = keyof typeof DETAIL;
-export const FOG_NEAR = 14;
-export const FOG_FAR = 46;
-/** Plant sprites a little under life size: the tallest bloom stands about eye height. */
-export const PLANT_SCALE = 0.85;
-/** Height of the raised beds: plants stand on their soil. */
-export const BED_H = 0.28;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
 
 /** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. */
 const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
-
-/** A plant sprite's drawn height in metres, from its height in SVG units (stemHeight, ui/plant.tsx). */
-export function plantHeight(growth: number): number {
-  return (stemHeight(growth) / T.VIEW_H) * SPRITE_H * PLANT_SCALE;
-}
-
-// The vertex shader part every sprite shares: the fog and selection inputs,
-// and billboard(), which sways the quad in the wind, leans it by `droop`, then
-// turns it to face the camera around the vertical axis only, like Doom's
-// sprites. It returns the view-space position.
-const BILLBOARD = /* glsl */ `
-  uniform float uTime;
-  uniform float uSway;
-  uniform float uFogNear;
-  uniform float uFogFar;
-  uniform float uSelected;
-  varying float vFog;
-  varying float vSel;
-  vec4 billboard(vec3 at, vec2 p, float phase, float droop) {
-    float h = position.y / ${SPRITE_H.toFixed(1)};
-    float a = droop + uSway * sin(uTime * 1.4 + phase) * 0.07 * h + uSway * sin(uTime * 3.1 + phase * 2.0) * 0.015;
-    p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
-    vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
-    vec3 world = at + right * p.x + vec3(0.0, p.y, 0.0);
-    return viewMatrix * vec4(world, 1.0);
-  }
-`;
-
-// The fragment shader part every sprite shares: time-of-day tint, a pulse
-// when selected, and fog.
-const SHADE = /* glsl */ `
-  uniform vec3 uFog;
-  uniform vec3 uTint;
-  uniform float uTime;
-  varying float vFog;
-  varying float vSel;
-  vec4 shade(vec4 c) {
-    vec3 col = c.rgb * uTint;
-    col = mix(col, min(vec3(1.0), col * 1.35 + 0.08), vSel * (0.6 + 0.4 * sin(uTime * 5.0)));
-    return vec4(mix(col, uFog, vFog), 1.0);
-  }
-`;
-
-const SPRITE_VERT = /* glsl */ `
-  attribute vec3 iPos;
-  attribute vec4 iUv;
-  attribute vec4 iParams; // phase, droop, scale, index
-  varying vec2 vUv;
-  ${BILLBOARD}
-  void main() {
-    vec4 mv = billboard(iPos, position.xy * iParams.z, iParams.x, iParams.y);
-    gl_Position = projectionMatrix * mv;
-    vUv = iUv.xy + uv * iUv.zw;
-    vFog = smoothstep(uFogNear, uFogFar, -mv.z);
-    vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
-  }
-`;
-
-// A sprite lying flat (the fish in the pond): centred on iPos, its +x turned
-// toward (cos a, sin a) on the ground, where a is iParams.y.
-const LYING_VERT = /* glsl */ `
-  attribute vec3 iPos;
-  attribute vec4 iUv;
-  attribute vec4 iParams; // phase, heading, scale, index
-  uniform float uFogNear;
-  uniform float uFogFar;
-  uniform float uSelected;
-  varying vec2 vUv;
-  varying float vFog;
-  varying float vSel;
-  void main() {
-    vec2 p = position.xy * iParams.z;
-    float a = iParams.y;
-    // Local y goes to the far side, so the quad's front faces up.
-    vec4 mv = viewMatrix * vec4(iPos + vec3(p.x * cos(a) + p.y * sin(a), 0.0, p.x * sin(a) - p.y * cos(a)), 1.0);
-    gl_Position = projectionMatrix * mv;
-    vUv = iUv.xy + uv * iUv.zw;
-    vFog = smoothstep(uFogNear, uFogFar, -mv.z);
-    vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
-  }
-`;
-
-const SPRITE_FRAG = /* glsl */ `
-  uniform sampler2D uMap;
-  varying vec2 vUv;
-  ${SHADE}
-  void main() {
-    vec4 c = texture2D(uMap, vUv);
-    if (c.a < 0.5) discard;
-    gl_FragColor = shade(c);
-  }
-`;
-
-function spriteMaterial(map: THREE.Texture, vertexShader: string): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uMap: { value: map },
-      uTime: { value: 0 },
-      uSway: { value: 1 },
-      uFogNear: { value: FOG_NEAR },
-      uFogFar: { value: FOG_FAR },
-      uFog: { value: new THREE.Color() },
-      uTint: { value: new THREE.Color(1, 1, 1) },
-      uSelected: { value: -1 },
-    },
-    vertexShader,
-    fragmentShader: SPRITE_FRAG,
-  });
-}
-
-/** A w×h quad standing on its bottom edge. */
-export function standingQuad(w: number, h: number): THREE.PlaneGeometry {
-  const quad = new THREE.PlaneGeometry(w, h);
-  quad.translate(0, h / 2, 0);
-  return quad;
-}
-
-/** Instanced geometry that shares `quad`'s vertices; the caller adds the per-instance attributes. */
-export function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeometry {
-  const geo = new THREE.InstancedBufferGeometry();
-  geo.index = quad.index;
-  geo.setAttribute("position", quad.getAttribute("position"));
-  geo.setAttribute("uv", quad.getAttribute("uv"));
-  return geo;
-}
-
-/** Instanced camera-facing quads, bottom-centre anchored, from one atlas. `lying`: flat on the ground instead, centred, turned by `droop` (LYING_VERT). */
-export type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
-export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, lying = false) {
-  const geo = instanced(lying ? new THREE.PlaneGeometry(w, h) : standingQuad(w, h));
-  const pos = new Float32Array(items.length * 3);
-  const uv = new Float32Array(items.length * 4);
-  const params = new Float32Array(items.length * 4);
-  items.forEach((it, i) => {
-    pos.set([it.x, it.y, it.z], i * 3);
-    uv.set([it.u, it.v, it.uw, it.vh], i * 4);
-    params.set([it.phase, it.droop, it.scale, it.index], i * 4);
-  });
-  geo.setAttribute("iPos", new THREE.InstancedBufferAttribute(pos, 3));
-  geo.setAttribute("iUv", new THREE.InstancedBufferAttribute(uv, 4));
-  geo.setAttribute("iParams", new THREE.InstancedBufferAttribute(params, 4));
-  geo.instanceCount = items.length;
-  const mesh = new THREE.Mesh(geo, spriteMaterial(map, lying ? LYING_VERT : SPRITE_VERT));
-  mesh.frustumCulled = false;
-  return mesh;
-}
-
-/**
- * What every part of the world (#323) is built with: GardenScene.build() makes
- * one of these and passes it, in a fixed order, to each part's build(). The
- * parts push their own tap targets and materials into the shared scene,
- * hitBoxes, hitDiscs and mats straight away, rather than handing them back to
- * be merged.
- */
-export interface BuildCtx {
-  L: Layout;
-  b: Layout["bounds"];
-  /** The garden inside the fence: width, depth and middle. */
-  w: number;
-  d: number;
-  cx: number;
-  cz: number;
-  /** An unlit material that follows the time of day's tint. */
-  mat: (tex: THREE.Texture, opts?: THREE.MeshBasicMaterialParameters) => THREE.MeshBasicMaterial;
-  woodTex: THREE.Texture;
-  /** One random sequence for the whole world, so it is laid out the same every time. */
-  rand: () => number;
-  scene: THREE.Scene;
-  /** What a tap can meet (scenery.ts): every part adds its own boxes and discs here as it builds. */
-  hitBoxes: HitBox[];
-  hitDiscs: HitDisc[];
-  /** Every sprite shader material a part makes: GardenScene.tick sets their time and sway uniforms, and tints them for the time of day. */
-  mats: Set<THREE.ShaderMaterial>;
-  /** Every plain (unlit, untinted-by-default) material a part makes outside of `mat()`, so GardenScene.tint can still tint it for the time of day. */
-  basic: THREE.MeshBasicMaterial[];
-}
-
-/** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */
-export function signBoard(c: BuildCtx, tex: THREE.Texture, w: number, h: number): THREE.Group {
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(tex)));
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(c.woodTex));
-  back.rotation.y = Math.PI;
-  g.add(back);
-  return g;
-}
 
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
@@ -345,9 +152,16 @@ export class GardenScene {
   /** Lantern spots, for the moth. */
   private lanternSpots: [number, number][] = [];
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
-  private door = new Door();
-  /** The gate's hedge and, once the door opens, the orchard's (#323). */
+  private door: Door;
+  /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose beyond the scene's own sweep. */
   private hedge = new Hedge();
+  /**
+   * Every rendering subsystem with its own tick and/or onConditions (#323):
+   * ticked and given Conditions in this order, and disposed in it too. Order
+   * among them does not matter for correctness (none reads another's tick
+   * result in the same frame) but is fixed and documented here regardless.
+   */
+  private parts: Part[];
   /** The orchard behind the door, once it is open (#315). */
   private orchard: Orchard | null = null;
   /** The orchard tree tapped last and until when its tag shows. */
@@ -391,6 +205,8 @@ export class GardenScene {
     this.sky = new SkyWater(this.camera, reducedMotion);
     this.critters = new Critters(this.camera, reducedMotion);
     this.plants = new Plants(this.renderer, this.camera, layout, (d, total) => this.cb.onProgress(d, total), (x, y, z) => this.behindHedge(x, y, z));
+    this.door = new Door(reducedMotion);
+    this.parts = [this.sky, this.door, this.critters, this.plants];
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
@@ -912,10 +728,15 @@ export class GardenScene {
   /** Rasterises every plant's sprite, then builds the streaming pool (#323: scenePlants.ts). */
   async loadPlants(): Promise<void> {
     await this.plants.loadPlants({ scene: this.scene, mats: this.mats });
-    // Nothing to tint or stream in an empty garden: loadPlants above already returned at once.
-    if (this.layout.plants.length) this.setTime(this.time);
+    // The walk may have been left (and disposed) while the sprites rasterised: building more
+    // (setTime makes new sky/hill/sun textures) onto a torn-down scene would only leak them.
+    if (this.disposed) return;
+    const total = this.layout.plants.length;
+    // Nothing to tint, stream or report in an empty garden: loadPlants above already returned at once.
+    if (!total) return;
+    this.setTime(this.time);
+    this.cb.onProgress(total, total);
   }
-
 
   setTime(t: TimeOfDay) {
     this.time = t;
@@ -924,13 +745,11 @@ export class GardenScene {
     this.scene.fog = new THREE.Fog(fog, FOG_NEAR, FOG_FAR);
     const dark = t !== "day";
     const conditions: Conditions = { time: t, dark };
-    this.sky.onConditions(conditions);
-    this.critters.onConditions(conditions);
+    for (const part of this.parts) part.onConditions?.(conditions);
     this.tint();
     this.lit.visible = dark;
     this.unlit.visible = !dark;
     for (const g of this.glows) g.visible = dark;
-    this.door.keyhole.glow.visible = dark && this.door.state !== "open";
     this.guests.setDark(dark, t === "night");
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
@@ -1109,12 +928,13 @@ export class GardenScene {
       mat.uniforms.uTime.value = t;
       mat.uniforms.uSway.value = motion;
     }
-    // Chunk culling: three skips beds outside the view (bounding spheres);
-    // beds wholly inside the fog are skipped here. Also streams full-size
-    // sprites for the plants nearest you, and the perk uniform.
-    this.plants.tick(dt, t, this.x, this.z, this.yaw, FOG_FAR, this.camera.position);
-    this.sky.tick(dt, t);
-    this.critters.tick(dt, t);
+    // One frame, ticked into every part in the fixed order `parts` documents:
+    // sky (clouds, water, the sun), the door (its swing and the key's glint),
+    // critters (fireflies, butterflies, the sleeping bloom's z's), then plants
+    // (chunk culling — beds outside the fog are skipped — streaming the
+    // plants nearest you, and the perk uniform).
+    const frame: Frame = { dt, elapsed: t, x: this.x, z: this.z, yaw: this.yaw };
+    for (const part of this.parts) part.tick?.(frame);
     if (this.selected) {
       const p = this.selected;
       this.marker.position.set(p.x, BED_H + plantHeight(p.growth) + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
@@ -1131,22 +951,6 @@ export class GardenScene {
     }
 
     if (this.guests.any) this.guests.tick(dt, this.x, this.z);
-
-    // The door swings open, slowing as it goes.
-    const door = this.door;
-    if (door.swing !== null) {
-      door.swing = Math.min(1, door.swing + dt / DOOR.swing);
-      door.leaf.rotation.y = DOOR.open * (1 - (1 - door.swing) ** 3);
-      if (door.swing >= 1) door.swing = null;
-    }
-
-    // The hidden key glints now and then when you are near; with reduced motion, a still glint.
-    const key = door.state === "key" ? door.key : null;
-    if (key) {
-      const k = t % GLINT.every;
-      key.glint.visible = Math.hypot(this.x - key.x, this.z - key.z) < GLINT.near && (this.reducedMotion || k < GLINT.flash);
-      key.glint.scale.setScalar(this.reducedMotion ? 0.12 : 0.04 + 0.16 * Math.sin((Math.PI * k) / GLINT.flash));
-    }
 
     this.renderer.render(this.scene, this.camera);
     this.labels();
@@ -1216,7 +1020,7 @@ export class GardenScene {
 
   dispose() {
     this.disposed = true;
-    this.plants.dispose();
+    for (const part of this.parts) part.dispose?.();
     cancelAnimationFrame(this.frame);
     this.orchard?.dispose();
     this.scene.traverse((o) => {

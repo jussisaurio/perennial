@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 import { hedgeClumps, hedgeCore, type Clump, type HedgeWall } from "./hedge";
-import type { BuildCtx } from "./scene";
+import type { BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */

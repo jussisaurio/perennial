@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { orchardBench, placeTrees, SPRITE_M, treeHits, type OrchardArea, type OrchardTree, type PlacedTree, type TreeHit } from "./orchard";
 import { CELL_H_PX, LOOKS } from "./orchardArt";
-import type { SpriteItem } from "./scene";
+import type { SpriteItem } from "./sceneSprites";
 import type { HitBox } from "./scenery";
 import * as T from "./textures";
 

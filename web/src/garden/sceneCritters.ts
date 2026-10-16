@@ -4,9 +4,9 @@
 // garden's many small animated things are described).
 
 import * as THREE from "three";
-import { BED_H, type BuildCtx } from "./scene";
+import { BED_H, type BuildCtx } from "./sceneSprites";
 import type { PlacedPlant } from "./world";
-import type { Conditions } from "./scenePart";
+import type { Conditions, Frame } from "./scenePart";
 import * as T from "./textures";
 
 // Three z's drifting up from the sleeping bloom (#62). All the motion is in the
@@ -124,8 +124,9 @@ export class Critters {
     if (this.snore) this.snore.material.uniforms.uScale.value = pxPerMetre;
   }
 
-  tick(_dt: number, elapsed: number) {
+  tick(f: Frame) {
     const motion = this.reducedMotion ? 0 : 1;
+    const elapsed = f.elapsed;
     this.fireflies.material.uniforms.uTime.value = elapsed;
     this.fireflies.material.uniforms.uMove.value = motion;
     if (this.snore?.visible) this.snore.material.uniforms.uTime.value = elapsed;

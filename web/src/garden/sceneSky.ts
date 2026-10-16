@@ -2,11 +2,12 @@
 // the sun (the moon at night), and the pond with its lily pads. Everything
 // here only the time of day tints or moves; nothing is tapped directly (the
 // sun, a cloud, the hills and the pond are named through scenery.ts's own hit
-// test, not this part's pick).
+// test; picking stays on GardenScene, which reads sunDir/cloudPositions/
+// hillProfile below to build that hit test's world).
 
 import * as THREE from "three";
-import type { BuildCtx } from "./scene";
-import type { Conditions, Part } from "./scenePart";
+import type { BuildCtx } from "./sceneSprites";
+import type { Conditions, Frame, Part } from "./scenePart";
 import * as T from "./textures";
 
 /** The far hills: a ring of this radius and height, its middle this high, the texture repeated this often round it. pickScenery (scene.ts) uses it too, for the ring's shape. */
@@ -145,10 +146,10 @@ export class SkyWater implements Part {
     this.sunDir.set(sx, sy, sz).normalize();
   }
 
-  tick(dt: number, elapsed: number) {
+  tick(f: Frame) {
     if (!this.reducedMotion) {
-      this.water.offset.set((elapsed * 0.02) % 1, Math.sin(elapsed * 0.3) * 0.03);
-      for (const cloud of this.clouds) cloud.position.applyAxisAngle(UP, dt * 0.004);
+      this.water.offset.set((f.elapsed * 0.02) % 1, Math.sin(f.elapsed * 0.3) * 0.03);
+      for (const cloud of this.clouds) cloud.position.applyAxisAngle(UP, f.dt * 0.004);
     }
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
   }

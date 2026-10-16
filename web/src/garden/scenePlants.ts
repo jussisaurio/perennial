@@ -5,13 +5,16 @@
 
 import * as THREE from "three";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope } from "./whimsy";
-import { BED_H, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, signBoard, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx, type Label } from "./scene";
+import type { Label } from "./scene";
+import type { Frame } from "./scenePart";
+import { BED_H, BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, signBoard, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
 import { boardBox } from "./scenery";
 import type { Layout, PlacedPlant } from "./world";
 import * as T from "./textures";
 
-// Plants: like other sprites, but each samples its small sprite, or its
-// full-size one once the streamer has put it in a pool slot (iCell.y >= 0).
+// Plants: like other sprites (BILLBOARD, SHADE: sceneSprites.ts), but each
+// samples its small sprite, or its full-size one once the streamer has put
+// it in a pool slot (iCell.y >= 0).
 const PLANT_VERT = /* glsl */ `
   attribute vec3 iPos;
   attribute vec4 iParams; // phase, droop, scale, index
@@ -21,21 +24,7 @@ const PLANT_VERT = /* glsl */ `
   varying vec2 vLow;
   varying vec2 vHi;
   varying float vHasHi;
-  uniform float uTime;
-  uniform float uSway;
-  uniform float uFogNear;
-  uniform float uFogFar;
-  uniform float uSelected;
-  varying float vFog;
-  varying float vSel;
-  vec4 billboard(vec3 at, vec2 p, float phase, float droop) {
-    float h = position.y / 2.0; // SPRITE_H (scene.ts): a literal here, not an import, so this module's top level never needs scene.ts's (a circular import)
-    float a = droop + uSway * sin(uTime * 1.4 + phase) * 0.07 * h + uSway * sin(uTime * 3.1 + phase * 2.0) * 0.015;
-    p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
-    vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
-    vec3 world = at + right * p.x + vec3(0.0, p.y, 0.0);
-    return viewMatrix * vec4(world, 1.0);
-  }
+  ${BILLBOARD}
   vec2 cellUv(float idx, float cols, vec2 cell, vec2 size) {
     // Half a texel in from the edge, so nearest sampling never reads the neighbour.
     vec2 q = clamp(vec2(uv.x, 1.0 - uv.y), 0.5 / cell, 1.0 - 0.5 / cell);
@@ -61,16 +50,7 @@ const PLANT_FRAG = /* glsl */ `
   varying vec2 vLow;
   varying vec2 vHi;
   varying float vHasHi;
-  uniform vec3 uFog;
-  uniform vec3 uTint;
-  uniform float uTime;
-  varying float vFog;
-  varying float vSel;
-  vec4 shade(vec4 c) {
-    vec3 col = c.rgb * uTint;
-    col = mix(col, min(vec3(1.0), col * 1.35 + 0.08), vSel * (0.6 + 0.4 * sin(uTime * 5.0)));
-    return vec4(mix(col, uFog, vFog), 1.0);
-  }
+  ${SHADE}
   void main() {
     vec4 c = vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
     if (c.a < 0.5) discard;
@@ -223,7 +203,7 @@ export class Plants {
       this.chunks.push({ mesh, center, radius });
       idx.forEach((pi, k) => (this.hiRef[pi] = { attr: cellAttr, i: k }));
     }
-    this.onProgress(plants.length, plants.length);
+    // Not onProgress(done) here: GardenScene.loadPlants calls it after setTime, as main did.
   }
 
   private setSlot(plant: number, slot: number) {
@@ -329,8 +309,9 @@ export class Plants {
   }
 
   /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, and the perk uniform. */
-  tick(_dt: number, elapsed: number, x: number, z: number, yaw: number, fogFar: number, cameraPos: THREE.Vector3) {
-    for (const c of this.chunks) c.mesh.visible = c.center.distanceTo(cameraPos) - c.radius < fogFar;
+  tick(f: Frame) {
+    const { elapsed, x, z, yaw } = f;
+    for (const c of this.chunks) c.mesh.visible = c.center.distanceTo(this.camera.position) - c.radius < FOG_FAR;
     if (this.pool && !this.streaming && (this.hungry || elapsed - this.lastStream > 0.25)) {
       this.lastStream = elapsed;
       this.stream(x, z, yaw);
