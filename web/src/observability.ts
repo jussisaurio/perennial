@@ -86,6 +86,8 @@ export type Event =
   | "session_finished"
   | "email_added"
   | "garden_opened"
+  // A kind of tap in the walk-in garden and how many, per visit (#335): which verbs people use.
+  | "garden_action"
   | "words_added"
   | "seed_shared"
   | "seed_planted"

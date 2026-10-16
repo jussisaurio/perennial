@@ -14,6 +14,7 @@ import { track } from "../observability";
 import { DOOR_LINES, groupOf, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, DoorAction, DoorState, TimeOfDay } from "../garden/scene";
+import type { TapHit } from "../garden/scenePart";
 import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
 import { takeFocus } from "./gardenFocus";
@@ -39,6 +40,24 @@ export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
 /** The walk-in garden for the signed-in learner. */
 export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: (minutes: number) => void }) {
   useEffect(() => track("garden_opened"), []);
+  // What the learner does in the walk (#335): how many taps of each kind (walk, plant, door...), one event per kind,
+  // sent when the walk closes, or when the page is hidden: on a phone the walk is often left by locking it, not closed.
+  // Kinds and counts only: no places, no words.
+  const taps = useRef(new Map<TapHit["kind"], number>());
+  useEffect(() => {
+    const send = () => {
+      for (const [verb, count] of taps.current) track("garden_action", { verb, count });
+      taps.current.clear();
+    };
+    const hidden = () => document.visibilityState === "hidden" && send();
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      document.removeEventListener("visibilitychange", hidden);
+      send();
+    };
+  }, []);
+  // `?? 0`: the first tap of its kind this visit.
+  const onTap = (kind: TapHit["kind"]) => taps.current.set(kind, (taps.current.get(kind) ?? 0) + 1);
   const learner = useLearner(lang);
   // The learner's own garden: the same plants as the 2D garden.
   const source = useMemo(() => (learner ? plantsFromLearner(learner) : null), [learner]);
@@ -66,7 +85,7 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const now = useNow();
   const chunk = learner ? nextChunk(learner, now) : null;
   const water = learner && chunk ? { label: chunk.state === "finish" ? `${chunkLabel(chunk)} · ${chunk.minutes} min` : chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
-  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} onExit={onExit} water={water} focus={focus} />;
+  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} onExit={onExit} water={water} focus={focus} onTap={onTap} />;
 }
 
 function initialTime(): TimeOfDay {
@@ -123,6 +142,7 @@ export function GardenWalk({
   onExit,
   water,
   focus,
+  onTap,
 }: {
   lang: string;
   source: PlantSource | null;
@@ -134,6 +154,8 @@ export function GardenWalk({
   /** Starts practice; `label` says what it starts. */
   water?: { label: string; start: () => void };
   focus?: string | null;
+  /** A tap met something in the walk (or open ground to walk to): its kind, for counting (#335). */
+  onTap?: (kind: TapHit["kind"]) => void;
 }) {
   const [time, setTime] = useState<TimeOfDay>(initialTime);
   const [hint, setHint] = useState(true);
@@ -169,14 +191,16 @@ export function GardenWalk({
 
   const croaks = useRef(0);
   // A click or tap (not a drag) picks a visitor, a plant, an orchard tree, the
-  // door or key, or the garden itself, in that order (one dispatcher, #323):
-  // whichever it meets first wins, and tapping anything but a plant (or
-  // nothing) still syncs the selection, exactly as the old five-step chain did.
+  // door or key, open ground to walk to, or the garden itself, in that order
+  // (one dispatcher, #323): whichever it meets first wins. Tapping anything but
+  // a visitor or a plant (or nothing) closes a plant's card; a plant opens its
+  // own, once you are near it (#336).
   const onPointerUp = (e: React.PointerEvent) => {
     if (!endDrag() || !scene.current || !wrap.current) return;
     const r = wrap.current.getBoundingClientRect();
     const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
-    if (hit?.kind !== "visitor") scene.current.select(hit?.kind === "plant" ? hit.p : null);
+    if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
+    if (hit) onTap?.(hit.kind);
     switch (hit?.kind) {
       case "visitor":
         // An awake frog croaks one of your known words instead (never its own name), in a bubble and, with sound on, aloud.
@@ -191,7 +215,9 @@ export function GardenWalk({
         if (sound && hit.v.word) void speak(hit.v.word, tag);
         return;
       case "plant":
-        return; // select() above already opened its card
+        // Its card opens here when it is near, or once you have walked up to it.
+        scene.current.tapPlant(hit.p);
+        return;
       case "tree":
         // An orchard tree (#315): its word and meaning over it for a moment and, with sound on, its word.
         scene.current.tapTree(hit.t);
@@ -199,8 +225,12 @@ export function GardenWalk({
         if (sound) void speak(hit.t.lemma, tag);
         return;
       case "door":
-        // The key, or the shut door (#315): its quiet line, or it opens.
-        scene.current.doorAct(hit.a);
+        // The key, or the shut door (#315): its quiet line, or it opens; from afar, once you have walked up to it.
+        scene.current.tapDoor(hit.a);
+        setHint(false);
+        return;
+      case "walk":
+        scene.current.walkTo(hit.x, hit.z);
         setHint(false);
         return;
       case "scenery":
@@ -325,8 +355,8 @@ export function GardenWalk({
 
       {hint && stats.total > 0 && !selected && (
         <div className="gw-hint">
-          <span className="gw-hint-fine">Walk: W A S D or arrow keys · Look: drag or swipe with two fingers · Click a plant to see its word</span>
-          <span className="gw-hint-coarse">Walk: use the circle · Look: drag · Tap a plant</span>
+          <span className="gw-hint-fine">Walk: W A S D, arrow keys or click the ground · Look: drag or swipe with two fingers · Click a plant to see its word</span>
+          <span className="gw-hint-coarse">Walk: tap the ground or use the circle · Look: drag · Tap a plant</span>
         </div>
       )}
 

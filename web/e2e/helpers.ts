@@ -193,3 +193,64 @@ export function doorNow(page: Page) {
     };
   });
 }
+
+// Tap to walk (#336), through the dev-only scene handle (window.__garden).
+export type WalkScene = {
+  x: number;
+  z: number;
+  yaw: number;
+  trip: unknown;
+  camera: unknown;
+  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
+  layout: { beds: { x: number; z: number; w: number; d: number }[]; plants: { id: string; lemma: string; x: number; z: number; bed: number }[] };
+  pickAny(x: number, y: number, w: number, h: number): { kind: string; p?: { id: string } } | null;
+};
+
+/** Where the walker stands and which way they face, and whether a walk is under way. */
+export const walker = (page: Page) =>
+  page.evaluate(() => {
+    const s = (window as unknown as { __garden: WalkScene }).__garden;
+    return { x: s.x, z: s.z, yaw: s.yaw, walking: !!s.trip };
+  });
+
+/**
+ * Stand in front of the first bed, a little left, and face `off` radians left
+ * of a spot 3 m away on the path in front of it, to the right. Returns where
+ * the spot shows on the page (pixels), the spot, and what a tap there meets.
+ */
+export function aimAtGround(page: Page, off: number) {
+  return page.evaluate(
+    (off) =>
+      new Promise<{ x: number; y: number; to: { x: number; z: number }; kind: string | undefined; yaw: number }>((done) => {
+        const s = (window as unknown as { __garden: WalkScene }).__garden;
+        const bed = s.layout.beds[0];
+        const to = { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 0.9 };
+        const from = { x: bed.x - 1, z: bed.z + bed.d / 2 + 3 };
+        // Forward is -z at yaw 0.
+        const yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z)) + off;
+        Object.assign(s, { ...from, yaw, pitch: -0.35 });
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const v = new s.tmp.constructor(to.x, 0, to.z).project(s.camera);
+            const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+            const [x, y] = [((v.x + 1) / 2) * r.width, ((1 - v.y) / 2) * r.height];
+            done({ x: r.left + x, y: r.top + y, to, kind: s.pickAny(x, y, r.width, r.height)?.kind, yaw });
+          }),
+        );
+      }),
+    off,
+  );
+}
+
+/** Wait until a walk has reached `to` and stopped there. */
+export async function arrives(page: Page, to: { x: number; z: number }) {
+  await expect
+    .poll(
+      async () => {
+        const w = await walker(page);
+        return !w.walking && Math.hypot(w.x - to.x, w.z - to.z) < 0.05;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}

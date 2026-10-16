@@ -48,10 +48,11 @@ export interface Part {
 
 /**
  * A tap the scene can answer. The host's one dispatcher (GardenScene.pickAny)
- * asks its own pickVisitor/pick/pickTree/pickDoor/pickScenery methods (each
- * already a pure query against a part or the host's own state) and keeps the
- * hit whose kind comes first in TAP_PRIORITY: a visitor, then a plant, an
- * orchard tree, the door or key, and last the garden itself (scenery).
+ * asks its own pickVisitor/pick/pickTree/pickDoor/pickGround/pickScenery
+ * methods (each already a pure query against a part or the host's own state)
+ * and keeps the hit whose kind comes first in TAP_PRIORITY: a visitor, then a
+ * plant, an orchard tree, the door or key, ground to walk to, and last the
+ * garden itself (scenery).
  * GardenWalk.tsx has one switch on `kind` instead of the five-step chain it
  * used to run itself. Picking is not part of the Part interface: no part
  * implements its own pick, so there is nothing to ask in a loop.
@@ -61,7 +62,9 @@ export type TapHit =
   | { kind: "plant"; p: PlacedPlant }
   | { kind: "tree"; t: PlacedTree }
   | { kind: "door"; a: DoorAction }
+  // Open ground out of reach (#336): walk there. Ground in reach is still scenery, the path's word.
+  | { kind: "walk"; x: number; z: number }
   | { kind: "scenery"; s: { view: SceneryView; hit: SceneryHit } };
 
 /** The order GardenScene.pickAny checks a tap in: first match wins. */
-export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "scenery"];
+export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "walk", "scenery"];
