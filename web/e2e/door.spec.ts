@@ -5,6 +5,19 @@ import { doorNow, serverRows, standAtDoor, standByKey } from "./helpers";
 // which hides somewhere in the garden (a different place for each learner);
 // a tap picks the key up, a tap opens the door, and it stays open for good.
 
+/**
+ * Lay the key, for picking, on the open path in front of the first bed: its
+ * own place differs per learner, and some (under the bench) can only be seen
+ * from close by. The drawn key stays where it was.
+ */
+function keyInTheOpen(page: Page) {
+  return page.evaluate(() => {
+    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; door: { key: { x: number; z: number } } } }).__garden;
+    const bed = s.layout.beds[0];
+    Object.assign(s.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
+  });
+}
+
 async function openWalk(page: Page) {
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
@@ -63,6 +76,30 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   await expect(page.locator(".sr-only[role=status]")).toHaveText(/^Locked\. The key must be somewhere\. Maybe by the /);
   await expect(page.getByRole("button", { name: "Try the door" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
+  // From afar (#336), a tap meets the key; but when something stands in front of it, the tap meets that instead, as before.
+  // In reach, the key comes first.
+  const meets = (at: [number, number], blocked: boolean) =>
+    page.evaluate(
+      ([x, y, blocked]) => {
+        type Box = { id: string; min: number[]; max: number[]; tag: null };
+        const s = (window as unknown as { __garden: { x: number; z: number; hitBoxes: Box[]; door: { key: { x: number; z: number } }; pickAny(x: number, y: number, w: number, h: number): { kind: string; a?: string } | null } }).__garden;
+        const k = s.door.key;
+        const [mx, mz] = [(s.x + k.x) / 2, (s.z + k.z) / 2];
+        if (blocked) s.hitBoxes.push({ id: "stone", min: [mx - 0.2, 0, mz - 0.2], max: [mx + 0.2, 1.2, mz + 0.2], tag: null });
+        const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+        const hit = s.pickAny(x - r.left, y - r.top, r.width, r.height);
+        if (blocked) s.hitBoxes.pop();
+        return hit?.a ?? hit?.kind;
+      },
+      [...at, blocked] as const,
+    );
+  const home = await page.evaluate(() => ({ ...(window as unknown as { __garden: { door: { key: { x: number; z: number } } } }).__garden.door.key }));
+  await keyInTheOpen(page);
+  const far = await standByKey(page, 5);
+  expect(await meets(far, false)).toBe("key");
+  expect(await meets(far, true)).toBe("scenery");
+  expect(await meets(await standByKey(page), true)).toBe("key");
+  await page.evaluate((home) => Object.assign((window as unknown as { __garden: { door: { key: object } } }).__garden.door.key, home), home);
   // By the key, its button shows, and a screen reader hears that it is here. A tap: one quiet line, and it is gone from the ground.
   const key = await standByKey(page);
   await expect(page.getByRole("button", { name: "Pick up the key" })).toBeVisible();
@@ -130,8 +167,10 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
   // A mystery: nothing is built behind the hedge while the door is shut.
   expect(await orchardNow(page)).toBeNull();
 
-  await standByKey(page);
-  await page.getByRole("button", { name: "Pick up the key" }).click();
+  // A tap on the key from afar walks up to it and picks it up (#336).
+  await keyInTheOpen(page);
+  await page.mouse.click(...(await standByKey(page, 5)));
+  await expect.poll(async () => (await doorNow(page)).state, { timeout: 15_000 }).toBe("held");
   await standAtDoor(page);
   await page.getByRole("button", { name: "Open the door with the key" }).click();
   await expect.poll(async () => (await doorNow(page)).state).toBe("open");

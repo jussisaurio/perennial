@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, WALKER, wayTo, type KeySpot, type Layout, type PlacedPlant } from "./world";
+import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
 import { benchLine, collideTrees, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
@@ -13,7 +13,7 @@ import { plantHeight as plantHeightOf } from "../ui/plant";
 import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
-import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
+import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
 import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
@@ -73,6 +73,8 @@ export interface SceneCallbacks {
   onDoor: (a: DoorAction | null) => void;
   /** The learner opened the door with the key: it stays open (saved with the course). */
   onDoorOpen: () => void;
+  /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
+  onStall: () => void;
 }
 
 export interface Input {
@@ -91,8 +93,6 @@ const DOOR_STAND = 1.4;
 const KEY_STAND = 1;
 /** How fast the view turns toward where a walk goes: the share of the turn left that it makes per second. */
 const TRIP_TURN = 3;
-/** A walk that makes no headway for this long (s) ends where it is: something it cannot plan round (walk's collisions) holds it. */
-const TRIP_STUCK = 0.5;
 /**
  * Width of the framebuffer, in pixels, for each level of detail. Normal
  * renders at about screen resolution on most screens (the textures keep the
@@ -145,14 +145,15 @@ export class GardenScene {
   /** A glide to a plant: along `path` (world.ts route), turning from one yaw and pitch to the other, `t` 0 to 1 over `s` seconds. */
   private glide: { path: [number, number][]; yaw: [number, number]; pitch: [number, number]; t: number; s: number } | null = null;
   /**
-   * A walk to a tapped spot (#336): along `way` (world.ts wayTo) at walking
-   * speed, `leg` the corner it heads for. It turns the view gently toward
-   * where it goes while `turn` (never with reduced motion, and no more once
-   * the viewer looks round themselves). Within `stop` m of the end it
-   * arrives and does `then` (a plant's card, the door). `stuck`: seconds
-   * without headway.
+   * A walk to a tapped spot (#336, world.ts Trip and walkStep). It turns the
+   * view gently toward where it goes while `turn` (never with reduced motion,
+   * and no more once the viewer looks round themselves). On arrival it does
+   * `then` (a plant's card, the door).
    */
-  private trip: { way: [number, number][]; leg: number; stop: number; then: (() => void) | null; turn: boolean; stuck: number } | null = null;
+  private trip: (Trip & { then: (() => void) | null; turn: boolean }) | null = null;
+  /** Where a walk's frame moves the walker (walkStep fills it in place); and whether a stalled walk was reported this time in the garden. */
+  private at = { x: 0, z: 0 };
+  private stallReported = false;
   /** The ring on the ground where a walk goes. */
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
@@ -416,8 +417,10 @@ export class GardenScene {
     const z0 = L.bounds.maxZ + HEDGE.gap;
     const toDoor = rayBox(r, [L.gate.x - DOOR_HALF, 0, z0 - 0.05], [L.gate.x + DOOR_HALF, DOOR.h, z0 + DOOR.thick + 0.05]);
     // A small thing on the ground: a generous disc round it, so a finger finds it.
-    // From farther than its reach too: a tap there walks to it first (tapDoor, #336).
-    const toKey = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
+    // From farther than its reach too: a tap there walks to it first (tapDoor, #336). There, whatever
+    // stands in front of it (a lantern, the sunflower) is what the tap meets; in reach the key comes first, as it did.
+    const disc = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
+    const toKey = disc < Infinity && !this.inReach("key") && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
     if (toKey <= toDoor) return "key";
     return d.state === "held" ? "open" : "try";
@@ -930,29 +933,31 @@ export class GardenScene {
   }
 
   /**
-   * One frame of a walk (#336): toward the next corner at walking speed, through walk()'s collisions.
+   * One frame of a walk (#336): toward the next corner at walking speed (world.ts walkStep).
    * The view turns gently toward where it goes; with reduced motion it keeps still, and the walk moves at an even pace.
    */
   private walkOn(dt: number) {
     const g = this.trip!;
-    const [cx, cz] = g.way[g.leg];
-    const last = g.leg === g.way.length - 1;
-    const left = Math.hypot(cx - this.x, cz - this.z) - (last ? g.stop : 0);
-    if (left < 1e-3) {
-      if (!last) return void g.leg++;
+    this.at.x = this.x;
+    this.at.z = this.z;
+    const now = walkStep(this.layout, g, this.at, WALK * dt, dt, this.door.state === "open", this.trunks);
+    this.x = this.at.x;
+    this.z = this.at.z;
+    if (now === "arrived") {
       const then = g.then;
       this.endTrip();
       return then?.();
     }
-    const step = Math.min(left, WALK * dt);
-    const k = step / Math.hypot(cx - this.x, cz - this.z);
-    const [x0, z0] = [this.x, this.z];
-    ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, this.x + (cx - this.x) * k, this.z + (cz - this.z) * k, this.door.state === "open", this.trunks));
-    const moved = Math.hypot(this.x - x0, this.z - z0);
-    g.stuck = moved < step / 4 ? g.stuck + dt : 0;
-    if (g.stuck > TRIP_STUCK) return this.endTrip();
+    if (now === "stalled") {
+      this.endTrip();
+      // Once per walk in the garden: a broken way is worth one report, not one a tap.
+      if (!this.stallReported) this.cb.onStall();
+      this.stallReported = true;
+      return;
+    }
     this.bob += dt * WALK * 3.2;
-    if (g.turn && moved > 0) {
+    const [cx, cz] = g.way[g.leg];
+    if (g.turn && g.stuck === 0) {
       // Forward is -z at yaw 0; turn the short way round.
       let d = Math.atan2(-(cx - this.x), -(cz - this.z)) - this.yaw;
       d -= Math.round(d / (Math.PI * 2)) * Math.PI * 2;

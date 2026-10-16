@@ -142,4 +142,14 @@ export function reportBadAnswer(path: string, issue: string) {
   Sentry.captureException(new Error(`bad answer: ${path}`), { tags: { path }, extra: { issue } });
 }
 
+/**
+ * A walk to a tapped spot in the 3D garden stalled (#336): the way it was
+ * given ran into something. A real exception, so Sentry shows it. The
+ * garden's size, roughly, and nothing else: no places, no words.
+ */
+export function reportStalledWalk(plants: number) {
+  const size = plants < 50 ? "<50" : plants < 200 ? "<200" : plants < 1000 ? "<1000" : "1000+";
+  Sentry.captureException(new Error("garden walk stalled"), { tags: { size } });
+}
+
 export const reactErrorHandler = Sentry.reactErrorHandler;

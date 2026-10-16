@@ -99,25 +99,26 @@ test("iPhone: tap a plant far away: walk there, and its card opens (#336)", asyn
   expect(beds.some((b) => Math.abs(at.x - b.x) < b.w / 2 && Math.abs(at.z - b.z) < b.d / 2)).toBe(false);
 });
 
-test("iPhone: the thumb stick still walks (#336)", async ({ page }) => {
+test("iPhone: the thumb stick still walks, and takes over from a walk under way (#336)", async ({ page }) => {
   await openWalk(page);
-  const before = await page.evaluate(() => {
-    const s = (window as unknown as { __garden: WalkScene }).__garden;
-    s.yaw = 0;
-    return s.z;
-  });
+  const { x, y, to } = await aimAtGround(page, 0);
+  const start = await walker(page);
+  await fingerTap(page, x, y);
+  expect((await walker(page)).walking).toBe(true);
   const stick = (await page.locator(".gw-stick").boundingBox())!;
-  // A finger pushes the stick forward for a moment, then lets go. Forward is -z at yaw 0.
+  // A finger pulls the stick back for a moment, then lets go: the walk stops, and you step back, away from where it went.
   await page.evaluate(
     async ([cx, cy]) => {
       const el = document.querySelector(".gw-stick")!;
       const o = { bubbles: true, cancelable: true, composed: true, pointerType: "touch", pointerId: 3, isPrimary: true };
       el.dispatchEvent(new PointerEvent("pointerdown", { ...o, clientX: cx, clientY: cy }));
-      el.dispatchEvent(new PointerEvent("pointermove", { ...o, clientX: cx, clientY: cy - 40 }));
+      el.dispatchEvent(new PointerEvent("pointermove", { ...o, clientX: cx, clientY: cy + 40 }));
       await new Promise((r) => setTimeout(r, 600));
-      el.dispatchEvent(new PointerEvent("pointerup", { ...o, clientX: cx, clientY: cy - 40 }));
+      el.dispatchEvent(new PointerEvent("pointerup", { ...o, clientX: cx, clientY: cy + 40 }));
     },
     [stick.x + stick.width / 2, stick.y + stick.height / 2],
   );
-  expect((await walker(page)).z).toBeLessThan(before - 0.3);
+  const after = await walker(page);
+  expect(after.walking).toBe(false);
+  expect(Math.hypot(after.x - to.x, after.z - to.z)).toBeGreaterThan(Math.hypot(start.x - to.x, start.z - to.z));
 });

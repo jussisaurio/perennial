@@ -14,6 +14,8 @@ mock.module("posthog-js", () => ({
 }));
 let sentryOptions: Record<string, unknown> | undefined;
 const sentryErrors: string[] = [];
+/** What each captured exception was sent with (its tags and extras), in step with sentryErrors. */
+const sentryHints: unknown[] = [];
 mock.module("@sentry/react", () => ({
   init: (options: Record<string, unknown>) => void (sentryOptions = options),
   browserTracingIntegration: () => ({}),
@@ -23,13 +25,16 @@ mock.module("@sentry/react", () => ({
   reactErrorHandler: () => {},
   // Bun's module mocks last for the whole test run, so every export the app calls
   // must be here, or a later file that reaches Sentry fails (send.test.ts).
-  captureException: (e: Error) => void sentryErrors.push(e.message),
+  captureException: (e: Error, hint: unknown) => {
+    sentryErrors.push(e.message);
+    sentryHints.push(hint);
+  },
 }));
 // As the Docker build sets them: keys, and an unset host and release passed as "".
 const env = { VITE_POSTHOG_KEY: "phc_test", VITE_POSTHOG_HOST: "", VITE_SENTRY_DSN: "https://key@sentry.test/1", VITE_RELEASE: "" };
 const saved = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
 Object.assign(process.env, env);
-const { identify, initObservability, linkAccount, reportBadAnswer, track } = await import("./observability");
+const { identify, initObservability, linkAccount, reportBadAnswer, reportStalledWalk, track } = await import("./observability");
 initObservability();
 for (const [k, v] of Object.entries(saved)) {
   if (v === undefined) delete process.env[k];
@@ -44,6 +49,12 @@ test("Sentry: a broken answer is reported once per path, never once per request"
 
 test("Sentry: an unset release is named as the server names it, never empty", () => {
   expect(sentryOptions?.release).toBe("dev");
+});
+
+test("Sentry: a stalled walk in the garden is reported with the garden's size only (#336)", () => {
+  reportStalledWalk(230);
+  expect(sentryErrors.at(-1)).toBe("garden walk stalled");
+  expect(sentryHints.at(-1)).toEqual({ tags: { size: "<1000" } });
 });
 
 test("Sentry: the browser never asks Sentry to work out the learner's IP", () => {

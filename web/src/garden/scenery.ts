@@ -291,8 +291,13 @@ export function pickScenery(r: Ray, w: SceneryWorld, has: (id: SceneryId) => boo
 export function groundAt(r: Ray, w: SceneryWorld): { x: number; z: number } | null {
   if (r.dy >= 0) return null;
   const t = -r.oy / r.dy;
-  if (t >= nearestThing(r, w, () => true).t) return null;
+  if (t >= thingAt(r, w)) return null;
   return { x: r.ox + r.dx * t, z: r.oz + r.dz * t };
+}
+
+/** How far along the ray the first thing in the garden is (a bed, the fence, a lantern, the pond...): `w.far` when there is none before the fog. */
+export function thingAt(r: Ray, w: SceneryWorld): number {
+  return nearestThing(r, w, () => true).t;
 }
 
 /** The nearest box or disc the ray meets before the fog, and how far along the ray it is (`w.far` when none). */

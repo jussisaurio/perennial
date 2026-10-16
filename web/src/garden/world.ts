@@ -431,6 +431,46 @@ export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number,
   return way;
 }
 
+/** A walk to a tapped spot under way (#336): its way (wayTo), the corner it heads for, how far short of the end it stops (m), and seconds without headway. */
+export interface Trip {
+  way: [number, number][];
+  leg: number;
+  stop: number;
+  stuck: number;
+}
+
+/**
+ * A walk that makes no headway for this long (s) has stalled: something holds
+ * it that wayTo did not plan round. That should never happen, so it is
+ * reported; the walk ends rather than walk into a wall for ever.
+ */
+export const TRIP_STUCK = 0.5;
+
+/**
+ * One frame of a walk: the walker at `at` moves up to `metres` toward the
+ * trip's next corner, through walk()'s collisions (`at` is updated in place).
+ * "arrived" within `stop` of the end, "stalled" after TRIP_STUCK seconds
+ * without headway, else "walking".
+ */
+export function walkStep(l: Layout, t: Trip, at: { x: number; z: number }, metres: number, dt: number, doorOpen: boolean, trees: readonly PlacedTree[]): "walking" | "arrived" | "stalled" {
+  const [cx, cz] = t.way[t.leg];
+  const last = t.leg === t.way.length - 1;
+  const gap = Math.hypot(cx - at.x, cz - at.z);
+  const left = gap - (last ? t.stop : 0);
+  if (left < 1e-3) {
+    if (last) return "arrived";
+    t.leg++;
+    return "walking";
+  }
+  const step = Math.min(left, metres);
+  const k = step / gap;
+  const x0 = at.x;
+  const z0 = at.z;
+  ({ x: at.x, z: at.z } = walk(l, x0, z0, x0 + (cx - x0) * k, z0 + (cz - z0) * k, doorOpen, trees));
+  t.stuck = Math.hypot(at.x - x0, at.z - z0) < step / 4 ? t.stuck + dt : 0;
+  return t.stuck > TRIP_STUCK ? "stalled" : "walking";
+}
+
 /** The point a fraction `k` (0 to 1) of the way along a route, by length. */
 export function along(path: readonly [number, number][], k: number): { x: number; z: number } {
   // The ends exactly: summing and subtracting leg lengths rounds, and Math.hypot rounds differently per platform.

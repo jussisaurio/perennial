@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { rng } from "../lib/seed";
 import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
-import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keySpot, layout, route, viewpoint, walk, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
+import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
@@ -126,6 +126,34 @@ describe("the way on foot to a tapped spot (#336)", () => {
     return { x, z };
   };
   const length = (way: [number, number][]) => way.slice(1).reduce((n, [x, z], i) => n + Math.hypot(x - way[i][0], z - way[i][1]), 0);
+
+  test("a frame at a time, a walk arrives, stopping short where asked", () => {
+    const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
+    const bed = l.beds[0];
+    const front = bed.z + bed.d / 2 + 1;
+    const trip = { way: wayTo(l, bed.x - 1, front, bed.x + 1.5, front, false, []), leg: 1, stop: 0.5, stuck: 0 };
+    const at = { x: bed.x - 1, z: front };
+    let now = "walking";
+    for (let i = 0; i < 100 && now === "walking"; i++) now = walkStep(l, trip, at, 3.6 / 60, 1 / 60, false, []);
+    expect(now).toBe("arrived");
+    expect(at.x).toBeCloseTo(bed.x + 1, 2);
+  });
+
+  test("a walk held by something it did not plan round stalls, and says so (#336)", () => {
+    const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
+    const bed = l.beds[0];
+    // A way straight through a bed: walk() stops the walker at its edge.
+    const trip = { way: [[bed.x, bed.z + bed.d / 2 + 1], [bed.x, bed.z - bed.d / 2 - 1]] as [number, number][], leg: 1, stop: 0, stuck: 0 };
+    const at = { x: bed.x, z: bed.z + bed.d / 2 + 1 };
+    const frames: string[] = [];
+    for (let i = 0; i < 120; i++) frames.push(walkStep(l, trip, at, 3.6 / 60, 1 / 60, false, []));
+    const stalled = frames.indexOf("stalled");
+    expect(stalled).toBeGreaterThan(0);
+    // Held for TRIP_STUCK seconds of frames at the bed's edge first, never through it.
+    expect(frames.slice(0, stalled).every((f) => f === "walking")).toBe(true);
+    expect(stalled / 60).toBeGreaterThan(TRIP_STUCK);
+    expect(at.z).toBeGreaterThanOrEqual(bed.z + bed.d / 2);
+  });
 
   test("straight there when nothing is in the way", () => {
     const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
