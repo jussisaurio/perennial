@@ -8,7 +8,7 @@ import { Clock, Effect, Fiber, Schema } from "effect";
 import { UserId } from "perennial-contract";
 import { linkAccount, reportSlowAuth, track } from "../observability";
 import { captchaHeaders } from "./captcha";
-import { clearOutboxNow, forgetOnDevice, keepOnDevice, recordPendingLink, resolvePendingLink, stopSyncNow } from "./device";
+import { clearOutboxNow, forgetOnDevice, keepOnDevice, noteSignIn, resolvePendingLink, stopSyncNow } from "./device";
 
 export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
 
@@ -145,7 +145,7 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
       // Nothing was sent yet, so there is nothing to recover.
       const before = yield* askSession;
       // Before the request: the app may see the account before this code does (#314).
-      recordPendingLink(before?.anonymous ? before.id : null);
+      noteSignIn(before, email);
       const { user, timedOut } = yield* timed("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } })).pipe(
         Effect.flatMap((r) =>
           r.error || !r.data
@@ -158,9 +158,10 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
       if (before?.anonymous) {
         track("email_added");
         linkAccount(user.id);
-        // Their progress moves into the account on the server; their unsent writes follow here.
-        resolvePendingLink(user.id);
       }
+      // An anonymous learner's progress moves into the account on the server; their
+      // unsent writes follow here. Also on a try again, when `before` was the account.
+      resolvePendingLink(user.id, user.email);
       track("signin_done", { ms: (yield* Clock.currentTimeMillis) - started, timedOut });
       // The lost answer would have told the app the user changed. Reload as the
       // account now (after the adoption above): a session refetch could hang too.

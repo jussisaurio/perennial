@@ -53,13 +53,13 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
 }
 
 /** One store per signed-in user; a new user (sign-in, sign-out) gets a fresh one. */
-function StoreProvider({ userId, anonymous, children }: { userId: string; anonymous: boolean; children: ReactNode }) {
+function StoreProvider({ userId, email, children }: { userId: string; email: string | null; children: ReactNode }) {
   const [store, setStore] = useState<Store | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
     let alive = true;
     let made: Store | null = null;
-    createStore(userId, anonymous).then(
+    createStore(userId, email).then(
       (s) => {
         made = s;
         if (alive) setStore(s);
@@ -72,7 +72,7 @@ function StoreProvider({ userId, anonymous, children }: { userId: string; anonym
       // Dispose after the screens using this store have unmounted.
       setTimeout(() => made?.dispose(), 0);
     };
-  }, [userId, anonymous]);
+  }, [userId, email]);
   if (error) return <div className="page narrow"><p className="error">Could not open your data: {error}</p></div>;
   if (!store) return <Settling />;
   // Keyed by user: a new user remounts every screen, so none holds the old store.
@@ -154,7 +154,7 @@ export default function App() {
   if (pending) return <Settling />;
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
   return (
-    <StoreProvider key={user.id} userId={user.id} anonymous={user.anonymous}>
+    <StoreProvider key={user.id} userId={user.id} email={user.email}>
       <Main route={route} go={go} />
       <ReloadBanner />
       <RefusedBanner />

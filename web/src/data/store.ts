@@ -75,13 +75,13 @@ async function adoptQueues(userId: string, target: StorageAdapter) {
   }
 }
 
-export async function createStore(userId: string, anonymous: boolean) {
+export async function createStore(userId: string, email: string | null) {
   // Queues of learners who signed out here go first; this learner is using theirs again.
   await cleanUpForgotten();
   keepOnDevice(userId);
   // An account's first start after a sign-in that this tab did not see finish
-  // (#314): the anonymous learner's queue is the account's now.
-  if (!anonymous) resolvePendingLink(userId);
+  // (#314): the anonymous learner's queue is the account's now. (Anonymous: no email.)
+  resolvePendingLink(userId, email);
   // Stopped before a sign-out reaches the server (stopSyncNow): a stream still loading
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();

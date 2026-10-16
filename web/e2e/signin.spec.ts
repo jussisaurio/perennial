@@ -115,12 +115,13 @@ test("a sign-in with no answer still signs in, when the server did sign in", asy
 // online (or the tab comes back). If the server signed in but its answer is
 // lost, that check sees the account first, and the app reloads as the account
 // before the sign-in code can move the anonymous learner's unsent writes.
-test("unsent writes follow the learner into the account, when the app sees the account before the sign-in answer", async ({ page }) => {
-  const address = newEmail();
+/**
+ * An anonymous learner with one unsent write (a word queued: "es", a form of
+ * "ser") while no write gets through, on the code step for `address`.
+ */
+async function unsentWriteThenCode(page: Page, address: string) {
   await page.clock.install();
   await startCourse(page);
-
-  // An unsent write: a word queued ("es", a form of "ser") while no write gets through.
   await page.route("**/api/write", (route) => route.abort());
   await openAdd(page);
   await page.getByPlaceholder(/Paste .* text here/).fill("El lobo es rojo.");
@@ -134,6 +135,19 @@ test("unsent writes follow the learner into the account, when the app sees the a
   await page.getByRole("button", { name: "Send me a code" }).click();
   await expect(page.getByText("We sent a 6-digit code")).toBeVisible();
   await page.getByLabel("Code", { exact: true }).fill(await codeFor(page, address));
+}
+
+/** Writes get through again; the account's server rows show the queued word once the queue has tried again. */
+async function expectWordReachedAccount(page: Page) {
+  await page.unroute("**/api/write");
+  // The queue waits longer after each failed try: at most 78 s (60 s and up to 30% more).
+  await page.clock.fastForward(80_000);
+  await expect.poll(async () => (await serverRows<{ status: string }>(page, "word_state")).map((s) => s.status), { timeout: 15_000 }).toEqual(["queued"]);
+}
+
+test("unsent writes follow the learner into the account, when the app sees the account before the sign-in answer", async ({ page }) => {
+  const address = newEmail();
+  await unsentWriteThenCode(page, address);
 
   const { reached } = await loseAnswer(page, "/api/auth/sign-in/email-otp");
   await page.locator("form").getByRole("button", { name: "Sign in", exact: true }).click();
@@ -144,11 +158,41 @@ test("unsent writes follow the learner into the account, when the app sees the a
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
   await reloaded;
   await expect(page.getByText(address)).toBeVisible();
+  await expectWordReachedAccount(page);
+});
 
-  await page.unroute("**/api/write");
-  // The queue waits longer after each failed try: at most 78 s (60 s and up to 30% more).
-  await page.clock.fastForward(80_000);
-  await expect.poll(async () => (await serverRows<{ status: string }>(page, "word_state")).map((s) => s.status), { timeout: 15_000 }).toEqual(["queued"]);
+// #314, on a try again: the first answer is lost and so is the check after it,
+// so the learner signs in again, now from the account's session.
+test("unsent writes follow the learner into the account, when they sign in again after a lost answer", async ({ page }) => {
+  const address = newEmail();
+  await unsentWriteThenCode(page, address);
+
+  // The server's sign-in moves the anonymous learner's rows: the course's sync starts over.
+  const resynced = page.waitForRequest((r) => r.url().includes("/api/shape") && r.url().includes("table=course") && r.url().includes("offset=-1"));
+  const { reached } = await loseAnswer(page, "/api/auth/sign-in/email-otp");
+  await page.locator("form").getByRole("button", { name: "Sign in", exact: true }).click();
+  await reached;
+  // The server signed in, but the app's check after the lost answer fails too.
+  let checked = false;
+  await page.route("**/api/auth/get-session*", (route) => ((checked = true), route.fulfill({ status: 503, body: "" })), { times: 1 });
+  await page.clock.fastForward(20_000);
+  await expect.poll(() => checked).toBe(true);
+  await resynced;
+
+  // The learner tries again with a new code, from the account's session now.
+  // (The resync redraws Settings, so open it afresh.)
+  await page.getByRole("tab", { name: "Today" }).click();
+  await page.getByRole("tab", { name: "Settings" }).click();
+  await page.getByLabel("Email").fill(address);
+  await page.getByRole("button", { name: "Send me a code" }).click();
+  await expect(page.getByText("We sent a 6-digit code")).toBeVisible();
+  await page.getByLabel("Code", { exact: true }).fill(await codeFor(page, address));
+  const reloaded = page.waitForEvent("load");
+  await page.locator("form").getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await reloaded;
+  await expect(page.getByText(address)).toBeVisible();
+  await expectWordReachedAccount(page);
 });
 
 test("a sign-in with no answer, when the server did not sign in, says so and can be tried again", async ({ page }) => {

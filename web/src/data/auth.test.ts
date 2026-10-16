@@ -30,16 +30,17 @@ mock.module("../observability", () => ({
   reportBadAnswer: () => {},
 }));
 mock.module("./captcha", () => ({ captchaHeaders: () => Promise.resolve({}) }));
-mock.module("./device", () => ({
-  recordPendingLink: (...a: unknown[]) => events.push(["recordPendingLink", ...a]),
-  resolvePendingLink: (...a: unknown[]) => events.push(["resolvePendingLink", ...a]),
-  clearOutboxNow: () => Promise.resolve(),
-  forgetOnDevice: () => {},
-  keepOnDevice: () => {},
-  stopSyncNow: () => false,
-}));
 
 const { AuthError, sendCode, signInWithCode } = await import("./auth");
+const { adoptedBy } = await import("./device");
+
+/** localStorage, in memory: device.ts keeps the pending link and the adoptions there. */
+class MemoryStorage {
+  private items = new Map<string, string>();
+  getItem = (k: string) => this.items.get(k) ?? null;
+  setItem = (k: string, v: string) => void this.items.set(k, v);
+  removeItem = (k: string) => void this.items.delete(k);
+}
 
 /** A request that never gets an answer. `aborted` says whether its fetch was stopped. */
 function hang() {
@@ -67,8 +68,9 @@ beforeEach(() => {
   jest.useFakeTimers({ now: new Date("2026-10-16T12:00:00Z") });
   events.length = 0;
   reloads = 0;
-  // A reload logs what had happened by then.
-  Object.defineProperty(globalThis, "location", { value: { reload: () => (reloads++, events.push(["reload"])) }, configurable: true });
+  Object.defineProperty(globalThis, "localStorage", { value: new MemoryStorage(), configurable: true });
+  // A reload logs whose queues the account had taken over by then.
+  Object.defineProperty(globalThis, "location", { value: { reload: () => (reloads++, events.push(["reload", adoptedBy("acct-1")])) }, configurable: true });
 });
 afterEach(() => {
   jest.useRealTimers();
@@ -113,7 +115,7 @@ test("a wrong code is refused with a line the learner can act on", async () => {
   const e = await signInWithCode("ana@example.com", "123456").catch((x: unknown) => x);
   expect(e).toBeInstanceOf(AuthError);
   expect(e).toHaveProperty("message", "That code is not correct, or it has expired.");
-  expect(events.some((x) => x[0] === "resolvePendingLink")).toBe(false);
+  expect(adoptedBy("acct-1")).toEqual([]);
 });
 
 test("a sign-in answered in time: the anonymous learner's writes go to the account, with no reload", async () => {
@@ -121,13 +123,8 @@ test("a sign-in answered in time: the anonymous learner's writes go to the accou
   server.signIn = () => Promise.resolve({ data: { user: account }, error: null });
   const user = await signInWithCode("ana@example.com", "123456");
   expect(user).toEqual({ id: "acct-1", email: "ana@example.com", anonymous: false });
-  expect(events).toEqual([
-    ["recordPendingLink", "anon-1"],
-    ["track", "email_added"],
-    ["linkAccount", "acct-1"],
-    ["resolvePendingLink", "acct-1"],
-    ["track", "signin_done", { ms: 0, timedOut: false }],
-  ]);
+  expect(events).toEqual([["track", "email_added"], ["linkAccount", "acct-1"], ["track", "signin_done", { ms: 0, timedOut: false }]]);
+  expect(adoptedBy("acct-1")).toEqual(["anon-1"]);
   expect(reloads).toBe(0);
 });
 
@@ -148,12 +145,10 @@ test("a sign-in whose answer is lost, when the server did sign in: asks the serv
   expect(seen.aborted).toBe(true);
   expect(user).toEqual({ id: "acct-1", email: "ana@example.com", anonymous: false });
   expect(events.filter((e) => e[0] !== "reportSlowAuth")).toEqual([
-    ["recordPendingLink", "anon-1"],
     ["track", "email_added"],
     ["linkAccount", "acct-1"],
-    ["resolvePendingLink", "acct-1"],
     ["track", "signin_done", { ms: 20_000, timedOut: true }],
-    ["reload"],
+    ["reload", ["anon-1"]],
   ]);
 });
 
@@ -168,4 +163,29 @@ test("a sign-in whose answer is lost, when the server did not sign in: says it t
   expect(error).toBeInstanceOf(AuthError);
   expect(error).toHaveProperty("code", "timeout");
   expect(reloads).toBe(0);
+});
+
+test("a try again after a lost answer, from the account's session: the anonymous learner's writes still follow", async () => {
+  // First try: the server signs in, the answer is lost, and asking the server fails too.
+  let sessionUser = anonymous;
+  let sessionDown = false;
+  server.session = () => (sessionDown ? Promise.resolve({ data: null }) : Promise.resolve({ data: { user: sessionUser } }));
+  const lost = hang();
+  server.signIn = (signal) => {
+    sessionUser = account;
+    sessionDown = true;
+    return lost.answer(signal);
+  };
+  let error: unknown;
+  void signInWithCode("ana@example.com", "111111").catch((e: unknown) => (error = e));
+  await settle();
+  jest.advanceTimersByTime(20_000);
+  await settle();
+  expect(error).toHaveProperty("code", "timeout");
+
+  // Second try: the session is the account now.
+  sessionDown = false;
+  server.signIn = () => Promise.resolve({ data: { user: account }, error: null });
+  await signInWithCode("ana@example.com", "222222");
+  expect(adoptedBy("acct-1")).toEqual(["anon-1"]);
 });
