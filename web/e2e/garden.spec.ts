@@ -370,12 +370,12 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
   type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
-  type Bench = { sat: number; lapse: number; shown: string; seated: boolean; bench: { x: number; z: number }; lit: { visible: boolean }; guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number; r: number } } };
+  type Bench = { sat: number; lapse: number; shown: string; seated: boolean; bench: { x: number; z: number }; lanterns: { dark: boolean; on: boolean[] }; guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number; r: number } } };
   const scene = () =>
     page.evaluate(() => {
       const s = (window as unknown as { __garden: Bench }).__garden;
       const bird = s.guests.sprites.find((g) => g.v.id === "bird")!.body.at;
-      return { lapse: s.lapse, shown: s.shown, lit: s.lit.visible, birdFromBench: Math.hypot(bird.x - s.bench.x, bird.z - s.bench.z) };
+      return { lapse: s.lapse, shown: s.shown, lit: s.lanterns.dark && s.lanterns.on.every(Boolean), birdFromBench: Math.hypot(bird.x - s.bench.x, bird.z - s.bench.z) };
     });
   const sat = (seconds: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden, { sat: n }), seconds);
   await page.evaluate(() => {

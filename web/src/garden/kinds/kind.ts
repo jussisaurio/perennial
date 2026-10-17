@@ -83,6 +83,8 @@ export interface Visitor<F extends string> {
   onVisit?(settled: boolean): void;
   /** Something lands in the pond (#358). True when it answers (and so the walk says so). */
   onSplash?(): boolean;
+  /** A lantern was blown out or lit again (#361), `on` by spot (Spots.lanterns). What it says about it, or null. */
+  onLanterns?(on: readonly boolean[]): string | null;
 }
 
 export interface VisitorKind<F extends string = string> {

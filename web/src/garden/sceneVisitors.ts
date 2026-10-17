@@ -331,6 +331,16 @@ export class SceneVisitors implements Part {
     return answered;
   }
 
+  /** A lantern was blown out or lit again (#361): each visitor that minds it answers, and may say so (the moth leaves its dark lantern). */
+  lanternsLit(on: readonly boolean[]) {
+    for (const s of this.sprites) {
+      const said = s.visitor.onLanterns?.(on);
+      if (said === undefined) continue;
+      if (said !== null) this.say(s.v.id, said);
+      this.draw(s);
+    }
+  }
+
   /** Visitors react to you and move: each kind's step, then its Body drawn. No allocations here: it runs every frame. */
   tick(f: Frame) {
     const camera = this.world.camera;

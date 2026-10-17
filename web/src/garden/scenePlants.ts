@@ -8,7 +8,9 @@ import { petalAt, petalForms, shakeLength, shiver } from "./shake";
 import { brush, brushStep, type Brush } from "./walkInto";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, SNEEZE } from "./whimsy";
 import type { Label } from "./scene";
+import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
+import { isOld } from "./plants";
 import { BED_H, BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, signBoard, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
 import { boardBox } from "./scenery";
 import type { Layout, PlacedPlant } from "./world";
@@ -25,13 +27,16 @@ const PLANT_VERT = /* glsl */ `
   attribute vec4 iParams; // phase, droop, scale, index
   attribute vec2 iCell; // low cell, high slot (-1: none yet)
   attribute float iLean; // brushed by the walker (#359): radians, springing back to 0
+  attribute float iOld; // 1: an old friend (plants.ts isOld)
   uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uShake; // plant index, lean (#357)
   uniform vec2 uSneeze; // plant index, squash (#360)
   uniform vec2 uLowSize;
+  uniform float uSilver;
   varying vec2 vLow;
   varying vec2 vHi;
   varying float vHasHi;
+  varying float vSilver;
   ${BILLBOARD}
   vec2 cellUv(float idx, float cols, vec2 cell, vec2 size) {
     // Half a texel in from the edge, so nearest sampling never reads the neighbour.
@@ -53,20 +58,35 @@ const PLANT_VERT = /* glsl */ `
     vHi = cellUv(max(iCell.y, 0.0), ${T.HI_COLS.toFixed(1)}, vec2(${T.HI_W.toFixed(1)}, ${T.HI_H.toFixed(1)}), vec2(${T.ATLAS.toFixed(1)}));
     vFog = smoothstep(uFogNear, uFogFar, -mv.z);
     vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
+    vSilver = uSilver * iOld;
   }
 `;
 
+// On a full moon's night (#361), an old friend's outer pixels (those next to an
+// empty one) turn a faint silver, fading with the fog like the rest of it.
 const PLANT_FRAG = /* glsl */ `
   uniform sampler2D uLow;
   uniform sampler2D uHi;
+  uniform vec2 uLowSize;
   varying vec2 vLow;
   varying vec2 vHi;
   varying float vHasHi;
+  varying float vSilver;
   ${SHADE}
+  float empty(sampler2D m, vec2 at) {
+    return 1.0 - step(0.5, texture2D(m, at).a);
+  }
+  float edge(sampler2D m, vec2 at, vec2 px) {
+    return min(1.0, empty(m, at + vec2(px.x, 0.0)) + empty(m, at - vec2(px.x, 0.0)) + empty(m, at + vec2(0.0, px.y)) + empty(m, at - vec2(0.0, px.y)));
+  }
   void main() {
     vec4 c = vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
     if (c.a < 0.5) discard;
     gl_FragColor = shade(c);
+    if (vSilver > 0.5) {
+      float rim = vHasHi > 0.5 ? edge(uHi, vHi, vec2(1.0 / ${T.ATLAS.toFixed(1)})) : edge(uLow, vLow, 1.0 / uLowSize);
+      gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.82, 0.86, 0.96), rim * 0.35 * (1.0 - vFog));
+    }
   }
 `;
 
@@ -86,6 +106,7 @@ function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: numbe
       uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
       uShake: { value: new THREE.Vector2(-1, 0) },
       uSneeze: { value: new THREE.Vector2(-1, 0) },
+      uSilver: { value: 0 },
     },
     vertexShader: PLANT_VERT,
     fragmentShader: PLANT_FRAG,
@@ -121,8 +142,10 @@ export class Plants {
   private onBrush: (p: PlacedPlant) => void;
   /** A plant sneezing (#360): its index, and when it began. */
   private sneezing = { i: -1, at: 0 };
+  /** Tonight's moon is full (moon.ts). */
+  private fullMoon: boolean;
 
-  /** `onBrush`: the walker brushed past a plant, and its note plays now (at most one a frame). */
+  /** `onBrush`: the walker brushed past a plant, and its note plays now (at most one a frame). `fullMoon`: tonight's moon is full (#361). */
   constructor(
     renderer: THREE.WebGLRenderer,
     camera: THREE.PerspectiveCamera,
@@ -130,6 +153,7 @@ export class Plants {
     onProgress: (done: number, total: number) => void,
     behindHedge: (x: number, y: number, z: number) => boolean,
     onBrush: (p: PlacedPlant) => void,
+    fullMoon: boolean,
   ) {
     this.renderer = renderer;
     this.camera = camera;
@@ -138,6 +162,13 @@ export class Plants {
     this.behindHedge = behindHedge;
     this.onBrush = onBrush;
     this.brush = brush(layout);
+    this.fullMoon = fullMoon;
+  }
+
+  /** On a full moon's night, old friends get their silver edge (#361). GardenScene.loadPlants gives the conditions again once the materials exist. */
+  onConditions(c: Conditions) {
+    const silver = this.fullMoon && c.time === "night" ? 1 : 0;
+    for (const m of this.plantMats) m.uniforms.uSilver.value = silver;
   }
 
   /** Raised beds: wooden sides, soil on top, and a sign for each. Draws no random numbers. */
@@ -215,11 +246,13 @@ export class Plants {
       const pos = new Float32Array(idx.length * 3);
       const params = new Float32Array(idx.length * 4);
       const cells = new Float32Array(idx.length * 2);
+      const old = new Float32Array(idx.length);
       idx.forEach((pi, k) => {
         const p = plants[pi];
         pos.set([p.x, baseY, p.z], k * 3);
         params.set([p.phase, p.droop, PLANT_SCALE, pi], k * 4);
         cells.set([pi % T.LOW_PER_SHEET, -1], k * 2);
+        old[k] = isOld(p) ? 1 : 0;
       });
       const cellAttr = new THREE.InstancedBufferAttribute(cells, 2);
       cellAttr.setUsage(THREE.DynamicDrawUsage);
@@ -229,6 +262,7 @@ export class Plants {
       geo.setAttribute("iPos", new THREE.InstancedBufferAttribute(pos, 3));
       geo.setAttribute("iParams", new THREE.InstancedBufferAttribute(params, 4));
       geo.setAttribute("iCell", cellAttr);
+      geo.setAttribute("iOld", new THREE.InstancedBufferAttribute(old, 1));
       geo.instanceCount = idx.length;
       const center = new THREE.Vector3(bed.x, 0.9, bed.z);
       const radius = Math.hypot(bed.w / 2, bed.d / 2, 1.2) + 0.4;

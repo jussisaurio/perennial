@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
+import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
 import { benchLine, collideTrees, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
@@ -13,7 +13,7 @@ import { plantHeight as plantHeightOf } from "../ui/plant";
 import { fishSign, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { SceneVisitors } from "./sceneVisitors";
-import { RAIL, type Spots } from "./spots";
+import { LANTERN_GLASS_Y, RAIL, type Spots } from "./spots";
 import { conditions } from "./conditions";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
@@ -21,6 +21,8 @@ import { Hedge } from "./sceneHedge";
 import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
+import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
+import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
 import { LEAVE_STAND, LeaveItOut, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
 import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
@@ -58,8 +60,8 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), carry's (#358), or the toys' (#360). */
-export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct | ToyAct;
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), carry's (#358), the toys' (#360), or blow a lantern out and light it again (#361). */
+export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct | ToyAct | "snuff" | "light";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), or a form falling from a shaken plant (kind "petal", #357; no text: a leaf), in screen fractions. */
 export interface Label {
@@ -102,6 +104,8 @@ export interface WalkVisitors {
   autumn: boolean;
   /** The lawn and pond toys (#360): today's calendar day, and the paper boat's word. */
   toys: ToysWalk;
+  /** Tonight's moon (#361, moon.ts moonPhase), as the walk opens. */
+  moon: number;
 }
 
 export interface SceneCallbacks {
@@ -129,6 +133,8 @@ export interface SceneCallbacks {
   onStall: () => void;
   /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
   onWalkInto: (e: WalkIntoEvent) => void;
+  /** Every lantern is out and the stars are out over the hills, or no longer (#361). */
+  onStars: (out: boolean) => void;
 }
 
 export interface Input {
@@ -287,9 +293,6 @@ export class GardenScene {
   /** The deadpan scenery (#364): the sundial, the mouse door, and the fish that jumps. */
   private jokes: Jokes;
   private marker!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  private lit!: ReturnType<typeof sprites>;
-  private unlit!: ReturnType<typeof sprites>;
-  private glows: THREE.Object3D[] = [];
   /** The sunflower: where it stands, its sprite's frame and lean, and which side it shows (null: not drawn yet). */
   private flower!: { x: number; z: number; uv: THREE.InstancedBufferAttribute; params: THREE.InstancedBufferAttribute; face: boolean | null };
   private selected: PlacedPlant | null = null;
@@ -310,8 +313,10 @@ export class GardenScene {
   private hitDiscs: HitDisc[] = [];
   /** The tapped scenery word and where its tag sits (it follows the sun or a cloud). */
   private sceneryTap: { view: SceneryView; hit: SceneryHit; until: number } | null = null;
-  /** Lantern spots, for the moth. */
-  private lanternSpots: [number, number][] = [];
+  /** The lanterns where paths cross (#361): lit at dusk and night, each one blown out or lit again by hand. */
+  private lanterns = new Lanterns();
+  /** The lantern the action button acts on, by spot (-1: none in reach). */
+  private lanternTarget = -1;
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door: Door;
   /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose beyond the scene's own sweep. */
@@ -368,7 +373,7 @@ export class GardenScene {
     const first = layout.beds[0];
     this.z = Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2);
     this.camera.rotation.order = "YXZ";
-    this.sky = new SkyWater(this.camera, reducedMotion);
+    this.sky = new SkyWater(this.camera, reducedMotion, visitors.moon);
     this.critters = new Critters(this.camera, reducedMotion);
     this.plants = new Plants(
       this.renderer,
@@ -377,6 +382,7 @@ export class GardenScene {
       (d, total) => this.cb.onProgress(d, total),
       (x, y, z) => this.behindHedge(x, y, z),
       (p) => this.cb.onWalkInto({ did: "brush", word: p.lemma, clear: p.stage === "bloom" }),
+      visitors.moon === FULL_MOON,
     );
     this.door = new Door(reducedMotion);
     this.leaveIt = new LeaveItOut(layout, visitors.leave);
@@ -425,7 +431,7 @@ export class GardenScene {
       },
       visitors.list,
     );
-    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry, this.toys];
+    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry, this.toys, this.lanterns];
     this.tinted = [this.mats, this.leaveIt.mats, this.walkInto.mats, this.carry.mats];
     this.scene.fog = this.fog;
     this.build();
@@ -465,7 +471,7 @@ export class GardenScene {
     this.buildHedge(c);
     const { pads } = this.sky.buildPond(c);
     this.buildTrees(c);
-    this.buildLanterns(c);
+    this.lanterns.build(c);
     const bench = this.buildBench(c);
     const boards = this.buildSigns(c, bench);
     // The one clock read in the build: what is where today (DESIGN.md, Garden code).
@@ -604,7 +610,7 @@ export class GardenScene {
     // (the gnome, the moth...) have no garden word and never sit in the trees.
     const brought = new Set(this.visitors.list.flatMap((v) => visitor(v.id).garden ?? []));
     const trees = this.visitors.door === "open" ? treeVisitorSpots(placeTrees(L.orchard, this.visitors.orchard.trees), brought, now) : [];
-    return { bench: this.bench, pads, lanterns: this.lanternSpots, perches, trees };
+    return { bench: this.bench, pads, lanterns: this.lanterns.spots, perches, trees };
   }
 
   /** The ray from the eye through a point on the canvas (CSS pixels). */
@@ -645,10 +651,41 @@ export class GardenScene {
     else if (a === "stand") this.standUp();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
     else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
+    else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
     else if (a === "throw" && this.reach === "throw") this.throwAhead();
     else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
     else if ((a === "blow" || a === "fold") && a === this.reach && this.toyTarget) this.doToy(this.toyTarget);
     else if (a !== "sit" && a === this.reach && this.leaveTarget) this.doLeave(this.leaveTarget);
+  }
+
+  /** The lantern under a point on the canvas (CSS pixels), while they are lit (#361), with nothing in front of it. Ask after the bowl. */
+  pickLantern(cssX: number, cssY: number, cssW: number, cssH: number): number | null {
+    const r = this.ray(cssX, cssY, cssW, cssH);
+    const got = this.lanterns.pick(r);
+    if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t || thingAt(r, this.sceneryWorld()) < got.t) return null;
+    return got.i;
+  }
+
+  /** A tap on a lantern (#361): blow it out or light it in reach; from farther away, walk up to it first. */
+  tapLantern(i: number) {
+    const [x, z] = this.lanterns.spots[i];
+    if (Math.hypot(x - this.x, z - this.z) < LANTERN_REACH) return this.toggleLantern(i);
+    this.goTo(x, z, LANTERN_REACH - 0.4, () => this.toggleLantern(i));
+  }
+
+  /** Blow lantern `i` out, or light it again; the moth, the stars and the fireflies answer. */
+  private toggleLantern(i: number) {
+    this.lanterns.toggle(i);
+    this.guests.lanternsLit(this.lanterns.on);
+    this.nightSky();
+  }
+
+  /** Every lantern out: the stars come out over the hills and the fireflies glow brighter (#361); otherwise they go back. */
+  private nightSky() {
+    const out = this.lanterns.allOut;
+    this.sky.setStars(out);
+    this.critters.setBright(out);
+    this.cb.onStars(out);
   }
 
   /** A long press on a plant (#357): shake it where it stands when its name shows; from farther away, walk to it first. */
@@ -1064,32 +1101,6 @@ export class GardenScene {
     this.scene.add(treeMesh);
   }
 
-  /** Lanterns where paths cross, and two by the door. Lit at dusk and night. */
-  private buildLanterns(c: BuildCtx) {
-    this.lanternSpots = lanternSpots(c.L);
-    for (const [x, z] of this.lanternSpots) this.hitBoxes.push(spriteBox("lantern", x, 0, z, 0.13, 1.26));
-    const lanternTex = T.pixelTexture(T.lantern());
-    const lanternItems = (u: number): SpriteItem[] => this.lanternSpots.map(([x, z]) => ({ x, y: 0, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
-    this.unlit = sprites(lanternTex, lanternItems(0), 0.42, 1.26);
-    this.lit = sprites(lanternTex, lanternItems(0.5), 0.42, 1.26);
-    for (const m of [this.unlit, this.lit]) {
-      this.mats.add(m.material);
-      this.scene.add(m);
-    }
-    const glowTex = T.pixelTexture(T.glow());
-    const additive = { map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false } as const;
-    for (const [x, z] of this.lanternSpots) {
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...additive }));
-      halo.scale.set(1.1, 1.1, 1);
-      halo.position.set(x, 1.12, z);
-      const pool = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ ...additive, opacity: 0.55 }));
-      pool.rotation.x = -Math.PI / 2;
-      pool.position.set(x, 0.06, z);
-      this.glows.push(halo, pool);
-      this.scene.add(halo, pool);
-    }
-  }
-
   /** A bench by the pond, for sitting and admiring. Returns where it stands. */
   private buildBench(c: BuildCtx): THREE.Group {
     const bench = benchModel(c);
@@ -1366,9 +1377,7 @@ export class GardenScene {
     this.tintNow.copy(LIGHT[t].tint);
     this.fogNow.copy(LIGHT[t].fog);
     this.tint();
-    this.lit.visible = c.dark;
-    this.unlit.visible = !c.dark;
-    for (const g of this.glows) g.visible = c.dark;
+    this.nightSky();
     this.birdByKey();
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
@@ -1416,6 +1425,7 @@ export class GardenScene {
     const pxPerMetre = Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
     this.critters.resize(pxPerMetre);
     this.walkInto.resize(pxPerMetre);
+    this.sky.resize(Math.round((cssH * dpr) / scale));
   }
 
   /**
@@ -1544,7 +1554,7 @@ export class GardenScene {
 
   /**
    * One tap (CSS pixels): the visitor, plant, orchard tree, door or key, the bowl and its things (#351),
-   * a joke (#364), a loose thing or where to put or throw it (#358), a dandelion clock (#360), open ground to walk to (#336), or scenery word it meets, in that order —
+   * a joke (#364), a lit lantern (#361), a loose thing or where to put or throw it (#358), a dandelion clock (#360), open ground to walk to (#336), or scenery word it meets, in that order —
    * the chain GardenWalk.tsx used to run itself as sequential if-returns
    * (#323). Every pick here is pure (no side effects), so asking all of them
    * and keeping the first match in TAP_PRIORITY is exactly that chain's
@@ -1564,6 +1574,8 @@ export class GardenScene {
     if (l) hits.bowl = { kind: "bowl", t: l };
     const j = this.pickJoke(cssX, cssY, cssW, cssH);
     if (j) hits.joke = { kind: "joke", j };
+    const lantern = this.pickLantern(cssX, cssY, cssW, cssH);
+    if (lantern !== null) hits.lantern = { kind: "lantern", i: lantern };
     const c = this.pickCarry(cssX, cssY, cssW, cssH);
     if (c) hits.carry = { kind: "carry", t: c };
     const toy = this.pickToy(cssX, cssY, cssW, cssH);
@@ -1788,17 +1800,23 @@ export class GardenScene {
   /**
    * Tell the page what the action button does now (#334): stand up from the
    * bench, pick up the key, throw a loose thing you hold or put it on the
-   * cairn (#358), pick up a find (#351), open or try the door, the rest of
-   * leave it out's (leave or follow at the bowl, hang on the shelf, take from
-   * the basket or the shelf), pick up a loose thing, sit on the bench, the
-   * toys' (#360: blow a dandelion clock, fold a boat at the pond), or shake the plant ahead of you (#357), for whichever is in reach (in that
+   * cairn (#358), pick up a find (#351), open or try the door (unless a
+   * lantern by the gate is nearer), the rest of leave it out's (leave or
+   * follow at the bowl, hang on the shelf, take from the basket or the shelf),
+   * blow out or light a lantern (#361), pick up a loose thing, sit on the
+   * bench, the toys' (#360: blow a dandelion clock, fold a boat at the pond),
+   * or shake the plant ahead of you (#357), for whichever is in reach (in that
    * order); or nothing. The thing in reach glints (the cue).
    */
   private reportReach() {
     const d = this.door;
     const b = this.bench;
     const nearKey = d.state === "key" && this.inReach("key");
-    const nearDoor = d.state !== "open" && this.inReach("try");
+    const lamp = this.seated ? -1 : this.lanterns.inReach(this.x, this.z);
+    const lampAct: Reach | null = lamp < 0 ? null : this.lanterns.on[lamp] ? "snuff" : "light";
+    // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
+    const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spots[lamp][0] - this.x, this.lanterns.spots[lamp][1] - this.z);
+    const nearDoor = d.state !== "open" && this.inReach("try") && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) <= lampNear;
     const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH;
     // A loose thing in your hands (#358) is used first: thrown, or put on the cairn. One thing at a time, so nothing of leave it out's is offered then.
     const holding = this.carry.held !== null;
@@ -1809,20 +1827,23 @@ export class GardenScene {
     const toy = this.seated || nearKey ? null : this.toys.reachAt(this.x, this.z);
     const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
     // The first of these that applies, in reportReach's order above.
-    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : (door ?? mine?.a ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
+    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : (door ?? mine?.a ?? lampAct ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
     const a: Reach | null = plant ? "shake" : before;
     const target = mine && a === mine.a ? mine.target : null;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = (a === "blow" || a === "fold") && toy ? toy.target : null;
+    const lantern = lampAct && a === lampAct ? lamp : -1;
     // Targets are made once (LeaveItOut.reachAt, Carry.reachAt, Toys.reachAt), so the same target is the same object.
-    if (a === this.reach && target === this.leaveTarget && plant === this.shakeTarget && carried === this.carryTarget && toyTarget === this.toyTarget) return;
+    if (a === this.reach && target === this.leaveTarget && plant === this.shakeTarget && carried === this.carryTarget && toyTarget === this.toyTarget && lantern === this.lanternTarget) return;
     this.reach = a;
     this.leaveTarget = target;
     this.shakeTarget = plant;
     this.carryTarget = carried;
     this.toyTarget = toyTarget;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget, this.x, this.z) : target ? this.leaveIt.cueAt(target) : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
+    this.lanternTarget = lantern;
+    const lampAt = lantern >= 0 ? this.lanterns.spots[lantern] : null;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget, this.x, this.z) : target ? this.leaveIt.cueAt(target) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
     this.cue.visible = !!at;
     if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);

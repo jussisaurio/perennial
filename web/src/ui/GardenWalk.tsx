@@ -49,11 +49,12 @@ type Shook = { lemma: string; forms: string[] };
  * them on the bench (#362); the key at their feet; a toy's doing (#360); a
  * find's word and meaning (#351); a fruit that fell from a tree they walked
  * into, and its word (#359); the prints from the bowl, or something at their
- * feet; what fell from a shaken plant (#357); the door's line; what a thrown
- * thing did where it landed (#358); what they hold. Things in the world, never
+ * feet; what fell from a shaken plant (#357); the door's line; a lantern that
+ * is out, and the stars once every one is (#361); what a thrown thing did
+ * where it landed (#358); what they hold. Things in the world, never
  * instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, company: Companion | null, landed: string | null, toy: ToyDone | null, lang: string): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, company: Companion | null, landed: string | null, toy: ToyDone | null, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
@@ -93,6 +94,7 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
       </>
     );
   const line = spokenLine(labels.find((l) => l.kind === "line")?.text, state);
+  if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.
   if (!held) return landed;
@@ -244,6 +246,8 @@ const REACH_NAME: Record<Reach, string> = {
   stack: "Put it on the stones",
   blow: "Blow the dandelion",
   fold: "Fold a boat",
+  snuff: "Blow out the lantern",
+  light: "Light the lantern",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -274,6 +278,10 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   blow: ["..#.#.#..", ".#.###.#.", "..#####..", "#.#####.#", "..#####..", ".#.###.#.", "..#.#.#..", "....#....", "....#....", "....#...."],
   // A paper boat.
   fold: [".....#.....", "....###....", "...#####...", "..#######..", "###########", ".#########.", "..#######.."],
+  // Puffs of air at a small flame.
+  snuff: ["..........#.", "####......##", ".........###", "#####....###", ".........###", "####......#."],
+  // A flame.
+  light: ["...#...", "...##..", "..###..", ".#####.", ".#####.", "#######", "#######", ".#####.", "..###.."],
 };
 
 /** Leave it out's actions (#351, sceneLeave.ts LeaveAct) and carry's (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -450,7 +458,7 @@ export function GardenWalk({
     if (sound && d.did === "fold") void speak(d.word.lemma, tag);
   };
   const toys = { walk: toysGiven ?? showcaseToys, done: toyDone };
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company } = useGardenScene({ lang, source, visitors, door, leave, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone });
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars } = useGardenScene({ lang, source, visitors, door, leave, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone });
   const held = hand && handView(hand, lang);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
@@ -531,6 +539,11 @@ export function GardenWalk({
         scene.current.tapToy(hit.i);
         setHint(false);
         return;
+      case "lantern":
+        // A lit lantern (#361): blow it out, or light it again; from afar, once you have walked up to it.
+        scene.current.tapLantern(hit.i);
+        setHint(false);
+        return;
       case "walk":
         scene.current.walkTo(hit.x, hit.z);
         moved();
@@ -601,7 +614,7 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold; who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, shook, company, landed, toyNews, lang)}
+        {spokenStatus(reach, labels, door.state, held, shook, company, landed, toyNews, lang, stars)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
