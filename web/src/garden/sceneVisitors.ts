@@ -8,6 +8,9 @@ import { daily, rareDay } from "../core/day";
 import * as T from "./textures";
 import { fencePickets, fencePoint, gnomePose, gnomeTag, snailLap, visitor, type GnomePose, type VisitorId, type VisitorView } from "./visitors";
 import { collide, type Layout } from "./world";
+import { RAIL, type Spots } from "./spots";
+import type { Conditions } from "./conditions";
+import type { Frame, Part } from "./scenePart";
 import { THIRSTY } from "./plants";
 import { KOI } from "./visitorArt";
 
@@ -75,19 +78,6 @@ export interface VisitorWorld {
   lying: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, vh: number, size: number) => SpriteMesh;
 }
 
-/**
- * Where the bench's notice board stands, from the bench (it turns 0.35 rad toward
- * the bench). Far enough right that its 1.2 m board clears the 1.3 m bench.
- */
-export const BENCH_SIGN = { dx: 1.45, dz: -0.05 };
-
-/** Where things are, for placing visitors: the bench, the lily pads and the lantern spots. */
-export interface VisitorSpots {
-  bench: THREE.Vector3;
-  pads: [number, number][];
-  lanterns: [number, number][];
-}
-
 /** A visitor's tag, or what it says, as the scene shows labels (screen fractions). */
 export interface VisitorLabel {
   id: string;
@@ -100,9 +90,7 @@ export interface VisitorLabel {
   known?: boolean;
 }
 
-export class SceneVisitors {
-  /** Their own materials, tinted with the time of day but never swaying or selected. */
-  readonly mats = new Set<THREE.ShaderMaterial>();
+export class SceneVisitors implements Part {
   private sprites: VisitorSprite[] = [];
   private tmp = new THREE.Vector3();
   /** The snail's lap: when it last moved, and the fence length in pickets. */
@@ -137,11 +125,6 @@ export class SceneVisitors {
     this.list = list;
   }
 
-  /** Is anyone here today? */
-  get any(): boolean {
-    return this.sprites.length > 0;
-  }
-
   /**
    * Today's visitors (garden/visitors.ts): the snail on the fence rail, the cat
    * on the bench, a toadstool by a bed, a bird on a sign or the fence, the gnome
@@ -150,12 +133,10 @@ export class SceneVisitors {
    * fish in the pond. One small texture for all of them; each is a
    * one-instance sprite mesh (the fish's lies flat).
    */
-  build({ bench, pads, lanterns }: VisitorSpots) {
+  build({ bench, pads, lanterns, perches, trees }: Spots) {
     if (!this.list.length) return;
     const L = this.world.layout;
-    const b = L.bounds;
     const tex = T.pixelTexture(T.visitors());
-    const RAIL = 0.53; // the top of the fence's upper rail
     const cellU = 1 / T.VISITOR_CELLS;
     // The frog's pad: the one nearest the gate, where you come in.
     const pad = pads.reduce((a, p) => (Math.hypot(p[0] - L.gate.x, p[1] - L.gate.z) < Math.hypot(a[0] - L.gate.x, a[1] - L.gate.z) ? p : a), pads[0]);
@@ -238,17 +219,10 @@ export class SceneVisitors {
         [x, y, z] = [bed.x + bed.w / 2 + 0.16, 0.0, bed.z + along * bed.d];
         [cell, size] = [T.VISITOR_CELL.toadstool, 0.6];
       } else {
-        // On a sign or the fence rail.
-        const first = L.beds[0];
-        const spots: [number, number, number][] = [
-          [L.gate.x, 1.19, b.minZ + 0.25],
-          [first.x - first.w / 2 - 0.3, 0.93, first.z + first.d / 2 + 0.3],
-          [b.maxX - 0.06, RAIL, (b.maxZ + first.z) / 2],
-          [b.minX + 0.06, RAIL, first.z - 1],
-        ];
-        if (!this.list.some((o) => o.id === "cat")) spots.push([bench.x + BENCH_SIGN.dx, 1.19, bench.z + BENCH_SIGN.dz]);
-        // On top of its word's plant (at its foot when the plant droops, thirsty); or on a sign or the fence.
-        [x, y, z] = home ? [home.x, home.r < THIRSTY ? this.world.bedTop : this.world.plantTop(home) + 0.02, home.z + 0.05] : daily(spots, "visitor-bird-spot");
+        // In an orchard tree on its days there (#315); on top of its word's plant (at its foot
+        // when the plant droops, thirsty); or on a sign or the fence.
+        const tree = trees.find((t) => t.who === "bird");
+        [x, y, z] = tree ? [tree.x, tree.y, tree.z] : home ? [home.x, home.r < THIRSTY ? this.world.bedTop : this.world.plantTop(home) + 0.02, home.z + 0.05] : daily(perches, "visitor-bird-spot");
         [cell, size] = [T.VISITOR_CELL.bird, 0.5];
       }
       const mesh = v.id === "fish" ? this.world.lying(tex, x, y, z, cell * cellU, cellU, FISH_VH, size) : this.world.sprite(tex, x, y, z, cell * cellU, cellU, size);
@@ -257,7 +231,6 @@ export class SceneVisitors {
         this.fish.heading = mesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
         this.fish.heading.setY(0, Math.PI / 2);
       }
-      this.mats.add(mesh.material);
       this.world.scene.add(mesh);
       const pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
       const uv = mesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
@@ -271,7 +244,7 @@ export class SceneVisitors {
   }
 
   /** The frog wakes at dusk; the moth comes out then; the butterfly goes at night, like the garden's own; the gnome lights its lantern when the others come on. */
-  setDark(dark: boolean, night: boolean) {
+  onConditions({ dark, night }: Conditions) {
     this.gnome.lit = dark;
     this.frog.dark = dark;
     for (const s of this.sprites) {
@@ -279,12 +252,20 @@ export class SceneVisitors {
       // Always there: the strip shows it too, and a learner who brought it looks for it.
       if (s.v.id === "frog") showCell(s.uv, this.frogAwake() ? T.VISITOR_CELL.frog : T.VISITOR_CELL.frogAsleep);
       if (s.v.id === "butterfly") s.mesh.visible = !night;
-      // The moth is always in its lantern's light.
-      if (s.v.id === "moth") s.mesh.material.uniforms.uTint.value.setRGB(0.85, 0.8, 0.7);
       if (s.v.id === "gnome") this.gnomeCell(s);
     }
     if (this.gnome.glow) this.gnome.glow.visible = dark;
     if (!dark && this.saying?.id === "frog") this.saying = null;
+  }
+
+  /** Tint and fog every visitor for the time of day; the moth is always in its lantern's light. */
+  tint(tint: THREE.Color, fog: THREE.Color) {
+    for (const s of this.sprites) {
+      const u = s.mesh.material.uniforms;
+      if (s.v.id === "moth") u.uTint.value.setRGB(0.85, 0.8, 0.7);
+      else u.uTint.value.copy(tint);
+      u.uFog.value.copy(fog);
+    }
   }
 
   /** The visitor under a point on the canvas (CSS pixels), if any. `hidden`: something (the hedge) is between the eye and this point. */
@@ -320,18 +301,6 @@ export class SceneVisitors {
   /** No tapped tag (a scenery word took its place). */
   untap() {
     this.tapped = null;
-  }
-
-  /**
-   * The bird sits somewhere else today: in an orchard tree (#315), and so not in
-   * the garden. That is its own spot now: it hops off from it as from its old one.
-   */
-  perchBird(x: number, y: number, z: number) {
-    const s = this.sprites.find((o) => o.v.id === "bird");
-    // Not here today (its word not brought, or a dev ?visitors= list without it): nothing to move.
-    if (!s) return;
-    s.home = [x, y, z];
-    this.visit("bird", null);
   }
 
   /**
@@ -374,9 +343,8 @@ export class SceneVisitors {
    * hops away, the gnome looks away when you do, the heron steps back. The moth
    * goes round its lantern. No allocations here: it runs every frame.
    */
-  tick(dt: number, x: number, z: number) {
+  tick({ dt, elapsed, x, z }: Frame) {
     const { camera, layout, reducedMotion } = this.world;
-    const elapsed = this.world.elapsed();
     for (const s of this.sprites) {
       const d = Math.hypot(s.x - x, s.z - z);
       if (s.v.id === "gnome") {

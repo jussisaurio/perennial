@@ -6,7 +6,8 @@
 import * as THREE from "three";
 import { BED_H, type BuildCtx } from "./sceneSprites";
 import type { PlacedPlant } from "./world";
-import type { Conditions, Frame } from "./scenePart";
+import type { Conditions } from "./conditions";
+import type { Frame } from "./scenePart";
 import * as T from "./textures";
 
 // Three z's drifting up from the sleeping bloom (#62). All the motion is in the
@@ -115,8 +116,8 @@ export class Critters {
 
   onConditions(c: Conditions) {
     this.fireflies.visible = c.dark;
-    for (const bf of this.butterflies) bf.mesh.visible = c.time !== "night";
-    if (this.snore) this.snore.visible = c.time === "night";
+    for (const bf of this.butterflies) bf.mesh.visible = !c.night;
+    if (this.snore) this.snore.visible = c.night;
   }
 
   /** Framebuffer pixels per metre at 1 m (GardenScene.resize), for the z's point size. */

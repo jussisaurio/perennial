@@ -102,8 +102,8 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 `GardenScene` (`scene.ts`) is a small host: the renderer and camera, the frame
 loop, movement, and the rendering subsystems that tick or react to the time of
 day behind the `Part` interface (`scenePart.ts`) — the sky and pond, the door
-and key, the critters (fireflies, butterflies...), and the plants (beds,
-culling, texture streaming). These are the rules a change to the garden's
+and key, the critters (fireflies, butterflies...), the plants (beds,
+culling, texture streaming), and the visitors. These are the rules a change to the garden's
 rendering code should follow, and the places it still does not (yet):
 
 - **A new Part is for a new rendering technique, never one per thing.** There
@@ -123,8 +123,8 @@ rendering code should follow, and the places it still does not (yet):
 - **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.
 - **Behaviour gets time only from the `Frame` it is ticked with, or from
-  `Conditions`** (`{ time, dark }`, what `setTime` broadcasts — weather and
-  the hour will join it later), **never from `Date`, `performance.now()` or
+  `Conditions`** (`conditions.ts`: `{ time, dark, night }`, what `setTime`
+  broadcasts — weather and the season will join it later), **never from `Date`, `performance.now()` or
   `Math.random()` directly.** Build-time placement may still use the seeded
   `rand()` passed through `BuildCtx`, or the calendar-day helpers in
   `core/day.ts` (which visitors already used before this): those pick *what*
@@ -137,17 +137,16 @@ Known exceptions, not yet brought in line:
   nothing to gain by giving them the interface. What came for the bowl is
   worked out from calendar days the page passes in (`garden/leave.ts`
   `resolve`), never from the clock in the scene.
-- **Visitors (`sceneVisitors.ts`) predate this interface** and were not
-  reshaped to fit it: a planned redesign of how the garden describes its
-  creatures and visitors may replace both at once, so this PR left it alone.
+- **Each visitor is still an `id ===` branch in `sceneVisitors.ts`**, not
+  yet one file per kind: #324 carries that.
 - **The ground, fence, outer trees, lanterns, bench, signs and the sunflower
   stayed host methods**, each still read directly by `setTime`/`tint` rather
   than through `onConditions` (the lanterns' lit/unlit swap and glow, and the
   sunflower's dusk droop, in particular). The keyhole's glow, once part of
   this list, moved to `Door.onConditions` in review.
 - **Two calls still read real time or randomness directly, not from a Frame:**
-  `GardenScene.openDoor` reads `new Date()` once, when the door opens, to
-  place a visitor in a newly-built orchard tree — a one-off placement, not a
+  `GardenScene.spots` reads `new Date()` once, as the garden is built, to
+  place a visitor in an orchard tree — a one-off placement, not a
   per-frame behaviour; `whimsy.ts`'s `neighbourPerks` defaults to
   `Math.random`, and `Plants.nod` (the plant perking up when it hears its
   name) calls it without passing a seeded `rand()` in its place.
@@ -156,9 +155,12 @@ Known exceptions, not yet brought in line:
   `GardenScene.build()`'s calls (breaking the shared random sequence) or the
   `parts` array (harmless today, since none of `tick`/`onConditions`/
   `dispose` currently depends on order, but that could change silently).
-- **Named build-time anchors (a `Spots` object parts return instead of
-  fields another part reads later, e.g. the pond's pads, the lantern spots,
-  the orchard's bird perch) are not in this PR:** #324 carries that.
+
+**Named places visitors use live in one `Spots` object** (`spots.ts`): the
+pond's pads, the lanterns, the bench, the perches on the notice boards and the
+fence's rail, and today's orchard tree spots. The scene fills it as it builds
+the static world, before the visitors, and visitors read only it, never another
+part's fields.
 
 ## Not yet / later
 
