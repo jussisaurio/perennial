@@ -391,6 +391,7 @@ export class GardenScene {
         camera: this.camera,
         layout,
         reducedMotion,
+        lang,
         elapsed: () => this.elapsed,
         bedTop: BED_H,
         // The plant's own drawn height (its genome and meaning too), as its sprite shows it.
@@ -447,10 +448,12 @@ export class GardenScene {
     this.buildLanterns(c);
     const bench = this.buildBench(c);
     const boards = this.buildSigns(c, bench);
+    // The one clock read in the build: what is where today (DESIGN.md, Garden code).
+    const now = new Date();
     // The mat says the doormat's word as a mat would: the bare word, in capitals.
     const welcome = this.visitors.scenery?.doormat?.word;
-    this.jokes.build(c, this.bench, new Date(), welcome ? bareNoun(welcome).toUpperCase() : null);
-    this.guests.build(this.spots(pads, boards));
+    this.jokes.build(c, this.bench, now, welcome ? bareNoun(welcome).toUpperCase() : null);
+    this.guests.build(this.spots(pads, boards, now), now);
     // After the visitors: the dog, if it came for the bowl in the night (#351), waits by what it left.
     this.leaveIt.build(c);
     this.scene.add(this.leaveIt.root);
@@ -563,7 +566,7 @@ export class GardenScene {
    * pond's pads, the lanterns, the bench, the notice boards and the fence's
    * rail, and, when the walk starts with the door open, the orchard's trees.
    */
-  private spots(pads: [number, number][], boards: [number, number, number][]): Spots {
+  private spots(pads: [number, number][], boards: [number, number, number][], now: Date): Spots {
     const L = this.layout;
     const b = L.bounds;
     const first = L.beds[0];
@@ -579,7 +582,7 @@ export class GardenScene {
     // does not vanish from the garden as the door opens. Visitors that came another way
     // (the gnome, the moth...) have no garden word and never sit in the trees.
     const brought = new Set(this.visitors.list.flatMap((v) => visitor(v.id).garden ?? []));
-    const trees = this.visitors.door === "open" ? treeVisitorSpots(placeTrees(L.orchard, this.visitors.orchard.trees), brought, new Date()) : [];
+    const trees = this.visitors.door === "open" ? treeVisitorSpots(placeTrees(L.orchard, this.visitors.orchard.trees), brought, now) : [];
     return { bench: this.bench, pads, lanterns: this.lanternSpots, perches, trees };
   }
 
@@ -703,7 +706,7 @@ export class GardenScene {
 
   /** What answers a landing (carry.ts ANSWERS): the frog, the dog, a plant. */
   private answerers: Answerers = {
-    frogHop: () => this.guests.frogHop(),
+    frogHop: () => this.guests.splash(),
     say: (id, text) => {
       if (!this.guests.here(id)) return false;
       this.say(id, text);
@@ -1213,10 +1216,20 @@ export class GardenScene {
     return this.guests.pick(cssX, cssY, cssW, cssH, (x, y, z) => this.behindHedge(x, y, z));
   }
 
-  /** Show a visitor's tag for a few seconds (after a tap). */
-  tapVisitor(id: VisitorId) {
-    this.guests.tap(id);
-    this.clearTaps({ scenery: true, tree: true, line: true, find: true, fruit: true });
+  /**
+   * A tap on a visitor: what it says back (the awake frog croaks one of the
+   * `known` words) in a small bubble for a few seconds, or else its tag. Returns what it said.
+   */
+  tapVisitor(id: VisitorId, known: readonly string[]): string | null {
+    const said = this.guests.tap(id, known);
+    this.clearTaps(said === null ? { scenery: true, tree: true, line: true, find: true, fruit: true } : { line: true });
+    return said;
+  }
+
+  /** A visitor says something in a small bubble for a few seconds (the dog or the frog answering a throw, #358). */
+  private say(id: VisitorId, text: string) {
+    this.guests.say(id, text);
+    this.clearTaps({ line: true });
   }
 
   /**
@@ -1267,16 +1280,6 @@ export class GardenScene {
   tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
     this.sceneryTap = { ...s, until: this.elapsed + 4 };
     this.clearTaps({ tree: true, line: true, visitor: true, find: true, fruit: true });
-  }
-
-  frogAwake(): boolean {
-    return this.guests.frogAwake();
-  }
-
-  /** A visitor says something in a small bubble for a few seconds (the frog's croak). */
-  say(id: VisitorId, text: string) {
-    this.guests.say(id, text);
-    this.clearTaps({ line: true });
   }
 
   /** Rasterises every plant's sprite, then builds the streaming pool (#323: scenePlants.ts). */

@@ -26,7 +26,6 @@ import { useNow } from "./useNow";
 import { useGardenScene, useWalkInput } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { gardenBroughtAt, learnerLeave, learnerVisitors, showcaseLeave, type LearnerVisitors } from "./visitors";
-import { frogCroak } from "../garden/visitors";
 import { FINDS, type Left, type LeaveWalk } from "../garden/leave";
 import { CRUMB_BAG, FIND_ART, fruitArt } from "../garden/leaveArt";
 import type { PixelArt } from "../garden/visitorArt";
@@ -432,7 +431,6 @@ export function GardenWalk({
     return () => clearTimeout(t);
   }, [hint]);
 
-  const croaks = useRef(0);
   // A click or tap (not a drag) picks a visitor, a plant, an orchard tree, the
   // door or key, open ground to walk to, or the garden itself, in that order
   // (one dispatcher, #323): whichever it meets first wins. Tapping anything but
@@ -446,18 +444,14 @@ export function GardenWalk({
     if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
     if (hit) onTap?.(hit.kind);
     switch (hit?.kind) {
-      case "visitor":
-        // An awake frog croaks one of your known words instead (never its own name), in a bubble and, with sound on, aloud.
-        // Asleep (by day), it is tapped like any visitor: its tag and its word. No card.
-        if (hit.v.id === "frog" && hit.v.word && scene.current.frogAwake()) {
-          const croak = frogCroak(visitors?.known ?? [], lang, croaks.current++);
-          scene.current.say("frog", croak);
-          if (sound) void speak(croak, tag);
-          return;
-        }
-        scene.current.tapVisitor(hit.v.id);
-        if (sound && hit.v.word) void speak(hit.v.word, tag);
+      case "visitor": {
+        // A visitor may answer (the awake frog croaks one of your known words, never its own name):
+        // in a bubble and, with sound on, aloud. Otherwise its tag and its word. No card.
+        const said = scene.current.tapVisitor(hit.v.id, visitors?.known ?? []);
+        const spoken = said ?? hit.v.word;
+        if (sound && spoken) void speak(spoken, tag);
         return;
+      }
       case "plant":
         // Its card opens here when it is near, or once you have walked up to it.
         scene.current.tapPlant(hit.p);

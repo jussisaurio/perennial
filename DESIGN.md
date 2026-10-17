@@ -153,17 +153,20 @@ Known exceptions, not yet brought in line:
   nothing to gain by giving them the interface. What came for the bowl is
   worked out from calendar days the page passes in (`garden/leave.ts`
   `resolve`), never from the clock in the scene.
-- **Each visitor is still an `id ===` branch in `sceneVisitors.ts`**, not
-  yet one file per kind: #324 carries that.
+- **A few scene stories still name a visitor:** the bench's sign says
+  "Bench: taken" and the snail's board stands only when the cat or the snail
+  is here, and the scene asks the dog and the bird to wait by a key or a find
+  (`visit`). These are the scene's own features about one visitor, not how
+  the visitor itself looks or acts.
 - **The ground, fence, outer trees, lanterns, bench, signs and the sunflower
   stayed host methods**, each still read directly by `setTime`/`tint` rather
   than through `onConditions` (the lanterns' lit/unlit swap and glow, and the
   sunflower's dusk droop, in particular). The keyhole's glow, once part of
   this list, moved to `Door.onConditions` in review.
 - **Two calls still read real time or randomness directly, not from a Frame:**
-  `GardenScene.spots` reads `new Date()` once, as the garden is built, to
-  place a visitor in an orchard tree — a one-off placement, not a
-  per-frame behaviour; `whimsy.ts`'s `neighbourPerks` defaults to
+  `GardenScene.build` reads `new Date()` once, to say what is where today
+  (the visitors' daily spots, a visitor in an orchard tree, the sundial's hour) — a one-off
+  placement, not a per-frame behaviour; `whimsy.ts`'s `neighbourPerks` defaults to
   `Math.random`, and `Plants.nod` (the plant perking up when it hears its
   name) calls it without passing a seeded `rand()` in its place.
 - **Build order and tick/dispose/condition order are documented but not
@@ -172,11 +175,27 @@ Known exceptions, not yet brought in line:
   `parts` array (harmless today, since none of `tick`/`onConditions`/
   `dispose` currently depends on order, but that could change silently).
 
-**Named places visitors use live in one `Spots` object** (`spots.ts`): the
-pond's pads, the lanterns, the bench, the perches on the notice boards and the
-fence's rail, and today's orchard tree spots. The scene fills it as it builds
-the static world, before the visitors, and visitors read only it, never another
-part's fields.
+**Visitors are data (#324).** Each kind of visitor is one pure file in
+`garden/kinds/` (a `VisitorKind`: its art frames, its hit box and tag, where it
+sits today, and how it acts), listed once in `kinds/index.ts`. Who comes on
+which day is its line in `VISITORS` (`visitors.ts`), shared with the 2D strip.
+So a new visitor is its `VISITORS` line, its art, its kind file and one line in
+`KINDS`; the runtime (`sceneVisitors.ts`), the scene and `GardenWalk` do not
+change. The rules:
+- **No `id === "<kind>"` in the runtime, the scene's tick or `GardenWalk`.** A
+  kind acts through its hooks (`step`, `onConditions`, `onTap`, `onVisit`) and
+  shows itself through its `Body` (where it is drawn, its frame, whether it is
+  seen, its tag, its glow); the runtime draws every Body the same way. New
+  verbs (calling a visitor, tapping it) become new hooks.
+- **A kind is pure** (no three, no DOM) and has unit tests that drive it with
+  a fixed `now` and `dt` (`kinds/kinds.test.ts`). It gets the walk's opening
+  moment (`Arrival.now`) for its daily picks, and time after that only from
+  the Frame.
+- **Kinds meet only through `Spots` and `Conditions`**, never through
+  references to each other. **Named places live in one `Spots` object**
+  (`spots.ts`): the pond's pads, the lanterns, the bench, the perches on the
+  notice boards and the fence's rail, and today's orchard tree spots. The
+  scene fills it as it builds the static world, before the visitors.
 
 ## Not yet / later
 

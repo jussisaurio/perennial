@@ -108,9 +108,9 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   while ((await time.getAttribute("aria-label")) !== "Time of day: Evening") await time.click();
   await page.waitForFunction(() => "__garden" in window);
   await page.evaluate(() => {
-    type Sprite = { v: { id: string }; x: number; z: number };
+    type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
     const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
-    const frog = s.guests.sprites.find((o) => o.v.id === "frog")!;
+    const frog = s.guests.sprites.find((o) => o.v.id === "frog")!.body.at;
     // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
     const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
     s.x = frog.x + Math.sin(a) * 1.3;
@@ -130,7 +130,11 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   await time.click();
   await expect(time).toHaveAttribute("aria-label", "Time of day: Day");
   await expect(tag).toHaveText("la rana · frog");
-  expect(await page.evaluate(() => (window as unknown as { __garden: { frogAwake(): boolean } }).__garden.frogAwake())).toBe(false);
+  const frame = await page.evaluate(() => {
+    type Sprite = { v: { id: string }; body: { frame: string } };
+    return (window as unknown as { __garden: { guests: { sprites: Sprite[] } } }).__garden.guests.sprites.find((o) => o.v.id === "frog")!.body.frame;
+  });
+  expect(frame).toBe("asleep");
   expect(errors).toEqual([]);
 });
 
@@ -365,12 +369,12 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
-  type Sprite = { v: { id: string }; x: number; z: number };
+  type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
   type Bench = { sat: number; lapse: number; shown: string; seated: boolean; bench: { x: number; z: number }; lit: { visible: boolean }; guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number; r: number } } };
   const scene = () =>
     page.evaluate(() => {
       const s = (window as unknown as { __garden: Bench }).__garden;
-      const bird = s.guests.sprites.find((g) => g.v.id === "bird")!;
+      const bird = s.guests.sprites.find((g) => g.v.id === "bird")!.body.at;
       return { lapse: s.lapse, shown: s.shown, lit: s.lit.visible, birdFromBench: Math.hypot(bird.x - s.bench.x, bird.z - s.bench.z) };
     });
   const sat = (seconds: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden, { sat: n }), seconds);

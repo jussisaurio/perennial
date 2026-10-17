@@ -289,8 +289,8 @@ test("a key left a few days: at dusk the bird waits by it, and by day it is back
   await keyWaited(page, 4, "&visitors=bird");
   const birdFromKey = () =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: { door: { key: { x: number; z: number } }; guests: { sprites: { v: { id: string }; x: number; z: number }[] } } }).__garden;
-      const b = s.guests.sprites.find((o) => o.v.id === "bird")!;
+      const s = (window as unknown as { __garden: { door: { key: { x: number; z: number } }; guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] } } }).__garden;
+      const b = s.guests.sprites.find((o) => o.v.id === "bird")!.body.at;
       return Math.hypot(b.x - s.door.key.x, b.z - s.door.key.z);
     });
   // Noon: the bird is in its own spot, away from the key.
