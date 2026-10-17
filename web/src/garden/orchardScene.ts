@@ -35,6 +35,8 @@ export interface Orchard {
   hits: TreeHit[];
   /** Scenery the tap can name: the bench. */
   scenery: HitBox[];
+  /** The trees' sprite params (phase, droop, scale, index; one instance per tree, in `trees` order), for the shake when one is walked into (#359), or null with no trees. */
+  params: THREE.InstancedBufferAttribute | null;
   /** The trees' sprite material, for the scene's per-frame uniforms. */
   mats: THREE.ShaderMaterial[];
   dispose(): void;
@@ -65,9 +67,11 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: Orch
     index: TREE_INDEX,
   }));
   const mats: THREE.ShaderMaterial[] = [];
+  let params: THREE.InstancedBufferAttribute | null = null;
   if (items.length) {
     const mesh = world.sprites(atlas, items, SPRITE_M.w, SPRITE_M.h);
     mats.push(mesh.material);
+    params = mesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     group.add(mesh);
   }
 
@@ -93,6 +97,7 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: Orch
     trees: placed,
     hits: treeHits(placed),
     scenery,
+    params,
     mats,
     dispose() {
       world.parent.remove(group);

@@ -103,8 +103,10 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 loop, movement, and the rendering subsystems that tick or react to the time of
 day behind the `Part` interface (`scenePart.ts`) — the sky and pond, the door
 and key, the critters (fireflies, butterflies...), the plants (beds,
-culling, texture streaming), the visitors, and the deadpan scenery (#364:
-the sundial, the mouse door, the fish that jumps). These are the rules a change to the garden's
+culling, texture streaming, brushing past them), the visitors, the deadpan
+scenery (#364: the sundial, the mouse door, the fish that jumps), and walking
+into things (#359: a CPU-moved pool of pixel bits for bursts and showers, and
+fallen fruit). These are the rules a change to the garden's
 rendering code should follow, and the places it still does not (yet):
 
 - **A new Part is for a new rendering technique, never one per thing.** There
@@ -116,7 +118,7 @@ rendering code should follow, and the places it still does not (yet):
   share one random sequence, drawn in a fixed sequence — never reshuffle it);
   the order `parts` is ticked, disposed and given `Conditions` in; pick
   priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
-  say, then the one active tag — the door's line, a find's word, scenery or
+  say, then the one active tag — the door's line, a find's word, a fallen fruit's word, scenery or
   tree — then a visitor's); and what the one action button acts on
   (`reportReach`: stand up, the key, a find at your feet, the door, the
   bowl, shelf and basket, the bench, then the plant ahead). A Part never reaches into another

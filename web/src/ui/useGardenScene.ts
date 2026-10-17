@@ -7,12 +7,14 @@ import { language } from "../content/languages";
 import { reportStalledWalk } from "../observability";
 import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
-import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkVisitors } from "../garden/scene";
+import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
 import type { Left, LeaveWalk } from "../garden/leave";
 import type { Hand, LeaveDone } from "../garden/sceneLeave";
 import type { Companion } from "../garden/bench";
 import { sceneryViews } from "../garden/scenery";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
+import { isAutumn } from "../core/day";
+import { wakeAudio } from "./chime";
 import { layout, type Layout, type PlacedPlant } from "../garden/world";
 import type { Focus } from "./gardenFocus";
 import type { LearnerVisitors } from "./visitors";
@@ -41,6 +43,7 @@ export function useGardenScene({
   visitors,
   door,
   leave,
+  walkInto,
   focus,
   time,
   detail,
@@ -54,6 +57,8 @@ export function useGardenScene({
   visitors?: LearnerVisitors | null;
   door: { state: DoorState; open: () => void };
   leave: { walk: LeaveWalk; save: (left: Left) => void; done: (d: LeaveDone) => void };
+  /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
+  walkInto: (e: WalkIntoEvent) => void;
   focus?: Focus | null;
   time: TimeOfDay;
   detail: Detail;
@@ -80,6 +85,8 @@ export function useGardenScene({
   leaveNow.current = leave;
   const shakeNow = useRef(onShake);
   shakeNow.current = onShake;
+  const walkIntoNow = useRef(walkInto);
+  walkIntoNow.current = walkInto;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
@@ -98,6 +105,7 @@ export function useGardenScene({
         door: door.state,
         orchard: { trees: source.orchard, firstPlanted: source.first ? source.first.at : null },
         leave: leave.walk,
+        autumn: isAutumn(new Date()),
       },
     });
   }, [source, data, visitors, door.state, leave.walk, lang]);
@@ -135,6 +143,7 @@ export function useGardenScene({
             onLeave: (d) => leaveNow.current.done(d),
             onLeft: (left) => leaveNow.current.save(left),
             onShake: (p, forms) => shakeNow.current(p, forms),
+            onWalkInto: (e) => walkIntoNow.current(e),
           },
           reduced,
           lang,
@@ -276,6 +285,8 @@ export function useWalkInput({
       }
       if (!WALK_KEYS.includes(e.code)) return;
       e.preventDefault();
+      // Walking brushes plants that play their notes (#359): audio may start only inside a key press or tap.
+      wakeAudio();
       keys.add(e.code);
       moved.current();
       update();

@@ -28,6 +28,8 @@ import { bareNoun, nounView } from "./nouns";
 import { plantInReach } from "./shake";
 import type { Gender } from "../deck/schema";
 import { Jokes, type Joke } from "./sceneJokes";
+import { WalkInto } from "./sceneWalkInto";
+import type { Fell, Rolling } from "./walkInto";
 import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
 import { inLang } from "./nouns";
@@ -50,6 +52,8 @@ const NOTICE_TOP = 1.19;
 export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 /** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
 export type DoorAction = "try" | "key" | "open";
+/** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
+export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
 /** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), or shake a plant (#357). */
 export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake";
 
@@ -61,7 +65,7 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find" | "petal";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find" | "petal" | "fruit";
   gloss?: string;
   /** A noun plant's gender: the shape of its label's stake (#357). */
   gender?: Gender;
@@ -90,6 +94,8 @@ export interface WalkVisitors {
   orchard: { trees: OrchardTree[]; firstPlanted: number | null };
   /** Leave it out (#351): the bowl and the shelf as the walk opens, and what the basket offers. */
   leave: LeaveWalk;
+  /** Autumn as the walk opens (core/day.ts isAutumn): leaf piles on the paths (#359). */
+  autumn: boolean;
 }
 
 export interface SceneCallbacks {
@@ -110,6 +116,8 @@ export interface SceneCallbacks {
   onCompany: (c: Companion | null) => void;
   /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
   onStall: () => void;
+  /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
+  onWalkInto: (e: WalkIntoEvent) => void;
 }
 
 export interface Input {
@@ -157,11 +165,11 @@ const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
 /**
  * The order GardenScene.labels pushes a tag in, when more than one shows at
  * once: a visitor's "say" bubble (the frog's croak) first; then whichever of
- * line/find/scenery/tree is active (GardenScene.clearTaps keeps at most one of
+ * line/find/fruit/scenery/tree is active (GardenScene.clearTaps keeps at most one of
  * those three set); a visitor's approach tag last. One table, like
  * TAP_PRIORITY.
  */
-const LABEL_PRIORITY = ["say", "line", "find", "scenery", "tree", "tag"] as const;
+const LABEL_PRIORITY = ["say", "line", "find", "fruit", "scenery", "tree", "tag"] as const;
 
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
@@ -214,6 +222,10 @@ export class GardenScene {
   private leaveIt: LeaveItOut;
   /** A find's word and meaning over where it lay, for a few seconds after it is picked up. */
   private foundTap: { word: string; gloss: string; at: [number, number, number]; until: number } | null = null;
+  /** A fallen fruit's tag (#359): the word of the tree it fell from, over the fruit as it rolls, for a few seconds. */
+  private fruitTap: { tree: PlacedTree; at: Readonly<Rolling>; until: number } | null = null;
+  /** Walking into things (#359): bumping orchard trees and bursting leaf piles. */
+  private walkInto: WalkInto;
   private cue!: THREE.Sprite;
   /** Sitting on the bench (#334); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
   private seated = false;
@@ -267,7 +279,7 @@ export class GardenScene {
   private lastLabels = "";
   private tmp = new THREE.Vector3();
   /** Filled in place every tick: tick allocates nothing (DESIGN.md, Garden code). */
-  private readonly tickFrame: Frame = { dt: 0, elapsed: 0, x: 0, z: 0, yaw: 0 };
+  private readonly tickFrame: Frame = { dt: 0, elapsed: 0, x: 0, z: 0, yaw: 0, speed: 0 };
   /** What a tap can name in the garden itself (#74), built once. The clouds and the sun are read at tap time. */
   private hitBoxes: HitBox[] = [];
   private hitDiscs: HitDisc[] = [];
@@ -333,10 +345,28 @@ export class GardenScene {
     this.camera.rotation.order = "YXZ";
     this.sky = new SkyWater(this.camera, reducedMotion);
     this.critters = new Critters(this.camera, reducedMotion);
-    this.plants = new Plants(this.renderer, this.camera, layout, (d, total) => this.cb.onProgress(d, total), (x, y, z) => this.behindHedge(x, y, z));
+    this.plants = new Plants(
+      this.renderer,
+      this.camera,
+      layout,
+      (d, total) => this.cb.onProgress(d, total),
+      (x, y, z) => this.behindHedge(x, y, z),
+      (p) => this.cb.onWalkInto({ did: "brush", word: p.lemma, clear: p.stage === "bloom" }),
+    );
     this.door = new Door(reducedMotion);
     this.leaveIt = new LeaveItOut(layout, visitors.leave);
     this.jokes = new Jokes(this.camera, reducedMotion);
+    this.walkInto = new WalkInto(
+      reducedMotion,
+      (tree, fell, fruit) => {
+        if (fruit) {
+          this.fruitTap = { tree, at: fruit, until: this.elapsed + 4 };
+          this.clearTaps({ scenery: true, tree: true, line: true, visitor: true, find: true });
+        }
+        this.cb.onWalkInto({ did: "bump", fell, word: tree.lemma });
+      },
+      () => this.cb.onWalkInto({ did: "pile" }),
+    );
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
@@ -356,8 +386,8 @@ export class GardenScene {
       },
       visitors.list,
     );
-    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes];
-    this.tinted = [this.mats, this.leaveIt.mats];
+    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto];
+    this.tinted = [this.mats, this.leaveIt.mats, this.walkInto.mats];
     this.scene.fog = this.fog;
     this.build();
   }
@@ -417,6 +447,7 @@ export class GardenScene {
     this.buildDecor(c);
     this.sky.buildSkyAndSun(c);
     this.critters.build(c);
+    this.walkInto.build(c, this.visitors.autumn);
     this.buildMarker();
     this.setTime(this.time);
   }
@@ -499,6 +530,7 @@ export class GardenScene {
       trees,
     );
     this.orchard = orchard;
+    this.walkInto.setOrchard(orchard.trees, orchard.params);
     for (const m of orchard.mats) this.mats.add(m);
     this.hitBoxes.push(...orchard.scenery);
     // Built after setTime when the door opens in this walk: give it the time of day now.
@@ -623,7 +655,7 @@ export class GardenScene {
       const v = nounView(FINDS[done.find], this.lang);
       // A course with no word for it shows only its meaning.
       this.foundTap = { word: v.word ?? v.gloss, gloss: v.gloss, at: done.at, until: this.elapsed + 4 };
-      this.clearTaps({ scenery: true, tree: true, line: true, visitor: true });
+      this.clearTaps({ scenery: true, tree: true, line: true, visitor: true, fruit: true });
     }
     this.cb.onLeave(done);
   }
@@ -759,22 +791,23 @@ export class GardenScene {
   /** Show a quiet line over a point for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
   private showLine(text: string, at: [number, number, number]) {
     this.line = { text, at, until: this.elapsed + 4 };
-    this.clearTaps({ scenery: true, tree: true, visitor: true, find: true });
+    this.clearTaps({ scenery: true, tree: true, visitor: true, find: true, fruit: true });
   }
 
   /**
    * A scenery word, an orchard tree, the door's quiet line, a find's word
-   * (#351) and a visitor's tag take turns showing: setting one clears
+   * (#351), a fallen fruit's word (#359) and a visitor's tag take turns showing: setting one clears
    * whichever of the rest is named here. One place for the rule this file's
    * own select/tapVisitor/tapTree/tapScenery/showLine used to half-repeat,
    * each inline (#323).
    */
-  private clearTaps(which: { scenery?: boolean; tree?: boolean; line?: boolean; visitor?: boolean; find?: boolean }) {
+  private clearTaps(which: { scenery?: boolean; tree?: boolean; line?: boolean; visitor?: boolean; find?: boolean; fruit?: boolean }) {
     if (which.scenery) this.sceneryTap = null;
     if (which.tree) this.treeTap = null;
     if (which.line) this.line = null;
     if (which.visitor) this.guests.untap();
     if (which.find) this.foundTap = null;
+    if (which.fruit) this.fruitTap = null;
   }
 
   /** The mouse door, or the sundial at night (#364), under a point on the canvas (CSS pixels), with nothing in front of it. Ask after leave it out's things. */
@@ -809,7 +842,7 @@ export class GardenScene {
   /** Show a tree's word and meaning over it for a few seconds (after a tap). One tag at a time. */
   tapTree(tree: PlacedTree) {
     this.treeTap = { tree, until: this.elapsed + 4 };
-    this.clearTaps({ scenery: true, line: true, visitor: true, find: true });
+    this.clearTaps({ scenery: true, line: true, visitor: true, find: true, fruit: true });
   }
 
   /** Trees and bushes outside the fence. */
@@ -1067,7 +1100,7 @@ export class GardenScene {
   /** Show a visitor's tag for a few seconds (after a tap). */
   tapVisitor(id: VisitorId) {
     this.guests.tap(id);
-    this.clearTaps({ scenery: true, tree: true, line: true, find: true });
+    this.clearTaps({ scenery: true, tree: true, line: true, find: true, fruit: true });
   }
 
   /**
@@ -1117,7 +1150,7 @@ export class GardenScene {
   /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
   tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
     this.sceneryTap = { ...s, until: this.elapsed + 4 };
-    this.clearTaps({ tree: true, line: true, visitor: true, find: true });
+    this.clearTaps({ tree: true, line: true, visitor: true, find: true, fruit: true });
   }
 
   frogAwake(): boolean {
@@ -1206,8 +1239,10 @@ export class GardenScene {
     this.renderer.setSize(Math.round((cssW * dpr) / scale), Math.round((cssH * dpr) / scale), false);
     this.camera.aspect = cssW / cssH;
     this.camera.updateProjectionMatrix();
-    // Framebuffer pixels per metre at 1 m, for the z's point size.
-    this.critters.resize(Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360)));
+    // Framebuffer pixels per metre at 1 m, for the z's and the bits' point size.
+    const pxPerMetre = Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
+    this.critters.resize(pxPerMetre);
+    this.walkInto.resize(pxPerMetre);
   }
 
   /**
@@ -1369,7 +1404,7 @@ export class GardenScene {
 
   select(p: PlacedPlant | null, walkTo = false) {
     this.selected = p;
-    if (p) this.clearTaps({ scenery: true, tree: true, find: true });
+    if (p) this.clearTaps({ scenery: true, tree: true, find: true, fruit: true });
     const index = p ? this.layout.plants.indexOf(p) : -1;
     for (const mat of this.mats) mat.uniforms.uSelected.value = index;
     this.marker.visible = !!p;
@@ -1413,7 +1448,10 @@ export class GardenScene {
     const t = this.elapsed;
     const motion = this.reducedMotion ? 0 : 1;
 
-    // Walking: forward is -z at yaw 0.
+    // Walking: forward is -z at yaw 0. Where the walker was, and whether they went on foot, for how fast they walk into things (#359).
+    const x0 = this.x;
+    const z0 = this.z;
+    const onFoot = !!this.trip || Math.hypot(this.input.move.x, this.input.move.y) > 0.01;
     const { move, run } = this.input;
     const len = Math.hypot(move.x, move.y);
     if (len > 0.01) {
@@ -1455,13 +1493,16 @@ export class GardenScene {
     // sky (clouds, water, the sun), the door (its swing and the key's glint),
     // critters (fireflies, butterflies, the sleeping bloom's z's), plants
     // (chunk culling — beds outside the fog are skipped — streaming the
-    // plants nearest you, and the perk uniform), then the visitors.
+    // plants nearest you, the perk uniform, brushing), the visitors, then
+    // walking into trees and leaf piles (#359).
     const frame = this.tickFrame;
     frame.dt = dt;
     frame.elapsed = t;
     frame.x = this.x;
     frame.z = this.z;
     frame.yaw = this.yaw;
+    // dt is 0 only on the very first frame, before anyone could walk.
+    frame.speed = onFoot && dt > 0 ? Math.hypot(this.x - x0, this.z - z0) / dt : 0;
     for (const part of this.parts) part.tick?.(frame);
     // The thing in reach glints now and then (#334); with reduced motion, a still glint.
     if (this.cue.visible) {
@@ -1531,8 +1572,15 @@ export class GardenScene {
       v.set(...ft.at).project(this.camera);
       if (v.z <= 1) tags.find = { id: "find", text: ft.word, gloss: ft.gloss, kind: "find", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
-    // A visitor's approach tag shows only while none of line/find/scenery/tree is active (clearTaps keeps at most one of those set at a time).
-    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line || this.foundTap);
+    // A fallen fruit's word (#359), over the fruit as it rolls; kept on the screen. Its meaning is the fruit's kind, the plain English name.
+    const fr = this.fruitTap;
+    if (fr && this.elapsed > fr.until) this.fruitTap = null;
+    else if (fr) {
+      v.set(fr.at.x, fr.at.y + 0.25, fr.at.z).project(this.camera);
+      if (v.z <= 1) tags.fruit = { id: "fruit", text: fr.tree.lemma, gloss: fr.tree.kind, kind: "fruit", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
+    }
+    // A visitor's approach tag shows only while none of line/find/fruit/scenery/tree is active (clearTaps keeps at most one of those set at a time).
+    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line || this.foundTap || this.fruitTap);
     const { say, tag } = this.guests.labels(this.x, this.z, !exclusiveActive);
     if (say) tags.say = say;
     if (tag) tags.tag = tag;
