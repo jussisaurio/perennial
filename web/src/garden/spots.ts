@@ -19,6 +19,9 @@ export interface Spots {
   trees: readonly TreeVisitorSpot[];
 }
 
+/** The middle of a lantern's glass (m): the moth goes round it, and the glint shows there (#361). */
+export const LANTERN_GLASS_Y = 1.02;
+
 /** The top of the fence's upper rail (m). */
 export const RAIL = 0.53;
 

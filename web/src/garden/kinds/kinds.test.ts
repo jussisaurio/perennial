@@ -163,4 +163,29 @@ describe("visitor kinds", () => {
     expect(fish.body.turn).toBeCloseTo(a + Math.PI / 2, 1);
     expect(Math.hypot(fish.body.x - L.pond.x, fish.body.z - L.pond.z)).toBeCloseTo(L.pond.r * 0.45, 5);
   });
+
+  test("the moth's lantern blown out (#361): it flies, a little hurt, to the nearest lit one; with none lit it sits in the dark, and goes to the first lit again", () => {
+    const moth = arrive("moth");
+    moth.onConditions!(conditions("night"));
+    const spot = (v: Visitor<string>) => SPOTS.lanterns.findIndex(([x, z]) => x === v.body.at.x && z === v.body.at.z);
+    const home = spot(moth);
+    const on = SPOTS.lanterns.map(() => true);
+    on[home] = false;
+    expect(moth.onLanterns!(on)).toBe("…");
+    const to = spot(moth);
+    const dist = (i: number) => Math.hypot(SPOTS.lanterns[i][0] - SPOTS.lanterns[home][0], SPOTS.lanterns[i][1] - SPOTS.lanterns[home][1]);
+    expect(to).not.toBe(home);
+    for (let i = 0; i < on.length; i++) if (i !== home) expect(dist(to)).toBeLessThanOrEqual(dist(i));
+    // It gets there.
+    run(moth, 2, 0, 0);
+    expect(Math.hypot(moth.body.x - SPOTS.lanterns[to][0], moth.body.z - SPOTS.lanterns[to][1])).toBeLessThan(0.3);
+    // Every lantern out: it sits on its dark lantern, saying nothing, and stays.
+    expect(moth.onLanterns!(on.map(() => false))).toBeNull();
+    run(moth, 1, 0, 0);
+    expect([moth.body.x, moth.body.z, moth.body.frame]).toEqual([SPOTS.lanterns[to][0], SPOTS.lanterns[to][1], "closed"]);
+    // One lit again: it goes there, not hurt this time.
+    const lit = on.map((_, i) => i === home);
+    expect(moth.onLanterns!(lit)).toBeNull();
+    expect(spot(moth)).toBe(home);
+  });
 });

@@ -15,6 +15,7 @@ import type { Companion } from "../garden/bench";
 import type { ToyDone } from "../garden/sceneToys";
 import type { ToysWalk } from "../garden/toys";
 import { sceneryViews } from "../garden/scenery";
+import { moonPhase } from "../garden/moon";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
 import { isAutumn } from "../core/day";
 import { wakeAudio } from "./chime";
@@ -87,6 +88,7 @@ export function useGardenScene({
   const [reach, setReach] = useState<Reach | null>(null);
   const [hand, setHand] = useState<Held | null>(null);
   const [company, setCompany] = useState<Companion | null>(null);
+  const [stars, setStars] = useState(false);
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
@@ -121,6 +123,8 @@ export function useGardenScene({
         leave: leave.walk,
         autumn: isAutumn(new Date()),
         toys: toys.walk,
+        // Tonight's real moon (#361), as the walk opens: the same as outside the window.
+        moon: moonPhase(Date.now()),
       },
     });
   }, [source, data, visitors, door.state, leave.walk, toys.walk, lang]);
@@ -161,6 +165,7 @@ export function useGardenScene({
             onWalkInto: (e) => walkIntoNow.current(e),
             onCarry: (d) => carryNow.current(d),
             onToy: (d) => toysNow.current.done(d),
+            onStars: setStars,
           },
           reduced,
           lang,
@@ -214,7 +219,7 @@ export function useGardenScene({
     scene.current?.setDetail(detail);
   }, [detail]);
 
-  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company };
+  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars };
 }
 
 /**

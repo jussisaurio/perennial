@@ -38,7 +38,10 @@ const SNORE_FRAG = /* glsl */ `
   }
 `;
 
-type Butterfly = { mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>; cx: number; cz: number; r: number; ph: number; tex: THREE.Texture };
+/** How long the fireflies take to brighten, or settle back, as the last lantern goes out or one is lit (s). */
+const BRIGHTEN_S = 2;
+
+type Butterfly ={ mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>; cx: number; cz: number; r: number; ph: number; tex: THREE.Texture };
 
 export class Critters {
   private camera: THREE.PerspectiveCamera;
@@ -46,6 +49,8 @@ export class Critters {
   private fireflies!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   private butterflies: Butterfly[] = [];
   private snore: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial> | null = null;
+  /** Every lantern is out (#361). */
+  private bright = false;
 
   constructor(camera: THREE.PerspectiveCamera, reducedMotion: boolean) {
     this.camera = camera;
@@ -68,12 +73,13 @@ export class Critters {
     this.fireflies = new THREE.Points(
       ffGeo,
       new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uMove: { value: 1 } },
-        vertexShader: `attribute float phase; uniform float uTime; uniform float uMove; varying float vA;
+        // uBright: 0 to 1 as every lantern goes out (#361): bigger, brighter, and more of them on at once.
+        uniforms: { uTime: { value: 0 }, uMove: { value: 1 }, uBright: { value: 0 } },
+        vertexShader: `attribute float phase; uniform float uTime; uniform float uMove; uniform float uBright; varying float vA;
           void main() { vec3 p = position + uMove * vec3(sin(uTime*0.5+phase)*0.6, sin(uTime*0.8+phase*2.0)*0.25, cos(uTime*0.4+phase)*0.6);
             vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv;
-            gl_PointSize = clamp(14.0 / -mv.z, 2.0, 6.0); vA = 0.5 + 0.5 * sin(uTime * 2.0 + phase * 3.0); }`,
-        fragmentShader: `varying float vA; void main() { if (vA < 0.25) discard; gl_FragColor = vec4(1.0, 0.95, 0.45, 1.0) * vA; }`,
+            gl_PointSize = clamp(14.0 * (1.0 + 0.5 * uBright) / -mv.z, 2.0, 6.0 + 3.0 * uBright); vA = 0.5 + 0.5 * sin(uTime * 2.0 + phase * 3.0); }`,
+        fragmentShader: `uniform float uBright; varying float vA; void main() { if (vA < 0.25 - 0.2 * uBright) discard; gl_FragColor = vec4(1.0, 0.95, 0.45, 1.0) * min(1.0, vA * (1.0 + 0.7 * uBright)); }`,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -120,6 +126,11 @@ export class Critters {
     if (this.snore) this.snore.visible = c.night;
   }
 
+  /** Every lantern is out (#361): the fireflies glow brighter over a moment; one lit again, and they settle back. */
+  setBright(on: boolean) {
+    this.bright = on;
+  }
+
   /** Framebuffer pixels per metre at 1 m (GardenScene.resize), for the z's point size. */
   resize(pxPerMetre: number) {
     if (this.snore) this.snore.material.uniforms.uScale.value = pxPerMetre;
@@ -130,6 +141,8 @@ export class Critters {
     const elapsed = f.elapsed;
     this.fireflies.material.uniforms.uTime.value = elapsed;
     this.fireflies.material.uniforms.uMove.value = motion;
+    const b = this.fireflies.material.uniforms.uBright;
+    b.value = this.bright ? Math.min(1, b.value + f.dt / BRIGHTEN_S) : Math.max(0, b.value - f.dt / BRIGHTEN_S);
     if (this.snore?.visible) this.snore.material.uniforms.uTime.value = elapsed;
     for (const bf of this.butterflies) {
       const a = elapsed * 0.7 * motion + bf.ph;

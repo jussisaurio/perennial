@@ -1,5 +1,6 @@
 // The sky and the pond (#323): the dome, the far hills, the drifting clouds,
-// the sun (the moon at night), and the pond with its lily pads. Everything
+// the sun (tonight's real moon at night, #361), the stars that come out over
+// the hills once every lantern is out, and the pond with its lily pads. Everything
 // here only the time of day tints or moves; nothing is tapped directly (the
 // sun, a cloud, the hills and the pond are named through scenery.ts's own hit
 // test; picking stays on GardenScene, which reads sunDir/cloudPositions/
@@ -8,6 +9,7 @@
 import * as THREE from "three";
 import { sunPath, SUN_AT, type Look } from "./bench";
 import type { TimeOfDay } from "./scene";
+import { rng } from "../lib/seed";
 import type { BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
@@ -22,6 +24,34 @@ const SUN_DIST = 200;
 const CLOUD: Record<TimeOfDay, THREE.Color> = { day: new THREE.Color(0xffffff), dusk: new THREE.Color(0xffd2c0), night: new THREE.Color(0x39406a) };
 /** How fast the clouds drift (rad/s), and how much faster for each part of the day a second while time speeds up on the bench (#362), up to `max`. */
 const CLOUD_DRIFT = { speed: 0.004, race: 4, max: 0.6 };
+/**
+ * The stars that come out low over the hills once every lantern is out (#361):
+ * how many, how far away, from how high over the horizon to how high
+ * (radians), and how long they take to come out or fade (s).
+ */
+const STARS = { n: 140, dist: 210, low: 0.02, high: 0.5, fade: 2.5 };
+
+// Square pixel stars, each with its own twinkle; with reduced motion they shine still.
+const STAR_VERT = /* glsl */ `
+  attribute float phase;
+  uniform float uTime;
+  uniform float uMove;
+  uniform float uSize;
+  uniform float uFade;
+  varying float vA;
+  void main() {
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = uSize * (phase > 5.0 ? 2.0 : 1.0);
+    vA = uFade * (1.0 - uMove * 0.45 * (0.5 + 0.5 * sin(uTime * (0.8 + fract(phase) * 1.6) + phase * 7.0)));
+  }
+`;
+const STAR_FRAG = /* glsl */ `
+  varying float vA;
+  void main() {
+    if (vA < 0.02) discard;
+    gl_FragColor = vec4(vec3(0.85, 0.88, 1.0) * vA, 1.0);
+  }
+`;
 
 /** What building this part returns for the parts built after it: the lily pads, for the frog and the fish. */
 export interface SkySpots {
@@ -50,14 +80,21 @@ export class SkyWater implements Part {
   private clouds: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
   private sun!: THREE.Sprite;
   private water!: THREE.Texture;
+  /** Tonight's moon (moon.ts moonPhase), worked out as the walk opens. */
+  private moonPhase: number;
+  private stars!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
+  /** Whether the stars over the hills are out (every lantern is), and how far they have come out, 0 to 1. */
+  private starsOut = false;
+  private starFade = 0;
   /** The hill texture's ridge row per column, for pickScenery (which point of the hills a ray meets). */
   hillProfile: number[] = [];
   /** Unit vector toward the sun (or the moon at night): pickScenery and the sunflower's face read it. */
   readonly sunDir = new THREE.Vector3();
 
-  constructor(camera: THREE.PerspectiveCamera, reducedMotion: boolean) {
+  constructor(camera: THREE.PerspectiveCamera, reducedMotion: boolean, moonPhase: number) {
     this.camera = camera;
     this.reducedMotion = reducedMotion;
+    this.moonPhase = moonPhase;
   }
 
   /** The clouds' current positions, for pickScenery (a tap can meet one). Builds one array; called once per tap, never from tick. */
@@ -78,6 +115,55 @@ export class SkyWater implements Part {
   buildSkyAndSun(ctx: BuildCtx) {
     this.buildSky(ctx);
     this.buildSun(ctx);
+    this.buildStars(ctx);
+  }
+
+  /**
+   * The stars that come out over the hills (#361), hidden until every lantern
+   * is out. Their own random sequence, not the world's: the parts built after
+   * the sky keep theirs. Drawn just after the dome, before the clouds and the
+   * hills, so both stand in front of them.
+   */
+  private buildStars(c: BuildCtx) {
+    const r = rng(23);
+    const pos = new Float32Array(STARS.n * 3);
+    const phase = new Float32Array(STARS.n);
+    for (let i = 0; i < STARS.n; i++) {
+      const a = r() * Math.PI * 2;
+      // More of them low down, where the lantern light hid them.
+      const up = STARS.low + (STARS.high - STARS.low) * r() * r();
+      pos.set([Math.cos(a) * Math.cos(up) * STARS.dist, Math.sin(up) * STARS.dist, Math.sin(a) * Math.cos(up) * STARS.dist], i * 3);
+      // One in six is a big one (phase > 5).
+      phase[i] = r() * 6;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("phase", new THREE.BufferAttribute(phase, 1));
+    this.stars = new THREE.Points(
+      geo,
+      new THREE.ShaderMaterial({
+        uniforms: { uTime: { value: 0 }, uMove: { value: this.reducedMotion ? 0 : 1 }, uSize: { value: 1 }, uFade: { value: 0 } },
+        vertexShader: STAR_VERT,
+        fragmentShader: STAR_FRAG,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        fog: false,
+      }),
+    );
+    this.stars.renderOrder = -1.5;
+    this.stars.frustumCulled = false;
+    this.stars.visible = false;
+    c.scene.add(this.stars);
+  }
+
+  /** Every lantern is out (#361): the stars come out over the hills; one lit again, and they fade. */
+  setStars(out: boolean) {
+    this.starsOut = out;
+  }
+
+  /** The framebuffer's height in pixels (GardenScene.resize): a star is a pixel or two of the garden's own big pixels. */
+  resize(height: number) {
+    this.stars.material.uniforms.uSize.value = Math.max(1, Math.round(height / 260));
   }
 
   /** Sky dome, far hills, clouds. */
@@ -119,7 +205,7 @@ export class SkyWater implements Part {
       sky.offset.set(0, -1);
       const hills = T.pixelTexture(T.hills(time === "night"), true);
       hills.repeat.set(HILLS.repeat, 1);
-      return { sky, hills, sun: T.pixelTexture(T.sun(time)) };
+      return { sky, hills, sun: T.pixelTexture(time === "night" ? T.moon(this.moonPhase) : T.sun(time)) };
     };
     this.looks = { day: look("day"), dusk: look("dusk"), night: look("night") };
     this.sun = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, depthWrite: false, transparent: true, alphaTest: 0.5 }));
@@ -199,6 +285,13 @@ export class SkyWater implements Part {
       this.water.offset.set((f.elapsed * 0.02) % 1, Math.sin(f.elapsed * 0.3) * 0.03);
       for (const cloud of this.clouds) cloud.position.applyAxisAngle(UP, f.dt * this.drift);
     }
+    // The stars come out, or fade, over a moment.
+    const step = f.dt / STARS.fade;
+    this.starFade = this.starsOut ? Math.min(1, this.starFade + step) : Math.max(0, this.starFade - step);
+    this.stars.visible = this.starFade > 0;
+    const u = this.stars.material.uniforms;
+    u.uFade.value = this.starFade;
+    u.uTime.value = f.elapsed;
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
   }
 

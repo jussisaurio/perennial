@@ -125,7 +125,7 @@ rendering code should follow, and the places it still does not (yet):
   tree — then a visitor's); and what the one action button acts on
   (`reportReach`: stand up, the key, what a loose thing in your hands does
   (throw it, or put it on the cairn), a find at your feet, the door, the
-  bowl, shelf and basket, picking up a loose thing, the bench, the toys
+  bowl, shelf and basket, a lantern, picking up a loose thing, the bench, the toys
   (blow a dandelion clock, fold a boat at the pond), then the plant ahead). What a thrown thing does where it lands is a row in
   `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a
   small function there: a new joke is one row, not new scene code. A Part never reaches into another
@@ -159,11 +159,12 @@ Known exceptions, not yet brought in line:
   is here, and the scene asks the dog and the bird to wait by a key or a find
   (`visit`). These are the scene's own features about one visitor, not how
   the visitor itself looks or acts.
-- **The ground, fence, outer trees, lanterns, bench, signs and the sunflower
-  stayed host methods**, each still read directly by `setTime`/`tint` rather
-  than through `onConditions` (the lanterns' lit/unlit swap and glow, and the
-  sunflower's dusk droop, in particular). The keyhole's glow, once part of
-  this list, moved to `Door.onConditions` in review.
+- **The ground, fence, outer trees, bench, signs and the sunflower stayed
+  host methods**, each still read directly by `setTime`/`tint` rather than
+  through `onConditions` (the sunflower's dusk droop, in particular). The
+  keyhole's glow, once part of this list, moved to `Door.onConditions` in
+  review; the lanterns moved to `Lanterns` (`sceneLanterns.ts`) when they
+  could be blown out (#361).
 - **Two calls still read real time or randomness directly, not from a Frame:**
   `GardenScene.build` reads `new Date()` once, to say what is where today
   (the visitors' daily spots, a visitor in an orchard tree, the sundial's hour) — a one-off

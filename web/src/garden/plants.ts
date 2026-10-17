@@ -45,8 +45,13 @@ export type PlantMood = keyof typeof PLANT_LINES;
 /** The plant's mood for its line of personality: thirsty first, then an old friend, else its stage. */
 export function plantMood(p: { s: number; r: number; stage: Stage }): PlantMood {
   if (p.r < THIRSTY) return "thirsty";
-  if (p.stage === "bloom" && p.s >= OLD_S) return "old";
+  if (isOld(p)) return "old";
   return p.stage;
+}
+
+/** An old friend: in bloom and known for a long time. On a full moon its edge shines silver in the walk (#361). */
+export function isOld(p: { s: number; stage: Stage }): boolean {
+  return p.stage === "bloom" && p.s >= OLD_S;
 }
 
 const STAGE_LABEL: Record<PlantStage, string> = { seed: "a seed", sprout: "a new sprout", bud: "budding", bloom: "in bloom" };
