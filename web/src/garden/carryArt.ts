@@ -9,7 +9,8 @@ import type { PixelArt } from "./visitorArt";
 const STONE = { o: "#4a4440", S: "#9a948a", s: "#7a746a", w: "#c8c2b6" };
 
 export const LOOSE_ART: Record<Loose, PixelArt> = {
-  pebble: { rows: [".oooo.", "oSwSSo", "oSSSso", ".oooo."], pal: STONE },
+  // Round, blue-grey and outlined, with a shine: not one of the path's grey specks.
+  pebble: { rows: ["..oooo..", ".oSwwSo.", "oSSwSSSo", "oSSSSSso", ".osssso.", "..oooo.."], pal: { o: "#33383e", S: "#a4aeb8", s: "#78828c", w: "#e8eef2" } },
   stick: {
     rows: ["............o.", "...........oTo", "..........oTo.", "..o.....ooTo..", ".oTo..ooTTo...", "..oTooTTo.....", "..ooTTo.......", ".oTTo.........", "oTo...........", ".o............"],
     pal: { o: "#4a3020", T: "#8a6a44" },

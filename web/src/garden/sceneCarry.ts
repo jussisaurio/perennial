@@ -50,12 +50,12 @@ const REACH = 1.1;
 export const CARRY_STAND = 0.6;
 /** Metres per atlas cell, and each thing's size in cells. */
 const SIZE = 0.5;
-const SCALE: Record<Loose, number> = { pebble: 1, stick: 2 };
+const SCALE: Record<Loose, number> = { pebble: 1.1, stick: 2 };
 const STONE_SCALE = 1.6;
-/** The first pebble on the cairn sits this high, and each one after this much higher. */
-const STACK = { base: 0.06, step: 0.055 };
+/** The first pebble on the cairn sits on its flat stone (5 px of a 0.8 m cell high), and each one after a pebble higher. */
+const STACK = { base: 0.12, step: 0.08 };
 /** A throw: it starts this far in front of you at this height, peaks this much above the line (plus some per metre), and flies this long (plus some per metre). */
-const FLIGHT = { ahead: 0.3, from: 0.8, peak: 0.35, peakPerM: 0.1, s: 0.3, sPerM: 0.06 };
+const FLIGHT = { ahead: 0.3, from: 0.8, peak: 0.15, peakPerM: 0.05, s: 0.3, sPerM: 0.06 };
 /** The rings spread for this long (s), from this size to this much bigger (m). */
 const RIPPLE = { s: 1.1, size: 1.2, grow: 0.8 };
 /** The cairn wobbles for this long (s) after a pebble goes on. */
