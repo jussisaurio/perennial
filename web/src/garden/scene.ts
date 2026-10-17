@@ -5,21 +5,23 @@
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { along, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, lanternSpots, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
-import { benchLine, collideTrees, pickTree, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
+import { benchLine, collideTrees, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf } from "../ui/plant";
 import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
-import { BENCH_SIGN, SceneVisitors } from "./sceneVisitors";
+import { SceneVisitors } from "./sceneVisitors";
+import { RAIL, type Spots } from "./spots";
+import { conditions } from "./conditions";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
 import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
-import { TAP_PRIORITY, type Conditions, type Frame, type Part, type TapHit } from "./scenePart";
+import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
 import { LEAVE_STAND, LeaveItOut, type Hand, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
 import { FINDS, type Left, type LeaveWalk } from "./leave";
 import { nounView } from "./nouns";
@@ -28,6 +30,14 @@ import type { Gender } from "../deck/schema";
 import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 
 export type TimeOfDay = "day" | "dusk" | "night";
+
+/**
+ * Where the bench's notice board stands, from the bench (it turns 0.35 rad toward
+ * the bench). Far enough right that its 1.2 m board clears the 1.3 m bench.
+ */
+const BENCH_SIGN = { dx: 1.45, dz: -0.05 };
+/** The height of the top of a notice board (m). */
+const NOTICE_TOP = 1.19;
 
 /**
  * The door in the hedge (#315): locked; locked with the key hidden somewhere in
@@ -287,7 +297,6 @@ export class GardenScene {
     this.plants = new Plants(this.renderer, this.camera, layout, (d, total) => this.cb.onProgress(d, total), (x, y, z) => this.behindHedge(x, y, z));
     this.door = new Door(reducedMotion);
     this.leaveIt = new LeaveItOut(layout, visitors.leave);
-    this.parts = [this.sky, this.door, this.critters, this.plants];
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
@@ -307,6 +316,7 @@ export class GardenScene {
       },
       visitors.list,
     );
+    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests];
     this.build();
   }
 
@@ -346,8 +356,8 @@ export class GardenScene {
     this.buildTrees(c);
     this.buildLanterns(c);
     const bench = this.buildBench(c);
-    this.buildSigns(c, bench);
-    this.guests.build({ bench: bench.position, pads, lanterns: this.lanternSpots });
+    const boards = this.buildSigns(c, bench);
+    this.guests.build(this.spots(pads, boards));
     // After the visitors: the dog, if it came for the bowl in the night (#351), waits by what it left.
     this.leaveIt.build(c);
     this.scene.add(this.leaveIt.root);
@@ -448,12 +458,31 @@ export class GardenScene {
     this.hitBoxes.push(...orchard.scenery);
     // Built after setTime when the door opens in this walk: give it the time of day now.
     this.tint();
-    // Only the bird has art so far: the owl, squirrel and bee are never in the list (#319). On its orchard days the bird sits there, not in the garden.
-    // Only when the walk starts with the door open: a bird the learner may be looking at does not vanish from the garden as the door opens.
-    if (swing) return;
-    // Visitors that came another way (the gnome, the moth...) have no garden word and never sit in the trees.
+  }
+
+  /**
+   * Where visitors can sit today (spots.ts), from the world built so far: the
+   * pond's pads, the lanterns, the bench, the notice boards and the fence's
+   * rail, and, when the walk starts with the door open, the orchard's trees.
+   */
+  private spots(pads: [number, number][], boards: [number, number, number][]): Spots {
+    const L = this.layout;
+    const b = L.bounds;
+    const first = L.beds[0];
+    // After the back fence's board: the first bed's sign (scenePlants.ts) and the fence's rail on either side.
+    const perches: [number, number, number][] = [
+      boards[0],
+      [first.x - first.w / 2 - 0.3, 0.93, first.z + first.d / 2 + 0.3],
+      [b.maxX - 0.06, RAIL, (b.maxZ + first.z) / 2],
+      [b.minX + 0.06, RAIL, first.z - 1],
+      ...boards.slice(1),
+    ];
+    // Only when the walk starts with the door open: a visitor the learner may be looking at
+    // does not vanish from the garden as the door opens. Visitors that came another way
+    // (the gnome, the moth...) have no garden word and never sit in the trees.
     const brought = new Set(this.visitors.list.flatMap((v) => visitor(v.id).garden ?? []));
-    for (const spot of treeVisitorSpots(orchard.trees, brought, new Date())) if (spot.who === "bird") this.guests.perchBird(spot.x, spot.y, spot.z);
+    const trees = this.visitors.door === "open" ? treeVisitorSpots(placeTrees(L.orchard, this.visitors.orchard.trees), brought, new Date()) : [];
+    return { bench: this.bench, pads, lanterns: this.lanternSpots, perches, trees };
   }
 
   /** The ray from the eye through a point on the canvas (CSS pixels). */
@@ -724,12 +753,17 @@ export class GardenScene {
     return bench;
   }
 
-  /** Notice boards: two whose text changes each day, and the snail's. */
-  private buildSigns(c: BuildCtx, bench: THREE.Group) {
+  /**
+   * Notice boards: two whose text changes each day, and the snail's. Returns the
+   * board tops a bird can sit on: the back fence's, and the bench's unless it
+   * says the cat has taken the bench.
+   */
+  private buildSigns(c: BuildCtx, bench: THREE.Group): [number, number, number][] {
     const { L, b, mat, woodTex } = c;
     // Two notice boards whose text changes each day: one on the back fence, one by the bench.
     const signs = pickSigns(this.lang);
-    if (this.visitors.list.some((v) => v.id === "cat")) signs.bench = { text: "Bench: taken" };
+    const taken = this.visitors.list.some((v) => v.id === "cat");
+    if (taken) signs.bench = { text: "Bench: taken" };
     const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
       const g = new THREE.Group();
       const board = signBoard(c, T.pixelTexture(T.notice(line.text)), 1.2, 0.48);
@@ -745,10 +779,12 @@ export class GardenScene {
       g.position.set(x, 0, z);
       g.rotation.y = turn;
       this.scene.add(g);
-      this.hitBoxes.push(boardBox(x, z, 1.2, 1.19, turn));
+      this.hitBoxes.push(boardBox(x, z, 1.2, NOTICE_TOP, turn));
     };
     noticeBoard(signs.fence, L.gate.x, b.minZ + 0.25, 0);
     noticeBoard(signs.bench, bench.position.x + BENCH_SIGN.dx, bench.position.z + BENCH_SIGN.dz, 0.35);
+    const tops: [number, number, number][] = [[L.gate.x, NOTICE_TOP, b.minZ + 0.25]];
+    if (!taken) tops.push([bench.position.x + BENCH_SIGN.dx, NOTICE_TOP, bench.position.z + BENCH_SIGN.dz]);
     // The snail's finish line (where it set off), on a small board just inside the gate, facing the garden.
     if (this.visitors.list.some((v) => v.id === "snail")) {
       const g = new THREE.Group();
@@ -763,6 +799,7 @@ export class GardenScene {
       this.scene.add(g);
       this.hitBoxes.push(boardBox(g.position.x, g.position.z, 1.0, 0.82, g.rotation.y));
     }
+    return tops;
   }
 
   /** Small stakes, and the sleeping bloom's z's. */
@@ -962,14 +999,13 @@ export class GardenScene {
     const s = T.SKIES[t];
     const fog = new THREE.Color(s.fog);
     this.scene.fog = new THREE.Fog(fog, FOG_NEAR, FOG_FAR);
-    const dark = t !== "day";
-    const conditions: Conditions = { time: t, dark };
-    for (const part of this.parts) part.onConditions?.(conditions);
+    const c = conditions(t);
+    const dark = c.dark;
+    for (const part of this.parts) part.onConditions?.(c);
     this.tint();
     this.lit.visible = dark;
     this.unlit.visible = !dark;
     for (const g of this.glows) g.visible = dark;
-    this.guests.setDark(dark, t === "night");
     // A key left waiting a few days (#334): at dusk and night the bird, if it is here today, lands by it.
     const help = this.keyHelp;
     if (help?.visitors && this.door.key) this.guests.visit("bird", dark ? [this.door.key.x + 0.2, 0, this.door.key.z - 0.1] : null);
@@ -984,10 +1020,11 @@ export class GardenScene {
     const tint = new THREE.Color(...s.tint);
     const fog = new THREE.Color(s.fog);
     for (const m of this.basic) m.color.copy(tint);
-    for (const mat of [...this.mats, ...this.guests.mats, ...this.leaveIt.mats]) {
+    for (const mat of [...this.mats, ...this.leaveIt.mats]) {
       mat.uniforms.uTint.value.copy(tint);
       mat.uniforms.uFog.value.copy(fog);
     }
+    this.guests.tint(tint, fog);
   }
 
   private detail: Detail = "normal";
@@ -1243,9 +1280,9 @@ export class GardenScene {
     }
     // One frame, ticked into every part in the fixed order `parts` documents:
     // sky (clouds, water, the sun), the door (its swing and the key's glint),
-    // critters (fireflies, butterflies, the sleeping bloom's z's), then plants
+    // critters (fireflies, butterflies, the sleeping bloom's z's), plants
     // (chunk culling — beds outside the fog are skipped — streaming the
-    // plants nearest you, and the perk uniform).
+    // plants nearest you, and the perk uniform), then the visitors.
     const frame = this.tickFrame;
     frame.dt = dt;
     frame.elapsed = t;
@@ -1272,8 +1309,6 @@ export class GardenScene {
       fl.uv.setX(0, face ? 0 : 0.5);
       fl.uv.needsUpdate = true;
     }
-
-    if (this.guests.any) this.guests.tick(dt, this.x, this.z);
 
     this.renderer.render(this.scene, this.camera);
     this.labels();

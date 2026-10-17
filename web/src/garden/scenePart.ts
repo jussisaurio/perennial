@@ -6,25 +6,15 @@
 // Conditions to every one, and disposes every one in that order, documented
 // in GardenScene itself. The hedge and the orchard build geometry only, with
 // nothing to tick, react to conditions or dispose beyond what the scene's own
-// sweep frees, so they are not Parts; visitors (sceneVisitors.ts) predate this
-// interface and were not reshaped to fit it (#323's course correction).
+// sweep frees, so they are not Parts.
 
-import type { DoorAction, TimeOfDay } from "./scene";
+import type { DoorAction } from "./scene";
+import type { Conditions } from "./conditions";
 import type { LeaveTarget } from "./sceneLeave";
 import type { PlacedTree } from "./orchard";
 import type { PlacedPlant } from "./world";
 import type { SceneryHit, SceneryView } from "./scenery";
 import type { VisitorView } from "./visitors";
-
-/**
- * What setTime/setDark broadcast today: the time of day, and whether it is
- * dark enough for lanterns, fireflies and the moon (dusk or night). Weather
- * and the hour will join this later; parts read only this, never the clock.
- */
-export interface Conditions {
-  time: TimeOfDay;
-  dark: boolean;
-}
 
 /** What a Part's tick needs: nothing here is read from Date, performance.now or Math.random. */
 export interface Frame {

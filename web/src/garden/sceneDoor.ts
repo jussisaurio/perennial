@@ -8,7 +8,8 @@
 
 import * as THREE from "three";
 import type { DoorState } from "./scene";
-import type { Conditions, Frame } from "./scenePart";
+import type { Conditions } from "./conditions";
+import type { Frame } from "./scenePart";
 import { FOG_FAR, sprites, type BuildCtx } from "./sceneSprites";
 import { DOOR_HALF, HEDGE, keyAt, type KeyHelp, type Layout } from "./world";
 import * as T from "./textures";

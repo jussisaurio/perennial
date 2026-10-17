@@ -7,7 +7,8 @@
 
 import * as THREE from "three";
 import type { BuildCtx } from "./sceneSprites";
-import type { Conditions, Frame, Part } from "./scenePart";
+import type { Conditions } from "./conditions";
+import type { Frame, Part } from "./scenePart";
 import * as T from "./textures";
 
 /** The far hills: a ring of this radius and height, its middle this high, the texture repeated this often round it. pickScenery (scene.ts) uses it too, for the ring's shape. */
@@ -131,18 +132,18 @@ export class SkyWater implements Part {
   onConditions(c: Conditions) {
     const s = T.SKIES[c.time];
     this.skyMat.map?.dispose();
-    const skyTex = T.pixelTexture(T.sky(s, c.time === "night"));
+    const skyTex = T.pixelTexture(T.sky(s, c.night));
     // The gradient covers the upper half of the dome; below the horizon it clamps.
     skyTex.repeat.set(1, 2);
     skyTex.offset.set(0, -1);
     this.skyMat.map = skyTex;
     this.skyMat.needsUpdate = true;
     this.hillMat.map?.dispose();
-    const hills = T.pixelTexture(T.hills(c.time === "night"), true);
+    const hills = T.pixelTexture(T.hills(c.night), true);
     hills.repeat.set(HILLS.repeat, 1);
     this.hillMat.map = hills;
     this.hillMat.needsUpdate = true;
-    for (const cloud of this.clouds) cloud.material.color.set(c.time === "night" ? 0x39406a : c.time === "dusk" ? 0xffd2c0 : 0xffffff);
+    for (const cloud of this.clouds) cloud.material.color.set(c.night ? 0x39406a : c.time === "dusk" ? 0xffd2c0 : 0xffffff);
     this.sun.material.map?.dispose();
     this.sun.material.map = T.pixelTexture(T.sun(c.time));
     this.sun.material.needsUpdate = true;
