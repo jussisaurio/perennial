@@ -3,7 +3,7 @@
 
 import { Effect, Schema, SchemaTransformation } from "effect";
 import { Lang } from "./course";
-import { GardenLeft } from "./garden";
+import { GardenLeft, GardenPot } from "./garden";
 import { WordId } from "./ids";
 
 /** Text limits for learner rows. Perennial AI output is held to the same ones (server/src/ai.ts). */
@@ -47,6 +47,8 @@ export const Mutation = Schema.Union([
       door_open: Schema.optionalKey(Schema.Boolean),
       // Leave it out (#351): the whole value; the server merges it with what it has (server/src/garden.ts).
       garden_left: Schema.optionalKey(GardenLeft),
+      // Two seeds, one pot (#387): the whole value; the newer one wins on the server (server/src/garden.ts).
+      garden_pot: Schema.optionalKey(GardenPot),
     }),
   }),
   Schema.Struct({

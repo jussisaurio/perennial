@@ -34,3 +34,31 @@ export type GardenLeft = typeof GardenLeft.Type;
 
 /** Nothing left yet, nothing kept. */
 export const NO_LEFT: GardenLeft = { n: 0, bowl: null, kept: [], hooks: [null, null, null], arranged: 0 };
+
+/** A visitor whose word's plant gave a seed for the pot (#387): a short id (web/src/garden/pot.ts PotKind). */
+const Seed = Schema.String.check(Schema.isPattern(/^[a-z]{1,24}$/));
+const Count = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 1_000_000 }));
+
+export const POT_LIMITS = { hatched: 100 } as const;
+
+/**
+ * Two seeds, one pot (#387), per course, on the wire. `sown` counts every seed
+ * put in the clay pot and `out` every creature let out of it, so the pot holds
+ * the seeds sown after the last creature's (`seeds`: sown − 2·out of them, 0
+ * to 2, first sown first). `day`: the calendar day the second seed went in,
+ * null until then; the creature hatches in the night after. `hatched`: the
+ * creatures let out, oldest first (only the newest POT_LIMITS.hatched), each
+ * the first seed's animal with the second one's trait. Every change moves
+ * `sown` or `out` forward, and the newer value wins (server/src/garden.ts mergePot).
+ */
+export const GardenPot = Schema.Struct({
+  sown: Count,
+  out: Count,
+  seeds: Schema.Array(Seed).check(Schema.isMaxLength(2)),
+  day: Schema.NullOr(Day),
+  hatched: Schema.Array(Schema.Struct({ base: Seed, trait: Seed })).check(Schema.isMaxLength(POT_LIMITS.hatched)),
+});
+export type GardenPot = typeof GardenPot.Type;
+
+/** Nothing sown yet, nothing hatched. */
+export const NO_POT: GardenPot = { sown: 0, out: 0, seeds: [], day: null, hatched: [] };

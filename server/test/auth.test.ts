@@ -75,6 +75,26 @@ test("the garden's bowl and shelf (#351) move into the account on sign-in, merge
   ]);
 });
 
+test("the garden's pot (#387) moves into the account on sign-in: the one with more done wins", async () => {
+  const email = unique("pot-merge");
+  const today = Math.floor(Date.now() / 86_400_000);
+  const account = await t.signIn(email);
+  const accountId = (await t.me(account)).id;
+  const one = { sown: 1, out: 0, seeds: ["dog"], day: null, hatched: [] };
+  await t.write(account, [{ type: "course.upsert", row: { lang: "es", garden_pot: one } }]);
+  // Without an account, on another device: a creature let out, and a seed in the pot again.
+  const anon = await t.anonymous();
+  const more = { sown: 3, out: 1, seeds: ["frog"], day: null, hatched: [{ base: "cat", trait: "bird" }] };
+  const de = { sown: 2, out: 0, seeds: ["fish", "snail"], day: today, hatched: [] };
+  await t.write(anon, [{ type: "course.upsert", row: { lang: "es", garden_pot: more } }, { type: "course.upsert", row: { lang: "de", garden_pot: de } }]);
+  await t.signIn(email, anon);
+  const rows = await t.sql<{ lang: string; garden_pot: unknown }>`select lang, garden_pot from course where user_id = ${accountId} order by lang`;
+  expect(rows.map((r) => [r.lang, r.garden_pot])).toEqual([
+    ["de", de],
+    ["es", more],
+  ]);
+});
+
 test("a find kept on the account's other device while the sign-in merges the garden is not lost (#351)", async () => {
   const email = unique("left-race");
   const today = Math.floor(Date.now() / 86_400_000);

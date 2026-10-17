@@ -121,6 +121,38 @@ test("leave it out: the garden's bowl and shelf only move forward, per course, a
   expect(JSON.parse(rows.find((r) => r.lang === "es")!.garden_left)).toEqual(found);
 });
 
+test("two seeds, one pot: the pot only moves forward, per course, beside the bowl, and syncs as an object (#387)", async () => {
+  const cookie = await t.signIn(unique("pot"));
+  const id = (await t.me(cookie)).id;
+  const today = Math.floor(Date.now() / 86_400_000);
+  const stored = async (lang = "es") => (await t.sql<{ kind: string; pot: unknown; left: unknown }>`select jsonb_typeof(garden_pot) as kind, garden_pot as pot, garden_left as left from course where user_id = ${id} and lang = ${lang}`)[0];
+  const put = (garden_pot: unknown, lang = "es") => t.write(cookie, [{ type: "course.upsert", row: { lang, garden_pot } }]);
+  // A new course starts with nothing sown.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", minutes: 5 } }]);
+  expect((await stored())?.pot).toEqual({ sown: 0, out: 0, seeds: [], day: null, hatched: [] });
+  const full = { sown: 2, out: 0, seeds: ["cat", "bird"], day: today - 1, hatched: [] };
+  const out = { sown: 2, out: 1, seeds: [], day: null, hatched: [{ base: "cat", trait: "bird" }] };
+  expect((await put(full)).status).toBe(200);
+  expect((await put(out)).status).toBe(200);
+  // A device that still has the seeds in the pot, and the bowl's own write: neither takes the creature back.
+  await put(full);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", garden_left: { n: 1, bowl: { thing: "crumbs", day: today, seen: null, found: false }, kept: [], hooks: [null, null, null], arranged: 0 } } }]);
+  const now = await stored();
+  expect(now?.kind).toBe("object");
+  expect(now?.pot).toEqual(out);
+  expect((now?.left as { n: number }).n).toBe(1);
+  // Refused: a day in the future, seeds that do not follow from the counts, a seed that is not an id.
+  const future = await put({ ...full, sown: 4, out: 1, hatched: out.hatched, day: today + 3 });
+  expect([future.status, future.body]).toEqual([422, { error: "garden_from_the_future" }]);
+  expect((await put({ ...full, sown: 3 })).status).toBe(422);
+  expect((await put({ ...full, seeds: ["my secret", "bird"] })).status).toBe(422);
+  expect((await stored())?.pot).toEqual(out);
+  // The course shape carries it to the learner's other devices.
+  const res = await t.call("/api/shape?table=course&offset=-1", undefined, cookie);
+  const rows = (res.body as { value?: { lang: string; garden_pot: string } }[]).filter((m) => m.value).map((m) => m.value!);
+  expect(JSON.parse(rows.find((r) => r.lang === "es")!.garden_pot)).toEqual(out);
+});
+
 test("a word's forms are stored as a list, which is what the app reads from the stream", async () => {
   const cookie = await t.signIn(unique("forms"));
   const id = crypto.randomUUID();

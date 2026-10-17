@@ -3,7 +3,7 @@
 // moves forward whatever order writes arrive in, and two devices end up the
 // same. Pure: the caller reads and writes the row.
 
-import { LEFT_LIMITS, type GardenLeft, type Issue } from "perennial-contract";
+import { LEFT_LIMITS, POT_LIMITS, type GardenLeft, type GardenPot, type Issue } from "perennial-contract";
 
 const DAY_MS = 86_400_000;
 
@@ -47,4 +47,30 @@ export function mergeLeft(stored: GardenLeft, sent: GardenLeft): GardenLeft {
   const { hooks, arranged } = sent.arranged > stored.arranged ? sent : stored;
   const hung = (k: string | null, i: number) => (k !== null && kept.includes(k) && hooks.indexOf(k) === i ? k : null);
   return { n: newer.n, bowl, kept, hooks: [hung(hooks[0], 0), hung(hooks[1], 1), hung(hooks[2], 2)], arranged };
+}
+
+/**
+ * Two seeds, one pot (#387): why a value cannot be right, or null. A day in
+ * the future is a device clock that is wrong ("clock"). The seeds in the pot
+ * are the ones sown after the last creature let out, 0 to 2 of them, with the
+ * day once there are two; the list holds the newest creatures let out.
+ */
+export function potProblem(v: GardenPot, now: number): Issue | "clock" | null {
+  const at = (path: string, message: string): Issue => ({ path: ["garden_pot", path], message });
+  if (v.seeds.length !== v.sown - 2 * v.out) return at("seeds", "the seeds in the pot are the ones sown after the last creature");
+  if ((v.day !== null) !== (v.seeds.length === 2)) return at("day", "a day comes with the second seed, and only then");
+  if (v.hatched.length !== Math.min(v.out, POT_LIMITS.hatched)) return at("hatched", "every creature let out is listed, up to the limit");
+  if (v.day !== null && v.day > latestDay(now)) return "clock";
+  return null;
+}
+
+/**
+ * The stored value with a device's merged in. Each change either sows a seed
+ * (`sown`) or lets a creature out (`out`), and what is in the pot follows from
+ * the seeds, so the value with more done wins whole: more sown, then more let
+ * out, and the stored one on a tie (two devices that each sowed a different
+ * seed: the first to arrive stays, as for the bowl).
+ */
+export function mergePot(stored: GardenPot, sent: GardenPot): GardenPot {
+  return sent.sown > stored.sown || (sent.sown === stored.sown && sent.out > stored.out) ? sent : stored;
 }

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import { NO_LEFT, type GardenLeft } from "perennial-contract";
-import { latestDay, leftProblem, mergeLeft } from "../src/garden";
+import { NO_LEFT, NO_POT, POT_LIMITS, type GardenLeft, type GardenPot } from "perennial-contract";
+import { latestDay, leftProblem, mergeLeft, mergePot, potProblem } from "../src/garden";
 
 const NOW = Date.UTC(2026, 9, 16, 12);
 const DAY = Math.floor(NOW / 86_400_000);
@@ -53,4 +53,41 @@ test("refused: a day in the future (the device's clock), seen before it was left
   expect(leftProblem({ ...NO_LEFT, n: 1 }, NOW)).toMatchObject({ path: ["garden_left", "bowl"] });
   expect(leftProblem({ ...left(1, DAY), n: 0 }, NOW)).toMatchObject({ path: ["garden_left", "bowl"] });
   expect(leftProblem(NO_LEFT, NOW)).toBeNull();
+});
+
+// ---- Two seeds, one pot (#387) ----
+
+const pot = (sown: number, out: number, seeds: string[], day: number | null, hatched: GardenPot["hatched"] = []): GardenPot => ({ sown, out, seeds, day, hatched });
+const catBird = { base: "cat", trait: "bird" };
+
+test("the pot: the value with more sown wins, then more let out; on a tie the stored one stays", () => {
+  const one = pot(1, 0, ["cat"], null);
+  const two = pot(2, 0, ["cat", "bird"], DAY);
+  const out = pot(2, 1, [], null, [catBird]);
+  const again = pot(3, 1, ["dog"], null, [catBird]);
+  expect(mergePot(one, two)).toBe(two);
+  expect(mergePot(two, one)).toBe(two);
+  expect(mergePot(two, out)).toBe(out);
+  // A device that has not seen the creature let out yet: nothing goes back.
+  expect(mergePot(out, two)).toBe(out);
+  expect(mergePot(again, out)).toBe(again);
+  // Two devices each sowed a different first seed: the first to arrive stays.
+  expect(mergePot(one, pot(1, 0, ["frog"], null))).toBe(one);
+  expect(mergePot(NO_POT, one)).toBe(one);
+});
+
+test("the pot: refused when its seeds do not follow from the counts, a day comes without two seeds, or the list is wrong", () => {
+  expect(potProblem(NO_POT, NOW)).toBeNull();
+  expect(potProblem(pot(2, 0, ["cat", "bird"], DAY), NOW)).toBeNull();
+  expect(potProblem(pot(3, 1, ["dog"], null, [catBird]), NOW)).toBeNull();
+  expect(potProblem(pot(2, 0, ["cat"], null), NOW)).toMatchObject({ path: ["garden_pot", "seeds"] });
+  expect(potProblem(pot(3, 0, ["cat", "bird"], DAY), NOW)).toMatchObject({ path: ["garden_pot", "seeds"] });
+  expect(potProblem(pot(1, 0, ["cat"], DAY), NOW)).toMatchObject({ path: ["garden_pot", "day"] });
+  expect(potProblem(pot(2, 0, ["cat", "bird"], null), NOW)).toMatchObject({ path: ["garden_pot", "day"] });
+  expect(potProblem(pot(2, 1, [], null), NOW)).toMatchObject({ path: ["garden_pot", "hatched"] });
+  // Past the limit, only the newest are listed.
+  const many = Array.from({ length: POT_LIMITS.hatched }, () => catBird);
+  expect(potProblem(pot(2 * (POT_LIMITS.hatched + 5), POT_LIMITS.hatched + 5, [], null, many), NOW)).toBeNull();
+  expect(potProblem(pot(2, 0, ["cat", "bird"], latestDay(NOW)), NOW)).toBeNull();
+  expect(potProblem(pot(2, 0, ["cat", "bird"], DAY + 2), NOW)).toBe("clock");
 });
