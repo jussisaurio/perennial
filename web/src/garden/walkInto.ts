@@ -125,7 +125,7 @@ export function brushStep(b: Brush, l: Layout, f: Frame): number {
 // ---- Bumping a tree ----
 
 /** Walking into a trunk: the walker is held WALKER from it (orchard.ts collideTrees), so within `touch` more is touching it. Away by `rearm` before it shakes again. */
-export const BUMP = { touch: 0.04, rearm: 0.5 } as const;
+const BUMP = { touch: 0.04, rearm: 0.5 } as const;
 
 /** What a bumped tree drops: a fruit when it is in fruit (the plain tree's "fruit" is a nest, so leaves), petals in blossom, else leaves. */
 export type Fell = "fruit" | "petals" | "leaves";
@@ -169,7 +169,7 @@ export interface Rolling {
 }
 
 /** Gravity (m/s²); the share of its speed a bounce keeps; slower than `settle` (m/s) it stops bouncing; ground friction (per s); slower than `stop` it lies still. */
-export const ROLL = { g: 9.8, bounce: 0.45, settle: 0.5, friction: 2.4, stop: 0.04 } as const;
+const ROLL = { g: 9.8, bounce: 0.45, settle: 0.5, friction: 2.4, stop: 0.04 } as const;
 
 /** A fruit falls this far round from straight behind the trunk (rad), left or right: you stand at the trunk, so it lands where you can see it, beside it. */
 const DROP_TURN = 0.55;
