@@ -189,9 +189,9 @@ change. The rules:
   kind acts through its hooks (`step`, `onConditions`, `onTap`, `onVisit`,
   `onSplash`, `onCall`, `onFind`) and shows itself through its `Body` (where it
   is drawn, its frame, whether it is seen, its tag, its glow, whether it hides
-  and where); the runtime draws every Body the same way. New verbs become new
-  hooks: a call (#377) asks each visitor in sight for its `onCall`, so each
-  answer lives in its kind file; finding one that hides (#379) is its `onFind`.
+  and where, what it says unasked, and what a screen reader hears about it);
+  the runtime draws every Body the same way. New verbs become new hooks: a
+  call (#377) asks each visitor in sight for its `onCall`, so each answer lives in its kind file; finding one that hides (#379) is its `onFind`.
 - **A kind is pure** (no three, no DOM) and has unit tests that drive it with
   a fixed `now` and `dt` (`kinds/kinds.test.ts`). It gets the walk's opening
   moment (`Arrival.now`) and the garden's age in calendar days (`Arrival.age`)
@@ -200,7 +200,8 @@ change. The rules:
   references to each other. **Named places live in one `Spots` object**
   (`spots.ts`): the pond's pads, the lanterns, the bench, the perches on the
   notice boards, the first bed's sign and the fence's rail, autumn's leaf
-  piles, and the orchard's trees and today's spots in them. The
+  piles, the orchard's trees and today's spots in them, and the high places
+  no goat could get to (the hedge's top, the shed's roof). The
   scene fills it as it builds the static world, before the visitors.
 
 ## Not yet / later

@@ -106,8 +106,17 @@ describe("who visits today", () => {
   });
 
   test("the dev override shows everyone, or only the ones asked for", () => {
-    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "gnome", "frog", "moth", "cat", "heron", "toadstool", "bird", "dog", "fish", "butterfly"]);
+    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "gnome", "frog", "moth", "cat", "heron", "toadstool", "bird", "dog", "fish", "butterfly", "goat", "mole"]);
     expect(visitorsFor(NO_FACTS, days[0], ["cat"]).present).toEqual(["cat"]);
+  });
+
+  test("the goat comes about one day in six, the same all day; the mole lives in the walk every day (#376)", () => {
+    const goat = days.filter((d) => visitorsFor(NO_FACTS, d).present.includes("goat")).length / days.length;
+    expect(goat).toBeGreaterThan(0.08);
+    expect(goat).toBeLessThan(0.25);
+    for (const d of days) expect(visitorsFor(NO_FACTS, d).present).toContain("mole");
+    expect(visitorViews(["goat", "mole"], "es").map((v) => v.word)).toEqual(["la cabra", "el topo"]);
+    expect(visitorViews(["goat", "mole"], "de").map((v) => v.word)).toEqual(["die Ziege", "der Maulwurf"]);
   });
 });
 

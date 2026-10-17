@@ -23,6 +23,14 @@ export interface Spots {
   orchard: readonly PlacedTree[];
   /** Autumn's leaf piles (#359), as the walk draws them: none in other seasons. */
   piles: readonly { x: number; z: number }[];
+  /** Places nothing with hooves could get to (#376): where the goat stands. */
+  ledges: readonly Ledge[];
+}
+
+/** A high, narrow place: what it is, and where on it something can stand (x, y, z). */
+export interface Ledge {
+  on: "hedge" | "shed" | "sign" | "bench";
+  at: [number, number, number];
 }
 
 /** The middle of a lantern's glass (m): the moth goes round it, and the glint shows there (#361). */

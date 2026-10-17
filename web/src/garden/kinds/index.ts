@@ -11,10 +11,12 @@ import { dog } from "./dog";
 import { fish } from "./fish";
 import { frog } from "./frog";
 import { gnome } from "./gnome";
+import { goat } from "./goat";
 import { heron } from "./heron";
 import type { VisitorKind } from "./kind";
+import { mole } from "./mole";
 import { moth } from "./moth";
 import { snail } from "./snail";
 import { toadstool } from "./toadstool";
 
-export const KINDS: Record<VisitorId, VisitorKind> = { snail, cat, toadstool, bird, frog, gnome, heron, moth, dog, fish, butterfly };
+export const KINDS: Record<VisitorId, VisitorKind> = { snail, cat, toadstool, bird, frog, gnome, heron, moth, dog, fish, butterfly, goat, mole };

@@ -490,6 +490,75 @@ export const MOLE: PixelArt = {
   pal: { o: INK, M: "#4f4650", m: "#6c6270", e: "#151015", p: "#f0a0a8", h: "#f2bcae", S: "#e0b860" },
 };
 
+// ---- The mole behind your back, in the walk (#376) ----
+
+/** Its molehill: damp earth, darker than the path. */
+const MOLEHILL = [
+  ".....oooooo.....",
+  "...oodldddDoo...",
+  "..odldddddddDo..",
+  ".odddldddddddDo.",
+  "odldddddddldddDo",
+];
+const MOLE_PAL = { ...MOLE.pal, w: "#fff8ec", d: "#6a4a34", D: "#4a3222", l: "#8a6a4c" };
+/** What is above the hill (16 wide), standing on it. */
+const molehill = (above: string[]): PixelArt => ({ rows: [...above, ...MOLEHILL], pal: MOLE_PAL });
+
+/** Just the hill: rising before it looks out, or left as it goes. */
+export const MOLE_HILL = molehill([]);
+/** Up out of its hill, paws on the edge, looking at nobody. */
+export const MOLE_UP = molehill([
+  ".....oooooo.....",
+  "....oMMMMMMo....",
+  "...oMmMMMMmMo...",
+  "...oMeMMMMeMo...",
+  "...oMMMppMMMo...",
+  "...oMMMppMMMo...",
+  "..ohhoMMMMohho..",
+  "..ohhhoMMohhho..",
+]);
+/** Caught: big eyes, mouth open, paws up. */
+export const MOLE_PANIC = molehill([
+  ".oo..oooooo..oo.",
+  "ohhooMMMMMMoohho",
+  "ohhoMmMMMMmMohho",
+  ".ooMwwMMMMwwMoo.",
+  "...oMweMMweMo...",
+  "...oMMMppMMMo...",
+  "...oMMoooMMMo...",
+  "....oMMMMMMo....",
+]);
+/** Digging back down, fast: half in, earth flying (two frames, the earth in different places). */
+export const MOLE_DIG = molehill(["..l..........d..", "....d......l....", "..d..oooooo...d.", "....oMMMMMMo....", "...oMMMMMMMMo..."]);
+export const MOLE_DIG_2 = molehill([".d...........l..", "...l........d...", ".....oooooo..l..", "..d.oMMMMMMo....", "...oMMMMMMMMo..."]);
+
+// ---- The goat in impossible places (#376) ----
+
+/** A white goat, side on, head to the left: back-curved horns, a beard, a short tail up. */
+export const GOAT: PixelArt = {
+  rows: [
+    "......oo.............",
+    ".....oHHo............",
+    "..oo.oHo.............",
+    ".oWWooWo.............",
+    "oWWWWWWWo............",
+    "oWeWWWWWo............",
+    "oWWWWWWWWo.........o.",
+    ".oPWWWWWWWooooooooowo",
+    "..ooWWWWWWWWWWWWWWWo.",
+    "...obWWWWWWWWWWWWWWo.",
+    "...obboWWWWWWWWWWWwo.",
+    "....oo.owWWWWWWWWwo..",
+    ".......oWWoooooWWo...",
+    ".......oWWo...oWWo...",
+    ".......oWWo...oWWo...",
+    ".......oWwo...oWwo...",
+    ".......oGGo...oGGo...",
+    ".......oooo...oooo...",
+  ],
+  pal: { o: INK, W: "#f2ecdc", w: "#c8bea6", H: "#a08c68", e: INK, P: "#d8a090", b: "#d8d0bc", G: "#5a4a3a" },
+};
+
 /** One rect per run of same-coloured pixels in a row: few elements for SVG. */
 export function runs(art: PixelArt): { x: number; y: number; w: number; fill: string }[] {
   const out: { x: number; y: number; w: number; fill: string }[] = [];

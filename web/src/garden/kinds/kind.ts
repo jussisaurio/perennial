@@ -35,6 +35,8 @@ export interface Arrival {
   /** The garden's age: calendar days since the first review (0 for a new learner). Never words or study days. */
   age: number;
   reducedMotion: boolean;
+  /** The course language, for what it says unasked (Body.says). */
+  lang: string;
 }
 
 /** Where a visitor hid today (#379), said plainly: "under the bench", or "behind" and a word in the course language ("manzana"). */
@@ -65,6 +67,10 @@ export interface Body<F extends string> {
   hiding: boolean;
   /** Where it hid today, said after its tag once it is found; null on a day it did not hide. */
   hid: Hideout | null;
+  /** What it says now without being tapped, in a bubble, in the course language (the mole's "¿Hola?"); null: nothing. */
+  says: string | null;
+  /** What a screen reader hears about it now, in plain English ("A goat stands on top of the hedge."); null: nothing. */
+  status: string | null;
 }
 
 /** A tap that a visitor may answer. */
@@ -140,7 +146,7 @@ export interface VisitorKind<F extends string = string> {
 
 /** A body standing still at a spot, showing `frame`. */
 export function bodyAt<F extends string>(x: number, y: number, z: number, frame: F): Body<F> {
-  return { at: { x, y, z }, x, y, z, frame, visible: true, turn: 0, tag: 1, glow: false, mute: false, hiding: false, hid: null };
+  return { at: { x, y, z }, x, y, z, frame, visible: true, turn: 0, tag: 1, glow: false, mute: false, hiding: false, hid: null, says: null, status: null };
 }
 
 /** Within this far of its spot (m), a visitor walking off it comes down to the ground (its spot may be up on a bed or the bench). */

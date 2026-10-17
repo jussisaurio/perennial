@@ -13,7 +13,7 @@ import { plantHeight as plantHeightOf } from "../ui/plant";
 import { fishSign, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { SceneVisitors, type Hider } from "./sceneVisitors";
-import { LANTERN_GLASS_Y, RAIL, type Spots } from "./spots";
+import { LANTERN_GLASS_Y, RAIL, type Ledge, type Spots } from "./spots";
 import { conditions } from "./conditions";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SkyWater } from "./sceneSky";
@@ -24,7 +24,7 @@ import { NAME_NEAR, Plants } from "./scenePlants";
 import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
-import { LEAVE_STAND, LeaveItOut, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
+import { LEAVE_STAND, LeaveItOut, shedRoof, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
 import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
 import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { echo, echoDate, type Met } from "./well";
@@ -52,6 +52,8 @@ export type TimeOfDay = "day" | "dusk" | "night";
 const BENCH_SIGN = { dx: 1.45, dz: -0.05 };
 /** The height of the top of a notice board (m). */
 const NOTICE_TOP = 1.19;
+/** The height of the top of the bench's back (m). */
+const BENCH_BACK = 0.8;
 
 /**
  * The door in the hedge (#315): locked; locked with the key hidden somewhere in
@@ -140,6 +142,8 @@ export interface SceneCallbacks {
   onDoorOpen: () => void;
   /** Sitting on the bench (#362): who just came to sit with you, or null once you stand up. */
   onCompany: (c: Companion | null) => void;
+  /** What a screen reader hears about the visitors now (#376: a goat up high, a mole caught), or null. */
+  onVisitorStatus: (line: string | null) => void;
   /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
   onStall: () => void;
   /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
@@ -214,7 +218,7 @@ function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
     bench.add(m);
   };
   plank(1.3, 0.06, 0.4, 0, 0.42, 0);
-  plank(1.3, 0.28, 0.05, 0, 0.66, -0.2);
+  plank(1.3, 0.28, 0.05, 0, BENCH_BACK - 0.14, -0.2);
   for (const sx of [-0.55, 0.55]) for (const sz of [-0.15, 0.15]) plank(0.06, 0.42, 0.06, sx, 0.21, sz);
   return bench;
 }
@@ -324,6 +328,8 @@ export class GardenScene {
   /** The sprite materials tint() tints itself: the scene's own and leave it out's (the visitors tint their own). */
   private tinted: readonly Set<THREE.ShaderMaterial>[];
   private lastLabels = "";
+  /** What a screen reader last heard about the visitors (#376). */
+  private lastHeard: string | null = null;
   private tmp = new THREE.Vector3();
   /** Filled in place every tick: tick allocates nothing (DESIGN.md, Garden code). */
   private readonly tickFrame: Frame = { dt: 0, elapsed: 0, x: 0, z: 0, yaw: 0, speed: 0 };
@@ -614,7 +620,8 @@ export class GardenScene {
   /**
    * Where visitors can sit today (spots.ts), from the world built so far: the
    * pond's pads, the lanterns, the bench, the notice boards, the first bed's
-   * sign and the fence's rail, autumn's leaf piles and, when the walk starts
+   * sign and the fence's rail, autumn's leaf piles, the high places the goat
+   * stands on and, when the walk starts
    * with the door open, the orchard's trees.
    */
   private spots(pads: [number, number][], boards: [number, number, number][], now: Date): Spots {
@@ -637,7 +644,15 @@ export class GardenScene {
     const orchard = this.visitors.door === "open" ? placeTrees(L.orchard, this.visitors.orchard.trees) : [];
     const trees = treeVisitorSpots(orchard, brought, now);
     const piles = this.visitors.autumn ? leafPiles(L) : [];
-    return { bench: this.bench, pads, lanterns: this.lanterns.spots, perches, sign, trees, orchard, piles };
+    // On top of the hedge left of the door, just behind its front, on the leaves that stand above it; on the back fence's board, beside where a bird sits; on the bench's back, clear of the sitter and the bird.
+    const [sx, sy, sz] = boards[0];
+    const ledges: Ledge[] = [
+      { on: "hedge", at: [L.gate.x - 2.2, HEDGE.height + 0.12, b.maxZ + HEDGE.gap + 0.25] },
+      { on: "shed", at: shedRoof(L) },
+      { on: "sign", at: [sx - 0.3, sy, sz] },
+      { on: "bench", at: [this.bench.x + 0.15, BENCH_BACK, this.bench.z - 0.2] },
+    ];
+    return { bench: this.bench, pads, lanterns: this.lanterns.spots, perches, sign, trees, orchard, piles, ledges };
   }
 
   /** The ray from the eye through a point on the canvas (CSS pixels). */
@@ -1851,6 +1866,11 @@ export class GardenScene {
       if (l) out.push(l);
     }
     this.reportReach();
+    const heard = this.guests.status();
+    if (heard !== this.lastHeard) {
+      this.lastHeard = heard;
+      this.cb.onVisitorStatus(heard);
+    }
     const key = out.map((l) => `${l.id}${l.text}${l.x.toFixed(3)}${l.y.toFixed(3)}${l.near.toFixed(2)}`).join();
     if (key !== this.lastLabels) {
       this.lastLabels = key;

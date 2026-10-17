@@ -35,8 +35,15 @@ const SIZE = { bowl: 0.9, basket: 0.8, item: 0.55, find: 0.9, hung: 0.6, board: 
 const GUEST_SIZE = { sparrow: 0.5, mouse: 0.45, hedgehog: 0.7, fox: 1.1 } as const;
 /** Prints: their size (m), the step between them along the way, and how far each sits off the middle of the way, left and right. */
 const PRINT = { size: 0.14, step: 0.32, side: 0.05 };
-/** The shed: its back wall is this tall, the shelf's board and the hooks this high, the hooks this far apart along the wall. */
-const SHED = { h: 1.7, half: 0.8, depth: 0.7, step: 0.08, board: 0.92, hook: 1.38, gap: 0.45 };
+/** The shed: its back wall is this tall, the shelf's board and the hooks this high, the hooks this far apart along the wall; its roof slopes down to the back by `tilt` (rad). */
+const SHED = { h: 1.7, half: 0.8, depth: 0.7, step: 0.08, board: 0.92, hook: 1.38, gap: 0.45, tilt: 0.18 };
+
+/** A place on the shed's roof, a little toward its front and its near end (#376: the goat stands there). */
+export function shedRoof(l: Layout): [number, number, number] {
+  const s = shedAt(l);
+  // 10 cm in front of the roof's middle, where it is that much higher, on top of its 5 cm board.
+  return [s.x - SHED.depth / 2 - 0.1, SHED.h + 0.06 + 0.025 + 0.1 * Math.sin(SHED.tilt), s.z + 0.3];
+}
 /** The board has room for every kind of find, in a row: nothing kept is ever out of sight. */
 const BOARD_SLOTS = Object.keys(FINDS).length;
 
@@ -180,7 +187,7 @@ export class LeaveItOut {
     box(0.06, h, half * 2, s.x, h / 2, s.z);
     for (const sz of [-1, 1]) box(depth, h, 0.05, s.x - depth / 2, h / 2, s.z + sz * half);
     const roof = box(depth + 0.25, 0.05, half * 2 + 0.2, s.x - depth / 2, h + 0.06, s.z);
-    roof.rotation.z = -0.18;
+    roof.rotation.z = -SHED.tilt;
     box(0.4, SHED.step, half * 2, s.x - depth - 0.1, SHED.step / 2, s.z);
     box(0.18, 0.04, half * 2 - 0.2, s.x - 0.12, SHED.board, s.z);
     for (let i = 0; i < 3; i++) {
