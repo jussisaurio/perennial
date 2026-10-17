@@ -9,7 +9,8 @@ import * as THREE from "three";
 import { JOKE_LINES, lapsDone, lapStep, POND_LAPS, sundialAngle, type Laps } from "./whimsy";
 import { rayBox, type Ray } from "./scenery";
 import type { BuildCtx } from "./sceneSprites";
-import type { Conditions, Frame, Part } from "./scenePart";
+import type { Conditions } from "./conditions";
+import type { Frame, Part } from "./scenePart";
 import { HEDGE } from "./world";
 import * as T from "./textures";
 
@@ -132,7 +133,7 @@ export class Jokes implements Part {
 
   /** No sun at night, so no shadow, and the sundial is closed. */
   onConditions(c: Conditions) {
-    this.night = c.time === "night";
+    this.night = c.night;
     this.shadow.visible = !this.night;
   }
 
