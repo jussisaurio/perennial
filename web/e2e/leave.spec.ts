@@ -196,6 +196,41 @@ test("a device clock days ahead: seeing the bowl is saved once, refused, and the
   expect(writes).toHaveLength(1);
 });
 
+test("the way in (#335): after a night, the guest's prints show in Today's strip until the find is picked up; they open the walk by the bowl", async ({ page }) => {
+  await page.goto("/?demo=es:3#/today");
+  const prints = page.getByRole("button", { name: "Something is waiting in your garden" });
+  await openWalk(page);
+  await standBy(page, "basket", 0.8);
+  await page.getByRole("button", { name: "Take from the basket" }).click();
+  await standBy(page, "bowl", 0.8);
+  await page.getByRole("button", { name: "Put it in the bowl" }).click();
+  await expect.poll(async () => (await savedLeft(page))?.n, { timeout: 15_000 }).toBe(1);
+  // The same day: nothing came yet, so nothing waits.
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible();
+  await expect(prints).toHaveCount(0);
+
+  // The next morning: the sparrow's prints, with no words.
+  await page.clock.setFixedTime(daysLater(1));
+  await page.reload();
+  await expect(prints).toBeVisible({ timeout: 20_000 });
+  await expect(prints).toHaveText("");
+  // They open the walk and walk you up to the bowl, where the prints start.
+  await prints.click();
+  await expect(page.getByRole("button", { name: "Follow the prints" })).toBeVisible({ timeout: 20_000 });
+  // Still there after the walk was opened: it waits until it is found.
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(prints).toBeVisible();
+  await prints.click();
+  await page.getByRole("button", { name: "Follow the prints" }).click({ timeout: 20_000 });
+  await page.getByRole("button", { name: "Pick it up" }).click({ timeout: 15_000 });
+  await expect.poll(async () => (await savedLeft(page))?.bowl?.found, { timeout: 15_000 }).toBe(true);
+  // Found: nothing waits any more.
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible();
+  await expect(prints).toHaveCount(0);
+});
+
 test("by button alone, with five things kept and three hooks: every thing can hang, and every hook can change", async ({ page }) => {
   await page.goto("/?demo=es:3#/today");
   await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });

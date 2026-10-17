@@ -4,7 +4,7 @@
 import { deriveMemory, readMemory, wordState, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { dayNumber, startOfDay } from "../core/day";
-import { basket, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type LeaveFacts, type LeaveWalk } from "../garden/leave";
+import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk, type Left } from "../garden/leave";
 import type { ReviewRow } from "../data/rows";
 import {
   learnerFacts,
@@ -140,14 +140,8 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
  */
 export function learnerLeave(l: Learner, now: number, dayNow: () => number): { walk: LeaveWalk; walkedNow: boolean } {
   const today = dayNumber(now);
-  // Missing from course rows Electric streams before their first course change after the migration: nothing left yet.
-  const stored = l.course.garden_left ?? NO_LEFT;
+  const stored = storedLeft(l);
   const seen = walked(stored, today);
-  const brought: LeaveFacts["brought"] = {};
-  for (const r of ROWS) {
-    const at = r.needs ? gardenBroughtAt(l, r.needs) : null;
-    if (r.needs && at !== null) brought[r.needs] = dayNumber(at);
-  }
   const fruits: Fruit[] = [];
   for (const w of l.words.values()) {
     const kind = w.orchard;
@@ -158,7 +152,29 @@ export function learnerLeave(l: Learner, now: number, dayNow: () => number): { w
     const kind = l.words.get(id)?.orchard;
     return kind && kind !== "tree" ? kind : null;
   };
-  return { walk: { left: seen ?? stored, today, dayNow, facts: { brought }, basket: basket(fruits), fruitOf }, walkedNow: seen !== null };
+  return { walk: { left: seen ?? stored, today, dayNow, facts: leaveFacts(l), basket: basket(fruits), fruitOf }, walkedNow: seen !== null };
+}
+
+// Missing from course rows Electric streams before their first course change after the migration: nothing left yet.
+const storedLeft = (l: Learner): Left => l.course.garden_left ?? NO_LEFT;
+
+/** What the bowl's rows need from the learner's reviews: the calendar day each row's visitor came. */
+function leaveFacts(l: Learner): LeaveFacts {
+  const brought: LeaveFacts["brought"] = {};
+  for (const r of ROWS) {
+    const at = r.needs ? gardenBroughtAt(l, r.needs) : null;
+    if (r.needs && at !== null) brought[r.needs] = dayNumber(at);
+  }
+  return { brought };
+}
+
+/**
+ * The guest who came for what was left in the bowl, while what it left waits
+ * to be found, as of `now`; or null (#335: Today's strip shows its prints).
+ */
+export function waitingGuest(l: Learner, now: number): Guest | null {
+  const b = bowlNow(storedLeft(l), dayNumber(now), leaveFacts(l));
+  return b.kind === "came" ? b.outcome.row.guest : null;
 }
 
 /** Leave it out on the landing page: nothing left, the crumbs in the basket, and nothing saved. */
