@@ -6,7 +6,7 @@
 import * as THREE from "three";
 import { petalAt, petalForms, shakeLength, shiver } from "./shake";
 import { brush, brushStep, type Brush } from "./walkInto";
-import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope } from "./whimsy";
+import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, SNEEZE } from "./whimsy";
 import type { Label } from "./scene";
 import type { Frame } from "./scenePart";
 import { BED_H, BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, signBoard, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
@@ -27,6 +27,7 @@ const PLANT_VERT = /* glsl */ `
   attribute float iLean; // brushed by the walker (#359): radians, springing back to 0
   uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uShake; // plant index, lean (#357)
+  uniform vec2 uSneeze; // plant index, squash (#360)
   uniform vec2 uLowSize;
   varying vec2 vLow;
   varying vec2 vHi;
@@ -43,7 +44,9 @@ const PLANT_VERT = /* glsl */ `
     float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
     // A shaken plant shivers: it leans side to side for a moment (#357). A brushed one leans away and springs back (#359).
     float shake = abs(iParams.w - uShake.x) < 0.5 ? uShake.y : 0.0;
-    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk), iParams.x, iParams.y + shake + iLean * uSway);
+    // A plant a dandelion seed lands on sneezes (#360): squashed down and out for a moment.
+    float sq = abs(iParams.w - uSneeze.x) < 0.5 ? uSneeze.y : 0.0;
+    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk) * vec2(1.0 + sq * 0.6, 1.0 - sq), iParams.x, iParams.y + shake + iLean * uSway);
     gl_Position = projectionMatrix * mv;
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
@@ -82,6 +85,7 @@ function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: numbe
       uSelected: { value: -1 },
       uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
       uShake: { value: new THREE.Vector2(-1, 0) },
+      uSneeze: { value: new THREE.Vector2(-1, 0) },
     },
     vertexShader: PLANT_VERT,
     fragmentShader: PLANT_FRAG,
@@ -115,6 +119,8 @@ export class Plants {
   private brush: Brush;
   private leanRef: { attr: THREE.InstancedBufferAttribute; i: number }[] = [];
   private onBrush: (p: PlacedPlant) => void;
+  /** A plant sneezing (#360): its index, and when it began. */
+  private sneezing = { i: -1, at: 0 };
 
   /** `onBrush`: the walker brushed past a plant, and its note plays now (at most one a frame). */
   constructor(
@@ -367,6 +373,23 @@ export class Plants {
     return out;
   }
 
+  /** A dandelion seed landed on plant `i` (an index into the layout's plants): it sneezes. The newest sneeze takes the place of one still going. */
+  sneeze(i: number, elapsed: number) {
+    this.sneezing.i = i;
+    this.sneezing.at = elapsed;
+  }
+
+  /** Squashes the sneezing plant, then lets it pop back. No allocations: it runs every frame. */
+  private tickSneeze(elapsed: number) {
+    const k = this.sneezing;
+    if (k.i < 0) return;
+    const t = elapsed - k.at;
+    const done = t > SNEEZE.rise + SNEEZE.fall;
+    const a = done ? 0 : perkEnvelope(t, SNEEZE.rise, SNEEZE.fall) * SNEEZE.squash;
+    for (const m of this.plantMats) m.uniforms.uSneeze.value.set(done ? -1 : k.i, a);
+    if (done) k.i = -1;
+  }
+
   /** Grows the perking plants a little, then lets them settle. No allocations: it runs every frame. */
   private tickPerk(elapsed: number) {
     const k = this.perk;
@@ -379,7 +402,7 @@ export class Plants {
     if (done) k.i = -1;
   }
 
-  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, the perk uniform, and brushing. */
+  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, the perk and sneeze uniforms, and brushing. */
   tick(f: Frame) {
     const { elapsed, x, z, yaw } = f;
     for (const c of this.chunks) c.mesh.visible = c.center.distanceTo(this.camera.position) - c.radius < FOG_FAR;
@@ -389,6 +412,7 @@ export class Plants {
     }
     this.tickPerk(elapsed);
     this.tickShake(elapsed);
+    this.tickSneeze(elapsed);
     this.tickBrush(f);
   }
 

@@ -12,6 +12,8 @@ import type { Left, LeaveWalk } from "../garden/leave";
 import type { LeaveDone } from "../garden/sceneLeave";
 import type { CarryDone, Held } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
+import type { ToyDone } from "../garden/sceneToys";
+import type { ToysWalk } from "../garden/toys";
 import { sceneryViews } from "../garden/scenery";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
 import { isAutumn } from "../core/day";
@@ -35,9 +37,11 @@ interface WalkData {
  * and quality changes go to the running scene. `onFocused`: the scene walked to
  * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
  * save it once it is opened. `leave`: the bowl and the shelf (#351), how to save
- * them, and what to do when the learner leaves or finds something. `onShake`:
- * a plant was shaken (#357), and the forms that fell from it. `onCarry`: a
- * loose thing was picked up, thrown, put down or stacked, or it landed (#358).
+ * them, and what to do when the learner leaves or finds something. `toys`: the
+ * dandelion clocks and the paper boat (#360), and what to do when one is played
+ * with. `onShake`: a plant was shaken (#357), and the forms that fell from it.
+ * `onCarry`: a loose thing was picked up, thrown, put down or stacked, or it
+ * landed (#358).
  */
 export function useGardenScene({
   lang,
@@ -46,6 +50,7 @@ export function useGardenScene({
   door,
   leave,
   walkInto,
+  toys,
   focus,
   time,
   detail,
@@ -62,6 +67,7 @@ export function useGardenScene({
   leave: { walk: LeaveWalk; save: (left: Left) => void; done: (d: LeaveDone) => void };
   /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
   walkInto: (e: WalkIntoEvent) => void;
+  toys: { walk: ToysWalk; done: (d: ToyDone) => void };
   focus?: Focus | null;
   time: TimeOfDay;
   detail: Detail;
@@ -93,6 +99,8 @@ export function useGardenScene({
   walkIntoNow.current = walkInto;
   const carryNow = useRef(onCarry);
   carryNow.current = onCarry;
+  const toysNow = useRef(toys);
+  toysNow.current = toys;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
@@ -112,9 +120,10 @@ export function useGardenScene({
         orchard: { trees: source.orchard, firstPlanted: source.first ? source.first.at : null },
         leave: leave.walk,
         autumn: isAutumn(new Date()),
+        toys: toys.walk,
       },
     });
-  }, [source, data, visitors, door.state, leave.walk, lang]);
+  }, [source, data, visitors, door.state, leave.walk, toys.walk, lang]);
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -151,6 +160,7 @@ export function useGardenScene({
             onShake: (p, forms) => shakeNow.current(p, forms),
             onWalkInto: (e) => walkIntoNow.current(e),
             onCarry: (d) => carryNow.current(d),
+            onToy: (d) => toysNow.current.done(d),
           },
           reduced,
           lang,
