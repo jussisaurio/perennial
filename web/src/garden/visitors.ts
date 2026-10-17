@@ -4,7 +4,7 @@
 // the Words list, Next plant or the session summary: they are just for fun.
 // Pure functions, so they are easy to test. Rules: docs/voice.md and issue #69.
 
-import { daily, DAY_MS, dayNumber, rareDay, startOfDay } from "../core/day";
+import { daily, DAY_MS, dayNumber, isAutumn, rareDay, startOfDay } from "../core/day";
 import { bareNoun, inLang, nounView, type NounDef, type NounView, type NounWords, type PerLang } from "./nouns";
 import type { Layout } from "./world";
 import type { GardenWord } from "../deck/schema";
@@ -82,8 +82,8 @@ export const VISITORS: readonly VisitorDef[] = [
     gloss: "mushroom",
     rare: true,
     tag: "approach",
-    // Autumn (September to November) is mushroom season.
-    schedule: ({ now }) => rareDay(now.getMonth() >= 8 && now.getMonth() <= 10 ? 3 : 7, "visitor-toadstool", now),
+    // Autumn is mushroom season.
+    schedule: ({ now }) => rareDay(isAutumn(now) ? 3 : 7, "visitor-toadstool", now),
   },
   { id: "bird", words: { es: "el pájaro", de: "der Vogel" }, gloss: "bird", rare: false, tag: "tap", garden: "bird", schedule: ({ facts }) => facts.garden.has("bird") },
   // Sits beside its word's plant, and wags its tail when you come near.

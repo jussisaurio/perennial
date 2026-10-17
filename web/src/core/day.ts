@@ -35,3 +35,8 @@ export function daily<T>(pool: readonly T[], key: string, now = new Date()): T {
 export function rareDay(oneIn: number, key: string, now = new Date()): boolean {
   return hash32(`rare:${today(now)}:${key}`) % oneIn === 0;
 }
+
+/** Autumn, September to November, in the learner's local time: the toadstool's season, and leaf piles on the paths (#359). */
+export function isAutumn(now: Date): boolean {
+  return now.getMonth() >= 8 && now.getMonth() <= 10;
+}
