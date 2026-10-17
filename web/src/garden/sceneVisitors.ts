@@ -8,12 +8,13 @@ import * as THREE from "three";
 import * as T from "./textures";
 import { visitor, type VisitorId, type VisitorView } from "./visitors";
 import { KINDS } from "./kinds";
-import type { Body, Home, Visitor, VisitorKind } from "./kinds/kind";
+import type { Body, Hideout, Home, Visitor, VisitorKind } from "./kinds/kind";
 import type { Layout } from "./world";
 import type { Spots } from "./spots";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
 import { THIRSTY } from "./plants";
+import { SEEK_REACH } from "./hide";
 
 /** Every kind's frames in one atlas, in KINDS order; a kind's frame name gives its cell. */
 const ATLAS = Object.values(KINDS).flatMap((k) => Object.values(k.art));
@@ -94,6 +95,14 @@ export interface VisitorLabel {
   kind: "visitor" | "say";
   gloss?: string;
   known?: boolean;
+  /** Where it hid today, once it is found (#379). */
+  where?: Hideout;
+}
+
+/** A visitor that hides (#379), as a screen reader hears of it: "the gnome", "behind manzana". */
+export interface Hider {
+  gloss: string;
+  where: Hideout;
 }
 
 export class SceneVisitors implements Part {
@@ -120,9 +129,10 @@ export class SceneVisitors implements Part {
   /**
    * Today's visitors, each where its kind says (kinds/). One small texture for
    * all of them; each is a one-instance sprite mesh (a lying kind's lies flat).
-   * `now`: the moment the walk opened, for the kinds' daily picks.
+   * `now`: the moment the walk opened, for the kinds' daily picks; `age`: the
+   * garden's age in calendar days.
    */
-  build(spots: Spots, now: Date) {
+  build(spots: Spots, now: Date, age: number) {
     if (!this.list.length) return;
     const w = this.world;
     const L = w.layout;
@@ -134,7 +144,7 @@ export class SceneVisitors implements Part {
       const g = visitor(v.id).garden;
       const plant = g ? L.plants.find((p) => p.garden === g) : undefined;
       const home: Home | null = plant ? { x: plant.x, z: plant.z, soil: w.bedTop, top: w.plantTop(plant), thirsty: plant.r < THIRSTY } : null;
-      const it = kind.arrive({ spots, layout: L, home, now, reducedMotion: w.reducedMotion });
+      const it = kind.arrive({ spots, layout: L, home, now, age, reducedMotion: w.reducedMotion });
       if (!it) continue;
       const { body, size } = it;
       const u = CELLS[v.id][body.frame] * cellU;
@@ -244,13 +254,18 @@ export class SceneVisitors implements Part {
   }
 
   /**
-   * A tap on a visitor. One with a word in this course may answer (the awake
-   * frog croaks one of your known words): it says that in a bubble for a few
-   * seconds, and this returns it. Otherwise its tag shows for a few seconds.
+   * A tap on a visitor. One that hides is found (#379). One with a word in
+   * this course may answer (the awake frog croaks one of your known words): it
+   * says that in a bubble for a few seconds, and this returns it. Otherwise
+   * its tag shows for a few seconds.
    */
   tap(id: VisitorId, known: readonly string[]): string | null {
     const s = this.sprites.find((o) => o.v.id === id);
     const elapsed = this.world.elapsed();
+    if (s?.body.hiding) {
+      this.find(id);
+      return null;
+    }
     const said = s?.v.word && s.visitor.onTap ? s.visitor.onTap({ elapsed, known, lang: this.world.lang }) : null;
     if (said === null) {
       this.tapped = { id, until: elapsed + 4 };
@@ -260,6 +275,29 @@ export class SceneVisitors implements Part {
     // Its answer's frame (the frog's puffed throat) shows at once.
     if (s) this.draw(s);
     return said;
+  }
+
+  /** A hiding visitor is found (#379): by a tap, or the action button near it. Its tag shows for a few seconds, and says where it was. */
+  find(id: VisitorId) {
+    const s = this.sprites.find((o) => o.v.id === id);
+    if (!s?.body.hiding || !s.visitor.onFind) return;
+    const elapsed = this.world.elapsed();
+    s.visitor.onFind(elapsed);
+    this.tapped = { id, until: elapsed + 4 };
+    this.draw(s);
+  }
+
+  /** A visitor hiding within reach of (x, z), for the action button (#379); null when none is. No allocation: asked every frame. */
+  hiderNear(x: number, z: number): VisitorId | null {
+    for (const s of this.sprites) if (s.body.hiding && s.mesh.visible && Math.hypot(s.body.at.x - x, s.body.at.z - z) < SEEK_REACH) return s.v.id;
+    return null;
+  }
+
+  /** A hiding visitor (#379): what it is, in English, and where it hides. */
+  hider(id: VisitorId): Hider {
+    const s = this.sprites.find((o) => o.v.id === id);
+    if (!s?.body.hid) throw new Error(`${id} does not hide today`);
+    return { gloss: s.v.gloss, where: s.body.hid };
   }
 
   /** A visitor says something in a small bubble for a few seconds, in place of its tag. */
@@ -410,7 +448,7 @@ export class SceneVisitors implements Part {
       // 1.5 m unless the kind says otherwise: near enough to read a small thing's name.
       if (show > 0 && d < (s.kind.tagRange ?? 1.5) && d < nearD && this.projectTag(s)) [tag, tagShow, nearD] = [s, show, d];
     }
-    const label = tag && this.projectTag(tag) ? { id: `visitor:${tag.v.id}`, text: tag.v.word!, gloss: tag.v.gloss, known: tag.v.known, kind: "visitor" as const, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: tagShow } : null;
+    const label = tag && this.projectTag(tag) ? { id: `visitor:${tag.v.id}`, text: tag.v.word!, gloss: tag.v.gloss, known: tag.v.known, kind: "visitor" as const, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: tagShow, ...(tag.body.hid && !tag.body.hiding && { where: tag.body.hid }) } : null;
     return { say, tag: label };
   }
 }

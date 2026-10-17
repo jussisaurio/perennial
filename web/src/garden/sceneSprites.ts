@@ -17,8 +17,6 @@ export const FOG_NEAR = 14;
 export const FOG_FAR = 46;
 /** Plant sprites a little under life size: the tallest bloom stands about eye height. */
 export const PLANT_SCALE = 0.85;
-/** Height of the raised beds: plants stand on their soil. */
-export const BED_H = 0.28;
 
 /** A plant sprite's drawn height in metres, from its height in SVG units (stemHeight, ui/plant.tsx). */
 export function plantHeight(growth: number): number {

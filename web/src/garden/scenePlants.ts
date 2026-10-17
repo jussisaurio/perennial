@@ -11,9 +11,9 @@ import type { Label } from "./scene";
 import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
 import { isOld } from "./plants";
-import { BED_H, BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, signBoard, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
+import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, signBoard, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
 import { boardBox } from "./scenery";
-import type { Layout, PlacedPlant } from "./world";
+import { BED_H, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 
 /** Plants this near you (m) show their names; a tap on one opens its card where you stand, and a tap on one farther away walks to it first (#336). */

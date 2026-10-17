@@ -9,10 +9,10 @@ import * as THREE from "three";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
 import { rayBox, type Ray } from "./scenery";
-import { BED_H, sprites, type BuildCtx } from "./sceneSprites";
+import { sprites, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 import { blowEnds, boatAt, dandelions, flight, FOLD_REACH, FROG_BOARDS, SEEDS, seedAt, voyage, type BoatWord, type Flight, type Head, type ToysWalk, type Voyage } from "./toys";
-import type { Layout } from "./world";
+import { BED_H, type Layout } from "./world";
 
 /** What the action button does here (GardenScene's Reach): blow a dandelion clock, fold a paper boat. */
 export type ToyAct = "blow" | "fold";

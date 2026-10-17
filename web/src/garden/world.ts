@@ -64,6 +64,8 @@ export const DOOR_HALF = 0.55;
 /** A walker's radius (m): how close the eye comes to fences, beds, the hedge and trunks. */
 export const WALKER = 0.28;
 
+/** Height of the raised beds: plants stand on their soil. */
+export const BED_H = 0.28;
 const SPACING = 0.62;
 const BED_COLS = 6;
 const BED_ROWS = 5;

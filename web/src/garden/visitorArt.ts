@@ -316,6 +316,21 @@ export function gnomeArt(pose: "front" | "side", lit: boolean): PixelArt {
   return { rows, pal: { ...GNOME_PAL, L: lit ? "#ffe680" : "#4a4048" } };
 }
 
+// Hide-and-seek (#379): how the gnome looks where it hides, and once it is found.
+const GNOME_EYES = ["...oSSSSSSSSo...", "...oSeSSSSeSo..."];
+/** Crouched behind something: only its hat and eyes peek out. */
+export const GNOME_PEEK: PixelArt = { rows: [...GNOME_HAT, ...GNOME_EYES], pal: GNOME_PAL };
+/** Among the lily pads, pretending to be one: a pad on its head, the hat poking through, its eyes just over the water. */
+export const GNOME_PAD: PixelArt = {
+  rows: [...GNOME_HAT.slice(0, 8), "...oGGGGGGGGo...", ".ooGGgGGGGGGGoo.", "oGGGGGGGGGGgGGGo", ".ooGGGGGGGGGGoo.", ...GNOME_EYES.slice(1)],
+  pal: { ...GNOME_PAL, G: "#5fb24c", g: "#3f8f3a" },
+};
+/** Found: it falls over, flat on its back, its hat to one side (the front rows turned on their side), its lantern unlit. */
+export const GNOME_FALLEN: PixelArt = {
+  rows: Array.from({ length: GNOME_FRONT_ROWS[0].length }, (_, x) => GNOME_FRONT_ROWS.map((row) => row[x]).join("")),
+  pal: { ...GNOME_PAL, L: "#4a4048" },
+};
+
 // A softer outline than the other visitors: the neck is thin, and black lines would hide it.
 const HERON_PAL = { o: "#555e68", W: "#eef1f3", G: "#9aa4ad", g: "#6b7680", k: "#1a1d22", y: "#e0b040", e: "#1a1d22" };
 const HERON_BODY = [

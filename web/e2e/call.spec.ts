@@ -2,7 +2,7 @@ import { expect, test, type Page } from "./test";
 
 // #377, call: with nothing in reach the action button whistles, and each
 // visitor in sight answers in its own way. A long press on open ground calls
-// too. The demo garden of 400 words has the gnome, the frog, the dog, the
+// too. The demo garden of 400 words has the gnome (hiding, on this day), the frog, the dog, the
 // mushroom and (at dusk and night) the moth.
 
 type CallScene = {
@@ -35,9 +35,8 @@ test("with nothing in reach the action button calls: the dog comes to your feet,
   await expect(call).toHaveText("");
   await call.click();
   // In the order they are listed; the moth is out only at dusk and night, so it is not asked by day. The frog sleeps by day.
-  await expect(status(page)).toHaveText(
-    "The gnome freezes. It is only a garden gnome. The frog croaks once in its sleep. The mushroom does nothing. It is a mushroom. The dog runs over, tail going.",
-  );
+  // On this day the gnome hides (#379), and keeps quiet: a call must not give it away.
+  await expect(status(page)).toHaveText("The frog croaks once in its sleep. The mushroom does nothing. It is a mushroom. The dog runs over, tail going.");
   // Reduced motion (the e2e default): the dog is at your feet at once, not at its plant on the far side of the garden.
   await expect
     .poll(() =>

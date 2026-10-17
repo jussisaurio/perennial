@@ -3,7 +3,7 @@
 // the visitors, so a visitor reads where things are from here and never from
 // another part's fields, and the build order this needs is plain to see.
 
-import type { TreeVisitorSpot } from "./orchard";
+import type { PlacedTree, TreeVisitorSpot } from "./orchard";
 import type { Layout } from "./world";
 
 export interface Spots {
@@ -15,8 +15,14 @@ export interface Spots {
   lanterns: readonly [number, number][];
   /** Where a small bird can sit (x, y, z): the tops of the notice boards and of the fence's rail. */
   perches: readonly [number, number, number][];
+  /** The top of the first bed's sign (x, y, z). It is one of the perches too. */
+  sign: readonly [number, number, number];
   /** Today's spots in the orchard's trees (#315), only when the walk starts with the door open. */
   trees: readonly TreeVisitorSpot[];
+  /** The orchard's trees, only when the walk starts with the door open. */
+  orchard: readonly PlacedTree[];
+  /** Autumn's leaf piles (#359), as the walk draws them: none in other seasons. */
+  piles: readonly { x: number; z: number }[];
 }
 
 /** The middle of a lantern's glass (m): the moth goes round it, and the glint shows there (#361). */

@@ -128,7 +128,7 @@ export interface OrchardArea {
 }
 
 /** Which way along z the door is, from anywhere in the orchard: the garden lies toward −z (world.ts layout). Everything placed from the door follows this one sign. */
-const DOOR_SIDE = -1;
+export const DOOR_SIDE = -1;
 
 /** The z of a line `m` metres in from the door's side of the area. */
 function inFromDoor(a: OrchardArea, m: number): number {
