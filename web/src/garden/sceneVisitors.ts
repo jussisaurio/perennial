@@ -83,6 +83,8 @@ export interface VisitorWorld {
   sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => SpriteMesh;
   /** The same, lying flat and centred on x, y, z, showing the bottom `vh` of the strip (size × size·vh metres). Turn it with iParams.y. */
   lying: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, vh: number, size: number) => SpriteMesh;
+  /** A fetching visitor (the dog, #335 S2) took something where it ran to, or dropped it where it is drawn, at (x, z). */
+  fetched: (e: "took" | "dropped", x: number, z: number) => void;
 }
 
 /** A visitor's tag, or what it says, as the scene shows labels (screen fractions). */
@@ -403,6 +405,34 @@ export class SceneVisitors implements Part {
     return lines;
   }
 
+  /** Fetch (#335 S2): a visitor runs to (x, z) for what lies there. False when it is not here today, does not fetch, or is out on a fetch already. */
+  fetch(id: VisitorId, x: number, z: number): boolean {
+    const s = this.sprites.find((o) => o.v.id === id);
+    return !!s?.visitor.fetch?.(x, z);
+  }
+
+  /** The dog fetched something of this visitor's (#335 S2): its hat, or itself. */
+  taken(id: VisitorId, what: "hat" | "self") {
+    const s = this.sprites.find((o) => o.v.id === id);
+    if (!s) return;
+    s.visitor.onTaken?.(what);
+    this.draw(s);
+  }
+
+  /** This visitor's hat is given back (#335 S2). */
+  hatBack(id: VisitorId) {
+    const s = this.sprites.find((o) => o.v.id === id);
+    if (!s) return;
+    s.visitor.onHatBack?.();
+    this.draw(s);
+  }
+
+  /** A visitor as it is drawn now (it may be running about, or hiding); null when it is not here today. Its own Body: read it, do not keep it. */
+  drawnAt(id: VisitorId): Readonly<Body<string>> | null {
+    for (const s of this.sprites) if (s.v.id === id) return s.body;
+    return null;
+  }
+
   /** Visitors react to you and move: each kind's step, then its Body drawn. No allocations here: it runs every frame. */
   tick(f: Frame) {
     const camera = this.world.camera;
@@ -411,7 +441,9 @@ export class SceneVisitors implements Part {
         // On screen: in front of the camera and inside it (a little margin).
         const p = this.tmp.set(s.body.at.x, s.body.at.y, s.body.at.z).project(camera);
         const seen = p.z < 1 && Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95;
-        if (s.visitor.step(f, seen) === "startled" && this.tapped?.id === s.v.id) this.tapped = null;
+        const did = s.visitor.step(f, seen);
+        if (did === "startled" && this.tapped?.id === s.v.id) this.tapped = null;
+        else if (did === "took" || did === "dropped") this.world.fetched(did, s.body.x, s.body.z);
       }
       this.draw(s);
     }

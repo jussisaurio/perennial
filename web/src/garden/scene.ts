@@ -28,7 +28,8 @@ import { LEAVE_STAND, LeaveItOut, shedRoof, type LeaveAct, type LeaveDone, type 
 import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
 import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { echo, echoDate, type Met } from "./well";
-import { FINDS, type Left, type LeaveWalk } from "./leave";
+import { FINDS, type Fruit, type Left, type LeaveWalk } from "./leave";
+import { BROUGHT, FETCH_WORDS, fetchFruit, HAT_BACK } from "./fetch";
 import { TOY_STAND, Toys, type ToyAct, type ToyDone, type ToyTarget } from "./sceneToys";
 import type { ToysWalk } from "./toys";
 import { bareNoun, nounView } from "./nouns";
@@ -76,7 +77,7 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find" | "petal" | "fruit" | "boat" | "echo";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find" | "fetch" | "petal" | "fruit" | "boat" | "echo";
   gloss?: string;
   /** A noun plant's gender: the shape of its label's stake (#357). */
   gender?: Gender;
@@ -268,8 +269,8 @@ export class GardenScene {
   private openedAt = 0;
   /** Leave it out (#351): the bowl, the shed and its shelf, and what came in the night. */
   private leaveIt: LeaveItOut;
-  /** A find's word and meaning over where it lay, for a few seconds after it is picked up. */
-  private foundTap: { word: string; gloss: string; at: [number, number, number]; until: number } | null = null;
+  /** A find's word and meaning over where it lay, for a few seconds after it is picked up; or, the same way, what the dog dropped at your feet (#335 S2). */
+  private foundTap: { kind: "find" | "fetch"; word: string; gloss: string; at: [number, number, number]; until: number } | null = null;
   /** A fallen fruit's tag (#359): the word of the tree it fell from, over the fruit as it rolls, for a few seconds. */
   private fruitTap: { tree: PlacedTree; at: Readonly<Rolling>; until: number } | null = null;
   /** Walking into things (#359): bumping orchard trees and bursting leaf piles. */
@@ -298,8 +299,8 @@ export class GardenScene {
   private seatView = { yaw: 0, pitch: 0, looked: false };
   private turnTo: { yaw: number; pitch: number; at: number } | null = null;
   private gnomeSays: number | null = null;
-  /** Is this visitor here today? Made once: the bench asks every frame while you sit. */
-  private readonly here = (id: Companion) => this.guests.has(id);
+  /** Is this visitor here today, and free to come? The dog may have the gnome or its hat (#335 S2). Made once: the bench asks every frame while you sit. */
+  private readonly here = (id: Companion) => this.guests.has(id) && !(id === "gnome" && this.carry.gnomeBusy());
   private readonly tintNow = new THREE.Color();
   private readonly fogNow = new THREE.Color();
   /** The pond's bench, by its middle (world.ts benchAt), worked out once: reportReach runs every frame. */
@@ -423,11 +424,24 @@ export class GardenScene {
       },
       () => this.cb.onWalkInto({ did: "pile" }),
     );
-    this.carry = new Carry(layout, visitors.leave.today, reducedMotion, {
-      dog: () => this.guests.where("dog"),
-      doorOpen: () => this.door.state === "open",
-      land: (l) => this.landed(l),
-    });
+    const fruits = visitors.leave.basket.filter((t): t is Fruit => "kind" in t);
+    this.carry = new Carry(
+      layout,
+      visitors.leave.today,
+      reducedMotion,
+      {
+        dog: () => this.guests.where("dog"),
+        dogDrawn: () => this.guests.drawnAt("dog"),
+        // A hiding gnome (#379) is left be: the dog must not give it away.
+        gnome: () => {
+          const g = this.guests.drawnAt("gnome");
+          return g && !g.hiding ? g.at : null;
+        },
+        doorOpen: () => this.door.state === "open",
+        land: (l) => this.landed(l),
+      },
+      fetchFruit(fruits, visitors.leave.today),
+    );
     this.toys = new Toys(layout, visitors.toys, reducedMotion, {
       sneeze: (i) => this.plants.sneeze(i, this.elapsed),
       material: (m) => {
@@ -453,6 +467,7 @@ export class GardenScene {
           return mesh;
         },
         lying: (tex, x, y, z, u, uw, vh, size) => sprites(tex, [{ x, y, z, u, v: 0, uw, vh, phase: 0, droop: 0, scale: 1, index: -6 }], size, size * vh, true),
+        fetched: (e, x, z) => this.fetched(e, x, z),
       },
       visitors.list,
     );
@@ -750,8 +765,7 @@ export class GardenScene {
 
   /** What you hold now: one thing at a time, leave it out's or a loose one. */
   private held(): Held | null {
-    const thing = this.carry.thing;
-    return thing ? { from: "ground", thing } : this.leaveIt.hand;
+    return this.carry.picked() ?? this.leaveIt.hand;
   }
 
   /**
@@ -789,9 +803,16 @@ export class GardenScene {
     this.goTo(at.x, at.z, CARRY_STAND, () => this.doCarry(t));
   }
 
-  /** Pick up a loose thing; put what you hold on the cairn or the ground, or drop it in the well; throw it at a point on the water. Anything that no longer applies does nothing. */
+  /** Pick up a loose thing; put what you hold on the cairn or the ground, or drop it in the well; throw it at a point on the water; give the gnome its hat back. Anything that no longer applies does nothing. */
   private doCarry(t: CarryTarget) {
     const c = this.carry;
+    if (t.at === "gnome") {
+      if (!c.give()) return;
+      this.guests.hatBack("gnome");
+      this.cb.onHand(this.held());
+      this.cb.onCarry({ did: "give", said: HAT_BACK, word: null });
+      return;
+    }
     let did: "lift" | "throw" | "put" | "stack" | "well";
     if (t.at === "thing") {
       if (this.leaveIt.hand || !c.lift(t.i)) return;
@@ -838,6 +859,13 @@ export class GardenScene {
       const from = this.elapsed + ECHO.delay;
       this.echoTap = { n, word: e.lemma, date: echoDate(e.at, this.openedAt), from, until: from + ECHO.show };
     },
+    fetch: (at) => {
+      // To where it came to rest: off a bed, it lies on the path beside it.
+      const lies = this.carry.at(at.i);
+      if (!this.guests.fetch("dog", lies.x, lies.z)) return false;
+      this.carry.fetchFor(at.i);
+      return true;
+    },
   };
 
   /** A thrown or put-down thing landed (#358): whoever its row names answers, and the page hears what happened. */
@@ -876,6 +904,28 @@ export class GardenScene {
     this.boatTap = { word: word.lemma, gloss: word.gloss, until: this.elapsed + 5 };
     this.clearTaps({ scenery: true, tree: true, line: true, visitor: true, find: true });
     this.cb.onToy({ did: "fold", word });
+  }
+
+  /**
+   * The dog on a fetch (#335 S2): it took something in its mouth (if that is the
+   * gnome's hat, or the gnome, the gnome knows), or it dropped it at your feet,
+   * where its word shows for a moment and the page hears what came back.
+   */
+  private fetched(e: "took" | "dropped", x: number, z: number) {
+    if (e === "took") {
+      const what = this.carry.dogTakes();
+      if (what === "hat" || what === "gnome") this.guests.taken("gnome", what === "hat" ? "hat" : "self");
+      return;
+    }
+    const d = this.carry.dogDrops(x, z, this.x, this.z);
+    // A fruit is one of the learner's own words, its meaning its kind (as a fallen fruit's tag); the rest are garden nouns.
+    // The dog brings a fruit only on a visit with one (Carry).
+    const f = this.carry.fruit;
+    const v = d.thing === "fruit" ? { word: f!.lemma, gloss: f!.kind } : nounView(FETCH_WORDS[d.thing], this.lang);
+    // A course with no word for it shows only its meaning.
+    this.foundTap = { kind: "fetch", word: v.word ?? v.gloss, gloss: v.gloss, at: [d.x, 0.35, d.z], until: this.elapsed + 4 };
+    this.clearTaps({ scenery: true, tree: true, line: true, visitor: true, fruit: true, boat: true });
+    this.cb.onCarry({ did: "fetch", said: BROUGHT[d.thing], word: v.word });
   }
 
   /** The bowl, a thing in the basket, a hook or the shelf's board, or what came in the night, under a point on the canvas (CSS pixels). Ask after the door. */
@@ -920,7 +970,7 @@ export class GardenScene {
       if (came?.row.guest === "dog") this.guests.visit("dog", null);
       const v = nounView(FINDS[done.find], this.lang);
       // A course with no word for it shows only its meaning.
-      this.foundTap = { word: v.word ?? v.gloss, gloss: v.gloss, at: done.at, until: this.elapsed + 4 };
+      this.foundTap = { kind: "find", word: v.word ?? v.gloss, gloss: v.gloss, at: done.at, until: this.elapsed + 4 };
       this.clearTaps({ scenery: true, tree: true, line: true, visitor: true, fruit: true, boat: true });
     }
     this.cb.onLeave(done);
@@ -1825,12 +1875,12 @@ export class GardenScene {
       v.set(tt.tree.x, tt.tree.height + 0.08, tt.tree.z).project(this.camera);
       if (v.z <= 1) tags.tree = { id: `tree:${tt.tree.id}`, text: tt.tree.lemma, gloss: tt.tree.gloss, kind: "tree", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
-    // A find's word and meaning (#351), over where it lay; kept on the screen.
+    // A find's word and meaning (#351), over where it lay, or what the dog dropped at your feet (#335 S2); kept on the screen.
     const ft = this.foundTap;
     if (ft && this.elapsed > ft.until) this.foundTap = null;
     else if (ft) {
       v.set(...ft.at).project(this.camera);
-      if (v.z <= 1) tags.find = { id: "find", text: ft.word, gloss: ft.gloss, kind: "find", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
+      if (v.z <= 1) tags.find = { id: ft.kind, text: ft.word, gloss: ft.gloss, kind: ft.kind, x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
     // A fallen fruit's word (#359), over the fruit as it rolls; kept on the screen. Its meaning is the fruit's kind, the plain English name.
     const fr = this.fruitTap;

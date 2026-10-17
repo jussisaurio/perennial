@@ -1042,14 +1042,20 @@ export function leafPile(): HTMLCanvasElement {
 /** Rings on the water, from small to wide, as they spread. */
 export const RINGS = 3;
 /** Cells of the carry atlas (32×32 each, things standing on the bottom row; the rings fill theirs), in this order. */
-export const CARRY_CELL = { pebble: 0, stick: 1, flatStone: 2, ring: (i: number) => 3 + i, well: 3 + RINGS };
-export const CARRY_CELLS = 4 + RINGS;
+export const CARRY_CELL = { pebble: 0, stick: 1, sock: 2, sign: 3, hat: 4, gnome: 5, fruit: 6, flatStone: 7, ring: (i: number) => 8 + i, well: 8 + RINGS };
+export const CARRY_CELLS = 9 + RINGS;
 
-/** The loose things, the cairn's stone, the rings and the orchard's well (#335 S6), in one small atlas (drawn once), in CARRY_CELL order. */
-export function carryAtlas(): HTMLCanvasElement {
+/**
+ * The loose things, the cairn's stone, the rings and the orchard's well (#335
+ * S6), in one small atlas (drawn once), in CARRY_CELL order. `fruit`: the
+ * fruit the dog may fetch this visit (#335 S2); none leaves its cell empty.
+ */
+export function carryAtlas(fruit: FruitKind | null): HTMLCanvasElement {
   const [c, ctx] = canvas(32 * CARRY_CELLS, 32);
   const rings = Array.from({ length: RINGS }, (_, i) => CarryArt.ring(5 + i * 5, 32));
-  [CarryArt.LOOSE_ART.pebble, CarryArt.LOOSE_ART.stick, CarryArt.FLAT_STONE, ...rings, CarryArt.WELL].forEach((art, i) => {
+  const L = CarryArt.LOOSE_ART;
+  [L.pebble, L.stick, L.sock, L.sign, L.hat, L.gnome, fruit && LeaveArt.fruitArt(fruit), CarryArt.FLAT_STONE, ...rings, CarryArt.WELL].forEach((art, i) => {
+    if (!art) return;
     const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
     const oy = 32 - art.rows.length;
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);

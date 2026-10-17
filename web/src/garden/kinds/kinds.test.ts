@@ -144,6 +144,60 @@ describe("visitor kinds", () => {
     expect(gnome.body).toMatchObject({ frame: "frontLit", glow: true });
   });
 
+  test("fetch (#335 S2): the dog runs to it, takes it, brings it to you, waits, and goes home; one fetch at a time", () => {
+    const dog = arrive("dog", { home: HOME });
+    const home = { ...dog.body.at };
+    /** Steps until the dog says `e`, with you at (x, z); how many seconds that took. */
+    const until = (e: "took" | "dropped", x: number, z: number) => {
+      const f: Frame = { dt: DT, elapsed: 0, x, z, yaw: 0, speed: 0 };
+      for (let t = 0; t < 20; t += DT) {
+        f.elapsed += DT;
+        if (dog.step!(f, true) === e) return t;
+      }
+      throw new Error(`the dog never ${e}`);
+    };
+    expect(dog.fetch!(4, 1)).toBe(true);
+    // Out on a fetch, it does not hear a call.
+    expect(dog.onCall!({ elapsed: 0, x: 0, z: 5, lang: "es" })).toBeNull();
+    until("took", 0, 5);
+    expect(dog.fetch!(0, 0)).toBe(false);
+    expect([dog.body.x, dog.body.z]).toEqual([4, 1]);
+    // Down off its bed while it runs.
+    expect(dog.body.y).toBe(0);
+    until("dropped", 0, 5);
+    expect(Math.hypot(dog.body.x, dog.body.z - 5)).toBeCloseTo(1.4, 5);
+    // It waits by you a moment, then trots home, back up on its bed.
+    run(dog, 10, 0, 5);
+    expect(dog.body).toMatchObject({ x: home.x, y: home.y, z: home.z });
+    expect(dog.fetch!(0, 0)).toBe(true);
+  });
+
+  test("with reduced motion the dog fetches without running: it is there, then by you", () => {
+    const dog = arrive("dog", { home: HOME, reducedMotion: true });
+    const f: Frame = { dt: DT, elapsed: 0, x: 0, z: 5, yaw: 0, speed: 0 };
+    dog.fetch!(4, 1);
+    expect(dog.step!(f, true)).toBe("took");
+    expect(dog.step!(f, true)).toBe("dropped");
+    expect(dog.body.frame).toBe("sit");
+  });
+
+  test("the dog fetched the gnome's hat: it turns its back, hides its name and plays no more, until the hat comes back; fetched itself, it is gone", () => {
+    const gnome = arrive("gnome");
+    gnome.onConditions!(conditions("day"));
+    gnome.onTaken!("hat");
+    expect(gnome.body).toMatchObject({ frame: "back", tag: 0 });
+    run(gnome, 5, 0, 0, false);
+    run(gnome, 5, 0, 0, true, 5);
+    expect(gnome.body.frame).toBe("back");
+    gnome.onConditions!(conditions("night"));
+    expect(gnome.body).toMatchObject({ frame: "backLit", glow: true });
+    gnome.onHatBack!();
+    expect(gnome.body).toMatchObject({ frame: "frontLit", tag: 1 });
+    gnome.onTaken!("self");
+    // No lantern glowing where it stood.
+    expect(gnome.body).toMatchObject({ visible: false, glow: false });
+  });
+
   test("the moth is out only at dusk and night, and the butterfly goes at night", () => {
     const moth = arrive("moth");
     const butterfly = arrive("butterfly", { home: HOME });

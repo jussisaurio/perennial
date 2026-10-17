@@ -1,20 +1,35 @@
 // Pixel art for the loose things you carry and throw (#358, garden/carry.ts),
 // in visitorArt.ts's style: a pebble, a stick, the cairn's flat stone, the orchard's well, and the
-// rings a splash makes. Drawn into the walk's texture (textures.ts carryAtlas)
-// and, for what you hold, into the page (GardenWalk.tsx).
+// rings a splash makes; and what the dog fetches (#335 S2): a sock, a sign, the
+// gnome's hat and the gnome itself, lying very stiff. Drawn into the walk's
+// texture (textures.ts carryAtlas) and, for what you hold, into the page
+// (GardenWalk.tsx). A fruit is the basket's (leaveArt.ts fruitArt).
 
 import type { Loose } from "./carry";
-import type { PixelArt } from "./visitorArt";
+import { GNOME_FALLEN, GNOME_HAT_ART, type PixelArt } from "./visitorArt";
 
 const STONE = { o: "#4a4440", S: "#9a948a", s: "#7a746a", w: "#c8c2b6" };
 
-export const LOOSE_ART: Record<Loose, PixelArt> = {
+export const LOOSE_ART: Record<Exclude<Loose, "fruit">, PixelArt> = {
   // Round, blue-grey and outlined, with a shine: not one of the path's grey specks.
   pebble: { rows: ["..oooo..", ".oSwwSo.", "oSSwSSSo", "oSSSSSso", ".osssso.", "..oooo.."], pal: { o: "#33383e", S: "#a4aeb8", s: "#78828c", w: "#e8eef2" } },
   stick: {
     rows: ["............o.", "...........oTo", "..........oTo.", "..o.....ooTo..", ".oTo..ooTTo...", "..oTooTTo.....", "..ooTTo.......", ".oTTo.........", "oTo...........", ".o............"],
     pal: { o: "#4a3020", T: "#8a6a44" },
   },
+  // One striped sock. Nobody knows whose.
+  sock: {
+    rows: [".oooo....", ".oRRo....", ".oWWo....", ".oRRo....", ".oWWo....", ".oWWWooo.", ".oWWWWWWo", "..oWWWWWo", "...ooooo."],
+    pal: { o: "#5a4a5a", W: "#e8e2d6", R: "#c84a4a" },
+  },
+  // A small board on a post, its words too small to read: "This is a sign."
+  sign: {
+    rows: ["oooooooooooo", "oPPPPPPPPPPo", "oPkkPkkkPkPo", "oPPPPPPPPPPo", "oPkkkPkkPPPo", "oPPPPPPPPPPo", "oooooooooooo", ".....oo.....", ".....oo.....", ".....oo.....", ".....oo....."],
+    pal: { o: "#4a3020", P: "#d8b47c", k: "#5a3a20" },
+  },
+  hat: GNOME_HAT_ART,
+  // Very stiff.
+  gnome: GNOME_FALLEN,
 };
 
 /** The cairn's flat stone, wide and low. */
