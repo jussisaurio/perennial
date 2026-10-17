@@ -36,7 +36,9 @@ test("start a second language from the top bar, switch back, and nothing new is 
   await expect(page.locator(".course-switch-button")).toHaveText(/Spanish/);
 });
 
-test("a second language the server refuses: the learner is told, and stays where they were", async ({ page }) => {
+test("a second language the server refuses: the learner is told, and stays where they were", async ({ page, allowConsoleError }) => {
+  // The app logs the refusal it's about to show the learner (App.tsx's startAnother).
+  allowConsoleError(/^course not saved/, "this test deliberately makes the server refuse the course write");
   await startCourse(page);
   // A permanent refusal (422), as from a server that does not know the language yet.
   await page.route("**/api/write", (route) =>
