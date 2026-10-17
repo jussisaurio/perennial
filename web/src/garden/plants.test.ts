@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { DAY_MS } from "../core/day";
 import { isStrong, plantStage, wordState, type MemoryRow } from "../core/memory";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
@@ -62,12 +63,18 @@ describe("garden plants", () => {
   test("the learner's plants use the shared stage, dots and order", () => {
     const now = Date.now();
     const row = (id: string, skill: MemoryRow["skill"], s: number, reps: number): MemoryRow => ({ key: `${id}:${skill}`, wordId: id, skill, s, d: 5, lastTs: now, due: now, reps, lapses: 0 });
+    const review = (id: string, skill: MemoryRow["skill"], daysAgo: number) => ({ word_id: id, skill, reviewed_at: new Date(now - daysAgo * DAY_MS).toISOString() });
     const memories = [row("w2", "read", 9, 1), row("w1", "read", 9, 2), row("w1", "listen", 8, 2), row("w1", "write", 8, 1), row("w0", "read", 0, 0)];
     const l = {
       words: new Map(words.map((w) => [w.id, { ...w, source: "deck", status: "active" }])),
       memories,
       memory: new Map(memories.map((m) => [m.key, m])),
       reviews: [],
+      // When each was first met, for the well (#335 S6): its first reading review, not a listening one.
+      reviewsByWord: new Map([
+        ["w1", [review("w1", "read", 2), review("w1", "listen", 6), review("w1", "read", 4)]],
+        ["w2", [review("w2", "read", 1)]],
+      ]),
       resolve: (id: string) => id,
       fresh: () => ["w5", "w6"],
     } as unknown as Learner;
@@ -78,5 +85,9 @@ describe("garden plants", () => {
     ]);
     expect(g.seeds).toBe(2);
     expect(g.first).toBeNull();
+    expect(g.met).toEqual([
+      { lemma: "word1", at: now - 4 * DAY_MS },
+      { lemma: "word2", at: now - DAY_MS },
+    ]);
   });
 });

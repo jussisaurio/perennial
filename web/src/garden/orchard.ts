@@ -106,11 +106,15 @@ export function orchardInput(l: OrchardLearner): OrchardInput[] {
   for (const m of l.memories) {
     const w = l.words.get(m.wordId);
     if (m.skill !== "read" || !w?.orchard || w.status === "ignored" || m.reps === 0) continue;
-    // A read memory comes from read reviews, so the word has at least one.
-    const planted = Math.min(...l.reviewsByWord.get(w.id)!.filter((r) => r.skill === "read").map((r) => Date.parse(r.reviewed_at)));
-    out.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, kind: w.orchard, planted, read: m });
+    out.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, kind: w.orchard, planted: plantedAt(l, w.id), read: m });
   }
   return out;
+}
+
+/** When a word with a read memory was planted: its first reading review (ms). */
+export function plantedAt(l: Pick<Learner, "reviewsByWord">, id: string): number {
+  // A read memory comes from read reviews, so the word has at least one.
+  return Math.min(...l.reviewsByWord.get(id)!.filter((r) => r.skill === "read").map((r) => Date.parse(r.reviewed_at)));
 }
 
 // ---- Placement ----
@@ -249,6 +253,14 @@ export function pickTree(r: Ray, hits: readonly TreeHit[]): { hit: TreeHit; t: n
 export function orchardBench(a: OrchardArea): { x: number; z: number; turn: number } {
   // Coming in, you face away from the door; your right is +x when you face −z. Turn 0 puts its back toward −z, the door's side (DOOR_SIDE).
   return { x: a.x + DOOR_SIDE * (AISLE / 2 + 0.9), z: inFromDoor(a, 1), turn: 0 };
+}
+
+/** The wishing well's stone ring (#335 S6): its radius in metres, for walking round it and for what lands in it. */
+export const WELL_R = 0.55;
+
+/** The wishing well, at the far end of the path up the middle: seen straight ahead from the door, with room to walk round it. */
+export function orchardWell(a: OrchardArea): { x: number; z: number } {
+  return { x: a.x, z: inFromDoor(a, a.d - 2.2) };
 }
 
 /** The bench's plaque, e.g. "First word planted 3 Oct 2026". */

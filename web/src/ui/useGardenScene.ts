@@ -130,6 +130,7 @@ export function useGardenScene({
         toys: toys.walk,
         // Tonight's real moon (#361), as the walk opens: the same as outside the window.
         moon: moonPhase(Date.now()),
+        met: source.met,
       },
     });
   }, [source, data, visitors, door.state, leave.walk, toys.walk, lang]);

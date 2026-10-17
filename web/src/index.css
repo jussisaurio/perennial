@@ -684,6 +684,17 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-say::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -2px; width: 6px; height: 6px; background: #fffdf6; border: 2px solid #3a2416; border-top: 0; border-left: 0; transform: translateY(-3px) rotate(45deg); }
 @keyframes gw-say-in { from { opacity: 0; transform: translate(-50%, calc(-100% - 3px)); } }
 @media (prefers-reduced-motion: reduce) { .gw-say { animation: none; } }
+/* The well's echo (#335 S6): pale words rising out of the well and fading, as an echo does. No box: it is a sound. As long as scene.ts ECHO.show. */
+.gw-echo {
+  position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
+  font: 500 1rem/1.2 var(--pixel); letter-spacing: 0.03em; color: #e8f2f4;
+  text-shadow: 2px 0 #1c2a30, -2px 0 #1c2a30, 0 2px #1c2a30, 0 -2px #1c2a30, 0 3px rgb(0 0 0 / 0.3);
+  animation: gw-echo 5s ease-out both;
+}
+.gw-echo i { font: italic 1.5rem/1.1 var(--display); }
+@keyframes gw-echo { 0% { opacity: 0; transform: translate(-50%, -40%); } 15%, 60% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -150%); } }
+/* Still: it shows, then goes (scene.ts ECHO.show). */
+@media (prefers-reduced-motion: reduce) { .gw-echo { animation: none; } }
 .gw-leaf { display: inline-block; margin-right: 3px; vertical-align: -1px; filter: drop-shadow(1px 1px 0 #2b1d12); }
 /* A noun plant's stake (#357): its top's shape is the noun's gender. */
 .gw-stake { display: inline-block; margin-right: 4px; vertical-align: -2px; filter: drop-shadow(1px 0 0 #2b1d12) drop-shadow(-1px 0 0 #2b1d12) drop-shadow(0 1px 0 #2b1d12) drop-shadow(0 -1px 0 #2b1d12); }

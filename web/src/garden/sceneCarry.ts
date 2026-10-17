@@ -1,6 +1,6 @@
 // Carry, put down, throw in the walk (#358; garden/carry.ts says what happens):
-// the pebbles by the pond, the stick by the shed, the cairn's flat stone, and
-// the rings a splash makes. It says what the action button can do with them
+// the pebbles by the pond, the stick by the shed, the cairn's flat stone, the
+// rings a splash makes, and the orchard's well (#335 S6) once the door is open. It says what the action button can do with them
 // where you stand, does it, flies a thrown thing in a small arc, and tells the
 // scene where it landed, for whoever answers. A Part: the one place loose
 // things move (a flight, the cairn's wobble, a stick drifting to the pond's
@@ -18,14 +18,14 @@ import type { Layout } from "./world";
 /** What you hold: leave it out's thing (#351), or a loose thing. One thing at a time. */
 export type Held = Hand | { from: "ground"; thing: Loose };
 
-/** What the action button does with loose things: pick one up, throw what you hold where you face, or put a pebble on the cairn. */
-export type CarryAct = `lift-${Loose}` | "throw" | "stack";
+/** What the action button does with loose things: pick one up, throw what you hold where you face, put a pebble on the cairn, or drop it in the well. */
+export type CarryAct = `lift-${Loose}` | "throw" | "stack" | "well";
 
-/** What a tap or the action button acts on: a loose thing, the cairn, a point on the water to throw at, or the ground in reach to put a thing down on. */
-export type CarryTarget = { at: "thing"; i: number } | { at: "cairn" } | { at: "water"; x: number; z: number } | { at: "ground"; x: number; z: number };
+/** What a tap or the action button acts on: a loose thing, the cairn, the well, a point on the water to throw at, or the ground in reach to put a thing down on. */
+export type CarryTarget = { at: "thing"; i: number } | { at: "cairn" } | { at: "well" } | { at: "water"; x: number; z: number } | { at: "ground"; x: number; z: number };
 
 /** What a carry did, for the page to count (#335); and, once a thing lands, what a screen reader hears. */
-export type CarryDone = { did: "lift" | "throw" | "put" | "stack" } | { did: "land"; said: string };
+export type CarryDone = { did: "lift" | "throw" | "put" | "stack" | "well" } | { did: "land"; said: string };
 
 /** A thing came down: where it was aimed, the place and its row, and what a screen reader hears (the scene adds who answers). */
 export interface Landing {
@@ -46,12 +46,18 @@ export interface CarryWorld {
 
 /** Near enough (m) to a loose thing or the cairn to use it. */
 const REACH = 1.1;
+/** Near enough (m) to the well's middle to drop a pebble in: a step from its stones. */
+const WELL_REACH = 1.8;
+/** A walk to the well heads for this far (m) in front of its stones, on the door's side. */
+const WELL_FRONT = 0.5;
 /** A walk to a loose thing or the cairn stops this short of it. */
 export const CARRY_STAND = 0.6;
 /** Metres per atlas cell, and each thing's size in cells. */
 const SIZE = 0.5;
 const SCALE: Record<Loose, number> = { pebble: 1.1, stick: 2 };
 const STONE_SCALE = 1.6;
+/** The well's cell is 1.4 m: its stones as wide as its ring (orchard.ts WELL_R), its roof a little over the eye. */
+const WELL_SCALE = 2.8;
 /** The first pebble on the cairn sits on its flat stone (5 px of a 0.8 m cell high), and each one after a pebble higher. */
 const STACK = { base: 0.12, step: 0.08 };
 /** A throw: it starts this far in front of you at this height, peaks this much above the line (plus some per metre), and flies this long (plus some per metre). */
@@ -89,6 +95,8 @@ export class Carry implements Part {
   /** How many pebbles the cairn holds today before the next makes it fall. */
   private holds: number;
   private cairn: { x: number; z: number };
+  /** The well stands once the door is open (showWell); its instance follows the things and the cairn's stone. */
+  private well = { shown: false, i: 0 };
   private layout: Layout;
   private world: CarryWorld;
   private reducedMotion: boolean;
@@ -100,7 +108,7 @@ export class Carry implements Part {
   private wobble = -Infinity;
   private elapsed = 0;
   /** Every target reachAt can point at, and what it returns, made once: it allocates nothing. */
-  private targets: { things: CarryTarget[]; cairn: CarryTarget };
+  private targets: { things: CarryTarget[]; cairn: CarryTarget; well: CarryTarget };
   private reach: { a: CarryAct; target: CarryTarget | null } = { a: "throw", target: null };
 
   constructor(layout: Layout, day: number, reducedMotion: boolean, world: CarryWorld) {
@@ -112,7 +120,7 @@ export class Carry implements Part {
     const pebbles = Array.from({ length: PEBBLES }, (_, i): Thing => ({ kind: "pebble", ...pebbleHome(layout, i), y: 0.01, at: "rest", home: pebbleHome(layout, i) }));
     const stick: Thing = { kind: "stick", ...stickHome(layout), y: 0.01, at: "rest", home: stickHome(layout) };
     this.things = [...pebbles, stick];
-    this.targets = { things: this.things.map((_, i) => ({ at: "thing", i })), cairn: { at: "cairn" } };
+    this.targets = { things: this.things.map((_, i) => ({ at: "thing", i })), cairn: { at: "cairn" }, well: { at: "well" } };
   }
 
   /** The loose thing you hold, if any. */
@@ -120,12 +128,15 @@ export class Carry implements Part {
     return this.held === null ? null : this.things[this.held].kind;
   }
 
-  /** The loose things and the cairn's flat stone, in one instanced mesh; the rings, lying on the water. Draws no random numbers. */
+  /** The loose things, the cairn's flat stone and the well (unseen until showWell), in one instanced mesh; the rings, lying on the water. Draws no random numbers. */
   build() {
     const tex = T.pixelTexture(T.carryAtlas());
     const cell = (c: number) => c / T.CARRY_CELLS;
     const items = this.things.map((t) => ({ x: t.x, y: t.y, z: t.z, u: cell(T.CARRY_CELL[t.kind]), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: SCALE[t.kind], index: -8 }));
     items.push({ x: this.cairn.x, y: 0.005, z: this.cairn.z, u: cell(T.CARRY_CELL.flatStone), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: STONE_SCALE, index: -8 });
+    const w = this.layout.well;
+    this.well.i = items.length;
+    items.push({ x: w.x, y: 0, z: w.z, u: cell(T.CARRY_CELL.well), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -8 });
     const mesh = sprites(tex, items, SIZE, SIZE);
     const rings = sprites(tex, [{ x: 0, y: 0.05, z: 0, u: cell(T.CARRY_CELL.ring(0)), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -8 }], RIPPLE.size, RIPPLE.size, true);
     for (const m of [mesh, rings]) {
@@ -137,6 +148,13 @@ export class Carry implements Part {
     this.params = mesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     const g = rings.geometry;
     this.ring = { pos: g.getAttribute("iPos") as THREE.InstancedBufferAttribute, uv: g.getAttribute("iUv") as THREE.InstancedBufferAttribute, params: g.getAttribute("iParams") as THREE.InstancedBufferAttribute, t: Infinity };
+  }
+
+  /** The door is open: the well stands in the orchard. */
+  showWell() {
+    this.well.shown = true;
+    this.params.setZ(this.well.i, WELL_SCALE);
+    this.params.needsUpdate = true;
   }
 
   /** Draw a thing where it is now; hidden while you hold it. */
@@ -155,14 +173,17 @@ export class Carry implements Part {
 
   /**
    * What the action button can do with loose things from (x, z): holding one,
-   * put a pebble on the cairn in reach, or else throw it; empty-handed, pick up
-   * the nearest thing in reach (`full`: you hold leave it out's thing, so not).
+   * put a pebble on the cairn or drop it in the well, in reach, or else throw
+   * it; empty-handed, pick up the nearest thing in reach (`full`: you hold
+   * leave it out's thing, so not).
    */
   reachAt(x: number, z: number, full: boolean): { a: CarryAct; target: CarryTarget | null } | null {
     const r = this.reach;
     if (this.held !== null) {
-      const onCairn = this.things[this.held].kind === "pebble" && near(x, z, this.cairn, REACH);
-      [r.a, r.target] = onCairn ? ["stack", this.targets.cairn] : ["throw", null];
+      const pebble = this.things[this.held].kind === "pebble";
+      if (pebble && near(x, z, this.cairn, REACH)) [r.a, r.target] = ["stack", this.targets.cairn];
+      else if (pebble && this.well.shown && near(x, z, this.layout.well, WELL_REACH)) [r.a, r.target] = ["well", this.targets.well];
+      else [r.a, r.target] = ["throw", null];
       return r;
     }
     if (full) return null;
@@ -186,6 +207,8 @@ export class Carry implements Part {
       return [th.x, th.y + 0.12 * SCALE[th.kind], th.z];
     }
     if (t.at === "cairn") return [this.cairn.x, this.top() + 0.1, this.cairn.z];
+    // Over the dark of the well's mouth.
+    if (t.at === "well") return [this.layout.well.x, 0.75, this.layout.well.z];
     return [t.x, 0.1, t.z];
   }
 
@@ -196,6 +219,9 @@ export class Carry implements Part {
 
   /** Where to walk to act on a target from afar, and whether you are near enough already. A point on the water or ground is always near: it is acted on from where you stand. */
   standFor(t: CarryTarget, x: number, z: number): { x: number; z: number; near: boolean } {
+    const w = this.layout.well;
+    // In front of its stones: a walker may not stand on the well's middle.
+    if (t.at === "well") return { x: w.x, z: w.z - w.r - WELL_FRONT, near: near(x, z, w, WELL_REACH) };
     const at = t.at === "thing" ? this.things[t.i] : t.at === "cairn" ? this.cairn : t;
     return { x: at.x, z: at.z, near: t.at === "water" || t.at === "ground" || near(x, z, at, REACH) };
   }
@@ -218,6 +244,13 @@ export class Carry implements Part {
     if (this.thing !== "pebble") return Infinity;
     const c = this.cairn;
     return rayBox(r, [c.x - 0.25, 0, c.z - 0.25], [c.x + 0.25, this.top() + 0.1, c.z + 0.25]);
+  }
+
+  /** How far along the ray the well is, while you hold a pebble and the door is open; Infinity otherwise. */
+  pickWell(r: Ray): number {
+    if (this.thing !== "pebble" || !this.well.shown) return Infinity;
+    const w = this.layout.well;
+    return rayBox(r, [w.x - w.r, 0, w.z - w.r], [w.x + w.r, 1.2, w.z + w.r]);
   }
 
   /** Pick a thing up. */

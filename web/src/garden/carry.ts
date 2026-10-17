@@ -1,7 +1,7 @@
 // Carry, put down, throw (#335 V2, #358): the small loose things in the garden
 // (pebbles by the pond, a stick by the shed), where they lie, and what happens
 // when one lands somewhere. What happens is data: one row per (thing, place),
-// so a new joke is one row. Who answers (the frog, the dog, a plant) is a small
+// so a new joke is one row. Who answers (the frog, the dog, a plant, the well) is a small
 // function each, on an interface the scene fills in. Nothing here is saved: a
 // thrown pebble is back by the pond next visit.
 
@@ -11,11 +11,11 @@ import { collide, type Layout } from "./world";
 /** A loose thing you can pick up. */
 export type Loose = "pebble" | "stick";
 
-/** Where a thing lands: in the pond, on the flat stone by the pond (the cairn), by the dog, in a bed, or on the ground. */
-export type Place = "pond" | "cairn" | "dog" | "bed" | "ground";
+/** Where a thing lands: in the pond, on the flat stone by the pond (the cairn), down the orchard's well, by the dog, in a bed, or on the ground. */
+export type Place = "pond" | "cairn" | "well" | "dog" | "bed" | "ground";
 
-/** Who answers a landing. */
-export type Answer = "frog" | "dog" | "plant";
+/** Who answers a landing: the well's answer is its echo (#335 S6). */
+export type Answer = "frog" | "dog" | "plant" | "well";
 
 /** What a landing does. */
 export interface Reaction {
@@ -42,6 +42,7 @@ export const ROWS: Record<Loose, Partial<Record<Place, Reaction>>> = {
     // Too tall a cairn falls instead (cairnHolds): the scene then says CAIRN_FALLS.
     cairn: { then: "stack", said: "The stones wobble, then stand." },
     bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
+    well: { then: "sink", answer: "well", said: "It falls a long way. Plop." },
   },
   stick: {
     pond: { then: "float", ripple: true, said: "Splash. The stick floats." },
@@ -66,6 +67,8 @@ export interface Answerers {
   say(id: "frog" | "dog", text: string): boolean;
   /** The plant nearest (x, z), if one is near, perks up. */
   perk(x: number, z: number): boolean;
+  /** A moment later the well's echo says an old word (well.ts), for the `n`th pebble this visit, with its own line. */
+  echo(n: number): void;
 }
 
 /**
@@ -77,6 +80,11 @@ export const ANSWERS: Record<Answer, (who: Answerers, at: { x: number; z: number
   frog: (who, _, n) => (n < FROG_PATIENCE ? (who.frogHop() ? "The frog hops to another pad." : null) : who.say("frog", "…") ? "The frog looks at you." : null),
   dog: (who) => (who.say("dog", "!") ? "The dog looks at the stick." : null),
   plant: (who, at) => (who.perk(at.x, at.z) ? "A plant perks up." : null),
+  // Nothing more now: the echo comes a moment later, and says itself.
+  well: (who, _, n) => {
+    who.echo(n);
+    return null;
+  },
 };
 
 /** How near (m) a landing must be to the cairn's stone, or the dog, to count as there. */
@@ -88,6 +96,8 @@ export function placeAt(l: Layout, x: number, z: number, dog: { x: number; z: nu
   if (Math.hypot(x - l.pond.x, z - l.pond.z) < l.pond.r) return "pond";
   const c = cairnAt(l);
   if (Math.hypot(x - c.x, z - c.z) < CAIRN_R) return "cairn";
+  // Behind the hedge: with the door shut, nothing thrown or carried gets this far.
+  if (Math.hypot(x - l.well.x, z - l.well.z) < l.well.r) return "well";
   if (dog && Math.hypot(x - dog.x, z - dog.z) < DOG_R) return "dog";
   if (l.beds.some((b) => Math.abs(x - b.x) < b.w / 2 && Math.abs(z - b.z) < b.d / 2)) return "bed";
   return "ground";
