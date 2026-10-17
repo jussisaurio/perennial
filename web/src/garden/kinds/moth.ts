@@ -2,7 +2,8 @@
 // Now and then it bumps into the glass, backs off and rests. With reduced
 // motion it sits on the lantern's roof, wings closed. When its lantern is
 // blown out (#361) it flies to the nearest lit one, a little hurt; with none
-// lit, it sits on the dark lantern's roof until one is lit again.
+// lit, it sits on the dark lantern's roof until one is lit again. Called
+// (#377), it does not care: it has its lantern.
 
 import { daily } from "../../core/day";
 import { MOTH_CLOSED, MOTH_OPEN } from "../visitorArt";
@@ -71,6 +72,9 @@ export const moth: VisitorKind<Look> = {
         // With reduced motion it is simply there, on the roof; otherwise step() flies it over.
         if (reducedMotion) sitOnRoof();
         return said;
+      },
+      onCall() {
+        return { line: "The moth does not leave its lantern." };
       },
       step({ dt, elapsed }) {
         if (!body.visible || reducedMotion || rest) return;

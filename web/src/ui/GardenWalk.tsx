@@ -37,7 +37,7 @@ import type { ToysWalk } from "../garden/toys";
 import { inLang, nounView } from "../garden/nouns";
 import { GNOME_WORD, type Companion } from "../garden/bench";
 import { PixelRects } from "./pixel";
-import { brushNote, wakeAudio } from "./chime";
+import { brushNote, wakeAudio, whistle } from "./chime";
 import { fellLine } from "../garden/walkInto";
 import type { Gender } from "../deck/schema";
 
@@ -49,12 +49,12 @@ type Shook = { lemma: string; forms: string[] };
  * them on the bench (#362); the key at their feet; a toy's doing (#360); a
  * find's word and meaning (#351); a fruit that fell from a tree they walked
  * into, and its word (#359); the prints from the bowl, or something at their
- * feet; what fell from a shaken plant (#357); the door's line; a lantern that
+ * feet; what fell from a shaken plant (#357); who answered a call (#377); the door's line; a lantern that
  * is out, and the stars once every one is (#361); what a thrown thing did
  * where it landed (#358); what they hold. Things in the world, never
  * instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, company: Companion | null, landed: string | null, toy: ToyDone | null, lang: string, stars: boolean): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, landed: string | null, toy: ToyDone | null, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
@@ -93,6 +93,7 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
         <span lang={lang}>{shook.lemma}</span> shakes. One leaf falls.
       </>
     );
+  if (called) return called.length ? called.join(" ") : "Only the wind answers.";
   const line = spokenLine(labels.find((l) => l.kind === "line")?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
@@ -248,6 +249,7 @@ const REACH_NAME: Record<Reach, string> = {
   fold: "Fold a boat",
   snuff: "Blow out the lantern",
   light: "Light the lantern",
+  call: "Call",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -282,6 +284,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   snuff: ["..........#.", "####......##", ".........###", "#####....###", ".........###", "####......#."],
   // A flame.
   light: ["...#...", "...##..", "..###..", ".#####.", ".#####.", "#######", "#######", ".#####.", "..###.."],
+  // A whistle, and its sound.
+  call: ["..........#..#", "...........#..", "######..####..", "#.....##....#.", "######.#....#.", ".......#....#.", "........####.."],
 };
 
 /** Leave it out's actions (#351, sceneLeave.ts LeaveAct) and carry's (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -424,8 +428,19 @@ export function GardenWalk({
   const leave = { ...given, done: leaveDone };
   // A shaken plant (#357): counted, said to screen readers and, with sound on, its forms said one by one.
   const [shook, setShook] = useState<Shook | null>(null);
+  // Who answered a call (#377), said to screen readers ([]: no one). With sound on, a short whistle. Counted where it was made (the button, a long press).
+  const [called, setCalled] = useState<string[] | null>(null);
+  const onCall = (heard: string[]) => {
+    setShook(null);
+    setCalled(heard);
+    if (!sound) return;
+    // A key press on the button does not wake audio as a pointer does (the walk's onPointerDownCapture): wake it here, inside the click.
+    wakeAudio();
+    whistle();
+  };
   const onShake = (p: PlacedPlant, forms: string[]) => {
     onTap?.("shake");
+    setCalled(null);
     setShook({ lemma: p.lemma, forms });
     setToyNews(null);
     if (sound && forms.length) void speakAll(forms, tag);
@@ -442,6 +457,7 @@ export function GardenWalk({
     if (d.did === "land") return setLanded(d.said);
     onTap?.(d.did);
     setShook(null);
+    setCalled(null);
   };
   const [showcaseToys] = useState(showcaseToysNow);
   // What a toy just did (#360), told to screen readers for a few seconds. Played with is counted; with sound on, the boat says its word.
@@ -455,10 +471,11 @@ export function GardenWalk({
     onTap?.(d.did);
     setToyNews(d);
     setShook(null);
+    setCalled(null);
     if (sound && d.did === "fold") void speak(d.word.lemma, tag);
   };
   const toys = { walk: toysGiven ?? showcaseToys, done: toyDone };
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars } = useGardenScene({ lang, source, visitors, door, leave, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone });
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars } = useGardenScene({ lang, source, visitors, door, leave, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall });
   const held = hand && handView(hand, lang);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
@@ -468,12 +485,16 @@ export function GardenWalk({
   useEffect(() => {
     if (selectedId && !dialog.current!.contains(document.activeElement)) dialog.current!.focus({ preventScroll: true });
   }, [selectedId]);
-  // A long press on a plant shakes it (#357); on anything else it does nothing.
+  // A long press on a plant shakes it (#357); on open ground, near or far, it calls (#377); on anything else it does nothing.
   const onHold = (clientX: number, clientY: number) => {
     if (!scene.current || !wrap.current) return;
     const r = wrap.current.getBoundingClientRect();
     const hit = scene.current.pickAny(clientX - r.left, clientY - r.top, r.width, r.height);
     if (hit?.kind === "plant") scene.current.shake(hit.p);
+    if (hit?.kind === "walk" || (hit?.kind === "scenery" && (hit.s.hit.id === "path" || hit.s.hit.id === "grass"))) {
+      onTap?.("call");
+      scene.current.call();
+    }
   };
   const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => moved(), onHold });
 
@@ -491,6 +512,7 @@ export function GardenWalk({
   const onPointerUp = (e: React.PointerEvent) => {
     if (!endDrag() || !scene.current || !wrap.current) return;
     setShook(null);
+    setCalled(null);
     const r = wrap.current.getBoundingClientRect();
     const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
@@ -614,7 +636,7 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold; who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, shook, company, landed, toyNews, lang, stars)}
+        {spokenStatus(reach, labels, door.state, held, shook, called, company, landed, toyNews, lang, stars)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
@@ -754,6 +776,7 @@ export function GardenWalk({
               // Leave it out's, carry's and the toys' verbs are counted when they are done (leaveDone, carryDone, toyDone): a press may find nothing left to do. A shake is counted by onShake.
               if (!LEAVE_ACTS.has(reach) && !CARRY_ACTS.has(reach) && !TOY_ACTS.has(reach) && reach !== "shake") onTap?.(reach);
               if (reach !== "shake") setShook(null);
+              if (reach !== "call") setCalled(null);
               // After the door opens, the key or a find is picked up, something is left, hung, thrown or stacked, a toy is played with, or a walk to the prints starts, there may be
               // nothing in reach: keep keyboard focus in the walk, not lost to the page. Taking or picking up keeps the button, for what comes next (a throw).
               const keeps = reach === "take" || reach === "unhang" || reach === "lift-pebble" || reach === "lift-stick";

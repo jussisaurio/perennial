@@ -28,6 +28,11 @@ export const SNAIL: PixelArt = {
   ],
   pal: { o: INK, s: "#c0703a", S: "#e6a060", d: "#8a4a24", b: "#d8c8a0", B: "#a89870", e: INK },
 };
+/** The snail gone into its shell (#377): only the edge of its foot shows. */
+export const SNAIL_SHELL: PixelArt = {
+  rows: SNAIL.rows.map((r, y) => (y < 9 ? r.slice(0, 10) + "......" : y === 9 ? "..bbooooob......" : "..BBBBBBBB......")),
+  pal: SNAIL.pal,
+};
 
 const CAT_ROWS = [
   "..o..o..................",
@@ -51,6 +56,33 @@ export const CAT_ASLEEP: PixelArt = { rows: CAT_ROWS, pal: { ...CAT_PAL, "1": IN
 export const CAT_AWAKE: PixelArt = {
   rows: CAT_ROWS.map((r, y) => (y === 4 ? r.slice(0, 5) + "3" + r.slice(6) : r)),
   pal: { ...CAT_PAL, "1": INK, "2": INK, "3": "#9ad050", "4": INK },
+};
+
+/** The cat's right ear flicked flat (#377): asleep, and awake with one eye open. */
+const earFlat = (rows: readonly string[]) => rows.map((r, y) => (y === 0 ? "..o..." + r.slice(6) : y === 1 ? ".oCo.oo" + r.slice(7) : r));
+export const CAT_EAR: PixelArt = { rows: earFlat(CAT_ASLEEP.rows), pal: CAT_ASLEEP.pal };
+export const CAT_EAR_AWAKE: PixelArt = { rows: earFlat(CAT_AWAKE.rows), pal: CAT_AWAKE.pal };
+/** The cat sitting up, facing you, staring (#377): its eyes look at the middle. */
+export const CAT_STARE: PixelArt = {
+  rows: [
+    "o.......o..",
+    "oo.....oo..",
+    "oCo...oCo..",
+    "oCCoooCCo..",
+    "oCCCCCCCo..",
+    "oC3eCe3Co..",
+    "oCCCpCCCo..",
+    ".owwwwwo...",
+    "..oCCCo....",
+    ".oCCCCCo...",
+    "oCCtCtCCo..",
+    "oCCCtCCCo..",
+    "oCCCCCCCoo.",
+    "oCwCCCwCoCo",
+    "oCwCCCwCoCo",
+    ".ooooooooo.",
+  ],
+  pal: { ...CAT_PAL, "3": "#9ad050", e: INK },
 };
 
 export const TOADSTOOL: PixelArt = {

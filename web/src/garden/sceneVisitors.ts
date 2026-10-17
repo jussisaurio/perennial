@@ -341,6 +341,24 @@ export class SceneVisitors implements Part {
     }
   }
 
+  /**
+   * You whistled (#377): each visitor in sight answers in its own way (its
+   * kind's onCall), and one with something to say says it in a bubble. What
+   * each did, as a screen reader hears it, in the order they are listed.
+   */
+  call(x: number, z: number): string[] {
+    const c = { elapsed: this.world.elapsed(), x, z, lang: this.world.lang };
+    const lines: string[] = [];
+    for (const s of this.sprites) {
+      const heard = s.body.visible && s.visitor.onCall ? s.visitor.onCall(c) : null;
+      if (!heard) continue;
+      lines.push(heard.line);
+      if (heard.say) this.say(s.v.id, heard.say);
+      this.draw(s);
+    }
+    return lines;
+  }
+
   /** Visitors react to you and move: each kind's step, then its Body drawn. No allocations here: it runs every frame. */
   tick(f: Frame) {
     const camera = this.world.camera;

@@ -1,7 +1,8 @@
 // The bird (#209): in an orchard tree on its days there (#315), on top of its
 // word's plant (at its foot when the plant droops), or on a notice board or
 // the fence's rail. It hops away when you come close, and comes back to the
-// same spot once you are well away.
+// same spot once you are well away. Called (#377), it flies up and lands
+// again where it was.
 
 import { daily } from "../../core/day";
 import { BIRD, BIRD_HOP } from "../visitorArt";
@@ -12,6 +13,9 @@ const SHY = 1;
 const CALM = 6;
 /** The hop's length (s). */
 const HOP_S = 0.7;
+/** Called: its flight up and back down (s), and how high it goes (m). */
+const FLY_S = 1.4;
+const FLY_UP = 0.7;
 
 type Look = "sit" | "hop";
 
@@ -32,8 +36,11 @@ export const bird: VisitorKind<Look> = {
     let dz = 0;
     /** Sitting with you on the bench (#362): it does not hop off. */
     let settled = false;
+    /** Called: 0 to 1 while it flies up and lands again; -1 when it is not. */
+    let fly = -1;
     const settle = () => {
       t = -1;
+      fly = -1;
       body.x = body.at.x;
       body.y = body.at.y;
       body.z = body.at.z;
@@ -47,7 +54,14 @@ export const bird: VisitorKind<Look> = {
         const { at } = body;
         const d = Math.hypot(at.x - x, at.z - z);
         let startled = false;
+        if (fly >= 0 && t < 0) {
+          fly = Math.min(1, fly + dt / FLY_S);
+          body.y = at.y + Math.sin(Math.PI * fly) * FLY_UP;
+          body.frame = fly < 1 ? "hop" : "sit";
+          if (fly === 1) fly = -1;
+        }
         if (t < 0 && d < SHY && !settled) {
+          fly = -1;
           // Away from you, a little to the side.
           const k = 1 / Math.max(d, 0.01);
           dx = (at.x - x) * k;
@@ -70,6 +84,12 @@ export const bird: VisitorKind<Look> = {
       onVisit(s) {
         settled = s;
         settle();
+      },
+      onCall() {
+        // Already off, or with reduced motion: it does not answer.
+        if (t >= 0 || reducedMotion) return null;
+        fly = 0;
+        return { line: "The bird flies up and lands again." };
       },
     };
   },

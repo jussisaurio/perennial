@@ -44,6 +44,30 @@ export function brushNote(word: string, clear: boolean): void {
   ring(word, 0, clear ? { peak: 0.045, octave: 0.3, fade: 0.5 } : { peak: 0.025, octave: 0, fade: 0.35 });
 }
 
+/**
+ * A short pixel whistle (#377): one square-wave note that slides up and then
+ * down, like an old game's call. Only with sound on, after wakeAudio.
+ */
+export function whistle(): void {
+  if (!isSoundOn() || !audio) return;
+  const now = audio.currentTime;
+  const gain = audio.createGain();
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.035, now + 0.01);
+  gain.gain.setValueAtTime(0.035, now + 0.32);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+  gain.connect(audio.destination);
+  const osc = audio.createOscillator();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(1320, now);
+  osc.frequency.exponentialRampToValueAtTime(1760, now + 0.12);
+  osc.frequency.setValueAtTime(1760, now + 0.18);
+  osc.frequency.exponentialRampToValueAtTime(1175, now + 0.4);
+  osc.connect(gain);
+  osc.start(now);
+  osc.stop(now + 0.5);
+}
+
 /** A sine at the word's note and a quiet octave above it (`octave`: its level, 0 for none): a small bell rather than a beep. `fade`: seconds to silence. */
 function ring(word: string, delay: number, { peak, octave, fade }: { peak: number; octave: number; fade: number }): void {
   if (!isSoundOn() || !audio) return;

@@ -43,6 +43,7 @@ interface WalkData {
  * with. `onShake`: a plant was shaken (#357), and the forms that fell from it.
  * `onCarry`: a loose thing was picked up, thrown, put down or stacked, or it
  * landed (#358).
+ * `onCall`: you whistled, and what each visitor that answered did (#377).
  */
 export function useGardenScene({
   lang,
@@ -60,6 +61,7 @@ export function useGardenScene({
   onFocused,
   onShake,
   onCarry,
+  onCall,
 }: {
   lang: string;
   source: PlantSource | null;
@@ -77,6 +79,7 @@ export function useGardenScene({
   onFocused: () => void;
   onShake: (p: PlacedPlant, forms: string[]) => void;
   onCarry: (d: CarryDone) => void;
+  onCall: (heard: string[]) => void;
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
@@ -103,6 +106,8 @@ export function useGardenScene({
   carryNow.current = onCarry;
   const toysNow = useRef(toys);
   toysNow.current = toys;
+  const callNow = useRef(onCall);
+  callNow.current = onCall;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
@@ -166,6 +171,7 @@ export function useGardenScene({
             onCarry: (d) => carryNow.current(d),
             onToy: (d) => toysNow.current.done(d),
             onStars: setStars,
+            onCall: (heard) => callNow.current(heard),
           },
           reduced,
           lang,

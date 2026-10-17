@@ -63,6 +63,21 @@ export interface Tap {
   lang: string;
 }
 
+/** You whistled (#377). */
+export interface Call {
+  elapsed: number;
+  /** Where you stand. */
+  x: number;
+  z: number;
+  lang: string;
+}
+
+/** A visitor's answer to a call: what a screen reader hears (one short sentence), and what it says in a bubble, if anything. */
+export interface Heard {
+  line: string;
+  say?: string;
+}
+
 /** One visitor in today's walk: its body and its hooks. */
 export interface Visitor<F extends string> {
   /** Its cell's size (m). */
@@ -85,6 +100,8 @@ export interface Visitor<F extends string> {
   onSplash?(): boolean;
   /** A lantern was blown out or lit again (#361), `on` by spot (Spots.lanterns). What it says about it, or null. */
   onLanterns?(on: readonly boolean[]): string | null;
+  /** You whistled (#377): it answers in its own way (its Body moves in the next steps), or null when it does not. Asked only while it is seen. */
+  onCall?(c: Call): Heard | null;
 }
 
 export interface VisitorKind<F extends string = string> {
@@ -110,4 +127,28 @@ export interface VisitorKind<F extends string = string> {
 /** A body standing still at a spot, showing `frame`. */
 export function bodyAt<F extends string>(x: number, y: number, z: number, frame: F): Body<F> {
   return { at: { x, y, z }, x, y, z, frame, visible: true, turn: 0, tag: 1, glow: false, mute: false };
+}
+
+/** Within this far of its spot (m), a visitor walking off it comes down to the ground (its spot may be up on a bed or the bench). */
+const STEP_DOWN = 0.5;
+
+/**
+ * Moves a body's drawn place toward (x, z) on the ground by `d` metres
+ * (Infinity: there at once), coming down from its spot as it leaves and going
+ * back up as it comes home. True once it is there.
+ */
+export function moveToward(body: Body<string>, x: number, z: number, d: number): boolean {
+  const gap = Math.hypot(x - body.x, z - body.z);
+  const k = gap <= d ? 1 : d / gap;
+  body.x += (x - body.x) * k;
+  body.z += (z - body.z) * k;
+  body.y = body.at.y * Math.max(0, 1 - Math.hypot(body.x - body.at.x, body.z - body.at.z) / STEP_DOWN);
+  return k === 1;
+}
+
+/** Where a visitor called over to you stops: `gap` metres from you (x, z), on its side of you. */
+export function besideYou(body: Body<string>, x: number, z: number, gap: number): { x: number; z: number } {
+  const d = Math.max(0.01, Math.hypot(body.x - x, body.z - z));
+  const k = Math.min(1, gap / d);
+  return { x: x + (body.x - x) * k, z: z + (body.z - z) * k };
 }

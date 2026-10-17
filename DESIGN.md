@@ -126,7 +126,7 @@ rendering code should follow, and the places it still does not (yet):
   (`reportReach`: stand up, the key, what a loose thing in your hands does
   (throw it, or put it on the cairn), a find at your feet, the door, the
   bowl, shelf and basket, a lantern, picking up a loose thing, the bench, the toys
-  (blow a dandelion clock, fold a boat at the pond), then the plant ahead). What a thrown thing does where it lands is a row in
+  (blow a dandelion clock, fold a boat at the pond), then the plant ahead; with nothing in reach, call, #377). What a thrown thing does where it lands is a row in
   `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a
   small function there: a new joke is one row, not new scene code. A Part never reaches into another
   Part's build or pick order.
@@ -185,10 +185,11 @@ So a new visitor is its `VISITORS` line, its art, its kind file and one line in
 `KINDS`; the runtime (`sceneVisitors.ts`), the scene and `GardenWalk` do not
 change. The rules:
 - **No `id === "<kind>"` in the runtime, the scene's tick or `GardenWalk`.** A
-  kind acts through its hooks (`step`, `onConditions`, `onTap`, `onVisit`) and
-  shows itself through its `Body` (where it is drawn, its frame, whether it is
-  seen, its tag, its glow); the runtime draws every Body the same way. New
-  verbs (calling a visitor, tapping it) become new hooks.
+  kind acts through its hooks (`step`, `onConditions`, `onTap`, `onVisit`,
+  `onSplash`, `onCall`) and shows itself through its `Body` (where it is drawn,
+  its frame, whether it is seen, its tag, its glow); the runtime draws every
+  Body the same way. New verbs become new hooks: a call (#377) asks each
+  visitor in sight for its `onCall`, so each answer lives in its kind file.
 - **A kind is pure** (no three, no DOM) and has unit tests that drive it with
   a fixed `now` and `dt` (`kinds/kinds.test.ts`). It gets the walk's opening
   moment (`Arrival.now`) for its daily picks, and time after that only from
