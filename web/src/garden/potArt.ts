@@ -77,13 +77,13 @@ interface Overlay {
 }
 
 const OVERLAYS: Record<Exclude<Trait, "green">, Overlay> = {
-  // The bird's: a brown wing up and back.
+  // The bird's: a pale feathered wing, up and back.
   wings: {
     on: "back",
     behind: true,
-    side: { rows: ["......oo", "....ooWo", "...oWWwo", "..oWWwo.", ".oWWwo..", "oWwwo..."], origin: [1, 5] },
+    side: { rows: ["........oo", "......ooWo", ".....oWWWo", "....oWWwWo", "...oWWwWo.", "..oWWwWo..", ".oWwwWo...", "oWwwoo...."], origin: [1, 7] },
     front: { rows: ["oo..................oo", "oWoo..............ooWo", "owWWo............oWWwo", ".owWWo..........oWWwo.", "..owWWoo......ooWWwo..", "...owwWWo....oWWwwo..."], origin: [11, 5] },
-    pal: { o: INK, W: "#d8b48a", w: "#a8764a" },
+    pal: { o: INK, W: "#f4ecdc", w: "#c8b49a" },
   },
   // The goldfish's: two orange fins along the back.
   fins: {

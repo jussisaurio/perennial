@@ -18,14 +18,14 @@ import { collide, type Layout } from "./world";
 /** What the action button does at the pot: let out what hatched. */
 export type PotAct = "hatch";
 
-/** A creature let out (`at`: where it was), and the oldest one, which went off over the fence to make room, if any. */
-export type PotDone = { did: "hatch"; creature: Creature; at: [number, number, number]; gone: Creature | null };
+/** A creature let out (`i`: its slot, as `creature` takes), and the oldest one, which went off over the fence to make room, if any. */
+export type PotDone = { did: "hatch"; creature: Creature; i: number; gone: Creature | null };
 
 /** Near enough (m) to the pot to use it; a walk to it stops this short. */
 const REACH = 1.0;
 export const POT_STAND = 0.6;
 /** Metres per atlas cell: the pot, a seed on its soil, a creature (a little one is smaller). */
-const SIZE = { pot: 0.8, seed: 0.5, creature: 0.75 };
+const SIZE = { pot: 0.8, seed: 0.5, creature: 0.6 };
 const LITTLE = 0.65;
 /** The pot's soil, where seeds lie and a creature sits (m). */
 const SOIL = (POT_TOP / 32) * SIZE.pot;
@@ -211,7 +211,7 @@ export class PotPart implements Part {
   /** A creature and where its name shows (over it), for a tap's tag. */
   creature(i: number): { c: Creature; at: [number, number, number] } {
     const s = this.slots[i];
-    return { c: s.c, at: [s.x, s.y + 0.45, s.z] };
+    return { c: s.c, at: [s.x, s.y + 0.4, s.z] };
   }
 
   /** A seed landed in the pot: it is sown today (as the walk's clock says), and saved. */
@@ -222,16 +222,16 @@ export class PotPart implements Part {
   /** Let out what hatched: it goes out to wander; with WANDER out already, the oldest goes off over the fence. */
   letOut(save: (pot: Pot) => void): PotDone | null {
     const c = this.hatched;
-    const s = this.slots.find((x) => x.at === "pot");
-    if (!c || !s) return null;
-    const at: [number, number, number] = [s.x, s.y + 0.45, s.z];
+    const i = this.slots.findIndex((x) => x.at === "pot");
+    if (!c || i < 0) return null;
+    const s = this.slots[i];
     this.change(letOut(this.pot, c), save);
     this.goOut(s);
     const out = this.slots.filter((x) => x.at === "wander");
     const oldest = out.length > WANDER ? out[0] : null;
     if (oldest) this.leave(oldest);
     this.refresh();
-    return { did: "hatch", creature: c, at, gone: oldest?.c ?? null };
+    return { did: "hatch", creature: c, i, gone: oldest?.c ?? null };
   }
 
   /** Off over the nearer side fence; a fish dives and is gone. */

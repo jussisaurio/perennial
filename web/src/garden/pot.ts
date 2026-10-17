@@ -97,8 +97,8 @@ export interface PotWalk {
   dayNow: () => number;
 }
 
-/** The clay pot: on the ground in front of the shed, at its end away from the gate. */
+/** The clay pot: on the ground before the shed, past its far end from the gate, out of the basket's reach. */
 export function potAt(l: Layout): { x: number; z: number } {
   const s = shedAt(l);
-  return { x: s.x - 1.1, z: s.z - 1.2 };
+  return { x: s.x - 1.2, z: s.z - 2.0 };
 }

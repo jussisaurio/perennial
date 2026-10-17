@@ -268,7 +268,7 @@ export class GardenScene {
   /** A find's word and meaning over where it lay, for a few seconds after it is picked up. */
   private foundTap: { word: string; gloss: string; at: [number, number, number]; until: number } | null = null;
   /** A creature's name (#387), over it, tapped or just let out; and its joke, if it has one. Shown in the find's place: one at a time. */
-  private creatureTap: { i: number | null; word: string; gloss: string; says: string | null; at: [number, number, number]; until: number } | null = null;
+  private creatureTap: { i: number; word: string; gloss: string; says: string | null; until: number } | null = null;
   /** Two seeds, one pot (#387): the pot by the shed and the creatures from it. */
   private pots: PotPart;
   /** A fallen fruit's tag (#359): the word of the tree it fell from, over the fruit as it rolls, for a few seconds. */
@@ -776,15 +776,14 @@ export class GardenScene {
 
   /** A tap on a creature (#387): its name over it, and its joke if it has one, from wherever you stand. Its name, to say aloud (null: no words for it in this course). */
   tapCreature(i: number): string | null {
-    const { c, at } = this.pots.creature(i);
-    return this.showCreature(i, c, at);
+    return this.showCreature(i, this.pots.creature(i).c);
   }
 
-  private showCreature(i: number | null, c: Creature, at: [number, number, number]): string | null {
+  private showCreature(i: number, c: Creature): string | null {
     const n = creatureName(c, this.lang);
     this.clearTaps({ scenery: true, tree: true, line: true, visitor: true, find: true, fruit: true, boat: true });
     // A course with no words for it shows only its meaning.
-    this.creatureTap = { i, word: n.word ?? n.gloss, gloss: n.gloss, says: n.says, at, until: this.elapsed + 5 };
+    this.creatureTap = { i, word: n.word ?? n.gloss, gloss: n.gloss, says: n.says, until: this.elapsed + 5 };
     return n.word;
   }
 
@@ -792,7 +791,7 @@ export class GardenScene {
   private letOut() {
     const done = this.pots.letOut((pot) => this.cb.onPot(pot));
     if (!done) return;
-    this.showCreature(null, done.creature, done.at);
+    this.showCreature(done.i, done.creature);
     this.cb.onHatch(done);
   }
 
@@ -1893,11 +1892,11 @@ export class GardenScene {
       v.set(w.x, 1.4, w.z).project(this.camera);
       if (v.z <= 1) tags.echo = { id: `echo:${ec.n}`, text: ec.word, gloss: ec.date, kind: "echo", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
-    // A creature's name (#387), over it as it wanders (or over the pot it left); kept on the screen. Its joke, in a bubble above.
+    // A creature's name (#387), over it as it wanders; kept on the screen. Its joke, in a bubble above.
     const ct = this.creatureTap;
     if (ct && this.elapsed > ct.until) this.creatureTap = null;
     else if (ct) {
-      v.set(...(ct.i === null ? ct.at : this.pots.creature(ct.i).at)).project(this.camera);
+      v.set(...this.pots.creature(ct.i).at).project(this.camera);
       const [x, y] = [onScreen((v.x + 1) / 2), onScreen((1 - v.y) / 2)];
       if (v.z <= 1) tags.creature = { id: "creature", text: ct.word, gloss: ct.gloss, kind: "creature", x, y, near: 1 };
       if (v.z <= 1 && ct.says) tags.say = { id: "creature-says", text: ct.says, kind: "say", x, y: y - 0.06, near: 1 };

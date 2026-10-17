@@ -108,8 +108,11 @@ scenery (#364: the sundial, the mouse door, the fish that jumps), walking
 into things (#359: a CPU-moved pool of pixel bits for bursts and showers, and
 fallen fruit), the loose things you carry and throw (`sceneCarry.ts`,
 #358: one instanced mesh for all of them, their flights, the cairn's wobble,
-the pond's rings, and the orchard's well, #335 S6), and the toys (#360: the dandelion clocks with their
-seed points, and the paper boat). These are the rules a change to the garden's
+the pond's rings, the orchard's well, #335 S6, and the seeds for the pot,
+#387), the toys (#360: the dandelion clocks with their
+seed points, and the paper boat), and the clay pot (`scenePot.ts`, #387: the
+creatures that hatch in it, drawn from an atlas made for the walk, as each
+base visitor's art with its trait's overlay, and moved about the garden). These are the rules a change to the garden's
 rendering code should follow, and the places it still does not (yet):
 
 - **A new Part is for a new rendering technique, never one per thing.** There
@@ -121,12 +124,12 @@ rendering code should follow, and the places it still does not (yet):
   share one random sequence, drawn in a fixed sequence — never reshuffle it);
   the order `parts` is ticked, disposed and given `Conditions` in; pick
   priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
-  say, then the one active tag — the door's line, a find's word, a fallen fruit's word, scenery or
+  say, then the one active tag — the door's line, a find's word, a creature's name, a fallen fruit's word, scenery or
   tree — then a visitor's); and what the one action button acts on
   (`reportReach`: stand up, the key, what a loose thing in your hands does
-  (throw it, put it on the cairn, or drop it in the well), a find at your feet, the door, the
-  bowl, shelf and basket, a lantern, picking up a loose thing, the bench, the toys
-  (blow a dandelion clock, fold a boat at the pond), then the plant ahead; with nothing in reach, call, #377). What a thrown thing does where it lands is a row in
+  (throw it, put it on the cairn, drop it in the well, or put a seed in the pot), a find at your feet, the door, the
+  bowl, shelf and basket, letting out what hatched in the pot, a lantern, picking up a loose thing, the bench, the toys
+  (blow a dandelion clock, fold a boat at the pond), then the plant ahead (take a seed from a visitor's word plant while the pot takes one, #387, or else shake it); with nothing in reach, call, #377). What a thrown thing does where it lands is a row in
   `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a
   small function there: a new joke is one row, not new scene code. A Part never reaches into another
   Part's build or pick order.

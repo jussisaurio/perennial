@@ -503,10 +503,11 @@ export function GardenWalk({
   const [showcasePotWalk] = useState(showcasePotNow);
   const potWalk = potGiven ?? showcasePotWalk;
   // What hatched, as the walk opened (#387), and the one that went off over the fence when another came out, told for a few seconds.
-  const [waiting] = useState(() => {
+  // The learner's pot arrives after the first render (the landing page's until then): worked out from whichever walk is given.
+  const waiting = useMemo(() => {
     const n = potNow(potWalk.walk.pot, potWalk.walk.today);
     return n.kind === "hatched" ? n.creature : null;
-  });
+  }, [potWalk.walk]);
   const [gone, setGone] = useState<Creature | null>(null);
   useEffect(() => {
     if (!gone) return;
