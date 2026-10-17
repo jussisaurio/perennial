@@ -1,7 +1,7 @@
 // The heron, one day a month: on the stones at the pond's edge, a little
 // round from the frog's pad, looking at it. It takes one slow step back when
-// you come close, and steps home once you are well away. With reduced motion
-// it just stays.
+// you come close, and steps home once you are well away. Called (#377), it
+// takes that slow step back too. With reduced motion it just stays.
 
 import { HERON, HERON_STEP } from "../visitorArt";
 import { padByGate } from "../spots";
@@ -33,6 +33,13 @@ export const heron: VisitorKind<Look> = {
     let dir = 0;
     let tx = 0;
     let tz = 0;
+    /** One slow step back, away from (x, z). */
+    const back = (x: number, z: number) => {
+      const { at } = body;
+      const k = STEP_M / Math.max(Math.hypot(at.x - x, at.z - z), 0.01);
+      ({ x: tx, z: tz } = collide(layout, at.x + (at.x - x) * k, at.z + (at.z - z) * k, 0.12));
+      dir = 1;
+    };
     return {
       size: 1.05,
       body,
@@ -40,11 +47,8 @@ export const heron: VisitorKind<Look> = {
         if (reducedMotion) return;
         const { at } = body;
         const d = Math.hypot(at.x - x, at.z - z);
-        if (dir === 0 && t === 0 && d < SHY) {
-          const k = STEP_M / Math.max(d, 0.01);
-          ({ x: tx, z: tz } = collide(layout, at.x + (at.x - x) * k, at.z + (at.z - z) * k, 0.12));
-          dir = 1;
-        } else if (dir === 0 && t === 1 && d > CALM) dir = -1;
+        if (dir === 0 && t === 0 && d < SHY) back(x, z);
+        else if (dir === 0 && t === 1 && d > CALM) dir = -1;
         if (dir === 0) return;
         t = Math.max(0, Math.min(1, t + (dir * dt) / STEP_S));
         const e = t * t * (3 - 2 * t);
@@ -52,6 +56,12 @@ export const heron: VisitorKind<Look> = {
         body.z = at.z + (tz - at.z) * e;
         body.frame = t > 0.15 && t < 0.85 ? "step" : "stand";
         if (t === 0 || t === 1) dir = 0;
+      },
+      onCall({ x, z }) {
+        // Already stepping, or a step away: it does not answer. Out of reach (CALM), it steps home again at once.
+        if (reducedMotion || dir !== 0 || t !== 0) return null;
+        back(x, z);
+        return { line: "The heron takes one slow step back." };
       },
     };
   },

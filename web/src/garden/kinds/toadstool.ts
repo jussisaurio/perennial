@@ -1,5 +1,5 @@
 // The mushroom, on its rare days (more often in autumn): by the right side of
-// a bed, both chosen by the date.
+// a bed, both chosen by the date. Called (#377), it does nothing.
 
 import { daily } from "../../core/day";
 import { TOADSTOOL } from "../visitorArt";
@@ -15,6 +15,10 @@ export const toadstool: VisitorKind<Look> = {
   arrive({ layout, now }) {
     const bed = daily(layout.beds, "visitor-toadstool-bed", now);
     const along = daily(ALONG, "visitor-toadstool-z", now);
-    return { size: 0.6, body: bodyAt<Look>(bed.x + bed.w / 2 + 0.16, 0, bed.z + along * bed.d, "toadstool") };
+    return {
+      size: 0.6,
+      body: bodyAt<Look>(bed.x + bed.w / 2 + 0.16, 0, bed.z + along * bed.d, "toadstool"),
+      onCall: () => ({ line: "The mushroom does nothing. It is a mushroom." }),
+    };
   },
 };

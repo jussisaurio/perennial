@@ -60,8 +60,8 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), carry's (#358), the toys' (#360), or blow a lantern out and light it again (#361). */
-export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct | ToyAct | "snuff" | "light";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), carry's (#358), the toys' (#360), or blow a lantern out and light it again (#361); with nothing in reach, call (#377). */
+export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), or a form falling from a shaken plant (kind "petal", #357; no text: a leaf), in screen fractions. */
 export interface Label {
@@ -112,8 +112,8 @@ export interface SceneCallbacks {
   onSelect: (p: PlacedPlant | null) => void;
   onLabels: (labels: Label[]) => void;
   onProgress: (done: number, total: number) => void;
-  /** What the action button does now, for the thing in reach (#334), or null with nothing in reach. */
-  onReach: (a: Reach | null) => void;
+  /** What the action button does now, for the thing in reach (#334); with nothing in reach, call (#377). */
+  onReach: (a: Reach) => void;
   /** What you hold changed (#351, #358): leave it out's thing or a loose one. */
   onHand: (h: Held | null) => void;
   /** Leave it out (#351): something was taken, left, found or hung; the new value, to save. */
@@ -121,6 +121,8 @@ export interface SceneCallbacks {
   onLeft: (left: Left) => void;
   /** A plant was shaken (#357): the forms that fell from it ([]: one leaf). */
   onShake: (p: PlacedPlant, forms: string[]) => void;
+  /** You whistled (#377): what each visitor that answered did, as a screen reader hears it ([]: no one answered). */
+  onCall: (heard: string[]) => void;
   /** Carry (#358): a loose thing was picked up, thrown, put down or stacked, or it landed. */
   onCarry: (done: CarryDone) => void;
   /** A dandelion clock was blown, or a paper boat folded (#360). */
@@ -653,6 +655,7 @@ export class GardenScene {
     else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
     else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
     else if (a === "throw" && this.reach === "throw") this.throwAhead();
+    else if (a === "call" && this.reach === "call") this.call();
     else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
     else if ((a === "blow" || a === "fold") && a === this.reach && this.toyTarget) this.doToy(this.toyTarget);
     else if (a !== "sit" && a === this.reach && this.leaveTarget) this.doLeave(this.leaveTarget);
@@ -686,6 +689,11 @@ export class GardenScene {
     this.sky.setStars(out);
     this.critters.setBright(out);
     this.cb.onStars(out);
+  }
+
+  /** Whistle (#377): every visitor in sight answers in its own way. From the action button with nothing in reach, or a long press on open ground. */
+  call() {
+    this.cb.onCall(this.guests.call(this.x, this.z));
   }
 
   /** A long press on a plant (#357): shake it where it stands when its name shows; from farther away, walk to it first. */
@@ -1806,7 +1814,8 @@ export class GardenScene {
    * blow out or light a lantern (#361), pick up a loose thing, sit on the
    * bench, the toys' (#360: blow a dandelion clock, fold a boat at the pond),
    * or shake the plant ahead of you (#357), for whichever is in reach (in that
-   * order); or nothing. The thing in reach glints (the cue).
+   * order); with nothing in reach, call (#377), so the button always does
+   * something. The thing in reach glints (the cue).
    */
   private reportReach() {
     const d = this.door;
@@ -1829,7 +1838,7 @@ export class GardenScene {
     // The first of these that applies, in reportReach's order above.
     const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : (door ?? mine?.a ?? lampAct ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
-    const a: Reach | null = plant ? "shake" : before;
+    const a: Reach = plant ? "shake" : (before ?? "call");
     const target = mine && a === mine.a ? mine.target : null;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = (a === "blow" || a === "fold") && toy ? toy.target : null;

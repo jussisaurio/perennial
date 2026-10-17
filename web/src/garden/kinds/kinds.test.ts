@@ -4,6 +4,7 @@ import type { Frame } from "../scenePart";
 import type { Spots } from "../spots";
 import { layout, lanternSpots, type GardenPlant } from "../world";
 import { KINDS } from ".";
+import { catComes } from "./cat";
 import type { Arrival, Home, Visitor } from "./kind";
 
 // Each kind is pure: these drive it with a fixed `now` and a fixed dt, as the runtime would.
@@ -187,5 +188,128 @@ describe("visitor kinds", () => {
     const lit = on.map((_, i) => i === home);
     expect(moth.onLanterns!(lit)).toBeNull();
     expect(spot(moth)).toBe(home);
+  });
+});
+
+describe("a call (#377)", () => {
+  /** Whistle at `elapsed` s, standing at (x, z). */
+  const call = (v: Visitor<string>, elapsed: number, x: number, z: number) => v.onCall!({ elapsed, x, z, lang: "es" });
+
+  test("every kind answers a call in its own way", () => {
+    for (const k of Object.values(KINDS)) {
+      const it = k.arrive({ spots: SPOTS, layout: L, home: HOME, now: NOW, reducedMotion: false })!;
+      expect(call(it, 0, 5, 5)?.line).toBeTruthy();
+    }
+  });
+
+  test("the dog runs to you, tail going, sits a while and trots home, back up on its bed", () => {
+    const dog = arrive("dog", { home: HOME });
+    const at = { ...dog.body.at };
+    expect(call(dog, 0, 5, 1)?.line).toBe("The dog runs over, tail going.");
+    const frames = new Set<string>();
+    for (let t = 0; t < 2; t += 0.1) {
+      run(dog, 0.1, 5, 1, true, t);
+      frames.add(dog.body.frame);
+    }
+    expect(Math.hypot(dog.body.x - 5, dog.body.z - 1)).toBeCloseTo(0.7, 5);
+    expect(dog.body.y).toBe(0);
+    expect(frames).toEqual(new Set(["sit", "wag"]));
+    run(dog, 10, 5, 1, true, 2);
+    expect(dog.body).toMatchObject({ x: at.x, y: at.y, z: at.z });
+  });
+
+  test("the cat flicks one ear; about one call in 50 it walks over, sits and stares, and goes back once you walk away", () => {
+    const cat = arrive("cat", { home: HOME });
+    let n = 0;
+    while (!catComes(NOW, n)) n++;
+    expect(n).toBeGreaterThan(0);
+    expect(call(cat, 0, 5, 1)?.line).toBe("The cat flicks one ear.");
+    run(cat, 0.1, 5, 1);
+    expect(cat.body.frame).toBe("ear");
+    run(cat, 0.5, 5, 1, true, 0.1);
+    expect(cat.body.frame).toBe("asleep");
+    for (let i = 1; i < n; i++) expect(call(cat, 1, 5, 1)?.line).toBe("The cat flicks one ear.");
+    expect(call(cat, 1, 5, 1)?.line).toBe("The cat gets up, walks over, sits at your feet and stares at you.");
+    run(cat, 10, 5, 1, true, 1);
+    expect(cat.body.frame).toBe("stare");
+    expect(Math.hypot(cat.body.x - 5, cat.body.z - 1)).toBeCloseTo(0.45, 5);
+    expect(call(cat, 11, 5, 1)?.line).toBe("The cat stares at you.");
+    run(cat, 15, 15, 1, true, 11);
+    expect(cat.body).toMatchObject({ frame: "asleep", x: cat.body.at.x, y: cat.body.at.y, z: cat.body.at.z });
+    // Seeded, about one call in 50.
+    let comes = 0;
+    for (let i = 0; i < 5000; i++) if (catComes(NOW, i)) comes++;
+    expect(comes).toBeGreaterThan(50);
+    expect(comes).toBeLessThan(200);
+  });
+
+  test("the gnome freezes, its name hidden, then plays statues again", () => {
+    const gnome = arrive("gnome");
+    gnome.onConditions!(conditions("day"));
+    call(gnome, 0, 0, 0);
+    expect(gnome.body.tag).toBe(0);
+    // Out of view it would look away after a few seconds: frozen, it does not.
+    run(gnome, 5, 0, 0, false);
+    expect(gnome.body).toMatchObject({ frame: "front", tag: 0 });
+    run(gnome, 2, 0, 0, true, 5);
+    expect(gnome.body).toMatchObject({ frame: "front", tag: 1 });
+  });
+
+  test("the frog croaks back once, in its course's sound, even in its sleep", () => {
+    const frog = arrive("frog");
+    frog.onConditions!(conditions("day"));
+    expect(call(frog, 0, 0, 0)).toEqual({ line: "The frog croaks once in its sleep.", say: "croac…" });
+    expect(frog.body.frame).toBe("croak");
+    run(frog, 1, 0, 0);
+    expect(frog.body.frame).toBe("asleep");
+    frog.onConditions!(conditions("dusk"));
+    expect(call(frog, 1, 0, 0)?.line).toBe("The frog croaks back.");
+  });
+
+  test("the bird flies up and lands again where it was; with reduced motion it does not answer", () => {
+    const bird = arrive("bird");
+    const at = { ...bird.body.at };
+    call(bird, 0, 10, 10);
+    run(bird, 0.7, 10, 10);
+    expect(bird.body).toMatchObject({ frame: "hop", x: at.x, z: at.z });
+    expect(bird.body.y).toBeGreaterThan(at.y + 0.5);
+    run(bird, 1, 10, 10, true, 0.7);
+    expect(bird.body).toMatchObject({ frame: "sit", y: at.y });
+    expect(call(arrive("bird", { reducedMotion: true }), 0, 10, 10)).toBeNull();
+  });
+
+  test("the snail goes into its shell three full seconds after the call, and comes out again", () => {
+    const snail = arrive("snail", { home: HOME });
+    call(snail, 1, 0, 0);
+    run(snail, 2.9, 0, 0, true, 1);
+    expect(snail.body.frame).toBe("snail");
+    run(snail, 0.2, 0, 0, true, 3.9);
+    expect(snail.body.frame).toBe("shell");
+    run(snail, 5, 0, 0, true, 4.1);
+    expect(snail.body.frame).toBe("snail");
+  });
+
+  test("the heron takes one slow step back and home again; the fish darts round; the butterfly lifts off higher", () => {
+    const heron = arrive("heron");
+    const { x, z } = heron.body.at;
+    call(heron, 0, x + 10, z);
+    run(heron, 1, x + 10, z);
+    expect(heron.body.x).toBeLessThan(x);
+    run(heron, 4, x + 10, z, true, 1);
+    expect([heron.body.x, heron.body.z]).toEqual([x, z]);
+
+    const calm = arrive("fish");
+    const darting = arrive("fish");
+    call(darting, 0, 0, 0);
+    run(calm, 1, 0, 0);
+    run(darting, 1, 0, 0);
+    expect(darting.body.turn - Math.PI / 2).toBeCloseTo(8 * (calm.body.turn - Math.PI / 2), 1);
+
+    const still = arrive("butterfly", { home: HOME });
+    const flying = arrive("butterfly", { home: HOME });
+    call(flying, 0, 0, 0);
+    run(still, 0.8, 0, 0);
+    run(flying, 0.8, 0, 0);
+    expect(flying.body.y - still.body.y).toBeCloseTo(0.4, 1);
   });
 });
