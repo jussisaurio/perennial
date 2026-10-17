@@ -13,6 +13,7 @@ import type { Hand, LeaveDone } from "../garden/sceneLeave";
 import { sceneryViews } from "../garden/scenery";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
 import { layout, type Layout, type PlacedPlant } from "../garden/world";
+import type { Focus } from "./gardenFocus";
 import type { LearnerVisitors } from "./visitors";
 
 interface WalkData {
@@ -47,7 +48,7 @@ export function useGardenScene({
   visitors?: LearnerVisitors | null;
   door: { state: DoorState; open: () => void };
   leave: { walk: LeaveWalk; save: (left: Left) => void; done: (d: LeaveDone) => void };
-  focus?: string | null;
+  focus?: Focus | null;
   time: TimeOfDay;
   detail: Detail;
   wrap: RefObject<HTMLDivElement | null>;
@@ -143,11 +144,13 @@ export function useGardenScene({
       s.start();
       setReady(true);
       // Opened from "View in garden": walk to that plant and show its card.
-      const target = focus ? data.l.plants.find((p) => p.id === focus) : undefined;
+      const target = focus?.at === "plant" ? data.l.plants.find((p) => p.id === focus.id) : undefined;
       if (target) {
         s.select(target, true);
         onFocused();
       }
+      // Opened from what waits in Today's strip (#335): walk up to the bowl, where the prints start. Following them is the learner's.
+      if (focus?.at === "bowl") s.walkToBowl();
       await s.loadPlants();
       if (alive) setProgress(null);
     })();

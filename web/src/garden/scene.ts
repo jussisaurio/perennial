@@ -505,6 +505,12 @@ export class GardenScene {
     this.goTo(at.x, at.z, LEAVE_STAND, () => this.doLeave(t));
   }
 
+  /** Walk up to the bowl, and stop there (#335: the walk opened from what waits in Today's strip). */
+  walkToBowl() {
+    const at = this.leaveIt.standFor({ at: "bowl" }, this.x, this.z);
+    this.goTo(at.x, at.z, LEAVE_STAND, null);
+  }
+
   /**
    * Do leave it out's action on a thing in reach: take, leave, pick up, hang;
    * at the bowl, once something came in the night, follow its prints to what it

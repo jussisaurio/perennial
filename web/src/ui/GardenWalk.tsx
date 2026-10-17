@@ -17,7 +17,7 @@ import type { Detail, DoorState, Label, Reach, TimeOfDay } from "../garden/scene
 import type { TapHit } from "../garden/scenePart";
 import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
-import { takeFocus } from "./gardenFocus";
+import { takeFocus, type Focus } from "./gardenFocus";
 import { WordPlant } from "./plant";
 import { speak } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
@@ -71,7 +71,9 @@ export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
 
 /** The walk-in garden for the signed-in learner. */
 export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: (minutes: number) => void }) {
-  useEffect(() => track("garden_opened"), []);
+  const [focus] = useState(takeFocus);
+  // `from: "today"`: opened by the picture of what waits in Today's strip (#335), to see how often that way in is used.
+  useEffect(() => track("garden_opened", focus?.at === "bowl" ? { from: "today" } : {}), [focus]);
   // What the learner does in the walk (#335): how many taps of each kind (walk, plant, door...) and presses of the
   // action button by what it did (sit, key...), one event per kind,
   // sent when the walk closes, or when the page is hidden: on a phone the walk is often left by locking it, not closed.
@@ -130,7 +132,6 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
     saveLeftHere(leaveOpened.walk.left);
   }, [leaveOpened, saveLeftHere]);
   const leave = useMemo(() => leaveOpened && { walk: leaveOpened.walk, save: saveLeftHere }, [leaveOpened, saveLeftHere]);
-  const [focus] = useState(takeFocus);
   // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done,
   // named as Today names it, and worked out with the clock, so a walk open past midnight starts the new day.
   // Until the learner loads there are no plants (`source` is null), so nothing to water either.
@@ -294,7 +295,7 @@ export function GardenWalk({
   onExit: () => void;
   /** Starts practice; `label` says what it starts. */
   water?: { label: string; start: () => void };
-  focus?: string | null;
+  focus?: Focus | null;
   /** A tap met something in the walk (or open ground to walk to), or the action button did something: what, for counting (#335). */
   onTap?: (verb: GardenVerb) => void;
   /** Whether the controls hint shows, and what to do once the viewer first moves while it shows. */

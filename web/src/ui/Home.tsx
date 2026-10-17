@@ -13,8 +13,8 @@ import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside, restDayLine } from "../content/voice";
 import { plural } from "./format";
-import { focusPlant } from "./gardenFocus";
-import { learnerVisitors } from "./visitors";
+import { focusBowl, focusPlant } from "./gardenFocus";
+import { learnerVisitors, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import { today } from "../core/day";
 import { KNOWN_RULE } from "../core/memory";
@@ -47,6 +47,15 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   // The same planner the session uses, for what the day's minutes are for.
   const plan = useMemo(() => (learner && chunk ? sessionPlan(learner, chunk.minutes, mayListen(language(code).tag), now) : null), [learner, chunk, now, code]);
   const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
+  // What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.
+  const guest = useMemo(() => (learner ? waitingGuest(learner, now) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
+  const waiting = guest && {
+    guest,
+    onOpen: () => {
+      focusBowl();
+      onWalk();
+    },
+  };
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
   // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
@@ -71,7 +80,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </div>
       </header>
 
-      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code, mole: visitors.mole }} />
+      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code, mole: visitors.mole }} waiting={waiting} />
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
