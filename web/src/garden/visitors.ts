@@ -9,7 +9,7 @@ import { bareNoun, inLang, nounView, type NounDef, type NounView, type NounWords
 import type { Layout } from "./world";
 import type { GardenWord } from "../deck/schema";
 
-export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird" | "dog" | "fish" | "butterfly";
+export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird" | "dog" | "fish" | "butterfly" | "goat" | "mole";
 
 /** What we know about the learner, from review dates only. */
 export interface LearnerFacts {
@@ -58,6 +58,10 @@ export const RARE_CAP = 2;
 /** Known words that bring the gnome, and the frog for learners who knew 150 words before it had a word of its own (#209). */
 const GNOME_KNOWN = 50;
 const FROG_KNOWN = 150;
+/** The goat stands somewhere impossible on about one day in this many (#376). */
+const GOAT_ONE_IN = 6;
+/** The mole's word: it lives at the end of the 2D strip (#61) and behind your back in the walk (#376). */
+const MOLE_WORDS: NounWords = { es: "el topo", de: "der Maulwurf" };
 
 /**
  * Residents first, then rare visitors in priority order: when more than two
@@ -92,6 +96,10 @@ export const VISITORS: readonly VisitorDef[] = [
   { id: "fish", words: { es: "el pez", de: "der Fisch" }, gloss: "fish", rare: false, tag: "tap", garden: "fish", schedule: ({ facts }) => facts.garden.has("fish") },
   // On top of its word's plant; in the walk not at night.
   { id: "butterfly", words: { es: "la mariposa", de: "der Schmetterling" }, gloss: "butterfly", rare: false, tag: "tap", garden: "butterfly", schedule: ({ facts }) => facts.garden.has("butterfly") },
+  // Somewhere no goat could get (#376). No deck has its word, so it needs none: any rare day, from day 1.
+  { id: "goat", words: { es: "la cabra", de: "die Ziege" }, gloss: "goat", rare: true, tag: "approach", schedule: ({ now }) => rareDay(GOAT_ONE_IN, "visitor-goat", now) },
+  // Behind your back in the walk (#376). It lives here; how rarely it pops up is its own (kinds/mole.ts). Small and quick: tap only.
+  { id: "mole", words: MOLE_WORDS, gloss: "mole", rare: false, tag: "tap", schedule: () => true },
 ];
 
 export const visitor = (id: VisitorId): VisitorDef => VISITORS.find((v) => v.id === id)!;
@@ -198,7 +206,7 @@ export type StripVisitorId = "worm" | "mole";
 
 export const STRIP_VISITORS: Record<StripVisitorId, { words: NounWords; gloss: string }> = {
   worm: { words: { es: "el gusano", de: "der Wurm" }, gloss: "worm" },
-  mole: { words: { es: "el topo", de: "der Maulwurf" }, gloss: "mole" },
+  mole: { words: MOLE_WORDS, gloss: "mole" },
 };
 
 /** The mole looks up at the end of the strip on about one day in this many. */

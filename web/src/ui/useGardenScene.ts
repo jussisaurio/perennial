@@ -92,6 +92,7 @@ export function useGardenScene({
   const [hand, setHand] = useState<Held | null>(null);
   const [company, setCompany] = useState<Companion | null>(null);
   const [stars, setStars] = useState(false);
+  const [heard, setHeard] = useState<string | null>(null);
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
@@ -167,6 +168,7 @@ export function useGardenScene({
             onStall: () => reportStalledWalk(data.l.plants.length),
             onHand: setHand,
             onCompany: setCompany,
+            onVisitorStatus: setHeard,
             onLeave: (d) => leaveNow.current.done(d),
             onLeft: (left) => leaveNow.current.save(left),
             onShake: (p, forms) => shakeNow.current(p, forms),
@@ -228,7 +230,7 @@ export function useGardenScene({
     scene.current?.setDetail(detail);
   }, [detail]);
 
-  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars };
+  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard };
 }
 
 /**

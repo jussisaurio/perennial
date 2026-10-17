@@ -79,14 +79,14 @@ describe("the ends of the strip (#61) and the empty garden (#58)", () => {
     expect(moleVisits(days[0], ["cat"])).toBe(false);
   });
 
-  test("strip-only visitors are words with their article, and never walk visitors", () => {
+  test("the strip's visitors are words with their article; the worm is never in the walk, the mole is in it too (#376)", () => {
     expect(stripVisitor("worm", "es")).toEqual({ id: "worm", word: "el gusano", gloss: "worm" });
     expect(stripVisitor("worm", "de")?.word).toBe("der Wurm");
     expect(stripVisitor("mole", "es")?.word).toBe("el topo");
     expect(stripVisitor("mole", "de")?.word).toBe("der Maulwurf");
     expect(stripVisitor("mole", "fr")).toBeNull();
-    // The walk never gets them, even with every visitor on.
-    expect(visitorsFor(NO_FACTS, days[0], "all").present).not.toContain("mole");
-    expect(visitorsFor(NO_FACTS, days[0], ["mole", "worm"]).present).toEqual([]);
+    // The walk never gets the worm, even with every visitor on.
+    expect(visitorsFor(NO_FACTS, days[0], "all").present).not.toContain("worm");
+    expect(visitorsFor(NO_FACTS, days[0], ["mole", "worm"]).present).toEqual(["mole"]);
   });
 });

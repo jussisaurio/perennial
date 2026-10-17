@@ -66,12 +66,13 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  * into, and its word (#359); the well's echo, an old word and the day it
  * was met (#335 S6); the prints from the bowl, or something at their
  * feet; something small hiding near them, or what they just found hiding
- * (#379); what fell from a shaken plant (#357); who answered a call (#377); the door's line; a lantern that
+ * (#379); what fell from a shaken plant (#357); who answered a call (#377); a visitor's own line (#376: the
+ * goat up high, the mole caught); the door's line; a lantern that
  * is out, and the stars once every one is (#361); what a thrown thing did
  * where it landed (#358); what they hold. Things in the world, never
  * instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
@@ -132,6 +133,7 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
       </>
     );
   if (called) return called.length ? called.join(" ") : "Only the wind answers.";
+  if (heard) return heard;
   const line = spokenLine(labels.find((l) => l.kind === "line")?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
@@ -521,7 +523,7 @@ export function GardenWalk({
     if (sound && d.did === "fold") void speak(d.word.lemma, tag);
   };
   const toys = { walk: toysGiven ?? showcaseToys, done: toyDone };
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars } = useGardenScene({ lang, source, visitors, door, leave, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall });
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard } = useGardenScene({ lang, source, visitors, door, leave, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall });
   const held = hand && handView(hand, lang);
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = labels.find((l) => l.kind === "echo");
@@ -694,7 +696,7 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold; who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, shook, called, company, landed, toyNews, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
+        {spokenStatus(reach, labels, door.state, held, shook, called, company, heard, landed, toyNews, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>

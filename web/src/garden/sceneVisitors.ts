@@ -144,7 +144,7 @@ export class SceneVisitors implements Part {
       const g = visitor(v.id).garden;
       const plant = g ? L.plants.find((p) => p.garden === g) : undefined;
       const home: Home | null = plant ? { x: plant.x, z: plant.z, soil: w.bedTop, top: w.plantTop(plant), thirsty: plant.r < THIRSTY } : null;
-      const it = kind.arrive({ spots, layout: L, home, now, age, reducedMotion: w.reducedMotion });
+      const it = kind.arrive({ spots, layout: L, home, now, age, reducedMotion: w.reducedMotion, lang: w.lang });
       if (!it) continue;
       const { body, size } = it;
       const u = CELLS[v.id][body.frame] * cellU;
@@ -331,6 +331,12 @@ export class SceneVisitors implements Part {
     return this.sprites.some((o) => o.v.id === id && o.mesh.visible);
   }
 
+  /** What a screen reader hears about the visitors now (#376: the goat up high, the mole caught), or null. The first that has a line. */
+  status(): string | null {
+    for (const s of this.sprites) if (s.body.status) return s.body.status;
+    return null;
+  }
+
   /** Where a visitor sits now, on the ground; null when it is not here today. */
   where(id: VisitorId): { x: number; z: number } | null {
     const s = this.sprites.find((o) => o.v.id === id);
@@ -432,6 +438,13 @@ export class SceneVisitors implements Part {
     let sayer: VisitorSprite | null = null;
     if (saying) for (const s of this.sprites) if (s.v.id === saying.id && s.mesh.visible) sayer = s;
     if (saying && sayer && this.projectTag(sayer)) say = { id: `say:${saying.id}`, text: saying.text, kind: "say", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 };
+    // Else what a visitor says unasked (the mole's hello to nobody, #376).
+    if (!say)
+      for (const s of this.sprites)
+        if (s.body.says && s.mesh.visible && this.projectTag(s)) {
+          [say, sayer] = [{ id: `say:${s.v.id}`, text: s.body.says, kind: "say", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 }, s];
+          break;
+        }
     let tag: VisitorSprite | null = null;
     let tagShow = 1;
     let nearD = Infinity;
