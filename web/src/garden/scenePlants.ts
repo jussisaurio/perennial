@@ -5,6 +5,7 @@
 
 import * as THREE from "three";
 import { petalAt, petalForms, shakeLength, shiver } from "./shake";
+import { brush, brushStep, type Brush } from "./walkInto";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope } from "./whimsy";
 import type { Label } from "./scene";
 import type { Frame } from "./scenePart";
@@ -23,6 +24,7 @@ const PLANT_VERT = /* glsl */ `
   attribute vec3 iPos;
   attribute vec4 iParams; // phase, droop, scale, index
   attribute vec2 iCell; // low cell, high slot (-1: none yet)
+  attribute float iLean; // brushed by the walker (#359): radians, springing back to 0
   uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uShake; // plant index, lean (#357)
   uniform vec2 uLowSize;
@@ -39,9 +41,9 @@ const PLANT_VERT = /* glsl */ `
   void main() {
     // A plant that hears its name grows a few percent for a moment.
     float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
-    // A shaken plant shivers: it leans side to side for a moment (#357).
+    // A shaken plant shivers: it leans side to side for a moment (#357). A brushed one leans away and springs back (#359).
     float shake = abs(iParams.w - uShake.x) < 0.5 ? uShake.y : 0.0;
-    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk), iParams.x, iParams.y + shake);
+    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk), iParams.x, iParams.y + shake + iLean * uSway);
     gl_Position = projectionMatrix * mv;
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
@@ -109,13 +111,27 @@ export class Plants {
   private perk = { i: -1, at: 0, n: -1 };
   /** A shaken plant (#357): its index, when, and the forms falling from it as petals ([]: one leaf). */
   private shook: { i: number; at: number; forms: string[]; still: boolean } | null = null;
+  /** Brushing the beds (#359): every plant's lean and spring, and where each plant's lean is drawn (once its bed's mesh is built). */
+  private brush: Brush;
+  private leanRef: { attr: THREE.InstancedBufferAttribute; i: number }[] = [];
+  private onBrush: (p: PlacedPlant) => void;
 
-  constructor(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera, layout: Layout, onProgress: (done: number, total: number) => void, behindHedge: (x: number, y: number, z: number) => boolean) {
+  /** `onBrush`: the walker brushed past a plant, and its note plays now (at most one a frame). */
+  constructor(
+    renderer: THREE.WebGLRenderer,
+    camera: THREE.PerspectiveCamera,
+    layout: Layout,
+    onProgress: (done: number, total: number) => void,
+    behindHedge: (x: number, y: number, z: number) => boolean,
+    onBrush: (p: PlacedPlant) => void,
+  ) {
     this.renderer = renderer;
     this.camera = camera;
     this.layout = layout;
     this.onProgress = onProgress;
     this.behindHedge = behindHedge;
+    this.onBrush = onBrush;
+    this.brush = brush(layout);
   }
 
   /** Raised beds: wooden sides, soil on top, and a sign for each. Draws no random numbers. */
@@ -201,6 +217,9 @@ export class Plants {
       });
       const cellAttr = new THREE.InstancedBufferAttribute(cells, 2);
       cellAttr.setUsage(THREE.DynamicDrawUsage);
+      const leanAttr = new THREE.InstancedBufferAttribute(new Float32Array(idx.length), 1);
+      leanAttr.setUsage(THREE.DynamicDrawUsage);
+      geo.setAttribute("iLean", leanAttr);
       geo.setAttribute("iPos", new THREE.InstancedBufferAttribute(pos, 3));
       geo.setAttribute("iParams", new THREE.InstancedBufferAttribute(params, 4));
       geo.setAttribute("iCell", cellAttr);
@@ -211,7 +230,10 @@ export class Plants {
       const mesh = new THREE.Mesh(geo, mats[sheet]);
       ctx.scene.add(mesh);
       this.chunks.push({ mesh, center, radius });
-      idx.forEach((pi, k) => (this.hiRef[pi] = { attr: cellAttr, i: k }));
+      idx.forEach((pi, k) => {
+        this.hiRef[pi] = { attr: cellAttr, i: k };
+        this.leanRef[pi] = { attr: leanAttr, i: k };
+      });
     }
     // Not onProgress(done) here: GardenScene.loadPlants calls it after setTime, as main did.
   }
@@ -357,7 +379,7 @@ export class Plants {
     if (done) k.i = -1;
   }
 
-  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, and the perk uniform. */
+  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, the perk uniform, and brushing. */
   tick(f: Frame) {
     const { elapsed, x, z, yaw } = f;
     for (const c of this.chunks) c.mesh.visible = c.center.distanceTo(this.camera.position) - c.radius < FOG_FAR;
@@ -367,6 +389,22 @@ export class Plants {
     }
     this.tickPerk(elapsed);
     this.tickShake(elapsed);
+    this.tickBrush(f);
+  }
+
+  /** Brushing the beds (#359): plants you walk right past lean away and spring back, and one plays its note. No allocations. */
+  private tickBrush(f: Frame) {
+    const b = this.brush;
+    const note = brushStep(b, this.layout, f);
+    for (let k = 0; k < b.changed; k++) {
+      const i = b.dirty[k];
+      // Before loadPlants has built the beds' meshes there is nothing to draw the lean on yet.
+      const ref = this.leanRef[i];
+      if (!ref) continue;
+      ref.attr.setX(ref.i, b.lean[i]);
+      ref.attr.needsUpdate = true;
+    }
+    if (note >= 0) this.onBrush(this.layout.plants[note]);
   }
 
   /** Select the plant under a point on the canvas (CSS pixels), if any. */

@@ -12,6 +12,7 @@ import * as LeaveArt from "./leaveArt";
 import { FRUIT_KINDS, type Find, type FruitKind, type Guest, type WildGuest } from "./leave";
 import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
+import { LEAF_PILE } from "./walkInto";
 import { loadImage } from "../ui/files";
 
 export function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
@@ -1042,5 +1043,18 @@ export function prints(): HTMLCanvasElement {
     const oy = Math.floor((PRINT_CELL - rows.length) / 2);
     rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, ox + x, oy + y, "#4a3624")));
   });
+  return c;
+}
+
+// ---- Walk into things (#359) ------------------------------------------------
+
+/** Pixels per side of the leaf pile's cell: the pile stands on its bottom row. */
+export const PILE_CELL = 16;
+
+/** An autumn leaf pile (walkInto.ts LEAF_PILE), standing on the cell's bottom row. */
+export function leafPile(): HTMLCanvasElement {
+  const [c, ctx] = canvas(PILE_CELL, PILE_CELL);
+  const oy = PILE_CELL - LEAF_PILE.rows.length;
+  for (const r of Art.runs(LEAF_PILE)) px(ctx, r.x, oy + r.y, r.fill, r.w, 1);
   return c;
 }

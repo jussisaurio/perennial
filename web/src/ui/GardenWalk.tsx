@@ -13,7 +13,7 @@ import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_LINES, groupOf, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
-import type { Detail, DoorState, Label, Reach, TimeOfDay } from "../garden/scene";
+import type { Detail, DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
 import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
@@ -34,6 +34,8 @@ import type { Hand, LeaveAct, LeaveDone } from "../garden/sceneLeave";
 import { inLang, nounView } from "../garden/nouns";
 import { GNOME_WORD, type Companion } from "../garden/bench";
 import { PixelRects } from "./pixel";
+import { brushNote, wakeAudio } from "./chime";
+import { fellLine } from "../garden/walkInto";
 import type { Gender } from "../deck/schema";
 
 /** A plant just shaken (#357): its word and the forms that fell from it ([]: one leaf). */
@@ -42,8 +44,9 @@ type Shook = { lemma: string; forms: string[] };
 /**
  * What the walk's status says to a screen reader: who just came to sit with
  * them on the bench (#362); the key at their feet; a find's word and meaning
- * (#351); the prints from the bowl, or something at their feet; what fell from
- * a shaken plant (#357); the door's line; what they hold. Things in the world,
+ * (#351); a fruit that fell from a tree they walked into, and its word (#359);
+ * the prints from the bowl, or something at their feet; what fell from a
+ * shaken plant (#357); the door's line; what they hold. Things in the world,
  * never instructions (#334).
  */
 function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, company: Companion | null, lang: string): ReactNode {
@@ -55,6 +58,14 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
     return (
       <>
         You found <span lang={lang}>{found.text}</span>: {found.gloss}.
+      </>
+    );
+  const fell = labels.find((l) => l.kind === "fruit");
+  // A fruit's tag always carries its kind in English as its meaning (scene.ts labels).
+  if (fell)
+    return (
+      <>
+        {fellLine(fell.gloss!)} <span lang={lang}>{fell.text}</span>
       </>
     );
   if (reach === "follow") return "Small prints lead away from the bowl.";
@@ -90,8 +101,8 @@ const COMPANY_LINE: Record<Companion, (lang: string) => ReactNode> = {
   ),
 };
 
-/** What the learner did in the walk, for counting (#335): what a tap met (TapHit kinds), what the action button did (#334), or what they left or found (#351). */
-type GardenVerb = TapHit["kind"] | Reach;
+/** What the learner did in the walk, for counting (#335): what a tap met (TapHit kinds), what the action button did (#334), what they left or found (#351), or what they walked into (#359). */
+type GardenVerb = TapHit["kind"] | Reach | WalkIntoEvent["did"];
 
 /** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
 export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
@@ -367,7 +378,13 @@ export function GardenWalk({
     setShook({ lemma: p.lemma, forms });
     if (sound && forms.length) void speakAll(forms, tag);
   };
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company } = useGardenScene({ lang, source, visitors, door, leave, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake });
+  // Walking into things is counted (#359). A brushed plant plays its note (only with sound on: brushNote checks); with sound on, a fallen fruit says its word.
+  const walkInto = (e: WalkIntoEvent) => {
+    onTap?.(e.did);
+    if (e.did === "brush") brushNote(e.word, e.clear);
+    else if (e.did === "bump" && e.fell === "fruit" && sound) void speak(e.word, tag);
+  };
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company } = useGardenScene({ lang, source, visitors, door, leave, walkInto, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake });
   const held = hand && handView(hand, lang);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
@@ -498,7 +515,8 @@ export function GardenWalk({
     );
 
   return (
-    <div className={`gw gw-${time}`} ref={wrap}>
+    // Walking brushes plants that play their notes (#359): audio may start only inside a tap or key press, so any press in the walk wakes it.
+    <div className={`gw gw-${time}`} ref={wrap} onPointerDownCapture={() => wakeAudio()}>
       <canvas
         ref={canvas}
         className="gw-canvas"
@@ -510,7 +528,7 @@ export function GardenWalk({
         onPointerCancel={onPointerCancel}
       />
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
-          for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold; and who comes to sit with them on the bench (#362). */}
+          for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold; who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
         {spokenStatus(reach, labels, door.state, held, shook, company, lang)}
       </div>
@@ -525,7 +543,7 @@ export function GardenWalk({
             <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
-          ) : l.kind === "tree" || l.kind === "find" || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
+          ) : l.kind === "tree" || l.kind === "find" || l.kind === "fruit" || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
             <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               <i>{l.text}</i>
               <small lang="en"> · {l.gloss}</small>

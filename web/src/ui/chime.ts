@@ -31,19 +31,34 @@ export function wakeAudio(): void {
 
 /** Plays the word's note once, quietly, `delay` seconds from now. Only with sound on, after wakeAudio. */
 export function chime(word: string, delay = 0): void {
+  ring(word, delay, { peak: 0.07, octave: 0.25, fade: 0.9 });
+}
+
+/**
+ * A plant brushed in the walk (#359): its word's note, softer and shorter
+ * than the chime, so a run along a row is a quick run of notes. A bloom rings
+ * clear (with its octave); a younger plant sounds soft and plain, so you can
+ * hear what you know. Only with sound on, after wakeAudio.
+ */
+export function brushNote(word: string, clear: boolean): void {
+  ring(word, 0, clear ? { peak: 0.045, octave: 0.3, fade: 0.5 } : { peak: 0.025, octave: 0, fade: 0.35 });
+}
+
+/** A sine at the word's note and a quiet octave above it (`octave`: its level, 0 for none): a small bell rather than a beep. `fade`: seconds to silence. */
+function ring(word: string, delay: number, { peak, octave, fade }: { peak: number; octave: number; fade: number }): void {
   if (!isSoundOn() || !audio) return;
   const now = audio.currentTime + delay;
   const note = noteFor(word);
   const gain = audio.createGain();
   gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.07, now + 0.015);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+  gain.gain.linearRampToValueAtTime(peak, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + fade);
   gain.connect(audio.destination);
-  // A sine and a quiet octave above it: a small bell rather than a beep.
   for (const [mult, level] of [
     [1, 1],
-    [2, 0.25],
+    [2, octave],
   ] as const) {
+    if (level === 0) continue;
     const osc = audio.createOscillator();
     osc.type = "sine";
     osc.frequency.value = note * mult;
@@ -51,6 +66,6 @@ export function chime(word: string, delay = 0): void {
     g.gain.value = level;
     osc.connect(g).connect(gain);
     osc.start(now);
-    osc.stop(now + 0.95);
+    osc.stop(now + fade + 0.05);
   }
 }

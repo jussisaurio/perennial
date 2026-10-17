@@ -27,6 +27,8 @@ export interface Frame {
   x: number;
   z: number;
   yaw: number;
+  /** How fast the viewer walks this frame, on foot (m/s): 0 standing, sitting, or gliding to a plant (#359: only feet brush and bump). */
+  speed: number;
 }
 
 export interface Part {
