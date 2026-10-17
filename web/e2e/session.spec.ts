@@ -243,8 +243,10 @@ test("on the summary, Enter on a focused button presses that button, not the mai
 
 // #253: the server refuses answers dated more than a day ahead. A device clock
 // that far off loses them, and the app must say so, never "saved".
-test("an answer the server refuses is reported, not called saved", async ({ page }) => {
+test("an answer the server refuses is reported, not called saved", async ({ page, allowConsoleError }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  // The clock-ahead answers (below) are refused by design; the app logs the refusal it reports in the card.
+  allowConsoleError(/^review not saved/, "this test's clock is deliberately days ahead, so the server refuses each answer");
   // Three days ahead of the server's real clock.
   await page.clock.setFixedTime(new Date(Date.now() + 3 * 86_400_000));
   await startCourse(page);

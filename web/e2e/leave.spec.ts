@@ -178,7 +178,9 @@ test("a walk open across midnight: what is left after it is left on the new day,
   expect((await leaveNow(page)).came).toBeNull();
 });
 
-test("a device clock days ahead: seeing the bowl is saved once, refused, and the clock notice says why", async ({ page }) => {
+test("a device clock days ahead: seeing the bowl is saved once, refused, and the clock notice says why", async ({ page, allowConsoleError }) => {
+  // The clock-ahead write is refused by design (below); the app logs the refusal it reports in its toast.
+  allowConsoleError(/^garden not saved/, "this test's clock is deliberately days ahead, so the server refuses the write");
   await page.goto("/?demo=es:3#/today");
   await openWalk(page);
   await standBy(page, "basket", 0.8);

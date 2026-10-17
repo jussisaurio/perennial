@@ -17,6 +17,11 @@ const ALLOWED_CONSOLE_ERRORS: { pattern: RegExp; reason: string }[] = [
     pattern: /NotFoundError: The object can not be found here/,
     reason: "WebKit's vite dev-server HMR noise on iPhone runs; seen on plain main, not caused by app code.",
   },
+  {
+    pattern: /^Failed to load resource: /,
+    reason:
+      "The browser's own echo of a non-2xx or aborted fetch, logged whether or not the app handles it. Many specs mock a server refusal (4xx/5xx) or abort a request on purpose, and real refusals (e.g. a 409 merging an anonymous learner into an existing account) are normal; the app's own message, if it logs one, is the actual signal.",
+  },
 ];
 
 export const test = base.extend<{

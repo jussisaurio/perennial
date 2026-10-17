@@ -18,8 +18,10 @@ test("smoke: landing → start learning → a session → progress survives a re
   await expect(page.getByText(/You are learning|You know/)).toBeVisible({ timeout: 15000 });
 });
 
-test("a deck that cannot load, with no copy kept: the learner is told, not left on a loading screen", async ({ page }) => {
+test("a deck that cannot load, with no copy kept: the learner is told, not left on a loading screen", async ({ page, allowConsoleError }) => {
   await startCourse(page);
+  // The aborted deck fetch (below) is refused by design; the app logs the failure it shows in the alert.
+  allowConsoleError(/^\[deck\] es: could not load/, "this test deliberately aborts the deck file to check the failure is shown");
   // As offline before the deck was ever cached: no saved copy, and the deck file fails.
   await page.evaluate(() => caches.delete("perennial-decks"));
   const deckFile = "**/decks/es/deck.json*";

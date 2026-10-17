@@ -20,9 +20,10 @@ test("dev demo: a delete the server refuses is reported", async ({ page }) => {
   await expect.poll(() => warnings.some((w) => w.includes("could not delete the demo learner on the server: 500"))).toBe(true);
 });
 
-test("dev demo: a seed that fails is reported, and the app still opens", async ({ page }) => {
+test("dev demo: a seed that fails is reported, and the app still opens", async ({ page, allowConsoleError }) => {
   const errors: string[] = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  allowConsoleError(/^\[demo\] could not seed/, "this test deliberately makes the demo's write fail, to check it is reported");
   await page.route("**/api/write", (route) => route.fulfill({ status: 422, json: { error: "invalid" } }));
   await page.goto("/?demo=es:5");
   await expect(page.getByRole("heading", { name: "Grow a language, 5 minutes a day." })).toBeVisible({ timeout: 20000 });
@@ -45,10 +46,12 @@ test("dev demo: ?demo=off leaves a real account alone", async ({ page }) => {
   expect((await page.request.get("/api/me")).status()).toBe(200);
 });
 
-test("dev demo: when sign-out fails, the demo writes nothing into the account", async ({ page }) => {
+test("dev demo: when sign-out fails, the demo writes nothing into the account", async ({ page, allowConsoleError }) => {
   await startCourse(page);
   await addEmail(page);
   const before = (await serverRows(page, "review")).length;
+  // The failed sign-out (below) means the demo would write into the signed-in account; it refuses and says so.
+  allowConsoleError(/^\[demo\] could not seed/, "this test deliberately fails sign-out, so the demo refuses to seed");
   await page.route("**/api/auth/sign-out", (route) => route.fulfill({ status: 500, json: {} }));
   // Wait for the demo to finish either way, then count: on the old code it wrote its reviews here.
   const done = page.waitForEvent("console", (m) => /\[demo\] (seeded|could not seed) es/.test(m.text()));
