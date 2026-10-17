@@ -4,8 +4,8 @@
 // garden's many small animated things are described).
 
 import * as THREE from "three";
-import { BED_H, type BuildCtx } from "./sceneSprites";
-import type { PlacedPlant } from "./world";
+import type { BuildCtx } from "./sceneSprites";
+import { BED_H, type PlacedPlant } from "./world";
 import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
 import * as T from "./textures";
