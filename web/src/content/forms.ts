@@ -1,7 +1,7 @@
 // How a card names a word: the form it asks about (#259), and the dictionary
 // word that form belongs to, with its article (#260).
 
-import type { DeckLang, DeckWord } from "../deck/schema";
+import type { DeckLang, Gender } from "../deck/schema";
 import { formKey, locate } from "./text";
 
 /** Text before a word that starts a sentence: nothing, or an end mark (. ! ? … or a dialogue dash), then only spaces, quotes and opening marks. */
@@ -28,8 +28,6 @@ export function otherForm(word: { lemma: string }, asked: string): string | null
   return formKey(asked) === formKey(word.lemma) ? null : asked;
 }
 
-type Gender = NonNullable<DeckWord["gender"]>;
-
 /**
  * German nouns with their article: the article is part of the word to learn.
  * Not Spanish yet (#289): there a feminine noun with a stressed a- takes "el"
@@ -39,7 +37,7 @@ type Gender = NonNullable<DeckWord["gender"]>;
 const ARTICLES: Partial<Record<DeckLang, Partial<Record<Gender, string>>>> = { de: { m: "der", f: "die", n: "das" } };
 
 /** The word as the dictionary gives it: "der Mann", "haben". */
-export function headword(word: { lemma: string; pos?: string | null; gender?: string }, lang: string): string {
-  const article = word.pos === "noun" && word.gender ? ARTICLES[lang as DeckLang]?.[word.gender as Gender] : undefined; // both checked where they enter: course codes and the deck schema
+export function headword(word: { lemma: string; pos?: string | null; gender?: Gender }, lang: string): string {
+  const article = word.pos === "noun" && word.gender ? ARTICLES[lang as DeckLang]?.[word.gender] : undefined; // the course code is checked where it enters
   return article ? `${article} ${word.lemma}` : word.lemma;
 }

@@ -19,7 +19,7 @@ import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
 import { takeFocus, type Focus } from "./gardenFocus";
 import { WordPlant } from "./plant";
-import { speak } from "./speech";
+import { speak, speakAll } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
@@ -33,13 +33,18 @@ import type { PixelArt } from "../garden/visitorArt";
 import type { Hand, LeaveAct, LeaveDone } from "../garden/sceneLeave";
 import { nounView } from "../garden/nouns";
 import { PixelRects } from "./pixel";
+import type { Gender } from "../deck/schema";
+
+/** A plant just shaken (#357): its word and the forms that fell from it ([]: one leaf). */
+type Shook = { lemma: string; forms: string[] };
 
 /**
  * What the walk's status says to a screen reader: the key at their feet; a
  * find's word and meaning (#351); the prints from the bowl, or something at
- * their feet; the door's line; what they hold. Things in the world, never instructions (#334).
+ * their feet; what fell from a shaken plant (#357); the door's line; what they hold.
+ * Things in the world, never instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, lang: string): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, lang: string): ReactNode {
   if (reach === "key") return "The key is here.";
   // The course-language word is marked as such, so a screen reader says it in that language.
   const found = labels.find((l) => l.kind === "find");
@@ -51,6 +56,16 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
     );
   if (reach === "follow") return "Small prints lead away from the bowl.";
   if (reach === "find") return "Something lies here.";
+  if (shook)
+    return shook.forms.length ? (
+      <>
+        <span lang={lang}>{shook.lemma}</span> shakes. Petals fall: <span lang={lang}>{shook.forms.join(", ")}</span>.
+      </>
+    ) : (
+      <>
+        <span lang={lang}>{shook.lemma}</span> shakes. One leaf falls.
+      </>
+    );
   const line = spokenLine(labels.find((l) => l.kind === "line")?.text, state);
   if (line || !held) return line;
   return <>You hold {held.word ? <span lang={lang}>{held.name}</span> : held.name}.</>;
@@ -180,6 +195,7 @@ const REACH_NAME: Record<Reach, string> = {
   find: "Pick it up",
   hang: "Hang it on the shelf",
   unhang: "Take from the shelf",
+  shake: "Shake the plant",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -196,6 +212,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   leave: ["#........#", "##########", ".########.", "..######.."],
   // Prints, one after the other.
   follow: ["......#.#.", ".......#..", "..........", "..#.#.....", "...#......", "......#.#.", ".......#..", "..#.#.....", "...#......"],
+  // A small plant, shaking.
+  shake: [".#..#..#.", "#..###..#", ".#.#.#.#.", "#...#...#", "....#....", "..#####..", "...###..."],
   // A hook.
   hang: ["..##..", ".#..#.", ".....#", "....#.", "...#..", "...#..", "#..#..", ".##..."],
 };
@@ -328,7 +346,14 @@ export function GardenWalk({
     if (word) void speak(word, tag);
   };
   const leave = { ...given, done: leaveDone };
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand } = useGardenScene({ lang, source, visitors, door, leave, focus, time, detail, wrap, canvas, onFocused: () => setHint(false) });
+  // A shaken plant (#357): counted, said to screen readers and, with sound on, its forms said one by one.
+  const [shook, setShook] = useState<Shook | null>(null);
+  const onShake = (p: PlacedPlant, forms: string[]) => {
+    onTap?.("shake");
+    setShook({ lemma: p.lemma, forms });
+    if (sound && forms.length) void speakAll(forms, tag);
+  };
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand } = useGardenScene({ lang, source, visitors, door, leave, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake });
   const held = hand && handView(hand, lang);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
@@ -338,7 +363,14 @@ export function GardenWalk({
   useEffect(() => {
     if (selectedId && !dialog.current!.contains(document.activeElement)) dialog.current!.focus({ preventScroll: true });
   }, [selectedId]);
-  const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => moved() });
+  // A long press on a plant shakes it (#357); on anything else it does nothing.
+  const onHold = (clientX: number, clientY: number) => {
+    if (!scene.current || !wrap.current) return;
+    const r = wrap.current.getBoundingClientRect();
+    const hit = scene.current.pickAny(clientX - r.left, clientY - r.top, r.width, r.height);
+    if (hit?.kind === "plant") scene.current.shake(hit.p);
+  };
+  const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => moved(), onHold });
 
   useEffect(() => {
     if (!hint) return;
@@ -354,6 +386,7 @@ export function GardenWalk({
   // own, once you are near it (#336).
   const onPointerUp = (e: React.PointerEvent) => {
     if (!endDrag() || !scene.current || !wrap.current) return;
+    setShook(null);
     const r = wrap.current.getBoundingClientRect();
     const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
@@ -460,11 +493,16 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           and for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold. */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, lang)}
+        {spokenStatus(reach, labels, door.state, held, shook, lang)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
-          l.kind === "say" || l.kind === "line" ? (
+          l.kind === "petal" ? (
+            // A form falling from a shaken plant (#357), or a leaf for a word with none.
+            <span key={l.id} className="gw-petal" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
+              {l.text || <LeafMark />}
+            </span>
+          ) : l.kind === "say" || l.kind === "line" ? (
             <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
@@ -476,6 +514,7 @@ export function GardenWalk({
           ) : (
             <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" || l.kind === "scenery" ? l.near : 0.35 + l.near * 0.65 }}>
               {l.known && <LeafMark />}
+              {l.gender && <StakeMark gender={l.gender} />}
               {l.text}
             </span>
           ),
@@ -591,8 +630,9 @@ export function GardenWalk({
             aria-label={REACH_NAME[reach]}
             onClick={() => {
               scene.current?.act(reach);
-              // Leave it out's verbs are counted when they are done (leaveDone): a press may find nothing left to do.
-              if (!LEAVE_ACTS.has(reach)) onTap?.(reach);
+              // Leave it out's verbs are counted when they are done (leaveDone): a press may find nothing left to do. A shake is counted by onShake.
+              if (!LEAVE_ACTS.has(reach) && reach !== "shake") onTap?.(reach);
+              if (reach !== "shake") setShook(null);
               // After the door opens, the key or a find is picked up, something is left or hung, or a walk to the prints starts, there may be nothing
               // in reach: keep keyboard focus in the walk, not lost to the page. Taking from the basket or the shelf keeps the button, for what comes next.
               if (reach === "open" || reach === "key" || (LEAVE_ACTS.has(reach) && reach !== "take" && reach !== "unhang")) canvas.current?.focus({ preventScroll: true });
@@ -622,12 +662,16 @@ export function GardenWalk({
 /** A small pixel-art icon from rows of "#" (drawn) and "." (empty), in the button's colour. */
 function PixelIcon({ rows }: { rows: readonly string[] }) {
   const w = Math.max(...rows.map((r) => r.length));
-  const d = rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === "#" ? [`M${x} ${y}h1v1h-1z`] : []))).join("");
   return (
     <svg viewBox={`-1 -1 ${w + 2} ${rows.length + 2}`} width="32" height="32" aria-hidden="true" shapeRendering="crispEdges">
-      <path d={d} fill="currentColor" />
+      <path d={pixelPath(rows)} fill="currentColor" />
     </svg>
   );
+}
+
+/** An SVG path with a 1×1 square for each "#" in the rows. */
+function pixelPath(rows: readonly string[]): string {
+  return rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === "#" ? [`M${x} ${y}h1v1h-1z`] : []))).join("");
 }
 
 /** Pixel art in its own colours, as big as the action button's icon. */
@@ -647,6 +691,31 @@ function LeafMark() {
   return (
     <svg className="gw-leaf" viewBox="0 0 5 5" width="10" height="10" aria-hidden="true" shapeRendering="crispEdges">
       <path d="M3 0h2v2h-1v1h-1v1h-2v1h-1v-2h1v-1h1v-1h1z" fill="#8ccc6a" />
+    </svg>
+  );
+}
+
+/**
+ * The top of a noun plant's label stake, by the noun's gender (#357): pointed,
+ * round or square, and pointed beside round for a noun that takes either.
+ * Never explained: the learner finds the pattern.
+ */
+const STAKE_TOP = {
+  point: ["...#...", "..###..", ".#####.", "#######"],
+  round: ["..###..", ".#####.", ".#####.", "..###.."],
+  square: [".#####.", ".#####.", ".#####.", ".#####."],
+};
+const STAKE_POST = ["...#...", "...#...", "...#..."];
+const STAKE_TOPS: Record<Gender, (keyof typeof STAKE_TOP)[]> = { m: ["point"], f: ["round"], n: ["square"], mf: ["point", "round"] };
+
+function StakeMark({ gender }: { gender: Gender }) {
+  const tops = STAKE_TOPS[gender];
+  const w = tops.length * 8 - 1;
+  return (
+    <svg className="gw-stake" viewBox={`0 0 ${w} 7`} width={w * 2} height="14" aria-hidden="true" shapeRendering="crispEdges">
+      {tops.map((t, i) => (
+        <path key={t} transform={`translate(${i * 8} 0)`} d={pixelPath([...STAKE_TOP[t], ...STAKE_POST])} fill="#e2bd86" />
+      ))}
     </svg>
   );
 }

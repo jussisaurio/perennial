@@ -3,7 +3,7 @@ import { gateHedge, hedgeClumps, hedgeCore, orchardHedge } from "./hedge";
 import { rayBox } from "./scenery";
 import { collide, DOOR_HALF, layout, WALKER, type GardenPlant } from "./world";
 
-const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: ["noun", "verb", "adj"][i % 3], rank: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false });
+const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: ["noun", "verb", "adj"][i % 3], rank: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
 const gardens = [layout([]), layout(Array.from({ length: 70 }, (_, i) => plant(i))), layout(Array.from({ length: 600 }, (_, i) => plant(i)))];
 /** The door's top (scene.ts DOOR.h) and the eye's height (scene.ts EYE). */
 const DOOR_TOP = 2.05;

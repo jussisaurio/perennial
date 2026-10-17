@@ -165,7 +165,7 @@ test("the basket: the crumbs, then at most three fruits", () => {
 
 test("every find lies inside the fence, clear of the pond, in a small garden and a big one", () => {
   for (const n of [3, 400]) {
-    const l = layout(Array.from({ length: n }, (_, i) => ({ id: `w${i}`, lemma: `w${i}`, gloss: "", pos: "noun", rank: i, s: 1, r: 1, stage: "sprout" as const, growth: 0.2, listen: false, write: false })));
+    const l = layout(Array.from({ length: n }, (_, i) => ({ id: `w${i}`, lemma: `w${i}`, gloss: "", pos: "noun", rank: i, s: 1, r: 1, stage: "sprout" as const, growth: 0.2, listen: false, write: false, forms: [] })));
     for (const spot of ["post", "shed", "hedge", "corner", "far"] as const) {
       const p = findAt(l, spot);
       expect(p.x > l.bounds.minX && p.x < l.bounds.maxX && p.z > l.bounds.minZ && p.z < l.bounds.maxZ).toBe(true);

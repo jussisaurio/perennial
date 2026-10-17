@@ -23,6 +23,8 @@ import { TAP_PRIORITY, type Conditions, type Frame, type Part, type TapHit } fro
 import { LEAVE_STAND, LeaveItOut, type Hand, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
 import { FINDS, type Left, type LeaveWalk } from "./leave";
 import { nounView } from "./nouns";
+import { plantInReach } from "./shake";
+import type { Gender } from "../deck/schema";
 import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 
 export type TimeOfDay = "day" | "dusk" | "night";
@@ -35,10 +37,10 @@ export type TimeOfDay = "day" | "dusk" | "night";
 export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 /** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
 export type DoorAction = "try" | "key" | "open";
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, or leave it out's (#351). */
-export type Reach = DoorAction | "sit" | "stand" | LeaveAct;
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), or shake a plant (#357). */
+export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake";
 
-/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), or a quiet line in English from the garden itself (kind "line"), in screen fractions. */
+/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), or a form falling from a shaken plant (kind "petal", #357; no text: a leaf), in screen fractions. */
 export interface Label {
   id: string;
   text: string;
@@ -46,8 +48,10 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find" | "petal";
   gloss?: string;
+  /** A noun plant's gender: the shape of its label's stake (#357). */
+  gender?: Gender;
   /** A visitor whose noun the learner knows: plant-label styling with a tiny leaf. */
   known?: boolean;
 }
@@ -85,6 +89,8 @@ export interface SceneCallbacks {
   onHand: (h: Hand | null) => void;
   onLeave: (done: LeaveDone) => void;
   onLeft: (left: Left) => void;
+  /** A plant was shaken (#357): the forms that fell from it ([]: one leaf). */
+  onShake: (p: PlacedPlant, forms: string[]) => void;
   /** The learner opened the door with the key: it stays open (saved with the course). */
   onDoorOpen: () => void;
   /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
@@ -180,6 +186,8 @@ export class GardenScene {
   private reach: Reach | null = null;
   /** What the action button acts on when it does leave it out's (#351). */
   private leaveTarget: LeaveTarget | null = null;
+  /** The plant the action button shakes, when it shakes one (#357). */
+  private shakeTarget: PlacedPlant | null = null;
   /** Leave it out (#351): the bowl, the shed and its shelf, and what came in the night. */
   private leaveIt: LeaveItOut;
   /** A find's word and meaning over where it lay, for a few seconds after it is picked up. */
@@ -485,7 +493,19 @@ export class GardenScene {
     if (a === "sit" && !this.seated) this.sit();
     else if (a === "stand") this.standUp();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
+    else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
     else if (a !== "sit" && a === this.reach && this.leaveTarget) this.doLeave(this.leaveTarget);
+  }
+
+  /** A long press on a plant (#357): shake it where it stands when its name shows; from farther away, walk to it first. */
+  shake(p: PlacedPlant) {
+    if (Math.hypot(p.x - this.x, p.z - this.z) < NAME_NEAR) return this.shakeNow(p);
+    const v = viewpoint(this.layout, p);
+    this.goTo(v.x, v.z, 0, () => this.shakeNow(p));
+  }
+
+  private shakeNow(p: PlacedPlant) {
+    this.cb.onShake(p, this.plants.shake(p, this.elapsed, this.reducedMotion));
   }
 
   /** The bowl, a thing in the basket, a hook or the shelf's board, or what came in the night, under a point on the canvas (CSS pixels). Ask after the door. */
@@ -1263,6 +1283,7 @@ export class GardenScene {
   private labels() {
     const v = this.tmp;
     const out: Label[] = this.plants.labelsNear(this.x, this.z, v);
+    out.push(...this.plants.petals(this.elapsed, v));
     const tags: Partial<Record<(typeof LABEL_PRIORITY)[number], Label>> = {};
 
     // A tapped scenery word (#74) is the one tag while it shows: no visitor tag beside it.
@@ -1324,8 +1345,9 @@ export class GardenScene {
    * Tell the page what the action button does now (#334): stand up from the
    * bench, pick up the key, pick up a find (#351), open or try the door, the
    * rest of leave it out's (leave or follow at the bowl, hang on the shelf,
-   * take from the basket or the shelf), or sit on the bench, for whichever is in reach (in
-   * that order); or nothing. The thing in reach glints (the cue).
+   * take from the basket or the shelf), sit on the bench, or shake the plant
+   * ahead of you (#357), for whichever is in reach (in that order); or nothing.
+   * The thing in reach glints (the cue).
    */
   private reportReach() {
     const d = this.door;
@@ -1336,13 +1358,16 @@ export class GardenScene {
     // A find at your feet comes before the door: the gate post's feather lies in the door's reach.
     const leave = this.seated || nearKey ? null : this.leaveIt.reachAt(this.x, this.z);
     const mine = leave && (leave.a === "find" || !nearDoor) ? leave : null;
-    const a: Reach | null = this.seated ? "stand" : nearKey ? "key" : mine?.a === "find" ? "find" : nearDoor ? (d.state === "held" ? "open" : "try") : mine ? mine.a : nearBench ? "sit" : null;
+    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : mine?.a === "find" ? "find" : nearDoor ? (d.state === "held" ? "open" : "try") : mine ? mine.a : nearBench ? "sit" : null;
+    const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
+    const a: Reach | null = plant ? "shake" : before;
     const target = mine?.target ?? null;
     // Targets are made once (LeaveItOut.reachAt), so the same target is the same object.
-    if (a === this.reach && target === this.leaveTarget) return;
+    if (a === this.reach && target === this.leaveTarget && plant === this.shakeTarget) return;
     this.reach = a;
     this.leaveTarget = target;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : a === "try" || a === "open" ? d.handle : target ? this.leaveIt.cueAt(target) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : null;
+    this.shakeTarget = plant;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : a === "try" || a === "open" ? d.handle : target ? this.leaveIt.cueAt(target) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
     this.cue.visible = !!at;
     if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);

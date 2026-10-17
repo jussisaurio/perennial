@@ -462,7 +462,7 @@ export const GrowthStrip = memo(function GrowthStrip() {
               ) : (
                 <g className="sway" style={{ animationDelay: `${-i}s` }}>
                   <StripPlant
-                    p={{ id: `demo${i + 2}`, lemma: ["", "casa", "mañana", "Blume", "perennial"][i], gloss: "", pos: "", rank: 0, s: st.s, r: 1, stage, growth: growthOf(st.s), listen: st.s >= OLD_S, write: st.s >= OLD_S }}
+                    p={{ id: `demo${i + 2}`, lemma: ["", "casa", "mañana", "Blume", "perennial"][i], gloss: "", pos: "", rank: 0, s: st.s, r: 1, stage, growth: growthOf(st.s), listen: st.s >= OLD_S, write: st.s >= OLD_S, forms: [] }}
                     scale={1.25}
                     highlighted={false}
                   />

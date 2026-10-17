@@ -282,7 +282,7 @@ describe("the cat (after a break)", () => {
 });
 
 describe("the snail's daily lap", () => {
-  const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `w${i}`, gloss: "", pos: i % 2 ? "noun" : "verb", rank: i, s: 10, r: 0.9, stage: "bud", growth: 0.5, listen: false, write: false });
+  const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `w${i}`, gloss: "", pos: i % 2 ? "noun" : "verb", rank: i, s: 10, r: 0.9, stage: "bud", growth: 0.5, listen: false, write: false, forms: [] });
   const l = layout(Array.from({ length: 80 }, (_, i) => plant(i)));
   const pickets = fencePickets(l);
 
