@@ -5,14 +5,18 @@ import { collide, layout, WALKER, type GardenPlant } from "./world";
 const plant = (i: number, pos = "noun"): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos, rank: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false });
 const gardens = [0, 3, 40, 300].map((n) => layout(Array.from({ length: n }, (_, i) => plant(i, i % 3 ? "noun" : "verb"))));
 
-/** A scene stand-in that records who answered. */
-function scene(here: { frogOnPad?: boolean; frog?: boolean; dog?: boolean; plant?: boolean }) {
+/** Where a thing came down, for the answers: the first loose thing, at the origin. */
+const AT = { i: 0, x: 0, z: 0 };
+
+/** A scene stand-in that records who answered. `fetching`: the dog is out on a fetch already. */
+function scene(here: { frogOnPad?: boolean; frog?: boolean; dog?: boolean; fetching?: boolean; plant?: boolean }) {
   const did: string[] = [];
   const who: Answerers = {
     frogHop: () => (here.frogOnPad ? (did.push("hop"), true) : false),
     say: (id, text) => (here[id] ? (did.push(`${id}:${text}`), true) : false),
     perk: () => (here.plant ? (did.push("perk"), true) : false),
     echo: (n) => void did.push(`echo:${n}`),
+    fetch: (at) => (here.dog && !here.fetching ? (did.push(`fetch:${at.i}`), true) : false),
   };
   return { who, did };
 }
@@ -54,16 +58,19 @@ describe("the rows", () => {
     expect(reaction("stick", "pond")).toMatchObject({ then: "float", ripple: true });
   });
 
-  test("only a pebble goes on the cairn; only the stick makes the dog look", () => {
+  test("only a pebble goes on the cairn; the dog fetches anything but a pebble (#335 S2)", () => {
     expect(reaction("pebble", "cairn").then).toBe("stack");
     expect(reaction("stick", "cairn")).toEqual(reaction("stick", "ground"));
-    expect(reaction("stick", "dog").answer).toBe("dog");
+    for (const thing of ["stick", "sock", "sign", "hat", "gnome", "fruit"] as const) {
+      expect(reaction(thing, "dog").answer).toBe("dog");
+      expect(reaction(thing, "pond")).toMatchObject({ then: "float", ripple: true });
+    }
     expect(reaction("pebble", "dog")).toEqual(reaction("pebble", "ground"));
   });
 
   test("the frog hops away from the first few pebbles, then only looks at you", () => {
     const { who, did } = scene({ frogOnPad: true, frog: true });
-    const said = Array.from({ length: FROG_PATIENCE + 2 }, (_, n) => ANSWERS.frog(who, { x: 0, z: 0 }, n));
+    const said = Array.from({ length: FROG_PATIENCE + 2 }, (_, n) => ANSWERS.frog(who, AT, n));
     expect(said.slice(0, FROG_PATIENCE)).toEqual(Array(FROG_PATIENCE).fill("The frog hops to another pad."));
     expect(said.slice(FROG_PATIENCE)).toEqual(["The frog looks at you.", "The frog looks at you."]);
     expect(did).toEqual([...Array(FROG_PATIENCE).fill("hop"), "frog:…", "frog:…"]);
@@ -71,17 +78,20 @@ describe("the rows", () => {
 
   test("no frog on a pad, no dog, no plant near: nobody answers, and nothing is said for them", () => {
     const { who, did } = scene({});
-    expect(ANSWERS.frog(who, { x: 0, z: 0 }, 0)).toBeNull();
-    expect(ANSWERS.frog(who, { x: 0, z: 0 }, FROG_PATIENCE)).toBeNull();
-    expect(ANSWERS.dog(who, { x: 0, z: 0 }, 0)).toBeNull();
-    expect(ANSWERS.plant(who, { x: 0, z: 0 }, 0)).toBeNull();
+    expect(ANSWERS.frog(who, AT, 0)).toBeNull();
+    expect(ANSWERS.frog(who, AT, FROG_PATIENCE)).toBeNull();
+    expect(ANSWERS.dog(who, AT, 0)).toBeNull();
+    expect(ANSWERS.plant(who, AT, 0)).toBeNull();
     expect(did).toEqual([]);
   });
 
-  test("the dog sees the stick", () => {
-    const { who, did } = scene({ dog: true });
-    expect(ANSWERS.dog(who, { x: 0, z: 0 }, 0)).toBe("The dog looks at the stick.");
-    expect(did).toEqual(["dog:!"]);
+  test("the dog runs after what came down; still out on a fetch, it only looks", () => {
+    const idle = scene({ dog: true });
+    expect(ANSWERS.dog(idle.who, { i: 6, x: 1, z: 2 }, 0)).toBe("The dog runs after it.");
+    expect(idle.did).toEqual(["fetch:6"]);
+    const busy = scene({ dog: true, fetching: true });
+    expect(ANSWERS.dog(busy.who, AT, 1)).toBe("The dog looks at it.");
+    expect(busy.did).toEqual(["dog:!"]);
   });
 });
 

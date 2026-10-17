@@ -310,11 +310,29 @@ const GNOME_SIDE_ROWS = gnome([
   "..oWWWBBBBBBBo..",
   "..oSBBBBBBBBBBS.",
 ]);
-/** The gnome facing you or looking away, with its lantern unlit (by day) or lit. */
-export function gnomeArt(pose: "front" | "side", lit: boolean): PixelArt {
-  const rows = { front: GNOME_FRONT_ROWS, side: GNOME_SIDE_ROWS }[pose];
+/** Hatless, its back to you (the dog has its hat, #335 S2): a bald head, a fringe of white hair, the coat. */
+const GNOME_BACK_ROWS = [
+  ...Array(6).fill("................"),
+  ".......o.o......",
+  ".....oooooo.....",
+  "....oSSSSSSo....",
+  "...oSSSSSSSSo...",
+  "...oSSSSSSSSo...",
+  "..SoWWWWWWWWoS..",
+  "..oWWWWWWWWWWo..",
+  "..oBBBBBBBBBBo..",
+  "..oBBBBBBBBBBo..",
+  ".oBBBBBBBBBBBBo.",
+  ".SBBBBBBBBBBBBS.",
+  ...GNOME_LEGS,
+];
+/** The gnome facing you or looking away, or hatless with its back to you, with its lantern unlit (by day) or lit. */
+export function gnomeArt(pose: "front" | "side" | "back", lit: boolean): PixelArt {
+  const rows = { front: GNOME_FRONT_ROWS, side: GNOME_SIDE_ROWS, back: GNOME_BACK_ROWS }[pose];
   return { rows, pal: { ...GNOME_PAL, L: lit ? "#ffe680" : "#4a4048" } };
 }
+/** The gnome's hat, on its own (the dog brings it back, #335 S2). */
+export const GNOME_HAT_ART: PixelArt = { rows: GNOME_HAT, pal: GNOME_PAL };
 
 // Hide-and-seek (#379): how the gnome looks where it hides, and once it is found.
 const GNOME_EYES = ["...oSSSSSSSSo...", "...oSeSSSSeSo..."];

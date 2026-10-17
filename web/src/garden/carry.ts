@@ -3,13 +3,15 @@
 // when one lands somewhere. What happens is data: one row per (thing, place),
 // so a new joke is one row. Who answers (the frog, the dog, a plant, the well) is a small
 // function each, on an interface the scene fills in. Nothing here is saved: a
-// thrown pebble is back by the pond next visit.
+// thrown pebble is back by the pond next visit. What the dog brings back when
+// it fetches (fetch.ts) is a loose thing too.
 
 import { hash32 } from "../lib/seed";
+import type { Fetchable } from "./fetch";
 import { collide, type Layout } from "./world";
 
-/** A loose thing you can pick up. */
-export type Loose = "pebble" | "stick";
+/** A loose thing you can pick up: a pebble, or anything the dog fetches. */
+export type Loose = "pebble" | Fetchable;
 
 /** Where a thing lands: in the pond, on the flat stone by the pond (the cairn), down the orchard's well, by the dog, in a bed, or on the ground. */
 export type Place = "pond" | "cairn" | "well" | "dog" | "bed" | "ground";
@@ -35,6 +37,13 @@ export interface Reaction {
 /** Anything that lands where no row says otherwise. */
 const LIE: Reaction = { then: "lie", said: "It lands on the ground." };
 
+/** Anything the dog fetches: it floats on the pond (`floats`: what a screen reader hears), the dog runs after it (fetch.ts), and a plant by it perks up. */
+const fetched = (floats: string): Partial<Record<Place, Reaction>> => ({
+  pond: { then: "float", ripple: true, said: floats },
+  dog: { then: "lie", answer: "dog", said: "It lands by the dog." },
+  bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
+});
+
 /** The rows: (thing, place) → what happens. A place with no row here is the ground. */
 export const ROWS: Record<Loose, Partial<Record<Place, Reaction>>> = {
   pebble: {
@@ -44,12 +53,12 @@ export const ROWS: Record<Loose, Partial<Record<Place, Reaction>>> = {
     bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
     well: { then: "sink", answer: "well", said: "It falls a long way. Plop." },
   },
-  stick: {
-    pond: { then: "float", ripple: true, said: "Splash. The stick floats." },
-    // Fetch (#335 S2) grows from this row: for now the dog only sees the stick.
-    dog: { then: "lie", answer: "dog", said: "It lands by the dog." },
-    bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
-  },
+  stick: fetched("Splash. The stick floats."),
+  sock: fetched("Splash. The sock floats."),
+  sign: fetched("Splash. The sign floats."),
+  hat: fetched("Splash. The hat floats."),
+  gnome: fetched("Splash. The gnome floats, very stiff."),
+  fruit: fetched("Splash. The fruit bobs on the water."),
 };
 
 export function reaction(thing: Loose, place: Place): Reaction {
@@ -58,6 +67,13 @@ export function reaction(thing: Loose, place: Place): Reaction {
 
 /** How many pebbles the frog hops away from in one visit; after that it only looks at you. */
 export const FROG_PATIENCE = 3;
+
+/** Where a thing came down: `i` is which loose thing it is (the scene's own index), for the dog to run after. */
+export interface Down {
+  i: number;
+  x: number;
+  z: number;
+}
 
 /** What the scene lets an answer do. Each returns false when that one is not here to answer. */
 export interface Answerers {
@@ -69,6 +85,8 @@ export interface Answerers {
   perk(x: number, z: number): boolean;
   /** A moment later the well's echo says an old word (well.ts), for the `n`th pebble this visit, with its own line. */
   echo(n: number): void;
+  /** The dog runs after what came down, to bring something back (fetch.ts). False while it is still out on a fetch. */
+  fetch(at: Down): boolean;
 }
 
 /**
@@ -76,9 +94,10 @@ export interface Answerers {
  * one has answered before, this visit. Small functions, so each can move into
  * its visitor's own file (#324).
  */
-export const ANSWERS: Record<Answer, (who: Answerers, at: { x: number; z: number }, n: number) => string | null> = {
+export const ANSWERS: Record<Answer, (who: Answerers, at: Down, n: number) => string | null> = {
   frog: (who, _, n) => (n < FROG_PATIENCE ? (who.frogHop() ? "The frog hops to another pad." : null) : who.say("frog", "…") ? "The frog looks at you." : null),
-  dog: (who) => (who.say("dog", "!") ? "The dog looks at the stick." : null),
+  // Still out on the last fetch, it only looks.
+  dog: (who, at) => (who.fetch(at) ? "The dog runs after it." : who.say("dog", "!") ? "The dog looks at it." : null),
   plant: (who, at) => (who.perk(at.x, at.z) ? "A plant perks up." : null),
   // Nothing more now: the echo comes a moment later, and says itself.
   well: (who, _, n) => {

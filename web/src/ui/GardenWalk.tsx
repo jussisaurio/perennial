@@ -69,10 +69,10 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  * (#379); what fell from a shaken plant (#357); who answered a call (#377); a visitor's own line (#376: the
  * goat up high, the mole caught); the door's line; a lantern that
  * is out, and the stars once every one is (#361); what a thrown thing did
- * where it landed (#358); what they hold. Things in the world, never
- * instructions (#334).
+ * where it landed (#358), or what the dog brought back (#335 S2), and its
+ * word; what they hold. Things in the world, never instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: Landed | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
@@ -138,9 +138,25 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.
-  if (!held) return landed;
+  if (!held)
+    return (
+      landed && (
+        <>
+          {landed.said}
+          {landed.word && (
+            <>
+              {" "}
+              <span lang={lang}>{landed.word}</span>
+            </>
+          )}
+        </>
+      )
+    );
   return <>You hold {held.word ? <span lang={lang}>{held.name}</span> : held.name}.</>;
 }
+
+/** What a screen reader last heard of a loose thing (#358): where it landed, or what the dog brought back (#335 S2) and its word in the course language. */
+type Landed = { said: string; word: string | null };
 
 /** The door's line as a screen reader hears it: the locked line also says where this learner's key lies, once there is one. */
 function spokenLine(line: string | undefined, state: DoorState): string | undefined {
@@ -283,6 +299,11 @@ const REACH_NAME: Record<Reach, string> = {
   shake: "Shake the plant",
   "lift-pebble": "Pick up the pebble",
   "lift-stick": "Pick up the stick",
+  "lift-sock": "Pick up the sock",
+  "lift-sign": "Pick up the sign",
+  "lift-hat": "Pick up the hat",
+  "lift-gnome": "Pick up the gnome",
+  "lift-fruit": "Pick up the fruit",
   throw: "Throw it",
   stack: "Put it on the stones",
   blow: "Blow the dandelion",
@@ -292,6 +313,7 @@ const REACH_NAME: Record<Reach, string> = {
   call: "Call",
   well: "Drop it in the well",
   seek: "Found you",
+  give: "Give the hat back",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -314,6 +336,11 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   hang: ["..##..", ".#..#.", ".....#", "....#.", "...#..", "...#..", "#..#..", ".##..."],
   "lift-pebble": HAND,
   "lift-stick": HAND,
+  "lift-sock": HAND,
+  "lift-sign": HAND,
+  "lift-hat": HAND,
+  "lift-gnome": HAND,
+  "lift-fruit": HAND,
   // An arc, coming down.
   throw: ["..######....", ".#......#...", "#........#..", "#........#..", "#......#####", "#.......###.", "#........#.."],
   // Three stones, one on another.
@@ -332,11 +359,15 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   well: ["....##....", "....##....", "..........", "....##....", "..........", "#........#", "#........#", "##########", "##########"],
   // An open eye: I see you.
   seek: ["...####...", ".##....##.", "#...##...#", "#..####..#", "#...##...#", ".##....##.", "...####..."],
+  // A pointed hat.
+  give: ["....#....", "...###...", "...###...", "..#####..", "..#####..", ".#######.", "#########"],
 };
 
 /** Leave it out's actions (#351, sceneLeave.ts LeaveAct) and carry's (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
 const LEAVE_ACTS = new Set<Reach>(["take", "leave", "follow", "find", "hang", "unhang"] satisfies LeaveAct[]);
-const CARRY_ACTS = new Set<Reach>(["lift-pebble", "lift-stick", "throw", "stack", "well"] satisfies CarryAct[]);
+/** Picking up a loose thing keeps the action button, for what comes next (a throw). */
+const LIFTS = new Set<Reach>(["lift-pebble", "lift-stick", "lift-sock", "lift-sign", "lift-hat", "lift-gnome", "lift-fruit"] satisfies CarryAct[]);
+const CARRY_ACTS = new Set<Reach>([...LIFTS, "throw", "stack", "well", "give"] satisfies Reach[]);
 /** The toys' actions (#360, sceneToys.ts ToyAct). */
 const TOY_ACTS = new Set<Reach>(["blow", "fold"] satisfies ToyAct[]);
 
@@ -345,7 +376,8 @@ const TOY_ACTS = new Set<Reach>(["blow", "fold"] satisfies ToyAct[]);
 type HandView = { art: PixelArt; name: string; word: boolean };
 
 function handView(h: Held, lang: string): HandView {
-  if (h.from === "ground") return { art: LOOSE_ART[h.thing], name: `the ${h.thing}`, word: false };
+  // A fruit the dog brought (#335 S2) is one of the learner's words, as the basket's are.
+  if (h.from === "ground") return h.thing === "fruit" ? { art: fruitArt(h.fruit.kind), name: h.fruit.lemma, word: true } : { art: LOOSE_ART[h.thing], name: `the ${h.thing}`, word: false };
   if (h.from === "shelf") {
     const v = nounView(FINDS[h.find], lang);
     // A course with no word for it says its meaning.
@@ -499,13 +531,17 @@ export function GardenWalk({
     if (e.did === "brush") brushNote(e.word, e.clear);
     else if (e.did === "bump" && e.fell === "fruit" && sound) void speak(e.word, tag);
   };
-  // What a thrown or put-down thing did where it landed (#358), for screen readers. Doing something with it ends what a shake said.
-  const [landed, setLanded] = useState<string | null>(null);
+  // What a thrown or put-down thing did where it landed (#358), or what the dog brought back (#335 S2), for screen readers. Doing something with it ends what a shake said.
+  // With sound on, what the dog brought says its word, as a find does.
+  const [landed, setLanded] = useState<Landed | null>(null);
   const carryDone = (d: CarryDone) => {
-    if (d.did === "land") return setLanded(d.said);
+    if (d.did === "land") return setLanded({ said: d.said, word: null });
     onTap?.(d.did);
     setShook(null);
     setCalled(null);
+    if (d.did !== "fetch" && d.did !== "give") return;
+    setLanded({ said: d.said, word: d.word });
+    if (sound && d.word) void speak(d.word, tag);
   };
   const [showcaseToys] = useState(showcaseToysNow);
   // What a toy just did (#360), told to screen readers for a few seconds. Played with is counted; with sound on, the boat says its word.
@@ -714,7 +750,7 @@ export function GardenWalk({
             <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
-          ) : l.kind === "tree" || l.kind === "find" || l.kind === "fruit" || l.kind === "boat" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
+          ) : l.kind === "tree" || l.kind === "find" || l.kind === "fetch" || l.kind === "fruit" || l.kind === "boat" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
             <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               <i>{l.text}</i>
               {/* A visitor found hiding (#379) says where it was in place of its meaning. */}
@@ -846,7 +882,7 @@ export function GardenWalk({
               if (reach !== "call") setCalled(null);
               // After the door opens, the key or a find is picked up, something is left, hung, thrown or stacked, a toy is played with, or a walk to the prints starts, there may be
               // nothing in reach: keep keyboard focus in the walk, not lost to the page. Taking or picking up keeps the button, for what comes next (a throw).
-              const keeps = reach === "take" || reach === "unhang" || reach === "lift-pebble" || reach === "lift-stick";
+              const keeps = reach === "take" || reach === "unhang" || LIFTS.has(reach);
               if (reach === "open" || reach === "key" || reach === "seek" || ((LEAVE_ACTS.has(reach) || CARRY_ACTS.has(reach) || TOY_ACTS.has(reach)) && !keeps)) canvas.current?.focus({ preventScroll: true });
             }}
           >

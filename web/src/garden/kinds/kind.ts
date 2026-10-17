@@ -103,9 +103,11 @@ export interface Visitor<F extends string> {
   body: Body<F>;
   /**
    * One frame: react to you (f.x, f.z) and move. `seen`: it is on screen.
-   * Allocates nothing. "startled": it flew off, so its tapped tag goes.
+   * Allocates nothing. "startled": it flew off, so its tapped tag goes. On a
+   * fetch (#335 S2): "took", it reached what it ran to and took something in
+   * its mouth; "dropped", it dropped that where it is drawn, by your feet.
    */
-  step?(f: Frame, seen: boolean): void | "startled";
+  step?(f: Frame, seen: boolean): void | "startled" | "took" | "dropped";
   onConditions?(c: Conditions): void;
   /** Its answer to a tap, said in a bubble instead of its tag; null shows its tag as usual. */
   onTap?(t: Tap): string | null;
@@ -122,6 +124,12 @@ export interface Visitor<F extends string> {
   onLanterns?(on: readonly boolean[]): string | null;
   /** You whistled (#377): it answers in its own way (its Body moves in the next steps), or null when it does not. Asked only while it is seen. */
   onCall?(c: Call): Heard | null;
+  /** Fetch (#335 S2): run to (x, z), take something there, and bring it to you (step says when). False while it is out on a fetch already. */
+  fetch?(x: number, z: number): boolean;
+  /** The dog fetched something of its (#335 S2): its hat, or itself, carried off very stiff. */
+  onTaken?(what: "hat" | "self"): void;
+  /** Its hat is given back. */
+  onHatBack?(): void;
 }
 
 export interface VisitorKind<F extends string = string> {
