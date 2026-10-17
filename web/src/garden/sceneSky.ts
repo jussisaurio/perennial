@@ -6,6 +6,8 @@
 // hillProfile below to build that hit test's world).
 
 import * as THREE from "three";
+import { sunPath, SUN_AT, type Look } from "./bench";
+import type { TimeOfDay } from "./scene";
 import type { BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
@@ -16,17 +18,35 @@ export const HILLS = { radius: 150, height: 34, y: 10, repeat: 4 };
 const UP = new THREE.Vector3(0, 1, 0);
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
+/** The clouds' colour at each time of day. */
+const CLOUD: Record<TimeOfDay, THREE.Color> = { day: new THREE.Color(0xffffff), dusk: new THREE.Color(0xffd2c0), night: new THREE.Color(0x39406a) };
+/** How fast the clouds drift (rad/s), and how much faster for each part of the day a second while time speeds up on the bench (#362), up to `max`. */
+const CLOUD_DRIFT = { speed: 0.004, race: 4, max: 0.6 };
 
 /** What building this part returns for the parts built after it: the lily pads, for the frog and the fish. */
 export interface SkySpots {
   pads: [number, number][];
 }
 
+/** Show a texture on a material, telling three.js only when it changes (blend runs every frame). */
+function show(m: THREE.MeshBasicMaterial | THREE.SpriteMaterial, tex: THREE.Texture) {
+  if (m.map === tex) return;
+  m.map = tex;
+  m.needsUpdate = true;
+}
+
 export class SkyWater implements Part {
   private camera: THREE.PerspectiveCamera;
   private reducedMotion: boolean;
   private skyMat!: THREE.MeshBasicMaterial;
+  /** The next part of the day's sky, faded in over this one while time speeds up on the bench (#362). */
+  private nextSky!: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>;
   private hillMat!: THREE.MeshBasicMaterial;
+  /** Each time of day's sky, hills and sun, drawn once: the time-lapse on the bench swaps them as it goes, and a frame makes nothing. */
+  private looks!: Record<TimeOfDay, { sky: THREE.Texture; hills: THREE.Texture; sun: THREE.Texture }>;
+  /** How fast the clouds drift now (rad/s). */
+  private drift = CLOUD_DRIFT.speed;
+  private sunAt: [number, number, number] = [0, 0, 0];
   private clouds: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
   private sun!: THREE.Sprite;
   private water!: THREE.Texture;
@@ -67,6 +87,11 @@ export class SkyWater implements Part {
     const dome = new THREE.Mesh(new THREE.SphereGeometry(240, 16, 12), this.skyMat);
     dome.renderOrder = -2;
     c.scene.add(dome);
+    // Just inside the dome, so it draws over it.
+    this.nextSky = new THREE.Mesh(new THREE.SphereGeometry(238, 16, 12), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false, transparent: true }));
+    this.nextSky.renderOrder = -2;
+    this.nextSky.visible = false;
+    c.scene.add(this.nextSky);
     this.hillMat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, fog: false, depthWrite: false });
     const hillRing = new THREE.Mesh(new THREE.CylinderGeometry(HILLS.radius, HILLS.radius, HILLS.height, 32, 1, true), this.hillMat);
     hillRing.position.y = HILLS.y;
@@ -87,6 +112,16 @@ export class SkyWater implements Part {
 
   /** The sun (or moon), always on top of the sky and hills. */
   private buildSun(c: BuildCtx) {
+    const look = (time: TimeOfDay) => {
+      const sky = T.pixelTexture(T.sky(T.SKIES[time], time === "night"));
+      // The gradient covers the upper half of the dome; below the horizon it clamps.
+      sky.repeat.set(1, 2);
+      sky.offset.set(0, -1);
+      const hills = T.pixelTexture(T.hills(time === "night"), true);
+      hills.repeat.set(HILLS.repeat, 1);
+      return { sky, hills, sun: T.pixelTexture(T.sun(time)) };
+    };
+    this.looks = { day: look("day"), dusk: look("dusk"), night: look("night") };
     this.sun = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, depthWrite: false, transparent: true, alphaTest: 0.5 }));
     this.sun.scale.set(16, 16, 1);
     this.sun.renderOrder = -1;
@@ -130,33 +165,45 @@ export class SkyWater implements Part {
   }
 
   onConditions(c: Conditions) {
-    const s = T.SKIES[c.time];
-    this.skyMat.map?.dispose();
-    const skyTex = T.pixelTexture(T.sky(s, c.night));
-    // The gradient covers the upper half of the dome; below the horizon it clamps.
-    skyTex.repeat.set(1, 2);
-    skyTex.offset.set(0, -1);
-    this.skyMat.map = skyTex;
-    this.skyMat.needsUpdate = true;
-    this.hillMat.map?.dispose();
-    const hills = T.pixelTexture(T.hills(c.night), true);
-    hills.repeat.set(HILLS.repeat, 1);
-    this.hillMat.map = hills;
-    this.hillMat.needsUpdate = true;
-    for (const cloud of this.clouds) cloud.material.color.set(c.night ? 0x39406a : c.time === "dusk" ? 0xffd2c0 : 0xffffff);
-    this.sun.material.map?.dispose();
-    this.sun.material.map = T.pixelTexture(T.sun(c.time));
-    this.sun.material.needsUpdate = true;
-    // High in the south-west by day, low in the west at dusk, the moon in the east at night.
-    const [sx, sy, sz] = c.time === "day" ? [-0.5, 0.55, -0.7] : c.time === "dusk" ? [-0.95, 0.12, -0.3] : [0.6, 0.45, -0.65];
-    this.sunDir.set(sx, sy, sz).normalize();
+    const look = this.looks[c.time];
+    show(this.skyMat, look.sky);
+    show(this.hillMat, look.hills);
+    for (const cloud of this.clouds) cloud.material.color.copy(CLOUD[c.time]);
+    show(this.sun.material, look.sun);
+    const [x, y, z] = SUN_AT[c.time];
+    this.sunDir.set(x, y, z).normalize();
+  }
+
+  /**
+   * Time speeding up on the bench (#362), after onConditions for the time of
+   * day nearer now: the next sky fades in over this one, the clouds change
+   * colour and race (`race`: parts of the day a second, negative while it runs
+   * back), and the sun or moon moves. With reduced motion, only the fade: the
+   * clouds and the sun stay still. Null: time runs as usual again.
+   */
+  blend(look: Look | null, race: number) {
+    this.drift = CLOUD_DRIFT.speed + Math.max(-CLOUD_DRIFT.max, Math.min(CLOUD_DRIFT.max, race * CLOUD_DRIFT.race));
+    this.nextSky.visible = !!look && look.k > 0;
+    if (!look) return;
+    show(this.skyMat, this.looks[look.from].sky);
+    show(this.nextSky.material, this.looks[look.to].sky);
+    this.nextSky.material.opacity = look.k;
+    for (const cloud of this.clouds) cloud.material.color.copy(CLOUD[look.from]).lerp(CLOUD[look.to], look.k);
+    if (this.reducedMotion) return;
+    const at = sunPath(look, this.sunAt);
+    this.sunDir.set(at[0], at[1], at[2]).normalize();
   }
 
   tick(f: Frame) {
     if (!this.reducedMotion) {
       this.water.offset.set((f.elapsed * 0.02) % 1, Math.sin(f.elapsed * 0.3) * 0.03);
-      for (const cloud of this.clouds) cloud.position.applyAxisAngle(UP, f.dt * 0.004);
+      for (const cloud of this.clouds) cloud.position.applyAxisAngle(UP, f.dt * this.drift);
     }
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
+  }
+
+  /** Every time of day's sky, hills and sun: the scene's own sweep frees only those on show. */
+  dispose() {
+    for (const look of Object.values(this.looks)) for (const t of Object.values(look)) t.dispose();
   }
 }

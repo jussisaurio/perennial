@@ -123,12 +123,19 @@ rendering code should follow, and the places it still does not (yet):
 - **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.
 - **Behaviour gets time only from the `Frame` it is ticked with, or from
-  `Conditions`** (`conditions.ts`: `{ time, dark, night }`, what `setTime`
+  `Conditions`** (`conditions.ts`: `{ time, dark, night }`, what `showTime`
   broadcasts — weather and the season will join it later), **never from `Date`, `performance.now()` or
   `Math.random()` directly.** Build-time placement may still use the seeded
   `rand()` passed through `BuildCtx`, or the calendar-day helpers in
   `core/day.ts` (which visitors already used before this): those pick *what*
   is in the garden today, not how it moves from frame to frame.
+- **The time of day on show can differ from the one chosen** while time
+  speeds up on the bench (#362): `time` is what the clock or the button chose,
+  `shown` is what the parts get as `Conditions`. The host works out the
+  time-lapse from the seconds sat (`garden/bench.ts`, pure) and, each frame,
+  fades the sky (`SkyWater.blend`), the tint and the fog between two times of
+  day. The sky, hills and sun textures for every time of day are drawn once,
+  so this makes nothing new each frame.
 
 Known exceptions, not yet brought in line:
 - **The hedge, the orchard and leave it out's bowl and shed (`sceneLeave.ts`,

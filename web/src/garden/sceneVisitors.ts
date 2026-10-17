@@ -116,6 +116,8 @@ export class SceneVisitors implements Part {
   private fish = { a: 0, heading: null as THREE.InstancedBufferAttribute | null };
   /** The butterfly is off its flower (tick() moves it only then). */
   private butterflyUp = false;
+  /** Visitors sitting with you on the bench (#362): they do not shy away or wake up as you are near. */
+  private settled = new Set<VisitorId>();
 
   private world: VisitorWorld;
   private list: VisitorView[];
@@ -123,6 +125,12 @@ export class SceneVisitors implements Part {
   constructor(world: VisitorWorld, list: VisitorView[]) {
     this.world = world;
     this.list = list;
+  }
+
+  /** Is this visitor here today? No allocation: the bench asks every frame while you sit (#362). */
+  has(id: VisitorId): boolean {
+    for (const s of this.sprites) if (s.v.id === id) return true;
+    return false;
   }
 
   /**
@@ -306,10 +314,13 @@ export class SceneVisitors implements Part {
   /**
    * A visitor waits somewhere else for now (#334: by a key left waiting), or
    * (null) goes back to its own spot. A visitor not here today: nothing to move.
+   * `settled`: it sits with you on the bench (#362), and does not mind you there.
    */
-  visit(id: VisitorId, at: [number, number, number] | null) {
+  visit(id: VisitorId, at: [number, number, number] | null, settled = false) {
     const s = this.sprites.find((o) => o.v.id === id);
     if (!s) return;
+    if (settled) this.settled.add(id);
+    else this.settled.delete(id);
     [s.x, s.y, s.z] = at ?? s.home;
     s.pos.setXYZ(0, s.x, s.y, s.z);
     s.pos.needsUpdate = true;
@@ -425,14 +436,14 @@ export class SceneVisitors implements Part {
         s.pos.needsUpdate = true;
         showCell(s.uv, !resting && Math.sin(elapsed * 28) > 0 ? T.VISITOR_CELL.mothOpen : T.VISITOR_CELL.mothClosed);
       } else if (s.v.id === "cat") {
-        const awake = d < 2.4;
+        const awake = d < 2.4 && !this.settled.has("cat");
         if (awake !== this.catAwake) {
           this.catAwake = awake;
           showCell(s.uv, awake ? T.VISITOR_CELL.catAwake : T.VISITOR_CELL.catAsleep);
         }
       } else if (s.v.id === "bird") {
         const bd = this.bird;
-        if (bd.t < 0 && d < 1) {
+        if (bd.t < 0 && d < 1 && !this.settled.has("bird")) {
           // Away from you, a little to the side.
           const k = 1 / Math.max(d, 0.01);
           bd.dx = (s.x - x) * k;
