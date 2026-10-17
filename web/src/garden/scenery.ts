@@ -22,6 +22,8 @@ export type SceneryId =
   | "lily"
   | "lantern"
   | "sign"
+  | "sundial"
+  | "doormat"
   | "bed"
   | "path"
   | "grass"
@@ -51,6 +53,10 @@ export const SCENERY: Record<SceneryId, NounDef> = {
   lily: { words: { es: "el nenúfar", de: "die Seerose" }, gloss: "water lily" },
   lantern: { words: { es: "el farol", de: "die Laterne" }, gloss: "lantern" },
   sign: { words: { es: "el letrero", de: "das Schild" }, gloss: "sign" },
+  // By the bench (#364). Its shadow tells the real time.
+  sundial: { words: { es: "el reloj de sol", de: "die Sonnenuhr" }, gloss: "sundial" },
+  // The mouse door's mat (#364): named for what is written on it, not for the mat.
+  doormat: { words: { es: "la bienvenida", de: "das Willkommen" }, gloss: "welcome" },
   bed: { words: { es: "el bancal", de: "das Beet" }, gloss: "flower bed" },
   path: { words: { es: "el camino", de: "der Weg" }, gloss: "path" },
   grass: { words: { es: "la hierba", de: "das Gras" }, gloss: "grass" },

@@ -32,7 +32,8 @@ describe("scenery words", () => {
   test("every entry has a Spanish and a German word with its article, and a plain gloss", () => {
     for (const id of ids) {
       const d = SCENERY[id];
-      expect(d.words.es).toMatch(/^(el|la|los|las) \p{L}+$/u);
+      // One noun, or a noun with "de" (el reloj de sol).
+      expect(d.words.es).toMatch(/^(el|la|los|las) \p{L}+( de \p{L}+)?$/u);
       expect(d.words.de).toMatch(/^(der|die|das) \p{Lu}\p{L}+$/u);
       expect(d.gloss).toMatch(/^[a-z]+( [a-z]+)?$/);
     }

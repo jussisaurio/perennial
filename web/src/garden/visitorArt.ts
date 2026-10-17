@@ -202,6 +202,21 @@ export const KOI: PixelArt = {
   pal: { o: "#a0502a", F: "#e8803c", W: "#f4e2c8", T: "#e8a060", e: INK },
 };
 
+/** The same goldfish from the side, head to the right: the one that jumps out of the pond (#364). */
+export const LEAPING_FISH: PixelArt = {
+  rows: [
+    ".......oo.......",
+    "......oFFo......",
+    "T..ooooFFoooo...",
+    "TToFFFFFFFFFFoo.",
+    "TTFFFFFFFFFFFeFo",
+    "TToWWWWWWWWWFFo.",
+    "T..ooWWWWWWoo...",
+    ".......oo.......",
+  ],
+  pal: KOI.pal,
+};
+
 const BUTTERFLY_PAL = { o: INK, a: INK, O: "#f0a040", d: "#c0602a", w: "#fff8e7", b: INK };
 /** A butterfly resting, wings open: orange with dark edges and white spots. */
 export const BUTTERFLY: PixelArt = {

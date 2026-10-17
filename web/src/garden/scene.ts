@@ -10,7 +10,7 @@ import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf } from "../ui/plant";
-import { pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
+import { fishSign, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { SceneVisitors } from "./sceneVisitors";
 import { RAIL, type Spots } from "./spots";
@@ -24,9 +24,10 @@ import { NAME_NEAR, Plants } from "./scenePlants";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
 import { LEAVE_STAND, LeaveItOut, type Hand, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
 import { FINDS, type Left, type LeaveWalk } from "./leave";
-import { nounView } from "./nouns";
+import { bareNoun, nounView } from "./nouns";
 import { plantInReach } from "./shake";
 import type { Gender } from "../deck/schema";
+import { Jokes, type Joke } from "./sceneJokes";
 import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
 import { inLang } from "./nouns";
@@ -246,6 +247,8 @@ export class GardenScene {
   private sky: SkyWater;
   /** Fireflies, butterflies and the sleeping bloom's z's (#323). */
   private critters: Critters;
+  /** The deadpan scenery (#364): the sundial, the mouse door, and the fish that jumps. */
+  private jokes: Jokes;
   private marker!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private lit!: ReturnType<typeof sprites>;
   private unlit!: ReturnType<typeof sprites>;
@@ -333,6 +336,7 @@ export class GardenScene {
     this.plants = new Plants(this.renderer, this.camera, layout, (d, total) => this.cb.onProgress(d, total), (x, y, z) => this.behindHedge(x, y, z));
     this.door = new Door(reducedMotion);
     this.leaveIt = new LeaveItOut(layout, visitors.leave);
+    this.jokes = new Jokes(this.camera, reducedMotion);
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
@@ -352,7 +356,7 @@ export class GardenScene {
       },
       visitors.list,
     );
-    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests];
+    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes];
     this.tinted = [this.mats, this.leaveIt.mats];
     this.scene.fog = this.fog;
     this.build();
@@ -395,6 +399,9 @@ export class GardenScene {
     this.buildLanterns(c);
     const bench = this.buildBench(c);
     const boards = this.buildSigns(c, bench);
+    // The mat says the doormat's word as a mat would: the bare word, in capitals.
+    const welcome = this.visitors.scenery?.doormat?.word;
+    this.jokes.build(c, this.bench, new Date(), welcome ? bareNoun(welcome).toUpperCase() : null);
     this.guests.build(this.spots(pads, boards));
     // After the visitors: the dog, if it came for the bowl in the night (#351), waits by what it left.
     this.leaveIt.build(c);
@@ -770,6 +777,19 @@ export class GardenScene {
     if (which.find) this.foundTap = null;
   }
 
+  /** The mouse door, or the sundial at night (#364), under a point on the canvas (CSS pixels), with nothing in front of it. Ask after leave it out's things. */
+  pickJoke(cssX: number, cssY: number, cssW: number, cssH: number): Joke | null {
+    const r = this.ray(cssX, cssY, cssW, cssH);
+    const got = this.jokes.pick(r);
+    if (!got || got.t > FOG_FAR || thingAt(r, this.sceneryWorld()) < got.t) return null;
+    return { line: got.line, at: got.at };
+  }
+
+  /** A joke's quiet line, over it for a few seconds (after a tap). */
+  tapJoke(j: Joke) {
+    this.showLine(j.line, j.at);
+  }
+
   /** How far along the ray the nearest hedge is, or Infinity: what lies past it is hidden. */
   private hedgeAt(r: Ray): number {
     let t = Infinity;
@@ -889,9 +909,13 @@ export class GardenScene {
     const signs = pickSigns(this.lang);
     const taken = this.visitors.list.some((v) => v.id === "cat");
     if (taken) signs.bench = { text: "Bench: taken" };
+    // The fish swims in the pond (#209): "No fish." is put right by hand (#364).
+    const fish = this.visitors.list.some((v) => v.id === "fish");
+    signs.fence = fishSign(signs.fence, fish);
+    signs.bench = fishSign(signs.bench, fish);
     const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
       const g = new THREE.Group();
-      const board = signBoard(c, T.pixelTexture(T.notice(line.text)), 1.2, 0.48);
+      const board = signBoard(c, T.pixelTexture(line.fix ? T.fixedNotice(line.text, line.fix.strike, line.fix.write) : T.notice(line.text)), 1.2, 0.48);
       board.position.y = 0.95;
       if (line.upsideDown) board.rotation.z = Math.PI;
       g.add(board);
@@ -1312,7 +1336,7 @@ export class GardenScene {
 
   /**
    * One tap (CSS pixels): the visitor, plant, orchard tree, door or key, the bowl and its things (#351),
-   * open ground to walk to (#336), or scenery word it meets, in that order —
+   * a joke (#364), open ground to walk to (#336), or scenery word it meets, in that order —
    * the chain GardenWalk.tsx used to run itself as sequential if-returns
    * (#323). Every pick here is pure (no side effects), so asking all of them
    * and keeping the first match in TAP_PRIORITY is exactly that chain's
@@ -1330,6 +1354,8 @@ export class GardenScene {
     if (d) hits.door = { kind: "door", a: d };
     const l = this.pickLeave(cssX, cssY, cssW, cssH);
     if (l) hits.bowl = { kind: "bowl", t: l };
+    const j = this.pickJoke(cssX, cssY, cssW, cssH);
+    if (j) hits.joke = { kind: "joke", j };
     const g = this.pickGround(cssX, cssY, cssW, cssH);
     if (g) hits.walk = { kind: "walk", ...g };
     const s = this.pickScenery(cssX, cssY, cssW, cssH);

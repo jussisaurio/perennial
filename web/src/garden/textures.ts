@@ -572,6 +572,139 @@ export function spot(): HTMLCanvasElement {
   return c;
 }
 
+// ---- Deadpan scenery (#364) -------------------------------------------------
+
+/** Text in one solid colour, with no soft edge: drawn on its own, then only its solid pixels are kept. Left-aligned at `x`, centred on `y`. */
+function hardText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, font: string, color: string) {
+  const [s, sc] = canvas(ctx.canvas.width, ctx.canvas.height);
+  sc.font = font;
+  sc.textBaseline = "middle";
+  sc.fillText(text, x, y);
+  const img = sc.getImageData(0, 0, s.width, s.height).data;
+  for (let i = 0; i < img.length; i += 4) if (img[i + 3] > 110) px(ctx, (i / 4) % s.width, Math.floor(i / 4 / s.width), color);
+}
+
+/**
+ * The notice "No fishing. No fish." put right by hand (#364): the printed
+ * text, with `strike` crossed out in red marker and `write` written in after it.
+ */
+export function fixedNotice(text: string, strike: string, write: string): HTMLCanvasElement {
+  const W = 160;
+  const H = 64;
+  const [c, ctx] = board(W, H);
+  const first = text.slice(0, text.lastIndexOf(strike)).trim();
+  const hand = (size: number) => `italic bold ${size}px ui-monospace, Menlo, monospace`;
+  // Two lines: the first as printed; on the second, the struck words, then the fix. As large as fits.
+  let size = 18;
+  const width = (s: number) => {
+    ctx.font = boardFont(s);
+    const a = ctx.measureText(first).width;
+    const b = ctx.measureText(`${strike} `).width;
+    ctx.font = hand(s);
+    return { first: a, second: b + ctx.measureText(write).width, strike: b };
+  };
+  while (size > 8 && Math.max(width(size).first, width(size).second) > W - 14) size--;
+  const w = width(size);
+  const step = size + 4;
+  const y1 = H / 2 + 1 - step / 2;
+  const y2 = H / 2 + 1 + step / 2;
+  const x0 = Math.round((W - w.second) / 2);
+  ctx.font = boardFont(size);
+  ctx.fillText(first, W / 2, y1);
+  ctx.textAlign = "left";
+  ctx.fillText(strike, x0, y2);
+  crispText(ctx, W, H);
+  // After crispText, which would turn the red to the board's colour.
+  const red = "#b3261e";
+  const struck = Math.round(ctx.measureText(strike).width);
+  px(ctx, x0 - 2, Math.round(y2) - 1, red, struck + 4, 2);
+  hardText(ctx, write, x0 + Math.round(w.strike), y2 - 1, hand(size), red);
+  return c;
+}
+
+/** The sundial's face (#364), seen from above, noon at the top: a bronze disc with hour marks from 6 in the morning (left) to 6 in the evening (right). */
+export function sundialFace(): HTMLCanvasElement {
+  const [c, ctx] = canvas(32, 32);
+  for (let y = 0; y < 32; y++)
+    for (let x = 0; x < 32; x++) {
+      const d = Math.hypot(x - 15.5, y - 15.5);
+      if (d < 16) px(ctx, x, y, d > 14.5 ? "#6e5226" : (x + y) % 7 === 0 ? "#9a7a3e" : "#b48c4a");
+    }
+  for (let h = 6; h <= 18; h++) {
+    const a = ((h - 12) * Math.PI) / 12;
+    const long = h % 3 === 0;
+    for (let r = long ? 9 : 11; r <= 13; r++) px(ctx, Math.round(15.5 + Math.sin(a) * r - 0.5), Math.round(15.5 - Math.cos(a) * r - 0.5), "#4a3418");
+  }
+  return c;
+}
+
+/** Weathered stone, for the sundial's pillar. */
+export const stone = () =>
+  speckle(23, "#a9a29a", [
+    ["#c9c3b8", 60],
+    ["#8a847c", 70],
+  ]);
+
+/** The mouse door (#364): a tiny arched wooden door in a stone frame, with a brass knob. */
+export function mouseDoor(): HTMLCanvasElement {
+  const rows = [
+    "....ssss....",
+    "..ssddddss..",
+    ".sddwwwwdds.",
+    ".sdwwwdwwds.",
+    "sdwwwwdwwwds",
+    "sdwwwwdwwwds",
+    "sdddddddddds",
+    "sdwwwwdwwwds",
+    "sdwwwwdwwwds",
+    "sdwwwwdwwkds",
+    "sdwwwwdwwwds",
+    "sdwwwwdwwwds",
+    "sdddddddddds",
+    "sdwwwwdwwwds",
+    "sdwwwwdwwwds",
+    "ssssssssssss",
+  ];
+  const color: Record<string, string> = { s: "#8d8a85", d: "#5a3820", w: "#9c6a3d", k: "#e0b24a" };
+  const [c, ctx] = canvas(12, 16);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, color[ch])));
+  return c;
+}
+
+/** The mouse door's mat (#364), seen from above: coir with a dark edge and `word` on it (none for a course without one). */
+export function doormat(word: string | null): HTMLCanvasElement {
+  const [c, ctx] = canvas(48, 14);
+  px(ctx, 0, 0, "#7a5528", 48, 14);
+  px(ctx, 1, 1, "#c09048", 46, 12);
+  if (word) {
+    let size = 10;
+    const font = (s: number) => `bold ${s}px ui-monospace, Menlo, monospace`;
+    ctx.font = font(size);
+    while (size > 5 && ctx.measureText(word).width > 44) ctx.font = font(--size);
+    hardText(ctx, word, Math.round((48 - ctx.measureText(word).width) / 2), 7, font(size), "#3b2414");
+  }
+  return c;
+}
+
+/** The fish that jumps (#364), from the side, head to the right. */
+export function leapingFish(): HTMLCanvasElement {
+  const art = Art.LEAPING_FISH;
+  const [c, ctx] = canvas(art.rows[0].length, art.rows.length);
+  for (const r of Art.runs(art)) px(ctx, r.x, r.y, r.fill, r.w, 1);
+  return c;
+}
+
+/** Where the fish went in (#364): a pale ring on the water, seen from above. */
+export function ripple(): HTMLCanvasElement {
+  const [c, ctx] = canvas(16, 16);
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++) {
+      const d = Math.hypot(x - 7.5, y - 7.5);
+      if (d > 5.6 && d < 7.2) px(ctx, x, y, "#d8f0ff");
+    }
+  return c;
+}
+
 // ---- Word plants --------------------------------------------------------
 //
 // Two levels of detail. Every plant has a small sprite in a "low" sheet,
