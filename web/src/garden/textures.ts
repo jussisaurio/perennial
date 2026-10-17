@@ -929,64 +929,16 @@ export function sunflower(): HTMLCanvasElement {
 
 // ---- Visitors ---------------------------------------------------------------
 
-/** Visitor cells (32×32 each, standing on the bottom row), in this order. */
-export const VISITOR_CELL = {
-  snail: 0,
-  catAsleep: 1,
-  catAwake: 2,
-  toadstool: 3,
-  bird: 4,
-  birdHop: 5,
-  frog: 6,
-  frogCroak: 7,
-  frogAsleep: 8,
-  gnomeFront: 9,
-  gnomeSide: 10,
-  /** The same two poses with the lantern lit, for dusk and night. */
-  gnomeFrontLit: 11,
-  gnomeSideLit: 12,
-  heron: 13,
-  heronStep: 14,
-  mothOpen: 15,
-  mothClosed: 16,
-  dog: 17,
-  dogWag: 18,
-  /** Seen from above: it lies flat in the pond (sceneVisitors.ts). */
-  fish: 19,
-  butterfly: 20,
-  butterflyClosed: 21,
-} as const;
-export const VISITOR_CELLS = Object.keys(VISITOR_CELL).length;
-
-/** The garden visitors in one small atlas (drawn once), in VISITOR_CELL order. */
-export function visitors(): HTMLCanvasElement {
-  const [c, ctx] = canvas(32 * VISITOR_CELLS, 32);
-  const poses = ["front", "side"] as const;
-  [
-    Art.SNAIL,
-    Art.CAT_ASLEEP,
-    Art.CAT_AWAKE,
-    Art.TOADSTOOL,
-    Art.BIRD,
-    Art.BIRD_HOP,
-    Art.FROG,
-    Art.FROG_CROAK,
-    Art.FROG_ASLEEP,
-    ...poses.map((p) => Art.gnomeArt(p, false)),
-    ...poses.map((p) => Art.gnomeArt(p, true)),
-    Art.HERON,
-    Art.HERON_STEP,
-    Art.MOTH_OPEN,
-    Art.MOTH_CLOSED,
-    Art.DOG,
-    Art.DOG_WAG,
-    Art.KOI,
-    Art.BUTTERFLY,
-    Art.BUTTERFLY_CLOSED,
-  ].forEach((art, i) => {
+/**
+ * The garden visitors' frames in one small atlas (drawn once): one 32×32 cell
+ * each, in this order, standing on the bottom row (kinds/index.ts lists them).
+ */
+export function visitors(arts: readonly Art.PixelArt[]): HTMLCanvasElement {
+  const [c, ctx] = canvas(32 * arts.length, 32);
+  arts.forEach((art, i) => {
     const w = art.rows[0].length;
     const ox = i * 32 + Math.floor((32 - w) / 2);
-    const oy = 32 - art.rows.length - (art === Art.BIRD_HOP ? 2 : 0);
+    const oy = 32 - art.rows.length;
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
   });
   return c;

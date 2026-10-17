@@ -13,7 +13,7 @@ type CarryScene = {
   yaw: number;
   layout: { pond: Spot & { r: number } };
   carry: { held: number | null };
-  guests: { sprites: { v: { id: string }; x: number; z: number }[] };
+  guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] };
 };
 
 const scene = (page: Page) => page.evaluate(() => (window as unknown as { __garden: CarryScene }).__garden);
@@ -28,7 +28,7 @@ const spots = (page: Page) =>
 
 const frogAt = async (page: Page) => {
   const f = (await scene(page)).guests.sprites.find((s) => s.v.id === "frog")!;
-  return { x: f.x, z: f.z };
+  return { x: f.body.at.x, z: f.body.at.z };
 };
 
 /** Turn to face the middle of the pond, where you stand. */
