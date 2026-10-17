@@ -25,6 +25,9 @@ import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
 import { LEAVE_STAND, LeaveItOut, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
+import { POT_STAND, PotPart, type PotAct, type PotDone } from "./scenePot";
+import { seedOf, type Creature, type Pot, type PotWalk } from "./pot";
+import { creatureName } from "./potNames";
 import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
 import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { echo, echoDate, type Met } from "./well";
@@ -61,10 +64,10 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), carry's (#358), the toys' (#360), or blow a lantern out and light it again (#361); with nothing in reach, call (#377). */
-export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357) or take a seed from it (#387), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or let out what hatched in the pot (#387); with nothing in reach, call (#377). */
+export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | "take-seed" | CarryAct | ToyAct | "snuff" | "light" | PotAct | "call";
 
-/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
+/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), or a creature's name (kind "creature", #387), in screen fractions. */
 export interface Label {
   id: string;
   text: string;
@@ -72,7 +75,7 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find" | "petal" | "fruit" | "boat" | "echo";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "find" | "petal" | "fruit" | "boat" | "echo" | "creature";
   gloss?: string;
   /** A noun plant's gender: the shape of its label's stake (#357). */
   gender?: Gender;
@@ -101,6 +104,8 @@ export interface WalkVisitors {
   orchard: { trees: OrchardTree[]; firstPlanted: number | null };
   /** Leave it out (#351): the bowl and the shelf as the walk opens, and what the basket offers. */
   leave: LeaveWalk;
+  /** Two seeds, one pot (#387): the pot and its creatures as the walk opens. */
+  pot: PotWalk;
   /** Autumn as the walk opens (core/day.ts isAutumn): leaf piles on the paths (#359). */
   autumn: boolean;
   /** The lawn and pond toys (#360): today's calendar day, and the paper boat's word. */
@@ -124,6 +129,10 @@ export interface SceneCallbacks {
   onLeft: (left: Left) => void;
   /** A plant was shaken (#357): the forms that fell from it ([]: one leaf). */
   onShake: (p: PlacedPlant, forms: string[]) => void;
+  /** Two seeds, one pot (#387): a seed was sown or a creature let out; the new value, to save. */
+  onPot: (pot: Pot) => void;
+  /** A creature was let out of the pot (#387). */
+  onHatch: (done: PotDone) => void;
   /** You whistled (#377): what each visitor that answered did, as a screen reader hears it ([]: no one answered). */
   onCall: (heard: string[]) => void;
   /** Carry (#358): a loose thing was picked up, thrown, put down or stacked, or it landed. */
@@ -197,7 +206,7 @@ const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
  * those three set); a visitor's approach tag last. One table, like
  * TAP_PRIORITY.
  */
-const LABEL_PRIORITY = ["say", "echo", "line", "find", "fruit", "boat", "scenery", "tree", "tag"] as const;
+const LABEL_PRIORITY = ["say", "echo", "line", "find", "creature", "fruit", "boat", "scenery", "tree", "tag"] as const;
 
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
@@ -258,6 +267,10 @@ export class GardenScene {
   private leaveIt: LeaveItOut;
   /** A find's word and meaning over where it lay, for a few seconds after it is picked up. */
   private foundTap: { word: string; gloss: string; at: [number, number, number]; until: number } | null = null;
+  /** A creature's name (#387), over it, tapped or just let out; and its joke, if it has one. Shown in the find's place: one at a time. */
+  private creatureTap: { i: number | null; word: string; gloss: string; says: string | null; at: [number, number, number]; until: number } | null = null;
+  /** Two seeds, one pot (#387): the pot by the shed and the creatures from it. */
+  private pots: PotPart;
   /** A fallen fruit's tag (#359): the word of the tree it fell from, over the fruit as it rolls, for a few seconds. */
   private fruitTap: { tree: PlacedTree; at: Readonly<Rolling>; until: number } | null = null;
   /** Walking into things (#359): bumping orchard trees and bursting leaf piles. */
@@ -409,8 +422,10 @@ export class GardenScene {
       },
       () => this.cb.onWalkInto({ did: "pile" }),
     );
+    this.pots = new PotPart(layout, visitors.pot, reducedMotion);
     this.carry = new Carry(layout, visitors.leave.today, reducedMotion, {
       dog: () => this.guests.where("dog"),
+      pot: () => (this.pots.takes() ? this.pots.spot : null),
       doorOpen: () => this.door.state === "open",
       land: (l) => this.landed(l),
     });
@@ -442,8 +457,8 @@ export class GardenScene {
       },
       visitors.list,
     );
-    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry, this.toys, this.lanterns];
-    this.tinted = [this.mats, this.leaveIt.mats, this.walkInto.mats, this.carry.mats];
+    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry, this.toys, this.lanterns, this.pots];
+    this.tinted = [this.mats, this.leaveIt.mats, this.walkInto.mats, this.carry.mats, this.pots.mats];
     this.scene.fog = this.fog;
     this.build();
   }
@@ -501,6 +516,8 @@ export class GardenScene {
     // Draws no random numbers either.
     this.carry.build();
     this.scene.add(this.carry.root);
+    this.pots.build();
+    this.scene.add(this.pots.root);
     // A key left waiting a few days (#334): the dog, if it is here today, sits by it.
     if (this.keyHelp?.visitors && this.door.key && !dog) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
     // After the visitors: a visitor may sit in the orchard's trees today.
@@ -664,6 +681,8 @@ export class GardenScene {
     else if (a === "stand") this.standUp();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
     else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
+    else if (a === "take-seed" && this.reach === "take-seed" && this.shakeTarget) this.takeSeed(this.shakeTarget);
+    else if (a === "hatch" && this.reach === "hatch") this.letOut();
     else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
     else if (a === "throw" && this.reach === "throw") this.throwAhead();
     else if (a === "call" && this.reach === "call") this.call();
@@ -721,7 +740,60 @@ export class GardenScene {
   /** What you hold now: one thing at a time, leave it out's or a loose one. */
   private held(): Held | null {
     const thing = this.carry.thing;
-    return thing ? { from: "ground", thing } : this.leaveIt.hand;
+    return thing ? { from: "ground", thing, of: this.carry.seed } : this.leaveIt.hand;
+  }
+
+  /** Take a seed from a visitor's word plant (#387): it perks up, unharmed, and the seed is in your hand. */
+  private takeSeed(p: PlacedPlant) {
+    const of = seedOf(p);
+    if (!of || this.leaveIt.hand || !this.carry.sprout(of)) return;
+    this.nod(p);
+    this.cb.onHand(this.held());
+    this.cb.onCarry({ did: "take-seed", of });
+  }
+
+  /** The pot, while something hatched waits in it (#387), under a point on the canvas (CSS pixels), with nothing in front of it. */
+  pickPot(cssX: number, cssY: number, cssW: number, cssH: number): boolean {
+    const r = this.ray(cssX, cssY, cssW, cssH);
+    const t = this.pots.pickPot(r);
+    return t < FOG_FAR && this.hedgeAt(r) >= t && thingAt(r, this.sceneryWorld()) >= t;
+  }
+
+  /** A creature from the pot (#387) under a point on the canvas (CSS pixels), with nothing in front of it. */
+  pickCreature(cssX: number, cssY: number, cssW: number, cssH: number): number | null {
+    const r = this.ray(cssX, cssY, cssW, cssH);
+    const got = this.pots.pickCreature(r);
+    if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t || thingAt(r, this.sceneryWorld()) < got.t) return null;
+    return got.i;
+  }
+
+  /** A tap on the pot (#387): let out what hatched, in reach; from farther away, walk up to it first. */
+  tapPot() {
+    const at = this.pots.standFor(this.x, this.z);
+    if (at.near) return this.letOut();
+    this.goTo(at.x, at.z, POT_STAND, () => this.letOut());
+  }
+
+  /** A tap on a creature (#387): its name over it, and its joke if it has one, from wherever you stand. Its name, to say aloud (null: no words for it in this course). */
+  tapCreature(i: number): string | null {
+    const { c, at } = this.pots.creature(i);
+    return this.showCreature(i, c, at);
+  }
+
+  private showCreature(i: number | null, c: Creature, at: [number, number, number]): string | null {
+    const n = creatureName(c, this.lang);
+    this.clearTaps({ scenery: true, tree: true, line: true, visitor: true, find: true, fruit: true, boat: true });
+    // A course with no words for it shows only its meaning.
+    this.creatureTap = { i, word: n.word ?? n.gloss, gloss: n.gloss, says: n.says, at, until: this.elapsed + 5 };
+    return n.word;
+  }
+
+  /** Let out what hatched in the pot (#387): it goes off to wander, its name over the pot. */
+  private letOut() {
+    const done = this.pots.letOut((pot) => this.cb.onPot(pot));
+    if (!done) return;
+    this.showCreature(null, done.creature, done.at);
+    this.cb.onHatch(done);
   }
 
   /**
@@ -741,6 +813,7 @@ export class GardenScene {
       // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
       return this.carry.standFor(got.target, this.x, this.z).near || wall >= got.t ? got.target : null;
     }
+    if (this.carry.pickPot(r) <= wall) return { at: "pot" };
     if (this.carry.pickCairn(r) <= wall) return { at: "cairn" };
     if (this.carry.pickWell(r) <= wall) return { at: "well" };
     // The pond's own hit disc (sceneSky.ts) lies a few mm over the water and a rim wider: the water may be just behind it.
@@ -762,14 +835,14 @@ export class GardenScene {
   /** Pick up a loose thing; put what you hold on the cairn or the ground, or drop it in the well; throw it at a point on the water. Anything that no longer applies does nothing. */
   private doCarry(t: CarryTarget) {
     const c = this.carry;
-    let did: "lift" | "throw" | "put" | "stack" | "well";
+    let did: "lift" | "throw" | "put" | "stack" | "well" | "plant";
     if (t.at === "thing") {
       if (this.leaveIt.hand || !c.lift(t.i)) return;
       did = "lift";
     } else {
-      const at = t.at === "cairn" ? c.standFor(t, this.x, this.z) : t.at === "well" ? this.layout.well : t;
+      const at = t.at === "cairn" ? c.standFor(t, this.x, this.z) : t.at === "well" ? this.layout.well : t.at === "pot" ? this.pots.spot : t;
       if (!c.letGo(this.x, this.z, at.x, at.z, t.at === "water")) return;
-      did = t.at === "water" ? "throw" : t.at === "cairn" ? "stack" : t.at === "well" ? "well" : "put";
+      did = t.at === "water" ? "throw" : t.at === "cairn" ? "stack" : t.at === "well" ? "well" : t.at === "pot" ? "plant" : "put";
     }
     this.cb.onHand(this.held());
     this.cb.onCarry({ did });
@@ -812,6 +885,8 @@ export class GardenScene {
 
   /** A thrown or put-down thing landed (#358): whoever its row names answers, and the page hears what happened. */
   private landed(l: Landing) {
+    // A seed in the pot (#387) is sown there, and saved.
+    if (l.reaction.then === "sow") this.pots.sow(l.of!, (pot) => this.cb.onPot(pot));
     const a = l.reaction.answer;
     const more = a ? ANSWERS[a](this.answerers, l, this.answered[a]++) : null;
     this.cb.onCarry({ did: "land", said: more ? `${l.said} ${more}` : l.said });
@@ -1042,7 +1117,8 @@ export class GardenScene {
     if (which.tree) this.treeTap = null;
     if (which.line) this.line = null;
     if (which.visitor) this.guests.untap();
-    if (which.find) this.foundTap = null;
+    // A creature's name (#387) shows in the find's place.
+    if (which.find) this.foundTap = this.creatureTap = null;
     if (which.fruit) this.fruitTap = null;
     if (which.boat) this.boatTap = null;
   }
@@ -1591,6 +1667,9 @@ export class GardenScene {
     const hits: Partial<Record<TapHit["kind"], TapHit>> = {};
     const v = this.pickVisitor(cssX, cssY, cssW, cssH);
     if (v) hits.visitor = { kind: "visitor", v };
+    const cr = this.pickCreature(cssX, cssY, cssW, cssH);
+    if (cr !== null) hits.creature = { kind: "creature", i: cr };
+    if (this.pickPot(cssX, cssY, cssW, cssH)) hits.pot = { kind: "pot" };
     const p = this.pick(cssX, cssY, cssW, cssH);
     if (p) hits.plant = { kind: "plant", p };
     const t = this.pickTree(cssX, cssY, cssW, cssH);
@@ -1814,8 +1893,17 @@ export class GardenScene {
       v.set(w.x, 1.4, w.z).project(this.camera);
       if (v.z <= 1) tags.echo = { id: `echo:${ec.n}`, text: ec.word, gloss: ec.date, kind: "echo", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
+    // A creature's name (#387), over it as it wanders (or over the pot it left); kept on the screen. Its joke, in a bubble above.
+    const ct = this.creatureTap;
+    if (ct && this.elapsed > ct.until) this.creatureTap = null;
+    else if (ct) {
+      v.set(...(ct.i === null ? ct.at : this.pots.creature(ct.i).at)).project(this.camera);
+      const [x, y] = [onScreen((v.x + 1) / 2), onScreen((1 - v.y) / 2)];
+      if (v.z <= 1) tags.creature = { id: "creature", text: ct.word, gloss: ct.gloss, kind: "creature", x, y, near: 1 };
+      if (v.z <= 1 && ct.says) tags.say = { id: "creature-says", text: ct.says, kind: "say", x, y: y - 0.06, near: 1 };
+    }
     // A visitor's approach tag shows only while none of line/find/fruit/boat/scenery/tree is active (clearTaps keeps at most one of those set at a time).
-    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line || this.foundTap || this.fruitTap || this.boatTap);
+    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line || this.foundTap || this.creatureTap || this.fruitTap || this.boatTap);
     const { say, tag } = this.guests.labels(this.x, this.z, !exclusiveActive);
     if (say) tags.say = say;
     if (tag) tags.tag = tag;
@@ -1861,11 +1949,14 @@ export class GardenScene {
     const leave = this.seated || nearKey || holding ? null : this.leaveIt.reachAt(this.x, this.z);
     const mine = leave && (leave.a === "find" || !nearDoor) ? leave : null;
     const toy = this.seated || nearKey ? null : this.toys.reachAt(this.x, this.z);
+    // What hatched in the pot (#387), with free hands.
+    const hatch = this.seated || nearKey || holding || this.leaveIt.hand ? null : this.pots.reachAt(this.x, this.z);
     const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
     // The first of these that applies, in reportReach's order above.
-    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : (door ?? mine?.a ?? lampAct ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
+    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : (door ?? mine?.a ?? hatch ?? lampAct ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
-    const a: Reach = plant ? "shake" : (before ?? "call");
+    // A visitor's word plant gives a seed (#387) while the pot takes one and your hands are free; otherwise it is shaken.
+    const a: Reach = plant ? (seedOf(plant) && this.pots.takes() && !this.leaveIt.hand ? "take-seed" : "shake") : (before ?? "call");
     const target = mine && a === mine.a ? mine.target : null;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = (a === "blow" || a === "fold") && toy ? toy.target : null;
@@ -1879,7 +1970,7 @@ export class GardenScene {
     this.toyTarget = toyTarget;
     this.lanternTarget = lantern;
     const lampAt = lantern >= 0 ? this.lanterns.spots[lantern] : null;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget, this.x, this.z) : target ? this.leaveIt.cueAt(target) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget, this.x, this.z) : target ? this.leaveIt.cueAt(target) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : carried ? this.carry.cueAt(carried) : a === "hatch" ? [this.pots.spot.x, 0.5, this.pots.spot.z] : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
     this.cue.visible = !!at;
     if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);

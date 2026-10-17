@@ -1,6 +1,7 @@
 // Carry, put down, throw in the walk (#358; garden/carry.ts says what happens):
 // the pebbles by the pond, the stick by the shed, the cairn's flat stone, the
-// rings a splash makes, and the orchard's well (#335 S6) once the door is open. It says what the action button can do with them
+// rings a splash makes, the orchard's well (#335 S6) once the door is open,
+// and the seeds taken from visitors' plants for the clay pot (#387). It says what the action button can do with them
 // where you stand, does it, flies a thrown thing in a small arc, and tells the
 // scene where it landed, for whoever answers. A Part: the one place loose
 // things move (a flight, the cairn's wobble, a stick drifting to the pond's
@@ -10,26 +11,29 @@ import * as THREE from "three";
 import { cairnAt, cairnHolds, CAIRN_FALLS, PEBBLES, pebbleHome, placeAt, reaction, restAt, stickHome, type Loose, type Place, type Reaction } from "./carry";
 import { rayBox, type Ray } from "./scenery";
 import type { Frame, Part } from "./scenePart";
+import type { PotKind } from "./pot";
 import type { Hand } from "./sceneLeave";
 import { sprites } from "./sceneSprites";
 import * as T from "./textures";
 import type { Layout } from "./world";
 
-/** What you hold: leave it out's thing (#351), or a loose thing. One thing at a time. */
-export type Held = Hand | { from: "ground"; thing: Loose };
+/** What you hold: leave it out's thing (#351), or a loose thing (`of`: whose plant a seed came from, #387). One thing at a time. */
+export type Held = Hand | { from: "ground"; thing: Loose; of: PotKind | null };
 
-/** What the action button does with loose things: pick one up, throw what you hold where you face, put a pebble on the cairn, or drop it in the well. */
-export type CarryAct = `lift-${Loose}` | "throw" | "stack" | "well";
+/** What the action button does with loose things: pick one up, throw what you hold where you face, put a pebble on the cairn, drop it in the well, or put a seed in the pot (#387). */
+export type CarryAct = `lift-${Loose}` | "throw" | "stack" | "well" | "plant";
 
-/** What a tap or the action button acts on: a loose thing, the cairn, the well, a point on the water to throw at, or the ground in reach to put a thing down on. */
-export type CarryTarget = { at: "thing"; i: number } | { at: "cairn" } | { at: "well" } | { at: "water"; x: number; z: number } | { at: "ground"; x: number; z: number };
+/** What a tap or the action button acts on: a loose thing, the cairn, the well, the pot, a point on the water to throw at, or the ground in reach to put a thing down on. */
+export type CarryTarget = { at: "thing"; i: number } | { at: "cairn" } | { at: "well" } | { at: "pot" } | { at: "water"; x: number; z: number } | { at: "ground"; x: number; z: number };
 
-/** What a carry did, for the page to count (#335); and, once a thing lands, what a screen reader hears. */
-export type CarryDone = { did: "lift" | "throw" | "put" | "stack" | "well" } | { did: "land"; said: string };
+/** What a carry did, for the page to count (#335): a seed taken from a plant (#387) says whose; once a thing lands, what a screen reader hears. */
+export type CarryDone = { did: "lift" | "throw" | "put" | "stack" | "well" | "plant" } | { did: "take-seed"; of: PotKind } | { did: "land"; said: string };
 
 /** A thing came down: where it was aimed, the place and its row, and what a screen reader hears (the scene adds who answers). */
 export interface Landing {
   thing: Loose;
+  /** A seed's kind (#387), or null. */
+  of: PotKind | null;
   place: Place;
   x: number;
   z: number;
@@ -37,9 +41,10 @@ export interface Landing {
   said: string;
 }
 
-/** What the scene gives: where the dog is today, whether the door is open (the orchard is ground too), and where to send a landing. */
+/** What the scene gives: where the dog is today, whether the door is open (the orchard is ground too), the pot while it takes a seed (#387), and where to send a landing. */
 export interface CarryWorld {
   dog: () => { x: number; z: number } | null;
+  pot: () => { x: number; z: number } | null;
   doorOpen: () => boolean;
   land: (l: Landing) => void;
 }
@@ -54,7 +59,9 @@ const WELL_FRONT = 0.5;
 export const CARRY_STAND = 0.6;
 /** Metres per atlas cell, and each thing's size in cells. */
 const SIZE = 0.5;
-const SCALE: Record<Loose, number> = { pebble: 1.1, stick: 2 };
+const SCALE: Record<Loose, number> = { pebble: 1.1, stick: 2, seed: 0.9 };
+/** Seeds lying about at once (#387): a new one takes the place of the oldest, which is gone. */
+const SEEDS = 4;
 const STONE_SCALE = 1.6;
 /** The well's cell is 1.4 m: its stones as wide as its ring (orchard.ts WELL_R), its roof a little over the eye. */
 const WELL_SCALE = 2.8;
@@ -69,15 +76,19 @@ const WOBBLE_S = 0.6;
 /** A floating stick drifts to this far inside the pond's edge, at this speed (m/s). */
 const FLOAT = { edge: 0.2, speed: 0.25, y: 0.03 };
 
-type State = "rest" | "held" | "flying" | "stacked" | "floating";
+/** "gone": a seed not taken yet, sunk, or sown. */
+type State = "rest" | "held" | "flying" | "stacked" | "floating" | "gone";
 
 interface Thing {
   kind: Loose;
+  /** A seed's kind, or null. */
+  of: PotKind | null;
   x: number;
   y: number;
   z: number;
   at: State;
-  home: { x: number; z: number };
+  /** Where another waits when it sinks; null for a seed, which is gone. */
+  home: { x: number; z: number } | null;
 }
 
 const near = (x: number, z: number, p: { x: number; z: number }, r: number) => Math.hypot(x - p.x, z - p.z) < r;
@@ -101,14 +112,17 @@ export class Carry implements Part {
   private world: CarryWorld;
   private reducedMotion: boolean;
   private pos!: THREE.InstancedBufferAttribute;
+  private uv!: THREE.InstancedBufferAttribute;
   private params!: THREE.InstancedBufferAttribute;
+  /** The seed slot the next seed takes (#387), round and round. */
+  private nextSeed = 0;
   private ring!: { pos: THREE.InstancedBufferAttribute; uv: THREE.InstancedBufferAttribute; params: THREE.InstancedBufferAttribute; t: number };
   private flight: { i: number; from: [number, number, number]; to: [number, number, number]; peak: number; t: number; s: number; landing: Landing } | null = null;
   /** When the cairn last got a pebble (elapsed s), for its wobble. */
   private wobble = -Infinity;
   private elapsed = 0;
   /** Every target reachAt can point at, and what it returns, made once: it allocates nothing. */
-  private targets: { things: CarryTarget[]; cairn: CarryTarget; well: CarryTarget };
+  private targets: { things: CarryTarget[]; cairn: CarryTarget; well: CarryTarget; pot: CarryTarget };
   private reach: { a: CarryAct; target: CarryTarget | null } = { a: "throw", target: null };
 
   constructor(layout: Layout, day: number, reducedMotion: boolean, world: CarryWorld) {
@@ -117,10 +131,12 @@ export class Carry implements Part {
     this.reducedMotion = reducedMotion;
     this.holds = cairnHolds(day);
     this.cairn = cairnAt(layout);
-    const pebbles = Array.from({ length: PEBBLES }, (_, i): Thing => ({ kind: "pebble", ...pebbleHome(layout, i), y: 0.01, at: "rest", home: pebbleHome(layout, i) }));
-    const stick: Thing = { kind: "stick", ...stickHome(layout), y: 0.01, at: "rest", home: stickHome(layout) };
-    this.things = [...pebbles, stick];
-    this.targets = { things: this.things.map((_, i) => ({ at: "thing", i })), cairn: { at: "cairn" }, well: { at: "well" } };
+    const pebbles = Array.from({ length: PEBBLES }, (_, i): Thing => ({ kind: "pebble", of: null, ...pebbleHome(layout, i), y: 0.01, at: "rest", home: pebbleHome(layout, i) }));
+    const stick: Thing = { kind: "stick", of: null, ...stickHome(layout), y: 0.01, at: "rest", home: stickHome(layout) };
+    // Their kind is set as each is taken.
+    const seeds = Array.from({ length: SEEDS }, (): Thing => ({ kind: "seed", of: "cat", x: 0, y: 0, z: 0, at: "gone", home: null }));
+    this.things = [...pebbles, stick, ...seeds];
+    this.targets = { things: this.things.map((_, i) => ({ at: "thing", i })), cairn: { at: "cairn" }, well: { at: "well" }, pot: { at: "pot" } };
   }
 
   /** The loose thing you hold, if any. */
@@ -128,11 +144,16 @@ export class Carry implements Part {
     return this.held === null ? null : this.things[this.held].kind;
   }
 
+  /** The kind of the seed you hold (#387), if you hold one. */
+  get seed(): PotKind | null {
+    return this.held === null ? null : this.things[this.held].of;
+  }
+
   /** The loose things, the cairn's flat stone and the well (unseen until showWell), in one instanced mesh; the rings, lying on the water. Draws no random numbers. */
   build() {
     const tex = T.pixelTexture(T.carryAtlas());
     const cell = (c: number) => c / T.CARRY_CELLS;
-    const items = this.things.map((t) => ({ x: t.x, y: t.y, z: t.z, u: cell(T.CARRY_CELL[t.kind]), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: SCALE[t.kind], index: -8 }));
+    const items = this.things.map((t) => ({ x: t.x, y: t.y, z: t.z, u: cell(this.cellOf(t)), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: t.at === "gone" ? 0 : SCALE[t.kind], index: -8 }));
     items.push({ x: this.cairn.x, y: 0.005, z: this.cairn.z, u: cell(T.CARRY_CELL.flatStone), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: STONE_SCALE, index: -8 });
     const w = this.layout.well;
     this.well.i = items.length;
@@ -145,6 +166,7 @@ export class Carry implements Part {
       this.root.add(m);
     }
     this.pos = mesh.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute;
+    this.uv = mesh.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute;
     this.params = mesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     const g = rings.geometry;
     this.ring = { pos: g.getAttribute("iPos") as THREE.InstancedBufferAttribute, uv: g.getAttribute("iUv") as THREE.InstancedBufferAttribute, params: g.getAttribute("iParams") as THREE.InstancedBufferAttribute, t: Infinity };
@@ -157,12 +179,31 @@ export class Carry implements Part {
     this.params.needsUpdate = true;
   }
 
-  /** Draw a thing where it is now; hidden while you hold it. */
+  private cellOf(t: Thing): number {
+    return t.kind === "seed" ? T.CARRY_CELL.seed(t.of!) : T.CARRY_CELL[t.kind];
+  }
+
+  /** Draw a thing where it is now; hidden while you hold it, and once it is gone. */
   private draw(i: number) {
     const t = this.things[i];
     this.pos.setXYZ(i, t.x, t.y, t.z);
-    this.params.setZ(i, t.at === "held" ? 0 : SCALE[t.kind]);
-    this.pos.needsUpdate = this.params.needsUpdate = true;
+    this.uv.setX(i, this.cellOf(t) / T.CARRY_CELLS);
+    this.params.setZ(i, t.at === "held" || t.at === "gone" ? 0 : SCALE[t.kind]);
+    this.pos.needsUpdate = this.uv.needsUpdate = this.params.needsUpdate = true;
+  }
+
+  /**
+   * Take a seed from a visitor's word plant (#387): it is in your hand. The
+   * plant keeps all its own; with SEEDS lying about already, the oldest is gone.
+   */
+  sprout(of: PotKind): boolean {
+    if (this.held !== null) return false;
+    const i = PEBBLES + 1 + this.nextSeed;
+    this.nextSeed = (this.nextSeed + 1) % SEEDS;
+    Object.assign(this.things[i], { of, at: "held" });
+    this.held = i;
+    this.draw(i);
+    return true;
   }
 
   /** Can this thing be picked up now: lying, floating, or on top of the cairn. */
@@ -181,7 +222,9 @@ export class Carry implements Part {
     const r = this.reach;
     if (this.held !== null) {
       const pebble = this.things[this.held].kind === "pebble";
-      if (pebble && near(x, z, this.cairn, REACH)) [r.a, r.target] = ["stack", this.targets.cairn];
+      const pot = this.things[this.held].kind === "seed" ? this.world.pot() : null;
+      if (pot && near(x, z, pot, REACH)) [r.a, r.target] = ["plant", this.targets.pot];
+      else if (pebble && near(x, z, this.cairn, REACH)) [r.a, r.target] = ["stack", this.targets.cairn];
       else if (pebble && this.well.shown && near(x, z, this.layout.well, WELL_REACH)) [r.a, r.target] = ["well", this.targets.well];
       else [r.a, r.target] = ["throw", null];
       return r;
@@ -195,7 +238,7 @@ export class Carry implements Part {
       if (d < bestD && this.liftable(i)) [best, bestD] = [i, d];
     }
     if (best < 0) return null;
-    r.a = this.things[best].kind === "pebble" ? "lift-pebble" : "lift-stick";
+    r.a = `lift-${this.things[best].kind}`;
     r.target = this.targets.things[best];
     return r;
   }
@@ -209,6 +252,10 @@ export class Carry implements Part {
     if (t.at === "cairn") return [this.cairn.x, this.top() + 0.1, this.cairn.z];
     // Over the dark of the well's mouth.
     if (t.at === "well") return [this.layout.well.x, 0.75, this.layout.well.z];
+    if (t.at === "pot") {
+      const p = this.world.pot()!;
+      return [p.x, 0.4, p.z];
+    }
     return [t.x, 0.1, t.z];
   }
 
@@ -222,6 +269,11 @@ export class Carry implements Part {
     const w = this.layout.well;
     // In front of its stones: a walker may not stand on the well's middle.
     if (t.at === "well") return { x: w.x, z: w.z - w.r - WELL_FRONT, near: near(x, z, w, WELL_REACH) };
+    // The pot takes no seed now: nothing to walk to.
+    if (t.at === "pot") {
+      const p = this.world.pot();
+      return p ? { ...p, near: near(x, z, p, REACH) } : { x, z, near: false };
+    }
     const at = t.at === "thing" ? this.things[t.i] : t.at === "cairn" ? this.cairn : t;
     return { x: at.x, z: at.z, near: t.at === "water" || t.at === "ground" || near(x, z, at, REACH) };
   }
@@ -244,6 +296,13 @@ export class Carry implements Part {
     if (this.thing !== "pebble") return Infinity;
     const c = this.cairn;
     return rayBox(r, [c.x - 0.25, 0, c.z - 0.25], [c.x + 0.25, this.top() + 0.1, c.z + 0.25]);
+  }
+
+  /** How far along the ray the pot is, while you hold a seed and it takes one (#387); Infinity otherwise. */
+  pickPot(r: Ray): number {
+    const p = this.thing === "seed" ? this.world.pot() : null;
+    if (!p) return Infinity;
+    return rayBox(r, [p.x - 0.25, 0, p.z - 0.25], [p.x + 0.25, 0.35, p.z + 0.25]);
   }
 
   /** How far along the ray the well is, while you hold a pebble and the door is open; Infinity otherwise. */
@@ -272,13 +331,13 @@ export class Carry implements Part {
     const i = this.held;
     if (i === null) return false;
     const th = this.things[i];
-    const place = placeAt(this.layout, ax, az, this.world.dog());
+    const place = placeAt(this.layout, ax, az, this.world.dog(), this.world.pot());
     const rx = reaction(th.kind, place);
     const rest = rx.then === "stack" ? this.cairn : restAt(this.layout, ax, az, place, this.world.doorOpen());
     const y = rx.then === "stack" ? this.top() : rx.then === "float" ? FLOAT.y : 0.01;
     // Put down by hand on the ground: that is all that happened.
     const said = !arc && place === "ground" ? "You put it down." : rx.said;
-    const landing: Landing = { thing: th.kind, place, x: ax, z: az, reaction: rx, said };
+    const landing: Landing = { thing: th.kind, of: th.of, place, x: ax, z: az, reaction: rx, said };
     this.held = null;
     th.at = "flying";
     if (!arc || this.reducedMotion) {
@@ -307,10 +366,11 @@ export class Carry implements Part {
     const th = this.things[i];
     const rx = l.reaction;
     if (rx.ripple) this.ripple(l.x, l.z);
-    if (rx.then === "sink") {
+    if (rx.then === "sink" && th.home) {
       // Another waits by the pond: pebbles never run out.
       [th.x, th.y, th.z, th.at] = [th.home.x, 0.01, th.home.z, "rest"];
-    } else if (rx.then === "float") th.at = "floating";
+    } else if (rx.then === "sink" || rx.then === "sow") th.at = "gone";
+    else if (rx.then === "float") th.at = "floating";
     else if (rx.then === "stack") {
       th.at = "stacked";
       this.stack.push(i);

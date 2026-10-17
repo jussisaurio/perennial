@@ -9,6 +9,8 @@ import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
 import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
 import type { Left, LeaveWalk } from "../garden/leave";
+import type { Pot, PotWalk } from "../garden/pot";
+import type { PotDone } from "../garden/scenePot";
 import type { LeaveDone } from "../garden/sceneLeave";
 import type { CarryDone, Held } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
@@ -37,7 +39,8 @@ interface WalkData {
  * not change while you walk) and the scene is built once from it; time of day
  * and quality changes go to the running scene. `onFocused`: the scene walked to
  * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
- * save it once it is opened. `leave`: the bowl and the shelf (#351), how to save
+ * save it once it is opened. `pot`: the clay pot and its creatures (#387), how
+ * to save them, and what to do when one is let out. `leave`: the bowl and the shelf (#351), how to save
  * them, and what to do when the learner leaves or finds something. `toys`: the
  * dandelion clocks and the paper boat (#360), and what to do when one is played
  * with. `onShake`: a plant was shaken (#357), and the forms that fell from it.
@@ -51,6 +54,7 @@ export function useGardenScene({
   visitors,
   door,
   leave,
+  pot,
   walkInto,
   toys,
   focus,
@@ -68,6 +72,7 @@ export function useGardenScene({
   visitors?: LearnerVisitors | null;
   door: { state: DoorState; open: () => void };
   leave: { walk: LeaveWalk; save: (left: Left) => void; done: (d: LeaveDone) => void };
+  pot: { walk: PotWalk; save: (pot: Pot) => void; done: (d: PotDone) => void };
   /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
   walkInto: (e: WalkIntoEvent) => void;
   toys: { walk: ToysWalk; done: (d: ToyDone) => void };
@@ -98,6 +103,8 @@ export function useGardenScene({
   openDoor.current = door.open;
   const leaveNow = useRef(leave);
   leaveNow.current = leave;
+  const potNow = useRef(pot);
+  potNow.current = pot;
   const shakeNow = useRef(onShake);
   shakeNow.current = onShake;
   const walkIntoNow = useRef(walkInto);
@@ -126,6 +133,7 @@ export function useGardenScene({
         door: door.state,
         orchard: { trees: source.orchard, firstPlanted: source.first ? source.first.at : null },
         leave: leave.walk,
+        pot: pot.walk,
         autumn: isAutumn(new Date()),
         toys: toys.walk,
         // Tonight's real moon (#361), as the walk opens: the same as outside the window.
@@ -133,7 +141,7 @@ export function useGardenScene({
         met: source.met,
       },
     });
-  }, [source, data, visitors, door.state, leave.walk, toys.walk, lang]);
+  }, [source, data, visitors, door.state, leave.walk, pot.walk, toys.walk, lang]);
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -167,6 +175,8 @@ export function useGardenScene({
             onCompany: setCompany,
             onLeave: (d) => leaveNow.current.done(d),
             onLeft: (left) => leaveNow.current.save(left),
+            onPot: (p) => potNow.current.save(p),
+            onHatch: (d) => potNow.current.done(d),
             onShake: (p, forms) => shakeNow.current(p, forms),
             onWalkInto: (e) => walkIntoNow.current(e),
             onCarry: (d) => carryNow.current(d),

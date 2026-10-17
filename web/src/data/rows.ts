@@ -2,7 +2,7 @@
 // ISO strings; numbers and JSON are parsed by Electric.
 
 import { Option, Schema } from "effect";
-import type { GardenLeft } from "perennial-contract";
+import type { GardenLeft, GardenPot } from "perennial-contract";
 
 export type Skill = "read" | "listen" | "write";
 
@@ -22,6 +22,8 @@ export interface CourseRow {
    * course change after the migration.
    */
   garden_left?: GardenLeft;
+  /** Two seeds, one pot (#387): the seeds in the garden's pot and the creatures let out. Missing as garden_left is, before the migration's first change. */
+  garden_pot?: GardenPot;
   created_at: string;
 }
 

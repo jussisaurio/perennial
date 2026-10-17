@@ -8,7 +8,8 @@ import type { PixelArt } from "./visitorArt";
 
 const STONE = { o: "#4a4440", S: "#9a948a", s: "#7a746a", w: "#c8c2b6" };
 
-export const LOOSE_ART: Record<Loose, PixelArt> = {
+/** A seed's art is its kind's (potArt.ts seedArt). */
+export const LOOSE_ART: Record<Exclude<Loose, "seed">, PixelArt> = {
   // Round, blue-grey and outlined, with a shine: not one of the path's grey specks.
   pebble: { rows: ["..oooo..", ".oSwwSo.", "oSSwSSSo", "oSSSSSso", ".osssso.", "..oooo.."], pal: { o: "#33383e", S: "#a4aeb8", s: "#78828c", w: "#e8eef2" } },
   stick: {

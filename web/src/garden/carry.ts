@@ -3,16 +3,17 @@
 // when one lands somewhere. What happens is data: one row per (thing, place),
 // so a new joke is one row. Who answers (the frog, the dog, a plant, the well) is a small
 // function each, on an interface the scene fills in. Nothing here is saved: a
-// thrown pebble is back by the pond next visit.
+// thrown pebble is back by the pond next visit. A seed from a visitor's word
+// plant (#387) is a loose thing too, until it goes in the clay pot (pot.ts).
 
 import { hash32 } from "../lib/seed";
 import { collide, type Layout } from "./world";
 
 /** A loose thing you can pick up. */
-export type Loose = "pebble" | "stick";
+export type Loose = "pebble" | "stick" | "seed";
 
-/** Where a thing lands: in the pond, on the flat stone by the pond (the cairn), down the orchard's well, by the dog, in a bed, or on the ground. */
-export type Place = "pond" | "cairn" | "well" | "dog" | "bed" | "ground";
+/** Where a thing lands: in the pond, on the flat stone by the pond (the cairn), in the clay pot (#387), down the orchard's well, by the dog, in a bed, or on the ground. */
+export type Place = "pond" | "cairn" | "pot" | "well" | "dog" | "bed" | "ground";
 
 /** Who answers a landing: the well's answer is its echo (#335 S6). */
 export type Answer = "frog" | "dog" | "plant" | "well";
@@ -22,9 +23,9 @@ export interface Reaction {
   /**
    * What becomes of the thing: it lies where it lands; it sinks (and another
    * waits by the pond, so pebbles never run out); it floats and drifts back to
-   * the edge; or it goes on the cairn.
+   * the edge; it goes on the cairn; or it is sown in the pot (#387).
    */
-  then: "lie" | "sink" | "float" | "stack";
+  then: "lie" | "sink" | "float" | "stack" | "sow";
   /** Rings spread on the water where it lands. */
   ripple?: true;
   answer?: Answer;
@@ -48,6 +49,12 @@ export const ROWS: Record<Loose, Partial<Record<Place, Reaction>>> = {
     pond: { then: "float", ripple: true, said: "Splash. The stick floats." },
     // Fetch (#335 S2) grows from this row: for now the dog only sees the stick.
     dog: { then: "lie", answer: "dog", said: "It lands by the dog." },
+    bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
+  },
+  // A seed that sinks is gone: seeds come from the plants, not from a heap by the pond.
+  seed: {
+    pond: { then: "sink", ripple: true, said: "Plop. The seed sinks." },
+    pot: { then: "sow", said: "The seed drops into the pot." },
     bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
   },
 };
@@ -87,15 +94,17 @@ export const ANSWERS: Record<Answer, (who: Answerers, at: { x: number; z: number
   },
 };
 
-/** How near (m) a landing must be to the cairn's stone, or the dog, to count as there. */
+/** How near (m) a landing must be to the cairn's stone, the pot, or the dog, to count as there. */
 const CAIRN_R = 0.35;
+const POT_R = 0.35;
 const DOG_R = 1.2;
 
-/** Where a thing that lands at (x, z) has landed. */
-export function placeAt(l: Layout, x: number, z: number, dog: { x: number; z: number } | null): Place {
+/** Where a thing that lands at (x, z) has landed. `pot`: the clay pot, while it takes a seed (pot.ts takes). */
+export function placeAt(l: Layout, x: number, z: number, dog: { x: number; z: number } | null, pot: { x: number; z: number } | null): Place {
   if (Math.hypot(x - l.pond.x, z - l.pond.z) < l.pond.r) return "pond";
   const c = cairnAt(l);
   if (Math.hypot(x - c.x, z - c.z) < CAIRN_R) return "cairn";
+  if (pot && Math.hypot(x - pot.x, z - pot.z) < POT_R) return "pot";
   // Behind the hedge: with the door shut, nothing thrown or carried gets this far.
   if (Math.hypot(x - l.well.x, z - l.well.z) < l.well.r) return "well";
   if (dog && Math.hypot(x - dog.x, z - dog.z) < DOG_R) return "dog";

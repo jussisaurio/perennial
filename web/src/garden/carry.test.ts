@@ -20,14 +20,14 @@ function scene(here: { frogOnPad?: boolean; frog?: boolean; dog?: boolean; plant
 describe("where a thing lands", () => {
   const L = gardens[1];
   test("in the pond, on the cairn's stone, by the dog, in a bed, or on the ground", () => {
-    expect(placeAt(L, L.pond.x + 0.4, L.pond.z, null)).toBe("pond");
+    expect(placeAt(L, L.pond.x + 0.4, L.pond.z, null, null)).toBe("pond");
     const c = cairnAt(L);
-    expect(placeAt(L, c.x + 0.1, c.z, null)).toBe("cairn");
+    expect(placeAt(L, c.x + 0.1, c.z, null, null)).toBe("cairn");
     const bed = L.beds[0];
-    expect(placeAt(L, bed.x, bed.z, null)).toBe("bed");
+    expect(placeAt(L, bed.x, bed.z, null, null)).toBe("bed");
     // The dog sits by its plant, in the bed: near it, it is the dog's place.
-    expect(placeAt(L, bed.x, bed.z, { x: bed.x + 0.5, z: bed.z })).toBe("dog");
-    expect(placeAt(L, L.gate.x, L.gate.z - 1, null)).toBe("ground");
+    expect(placeAt(L, bed.x, bed.z, { x: bed.x + 0.5, z: bed.z }, null)).toBe("dog");
+    expect(placeAt(L, L.gate.x, L.gate.z - 1, null, null)).toBe("ground");
   });
 
   test("a throw goes ahead, where you face", () => {
@@ -94,8 +94,8 @@ test("in every size of garden, the pebbles, the stick and the cairn lie on open 
   for (const L of gardens) {
     const spots = [...Array.from({ length: PEBBLES }, (_, i) => pebbleHome(L, i)), stickHome(L), cairnAt(L)];
     for (const p of spots) {
-      expect(placeAt(L, p.x, p.z, null)).not.toBe("pond");
-      expect(placeAt(L, p.x, p.z, null)).not.toBe("bed");
+      expect(placeAt(L, p.x, p.z, null, null)).not.toBe("pond");
+      expect(placeAt(L, p.x, p.z, null, null)).not.toBe("bed");
       // Where a walker can stand nearest it is within reach (sceneCarry.ts: 1.1 m).
       const stand = collide(L, p.x, p.z, WALKER);
       expect(Math.hypot(stand.x - p.x, stand.z - p.z)).toBeLessThan(1.1);
@@ -108,7 +108,7 @@ describe("the orchard's well (#335 S6)", () => {
   const w = L.well;
 
   test("a pebble dropped in falls, and another waits by the pond; the echo answers a moment later, with its own line", () => {
-    expect(placeAt(L, w.x + 0.2, w.z, null)).toBe("well");
+    expect(placeAt(L, w.x + 0.2, w.z, null, null)).toBe("well");
     expect(reaction("pebble", "well")).toMatchObject({ then: "sink", answer: "well" });
     const { who, did } = scene({});
     expect(ANSWERS.well(who, w, 2)).toBeNull();

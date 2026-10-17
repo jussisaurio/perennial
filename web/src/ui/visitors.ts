@@ -4,6 +4,7 @@
 import { deriveMemory, readMemory, wordState, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { dayNumber, startOfDay } from "../core/day";
+import { NO_POT, type PotWalk } from "../garden/pot";
 import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk, type Left } from "../garden/leave";
 import type { ReviewRow } from "../data/rows";
 import {
@@ -158,6 +159,16 @@ export function learnerLeave(l: Learner, now: number, dayNow: () => number): { w
 
 // Missing from course rows Electric streams before their first course change after the migration: nothing left yet.
 const storedLeft = (l: Learner): Left => l.course.garden_left ?? NO_LEFT;
+
+/** Two seeds, one pot (#387): the pot as the walk opens. Missing as garden_left is, before its first change: nothing sown yet. */
+export function learnerPot(l: Learner, now: number, dayNow: () => number): PotWalk {
+  return { pot: l.course.garden_pot ?? NO_POT, today: dayNumber(now), dayNow };
+}
+
+/** The pot on the landing page: empty, and nothing saved. */
+export function showcasePot(now: number, dayNow: () => number): PotWalk {
+  return { pot: NO_POT, today: dayNumber(now), dayNow };
+}
 
 /** What the bowl's rows need from the learner's reviews: the calendar day each row's visitor came. */
 function leaveFacts(l: Learner): LeaveFacts {

@@ -13,7 +13,7 @@ import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
 import type { Gender, GardenWord, OrchardWord } from "../deck/schema";
-import type { GardenLeft } from "perennial-contract";
+import type { GardenLeft, GardenPot } from "perennial-contract";
 
 export interface Sentence {
   id: string;
@@ -274,6 +274,16 @@ export function saveLeft(store: Store, lang: string, left: GardenLeft) {
     store.collections.course.update(lang, (d) => {
       // As saveCourse does: the draft's type wants mutable arrays, and the value is replaced whole, never edited in place.
       Object.assign(d, { garden_left: left });
+    });
+  });
+}
+
+/** Two seeds, one pot (#387): a seed was sown or a creature let out. The server keeps the value with more done (server/src/garden.ts). */
+export function savePot(store: Store, lang: string, pot: GardenPot) {
+  return store.write(() => {
+    store.collections.course.update(lang, (d) => {
+      // As saveLeft does: the value is replaced whole, never edited in place.
+      Object.assign(d, { garden_pot: pot });
     });
   });
 }

@@ -11,6 +11,8 @@ import * as Art from "./visitorArt";
 import * as LeaveArt from "./leaveArt";
 import * as CarryArt from "./carryArt";
 import * as ToyArt from "./toyArt";
+import * as PotArt from "./potArt";
+import { POT_KINDS, type Creature, type PotKind } from "./pot";
 import { FRUIT_KINDS, type Find, type FruitKind, type Guest, type WildGuest } from "./leave";
 import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
@@ -1042,14 +1044,14 @@ export function leafPile(): HTMLCanvasElement {
 /** Rings on the water, from small to wide, as they spread. */
 export const RINGS = 3;
 /** Cells of the carry atlas (32×32 each, things standing on the bottom row; the rings fill theirs), in this order. */
-export const CARRY_CELL = { pebble: 0, stick: 1, flatStone: 2, ring: (i: number) => 3 + i, well: 3 + RINGS };
-export const CARRY_CELLS = 4 + RINGS;
+export const CARRY_CELL = { pebble: 0, stick: 1, flatStone: 2, ring: (i: number) => 3 + i, well: 3 + RINGS, seed: (k: PotKind) => 4 + RINGS + POT_KINDS.indexOf(k) };
+export const CARRY_CELLS = 4 + RINGS + POT_KINDS.length;
 
-/** The loose things, the cairn's stone, the rings and the orchard's well (#335 S6), in one small atlas (drawn once), in CARRY_CELL order. */
+/** The loose things, the cairn's stone, the rings, the orchard's well (#335 S6) and the seeds for the pot (#387), in one small atlas (drawn once), in CARRY_CELL order. */
 export function carryAtlas(): HTMLCanvasElement {
   const [c, ctx] = canvas(32 * CARRY_CELLS, 32);
   const rings = Array.from({ length: RINGS }, (_, i) => CarryArt.ring(5 + i * 5, 32));
-  [CarryArt.LOOSE_ART.pebble, CarryArt.LOOSE_ART.stick, CarryArt.FLAT_STONE, ...rings, CarryArt.WELL].forEach((art, i) => {
+  [CarryArt.LOOSE_ART.pebble, CarryArt.LOOSE_ART.stick, CarryArt.FLAT_STONE, ...rings, CarryArt.WELL, ...POT_KINDS.map(PotArt.seedArt)].forEach((art, i) => {
     const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
     const oy = 32 - art.rows.length;
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
@@ -1117,5 +1119,22 @@ export function boat(word: string): HTMLCanvasElement {
   tctx.fillText(word, w / 2, 23);
   const img = tctx.getImageData(0, 0, w, h).data;
   for (let y = 18; y < 29; y++) for (let x = 0; x < w; x++) if (img[(y * w + x) * 4 + 3] > 110) px(ctx, x, y, INK);
+  return c;
+}
+
+// ---- Two seeds, one pot (#387) ------------------------------------------------
+
+/** Cells of the pot's atlas (32×32 each, standing on the bottom row): the pot, the pot once something hatched, a seed of each kind, then this walk's creatures. */
+export const POT_CELL = { pot: 0, hatched: 1, seed: (k: PotKind) => 2 + POT_KINDS.indexOf(k), creature: (i: number) => 2 + POT_KINDS.length + i };
+
+/** The pot, its seeds and `creatures` (drawn once, as the walk opens), in POT_CELL order. */
+export function potAtlas(creatures: readonly Creature[]): HTMLCanvasElement {
+  const arts = [PotArt.POT, PotArt.POT_HATCHED, ...POT_KINDS.map(PotArt.seedArt), ...creatures.map(PotArt.creatureArt)];
+  const [c, ctx] = canvas(32 * arts.length, 32);
+  arts.forEach((art, i) => {
+    const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
+    const oy = 32 - art.rows.length;
+    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  });
   return c;
 }

@@ -56,6 +56,10 @@ export interface Part {
  */
 export type TapHit =
   | { kind: "visitor"; v: VisitorView }
+  // A creature from the pot (#387), by its slot: its name.
+  | { kind: "creature"; i: number }
+  // The pot, while something hatched waits in it (#387): let it out.
+  | { kind: "pot" }
   | { kind: "plant"; p: PlacedPlant }
   | { kind: "tree"; t: PlacedTree }
   | { kind: "door"; a: DoorAction }
@@ -74,4 +78,4 @@ export type TapHit =
   | { kind: "scenery"; s: { view: SceneryView; hit: SceneryHit } };
 
 /** The order GardenScene.pickAny checks a tap in: first match wins. */
-export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "bowl", "joke", "lantern", "carry", "toy", "walk", "scenery"];
+export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "creature", "plant", "tree", "door", "bowl", "pot", "joke", "lantern", "carry", "toy", "walk", "scenery"];
