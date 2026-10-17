@@ -21,18 +21,13 @@ How we write and merge code here. It applies to every session and every agent. T
 - **A failing CI test is never just re-run.** Find the cause: read the log, check if a retry fails the same way, reproduce it locally. If this PR caused it, fix it here. If it is an older flaky test, fix it in a separate PR first. Then start `scripts/merge-when-green.sh` again.
 - Tests that depend on time pin the clock: `page.clock.setFixedTime` in e2e, and a fixed `now` passed in for unit tests. Tests that depend on layout pin the viewport.
 
-## Before merge: an independent review
+## Before merge: a review sized to the risk
 
-Every PR gets a review from a fresh agent that did not write the code, unless the fix is obvious. A fix is obvious when it is small, you are sure of it, and something proves it works: a test that fails without it, or, for tooling and CI changes, the CI run itself (timings, test counts). Then say "No review: obvious fix" in the PR. A low-risk PR whose review is slow may merge before the review ends; its findings then go in a follow-up PR. Auth, sync, writes, data, security and AI spend are never obvious enough to skip, and always wait for their review. It gets the diff (`gh pr diff <n>`), the linked issue and this file. It reports must-fix and optional findings with file:line and a failing scenario. The author fixes each finding, or writes in the PR why not. The PR description ends with `Reviewed: <depth>, <n> must-fix fixed, <n> declined (reasons above)`.
+We are pre-alpha: ship fast, and keep heavy process for mistakes that are hard to undo.
 
-How deep, by risk:
-
-| PR touches | Review |
-|---|---|
-| Docs or tests only | One quick pass |
-| App code or tooling (web/, server/, scripts/) | A normal review: correctness, then the code standard above |
-| CI, Docker, deploy (.github/, Dockerfile, docker-compose.yml) | A deep review |
-| Auth, sync, writes, data model, migrations, security, money (AI spend) | A deep review, and a second agent checks each finding before it is acted on |
+- **Most PRs** (app code, garden, UI, tooling, tests, docs): CI green and the author's own checks are enough when the author is reasonably sure the change is correct and it cannot corrupt or lose data. For a non-trivial change, ask one fresh agent for a quick review, but don't wait for it: merge when CI is green, and put its findings in a follow-up PR.
+- **Careful review** for changes that can corrupt or lose data, or weaken security: data migrations, the data model and sync merge rules, auth, security, and AI spend once AI is on in production. A fresh agent reviews the diff (`gh pr diff <n>`), the linked issue and this file, and reports must-fix findings with file:line and a failing scenario. A second agent checks each must-fix before it is acted on. These PRs wait for their review.
+- The PR description ends with `Reviewed: <none | quick | careful>`, and for a careful review `, <n> must-fix fixed, <n> declined (reasons above)`.
 
 Deck content (decks/) also follows the proofreader process in docs/decks.md.
 
@@ -40,7 +35,7 @@ Then merge when CI is green: `scripts/merge-when-green.sh <pr>` in the backgroun
 
 ## Every week: a cleanup sweep
 
-Per-PR reviews catch local problems, not slow drift across files. Once a week, open a P2 issue "Cleanup sweep <date>" and run it. Agents split the code by directory and look for duplication, dead code, needless fallbacks and tangled modules. These are refactors with no behaviour change, in small PRs, reviewed like any other.
+Per-PR reviews catch local problems, not slow drift across files. Once a week, open a P2 issue "Cleanup sweep <date>" and run it. Agents split the code by directory and look for duplication, dead code, needless fallbacks and tangled modules. These are refactors with no behaviour change, in small PRs.
 
 ## Product rules that code reviews also check
 
