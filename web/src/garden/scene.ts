@@ -22,7 +22,9 @@ import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
-import { LEAVE_STAND, LeaveItOut, type Hand, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
+import { LEAVE_STAND, LeaveItOut, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
+import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
+import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { FINDS, type Left, type LeaveWalk } from "./leave";
 import { bareNoun, nounView } from "./nouns";
 import { plantInReach } from "./shake";
@@ -54,8 +56,8 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), or shake a plant (#357). */
-export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), or carry's (#358). */
+export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct;
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), or a form falling from a shaken plant (kind "petal", #357; no text: a leaf), in screen fractions. */
 export interface Label {
@@ -104,12 +106,15 @@ export interface SceneCallbacks {
   onProgress: (done: number, total: number) => void;
   /** What the action button does now, for the thing in reach (#334), or null with nothing in reach. */
   onReach: (a: Reach | null) => void;
-  /** Leave it out (#351): what you hold changed; something was taken, left, found or hung; the new value, to save. */
-  onHand: (h: Hand | null) => void;
+  /** What you hold changed (#351, #358): leave it out's thing or a loose one. */
+  onHand: (h: Held | null) => void;
+  /** Leave it out (#351): something was taken, left, found or hung; the new value, to save. */
   onLeave: (done: LeaveDone) => void;
   onLeft: (left: Left) => void;
   /** A plant was shaken (#357): the forms that fell from it ([]: one leaf). */
   onShake: (p: PlacedPlant, forms: string[]) => void;
+  /** Carry (#358): a loose thing was picked up, thrown, put down or stacked, or it landed. */
+  onCarry: (done: CarryDone) => void;
   /** The learner opened the door with the key: it stays open (saved with the course). */
   onDoorOpen: () => void;
   /** Sitting on the bench (#362): who just came to sit with you, or null once you stand up. */
@@ -136,6 +141,10 @@ const DOOR_STAND = 1.4;
 const KEY_STAND = 1;
 /** The thing in reach glints (#334): a flash this long (s), this often (s); more often than the key's late help, as it is right there. */
 const CUE = { flash: 0.5, every: 1.6 };
+/** A tap on the water farther than this (m) walks to the pond first, then throws (#358). */
+const THROW_MAX = 6;
+/** A plant this near (m) where a thing lands perks up (#358). */
+const PERK_NEAR = 0.9;
 /** Near enough to the bench (m, from its middle) to sit on it (#334). */
 const BENCH_REACH = 1.6;
 /** Sitting on the bench (#334): the eye's height, where you sit along the seat (near its left end: the rest is for company, #362), and how fast you sit down (per second). */
@@ -214,10 +223,14 @@ export class GardenScene {
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   /** What the action button does now (#334), and the glint on the thing in reach that shows it can be used. */
   private reach: Reach | null = null;
-  /** What the action button acts on when it does leave it out's (#351). */
+  /** What the action button acts on when it does leave it out's (#351), or carry's (#358; a throw has none: it goes where you face). */
   private leaveTarget: LeaveTarget | null = null;
   /** The plant the action button shakes, when it shakes one (#357). */
   private shakeTarget: PlacedPlant | null = null;
+  private carryTarget: CarryTarget | null = null;
+  /** Carry (#358): the pebbles, the stick and the cairn; and how often each one has answered a landing this visit. */
+  private carry: Carry;
+  private answered: Record<Answer, number> = { frog: 0, dog: 0, plant: 0 };
   /** Leave it out (#351): the bowl, the shed and its shelf, and what came in the night. */
   private leaveIt: LeaveItOut;
   /** A find's word and meaning over where it lay, for a few seconds after it is picked up. */
@@ -367,6 +380,11 @@ export class GardenScene {
       },
       () => this.cb.onWalkInto({ did: "pile" }),
     );
+    this.carry = new Carry(layout, visitors.leave.today, reducedMotion, {
+      dog: () => this.guests.where("dog"),
+      doorOpen: () => this.door.state === "open",
+      land: (l) => this.landed(l),
+    });
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
@@ -386,8 +404,8 @@ export class GardenScene {
       },
       visitors.list,
     );
-    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto];
-    this.tinted = [this.mats, this.leaveIt.mats, this.walkInto.mats];
+    this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry];
+    this.tinted = [this.mats, this.leaveIt.mats, this.walkInto.mats, this.carry.mats];
     this.scene.fog = this.fog;
     this.build();
   }
@@ -438,6 +456,9 @@ export class GardenScene {
     this.scene.add(this.leaveIt.root);
     const dog = this.leaveIt.dogAt();
     if (dog) this.guests.visit("dog", dog);
+    // Draws no random numbers either.
+    this.carry.build();
+    this.scene.add(this.carry.root);
     // A key left waiting a few days (#334): the dog, if it is here today, sits by it.
     if (this.keyHelp?.visitors && this.door.key && !dog) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
     // After the visitors: a visitor may sit in the orchard's trees today.
@@ -600,6 +621,8 @@ export class GardenScene {
     else if (a === "stand") this.standUp();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
     else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
+    else if (a === "throw" && this.reach === "throw") this.throwAhead();
+    else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
     else if (a !== "sit" && a === this.reach && this.leaveTarget) this.doLeave(this.leaveTarget);
   }
 
@@ -614,8 +637,101 @@ export class GardenScene {
     this.cb.onShake(p, this.plants.shake(p, this.elapsed, this.reducedMotion));
   }
 
+  /** What you hold now: one thing at a time, leave it out's or a loose one. */
+  private held(): Held | null {
+    const thing = this.carry.thing;
+    return thing ? { from: "ground", thing } : this.leaveIt.hand;
+  }
+
+  /**
+   * A loose thing under a point on the canvas (CSS pixels), with your hands
+   * free; holding one, the cairn (a pebble), the pond to throw it in, or the
+   * ground in reach to put it down. Ask after the bowl's things.
+   */
+  pickCarry(cssX: number, cssY: number, cssW: number, cssH: number): CarryTarget | null {
+    // One thing at a time: what you hold from the basket or the shelf goes back there first.
+    if (this.leaveIt.hand) return null;
+    const r = this.ray(cssX, cssY, cssW, cssH);
+    const w = this.sceneryWorld();
+    const wall = Math.min(thingAt(r, w), this.hedgeAt(r));
+    if (this.carry.held === null) {
+      const got = this.carry.pick(r);
+      if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
+      // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
+      return this.carry.standFor(got.target, this.x, this.z).near || wall >= got.t ? got.target : null;
+    }
+    if (this.carry.pickCairn(r) <= wall) return { at: "cairn" };
+    // The pond's own hit disc (sceneSky.ts) lies a few mm over the water and a rim wider: the water may be just behind it.
+    const p = this.layout.pond;
+    const water = rayDisc(r, p.x, 0.04, p.z, p.r);
+    if (water < FOG_FAR && water < wall + 0.1) return { at: "water", x: r.ox + r.dx * water, z: r.oz + r.dz * water };
+    const g = groundAt(r, w);
+    return g && Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH ? { at: "ground", ...g } : null;
+  }
+
+  /** A tap on a loose thing, the cairn, the water or the ground in reach (#358): act on it in reach; from farther away, walk up to it first. */
+  tapCarry(t: CarryTarget) {
+    if (t.at === "water" && Math.hypot(t.x - this.x, t.z - this.z) > THROW_MAX) return this.goTo(t.x, t.z, 0, () => this.doCarry(t));
+    const at = this.carry.standFor(t, this.x, this.z);
+    if (at.near) return this.doCarry(t);
+    this.goTo(at.x, at.z, CARRY_STAND, () => this.doCarry(t));
+  }
+
+  /** Pick up a loose thing; put what you hold on the cairn or the ground; throw it at a point on the water. Anything that no longer applies does nothing. */
+  private doCarry(t: CarryTarget) {
+    const c = this.carry;
+    let did: "lift" | "throw" | "put" | "stack";
+    if (t.at === "thing") {
+      if (this.leaveIt.hand || !c.lift(t.i)) return;
+      did = "lift";
+    } else {
+      const at = t.at === "cairn" ? c.standFor(t, this.x, this.z) : t;
+      if (!c.letGo(this.x, this.z, at.x, at.z, t.at === "water")) return;
+      did = t.at === "water" ? "throw" : t.at === "cairn" ? "stack" : "put";
+    }
+    this.cb.onHand(this.held());
+    this.cb.onCarry({ did });
+  }
+
+  /** The action button's throw (#358): what you hold flies to where you face. */
+  private throwAhead() {
+    const to = aimAt(this.x, this.z, this.yaw);
+    if (!this.carry.letGo(this.x, this.z, to.x, to.z, true)) return;
+    this.cb.onHand(this.held());
+    this.cb.onCarry({ did: "throw" });
+  }
+
+  /** What answers a landing (carry.ts ANSWERS): the frog, the dog, a plant. */
+  private answerers: Answerers = {
+    frogHop: () => this.guests.frogHop(),
+    say: (id, text) => {
+      if (!this.guests.here(id)) return false;
+      this.say(id, text);
+      return true;
+    },
+    perk: (x, z) => {
+      let best: PlacedPlant | null = null;
+      let bestD = PERK_NEAR;
+      for (const p of this.layout.plants) {
+        const d = Math.hypot(p.x - x, p.z - z);
+        if (d < bestD) [best, bestD] = [p, d];
+      }
+      if (best) this.nod(best);
+      return !!best;
+    },
+  };
+
+  /** A thrown or put-down thing landed (#358): whoever its row names answers, and the page hears what happened. */
+  private landed(l: Landing) {
+    const a = l.reaction.answer;
+    const more = a ? ANSWERS[a](this.answerers, l, this.answered[a]++) : null;
+    this.cb.onCarry({ did: "land", said: more ? `${l.said} ${more}` : l.said });
+  }
+
   /** The bowl, a thing in the basket, a hook or the shelf's board, or what came in the night, under a point on the canvas (CSS pixels). Ask after the door. */
   pickLeave(cssX: number, cssY: number, cssW: number, cssH: number): LeaveTarget | null {
+    // One thing at a time: a loose thing in your hands is thrown or put down first (#358).
+    if (this.carry.held !== null) return null;
     const r = this.ray(cssX, cssY, cssW, cssH);
     const got = this.leaveIt.pick(r);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
@@ -648,7 +764,7 @@ export class GardenScene {
     const came = this.leaveIt.came;
     const done = this.leaveIt.act(t, (left) => this.cb.onLeft(left));
     if (!done) return;
-    this.cb.onHand(this.leaveIt.hand);
+    this.cb.onHand(this.held());
     if (done.did === "find") {
       // The dog that brought it goes home.
       if (came?.row.guest === "dog") this.guests.visit("dog", null);
@@ -1371,7 +1487,7 @@ export class GardenScene {
 
   /**
    * One tap (CSS pixels): the visitor, plant, orchard tree, door or key, the bowl and its things (#351),
-   * a joke (#364), open ground to walk to (#336), or scenery word it meets, in that order —
+   * a joke (#364), a loose thing or where to put or throw it (#358), open ground to walk to (#336), or scenery word it meets, in that order —
    * the chain GardenWalk.tsx used to run itself as sequential if-returns
    * (#323). Every pick here is pure (no side effects), so asking all of them
    * and keeping the first match in TAP_PRIORITY is exactly that chain's
@@ -1391,6 +1507,8 @@ export class GardenScene {
     if (l) hits.bowl = { kind: "bowl", t: l };
     const j = this.pickJoke(cssX, cssY, cssW, cssH);
     if (j) hits.joke = { kind: "joke", j };
+    const c = this.pickCarry(cssX, cssY, cssW, cssH);
+    if (c) hits.carry = { kind: "carry", t: c };
     const g = this.pickGround(cssX, cssY, cssW, cssH);
     if (g) hits.walk = { kind: "walk", ...g };
     const s = this.pickScenery(cssX, cssY, cssW, cssH);
@@ -1493,8 +1611,9 @@ export class GardenScene {
     // sky (clouds, water, the sun), the door (its swing and the key's glint),
     // critters (fireflies, butterflies, the sleeping bloom's z's), plants
     // (chunk culling — beds outside the fog are skipped — streaming the
-    // plants nearest you, the perk uniform, brushing), the visitors, then
-    // walking into trees and leaf piles (#359).
+    // plants nearest you, the perk uniform, brushing), the visitors, the
+    // jokes, walking into trees and leaf piles (#359), then the loose things
+    // (a thrown one's flight, the pond's rings, the cairn's wobble).
     const frame = this.tickFrame;
     frame.dt = dt;
     frame.elapsed = t;
@@ -1599,11 +1718,12 @@ export class GardenScene {
 
   /**
    * Tell the page what the action button does now (#334): stand up from the
-   * bench, pick up the key, pick up a find (#351), open or try the door, the
-   * rest of leave it out's (leave or follow at the bowl, hang on the shelf,
-   * take from the basket or the shelf), sit on the bench, or shake the plant
-   * ahead of you (#357), for whichever is in reach (in that order); or nothing.
-   * The thing in reach glints (the cue).
+   * bench, pick up the key, throw a loose thing you hold or put it on the
+   * cairn (#358), pick up a find (#351), open or try the door, the rest of
+   * leave it out's (leave or follow at the bowl, hang on the shelf, take from
+   * the basket or the shelf), pick up a loose thing, sit on the bench, or
+   * shake the plant ahead of you (#357), for whichever is in reach (in that
+   * order); or nothing. The thing in reach glints (the cue).
    */
   private reportReach() {
     const d = this.door;
@@ -1611,19 +1731,26 @@ export class GardenScene {
     const nearKey = d.state === "key" && this.inReach("key");
     const nearDoor = d.state !== "open" && this.inReach("try");
     const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH;
+    // A loose thing in your hands (#358) is used first: thrown, or put on the cairn. One thing at a time, so nothing of leave it out's is offered then.
+    const holding = this.carry.held !== null;
+    const carry = this.seated || nearKey ? null : this.carry.reachAt(this.x, this.z, !!this.leaveIt.hand);
     // A find at your feet comes before the door: the gate post's feather lies in the door's reach.
-    const leave = this.seated || nearKey ? null : this.leaveIt.reachAt(this.x, this.z);
+    const leave = this.seated || nearKey || holding ? null : this.leaveIt.reachAt(this.x, this.z);
     const mine = leave && (leave.a === "find" || !nearDoor) ? leave : null;
-    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : mine?.a === "find" ? "find" : nearDoor ? (d.state === "held" ? "open" : "try") : mine ? mine.a : nearBench ? "sit" : null;
+    const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
+    // The first of these that applies, in reportReach's order above.
+    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : (door ?? mine?.a ?? carry?.a ?? (nearBench ? "sit" : null));
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
     const a: Reach | null = plant ? "shake" : before;
-    const target = mine?.target ?? null;
-    // Targets are made once (LeaveItOut.reachAt), so the same target is the same object.
-    if (a === this.reach && target === this.leaveTarget && plant === this.shakeTarget) return;
+    const target = mine && a === mine.a ? mine.target : null;
+    const carried = carry && a === carry.a ? carry.target : null;
+    // Targets are made once (LeaveItOut.reachAt, Carry.reachAt), so the same target is the same object.
+    if (a === this.reach && target === this.leaveTarget && plant === this.shakeTarget && carried === this.carryTarget) return;
     this.reach = a;
     this.leaveTarget = target;
     this.shakeTarget = plant;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : a === "try" || a === "open" ? d.handle : target ? this.leaveIt.cueAt(target) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
+    this.carryTarget = carried;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : target ? this.leaveIt.cueAt(target) : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
     this.cue.visible = !!at;
     if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);

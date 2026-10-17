@@ -9,6 +9,7 @@ import { Plant } from "../ui/plant";
 import type { PlacedPlant } from "./world";
 import * as Art from "./visitorArt";
 import * as LeaveArt from "./leaveArt";
+import * as CarryArt from "./carryArt";
 import { FRUIT_KINDS, type Find, type FruitKind, type Guest, type WildGuest } from "./leave";
 import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
@@ -1056,5 +1057,25 @@ export function leafPile(): HTMLCanvasElement {
   const [c, ctx] = canvas(PILE_CELL, PILE_CELL);
   const oy = PILE_CELL - LEAF_PILE.rows.length;
   for (const r of Art.runs(LEAF_PILE)) px(ctx, r.x, oy + r.y, r.fill, r.w, 1);
+  return c;
+}
+
+// ---- Carry, put down, throw (#358) -------------------------------------------
+
+/** Rings on the water, from small to wide, as they spread. */
+export const RINGS = 3;
+/** Cells of the carry atlas (32×32 each, things standing on the bottom row; the rings fill theirs), in this order. */
+export const CARRY_CELL = { pebble: 0, stick: 1, flatStone: 2, ring: (i: number) => 3 + i };
+export const CARRY_CELLS = 3 + RINGS;
+
+/** The loose things, the cairn's stone and the rings, in one small atlas (drawn once), in CARRY_CELL order. */
+export function carryAtlas(): HTMLCanvasElement {
+  const [c, ctx] = canvas(32 * CARRY_CELLS, 32);
+  const rings = Array.from({ length: RINGS }, (_, i) => CarryArt.ring(5 + i * 5, 32));
+  [CarryArt.LOOSE_ART.pebble, CarryArt.LOOSE_ART.stick, CarryArt.FLAT_STONE, ...rings].forEach((art, i) => {
+    const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
+    const oy = 32 - art.rows.length;
+    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  });
   return c;
 }

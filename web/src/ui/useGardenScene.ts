@@ -9,7 +9,8 @@ import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
 import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
 import type { Left, LeaveWalk } from "../garden/leave";
-import type { Hand, LeaveDone } from "../garden/sceneLeave";
+import type { LeaveDone } from "../garden/sceneLeave";
+import type { CarryDone, Held } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
 import { sceneryViews } from "../garden/scenery";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
@@ -35,7 +36,8 @@ interface WalkData {
  * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
  * save it once it is opened. `leave`: the bowl and the shelf (#351), how to save
  * them, and what to do when the learner leaves or finds something. `onShake`:
- * a plant was shaken (#357), and the forms that fell from it.
+ * a plant was shaken (#357), and the forms that fell from it. `onCarry`: a
+ * loose thing was picked up, thrown, put down or stacked, or it landed (#358).
  */
 export function useGardenScene({
   lang,
@@ -51,6 +53,7 @@ export function useGardenScene({
   canvas,
   onFocused,
   onShake,
+  onCarry,
 }: {
   lang: string;
   source: PlantSource | null;
@@ -66,6 +69,7 @@ export function useGardenScene({
   canvas: RefObject<HTMLCanvasElement | null>;
   onFocused: () => void;
   onShake: (p: PlacedPlant, forms: string[]) => void;
+  onCarry: (d: CarryDone) => void;
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
@@ -75,7 +79,7 @@ export function useGardenScene({
   const [labels, setLabels] = useState<Label[]>([]);
   const [ready, setReady] = useState(false);
   const [reach, setReach] = useState<Reach | null>(null);
-  const [hand, setHand] = useState<Hand | null>(null);
+  const [hand, setHand] = useState<Held | null>(null);
   const [company, setCompany] = useState<Companion | null>(null);
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
@@ -87,6 +91,8 @@ export function useGardenScene({
   shakeNow.current = onShake;
   const walkIntoNow = useRef(walkInto);
   walkIntoNow.current = walkInto;
+  const carryNow = useRef(onCarry);
+  carryNow.current = onCarry;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
@@ -144,6 +150,7 @@ export function useGardenScene({
             onLeft: (left) => leaveNow.current.save(left),
             onShake: (p, forms) => shakeNow.current(p, forms),
             onWalkInto: (e) => walkIntoNow.current(e),
+            onCarry: (d) => carryNow.current(d),
           },
           reduced,
           lang,

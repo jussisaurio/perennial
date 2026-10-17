@@ -12,6 +12,7 @@ import type { DoorAction } from "./scene";
 import type { Conditions } from "./conditions";
 import type { LeaveTarget } from "./sceneLeave";
 import type { Joke } from "./sceneJokes";
+import type { CarryTarget } from "./sceneCarry";
 import type { PlacedTree } from "./orchard";
 import type { PlacedPlant } from "./world";
 import type { SceneryHit, SceneryView } from "./scenery";
@@ -42,11 +43,12 @@ export interface Part {
 
 /**
  * A tap the scene can answer. The host's one dispatcher (GardenScene.pickAny)
- * asks its own pickVisitor/pick/pickTree/pickDoor/pickLeave/pickJoke/pickGround/pickScenery
+ * asks its own pickVisitor/pick/pickTree/pickDoor/pickLeave/pickJoke/pickCarry/pickGround/pickScenery
  * methods (each already a pure query against a part or the host's own state)
  * and keeps the hit whose kind comes first in TAP_PRIORITY: a visitor, then a
  * plant, an orchard tree, the door or key, the bowl and its things (#351),
- * a joke (#364), ground to walk to, and last the garden itself (scenery).
+ * a joke (#364), loose things and where to put or throw them (#358), ground
+ * to walk to, and last the garden itself (scenery).
  * GardenWalk.tsx has one switch on `kind` instead of the five-step chain it
  * used to run itself. Picking is not part of the Part interface: no part
  * implements its own pick, so there is nothing to ask in a loop.
@@ -60,9 +62,11 @@ export type TapHit =
   | { kind: "bowl"; t: LeaveTarget }
   // The deadpan scenery (#364): the mouse door, or the sundial at night, says its line.
   | { kind: "joke"; j: Joke }
+  // Carry (#358): a loose thing to pick up; holding one, the cairn, the water to throw it in, or the ground in reach to put it down.
+  | { kind: "carry"; t: CarryTarget }
   // Open ground out of reach (#336): walk there. Ground in reach is still scenery, the path's word.
   | { kind: "walk"; x: number; z: number }
   | { kind: "scenery"; s: { view: SceneryView; hit: SceneryHit } };
 
 /** The order GardenScene.pickAny checks a tap in: first match wins. */
-export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "bowl", "joke", "walk", "scenery"];
+export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "bowl", "joke", "carry", "walk", "scenery"];

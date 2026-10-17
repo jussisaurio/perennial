@@ -30,6 +30,9 @@ const FISH_R = 0.45;
 const FISH_SPEED = 0.2;
 /** The part of the fish's cell that holds its art: the bottom rows of a 32-row cell (textures.ts). */
 const FISH_VH = KOI.rows.length / 32;
+/** The frog's hop from pad to pad: how long it takes (s) and how high it goes (m). */
+const HOP_S = 0.45;
+const HOP_UP = 0.3;
 /** How long each frame of the dog's tail wag shows (s). */
 const WAG_S = 0.3;
 /** How near you come before the dog wags its tail (m). */
@@ -106,6 +109,10 @@ export class SceneVisitors implements Part {
   private bird = { t: -1, dx: 0, dz: 0 };
   /** The frog: puffed up until `croak` (elapsed s); asleep by day, as in the strip, and all day on about one day in 25. */
   private frog = { croak: 0, puffed: false, asleep: false, dark: false };
+  /** The lily pads, which one the frog sits on (null: at its word's plant, or not here), and its hop from one to the next (t: 0 to 1). */
+  private pads: readonly [number, number][] = [];
+  private frogPad: number | null = null;
+  private hop = { t: 1, x: 0, z: 0 };
   /** The gnome's pose, when it left / came back into view, its lantern (lit at dusk and night) and the lantern's small glow. */
   private gnome = { pose: "front" as GnomePose, inView: true, changedAt: 0, lit: false, glow: null as THREE.Sprite | null };
   /** The heron: t is 0 at home, 1 one step back; dir is +1 while stepping back, -1 while stepping home. */
@@ -148,6 +155,7 @@ export class SceneVisitors implements Part {
     const cellU = 1 / T.VISITOR_CELLS;
     // The frog's pad: the one nearest the gate, where you come in.
     const pad = pads.reduce((a, p) => (Math.hypot(p[0] - L.gate.x, p[1] - L.gate.z) < Math.hypot(a[0] - L.gate.x, a[1] - L.gate.z) ? p : a), pads[0]);
+    this.pads = pads;
     for (const v of this.list) {
       let x: number, y: number, z: number, cell: number, size: number;
       // A garden-word visitor (#209) lives at its word's plant (#235); one that came another way keeps its spot below.
@@ -160,6 +168,7 @@ export class SceneVisitors implements Part {
         this.frog.asleep = rareDay(25, "frog-asleep");
         // Beside its word's plant, in its bed; or on the lily pad nearest the gate.
         [x, y, z] = home ? [home.x - 0.14, this.world.bedTop, home.z + 0.1] : [pad[0], 0.075, pad[1]];
+        this.frogPad = home ? null : pads.indexOf(pad);
         [cell, size, hit, top] = [this.frogAwake() ? T.VISITOR_CELL.frog : T.VISITOR_CELL.frogAsleep, 0.42, [0.17, 0.25, 0.2], 0.42];
       } else if (v.id === "gnome") {
         // A bed corner chosen by the date; never the front-left one, where the bed's sign is.
@@ -331,6 +340,35 @@ export class SceneVisitors implements Part {
     s.mesh.visible = true;
   }
 
+  /** Is this visitor here, and in sight, now? */
+  here(id: VisitorId): boolean {
+    return this.sprites.some((o) => o.v.id === id && o.mesh.visible);
+  }
+
+  /** Where a visitor is now, on the ground; null when it is not here today. */
+  where(id: VisitorId): { x: number; z: number } | null {
+    const s = this.sprites.find((o) => o.v.id === id);
+    return s ? { x: s.x, z: s.z } : null;
+  }
+
+  /**
+   * A pebble lands in the pond (#358): the frog on a lily pad hops to the next
+   * pad, and stays there. False when it is not on a pad (at its word's plant, or
+   * not here today). With reduced motion it is there at once.
+   */
+  frogHop(): boolean {
+    const s = this.sprites.find((o) => o.v.id === "frog");
+    if (!s || this.frogPad === null) return false;
+    this.frogPad = (this.frogPad + 1) % this.pads.length;
+    const [x, z] = this.pads[this.frogPad];
+    Object.assign(this.hop, { t: this.world.reducedMotion ? 1 : 0, x: s.x, z: s.z });
+    [s.x, s.z] = [x, z];
+    s.home = [x, s.y, z];
+    s.pos.setXYZ(0, s.x, s.y, s.z);
+    s.pos.needsUpdate = true;
+    return true;
+  }
+
   /** Awake at dusk and night, except on its sleepy days. Only then does a tap make it croak. */
   frogAwake(): boolean {
     return this.frog.dark && !this.frog.asleep;
@@ -378,6 +416,13 @@ export class SceneVisitors implements Part {
           g.glow.position.set(s.x + e[0] * k * off, s.y + (4.5 / 32) * s.h, s.z + e[8] * k * off);
         }
       } else if (s.v.id === "frog") {
+        // Mid-hop: from the pad it left (hop.x, z) to where it sits now, in a small arc.
+        const h = this.hop;
+        if (h.t < 1) {
+          h.t = Math.min(1, h.t + dt / HOP_S);
+          s.pos.setXYZ(0, h.x + (s.x - h.x) * h.t, s.y + Math.sin(Math.PI * h.t) * HOP_UP, h.z + (s.z - h.z) * h.t);
+          s.pos.needsUpdate = true;
+        }
         if (this.frog.puffed && elapsed > this.frog.croak) {
           this.frog.puffed = false;
           showCell(s.uv, T.VISITOR_CELL.frog);
