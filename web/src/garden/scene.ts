@@ -28,6 +28,8 @@ import { nounView } from "./nouns";
 import { plantInReach } from "./shake";
 import type { Gender } from "../deck/schema";
 import { BED_H, FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
+import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
+import { inLang } from "./nouns";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -103,6 +105,8 @@ export interface SceneCallbacks {
   onShake: (p: PlacedPlant, forms: string[]) => void;
   /** The learner opened the door with the key: it stays open (saved with the course). */
   onDoorOpen: () => void;
+  /** Sitting on the bench (#362): who just came to sit with you, or null once you stand up. */
+  onCompany: (c: Companion | null) => void;
   /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
   onStall: () => void;
 }
@@ -125,8 +129,8 @@ const KEY_STAND = 1;
 const CUE = { flash: 0.5, every: 1.6 };
 /** Near enough to the bench (m, from its middle) to sit on it (#334). */
 const BENCH_REACH = 1.6;
-/** Sitting on the bench (#334): the eye's height, where you sit along the seat (beside the cat's place), and how fast you sit down (per second). */
-const SEAT = { eye: 0.78, dx: -0.3, speed: 2.5 };
+/** Sitting on the bench (#334): the eye's height, where you sit along the seat (near its left end: the rest is for company, #362), and how fast you sit down (per second). */
+const SEAT = { eye: 0.78, dx: -0.5, speed: 2.5 };
 /** How fast the view turns toward where a walk goes: the share of the turn left that it makes per second. */
 const TRIP_TURN = 3;
 /**
@@ -138,6 +142,13 @@ export const DETAIL = { normal: 2160, low: 760 } as const;
 export type Detail = keyof typeof DETAIL;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
+
+/** Each time of day's tint for everything unlit, and its fog, made once: the time-lapse on the bench (#362) blends them every frame. */
+const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color }> = {
+  day: { tint: new THREE.Color(...T.SKIES.day.tint), fog: new THREE.Color(T.SKIES.day.fog) },
+  dusk: { tint: new THREE.Color(...T.SKIES.dusk.tint), fog: new THREE.Color(T.SKIES.dusk.fog) },
+  night: { tint: new THREE.Color(...T.SKIES.night.tint), fog: new THREE.Color(T.SKIES.night.fog) },
+};
 
 /** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. */
 const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
@@ -206,6 +217,24 @@ export class GardenScene {
   /** Sitting on the bench (#334); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
   private seated = false;
   private seat = 0;
+  /**
+   * Sitting still on the bench (#362): seconds sat; how far time has run on
+   * (parts of the day past `time`, bench.ts) and the look on show for it; who
+   * came to sit with you; the view you sat down with, and whether you have
+   * looked round yourself since; the turn of the head toward who came last;
+   * and when the gnome says its word (seconds sat).
+   */
+  private sat = 0;
+  private lapse = 0;
+  private readonly lapseNow: Look = { from: "day", to: "day", k: 0 };
+  private come = new Set<Companion>();
+  private seatView = { yaw: 0, pitch: 0, looked: false };
+  private turnTo: { yaw: number; pitch: number; at: number } | null = null;
+  private gnomeSays: number | null = null;
+  /** Is this visitor here today? Made once: the bench asks every frame while you sit. */
+  private readonly here = (id: Companion) => this.guests.has(id);
+  private readonly tintNow = new THREE.Color();
+  private readonly fogNow = new THREE.Color();
   /** The pond's bench, by its middle (world.ts benchAt), worked out once: reportReach runs every frame. */
   private bench!: { x: number; z: number };
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
@@ -224,7 +253,14 @@ export class GardenScene {
   /** The sunflower: where it stands, its sprite's frame and lean, and which side it shows (null: not drawn yet). */
   private flower!: { x: number; z: number; uv: THREE.InstancedBufferAttribute; params: THREE.InstancedBufferAttribute; face: boolean | null };
   private selected: PlacedPlant | null = null;
+  /** The time of day chosen (the clock, or the button), and the one on show: they differ while time speeds up on the bench (#362). */
   private time: TimeOfDay = "day";
+  private shown: TimeOfDay = "day";
+  /** Time is sped up on the bench now, or running back to the time chosen (#362). */
+  private lapsing = false;
+  private readonly fog = new THREE.Fog(0xffffff, FOG_NEAR, FOG_FAR);
+  /** The sprite materials tint() tints itself: the scene's own and leave it out's (the visitors tint their own). */
+  private tinted: readonly Set<THREE.ShaderMaterial>[];
   private lastLabels = "";
   private tmp = new THREE.Vector3();
   /** Filled in place every tick: tick allocates nothing (DESIGN.md, Garden code). */
@@ -317,6 +353,8 @@ export class GardenScene {
       visitors.list,
     );
     this.parts = [this.sky, this.door, this.critters, this.plants, this.guests];
+    this.tinted = [this.mats, this.leaveIt.mats];
+    this.scene.fog = this.fog;
     this.build();
   }
 
@@ -589,12 +627,99 @@ export class GardenScene {
     this.endTrip();
     this.glide = null;
     // The bench faces +z, toward the pond; forward is -z at yaw 0.
-    [this.x, this.z, this.yaw, this.pitch] = [b.x + SEAT.dx, b.z + 0.05, Math.PI, -0.12];
+    [this.x, this.z, this.yaw, this.pitch] = [b.x + SEAT.dx, b.z + 0.05, Math.PI, 0.1];
     this.seated = true;
+    this.sat = 0;
+    this.seatView = { yaw: this.yaw, pitch: this.pitch, looked: false };
   }
 
+  /** Stand up (any move does): who came to sit with you goes back to their own places, and time runs back to now (#362). Called every frame you move: nothing to do unless you sat. */
   private standUp() {
+    if (!this.seated) return;
     this.seated = false;
+    this.turnTo = null;
+    this.gnomeSays = null;
+    for (const id of this.come) this.guests.visit(id, null);
+    const bird = this.come.has("bird");
+    this.come.clear();
+    // The bird may have been waiting by a key before it came.
+    if (bird) this.birdByKey();
+    this.cb.onCompany(null);
+  }
+
+  /**
+   * One frame of sitting on the bench (#362), before the camera moves: time
+   * speeds up after a while (bench.ts), and visitors here today come to sit
+   * with you, each once its place is out of view, so you never see one come.
+   * The head turns to whoever came (not with reduced motion, nor once you have
+   * looked round yourself). Standing up, time runs back to the time chosen.
+   */
+  private onBench(dt: number) {
+    let race = 0;
+    if (this.seated) {
+      this.sat += dt;
+      race = lapseRate(this.sat);
+      this.lapse += race * dt;
+      const who = due(this.sat, this.here, this.come);
+      if (who && !this.inView(who)) this.sitBeside(who);
+      if (this.gnomeSays !== null && this.sat >= this.gnomeSays) {
+        this.gnomeSays = null;
+        // lang is a deck language here, so a word for it is always there.
+        this.guests.say("gnome", inLang(GNOME_WORD, this.lang)!);
+      }
+      const t = this.turnTo;
+      if (t) {
+        const w = glance(this.sat - t.at);
+        const v = this.seatView;
+        this.yaw = v.yaw + (t.yaw - v.yaw) * w;
+        this.pitch = v.pitch + (t.pitch - v.pitch) * w;
+        if (w === 0 && this.sat > t.at) this.turnTo = null;
+      }
+    } else if (this.lapse) {
+      race = backRate(this.lapse);
+      this.lapse = settle(this.lapse, dt);
+    }
+    if (!this.lapse) {
+      if (!this.lapsing) return;
+      // Back to the time chosen.
+      this.lapsing = false;
+      this.sky.blend(null, 0);
+      return this.showTime(this.time);
+    }
+    this.lapsing = true;
+    const look = lapseLook(this.time, this.lapse, this.lapseNow);
+    // What is lit or awake changes half way; the sky, the light and the fog fade.
+    const now = look.k < 0.5 ? look.from : look.to;
+    if (now !== this.shown) this.showTime(now);
+    this.sky.blend(look, race);
+    this.tintNow.copy(LIGHT[look.from].tint).lerp(LIGHT[look.to].tint, look.k);
+    this.fogNow.copy(LIGHT[look.from].fog).lerp(LIGHT[look.to].fog, look.k);
+    this.tint();
+  }
+
+  /** Is a visitor's place on the bench in view now? */
+  private inView(who: Companion): boolean {
+    const [dx, dy, dz] = COMPANY_SPOT[who];
+    const p = this.tmp.set(this.bench.x + dx, dy + 0.15, this.bench.z + dz).project(this.camera);
+    return p.z < 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1;
+  }
+
+  /** A visitor comes to sit with you on the bench (#362), and the head turns to it. The gnome says its word once you see it. */
+  private sitBeside(who: Companion) {
+    const [dx, dy, dz] = COMPANY_SPOT[who];
+    const at: [number, number, number] = [this.bench.x + dx, dy, this.bench.z + dz];
+    this.guests.visit(who, at, true);
+    this.come.add(who);
+    this.cb.onCompany(who);
+    const turn = !this.reducedMotion && !this.seatView.looked;
+    if (who === "gnome") this.gnomeSays = this.sat + (turn ? GLANCE.turn : 0);
+    if (!turn) return;
+    // Forward is -z at yaw 0; turn the short way round. Look at its middle, a little above where it sits.
+    const v = this.seatView;
+    let yaw = Math.atan2(-(at[0] - this.x), -(at[2] - this.z));
+    yaw -= Math.round((yaw - v.yaw) / (Math.PI * 2)) * Math.PI * 2;
+    const pitch = Math.max(-0.75, Math.atan2(at[1] + 0.2 - SEAT.eye, Math.hypot(at[0] - this.x, at[2] - this.z)));
+    this.turnTo = { yaw, pitch, at: this.sat };
   }
 
   /** A tap on the key or the door (#336): act on it in reach; from farther away, walk up to it first. */
@@ -958,7 +1083,7 @@ export class GardenScene {
       far: FOG_FAR,
       hills: { radius: HILLS.radius, bottom: HILLS.y - HILLS.height / 2, top: HILLS.y + HILLS.height / 2, profile: this.sky.hillProfile, rows: T.HILL_ROWS, repeat: HILLS.repeat },
       sunDir: this.sky.sunDir,
-      night: this.time === "night",
+      night: this.shown === "night",
       sunRadius: 0.045,
       clouds: this.sky.cloudPositions,
       cloudHalf: [8.8, 5],
@@ -984,46 +1109,59 @@ export class GardenScene {
   /** Rasterises every plant's sprite, then builds the streaming pool (#323: scenePlants.ts). */
   async loadPlants(): Promise<void> {
     await this.plants.loadPlants({ scene: this.scene, mats: this.mats });
-    // The walk may have been left (and disposed) while the sprites rasterised: building more
-    // (setTime makes new sky/hill/sun textures) onto a torn-down scene would only leak them.
+    // The walk may have been left (and disposed) while the sprites rasterised: nothing to tint then.
     if (this.disposed) return;
     const total = this.layout.plants.length;
     // Nothing to tint, stream or report in an empty garden: loadPlants above already returned at once.
     if (!total) return;
-    this.setTime(this.time);
+    // The new plants take the time of day on show; while time speeds up on the bench, the next frame blends them too.
+    this.showTime(this.shown);
     this.cb.onProgress(total, total);
   }
 
   setTime(t: TimeOfDay) {
     this.time = t;
-    const s = T.SKIES[t];
-    const fog = new THREE.Color(s.fog);
-    this.scene.fog = new THREE.Fog(fog, FOG_NEAR, FOG_FAR);
+    // Time sped up on the bench (#362) runs on from the time chosen now.
+    this.lapse = 0;
+    this.lapsing = false;
+    this.sky.blend(null, 0);
+    this.showTime(t);
+  }
+
+  /** Show a time of day: the sky, what is lit, who is awake, the tint and the fog. The one chosen, or one on the way while time speeds up on the bench (#362). */
+  private showTime(t: TimeOfDay) {
+    this.shown = t;
     const c = conditions(t);
-    const dark = c.dark;
     for (const part of this.parts) part.onConditions?.(c);
+    this.tintNow.copy(LIGHT[t].tint);
+    this.fogNow.copy(LIGHT[t].fog);
     this.tint();
-    this.lit.visible = dark;
-    this.unlit.visible = !dark;
-    for (const g of this.glows) g.visible = dark;
-    // A key left waiting a few days (#334): at dusk and night the bird, if it is here today, lands by it.
-    const help = this.keyHelp;
-    if (help?.visitors && this.door.key) this.guests.visit("bird", dark ? [this.door.key.x + 0.2, 0, this.door.key.z - 0.1] : null);
+    this.lit.visible = c.dark;
+    this.unlit.visible = !c.dark;
+    for (const g of this.glows) g.visible = c.dark;
+    this.birdByKey();
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
     this.flower.params.needsUpdate = true;
   }
 
-  /** Tint everything unlit and every sprite for the time of day, and fog the sprites. */
+  /** A key left waiting a few days (#334): at dusk and night the bird, if it is here today, lands by it; not while it sits with you on the bench (#362). */
+  private birdByKey() {
+    const help = this.keyHelp;
+    if (help?.visitors && this.door.key && !this.come.has("bird")) this.guests.visit("bird", this.shown !== "day" ? [this.door.key.x + 0.2, 0, this.door.key.z - 0.1] : null);
+  }
+
+  /** Tint everything unlit and every sprite with tintNow, and fog them with fogNow. Allocates nothing: the time-lapse on the bench (#362) calls it every frame. */
   private tint() {
-    const s = T.SKIES[this.time];
-    const tint = new THREE.Color(...s.tint);
-    const fog = new THREE.Color(s.fog);
+    const tint = this.tintNow;
+    const fog = this.fogNow;
+    this.fog.color.copy(fog);
     for (const m of this.basic) m.color.copy(tint);
-    for (const mat of [...this.mats, ...this.leaveIt.mats]) {
-      mat.uniforms.uTint.value.copy(tint);
-      mat.uniforms.uFog.value.copy(fog);
-    }
+    for (const mats of this.tinted)
+      for (const mat of mats) {
+        mat.uniforms.uTint.value.copy(tint);
+        mat.uniforms.uFog.value.copy(fog);
+      }
     this.guests.tint(tint, fog);
   }
 
@@ -1059,10 +1197,17 @@ export class GardenScene {
 
   look(dx: number, dy: number) {
     this.glide = null;
+    this.lookedRound();
     // A walk goes on, but the viewer looks where they like now.
     if (this.trip) this.trip.turn = false;
     this.yaw -= dx * 0.0055;
     this.pitch = Math.max(-0.75, Math.min(0.5, this.pitch - dy * 0.004));
+  }
+
+  /** The viewer looks where they like now: on the bench (#362), the head no longer turns to who comes. */
+  private lookedRound() {
+    this.seatView.looked = true;
+    this.turnTo = null;
   }
 
   /** Walk straight ahead (or back, if negative) by `metres`. */
@@ -1075,6 +1220,7 @@ export class GardenScene {
 
   turn(amount: number) {
     this.glide = null;
+    this.lookedRound();
     if (this.trip) this.trip.turn = false;
     this.yaw += amount;
   }
@@ -1267,6 +1413,7 @@ export class GardenScene {
       if (g.t >= 1) this.glide = null;
     }
 
+    this.onBench(dt);
     // Sitting down or standing up: the eye sinks or rises over a moment (at once, with reduced motion).
     const sat = this.seated ? 1 : 0;
     this.seat = this.reducedMotion ? sat : this.seat + Math.max(-dt * SEAT.speed, Math.min(dt * SEAT.speed, sat - this.seat));
@@ -1303,7 +1450,7 @@ export class GardenScene {
 
     // The sunflower shows its face only to someone standing in its sun (and never at night).
     const fl = this.flower;
-    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sky.sunDir.x, this.sky.sunDir.z, this.time === "night");
+    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sky.sunDir.x, this.sky.sunDir.z, this.shown === "night");
     if (face !== fl.face) {
       fl.face = face;
       fl.uv.setX(0, face ? 0 : 0.5);

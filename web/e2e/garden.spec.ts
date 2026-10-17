@@ -356,6 +356,59 @@ test("by the bench the action button sits you down, facing the pond; it or a ste
   expect((await scene()).seated).toBe(false);
 });
 
+// #362: sit still and the garden comes to you. Seconds sat are moved on through the dev-only scene handle, as a test cannot sit for a minute.
+test("sitting still on the bench: the bird, the cat and the gnome come to sit with you, and time runs on to dusk; stand up and it is now again", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // A dev-only override brings every visitor today.
+  await page.goto("/?demo=es:30&visitors=all#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  type Sprite = { v: { id: string }; x: number; z: number };
+  type Bench = { sat: number; lapse: number; shown: string; seated: boolean; bench: { x: number; z: number }; lit: { visible: boolean }; guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number; r: number } } };
+  const scene = () =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: Bench }).__garden;
+      const bird = s.guests.sprites.find((g) => g.v.id === "bird")!;
+      return { lapse: s.lapse, shown: s.shown, lit: s.lit.visible, birdFromBench: Math.hypot(bird.x - s.bench.x, bird.z - s.bench.z) };
+    });
+  const sat = (seconds: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden, { sat: n }), seconds);
+  await page.evaluate(() => {
+    const s = (window as unknown as { __garden: Bench }).__garden;
+    const p = s.layout.pond;
+    Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+  });
+  const away = (await scene()).birdFromBench;
+  expect(away).toBeGreaterThan(1);
+  await page.getByRole("button", { name: "Sit on the bench" }).click();
+  const status = page.locator(".sr-only[role=status]");
+  await expect(status).toHaveText("");
+
+  // Facing the pond, nobody sees them come.
+  await sat(9.9);
+  await expect(status).toHaveText("A bird lands on the back of the bench.");
+  expect((await scene()).birdFromBench).toBeLessThan(0.8);
+  await sat(19.9);
+  await expect(status).toHaveText("The cat sits beside you.");
+  await sat(39.9);
+  await expect(status).toHaveText("The gnome comes over. It says: Bonito.");
+  // The gnome's word is said in the course language.
+  await expect(status.locator("span[lang=es]")).toHaveText("Bonito.");
+
+  // Time has run on to dusk: the lanterns are lit. The time of day the learner chose stays as it was.
+  await page.evaluate(() => Object.assign((window as unknown as { __garden: Bench }).__garden, { lapse: 0.9 }));
+  await expect.poll(async () => (await scene()).shown).toBe("dusk");
+  expect((await scene()).lit).toBe(true);
+  await expect(page.getByRole("button", { name: "Time of day: Day" })).toBeVisible();
+
+  // Stand up: time runs back to now, and the visitors go back to their places.
+  await page.getByRole("button", { name: "Stand up" }).click();
+  await expect.poll(async () => (await scene()).lapse).toBe(0);
+  expect(await scene()).toEqual({ lapse: 0, shown: "day", lit: false, birdFromBench: away });
+  await expect(status).toHaveText("");
+});
+
 test("the controls hint shows in the learner's walk until they first move; the landing page's walk does not use it up (#334)", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
   const hint = page.locator(".gw-hint");

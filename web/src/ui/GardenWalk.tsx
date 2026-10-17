@@ -31,7 +31,8 @@ import { FINDS, type Left, type LeaveWalk } from "../garden/leave";
 import { CRUMB_BAG, FIND_ART, fruitArt } from "../garden/leaveArt";
 import type { PixelArt } from "../garden/visitorArt";
 import type { Hand, LeaveAct, LeaveDone } from "../garden/sceneLeave";
-import { nounView } from "../garden/nouns";
+import { inLang, nounView } from "../garden/nouns";
+import { GNOME_WORD, type Companion } from "../garden/bench";
 import { PixelRects } from "./pixel";
 import type { Gender } from "../deck/schema";
 
@@ -39,12 +40,14 @@ import type { Gender } from "../deck/schema";
 type Shook = { lemma: string; forms: string[] };
 
 /**
- * What the walk's status says to a screen reader: the key at their feet; a
- * find's word and meaning (#351); the prints from the bowl, or something at
- * their feet; what fell from a shaken plant (#357); the door's line; what they hold.
- * Things in the world, never instructions (#334).
+ * What the walk's status says to a screen reader: who just came to sit with
+ * them on the bench (#362); the key at their feet; a find's word and meaning
+ * (#351); the prints from the bowl, or something at their feet; what fell from
+ * a shaken plant (#357); the door's line; what they hold. Things in the world,
+ * never instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, lang: string): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, company: Companion | null, lang: string): ReactNode {
+  if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // The course-language word is marked as such, so a screen reader says it in that language.
   const found = labels.find((l) => l.kind === "find");
@@ -75,6 +78,17 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
 function spokenLine(line: string | undefined, state: DoorState): string | undefined {
   return line === DOOR_LINES.locked && typeof state === "object" ? `${line} ${KEY_PLACE[state.key]}` : line;
 }
+
+/** Who came to sit with you on the bench (#362), as a screen reader hears it. The gnome's word is in the course language. */
+const COMPANY_LINE: Record<Companion, (lang: string) => ReactNode> = {
+  bird: () => "A bird lands on the back of the bench.",
+  cat: () => "The cat sits beside you.",
+  gnome: (lang) => (
+    <>
+      The gnome comes over. It says: <span lang={lang}>{inLang(GNOME_WORD, lang)}</span>
+    </>
+  ),
+};
 
 /** What the learner did in the walk, for counting (#335): what a tap met (TapHit kinds), what the action button did (#334), or what they left or found (#351). */
 type GardenVerb = TapHit["kind"] | Reach;
@@ -353,7 +367,7 @@ export function GardenWalk({
     setShook({ lemma: p.lemma, forms });
     if (sound && forms.length) void speakAll(forms, tag);
   };
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand } = useGardenScene({ lang, source, visitors, door, leave, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake });
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company } = useGardenScene({ lang, source, visitors, door, leave, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake });
   const held = hand && handView(hand, lang);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
@@ -491,9 +505,9 @@ export function GardenWalk({
         onPointerCancel={onPointerCancel}
       />
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
-          and for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold. */}
+          for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold; and who comes to sit with them on the bench (#362). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, shook, lang)}
+        {spokenStatus(reach, labels, door.state, held, shook, company, lang)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>

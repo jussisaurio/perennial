@@ -10,6 +10,7 @@ import type { PlantSource } from "../garden/plants";
 import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkVisitors } from "../garden/scene";
 import type { Left, LeaveWalk } from "../garden/leave";
 import type { Hand, LeaveDone } from "../garden/sceneLeave";
+import type { Companion } from "../garden/bench";
 import { sceneryViews } from "../garden/scenery";
 import { keepsakeLabel, sleeperId } from "../garden/whimsy";
 import { layout, type Layout, type PlacedPlant } from "../garden/world";
@@ -70,6 +71,7 @@ export function useGardenScene({
   const [ready, setReady] = useState(false);
   const [reach, setReach] = useState<Reach | null>(null);
   const [hand, setHand] = useState<Hand | null>(null);
+  const [company, setCompany] = useState<Companion | null>(null);
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
@@ -129,6 +131,7 @@ export function useGardenScene({
             onDoorOpen: () => openDoor.current(),
             onStall: () => reportStalledWalk(data.l.plants.length),
             onHand: setHand,
+            onCompany: setCompany,
             onLeave: (d) => leaveNow.current.done(d),
             onLeft: (left) => leaveNow.current.save(left),
             onShake: (p, forms) => shakeNow.current(p, forms),
@@ -185,7 +188,7 @@ export function useGardenScene({
     scene.current?.setDetail(detail);
   }, [detail]);
 
-  return { data, scene, ready, failed, progress, labels, selected, reach, hand };
+  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company };
 }
 
 /**
