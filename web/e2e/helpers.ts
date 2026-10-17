@@ -13,6 +13,22 @@ export async function expectServerRows(page: Page, table: string, n: number | ((
   await expect.poll(async () => ok((await serverRows(page, table)).length), { timeout: 15_000, message: `${table} rows` }).toBe(true);
 }
 
+/**
+ * Wait until a write the test just made is in the app's own data (#343), not
+ * on a timer: a reload right after `postWrite` can race the write landing in
+ * the client's store, and under load the race is lost more often.
+ */
+export async function waitForSynced(page: Page, table: string, ids: string[]) {
+  await page.waitForFunction(
+    ({ table, ids }: { table: string; ids: string[] }) => {
+      const store = (window as unknown as { __store?: { collections: Record<string, { has(k: string): boolean }> } }).__store;
+      return !!store && ids.every((id) => store.collections[table].has(id));
+    },
+    { table, ids },
+    { timeout: 20_000 },
+  );
+}
+
 /** Enter an email, read the code from the dev server's outbox, sign in. */
 export async function signIn(page: Page, address: string, cta: string) {
   await page.getByLabel("Email").fill(address);
