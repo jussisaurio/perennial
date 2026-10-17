@@ -1,5 +1,5 @@
 // Pixel art for the loose things you carry and throw (#358, garden/carry.ts),
-// in visitorArt.ts's style: a pebble, a stick, the cairn's flat stone, and the
+// in visitorArt.ts's style: a pebble, a stick, the cairn's flat stone, the orchard's well, and the
 // rings a splash makes. Drawn into the walk's texture (textures.ts carryAtlas)
 // and, for what you hold, into the page (GardenWalk.tsx).
 
@@ -19,6 +19,41 @@ export const LOOSE_ART: Record<Loose, PixelArt> = {
 
 /** The cairn's flat stone, wide and low. */
 export const FLAT_STONE: PixelArt = { rows: ["...oooooooo...", ".ooSwSSSSSSoo.", "oSSSSSSSSSSsso", "osssssssssssso", ".oooooooooooo."], pal: STONE };
+
+/** The orchard's wishing well (#335 S6): a ring of stones, dark inside, under a small roof with a bucket on its rope. */
+export const WELL: PixelArt = {
+  rows: [
+    "...........oooooo...........",
+    ".........ooRRRRRRoo.........",
+    ".......ooRRRRrrRRRRoo.......",
+    ".....ooRRRRRrrrrRRRRRoo.....",
+    "...ooRRRRRRrrrrrrRRRRRRoo...",
+    "..orrrrrrrrrrrrrrrrrrrrrro..",
+    "..oooooooooooooooooooooooo..",
+    "..oPo..........c.......oPo..",
+    "..oPo..........c.......oPo..",
+    "..oPo..........c.......oPo..",
+    "..oPo.........obbo.....oPo..",
+    "..oPo.........obbo.....oPo..",
+    "..oPo..........oo......oPo..",
+    "..oPo..................oPo..",
+    ".oooooooooooooooooooooooooo.",
+    "oKKKKKKKKKKKKKKKKKKKKKKKKKKo",
+    "owSSwSSSoSwSSSSoSSwSSSoSwSSo",
+    "osssssssosssssssosssssssosso",
+    "oooooooooooooooooooooooooooo",
+    "oSSwSSSoSSSwSSSoSSwSSSSoSSSo",
+    "osssssosssssssosssssssosssso",
+    "oooooooooooooooooooooooooooo",
+    "owSSSoSSwSSSSoSSSwSSoSSwSSSo",
+    "osssosssssssssossssssossssso",
+    "oooooooooooooooooooooooooooo",
+    "oSSwSSSSoSSSwSSoSSSSwSSSoSSo",
+    "ossssssosssssssossssssssosso",
+    ".oooooooooooooooooooooooooo.",
+  ],
+  pal: { ...STONE, K: "#1c2024", R: "#a8603e", r: "#8a4a32", P: "#8a6440", c: "#c8a870", b: "#7a5233" },
+};
 
 /** Rings on the water, seen from above: a thin light circle, `r` pixels round, in a square of `size`. */
 export function ring(r: number, size: number): PixelArt {

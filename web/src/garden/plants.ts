@@ -10,7 +10,8 @@ import { isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "..
 import type { Learner } from "../data/learner";
 import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
-import { orchardInput, orchardTrees, type OrchardTree } from "./orchard";
+import { orchardInput, orchardTrees, plantedAt, type OrchardTree } from "./orchard";
+import type { Met } from "./well";
 import { leanDeg, leanDir, type GardenPlant } from "./world";
 
 export { leanDeg, leanDir, type GardenPlant };
@@ -33,6 +34,8 @@ export interface PlantSource {
   first?: FirstWord | null;
   /** The trees in the orchard behind the hedge (#315): every orchard word started. */
   orchard: OrchardTree[];
+  /** Every plant's word and when it was first met, for the orchard well's echo (#335 S6). */
+  met: Met[];
 }
 
 /** Height from 0 to 1: grows fast at first, then slower; full height at about four months of stability. */
@@ -109,7 +112,8 @@ export function plantsFromLearner(l: Learner, now = Date.now()): PlantSource {
     });
   }
   plants.sort((a, b) => a.rank - b.rank);
-  return { plants, seeds: l.fresh().length, first: firstWord(l), orchard: orchardTrees(orchardInput(l), now) };
+  const met = plants.map((p) => ({ lemma: p.lemma, at: plantedAt(l, p.id) }));
+  return { plants, seeds: l.fresh().length, first: firstWord(l), orchard: orchardTrees(orchardInput(l), now), met };
 }
 
 const SHOWCASE_SPAN = 160;
@@ -132,6 +136,6 @@ export function showcasePlants(deck: LoadedDeck, count: number): PlantSource {
       const stage = plantStage({ s, reps: 3 }) as Stage;
       return { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, s, r, stage, growth: growthOf(s), listen: s > 60, write: s > 90, forms: w.forms, gender: w.gender, garden: w.garden };
     });
-  // The landing page's door stays locked: nothing grows behind it.
-  return { plants, seeds: Math.max(0, deck.words.length - count), orchard: [] };
+  // The landing page's door stays locked: nothing grows behind it, and there is no well to echo.
+  return { plants, seeds: Math.max(0, deck.words.length - count), orchard: [], met: [] };
 }

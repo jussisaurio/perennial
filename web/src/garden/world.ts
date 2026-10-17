@@ -5,7 +5,7 @@
 import { toPos, type Gender, type GardenWord, type Pos } from "../deck/schema";
 import { dayNumber } from "../core/day";
 import { hash01 } from "../lib/seed";
-import { collideTrees, ORCHARD_MIN, type PlacedTree } from "./orchard";
+import { collideTrees, ORCHARD_MIN, orchardWell, WELL_R, type PlacedTree } from "./orchard";
 import type { Stage } from "../ui/plant";
 
 export interface GardenPlant {
@@ -53,6 +53,8 @@ export interface Layout {
   pond: { x: number; z: number; r: number };
   /** The old orchard (#315): the walkable ground behind the hedge's door, by its middle. Nothing is built there until the door opens. */
   orchard: { x: number; z: number; w: number; d: number };
+  /** The wishing well in the orchard (#335 S6): its middle and its stone ring's radius. It is there only once the door is open. */
+  well: { x: number; z: number; r: number };
 }
 
 /** The hedge along the gate side (#315): from just behind the fence line, this deep and this tall. Taller than the eye (scene.ts EYE), so nothing behind it shows. */
@@ -160,14 +162,16 @@ export function layout(plants: GardenPlant[]): Layout {
   const halfW = (cols * cellW) / 2 + 1.2;
   const front = BED_D / 2 + PATH + 4.5; // room by the gate for the pond
   const bounds = { minX: -halfW, maxX: halfW, minZ: -(rows - 1) * cellD - BED_D / 2 - PATH, maxZ: front };
+  // A fixed size, whatever the size of the garden: just big enough for a tree of every kind. The door is in the middle of its side toward the garden.
+  const orchard = { x: 0, z: bounds.maxZ + HEDGE.gap + HEDGE.depth + ORCHARD_MIN.d / 2, w: ORCHARD_MIN.w, d: ORCHARD_MIN.d };
   return {
     beds,
     plants: placed,
     bounds,
     gate: { x: 0, z: bounds.maxZ },
     pond: { x: bounds.minX + 2.6, z: bounds.maxZ - 2.4, r: 1.5 },
-    // A fixed size, whatever the size of the garden: just big enough for a tree of every kind. The door is in the middle of its side toward the garden.
-    orchard: { x: 0, z: bounds.maxZ + HEDGE.gap + HEDGE.depth + ORCHARD_MIN.d / 2, w: ORCHARD_MIN.w, d: ORCHARD_MIN.d },
+    orchard,
+    well: { ...orchardWell(orchard), r: WELL_R },
   };
 }
 
@@ -281,7 +285,8 @@ function nearestIn(rects: Rect[], x: number, z: number): { x: number; z: number 
 
 /**
  * Keep a walker of radius `rad` inside the fence and out of beds and the pond.
- * Once the door is open (#315), the doorway and the orchard behind it are open too.
+ * Once the door is open (#315), the doorway and the orchard behind it are open
+ * too, and its well stands in the way (#335 S6).
  */
 export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen = false): { x: number; z: number } {
   const b = l.bounds;
@@ -304,16 +309,19 @@ export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen 
       else z = bed.z + Math.sign(dz || 1) * hd;
     }
   }
-  const dx = x - l.pond.x;
-  const dz = z - l.pond.z;
+  ({ x, z } = outOf(l.pond, x, z, rad));
+  return doorOpen ? outOf(l.well, x, z, rad) : { x, z };
+}
+
+/** Push a walker of radius `rad` out of a round thing (the pond, the well) the shortest way. */
+function outOf(c: { x: number; z: number; r: number }, x: number, z: number, rad: number): { x: number; z: number } {
+  const dx = x - c.x;
+  const dz = z - c.z;
   const d = Math.hypot(dx, dz);
-  const min = l.pond.r + rad;
-  if (d < min) {
-    const k = min / (d || 1);
-    x = l.pond.x + dx * k;
-    z = l.pond.z + dz * k;
-  }
-  return { x, z };
+  const min = c.r + rad;
+  if (d >= min) return { x, z };
+  const k = min / (d || 1);
+  return { x: c.x + dx * k, z: c.z + dz * k };
 }
 
 /**
@@ -389,8 +397,8 @@ function toSegment(x: number, z: number, ax: number, az: number, bx: number, bz:
 
 /**
  * The way on foot to a spot (#336, tap to walk): the shortest line of corners
- * round the beds, the pond, the hedge (through the door when it is open) and
- * the orchard's trunks, from (x, z) to (toX, toZ). Both ends must be where a
+ * round the beds, the pond, the hedge (through the door when it is open), the
+ * orchard's well and its trunks, from (x, z) to (toX, toZ). Both ends must be where a
  * walker may stand (collide, collideTrees). Straight there when nothing is in
  * the way, which is most taps. Corners in order, from (x, z) to the spot.
  */
@@ -404,7 +412,7 @@ export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number,
       ? [[h0, l.gate.x - DOOR_HALF, l.bounds.maxZ, near] as Rect, [l.gate.x + DOOR_HALF, h1, l.bounds.maxZ, near] as Rect]
       : [[h0, h1, l.bounds.maxZ, near] as Rect]),
   ];
-  const rounds = [l.pond, ...trees.map((t) => ({ x: t.x, z: t.z, r: t.trunk }))];
+  const rounds = [l.pond, ...(doorOpen ? [l.well] : []), ...trees.map((t) => ({ x: t.x, z: t.z, r: t.trunk }))];
   const clear = (ax: number, az: number, bx: number, bz: number) =>
     rects.every((r) => !crossesRect(ax, az, bx, bz, r, LEG_CLEAR)) && rounds.every((c) => toSegment(c.x, c.z, ax, az, bx, bz) >= c.r + LEG_CLEAR);
   if (clear(x, z, toX, toZ)) return [[x, z], [toX, toZ]];

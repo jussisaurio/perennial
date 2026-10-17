@@ -48,7 +48,8 @@ type Shook = { lemma: string; forms: string[] };
  * What the walk's status says to a screen reader: who just came to sit with
  * them on the bench (#362); the key at their feet; a toy's doing (#360); a
  * find's word and meaning (#351); a fruit that fell from a tree they walked
- * into, and its word (#359); the prints from the bowl, or something at their
+ * into, and its word (#359); the well's echo, an old word and the day it
+ * was met (#335 S6); the prints from the bowl, or something at their
  * feet; what fell from a shaken plant (#357); who answered a call (#377); the door's line; a lantern that
  * is out, and the stars once every one is (#361); what a thrown thing did
  * where it landed (#358); what they hold. Things in the world, never
@@ -79,6 +80,14 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
     return (
       <>
         {fellLine(fell.gloss!)} <span lang={lang}>{fell.text}</span>
+      </>
+    );
+  const echoed = labels.find((l) => l.kind === "echo");
+  // The echo's gloss is the day the word was met (scene.ts labels).
+  if (echoed)
+    return (
+      <>
+        An echo from the well: {echoed.gloss}: <span lang={lang}>{echoed.text}</span>.
       </>
     );
   if (reach === "follow") return "Small prints lead away from the bowl.";
@@ -250,6 +259,7 @@ const REACH_NAME: Record<Reach, string> = {
   snuff: "Blow out the lantern",
   light: "Light the lantern",
   call: "Call",
+  well: "Drop it in the well",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -286,11 +296,13 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   light: ["...#...", "...##..", "..###..", ".#####.", ".#####.", "#######", "#######", ".#####.", "..###.."],
   // A whistle, and its sound.
   call: ["..........#..#", "...........#..", "######..####..", "#.....##....#.", "######.#....#.", ".......#....#.", "........####.."],
+  // A stone, dropping into a well.
+  well: ["....##....", "....##....", "..........", "....##....", "..........", "#........#", "#........#", "##########", "##########"],
 };
 
 /** Leave it out's actions (#351, sceneLeave.ts LeaveAct) and carry's (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
 const LEAVE_ACTS = new Set<Reach>(["take", "leave", "follow", "find", "hang", "unhang"] satisfies LeaveAct[]);
-const CARRY_ACTS = new Set<Reach>(["lift-pebble", "lift-stick", "throw", "stack"] satisfies CarryAct[]);
+const CARRY_ACTS = new Set<Reach>(["lift-pebble", "lift-stick", "throw", "stack", "well"] satisfies CarryAct[]);
 /** The toys' actions (#360, sceneToys.ts ToyAct). */
 const TOY_ACTS = new Set<Reach>(["blow", "fold"] satisfies ToyAct[]);
 
@@ -477,6 +489,17 @@ export function GardenWalk({
   const toys = { walk: toysGiven ?? showcaseToys, done: toyDone };
   const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars } = useGardenScene({ lang, source, visitors, door, leave, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall });
   const held = hand && handView(hand, lang);
+  // With sound on, the well's echo (#335 S6) says its word once, as it rises.
+  const echoed = labels.find((l) => l.kind === "echo");
+  const echoId = echoed?.id;
+  const echoWord = echoed?.text;
+  // Once per echo: turning sound on while one shows does not say it again.
+  const echoSaid = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!echoId || echoId === echoSaid.current) return;
+    echoSaid.current = echoId;
+    if (sound) void speak(echoWord!, tag);
+  }, [echoId, echoWord, sound, tag]);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
   // the scene) takes focus to the card, so a screen reader reads it (#266). From the
   // card's own Next plant, focus stays on that button and the live card body is read.
@@ -644,6 +667,11 @@ export function GardenWalk({
             // A form falling from a shaken plant (#357), or a leaf for a word with none.
             <span key={l.id} className="gw-petal" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               {l.text || <LeafMark />}
+            </span>
+          ) : l.kind === "echo" ? (
+            // The well's echo (#335 S6): the day it was met, then the word.
+            <span key={l.id} className="gw-echo" lang="en" style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+              {l.gloss}: <i lang={lang}>{l.text}</i>.
             </span>
           ) : l.kind === "say" || l.kind === "line" ? (
             <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
