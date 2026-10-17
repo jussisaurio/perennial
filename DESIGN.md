@@ -103,7 +103,8 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 loop, movement, and the rendering subsystems that tick or react to the time of
 day behind the `Part` interface (`scenePart.ts`) — the sky and pond, the door
 and key, the critters (fireflies, butterflies...), the plants (beds,
-culling, texture streaming), and the visitors. These are the rules a change to the garden's
+culling, texture streaming), the visitors, and the deadpan scenery (#364:
+the sundial, the mouse door, the fish that jumps). These are the rules a change to the garden's
 rendering code should follow, and the places it still does not (yet):
 
 - **A new Part is for a new rendering technique, never one per thing.** There

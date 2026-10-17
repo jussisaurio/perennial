@@ -1,5 +1,6 @@
 // Small jokes in the walk-in garden: two signs whose text changes each day,
-// and a sunflower that only looks at you when you stand in its sun.
+// a sunflower that only looks at you when you stand in its sun, and the
+// deadpan scenery (#364): a sundial that tells the time, and a fish.
 // Pure functions, so they are easy to test.
 
 import { daily, rareDay } from "../core/day";
@@ -11,11 +12,17 @@ export interface SignLine {
   upsideDown?: boolean;
   /** BCP 47 code when the line is in the course language. */
   lang?: string;
+  /** Put right by hand (#364): `strike` (the end of the text) is crossed out, and `write` written in after it. */
+  fix?: { strike: string; write: string };
 }
+
+/** The sign that turns out to be wrong (#364). */
+const NO_FISH = "No fishing. No fish.";
 
 /**
  * Lines for either sign. Every line must be true in the garden: Shift is the
- * run key, the pond has no fish, the lanterns come on in the evening.
+ * run key, the lanterns come on in the evening, and the pond has no fish (or
+ * the sign is put right: fishSign).
  */
 export const SIGN_POOL: readonly SignLine[] = [
   { text: "Please walk slowly. Words are growing." },
@@ -26,7 +33,7 @@ export const SIGN_POOL: readonly SignLine[] = [
   { text: "This side up", upsideDown: true },
   { text: "Please do not pick the words." },
   { text: "Keep off the soil." },
-  { text: "No fishing. No fish." },
+  { text: NO_FISH },
   { text: "Lanterns come on at dusk." },
   { text: "Words may grow without warning." },
   { text: "This is a sign." },
@@ -139,3 +146,58 @@ export function keepsakeLabel(lemma: string, at: number): string {
   const d = new Date(at);
   return `${lemma} · ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
+
+// ---- Deadpan scenery (#364) ----
+
+/**
+ * The fish swims in the pond once the learner has brought it (#209: they know
+ * pez or Fisch): then "No fish." is crossed out by hand, and "One fish."
+ * written in after it. Any other line stays as it is.
+ */
+export function fishSign(line: SignLine, fishHere: boolean): SignLine {
+  return fishHere && line.text === NO_FISH ? { ...line, fix: { strike: "No fish.", write: "One fish." } } : line;
+}
+
+/** What the sundial and the mouse door say when tapped: the dial only at night, when it has no shadow. */
+export const JOKE_LINES = { sundial: "Sundial: closed until morning.", mouseDoor: "Locked. Wrong size." } as const;
+
+/**
+ * The sundial's shadow (#364) at the clock time `now`: radians round from the
+ * dial's noon mark, 15° an hour, as the sun goes. Negative in the morning
+ * (the shadow points west), positive after noon (east).
+ */
+export const sundialAngle = (now: Date): number => ((now.getHours() + now.getMinutes() / 60 - 12) * Math.PI) / 12;
+
+/** Walking round the pond (#364): within `ring` m of its middle it counts; `jump` laps in one visit make a fish jump, once. */
+export const POND_LAPS = { ring: 4, jump: 3 } as const;
+
+/** How far round the pond the walker has gone this visit (radians, one way minus the other), and the angle they were last at (null: away from the pond). */
+export interface Laps {
+  turned: number;
+  last: number | null;
+}
+
+/**
+ * One frame of walking round the pond: add the angle the walker went round
+ * its middle since the last frame, while they are near it. Away from the pond
+ * nothing counts, and nothing is lost. Changes `s` in place: it runs every
+ * frame, and a frame allocates nothing (DESIGN.md, Garden code).
+ */
+export function lapStep(s: Laps, x: number, z: number, pond: { x: number; z: number }) {
+  const dx = x - pond.x;
+  const dz = z - pond.z;
+  if (Math.hypot(dx, dz) > POND_LAPS.ring) {
+    s.last = null;
+    return;
+  }
+  const a = Math.atan2(dz, dx);
+  if (s.last !== null) {
+    // The short way round: one frame never goes half round the pond.
+    const d = a - s.last;
+    s.turned += d - Math.round(d / (Math.PI * 2)) * Math.PI * 2;
+  }
+  s.last = a;
+}
+
+/** Whole laps round the pond, either way round. Back and forth cancels out. */
+export const lapsDone = (s: Laps): number => Math.floor(Math.abs(s.turned) / (Math.PI * 2));

@@ -438,6 +438,11 @@ export function GardenWalk({
         scene.current.tapLeave(hit.t);
         setHint(false);
         return;
+      case "joke":
+        // The mouse door, or the sundial at night (#364): its quiet line, from wherever you stand.
+        scene.current.tapJoke(hit.j);
+        setHint(false);
+        return;
       case "walk":
         scene.current.walkTo(hit.x, hit.z);
         moved();
