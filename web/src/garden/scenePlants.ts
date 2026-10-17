@@ -4,6 +4,7 @@
 // (loadPlants) so memory stays the same whatever the garden's size.
 
 import * as THREE from "three";
+import { petalAt, petalForms, shakeLength, shiver } from "./shake";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope } from "./whimsy";
 import type { Label } from "./scene";
 import type { Frame } from "./scenePart";
@@ -23,6 +24,7 @@ const PLANT_VERT = /* glsl */ `
   attribute vec4 iParams; // phase, droop, scale, index
   attribute vec2 iCell; // low cell, high slot (-1: none yet)
   uniform vec4 uPerk; // plant index, growth; neighbour index, growth
+  uniform vec2 uShake; // plant index, lean (#357)
   uniform vec2 uLowSize;
   varying vec2 vLow;
   varying vec2 vHi;
@@ -37,7 +39,9 @@ const PLANT_VERT = /* glsl */ `
   void main() {
     // A plant that hears its name grows a few percent for a moment.
     float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
-    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk), iParams.x, iParams.y);
+    // A shaken plant shivers: it leans side to side for a moment (#357).
+    float shake = abs(iParams.w - uShake.x) < 0.5 ? uShake.y : 0.0;
+    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk), iParams.x, iParams.y + shake);
     gl_Position = projectionMatrix * mv;
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
@@ -75,6 +79,7 @@ function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: numbe
       uTint: { value: new THREE.Color(1, 1, 1) },
       uSelected: { value: -1 },
       uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
+      uShake: { value: new THREE.Vector2(-1, 0) },
     },
     vertexShader: PLANT_VERT,
     fragmentShader: PLANT_FRAG,
@@ -102,6 +107,8 @@ export class Plants {
   private plantMats: THREE.ShaderMaterial[] = [];
   /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
   private perk = { i: -1, at: 0, n: -1 };
+  /** A shaken plant (#357): its index, when, and the forms falling from it as petals ([]: one leaf). */
+  private shook: { i: number; at: number; forms: string[]; still: boolean } | null = null;
 
   constructor(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera, layout: Layout, onProgress: (done: number, total: number) => void, behindHedge: (x: number, y: number, z: number) => boolean) {
     this.renderer = renderer;
@@ -295,6 +302,49 @@ export class Plants {
     this.perk.n = neighbourPerks() ? nearestPlant(this.layout.plants, i) : -1;
   }
 
+  /**
+   * Shake a plant (#357): it shivers, and its word's other forms fall from it
+   * as petals, written on them; a word with no other forms drops one leaf.
+   * A new shake ends the last one. With reduced motion it does not shiver,
+   * and the petals lie on the soil from the start. Returns the forms that fall.
+   */
+  shake(p: PlacedPlant, elapsed: number, reducedMotion: boolean): string[] {
+    const forms = petalForms(p.lemma, p.forms);
+    this.shook = { i: this.layout.plants.indexOf(p), at: elapsed, forms, still: reducedMotion };
+    return forms;
+  }
+
+  /** The shaken plant's shiver; the shake ends once its last petal has faded. No allocations: it runs every frame. */
+  private tickShake(elapsed: number) {
+    const k = this.shook;
+    if (!k) return;
+    const t = elapsed - k.at;
+    const done = t > shakeLength(k.forms.length);
+    const lean = done || k.still ? 0 : shiver(t);
+    for (const m of this.plantMats) m.uniforms.uShake.value.set(done ? -1 : k.i, lean);
+    if (done) this.shook = null;
+  }
+
+  /** The falling petals, as labels in screen fractions, for the shake under way (#357). */
+  petals(elapsed: number, v: THREE.Vector3): Label[] {
+    const k = this.shook;
+    if (!k) return [];
+    const p = this.layout.plants[k.i];
+    const top = BED_H + plantHeight(p.growth);
+    const t = elapsed - k.at;
+    const out: Label[] = [];
+    // No forms: one leaf, with no word on it.
+    const texts = k.forms.length ? k.forms : [""];
+    texts.forEach((text, i) => {
+      const at = petalAt(p.id, i, t, top - BED_H, k.still);
+      if (!at) return;
+      v.set(p.x + at.dx, top + at.dy, p.z + at.dz).project(this.camera);
+      if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) return;
+      out.push({ id: `petal:${i}`, text, kind: "petal", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: at.alpha });
+    });
+    return out;
+  }
+
   /** Grows the perking plants a little, then lets them settle. No allocations: it runs every frame. */
   private tickPerk(elapsed: number) {
     const k = this.perk;
@@ -316,6 +366,7 @@ export class Plants {
       this.stream(x, z, yaw);
     }
     this.tickPerk(elapsed);
+    this.tickShake(elapsed);
   }
 
   /** Select the plant under a point on the canvas (CSS pixels), if any. */
@@ -358,7 +409,7 @@ export class Plants {
     for (const { p, d } of near.slice(0, 10)) {
       v.set(p.x, BED_H + plantHeight(p.growth) + 0.12, p.z).project(this.camera);
       if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) continue;
-      out.push({ id: p.id, text: p.lemma, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / NAME_NEAR });
+      out.push({ id: p.id, text: p.lemma, gender: p.gender, x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 - d / NAME_NEAR });
     }
     return out;
   }

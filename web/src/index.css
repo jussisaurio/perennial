@@ -620,7 +620,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
    Safari ignores this: the walk's wheel handler stops it there (useGardenScene). */
 html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-night { --panel: #1d2350; --panel-2: #262e66; --edge: #0a0d24; --edge-hi: #5a67b8; --gw-ink: #f5ecd0; --gw-muted: #aab3e6; }
-.gw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; cursor: grab; outline: none; }
+.gw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; cursor: grab; outline: none; -webkit-touch-callout: none; }
 .gw-canvas:active { cursor: grabbing; }
 /* Soft vignette and the faintest scanlines: a hint of an old screen, never in the way. */
 .gw::after {
@@ -685,6 +685,15 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 @keyframes gw-say-in { from { opacity: 0; transform: translate(-50%, calc(-100% - 3px)); } }
 @media (prefers-reduced-motion: reduce) { .gw-say { animation: none; } }
 .gw-leaf { display: inline-block; margin-right: 3px; vertical-align: -1px; filter: drop-shadow(1px 1px 0 #2b1d12); }
+/* A noun plant's stake (#357): its top's shape is the noun's gender. */
+.gw-stake { display: inline-block; margin-right: 4px; vertical-align: -2px; filter: drop-shadow(1px 0 0 #2b1d12) drop-shadow(-1px 0 0 #2b1d12) drop-shadow(0 1px 0 #2b1d12) drop-shadow(0 -1px 0 #2b1d12); }
+/* A form falling from a shaken plant (#357): a small pale petal with the form on it. */
+.gw-petal {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+  padding: 0.1rem 0.4rem 0.14rem; background: #ffe3ec; color: #5a2438; border: 2px solid #5a2438; border-radius: 8px 2px;
+  font: 500 0.82rem/1 var(--pixel); letter-spacing: 0.02em;
+}
+.gw-petal:has(svg) { padding: 0; background: none; border: 0; }
 
 .gw-card {
   position: absolute; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%);

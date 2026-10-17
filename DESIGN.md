@@ -118,7 +118,7 @@ rendering code should follow, and the places it still does not (yet):
   say, then the one active tag — the door's line, a find's word, scenery or
   tree — then a visitor's); and what the one action button acts on
   (`reportReach`: stand up, the key, a find at your feet, the door, the
-  bowl, shelf and basket, then the bench). A Part never reaches into another
+  bowl, shelf and basket, the bench, then the plant ahead). A Part never reaches into another
   Part's build or pick order.
 - **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.

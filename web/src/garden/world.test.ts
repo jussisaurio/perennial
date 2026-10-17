@@ -16,6 +16,7 @@ const plant = (i: number, pos = "noun"): GardenPlant => ({
   growth: 0.5,
   listen: false,
   write: false,
+  forms: [],
 });
 
 describe("garden layout", () => {

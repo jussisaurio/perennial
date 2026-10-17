@@ -14,6 +14,10 @@ export const isDeckLang = (s: string): s is DeckLang => (DECK_LANGS as readonly 
 export const POS = ["noun", "verb", "adj", "adv", "pron", "prep", "conj", "det", "num", "particle", "phrase", "interj"] as const;
 export type Pos = (typeof POS)[number];
 
+/** A noun's gender, as decks spell it: "mf" is a noun that takes either (el/la colega). */
+export const GENDERS = ["m", "f", "n", "mf"] as const;
+export type Gender = (typeof GENDERS)[number];
+
 /** Spelled-out names, as an AI-written word of the learner's own may have them. */
 const POS_NAMES: Record<string, Pos> = {
   adjective: "adj",
@@ -78,7 +82,7 @@ export const SourceWord = Schema.Struct({
   sense: Schema.optionalKey(Schema.Trim.check(Schema.isMaxLength(40))),
   forms: Schema.Array(text(60)).check(Schema.isMinLength(1), Schema.isMaxLength(40)),
   notes: Schema.optionalKey(Schema.Trim.check(Schema.isMaxLength(300))),
-  gender: Schema.optionalKey(Schema.Literals(["m", "f", "n", "mf"] as const)),
+  gender: Schema.optionalKey(Schema.Literals(GENDERS)),
   sentences: Schema.Array(SourceSentence).check(Schema.isMinLength(3), Schema.isMaxLength(8)),
 });
 export interface SourceWord extends Schema.Schema.Type<typeof SourceWord> {}
@@ -95,7 +99,7 @@ export const DeckWord = (lang: string) =>
     rank: Schema.Int.check(Schema.isGreaterThan(0)),
     forms: Schema.Array(text(60)).check(Schema.isMinLength(1)),
     notes: Schema.optionalKey(Schema.String),
-    gender: Schema.optionalKey(Schema.Literals(["m", "f", "n", "mf"] as const)),
+    gender: Schema.optionalKey(Schema.Literals(GENDERS)),
     /**
      * This word brings that thing into the garden; the course places it, not
      * its rank. `optional`, not `optionalKey`: buildDeck() clears a retired

@@ -12,7 +12,7 @@ import { postWrite } from "./http";
 import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
-import type { GardenWord, OrchardWord } from "../deck/schema";
+import type { Gender, GardenWord, OrchardWord } from "../deck/schema";
 import type { GardenLeft } from "perennial-contract";
 
 export interface Sentence {
@@ -31,7 +31,7 @@ export interface Word {
   pos?: string | null;
   forms: readonly string[];
   notes?: string | null;
-  gender?: string;
+  gender?: Gender;
   /** Frequency order for deck words; user words come after the deck. */
   rank: number;
   source: "deck" | "user";

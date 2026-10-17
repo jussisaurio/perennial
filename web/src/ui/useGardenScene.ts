@@ -16,6 +16,9 @@ import { layout, type Layout, type PlacedPlant } from "../garden/world";
 import type { Focus } from "./gardenFocus";
 import type { LearnerVisitors } from "./visitors";
 
+/** A press held this long (ms) without moving is a long press (#357). */
+const HOLD_MS = 500;
+
 interface WalkData {
   l: Layout;
   seeds: number;
@@ -28,7 +31,8 @@ interface WalkData {
  * and quality changes go to the running scene. `onFocused`: the scene walked to
  * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
  * save it once it is opened. `leave`: the bowl and the shelf (#351), how to save
- * them, and what to do when the learner leaves or finds something.
+ * them, and what to do when the learner leaves or finds something. `onShake`:
+ * a plant was shaken (#357), and the forms that fell from it.
  */
 export function useGardenScene({
   lang,
@@ -42,6 +46,7 @@ export function useGardenScene({
   wrap,
   canvas,
   onFocused,
+  onShake,
 }: {
   lang: string;
   source: PlantSource | null;
@@ -54,6 +59,7 @@ export function useGardenScene({
   wrap: RefObject<HTMLDivElement | null>;
   canvas: RefObject<HTMLCanvasElement | null>;
   onFocused: () => void;
+  onShake: (p: PlacedPlant, forms: string[]) => void;
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
@@ -70,6 +76,8 @@ export function useGardenScene({
   openDoor.current = door.open;
   const leaveNow = useRef(leave);
   leaveNow.current = leave;
+  const shakeNow = useRef(onShake);
+  shakeNow.current = onShake;
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   useEffect(() => {
@@ -123,6 +131,7 @@ export function useGardenScene({
             onHand: setHand,
             onLeave: (d) => leaveNow.current.done(d),
             onLeft: (left) => leaveNow.current.save(left),
+            onShake: (p, forms) => shakeNow.current(p, forms),
           },
           reduced,
           lang,
@@ -185,7 +194,8 @@ export function useGardenScene({
  * looks around and pinch walks; dragging looks; the thumb stick walks.
  * `onMove`: the viewer moved or looked (the hint can go). The pointer handlers
  * go on the canvas; `endDrag` says whether a pointer-up was a click or tap
- * rather than the end of a drag.
+ * rather than the end of a drag or a long press. `onHold`: a press held still
+ * for a moment (#357), at that point (client pixels).
  */
 export function useWalkInput({
   scene,
@@ -193,15 +203,19 @@ export function useWalkInput({
   selected,
   onExit,
   onMove,
+  onHold,
 }: {
   scene: RefObject<GardenScene | null>;
   wrap: RefObject<HTMLDivElement | null>;
   selected: PlacedPlant | null;
   onExit: () => void;
   onMove: () => void;
+  onHold: (clientX: number, clientY: number) => void;
 }) {
   const moved = useRef(onMove);
   moved.current = onMove;
+  const held = useRef(onHold);
+  held.current = onHold;
   const selectedRef = useRef<PlacedPlant | null>(null);
   selectedRef.current = selected;
 
@@ -284,10 +298,17 @@ export function useWalkInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onExit]);
 
-  // Drag to look; a click or tap without dragging picks something.
-  const drag = useRef<{ x: number; y: number; moved: number; id: number } | null>(null);
+  // Drag to look; a click or tap without dragging picks something; a press held still is a long press.
+  const drag = useRef<{ x: number; y: number; moved: number; id: number; hold: number; held: boolean } | null>(null);
+  useEffect(() => () => clearTimeout(drag.current?.hold), []);
   const onPointerDown = (e: PointerEvent) => {
-    drag.current = { x: e.clientX, y: e.clientY, moved: 0, id: e.pointerId };
+    clearTimeout(drag.current?.hold);
+    const d = { x: e.clientX, y: e.clientY, moved: 0, id: e.pointerId, hold: 0, held: false };
+    d.hold = window.setTimeout(() => {
+      d.held = true;
+      held.current(d.x, d.y);
+    }, HOLD_MS);
+    drag.current = d;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: PointerEvent) => {
@@ -299,15 +320,20 @@ export function useWalkInput({
     d.x = e.clientX;
     d.y = e.clientY;
     if (d.moved > 4) {
+      clearTimeout(d.hold);
       scene.current?.look(dx, dy);
       moved.current();
     }
   };
-  const onPointerCancel = () => (drag.current = null);
+  const onPointerCancel = () => {
+    clearTimeout(drag.current?.hold);
+    drag.current = null;
+  };
   const endDrag = (): boolean => {
     const d = drag.current;
     drag.current = null;
-    return !!d && d.moved <= 6;
+    clearTimeout(d?.hold);
+    return !!d && d.moved <= 6 && !d.held;
   };
 
   /** The touch-screen thumb stick: walk at this speed, -1..1 sideways and forward. */
