@@ -111,6 +111,8 @@ export const PERK = { rise: 0.15, fall: 0.25 } as const;
 export const NEIGHBOUR = { delay: 0.12, rise: 0.2, fall: 1.1 } as const;
 /** How much a perking plant grows (fraction of its height). */
 export const PERK_SCALE = 0.04;
+/** A sneeze (#360, a dandelion seed lands on the plant): a quick squash (fraction of its height), then it pops back (s). */
+export const SNEEZE = { rise: 0.08, fall: 0.35, squash: 0.18 } as const;
 /** On about one listen in this many, the neighbour perks up too, as if you called it. */
 export const NEIGHBOUR_PERK = 30;
 

@@ -10,6 +10,7 @@ import type { PlacedPlant } from "./world";
 import * as Art from "./visitorArt";
 import * as LeaveArt from "./leaveArt";
 import * as CarryArt from "./carryArt";
+import * as ToyArt from "./toyArt";
 import { FRUIT_KINDS, type Find, type FruitKind, type Guest, type WildGuest } from "./leave";
 import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
@@ -1029,5 +1030,68 @@ export function carryAtlas(): HTMLCanvasElement {
     const oy = 32 - art.rows.length;
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
   });
+  return c;
+}
+
+// ---- Lawn and pond toys (#360) ----------------------------------------------
+
+/** Cells of the toy atlas (16×24 each, standing on the bottom row): a dandelion clock, then the same clock blown. */
+export const TOY_CELL = { clock: 0, blown: 1 } as const;
+export const TOY_CELLS = 2;
+const TOY_W = 16;
+const TOY_H = 24;
+
+/** The dandelion clock and the blown one, side by side. */
+export function toyAtlas(): HTMLCanvasElement {
+  const [c, ctx] = canvas(TOY_W * TOY_CELLS, TOY_H);
+  [ToyArt.CLOCK, ToyArt.BLOWN].forEach((art, i) => {
+    const ox = i * TOY_W + Math.floor((TOY_W - art.rows[0].length) / 2);
+    const oy = TOY_H - art.rows.length;
+    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  });
+  return c;
+}
+
+/** The boat's canvas (px): a paper boat seen from the side, its sail folded up in the middle. */
+export const BOAT_PX = { w: 64, h: 32 } as const;
+
+/**
+ * A paper boat with a word written on its side in the pixel font, in ink, as
+ * big as fits. The font must be loaded first (document.fonts.load): a canvas
+ * does not wait for it.
+ */
+export function boat(word: string): HTMLCanvasElement {
+  const { w, h } = BOAT_PX;
+  const [c, ctx] = canvas(w, h);
+  const INK = "#3a2416";
+  const PAPER = "#f4efe2";
+  const FOLD = "#d4ccb8";
+  // The sail: a triangle from the hull's top up to a point, its far half in the fold's shade.
+  for (let y = 3; y < 17; y++) {
+    const half = Math.round(((y - 3) / 14) * 17);
+    px(ctx, 32 - half, y, PAPER, half, 1);
+    px(ctx, 32, y, FOLD, half, 1);
+    px(ctx, 31 - half, y, INK);
+    px(ctx, 32 + half, y, INK);
+  }
+  // The hull: wide at the top, narrow at the waterline.
+  for (let y = 17; y < 29; y++) {
+    const half = 30 - Math.round(((y - 17) / 11) * 8);
+    px(ctx, 32 - half, y, y === 17 ? INK : PAPER, half * 2, 1);
+    px(ctx, 32 - half - 1, y, INK);
+    px(ctx, 32 + half, y, INK);
+  }
+  px(ctx, 32 - 22, 29, INK, 44, 1);
+  // The word, drawn alone, then copied in where it is dark enough: crisp pixels, no grey edges.
+  const [, tctx] = canvas(w, h);
+  let size = 11;
+  do tctx.font = `700 ${size}px "Pixelify Sans"`;
+  while (tctx.measureText(word).width > 46 && --size > 6);
+  tctx.textAlign = "center";
+  tctx.textBaseline = "middle";
+  tctx.fillStyle = "#000";
+  tctx.fillText(word, w / 2, 23);
+  const img = tctx.getImageData(0, 0, w, h).data;
+  for (let y = 18; y < 29; y++) for (let x = 0; x < w; x++) if (img[(y * w + x) * 4 + 3] > 110) px(ctx, x, y, INK);
   return c;
 }

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { deriveMemory, wordState } from "../core/memory";
 import type { ReviewRow } from "../data/rows";
 import { milestoneLine } from "../garden/visitors";
-import { broughtAt, knownAt, knownWords } from "./visitors";
+import { boatWord, broughtAt, knownAt, knownWords } from "./visitors";
 
 const DAY = 86_400_000;
 const start = new Date(2026, 0, 1, 9).getTime();
@@ -86,5 +86,28 @@ describe("when a garden word brought its visitor", () => {
     expect(broughtAt(l, "llave")).toBe(start + 2 * DAY);
     expect(broughtAt(l, "casa")).toBeNull();
     expect(broughtAt({ reviewsByWord: new Map([["llave", [{ ...review("llave", 1), grade: 2 }]]]) }, "llave")).toBeNull();
+  });
+});
+
+describe("the paper boat's word (#360)", () => {
+  const word = (id: string) => ({ id, lemma: id.toUpperCase(), gloss: `${id} in English` });
+  const words = new Map(["casa", "perro", "gato"].map((id) => [id, word(id)]));
+  const learner = (reviews: ReviewRow[]) => ({ reviews, words, resolve: same }) as unknown as Parameters<typeof boatWord>[0];
+  const at = (day: number) => start + day * DAY;
+
+  test("a word practised today: the one practised last", () => {
+    // gato is the newest word, but casa was practised last, today.
+    const l = learner([review("casa", 0), review("perro", 1), review("gato", 5), review("casa", 9)]);
+    expect(boatWord(l, at(9) + 3_600_000)).toEqual({ lemma: "CASA", gloss: "casa in English" });
+  });
+
+  test("nothing practised today: the newest word", () => {
+    const l = learner([review("casa", 0), review("gato", 5), review("casa", 9), review("perro", 1)]);
+    expect(boatWord(l, at(12))).toEqual({ lemma: "GATO", gloss: "gato in English" });
+  });
+
+  test("no answers yet, or only for words no longer in the course: no boat", () => {
+    expect(boatWord(learner([]), at(0))).toBeNull();
+    expect(boatWord(learner([review("gone", 0)]), at(0))).toBeNull();
   });
 });

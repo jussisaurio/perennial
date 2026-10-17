@@ -24,6 +24,7 @@ import {
   type VisitorView,
 } from "../garden/visitors";
 import { sceneryViews, type SceneryViews } from "../garden/scenery";
+import type { BoatWord } from "../garden/toys";
 import type { GardenWord } from "../deck/schema";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
@@ -175,6 +176,29 @@ function leaveFacts(l: Learner): LeaveFacts {
 export function waitingGuest(l: Learner, now: number): Guest | null {
   const b = bowlNow(storedLeft(l), dayNumber(now), leaveFacts(l));
   return b.kind === "came" ? b.outcome.row.guest : null;
+}
+
+/**
+ * The word on the paper boat (#360): the word practised last, if that was
+ * today; else the newest word (the one whose first answer came last). Null
+ * with no answers yet.
+ */
+export function boatWord(l: Pick<Learner, "reviews" | "words" | "resolve">, now: number): BoatWord | null {
+  let last: ReviewRow | null = null;
+  const first = new Map<string, number>();
+  for (const r of l.reviews) {
+    if (!l.words.has(l.resolve(r.word_id))) continue;
+    const t = Date.parse(r.reviewed_at);
+    if (!last || t > Date.parse(last.reviewed_at)) last = r;
+    const id = l.resolve(r.word_id);
+    // `?? t`: the word's first answer met so far.
+    first.set(id, Math.min(t, first.get(id) ?? t));
+  }
+  if (!last) return null;
+  let id = l.resolve(last.word_id);
+  if (dayNumber(Date.parse(last.reviewed_at)) !== dayNumber(now)) for (const [w, t] of first) if (t > first.get(id)!) id = w;
+  const w = l.words.get(id)!;
+  return { lemma: w.lemma, gloss: w.gloss };
 }
 
 /** Leave it out on the landing page: nothing left, the crumbs in the basket, and nothing saved. */

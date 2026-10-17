@@ -299,6 +299,25 @@ export class SceneVisitors implements Part {
     return s ? { x: s.body.at.x, z: s.body.at.z } : null;
   }
 
+  /**
+   * A visitor here today that something carries (#360: the frog on the paper
+   * boat): where it sits now, and a move that makes nothing, as it runs every
+   * frame. Null when it is not here today.
+   */
+  carried(id: VisitorId): { home: Readonly<{ x: number; z: number }>; to: (x: number, y: number, z: number) => void } | null {
+    const s = this.sprites.find((o) => o.v.id === id);
+    if (!s) return null;
+    const b = s.body;
+    const to = (x: number, y: number, z: number) => {
+      b.at.x = b.x = x;
+      b.at.y = b.y = y;
+      b.at.z = b.z = z;
+      this.draw(s);
+    };
+    // Read when asked: a pebble in the pond moves the frog to another pad (#358).
+    return { home: b.at, to };
+  }
+
   /** Something lands in the pond (#358): each visitor that minds it answers (the frog on a pad hops to the next). True when one did. */
   splash(): boolean {
     let answered = false;
