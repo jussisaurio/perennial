@@ -15,6 +15,8 @@ import { DOOR_LINES, groupOf, keyHelp, keySpot, type KeySpot, type PlacedPlant }
 import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
+import type { Hider } from "../garden/sceneVisitors";
+import type { Hideout } from "../garden/kinds/kind";
 import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
 import { takeFocus, type Focus } from "./gardenFocus";
@@ -43,6 +45,19 @@ import type { Gender } from "../deck/schema";
 
 /** A plant just shaken (#357): its word and the forms that fell from it ([]: one leaf). */
 type Shook = { lemma: string; forms: string[] };
+/** Hide-and-seek (#379): something hiding in reach of the action button, and what the button just found. */
+type Seek = { near: Hider | null; found: Hider | null };
+
+/** Where a visitor hid (#379): "under the bench", or "behind" and its word, said in the course language. */
+function Where({ where, lang }: { where: Hideout; lang: string }) {
+  return where.word === null ? (
+    <>{where.text}</>
+  ) : (
+    <>
+      {where.text} <span lang={lang}>{where.word}</span>
+    </>
+  );
+}
 
 /**
  * What the walk's status says to a screen reader: who just came to sit with
@@ -50,12 +65,13 @@ type Shook = { lemma: string; forms: string[] };
  * find's word and meaning (#351); a fruit that fell from a tree they walked
  * into, and its word (#359); the well's echo, an old word and the day it
  * was met (#335 S6); the prints from the bowl, or something at their
- * feet; what fell from a shaken plant (#357); who answered a call (#377); the door's line; a lantern that
+ * feet; something small hiding near them, or what they just found hiding
+ * (#379); what fell from a shaken plant (#357); who answered a call (#377); the door's line; a lantern that
  * is out, and the stars once every one is (#361); what a thrown thing did
  * where it landed (#358); what they hold. Things in the world, never
  * instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, landed: string | null, toy: ToyDone | null, lang: string, stars: boolean): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
@@ -64,6 +80,19 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
     return (
       <>
         A paper boat with <span lang={lang}>{toy.word.lemma}</span> on it floats out on the pond.
+      </>
+    );
+  // It never says what hides, only that something small does: the button finds it.
+  if (seek.near)
+    return (
+      <>
+        Something small is <Where where={seek.near.where} lang={lang} />.
+      </>
+    );
+  if (seek.found)
+    return (
+      <>
+        You found the {seek.found.gloss}. It was <Where where={seek.found.where} lang={lang} />.
       </>
     );
   // The course-language word is marked as such, so a screen reader says it in that language.
@@ -260,6 +289,7 @@ const REACH_NAME: Record<Reach, string> = {
   light: "Light the lantern",
   call: "Call",
   well: "Drop it in the well",
+  seek: "Found you",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -298,6 +328,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   call: ["..........#..#", "...........#..", "######..####..", "#.....##....#.", "######.#....#.", ".......#....#.", "........####.."],
   // A stone, dropping into a well.
   well: ["....##....", "....##....", "..........", "....##....", "..........", "#........#", "#........#", "##########", "##########"],
+  // An open eye: I see you.
+  seek: ["...####...", ".##....##.", "#...##...#", "#..####..#", "#...##...#", ".##....##.", "...####..."],
 };
 
 /** Leave it out's actions (#351, sceneLeave.ts LeaveAct) and carry's (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -450,6 +482,8 @@ export function GardenWalk({
     wakeAudio();
     whistle();
   };
+  // What the action button last found hiding (#379), for screen readers. Any other tap or press ends it.
+  const [found, setFound] = useState<Hider | null>(null);
   const onShake = (p: PlacedPlant, forms: string[]) => {
     onTap?.("shake");
     setCalled(null);
@@ -536,6 +570,7 @@ export function GardenWalk({
     if (!endDrag() || !scene.current || !wrap.current) return;
     setShook(null);
     setCalled(null);
+    setFound(null);
     const r = wrap.current.getBoundingClientRect();
     const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
@@ -659,7 +694,7 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           for leave it out (#351), what they found, the prints and what lies at their feet, and what they hold; who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, shook, called, company, landed, toyNews, lang, stars)}
+        {spokenStatus(reach, labels, door.state, held, shook, called, company, landed, toyNews, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
@@ -677,10 +712,11 @@ export function GardenWalk({
             <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
-          ) : l.kind === "tree" || l.kind === "find" || l.kind === "fruit" || l.kind === "boat" || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
+          ) : l.kind === "tree" || l.kind === "find" || l.kind === "fruit" || l.kind === "boat" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
             <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
               <i>{l.text}</i>
-              <small lang="en"> · {l.gloss}</small>
+              {/* A visitor found hiding (#379) says where it was in place of its meaning. */}
+              <small lang="en"> · {l.where ? <Where where={l.where} lang={lang} /> : l.gloss}</small>
             </span>
           ) : (
             <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" || l.kind === "scenery" ? l.near : 0.35 + l.near * 0.65 }}>
@@ -800,6 +836,7 @@ export function GardenWalk({
             className="gw-btn gw-icon gw-act"
             aria-label={REACH_NAME[reach]}
             onClick={() => {
+              setFound(reach === "seek" && scene.current ? scene.current.hider() : null);
               scene.current?.act(reach);
               // Leave it out's, carry's and the toys' verbs are counted when they are done (leaveDone, carryDone, toyDone): a press may find nothing left to do. A shake is counted by onShake.
               if (!LEAVE_ACTS.has(reach) && !CARRY_ACTS.has(reach) && !TOY_ACTS.has(reach) && reach !== "shake") onTap?.(reach);
@@ -808,7 +845,7 @@ export function GardenWalk({
               // After the door opens, the key or a find is picked up, something is left, hung, thrown or stacked, a toy is played with, or a walk to the prints starts, there may be
               // nothing in reach: keep keyboard focus in the walk, not lost to the page. Taking or picking up keeps the button, for what comes next (a throw).
               const keeps = reach === "take" || reach === "unhang" || reach === "lift-pebble" || reach === "lift-stick";
-              if (reach === "open" || reach === "key" || ((LEAVE_ACTS.has(reach) || CARRY_ACTS.has(reach) || TOY_ACTS.has(reach)) && !keeps)) canvas.current?.focus({ preventScroll: true });
+              if (reach === "open" || reach === "key" || reach === "seek" || ((LEAVE_ACTS.has(reach) || CARRY_ACTS.has(reach) || TOY_ACTS.has(reach)) && !keeps)) canvas.current?.focus({ preventScroll: true });
             }}
           >
             <PixelIcon rows={REACH_ICON[reach]} />

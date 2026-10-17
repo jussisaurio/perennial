@@ -32,7 +32,15 @@ export interface Arrival {
   home: Home | null;
   /** The moment the walk opened: daily picks use its calendar day. */
   now: Date;
+  /** The garden's age: calendar days since the first review (0 for a new learner). Never words or study days. */
+  age: number;
   reducedMotion: boolean;
+}
+
+/** Where a visitor hid today (#379), said plainly: "under the bench", or "behind" and a word in the course language ("manzana"). */
+export interface Hideout {
+  text: string;
+  word: string | null;
 }
 
 /** One visitor as the runtime draws it. Its hooks change these; the runtime uploads only what changed. */
@@ -53,6 +61,10 @@ export interface Body<F extends string> {
   glow: boolean;
   /** It cannot talk now (the frog asleep): what it said goes. */
   mute: boolean;
+  /** It hides (#379): its tag never shows, and the action button near it finds it. */
+  hiding: boolean;
+  /** Where it hid today, said after its tag once it is found; null on a day it did not hide. */
+  hid: Hideout | null;
 }
 
 /** A tap that a visitor may answer. */
@@ -96,6 +108,8 @@ export interface Visitor<F extends string> {
    * `settled`: it sits with you on the bench (#362), so it does not mind you near.
    */
   onVisit?(settled: boolean): void;
+  /** It was found while it hid (#379): a tap on it, or the action button near it. */
+  onFind?(elapsed: number): void;
   /** Something lands in the pond (#358). True when it answers (and so the walk says so). */
   onSplash?(): boolean;
   /** A lantern was blown out or lit again (#361), `on` by spot (Spots.lanterns). What it says about it, or null. */
@@ -126,7 +140,7 @@ export interface VisitorKind<F extends string = string> {
 
 /** A body standing still at a spot, showing `frame`. */
 export function bodyAt<F extends string>(x: number, y: number, z: number, frame: F): Body<F> {
-  return { at: { x, y, z }, x, y, z, frame, visible: true, turn: 0, tag: 1, glow: false, mute: false };
+  return { at: { x, y, z }, x, y, z, frame, visible: true, turn: 0, tag: 1, glow: false, mute: false, hiding: false, hid: null };
 }
 
 /** Within this far of its spot (m), a visitor walking off it comes down to the ground (its spot may be up on a bed or the bench). */

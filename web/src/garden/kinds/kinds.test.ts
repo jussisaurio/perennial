@@ -21,12 +21,15 @@ const SPOTS: Spots = {
   ],
   lanterns: lanternSpots(L),
   perches: [[1, 1.19, 1]],
+  sign: [1, 1.19, 1],
   trees: [],
+  orchard: [],
+  piles: [],
 };
 const HOME: Home = { x: 1, z: 1, soil: 0.3, top: 0.9, thirsty: false };
 
 function arrive(id: keyof typeof KINDS, a: Partial<Arrival> = {}): Visitor<string> {
-  const it = KINDS[id].arrive({ spots: SPOTS, layout: L, home: null, now: NOW, reducedMotion: false, ...a });
+  const it = KINDS[id].arrive({ spots: SPOTS, layout: L, home: null, now: NOW, age: 0, reducedMotion: false, ...a });
   if (!it) throw new Error(`${id} stayed away`);
   return it;
 }
@@ -46,15 +49,15 @@ describe("visitor kinds", () => {
   test("every kind's frames have art, and every kind that comes starts on one of them", () => {
     for (const k of Object.values(KINDS)) {
       expect(Object.keys(k.art).length).toBeGreaterThan(0);
-      const it = k.arrive({ spots: SPOTS, layout: L, home: HOME, now: NOW, reducedMotion: false });
+      const it = k.arrive({ spots: SPOTS, layout: L, home: HOME, now: NOW, age: 0, reducedMotion: false });
       expect(it).not.toBeNull();
       expect(Object.keys(k.art)).toContain(it!.body.frame);
     }
   });
 
   test("the dog and the butterfly stay away without their word's plant", () => {
-    expect(KINDS.dog.arrive({ spots: SPOTS, layout: L, home: null, now: NOW, reducedMotion: false })).toBeNull();
-    expect(KINDS.butterfly.arrive({ spots: SPOTS, layout: L, home: null, now: NOW, reducedMotion: false })).toBeNull();
+    expect(KINDS.dog.arrive({ spots: SPOTS, layout: L, home: null, now: NOW, age: 0, reducedMotion: false })).toBeNull();
+    expect(KINDS.butterfly.arrive({ spots: SPOTS, layout: L, home: null, now: NOW, age: 0, reducedMotion: false })).toBeNull();
   });
 
   test("the frog sleeps by day and does not answer a tap; awake at dusk, it croaks a known word, puffed up for a moment", () => {

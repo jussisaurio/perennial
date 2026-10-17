@@ -12,7 +12,7 @@ import * as T from "./textures";
 import { plantHeight as plantHeightOf } from "../ui/plant";
 import { fishSign, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
-import { SceneVisitors } from "./sceneVisitors";
+import { SceneVisitors, type Hider } from "./sceneVisitors";
 import { LANTERN_GLASS_Y, RAIL, type Spots } from "./spots";
 import { conditions } from "./conditions";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
@@ -36,10 +36,12 @@ import { plantInReach } from "./shake";
 import type { Gender } from "../deck/schema";
 import { Jokes, type Joke } from "./sceneJokes";
 import { WalkInto } from "./sceneWalkInto";
-import type { Fell, Rolling } from "./walkInto";
+import { leafPiles, type Fell, type Rolling } from "./walkInto";
 import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
 import { inLang } from "./nouns";
+import { dayNumber } from "../core/day";
+import type { Hideout } from "./kinds/kind";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -61,8 +63,8 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), carry's (#358), the toys' (#360), or blow a lantern out and light it again (#361); with nothing in reach, call (#377). */
-export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, leave it out's (#351), shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379); with nothing in reach, call (#377). */
+export type Reach = DoorAction | "sit" | "stand" | LeaveAct | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call" | "seek";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
 export interface Label {
@@ -78,6 +80,8 @@ export interface Label {
   gender?: Gender;
   /** A visitor whose noun the learner knows: plant-label styling with a tiny leaf. */
   known?: boolean;
+  /** Where a visitor hid today, once it is found (#379): said after its word. */
+  where?: Hideout;
 }
 
 /** Who visits the walk today. */
@@ -109,6 +113,8 @@ export interface WalkVisitors {
   moon: number;
   /** Every word in the garden and when it was first met, for the well's echo (#335 S6). */
   met: Met[];
+  /** The learner's first review ever (ms), for the garden's age (#379); null for a new learner. */
+  firstReview: number | null;
 }
 
 export interface SceneCallbacks {
@@ -247,6 +253,8 @@ export class GardenScene {
   /** The plant the action button shakes, when it shakes one (#357). */
   private shakeTarget: PlacedPlant | null = null;
   private carryTarget: CarryTarget | null = null;
+  /** The hiding visitor the action button finds, when it finds one (#379). */
+  private seekTarget: VisitorId | null = null;
   /** Carry (#358): the pebbles, the stick and the cairn; and how often each one has answered a landing this visit. */
   private carry: Carry;
   private answered: Record<Answer, number> = { frog: 0, dog: 0, plant: 0, well: 0 };
@@ -491,7 +499,9 @@ export class GardenScene {
     // The mat says the doormat's word as a mat would: the bare word, in capitals.
     const welcome = this.visitors.scenery?.doormat?.word;
     this.jokes.build(c, this.bench, now, welcome ? bareNoun(welcome).toUpperCase() : null);
-    this.guests.build(this.spots(pads, boards, now), now);
+    // The garden's age, in calendar days since the first review (#379).
+    const first = this.visitors.firstReview;
+    this.guests.build(this.spots(pads, boards, now), now, first === null ? 0 : dayNumber(now) - dayNumber(first));
     // After the visitors: the dog, if it came for the bowl in the night (#351), waits by what it left.
     this.leaveIt.build(c);
     this.scene.add(this.leaveIt.root);
@@ -603,17 +613,19 @@ export class GardenScene {
 
   /**
    * Where visitors can sit today (spots.ts), from the world built so far: the
-   * pond's pads, the lanterns, the bench, the notice boards and the fence's
-   * rail, and, when the walk starts with the door open, the orchard's trees.
+   * pond's pads, the lanterns, the bench, the notice boards, the first bed's
+   * sign and the fence's rail, autumn's leaf piles and, when the walk starts
+   * with the door open, the orchard's trees.
    */
   private spots(pads: [number, number][], boards: [number, number, number][], now: Date): Spots {
     const L = this.layout;
     const b = L.bounds;
     const first = L.beds[0];
     // After the back fence's board: the first bed's sign (scenePlants.ts) and the fence's rail on either side.
+    const sign: [number, number, number] = [first.x - first.w / 2 - 0.3, 0.93, first.z + first.d / 2 + 0.3];
     const perches: [number, number, number][] = [
       boards[0],
-      [first.x - first.w / 2 - 0.3, 0.93, first.z + first.d / 2 + 0.3],
+      sign,
       [b.maxX - 0.06, RAIL, (b.maxZ + first.z) / 2],
       [b.minX + 0.06, RAIL, first.z - 1],
       ...boards.slice(1),
@@ -622,8 +634,10 @@ export class GardenScene {
     // does not vanish from the garden as the door opens. Visitors that came another way
     // (the gnome, the moth...) have no garden word and never sit in the trees.
     const brought = new Set(this.visitors.list.flatMap((v) => visitor(v.id).garden ?? []));
-    const trees = this.visitors.door === "open" ? treeVisitorSpots(placeTrees(L.orchard, this.visitors.orchard.trees), brought, now) : [];
-    return { bench: this.bench, pads, lanterns: this.lanterns.spots, perches, trees };
+    const orchard = this.visitors.door === "open" ? placeTrees(L.orchard, this.visitors.orchard.trees) : [];
+    const trees = treeVisitorSpots(orchard, brought, now);
+    const piles = this.visitors.autumn ? leafPiles(L) : [];
+    return { bench: this.bench, pads, lanterns: this.lanterns.spots, perches, sign, trees, orchard, piles };
   }
 
   /** The ray from the eye through a point on the canvas (CSS pixels). */
@@ -667,6 +681,7 @@ export class GardenScene {
     else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
     else if (a === "throw" && this.reach === "throw") this.throwAhead();
     else if (a === "call" && this.reach === "call") this.call();
+    else if (a === "seek" && this.reach === "seek" && this.seekTarget) this.seek(this.seekTarget);
     else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
     else if ((a === "blow" || a === "fold") && a === this.reach && this.toyTarget) this.doToy(this.toyTarget);
     else if (a !== "sit" && a === this.reach && this.leaveTarget) this.doLeave(this.leaveTarget);
@@ -1312,6 +1327,17 @@ export class GardenScene {
    * A tap on a visitor: what it says back (the awake frog croaks one of the
    * `known` words) in a small bubble for a few seconds, or else its tag. Returns what it said.
    */
+  /** The action button finds a hiding visitor (#379), as a tap on it would. */
+  private seek(id: VisitorId) {
+    this.guests.find(id);
+    this.clearTaps({ scenery: true, tree: true, line: true, find: true, fruit: true });
+  }
+
+  /** The hiding visitor the action button would find now (#379), for the status a screen reader hears; null when it would find none. */
+  hider(): Hider | null {
+    return this.reach === "seek" && this.seekTarget ? this.guests.hider(this.seekTarget) : null;
+  }
+
   tapVisitor(id: VisitorId, known: readonly string[]): string | null {
     const said = this.guests.tap(id, known);
     this.clearTaps(said === null ? { scenery: true, tree: true, line: true, find: true, fruit: true, boat: true } : { line: true });
@@ -1835,12 +1861,12 @@ export class GardenScene {
   /**
    * Tell the page what the action button does now (#334): stand up from the
    * bench, pick up the key, throw a loose thing you hold or put it on the
-   * cairn (#358), pick up a find (#351), open or try the door (unless a
-   * lantern by the gate is nearer), the rest of leave it out's (leave or
-   * follow at the bowl, hang on the shelf, take from the basket or the shelf),
-   * blow out or light a lantern (#361), pick up a loose thing, sit on the
-   * bench, the toys' (#360: blow a dandelion clock, fold a boat at the pond),
-   * or shake the plant ahead of you (#357), for whichever is in reach (in that
+   * cairn (#358), pick up a find (#351), find a hiding visitor (#379), open
+   * or try the door (unless a lantern by the gate is nearer), the rest of leave
+   * it out's (leave or follow at the bowl, hang on the shelf, take from the
+   * basket or the shelf), blow out or light a lantern (#361), pick up a loose
+   * thing, sit on the bench, the toys' (#360: blow a dandelion clock, fold a
+   * boat at the pond), or shake the plant ahead of you (#357), for whichever is in reach (in that
    * order); with nothing in reach, call (#377), so the button always does
    * something. The thing in reach glints (the cue).
    */
@@ -1861,18 +1887,22 @@ export class GardenScene {
     const leave = this.seated || nearKey || holding ? null : this.leaveIt.reachAt(this.x, this.z);
     const mine = leave && (leave.a === "find" || !nearDoor) ? leave : null;
     const toy = this.seated || nearKey ? null : this.toys.reachAt(this.x, this.z);
+    // A hiding visitor (#379) comes before the bench and the plant ahead: it hides under the one and behind the other.
+    const hider = this.seated || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z);
     const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
     // The first of these that applies, in reportReach's order above.
-    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : (door ?? mine?.a ?? lampAct ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
+    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : mine?.a === "find" ? "find" : hider ? "seek" : (door ?? mine?.a ?? lampAct ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
     const a: Reach = plant ? "shake" : (before ?? "call");
     const target = mine && a === mine.a ? mine.target : null;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = (a === "blow" || a === "fold") && toy ? toy.target : null;
     const lantern = lampAct && a === lampAct ? lamp : -1;
+    const seeking = a === "seek" ? hider : null;
     // Targets are made once (LeaveItOut.reachAt, Carry.reachAt, Toys.reachAt), so the same target is the same object.
-    if (a === this.reach && target === this.leaveTarget && plant === this.shakeTarget && carried === this.carryTarget && toyTarget === this.toyTarget && lantern === this.lanternTarget) return;
+    if (a === this.reach && target === this.leaveTarget && plant === this.shakeTarget && carried === this.carryTarget && toyTarget === this.toyTarget && lantern === this.lanternTarget && seeking === this.seekTarget) return;
     this.reach = a;
+    this.seekTarget = seeking;
     this.leaveTarget = target;
     this.shakeTarget = plant;
     this.carryTarget = carried;
