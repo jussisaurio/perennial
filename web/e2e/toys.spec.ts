@@ -76,12 +76,12 @@ test("a tap walks up to a dandelion clock and blows it; at the pond the button f
   // The seeds fade, and are gone.
   await expect.poll(async () => (await toysNow(page)).seeds, { timeout: 15_000 }).toBe(false);
 
-  // At the pond's edge, away from the bench: the button folds a boat.
+  // At the pond's edge on the gate's side, away from the bench and the pebbles (#358): the button folds a boat.
   await page.evaluate(() => {
     const s = (window as unknown as { __garden: ToyScene }).__garden;
     const p = s.layout.pond;
-    // Forward is -z at yaw 0: face the pond (-x).
-    Object.assign(s, { x: p.x + p.r + 0.6, z: p.z, yaw: Math.PI / 2, pitch: -0.4 });
+    // Forward is -z at yaw 0: face the pond.
+    Object.assign(s, { x: p.x, z: p.z + p.r + 0.5, yaw: 0, pitch: -0.4 });
   });
   const word = (await toysNow(page)).word!;
   expect(word).not.toBeNull();
