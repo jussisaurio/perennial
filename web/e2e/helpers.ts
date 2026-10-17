@@ -282,7 +282,11 @@ const leavePlace = (page: Page, what: LeaveThing) =>
 
 /** Stand `metres` from a thing, on the garden side, facing it; return where it shows on the page (pixels). */
 export async function standByLeave(page: Page, what: LeaveThing, metres: number) {
-  const p = await leavePlace(page, what);
+  return standBy(page, await leavePlace(page, what), metres);
+}
+
+/** Stand `metres` from a point (x, z, and a height to look at), on the garden side, facing it; return where it shows on the page (pixels). */
+export function standBy(page: Page, p: { x: number; y: number; z: number }, metres: number) {
   return page.evaluate(
     ({ p, metres }) => {
       const s = (window as unknown as { __garden: WalkScene }).__garden;

@@ -104,9 +104,11 @@ loop, movement, and the rendering subsystems that tick or react to the time of
 day behind the `Part` interface (`scenePart.ts`) — the sky and pond, the door
 and key, the critters (fireflies, butterflies...), the plants (beds,
 culling, texture streaming, brushing past them), the visitors, the deadpan
-scenery (#364: the sundial, the mouse door, the fish that jumps), and walking
+scenery (#364: the sundial, the mouse door, the fish that jumps), walking
 into things (#359: a CPU-moved pool of pixel bits for bursts and showers, and
-fallen fruit). These are the rules a change to the garden's
+fallen fruit), and the loose things you carry and throw (`sceneCarry.ts`,
+#358: one instanced mesh for all of them, their flights, the cairn's wobble
+and the pond's rings). These are the rules a change to the garden's
 rendering code should follow, and the places it still does not (yet):
 
 - **A new Part is for a new rendering technique, never one per thing.** There
@@ -120,8 +122,12 @@ rendering code should follow, and the places it still does not (yet):
   priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
   say, then the one active tag — the door's line, a find's word, a fallen fruit's word, scenery or
   tree — then a visitor's); and what the one action button acts on
-  (`reportReach`: stand up, the key, a find at your feet, the door, the
-  bowl, shelf and basket, the bench, then the plant ahead). A Part never reaches into another
+  (`reportReach`: stand up, the key, what a loose thing in your hands does
+  (throw it, or put it on the cairn), a find at your feet, the door, the
+  bowl, shelf and basket, picking up a loose thing, the bench, then the
+  plant ahead). What a thrown thing does where it lands is a row in
+  `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a
+  small function there: a new joke is one row, not new scene code. A Part never reaches into another
   Part's build or pick order.
 - **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.
