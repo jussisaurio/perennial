@@ -7,7 +7,7 @@
     "dev:ai": "bun scripts/dev.ts --ai"
   },
   "devDependencies": {
-    "railway": "^3.13.1"
+    "railway": "^3.16.0"
   },
   "overrides": {
     "@effect/platform-node-shared": "4.0.0"
