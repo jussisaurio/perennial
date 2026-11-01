@@ -55,7 +55,6 @@ const HINT_ANSWERS = 3;
 
 export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string; onExit: () => void; onWalk: () => void; minutes: number }) {
   const [help, setHelp] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
 
   // The word's plant is planted or grows before the next card (#200).
   const [growing, setGrowing] = useState<{ m: GrowthMoment; corner: DOMRect } | null>(null);
@@ -95,19 +94,10 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
     };
   }, [growing]);
 
-  const noteTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const flash = (text: string, ms = 1800) => {
-    setNote(text);
-    clearTimeout(noteTimer.current);
-    noteTimer.current = setTimeout(() => setNote(null), ms);
-  };
-
   const { learner, tag, runner, card, done, active, ended, counts, refusedBefore, practised, introduced, before, arrived, serial, canUndo, start, finish, undo, exit, resume, firstSummary } = useSessionRunner({
     lang,
     minutes,
     onExit,
-    flash,
-    clearNote: () => setNote(null),
     grow,
   });
 
@@ -151,11 +141,6 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={finish} />
       ) : null}
-      {note && (
-        <div className="session-note" role="status">
-          {note}
-        </div>
-      )}
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
       {card && !done && (
         <div className="card-plant" ref={cornerPlant} key={`plant-${serial}`} aria-hidden="true">
