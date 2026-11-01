@@ -47,15 +47,11 @@ function chooseExample(l: Learner, wordId: string, onIntro: string | undefined):
 }
 
 interface Feedback {
-  /** A short note for a moment ("Undone."); `ms` for a longer one. */
-  flash: (text: string, ms?: number) => void;
-  /** A note is about the previous card: clear it when the next answer comes. */
-  clearNote: () => void;
   /** The word's plant is planted or grows; the next card waits until this resolves. */
   grow: (m: GrowthMoment) => Promise<void>;
 }
 
-export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow }: { lang: string; minutes: number; onExit: () => void } & Feedback) {
+export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string; minutes: number; onExit: () => void } & Feedback) {
   const learner = useLearner(lang);
   // Answers update the learner live; reads in event handlers use the latest.
   const live = useRef(learner);
@@ -193,7 +189,6 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
     busy.current = true;
     // Still inside the answer's tap or key press: the only time Safari lets audio start.
     wakeAudio();
-    clearNote();
     try {
       const moment = await record(runner, card, grade, opts);
       // Paused meanwhile: the pause screen is up, so no moment over it.
@@ -221,7 +216,6 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       // Undoing a quick check gives the intro's time back to the next one; undoing the intro drops it.
       if (last.carried !== undefined) introMs.current.set(last.wordId, last.carried);
       if (last.intro) introMs.current.delete(last.wordId);
-      flash("Undone.");
       // Undo from the pause screen goes back into the session.
       pause(false);
       await advance(runner, last);

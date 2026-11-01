@@ -129,11 +129,10 @@ test("Forgot is retried with its own label, and undo reverts it on the server to
   await expect(page.locator("main.card")).toHaveAttribute("data-lemma", lemma);
 });
 
-test("'I knew it' skips the quick check (no extra note: the button said so), is stored as 'known', and is undoable", async ({ page }) => {
+test("'I knew it' skips the quick check, is stored as 'known', and is undoable", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   await answer(page, "2");
-  await expect(page.locator(".session-note")).toHaveCount(0); // the button already promised "Back in about a week"
   await expectServerRows(page, "review", 1);
   const [r] = await serverRows<{ grade: number; kind: string }>(page, "review");
   expect(r).toMatchObject({ grade: 4, kind: "known" });
@@ -282,9 +281,10 @@ test("Enter or Space on a button reached with Tab presses that button, not the c
   await page.keyboard.press("Space");
   await expect(gloss).toHaveCount(0);
   // Enter on Undo undoes at once, without showing this card's meaning first.
+  const shown = await page.locator(".session").getAttribute("data-card");
   await tabTo(page, page.getByRole("button", { name: "Undo" }));
   await page.keyboard.press("Enter");
-  await expect(page.locator(".session-note")).toHaveText("Undone.");
+  await expect(page.locator(".session")).not.toHaveAttribute("data-card", shown!);
   await expect(gloss).toHaveCount(0);
   // A mouse click leaves focus on its button, but Space and Enter still mean the card's keys.
   await page.getByRole("button", { name: "Play the word" }).click();
