@@ -4,7 +4,6 @@ import {
   doneTodayNote,
   EMPTY_WALK,
   firstPlantsLine,
-  forgotLine,
   greetingAside,
   loadingLine,
   PLANT_LINES,
@@ -22,7 +21,7 @@ const FILTERS: WordsFilter[] = ["all", "known", "learning", "new", "suspended", 
 const days = Array.from({ length: 60 }, (_, d) => new Date(2026, 8, 1 + d, [8, 14, 20, 23][d % 4]));
 const english = [
   ...Object.values(PLANT_LINES).flat(),
-  ...days.flatMap((d) => [loadingLine(d), doneTodayNote(d), forgotLine(true, d), greetingAside(d) ?? ""]),
+  ...days.flatMap((d) => [loadingLine(d), doneTodayNote(d), greetingAside(d) ?? ""]),
   ...days.map((d, i) => summaryHeadline("es", i, d)).flatMap((h) => (h.small ? [h.small] : [h.line])),
   ...Object.values(EMPTY_WALK),
   WORM_LINE,
@@ -38,10 +37,6 @@ test("English lines: no exclamation marks, short sentences", () => {
     expect(line).not.toContain("!");
     for (const sentence of line.split(/(?<=\.)\s+/)) expect(sentence.split(/\s+/).length).toBeLessThanOrEqual(16);
   }
-});
-
-test("after 'I forgot', what happens next always comes first", () => {
-  for (const d of days) expect(forgotLine(true, d).startsWith("You will see this word again soon.")).toBe(true);
 });
 
 test("lines rotate across days", () => {

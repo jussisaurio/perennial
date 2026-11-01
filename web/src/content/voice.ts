@@ -98,13 +98,6 @@ export function doneTodayNote(now = new Date()): string {
   return daily(["The plants are busy growing now.", "Extra practice is fine. The plants will not tell anyone.", "The roots grow while you rest.", "The worms are busy under the soil."], "done-today", now);
 }
 
-/** After "I forgot": what happens next, then (sometimes) a kind word. */
-export function forgotLine(retry: boolean, now = new Date()): string {
-  const next = retry ? "You will see this word again soon." : "You will see this word again next time.";
-  const wink = daily([null, null, "Forgetting is part of it.", "It happens to every plant.", "Roots grow under the ground first.", null], "forgot", now);
-  return wink ? `${next} ${wink}` : next;
-}
-
 /** Small asides in quiet system copy (#68): the clear part never changes. */
 export const sendingLabel = (now = new Date()) => (rareDay(6, "by-bee", now) ? "Sending… by bee" : "Sending…");
 export const savedLine = (now = new Date()) => (rareDay(4, "saved", now) ? "All changes are saved. The gardener wrote them down." : "All changes are saved.");
