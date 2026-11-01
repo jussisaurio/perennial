@@ -101,7 +101,7 @@ test("double-clicking Show does not grade the unseen answer", async ({ page }) =
   expect(await serverRows(page, "review")).toHaveLength(1);
 });
 
-test("Forgot is acknowledged, retried with its own label, and undo reverts it on the server too", async ({ page }) => {
+test("Forgot is retried with its own label, and undo reverts it on the server too", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   await continueIntros(page, 4);
@@ -109,7 +109,6 @@ test("Forgot is acknowledged, retried with its own label, and undo reverts it on
   const lemma = (await page.locator("main.card").getAttribute("data-lemma"))!;
   await reveal(page);
   await page.getByRole("button", { name: /I forgot/ }).click();
-  await expect(page.getByRole("status")).toHaveText(/see this word again soon/);
   await expectServerRows(page, "review", 1);
 
   // Undo brings the same card back and deletes the review.

@@ -3,7 +3,6 @@
 // summary), and recording each answer as a review.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { forgotLine } from "../content/voice";
 import { language } from "../content/languages";
 import { ActiveClock } from "../core/clock";
 import type { Grade } from "../core/fsrs";
@@ -316,8 +315,8 @@ export function useSessionRunner({ lang, minutes, onExit, flash, clearNote, grow
       const brought = !!live.current && broughtVisitor(live.current, word.id);
       // ?? 0: no intro for this word in this session.
       const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), sentence_id: example?.id ?? null });
-      const retry = runner.report(task, { grade });
-      if (grade === 1) flash(forgotLine(retry));
+      // No note after "I forgot": the retry card says "try again" when it comes.
+      runner.report(task, { grade });
       setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
       // Only reading memory grows the plant, and only a remembered word grows.
       if (grade < 3 || task.skill !== "read") return null;
