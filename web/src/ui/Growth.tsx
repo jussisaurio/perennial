@@ -1,6 +1,7 @@
-// The moment after a good answer: the word's plant gets water and grows into
-// its new form, or a new word's seed goes into the soil. Under a second, any
-// tap or key skips it, and the next card waits for it (#200).
+// The moment after a good answer: the word's plant glides down from the card's
+// corner, then gets water and grows into its new form, or a new word's seed goes
+// into the soil. About a second, any tap or key skips it, and the next card
+// waits for it (#200).
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FORM, PlantForm, plantFrame, plantTop, stemHeight } from "./plant";
@@ -56,9 +57,12 @@ export function grows(m: GrowthMoment): boolean {
 /** Whether the moment plays at all: the learner's setting, and the device not asking for less motion. */
 export const growthOn = () => growthSetting() && !reducedMotion();
 
-// The timeline, in ms. Watering: the can tips in, three drops fall, and the
-// plant grows as they land. Planting: the seed drops in and the soil settles.
+// The timeline, in ms, after the plant's glide from the corner. Watering: the can
+// tips in, three drops fall, and the plant grows as they land. Planting: the seed
+// drops in and the soil settles.
 const T = {
+  /** The corner plant moving to where it is watered, so the learner sees it is the same plant. */
+  glide: 320,
   seedFall: 260,
   soilPat: 140,
   canIn: 180,
@@ -90,7 +94,7 @@ function timeline(m: GrowthMoment) {
 
 /** When the moment's chime should sound (ms): as the seed lands, or as the first drop reaches the soil. */
 export function chimeDelay(m: GrowthMoment): number {
-  return m.planted ? T.seedFall : T.canIn + T.tip - 30 + T.drop;
+  return T.glide + (m.planted ? T.seedFall : T.canIn + T.tip - 30 + T.drop);
 }
 
 const easeIn = (t: number) => t * t;
@@ -147,8 +151,11 @@ function Visitor({ art, e, side, until }: { art: PixelArt; e: number; side: numb
   );
 }
 
-/** The moment itself, drawn frame by frame. Calls `onDone` once, when it ends. */
-export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
+/**
+ * The moment itself, drawn frame by frame. Calls `onDone` once, when it ends.
+ * `corner` is where the card's plant was drawn (a WordPlant): the moment starts there.
+ */
+export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect; onDone: () => void }) {
   const [e, setE] = useState(0);
   const done = useRef(onDone);
   useLayoutEffect(() => {
@@ -160,8 +167,8 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
     const t0 = performance.now();
     const tick = (now: number) => {
       const el = now - t0;
-      setE(el);
-      if (el >= tl.end) done.current();
+      setE(Math.max(0, el - T.glide));
+      if (el >= T.glide + tl.end) done.current();
       else raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -170,6 +177,22 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
 
   // One frame for the whole moment, sized for the larger plant, so growing shows.
   const side = Math.max(plantFrame(m.word, m.from.s, m.from.stage), plantFrame(m.word, m.to.s, m.to.stage));
+  const svg = useRef<SVGSVGElement>(null);
+  // Before the first paint, so the plant is never seen at the bottom first. Both
+  // drawings put the plant's root at x 0, y 0, with 8 units below it.
+  useLayoutEffect(() => {
+    const el = svg.current!;
+    const r = el.getBoundingClientRect();
+    const cornerSide = plantFrame(m.word, m.from.s, m.from.stage);
+    const k = corner.height / cornerSide / (r.height / side);
+    const ox = r.width / 2;
+    const oy = (r.height * (side - 8)) / side;
+    const dx = corner.left + corner.width / 2 - (r.left + ox);
+    const dy = corner.top + (corner.height * (cornerSide - 8)) / cornerSide - (r.top + oy);
+    el.style.transformOrigin = `${ox}px ${oy}px`;
+    const glide = el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${k})` }, { transform: "none" }], { duration: T.glide, easing: "cubic-bezier(0.3, 0, 0.2, 1)" });
+    return () => glide.cancel();
+  }, [corner, m, side]);
   const g = phase(e, tl.growStart, tl.growMs);
   // Height and form share one pace, so leaves and bud come as the stem rises.
   // Only the height springs: an overshooting form would open a bud's flower for a moment.
@@ -185,7 +208,7 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
   const top = plantTop(m.word, growthOf(m.to.s), 1.05);
   return (
     <div className="growth" data-kind={m.planted ? "plant" : "water"} aria-hidden="true">
-      <svg viewBox={`${-side * 0.85} ${-(side - 8)} ${side * 1.7} ${side}`} height="100%">
+      <svg ref={svg} viewBox={`${-side * 0.85} ${-(side - 8)} ${side * 1.7} ${side}`} height="100%">
         <ellipse cx={0} cy={3} rx={side * 0.3 * (1 + pat * 0.06)} ry={side * 0.06 * (1 + pat * 0.4)} fill="var(--soil-1)" />
         {m.planted &&
           patT > 0 &&
@@ -205,7 +228,8 @@ export function Growth({ m, onDone }: { m: GrowthMoment; onDone: () => void }) {
             const r = side * (0.06 + 0.12 * Math.sqrt(sparkle));
             return <circle key={i} cx={top.x + Math.cos(a) * r} cy={top.y + Math.sin(a) * r} r={side * 0.014 * (1 - sparkle * 0.5)} fill="var(--sun)" opacity={1 - sparkle} />;
           })}
-        {m.visitor && <Visitor art={m.visitor} e={e} side={side} until={tl.growEnd} />}
+        {/* Not during the glide: it hops in from where the plant is going. */}
+        {m.visitor && e > 0 && <Visitor art={m.visitor} e={e} side={side} until={tl.growEnd} />}
         {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} growMs={tl.growMs} />}
       </svg>
     </div>

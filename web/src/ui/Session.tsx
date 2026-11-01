@@ -58,7 +58,8 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   const [note, setNote] = useState<string | null>(null);
 
   // The word's plant is planted or grows before the next card (#200).
-  const [growing, setGrowing] = useState<GrowthMoment | null>(null);
+  const [growing, setGrowing] = useState<{ m: GrowthMoment; corner: DOMRect } | null>(null);
+  const cornerPlant = useRef<HTMLDivElement>(null);
   const grown = useRef<(() => void) | null>(null);
   // Every remembered answer is watered, even when the plant barely grows (a retry
   // after "I forgot" adds little): the learner sees the answer counted.
@@ -69,7 +70,8 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
         setGrowing(null);
         resolve();
       };
-      setGrowing(m);
+      // The answered card's plant is still on screen: the moment starts from it.
+      setGrowing({ m, corner: cornerPlant.current!.firstElementChild!.getBoundingClientRect() });
       chime(m.word, chimeDelay(m) / 1000);
     });
   };
@@ -156,12 +158,12 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       )}
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
       {card && !done && (
-        <div className="card-plant" key={`plant-${serial}`} aria-hidden="true">
+        <div className="card-plant" ref={cornerPlant} key={`plant-${serial}`} aria-hidden="true">
           <WordPlant word={card.word.lemma} s={card.s} stage={card.stage} size={76} />
         </div>
       )}
       {/* ?.: a tap may already have ended the moment. */}
-      {growing && <Growth m={growing} onDone={() => grown.current?.()} />}
+      {growing && <Growth m={growing.m} corner={growing.corner} onDone={() => grown.current?.()} />}
       {watching && card && !done && serial - watching.start >= watching.visit.from - 1 && serial - watching.start < watching.visit.to - 1 && <Watcher view={watching.view} />}
     </div>
   );
