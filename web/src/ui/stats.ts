@@ -1,9 +1,11 @@
 import { DAY_MS, startOfDay } from "../core/day";
-import { readMemory, wordState } from "../core/memory";
+import { deriveMemory, readMemory, wordState } from "../core/memory";
 import type { Learner } from "../data/learner";
 
 interface CourseStats {
   known: number;
+  /** Words known now that were not known when today began. */
+  knownToday: number;
   learning: number;
   /** Words in the deck not started yet. */
   seeds: number;
@@ -20,6 +22,11 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
     else if (st === "learning") learning++;
   }
   const startOfToday = startOfDay(now);
+  // Memory as it was this morning: the reviews from before today, replayed.
+  const morning = deriveMemory(l.reviews.filter((r) => Date.parse(r.reviewed_at) < startOfToday), l.course.retention, l.resolve);
+  const knownThen = new Set(morning.filter((m) => m.skill === "read" && wordState(m) === "known").map((m) => m.wordId));
+  let knownToday = 0;
+  for (const w of l.words.values()) if (!knownThen.has(w.id) && wordState(readMemory(l, w.id)) === "known") knownToday++;
   const reviews = l.reviews.map((r) => ({ ...r, ts: Date.parse(r.reviewed_at) })).sort((a, b) => a.ts - b.ts);
   const recent = reviews.filter((r) => r.ts > now - 30 * DAY_MS);
   // Retention = pass rate on reviews of items that had already been seen on an earlier day.
@@ -45,5 +52,5 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
     const idx = 29 - Math.floor((startOfToday + DAY_MS - 1 - r.ts) / DAY_MS);
     if (idx >= 0 && idx < 30) days[idx].reviews++;
   }
-  return { known, learning, seeds: l.fresh().length, retention30: total >= 20 ? pass / total : null, days };
+  return { known, knownToday, learning, seeds: l.fresh().length, retention30: total >= 20 ? pass / total : null, days };
 }

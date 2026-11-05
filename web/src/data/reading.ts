@@ -1,5 +1,6 @@
 // Which words of a sentence the learner has grown: after a card's answer shows,
 // they get a faint tint, so the learner sees how much of real text they can read.
+// And a whole sentence they can now read, for the summary (#412).
 
 import { kindOf } from "../content/order";
 import { formKey, tokenize } from "../content/text";
@@ -37,4 +38,41 @@ export function grownSpans(l: Learner, text: string, tag: string, wordId: string
     if (grown) spans.push([t.index, t.index + t.text.length]);
   }
   return spans;
+}
+
+/** A sentence this short is not news: "Es mi casa." */
+const READ_MIN_WORDS = 5;
+
+export interface ReadNow {
+  id: string;
+  text: string;
+  translation: string;
+}
+
+/**
+ * A deck sentence the learner can read whole: every word in it is grown (grammar
+ * words too), it has at least READ_MIN_WORDS words, it never came on a card
+ * (no review names it) and is not in `shown`. Of those, the one with the most
+ * words from `practised` (this session's words), so it is about today.
+ */
+export function readNow(l: Learner, tag: string, practised: ReadonlySet<string>, shown: ReadonlySet<string>): ReadNow | null {
+  const index = formIndex(l);
+  const onCards = new Set(l.reviews.map((r) => r.sentence_id));
+  const grown = (id: string) => !!readMemory(l, id)?.reps;
+  let best: { s: ReadNow; today: number } | null = null;
+  for (const list of l.deck.sentencesByWord.values()) {
+    for (const s of list) {
+      if (onCards.has(s.id) || shown.has(s.id)) continue;
+      const words = tokenize(s.text, tag).filter((t) => t.word);
+      if (words.length < READ_MIN_WORDS) continue;
+      let today = 0;
+      const all = words.every((t) => {
+        const ids = (index.get(formKey(t.text)) ?? []).filter(grown);
+        if (ids.some((id) => practised.has(id))) today++;
+        return ids.length > 0;
+      });
+      if (all && (!best || today > best.today)) best = { s: { id: s.id, text: s.text, translation: s.translation }, today };
+    }
+  }
+  return best?.s ?? null;
 }

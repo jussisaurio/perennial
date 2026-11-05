@@ -388,6 +388,10 @@ section { margin-bottom: 1.25rem; }
 .sentence.big { font-size: clamp(1.55rem, 4.5vw, 2rem); line-height: 1.45; }
 .translation { color: var(--muted); margin: 0; font-size: 1.05rem; }
 .translation.big { color: var(--ink); font-size: 1.3rem; }
+/* The summary's sentence the learner can now read whole (#412). */
+.read-now { margin: 1rem 0; padding: 0.9rem 1rem; border-radius: 14px; background: var(--leaf-soft); }
+.read-now p { margin: 0 0 0.35rem; }
+.read-now .translation { margin: 0; }
 /* A word the learner has grown, in a card's sentence once the answer shows: a thin line of grass under it. */
 .grown { background: linear-gradient(transparent 86%, color-mix(in oklab, var(--leaf-2), transparent 35%) 86%); }
 mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color: inherit; padding: 0 0.08em; font-weight: 600; }
