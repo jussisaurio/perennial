@@ -17,15 +17,16 @@ export const NEW_WORD_MS = 12_000;
 
 /**
  * Time per task, ms. `intro` covers the intro and its follow-up test.
- * Heuristic prices from how long self-graded cards really take (#311): the old
- * ones were 2–5 times too high, so a fast learner's chunk was mostly early reviews.
+ * Heuristic prices from how long self-graded cards really take (#311).
  */
 const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 5_000, listen: 7_000, write: 12_000 };
 
 /**
  * The share of a chunk's minutes the plan fills. The rest is for slow answers
  * and retries of quick checks; without it, a 60-day simulation (#311) left the
- * weakest due words unwatered at the end of most chunks.
+ * weakest due words unwatered at the end of most chunks. Keep the planned new
+ * words of a day-1 chunk worth over 4 minutes: nextChunk counts them at
+ * NEW_WORD_MS each, and under a minute left is what makes the day done.
  */
 const PLANNED_SHARE = 0.9;
 
@@ -98,6 +99,7 @@ export function plan(input: PlanInput): Plan {
   // truly large.
   const free = budgetMs * PLANNED_SHARE - dueCost;
   let byTime = Math.floor(Math.max(0, free) / COSTS.intro);
+  // The trickle compares with the whole budget, not the planned share: it is about how big the backlog is.
   if (byTime === 0 && dueCost < 3 * budgetMs) byTime = dueCost < 1.5 * budgetMs ? 2 : 1;
   const newCount = Math.min(byTime, fresh.length);
 
