@@ -248,11 +248,11 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   // The toys (#360), worked out once, when the walk first has its learner, like the bowl: the day's wind and clocks, and the boat's word.
   const [toys, setToys] = useState<ToysWalk | null>(null);
   if (learner && !toys) setToys({ day: dayNumber(now), boat: boatWord(learner, now) });
-  // Watering is today's practice: the rest of today's 5 minutes, or 5 more once they are done,
+  // Watering is today's practice: the rest of today's practice, or more once it is done,
   // named as Today names it, and worked out with the clock, so a walk open past midnight starts the new day.
   // Until the learner loads there are no plants (`source` is null), so nothing to water either.
   const chunk = learner ? nextChunk(learner, now) : null;
-  const water = learner && chunk ? { label: chunk.state === "finish" ? `${chunkLabel(chunk)} · ${chunk.minutes} min` : chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
+  const water = learner && chunk ? { label: chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
   const [hint] = useState(() => ({ show: !hintSeen(), moved: markHintSeen }));
   return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} leave={leave ?? undefined} toys={toys ?? undefined} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
 }

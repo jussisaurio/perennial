@@ -155,7 +155,7 @@ test("leaving after doing something shows the summary", async ({ page }) => {
   await expect(page.locator(".summary h1")).toHaveText("You saw 1 new word."); // no answer yet, so not planted
   await expect(page.getByText("session paused", { exact: true })).toBeVisible(); // not "complete" when you leave early
   await page.getByRole("button", { name: /Done/ }).click();
-  await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /today's practice/i })).toBeVisible();
 });
 
 // #254: a paused session says what "New to me" words still need, and Continue
@@ -170,7 +170,7 @@ test("a paused session can continue, and keeps its quick checks", async ({ page 
   await page.getByRole("button", { name: "End session" }).click();
   await expect(page.locator(".summary")).toContainText("A new word is planted after its quick check. Tap Continue: its quick check comes in a few cards. If you stop, it comes back as a new word next time.");
   await expect(page.locator(".summary")).not.toContainText(/(^|\D)0 words/); // nothing started yet, though one word was seen
-  await expect(page.getByRole("button", { name: "Practice 5 more minutes" })).toHaveCount(0); // Continue is the way on
+  await expect(page.getByRole("button", { name: "Practice more" })).toHaveCount(0); // Continue is the way on
   await page.getByRole("button", { name: "Continue this session" }).click();
   await expect(page.locator(".word")).toHaveText(second); // the card it left
   for (let i = 0; i < 6 && !/quick check/.test((await kicker(page).textContent()) ?? ""); i++) await answer(page, "1");
@@ -228,7 +228,7 @@ test("on the summary, Enter on a focused button presses that button, not the mai
   await page.getByRole("button", { name: "End session" }).click();
   await tabTo(page, page.getByRole("button", { name: "Done" }));
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible(); // Today, not Continue
+  await expect(page.getByRole("button", { name: /today's practice/i })).toBeVisible(); // Today, not Continue
   // With nothing focused, Enter on the pause screen is Continue (#254): Done would drop the quick checks.
   await startSession(page);
   await answer(page, "1");
@@ -262,7 +262,7 @@ test("an answer the server refuses is reported, not called saved", async ({ page
   await expect(line).toHaveText(/^2 answers were not saved/);
   await expect(page.getByText("Your answers are saved")).toHaveCount(0);
   await page.getByRole("button", { name: /Done/ }).click();
-  await expect(page.getByRole("button", { name: /today's 5 minutes/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /today's practice/i })).toBeVisible();
   await expect(page.locator(".toast")).toHaveCount(0); // already told
   await page.getByRole("tab", { name: "Settings" }).click();
   await expect(line).toHaveText(/^2 answers were not saved/);

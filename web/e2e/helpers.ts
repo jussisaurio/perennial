@@ -65,7 +65,7 @@ export async function openAdd(page: Page) {
 }
 
 export async function startSession(page: Page) {
-  await page.getByRole("button", { name: /today's 5 minutes/i }).click();
+  await page.getByRole("button", { name: /today's practice/i }).click();
   await expect(page.locator(".kicker")).toBeVisible();
 }
 

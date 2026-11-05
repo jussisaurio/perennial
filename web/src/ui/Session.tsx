@@ -18,7 +18,7 @@ import { RefusedLine, useRefused } from "./Refused";
 import type { Refused } from "../data/store";
 import { useKeys, useShortcut } from "./useShortcut";
 import { track } from "../observability";
-import { DAILY_MINUTES } from "../data/practice";
+import { chunkLabel, DAILY_MINUTES } from "../data/practice";
 import { KNOWN_RULE, plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
@@ -778,7 +778,7 @@ function Summary({
       )}
       <div className="actions">
         {/* Paused: Continue goes back to the card it left, with the time that was left; a new
-            chunk on top would only confuse. Finished: 5 more minutes always works. */}
+            chunk on top would only confuse. Finished: Practice more always works. */}
         {paused ? (
           <>
             <button className="secondary" onClick={onExit}>
@@ -791,7 +791,7 @@ function Summary({
         ) : (
           <>
             <button className="secondary" onClick={onMore}>
-              Practice {DAILY_MINUTES} more minutes
+              {chunkLabel({ state: "done" })}
             </button>
             <button className="primary" onClick={onExit} aria-keyshortcuts="Enter">
               Done <kbd aria-hidden="true">Enter</kbd>

@@ -103,7 +103,6 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
             <SeedIcon size={20} />
           </span>
           {chunkLabel(chunk)}
-          {chunk.state === "finish" && <small>· {chunk.minutes} min</small>}
         </button>
         <p className="start-note">
           {chunk.state === "done"

@@ -6,7 +6,7 @@ test("smoke: landing → start learning → a session → progress survives a re
   await expect(page.getByRole("heading", { name: /Grow a language/ })).toBeVisible();
   await page.getByRole("button", { name: /Start learning Spanish/ }).click();
   await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15000 });
-  await page.getByRole("button", { name: /today's 5 minutes/i }).click();
+  await page.getByRole("button", { name: /today's practice/i }).click();
   await expect(page.locator(".kicker")).toBeVisible();
   // Answer "I knew it" on the first new word: that records a review.
   await page.getByRole("button", { name: /Show meaning/ }).click();

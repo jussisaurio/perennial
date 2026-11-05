@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "./test";
 import { answer, kicker, reveal, startCourse } from "./helpers";
 
-// #189: 5 minutes a day for everyone, and "Practice 5 more minutes" whenever the learner wants.
+// #189: 5 minutes a day for everyone, and "Practice more" whenever the learner wants.
 test.use({ viewport: { width: 1280, height: 900 } });
 
 const MORNING = new Date("2026-10-01T10:00:00");
@@ -40,7 +40,7 @@ test("first day: 5 minutes a day, no minutes to choose, and the day's button", a
   await expect(page.getByRole("radiogroup", { name: "Minutes per day" })).toHaveCount(0);
   await page.getByRole("button", { name: "Start learning Spanish" }).click();
   await expect(page.getByText(/seeds are ready to plant/)).toBeVisible({ timeout: 15_000 });
-  await expect(startButton(page)).toHaveText("Start today's 5 minutes");
+  await expect(startButton(page)).toHaveText("Start today's practice");
   await expect(page.locator("body")).not.toHaveText(NEVER);
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
@@ -51,29 +51,29 @@ test("first day: 5 minutes a day, no minutes to choose, and the day's button", a
   await expect(page.locator("option", { hasText: "minutes" })).toHaveCount(0);
 });
 
-test("partway through the day: finish the rest of today's 5 minutes", async ({ page }) => {
+test("partway through the day: finish the rest of today's practice, and the label promises no minutes (#310)", async ({ page }) => {
   await page.clock.setFixedTime(MORNING);
   await startCourse(page);
   await answered(page, { from: 20, count: 3, minutes: 0.5, daysAgo: 10 }); // due again by now
   await answered(page, { count: 4, minutes: 2 });
-  await expect(startButton(page)).toHaveText(/^Finish today's 5 minutes\s*· 3 min$/);
+  await expect(startButton(page)).toHaveText("Finish today's practice");
   await expect(page.getByText("Water your plants, then plant a few new seeds.")).toBeVisible();
   await expect(page.locator("body")).not.toHaveText(NEVER);
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("3 min left");
 });
 
-test("done for the day (under a minute left counts): watered, and 5 more minutes always works", async ({ page }) => {
+test("done for the day (under a minute left counts): watered, and Practice more always works", async ({ page }) => {
   await page.clock.setFixedTime(MORNING);
   await startCourse(page);
   await answered(page, { count: 8, minutes: 4.25 });
   await expect(page.getByText("The garden is watered for today.")).toBeVisible();
-  await expect(startButton(page)).toHaveText("Practice 5 more minutes");
+  await expect(startButton(page)).toHaveText("Practice more");
   await expect(page.locator("body")).not.toHaveText(NEVER);
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
 
-  // Plant one seed ("I knew it" answers it at once), stop: the summary says what happened, and offers 5 more minutes again.
+  // Plant one seed ("I knew it" answers it at once), stop: the summary says what happened, and offers Practice more again.
   await expect(kicker(page)).toHaveText("new word");
   await answer(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
@@ -97,7 +97,7 @@ test("done, but plants are still due: say how many, not 'watered'", async ({ pag
   await answered(page, { from: 10, count: 5, minutes: 5 });
   await expect(page.getByText("10 plants still need water.")).toBeVisible();
   await expect(page.getByText("The garden is watered for today.")).toHaveCount(0);
-  await expect(startButton(page)).toHaveText("Practice 5 more minutes");
+  await expect(startButton(page)).toHaveText("Practice more");
 });
 
 test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", async ({ page }) => {
@@ -109,7 +109,7 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
   });
   const note = page.getByText("Perennial is now 5 minutes at a time.", { exact: false });
   await expect(note).toBeVisible();
-  await expect(startButton(page)).toHaveText("Start today's 5 minutes");
+  await expect(startButton(page)).toHaveText("Start today's practice");
   await startButton(page).click();
   await expect(timeLeft(page)).toHaveText("5 min left");
   await answer(page, "2"); // "I knew it": one seed planted
@@ -124,14 +124,14 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
   await expect(note).toHaveCount(0);
 });
 
-test("the walk's Water button: the rest of today's 5 minutes, then 5 more once done", async ({ page }) => {
+test("the walk's Water button: the rest of today's practice, then more once done", async ({ page }) => {
   // Low quality: CI draws WebGL in software, and normal quality is too slow there (garden.spec.ts).
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
   await page.clock.setFixedTime(MORNING);
   await startCourse(page);
   await answered(page, { count: 6, minutes: 1, daysAgo: 30 }); // thirsty plants
   await answered(page, { from: 6, count: 3, minutes: 2 });
-  await expect(startButton(page)).toContainText("3 min");
+  await expect(startButton(page)).toHaveText("Finish today's practice");
   // The button says what it starts, as Today does, and never counts thirsty plants (#263).
   const water = async (label: string) => {
     await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -140,13 +140,13 @@ test("the walk's Water button: the rest of today's 5 minutes, then 5 more once d
     await expect(page.getByText(/thirsty/)).toHaveCount(0);
     await button.click();
   };
-  await water("Finish today's 5 minutes · 3 min");
+  await water("Finish today's practice");
   await expect(timeLeft(page)).toHaveText("3 min left");
 
   await page.goto("/#/today");
   await answered(page, { from: 9, count: 3, minutes: 3 });
   await expect(page.getByText("6 plants still need water.")).toBeVisible(); // done for today, the thirsty ones still due
-  await water("Practice 5 more minutes");
+  await water("Practice more");
   await expect(timeLeft(page)).toHaveText("5 min left");
 });
 
