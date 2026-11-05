@@ -13,6 +13,7 @@ import { hash32 } from "../lib/seed";
 import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
 import { wakeAudio } from "./chime";
 import { sessionPlan } from "../data/practice";
+import { grownSpans } from "../data/reading";
 import type { Refused } from "../data/store";
 import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
 import { GARDEN_VISITOR_ART, type PixelArt } from "../garden/visitorArt";
@@ -25,6 +26,8 @@ export interface Card {
   /** Reading-memory stability and the word's plant stage, for its plant. */
   s: number;
   stage: PlantStage;
+  /** Where the example's other grown words are, tinted once the answer shows. */
+  grown: [number, number][];
 }
 
 export type Ended = "time" | "empty" | "user";
@@ -155,7 +158,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     shownAt.current = clock.current.elapsed;
     serial.current++;
     if (!paused.current) setDone(false);
-    setCard({ task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read) });
+    setCard({ task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read), grown: example ? grownSpans(l, example.text, tag, word.id) : [] });
   };
 
   // Plan once, as soon as the learner has loaded. Later changes (every answer
