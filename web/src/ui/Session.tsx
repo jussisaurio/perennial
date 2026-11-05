@@ -38,16 +38,32 @@ function Marked({ text, at }: { text: string; at: Set<number> }) {
   );
 }
 
-function Highlight({ text, part, blank }: { text: string; part: string; blank?: boolean }) {
+/** The sentence with its card's word marked (or blanked), and the learner's grown words (`grown`, from data/reading.ts) tinted. */
+function Highlight({ text, part, blank, grown = [] }: { text: string; part: string; blank?: boolean; grown?: readonly [number, number][] }) {
   const i = locate(text, part);
-  if (i < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, i)}
-      {blank ? <span className="blank">{" ".repeat(Math.max(4, [...part].length))}</span> : <mark>{part}</mark>}
-      {text.slice(i + part.length)}
-    </>
-  );
+  const cuts = [...grown.filter(([s, e]) => i < 0 || e <= i || s >= i + part.length).map(([s, e]) => ({ s, e, grown: true })), ...(i < 0 ? [] : [{ s: i, e: i + part.length, grown: false }])].sort((a, b) => a.s - b.s);
+  let at = 0;
+  const out: ReactNode[] = [];
+  for (const c of cuts) {
+    out.push(text.slice(at, c.s));
+    const piece = text.slice(c.s, c.e);
+    out.push(
+      c.grown ? (
+        <span className="grown" key={c.s}>
+          {piece}
+        </span>
+      ) : blank ? (
+        <span className="blank" key={c.s}>
+          {" ".repeat(Math.max(4, [...part].length))}
+        </span>
+      ) : (
+        <mark key={c.s}>{piece}</mark>
+      ),
+    );
+    at = c.e;
+  }
+  out.push(text.slice(at));
+  return <>{out}</>;
 }
 
 /** How many answers the learner gives before the quick-check hint stops showing. */
@@ -325,7 +341,7 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
       {example && (
         <div className="example">
           <p className="sentence" lang={tag}>
-            <Highlight text={example.text} part={example.cloze} /> <Speaker text={example.text} tag={tag} what="sentence" />
+            <Highlight text={example.text} part={example.cloze} grown={revealed ? card.grown : undefined} /> <Speaker text={example.text} tag={tag} what="sentence" />
           </p>
           {revealed && <p className="translation">{example.translation}</p>}
         </div>
@@ -421,7 +437,7 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
         </div>
       ) : example ? (
         <p className="sentence big" lang={tag}>
-          <Highlight text={example.text} part={example.cloze} />
+          <Highlight text={example.text} part={example.cloze} grown={revealed ? card.grown : undefined} />
           {revealed && <Speaker text={example.text} tag={tag} what="sentence" />}
         </p>
       ) : (
@@ -490,7 +506,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
             {example.translation}
           </p>
           <p className="sentence" lang={tag}>
-            <Highlight text={example.text} part={example.cloze} blank={!verdict} />
+            <Highlight text={example.text} part={example.cloze} blank={!verdict} grown={verdict ? card.grown : undefined} />
           </p>
           <p className="hint">Meaning: {word.gloss}</p>
         </>

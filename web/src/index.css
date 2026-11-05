@@ -388,6 +388,8 @@ section { margin-bottom: 1.25rem; }
 .sentence.big { font-size: clamp(1.55rem, 4.5vw, 2rem); line-height: 1.45; }
 .translation { color: var(--muted); margin: 0; font-size: 1.05rem; }
 .translation.big { color: var(--ink); font-size: 1.3rem; }
+/* A word the learner has grown, in a card's sentence once the answer shows: a thin line of grass under it. */
+.grown { background: linear-gradient(transparent 86%, color-mix(in oklab, var(--leaf-2), transparent 35%) 86%); }
 mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color: inherit; padding: 0 0.08em; font-weight: 600; }
 /* The dark sun-soft is a muddy brown under a word: a see-through sun reads as a highlighter. */
 :root[data-theme="dark"] mark { background: linear-gradient(transparent 58%, color-mix(in oklab, var(--sun), transparent 62%) 58%); }
