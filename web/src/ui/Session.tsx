@@ -22,6 +22,8 @@ import { chunkLabel, DAILY_MINUTES } from "../data/practice";
 import { KNOWN_RULE, plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
+import { readNow } from "../data/reading";
+import { language } from "../content/languages";
 import { broughtVisitor, gardenBrought } from "./visitors";
 import { sessionVisit, type SessionVisit } from "../garden/sessionVisitor";
 import { GARDEN_VISITOR_ART } from "../garden/visitorArt";
@@ -620,6 +622,33 @@ const RARE_NEWS: Record<Rare, string> = { golden: "with a golden flower", twin: 
  * plain day: never a routine prompt. A visitor that came first, then a rare
  * flower that opened, then any flower that opened for the first time.
  */
+/** Read-now sentences shown on this device, per language, and the day of the last one. */
+const READ_KEY = (lang: string) => `perennial-read-now:${lang}`;
+
+/**
+ * Today's sentence to read, if one fits and none was shown today. Shown ones are
+ * kept on this device; without storage a sentence may come again, which is harmless.
+ */
+function readingToday(l: Learner, practised: ReadonlySet<string>): (ReturnType<typeof readNow> & { tag: string }) | null {
+  const key = READ_KEY(l.lang);
+  let saved: { day: string; ids: string[] } = { day: "", ids: [] };
+  try {
+    saved = JSON.parse(localStorage.getItem(key) ?? "null") ?? saved;
+  } catch {
+    // No storage, or an unreadable value: as if nothing was shown yet.
+  }
+  if (saved.day === today()) return null;
+  const tag = language(l.lang).tag;
+  const s = readNow(l, tag, practised, new Set(saved.ids));
+  if (!s) return null;
+  try {
+    localStorage.setItem(key, JSON.stringify({ day: today(), ids: [...saved.ids, s.id] }));
+  } catch {
+    // Not saved: it may show again on this device.
+  }
+  return { ...s, tag };
+}
+
 function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[]): { line: string; wordId: string } | null {
   // Checked against the learner now: an answer undone after its visitor came takes the visitor away again.
   for (const id of arrived.filter((x) => broughtVisitor(l, x))) {
@@ -716,6 +745,9 @@ function Summary({
   const highlight = useMemo(() => new Set([...practised, ...introduced]), [practised, introduced]);
   // News worth a look in the garden (#232), worked out once, as the summary opens.
   const [news] = useState(() => (learner ? gardenNews(learner, before, arrived) : null));
+  // A sentence the learner can now read whole (#412): once a day, never on a paused session.
+  const [reading] = useState(() => (learner && !paused ? readingToday(learner, practised) : null));
+  const [english, setEnglish] = useState(false);
   // Worked out once, when the summary opens: later syncs update the learner, and must not start the replay again.
   const [replay] = useState(() => {
     if (!learner || !growthOn()) return null;
@@ -768,7 +800,8 @@ function Summary({
         <p>
           {stats.known > 0 ? (
             <>
-              You know <strong>{stats.known}</strong> {stats.known === 1 ? "word" : "words"}.{stats.learning > 0 && <> You are learning {stats.learning} more.</>}
+              You know <strong>{stats.known}</strong> {stats.known === 1 ? "word" : "words"}
+              {stats.knownToday > 0 && <>, {stats.knownToday} more than this morning</>}.{stats.learning > 0 && <> You are learning {stats.learning} more.</>}
             </>
           ) : (
             <>
@@ -791,6 +824,21 @@ function Summary({
             See it in the garden <span aria-hidden="true">→</span>
           </button>
         </p>
+      )}
+      {reading && (
+        <div className="read-now">
+          <p className="muted small">You can read this now.</p>
+          <p className="sentence" lang={reading.tag}>
+            {reading.text} <Speaker text={reading.text} tag={reading.tag} what="sentence" />
+          </p>
+          {english ? (
+            <p className="translation">{reading.translation}</p>
+          ) : (
+            <button className="ghost link" onClick={() => setEnglish(true)}>
+              Show English
+            </button>
+          )}
+        </div>
       )}
       <div className="actions">
         {/* Paused: Continue goes back to the card it left, with the time that was left; a new
