@@ -59,9 +59,10 @@ export const deckKind = (w: { pos?: string | null }) => kindOf(w.pos);
  * Where the n-th garden word goes in the course (0-based): the 3rd word, so the
  * first session shows the idea; the 12th, so it reads as a rule; then with gaps
  * that start at 27 words and shrink by 2 each time, to no fewer than 12. New
- * words slow down as reviews fill the 5 minutes (12 on day one, about 2 a day
- * by day 30), so even gaps in words would be ever longer gaps in days; these
- * keep a new garden word about once a week for the first two months.
+ * words slow down as reviews fill the 5 minutes, so even gaps in words would be
+ * ever longer gaps in days. Since #311 a daily learner gets about 22 new words
+ * on day one and 8–9 a day later, so a new garden word comes every 2–3 days.
+ * The slots stay: moving them would reorder the course for learners mid-course.
  */
 export function gardenSlot(n: number): number {
   if (n === 0) return 2;
