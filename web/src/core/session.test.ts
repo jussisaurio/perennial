@@ -70,6 +70,8 @@ describe("plan", () => {
     const p = chunk({ memories, fresh: words(40) });
     expect(p.queue).toContainEqual({ kind: "review", wordId: "a", skill: "write", isNew: true });
     expect(p.newCount).toBe(21); // (270 s - 12 s of writing) / 12 s
+    // It comes early, among the new words, not after all 21 of them.
+    expect(p.queue.findIndex((t) => t.kind === "review" && t.isNew)).toBeLessThan(3);
   });
 
   test("writing gets its turn: a new skill is offered when the word has nothing else due", () => {

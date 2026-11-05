@@ -138,16 +138,19 @@ export function plan(input: PlanInput): Plan {
   const early: Task[] = [...soon, ...weakest].map((m) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
 
   // Interleave: spread intros through the first part of the session so new
-  // material doesn't all land at the end (and get cut off by the timer).
+  // material doesn't all land at the end (and get cut off by the timer). The
+  // new skill goes with the due reviews, ahead of the intros it outranks: after
+  // all of them, a short chunk cut it first, and the chunk was a long run of new words.
+  const ahead = [...reviews, ...skills];
   const queue: Task[] = [];
-  const gap = intros.length ? Math.max(1, Math.floor(Math.min(reviews.length, 20) / intros.length)) : 0;
+  const gap = intros.length ? Math.max(1, Math.floor(Math.min(ahead.length, 20) / intros.length)) : 0;
   let ri = 0;
   for (const intro of intros) {
-    for (let k = 0; k < gap && ri < reviews.length; k++) queue.push(reviews[ri++]);
+    for (let k = 0; k < gap && ri < ahead.length; k++) queue.push(ahead[ri++]);
     queue.push(intro);
   }
-  while (ri < reviews.length) queue.push(reviews[ri++]);
-  queue.push(...skills, ...early);
+  while (ri < ahead.length) queue.push(ahead[ri++]);
+  queue.push(...early);
 
   // Every learned word was already answered today and no new words are left
   // (a small course, practised a lot): a second try today beats an empty chunk.
