@@ -23,6 +23,13 @@ export interface GrowthMoment {
   planted: boolean;
   /** A garden word's visitor (#209), arriving with this first good answer. */
   visitor?: PixelArt;
+  /**
+   * A remembered word that was hard: back on its retry after "I forgot", or likely
+   * forgotten. More water and a little spring, so the feedback fits the answer (#412).
+   */
+  strong?: boolean;
+  /** One quiet line under the plant, such as the word's longest wait yet (#412). */
+  note?: string;
 }
 
 // Showing the moment is a per-device choice, like sound.
@@ -75,6 +82,10 @@ const T = {
   bloom: 760,
   hold: 80,
   sparkle: 380,
+  /** A strong moment's spring, after the water lands. */
+  perk: 420,
+  /** Longer on screen when there is a line to read. */
+  note: 1100,
 };
 
 function timeline(m: GrowthMoment) {
@@ -88,8 +99,9 @@ function timeline(m: GrowthMoment) {
   // Watered without growing: the moment ends once the water has landed.
   const growEnd = rises ? growStart + growMs : watered ? growStart : plantEnd;
   const sparkleStart = growEnd - 160;
-  const end = Math.max(plantEnd, growEnd) + T.hold;
-  return { plantEnd, watered, growStart, growMs, growEnd, blooms, sparkleStart, end: blooms ? Math.max(end, sparkleStart + T.sparkle) : end };
+  const perkStart = growEnd;
+  const end = Math.max(plantEnd, growEnd + (m.strong ? T.perk : 0)) + (m.note ? T.note : T.hold);
+  return { plantEnd, watered, growStart, growMs, growEnd, blooms, sparkleStart, perkStart, end: blooms ? Math.max(end, sparkleStart + T.sparkle) : end };
 }
 
 /** When the moment's chime should sound (ms): as the seed lands, or as the first drop reaches the soil. */
@@ -105,7 +117,7 @@ export const easeOutBack = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1)
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const phase = (e: number, start: number, length: number) => clamp01((e - start) / length);
 
-function WateringCan({ e, side, growStart, growMs }: { e: number; side: number; growStart: number; growMs: number }) {
+function WateringCan({ e, side, growStart, growMs, drops }: { e: number; side: number; growStart: number; growMs: number; drops: number }) {
   const k = side / 90;
   const shown = phase(e, 0, T.canIn) * (1 - phase(e, growStart + growMs * 0.45, T.canOut));
   const tip = 28 * phase(e, T.canIn, T.tip) * (1 - 0.65 * phase(e, growStart + growMs * 0.45, T.canOut));
@@ -122,7 +134,7 @@ function WateringCan({ e, side, growStart, growMs }: { e: number; side: number; 
         <rect x={-12} y={-9} width={24} height={18} rx={4} fill="var(--sky)" />
         <rect x={-8} y={-5} width={9} height={3} rx={1.5} fill="var(--sky-soft)" opacity={0.7} />
       </g>
-      {[0, 1, 2].map((i) => {
+      {Array.from({ length: drops }, (_, i) => {
         const t = phase(e, T.canIn + T.tip - 30 + i * T.dropGap, T.drop);
         if (t <= 0 || t >= 1) return null;
         const f = easeIn(t);
@@ -205,6 +217,8 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
   const patT = phase(e, T.seedFall, T.soilPat);
   const pat = m.planted ? Math.sin(Math.PI * patT) : 0;
   const sparkle = tl.blooms ? phase(e, tl.sparkleStart, T.sparkle) : 0;
+  // A strong moment: the plant stretches up once, and settles.
+  const perk = m.strong ? Math.sin(Math.PI * phase(e, tl.perkStart, T.perk)) : 0;
   const top = plantTop(m.word, growthOf(m.to.s), 1.05);
   return (
     <div className="growth" data-kind={m.planted ? "plant" : "water"} aria-hidden="true">
@@ -218,7 +232,7 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
             <circle key={d} cx={d * side * (0.07 + patT * 0.09)} cy={-side * (0.02 + Math.abs(d) * 0.07) * Math.sin(Math.PI * patT)} r={side * 0.016} fill="var(--ink-2)" opacity={0.35 * (1 - patT)} />
           ))}
         {/* The seed squashes a little as it lands. */}
-        <g transform={`translate(0 ${-fall * side * 0.55}) scale(${1 + pat * 0.22} ${1 - pat * 0.28})`}>
+        <g transform={`translate(0 ${-fall * side * 0.55}) scale(${(1 + pat * 0.22) * (1 - perk * 0.05)} ${(1 - pat * 0.28) * (1 + perk * 0.12)})`}>
           <PlantForm word={m.word} growth={growth} form={form} scale={1.05} />
         </g>
         {sparkle > 0 &&
@@ -230,8 +244,9 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
           })}
         {/* Not during the glide: it hops in from where the plant is going. */}
         {m.visitor && e > 0 && <Visitor art={m.visitor} e={e} side={side} until={tl.growEnd} />}
-        {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} growMs={tl.growMs} />}
+        {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} growMs={tl.growMs} drops={m.strong ? 5 : 3} />}
       </svg>
+      {m.note && e > tl.growStart && <p className="growth-note">{m.note}</p>}
     </div>
   );
 }
