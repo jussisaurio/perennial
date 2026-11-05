@@ -16,6 +16,7 @@ import { plural } from "./format";
 import { focusBowl, focusPlant } from "./gardenFocus";
 import { learnerVisitors, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
+import { readableCount } from "../data/reading";
 import { today } from "../core/day";
 import { KNOWN_RULE } from "../core/memory";
 
@@ -43,6 +44,8 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const day = today(new Date(now));
   const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
+  // How much real text the known words open up (#412): only ever goes up as words are learned.
+  const readable = useMemo(() => (learner ? readableCount(learner, language(code).tag) : 0), [learner, code]);
   const chunk = useMemo(() => (learner ? nextChunk(learner, now) : null), [learner, now]);
   // The same planner the session uses, for what the day's minutes are for.
   const plan = useMemo(() => (learner && chunk ? sessionPlan(learner, chunk.minutes, mayListen(language(code).tag), now) : null), [learner, chunk, now, code]);
@@ -127,6 +130,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           {stats.known > 0 ? (
             <p>
               You know <strong>{stats.known}</strong> {stats.known === 1 ? "word" : "words"} of {lang}, most common first.
+              {readable > 0 && <> You can read {plural(readable, "sentence")} from the course.</>}
             </p>
           ) : (
             <p>

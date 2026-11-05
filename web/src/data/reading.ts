@@ -4,7 +4,7 @@
 
 import { kindOf } from "../content/order";
 import { formKey, tokenize } from "../content/text";
-import { readMemory } from "../core/memory";
+import { readMemory, wordState } from "../core/memory";
 import type { Learner } from "./learner";
 
 /** Each form (lowercase) and the words it can be a form of. Built once per learner. */
@@ -75,4 +75,18 @@ export function readNow(l: Learner, tag: string, practised: ReadonlySet<string>,
     }
   }
   return best?.s ?? null;
+}
+
+/**
+ * How many of the deck's sentences the learner can read whole: every word in
+ * them is known, by the same rule as "You know N words", so the two never disagree.
+ * The same text under two words counts once.
+ */
+export function readableCount(l: Learner, tag: string): number {
+  const index = formIndex(l);
+  const known = (id: string) => wordState(readMemory(l, id)) === "known";
+  const texts = new Set<string>();
+  for (const list of l.deck.sentencesByWord.values())
+    for (const s of list) if (tokenize(s.text, tag).every((t) => !t.word || (index.get(formKey(t.text)) ?? []).some(known))) texts.add(s.text);
+  return texts.size;
 }
