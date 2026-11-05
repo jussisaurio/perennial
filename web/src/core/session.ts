@@ -13,10 +13,21 @@ export type Task =
   | { kind: "review"; wordId: string; skill: Skill; isNew?: boolean; retry?: boolean };
 
 /** The time a new word takes: its new-word card and its quick check. */
-export const NEW_WORD_MS = 25_000;
+export const NEW_WORD_MS = 12_000;
 
-/** Time per task, ms. `intro` covers the intro and its follow-up test. */
-const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 8_000, listen: 10_000, write: 14_000 };
+/**
+ * Time per task, ms. `intro` covers the intro and its follow-up test.
+ * Heuristic prices from how long self-graded cards really take (#311): the old
+ * ones were 2–5 times too high, so a fast learner's chunk was mostly early reviews.
+ */
+const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 5_000, listen: 7_000, write: 12_000 };
+
+/**
+ * The share of a chunk's minutes the plan fills. The rest is for slow answers
+ * and retries of quick checks; without it, a 60-day simulation (#311) left the
+ * weakest due words unwatered at the end of most chunks.
+ */
+const PLANNED_SHARE = 0.9;
 
 /** First practice of a newly unlocked skill (listening, writing), per session. */
 const MAX_NEW_SKILLS = 4;
@@ -79,12 +90,13 @@ export function plan(input: PlanInput): Plan {
   // is saved cheaply today; one at R=0.3 is mostly gone and costs the same
   // to relearn tomorrow. This is what makes a week-long break painless.
   const due = [...byWord.values()].sort((a, b) => b.r - a.r);
-  const dueCost = due.reduce((sum, { m }) => sum + COSTS[m.skill], 0);
+  // A word likely forgotten costs more: a forgotten card comes back as a retry.
+  const dueCost = due.reduce((sum, { m, r }) => sum + COSTS[m.skill] * (2 - r), 0);
 
   // New words fill the time left over. Keep a trickle (1–2) coming even during
   // a backlog so sessions never become pure catch-up, unless the backlog is
   // truly large.
-  const free = budgetMs - dueCost;
+  const free = budgetMs * PLANNED_SHARE - dueCost;
   let byTime = Math.floor(Math.max(0, free) / COSTS.intro);
   if (byTime === 0 && dueCost < 3 * budgetMs) byTime = dueCost < 1.5 * budgetMs ? 2 : 1;
   const newCount = Math.min(byTime, fresh.length);

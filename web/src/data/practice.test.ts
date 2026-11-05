@@ -57,7 +57,7 @@ test("a fast learner who answers all of the day's planned cards is done for the 
   // Day one: the planner fills 5 minutes with new words, priced at what a new word usually takes.
   const planned = sessionPlan(learner(40, []), 5, false, now).queue;
   const answers = (tasks: typeof planned) => tasks.map((t) => ({ word_id: t.wordId, grade: 3, reviewed_at: at(now - 60_000), duration_ms: 8_000 }));
-  // Each word took 8 s, not the planned 25 s: under 2 real minutes, but every planned card is done.
+  // Each word took 8 s, not the planned 12 s: under 2 real minutes, but every planned card is done.
   expect(nextChunk(learner(40, [], answers(planned)), now)).toEqual({ state: "done", minutes: 5 });
   // Half of them is half of the day: the rest is still to do.
   expect(nextChunk(learner(40, [], answers(planned.slice(0, planned.length / 2))), now)).toEqual({ state: "finish", minutes: 3 });
@@ -67,12 +67,12 @@ test("only a word's first answer ever counts as a new word; every other answer c
   // 30 plants first answered 10 days ago, each watered today in 2 s: 60 s of real time.
   const old = Array.from({ length: 30 }, (_, i) => ({ word_id: `w${i}`, grade: 3, reviewed_at: at(now - 10 * DAY_MS + i * 1000), duration_ms: 8_000 }));
   const watered = old.map((r, i) => ({ ...r, reviewed_at: at(now - 600_000 + i * 10_000), duration_ms: 2_000 }));
-  // One new word: its quick check (5 s, counted as 25 s), then a retry today (3 s, real time).
+  // One new word: its quick check (5 s, counted as 12 s), then a retry today (3 s, real time).
   const seed = [
     { word_id: "n", grade: 1, reviewed_at: at(now - 200_000), duration_ms: 5_000 },
     { word_id: "n", grade: 3, reviewed_at: at(now - 100_000), duration_ms: 3_000 },
   ];
-  // 60 + 25 + 3 = 88 s: 3.5 minutes left.
+  // 60 + 12 + 3 = 75 s: 3.75 minutes left.
   expect(nextChunk(learner(40, [], [...old, ...watered, ...seed]), now)).toEqual({ state: "finish", minutes: 4 });
   // Stopping early in a review session keeps the real minutes left: 25 reviews at 3 s.
   const quick = old.slice(0, 25).map((r, i) => ({ ...r, reviewed_at: at(now - 600_000 + i * 10_000), duration_ms: 3_000 }));

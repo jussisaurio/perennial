@@ -25,7 +25,7 @@ const ids = (queue: Task[]) => queue.map((t) => t.wordId);
 describe("plan", () => {
   test("a fresh learner gets new words, as many as fit in the minutes", () => {
     const p = chunk({ fresh: words(40) });
-    expect(p.newCount).toBe(12); // 5 min at 25 s per new word and its quick check
+    expect(p.newCount).toBe(22); // 90% of 5 min at 12 s per new word and its quick check
     expect(p.queue.every((t) => t.kind === "intro")).toBe(true);
     expect(chunk({ fresh: words(3) }).newCount).toBe(3);
   });
@@ -33,11 +33,17 @@ describe("plan", () => {
   test("due reviews come first and new words get only the time left", () => {
     const due = Array.from({ length: 20 }, (_, i) => mem(`d${i}`, "read", 12, 10));
     const p = chunk({ memories: due, fresh: words(40) });
-    expect(p.newCount).toBe(5); // (300 s - 20 × 8 s) / 25 s
+    expect(p.newCount).toBe(13); // (270 s - 20 × 5 s × (2 - R ≈ 0.89)) / 12 s
     expect(p.due).toBe(20);
     expect(p.queue[0].kind).toBe("review");
     // All 20 due reviews are in, whatever the timer cuts later.
     expect(ids(p.queue).filter((id) => id.startsWith("d"))).toHaveLength(20);
+  });
+
+  test("words likely forgotten leave less time for new words: a forgotten card comes back as a retry", () => {
+    const onTime = Array.from({ length: 20 }, (_, i) => mem(`d${i}`, "read", 10, 10)); // R = 0.9
+    const late = Array.from({ length: 20 }, (_, i) => mem(`d${i}`, "read", 60, 10)); // R ≈ 0.7
+    expect(chunk({ memories: late, fresh: words(40) }).newCount).toBeLessThan(chunk({ memories: onTime, fresh: words(40) }).newCount);
   });
 
   test("triage: overdue items with higher retrievability come first", () => {
@@ -65,9 +71,9 @@ describe("plan", () => {
   });
 
   test("huge backlog: no new words; moderate backlog: a trickle", () => {
-    const many = Array.from({ length: 200 }, (_, i) => mem(`w${i}`, "read", 30, 5));
+    const many = Array.from({ length: 300 }, (_, i) => mem(`w${i}`, "read", 30, 5));
     expect(chunk({ budgetMs: 7 * 60_000, memories: many, fresh: ["n1", "n2"] }).newCount).toBe(0);
-    const some = many.slice(0, 60); // ~8 min of reviews in a 7 min session
+    const some = many.slice(0, 90); // ~9 min of reviews in a 7 min session
     expect(chunk({ budgetMs: 7 * 60_000, memories: some, fresh: ["n1", "n2"] }).newCount).toBe(2);
   });
 
@@ -77,7 +83,7 @@ describe("plan", () => {
     const first = chunk({ fresh: words(100) });
     const learnedToday = first.queue.map((t) => mem(t.wordId, "read", 0, 2));
     const second = chunk({ fresh: words(100).slice(first.newCount), memories: learnedToday, answeredToday: new Set(ids(first.queue)) });
-    expect(second.newCount).toBe(12);
+    expect(second.newCount).toBe(22);
     expect(ids(second.queue).some((id) => ids(first.queue).includes(id))).toBe(false);
     // The next days: 48 words from a long evening fall due, and they fill the
     // chunk before any new word (only the trickle of 1–2 gets in).
@@ -166,11 +172,11 @@ describe("Session", () => {
       return t && `${t.kind}:${t.wordId}`;
     };
     expect(served(0)).toBe("intro:x");
-    expect(served(45_000)).toBe("review:a"); // 15 s left: a review, not "y"
-    expect(served(50_000)).toBe("review:x"); // only new words are left: x's quick check, and the chunk ends
-    expect(served(50_000)).toBeNull();
-    // Ended by the clock, though 10 s are left: the summary must not say every plant has water.
-    expect(s.endedBy(50_000)).toBe("time");
+    expect(served(50_000)).toBe("review:a"); // 10 s left: a review, not "y"
+    expect(served(55_000)).toBe("review:x"); // only new words are left: x's quick check, and the chunk ends
+    expect(served(55_000)).toBeNull();
+    // Ended by the clock, though 5 s are left: the summary must not say every plant has water.
+    expect(s.endedBy(55_000)).toBe("time");
   });
 
   test("a chunk that served every card ended empty, not by time", () => {
