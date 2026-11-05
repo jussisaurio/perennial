@@ -51,6 +51,23 @@ export function plantStage(read: Pick<MemoryRow, "s" | "reps"> | undefined): Pla
 /** A listening or writing memory strong enough for its dot on the plant: known by the same rule as reading. */
 export const isStrong = (m: Pick<MemoryRow, "s" | "reps"> | undefined): boolean => wordState(m) === "known";
 
+/** A gap this short is not news, even when it is a word's longest yet. */
+const RECORD_MIN_DAYS = 14;
+
+/**
+ * Whole days since the last of `times` (a word's earlier reviews, ms), when that
+ * is at least two weeks and longer than any gap before it: the longest this word
+ * has waited and still been remembered. Otherwise null.
+ */
+export function recordGap(times: number[], now: number): number | null {
+  if (!times.length) return null;
+  const sorted = [...times].sort((a, b) => a - b);
+  const gap = now - sorted[sorted.length - 1];
+  for (let i = 1; i < sorted.length; i++) if (sorted[i] - sorted[i - 1] >= gap) return null;
+  const days = Math.floor(gap / DAY_MS);
+  return days >= RECORD_MIN_DAYS ? days : null;
+}
+
 export function recall(m: MemoryRow, now = Date.now()): number {
   return m.reps ? fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s) : 0;
 }

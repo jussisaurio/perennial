@@ -583,6 +583,8 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 /* The plant's moment after a good answer (Growth.tsx): where the answer buttons were, which step aside for it. */
 .growth { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); height: 132px; pointer-events: none; z-index: 60; }
 .growth svg { display: block; overflow: visible; }
+/* `translate`, not `transform`: the rise animation sets transform. */
+.growth-note { position: absolute; left: 50%; bottom: -0.2rem; translate: -50% 0; margin: 0; white-space: nowrap; font-size: 0.85rem; color: var(--muted); animation: rise 0.4s var(--ease) both; }
 .session .actions, .session .question { transition: opacity 0.12s var(--ease); }
 .session.growing .actions, .session.growing .question { opacity: 0; pointer-events: none; }
 /* The corner plant would show the old form beside the growing one. Its "rise" animation holds its opacity, so hide it this way. */

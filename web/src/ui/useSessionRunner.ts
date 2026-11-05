@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { language } from "../content/languages";
 import { ActiveClock } from "../core/clock";
 import type { Grade } from "../core/fsrs";
-import { plantStage, readMemory, type PlantStage } from "../core/memory";
+import { plantStage, readMemory, recall, recordGap, type PlantStage } from "../core/memory";
 import { Session as Runner, type Task } from "../core/session";
 import { recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import { hash32 } from "../lib/seed";
@@ -31,6 +31,11 @@ export interface Card {
 }
 
 export type Ended = "time" | "empty" | "user";
+
+/** Recall below this when remembered: a long shot, which gets a stronger growth moment. */
+const LONG_SHOT = 0.7;
+/** Long-shot moments per chunk. */
+const MAX_STRONG = 3;
 
 /**
  * Pick the sentence the learner has seen least, so no two reviews look the same.
@@ -74,6 +79,8 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   const clock = useRef(new ActiveClock(Date.now()));
   const [active, setActive] = useState(0);
   const counts = useRef({ intros: 0, answers: 0 });
+  /** Long-shot saves shown as strong moments this chunk. */
+  const strongMoments = useRef(0);
   // Writes the server had refused before this chunk: the summary tells of any new ones (#253).
   const refusedBefore = useRef<Refused>({ count: 0, clock: 0, gardenClock: 0, seen: 0 });
   const [ended, setEnded] = useState<Ended>("time");
@@ -114,6 +121,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       const r = new Runner(p, mins * 60_000);
       // Each chunk is its own session: its own summary, and nothing to undo from the last one.
       counts.current = { intros: 0, answers: 0 };
+      strongMoments.current = 0;
       refusedBefore.current = store.refused();
       practised.current = new Set();
       introduced.current = new Set();
@@ -306,8 +314,12 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       practised.current.add(word.id);
       const carried = introMs.current.get(word.id);
       introMs.current.delete(word.id);
+      // Read before this answer is recorded: its reading memory, and when it was last practised.
+      const readBefore = live.current ? readMemory(live.current, word.id) : undefined;
       // ?? 0: no read review yet (a new word's quick check).
-      const repsBefore = (live.current && readMemory(live.current, word.id)?.reps) ?? 0;
+      const repsBefore = readBefore?.reps ?? 0;
+      const now = Date.now();
+      const earlier = (live.current?.reviewsByWord.get(word.id) ?? []).filter((r) => r.skill === "read").map((r) => Date.parse(r.reviewed_at));
       // Read before this answer is recorded: did the word already bring its visitor?
       const brought = !!live.current && broughtVisitor(live.current, word.id);
       // ?? 0: no intro for this word in this session.
@@ -320,8 +332,13 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       // The first good answer to a word (a wrong one earlier does not count): a garden word's visitor comes now.
       const visitor = brought ? undefined : visitorArrives(word.id);
       if (!growthOn()) return null;
+      // A hard one remembered: back on its retry, or likely forgotten. A few per session at most, so a session after a break is not all fanfare.
+      const longShot = !!readBefore?.reps && recall(readBefore, now) < LONG_SHOT && strongMoments.current < MAX_STRONG;
+      const strong = !!task.retry || longShot;
+      if (longShot) strongMoments.current++;
+      const gap = recordGap(earlier, now);
       const read = await readAfter(word.id, repsBefore);
-      return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false, visitor } : null;
+      return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false, visitor, strong, note: gap ? `Last seen ${gap} days ago. Its longest wait yet.` : undefined } : null;
     } else {
       // Passed over without an answer ("Can't listen now"): nothing to undo, so
       // Undo steps back over this card to the last answer.
