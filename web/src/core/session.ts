@@ -30,8 +30,13 @@ const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 5_000
  */
 const PLANNED_SHARE = 0.9;
 
-/** First practice of a newly unlocked skill (listening, writing), per session. */
-const MAX_NEW_SKILLS = 4;
+/**
+ * First practice of a newly unlocked skill (listening, writing), per session. It
+ * comes before new words: with only the time new words left over, a 60-day
+ * simulation started almost no listening or typing at all (#405). One per
+ * session costs about 15% of the words learned by day 60; two cost 30%.
+ */
+const MAX_NEW_SKILLS = 1;
 
 export interface PlanInput {
   now: number;
@@ -57,8 +62,8 @@ const DUE_HORIZON_MS = 6 * 3_600_000;
 /**
  * One chunk of practice, filled in this order:
  * 1. due reviews, the ones still most likely to be saved first;
- * 2. new words in the time left (a trickle even during a backlog);
- * 3. the first practice of newly unlocked skills;
+ * 2. the first practice of a newly unlocked skill (listening, writing);
+ * 3. new words in the time left (a trickle even during a backlog);
  * 4. reviews due within a day, soonest first;
  * 5. any other learned word, weakest first.
  * Steps 4 and 5 make sure a chunk is never empty once anything is learned.
@@ -94,21 +99,25 @@ export function plan(input: PlanInput): Plan {
   // A word likely forgotten costs more: a forgotten card comes back as a retry.
   const dueCost = due.reduce((sum, { m, r }) => sum + COSTS[m.skill] * (2 - r), 0);
 
+  // Newly unlocked skills, for words that have no real review in this session:
+  // after due reviews, before new words.
+  const free = budgetMs * PLANNED_SHARE - dueCost;
+  const newSkills: MemoryRow[] = [];
+  let skillCost = 0;
+  for (const m of unlocked.values()) {
+    if (newSkills.length >= MAX_NEW_SKILLS) break;
+    if (byWord.has(m.wordId) || skillCost + COSTS[m.skill] > free) continue;
+    newSkills.push(m);
+    skillCost += COSTS[m.skill];
+  }
+
   // New words fill the time left over. Keep a trickle (1–2) coming even during
   // a backlog so sessions never become pure catch-up, unless the backlog is
   // truly large.
-  const free = budgetMs * PLANNED_SHARE - dueCost;
-  let byTime = Math.floor(Math.max(0, free) / COSTS.intro);
+  let byTime = Math.floor(Math.max(0, free - skillCost) / COSTS.intro);
   // The trickle compares with the whole budget, not the planned share: it is about how big the backlog is.
   if (byTime === 0 && dueCost < 3 * budgetMs) byTime = dueCost < 1.5 * budgetMs ? 2 : 1;
   const newCount = Math.min(byTime, fresh.length);
-
-  // Newly unlocked skills: a small trickle with the leftover time, for words
-  // that have no real review in this session.
-  const spare = free - newCount * COSTS.intro;
-  const newSkills = [...unlocked.values()]
-    .filter((m) => !byWord.has(m.wordId))
-    .slice(0, Math.max(0, Math.min(MAX_NEW_SKILLS, Math.floor(spare / COSTS.write))));
 
   // Early reviews for the rest of the time: what comes due soonest, then the
   // weakest of everything else. Practising early is worth a little less, never harm.
