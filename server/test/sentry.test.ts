@@ -47,6 +47,11 @@ const env = {
 const start = (extra: Record<string, string> = {}) =>
   Bun.spawn(["bun", "--preload", "./instrument.ts", "index.ts"], { cwd: `${import.meta.dir}/..`, env: { ...env, ...extra }, stdout: "pipe", stderr: "pipe" });
 
+// Production migrates before each deploy, and so must this: index.ts does not. Without it, on a
+// fresh database (CI) the tables exist only if another test file's startApp ran first.
+const migrated = Bun.spawnSync(["bun", "src/migrate.ts"], { cwd: `${import.meta.dir}/..`, env, stderr: "pipe" });
+if (migrated.exitCode !== 0) throw new Error(`migrations failed: ${migrated.stderr.toString()}`);
+
 const logLines: Record<string, unknown>[] = [];
 const server = start();
 afterAll(() => (server.kill(), ingest.stop(true), stopMockLLM()));
