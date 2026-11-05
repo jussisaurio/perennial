@@ -126,7 +126,12 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /** Where the top of the word's stem is, where its flower sits: as Plant draws it. */
 export function plantTop(word: string, growth: number, scale = 1): { x: number; y: number } {
-  return onStem(plantHeight(word, growth, scale), genome(word).curve * 10 * scale, 1);
+  return stemPoint(word, growth, 1, scale);
+}
+
+/** A point `t` of the way up the word's stem (0 the root, 1 the top), as Plant draws it. */
+export function stemPoint(word: string, growth: number, t: number, scale = 1): { x: number; y: number } {
+  return onStem(plantHeight(word, growth, scale), genome(word).curve * 10 * scale, t);
 }
 
 /** How tall the word's stem is drawn: its growth, its genome, and a big or small meaning (#214). The one place for it. */

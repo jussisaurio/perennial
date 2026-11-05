@@ -6,7 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { language } from "../content/languages";
 import { ActiveClock } from "../core/clock";
 import type { Grade } from "../core/fsrs";
-import { plantStage, readMemory, recall, recordGap, type PlantStage } from "../core/memory";
+import { isStrong, memKey, plantStage, readMemory, recall, recordGap, type PlantStage } from "../core/memory";
+import type { Skill } from "../data/rows";
 import { Session as Runner, type Task } from "../core/session";
 import { recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import { hash32 } from "../lib/seed";
@@ -36,6 +37,9 @@ export type Ended = "time" | "empty" | "user";
 const LONG_SHOT = 0.7;
 /** Long-shot moments per chunk. */
 const MAX_STRONG = 3;
+
+/** What a new dot on the plant means, said once, as it comes (the garden draws the same dots). */
+const DOT_NOTES = { listen: "A blue dot: you know it by ear now.", write: "An orange dot: you can write it now." } as const;
 
 /**
  * Pick the sentence the learner has seen least, so no two reviews look the same.
@@ -261,10 +265,10 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
    * render or two; if not, undefined, and the moment is skipped rather than
    * holding up the next card.
    */
-  const readAfter = async (wordId: string, reps: number) => {
+  const memoryAfter = async (wordId: string, skill: Skill, reps: number) => {
     for (let i = 0; i < 3; i++) {
-      const read = live.current ? readMemory(live.current, wordId) : undefined;
-      if (read && read.reps > reps) return read;
+      const m = live.current?.memory.get(memKey(wordId, skill));
+      if (m && m.reps > reps) return m;
       await new Promise<void>((resolve) => {
         learnerChanged.current.add(resolve);
         setTimeout(resolve, 150);
@@ -306,7 +310,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       if (!growthOn()) return null;
       const seed = { s: 0, stage: "seed" as const };
       if (!opts.alreadyKnown) return { word: word.lemma, from: seed, to: seed, planted: true };
-      const read = await readAfter(word.id, 0);
+      const read = await memoryAfter(word.id, "read", 0);
       return read ? { word: word.lemma, from: seed, to: { s: read.s, stage: plantStage(read) }, planted: true, visitor } : null;
     } else if (grade) {
       counts.current.answers++;
@@ -314,12 +318,12 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       practised.current.add(word.id);
       const carried = introMs.current.get(word.id);
       introMs.current.delete(word.id);
-      // Read before this answer is recorded: its reading memory, and when it was last practised.
-      const readBefore = live.current ? readMemory(live.current, word.id) : undefined;
-      // ?? 0: no read review yet (a new word's quick check).
-      const repsBefore = readBefore?.reps ?? 0;
+      // Read before this answer is recorded: this skill's memory, and when it was last practised.
+      const skillBefore = live.current?.memory.get(memKey(word.id, task.skill));
+      // ?? 0: no review yet (a new word's quick check, a skill's first practice).
+      const repsBefore = skillBefore?.reps ?? 0;
       const now = Date.now();
-      const earlier = (live.current?.reviewsByWord.get(word.id) ?? []).filter((r) => r.skill === "read").map((r) => Date.parse(r.reviewed_at));
+      const earlier = (live.current?.reviewsByWord.get(word.id) ?? []).filter((r) => r.skill === task.skill).map((r) => Date.parse(r.reviewed_at));
       // Read before this answer is recorded: did the word already bring its visitor?
       const brought = !!live.current && broughtVisitor(live.current, word.id);
       // ?? 0: no intro for this word in this session.
@@ -327,18 +331,26 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       // No note after "I forgot": the retry card says "try again" when it comes.
       runner.report(task, { grade });
       setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
-      // Only reading memory grows the plant, and only a remembered word grows.
-      if (grade < 3 || task.skill !== "read") return null;
-      // The first good answer to a word (a wrong one earlier does not count): a garden word's visitor comes now.
-      const visitor = brought ? undefined : visitorArrives(word.id);
+      // Every remembered answer waters the plant; only reading makes it grow.
+      if (grade < 3) return null;
+      // The first good reading answer to a word (a wrong one earlier does not count): a garden word's visitor comes now.
+      const visitor = task.skill === "read" && !brought ? visitorArrives(word.id) : undefined;
       if (!growthOn()) return null;
       // A hard one remembered: back on its retry, or likely forgotten. A few per session at most, so a session after a break is not all fanfare.
-      const longShot = !!readBefore?.reps && recall(readBefore, now) < LONG_SHOT && strongMoments.current < MAX_STRONG;
+      const longShot = !!skillBefore?.reps && recall(skillBefore, now) < LONG_SHOT && strongMoments.current < MAX_STRONG;
       const strong = !!task.retry || longShot;
       if (longShot) strongMoments.current++;
       const gap = recordGap(earlier, now);
-      const read = await readAfter(word.id, repsBefore);
-      return read ? { word: word.lemma, from: { s: card.s, stage: card.stage }, to: { s: read.s, stage: plantStage(read) }, planted: false, visitor, strong, note: gap ? `Last seen ${gap} days ago. Its longest wait yet.` : undefined } : null;
+      const after = await memoryAfter(word.id, task.skill, repsBefore);
+      if (!after) return null;
+      const look = { s: card.s, stage: card.stage };
+      if (task.skill !== "read") {
+        // Listening or writing strong for the first time: its dot comes onto the plant, as the garden draws it.
+        const dot = isStrong(after) && !isStrong(skillBefore) ? task.skill : undefined;
+        const note = dot ? DOT_NOTES[dot] : gap ? `Last seen ${gap} days ago. Its longest wait yet.` : undefined;
+        return { word: word.lemma, from: look, to: look, planted: false, strong, dot, note };
+      }
+      return { word: word.lemma, from: look, to: { s: after.s, stage: plantStage(after) }, planted: false, visitor, strong, note: gap ? `Last seen ${gap} days ago. Its longest wait yet.` : undefined };
     } else {
       // Passed over without an answer ("Can't listen now"): nothing to undo, so
       // Undo steps back over this card to the last answer.
