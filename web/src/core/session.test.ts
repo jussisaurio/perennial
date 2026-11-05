@@ -61,8 +61,15 @@ describe("plan", () => {
     const p = chunk({ budgetMs: 7 * 60_000, memories });
     expect(p.queue[0]).toEqual({ kind: "review", wordId: "slipping", skill: "read" });
     const newSkills = p.queue.filter((t) => t.kind === "review" && t.isNew);
-    expect(newSkills.length).toBeLessThanOrEqual(4);
+    expect(newSkills.length).toBe(1);
     expect(newSkills.length).toBeGreaterThan(0);
+  });
+
+  test("an unlocked skill comes before new words, so listening and typing really start (#405)", () => {
+    const memories = [mem("a", "read", 1, 30), unlocked("a", "write")];
+    const p = chunk({ memories, fresh: words(40) });
+    expect(p.queue).toContainEqual({ kind: "review", wordId: "a", skill: "write", isNew: true });
+    expect(p.newCount).toBe(21); // (270 s - 12 s of writing) / 12 s
   });
 
   test("writing gets its turn: a new skill is offered when the word has nothing else due", () => {
