@@ -4,7 +4,7 @@
 // waits for it (#200).
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { FORM, PlantForm, plantFrame, plantTop, stemHeight } from "./plant";
+import { FORM, PlantForm, plantFrame, plantTop, stemHeight, stemPoint } from "./plant";
 import { growthOf } from "../garden/plants";
 import type { PlantStage } from "../core/memory";
 import type { PixelArt } from "../garden/visitorArt";
@@ -30,6 +30,8 @@ export interface GrowthMoment {
   strong?: boolean;
   /** One quiet line under the plant, such as the word's longest wait yet (#412). */
   note?: string;
+  /** Listening or writing just became strong: its dot comes onto the plant, as in the garden. */
+  dot?: "listen" | "write";
 }
 
 // Showing the moment is a per-device choice, like sound.
@@ -84,6 +86,8 @@ const T = {
   sparkle: 380,
   /** A strong moment's spring, after the water lands. */
   perk: 420,
+  /** A new skill dot pops onto the stem. */
+  dot: 420,
   /** Longer on screen when there is a line to read. */
   note: 1100,
 };
@@ -100,7 +104,7 @@ function timeline(m: GrowthMoment) {
   const growEnd = rises ? growStart + growMs : watered ? growStart : plantEnd;
   const sparkleStart = growEnd - 160;
   const perkStart = growEnd;
-  const end = Math.max(plantEnd, growEnd + (m.strong ? T.perk : 0)) + (m.note ? T.note : T.hold);
+  const end = Math.max(plantEnd, growEnd + Math.max(m.strong ? T.perk : 0, m.dot ? T.dot : 0)) + (m.note ? T.note : T.hold);
   return { plantEnd, watered, growStart, growMs, growEnd, blooms, sparkleStart, perkStart, end: blooms ? Math.max(end, sparkleStart + T.sparkle) : end };
 }
 
@@ -219,6 +223,9 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
   const sparkle = tl.blooms ? phase(e, tl.sparkleStart, T.sparkle) : 0;
   // A strong moment: the plant stretches up once, and settles.
   const perk = m.strong ? Math.sin(Math.PI * phase(e, tl.perkStart, T.perk)) : 0;
+  // Where the garden draws the dot (StripPlant), on this plant's stem; it pops in, a little too big, then settles.
+  const dotAt = m.dot && stemPoint(m.word, growthOf(m.to.s), m.dot === "listen" ? 0.45 : 0.62, 1.05);
+  const dotR = side * 0.035 * easeOutBack(phase(e, tl.perkStart, T.dot));
   const top = plantTop(m.word, growthOf(m.to.s), 1.05);
   return (
     <div className="growth" data-kind={m.planted ? "plant" : "water"} aria-hidden="true">
@@ -243,6 +250,7 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
             return <circle key={i} cx={top.x + Math.cos(a) * r} cy={top.y + Math.sin(a) * r} r={side * 0.014 * (1 - sparkle * 0.5)} fill="var(--sun)" opacity={1 - sparkle} />;
           })}
         {/* Not during the glide: it hops in from where the plant is going. */}
+        {dotAt && dotR > 0 && <circle cx={dotAt.x + (m.dot === "listen" ? 4 : -4)} cy={dotAt.y} r={dotR} fill={m.dot === "listen" ? "var(--sky)" : "var(--persimmon)"} />}
         {m.visitor && e > 0 && <Visitor art={m.visitor} e={e} side={side} until={tl.growEnd} />}
         {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} growMs={tl.growMs} drops={m.strong ? 5 : 3} />}
       </svg>
