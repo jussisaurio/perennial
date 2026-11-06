@@ -21,8 +21,9 @@ export type ServerInfo = typeof ServerInfo.Type;
  * table's own (web/src/data/rows.ts). A Record schema would copy every row,
  * key by key: about 10 ms for a year of reviews, on the app's launch (#486).
  */
-const Row = Schema.declare((u: unknown): u is Record<string, unknown> => typeof u === "object" && u !== null && !Array.isArray(u));
-const Rows = Schema.Array(Row);
+const isRow = (u: unknown): u is Record<string, unknown> => typeof u === "object" && u !== null && !Array.isArray(u);
+// One check for the whole list: Schema.Array runs its decoder per row, ~20 ms at CPU 10× on a cold start (#447).
+const Rows = Schema.declare((u: unknown): u is ReadonlyArray<Record<string, unknown>> => Array.isArray(u) && u.every(isRow));
 export const LearnerRows = Schema.Struct({
   course: Rows,
   review: Rows,
