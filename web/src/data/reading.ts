@@ -17,14 +17,21 @@ function indexOf(words: Iterable<Word>): Map<string, string[]> {
 // The deck's words, indexed once per deck. Every answer makes a new learner, and
 // indexing the whole deck again took 5–12 ms per card at CPU 10× (#457).
 const deckIndexes = new WeakMap<Learner["deck"], Map<string, string[]>>();
+// The whole index, once per words map: an answer keeps the map, and a list of every word per card made a major GC every few answers (#572).
+const formIndexes = new WeakMap<Learner["words"], { get(form: string): string[] | undefined }>();
 
 /** The words a form (lowercase) can be a form of: the deck's, then the learner's own. */
 function formIndex(l: Learner): { get(form: string): string[] | undefined } {
+  let index = formIndexes.get(l.words);
+  if (index) return index;
   const words = [...l.words.values()];
   let deck = deckIndexes.get(l.deck);
   if (!deck) deckIndexes.set(l.deck, (deck = indexOf(words.filter((w) => w.source === "deck"))));
+  const deckIndex = deck;
   const mine = indexOf(words.filter((w) => w.source === "user"));
-  return { get: (f) => (mine.has(f) ? [...(deck.get(f) ?? []), ...mine.get(f)!] : deck.get(f)) };
+  index = { get: (f) => (mine.has(f) ? [...(deckIndex.get(f) ?? []), ...mine.get(f)!] : deckIndex.get(f)) };
+  formIndexes.set(l.words, index);
+  return index;
 }
 
 /**
