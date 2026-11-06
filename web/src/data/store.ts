@@ -160,10 +160,14 @@ export async function createStore(userId: string, email: string | null) {
     sync.abort();
   };
   /** Read every table again, in one new request: one already under way may have started before a change. */
-  const refetchAll = () => {
-    if (sync.signal.aborted) return Promise.resolve();
+  const refetchAll = async () => {
+    if (sync.signal.aborted) return;
+    // A refetch cancels a read under way only once the table has rows: the
+    // first read is joined instead (TanStack Query), and may predate the change
+    // (#529: a course written while the first read ran never showed). Cancel it.
+    await queryClient.cancelQueries();
     reading = null;
-    return Promise.all(Object.values(collections).map((c) => c.utils.refetch())).then(() => undefined);
+    await Promise.all(Object.values(collections).map((c) => c.utils.refetch()));
   };
   let hiddenAt: number | null = null;
   const onVisibility = () => {

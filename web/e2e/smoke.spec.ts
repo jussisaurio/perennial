@@ -20,6 +20,27 @@ test("smoke: landing → start learning → a session → progress survives a re
   await expect(page.getByRole("region", { name: "Your progress" })).toContainText("You are learning 1 word.", { timeout: 15000 });
 });
 
+test("a first read that began before the course was written does not leave the learner on Loading (#529)", async ({ page }) => {
+  // The course is written only once the server has read the rows (with no course yet);
+  // that read's answer never comes, so the app must read again.
+  let rowsRead!: () => void;
+  const read = new Promise<void>((r) => (rowsRead = r));
+  let written = false;
+  page.on("response", (r) => {
+    if (r.url().endsWith("/api/write")) written = true;
+  });
+  await page.route("**/api/write", async (route) => {
+    await read;
+    await route.continue();
+  });
+  await page.route("**/api/rows", async (route) => {
+    if (written) return route.continue();
+    await route.fetch();
+    rowsRead();
+  });
+  await startCourse(page);
+});
+
 test("a deck that cannot load: the learner is told, not left on a loading screen", async ({ page, allowConsoleError }) => {
   await startCourse(page);
   // The aborted deck fetch (below) is refused by design; the app logs the failure it shows in the alert.
