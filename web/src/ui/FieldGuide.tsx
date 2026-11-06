@@ -12,7 +12,7 @@ import { WordPlant, rareOf, type Rare } from "./plant";
 import { giftLink } from "../data/gift";
 import { track } from "../observability";
 import { useLatinNames } from "../content/latin";
-import { pageImage, type PageImage } from "./pageImage";
+import type { PageImage } from "./pageImage";
 import { download } from "./files";
 import { headword } from "../content/forms";
 
@@ -134,7 +134,8 @@ function SharePicture({ page }: { page: PageImage }) {
   const { lemma, gloss, latin, rare, s, stage } = page;
   useEffect(() => {
     let live = true;
-    pageImage({ lemma, gloss, latin, rare, s, stage }).then(
+    // Its own chunk: it pulls in react-dom/server (~190 KB), which the first load does not need (#481).
+    import("./pageImage").then(({ pageImage }) => pageImage({ lemma, gloss, latin, rare, s, stage })).then(
       (blob) => live && setFile(new File([blob], `perennial-${lemma}.png`, { type: "image/png" })),
       (e: unknown) => {
         console.warn("[guide] the picture could not be made", e);
