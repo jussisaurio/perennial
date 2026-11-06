@@ -36,7 +36,8 @@
   --shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 10px 30px -18px rgb(60 45 20 / 0.35);
   --radius: 18px;
   --display: "Gloock", "Iowan Old Style", "Palatino", Georgia, serif;
-  --ui: "Onest Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ui-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ui: "Onest Variable", var(--ui-system);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light;
@@ -177,7 +178,8 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
 .course-switch-button { border: 1px solid var(--line); background: var(--card); }
 .course-switch-button[aria-expanded="true"] { border-color: var(--ink); }
 .course-switch-label { color: var(--muted); }
-.caret { font-size: 0.7em; color: var(--muted); }
+/* Onest has no ▾. Naming it here would load its symbols file on every screen, for nothing. */
+.caret { font-size: 0.7em; color: var(--muted); font-family: var(--ui-system); }
 .course-menu {
   position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; width: max-content; min-width: 13rem; max-width: calc(100vw - 32px);
   background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 0.4rem; box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.35);

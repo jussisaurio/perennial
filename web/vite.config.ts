@@ -1,7 +1,7 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import babel from "@rolldown/plugin-babel";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import pkg from "./package.json" with { type: "json" };
 
 // Source maps for readable error reports: uploaded to Sentry during the
@@ -9,11 +9,30 @@ import pkg from "./package.json" with { type: "json" };
 // served. Off unless the build has a token, org and project (Railway build vars).
 const sentry = !!(process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT);
 
+// The first screens' fonts, fetched with the page and not only once the CSS is applied.
+// Without this, the first layouts look up fallback fonts and lay out again when each
+// font comes (#569). The files are hashed, so the links are added at build time.
+const FIRST_FONTS = ["onest-latin-wght-normal", "gloock-latin-400-normal"];
+const preloadFonts = (): Plugin => ({
+  name: "preload-fonts",
+  apply: "build",
+  transformIndexHtml(_html, ctx) {
+    if (!ctx.bundle) throw new Error("preload-fonts: no bundle (it runs in builds only)");
+    const files = Object.keys(ctx.bundle);
+    return FIRST_FONTS.map((font) => {
+      const file = files.find((f) => f.startsWith(`assets/${font}-`) && f.endsWith(".woff2"));
+      if (!file) throw new Error(`preload-fonts: no ${font} woff2 in the build`);
+      return { tag: "link", attrs: { rel: "preload", href: `/${file}`, as: "font", type: "font/woff2", crossorigin: "" }, injectTo: "head" };
+    });
+  },
+});
+
 export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   build: { sourcemap: sentry ? "hidden" : false },
   plugins: [
     react(),
+    preloadFonts(),
     // React Compiler memoizes components and hooks at build time (#452).
     babel({ presets: [reactCompilerPreset()] }),
     sentry &&
