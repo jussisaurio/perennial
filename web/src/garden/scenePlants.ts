@@ -217,14 +217,17 @@ export class Plants {
     c.scene.add(new THREE.Mesh(mergeGeometries(soil), mat(soilTex)));
   }
 
-  /** A texture that lives only on the GPU: allocate, upload empty, drop the CPU copy. Sprites are copied into it later. */
+  /**
+   * A texture that lives only on the GPU: storage allocated, nothing uploaded (WebGL starts it
+   * cleared). Sprites are copied into it later. Uploading empty sheets took ~55 ms at CPU 10× (#459).
+   */
   private gpuTexture(w: number, h: number): THREE.DataTexture {
-    const t = new THREE.DataTexture(new Uint8Array(w * h * 4), w, h);
+    const t = new THREE.DataTexture(null, w, h);
     t.magFilter = t.minFilter = THREE.NearestFilter;
     t.generateMipmaps = false;
+    t.source.dataReady = false;
     t.needsUpdate = true;
     this.renderer.initTexture(t);
-    (t.image as { data: Uint8Array | null }).data = null;
     return t;
   }
 
