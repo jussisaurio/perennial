@@ -101,6 +101,21 @@ test("double-clicking Show does not grade the unseen answer", async ({ page }) =
   expect(await serverRows(page, "review")).toHaveLength(1);
 });
 
+test("an answer key right after Show counts; the buttons look held back until a tap counts", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  await continueIntros(page, 4);
+  const card = await page.locator(".session").getAttribute("data-card");
+  const remembered = page.getByRole("button", { name: /I remembered/ });
+  // No wait between Show and the answer key: the key is a different one, so it counts at once.
+  await page.getByRole("button", { name: /Show answer/ }).click();
+  await expect(remembered).toBeVisible();
+  // Until taps count, the buttons are dimmed: nothing looks pressable that isn't.
+  expect(Number(await remembered.evaluate((b) => getComputedStyle(b).opacity))).toBeLessThan(1);
+  await page.keyboard.press("2");
+  await expect(page.locator(".session")).not.toHaveAttribute("data-card", card!);
+});
+
 test("Forgot is retried with its own label, and undo reverts it on the server too", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
