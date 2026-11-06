@@ -30,7 +30,7 @@ describe("the wind", () => {
 describe("dandelion clocks", () => {
   test("three by the fence, on open ground a walker can reach, in a small and a big garden", () => {
     for (const l of [small, big]) {
-      const base = dandelions(l, DAY, BED_TOP).filter((h) => h.id.startsWith("base"));
+      const base = dandelions(l, DAY).filter((h) => h.id.startsWith("base"));
       expect(base).toHaveLength(3);
       for (const h of base) {
         const free = collide(l, h.x, h.z, 0.3);
@@ -40,7 +40,7 @@ describe("dandelion clocks", () => {
   });
 
   test("a new clock grows where a seed from an earlier day's wind came down", () => {
-    const heads = dandelions(big, DAY, BED_TOP);
+    const heads = dandelions(big, DAY);
     const grew = heads.filter((h) => h.id.startsWith("grew"));
     expect(grew.length).toBeGreaterThan(0);
     for (const g of grew) {
@@ -48,31 +48,31 @@ describe("dandelion clocks", () => {
       expect(day).toBeLessThan(DAY);
       expect(day).toBeGreaterThanOrEqual(DAY - 3);
       // One of that day's clocks sent a seed exactly there, with that day's wind.
-      const from = dandelions(big, day, BED_TOP).filter((h) => h.id.startsWith("base"));
+      const from = dandelions(big, day).filter((h) => h.id.startsWith("base"));
       const landed = from.some((h) => Array.from({ length: SEEDS }, (_, i) => flight(big, h, day, i, BED_TOP)).some((f) => f.ground && f.to.x === g.x && f.to.z === g.z));
       expect(landed).toBe(true);
     }
   });
 
   test("most days a new clock grows, and it stays for three days", () => {
-    const grewOn = Array.from({ length: 100 }, (_, i) => DAY + i).filter((d) => dandelions(big, d + 1, BED_TOP).some((h) => h.id === `grew:${d}`));
+    const grewOn = Array.from({ length: 100 }, (_, i) => DAY + i).filter((d) => dandelions(big, d + 1).some((h) => h.id === `grew:${d}`));
     expect(grewOn.length).toBeGreaterThan(70);
     const d = grewOn[0];
-    const first = dandelions(big, d + 1, BED_TOP).find((h) => h.id === `grew:${d}`);
-    expect(dandelions(big, d + 3, BED_TOP).find((h) => h.id === `grew:${d}`)).toEqual(first!);
-    expect(dandelions(big, d + 4, BED_TOP).find((h) => h.id === `grew:${d}`)).toBeUndefined();
+    const first = dandelions(big, d + 1).find((h) => h.id === `grew:${d}`);
+    expect(dandelions(big, d + 3).find((h) => h.id === `grew:${d}`)).toEqual(first!);
+    expect(dandelions(big, d + 4).find((h) => h.id === `grew:${d}`)).toBeUndefined();
   });
 
   test("clocks never grow on top of each other", () => {
     for (let d = 0; d < 30; d++) {
-      const heads = dandelions(big, DAY + d, BED_TOP);
+      const heads = dandelions(big, DAY + d);
       for (const a of heads) for (const b of heads) if (a !== b) expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThanOrEqual(0.9);
     }
   });
 });
 
 describe("a blow", () => {
-  const head = dandelions(big, DAY, BED_TOP)[0];
+  const head = dandelions(big, DAY)[0];
   const flights = Array.from({ length: SEEDS }, (_, i) => flight(big, head, DAY, i, BED_TOP));
 
   test("the seeds go downwind", () => {
@@ -114,7 +114,7 @@ describe("a blow", () => {
     // A breeze across the beds: some seed of some clock, some day, lands on a plant.
     let hit = null;
     for (let d = 0; d < 60 && !hit; d++)
-      for (const h of dandelions(big, DAY + d, BED_TOP))
+      for (const h of dandelions(big, DAY + d))
         for (let i = 0; i < SEEDS && !hit; i++) {
           const f = flight(big, h, DAY + d, i, BED_TOP);
           if (f.plant >= 0) hit = f;

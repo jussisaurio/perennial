@@ -99,7 +99,7 @@ export class Toys implements Part {
     this.walk = walk;
     this.reducedMotion = reducedMotion;
     this.hooks = hooks;
-    this.heads = dandelions(layout, walk.day, BED_H);
+    this.heads = dandelions(layout, walk.day);
     this.blown = this.heads.map(() => false);
     this.blows = this.heads.map(() => null);
     this.targets = { clocks: this.heads.map((_, i) => ({ at: "clock", i })), pond: { at: "pond" } };
