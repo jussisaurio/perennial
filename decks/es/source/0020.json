@@ -1,0 +1,2799 @@
+[
+  {
+    "lemma": "espía",
+    "gloss": "spy",
+    "pos": "noun",
+    "forms": [
+      "espía",
+      "espías"
+    ],
+    "gender": "mf",
+    "sentences": [
+      {
+        "text": "Su vecino era un espía.",
+        "translation": "His neighbour was a spy.",
+        "cloze": "espía"
+      },
+      {
+        "text": "En esta novela, todos son espías.",
+        "translation": "In this novel, everyone is a spy.",
+        "cloze": "espías"
+      },
+      {
+        "text": "¿Crees que ella es una espía?",
+        "translation": "Do you think she's a spy?",
+        "cloze": "espía"
+      }
+    ]
+  },
+  {
+    "lemma": "empleado",
+    "gloss": "employee, worker",
+    "pos": "noun",
+    "forms": [
+      "empleado",
+      "empleados",
+      "empleada",
+      "empleadas"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "La empresa tiene cincuenta empleados.",
+        "translation": "The company has fifty employees.",
+        "cloze": "empleados"
+      },
+      {
+        "text": "Pregúntale al empleado de la tienda.",
+        "translation": "Ask the shop worker.",
+        "cloze": "empleado"
+      },
+      {
+        "text": "Mi tía trabajó treinta años como empleada de banco.",
+        "translation": "My aunt worked as a bank clerk for thirty years.",
+        "cloze": "empleada"
+      }
+    ]
+  },
+  {
+    "lemma": "crema",
+    "gloss": "cream (for the skin); creamy soup",
+    "pos": "noun",
+    "forms": [
+      "crema",
+      "cremas"
+    ],
+    "notes": "Cream for coffee or cakes is nata in Spain.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Me pongo crema en las manos cada noche.",
+        "translation": "I put cream on my hands every night.",
+        "cloze": "crema"
+      },
+      {
+        "text": "De primero hay crema de verduras.",
+        "translation": "For the first course there's cream of vegetable soup.",
+        "cloze": "crema"
+      },
+      {
+        "text": "Mi hermana tiene muchas cremas en el baño.",
+        "translation": "My sister has lots of creams in the bathroom.",
+        "cloze": "cremas"
+      }
+    ]
+  },
+  {
+    "lemma": "contestar",
+    "gloss": "to answer, to reply",
+    "pos": "verb",
+    "forms": [
+      "contestar",
+      "contesta",
+      "contestas",
+      "contesto",
+      "contestó",
+      "contesté",
+      "contestado",
+      "contestes"
+    ],
+    "sentences": [
+      {
+        "text": "¿Por qué no me contestas?",
+        "translation": "Why aren't you answering me?",
+        "cloze": "contestas"
+      },
+      {
+        "text": "Contesté todas las preguntas del examen.",
+        "translation": "I answered all the questions on the exam.",
+        "cloze": "Contesté"
+      },
+      {
+        "text": "Contesta en español, por favor.",
+        "translation": "Answer in Spanish, please.",
+        "cloze": "Contesta"
+      }
+    ]
+  },
+  {
+    "lemma": "mandar",
+    "gloss": "to send; to order, to be in charge",
+    "pos": "verb",
+    "forms": [
+      "mandar",
+      "mando",
+      "manda",
+      "mandas",
+      "mandó",
+      "mandé",
+      "mandado",
+      "mándame"
+    ],
+    "sentences": [
+      {
+        "text": "¿Me mandas la dirección?",
+        "translation": "Can you send me the address?",
+        "cloze": "mandas"
+      },
+      {
+        "text": "Aquí mando yo.",
+        "translation": "I'm the one in charge here.",
+        "cloze": "mando"
+      },
+      {
+        "text": "¿Quién te ha mandado hacer eso?",
+        "translation": "Who told you to do that?",
+        "cloze": "mandado"
+      },
+      {
+        "text": "Mi tía me mandó un paquete por mi cumpleaños.",
+        "translation": "My aunt sent me a parcel for my birthday.",
+        "cloze": "mandó"
+      }
+    ]
+  },
+  {
+    "lemma": "prisionero",
+    "gloss": "prisoner, captive",
+    "pos": "noun",
+    "forms": [
+      "prisionero",
+      "prisioneros",
+      "prisionera",
+      "prisioneras"
+    ],
+    "notes": "Someone in jail is usually a preso; prisionero is mostly for war.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Los prisioneros volvieron a casa después de la guerra.",
+        "translation": "The prisoners came home after the war.",
+        "cloze": "prisioneros"
+      },
+      {
+        "text": "Lo tuvieron prisionero en una isla.",
+        "translation": "They held him prisoner on an island.",
+        "cloze": "prisionero"
+      },
+      {
+        "text": "Me siento prisionera en mi propia casa.",
+        "translation": "I feel like a prisoner in my own home.",
+        "cloze": "prisionera"
+      }
+    ]
+  },
+  {
+    "lemma": "flota",
+    "gloss": "fleet",
+    "pos": "noun",
+    "forms": [
+      "flota",
+      "flotas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "La flota salió del puerto por la mañana.",
+        "translation": "The fleet left the port in the morning.",
+        "cloze": "flota"
+      },
+      {
+        "text": "La empresa tiene una flota de cien camiones.",
+        "translation": "The company has a fleet of a hundred trucks.",
+        "cloze": "flota"
+      },
+      {
+        "text": "Los dos países tienen flotas enormes.",
+        "translation": "Both countries have huge fleets.",
+        "cloze": "flotas"
+      }
+    ]
+  },
+  {
+    "lemma": "cometer",
+    "gloss": "to commit (a crime); to make (a mistake)",
+    "pos": "verb",
+    "forms": [
+      "cometer",
+      "comete",
+      "cometes",
+      "cometemos",
+      "cometí",
+      "cometió",
+      "cometido"
+    ],
+    "notes": "cometer un error = to make a mistake.",
+    "sentences": [
+      {
+        "text": "Ha cometido el mismo error dos veces.",
+        "translation": "He's made the same mistake twice.",
+        "cloze": "cometido"
+      },
+      {
+        "text": "No cometió ningún crimen.",
+        "translation": "He didn't commit any crime.",
+        "cloze": "cometió"
+      },
+      {
+        "text": "Cometí el error de confiar en él.",
+        "translation": "I made the mistake of trusting him.",
+        "cloze": "Cometí"
+      }
+    ]
+  },
+  {
+    "lemma": "igualmente",
+    "gloss": "you too, likewise; equally; anyway",
+    "pos": "adv",
+    "forms": [
+      "igualmente"
+    ],
+    "sentences": [
+      {
+        "text": "Gracias, igualmente.",
+        "translation": "Thanks, same to you.",
+        "cloze": "igualmente"
+      },
+      {
+        "text": "Los dos son igualmente importantes.",
+        "translation": "They're both equally important.",
+        "cloze": "igualmente"
+      },
+      {
+        "text": "No me apetece, pero iré igualmente.",
+        "translation": "I don't feel like it, but I'll go anyway.",
+        "cloze": "igualmente"
+      }
+    ]
+  },
+  {
+    "lemma": "ayudante",
+    "gloss": "assistant, helper",
+    "pos": "noun",
+    "forms": [
+      "ayudante",
+      "ayudantes"
+    ],
+    "gender": "mf",
+    "sentences": [
+      {
+        "text": "Hoy eres mi ayudante en la cocina.",
+        "translation": "Today you're my helper in the kitchen.",
+        "cloze": "ayudante"
+      },
+      {
+        "text": "El mecánico vino con su ayudante.",
+        "translation": "The mechanic came with his assistant.",
+        "cloze": "ayudante"
+      },
+      {
+        "text": "Necesitamos dos ayudantes más para la fiesta.",
+        "translation": "We need two more helpers for the party.",
+        "cloze": "ayudantes"
+      }
+    ]
+  },
+  {
+    "lemma": "cultura",
+    "gloss": "culture",
+    "pos": "noun",
+    "forms": [
+      "cultura",
+      "culturas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "La música es una parte importante de nuestra cultura.",
+        "translation": "Music is an important part of our culture.",
+        "cloze": "cultura"
+      },
+      {
+        "text": "Cada país tiene su propia cultura.",
+        "translation": "Every country has its own culture.",
+        "cloze": "cultura"
+      },
+      {
+        "text": "Viajar te ayuda a entender otras culturas.",
+        "translation": "Travelling helps you understand other cultures.",
+        "cloze": "culturas"
+      }
+    ]
+  },
+  {
+    "lemma": "revolución",
+    "gloss": "revolution",
+    "pos": "noun",
+    "forms": [
+      "revolución",
+      "revoluciones"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "La revolución empezó en la capital.",
+        "translation": "The revolution started in the capital.",
+        "cloze": "revolución"
+      },
+      {
+        "text": "Internet fue una revolución.",
+        "translation": "The internet was a revolution.",
+        "cloze": "revolución"
+      },
+      {
+        "text": "El país ha vivido dos revoluciones.",
+        "translation": "The country has been through two revolutions.",
+        "cloze": "revoluciones"
+      }
+    ]
+  },
+  {
+    "lemma": "hombro",
+    "gloss": "shoulder",
+    "pos": "noun",
+    "forms": [
+      "hombro",
+      "hombros"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Llevaba la mochila en un solo hombro.",
+        "translation": "She carried her backpack on one shoulder.",
+        "cloze": "hombro"
+      },
+      {
+        "text": "Mi padre me llevaba sobre los hombros.",
+        "translation": "My father used to carry me on his shoulders.",
+        "cloze": "hombros"
+      },
+      {
+        "text": "Puedes llorar en mi hombro.",
+        "translation": "You can cry on my shoulder.",
+        "cloze": "hombro"
+      }
+    ]
+  },
+  {
+    "lemma": "bota",
+    "gloss": "boot",
+    "pos": "noun",
+    "forms": [
+      "bota",
+      "botas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Necesito unas botas para la nieve.",
+        "translation": "I need some snow boots.",
+        "cloze": "botas"
+      },
+      {
+        "text": "Se me ha roto una bota.",
+        "translation": "One of my boots has broken.",
+        "cloze": "bota"
+      },
+      {
+        "text": "¿Te gustan mis botas nuevas?",
+        "translation": "Do you like my new boots?",
+        "cloze": "botas"
+      }
+    ]
+  },
+  {
+    "lemma": "adorar",
+    "gloss": "to adore, to love",
+    "pos": "verb",
+    "forms": [
+      "adorar",
+      "adoro",
+      "adora",
+      "adoras",
+      "adoran",
+      "adoraba"
+    ],
+    "sentences": [
+      {
+        "text": "Adoro este pueblo.",
+        "translation": "I adore this town.",
+        "cloze": "Adoro"
+      },
+      {
+        "text": "Los niños adoran a su abuela.",
+        "translation": "The children adore their grandmother.",
+        "cloze": "adoran"
+      },
+      {
+        "text": "Mi madre adoraba el mar.",
+        "translation": "My mother loved the sea.",
+        "cloze": "adoraba"
+      }
+    ]
+  },
+  {
+    "lemma": "saludo",
+    "gloss": "greeting; (saludos) regards, best wishes",
+    "pos": "noun",
+    "forms": [
+      "saludo",
+      "saludos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Mi madre te manda saludos.",
+        "translation": "My mother says hello.",
+        "cloze": "saludos"
+      },
+      {
+        "text": "Un saludo, Ana.",
+        "translation": "Best wishes, Ana.",
+        "cloze": "saludo"
+      },
+      {
+        "text": "Me hizo un saludo con la mano.",
+        "translation": "He waved hello to me.",
+        "cloze": "saludo"
+      }
+    ]
+  },
+  {
+    "lemma": "adulto",
+    "gloss": "adult, grown-up",
+    "pos": "noun",
+    "forms": [
+      "adulto",
+      "adultos",
+      "adulta",
+      "adultas"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Los adultos pagan diez euros y los niños, cinco.",
+        "translation": "Adults pay ten euros and children five.",
+        "cloze": "adultos"
+      },
+      {
+        "text": "Ahora que eres adulta, decides tú.",
+        "translation": "Now that you're an adult, you decide.",
+        "cloze": "adulta"
+      },
+      {
+        "text": "Los adultos también tienen miedo.",
+        "translation": "Adults get scared too.",
+        "cloze": "adultos"
+      }
+    ]
+  },
+  {
+    "lemma": "serpiente",
+    "gloss": "snake",
+    "pos": "noun",
+    "forms": [
+      "serpiente",
+      "serpientes"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Vimos una serpiente en el camino.",
+        "translation": "We saw a snake on the path.",
+        "cloze": "serpiente"
+      },
+      {
+        "text": "Las serpientes me dan mucho asco.",
+        "translation": "I find snakes really disgusting.",
+        "cloze": "serpientes"
+      },
+      {
+        "text": "Tranquilo, esa serpiente no es peligrosa.",
+        "translation": "Don't worry, that snake isn't dangerous.",
+        "cloze": "serpiente"
+      }
+    ]
+  },
+  {
+    "lemma": "romántico",
+    "gloss": "romantic",
+    "pos": "adj",
+    "forms": [
+      "romántico",
+      "romántica",
+      "románticos",
+      "románticas"
+    ],
+    "sentences": [
+      {
+        "text": "Fue una cena muy romántica.",
+        "translation": "It was a very romantic dinner.",
+        "cloze": "romántica"
+      },
+      {
+        "text": "Mi marido no es nada romántico.",
+        "translation": "My husband isn't romantic at all.",
+        "cloze": "romántico"
+      },
+      {
+        "text": "Nunca veo películas románticas.",
+        "translation": "I never watch romantic films.",
+        "cloze": "románticas"
+      }
+    ]
+  },
+  {
+    "lemma": "posiblemente",
+    "gloss": "possibly, maybe",
+    "pos": "adv",
+    "forms": [
+      "posiblemente"
+    ],
+    "sentences": [
+      {
+        "text": "Es posiblemente la película más larga que he visto.",
+        "translation": "It's possibly the longest film I've seen.",
+        "cloze": "posiblemente"
+      },
+      {
+        "text": "Posiblemente, pero no lo sé seguro.",
+        "translation": "Possibly, but I don't know for sure.",
+        "cloze": "Posiblemente"
+      },
+      {
+        "text": "Posiblemente vengan mis padres.",
+        "translation": "My parents might come.",
+        "cloze": "Posiblemente"
+      }
+    ]
+  },
+  {
+    "lemma": "enfrente",
+    "gloss": "opposite, across the street",
+    "pos": "adv",
+    "forms": [
+      "enfrente"
+    ],
+    "notes": "enfrente de = opposite.",
+    "sentences": [
+      {
+        "text": "Siéntate enfrente de mí.",
+        "translation": "Sit opposite me.",
+        "cloze": "enfrente"
+      },
+      {
+        "text": "Hay un bar enfrente del colegio.",
+        "translation": "There's a bar opposite the school.",
+        "cloze": "enfrente"
+      },
+      {
+        "text": "Los vecinos de enfrente tienen un perro.",
+        "translation": "The neighbours across the street have a dog.",
+        "cloze": "enfrente"
+      }
+    ]
+  },
+  {
+    "lemma": "capacidad",
+    "gloss": "ability; capacity",
+    "pos": "noun",
+    "forms": [
+      "capacidad",
+      "capacidades"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Tiene una gran capacidad para aprender.",
+        "translation": "She has a great ability to learn.",
+        "cloze": "capacidad"
+      },
+      {
+        "text": "El estadio tiene capacidad para cincuenta mil personas.",
+        "translation": "The stadium holds fifty thousand people.",
+        "cloze": "capacidad"
+      },
+      {
+        "text": "No dudo de tus capacidades.",
+        "translation": "I don't doubt your abilities.",
+        "cloze": "capacidades"
+      }
+    ]
+  },
+  {
+    "lemma": "aliento",
+    "gloss": "breath; encouragement",
+    "pos": "noun",
+    "forms": [
+      "aliento"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Llegué arriba sin aliento.",
+        "translation": "I got to the top out of breath.",
+        "cloze": "aliento"
+      },
+      {
+        "text": "Tu perro tiene mal aliento.",
+        "translation": "Your dog has bad breath.",
+        "cloze": "aliento"
+      },
+      {
+        "text": "Gracias por tus palabras de aliento.",
+        "translation": "Thanks for your words of encouragement.",
+        "cloze": "aliento"
+      }
+    ]
+  },
+  {
+    "lemma": "placa",
+    "gloss": "badge; plaque, sign",
+    "pos": "noun",
+    "forms": [
+      "placa",
+      "placas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "El policía me enseñó su placa.",
+        "translation": "The police officer showed me his badge.",
+        "cloze": "placa"
+      },
+      {
+        "text": "En la puerta hay una placa con su nombre.",
+        "translation": "On the door there's a plaque with his name.",
+        "cloze": "placa"
+      },
+      {
+        "text": "En mi calle cambiaron todas las placas.",
+        "translation": "They changed all the signs on my street.",
+        "cloze": "placas"
+      }
+    ]
+  },
+  {
+    "lemma": "rata",
+    "gloss": "rat; (informal) stingy person",
+    "pos": "noun",
+    "forms": [
+      "rata",
+      "ratas"
+    ],
+    "notes": "In Spain, ser una rata also means to be stingy.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "¡Esa rata es enorme!",
+        "translation": "That rat is huge!",
+        "cloze": "rata"
+      },
+      {
+        "text": "Anoche vi dos ratas en la calle.",
+        "translation": "Last night I saw two rats in the street.",
+        "cloze": "ratas"
+      },
+      {
+        "text": "No seas rata y paga tú.",
+        "translation": "Don't be stingy, you pay.",
+        "cloze": "rata"
+      }
+    ]
+  },
+  {
+    "lemma": "cuadro",
+    "gloss": "painting, picture; (de cuadros) checked",
+    "pos": "noun",
+    "forms": [
+      "cuadro",
+      "cuadros"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Mi abuela tiene un cuadro precioso en el salón.",
+        "translation": "My grandmother has a beautiful painting in the living room.",
+        "cloze": "cuadro"
+      },
+      {
+        "text": "¿Quién ha pintado este cuadro?",
+        "translation": "Who painted this picture?",
+        "cloze": "cuadro"
+      },
+      {
+        "text": "Llevaba una camisa de cuadros.",
+        "translation": "He was wearing a checked shirt.",
+        "cloze": "cuadros"
+      }
+    ]
+  },
+  {
+    "lemma": "afortunado",
+    "gloss": "lucky, fortunate",
+    "pos": "adj",
+    "forms": [
+      "afortunado",
+      "afortunada",
+      "afortunados",
+      "afortunadas"
+    ],
+    "sentences": [
+      {
+        "text": "Soy muy afortunado de tenerte.",
+        "translation": "I'm very lucky to have you.",
+        "cloze": "afortunado"
+      },
+      {
+        "text": "Te ha tocado la lotería, ¡qué afortunada!",
+        "translation": "You've won the lottery, how lucky!",
+        "cloze": "afortunada"
+      },
+      {
+        "text": "Nos sentimos afortunados de vivir aquí.",
+        "translation": "We feel lucky to live here.",
+        "cloze": "afortunados"
+      }
+    ]
+  },
+  {
+    "lemma": "puesto",
+    "gloss": "job, position; stall",
+    "pos": "noun",
+    "forms": [
+      "puesto",
+      "puestos"
+    ],
+    "notes": "Also a form of poner: he puesto = I have put.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Le han ofrecido un puesto en Madrid.",
+        "translation": "They've offered him a job in Madrid.",
+        "cloze": "puesto"
+      },
+      {
+        "text": "En el mercado, los puestos de fruta abren temprano.",
+        "translation": "At the market, the fruit stalls open early.",
+        "cloze": "puestos"
+      },
+      {
+        "text": "Ella tiene un puesto de mucha responsabilidad.",
+        "translation": "She has a position with a lot of responsibility.",
+        "cloze": "puesto"
+      }
+    ]
+  },
+  {
+    "lemma": "división",
+    "gloss": "division",
+    "pos": "noun",
+    "forms": [
+      "división",
+      "divisiones"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "El equipo juega en primera división.",
+        "translation": "The team plays in the first division.",
+        "cloze": "división"
+      },
+      {
+        "text": "Los niños ya saben hacer divisiones.",
+        "translation": "The kids can already do division.",
+        "cloze": "divisiones"
+      },
+      {
+        "text": "Hay mucha división dentro del partido.",
+        "translation": "There's a lot of division within the party.",
+        "cloze": "división"
+      }
+    ]
+  },
+  {
+    "lemma": "bicicleta",
+    "gloss": "bicycle, bike",
+    "pos": "noun",
+    "forms": [
+      "bicicleta",
+      "bicicletas"
+    ],
+    "notes": "People often say bici.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Mi bicicleta es vieja, pero funciona.",
+        "translation": "My bike is old, but it works.",
+        "cloze": "bicicleta"
+      },
+      {
+        "text": "Dejamos las bicicletas en la puerta.",
+        "translation": "We left the bikes at the door.",
+        "cloze": "bicicletas"
+      },
+      {
+        "text": "Prefiero ir en bicicleta, es más rápido.",
+        "translation": "I prefer to go by bike, it's faster.",
+        "cloze": "bicicleta"
+      }
+    ]
+  },
+  {
+    "lemma": "pesado",
+    "gloss": "heavy; annoying, tiring",
+    "pos": "adj",
+    "forms": [
+      "pesado",
+      "pesada",
+      "pesados",
+      "pesadas"
+    ],
+    "sentences": [
+      {
+        "text": "Esta maleta es muy pesada.",
+        "translation": "This suitcase is very heavy.",
+        "cloze": "pesada"
+      },
+      {
+        "text": "No seas pesado, ya te he dicho que no.",
+        "translation": "Don't be a pain, I've already told you no.",
+        "cloze": "pesado"
+      },
+      {
+        "text": "No debes llevar cosas pesadas.",
+        "translation": "You shouldn't carry heavy things.",
+        "cloze": "pesadas"
+      }
+    ]
+  },
+  {
+    "lemma": "sugerir",
+    "gloss": "to suggest",
+    "pos": "verb",
+    "forms": [
+      "sugerir",
+      "sugiero",
+      "sugieres",
+      "sugiere",
+      "sugirió",
+      "sugerí",
+      "sugerido"
+    ],
+    "notes": "e changes to ie or i: sugiero, sugirió.",
+    "sentences": [
+      {
+        "text": "Te sugiero que lo pienses bien.",
+        "translation": "I suggest you think it over carefully.",
+        "cloze": "sugiero"
+      },
+      {
+        "text": "¿Qué sugieres?",
+        "translation": "What do you suggest?",
+        "cloze": "sugieres"
+      },
+      {
+        "text": "El médico me sugirió descansar más.",
+        "translation": "The doctor suggested I rest more.",
+        "cloze": "sugirió"
+      }
+    ]
+  },
+  {
+    "lemma": "espacial",
+    "gloss": "space (to do with outer space)",
+    "pos": "adj",
+    "forms": [
+      "espacial",
+      "espaciales"
+    ],
+    "sentences": [
+      {
+        "text": "Quiere trabajar en una estación espacial.",
+        "translation": "She wants to work on a space station.",
+        "cloze": "espacial"
+      },
+      {
+        "text": "De niño quería una nave espacial.",
+        "translation": "As a kid I wanted a spaceship.",
+        "cloze": "espacial"
+      },
+      {
+        "text": "Las misiones espaciales son muy caras.",
+        "translation": "Space missions are very expensive.",
+        "cloze": "espaciales"
+      }
+    ]
+  },
+  {
+    "lemma": "mejorar",
+    "gloss": "to improve, to get better",
+    "pos": "verb",
+    "forms": [
+      "mejorar",
+      "mejoro",
+      "mejoras",
+      "mejoró",
+      "mejorado",
+      "mejorando"
+    ],
+    "sentences": [
+      {
+        "text": "Las cosas van a mejorar.",
+        "translation": "Things are going to get better.",
+        "cloze": "mejorar"
+      },
+      {
+        "text": "El tiempo ha mejorado mucho.",
+        "translation": "The weather has got much better.",
+        "cloze": "mejorado"
+      },
+      {
+        "text": "Mi abuelo mejoró después de la operación.",
+        "translation": "My grandfather got better after the surgery.",
+        "cloze": "mejoró"
+      }
+    ]
+  },
+  {
+    "lemma": "concurso",
+    "gloss": "contest, competition; game show",
+    "pos": "noun",
+    "forms": [
+      "concurso",
+      "concursos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Ganó un concurso de cocina.",
+        "translation": "She won a cooking contest.",
+        "cloze": "concurso"
+      },
+      {
+        "text": "Mi madre ve concursos en la tele.",
+        "translation": "My mother watches game shows on TV.",
+        "cloze": "concursos"
+      },
+      {
+        "text": "Me voy a presentar al concurso de fotos.",
+        "translation": "I'm going to enter the photo contest.",
+        "cloze": "concurso"
+      }
+    ]
+  },
+  {
+    "lemma": "comisaría",
+    "gloss": "police station",
+    "pos": "noun",
+    "forms": [
+      "comisaría",
+      "comisarías"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Al lado del hospital hay una comisaría.",
+        "translation": "There's a police station next to the hospital.",
+        "cloze": "comisaría"
+      },
+      {
+        "text": "¿Dónde está la comisaría más cercana?",
+        "translation": "Where's the nearest police station?",
+        "cloze": "comisaría"
+      },
+      {
+        "text": "Llamaron a todas las comisarías de la zona.",
+        "translation": "They called every police station in the area.",
+        "cloze": "comisarías"
+      }
+    ]
+  },
+  {
+    "lemma": "sincero",
+    "gloss": "sincere, honest",
+    "pos": "adj",
+    "forms": [
+      "sincero",
+      "sincera",
+      "sinceros",
+      "sinceras"
+    ],
+    "sentences": [
+      {
+        "text": "Te voy a ser sincero.",
+        "translation": "I'll be honest with you.",
+        "cloze": "sincero"
+      },
+      {
+        "text": "Quiero una respuesta sincera.",
+        "translation": "I want a sincere answer.",
+        "cloze": "sincera"
+      },
+      {
+        "text": "Prefiero a las personas sinceras.",
+        "translation": "I prefer sincere people.",
+        "cloze": "sinceras"
+      }
+    ]
+  },
+  {
+    "lemma": "céntimo",
+    "gloss": "cent",
+    "pos": "noun",
+    "forms": [
+      "céntimo",
+      "céntimos"
+    ],
+    "notes": "In Latin America, centavo.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Me faltan veinte céntimos para el café.",
+        "translation": "I'm twenty cents short for the coffee.",
+        "cloze": "céntimos"
+      },
+      {
+        "text": "El pan ha subido diez céntimos.",
+        "translation": "Bread has gone up ten cents.",
+        "cloze": "céntimos"
+      },
+      {
+        "text": "No pienso pagar ni un céntimo más.",
+        "translation": "I'm not paying a single cent more.",
+        "cloze": "céntimo"
+      }
+    ]
+  },
+  {
+    "lemma": "naturalmente",
+    "gloss": "naturally; of course",
+    "pos": "adv",
+    "forms": [
+      "naturalmente"
+    ],
+    "sentences": [
+      {
+        "text": "Naturalmente, te ayudaré.",
+        "translation": "Naturally, I'll help you.",
+        "cloze": "Naturalmente"
+      },
+      {
+        "text": "Mi hijo es naturalmente tranquilo.",
+        "translation": "My son is naturally calm.",
+        "cloze": "naturalmente"
+      },
+      {
+        "text": "Le pedí dinero y, naturalmente, dijo que no.",
+        "translation": "I asked him for money and, naturally, he said no.",
+        "cloze": "naturalmente"
+      }
+    ]
+  },
+  {
+    "lemma": "recurso",
+    "gloss": "resource; resort, option",
+    "pos": "noun",
+    "forms": [
+      "recurso",
+      "recursos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Es un país con pocos recursos.",
+        "translation": "It's a country with few resources.",
+        "cloze": "recursos"
+      },
+      {
+        "text": "No tenemos recursos para eso.",
+        "translation": "We don't have the resources for that.",
+        "cloze": "recursos"
+      },
+      {
+        "text": "Era mi último recurso.",
+        "translation": "It was my last resort.",
+        "cloze": "recurso"
+      }
+    ]
+  },
+  {
+    "lemma": "raza",
+    "gloss": "breed; race",
+    "pos": "noun",
+    "forms": [
+      "raza",
+      "razas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Quiero un perro, pero no me importa la raza.",
+        "translation": "I want a dog, but I don't care about the breed.",
+        "cloze": "raza"
+      },
+      {
+        "text": "En mi barrio vive gente de todas las razas.",
+        "translation": "People of every race live in my neighbourhood.",
+        "cloze": "razas"
+      },
+      {
+        "text": "Esta raza de caballo es muy antigua.",
+        "translation": "This breed of horse is very old.",
+        "cloze": "raza"
+      }
+    ]
+  },
+  {
+    "lemma": "muestra",
+    "gloss": "sample; sign, token",
+    "pos": "noun",
+    "forms": [
+      "muestra",
+      "muestras"
+    ],
+    "notes": "Also a form of mostrar: me muestra = shows me.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Necesitamos una muestra de sangre.",
+        "translation": "We need a blood sample.",
+        "cloze": "muestra"
+      },
+      {
+        "text": "Me dieron muestras gratis de perfume.",
+        "translation": "They gave me free perfume samples.",
+        "cloze": "muestras"
+      },
+      {
+        "text": "Este regalo es una muestra de cariño.",
+        "translation": "This present is a sign of affection.",
+        "cloze": "muestra"
+      }
+    ]
+  },
+  {
+    "lemma": "imaginación",
+    "gloss": "imagination",
+    "pos": "noun",
+    "forms": [
+      "imaginación"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Tienes mucha imaginación.",
+        "translation": "You have a lot of imagination.",
+        "cloze": "imaginación"
+      },
+      {
+        "text": "Son cosas de tu imaginación.",
+        "translation": "It's all in your imagination.",
+        "cloze": "imaginación"
+      },
+      {
+        "text": "Para los regalos no tengo imaginación.",
+        "translation": "I'm not very imaginative when it comes to presents.",
+        "cloze": "imaginación"
+      }
+    ]
+  },
+  {
+    "lemma": "ceremonia",
+    "gloss": "ceremony",
+    "pos": "noun",
+    "forms": [
+      "ceremonia",
+      "ceremonias"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Mi hermano no vino a la ceremonia.",
+        "translation": "My brother didn't come to the ceremony.",
+        "cloze": "ceremonia"
+      },
+      {
+        "text": "Nos casamos en una ceremonia muy sencilla.",
+        "translation": "We got married in a very simple ceremony.",
+        "cloze": "ceremonia"
+      },
+      {
+        "text": "En verano hay muchas ceremonias en esta iglesia.",
+        "translation": "In summer there are lots of ceremonies in this church.",
+        "cloze": "ceremonias"
+      }
+    ]
+  },
+  {
+    "lemma": "almacén",
+    "gloss": "warehouse, storeroom; (grandes almacenes) department store",
+    "pos": "noun",
+    "forms": [
+      "almacén",
+      "almacenes"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Trabajo en un almacén de muebles.",
+        "translation": "I work at a furniture warehouse.",
+        "cloze": "almacén"
+      },
+      {
+        "text": "Las cajas están en el almacén.",
+        "translation": "The boxes are in the storeroom.",
+        "cloze": "almacén"
+      },
+      {
+        "text": "Vamos de compras a los grandes almacenes.",
+        "translation": "Let's go shopping at the department store.",
+        "cloze": "almacenes"
+      }
+    ]
+  },
+  {
+    "lemma": "sabor",
+    "gloss": "taste, flavour",
+    "pos": "noun",
+    "forms": [
+      "sabor",
+      "sabores"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Esta sopa no tiene sabor.",
+        "translation": "This soup has no taste.",
+        "cloze": "sabor"
+      },
+      {
+        "text": "Elige el sabor de helado que quieras.",
+        "translation": "Choose whichever ice cream flavour you want.",
+        "cloze": "sabor"
+      },
+      {
+        "text": "Me encantan los sabores de la cocina india.",
+        "translation": "I love the flavours of Indian cooking.",
+        "cloze": "sabores"
+      }
+    ]
+  },
+  {
+    "lemma": "unión",
+    "gloss": "union; unity, closeness",
+    "pos": "noun",
+    "forms": [
+      "unión",
+      "uniones"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "La unión hace la fuerza.",
+        "translation": "Unity is strength.",
+        "cloze": "unión"
+      },
+      {
+        "text": "España es parte de la Unión Europea.",
+        "translation": "Spain is part of the European Union.",
+        "cloze": "Unión"
+      },
+      {
+        "text": "Hay mucha unión entre los hermanos.",
+        "translation": "The brothers and sisters are very close.",
+        "cloze": "unión"
+      }
+    ]
+  },
+  {
+    "lemma": "reserva",
+    "gloss": "booking, reservation; reserve",
+    "pos": "noun",
+    "forms": [
+      "reserva",
+      "reservas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "He hecho una reserva para las nueve.",
+        "translation": "I've made a booking for nine o'clock.",
+        "cloze": "reserva"
+      },
+      {
+        "text": "Quiero cancelar mi reserva.",
+        "translation": "I want to cancel my booking.",
+        "cloze": "reserva"
+      },
+      {
+        "text": "Quedan pocas reservas de agua.",
+        "translation": "There are few water reserves left.",
+        "cloze": "reservas"
+      }
+    ]
+  },
+  {
+    "lemma": "encanto",
+    "gloss": "charm; (un encanto) a delight",
+    "pos": "noun",
+    "forms": [
+      "encanto",
+      "encantos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Este pueblo tiene mucho encanto.",
+        "translation": "This village has a lot of charm.",
+        "cloze": "encanto"
+      },
+      {
+        "text": "Tu abuela es un encanto.",
+        "translation": "Your grandmother is a delight.",
+        "cloze": "encanto"
+      },
+      {
+        "text": "Cada estación tiene sus encantos.",
+        "translation": "Every season has its charms.",
+        "cloze": "encantos"
+      }
+    ]
+  },
+  {
+    "lemma": "calidad",
+    "gloss": "quality",
+    "pos": "noun",
+    "forms": [
+      "calidad",
+      "calidades"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Es un producto de buena calidad.",
+        "translation": "It's a good quality product.",
+        "cloze": "calidad"
+      },
+      {
+        "text": "Prefiero la calidad a la cantidad.",
+        "translation": "I prefer quality to quantity.",
+        "cloze": "calidad"
+      },
+      {
+        "text": "La calidad del aire es mala hoy.",
+        "translation": "The air quality is bad today.",
+        "cloze": "calidad"
+      }
+    ]
+  },
+  {
+    "lemma": "esconder",
+    "gloss": "to hide",
+    "pos": "verb",
+    "forms": [
+      "esconder",
+      "escondo",
+      "esconde",
+      "escondes",
+      "escondió",
+      "escondí",
+      "escondido",
+      "esconderse",
+      "escóndete"
+    ],
+    "sentences": [
+      {
+        "text": "¿Dónde escondes las llaves?",
+        "translation": "Where do you hide the keys?",
+        "cloze": "escondes"
+      },
+      {
+        "text": "El niño se escondió debajo de la cama.",
+        "translation": "The child hid under the bed.",
+        "cloze": "escondió"
+      },
+      {
+        "text": "Has escondido mis zapatos, ¿verdad?",
+        "translation": "You've hidden my shoes, haven't you?",
+        "cloze": "escondido"
+      },
+      {
+        "text": "¡Escóndete, que viene!",
+        "translation": "Hide, he's coming!",
+        "cloze": "Escóndete"
+      }
+    ]
+  },
+  {
+    "lemma": "aceite",
+    "gloss": "oil",
+    "pos": "noun",
+    "forms": [
+      "aceite",
+      "aceites"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Echa un poco de aceite a la ensalada.",
+        "translation": "Put a little oil on the salad.",
+        "cloze": "aceite"
+      },
+      {
+        "text": "Mezcla los dos aceites.",
+        "translation": "Mix the two oils.",
+        "cloze": "aceites"
+      },
+      {
+        "text": "El coche pierde aceite.",
+        "translation": "The car is leaking oil.",
+        "cloze": "aceite"
+      }
+    ]
+  },
+  {
+    "lemma": "punta",
+    "gloss": "tip, point; end",
+    "pos": "noun",
+    "forms": [
+      "punta",
+      "puntas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Lo tengo en la punta de la lengua.",
+        "translation": "It's on the tip of my tongue.",
+        "cloze": "punta"
+      },
+      {
+        "text": "Vive en la otra punta de la ciudad.",
+        "translation": "She lives at the other end of town.",
+        "cloze": "punta"
+      },
+      {
+        "text": "Toca las puntas de los pies.",
+        "translation": "Touch your toes.",
+        "cloze": "puntas"
+      }
+    ]
+  },
+  {
+    "lemma": "cinturón",
+    "gloss": "belt; seatbelt",
+    "pos": "noun",
+    "forms": [
+      "cinturón",
+      "cinturones"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "En el coche, siempre llevo el cinturón.",
+        "translation": "In the car, I always wear my seatbelt.",
+        "cloze": "cinturón"
+      },
+      {
+        "text": "Necesito un cinturón para estos pantalones.",
+        "translation": "I need a belt for these trousers.",
+        "cloze": "cinturón"
+      },
+      {
+        "text": "Estos cinturones son de cuero.",
+        "translation": "These belts are leather.",
+        "cloze": "cinturones"
+      }
+    ]
+  },
+  {
+    "lemma": "chiste",
+    "gloss": "joke (a funny story)",
+    "pos": "noun",
+    "forms": [
+      "chiste",
+      "chistes"
+    ],
+    "notes": "A chiste is a joke you tell; a broma is a joke you play or make.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Cuéntame un chiste.",
+        "translation": "Tell me a joke.",
+        "cloze": "chiste"
+      },
+      {
+        "text": "Mi padre cuenta chistes muy malos.",
+        "translation": "My dad tells really bad jokes.",
+        "cloze": "chistes"
+      },
+      {
+        "text": "No entendí el chiste.",
+        "translation": "I didn't get the joke.",
+        "cloze": "chiste"
+      }
+    ]
+  },
+  {
+    "lemma": "consecuencia",
+    "gloss": "consequence, result",
+    "pos": "noun",
+    "forms": [
+      "consecuencia",
+      "consecuencias"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Todo tiene consecuencias.",
+        "translation": "Everything has consequences.",
+        "cloze": "consecuencias"
+      },
+      {
+        "text": "Tendrás que aceptar las consecuencias.",
+        "translation": "You'll have to accept the consequences.",
+        "cloze": "consecuencias"
+      },
+      {
+        "text": "Como consecuencia, perdió el trabajo.",
+        "translation": "As a consequence, he lost his job.",
+        "cloze": "consecuencia"
+      }
+    ]
+  },
+  {
+    "lemma": "sinceramente",
+    "gloss": "sincerely; honestly",
+    "pos": "adv",
+    "forms": [
+      "sinceramente"
+    ],
+    "notes": "Honestamente means the same.",
+    "sentences": [
+      {
+        "text": "Espero sinceramente que te vaya bien.",
+        "translation": "I sincerely hope things go well for you.",
+        "cloze": "sinceramente"
+      },
+      {
+        "text": "Te lo agradezco sinceramente.",
+        "translation": "I'm truly grateful to you.",
+        "cloze": "sinceramente"
+      },
+      {
+        "text": "¿Sinceramente? Me parece caro.",
+        "translation": "Honestly? I think it's expensive.",
+        "cloze": "Sinceramente"
+      }
+    ]
+  },
+  {
+    "lemma": "vaca",
+    "gloss": "cow",
+    "pos": "noun",
+    "forms": [
+      "vaca",
+      "vacas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Vimos vacas desde el tren.",
+        "translation": "We saw cows from the train.",
+        "cloze": "vacas"
+      },
+      {
+        "text": "La leche de vaca no me sienta bien.",
+        "translation": "Cow's milk doesn't agree with me.",
+        "cloze": "vaca"
+      },
+      {
+        "text": "La vaca se comió las flores del jardín.",
+        "translation": "The cow ate the flowers in the garden.",
+        "cloze": "vaca"
+      }
+    ]
+  },
+  {
+    "lemma": "investigar",
+    "gloss": "to investigate; to research",
+    "pos": "verb",
+    "forms": [
+      "investigar",
+      "investiga",
+      "investigan",
+      "investigando",
+      "investigó",
+      "investigado"
+    ],
+    "sentences": [
+      {
+        "text": "Mi hermana investiga el cáncer.",
+        "translation": "My sister does cancer research.",
+        "cloze": "investiga"
+      },
+      {
+        "text": "¿Quién está investigando el accidente?",
+        "translation": "Who's investigating the accident?",
+        "cloze": "investigando"
+      },
+      {
+        "text": "Nadie investigó su muerte.",
+        "translation": "Nobody investigated his death.",
+        "cloze": "investigó"
+      }
+    ]
+  },
+  {
+    "lemma": "apellido",
+    "gloss": "surname, last name",
+    "pos": "noun",
+    "forms": [
+      "apellido",
+      "apellidos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Tengo el apellido de mi madre.",
+        "translation": "I have my mother's surname.",
+        "cloze": "apellido"
+      },
+      {
+        "text": "En España tenemos dos apellidos.",
+        "translation": "In Spain we have two surnames.",
+        "cloze": "apellidos"
+      },
+      {
+        "text": "No sé cómo se escribe tu apellido.",
+        "translation": "I don't know how to spell your surname.",
+        "cloze": "apellido"
+      }
+    ]
+  },
+  {
+    "lemma": "actual",
+    "gloss": "current, present",
+    "pos": "adj",
+    "forms": [
+      "actual",
+      "actuales"
+    ],
+    "notes": "False friend: actual means current, not real.",
+    "sentences": [
+      {
+        "text": "Estoy contento con mi trabajo actual.",
+        "translation": "I'm happy with my current job.",
+        "cloze": "actual"
+      },
+      {
+        "text": "La situación actual es difícil.",
+        "translation": "The current situation is difficult.",
+        "cloze": "actual"
+      },
+      {
+        "text": "Las casas actuales son más pequeñas.",
+        "translation": "Today's houses are smaller.",
+        "cloze": "actuales"
+      }
+    ]
+  },
+  {
+    "lemma": "instante",
+    "gloss": "instant, moment",
+    "pos": "noun",
+    "forms": [
+      "instante",
+      "instantes"
+    ],
+    "notes": "Momento means almost the same; an instante is a very short moment.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "En ese instante sonó el teléfono.",
+        "translation": "At that instant, the phone rang.",
+        "cloze": "instante"
+      },
+      {
+        "text": "Al instante supe que era ella.",
+        "translation": "I knew instantly that it was her.",
+        "cloze": "instante"
+      },
+      {
+        "text": "Durante un instante, nadie dijo nada.",
+        "translation": "For an instant, nobody said anything.",
+        "cloze": "instante"
+      }
+    ]
+  },
+  {
+    "lemma": "emoción",
+    "gloss": "emotion; excitement",
+    "pos": "noun",
+    "forms": [
+      "emoción",
+      "emociones"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "No puede controlar sus emociones.",
+        "translation": "He can't control his emotions.",
+        "cloze": "emociones"
+      },
+      {
+        "text": "Los niños esperan la Navidad con emoción.",
+        "translation": "The children are waiting for Christmas with excitement.",
+        "cloze": "emoción"
+      },
+      {
+        "text": "Con la emoción, se me olvidó tu regalo.",
+        "translation": "In all the excitement, I forgot your present.",
+        "cloze": "emoción"
+      }
+    ]
+  },
+  {
+    "lemma": "dormitorio",
+    "gloss": "bedroom",
+    "pos": "noun",
+    "forms": [
+      "dormitorio",
+      "dormitorios"
+    ],
+    "notes": "In everyday speech people often say habitación or cuarto.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Los dormitorios dan al jardín.",
+        "translation": "The bedrooms look out onto the garden.",
+        "cloze": "dormitorios"
+      },
+      {
+        "text": "El dormitorio de mis padres es el más grande.",
+        "translation": "My parents' bedroom is the biggest.",
+        "cloze": "dormitorio"
+      },
+      {
+        "text": "Los niños duermen en el mismo dormitorio.",
+        "translation": "The kids sleep in the same bedroom.",
+        "cloze": "dormitorio"
+      }
+    ]
+  },
+  {
+    "lemma": "pulso",
+    "gloss": "pulse; steady hand",
+    "pos": "noun",
+    "forms": [
+      "pulso"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Tiene el pulso muy débil.",
+        "translation": "His pulse is very weak.",
+        "cloze": "pulso"
+      },
+      {
+        "text": "No le encuentro el pulso.",
+        "translation": "I can't find his pulse.",
+        "cloze": "pulso"
+      },
+      {
+        "text": "Tengo buen pulso para dibujar.",
+        "translation": "I have a steady hand for drawing.",
+        "cloze": "pulso"
+      }
+    ]
+  },
+  {
+    "lemma": "atrever",
+    "gloss": "to dare (atreverse)",
+    "pos": "verb",
+    "forms": [
+      "atreverse",
+      "atreve",
+      "atrevo",
+      "atreves",
+      "atrevió",
+      "atreví",
+      "atrevas"
+    ],
+    "notes": "Always used as atreverse: me atrevo, te atreves.",
+    "sentences": [
+      {
+        "text": "Mi hermano pequeño no se atreve a saltar.",
+        "translation": "My little brother doesn't dare to jump.",
+        "cloze": "atreve"
+      },
+      {
+        "text": "Todavía no me atrevo a decírselo.",
+        "translation": "I still don't dare tell him.",
+        "cloze": "atrevo"
+      },
+      {
+        "text": "Nadie se atrevió a hablar.",
+        "translation": "Nobody dared to speak.",
+        "cloze": "atrevió"
+      },
+      {
+        "text": "¿Cómo te atreves a hablarme así?",
+        "translation": "How dare you speak to me like that?",
+        "cloze": "atreves"
+      }
+    ]
+  },
+  {
+    "lemma": "frase",
+    "gloss": "sentence; phrase",
+    "pos": "noun",
+    "forms": [
+      "frase",
+      "frases"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Repite la frase, por favor.",
+        "translation": "Repeat the sentence, please.",
+        "cloze": "frase"
+      },
+      {
+        "text": "Escribe tres frases con esta palabra.",
+        "translation": "Write three sentences with this word.",
+        "cloze": "frases"
+      },
+      {
+        "text": "Mi abuelo siempre dice esa frase.",
+        "translation": "My grandfather always says that phrase.",
+        "cloze": "frase"
+      }
+    ]
+  },
+  {
+    "lemma": "partida",
+    "gloss": "game, round (of cards, chess); start",
+    "pos": "noun",
+    "forms": [
+      "partida",
+      "partidas"
+    ],
+    "notes": "A football match is a partido, not a partida.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "¿Echamos una partida de cartas?",
+        "translation": "Shall we play a game of cards?",
+        "cloze": "partida"
+      },
+      {
+        "text": "Hemos jugado tres partidas y he ganado dos.",
+        "translation": "We've played three rounds and I've won two.",
+        "cloze": "partidas"
+      },
+      {
+        "text": "Esto es solo el punto de partida.",
+        "translation": "This is just the starting point.",
+        "cloze": "partida"
+      }
+    ]
+  },
+  {
+    "lemma": "despedir",
+    "gloss": "to fire; to see off; (despedirse) to say goodbye",
+    "pos": "verb",
+    "forms": [
+      "despedir",
+      "despedido",
+      "despidieron",
+      "despedimos",
+      "despedirse",
+      "despedirla",
+      "despídete",
+      "despido"
+    ],
+    "notes": "e changes to i in some forms: despido, despidieron.",
+    "sentences": [
+      {
+        "text": "Me han despedido del trabajo.",
+        "translation": "I've been fired from my job.",
+        "cloze": "despedido"
+      },
+      {
+        "text": "Fuimos al aeropuerto a despedirla.",
+        "translation": "We went to the airport to see her off.",
+        "cloze": "despedirla"
+      },
+      {
+        "text": "Nos despedimos en la puerta de casa.",
+        "translation": "We said goodbye at the front door.",
+        "cloze": "despedimos"
+      },
+      {
+        "text": "Despídete de tus amigos, nos vamos.",
+        "translation": "Say goodbye to your friends, we're leaving.",
+        "cloze": "Despídete"
+      }
+    ]
+  },
+  {
+    "lemma": "moral",
+    "gloss": "moral",
+    "pos": "adj",
+    "forms": [
+      "moral",
+      "morales"
+    ],
+    "sentences": [
+      {
+        "text": "Tengo la obligación moral de ayudarle.",
+        "translation": "I have a moral duty to help him.",
+        "cloze": "moral"
+      },
+      {
+        "text": "Le dimos apoyo moral.",
+        "translation": "We gave him moral support.",
+        "cloze": "moral"
+      },
+      {
+        "text": "Tiene principios morales muy fuertes.",
+        "translation": "He has very strong moral principles.",
+        "cloze": "morales"
+      }
+    ]
+  },
+  {
+    "lemma": "asalto",
+    "gloss": "assault, raid; round (in boxing)",
+    "pos": "noun",
+    "forms": [
+      "asalto",
+      "asaltos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "El asalto a la ciudad duró tres días.",
+        "translation": "The assault on the city lasted three days.",
+        "cloze": "asalto"
+      },
+      {
+        "text": "Ganó el combate en el tercer asalto.",
+        "translation": "He won the fight in the third round.",
+        "cloze": "asalto"
+      },
+      {
+        "text": "Fue un combate de doce asaltos.",
+        "translation": "It was a twelve-round fight.",
+        "cloze": "asaltos"
+      }
+    ]
+  },
+  {
+    "lemma": "decente",
+    "gloss": "decent, respectable",
+    "pos": "adj",
+    "forms": [
+      "decente",
+      "decentes"
+    ],
+    "sentences": [
+      {
+        "text": "Busco un trabajo con un sueldo decente.",
+        "translation": "I'm looking for a job with a decent salary.",
+        "cloze": "decente"
+      },
+      {
+        "text": "Ponte algo decente, que vamos a cenar fuera.",
+        "translation": "Put on something decent, we're eating out.",
+        "cloze": "decente"
+      },
+      {
+        "text": "Aquí no hay hoteles decentes.",
+        "translation": "There are no decent hotels here.",
+        "cloze": "decentes"
+      }
+    ]
+  },
+  {
+    "lemma": "asustar",
+    "gloss": "to scare, to frighten",
+    "pos": "verb",
+    "forms": [
+      "asustar",
+      "asusta",
+      "asustas",
+      "asustes",
+      "asustó",
+      "asusté",
+      "asustaste"
+    ],
+    "notes": "asustarse = to get scared: me asusté = I got scared.",
+    "sentences": [
+      {
+        "text": "Me asusta conducir de noche.",
+        "translation": "Driving at night scares me.",
+        "cloze": "asusta"
+      },
+      {
+        "text": "El ruido asustó a los niños.",
+        "translation": "The noise frightened the children.",
+        "cloze": "asustó"
+      },
+      {
+        "text": "¡Qué susto! No me asustes así.",
+        "translation": "What a fright! Don't scare me like that.",
+        "cloze": "asustes"
+      }
+    ]
+  },
+  {
+    "lemma": "combustible",
+    "gloss": "fuel",
+    "pos": "noun",
+    "forms": [
+      "combustible",
+      "combustibles"
+    ],
+    "notes": "For a car, people usually say gasolina.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Nos estamos quedando sin combustible.",
+        "translation": "We're running out of fuel.",
+        "cloze": "combustible"
+      },
+      {
+        "text": "El precio del combustible ha subido.",
+        "translation": "The price of fuel has gone up.",
+        "cloze": "combustible"
+      },
+      {
+        "text": "El avión necesita más combustible.",
+        "translation": "The plane needs more fuel.",
+        "cloze": "combustible"
+      }
+    ]
+  },
+  {
+    "lemma": "discusión",
+    "gloss": "argument; discussion",
+    "pos": "noun",
+    "forms": [
+      "discusión",
+      "discusiones"
+    ],
+    "notes": "Usually it means an argument, not a calm talk.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Tuvimos una discusión muy fuerte.",
+        "translation": "We had a big argument.",
+        "cloze": "discusión"
+      },
+      {
+        "text": "En las comidas familiares siempre hay discusiones.",
+        "translation": "There are always arguments at family meals.",
+        "cloze": "discusiones"
+      },
+      {
+        "text": "Después de la charla hubo una discusión interesante.",
+        "translation": "After the talk there was an interesting discussion.",
+        "cloze": "discusión"
+      }
+    ]
+  },
+  {
+    "lemma": "pata",
+    "gloss": "leg, paw (of an animal or furniture)",
+    "pos": "noun",
+    "forms": [
+      "pata",
+      "patas"
+    ],
+    "notes": "Pierna is for people; pata is for animals and furniture.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Me he dado un golpe con la pata de la cama.",
+        "translation": "I banged myself on the leg of the bed.",
+        "cloze": "pata"
+      },
+      {
+        "text": "Los perros tienen cuatro patas.",
+        "translation": "Dogs have four legs.",
+        "cloze": "patas"
+      },
+      {
+        "text": "El gato tiene una pata blanca.",
+        "translation": "The cat has one white paw.",
+        "cloze": "pata"
+      }
+    ]
+  },
+  {
+    "lemma": "requerir",
+    "gloss": "to require, to need",
+    "pos": "verb",
+    "forms": [
+      "requerir",
+      "requiere",
+      "requieren",
+      "requería",
+      "requerido"
+    ],
+    "notes": "e changes to ie in some forms: requiere.",
+    "sentences": [
+      {
+        "text": "Este trabajo requiere mucha paciencia.",
+        "translation": "This job requires a lot of patience.",
+        "cloze": "requiere"
+      },
+      {
+        "text": "¿Qué documentos se requieren?",
+        "translation": "What documents are required?",
+        "cloze": "requieren"
+      },
+      {
+        "text": "El viaje requería mucha preparación.",
+        "translation": "The trip required a lot of preparation.",
+        "cloze": "requería"
+      }
+    ]
+  },
+  {
+    "lemma": "comunicación",
+    "gloss": "communication",
+    "pos": "noun",
+    "forms": [
+      "comunicación",
+      "comunicaciones"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "En una pareja, la comunicación es muy importante.",
+        "translation": "In a relationship, communication is very important.",
+        "cloze": "comunicación"
+      },
+      {
+        "text": "Hay problemas de comunicación entre los dos equipos.",
+        "translation": "There are communication problems between the two teams.",
+        "cloze": "comunicación"
+      },
+      {
+        "text": "Las comunicaciones con la isla son difíciles.",
+        "translation": "Communications with the island are difficult.",
+        "cloze": "comunicaciones"
+      }
+    ]
+  },
+  {
+    "lemma": "sed",
+    "gloss": "thirst",
+    "pos": "noun",
+    "forms": [
+      "sed"
+    ],
+    "notes": "tener sed = to be thirsty.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Bebe agua antes de tener sed.",
+        "translation": "Drink water before you get thirsty.",
+        "cloze": "sed"
+      },
+      {
+        "text": "Correr me da sed.",
+        "translation": "Running makes me thirsty.",
+        "cloze": "sed"
+      },
+      {
+        "text": "Los perros tenían sed después del paseo.",
+        "translation": "The dogs were thirsty after the walk.",
+        "cloze": "sed"
+      }
+    ]
+  },
+  {
+    "lemma": "joya",
+    "gloss": "jewel, piece of jewellery; gem (a great person)",
+    "pos": "noun",
+    "forms": [
+      "joya",
+      "joyas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Le robaron todas sus joyas.",
+        "translation": "They stole all her jewellery.",
+        "cloze": "joyas"
+      },
+      {
+        "text": "Este anillo es la única joya que tengo.",
+        "translation": "This ring is the only piece of jewellery I have.",
+        "cloze": "joya"
+      },
+      {
+        "text": "Tu hijo es una joya.",
+        "translation": "Your son is a gem.",
+        "cloze": "joya"
+      }
+    ]
+  },
+  {
+    "lemma": "noble",
+    "gloss": "noble; good-natured",
+    "pos": "adj",
+    "forms": [
+      "noble",
+      "nobles"
+    ],
+    "sentences": [
+      {
+        "text": "Lo hizo por una causa noble.",
+        "translation": "He did it for a noble cause.",
+        "cloze": "noble"
+      },
+      {
+        "text": "Viene de una familia noble.",
+        "translation": "She comes from a noble family.",
+        "cloze": "noble"
+      },
+      {
+        "text": "Los caballos son animales nobles.",
+        "translation": "Horses are good-natured animals.",
+        "cloze": "nobles"
+      }
+    ]
+  },
+  {
+    "lemma": "traidor",
+    "gloss": "traitor",
+    "pos": "noun",
+    "forms": [
+      "traidor",
+      "traidora",
+      "traidores"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Lo llamaron traidor por irse al otro equipo.",
+        "translation": "They called him a traitor for joining the other team.",
+        "cloze": "traidor"
+      },
+      {
+        "text": "En la película, el traidor es su mejor amigo.",
+        "translation": "In the film, the traitor is his best friend.",
+        "cloze": "traidor"
+      },
+      {
+        "text": "Nadie quiere a los traidores.",
+        "translation": "Nobody likes traitors.",
+        "cloze": "traidores"
+      }
+    ]
+  },
+  {
+    "lemma": "letra",
+    "gloss": "letter (of the alphabet); handwriting; lyrics",
+    "pos": "noun",
+    "forms": [
+      "letra",
+      "letras"
+    ],
+    "notes": "A letter you send is a carta.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "La palabra tiene cinco letras.",
+        "translation": "The word has five letters.",
+        "cloze": "letras"
+      },
+      {
+        "text": "No entiendo tu letra.",
+        "translation": "I can't read your handwriting.",
+        "cloze": "letra"
+      },
+      {
+        "text": "¿Te sabes la letra de esta canción?",
+        "translation": "Do you know the lyrics of this song?",
+        "cloze": "letra"
+      }
+    ]
+  },
+  {
+    "lemma": "vía",
+    "gloss": "track (railway)",
+    "pos": "noun",
+    "forms": [
+      "vía",
+      "vías"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "El tren sale por la vía dos.",
+        "translation": "The train leaves from track two.",
+        "cloze": "vía"
+      },
+      {
+        "text": "Hay un gato en las vías.",
+        "translation": "There's a cat on the tracks.",
+        "cloze": "vías"
+      },
+      {
+        "text": "Está prohibido cruzar la vía.",
+        "translation": "It's forbidden to cross the railway track.",
+        "cloze": "vía"
+      }
+    ]
+  },
+  {
+    "lemma": "sacerdote",
+    "gloss": "priest",
+    "pos": "noun",
+    "forms": [
+      "sacerdote",
+      "sacerdotes"
+    ],
+    "notes": "In everyday Spanish, a priest is usually a cura.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "El sacerdote los casó en la iglesia.",
+        "translation": "The priest married them in the church.",
+        "cloze": "sacerdote"
+      },
+      {
+        "text": "Mi tío quería ser sacerdote.",
+        "translation": "My uncle wanted to be a priest.",
+        "cloze": "sacerdote"
+      },
+      {
+        "text": "Los sacerdotes vivían en el templo.",
+        "translation": "The priests lived in the temple.",
+        "cloze": "sacerdotes"
+      }
+    ]
+  },
+  {
+    "lemma": "resistencia",
+    "gloss": "resistance; stamina",
+    "pos": "noun",
+    "forms": [
+      "resistencia",
+      "resistencias"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Tiene mucha resistencia: corre veinte kilómetros.",
+        "translation": "She has a lot of stamina: she runs twenty kilometres.",
+        "cloze": "resistencia"
+      },
+      {
+        "text": "El ejército encontró poca resistencia.",
+        "translation": "The army met little resistance.",
+        "cloze": "resistencia"
+      },
+      {
+        "text": "Mi abuelo luchó en la resistencia.",
+        "translation": "My grandfather fought in the resistance.",
+        "cloze": "resistencia"
+      }
+    ]
+  },
+  {
+    "lemma": "arroz",
+    "gloss": "rice",
+    "pos": "noun",
+    "forms": [
+      "arroz"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "En Valencia se come mucho arroz.",
+        "translation": "In Valencia people eat a lot of rice.",
+        "cloze": "arroz"
+      },
+      {
+        "text": "El arroz necesita veinte minutos.",
+        "translation": "The rice needs twenty minutes.",
+        "cloze": "arroz"
+      },
+      {
+        "text": "El arroz se ha quemado.",
+        "translation": "The rice has burnt.",
+        "cloze": "arroz"
+      }
+    ]
+  },
+  {
+    "lemma": "desconocido",
+    "gloss": "unknown",
+    "pos": "adj",
+    "forms": [
+      "desconocido",
+      "desconocida",
+      "desconocidos",
+      "desconocidas"
+    ],
+    "notes": "un desconocido = a stranger.",
+    "sentences": [
+      {
+        "text": "Me ha llamado un número desconocido.",
+        "translation": "I've had a call from an unknown number.",
+        "cloze": "desconocido"
+      },
+      {
+        "text": "Los motivos todavía son desconocidos.",
+        "translation": "The reasons are still unknown.",
+        "cloze": "desconocidos"
+      },
+      {
+        "text": "No abras la puerta a gente desconocida.",
+        "translation": "Don't open the door to people you don't know.",
+        "cloze": "desconocida"
+      }
+    ]
+  },
+  {
+    "lemma": "mínimo",
+    "gloss": "minimum; slightest",
+    "pos": "adj",
+    "forms": [
+      "mínimo",
+      "mínima",
+      "mínimos",
+      "mínimas"
+    ],
+    "notes": "como mínimo = at least.",
+    "sentences": [
+      {
+        "text": "El salario mínimo ha subido este año.",
+        "translation": "The minimum wage has gone up this year.",
+        "cloze": "mínimo"
+      },
+      {
+        "text": "No tengo la más mínima idea.",
+        "translation": "I haven't the slightest idea.",
+        "cloze": "mínima"
+      },
+      {
+        "text": "Los cambios son mínimos.",
+        "translation": "The changes are minimal.",
+        "cloze": "mínimos"
+      }
+    ]
+  },
+  {
+    "lemma": "bandera",
+    "gloss": "flag",
+    "pos": "noun",
+    "forms": [
+      "bandera",
+      "banderas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "España tiene una bandera roja y amarilla.",
+        "translation": "Spain has a red and yellow flag.",
+        "cloze": "bandera"
+      },
+      {
+        "text": "Había banderas en todas las ventanas.",
+        "translation": "There were flags in every window.",
+        "cloze": "banderas"
+      },
+      {
+        "text": "¿De qué país es esta bandera?",
+        "translation": "Which country is this flag from?",
+        "cloze": "bandera"
+      }
+    ]
+  },
+  {
+    "lemma": "plaza",
+    "gloss": "square; place (at a university, on a course)",
+    "pos": "noun",
+    "forms": [
+      "plaza",
+      "plazas"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Nos vemos en la plaza mayor.",
+        "translation": "See you in the main square.",
+        "cloze": "plaza"
+      },
+      {
+        "text": "Me han dado una plaza en la universidad.",
+        "translation": "I've got a place at university.",
+        "cloze": "plaza"
+      },
+      {
+        "text": "En el centro hay varias plazas con fuentes.",
+        "translation": "In the centre there are several squares with fountains.",
+        "cloze": "plazas"
+      }
+    ]
+  },
+  {
+    "lemma": "planear",
+    "gloss": "to plan",
+    "pos": "verb",
+    "forms": [
+      "planear",
+      "planeando",
+      "planeado",
+      "planea",
+      "planeamos",
+      "planeó"
+    ],
+    "sentences": [
+      {
+        "text": "Planeamos ir a la playa en agosto.",
+        "translation": "We're planning to go to the beach in August.",
+        "cloze": "Planeamos"
+      },
+      {
+        "text": "¿Qué estás planeando?",
+        "translation": "What are you planning?",
+        "cloze": "planeando"
+      },
+      {
+        "text": "Lo tenían todo planeado.",
+        "translation": "They had it all planned.",
+        "cloze": "planeado"
+      }
+    ]
+  },
+  {
+    "lemma": "imperio",
+    "gloss": "empire",
+    "pos": "noun",
+    "forms": [
+      "imperio",
+      "imperios"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "El Imperio romano era enorme.",
+        "translation": "The Roman Empire was huge.",
+        "cloze": "Imperio"
+      },
+      {
+        "text": "Construyó un imperio con sus hoteles.",
+        "translation": "He built an empire with his hotels.",
+        "cloze": "imperio"
+      },
+      {
+        "text": "Tarde o temprano, todos los imperios caen.",
+        "translation": "Sooner or later, all empires fall.",
+        "cloze": "imperios"
+      }
+    ]
+  },
+  {
+    "lemma": "cartera",
+    "gloss": "wallet; school bag, briefcase",
+    "pos": "noun",
+    "forms": [
+      "cartera",
+      "carteras"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "No llevo dinero en la cartera.",
+        "translation": "I don't have any money in my wallet.",
+        "cloze": "cartera"
+      },
+      {
+        "text": "Llevo la cartera en el bolsillo de atrás.",
+        "translation": "I keep my wallet in my back pocket.",
+        "cloze": "cartera"
+      },
+      {
+        "text": "Los niños van al colegio con sus carteras.",
+        "translation": "The kids go to school with their school bags.",
+        "cloze": "carteras"
+      }
+    ]
+  },
+  {
+    "lemma": "depósito",
+    "gloss": "tank; deposit",
+    "pos": "noun",
+    "forms": [
+      "depósito",
+      "depósitos"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Llena el depósito, por favor.",
+        "translation": "Fill up the tank, please.",
+        "cloze": "depósito"
+      },
+      {
+        "text": "Hay que pagar un depósito de cien euros.",
+        "translation": "You have to pay a hundred-euro deposit.",
+        "cloze": "depósito"
+      },
+      {
+        "text": "En el tejado hay dos depósitos de agua.",
+        "translation": "There are two water tanks on the roof.",
+        "cloze": "depósitos"
+      }
+    ]
+  },
+  {
+    "lemma": "periodista",
+    "gloss": "journalist",
+    "pos": "noun",
+    "forms": [
+      "periodista",
+      "periodistas"
+    ],
+    "gender": "mf",
+    "sentences": [
+      {
+        "text": "De mayor quiero ser periodista.",
+        "translation": "When I grow up I want to be a journalist.",
+        "cloze": "periodista"
+      },
+      {
+        "text": "Había muchos periodistas en la puerta.",
+        "translation": "There were many journalists at the door.",
+        "cloze": "periodistas"
+      },
+      {
+        "text": "El periodista me hizo muchas preguntas.",
+        "translation": "The journalist asked me a lot of questions.",
+        "cloze": "periodista"
+      }
+    ]
+  },
+  {
+    "lemma": "comprobar",
+    "gloss": "to make sure, to verify",
+    "pos": "verb",
+    "forms": [
+      "comprobar",
+      "compruebo",
+      "comprueba",
+      "compruébalo",
+      "comprobó",
+      "comprobado"
+    ],
+    "notes": "o changes to ue in some forms: compruebo.",
+    "sentences": [
+      {
+        "text": "Comprueba que el gas está apagado.",
+        "translation": "Make sure the gas is off.",
+        "cloze": "Comprueba"
+      },
+      {
+        "text": "El inspector comprobó su historia.",
+        "translation": "The inspector verified his story.",
+        "cloze": "comprobó"
+      },
+      {
+        "text": "Compruébalo tú mismo.",
+        "translation": "See for yourself.",
+        "cloze": "Compruébalo"
+      }
+    ]
+  },
+  {
+    "lemma": "forense",
+    "gloss": "forensic",
+    "pos": "adj",
+    "forms": [
+      "forense",
+      "forenses"
+    ],
+    "notes": "el forense = the medical examiner.",
+    "sentences": [
+      {
+        "text": "El médico forense llegó a las diez.",
+        "translation": "The medical examiner arrived at ten.",
+        "cloze": "forense"
+      },
+      {
+        "text": "Esperamos el informe forense.",
+        "translation": "We're waiting for the forensic report.",
+        "cloze": "forense"
+      },
+      {
+        "text": "Los equipos forenses ya están en la casa.",
+        "translation": "The forensic teams are already at the house.",
+        "cloze": "forenses"
+      }
+    ]
+  },
+  {
+    "lemma": "tensión",
+    "gloss": "tension; blood pressure",
+    "pos": "noun",
+    "forms": [
+      "tensión",
+      "tensiones"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Había mucha tensión en la reunión.",
+        "translation": "There was a lot of tension in the meeting.",
+        "cloze": "tensión"
+      },
+      {
+        "text": "Con la edad, sube la tensión.",
+        "translation": "Blood pressure goes up with age.",
+        "cloze": "tensión"
+      },
+      {
+        "text": "Hay tensiones entre los dos países.",
+        "translation": "There are tensions between the two countries.",
+        "cloze": "tensiones"
+      }
+    ]
+  },
+  {
+    "lemma": "involucrado",
+    "gloss": "involved",
+    "pos": "adj",
+    "forms": [
+      "involucrado",
+      "involucrada",
+      "involucrados",
+      "involucradas"
+    ],
+    "sentences": [
+      {
+        "text": "No quiero estar involucrado en esto.",
+        "translation": "I don't want to be involved in this.",
+        "cloze": "involucrado"
+      },
+      {
+        "text": "¿Está tu hermana involucrada?",
+        "translation": "Is your sister involved?",
+        "cloze": "involucrada"
+      },
+      {
+        "text": "Tres coches estuvieron involucrados en el accidente.",
+        "translation": "Three cars were involved in the accident.",
+        "cloze": "involucrados"
+      }
+    ]
+  }
+]
