@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { COURSE_LANGUAGES } from "../content/languages";
-import type { DeckLang } from "../deck/schema";
+import type { DeckLang } from "../deck/langs";
 
 export default function DevTools() {
   const [lang, setLang] = useState<DeckLang>("es");

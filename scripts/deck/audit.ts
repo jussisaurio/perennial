@@ -21,7 +21,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Schema } from "effect";
-import { DECK_LANGS, Deck, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
+import { DECK_LANGS } from "../../web/src/deck/langs.ts";
+import { Deck, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
 import { language } from "../../web/src/content/languages.ts";
 import { courseOrder } from "../../web/src/content/order.ts";
 import { formKey, tokenize } from "../../web/src/content/text.ts";

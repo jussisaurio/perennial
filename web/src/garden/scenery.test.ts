@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { DECK_LANGS } from "../deck/schema";
+import { DECK_LANGS } from "../deck/langs";
 import { VISITORS, STRIP_VISITORS } from "./visitors";
 import {
   boardBox,

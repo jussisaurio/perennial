@@ -6,10 +6,6 @@
 
 import { Schema } from "effect";
 
-export const DECK_LANGS = ["es", "de"] as const;
-export type DeckLang = (typeof DECK_LANGS)[number];
-export const isDeckLang = (s: string): s is DeckLang => (DECK_LANGS as readonly string[]).includes(s);
-
 /** Parts of speech, as decks spell them. Groupings (garden beds, course order) are built from these. */
 export const POS = ["noun", "verb", "adj", "adv", "pron", "prep", "conj", "det", "num", "particle", "phrase", "interj"] as const;
 export type Pos = (typeof POS)[number];

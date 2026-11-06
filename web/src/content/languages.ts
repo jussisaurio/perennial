@@ -2,7 +2,7 @@
 // language. `tag` is the BCP 47 tag used for speech synthesis and word
 // segmentation.
 
-import { DECK_LANGS, isDeckLang, type DeckLang } from "../deck/schema";
+import { DECK_LANGS, isDeckLang, type DeckLang } from "../deck/langs";
 
 export interface Language {
   code: string;
