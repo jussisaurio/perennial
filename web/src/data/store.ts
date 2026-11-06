@@ -25,6 +25,7 @@ import { ApiError, HttpError, request } from "./http";
 import { reportBadAnswer, reportError } from "../observability";
 import { Learners } from "./learner";
 import { makeTable } from "./table";
+import { yieldToBrowser } from "../lib/yield";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import { OtherUser, sendQueued, shouldRetry } from "./send";
 import { tabLock } from "./tabLock";
@@ -91,19 +92,30 @@ export async function createStore(userId: string, email: string | null) {
       // Keep trying (paused while offline, at most 30 s apart) until the rows come: the screens wait for them.
       retry: (_count, e) => !signedOut(e),
     });
+  // Each table in its own task, and the learners after them: making a table
+  // starts its read, and all of it in one task was ~35 ms at CPU 10× (#569).
+  // The reads still share one request: scheduler.yield resumes ahead of the
+  // response. (Where it falls back to setTimeout, a late table may read again.)
+  const table = async <T>(make: () => T) => {
+    await yieldToBrowser();
+    return make();
+  };
   const collections = {
-    course: makeTable<CourseRow>("course", (r) => r.lang, read, sync.signal, signedOut),
-    review: makeTable<ReviewRow>("review", (r) => r.id, read, sync.signal, signedOut),
-    word_state: makeTable<WordStateRow>("word_state", (r) => r.word_id, read, sync.signal, signedOut),
-    user_word: makeTable<UserWordRow>("user_word", (r) => r.id, read, sync.signal, signedOut, (row) =>
-      syncedUserWord(row, (type) => reportBadAnswer("/api/rows user_word.forms", `forms: ${type}`)),
+    course: await table(() => makeTable<CourseRow>("course", (r) => r.lang, read, sync.signal, signedOut)),
+    review: await table(() => makeTable<ReviewRow>("review", (r) => r.id, read, sync.signal, signedOut)),
+    word_state: await table(() => makeTable<WordStateRow>("word_state", (r) => r.word_id, read, sync.signal, signedOut)),
+    user_word: await table(() =>
+      makeTable<UserWordRow>("user_word", (r) => r.id, read, sync.signal, signedOut, (row) =>
+        syncedUserWord(row, (type) => reportBadAnswer("/api/rows user_word.forms", `forms: ${type}`)),
+      ),
     ),
-    user_sentence: makeTable<UserSentenceRow>("user_sentence", (r) => r.id, read, sync.signal, signedOut),
+    user_sentence: await table(() => makeTable<UserSentenceRow>("user_sentence", (r) => r.id, read, sync.signal, signedOut)),
   };
   type Table = keyof typeof collections;
   const disposers = new Set<() => void>();
   const onDispose = (cb: () => void) => void disposers.add(cb);
   // Now, while the first read is under way: see Learners.
+  await yieldToBrowser();
   const learners = new Learners({ collections, onDispose });
   const stopSync = () => {
     // The read under way ends; aborting `sync` stops the tables applying it (makeTable) and the request itself.
