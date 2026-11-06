@@ -434,14 +434,24 @@ export function WordPlant({ word, s, stage, size = 96, className }: { word: stri
 }
 
 /** A plant as the 2D garden draws it: leaning as recall fades (the walk's lean too), with dots for listening and writing. */
-export function StripPlant({ p, scale, highlighted, look }: { p: GardenPlant; scale: number; highlighted: boolean; look?: { growth: number; form: number } }) {
+/** A plant's sprite (garden/plantCanvas.ts plantPng) and its box about the plant's foot. */
+export interface SpriteImage {
+  href: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export function StripPlant({ p, scale, highlighted, look, sprite }: { p: GardenPlant; scale: number; highlighted: boolean; look?: { growth: number; form: number }; sprite?: SpriteImage }) {
   // The glow and the dots follow the plant as drawn, also mid-replay.
   const h = (16 + 118 * (look?.growth ?? p.growth)) * sizeOf(meaningOf(p.lemma)) * scale;
   return (
     <g transform={`rotate(${leanDeg(p.id, p.r).toFixed(1)})`}>
       {highlighted && <circle className="glow" cy={-h} r={14 * scale} />}
       {/* look: a frame of the summary's replay, between how the plant looked and how it looks now. */}
-      {look ? <PlantForm word={p.lemma} growth={look.growth} form={look.form} scale={scale} /> : <Plant word={p.lemma} growth={p.growth} stage={p.stage} scale={scale} />}
+      {/* sprite: the same plant drawn by a worker, one element instead of ~25 (#486). */}
+      {look ? <PlantForm word={p.lemma} growth={look.growth} form={look.form} scale={scale} /> : sprite ? <image {...sprite} /> : <Plant word={p.lemma} growth={p.growth} stage={p.stage} scale={scale} />}
       {p.listen && <circle cx={4 * scale} cy={-h * 0.45} r={2.4 * scale} fill="var(--sky)" />}
       {p.write && <circle cx={-4 * scale} cy={-h * 0.62} r={2.4 * scale} fill="var(--persimmon)" />}
     </g>

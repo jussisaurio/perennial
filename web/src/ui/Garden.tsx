@@ -8,7 +8,9 @@ import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
 import { language } from "../content/languages";
-import { FORM, plantHeight, StripPlant } from "./plant";
+import { FORM, plantHeight, StripPlant, type SpriteImage } from "./plant";
+import { spriteBox } from "../garden/plantCanvas";
+import { drawSprites, spriteKey, stripSprite } from "../garden/stripSprites";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
 import { growthOf, leanDeg, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
@@ -205,6 +207,21 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
   }, [scrolls, edges]);
   const over = edges ? OVERSCAN : 0;
   const visible = scrolls ? layout.filter((l) => l.x > scrollX - over && l.x < scrollX + width + over) : layout;
+  // Each plant in view is one <image> drawn by a worker (#486): as SVG it was ~25 elements, each costing style and layout.
+  const dpr = window.devicePixelRatio;
+  const plantScale = layout[0]?.scale ?? 1; // no plants: nothing to draw at any scale
+  const [, setSpritesIn] = useState(0);
+  const sprites = new Map<string, SpriteImage>();
+  const missing: GardenPlant[] = [];
+  for (const { p } of visible) {
+    const href = stripSprite(spriteKey(p, plantScale, dpr));
+    if (href) sprites.set(p.id, { href, ...spriteBox(plantScale, dpr) });
+    else missing.push(p);
+  }
+  const missingKey = missing.map((p) => spriteKey(p, plantScale, dpr)).join("\n");
+  useEffect(() => {
+    if (missing.length) void drawSprites(missing, plantScale, dpr).then(() => setSpritesIn((n) => n + 1));
+  }, [missingKey]); // eslint-disable-line react-hooks/exhaustive-deps -- `missing`, the scale and dpr change only with this key
   const seeds = Math.min(data?.seeds ?? 0, 24);
   const blooming = data?.plants.filter((p) => p.stage === "bloom").length ?? 0;
   // The landing page's garden is a sample: counts would read as someone's real progress (#261).
@@ -245,8 +262,11 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
                   <g key={perk.id === p.id ? `perk${perk.n}` : `late${perk.n}`} className={perk.id === p.id ? "perk" : "perk late"}>
                     <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
                   </g>
-                ) : (
+                ) : replaying.look(p) ? (
                   <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
+                ) : (
+                  // Standing still: its sprite, once the worker has drawn it. Until then an empty slot, so nothing moves.
+                  sprites.has(p.id) && <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} sprite={sprites.get(p.id)} />
                 )}
                 {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
                 {/* generous invisible hit area */}
