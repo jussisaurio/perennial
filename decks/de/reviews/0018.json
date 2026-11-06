@@ -1,0 +1,9 @@
+{
+  "file": "source/0018.json",
+  "sha256": "4fa2c1a4ec1bb7c1672225c85c273f3460d8631a1ba125a4c5d21626f30754b5",
+  "author": "claude-agent:de-author-0018-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0018-2026-11-06",
+  "reviewedAt": "2026-11-06",
+  "verdict": "approved",
+  "notes": "100 entries proofread; 25 fixes applied (17 near-copies/reused frames, 2 variety, 4 translation/gloss, 1 colon capital, 1 naturalness); all re-checked ok"
+}
