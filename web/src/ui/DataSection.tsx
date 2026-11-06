@@ -47,7 +47,10 @@ function DeleteAccount({ lang }: { lang: string }) {
           This deletes your account, your garden and everything stored on our server. <strong>You cannot undo this.</strong> Download your data first if you want to keep a copy.
         </p>
         <label>
-          Type <strong>delete</strong> to confirm
+          {/* One span: labels here lay out their children as a grid, so bare text and <strong> took a line each. */}
+          <span>
+            Type <strong>delete</strong> to confirm
+          </span>
           <input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
         </label>
         <div className="row">
