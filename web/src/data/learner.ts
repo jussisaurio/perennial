@@ -14,7 +14,7 @@ import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, SKILLS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
 import type { Gender, GardenWord, OrchardWord } from "../deck/schema";
-import type { GardenLeft } from "perennial-contract";
+import { NO_LEFT, type GardenLeft } from "perennial-contract";
 
 export interface Sentence {
   id: string;
@@ -498,7 +498,7 @@ export function saveCourse(store: Store, lang: string, patch: Partial<Pick<Cours
         Object.assign(d, patch);
       });
     // The app no longer reads `minutes` (5 a day for everyone); older app versions still do.
-    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, door_open: false, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
+    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, door_open: false, garden_left: NO_LEFT, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
   });
 }
 

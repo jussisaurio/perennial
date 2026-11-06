@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { standBy } from "./helpers";
+import { readRowsAgain, standBy } from "./helpers";
 
 // #335 S6, the wishing well: carry a pebble from the pond, through the open
 // door, to the well at the far end of the orchard's path, and drop it in. A
@@ -36,7 +36,8 @@ test("carry a pebble through the door to the well and drop it in: the echo says 
     const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
     await postWrite([{ type: "course.upsert", row: { lang: "es", door_open: true } }]);
   });
-  await page.goto("/#/today");
+  // The demo already moved the page to /#/today, so going there again would not reload it.
+  await readRowsAgain(page);
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
