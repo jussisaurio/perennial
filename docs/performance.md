@@ -48,6 +48,8 @@ Output is in `web/perf/out/`. `report.md` has one table and then a section per s
 - **Took ms, p95 frame ms, Frames > 50 ms, JS heap MB, DOM nodes**: the time the scenario took, frame times from requestAnimationFrame, and memory and DOM size at the end.
 - **Self time per function**: from the CPU profile, the functions that took the most time themselves.
 
+A long frame whose script is "(anonymous) (no source URL)" from a FrameRequestCallback is the harness's own frame counter. It is not slow itself. Chrome slows the CPU by pausing the page when JS next runs, so the pause for earlier work (style, layout, parsing) can land in that callback. In the trace it shows as `V8.InvokeApiInterruptCallbacks`. Count it as time the page was busy, but look at the work before it.
+
 For each screen, the run with the most time over budget saves its Chrome trace (`*.trace.json`) and CPU profile (`*.cpuprofile`). Drag them into Chrome DevTools → Performance.
 
 The 3D walk uses software WebGL in headless Chrome, so its frame times are worse than on a real GPU.
