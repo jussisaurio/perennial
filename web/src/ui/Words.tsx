@@ -11,6 +11,7 @@ import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useScrollMargin } from "./useScrollMargin";
+import { noForcedLayout } from "./virtualRows";
 import { useShortcut } from "./useShortcut";
 import { RadioChips } from "./arrows";
 import { AddScreen } from "./Add";
@@ -51,7 +52,7 @@ function VirtualWords<T extends { l: Word }>({ rows, render }: { rows: T[]; rend
   // the overscan rows fill the view meanwhile.
   // The virtualizer cannot be memoized, so React Compiler skips this component: the warning says only that.
   // oxlint-disable-next-line react/incompatible-library
-  const v = useWindowVirtualizer({ count: rows.length, estimateSize: () => 54, overscan: 8, scrollMargin: offset, getItemKey: (i) => rows[i].l.id, useFlushSync: false });
+  const v = useWindowVirtualizer({ count: rows.length, estimateSize: () => 54, overscan: 8, scrollMargin: offset, getItemKey: (i) => rows[i].l.id, useFlushSync: false, ...noForcedLayout });
   return (
     <ul className="words" ref={list} style={{ height: v.getTotalSize(), position: "relative" }}>
       {v.getVirtualItems().map((item) => (
