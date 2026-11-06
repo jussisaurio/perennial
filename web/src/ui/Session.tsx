@@ -432,7 +432,7 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
       {/* It stays when the answer shows, so the card does not jump. */}
       {hint && <p className="hint">Think of the meaning first. Then show the answer and say honestly if you remembered it. Forgetting is normal.</p>}
       {listen && !revealed ? (
-        <div className="listen">
+        <div className="listen-play">
           <button className="play" onClick={play} aria-label="Play again">
             <SpeakerIcon size={34} />
           </button>

@@ -128,3 +128,21 @@ test("small phone: the landing Start, a long card's question, the summary button
   expect(close.y + close.height, "Close is inside the word page").toBeLessThanOrEqual(dialog.y + dialog.height);
   onScreen("Close", close);
 });
+
+test("the listening card's kicker is the same pill as the others (#419)", async ({ page }) => {
+  await startCourse(page);
+  await page.locator("button.start").click();
+  await expect(page.locator("main.card")).toBeVisible();
+  // A real listening review needs weeks of history, so render its kicker next to a reading one on a live card.
+  const [read, listen] = await page.locator("main.card").evaluate((card) =>
+    ["read", "listen"].map((kind) => {
+      const k = document.createElement("div");
+      k.className = `kicker ${kind}`;
+      k.textContent = kind;
+      card.append(k);
+      const { height } = k.getBoundingClientRect();
+      return { height, paddingTop: getComputedStyle(k).paddingTop };
+    }),
+  );
+  expect(listen).toEqual(read);
+});

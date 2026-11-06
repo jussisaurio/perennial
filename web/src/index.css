@@ -406,7 +406,7 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .speaker { display: inline-flex; gap: 0.1rem; vertical-align: middle; }
 .speaker button { padding: 0.35rem; border-radius: 50%; color: var(--muted); min-width: 40px; min-height: 40px; }
 .speaker button:hover { color: var(--ink); background: var(--paper-2); }
-.listen { display: flex; align-items: center; gap: 1.25rem; padding: 2.5rem 0 1rem; }
+.listen-play { display: flex; align-items: center; gap: 1.25rem; padding: 2.5rem 0 1rem; }
 .play {
   position: relative; width: 6rem; height: 6rem; border-radius: 50%; color: var(--sky);
   background: var(--sky-soft); border: none;
