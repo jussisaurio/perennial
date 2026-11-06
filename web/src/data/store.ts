@@ -65,7 +65,35 @@ function makeCollection<T extends object>(
     // Keep trying (paused while offline, at most 30 s apart) until the rows come: the screens wait for them.
     retry: (_count, e) => !signedOut(e),
   });
-  return createCollection(options);
+  // The collection's own sync calls, for `keep` below.
+  let synced: Parameters<typeof options.sync.sync>[0] | undefined;
+  const collection = createCollection({
+    ...options,
+    sync: {
+      ...options.sync,
+      sync: (params) => {
+        synced = params;
+        return options.sync.sync(params);
+      },
+    },
+  });
+  /**
+   * Make rows the server has the collection's own. utils.writeUpsert costs a
+   * copy and a deep compare of the whole table (#521: 80–130 ms per answer for
+   * the review table), so only the written rows go in, straight to the synced
+   * state. A read under way may return older rows; then writeUpsert, which
+   * guards against that.
+   */
+  const keep = (change: { row: Partial<T> } | { deleted: string }) => {
+    if (queryClient.isFetching({ queryKey: [table] }) > 0)
+      return "row" in change ? collection.utils.writeUpsert(change.row) : collection.utils.writeDelete(change.deleted);
+    if (!synced) throw new Error(`${table}: not syncing`);
+    synced.begin();
+    // Whole rows, as writeUpsert takes them. An update of a row the table lacks adds it.
+    synced.write("row" in change ? { type: "update", value: change.row as T } : { type: "delete", key: change.deleted });
+    synced.commit();
+  };
+  return Object.assign(collection, { keep });
 }
 
 /** This user's queue of unsent writes: their own IndexedDB database (or localStorage keys). */
@@ -217,12 +245,12 @@ export async function createStore(userId: string, email: string | null) {
     for (const row of stored?.course ?? []) merged.set(`course:${String(row.lang)}`, row);
     for (const row of stored?.word_state ?? []) merged.set(`word_state:${String(row.word_id)}`, row);
     return Promise.all(
-      mutations.map((m) => {
+      mutations.map(async (m) => {
         const table = m.collection.id as Table;
-        const { utils } = collections[table];
+        const { keep } = collections[table];
         const server = merged.get(`${table}:${String(m.key)}`);
-        if (server) return utils.writeUpsert(server);
-        return m.type === "delete" ? utils.writeDelete(m.key as string) : utils.writeUpsert(m.modified);
+        if (server) return keep({ row: server });
+        return m.type === "delete" ? keep({ deleted: m.key as string }) : keep({ row: m.modified });
       }),
     ).then(
       () => undefined,
