@@ -282,7 +282,8 @@ const today = (page: Page) => page.locator("button.start").waitFor();
 const words = (page: Page) => page.locator("ul.words li").first().waitFor();
 
 const SCENARIOS: Scenario[] = [
-  { name: "Today: cold load", action: (page) => onScreen(page, "#/today", () => today(page)) },
+  // From about:blank: a goto to the URL the page is at only changes the hash, and loads no script (#461).
+  { name: "Today: cold load", setup: async (page) => void (await page.goto("about:blank")), action: (page) => onScreen(page, "#/today", () => today(page)) },
   { name: "Garden: open and scroll", action: async (page) => { await page.goto(`${BASE}/#/garden`); await page.waitForTimeout(1500); await scroll(page); } },
   { name: "Words: open and scroll", action: async (page) => { await page.goto(`${BASE}/#/words`); await page.waitForTimeout(1500); await scroll(page); } },
   {
