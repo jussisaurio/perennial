@@ -299,26 +299,36 @@ export class MemoryLog {
     return lo;
   }
 
-  /** Every unlocked row, in the order of the reading rows. Keeps the rows it already has. */
+  /** Every unlocked row, in the order of the reading rows. Only build() asks, with no unlocks yet. */
   private unlockAll(): MemoryRow[] {
     const rows: MemoryRow[] = [];
     for (const g of this.groups.values()) {
       if (g.skill !== "read") continue;
       for (const skill of ["listen", "write"] as const) {
-        const key = memKey(g.wordId, skill);
-        const row = this.unlockedBy.get(key) ?? this.unlock(g.wordId, skill);
+        // build() has replayed every group by now, and every group has reviews.
+        const row = this.unlockFrom(g.row!, skill);
         if (!row) continue;
-        this.unlockedBy.set(key, row);
+        this.unlockedBy.set(row.key, row);
         rows.push(row);
       }
     }
     return rows;
   }
 
-  /** Harder skills unlock once reading is genuinely established, not after one lucky review. */
   private unlock(wordId: string, skill: Exclude<Skill, "read">): MemoryRow | null {
     const r = this.groups.get(memKey(wordId, "read"))?.row;
-    if (!r || r.reps < 2 || r.s < UNLOCK[skill] || this.groups.has(memKey(wordId, skill))) return null;
-    return { key: memKey(wordId, skill), wordId, skill, s: 0, d: 0, lastTs: r.lastTs, due: r.lastTs, reps: 0, lapses: 0 };
+    return r ? this.unlockFrom(r, skill) : null;
+  }
+
+  /**
+   * Harder skills unlock once reading is genuinely established, not after one
+   * lucky review. Takes the reading row itself: looking it up by key for every
+   * word was a third of the launch's memory build (#486).
+   */
+  private unlockFrom(read: MemoryRow, skill: Exclude<Skill, "read">): MemoryRow | null {
+    if (read.reps < 2 || read.s < UNLOCK[skill]) return null;
+    const key = memKey(read.wordId, skill);
+    if (this.groups.has(key)) return null;
+    return { key, wordId: read.wordId, skill, s: 0, d: 0, lastTs: read.lastTs, due: read.lastTs, reps: 0, lapses: 0 };
   }
 }
