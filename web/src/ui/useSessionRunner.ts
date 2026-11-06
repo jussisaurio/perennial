@@ -81,12 +81,6 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   useLayoutEffect(() => {
     live.current = learner;
   }, [learner]);
-  // An answer reaches the learner on a later render: whoever waits for that hears of each new learner.
-  const learnerChanged = useRef(new Set<() => void>());
-  useEffect(() => {
-    for (const fn of learnerChanged.current) fn();
-    learnerChanged.current.clear();
-  }, [learner]);
   const store = useStore();
   const tag = language(lang).tag;
   const [runner, setRunner] = useState<Runner | null>(null);
@@ -238,9 +232,8 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     // Still inside the answer's tap or key press: the only time Safari lets audio start.
     wakeAudio();
     try {
-      const moment = await record(runner, card, grade, opts);
-      // Paused meanwhile: the pause screen is up, so no moment over it.
-      if (moment && !paused.current) await grow(moment);
+      const moment = record(runner, card, grade, opts);
+      if (moment) await grow(moment);
       advance(runner);
     } finally {
       busy.current = false;
@@ -293,21 +286,20 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   const firstSummary = () => !tracked.current && (tracked.current = true);
 
   /**
-   * The word's reading memory once it has more than `reps` reviews, that is,
-   * once the answer just given has reached the learner. It arrives within a
-   * render or two; if not, undefined, and the moment is skipped rather than
-   * holding up the next card.
+   * Records a review. The store has it at once, so the reads after it (the
+   * answer's moment, the next card) see it now, not a render later: the answer
+   * and its moment come in one render (#572).
    */
-  const memoryAfter = async (wordId: string, skill: Skill, reps: number) => {
-    for (let i = 0; i < 3; i++) {
-      const m = live.current?.memory.get(memKey(wordId, skill));
-      if (m && m.reps > reps) return m;
-      await new Promise<void>((resolve) => {
-        learnerChanged.current.add(resolve);
-        setTimeout(resolve, 150);
-      });
-    }
-    return undefined;
+  const recordNow = (row: Parameters<typeof recordReview>[1]) => {
+    const id = recordReview(store, row);
+    live.current = store.learners.get(lang, live.current!.deck);
+    return id;
+  };
+
+  /** The word's memory once it has more than `reps` reviews. Undefined when the answer was not recorded (another tab writes): no moment then. */
+  const memoryAfter = (wordId: string, skill: Skill, reps: number) => {
+    const m = live.current?.memory.get(memKey(wordId, skill));
+    return m && m.reps > reps ? m : undefined;
   };
 
   /**
@@ -325,14 +317,14 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   };
 
   /** Records the answer. Returns the plant's moment, if the answer plants or waters it. */
-  const record = async (runner: Runner, card: Card, grade: Grade | null, opts: { alreadyKnown?: boolean }): Promise<GrowthMoment | null> => {
+  const record = (runner: Runner, card: Card, grade: Grade | null, opts: { alreadyKnown?: boolean }): GrowthMoment | null => {
     const ms = Math.min(clock.current.tick(Date.now()) - shownAt.current, 60_000);
     const { task, word, example } = card;
     if (!before.current.has(word.id)) before.current.set(word.id, { s: card.s, stage: card.stage });
     if (task.kind === "intro") {
       counts.current.intros++;
       introduced.current.add(word.id);
-      const reviewId = opts.alreadyKnown ? recordReview(store, { lang, word_id: word.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
+      const reviewId = opts.alreadyKnown ? recordNow({ lang, word_id: word.id, skill: "read", grade: 4, kind: "known", duration_ms: Math.round(ms), sentence_id: null }) : undefined;
       if (!opts.alreadyKnown) introMs.current.set(word.id, ms);
       if (example) introSentence.current.set(word.id, example.id);
       runner.report(task, { alreadyKnown: opts.alreadyKnown });
@@ -343,7 +335,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       if (!growthOn()) return null;
       const seed = { s: 0, stage: "seed" as const };
       if (!opts.alreadyKnown) return { word: word.lemma, from: seed, to: seed, planted: true };
-      const read = await memoryAfter(word.id, "read", 0);
+      const read = memoryAfter(word.id, "read", 0);
       return read ? { word: word.lemma, from: seed, to: { s: read.s, stage: plantStage(read) }, planted: true, visitor } : null;
     } else if (grade) {
       counts.current.answers++;
@@ -360,7 +352,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       // Read before this answer is recorded: did the word already bring its visitor?
       const brought = !!live.current && broughtVisitor(live.current, word.id);
       // ?? 0: no intro for this word in this session.
-      const reviewId = recordReview(store, { lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), sentence_id: example?.id ?? null });
+      const reviewId = recordNow({ lang, word_id: word.id, skill: task.skill, grade, kind: "review", duration_ms: Math.round(ms + (carried ?? 0)), sentence_id: example?.id ?? null });
       // No note after "I forgot": the retry card says "try again" when it comes.
       runner.report(task, { grade });
       setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
@@ -374,7 +366,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       const strong = !!task.retry || longShot;
       if (longShot) strongMoments.current++;
       const gap = recordGap(earlier, now);
-      const after = await memoryAfter(word.id, task.skill, repsBefore);
+      const after = memoryAfter(word.id, task.skill, repsBefore);
       if (!after) return null;
       const look = { s: card.s, stage: card.stage };
       if (task.skill !== "read") {
