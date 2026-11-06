@@ -199,6 +199,8 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
 }
 .course-ask p { margin: 0 0 0.75rem; }
 .tabs { display: flex; gap: 0.15rem; margin-left: auto; background: var(--paper-2); padding: 0.25rem; border-radius: 999px; }
+/* As small as the language button beside it: Today's main button stays the big one. */
+.top-signin { padding: 0.4rem 0.8rem; font-size: 0.92rem; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
 .tab { padding: 0.45rem 0.95rem; color: var(--muted); font-weight: 500; font-size: 0.92rem; }
 .tab svg { display: none; }
 .tab.on { color: var(--ink); background: var(--card); box-shadow: 0 2px 8px -4px rgb(0 0 0 / 0.25); }
@@ -213,6 +215,19 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
   }
   .tab { flex-direction: column; gap: 0.15rem; font-size: 0.7rem; padding: 0.45rem 0.6rem; flex: 1; border-radius: 16px; }
   .tab svg { display: block; }
+  /* The tabs move to the bottom: Sign in takes the top bar's right end. */
+  .top-signin { margin-left: auto; }
+}
+/* Logo, language, (tabs) and Sign in in one row, without a sideways scroll down to 320 px. */
+@media (max-width: 760px) {
+  nav.top { gap: 0.6rem; }
+}
+@media (min-width: 641px) and (max-width: 760px) {
+  .tab { padding: 0.45rem 0.7rem; }
+  nav.top .wordmark { font-size: 1.3rem; }
+}
+@media (max-width: 360px) {
+  nav.top .wordmark { font-size: 1.3rem; }
 }
 .page { padding-top: 0.75rem; animation: rise 0.45s var(--ease) both; }
 .page.narrow { max-width: 36rem; margin: 0 auto; padding: 2.5rem 16px 5rem; }
