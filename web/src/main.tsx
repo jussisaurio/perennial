@@ -12,7 +12,8 @@ initTheme();
 // Error reports load after the first paint, out of this first task (#481). Reports made before then wait for them.
 afterPaint(() => void initObservability());
 // What the server can do, and whether this app is still new enough for it.
-loadServerInfo();
+// After the first paint too: its first Schema decode and Effect run are ~25 ms at CPU 10× (#481).
+afterPaint(loadServerInfo);
 void navigator.storage?.persist?.();
 
 // After a deploy, this page may ask for last release's code chunks, which are
