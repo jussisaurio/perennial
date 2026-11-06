@@ -291,7 +291,11 @@ function useReveal() {
 function Said({ children }: { children: ReactNode }) {
   const line = useRef<HTMLParagraphElement>(null);
   // After the paint: focus brings style and layout up to date, half of the key press's task when done in it (#457).
-  useEffect(() => afterPaint(() => line.current!.focus({ preventScroll: true })), []);
+  useEffect(() => {
+    // Until then, a key must not press a button that kept focus ("End session" pressed with Enter): keys are the screen's shortcuts.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    return afterPaint(() => line.current!.focus({ preventScroll: true }));
+  }, []);
   return (
     <p className="said sr-only" tabIndex={-1} ref={line}>
       {children}

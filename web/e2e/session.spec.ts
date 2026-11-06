@@ -345,6 +345,18 @@ test("a screen reader hears each step, and focus stays in the card (#257)", asyn
   await expect(page.locator("main.summary .said")).toHaveText(/^Session paused\. /);
 });
 
+test("End session pressed with Enter, then Enter again at once: the second Enter is Continue, not End session again", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  await answer(page, "1");
+  await tabTo(page, page.getByRole("button", { name: "End session" }));
+  // The summary's line takes focus after a paint; a key before then must not press the button again.
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main.card")).toBeVisible();
+  await expect(page.locator("main.summary")).toHaveCount(0);
+});
+
 test("buttons and meanings have names a screen reader reads clearly (#266)", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
