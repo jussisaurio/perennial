@@ -17,6 +17,15 @@ test("the browser Back button moves between screens instead of leaving the app",
   await expect(page.getByRole("button", { name: /today's practice/i })).toBeVisible();
 });
 
+test("the Perennial logo goes home to Today", async ({ page }) => {
+  await startCourse(page);
+  await page.getByRole("tab", { name: "Words" }).click();
+  await expect(page.getByRole("heading", { name: "Words" })).toBeVisible();
+  await page.getByRole("link", { name: "Perennial: go to Today" }).click();
+  await expect(page).toHaveURL(/#\/today$/);
+  await expect(page.getByRole("button", { name: /today's practice/i })).toBeVisible();
+});
+
 test("export downloads everything, including the review log", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
