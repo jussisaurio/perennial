@@ -6,6 +6,7 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useScrollMargin } from "./useScrollMargin";
+import { noForcedLayout } from "./virtualRows";
 import { plantStage, type MemoryRow, type PlantStage } from "../core/memory";
 import type { Word } from "../data/learner";
 import { WordPlant, rareOf, type Rare } from "./plant";
@@ -88,7 +89,7 @@ export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string;
   const offset = useScrollMargin(wrap);
   // The virtualizer cannot be memoized, so React Compiler skips this component: the warning says only that.
   // oxlint-disable-next-line react/incompatible-library
-  const v =useWindowVirtualizer({ count: items.length, estimateSize: (i) => (items[i].kind === "head" ? 64 : 200), overscan: 4, scrollMargin: offset });
+  const v =useWindowVirtualizer({ count: items.length, estimateSize: (i) => (items[i].kind === "head" ? 64 : 200), overscan: 4, scrollMargin: offset, ...noForcedLayout });
   const onOpenId = useRef(onOpen);
   useLayoutEffect(() => {
     onOpenId.current = onOpen;
