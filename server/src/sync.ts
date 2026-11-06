@@ -229,14 +229,16 @@ export const SyncLive = Layer.effect(
       Effect.catchTag("SqlError", Effect.die),
     );
 
-    // The tables at once, each on its own connection, so each is read on its own (as the
-    // shapes were): a write between two reads shows in one of them, and the next fetch has it all.
+    // One read-only REPEATABLE READ transaction: every table is read at the same moment,
+    // on one pooled connection, so two reads at once leave room for writes.
     const rows = Effect.fn("Sync.rows")(
       function* (userId: UserId) {
         const table = (name: keyof LearnerRows) => sql`select * from ${sql(name)} where user_id = ${userId}`;
-        return yield* Effect.all(
-          { course: table("course"), review: table("review"), word_state: table("word_state"), user_word: table("user_word"), user_sentence: table("user_sentence") },
-          { concurrency: "unbounded" },
+        return yield* sql.withTransaction(
+          Effect.gen(function* () {
+            yield* sql`set transaction isolation level repeatable read, read only`;
+            return { course: yield* table("course"), review: yield* table("review"), word_state: yield* table("word_state"), user_word: yield* table("user_word"), user_sentence: yield* table("user_sentence") };
+          }),
         );
       },
       Effect.catchTag("SqlError", Effect.die),
