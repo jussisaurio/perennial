@@ -252,9 +252,12 @@ function Actions({ children }: { children: ReactNode }) {
 }
 
 /**
- * A card's answer, hidden until shown. Answers given within GUARD_MS of showing
- * are ignored: "Show" sits where the answer buttons appear, so a double-click
- * or double-tap would otherwise answer a card nobody has read.
+ * A card's answer, hidden until shown. Clicks and taps on the answer buttons
+ * within GUARD_MS of showing are ignored: "Show" sits where the answer buttons
+ * appear, so a double-click or double-tap would otherwise answer a card nobody
+ * has read. The buttons look dimmed until then (data-armed), so what looks
+ * pressable is pressable. The answer keys (1, 2, arrows) differ from the keys
+ * that show the answer, so they are never held back.
  */
 function useReveal() {
   const [revealed, setRevealed] = useState(false);
@@ -317,10 +320,12 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
     play();
     return stopSpeaking;
   }, [play]);
-  const isNew = guarded(() => onDone(null));
-  const knewIt = guarded(() => onDone(null, { alreadyKnown: true }));
+  const isNewNow = () => onDone(null);
+  const knewItNow = () => onDone(null, { alreadyKnown: true });
+  const isNew = guarded(isNewNow);
+  const knewIt = guarded(knewItNow);
   // Answers are always 1 / ← (the left button) and 2 / → (the right one).
-  useKeys(revealed ? { "1": isNew, ArrowLeft: isNew, "2": knewIt, ArrowRight: knewIt, r: play } : { " ": reveal, Enter: reveal, r: play });
+  useKeys(revealed ? { "1": isNewNow, ArrowLeft: isNewNow, "2": knewItNow, ArrowRight: knewItNow, r: play } : { " ": reveal, Enter: reveal, r: play });
   return (
     <main className="card" data-armed={armed || undefined}>
       {revealed ? (
@@ -398,7 +403,7 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
   }, [revealed, listen, audioText, tag]);
   useKeys(
     revealed
-      ? { "1": () => grade(1), ArrowLeft: () => grade(1), "2": () => grade(3), ArrowRight: () => grade(3), r: play }
+      ? { "1": () => onDone(1), ArrowLeft: () => onDone(1), "2": () => onDone(3), ArrowRight: () => onDone(3), r: play }
       : { " ": reveal, Enter: reveal, r: play },
   );
   // Grades are about the word; on a listening card that means "did I catch it".
@@ -432,7 +437,7 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
       {/* It stays when the answer shows, so the card does not jump. */}
       {hint && <p className="hint">Think of the meaning first. Then show the answer and say honestly if you remembered it. Forgetting is normal.</p>}
       {listen && !revealed ? (
-        <div className="listen">
+        <div className="listen-play">
           <button className="play" onClick={play} aria-label="Play again">
             <SpeakerIcon size={34} />
           </button>
