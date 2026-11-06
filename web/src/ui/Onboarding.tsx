@@ -3,7 +3,7 @@
 // course in one step; nothing to set up, no email needed yet.
 
 import { farewell } from "../content/voice";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES, language } from "../content/languages";
 import { isDeckLang } from "../deck/schema";
 import { ensureUser } from "../data/auth";
@@ -14,7 +14,9 @@ import { useDeck } from "../data/learner";
 import { track } from "../observability";
 import { SignIn } from "./Account";
 import { Garden, showcaseGarden } from "./Garden";
-import { GardenWalk, showcaseWalkPlants } from "./GardenWalk";
+import { showcaseWalkPlants } from "../garden/plants";
+import { GardenWalk } from "./screens";
+import { Settling } from "./Settling";
 import { showcaseVisitors } from "./visitors";
 import { GrowthStrip } from "./plant";
 import { FlowerIcon, SproutMark } from "./icons";
@@ -133,15 +135,18 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
 
   if (walking)
     return (
-      <GardenWalk
-        lang={lang}
-        source={walkSource}
-        visitors={showcaseVisitors(lang)}
-        onExit={() => {
-          backFromWalk.current = true;
-          setWalking(false);
-        }}
-      />
+      // While the walk's chunk loads (ui/screens.ts).
+      <Suspense fallback={<Settling />}>
+        <GardenWalk
+          lang={lang}
+          source={walkSource}
+          visitors={showcaseVisitors(lang)}
+          onExit={() => {
+            backFromWalk.current = true;
+            setWalking(false);
+          }}
+        />
+      </Suspense>
     );
 
   // Signing in gets the whole screen: on a phone, the pitch and the sample garden below only push the form down.
