@@ -70,7 +70,7 @@ for (let n = 0; !(await fetch(`${BASE}/health`).then((r) => r.ok, () => false));
 
 // ---- measuring --------------------------------------------------------------------
 
-interface Loaf { duration: number; blocking: number; scripts: { ms: number; invoker: string; fn: string; url: string; char: number }[] }
+interface Loaf { start: number; duration: number; blocking: number; scripts: { ms: number; invoker: string; fn: string; url: string; char: number }[] }
 /** One Event Timing entry; an interaction (a click: pointerdown, pointerup, click) has several. */
 interface EventEntry { name: string; id: number; start: number; processingStart: number; processingEnd: number; end: number }
 interface Interaction { name: string; delay: number; processing: number; presentation: number; duration: number }
@@ -89,7 +89,7 @@ const PROBE = () => {
     for (const e of l.getEntries() as LoafEntry[]) {
       // An invoker can quote a whole data: URL (an image's onload), so it is cut short.
       const scripts = e.scripts.map((s) => ({ ms: s.duration, invoker: s.invoker.slice(0, 60), fn: s.sourceFunctionName, url: s.sourceURL, char: s.sourceCharPosition }));
-      w.__perf.loafs.push({ duration: e.duration, blocking: e.blockingDuration, scripts });
+      w.__perf.loafs.push({ start: e.startTime, duration: e.duration, blocking: e.blockingDuration, scripts });
     }
   }).observe({ type: "long-animation-frame", buffered: true });
   type EventTiming = PerformanceEntry & { interactionId: number; processingStart: number; processingEnd: number };
@@ -161,6 +161,9 @@ const CATEGORIES = [
   "__metadata",
 ];
 
+/** Set in the page once the profilers are running: only what follows it is measured. */
+const MARK = "perf:measure";
+
 // The trace engine is DevTools' own, and expects a browser's DOMRect.
 polyfillDOMRect();
 
@@ -172,13 +175,15 @@ async function fromTrace(trace: Buffer): Promise<{ tasks: number[]; frames: numb
   const model = Trace.TraceModel.Model.createWithAllHandlers();
   await model.parse(JSON.parse(trace.toString()).traceEvents);
   const data = model.parsedTrace()!.data;
+  const mark = data.UserTimings.performanceMarks.find((m) => m.name === MARK);
+  if (!mark) throw new Error(`no ${MARK} mark in the trace`);
   const threads = Trace.Handlers.Threads.threadsInTrace(data).filter((t) => t.type === Trace.Handlers.Threads.ThreadType.MAIN_THREAD && t.processIsOnMainFrame);
   if (!threads.length) throw new Error("no main thread in the trace");
   const tasks = threads.flatMap((t) => {
     // Playwright's and our DevTools commands run on the page's main thread, inside the JS that is
     // running when they arrive (a V8 API interrupt). In the field no DevTools is attached: not app work.
     const devtools = t.entries.filter((e) => e.name === "V8.InvokeApiInterruptCallbacks");
-    return t.entries.filter(Trace.Types.Events.isRunTask).map((task) => {
+    return t.entries.filter((e) => Trace.Types.Events.isRunTask(e) && e.ts >= mark.ts).map((task) => {
       const end = task.ts + task.dur;
       // One still running when the trace stopped has no end; it stays counted, which errs high.
       const inside = devtools.filter((e) => e.ts >= task.ts && e.ts < end).reduce((a, e) => a + (e.dur ?? 0), 0);
@@ -186,7 +191,7 @@ async function fromTrace(trace: Buffer): Promise<{ tasks: number[]; frames: numb
     });
   });
   // Idle frames had nothing to draw, so their length is not a delay anyone saw.
-  const frames = data.Frames.frames.filter((f) => !f.idle).map((f) => f.duration / 1000);
+  const frames = data.Frames.frames.filter((f) => !f.idle && f.startTime >= mark.ts).map((f) => f.duration / 1000);
   return { tasks, frames };
 }
 
@@ -206,15 +211,16 @@ function slowest(events: EventEntry[]): Interaction | undefined {
 }
 
 async function measure(page: Page, cdp: CDPSession, screen: string, action: () => Promise<void>): Promise<{ result: Result; trace: Buffer; profile: object }> {
-  await page.evaluate(() => {
-    const w = window as unknown as { __perf: Probe };
-    w.__perf.loafs = [];
-    w.__perf.events = [];
-  });
   await cdp.send("HeapProfiler.collectGarbage");
-  // Before the trace: starting the profiler is a main-thread task of hundreds of ms at CPU 10× (#450).
-  await cdp.send("Profiler.start");
+  // Starting a V8 profiler (the trace's, then ours) takes hundreds of ms at CPU 10×, in an
+  // interrupt that runs inside the next JS on the page: the scenario's first handler, or our
+  // own observer, showed it as theirs (#447). So run a little JS of ours after each start, and
+  // measure only from a mark set after both.
   await page.context().browser()!.startTracing(page, { categories: CATEGORIES });
+  await page.evaluate(() => 0);
+  await cdp.send("Profiler.start");
+  await page.evaluate(() => 0);
+  const from = await page.evaluate((name) => performance.mark(name).startTime, MARK);
   const t = performance.now();
   await action();
   const ms = performance.now() - t;
@@ -222,7 +228,9 @@ async function measure(page: Page, cdp: CDPSession, screen: string, action: () =
   const { profile } = await cdp.send("Profiler.stop");
   const { tasks: all, frames } = await fromTrace(trace);
   const tasks = all.filter((d) => d > BUDGET_MS);
-  const { loafs, events } = await page.evaluate(() => (window as unknown as { __perf: Probe }).__perf);
+  const probe = await page.evaluate(() => (window as unknown as { __perf: Probe }).__perf);
+  const loafs = probe.loafs.filter((l) => l.start >= from);
+  const events = probe.events.filter((e) => e.start >= from);
   const { metrics } = await cdp.send("Performance.getMetrics");
   // Live elements (Chrome's "Nodes" metric also counts detached ones awaiting GC).
   const nodes = await page.evaluate(() => document.getElementsByTagName("*").length);
