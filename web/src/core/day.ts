@@ -28,7 +28,12 @@ export function dayNumber(t: number | Date): number {
 
 /** One line from a pool: the same all day for this key, a different one tomorrow. */
 export function daily<T>(pool: readonly T[], key: string, now = new Date()): T {
-  return pool[hash32(`${today(now)}:${key}`) % pool.length];
+  return pool[dailyIndex(pool.length, key, now)];
+}
+
+/** daily's pick as an index into a pool of this size. */
+export function dailyIndex(size: number, key: string, now = new Date()): number {
+  return hash32(`${today(now)}:${key}`) % size;
 }
 
 /** True on roughly one day in `oneIn` for this key (stable for the whole day). */
