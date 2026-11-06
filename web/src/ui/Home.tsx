@@ -5,7 +5,7 @@ import { perLearnerDay, useLearner, type Learner } from "../data/learner";
 import { SignIn } from "./Account";
 import { Garden, gardenFromLearner } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
-import { courseStats } from "./stats";
+import { statsToday } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
 import { chunkLabel, DAILY_MINUTES, nextChunk, sessionPlan } from "../data/practice";
@@ -26,8 +26,7 @@ function greeting(): string {
 // The entrance animation plays once per visit, not on every tab switch.
 let animated = false;
 
-// Today's numbers, garden, visitors and plan: each worked out once per learner and day, whichever part asks first.
-const statsToday = perLearnerDay(courseStats);
+// Today's garden, visitors and plan: each worked out once per learner and day, whichever part asks first.
 const gardenToday = perLearnerDay(gardenFromLearner);
 const visitorsToday = perLearnerDay((l, now) => learnerVisitors(l, new Date(now)));
 // What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.

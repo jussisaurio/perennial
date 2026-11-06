@@ -1,6 +1,6 @@
 import { DAY_MS, startOfDay } from "../core/day";
 import { knownAt, readMemory, wordState } from "../core/memory";
-import type { Learner } from "../data/learner";
+import { perLearnerDay, type Learner } from "../data/learner";
 
 interface CourseStats {
   known: number;
@@ -12,6 +12,9 @@ interface CourseStats {
   retention30: number | null;
   days: { day: number; reviews: number }[]; // last 30 days
 }
+
+/** The course numbers, once per learner and day: Today and Words share them. */
+export const statsToday = perLearnerDay(courseStats);
 
 export function courseStats(l: Learner, now = Date.now()): CourseStats {
   const startOfToday = startOfDay(now);
