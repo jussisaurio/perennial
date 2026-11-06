@@ -81,6 +81,9 @@ Nearly every proofreading fix in #422 was one of these. Grammar errors were clos
 - **Use the setting a native lives in.** Kilometres, not miles; "leña" for firewood; "hacer la maleta" for packing in Spain.
 - **Notes must be exactly true,** and every gloss sense needs a sentence. Nouns with a common plural get a plural sentence.
 - **One frame per file.** Don't cluster a topic or repeat a pattern inside one file either.
+- **A gloss that copies an older word's gloss collides in every sentence.** "to use", "exciting" and "usually" were already taken. Name the difference ("a bit more formal than benutzen"), or choose a sense the older word can't take.
+- **Grep the English too.** Older pairs often hide in the translations: desgracia was already "tragedy", and comer was already "have lunch".
+- **Sets of related words** (compass points, numbers, school subjects, languages) need a different frame for each word. "Der Wind kommt von Westen" next to "…von Osten" fails the cloze test.
 
 ### Running it with agents
 
@@ -89,7 +92,10 @@ Nearly every proofreading fix in #422 was one of these. Grammar errors were clos
 - **Every agent keeps its helper files in its own folder.** Parallel agents overwrote each other's shared scripts. `proof.ts mark` refused the wrong file or reviewer, so no wrong verdict landed. Before finishing, check that `proof.ts status` agrees with every verdict.
 - **Suggested replacements need the same checks.** Proofreaders' own replacement sentences were often reused frames or had rare words.
 - **Small exact fixes can be applied by whoever runs the batch.** This saves a round trip. Only the proofreader marks entries ok.
-- **Fix rates per 100 entries:** the pilots needed 7 and 11 fixes, and the first wave 11–31. After the worn-openings list and the synonym grep were in the brief, a second-wave file needed 7.
+- **Fix rates per 100 entries rose as the deck grew:** 7 and 11 for the pilots, 11–31 in the first wave, then 7–36 and 19–62 in the later waves. Grammar errors stayed near zero. Nearly every fix was a near-copy of an older sentence. With 2000 words, every new sentence has many more older sentences to echo. `draft.ts check` caught few of these, and proofreaders wrote their own similarity scripts to find them (#428). Before the next batch, give authors a ranked "closest sentences" search.
+- **Files written in parallel echo each other.** When two new files clash, change the one that is not yet approved, or the later one in the course. Tell the editors of both files about the pair.
+- **Rebuild deck.json and ids.json from main's at the end.** Words swapped out of the list during review (celular, enojado) otherwise keep an id as retired words that never shipped.
+- **Agents can stop on a usage limit.** Their context survives: a message resumes each one where it stopped. Drafts outside `decks/` and verdicts already in the ledger are safe.
 
 ## Tools
 
