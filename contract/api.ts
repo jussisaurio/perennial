@@ -18,9 +18,11 @@ export type ServerInfo = typeof ServerInfo.Type;
 /**
  * GET /api/rows: all of the learner's rows, per table, as stored (timestamps as
  * ISO strings). Each row is checked only as an object here: its columns are the
- * table's own (web/src/data/rows.ts).
+ * table's own (web/src/data/rows.ts). A Record schema would copy every row,
+ * key by key: about 10 ms for a year of reviews, on the app's launch (#486).
  */
-const Rows = Schema.Array(Schema.Record(Schema.String, Schema.Unknown));
+const Row = Schema.declare((u: unknown): u is Record<string, unknown> => typeof u === "object" && u !== null && !Array.isArray(u));
+const Rows = Schema.Array(Row);
 export const LearnerRows = Schema.Struct({
   course: Rows,
   review: Rows,
