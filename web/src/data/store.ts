@@ -80,10 +80,10 @@ export async function createStore(userId: string, email: string | null) {
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();
   const queryClient = new QueryClient();
-  // The first read is the rows that came with /api/boot, if they are this user's
-  // (#602). null: not this user's (an anonymous learner who started just now), or
-  // boot failed: read /api/rows, as later reads do.
-  let first: Promise<LearnerRows | null> | null = boot().then(
+  // Each table's first read is the rows that came with /api/boot, if they are this
+  // user's (#602); refetchAll reads the server again. null: not this user's (an
+  // anonymous learner who started just now), or boot failed: read /api/rows.
+  let fromBoot: Promise<LearnerRows | null> | null = boot().then(
     (b) => (b.user?.id === userId ? b.rows : null),
     () => null,
   );
@@ -91,11 +91,7 @@ export async function createStore(userId: string, email: string | null) {
   const read = () =>
     queryClient.fetchQuery({
       queryKey: ["rows"],
-      queryFn: async () => {
-        const fromBoot = first;
-        first = null;
-        return (fromBoot && (await fromBoot)) ?? Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal });
-      },
+      queryFn: async () => (fromBoot && (await fromBoot)) ?? Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }),
       // A new request each time, unless one is under way (refetchAll cancels that one first).
       staleTime: 0,
       // Nothing kept once read: a cancelled read then fails (CancelledError), where it
@@ -137,6 +133,7 @@ export async function createStore(userId: string, email: string | null) {
   /** Read every table again, in one new request: one already under way may have started before a change. */
   const refetchAll = async () => {
     if (sync.signal.aborted) return;
+    fromBoot = null;
     // A read under way would be joined (TanStack Query), and may predate the
     // change (#529: a course written while the first read ran never showed). Cancel it.
     await queryClient.cancelQueries();
