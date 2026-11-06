@@ -36,10 +36,18 @@ const toUser = (raw: unknown): SessionUser => {
 // code). App shows a loading screen while pending, which would wipe the page.
 let sessionKnown = false;
 
+// Decoded once per session user object, not in every render: ~7 ms at CPU 10× the first time (#569).
+const decoded = new WeakMap<object, SessionUser>();
+function renderedUser(raw: object): SessionUser {
+  let user = decoded.get(raw);
+  if (!user) decoded.set(raw, (user = toUser(raw)));
+  return user;
+}
+
 export function useUser(): { user: SessionUser | null; pending: boolean } {
   const { data, isPending } = authClient.useSession();
   if (!isPending) sessionKnown = true;
-  return { user: data?.user ? toUser(data.user) : null, pending: isPending && !sessionKnown };
+  return { user: data?.user ? renderedUser(data.user) : null, pending: isPending && !sessionKnown };
 }
 
 /** The auth client's session store: no session (null) until it knows of one. */
