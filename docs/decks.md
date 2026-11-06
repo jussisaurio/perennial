@@ -57,6 +57,40 @@ For each **sentence**:
 - **Variety:** across a word's sentences, different contexts, and different forms where the word has them (persons and tenses for verbs, singular and plural, cases).
 - **Appropriate:** nothing offensive, nothing that dates quickly, no real people or brands.
 
+## Growing the decks
+
+What we learned taking each course from about 1000 to about 2000 words (#422). Read this before the next batch.
+
+### The word list
+
+- **The subtitle list gets noisy past rank 3000.** Most forms there are names (andrew, kurt, vera), inflections of words we have (podría, hiciste), English words, and stage directions (stöhnt). 1000 new words needed corpus ranks up to about 4300. Map forms to lemmas, drop those, and keep a pool of about 100 spare lemmas past the cutoff for replacements.
+- **One agent drafts the list and another reviews it.** The review changed about 40 of 1000 rows: ranks raised by a name (Bella, Marco) or by subtitle credits (Übersetzung), forms that belong to a more common word, and words with little use for adult beginners.
+- **Mark synonyms before anyone writes.** A new word with the same meaning as a deck word (trabajo/empleo, Maschine/Gerät) makes an ambiguous cloze card: the learner types the older word. Note the older word on the row. Drop near-exact variants (weswegen next to warum, wieso and weshalb; Kram next to Zeug).
+- **Spanish is Spain Spanish** (coche, conducir, ordenador, vosotros, vídeo, zumo, céntimo). Drop Latin American twins of deck words (computadora, celular, enojado, jugo), or put them only in notes.
+- **Check the themes that frequency misses.** The subtitle ranks left most months out of the Spanish course. Check days, months, numbers and other closed sets by hand.
+
+### Writing the sentences
+
+Nearly every proofreading fix in #422 was one of these. Grammar errors were close to zero.
+
+- **The cloze test.** If a new sentence is an older sentence with one word swapped ("Das ist mir vollkommen egal." next to "Das ist mir völlig egal.") or added ("Gib mir deine rechte Hand." next to "Gib mir deine Hand."), the learner answers the older word. Write a new situation instead.
+- **Search the deck by meaning, not only words.** Grep each sentence's frame without its target word ("para cenar", "al final del pasillo"), and grep the sentences of every older synonym. `draft.ts check` finds echoes that share words; only a grep by meaning finds the rest.
+- **Avoid the worn openings.** `draft.ts frames <lang>` lists the openings the deck already uses 4 or more times ("Das ist X", "Es un X", "No hay X", "Die Polizei hat…"). Don't start a new sentence with one.
+- **Days and months** almost always copy another day's sentence ("closed on X", "market on X", "see you on X"). Grep every day and month first.
+- **Make the gloss and translation rule out the older word.** "instead of (a longer form of statt)"; "states", not "countries", when Länder exists. The English must not repeat an older card's English word for word, and must stand on its own ("Schmeckt es dir?" is "Does it taste good?", not "Do you like it?").
+- **Use the setting a native lives in.** Kilometres, not miles; "leña" for firewood; "hacer la maleta" for packing in Spain.
+- **Notes must be exactly true,** and every gloss sense needs a sentence. Nouns with a common plural get a plural sentence.
+- **One frame per file.** Don't cluster a topic or repeat a pattern inside one file either.
+
+### Running it with agents
+
+- **Pilot first.** Write and proofread one file per language, turn its findings into rules for the author brief, then write the rest in waves of three files per language. After each wave, add the new lessons to the brief.
+- **Draft outside `decks/`.** Authors write drafts elsewhere, check them with `draft.ts check`, and copy a file into `decks/<lang>/source/` only when it has no errors. Then parallel authors never see a broken file.
+- **Every agent keeps its helper files in its own folder.** Parallel agents overwrote each other's shared scripts. `proof.ts mark` refused the wrong file or reviewer, so no wrong verdict landed. Before finishing, check that `proof.ts status` agrees with every verdict.
+- **Suggested replacements need the same checks.** Proofreaders' own replacement sentences were often reused frames or had rare words.
+- **Small exact fixes can be applied by whoever runs the batch.** This saves a round trip. Only the proofreader marks entries ok.
+- **Fix rates per 100 entries:** the pilots needed 7 and 11 fixes, and the first wave 11–31. After the worn-openings list and the synonym grep were in the brief, a second-wave file needed 7.
+
 ## Tools
 
 - `bun scripts/deck/build.ts <lang>`: rebuilds `deck.json` and `ids.json` from source.
@@ -65,4 +99,5 @@ For each **sentence**:
 - `bun scripts/deck/sheet.ts <lang> NNNN [--only-flagged]`: an overview page of a file with all flags (for skimming, not for the verdicts).
 - `bun scripts/deck/review.ts <lang> NNNN --author … --reviewer …`: records an approval.
 - `bun scripts/deck/check.ts --base origin/main`: the CI gate (schema, invariants, approvals, up to date, compatibility).
+- `bun scripts/deck/draft.ts check <lang> <NNNN> <draft.json>`: checks a draft against the deck without writing anything: schema, duplicates, shared forms, cloze, rare words, and echoes of older sentences (near-duplicate, same-frame). `draft.ts frames <lang>`: the worn sentence openings.
 - `bun scripts/deck/generate.ts`: drafts source words with the Anthropic API. Drafts still need a proofreader.
