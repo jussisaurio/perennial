@@ -3,7 +3,7 @@
 // recall fades — until the next session waters them. Nothing ever dies.
 // The plants themselves come from garden/plants.ts, shared with the walk.
 
-import { memo, type PointerEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, type PointerEvent, type RefCallback, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
@@ -58,16 +58,32 @@ const OVERSCAN = 160;
  * words cost the same as 200. Memoised: on the landing page a chip tap must
  * not redraw every plant.
  */
-export const Garden = memo(function Garden({
-  data,
-  highlight,
-  compact,
-  showcase,
-  onView,
-  visitors,
-  replay,
-  waiting,
-}: {
+export const Garden = memo(function Garden(props: GardenProps) {
+  // Measured before any plant is drawn: which plants are in view depends on the width, and a guess drew them twice (#492).
+  const [width, setWidth] = useState<number | null>(null);
+  const fit = useCallback((w: number) => setWidth(Math.max(280, Math.round(w))), []);
+  const observe = useCallback(
+    (el: HTMLDivElement) => {
+      const ro = new ResizeObserver(([e]) => fit(e.contentRect.width));
+      ro.observe(el);
+      return () => ro.disconnect();
+    },
+    [fit],
+  );
+  // Set from a ref, the width is in before paint, so the empty frame never shows. The same box as contentRect: .garden has no padding or border.
+  if (width === null)
+    return (
+      <div
+        className={`garden ${props.compact ? "compact" : ""}`}
+        ref={(el) => {
+          if (el) fit(el.getBoundingClientRect().width);
+        }}
+      />
+    );
+  return <Strip {...props} width={width} wrap={observe} />;
+});
+
+interface GardenProps {
   data: GardenData | null | undefined;
   highlight?: Set<string>;
   compact?: boolean;
@@ -80,11 +96,10 @@ export const Garden = memo(function Garden({
   replay?: readonly { id: string; from: PlantLook }[] | null;
   /** Something waits in the walk (#335): the guest whose prints lead from the bowl, and how to open the walk there. */
   waiting?: { guest: Guest; onOpen: () => void } | null;
-}) {
-  const wrap = useRef<HTMLDivElement>(null);
+}
+
+function Strip({ data, highlight, compact, showcase, onView, visitors, replay, waiting, width, wrap }: GardenProps & { width: number; wrap: RefCallback<HTMLDivElement> }) {
   const scroller = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(640);
-  const [scrollX, setScrollX] = useState(0);
   const [hover, setHover] = useState<{ p: GardenPlant; x: number; y: number } | null>(null);
   // Hover intent: with a card open, switching to another plant waits a moment,
   // so the pointer can cross other plants on its way to the card's button.
@@ -109,14 +124,6 @@ export const Garden = memo(function Garden({
     setVisitorTip(null);
   };
   useEffect(() => () => clearTimeout(switching.current), []);
-
-  useEffect(() => {
-    const el = wrap.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => setWidth(Math.max(280, Math.round(e.contentRect.width))));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   const plants = useMemo(() => data?.plants ?? [], [data]);
   const n = plants.length;
@@ -161,18 +168,21 @@ export const Garden = memo(function Garden({
   const replaying = useReplay(replayInView);
 
   // Open where the newest growth is, or on today's words after a session, and
-  // keep following it while words sync in, until the learner scrolls.
-  const autoX = useRef<number | null>(null);
-  useLayoutEffect(() => {
-    const el = scroller.current;
-    if (!el || !scrolls || (autoX.current !== null && Math.abs(el.scrollLeft - autoX.current) > 2)) return;
+  // keep following it while words sync in, until the learner scrolls. Worked
+  // out in render, so the first render already draws the plants in view (#492).
+  const opening = useMemo(() => {
+    if (!scrolls) return 0;
     const lit = highlight?.size ? layout.filter((l) => highlight.has(l.p.id)) : [];
-    el.scrollLeft = lit.length ? lit.reduce((a, l) => a + l.x, 0) / lit.length - width / 2 : fullWidth;
-    autoX.current = el.scrollLeft;
-    setScrollX(el.scrollLeft);
-    // Not on highlight/layout identity changes: n and width cover growth and resizes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrolls, width, n]);
+    const want = lit.length ? lit.reduce((a, l) => a + l.x, 0) / lit.length - width / 2 : fullWidth;
+    return Math.max(0, Math.min(fullWidth - width, want));
+  }, [scrolls, layout, highlight, width, fullWidth]);
+  // Where the learner scrolled to; null until they do.
+  const [scrolled, setScrolled] = useState<number | null>(null);
+  const scrollX = !scrolls ? 0 : (scrolled ?? opening);
+  useLayoutEffect(() => {
+    // Only a write: reading scrollLeft back here forced a layout of the whole new screen.
+    if (scrolls && scrolled === null && scroller.current) scroller.current.scrollLeft = opening;
+  }, [scrolls, scrolled, opening]);
 
   // Swipe on touch, two-finger scroll on trackpads, and arrows on desktop.
   const atStart = scrollX <= 4;
@@ -181,7 +191,8 @@ export const Garden = memo(function Garden({
 
   const onScroll = () => {
     const x = scroller.current?.scrollLeft ?? 0;
-    requestAnimationFrame(() => setScrollX(x));
+    // The opening scroll fires this too: only a move away from it is the learner's.
+    if (scrolled !== null || Math.abs(x - opening) > 2) requestAnimationFrame(() => setScrolled(x));
     hide();
   };
 
@@ -333,7 +344,7 @@ export const Garden = memo(function Garden({
       )}
     </div>
   );
-});
+}
 
 /** What a strip tooltip needs: a word and its gloss. */
 type TipVisitor = { id: string; word: string | null; gloss: string };
