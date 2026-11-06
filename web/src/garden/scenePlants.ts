@@ -249,7 +249,9 @@ export class Plants {
     const groups = new Map<string, number[]>();
     plants.forEach((p, i) => {
       const k = `${p.bed}:${Math.floor(i / T.LOW_PER_SHEET)}`;
-      groups.set(k, [...(groups.get(k) ?? []), i]);
+      const list = groups.get(k);
+      if (list) list.push(i);
+      else groups.set(k, [i]);
     });
     const quad = standingQuad(SPRITE_W, SPRITE_H);
     const baseY = BED_H - (4 / T.VIEW_H) * SPRITE_H * PLANT_SCALE; // the SVG frame has 4 units below the base
@@ -261,11 +263,18 @@ export class Plants {
       const params = new Float32Array(idx.length * 4);
       const cells = new Float32Array(idx.length * 2);
       const old = new Float32Array(idx.length);
+      // Written in place: no small array per plant (#459).
       idx.forEach((pi, k) => {
         const p = plants[pi];
-        pos.set([p.x, baseY, p.z], k * 3);
-        params.set([p.phase, p.droop, PLANT_SCALE, pi], k * 4);
-        cells.set([pi % T.LOW_PER_SHEET, -1], k * 2);
+        pos[k * 3] = p.x;
+        pos[k * 3 + 1] = baseY;
+        pos[k * 3 + 2] = p.z;
+        params[k * 4] = p.phase;
+        params[k * 4 + 1] = p.droop;
+        params[k * 4 + 2] = PLANT_SCALE;
+        params[k * 4 + 3] = pi;
+        cells[k * 2] = pi % T.LOW_PER_SHEET;
+        cells[k * 2 + 1] = -1;
         old[k] = isOld(p) ? 1 : 0;
       });
       const cellAttr = new THREE.InstancedBufferAttribute(cells, 2);
