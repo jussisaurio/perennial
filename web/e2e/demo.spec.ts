@@ -73,6 +73,8 @@ test("dev demo: a failed session check deletes nothing", async ({ page }) => {
   await acted;
   await page.unrouteAll({ behavior: "ignoreErrors" });
   expect((await page.request.get("/api/me")).status()).toBe(200);
-  await page.goto("/#/settings");
+  // The demo boot already moved the page to /#/settings, so goto("/#/settings") would only
+  // be a hash change: the page would keep the failed session check. A reload asks again.
+  await page.reload();
   await expect(page.getByText(email)).toBeVisible();
 });
