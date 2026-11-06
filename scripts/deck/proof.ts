@@ -64,7 +64,8 @@ export function ledgerProblems(lang: string, num: string): string[] {
 
 function card(lang: string, num: string, s: ReturnType<typeof ledgerState>[number], flags: string[], index: number, total: number): string {
   const w = s.w;
-  const target = s.key.split("|").filter(Boolean).join("|");
+  // The lemma as written: `mark` matches it exactly, and ledger keys are lower case (#224).
+  const target = [w.lemma, w.pos, w.sense].filter(Boolean).join("|");
   const lines = [
     `Entry ${index + 1} of ${total} in decks/${lang}/source/${num}.json — state: ${s.state}`,
     s.rec?.note ? `Previous note: ${s.rec.note}` : "",
