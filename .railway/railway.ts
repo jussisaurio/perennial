@@ -3,7 +3,7 @@
 // deprecated). Variables are unmanaged: secrets live only in Railway, never
 // in this file. See docs/DEPLOY.md.
 
-import { defineRailway, github, image, project, service, volume } from "railway/iac";
+import { defineRailway, github, project, service } from "railway/iac";
 
 const REGION = "europe-west4-drams3a";
 
@@ -25,15 +25,6 @@ export default defineRailway(() => {
     },
   });
 
-  // Sync. Private network only (no public domain); shapes persist on the volume.
-  const electricVolume = volume("electric-volume", { alerts: { usage: { "100": {}, "80": {}, "95": {} } }, allowOnlineResize: true, region: REGION, sizeMB: 5000 });
-  const electric = service("electric", {
-    source: image("electricsql/electric:1.8.1"),
-    replicas: { [REGION]: 1 },
-    volumeMounts: { "/var/lib/electric": electricVolume },
-    deploy: { healthcheckPath: "/v1/health", restartPolicyMaxRetries: 5 },
-  });
-
   // Daily cleanup (stale anonymous learners, old logs), then exits.
   const housekeeping = service("housekeeping", {
     source: repo,
@@ -44,6 +35,6 @@ export default defineRailway(() => {
 
   return project("bountiful-friendship", {
     variables: { managed: false },
-    resources: [web, electric, housekeeping, electricVolume],
+    resources: [web, housekeeping],
   });
 });

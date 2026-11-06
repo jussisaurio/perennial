@@ -167,8 +167,6 @@ test("unsent writes follow the learner into the account, when they sign in again
   const address = newEmail();
   await unsentWriteThenCode(page, address);
 
-  // The server's sign-in moves the anonymous learner's rows: the course's sync starts over.
-  const resynced = page.waitForRequest((r) => r.url().includes("/api/shape") && r.url().includes("table=course") && r.url().includes("offset=-1"));
   const { reached } = await loseAnswer(page, "/api/auth/sign-in/email-otp");
   await page.locator("form").getByRole("button", { name: "Sign in", exact: true }).click();
   await reached;
@@ -177,10 +175,9 @@ test("unsent writes follow the learner into the account, when they sign in again
   await page.route("**/api/auth/get-session*", (route) => ((checked = true), route.fulfill({ status: 503, body: "" })), { times: 1 });
   await page.clock.fastForward(20_000);
   await expect.poll(() => checked).toBe(true);
-  await resynced;
 
   // The learner tries again with a new code, from the account's session now.
-  // (The resync redraws Settings, so open it afresh.)
+  // (Open Settings afresh, so it starts at the email step.)
   await page.getByRole("tab", { name: "Today" }).click();
   await page.getByRole("tab", { name: "Settings" }).click();
   await page.getByLabel("Email").fill(address);

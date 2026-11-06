@@ -26,7 +26,7 @@ The user's goal now: **"focus heavily on implementing a lot of fun features, tha
    - If it says the PR conflicts: rebase onto origin/main, resolve, re-run the checks, force-push with lease, and run the script again. Other agents merge in parallel, so expect this.
    - If CI fails: find the cause; never just re-run.
    - **Careful-review exception:** if your change touches a migration, the data model or sync merge rules, auth or security, do not merge. Report to the orchestrator for a careful review.
-5. **Shared infra:** Postgres + Electric are shared (`docker compose up -d` from the main checkout). Use your own `E2E_PORT_OFFSET`: multiply the number given in your prompt by 10 (e.g. 401 → 4010). Offsets one apart clash, because the e2e setup uses consecutive ports per offset. Run only the specs you need, not the whole suite.
+5. **Shared infra:** Postgres is shared (`docker compose up -d` from the main checkout). Use your own `E2E_PORT_OFFSET`: multiply the number given in your prompt by 10 (e.g. 401 → 4010). Offsets one apart clash, because the e2e setup uses consecutive ports per offset. Run only the specs you need, not the whole suite.
 6. **Report back** when merged: the PR number, what a learner can now do, and anything for later.
 
 ## Machine load (many agents run at once)

@@ -25,8 +25,6 @@ export const ApiErrorBody = Schema.Union([
   bare("sign_in_required"),
   bare("account_required"),
   // Sync
-  bare("unknown_shape"),
-  bare("unknown_table"),
   Schema.Struct({ error: Schema.tag("quota"), table: Schema.Literals(["user_word", "user_sentence", "word_state", "reviewsPerDay"]), limit: Schema.Number }),
   Schema.Struct({ error: Schema.tag("unknown_word"), word_id: Schema.String }),
   bare("review_from_the_future"),
@@ -67,8 +65,6 @@ export const ERROR_STATUS = {
   please_reload: 426,
   sign_in_required: 401,
   account_required: 403,
-  unknown_shape: 400,
-  unknown_table: 400,
   quota: 429,
   unknown_word: 422,
   review_from_the_future: 422,

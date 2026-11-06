@@ -21,8 +21,3 @@ test("user_word forms of any other shape: no forms, and the type is reported, ne
   expect(syncedUserWord({ ...row, forms: null }, report).forms).toEqual([]);
   expect(bad).toEqual(["string", "string", "object", "object"]);
 });
-
-test("an update without forms keeps the columns it has", () => {
-  const update = { id: "w1", gloss: "fox" };
-  expect(syncedUserWord(update, () => {})).toEqual(update);
-});

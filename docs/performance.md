@@ -10,7 +10,7 @@ cd server && bun run load -- --users 100 --seconds 30
 
 It starts a profiled server and simulates learners as the app behaves: an anonymous sign-in, a course, then a review every 2–5 s while a live shape poll waits for the write to sync back. Output in `server/load/out/`:
 
-- `report.md`: p50/p95/p99 per request, write → synced-back latency (Electric echo), writes per second, server memory over the run.
+- `report.md`: p50/p95/p99 per request, writes per second, server memory over the run.
 - `CPU.*.cpuprofile` (Chrome DevTools → Performance, or speedscope.app) and `CPU.*.md`, a grep-friendly summary of hot functions.
 - `Heap.*.md`: a heap summary at exit (largest types and retainers).
 

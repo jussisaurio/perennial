@@ -2,9 +2,9 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 export const newEmail = (prefix = "learner") => `${prefix}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-/** Rows the server has for the signed-in learner (dev-only endpoint). */
+/** Rows the server has for the signed-in learner (GET /api/rows). */
 export async function serverRows<T = Record<string, unknown>>(page: Page, table: string): Promise<T[]> {
-  return page.evaluate(async (table) => (await fetch(`/api/dev/rows?table=${table}`)).json(), table);
+  return page.evaluate(async (table) => ((await (await fetch("/api/rows")).json()) as Record<string, unknown[]>)[table], table);
 }
 
 /** Wait until the server has `n` rows in `table` (writes upload in the background). */
@@ -13,12 +13,18 @@ export async function expectServerRows(page: Page, table: string, n: number | ((
   await expect.poll(async () => ok((await serverRows(page, table)).length), { timeout: 15_000, message: `${table} rows` }).toBe(true);
 }
 
+/** The app reads the learner's rows again, as when its tab comes back into view: for rows a test wrote with `postWrite`. */
+export async function readRowsAgain(page: Page) {
+  await page.evaluate(() => (window as unknown as { __store: { refetchAll(): Promise<void> } }).__store.refetchAll());
+}
+
 /**
  * Wait until a write the test just made is in the app's own data (#343), not
- * on a timer: a reload right after `postWrite` can race the write landing in
- * the client's store, and under load the race is lost more often.
+ * on a timer: the app reads it from the server again first.
  */
 export async function waitForSynced(page: Page, table: string, ids: string[]) {
+  await page.waitForFunction(() => !!(window as unknown as { __store?: unknown }).__store);
+  await readRowsAgain(page);
   await page.waitForFunction(
     ({ table, ids }: { table: string; ids: string[] }) => {
       const store = (window as unknown as { __store?: { collections: Record<string, { has(k: string): boolean }> } }).__store;

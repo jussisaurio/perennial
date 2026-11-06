@@ -1,8 +1,9 @@
-// The learner's synced data. Each table is a TanStack DB collection fed by an
-// Electric shape (through our auth proxy), held in memory. Writes go through a
-// queue (TanStack DB's offline transactions): they apply instantly on the
-// device, are stored in IndexedDB, and are sent to /api/write, with retries,
-// until the server has them.
+// The learner's synced data. Each table is a TanStack DB query collection, held
+// in memory and read from GET /api/rows: at start, and again when the tab comes
+// back into view after a while. Writes go through a queue (TanStack DB's offline
+// transactions): they apply instantly on the device, are stored in IndexedDB,
+// and are sent to /api/write, with retries, until the server has them. Then the
+// rows go into the collection as the server's own.
 //
 // A store belongs to one user, and so does its queue (see device.ts): a write
 // queued by one learner is never sent while another is signed in, except that
@@ -14,43 +15,55 @@
 // that one (see `writer` below and App).
 
 import * as Sentry from "@sentry/react";
-import { electricCollectionOptions, type ElectricCollectionConfig } from "@tanstack/electric-db-collection";
+import { QueryClient } from "@tanstack/query-core";
+import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
-import { Effect, Exit } from "effect";
+import { Effect } from "effect";
+import { LearnerRows } from "perennial-contract";
 import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
-import type { ApiError, HttpError } from "./http";
+import { ApiError, HttpError, request } from "./http";
 import { reportBadAnswer } from "../observability";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import { OtherUser, sendQueued, shouldRetry } from "./send";
 import { tabLock } from "./tabLock";
 
-/** `transformer`: changes each synced row, or the columns an update changed, before the collection has it. */
+/**
+ * Read the rows again when the tab comes back after this long hidden: a quick
+ * look at another tab needs no new read, but the learner may have used another
+ * device meanwhile.
+ */
+const REFETCH_AFTER_HIDDEN_MS = 60_000;
+
+/** Signed out: this store is being replaced, so asking again cannot help. */
+const signedOut = (e: unknown) => (e instanceof ApiError && e.body.error === "sign_in_required") || (e instanceof HttpError && e.status === 401);
+
+/**
+ * One table's collection, filled from `read` (one GET /api/rows for all of
+ * them). `toRow` checks or changes a row first; the columns are the table's
+ * own (rows.ts) and are not checked one by one.
+ */
 function makeCollection<T extends object>(
-  table: string,
+  table: keyof LearnerRows,
   getKey: (row: T) => string,
-  sync: AbortSignal,
-  transformer?: ElectricCollectionConfig<T & Record<string, unknown>>["shapeOptions"]["transformer"],
+  read: () => Promise<LearnerRows>,
+  queryClient: QueryClient,
+  toRow: (row: Record<string, unknown>) => Record<string, unknown> = (row) => row,
 ) {
-  const options = electricCollectionOptions<T & Record<string, unknown>>({
+  const options = queryCollectionOptions({
     id: table,
-    getKey: getKey as (row: T & Record<string, unknown>) => string,
-    shapeOptions: {
-      url: `${location.origin}/api/shape`,
-      params: { table },
-      signal: sync,
-      // The abort reaches the stream, but not a prefetch it already chained: refuse new requests too.
-      fetchClient: (input, init) => (sync.aborted ? Promise.reject(new DOMException("sync stopped", "AbortError")) : fetch(input, init)),
-      parser: { timestamptz: (v: string) => v },
-      transformer,
-      // Signed out, or signed in as someone else: this store is being replaced. Stop quietly.
-      onError: (e) => {
-        if ((e as { status?: number }).status === 401) return;
-        console.warn(`[store] ${table} sync error`, e);
-        return {};
-      },
-    },
+    queryKey: [table],
+    queryFn: async () => (await read())[table].map((row) => toRow(row) as T),
+    queryClient,
+    getKey,
+    // Read at once, all tables together: the screens need them all.
+    startSync: true,
+    // Read again only when the store says so (refetchAll below), never on a timer or focus.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    // Keep trying (paused while offline, at most 30 s apart) until the rows come: the screens wait for them.
+    retry: (_count, e) => !signedOut(e),
   });
   return createCollection(options);
 }
@@ -90,19 +103,47 @@ export async function createStore(userId: string, email: string | null) {
   // An account's first start after a sign-in that this tab did not see finish
   // (#314): the anonymous learner's queue is the account's now. (Anonymous: no email.)
   resolvePendingLink(userId, email);
-  // Stopped before a sign-out reaches the server (stopSyncNow): a stream still loading
+  // Stopped before a sign-out reaches the server (stopSyncNow): a read still under way
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();
+  const queryClient = new QueryClient();
+  // The tables' reads at the same moment share one request.
+  let reading: Promise<LearnerRows> | null = null;
+  const read = () => {
+    if (reading) return reading;
+    const p = Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }).finally(() => {
+      if (reading === p) reading = null;
+    });
+    return (reading = p);
+  };
   const collections = {
-    course: makeCollection<CourseRow>("course", (r) => r.lang, sync.signal),
-    review: makeCollection<ReviewRow>("review", (r) => r.id, sync.signal),
-    word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, sync.signal),
-    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, sync.signal, (row) =>
-      syncedUserWord(row, (type) => reportBadAnswer("/api/shape user_word.forms", `forms: ${type}`)),
+    course: makeCollection<CourseRow>("course", (r) => r.lang, read, queryClient),
+    review: makeCollection<ReviewRow>("review", (r) => r.id, read, queryClient),
+    word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, read, queryClient),
+    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, read, queryClient, (row) =>
+      syncedUserWord(row, (type) => reportBadAnswer("/api/rows user_word.forms", `forms: ${type}`)),
     ),
-    user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, sync.signal),
+    user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, read, queryClient),
   };
   type Table = keyof typeof collections;
+  const stopSync = () => {
+    // Cancelled queries go back to how they were, with no error; then the request itself stops.
+    void queryClient.cancelQueries();
+    sync.abort();
+  };
+  /** Read every table again, in one new request: one already under way may have started before a change. */
+  const refetchAll = () => {
+    if (sync.signal.aborted) return Promise.resolve();
+    reading = null;
+    return Promise.all(Object.values(collections).map((c) => c.utils.refetch())).then(() => undefined);
+  };
+  let hiddenAt: number | null = null;
+  const onVisibility = () => {
+    if (document.visibilityState === "hidden") return void (hiddenAt = Date.now());
+    if (hiddenAt !== null && Date.now() - hiddenAt > REFETCH_AFTER_HIDDEN_MS) void refetchAll();
+    hiddenAt = null;
+  };
+  document.addEventListener("visibilitychange", onVisibility);
 
   // Whether this tab may write. Without a queue (no storage) every tab sends directly.
   let writer = true;
@@ -138,8 +179,7 @@ export async function createStore(userId: string, email: string | null) {
     leaderElection: tabLock(`perennial-writer-${userId}`),
     onLeadershipChange: setWriter,
     mutationFns: {
-      // Traced (sampled, see observability.ts): the time from sending a write
-      // to seeing it come back through sync is the latency learners feel.
+      // Traced (sampled, see observability.ts): the time to save a write.
       write: ({ transaction, idempotencyKey }) =>
         Sentry.startSpan({ name: "sync write", op: "sync.write" }, (span) =>
           Effect.runPromise(
@@ -150,18 +190,10 @@ export async function createStore(userId: string, email: string | null) {
               const current = sessionUserId();
               if (current && current !== userId) return yield* new OtherUser();
               span.setAttribute("mutations", mutations.length);
-              const result = yield* sendQueued(mutations, idempotencyKey, noteRefused);
-              // Nothing changed (say, a repeat of an earlier write), or no answer to read: no echo to wait for.
-              if (!result?.changed) return;
-              // Keep the optimistic rows until Electric echoes the write back.
-              const tables = new Set(transaction.mutations.map((m) => m.collection.id as Table));
-              const echoed = yield* Effect.forEach(
-                tables,
-                // After 15 s without the echo the rows stay as they are; the trace says so.
-                (t) => Effect.tryPromise(() => collections[t].utils.awaitTxId(result.txid, 15_000)).pipe(Effect.exit, Effect.map(Exit.isSuccess)),
-                { concurrency: "unbounded" },
-              );
-              span.setAttribute("echoed", echoed.every(Boolean));
+              yield* sendQueued(mutations, idempotencyKey, noteRefused);
+              // The server has them: the rows become the collection's own, so they stay
+              // when this transaction ends (no flicker until the next read).
+              yield* Effect.promise(() => confirm(transaction.mutations));
             }),
           ),
         ),
@@ -172,9 +204,26 @@ export async function createStore(userId: string, email: string | null) {
     onStorageFailure: (d) => console.warn("[store] offline queue storage:", d.code, d.message),
   });
   await executor.waitForInit();
+
+  /**
+   * Put rows the server took into the collections. The server may merge some
+   * (the garden's bowl, a newer word state): the next read brings its version.
+   * A failure here is a bug, reported; the write itself is saved.
+   */
+  function confirm(mutations: readonly PendingMutation[]) {
+    return Promise.all(
+      mutations.map((m) => {
+        const { utils } = collections[m.collection.id as Table];
+        return m.type === "delete" ? utils.writeDelete(m.key as string) : utils.writeUpsert(m.modified);
+      }),
+    ).then(
+      () => undefined,
+      (e: unknown) => void (console.error("[store] could not keep saved rows", e), Sentry.captureException(e)),
+    );
+  }
   const unregister = registerOutbox(userId, () => executor.clearOutbox());
-  const unregisterSync = registerSync(userId, () => sync.abort());
-  if (import.meta.env.DEV) (window as unknown as { __store: unknown }).__store = { userId, collections };
+  const unregisterSync = registerSync(userId, stopSync);
+  if (import.meta.env.DEV) (window as unknown as { __store: unknown }).__store = { userId, collections, refetchAll };
 
   /** Apply changes on the device now; send them to the server when possible. */
   function write(mutate: () => void) {
@@ -189,6 +238,7 @@ export async function createStore(userId: string, email: string | null) {
     userId,
     collections,
     write,
+    refetchAll,
     /** Whether this tab may write (see tabLock). For useSyncExternalStore. */
     isWriter: () => writer,
     onWriterChange: (cb: () => void) => {
@@ -213,6 +263,8 @@ export async function createStore(userId: string, email: string | null) {
       for (const d of disposers) d();
       unregister();
       unregisterSync();
+      document.removeEventListener("visibilitychange", onVisibility);
+      stopSync();
       writerListeners.clear();
       refusedListeners.clear();
       executor.dispose();

@@ -30,7 +30,6 @@ export interface Config {
   /** Clients older than this get "please reload" instead of writing. */
   minClientVersion: string;
 
-  electric: { url: string; secret?: string | undefined };
   anthropic: { apiKey?: string | undefined; baseURL?: string | undefined; model: string };
   mail: { resendKey?: string | undefined; from: string };
   /** Server reports go to sentryDsn. connect lists the origins the browser
@@ -76,8 +75,6 @@ const env = EnvConfig.all({
   BETTER_AUTH_SECRET: variable("BETTER_AUTH_SECRET"),
   RAILWAY_GIT_COMMIT_SHA: variable("RAILWAY_GIT_COMMIT_SHA"),
   MIN_CLIENT_VERSION: variable("MIN_CLIENT_VERSION"),
-  ELECTRIC_URL: variable("ELECTRIC_URL"),
-  ELECTRIC_SECRET: variable("ELECTRIC_SECRET"),
   ANTHROPIC_API_KEY: variable("ANTHROPIC_API_KEY"),
   ANTHROPIC_BASE_URL: variable("ANTHROPIC_BASE_URL"),
   PERENNIAL_MODEL: variable("PERENNIAL_MODEL"),
@@ -115,7 +112,6 @@ const settings = env.pipe(
       dev,
       release: releaseOf(env),
       minClientVersion: env.MIN_CLIENT_VERSION ?? "0.0.0",
-      electric: { url: (env.ELECTRIC_URL ?? "http://localhost:30009").replace(/\/$/, ""), secret: env.ELECTRIC_SECRET },
       anthropic: {
         apiKey: env.ANTHROPIC_API_KEY,
         baseURL: env.ANTHROPIC_BASE_URL,
@@ -186,7 +182,6 @@ export function configProblems(c: Config): string[] {
   if (!c.mail.from || c.mail.from.includes("perennial.local")) out.push("MAIL_FROM must be set to an address on your sending domain");
   if (!c.appUrl.startsWith("https://")) out.push("APP_URL must be the public https URL");
   if (c.databaseUrl.includes("@localhost:25432/")) out.push("DATABASE_URL must be set");
-  if (!c.electric.secret) out.push("ELECTRIC_SECRET must be set (and match the Electric service)");
   if (!!c.turnstile.secretKey !== !!c.turnstile.siteKey) out.push("TURNSTILE_SECRET_KEY and VITE_TURNSTILE_SITE_KEY must be set together");
   return out;
 }

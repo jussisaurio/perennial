@@ -1,9 +1,8 @@
-# Local Postgres + Electric for development, tests and CI.
+# Local Postgres for development, tests and CI.
 #   docker compose up -d        then: cd server && bun run migrate && bun dev
 services:
   postgres:
     image: postgres:17-alpine
-    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=10", "-c", "max_wal_senders=10"]
     environment:
       POSTGRES_USER: perennial
       POSTGRES_PASSWORD: perennial
@@ -16,12 +15,3 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
-  electric:
-    image: electricsql/electric:1.8.1
-    environment:
-      DATABASE_URL: postgresql://perennial:perennial@postgres:5432/perennial?sslmode=disable
-      ELECTRIC_INSECURE: "true"
-    ports: ["30009:3000"]
-    depends_on:
-      postgres:
-        condition: service_healthy

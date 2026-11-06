@@ -74,7 +74,7 @@ test("signing out stops syncing first: no failed tables, no 401s", async ({ page
   const errors: string[] = [];
   const unauthorized: string[] = [];
   page.on("console", (m) => /entered error state|Live Query Error/.test(m.text()) && errors.push(m.text()));
-  page.on("response", (r) => r.url().includes("/api/shape") && r.status() === 401 && unauthorized.push(r.url()));
+  page.on("response", (r) => r.url().includes("/api/rows") && r.status() === 401 && unauthorized.push(r.url()));
   await startCourse(page);
   await addEmail(page);
   await page.getByRole("button", { name: "Sign out" }).click();
@@ -91,7 +91,7 @@ test("a sign-out that fails reloads, still signed in and syncing", async ({ page
   await page.getByRole("button", { name: "Sign out" }).click();
   await reloaded;
   // Sync runs again after the reload (the sign-out had stopped it).
-  await page.waitForResponse((r) => r.url().includes("/api/shape") && r.status() === 200);
+  await page.waitForResponse((r) => r.url().includes("/api/rows") && r.status() === 200);
   await expect(page.getByText(email)).toBeVisible();
 });
 

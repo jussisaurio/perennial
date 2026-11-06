@@ -14,3 +14,18 @@ export type Me = typeof Me.Type;
 /** GET /api/server: this server's release, the oldest app version it accepts writes from, and what it can do now. Public. */
 export const ServerInfo = Schema.Struct({ release: Schema.String, minClientVersion: Schema.String, features: Schema.Struct({ ai: Schema.Boolean }) });
 export type ServerInfo = typeof ServerInfo.Type;
+
+/**
+ * GET /api/rows: all of the learner's rows, per table, as stored (timestamps as
+ * ISO strings). Each row is checked only as an object here: its columns are the
+ * table's own (web/src/data/rows.ts).
+ */
+const Rows = Schema.Array(Schema.Record(Schema.String, Schema.Unknown));
+export const LearnerRows = Schema.Struct({
+  course: Rows,
+  review: Rows,
+  word_state: Rows,
+  user_word: Rows,
+  user_sentence: Rows,
+});
+export type LearnerRows = typeof LearnerRows.Type;

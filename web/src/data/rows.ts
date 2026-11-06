@@ -1,5 +1,5 @@
-// Rows as they sync from Postgres (see server/migrations). Timestamps stay
-// ISO strings; numbers and JSON are parsed by Electric.
+// Rows as the server sends them from Postgres (GET /api/rows, see
+// server/migrations): timestamps as ISO strings, numbers and JSON parsed.
 
 import { Option, Schema } from "effect";
 import type { GardenLeft } from "perennial-contract";
@@ -19,8 +19,7 @@ export interface CourseRow {
   door_open: boolean;
   /**
    * Leave it out (#351): what was left in the garden's bowl and when, and the
-   * shed's shelf. Missing from course rows Electric streams before their first
-   * course change after the migration.
+   * shed's shelf. The server always sends it (migration 0005 gave it a default).
    */
   garden_left?: GardenLeft;
   created_at: string;
@@ -62,19 +61,17 @@ export interface UserWordRow {
 
 const Forms = Schema.Array(Schema.String);
 // /api/write once stored `forms` as a jsonb string holding the list's JSON text (#337),
-// so those rows stream a string. A migration fixes the stored rows, but this stays: during a
+// so those rows come as a string. A migration fixes the stored rows, but this stays: during a
 // deploy, the older server can still write string rows after the migration ran.
 const decodeForms = Schema.decodeUnknownOption(Schema.Union([Forms, Schema.fromJsonString(Forms)]));
 
 /**
- * A user_word row as Electric streams it, with `forms` as a list. Forms of any
+ * A user_word row as the server sends it, with `forms` as a list. Forms of any
  * other shape are a bug: the word gets no forms of its own (the learner model
  * then uses the lemma), and `bad` hears the type that came, never the value.
  * A later edit of that word saves its forms as `[]`.
  */
 export function syncedUserWord<R extends Record<string, unknown>>(row: R, bad: (type: string) => void): R {
-  // An update carries only the columns it changed.
-  if (!("forms" in row)) return row;
   const forms = decodeForms(row.forms);
   if (Option.isSome(forms)) return { ...row, forms: forms.value };
   bad(typeof row.forms);

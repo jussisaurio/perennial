@@ -30,27 +30,21 @@ async function aliceWithData() {
 const TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
 const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.db(table)} where user_id = ${userId}`)[0]?.n);
 
-describe("reads: shapes only ever contain your own rows", () => {
-  test.each(TABLES)("%s", async (table) => {
+describe("reads: /api/rows only ever has your own rows", () => {
+  test("whatever the client asks for", async () => {
     const { aliceId } = await aliceWithData();
     const mallory = await t.signIn(unique("mallory"));
-    // Every way a client might try to widen the shape.
-    for (const extra of ["", "&where=true", `&where=user_id%3D'${aliceId}'`, `&params[1]=${aliceId}`, "&columns=user_id", `&subset__where=user_id%3D'${aliceId}'`]) {
-      const res = await t.call(`/api/shape?table=${table}&offset=-1${extra}`, undefined, mallory);
-      if (res.status !== 200) continue; // rejected outright is fine too
-      // A log is an array of messages; a subset request returns { data: [...] }.
-      const msgs = (Array.isArray(res.body) ? res.body : res.body.data) as { value?: { user_id: string } }[];
-      const ids = msgs.filter((m) => m.value).map((m) => m.value!.user_id);
-      expect(ids).not.toContain(aliceId);
+    await t.write(mallory, [review(W.b)]);
+    // Ways a client might try to widen the read: the server reads no parameters.
+    for (const extra of ["", "?where=true", `?user_id=${aliceId}`, "?table=user"]) {
+      const res = await t.call(`/api/rows${extra}`, undefined, mallory);
+      expect(res.status).toBe(200);
+      expect(Object.keys(res.body).sort()).toEqual([...TABLES].sort());
+      const owners = TABLES.flatMap((tb) => (res.body[tb] as { user_id: string }[]).map((r) => r.user_id));
+      expect(owners.length).toBeGreaterThan(0);
+      expect(owners).not.toContain(aliceId);
     }
-    expect((await t.call(`/api/shape?table=${table}&offset=-1`)).status).toBe(401);
-  });
-
-  test("tables outside the allow-list are refused", async () => {
-    const mallory = await t.signIn(unique("mallory"));
-    for (const table of ["user", "session", "account", "verification", "ai_usage", "ai_request", "public.user", "toString", "__proto__", "constructor"]) {
-      expect((await t.call(`/api/shape?table=${table}&offset=-1`, undefined, mallory)).status).toBe(400);
-    }
+    expect((await t.call("/api/rows")).status).toBe(401);
   });
 });
 
@@ -209,7 +203,7 @@ describe("production configuration fails closed", () => {
       set(saved);
     }
   };
-  const good = { BETTER_AUTH_SECRET: "x".repeat(40), RESEND_API_KEY: "re_test", MAIL_FROM: "Perennial <hello@example.com>", APP_URL: "https://perennial.example", DATABASE_URL: "postgres://x", ELECTRIC_SECRET: "s" };
+  const good = { BETTER_AUTH_SECRET: "x".repeat(40), RESEND_API_KEY: "re_test", MAIL_FROM: "Perennial <hello@example.com>", APP_URL: "https://perennial.example", DATABASE_URL: "postgres://x" };
 
   test("a complete production config is fine, and never dev mode", () => {
     const c = prod(good);

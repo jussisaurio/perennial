@@ -1,5 +1,5 @@
 import { expect, test } from "./test";
-import { answer, kicker, reveal, startCourse, startSession } from "./helpers";
+import { answer, kicker, readRowsAgain, reveal, startCourse, startSession } from "./helpers";
 
 // #209: learn a garden word, and its visitor comes. The cat is the course's 3rd word,
 // so a new learner meets it in the first 5 minutes; the summary says it came.
@@ -79,6 +79,7 @@ test("a learner who knows perro, pez and mariposa: the dog, the fish and the but
     await postWrite(Object.values(ids).map((word_id) => ({ type: "review.insert", row: { id: crypto.randomUUID(), lang: "es", word_id, skill: "read", grade: 4, kind: "known", reviewed_at: at, duration_ms: 4000, sentence_id: null } })));
     return ids;
   });
+  await readRowsAgain(page);
   await expect(page.getByRole("button", { name: "el perro · dog" })).toHaveAttribute("data-at", ids.perro);
   await expect(page.getByRole("button", { name: "el pez · fish" })).toHaveAttribute("data-at", ids.pez);
   await expect(page.getByRole("button", { name: "la mariposa · butterfly" })).toHaveAttribute("data-at", ids.mariposa);

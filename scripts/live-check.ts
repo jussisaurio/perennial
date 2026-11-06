@@ -49,7 +49,7 @@ ok(home.headers.get("x-content-type-options") === "nosniff", "nosniff");
 ok((await req("/health")).status === 200, "/health 200");
 
 // 2. Things that must not be public
-for (const p of ["/api/dev/outbox", "/api/dev/rows?table=review"]) {
+for (const p of ["/api/dev/outbox"]) {
   const r = await req(p);
   ok([401, 403, 404].includes(r.status), `dev endpoint closed: ${p}`, String(r.status));
 }
@@ -63,7 +63,7 @@ for (const a of assets) {
   const r = await req(a + ".map");
   ok(r.status !== 200 || !r.text.includes('"sources"'), `no source map: ${a}.map`, String(r.status));
 }
-ok((await req("/api/shape?table=review&offset=-1")).status === 401, "shape needs a session");
+ok((await req("/api/rows")).status === 401, "/api/rows needs a session");
 ok((await req("/api/me")).status === 401, "/api/me needs a session");
 ok([401, 403].includes((await req("/api/ai/examples", { body: { lang: "es", words: [], known: [] } })).status), "AI needs a session");
 
@@ -84,14 +84,13 @@ for (const p of ["/api/auth/list-sessions", "/api/auth/update-user", "/api/auth/
 const reviewId = crypto.randomUUID();
 const wA = await req("/api/write", { cookie: A.cookie, headers: { "x-perennial-version": "9.9.9" }, body: { mutations: [{ type: "review.insert", row: { id: reviewId, lang: "es", word_id: WORD, skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 3000 } }] } });
 ok(wA.status === 200, "user A can write", String(wA.status));
-for (const extra of ["", "&where=true", `&where=user_id%3D'${A.id}'`, `&params[1]=${A.id}`, `&subset__where=user_id%3D'${A.id}'`]) {
-  const r = await req(`/api/shape?table=review&offset=-1${extra}`, { cookie: B.cookie });
-  ok(!r.text.includes(A.id!) && !r.text.includes(reviewId), `B cannot read A's reviews${extra ? ` via ${decodeURIComponent(extra)}` : ""}`, String(r.status));
+for (const extra of ["", "?where=true", `?user_id=${A.id}`, "?table=user"]) {
+  const r = await req(`/api/rows${extra}`, { cookie: B.cookie });
+  ok(r.status === 200 && !r.text.includes(A.id!) && !r.text.includes(reviewId), `B cannot read A's rows${extra ? ` via ${extra}` : ""}`, String(r.status));
 }
-for (const t of ["user", "session", "account", "verification", "ai_request", "mail_log"]) ok((await req(`/api/shape?table=${t}&offset=-1`, { cookie: B.cookie })).status === 400, `shape refuses table ${t}`);
 const wB = await req("/api/write", { cookie: B.cookie, headers: { "x-perennial-version": "9.9.9" }, body: { mutations: [{ type: "review.delete", id: reviewId }, { type: "review.insert", row: { id: reviewId, lang: "es", word_id: WORD, skill: "read", grade: 1, reviewed_at: new Date().toISOString(), duration_ms: 1 } }] } });
-const stillA = await req("/api/shape?table=review&offset=-1", { cookie: A.cookie });
-ok(stillA.text.includes(reviewId) && /"grade":"?3/.test(stillA.text), "B cannot delete or overwrite A's review", `B write ${wB.status}`);
+const stillA = await req("/api/rows", { cookie: A.cookie });
+ok(stillA.text.includes(reviewId) && /"grade":3/.test(stillA.text), "B cannot delete or overwrite A's review", `B write ${wB.status}`);
 
 // 6. CSRF and request hygiene
 ok((await req("/api/write", { cookie: A.cookie, headers: { origin: "https://evil.example" }, body: { mutations: [] } })).status === 403, "cross-origin write refused");

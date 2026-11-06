@@ -1,4 +1,4 @@
-// Perennial server: auth, sync (Electric proxy + writes), Perennial AI, and
+// Perennial server: auth, sync (the learner's rows + writes), Perennial AI, and
 // the built web app from ../web/dist. Configuration: see src/config.ts.
 // Error reporting is set up in instrument.ts (preloaded, see package.json).
 
@@ -29,7 +29,6 @@ const Started = Layer.effectDiscard(
         release: config.release,
         ai: ai.enabled ? config.anthropic.model : "off",
         mail: config.dev ? "dev outbox" : "resend",
-        electric: config.electric.url,
       }),
     );
   }),

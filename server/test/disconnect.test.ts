@@ -1,7 +1,6 @@
 // A client that goes away mid-request (a closed tab, a lost connection): a
 // write, an AI call and an account deletion still run to their end, line in
-// the log included, so nothing stops half-way. Only a shape long poll stops,
-// and it stops its upstream fetch to Electric too.
+// the log included, so nothing stops half-way.
 
 import { afterAll, expect, test } from "bun:test";
 import { mockLLM, review, startApp, stopMockLLM, unique, W } from "./helpers";
@@ -9,25 +8,22 @@ import { mockLLM, review, startApp, stopMockLLM, unique, W } from "./helpers";
 type App = Awaited<ReturnType<typeof startApp>>;
 type Line = Record<string, unknown>;
 
-/** A stand-in upstream (Electric, the model) that holds each request until `release()`, then answers or forwards it. */
-function heldUpstream(forward?: string) {
+/** A stand-in for the model that holds each request until `release()`, then forwards it. */
+function heldUpstream(forward: string) {
   const arrived = Promise.withResolvers<void>();
   const gate = Promise.withResolvers<void>();
-  const aborted = Promise.withResolvers<void>();
   const server = Bun.serve({
     port: 0,
     idleTimeout: 0,
     async fetch(req) {
-      req.signal.addEventListener("abort", () => aborted.resolve());
       const body = await req.text();
       arrived.resolve();
       await gate.promise;
-      if (!forward) return new Response("[]", { headers: { "content-type": "application/json" } });
       const url = new URL(req.url);
       return fetch(forward + url.pathname + url.search, { method: req.method, headers: req.headers, body });
     },
   });
-  return { url: `http://localhost:${server.port}`, arrived: arrived.promise, aborted: aborted.promise, release: () => gate.resolve(), stop: () => server.stop(true) };
+  return { url: `http://localhost:${server.port}`, arrived: arrived.promise, release: () => gate.resolve(), stop: () => server.stop(true) };
 }
 
 /** Lock a learner's user row in a transaction of our own, so the server's next write to them waits for us. */
@@ -141,23 +137,5 @@ test("an AI call finishes, and is paid for, after its client is gone", async () 
   } finally {
     model.stop();
     await ai.stop();
-  }
-});
-
-test("a shape poll whose client is gone stops its fetch to Electric", async () => {
-  const electric = heldUpstream();
-  const app = await startApp({ electric: { url: electric.url } });
-  try {
-    const cookie = await app.anonymous();
-    const client = new AbortController();
-    const sent = fetch(`${app.url}/api/shape?table=review&offset=-1`, { signal: client.signal, headers: { cookie } }).catch(() => "aborted");
-    await electric.arrived;
-    client.abort();
-    expect(await sent).toBe("aborted");
-    await electric.aborted;
-  } finally {
-    electric.release();
-    electric.stop();
-    await app.stop();
   }
 });

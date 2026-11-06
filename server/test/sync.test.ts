@@ -6,25 +6,23 @@ import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
 
-test("writes return the Postgres transaction id; review inserts are idempotent", async () => {
+test("review inserts are idempotent", async () => {
   const cookie = await t.signIn(unique("write"));
   const r = review(W.a);
   const first = await t.write(cookie, [r]);
   expect(first.status).toBe(200);
-  expect(typeof first.body.txid).toBe("number");
   expect((await t.write(cookie, [r])).status).toBe(200); // a retry changes nothing
   const id = (await t.me(cookie)).id;
   expect((await t.sql`select count(*)::int as n from review where user_id = ${id}`)[0]?.n).toBe(1);
 });
 
-test("writes say whether anything changed, so the client doesn't wait for an echo that won't come", async () => {
+test("writes say whether anything changed", async () => {
   const cookie = await t.signIn(unique("noop"));
   const r = review(W.i);
   expect((await t.write(cookie, [r])).body).toMatchObject({ changed: true });
   const again = await t.write(cookie, [r]); // a retried insert
   expect(again.status).toBe(200);
   expect(again.body).toMatchObject({ changed: false });
-  expect(typeof again.body.txid).toBe("number");
   expect((await t.write(cookie, [{ type: "review.delete", id: crypto.randomUUID() }])).body.changed).toBe(false);
 });
 
@@ -77,12 +75,11 @@ test("the orchard door opens for good, per course, and syncs to the learner's de
   await t.write(cookie, [{ type: "course.upsert", row: { lang: "de" } }]);
   expect(await door("de")).toBe(false);
   expect((await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", door_open: "yes" } }])).status).toBe(422);
-  // The course shape carries it to the learner's other devices.
-  const res = await t.call("/api/shape?table=course&offset=-1", undefined, cookie);
+  // The learner's other devices read it.
+  const res = await t.call("/api/rows", undefined, cookie);
   expect(res.status).toBe(200);
-  // Electric sends values as text; the app's Electric client parses them.
-  const rows = (res.body as { value?: { lang: string; door_open: string } }[]).filter((m) => m.value).map((m) => m.value!);
-  expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", "false"], ["es", "true"]]);
+  const rows = res.body.course as { lang: string; door_open: boolean }[];
+  expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", false], ["es", true]]);
 });
 
 test("leave it out: the garden's bowl and shelf only move forward, per course, and sync as an object (#351)", async () => {
@@ -115,13 +112,12 @@ test("leave it out: the garden's bowl and shelf only move forward, per course, a
   expect((await put({ ...crumbs, bowl: { ...crumbs.bowl, thing: "my secret note" } })).status).toBe(422);
   expect((await put({ ...crumbs, kept: Array.from({ length: 33 }, () => "feather") })).status).toBe(422);
   expect((await stored())?.left).toEqual(found);
-  // The course shape carries it to the learner's other devices.
-  const res = await t.call("/api/shape?table=course&offset=-1", undefined, cookie);
-  const rows = (res.body as { value?: { lang: string; garden_left: string } }[]).filter((m) => m.value).map((m) => m.value!);
-  expect(JSON.parse(rows.find((r) => r.lang === "es")!.garden_left)).toEqual(found);
+  // The learner's other devices read it as an object.
+  const rows = (await t.call("/api/rows", undefined, cookie)).body.course as { lang: string; garden_left: unknown }[];
+  expect(rows.find((r) => r.lang === "es")?.garden_left).toEqual(found);
 });
 
-test("a word's forms are stored as a list, which is what the app reads from the stream", async () => {
+test("a word's forms are stored as a list, which is what the app reads", async () => {
   const cookie = await t.signIn(unique("forms"));
   const id = crypto.randomUUID();
   expect((await t.write(cookie, [{ type: "user_word.upsert", row: { id, lang: "es", lemma: "zorro", gloss: "fox", forms: ["zorro", "zorros"] } }])).status).toBe(200);
@@ -129,7 +125,7 @@ test("a word's forms are stored as a list, which is what the app reads from the 
   expect(row).toEqual({ kind: "array", forms: ["zorro", "zorros"] });
 });
 
-test("migration 0004 turns forms stored as a JSON string into the list, and the stream carries it (#337)", async () => {
+test("migration 0004 turns forms stored as a JSON string into the list, and the app reads it (#337)", async () => {
   const cookie = await t.signIn(unique("forms-string"));
   const user = (await t.me(cookie)).id;
   const id = crypto.randomUUID();
@@ -138,21 +134,14 @@ test("migration 0004 turns forms stored as a JSON string into the list, and the 
   await t.sql`insert into user_word (id, user_id, lang, lemma, gloss, forms) values (${id}, ${user}, 'es', 'zorro', 'fox', to_jsonb(${JSON.stringify(forms)}::text))`;
   const read = async () => (await t.sql<{ kind: string; forms: unknown }>`select jsonb_typeof(forms) as kind, forms from user_word where id = ${id}`)[0];
   expect(await read()).toEqual({ kind: "string", forms: JSON.stringify(forms) });
-  // The learner's stream as an open app has it, up to date before the migration.
-  const shape = (offset: string, handle = "") => t.call(`/api/shape?table=user_word&offset=${offset}${handle && `&handle=${handle}&live=true`}`, undefined, cookie);
-  const start = await shape("-1");
-  expect(start.status).toBe(200);
 
   const migration = await Bun.file(new URL("../migrations/0004_user_word_forms_list.sql", import.meta.url)).text();
   // Twice: a rerun (say, a later cleanup migration) changes nothing.
   for (let i = 0; i < 2; i++) for (const statement of statements(migration)) await Effect.runPromise(t.db.unsafe(statement));
   expect(await read()).toEqual({ kind: "array", forms });
 
-  // The open app gets the update. Electric sends values as text; the app's Electric client parses them.
-  const live = await shape(start.headers.get("electric-offset")!, start.headers.get("electric-handle")!);
-  expect(live.status).toBe(200);
-  const updates = (live.body as { headers: { operation?: string }; value?: { id: string; forms: string } }[]).filter((m) => m.headers.operation === "update");
-  expect(updates.map((m) => [m.value?.id, JSON.parse(m.value!.forms)])).toEqual([[id, forms]]);
+  const rows = (await t.call("/api/rows", undefined, cookie)).body.user_word as { id: string; forms: unknown }[];
+  expect(rows.map((r) => [r.id, r.forms])).toEqual([[id, forms]]);
 });
 
 test("bad batches are rejected whole; reviews from the future too", async () => {
@@ -170,21 +159,4 @@ test("old clients are told to reload before writing", async () => {
   const fresh = await strict.call("/api/write", { mutations: [review(W.f)] }, cookie, { "x-perennial-version": "2.0.0" });
   expect(fresh.status).toBe(200);
   await strict.stop();
-});
-
-test("shapes stream only the learner's own rows, whatever the client asks for", async () => {
-  const alice = await t.signIn(unique("shape-a"));
-  const bob = await t.signIn(unique("shape-b"));
-  await t.write(alice, [review(W.g)]);
-  await t.write(bob, [review(W.h)]);
-  // A sneaky client tries to widen the shape.
-  const res = await t.call("/api/shape?table=review&offset=-1&where=true", undefined, bob);
-  expect(res.status).toBe(200);
-  const rows = (res.body as { value?: { word_id: string } }[]).filter((m) => m.value).map((m) => m.value!.word_id);
-  expect(rows).toContain(W.h);
-  expect(rows).not.toContain(W.g);
-  expect(res.headers.get("vary")).toContain("cookie");
-  expect(res.headers.get("cache-control") ?? "").not.toContain("public");
-  expect((await t.call("/api/shape?table=user&offset=-1", undefined, bob)).status).toBe(400);
-  expect((await t.call("/api/shape?table=review&offset=-1")).status).toBe(401);
 });
