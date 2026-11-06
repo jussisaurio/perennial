@@ -127,10 +127,15 @@ const CATCH_UP = 5;
  * Before any such word there is nothing to keep a distance from: Infinity.
  */
 export function sincePlaced(started: Iterable<{ garden?: GardenWord; orchard?: OrchardWord; first: number }>): number {
+  return sinceLastPlaced(started).since;
+}
+
+/** sincePlaced, and the first review time of the last garden or orchard word it counts from (-Infinity for none). */
+export function sinceLastPlaced(started: Iterable<{ garden?: GardenWord; orchard?: OrchardWord; first: number }>): { since: number; last: number } {
   const words = [...started];
   const last = Math.max(...words.filter(placed).map((w) => w.first));
-  if (last === -Infinity) return Infinity;
-  return words.filter((w) => !placed(w) && w.first > last).length;
+  if (last === -Infinity) return { since: Infinity, last };
+  return { since: words.filter((w) => !placed(w) && w.first > last).length, last };
 }
 
 /**
@@ -142,22 +147,89 @@ export function sincePlaced(started: Iterable<{ garden?: GardenWord; orchard?: O
  * learner gets the course as it is: its places are further apart.
  */
 export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean, since: number): W[] {
-  const out: W[] = [];
-  const due: W[] = [];
-  for (const w of course) {
-    if (!open(w)) continue;
-    if (placed(w)) {
-      due.push(w);
-      continue;
-    }
-    if (due.length && since >= CATCH_UP - 1) {
-      out.push(due.shift()!);
-      since = 0;
-    }
-    out.push(w);
-    since++;
+  return walkCourse(course, open, since).list;
+}
+
+/** nextWords' walk so far: the words out, the garden and orchard words held back, and `since`. */
+class Walker<W extends DeckWord> {
+  readonly out: W[] = [];
+  readonly due: W[] = [];
+  since: number;
+  constructor(since: number) {
+    this.since = since;
   }
-  return [...out, ...due];
+  /** The next open course word. */
+  step(w: W) {
+    if (placed(w)) {
+      this.due.push(w);
+      return;
+    }
+    if (this.due.length && this.since >= CATCH_UP - 1) {
+      this.out.push(this.due.shift()!);
+      this.since = 0;
+    }
+    this.out.push(w);
+    this.since++;
+  }
+  /** From here on, the same words give the same list: `since` only matters up to CATCH_UP - 1. */
+  same(o: Walker<W>): boolean {
+    return Math.min(this.since, CATCH_UP - 1) === Math.min(o.since, CATCH_UP - 1) && this.due.length === o.due.length && this.due.every((w, i) => w === o.due[i]);
+  }
+}
+
+/** nextWords, kept so the next learner's walk can go on from it (walkAgain). `head`: the first open course place. */
+export interface Walk<W> {
+  list: W[];
+  since: number;
+  head: number;
+}
+
+/** nextWords, from the start of the course. */
+export function walkCourse<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean, since: number): Walk<W> {
+  const walker = new Walker<W>(since);
+  let head = course.length;
+  for (let i = 0; i < course.length; i++) {
+    if (!open(course[i])) continue;
+    head = Math.min(head, i);
+    walker.step(course[i]);
+  }
+  return { list: [...walker.out, ...walker.due], since, head };
+}
+
+/**
+ * The walk of `prev` after a few words opened or closed (`changed`, their
+ * places in the course; `wasOpen` says what they were before) and `since`
+ * moved. Equal to walkCourse with `open` and `since` (#486). It walks the
+ * old and the new course side by side, from the first open place, until both
+ * are past the changed words and in the same state; the rest of the old list
+ * is then the rest of the new one. A learner's answer starts a word at the
+ * head of the course, so that is a few words, not the whole course.
+ */
+export function walkAgain<W extends DeckWord>(prev: Walk<W>, course: readonly W[], open: (w: W) => boolean, wasOpen: (w: W) => boolean, since: number, changed: ReadonlySet<number>): Walk<W> {
+  // Before the old head, every place was closed, and those not changed still are.
+  let from = prev.head;
+  let last = -1;
+  for (const i of changed) {
+    if (i < from && open(course[i])) from = i;
+    last = Math.max(last, i);
+  }
+  const now = new Walker<W>(since);
+  const was = new Walker<W>(prev.since);
+  let head = course.length;
+  for (let i = from; i < course.length; i++) {
+    const w = course[i];
+    const o = open(w);
+    if (o) {
+      head = Math.min(head, i);
+      now.step(w);
+    }
+    if (changed.has(i) ? wasOpen(w) : o) was.step(w);
+    if (i >= last && now.same(was)) {
+      while (head === course.length && ++i < course.length) if (open(course[i])) head = i;
+      return { list: [...now.out, ...prev.list.slice(was.out.length)], since, head };
+    }
+  }
+  return { list: [...now.out, ...now.due], since, head };
 }
 
 type ListWord = { id: string; source: "deck" | "user"; rank: number };
