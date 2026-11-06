@@ -59,8 +59,6 @@ const PERMANENT = {
   please_reload: false,
   sign_in_required: false,
   account_required: false,
-  unknown_shape: false,
-  unknown_table: false,
   quota: true,
   unknown_word: true,
   review_from_the_future: true,

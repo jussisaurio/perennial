@@ -43,7 +43,7 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
 
 **Auth:** Better Auth's tables `user` (with `"isAnonymous"`; Better Auth's own camelCase column names are kept), `account`, `session` and `verification`. User ids are `uuid`. `account` has one row per sign-in method (`provider_id`, `account_id`), so social login is config, not a schema change.
 
-**Synced per user** with ElectricSQL (Postgres to client over HTTP "shapes", always filtered `where user_id = $session` by our proxy) into TanStack DB collections on the client. Writes go through our own endpoints, queued offline by TanStack DB's offline transactions. Composite keys keep their Postgres primary key; the client keys rows by the non-user part (`lang`, `word_id`), so linking an account doesn't make every local row resync.
+**Synced per user**: `GET /api/rows` returns all of it in one response, always filtered `where user_id = $session`, into TanStack DB query collections on the client. Writes go through our own endpoints, queued offline by TanStack DB's offline transactions. Composite keys keep their Postgres primary key; the client keys rows by the non-user part (`lang`, `word_id`), so linking an account doesn't make every local row resync.
 
 ```sql
 create table course (            -- one per language; settings edited per column
@@ -83,7 +83,7 @@ create table user_sentence (     -- from own texts, or AI-written for any word
 create index on user_sentence (user_id, word_id);
 ```
 
-Theme and sound are per-device preferences (localStorage), so they don't sync. Deletes are real deletes (Electric syncs them): Undo deletes the review, and deleting a word or sentence removes it.
+Theme and sound are per-device preferences (localStorage), so they don't sync. Deletes are real deletes: the next read of `/api/rows` brings them. Undo deletes the review, and deleting a word or sentence removes it.
 
 **Server only:** `ai_usage (user_id, period, used)`, `ai_spend (period, usd)`, and `ai_request` (model, prompt version, tokens, cost, latency). Rows that reference a user cascade when the user is deleted.
 

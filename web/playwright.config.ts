@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 // Ports are offset from the dev defaults so the suite can run beside `bun dev`.
 // E2E_PORT_OFFSET shifts them again, so two checkouts can run the suite at once.
-// Needs Postgres + Electric: `docker compose up -d` at the repo root.
+// Needs Postgres: `docker compose up -d` at the repo root.
 const OFFSET = Number(process.env.E2E_PORT_OFFSET ?? 0);
 const WEB = 5181 + OFFSET;
 const API = 18787 + OFFSET;
@@ -17,7 +17,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   // Every test makes its own learner, so tests run in any order and at once.
   // GitHub's runners for public repos have 4 vCPUs, but they also run vite, the
-  // API, Postgres and Electric: 4 workers saved ~0–13 s and brought a new
+  // API and Postgres: 4 workers saved ~0–13 s and brought a new
   // ECONNRESET on the shared server (#287), so 2 per runner (CI also shards the suite).
   workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : [["list"]],

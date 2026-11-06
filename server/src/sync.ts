@@ -1,25 +1,18 @@
-// Sync: reads stream from Electric through an auth proxy (each learner sees
-// only their own rows); writes come in as batches of mutations, are checked,
-// scoped to the session's user, and applied in one transaction. The response
-// carries the Postgres transaction id, which the client waits to see in the
-// stream before dropping its optimistic state, and whether any row changed (if
-// none did, no echo will come: the client must not wait for one).
+// Sync: the app reads all of the learner's rows in one request (each learner
+// sees only their own rows); writes come in as batches of mutations, are
+// checked, scoped to the session's user, and applied in one transaction. The
+// response says whether any row changed.
 
-import { ELECTRIC_PROTOCOL_QUERY_PARAMS } from "@electric-sql/client";
 import { PgClient } from "@effect/sql-pg";
 import { Clock, Context, Effect, Layer } from "effect";
 import type { SqlError } from "effect/sql/SqlError";
-import { NO_LEFT, type GardenLeft, type Mutation, type UserId, type WordId, type WriteResult } from "perennial-contract";
-import { AppConfig } from "./config";
+import { NO_LEFT, type GardenLeft, type LearnerRows, type Mutation, type UserId, type WordId, type WriteResult } from "perennial-contract";
 import { COURSE_DEFAULTS } from "./course";
 import { rowCount, theRow } from "./db";
 import { leftProblem, mergeLeft } from "./garden";
 import { type ApiError, refuse } from "./http";
-import { event, inSentryScope, RequestContext } from "./request";
+import { event, RequestContext } from "./request";
 import { Words } from "./words";
-
-/** Tables a learner can read, each scoped to their user id. */
-export const LEARNER_TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
 
 const DAY = 86_400_000;
 /** A device clock can be wrong: never accept times from the future (with a little slack). */
@@ -44,8 +37,8 @@ export class Sync extends Context.Service<
      * call the model: their words are charged before the app writes them.
      */
     readonly ensureRoom: (userId: UserId, table: "user_word" | "user_sentence", n: number) => Effect.Effect<void, ApiError>;
-    /** The learner's rows of one table, streamed from Electric. */
-    readonly proxyShape: (req: Request, userId: UserId) => Effect.Effect<Response, ApiError, RequestContext>;
+    /** All of the learner's rows, of every table they can read. */
+    readonly rows: (userId: UserId) => Effect.Effect<LearnerRows>;
   }
 >()("perennial/Sync") {}
 
@@ -54,7 +47,6 @@ export const SyncLive = Layer.effect(
   Effect.gen(function* () {
     const sql = yield* PgClient.PgClient;
     const words = yield* Words;
-    const config = yield* AppConfig;
 
     // A database failure while answering a request is an outage or a bug, never
     // the learner's doing: a defect (500, with a Sentry report), as before.
@@ -134,8 +126,7 @@ export const SyncLive = Layer.effect(
 
     /**
      * Applies a batch in one transaction. `changed` is false when no statement
-     * touched a row (a retried insert, an older state, a delete of nothing): no
-     * change reaches the stream, so there is no txid echo to wait for.
+     * touched a row (a retried insert, an older state, a delete of nothing).
      */
     const applyWrites = Effect.fn("Sync.applyWrites")(
       function* (userId: UserId, mutations: readonly Mutation[]) {
@@ -151,8 +142,6 @@ export const SyncLive = Layer.effect(
             if (!user.length || !(yield* sql`select 1 from session where "userId" = ${userId} limit 1`).length) return yield* refuse({ error: "sign_in_required" });
             yield* checkQuota(userId, mutations);
             yield* checkWords(userId, mutations);
-            // The txid must be read inside the writing transaction.
-            const { txid } = yield* theRow(sql<{ txid: string }>`select pg_current_xact_id()::xid::text as txid`);
             let rows = 0;
             const started: string[] = [];
             for (const m of mutations) {
@@ -231,7 +220,7 @@ export const SyncLive = Layer.effect(
                   break;
               }
             }
-            return { txid: Number(txid), changed: rows > 0, started };
+            return { changed: rows > 0, started };
           }),
         );
         if (started.length) yield* event({ courseStarted: started.join(",") });
@@ -240,34 +229,19 @@ export const SyncLive = Layer.effect(
       Effect.catchTag("SqlError", Effect.die),
     );
 
-    const proxyShape = Effect.fn("Sync.proxyShape")(function* (req: Request, userId: UserId) {
-      const ctx = yield* RequestContext;
-      const url = new URL(req.url);
-      const table = url.searchParams.get("table") ?? "";
-      if (!LEARNER_TABLES.includes(table)) return yield* refuse({ error: "unknown_shape" });
-      const origin = new URL(`${config.electric.url}/v1/shape`);
-      for (const [k, v] of url.searchParams) if (ELECTRIC_PROTOCOL_QUERY_PARAMS.includes(k)) origin.searchParams.set(k, v);
-      // The shape definition is always ours, never the client's.
-      origin.searchParams.set("table", table);
-      origin.searchParams.set("where", "user_id = $1");
-      origin.searchParams.set("params[1]", userId);
-      if (config.electric.secret) origin.searchParams.set("secret", config.electric.secret);
-      // The request's own signal: when the browser goes, the fetch to Electric stops too.
-      const res = yield* Effect.tryPromise({ try: () => inSentryScope(ctx, () => fetch(origin, { signal: req.signal })), catch: (e) => e }).pipe(
-        // The browser cancelled the long poll (navigation, a new shape): nothing to report. Anything else is a bug or an outage.
-        Effect.catch((e) => (req.signal.aborted ? Effect.succeed(null) : Effect.die(e))),
-      );
-      if (!res) return new Response(null, { status: 499 });
-      const headers = new Headers(res.headers);
-      headers.delete("content-encoding"); // fetch already decompressed the body
-      headers.delete("content-length");
-      headers.delete("access-control-allow-origin");
-      // Same URL, different user: never let a shared cache serve it to someone else.
-      headers.set("vary", "cookie");
-      headers.set("cache-control", (headers.get("cache-control") ?? "no-cache").replace(/\bpublic\b/, "private").replace(/,?\s*s-maxage=\d+/, ""));
-      return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
-    });
+    // The tables at once, each on its own connection, so each is read on its own (as the
+    // shapes were): a write between two reads shows in one of them, and the next fetch has it all.
+    const rows = Effect.fn("Sync.rows")(
+      function* (userId: UserId) {
+        const table = (name: keyof LearnerRows) => sql`select * from ${sql(name)} where user_id = ${userId}`;
+        return yield* Effect.all(
+          { course: table("course"), review: table("review"), word_state: table("word_state"), user_word: table("user_word"), user_sentence: table("user_sentence") },
+          { concurrency: "unbounded" },
+        );
+      },
+      Effect.catchTag("SqlError", Effect.die),
+    );
 
-    return Sync.of({ applyWrites, ensureRoom, proxyShape });
+    return Sync.of({ applyWrites, ensureRoom, rows });
   }),
 );

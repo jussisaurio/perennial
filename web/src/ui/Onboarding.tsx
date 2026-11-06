@@ -45,10 +45,10 @@ function saveDraft(d: Draft) {
  * loading screen (not this page again) while the new account and its course
  * arrive, even though signing in remounts everything in between. Kept outside
  * React for that reason, and observable, so a failure brings this page back
- * with its error.
+ * with its error. `saved`: the server has the course, so the app reads it (App).
  */
-type Starting = { lang: string | null; error: string };
-let starting: Starting = { lang: null, error: "" };
+type Starting = { lang: string | null; saved: boolean; error: string };
+let starting: Starting = { lang: null, saved: false, error: "" };
 const startingListeners = new Set<() => void>();
 function setStarting(next: Starting) {
   starting = next;
@@ -60,18 +60,19 @@ const subscribeStarting = (l: () => void) => {
 };
 export const useStartingCourse = () => useSyncExternalStore(subscribeStarting, () => starting);
 export const courseArrived = () => {
-  if (starting.lang) setStarting({ lang: null, error: "" });
+  if (starting.lang) setStarting({ lang: null, saved: false, error: "" });
 };
 
 /** The first write: an anonymous account (if there is none yet) and the course. */
 export async function startCourse(lang: string) {
-  setStarting({ lang, error: "" });
+  setStarting({ lang, saved: false, error: "" });
   try {
     await ensureUser();
     // The app no longer reads `minutes` (5 a day for everyone); older app versions still do.
     await postWrite([{ type: "course.upsert", row: { lang, minutes: DAILY_MINUTES } }]);
+    setStarting({ lang, saved: true, error: "" });
   } catch (e) {
-    setStarting({ lang: null, error: "Could not start. Check your internet connection and try again." });
+    setStarting({ lang: null, saved: false, error: "Could not start. Check your internet connection and try again." });
     throw e;
   }
 }

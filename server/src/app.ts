@@ -1,4 +1,4 @@
-// The HTTP app: auth, sync (shape proxy + writes), Perennial AI, account
+// The HTTP app: auth, sync (the learner's rows + writes), Perennial AI, account
 // deletion, and the built web app. Every request gets an id that appears in
 // every log line, in the X-Request-Id response header, and in error reports.
 //
@@ -23,7 +23,7 @@ import { annotate, event, inBetterAuth, inSentryScope, RequestContext, sentrySpa
 import { Mail, OutboxMailer } from "./mail";
 import { Ai } from "./ai";
 import { Auth } from "./services";
-import { LEARNER_TABLES, Sync } from "./sync";
+import { Sync } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
 
 /**
@@ -50,7 +50,7 @@ self.addEventListener("activate", (e) => e.waitUntil((async () => {
 const SLOW_MS = 1000;
 
 /**
- * A web Response (Better Auth, the shape proxy, static files, the edge's own)
+ * A web Response (Better Auth, static files, the edge's own)
  * as Effect's response, untouched: the server sends the same object on. (Effect's
  * fromWeb would turn its body into a stream and re-encode its cookies.)
  */
@@ -122,8 +122,7 @@ export const AppLive = Layer.effect(
     // the whole request fiber uninterruptible from its start, which keeps
     // `handle`, Better Auth and static files going; HttpRouter makes a route
     // interruptible again unless it says `uninterruptible: true`. So never wrap
-    // `handle` or a route in Effect.interruptible or Effect.timeout. (The shape
-    // proxy stops its own upstream fetch: sync.ts.)
+    // `handle` or a route in Effect.interruptible or Effect.timeout.
     const at = (path: `/${string}`, methods: Methods) =>
       HttpRouter.route(
         "*",
@@ -156,11 +155,11 @@ export const AppLive = Layer.effect(
         GET: Effect.sync(() => json({ release: config.release, minClientVersion: config.minClientVersion, features: { ai: ai.enabled } } satisfies ServerInfo, 200, { "cache-control": "no-cache" })),
       }),
 
-      at("/api/shape", {
+      // Everything the learner has: the app reads it at start and when it comes back into view (web/src/data/store.ts).
+      at("/api/rows", {
         GET: Effect.gen(function* () {
           const user = yield* requireUser();
-          const { request } = yield* RequestContext;
-          return webResponse(yield* sync.proxyShape(request, user.id));
+          return json(yield* sync.rows(user.id));
         }),
       }),
       at("/api/write", {
@@ -220,16 +219,6 @@ export const AppLive = Layer.effect(
           const email = new URL(request.url).searchParams.get("email") ?? "";
           const m = mailer.latest(email);
           return m ? json({ code: m.subject.match(/\d{6}/)?.[0], subject: m.subject }) : yield* refuse({ error: "no_mail" });
-        }),
-      }));
-      // The signed-in learner's rows, as stored on the server (tests check what really arrived).
-      routes.push(at("/api/dev/rows", {
-        GET: Effect.gen(function* () {
-          const user = yield* requireUser();
-          const { request } = yield* RequestContext;
-          const table = new URL(request.url).searchParams.get("table");
-          if (!table || !LEARNER_TABLES.includes(table)) return yield* refuse({ error: "unknown_table" });
-          return json(yield* Effect.orDie(sql`select * from ${sql(table)} where user_id = ${user.id}`));
         }),
       }));
     }
@@ -351,12 +340,9 @@ export const AppLive = Layer.effect(
 /** The request's one line (log.ts). */
 const logRequest = (ctx: RequestInfo, req: Request, url: URL, status: number, ms: number) =>
   Effect.gen(function* () {
-    // Shapes are long polls (held open until data changes, then cancelled by
-    // the browser as 499): logging them would drown everything else.
-    if (url.pathname === "/api/shape" && (status < 400 || status === 499)) return;
-    // Slow requests stand out (warn) so they can be searched and alerted on. Live shape
-    // polls wait ~20 s by design and AI calls take seconds, so neither counts.
-    const slow = ms > SLOW_MS && url.pathname !== "/api/shape" && !url.pathname.startsWith("/api/ai/");
+    // Slow requests stand out (warn) so they can be searched and alerted on. AI
+    // calls take seconds by design, so they don't count.
+    const slow = ms > SLOW_MS && !url.pathname.startsWith("/api/ai/");
     yield* (slow ? Effect.logWarning("slow request") : Effect.logInfo("request")).pipe(Effect.annotateLogs({ method: req.method, path: url.pathname, status, ms }));
     // Grouped by route: API paths carry no ids; every static file is one route.
     if (slow && ms > VERY_SLOW_MS) inSentryScope(ctx, () => reportVerySlow(req.method, url.pathname.startsWith("/api/") ? url.pathname : "static", status, ms));
@@ -371,7 +357,6 @@ export const BunServerLive = (port: number) =>
     port,
     // Bun.serve's own default; BunHttpServer's would be "::" (IPv6).
     hostname: "0.0.0.0",
-    // Electric holds live shape requests open for ~20 s; Bun's default 10 s idle
-    // timeout would cut them.
+    // An AI call can take longer than Bun's default 10 s idle timeout, which would cut it.
     idleTimeout: 0,
   });

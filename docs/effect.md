@@ -14,7 +14,7 @@ We use [Effect](https://effect.website) where the code does I/O. Errors, timeout
 | Wire contract (`contract/`) | Yes, Schema | One schema for every request body, answer and error code. The server decodes with it; the app will too. |
 | The app's I/O (`web/src/data/*`) | Yes | Timeouts, the tab lock and the server's errors become types. |
 | Pure code (`core/*`, `content/*`, FSRS, the planner) | No | It is pure and takes `now` as an argument. Effect would only add noise. |
-| React, TanStack DB, Electric wiring | No | They have the shape of their frameworks. Effect starts at the functions they call. |
+| React, TanStack DB wiring | No | They have the shape of their frameworks. Effect starts at the functions they call. |
 | The 3D garden | No | A frame loop gains nothing from fibers. |
 
 Inside Effect code, plain TypeScript is fine: `null`, `if`, loops. We do not use `Option` everywhere or long point-free pipes.

@@ -21,9 +21,9 @@ async function failsWith<C extends abstract new (...args: never[]) => unknown>(c
   return e as InstanceType<C>; // narrowed by the instanceof check above; TS does not carry it through the generic
 }
 
-test("a write the server took: its txid, and whether anything changed", async () => {
-  answer(200, JSON.stringify({ txid: 42, changed: false }));
-  expect(await postWrite([])).toEqual({ txid: 42, changed: false });
+test("a write the server took: whether anything changed", async () => {
+  answer(200, JSON.stringify({ changed: false }));
+  expect(await postWrite([])).toEqual({ changed: false });
 });
 
 test("a contract error is an ApiError with its fields, and says whether to try again", async () => {
@@ -75,10 +75,10 @@ test("no connection is a NetworkError with the browser's words", async () => {
 });
 
 test("a success answer that breaks the contract is a BadAnswer; the learner never sees its raw words", async () => {
-  answer(200, JSON.stringify({ txid: "42" }));
+  answer(200, JSON.stringify({ changed: "no" }));
   const e = await failsWith(BadAnswer, postWrite([]));
   expect(e.path).toBe("/api/write");
-  expect(String(e.cause)).toContain("txid");
+  expect(String(e.cause)).toContain("changed");
   expect(apiMessage(e)).toBe("Something went wrong. Try again later.");
 });
 

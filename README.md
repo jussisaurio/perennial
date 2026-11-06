@@ -17,21 +17,21 @@ Anki; see [DESIGN.md](DESIGN.md) for what we changed and why.
 
 ```
 decks/<lang>/deck.json      the shared course: static JSON, built into the app
-web/  (Vite + React)        TanStack DB collections fed by Electric shapes; a write queue
-server/  (Bun)              Better Auth, Electric shape proxy, /api/write, Perennial AI, serves web/dist
+web/  (Vite + React)        TanStack DB query collections fed by GET /api/rows; a write queue
+server/  (Bun)              Better Auth, /api/rows, /api/write, Perennial AI, serves web/dist
 contract/                   the wire contract: every request, answer and error code, as Effect Schemas
-Postgres + Electric         learner data; Electric streams each learner's rows to their devices
+Postgres                    learner data; the server reads and writes it, scoped to the session user
 ```
 
 - **Decks are content, not user data.** The course is static JSON in `decks/`, built into the app. There is no AI at runtime for the course. Format and rules: [docs/schema.md](docs/schema.md).
 - **Server** (`server/`): Bun, [Effect](docs/effect.md) for the HTTP edge, settings and logs, Postgres through `Bun.sql`, plain SQL migrations in `server/migrations/`. Where Effect is used and where it is not: [docs/effect.md](docs/effect.md).
   - **Accounts:** [Better Auth](https://better-auth.com). The first write ("Start learning") creates an anonymous user. Signing in with an email code moves the progress into the real account. Anonymous learners with no activity for 60 days are deleted by a daily job (`server/src/housekeeping.ts`).
-  - **Reads:** `/api/shape` is an auth proxy in front of [Electric](https://electric-sql.com). The shape is always the server's own (`where user_id = <session user>`), never the client's.
-  - **Writes:** `POST /api/write` takes a batch of mutations, checks them, scopes them to the session user, and applies them in one transaction. It returns the Postgres transaction id.
+  - **Reads:** `GET /api/rows` returns the session user's rows for every learner table in one response, always `where user_id = <session user>`, never the client's.
+  - **Writes:** `POST /api/write` takes a batch of mutations, checks them, scopes them to the session user, and applies them in one transaction. It returns whether anything changed.
   - **Perennial AI:** task endpoints (`/api/ai/mine`, `/api/ai/examples`) through the Anthropic SDK. Each word costs one AI word from a monthly allowance (`FREE_CREDITS`). A global monthly budget (`MONTHLY_BUDGET_USD`) pauses AI for everyone when it is reached.
   - Also: `/health`, account deletion, structured JSON logs with request ids, Sentry (`server/instrument.ts`). All settings: `server/src/config.ts`.
 - **Observability in the browser** (`web/src/observability.ts`): Sentry error reports and privacy-first PostHog events (no cookies, no autocapture, no session replay). Both are off unless their keys are set at build time.
-- **Client** (`web/src/data/`): each synced table is a TanStack DB collection fed by an Electric shape, held in memory: each start syncs it again from the server. Writes apply on the device at once, wait in a queue (IndexedDB, TanStack DB offline transactions), and go to `/api/write`, with retries, until the server has them. There is no offline mode for now ([#188](https://github.com/jussisaurio/perennial/issues/188)). Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
+- **Client** (`web/src/data/`): each synced table is a TanStack DB query collection, held in memory and read from `GET /api/rows`: once at start, and again when the tab comes back into view after being hidden over a minute. There is no live push between devices; another device's changes show up on the next read. Writes apply on the device at once, wait in a queue (IndexedDB, TanStack DB offline transactions), and go to `/api/write`, with retries, until the server has them; the confirmed rows then go into the collections directly, so they don't flicker. There is no offline mode for now ([#188](https://github.com/jussisaurio/perennial/issues/188)). Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
 
 License: the code is [MIT](LICENSE). The course content in `decks/` is not ([decks/LICENSE](decks/LICENSE)). The order of the words is based on word frequencies from [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018, CC BY-SA 4.0).
 
@@ -42,7 +42,7 @@ Deploying: [docs/DEPLOY.md](docs/DEPLOY.md) (Railway + PlanetScale Postgres). Da
 Needs [Bun](https://bun.sh) and Docker. One command:
 
 ```sh
-bun run dev          # Postgres + Electric, migrations, API (:8787) and app (http://localhost:5173)
+bun run dev          # Postgres, migrations, API (:8787) and app (http://localhost:5173)
 bun run dev:ai       # the same, plus a mock model so Perennial AI works without a key
 ```
 
@@ -71,7 +71,7 @@ cd web && bun run lint                 # oxlint --deny-warnings (CI fails on any
 cd web && bun test src                 # unit: FSRS (checked against ts-fsrs), planner, answer checking, text, deck schema
 bun test scripts/deck web/src/deck     # decks: build, invariants, compatibility, replay
 docker compose up -d                   # needed by the next two
-cd server && bun test                  # sync, accounts and merging, AI limits, housekeeping (real Postgres + Electric, mock model)
+cd server && bun test                  # sync, accounts and merging, AI limits, housekeeping (real Postgres, mock model)
 cd web && bun run e2e                  # Playwright: starts its own server, mock model and Vite on other ports
 ```
 

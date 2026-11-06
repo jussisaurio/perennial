@@ -1,4 +1,4 @@
-// Test harness: the real app against the local Postgres + Electric
+// Test harness: the real app against the local Postgres
 // (`docker compose up -d`), with a mock model and the dev mail outbox.
 
 import { PgClient } from "@effect/sql-pg";

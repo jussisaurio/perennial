@@ -1,6 +1,6 @@
 // Local development in one command: `bun run dev` at the repo root.
 //
-// Starts Postgres + Electric (docker compose), installs dependencies when
+// Starts Postgres (docker compose), installs dependencies when
 // missing, applies migrations, then runs the API (:8787) and the app (:5173)
 // with their output side by side. Ctrl-C stops both (the containers keep
 // running; `docker compose down` stops them).
@@ -22,7 +22,7 @@ function run(cmd: string[], cwd = ROOT) {
   }
 }
 
-console.log("▸ Postgres + Electric");
+console.log("▸ Postgres");
 run(["docker", "compose", "up", "-d", "--wait"]);
 // One install at the root covers every workspace (web, server, scripts).
 if (["node_modules", "web/node_modules", "server/node_modules"].some((d) => !existsSync(join(ROOT, d)))) {

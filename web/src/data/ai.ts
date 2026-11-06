@@ -48,8 +48,6 @@ const message = ApiErrorBody.match({
   not_found: somethingWrong,
   method_not_allowed: somethingWrong,
   please_reload: somethingWrong,
-  unknown_shape: somethingWrong,
-  unknown_table: somethingWrong,
   unknown_word: somethingWrong,
   review_from_the_future: somethingWrong,
   garden_from_the_future: somethingWrong,

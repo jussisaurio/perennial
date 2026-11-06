@@ -1,7 +1,8 @@
 // Load test with CPU and heap profiles. Starts its own server against the
 // local stack (`docker compose up -d`, migrated) and simulates learners the way
 // the app behaves: an anonymous sign-in, a course, then reviews written in
-// small batches while a live shape poll per learner waits for them to sync back.
+// small batches, and the learner's rows read at start and now and then (a tab
+// coming back into view).
 //
 //   bun load/run.ts [--users 50] [--seconds 30]
 //
@@ -49,7 +50,6 @@ for (let i = 0; ; i++) {
 
 const timings = new Map<string, number[]>();
 const errors = new Map<string, number>();
-const echo: number[] = [];
 function record(name: string, ms: number, ok: boolean) {
   if (!timings.has(name)) timings.set(name, []);
   timings.get(name)!.push(ms);
@@ -62,20 +62,18 @@ const sampler = setInterval(async () => {
   memory.push({ t: Math.round((performance.now() - started) / 1000), rssMb: Math.round(Number(ps.stdout.toString().trim()) / 1024) });
 }, 1000);
 
-async function call(name: string, path: string, cookie: string | undefined, body?: unknown, signal?: AbortSignal) {
+async function call(name: string, path: string, cookie: string | undefined, body?: unknown) {
   const t = performance.now();
   try {
     const res = await fetch(BASE + path, {
       method: body === undefined ? "GET" : "POST",
       headers: { "content-type": "application/json", origin: BASE, ...(cookie ? { cookie } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal,
     });
     const text = await res.text();
     record(name, performance.now() - t, res.ok);
     return { res, text };
   } catch (e) {
-    if (signal?.aborted) return null;
     record(name, performance.now() - t, false);
     return null;
   }
@@ -84,7 +82,6 @@ async function call(name: string, path: string, cookie: string | undefined, body
 // ---- one simulated learner ------------------------------------------------------
 
 const deadline = Date.now() + SECONDS * 1000;
-const stop = new AbortController();
 
 async function learner(n: number) {
   await Bun.sleep(Math.random() * 2000); // arrivals spread over 2 s
@@ -93,31 +90,7 @@ async function learner(n: number) {
   const cookie = signedIn.res.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
   await call("write: course", "/api/write", cookie, { mutations: [{ type: "course.upsert", row: { lang: "es", minutes: 10 } }] });
 
-  // The live poll, as the client keeps one per table (here: reviews only).
-  const sent = new Map<string, number>();
-  const poll = (async () => {
-    let offset = "-1";
-    let handle = "";
-    while (!stop.signal.aborted) {
-      const live = offset === "-1" ? "" : "&live=true";
-      const r = await call(offset === "-1" ? "shape: initial" : "shape: live poll", `/api/shape?table=review&offset=${offset}${handle ? `&handle=${handle}` : ""}${live}`, cookie, undefined, stop.signal);
-      if (!r) break;
-      if (r.res.status === 409) {
-        offset = "-1";
-        handle = "";
-        continue;
-      }
-      offset = r.res.headers.get("electric-offset") ?? offset;
-      handle = r.res.headers.get("electric-handle") ?? handle;
-      for (const m of JSON.parse(r.text || "[]") as { value?: { id: string } }[]) {
-        const at = m.value && sent.get(m.value.id);
-        if (at) {
-          echo.push(performance.now() - at);
-          sent.delete(m.value!.id);
-        }
-      }
-    }
-  })();
+  await call("rows", "/api/rows", cookie);
 
   // A session: a review every 2-5 s, sent in batches of 1-3 (the offline queue merges).
   let word = 0;
@@ -127,17 +100,14 @@ async function learner(n: number) {
       type: "review.insert",
       row: { id: crypto.randomUUID(), lang: "es", word_id: DECK_IDS[(n * 37 + word++) % DECK_IDS.length], skill: "read", grade: 3, reviewed_at: new Date().toISOString(), duration_ms: 4000 },
     }));
-    const t = performance.now();
-    for (const m of batch) sent.set(m.row.id, t);
     await call("write: reviews", "/api/write", cookie, { mutations: batch });
     if (Math.random() < 0.1) await call("me", "/api/me", cookie);
+    if (Math.random() < 0.05) await call("rows", "/api/rows", cookie);
   }
-  await poll;
 }
 
 const runners = Array.from({ length: USERS }, (_, i) => learner(i));
 await Bun.sleep(SECONDS * 1000);
-stop.abort();
 await Promise.allSettled(runners);
 clearInterval(sampler);
 
@@ -159,9 +129,6 @@ const report = `# Load test: ${USERS} learners, ${SECONDS} s
 | Request | Count | Errors | p50 ms | p95 ms | p99 ms |
 |---|---|---|---|---|---|
 ${rows.join("\n")}
-| write → synced back (echo) | ${echo.length} | | ${pct(echo, 50)} | ${pct(echo, 95)} | ${pct(echo, 99)} |
-
-Live polls wait up to ~20 s by design; their latency is not a cost.
 
 Server memory (RSS): start ${memory[0]?.rssMb ?? "?"} MB, peak ${peak} MB, end ${memory.at(-1)?.rssMb ?? "?"} MB.
 Writes per second: ${((timings.get("write: reviews")?.length ?? 0) / SECONDS).toFixed(1)}.

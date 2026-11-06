@@ -87,9 +87,6 @@ export type Mutation = typeof Mutation.Type;
 export const WriteBatch = Schema.Struct({ mutations: Schema.Array(Mutation).check(Schema.isMinLength(1), Schema.isMaxLength(500)) });
 export type WriteBatch = typeof WriteBatch.Type;
 
-/**
- * The Postgres transaction id, which the app waits to see in the sync stream,
- * and whether any row changed (if none did, no echo will come).
- */
-export const WriteResult = Schema.Struct({ txid: Schema.Number, changed: Schema.Boolean });
+/** Whether any row changed (a retried insert or an older state changes none). */
+export const WriteResult = Schema.Struct({ changed: Schema.Boolean });
 export type WriteResult = typeof WriteResult.Type;

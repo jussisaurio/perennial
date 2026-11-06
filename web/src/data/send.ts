@@ -32,7 +32,7 @@ export const shouldRetry = (e: Error) => (retryLater(e) ? true : undefined);
  * Send one queued batch. A refusal for good is passed to `onRefused` and
  * fails with NonRetriableError, so the queue rolls it back. An answer that
  * breaks the contract comes after the server applied the write: it is
- * reported once and counted as sent, with no echo to wait for (null).
+ * reported once and counted as sent.
  */
 export const sendQueued = (mutations: readonly unknown[], idempotencyKey: string, onRefused: (e: ApiError | HttpError) => void) =>
   sendWrite(mutations, idempotencyKey).pipe(

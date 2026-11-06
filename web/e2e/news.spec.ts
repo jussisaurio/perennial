@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { answer, kicker, reveal, startCourse, startSession } from "./helpers";
+import { answer, kicker, readRowsAgain, reveal, startCourse, startSession } from "./helpers";
 
 // #232: the summary points to the garden only on days with real news.
 
@@ -11,6 +11,7 @@ async function nearlyKnown(page: Page, lemma: string) {
     const w = (await loadDeck("es")).words.find((x: { lemma: string }) => x.lemma === lemma)!;
     await postWrite([{ type: "review.insert", row: { id: crypto.randomUUID(), lang: "es", word_id: w.id, skill: "read", grade: 4, kind: "known", reviewed_at: new Date(Date.now() - 12 * 86_400_000).toISOString(), duration_ms: 4000, sentence_id: null } }]);
   }, lemma);
+  await readRowsAgain(page);
 }
 
 const news = (page: Page) => page.locator(".garden-news");

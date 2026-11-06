@@ -178,10 +178,14 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
     setChosen(lang);
     keepCourse(lang);
   };
-  const starting = useStartingCourse().lang;
+  const { lang: starting, saved } = useStartingCourse();
   useEffect(() => {
     if (course && starting) courseArrived();
   }, [course, starting]);
+  // Written straight to the server, not through the store: read it from there.
+  useEffect(() => {
+    if (saved && !course) void store.refetchAll();
+  }, [saved, course, store]);
 
   // Still loading, or a course was just started and is on its way: not the landing page.
   if (!course && (!ready || starting)) return <Settling />;
