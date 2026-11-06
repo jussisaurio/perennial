@@ -102,8 +102,10 @@ Use this one role for `web`, `housekeeping` and `electric`. (The default `postgr
 Connection string. Use the **direct** port **5432**, not PgBouncer (6432). Electric needs a replication connection, and the server uses session-level advisory locks and prepared statements:
 
 ```
-postgresql://perennial.<id>:<password>@<host>.psdb.cloud:5432/postgres?sslmode=require
+postgresql://perennial.<id>:<password>@<host>.psdb.cloud:5432/postgres?sslmode=verify-full
 ```
+
+Keep `sslmode=verify-full` for `web` and `housekeeping`: it checks the certificate and the host name. Production uses it. Only `electric` needs `require` (3.2), because Electric rejects `verify-full`.
 
 Copy the exact host, user and database name from the PlanetScale **Connect** page.
 
@@ -300,7 +302,7 @@ When `APP_URL` starts with `https://`, the server sends HSTS.
 Do these in order. Tick each one.
 
 - [ ] PlanetScale: parameters from 2.2 set; `show wal_level` returns `logical`.
-- [ ] PlanetScale: role `perennial` with `REPLICATION` created; direct URL (port 5432, `sslmode=require`) saved in the shared variable.
+- [ ] PlanetScale: role `perennial` with `REPLICATION` created; direct URL (port 5432, `sslmode=verify-full`) saved in the shared variable; Electric's own copy uses `sslmode=require`.
 - [ ] `electric` deployed with its volume; the log shows that it connected to Postgres; the healthcheck is green.
 - [ ] `web` variables set, including `RESEND_API_KEY` and a new `BETTER_AUTH_SECRET`.
 - [ ] `web` deployed. The pre-deploy log shows `applied 0001_init.sql` (later: `up to date`).
