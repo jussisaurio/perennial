@@ -105,7 +105,7 @@ test("with Perennial AI off, Add words is hidden, and its address shows the word
   await page.route("**/api/boot", async (route) => {
     const res = await route.fetch();
     const boot = await res.json();
-    await route.fulfill({ response: res, json: { ...boot, server: { ...boot.server, features: { ai: false } } } });
+    await route.fulfill({ response: res, json: { ...boot, server: { ...boot.server, features: { ...boot.server.features, ai: false } } } });
   });
   await startCourse(page);
   await page.getByRole("tab", { name: "Words" }).click();

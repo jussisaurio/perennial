@@ -37,6 +37,8 @@ export interface Config {
   observability: { sentryDsn?: string | undefined; connect: string[] };
   /** Bot check (Cloudflare Turnstile) on new anonymous users and sign-in codes. Off without a secret. */
   turnstile: { secretKey?: string | undefined; siteKey?: string | undefined };
+  /** "Continue with Google" (OAuth client from Google Cloud Console). Off unless both are set. */
+  google: { clientId?: string | undefined; clientSecret?: string | undefined };
   /** Headers that carry the client IP, set by our proxy (rate limits). The first usable one wins. */
   clientIpHeaders: string[];
   /** Sign-in codes per email address: per 15 minutes, and per day. */
@@ -87,6 +89,8 @@ const env = EnvConfig.all({
   POSTHOG_HOST: variable("POSTHOG_HOST"),
   TURNSTILE_SECRET_KEY: variable("TURNSTILE_SECRET_KEY"),
   VITE_TURNSTILE_SITE_KEY: variable("VITE_TURNSTILE_SITE_KEY"),
+  GOOGLE_CLIENT_ID: variable("GOOGLE_CLIENT_ID"),
+  GOOGLE_CLIENT_SECRET: variable("GOOGLE_CLIENT_SECRET"),
   CLIENT_IP_HEADERS: variable("CLIENT_IP_HEADERS"),
   CODES_PER_EMAIL_15MIN: variable("CODES_PER_EMAIL_15MIN"),
   CODES_PER_EMAIL_DAY: variable("CODES_PER_EMAIL_DAY"),
@@ -128,6 +132,7 @@ const settings = env.pipe(
           .filter((o): o is string => !!o),
       },
       turnstile: { secretKey: env.TURNSTILE_SECRET_KEY, siteKey: env.VITE_TURNSTILE_SITE_KEY },
+      google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
       // Railway's edge sets X-Real-IP to the connecting address. X-Forwarded-For
       // can carry client-made entries; Better Auth trusts it only with one value.
       clientIpHeaders: (env.CLIENT_IP_HEADERS ?? "x-real-ip,x-forwarded-for").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean),
@@ -183,8 +188,12 @@ export function configProblems(c: Config): string[] {
   if (!c.appUrl.startsWith("https://")) out.push("APP_URL must be the public https URL");
   if (c.databaseUrl.includes("@localhost:25432/")) out.push("DATABASE_URL must be set");
   if (!!c.turnstile.secretKey !== !!c.turnstile.siteKey) out.push("TURNSTILE_SECRET_KEY and VITE_TURNSTILE_SITE_KEY must be set together");
+  if (!!c.google.clientId !== !!c.google.clientSecret) out.push("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together");
   return out;
 }
+
+/** Google sign-in's OAuth client, when both halves are set. */
+export const googleClient = (c: Config) => (c.google.clientId && c.google.clientSecret ? { clientId: c.google.clientId, clientSecret: c.google.clientSecret } : undefined);
 
 /** USD per million tokens [input, output]. Used for the global spend breaker. */
 export const PRICES: Record<string, [number, number]> = {

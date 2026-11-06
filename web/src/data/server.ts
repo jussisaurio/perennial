@@ -18,11 +18,11 @@ import { APP_VERSION, RELEASE } from "../version";
 import { boot } from "./boot";
 import { reloadNeeded, request, type BadAnswer } from "./http";
 
-/** What the server can do now. `ai`: Perennial AI (words from your own texts, new sentences). */
+/** What the server can do now. `ai`: Perennial AI (words from your own texts, new sentences). `google`: "Continue with Google". */
 export type Features = ServerInfo["features"];
 
 const KEY = "perennial-server";
-const OFF: Features = { ai: false };
+const OFF: Features = { ai: false, google: false };
 const Kept = Schema.fromJsonString(ServerInfo);
 
 // Read from storage on first use, not at import: the first Schema decode is

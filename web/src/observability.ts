@@ -146,6 +146,7 @@ export type Event =
   // The sign-in steps (#312), to see where people stop.
   | "signin_code_requested"
   | "signin_code_shown"
+  | "signin_google_started"
   | "signin_done";
 
 export function track(event: Event, props: Record<string, unknown> = {}) {

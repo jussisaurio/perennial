@@ -1,5 +1,11 @@
-// Accounts with Better Auth: email one-time codes now, social login later
-// (one `account` row per sign-in method), and anonymous users.
+// Accounts with Better Auth: email one-time codes, Google, and anonymous
+// users. One `user` per email, with one `account` row per sign-in method.
+//
+// Google and email codes reach the same account: both prove the email. A
+// Google sign-in joins the account with that email only when Google says the
+// email is verified. That is Better Auth's rule for a provider that is not in
+// accountLinking.trustedProviders, so Google must stay out of that list. A
+// sign-in code to an email that first came through Google finds that user.
 //
 // Anonymous learners: the app creates an anonymous user on the first write
 // ("Start learning"). Signing in with email from that session links the
@@ -12,9 +18,9 @@ import { betterAuth } from "better-auth";
 import { anonymous, captcha, emailOTP } from "better-auth/plugins";
 import { Effect } from "effect";
 import { Pool } from "pg";
-import type { Config } from "./config";
+import { googleClient, type Config } from "./config";
 import { CLIENT_IP_HEADER } from "./clientIp";
-import type { GardenLeft } from "perennial-contract";
+import { GOOGLE_FAILED, type GardenLeft } from "perennial-contract";
 import { theRow } from "./db";
 import { mergeLeft } from "./garden";
 import { event, log } from "./log";
@@ -64,8 +70,15 @@ export function createAuth(config: Config, sql: PgClient.PgClient, mailer: Maile
   // Idle connections stay open: most requests come after a quiet spell, and a new
   // connection to PlanetScale costs ~70 ms (#603). PlanetScale asks for a new one each day.
   const pool = new Pool({ connectionString: config.databaseUrl, max: 4, idleTimeoutMillis: 0, maxLifetimeSeconds: 24 * 60 * 60 });
+  const google = googleClient(config);
   const auth = betterAuth({
     database: pool,
+    // Callback: <APP_URL>/api/auth/callback/google (docs/DEPLOY.md).
+    ...(google ? { socialProviders: { google } } : {}),
+    // No trustedProviders: a trusted provider is linked even with an unverified email (see the top of this file).
+    account: { accountLinking: { enabled: true } },
+    // A failed or cancelled Google sign-in goes back to the app, not to Better Auth's error page.
+    onAPIError: { errorURL: `${config.appUrl}/?${GOOGLE_FAILED}` },
     baseURL: config.appUrl,
     secret: config.secret,
     session: {
@@ -95,12 +108,8 @@ export function createAuth(config: Config, sql: PgClient.PgClient, mailer: Maile
     },
     // Wide-event facts for the request's log line (log.ts): who signed up, and how they signed in.
     databaseHooks: {
-      user: { create: { after: async (user) => event({ signup: user.isAnonymous ? "anonymous" : "email" }) } },
-      session: {
-        create: {
-          after: async (session, ctx) => event({ userId: session.userId, signin: ctx?.path === "/sign-in/anonymous" ? "anonymous" : ctx?.path === "/sign-in/email-otp" ? "email" : (ctx?.path ?? "other") }),
-        },
-      },
+      user: { create: { after: async (user, ctx) => event({ signup: user.isAnonymous ? "anonymous" : ctx?.path === GOOGLE_CALLBACK ? "google" : "email" }) } },
+      session: { create: { after: async (session, ctx) => event({ userId: session.userId, signin: signInMethod(ctx?.path) }) } },
     },
     advanced: {
       database: { generateId: "uuid" },
@@ -139,6 +148,18 @@ export function createAuth(config: Config, sql: PgClient.PgClient, mailer: Maile
     ],
   });
   return { auth, pool };
+}
+
+/** Better Auth's path for every OAuth callback (Google is the only provider). */
+const GOOGLE_CALLBACK = "/callback/:id";
+
+/** How a new session signed in, for the log. */
+function signInMethod(path: string | undefined) {
+  if (path === "/sign-in/anonymous") return "anonymous";
+  if (path === "/sign-in/email-otp") return "email";
+  if (path === GOOGLE_CALLBACK) return "google";
+  // Any other path is logged as it is, so a new way in shows up.
+  return path ?? "other";
 }
 
 /** Records a code for this address, unless it already had its share (per 15 minutes and per day). */

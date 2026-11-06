@@ -38,6 +38,7 @@ Create these before you start. Keep every secret in a password manager.
 | Anthropic | An API key in a workspace with a monthly spend limit | `ANTHROPIC_API_KEY` |
 | Sentry (optional) | One project for the server (platform "Bun") and one for the browser (platform "React"). In each project's security settings, turn on **Prevent storing of IP addresses**. Use the EU region if your users are mostly in the EU. | `SENTRY_DSN`, `VITE_SENTRY_DSN` |
 | PostHog (optional) | A project (EU or US cloud) | `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST` |
+| Google Cloud (optional) | An OAuth client for "Continue with Google" (section 3.4) | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 
 Generate this yourself:
 
@@ -144,6 +145,7 @@ Services refer to it as `${{shared.DATABASE_URL}}`.
 | `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | |
 | `POSTHOG_HOST` | not set | Optional. An extra origin for the CSP `connect-src`, for example a PostHog reverse proxy. Normally not needed: see `VITE_POSTHOG_HOST`. |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` or `silent` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | not set (no Google button) | "Continue with Google" (section 3.4). Set both or neither: production does not start with only one. |
 
 **Build arguments** (Railway passes service variables with these names to the Docker build; changing one needs a rebuild)
 
@@ -172,6 +174,27 @@ These values end up in the public JavaScript. That is expected: a Sentry DSN and
 | `ANONYMOUS_RETENTION_DAYS` | Same as on `web` (default `60`) |
 
 The job deletes anonymous learners with no activity for that many days (their data cascades), AI request logs older than 180 days, and expired sign-in codes and sessions. An advisory lock stops two runs at the same time. It prints one JSON log line with the counts.
+
+### 3.4 Sign-in with Google (optional)
+
+Without these steps the app shows only email codes. Google and email codes reach the same account: a learner who signed in with a code and then uses Google (or the other way round) keeps their progress. Google joins an existing account only when Google says the email is verified.
+
+1. Open [Google Cloud Console](https://console.cloud.google.com/) and pick or create a project, e.g. `Perennial`.
+2. **APIs & Services → OAuth consent screen** (also called **Google Auth Platform**):
+   - App name `Perennial`, a support email, and your domain under **Authorized domains**.
+   - Audience: **External**.
+   - Data access (scopes): only `openid`, `email` and `profile`. These need no review by Google.
+   - Press **Publish app** to move it from **Testing** to **In production**. In Testing, only the test users you list can sign in.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**:
+   - Application type: **Web application**.
+   - **Authorized redirect URIs**: `https://<your domain>/api/auth/callback/google`. For local testing, also add `http://localhost:5173/api/auth/callback/google`.
+   - **Authorized JavaScript origins**: not needed.
+4. Copy the client ID and the client secret. On the Railway service `web`, set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, then deploy.
+5. Check: `https://<your domain>/api/server` shows `"google": true`, and the sign-in screen shows **Continue with Google**.
+
+Do not add Google to Better Auth's `trustedProviders` (server/src/auth.ts). A trusted provider joins accounts even when the email is not verified.
+
+To rotate the secret: in the OAuth client, add a new secret, update `GOOGLE_CLIENT_SECRET`, redeploy, then delete the old secret.
 
 ## 4. Custom domain and email
 

@@ -164,7 +164,8 @@ function adoptOnDevice(from: string, to: string) {
 // can see the account through Better Auth's own session check and reload
 // before the sign-in code finishes.
 const LINK_KEY = "perennial-pending-link";
-const PendingLink = Schema.fromJsonString(Schema.Struct({ from: Schema.String, email: Schema.String }));
+// email null: a Google sign-in, whose email is known only when it comes back.
+const PendingLink = Schema.fromJsonString(Schema.Struct({ from: Schema.String, email: Schema.NullOr(Schema.String) }));
 type PendingLink = typeof PendingLink.Type;
 
 const sameEmail = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
@@ -192,17 +193,18 @@ function savePendingLink(link: PendingLink | null) {
  * About to sign in as `email` from the session `before`. From an anonymous
  * session, that learner's queue is to follow. From that same account (a try
  * again after a lost answer, when the server had signed in), the link stays.
- * Otherwise there is nothing to carry over.
+ * Otherwise there is nothing to carry over. `email` is null for Google: any
+ * account the app sees next is the one it signed in to.
  */
-export function noteSignIn(before: { id: string; email: string | null; anonymous: boolean } | null, email: string) {
+export function noteSignIn(before: { id: string; email: string | null; anonymous: boolean } | null, email: string | null) {
   if (before?.anonymous) savePendingLink({ from: before.id, email });
-  else if (!(before?.email && sameEmail(before.email, email))) savePendingLink(null);
+  else if (!(before?.email && email && sameEmail(before.email, email))) savePendingLink(null);
 }
 
 /** The session is the account `userId` (with `email`) now: a pending sign-in to this account moves the anonymous learner's queue here. */
 export function resolvePendingLink(userId: string, email: string | null) {
   const link = pendingLink();
-  if (!link || !email || !sameEmail(link.email, email)) return;
+  if (!link || !email || (link.email !== null && !sameEmail(link.email, email))) return;
   savePendingLink(null);
   adoptOnDevice(link.from, userId);
 }

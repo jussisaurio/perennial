@@ -3,9 +3,9 @@ import { useFeatures } from "../data/server";
 import { errorLine, sendingLabel } from "../content/voice";
 import type { Me } from "perennial-contract";
 import { getMe, resetDate } from "../data/ai";
-import { AuthError, sendCode, signInWithCode, signOut, useUser } from "../data/auth";
+import { AuthError, googleSignInFailed, sendCode, signInWithCode, signInWithGoogle, signOut, useUser } from "../data/auth";
 import { track } from "../observability";
-import { CheckIcon } from "./icons";
+import { CheckIcon, GoogleMark } from "./icons";
 
 /** Account details from the server (credits), refreshed when the user changes. */
 export function useMe(): { me: Me | null; refresh: () => void } {
@@ -48,8 +48,9 @@ export function SignIn({ cta }: { cta: string }) {
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
   const [sent, setSent] = useState<Sent>("sent");
-  const [busy, setBusy] = useState<"send" | "sign-in" | null>(null);
-  const [error, setError] = useState("");
+  const [busy, setBusy] = useState<"send" | "sign-in" | "google" | null>(null);
+  const [error, setError] = useState(() => (googleSignInFailed() ? "Signing in with Google did not finish. Try again, or use an email code." : ""));
+  const { google } = useFeatures();
   const [resendAt, setResendAt] = useState(0);
   const [now, setNow] = useState(() => Date.now());
 
@@ -61,7 +62,7 @@ export function SignIn({ cta }: { cta: string }) {
   }, [now, resendAt]);
   const resendIn = Math.ceil((resendAt - now) / 1000);
 
-  const run = async (what: "send" | "sign-in", fn: () => Promise<unknown>) => {
+  const run = async (what: "send" | "sign-in" | "google", fn: () => Promise<unknown>) => {
     setBusy(what);
     setError("");
     try {
@@ -103,7 +104,7 @@ export function SignIn({ cta }: { cta: string }) {
         </label>
         <div className="row">
           <button className="primary" type="submit" disabled={!!busy || !email.includes("@")}>
-            {busy ? sendingLabel() : cta}
+            {busy === "send" ? sendingLabel() : cta}
           </button>
           <button className="ghost" type="button" disabled={!!busy || !email.includes("@")} onClick={() => (setSent("have-code"), setStep("code"), setError(""))}>
             Enter a code I already have
@@ -111,6 +112,14 @@ export function SignIn({ cta }: { cta: string }) {
         </div>
         {alert}
         <p className="muted small">You do not need a password. We send you a code by email.</p>
+        {google && (
+          <div className="row">
+            <button className="secondary" type="button" disabled={!!busy} onClick={() => void run("google", signInWithGoogle)}>
+              <GoogleMark />
+              Continue with Google
+            </button>
+          </div>
+        )}
       </form>
     );
 
