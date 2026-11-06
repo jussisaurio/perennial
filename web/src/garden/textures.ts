@@ -16,11 +16,15 @@ import { LEAF_PILE } from "./walkInto";
 import type { SpriteDone, SpriteJob } from "./spriteWorker";
 import { FULL_MOON, MOON_PHASES } from "./moon";
 
-export function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+/**
+ * A pixel canvas. `readBack`: its pixels are read with getImageData, so it is kept in CPU memory:
+ * on a GPU canvas each read waits for the GPU, ~120 ms over the walk's bed signs at CPU 10× (#447).
+ */
+export function canvas(w: number, h: number, readBack = false): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
-  const ctx = c.getContext("2d")!;
+  const ctx = c.getContext("2d", { willReadFrequently: readBack })!;
   ctx.imageSmoothingEnabled = false;
   return [c, ctx];
 }
@@ -434,7 +438,8 @@ export function butterfly(hue: number): HTMLCanvasElement {
 
 /** A blank wooden board, w×h: a dark frame, a lit top edge and a seam across the middle. Set up for centred text in dark ink. */
 function board(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
-  const [c, ctx] = canvas(w, h);
+  // Read back by crispText.
+  const [c, ctx] = canvas(w, h, true);
   px(ctx, 0, 0, "#7a4f2c", w, h);
   px(ctx, 2, 2, "#c99257", w - 4, h - 4);
   px(ctx, 2, 2, "#ddb07a", w - 4, 2);
@@ -578,7 +583,7 @@ export function spot(): HTMLCanvasElement {
 
 /** Text in one solid colour, with no soft edge: drawn on its own, then only its solid pixels are kept. Left-aligned at `x`, centred on `y`. */
 function hardText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, font: string, color: string) {
-  const [s, sc] = canvas(ctx.canvas.width, ctx.canvas.height);
+  const [s, sc] = canvas(ctx.canvas.width, ctx.canvas.height, true);
   sc.font = font;
   sc.textBaseline = "middle";
   sc.fillText(text, x, y);
@@ -1122,7 +1127,7 @@ export function boat(word: string): HTMLCanvasElement {
   }
   px(ctx, 32 - 22, 29, INK, 44, 1);
   // The word, drawn alone, then copied in where it is dark enough: crisp pixels, no grey edges.
-  const [, tctx] = canvas(w, h);
+  const [, tctx] = canvas(w, h, true);
   let size = 11;
   do tctx.font = `700 ${size}px "Pixelify Sans"`;
   while (tctx.measureText(word).width > 46 && --size > 6);
