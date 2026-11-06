@@ -255,9 +255,10 @@ export function Plant({ word, growth, stage, scale = 1 }: { word: string; growth
  * The plant at any `form` between two stages (see FORM). In between, each part
  * grows, opens or fades on its own schedule, so the change reads as growing:
  * the stem rises out of the seed, leaves unfold one by one, the bud swells and
- * opens into the flower.
+ * opens into the flower. Memoised: a growth moment re-renders every frame, also
+ * while the plant itself does not change (#478).
  */
-export function PlantForm({ word, growth, form, scale = 1 }: { word: string; growth: number; form: number; scale?: number }) {
+export const PlantForm = memo(function PlantForm({ word, growth, form, scale = 1 }: { word: string; growth: number; form: number; scale?: number }) {
   const rare = rareOf(word);
   const meaning = meaningOf(word);
   // The word's meaning wins over a golden rare: "azul" is blue first of all.
@@ -408,7 +409,7 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
       )}
     </g>
   );
-}
+});
 
 /** The side of the square that frames a word's plant at stability `s` and `stage`, so a sprout fills it as well as a tall bloom. */
 export function plantFrame(word: string, s: number, stage: PlantStage): number {

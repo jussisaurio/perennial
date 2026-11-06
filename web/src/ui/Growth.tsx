@@ -165,48 +165,127 @@ export const easeOutBack = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1)
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const phase = (e: number, start: number, length: number) => clamp01((e - start) / length);
 
-function WateringCan({ e, side, growStart, growMs, drops }: { e: number; side: number; growStart: number; growMs: number; drops: number }) {
+/**
+ * Plays keyframes on an element of the moment, `delay` ms after the glide begins. The fixed-shape parts (can,
+ * drops, visitor, sparkles) animate this way, so React does not redraw them every frame (#478).
+ * CSS transforms on SVG elements are in user units, from the origin.
+ */
+function play(el: Element, keyframes: Keyframe[], delay: number, duration: number, fill: FillMode): Animation {
+  return el.animate(keyframes, { delay: T.glide + delay, duration, fill });
+}
+
+/** `n + 1` keyframes of `frame` over t in 0..1, for curves that are not linear. */
+const sample = (n: number, frame: (t: number) => Keyframe): Keyframe[] => Array.from({ length: n + 1 }, (_, i) => frame(i / n));
+
+function WateringCan({ side, growStart, growMs, drops }: { side: number; growStart: number; growMs: number; drops: number }) {
   const k = side / 90;
-  const shown = phase(e, 0, T.canIn) * (1 - phase(e, growStart + growMs * 0.45, T.canOut));
-  const tip = 28 * phase(e, T.canIn, T.tip) * (1 - 0.65 * phase(e, growStart + growMs * 0.45, T.canOut));
-  const slide = (1 - phase(e, 0, T.canIn)) * -10;
   // The spout's end once tipped, where the drops start.
   const sx = -0.17 * side;
   const sy = -0.62 * side;
+  const can = useRef<SVGGElement>(null);
+  const water = useRef<SVGGElement>(null);
+  useLayoutEffect(() => {
+    // The can slides and fades in, tips, holds, then fades out half tipped back. Each step is linear.
+    const out = growStart + growMs * 0.45;
+    const at = (slide: number, tip: number) => `translate(${-0.48 * side + slide * k}px, ${-0.62 * side}px) scale(${k}) rotate(${tip}deg)`;
+    const end = out + T.canOut;
+    const anims = [
+      play(
+        can.current!,
+        [
+          { offset: 0, transform: at(-10, 0), opacity: 0 },
+          { offset: T.canIn / end, transform: at(0, 0), opacity: 1 },
+          { offset: (T.canIn + T.tip) / end, transform: at(0, 28), opacity: 1 },
+          { offset: out / end, transform: at(0, 28), opacity: 1 },
+          { offset: 1, transform: at(0, 28 * 0.35), opacity: 0 },
+        ],
+        0,
+        end,
+        "both",
+      ),
+      ...Array.from(water.current!.children, (drop, i) =>
+        play(
+          drop,
+          sample(8, (t) => {
+            const f = easeIn(t);
+            return { transform: `translate(${sx + (0.08 + i * 0.035) * side * f}px, ${sy + 0.56 * side * f}px)`, opacity: 1 - t * 0.5 };
+          }),
+          T.canIn + T.tip - 30 + i * T.dropGap,
+          T.drop,
+          "none",
+        ),
+      ),
+    ];
+    return () => anims.forEach((a) => a.cancel());
+  }, [side, k, sx, sy, growStart, growMs]);
   return (
     <g>
-      <g transform={`translate(${-0.48 * side + slide * k} ${-0.62 * side}) scale(${k}) rotate(${tip})`} opacity={shown}>
+      <g ref={can} opacity={0}>
         <path d="M-8 -9 Q 0 -21 8 -9" fill="none" stroke="var(--sky)" strokeWidth={2.6} strokeLinecap="round" />
         <path d="M10 -2 L 24 -12" stroke="var(--sky)" strokeWidth={3.4} strokeLinecap="round" />
         <circle cx={25} cy={-13} r={2.8} fill="var(--sky)" />
         <rect x={-12} y={-9} width={24} height={18} rx={4} fill="var(--sky)" />
         <rect x={-8} y={-5} width={9} height={3} rx={1.5} fill="var(--sky-soft)" opacity={0.7} />
       </g>
-      {Array.from({ length: drops }, (_, i) => {
-        const t = phase(e, T.canIn + T.tip - 30 + i * T.dropGap, T.drop);
-        if (t <= 0 || t >= 1) return null;
-        const f = easeIn(t);
-        const x = sx + (0.08 + i * 0.035) * side * f;
-        const y = sy + 0.56 * side * f;
-        return <ellipse key={i} cx={x} cy={y} rx={1.5 * k * 1.4} ry={2.1 * k * 1.4} fill="var(--sky)" opacity={1 - t * 0.5} />;
-      })}
+      {/* Hidden but while each drop falls. */}
+      <g ref={water}>
+        {Array.from({ length: drops }, (_, i) => (
+          <ellipse key={i} rx={1.5 * k * 1.4} ry={2.1 * k * 1.4} fill="var(--sky)" opacity={0} />
+        ))}
+      </g>
     </g>
   );
 }
 
 /** A garden word's visitor (#209) hops in along the soil from the left, and stops beside the plant. */
-function Visitor({ art, e, side, until }: { art: PixelArt; e: number; side: number; until: number }) {
+function Visitor({ art, side, until }: { art: PixelArt; side: number; until: number }) {
   const w = art.rows[0].length;
   const h = art.rows.length;
   // About a third of the frame wide, whatever the plant's size: it should read as an animal, not a crumb.
   const k = (side * 0.34) / w;
-  const t = clamp01(e / Math.max(1, until));
-  const x = -side * 0.95 + side * 0.6 * easeOut(t);
-  // Three small hops on the way in.
-  const hop = Math.abs(Math.sin(t * Math.PI * 3)) * side * 0.04 * (1 - t);
+  const el = useRef<SVGGElement>(null);
+  useLayoutEffect(() => {
+    const frames = sample(36, (t) => {
+      const x = -side * 0.95 + side * 0.6 * easeOut(t);
+      // Three small hops on the way in.
+      const hop = Math.abs(Math.sin(t * Math.PI * 3)) * side * 0.04 * (1 - t);
+      return { transform: `translate(${x - (w * k) / 2}px, ${3 - h * k - hop}px) scale(${k})`, opacity: 1 };
+    });
+    // Not during the glide: it hops in from where the plant is going, and then stays.
+    const a = play(el.current!, frames, 0, Math.max(1, until), "forwards");
+    return () => a.cancel();
+  }, [side, until, w, h, k]);
   return (
-    <g transform={`translate(${x - (w * k) / 2} ${3 - h * k - hop}) scale(${k})`} shapeRendering="crispEdges">
+    <g ref={el} opacity={0} shapeRendering="crispEdges">
       <PixelRects art={art} />
+    </g>
+  );
+}
+
+/** A first bloom's sparkle: six dots fly out from the flower and fade. */
+function Sparkle({ at, side, start }: { at: { x: number; y: number }; side: number; start: number }) {
+  const el = useRef<SVGGElement>(null);
+  useLayoutEffect(() => {
+    const anims = Array.from(el.current!.children, (dot, i) => {
+      const a = (i / 6) * Math.PI * 2 + 0.3;
+      return play(
+        dot,
+        sample(10, (t) => {
+          const r = side * (0.06 + 0.12 * Math.sqrt(t));
+          return { transform: `translate(${at.x + Math.cos(a) * r}px, ${at.y + Math.sin(a) * r}px) scale(${1 - t * 0.5})`, opacity: 1 - t };
+        }),
+        start,
+        T.sparkle,
+        "none",
+      );
+    });
+    return () => anims.forEach((a) => a.cancel());
+  }, [at.x, at.y, side, start]);
+  return (
+    <g ref={el}>
+      {Array.from({ length: 6 }, (_, i) => (
+        <circle key={i} r={side * 0.014} fill="var(--sun)" opacity={0} />
+      ))}
     </g>
   );
 }
@@ -264,7 +343,6 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
   const fall = m.planted ? 1 - easeIn(phase(e, 0, T.seedFall)) : 0;
   const patT = phase(e, T.seedFall, T.soilPat);
   const pat = m.planted ? Math.sin(Math.PI * patT) : 0;
-  const sparkle = tl.blooms ? phase(e, tl.sparkleStart, T.sparkle) : 0;
   // A strong moment: the plant stretches up once, and settles.
   const perk = m.strong ? Math.sin(Math.PI * phase(e, tl.perkStart, T.perk)) : 0;
   // Where the garden draws the dot (StripPlant), on this plant's stem; it pops in, a little too big, then settles.
@@ -286,17 +364,11 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
         <g transform={`translate(0 ${-fall * side * 0.55}) scale(${(1 + pat * 0.22) * (1 - perk * 0.05)} ${(1 - pat * 0.28) * (1 + perk * 0.12)})`}>
           <PlantForm word={m.word} growth={growth} form={form} scale={1.05} />
         </g>
-        {sparkle > 0 &&
-          sparkle < 1 &&
-          Array.from({ length: 6 }, (_, i) => {
-            const a = (i / 6) * Math.PI * 2 + 0.3;
-            const r = side * (0.06 + 0.12 * Math.sqrt(sparkle));
-            return <circle key={i} cx={top.x + Math.cos(a) * r} cy={top.y + Math.sin(a) * r} r={side * 0.014 * (1 - sparkle * 0.5)} fill="var(--sun)" opacity={1 - sparkle} />;
-          })}
+        {tl.blooms && <Sparkle at={top} side={side} start={tl.sparkleStart} />}
         {/* Not during the glide: it hops in from where the plant is going. */}
         {dotAt && dotR > 0 && <circle cx={dotAt.x + (m.dot === "listen" ? 4 : -4)} cy={dotAt.y} r={dotR} fill={m.dot === "listen" ? "var(--sky)" : "var(--persimmon)"} />}
-        {m.visitor && e > 0 && <Visitor art={m.visitor} e={e} side={side} until={tl.growEnd} />}
-        {tl.watered && <WateringCan e={e} side={side} growStart={tl.growStart} growMs={tl.growMs} drops={m.strong ? 5 : 3} />}
+        {m.visitor && <Visitor art={m.visitor} side={side} until={tl.growEnd} />}
+        {tl.watered && <WateringCan side={side} growStart={tl.growStart} growMs={tl.growMs} drops={m.strong ? 5 : 3} />}
       </svg>
       {m.note && e > tl.growStart && <p className="growth-note">{m.note}</p>}
     </div>
