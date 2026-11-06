@@ -99,6 +99,7 @@ describe("Learners: one review at a time, the same as building it all again", ()
       }
       l = live.learners.get("es", deck)!;
       expect(view(l)).toEqual(view(store(rows).learners.get("es", deck)!));
+      for (const m of l.memories) expect(l.memory.get(m.key)).toBe(m);
       // A row that did not change is the same object, so screens can skip it.
       const changed = new Set(rows.slice(-1).map((r) => (r.word_id === "w3-old" ? "w3" : r.word_id)));
       if (pick < 0.6) for (const [key, m] of before.memory) if (!changed.has(m.wordId)) expect(l.memory.get(key)).toBe(m);

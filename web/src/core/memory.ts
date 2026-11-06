@@ -247,24 +247,23 @@ export class MemoryLog {
       } else this.replayed[i] = row;
       words.add(g.wordId);
     }
-    // A word keeps its place among the unlocks while the skills it has unlocked stay the same; otherwise the unlocks are walked again.
-    let same = true;
+    // An unlock that stays keeps its place, and one that goes (its first answer) leaves the rest in order. Only a new unlock needs the order of the reading rows.
+    let added = false;
     const fresh = new Map<string, MemoryRow>();
+    const gone = new Set<string>();
     for (const wordId of words) {
       for (const skill of ["listen", "write"] as const) {
         const key = memKey(wordId, skill);
         const row = this.unlock(wordId, skill);
-        if (!!row !== this.unlockedBy.has(key)) same = false;
+        if (row && !this.unlockedBy.has(key)) added = true;
+        if (!row && this.unlockedBy.has(key)) gone.add(key);
         if (row) fresh.set(key, row);
       }
     }
-    if (same) {
-      if (fresh.size) this.unlocked = this.unlocked.map((r) => fresh.get(r.key) ?? r);
-    } else {
-      for (const wordId of words) for (const skill of ["listen", "write"] as const) this.unlockedBy.delete(memKey(wordId, skill));
-      this.unlocked = this.unlockAll();
-    }
+    for (const key of gone) this.unlockedBy.delete(key);
     for (const [key, row] of fresh) this.unlockedBy.set(key, row);
+    if (added) this.unlocked = this.unlockAll();
+    else if (fresh.size || gone.size) this.unlocked = this.unlocked.filter((r) => !gone.has(r.key)).map((r) => fresh.get(r.key) ?? r);
     this.touched = words;
   }
 
