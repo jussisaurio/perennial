@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { language } from "../content/languages";
 import { useUser } from "../data/auth";
 import { perLearnerDay, useLearner, type Learner } from "../data/learner";
@@ -33,6 +33,12 @@ const visitorsToday = perLearnerDay((l, now) => learnerVisitors(l, new Date(now)
 // What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.
 const guestToday = perLearnerDay(waitingGuest);
 const chunkToday = perLearnerDay(nextChunk);
+// The same planner the session uses, for what the day's minutes are for. One per
+// voice setting: sound can be turned off, and voices load late.
+const planToday = {
+  listen: perLearnerDay((l, now) => sessionPlan(l, chunkToday(l, now).minutes, true, now)),
+  quiet: perLearnerDay((l, now) => sessionPlan(l, chunkToday(l, now).minutes, false, now)),
+};
 
 // Each part below works out its own numbers, so on a slow device React can
 // pause between the parts (App opens screens in a transition) instead of
@@ -80,9 +86,7 @@ function Aside({ learner, now }: { learner: Learner; now: number }) {
 /** The day's action right under the greeting: on a phone it must never sit under the tab bar. */
 function StartRow({ learner, chunk, now, onStart }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; now: number; onStart: () => void }) {
   const { user } = useUser();
-  const code = learner.lang;
-  // The same planner the session uses, for what the day's minutes are for.
-  const plan = useMemo(() => sessionPlan(learner, chunk.minutes, mayListen(language(code).tag), now), [learner, chunk, now, code]);
+  const plan = planToday[mayListen(language(learner.lang).tag) ? "listen" : "quiet"](learner, now);
   return (
     <div className="start-row">
       {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. */}
