@@ -148,6 +148,7 @@ export function useGardenScene({
     let alive = true;
     let s: GardenScene | null = null;
     const el = wrap.current;
+    const cv = canvas.current;
     const ro = new ResizeObserver(([e]) => s?.resize(e.contentRect.width, e.contentRect.height));
     void (async () => {
       const mod = await import("../garden/scene").catch((e: unknown) => {
@@ -158,11 +159,10 @@ export function useGardenScene({
       // undefined: this tab runs a release whose chunk is gone after a deploy; main.tsx is reloading the page.
       if (!alive || !mod) return;
       if (mod === "failed") return setFailed({ text: "The garden could not load.", retry: true });
-      if (!mod.webglAvailable()) return setFailed({ text: "Your browser cannot show 3D graphics." });
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
         s = new mod.GardenScene(
-          canvas.current!,
+          cv,
           data.l,
           {
             onSelect: setSelected,
@@ -189,6 +189,9 @@ export function useGardenScene({
         );
         await s.build();
       } catch (e) {
+        // No test context first: a second WebGL context costs ~30 ms at CPU 10× (#459). The renderer makes the only one, so
+        // a canvas with no context afterwards means the browser has no WebGL; asking again only costs in that failure.
+        if (!cv.getContext("webgl2")) return setFailed({ text: "Your browser cannot show 3D graphics." });
         return setFailed({ text: e instanceof Error ? e.message : String(e) });
       }
       // Left while the scene was built: the cleanup below disposed of it.

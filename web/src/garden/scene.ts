@@ -2092,13 +2092,3 @@ function texturesOf(mat: THREE.Material): THREE.Texture[] {
 
 /** How long one slice of the scene's build may run before it yields: under the 10 ms task budget, with room for the browser's own work. */
 const SLICE_MS = 8;
-
-export function webglAvailable(): boolean {
-  try {
-    const c = document.createElement("canvas");
-    return !!c.getContext("webgl2");
-  } catch {
-    // getContext can throw instead of returning null in some browsers: either way, no WebGL.
-    return false;
-  }
-}
