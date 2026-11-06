@@ -23,7 +23,10 @@ const KEY = "perennial-server";
 const OFF: Features = { ai: false };
 const Kept = Schema.fromJsonString(ServerInfo);
 
-let features: Features = cached() ?? OFF;
+// Read from storage on first use, not at import: the first Schema decode is
+// ~10 ms at CPU 10×, and the start screen does not show features (#481).
+// null: not read yet.
+let features: Features | null = null;
 const listeners = new Set<() => void>();
 let fetched = false;
 
@@ -82,7 +85,7 @@ export function newDeploy(serverRelease: string, built = RELEASE): boolean {
 const RECHECK_MS = 5 * 60_000;
 let lastAsked = 0;
 
-/** Ask the server (main.tsx calls this at start; the hook too, if first), then again when the tab returns. */
+/** Ask the server (main.tsx calls this after the first paint; the hook too, if first), then again when the tab returns. */
 export function loadServerInfo() {
   if (fetched) return;
   fetched = true;
@@ -103,5 +106,5 @@ function subscribe(l: () => void) {
 
 /** The server's features (off until known). */
 export function useFeatures(): Features {
-  return useSyncExternalStore(subscribe, () => features);
+  return useSyncExternalStore(subscribe, () => (features ??= cached() ?? OFF));
 }
