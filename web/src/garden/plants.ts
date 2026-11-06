@@ -139,3 +139,8 @@ export function showcasePlants(deck: LoadedDeck, count: number): PlantSource {
   // The landing page's door stays locked: nothing grows behind it, and there is no well to echo.
   return { plants, seeds: Math.max(0, deck.words.length - count), orchard: [], met: [] };
 }
+
+/** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
+export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
+  return { ...showcasePlants(deck, count), seeds: 0 };
+}

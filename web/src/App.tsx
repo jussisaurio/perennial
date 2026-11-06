@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { startTransition, Suspense, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
 import { identify, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useStore } from "./data/learner";
@@ -8,15 +8,12 @@ import { reloadNeeded } from "./data/http";
 import { createStore, type Store } from "./data/store";
 import { Home } from "./ui/Home";
 import { FlowerIcon, GearIcon, HomeIcon, ListIcon, SproutMark } from "./ui/icons";
-import { LearnerGardenWalk } from "./ui/GardenWalk";
 import { CourseSwitcher } from "./ui/CourseSwitcher";
 import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
 import { RefusedBanner, useRefused } from "./ui/Refused";
-import { SessionScreen } from "./ui/Session";
+import { LearnerGardenWalk, preloadScreens, SessionScreen, SettingsScreen, WordsScreen } from "./ui/screens";
 import { DAILY_MINUTES } from "./data/practice";
-import { SettingsScreen } from "./ui/Settings";
-import { WordsScreen } from "./ui/Words";
 import { GiftArrival } from "./ui/Gift";
 import { arrowKeys } from "./ui/arrows";
 import { pendingGift } from "./data/gift";
@@ -156,7 +153,10 @@ export default function App() {
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
   return (
     <StoreProvider key={user.id} userId={user.id} email={user.email}>
-      <Main route={route} go={go} />
+      {/* While a screen's chunk loads (ui/screens.ts). Below the store, so its effects stay up. Tab changes are transitions, so they keep the old screen up instead. */}
+      <Suspense fallback={<Settling />}>
+        <Main route={route} go={go} />
+      </Suspense>
       <ReloadBanner />
       <RefusedBanner />
     </StoreProvider>
@@ -186,6 +186,11 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   useEffect(() => {
     if (saved && !course) void store.refetchAll();
   }, [saved, course, store]);
+  // Once a course is up (Today is drawn first): fetch the other screens, so a tab opens at once.
+  const hasCourse = course !== undefined;
+  useEffect(() => {
+    if (hasCourse) preloadScreens();
+  }, [hasCourse]);
 
   // Still loading, or a course was just started and is on its way: not the landing page.
   if (!course && (!ready || starting)) return <Settling />;

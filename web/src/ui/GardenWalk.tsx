@@ -7,12 +7,11 @@ import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { language } from "../content/languages";
-import type { LoadedDeck } from "../data/deck";
 import { openDoor, saveLeft, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_LINES, groupOf, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
-import { plantMood, plantsFromLearner, showcasePlants, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
+import { plantMood, plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
 import type { Hider } from "../garden/sceneVisitors";
@@ -177,11 +176,6 @@ const COMPANY_LINE: Record<Companion, (lang: string) => ReactNode> = {
 
 /** What the learner did in the walk, for counting (#335): what a tap met (TapHit kinds), what the action button did (#334), what they left or found (#351), what they walked into (#359), or did with a loose thing (#358). */
 type GardenVerb = TapHit["kind"] | Reach | WalkIntoEvent["did"] | Exclude<CarryDone["did"], "land">;
-
-/** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */
-export function showcaseWalkPlants(deck: LoadedDeck, count = 160): PlantSource {
-  return { ...showcasePlants(deck, count), seeds: 0 };
-}
 
 /** The walk-in garden for the signed-in learner. */
 export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onExit: () => void; onWater: (minutes: number) => void }) {
