@@ -1,0 +1,9 @@
+{
+  "file": "source/0023.json",
+  "sha256": "fe7fc81bb27946f0612a1a7ee91cfc7d3a2d419088ac287abd769ef625049f37",
+  "author": "claude-agent:es-author-0023-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0023-2026-11-06",
+  "reviewedAt": "2026-11-06",
+  "verdict": "approved",
+  "notes": "100/100 ok after two fix rounds (46 fixes: mostly near-copies/synonym-in-slot of older sentences, plus a few calques, one LatAm term, one rare word)"
+}
