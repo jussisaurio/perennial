@@ -74,13 +74,15 @@ interface Loaf { duration: number; blocking: number; scripts: { ms: number; invo
 /** One Event Timing entry; an interaction (a click: pointerdown, pointerup, click) has several. */
 interface EventEntry { name: string; id: number; start: number; processingStart: number; processingEnd: number; end: number }
 interface Interaction { name: string; delay: number; processing: number; presentation: number; duration: number }
-interface Probe { frames: number[]; loafs: Loaf[]; events: EventEntry[] }
+interface Probe { loafs: Loaf[]; events: EventEntry[] }
 
-// In the page: frame times, Long Animation Frames (what blocked a frame, by script)
-// and Event Timing (how long each interaction took to paint), as in the field.
+// In the page: Long Animation Frames (what blocked a frame, by script) and Event Timing
+// (how long each interaction took to paint), as in the field. No script of ours runs per
+// frame: DevTools commands run inside whatever JS is on the stack, and a requestAnimationFrame
+// loop here was charged with them (#450). Frame times come from the trace.
 const PROBE = () => {
   const w = window as unknown as { __perf: Probe };
-  w.__perf = { frames: [], loafs: [], events: [] };
+  w.__perf = { loafs: [], events: [] };
   type Script = { duration: number; invoker: string; sourceFunctionName: string; sourceURL: string; sourceCharPosition: number };
   type LoafEntry = PerformanceEntry & { blockingDuration: number; scripts: Script[] };
   new PerformanceObserver((l) => {
@@ -99,13 +101,6 @@ const PROBE = () => {
     }
     // 16 ms is the lowest threshold the browser allows; faster events are fine anyway.
   }).observe({ type: "event", buffered: true, durationThreshold: 16 } as PerformanceObserverInit);
-  let last = performance.now();
-  const tick = (t: number) => {
-    w.__perf.frames.push(t - last);
-    last = t;
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
 };
 
 interface Result {
@@ -169,13 +164,30 @@ const CATEGORIES = [
 // The trace engine is DevTools' own, and expects a browser's DOMRect.
 polyfillDOMRect();
 
-/** Durations in ms of every task the page's main thread ran, as DevTools' Performance panel finds them. */
-async function mainThreadTasks(trace: Buffer): Promise<number[]> {
+/**
+ * From the trace, as DevTools' Performance panel finds them: the duration in ms of every task
+ * the page's main thread ran, and of every frame Chrome drew.
+ */
+async function fromTrace(trace: Buffer): Promise<{ tasks: number[]; frames: number[] }> {
   const model = Trace.TraceModel.Model.createWithAllHandlers();
   await model.parse(JSON.parse(trace.toString()).traceEvents);
-  const threads = Trace.Handlers.Threads.threadsInTrace(model.parsedTrace()!.data).filter((t) => t.type === Trace.Handlers.Threads.ThreadType.MAIN_THREAD && t.processIsOnMainFrame);
+  const data = model.parsedTrace()!.data;
+  const threads = Trace.Handlers.Threads.threadsInTrace(data).filter((t) => t.type === Trace.Handlers.Threads.ThreadType.MAIN_THREAD && t.processIsOnMainFrame);
   if (!threads.length) throw new Error("no main thread in the trace");
-  return threads.flatMap((t) => t.entries.filter(Trace.Types.Events.isRunTask).map((e) => e.dur / 1000));
+  const tasks = threads.flatMap((t) => {
+    // Playwright's and our DevTools commands run on the page's main thread, inside the JS that is
+    // running when they arrive (a V8 API interrupt). In the field no DevTools is attached: not app work.
+    const devtools = t.entries.filter((e) => e.name === "V8.InvokeApiInterruptCallbacks");
+    return t.entries.filter(Trace.Types.Events.isRunTask).map((task) => {
+      const end = task.ts + task.dur;
+      // One still running when the trace stopped has no end; it stays counted, which errs high.
+      const inside = devtools.filter((e) => e.ts >= task.ts && e.ts < end).reduce((a, e) => a + (e.dur ?? 0), 0);
+      return (task.dur - inside) / 1000;
+    });
+  });
+  // Idle frames had nothing to draw, so their length is not a delay anyone saw.
+  const frames = data.Frames.frames.filter((f) => !f.idle).map((f) => f.duration / 1000);
+  return { tasks, frames };
 }
 
 /**
@@ -196,20 +208,21 @@ function slowest(events: EventEntry[]): Interaction | undefined {
 async function measure(page: Page, cdp: CDPSession, screen: string, action: () => Promise<void>): Promise<{ result: Result; trace: Buffer; profile: object }> {
   await page.evaluate(() => {
     const w = window as unknown as { __perf: Probe };
-    w.__perf.frames = [];
     w.__perf.loafs = [];
     w.__perf.events = [];
   });
   await cdp.send("HeapProfiler.collectGarbage");
-  await page.context().browser()!.startTracing(page, { categories: CATEGORIES });
+  // Before the trace: starting the profiler is a main-thread task of hundreds of ms at CPU 10× (#450).
   await cdp.send("Profiler.start");
+  await page.context().browser()!.startTracing(page, { categories: CATEGORIES });
   const t = performance.now();
   await action();
   const ms = performance.now() - t;
-  const { profile } = await cdp.send("Profiler.stop");
   const trace = await page.context().browser()!.stopTracing();
-  const tasks = (await mainThreadTasks(trace)).filter((d) => d > BUDGET_MS);
-  const { frames, loafs, events } = await page.evaluate(() => (window as unknown as { __perf: Probe }).__perf);
+  const { profile } = await cdp.send("Profiler.stop");
+  const { tasks: all, frames } = await fromTrace(trace);
+  const tasks = all.filter((d) => d > BUDGET_MS);
+  const { loafs, events } = await page.evaluate(() => (window as unknown as { __perf: Probe }).__perf);
   const { metrics } = await cdp.send("Performance.getMetrics");
   // Live elements (Chrome's "Nodes" metric also counts detached ones awaiting GC).
   const nodes = await page.evaluate(() => document.getElementsByTagName("*").length);

@@ -30,6 +30,8 @@ It builds the app (with the demo switch on), starts the real server, and creates
 
 Numbers from before 2026-11-06 (harness v1, #447 baseline) are not comparable: v1 used one page for all runs, so its first run was cold and its later runs had one or more warm-ups. Measure before and after a change with the same version.
 
+Worst ms, Over budget ms, LoAF blocking ms and the frame columns from before the fix in #450 (2026-11-06) count DevTools work as app work. The profiler start alone was one task of 300–650 ms at CPU 10×. Do not compare them with later numbers.
+
 - `--runs <n>`: run each screen n times. The report shows the median, and the p90 for the main numbers. Use 5 to compare before and after a change: one run varies with what else the machine does.
 - `--only <text>`: only the screens whose name has this text.
 - `--cpu <n>`: slow the CPU n times (default 10).
@@ -41,14 +43,14 @@ Numbers from before 2026-11-06 (harness v1, #447 baseline) are not comparable: v
 
 Output is in `web/perf/out/`. `report.md` has one table and then a section per screen.
 
-- **Tasks > 10 ms, Worst ms, Over budget ms**: main-thread tasks longer than the budget, the longest one, and their time beyond 10 ms added up. These come from the Chrome trace, read by the DevTools trace engine (`@paulirish/trace_engine`, the same code as the Performance panel). These are the numbers for the bar. Promise callbacks (microtasks) run inside the task that started them, so a chain of `await`s with no real waiting is one long task here. A chain that waits for I/O (fetch, IndexedDB, messages) is many short tasks. It is slow, but no single task blocks, so look at INP and Took ms for it.
+- **Tasks > 10 ms, Worst ms, Over budget ms**: main-thread tasks longer than the budget, the longest one, and their time beyond 10 ms added up. These come from the Chrome trace, read by the DevTools trace engine (`@paulirish/trace_engine`, the same code as the Performance panel). These are the numbers for the bar. DevTools commands (Playwright's clicks and checks, the profiler) run on the page's main thread, inside the JS that is running when they arrive. In the trace they are `V8.InvokeApiInterruptCallbacks`, and their time is taken out of the task: no DevTools is attached in the field. Promise callbacks (microtasks) run inside the task that started them, so a chain of `await`s with no real waiting is one long task here. A chain that waits for I/O (fetch, IndexedDB, messages) is many short tasks. It is slow, but no single task blocks, so look at INP and Took ms for it.
 - **… p90**: the same, at the 90th percentile of the runs. With 5 runs, this is the worst run.
 - **INP ms**: lab INP, the slowest click or key press from input to the next paint (Event Timing). "< 16" means no interaction took 16 ms or more. Screens with no click or key press (cold load, scrolling) have none. The section per screen splits it into input delay (the main thread was busy), processing (our event handlers) and presentation (render, layout and paint after them). Field INP is "good" under 200 ms.
 - **LoAF blocking ms**: Long Animation Frames over 50 ms. For each, its time beyond 50 ms, added up. The section per screen lists the longest frames with the scripts that ran in them: time, function, file and character position, and what called it (an event listener, a timer, a promise).
-- **Took ms, p95 frame ms, Frames > 50 ms, JS heap MB, DOM nodes**: the time the scenario took, frame times from requestAnimationFrame, and memory and DOM size at the end.
+- **Took ms, p95 frame ms, Frames > 50 ms, JS heap MB, DOM nodes**: the time the scenario took, the frames Chrome drew (from the trace's frame track, not counting idle frames), and memory and DOM size at the end.
 - **Self time per function**: from the CPU profile, the functions that took the most time themselves.
 
-A long frame whose script is "(anonymous) (no source URL)" from a FrameRequestCallback is the harness's own frame counter. It is not slow itself. Chrome slows the CPU by pausing the page when JS next runs, so the pause for earlier work (style, layout, parsing) can land in that callback. In the trace it shows as `V8.InvokeApiInterruptCallbacks`. Count it as time the page was busy, but look at the work before it.
+LoAF blocking and the self time per function still include DevTools command time. It is charged to whatever JS was on the stack, often Playwright's `markTargetElements` during a click. Before #450, the harness counted frames with its own requestAnimationFrame loop. That loop was often on the stack, so the profiler start (about 300–650 ms at CPU 10×) showed as a long "(anonymous) (no source URL)" or `sentryWrapped` frame script.
 
 For each screen, the run with the most time over budget saves its Chrome trace (`*.trace.json`) and CPU profile (`*.cpuprofile`). Drag them into Chrome DevTools → Performance.
 
