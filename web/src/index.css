@@ -306,7 +306,6 @@ section { margin-bottom: 1.25rem; }
 .garden .seed { fill: var(--ink-2); opacity: 0.45; }
 .garden .glow { fill: var(--sun); opacity: 0.35; animation: glow 2.4s var(--ease) infinite; transform-box: fill-box; transform-origin: center; }
 .garden .sway { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 6s ease-in-out infinite; }
-.garden g[transform] > .sway { cursor: pointer; }
 .garden .firefly { fill: var(--sun); opacity: 0; display: none; }
 :root[data-theme="dark"] .garden .firefly { display: block; animation: firefly 7s ease-in-out infinite; filter: drop-shadow(0 0 4px var(--sun)); }
 
