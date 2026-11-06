@@ -51,6 +51,9 @@ const SPACING = 22;
 /** Plants drawn beyond each edge of the view, so a quick pan never shows gaps. */
 const OVERSCAN = 160;
 
+/** The width of the last strip drawn. Every strip is as wide as the page column; the ResizeObserver corrects it if the window changed since. */
+let lastWidth: number | null = null;
+
 /**
  * Small gardens (the landing page, a first week) fit the width. Bigger ones
  * become a strip you pan sideways, in course order, so the newest growth is
@@ -60,8 +63,12 @@ const OVERSCAN = 160;
  */
 export const Garden = memo(function Garden(props: GardenProps) {
   // Measured before any plant is drawn: which plants are in view depends on the width, and a guess drew them twice (#492).
-  const [width, setWidth] = useState<number | null>(null);
-  const fit = useCallback((w: number) => setWidth(Math.max(280, Math.round(w))), []);
+  // A later visit starts from the last strip's width: measuring forced a layout of the whole new screen and a second render, in one task of a tab switch (#447).
+  const [width, setWidth] = useState<number | null>(lastWidth);
+  const fit = useCallback((w: number) => {
+    lastWidth = Math.max(280, Math.round(w));
+    setWidth(lastWidth);
+  }, []);
   const observe = useCallback(
     (el: HTMLDivElement) => {
       const ro = new ResizeObserver(([e]) => fit(e.contentRect.width));
