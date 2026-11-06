@@ -4,10 +4,15 @@
 // load, the last good copy kept in the Cache API is used instead.
 
 import { Option, Schema } from "effect";
+import { language } from "../content/languages";
+import { wordKeys } from "../content/text";
 import { DeckSentence, DeckWord } from "../deck/schema";
 
 const loaders = import.meta.glob<unknown>("../../../decks/*/deck.json", { import: "default" });
 const CACHE = "perennial-decks";
+
+/** A deck sentence with its word keys, always there once loaded. */
+export type CourseSentence = DeckSentence & { keys: readonly string[] };
 
 export interface LoadedDeck {
   lang: string;
@@ -15,7 +20,7 @@ export interface LoadedDeck {
   /** Live words in frequency order (no retired words, no aliases). */
   words: DeckWord[];
   byId: Map<string, DeckWord>;
-  sentencesByWord: Map<string, DeckSentence[]>;
+  sentencesByWord: Map<string, CourseSentence[]>;
   /** Resolves aliases; returns the word even if retired, or undefined. */
   resolve(id: string): DeckWord | undefined;
   skipped: number;
@@ -38,7 +43,7 @@ function index(raw: unknown, lang: string): LoadedDeck {
     if (Option.isSome(r)) byId.set(r.value.id, r.value);
     else skipped++;
   }
-  const sentencesByWord = new Map<string, DeckSentence[]>();
+  const sentencesByWord = new Map<string, CourseSentence[]>();
   for (const s of d.sentences) {
     const r = decodeSentence(s);
     if (Option.isNone(r) || !r.value.text.includes(r.value.cloze) || !byId.has(r.value.wordId)) {
@@ -47,7 +52,8 @@ function index(raw: unknown, lang: string): LoadedDeck {
     }
     if (r.value.retired) continue;
     const list = sentencesByWord.get(r.value.wordId) ?? [];
-    list.push(r.value);
+    // The build adds keys (#453); a last good copy kept from before that has none.
+    list.push({ ...r.value, keys: r.value.keys ?? wordKeys(r.value.text, language(lang).tag) });
     sentencesByWord.set(r.value.wordId, list);
   }
   const resolve = (id: string) => {

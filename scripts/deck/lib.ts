@@ -6,7 +6,8 @@ import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 
 import { join } from "node:path";
 import { Result, Schema, SchemaIssue } from "effect";
 import { Deck, GARDEN_WORDS, ID_ALPHABET, ORCHARD_WORDS, SourceWord, deckProblems, manifestKey, type DeckSentence, type DeckWord } from "../../web/src/deck/schema.ts";
-import { locate } from "../../web/src/content/text.ts";
+import { locate, wordKeys } from "../../web/src/content/text.ts";
+import { language } from "../../web/src/content/languages.ts";
 
 export const ROOT = join(import.meta.dir, "../..");
 export const deckDir = (lang: string) => join(ROOT, "decks", lang);
@@ -154,7 +155,9 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden =
     for (const s of prev?.sentences ?? []) if (s.wordId === w.id && !liveSids.has(s.id)) sentences.push({ ...s, retired: true });
   }
 
-  let deck: Deck = { lang: lang as Deck["lang"], native: "en", version: prev?.version ?? 1, words, sentences };
+  // Each sentence's word keys, so the app does not tokenize the whole deck (#453).
+  const keyed = sentences.map((s) => ({ ...s, keys: wordKeys(s.text, language(lang).tag) }));
+  let deck: Deck = { lang: lang as Deck["lang"], native: "en", version: prev?.version ?? 1, words, sentences: keyed };
   // Parsing also puts keys in schema order, the same order a read gives.
   const parsed = decode(Deck(lang), deck);
   if (parsed.success) deck = parsed.data;

@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test";
 import type { Learner, Word } from "./learner";
+import { wordKeys } from "../content/text";
 import { grownSpans, readableCount, readNow } from "./reading";
 
 // A learner whose words are these, with a reading memory for the grown ones.
 function learner(words: (Pick<Word, "id" | "lemma" | "pos" | "forms"> & { grown?: boolean; known?: boolean })[], sentences: { id: string; text: string }[] = [], seen: string[] = []): Learner {
   return {
-    deck: { sentencesByWord: new Map([["x", sentences.map((s) => ({ ...s, translation: `(${s.id})`, cloze: "" }))]]) },
+    deck: { sentencesByWord: new Map([["x", sentences.map((s) => ({ ...s, translation: `(${s.id})`, cloze: "", keys: wordKeys(s.text, "es") }))]]) },
     reviews: seen.map((id) => ({ sentence_id: id })),
     words: new Map(words.map((w) => [w.id, w])),
     memory: new Map(words.filter((w) => w.grown).map((w) => [`${w.id}:read`, { reps: 2, s: w.known ? 30 : 1 }])),
@@ -37,10 +38,10 @@ test("a sentence to read now: every word grown, long enough, never on a card, ab
     { id: "water", text: "Pan y agua, el gato come pan." },
   ];
   const l = learner(words, sentences, ["seen"]);
-  expect(readNow(l, "es", new Set(), new Set())?.id).toBe("bread");
-  expect(readNow(l, "es", new Set(), new Set(["bread"]))?.id).toBe("water"); // shown before
-  expect(readNow(l, "es", new Set(["agua", "pan"]), new Set())?.id).toBe("water"); // more of today's words: pan twice
-  expect(readNow(learner(words.slice(0, 3), sentences), "es", new Set(), new Set())).toBeNull();
+  expect(readNow(l, new Set(), new Set())?.id).toBe("bread");
+  expect(readNow(l, new Set(), new Set(["bread"]))?.id).toBe("water"); // shown before
+  expect(readNow(l, new Set(["agua", "pan"]), new Set())?.id).toBe("water"); // more of today's words: pan twice
+  expect(readNow(learner(words.slice(0, 3), sentences), new Set(), new Set())).toBeNull();
 });
 
 test("sentences you can read: every word known (by the word count's rule), each text once", () => {
@@ -50,5 +51,5 @@ test("sentences you can read: every word known (by the word count's rule), each 
     { id: "b", text: "El gato come." }, // the same text under another word
     { id: "c", text: "El gato come pan." }, // pan is still learning
   ]);
-  expect(readableCount(l, "es")).toBe(1);
+  expect(readableCount(l)).toBe(1);
 });

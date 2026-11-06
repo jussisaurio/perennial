@@ -15,7 +15,7 @@ export function Progress({ learner, lang: code }: { learner: Learner; lang: stri
   const day = today(new Date(now));
   const stats = useMemo(() => courseStats(learner, now), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   // How much real text the known words open up (#412): only ever goes up as words are learned.
-  const readable = useMemo(() => readableCount(learner, language(code).tag), [learner, code]);
+  const readable = useMemo(() => readableCount(learner), [learner]);
   if (stats.known + stats.learning === 0) return null;
   const max = Math.max(1, ...stats.days.map((d) => d.reviews));
   const lang = language(code).name;

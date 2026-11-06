@@ -647,7 +647,7 @@ function readingToday(l: Learner, practised: ReadonlySet<string>): (ReturnType<t
   }
   if (saved.day === today()) return null;
   const tag = language(l.lang).tag;
-  const s = readNow(l, tag, practised, new Set(saved.ids));
+  const s = readNow(l, practised, new Set(saved.ids));
   if (!s) return null;
   try {
     localStorage.setItem(key, JSON.stringify({ day: today(), ids: [...saved.ids, s.id] }));
