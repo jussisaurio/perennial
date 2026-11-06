@@ -46,9 +46,9 @@ test("sleepy words sleep: every head stays closed, in its own colours, also whil
 });
 
 test("loco scrambles its petals: they are not all the same length", () => {
-  const petals = draw("loco", "bloom").match(/rotate\((-?[\d.]+)\)"><path d="M0 0 C [^"]+"/g) ?? [];
+  const petals = draw("loco", "bloom").match(/<path d="M0 0 C [^"]+"[^>]*transform="rotate\(-?[\d.]+\)"/g) ?? [];
   expect(petals.length).toBeGreaterThan(5);
-  expect(new Set(petals.map((p) => p.split("C")[1])).size).toBeGreaterThan(3);
+  expect(new Set(petals.map((p) => p.split('"')[1])).size).toBeGreaterThan(3);
 });
 
 test("grande is slightly too big, pequeño is small, and caer has a petal on the ground", () => {
