@@ -397,6 +397,9 @@ export class GardenScene {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     this.renderer.setPixelRatio(1);
+    // Reading the shader logs on a program's first use waits for the GPU: ~10 ms of a first draw at CPU 10× (#571).
+    // Dev and the e2e tests still read them, so a broken shader fails there.
+    this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
     this.x = layout.gate.x;
     // Start inside the gate, close enough that the first bed fills the view.
     const first = layout.beds[0];
@@ -604,9 +607,13 @@ export class GardenScene {
     const meshes = new Set<string>();
     const textures = new Set<THREE.Texture>();
     const linked: Promise<unknown>[] = [];
+    // Without the extension there is no link status to wait for (each program counts as ready at once), and
+    // compileAsync would warn on every page: compile alone does the same.
+    const parallel = this.renderer.extensions.has("KHR_parallel_shader_compile");
     for (const child of parts) {
       for (const o of firstOfEach(child, meshes)) {
-        linked.push(this.renderer.compileAsync(o, this.camera, target));
+        if (parallel) linked.push(this.renderer.compileAsync(o, this.camera, target));
+        else this.renderer.compile(o, this.camera, target);
         if (await this.stopped()) return;
         for (const mat of materialsOf(o))
           for (const t of texturesOf(mat)) {
