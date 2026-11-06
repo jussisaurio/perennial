@@ -5,6 +5,7 @@
 
 import type { SpritePlant } from "./plantCanvas";
 import type { StripDone, StripJob } from "./stripWorker";
+import { inSlices } from "../lib/yield";
 
 /** A plant's look at a scale and pixel density: plants that look the same share a sprite. */
 export const spriteKey = (p: SpritePlant, scale: number, dpr: number) => `${p.lemma} ${p.stage} ${p.growth} ${scale} ${dpr}`;
@@ -38,22 +39,32 @@ function drawn(plants: SpritePlant[], scale: number, dpr: number): Promise<Blob[
   return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
 }
 
+/** Starts loading each PNG as an image, one step per image; each URL resolves once its image is decoded. */
+function* decodeSteps(pngs: Blob[]): Generator<void, Promise<string>[]> {
+  const urls: Promise<string>[] = [];
+  for (const png of pngs) {
+    const url = URL.createObjectURL(png);
+    const img = new Image();
+    img.src = url;
+    // Decoded before the strip shows it, off the main thread, so its first paint does not decode it.
+    urls.push(img.decode().then(() => url));
+    yield;
+  }
+  return urls;
+}
+
 /** Draws the sprites not drawn yet, in one job; resolves when all of them are ready. */
 export function drawSprites(plants: SpritePlant[], scale: number, dpr: number): Promise<void> {
   const todo = plants.filter((p) => !drawing.has(spriteKey(p, scale, dpr)));
   if (todo.length) {
-    const pngs = drawn(todo, scale, dpr);
+    // Started in slices: starting a screen of plant images at once was a ~40 ms task at CPU 10× (#569).
+    const decoded = drawn(todo, scale, dpr).then((pngs) => inSlices(decodeSteps(pngs)));
     todo.forEach((p, i) => {
       const key = spriteKey(p, scale, dpr);
       drawing.set(
         key,
-        pngs.then(async (all) => {
-          const url = URL.createObjectURL(all[i]);
-          const img = new Image();
-          img.src = url;
-          // Decoded before the strip shows it, off the main thread, so its first paint does not decode it.
-          await img.decode();
-          ready.set(key, url);
+        decoded.then(async (urls) => {
+          ready.set(key, await urls[i]);
         }),
       );
     });
