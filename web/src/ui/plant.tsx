@@ -6,7 +6,7 @@
 // the sprite worker, outside React, and compiled ones need React's hook state there.
 "use no memo";
 
-import { memo, type ReactNode } from "react";
+import { Fragment, memo, type ReactNode } from "react";
 import { OLD_S, plantStage, type PlantStage } from "../core/memory";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";
 import { hash01, hash32, rng } from "../lib/seed";
@@ -185,64 +185,64 @@ function Flower({ g, r, open, striped = false, crazy = false }: { g: Genome; r: 
       const turn = (i * 360) / n + (crazy ? (wild - 0.5) * 50 : 0);
       const l = crazy ? len * (0.6 + wild * 0.8) : len;
       return (
-        <g key={i} transform={`rotate(${turn})`}>
-          <path d={petalPath(shape, l, w)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} />
-          {striped && <path d={`M0 ${-l * 0.15} L0 ${-l * 0.85}`} stroke="#fff" strokeOpacity={0.7} strokeWidth={Math.max(0.6, w * 0.34)} strokeLinecap="round" />}
-        </g>
+        <Fragment key={i}>
+          <path d={petalPath(shape, l, w)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} transform={`rotate(${turn})`} />
+          {striped && <path d={`M0 ${-l * 0.15} L0 ${-l * 0.85}`} stroke="#fff" strokeOpacity={0.7} strokeWidth={Math.max(0.6, w * 0.34)} strokeLinecap="round" transform={`rotate(${turn})`} />}
+        </Fragment>
       );
     });
   switch (g.flower) {
     case "daisy":
       return (
-        <g>
+        <>
           {ring(g.petals, r * 1.25, r * 0.32)}
           <circle r={r * 0.42} fill={g.center} />
-        </g>
+        </>
       );
     case "star":
       return (
-        <g>
+        <>
           {ring(g.petals, r * 1.3, r * 0.45, "pointed")}
           <circle r={r * 0.28} fill={g.center} />
-        </g>
+        </>
       );
     case "cup":
       return <path d={`M${-r} ${-r * 0.1} C ${-r} ${r * 0.9} ${r} ${r * 0.9} ${r} ${-r * 0.1} L ${r * 0.5} ${-r * 1.1} L 0 ${-r * 0.45} L ${-r * 0.5} ${-r * 1.1} Z`} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.6} transform={`translate(0 ${r * 0.3})`} />;
     case "bell":
       // Hangs from a little arched stalk.
       return (
-        <g>
+        <>
           <path d={`M0 0 Q ${r * 1.1} ${-r * 0.6} ${r * 1.3} ${r * 0.5}`} fill="none" stroke={g.stem} strokeWidth={1} />
           <path d={`M${r * 1.3 - r * 0.7} ${r * 0.5} C ${r * 0.6} ${r * 1.6} ${r * 2} ${r * 1.6} ${r * 2} ${r * 0.5} Z`} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.6} />
-        </g>
+        </>
       );
     case "cluster":
       return (
-        <g>
+        <>
           {Array.from({ length: Math.max(5, Math.min(9, g.petals)) }, (_, i) => {
             const n = Math.max(5, Math.min(9, g.petals));
             const t = (i / (n - 1)) * Math.PI;
             return <circle key={i} cx={Math.cos(t) * r * 1.1} cy={-Math.sin(t) * r * 0.9} r={r * 0.36} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.5} />;
           })}
-        </g>
+        </>
       );
     case "spike":
       return (
-        <g>
+        <>
           {Array.from({ length: 6 }, (_, i) => (
             <ellipse key={i} cx={(i % 2 ? 1 : -1) * r * 0.28} cy={-i * r * 0.5} rx={r * (0.42 - i * 0.04)} ry={r * (0.32 - i * 0.03)} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.4} />
           ))}
-        </g>
+        </>
       );
     case "pom":
       return (
-        <g>
+        <>
           {Array.from({ length: 14 }, (_, i) => {
             const a = i * 2.4;
             const d = r * 0.85 * Math.sqrt((i + 0.5) / 14);
             return <circle key={i} cx={Math.cos(a) * d} cy={Math.sin(a) * d} r={r * 0.3} fill={g.petal} stroke={g.petalEdge} strokeWidth={0.4} />;
           })}
-        </g>
+        </>
       );
   }
 }
@@ -292,7 +292,7 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
     const sh = h * p;
     const top = onStem(sh, bend * p, 1);
     return (
-      <g>
+      <>
         {p < 1 && <ellipse cx={0} cy={-1.2 * scale} rx={3.4 * scale} ry={2.3 * scale} fill="var(--ink-2)" opacity={0.55 * (1 - p * p)} />}
         {p > 0 && (
           <>
@@ -303,7 +303,7 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
             ))}
           </>
         )}
-      </g>
+      </>
     );
   }
 
@@ -322,13 +322,15 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
     const sides = g.opposite ? [-1, 1] : [i % 2 ? 1 : -1];
     for (const side of sides) {
       const len = leafLen * (1 - t * 0.35) * k;
+      // On each shape, not on a group around them: the strip draws dozens of plants at once, and every element costs style and layout (#486).
+      const at = `translate(${p.x} ${p.y}) rotate(${p.angle + side * leafTurn})`;
       leaves.push(
-        <g key={`${i}${side}`} transform={`translate(${p.x} ${p.y}) rotate(${p.angle + side * leafTurn})`}>
-          <path d={leafPath(g.leafShape, len, leafW * k)} fill={g.leaf} />
+        <Fragment key={`${i}${side}`}>
+          <path d={leafPath(g.leafShape, len, leafW * k)} fill={g.leaf} transform={at} />
           {/* "frío": frost on every leaf tip. "agua": a drop on every other leaf. */}
-          {meaning?.kind === "cold" && <circle cy={-len * 0.86} r={leafW * k * 0.32} fill="#fff" />}
-          {meaning?.kind === "water" && i % 2 === 0 && <ellipse cy={-len * 0.5} rx={leafW * k * 0.3} ry={leafW * k * 0.4} fill="hsl(208 70% 62%)" />}
-        </g>,
+          {meaning?.kind === "cold" && <circle cy={-len * 0.86} r={leafW * k * 0.32} fill="#fff" transform={at} />}
+          {meaning?.kind === "water" && i % 2 === 0 && <ellipse cy={-len * 0.5} rx={leafW * k * 0.3} ry={leafW * k * 0.4} fill="hsl(208 70% 62%)" transform={at} />}
+        </Fragment>,
       );
     }
   }
@@ -342,12 +344,12 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
       const ex = p.x + side * len * 0.7;
       const ey = p.y - len * 0.7;
       branches.push(
-        <g key={`b${i}`}>
+        <Fragment key={`b${i}`}>
           <path d={`M${p.x} ${p.y} Q ${p.x + side * len * 0.6} ${p.y - len * 0.1} ${ex} ${ey}`} fill="none" stroke={g.stem} strokeWidth={Math.max(1, 1.4 * scale)} strokeLinecap="round" />
           <g transform={`translate(${ex} ${ey}) rotate(${side * 20})`}>
             {asleep ? <Flower g={{ ...g, bud: g.petal, budEdge: g.petalEdge }} r={flowerR * 0.7 * u} open={false} /> : <Flower g={g} r={flowerR * 0.6 * u} open striped={striped} crazy={crazy} />}
           </g>
-        </g>,
+        </Fragment>,
       );
     }
   if (u > 0 && rare === "twin") {
@@ -359,12 +361,12 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
     const ex = p.x + side * len * 0.75;
     const ey = p.y - len * 0.85;
     branches.push(
-      <g key="twin">
+      <Fragment key="twin">
         <path d={`M${p.x} ${p.y} Q ${p.x + side * len * 0.7} ${p.y - len * 0.05} ${ex} ${ey}`} fill="none" stroke={g.stem} strokeWidth={Math.max(1.1, 1.8 * scale)} strokeLinecap="round" />
         <g transform={`translate(${ex} ${ey}) rotate(${side * 25})`}>
           <Flower g={g} r={flowerR * u} open striped={striped} />
         </g>
-      </g>,
+      </Fragment>,
     );
   }
 
@@ -372,7 +374,7 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
   // flower's heart while the petals unfurl.
   const bud = clamp01((q - 0.3) / 0.7) * (1 - u);
   return (
-    <g>
+    <>
       {u > 0 && rare === "golden" && (
         // A soft glow behind the whole flower head (drawn first) and a glint: gold, not just yellow.
         <g transform={`translate(${top.x} ${top.y})`} opacity={u}>
@@ -410,7 +412,7 @@ export function PlantForm({ word, growth, form, scale = 1 }: { word: string; gro
           <Bee size={flowerR * 1.4} />
         </g>
       )}
-    </g>
+    </>
   );
 }
 

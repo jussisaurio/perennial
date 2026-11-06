@@ -233,9 +233,14 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
           {visible.map(({ p, x, y, scale }, i) => (
             <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={(e) => hovers(e) && show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
               <g className="sway" style={{ animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: meaningOf(p.lemma)?.kind === "dance" ? "1.4s" : `${5 + hash01(p.id, 29) * 4}s` }}>
-                <g key={perk?.id === p.id ? `perk${perk.n}` : perk?.neighbour === p.id ? `late${perk.n}` : "still"} className={perk?.id === p.id ? "perk" : perk?.neighbour === p.id ? "perk late" : undefined}>
+                {/* The hop's group only while it hops: every element in the strip costs style and layout (#486). */}
+                {perk?.id === p.id || perk?.neighbour === p.id ? (
+                  <g key={perk.id === p.id ? `perk${perk.n}` : `late${perk.n}`} className={perk.id === p.id ? "perk" : "perk late"}>
+                    <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
+                  </g>
+                ) : (
                   <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
-                </g>
+                )}
                 {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
                 {/* generous invisible hit area */}
                 <rect x={-8} y={-140 * scale} width={16} height={140 * scale} fill="transparent" />
