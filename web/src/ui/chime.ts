@@ -19,14 +19,23 @@ export function noteFor(word: string): number {
 let audio: AudioContext | null = null;
 
 /**
+ * Makes the audio context before it is needed, outside any tap or key press.
+ * The first one takes 100–250 ms on a slow laptop: inside an answer's key
+ * press, that delays the next card (#457). It waits, silent, for wakeAudio.
+ */
+export function prepareAudio(): AudioContext | null {
+  if (!isSoundOn()) return null;
+  return (audio ??= new AudioContext());
+}
+
+/**
  * Called inside the answer's own tap or key press, before anything awaits.
  * Safari lets a page start audio only there; the chime itself plays a moment
  * later. Also wakes audio that iOS paused (a call, the app in the background).
  */
 export function wakeAudio(): void {
-  if (!isSoundOn()) return;
-  audio ??= new AudioContext();
-  if (audio.state !== "running") audio.resume().catch((e: unknown) => console.warn("[chime] audio would not start", e));
+  const a = prepareAudio();
+  if (a && a.state !== "running") a.resume().catch((e: unknown) => console.warn("[chime] audio would not start", e));
 }
 
 /** Plays the word's note once, quietly, `delay` seconds from now. Only with sound on, after wakeAudio. */
