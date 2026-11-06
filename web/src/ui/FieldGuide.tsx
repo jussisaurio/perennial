@@ -251,9 +251,12 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
           )}
         </div>
         {detail}
-        <button ref={close} className="secondary guide-close" onClick={() => ref.current?.close()}>
-          Close
-        </button>
+        {/* A bar, not a bare button: the page scrolls under it, and nothing shows through around Close. */}
+        <div className="guide-foot">
+          <button ref={close} className="secondary guide-close" onClick={() => ref.current?.close()}>
+            Close
+          </button>
+        </div>
       </div>
     </dialog>
   );
