@@ -169,7 +169,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       )}
       <h1 style={{ marginTop: "2rem" }}>Grow a language, {DAILY_MINUTES}&nbsp;minutes a day.</h1>
       <p className="lede">
-        Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, in real sentences. Missed days do not pile up.
+        Every word you learn grows into a plant. It grows each time you remember it. You learn the most common words first, and a few garden words early, in real sentences. Missed days do not pile up.
       </p>
 
       <div className="choice lang-choice landing-langs" role="radiogroup" aria-label="Language to learn">
