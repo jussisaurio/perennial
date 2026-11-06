@@ -43,6 +43,8 @@ export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; add
  * is taller than a closed row.
  */
 function VirtualWords<T extends { l: Word }>({ rows, render }: { rows: T[]; render: (row: T) => ReactNode }) {
+  // TanStack Virtual changes its virtualizer in place, so React Compiler would keep its old rows.
+  "use no memo";
   const list = useRef<HTMLUListElement>(null);
   const offset = useScrollMargin(list);
   // New rows render in their own task, not inside the scroll event's frame;

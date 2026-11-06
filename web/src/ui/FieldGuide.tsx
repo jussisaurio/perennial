@@ -59,6 +59,8 @@ const GAP = 13;
  * thousand plants are too many to draw at once on a phone.
  */
 export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string; rows: GuideRow[]; open: string | null; onOpen: (id: string | null) => void; detail: (row: GuideRow) => ReactNode }) {
+  // TanStack Virtual changes its virtualizer in place, so React Compiler would keep its old rows.
+  "use no memo";
   const wrap = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(360);
   useEffect(() => {

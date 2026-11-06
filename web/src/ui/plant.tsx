@@ -2,6 +2,10 @@
 // "casa" looks the same in the garden, on its cards, and on every device.
 // Growth follows memory stability: sprout → bud → bloom.
 
+// No React Compiler: plantCanvas.ts calls these components as plain functions in
+// the sprite worker, outside React, and compiled ones need React's hook state there.
+"use no memo";
+
 import { memo, type ReactNode } from "react";
 import { OLD_S, plantStage, type PlantStage } from "../core/memory";
 import { growthOf, leanDeg, stageLabel, type GardenPlant } from "../garden/plants";

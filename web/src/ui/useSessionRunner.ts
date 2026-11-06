@@ -2,7 +2,7 @@
 // card on screen, the active-time clock, what was answered (for Undo and the
 // summary), and recording each answer as a review.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { language } from "../content/languages";
 import { ActiveClock } from "../core/clock";
 import type { Grade } from "../core/fsrs";
@@ -33,6 +33,15 @@ export interface Card {
 }
 
 export type Ended = "time" | "empty" | "user";
+
+/** What a chunk did, copied as its summary opens. */
+export interface ChunkDone {
+  counts: { intros: number; answers: number };
+  practised: Set<string>;
+  introduced: Set<string>;
+  before: Map<string, PlantLook>;
+  arrived: string[];
+}
 
 /** Recall below this when remembered: a long shot, which gets a stronger growth moment. */
 const LONG_SHOT = 0.7;
@@ -68,7 +77,10 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   const learner = useLearner(lang);
   // Answers update the learner live; reads in event handlers use the latest.
   const live = useRef(learner);
-  live.current = learner;
+  // Before the browser paints, so no tap can see the learner from before.
+  useLayoutEffect(() => {
+    live.current = learner;
+  }, [learner]);
   // An answer reaches the learner on a later render: whoever waits for that hears of each new learner.
   const learnerChanged = useRef(new Set<() => void>());
   useEffect(() => {
@@ -79,15 +91,17 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   const tag = language(lang).tag;
   const [runner, setRunner] = useState<Runner | null>(null);
   const [card, setCard] = useState<Card | null>(null);
-  const [done, setDone] = useState(false);
+  // Set while the summary shows: what the chunk did, so far.
+  const [done, setDone] = useState<ChunkDone | null>(null);
   // Active time only: paused while the tab is hidden or the learner is idle.
-  const clock = useRef(new ActiveClock(Date.now()));
+  const [firstClock] = useState(() => new ActiveClock(Date.now()));
+  const clock = useRef(firstClock);
   const [active, setActive] = useState(0);
   const counts = useRef({ intros: 0, answers: 0 });
   /** Long-shot saves shown as strong moments this chunk. */
   const strongMoments = useRef(0);
   // Writes the server had refused before this chunk: the summary tells of any new ones (#253).
-  const refusedBefore = useRef<Refused>({ count: 0, clock: 0, gardenClock: 0, seen: 0 });
+  const [refusedBefore, setRefusedBefore] = useState<Refused>({ count: 0, clock: 0, gardenClock: 0, seen: 0 });
   const [ended, setEnded] = useState<Ended>("time");
   // Words answered this session, and the new words shown (a seed is planted once it has an answer).
   const practised = useRef(new Set<string>());
@@ -102,7 +116,8 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   // The sentence on each new-word card this chunk: its quick check shows another one.
   const introSentence = useRef(new Map<string, string>());
   const shownAt = useRef(0);
-  const serial = useRef(0);
+  /** Changes with every card shown, so each card mounts fresh. */
+  const [serial, setSerial] = useState(0);
   // On the pause screen (#254): the clock waits, and an answer still finishing
   // (its growth moment) puts the next card behind the pause screen, not over it.
   const paused = useRef(false);
@@ -116,6 +131,47 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   // Each entry keeps the card's word and sentence, so Undo shows exactly that card again.
   const [undoStack, setUndoStack] = useState<{ reviewId?: string; intro: boolean; practised?: string; wordId: string; example?: Sentence; carried?: number }[]>([]);
 
+  // Copies: the refs change in place, and a render sees only new objects as changes.
+  const chunkDone = (): ChunkDone => ({
+    counts: { ...counts.current },
+    practised: new Set(practised.current),
+    introduced: new Set(introduced.current),
+    before: new Map(before.current),
+    arrived: [...arrived.current],
+  });
+
+  /** Show the next card. `again`: the card being undone, so it comes back with the same sentence. */
+  const advance = (r: Runner, again?: { wordId: string; example?: Sentence }) => {
+    stopSpeaking();
+    const now = clock.current.tick(Date.now());
+    const l = live.current!;
+    let task = r.next(now);
+    // A word that is gone (deleted on another device): pass over it, and keep it out of Undo.
+    while (task && !l.words.has(task.wordId)) {
+      r.skip();
+      task = r.next(now);
+    }
+    if (!task) {
+      setEnded(r.endedBy(now));
+      setCard(null);
+      setDone(chunkDone());
+      return;
+    }
+    const word = l.words.get(task.wordId)!;
+    const example = again?.wordId === word.id ? again.example : chooseExample(l, word.id, introSentence.current.get(word.id));
+    const read = readMemory(l, word.id);
+    shownAt.current = clock.current.elapsed;
+    setSerial((n) => n + 1);
+    if (!paused.current) setDone(null);
+    const shown: Card = { task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read), grown: [] };
+    setCard(shown);
+    // The grown words show only with the answer: found once the card is on screen, not before it (#457).
+    if (example) afterPaint(() => {
+      const grown = grownSpans(live.current!, example.text, tag, word.id);
+      setCard((c) => (c === shown ? { ...shown, grown } : c));
+    });
+  };
+
   const start = useCallback(
     async (mins: number) => {
       // No voice, or sound turned off: no listening exercises.
@@ -127,7 +183,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       // Each chunk is its own session: its own summary, and nothing to undo from the last one.
       counts.current = { intros: 0, answers: 0 };
       strongMoments.current = 0;
-      refusedBefore.current = store.refused();
+      setRefusedBefore(store.refused());
       practised.current = new Set();
       introduced.current = new Set();
       before.current = new Map();
@@ -140,45 +196,13 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       tracked.current = false;
       setActive(0);
       setRunner(r);
-      setDone(false);
-      await advance(r);
+      setDone(null);
+      advance(r);
     },
     // `advance` reads only refs and stable setters; `store` is the same for the session's life (App keys it by user).
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tag],
   );
-
-  /** Show the next card. `again`: the card being undone, so it comes back with the same sentence. */
-  const advance = async (r: Runner, again?: { wordId: string; example?: Sentence }) => {
-    stopSpeaking();
-    const now = clock.current.tick(Date.now());
-    const task = r.next(now);
-    if (!task) {
-      setEnded(r.endedBy(now));
-      setCard(null);
-      setDone(true);
-      return;
-    }
-    const l = live.current!;
-    const word = l.words.get(task.wordId);
-    if (!word) {
-      // The word is gone (deleted on another device): pass over it, and keep it out of Undo.
-      r.skip();
-      return advance(r);
-    }
-    const example = again?.wordId === word.id ? again.example : chooseExample(l, word.id, introSentence.current.get(word.id));
-    const read = readMemory(l, word.id);
-    shownAt.current = clock.current.elapsed;
-    serial.current++;
-    if (!paused.current) setDone(false);
-    const shown: Card = { task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read), grown: [] };
-    setCard(shown);
-    // The grown words show only with the answer: found once the card is on screen, not before it (#457).
-    if (example) afterPaint(() => {
-      const grown = grownSpans(live.current!, example.text, tag, word.id);
-      setCard((c) => (c === shown ? { ...shown, grown } : c));
-    });
-  };
 
   // Plan once, as soon as the learner has loaded. Later changes (every answer
   // updates the learner) must not replan a session that is under way.
@@ -217,7 +241,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       const moment = await record(runner, card, grade, opts);
       // Paused meanwhile: the pause screen is up, so no moment over it.
       if (moment && !paused.current) await grow(moment);
-      await advance(runner);
+      advance(runner);
     } finally {
       busy.current = false;
     }
@@ -242,7 +266,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       if (last.intro) introMs.current.delete(last.wordId);
       // Undo from the pause screen goes back into the session.
       pause(false);
-      await advance(runner, last);
+      advance(runner, last);
     } finally {
       busy.current = false;
     }
@@ -255,14 +279,14 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       stopSpeaking();
       pause(true);
       setEnded("user");
-      setDone(true);
+      setDone(chunkDone());
     } else onExit();
   };
 
   /** Back from the pause screen to the card it left, with the quick checks still to come. */
   const resume = () => {
     pause(false);
-    setDone(false);
+    setDone(null);
   };
 
   /** True the first time a summary opens in this chunk. */
@@ -376,15 +400,8 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     done,
     active,
     ended,
-    /** What this session did so far, for the summary. */
-    counts: counts.current,
-    refusedBefore: refusedBefore.current,
-    practised: practised.current,
-    before: before.current,
-    arrived: arrived.current,
-    introduced: introduced.current,
-    /** Changes with every card shown, so each card mounts fresh. */
-    serial: serial.current,
+    refusedBefore,
+    serial,
     canUndo: undoStack.length > 0,
     start,
     finish,
