@@ -71,10 +71,12 @@ export const Garden = memo(function Garden(props: GardenProps) {
     [fit],
   );
   // Set from a ref, the width is in before paint, so the empty frame never shows. The same box as contentRect: .garden has no padding or border.
+  // At the strip's height: whatever lays out in this frame (the landing focuses its walk link, #273) sees the page as it will be.
   if (width === null)
     return (
       <div
         className={`garden ${props.compact ? "compact" : ""}`}
+        style={{ height: H }}
         ref={(el) => {
           if (el) fit(el.getBoundingClientRect().width);
         }}
