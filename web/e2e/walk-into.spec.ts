@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./test";
+import { readRowsAgain } from "./helpers";
 
 // #359, walk into things (#335 V6): no button, your body is the verb. Brush
 // past a bed and its plants play their notes (and sway); walk into an orchard
@@ -75,7 +76,8 @@ test("brushing a bed plays its words' notes; walking into the apple tree drops a
     });
     await postWrite([{ type: "course.upsert", row: { lang: "es", door_open: true } }, ...[120, 100, 70, 30].map(review)]);
   });
-  await page.goto("/#/today");
+  // The demo already moved the page to /#/today, so going there again would not reload it.
+  await readRowsAgain(page);
   await openWalk(page);
 
   // Along the front of a full bed, hugging it, facing along it (+x): a run of notes, one or two oscillators each.
