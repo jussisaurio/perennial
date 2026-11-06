@@ -6,7 +6,7 @@ import { expectServerRows, serverRows, startCourse, waitForSynced } from "./help
 test("course words: search the upcoming words, pause and resume, never show (with undo)", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("combobox").selectOption("new"); // what comes next
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("new"); // what comes next
   const first = page.locator(".word-row").first();
   const lemma = (await first.locator("strong").textContent())!;
   await page.getByPlaceholder("Search words or meanings").fill(lemma);
@@ -54,11 +54,11 @@ test("All and New find any word in the course, also one far past the first 500 (
 test("empty lists say what is missing, with a small wink (#58)", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("combobox").selectOption("suspended");
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("suspended");
   await expect(page.getByText("No paused words. Everyone is awake.")).toBeVisible();
-  await page.getByRole("combobox").selectOption("known");
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("known");
   await expect(page.getByText("No flowers yet. They are coming.")).toBeVisible();
-  await page.getByRole("combobox").selectOption("new");
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("new");
   await page.getByPlaceholder("Search words or meanings").fill("qqzzxx");
   await expect(page.getByText("No new word like this. Try All.")).toBeVisible(); // New has every word not started: say where else to look (#262)
 });
