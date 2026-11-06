@@ -236,9 +236,18 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   return (
     <div className="app">
       <nav className="top">
-        <span className="wordmark">
+        {/* Learners click the logo to go home, as on most sites. */}
+        <a
+          className="wordmark"
+          href="#/today"
+          aria-label="Perennial: go to Today"
+          onClick={(e) => {
+            e.preventDefault();
+            go("/today");
+          }}
+        >
           <SproutMark /> perennial
-        </span>
+        </a>
         <CourseSwitcher
           courses={courses}
           current={lang}
