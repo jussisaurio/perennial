@@ -605,10 +605,14 @@ export class GardenScene {
    */
   private async drawOnce(parts: THREE.Object3D[]): Promise<void> {
     const all = this.scene.children;
+    // One array for every part, filled by index: an array (and an entry pair per child) per part was ~10 MB of garbage (#459).
+    const shown: boolean[] = [];
     for (const p of parts) {
       if (!p.visible) continue;
-      const shown = all.map((o) => o.visible);
-      for (const o of all) o.visible = o === p;
+      for (let i = 0; i < all.length; i++) {
+        shown[i] = all[i].visible;
+        all[i].visible = all[i] === p;
+      }
       // Only this part's matrices: updating the whole scene's on every draw cost more than the draws.
       p.updateMatrixWorld();
       this.scene.matrixWorldAutoUpdate = false;
@@ -619,7 +623,7 @@ export class GardenScene {
       } finally {
         this.renderer.setScissorTest(false);
         this.scene.matrixWorldAutoUpdate = true;
-        for (const [i, o] of all.entries()) o.visible = shown[i];
+        for (let i = 0; i < all.length; i++) all[i].visible = shown[i];
       }
       if (await this.stopped()) return;
     }

@@ -113,7 +113,10 @@ export function layout(plants: GardenPlant[]): Layout {
   const byGroup = new Map<string, GardenPlant[]>();
   for (const p of plants) {
     const g = groupOf(p.pos);
-    byGroup.set(g, [...(byGroup.get(g) ?? []), p]);
+    // Pushed, not spread: a copy per plant was quadratic, ~8 MB of garbage for ~1000 plants (#459).
+    const list = byGroup.get(g);
+    if (list) list.push(p);
+    else byGroup.set(g, [p]);
   }
   const order = [...GROUPS.map((g) => g.label), OTHER].filter((g) => byGroup.has(g));
   for (const g of order) byGroup.get(g)!.sort((a, b) => a.rank - b.rank || a.lemma.localeCompare(b.lemma));
