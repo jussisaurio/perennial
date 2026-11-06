@@ -248,6 +248,11 @@ export class Learners {
     return () => void this.listeners.delete(l);
   };
 
+  /** Whether `l` is its language's last built learner: only a new build changes the maps it shares (moreReviews, memoryOf). */
+  isCurrent(l: Learner): boolean {
+    return this.built.get(l.lang)?.learner === l;
+  }
+
   /** The teachable courses, and whether they have loaded: "none yet" is not "none". The same object until either changes. */
   courseList = (): { courses: CourseRow[]; ready: boolean } => {
     const ready = this.store.collections.course.isReady();

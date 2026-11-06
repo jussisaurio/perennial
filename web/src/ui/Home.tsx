@@ -1,7 +1,7 @@
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { language } from "../content/languages";
 import { useUser } from "../data/auth";
-import { perLearnerDay, slicedPerLearnerDay, useLearner, type Learner } from "../data/learner";
+import { perLearnerDay, slicedPerLearnerDay, useLearner, useStore, type Learner } from "../data/learner";
 import { SignIn } from "./Account";
 import { Garden, gardenSteps } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
@@ -107,15 +107,18 @@ let painted = false;
  */
 function useAfterPaint(learner: Learner | null, now: number): boolean {
   const [rest, setRest] = useState(painted);
+  const { learners } = useStore();
   useEffect(() => {
     if (!learner || rest) return;
     let gone = false;
+    // A newer learner may be built while this deferred one still shows (#580): its slices would read a mix. Its render runs this again.
+    const live = () => !gone && learners.isCurrent(learner);
     // The frame's callback runs before its paint; the task after it, after the paint.
     let timer: ReturnType<typeof setTimeout> | undefined;
     const frame = requestAnimationFrame(() => {
       timer = setTimeout(() =>
-        void workOut(learner, now, () => !gone).then(() => {
-          if (gone) return;
+        void workOut(learner, now, live).then(() => {
+          if (!live()) return;
           startTransition(() => {
             painted = true;
             setRest(true);
@@ -128,7 +131,7 @@ function useAfterPaint(learner: Learner | null, now: number): boolean {
       cancelAnimationFrame(frame);
       clearTimeout(timer);
     };
-  }, [learner, now, rest]);
+  }, [learner, learners, now, rest]);
   return rest;
 }
 
