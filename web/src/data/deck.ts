@@ -67,17 +67,26 @@ function index(raw: unknown, lang: string): LoadedDeck {
 }
 
 const memo = new Map<string, Promise<LoadedDeck>>();
+const loaded = new Map<string, LoadedDeck>();
+
+/** A deck that has loaded already, or undefined: a screen that opens again draws at once, not after a wait for the promise. */
+export function loadedDeck(lang: string): LoadedDeck | undefined {
+  return loaded.get(lang);
+}
 
 export function loadDeck(lang: string): Promise<LoadedDeck> {
   let p = memo.get(lang);
   if (!p) {
     p = load(lang);
     memo.set(lang, p);
-    // Not kept: the next call tries again.
-    p.catch((e) => {
-      memo.delete(lang);
-      console.error(`[deck] ${lang}: could not load`, e);
-    });
+    p.then(
+      (d) => void loaded.set(lang, d),
+      (e) => {
+        // Not kept: the next call tries again.
+        memo.delete(lang);
+        console.error(`[deck] ${lang}: could not load`, e);
+      },
+    );
   }
   return p;
 }

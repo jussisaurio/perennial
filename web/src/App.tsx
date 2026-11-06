@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { startTransition, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
 import { identify, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useStore } from "./data/learner";
@@ -39,7 +39,7 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
   };
   const [route, setRoute] = useState<Route>(read);
   useEffect(() => {
-    const onChange = () => setRoute(read());
+    const onChange = () => startTransition(() => setRoute(read()));
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
@@ -47,7 +47,8 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
     if (to === route) return;
     if (opts.replace) history.replaceState(null, "", `#${to}`);
     else history.pushState(null, "", `#${to}`);
-    setRoute(to);
+    // A transition: on a slow device React draws the new screen in short slices, and the old one stays until it is ready.
+    startTransition(() => setRoute(to));
   };
   return [route, go];
 }

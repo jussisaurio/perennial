@@ -6,8 +6,9 @@ import { teachable } from "../content/languages";
 import { courseOrder, nextWords, sincePlaced } from "../content/order";
 import { useLiveQuery, type ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
+import { startOfDay } from "../core/day";
 import { MemoryLog, type MemoryRow } from "../core/memory";
-import { loadDeck, type LoadedDeck } from "./deck";
+import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
 import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
@@ -55,7 +56,8 @@ export function useStore(): Store {
 
 /** A language's deck (null while it loads), and whether it could not load at all (no saved copy either). */
 export function useDeck(lang: string | undefined): { deck: LoadedDeck | null; failed: boolean } {
-  const [deck, setDeck] = useState<LoadedDeck | null>(null);
+  // Null: not loaded yet, so the effect below waits for it.
+  const [deck, setDeck] = useState<LoadedDeck | null>(() => (lang ? (loadedDeck(lang) ?? null) : null));
   const [failed, setFailed] = useState<string | null>(null);
   useEffect(() => {
     if (!lang) return;
@@ -355,6 +357,24 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
   };
   const fresh = () => upcoming().map((w) => w.id);
   return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, states: stateMap, sentences, upcoming, fresh, resolve };
+}
+
+/**
+ * `derive(l, now)`, worked out once per learner and day: a screen that opens
+ * again, or a second part that asks, gets it with no work. A learner is a new
+ * object whenever its data changes, so it is never stale; within a day it
+ * keeps the first `now`, as a screen's own memo for the day would.
+ */
+export function perLearnerDay<T>(derive: (l: Learner, now: number) => T): (l: Learner, now: number) => T {
+  const cache = new WeakMap<Learner, { day: number; value: T }>();
+  return (l, now) => {
+    const day = startOfDay(now);
+    const hit = cache.get(l);
+    if (hit?.day === day) return hit.value;
+    const value = derive(l, now);
+    cache.set(l, { day, value });
+    return value;
+  };
 }
 
 const sources = new WeakMap<Store, Learners>();

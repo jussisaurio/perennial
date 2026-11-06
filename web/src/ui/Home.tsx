@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { language } from "../content/languages";
 import { useUser } from "../data/auth";
-import { useLearner } from "../data/learner";
+import { perLearnerDay, useLearner, type Learner } from "../data/learner";
 import { SignIn } from "./Account";
 import { Garden, gardenFromLearner } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
@@ -16,7 +16,7 @@ import { plural } from "./format";
 import { focusBowl, focusPlant } from "./gardenFocus";
 import { learnerVisitors, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
-import { today } from "../core/day";
+import type { Plan } from "../core/session";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -26,44 +26,26 @@ function greeting(): string {
 // The entrance animation plays once per visit, not on every tab switch.
 let animated = false;
 
+// Today's numbers, garden, visitors and plan: each worked out once per learner and day, whichever part asks first.
+const statsToday = perLearnerDay(courseStats);
+const gardenToday = perLearnerDay(gardenFromLearner);
+const visitorsToday = perLearnerDay((l, now) => learnerVisitors(l, new Date(now)));
+// What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.
+const guestToday = perLearnerDay(waitingGuest);
+const chunkToday = perLearnerDay(nextChunk);
+
+// Each part below works out its own numbers, so on a slow device React can
+// pause between the parts (App opens screens in a transition) instead of
+// working them all out in one long task.
 export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onWalk: () => void }) {
-  const view = (id: string) => {
-    focusPlant(id);
-    onWalk();
-  };
   const [stagger] = useState(() => !animated);
   useEffect(() => {
     animated = true;
   }, []);
-  const { user } = useUser();
   const learner = useLearner(code);
   const now = useNow();
-  // Today's numbers and visitors change with the calendar day, not every minute.
-  const day = today(new Date(now));
-  const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
-  const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  const chunk = useMemo(() => (learner ? nextChunk(learner, now) : null), [learner, now]);
-  // The same planner the session uses, for what the day's minutes are for.
-  const plan = useMemo(() => (learner && chunk ? sessionPlan(learner, chunk.minutes, mayListen(language(code).tag), now) : null), [learner, chunk, now, code]);
-  const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
-  // What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.
-  const guest = useMemo(() => (learner ? waitingGuest(learner, now) : null), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
-  const waiting = guest && {
-    guest,
-    onOpen: () => {
-      focusBowl();
-      onWalk();
-    },
-  };
-  // Where the snail is on its daily lap (the strip is the fence, unrolled).
-  const snailAt = snailLap();
-  // On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside.
-  const aside = visitors?.milestone ?? visitors?.welcome ?? greetingAside();
-  if (!learner || !stats || !chunk || !plan) return <Settling />;
-  const course = learner.course;
-  const ready = stats.seeds;
-  const started = stats.known + stats.learning;
-  const start = () => onStart(chunk.minutes);
+  if (!learner) return <Settling />;
+  const chunk = chunkToday(learner, now);
   const lang = language(code).name;
 
   return (
@@ -74,54 +56,104 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <h1>
             {greeting()}. Time for <em>{lang}</em>.
           </h1>
-          {aside && <p className="greeting-aside">{aside}</p>}
+          <Aside learner={learner} now={now} />
         </div>
       </header>
 
-      {/* The day's action right under the greeting: on a phone it must never sit under the tab bar. */}
-      <div className="start-row">
-        {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. */}
-        {chunk.state === "done" && <p className="watered">{plan.due ? `${plural(plan.due, "plant")} still ${plan.due === 1 ? "needs" : "need"} water.` : "The garden is watered for today."}</p>}
-        <Shortcut keyName="Enter" run={start} />
-        <button className="start" onClick={start} aria-keyshortcuts="Enter">
-          <span className="clock" aria-hidden="true">
-            <SeedIcon size={20} />
-          </span>
-          {chunkLabel(chunk)}
-        </button>
-        <p className="start-note">
-          {chunk.state === "done"
-            ? plan.due
-              ? "" // no wink under a count of thirsty plants: it would read as if all is well
-              : doneTodayNote()
-            : started === 0
-              ? `${ready} seeds are ready to plant: the most common words first, and a few garden words early. Each word has example sentences and audio.`
-              : ready === 0
-                ? "Every seed in the course is planted. Today is for growing them."
-                : plan.due === 0
-                  ? "Every plant has water. Today is for new seeds."
-                  : plan.newCount > 2
-                  ? "Water your plants, then plant a few new seeds."
-                  : "Today is mostly watering. Missed days do not pile up."}
-        </p>
-        {user && course.minutes !== DAILY_MINUTES && <FiveMinutesNote userId={user.id} />}
-      </div>
-
-      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code, mole: visitors.mole }} waiting={waiting} />
+      <StartRow learner={learner} chunk={chunk} now={now} onStart={() => onStart(chunk.minutes)} />
+      <TodayGarden learner={learner} now={now} onWalk={onWalk} />
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
-
-      {user?.anonymous && started >= 10 && (
-        // A gentle nudge once there is something worth keeping.
-        <details className="panel more keep-garden">
-          <summary>Keep your garden safe: sign in with your email</summary>
-          <p className="muted small">Your garden is saved in this browser. Sign in with your email to keep it in your account and on all your devices. If you have no account yet, this makes one.</p>
-          <SignIn cta="Send me a code" />
-        </details>
-      )}
-
+      <KeepGarden learner={learner} now={now} />
     </div>
+  );
+}
+
+/** On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside. */
+function Aside({ learner, now }: { learner: Learner; now: number }) {
+  const visitors = visitorsToday(learner, now);
+  const aside = visitors.milestone ?? visitors.welcome ?? greetingAside();
+  return aside && <p className="greeting-aside">{aside}</p>;
+}
+
+/** The day's action right under the greeting: on a phone it must never sit under the tab bar. */
+function StartRow({ learner, chunk, now, onStart }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; now: number; onStart: () => void }) {
+  const { user } = useUser();
+  const code = learner.lang;
+  // The same planner the session uses, for what the day's minutes are for.
+  const plan = useMemo(() => sessionPlan(learner, chunk.minutes, mayListen(language(code).tag), now), [learner, chunk, now, code]);
+  return (
+    <div className="start-row">
+      {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. */}
+      {chunk.state === "done" && <p className="watered">{plan.due ? `${plural(plan.due, "plant")} still ${plan.due === 1 ? "needs" : "need"} water.` : "The garden is watered for today."}</p>}
+      <Shortcut keyName="Enter" run={onStart} />
+      <button className="start" onClick={onStart} aria-keyshortcuts="Enter">
+        <span className="clock" aria-hidden="true">
+          <SeedIcon size={20} />
+        </span>
+        {chunkLabel(chunk)}
+      </button>
+      <StartNote learner={learner} chunk={chunk} plan={plan} now={now} />
+      {user && learner.course.minutes !== DAILY_MINUTES && <FiveMinutesNote userId={user.id} />}
+    </div>
+  );
+}
+
+function StartNote({ learner, chunk, plan, now }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; plan: Plan; now: number }) {
+  const stats = statsToday(learner, now);
+  const ready = stats.seeds;
+  const started = stats.known + stats.learning;
+  return (
+    <p className="start-note">
+      {chunk.state === "done"
+        ? plan.due
+          ? "" // no wink under a count of thirsty plants: it would read as if all is well
+          : doneTodayNote()
+        : started === 0
+          ? `${ready} seeds are ready to plant: the most common words first, and a few garden words early. Each word has example sentences and audio.`
+          : ready === 0
+            ? "Every seed in the course is planted. Today is for growing them."
+            : plan.due === 0
+              ? "Every plant has water. Today is for new seeds."
+              : plan.newCount > 2
+              ? "Water your plants, then plant a few new seeds."
+              : "Today is mostly watering. Missed days do not pile up."}
+    </p>
+  );
+}
+
+function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; onWalk: () => void }) {
+  const view = (id: string) => {
+    focusPlant(id);
+    onWalk();
+  };
+  const garden = gardenToday(learner, now);
+  const visitors = visitorsToday(learner, now);
+  const guest = guestToday(learner, now);
+  const waiting = guest && {
+    guest,
+    onOpen: () => {
+      focusBowl();
+      onWalk();
+    },
+  };
+  // Where the snail is on its daily lap (the strip is the fence, unrolled).
+  const snailAt = snailLap();
+  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} waiting={waiting} />;
+}
+
+/** A gentle nudge once there is something worth keeping. */
+function KeepGarden({ learner, now }: { learner: Learner; now: number }) {
+  const { user } = useUser();
+  const stats = statsToday(learner, now);
+  if (!user?.anonymous || stats.known + stats.learning < 10) return null;
+  return (
+    <details className="panel more keep-garden">
+      <summary>Keep your garden safe: sign in with your email</summary>
+      <p className="muted small">Your garden is saved in this browser. Sign in with your email to keep it in your account and on all your devices. If you have no account yet, this makes one.</p>
+      <SignIn cta="Send me a code" />
+    </details>
   );
 }
 
