@@ -163,12 +163,10 @@ jobs:
       - name: Install Playwright browsers
         working-directory: web
         run: bunx playwright install ${{ matrix.browser }}
-      # Vite pre-bundles dependencies on the first page load; keep that work between runs.
-      - name: Cache Vite dependencies
-        uses: actions/cache@v6
-        with:
-          path: web/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('bun.lock', 'web/vite.config.ts') }}
+      # No cache for Vite's pre-bundled dependencies (web/node_modules/.vite): a cache from before
+      # a new import (with the same bun.lock) lacks that dependency, so Vite bundles again
+      # mid-run and pages loading at that moment are stuck on "504 Outdated Optimize Dep" (#523).
+      # A cold start scans every import first and takes only a few seconds.
 
       - name: Wait for Postgres
         # Started early (above), so the image pull ran during the other setup. Fail here, not later in the tests.
