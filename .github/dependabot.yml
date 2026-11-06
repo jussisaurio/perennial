@@ -5,7 +5,14 @@ updates:
   - package-ecosystem: bun
     directory: /
     schedule: { interval: weekly }
-    groups: { dependencies: { patterns: ["*"] } }
+    # Only minor and patch updates are grouped, so the group stays green and can merge on its own.
+    # Majors, and packages where any bump can change behaviour (Effect is pinned; ts-fsrs schedules
+    # learners' reviews), each arrive as their own PR.
+    groups:
+      dependencies:
+        patterns: ["*"]
+        exclude-patterns: ["effect", "@effect/*", "ts-fsrs"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
