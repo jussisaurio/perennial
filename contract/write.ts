@@ -87,6 +87,13 @@ export type Mutation = typeof Mutation.Type;
 export const WriteBatch = Schema.Struct({ mutations: Schema.Array(Mutation).check(Schema.isMinLength(1), Schema.isMaxLength(500)) });
 export type WriteBatch = typeof WriteBatch.Type;
 
-/** Whether any row changed (a retried insert or an older state changes none). */
-export const WriteResult = Schema.Struct({ changed: Schema.Boolean });
+const Rows = Schema.Array(Schema.Record(Schema.String, Schema.Unknown));
+
+/**
+ * Whether any row changed (a retried insert or an older state changes none),
+ * and the rows the server now has for each course and word state in the batch.
+ * The server merges those (the garden's bowl, the newer word state), so they
+ * can differ from the device's. A word state that is not there was deleted.
+ */
+export const WriteResult = Schema.Struct({ changed: Schema.Boolean, stored: Schema.Struct({ course: Rows, word_state: Rows }) });
 export type WriteResult = typeof WriteResult.Type;

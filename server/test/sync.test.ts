@@ -39,7 +39,9 @@ test("word state: the newer change wins, and the server caps future times", asyn
   const id = (await t.me(cookie)).id;
   const at = (ms: number) => new Date(Date.now() + ms).toISOString();
   await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "paused", updated_at: at(-1000) } }]);
-  await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "ignored", updated_at: at(-5000) } }]); // older: loses
+  const older = await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "ignored", updated_at: at(-5000) } }]); // older: loses
+  // The answer has the row the server kept, so the device can take it.
+  expect(older.body).toMatchObject({ changed: false, stored: { course: [], word_state: [{ word_id: W.d, status: "paused" }] } });
   expect((await t.sql`select status from word_state where user_id = ${id}`)[0]?.status).toBe("paused");
   // A device with a fast clock cannot win every later conflict.
   await t.write(cookie, [{ type: "word_state.upsert", row: { word_id: W.d, status: "queued", updated_at: at(10 * 86_400_000) } }]);
