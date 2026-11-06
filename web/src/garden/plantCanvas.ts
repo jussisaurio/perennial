@@ -93,6 +93,31 @@ function draw(ctx: OffscreenCanvasRenderingContext2D, node: ReactNode, alpha: nu
   ctx.restore();
 }
 
+/** One plant at `scale`, its frame (VIEW_W × VIEW_H at scale 1) from the current origin, its foot 4 above the frame's bottom. */
+function drawPlant(ctx: OffscreenCanvasRenderingContext2D, p: SpritePlant, scale: number) {
+  ctx.translate((VIEW_W / 2) * scale, (VIEW_H - 4) * scale);
+  draw(ctx, createElement(Plant, { word: p.lemma, growth: p.growth, stage: p.stage, scale }), 1);
+}
+
+/** Where plantPng's sprite sits, in SVG units about the plant's foot: whole device pixels, so it is drawn 1:1. */
+export function spriteBox(scale: number, dpr: number) {
+  return { x: (-VIEW_W / 2) * scale, y: -(VIEW_H - 4) * scale, width: Math.ceil(VIEW_W * scale * dpr) / dpr, height: Math.ceil(VIEW_H * scale * dpr) / dpr };
+}
+
+/**
+ * One plant for the garden strip (#486), drawn at the strip's scale (Plant's
+ * strokes do not scale with it) and `dpr` device pixels per SVG unit, as a PNG.
+ * Soft edges, unlike the walk's: it stands in for the same plant drawn as SVG.
+ */
+export function plantPng(p: SpritePlant, scale: number, dpr: number): Promise<Blob> {
+  const box = spriteBox(scale, dpr);
+  const c = new OffscreenCanvas(Math.round(box.width * dpr), Math.round(box.height * dpr));
+  const ctx = c.getContext("2d")!;
+  ctx.scale(dpr, dpr);
+  drawPlant(ctx, p, scale);
+  return c.convertToBlob();
+}
+
 /**
  * Plants in a grid of `cols`, each in a cell of w × h pixels, as unpremultiplied
  * RGBA. Hard alpha edges, so the sprites look hand-pixelled rather than
@@ -109,8 +134,7 @@ export function drawPlants(plants: SpritePlant[], cols: number, w: number, h: nu
     ctx.clip();
     ctx.translate((i % cols) * w, Math.floor(i / cols) * h);
     ctx.scale(w / VIEW_W, h / VIEW_H);
-    ctx.translate(VIEW_W / 2, VIEW_H - 4);
-    draw(ctx, createElement(Plant, { word: p.lemma, growth: p.growth, stage: p.stage, scale: 1 }), 1);
+    drawPlant(ctx, p, 1);
     ctx.restore();
   });
   const data = ctx.getImageData(0, 0, c.width, c.height);
