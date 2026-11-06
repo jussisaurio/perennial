@@ -223,6 +223,9 @@ export function useGardenScene({
       alive = false;
       ro.disconnect();
       s?.dispose();
+      // The handle goes with its scene, so a script waiting for the next walk's scene does not read this one.
+      const w = window as unknown as { __garden?: unknown };
+      if (import.meta.env.DEV && w.__garden === s) delete w.__garden;
       scene.current = null;
       setReady(false);
     };

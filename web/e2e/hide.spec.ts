@@ -26,7 +26,7 @@ test("the gnome hides behind a plant: near it, the button finds it, it falls ove
   const before = await gnome();
   expect(before).toMatchObject({ hiding: true, frame: "peek", hid: { text: "behind" } });
   const word = before.hid!.word!;
-  const status = page.locator(".gw > [role=status]");
+  const status = page.locator(".gw > .sr-only[role=status]");
   const find = page.getByRole("button", { name: "Found you" });
   // From the gate, nothing gives it away.
   await expect(find).toHaveCount(0);
