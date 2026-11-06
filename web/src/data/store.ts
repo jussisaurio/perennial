@@ -15,7 +15,6 @@
 // that one (see `writer` below and App).
 
 import { QueryClient } from "@tanstack/query-core";
-import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { Effect } from "effect";
@@ -24,6 +23,7 @@ import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
 import { ApiError, HttpError, request } from "./http";
 import { reportBadAnswer, reportError } from "../observability";
+import { makeTable } from "./table";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import { OtherUser, sendQueued, shouldRetry } from "./send";
 import { tabLock } from "./tabLock";
@@ -37,63 +37,6 @@ const REFETCH_AFTER_HIDDEN_MS = 60_000;
 
 /** Signed out: this store is being replaced, so asking again cannot help. */
 const signedOut = (e: unknown) => (e instanceof ApiError && e.body.error === "sign_in_required") || (e instanceof HttpError && e.status === 401);
-
-/**
- * One table's collection, filled from `read` (one GET /api/rows for all of
- * them). `toRow` checks or changes a row first; the columns are the table's
- * own (rows.ts) and are not checked one by one.
- */
-function makeCollection<T extends object>(
-  table: keyof LearnerRows,
-  getKey: (row: T) => string,
-  read: () => Promise<LearnerRows>,
-  queryClient: QueryClient,
-  toRow: (row: Record<string, unknown>) => Record<string, unknown> = (row) => row,
-) {
-  const options = queryCollectionOptions({
-    id: table,
-    queryKey: [table],
-    queryFn: async () => (await read())[table].map((row) => toRow(row) as T),
-    queryClient,
-    getKey,
-    // Read at once, all tables together: the screens need them all.
-    startSync: true,
-    // Read again only when the store says so (refetchAll below), never on a timer or focus.
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    // Keep trying (paused while offline, at most 30 s apart) until the rows come: the screens wait for them.
-    retry: (_count, e) => !signedOut(e),
-  });
-  // The collection's own sync calls, for `keep` below.
-  let synced: Parameters<typeof options.sync.sync>[0] | undefined;
-  const collection = createCollection({
-    ...options,
-    sync: {
-      ...options.sync,
-      sync: (params) => {
-        synced = params;
-        return options.sync.sync(params);
-      },
-    },
-  });
-  /**
-   * Make rows the server has the collection's own. utils.writeUpsert costs a
-   * copy and a deep compare of the whole table (#521: 80–130 ms per answer for
-   * the review table), so only the written rows go in, straight to the synced
-   * state. A read under way may return older rows; then writeUpsert, which
-   * guards against that.
-   */
-  const keep = (change: { row: Partial<T> } | { deleted: string }) => {
-    if (queryClient.isFetching({ queryKey: [table] }) > 0)
-      return "row" in change ? collection.utils.writeUpsert(change.row) : collection.utils.writeDelete(change.deleted);
-    if (!synced) throw new Error(`${table}: not syncing`);
-    synced.begin();
-    // Whole rows, as writeUpsert takes them. An update of a row the table lacks adds it.
-    synced.write("row" in change ? { type: "update", value: change.row as T } : { type: "delete", key: change.deleted });
-    synced.commit();
-  };
-  return Object.assign(collection, { keep });
-}
 
 /** This user's queue of unsent writes: their own IndexedDB database (or localStorage keys). */
 async function outboxStorage(userId: string): Promise<StorageAdapter | undefined> {
@@ -135,22 +78,24 @@ export async function createStore(userId: string, email: string | null) {
   const sync = new AbortController();
   const queryClient = new QueryClient();
   // The tables' reads at the same moment share one request.
-  let reading: Promise<LearnerRows> | null = null;
-  const read = () => {
-    if (reading) return reading;
-    const p = Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }).finally(() => {
-      if (reading === p) reading = null;
+  const read = () =>
+    queryClient.fetchQuery({
+      queryKey: ["rows"],
+      queryFn: () => Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }),
+      // A new request each time, unless one is under way (refetchAll cancels that one first).
+      staleTime: 0,
+      // Keep trying (paused while offline, at most 30 s apart) until the rows come: the screens wait for them.
+      retry: (_count, e) => !signedOut(e),
     });
-    return (reading = p);
-  };
+  const stopped = (e: unknown) => sync.signal.aborted || signedOut(e);
   const collections = {
-    course: makeCollection<CourseRow>("course", (r) => r.lang, read, queryClient),
-    review: makeCollection<ReviewRow>("review", (r) => r.id, read, queryClient),
-    word_state: makeCollection<WordStateRow>("word_state", (r) => r.word_id, read, queryClient),
-    user_word: makeCollection<UserWordRow>("user_word", (r) => r.id, read, queryClient, (row) =>
+    course: makeTable<CourseRow>("course", (r) => r.lang, read, stopped),
+    review: makeTable<ReviewRow>("review", (r) => r.id, read, stopped),
+    word_state: makeTable<WordStateRow>("word_state", (r) => r.word_id, read, stopped),
+    user_word: makeTable<UserWordRow>("user_word", (r) => r.id, read, stopped, (row) =>
       syncedUserWord(row, (type) => reportBadAnswer("/api/rows user_word.forms", `forms: ${type}`)),
     ),
-    user_sentence: makeCollection<UserSentenceRow>("user_sentence", (r) => r.id, read, queryClient),
+    user_sentence: makeTable<UserSentenceRow>("user_sentence", (r) => r.id, read, stopped),
   };
   type Table = keyof typeof collections;
   const stopSync = () => {
@@ -161,12 +106,10 @@ export async function createStore(userId: string, email: string | null) {
   /** Read every table again, in one new request: one already under way may have started before a change. */
   const refetchAll = async () => {
     if (sync.signal.aborted) return;
-    // A refetch cancels a read under way only once the table has rows: the
-    // first read is joined instead (TanStack Query), and may predate the change
-    // (#529: a course written while the first read ran never showed). Cancel it.
+    // A read under way would be joined (TanStack Query), and may predate the
+    // change (#529: a course written while the first read ran never showed). Cancel it.
     await queryClient.cancelQueries();
-    reading = null;
-    await Promise.all(Object.values(collections).map((c) => c.utils.refetch()));
+    await Promise.all(Object.values(collections).map((c) => c.refetch()));
   };
   let hiddenAt: number | null = null;
   const onVisibility = () => {

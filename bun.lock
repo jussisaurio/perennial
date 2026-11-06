@@ -57,7 +57,6 @@
         "@sentry/react": "11",
         "@tanstack/offline-transactions": "1.1.0",
         "@tanstack/query-core": "5.106.1",
-        "@tanstack/query-db-collection": "1.4.3",
         "@tanstack/react-db": "0.5.8",
         "@tanstack/react-virtual": "^3.14.14",
         "better-auth": "1.7.7",
@@ -455,8 +454,6 @@
     "@tanstack/pacer-lite": ["@tanstack/pacer-lite@0.2.2", "", {}, "sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw=="],
 
     "@tanstack/query-core": ["@tanstack/query-core@5.106.1", "", {}, "sha512-erYv/UACddcdgjOL2ixmFdK6tO/AVBeUcTCOtX2N51yZpDQ2U7KJ+xgB/bCNfsF3uoCDTqGHEEbDiFsIO9YUmQ=="],
-
-    "@tanstack/query-db-collection": ["@tanstack/query-db-collection@1.4.3", "", { "dependencies": { "@standard-schema/spec": "^1.1.0", "@tanstack/db": "0.13.0" }, "peerDependencies": { "@tanstack/query-core": "^5.0.0", "typescript": ">=4.7" } }, "sha512-vTmt/nA/z+NlSQggFH8/847VTfn3uGw51xYSWzcQuEe71O1gOnhMee0mBkIB4sHEM6sq1Rmgj4A9tYfr2W/Dfg=="],
 
     "@tanstack/react-db": ["@tanstack/react-db@0.5.8", "", { "dependencies": { "@tanstack/db": "0.13.0" }, "peerDependencies": { "react": ">=18.0.0" } }, "sha512-CpNBCW+jdAwTCJTP9b6u8S5ZfX+x5KtAKwcJ4hb+Y4zDJptbFy2teGxYk7oaIguGXdZreMd7lJH7jm3+NZBECA=="],
 
