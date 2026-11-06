@@ -93,6 +93,8 @@ test("small phone: the landing Start, a long card's question, the summary button
     expect(box!.y + box!.height, name).toBeLessThanOrEqual(page.viewportSize()!.height);
   };
   await page.goto("/");
+  // Where the page settles: the landing's entrance animation (.stagger) moves each part up into place.
+  await page.waitForFunction(() => document.getAnimations().every((a) => !(a instanceof CSSAnimation && a.animationName === "rise") || a.playState === "finished"));
   onScreen("Start learning", await page.getByRole("button", { name: "Start learning Spanish" }).boundingBox());
   await startCourse(page);
   await page.locator("button.start").click();

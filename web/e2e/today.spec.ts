@@ -137,7 +137,7 @@ test("the walk's Water button: the rest of today's practice, then more once done
   // The button says what it starts, as Today does, and never counts thirsty plants (#263).
   const water = async (label: string) => {
     await page.getByRole("button", { name: "Walk in your garden" }).click();
-    const button = page.getByRole("button", { name: `💧 ${label}` });
+    const button = page.locator(".gw-water", { hasText: label });
     await expect(button).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/thirsty/)).toHaveCount(0);
     await button.click();
