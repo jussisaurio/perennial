@@ -11,14 +11,12 @@ import { useShortcut } from "./useShortcut";
 import { chunkLabel, DAILY_MINUTES, nextChunk, sessionPlan } from "../data/practice";
 import { mayListen } from "./speech";
 import { Settling } from "./Settling";
-import { doneTodayNote, greetingAside, restDayLine } from "../content/voice";
+import { doneTodayNote, greetingAside } from "../content/voice";
 import { plural } from "./format";
 import { focusBowl, focusPlant } from "./gardenFocus";
 import { learnerVisitors, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
-import { readableCount } from "../data/reading";
 import { today } from "../core/day";
-import { KNOWN_RULE } from "../core/memory";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -44,8 +42,6 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const day = today(new Date(now));
   const stats = useMemo(() => (learner ? courseStats(learner, now) : undefined), [learner, day]); // eslint-disable-line react-hooks/exhaustive-deps -- per day, not per minute
   const garden = useMemo(() => (learner ? gardenFromLearner(learner) : null), [learner]);
-  // How much real text the known words open up (#412): only ever goes up as words are learned.
-  const readable = useMemo(() => (learner ? readableCount(learner, language(code).tag) : 0), [learner, code]);
   const chunk = useMemo(() => (learner ? nextChunk(learner, now) : null), [learner, now]);
   // The same planner the session uses, for what the day's minutes are for.
   const plan = useMemo(() => (learner && chunk ? sessionPlan(learner, chunk.minutes, mayListen(language(code).tag), now) : null), [learner, chunk, now, code]);
@@ -68,7 +64,6 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const ready = stats.seeds;
   const started = stats.known + stats.learning;
   const start = () => onStart(chunk.minutes);
-  const max = Math.max(1, ...stats.days.map((d) => d.reviews));
   const lang = language(code).name;
 
   return (
@@ -126,52 +121,6 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </details>
       )}
 
-      {started > 0 && (
-        <div className="progress-line">
-          {stats.known > 0 ? (
-            <p>
-              You know <strong>{stats.known}</strong> {stats.known === 1 ? "word" : "words"} of {lang}, most common first.
-              {readable > 0 && <> You can read {plural(readable, "sentence")} from the course.</>}
-            </p>
-          ) : (
-            <p>
-              You are learning <strong>{stats.learning}</strong> {stats.learning === 1 ? "word" : "words"}.
-            </p>
-          )}
-          <details className="more">
-            <summary>What does "know" mean?</summary>
-            <p className="muted small">
-              {KNOWN_RULE} The course starts with the words people use most in everyday speech, so each word you learn is one you will hear often.
-            </p>
-          </details>
-        </div>
-      )}
-
-      {stats.days.some((d) => d.reviews) && (
-        <details className="more">
-          <summary>More progress</summary>
-          <div className="stats">
-            <div className="stat">
-              <div className="num">{stats.learning}</div>
-              <div className="lbl">learning</div>
-            </div>
-            <div className="stat">
-              <div className="num">{stats.retention30 !== null ? `${Math.round(stats.retention30 * 100)}%` : "—"}</div>
-              <div className="lbl">recall rate, last 30 days (target {Math.round(course.retention * 100)}%)</div>
-            </div>
-          </div>
-          <p className="muted small">Recall rate: how often you remembered a word when it came back on a later day. It needs at least 20 such answers.</p>
-          <div className="activity" role="img" aria-label="Reviews per day, last 30 days">
-            {stats.days.map((d, i) => (
-              <div key={d.day} className={i === 29 ? "today" : undefined} title={d.reviews ? `${new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" })}: ${plural(d.reviews, "review")}` : restDayLine(new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" }))} style={{ height: `${Math.max(4, (d.reviews / max) * 100)}%` }} />
-            ))}
-          </div>
-          <div className="activity-cap">
-            <span>30 days ago</span>
-            <span>today</span>
-          </div>
-        </details>
-      )}
     </div>
   );
 }

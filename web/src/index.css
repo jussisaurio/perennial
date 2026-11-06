@@ -541,6 +541,8 @@ details.danger { margin-top: 2.5rem; }
    than the Add words button, so the button touched the filter row below (#116). */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .page-head h1 { margin: 0; }
+.progress { margin: 0.25rem 0 1.5rem; }
+.progress .activity { height: 28px; margin-top: 0.75rem; }
 .progress-line { display: grid; gap: 0.2rem; font-size: 1.15rem; color: var(--ink-2); margin: 0.5rem 0 1.25rem; }
 .progress-line p { margin: 0; }
 .progress-line strong { font: 1.6rem/1 var(--display); color: var(--ink); font-weight: 400; }
