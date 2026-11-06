@@ -12,7 +12,7 @@ import { chunkLabel, DAILY_MINUTES, nextChunk, sessionPlan } from "../data/pract
 import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside } from "../content/voice";
-import { plural } from "./format";
+import { longDay, plural } from "./format";
 import { focusBowl, focusPlant } from "./gardenFocus";
 import { learnerVisitors, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
@@ -59,7 +59,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
     <div className={stagger ? "page home stagger" : "page home"}>
       <header className="home-head">
         <div>
-          <div className="date">{new Date(now).toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}</div>
+          <div className="date">{longDay(new Date(now))}</div>
           <h1>
             {greeting()}. Time for <em>{lang}</em>.
           </h1>
