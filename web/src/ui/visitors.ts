@@ -106,8 +106,7 @@ export function gardenBroughtAt(l: Pick<Learner, "reviewsByWord" | "deck">, g: G
 export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
   // A known word has a memory, so it is studied: O(studied), not O(deck), in the same order.
   const { count, lemmas, croaks } = knownWords(l.studied, l.memory);
-  const times = l.reviews.map((r) => reviewedAt(r));
-  const facts = learnerFacts(times, count, now, gardenBrought(l));
+  const facts = learnerFacts(l, count, now, gardenBrought(l));
   const today = visitorsFor(facts, now, devVisitorOverride());
   const before = knownAt(l, startOfDay(now)).size;
   return {

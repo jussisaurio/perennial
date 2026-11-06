@@ -27,7 +27,17 @@ import {
 
 const at = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m, d, h, min).getTime();
 const days = Array.from({ length: 365 }, (_, d) => new Date(2026, 0, 1 + d, 12));
-const facts = (reviews: number[], now: number, known = 0) => learnerFacts(reviews, known, now, new Set());
+// The review times as a plain list, read from scratch.
+const facts = (reviews: number[], now: number, known = 0) =>
+  learnerFacts(
+    {
+      firstReviewAt: () => (reviews.length ? Math.min(...reviews) : null),
+      lastReviewBefore: (t) => reviews.filter((r) => r < t).reduce<number | null>((a, r) => (a === null || r > a ? r : a), null),
+    },
+    known,
+    now,
+    new Set(),
+  );
 
 describe("visitor words", () => {
   test("every visitor has a Spanish and a German word with its article, and a plain gloss", () => {
