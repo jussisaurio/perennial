@@ -4,7 +4,7 @@
 import { knownAt, readMemory, reviewedAt, wordState, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { dayNumber, startOfDay } from "../core/day";
-import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk, type Left } from "../garden/leave";
+import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk } from "../garden/leave";
 import {
   learnerFacts,
   milestoneLine,
@@ -130,7 +130,7 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
  */
 export function learnerLeave(l: Learner, now: number, dayNow: () => number): { walk: LeaveWalk; walkedNow: boolean } {
   const today = dayNumber(now);
-  const stored = storedLeft(l);
+  const stored = l.course.garden_left;
   const seen = walked(stored, today);
   const fruits: Fruit[] = [];
   for (const w of l.words.values()) {
@@ -144,9 +144,6 @@ export function learnerLeave(l: Learner, now: number, dayNow: () => number): { w
   };
   return { walk: { left: seen ?? stored, today, dayNow, facts: leaveFacts(l), basket: basket(fruits), fruitOf }, walkedNow: seen !== null };
 }
-
-// Missing from course rows Electric streams before their first course change after the migration: nothing left yet.
-const storedLeft = (l: Learner): Left => l.course.garden_left ?? NO_LEFT;
 
 /** What the bowl's rows need from the learner's reviews: the calendar day each row's visitor came. */
 function leaveFacts(l: Learner): LeaveFacts {
@@ -163,7 +160,7 @@ function leaveFacts(l: Learner): LeaveFacts {
  * to be found, as of `now`; or null (#335: Today's strip shows its prints).
  */
 export function waitingGuest(l: Learner, now: number): Guest | null {
-  const b = bowlNow(storedLeft(l), dayNumber(now), leaveFacts(l));
+  const b = bowlNow(l.course.garden_left, dayNumber(now), leaveFacts(l));
   return b.kind === "came" ? b.outcome.row.guest : null;
 }
 

@@ -20,7 +20,7 @@ import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
 import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { Effect } from "effect";
-import { LearnerRows } from "perennial-contract";
+import { LearnerRows, type WriteResult } from "perennial-contract";
 import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
 import { ApiError, HttpError, request } from "./http";
@@ -190,10 +190,11 @@ export async function createStore(userId: string, email: string | null) {
               const current = sessionUserId();
               if (current && current !== userId) return yield* new OtherUser();
               span.setAttribute("mutations", mutations.length);
-              yield* sendQueued(mutations, idempotencyKey, noteRefused);
+              const result = yield* sendQueued(mutations, idempotencyKey, noteRefused);
               // The server has them: the rows become the collection's own, so they stay
               // when this transaction ends (no flicker until the next read).
-              yield* Effect.promise(() => confirm(transaction.mutations));
+              // An answer that broke the contract (null, reported) has no stored rows: the device's stay.
+              yield* Effect.promise(() => confirm(transaction.mutations, result?.stored));
             }),
           ),
         ),
@@ -206,14 +207,21 @@ export async function createStore(userId: string, email: string | null) {
   await executor.waitForInit();
 
   /**
-   * Put rows the server took into the collections. The server may merge some
-   * (the garden's bowl, a newer word state): the next read brings its version.
+   * Put rows the server took into the collections. The server merges courses
+   * and word states (the garden's bowl, the newer word state): of those, its
+   * stored rows go in, not the device's.
    * A failure here is a bug, reported; the write itself is saved.
    */
-  function confirm(mutations: readonly PendingMutation[]) {
+  function confirm(mutations: readonly PendingMutation[], stored?: WriteResult["stored"]) {
+    const merged = new Map<string, Record<string, unknown>>();
+    for (const row of stored?.course ?? []) merged.set(`course:${String(row.lang)}`, row);
+    for (const row of stored?.word_state ?? []) merged.set(`word_state:${String(row.word_id)}`, row);
     return Promise.all(
       mutations.map((m) => {
-        const { utils } = collections[m.collection.id as Table];
+        const table = m.collection.id as Table;
+        const { utils } = collections[table];
+        const server = merged.get(`${table}:${String(m.key)}`);
+        if (server) return utils.writeUpsert(server);
         return m.type === "delete" ? utils.writeDelete(m.key as string) : utils.writeUpsert(m.modified);
       }),
     ).then(

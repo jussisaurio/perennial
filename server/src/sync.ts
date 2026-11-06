@@ -1,7 +1,7 @@
 // Sync: the app reads all of the learner's rows in one request (each learner
 // sees only their own rows); writes come in as batches of mutations, are
 // checked, scoped to the session's user, and applied in one transaction. The
-// response says whether any row changed.
+// response says whether any row changed, and has the rows the server merges.
 
 import { PgClient } from "@effect/sql-pg";
 import { Clock, Context, Effect, Layer } from "effect";
@@ -220,7 +220,14 @@ export const SyncLive = Layer.effect(
                   break;
               }
             }
-            return { changed: rows > 0, started };
+            // The rows the server merges, as stored now: the app keeps these, not its own (store.ts confirm).
+            const langs = [...new Set(mutations.flatMap((m) => (m.type === "course.upsert" ? [m.row.lang] : [])))];
+            const wordIds = [...new Set(mutations.flatMap((m) => (m.type === "word_state.upsert" ? [m.row.word_id] : m.type === "word_state.delete" ? [m.word_id] : [])))];
+            const stored = {
+              course: langs.length ? yield* sql`select * from course where user_id = ${userId} and lang in ${sql.in(langs)}` : [],
+              word_state: wordIds.length ? yield* sql`select * from word_state where user_id = ${userId} and word_id in ${sql.in(wordIds)}` : [],
+            };
+            return { changed: rows > 0, stored, started };
           }),
         );
         if (started.length) yield* event({ courseStarted: started.join(",") });
@@ -229,14 +236,16 @@ export const SyncLive = Layer.effect(
       Effect.catchTag("SqlError", Effect.die),
     );
 
-    // The tables at once, each on its own connection, so each is read on its own (as the
-    // shapes were): a write between two reads shows in one of them, and the next fetch has it all.
+    // One read-only REPEATABLE READ transaction: every table is read at the same moment,
+    // on one pooled connection, so two reads at once leave room for writes.
     const rows = Effect.fn("Sync.rows")(
       function* (userId: UserId) {
         const table = (name: keyof LearnerRows) => sql`select * from ${sql(name)} where user_id = ${userId}`;
-        return yield* Effect.all(
-          { course: table("course"), review: table("review"), word_state: table("word_state"), user_word: table("user_word"), user_sentence: table("user_sentence") },
-          { concurrency: "unbounded" },
+        return yield* sql.withTransaction(
+          Effect.gen(function* () {
+            yield* sql`set transaction isolation level repeatable read, read only`;
+            return { course: yield* table("course"), review: yield* table("review"), word_state: yield* table("word_state"), user_word: yield* table("user_word"), user_sentence: yield* table("user_sentence") };
+          }),
         );
       },
       Effect.catchTag("SqlError", Effect.die),

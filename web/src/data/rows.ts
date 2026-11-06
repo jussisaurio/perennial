@@ -21,7 +21,7 @@ export interface CourseRow {
    * Leave it out (#351): what was left in the garden's bowl and when, and the
    * shed's shelf. The server always sends it (migration 0005 gave it a default).
    */
-  garden_left?: GardenLeft;
+  garden_left: GardenLeft;
   created_at: string;
 }
 

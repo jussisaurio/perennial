@@ -22,8 +22,9 @@ async function failsWith<C extends abstract new (...args: never[]) => unknown>(c
 }
 
 test("a write the server took: whether anything changed", async () => {
-  answer(200, JSON.stringify({ changed: false }));
-  expect(await postWrite([])).toEqual({ changed: false });
+  const result = { changed: false, stored: { course: [], word_state: [] } };
+  answer(200, JSON.stringify(result));
+  expect(await postWrite([])).toEqual(result);
 });
 
 test("a contract error is an ApiError with its fields, and says whether to try again", async () => {
