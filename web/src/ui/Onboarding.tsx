@@ -143,6 +143,26 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       />
     );
 
+  // Signing in gets the whole screen: on a phone, the pitch and the sample garden below only push the form down.
+  if (!signedIn && linking)
+    return (
+      <div className="page narrow landing">
+        <header className="landing-top">
+          <span className="wordmark">
+            <SproutMark size={26} /> perennial
+          </span>
+        </header>
+        <section className="landing-signin">
+          <h1>Sign in</h1>
+          <p className="muted small">We send a code to your email. Your garden appears here after a moment.</p>
+          <SignIn cta="Send me a code" />
+        </section>
+        <button className="ghost link" onClick={() => setLinking(false)}>
+          New here? Start learning
+        </button>
+      </div>
+    );
+
   return (
     <div className="page narrow stagger landing">
       <header className="landing-top">
@@ -150,18 +170,11 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
           <SproutMark size={26} /> perennial
         </span>
         {!signedIn && (
-          <button className="secondary small" onClick={() => setLinking(!linking)} aria-expanded={linking}>
+          <button className="secondary small" onClick={() => setLinking(true)}>
             Sign in
           </button>
         )}
       </header>
-      {!signedIn && linking && (
-        <section className="panel landing-signin">
-          <h2 style={{ marginTop: 0 }}>Sign in</h2>
-          <p className="muted small">Sign in with your email. Your garden appears here after a moment.</p>
-          <SignIn cta="Send me a code" />
-        </section>
-      )}
       {goodbye && (
         <p className="farewell" role="status">
           {goodbye.line} {goodbye.wish && <em>{goodbye.wish}</em>}
