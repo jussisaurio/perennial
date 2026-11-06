@@ -235,11 +235,15 @@ export function leafPiles(l: Layout): { x: number; z: number }[] {
     ])
       spots.set(`${x.toFixed(1)},${z.toFixed(1)}`, { x, z });
   const keep = [...lanternSpots(l).map(([x, z]) => ({ x, z })), sunflowerAt(l), benchAt(l), bowlAt(l), shedAt(l), basketAt(l), ...KEY_SPOTS.map((s) => keyAt(l, s))];
-  return [...spots.entries()]
-    .filter(([, p]) => keep.every((k) => Math.hypot(k.x - p.x, k.z - p.z) >= PILES.clear))
-    .sort(([a], [b]) => hash01(a, 359) - hash01(b, 359))
-    .slice(0, PILES.count)
-    .map(([, p]) => p);
+  // Each key hashed once, and only the first few in hash order checked against `keep`: a big
+  // garden has hundreds of beds and of lanterns (#571). The sort is stable, as the old filter-then-sort was.
+  const order = [...spots.entries()].map(([key, p]) => ({ h: hash01(key, 359), p })).sort((a, b) => a.h - b.h);
+  const piles: { x: number; z: number }[] = [];
+  for (const { p } of order) {
+    if (piles.length === PILES.count) break;
+    if (keep.every((k) => Math.hypot(k.x - p.x, k.z - p.z) >= PILES.clear)) piles.push(p);
+  }
+  return piles;
 }
 
 /** A number in [0, 1) from a number: the scatter of a burst's leaves, seeded, never Math.random, and with no string to make. */

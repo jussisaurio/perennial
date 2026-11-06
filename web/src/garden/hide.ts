@@ -64,28 +64,39 @@ function behindPlant(l: Layout, p: PlacedPlant, front: boolean): Hiding | null {
   return { x: p.x + near[1] * BEHIND, y: BED_H, z: p.z + near[2] * BEHIND, look: "peek", where: { text: "behind", word: p.lemma } };
 }
 
-/** Every spot of a place in this garden today (none where it has nothing: no plants, no autumn, the door shut). */
-function spotsOf(place: Place, l: Layout, s: Spots): Hiding[] {
+/**
+ * Every spot of a place in this garden today (none where it has nothing: no plants, no autumn, the door shut).
+ * Lazy: whether a place has a spot is asked of every place, and a big garden has thousands of plants (#571).
+ */
+function* spotsOf(place: Place, l: Layout, s: Spots): Generator<Hiding> {
   switch (place) {
     case "front":
     case "edges":
-      // null: a plant deeper in its bed, or not in the front row.
-      return l.plants.flatMap((p) => behindPlant(l, p, place === "front") ?? []);
+      for (const p of l.plants) {
+        // null: a plant deeper in its bed, or not in the front row.
+        const h = behindPlant(l, p, place === "front");
+        if (h) yield h;
+      }
+      return;
     case "bench":
       // Under the seat (0.42 m up), toward one end, clear of the key's spot at the other.
-      return [{ x: s.bench.x - 0.25, y: 0, z: s.bench.z + 0.05, look: "peek", where: { text: "under the bench", word: null } }];
+      yield { x: s.bench.x - 0.25, y: 0, z: s.bench.z + 0.05, look: "peek", where: { text: "under the bench", word: null } };
+      return;
     case "sign":
-      return [{ x: s.sign[0], y: s.sign[1], z: s.sign[2], look: "front", where: { text: "on the sign", word: null } }];
+      yield { x: s.sign[0], y: s.sign[1], z: s.sign[2], look: "front", where: { text: "on the sign", word: null } };
+      return;
     case "pads": {
       // Not the frog's pad, by the gate.
       const frog = padByGate(s, l);
-      return s.pads.filter((p) => p !== frog).map(([x, z]) => ({ x, y: 0.05, z, look: "pad", where: { text: "among the lily pads", word: null } }));
+      for (const p of s.pads) if (p !== frog) yield { x: p[0], y: 0.05, z: p[1], look: "pad", where: { text: "among the lily pads", word: null } };
+      return;
     }
     case "leaves":
-      return s.piles.map((p) => ({ x: p.x, y: 0, z: p.z - 0.25, look: "peek", where: { text: "behind the leaves", word: null } }));
+      for (const p of s.piles) yield { x: p.x, y: 0, z: p.z - 0.25, look: "peek", where: { text: "behind the leaves", word: null } };
+      return;
     case "orchard":
       // Beside the trunk, on the far side from the door.
-      return s.orchard.map((t) => ({ x: t.x + t.trunk, y: 0, z: t.z - DOOR_SIDE * 0.3, look: "peek", where: { text: "behind", word: t.lemma } }));
+      for (const t of s.orchard) yield { x: t.x + t.trunk, y: 0, z: t.z - DOOR_SIDE * 0.3, look: "peek", where: { text: "behind", word: t.lemma } };
   }
 }
 
@@ -93,6 +104,7 @@ function spotsOf(place: Place, l: Layout, s: Spots): Hiding[] {
 export function hideout(l: Layout, s: Spots, age: number, now: Date): Hiding | null {
   if (!hidesToday(age, now)) return null;
   const places = (Object.keys(PLACES) as Place[]).filter((p) => age >= PLACES[p]);
-  const open = places.map((p) => spotsOf(p, l, s)).filter((spots) => spots.length);
-  return daily(daily(open, "gnome-hides-place", now), "gnome-hides-spot", now);
+  // Only the chosen place's spots are all listed.
+  const open = places.filter((p) => !spotsOf(p, l, s).next().done);
+  return daily([...spotsOf(daily(open, "gnome-hides-place", now), l, s)], "gnome-hides-spot", now);
 }
