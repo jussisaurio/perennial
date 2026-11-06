@@ -1,7 +1,8 @@
 import { language } from "../content/languages";
 import { restDayLine } from "../content/voice";
 import { KNOWN_RULE } from "../core/memory";
-import { perLearnerDay, type Learner } from "../data/learner";
+import type { DeckSentences } from "../data/deck";
+import { perLearnerDay, useDeckSentences, type Learner } from "../data/learner";
 import { readableCount } from "../data/reading";
 import { plural } from "./format";
 import { statsToday } from "./stats";
@@ -9,13 +10,21 @@ import { useNow } from "./useNow";
 
 // How much real text the known words open up (#412): only ever goes up as words are learned.
 // Kept per learner, so a new visit to Words with no new answers does no work.
-const readableToday = perLearnerDay((l) => readableCount(l));
+// One cache per deck's sentences, which are the same object for as long as the page is open.
+const readableBy = new WeakMap<DeckSentences, (l: Learner, now: number) => number>();
+function readableToday(l: Learner, sentences: DeckSentences, now: number): number {
+  let today = readableBy.get(sentences);
+  if (!today) readableBy.set(sentences, (today = perLearnerDay((x) => readableCount(x, sentences))));
+  return today(l, now);
+}
 
 /** How the course is going, on the Words page: open, not behind "More progress". Today keeps only the day's action. */
 export function Progress({ learner, lang: code }: { learner: Learner; lang: string }) {
   const now = useNow();
   const stats = statsToday.get(learner, now);
-  const readable = readableToday(learner, now);
+  // The count needs the deck's sentences, which come after its words (#608): the line waits for them.
+  const { sentences } = useDeckSentences(code);
+  const readable = sentences ? readableToday(learner, sentences, now) : 0;
   if (stats.known + stats.learning === 0) return null;
   const max = Math.max(1, ...stats.days.map((d) => d.reviews));
   const lang = language(code).name;

@@ -1,7 +1,7 @@
 import { startTransition, Suspense, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
 import { identify, track } from "./observability";
-import { saveCourse, StoreContext, useCourses, useDeck, useStore } from "./data/learner";
+import { saveCourse, StoreContext, useCourses, useDeck, useDeckSentences, useStore } from "./data/learner";
 import { cleanUpForgotten, keepCourse, readCourse } from "./data/device";
 import { language } from "./content/languages";
 import { reloadNeeded } from "./data/http";
@@ -172,7 +172,11 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   // A friend's seed is kept on this device (#213): only then is GiftArrival drawn, as its learner queries cost time (#230).
   const [giftHere] = useState(() => pendingGift() !== null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
-  const { deck, failed: deckFailed } = useDeck(course?.lang);
+  const { deck, failed: wordsFailed } = useDeck(course?.lang);
+  // Asked for here, so the sentences come right after the words, whatever screen is open (#608).
+  const { failed: sentencesFailed } = useDeckSentences(course?.lang);
+  // Cards, reading and the word page need the sentences: without them they would wait forever.
+  const deckFailed = wordsFailed || sentencesFailed;
   const store = useStore();
   const choose = (lang: string) => {
     setChosen(lang);

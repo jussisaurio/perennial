@@ -10,7 +10,12 @@ import type { CourseRow, ReviewRow, Skill } from "./rows";
 import type { Store } from "./store";
 
 // The decks load through Vite; this test brings its own.
-mock.module("./deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks here")), loadedDeck: () => undefined }));
+mock.module("./deck", () => ({
+  loadDeck: () => Promise.reject(new Error("no decks here")),
+  loadedDeck: () => undefined,
+  loadSentences: () => Promise.reject(new Error("no decks here")),
+  loadedSentences: () => undefined,
+}));
 const { Learners } = await import("./learner");
 const { sessionPlan, sessionPlanSteps } = await import("./practice");
 
@@ -42,7 +47,7 @@ const course: CourseRow = { user_id: "u", lang: "es", minutes: 5, retention: 0.9
 const deckWords = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", forms: [`word${i}`], rank: i }));
 const byId = new Map<string, unknown>(deckWords.map((w) => [w.id, w]));
 // Only what the learner reads of a deck.
-const defaultDeck = { lang: "es", words: deckWords, byId, sentencesByWord: new Map(), resolve: (id: string) => byId.get(id === "w3-old" ? "w3" : id) } as unknown as LoadedDeck;
+const defaultDeck = { lang: "es", words: deckWords, byId, resolve: (id: string) => byId.get(id === "w3-old" ? "w3" : id) } as unknown as LoadedDeck;
 
 /** A store with these reviews; the other tables are empty. */
 function store(reviews: ReviewRow[]) {
@@ -151,7 +156,7 @@ describe("Learners: one review at a time, the same as building it all again", ()
 });
 
 describe("upcoming(): one answer at a time, the same as working it out again", () => {
-  // A longer course, with garden and orchard words at their places and some words with no sentences yet.
+  // A longer course, with garden and orchard words at their places.
   const random = rng(7);
   const placed = new Map([...GARDEN_WORDS, ...ORCHARD_WORDS].map((name) => [Math.floor(random() * 400), name] as const));
   const words = Array.from({ length: 400 }, (_, i) => {
@@ -160,8 +165,7 @@ describe("upcoming(): one answer at a time, the same as working it out again", (
     return { id: `w${i}`, lemma: `word${i}`, gloss: "", forms: [`word${i}`], rank: i, pos: (["noun", "verb", "adj", "prep"] as const)[i % 4], ...place };
   });
   const byId = new Map<string, unknown>(words.map((w) => [w.id, w]));
-  const sentencesByWord = new Map(words.filter((_, i) => i % 13 !== 12).map((w) => [w.id, [{ id: `s-${w.id}`, text: "", translation: "", cloze: "" }]]));
-  const deck = { lang: "es", words, byId, sentencesByWord, resolve: (id: string) => byId.get(id) } as unknown as LoadedDeck;
+  const deck = { lang: "es", words, byId, resolve: (id: string) => byId.get(id) } as unknown as LoadedDeck;
   const t0 = Date.UTC(2026, 0, 1, 8);
   let n = 0;
   const review = (word: string, t: number): ReviewRow => ({ id: `u${n++}`, user_id: "u", lang: "es", word_id: word, skill: "read", grade: 3, kind: "review", reviewed_at: new Date(t0 + t * DAY_MS).toISOString(), duration_ms: 3000, sentence_id: null });

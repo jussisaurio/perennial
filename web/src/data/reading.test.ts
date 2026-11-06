@@ -1,18 +1,22 @@
 import { expect, test } from "bun:test";
+import type { DeckSentences } from "./deck";
 import type { Learner, Word } from "./learner";
 import { wordKeys } from "../content/text";
 import { grownSpans, readableCount, readNow } from "./reading";
 
 // A learner whose words are these, with a reading memory for the grown ones.
 // `deck`: the same deck as another learner's, as after an answer (a new learner, the same deck).
-function learner(words: (Pick<Word, "id" | "lemma" | "pos" | "forms"> & Partial<Pick<Word, "source">> & { grown?: boolean; known?: boolean })[], sentences: { id: string; text: string }[] = [], seen: string[] = [], deck?: Learner["deck"]): Learner {
+function learner(words: (Pick<Word, "id" | "lemma" | "pos" | "forms"> & Partial<Pick<Word, "source">> & { grown?: boolean; known?: boolean })[], seen: string[] = [], deck?: Learner["deck"]): Learner {
   return {
-    deck: deck ?? { sentencesByWord: new Map([["x", sentences.map((s) => ({ ...s, translation: `(${s.id})`, cloze: "", keys: wordKeys(s.text, "es") }))]]) },
+    deck: deck ?? {},
     everyReview: () => seen.map((id) => ({ sentence_id: id })),
     words: new Map(words.map((w) => [w.id, { source: "deck", ...w }])),
     memory: new Map(words.filter((w) => w.grown).map((w) => [`${w.id}:read`, { reps: 2, s: w.known ? 30 : 1 }])),
   } as unknown as Learner;
 }
+/** These texts as a deck's sentences, all under one word. */
+const deckSentences = (sentences: { id: string; text: string }[]): DeckSentences =>
+  new Map([["x", sentences.map((s) => ({ ...s, wordId: "x", translation: `(${s.id})`, cloze: "", keys: wordKeys(s.text, "es") }))]]);
 const shown = (text: string, spans: [number, number][]) => spans.map(([s, e]) => text.slice(s, e));
 
 test("grown words in a sentence: content words the learner has practised, not grammar words or the card's own word", () => {
@@ -34,7 +38,7 @@ test("grown words: a word of your own counts, also when the deck's words were lo
   const text = "El gato come pescado.";
   expect(shown(text, grownSpans(before, text, "es", "x"))).toEqual(["gato"]);
   // Later, with the same deck: your own word "pescado", practised.
-  const after = learner([...deck, { id: "u1", lemma: "pescado", pos: "noun", forms: ["pescado"], grown: true, source: "user" }], [], [], before.deck);
+  const after = learner([...deck, { id: "u1", lemma: "pescado", pos: "noun", forms: ["pescado"], grown: true, source: "user" }], [], before.deck);
   expect(shown(text, grownSpans(after, text, "es", "x"))).toEqual(["gato", "pescado"]);
 });
 
@@ -48,19 +52,21 @@ test("a sentence to read now: every word grown, long enough, never on a card, ab
     { id: "bread", text: "El gato bebe agua y come pan." },
     { id: "water", text: "Pan y agua, el gato come pan." },
   ];
-  const l = learner(words, sentences, ["seen"]);
-  expect(readNow(l, new Set(), new Set())?.id).toBe("bread");
-  expect(readNow(l, new Set(), new Set(["bread"]))?.id).toBe("water"); // shown before
-  expect(readNow(l, new Set(["agua", "pan"]), new Set())?.id).toBe("water"); // more of today's words: pan twice
-  expect(readNow(learner(words.slice(0, 3), sentences), new Set(), new Set())).toBeNull();
+  const l = learner(words, ["seen"]);
+  const s = deckSentences(sentences);
+  expect(readNow(l, s, new Set(), new Set())?.id).toBe("bread");
+  expect(readNow(l, s, new Set(), new Set(["bread"]))?.id).toBe("water"); // shown before
+  expect(readNow(l, s, new Set(["agua", "pan"]), new Set())?.id).toBe("water"); // more of today's words: pan twice
+  expect(readNow(learner(words.slice(0, 3)), s, new Set(), new Set())).toBeNull();
 });
 
 test("sentences you can read: every word known (by the word count's rule), each text once", () => {
   const w = (lemma: string, known = true) => ({ id: lemma, lemma, pos: "noun", forms: [lemma], grown: true, known });
-  const l = learner([w("el"), w("gato"), w("come"), w("pan", false)], [
+  const l = learner([w("el"), w("gato"), w("come"), w("pan", false)]);
+  const s = deckSentences([
     { id: "a", text: "El gato come." },
     { id: "b", text: "El gato come." }, // the same text under another word
     { id: "c", text: "El gato come pan." }, // pan is still learning
   ]);
-  expect(readableCount(l)).toBe(1);
+  expect(readableCount(l, s)).toBe(1);
 });

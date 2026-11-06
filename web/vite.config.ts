@@ -1,6 +1,7 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import babel from "@rolldown/plugin-babel";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { readFileSync } from "node:fs";
 import { defineConfig, type Plugin } from "vite";
 import pkg from "./package.json" with { type: "json" };
 
@@ -27,12 +28,45 @@ const preloadFonts = (): Plugin => ({
   },
 });
 
+// Each deck ships as two chunks (#608): its words, which Today and the plan need,
+// and its sentences (about 3/4 of the bytes), fetched right after. decks/<lang>/deck.json
+// stays the one source; `deck.json?part=words|sentences` is a slice of it. A chunk
+// has no imports, so its hash changes only with its own content: the words part leaves
+// out the deck's version, which goes up with every sentence edit.
+const PART = /\/decks\/([a-z]+)\/deck\.json\?part=(words|sentences)(&|$)/;
+const deckParts = (): Plugin => ({
+  name: "deck-parts",
+  load(id) {
+    const m = PART.exec(id);
+    if (!m) return null;
+    const file = id.slice(0, id.indexOf("?"));
+    this.addWatchFile(file);
+    const deck = JSON.parse(readFileSync(file, "utf8")) as { lang: string; words: unknown[]; sentences: { retired?: boolean }[] };
+    // Retired sentences are never shown, so they don't ship. Retired words do: old reviews resolve through them.
+    const part = m[2] === "words" ? { lang: deck.lang, words: deck.words } : { lang: deck.lang, sentences: deck.sentences.filter((s) => !s.retired) };
+    // JSON.parse of a string, as Vite's JSON plugin does for big files: it parses faster than an object literal.
+    return { code: `export default JSON.parse(${JSON.stringify(JSON.stringify(part))});`, moduleType: "js" };
+  },
+});
+
 export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
-  build: { sourcemap: sentry ? "hidden" : false },
+  build: {
+    sourcemap: sentry ? "hidden" : false,
+    rolldownOptions: {
+      // deck-es-words-<hash>.js, not two files both named deck-<hash>.js.
+      output: {
+        chunkFileNames: (chunk) => {
+          const m = chunk.facadeModuleId && PART.exec(chunk.facadeModuleId);
+          return m ? `assets/deck-${m[1]}-${m[2]}-[hash].js` : "assets/[name]-[hash].js";
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     preloadFonts(),
+    deckParts(),
     // React Compiler memoizes components and hooks at build time (#452).
     babel({ presets: [reactCompilerPreset()] }),
     sentry &&

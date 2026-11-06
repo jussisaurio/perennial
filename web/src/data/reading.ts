@@ -5,6 +5,7 @@
 import { kindOf } from "../content/order";
 import { formKey, tokenize } from "../content/text";
 import { readMemory, wordState } from "../core/memory";
+import type { DeckSentences } from "./deck";
 import type { Learner, Word } from "./learner";
 
 /** Each form (lowercase) of `words` and the words it can be a form of. */
@@ -71,12 +72,12 @@ export interface ReadNow {
  * (no review names it) and is not in `shown`. Of those, the one with the most
  * words from `practised` (this session's words), so it is about today.
  */
-export function readNow(l: Learner, practised: ReadonlySet<string>, shown: ReadonlySet<string>): ReadNow | null {
+export function readNow(l: Learner, sentences: DeckSentences, practised: ReadonlySet<string>, shown: ReadonlySet<string>): ReadNow | null {
   const index = formIndex(l);
   const onCards = new Set(l.everyReview().map((r) => r.sentence_id));
   const grown = (id: string) => !!readMemory(l, id)?.reps;
   let best: { s: ReadNow; today: number } | null = null;
-  for (const list of l.deck.sentencesByWord.values()) {
+  for (const list of sentences.values()) {
     for (const s of list) {
       if (onCards.has(s.id) || shown.has(s.id)) continue;
       if (s.keys.length < READ_MIN_WORDS) continue;
@@ -97,11 +98,11 @@ export function readNow(l: Learner, practised: ReadonlySet<string>, shown: Reado
  * them is known, by the same rule as "You know N words", so the two never disagree.
  * The same text under two words counts once.
  */
-export function readableCount(l: Learner): number {
+export function readableCount(l: Learner, sentences: DeckSentences): number {
   // Every form of every known word: a sentence word is known when one of them matches it.
   const known = new Set<string>();
   for (const w of l.words.values()) if (wordState(readMemory(l, w.id)) === "known") for (const f of [w.lemma, ...w.forms]) known.add(formKey(f));
   const readable = new Set<string>();
-  for (const list of l.deck.sentencesByWord.values()) for (const s of list) if (s.keys.every((k) => known.has(k))) readable.add(s.text);
+  for (const list of sentences.values()) for (const s of list) if (s.keys.every((k) => known.has(k))) readable.add(s.text);
   return readable.size;
 }
