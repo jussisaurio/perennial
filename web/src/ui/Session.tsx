@@ -309,20 +309,28 @@ function useReveal() {
  * What a screen reader says as a card comes or its answer shows (#257). This
  * hidden line takes focus, so it is read once, from one place (no live region
  * saying it again), and Tab goes on into the card. Without it, focus drops to
- * the page when the pressed button goes away. A new line needs a new `key`.
+ * the page when the pressed button goes away. A new `step` (the answer shown)
+ * focuses the line again, so it is read again. The node stays: removing the
+ * focused node makes the browser look for focus anew (#572).
  */
-function Said({ children }: { children: ReactNode }) {
+function Said({ step, children }: { step?: string; children: ReactNode }) {
   const line = useRef<HTMLParagraphElement>(null);
   // After the paint: focus brings style and layout up to date, half of the key press's task when done in it (#457).
   useEffect(() => {
-    // Until then, a key must not press a button that kept focus ("End session" pressed with Enter): keys are the screen's shortcuts.
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     // The element, not the ref, goes to the timer: on unmount React clears the ref first and cancels the timer
     // later, in this effect's cleanup, and a non-urgent render (or a test clock) can fire the timer between the two.
     // Focus on an element that left the page does nothing.
     const el = line.current!;
-    return afterPaint(() => el.focus({ preventScroll: true }));
-  }, []);
+    // Until then, a key must not press a button that kept focus ("End session" pressed with Enter): keys are the screen's shortcuts.
+    // The line itself keeps focus until then: a key on it does nothing, and a blur here would bring style up to date in the key press's task.
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== el) active.blur();
+    return afterPaint(() => {
+      // Focus again, so a screen reader reads the new step: focusing the focused line says nothing.
+      if (document.activeElement === el) el.blur();
+      el.focus({ preventScroll: true });
+    });
+  }, [step]);
   return (
     <p className="said sr-only" tabIndex={-1} ref={line}>
       {children}
@@ -367,15 +375,17 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
   useKeys(revealed ? { "1": isNewNow, ArrowLeft: isNewNow, "2": knewItNow, ArrowRight: knewItNow, r: play } : { " ": () => reveal(), Enter: () => reveal(), r: play });
   return (
     <main className="card">
-      {revealed ? (
-        <Said key="answer">
-          <MeaningLine word={word} lang={lang} tag={tag} /> Is this word new to you?
-        </Said>
-      ) : (
-        <Said key="question">
-          New word: <span lang={tag}>{headword(word, lang)}</span>.
-        </Said>
-      )}
+      <Said step={revealed ? "answer" : "question"}>
+        {revealed ? (
+          <>
+            <MeaningLine word={word} lang={lang} tag={tag} /> Is this word new to you?
+          </>
+        ) : (
+          <>
+            New word: <span lang={tag}>{headword(word, lang)}</span>.
+          </>
+        )}
+      </Said>
       <Kicker kind="intro" />
       <div className="word">
         {headword(word, lang)} <Speaker text={word.lemma} tag={tag} what="word" />
@@ -448,20 +458,22 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
   const [no, yes] = listen ? ["Did not understand", "Understood"] : ["I forgot", "I remembered"];
   return (
     <main className="card" data-lemma={word.lemma}>
-      {revealed ? (
-        <Said key="answer">
-          {example && `${example.translation} `}
-          <MeaningLine word={word} lang={lang} tag={tag} asked={asked} />
-        </Said>
-      ) : listen ? (
-        // The sentence is only heard here, so the line leaves it out.
-        <Said key="question">Listen. What does the sentence mean?</Said>
-      ) : (
-        <Said key="question">
-          {example && <span lang={tag}>{example.text} </span>}
-          What does <span lang={tag}>{asked}</span> mean?
-        </Said>
-      )}
+      <Said step={revealed ? "answer" : "question"}>
+        {revealed ? (
+          <>
+            {example && `${example.translation} `}
+            <MeaningLine word={word} lang={lang} tag={tag} asked={asked} />
+          </>
+        ) : listen ? (
+          // The sentence is only heard here, so the line leaves it out.
+          "Listen. What does the sentence mean?"
+        ) : (
+          <>
+            {example && <span lang={tag}>{example.text} </span>}
+            What does <span lang={tag}>{asked}</span> mean?
+          </>
+        )}
+      </Said>
       <Kicker kind={kicker} />
       <p className="prompt">
         {listen ? (
