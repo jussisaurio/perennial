@@ -112,6 +112,33 @@ test("the setting 'Next card right away' skips the moment", async ({ page }) => 
   await expect(page.getByRole("radio", { name: "Next card right away" })).toHaveAttribute("aria-checked", "true");
 });
 
+test("the session bar turns the moment off and on, and Settings agrees", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  await page.locator("button.start").click();
+  const toggle = page.getByRole("button", { name: "Show plants growing" });
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await reveal(page);
+  await freeze(page);
+  // New to me would plant the seed; with the clock stopped the card moves on only because no moment plays.
+  await advance(page, "1");
+  await expect(moment(page)).toHaveCount(0);
+  await page.clock.resume();
+  // On again: the next seed is planted where the learner can see it.
+  await toggle.click();
+  await reveal(page);
+  await page.keyboard.press("1");
+  await expect(moment(page)).toHaveAttribute("data-kind", "plant");
+  await expect(moment(page)).toHaveCount(0);
+  await toggle.click();
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.getByRole("button", { name: /^Done/ }).click();
+  await page.goto("/#/settings");
+  await expect(page.getByRole("radio", { name: "Next card right away" })).toHaveAttribute("aria-checked", "true");
+});
+
 test("the summary replays what grew this chunk, then rests; a tap ends it (#216)", async ({ page }) => {
   await page.clock.install();
   await startCourse(page);

@@ -37,6 +37,21 @@ export const SpeakerOffIcon = (p: P) => (
   </Icon>
 );
 
+export const WateringCanIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5 10h10l-1 9H6z" />
+    <path d="M7 10V8.5a3 3 0 0 1 6 0V10M15 13l5-4.5M18.8 7.2l2.4 2.6" />
+  </Icon>
+);
+
+export const WateringCanOffIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5 10h10l-1 9H6z" />
+    <path d="M7 10V8.5a3 3 0 0 1 6 0V10M15 13l5-4.5M18.8 7.2l2.4 2.6" />
+    <path d="M3.5 3.5l17 17" />
+  </Icon>
+);
+
 export const SnailIcon = (p: P) => (
   <Icon {...p}>
     <path d="M3 18h13a5 5 0 0 0 5-5" />
