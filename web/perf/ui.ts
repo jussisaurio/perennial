@@ -253,7 +253,10 @@ async function measure(page: Page, cdp: CDPSession, screen: string, action: () =
   };
 }
 
-const browser = await chromium.launch({ args: ["--mute-audio", "--enable-unsafe-swiftshader"] });
+// Full Chromium, not the headless shell: it draws WebGL on the real GPU. The shell's software
+// WebGL (SwiftShader) built its pipelines at the first draws while the main thread waited in
+// Commit, 0.6 to 1.5 s at CPU 10×: a laptop with any GPU does not have that wait (#459).
+const browser = await chromium.launch({ channel: "chromium", args: ["--mute-audio"] });
 
 /** A fresh context per run, so no run inherits another's state, timers or heap. */
 async function open(): Promise<{ context: BrowserContext; page: Page; cdp: CDPSession }> {
@@ -406,7 +409,7 @@ Self time per function (same run):
 ${r.top.map((t) => `- ${t}`).join("\n")}`)
   .join("\n\n")}
 
-The 3D walk runs on software WebGL here, so its frame times are worse than on a real GPU.
+The 3D walk draws on this machine's GPU, which the CPU slowdown does not slow: an old laptop's GPU is slower.
 Per screen, that run's Chrome trace (*.trace.json) and CPU profile (*.cpuprofile) are in perf/out/: open them in Chrome DevTools → Performance.
 `;
 writeFileSync(join(OUT, "report.md"), report);
