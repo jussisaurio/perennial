@@ -146,6 +146,13 @@ export const CheckIcon = (p: P) => (
   </Icon>
 );
 
+export const AlertIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5v5.5M12 16.5v.01" />
+  </Icon>
+);
+
 export const SproutMark = ({ size = 22 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M12 21v-8" stroke="var(--leaf)" strokeWidth="2" strokeLinecap="round" />
