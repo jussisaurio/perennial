@@ -1,7 +1,8 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { knownAt, readMemory, reviewedAt, wordState, type MemoryRow } from "../core/memory";
+import { runAll } from "../lib/yield";
+import { knownAtSteps, readMemory, reviewedAt, wordState, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { dayNumber, startOfDay } from "../core/day";
 import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk } from "../garden/leave";
@@ -55,16 +56,19 @@ export interface LearnerVisitors {
  * The learner's known words: how many (all of them, for unlocks and
  * milestones), their lemmas (lower case), and what the frog may croak.
  */
-export function knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, memory: { get: (key: string) => Pick<MemoryRow, "s" | "reps"> | undefined }): { count: number; lemmas: Set<string>; croaks: string[] } {
+export function* knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, memory: { get: (key: string) => Pick<MemoryRow, "s" | "reps"> | undefined }): Generator<void, { count: number; lemmas: Set<string>; croaks: string[] }> {
   const all: string[] = [];
   const nouns: string[] = [];
   const lemmas = new Set<string>();
-  for (const w of words)
+  // A step per word, so Today can work it out in slices (#569).
+  for (const w of words) {
+    yield;
     if (wordState(readMemory({ memory }, w.id)) === "known") {
       all.push(w.lemma);
       if (w.pos === "noun") nouns.push(w.lemma);
       lemmas.add(w.lemma.toLowerCase());
     }
+  }
   // The frog croaks things: "croac… casa" is a joke, "croac… no" is not. Only its pool is nouns; the count is every known word.
   return { count: all.length, lemmas, croaks: nouns.length >= 5 ? nouns : all };
 }
@@ -104,11 +108,19 @@ export function gardenBroughtAt(l: Pick<Learner, "reviewsByWord" | "deck">, g: G
 }
 
 export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
+  return runAll(visitorSteps(l, now));
+}
+
+/** learnerVisitors a step at a time, so Today's first load can work it out in slices (#569). */
+export function* visitorSteps(l: Learner, now: Date): Generator<void, LearnerVisitors> {
   // A known word has a memory, so it is studied: O(studied), not O(deck), in the same order.
-  const { count, lemmas, croaks } = knownWords(l.studied, l.memory);
-  const facts = learnerFacts(l, count, now, gardenBrought(l));
+  const { count, lemmas, croaks } = yield* knownWords(l.studied, l.memory);
+  const garden = gardenBrought(l);
+  yield;
+  const facts = learnerFacts(l, count, now, garden);
+  yield;
   const today = visitorsFor(facts, now, devVisitorOverride());
-  const before = knownAt(l, startOfDay(now)).size;
+  const before = (yield* knownAtSteps(l, startOfDay(now))).size;
   return {
     facts,
     today,

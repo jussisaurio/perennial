@@ -1,6 +1,7 @@
 import { DAY_MS, startOfDay } from "../core/day";
-import { knownAt, readMemory, reviewedAt, wordState } from "../core/memory";
-import { perLearnerDay, type Learner } from "../data/learner";
+import { knownAtSteps, readMemory, reviewedAt, wordState } from "../core/memory";
+import { slicedPerLearnerDay, type Learner } from "../data/learner";
+import { runAll } from "../lib/yield";
 import type { ReviewRow } from "../data/rows";
 
 interface CourseStats {
@@ -14,17 +15,23 @@ interface CourseStats {
   days: { day: number; reviews: number }[]; // last 30 days
 }
 
-/** The course numbers, once per learner and day: Today and Words share them. */
-export const statsToday = perLearnerDay(courseStats);
+/** The course numbers, once per learner and day: Today and Words share them. Today works them out in slices (#569). */
+export const statsToday = slicedPerLearnerDay(statsSteps);
 
 export function courseStats(l: Learner, now = Date.now()): CourseStats {
+  return runAll(statsSteps(l, now));
+}
+
+/** courseStats a step per word and per review list. */
+function* statsSteps(l: Learner, now: number): Generator<void, CourseStats> {
   const startOfToday = startOfDay(now);
   // Known when today began.
-  const knownThen = knownAt(l, startOfToday);
+  const knownThen = yield* knownAtSteps(l, startOfToday);
   let known = 0;
   let knownToday = 0;
   let learning = 0;
   for (const w of l.words.values()) {
+    yield;
     const st = wordState(readMemory(l, w.id));
     if (st === "known") {
       known++;
@@ -36,6 +43,7 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
   let total = 0;
   const days = Array.from({ length: 30 }, (_, i) => ({ day: startOfToday - (29 - i) * DAY_MS, reviews: 0 }));
   for (const list of l.reviewsByWord.values()) {
+    yield;
     const { last, reviews } = timedReviews(list);
     if (last <= now - 30 * DAY_MS) continue;
     for (const { ts, passed } of reviews) {
