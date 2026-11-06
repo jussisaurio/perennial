@@ -3,28 +3,60 @@
 // analytics is privacy-first: no cookies, no autocapture, no session replay,
 // Do Not Track respected, and only a few named events.
 
-import * as Sentry from "@sentry/react";
 import type { PostHog } from "posthog-js";
 import { RELEASE } from "./version";
 
 let posthog: PostHog | null = null;
 
+type SentryApi = typeof import("@sentry/react");
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+let sentry: SentryApi | null = null;
+// Sentry loads in its own chunk after the first render: its code and init were
+// about 35 ms of the first script's task at CPU 10× (#481). Reports made before
+// that wait here.
+let early: ((s: SentryApi) => void)[] = [];
+function withSentry(report: (s: SentryApi) => void) {
+  if (sentry) report(sentry);
+  // 50 only bounds a queue whose chunk never loads.
+  else if (SENTRY_DSN && early.length < 50) early.push(report);
+}
+// Until Sentry's own handlers are in, a crash at start still waits for it.
+// `??`: a script error from another origin has no error object, only a message.
+const earlyError = (e: ErrorEvent) => withSentry((s) => s.captureException(e.error ?? e.message));
+const earlyRejection = (e: PromiseRejectionEvent) => withSentry((s) => s.captureException(e.reason));
+if (SENTRY_DSN) {
+  addEventListener("error", earlyError);
+  addEventListener("unhandledrejection", earlyRejection);
+}
+
+/** Loads and starts error reports. Called once, after the first paint. */
 export function initObservability() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
-  if (dsn) {
-    Sentry.init({
-      // Not the learner's IP: by default Sentry works it out from the connection.
-      dataCollection: { userInfo: false },
-      dsn,
-      release: RELEASE,
-      environment: import.meta.env.MODE,
-      // No replay and no page-load traces (#488): replay records every DOM change
-      // all the time, tracing wraps every fetch and listener, and nobody read either.
-      integrations: [Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] })],
-      // Long polls are cancelled by design; not errors.
-      ignoreErrors: [/AbortError/, /The user aborted a request/],
-    });
-  }
+  const dsn = SENTRY_DSN;
+  if (!dsn) return;
+  return (
+    import("@sentry/react")
+      .then((s) => {
+        s.init({
+          // Not the learner's IP: by default Sentry works it out from the connection.
+          dataCollection: { userInfo: false },
+          dsn,
+          release: RELEASE,
+          environment: import.meta.env.MODE,
+          // No replay and no page-load traces (#488): replay records every DOM change
+          // all the time, tracing wraps every fetch and listener, and nobody read either.
+          integrations: [s.consoleLoggingIntegration({ levels: ["warn", "error"] })],
+          // Long polls are cancelled by design; not errors.
+          ignoreErrors: [/AbortError/, /The user aborted a request/],
+        });
+        removeEventListener("error", earlyError);
+        removeEventListener("unhandledrejection", earlyRejection);
+        sentry = s;
+        for (const report of early) report(s);
+        early = [];
+      })
+      // Error reports never break the app. A missing chunk after a deploy reloads the page (main.tsx).
+      .catch(() => {})
+  );
 }
 
 // PostHog starts once the learner is known (identify), with their id as the
@@ -97,7 +129,7 @@ export function track(event: Event, props: Record<string, unknown> = {}) {
 /** Tie events to the learner (an id only, never the email). A new user reloads the app (App.tsx). */
 export function identify(userId: string) {
   startPostHog(userId);
-  Sentry.setUser({ id: userId });
+  withSentry((s) => s.setUser({ id: userId }));
 }
 
 /**
@@ -115,7 +147,7 @@ export function linkAccount(accountId: string) {
  * `protocol` is the connection's protocol (h3, h2), when the browser shows it.
  */
 export function reportSlowAuth(step: "send" | "sign-in", path: string, ms: number, protocol: string | undefined) {
-  Sentry.captureException(new Error(`auth request slow: ${step}`), { tags: { step, path, protocol }, extra: { ms } });
+  withSentry((s) => s.captureException(new Error(`auth request slow: ${step}`), { tags: { step, path, protocol }, extra: { ms } }));
 }
 
 const badAnswerPaths = new Set<string>();
@@ -130,7 +162,7 @@ export function reportBadAnswer(path: string, issue: string) {
   // (each write, each recheck), and one report says all there is to say.
   if (badAnswerPaths.has(path)) return;
   badAnswerPaths.add(path);
-  Sentry.captureException(new Error(`bad answer: ${path}`), { tags: { path }, extra: { issue } });
+  withSentry((s) => s.captureException(new Error(`bad answer: ${path}`), { tags: { path }, extra: { issue } }));
 }
 
 /**
@@ -140,7 +172,15 @@ export function reportBadAnswer(path: string, issue: string) {
  */
 export function reportStalledWalk(plants: number) {
   const size = plants < 50 ? "<50" : plants < 200 ? "<200" : plants < 1000 ? "<1000" : "1000+";
-  Sentry.captureException(new Error("garden walk stalled"), { tags: { size } });
+  withSentry((s) => s.captureException(new Error("garden walk stalled"), { tags: { size } }));
 }
 
-export const reactErrorHandler = Sentry.reactErrorHandler;
+/** For createRoot's error options: an error React caught, or one it could not recover from. */
+export function reportReactError(error: unknown, info: { componentStack?: string }) {
+  withSentry((s) => s.reactErrorHandler()(error, info));
+}
+
+/** A bug we caught and carried on from. */
+export function reportError(e: unknown) {
+  withSentry((s) => s.captureException(e));
+}

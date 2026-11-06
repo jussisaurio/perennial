@@ -35,7 +35,7 @@ const env = { VITE_POSTHOG_KEY: "phc_test", VITE_POSTHOG_HOST: "", VITE_SENTRY_D
 const saved = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
 Object.assign(process.env, env);
 const { identify, initObservability, linkAccount, reportBadAnswer, reportStalledWalk, track } = await import("./observability");
-initObservability();
+await initObservability();
 for (const [k, v] of Object.entries(saved)) {
   if (v === undefined) delete process.env[k];
   else process.env[k] = v;
