@@ -205,11 +205,9 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       {/* Start sits right under the choice, so a phone shows it without a long scroll (#264). The garden below is for the curious. */}
       <p className="muted small">Lessons are in English. More languages will come later.</p>
       <GiftCard lang={lang} />
-      <div className="row" style={{ marginTop: "1.5rem" }}>
-        <button className="primary wide" onClick={() => void start()} disabled={busy}>
-          {busy ? "Starting…" : `Start learning ${name}`}
-        </button>
-      </div>
+      <button className="primary block landing-start" onClick={() => void start()} disabled={busy}>
+        {busy ? "Starting…" : `Start learning ${name}`}
+      </button>
       {error && (
         <p className="error" role="alert">
           {error}

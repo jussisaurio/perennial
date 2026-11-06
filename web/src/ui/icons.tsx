@@ -153,6 +153,12 @@ export const AlertIcon = (p: P) => (
   </Icon>
 );
 
+export const ChevronDownIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6.5 9.5l5.5 5.5 5.5-5.5" />
+  </Icon>
+);
+
 export const SproutMark = ({ size = 22 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M12 21v-8" stroke="var(--leaf)" strokeWidth="2" strokeLinecap="round" />

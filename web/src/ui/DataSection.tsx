@@ -78,7 +78,7 @@ export function DataSection({ lang }: { lang: string }) {
         Your progress is saved on the Perennial server, so you can continue on any device {user?.anonymous ? "after you add your email" : "where you sign in"}.{ai && " When Perennial AI makes cards for you, those words and sentences are sent to the AI service (Anthropic)."} See the{" "}
         <a href="/privacy.html">privacy policy</a>.
       </p>
-      <div className="row">
+      <div className="row even">
         <button className="secondary" disabled={!learner || !sentences} onClick={() => learner && sentences && setSaved(exportJSON(learner, sentences))}>
           Download all my data (JSON)
         </button>

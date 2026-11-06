@@ -123,8 +123,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 :focus-visible { outline: 2.5px solid var(--persimmon); outline-offset: 2px; }
 button.primary { background: var(--ink); color: var(--paper); box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.5); }
 button.primary:hover:not(:disabled) { box-shadow: 0 10px 24px -8px rgb(0 0 0 / 0.6); }
-/* A faded ink button still looked pressable (light) and was dark on grey (dark): a flat, quiet one, in both themes. */
-button.primary:disabled { opacity: 1; background: var(--paper-2); color: var(--muted); border-color: var(--line); box-shadow: none; }
+/* A faded ink button still looked pressable (light) and was dark on grey (dark): a flat tint of the ink, with no border, in both themes. */
+button.primary:disabled { opacity: 1; background: color-mix(in oklab, var(--ink) 8%, transparent); color: color-mix(in oklab, var(--ink) 40%, transparent); box-shadow: none; }
 button.secondary { background: var(--card); border-color: var(--line); }
 button.secondary:hover:not(:disabled) { border-color: var(--ink-2); }
 /* The same lift as "I remembered", so the two answers look equal. */
@@ -137,6 +137,8 @@ button.pass:hover:not(:disabled) { box-shadow: 0 10px 24px -10px var(--leaf); }
 button.ghost { padding: 0.4rem 0.6rem; color: var(--muted); }
 button.ghost:hover:not(:disabled) { color: var(--ink); background: var(--paper-2); }
 button.wide { min-width: 12rem; }
+/* A form's main button: as wide as its field (.form input), and tall enough to hit with a thumb. */
+button.block { width: 100%; max-width: 26rem; min-height: 3.1rem; }
 button.icon { padding: 0.5rem; border-radius: 50%; color: var(--ink-2); }
 button.icon:hover { background: var(--paper-2); color: var(--ink); }
 kbd {
@@ -153,8 +155,23 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink-2); box-shadow: 0 0 0 4px var(--sun-soft); }
 input::placeholder, textarea::placeholder { color: var(--muted); }
 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%236f685b' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.2rem; }
-/* No margin: the browser's default pushed the track past the content edge. */
-input[type="range"] { padding: 0; margin: 0; accent-color: var(--persimmon); border: none; background: none; box-shadow: none; }
+/* No margin: the browser's default pushed the track past the content edge.
+   Our own track and thumb: --fill (0 to 1, set by the page) inks the track up to the thumb's centre. */
+input[type="range"] {
+  --thumb: 1.5rem; --fill: 0.5;
+  -webkit-appearance: none; appearance: none; height: var(--thumb); padding: 0; margin: 0; border: none; border-radius: 0; background: none; box-shadow: none; cursor: pointer;
+}
+input[type="range"]:focus { box-shadow: none; }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--ink-2) calc(var(--thumb) / 2 + var(--fill) * (100% - var(--thumb))), var(--line) 0); }
+input[type="range"]::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--ink-2) calc(var(--thumb) / 2 + var(--fill) * (100% - var(--thumb))), var(--line) 0); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: var(--thumb); height: var(--thumb); margin-top: calc(3px - var(--thumb) / 2); border-radius: 50%;
+  background: #fff; box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22); transition: box-shadow 0.2s;
+}
+input[type="range"]::-moz-range-thumb { width: var(--thumb); height: var(--thumb); border: none; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22); }
+input[type="range"]:focus-visible { outline: none; }
+input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22), 0 0 0 4px var(--sun-soft); }
+input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22), 0 0 0 4px var(--sun-soft); }
 input[type="file"] { padding: 0.5rem; }
 .form { display: grid; gap: 1rem; }
 /* An email or a code does not need the whole desktop column. */
@@ -165,15 +182,22 @@ input[type="file"] { padding: 0.5rem; }
 .chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .chip { border: 1px solid var(--line); background: var(--card); padding: 0.55rem 1rem; }
 .chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+/* Options of one choice, or a pair of buttons: equal widths, in one row. On a phone they stack, each as wide as the column. */
+.even { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); max-width: 34rem; }
+.even > * { white-space: nowrap; }
+@media (max-width: 640px) { .even { grid-auto-flow: row; } }
 
 /* ---------- app shell ---------- */
 .app { max-width: 52rem; margin: 0 auto; padding: 0 16px 6rem; }
 nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75rem; }
 .landing-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .landing-signin { margin-top: 1.25rem; }
-/* Sign-in: the two ways in, and the email step's button, are full width like the field; the code link is a quiet afterthought. */
-.signin-wide { width: 100%; max-width: 26rem; }
-.form .signin-have { justify-self: start; font-size: 0.88rem; }
+/* As wide as the language cards above it. */
+button.landing-start { max-width: none; margin-top: 1.5rem; }
+/* Sign-in: a field and its error stay together; the quiet links under the button line up with the form's edge. */
+.signin-field { display: grid; gap: 0.45rem; }
+.signin-links { display: flex; flex-wrap: wrap; column-gap: 1.5rem; row-gap: 0.25rem; margin-top: -0.35rem; }
+.form .ghost.link { justify-self: start; font-size: 0.92rem; }
 .wordmark { display: inline-flex; align-items: center; gap: 0.35rem; font: 1.55rem/1 var(--display); letter-spacing: -0.02em; color: inherit; text-decoration: none; }
 /* The language: a garden per course (ui/CourseSwitcher.tsx). */
 .course-switch { position: relative; }
@@ -181,8 +205,8 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
 .course-switch-button { border: 1px solid var(--line); background: var(--card); }
 .course-switch-button[aria-expanded="true"] { border-color: var(--ink); }
 .course-switch-label { color: var(--muted); }
-/* Onest has no ▾. Naming it here would load its symbols file on every screen, for nothing. */
-.caret { font-size: 0.7em; color: var(--muted); font-family: var(--ui-system); }
+.course-switch-button > svg { color: var(--muted); transition: transform 0.2s var(--ease); }
+.course-switch-button[aria-expanded="true"] > svg { transform: rotate(180deg); }
 .course-menu {
   position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; width: max-content; min-width: 13rem; max-width: calc(100vw - 32px);
   background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 0.4rem; box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.35);
@@ -532,7 +556,11 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .legend { padding: 0.05em 0.45em; border-radius: 5px; margin-left: 0.3rem; }
 
 /* ---------- onboarding ---------- */
-.ghost.link { padding-left: 0; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+/* A text link that is a button: no side padding, so it lines up with the text around it. */
+.ghost.link { padding-inline: 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in oklab, currentColor, transparent 60%); }
+.ghost.link:hover:not(:disabled) { background: none; color: var(--ink); }
+/* Not yet usable (a countdown, no email yet): plain readable text, not a faded link. */
+.ghost.link:disabled { opacity: 1; color: var(--muted); text-decoration: none; }
 .link:hover { background: none !important; text-decoration-color: currentColor; }
 .lede { font-size: 1.12rem; color: var(--ink-2); max-width: 32rem; }
 
@@ -626,9 +654,20 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 .credits-bar { height: 6px; border-radius: 3px; background: var(--paper-2); overflow: hidden; max-width: 22rem; }
 .credits-bar div { height: 100%; background: linear-gradient(90deg, var(--leaf), var(--sun)); border-radius: 3px; transition: width 0.6s var(--ease); }
 .choice { display: grid; gap: 0.5rem; }
-.choice label { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.75rem 0.9rem; border: 1px solid var(--line); border-radius: 14px; background: var(--card); cursor: pointer; color: var(--ink); font-size: 0.95rem; }
-.choice label:has(input:checked) { border-color: var(--ink-2); box-shadow: 0 0 0 3px var(--sun-soft); }
-.choice input { width: auto; margin-top: 0.2rem; accent-color: var(--persimmon); }
+/* Cards to choose from: the whole card is the control. The browser's radio is see-through and covers the card, so a tap anywhere picks it; a drawn dot shows the choice. */
+.choice label {
+  position: relative; display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--card); cursor: pointer; color: var(--ink); font-size: 0.95rem; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.choice label:hover { border-color: color-mix(in oklab, var(--line), var(--ink) 25%); }
+.choice label:has(input:checked) { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.choice label:has(input:focus-visible) { outline: 2.5px solid var(--persimmon); outline-offset: 2px; }
+.choice input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.choice label::after {
+  content: ""; flex: none; margin-left: auto; width: 1.25rem; height: 1.25rem; border-radius: 50%; box-sizing: border-box;
+  border: 1.5px solid color-mix(in oklab, var(--muted), transparent 45%); background: var(--card); transition: border 0.15s;
+}
+.choice label:has(input:checked)::after { border: 0.4rem solid var(--ink); }
 .choice span { display: grid; gap: 0.1rem; }
 /* The question sticks to the screen's foot with its answers, so on a long card the answers never cover it (#264). */
 .question {
