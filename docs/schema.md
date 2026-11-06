@@ -33,7 +33,8 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
 ```jsonc
 // decks/es/deck.json → { lang, native, version, words: [...], sentences: [...] }
 { "id": "es.w.k7m2q9xd4f", "lemma": "casa", "gloss": "house", "pos": "noun", "rank": 112, "forms": ["casa", "casas"], "notes": "" }
-{ "id": "es.s.p3v8n2c6wq", "wordId": "es.w.k7m2q9xd4f", "text": "Mi casa es pequeña.", "translation": "My house is small.", "cloze": "casa" }
+{ "id": "es.s.p3v8n2c6wq", "wordId": "es.w.k7m2q9xd4f", "text": "Mi casa es pequeña.", "translation": "My house is small.", "cloze": "casa", "keys": ["mi", "casa", "es", "pequeña"] }
+// keys: built from text, not written by authors. The app uses them to count readable sentences without splitting text.
 ```
 
 **Deck words are not in Postgres.** The files are the source of truth, and the server reads the same files. **Learner-made words are in Postgres.** A `word_id` is a deck id, a `user_word` id, or `form:<lang>:<form>` (a surface form the learner chose to ignore, such as a name).

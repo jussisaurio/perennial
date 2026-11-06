@@ -120,6 +120,11 @@ export const DeckSentence = (lang: string) =>
     translation: text(240),
     cloze: text(60),
     retired: Schema.optionalKey(Schema.Boolean),
+    /**
+     * Built, not written: wordKeys(text), so the app never tokenizes the whole
+     * deck (#453). Optional only because decks built before it have none.
+     */
+    keys: Schema.optionalKey(Schema.Array(Schema.String)),
   });
 
 export const Deck = (lang: string) =>

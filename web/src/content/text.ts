@@ -14,6 +14,12 @@ export function tokenize(text: string, tag: string): Token[] {
 
 export const formKey = (s: string) => s.normalize("NFC").toLocaleLowerCase().trim();
 
+/** The words of `text` as form keys, in order: what a sentence asks the learner to know. */
+export const wordKeys = (text: string, tag: string) =>
+  tokenize(text, tag)
+    .filter((t) => t.word)
+    .map((t) => formKey(t.text));
+
 /**
  * Index of `part` in `text`, preferring an occurrence that stands as a whole
  * word ("de" in "¿Dónde está de…" should not match inside "Dónde"). Unspaced

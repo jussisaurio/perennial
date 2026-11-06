@@ -55,7 +55,7 @@ export interface ReadNow {
  * (no review names it) and is not in `shown`. Of those, the one with the most
  * words from `practised` (this session's words), so it is about today.
  */
-export function readNow(l: Learner, tag: string, practised: ReadonlySet<string>, shown: ReadonlySet<string>): ReadNow | null {
+export function readNow(l: Learner, practised: ReadonlySet<string>, shown: ReadonlySet<string>): ReadNow | null {
   const index = formIndex(l);
   const onCards = new Set(l.reviews.map((r) => r.sentence_id));
   const grown = (id: string) => !!readMemory(l, id)?.reps;
@@ -63,11 +63,10 @@ export function readNow(l: Learner, tag: string, practised: ReadonlySet<string>,
   for (const list of l.deck.sentencesByWord.values()) {
     for (const s of list) {
       if (onCards.has(s.id) || shown.has(s.id)) continue;
-      const words = tokenize(s.text, tag).filter((t) => t.word);
-      if (words.length < READ_MIN_WORDS) continue;
+      if (s.keys.length < READ_MIN_WORDS) continue;
       let today = 0;
-      const all = words.every((t) => {
-        const ids = (index.get(formKey(t.text)) ?? []).filter(grown);
+      const all = s.keys.every((k) => {
+        const ids = (index.get(k) ?? []).filter(grown);
         if (ids.some((id) => practised.has(id))) today++;
         return ids.length > 0;
       });
@@ -82,24 +81,11 @@ export function readNow(l: Learner, tag: string, practised: ReadonlySet<string>,
  * them is known, by the same rule as "You know N words", so the two never disagree.
  * The same text under two words counts once.
  */
-// Each course sentence's word keys, worked out once per deck: tokenizing every
-// sentence on each call cost ~250 ms per visit to Words (perf/ui.ts).
-const sentenceKeys = new WeakMap<Learner["deck"], Map<string, string[]>>();
-function keysOf(l: Learner, tag: string): Map<string, string[]> {
-  let keys = sentenceKeys.get(l.deck);
-  if (!keys) {
-    keys = new Map();
-    for (const list of l.deck.sentencesByWord.values())
-      for (const s of list) if (!keys.has(s.text)) keys.set(s.text, tokenize(s.text, tag).filter((t) => t.word).map((t) => formKey(t.text)));
-    sentenceKeys.set(l.deck, keys);
-  }
-  return keys;
-}
-
-export function readableCount(l: Learner, tag: string): number {
-  const index = formIndex(l);
-  const known = (id: string) => wordState(readMemory(l, id)) === "known";
-  let count = 0;
-  for (const keys of keysOf(l, tag).values()) if (keys.every((k) => (index.get(k) ?? []).some(known))) count++;
-  return count;
+export function readableCount(l: Learner): number {
+  // Every form of every known word: a sentence word is known when one of them matches it.
+  const known = new Set<string>();
+  for (const w of l.words.values()) if (wordState(readMemory(l, w.id)) === "known") for (const f of [w.lemma, ...w.forms]) known.add(formKey(f));
+  const readable = new Set<string>();
+  for (const list of l.deck.sentencesByWord.values()) for (const s of list) if (s.keys.every((k) => known.has(k))) readable.add(s.text);
+  return readable.size;
 }

@@ -26,6 +26,8 @@ test("first build assigns ids, ranks and version 1", () => {
   expect(r.deck.words.map((w) => [w.lemma, w.rank])).toEqual([["casa", 1], ["mesa", 2]]);
   expect(r.deck.words[0].id).toMatch(/^es\.w\.[0-9a-z]{10}$/);
   expect(r.deck.sentences).toHaveLength(6);
+  // Each sentence's words, lowercased, so the app need not tokenize the deck (#453).
+  expect(r.deck.sentences[0].keys).toEqual(["la", "casa", "número", "1"]);
   expect(Object.keys(r.manifest.words)).toEqual(["casa|noun|", "mesa|noun|"]);
 });
 
