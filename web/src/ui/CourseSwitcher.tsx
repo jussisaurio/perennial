@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { COURSE_LANGUAGES, language } from "../content/languages";
 import type { CourseRow } from "../data/rows";
-import { SproutMark } from "./icons";
+import { ChevronDownIcon, SproutMark } from "./icons";
 import { arrowKeys } from "./arrows";
 
 export function CourseSwitcher({ courses, current, onSwitch, onStart }: { courses: CourseRow[]; current: string; onSwitch: (lang: string) => void; onStart: (lang: string) => void }) {
@@ -53,9 +53,7 @@ export function CourseSwitcher({ courses, current, onSwitch, onStart }: { course
         }}
       >
         {name}
-        <span aria-hidden className="caret">
-          ▾
-        </span>
+        <ChevronDownIcon size={14} strokeWidth={2.2} />
       </button>
       {open && (
         <div className="course-menu" role="menu" aria-label="Your languages" ref={menu} onKeyDown={arrowKeys}>

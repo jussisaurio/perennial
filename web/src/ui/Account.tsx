@@ -94,11 +94,11 @@ export function SignIn({ cta }: { cta: string }) {
   if (step === "email" && google && !byEmail)
     return (
       <div className="form">
-        <button className="secondary signin-wide" type="button" disabled={!!busy} onClick={() => void run("google", signInWithGoogle)}>
+        <button className="secondary block" type="button" disabled={!!busy} onClick={() => void run("google", signInWithGoogle)}>
           <GoogleMark />
           Continue with Google
         </button>
-        <button className="secondary signin-wide" type="button" disabled={!!busy} onClick={() => (setByEmail(true), setError(""))}>
+        <button className="secondary block" type="button" disabled={!!busy} onClick={() => (setByEmail(true), setError(""))}>
           Email me a code
         </button>
         {alert}
@@ -114,15 +114,17 @@ export function SignIn({ cta }: { cta: string }) {
           void run("send", () => send(false));
         }}
       >
-        <label>
-          Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required autoFocus={byEmail} />
-        </label>
-        <button className="primary signin-wide" type="submit" disabled={!!busy || !email.includes("@")}>
+        <div className="signin-field">
+          <label>
+            Email
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required autoFocus={byEmail} />
+          </label>
+          {alert}
+        </div>
+        <button className="primary block" type="submit" disabled={!!busy || !email.includes("@")}>
           {busy === "send" ? sendingLabel() : cta}
         </button>
-        {alert}
-        <button className="ghost signin-have" type="button" disabled={!!busy || !email.includes("@")} onClick={() => (setSent("have-code"), setStep("code"), setError(""))}>
+        <button className="ghost link" type="button" disabled={!!busy || !email.includes("@")} onClick={() => (setSent("have-code"), setStep("code"), setError(""))}>
           Enter a code I already have
         </button>
       </form>
@@ -143,22 +145,24 @@ export function SignIn({ cta }: { cta: string }) {
         {sent === "maybe-sent" && <>The code to {to} may still be on its way. If no email comes in a minute, send it again.</>}
         {sent === "have-code" && <>Enter the 6-digit code we sent to {to}.</>}
       </p>
-      <label>
-        Code
-        <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" autoFocus />
-      </label>
-      <div className="row">
-        <button className="primary" type="submit" disabled={!!busy || code.length !== 6}>
-          {busy === "sign-in" ? "Signing in…" : "Sign in"}
-        </button>
-        <button className="ghost" type="button" disabled={!!busy || resendIn > 0} onClick={() => void run("send", () => send(true))}>
+      <div className="signin-field">
+        <label>
+          Code
+          <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" autoFocus />
+        </label>
+        {alert}
+      </div>
+      <button className="primary block" type="submit" disabled={!!busy || code.length !== 6}>
+        {busy === "sign-in" ? "Signing in…" : "Sign in"}
+      </button>
+      <div className="signin-links">
+        <button className="ghost link" type="button" disabled={!!busy || resendIn > 0} onClick={() => void run("send", () => send(true))}>
           {busy === "send" ? sendingLabel() : resendIn > 0 ? `Send the code again in ${resendIn} s` : "Send the code again"}
         </button>
-        <button className="ghost" type="button" disabled={!!busy} onClick={() => (setStep("email"), setCode(""), setError(""))}>
+        <button className="ghost link" type="button" disabled={!!busy} onClick={() => (setStep("email"), setCode(""), setError(""))}>
           Use another email
         </button>
       </div>
-      {alert}
     </form>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, type CSSProperties } from "react";
 import { savedLine, SOUND_OFF_ASIDE } from "../content/voice";
 import { saveCourse, useLearner, useStore } from "../data/learner";
 import type { CourseRow } from "../data/rows";
@@ -12,6 +12,10 @@ import { RadioChips } from "./arrows";
 
 const DevTools = import.meta.env.DEV ? lazy(() => import("../dev/DevTools")) : null;
 
+// The retention slider's ends.
+const LOW = 0.8;
+const HIGH = 0.95;
+
 function CourseSettings({ course }: { course: CourseRow }) {
   const store = useStore();
   const [retention, setRetention] = useState(course.retention);
@@ -19,11 +23,13 @@ function CourseSettings({ course }: { course: CourseRow }) {
   const commit = () => {
     if (Math.abs(retention - course.retention) > 1e-6) void saveCourse(store, course.lang, { retention });
   };
+  // React's style type has no custom properties: --fill inks the track up to the thumb (index.css).
+  const fill = { "--fill": (retention - LOW) / (HIGH - LOW) } as CSSProperties;
   return (
     <div className="form">
       <label className="form">
         <span>Target: remember {Math.round(retention * 100)}% of words</span>
-        <input type="range" aria-valuetext={`${Math.round(retention * 100)}%`} min={0.8} max={0.95} step={0.01} value={retention} onChange={(e) => setRetention(Number(e.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
+        <input type="range" style={fill} aria-valuetext={`${Math.round(retention * 100)}%`} min={LOW} max={HIGH} step={0.01} value={retention} onChange={(e) => setRetention(Number(e.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
         <span className="muted small">
           When a word comes back, this is how sure you are to remember it. 90% is good for most people. A higher number gives you many more reviews. A lower number makes you forget more.
         </span>
@@ -38,6 +44,7 @@ function GrowthSetting() {
     <div className="form">
       <RadioChips
         label="Growing plants"
+        className="even"
         options={[
           [true, "Show plants growing"],
           [false, "Next card right away"],
@@ -59,6 +66,7 @@ function SoundSetting() {
     <div className="form">
       <RadioChips
         label="Sound"
+        className="even"
         options={[
           [true, "Sound on"],
           [false, "Sound off"],
@@ -78,6 +86,7 @@ function Appearance() {
   return (
     <RadioChips<ThemePref>
       label="Theme"
+      className="even"
       options={[
         ["system", "Same as my device"],
         ["light", "Light"],
