@@ -4,7 +4,7 @@
 
 # Bun workspaces: one lockfile at the root. Each stage copies every workspace's
 # package.json (the lockfile names them all) and installs only what it needs.
-FROM oven/bun:1.3.14 AS web
+FROM oven/bun:1.4.4 AS web
 WORKDIR /app
 COPY package.json bun.lock ./
 COPY contract/package.json contract/
@@ -34,7 +34,7 @@ ARG VITE_RELEASE="${RAILWAY_GIT_COMMIT_SHA}"
 ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY VITE_POSTHOG_HOST=$VITE_POSTHOG_HOST VITE_TURNSTILE_SITE_KEY=$VITE_TURNSTILE_SITE_KEY VITE_RELEASE=$VITE_RELEASE
 RUN bunx vite build
 
-FROM oven/bun:1.3.14-slim
+FROM oven/bun:1.4.4-slim
 WORKDIR /app
 COPY package.json bun.lock ./
 COPY contract/package.json contract/
