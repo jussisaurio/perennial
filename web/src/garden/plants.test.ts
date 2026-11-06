@@ -69,7 +69,6 @@ describe("garden plants", () => {
       words: new Map(words.map((w) => [w.id, { ...w, source: "deck", status: "active" }])),
       memories,
       memory: new Map(memories.map((m) => [m.key, m])),
-      reviews: [],
       // When each was first met, for the well (#335 S6): its first reading review, not a listening one.
       reviewsByWord: new Map([
         ["w1", [review("w1", "read", 2), review("w1", "listen", 6), review("w1", "read", 4)]],
@@ -84,10 +83,40 @@ describe("garden plants", () => {
       ["w2", "bud", false, false],
     ]);
     expect(g.seeds).toBe(2);
-    expect(g.first).toBeNull();
+    expect(g.first).toEqual({ id: "w1", lemma: "word1", at: now - 4 * DAY_MS });
     expect(g.met).toEqual([
       { lemma: "word1", at: now - 4 * DAY_MS },
       { lemma: "word2", at: now - DAY_MS },
     ]);
+  });
+
+  test("the first word is the one a walk of every review finds", () => {
+    const now = Date.UTC(2026, 10, 6, 12);
+    const status = (i: number) => (i % 7 === 3 ? "ignored" : "active");
+    const known = new Map(words.slice(0, 40).map((w, i) => [w.id, { ...w, source: "deck", status: status(i) }]));
+    // A seeded mix: alias ids, words this build does not know, ignored words, other skills.
+    let seed = 7;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const resolve = (id: string) => (id.startsWith("alias-") ? id.slice(6) : id);
+    const skills = ["read", "listen", "write"] as const;
+    const reviews = Array.from({ length: 600 }, (_, i) => {
+      const n = Math.floor(rand() * 45);
+      return { id: `r${i}`, word_id: rand() < 0.2 ? `alias-w${n}` : `w${n}`, skill: skills[Math.floor(rand() * 3)], reviewed_at: new Date(now - Math.floor(rand() * 300 * DAY_MS)).toISOString() };
+    });
+    const reviewsByWord = new Map<string, typeof reviews>();
+    for (const r of reviews) reviewsByWord.set(resolve(r.word_id), [...(reviewsByWord.get(resolve(r.word_id)) ?? []), r]);
+    const l = { words: known, memories: [], memory: new Map(), reviewsByWord, fresh: () => [] } as unknown as Learner;
+    // Then again with that first word ignored: the next one takes its place.
+    for (let round = 0; round < 2; round++) {
+      // From scratch: the earliest reading review of a word still in the garden.
+      let want: { id: string; at: number } | null = null;
+      for (const r of reviews) {
+        const w = known.get(resolve(r.word_id));
+        const at = Date.parse(r.reviewed_at);
+        if (r.skill === "read" && w && w.status !== "ignored" && (!want || at < want.at)) want = { id: w.id, at };
+      }
+      expect(plantsFromLearner(l, now).first).toEqual({ id: want!.id, lemma: known.get(want!.id)!.lemma, at: want!.at });
+      known.set(want!.id, { ...known.get(want!.id)!, status: "ignored" });
+    }
   });
 });

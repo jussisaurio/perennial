@@ -6,7 +6,7 @@
 import { courseOrder } from "../content/order";
 import type { PLANT_LINES } from "../content/voice";
 import type { LoadedDeck } from "../data/deck";
-import { isStrong, memKey, OLD_S, plantStage, recall, reviewedAt, type PlantStage } from "../core/memory";
+import { firstReviewed, isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "../core/memory";
 import type { Learner } from "../data/learner";
 import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
@@ -71,18 +71,22 @@ export function stageSentence(stage: PlantStage): string {
   return `${label[0].toUpperCase()}${label.slice(1)}: ${STAGE_MEANING[stage]}.`;
 }
 
-/** The first word the learner ever practised that is still in the garden, or null. */
-function firstWord(l: Learner): FirstWord | null {
-  let best: { id: string; at: number } | null = null;
-  for (const r of l.reviews) {
-    if (r.skill !== "read") continue;
-    const at = reviewedAt(r);
-    if (best && at >= best.at) continue;
-    const id = l.resolve(r.word_id);
+/**
+ * The first word the learner ever practised that is still in the garden, or
+ * null. From each word's cached first reading review (firstReviewed), not a
+ * walk of every review: a new learner costs one lookup per reviewed word
+ * (#486). Two words first read in the same ms (a pinned clock in tests): the
+ * word whose reviews came first wins, as in the review table's order.
+ */
+function firstWord(l: Pick<Learner, "words" | "reviewsByWord">): FirstWord | null {
+  let best: FirstWord | null = null;
+  for (const [id, list] of l.reviewsByWord) {
     const w = l.words.get(id);
-    if (w && w.status !== "ignored") best = { id, at };
+    if (!w || w.status === "ignored") continue;
+    const at = firstReviewed(list).read;
+    if (at !== Infinity && (!best || at < best.at)) best = { id, lemma: w.lemma, at };
   }
-  return best ? { id: best.id, lemma: l.words.get(best.id)!.lemma, at: best.at } : null;
+  return best;
 }
 
 /** The learner's garden: every word with progress is a plant, in course rank order. */
