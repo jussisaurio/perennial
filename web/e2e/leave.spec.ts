@@ -60,6 +60,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("day 1, three plants: carry the crumbs to the bowl by tapping; the next day prints lead to what the sparrow left; pick it up, hang it, and it stays after a reload", async ({ page }) => {
+  // Four days, so the app and the walk load four times: about 7 s each on CI's software WebGL, 23-30 s in all (#623).
+  test.setTimeout(60_000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto("/?demo=es:3#/today");
