@@ -6,8 +6,8 @@ import { teachable } from "../content/languages";
 import { courseOrder, nextWords, sincePlaced } from "../content/order";
 import { useLiveQuery, type ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
-import { startOfDay } from "../core/day";
-import { firstReviewed, MemoryLog, memKey, type MemoryRow } from "../core/memory";
+import { DAY_MS, startOfDay } from "../core/day";
+import { firstReviewed, MemoryLog, reviewedAt, memKey, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
 import { yieldToBrowser } from "../lib/yield";
@@ -99,6 +99,8 @@ export interface Learner {
   memory: Map<string, MemoryRow>;
   reviews: ReviewRow[];
   reviewsByWord: Map<string, ReviewRow[]>;
+  /** The reviews made at or after `t` (ms), without a walk of every review: Today's plan and minutes read today's. */
+  reviewsSince(t: number): ReviewRow[];
   states: Map<string, WordStateRow>;
   sentences(wordId: string): Sentence[];
   /** Words a session can introduce next, best first: picked words, then the course (content/order.ts). */
@@ -163,7 +165,12 @@ interface Reviews {
   links: Links;
   log: MemoryLog;
   byWord: Map<string, ReviewRow[]>;
+  /** The reviews by UTC day (dayOf), so reviewsSince reads only the last days. */
+  byDay: Map<number, ReviewRow[]>;
 }
+
+/** A review's UTC day: unlike a local day, it stays right if the time zone changes. */
+const dayOf = (r: ReviewRow) => Math.floor(reviewedAt(r) / DAY_MS);
 
 interface Built {
   words: Words;
@@ -326,16 +333,20 @@ export class Learners {
 function* allReviews(rows: readonly ReviewRow[], links: Links, retention: number): Generator<void, Reviews> {
   const log = new MemoryLog(retention, links.resolve);
   const byWord = new Map<string, ReviewRow[]>();
+  const byDay = new Map<number, ReviewRow[]>();
+  const add = <K>(map: Map<K, ReviewRow[]>, key: K, r: ReviewRow) => {
+    const list = map.get(key);
+    if (list) list.push(r);
+    else map.set(key, [r]);
+  };
   for (const r of rows) {
     log.set(r);
-    const id = links.resolve(r.word_id);
-    const list = byWord.get(id) ?? [];
-    list.push(r);
-    byWord.set(id, list);
+    add(byWord, links.resolve(r.word_id), r);
+    add(byDay, dayOf(r), r);
     yield;
   }
   yield* log.building();
-  return { links, log, byWord };
+  return { links, log, byWord, byDay };
 }
 
 function runAll<T>(steps: Generator<void, T>): T {
@@ -363,9 +374,18 @@ async function inSlices<T>(steps: Generator<void, T>): Promise<T> {
 /** Take in review changes: only the words they touch change. Null when the log must be built again (MemoryLog says when). */
 function moreReviews(prev: Reviews, changes: readonly ChangeMessage<ReviewRow>[]): Reviews | null {
   const byWord = new Map(prev.byWord);
+  const byDay = new Map(prev.byDay);
   for (const { type, value: r } of changes) {
     const id = prev.links.resolve(r.word_id);
     const was = byWord.get(id) ?? [];
+    // Out of its day first: a changed review can have a new time.
+    const old = was.find((x) => x.id === r.id);
+    if (old) {
+      const left = byDay.get(dayOf(old))!.filter((x) => x.id !== r.id);
+      if (left.length) byDay.set(dayOf(old), left);
+      else byDay.delete(dayOf(old));
+    }
+    if (type !== "delete") byDay.set(dayOf(r), [...(byDay.get(dayOf(r)) ?? []), r]);
     if (type === "delete") {
       if (!prev.log.delete(r.id)) return null;
       const left = was.filter((x) => x.id !== r.id);
@@ -377,7 +397,7 @@ function moreReviews(prev: Reviews, changes: readonly ChangeMessage<ReviewRow>[]
       byWord.set(id, was.some((x) => x.id === r.id) ? was.map((x) => (x.id === r.id ? r : x)) : [...was, r]);
     }
   }
-  return { ...prev, byWord };
+  return { ...prev, byWord, byDay };
 }
 
 /** What the review log says about the words: the log's rows, and the parts of the learner made from them. */
@@ -431,7 +451,7 @@ function memoryOf(log: MemoryLog, words: Map<string, Word>, prev: Memory | undef
 }
 
 /** The learner itself, from its parts. */
-function assemble(lang: string, course: CourseRow, { words, stateMap, links }: Words, { byWord: reviewsByWord }: Reviews, sentencesBy: Map<string, Sentence[]>, langReviews: ReviewRow[], { memories, memory, started, studied }: Memory): Learner {
+function assemble(lang: string, course: CourseRow, { words, stateMap, links }: Words, { byWord: reviewsByWord, byDay }: Reviews, sentencesBy: Map<string, Sentence[]>, langReviews: ReviewRow[], { memories, memory, started, studied }: Memory): Learner {
   const { deck, resolve } = links;
   const sentences = (wordId: string): Sentence[] => [
     ...(deck.sentencesByWord.get(wordId) ?? []).map((s) => ({ id: s.id, text: s.text, translation: s.translation, cloze: s.cloze, origin: "deck" as const })),
@@ -464,7 +484,12 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
     return next;
   };
   const fresh = () => upcoming().map((w) => w.id);
-  return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, states: stateMap, sentences, upcoming, fresh, resolve };
+  const reviewsSince = (t: number) => {
+    const out: ReviewRow[] = [];
+    for (const [day, list] of byDay) if (day >= Math.floor(t / DAY_MS)) for (const r of list) if (reviewedAt(r) >= t) out.push(r);
+    return out;
+  };
+  return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, reviewsSince, states: stateMap, sentences, upcoming, fresh, resolve };
 }
 
 /**
