@@ -19,7 +19,8 @@ async function openWalk(page: Page) {
   await page.waitForFunction(() => "__garden" in window);
 }
 
-const status = (page: Page) => page.locator(".gw > [role=status]");
+// The visitors' answers, read out; not the loading line, which stays up while the plants are drawn in the background (#470).
+const status = (page: Page) => page.locator(".gw > .sr-only[role=status]");
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
