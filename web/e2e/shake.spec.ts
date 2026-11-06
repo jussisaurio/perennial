@@ -43,7 +43,8 @@ const standBy = (page: Page, lemma: string) =>
     lemma,
   );
 
-const status = (page: Page) => page.locator(".gw > [role=status]");
+// The sr-only line, not the loading line: that is a status too while plants still stream in (#621).
+const status = (page: Page) => page.locator(".gw > .sr-only[role=status]");
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
