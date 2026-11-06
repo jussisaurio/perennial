@@ -709,7 +709,8 @@ button.tok:active { transform: none; }
 @media (max-width: 640px) { .app { padding-bottom: calc(9rem + env(safe-area-inset-bottom)); } }
 .lang-choice { grid-template-columns: 1fr 1fr; }
 .lang-choice strong { font: 1.2rem/1.2 var(--display); font-weight: 400; }
-@media (max-width: 420px) { .lang-choice { grid-template-columns: 1fr; } }
+/* On a phone the cards stack: slimmer, so the Start button below them stays on a small screen (#264). */
+@media (max-width: 420px) { .lang-choice { grid-template-columns: 1fr; } .lang-choice label { padding-block: 0.7rem; } button.landing-start { margin-top: 1rem; } }
 .warn { color: color-mix(in oklab, var(--sun), var(--ink) 40%); }
 :root[data-theme="dark"] .warn { color: var(--sun); }
 .answer.warn { border-color: var(--sun); background: var(--sun-soft); }
