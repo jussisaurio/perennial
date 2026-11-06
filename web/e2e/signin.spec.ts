@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { newEmail, openAdd, serverRows, startCourse } from "./helpers";
+import { addEmail, answer, expectServerRows, newEmail, openAdd, serverRows, signIn, startCourse, startSession } from "./helpers";
 
 // #312: on some phones an auth request gets no answer at all. The form must not stay stuck.
 
@@ -213,4 +213,38 @@ test("a sign-in with no answer, when the server did not sign in, says so and can
   await expect(page.getByText("Signing in took too long.")).toBeVisible();
   // The code was never used, so it still works.
   await enterCode(page, address, code);
+});
+
+test("an anonymous learner signs in from Today right after starting, and their progress comes along", async ({ browser }) => {
+  // An account made on another device, with one review in it.
+  const other = await (await browser.newContext()).newPage();
+  await startCourse(other);
+  await startSession(other);
+  await answer(other, "2");
+  await expectServerRows(other, "review", 1);
+  await other.getByRole("button", { name: "End session" }).click();
+  await other.getByRole("button", { name: /Done/ }).click();
+  const address = await addEmail(other);
+
+  // This device, phone-sized: a new anonymous learner with one review of their own, back on Today.
+  const page = await (await browser.newContext({ viewport: { width: 390, height: 664 } })).newPage();
+  await startCourse(page);
+  await startSession(page);
+  await answer(page, "2");
+  await expectServerRows(page, "review", 1);
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.getByRole("button", { name: /Done/ }).click();
+  await expect(page.getByRole("tab", { name: "Today" })).toHaveAttribute("aria-selected", "true");
+
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByText("Your garden so far comes with you.")).toBeVisible();
+  const reloaded = page.waitForEvent("load");
+  await signIn(page, address, "Send me a code");
+  await reloaded;
+  await expect(page.getByText(address)).toBeVisible();
+  // Both reviews are in the account: this device's progress came along.
+  await expectServerRows(page, "review", 2);
+  // Signed in: the top bar has no Sign in button any more.
+  await page.getByRole("tab", { name: "Today" }).click();
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
 });

@@ -115,8 +115,8 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
       {user?.anonymous && started >= 10 && (
         // A gentle nudge once there is something worth keeping.
         <details className="panel more keep-garden">
-          <summary>Keep your garden safe: add your email</summary>
-          <p className="muted small">Your garden is saved in this browser. With your email, it is also kept in your account and on all your devices.</p>
+          <summary>Keep your garden safe: sign in with your email</summary>
+          <p className="muted small">Your garden is saved in this browser. Sign in with your email to keep it in your account and on all your devices. If you have no account yet, this makes one.</p>
           <SignIn cta="Send me a code" />
         </details>
       )}

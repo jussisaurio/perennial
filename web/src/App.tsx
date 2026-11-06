@@ -163,6 +163,7 @@ export default function App() {
 }
 
 function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: boolean }) => void }) {
+  const { user } = useUser();
   const { courses, ready } = useCourses();
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
@@ -269,6 +270,12 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
             );
           })}
         </div>
+        {/* From the first day on: a learner with an account elsewhere signs in here, and their garden so far comes along (data/auth.ts). Settings holds the form. */}
+        {user?.anonymous && route !== "/settings" && (
+          <button className="secondary top-signin" onClick={() => go("/settings")}>
+            Sign in
+          </button>
+        )}
       </nav>
       {startError && (
         <p className="error" role="alert">

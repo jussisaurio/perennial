@@ -176,7 +176,7 @@ export function AccountPanel() {
     return (
       <div className="form">
         <p className="small">
-          <strong>Keep your garden safe.</strong> Add your email to keep your words on all your devices{ai && " and to use Perennial AI"}. Your progress stays.
+          <strong>Keep your garden safe.</strong> Sign in with your email to keep your words on all your devices{ai && " and to use Perennial AI"}. If you have no account yet, this makes one. Your garden so far comes with you.
         </p>
         <SignIn cta="Send me a code" />
       </div>
