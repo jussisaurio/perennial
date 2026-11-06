@@ -116,18 +116,36 @@ test("iPhone: the thumb stick still walks, and takes over from a walk under way 
   await fingerTap(page, x, y);
   expect((await walker(page)).walking).toBe(true);
   const stick = (await page.locator(".gw-stick").boundingBox())!;
-  // A finger pulls the stick back for a moment, then lets go: the walk stops, and you step back, away from where it went.
-  await page.evaluate(
-    async ([cx, cy]) => {
-      const el = document.querySelector(".gw-stick")!;
-      const o = { bubbles: true, cancelable: true, composed: true, pointerType: "touch", pointerId: 3, isPrimary: true };
-      el.dispatchEvent(new PointerEvent("pointerdown", { ...o, clientX: cx, clientY: cy }));
-      el.dispatchEvent(new PointerEvent("pointermove", { ...o, clientX: cx, clientY: cy + 40 }));
-      await new Promise((r) => setTimeout(r, 600));
-      el.dispatchEvent(new PointerEvent("pointerup", { ...o, clientX: cx, clientY: cy + 40 }));
-    },
-    [stick.x + stick.width / 2, stick.y + stick.height / 2],
+  // A finger pulls the stick back, then lets go: the walk stops, and you step back, away from where it went.
+  // It holds until you stand farther away than at the start, counted in frames, not in fixed time:
+  // on a slow runner one finger tap can take a second, and a fixed hold then ends too early.
+  const held = await page.evaluate(
+    ([cx, cy, tx, tz, far]) =>
+      new Promise<{ walking: boolean; from: number; closest: number }>((done) => {
+        const s = (window as unknown as { __garden: WalkScene }).__garden;
+        const away = () => Math.hypot(s.x - tx, s.z - tz);
+        const el = document.querySelector(".gw-stick")!;
+        const o = { bubbles: true, cancelable: true, composed: true, pointerType: "touch", pointerId: 3, isPrimary: true };
+        const walking = !!s.trip;
+        const from = away();
+        let closest = from;
+        el.dispatchEvent(new PointerEvent("pointerdown", { ...o, clientX: cx, clientY: cy }));
+        el.dispatchEvent(new PointerEvent("pointermove", { ...o, clientX: cx, clientY: cy + 40 }));
+        // A time limit, so a stick that never walks you back fails the assertions below and does not hang.
+        const until = performance.now() + 10_000;
+        const frame = () => {
+          closest = Math.min(closest, away());
+          if (away() <= far && performance.now() < until) return requestAnimationFrame(frame);
+          el.dispatchEvent(new PointerEvent("pointerup", { ...o, clientX: cx, clientY: cy + 40 }));
+          done({ walking, from, closest });
+        };
+        requestAnimationFrame(frame);
+      }),
+    [stick.x + stick.width / 2, stick.y + stick.height / 2, to.x, to.z, Math.hypot(start.x - to.x, start.z - to.z)],
   );
+  // The walk was still going when the finger came down, and it never took you a step closer after that.
+  expect(held.walking).toBe(true);
+  expect(held.closest).toBe(held.from);
   const after = await walker(page);
   expect(after.walking).toBe(false);
   expect(Math.hypot(after.x - to.x, after.z - to.z)).toBeGreaterThan(Math.hypot(start.x - to.x, start.z - to.z));
