@@ -2,13 +2,15 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { initObservability, reactErrorHandler } from "./observability";
+import { initObservability, reportReactError } from "./observability";
+import { afterPaint } from "./ui/afterPaint";
 import { initTheme } from "./ui/theme";
 import { loadServerInfo } from "./data/server";
 import { takeGiftFromUrl } from "./data/gift";
 
 initTheme();
-initObservability();
+// Error reports load after the first paint, out of this first task (#481). Reports made before then wait for them.
+afterPaint(() => void initObservability());
 // What the server can do, and whether this app is still new enough for it.
 loadServerInfo();
 void navigator.storage?.persist?.();
@@ -33,7 +35,7 @@ async function boot() {
   // Dev-only switches like ?demo=es. Removed from production builds, except
   // the one the UI performance run measures (VITE_DEV_TOOLS=1, perf/ui.ts).
   if (import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === "1") await (await import("./dev/boot")).devBoot();
-  createRoot(document.getElementById("root")!, { onUncaughtError: reactErrorHandler(), onCaughtError: reactErrorHandler(), onRecoverableError: reactErrorHandler() }).render(
+  createRoot(document.getElementById("root")!, { onUncaughtError: reportReactError, onCaughtError: reportReactError, onRecoverableError: reportReactError }).render(
     <StrictMode>
       <App />
     </StrictMode>,

@@ -14,7 +14,6 @@
 // holding the user's Web Lock may write. Other tabs ask the learner to use
 // that one (see `writer` below and App).
 
-import * as Sentry from "@sentry/react";
 import { QueryClient } from "@tanstack/query-core";
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
@@ -24,7 +23,7 @@ import { LearnerRows, type WriteResult } from "perennial-contract";
 import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
 import { ApiError, HttpError, request } from "./http";
-import { reportBadAnswer } from "../observability";
+import { reportBadAnswer, reportError } from "../observability";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import { OtherUser, sendQueued, shouldRetry } from "./send";
 import { tabLock } from "./tabLock";
@@ -211,24 +210,20 @@ export async function createStore(userId: string, email: string | null) {
     leaderElection: tabLock(`perennial-writer-${userId}`),
     onLeadershipChange: setWriter,
     mutationFns: {
-      // Traced (sampled, see observability.ts): the time to save a write.
       write: ({ transaction, idempotencyKey }) =>
-        Sentry.startSpan({ name: "sync write", op: "sync.write" }, (span) =>
-          Effect.runPromise(
-            Effect.gen(function* () {
-              const at = typeof transaction.metadata?.at === "string" ? transaction.metadata.at : undefined;
-              const mutations = transaction.mutations.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
-              if (!mutations.length) return;
-              const current = sessionUserId();
-              if (current && current !== userId) return yield* new OtherUser();
-              span.setAttribute("mutations", mutations.length);
-              const result = yield* sendQueued(mutations, idempotencyKey, noteRefused);
-              // The server has them: the rows become the collection's own, so they stay
-              // when this transaction ends (no flicker until the next read).
-              // An answer that broke the contract (null, reported) has no stored rows: the device's stay.
-              yield* Effect.promise(() => confirm(transaction.mutations, result?.stored));
-            }),
-          ),
+        Effect.runPromise(
+          Effect.gen(function* () {
+            const at = typeof transaction.metadata?.at === "string" ? transaction.metadata.at : undefined;
+            const mutations = transaction.mutations.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
+            if (!mutations.length) return;
+            const current = sessionUserId();
+            if (current && current !== userId) return yield* new OtherUser();
+            const result = yield* sendQueued(mutations, idempotencyKey, noteRefused);
+            // The server has them: the rows become the collection's own, so they stay
+            // when this transaction ends (no flicker until the next read).
+            // An answer that broke the contract (null, reported) has no stored rows: the device's stay.
+            yield* Effect.promise(() => confirm(transaction.mutations, result?.stored));
+          }),
         ),
     },
     // A session that expired offline, or an app that must reload first: keep
@@ -258,7 +253,7 @@ export async function createStore(userId: string, email: string | null) {
       }),
     ).then(
       () => undefined,
-      (e: unknown) => void (console.error("[store] could not keep saved rows", e), Sentry.captureException(e)),
+      (e: unknown) => void (console.error("[store] could not keep saved rows", e), reportError(e)),
     );
   }
   const unregister = registerOutbox(userId, () => executor.clearOutbox());
