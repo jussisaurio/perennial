@@ -18,20 +18,20 @@ How we write and merge code here. It applies to every session and every agent. T
 
 - A test for a fix must **fail without the fix**. Run it against the old code once to check.
 - Test behaviour, not the code's own structure. A test that passes whether or not the bug exists is deleted, not kept as "coverage".
-- **A failing CI test is never just re-run.** Find the cause: read the log, check if a retry fails the same way, reproduce it locally. If this PR caused it, fix it here. If it is an older flaky test, fix it in a separate PR first. Then start `scripts/merge-when-green.sh` again.
+- **A failing CI test is never just re-run.** Find the cause: read the log, check if a retry fails the same way, reproduce it locally. If a change caused it, fix it in the next PR. If it is an older flaky test, fix it in its own PR.
 - Tests that depend on time pin the clock: `page.clock.setFixedTime` in e2e, and a fixed `now` passed in for unit tests. Tests that depend on layout pin the viewport.
 
 ## Before merge: a review sized to the risk
 
 We are pre-alpha: ship fast, and keep heavy process for mistakes that are hard to undo.
 
-- **Most PRs** (app code, garden, UI, tooling, tests, docs): CI green and the author's own checks are enough when the author is reasonably sure the change is correct and it cannot corrupt or lose data. For a non-trivial change, ask one fresh agent for a quick review, but don't wait for it: merge when CI is green, and put its findings in a follow-up PR.
+- **Most PRs** (app code, garden, UI, tooling, tests, docs): the author's own checks (typecheck, lint, the tests that cover the change) are enough when the author is reasonably sure the change is correct and it cannot corrupt or lose data. Merge right away; do not wait for CI. For a non-trivial change, ask one fresh agent for a quick review, but don't wait for it either: put its findings in a follow-up PR.
 - **Careful review** for changes that can corrupt or lose data, or weaken security: data migrations, the data model and sync merge rules, auth, security, and AI spend once AI is on in production. A fresh agent reviews the diff (`gh pr diff <n>`), the linked issue and this file, and reports must-fix findings with file:line and a failing scenario. A second agent checks each must-fix before it is acted on. These PRs wait for their review.
 - The PR description ends with `Reviewed: <none | quick | careful>`, and for a careful review `, <n> must-fix fixed, <n> declined (reasons above)`.
 
 Deck content (decks/) also follows the proofreader process in docs/decks.md.
 
-Then merge when CI is green: `scripts/merge-when-green.sh <pr>` in the background (add `--git` for PRs that touch .github/workflows). Do not watch CI in the foreground.
+Then merge: `gh pr merge <pr> --merge --delete-branch`. CI still runs on `main`, and Railway does not deploy a red `main` (Wait for CI, docs/DEPLOY.md), so a red `main` is the first thing to fix: nothing deploys until it is green again. Careful-review PRs wait for their review, not for CI. `scripts/merge-when-green.sh` remains for when you do want to wait. Do not watch CI in the foreground.
 
 ## Every week: a cleanup sweep
 
