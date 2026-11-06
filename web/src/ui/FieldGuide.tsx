@@ -5,6 +5,7 @@
 
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { useScrollMargin } from "./useScrollMargin";
 import { plantStage, type MemoryRow, type PlantStage } from "../core/memory";
 import type { Word } from "../data/learner";
 import { WordPlant, rareOf, type Rare } from "./plant";
@@ -82,14 +83,10 @@ export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string;
     return out;
   }, [rows, cols]);
 
-  const [offset, setOffset] = useState(0);
-  // As in the list: banners above can appear later, so keep the offset current.
-  // oxlint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    const top = (wrap.current?.getBoundingClientRect().top ?? 0) + window.scrollY;
-    if (Math.abs(top - offset) > 1) setOffset(top);
-  });
-  const v = useWindowVirtualizer({ count: items.length, estimateSize: (i) => (items[i].kind === "head" ? 64 : 200), overscan: 4, scrollMargin: offset });
+  const offset = useScrollMargin(wrap);
+  // The virtualizer cannot be memoized, so React Compiler skips this component: the warning says only that.
+  // oxlint-disable-next-line react/incompatible-library
+  const v =useWindowVirtualizer({ count: items.length, estimateSize: (i) => (items[i].kind === "head" ? 64 : 200), overscan: 4, scrollMargin: offset });
   const onOpenId = useRef(onOpen);
   useLayoutEffect(() => {
     onOpenId.current = onOpen;

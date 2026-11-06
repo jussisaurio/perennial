@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { apiMessage, moreExamples } from "../data/ai";
 import { useFeatures } from "../data/server";
@@ -10,6 +10,7 @@ import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type 
 import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
+import { useScrollMargin } from "./useScrollMargin";
 import { useShortcut } from "./useShortcut";
 import { RadioChips } from "./arrows";
 import { AddScreen } from "./Add";
@@ -43,15 +44,12 @@ export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; add
  */
 function VirtualWords<T extends { l: Word }>({ rows, render }: { rows: T[]; render: (row: T) => ReactNode }) {
   const list = useRef<HTMLUListElement>(null);
-  const [offset, setOffset] = useState(0);
-  // Banners above the list can appear later, so keep the offset current. It
-  // runs after every render on purpose, and only sets state when it moved.
-  // oxlint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    const top = (list.current?.getBoundingClientRect().top ?? 0) + window.scrollY;
-    if (Math.abs(top - offset) > 1) setOffset(top);
-  });
-  const v = useWindowVirtualizer({ count: rows.length, estimateSize: () => 54, overscan: 8, scrollMargin: offset, getItemKey: (i) => rows[i].l.id });
+  const offset = useScrollMargin(list);
+  // New rows render in their own task, not inside the scroll event's frame;
+  // the overscan rows fill the view meanwhile.
+  // The virtualizer cannot be memoized, so React Compiler skips this component: the warning says only that.
+  // oxlint-disable-next-line react/incompatible-library
+  const v = useWindowVirtualizer({ count: rows.length, estimateSize: () => 54, overscan: 8, scrollMargin: offset, getItemKey: (i) => rows[i].l.id, useFlushSync: false });
   return (
     <ul className="words" ref={list} style={{ height: v.getTotalSize(), position: "relative" }}>
       {v.getVirtualItems().map((item) => (
