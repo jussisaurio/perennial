@@ -82,11 +82,24 @@ export function readNow(l: Learner, tag: string, practised: ReadonlySet<string>,
  * them is known, by the same rule as "You know N words", so the two never disagree.
  * The same text under two words counts once.
  */
+// Each course sentence's word keys, worked out once per deck: tokenizing every
+// sentence on each call cost ~250 ms per visit to Words (perf/ui.ts).
+const sentenceKeys = new WeakMap<Learner["deck"], Map<string, string[]>>();
+function keysOf(l: Learner, tag: string): Map<string, string[]> {
+  let keys = sentenceKeys.get(l.deck);
+  if (!keys) {
+    keys = new Map();
+    for (const list of l.deck.sentencesByWord.values())
+      for (const s of list) if (!keys.has(s.text)) keys.set(s.text, tokenize(s.text, tag).filter((t) => t.word).map((t) => formKey(t.text)));
+    sentenceKeys.set(l.deck, keys);
+  }
+  return keys;
+}
+
 export function readableCount(l: Learner, tag: string): number {
   const index = formIndex(l);
   const known = (id: string) => wordState(readMemory(l, id)) === "known";
-  const texts = new Set<string>();
-  for (const list of l.deck.sentencesByWord.values())
-    for (const s of list) if (tokenize(s.text, tag).every((t) => !t.word || (index.get(formKey(t.text)) ?? []).some(known))) texts.add(s.text);
-  return texts.size;
+  let count = 0;
+  for (const keys of keysOf(l, tag).values()) if (keys.every((k) => (index.get(k) ?? []).some(known))) count++;
+  return count;
 }
