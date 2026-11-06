@@ -90,6 +90,28 @@ export function reviewedAt(r: ReviewRow): number {
   return t;
 }
 
+const firsts = new WeakMap<readonly ReviewRow[], { any: number; read: number }>();
+
+/**
+ * A word's first review and first reading review (ms; Infinity: none), from
+ * its review list. Worked out once per list: a word with no new review keeps
+ * its list from one learner to the next (Learners), so a new review costs
+ * only its own word, not a walk of every review (#486).
+ */
+export function firstReviewed(list: readonly ReviewRow[]): { any: number; read: number } {
+  let f = firsts.get(list);
+  if (!f) {
+    f = { any: Infinity, read: Infinity };
+    for (const r of list) {
+      const t = reviewedAt(r);
+      if (t < f.any) f.any = t;
+      if (r.skill === "read" && t < f.read) f.read = t;
+    }
+    firsts.set(list, f);
+  }
+  return f;
+}
+
 /** A word's reading memory, which decides its state and its plant. */
 export function readMemory<M>(l: { memory: { get: (key: string) => M | undefined } }, wordId: string): M | undefined {
   return l.memory.get(memKey(wordId, "read"));
