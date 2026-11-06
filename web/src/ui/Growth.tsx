@@ -211,11 +211,16 @@ function Visitor({ art, e, side, until }: { art: PixelArt; e: number; side: numb
   );
 }
 
+/** The moment's svg is this many times as wide as it is high: its viewBox. */
+const WIDE = 1.7;
+
 /**
  * The moment itself, drawn frame by frame. Calls `onDone` once, when it ends.
  * `corner` is where the card's plant was drawn (a WordPlant): the moment starts there.
+ * `spot` is the box of the empty `.growth-spot`, the svg's box with no width: the
+ * svg is centred on it.
  */
-export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect; onDone: () => void }) {
+export function Growth({ m, corner, spot, onDone }: { m: GrowthMoment; corner: DOMRect; spot: DOMRect; onDone: () => void }) {
   const [e, setE] = useState(0);
   const done = useRef(onDone);
   useLayoutEffect(() => {
@@ -239,20 +244,20 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
   const side = Math.max(plantFrame(m.word, m.from.s, m.from.stage), plantFrame(m.word, m.to.s, m.to.stage));
   const svg = useRef<SVGSVGElement>(null);
   // Before the first paint, so the plant is never seen at the bottom first. Both
-  // drawings put the plant's root at x 0, y 0, with 8 units below it.
+  // drawings put the plant's root at x 0, y 0, with 8 units below it. The svg's box
+  // comes from `spot`, read with `corner`: reading it here would force a layout (#572).
   useLayoutEffect(() => {
     const el = svg.current!;
-    const r = el.getBoundingClientRect();
     const cornerSide = plantFrame(m.word, m.from.s, m.from.stage);
-    const k = corner.height / cornerSide / (r.height / side);
-    const ox = r.width / 2;
-    const oy = (r.height * (side - 8)) / side;
-    const dx = corner.left + corner.width / 2 - (r.left + ox);
-    const dy = corner.top + (corner.height * (cornerSide - 8)) / cornerSide - (r.top + oy);
+    const k = corner.height / cornerSide / (spot.height / side);
+    const ox = (spot.height * WIDE) / 2;
+    const oy = (spot.height * (side - 8)) / side;
+    const dx = corner.left + corner.width / 2 - spot.left;
+    const dy = corner.top + (corner.height * (cornerSide - 8)) / cornerSide - (spot.top + oy);
     el.style.transformOrigin = `${ox}px ${oy}px`;
     const glide = el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${k})` }, { transform: "none" }], { duration: T.glide, easing: "cubic-bezier(0.3, 0, 0.2, 1)" });
     return () => glide.cancel();
-  }, [corner, m, side]);
+  }, [corner, spot, m, side]);
   const g = phase(e, tl.growStart, tl.growMs);
   // Height and form share one pace, so leaves and bud come as the stem rises.
   // Only the height springs: an overshooting form would open a bud's flower for a moment.
@@ -273,7 +278,7 @@ export function Growth({ m, corner, onDone }: { m: GrowthMoment; corner: DOMRect
   const top = plantTop(m.word, growthOf(m.to.s), 1.05);
   return (
     <div className="growth" data-kind={m.planted ? "plant" : "water"} aria-hidden="true">
-      <svg ref={svg} viewBox={`${-side * 0.85} ${-(side - 8)} ${side * 1.7} ${side}`} height="100%">
+      <svg ref={svg} viewBox={`${(-side * WIDE) / 2} ${-(side - 8)} ${side * WIDE} ${side}`} height="100%">
         <ellipse cx={0} cy={3} rx={side * 0.3 * (1 + pat * 0.06)} ry={side * 0.06 * (1 + pat * 0.4)} fill="var(--soil-1)" />
         {m.planted &&
           patT > 0 &&
