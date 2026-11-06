@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { language } from "../content/languages";
 import { useUser } from "../data/auth";
 import { perLearnerDay, useLearner, type Learner } from "../data/learner";
@@ -51,6 +51,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   }, []);
   const learner = useDeferredValue(useLearner(code));
   const now = useNow();
+  const rest = useAfterPaint(!!learner);
   if (!learner) return <Settling />;
   const chunk = chunkToday(learner, now);
   const lang = language(code).name;
@@ -63,18 +64,50 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <h1>
             {greeting()}. Time for <em>{lang}</em>.
           </h1>
-          <Aside learner={learner} now={now} />
+          {rest && <Aside learner={learner} now={now} />}
         </div>
       </header>
 
-      <StartRow learner={learner} chunk={chunk} now={now} onStart={() => onStart(chunk.minutes)} />
-      <TodayGarden learner={learner} now={now} onWalk={onWalk} />
+      <StartRow learner={learner} chunk={chunk} now={now} rest={rest} onStart={() => onStart(chunk.minutes)} />
+      {rest ? <TodayGarden learner={learner} now={now} onWalk={onWalk} /> : <Garden data={null} />}
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
-      <KeepGarden learner={learner} now={now} />
+      {rest && <KeepGarden learner={learner} now={now} />}
     </div>
   );
+}
+
+// Whether Today's first paint has happened, on this page load.
+let painted = false;
+
+/**
+ * Today's first paint is the greeting and the start button. The rest (the
+ * plan's notes, the visitors, the garden, the stats) comes in the frames
+ * after, in a transition: on a cold load at CPU 10× it was 300 ms of work
+ * before anything showed (#486). Later visits have it worked out already
+ * (perLearnerDay), so they draw it all at once.
+ */
+function useAfterPaint(ready: boolean): boolean {
+  const [rest, setRest] = useState(painted);
+  useEffect(() => {
+    if (!ready || rest) return;
+    // The frame's callback runs before its paint; the task after it, after the paint.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const frame = requestAnimationFrame(() => {
+      timer = setTimeout(() =>
+        startTransition(() => {
+          painted = true;
+          setRest(true);
+        }),
+      );
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [ready, rest]);
+  return rest;
 }
 
 /** On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside. */
@@ -85,13 +118,13 @@ function Aside({ learner, now }: { learner: Learner; now: number }) {
 }
 
 /** The day's action right under the greeting: on a phone it must never sit under the tab bar. */
-function StartRow({ learner, chunk, now, onStart }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; now: number; onStart: () => void }) {
+function StartRow({ learner, chunk, now, rest, onStart }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; now: number; rest: boolean; onStart: () => void }) {
   const { user } = useUser();
-  const plan = planToday[mayListen(language(learner.lang).tag) ? "listen" : "quiet"](learner, now);
+  const plan = rest ? planToday[mayListen(language(learner.lang).tag) ? "listen" : "quiet"](learner, now) : null;
   return (
     <div className="start-row">
-      {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. */}
-      {chunk.state === "done" && <p className="watered">{plan.due ? `${plural(plan.due, "plant")} still ${plan.due === 1 ? "needs" : "need"} water.` : "The garden is watered for today."}</p>}
+      {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. Until the plan is in, an empty line keeps the button where it will be. */}
+      {chunk.state === "done" && <p className="watered">{!plan ? " " : plan.due ? `${plural(plan.due, "plant")} still ${plan.due === 1 ? "needs" : "need"} water.` : "The garden is watered for today."}</p>}
       <Shortcut keyName="Enter" run={onStart} />
       <button className="start" onClick={onStart} aria-keyshortcuts="Enter">
         <span className="clock" aria-hidden="true">
@@ -99,7 +132,7 @@ function StartRow({ learner, chunk, now, onStart }: { learner: Learner; chunk: R
         </span>
         {chunkLabel(chunk)}
       </button>
-      <StartNote learner={learner} chunk={chunk} plan={plan} now={now} />
+      {plan && <StartNote learner={learner} chunk={chunk} plan={plan} now={now} />}
       {user && learner.course.minutes !== DAILY_MINUTES && <FiveMinutesNote userId={user.id} />}
     </div>
   );

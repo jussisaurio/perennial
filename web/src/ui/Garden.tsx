@@ -3,7 +3,7 @@
 // recall fades — until the next session waters them. Nothing ever dies.
 // The plants themselves come from garden/plants.ts, shared with the walk.
 
-import { memo, type PointerEvent, type RefCallback, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, startTransition, type PointerEvent, type RefCallback, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
@@ -65,30 +65,22 @@ export const Garden = memo(function Garden(props: GardenProps) {
   // Measured before any plant is drawn: which plants are in view depends on the width, and a guess drew them twice (#492).
   // A later visit starts from the last strip's width: measuring forced a layout of the whole new screen and a second render, in one task of a tab switch (#447).
   const [width, setWidth] = useState<number | null>(lastWidth);
-  const fit = useCallback((w: number) => {
-    lastWidth = Math.max(280, Math.round(w));
-    setWidth(lastWidth);
-  }, []);
-  const observe = useCallback(
-    (el: HTMLDivElement) => {
-      const ro = new ResizeObserver(([e]) => fit(e.contentRect.width));
-      ro.observe(el);
-      return () => ro.disconnect();
-    },
-    [fit],
-  );
-  // Set from a ref, the width is in before paint, so the empty frame never shows. The same box as contentRect: .garden has no padding or border.
-  // At the strip's height: whatever lays out in this frame (the landing focuses its walk link, #273) sees the page as it will be.
-  if (width === null)
-    return (
-      <div
-        className={`garden ${props.compact ? "compact" : ""}`}
-        style={{ height: H }}
-        ref={(el) => {
-          if (el) fit(el.getBoundingClientRect().width);
-        }}
-      />
+  const observe = useCallback((el: HTMLDivElement) => {
+    // The observer reports after the browser's own layout, so nothing forces one. In a transition, so React
+    // can pause while it draws the plants: measuring in a ref and drawing them at once was one task of
+    // 180 ms on a cold load at CPU 10× (#486). The empty strip keeps its height meanwhile, so nothing moves.
+    const ro = new ResizeObserver(([e]) =>
+      startTransition(() => {
+        lastWidth = Math.max(280, Math.round(e.contentRect.width));
+        setWidth(lastWidth);
+      }),
     );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // The same box as contentRect: .garden has no padding or border.
+  // At the strip's height: whatever lays out in this frame (the landing focuses its walk link, #273) sees the page as it will be.
+  if (width === null) return <div className={`garden ${props.compact ? "compact" : ""}`} style={{ height: H }} ref={observe} />;
   return <Strip {...props} width={width} wrap={observe} />;
 });
 
