@@ -6,6 +6,7 @@ import { isCancelledError } from "@tanstack/query-core";
 import { createCollection, deepEquals, type ChangeMessageOrDeleteKeyMessage, type SyncConfig } from "@tanstack/react-db";
 import type { LearnerRows } from "perennial-contract";
 import { yieldToBrowser } from "../lib/yield";
+import { reportError } from "../observability";
 
 /** Rows per commit: one commit of 100 rows is about 5 ms at CPU 10×. */
 const ROWS_PER_SLICE = 100;
@@ -14,13 +15,15 @@ type Sync<T extends object> = Parameters<SyncConfig<T, string>["sync"]>[0];
 
 /**
  * `read` gives every table's rows (the tables share one request); `toRow`
- * checks or changes a row first. `skip` says whether a read failed only
- * because it was stopped or the learner signed out: then nothing changes.
+ * checks or changes a row first. Once `stop` aborts (sign-out, dispose), no
+ * read changes the table any more. `skip` says whether a read failed only
+ * because the learner signed out: then nothing changes.
  */
 export function makeTable<T extends object>(
   table: keyof LearnerRows,
   getKey: (row: T) => string,
   read: () => Promise<LearnerRows>,
+  stop: AbortSignal,
   skip: (e: unknown) => boolean,
   toRow: (row: Record<string, unknown>) => Record<string, unknown> = (row) => row,
 ) {
@@ -29,12 +32,13 @@ export function makeTable<T extends object>(
   const server = new Map<string, T>();
   /** Per read under way: rows kept (below) since it started, which it may not have. */
   const reads = new Set<Set<string>>();
-  /** A newer read, or the end of syncing, stops the one applying. */
+  /** A newer read, or the end of syncing, stops the one applying (as does `stop`). */
   let generation = 0;
 
   /** Read the rows and make the collection hold exactly them, but for rows kept meanwhile. */
   async function load() {
     const gen = ++generation;
+    const stale = () => gen !== generation || stop.aborted;
     const kept = new Set<string>();
     reads.add(kept);
     try {
@@ -43,9 +47,10 @@ export function makeTable<T extends object>(
         all = await read();
       } catch (e) {
         // A newer read replaces this one, or this store is being replaced (see `skip`).
-        if (isCancelledError(e) || skip(e)) return;
+        if (isCancelledError(e) || stop.aborted || skip(e)) return;
         throw e;
       }
+      if (stale()) return;
       const rows = all[table];
       const seen = new Set<string>();
       let applied: ReturnType<Sync<T>["commit"]> = true;
@@ -56,13 +61,13 @@ export function makeTable<T extends object>(
         for (const w of writes) s.write(w);
         applied = s.commit();
       };
-      const stale = async () => {
+      const yieldThenStale = async () => {
         await yieldToBrowser();
-        return gen !== generation;
+        return stale();
       };
       for (let i = 0; i < rows.length; i += ROWS_PER_SLICE) {
         // Each table its own tasks: they all get their rows at once.
-        if (await stale()) return;
+        if (await yieldThenStale()) return;
         const writes: ChangeMessageOrDeleteKeyMessage<T, string>[] = [];
         for (const raw of rows.slice(i, i + ROWS_PER_SLICE)) {
           const row = toRow(raw) as T;
@@ -78,14 +83,19 @@ export function makeTable<T extends object>(
       }
       const gone = [...server.keys()].filter((key) => !seen.has(key) && !kept.has(key));
       for (let i = 0; i < gone.length; i += ROWS_PER_SLICE) {
-        if (await stale()) return;
+        if (await yieldThenStale()) return;
         const keys = gone.slice(i, i + ROWS_PER_SLICE);
         for (const key of keys) server.delete(key);
         commit(keys.map((key) => ({ type: "delete", key })));
       }
       // Ready once every row is visible: a commit waits while a local write is being sent.
       if (applied !== true) await applied;
-      if (gen === generation) synced!.markReady();
+      if (!stale()) synced!.markReady();
+    } catch (e) {
+      // A bug (a duplicate key, a bad row, a refused commit): the table stays
+      // loading, so it must be seen. The screens show no error state of their own.
+      console.error(`[${table}] could not load rows`, e);
+      reportError(e);
     } finally {
       reads.delete(kept);
     }
@@ -110,7 +120,7 @@ export function makeTable<T extends object>(
   });
 
   return Object.assign(collection, {
-    /** Read the rows again. */
+    /** Read the rows again. A failure is reported, not thrown. */
     refetch: load,
     /**
      * Make rows the server has the collection's own: only the written rows,

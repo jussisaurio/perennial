@@ -84,22 +84,24 @@ export async function createStore(userId: string, email: string | null) {
       queryFn: () => Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }),
       // A new request each time, unless one is under way (refetchAll cancels that one first).
       staleTime: 0,
+      // Nothing kept once read: a cancelled read then fails (CancelledError), where it
+      // would return the old response, and the full response is not held in memory.
+      gcTime: 0,
       // Keep trying (paused while offline, at most 30 s apart) until the rows come: the screens wait for them.
       retry: (_count, e) => !signedOut(e),
     });
-  const stopped = (e: unknown) => sync.signal.aborted || signedOut(e);
   const collections = {
-    course: makeTable<CourseRow>("course", (r) => r.lang, read, stopped),
-    review: makeTable<ReviewRow>("review", (r) => r.id, read, stopped),
-    word_state: makeTable<WordStateRow>("word_state", (r) => r.word_id, read, stopped),
-    user_word: makeTable<UserWordRow>("user_word", (r) => r.id, read, stopped, (row) =>
+    course: makeTable<CourseRow>("course", (r) => r.lang, read, sync.signal, signedOut),
+    review: makeTable<ReviewRow>("review", (r) => r.id, read, sync.signal, signedOut),
+    word_state: makeTable<WordStateRow>("word_state", (r) => r.word_id, read, sync.signal, signedOut),
+    user_word: makeTable<UserWordRow>("user_word", (r) => r.id, read, sync.signal, signedOut, (row) =>
       syncedUserWord(row, (type) => reportBadAnswer("/api/rows user_word.forms", `forms: ${type}`)),
     ),
-    user_sentence: makeTable<UserSentenceRow>("user_sentence", (r) => r.id, read, stopped),
+    user_sentence: makeTable<UserSentenceRow>("user_sentence", (r) => r.id, read, sync.signal, signedOut),
   };
   type Table = keyof typeof collections;
   const stopSync = () => {
-    // Cancelled queries go back to how they were, with no error; then the request itself stops.
+    // The read under way ends; aborting `sync` stops the tables applying it (makeTable) and the request itself.
     void queryClient.cancelQueries();
     sync.abort();
   };
