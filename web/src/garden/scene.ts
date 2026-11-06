@@ -591,55 +591,82 @@ export class GardenScene {
 
   /**
    * Compiles the shaders and uploads the textures before the first frame, a
-   * slice at a time (#459): the first render did both in one long task. The
-   * GPU links the shaders while the slices yield. `parts`: children of the scene.
+   * slice at a time (#459): the first render did both in one long task. One step
+   * per mesh with a new material, and one per texture: a whole part was up to 26 ms
+   * at CPU 10× (#571). The GPU links the shaders while the slices yield, and the
+   * first draws wait for the links. `parts`: children of the scene.
    */
   private async warm(parts: THREE.Object3D[]): Promise<void> {
     // The scene's fog without its objects: compile() walks the whole target scene for lights on
     // every call, and the garden has none. The fog is part of each shader's cache key.
     const target = new THREE.Scene();
     target.fog = this.fog;
+    const meshes = new Set<string>();
+    const textures = new Set<THREE.Texture>();
+    const linked: Promise<unknown>[] = [];
     for (const child of parts) {
-      this.renderer.compile(child, this.camera, target);
-      child.traverse((o) => {
-        for (const mat of materialsOf(o)) for (const t of texturesOf(mat)) this.renderer.initTexture(t);
-      });
-      if (await this.stopped()) return;
+      for (const o of firstOfEach(child, meshes)) {
+        linked.push(this.renderer.compileAsync(o, this.camera, target));
+        if (await this.stopped()) return;
+        for (const mat of materialsOf(o))
+          for (const t of texturesOf(mat)) {
+            if (textures.has(t)) continue;
+            textures.add(t);
+            this.renderer.initTexture(t);
+            if (await this.stopped()) return;
+          }
+      }
     }
+    // Without the wait, the first draw of a material blocks until the GPU has linked its program.
+    await Promise.all(linked);
+    this.sliceFrom = performance.now();
+    if (this.disposed) return;
     await this.drawOnce(parts);
   }
 
   /**
-   * Draws each part once into one pixel, a slice at a time. compile() leaves part of a
-   * material's setup to its first draw: its program and uniforms, and the wait for the GPU's
-   * link. On the first frame, that took about 200 ms in one task at CPU 10× (#459).
-   * Only what the camera sees now is drawn, as on the first frame. Each draw hides
-   * the rest and shows it again in the same slice: the loop may be drawing frames
-   * between slices (the plants are warmed after start).
+   * Draws each mesh with a new material once into one pixel, a slice at a time.
+   * compile() leaves part of a material's setup to its first draw: its program and
+   * uniforms. On the first frame, that took about 200 ms in one task at CPU 10× (#459),
+   * and a whole part per draw up to 44 ms (#571). Only what the camera sees now is drawn,
+   * as on the first frame. Each draw hides the other parts, and puts the one mesh on a
+   * layer of its own for the camera, and undoes both in the same slice: the loop may be
+   * drawing frames between slices (the plants are warmed after start).
    */
   private async drawOnce(parts: THREE.Object3D[]): Promise<void> {
     const all = this.scene.children;
     // One array for every part, filled by index: an array (and an entry pair per child) per part was ~10 MB of garbage (#459).
     const shown: boolean[] = [];
+    const frustum = new THREE.Frustum();
+    const drawn = new Set<string>();
     for (const p of parts) {
       if (!p.visible) continue;
-      for (let i = 0; i < all.length; i++) {
-        shown[i] = all[i].visible;
-        all[i].visible = all[i] === p;
-      }
       // Only this part's matrices: updating the whole scene's on every draw cost more than the draws.
       p.updateMatrixWorld();
-      this.scene.matrixWorldAutoUpdate = false;
-      this.renderer.setScissorTest(true);
-      this.renderer.setScissor(0, 0, 1, 1);
-      try {
-        this.renderer.render(this.scene, this.camera);
-      } finally {
-        this.renderer.setScissorTest(false);
-        this.scene.matrixWorldAutoUpdate = true;
-        for (let i = 0; i < all.length; i++) all[i].visible = shown[i];
+      this.camera.updateMatrixWorld();
+      frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+      for (const o of firstOfEach(p, drawn, frustum)) {
+        for (let i = 0; i < all.length; i++) {
+          shown[i] = all[i].visible;
+          all[i].visible = all[i] === p;
+        }
+        const seen = this.camera.layers.mask;
+        this.camera.layers.set(WARM_LAYER);
+        o.layers.enable(WARM_LAYER);
+        this.scene.matrixWorldAutoUpdate = false;
+        this.renderer.setScissorTest(true);
+        this.renderer.setScissor(0, 0, 1, 1);
+        try {
+          this.renderer.render(this.scene, this.camera);
+        } finally {
+          this.renderer.setScissorTest(false);
+          this.scene.matrixWorldAutoUpdate = true;
+          o.layers.disable(WARM_LAYER);
+          this.camera.layers.mask = seen;
+          for (let i = 0; i < all.length; i++) all[i].visible = shown[i];
+        }
+        if (await this.stopped()) return;
       }
-      if (await this.stopped()) return;
     }
   }
 
@@ -2106,6 +2133,31 @@ function materialsOf(o: THREE.Object3D): THREE.Material[] {
   const m = (o as THREE.Mesh).material;
   return Array.isArray(m) ? m : m ? [m] : [];
 }
+
+/**
+ * The objects under `root` that bring a material not yet in `seen`, and adds their
+ * materials to it. A material's shader also depends on the kind of object (an
+ * instanced mesh, a sprite), so the key has both. With a frustum: only the shown
+ * objects the camera sees, as a draw would.
+ */
+function firstOfEach(root: THREE.Object3D, seen: Set<string>, frustum?: THREE.Frustum): THREE.Object3D[] {
+  const out: THREE.Object3D[] = [];
+  const visit = (o: THREE.Object3D) => {
+    const mats = materialsOf(o);
+    if (!mats.length) return;
+    const keys = mats.map((m) => `${o.type} ${m.uuid}`);
+    if (keys.every((k) => seen.has(k))) return;
+    if (frustum && o.frustumCulled && !(o instanceof THREE.Sprite ? frustum.intersectsSprite(o) : frustum.intersectsObject(o))) return;
+    for (const k of keys) seen.add(k);
+    out.push(o);
+  };
+  if (frustum) root.traverseVisible(visit);
+  else root.traverse(visit);
+  return out;
+}
+
+/** The camera layer drawOnce draws one object on; nothing else in the garden uses layers. */
+const WARM_LAYER = 31;
 
 /** The textures a material draws with: its maps, and for a sprite shader its uniforms. */
 function texturesOf(mat: THREE.Material): THREE.Texture[] {
