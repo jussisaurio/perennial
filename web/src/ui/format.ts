@@ -14,6 +14,15 @@ export function refusedLine({ count, clock, gardenClock }: Pick<Refused, "count"
   return parts.join(" ");
 }
 
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/**
+ * "Friday, November 6": what toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }) says,
+ * without its first Intl.DateTimeFormat, which costs ~50 ms on a slow laptop in Today's first render (#480).
+ */
+export const longDay = (d: Date) => `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+
 // Made on first use: building it costs ~50 ms on a slow laptop, and module load blocks first paint (#481).
 let rtf: Intl.RelativeTimeFormat | undefined;
 
