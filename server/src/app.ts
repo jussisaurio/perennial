@@ -7,6 +7,7 @@
 // and bugs into responses (in one place), logs the request's one line, and
 // adds the headers every answer gets.
 
+import { join } from "node:path";
 import { BunHttpServer } from "@effect/platform-bun";
 import { PgClient } from "@effect/sql-pg";
 import * as Sentry from "@sentry/bun";
@@ -17,7 +18,7 @@ import type { HttpMethod } from "effect/http/HttpMethod";
 import { ExamplesIn, MineIn, UserId, WriteBatch, type Me, type ServerInfo } from "perennial-contract";
 import { withClientIp } from "./clientIp";
 import { AppConfig } from "./config";
-import { ApiError, decodeBody, errorResponse, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
+import { ApiError, decodeBody, errorResponse, inlineScriptHashes, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { traceId } from "./log";
 import { annotate, event, inBetterAuth, inSentryScope, RequestContext, sentrySpan, type RequestInfo } from "./request";
 import { Mail, OutboxMailer } from "./mail";
@@ -87,7 +88,10 @@ export const AppLive = Layer.effect(
     const auth = yield* Auth;
     const ai = yield* Ai;
     const sync = yield* Sync;
-    const headers = securityHeaders([...new Set(config.observability.connect)], config.appUrl.startsWith("https://"), !!config.turnstile.siteKey);
+    // No built page (server tests, API-only runs): no inline scripts to allow.
+    const index = Bun.file(join(config.staticDir, "index.html"));
+    const page = (yield* Effect.promise(() => index.exists())) ? yield* Effect.promise(() => index.text()) : "";
+    const headers = securityHeaders([...new Set(config.observability.connect)], inlineScriptHashes(page), config.appUrl.startsWith("https://"), !!config.turnstile.siteKey);
 
     const session = Effect.gen(function* () {
       const { request } = yield* RequestContext;
