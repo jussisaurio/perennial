@@ -13,7 +13,7 @@ import { spriteBox } from "../garden/plantCanvas";
 import { drawSprites, spriteKey, stripSprite } from "../garden/stripSprites";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
-import { growthOf, leanDeg, plantMood, plantsFromLearner, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
+import { growthOf, leanDeg, plantMood, plantSteps, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
 import { BIRD, BUTTERFLY, BUTTERFLY_CLOSED, CAT_ASLEEP, DOG, FISHBOWL, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
 import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
@@ -23,6 +23,7 @@ import { PRINT_ROWS } from "../garden/leaveArt";
 import type { Guest } from "../garden/leave";
 import { easeOut, easeOutBack, reducedMotion, type PlantLook } from "./Growth";
 import { afterPaint } from "./afterPaint";
+import { runAll } from "../lib/yield";
 
 const H = 210;
 const GROUND = H - 34;
@@ -41,7 +42,12 @@ const counted = (g: PlantSource): GardenData => ({ ...g, total: g.plants.length 
 
 /** The learner's garden for the strip: the same plants as the walk. */
 export function gardenFromLearner(l: Learner, now = Date.now()): GardenData {
-  return counted(plantsFromLearner(l, now));
+  return runAll(gardenSteps(l, now));
+}
+
+/** gardenFromLearner a step at a time (plantSteps). */
+export function* gardenSteps(l: Learner, now: number): Generator<void, GardenData> {
+  return counted(yield* plantSteps(l, now));
 }
 
 /** The landing page's strip: the same words, at the same stages, as the landing page's walk. */

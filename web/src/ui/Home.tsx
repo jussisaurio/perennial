@@ -1,9 +1,9 @@
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { language } from "../content/languages";
 import { useUser } from "../data/auth";
-import { perLearnerDay, useLearner, type Learner } from "../data/learner";
+import { perLearnerDay, slicedPerLearnerDay, useLearner, type Learner } from "../data/learner";
 import { SignIn } from "./Account";
-import { Garden, gardenFromLearner } from "./Garden";
+import { Garden, gardenSteps } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
 import { statsToday } from "./stats";
 import { useNow } from "./useNow";
@@ -17,6 +17,7 @@ import { focusBowl, focusPlant } from "./gardenFocus";
 import { learnerVisitors, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import type { Plan } from "../core/session";
+import { yieldToBrowser } from "../lib/yield";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -27,7 +28,7 @@ function greeting(): string {
 let animated = false;
 
 // Today's garden, visitors and plan: each worked out once per learner and day, whichever part asks first.
-const gardenToday = perLearnerDay(gardenFromLearner);
+const gardenToday = slicedPerLearnerDay(gardenSteps);
 const visitorsToday = perLearnerDay((l, now) => learnerVisitors(l, new Date(now)));
 // What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.
 const guestToday = perLearnerDay(waitingGuest);
@@ -38,6 +39,23 @@ const planToday = {
   listen: perLearnerDay((l, now) => sessionPlan(l, chunkToday(l, now).minutes, true, now)),
   quiet: perLearnerDay((l, now) => sessionPlan(l, chunkToday(l, now).minutes, false, now)),
 };
+const voiceOf = (l: Learner) => (mayListen(language(l.lang).tag) ? "listen" : "quiet");
+
+/**
+ * The parts after the first paint, worked out before they render: the first
+ * upcoming() and the plan each in a task of their own, the garden in slices.
+ * In a render, React could not split them (#569). It stops once `l` is no
+ * longer the current learner (see slicedPerLearnerDay).
+ */
+async function workOut(l: Learner, now: number, live: () => boolean) {
+  l.fresh();
+  await yieldToBrowser();
+  if (!live()) return;
+  planToday[voiceOf(l)](l, now);
+  await yieldToBrowser();
+  if (!live()) return;
+  await gardenToday.warm(l, now, live);
+}
 
 // Each part below works out its own numbers, so on a slow device React can
 // pause between the parts (App opens screens in a transition) instead of
@@ -51,7 +69,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   }, []);
   const learner = useDeferredValue(useLearner(code));
   const now = useNow();
-  const rest = useAfterPaint(!!learner);
+  const rest = useAfterPaint(learner, now);
   if (!learner) return <Settling />;
   const chunk = chunkToday(learner, now);
   const lang = language(code).name;
@@ -84,29 +102,34 @@ let painted = false;
 /**
  * Today's first paint is the greeting and the start button. The rest (the
  * plan's notes, the visitors, the garden, the stats) comes in the frames
- * after, in a transition: on a cold load at CPU 10× it was 300 ms of work
- * before anything showed (#486). Later visits have it worked out already
- * (perLearnerDay), so they draw it all at once.
+ * after (workOut), then render in a transition: on a cold load at CPU 10× it
+ * was 300 ms of work before anything showed (#486). Later visits have it
+ * worked out already (perLearnerDay), so they draw it all at once.
  */
-function useAfterPaint(ready: boolean): boolean {
+function useAfterPaint(learner: Learner | null, now: number): boolean {
   const [rest, setRest] = useState(painted);
   useEffect(() => {
-    if (!ready || rest) return;
+    if (!learner || rest) return;
+    let gone = false;
     // The frame's callback runs before its paint; the task after it, after the paint.
     let timer: ReturnType<typeof setTimeout> | undefined;
     const frame = requestAnimationFrame(() => {
       timer = setTimeout(() =>
-        startTransition(() => {
-          painted = true;
-          setRest(true);
+        void workOut(learner, now, () => !gone).then(() => {
+          if (gone) return;
+          startTransition(() => {
+            painted = true;
+            setRest(true);
+          });
         }),
       );
     });
     return () => {
+      gone = true;
       cancelAnimationFrame(frame);
       clearTimeout(timer);
     };
-  }, [ready, rest]);
+  }, [learner, now, rest]);
   return rest;
 }
 
@@ -120,7 +143,7 @@ function Aside({ learner, now }: { learner: Learner; now: number }) {
 /** The day's action right under the greeting: on a phone it must never sit under the tab bar. */
 function StartRow({ learner, chunk, now, rest, onStart }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; now: number; rest: boolean; onStart: () => void }) {
   const { user } = useUser();
-  const plan = rest ? planToday[mayListen(language(learner.lang).tag) ? "listen" : "quiet"](learner, now) : null;
+  const plan = rest ? planToday[voiceOf(learner)](learner, now) : null;
   return (
     <div className="start-row">
       {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. Until the plan is in, an empty line keeps the button where it will be. */}
@@ -166,7 +189,7 @@ function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; 
     focusPlant(id);
     onWalk();
   };
-  const garden = gardenToday(learner, now);
+  const garden = gardenToday.get(learner, now);
   const visitors = visitorsToday(learner, now);
   const guest = guestToday(learner, now);
   const waiting = guest && {

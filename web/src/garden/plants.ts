@@ -9,6 +9,7 @@ import type { LoadedDeck } from "../data/deck";
 import { firstReviewed, isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "../core/memory";
 import type { Learner } from "../data/learner";
 import { hash01 } from "../lib/seed";
+import { runAll } from "../lib/yield";
 import type { Stage } from "../ui/plant";
 import { orchardInput, orchardTrees, plantedAt, type OrchardTree } from "./orchard";
 import type { Met } from "./well";
@@ -91,8 +92,14 @@ function firstWord(l: Pick<Learner, "words" | "reviewsByWord">): FirstWord | nul
 
 /** The learner's garden: every word with progress is a plant, in course rank order. */
 export function plantsFromLearner(l: Learner, now = Date.now()): PlantSource {
+  return runAll(plantSteps(l, now));
+}
+
+/** plantsFromLearner a step at a time, so Today's first load can work it out in slices (#569). */
+export function* plantSteps(l: Learner, now: number): Generator<void, PlantSource> {
   const plants: GardenPlant[] = [];
   for (const m of l.memories) {
+    yield;
     const w = l.words.get(m.wordId);
     if (m.skill !== "read" || !w || w.status === "ignored") continue;
     const stage = plantStage(m);
@@ -116,8 +123,12 @@ export function plantsFromLearner(l: Learner, now = Date.now()): PlantSource {
     });
   }
   plants.sort((a, b) => a.rank - b.rank);
+  yield;
   const met = plants.map((p) => ({ lemma: p.lemma, at: plantedAt(l, p.id) }));
-  return { plants, seeds: l.fresh().length, first: firstWord(l), orchard: orchardTrees(orchardInput(l), now), met };
+  yield;
+  const first = firstWord(l);
+  yield;
+  return { plants, seeds: l.fresh().length, first, orchard: orchardTrees(orchardInput(l), now), met };
 }
 
 const SHOWCASE_SPAN = 160;
