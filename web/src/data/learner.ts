@@ -10,7 +10,7 @@ import { DAY_MS, startOfDay } from "../core/day";
 import { firstReviewed, MemoryLog, reviewedAt, memKey, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
-import { inSlices, runAll } from "../lib/yield";
+import { inSlices, runAll, yieldToBrowser } from "../lib/yield";
 import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, SKILLS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
@@ -348,23 +348,31 @@ export class Learners {
     const first = this.first.get(lang);
     if (first !== undefined) return first;
     this.first.set(lang, null);
+    // This runs in a render: all of the build waits for the next task, so the
+    // first render does none of it (~20 ms at CPU 10× when it did the first slice, #569).
+    void yieldToBrowser()
+      .then(() => inSlices(this.firstSteps(lang, deck, retention)))
+      .then((first) => {
+        this.first.set(lang, first);
+        this.notify();
+      });
+    return null;
+  }
+
+  private *firstSteps(lang: string, deck: LoadedDeck, retention: number): Generator<void, First> {
+    // The rows and the changes after them are taken in one step: a review is in one or the other, never both.
     this.pending.set(lang, []);
+    const rows = this.langReviews(lang);
+    yield;
     const links = this.links(lang, deck);
     const words = this.words(links);
-    const rows = this.langReviews(lang);
-    // The course order (~16 ms at CPU 10×, once per deck) is one step too: upcoming() reads it right after first paint.
-    const steps = (function* (): Generator<void, First> {
-      courseOrder(deck);
-      yield;
-      const reviews = yield* allReviews(rows, links, retention);
-      // The memory map, started words and studied list: O(memories + words), so not in the first render either.
-      return { reviews, words, memory: memoryOf(reviews.log, words.words, undefined) };
-    })();
-    void inSlices(steps).then((first) => {
-      this.first.set(lang, first);
-      this.notify();
-    });
-    return null;
+    yield;
+    // The course order (~10 ms at CPU 10×, once per deck) is one step too: upcoming() reads it right after first paint.
+    courseOrder(deck);
+    yield;
+    const reviews = yield* allReviews(rows, links, retention);
+    // The memory map, started words and studied list: O(memories + words), so not in the first render either.
+    return { reviews, words, memory: memoryOf(reviews.log, words.words, undefined) };
   }
 
   private langReviews(lang: string): ReviewRow[] {
