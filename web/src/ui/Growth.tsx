@@ -67,12 +67,31 @@ export function useGrowthSetting(): [boolean, (on: boolean) => void] {
   return [on, setGrowthSetting];
 }
 
-/** An icon button in the session bar that turns the moment on or off, like sound. It hides when the device asks for less motion: then nothing moves anyway. */
+/**
+ * An icon button in the session bar that turns the moment on or off, like sound. It hides when the device
+ * asks for less motion: then nothing moves anyway. A watering can alone is guesswork, so its label shows
+ * on hover and focus, and for a moment after a tap, where phones have no hover.
+ */
 export function GrowthToggle() {
   const [on, set] = useGrowthSetting();
+  const [tapped, setTapped] = useState(false);
+  useEffect(() => {
+    if (!tapped) return;
+    const t = setTimeout(() => setTapped(false), 1500);
+    return () => clearTimeout(t);
+  }, [tapped, on]);
   if (reducedMotion()) return null;
   return (
-    <button className="icon" onClick={() => set(!on)} aria-pressed={on} aria-label="Show plants growing" title={on ? "Plants grow after each answer. Click for the next card right away." : "Next card right away. Click to show plants growing."}>
+    <button
+      className={tapped ? "icon tip-shown" : "icon"}
+      onClick={() => {
+        set(!on);
+        setTapped(true);
+      }}
+      aria-pressed={on}
+      aria-label="Show plants growing"
+      data-tip={on ? "Growing plants: on" : "Growing plants: off"}
+    >
       {on ? <WateringCanIcon /> : <WateringCanOffIcon />}
     </button>
   );

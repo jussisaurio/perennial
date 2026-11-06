@@ -37,18 +37,19 @@ export const SpeakerOffIcon = (p: P) => (
   </Icon>
 );
 
+// A side-on can: the handle at the back (on top it reads as a padlock), a spout with a rose, and drops.
+const can = "M5 11h8v7.5a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 5 18.5zM5 13.5a3 3 0 0 1 0-6h3M13 15l5-5M17 8.5l2.5 2.5";
 export const WateringCanIcon = (p: P) => (
   <Icon {...p}>
-    <path d="M5 10h10l-1 9H6z" />
-    <path d="M7 10V8.5a3 3 0 0 1 6 0V10M15 13l5-4.5M18.8 7.2l2.4 2.6" />
+    <path d={can} />
+    <path d="M20.5 13.5v1.2M19 16v1.2M22 16.5v1" />
   </Icon>
 );
 
 export const WateringCanOffIcon = (p: P) => (
   <Icon {...p}>
-    <path d="M5 10h10l-1 9H6z" />
-    <path d="M7 10V8.5a3 3 0 0 1 6 0V10M15 13l5-4.5M18.8 7.2l2.4 2.6" />
-    <path d="M3.5 3.5l17 17" />
+    <path d={can} />
+    <path d="M3 3l18 18" />
   </Icon>
 );
 
