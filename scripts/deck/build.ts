@@ -1,7 +1,7 @@
 // Builds decks/<lang>/deck.json and ids.json from decks/<lang>/source/*.json.
 //   bun scripts/deck/build.ts es [de ...]     (no argument: every language)
 
-import { DECK_LANGS, isDeckLang } from "../../web/src/deck/schema.ts";
+import { DECK_LANGS, isDeckLang } from "../../web/src/deck/langs.ts";
 import { buildDeck, readDeckFiles, readSource, writeDeckFiles } from "./lib.ts";
 
 const langs = process.argv.slice(2).length ? process.argv.slice(2) : [...DECK_LANGS];

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { COURSE_DEFAULTS as APP_DEFAULTS } from "../../web/src/data/rows.ts";
-import { DECK_LANGS } from "../../web/src/deck/schema.ts";
+import { DECK_LANGS } from "../../web/src/deck/langs.ts";
 import { COURSE_LANGS, Lang } from "perennial-contract";
 import { COURSE_DEFAULTS } from "../src/course";
 

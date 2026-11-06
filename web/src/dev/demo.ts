@@ -12,7 +12,7 @@ import { postWrite } from "../data/http";
 import { memKey } from "../core/memory";
 import { COURSE_DEFAULTS } from "../data/rows";
 import { DAILY_MINUTES } from "../data/practice";
-import type { DeckLang } from "../deck/schema";
+import type { DeckLang } from "../deck/langs";
 import { rng } from "../lib/seed";
 
 async function post(mutations: unknown[]) {

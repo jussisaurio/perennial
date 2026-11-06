@@ -1,19 +1,28 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
 import "./index.css";
 import { initObservability, reportReactError } from "./observability";
 import { afterPaint } from "./ui/afterPaint";
 import { initTheme } from "./ui/theme";
-import { loadServerInfo } from "./data/server";
 import { takeGiftFromUrl } from "./data/gift";
+import { yieldToBrowser } from "./lib/yield";
+import { Settling } from "./ui/Settling";
+
+// The app's code loads in two steps, each run in its own task (#569). As one
+// step it was a ~100 ms task at CPU 10× before the first paint. First Effect
+// and the wire schemas, which are built as they load (about half the time); then the rest.
+const App = lazy(async () => {
+  await import("perennial-contract");
+  await yieldToBrowser();
+  return import("./App");
+});
 
 initTheme();
 // Error reports load after the first paint, out of this first task (#481). Reports made before then wait for them.
 afterPaint(() => void initObservability());
 // What the server can do, and whether this app is still new enough for it.
 // After the first paint too: its first Schema decode and Effect run are ~25 ms at CPU 10× (#481).
-afterPaint(loadServerInfo);
+afterPaint(() => void import("./data/server").then((m) => m.loadServerInfo()));
 void navigator.storage?.persist?.();
 
 // After a deploy, this page may ask for last release's code chunks, which are
@@ -38,7 +47,9 @@ async function boot() {
   if (import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === "1") await (await import("./dev/boot")).devBoot();
   createRoot(document.getElementById("root")!, { onUncaughtError: reportReactError, onCaughtError: reportReactError, onRecoverableError: reportReactError }).render(
     <StrictMode>
-      <App />
+      <Suspense fallback={<Settling />}>
+        <App />
+      </Suspense>
     </StrictMode>,
   );
 }

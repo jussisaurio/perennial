@@ -6,7 +6,8 @@
 
 import { join } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
-import { DECK_LANGS, Deck, GARDEN_WORDS, ORCHARD_WORDS, compatibility, deckProblems } from "../../web/src/deck/schema.ts";
+import { DECK_LANGS } from "../../web/src/deck/langs.ts";
+import { Deck, GARDEN_WORDS, ORCHARD_WORDS, compatibility, deckProblems } from "../../web/src/deck/schema.ts";
 import { ROOT, buildDeck, decode, deckDir, readDeckFiles, readSource, toJson } from "./lib.ts";
 import { reviewProblems } from "./reviews.ts";
 

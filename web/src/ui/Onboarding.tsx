@@ -5,7 +5,7 @@
 import { farewell } from "../content/voice";
 import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { COURSE_LANGUAGES, language } from "../content/languages";
-import { isDeckLang } from "../deck/schema";
+import { isDeckLang } from "../deck/langs";
 import { ensureUser } from "../data/auth";
 import { postWrite } from "../data/http";
 import { DAILY_MINUTES } from "../data/practice";

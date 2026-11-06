@@ -2,7 +2,7 @@
 // their article, plus a few per-language extras (a croak, a sign). Every table
 // has an entry for each deck language, so a new course cannot forget one.
 
-import type { DeckLang } from "../deck/schema";
+import type { DeckLang } from "../deck/langs";
 
 /** Something per course language. */
 export type PerLang<T> = Record<DeckLang, T>;

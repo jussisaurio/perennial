@@ -3,13 +3,14 @@
 //   ?demo=de:120    a German learner with 120 words studied
 //   ?demo=off       delete the demo learner
 
-import { DECK_LANGS, isDeckLang } from "../deck/schema";
-import { removeDemo, seedDemo } from "./demo";
+import { DECK_LANGS, isDeckLang } from "../deck/langs";
 
 export async function devBoot(): Promise<void> {
   const params = new URLSearchParams(location.search);
   const demo = params.get("demo");
   if (demo === null) return;
+  // Imported only here: without ?demo, the app's code loads as in production (main.tsx).
+  const { removeDemo, seedDemo } = await import("./demo");
   params.delete("demo");
   const rest = params.toString();
   history.replaceState(null, "", location.pathname + (rest ? `?${rest}` : "") + (location.hash || "#/today"));

@@ -1,7 +1,8 @@
 // How a card names a word: the form it asks about (#259), and the dictionary
 // word that form belongs to, with its article (#260).
 
-import type { DeckLang, Gender } from "../deck/schema";
+import type { DeckLang } from "../deck/langs";
+import type { Gender } from "../deck/schema";
 import { formKey, locate } from "./text";
 
 /** Text before a word that starts a sentence: nothing, or an end mark (. ! ? … or a dialogue dash), then only spaces, quotes and opening marks. */
