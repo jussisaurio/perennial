@@ -54,7 +54,7 @@ LoAF blocking and the self time per function still include DevTools command time
 
 For each screen, the run with the most time over budget saves its Chrome trace (`*.trace.json`) and CPU profile (`*.cpuprofile`). Drag them into Chrome DevTools → Performance.
 
-The 3D walk uses software WebGL in headless Chrome, so its frame times are worse than on a real GPU.
+The browser is full Chromium in headless mode, so WebGL draws on the machine's real GPU. The CPU slowdown does not slow the GPU, and an old laptop's GPU is much slower than an M4's, so the 3D walk's frames are faster here than on that laptop. Before 2026-11-06 (#459), the harness used software WebGL (SwiftShader). Its first draws made the main thread wait 0.6–1.5 s in Commit at CPU 10×. Do not compare the walk's Worst ms and Over budget ms from before then.
 
 ## Baseline (2026-10-11, M-series laptop)
 
