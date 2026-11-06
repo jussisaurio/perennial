@@ -346,7 +346,7 @@ export class GardenScene {
   private lanternTarget = -1;
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door: Door;
-  /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose beyond the scene's own sweep. */
+  /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose. */
   private hedge = new Hedge();
   /**
    * Every rendering subsystem with its own tick and/or onConditions (#323):
@@ -2070,15 +2070,10 @@ export class GardenScene {
     this.disposed = true;
     for (const part of this.parts) part.dispose?.();
     cancelAnimationFrame(this.frame);
-    this.orchard?.dispose();
-    this.scene.traverse((o) => {
-      (o as THREE.Mesh).geometry?.dispose();
-      for (const mat of materialsOf(o)) {
-        for (const t of texturesOf(mat)) t.dispose();
-        mat.dispose();
-      }
-    });
     this.renderer.dispose();
+    // Losing the context frees every geometry, material and texture on the GPU at once. Disposing each of them was
+    // ~45-70 ms in one task at CPU 10× as the walk closed (#459); the canvas goes with the walk, so nothing draws on it again.
+    this.renderer.forceContextLoss();
   }
 }
 

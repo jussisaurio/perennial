@@ -294,9 +294,4 @@ export class SkyWater implements Part {
     u.uTime.value = f.elapsed;
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
   }
-
-  /** Every time of day's sky, hills and sun: the scene's own sweep frees only those on show. */
-  dispose() {
-    for (const look of Object.values(this.looks)) for (const t of Object.values(look)) t.dispose();
-  }
 }

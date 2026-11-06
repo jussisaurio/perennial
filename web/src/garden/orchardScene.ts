@@ -39,7 +39,6 @@ export interface Orchard {
   params: THREE.InstancedBufferAttribute | null;
   /** The trees' sprite material, for the scene's per-frame uniforms. */
   mats: THREE.ShaderMaterial[];
-  dispose(): void;
 }
 
 /** Sprite index for the trees: never the selected plant's. */
@@ -49,7 +48,6 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: Orch
   const group = new THREE.Group();
   const placed = placeTrees(area, trees);
   const atlas = T.pixelTexture(T.orchard());
-  const own: THREE.Texture[] = [atlas];
   // Half a texel in from the cell's top and bottom, so nearest sampling never reads the row above or below.
   const inset = 0.5 / (CELL_H_PX * LOOKS.length);
   const items: SpriteItem[] = placed.map((t) => ({
@@ -80,7 +78,6 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: Orch
   const bench = world.bench();
   if (world.plaque !== null) {
     const plaqueTex = T.pixelTexture(T.notice(world.plaque));
-    own.push(plaqueTex);
     const plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.28), world.mat(plaqueTex));
     // Just behind the back rest, facing away from the seat.
     plaque.position.set(0, 0.66, -0.235);
@@ -99,15 +96,5 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: Orch
     scenery,
     params,
     mats,
-    dispose() {
-      world.parent.remove(group);
-      group.traverse((o) => {
-        if (!(o instanceof THREE.Mesh)) return;
-        o.geometry.dispose();
-        for (const m of [o.material].flat()) m.dispose();
-      });
-      // The wood is the scene's; the atlas and the plaque are the orchard's own.
-      for (const t of own) t.dispose();
-    },
   };
 }

@@ -5,8 +5,8 @@
 // one array of these, ticks every one with the same Frame, broadcasts
 // Conditions to every one, and disposes every one in that order, documented
 // in GardenScene itself. The hedge and the orchard build geometry only, with
-// nothing to tick, react to conditions or dispose beyond what the scene's own
-// sweep frees, so they are not Parts.
+// nothing to tick, react to conditions or dispose (the scene's lost context
+// frees their GPU memory), so they are not Parts.
 
 import type { DoorAction } from "./scene";
 import type { Conditions } from "./conditions";

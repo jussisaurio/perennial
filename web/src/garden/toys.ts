@@ -69,7 +69,7 @@ function baseHeads(l: Layout): Head[] {
  * day when the wind took every seed over the fence, none).
  * Whether or not the learner blew it, the wind did: no state is kept.
  */
-export function dandelions(l: Layout, day: number, bedTop: number): Head[] {
+export function dandelions(l: Layout, day: number): Head[] {
   const heads = baseHeads(l);
   for (let k = SPREAD_DAYS; k >= 1; k--) {
     const d = day - k;
@@ -77,8 +77,9 @@ export function dandelions(l: Layout, day: number, bedTop: number): Head[] {
     const start = Math.floor(hash01(`${d}:dandelion`) * BASE);
     const grew = (from: Head): Head | null => {
       for (let i = 0; i < SEEDS; i++) {
-        const f = flight(l, from, d, i, bedTop);
-        if (f.ground && !heads.some((h) => Math.hypot(h.x - f.to.x, h.z - f.to.z) < APART)) return { id: `grew:${d}`, x: f.to.x, z: f.to.z };
+        // Not flight(): it looks for a plant under each seed, and a clock needs only where it came down (#459).
+        const { to } = seedWay(from, d, i);
+        if (onGround(l, to) && !heads.some((h) => Math.hypot(h.x - to.x, h.z - to.z) < APART)) return { id: `grew:${d}`, x: to.x, z: to.z };
       }
       return null;
     };
@@ -119,8 +120,8 @@ const SETTLE = 2.5;
 /** With reduced motion, the seeds fade where they are over this long (s). */
 const FADE = 1.5;
 
-/** Seed `i` of clock `h`, blown on calendar day `day`: where the wind takes it, and what it lands on. */
-export function flight(l: Layout, h: Head, day: number, i: number, bedTop: number): Flight {
+/** Where seed `i` of clock `h`, blown on calendar day `day`, comes down, and how long it is in the air (s); `r` is its random sequence. */
+function seedWay(h: Head, day: number, i: number): { to: XZ; time: number; r: (salt: number) => number } {
   // What changes comes first: FNV mixes a change at the end of a key poorly.
   const key = `${i}:${day}:${h.id}`;
   const r = (salt: number) => hash01(key, salt);
@@ -131,14 +132,26 @@ export function flight(l: Layout, h: Head, day: number, i: number, bedTop: numbe
   const [ax, az] = [w.x / speed, w.z / speed];
   const along = speed * time * (0.75 + r(2) * 0.4);
   const side = (r(3) - 0.5) * 1.6;
-  const to = { x: h.x + ax * along - az * side, z: h.z + az * along + ax * side };
-  const plant = plantAt(l, to);
-  const b = l.bounds;
-  const inside = to.x > b.minX && to.x < b.maxX && to.z > b.minZ && to.z < b.maxZ;
-  const inBed = l.beds.some((bed) => Math.abs(to.x - bed.x) < bed.w / 2 && Math.abs(to.z - bed.z) < bed.d / 2);
+  return { to: { x: h.x + ax * along - az * side, z: h.z + az * along + ax * side }, time, r };
+}
+
+/** Open ground inside the fence: not in a bed, the pond or anything else the walker cannot stand in. */
+function onGround(l: Layout, to: XZ): boolean {
   const free = collide(l, to.x, to.z, 0.3);
-  const ground = inside && Math.abs(free.x - to.x) < 1e-9 && Math.abs(free.z - to.z) < 1e-9;
-  return { from: { x: h.x, z: h.z }, to, delay: r(4) * 0.6, time, lift: 0.5 + r(5) * 0.9, land: plant >= 0 || (inside && inBed) ? bedTop : 0.02, phase: r(6) * Math.PI * 2, plant, ground };
+  return inside(l, to) && Math.abs(free.x - to.x) < 1e-9 && Math.abs(free.z - to.z) < 1e-9;
+}
+
+function inside(l: Layout, to: XZ): boolean {
+  const b = l.bounds;
+  return to.x > b.minX && to.x < b.maxX && to.z > b.minZ && to.z < b.maxZ;
+}
+
+/** Seed `i` of clock `h`, blown on calendar day `day`: where the wind takes it, and what it lands on. */
+export function flight(l: Layout, h: Head, day: number, i: number, bedTop: number): Flight {
+  const { to, time, r } = seedWay(h, day, i);
+  const plant = plantAt(l, to);
+  const inBed = l.beds.some((bed) => Math.abs(to.x - bed.x) < bed.w / 2 && Math.abs(to.z - bed.z) < bed.d / 2);
+  return { from: { x: h.x, z: h.z }, to, delay: r(4) * 0.6, time, lift: 0.5 + r(5) * 0.9, land: plant >= 0 || (inside(l, to) && inBed) ? bedTop : 0.02, phase: r(6) * Math.PI * 2, plant, ground: onGround(l, to) };
 }
 
 /** The plant whose middle is nearest a point, within reach of a landing seed; -1 for none. */
