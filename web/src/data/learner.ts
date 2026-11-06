@@ -97,7 +97,8 @@ export interface Learner {
   studied: Word[];
   memories: MemoryRow[];
   memory: Map<string, MemoryRow>;
-  reviews: ReviewRow[];
+  /** Every review of this language, word by word: made once per learner, when first asked (an export, a count), not on every answer (#486). */
+  everyReview(): ReviewRow[];
   reviewsByWord: Map<string, ReviewRow[]>;
   /** The reviews made at or after `t` (ms), without a walk of every review: Today's plan and minutes read today's. */
   reviewsSince(t: number): ReviewRow[];
@@ -269,7 +270,7 @@ export class Learners {
     // The same reviews and words (the first build, with no answers since): the same memory, with no copy of its maps.
     const memory =
       earlier.reviews === reviews && earlier.words === words ? earlier.memory : memoryOf(reviews.log, words.words, earlier.reviews.log === reviews.log && earlier.words.words === words.words ? earlier.memory : undefined);
-    const learner = assemble(lang, course, words, reviews, sentences.byWord, [...this.reviews.rows.values()].filter((r) => r.lang === lang), memory);
+    const learner = assemble(lang, course, words, reviews, sentences.byWord, memory);
     this.built.set(lang, { words, reviews, sentences, memory, learner });
     this.first.delete(lang);
     return learner;
@@ -465,7 +466,7 @@ function memoryOf(log: MemoryLog, words: Map<string, Word>, prev: Memory | undef
 }
 
 /** The learner itself, from its parts. */
-function assemble(lang: string, course: CourseRow, { words, stateMap, links }: Words, { byWord: reviewsByWord, byDay }: Reviews, sentencesBy: Map<string, Sentence[]>, langReviews: ReviewRow[], { memories, memory, started, studied }: Memory): Learner {
+function assemble(lang: string, course: CourseRow, { words, stateMap, links }: Words, { byWord: reviewsByWord, byDay }: Reviews, sentencesBy: Map<string, Sentence[]>, { memories, memory, started, studied }: Memory): Learner {
   const { deck, resolve } = links;
   const sentences = (wordId: string): Sentence[] => [
     ...(deck.sentencesByWord.get(wordId) ?? []).map((s) => ({ id: s.id, text: s.text, translation: s.translation, cloze: s.cloze, origin: "deck" as const })),
@@ -503,6 +504,8 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
     for (const [day, list] of byDay) if (day >= Math.floor(t / DAY_MS)) for (const r of list) if (reviewedAt(r) >= t) out.push(r);
     return out;
   };
+  let every: ReviewRow[] | null = null;
+  const everyReview = () => (every ??= [...reviewsByWord.values()].flat());
   // A review on an earlier UTC day is earlier: only one day's reviews are read, and one more when none of the last day's is before `t`.
   const firstReviewAt = () => {
     let first: number | null = null;
@@ -521,7 +524,7 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
       bound = day - 1;
     }
   };
-  return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, sentences, upcoming, fresh, resolve };
+  return { lang, deck, course, words, studied, memories, memory, everyReview, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, sentences, upcoming, fresh, resolve };
 }
 
 /**

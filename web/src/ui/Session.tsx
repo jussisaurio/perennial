@@ -20,7 +20,7 @@ import { useKeys, useShortcut } from "./useShortcut";
 import { afterPaint } from "./afterPaint";
 import { track } from "../observability";
 import { chunkLabel, DAILY_MINUTES } from "../data/practice";
-import { KNOWN_RULE, plantStage, readMemory, reviewedAt } from "../core/memory";
+import { KNOWN_RULE, plantStage, readMemory } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { readNow } from "../data/reading";
@@ -73,9 +73,9 @@ function Highlight({ text, part, blank, grown = [] }: { text: string; part: stri
 const HINT_ANSWERS = 3;
 
 /** Fewer than `n` answers in the log. It stops counting at `n`: the session asks each second, and the log grows long. */
-function fewerAnswers(reviews: Learner["reviews"], n: number): boolean {
+function fewerAnswers(reviewsByWord: Learner["reviewsByWord"], n: number): boolean {
   let answers = 0;
-  for (const r of reviews) if (r.kind === "review" && ++answers >= n) return false;
+  for (const list of reviewsByWord.values()) for (const r of list) if (r.kind === "review" && ++answers >= n) return false;
   return true;
 }
 
@@ -145,7 +145,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   if (!runner) return <div className="session center muted">Preparing…</div>;
 
   // The quick-check hint is for a learner's first few answers; after that it is noise (#270).
-  const hint = !!learner && fewerAnswers(learner.reviews, HINT_ANSWERS);
+  const hint = !!learner && fewerAnswers(learner.reviewsByWord, HINT_ANSWERS);
 
   const elapsed = Math.min(1, active / runner.budgetMs);
   const overtime = runner.timeUp(active);
@@ -719,7 +719,7 @@ function watcherFor(l: Learner, start: number): { visit: SessionVisit; view: Vis
   const garden = gardenBrought(l);
   const brought = VISITORS.filter((v) => v.garden && garden.has(v.garden) && GARDEN_VISITOR_ART[v.garden]).map((v) => v.id);
   const dayStart = startOfDay();
-  const todays = l.reviews.filter((r) => reviewedAt(r) >= dayStart).length;
+  const todays = l.reviewsSince(dayStart).length;
   const visit = sessionVisit(today(), todays, brought);
   return visit ? { visit, view: visitorViews([visit.id], l.lang)[0], start } : null;
 }
@@ -806,7 +806,7 @@ function Summary({
     return grew.length ? grew : null;
   });
   // ?? only for the type: a summary follows a started session, so the learner has loaded.
-  const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? "", learner?.reviews.length ?? 0));
+  const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? "", learner?.everyReview().length ?? 0));
   const title = paused ? "Session paused" : "Session complete";
   // Live: a refusal can arrive after the summary opens, as the last answers upload.
   const refused = useRefused();
