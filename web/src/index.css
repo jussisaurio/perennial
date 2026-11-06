@@ -173,6 +173,13 @@ input[type="range"]:focus-visible { outline: none; }
 input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22), 0 0 0 4px var(--sun-soft); }
 input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22), 0 0 0 4px var(--sun-soft); }
 input[type="file"] { padding: 0.5rem; }
+/* The search field's clear button: a quiet ink circle with a cut-out cross, not Chrome's blue ×. */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none; appearance: none; width: 1.1rem; height: 1.1rem; margin-left: 0.4rem; cursor: pointer; background: var(--muted);
+  --x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 0a10 10 0 1 0 0 20 10 10 0 1 0 0-20zM6.2 7.6l1.4-1.4L10 8.6l2.4-2.4 1.4 1.4L11.4 10l2.4 2.4-1.4 1.4L10 11.4l-2.4 2.4-1.4-1.4L8.6 10z'/%3E%3C/svg%3E");
+  -webkit-mask: var(--x) center / contain no-repeat; mask: var(--x) center / contain no-repeat;
+}
+input[type="search"]::-webkit-search-cancel-button:hover { background: var(--ink-2); }
 .form { display: grid; gap: 1rem; }
 /* An email or a code does not need the whole desktop column. */
 .form input:not([type="range"]) { max-width: 26rem; }
