@@ -2,7 +2,7 @@
 // the garden (useGardenScene), and walking and looking around in it with keys,
 // trackpad and drags (useWalkInput). GardenWalk.tsx draws everything around it.
 
-import { useEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
 import { language } from "../content/languages";
 import { reportStalledWalk } from "../observability";
 import { reservedStake } from "../content/voice";
@@ -96,23 +96,28 @@ export function useGardenScene({
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
-  openDoor.current = door.open;
   const leaveNow = useRef(leave);
-  leaveNow.current = leave;
   const shakeNow = useRef(onShake);
-  shakeNow.current = onShake;
   const walkIntoNow = useRef(walkInto);
-  walkIntoNow.current = walkInto;
   const carryNow = useRef(onCarry);
-  carryNow.current = onCarry;
   const toysNow = useRef(toys);
-  toysNow.current = toys;
   const callNow = useRef(onCall);
-  callNow.current = onCall;
+  // Before the browser paints, so the scene never calls the ones from before.
+  useLayoutEffect(() => {
+    openDoor.current = door.open;
+    leaveNow.current = leave;
+    shakeNow.current = onShake;
+    walkIntoNow.current = walkInto;
+    carryNow.current = onCarry;
+    toysNow.current = toys;
+    callNow.current = onCall;
+  });
+  const timeNow = useRef(time);
+  const detailNow = useRef(detail);
 
   // A snapshot of the garden when it opens: it does not change while you walk.
-  useEffect(() => {
-    if (!source || data) return;
+  const [openedAt] = useState(() => Date.now());
+  if (source && !data) {
     const l = layout(source.plants);
     const first = source.first && l.plants.some((p) => p.id === source.first!.id) ? { id: source.first.id, text: keepsakeLabel(source.first.lemma, source.first.at) } : null;
     setData({
@@ -127,16 +132,16 @@ export function useGardenScene({
         door: door.state,
         orchard: { trees: source.orchard, firstPlanted: source.first ? source.first.at : null },
         leave: leave.walk,
-        autumn: isAutumn(new Date()),
+        autumn: isAutumn(new Date(openedAt)),
         toys: toys.walk,
         // Tonight's real moon (#361), as the walk opens: the same as outside the window.
-        moon: moonPhase(Date.now()),
+        moon: moonPhase(openedAt),
         met: source.met,
         // The landing page's walk has no learner, and no visitors to hide.
         firstReview: visitors ? visitors.facts.firstReview : null,
       },
     });
-  }, [source, data, visitors, door.state, leave.walk, toys.walk, lang]);
+  }
 
   useEffect(() => {
     if (!data || !canvas.current || !wrap.current) return;
@@ -222,8 +227,6 @@ export function useGardenScene({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
-  const timeNow = useRef(time);
-  const detailNow = useRef(detail);
   useEffect(() => {
     timeNow.current = time;
     scene.current?.setTime(time);
@@ -246,7 +249,8 @@ export function useGardenScene({
  * for a moment (#357), at that point (client pixels).
  */
 export function useWalkInput({
-  scene,
+  // A name that ends in "Ref" tells React Compiler this is a ref, which handlers may change.
+  scene: sceneRef,
   wrap,
   selected,
   onExit,
@@ -261,11 +265,14 @@ export function useWalkInput({
   onHold: (clientX: number, clientY: number) => void;
 }) {
   const moved = useRef(onMove);
-  moved.current = onMove;
   const held = useRef(onHold);
-  held.current = onHold;
   const selectedRef = useRef<PlacedPlant | null>(null);
-  selectedRef.current = selected;
+  // Before the browser paints, so no key or pointer sees the ones from before.
+  useLayoutEffect(() => {
+    moved.current = onMove;
+    held.current = onHold;
+    selectedRef.current = selected;
+  });
 
   // Trackpad: two-finger swipe looks around, pinch walks forward and back.
   useEffect(() => {
@@ -277,7 +284,7 @@ export function useWalkInput({
       // overscroll-behavior for it (WebKit bug 240183).
       e.preventDefault();
       if ((e.target as HTMLElement).closest(".gw-card, .gw-top, .gw-bottom")) return;
-      const s = scene.current;
+      const s = sceneRef.current;
       if (!s) return;
       const k = e.deltaMode === 1 ? 16 : 1; // lines to pixels
       if (e.ctrlKey) s.step(-e.deltaY * k * 0.02);
@@ -295,7 +302,7 @@ export function useWalkInput({
     const keys = new Set<string>();
     let turning = 0;
     const update = () => {
-      const s = scene.current;
+      const s = sceneRef.current;
       if (!s) return;
       const k = (c: string) => keys.has(c);
       s.input.move.y = (k("KeyW") || k("ArrowUp") ? 1 : 0) - (k("KeyS") || k("ArrowDown") ? 1 : 0);
@@ -305,7 +312,7 @@ export function useWalkInput({
       cancelAnimationFrame(turning);
       if (turn) {
         const step = () => {
-          scene.current?.turn(turn * 0.035);
+          sceneRef.current?.turn(turn * 0.035);
           turning = requestAnimationFrame(step);
         };
         step();
@@ -315,7 +322,7 @@ export function useWalkInput({
     const down = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.code === "Escape") {
-        if (scene.current && selectedRef.current) scene.current.select(null);
+        if (sceneRef.current && selectedRef.current) sceneRef.current.select(null);
         else onExit();
         return;
       }
@@ -371,7 +378,7 @@ export function useWalkInput({
     d.y = e.clientY;
     if (d.moved > 4) {
       clearTimeout(d.hold);
-      scene.current?.look(dx, dy);
+      sceneRef.current?.look(dx, dy);
       moved.current();
     }
   };
@@ -388,7 +395,7 @@ export function useWalkInput({
 
   /** The touch-screen thumb stick: walk at this speed, -1..1 sideways and forward. */
   const stick = (x: number, y: number) => {
-    const s = scene.current;
+    const s = sceneRef.current;
     if (!s) return;
     s.input.move.x = x;
     s.input.move.y = y;

@@ -126,7 +126,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
     };
   }, [growing]);
 
-  const { learner, tag, runner, card, done, active, ended, counts, refusedBefore, practised, introduced, before, arrived, serial, canUndo, start, finish, undo, exit, resume, firstSummary } = useSessionRunner({
+  const { learner, tag, runner, card, done, active, ended, refusedBefore, serial, canUndo, start, finish, undo, exit, resume, firstSummary } = useSessionRunner({
     lang,
     minutes,
     onExit,
@@ -172,7 +172,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       {/* During the session and on its summary: in place, never over the answer buttons. */}
       <RefusedLine since={refusedBefore} />
       {done ? (
-        <Summary learner={learner} counts={counts} refusedBefore={refusedBefore} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
+        <Summary learner={learner} {...done} refusedBefore={refusedBefore} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={answer} />
       ) : null}

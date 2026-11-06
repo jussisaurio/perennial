@@ -1,5 +1,6 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin";
-import react from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import pkg from "./package.json" with { type: "json" };
 
@@ -13,6 +14,8 @@ export default defineConfig({
   build: { sourcemap: sentry ? "hidden" : false },
   plugins: [
     react(),
+    // React Compiler memoizes components and hooks at build time (#452).
+    babel({ presets: [reactCompilerPreset()] }),
     sentry &&
       sentryVitePlugin({
         org: process.env.SENTRY_ORG,
