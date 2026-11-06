@@ -42,7 +42,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
     "pg": "8",
-    "ts-fsrs": "^5.4.2",
+    "ts-fsrs": "^6.0.0",
     "typescript": "~7.0.2",
     "vite": "^8.3.0"
   }

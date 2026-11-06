@@ -64,4 +64,12 @@ describe("FSRS-6", () => {
     expect(a!.lapses).toBe(1);
     expect(a!.reps).toBe(3);
   });
+
+  test("a forgotten word is due tomorrow at the earliest, not later today", () => {
+    const t0 = Date.UTC(2026, 0, 1);
+    // Forgotten on first sight: stability is a fraction of a day, but the next review waits a whole day.
+    const st = replay(f, [{ ts: t0, grade: 1 }], 0.9, "x")!;
+    expect(st.s).toBeLessThan(1);
+    expect(st.due - st.lastTs).toBe(DAY_MS);
+  });
 });

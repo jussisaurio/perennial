@@ -22,7 +22,8 @@ by a memory model) and drops most of what grew around it.
 ## Research we lean on
 
 - **FSRS-6** (open-spaced-repetition). Its DSR model beats SM-2 by a wide margin
-  on the srs-benchmark. Formulas are in `web/src/core/fsrs.ts`.
+  on the srs-benchmark. The formulas come from ts-fsrs's FSRS-6 model; `web/src/core/fsrs.ts`
+  replays the review log through them, with our own fuzz.
 - **Frequency-first vocabulary.** A small number of words covers most running
   text: the top ~1,000 lemmas cover ~80–85% of spoken text, and ~3,000 cover
   ~90–95%.
