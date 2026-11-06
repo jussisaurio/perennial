@@ -173,8 +173,8 @@ export class Plants {
     for (const m of this.plantMats) m.uniforms.uSilver.value = silver;
   }
 
-  /** Raised beds: wooden sides, soil on top, and a sign for each. Draws no random numbers. */
-  build(c: BuildCtx) {
+  /** Raised beds: wooden sides, soil on top, and a sign for each, a bed per step: the scene yields between them (#459). Draws no random numbers. */
+  *build(c: BuildCtx): Generator<void> {
     const { L, mat, woodTex } = c;
     const soilTex = T.pixelTexture(T.soil(), true);
     for (const bed of L.beds) {
@@ -201,6 +201,7 @@ export class Plants {
       // Behind the board (it faces the path), never in its plane.
       post.position.set(sx - Math.sin(0.5) * 0.06, 0.33, sz - Math.cos(0.5) * 0.06);
       c.scene.add(post);
+      yield;
     }
   }
 

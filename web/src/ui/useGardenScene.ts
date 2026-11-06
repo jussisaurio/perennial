@@ -182,9 +182,12 @@ export function useGardenScene({
           lang,
           data.visitors,
         );
+        await s.build();
       } catch (e) {
         return setFailed({ text: e instanceof Error ? e.message : String(e) });
       }
+      // Left while the scene was built: the cleanup below disposed of it.
+      if (!alive) return;
       scene.current = s;
       // Dev builds only: the scene, for screenshot scripts.
       if (import.meta.env.DEV) (window as unknown as { __garden: unknown }).__garden = s;
