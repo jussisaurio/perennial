@@ -21,7 +21,7 @@ import { snoreLine } from "../garden/whimsy";
 import { takeFocus, type Focus } from "./gardenFocus";
 import { WordPlant } from "./plant";
 import { speak, speakAll } from "./speech";
-import { SoundToggle, useSound } from "./Sound";
+import { useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
 import { yieldToBrowser } from "../lib/yield";
@@ -289,6 +289,22 @@ function savedDetail(): Detail | null {
 
 const TIME_LABEL: Record<TimeOfDay, string> = { day: "Day", dusk: "Evening", night: "Night" };
 const NEXT_TIME: Record<TimeOfDay, TimeOfDay> = { day: "dusk", dusk: "night", night: "day" };
+
+/** The walk's small icons, drawn in pixels like its frames: emoji and font glyphs each come in another style. */
+const GLYPH = {
+  left: ["...#...", "..#....", ".#.....", "#######", ".#.....", "..#....", "...#..."],
+  right: ["...#...", "....#..", ".....#.", "#######", ".....#.", "....#..", "...#..."],
+  close: ["#.....#", ".#...#.", "..#.#..", "...#...", "..#.#..", ".#...#.", "#.....#"],
+  soundOn: ["...#....#..", "..##..#..#.", "####...#..#", "####...#..#", "####...#..#", "..##..#..#.", "...#....#.."],
+  soundOff: ["...#.......", "..##..#...#", "####...#.#.", "####....#..", "####...#.#.", "..##..#...#", "...#......."],
+  drop: ["...#...", "..###..", ".#####.", ".#####.", "#######", "#######", ".#####.", "..###.."],
+  day: ["...#...", ".#...#.", "..###..", "#.###.#", "..###..", ".#...#.", "...#..."],
+  dusk: ["...#...", "#.....#", "..###..", ".#####.", "#######", ".......", "#######"],
+  night: ["..####.", ".###...", "###....", "###....", "###....", ".###...", "..####."],
+} satisfies Record<string, readonly string[]>;
+
+/** A walk icon at 2 px a pixel: the stroke of the pixel font beside it. */
+const Glyph = ({ name }: { name: keyof typeof GLYPH }) => <PixelIcon rows={GLYPH[name]} cell={2} />;
 
 /**
  * The action button (#334) shows only an icon, which changes shape with what it
@@ -779,14 +795,26 @@ export function GardenWalk({
 
       <div className="gw-top">
         <button className="gw-btn" onClick={onExit} aria-label="Back">
-          ← <span className="gw-tool-label">Back</span>
+          <Glyph name="left" /> <span className="gw-tool-label">Back</span>
         </button>
         <div className="gw-stats" aria-live="polite">
-          {data && (stats.total ? `${plural(stats.total, "plant")} · ${stats.bloom} in bloom` : "No plants yet")}
-          {data && data.seeds > 0 && <span className="gw-seeds"> · {plural(data.seeds, "seed")} ready</span>}
+          {/* One span: as flex items, the parts would lose the spaces between them. On a phone the two counts stack (.gw-dot). */}
+          <span>
+            {data &&
+              (stats.total ? (
+                <>
+                  <span>{plural(stats.total, "plant")}</span>
+                  <span className="gw-dot"> · </span>
+                  <span>{stats.bloom} in bloom</span>
+                </>
+              ) : (
+                "No plants yet"
+              ))}
+            {data && data.seeds > 0 && <span className="gw-seeds"> · {plural(data.seeds, "seed")} ready</span>}
+          </span>
         </div>
         <div className="gw-tools">
-          <SoundToggle className="gw-btn gw-icon" size={21} />
+          <WalkSound />
           <button
             className="gw-btn gw-quality"
             onClick={() => chooseDetail(detail === "normal" ? "low" : "normal")}
@@ -797,7 +825,7 @@ export function GardenWalk({
             <span className="gw-tool-label">{DETAIL_LABEL[detail]}</span>
           </button>
           <button className="gw-btn gw-time" onClick={() => setTime(NEXT_TIME[time])} title="Change the time of day" aria-label={`Time of day: ${TIME_LABEL[time]}`}>
-            <span className="gw-glyph" aria-hidden="true">{time === "night" ? "☾" : time === "dusk" ? "◐" : "☀"}</span> <span className="gw-tool-label">{TIME_LABEL[time]}</span>
+            <Glyph name={time} /> <span className="gw-tool-label">{TIME_LABEL[time]}</span>
           </button>
         </div>
       </div>
@@ -828,7 +856,7 @@ export function GardenWalk({
       {selected && (
         <div className="gw-card" role="dialog" aria-label={`The plant for ${selected.lemma}`} ref={dialog} tabIndex={-1}>
           <button className="gw-close" onClick={() => scene.current?.select(null)} aria-label="Close">
-            ×
+            <Glyph name="close" />
           </button>
           <div className="gw-card-body" aria-live="polite">
             <WordPlant word={selected.lemma} s={selected.s} stage={selected.stage} size={72} />
@@ -860,15 +888,15 @@ export function GardenWalk({
                   void speak(selected.lemma, tag);
                 }}
               >
-                🔊 Listen
+                <Glyph name="soundOn" /> Listen
               </button>
             )}
             <span className="gw-spacer" />
             <button className="gw-btn" onClick={() => step(-1)} aria-label="Previous plant">
-              ←
+              <Glyph name="left" />
             </button>
             <button className="gw-btn" onClick={() => step(1)}>
-              Next plant <span aria-hidden="true">→</span>
+              Next plant <Glyph name="right" />
             </button>
           </div>
         </div>
@@ -902,13 +930,13 @@ export function GardenWalk({
         )}
         {ready && !selected && stats.total > 0 && (
           <button className="gw-btn" onClick={() => step(1)}>
-            Next plant <span aria-hidden="true">→</span>
+            Next plant <Glyph name="right" />
           </button>
         )}
         {/* Named for what it starts, with no count of thirsty plants: Today keeps missed days from piling up, and so does the walk (#263). */}
         {water && stats.total > 0 && !selected && (
           <button className="gw-btn gw-water" onClick={water.start}>
-            💧 {water.label}
+            <Glyph name="drop" /> {water.label}
           </button>
         )}
       </div>
@@ -918,11 +946,11 @@ export function GardenWalk({
   );
 }
 
-/** A small pixel-art icon from rows of "#" (drawn) and "." (empty), in the button's colour. */
-function PixelIcon({ rows }: { rows: readonly string[] }) {
+/** A small pixel-art icon from rows of "#" (drawn) and "." (empty), in the button's colour: 32 px square, or `cell` px a pixel. */
+function PixelIcon({ rows, cell }: { rows: readonly string[]; cell?: number }) {
   const w = Math.max(...rows.map((r) => r.length));
   return (
-    <svg viewBox={`-1 -1 ${w + 2} ${rows.length + 2}`} width="32" height="32" aria-hidden="true" shapeRendering="crispEdges">
+    <svg viewBox={`-1 -1 ${w + 2} ${rows.length + 2}`} width={cell ? (w + 2) * cell : 32} height={cell ? (rows.length + 2) * cell : 32} aria-hidden="true" shapeRendering="crispEdges">
       <path d={pixelPath(rows)} fill="currentColor" />
     </svg>
   );
@@ -979,12 +1007,31 @@ function StakeMark({ gender }: { gender: Gender }) {
   );
 }
 
+/** The app's sound toggle (Sound.tsx), with the walk's pixel speaker. */
+function WalkSound() {
+  const [on, set] = useSound();
+  return (
+    <button className="gw-btn gw-icon" onClick={() => set(!on)} aria-pressed={!on} aria-label="Mute sound" title={on ? "Sound is on. Click to turn it off." : "Sound is off. Click to turn it on."}>
+      <Glyph name={on ? "soundOn" : "soundOff"} />
+    </button>
+  );
+}
+
+/** The thumb stick's base: a disc of 24 × 24 pixels with a rim, like the walk's frames. */
+const STICK_CELLS = 24;
+/** Each cell's distance from the middle, in cells, picks whether it is drawn. */
+const stickPath = (drawn: (d: number) => boolean) =>
+  pixelPath(Array.from({ length: STICK_CELLS }, (_, y) => Array.from({ length: STICK_CELLS }, (_, x) => (drawn(Math.hypot(x + 0.5 - STICK_CELLS / 2, y + 0.5 - STICK_CELLS / 2)) ? "#" : ".")).join("")));
+const STICK_RIM = stickPath((d) => d <= 12 && d > 10.5);
+const STICK_FILL = stickPath((d) => d <= 10.5);
+
 /** A thumb stick for touch screens. Hidden where there is a mouse. */
 function Joystick({ onMove }: { onMove: (x: number, y: number) => void }) {
   const base = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState<[number, number]>([0, 0]);
   const active = useRef<number | null>(null);
-  const R = 44;
+  // How far the knob goes from the middle, in px: its edge to the base's rim (.gw-stick is 96 px, .gw-knob 40).
+  const R = 30;
   const move = (e: React.PointerEvent) => {
     if (active.current !== e.pointerId || !base.current) return;
     const r = base.current.getBoundingClientRect();
@@ -1014,6 +1061,10 @@ function Joystick({ onMove }: { onMove: (x: number, y: number) => void }) {
       onPointerUp={end}
       onPointerCancel={end}
     >
+      <svg viewBox={`0 0 ${STICK_CELLS} ${STICK_CELLS}`} shapeRendering="crispEdges">
+        <path className="gw-stick-fill" d={STICK_FILL} />
+        <path className="gw-stick-rim" d={STICK_RIM} />
+      </svg>
       <div className="gw-knob" style={{ transform: `translate(${knob[0]}px, ${knob[1]}px)` }} />
     </div>
   );
