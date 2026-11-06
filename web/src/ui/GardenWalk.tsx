@@ -25,6 +25,7 @@ import { speak, speakAll } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
+import { yieldToBrowser } from "../lib/yield";
 import { useGardenScene, useWalkInput } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { boatWord, gardenBroughtAt, learnerLeave, learnerVisitors, showcaseLeave, type LearnerVisitors } from "./visitors";
@@ -207,9 +208,26 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   // `?? 0`: the first tap of its kind this visit.
   const onTap = (verb: GardenVerb) => taps.current.set(verb, (taps.current.get(verb) ?? 0) + 1);
   const learner = useLearner(lang);
-  // The learner's own garden: the same plants as the 2D garden.
-  const source = useMemo(() => (learner ? plantsFromLearner(learner) : null), [learner]);
-  const visitors = useMemo(() => (learner ? learnerVisitors(learner) : null), [learner]);
+  // The learner's own garden (the same plants as the 2D garden) and today's visitors. The walk is a snapshot of
+  // them as it opens, so they are worked out once, in tasks of their own: in render, with every deck word studied,
+  // the two took about 120 ms in one task at CPU 10× (#459).
+  const [opened, setOpened] = useState<{ source: PlantSource; visitors: LearnerVisitors } | null>(null);
+  useEffect(() => {
+    if (!learner || opened) return;
+    let alive = true;
+    void (async () => {
+      await yieldToBrowser();
+      if (!alive) return;
+      const source = plantsFromLearner(learner);
+      await yieldToBrowser();
+      if (alive) setOpened({ source, visitors: learnerVisitors(learner) });
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [learner, opened]);
+  const source = opened?.source ?? null;
+  const visitors = opened?.visitors ?? null;
   const store = useStore();
   const now = useNow();
   // The door in the hedge (#315): open for good once opened; until then the key hides in the garden once "key" brought it,

@@ -4,6 +4,7 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
+import { yieldToBrowser } from "../lib/yield";
 import { along, BED_H, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
 import { benchLine, collideTrees, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
@@ -590,6 +591,37 @@ export class GardenScene {
         for (const mat of materialsOf(o)) for (const t of texturesOf(mat)) this.renderer.initTexture(t);
       });
       if (await this.stopped()) return;
+    }
+    await this.drawOnce();
+  }
+
+  /**
+   * Draws each part once into one pixel, a slice at a time. compile() leaves part of a
+   * material's setup to its first draw: its program and uniforms, and the wait for the GPU's
+   * link. On the first frame, that took about 200 ms in one task at CPU 10× (#459).
+   * Only what the camera sees now is drawn, as on the first frame.
+   */
+  private async drawOnce(): Promise<void> {
+    const parts = [...this.scene.children];
+    const shown = parts.map((p) => p.visible);
+    for (const p of parts) p.visible = false;
+    // The hidden parts' matrices do not change meanwhile: update them all once, not on every draw.
+    this.scene.updateMatrixWorld();
+    this.scene.matrixWorldAutoUpdate = false;
+    this.renderer.setScissorTest(true);
+    this.renderer.setScissor(0, 0, 1, 1);
+    try {
+      for (const [i, p] of parts.entries()) {
+        if (!shown[i]) continue;
+        p.visible = true;
+        this.renderer.render(this.scene, this.camera);
+        p.visible = false;
+        if (await this.stopped()) return;
+      }
+    } finally {
+      this.renderer.setScissorTest(false);
+      this.scene.matrixWorldAutoUpdate = true;
+      for (const [i, p] of parts.entries()) p.visible = shown[i];
     }
   }
 
@@ -2065,16 +2097,6 @@ function texturesOf(mat: THREE.Material): THREE.Texture[] {
 
 /** How long one slice of the scene's build may run before it yields: under the 10 ms task budget, with room for the browser's own work. */
 const SLICE_MS = 8;
-
-/**
- * Lets the browser paint and handle input. scheduler.yield resumes this work
- * ahead of other queued tasks; where it is missing (Safari, for one), a new
- * task via setTimeout does the same, only queued last.
- */
-function yieldToBrowser(): Promise<void> {
-  const s = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
-  return s?.yield ? s.yield() : new Promise((r) => setTimeout(r, 0));
-}
 
 export function webglAvailable(): boolean {
   try {
