@@ -576,9 +576,6 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
   position: sticky; bottom: 0; background: linear-gradient(transparent, var(--paper) 1.2rem);
 }
 .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-/* Answer buttons fade in while taps are still held back (useReveal), so nothing looks pressable that isn't. */
-.card :is(.answer-btn, .actions .pass, .actions .fail) { transition: opacity 0.2s var(--ease); }
-.card:not([data-armed]) :is(.answer-btn, .actions .pass, .actions .fail) { opacity: 0.45; cursor: default; }
 /* Titles at the top, so side-by-side choices line up when one description wraps. */
 .answer-btn { flex-direction: column; align-items: flex-start; justify-content: flex-start; text-align: left; gap: 0.25rem; padding: 0.85rem 1rem; border-radius: 16px; border: 1px solid var(--line); background: var(--card); }
 .answer-btn strong { font-size: 1.05rem; display: inline-flex; align-items: center; gap: 0.3rem; }

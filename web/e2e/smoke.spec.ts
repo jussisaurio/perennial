@@ -1,5 +1,5 @@
 import { expect, test } from "./test";
-import { answer, startCourse, startSession } from "./helpers";
+import { answer, reveal, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   await page.goto("/");
@@ -9,8 +9,8 @@ test("smoke: landing → start learning → a session → progress survives a re
   await page.getByRole("button", { name: /today's practice/i }).click();
   await expect(page.locator(".kicker")).toBeVisible();
   // Answer "I knew it" on the first new word: that records a review.
-  await page.getByRole("button", { name: /Show meaning/ }).click();
-  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
+  // With a key: a click on "I knew it" this soon after a click on Show would be dropped as a double-click.
+  await reveal(page);
   await page.getByRole("button", { name: /I knew it/ }).click();
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /^Done/ }).click();

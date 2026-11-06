@@ -93,15 +93,14 @@ test("double-clicking Show does not grade the unseen answer", async ({ page }) =
   await page.getByRole("button", { name: /Show answer/ }).dblclick();
   await expect(page.getByRole("button", { name: /I remembered/ })).toBeVisible();
   await expect(page.locator(".session")).toHaveAttribute("data-card", card!); // still the same card
-  // Grade "I forgot" for real. Writes upload in order, so once that one is on
-  // the server, a stray "I remembered" from the double-click would be too.
-  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
+  // Grade "I forgot" for real, at once: only the double-click's second half was dropped.
+  // Writes upload in order, so once that one is on the server, a stray "I remembered" would be too.
   await page.getByRole("button", { name: /I forgot/ }).click();
   await expect.poll(async () => (await serverRows<{ grade: number }>(page, "review")).some((r) => r.grade === 1), { timeout: 15_000 }).toBe(true);
   expect(await serverRows(page, "review")).toHaveLength(1);
 });
 
-test("an answer key right after Show counts; the buttons look held back until a tap counts", async ({ page }) => {
+test("an answer key right after Show counts, and the answer buttons never look held back", async ({ page }) => {
   await startCourse(page);
   await startSession(page);
   await continueIntros(page, 4);
@@ -110,8 +109,8 @@ test("an answer key right after Show counts; the buttons look held back until a 
   // No wait between Show and the answer key: the key is a different one, so it counts at once.
   await page.getByRole("button", { name: /Show answer/ }).click();
   await expect(remembered).toBeVisible();
-  // Until taps count, the buttons are dimmed: nothing looks pressable that isn't.
-  expect(Number(await remembered.evaluate((b) => getComputedStyle(b).opacity))).toBeLessThan(1);
+  // Taps count at once too, so the buttons look like any other (#500).
+  expect(Number(await remembered.evaluate((b) => getComputedStyle(b).opacity))).toBe(1);
   await page.keyboard.press("2");
   await expect(page.locator(".session")).not.toHaveAttribute("data-card", card!);
 });
@@ -210,6 +209,8 @@ test("ending the session while an answer finishes keeps the pause, and the clock
   await expect(page.locator("main.summary")).toBeVisible();
   await page.clock.runFor(1_000);
   await expect(page.locator("main.summary")).toBeVisible(); // the next card did not come over it
+  // Both answers on the server first, or the one ended with the session uploads late and looks like the new one.
+  await expectServerRows(page, "review", 2);
   const before = new Set((await serverRows<{ id: string }>(page, "review")).map((r) => r.id));
   await page.getByRole("button", { name: "Continue this session" }).click();
   await expect(kicker(page)).toBeVisible();
@@ -305,7 +306,6 @@ test("Enter or Space on a button reached with Tab presses that button, not the c
   await page.getByRole("button", { name: "Play the word" }).click();
   await page.keyboard.press("Space");
   await expect(gloss).toBeVisible();
-  await expect(page.locator("main.card")).toHaveAttribute("data-armed", "true");
   await advance(page, "1");
   // Even on a button first reached with Tab: the click makes it the mouse's.
   await tabTo(page, page.getByRole("button", { name: "Mute sound" }));

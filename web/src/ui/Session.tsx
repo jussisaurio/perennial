@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { didLine, firstPlantsLine, summaryHeadline } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
@@ -217,9 +217,6 @@ function Speaker({ text, tag, what }: { text: string; tag: string; what: "word" 
   );
 }
 
-/** Ignore answer input this soon after revealing, to absorb accidental double-clicks. */
-const GUARD_MS = 400;
-
 const KICKERS = {
   intro: { icon: <SeedIcon size={15} />, text: "new word" },
   read: { icon: <BookIcon size={15} />, text: "reading" },
@@ -265,28 +262,47 @@ function Actions({ children }: { children: ReactNode }) {
   return <div className="actions">{children}</div>;
 }
 
+/** Two presses this close together are one double-click or double-tap. */
+const DOUBLE_TAP_MS = 400;
+
+/** A click, or the Enter that submits a form. */
+type Press = MouseEvent<HTMLElement> | FormEvent;
+
+/** Where a press landed: a box on the screen, or "key" for a key (a click from a key has detail 0). */
+function placeOf(e: Press): DOMRect | "key" {
+  return "detail" in e && e.detail > 0 ? e.currentTarget.getBoundingClientRect() : "key";
+}
+
+/** Whether press `e` landed on `place`, where Show was pressed. */
+function samePlace(place: DOMRect | "key", e: Press) {
+  if (place === "key") return placeOf(e) === "key";
+  if (!("clientX" in e) || e.detail === 0) return false;
+  return e.clientX >= place.left && e.clientX <= place.right && e.clientY >= place.top && e.clientY <= place.bottom;
+}
+
 /**
- * A card's answer, hidden until shown. Clicks and taps on the answer buttons
- * within GUARD_MS of showing are ignored: "Show" sits where the answer buttons
- * appear, so a double-click or double-tap would otherwise answer a card nobody
- * has read. The buttons look dimmed until then (data-armed), so what looks
- * pressable is pressable. The answer keys (1, 2, arrows) differ from the keys
- * that show the answer, so they are never held back.
+ * A card's answer, hidden until shown. "Show" sits where the answer buttons
+ * appear, so the second half of a double-click or double-tap on it would
+ * answer a card nobody has read. So the first answer press is dropped when it
+ * comes that soon after Show and lands where Show was. Every other press
+ * counts at once, so the buttons never look or act held back. The answer keys
+ * (1, 2, arrows) differ from the keys that show the answer, so they always count.
  */
 function useReveal() {
   const [revealed, setRevealed] = useState(false);
-  const reveal = () => setRevealed(true);
-  // Exposed as data-armed so tests can wait for the guard instead of sleeping.
-  const [armed, setArmed] = useState(false);
-  useEffect(() => {
-    if (!revealed) return;
-    const t = setTimeout(() => setArmed(true), GUARD_MS);
-    return () => clearTimeout(t);
-  }, [revealed]);
-  const guarded = (answer: () => void) => () => {
-    if (armed) answer();
+  const shown = useRef<{ at: number; place: DOMRect | "key" } | null>(null);
+  // A shortcut key passes no event: its answer keys are other keys, so no answer press can be its second half.
+  const reveal = (e?: Press) => {
+    shown.current = e ? { at: e.timeStamp, place: placeOf(e) } : null;
+    setRevealed(true);
   };
-  return { revealed, reveal, guarded, armed };
+  const guarded = (answer: () => void) => (e: Press) => {
+    const show = shown.current;
+    shown.current = null;
+    if (show && e.timeStamp - show.at < DOUBLE_TAP_MS && samePlace(show.place, e)) return;
+    answer();
+  };
+  return { revealed, reveal, guarded };
 }
 
 /**
@@ -332,7 +348,7 @@ function MeaningLine({ word, lang, tag, asked }: { word: Word; lang: string; tag
 // answer is in view, "I knew it" is too easy to believe (#196).
 function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: string; onDone: (g: Grade | null, o?: { alreadyKnown?: boolean }) => void }) {
   const { word, example } = card;
-  const { revealed, reveal, guarded, armed } = useReveal();
+  const { revealed, reveal, guarded } = useReveal();
   const play = useCallback(() => void speakAll(example ? [word.lemma, example.text] : [word.lemma], tag), [word.lemma, example, tag]);
   // The sentence follows the word; leaving the card cuts both off, so it never plays over the next one.
   useEffect(() => {
@@ -344,9 +360,9 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
   const isNew = guarded(isNewNow);
   const knewIt = guarded(knewItNow);
   // Answers are always 1 / ← (the left button) and 2 / → (the right one).
-  useKeys(revealed ? { "1": isNewNow, ArrowLeft: isNewNow, "2": knewItNow, ArrowRight: knewItNow, r: play } : { " ": reveal, Enter: reveal, r: play });
+  useKeys(revealed ? { "1": isNewNow, ArrowLeft: isNewNow, "2": knewItNow, ArrowRight: knewItNow, r: play } : { " ": () => reveal(), Enter: () => reveal(), r: play });
   return (
-    <main className="card" data-armed={armed || undefined}>
+    <main className="card">
       {revealed ? (
         <Said key="answer">
           <MeaningLine word={word} lang={lang} tag={tag} /> Is this word new to you?
@@ -410,8 +426,7 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
 function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card; tag: string; lang: string; listen: boolean; onDone: (g: Grade | null) => void; kicker: keyof typeof KICKERS; hint: boolean }) {
   const { word, example } = card;
   const asked = askedForm(word, example);
-  const { revealed, reveal, guarded, armed } = useReveal();
-  const grade = (g: Grade) => guarded(() => onDone(g))();
+  const { revealed, reveal, guarded } = useReveal();
   const audioText = example?.text ?? word.lemma;
   const play = () => void speak(audioText, tag);
   useEffect(() => {
@@ -423,12 +438,12 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
   useKeys(
     revealed
       ? { "1": () => onDone(1), ArrowLeft: () => onDone(1), "2": () => onDone(3), ArrowRight: () => onDone(3), r: play }
-      : { " ": reveal, Enter: reveal, r: play },
+      : { " ": () => reveal(), Enter: () => reveal(), r: play },
   );
   // Grades are about the word; on a listening card that means "did I catch it".
   const [no, yes] = listen ? ["Did not understand", "Understood"] : ["I forgot", "I remembered"];
   return (
-    <main className="card" data-lemma={word.lemma} data-armed={armed || undefined}>
+    <main className="card" data-lemma={word.lemma}>
       {revealed ? (
         <Said key="answer">
           {example && `${example.translation} `}
@@ -479,10 +494,10 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
             <Meaning word={word} lang={lang} asked={asked} />
           </div>
           <Actions>
-            <button className="fail" onClick={() => grade(1)} aria-keyshortcuts="1">
+            <button className="fail" onClick={guarded(() => onDone(1))} aria-keyshortcuts="1">
               {no} <kbd aria-hidden="true">1</kbd>
             </button>
-            <button className="pass" onClick={() => grade(3)} aria-keyshortcuts="2">
+            <button className="pass" onClick={guarded(() => onDone(3))} aria-keyshortcuts="2">
               {yes} <kbd aria-hidden="true">2</kbd>
             </button>
           </Actions>
@@ -513,20 +528,20 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
   const ids = useId();
   const grade: Grade = verdict && passes(verdict) ? 3 : 1;
   // Checking shows the answer: Enter pressed twice must not also move on past it.
-  const { reveal, guarded, armed } = useReveal();
+  const { reveal, guarded } = useReveal();
 
-  const submit = () => {
+  const submit = (e: Press) => {
     if (verdict) {
-      guarded(() => onDone(grade))();
+      guarded(() => onDone(grade))(e);
       return;
     }
     setVerdict(check(value, target, lang));
-    reveal();
+    reveal(e);
     void speak(example?.text ?? word.lemma, tag);
   };
 
   return (
-    <main className="card" data-armed={armed || undefined}>
+    <main className="card">
       <Kicker kind={kicker} />
       <p className="prompt">Type the missing word.</p>
       {example ? (
@@ -547,7 +562,7 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          submit();
+          submit(e);
         }}
       >
         <input
