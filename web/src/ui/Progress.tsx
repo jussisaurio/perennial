@@ -52,7 +52,10 @@ export function Progress({ learner, lang: code }: { learner: Learner; lang: stri
           </p>
           <div className="activity" role="img" aria-label="Reviews per day, last 30 days">
             {stats.days.map((d, i) => (
-              <div key={d.day} className={i === 29 ? "today" : undefined} title={d.reviews ? `${new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" })}: ${plural(d.reviews, "review")}` : restDayLine(new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" }))} style={{ height: `${Math.max(4, (d.reviews / max) * 100)}%` }} />
+              // Each day is a faint cell; a bar grows in it only on a day with reviews, so rest days don't read as a broken line.
+              <div key={d.day} className={i === 29 ? "today" : undefined} title={d.reviews ? `${new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" })}: ${plural(d.reviews, "review")}` : restDayLine(new Date(d.day).toLocaleDateString("en", { month: "short", day: "numeric" }))}>
+                {d.reviews > 0 && <span style={{ height: `${Math.max(10, (d.reviews / max) * 100)}%` }} />}
+              </div>
             ))}
           </div>
           <div className="activity-cap">

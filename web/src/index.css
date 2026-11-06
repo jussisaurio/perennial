@@ -123,8 +123,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 :focus-visible { outline: 2.5px solid var(--persimmon); outline-offset: 2px; }
 button.primary { background: var(--ink); color: var(--paper); box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.5); }
 button.primary:hover:not(:disabled) { box-shadow: 0 10px 24px -8px rgb(0 0 0 / 0.6); }
-/* A faded ink button still looked pressable (light) and was dark on grey (dark): a flat, quiet one, in both themes. */
-button.primary:disabled { opacity: 1; background: var(--paper-2); color: var(--muted); border-color: var(--line); box-shadow: none; }
+/* A faded ink button still looked pressable (light) and was dark on grey (dark): a flat tint of the ink, with no border, in both themes. */
+button.primary:disabled { opacity: 1; background: color-mix(in oklab, var(--ink) 8%, transparent); color: color-mix(in oklab, var(--ink) 40%, transparent); box-shadow: none; }
 button.secondary { background: var(--card); border-color: var(--line); }
 button.secondary:hover:not(:disabled) { border-color: var(--ink-2); }
 /* The same lift as "I remembered", so the two answers look equal. */
@@ -137,6 +137,8 @@ button.pass:hover:not(:disabled) { box-shadow: 0 10px 24px -10px var(--leaf); }
 button.ghost { padding: 0.4rem 0.6rem; color: var(--muted); }
 button.ghost:hover:not(:disabled) { color: var(--ink); background: var(--paper-2); }
 button.wide { min-width: 12rem; }
+/* A form's main button: as wide as its field (.form input), and tall enough to hit with a thumb. */
+button.block { width: 100%; max-width: 26rem; min-height: 3.1rem; }
 button.icon { padding: 0.5rem; border-radius: 50%; color: var(--ink-2); }
 button.icon:hover { background: var(--paper-2); color: var(--ink); }
 kbd {
@@ -153,9 +155,31 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink-2); box-shadow: 0 0 0 4px var(--sun-soft); }
 input::placeholder, textarea::placeholder { color: var(--muted); }
 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%236f685b' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.2rem; }
-/* No margin: the browser's default pushed the track past the content edge. */
-input[type="range"] { padding: 0; margin: 0; accent-color: var(--persimmon); border: none; background: none; box-shadow: none; }
+/* No margin: the browser's default pushed the track past the content edge.
+   Our own track and thumb: --fill (0 to 1, set by the page) inks the track up to the thumb's centre. */
+input[type="range"] {
+  --thumb: 1.5rem; --fill: 0.5;
+  -webkit-appearance: none; appearance: none; height: var(--thumb); padding: 0; margin: 0; border: none; border-radius: 0; background: none; box-shadow: none; cursor: pointer;
+}
+input[type="range"]:focus { box-shadow: none; }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--ink-2) calc(var(--thumb) / 2 + var(--fill) * (100% - var(--thumb))), var(--line) 0); }
+input[type="range"]::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--ink-2) calc(var(--thumb) / 2 + var(--fill) * (100% - var(--thumb))), var(--line) 0); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: var(--thumb); height: var(--thumb); margin-top: calc(3px - var(--thumb) / 2); border-radius: 50%;
+  background: #fff; box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22); transition: box-shadow 0.2s;
+}
+input[type="range"]::-moz-range-thumb { width: var(--thumb); height: var(--thumb); border: none; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22); }
+input[type="range"]:focus-visible { outline: none; }
+input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22), 0 0 0 4px var(--sun-soft); }
+input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.22), 0 0 0 4px var(--sun-soft); }
 input[type="file"] { padding: 0.5rem; }
+/* The search field's clear button: a quiet ink circle with a cut-out cross, not Chrome's blue ×. */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none; appearance: none; width: 1.1rem; height: 1.1rem; margin-left: 0.4rem; cursor: pointer; background: var(--muted);
+  --x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill-rule='evenodd' d='M10 0a10 10 0 1 0 0 20 10 10 0 1 0 0-20zM6.2 7.6l1.4-1.4L10 8.6l2.4-2.4 1.4 1.4L11.4 10l2.4 2.4-1.4 1.4L10 11.4l-2.4 2.4-1.4-1.4L8.6 10z'/%3E%3C/svg%3E");
+  -webkit-mask: var(--x) center / contain no-repeat; mask: var(--x) center / contain no-repeat;
+}
+input[type="search"]::-webkit-search-cancel-button:hover { background: var(--ink-2); }
 .form { display: grid; gap: 1rem; }
 /* An email or a code does not need the whole desktop column. */
 .form input:not([type="range"]) { max-width: 26rem; }
@@ -165,15 +189,22 @@ input[type="file"] { padding: 0.5rem; }
 .chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .chip { border: 1px solid var(--line); background: var(--card); padding: 0.55rem 1rem; }
 .chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+/* Options of one choice, or a pair of buttons: equal widths, in one row. On a phone they stack, each as wide as the column. */
+.even { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); max-width: 34rem; }
+.even > * { white-space: nowrap; }
+@media (max-width: 640px) { .even { grid-auto-flow: row; } }
 
 /* ---------- app shell ---------- */
 .app { max-width: 52rem; margin: 0 auto; padding: 0 16px 6rem; }
 nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75rem; }
 .landing-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .landing-signin { margin-top: 1.25rem; }
-/* Sign-in: the two ways in, and the email step's button, are full width like the field; the code link is a quiet afterthought. */
-.signin-wide { width: 100%; max-width: 26rem; }
-.form .signin-have { justify-self: start; font-size: 0.88rem; }
+/* As wide as the language cards above it. */
+button.landing-start { max-width: none; margin-top: 1.5rem; }
+/* Sign-in: a field and its error stay together; the quiet links under the button line up with the form's edge. */
+.signin-field { display: grid; gap: 0.45rem; }
+.signin-links { display: flex; flex-wrap: wrap; column-gap: 1.5rem; row-gap: 0.25rem; margin-top: -0.35rem; }
+.form .ghost.link { justify-self: start; font-size: 0.92rem; }
 .wordmark { display: inline-flex; align-items: center; gap: 0.35rem; font: 1.55rem/1 var(--display); letter-spacing: -0.02em; color: inherit; text-decoration: none; }
 /* The language: a garden per course (ui/CourseSwitcher.tsx). */
 .course-switch { position: relative; }
@@ -181,8 +212,8 @@ nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75r
 .course-switch-button { border: 1px solid var(--line); background: var(--card); }
 .course-switch-button[aria-expanded="true"] { border-color: var(--ink); }
 .course-switch-label { color: var(--muted); }
-/* Onest has no ▾. Naming it here would load its symbols file on every screen, for nothing. */
-.caret { font-size: 0.7em; color: var(--muted); font-family: var(--ui-system); }
+.course-switch-button > svg { color: var(--muted); transition: transform 0.2s var(--ease); }
+.course-switch-button[aria-expanded="true"] > svg { transform: rotate(180deg); }
 .course-menu {
   position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; width: max-content; min-width: 13rem; max-width: calc(100vw - 32px);
   background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 0.4rem; box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.35);
@@ -252,7 +283,8 @@ section { margin-bottom: 1.25rem; }
 .home-head h1 em { font-style: normal; color: var(--persimmon); }
 .date { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
 
-.start-row { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; margin: 1.5rem 0 2rem; }
+/* Little space below: the garden strip's sky gives the air. */
+.start-row { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; margin: 1.5rem 0 0.75rem; }
 .start {
   position: relative; border-radius: 999px; padding: 1.05rem 1.6rem 1.05rem 1.25rem;
   background: var(--ink); color: var(--paper); font-size: 1.12rem; font-weight: 600; gap: 0.8rem;
@@ -265,8 +297,8 @@ section { margin-bottom: 1.25rem; }
 }
 .start small { font-weight: 400; opacity: 0.65; font-size: 0.9rem; white-space: nowrap; }
 .start-note { color: var(--muted); font-size: 0.92rem; max-width: 22rem; }
-/* Today, once the day's minutes are done: the plain fact, above "Practice more". */
-.start-row .watered { flex-basis: 100%; margin: 0 0 -0.4rem; font: 1.3rem/1.3 var(--display); }
+/* Today, once the day's minutes are done: the plain fact, above "Practice more". A body line: in the display face it fought the greeting. */
+.start-row .watered { flex-basis: 100%; margin: 0 0 -0.25rem; font-size: 1.05rem; color: var(--ink-2); }
 .start-row .five-minutes-note { flex-basis: 100%; margin: -0.6rem 0 0; max-width: 34rem; }
 
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 2rem; border-top: 1px solid var(--line); }
@@ -280,9 +312,10 @@ section { margin-bottom: 1.25rem; }
 }
 
 .activity { display: flex; align-items: flex-end; gap: 3px; height: 40px; margin-top: 1.75rem; }
-.activity div { flex: 1; background: var(--leaf-2); border-radius: 3px 3px 1px 1px; min-height: 3px; transition: height 0.6s var(--ease); }
+.activity div { flex: 1; height: 100%; display: flex; align-items: flex-end; background: color-mix(in oklab, var(--line-soft), transparent 50%); border-radius: 3px; overflow: hidden; }
+.activity span { flex: 1; background: var(--leaf-2); transition: height 0.6s var(--ease); }
 /* Today in a deeper green: red read as an error. */
-.activity div.today { background: var(--leaf); }
+.activity div.today span { background: var(--leaf); }
 .activity-cap { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-top: 0.35rem; }
 
 /* ---------- garden ---------- */
@@ -324,7 +357,16 @@ section { margin-bottom: 1.25rem; }
   85% { transform: translate(-10px, -24px); opacity: 0; }
 }
 .garden-empty { position: absolute; inset: 0 0 50px; display: grid; place-items: center; color: var(--muted); font: 1.15rem var(--display); pointer-events: none; }
-.garden-legend { display: flex; align-items: center; gap: 1.1rem; font-size: 0.82rem; color: var(--muted); padding: 0.5rem 16px 0; }
+/* The counts never wrap inside: on a phone they broke into little columns beside the swipe hint. */
+.garden-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 0.25rem 1.1rem; font-size: 0.82rem; color: var(--muted); padding: 0.5rem 16px 0; }
+.garden-legend > span { white-space: nowrap; }
+.garden-legend .swipe-hint { flex-basis: 100%; font-size: 0.78rem; }
+/* On a phone the strip runs edge to edge; on wider screens it keeps to the page column, as a bed with soft corners. */
+@media (min-width: 641px) {
+  .garden { margin-inline: 0; }
+  .garden-scroll { border-radius: 0 0 14px 14px; }
+  .garden-legend { padding-inline: 0; }
+}
 .garden-legend b { color: var(--ink); font-weight: 600; }
 .plant-tip {
   position: absolute; width: 200px; padding: 0.6rem 0.75rem; border-radius: 12px; pointer-events: none;
@@ -377,22 +419,28 @@ section { margin-bottom: 1.25rem; }
 .words-empty { margin: 2rem 0; text-align: center; font: 1.1rem var(--display); color: var(--ink-2); }
 
 /* ---------- session ---------- */
-.session { position: relative; max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
+/* --card-top and --kicker-h: the card's top padding and the kicker's height, which place the card's plant (.card-plant). */
+.session { --card-top: clamp(2rem, 9vh, 6rem); --kicker-h: 1.8rem; position: relative; max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
 .session-bar { display: flex; align-items: center; gap: 0.8rem; padding: 1rem 0 0.25rem; }
 .vine { position: relative; flex: 1; height: 18px; display: flex; align-items: center; }
 .vine::before { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--line); border-radius: 2px; }
 .vine .grow { position: absolute; left: 0; height: 3px; background: var(--leaf); border-radius: 3px; transition: width 1s linear; }
-.vine .tip { position: absolute; transform: translate(-50%, -1px); transition: left 1s linear; color: var(--leaf); }
+/* The sprout's stem ends 4/24 above its box's foot: placed so, it grows from the line (9px up the 18px vine). */
+.vine .tip { position: absolute; bottom: calc(9px - 16px * 4 / 24); transform: translateX(-50%); transition: left 1s linear; color: var(--leaf); }
+.vine .tip svg { display: block; }
 .time-left { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5rem; text-align: right; }
 
-.card { flex: 1; display: flex; flex-direction: column; gap: 0.85rem; padding: clamp(2rem, 9vh, 6rem) 0 1rem; animation: card-in 0.38s var(--ease) both; }
+.card-stage { position: relative; flex: 1; display: flex; flex-direction: column; }
+/* Under the "not saved" notice the card needs less air above it. */
+.refused + .card-stage { --card-top: 1.5rem; }
+.card { flex: 1; display: flex; flex-direction: column; gap: 0.85rem; padding: var(--card-top) 0 1rem; animation: card-in 0.38s var(--ease) both; }
 /* Read by a screen reader, not shown. */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(0.99); } to { opacity: 1; transform: none; } }
 .kicker {
   align-self: flex-start; display: inline-flex; align-items: center; gap: 0.4rem;
   font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
-  padding: 0.35rem 0.7rem 0.35rem 0.55rem; border-radius: 999px;
+  height: var(--kicker-h); padding: 0 0.7rem 0 0.55rem; border-radius: 999px;
 }
 .kicker.read { background: var(--leaf-soft); color: var(--leaf); }
 .kicker.listen { background: var(--sky-soft); color: var(--sky); }
@@ -402,7 +450,8 @@ section { margin-bottom: 1.25rem; }
 
 .word { font: clamp(2.8rem, 10vw, 4.2rem)/1.05 var(--display); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; word-break: break-word; }
 .gloss { font-size: 1.3rem; color: var(--ink-2); }
-.pos { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 0.15rem; }
+/* Like a dictionary: a quiet italic after the serif headword, not shouted caps. */
+.pos { font: italic 0.85em var(--display); color: var(--muted); margin-right: 0.3rem; }
 .sentence { font-size: 1.35rem; line-height: 1.6; margin: 0.25rem 0 0; }
 .sentence.big { font-size: clamp(1.55rem, 4.5vw, 2rem); line-height: 1.45; }
 .translation { color: var(--muted); margin: 0; font-size: 1.05rem; }
@@ -415,7 +464,7 @@ section { margin-bottom: 1.25rem; }
 .grown { background: linear-gradient(transparent 86%, color-mix(in oklab, var(--leaf-2), transparent 35%) 86%); }
 mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color: inherit; padding: 0 0.08em; font-weight: 600; }
 /* The dark sun-soft is a muddy brown under a word: a see-through sun reads as a highlighter. */
-:root[data-theme="dark"] mark { background: linear-gradient(transparent 58%, color-mix(in oklab, var(--sun), transparent 62%) 58%); }
+:root[data-theme="dark"] mark { background: linear-gradient(transparent 70%, color-mix(in oklab, var(--sun), transparent 55%) 70%); }
 .blank { display: inline-block; border-bottom: 2.5px solid var(--persimmon); margin: 0 0.1em; animation: blink 1.6s ease-in-out infinite; }
 @keyframes blink { 50% { border-color: var(--persimmon-soft); } }
 .example { border-top: 1px dashed var(--line); padding-top: 1rem; margin-top: 0.5rem; }
@@ -432,16 +481,26 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 }
 .play::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--sky-soft); animation: ripple 2.2s var(--ease) infinite; }
 @keyframes ripple { from { transform: scale(0.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+/* Two equal halves of the card's width. The fade is short and inside the padding: text that scrolls under the bar is hidden, never half seen. */
 .actions {
-  margin-top: auto; display: flex; gap: 0.7rem; justify-content: flex-end; flex-wrap: wrap;
-  position: sticky; bottom: 0; padding: 1.5rem 0 max(1.1rem, env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, var(--paper) 35%);
+  margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem;
+  position: sticky; bottom: 0; padding: 1.25rem 0 max(1.1rem, env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, var(--paper) 1rem);
 }
-.actions button { padding: 0.9rem 1.5rem; font-size: 1.05rem; font-weight: 600; }
-/* Two answers side by side on a phone: less side padding, so "I remembered" fits on one line down to 320 px (#202). */
-@media (max-width: 480px) { .actions button { flex: 1; padding-inline: 0.6rem; text-wrap: balance; } }
-/* The summary's labels are longer: each button keeps its label on one line, and the second moves to its own row if both do not fit (#264). */
-.summary .actions button { flex: 1 1 auto; white-space: nowrap; }
+/* One button takes the right half, where the two answers will be. */
+.actions > :only-child { grid-column: 2; }
+/* The same corners as the two-line answer choices (.answer-btn). */
+.actions button { padding: 0.9rem 1.25rem; font-size: 1.05rem; font-weight: 600; border-radius: 16px; }
+/* On a phone one button takes the whole row; two answers get less side padding, so "I remembered" fits on one line down to 320 px (#202). */
+@media (max-width: 480px) {
+  .actions > :only-child { grid-column: 1 / -1; }
+  .actions button { padding-inline: 0.6rem; text-wrap: balance; }
+}
+/* The summary's labels are longer and keep to one line: on a phone the two stack, full width (#264). */
+.summary .actions button { white-space: nowrap; }
+@media (max-width: 480px) { .summary .actions { grid-template-columns: 1fr; } }
+/* A coloured glow under an answer reads as a stain on the dark paper. */
+:root[data-theme="dark"] .actions button.fail, :root[data-theme="dark"] .actions button.pass { box-shadow: none; }
 .answer { font-size: 1.5rem; padding: 0.85rem 1.1rem; border-radius: 14px; border-width: 1.5px; }
 .answer.ok { border-color: var(--leaf); background: var(--leaf-soft); }
 .answer.bad { border-color: var(--persimmon); background: var(--persimmon-soft); animation: shake 0.35s; }
@@ -455,15 +514,32 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .summary h1 { margin-top: 0.5rem; }
 
 /* ---------- words ---------- */
-/* On a phone the filter moves under the search box rather than squeezing it until its placeholder is cut (#120); on wider screens they share the row. */
-.row > .search { flex: 1 1 15rem; min-width: 0; }
+/* One toolbar: search, filter and view share a row on wide screens, all one height. On a phone the
+   search keeps a full row rather than being squeezed until its placeholder is cut (#120), and the
+   filter and view share the second. */
+.words-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.6rem; margin-bottom: 0.9rem; }
+.words-bar .search { flex: 1 1 0; min-width: 0; }
+.words-bar select { flex: none; width: auto; }
+.words-bar .words-view { flex: none; flex-wrap: nowrap; }
+@media (max-width: 560px) {
+  .words-bar .search { flex-basis: 100%; }
+  .words-bar select { flex: 1 1 0; }
+}
+.words-count { margin: 0 0 0.25rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums; }
 .words { list-style: none; padding: 0; margin: 0; }
 .words li { border-bottom: 1px solid var(--line-soft); }
-.word-row { display: flex; gap: 0.85rem; align-items: center; width: 100%; text-align: left; padding: 0.8rem 0.4rem; border-radius: 12px; justify-content: flex-start; }
+/* Fixed columns, so every meaning starts at the same x whatever the word's width. A long word wraps in its column. */
+.word-row { display: grid; grid-template-columns: 22px minmax(0, 9rem) minmax(0, 1fr) auto; column-gap: 0.85rem; align-items: center; width: 100%; text-align: left; padding: 0.8rem 0.4rem; border-radius: 12px; }
 .word-row:hover { background: var(--paper-2); }
-.word-row strong { font: 1.2rem/1.2 var(--display); font-weight: 400; }
+.word-row strong { font: 1.2rem/1.2 var(--display); font-weight: 400; overflow-wrap: anywhere; }
 .word-row .gl { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.word-row .skills { margin-left: auto; display: flex; gap: 0.3rem; flex: none; }
+.word-row .skills { display: flex; gap: 0.3rem; }
+/* A phone has no room for a word column: the meaning goes under the word, so it still starts at one x. */
+@media (max-width: 560px) {
+  .word-row { grid-template-columns: 22px minmax(0, 1fr); row-gap: 0.1rem; padding: 0.6rem 0.4rem; }
+  .word-row .glyph { grid-row: span 2; }
+  .word-row .gl { font-size: 0.92rem; line-height: 1.3; }
+}
 .pip { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.45rem; border-radius: 999px; font-variant-numeric: tabular-nums; }
 .pip.read { background: var(--leaf-soft); color: var(--leaf); }
 .pip.listen { background: var(--sky-soft); color: var(--sky); }
@@ -471,6 +547,9 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 @media (max-width: 560px) { .word-row .skills { display: none; } }
 .glyph { flex: none; width: 22px; height: 22px; }
 .detail { padding: 0.5rem 0.4rem 1.25rem; display: grid; gap: 0.85rem; animation: rise 0.25s var(--ease); }
+/* An open row's detail starts where the word does, under it, not under the flower. */
+.words .detail { padding-left: calc(0.4rem + 22px + 0.85rem); }
+.schedule li span { white-space: nowrap; }
 .examples { padding-left: 1.1rem; margin: 0.25rem 0; display: grid; gap: 0.45rem; }
 .examples li::marker { color: var(--leaf-2); }
 
@@ -484,7 +563,11 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .legend { padding: 0.05em 0.45em; border-radius: 5px; margin-left: 0.3rem; }
 
 /* ---------- onboarding ---------- */
-.ghost.link { padding-left: 0; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+/* A text link that is a button: no side padding, so it lines up with the text around it. */
+.ghost.link { padding-inline: 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in oklab, currentColor, transparent 60%); }
+.ghost.link:hover:not(:disabled) { background: none; color: var(--ink); }
+/* Not yet usable (a countdown, no email yet): plain readable text, not a faded link. */
+.ghost.link:disabled { opacity: 1; color: var(--muted); text-decoration: none; }
 .link:hover { background: none !important; text-decoration-color: currentColor; }
 .lede { font-size: 1.12rem; color: var(--ink-2); max-width: 32rem; }
 
@@ -545,17 +628,25 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .status-card .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 details.more > summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; list-style: none; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0; }
 details.more > summary::-webkit-details-marker { display: none; }
-details.more > summary::before { content: "›"; display: inline-block; transition: transform 0.2s var(--ease); font-size: 1.1rem; line-height: 1; }
+details.more > summary::before {
+  content: ""; width: 0.75rem; height: 0.75rem; flex: none; background: currentColor; transition: transform 0.2s var(--ease);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M4.5 2.5 8 6l-3.5 3.5' stroke='black' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
 details.more[open] > summary::before { transform: rotate(90deg); }
 details.more > summary:hover { color: var(--ink); }
 details.more[open] > :not(summary) { margin-top: 0.75rem; animation: rise 0.25s var(--ease); }
+/* One line when closed: the panel's full padding made a tall card for it. The whole row opens it. */
+.panel.keep-garden { padding: 0.8rem 1.1rem; }
+details.keep-garden > summary { display: flex; color: var(--ink-2); }
+.panel.keep-garden[open] { padding-bottom: 1.1rem; }
 details.danger { margin-top: 2.5rem; }
 .error { color: var(--persimmon); font-size: 0.9rem; margin: 0; }
 /* Writes the server refused (#253): in place, above the card or in Settings. */
-.refused { margin: 0.5rem 0; }
-/* In a session, clear of the card's plant at the top right (.card-plant). */
-.session > .refused { margin-right: 84px; }
-@media (max-width: 480px) { .session > .refused { margin-right: 66px; } }
+.refused {
+  display: flex; align-items: flex-start; gap: 0.55rem; margin: 0.5rem 0; padding: 0.7rem 0.9rem; border-radius: 14px;
+  background: var(--persimmon-soft); color: var(--ink); font-size: 0.9rem; line-height: 1.45;
+}
+.refused svg { flex: none; color: var(--persimmon); margin-top: 0.1rem; }
 /* The space below sits on the whole head, not the h1: on phones the h1 is shorter
    than the Add words button, so the button touched the filter row below (#116). */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
@@ -570,9 +661,20 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 .credits-bar { height: 6px; border-radius: 3px; background: var(--paper-2); overflow: hidden; max-width: 22rem; }
 .credits-bar div { height: 100%; background: linear-gradient(90deg, var(--leaf), var(--sun)); border-radius: 3px; transition: width 0.6s var(--ease); }
 .choice { display: grid; gap: 0.5rem; }
-.choice label { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.75rem 0.9rem; border: 1px solid var(--line); border-radius: 14px; background: var(--card); cursor: pointer; color: var(--ink); font-size: 0.95rem; }
-.choice label:has(input:checked) { border-color: var(--ink-2); box-shadow: 0 0 0 3px var(--sun-soft); }
-.choice input { width: auto; margin-top: 0.2rem; accent-color: var(--persimmon); }
+/* Cards to choose from: the whole card is the control. The browser's radio is see-through and covers the card, so a tap anywhere picks it; a drawn dot shows the choice. */
+.choice label {
+  position: relative; display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--card); cursor: pointer; color: var(--ink); font-size: 0.95rem; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.choice label:hover { border-color: color-mix(in oklab, var(--line), var(--ink) 25%); }
+.choice label:has(input:checked) { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.choice label:has(input:focus-visible) { outline: 2.5px solid var(--persimmon); outline-offset: 2px; }
+.choice input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.choice label::after {
+  content: ""; flex: none; margin-left: auto; width: 1.25rem; height: 1.25rem; border-radius: 50%; box-sizing: border-box;
+  border: 1.5px solid color-mix(in oklab, var(--muted), transparent 45%); background: var(--card); transition: border 0.15s;
+}
+.choice label:has(input:checked)::after { border: 0.4rem solid var(--ink); }
 .choice span { display: grid; gap: 0.1rem; }
 /* The question sticks to the screen's foot with its answers, so on a long card the answers never cover it (#264). */
 .question {
@@ -587,7 +689,8 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 .answer-btn.primary span { color: color-mix(in oklab, var(--paper), transparent 25%); }
 @media (max-width: 420px) { .answers { grid-template-columns: 1fr; } }
 button.undo { padding: 0.35rem 0.7rem; color: var(--ink-2); font-size: 0.88rem; border: 1px solid var(--line); background: var(--card); }
-button.undo:disabled { opacity: 0.35; }
+/* Disabled, it keeps its shape: quieter text and outline, not the whole pill faded. */
+button.undo:disabled { opacity: 1; background: transparent; color: color-mix(in oklab, var(--muted), transparent 35%); border-color: var(--line-soft); }
 .shortcut-help { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgb(0 0 0 / 0.35); padding: 16px; animation: rise 0.2s var(--ease); }
 .shortcut-help .panel { max-width: 26rem; width: 100%; }
 .shortcut-help h2 { margin-top: 0; }
@@ -612,7 +715,9 @@ button.tok:active { transform: none; }
 .answer.warn { border-color: var(--sun); background: var(--sun-soft); }
 mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; padding: 0 0.05em; font-weight: 700; }
 .examples .author { display: block; font-size: 0.75rem; color: var(--muted); }
-.card-plant { position: absolute; top: 58px; right: 8px; pointer-events: none; animation: rise 0.4s var(--ease) both; }
+/* At the right end of the kicker's row, its soil (5px above its box's foot, 16px in from its right) level with the kicker's foot and the column's edge. */
+.card-stage { --plant-foot: calc(var(--card-top) + var(--kicker-h) + 5px); }
+.card-plant { position: absolute; top: calc(var(--plant-foot) - 76px); right: -16px; pointer-events: none; animation: rise 0.4s var(--ease) both; }
 /* The plant's moment after a good answer (Growth.tsx): where the answer buttons were, which step aside for it. */
 /* .growth-spot: the same box, always there and empty. Session reads it as an answer comes, so the moment reads no layout. */
 .growth, .growth-spot { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); height: 132px; pointer-events: none; }
@@ -624,13 +729,14 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .session.growing .actions, .session.growing .question { opacity: 0; pointer-events: none; }
 /* The corner plant would show the old form beside the growing one. Its "rise" animation holds its opacity, so hide it this way. */
 .session.growing .card-plant { visibility: hidden; }
-@media (max-width: 480px) { .card-plant { top: 54px; right: 2px; transform: scale(0.85); transform-origin: top right; } }
+@media (max-width: 480px) { .card-plant { transform: scale(0.85); transform-origin: bottom right; } }
 
 /* ---- Walk-in garden: a 90s game in a cosy frame ---------------------- */
 /* Without this the figure keeps the browser's 40 px side margins: caption indented, garden narrowed. */
 .landing-garden { margin-inline: 0; }
-.walk-link { display: inline-flex; align-items: center; gap: 0.45rem; margin: -0.4rem 0 1rem; padding: 0.35rem 0.2rem; color: var(--ink); font-weight: 600; background: none; border: 0; }
-.walk-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* A small pill, so it reads as a way in: as bare bold text it looked like a stray label. */
+.walk-link { margin: 0.9rem 0 1.25rem; padding: 0.5rem 1rem 0.5rem 0.8rem; font-size: 0.92rem; font-weight: 600; color: var(--ink); background: var(--card); border-color: var(--line); }
+.walk-link:hover { border-color: var(--ink-2); }
 
 .gw {
   --px: 3px;
@@ -662,7 +768,7 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 }
 
 /* Chunky notched pixel frames, like a SNES dialog box. */
-.gw-btn, .gw-card, .gw-stats, .gw-loading, .gw-hint {
+.gw-btn, .gw-card, .gw-stats, .gw-loading, .gw-hint, .gw-knob {
   background: var(--panel);
   box-shadow:
     0 calc(-1 * var(--px)) 0 0 var(--edge), 0 var(--px) 0 0 var(--edge),
@@ -673,9 +779,10 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 }
 .gw-btn {
   font: 500 1rem/1 var(--pixel); color: var(--gw-ink); padding: 0.6rem 0.85rem; border: 0; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; letter-spacing: 0.02em;
+  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; letter-spacing: 0.02em; white-space: nowrap;
   transition: transform 80ms steps(2);
 }
+.gw-btn svg, .gw-close svg { display: block; flex: none; }
 .gw-btn:hover { background: var(--panel-2); }
 .gw-btn:active { transform: translateY(var(--px)); }
 .gw-btn:focus-visible { outline: var(--px) solid var(--accent); outline-offset: calc(var(--px) * 2); }
@@ -683,9 +790,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-night .gw-water { background: #24507a; color: #e6f4ff; --panel-2: #1c4166; --edge-hi: #4d86bd; }
 
 .gw-top { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; gap: 14px; align-items: center; justify-content: space-between; z-index: 3; }
-/* Numbers in the pixel font are hard to read at this size (5 looks like 8). */
-/* The padding makes it as tall as the 44 px buttons beside it. */
-.gw-stats { font: 600 0.95rem/1.2 var(--ui); font-variant-numeric: tabular-nums; padding: calc((44px - 1.2em) / 2) 0.8rem; text-align: center; min-width: 0; }
+/* As tall as the 44 px buttons beside it, so the bar's tops and bottoms line up. */
+.gw-stats { font: 500 1rem/1.2 var(--pixel); letter-spacing: 0.02em; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.3rem 0.8rem; text-align: center; min-width: 0; }
 .gw-seeds { color: var(--gw-muted); }
 .gw-bottom { position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); right: 16px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; z-index: 3; }
 
@@ -739,40 +845,50 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 
 .gw-card {
   position: absolute; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%);
-  width: min(30rem, calc(100% - 40px)); padding: 1rem 1.1rem 1.05rem; display: grid; gap: 0.8rem;
+  width: min(30rem, calc(100% - 40px)); padding: 1rem 1.1rem 1.05rem; display: grid; gap: 0.8rem; font-family: var(--pixel); letter-spacing: 0.02em;
   animation: gw-pop 220ms steps(4) both; z-index: 4;
 }
 @keyframes gw-pop { from { transform: translate(-50%, 24px); opacity: 0; } }
 .gw-card-body { display: grid; grid-template-columns: auto 1fr; gap: 0.9rem; align-items: center; }
-.gw-card-body > div { display: grid; gap: 0.25rem; min-width: 0; }
-.gw-card svg { background: var(--panel-2); image-rendering: pixelated; }
+/* The right padding keeps a long meaning clear of the close button. */
+.gw-card-body > div { display: grid; gap: 0.25rem; min-width: 0; padding-right: 28px; }
+.gw-card-body > svg { background: var(--panel-2); image-rendering: pixelated; }
 .gw-word { font: 700 1.9rem/1 var(--pixel); letter-spacing: 0.01em; }
 .gw-gloss { font-size: 1.05rem; }
 .gw-card .muted { color: var(--gw-muted); }
-.gw-flavour { font-style: italic; color: var(--gw-muted); }
+/* No italic: the pixel font has none, and a slanted one smears its pixels. */
+.gw-flavour { color: var(--gw-muted); }
 .gw-card .row { gap: 0.5rem; flex-wrap: wrap; }
 .gw-card button.secondary, .gw-card button.ghost, .gw-empty button.primary { font-family: var(--pixel); border-radius: 0; }
 .gw-night .gw-card button.ghost { color: var(--gw-ink); }
-.gw-close { position: absolute; top: 4px; right: 6px; width: 40px; height: 40px; border: 0; background: none; font: 700 1.5rem/1 var(--pixel); color: var(--gw-muted); cursor: pointer; }
+.gw-close { position: absolute; top: 4px; right: 6px; width: 40px; height: 40px; border: 0; padding: 0; background: none; display: grid; place-items: center; color: var(--gw-muted); cursor: pointer; }
 .gw-empty { text-align: center; justify-items: center; bottom: 50%; transform: translate(-50%, 50%); animation: none; }
 .gw-empty strong { font: 700 1.5rem/1.1 var(--pixel); }
 
 /* The walk works while the plants are drawn (#459): a tap goes through to the garden. */
-.gw-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0.8rem 1.1rem; font: 500 1.05rem/1 var(--pixel); pointer-events: none; }
-.gw-hint { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); padding: 0.55rem 0.85rem; font: 500 0.9rem/1.3 var(--pixel); text-align: center; max-width: calc(100% - 40px); animation: gw-pop 300ms steps(4) both; }
+/* max-content: a box at left 50% would otherwise shrink to the half of the screen right of it, and wrap. */
+.gw-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: calc(100% - 40px); padding: 0.8rem 1.1rem; font: 500 1.05rem/1.3 var(--pixel); text-align: center; pointer-events: none; }
+.gw-hint { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); width: max-content; padding: 0.55rem 0.85rem; font: 500 0.9rem/1.3 var(--pixel); text-align: center; text-wrap: balance; max-width: min(40rem, calc(100% - 40px)); animation: gw-pop 300ms steps(4) both; }
 .gw-hint-coarse { display: none; }
 
-.gw-stick { display: none; position: absolute; left: 28px; bottom: max(28px, env(safe-area-inset-bottom)); width: 112px; height: 112px; border-radius: 50%; background: rgb(255 250 240 / 0.22); box-shadow: inset 0 0 0 3px rgb(43 29 18 / 0.5); z-index: 3; touch-action: none; }
-.gw-knob { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: var(--panel); box-shadow: 0 0 0 3px var(--edge), 0 5px 0 3px rgb(0 0 0 / 0.25); }
+/* A pixel disc (GardenWalk's STICK_CELLS, 4 px a pixel) with a knob framed like the buttons. */
+.gw-stick { display: none; position: absolute; left: 22px; bottom: max(24px, env(safe-area-inset-bottom)); width: 96px; height: 96px; z-index: 3; touch-action: none; }
+.gw-stick svg { display: block; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 var(--px) 0 rgb(0 0 0 / 0.25)); }
+.gw-stick-fill { fill: var(--panel); opacity: 0.4; }
+.gw-stick-rim { fill: var(--edge); opacity: 0.75; }
+.gw-knob { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; pointer-events: none; }
 @media (pointer: coarse) {
   .gw-stick { display: block; }
   .gw-hint-fine { display: none; }
   .gw-hint-coarse { display: inline; }
-  .gw-bottom { left: 160px; }
+  .gw-bottom { left: 132px; }
 }
 @media (max-width: 560px) {
   .gw { --px: 2px; }
-  .gw-stats { font-size: 0.8rem; padding: 0.45rem 0.55rem; }
+  /* Too narrow for one line in the pixel font: the two counts stack, each on its own line. */
+  .gw-stats { font-size: 0.85rem; line-height: 1.15; padding: 0.3rem 0.55rem; }
+  .gw-stats span span:not(.gw-seeds, .gw-dot) { display: block; }
+  .gw-dot { display: none; }
   .gw-btn { font-size: 0.9rem; padding: 0.5rem 0.65rem; }
   .gw-card { bottom: 160px; }
 }
@@ -784,7 +900,7 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
   /* On phones the card sits over the sky, leaving the plant and the stick free. */
   .gw-card { top: calc(max(14px, env(safe-area-inset-top)) + 64px); bottom: auto; padding: 0.75rem 0.8rem 0.8rem; gap: 0.6rem; animation-name: gw-drop; }
   .gw-card-body { gap: 0.7rem; }
-  .gw-card svg { width: 52px; height: 52px; }
+  .gw-card-body > svg { width: 52px; height: 52px; }
   .gw-word { font-size: 1.5rem; }
   .gw-bed { display: none; }
   .gw-empty { top: 50%; }
@@ -800,9 +916,13 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw, .gw * { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
 .gw-icon { min-width: 44px; justify-content: center; padding: 0.6rem; }
 /* The time and quality labels change with the choice: steady widths, so the buttons beside them do not shift (#274). */
-.gw-glyph { display: inline-block; width: 1em; text-align: center; }
-@media (min-width: 561px) { .gw-time { min-width: 7em; } .gw-quality { min-width: 10.4em; } }
-.gw-icon svg { display: block; }
+@media (min-width: 561px) {
+  .gw-time { min-width: 7em; } .gw-quality { min-width: 10.4em; }
+  /* Equal side columns, so the counts sit in the middle of the screen, under the hint. */
+  .gw-top { display: grid; grid-template-columns: 1fr auto 1fr; }
+  .gw-top > :first-child { justify-self: start; }
+  .gw-tools { justify-self: end; }
+}
 /* The action button (#334): only an icon, a little bigger than the rest, for a thumb. */
 .gw-act { min-width: 56px; min-height: 56px; }
 /* What you hold (#351), beside the action button: the thing itself, on a small paper square. Not a button. */
@@ -835,8 +955,6 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .deck-failed { display: grid; gap: 1rem; justify-items: start; }
 
 /* ---- Field guide (#211): pressed flowers on paper, pencil sketches for words still growing ---- */
-/* The same gap as between the search and the filter above it. */
-.words-view { margin: 0.6rem 0 0.4rem; }
 .guide-head { padding: 1.2rem 0 0.5rem; }
 .guide-head h2 { font: 1.4rem/1.2 var(--display); margin: 0 0 0.3rem; }
 .guide-head p { margin: 0; }
@@ -881,8 +999,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* A known word's page: give its seed, or share a picture of it (#213, #225). */
 .guide-share { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.2rem 0.6rem; margin-top: 0.3rem; }
 
-/* A visitor watching the session (#210): at the foot of the card's plant (.card-plant: 76px at top 58px, right 8px), on its left. It takes no taps. */
-.session-watcher { position: absolute; top: calc(58px + 76px); right: calc(8px + 76px); transform: translateY(-100%); pointer-events: none; animation: watcher-in 0.7s var(--ease) both; }
+/* A visitor watching the session (#210): at the foot of the card's plant (.card-plant, 76px wide), on its left. It takes no taps. */
+.session-watcher { position: absolute; top: var(--plant-foot); right: 60px; transform: translateY(-100%); pointer-events: none; animation: watcher-in 0.7s var(--ease) both; }
 .session.growing .session-watcher { visibility: hidden; }
 @keyframes watcher-in { from { transform: translate(14px, -100%); opacity: 0; } to { transform: translateY(-100%); opacity: 1; } }
-@media (max-width: 480px) { .session-watcher { top: calc(54px + 65px); right: calc(2px + 65px); } }
+@media (max-width: 480px) { .session-watcher { right: 49px; } }

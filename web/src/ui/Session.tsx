@@ -183,18 +183,19 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       {done ? (
         <Summary learner={learner} sentences={sentences}{...done} refusedBefore={refusedBefore} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
       ) : card ? (
-        <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={answer} />
+        // The card's plant stands on the kicker's row, so it moves with the card when a line above pushes it down.
+        <div className="card-stage">
+          <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={answer} />
+          <div className="card-plant" ref={cornerPlant} key={`plant-${serial}`} aria-hidden="true">
+            <WordPlant word={card.word.lemma} s={card.s} stage={card.stage} size={76} />
+          </div>
+          {growth && watching && serial - watching.start >= watching.visit.from - 1 && serial - watching.start < watching.visit.to - 1 && <Watcher view={watching.view} />}
+        </div>
       ) : null}
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
-      {card && !done && (
-        <div className="card-plant" ref={cornerPlant} key={`plant-${serial}`} aria-hidden="true">
-          <WordPlant word={card.word.lemma} s={card.s} stage={card.stage} size={76} />
-        </div>
-      )}
       {/* ?.: a tap may already have ended the moment. */}
       {growing && <Growth m={growing.m} corner={growing.at.corner} spot={growing.at.spot} onDone={() => grown.current?.()} />}
       <div className="growth-spot" ref={growthSpot} />
-      {growth && watching && card && !done && serial - watching.start >= watching.visit.from - 1 && serial - watching.start < watching.visit.to - 1 && <Watcher view={watching.view} />}
     </div>
   );
 }

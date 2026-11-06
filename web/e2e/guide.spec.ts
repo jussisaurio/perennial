@@ -70,11 +70,11 @@ test("the field guide: pressed flowers for known words, sketches for growing one
   await expect(page.locator("dialog[open]")).toHaveCount(0);
   await search.fill("");
 
-  // Only started words are drawn, and the count says so: "New" has nothing to draw.
-  await page.locator(".row select").first().selectOption("new");
+  // Only started words are drawn: "New" has nothing to draw, and the empty line says so in place of a count.
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("new");
   await expect(page.getByText("Words you have not started yet have no flower to show.")).toBeVisible();
-  await expect(page.getByText("0 words")).toBeVisible();
-  await page.locator(".row select").first().selectOption("all");
+  await expect(page.getByText("0 words")).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("all");
 
   // The view is remembered on this device.
   await page.reload();
