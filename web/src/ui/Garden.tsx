@@ -13,6 +13,7 @@ import { spriteBox } from "../garden/plantCanvas";
 import { drawSprites, spriteKey, stripSprite } from "../garden/stripSprites";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
+import { stripPlaces } from "../garden/stripPlaces";
 import { growthOf, leanDeg, plantMood, plantSteps, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
 import { BIRD, BUTTERFLY, BUTTERFLY_CLOSED, CAT_ASLEEP, DOG, FISHBOWL, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
@@ -142,12 +143,18 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
   const cat = view("cat");
   // A garden-word visitor (#209) lives at its word's plant (#235), when the garden has it.
   // Without that plant (the cat after a break, the frog at 150 words, a word set aside) it keeps its old spot.
-  const homePlant = (v: VisitorView) => {
+  // The first plant of each garden word, in one pass, not a search of all plants per visitor (#569).
+  const homes = useMemo(() => {
+    const m = new Map<string, number>();
+    plants.forEach((p, i) => p.garden && !m.has(p.garden) && m.set(p.garden, i));
+    return m;
+  }, [plants]);
+  const homeIndex = (v: VisitorView) => {
     const g = visitor(v.id).garden;
-    return g ? plants.find((p) => p.garden === g) : undefined;
+    return g ? homes.get(g) : undefined;
   };
   // Room at the right end for a cat with no plant of its own, so it does not sleep on the newest plant.
-  const catRoom = cat && !homePlant(cat) ? 46 : 0;
+  const catRoom = cat && homeIndex(cat) === undefined ? 46 : 0;
   const scrolls = n * SPACING + pad * 2 + catRoom > width;
   // Only a strip that scrolls has ends to find (#61): the first word's post at the far left, the mole past the seeds.
   const first = scrolls && !showcase ? data?.first : null;
@@ -156,25 +163,26 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
   const moleRoom = mole ? 56 : 0;
   const fullWidth = scrolls ? n * SPACING + pad * 2 + catRoom + keepRoom + moleRoom : width;
 
-  const layout = useMemo(() => {
+  const places = useMemo(() => {
     // Small gardens cluster in the middle instead of scattering across the width.
     const spacing = scrolls ? SPACING : n ? Math.min(34, (width - pad * 2 - catRoom) / n) : width;
     const offset = scrolls ? pad + keepRoom : (width - catRoom - spacing * n) / 2;
-    const scale = Math.max(0.42, Math.min(1.05, spacing / 20));
-    return plants.map((p, i) => ({ p, x: offset + spacing * (i + 0.5) + (hash01(p.id, 17) - 0.5) * spacing * 0.8, y: GROUND + hash01(p.id, 19) * 4, scale }));
+    return stripPlaces(plants, spacing, offset, GROUND);
   }, [plants, n, scrolls, width, catRoom, keepRoom]);
+  // Today's words, in plant order (the order their x's are summed in).
+  const lit = useMemo(() => (highlight?.size ? plants.flatMap((p, i) => (highlight.has(p.id) ? [places.at(i)] : [])) : []), [plants, places, highlight]);
 
   // Only the replayed plants on screen once the strip has scrolled to this
   // session's words (the same centre as below), left to right: in a long
   // garden, off-screen plants would spend the replay's time unseen.
   const replayInView = useMemo(() => {
     if (!replay?.length) return null;
-    const xs = new Map(layout.map((l) => [l.p.id, l.x]));
-    const lit = highlight?.size ? layout.filter((l) => highlight.has(l.p.id)) : [];
+    const ids = new Set(replay.map((r) => r.id));
+    const xs = new Map(plants.flatMap((p, i) => (ids.has(p.id) ? [[p.id, places.at(i).x] as const] : [])));
     const centre = scrolls && lit.length ? lit.reduce((a, l) => a + l.x, 0) / lit.length : null;
     const seen = replay.filter((r) => xs.has(r.id) && (centre === null || Math.abs(xs.get(r.id)! - centre) <= width / 2));
     return seen.length ? [...seen].sort((a, b) => xs.get(a.id)! - xs.get(b.id)!) : null;
-  }, [replay, layout, highlight, scrolls, width]);
+  }, [replay, plants, places, lit, scrolls, width]);
   const replaying = useReplay(replayInView);
 
   // Open where the newest growth is, or on today's words after a session, and
@@ -182,10 +190,9 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
   // out in render, so the first render already draws the plants in view (#492).
   const opening = useMemo(() => {
     if (!scrolls) return 0;
-    const lit = highlight?.size ? layout.filter((l) => highlight.has(l.p.id)) : [];
     const want = lit.length ? lit.reduce((a, l) => a + l.x, 0) / lit.length - width / 2 : fullWidth;
     return Math.max(0, Math.min(fullWidth - width, want));
-  }, [scrolls, layout, highlight, width, fullWidth]);
+  }, [scrolls, lit, width, fullWidth]);
   // Where the learner scrolled to; null until they do.
   const [scrolled, setScrolled] = useState<number | null>(null);
   const scrollX = !scrolls ? 0 : (scrolled ?? opening);
@@ -217,10 +224,10 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
     if (scrolls && !edges) return afterPaint(() => startTransition(() => setEdges(true)));
   }, [scrolls, edges]);
   const over = edges ? OVERSCAN : 0;
-  const visible = scrolls ? layout.filter((l) => l.x > scrollX - over && l.x < scrollX + width + over) : layout;
+  const visible = scrolls ? places.between(scrollX - over, scrollX + width + over) : Array.from({ length: n }, (_, i) => places.at(i));
   // Each plant in view is one <image> drawn by a worker (#486): as SVG it was ~25 elements, each costing style and layout.
   const dpr = window.devicePixelRatio;
-  const plantScale = layout[0]?.scale ?? 1; // no plants: nothing to draw at any scale
+  const plantScale = places.scale;
   const [, setSpritesIn] = useState(0);
   const sprites = new Map<string, SpriteImage>();
   const missing: GardenPlant[] = [];
@@ -241,8 +248,9 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
   const to = scrolls ? Math.min(fullWidth, scrollX + width + OVERSCAN) : width;
   // Late at night one bloom snores (#62): the same one all day, the same as in the walk.
   const day = today();
-  const sleeper = useMemo(() => sleeperId(plants.filter((p) => p.stage === "bloom").map((p) => p.id)), [plants, day]); // eslint-disable-line react-hooks/exhaustive-deps -- a new sleeper each day
-  const snoring = sleeper && isSleepyHour() ? sleeper : null;
+  const sleepy = isSleepyHour();
+  // Looked for only late at night: by day it searched all the blooms for nothing (#569).
+  const snoring = useMemo(() => (sleepy ? sleeperId(plants.filter((p) => p.stage === "bloom").map((p) => p.id)) : null), [plants, day, sleepy]); // eslint-disable-line react-hooks/exhaustive-deps -- a new sleeper each day
   const empty = !!data && data.total === 0 && !showcase;
   const stake = empty && visitors ? reservedStake(language(visitors.lang).name, visitors.lang) : null;
   const worm = empty && visitors ? stripVisitor("worm", visitors.lang) : null;
@@ -327,9 +335,8 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
         {(["snail", "cat", "bird", "frog", "dog", "fish", "butterfly"] as const).map(view).map((v) => {
           if (!v) return null;
           // Looked up once, not per plant: inside the search it cost ~300 ms per Today visit (perf/ui.ts).
-          const plant = homePlant(v);
-          // The layout is in the plants' order: indexOf, not a search by id (~4 ms of the first render at CPU 10×, #569).
-          const home = plant && layout[plants.indexOf(plant)];
+          const i = homeIndex(v);
+          const home = i === undefined ? undefined : places.at(i);
           const at = home ? atPlant(v.id, home, isSleepyHour()) : null;
           // No plant of its own: the snail on the soil, the cat asleep at the right end; the bird, frog and fish only in the walk; the dog and butterfly stay away.
           if (!at && v.id !== "snail" && v.id !== "cat") return null;

@@ -3,7 +3,7 @@
 // deadpan scenery (#364): a sundial that tells the time, and a fish.
 // Pure functions, so they are easy to test.
 
-import { daily, rareDay } from "../core/day";
+import { daily, dailyIndex, rareDay } from "../core/day";
 import { inLang, type PerLang } from "./nouns";
 
 export interface SignLine {
@@ -89,12 +89,36 @@ export const isSleepyHour = (now: Date = new Date()): boolean => now.getHours() 
 const SLEEP_VERB: PerLang<string> = { es: "dormir", de: "schlafen" };
 
 /**
- * Tonight's sleeper: one blooming plant, picked by the date. The ids are
- * sorted first, so the strip and the walk agree whatever order they keep.
+ * Tonight's sleeper: one blooming plant, picked by the date. It is the k-th id
+ * in sorted order, so the strip and the walk agree whatever order they keep.
  */
 export function sleeperId(bloomIds: readonly string[], now: Date = new Date()): string | null {
   if (!bloomIds.length) return null;
-  return daily([...bloomIds].sort(), "sleeper", now);
+  return kthSmallest([...bloomIds], dailyIndex(bloomIds.length, "sleeper", now));
+}
+
+/** The k-th smallest string (as `sort()` orders them), without sorting them all: quickselect, O(n) (#569). Reorders `xs`. */
+function kthSmallest(xs: string[], k: number): string {
+  let lo = 0;
+  let hi = xs.length - 1;
+  while (lo < hi) {
+    const pivot = xs[(lo + hi) >> 1];
+    let i = lo;
+    let j = hi;
+    while (i <= j) {
+      while (xs[i] < pivot) i++;
+      while (xs[j] > pivot) j--;
+      if (i <= j) {
+        [xs[i], xs[j]] = [xs[j], xs[i]];
+        i++;
+        j--;
+      }
+    }
+    if (k <= j) hi = j;
+    else if (k >= i) lo = i;
+    else return xs[k];
+  }
+  return xs[k];
 }
 
 /** The line on the sleeper's card: the snore first, then the verb it teaches. */

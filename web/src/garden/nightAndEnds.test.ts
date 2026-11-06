@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { rng } from "../lib/seed";
+import { daily } from "../core/day";
 import { isSleepyHour, keepsakeLabel, NEIGHBOUR, NEIGHBOUR_PERK, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId, snoreLine } from "./whimsy";
 import { MOLE_ONE_IN, moleVisits, stripVisitor, visitorsFor, NO_FACTS } from "./visitors";
 
@@ -18,6 +19,14 @@ describe("a plant that sleeps at night (#62)", () => {
     expect(sleeperId([...ids].reverse(), new Date(2026, 9, 11, 2))).toBe(s);
     expect(new Set(days.slice(0, 30).map((d) => sleeperId(ids, d))).size).toBeGreaterThan(10);
     expect(sleeperId([], night)).toBeNull();
+  });
+
+  test("the pick is the day's index into the sorted ids (#569)", () => {
+    const r = rng(7);
+    for (const n of [1, 2, 3, 17, 300]) {
+      const ids = Array.from({ length: n }, () => `w${Math.floor(r() * 5000)}`);
+      for (const d of days.slice(0, 60)) expect(sleeperId(ids, d)).toBe(daily([...ids].sort(), "sleeper", d));
+    }
   });
 
   test("the card teaches the verb, after the snore", () => {
