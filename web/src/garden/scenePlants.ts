@@ -12,7 +12,7 @@ import type { Label } from "./scene";
 import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
 import { isOld } from "./plants";
-import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
+import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, SPRITE_H, SPRITE_W, standingQuad, still, type BuildCtx } from "./sceneSprites";
 import { boardBox } from "./scenery";
 import { BED_H, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
@@ -186,7 +186,11 @@ export class Plants {
     const soilTex = T.pixelTexture(T.soil(), true);
     const wood: THREE.BufferGeometry[] = [];
     const soil: THREE.BufferGeometry[] = [];
-    for (const bed of L.beds) {
+    // Every bed's sign on one canvas, one texture and one material; each board shows its own cell.
+    const atlas = T.signs(L.beds.map((bed) => bed.label));
+    const signMat = mat(T.pixelTexture(atlas));
+    const rows = atlas.height / T.SIGN.h;
+    for (const [n, bed] of L.beds.entries()) {
       const box = new THREE.BoxGeometry(bed.w, BED_H, bed.d);
       // Each face's texture repeat (faces +x, -x, +y, -y, +z, -z), in its UVs, so one material draws every bed.
       const repeat = [[bed.d / 1.2, 1], [bed.d / 1.2, 1], [bed.w, bed.d], [bed.w, bed.d], [bed.w / 1.2, 1], [bed.w / 1.2, 1]];
@@ -199,15 +203,23 @@ export class Plants {
       wood.push(faces(box, [0, 1, 4, 5]));
       soil.push(faces(box, [2, 3]));
       c.hitBoxes.push({ id: "bed", min: [bed.x - bed.w / 2, 0, bed.z - bed.d / 2], max: [bed.x + bed.w / 2, BED_H, bed.z + bed.d / 2], tag: null });
-      const signTex = T.pixelTexture(T.sign(bed.label));
       // Just outside the front-left corner, turned toward the path, so it never hides a plant.
       const sx = bed.x - bed.w / 2 - 0.3;
       const sz = bed.z + bed.d / 2 + 0.3;
       // As signBoard: the text on the front only, plain wood on the back.
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.3), mat(signTex));
+      const face = new THREE.PlaneGeometry(0.96, 0.3);
+      // This bed's cell in the atlas, half a texel in from its edge so nearest sampling never reads the next cell (or an
+      // empty one). The texture is flipped: v = 1 is the canvas's top row.
+      const col = n % T.SIGN.cols;
+      const row = Math.floor(n / T.SIGN.cols);
+      const inU = (u: number) => Math.min(Math.max(u, 0.5 / T.SIGN.w), 1 - 0.5 / T.SIGN.w);
+      const inV = (v: number) => Math.min(Math.max(v, 0.5 / T.SIGN.h), 1 - 0.5 / T.SIGN.h);
+      const faceUv = face.getAttribute("uv");
+      for (let k = 0; k < faceUv.count; k++) faceUv.setXY(k, (col + inU(faceUv.getX(k))) / T.SIGN.cols, 1 - (row + 1 - inV(faceUv.getY(k))) / rows);
+      const board = new THREE.Mesh(face, signMat);
       board.position.set(sx, 0.78, sz);
       board.rotation.y = 0.5;
-      c.scene.add(board);
+      c.scene.add(still(board));
       wood.push(new THREE.PlaneGeometry(0.96, 0.3).rotateY(Math.PI + 0.5).translate(sx, 0.78, sz));
       c.hitBoxes.push(boardBox(sx, sz, 0.96, 0.93, 0.5));
       // The post: behind the board (it faces the path), never in its plane.
@@ -216,8 +228,8 @@ export class Plants {
     }
     // A garden with no beds yet: mergeGeometries needs at least one geometry.
     if (!wood.length) return;
-    c.scene.add(new THREE.Mesh(mergeGeometries(wood), mat(woodTex)));
-    c.scene.add(new THREE.Mesh(mergeGeometries(soil), mat(soilTex)));
+    c.scene.add(still(new THREE.Mesh(mergeGeometries(wood), mat(woodTex))));
+    c.scene.add(still(new THREE.Mesh(mergeGeometries(soil), mat(soilTex))));
   }
 
   /**
@@ -296,7 +308,7 @@ export class Plants {
       const radius = Math.hypot(bed.w / 2, bed.d / 2, 1.2) + 0.4;
       geo.boundingSphere = new THREE.Sphere(center, radius);
       const mesh = new THREE.Mesh(geo, mats[sheet]);
-      ctx.scene.add(mesh);
+      ctx.scene.add(still(mesh));
       this.chunks.push({ mesh, center, radius });
       idx.forEach((pi, k) => {
         this.hiRef[pi] = { attr: cellAttr, i: k };

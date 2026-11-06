@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 import { hedgeClumps, hedgeCore, type Clump, type HedgeWall } from "./hedge";
-import type { BuildCtx } from "./sceneSprites";
+import { still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */
@@ -62,7 +62,7 @@ export class Hedge {
       shadeUp(geo, 0.42, 0.66);
       const m = new THREE.Mesh(geo, this.mat);
       m.position.set((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
-      ctx.scene.add(m);
+      ctx.scene.add(still(m));
       ctx.hitBoxes.push({ id: "hedge", min: [...w.min], max: [...w.max], tag: null });
       clumps.push(...hedgeClumps(w, seed + i));
     });
@@ -79,6 +79,6 @@ export class Hedge {
       mesh.setMatrixAt(i, m4.makeScale(...c.r).setPosition(...c.at));
       mesh.setColorAt(i, color.setScalar(c.shade));
     });
-    ctx.scene.add(mesh);
+    ctx.scene.add(still(mesh));
   }
 }

@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { sunPath, SUN_AT, type Look } from "./bench";
 import type { TimeOfDay } from "./scene";
 import { rng } from "../lib/seed";
-import type { BuildCtx } from "./sceneSprites";
+import { still, type BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
 import * as T from "./textures";
@@ -172,17 +172,17 @@ export class SkyWater implements Part {
     this.skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false });
     const dome = new THREE.Mesh(new THREE.SphereGeometry(240, 16, 12), this.skyMat);
     dome.renderOrder = -2;
-    c.scene.add(dome);
+    c.scene.add(still(dome));
     // Just inside the dome, so it draws over it.
     this.nextSky = new THREE.Mesh(new THREE.SphereGeometry(238, 16, 12), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false, transparent: true }));
     this.nextSky.renderOrder = -2;
     this.nextSky.visible = false;
-    c.scene.add(this.nextSky);
+    c.scene.add(still(this.nextSky));
     this.hillMat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.5, side: THREE.BackSide, fog: false, depthWrite: false });
     const hillRing = new THREE.Mesh(new THREE.CylinderGeometry(HILLS.radius, HILLS.radius, HILLS.height, 32, 1, true), this.hillMat);
     hillRing.position.y = HILLS.y;
     hillRing.renderOrder = -1;
-    c.scene.add(hillRing);
+    c.scene.add(still(hillRing));
     this.hillProfile = T.hillProfile();
     const cloudTex = T.pixelTexture(T.cloud());
     for (let i = 0; i < 9; i++) {
@@ -230,12 +230,12 @@ export class SkyWater implements Part {
     const pond = new THREE.Mesh(new THREE.CircleGeometry(L.pond.r, 20), mat(this.water));
     pond.rotation.x = -Math.PI / 2;
     pond.position.set(L.pond.x, 0.04, L.pond.z);
-    c.scene.add(pond);
+    c.scene.add(still(pond));
     c.hitDiscs.push({ id: "pond", x: L.pond.x, y: 0.045, z: L.pond.z, r: L.pond.r + 0.18, tagY: 0.3 });
     const rim = new THREE.Mesh(new THREE.RingGeometry(L.pond.r, L.pond.r + 0.18, 20), mat(T.pixelTexture(T.path(), true), { color: 0xb0aaa0 }));
     rim.rotation.x = -Math.PI / 2;
     rim.position.set(L.pond.x, 0.045, L.pond.z);
-    c.scene.add(rim);
+    c.scene.add(still(rim));
     const padTex = T.pixelTexture(T.lilypad());
     const pads: [number, number][] = [];
     for (let i = 0; i < 4; i++) {
@@ -245,7 +245,7 @@ export class SkyWater implements Part {
       pad.position.set(L.pond.x + Math.cos(a) * L.pond.r * 0.55, 0.07, L.pond.z + Math.sin(a) * L.pond.r * 0.55);
       pads.push([pad.position.x, pad.position.z]);
       c.hitDiscs.push({ id: "lily", x: pad.position.x, y: 0.07, z: pad.position.z, r: 0.2, tagY: 0.14 });
-      c.scene.add(pad);
+      c.scene.add(still(pad));
     }
     return pads;
   }

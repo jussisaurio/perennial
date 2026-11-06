@@ -10,7 +10,7 @@ import * as THREE from "three";
 import type { DoorState } from "./scene";
 import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
-import { FOG_FAR, sprites, type BuildCtx } from "./sceneSprites";
+import { FOG_FAR, sprites, still, type BuildCtx } from "./sceneSprites";
 import { DOOR_HALF, HEDGE, keyAt, type KeyHelp, type Layout } from "./world";
 import * as T from "./textures";
 
@@ -68,12 +68,12 @@ export class Door {
     for (const s of [-1, 1]) {
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, DOOR.h + 0.14, 0.2), mat(woodTex));
       post.position.set(gx + s * (DOOR_HALF + 0.06), (DOOR.h + 0.14) / 2, z0);
-      c.scene.add(post);
+      c.scene.add(still(post));
       c.hitBoxes.push({ id: "door", min: [gx + s * (DOOR_HALF + 0.06) - 0.06, 0, z0 - 0.1], max: [gx + s * (DOOR_HALF + 0.06) + 0.06, DOOR.h + 0.14, z0 + 0.1], tag: doorTag });
     }
     const beam = new THREE.Mesh(new THREE.BoxGeometry(DOOR_HALF * 2 + 0.36, 0.14, 0.22), mat(woodTex));
     beam.position.set(gx, DOOR.h + 0.14, z0);
-    c.scene.add(beam);
+    c.scene.add(still(beam));
     c.hitBoxes.push({ id: "door", min: [gx - DOOR_HALF - 0.18, DOOR.h + 0.07, z0 - 0.11], max: [gx + DOOR_HALF + 0.18, DOOR.h + 0.21, z0 + 0.11], tag: doorTag });
 
     // The door turns on its hinge, at the right as you face it from the garden.
