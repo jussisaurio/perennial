@@ -141,10 +141,26 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('bun.lock') }}
-      # Two steps, so the log shows which part is slow: the system packages (apt) are not cached.
+      # The browsers' system packages (.deb files) are cached too: the runners' Ubuntu mirror is
+      # sometimes very slow (3–6 min per large package), which held the WebKit job for an hour.
+      # apt keeps its downloads in a folder the runner user owns, so actions/cache can save it.
+      - name: Point apt's download cache at a cacheable folder
+        run: |
+          mkdir -p "$HOME/apt-archives/partial"
+          echo "Dir::Cache::Archives \"$HOME/apt-archives\";" | sudo tee /etc/apt/apt.conf.d/99perennial-cache
+      - name: Cache browser system packages
+        uses: actions/cache@v6
+        with:
+          path: ~/apt-archives
+          key: apt-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('bun.lock') }}
       - name: Install browser system packages
         working-directory: web
-        run: bunx playwright install-deps ${{ matrix.browser }}
+        # A slow mirror on a cold cache should fail the job in minutes, not hold it for an hour.
+        timeout-minutes: 15
+        run: |
+          bunx playwright install-deps ${{ matrix.browser }}
+          # apt runs as root: give its downloads back to the runner user, so the cache can save them.
+          sudo chown -R "$USER" "$HOME/apt-archives"
       - name: Install Playwright browsers
         working-directory: web
         run: bunx playwright install ${{ matrix.browser }}
