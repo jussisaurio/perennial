@@ -197,10 +197,15 @@ const SCENARIOS: Scenario[] = [
       await page.goto(`${BASE}/#/today`);
       await page.locator("button.start").click();
       await page.locator(".kicker").waitFor();
+      // Each card as a learner answers it: show the answer, then "I remembered" (2).
+      // A writing card: Enter checks, Enter goes on. Then wait for the next card.
       for (let n = 0; n < 10; n++) {
-        await page.keyboard.press("Space");
+        const card = await page.locator(".session").getAttribute("data-card");
+        const write = (await page.locator("input.answer").count()) > 0;
+        await page.keyboard.press(write ? "Enter" : "Space");
         await page.waitForTimeout(500);
-        await page.keyboard.press("Space");
+        await page.keyboard.press(write ? "Enter" : "2");
+        await page.waitForFunction((c) => document.querySelector(".session")?.getAttribute("data-card") !== c, card, { polling: 100 });
         await page.waitForTimeout(500);
       }
     },
