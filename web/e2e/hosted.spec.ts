@@ -16,7 +16,9 @@ test("progress made before adding an email stays, and another device signs in to
   await two.goto("/");
   await two.getByRole("button", { name: "Sign in", exact: true }).click();
   await signIn(two, address, "Send me a code");
-  await expect(two.getByText(/You are learning|You know/)).toBeVisible({ timeout: 15_000 });
+  // The one review made before the email is in this garden too: Progress is on the Words page.
+  await two.getByRole("tab", { name: "Words" }).click();
+  await expect(two.getByRole("region", { name: "Your progress" })).toContainText("You are learning 1 word.", { timeout: 15_000 });
 });
 
 test("words from a text use AI words; the limit is clear before anything is sent", async ({ page }) => {
