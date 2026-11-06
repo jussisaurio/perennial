@@ -114,22 +114,19 @@ export function heronDay(year: number, month: number): number {
   );
 }
 
-/** The facts visitorsFor needs, from the learner's review times (ms, any order). */
-export function learnerFacts(reviews: Iterable<number>, known: number, now: Date | number, garden: ReadonlySet<GardenWord>): LearnerFacts {
-  // A time before a day's local midnight is on an earlier day: one compare per review, not a Date each (#479).
-  const today = startOfDay(now);
-  let first: number | null = null;
-  let last: number | null = null;
-  for (const t of reviews) {
-    if (first === null || t < first) first = t;
-    if (t < today && (last === null || t > last)) last = t;
-  }
-  let prev: number | null = null;
-  if (last !== null) {
-    const lastDay = startOfDay(last);
-    for (const t of reviews) if (t < lastDay && (prev === null || t > prev)) prev = t;
-  }
-  return { firstReview: first, lastBeforeToday: last, prevBeforeLast: prev, known, garden };
+/** The learner's review times (ms) that learnerFacts reads; the learner answers both from its reviews by day, without a walk of every review (#486). */
+export interface ReviewTimes {
+  /** The first review, or null for none. */
+  firstReviewAt(): number | null;
+  /** The last review before `t`, or null for none. */
+  lastReviewBefore(t: number): number | null;
+}
+
+/** The facts visitorsFor needs, from the learner's review times. */
+export function learnerFacts(reviews: ReviewTimes, known: number, now: Date | number, garden: ReadonlySet<GardenWord>): LearnerFacts {
+  const last = reviews.lastReviewBefore(startOfDay(now));
+  const prev = last === null ? null : reviews.lastReviewBefore(startOfDay(last));
+  return { firstReview: reviews.firstReviewAt(), lastBeforeToday: last, prevBeforeLast: prev, known, garden };
 }
 
 /**

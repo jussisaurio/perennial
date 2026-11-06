@@ -101,6 +101,10 @@ export interface Learner {
   reviewsByWord: Map<string, ReviewRow[]>;
   /** The reviews made at or after `t` (ms), without a walk of every review: Today's plan and minutes read today's. */
   reviewsSince(t: number): ReviewRow[];
+  /** The first review's time (ms), or null for none. Reads the first day's reviews only. */
+  firstReviewAt(): number | null;
+  /** The last review's time before `t` (ms), or null for none. Reads at most two days' reviews. */
+  lastReviewBefore(t: number): number | null;
   states: Map<string, WordStateRow>;
   sentences(wordId: string): Sentence[];
   /** Words a session can introduce next, best first: picked words, then the course (content/order.ts). */
@@ -499,7 +503,25 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
     for (const [day, list] of byDay) if (day >= Math.floor(t / DAY_MS)) for (const r of list) if (reviewedAt(r) >= t) out.push(r);
     return out;
   };
-  return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, reviewsSince, states: stateMap, sentences, upcoming, fresh, resolve };
+  // A review on an earlier UTC day is earlier: only one day's reviews are read, and one more when none of the last day's is before `t`.
+  const firstReviewAt = () => {
+    let first: number | null = null;
+    const day = Math.min(...byDay.keys());
+    if (day !== Infinity) for (const r of byDay.get(day)!) if (first === null || reviewedAt(r) < first) first = reviewedAt(r);
+    return first;
+  };
+  const lastReviewBefore = (t: number) => {
+    for (let bound = Math.floor(t / DAY_MS); ; ) {
+      let day = -Infinity;
+      for (const d of byDay.keys()) if (d <= bound && d > day) day = d;
+      if (day === -Infinity) return null;
+      let last: number | null = null;
+      for (const r of byDay.get(day)!) if (reviewedAt(r) < t && (last === null || reviewedAt(r) > last)) last = reviewedAt(r);
+      if (last !== null) return last;
+      bound = day - 1;
+    }
+  };
+  return { lang, deck, course, words, studied, memories, memory, reviews: langReviews, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, sentences, upcoming, fresh, resolve };
 }
 
 /**

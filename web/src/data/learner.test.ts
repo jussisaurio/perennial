@@ -131,6 +131,13 @@ describe("Learners: one review at a time, the same as building it all again", ()
       }
       l = live.learners.get("es", deck)!;
       expect(view(l)).toEqual(view(await fromScratch(rows)));
+      // The first review and the last before a time, as a walk of every review finds them.
+      const times = rows.map((r) => Date.parse(r.reviewed_at));
+      expect(l.firstReviewAt()).toBe(Math.min(...times));
+      for (const t of [t0, t0 + 1, t0 + 37.3 * DAY_MS, t0 + day * DAY_MS, t0 + (day + 0.01) * DAY_MS, t0 + 900 * DAY_MS]) {
+        const before = times.filter((x) => x < t);
+        expect(l.lastReviewBefore(t)).toBe(before.length ? Math.max(...before) : null);
+      }
       for (const m of l.memories) expect(l.memory.get(m.key)).toBe(m);
       // A row that did not change is the same object, so screens can skip it.
       const changed = new Set(rows.slice(-1).map((r) => (r.word_id === "w3-old" ? "w3" : r.word_id)));
