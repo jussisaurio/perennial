@@ -263,24 +263,40 @@ export class MemoryLog {
       } else this.replayed[i] = row;
       words.add(g.wordId);
     }
-    // An unlock that stays keeps its place, and one that goes (its first answer) leaves the rest in order. Only a new unlock needs the order of the reading rows.
-    let added = false;
+    // An unlock that stays keeps its place, and one that goes (its first answer) leaves the rest in order.
+    // A new one goes in at its reading row's place: walking every group for it took 10–17 ms per answer at CPU 10× (#457).
+    const added: MemoryRow[] = [];
     const fresh = new Map<string, MemoryRow>();
     const gone = new Set<string>();
     for (const wordId of words) {
       for (const skill of ["listen", "write"] as const) {
         const key = memKey(wordId, skill);
         const row = this.unlock(wordId, skill);
-        if (row && !this.unlockedBy.has(key)) added = true;
+        if (row && !this.unlockedBy.has(key)) added.push(row);
         if (!row && this.unlockedBy.has(key)) gone.add(key);
         if (row) fresh.set(key, row);
       }
     }
     for (const key of gone) this.unlockedBy.delete(key);
     for (const [key, row] of fresh) this.unlockedBy.set(key, row);
-    if (added) this.unlocked = this.unlockAll();
-    else if (fresh.size || gone.size) this.unlocked = this.unlocked.filter((r) => !gone.has(r.key)).map((r) => fresh.get(r.key) ?? r);
+    if (fresh.size || gone.size) this.unlocked = this.unlocked.filter((r) => !gone.has(r.key)).map((r) => fresh.get(r.key) ?? r);
+    for (const row of added) this.unlocked.splice(this.unlockedPlace(row), 0, row);
     this.touched = words;
+  }
+
+  /** Where an unlocked row goes in `unlocked`: by its reading row's place, listening before writing. */
+  private unlockedPlace(row: MemoryRow): number {
+    // !: a word unlocks only once its reading row is in the log.
+    const order = (r: MemoryRow) => this.at.get(memKey(r.wordId, "read"))! * 2 + (r.skill === "write" ? 1 : 0);
+    const at = order(row);
+    let lo = 0;
+    let hi = this.unlocked.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (order(this.unlocked[mid]) < at) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
   }
 
   /** Every unlocked row, in the order of the reading rows. Keeps the rows it already has. */
