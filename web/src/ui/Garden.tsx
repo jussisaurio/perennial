@@ -3,7 +3,7 @@
 // recall fades — until the next session waters them. Nothing ever dies.
 // The plants themselves come from garden/plants.ts, shared with the walk.
 
-import { memo, startTransition, type PointerEvent, type RefCallback, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, startTransition, type MouseEvent, type PointerEvent, type RefCallback, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
@@ -251,11 +251,32 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
     const next = neighbourPerks() ? ((visible[i + 1] ?? visible[i - 1])?.p.id ?? null) : null;
     setPerk((o) => ({ id: l.p.id, n: (o?.n ?? 0) + 1, neighbour: next }));
   };
+  // The plant under the pointer, found from where the plants stand, not from a hit area element per
+  // plant: every element in the strip costs style and layout (#569). A plant's area is 16 wide and
+  // 140·scale tall above its foot; where two overlap, the later one wins, as the element on top did.
+  const pointed = useRef<string | null>(null);
+  const plantAt = (e: MouseEvent<SVGSVGElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - box.left;
+    const y = e.clientY - box.top;
+    return visible.findLastIndex((l) => Math.abs(l.x - x) <= 8 && y <= l.y && y >= l.y - 140 * l.scale);
+  };
+  const onPointerMove = (e: PointerEvent<SVGSVGElement>) => {
+    const i = plantAt(e);
+    e.currentTarget.style.cursor = i < 0 ? "" : "pointer";
+    const id = i < 0 ? null : visible[i].p.id;
+    if (i >= 0 && id !== pointed.current && hovers(e)) show(visible[i]);
+    pointed.current = id;
+  };
+  const onClick = (e: MouseEvent<SVGSVGElement>) => {
+    const i = plantAt(e);
+    if (i >= 0) tap(visible[i], i);
+  };
 
   return (
     <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} data-replaying={replaying.on || undefined} onPointerLeave={(e) => hovers(e) && hide()}>
       <div className="garden-scroll" ref={scroller} onScroll={scrolls ? onScroll : undefined}>
-        <svg width={fullWidth} height={H} viewBox={`0 0 ${fullWidth} ${H}`} role="img" aria-label={label}>
+        <svg width={fullWidth} height={H} viewBox={`0 0 ${fullWidth} ${H}`} role="img" aria-label={label} onPointerMove={onPointerMove} onClick={onClick}>
           <defs>
             <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="var(--soil-1)" />
@@ -265,29 +286,31 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
           {Array.from({ length: 6 }, (_, i) => (
             <circle key={i} className="firefly" cx={scrollX + (width / 6) * (i + 0.5)} cy={40 + (i % 3) * 30} r={1.8} style={{ animationDelay: `${i * 1.3}s` }} />
           ))}
-          {visible.map(({ p, x, y, scale }, i) => (
-            <g key={p.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`} onPointerEnter={(e) => hovers(e) && show({ p, x, y })} onClick={() => tap({ p, x, y }, i)}>
-              <g className="sway" style={{ animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: meaningOf(p.lemma)?.kind === "dance" ? "1.4s" : `${5 + hash01(p.id, 29) * 4}s` }}>
-                {/* The hop's group only while it hops: every element in the strip costs style and layout (#486). */}
-                {perk?.id === p.id || perk?.neighbour === p.id ? (
-                  <g key={perk.id === p.id ? `perk${perk.n}` : `late${perk.n}`} className={perk.id === p.id ? "perk" : "perk late"}>
-                    <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
-                  </g>
-                ) : replaying.look(p) ? (
+          {visible.map(({ p, x, y, scale }) => (
+            // One group per plant: `translate` stands it at its foot and the sway turns it there.
+            // No hit area element (see plantAt): every element in the strip costs style and layout (#569).
+            <g
+              key={p.id}
+              className="sway"
+              style={{ translate: `${x.toFixed(1)}px ${y.toFixed(1)}px`, animationDelay: `${-hash01(p.id, 23) * 6}s`, animationDuration: meaningOf(p.lemma)?.kind === "dance" ? "1.4s" : `${5 + hash01(p.id, 29) * 4}s` }}
+            >
+              {/* The hop's group only while it hops: every element in the strip costs style and layout (#486). */}
+              {perk?.id === p.id || perk?.neighbour === p.id ? (
+                <g key={perk.id === p.id ? `perk${perk.n}` : `late${perk.n}`} className={perk.id === p.id ? "perk" : "perk late"}>
                   <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
-                ) : (
-                  // Standing still: its sprite, once the worker has drawn it. Until then an empty slot, so nothing moves.
-                  sprites.has(p.id) && <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} sprite={sprites.get(p.id)} />
-                )}
-                {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
-                {/* generous invisible hit area */}
-                <rect x={-8} y={-140 * scale} width={16} height={140 * scale} fill="transparent" />
-              </g>
+                </g>
+              ) : replaying.look(p) ? (
+                <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} look={replaying.look(p)} />
+              ) : (
+                // Standing still: its sprite, once the worker has drawn it. Until then an empty slot, so nothing moves.
+                sprites.has(p.id) && <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} sprite={sprites.get(p.id)} />
+              )}
+              {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
             </g>
           ))}
           {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, first.at)} />}
           <path d={`M0 ${GROUND + 4} Q ${fullWidth * 0.25} ${GROUND - 3} ${fullWidth * 0.5} ${GROUND + 3} T ${fullWidth} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
-          {/* The tufts, and the seeds below, each one path: every element in the strip costs style and layout (#569). */}
+          {/* The tufts one path, the seeds a path per layer: every element in the strip costs style and layout (#569). */}
           <path
             className="tuft"
             d={Array.from({ length: Math.ceil((to - from) / 38) }, (_, k) => {
@@ -296,20 +319,9 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
               return `M${gx} ${GROUND + 6} l -3 -7 M${gx} ${GROUND + 6} l 0 -9 M${gx} ${GROUND + 6} l 3 -6`;
             }).join(" ")}
           />
-          {seeds > 0 && (
-            <path
-              className="seed"
-              d={Array.from({ length: seeds }, (_, i) => {
-                const sx = (scrolls ? fullWidth - width : 0) + 24 + hash01(`seed${i}`, 37) * (width - 48);
-                const sy = GROUND + 14 + hash01(`seed${i}`, 41) * 12;
-                // An ellipse of radii 2.6 and 1.7 turned by `deg`: two half arcs between the ends of its long axis.
-                const deg = hash01(`seed${i}`, 43) * 180;
-                const dx = 2.6 * Math.cos((deg * Math.PI) / 180);
-                const dy = 2.6 * Math.sin((deg * Math.PI) / 180);
-                return `M${sx + dx} ${sy + dy} A2.6 1.7 ${deg} 1 0 ${sx - dx} ${sy - dy} A2.6 1.7 ${deg} 1 0 ${sx + dx} ${sy + dy}Z`;
-              }).join(" ")}
-            />
-          )}
+          {seedLayers(seeds, (scrolls ? fullWidth - width : 0) + 24, width - 48).map((d, i) => (
+            <path key={i} className="seed" d={d} />
+          ))}
           {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>
         {(["snail", "cat", "bird", "frog", "dog", "fish", "butterfly"] as const).map(view).map((v) => {
@@ -492,6 +504,30 @@ function PixelSprite({ art, x, y, scale }: { art: PixelArt; x: number; y: number
 }
 
 /** One small "z" drifting up from a sleeping bloom (still, with reduced motion). */
+/**
+ * The seeds' ellipses (radii 2.6 and 1.7, each turned its own way), as path data
+ * from `x0` across `w`. A path is see-through as a whole, so where seeds overlap
+ * they would merge into one flat shape: overlapping seeds go in separate paths,
+ * which stack and darken as separate ellipses did.
+ */
+function seedLayers(count: number, x0: number, w: number): string[] {
+  const layers: { x: number; y: number; d: string }[][] = [];
+  for (let i = 0; i < count; i++) {
+    const x = x0 + hash01(`seed${i}`, 37) * w;
+    const y = GROUND + 14 + hash01(`seed${i}`, 41) * 12;
+    const deg = hash01(`seed${i}`, 43) * 180;
+    const dx = 2.6 * Math.cos((deg * Math.PI) / 180);
+    const dy = 2.6 * Math.sin((deg * Math.PI) / 180);
+    // Two half arcs between the ends of the long axis.
+    const d = `M${x + dx} ${y + dy} A2.6 1.7 ${deg} 1 0 ${x - dx} ${y - dy} A2.6 1.7 ${deg} 1 0 ${x + dx} ${y + dy}Z`;
+    // Two seeds can overlap only when their centres are closer than twice the long radius.
+    const free = layers.find((l) => l.every((o) => Math.hypot(o.x - x, o.y - y) >= 5.2));
+    if (free) free.push({ x, y, d });
+    else layers.push([{ x, y, d }]);
+  }
+  return layers.map((l) => l.map((s) => s.d).join(" "));
+}
+
 function Snore({ y }: { y: number }) {
   return (
     <text className="snore" x={7} y={y} aria-hidden="true">

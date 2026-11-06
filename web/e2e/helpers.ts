@@ -136,9 +136,15 @@ export async function settledGardenWidth(page: Page, min = 2000) {
 /** A point on the strip's plant nearest the middle, a little above its foot (between two plants there is a small gap). */
 export async function plantNearMiddle(page: Page) {
   const box = (await page.locator(".garden-scroll").boundingBox())!;
-  return page.locator(".garden svg > g[transform] rect").evaluateAll((els, mid) => {
-    const r = els.map((e) => e.getBoundingClientRect()).sort((a, b) => Math.abs(a.x + a.width / 2 - mid) - Math.abs(b.x + b.width / 2 - mid))[0];
-    return [r.x + r.width / 2, r.bottom - 20] as const;
+  // Each plant's group stands at its foot by its CSS `translate`.
+  return page.locator(".garden svg > .sway").evaluateAll((els, mid) => {
+    const svg = els[0].closest("svg")!.getBoundingClientRect();
+    const feet = els.map((e) => {
+      const [x, y] = getComputedStyle(e).translate.split(" ").map(parseFloat);
+      return { x: svg.x + x, y: svg.y + y };
+    });
+    const foot = feet.sort((a, b) => Math.abs(a.x - mid) - Math.abs(b.x - mid))[0];
+    return [foot.x, foot.y - 20] as const;
   }, box.x + box.width / 2);
 }
 
