@@ -22,10 +22,10 @@
     "@effect/sql-pg": "4.0.0",
     "@electric-sql/client": "1.5.28",
     "@sentry/bun": "11",
-    "better-auth": "1.7.7",
+    "better-auth": "1.7.15",
     "effect": "4.0.0",
     "perennial-contract": "workspace:*",
     "pg": "8",
-    "resend": "^6.32.1"
+    "resend": "^6.37.0"
   }
 }
