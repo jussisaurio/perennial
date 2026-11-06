@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { deriveMemory, wordState } from "../core/memory";
+import { deriveMemory, knownAt as knownSet, wordState } from "../core/memory";
 import type { ReviewRow } from "../data/rows";
 import { milestoneLine } from "../garden/visitors";
-import { boatWord, broughtAt, knownAt, knownWords } from "./visitors";
+import { boatWord, broughtAt, knownWords } from "./visitors";
 
 const DAY = 86_400_000;
 const start = new Date(2026, 0, 1, 9).getTime();
@@ -19,6 +19,13 @@ const review = (word: string, day: number, skill: ReviewRow["skill"] = "read"): 
   sentence_id: null,
 });
 const same = (id: string) => id;
+
+/** How many of `words` were known just before `t`, for a learner with these reviews. */
+function knownAt(reviews: ReviewRow[], t: number, retention: number, resolve: (id: string) => string, words: Set<string>): number {
+  const memories = deriveMemory(reviews, retention, resolve).filter((m) => words.has(m.wordId));
+  const reviewsByWord = Map.groupBy(reviews, (r) => resolve(r.word_id));
+  return knownSet({ words: new Map([...words].map((id) => [id, id])), memory: new Map(memories.map((m) => [m.key, m])), reviewsByWord, course: { retention } }, t).size;
+}
 
 describe("known words at the start of a day (for the milestone line)", () => {
   // Each word reviewed well on a growing schedule: known after a few weeks.

@@ -1,5 +1,5 @@
 import { DAY_MS, startOfDay } from "../core/day";
-import { deriveMemory, readMemory, wordState } from "../core/memory";
+import { knownAt, readMemory, wordState } from "../core/memory";
 import type { Learner } from "../data/learner";
 
 interface CourseStats {
@@ -14,43 +14,41 @@ interface CourseStats {
 }
 
 export function courseStats(l: Learner, now = Date.now()): CourseStats {
+  const startOfToday = startOfDay(now);
+  // Known when today began.
+  const knownThen = knownAt(l, startOfToday);
   let known = 0;
+  let knownToday = 0;
   let learning = 0;
   for (const w of l.words.values()) {
     const st = wordState(readMemory(l, w.id));
-    if (st === "known") known++;
-    else if (st === "learning") learning++;
+    if (st === "known") {
+      known++;
+      if (!knownThen.has(w.id)) knownToday++;
+    } else if (st === "learning") learning++;
   }
-  const startOfToday = startOfDay(now);
-  // Memory as it was this morning: the reviews from before today, replayed.
-  const morning = deriveMemory(l.reviews.filter((r) => Date.parse(r.reviewed_at) < startOfToday), l.course.retention, l.resolve);
-  const knownThen = new Set(morning.filter((m) => m.skill === "read" && wordState(m) === "known").map((m) => m.wordId));
-  let knownToday = 0;
-  for (const w of l.words.values()) if (!knownThen.has(w.id) && wordState(readMemory(l, w.id)) === "known") knownToday++;
-  const reviews = l.reviews.map((r) => ({ ...r, ts: Date.parse(r.reviewed_at) })).sort((a, b) => a.ts - b.ts);
-  const recent = reviews.filter((r) => r.ts > now - 30 * DAY_MS);
   // Retention = pass rate on reviews of items that had already been seen on an earlier day.
-  const byItem = new Map<string, number[]>();
-  for (const r of reviews) {
-    const k = `${l.resolve(r.word_id)}:${r.skill}`;
-    const list = byItem.get(k);
-    if (list) list.push(r.ts);
-    else byItem.set(k, [r.ts]);
-  }
+  // An item is a word and a skill, so each word's reviews are looked at on their own.
   let pass = 0;
   let total = 0;
-  for (const r of recent) {
-    if (r.kind === "known") continue;
-    const prior = byItem.get(`${l.resolve(r.word_id)}:${r.skill}`)!.filter((t) => t < r.ts);
-    if (prior.length && r.ts - prior[prior.length - 1] > 12 * 3_600_000) {
-      total++;
-      if (r.grade > 1) pass++;
-    }
-  }
   const days = Array.from({ length: 30 }, (_, i) => ({ day: startOfToday - (29 - i) * DAY_MS, reviews: 0 }));
-  for (const r of recent) {
-    const idx = 29 - Math.floor((startOfToday + DAY_MS - 1 - r.ts) / DAY_MS);
-    if (idx >= 0 && idx < 30) days[idx].reviews++;
+  for (const list of l.reviewsByWord.values()) {
+    const ts = list.map((r) => Date.parse(r.reviewed_at));
+    list.forEach((r, i) => {
+      if (ts[i] <= now - 30 * DAY_MS) return;
+      const idx = 29 - Math.floor((startOfToday + DAY_MS - 1 - ts[i]) / DAY_MS);
+      if (idx >= 0 && idx < 30) days[idx].reviews++;
+      if (r.kind === "known") return;
+      // The item's latest review before this one.
+      let prior = -Infinity;
+      list.forEach((x, j) => {
+        if (x.skill === r.skill && ts[j] < ts[i] && ts[j] > prior) prior = ts[j];
+      });
+      if (prior > -Infinity && ts[i] - prior > 12 * 3_600_000) {
+        total++;
+        if (r.grade > 1) pass++;
+      }
+    });
   }
   return { known, knownToday, learning, seeds: l.fresh().length, retention30: total >= 20 ? pass / total : null, days };
 }

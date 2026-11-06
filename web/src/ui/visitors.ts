@@ -1,7 +1,7 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { deriveMemory, readMemory, wordState, type MemoryRow } from "../core/memory";
+import { knownAt, readMemory, wordState, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { dayNumber, startOfDay } from "../core/day";
 import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk, type Left } from "../garden/leave";
@@ -50,14 +50,6 @@ export interface LearnerVisitors {
   mole: boolean;
   /** Words for the garden itself (#74), shown in the walk when you tap the sunflower, a tree, the pond... */
   scenery: SceneryViews;
-}
-
-/** How many of `words` were known just before `t` (ms): the reading reviews before `t`, replayed. */
-export function knownAt(reviews: readonly ReviewRow[], t: number, retention: number, resolve: (id: string) => string, words: { has: (id: string) => boolean }): number {
-  const before = reviews.filter((r) => r.skill === "read" && Date.parse(r.reviewed_at) < t);
-  let n = 0;
-  for (const m of deriveMemory(before, retention, resolve)) if (m.skill === "read" && words.has(m.wordId) && wordState(m) === "known") n++;
-  return n;
 }
 
 /**
@@ -117,9 +109,7 @@ export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
   const times = l.reviews.map((r) => Date.parse(r.reviewed_at));
   const facts = learnerFacts(times, count, now, gardenBrought(l));
   const today = visitorsFor(facts, now, devVisitorOverride());
-  // Known at the start of today. Only worth a replay when there are reviews today.
-  const dayStart = startOfDay(now);
-  const before = times.some((t) => t >= dayStart) ? knownAt(l.reviews, dayStart, l.course.retention, l.resolve, l.words) : count;
+  const before = knownAt(l, startOfDay(now)).size;
   return {
     facts,
     today,

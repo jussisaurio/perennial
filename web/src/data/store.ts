@@ -128,6 +128,8 @@ export async function createStore(userId: string, email: string | null) {
     setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (code === "review_from_the_future" ? 1 : 0), gardenClock: refused.gardenClock + (code === "garden_from_the_future" ? 1 : 0) });
   };
 
+  const disposers = new Set<() => void>();
+
   const storage = await outboxStorage(userId);
   if (storage) await adoptQueues(userId, storage);
   const executor: OfflineExecutor = startOfflineExecutor({
@@ -204,7 +206,11 @@ export async function createStore(userId: string, email: string | null) {
       refusedListeners.add(cb);
       return () => void refusedListeners.delete(cb);
     },
+    /** Runs `cb` when the store is disposed: for what follows the tables itself (data/learner.ts). */
+    onDispose: (cb: () => void) => void disposers.add(cb),
     dispose() {
+      // First: a collection is cleaned up only once nothing follows it.
+      for (const d of disposers) d();
       unregister();
       unregisterSync();
       writerListeners.clear();
