@@ -124,7 +124,7 @@ async function unsentWriteThenCode(page: Page, address: string) {
   await startCourse(page);
   await page.route("**/api/write", (route) => route.abort());
   await openAdd(page);
-  await page.getByPlaceholder(/Paste .* text here/).fill("El lobo es rojo.");
+  await page.getByPlaceholder(/Paste .* text here/).fill("El topo es rojo.");
   await page.locator(".reader .tok", { hasText: /^es$/ }).click();
   const tried = page.waitForRequest("**/api/write");
   await page.getByRole("button", { name: "Learn 1 word" }).click();

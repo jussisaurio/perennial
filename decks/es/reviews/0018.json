@@ -1,0 +1,9 @@
+{
+  "file": "source/0018.json",
+  "sha256": "ba26e048c3755e09a015ab5160559f2062ea403057506e92005be8f7e560573c",
+  "author": "claude-agent:es-author-0018-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0018-2026-11-06",
+  "reviewedAt": "2026-11-06",
+  "verdict": "approved",
+  "notes": "100 entries proofread: 93 ok first pass, 7 fixed (6 near-copies/same-frame of older sentences incl. day names, 1 synonym-in-slot, 1 untaught homograph cura) and re-checked ok"
+}

@@ -1,0 +1,2760 @@
+[
+ {
+  "lemma": "Umstand",
+  "gloss": "circumstance; trouble, fuss (Umstände)",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Umständen",
+   "Umstände",
+   "Umstand"
+  ],
+  "notes": "Mostly plural: unter diesen Umständen = in these circumstances; keine Umstände machen = not to go to any trouble.",
+  "sentences": [
+   {
+    "text": "Unter diesen Umständen bleibe ich lieber zu Hause.",
+    "translation": "In these circumstances I'd rather stay at home.",
+    "cloze": "Umständen"
+   },
+   {
+    "text": "Machen Sie sich bitte keine Umstände!",
+    "translation": "Please don't go to any trouble!",
+    "cloze": "Umstände"
+   },
+   {
+    "text": "Er ist unter seltsamen Umständen gestorben.",
+    "translation": "He died in strange circumstances.",
+    "cloze": "Umständen"
+   }
+  ]
+ },
+ {
+  "lemma": "Angelegenheit",
+  "gloss": "matter, affair (more formal than Sache)",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Angelegenheit",
+   "Angelegenheiten"
+  ],
+  "sentences": [
+   {
+    "text": "Ich bin in einer privaten Angelegenheit hier.",
+    "translation": "I'm here on a private matter.",
+    "cloze": "Angelegenheit"
+   },
+   {
+    "text": "Halt dich aus meinen Angelegenheiten raus!",
+    "translation": "Stay out of my affairs!",
+    "cloze": "Angelegenheiten"
+   },
+   {
+    "text": "Um solche Angelegenheiten kümmert sich mein Anwalt.",
+    "translation": "My lawyer deals with matters like that.",
+    "cloze": "Angelegenheiten"
+   }
+  ]
+ },
+ {
+  "lemma": "Dienstag",
+  "gloss": "Tuesday",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Dienstag",
+   "Dienstage"
+  ],
+  "sentences": [
+   {
+    "text": "Kannst du am Dienstag um zehn?",
+    "translation": "Can you do Tuesday at ten?",
+    "cloze": "Dienstag"
+   },
+   {
+    "text": "Seit Dienstag habe ich nichts von ihm gehört.",
+    "translation": "I haven't heard from him since Tuesday.",
+    "cloze": "Dienstag"
+   },
+   {
+    "text": "Der Kurs fällt diesen Dienstag aus.",
+    "translation": "The class is cancelled this Tuesday.",
+    "cloze": "Dienstag"
+   }
+  ]
+ },
+ {
+  "lemma": "folgend",
+  "gloss": "following, next",
+  "pos": "adj",
+  "forms": [
+   "folgenden",
+   "folgende",
+   "folgendes"
+  ],
+  "sentences": [
+   {
+    "text": "Am folgenden Tag war er wieder gesund.",
+    "translation": "The following day he was well again.",
+    "cloze": "folgenden"
+   },
+   {
+    "text": "Bitte beantworten Sie die folgenden Fragen.",
+    "translation": "Please answer the following questions.",
+    "cloze": "folgenden"
+   },
+   {
+    "text": "Die folgende Geschichte ist wirklich passiert.",
+    "translation": "The following story really happened.",
+    "cloze": "folgende"
+   }
+  ]
+ },
+ {
+  "lemma": "anstellen",
+  "gloss": "to get up to (something bad); to employ, to hire",
+  "pos": "verb",
+  "forms": [
+   "anstellen",
+   "angestellt",
+   "anzustellen"
+  ],
+  "notes": "Separable: Die Firma stellt zwei Leute an. Was hast du angestellt? = What have you been up to?",
+  "sentences": [
+   {
+    "text": "Was hast du jetzt schon wieder angestellt?",
+    "translation": "What have you been up to this time?",
+    "cloze": "angestellt"
+   },
+   {
+    "text": "Meine Schwester ist bei einer Bank angestellt.",
+    "translation": "My sister is employed at a bank.",
+    "cloze": "angestellt"
+   },
+   {
+    "text": "Wir können es uns nicht leisten, jemanden anzustellen.",
+    "translation": "We can't afford to hire anyone.",
+    "cloze": "anzustellen"
+   }
+  ]
+ },
+ {
+  "lemma": "Training",
+  "gloss": "training, practice (sport)",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Training",
+   "Trainings"
+  ],
+  "sentences": [
+   {
+    "text": "Das Training fängt heute erst um sechs an.",
+    "translation": "Training doesn't start until six today.",
+    "cloze": "Training"
+   },
+   {
+    "text": "Er geht dreimal pro Woche zum Training.",
+    "translation": "He goes to training three times a week.",
+    "cloze": "Training"
+   },
+   {
+    "text": "Ohne Training schaffst du das nie.",
+    "translation": "You'll never manage that without training.",
+    "cloze": "Training"
+   }
+  ]
+ },
+ {
+  "lemma": "auftauchen",
+  "gloss": "to turn up, to show up (often suddenly); to come up (out of water)",
+  "pos": "verb",
+  "forms": [
+   "auftauchen",
+   "aufgetaucht",
+   "auftauchte",
+   "aufzutauchen"
+  ],
+  "notes": "Separable: Er taucht plötzlich auf. Perfect with sein: Er ist aufgetaucht.",
+  "sentences": [
+   {
+    "text": "Die Katze ist nach drei Tagen wieder aufgetaucht.",
+    "translation": "The cat turned up again after three days.",
+    "cloze": "aufgetaucht"
+   },
+   {
+    "text": "Er kann hier nicht einfach so auftauchen!",
+    "translation": "He can't just show up here like that!",
+    "cloze": "auftauchen"
+   },
+   {
+    "text": "Wir warteten am See, bis sie wieder auftauchte.",
+    "translation": "We waited at the lake until she came back up.",
+    "cloze": "auftauchte"
+   }
+  ]
+ },
+ {
+  "lemma": "rauskommen",
+  "gloss": "to come out, to get out",
+  "pos": "verb",
+  "forms": [
+   "rauskommen",
+   "rausgekommen",
+   "rauszukommen"
+  ],
+  "notes": "Separable: Komm raus! Everyday short form of herauskommen. Perfect with sein.",
+  "sentences": [
+   {
+    "text": "Er will nicht aus seinem Zimmer rauskommen.",
+    "translation": "He won't come out of his room.",
+    "cloze": "rauskommen"
+   },
+   {
+    "text": "Irgendwann ist die Wahrheit doch rausgekommen.",
+    "translation": "In the end the truth came out.",
+    "cloze": "rausgekommen"
+   },
+   {
+    "text": "Es ist schwer, aus dieser Situation rauszukommen.",
+    "translation": "It's hard to get out of this situation.",
+    "cloze": "rauszukommen"
+   }
+  ]
+ },
+ {
+  "lemma": "Suppe",
+  "gloss": "soup",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Suppe",
+   "Suppen"
+  ],
+  "sentences": [
+   {
+    "text": "Wenn ich krank bin, macht mir meine Mutter Suppe.",
+    "translation": "When I'm ill, my mum makes me soup.",
+    "cloze": "Suppe"
+   },
+   {
+    "text": "Zum Mittag gibt es nur eine Suppe.",
+    "translation": "There's just soup for lunch.",
+    "cloze": "Suppe"
+   },
+   {
+    "text": "Dieses Restaurant hat sechs verschiedene Suppen.",
+    "translation": "This restaurant has six different soups.",
+    "cloze": "Suppen"
+   }
+  ]
+ },
+ {
+  "lemma": "Sitz",
+  "gloss": "seat (in a car, bus, cinema)",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Sitz",
+   "Sitze"
+  ],
+  "notes": "Sitz is the seat itself; for a free place to sit, say Platz.",
+  "sentences": [
+   {
+    "text": "Dein Handy ist unter den Sitz gefallen.",
+    "translation": "Your phone has fallen under the seat.",
+    "cloze": "Sitz"
+   },
+   {
+    "text": "Kannst du deinen Sitz ein bisschen nach vorne machen?",
+    "translation": "Can you move your seat forward a bit?",
+    "cloze": "Sitz"
+   },
+   {
+    "text": "Die Sitze in diesem Kino sind super bequem.",
+    "translation": "The seats in this cinema are really comfortable.",
+    "cloze": "Sitze"
+   }
+  ]
+ },
+ {
+  "lemma": "Vorteil",
+  "gloss": "advantage",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Vorteil",
+   "Vorteile",
+   "Vorteilen"
+  ],
+  "sentences": [
+   {
+    "text": "Dein Deutsch ist hier ein echter Vorteil.",
+    "translation": "Your German is a real advantage here.",
+    "cloze": "Vorteil"
+   },
+   {
+    "text": "Er denkt immer nur an seinen eigenen Vorteil.",
+    "translation": "He only ever thinks of his own advantage.",
+    "cloze": "Vorteil"
+   },
+   {
+    "text": "Was sind die Vorteile einer großen Stadt?",
+    "translation": "What are the advantages of a big city?",
+    "cloze": "Vorteile"
+   }
+  ]
+ },
+ {
+  "lemma": "rosa",
+  "gloss": "pink",
+  "pos": "adj",
+  "forms": [
+   "rosa"
+  ],
+  "notes": "Usually takes no endings: ein rosa Kleid.",
+  "sentences": [
+   {
+    "text": "Meine Tochter will nur noch rosa Sachen tragen.",
+    "translation": "My daughter only wants to wear pink things now.",
+    "cloze": "rosa"
+   },
+   {
+    "text": "Am Abend war der Himmel ganz rosa.",
+    "translation": "In the evening the sky was all pink.",
+    "cloze": "rosa"
+   },
+   {
+    "text": "Die Rosen vor dem Haus sind rosa.",
+    "translation": "The roses in front of the house are pink.",
+    "cloze": "rosa"
+   }
+  ]
+ },
+ {
+  "lemma": "Tour",
+  "gloss": "tour (a guided or round trip)",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Tour",
+   "Touren"
+  ],
+  "sentences": [
+   {
+    "text": "Die Tour durch das Schloss dauert zwei Stunden.",
+    "translation": "The tour of the castle takes two hours.",
+    "cloze": "Tour"
+   },
+   {
+    "text": "Die Band ist gerade auf Tour.",
+    "translation": "The band is on tour right now.",
+    "cloze": "Tour"
+   },
+   {
+    "text": "Von hier aus starten jeden Morgen Touren in die Berge.",
+    "translation": "Tours into the mountains leave from here every morning.",
+    "cloze": "Touren"
+   }
+  ]
+ },
+ {
+  "lemma": "amerikanisch",
+  "gloss": "American",
+  "pos": "adj",
+  "forms": [
+   "amerikanische",
+   "amerikanischen",
+   "amerikanisch",
+   "amerikanischer",
+   "amerikanisches"
+  ],
+  "notes": "The person is Amerikaner, the woman Amerikanerin.",
+  "sentences": [
+   {
+    "text": "Ich finde amerikanische Autos viel zu groß.",
+    "translation": "I think American cars are far too big.",
+    "cloze": "amerikanische"
+   },
+   {
+    "text": "Sie hat ein Jahr bei einer amerikanischen Familie gewohnt.",
+    "translation": "She lived with an American family for a year.",
+    "cloze": "amerikanischen"
+   },
+   {
+    "text": "Seine Idee klingt sehr amerikanisch.",
+    "translation": "His idea sounds very American.",
+    "cloze": "amerikanisch"
+   }
+  ]
+ },
+ {
+  "lemma": "berühren",
+  "gloss": "to touch (lightly); to move (emotionally)",
+  "pos": "verb",
+  "forms": [
+   "berühren",
+   "berührt",
+   "berührte"
+  ],
+  "notes": "anfassen is the everyday word for touching things with your hands.",
+  "sentences": [
+   {
+    "text": "Seine Worte haben mich tief berührt.",
+    "translation": "His words moved me deeply.",
+    "cloze": "berührt"
+   },
+   {
+    "text": "Sie berührte mich kurz am Arm.",
+    "translation": "She briefly touched my arm.",
+    "cloze": "berührte"
+   },
+   {
+    "text": "Die beiden Kabel dürfen sich nicht berühren.",
+    "translation": "The two wires mustn't touch each other.",
+    "cloze": "berühren"
+   }
+  ]
+ },
+ {
+  "lemma": "französisch",
+  "gloss": "French",
+  "pos": "adj",
+  "forms": [
+   "französische",
+   "französischen",
+   "französisch",
+   "französischer",
+   "französisches"
+  ],
+  "notes": "The language is Französisch, with a capital F.",
+  "sentences": [
+   {
+    "text": "Sie hört gern französische Lieder.",
+    "translation": "She likes listening to French songs.",
+    "cloze": "französische"
+   },
+   {
+    "text": "Zum Abendessen gibt es französischen Käse.",
+    "translation": "There's French cheese for dinner.",
+    "cloze": "französischen"
+   },
+   {
+    "text": "Das Essen hier ist typisch französisch.",
+    "translation": "The food here is typically French.",
+    "cloze": "französisch"
+   }
+  ]
+ },
+ {
+  "lemma": "Gedächtnis",
+  "gloss": "memory (the ability to remember)",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Gedächtnis"
+  ],
+  "notes": "Gedächtnis is the ability; a single memory of something is eine Erinnerung.",
+  "sentences": [
+   {
+    "text": "Mein Vater hat ein Gedächtnis wie ein Elefant.",
+    "translation": "My dad has a memory like an elephant.",
+    "cloze": "Gedächtnis"
+   },
+   {
+    "text": "Nach dem Unfall hat er sein Gedächtnis verloren.",
+    "translation": "He lost his memory after the accident.",
+    "cloze": "Gedächtnis"
+   },
+   {
+    "text": "Mit dem Alter wird das Gedächtnis schlechter.",
+    "translation": "Memory gets worse with age.",
+    "cloze": "Gedächtnis"
+   }
+  ]
+ },
+ {
+  "lemma": "Wirklichkeit",
+  "gloss": "reality; in Wirklichkeit = actually, in real life",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Wirklichkeit"
+  ],
+  "sentences": [
+   {
+    "text": "In Wirklichkeit ist er viel kleiner.",
+    "translation": "In real life he's much shorter.",
+    "cloze": "Wirklichkeit"
+   },
+   {
+    "text": "Sie sagt, sie ist krank, aber in Wirklichkeit hat sie keine Lust.",
+    "translation": "She says she's ill, but actually she doesn't feel like it.",
+    "cloze": "Wirklichkeit"
+   },
+   {
+    "text": "Er kann Traum und Wirklichkeit nicht mehr unterscheiden.",
+    "translation": "He can no longer tell dreams from reality.",
+    "cloze": "Wirklichkeit"
+   }
+  ],
+  "notes": "Realität means the same, but in Wirklichkeit (= actually) is a fixed phrase; you cannot say in Realität."
+ },
+ {
+  "lemma": "bestrafen",
+  "gloss": "to punish",
+  "pos": "verb",
+  "forms": [
+   "bestrafen",
+   "bestraft",
+   "bestrafst",
+   "bestrafte"
+  ],
+  "sentences": [
+   {
+    "text": "Warum bestrafst du mich?",
+    "translation": "Why are you punishing me?",
+    "cloze": "bestrafst"
+   },
+   {
+    "text": "Seine Eltern haben ihn nie bestraft.",
+    "translation": "His parents never punished him.",
+    "cloze": "bestraft"
+   },
+   {
+    "text": "Wer zu schnell fährt, muss bestraft werden.",
+    "translation": "People who drive too fast must be punished.",
+    "cloze": "bestraft"
+   }
+  ]
+ },
+ {
+  "lemma": "Kreis",
+  "gloss": "circle",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Kreis",
+   "Kreise"
+  ],
+  "sentences": [
+   {
+    "text": "Setzt euch bitte alle in einen Kreis.",
+    "translation": "Please all sit in a circle.",
+    "cloze": "Kreis"
+   },
+   {
+    "text": "Wir drehen uns nur im Kreis.",
+    "translation": "We're just going round in circles.",
+    "cloze": "Kreis"
+   },
+   {
+    "text": "Mit dem Finger machte sie kleine Kreise auf dem Tisch.",
+    "translation": "She made little circles on the table with her finger.",
+    "cloze": "Kreise"
+   }
+  ]
+ },
+ {
+  "lemma": "rein",
+  "gloss": "pure; nothing but",
+  "pos": "adj",
+  "forms": [
+   "reine",
+   "reinem",
+   "reines",
+   "reiner",
+   "reinen"
+  ],
+  "notes": "Not the same as rein = in (Komm rein!).",
+  "sentences": [
+   {
+    "text": "Ich habe ihn aus reiner Neugier gefragt.",
+    "translation": "I asked him out of pure curiosity.",
+    "cloze": "reiner"
+   },
+   {
+    "text": "Es war reines Glück, dass nichts passiert ist.",
+    "translation": "It was pure luck that nothing happened.",
+    "cloze": "reines"
+   },
+   {
+    "text": "Das war reine Zeitverschwendung.",
+    "translation": "That was a pure waste of time.",
+    "cloze": "reine"
+   }
+  ]
+ },
+ {
+  "lemma": "Staatsanwalt",
+  "gloss": "prosecutor, public prosecutor",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Staatsanwalt",
+   "Staatsanwälte"
+  ],
+  "notes": "Plural: Staatsanwälte. A woman is a Staatsanwältin.",
+  "sentences": [
+   {
+    "text": "Der Staatsanwalt fordert fünf Jahre Gefängnis.",
+    "translation": "The prosecutor is asking for five years in prison.",
+    "cloze": "Staatsanwalt"
+   },
+   {
+    "text": "Der Fall liegt jetzt beim Staatsanwalt.",
+    "translation": "The case is now with the prosecutor.",
+    "cloze": "Staatsanwalt"
+   },
+   {
+    "text": "Zwei Staatsanwälte arbeiten an diesem Fall.",
+    "translation": "Two prosecutors are working on this case.",
+    "cloze": "Staatsanwälte"
+   }
+  ]
+ },
+ {
+  "lemma": "Ewigkeit",
+  "gloss": "eternity; ages (a very long time)",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Ewigkeit"
+  ],
+  "sentences": [
+   {
+    "text": "Wir kennen uns schon seit einer Ewigkeit.",
+    "translation": "We've known each other for ages.",
+    "cloze": "Ewigkeit"
+   },
+   {
+    "text": "Die fünf Minuten kamen mir wie eine Ewigkeit vor.",
+    "translation": "The five minutes felt like an eternity to me.",
+    "cloze": "Ewigkeit"
+   },
+   {
+    "text": "Für ein Kind ist ein Jahr eine Ewigkeit.",
+    "translation": "For a child, a year is an eternity.",
+    "cloze": "Ewigkeit"
+   }
+  ]
+ },
+ {
+  "lemma": "Störung",
+  "gloss": "disturbance, interruption; fault (in a machine or network)",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Störung",
+   "Störungen"
+  ],
+  "sentences": [
+   {
+    "text": "Entschuldigen Sie bitte die Störung.",
+    "translation": "Sorry to disturb you.",
+    "cloze": "Störung"
+   },
+   {
+    "text": "Wegen einer Störung fährt die U-Bahn heute nicht.",
+    "translation": "The underground isn't running today because of a fault.",
+    "cloze": "Störung"
+   },
+   {
+    "text": "Mit dem Internet gibt es ständig Störungen.",
+    "translation": "The internet keeps having faults.",
+    "cloze": "Störungen"
+   }
+  ]
+ },
+ {
+  "lemma": "hässlich",
+  "gloss": "ugly",
+  "pos": "adj",
+  "forms": [
+   "hässlich",
+   "hässliche",
+   "hässlichen",
+   "hässlicher",
+   "hässliches"
+  ],
+  "sentences": [
+   {
+    "text": "Den hässlichen Pullover ziehe ich nicht an.",
+    "translation": "I'm not putting on that ugly jumper.",
+    "cloze": "hässlichen"
+   },
+   {
+    "text": "Heute finde ich mich total hässlich.",
+    "translation": "Today I think I look really ugly.",
+    "cloze": "hässlich"
+   },
+   {
+    "text": "Neben dem Bahnhof stehen nur hässliche Häuser.",
+    "translation": "There are only ugly buildings next to the station.",
+    "cloze": "hässliche"
+   }
+  ]
+ },
+ {
+  "lemma": "Tiger",
+  "gloss": "tiger",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Tiger",
+   "Tigern"
+  ],
+  "notes": "Plural: die Tiger (no change).",
+  "sentences": [
+   {
+    "text": "Im Zoo gibt es zwei junge Tiger.",
+    "translation": "There are two young tigers at the zoo.",
+    "cloze": "Tiger"
+   },
+   {
+    "text": "Einen echten Tiger habe ich noch nie gesehen.",
+    "translation": "I've never seen a real tiger.",
+    "cloze": "Tiger"
+   },
+   {
+    "text": "Unsere Katze sieht aus wie ein kleiner Tiger.",
+    "translation": "Our cat looks like a little tiger.",
+    "cloze": "Tiger"
+   }
+  ]
+ },
+ {
+  "lemma": "Zigarette",
+  "gloss": "cigarette",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Zigarette",
+   "Zigaretten"
+  ],
+  "sentences": [
+   {
+    "text": "Hast du mal eine Zigarette für mich?",
+    "translation": "Could you spare me a cigarette?",
+    "cloze": "Zigarette"
+   },
+   {
+    "text": "Er raucht zwanzig Zigaretten am Tag.",
+    "translation": "He smokes twenty cigarettes a day.",
+    "cloze": "Zigaretten"
+   },
+   {
+    "text": "Sie machte ihre Zigarette aus und ging hinein.",
+    "translation": "She put out her cigarette and went inside.",
+    "cloze": "Zigarette"
+   }
+  ]
+ },
+ {
+  "lemma": "mutig",
+  "gloss": "brave",
+  "pos": "adj",
+  "forms": [
+   "mutig",
+   "mutiger",
+   "mutige",
+   "mutigen",
+   "mutiges"
+  ],
+  "sentences": [
+   {
+    "text": "Sei mutig und sag ihm, was du denkst.",
+    "translation": "Be brave and tell him what you think.",
+    "cloze": "mutig"
+   },
+   {
+    "text": "Kinder sind oft mutiger als Erwachsene.",
+    "translation": "Children are often braver than adults.",
+    "cloze": "mutiger"
+   },
+   {
+    "text": "Wir brauchen mutige Leute wie dich.",
+    "translation": "We need brave people like you.",
+    "cloze": "mutige"
+   }
+  ]
+ },
+ {
+  "lemma": "ausruhen",
+  "gloss": "to rest (after effort or work)",
+  "pos": "verb",
+  "forms": [
+   "ausruhen",
+   "ausgeruht",
+   "auszuruhen"
+  ],
+  "notes": "Used with sich and separable: Ich ruhe mich aus.",
+  "sentences": [
+   {
+    "text": "Ich muss mich kurz ausruhen.",
+    "translation": "I need to rest for a moment.",
+    "cloze": "ausruhen"
+   },
+   {
+    "text": "Nach dem langen Weg haben wir uns im Schatten ausgeruht.",
+    "translation": "After the long walk we rested in the shade.",
+    "cloze": "ausgeruht"
+   },
+   {
+    "text": "Bei der Arbeit hatte ich keine Zeit, mich auszuruhen.",
+    "translation": "At work I had no time to rest.",
+    "cloze": "auszuruhen"
+   }
+  ]
+ },
+ {
+  "lemma": "linke",
+  "gloss": "left (not right)",
+  "pos": "adj",
+  "forms": [
+   "linke",
+   "linken",
+   "linkes",
+   "linker"
+  ],
+  "notes": "Always with an ending: die linke Hand. 'On the left' is links.",
+  "sentences": [
+   {
+    "text": "In England fährt man auf der linken Seite.",
+    "translation": "In England people drive on the left.",
+    "cloze": "linken"
+   },
+   {
+    "text": "Mit der linken Hand kann ich gar nicht schreiben.",
+    "translation": "I can't write at all with my left hand.",
+    "cloze": "linken"
+   },
+   {
+    "text": "Sein linkes Auge ist blau, das rechte braun.",
+    "translation": "His left eye is blue, the right one brown.",
+    "cloze": "linkes"
+   }
+  ]
+ },
+ {
+  "lemma": "Not",
+  "gloss": "need, hardship; zur Not = if need be",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Not"
+  ],
+  "sentences": [
+   {
+    "text": "Zur Not können wir bei meinen Eltern schlafen.",
+    "translation": "If need be, we can sleep at my parents' place.",
+    "cloze": "Not"
+   },
+   {
+    "text": "Viele Familien leben in großer Not.",
+    "translation": "Many families live in great hardship.",
+    "cloze": "Not"
+   },
+   {
+    "text": "Er war immer da, wenn ich in Not war.",
+    "translation": "He was always there when I was in need.",
+    "cloze": "Not"
+   }
+  ]
+ },
+ {
+  "lemma": "Unglück",
+  "gloss": "disaster, serious accident; bad luck",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Unglück",
+   "Unglücke"
+  ],
+  "notes": "An everyday car accident is ein Unfall; Unglück is a bigger disaster. Pech is everyday bad luck (So ein Pech!); Unglück bringen = to bring bad luck.",
+  "sentences": [
+   {
+    "text": "Bei dem Unglück sind drei Menschen gestorben.",
+    "translation": "Three people died in the disaster.",
+    "cloze": "Unglück"
+   },
+   {
+    "text": "Schwarze Katzen bringen angeblich Unglück.",
+    "translation": "Black cats are supposed to bring bad luck.",
+    "cloze": "Unglück"
+   },
+   {
+    "text": "Ein Unglück kommt selten allein.",
+    "translation": "Bad luck rarely comes alone.",
+    "cloze": "Unglück"
+   }
+  ]
+ },
+ {
+  "lemma": "eng",
+  "gloss": "narrow, tight; close (friends)",
+  "pos": "adj",
+  "forms": [
+   "eng",
+   "enge",
+   "engen",
+   "enger",
+   "engste"
+  ],
+  "sentences": [
+   {
+    "text": "Die Straßen in diesem Dorf sind sehr eng.",
+    "translation": "The streets in this village are very narrow.",
+    "cloze": "eng"
+   },
+   {
+    "text": "Wir wohnen mit drei Kindern in einer engen Wohnung.",
+    "translation": "We live in a cramped flat with three children.",
+    "cloze": "engen"
+   },
+   {
+    "text": "Sie ist meine engste Freundin.",
+    "translation": "She's my closest friend.",
+    "cloze": "engste"
+   }
+  ]
+ },
+ {
+  "lemma": "üben",
+  "gloss": "to practise",
+  "pos": "verb",
+  "forms": [
+   "üben",
+   "übt",
+   "übst",
+   "übe",
+   "geübt"
+  ],
+  "sentences": [
+   {
+    "text": "Jeden Abend übe ich eine Stunde Gitarre.",
+    "translation": "I practise the guitar for an hour every evening.",
+    "cloze": "übe"
+   },
+   {
+    "text": "Wir haben das Lied lange geübt.",
+    "translation": "We practised the song for a long time.",
+    "cloze": "geübt"
+   },
+   {
+    "text": "Übt ihr noch für das Konzert?",
+    "translation": "Are you still practising for the concert?",
+    "cloze": "Übt"
+   }
+  ]
+ },
+ {
+  "lemma": "Wissenschaftler",
+  "gloss": "scientist",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Wissenschaftler",
+   "Wissenschaftlern"
+  ],
+  "notes": "Plural: die Wissenschaftler (no change). A woman is a Wissenschaftlerin.",
+  "sentences": [
+   {
+    "text": "Mein Bruder ist Wissenschaftler und arbeitet in einem Labor.",
+    "translation": "My brother is a scientist and works in a lab.",
+    "cloze": "Wissenschaftler"
+   },
+   {
+    "text": "Wissenschaftler haben im Wald eine neue Pflanze entdeckt.",
+    "translation": "Scientists have discovered a new plant in the forest.",
+    "cloze": "Wissenschaftler"
+   },
+   {
+    "text": "Im Fernsehen hat ein Wissenschaftler das gut erklärt.",
+    "translation": "A scientist explained it well on TV.",
+    "cloze": "Wissenschaftler"
+   }
+  ]
+ },
+ {
+  "lemma": "Reaktion",
+  "gloss": "reaction",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Reaktion",
+   "Reaktionen"
+  ],
+  "sentences": [
+   {
+    "text": "Seine Reaktion hat mich überrascht.",
+    "translation": "His reaction surprised me.",
+    "cloze": "Reaktion"
+   },
+   {
+    "text": "Wie war die Reaktion deiner Eltern?",
+    "translation": "What was your parents' reaction?",
+    "cloze": "Reaktion"
+   },
+   {
+    "text": "Die Reaktionen auf das Video waren sehr positiv.",
+    "translation": "The reactions to the video were very positive.",
+    "cloze": "Reaktionen"
+   }
+  ]
+ },
+ {
+  "lemma": "Dusche",
+  "gloss": "shower",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Dusche",
+   "Duschen"
+  ],
+  "sentences": [
+   {
+    "text": "Ich gehe kurz unter die Dusche.",
+    "translation": "I'm just going to have a quick shower.",
+    "cloze": "Dusche"
+   },
+   {
+    "text": "Eine kalte Dusche macht mich morgens wach.",
+    "translation": "A cold shower wakes me up in the morning.",
+    "cloze": "Dusche"
+   },
+   {
+    "text": "Gibt es am Strand auch Duschen?",
+    "translation": "Are there showers on the beach too?",
+    "cloze": "Duschen"
+   }
+  ]
+ },
+ {
+  "lemma": "Mitarbeiter",
+  "gloss": "employee, member of staff",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Mitarbeiter",
+   "Mitarbeitern"
+  ],
+  "notes": "Plural: die Mitarbeiter (no change). A woman is a Mitarbeiterin.",
+  "sentences": [
+   {
+    "text": "Die Firma hat über hundert Mitarbeiter.",
+    "translation": "The company has over a hundred employees.",
+    "cloze": "Mitarbeiter"
+   },
+   {
+    "text": "Ein Mitarbeiter hilft Ihnen gleich weiter.",
+    "translation": "A member of staff will help you in a moment.",
+    "cloze": "Mitarbeiter"
+   },
+   {
+    "text": "Wir suchen noch Mitarbeiter für die Küche.",
+    "translation": "We're still looking for kitchen staff.",
+    "cloze": "Mitarbeiter"
+   }
+  ]
+ },
+ {
+  "lemma": "bedrohen",
+  "gloss": "to threaten",
+  "pos": "verb",
+  "forms": [
+   "bedrohen",
+   "bedroht",
+   "bedrohte"
+  ],
+  "sentences": [
+   {
+    "text": "Er hat mich mit einem Messer bedroht.",
+    "translation": "He threatened me with a knife.",
+    "cloze": "bedroht"
+   },
+   {
+    "text": "Ein großes Feuer bedroht das Dorf.",
+    "translation": "A big fire is threatening the village.",
+    "cloze": "bedroht"
+   },
+   {
+    "text": "Der Mann bedrohte die Frau an der Kasse und lief weg.",
+    "translation": "The man threatened the woman at the till and ran away.",
+    "cloze": "bedrohte"
+   }
+  ]
+ },
+ {
+  "lemma": "reagieren",
+  "gloss": "to react",
+  "pos": "verb",
+  "forms": [
+   "reagieren",
+   "reagiert",
+   "reagierte"
+  ],
+  "sentences": [
+   {
+    "text": "Der Hund reagiert sofort auf seinen Namen.",
+    "translation": "The dog reacts to its name straight away.",
+    "cloze": "reagiert"
+   },
+   {
+    "text": "Ich wusste nicht, wie ich reagieren sollte.",
+    "translation": "I didn't know how to react.",
+    "cloze": "reagieren"
+   },
+   {
+    "text": "Sie reagierte ganz ruhig auf die schlechte Nachricht.",
+    "translation": "She reacted very calmly to the bad news.",
+    "cloze": "reagierte"
+   }
+  ]
+ },
+ {
+  "lemma": "Identität",
+  "gloss": "identity",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Identität",
+   "Identitäten"
+  ],
+  "sentences": [
+   {
+    "text": "Die Polizei kennt die Identität des Toten noch nicht.",
+    "translation": "The police don't know the dead man's identity yet.",
+    "cloze": "Identität"
+   },
+   {
+    "text": "Er lebt seit Jahren unter einer falschen Identität.",
+    "translation": "He's been living under a false identity for years.",
+    "cloze": "Identität"
+   },
+   {
+    "text": "Jemand hat im Internet meine Identität gestohlen.",
+    "translation": "Someone stole my identity online.",
+    "cloze": "Identität"
+   }
+  ]
+ },
+ {
+  "lemma": "rund",
+  "gloss": "round; rund um die Uhr = round the clock",
+  "pos": "adj",
+  "forms": [
+   "rund",
+   "runde",
+   "runden",
+   "rundes",
+   "runder"
+  ],
+  "sentences": [
+   {
+    "text": "Sie hat ein rundes Gesicht und kurze Haare.",
+    "translation": "She has a round face and short hair.",
+    "cloze": "rundes"
+   },
+   {
+    "text": "Die Apotheke hat rund um die Uhr geöffnet.",
+    "translation": "The chemist's is open round the clock.",
+    "cloze": "rund"
+   },
+   {
+    "text": "Die Kinder sitzen um einen runden Tisch.",
+    "translation": "The children are sitting around a round table.",
+    "cloze": "runden"
+   }
+  ]
+ },
+ {
+  "lemma": "Fieber",
+  "gloss": "fever, temperature",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Fieber"
+  ],
+  "sentences": [
+   {
+    "text": "Das Kind hat hohes Fieber.",
+    "translation": "The child has a high temperature.",
+    "cloze": "Fieber"
+   },
+   {
+    "text": "Mit Fieber gehst du heute nicht in die Schule!",
+    "translation": "You're not going to school with a temperature today!",
+    "cloze": "Fieber"
+   },
+   {
+    "text": "Heute Morgen ist das Fieber endlich gesunken.",
+    "translation": "This morning the fever finally went down.",
+    "cloze": "Fieber"
+   }
+  ]
+ },
+ {
+  "lemma": "leiten",
+  "gloss": "to run, to be in charge of (a school, team, meeting)",
+  "pos": "verb",
+  "forms": [
+   "leiten",
+   "leitet",
+   "geleitet",
+   "leitete"
+  ],
+  "sentences": [
+   {
+    "text": "Sie leitet seit drei Jahren die Schule.",
+    "translation": "She's been head of the school for three years.",
+    "cloze": "leitet"
+   },
+   {
+    "text": "Er hat das Projekt zwei Jahre lang geleitet.",
+    "translation": "He was in charge of the project for two years.",
+    "cloze": "geleitet"
+   },
+   {
+    "text": "Wer soll heute die Sitzung leiten?",
+    "translation": "Who's going to chair the meeting today?",
+    "cloze": "leiten"
+   }
+  ]
+ },
+ {
+  "lemma": "Donnerstag",
+  "gloss": "Thursday",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Donnerstag",
+   "Donnerstage"
+  ],
+  "sentences": [
+   {
+    "text": "Am Donnerstag kommt meine Mutter zu Besuch.",
+    "translation": "My mother is coming to visit on Thursday.",
+    "cloze": "Donnerstag"
+   },
+   {
+    "text": "Donnerstag passt mir leider nicht.",
+    "translation": "Sorry, Thursday doesn't work for me.",
+    "cloze": "Donnerstag"
+   },
+   {
+    "text": "Bis Donnerstag bin ich noch in Hamburg.",
+    "translation": "I'm in Hamburg until Thursday.",
+    "cloze": "Donnerstag"
+   }
+  ]
+ },
+ {
+  "lemma": "unheimlich",
+  "gloss": "creepy, scary",
+  "pos": "adj",
+  "forms": [
+   "unheimlich",
+   "unheimliche",
+   "unheimlichen",
+   "unheimlicher"
+  ],
+  "notes": "In speech it also means 'incredibly': unheimlich nett.",
+  "sentences": [
+   {
+    "text": "Nachts ist der Wald ein bisschen unheimlich.",
+    "translation": "The forest is a bit creepy at night.",
+    "cloze": "unheimlich"
+   },
+   {
+    "text": "Der Mann war mir von Anfang an unheimlich.",
+    "translation": "That man gave me the creeps from the start.",
+    "cloze": "unheimlich"
+   },
+   {
+    "text": "In dem alten Haus hörte man unheimliche Geräusche.",
+    "translation": "You could hear creepy noises in the old house.",
+    "cloze": "unheimliche"
+   }
+  ]
+ },
+ {
+  "lemma": "Jahrhundert",
+  "gloss": "century",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Jahrhundert",
+   "Jahrhunderts",
+   "Jahrhunderte",
+   "Jahrhunderten"
+  ],
+  "sentences": [
+   {
+    "text": "Das Haus ist aus dem letzten Jahrhundert.",
+    "translation": "The house is from the last century.",
+    "cloze": "Jahrhundert"
+   },
+   {
+    "text": "Das war das Spiel des Jahrhunderts!",
+    "translation": "That was the match of the century!",
+    "cloze": "Jahrhunderts"
+   },
+   {
+    "text": "Das Dorf gibt es schon seit Jahrhunderten.",
+    "translation": "The village has been here for centuries.",
+    "cloze": "Jahrhunderten"
+   }
+  ]
+ },
+ {
+  "lemma": "Diener",
+  "gloss": "servant",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Diener",
+   "Dienern"
+  ],
+  "notes": "Plural: die Diener (no change).",
+  "sentences": [
+   {
+    "text": "Der König hat viele Diener.",
+    "translation": "The king has many servants.",
+    "cloze": "Diener"
+   },
+   {
+    "text": "Der Diener brachte den Gästen Wein.",
+    "translation": "The servant brought the guests wine.",
+    "cloze": "Diener"
+   },
+   {
+    "text": "Ein alter Diener öffnete uns die Tür.",
+    "translation": "An old servant opened the door for us.",
+    "cloze": "Diener"
+   }
+  ]
+ },
+ {
+  "lemma": "extrem",
+  "gloss": "extreme; extremely",
+  "pos": "adj",
+  "forms": [
+   "extrem",
+   "extreme",
+   "extremen",
+   "extremer"
+  ],
+  "sentences": [
+   {
+    "text": "Bei extremer Hitze bleiben wir lieber drinnen.",
+    "translation": "In extreme heat we'd rather stay indoors.",
+    "cloze": "extremer"
+   },
+   {
+    "text": "Er hat manchmal ziemlich extreme Ideen.",
+    "translation": "He sometimes has pretty extreme ideas.",
+    "cloze": "extreme"
+   },
+   {
+    "text": "In extremen Fällen hilft nur eine Operation.",
+    "translation": "In extreme cases, only an operation helps.",
+    "cloze": "extremen"
+   }
+  ]
+ },
+ {
+  "lemma": "Ausweis",
+  "gloss": "ID card, identity card",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Ausweis",
+   "Ausweise"
+  ],
+  "sentences": [
+   {
+    "text": "Darf ich bitte Ihren Ausweis sehen?",
+    "translation": "May I see your ID, please?",
+    "cloze": "Ausweis"
+   },
+   {
+    "text": "Ich habe meinen Ausweis zu Hause vergessen.",
+    "translation": "I left my ID at home.",
+    "cloze": "Ausweis"
+   },
+   {
+    "text": "Ohne Ausweis kommst du hier nicht rein.",
+    "translation": "You won't get in here without ID.",
+    "cloze": "Ausweis"
+   }
+  ]
+ },
+ {
+  "lemma": "Sicht",
+  "gloss": "visibility, view; aus meiner Sicht = from my point of view",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Sicht"
+  ],
+  "sentences": [
+   {
+    "text": "Aus meiner Sicht ist das kein Problem.",
+    "translation": "From my point of view, that's not a problem.",
+    "cloze": "Sicht"
+   },
+   {
+    "text": "Bei Nebel ist die Sicht sehr schlecht.",
+    "translation": "Visibility is very poor in fog.",
+    "cloze": "Sicht"
+   },
+   {
+    "text": "Endlich ist das Ende in Sicht.",
+    "translation": "At last the end is in sight.",
+    "cloze": "Sicht"
+   }
+  ]
+ },
+ {
+  "lemma": "Sport",
+  "gloss": "sport, exercise",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Sport",
+   "Sports"
+  ],
+  "sentences": [
+   {
+    "text": "Unsere Tochter ist sehr gut im Sport.",
+    "translation": "Our daughter is very good at sport.",
+    "cloze": "Sport"
+   },
+   {
+    "text": "Fußball ist hier der wichtigste Sport.",
+    "translation": "Football is the most important sport here.",
+    "cloze": "Sport"
+   },
+   {
+    "text": "Für Sport habe ich leider keine Zeit.",
+    "translation": "Sadly I have no time for sport.",
+    "cloze": "Sport"
+   }
+  ]
+ },
+ {
+  "lemma": "studieren",
+  "gloss": "to study (at university)",
+  "pos": "verb",
+  "forms": [
+   "studieren",
+   "studiert",
+   "studierst",
+   "studierte"
+  ],
+  "notes": "For school or learning in general, use lernen.",
+  "sentences": [
+   {
+    "text": "Was studierst du eigentlich?",
+    "translation": "What are you studying, by the way?",
+    "cloze": "studierst"
+   },
+   {
+    "text": "Mein Vater hat nie studiert.",
+    "translation": "My father never went to university.",
+    "cloze": "studiert"
+   },
+   {
+    "text": "Nach der Schule will sie in Hamburg studieren.",
+    "translation": "After school she wants to go to university in Hamburg.",
+    "cloze": "studieren"
+   }
+  ]
+ },
+ {
+  "lemma": "anlügen",
+  "gloss": "to lie to (someone)",
+  "pos": "verb",
+  "forms": [
+   "anlügen",
+   "angelogen",
+   "anzulügen"
+  ],
+  "notes": "Separable: Er lügt mich an. Past: hat angelogen.",
+  "sentences": [
+   {
+    "text": "Du hast mich die ganze Zeit angelogen!",
+    "translation": "You've been lying to me the whole time!",
+    "cloze": "angelogen"
+   },
+   {
+    "text": "Ich würde dich nie anlügen.",
+    "translation": "I would never lie to you.",
+    "cloze": "anlügen"
+   },
+   {
+    "text": "Er hat versprochen, mich nicht mehr anzulügen.",
+    "translation": "He promised not to lie to me any more.",
+    "cloze": "anzulügen"
+   }
+  ]
+ },
+ {
+  "lemma": "Text",
+  "gloss": "text; words (of a song)",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Text",
+   "Texte",
+   "Textes"
+  ],
+  "sentences": [
+   {
+    "text": "Ich habe den Text dreimal gelesen und nichts verstanden.",
+    "translation": "I read the text three times and understood nothing.",
+    "cloze": "Text"
+   },
+   {
+    "text": "Für morgen müssen wir einen kurzen Text schreiben.",
+    "translation": "We have to write a short text for tomorrow.",
+    "cloze": "Text"
+   },
+   {
+    "text": "Sie schreibt die Texte für ihre Band.",
+    "translation": "She writes the words for her band's songs.",
+    "cloze": "Texte"
+   }
+  ]
+ },
+ {
+  "lemma": "nebenan",
+  "gloss": "next door",
+  "pos": "adv",
+  "forms": [
+   "nebenan"
+  ],
+  "sentences": [
+   {
+    "text": "Ich hole schnell Brot im Laden nebenan.",
+    "translation": "I'll quickly get some bread from the shop next door.",
+    "cloze": "nebenan"
+   },
+   {
+    "text": "Nebenan wohnt eine alte Dame mit drei Katzen.",
+    "translation": "An old lady with three cats lives next door.",
+    "cloze": "Nebenan"
+   },
+   {
+    "text": "Im Zimmer nebenan weint ein Baby.",
+    "translation": "A baby is crying in the room next door.",
+    "cloze": "nebenan"
+   }
+  ]
+ },
+ {
+  "lemma": "Lektion",
+  "gloss": "lesson (in a book or course); a lesson learned",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Lektion",
+   "Lektionen"
+  ],
+  "notes": "A lesson at school (the class) is eine Stunde.",
+  "sentences": [
+   {
+    "text": "Heute machen wir Lektion fünf.",
+    "translation": "Today we're doing lesson five.",
+    "cloze": "Lektion"
+   },
+   {
+    "text": "Das war mir eine Lektion.",
+    "translation": "That taught me a lesson.",
+    "cloze": "Lektion"
+   },
+   {
+    "text": "Die ersten Lektionen im Buch sind ganz leicht.",
+    "translation": "The first lessons in the book are very easy.",
+    "cloze": "Lektionen"
+   }
+  ]
+ },
+ {
+  "lemma": "Staub",
+  "gloss": "dust",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Staub"
+  ],
+  "sentences": [
+   {
+    "text": "Mach das Fenster zu, sonst kommt der Staub rein.",
+    "translation": "Shut the window, or the dust will get in.",
+    "cloze": "Staub"
+   },
+   {
+    "text": "Das alte Buch war voller Staub.",
+    "translation": "The old book was covered in dust.",
+    "cloze": "Staub"
+   },
+   {
+    "text": "Gegen Staub bin ich allergisch.",
+    "translation": "I'm allergic to dust.",
+    "cloze": "Staub"
+   }
+  ]
+ },
+ {
+  "lemma": "Dutzend",
+  "gloss": "dozen",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Dutzend",
+   "Dutzende"
+  ],
+  "sentences": [
+   {
+    "text": "Ein Dutzend Eier, bitte.",
+    "translation": "A dozen eggs, please.",
+    "cloze": "Dutzend"
+   },
+   {
+    "text": "Zur Party kamen nur ein Dutzend Leute.",
+    "translation": "Only a dozen people came to the party.",
+    "cloze": "Dutzend"
+   },
+   {
+    "text": "In der Küche standen Dutzende leere Flaschen.",
+    "translation": "There were dozens of empty bottles in the kitchen.",
+    "cloze": "Dutzende"
+   }
+  ]
+ },
+ {
+  "lemma": "Ratte",
+  "gloss": "rat",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Ratte",
+   "Ratten"
+  ],
+  "sentences": [
+   {
+    "text": "Am Fluss habe ich eine Ratte gesehen.",
+    "translation": "I saw a rat by the river.",
+    "cloze": "Ratte"
+   },
+   {
+    "text": "Ratten sind klüger, als man denkt.",
+    "translation": "Rats are cleverer than you'd think.",
+    "cloze": "Ratten"
+   },
+   {
+    "text": "In der Stadt gibt es mehr Ratten als Menschen.",
+    "translation": "There are more rats than people in the city.",
+    "cloze": "Ratten"
+   }
+  ]
+ },
+ {
+  "lemma": "Mitleid",
+  "gloss": "pity, sympathy",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Mitleid"
+  ],
+  "sentences": [
+   {
+    "text": "Ich brauche dein Mitleid nicht.",
+    "translation": "I don't need your pity.",
+    "cloze": "Mitleid"
+   },
+   {
+    "text": "Mit ihm habe ich überhaupt kein Mitleid.",
+    "translation": "I have no sympathy for him at all.",
+    "cloze": "Mitleid"
+   },
+   {
+    "text": "Sie hat ihm aus Mitleid Geld gegeben.",
+    "translation": "She gave him money out of pity.",
+    "cloze": "Mitleid"
+   }
+  ]
+ },
+ {
+  "lemma": "testen",
+  "gloss": "to test",
+  "pos": "verb",
+  "forms": [
+   "testen",
+   "getestet",
+   "testet",
+   "testete"
+  ],
+  "sentences": [
+   {
+    "text": "Willst du das neue Spiel testen?",
+    "translation": "Do you want to test the new game?",
+    "cloze": "testen"
+   },
+   {
+    "text": "Das Medikament wurde nicht an Tieren getestet.",
+    "translation": "The medicine wasn't tested on animals.",
+    "cloze": "getestet"
+   },
+   {
+    "text": "Er testet gern, wie weit er bei mir gehen kann.",
+    "translation": "He likes to test how far he can go with me.",
+    "cloze": "testet"
+   }
+  ]
+ },
+ {
+  "lemma": "Auftritt",
+  "gloss": "performance, appearance (on stage or TV)",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Auftritt",
+   "Auftritte",
+   "Auftritten"
+  ],
+  "notes": "An artist's own show or gig; a play or film showing is eine Vorstellung.",
+  "sentences": [
+   {
+    "text": "Ihr Auftritt war der beste des Abends.",
+    "translation": "Her performance was the best of the evening.",
+    "cloze": "Auftritt"
+   },
+   {
+    "text": "Morgen hat er seinen ersten Auftritt im Fernsehen.",
+    "translation": "Tomorrow he makes his first TV appearance.",
+    "cloze": "Auftritt"
+   },
+   {
+    "text": "Die Band hat dieses Jahr über hundert Auftritte.",
+    "translation": "The band has over a hundred gigs this year.",
+    "cloze": "Auftritte"
+   }
+  ]
+ },
+ {
+  "lemma": "Gegner",
+  "gloss": "opponent (in sport, a game or a debate)",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Gegner",
+   "Gegnern"
+  ],
+  "notes": "Plural: die Gegner (no change). An opponent is not an enemy (Feind).",
+  "sentences": [
+   {
+    "text": "Unser nächster Gegner ist sehr stark.",
+    "translation": "Our next opponent is very strong.",
+    "cloze": "Gegner"
+   },
+   {
+    "text": "Er hat seinen Gegner in fünf Minuten geschlagen.",
+    "translation": "He beat his opponent in five minutes.",
+    "cloze": "Gegner"
+   },
+   {
+    "text": "Es gibt viele Gegner dieser Idee.",
+    "translation": "There are many opponents of this idea.",
+    "cloze": "Gegner"
+   }
+  ]
+ },
+ {
+  "lemma": "Wunde",
+  "gloss": "wound",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Wunde",
+   "Wunden"
+  ],
+  "sentences": [
+   {
+    "text": "Die Wunde blutet immer noch.",
+    "translation": "The wound is still bleeding.",
+    "cloze": "Wunde"
+   },
+   {
+    "text": "Zuerst musst du die Wunde sauber machen.",
+    "translation": "First you need to clean the wound.",
+    "cloze": "Wunde"
+   },
+   {
+    "text": "Die Zeit heilt alle Wunden.",
+    "translation": "Time heals all wounds.",
+    "cloze": "Wunden"
+   }
+  ]
+ },
+ {
+  "lemma": "Linie",
+  "gloss": "line (drawn, or a bus or train line); in erster Linie = mainly",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Linie",
+   "Linien"
+  ],
+  "sentences": [
+   {
+    "text": "Welche Linie fährt zum Bahnhof?",
+    "translation": "Which line goes to the station?",
+    "cloze": "Linie"
+   },
+   {
+    "text": "Bleiben Sie bitte hinter der weißen Linie!",
+    "translation": "Please stay behind the white line!",
+    "cloze": "Linie"
+   },
+   {
+    "text": "In erster Linie geht es um die Kinder.",
+    "translation": "It's mainly about the children.",
+    "cloze": "Linie"
+   }
+  ]
+ },
+ {
+  "lemma": "Bedrohung",
+  "gloss": "threat (something dangerous)",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Bedrohung",
+   "Bedrohungen"
+  ],
+  "sentences": [
+   {
+    "text": "Er sieht in jedem Fremden eine Bedrohung.",
+    "translation": "He sees every stranger as a threat.",
+    "cloze": "Bedrohung"
+   },
+   {
+    "text": "Von diesem Mann geht keine Bedrohung aus.",
+    "translation": "This man is no threat.",
+    "cloze": "Bedrohung"
+   },
+   {
+    "text": "Gegen solche Bedrohungen brauchen wir einen Plan.",
+    "translation": "We need a plan against threats like these.",
+    "cloze": "Bedrohungen"
+   }
+  ]
+ },
+ {
+  "lemma": "Bauer",
+  "gloss": "farmer",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Bauer",
+   "Bauern"
+  ],
+  "notes": "Weak noun: den Bauern, dem Bauern. A woman is a Bäuerin.",
+  "sentences": [
+   {
+    "text": "Mein Opa war sein Leben lang Bauer.",
+    "translation": "My grandad was a farmer all his life.",
+    "cloze": "Bauer"
+   },
+   {
+    "text": "Wir kaufen unsere Eier direkt beim Bauern.",
+    "translation": "We buy our eggs straight from the farmer.",
+    "cloze": "Bauern"
+   },
+   {
+    "text": "Die Bauern warten seit Wochen auf Regen.",
+    "translation": "The farmers have been waiting weeks for rain.",
+    "cloze": "Bauern"
+   }
+  ]
+ },
+ {
+  "lemma": "einkaufen",
+  "gloss": "to go shopping, to do the shopping",
+  "pos": "verb",
+  "forms": [
+   "einkaufen",
+   "eingekauft",
+   "einzukaufen"
+  ],
+  "notes": "Separable: Ich kaufe heute ein. Use kaufen for buying one thing.",
+  "sentences": [
+   {
+    "text": "Nach der Arbeit gehe ich noch schnell einkaufen.",
+    "translation": "After work I'm quickly going shopping.",
+    "cloze": "einkaufen"
+   },
+   {
+    "text": "Für die ganze Woche haben wir schon eingekauft.",
+    "translation": "We've already done the shopping for the whole week.",
+    "cloze": "eingekauft"
+   },
+   {
+    "text": "Er hat nie Lust einzukaufen.",
+    "translation": "He never feels like doing the shopping.",
+    "cloze": "einzukaufen"
+   }
+  ]
+ },
+ {
+  "lemma": "Kreuz",
+  "gloss": "cross",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Kreuz",
+   "Kreuze"
+  ],
+  "sentences": [
+   {
+    "text": "Oben auf dem Berg steht ein großes Kreuz.",
+    "translation": "There's a big cross at the top of the mountain.",
+    "cloze": "Kreuz"
+   },
+   {
+    "text": "Mach ein Kreuz bei der richtigen Antwort.",
+    "translation": "Put a cross next to the right answer.",
+    "cloze": "Kreuz"
+   },
+   {
+    "text": "Sie trägt ein kleines Kreuz an einer Kette.",
+    "translation": "She wears a small cross on a chain.",
+    "cloze": "Kreuz"
+   }
+  ]
+ },
+ {
+  "lemma": "begehen",
+  "gloss": "to commit (a crime); to make (a mistake)",
+  "pos": "verb",
+  "forms": [
+   "begehen",
+   "begangen",
+   "begeht",
+   "beging"
+  ],
+  "sentences": [
+   {
+    "text": "Die Täter begehen ihre Verbrechen meist am Wochenende.",
+    "translation": "The criminals usually commit their crimes at the weekend.",
+    "cloze": "begehen"
+   },
+   {
+    "text": "Sie beging den größten Fehler ihres Lebens.",
+    "translation": "She made the biggest mistake of her life.",
+    "cloze": "beging"
+   },
+   {
+    "text": "Der Mord wurde mitten in der Nacht begangen.",
+    "translation": "The murder was committed in the middle of the night.",
+    "cloze": "begangen"
+   }
+  ]
+ },
+ {
+  "lemma": "nachsehen",
+  "gloss": "to go and see, to check",
+  "pos": "verb",
+  "forms": [
+   "nachsehen",
+   "nachgesehen",
+   "nachzusehen"
+  ],
+  "notes": "Separable: Ich sehe mal nach.",
+  "sentences": [
+   {
+    "text": "Kannst du mal nachsehen, wer an der Tür ist?",
+    "translation": "Can you go and see who's at the door?",
+    "cloze": "nachsehen"
+   },
+   {
+    "text": "Hast du im Kühlschrank nachgesehen?",
+    "translation": "Did you check the fridge?",
+    "cloze": "nachgesehen"
+   },
+   {
+    "text": "Er stand auf, um nachzusehen, was los war.",
+    "translation": "He got up to see what was going on.",
+    "cloze": "nachzusehen"
+   }
+  ]
+ },
+ {
+  "lemma": "Leidenschaft",
+  "gloss": "passion",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Leidenschaft",
+   "Leidenschaften"
+  ],
+  "sentences": [
+   {
+    "text": "Kochen ist meine große Leidenschaft.",
+    "translation": "Cooking is my great passion.",
+    "cloze": "Leidenschaft"
+   },
+   {
+    "text": "Sie singt mit viel Leidenschaft.",
+    "translation": "She sings with a lot of passion.",
+    "cloze": "Leidenschaft"
+   },
+   {
+    "text": "Uns verbindet die Leidenschaft für alte Autos.",
+    "translation": "We share a passion for old cars.",
+    "cloze": "Leidenschaft"
+   }
+  ]
+ },
+ {
+  "lemma": "bereuen",
+  "gloss": "to regret",
+  "pos": "verb",
+  "forms": [
+   "bereuen",
+   "bereue",
+   "bereut"
+  ],
+  "sentences": [
+   {
+    "text": "Ich bereue jedes Wort, das ich gesagt habe.",
+    "translation": "I regret every word I said.",
+    "cloze": "bereue"
+   },
+   {
+    "text": "Bis heute hat er es nicht bereut, aufs Land zu ziehen.",
+    "translation": "To this day he hasn't regretted moving to the country.",
+    "cloze": "bereut"
+   },
+   {
+    "text": "Das wirst du noch bereuen!",
+    "translation": "You'll regret this!",
+    "cloze": "bereuen"
+   }
+  ]
+ },
+ {
+  "lemma": "Spieler",
+  "gloss": "player",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Spieler",
+   "Spielern"
+  ],
+  "notes": "Plural: die Spieler (no change). A woman is a Spielerin.",
+  "sentences": [
+   {
+    "text": "Der neue Spieler ist noch sehr jung.",
+    "translation": "The new player is still very young.",
+    "cloze": "Spieler"
+   },
+   {
+    "text": "Jeder Spieler bekommt fünf Karten.",
+    "translation": "Each player gets five cards.",
+    "cloze": "Spieler"
+   },
+   {
+    "text": "Nach dem Spiel warten die Fans auf die Spieler.",
+    "translation": "After the match the fans wait for the players.",
+    "cloze": "Spieler"
+   }
+  ]
+ },
+ {
+  "lemma": "steuern",
+  "gloss": "to steer; to control",
+  "pos": "verb",
+  "forms": [
+   "steuern",
+   "steuert",
+   "gesteuert",
+   "steuerte"
+  ],
+  "sentences": [
+   {
+    "text": "Wer steuert das Boot?",
+    "translation": "Who's steering the boat?",
+    "cloze": "steuert"
+   },
+   {
+    "text": "Der Pilot steuerte das Flugzeug sicher durch den Sturm.",
+    "translation": "The pilot steered the plane safely through the storm.",
+    "cloze": "steuerte"
+   },
+   {
+    "text": "Das Licht kann man mit dem Handy steuern.",
+    "translation": "You can control the lights with your phone.",
+    "cloze": "steuern"
+   }
+  ]
+ },
+ {
+  "lemma": "voran",
+  "gloss": "first, ahead (in front of others); forward",
+  "pos": "adv",
+  "forms": [
+   "voran"
+  ],
+  "notes": "Es geht voran = things are making progress.",
+  "sentences": [
+   {
+    "text": "Geh du voran, ich kenne den Weg nicht.",
+    "translation": "You go first, I don't know the way.",
+    "cloze": "voran"
+   },
+   {
+    "text": "Er sprang mit dem Kopf voran ins Wasser.",
+    "translation": "He jumped into the water head first.",
+    "cloze": "voran"
+   },
+   {
+    "text": "Alle haben geholfen, allen voran meine Mutter.",
+    "translation": "Everyone helped, my mother most of all.",
+    "cloze": "voran"
+   }
+  ]
+ },
+ {
+  "lemma": "Verabredung",
+  "gloss": "date, plans to meet (with a friend)",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Verabredung",
+   "Verabredungen"
+  ],
+  "notes": "For a meeting with a doctor or office, say Termin.",
+  "sentences": [
+   {
+    "text": "Er kam zu spät zu unserer ersten Verabredung.",
+    "translation": "He was late for our first date.",
+    "cloze": "Verabredung"
+   },
+   {
+    "text": "Tut mir leid, ich hatte unsere Verabredung ganz vergessen.",
+    "translation": "Sorry, I'd completely forgotten we were meeting.",
+    "cloze": "Verabredung"
+   },
+   {
+    "text": "Sie sagt ihre Verabredungen oft in letzter Minute ab.",
+    "translation": "She often cancels her plans at the last minute.",
+    "cloze": "Verabredungen"
+   }
+  ]
+ },
+ {
+  "lemma": "überfallen",
+  "gloss": "to rob (with force), to mug, to attack",
+  "pos": "verb",
+  "forms": [
+   "überfallen",
+   "überfiel",
+   "überfielen"
+  ],
+  "notes": "Not separable: Sie überfielen die Bank. Past: hat überfallen.",
+  "sentences": [
+   {
+    "text": "Gestern überfielen zwei Männer eine Bank.",
+    "translation": "Yesterday two men robbed a bank.",
+    "cloze": "überfielen"
+   },
+   {
+    "text": "Er wurde nachts auf dem Weg nach Hause überfallen.",
+    "translation": "He was mugged on his way home at night.",
+    "cloze": "überfallen"
+   },
+   {
+    "text": "Die Tankstelle ist schon zweimal überfallen worden.",
+    "translation": "The petrol station has already been robbed twice.",
+    "cloze": "überfallen"
+   }
+  ]
+ },
+ {
+  "lemma": "umdrehen",
+  "gloss": "to turn around (sich umdrehen)",
+  "pos": "verb",
+  "forms": [
+   "umdrehen",
+   "umgedreht",
+   "umdrehst",
+   "umzudrehen"
+  ],
+  "notes": "Separable, usually with sich: Dreh dich um!",
+  "sentences": [
+   {
+    "text": "Er hat sich nicht mal umgedreht.",
+    "translation": "He didn't even turn round.",
+    "cloze": "umgedreht"
+   },
+   {
+    "text": "Wenn du dich jetzt umdrehst, siehst du ihn.",
+    "translation": "If you turn round now, you'll see him.",
+    "cloze": "umdrehst"
+   },
+   {
+    "text": "Ohne sich umzudrehen, ging sie aus dem Zimmer.",
+    "translation": "She left the room without turning round.",
+    "cloze": "umzudrehen"
+   }
+  ]
+ },
+ {
+  "lemma": "Kilo",
+  "gloss": "kilo (kilogram)",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Kilo",
+   "Kilos"
+  ],
+  "sentences": [
+   {
+    "text": "Unser Hund wiegt fast dreißig Kilo.",
+    "translation": "Our dog weighs almost thirty kilos.",
+    "cloze": "Kilo"
+   },
+   {
+    "text": "Im Flugzeug darf jeder nur zwanzig Kilo mitnehmen.",
+    "translation": "On the plane everyone can only take twenty kilos.",
+    "cloze": "Kilo"
+   },
+   {
+    "text": "Ein paar Kilos weniger wären nicht schlecht.",
+    "translation": "A few kilos less wouldn't hurt.",
+    "cloze": "Kilos"
+   }
+  ]
+ },
+ {
+  "lemma": "negativ",
+  "gloss": "negative",
+  "pos": "adj",
+  "forms": [
+   "negativ",
+   "negative",
+   "negativen",
+   "negativer"
+  ],
+  "sentences": [
+   {
+    "text": "Warum siehst du alles so negativ?",
+    "translation": "Why do you see everything so negatively?",
+    "cloze": "negativ"
+   },
+   {
+    "text": "Das hat leider auch negative Folgen.",
+    "translation": "Sadly, that has negative effects too.",
+    "cloze": "negative"
+   },
+   {
+    "text": "Die Antwort der Bank war negativ.",
+    "translation": "The bank's answer was negative.",
+    "cloze": "negativ"
+   }
+  ]
+ },
+ {
+  "lemma": "Schild",
+  "gloss": "sign (a board with words or a picture)",
+  "pos": "noun",
+  "gender": "n",
+  "forms": [
+   "Schild",
+   "Schilder",
+   "Schildern"
+  ],
+  "notes": "Plural: Schilder. For a signal or symbol, say Zeichen.",
+  "sentences": [
+   {
+    "text": "Auf dem Schild steht „Rauchen verboten“.",
+    "translation": "The sign says \"No smoking\".",
+    "cloze": "Schild"
+   },
+   {
+    "text": "An der Tür hängt ein Schild: Geschlossen.",
+    "translation": "There's a sign on the door: Closed.",
+    "cloze": "Schild"
+   },
+   {
+    "text": "Folgen Sie einfach den Schildern zum Ausgang.",
+    "translation": "Just follow the signs to the exit.",
+    "cloze": "Schildern"
+   }
+  ]
+ },
+ {
+  "lemma": "Kühlschrank",
+  "gloss": "fridge",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Kühlschrank",
+   "Kühlschränke"
+  ],
+  "sentences": [
+   {
+    "text": "Im Kühlschrank ist nichts mehr zu essen.",
+    "translation": "There's nothing left to eat in the fridge.",
+    "cloze": "Kühlschrank"
+   },
+   {
+    "text": "Stell die Milch bitte in den Kühlschrank.",
+    "translation": "Please put the milk in the fridge.",
+    "cloze": "Kühlschrank"
+   },
+   {
+    "text": "Ist im Kühlschrank noch Platz für den Kuchen?",
+    "translation": "Is there still room in the fridge for the cake?",
+    "cloze": "Kühlschrank"
+   }
+  ]
+ },
+ {
+  "lemma": "identifizieren",
+  "gloss": "to identify",
+  "pos": "verb",
+  "forms": [
+   "identifizieren",
+   "identifiziert",
+   "identifizierte"
+  ],
+  "sentences": [
+   {
+    "text": "Die Polizei konnte den Mann schnell identifizieren.",
+    "translation": "The police were able to identify the man quickly.",
+    "cloze": "identifizieren"
+   },
+   {
+    "text": "Sie hat den Dieb auf einem Foto identifiziert.",
+    "translation": "She identified the thief from a photo.",
+    "cloze": "identifiziert"
+   },
+   {
+    "text": "Mit diesem Buch kann man Pflanzen identifizieren.",
+    "translation": "You can identify plants with this book.",
+    "cloze": "identifizieren"
+   }
+  ]
+ },
+ {
+  "lemma": "Lehrerin",
+  "gloss": "teacher (a woman)",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Lehrerin",
+   "Lehrerinnen"
+  ],
+  "sentences": [
+   {
+    "text": "Die neue Lehrerin kommt aus Spanien.",
+    "translation": "The new teacher is from Spain.",
+    "cloze": "Lehrerin"
+   },
+   {
+    "text": "An unserer Schule gibt es mehr Lehrerinnen als Lehrer.",
+    "translation": "At our school there are more female teachers than male teachers.",
+    "cloze": "Lehrerinnen"
+   },
+   {
+    "text": "Die Kinder haben der Lehrerin Blumen geschenkt.",
+    "translation": "The children gave the teacher flowers.",
+    "cloze": "Lehrerin"
+   }
+  ]
+ },
+ {
+  "lemma": "Zentrale",
+  "gloss": "head office, headquarters",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Zentrale",
+   "Zentralen"
+  ],
+  "sentences": [
+   {
+    "text": "Die Zentrale der Firma ist in München.",
+    "translation": "The company's head office is in Munich.",
+    "cloze": "Zentrale"
+   },
+   {
+    "text": "Ich rufe sofort die Zentrale an.",
+    "translation": "I'll call headquarters right away.",
+    "cloze": "Zentrale"
+   },
+   {
+    "text": "Die Zentrale hat neue Regeln für alle geschickt.",
+    "translation": "Head office has sent new rules for everyone.",
+    "cloze": "Zentrale"
+   }
+  ]
+ },
+ {
+  "lemma": "Jäger",
+  "gloss": "hunter",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Jäger",
+   "Jägern"
+  ],
+  "notes": "Plural: die Jäger (no change).",
+  "sentences": [
+   {
+    "text": "Im Herbst sind viele Jäger im Wald unterwegs.",
+    "translation": "In autumn there are lots of hunters out in the forest.",
+    "cloze": "Jäger"
+   },
+   {
+    "text": "Mein Onkel ist Jäger und hat zwei Hunde.",
+    "translation": "My uncle is a hunter and has two dogs.",
+    "cloze": "Jäger"
+   },
+   {
+    "text": "Katzen sind sehr gute Jäger.",
+    "translation": "Cats are very good hunters.",
+    "cloze": "Jäger"
+   }
+  ]
+ },
+ {
+  "lemma": "wenden",
+  "gloss": "to turn (a car, or food in a pan); sich wenden an = to turn to (for help)",
+  "pos": "verb",
+  "forms": [
+   "wenden",
+   "gewendet",
+   "wendet"
+  ],
+  "sentences": [
+   {
+    "text": "Hier kannst du nicht wenden.",
+    "translation": "You can't turn the car round here.",
+    "cloze": "wenden"
+   },
+   {
+    "text": "Hast du das Fleisch schon gewendet?",
+    "translation": "Have you turned the meat yet?",
+    "cloze": "gewendet"
+   },
+   {
+    "text": "Wenden Sie sich bitte an die Information.",
+    "translation": "Please ask at the information desk.",
+    "cloze": "Wenden"
+   }
+  ]
+ },
+ {
+  "lemma": "Start",
+  "gloss": "start (of a race, a new year); takeoff (of a plane)",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Start",
+   "Starts"
+  ],
+  "sentences": [
+   {
+    "text": "Beim Start hält sie immer meine Hand.",
+    "translation": "She always holds my hand during takeoff.",
+    "cloze": "Start"
+   },
+   {
+    "text": "Einen guten Start ins neue Jahr!",
+    "translation": "Have a good start to the new year!",
+    "cloze": "Start"
+   },
+   {
+    "text": "Alle Autos stehen schon am Start.",
+    "translation": "All the cars are already at the start.",
+    "cloze": "Start"
+   }
+  ]
+ },
+ {
+  "lemma": "unglücklich",
+  "gloss": "unhappy; unlucky",
+  "pos": "adj",
+  "forms": [
+   "unglücklich",
+   "unglückliche",
+   "unglücklichen",
+   "unglücklicher",
+   "unglückliches"
+  ],
+  "sentences": [
+   {
+    "text": "Sie war lange unglücklich in ihrer Ehe.",
+    "translation": "She was unhappy in her marriage for a long time.",
+    "cloze": "unglücklich"
+   },
+   {
+    "text": "Er ist unglücklich in seine Nachbarin verliebt.",
+    "translation": "He's in love with his neighbour, but she doesn't love him back.",
+    "cloze": "unglücklich"
+   },
+   {
+    "text": "Das war ein unglücklicher Zufall.",
+    "translation": "That was an unlucky coincidence.",
+    "cloze": "unglücklicher"
+   }
+  ]
+ },
+ {
+  "lemma": "Sand",
+  "gloss": "sand",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Sand"
+  ],
+  "sentences": [
+   {
+    "text": "Im Sand bauen die Kinder eine Burg.",
+    "translation": "The children are building a castle in the sand.",
+    "cloze": "Sand"
+   },
+   {
+    "text": "Nach dem Strand ist überall Sand im Auto.",
+    "translation": "After the beach there's sand all over the car.",
+    "cloze": "Sand"
+   },
+   {
+    "text": "Mittags ist der Sand zu heiß zum Laufen.",
+    "translation": "At midday the sand is too hot to walk on.",
+    "cloze": "Sand"
+   }
+  ]
+ },
+ {
+  "lemma": "Pfarrer",
+  "gloss": "priest, vicar (of a local church)",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Pfarrer"
+  ],
+  "notes": "Pfarrer is the priest of a local church; Priester is any priest.",
+  "sentences": [
+   {
+    "text": "Herr Pfarrer, haben Sie kurz Zeit?",
+    "translation": "Vicar, do you have a moment?",
+    "cloze": "Pfarrer"
+   },
+   {
+    "text": "Nach der Kirche sprach ich kurz mit dem Pfarrer.",
+    "translation": "After church I had a quick word with the vicar.",
+    "cloze": "Pfarrer"
+   },
+   {
+    "text": "Der Pfarrer wohnt im Haus neben der Kirche.",
+    "translation": "The vicar lives in the house next to the church.",
+    "cloze": "Pfarrer"
+   }
+  ]
+ },
+ {
+  "lemma": "Zauber",
+  "gloss": "spell, magic; charm",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Zauber"
+  ],
+  "sentences": [
+   {
+    "text": "Mit einem Zauber machte die Hexe den Prinzen zum Frosch.",
+    "translation": "With a spell, the witch turned the prince into a frog.",
+    "cloze": "Zauber"
+   },
+   {
+    "text": "Der Zauber wirkt nur bis Mitternacht.",
+    "translation": "The spell only works until midnight.",
+    "cloze": "Zauber"
+   },
+   {
+    "text": "Im Winter hat das Dorf einen besonderen Zauber.",
+    "translation": "In winter the village has a special charm.",
+    "cloze": "Zauber"
+   }
+  ]
+ },
+ {
+  "lemma": "Rückkehr",
+  "gloss": "return, coming back",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Rückkehr"
+  ],
+  "sentences": [
+   {
+    "text": "Gleich nach seiner Rückkehr hat er seine Mutter angerufen.",
+    "translation": "Right after he came back, he called his mother.",
+    "cloze": "Rückkehr"
+   },
+   {
+    "text": "Wir freuen uns auf deine Rückkehr.",
+    "translation": "We're looking forward to you coming back.",
+    "cloze": "Rückkehr"
+   },
+   {
+    "text": "Die Rückkehr nach Deutschland war für ihn nicht leicht.",
+    "translation": "Moving back to Germany wasn't easy for him.",
+    "cloze": "Rückkehr"
+   }
+  ]
+ },
+ {
+  "lemma": "Hafen",
+  "gloss": "harbour, port",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Hafen",
+   "Häfen"
+  ],
+  "notes": "Plural: Häfen.",
+  "sentences": [
+   {
+    "text": "Am Abend kam das Schiff in den Hafen.",
+    "translation": "In the evening the ship came into port.",
+    "cloze": "Hafen"
+   },
+   {
+    "text": "Heute essen wir Fisch unten am Hafen.",
+    "translation": "Today we're eating fish down at the harbour.",
+    "cloze": "Hafen"
+   },
+   {
+    "text": "Hamburg hat einen der größten Häfen in Europa.",
+    "translation": "Hamburg has one of the biggest ports in Europe.",
+    "cloze": "Häfen"
+   }
+  ]
+ },
+ {
+  "lemma": "verschwenden",
+  "gloss": "to waste",
+  "pos": "verb",
+  "forms": [
+   "verschwenden",
+   "verschwende",
+   "verschwendet"
+  ],
+  "sentences": [
+   {
+    "text": "Verschwende nicht meine Zeit!",
+    "translation": "Don't waste my time!",
+    "cloze": "Verschwende"
+   },
+   {
+    "text": "Wir haben viel zu viel Wasser verschwendet.",
+    "translation": "We've wasted far too much water.",
+    "cloze": "verschwendet"
+   },
+   {
+    "text": "Es ist schade, so viel Essen zu verschwenden.",
+    "translation": "It's a shame to waste so much food.",
+    "cloze": "verschwenden"
+   }
+  ]
+ },
+ {
+  "lemma": "Affe",
+  "gloss": "monkey, ape",
+  "pos": "noun",
+  "gender": "m",
+  "forms": [
+   "Affe",
+   "Affen"
+  ],
+  "notes": "Weak noun: den Affen, dem Affen.",
+  "sentences": [
+   {
+    "text": "Der Affe hat mir die Banane geklaut!",
+    "translation": "The monkey stole my banana!",
+    "cloze": "Affe"
+   },
+   {
+    "text": "Die Kinder klettern wie die Affen.",
+    "translation": "The kids are climbing like monkeys.",
+    "cloze": "Affen"
+   },
+   {
+    "text": "Bitte die Affen nicht füttern!",
+    "translation": "Please don't feed the monkeys!",
+    "cloze": "Affen"
+   }
+  ]
+ },
+ {
+  "lemma": "Kindheit",
+  "gloss": "childhood",
+  "pos": "noun",
+  "gender": "f",
+  "forms": [
+   "Kindheit"
+  ],
+  "sentences": [
+   {
+    "text": "Über ihre Kindheit spricht sie nicht gern.",
+    "translation": "She doesn't like talking about her childhood.",
+    "cloze": "Kindheit"
+   },
+   {
+    "text": "In meiner Kindheit gab es noch kein Internet.",
+    "translation": "When I was a child, there was no internet yet.",
+    "cloze": "Kindheit"
+   },
+   {
+    "text": "Seit ihrer Kindheit spielt sie Klavier.",
+    "translation": "She's played the piano since she was a child.",
+    "cloze": "Kindheit"
+   }
+  ]
+ },
+ {
+  "lemma": "vermeiden",
+  "gloss": "to avoid",
+  "pos": "verb",
+  "forms": [
+   "vermeiden",
+   "vermeidet",
+   "vermieden"
+  ],
+  "notes": "Past: hat vermieden.",
+  "sentences": [
+   {
+    "text": "Ich versuche, Zucker zu vermeiden.",
+    "translation": "I try to avoid sugar.",
+    "cloze": "vermeiden"
+   },
+   {
+    "text": "Er vermeidet es, über seinen Vater zu sprechen.",
+    "translation": "He avoids talking about his father.",
+    "cloze": "vermeidet"
+   },
+   {
+    "text": "Sie hat jeden Streit mit ihm vermieden.",
+    "translation": "She avoided any argument with him.",
+    "cloze": "vermieden"
+   }
+  ]
+ }
+]

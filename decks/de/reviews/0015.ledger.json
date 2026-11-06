@@ -1,0 +1,506 @@
+{
+  "file": "source/0015.json",
+  "reviewer": "claude-agent:de-proofreader-0015-2026-11-06",
+  "entries": {
+    "bürgermeister|noun|": {
+      "hash": "ddc3e66eed7dfa7a",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:29.264Z"
+    },
+    "fluss|noun|": {
+      "hash": "fe1ebeb33fe1eea1",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:37.744Z"
+    },
+    "woran|adv|": {
+      "hash": "3130eefa4cb33895",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:41.314Z"
+    },
+    "durcheinander|adj|": {
+      "hash": "4822db44bdbe067b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:44.017Z"
+    },
+    "test|noun|": {
+      "hash": "5c20893304d554f6",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:46.767Z"
+    },
+    "dadurch|adv|": {
+      "hash": "d02b1acaf20db4d5",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:50.117Z"
+    },
+    "direktor|noun|": {
+      "hash": "3858fa42fa709055",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:53.730Z"
+    },
+    "karriere|noun|": {
+      "hash": "63d65a164dc64487",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:57.218Z"
+    },
+    "akte|noun|": {
+      "hash": "6165744abe232239",
+      "verdict": "ok",
+      "at": "2026-11-06T07:09:59.546Z"
+    },
+    "erinnerung|noun|": {
+      "hash": "4df3c2cf3eecbea8",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:02.020Z"
+    },
+    "großmutter|noun|": {
+      "hash": "2d3d8c91087e06ba",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:05.518Z"
+    },
+    "lösen|verb|": {
+      "hash": "6eacea79e819225b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:11.040Z"
+    },
+    "greifen|verb|": {
+      "hash": "997b14216f773565",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:14.791Z"
+    },
+    "zweifel|noun|": {
+      "hash": "95b0f7f122e2b38e",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:17.870Z"
+    },
+    "sprache|noun|": {
+      "hash": "66616efd67a67f56",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:22.601Z"
+    },
+    "nerv|noun|": {
+      "hash": "23b357c8d055d10b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:27.244Z"
+    },
+    "entlassen|verb|": {
+      "hash": "ab74e39cafe9d18a",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:30.851Z"
+    },
+    "zweimal|adv|": {
+      "hash": "42341a1b73a23589",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:36.707Z"
+    },
+    "abholen|verb|": {
+      "hash": "92d71036b1bd2bd1",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:42.315Z"
+    },
+    "kollege|noun|": {
+      "hash": "3b7219517a6b1dfa",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:46.360Z"
+    },
+    "szene|noun|": {
+      "hash": "bc9df55d8e07d11d",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:50.049Z"
+    },
+    "pflicht|noun|": {
+      "hash": "6fc1b48ebf30cfc7",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:52.904Z"
+    },
+    "wache|noun|": {
+      "hash": "fc2fbeaafb9630fb",
+      "verdict": "ok",
+      "at": "2026-11-06T07:10:55.398Z"
+    },
+    "neulich|adv|": {
+      "hash": "877bc7d38c944219",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:00.620Z"
+    },
+    "knie|noun|": {
+      "hash": "193b6f1312d9df97",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:08.383Z"
+    },
+    "spannend|adj|": {
+      "hash": "de9efd6c9cc6c634",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:11.818Z"
+    },
+    "unschuldig|adj|": {
+      "hash": "e5c120ea54ab932c",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:18.597Z"
+    },
+    "schutz|noun|": {
+      "hash": "6f2ee26004c41109",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:21.652Z"
+    },
+    "weshalb|adv|": {
+      "hash": "98af384b8db9a28b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:09.511Z"
+    },
+    "woanders|adv|": {
+      "hash": "427f0e9480ba9a52",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:39.291Z"
+    },
+    "kuss|noun|": {
+      "hash": "5806d7de108a5dd6",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:42.986Z"
+    },
+    "verhindern|verb|": {
+      "hash": "c77c707e47d1171b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:46.935Z"
+    },
+    "erklärung|noun|": {
+      "hash": "3f05dbc7e3cd2aa9",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:50.714Z"
+    },
+    "video|noun|": {
+      "hash": "1e6ceaa8f2b908ef",
+      "verdict": "ok",
+      "at": "2026-11-06T07:11:54.884Z"
+    },
+    "klug|adj|": {
+      "hash": "b7df102e5aac08d1",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:12.988Z"
+    },
+    "außerhalb|prep|": {
+      "hash": "24b58645caec1ac8",
+      "verdict": "ok",
+      "at": "2026-11-06T07:12:12.138Z"
+    },
+    "opa|noun|": {
+      "hash": "1078870e21aded42",
+      "verdict": "ok",
+      "at": "2026-11-06T07:12:16.974Z"
+    },
+    "selbstverständlich|adv|": {
+      "hash": "99982e07663601cb",
+      "verdict": "ok",
+      "at": "2026-11-06T07:12:23.487Z"
+    },
+    "aufstehen|verb|": {
+      "hash": "5d082e5048a0bbf6",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:15.636Z"
+    },
+    "gebrauchen|verb|": {
+      "hash": "bc724b1ea6590d07",
+      "verdict": "ok",
+      "at": "2026-11-06T07:12:42.582Z"
+    },
+    "milch|noun|": {
+      "hash": "35b56b7c3f0c4b8c",
+      "verdict": "ok",
+      "at": "2026-11-06T07:12:49.194Z"
+    },
+    "feuern|verb|": {
+      "hash": "75a89815dca2235e",
+      "verdict": "ok",
+      "at": "2026-11-06T07:12:55.272Z"
+    },
+    "kochen|verb|": {
+      "hash": "aee46c08887d3e66",
+      "verdict": "ok",
+      "at": "2026-11-06T07:12:59.309Z"
+    },
+    "schwach|adj|": {
+      "hash": "b5a81c8876f5438a",
+      "verdict": "ok",
+      "at": "2026-11-06T07:13:06.286Z"
+    },
+    "hinein|adv|": {
+      "hash": "dbf2f41212943db7",
+      "verdict": "ok",
+      "at": "2026-11-06T07:13:10.294Z"
+    },
+    "grenze|noun|": {
+      "hash": "e025f6abff0a0440",
+      "verdict": "ok",
+      "at": "2026-11-06T07:13:14.685Z"
+    },
+    "braut|noun|": {
+      "hash": "413fb4d99a8ec458",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:19.154Z"
+    },
+    "peinlich|adj|": {
+      "hash": "45508a08ccd2004f",
+      "verdict": "ok",
+      "at": "2026-11-06T07:13:31.157Z"
+    },
+    "klappen|verb|": {
+      "hash": "750560e234223c81",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:22.914Z"
+    },
+    "aufmerksamkeit|noun|": {
+      "hash": "34fe83f542e06496",
+      "verdict": "ok",
+      "at": "2026-11-06T07:13:45.138Z"
+    },
+    "form|noun|": {
+      "hash": "6dd59dc195618cf4",
+      "verdict": "ok",
+      "at": "2026-11-06T07:13:48.478Z"
+    },
+    "umsonst|adv|": {
+      "hash": "da99274145c1a360",
+      "verdict": "ok",
+      "at": "2026-11-06T07:13:54.273Z"
+    },
+    "kennenlernen|verb|": {
+      "hash": "a9a879095c63dbc6",
+      "verdict": "ok",
+      "at": "2026-11-06T07:14:01.654Z"
+    },
+    "nirgendwo|adv|": {
+      "hash": "54c48678a217cd12",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:26.906Z"
+    },
+    "ergeben|verb|": {
+      "hash": "34dd21f86919a78c",
+      "verdict": "ok",
+      "at": "2026-11-06T07:14:19.580Z"
+    },
+    "daten|noun|": {
+      "hash": "72b19e94eb06ca74",
+      "verdict": "ok",
+      "at": "2026-11-06T07:14:23.942Z"
+    },
+    "merken|verb|": {
+      "hash": "a2f74985ce385663",
+      "verdict": "ok",
+      "at": "2026-11-06T07:14:32.010Z"
+    },
+    "schande|noun|": {
+      "hash": "3a7b50af577f61f0",
+      "verdict": "ok",
+      "at": "2026-11-06T07:14:34.973Z"
+    },
+    "sieg|noun|": {
+      "hash": "5b6f33de25e7fc45",
+      "verdict": "ok",
+      "at": "2026-11-06T07:14:38.726Z"
+    },
+    "satt|adj|": {
+      "hash": "415607fb899016fd",
+      "verdict": "ok",
+      "at": "2026-11-06T07:14:43.141Z"
+    },
+    "blödsinn|noun|": {
+      "hash": "afc0280ac598b20c",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:30.091Z"
+    },
+    "pfund|noun|": {
+      "hash": "e7a85dbb500936b8",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:33.474Z"
+    },
+    "handeln|verb|": {
+      "hash": "9cfde583f29ab257",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:07.154Z"
+    },
+    "enden|verb|": {
+      "hash": "ec4c0a3553bfb50f",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:12.182Z"
+    },
+    "warm|adj|": {
+      "hash": "185a17b1a3b5d657",
+      "verdict": "ok",
+      "at": "2026-11-06T07:23:25.759Z"
+    },
+    "raten|verb|": {
+      "hash": "3920507c3a14741e",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:30.857Z"
+    },
+    "kunst|noun|": {
+      "hash": "2d8030166883da91",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:36.512Z"
+    },
+    "kapitän|noun|": {
+      "hash": "91fe0097186e2be1",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:39.650Z"
+    },
+    "desto|conj|": {
+      "hash": "3fc9b6a9230118b9",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:45.243Z"
+    },
+    "einsatz|noun|": {
+      "hash": "45ce22f1135de1dd",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:48.662Z"
+    },
+    "schweigen|verb|": {
+      "hash": "abee3fdc261f59cd",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:53.606Z"
+    },
+    "krankheit|noun|": {
+      "hash": "d061cb9eacaecfbe",
+      "verdict": "ok",
+      "at": "2026-11-06T07:15:57.196Z"
+    },
+    "schatten|noun|": {
+      "hash": "d097260b5aab003c",
+      "verdict": "ok",
+      "at": "2026-11-06T07:16:01.064Z"
+    },
+    "tatsache|noun|": {
+      "hash": "834e11ef212bc444",
+      "verdict": "ok",
+      "at": "2026-11-06T07:16:06.759Z"
+    },
+    "stock|noun|": {
+      "hash": "a59d60f00758291c",
+      "verdict": "ok",
+      "at": "2026-11-06T07:16:14.744Z"
+    },
+    "hingehen|verb|": {
+      "hash": "1537f70bf496a11b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:16:21.334Z"
+    },
+    "verbieten|verb|": {
+      "hash": "82a44b0127fbc2aa",
+      "verdict": "ok",
+      "at": "2026-11-06T07:16:27.649Z"
+    },
+    "anzug|noun|": {
+      "hash": "dd5aa84b80aa3bfe",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:43.020Z"
+    },
+    "freitag|noun|": {
+      "hash": "85d4c695ffe1bee1",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:46.270Z"
+    },
+    "dunkel|adj|": {
+      "hash": "c65ea985d7f52521",
+      "verdict": "ok",
+      "at": "2026-11-06T07:17:06.989Z"
+    },
+    "enttäuscht|adj|": {
+      "hash": "72dc6b1416fde297",
+      "verdict": "ok",
+      "at": "2026-11-06T07:17:11.889Z"
+    },
+    "klopfen|verb|": {
+      "hash": "4dd07dfe20569574",
+      "verdict": "ok",
+      "at": "2026-11-06T07:17:37.890Z"
+    },
+    "dreck|noun|": {
+      "hash": "fdaff07852eb4549",
+      "verdict": "ok",
+      "at": "2026-11-06T07:17:46.879Z"
+    },
+    "mühe|noun|": {
+      "hash": "11e1aab83f25c15b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:17:53.008Z"
+    },
+    "kontrollieren|verb|": {
+      "hash": "e2cb3d11aeaf8ed2",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:00.080Z"
+    },
+    "knochen|noun|": {
+      "hash": "0b1092b47102a51f",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:05.454Z"
+    },
+    "trennen|verb|": {
+      "hash": "5c922356175f6430",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:09.526Z"
+    },
+    "programm|noun|": {
+      "hash": "5d687fc4636fd042",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:13.172Z"
+    },
+    "grab|noun|": {
+      "hash": "f450331f5f152364",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:16.932Z"
+    },
+    "ebenso|adv|": {
+      "hash": "8b4294529107395d",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:24.437Z"
+    },
+    "nachbar|noun|": {
+      "hash": "c6757e82d8677d22",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:28.527Z"
+    },
+    "bieten|verb|": {
+      "hash": "0513372312e5f325",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:33.245Z"
+    },
+    "freundlich|adj|": {
+      "hash": "84a97ec35a5fc237",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:50.153Z"
+    },
+    "dennoch|adv|": {
+      "hash": "f8850ee3968bfa0d",
+      "verdict": "ok",
+      "at": "2026-11-06T07:18:52.099Z"
+    },
+    "rauchen|verb|": {
+      "hash": "096fb34f201f7001",
+      "verdict": "ok",
+      "at": "2026-11-06T07:19:00.652Z"
+    },
+    "dick|adj|": {
+      "hash": "2f69d5cc2d5f9604",
+      "verdict": "ok",
+      "at": "2026-11-06T07:19:07.816Z"
+    },
+    "stuhl|noun|": {
+      "hash": "e2598d5cce08d24f",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:54.050Z"
+    },
+    "vergeben|verb|": {
+      "hash": "66328cc36d4e5986",
+      "verdict": "ok",
+      "at": "2026-11-06T07:19:30.744Z"
+    },
+    "ausgehen|verb|": {
+      "hash": "466e8c3504ef4349",
+      "verdict": "ok",
+      "at": "2026-11-06T07:22:58.283Z"
+    },
+    "trotz|prep|": {
+      "hash": "73a8aa4190056c0b",
+      "verdict": "ok",
+      "at": "2026-11-06T07:19:54.818Z"
+    }
+  }
+}

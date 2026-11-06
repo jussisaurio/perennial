@@ -1,0 +1,9 @@
+{
+  "file": "source/0015.json",
+  "sha256": "cad3473e9a47edb89e5817ae780336c3e24624b17884dbe374a76286b5c637ce",
+  "author": "claude-agent:es-author-0015-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0015-2026-11-06",
+  "reviewedAt": "2026-11-06",
+  "verdict": "approved",
+  "notes": "100 entries proofread; 26 fixes applied and re-checked (mostly near-duplicates of older sentences, plus Spain usage, glosses and variety)"
+}

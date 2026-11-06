@@ -1,0 +1,9 @@
+{
+  "file": "source/0023.json",
+  "sha256": "5ab7fbd48cd836f686bc153dfd2caaad8439e8657954d52436666c8bed03682a",
+  "author": "claude-agent:de-author-0023-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0023-2026-11-06",
+  "reviewedAt": "2026-11-06",
+  "verdict": "approved",
+  "notes": "100 entries proofread; 55 fixes round 1 (mostly older words fitting the blank or copied frames, synonym notes, 3 naturalness, 1 variety), 7 more in round 2; all ok"
+}

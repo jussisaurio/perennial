@@ -1,0 +1,9 @@
+{
+  "file": "source/0016.json",
+  "sha256": "deb952550c6a2bba69368f08a2c9e38caa8502456c5ecf869b709f93f6483b81",
+  "author": "claude-agent:de-author-0016-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0016-2026-11-06",
+  "reviewedAt": "2026-11-06",
+  "verdict": "approved",
+  "notes": "100 entries proofread; 31 fixed (mostly near-duplicates of older sentences, 1 wrong sense, 2 variety, 2 translation)"
+}

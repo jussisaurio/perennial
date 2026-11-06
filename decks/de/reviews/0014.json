@@ -1,0 +1,9 @@
+{
+  "file": "source/0014.json",
+  "sha256": "8142d5d36a10afdae47c51e4a6b76e11dfbeed6a579bffa68de1531ab98c95eb",
+  "author": "claude-agent:de-author-0014-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0014-2026-11-06",
+  "reviewedAt": "2026-11-06",
+  "verdict": "approved",
+  "notes": "100 entries proofread; 7 fixed (3 translation, 1 naturalness, 1 variety, 2 near-duplicates) plus the Dienst gloss"
+}
