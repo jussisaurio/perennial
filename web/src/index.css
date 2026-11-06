@@ -265,7 +265,9 @@ button.landing-start { max-width: none; margin-top: 1.5rem; }
 @media (max-width: 360px) {
   nav.top .wordmark { font-size: 1.3rem; }
 }
-.page { padding-top: 0.75rem; animation: rise 0.45s var(--ease) both; }
+/* Fill backwards, not both: a held transform makes the page the box that position: fixed
+   children (the toast) are placed in, so a toast on a long page sat far below the screen. */
+.page { padding-top: 0.75rem; animation: rise 0.45s var(--ease) backwards; }
 .page.narrow { max-width: 36rem; margin: 0 auto; padding: 2.5rem 16px 5rem; }
 section { margin-bottom: 1.25rem; }
 .panel { background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
