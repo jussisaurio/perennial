@@ -1,11 +1,10 @@
 // Today's garden visitors for the signed-in learner, from review dates and
 // known words. Visitor words are never reviews, stats or Words list entries.
 
-import { knownAt, readMemory, wordState, type MemoryRow } from "../core/memory";
+import { knownAt, readMemory, reviewedAt, wordState, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { dayNumber, startOfDay } from "../core/day";
 import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk } from "../garden/leave";
-import type { ReviewRow } from "../data/rows";
 import {
   learnerFacts,
   milestoneLine,
@@ -83,7 +82,7 @@ export function broughtVisitor(l: Pick<Learner, "reviewsByWord">, wordId: string
 export function broughtAt(l: Pick<Learner, "reviewsByWord">, wordId: string): number | null {
   let at: number | null = null;
   // `?? []`: a word never reviewed has no list.
-  for (const r of l.reviewsByWord.get(wordId) ?? []) if (r.skill === "read" && r.grade >= 3 && (at === null || Date.parse(r.reviewed_at) < at)) at = Date.parse(r.reviewed_at);
+  for (const r of l.reviewsByWord.get(wordId) ?? []) if (r.skill === "read" && r.grade >= 3 && (at === null || reviewedAt(r) < at)) at = reviewedAt(r);
   return at;
 }
 
@@ -106,7 +105,7 @@ export function gardenBroughtAt(l: Pick<Learner, "reviewsByWord" | "deck">, g: G
 
 export function learnerVisitors(l: Learner, now = new Date()): LearnerVisitors {
   const { count, lemmas, croaks } = knownWords(l.words.values(), l.memory);
-  const times = l.reviews.map((r) => Date.parse(r.reviewed_at));
+  const times = l.reviews.map((r) => reviewedAt(r));
   const facts = learnerFacts(times, count, now, gardenBrought(l));
   const today = visitorsFor(facts, now, devVisitorOverride());
   const before = knownAt(l, startOfDay(now)).size;
@@ -170,21 +169,23 @@ export function waitingGuest(l: Learner, now: number): Guest | null {
  * today; else the newest word (the one whose first answer came last). Null
  * with no answers yet.
  */
-export function boatWord(l: Pick<Learner, "reviews" | "words" | "resolve">, now: number): BoatWord | null {
-  let last: ReviewRow | null = null;
-  const first = new Map<string, number>();
-  for (const r of l.reviews) {
-    if (!l.words.has(l.resolve(r.word_id))) continue;
-    const t = Date.parse(r.reviewed_at);
-    if (!last || t > Date.parse(last.reviewed_at)) last = r;
-    const id = l.resolve(r.word_id);
-    // `?? t`: the word's first answer met so far.
-    first.set(id, Math.min(t, first.get(id) ?? t));
+export function boatWord(l: Pick<Learner, "reviewsByWord" | "words">, now: number): BoatWord | null {
+  // Reviews come listed under their word: one look-up per word, not two per review (#479).
+  let last: { id: string; t: number } | null = null;
+  let newest: { id: string; t: number } | null = null;
+  for (const [id, list] of l.reviewsByWord) {
+    if (!l.words.has(id)) continue;
+    let first = Infinity;
+    for (const r of list) {
+      const t = reviewedAt(r);
+      if (!last || t > last.t) last = { id, t };
+      first = Math.min(first, t);
+    }
+    if (!newest || first > newest.t) newest = { id, t: first };
   }
   if (!last) return null;
-  let id = l.resolve(last.word_id);
-  if (dayNumber(Date.parse(last.reviewed_at)) !== dayNumber(now)) for (const [w, t] of first) if (t > first.get(id)!) id = w;
-  const w = l.words.get(id)!;
+  // Both are set together: a word with reviews sets each.
+  const w = l.words.get(dayNumber(last.t) === dayNumber(now) ? last.id : newest!.id)!;
   return { lemma: w.lemma, gloss: w.gloss };
 }
 

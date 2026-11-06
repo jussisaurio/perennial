@@ -20,7 +20,7 @@ import { useKeys, useShortcut } from "./useShortcut";
 import { afterPaint } from "./afterPaint";
 import { track } from "../observability";
 import { chunkLabel, DAILY_MINUTES } from "../data/practice";
-import { KNOWN_RULE, plantStage, readMemory } from "../core/memory";
+import { KNOWN_RULE, plantStage, readMemory, reviewedAt } from "../core/memory";
 import { plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { readNow } from "../data/reading";
@@ -715,7 +715,7 @@ function watcherFor(l: Learner, start: number): { visit: SessionVisit; view: Vis
   const garden = gardenBrought(l);
   const brought = VISITORS.filter((v) => v.garden && garden.has(v.garden) && GARDEN_VISITOR_ART[v.garden]).map((v) => v.id);
   const dayStart = startOfDay();
-  const todays = l.reviews.filter((r) => Date.parse(r.reviewed_at) >= dayStart).length;
+  const todays = l.reviews.filter((r) => reviewedAt(r) >= dayStart).length;
   const visit = sessionVisit(today(), todays, brought);
   return visit ? { visit, view: visitorViews([visit.id], l.lang)[0], start } : null;
 }
