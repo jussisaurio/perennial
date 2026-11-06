@@ -20,6 +20,7 @@ import { today } from "../core/day";
 import { PRINT_ROWS } from "../garden/leaveArt";
 import type { Guest } from "../garden/leave";
 import { easeOut, easeOutBack, reducedMotion, type PlantLook } from "./Growth";
+import { afterPaint } from "./afterPaint";
 
 const H = 210;
 const GROUND = H - 34;
@@ -197,7 +198,13 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
     hide();
   };
 
-  const visible = scrolls ? layout.filter((l) => l.x > scrollX - OVERSCAN && l.x < scrollX + width + OVERSCAN) : layout;
+  // The plants in view first, the ones past the edges in a later task: the whole strip at once was ~38 ms of style and layout at CPU 10× (#486).
+  const [edges, setEdges] = useState(false);
+  useEffect(() => {
+    if (scrolls && !edges) return afterPaint(() => startTransition(() => setEdges(true)));
+  }, [scrolls, edges]);
+  const over = edges ? OVERSCAN : 0;
+  const visible = scrolls ? layout.filter((l) => l.x > scrollX - over && l.x < scrollX + width + over) : layout;
   const seeds = Math.min(data?.seeds ?? 0, 24);
   const blooming = data?.plants.filter((p) => p.stage === "bloom").length ?? 0;
   // The landing page's garden is a sample: counts would read as someone's real progress (#261).
