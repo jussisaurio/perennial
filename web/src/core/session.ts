@@ -124,12 +124,12 @@ export function plan(input: PlanInput): Plan {
   const taken = new Set([...byWord.keys(), ...newSkills.map((m) => m.wordId)]);
   const soon = firstPerWord(
     learned.filter((m) => !taken.has(m.wordId) && m.due <= now + DAY_MS),
-    (a, b) => a.due - b.due,
+    (m) => m.due,
   );
   for (const m of soon) taken.add(m.wordId);
   const weakest = firstPerWord(
     learned.filter((m) => !taken.has(m.wordId)),
-    (a, b) => recall(a) - recall(b),
+    recall,
   );
 
   const reviews: Task[] = due.map(({ m }) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
@@ -157,7 +157,7 @@ export function plan(input: PlanInput): Plan {
   if (!queue.length) {
     const again = firstPerWord(
       memories.filter((m) => m.reps > 0),
-      (a, b) => recall(a) - recall(b),
+      recall,
     );
     queue.push(...again.map((m): Task => ({ kind: "review", wordId: m.wordId, skill: m.skill })));
   }
@@ -165,10 +165,18 @@ export function plan(input: PlanInput): Plan {
   return { queue, newCount, due: due.length };
 }
 
-/** Each word's first memory in `order`, the words in that order too. */
-function firstPerWord(memories: MemoryRow[], order: (a: MemoryRow, b: MemoryRow) => number): MemoryRow[] {
+/**
+ * Each word's first memory by `key`, lowest first, the words in that order too.
+ * Each key is worked out once, not in every comparison of the sort: recall is a
+ * power, and a big garden sorts thousands of memories when a session starts (#457).
+ */
+function firstPerWord(memories: MemoryRow[], key: (m: MemoryRow) => number): MemoryRow[] {
   const seen = new Set<string>();
-  return [...memories].sort(order).filter((m) => !seen.has(m.wordId) && !!seen.add(m.wordId));
+  return memories
+    .map((m) => ({ m, k: key(m) }))
+    .sort((a, b) => a.k - b.k)
+    .map(({ m }) => m)
+    .filter((m) => !seen.has(m.wordId) && !!seen.add(m.wordId));
 }
 
 export interface Outcome {
