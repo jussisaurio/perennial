@@ -6,7 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { language } from "../content/languages";
 import { ActiveClock } from "../core/clock";
 import type { Grade } from "../core/fsrs";
-import { isStrong, memKey, plantStage, readMemory, recall, recordGap, type PlantStage } from "../core/memory";
+import { isStrong, memKey, plantStage, readMemory, recall, recordGap, reviewedAt, type PlantStage } from "../core/memory";
 import type { Skill } from "../data/rows";
 import { Session as Runner, type Task } from "../core/session";
 import { recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
@@ -356,7 +356,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       // ?? 0: no review yet (a new word's quick check, a skill's first practice).
       const repsBefore = skillBefore?.reps ?? 0;
       const now = Date.now();
-      const earlier = (live.current?.reviewsByWord.get(word.id) ?? []).filter((r) => r.skill === task.skill).map((r) => Date.parse(r.reviewed_at));
+      const earlier = (live.current?.reviewsByWord.get(word.id) ?? []).filter((r) => r.skill === task.skill).map((r) => reviewedAt(r));
       // Read before this answer is recorded: did the word already bring its visitor?
       const brought = !!live.current && broughtVisitor(live.current, word.id);
       // ?? 0: no intro for this word in this session.

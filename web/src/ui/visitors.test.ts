@@ -99,7 +99,7 @@ describe("when a garden word brought its visitor", () => {
 describe("the paper boat's word (#360)", () => {
   const word = (id: string) => ({ id, lemma: id.toUpperCase(), gloss: `${id} in English` });
   const words = new Map(["casa", "perro", "gato"].map((id) => [id, word(id)]));
-  const learner = (reviews: ReviewRow[]) => ({ reviews, words, resolve: same }) as unknown as Parameters<typeof boatWord>[0];
+  const learner = (reviews: ReviewRow[]) => ({ reviewsByWord: Map.groupBy(reviews, (r) => r.word_id), words }) as unknown as Parameters<typeof boatWord>[0];
   const at = (day: number) => start + day * DAY;
 
   test("a word practised today: the one practised last", () => {

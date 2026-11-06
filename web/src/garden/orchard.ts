@@ -6,7 +6,7 @@
 // nothing is stored. Pure functions, so the orchard is the same on every device.
 
 import { DAY_MS, daily, rareDay } from "../core/day";
-import { plantStage, type MemoryRow } from "../core/memory";
+import { plantStage, reviewedAt, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
 import { ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema";
 import { hash01 } from "../lib/seed";
@@ -114,7 +114,7 @@ export function orchardInput(l: OrchardLearner): OrchardInput[] {
 /** When a word with a read memory was planted: its first reading review (ms). */
 export function plantedAt(l: Pick<Learner, "reviewsByWord">, id: string): number {
   // A read memory comes from read reviews, so the word has at least one.
-  return Math.min(...l.reviewsByWord.get(id)!.filter((r) => r.skill === "read").map((r) => Date.parse(r.reviewed_at)));
+  return Math.min(...l.reviewsByWord.get(id)!.filter((r) => r.skill === "read").map((r) => reviewedAt(r)));
 }
 
 // ---- Placement ----

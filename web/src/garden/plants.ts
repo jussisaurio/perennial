@@ -6,7 +6,7 @@
 import { courseOrder } from "../content/order";
 import type { PLANT_LINES } from "../content/voice";
 import type { LoadedDeck } from "../data/deck";
-import { isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "../core/memory";
+import { isStrong, memKey, OLD_S, plantStage, recall, reviewedAt, type PlantStage } from "../core/memory";
 import type { Learner } from "../data/learner";
 import { hash01 } from "../lib/seed";
 import type { Stage } from "../ui/plant";
@@ -76,7 +76,7 @@ function firstWord(l: Learner): FirstWord | null {
   let best: { id: string; at: number } | null = null;
   for (const r of l.reviews) {
     if (r.skill !== "read") continue;
-    const at = Date.parse(r.reviewed_at);
+    const at = reviewedAt(r);
     if (best && at >= best.at) continue;
     const id = l.resolve(r.word_id);
     const w = l.words.get(id);
