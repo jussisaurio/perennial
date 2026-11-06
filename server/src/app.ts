@@ -17,7 +17,7 @@ import { HttpRouter, HttpServer, HttpServerError, HttpServerRequest, HttpServerR
 import type { HttpMethod } from "effect/http/HttpMethod";
 import { AuthUser, ExamplesIn, MineIn, WriteBatch, type Boot, type Me, type ServerInfo } from "perennial-contract";
 import { withClientIp } from "./clientIp";
-import { AppConfig } from "./config";
+import { AppConfig, googleClient } from "./config";
 import { ApiError, decodeBody, errorResponse, inlineScriptHashes, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
 import { traceId } from "./log";
 import { annotate, event, inBetterAuth, inSentryScope, RequestContext, sentrySpan, type RequestInfo } from "./request";
@@ -111,7 +111,7 @@ export const AppLive = Layer.effect(
       const { request } = yield* RequestContext;
       if (!versionAtLeast(request.headers.get("x-perennial-version"), config.minClientVersion)) return yield* refuse({ error: "please_reload", minVersion: config.minClientVersion });
     });
-    const serverInfo: ServerInfo = { release: config.release, minClientVersion: config.minClientVersion, features: { ai: ai.enabled } };
+    const serverInfo: ServerInfo = { release: config.release, minClientVersion: config.minClientVersion, features: { ai: ai.enabled, google: !!googleClient(config) } };
     const body = <S extends Schema.Decoder<unknown>>(schema: S, limit = 64 * 1024) => RequestContext.use(({ request }) => decodeBody(request, schema, limit));
 
     // The router finds the path; the path's own table picks the method (405
@@ -245,6 +245,9 @@ export const AppLive = Layer.effect(
       "/api/auth/sign-in/anonymous": ["POST"],
       "/api/auth/email-otp/send-verification-otp": ["POST"],
       "/api/auth/sign-in/email-otp": ["POST"],
+      // Google: the app asks for Google's address, and Google sends the learner back to the callback.
+      "/api/auth/sign-in/social": ["POST"],
+      "/api/auth/callback/google": ["GET"],
     };
 
     const appOrigin = new URL(config.appUrl).origin;

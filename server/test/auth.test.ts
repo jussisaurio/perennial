@@ -1,7 +1,9 @@
 import { afterAll, expect, test } from "bun:test";
+import { handleOAuthUserInfo } from "better-auth/oauth2";
 import { review, startApp, stopMockLLM, unique, W, word } from "./helpers";
 
-const t = await startApp();
+// A made-up Google client: these tests never reach Google.
+const t = await startApp({ google: { clientId: "test-client", clientSecret: "test-secret" } });
 afterAll(async () => (await t.stop(), stopMockLLM()));
 
 test("email code sign-in: a cookie session, no password", async () => {
@@ -129,4 +131,36 @@ test("deleting an account removes everything", async () => {
   expect((await t.call("/api/account/delete", {}, cookie)).status).toBe(200);
   expect((await t.sql`select 1 from review where user_id = ${id}`).length).toBe(0);
   expect((await t.call("/api/me", undefined, cookie)).status).toBe(401);
+});
+
+/** What Better Auth's Google callback does with the profile Google sent back (the code exchange with Google is skipped). */
+async function googleSignIn(email: string, emailVerified: boolean) {
+  const sub = crypto.randomUUID();
+  // The handler reads only `context` from the endpoint context on these paths.
+  const c = { context: await t.app.auth.$context } as unknown as Parameters<typeof handleOAuthUserInfo>[0];
+  const r = await handleOAuthUserInfo(c, { userInfo: { id: sub, email, emailVerified, name: "", image: null }, account: { providerId: "google", accountId: sub } });
+  return { userId: r.data?.user.id, error: r.error };
+}
+
+test("Google with a verified email signs in to the account that email codes made, with its progress", async () => {
+  const email = unique("google-link");
+  const cookie = await t.signIn(email);
+  const id = (await t.me(cookie)).id;
+  await t.write(cookie, [review(W.a)]);
+  expect(await googleSignIn(email.toUpperCase(), true)).toEqual({ userId: id, error: null });
+  expect((await t.sql`select 1 from review where user_id = ${id}`).length).toBe(1);
+});
+
+test("Google with an unverified email does not get the account that email codes made", async () => {
+  const email = unique("google-unverified");
+  const id = (await t.me(await t.signIn(email))).id;
+  expect((await googleSignIn(email, false)).userId).toBeUndefined();
+  expect((await t.sql`select 1 from account where "userId" = ${id} and "providerId" = 'google'`).length).toBe(0);
+});
+
+test("an email code signs in to the account that Google made", async () => {
+  const email = unique("google-first");
+  const { userId, error } = await googleSignIn(email, true);
+  if (!userId) throw new Error(`Google sign-up failed: ${error}`);
+  expect((await t.me(await t.signIn(email))).id).toBe(userId);
 });

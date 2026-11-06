@@ -26,7 +26,7 @@ async function withConsole(level: string, capture: (...args: unknown[]) => void,
 }
 
 describe("auth endpoints: an allow-list", () => {
-  const used = ["GET /get-session", "POST /sign-out", "POST /sign-in/anonymous", "POST /email-otp/send-verification-otp", "POST /sign-in/email-otp"];
+  const used = ["GET /get-session", "POST /sign-out", "POST /sign-in/anonymous", "POST /email-otp/send-verification-otp", "POST /sign-in/email-otp", "POST /sign-in/social"];
 
   test("every other Better Auth endpoint is 404, signed in or not", async () => {
     const cookie = await t.signIn(unique("probe"));

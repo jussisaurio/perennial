@@ -60,3 +60,11 @@ test("signing in from no session, or signing the anonymous learner out, drops th
   resolvePendingLink("acct-x", "x@example.com");
   expect(adoptedBy("acct-x")).toEqual([]);
 });
+
+test("a Google sign-in from an anonymous session: the account the app sees next takes over the queue", () => {
+  noteSignIn(anonymous, null);
+  // Still anonymous (the Google sign-in was cancelled): nothing moves.
+  resolvePendingLink("anon-x", null);
+  resolvePendingLink("acct-g", "g@example.com");
+  expect(adoptedBy("acct-g")).toEqual(["anon-x"]);
+});

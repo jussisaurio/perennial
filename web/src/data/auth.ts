@@ -1,11 +1,11 @@
 // Accounts (Better Auth). Learners start without an account: the first write
 // ("Start learning") creates an anonymous user. Signing in with an email code
-// from that session moves their progress into the account.
+// or with Google from that session moves their progress into the account.
 
 import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { Clock, Effect, Fiber, Schema } from "effect";
-import { AuthUser, UserId } from "perennial-contract";
+import { AuthUser, GOOGLE_FAILED, UserId } from "perennial-contract";
 import { linkAccount, reportSlowAuth, track } from "../observability";
 import { boot } from "./boot";
 import { captchaHeaders } from "./captcha";
@@ -193,6 +193,30 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
       return user;
     }),
   );
+
+/**
+ * Leaves for Google's sign-in page; it comes back to the app's start, signed in.
+ * The account's email is known only then, so the anonymous learner's unsent
+ * writes follow whichever account the app sees next (device.ts).
+ */
+export async function signInWithGoogle() {
+  noteSignIn(await currentUser(), null);
+  track("signin_google_started");
+  // A failure comes back to the server's error address (auth.ts onAPIError), which googleSignInFailed reads.
+  const r = await authClient.signIn.social({ provider: "google", callbackURL: "/" });
+  if (r.error) throw new AuthError({ code: r.error.code ?? "google_failed", message: "Could not open Google sign-in. Try again, or use an email code." });
+}
+
+let googleFailedSeen: boolean | undefined;
+/** True if this page load came back from a Google sign-in that did not work. Takes the mark out of the address. */
+export function googleSignInFailed(): boolean {
+  if (googleFailedSeen === undefined) {
+    const params = new URLSearchParams(location.search);
+    googleFailedSeen = params.has(GOOGLE_FAILED);
+    if (googleFailedSeen) history.replaceState(history.state, "", location.pathname + location.hash);
+  }
+  return googleFailedSeen;
+}
 
 /** Signs out, and forgets this user's data on this device (see device.ts). */
 export async function signOut() {

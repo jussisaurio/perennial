@@ -275,10 +275,10 @@ describe("the server describes itself", () => {
   test("/api/server: release, minimum app version and features, public and user-free", async () => {
     const res = await t.call("/api/server");
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ release: t.config.release, minClientVersion: t.config.minClientVersion, features: { ai: true } });
+    expect(res.body).toEqual({ release: t.config.release, minClientVersion: t.config.minClientVersion, features: { ai: true, google: false } });
     const off = await startApp({ anthropic: { apiKey: undefined, model: "claude-haiku-4-5" } });
     try {
-      expect((await off.call("/api/server")).body.features).toEqual({ ai: false });
+      expect((await off.call("/api/server")).body.features).toEqual({ ai: false, google: false });
     } finally {
       await off.stop();
     }
