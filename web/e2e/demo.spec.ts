@@ -65,6 +65,8 @@ test("dev demo: a failed session check deletes nothing", async ({ page }) => {
   const email = await addEmail(page);
   // Every session check fails while the demo decides; then it either deletes or says it won't.
   await page.route("**/api/auth/get-session", (route) => route.fulfill({ status: 500, json: {} }));
+  // The first check comes with /api/boot: failing, it falls back to get-session.
+  await page.route("**/api/boot", (route) => route.fulfill({ status: 500, json: {} }));
   const acted = Promise.race([
     page.waitForResponse("**/api/account/delete"),
     page.waitForEvent("console", (m) => m.text().includes("[demo] not signed in as a demo learner")),

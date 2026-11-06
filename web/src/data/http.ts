@@ -98,6 +98,11 @@ export const reloadNeeded = new (class extends EventTarget {
 /** A request to our server, its answer checked with `schema` and its errors with the contract. */
 export const request = Effect.fn("Http.request")(function* <S extends Schema.Decoder<unknown>>(schema: S, path: string, init: RequestInit = {}) {
   const res = yield* Effect.tryPromise({ try: (signal) => fetch(path, { ...init, signal }), catch: (cause) => new NetworkError({ cause }) });
+  return yield* readAnswer(schema, path, res);
+});
+
+/** An answer from our server to `path`, checked as `request` checks it. For a request started elsewhere (data/boot.ts). */
+export const readAnswer = Effect.fn("Http.readAnswer")(function* <S extends Schema.Decoder<unknown>>(schema: S, path: string, res: Response) {
   // An error page (from a proxy, say) has no JSON body: null, and the status still says what failed.
   const body = yield* Effect.promise((): Promise<unknown> => res.json().catch(() => null));
   // One rule for every call, whatever the body says: the server needs a newer app.

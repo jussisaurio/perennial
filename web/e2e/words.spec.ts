@@ -102,9 +102,10 @@ test("word detail: scheduling details show stability, difficulty, recall and the
 
 // Adding words from a text needs Perennial AI: with it off on the server, the feature is hidden.
 test("with Perennial AI off, Add words is hidden, and its address shows the word list", async ({ page }) => {
-  await page.route("**/api/server", async (route) => {
+  await page.route("**/api/boot", async (route) => {
     const res = await route.fetch();
-    await route.fulfill({ response: res, json: { ...(await res.json()), features: { ai: false } } });
+    const boot = await res.json();
+    await route.fulfill({ response: res, json: { ...boot, server: { ...boot.server, features: { ai: false } } } });
   });
   await startCourse(page);
   await page.getByRole("tab", { name: "Words" }).click();

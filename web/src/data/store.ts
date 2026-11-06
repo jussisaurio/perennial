@@ -1,6 +1,6 @@
 // The learner's synced data. Each table is a TanStack DB query collection, held
-// in memory and read from GET /api/rows: at start, and again when the tab comes
-// back into view after a while. Writes go through a queue (TanStack DB's offline
+// in memory and read from GET /api/rows (at start, from GET /api/boot), and
+// again when the tab comes back into view after a while. Writes go through a queue (TanStack DB's offline
 // transactions): they apply instantly on the device, are stored in IndexedDB,
 // and are sent to /api/write, with retries, until the server has them. Then the
 // rows go into the collection as the server's own.
@@ -20,6 +20,7 @@ import { createCollection, type PendingMutation } from "@tanstack/react-db";
 import { Effect } from "effect";
 import { LearnerRows, type WriteResult } from "perennial-contract";
 import { sessionUserId } from "./auth";
+import { boot } from "./boot";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
 import { ApiError, HttpError, request } from "./http";
 import { reportBadAnswer, reportError } from "../observability";
@@ -79,11 +80,22 @@ export async function createStore(userId: string, email: string | null) {
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();
   const queryClient = new QueryClient();
+  // The first read is the rows that came with /api/boot, if they are this user's
+  // (#602). null: not this user's (an anonymous learner who started just now), or
+  // boot failed: read /api/rows, as later reads do.
+  let first: Promise<LearnerRows | null> | null = boot().then(
+    (b) => (b.user?.id === userId ? b.rows : null),
+    () => null,
+  );
   // The tables' reads at the same moment share one request.
   const read = () =>
     queryClient.fetchQuery({
       queryKey: ["rows"],
-      queryFn: () => Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }),
+      queryFn: async () => {
+        const fromBoot = first;
+        first = null;
+        return (fromBoot && (await fromBoot)) ?? Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal });
+      },
       // A new request each time, unless one is under way (refetchAll cancels that one first).
       staleTime: 0,
       // Nothing kept once read: a cancelled read then fails (CancelledError), where it

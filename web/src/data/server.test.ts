@@ -40,14 +40,15 @@ test("an answer this app can't fully read still says when to reload; it is repor
     loadServerInfo();
     await settle();
     expect(asked).toBe(1);
-    expect(reports.length).toBe(1);
+    // The start's /api/boot answer breaks the contract too, so /api/server is asked as well.
+    expect(reports.map((r) => r[0])).toEqual(["/api/boot", "/api/server"]);
 
     // The tab comes back later; this time a 200 page that is not JSON at all.
     globalThis.fetch = (async () => new Response("<html>maintenance</html>", { headers: { "content-type": "text/html" } })) as unknown as typeof fetch;
     Date.now = () => realNow() + 10 * 60_000;
     tabBack();
     await settle();
-    expect(reports.length).toBe(2); // reportBadAnswer itself keeps it to one Sentry event per path
+    expect(reports.length).toBe(3); // reportBadAnswer itself keeps it to one Sentry event per path
   } finally {
     globalThis.fetch = realFetch;
     Date.now = realNow;
