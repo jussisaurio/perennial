@@ -278,6 +278,9 @@ export class Learners {
     const words = earlier.words.links === links && earlier.words.states === this.states.version ? earlier.words : this.words(links);
     const sentences = prev && prev.sentences.links === links && prev.sentences.version === this.userSentences.version ? prev.sentences : this.sentences(links);
     let reviews = base.links === links && base.log.retention === course.retention ? base : null;
+    // moreReviews and memoryOf change the maps in place: what upcoming() needs from the learner before is read first.
+    const changed = new Set(pending.map((c) => links.resolve(c.value.word_id)));
+    const was = prev?.upcoming.state ? beforeOf(prev, changed) : null;
     if (reviews && pending.length) reviews = moreReviews(reviews, pending);
     reviews ??= runAll(allReviews(this.langReviews(lang), links, course.retention));
     this.pending.set(lang, []);
@@ -286,8 +289,7 @@ export class Learners {
     const memory =
       earlier.reviews === reviews && earlier.words === words ? earlier.memory : memoryOf(reviews.log, words.words, earlier.reviews.log === reviews.log && earlier.words.words === words.words ? earlier.memory : undefined);
     // Only the reviews of these words changed since the learner before (moreReviews keeps the log): its upcoming() goes on from there.
-    const before = prev?.upcoming.state;
-    const from = before && prev.words === words && prev.sentences === sentences && prev.reviews.log === reviews.log ? { state: before, started: prev.memory.started, byWord: prev.reviews.byWord, changed: new Set(pending.map((c) => links.resolve(c.value.word_id))) } : null;
+    const from = prev && was && prev.words === words && prev.sentences === sentences && prev.reviews.log === reviews.log ? was : null;
     const upcoming = { state: null };
     const learner = assemble(lang, course, words, reviews, sentences.byWord, memory, from, upcoming);
     this.built.set(lang, { words, reviews, sentences, memory, learner, upcoming });
@@ -405,10 +407,23 @@ async function inSlices<T>(steps: Generator<void, T>): Promise<T> {
   }
 }
 
-/** Take in review changes: only the words they touch change. Null when the log must be built again (MemoryLog says when). */
+/** What upcoming() needs of `changed` words from the learner before, read before moreReviews and memoryOf change its maps. */
+function beforeOf(prev: Built, changed: Set<string>): Before {
+  const started = new Set([...changed].filter((id) => prev.memory.started.has(id)));
+  // Every started word has reviews: memories come from them.
+  const first = new Map([...started].map((id) => [id, firstReviewed(prev.reviews.byWord.get(id)!).any]));
+  return { state: prev.upcoming.state!, started, first, changed };
+}
+
+/**
+ * Take in review changes: only the words they touch change. Null when the log
+ * must be built again (MemoryLog says when). The maps change in place, as the
+ * log does: a copy of every word's entry per answer made a major GC every few
+ * answers (#572). Each word's and day's list is still a new array when it
+ * changes, so caches by list (firstReviewed) stay right.
+ */
 function moreReviews(prev: Reviews, changes: readonly ChangeMessage<ReviewRow>[]): Reviews | null {
-  const byWord = new Map(prev.byWord);
-  const byDay = new Map(prev.byDay);
+  const { byWord, byDay } = prev;
   for (const { type, value: r } of changes) {
     const id = prev.links.resolve(r.word_id);
     const was = byWord.get(id) ?? [];
@@ -431,7 +446,7 @@ function moreReviews(prev: Reviews, changes: readonly ChangeMessage<ReviewRow>[]
       byWord.set(id, was.some((x) => x.id === r.id) ? was.map((x) => (x.id === r.id ? r : x)) : [...was, r]);
     }
   }
-  return { ...prev, byWord, byDay };
+  return { ...prev };
 }
 
 /** What the review log says about the words: the log's rows, and the parts of the learner made from them. */
@@ -446,7 +461,8 @@ interface Memory {
 /**
  * The memory of `log` for `words`. With `prev`, the memory of the same log
  * and words just before, only the words the log changed since are worked out
- * again, and the rest is kept (#483). Equal to building it all again.
+ * again, and the rest is kept (#483), in `prev`'s own map and set (#572).
+ * Equal to building it all again.
  */
 function memoryOf(log: MemoryLog, words: Map<string, Word>, prev: Memory | undefined): Memory {
   const rows = log.rows();
@@ -464,8 +480,7 @@ function memoryOf(log: MemoryLog, words: Map<string, Word>, prev: Memory | undef
     return { rows, memories, memory: new Map(memories.map((m) => [m.key, m])), started, studied: studiedOf(started) };
   }
   const memories = prev.memories === prev.rows && [...touched].every(shown) ? rows : all();
-  const memory = new Map(prev.memory);
-  const started = new Set(prev.started);
+  const { memory, started } = prev;
   let moved = false;
   for (const wordId of touched) {
     if (!shown(wordId)) continue;
@@ -546,8 +561,10 @@ interface Upcoming {
 /** The learner before, when only some words' reviews changed since (`changed`, a superset of them). */
 interface Before {
   state: Upcoming;
+  /** The `changed` words that were started. */
   started: Set<string>;
-  byWord: Map<string, ReviewRow[]>;
+  /** Their first reviews. */
+  first: Map<string, number>;
   changed: Set<string>;
 }
 
@@ -586,8 +603,7 @@ function upcomingOf(words: Words, started: Set<string>, firstReview: (id: string
     return pick(walkCourse(course, inCourse, since), last);
   };
   if (!from) return fromScratch();
-  // Every started word has reviews: memories come from them.
-  const firstBefore = (id: string) => firstReviewed(from.byWord.get(id)!).any;
+  const firstBefore = (id: string) => from.first.get(id)!;
   const moved = [...from.changed].filter((id) => from.started.has(id) !== started.has(id) || (started.has(id) && firstBefore(id) !== firstReview(id)));
   if (!moved.length) return from.state;
   // A garden or orchard word moved: its time is where `since` counts from.
