@@ -8,6 +8,7 @@
 // steadily, so a new learner soon sees that learning a word brings something
 // into the garden. Orchard words (#315) come at fixed places too, after the key.
 
+import { runAll } from "../lib/yield";
 import { GARDEN_WORDS, ORCHARD_WORDS, toPos, type GardenWord, type OrchardWord, type Pos } from "../deck/schema";
 
 export type WordKind = "noun" | "verb" | "other" | "function";
@@ -95,26 +96,36 @@ const orders = new WeakMap<object, readonly DeckWord[]>();
  * it); worked out once per loaded deck.
  */
 export function courseOrder<W extends DeckWord>(deck: { words: readonly W[] }): readonly W[] {
-  let order = orders.get(deck);
-  if (!order) {
-    const byRank = [...deck.words].sort((a, b) => a.rank - b.rank);
-    const garden = byRank.filter((w) => w.garden).sort((a, b) => GARDEN_WORDS.indexOf(a.garden!) - GARDEN_WORDS.indexOf(b.garden!));
-    const orchard = byRank.filter((w) => w.orchard).sort((a, b) => ORCHARD_WORDS.indexOf(a.orchard!) - ORCHARD_WORDS.indexOf(b.orchard!));
-    const rest = introOrder(byRank.filter((w) => !placed(w)), deckKind);
-    const out: W[] = [];
-    let g = 0;
-    let o = 0;
-    let r = 0;
-    // A deck shorter than the slots (a test deck) gets its last garden, then orchard words at the end.
-    while (out.length < byRank.length) {
-      if (g < garden.length && (out.length === gardenSlot(g) || r === rest.length)) out.push(garden[g++]);
-      else if (o < orchard.length && (out.length === orchardSlot(o) || r === rest.length)) out.push(orchard[o++]);
-      else out.push(rest[r++]);
-    }
-    order = out;
-    orders.set(deck, order);
+  return runAll(courseOrderSteps(deck));
+}
+
+/** courseOrder a step at a time, to run in slices: ~10 ms at CPU 10× for a full deck (#569). */
+export function* courseOrderSteps<W extends DeckWord>(deck: { words: readonly W[] }): Generator<void, readonly W[]> {
+  const known = orders.get(deck);
+  if (known) return known as readonly W[];
+  const byRank = [...deck.words].sort((a, b) => a.rank - b.rank);
+  yield;
+  const garden = byRank.filter((w) => w.garden).sort((a, b) => GARDEN_WORDS.indexOf(a.garden!) - GARDEN_WORDS.indexOf(b.garden!));
+  const orchard = byRank.filter((w) => w.orchard).sort((a, b) => ORCHARD_WORDS.indexOf(a.orchard!) - ORCHARD_WORDS.indexOf(b.orchard!));
+  yield;
+  const rest = introOrder(byRank.filter((w) => !placed(w)), deckKind);
+  yield;
+  const out: W[] = [];
+  let g = 0;
+  let o = 0;
+  let r = 0;
+  // A deck shorter than the slots (a test deck) gets its last garden, then orchard words at the end.
+  while (out.length < byRank.length) {
+    if (g < garden.length && (out.length === gardenSlot(g) || r === rest.length)) out.push(garden[g++]);
+    else if (o < orchard.length && (out.length === orchardSlot(o) || r === rest.length)) out.push(orchard[o++]);
+    else out.push(rest[r++]);
+    yield;
   }
-  return order as readonly W[];
+  // One order per deck: a courseOrder that finished while this one was in slices keeps its own.
+  const done = orders.get(deck);
+  if (done) return done as readonly W[];
+  orders.set(deck, out);
+  return out;
 }
 
 /** A learner behind on garden or orchard words gets one of them in every this many new words. */

@@ -3,7 +3,7 @@
 // from the review log (core/memory.ts); nothing derived is stored or synced.
 
 import { teachable } from "../content/languages";
-import { courseOrder, placed, sinceLastPlaced, walkAgain, walkCourse, type Walk } from "../content/order";
+import { courseOrder, courseOrderSteps, placed, sinceLastPlaced, walkAgain, walkCourse, type Walk } from "../content/order";
 import type { ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { DAY_MS, startOfDay } from "../core/day";
@@ -367,9 +367,8 @@ export class Learners {
     const links = this.links(lang, deck);
     const words = this.words(links);
     yield;
-    // The course order (~10 ms at CPU 10×, once per deck) is one step too: upcoming() reads it right after first paint.
-    courseOrder(deck);
-    yield;
+    // The course order (~10 ms at CPU 10×, once per deck), in steps too: upcoming() reads it right after first paint.
+    yield* courseOrderSteps(deck);
     const reviews = yield* allReviews(rows, links, retention);
     // The memory map, started words and studied list: O(memories + words), so not in the first render either.
     return { reviews, words, memory: memoryOf(reviews.log, words.words, undefined) };
