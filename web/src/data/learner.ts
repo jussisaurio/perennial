@@ -3,7 +3,7 @@
 // from the review log (core/memory.ts); nothing derived is stored or synced.
 
 import { teachable } from "../content/languages";
-import { courseOrder, nextWords, sincePlaced } from "../content/order";
+import { courseOrder, placed, sinceLastPlaced, walkAgain, walkCourse, type Walk } from "../content/order";
 import { useLiveQuery, type ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { DAY_MS, startOfDay } from "../core/day";
@@ -186,6 +186,8 @@ interface Built {
   sentences: { links: Links; version: number; byWord: Map<string, Sentence[]> };
   memory: Memory;
   learner: Learner;
+  /** The learner's upcoming(), once asked: the next learner goes on from it. */
+  upcoming: { state: Upcoming | null };
 }
 
 /**
@@ -270,8 +272,12 @@ export class Learners {
     // The same reviews and words (the first build, with no answers since): the same memory, with no copy of its maps.
     const memory =
       earlier.reviews === reviews && earlier.words === words ? earlier.memory : memoryOf(reviews.log, words.words, earlier.reviews.log === reviews.log && earlier.words.words === words.words ? earlier.memory : undefined);
-    const learner = assemble(lang, course, words, reviews, sentences.byWord, memory);
-    this.built.set(lang, { words, reviews, sentences, memory, learner });
+    // Only the reviews of these words changed since the learner before (moreReviews keeps the log): its upcoming() goes on from there.
+    const before = prev?.upcoming.state;
+    const from = before && prev.words === words && prev.sentences === sentences && prev.reviews.log === reviews.log ? { state: before, started: prev.memory.started, byWord: prev.reviews.byWord, changed: new Set(pending.map((c) => links.resolve(c.value.word_id))) } : null;
+    const upcoming = { state: null };
+    const learner = assemble(lang, course, words, reviews, sentences.byWord, memory, from, upcoming);
+    this.built.set(lang, { words, reviews, sentences, memory, learner, upcoming });
     this.first.delete(lang);
     return learner;
   }
@@ -466,7 +472,8 @@ function memoryOf(log: MemoryLog, words: Map<string, Word>, prev: Memory | undef
 }
 
 /** The learner itself, from its parts. */
-function assemble(lang: string, course: CourseRow, { words, stateMap, links }: Words, { byWord: reviewsByWord, byDay }: Reviews, sentencesBy: Map<string, Sentence[]>, { memories, memory, started, studied }: Memory): Learner {
+function assemble(lang: string, course: CourseRow, wordsOf: Words, { byWord: reviewsByWord, byDay }: Reviews, sentencesBy: Map<string, Sentence[]>, { memories, memory, started, studied }: Memory, from: Before | null, box: { state: Upcoming | null }): Learner {
+  const { words, stateMap, links } = wordsOf;
   const { deck, resolve } = links;
   const sentences = (wordId: string): Sentence[] => [
     ...(deck.sentencesByWord.get(wordId) ?? []).map((s) => ({ id: s.id, text: s.text, translation: s.translation, cloze: s.cloze, origin: "deck" as const })),
@@ -478,27 +485,15 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
   // Every started word has reviews: memories come from them.
   const firstReview = (id: string) => firstReviewed(reviewsByWord.get(id)!).any;
   // Sessions and the Words list's "New" both read this one order. Worked out once per learner, when first asked.
-  let next: Word[] | null = null;
+  // The learner before is let go once used: a chain of learners would hold every one's maps.
+  let before = from;
   const upcoming = () => {
-    if (next) return next;
-    const open = (w: Word) => !started.has(w.id) && w.status !== "ignored" && w.status !== "paused" && hasSentences(w.id);
-    const picked = [...words.values()]
-      .filter((w) => open(w) && (w.status === "queued" || w.source === "user"))
-      .sort((a, b) => (stateMap.get(a.id)?.queued_at ?? "").localeCompare(stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
-    const pickedIds = new Set(picked.map((w) => w.id));
-    // Garden and orchard words keep their spacing from one session to the next. Your own words are not in the deck, so they count as other new words.
-    const since = sincePlaced(
-      [...started].map((id) => {
-        const w = deck.byId.get(id);
-        return { garden: w?.garden, orchard: w?.orchard, first: firstReview(id) };
-      }),
-    );
-    // Your own choices first, as you made them; then the course, kinds of words taking turns (content/order.ts).
-    const course = nextWords(courseOrder(deck), (w) => open(words.get(w.id)!) && !pickedIds.has(w.id), since);
-    next = [...picked, ...course.map((w) => words.get(w.id)!)];
-    return next;
+    box.state ??= upcomingOf(wordsOf, started, firstReview, hasSentences, before);
+    before = null;
+    return box.state.next;
   };
-  const fresh = () => upcoming().map((w) => w.id);
+  let ids: string[] | null = null;
+  const fresh = () => (ids ??= upcoming().map((w) => w.id));
   const reviewsSince = (t: number) => {
     const out: ReviewRow[] = [];
     for (const [day, list] of byDay) if (day >= Math.floor(t / DAY_MS)) for (const r of list) if (reviewedAt(r) >= t) out.push(r);
@@ -526,6 +521,76 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
   };
   return { lang, deck, course, words, studied, memories, memory, everyReview, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, sentences, upcoming, fresh, resolve };
 }
+
+/** upcoming(): the words, and the walk of the course and `since` they came from. */
+interface Upcoming {
+  next: Word[];
+  walk: Walk<Word>;
+  /** sinceLastPlaced's `last`. */
+  last: number;
+}
+
+/** The learner before, when only some words' reviews changed since (`changed`, a superset of them). */
+interface Before {
+  state: Upcoming;
+  started: Set<string>;
+  byWord: Map<string, ReviewRow[]>;
+  changed: Set<string>;
+}
+
+/** The course as these words, each word's place in it, and the words you picked, in the order you picked them. Once per Words. */
+const choicesOf = new WeakMap<Words, { course: Word[]; at: Map<string, number>; picked: Word[] }>();
+function choices(w: Words) {
+  let c = choicesOf.get(w);
+  if (!c) {
+    const course = courseOrder(w.links.deck).map((d) => w.words.get(d.id)!);
+    const picked = [...w.words.values()].filter(isPicked).sort((a, b) => (w.stateMap.get(a.id)?.queued_at ?? "").localeCompare(w.stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
+    c = { course, at: new Map(course.map((x, i) => [x.id, i])), picked };
+    choicesOf.set(w, c);
+  }
+  return c;
+}
+
+/** Your own choices: they come before the course. */
+const isPicked = (w: Word) => w.status === "queued" || w.source === "user";
+
+/**
+ * The learner's upcoming(). With `from`, the learner before, only the words
+ * whose start or first review moved are looked at again (walkAgain): O(those
+ * words) plus a copy of the list, not O(course) (#486). Equal to working it
+ * out from scratch.
+ */
+function upcomingOf(words: Words, started: Set<string>, firstReview: (id: string) => number, hasSentences: (id: string) => boolean, from: Before | null): Upcoming {
+  const { course, at, picked } = choices(words);
+  const can = (w: Word) => w.status !== "ignored" && w.status !== "paused" && hasSentences(w.id);
+  const open = (w: Word) => !started.has(w.id) && can(w);
+  // Picked words are not in the course list too.
+  const inCourse = (w: Word) => open(w) && !isPicked(w);
+  const pick = (walk: Walk<Word>, last: number): Upcoming => ({ next: [...picked.filter(open), ...walk.list], walk, last });
+  // Garden and orchard words keep their spacing from one session to the next. Your own words are not in the deck, so they count as other new words.
+  const fromScratch = () => {
+    const { since, last } = sinceLastPlaced([...started].map((id) => ({ ...placedOf(words.words.get(id)!), first: firstReview(id) })));
+    return pick(walkCourse(course, inCourse, since), last);
+  };
+  if (!from) return fromScratch();
+  // Every started word has reviews: memories come from them.
+  const firstBefore = (id: string) => firstReviewed(from.byWord.get(id)!).any;
+  const moved = [...from.changed].filter((id) => from.started.has(id) !== started.has(id) || (started.has(id) && firstBefore(id) !== firstReview(id)));
+  if (!moved.length) return from.state;
+  // A garden or orchard word moved: its time is where `since` counts from.
+  if (moved.some((id) => placed(words.words.get(id)!))) return fromScratch();
+  let since = from.state.walk.since;
+  const { last } = from.state;
+  for (const id of moved) {
+    if (from.started.has(id) && firstBefore(id) > last) since--;
+    if (started.has(id) && firstReview(id) > last) since++;
+  }
+  const wasInCourse = (w: Word) => !from.started.has(w.id) && can(w) && !isPicked(w);
+  const changed = new Set(moved.flatMap((id) => (at.has(id) ? [at.get(id)!] : [])));
+  return pick(walkAgain(from.state.walk, course, inCourse, wasInCourse, since, changed), last);
+}
+
+const placedOf = (w: Word) => ({ garden: w.garden, orchard: w.orchard });
 
 /**
  * `derive(l, now)`, worked out once per learner and day: a screen that opens

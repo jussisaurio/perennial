@@ -1,6 +1,7 @@
 import { describe, expect, mock, test } from "bun:test";
 import type { ChangeMessage } from "@tanstack/react-db";
 import { DAY_MS } from "../core/day";
+import { GARDEN_WORDS, ORCHARD_WORDS } from "../deck/schema";
 import type { Grade } from "../core/fsrs";
 import { rng } from "../lib/seed";
 import type { LoadedDeck } from "./deck";
@@ -40,7 +41,7 @@ const course: CourseRow = { user_id: "u", lang: "es", minutes: 5, retention: 0.9
 const deckWords = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", forms: [`word${i}`], rank: i }));
 const byId = new Map<string, unknown>(deckWords.map((w) => [w.id, w]));
 // Only what the learner reads of a deck.
-const deck = { lang: "es", words: deckWords, byId, sentencesByWord: new Map(), resolve: (id: string) => byId.get(id === "w3-old" ? "w3" : id) } as unknown as LoadedDeck;
+const defaultDeck = { lang: "es", words: deckWords, byId, sentencesByWord: new Map(), resolve: (id: string) => byId.get(id === "w3-old" ? "w3" : id) } as unknown as LoadedDeck;
 
 /** A store with these reviews; the other tables are empty. */
 function store(reviews: ReviewRow[]) {
@@ -52,7 +53,7 @@ function store(reviews: ReviewRow[]) {
 }
 
 /** The first learner is built in slices: null until then, and then a notice. */
-function built(learners: InstanceType<typeof Learners>): Promise<Learner> {
+function built(learners: InstanceType<typeof Learners>, deck = defaultDeck): Promise<Learner> {
   return new Promise((done) => {
     const off = learners.subscribe(() => {
       const l = learners.get("es", deck);
@@ -64,10 +65,10 @@ function built(learners: InstanceType<typeof Learners>): Promise<Learner> {
 }
 
 /** The learner of these reviews, built from scratch. */
-async function fromScratch(reviews: ReviewRow[]): Promise<Learner> {
+async function fromScratch(reviews: ReviewRow[], deck = defaultDeck): Promise<Learner> {
   const { learners } = store(reviews);
   expect(learners.get("es", deck)).toBeNull();
-  return built(learners);
+  return built(learners, deck);
 }
 
 /** Everything a screen reads of the memory, to compare a learner kept up to date with one built from scratch. */
@@ -104,7 +105,7 @@ describe("Learners: one review at a time, the same as building it all again", ()
     const rows: ReviewRow[] = [];
     for (let w = 0; w < 30; w++) for (let k = 0, day = w; k < 6; k++, day += 2 ** k) rows.push(review(w, k > 4 && w % 3 === 0 ? "listen" : "read", day));
     const live = store(rows.slice(0, -20));
-    expect(live.learners.get("es", deck)).toBeNull();
+    expect(live.learners.get("es", defaultDeck)).toBeNull();
     // Answers that arrive while the first build runs are taken in after it.
     const first = built(live.learners);
     live.review.send(rows.slice(-20).map((r): ChangeMessage<ReviewRow> => ({ type: "insert", key: r.id, value: r })));
@@ -130,7 +131,7 @@ describe("Learners: one review at a time, the same as building it all again", ()
         const r = rows.pop()!;
         live.review.send([{ type: "delete", key: r.id, value: r }]);
       }
-      l = live.learners.get("es", deck)!;
+      l = live.learners.get("es", defaultDeck)!;
       expect(view(l)).toEqual(view(await fromScratch(rows)));
       // The first review and the last before a time, as a walk of every review finds them.
       expect(view(l).reviews).toEqual(rows.toSorted((a, b) => a.id.localeCompare(b.id)));
@@ -144,6 +145,51 @@ describe("Learners: one review at a time, the same as building it all again", ()
       // A row that did not change is the same object, so screens can skip it.
       const changed = new Set(rows.slice(-1).map((r) => (r.word_id === "w3-old" ? "w3" : r.word_id)));
       if (pick < 0.6) for (const [key, m] of before.memory) if (!changed.has(m.wordId)) expect(l.memory.get(key)).toBe(m);
+    }
+  });
+});
+
+describe("upcoming(): one answer at a time, the same as working it out again", () => {
+  // A longer course, with garden and orchard words at their places and some words with no sentences yet.
+  const random = rng(7);
+  const placed = new Map([...GARDEN_WORDS, ...ORCHARD_WORDS].map((name) => [Math.floor(random() * 400), name] as const));
+  const words = Array.from({ length: 400 }, (_, i) => {
+    const name = placed.get(i);
+    const place = name === undefined ? {} : (GARDEN_WORDS as readonly string[]).includes(name) ? { garden: name } : { orchard: name };
+    return { id: `w${i}`, lemma: `word${i}`, gloss: "", forms: [`word${i}`], rank: i, pos: (["noun", "verb", "adj", "prep"] as const)[i % 4], ...place };
+  });
+  const byId = new Map<string, unknown>(words.map((w) => [w.id, w]));
+  const sentencesByWord = new Map(words.filter((_, i) => i % 13 !== 12).map((w) => [w.id, [{ id: `s-${w.id}`, text: "", translation: "", cloze: "" }]]));
+  const deck = { lang: "es", words, byId, sentencesByWord, resolve: (id: string) => byId.get(id) } as unknown as LoadedDeck;
+  const t0 = Date.UTC(2026, 0, 1, 8);
+  let n = 0;
+  const review = (word: string, t: number): ReviewRow => ({ id: `u${n++}`, user_id: "u", lang: "es", word_id: word, skill: "read", grade: 3, kind: "review", reviewed_at: new Date(t0 + t * DAY_MS).toISOString(), duration_ms: 3000, sentence_id: null });
+
+  test("starting words, answers anywhere, moved times and undos", async () => {
+    const rows: ReviewRow[] = [];
+    const live = store(rows);
+    expect(live.learners.get("es", deck)).toBeNull();
+    let l = await built(live.learners, deck);
+    let t = 0;
+    for (let step = 0; step < 600; step++) {
+      const pick = random();
+      const next = l.fresh();
+      if (pick < 0.65 || !rows.length) {
+        // Mostly one of the next words, as a session starts them; sometimes any word, ahead in the course or again.
+        const r = review(random() < 0.5 && next.length ? next[Math.floor(random() * Math.min(3, next.length))] : `w${Math.floor(random() * 400)}`, (t += random()));
+        live.review.send([{ type: "insert", key: r.id, value: r }]);
+        rows.push(r);
+      } else if (pick < 0.75) {
+        // A review moves in time: a word's first review can change.
+        const i = Math.floor(random() * rows.length);
+        rows[i] = { ...rows[i], reviewed_at: new Date(t0 + random() * t * DAY_MS).toISOString() };
+        live.review.send([{ type: "update", key: rows[i].id, value: rows[i] }]);
+      } else {
+        const r = rows.pop()!;
+        live.review.send([{ type: "delete", key: r.id, value: r }]);
+      }
+      l = live.learners.get("es", deck)!;
+      expect(l.fresh()).toEqual((await fromScratch(rows, deck)).fresh());
     }
   });
 });
