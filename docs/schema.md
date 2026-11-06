@@ -28,7 +28,7 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
    - Retired entries are kept.
    - The PR gets a diff report (added, edited, retired). Large changes, for example more than 5% of words retired, fail unless explicitly approved.
 3. **Replay test:** review logs written against the previous deck version replay against the new one with no crash and no orphaned progress.
-4. **Defensive client:** the client validates the deck on load and skips invalid entries instead of crashing. If the deck fails to load as a whole, the client uses the last good version it kept (Cache API).
+4. **Trusting client:** the deck ships in the same build as the code that reads it, so the client does not decode it again on each launch (#461). If the deck fails to load, the learner is told where the words are needed, with a Reload button.
 
 ```jsonc
 // decks/es/deck.json → { lang, native, version, words: [...], sentences: [...] }
