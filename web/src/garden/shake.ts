@@ -74,7 +74,8 @@ export function plantInReach<P extends { x: number; z: number }>(plants: readonl
   for (const p of plants) {
     const dx = p.x - x;
     const dz = p.z - z;
-    const d = Math.hypot(dx, dz);
+    // Not Math.hypot: it allocates on each call, and this runs for every plant on every frame (#459).
+    const d = Math.sqrt(dx * dx + dz * dz);
     const ahead = dx * fx + dz * fz;
     if (d > SHAKE_REACH || ahead < d * 0.5) continue;
     // How far it is from the line you look along, and a little for how far away.
