@@ -95,16 +95,22 @@ export function readMemory<M>(l: { memory: { get: (key: string) => M | undefined
   return l.memory.get(memKey(wordId, "read"));
 }
 
+const knownAtCache = new WeakMap<object, { t: number; known: ReadonlySet<string> }>();
+
 /**
  * The words known just before `t` (ms): what a replay of the reading reviews
  * before `t` would say. Only words read since `t` are replayed: for the
- * others, that replay is their memory now.
+ * others, that replay is their memory now. Worked out once per learner and
+ * `t`: Today's stats and its visitors both ask for the start of the day.
  */
-export function knownAt(l: { words: ReadonlyMap<string, unknown>; memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } }, t: number): Set<string> {
+export function knownAt(l: { memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } }, t: number): ReadonlySet<string> {
+  const hit = knownAtCache.get(l);
+  if (hit?.t === t) return hit.known;
   const known = new Set<string>();
-  for (const id of l.words.keys()) {
-    const now = readMemory(l, id);
-    if (!now) continue;
+  // The memory holds only the learner's own words: walk their reading rows, not the whole deck.
+  for (const now of l.memory.values()) {
+    if (now.skill !== "read") continue;
+    const id = now.wordId;
     if (now.lastTs < t) {
       if (wordState(now) === "known") known.add(id);
       continue;
@@ -116,6 +122,7 @@ export function knownAt(l: { words: ReadonlyMap<string, unknown>; memory: Readon
       .map((r) => ({ ts: reviewedAt(r), grade: r.grade }));
     if (wordState(replay(fsrs, before, l.course.retention, memKey(id, "read")) ?? undefined) === "known") known.add(id);
   }
+  knownAtCache.set(l, { t, known });
   return known;
 }
 
