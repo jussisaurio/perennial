@@ -160,7 +160,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
         </header>
         <section className="landing-signin">
           <h1>Sign in</h1>
-          <p className="muted small">We send a code to your email. Your garden appears here after a moment.</p>
+          <p className="muted small">Your garden appears here after you sign in.</p>
           <SignIn cta="Send me a code" />
         </section>
         <button className="ghost link" onClick={() => setLinking(false)}>

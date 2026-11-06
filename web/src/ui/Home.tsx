@@ -222,8 +222,8 @@ function KeepGarden({ learner, now }: { learner: Learner; now: number }) {
   if (!user?.anonymous || stats.known + stats.learning < 10) return null;
   return (
     <details className="panel more keep-garden">
-      <summary>Keep your garden safe: sign in with your email</summary>
-      <p className="muted small">Your garden is saved in this browser. Sign in with your email to keep it in your account and on all your devices. If you have no account yet, this makes one.</p>
+      <summary>Keep your garden safe: sign in</summary>
+      <p className="muted small">Your garden is saved in this browser. Sign in to keep it in your account and on all your devices. If you have no account yet, this makes one.</p>
       <SignIn cta="Send me a code" />
     </details>
   );
