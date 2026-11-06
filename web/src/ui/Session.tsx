@@ -149,7 +149,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
           </div>
         </div>
         <span className="time-left">{done ? "" : overtime ? "finishing" : `${Math.max(1, Math.ceil((runner.budgetMs - active) / 60_000))} min left`}</span>
-        <SoundToggle />
+        <SoundToggle tip />
         <GrowthToggle />
         <button className="undo" onClick={() => void undo()} disabled={!canUndo} title="Undo last answer (Z)" aria-keyshortcuts="Z Control+Z Meta+Z">
           <UndoIcon size={18} /> Undo <kbd aria-hidden="true">Z</kbd>

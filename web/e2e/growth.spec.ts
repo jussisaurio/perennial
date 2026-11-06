@@ -118,8 +118,16 @@ test("the session bar turns the moment off and on, and Settings agrees", async (
   await page.locator("button.start").click();
   const toggle = page.getByRole("button", { name: "Show plants growing" });
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  // A watering can alone is guesswork: hovering names it at once.
+  await toggle.hover();
+  await expect.poll(() => toggle.evaluate((b) => getComputedStyle(b, "::after").content)).toBe('"Growing plants: on"');
+  await expect.poll(() => toggle.evaluate((b) => getComputedStyle(b, "::after").opacity)).toBe("1");
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  // The tap shows the new state, also where there is no hover.
+  await page.mouse.move(0, 0);
+  await expect(toggle).toHaveClass(/tip-shown/);
+  await expect.poll(() => toggle.evaluate((b) => getComputedStyle(b, "::after").content)).toBe('"Growing plants: off"');
   await reveal(page);
   await freeze(page);
   // New to me would plant the seed; with the clock stopped the card moves on only because no moment plays.
