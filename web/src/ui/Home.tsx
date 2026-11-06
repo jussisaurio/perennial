@@ -69,10 +69,11 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
   const learner = useDeferredValue(useLearner(code));
   const now = useNow();
   const rest = useAfterPaint(learner, now);
-  if (!learner) return <Settling />;
-  const chunk = chunkToday(learner, now);
   const lang = language(code).name;
 
+  // The greeting needs no deck, so it is drawn at once and stays the same element
+  // when the rest comes: on a slow network the deck takes seconds, and the
+  // greeting is the page's largest text (LCP, #605).
   return (
     <div className={stagger ? "page home stagger" : "page home"}>
       <header className="home-head">
@@ -81,17 +82,25 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
           <h1>
             {greeting()}. Time for <em>{lang}</em>.
           </h1>
-          {rest && <Aside learner={learner} now={now} />}
+          {learner && rest && <Aside learner={learner} now={now} />}
         </div>
       </header>
+      {learner ? <HomeBody learner={learner} now={now} rest={rest} onStart={onStart} onWalk={onWalk} /> : <Settling />}
+    </div>
+  );
+}
 
+function HomeBody({ learner, now, rest, onStart, onWalk }: { learner: Learner; now: number; rest: boolean; onStart: (minutes: number) => void; onWalk: () => void }) {
+  const chunk = chunkToday(learner, now);
+  return (
+    <>
       <StartRow learner={learner} chunk={chunk} now={now} rest={rest} onStart={() => onStart(chunk.minutes)} />
       {rest ? <TodayGarden learner={learner} now={now} onWalk={onWalk} /> : <Garden data={null} />}
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
       {rest && <KeepGarden learner={learner} now={now} />}
-    </div>
+    </>
   );
 }
 

@@ -172,7 +172,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   // A friend's seed is kept on this device (#213): only then is GiftArrival drawn, as its learner queries cost time (#230).
   const [giftHere] = useState(() => pendingGift() !== null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
-  const deckFailed = useDeck(course?.lang).failed;
+  const { deck, failed: deckFailed } = useDeck(course?.lang);
   const store = useStore();
   const choose = (lang: string) => {
     setChosen(lang);
@@ -186,11 +186,11 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   useEffect(() => {
     if (saved && !course) void store.refetchAll();
   }, [saved, course, store]);
-  // Once a course is up (Today is drawn first): fetch the other screens, so a tab opens at once.
-  const hasCourse = course !== undefined;
+  // Once the deck is in (Today is drawn first, and needs the deck more): fetch the other screens, so a tab opens at once.
+  const deckIn = deck !== null;
   useEffect(() => {
-    if (hasCourse) preloadScreens();
-  }, [hasCourse]);
+    if (deckIn) preloadScreens();
+  }, [deckIn]);
 
   // Still loading, or a course was just started and is on its way: not the landing page.
   if (!course && (!ready || starting)) return <Settling />;

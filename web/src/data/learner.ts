@@ -12,6 +12,7 @@ import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
 import { inSlices, runAll, yieldToBrowser } from "../lib/yield";
 import { DAILY_MINUTES } from "./practice";
+import { afterPaint } from "../ui/afterPaint";
 import { COURSE_DEFAULTS, SKILLS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
 import type { Gender, GardenWord, OrchardWord } from "../deck/schema";
@@ -63,17 +64,23 @@ export function useDeck(lang: string | undefined): { deck: LoadedDeck | null; fa
   useEffect(() => {
     if (!lang) return;
     let alive = true;
-    loadDeck(lang).then(
-      (d) => {
-        if (!alive) return;
-        setDeck(d);
-        setFailed(null);
-      },
-      // Logged once, where it fails (loadDeck).
-      () => alive && setFailed(lang),
+    // Fetched once the frame is painted: the deck is the biggest file (~450 kB
+    // compressed), and started in the commit that draws the top bar it holds
+    // up that paint and the page's LCP on slow networks (#605).
+    const cancel = afterPaint(() =>
+      loadDeck(lang).then(
+        (d) => {
+          if (!alive) return;
+          setDeck(d);
+          setFailed(null);
+        },
+        // Logged once, where it fails (loadDeck).
+        () => alive && setFailed(lang),
+      ),
     );
     return () => {
       alive = false;
+      cancel();
     };
   }, [lang]);
   return { deck: deck?.lang === lang ? deck : null, failed: !!lang && failed === lang };
