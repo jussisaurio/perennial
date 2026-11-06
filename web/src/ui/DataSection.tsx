@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useFeatures } from "../data/server";
 import { deleteAccount, useUser } from "../data/auth";
 import { readMemory, wordState } from "../core/memory";
-import { useLearner, type Learner } from "../data/learner";
+import { useLearner, useSentences, type Learner, type Sentences } from "../data/learner";
 import { language } from "../content/languages";
 import { download } from "./files";
 import { plural } from "./format";
@@ -10,8 +10,8 @@ import { plural } from "./format";
 const stamp = () => new Date().toISOString().slice(0, 10);
 
 /** Everything Perennial keeps about you for this language, including the full review log. */
-function exportJSON(l: Learner): string {
-  const words = l.studied.map((w) => ({ ...w, sentences: l.sentences(w.id) }));
+function exportJSON(l: Learner, sentences: Sentences): string {
+  const words = l.studied.map((w) => ({ ...w, sentences: sentences.of(w.id) }));
   const data = { app: "perennial", version: 2, exportedAt: new Date().toISOString(), language: l.lang, course: l.course, words, reviews: l.everyReview(), wordStates: [...l.states.values()] };
   const name = `perennial-${l.lang}-${stamp()}.json`;
   download(name, new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
@@ -68,6 +68,8 @@ export function DataSection({ lang }: { lang: string }) {
   const { user } = useUser();
   const { ai } = useFeatures();
   const learner = useLearner(lang);
+  // The full export has every word's sentences: it waits for the deck's (#608).
+  const sentences = useSentences(learner);
   // A download can start without a sign on the page: say that it did (#272).
   const [saved, setSaved] = useState("");
   return (
@@ -77,7 +79,7 @@ export function DataSection({ lang }: { lang: string }) {
         <a href="/privacy.html">privacy policy</a>.
       </p>
       <div className="row">
-        <button className="secondary" disabled={!learner} onClick={() => learner && setSaved(exportJSON(learner))}>
+        <button className="secondary" disabled={!learner || !sentences} onClick={() => learner && sentences && setSaved(exportJSON(learner, sentences))}>
           Download all my data (JSON)
         </button>
         <button className="secondary" disabled={!learner} onClick={() => learner && setSaved(exportCSV(learner))}>

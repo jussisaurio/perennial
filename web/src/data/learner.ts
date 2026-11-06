@@ -8,7 +8,7 @@ import type { ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { DAY_MS, startOfDay } from "../core/day";
 import { firstReviewed, MemoryLog, reviewedAt, memKey, type MemoryRow } from "../core/memory";
-import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
+import { loadDeck, loadedDeck, loadedSentences, loadSentences, type DeckSentences, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
 import { inSlices, runAll, yieldToBrowser } from "../lib/yield";
 import { DAILY_MINUTES } from "./practice";
@@ -56,25 +56,28 @@ export function useStore(): Store {
   return s;
 }
 
-/** A language's deck (null while it loads), and whether it could not load at all (no saved copy either). */
-export function useDeck(lang: string | undefined): { deck: LoadedDeck | null; failed: boolean } {
-  // Null: not loaded yet, so the effect below waits for it.
-  const [deck, setDeck] = useState<LoadedDeck | null>(() => (lang ? (loadedDeck(lang) ?? null) : null));
+/** A part of a language's deck (null while it loads), and whether it could not load. */
+function useDeckPart<T>(lang: string | undefined, loaded: (lang: string) => T | undefined, load: (lang: string) => Promise<T>): { part: T | null; failed: boolean } {
+  // Null: not loaded yet, so the effect below waits for it. Kept with its language, so a switch never shows the last one's.
+  const [part, setPart] = useState<{ lang: string; value: T } | null>(() => {
+    const now = lang ? loaded(lang) : undefined;
+    return lang && now !== undefined ? { lang, value: now } : null;
+  });
   const [failed, setFailed] = useState<string | null>(null);
   useEffect(() => {
     if (!lang) return;
     let alive = true;
-    // Fetched once the frame is painted: the deck is the biggest file (~450 kB
-    // compressed), and started in the commit that draws the top bar it holds
-    // up that paint and the page's LCP on slow networks (#605).
+    // Fetched once the frame is painted: the deck is the biggest download, and
+    // started in the commit that draws the top bar it holds up that paint and
+    // the page's LCP on slow networks (#605).
     const cancel = afterPaint(() =>
-      loadDeck(lang).then(
-        (d) => {
+      load(lang).then(
+        (value) => {
           if (!alive) return;
-          setDeck(d);
+          setPart({ lang, value });
           setFailed(null);
         },
-        // Logged once, where it fails (loadDeck).
+        // Logged once, where it fails (data/deck.ts).
         () => alive && setFailed(lang),
       ),
     );
@@ -82,8 +85,53 @@ export function useDeck(lang: string | undefined): { deck: LoadedDeck | null; fa
       alive = false;
       cancel();
     };
-  }, [lang]);
-  return { deck: deck?.lang === lang ? deck : null, failed: !!lang && failed === lang };
+  }, [lang, load]);
+  return { part: part && part.lang === lang ? part.value : null, failed: !!lang && failed === lang };
+}
+
+/** A language's deck words (null while they load), and whether they could not load. */
+export function useDeck(lang: string | undefined): { deck: LoadedDeck | null; failed: boolean } {
+  const { part, failed } = useDeckPart(lang, loadedDeck, loadDeck);
+  return { deck: part, failed };
+}
+
+/** A language's deck sentences (null while they load; they come after the words), and whether they could not load. */
+export function useDeckSentences(lang: string | undefined): { sentences: DeckSentences | null; failed: boolean } {
+  const { part, failed } = useDeckPart(lang, loadedSentences, loadSentences);
+  return { sentences: part, failed };
+}
+
+/** A learner's sentences for each word: the deck's, then their own. */
+export interface Sentences {
+  of(wordId: string): Sentence[];
+  /** The deck's alone, with their word keys: what reading looks through. */
+  deck: DeckSentences;
+}
+
+/** One per learner (and so per change of their own sentences). */
+const learnerSentences = new WeakMap<Learner, Sentences>();
+export function sentencesOf(l: Learner, deck: DeckSentences): Sentences {
+  const known = learnerSentences.get(l);
+  if (known?.deck === deck) return known;
+  const made: Sentences = {
+    deck,
+    of: (wordId) => [
+      ...(deck.get(wordId) ?? []).map((s) => ({ id: s.id, text: s.text, translation: s.translation, cloze: s.cloze, origin: "deck" as const })),
+      ...(l.ownSentences.get(wordId) ?? []),
+    ],
+  };
+  learnerSentences.set(l, made);
+  return made;
+}
+
+/**
+ * The learner's sentences, or null until the deck's have loaded: they come
+ * after the words (#608), so whatever shows a sentence waits for them on purpose.
+ * A failed load is shown by the app (Main in App.tsx), as for the words.
+ */
+export function useSentences(l: Learner | null): Sentences | null {
+  const { sentences } = useDeckSentences(l?.lang);
+  return l && sentences ? sentencesOf(l, sentences) : null;
 }
 
 /** The learner's courses, and whether they have loaded: "none yet" is not "none". */
@@ -113,7 +161,8 @@ export interface Learner {
   /** The last review's time before `t` (ms), or null for none. Reads at most two days' reviews. */
   lastReviewBefore(t: number): number | null;
   states: Map<string, WordStateRow>;
-  sentences(wordId: string): Sentence[];
+  /** The learner's own sentences (written or AI), by word. The deck's come later: see useSentences. */
+  ownSentences: ReadonlyMap<string, Sentence[]>;
   /** Words a session can introduce next, best first: picked words, then the course (content/order.ts). */
   upcoming(): Word[];
   /** The ids of upcoming(). */
@@ -502,12 +551,9 @@ function memoryOf(log: MemoryLog, words: Map<string, Word>, prev: Memory | undef
 function assemble(lang: string, course: CourseRow, wordsOf: Words, { byWord: reviewsByWord, byDay }: Reviews, sentencesBy: Map<string, Sentence[]>, { memories, memory, started, studied }: Memory, from: Before | null, box: { state: Upcoming | null }): Learner {
   const { words, stateMap, links } = wordsOf;
   const { deck, resolve } = links;
-  const sentences = (wordId: string): Sentence[] => [
-    ...(deck.sentencesByWord.get(wordId) ?? []).map((s) => ({ id: s.id, text: s.text, translation: s.translation, cloze: s.cloze, origin: "deck" as const })),
-    ...(sentencesBy.get(wordId) ?? []),
-  ];
-  // Every list in these maps has at least one sentence.
-  const hasSentences = (wordId: string) => deck.sentencesByWord.has(wordId) || sentencesBy.has(wordId);
+  // Every live deck word has sentences (CI checks it), and every list in sentencesBy has at least one.
+  // So the plan needs only the words part of the deck, not its sentences (#608).
+  const hasSentences = (wordId: string) => words.get(wordId)?.source === "deck" || sentencesBy.has(wordId);
 
   // Every started word has reviews: memories come from them.
   const firstReview = (id: string) => firstReviewed(reviewsByWord.get(id)!).any;
@@ -558,7 +604,7 @@ function assemble(lang: string, course: CourseRow, wordsOf: Words, { byWord: rev
       bound = day - 1;
     }
   };
-  return { lang, deck, course, words, studied, memories, memory, everyReview, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, sentences, upcoming, fresh, freshSteps, resolve };
+  return { lang, deck, course, words, studied, memories, memory, everyReview, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, ownSentences: sentencesBy, upcoming, fresh, freshSteps, resolve };
 }
 
 /** upcoming(): the words, and the walk of the course and `since` they came from. */

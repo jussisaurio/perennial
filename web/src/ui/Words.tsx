@@ -6,7 +6,7 @@ import { useUser } from "../data/auth";
 import { recall, wordState, type MemoryRow, type WordState } from "../core/memory";
 import { notStartedWords } from "../content/order";
 import { Progress } from "./Progress";
-import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
+import { setWordStatus, useLearner, useSentences, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
@@ -254,7 +254,7 @@ function authorLabel(e: Sentence): string {
 }
 
 /** "Write new sentences" with Perennial AI, with the cost shown first and an undo after. */
-function RewriteButton({ learner, word }: { learner: Learner; word: Word }) {
+function RewriteButton({ learner, word, examples }: { learner: Learner; word: Word; examples: Sentence[] }) {
   const { ai } = useFeatures();
   const store = useStore();
   const { user } = useUser();
@@ -269,7 +269,7 @@ function RewriteButton({ learner, word }: { learner: Learner; word: Word }) {
     setBusy(true);
     setError("");
     try {
-      const seen = learner.sentences(word.id).map((s) => s.text).slice(-6);
+      const seen = examples.map((s) => s.text).slice(-6);
       const known = learner.studied.slice(0, 400).map((w) => w.lemma);
       const r = await moreExamples(learner.lang, [{ lemma: word.lemma, gloss: word.gloss, seen }], known);
       const rows: UserSentenceRow[] = r.examples
@@ -317,7 +317,8 @@ function RewriteButton({ learner, word }: { learner: Learner; word: Word }) {
 function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; word: Word; memory: MemoryRow[]; onDeleted: () => void }) {
   const store = useStore();
   const now = useNow();
-  const examples = learner.sentences(word.id);
+  // Null until the deck's sentences are in: they come after its words (#608).
+  const examples = useSentences(learner)?.of(word.id) ?? null;
   const mine = word.source === "user";
   const [gloss, setGloss] = useState(word.gloss);
   const [notes, setNotes] = useState(word.notes ?? "");
@@ -366,20 +367,26 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
         <p className="muted small">Not started. It will come in a session as a new word.</p>
       )}
       {practised.length > 0 && <SchedulingDetails practised={practised} reviews={learner.reviewsByWord.get(word.id) ?? []} now={now} />}
-      <ul className="examples">
-        {examples.map((e) => (
-          <li key={e.id}>
-            <span>{e.text}</span> <span className="muted">— {e.translation}</span>
-            <span className="author">{authorLabel(e)}</span>
-            {e.origin !== "deck" && (
-              <button className="ghost small" onClick={() => void store.write(() => store.collections.user_sentence.delete(e.id))} aria-label="Remove sentence">
-                remove
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-      <RewriteButton learner={learner} word={word} />
+      {examples ? (
+        <>
+          <ul className="examples">
+            {examples.map((e) => (
+              <li key={e.id}>
+                <span>{e.text}</span> <span className="muted">— {e.translation}</span>
+                <span className="author">{authorLabel(e)}</span>
+                {e.origin !== "deck" && (
+                  <button className="ghost small" onClick={() => void store.write(() => store.collections.user_sentence.delete(e.id))} aria-label="Remove sentence">
+                    remove
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <RewriteButton learner={learner} word={word} examples={examples} />
+        </>
+      ) : (
+        <p className="muted small">Loading the sentences…</p>
+      )}
       <div className="row">
         <button className="secondary" onClick={() => void setWordStatus(store, word.id, paused ? "active" : "paused")}>
           {paused ? "Resume" : "Pause"}

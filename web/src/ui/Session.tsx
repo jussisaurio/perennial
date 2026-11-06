@@ -5,6 +5,7 @@ import type { Grade } from "../core/fsrs";
 import { askedForm, headword, otherForm } from "../content/forms";
 import { locate } from "../content/text";
 import type { Learner, Word } from "../data/learner";
+import type { DeckSentences } from "../data/deck";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { rareOf, WordPlant, type Rare } from "./plant";
@@ -134,7 +135,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
     };
   }, [growing]);
 
-  const { learner, tag, runner, card, done, active, ended, refusedBefore, serial, canUndo, start, finish, undo, exit, resume, firstSummary } = useSessionRunner({
+  const { learner, sentences, tag, runner, card, done, active, ended, refusedBefore, serial, canUndo, start, finish, undo, exit, resume, firstSummary } = useSessionRunner({
     lang,
     minutes,
     onExit,
@@ -180,7 +181,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       {/* During the session and on its summary: in place, never over the answer buttons. */}
       <RefusedLine since={refusedBefore} />
       {done ? (
-        <Summary learner={learner} {...done} refusedBefore={refusedBefore} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
+        <Summary learner={learner} sentences={sentences}{...done} refusedBefore={refusedBefore} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
       ) : card ? (
         <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={answer} />
       ) : null}
@@ -696,7 +697,7 @@ const READ_KEY = (lang: string) => `perennial-read-now:${lang}`;
  * Today's sentence to read, if one fits and none was shown today. Shown ones are
  * kept on this device; without storage a sentence may come again, which is harmless.
  */
-function readingToday(l: Learner, practised: ReadonlySet<string>): (ReturnType<typeof readNow> & { tag: string }) | null {
+function readingToday(l: Learner, sentences: DeckSentences, practised: ReadonlySet<string>): (ReturnType<typeof readNow> & { tag: string }) | null {
   const key = READ_KEY(l.lang);
   let saved: { day: string; ids: string[] } = { day: "", ids: [] };
   try {
@@ -706,7 +707,7 @@ function readingToday(l: Learner, practised: ReadonlySet<string>): (ReturnType<t
   }
   if (saved.day === today()) return null;
   const tag = language(l.lang).tag;
-  const s = readNow(l, practised, new Set(saved.ids));
+  const s = readNow(l, sentences, practised, new Set(saved.ids));
   if (!s) return null;
   try {
     localStorage.setItem(key, JSON.stringify({ day: today(), ids: [...saved.ids, s.id] }));
@@ -764,6 +765,7 @@ function Watcher({ view }: { view: VisitorView }) {
 
 function Summary({
   learner,
+  sentences,
   counts,
   refusedBefore,
   practised,
@@ -778,6 +780,7 @@ function Summary({
   firstSummary,
 }: {
   learner: Learner | null;
+  sentences: DeckSentences | null;
   counts: { intros: number; answers: number };
   refusedBefore: Refused;
   practised: Set<string>;
@@ -813,7 +816,7 @@ function Summary({
   // News worth a look in the garden (#232), worked out once, as the summary opens.
   const [news] = useState(() => (learner ? gardenNews(learner, before, arrived) : null));
   // A sentence the learner can now read whole (#412): once a day, never on a paused session.
-  const [reading] = useState(() => (learner && !paused ? readingToday(learner, practised) : null));
+  const [reading] = useState(() => (learner && sentences && !paused ? readingToday(learner, sentences, practised) : null));
   const [english, setEnglish] = useState(false);
   // Worked out once, when the summary opens: later syncs update the learner, and must not start the replay again.
   const [replay] = useState(() => {

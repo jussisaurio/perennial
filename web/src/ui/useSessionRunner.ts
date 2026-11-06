@@ -9,7 +9,8 @@ import type { Grade } from "../core/fsrs";
 import { isStrong, memKey, plantStage, readMemory, recall, recordGap, reviewedAt, type PlantStage } from "../core/memory";
 import type { Skill } from "../data/rows";
 import { Session as Runner, type Task } from "../core/session";
-import { recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
+import { recordReview, sentencesOf, undoReview, useDeckSentences, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
+import type { DeckSentences } from "../data/deck";
 import { hash32 } from "../lib/seed";
 import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
 import { prepareAudio, wakeAudio } from "./chime";
@@ -55,8 +56,8 @@ const DOT_NOTES = { listen: "A blue dot: you know it by ear now.", write: "An or
  * Pick the sentence the learner has seen least, so no two reviews look the same.
  * `onIntro`: the sentence on this word's new-word card, which records no review (#268).
  */
-function chooseExample(l: Learner, wordId: string, onIntro: string | undefined): Sentence | undefined {
-  const examples = l.sentences(wordId);
+function chooseExample(l: Learner, deck: DeckSentences, wordId: string, onIntro: string | undefined): Sentence | undefined {
+  const examples = sentencesOf(l, deck).of(wordId);
   if (!examples.length) return undefined;
   const seen = new Map<string, number>();
   for (const r of l.reviewsByWord.get(wordId) ?? []) if (r.sentence_id) seen.set(r.sentence_id, (seen.get(r.sentence_id) ?? 0) + 1);
@@ -75,6 +76,12 @@ interface Feedback {
 
 export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string; minutes: number; onExit: () => void } & Feedback) {
   const learner = useLearner(lang);
+  // Cards show the deck's sentences, which load after its words (#608): the session starts once they are in.
+  const { sentences } = useDeckSentences(lang);
+  const deckSentences = useRef(sentences);
+  useLayoutEffect(() => {
+    deckSentences.current = sentences;
+  }, [sentences]);
   // Answers update the learner live; reads in event handlers use the latest.
   const live = useRef(learner);
   // Before the browser paints, so no tap can see the learner from before.
@@ -152,7 +159,8 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       return;
     }
     const word = l.words.get(task.wordId)!;
-    const example = again?.wordId === word.id ? again.example : chooseExample(l, word.id, introSentence.current.get(word.id));
+    // !: a session starts only once the deck's sentences are in (below).
+    const example = again?.wordId === word.id ? again.example : chooseExample(l, deckSentences.current!, word.id, introSentence.current.get(word.id));
     const read = readMemory(l, word.id);
     shownAt.current = clock.current.elapsed;
     setSerial((n) => n + 1);
@@ -198,14 +206,14 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     [tag],
   );
 
-  // Plan once, as soon as the learner has loaded. Later changes (every answer
-  // updates the learner) must not replan a session that is under way.
+  // Plan once, as soon as the learner and the deck's sentences have loaded. Later
+  // changes (every answer updates the learner) must not replan a session that is under way.
   const started = useRef(false);
   useEffect(() => {
-    if (started.current || !learner) return;
+    if (started.current || !learner || !sentences) return;
     started.current = true;
     void start(minutes);
-  }, [learner, start, minutes]);
+  }, [learner, sentences, start, minutes]);
   useEffect(() => () => stopSpeaking(), []);
   // Ready before the first answer, whose key press then only wakes it.
   useEffect(() => afterPaint(() => void prepareAudio()), []);
@@ -386,6 +394,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
 
   return {
     learner,
+    sentences,
     tag,
     runner,
     card,
