@@ -2,7 +2,7 @@
 // every client of ours uses, and small helpers for statements.
 
 import { PgClient } from "@effect/sql-pg";
-import { Effect, Layer, Redacted } from "effect";
+import { Duration, Effect, Layer, Redacted } from "effect";
 import type { Statement } from "effect/sql";
 import type { SqlError } from "effect/sql/SqlError";
 import { AppConfig } from "./config";
@@ -33,9 +33,15 @@ export function connection(url: string): PgClient.PgClientConfig {
   return { url: Redacted.make(url), connectTimeout, ssl: { rejectUnauthorized: false } }; // nosemgrep: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
 }
 
-/** The app's pool, as Bun.SQL had it: at most 10 connections, idle ones closed after 30 s. */
+/**
+ * The app's pool: at most 10 connections. Idle ones stay open: most requests
+ * come after a quiet spell, and a new connection to PlanetScale costs ~70 ms
+ * (#603). Each is replaced after a day, as PlanetScale asks.
+ */
 export const DatabaseLive = Layer.unwrap(
-  Effect.map(AppConfig, (config) => PgClient.layer({ ...connection(config.databaseUrl), maxConnections: 10, idleTimeout: "30 seconds" })),
+  Effect.map(AppConfig, (config) =>
+    PgClient.layer({ ...connection(config.databaseUrl), maxConnections: 10, idleTimeout: Duration.infinity, connectionTTL: "1 day" }),
+  ),
 );
 
 /** How many rows a statement touched: the count in Postgres's command tag ("INSERT 0 1", "DELETE 3"). */

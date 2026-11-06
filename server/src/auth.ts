@@ -61,7 +61,9 @@ export function createAuth(config: Config, sql: PgClient.PgClient, mailer: Maile
   /** Our queries, from Better Auth's Promise callbacks; a failure rejects, as a throw did. */
   const run = <A, E>(effect: Effect.Effect<A, E, PgClient.PgClient>) => Effect.runPromise(Effect.provideService(effect, PgClient.PgClient, sql));
   // Better Auth has no adapter for sql-pg (and sql-pg cannot share a pg pool); it gets a small pg pool of its own.
-  const pool = new Pool({ connectionString: config.databaseUrl, max: 4 });
+  // Idle connections stay open: most requests come after a quiet spell, and a new
+  // connection to PlanetScale costs ~70 ms (#603). PlanetScale asks for a new one each day.
+  const pool = new Pool({ connectionString: config.databaseUrl, max: 4, idleTimeoutMillis: 0, maxLifetimeSeconds: 24 * 60 * 60 });
   const auth = betterAuth({
     database: pool,
     baseURL: config.appUrl,
@@ -77,7 +79,9 @@ export function createAuth(config: Config, sql: PgClient.PgClient, mailer: Maile
       enabled: !config.dev,
       window: 60,
       max: 100,
-      storage: "database",
+      // In memory, not a row read and written per request (#603). One replica
+      // (Railway), so one set of counters; a restart resets them, which is fine.
+      storage: "memory",
       // Codes by email are the main abuse target (email bombing).
       customRules: { "/email-otp/send-verification-otp": { window: 300, max: 3 }, "/sign-in/anonymous": { window: 3600, max: 20 } },
     },
