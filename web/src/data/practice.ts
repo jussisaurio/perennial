@@ -12,7 +12,7 @@ import type { ReviewRow } from "./rows";
 function answeredToday(l: Learner, now: number): Set<string> {
   const dayStart = startOfDay(now);
   const done = new Set<string>();
-  for (const r of l.reviews) if (r.grade >= 2 && reviewedAt(r) >= dayStart) done.add(l.resolve(r.word_id));
+  for (const r of l.reviewsSince(dayStart)) if (r.grade >= 2) done.add(l.resolve(r.word_id));
   return done;
 }
 
@@ -56,8 +56,7 @@ export function nextChunk(l: Learner, now = Date.now()): { state: "start" | "fin
   // Otherwise Today asks for more minutes after every chunk that ran out of new words (#255).
   // Every other answer counts its real time: the timer, not the plan, ends reviews.
   let ms = 0;
-  for (const r of l.reviews) {
-    if (reviewedAt(r) < dayStart) continue;
+  for (const r of l.reviewsSince(dayStart)) {
     ms += isFirstAnswer(l, r) ? Math.max(r.duration_ms, NEW_WORD_MS) : r.duration_ms;
   }
   const left = DAILY_MINUTES - ms / 60_000;

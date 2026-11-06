@@ -71,7 +71,15 @@ async function fromScratch(reviews: ReviewRow[]): Promise<Learner> {
 }
 
 /** Everything a screen reads of the memory, to compare a learner kept up to date with one built from scratch. */
-const view = (l: Learner) => ({ memories: l.memories, memory: l.memory, studied: l.studied.map((w) => w.id), reviews: l.reviews, reviewsByWord: l.reviewsByWord });
+const view = (l: Learner) => ({
+  memories: l.memories,
+  memory: l.memory,
+  studied: l.studied.map((w) => w.id),
+  reviews: l.reviews,
+  reviewsByWord: l.reviewsByWord,
+  // From the start, from mid-day 200 (the live answers), and from a day with none yet.
+  since: [0, 200.5, 400].map((day) => l.reviewsSince(Date.UTC(2026, 0, 1, 8) + day * DAY_MS).map((r) => r.id).sort()),
+});
 
 describe("Learners: one review at a time, the same as building it all again", () => {
   const random = rng(11);
