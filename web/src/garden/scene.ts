@@ -572,56 +572,56 @@ export class GardenScene {
     this.walkInto.build(c, this.visitors.autumn);
     this.buildMarker();
     this.setTime(this.time);
-    await this.warm();
+    await this.warm([...this.scene.children]);
   }
 
   /**
    * Compiles the shaders and uploads the textures before the first frame, a
    * slice at a time (#459): the first render did both in one long task. The
-   * GPU links the shaders while the slices yield.
+   * GPU links the shaders while the slices yield. `parts`: children of the scene.
    */
-  private async warm(): Promise<void> {
+  private async warm(parts: THREE.Object3D[]): Promise<void> {
     // The scene's fog without its objects: compile() walks the whole target scene for lights on
     // every call, and the garden has none. The fog is part of each shader's cache key.
     const target = new THREE.Scene();
     target.fog = this.fog;
-    for (const child of [...this.scene.children]) {
+    for (const child of parts) {
       this.renderer.compile(child, this.camera, target);
       child.traverse((o) => {
         for (const mat of materialsOf(o)) for (const t of texturesOf(mat)) this.renderer.initTexture(t);
       });
       if (await this.stopped()) return;
     }
-    await this.drawOnce();
+    await this.drawOnce(parts);
   }
 
   /**
    * Draws each part once into one pixel, a slice at a time. compile() leaves part of a
    * material's setup to its first draw: its program and uniforms, and the wait for the GPU's
    * link. On the first frame, that took about 200 ms in one task at CPU 10× (#459).
-   * Only what the camera sees now is drawn, as on the first frame.
+   * Only what the camera sees now is drawn, as on the first frame. Each draw hides
+   * the rest and shows it again in the same slice: the loop may be drawing frames
+   * between slices (the plants are warmed after start).
    */
-  private async drawOnce(): Promise<void> {
-    const parts = [...this.scene.children];
-    const shown = parts.map((p) => p.visible);
-    for (const p of parts) p.visible = false;
-    // The hidden parts' matrices do not change meanwhile: update them all once, not on every draw.
-    this.scene.updateMatrixWorld();
-    this.scene.matrixWorldAutoUpdate = false;
-    this.renderer.setScissorTest(true);
-    this.renderer.setScissor(0, 0, 1, 1);
-    try {
-      for (const [i, p] of parts.entries()) {
-        if (!shown[i]) continue;
-        p.visible = true;
+  private async drawOnce(parts: THREE.Object3D[]): Promise<void> {
+    const all = this.scene.children;
+    for (const p of parts) {
+      if (!p.visible) continue;
+      const shown = all.map((o) => o.visible);
+      for (const o of all) o.visible = o === p;
+      // Only this part's matrices: updating the whole scene's on every draw cost more than the draws.
+      p.updateMatrixWorld();
+      this.scene.matrixWorldAutoUpdate = false;
+      this.renderer.setScissorTest(true);
+      this.renderer.setScissor(0, 0, 1, 1);
+      try {
         this.renderer.render(this.scene, this.camera);
-        p.visible = false;
-        if (await this.stopped()) return;
+      } finally {
+        this.renderer.setScissorTest(false);
+        this.scene.matrixWorldAutoUpdate = true;
+        for (const [i, o] of all.entries()) o.visible = shown[i];
       }
-    } finally {
-      this.renderer.setScissorTest(false);
-      this.scene.matrixWorldAutoUpdate = true;
-      for (const [i, p] of parts.entries()) p.visible = shown[i];
+      if (await this.stopped()) return;
     }
   }
 
@@ -1555,6 +1555,9 @@ export class GardenScene {
     if (!total) return;
     // The new plants take the time of day on show; while time speeds up on the bench, the next frame blends them too.
     this.showTime(this.shown);
+    // Their materials set up here, a slice at a time, not all on the next frame (~50 ms at CPU 10×, #459).
+    await this.warm(this.plants.meshes());
+    if (this.disposed) return;
     await this.plants.drawSprites();
     // The walk may have been left (and disposed) while the sprites were drawn.
     if (this.disposed) return;

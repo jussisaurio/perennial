@@ -291,6 +291,11 @@ export class Plants {
     }
   }
 
+  /** The plant meshes, one per bed and sheet: all children of the scene. */
+  meshes(): THREE.Mesh[] {
+    return this.chunks.map((c) => c.mesh);
+  }
+
   /**
    * Draws every plant's small sprite, a run of plants per task so the page
    * never waits long (#459); the runs nearest you first, so the plants you see
