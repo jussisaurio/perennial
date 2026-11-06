@@ -611,7 +611,9 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .examples .author { display: block; font-size: 0.75rem; color: var(--muted); }
 .card-plant { position: absolute; top: 58px; right: 8px; pointer-events: none; animation: rise 0.4s var(--ease) both; }
 /* The plant's moment after a good answer (Growth.tsx): where the answer buttons were, which step aside for it. */
-.growth { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); height: 132px; pointer-events: none; z-index: 60; }
+/* .growth-spot: the same box, always there and empty. Session reads it as an answer comes, so the moment reads no layout. */
+.growth, .growth-spot { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); height: 132px; pointer-events: none; }
+.growth { z-index: 60; }
 .growth svg { display: block; overflow: visible; }
 /* `translate`, not `transform`: the rise animation sets transform. */
 .growth-note { position: absolute; left: 50%; bottom: -0.2rem; translate: -50% 0; margin: 0; white-space: nowrap; font-size: 0.85rem; color: var(--muted); animation: rise 0.4s var(--ease) both; }

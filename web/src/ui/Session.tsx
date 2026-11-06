@@ -79,18 +79,26 @@ function fewerAnswers(reviewsByWord: Learner["reviewsByWord"], n: number): boole
   return true;
 }
 
+/** Where the moment after an answer starts and is drawn: see `answer`. */
+interface Answered {
+  corner: DOMRect;
+  spot: DOMRect;
+}
+
 export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string; onExit: () => void; onWalk: () => void; minutes: number }) {
   const [help, setHelp] = useState(false);
 
   // The word's plant is planted or grows before the next card (#200).
-  const [growing, setGrowing] = useState<{ m: GrowthMoment; corner: DOMRect } | null>(null);
+  const [growing, setGrowing] = useState<{ m: GrowthMoment; at: Answered } | null>(null);
   const cornerPlant = useRef<HTMLDivElement>(null);
+  const growthSpot = useRef<HTMLDivElement>(null);
   const grown = useRef<(() => void) | null>(null);
-  // Where the answered card's plant is: the moment starts from it. Read as the answer
-  // comes, while the layout is fresh; read after the answer's render, it forces a layout (#457).
-  const answeredAt = useRef<DOMRect | null>(null);
+  // Where the answered card's plant is (the moment starts from it), and where the moment
+  // is drawn. Read as the answer comes, while the layout is fresh; read after the answer's
+  // render, they force a layout (#457, #572).
+  const answeredAt = useRef<Answered | null>(null);
   const answer = (g: Grade | null, o?: { alreadyKnown?: boolean }) => {
-    answeredAt.current = cornerPlant.current!.firstElementChild!.getBoundingClientRect();
+    answeredAt.current = { corner: cornerPlant.current!.firstElementChild!.getBoundingClientRect(), spot: growthSpot.current!.getBoundingClientRect() };
     void finish(g, o);
   };
   // Every remembered answer is watered, even when the plant barely grows (a retry
@@ -102,7 +110,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
         setGrowing(null);
         resolve();
       };
-      setGrowing({ m, corner: answeredAt.current! });
+      setGrowing({ m, at: answeredAt.current! });
       chime(m.word, chimeDelay(m) / 1000);
     });
   };
@@ -183,7 +191,8 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
         </div>
       )}
       {/* ?.: a tap may already have ended the moment. */}
-      {growing && <Growth m={growing.m} corner={growing.corner} onDone={() => grown.current?.()} />}
+      {growing && <Growth m={growing.m} corner={growing.at.corner} spot={growing.at.spot} onDone={() => grown.current?.()} />}
+      <div className="growth-spot" ref={growthSpot} />
       {growth && watching && card && !done && serial - watching.start >= watching.visit.from - 1 && serial - watching.start < watching.visit.to - 1 && <Watcher view={watching.view} />}
     </div>
   );
