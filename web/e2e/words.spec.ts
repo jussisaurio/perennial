@@ -33,6 +33,17 @@ test("course words: search the upcoming words, pause and resume, never show (wit
   await expectServerRows(page, "word_state", 0);
 });
 
+test("on the long word list, the note after Never show is on the screen, with its Undo", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await startCourse(page);
+  await page.getByRole("tab", { name: "Words" }).click();
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("new");
+  await page.locator(".word-row").first().click();
+  await page.getByRole("button", { name: "Never show this word" }).click();
+  // In view, not only rendered: it once sat at the foot of the whole list, far below the screen.
+  await expect(page.locator(".toast")).toBeInViewport();
+});
+
 test("All and New find any word in the course, also one far past the first 500 (#262)", async ({ page }) => {
   await startCourse(page);
   const late = await page.evaluate(async () => {
