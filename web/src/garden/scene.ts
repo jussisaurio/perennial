@@ -400,7 +400,7 @@ export class GardenScene {
     const first = layout.beds[0];
     this.z = Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2);
     this.camera.rotation.order = "YXZ";
-    this.sky = new SkyWater(this.camera, reducedMotion, visitors.moon);
+    this.sky = new SkyWater(this.camera, reducedMotion);
     this.critters = new Critters(this.camera, reducedMotion);
     this.plants = new Plants(
       this.renderer,
@@ -498,6 +498,8 @@ export class GardenScene {
    */
   async build(): Promise<void> {
     this.sliceFrom = performance.now();
+    // Painted in a worker while the steps before the trees run.
+    const far = T.paintFar(this.visitors.moon);
     const L = this.layout;
     const b = L.bounds;
     const c: BuildCtx = {
@@ -530,7 +532,8 @@ export class GardenScene {
     if (await this.stopped()) return;
     const { pads } = this.sky.buildPond(c);
     if (await this.stopped()) return;
-    this.buildTrees(c);
+    const farTex = await far;
+    this.buildTrees(c, farTex.trees);
     if (await this.stopped()) return;
     this.lanterns.build(c);
     if (await this.stopped()) return;
@@ -571,7 +574,7 @@ export class GardenScene {
     if (await this.stopped()) return;
     this.buildDecor(c);
     if (await this.stopped()) return;
-    this.sky.buildSkyAndSun(c);
+    this.sky.buildSkyAndSun(c, farTex);
     if (await this.stopped()) return;
     this.critters.build(c);
     if (await this.stopped()) return;
@@ -1252,10 +1255,9 @@ export class GardenScene {
   }
 
   /** Trees and bushes outside the fence. */
-  private buildTrees(c: BuildCtx) {
+  private buildTrees(c: BuildCtx, treeTex: THREE.Texture) {
     const { L, b, w, d, rand } = c;
     const hedge = hedgeSpan(L);
-    const treeTex = T.pixelTexture(T.trees());
     const trees: SpriteItem[] = [];
     const perimeter = 2 * (w + d);
     const count = Math.round(perimeter / 2.2);

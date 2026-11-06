@@ -14,22 +14,22 @@ import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { LEAF_PILE } from "./walkInto";
 import type { SpriteDone, SpriteJob } from "./spriteWorker";
+import type { PaintDone, PaintJob, Pixels } from "./paintWorker";
+import type { TimeOfDay } from "./scene";
 import { FULL_MOON, MOON_PHASES } from "./moon";
 
 /**
- * A pixel canvas. `readBack`: its pixels are read with getImageData, so it is kept in CPU memory:
- * on a GPU canvas each read waits for the GPU, ~120 ms over the walk's bed signs at CPU 10× (#447).
+ * A pixel canvas, offscreen so a worker can paint it too (paintWorker.ts). `readBack`: its pixels are read with getImageData,
+ * so it is kept in CPU memory: on a GPU canvas each read waits for the GPU, ~120 ms over the walk's bed signs at CPU 10× (#447).
  */
-export function canvas(w: number, h: number, readBack = false): [HTMLCanvasElement, CanvasRenderingContext2D] {
-  const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
+export function canvas(w: number, h: number, readBack = false): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
+  const c = new OffscreenCanvas(w, h);
   const ctx = c.getContext("2d", { willReadFrequently: readBack })!;
   ctx.imageSmoothingEnabled = false;
   return [c, ctx];
 }
 
-export function pixelTexture(c: HTMLCanvasElement, repeat = false): THREE.CanvasTexture {
+export function pixelTexture(c: OffscreenCanvas, repeat = false): THREE.CanvasTexture<OffscreenCanvas> {
   const t = new THREE.CanvasTexture(c);
   t.magFilter = THREE.NearestFilter;
   t.minFilter = THREE.NearestFilter;
@@ -38,13 +38,51 @@ export function pixelTexture(c: HTMLCanvasElement, repeat = false): THREE.Canvas
   return t;
 }
 
-export const px = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
+/** A texture a worker painted (paintWorker.ts), set up as pixelTexture sets up a canvas. */
+function paintedTexture({ width, height, data }: Pixels, repeat = false): THREE.DataTexture {
+  const t = new THREE.DataTexture(data, width, height);
+  // The worker's rows are top first, as a canvas's are: flipped on upload, as a CanvasTexture is.
+  t.flipY = true;
+  t.magFilter = THREE.NearestFilter;
+  t.minFilter = THREE.NearestFilter;
+  t.needsUpdate = true;
+  if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+/** The trees outside the fence, the clouds, and the sky's looks for each time of day, with tonight's moon. */
+export interface FarTextures {
+  trees: THREE.Texture;
+  cloud: THREE.Texture;
+  looks: Record<TimeOfDay, { sky: THREE.Texture; hills: THREE.Texture; sun: THREE.Texture }>;
+}
+
+/**
+ * Paints FarTextures in a worker (paintWorker.ts), a worker for the one job: pixel
+ * by pixel they took build steps of 10-40 ms at CPU 10× on the main thread (#571).
+ */
+export function paintFar(moonPhase: number): Promise<FarTextures> {
+  const worker = new Worker(new URL("./paintWorker.ts", import.meta.url), { type: "module" });
+  const job: PaintJob = { moonPhase };
+  worker.postMessage(job);
+  return new Promise<FarTextures>((resolve, reject) => {
+    worker.onmessage = (e: MessageEvent<PaintDone>) => {
+      const { trees, cloud, looks } = e.data;
+      const look = (l: PaintDone["looks"][TimeOfDay]) => ({ sky: paintedTexture(l.sky), hills: paintedTexture(l.hills, true), sun: paintedTexture(l.sun) });
+      resolve({ trees: paintedTexture(trees), cloud: paintedTexture(cloud), looks: { day: look(looks.day), dusk: look(looks.dusk), night: look(looks.night) } });
+    };
+    // Loudly: a walk without its sky would be a black dome.
+    worker.onerror = (e) => reject(new Error(`paint worker: ${e.message}`));
+  }).finally(() => worker.terminate());
+}
+
+export const px = (ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
 };
 
 /** Speckled ground: base colour plus a scatter of lighter and darker pixels. */
-function speckle(seed: number, base: string, dots: [string, number][], size = 32): HTMLCanvasElement {
+function speckle(seed: number, base: string, dots: [string, number][], size = 32): OffscreenCanvas {
   const [c, ctx] = canvas(size, size);
   const r = rng(seed);
   px(ctx, 0, 0, base, size, size);
@@ -52,7 +90,7 @@ function speckle(seed: number, base: string, dots: [string, number][], size = 32
   return c;
 }
 
-export function grass(): HTMLCanvasElement {
+export function grass(): OffscreenCanvas {
   const c = speckle(1, "#5fa44a", [
     ["#4e9140", 110],
     ["#72b85a", 80],
@@ -79,7 +117,7 @@ export function grass(): HTMLCanvasElement {
   return c;
 }
 
-export function path(): HTMLCanvasElement {
+export function path(): OffscreenCanvas {
   const c = speckle(2, "#d9bf8c", [
     ["#cbb07c", 140],
     ["#e6d1a3", 70],
@@ -96,7 +134,7 @@ export function path(): HTMLCanvasElement {
   return c;
 }
 
-export function soil(): HTMLCanvasElement {
+export function soil(): OffscreenCanvas {
   return speckle(3, "#6b4630", [
     ["#5a3a27", 160],
     ["#7d5640", 90],
@@ -104,7 +142,7 @@ export function soil(): HTMLCanvasElement {
   ]);
 }
 
-export function wood(): HTMLCanvasElement {
+export function wood(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 16);
   const r = rng(4);
   px(ctx, 0, 0, "#b07a45", 32, 16);
@@ -119,7 +157,7 @@ export function wood(): HTMLCanvasElement {
   return c;
 }
 
-export function picket(): HTMLCanvasElement {
+export function picket(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 32);
   for (let i = 0; i < 4; i++) {
     const x = i * 8 + 2;
@@ -135,7 +173,7 @@ export function picket(): HTMLCanvasElement {
 }
 
 /** Thick hedge leaves (#315): dense and dark, with no gaps to see through. */
-export function hedge(): HTMLCanvasElement {
+export function hedge(): OffscreenCanvas {
   const c = speckle(11, "#2f6b2f", [
     ["#245a27", 150],
     ["#3d7f37", 110],
@@ -155,7 +193,7 @@ export function hedge(): HTMLCanvasElement {
 }
 
 /** The old wooden door in the hedge (#315): planks, two iron bands, a ring and a keyhole. The keyhole is drawn dark: a warm light shows through it (scene.ts). */
-export function door(): HTMLCanvasElement {
+export function door(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 64);
   const r = rng(13);
   px(ctx, 0, 0, "#8a5a32", 32, 64);
@@ -179,7 +217,7 @@ export function door(): HTMLCanvasElement {
 }
 
 /** A small old key lying on the ground (#315): a ring, a shaft and a bit. */
-export function key(): HTMLCanvasElement {
+export function key(): OffscreenCanvas {
   const rows = [".ooo..........", "o...o.........", "o...ossssssss.", "o...o.....s.s.", ".ooo......s.s."];
   const [c, ctx] = canvas(14, 5);
   rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "o" ? "#e0b24a" : "#c9962e")));
@@ -187,7 +225,7 @@ export function key(): HTMLCanvasElement {
 }
 
 /** A small four-point glint, for the hidden key catching the light (#315). */
-export function glint(): HTMLCanvasElement {
+export function glint(): OffscreenCanvas {
   const rows = ["....o....", "....o....", "...oWo...", "..oWWWo..", "ooWWWWWoo", "..oWWWo..", "...oWo...", "....o....", "....o...."];
   const [c, ctx] = canvas(9, 9);
   rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "W" ? "#fffdf0" : "#ffe9a0")));
@@ -209,7 +247,7 @@ export const SKIES: Record<"day" | "dusk" | "night", Sky> = {
 };
 
 /** A banded sky gradient for the inside of the sky dome, retro style: no smooth blend. */
-export function sky(s: Sky, stars: boolean): HTMLCanvasElement {
+export function sky(s: Sky, stars: boolean): OffscreenCanvas {
   const [c, ctx] = canvas(64, 64);
   const bands = 12;
   const top = new THREE.Color(s.top);
@@ -255,7 +293,7 @@ export function hillProfile(): number[] {
 }
 
 /** Two layers of rolling hills with dithered edges, for a ring around the world. */
-export function hills(night: boolean): HTMLCanvasElement {
+export function hills(night: boolean): OffscreenCanvas {
   const [c, ctx] = canvas(256, HILL_ROWS);
   // Colour and shade for each ridge, in RIDGES order.
   const colors: [string, string][] = night
@@ -281,7 +319,7 @@ export function hills(night: boolean): HTMLCanvasElement {
 }
 
 /** A round blob of leaves centred on (cx, cy), lit from the top left: three shades plus speckle. Returns the pixels it drew. */
-function leafBlob(ctx: CanvasRenderingContext2D, r: () => number, cx: number, cy: number, rad: number, colors: readonly string[]): [number, number][] {
+function leafBlob(ctx: OffscreenCanvasRenderingContext2D, r: () => number, cx: number, cy: number, rad: number, colors: readonly string[]): [number, number][] {
   const out: [number, number][] = [];
   for (let y = -rad; y <= rad; y++)
     for (let x = -rad; x <= rad; x++) {
@@ -296,7 +334,7 @@ function leafBlob(ctx: CanvasRenderingContext2D, r: () => number, cx: number, cy
 }
 
 /** Trees and bushes for outside the fence: one atlas, 4 cells of 64×128. */
-export function trees(): HTMLCanvasElement {
+export function trees(): OffscreenCanvas {
   const [c, ctx] = canvas(256, 128);
   const blob = (r: () => number, cx: number, cy: number, rad: number, colors: string[]) => leafBlob(ctx, r, cx, cy, rad, colors);
   const trunk = (cx: number, top: number, w: number) => {
@@ -336,7 +374,7 @@ export function trees(): HTMLCanvasElement {
 }
 
 /** The orchard's trees (#315, orchardArt.ts): every kind in every look, a column per kind (in ORCHARD_WORDS order), a row per look (LOOKS). */
-export function orchard(): HTMLCanvasElement {
+export function orchard(): OffscreenCanvas {
   const [c, ctx] = canvas(CELL_W * ORCHARD_WORDS.length, CELL_H_PX * LOOKS.length);
   ORCHARD_WORDS.forEach((kind, col) =>
     LOOKS.forEach((look, row) => {
@@ -403,7 +441,7 @@ export function orchard(): HTMLCanvasElement {
   return c;
 }
 
-export function cloud(): HTMLCanvasElement {
+export function cloud(): OffscreenCanvas {
   const [c, ctx] = canvas(64, 32);
   const r = rng(31);
   const puffs = [
@@ -419,7 +457,7 @@ export function cloud(): HTMLCanvasElement {
 }
 
 /** A butterfly in two frames (wings open, wings closed), side by side. */
-export function butterfly(hue: number): HTMLCanvasElement {
+export function butterfly(hue: number): OffscreenCanvas {
   const [c, ctx] = canvas(16, 8);
   const wing = `hsl(${hue} 85% 65%)`;
   const dark = `hsl(${hue} 70% 42%)`;
@@ -437,7 +475,7 @@ export function butterfly(hue: number): HTMLCanvasElement {
 }
 
 /** A blank wooden board, w×h: a dark frame, a lit top edge and a seam across the middle. Set up for centred text in dark ink. */
-function board(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+function board(w: number, h: number): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
   // Read back by crispText.
   const [c, ctx] = canvas(w, h, true);
   plank(ctx, 0, 0, w, h);
@@ -445,7 +483,7 @@ function board(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext
 }
 
 /** board()'s wood at (x, y), and the ink set for its text. */
-function plank(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+function plank(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   px(ctx, x, y, "#7a4f2c", w, h);
   px(ctx, x + 2, y + 2, "#c99257", w - 4, h - 4);
   px(ctx, x + 2, y + 2, "#ddb07a", w - 4, 2);
@@ -465,7 +503,7 @@ export const SIGN = { w: 128, h: 40, cols: 8 } as const;
  * sign `i` at column i % SIGN.cols, row ⌊i / SIGN.cols⌋. A canvas per sign cost ~130 ms
  * over the walk's beds at CPU 10×, mostly the first draw on each new canvas (#571).
  */
-export function signs(labels: string[]): HTMLCanvasElement {
+export function signs(labels: string[]): OffscreenCanvas {
   const rows = Math.ceil(labels.length / SIGN.cols);
   const [c, ctx] = canvas(SIGN.w * SIGN.cols, SIGN.h * rows, true);
   labels.forEach((label, i) => {
@@ -482,7 +520,7 @@ export function signs(labels: string[]): HTMLCanvasElement {
 }
 
 /** Threshold anti-aliased text on a sign so it stays crisp pixels. */
-function crispText(ctx: CanvasRenderingContext2D, w: number, h: number) {
+function crispText(ctx: OffscreenCanvasRenderingContext2D, w: number, h: number) {
   const img = ctx.getImageData(0, 0, w, h);
   for (let i = 0; i < img.data.length; i += 4) {
     const dark = img.data[i] < 140;
@@ -500,7 +538,7 @@ function crispText(ctx: CanvasRenderingContext2D, w: number, h: number) {
 }
 
 /** A taller notice board for a short sentence: up to two lines, as large as fits. */
-export function notice(text: string): HTMLCanvasElement {
+export function notice(text: string): OffscreenCanvas {
   const W = 160;
   const H = 64;
   const [c, ctx] = board(W, H);
@@ -527,7 +565,7 @@ export function notice(text: string): HTMLCanvasElement {
   return c;
 }
 
-export function water(): HTMLCanvasElement {
+export function water(): OffscreenCanvas {
   const c = speckle(5, "#4f9fd6", [
     ["#62b2e4", 90],
     ["#3e88c0", 70],
@@ -538,7 +576,7 @@ export function water(): HTMLCanvasElement {
   return c;
 }
 
-export function lilypad(): HTMLCanvasElement {
+export function lilypad(): OffscreenCanvas {
   const [c, ctx] = canvas(16, 16);
   for (let y = 0; y < 16; y++)
     for (let x = 0; x < 16; x++) {
@@ -551,7 +589,7 @@ export function lilypad(): HTMLCanvasElement {
 }
 
 /** A small pixel arrow that bobs over the selected plant. */
-export function marker(): HTMLCanvasElement {
+export function marker(): OffscreenCanvas {
   const [c, ctx] = canvas(16, 16);
   const rows = [
     "...######...",
@@ -569,7 +607,7 @@ export function marker(): HTMLCanvasElement {
 }
 
 /** The key's late glint (#334): a warm four-point sparkle with a dark outline, so it shows on pale sand and on grass. */
-export function sparkle(): HTMLCanvasElement {
+export function sparkle(): OffscreenCanvas {
   const rows = [
     ".....d.....",
     "....dyd....",
@@ -590,7 +628,7 @@ export function sparkle(): HTMLCanvasElement {
 }
 
 /** Where a tap sends you (#336): a small pale ring on the ground, seen from above. */
-export function spot(): HTMLCanvasElement {
+export function spot(): OffscreenCanvas {
   const rows = ["...####...", ".##....##.", "#........#", "#........#", ".##....##.", "...####..."];
   const [c, ctx] = canvas(10, 10);
   rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, x, y + 2, "#fff6d8")));
@@ -600,7 +638,7 @@ export function spot(): HTMLCanvasElement {
 // ---- Deadpan scenery (#364) -------------------------------------------------
 
 /** Text in one solid colour, with no soft edge: drawn on its own, then only its solid pixels are kept. Left-aligned at `x`, centred on `y`. */
-function hardText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, font: string, color: string) {
+function hardText(ctx: OffscreenCanvasRenderingContext2D, text: string, x: number, y: number, font: string, color: string) {
   const [s, sc] = canvas(ctx.canvas.width, ctx.canvas.height, true);
   sc.font = font;
   sc.textBaseline = "middle";
@@ -613,7 +651,7 @@ function hardText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
  * The notice "No fishing. No fish." put right by hand (#364): the printed
  * text, with `strike` crossed out in red marker and `write` written in after it.
  */
-export function fixedNotice(text: string, strike: string, write: string): HTMLCanvasElement {
+export function fixedNotice(text: string, strike: string, write: string): OffscreenCanvas {
   const W = 160;
   const H = 64;
   const [c, ctx] = board(W, H);
@@ -648,7 +686,7 @@ export function fixedNotice(text: string, strike: string, write: string): HTMLCa
 }
 
 /** The sundial's face (#364), seen from above, noon at the top: a bronze disc with hour marks from 6 in the morning (left) to 6 in the evening (right). */
-export function sundialFace(): HTMLCanvasElement {
+export function sundialFace(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 32);
   for (let y = 0; y < 32; y++)
     for (let x = 0; x < 32; x++) {
@@ -671,7 +709,7 @@ export const stone = () =>
   ]);
 
 /** The mouse door (#364): a tiny arched wooden door in a stone frame, with a brass knob. */
-export function mouseDoor(): HTMLCanvasElement {
+export function mouseDoor(): OffscreenCanvas {
   const rows = [
     "....ssss....",
     "..ssddddss..",
@@ -697,7 +735,7 @@ export function mouseDoor(): HTMLCanvasElement {
 }
 
 /** The mouse door's mat (#364), seen from above: coir with a dark edge and `word` on it (none for a course without one). */
-export function doormat(word: string | null): HTMLCanvasElement {
+export function doormat(word: string | null): OffscreenCanvas {
   const [c, ctx] = canvas(48, 14);
   px(ctx, 0, 0, "#7a5528", 48, 14);
   px(ctx, 1, 1, "#c09048", 46, 12);
@@ -712,7 +750,7 @@ export function doormat(word: string | null): HTMLCanvasElement {
 }
 
 /** The fish that jumps (#364), from the side, head to the right. */
-export function leapingFish(): HTMLCanvasElement {
+export function leapingFish(): OffscreenCanvas {
   const art = Art.LEAPING_FISH;
   const [c, ctx] = canvas(art.rows[0].length, art.rows.length);
   for (const r of Art.runs(art)) px(ctx, r.x, r.y, r.fill, r.w, 1);
@@ -720,7 +758,7 @@ export function leapingFish(): HTMLCanvasElement {
 }
 
 /** Where the fish went in (#364): a pale ring on the water, seen from above. */
-export function ripple(): HTMLCanvasElement {
+export function ripple(): OffscreenCanvas {
   const [c, ctx] = canvas(16, 16);
   for (let y = 0; y < 16; y++)
     for (let x = 0; x < 16; x++) {
@@ -808,7 +846,7 @@ export const batchCell = (i: number) => ({ x: (i % BATCH_COLS) * HI_W, y: Math.f
 // ---- Decorations ----------------------------------------------------------
 
 /** Ground decorations, one atlas of 4 cells of 32×64: tuft, wildflowers, mushrooms, stone. */
-export function decor(): HTMLCanvasElement {
+export function decor(): OffscreenCanvas {
   const [c, ctx] = canvas(128, 64);
   const r = rng(41);
   // 0: grass tuft
@@ -843,7 +881,7 @@ export function decor(): HTMLCanvasElement {
 }
 
 /** A garden lantern on a post, lit (right) and unlit (left), 16×48 each. */
-export function lantern(): HTMLCanvasElement {
+export function lantern(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 48);
   for (const [ox, lit] of [
     [0, false],
@@ -862,7 +900,7 @@ export function lantern(): HTMLCanvasElement {
 }
 
 /** A pixel "z" for the sleeping bloom (#62), pale with a dark edge so it shows on the night sky. */
-export function snoreZ(): HTMLCanvasElement {
+export function snoreZ(): OffscreenCanvas {
   const rows = ["oooooooo", "oZZZZZZo", "ooooZZoo", "..oZZo..", ".oZZo...", "ooZZoooo", "oZZZZZZo", "oooooooo"];
   const [c, ctx] = canvas(8, 8);
   rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "Z" ? "#eef2ff" : "#2a2f4a")));
@@ -870,7 +908,7 @@ export function snoreZ(): HTMLCanvasElement {
 }
 
 /** A soft round glow in a few hard rings, for additive light pools and halos. */
-export function glow(): HTMLCanvasElement {
+export function glow(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 32);
   for (let y = 0; y < 32; y++)
     for (let x = 0; x < 32; x++) {
@@ -884,7 +922,7 @@ export function glow(): HTMLCanvasElement {
   return c;
 }
 
-export function sun(kind: "day" | "dusk"): HTMLCanvasElement {
+export function sun(kind: "day" | "dusk"): OffscreenCanvas {
   const [c, ctx] = canvas(32, 32);
   const [core, rim] = kind === "dusk" ? ["#ffd28a", "#ff9b5e"] : ["#fffbe6", "#ffe58a"];
   for (let y = 0; y < 32; y++)
@@ -900,7 +938,7 @@ export function sun(kind: "day" | "dusk"): HTMLCanvasElement {
  * (moon.ts), lit from the right while it waxes and from the left as it wanes.
  * The dark part is a faint disc, so even a new moon is there to tap.
  */
-export function moon(phase: number): HTMLCanvasElement {
+export function moon(phase: number): OffscreenCanvas {
   const [c, ctx] = canvas(32, 32);
   // Where light meets dark on each row, as a share of the row's half width.
   const k = Math.cos((2 * Math.PI * phase) / MOON_PHASES);
@@ -928,7 +966,7 @@ export function moon(phase: number): HTMLCanvasElement {
  * The sunflower, two frames of 32×64 side by side: its face (left, a small
  * calm smile) and the back of its head (right). No text.
  */
-export function sunflower(): HTMLCanvasElement {
+export function sunflower(): OffscreenCanvas {
   const [c, ctx] = canvas(64, 64);
   for (const [ox, face] of [
     [0, true],
@@ -990,7 +1028,7 @@ export function sunflower(): HTMLCanvasElement {
  * The garden visitors' frames in one small atlas (drawn once): one 32×32 cell
  * each, in this order, standing on the bottom row (kinds/index.ts lists them).
  */
-export function visitors(arts: readonly Art.PixelArt[]): HTMLCanvasElement {
+export function visitors(arts: readonly Art.PixelArt[]): OffscreenCanvas {
   const [c, ctx] = canvas(32 * arts.length, 32);
   arts.forEach((art, i) => {
     const w = art.rows[0].length;
@@ -1021,7 +1059,7 @@ export const LEAVE_CELL = {
 export const LEAVE_CELLS = 4 + GUESTS.length + FIND_IDS.length + 2 * FRUIT_KINDS.length;
 
 /** The bowl, the basket and what it offers, the guests and what they leave, in one small atlas (drawn once), in LEAVE_CELL order. */
-export function leaveAtlas(): HTMLCanvasElement {
+export function leaveAtlas(): OffscreenCanvas {
   const [c, ctx] = canvas(32 * LEAVE_CELLS, 32);
   [
     LeaveArt.BOWL,
@@ -1045,7 +1083,7 @@ export const PRINT_CELL = 8;
 export const PRINT_GUESTS = Object.keys(LeaveArt.PRINT_ROWS) as Guest[];
 
 /** The guests' prints on the path (lying sprites), one cell each, in PRINT_GUESTS order: dark, like damp earth. */
-export function prints(): HTMLCanvasElement {
+export function prints(): OffscreenCanvas {
   const [c, ctx] = canvas(PRINT_CELL * PRINT_GUESTS.length, PRINT_CELL);
   PRINT_GUESTS.forEach((g, i) => {
     const rows = LeaveArt.PRINT_ROWS[g];
@@ -1062,7 +1100,7 @@ export function prints(): HTMLCanvasElement {
 export const PILE_CELL = 16;
 
 /** An autumn leaf pile (walkInto.ts LEAF_PILE), standing on the cell's bottom row. */
-export function leafPile(): HTMLCanvasElement {
+export function leafPile(): OffscreenCanvas {
   const [c, ctx] = canvas(PILE_CELL, PILE_CELL);
   const oy = PILE_CELL - LEAF_PILE.rows.length;
   for (const r of Art.runs(LEAF_PILE)) px(ctx, r.x, oy + r.y, r.fill, r.w, 1);
@@ -1082,7 +1120,7 @@ export const CARRY_CELLS = 9 + RINGS;
  * S6), in one small atlas (drawn once), in CARRY_CELL order. `fruit`: the
  * fruit the dog may fetch this visit (#335 S2); none leaves its cell empty.
  */
-export function carryAtlas(fruit: FruitKind | null): HTMLCanvasElement {
+export function carryAtlas(fruit: FruitKind | null): OffscreenCanvas {
   const [c, ctx] = canvas(32 * CARRY_CELLS, 32);
   const rings = Array.from({ length: RINGS }, (_, i) => CarryArt.ring(5 + i * 5, 32));
   const L = CarryArt.LOOSE_ART;
@@ -1104,7 +1142,7 @@ const TOY_W = 16;
 const TOY_H = 24;
 
 /** The dandelion clock and the blown one, side by side. */
-export function toyAtlas(): HTMLCanvasElement {
+export function toyAtlas(): OffscreenCanvas {
   const [c, ctx] = canvas(TOY_W * TOY_CELLS, TOY_H);
   [ToyArt.CLOCK, ToyArt.BLOWN].forEach((art, i) => {
     const ox = i * TOY_W + Math.floor((TOY_W - art.rows[0].length) / 2);
@@ -1122,7 +1160,7 @@ export const BOAT_PX = { w: 64, h: 32 } as const;
  * big as fits. The font must be loaded first (document.fonts.load): a canvas
  * does not wait for it.
  */
-export function boat(word: string): HTMLCanvasElement {
+export function boat(word: string): OffscreenCanvas {
   const { w, h } = BOAT_PX;
   const [c, ctx] = canvas(w, h);
   const INK = "#3a2416";

@@ -80,8 +80,6 @@ export class SkyWater implements Part {
   private clouds: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
   private sun!: THREE.Sprite;
   private water!: THREE.Texture;
-  /** Tonight's moon (moon.ts moonPhase), worked out as the walk opens. */
-  private moonPhase: number;
   private stars!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
   /** Whether the stars over the hills are out (every lantern is), and how far they have come out, 0 to 1. */
   private starsOut = false;
@@ -91,10 +89,9 @@ export class SkyWater implements Part {
   /** Unit vector toward the sun (or the moon at night): pickScenery and the sunflower's face read it. */
   readonly sunDir = new THREE.Vector3();
 
-  constructor(camera: THREE.PerspectiveCamera, reducedMotion: boolean, moonPhase: number) {
+  constructor(camera: THREE.PerspectiveCamera, reducedMotion: boolean) {
     this.camera = camera;
     this.reducedMotion = reducedMotion;
-    this.moonPhase = moonPhase;
   }
 
   /** The clouds' current positions, for pickScenery (a tap can meet one). Builds one array; called once per tap, never from tick. */
@@ -112,9 +109,9 @@ export class SkyWater implements Part {
    * after the ground's own things: it has no tap targets of its own, so it
    * does not matter to anything but the random sequence, which this keeps.
    */
-  buildSkyAndSun(ctx: BuildCtx) {
-    this.buildSky(ctx);
-    this.buildSun(ctx);
+  buildSkyAndSun(ctx: BuildCtx, far: T.FarTextures) {
+    this.buildSky(ctx, far.cloud);
+    this.buildSun(ctx, far.looks);
     this.buildStars(ctx);
   }
 
@@ -167,7 +164,7 @@ export class SkyWater implements Part {
   }
 
   /** Sky dome, far hills, clouds. */
-  private buildSky(c: BuildCtx) {
+  private buildSky(c: BuildCtx, cloudTex: THREE.Texture) {
     const { rand } = c;
     this.skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false });
     const dome = new THREE.Mesh(new THREE.SphereGeometry(240, 16, 12), this.skyMat);
@@ -184,7 +181,6 @@ export class SkyWater implements Part {
     hillRing.renderOrder = -1;
     c.scene.add(still(hillRing));
     this.hillProfile = T.hillProfile();
-    const cloudTex = T.pixelTexture(T.cloud());
     for (let i = 0; i < 9; i++) {
       const cloud = new THREE.Mesh(new THREE.PlaneGeometry(22, 11), new THREE.MeshBasicMaterial({ map: cloudTex, alphaTest: 0.5, fog: false, depthWrite: false }));
       const a = (i / 9) * Math.PI * 2 + rand();
@@ -197,17 +193,14 @@ export class SkyWater implements Part {
   }
 
   /** The sun (or moon), always on top of the sky and hills. */
-  private buildSun(c: BuildCtx) {
-    const look = (time: TimeOfDay) => {
-      const sky = T.pixelTexture(T.sky(T.SKIES[time], time === "night"));
+  private buildSun(c: BuildCtx, looks: T.FarTextures["looks"]) {
+    for (const { sky, hills } of Object.values(looks)) {
       // The gradient covers the upper half of the dome; below the horizon it clamps.
       sky.repeat.set(1, 2);
       sky.offset.set(0, -1);
-      const hills = T.pixelTexture(T.hills(time === "night"), true);
       hills.repeat.set(HILLS.repeat, 1);
-      return { sky, hills, sun: T.pixelTexture(time === "night" ? T.moon(this.moonPhase) : T.sun(time)) };
-    };
-    this.looks = { day: look("day"), dusk: look("dusk"), night: look("night") };
+    }
+    this.looks = looks;
     this.sun = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, depthWrite: false, transparent: true, alphaTest: 0.5 }));
     this.sun.scale.set(16, 16, 1);
     this.sun.renderOrder = -1;
