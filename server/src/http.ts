@@ -55,13 +55,24 @@ export const decodeBody = Effect.fn("Http.decodeBody")(function* <S extends Sche
   );
 });
 
+/**
+ * CSP sources that allow exactly the page's own inline scripts (the theme
+ * script in index.html), by hash. They come from the built page itself, so
+ * editing the script can't leave a stale hash behind. Every other inline
+ * script stays forbidden.
+ */
+export function inlineScriptHashes(html: string): string[] {
+  return [...html.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => `'sha256-${new Bun.CryptoHasher("sha256").update(m[1] ?? "") /* the group always matches; ?? only satisfies the index type */.digest("base64")}'`);
+}
+
 /** Extra origins the page may talk to (error reporting, analytics), from config.
+ *  scriptHashes: the page's own inline scripts (inlineScriptHashes).
  *  turnstile: the bot check loads a script and an iframe from Cloudflare. */
-export function securityHeaders(connect: string[], https: boolean, turnstile = false): Record<string, string> {
+export function securityHeaders(connect: string[], scriptHashes: string[], https: boolean, turnstile = false): Record<string, string> {
   const cf = turnstile ? " https://challenges.cloudflare.com" : "";
   const csp = [
     "default-src 'self'",
-    `script-src 'self'${cf}`,
+    ["script-src 'self'", ...scriptHashes].join(" ") + cf,
     // React sets style attributes; the garden sets transforms inline.
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",

@@ -20,7 +20,14 @@
     <meta name="twitter:title" content="Perennial — grow a language, 5 minutes a day" />
     <meta name="twitter:description" content="Spaced repetition for Spanish and German, 5 minutes a day. Every word you learn grows into a plant." />
     <meta name="twitter:image" content="https://playperennial.com/og.png" />
-    <script src="/theme-init.js"></script>
+    <!-- Apply the saved theme before the page paints (no flash of the wrong colours).
+         Inline, so the page doesn't wait a round trip for it; the server allows exactly this script in its CSP by hash. -->
+    <script>
+      try {
+        var t = localStorage.getItem("perennial-theme");
+        document.documentElement.dataset.theme = t === "light" || t === "dark" ? t : matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      } catch {} // storage blocked: the default light theme stays
+    </script>
     <link rel="manifest" href="/manifest.webmanifest" />
   </head>
   <body>
