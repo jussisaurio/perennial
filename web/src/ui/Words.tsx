@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { apiMessage, moreExamples } from "../data/ai";
 import { useFeatures } from "../data/server";
@@ -131,7 +131,8 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
         )}
       </div>
       {learner && <Progress learner={learner} lang={lang} />}
-      <div className="row">
+      {/* Search, filter and view in one toolbar: one row on a wide screen, two on a phone. */}
+      <div className="words-bar">
         <input ref={search} className="search" type="search" placeholder={TOUCH ? "Search words or meanings" : "Search words or meanings (/)"} aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} aria-label="Which words">
           <option value="all">All</option>
@@ -141,23 +142,24 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           <option value="suspended">Paused</option>
           {(onAdd || hasMine) && <option value="mine">From my texts</option>}
         </select>
+        <RadioChips<WordsView>
+          className="words-view"
+          label="Show words as"
+          options={[
+            ["list", "List"],
+            ["guide", "Flowers"],
+          ]}
+          value={view}
+          onChange={(v) => {
+            // A word open in one view must not pop up in the other.
+            setOpen(null);
+            setView(v);
+            saveView(v);
+          }}
+        />
       </div>
-      <RadioChips<WordsView>
-        className="words-view"
-        label="Show words as"
-        options={[
-          ["list", "List"],
-          ["guide", "Flowers"],
-        ]}
-        value={view}
-        onChange={(v) => {
-          // A word open in one view must not pop up in the other.
-          setOpen(null);
-          setView(v);
-          saveView(v);
-        }}
-      />
-      <p className="muted small">{plural(shown.length, "word")}</p>
+      {/* An empty list says why in its own line, so "0 words" would only repeat it. */}
+      {shown.length > 0 && <p className="words-count">{count}</p>}
       <p className="sr-only" aria-live="polite">
         {heard}
       </p>
@@ -358,8 +360,14 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
         <ul className="schedule">
           {practised.map((m) => (
             <li key={m.skill}>
-              <strong>{SKILL_NAME[m.skill]}:</strong> next review {m.due <= now ? "now" : relTime(m.due)} · {plural(m.reps, "review")}
-              {m.lapses > 0 && ` · missed ${plural(m.lapses, "time")}`}
+              {/* Each fact stays whole, its dot at the end: a narrow line breaks between facts, never inside "missed 1 time". */}
+              <strong>{SKILL_NAME[m.skill]}:</strong>{" "}
+              {[`next review ${m.due <= now ? "now" : relTime(m.due)}`, plural(m.reps, "review"), ...(m.lapses > 0 ? [`missed ${plural(m.lapses, "time")}`] : [])].map((fact, i, all) => (
+                <Fragment key={i}>
+                  {i > 0 && " "}
+                  <span>{i < all.length - 1 ? `${fact} ·` : fact}</span>
+                </Fragment>
+              ))}
             </li>
           ))}
         </ul>
