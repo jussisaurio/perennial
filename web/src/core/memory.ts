@@ -340,7 +340,12 @@ export class MemoryLog {
     }
     for (const key of gone) this.unlockedBy.delete(key);
     for (const [key, row] of fresh) this.unlockedBy.set(key, row);
-    if (fresh.size || gone.size) this.unlocked = this.unlocked.filter((r) => !gone.has(r.key)).map((r) => fresh.get(r.key) ?? r);
+    // In place: two copies of every unlocked row on each answer were garbage for a major GC (#572).
+    if (fresh.size || gone.size) {
+      let n = 0;
+      for (const r of this.unlocked) if (!gone.has(r.key)) this.unlocked[n++] = fresh.get(r.key) ?? r;
+      this.unlocked.length = n;
+    }
     for (const row of added) this.unlocked.splice(this.unlockedPlace(row), 0, row);
     this.touched = words;
   }
