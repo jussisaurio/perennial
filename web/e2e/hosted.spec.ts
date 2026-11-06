@@ -46,7 +46,7 @@ test("words from a text use AI words; the limit is clear before anything is sent
 
   // Your own words are easy to find again (newest first; one batch shares a time).
   await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("combobox").selectOption("mine");
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("mine");
   await expect(page.locator(".word-row")).toHaveCount(6);
   for (const w of ["halcón", "castor", "lince", "nutria", "tejón", "garza"]) await expect(page.locator(".word-row strong", { hasText: w })).toHaveCount(1);
 });
@@ -55,7 +55,7 @@ test("Perennial AI can write new sentences for a word, and undo removes them", a
   await startCourse(page);
   await addEmail(page);
   await page.getByRole("tab", { name: "Words" }).click();
-  await page.getByRole("combobox").selectOption("new");
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("new");
   await page.locator(".word-row").first().click();
   const detail = page.locator(".detail");
   const before = await detail.locator(".examples li").count();
@@ -89,7 +89,7 @@ test("when the AI word count cannot load, nothing is blocked and the server says
 
   // The Words screen follows the same rule: allowed, and the server says no.
   await page.getByRole("button", { name: /← Words/ }).click();
-  await page.getByRole("combobox").selectOption("new");
+  await page.getByRole("combobox", { name: "Which words" }).selectOption("new");
   await page.locator(".word-row").first().click();
   await expect(page.getByText(/you have none left/)).toHaveCount(0);
   await page.getByRole("button", { name: "Write new sentences" }).click();
