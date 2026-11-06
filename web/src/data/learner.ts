@@ -302,7 +302,14 @@ export class Learners {
     if (first !== undefined) return first;
     this.first.set(lang, null);
     this.pending.set(lang, []);
-    const steps = allReviews(this.langReviews(lang), this.links(lang, deck), retention);
+    const links = this.links(lang, deck);
+    const rows = this.langReviews(lang);
+    // The course order (~16 ms at CPU 10×, once per deck) is one step too: upcoming() reads it right after first paint.
+    const steps = (function* () {
+      courseOrder(deck);
+      yield;
+      return yield* allReviews(rows, links, retention);
+    })();
     void inSlices(steps).then((reviews) => {
       this.first.set(lang, reviews);
       this.notify();
