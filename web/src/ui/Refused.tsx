@@ -5,6 +5,7 @@ import { useLayoutEffect, useSyncExternalStore } from "react";
 import { useStore } from "../data/learner";
 import type { Refused } from "../data/store";
 import { refusedLine } from "./format";
+import { AlertIcon } from "./icons";
 
 export function useRefused(): Refused {
   const store = useStore();
@@ -27,8 +28,9 @@ export function RefusedLine({ since }: { since?: Pick<Refused, "count" | "clock"
   }, [store, lost.count]);
   if (!lost.count) return null;
   return (
-    <p className="error refused" role="status">
-      {refusedLine(lost)}
+    <p className="refused" role="status">
+      <AlertIcon size={18} />
+      <span>{refusedLine(lost)}</span>
     </p>
   );
 }

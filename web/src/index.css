@@ -388,22 +388,28 @@ section { margin-bottom: 1.25rem; }
 .words-empty { margin: 2rem 0; text-align: center; font: 1.1rem var(--display); color: var(--ink-2); }
 
 /* ---------- session ---------- */
-.session { position: relative; max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
+/* --card-top and --kicker-h: the card's top padding and the kicker's height, which place the card's plant (.card-plant). */
+.session { --card-top: clamp(2rem, 9vh, 6rem); --kicker-h: 1.8rem; position: relative; max-width: 42rem; margin: 0 auto; padding: 0 16px; min-height: 100dvh; display: flex; flex-direction: column; }
 .session-bar { display: flex; align-items: center; gap: 0.8rem; padding: 1rem 0 0.25rem; }
 .vine { position: relative; flex: 1; height: 18px; display: flex; align-items: center; }
 .vine::before { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--line); border-radius: 2px; }
 .vine .grow { position: absolute; left: 0; height: 3px; background: var(--leaf); border-radius: 3px; transition: width 1s linear; }
-.vine .tip { position: absolute; transform: translate(-50%, -1px); transition: left 1s linear; color: var(--leaf); }
+/* The sprout's stem ends 4/24 above its box's foot: placed so, it grows from the line (9px up the 18px vine). */
+.vine .tip { position: absolute; bottom: calc(9px - 16px * 4 / 24); transform: translateX(-50%); transition: left 1s linear; color: var(--leaf); }
+.vine .tip svg { display: block; }
 .time-left { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5rem; text-align: right; }
 
-.card { flex: 1; display: flex; flex-direction: column; gap: 0.85rem; padding: clamp(2rem, 9vh, 6rem) 0 1rem; animation: card-in 0.38s var(--ease) both; }
+.card-stage { position: relative; flex: 1; display: flex; flex-direction: column; }
+/* Under the "not saved" notice the card needs less air above it. */
+.refused + .card-stage { --card-top: 1.5rem; }
+.card { flex: 1; display: flex; flex-direction: column; gap: 0.85rem; padding: var(--card-top) 0 1rem; animation: card-in 0.38s var(--ease) both; }
 /* Read by a screen reader, not shown. */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(0.99); } to { opacity: 1; transform: none; } }
 .kicker {
   align-self: flex-start; display: inline-flex; align-items: center; gap: 0.4rem;
   font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
-  padding: 0.35rem 0.7rem 0.35rem 0.55rem; border-radius: 999px;
+  height: var(--kicker-h); padding: 0 0.7rem 0 0.55rem; border-radius: 999px;
 }
 .kicker.read { background: var(--leaf-soft); color: var(--leaf); }
 .kicker.listen { background: var(--sky-soft); color: var(--sky); }
@@ -413,7 +419,8 @@ section { margin-bottom: 1.25rem; }
 
 .word { font: clamp(2.8rem, 10vw, 4.2rem)/1.05 var(--display); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; word-break: break-word; }
 .gloss { font-size: 1.3rem; color: var(--ink-2); }
-.pos { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 0.15rem; }
+/* Like a dictionary: a quiet italic after the serif headword, not shouted caps. */
+.pos { font: italic 0.85em var(--display); color: var(--muted); margin-right: 0.3rem; }
 .sentence { font-size: 1.35rem; line-height: 1.6; margin: 0.25rem 0 0; }
 .sentence.big { font-size: clamp(1.55rem, 4.5vw, 2rem); line-height: 1.45; }
 .translation { color: var(--muted); margin: 0; font-size: 1.05rem; }
@@ -426,7 +433,7 @@ section { margin-bottom: 1.25rem; }
 .grown { background: linear-gradient(transparent 86%, color-mix(in oklab, var(--leaf-2), transparent 35%) 86%); }
 mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color: inherit; padding: 0 0.08em; font-weight: 600; }
 /* The dark sun-soft is a muddy brown under a word: a see-through sun reads as a highlighter. */
-:root[data-theme="dark"] mark { background: linear-gradient(transparent 58%, color-mix(in oklab, var(--sun), transparent 62%) 58%); }
+:root[data-theme="dark"] mark { background: linear-gradient(transparent 70%, color-mix(in oklab, var(--sun), transparent 55%) 70%); }
 .blank { display: inline-block; border-bottom: 2.5px solid var(--persimmon); margin: 0 0.1em; animation: blink 1.6s ease-in-out infinite; }
 @keyframes blink { 50% { border-color: var(--persimmon-soft); } }
 .example { border-top: 1px dashed var(--line); padding-top: 1rem; margin-top: 0.5rem; }
@@ -443,16 +450,26 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 }
 .play::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--sky-soft); animation: ripple 2.2s var(--ease) infinite; }
 @keyframes ripple { from { transform: scale(0.9); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+/* Two equal halves of the card's width. The fade is short and inside the padding: text that scrolls under the bar is hidden, never half seen. */
 .actions {
-  margin-top: auto; display: flex; gap: 0.7rem; justify-content: flex-end; flex-wrap: wrap;
-  position: sticky; bottom: 0; padding: 1.5rem 0 max(1.1rem, env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, var(--paper) 35%);
+  margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem;
+  position: sticky; bottom: 0; padding: 1.25rem 0 max(1.1rem, env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, var(--paper) 1rem);
 }
-.actions button { padding: 0.9rem 1.5rem; font-size: 1.05rem; font-weight: 600; }
-/* Two answers side by side on a phone: less side padding, so "I remembered" fits on one line down to 320 px (#202). */
-@media (max-width: 480px) { .actions button { flex: 1; padding-inline: 0.6rem; text-wrap: balance; } }
-/* The summary's labels are longer: each button keeps its label on one line, and the second moves to its own row if both do not fit (#264). */
-.summary .actions button { flex: 1 1 auto; white-space: nowrap; }
+/* One button takes the right half, where the two answers will be. */
+.actions > :only-child { grid-column: 2; }
+/* The same corners as the two-line answer choices (.answer-btn). */
+.actions button { padding: 0.9rem 1.25rem; font-size: 1.05rem; font-weight: 600; border-radius: 16px; }
+/* On a phone one button takes the whole row; two answers get less side padding, so "I remembered" fits on one line down to 320 px (#202). */
+@media (max-width: 480px) {
+  .actions > :only-child { grid-column: 1 / -1; }
+  .actions button { padding-inline: 0.6rem; text-wrap: balance; }
+}
+/* The summary's labels are longer and keep to one line: on a phone the two stack, full width (#264). */
+.summary .actions button { white-space: nowrap; }
+@media (max-width: 480px) { .summary .actions { grid-template-columns: 1fr; } }
+/* A coloured glow under an answer reads as a stain on the dark paper. */
+:root[data-theme="dark"] .actions button.fail, :root[data-theme="dark"] .actions button.pass { box-shadow: none; }
 .answer { font-size: 1.5rem; padding: 0.85rem 1.1rem; border-radius: 14px; border-width: 1.5px; }
 .answer.ok { border-color: var(--leaf); background: var(--leaf-soft); }
 .answer.bad { border-color: var(--persimmon); background: var(--persimmon-soft); animation: shake 0.35s; }
@@ -590,10 +607,11 @@ details.keep-garden > summary { display: flex; color: var(--ink-2); }
 details.danger { margin-top: 2.5rem; }
 .error { color: var(--persimmon); font-size: 0.9rem; margin: 0; }
 /* Writes the server refused (#253): in place, above the card or in Settings. */
-.refused { margin: 0.5rem 0; }
-/* In a session, clear of the card's plant at the top right (.card-plant). */
-.session > .refused { margin-right: 84px; }
-@media (max-width: 480px) { .session > .refused { margin-right: 66px; } }
+.refused {
+  display: flex; align-items: flex-start; gap: 0.55rem; margin: 0.5rem 0; padding: 0.7rem 0.9rem; border-radius: 14px;
+  background: var(--persimmon-soft); color: var(--ink); font-size: 0.9rem; line-height: 1.45;
+}
+.refused svg { flex: none; color: var(--persimmon); margin-top: 0.1rem; }
 /* The space below sits on the whole head, not the h1: on phones the h1 is shorter
    than the Add words button, so the button touched the filter row below (#116). */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
@@ -625,7 +643,8 @@ details.more .stats { border-top: none; margin-top: 0.5rem; grid-template-column
 .answer-btn.primary span { color: color-mix(in oklab, var(--paper), transparent 25%); }
 @media (max-width: 420px) { .answers { grid-template-columns: 1fr; } }
 button.undo { padding: 0.35rem 0.7rem; color: var(--ink-2); font-size: 0.88rem; border: 1px solid var(--line); background: var(--card); }
-button.undo:disabled { opacity: 0.35; }
+/* Disabled, it keeps its shape: quieter text and outline, not the whole pill faded. */
+button.undo:disabled { opacity: 1; background: transparent; color: color-mix(in oklab, var(--muted), transparent 35%); border-color: var(--line-soft); }
 .shortcut-help { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgb(0 0 0 / 0.35); padding: 16px; animation: rise 0.2s var(--ease); }
 .shortcut-help .panel { max-width: 26rem; width: 100%; }
 .shortcut-help h2 { margin-top: 0; }
@@ -650,7 +669,9 @@ button.tok:active { transform: none; }
 .answer.warn { border-color: var(--sun); background: var(--sun-soft); }
 mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; padding: 0 0.05em; font-weight: 700; }
 .examples .author { display: block; font-size: 0.75rem; color: var(--muted); }
-.card-plant { position: absolute; top: 58px; right: 8px; pointer-events: none; animation: rise 0.4s var(--ease) both; }
+/* At the right end of the kicker's row, its soil (5px above its box's foot, 16px in from its right) level with the kicker's foot and the column's edge. */
+.card-stage { --plant-foot: calc(var(--card-top) + var(--kicker-h) + 5px); }
+.card-plant { position: absolute; top: calc(var(--plant-foot) - 76px); right: -16px; pointer-events: none; animation: rise 0.4s var(--ease) both; }
 /* The plant's moment after a good answer (Growth.tsx): where the answer buttons were, which step aside for it. */
 /* .growth-spot: the same box, always there and empty. Session reads it as an answer comes, so the moment reads no layout. */
 .growth, .growth-spot { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translateX(-50%); height: 132px; pointer-events: none; }
@@ -662,7 +683,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .session.growing .actions, .session.growing .question { opacity: 0; pointer-events: none; }
 /* The corner plant would show the old form beside the growing one. Its "rise" animation holds its opacity, so hide it this way. */
 .session.growing .card-plant { visibility: hidden; }
-@media (max-width: 480px) { .card-plant { top: 54px; right: 2px; transform: scale(0.85); transform-origin: top right; } }
+@media (max-width: 480px) { .card-plant { transform: scale(0.85); transform-origin: bottom right; } }
 
 /* ---- Walk-in garden: a 90s game in a cosy frame ---------------------- */
 /* Without this the figure keeps the browser's 40 px side margins: caption indented, garden narrowed. */
@@ -918,8 +939,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* A known word's page: give its seed, or share a picture of it (#213, #225). */
 .guide-share { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.2rem 0.6rem; margin-top: 0.3rem; }
 
-/* A visitor watching the session (#210): at the foot of the card's plant (.card-plant: 76px at top 58px, right 8px), on its left. It takes no taps. */
-.session-watcher { position: absolute; top: calc(58px + 76px); right: calc(8px + 76px); transform: translateY(-100%); pointer-events: none; animation: watcher-in 0.7s var(--ease) both; }
+/* A visitor watching the session (#210): at the foot of the card's plant (.card-plant, 76px wide), on its left. It takes no taps. */
+.session-watcher { position: absolute; top: var(--plant-foot); right: 60px; transform: translateY(-100%); pointer-events: none; animation: watcher-in 0.7s var(--ease) both; }
 .session.growing .session-watcher { visibility: hidden; }
 @keyframes watcher-in { from { transform: translate(14px, -100%); opacity: 0; } to { transform: translateY(-100%); opacity: 1; } }
-@media (max-width: 480px) { .session-watcher { top: calc(54px + 65px); right: calc(2px + 65px); } }
+@media (max-width: 480px) { .session-watcher { right: 49px; } }
