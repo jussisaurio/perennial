@@ -327,7 +327,7 @@ function* allReviews(rows: readonly ReviewRow[], links: Links, retention: number
     byWord.set(id, list);
     yield;
   }
-  yield* log.replaying();
+  yield* log.building();
   return { links, log, byWord };
 }
 

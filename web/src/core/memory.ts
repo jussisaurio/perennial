@@ -188,6 +188,8 @@ export class MemoryLog {
   private cached: MemoryRow[] | null = null;
   /** The words whose rows the last rows() changed; null when it built them all. */
   touched: ReadonlySet<string> | null = null;
+  /** building() made the rows, and no rows() has asked for them yet. */
+  private ahead = false;
 
   constructor(retention: number, resolve: (id: string) => string) {
     this.retention = retention;
@@ -241,11 +243,14 @@ export class MemoryLog {
 
   rows(): MemoryRow[] {
     if (this.cached) {
-      this.touched = new Set();
+      // Rows that building() made ahead are all new to their first rows().
+      this.touched = this.ahead ? null : new Set();
+      this.ahead = false;
       return this.cached;
     }
     if (this.changed) this.patch(this.changed);
-    else this.build();
+    else for (const _ of this.building());
+    this.ahead = false;
     this.changed = new Set();
     this.cached = this.replayed.concat(this.unlocked);
     return this.cached;
@@ -257,12 +262,34 @@ export class MemoryLog {
     return this.groups.get(key)?.row ?? this.unlockedBy.get(key);
   }
 
-  /** Replay each group not replayed yet, one step per group, so a long first build can pause between steps (#486). rows() then only puts them in order. */
-  *replaying(): Generator<void> {
+  /**
+   * Build every row, one step per group, so a long first build can pause
+   * between steps (#486). The next rows() then has them all, with no work:
+   * the first render no longer pays for the unlocks.
+   */
+  *building(): Generator<void> {
+    this.replayed.length = 0;
+    this.at.clear();
+    this.unlockedBy.clear();
+    this.unlocked = [];
     for (const [key, g] of this.groups) {
-      this.replay(key, g);
+      this.at.set(key, this.replayed.length);
+      const row = this.replay(key, g);
+      this.replayed.push(row);
+      // Unlocks follow the reading rows' order. They need only the reading row, and which groups exist.
+      if (g.skill === "read")
+        for (const skill of ["listen", "write"] as const) {
+          const u = this.unlockFrom(row, skill);
+          if (!u) continue;
+          this.unlockedBy.set(u.key, u);
+          this.unlocked.push(u);
+        }
       yield;
     }
+    this.touched = null;
+    this.changed = new Set();
+    this.cached = this.replayed.concat(this.unlocked);
+    this.ahead = true;
   }
 
   private replay(key: string, g: Group): MemoryRow {
@@ -272,18 +299,6 @@ export class MemoryLog {
     }
     // Every group in the log has reviews, and reviews replay to a row.
     return g.row!;
-  }
-
-  private build() {
-    this.replayed.length = 0;
-    this.at.clear();
-    for (const [key, g] of this.groups) {
-      this.at.set(key, this.replayed.length);
-      this.replayed.push(this.replay(key, g));
-    }
-    this.unlockedBy.clear();
-    this.unlocked = this.unlockAll();
-    this.touched = null;
   }
 
   /** Only the changed groups, and the unlocks of their words. */
@@ -334,22 +349,6 @@ export class MemoryLog {
       else hi = mid;
     }
     return lo;
-  }
-
-  /** Every unlocked row, in the order of the reading rows. Only build() asks, with no unlocks yet. */
-  private unlockAll(): MemoryRow[] {
-    const rows: MemoryRow[] = [];
-    for (const g of this.groups.values()) {
-      if (g.skill !== "read") continue;
-      for (const skill of ["listen", "write"] as const) {
-        // build() has replayed every group by now, and every group has reviews.
-        const row = this.unlockFrom(g.row!, skill);
-        if (!row) continue;
-        this.unlockedBy.set(row.key, row);
-        rows.push(row);
-      }
-    }
-    return rows;
   }
 
   private unlock(wordId: string, skill: Exclude<Skill, "read">): MemoryRow | null {
