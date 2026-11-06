@@ -23,6 +23,7 @@ import { sessionUserId } from "./auth";
 import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
 import { ApiError, HttpError, request } from "./http";
 import { reportBadAnswer, reportError } from "../observability";
+import { Learners } from "./learner";
 import { makeTable } from "./table";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import { OtherUser, sendQueued, shouldRetry } from "./send";
@@ -100,6 +101,10 @@ export async function createStore(userId: string, email: string | null) {
     user_sentence: makeTable<UserSentenceRow>("user_sentence", (r) => r.id, read, sync.signal, signedOut),
   };
   type Table = keyof typeof collections;
+  const disposers = new Set<() => void>();
+  const onDispose = (cb: () => void) => void disposers.add(cb);
+  // Now, while the first read is under way: see Learners.
+  const learners = new Learners({ collections, onDispose });
   const stopSync = () => {
     // The read under way ends; aborting `sync` stops the tables applying it (makeTable) and the request itself.
     void queryClient.cancelQueries();
@@ -144,8 +149,6 @@ export async function createStore(userId: string, email: string | null) {
     const code = e._tag === "ApiError" ? e.body.error : null;
     setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (code === "review_from_the_future" ? 1 : 0), gardenClock: refused.gardenClock + (code === "garden_from_the_future" ? 1 : 0) });
   };
-
-  const disposers = new Set<() => void>();
 
   const storage = await outboxStorage(userId);
   if (storage) await adoptQueues(userId, storage);
@@ -236,8 +239,10 @@ export async function createStore(userId: string, email: string | null) {
       refusedListeners.add(cb);
       return () => void refusedListeners.delete(cb);
     },
+    /** The learners of every language, kept live (data/learner.ts). */
+    learners,
     /** Runs `cb` when the store is disposed: for what follows the tables itself (data/learner.ts). */
-    onDispose: (cb: () => void) => void disposers.add(cb),
+    onDispose,
     dispose() {
       // First: a collection is cleaned up only once nothing follows it.
       for (const d of disposers) d();

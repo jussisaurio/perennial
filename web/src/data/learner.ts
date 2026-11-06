@@ -4,7 +4,7 @@
 
 import { teachable } from "../content/languages";
 import { courseOrder, placed, sinceLastPlaced, walkAgain, walkCourse, type Walk } from "../content/order";
-import { useLiveQuery, type ChangeMessage } from "@tanstack/react-db";
+import type { ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { DAY_MS, startOfDay } from "../core/day";
 import { firstReviewed, MemoryLog, reviewedAt, memKey, type MemoryRow } from "../core/memory";
@@ -81,9 +81,8 @@ export function useDeck(lang: string | undefined): { deck: LoadedDeck | null; fa
 
 /** The learner's courses, and whether they have loaded: "none yet" is not "none". */
 export function useCourses(): { courses: CourseRow[]; ready: boolean } {
-  const store = useStore();
-  const { data, isReady } = useLiveQuery((q) => q.from({ c: store.collections.course }));
-  return { courses: teachable((data ?? []) as CourseRow[]), ready: isReady };
+  const source = useStore().learners;
+  return useSyncExternalStore(source.subscribe, source.courseList);
 }
 
 // ---------- derivation ----------
@@ -130,7 +129,7 @@ const userWordToWord = (u: UserWordRow, i: number, status: Word["status"]): Word
 
 /** Everything the screens need about one language, kept live. Null while loading. Every screen shares one (see Learners). */
 export function useLearner(lang: string | undefined): Learner | null {
-  const source = learners(useStore());
+  const source = useStore().learners;
   // A deck that fails to load leaves this null: the app shows that error (Main in App.tsx).
   const { deck } = useDeck(lang);
   return useSyncExternalStore(source.subscribe, () => (lang && deck ? source.get(lang, deck) : null));
@@ -209,9 +208,13 @@ export class Learners {
   /** Each language's first build of its reviews, words and memory: null while it runs (firstBuild). */
   private readonly first = new Map<string, First | null>();
 
-  private readonly store: Store;
+  /** courseList's last answer, and the table it was made from. */
+  private courseCache: { version: number; ready: boolean; list: { courses: CourseRow[]; ready: boolean } } | null = null;
 
-  constructor(store: Store) {
+  private readonly store: Pick<Store, "collections" | "onDispose">;
+
+  /** Made with the store, before the rows arrive: they then come in a slice at a time, not all copied in one task at the first render (#447). */
+  constructor(store: Pick<Store, "collections" | "onDispose">) {
     this.store = store;
     const c = store.collections;
     const follow = <T extends object>(collection: { subscribeChanges(cb: (changes: ChangeMessage<T>[]) => void, o: { includeInitialState: boolean }): { unsubscribe(): void }; onFirstReady(cb: () => void): () => void }, mirror: Mirror<T>, also?: (changes: ChangeMessage<T>[]) => void) => {
@@ -241,6 +244,16 @@ export class Learners {
   subscribe = (l: () => void) => {
     this.listeners.add(l);
     return () => void this.listeners.delete(l);
+  };
+
+  /** The teachable courses, and whether they have loaded: "none yet" is not "none". The same object until either changes. */
+  courseList = (): { courses: CourseRow[]; ready: boolean } => {
+    const ready = this.store.collections.course.isReady();
+    const last = this.courseCache;
+    if (last && last.version === this.courses.version && last.ready === ready) return last.list;
+    const list = { courses: teachable([...this.courses.rows.values()]), ready };
+    this.courseCache = { version: this.courses.version, ready, list };
+    return list;
   };
 
   private notify() {
@@ -608,18 +621,6 @@ export function perLearnerDay<T>(derive: (l: Learner, now: number) => T): (l: Le
     cache.set(l, { day, value });
     return value;
   };
-}
-
-const sources = new WeakMap<Store, Learners>();
-
-/** The store's learners, made on first use. */
-function learners(store: Store): Learners {
-  let s = sources.get(store);
-  if (!s) {
-    s = new Learners(store);
-    sources.set(store, s);
-  }
-  return s;
 }
 
 // ---------- writes ----------
