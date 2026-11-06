@@ -171,6 +171,9 @@ input[type="file"] { padding: 0.5rem; }
 nav.top { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 0 0.75rem; }
 .landing-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .landing-signin { margin-top: 1.25rem; }
+/* Sign-in: the two ways in, and the email step's button, are full width like the field; the code link is a quiet afterthought. */
+.signin-wide { width: 100%; max-width: 26rem; }
+.form .signin-have { justify-self: start; font-size: 0.88rem; }
 .wordmark { display: inline-flex; align-items: center; gap: 0.35rem; font: 1.55rem/1 var(--display); letter-spacing: -0.02em; color: inherit; text-decoration: none; }
 /* The language: a garden per course (ui/CourseSwitcher.tsx). */
 .course-switch { position: relative; }

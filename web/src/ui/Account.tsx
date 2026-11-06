@@ -47,6 +47,7 @@ export function SignIn({ cta }: { cta: string }) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"email" | "code">("email");
+  const [byEmail, setByEmail] = useState(false);
   const [sent, setSent] = useState<Sent>("sent");
   const [busy, setBusy] = useState<"send" | "sign-in" | "google" | null>(null);
   const [error, setError] = useState(() => (googleSignInFailed() ? "Signing in with Google did not finish. Try again, or use an email code." : ""));
@@ -89,6 +90,21 @@ export function SignIn({ cta }: { cta: string }) {
     </p>
   );
 
+  // With Google on, the first screen is just the two ways in, so each label alone says what happens next.
+  if (step === "email" && google && !byEmail)
+    return (
+      <div className="form">
+        <button className="secondary signin-wide" type="button" disabled={!!busy} onClick={() => void run("google", signInWithGoogle)}>
+          <GoogleMark />
+          Continue with Google
+        </button>
+        <button className="secondary signin-wide" type="button" disabled={!!busy} onClick={() => (setByEmail(true), setError(""))}>
+          Email me a code
+        </button>
+        {alert}
+      </div>
+    );
+
   if (step === "email")
     return (
       <form
@@ -100,26 +116,15 @@ export function SignIn({ cta }: { cta: string }) {
       >
         <label>
           Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" required autoFocus={byEmail} />
         </label>
-        <div className="row">
-          <button className="primary" type="submit" disabled={!!busy || !email.includes("@")}>
-            {busy === "send" ? sendingLabel() : cta}
-          </button>
-          <button className="ghost" type="button" disabled={!!busy || !email.includes("@")} onClick={() => (setSent("have-code"), setStep("code"), setError(""))}>
-            Enter a code I already have
-          </button>
-        </div>
+        <button className="primary signin-wide" type="submit" disabled={!!busy || !email.includes("@")}>
+          {busy === "send" ? sendingLabel() : cta}
+        </button>
         {alert}
-        <p className="muted small">You do not need a password. We send you a code by email.</p>
-        {google && (
-          <div className="row">
-            <button className="secondary" type="button" disabled={!!busy} onClick={() => void run("google", signInWithGoogle)}>
-              <GoogleMark />
-              Continue with Google
-            </button>
-          </div>
-        )}
+        <button className="ghost signin-have" type="button" disabled={!!busy || !email.includes("@")} onClick={() => (setSent("have-code"), setStep("code"), setError(""))}>
+          Enter a code I already have
+        </button>
       </form>
     );
 
@@ -185,7 +190,7 @@ export function AccountPanel() {
     return (
       <div className="form">
         <p className="small">
-          <strong>Keep your garden safe.</strong> Sign in with your email to keep your words on all your devices{ai && " and to use Perennial AI"}. If you have no account yet, this makes one. Your garden so far comes with you.
+          <strong>Keep your garden safe.</strong> Sign in to keep your words on all your devices{ai && " and to use Perennial AI"}. If you have no account yet, this makes one. Your garden so far comes with you.
         </p>
         <SignIn cta="Send me a code" />
       </div>
