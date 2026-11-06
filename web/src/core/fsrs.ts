@@ -1,92 +1,54 @@
-// FSRS-6 (Free Spaced Repetition Scheduler), following py-fsrs / fsrs-rs.
-// https://github.com/open-spaced-repetition/awesome-fsrs/wiki/The-Algorithm
+// FSRS-6 (Free Spaced Repetition Scheduler), from ts-fsrs's FSRS-6 model.
+// https://github.com/open-spaced-repetition/ts-fsrs
 //
 // Perennial only uses grades 1 (forgot) and 3 (got it) from the UI, plus 4 for
 // "I already know this word". Grade 2 is supported for completeness.
+// The review log is replayed on every device (replay below), so the
+// scheduling state, fuzz included, stays our own pure fold.
 
+import { FSRS6Algorithm, FSRS6_DEFAULT_WEIGHTS, FSRS6_MODEL_BOUNDS } from "ts-fsrs/models/fsrs-6";
 import { hash32 } from "../lib/seed";
 import { DAY_MS } from "./day";
 
 export type Grade = 1 | 2 | 3 | 4;
-
-const DEFAULT_W: readonly number[] = [
-  0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835,
-  0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542,
-];
-
-const S_MIN = 0.001;
-const S_MAX = 36500;
 
 export interface Memory {
   s: number; // stability, days: time for R to drop from 1 to 0.9
   d: number; // difficulty, 1..10
 }
 
-const clampD = (d: number) => Math.min(10, Math.max(1, d));
-const clampS = (s: number) => Math.min(S_MAX, Math.max(S_MIN, s));
-
 export class FSRS {
   readonly w: readonly number[];
-  private readonly decay: number;
-  private readonly factor: number;
+  private readonly algo: FSRS6Algorithm;
 
-  constructor(w: readonly number[] = DEFAULT_W) {
+  constructor(w: readonly number[] = FSRS6_DEFAULT_WEIGHTS) {
     if (w.length !== 21) throw new Error(`FSRS-6 needs 21 weights, got ${w.length}`);
     this.w = w;
-    this.decay = -w[20];
-    this.factor = Math.pow(0.9, 1 / this.decay) - 1;
+    // Short-term on: a review on the same day uses FSRS's own same-day formula.
+    this.algo = new FSRS6Algorithm([...w], true, FSRS6_MODEL_BOUNDS);
   }
 
   /** Probability of recall after `t` days at stability `s`. */
   retrievability(t: number, s: number): number {
-    return Math.pow(1 + (this.factor * Math.max(0, t)) / s, this.decay);
+    return this.algo.forgetting_curve(Math.max(0, t), s);
   }
 
-  /** Days until R falls to `retention`. Fractional; callers decide rounding. */
+  /** Whole days (at least 1) until R falls to `retention`. */
   interval(s: number, retention: number): number {
-    const i = (s / this.factor) * (Math.pow(retention, 1 / this.decay) - 1);
-    return Math.min(S_MAX, Math.max(0, i));
-  }
-
-  private initD(g: Grade): number {
-    return this.w[4] - Math.exp(this.w[5] * (g - 1)) + 1;
+    return this.algo.next_interval(s, retention);
   }
 
   init(g: Grade): Memory {
-    return { s: clampS(this.w[g - 1]), d: clampD(this.initD(g)) };
-  }
-
-  private nextD(d: number, g: Grade): number {
-    const delta = -this.w[6] * (g - 3);
-    const damped = d + (delta * (10 - d)) / 9;
-    return clampD(this.w[7] * this.initD(4) + (1 - this.w[7]) * damped);
+    const m = this.algo.next_state(null, 0, g);
+    return { s: m.stability, d: m.difficulty };
   }
 
   /** New memory after a review `t` days (fractional) after the previous one. */
   next(m: Memory, t: number, g: Grade): Memory {
-    const w = this.w;
-    const d = this.nextD(m.d, g);
-    let s: number;
-    if (t < 1) {
-      // Same-day review: short-term stability formula.
-      let inc = Math.exp(w[17] * (g - 3 + w[18])) * Math.pow(m.s, -w[19]);
-      if (g >= 3) inc = Math.max(inc, 1);
-      s = m.s * inc;
-    } else {
-      const r = this.retrievability(t, m.s);
-      if (g === 1) {
-        const longTerm =
-          w[11] * Math.pow(m.d, -w[12]) * (Math.pow(m.s + 1, w[13]) - 1) * Math.exp(w[14] * (1 - r));
-        s = Math.min(longTerm, m.s / Math.exp(w[17] * w[18]));
-      } else {
-        const hard = g === 2 ? w[15] : 1;
-        const easy = g === 4 ? w[16] : 1;
-        s =
-          m.s *
-          (1 + Math.exp(w[8]) * (11 - m.d) * Math.pow(m.s, -w[9]) * (Math.exp(w[10] * (1 - r)) - 1) * hard * easy);
-      }
-    }
-    return { s: clampS(s), d };
+    // ts-fsrs counts elapsed time in days and treats 0 as "same day"; our log
+    // has ms timestamps, so anything under a day is a same-day review.
+    const n = this.algo.next_state({ stability: m.s, difficulty: m.d }, t < 1 ? 0 : t, g);
+    return { s: n.stability, d: n.difficulty };
   }
 }
 
