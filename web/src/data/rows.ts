@@ -4,7 +4,8 @@
 import { Option, Schema } from "effect";
 import type { GardenLeft } from "perennial-contract";
 
-export type Skill = "read" | "listen" | "write";
+export const SKILLS = ["read", "listen", "write"] as const;
+export type Skill = (typeof SKILLS)[number];
 
 /** A new course's settings until the learner changes them (the server and the course table use the same). */
 export const COURSE_DEFAULTS = { minutes: 7, retention: 0.9 } as const;

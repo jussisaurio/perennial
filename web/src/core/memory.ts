@@ -121,17 +121,28 @@ interface Group {
 
 /**
  * The memory of a review log that changes one review at a time: a change
- * replays only its own word and skill, not the whole log. rows() always equals
- * deriveMemory over the same reviews in the same order. The order matters:
- * the planner breaks ties by it, so a group keeps the place of its first review.
+ * replays only its own word and skill, not the whole log, and the other rows
+ * stay the same objects. rows() always equals deriveMemory over the same
+ * reviews in the same order. The order matters: the planner breaks ties by
+ * it, so a group keeps the place of its first review.
  */
 export class MemoryLog {
   private readonly groups = new Map<string, Group>();
   /** Which group each review is in. */
   private readonly keyOf = new Map<string, string>();
-  private cached: MemoryRow[] | null = null;
   readonly retention: number;
   private readonly resolve: (id: string) => string;
+  /** The rows of the groups, in the order of the groups, and where each group's row is. */
+  private readonly replayed: MemoryRow[] = [];
+  private readonly at = new Map<string, number>();
+  /** The unlocked but unpractised rows, in the order of their words' reading rows, and each by its key. */
+  private unlocked: MemoryRow[] = [];
+  private readonly unlockedBy = new Map<string, MemoryRow>();
+  /** Groups changed since the last rows(); null: build every row again (a group went away, or rows() was never asked). */
+  private changed: Set<string> | null = null;
+  private cached: MemoryRow[] | null = null;
+  /** The words whose rows the last rows() changed; null when it built them all. */
+  touched: ReadonlySet<string> | null = null;
 
   constructor(retention: number, resolve: (id: string) => string) {
     this.retention = retention;
@@ -155,6 +166,7 @@ export class MemoryLog {
     else g.list.push(entry);
     this.keyOf.set(r.id, key);
     g.row = undefined;
+    this.changed?.add(key);
     this.cached = null;
     return true;
   }
@@ -172,35 +184,110 @@ export class MemoryLog {
     if (i === 0 && g.list.length > 1) return false;
     g.list.splice(i, 1);
     this.keyOf.delete(id);
-    if (!g.list.length) this.groups.delete(key);
     g.row = undefined;
+    // A group that goes moves every row after it: rare (an undo), so the rows are built again.
+    if (!g.list.length) {
+      this.groups.delete(key);
+      this.changed = null;
+    } else this.changed?.add(key);
     this.cached = null;
     return true;
   }
 
   rows(): MemoryRow[] {
-    if (this.cached) return this.cached;
-    const rows: MemoryRow[] = [];
-    const read = new Map<string, MemoryRow>();
+    if (this.cached) {
+      this.touched = new Set();
+      return this.cached;
+    }
+    if (this.changed) this.patch(this.changed);
+    else this.build();
+    this.changed = new Set();
+    this.cached = this.replayed.concat(this.unlocked);
+    return this.cached;
+  }
+
+  /** The row of one word and skill, as of the last rows(). */
+  get(key: string): MemoryRow | undefined {
+    // Every group has its row by then; a key with no group may be unlocked.
+    return this.groups.get(key)?.row ?? this.unlockedBy.get(key);
+  }
+
+  private replay(key: string, g: Group): MemoryRow {
+    if (g.row === undefined) {
+      const st = replay(fsrs, g.list, this.retention, key);
+      g.row = st && { key, wordId: g.wordId, skill: g.skill, ...st };
+    }
+    // Every group in the log has reviews, and reviews replay to a row.
+    return g.row!;
+  }
+
+  private build() {
+    this.replayed.length = 0;
+    this.at.clear();
     for (const [key, g] of this.groups) {
-      if (g.row === undefined) {
-        const st = replay(fsrs, g.list, this.retention, key);
-        g.row = st && { key, wordId: g.wordId, skill: g.skill, ...st };
-      }
-      if (!g.row) continue;
-      rows.push(g.row);
-      if (g.skill === "read") read.set(g.wordId, g.row);
+      this.at.set(key, this.replayed.length);
+      this.replayed.push(this.replay(key, g));
     }
-    // Harder skills unlock once reading is genuinely established, not after one lucky review.
-    for (const [wordId, r] of read) {
-      if (r.reps < 2) continue;
+    this.unlockedBy.clear();
+    this.unlocked = this.unlockAll();
+    this.touched = null;
+  }
+
+  /** Only the changed groups, and the unlocks of their words. */
+  private patch(keys: Set<string>) {
+    const words = new Set<string>();
+    for (const key of keys) {
+      const g = this.groups.get(key)!;
+      const row = this.replay(key, g);
+      const i = this.at.get(key);
+      // A new group comes last, as in the map.
+      if (i === undefined) {
+        this.at.set(key, this.replayed.length);
+        this.replayed.push(row);
+      } else this.replayed[i] = row;
+      words.add(g.wordId);
+    }
+    // A word keeps its place among the unlocks while the skills it has unlocked stay the same; otherwise the unlocks are walked again.
+    let same = true;
+    const fresh = new Map<string, MemoryRow>();
+    for (const wordId of words) {
       for (const skill of ["listen", "write"] as const) {
-        if (r.s >= UNLOCK[skill] && !this.groups.has(memKey(wordId, skill))) {
-          rows.push({ key: memKey(wordId, skill), wordId, skill, s: 0, d: 0, lastTs: r.lastTs, due: r.lastTs, reps: 0, lapses: 0 });
-        }
+        const key = memKey(wordId, skill);
+        const row = this.unlock(wordId, skill);
+        if (!!row !== this.unlockedBy.has(key)) same = false;
+        if (row) fresh.set(key, row);
       }
     }
-    this.cached = rows;
+    if (same) {
+      if (fresh.size) this.unlocked = this.unlocked.map((r) => fresh.get(r.key) ?? r);
+    } else {
+      for (const wordId of words) for (const skill of ["listen", "write"] as const) this.unlockedBy.delete(memKey(wordId, skill));
+      this.unlocked = this.unlockAll();
+    }
+    for (const [key, row] of fresh) this.unlockedBy.set(key, row);
+    this.touched = words;
+  }
+
+  /** Every unlocked row, in the order of the reading rows. Keeps the rows it already has. */
+  private unlockAll(): MemoryRow[] {
+    const rows: MemoryRow[] = [];
+    for (const g of this.groups.values()) {
+      if (g.skill !== "read") continue;
+      for (const skill of ["listen", "write"] as const) {
+        const key = memKey(g.wordId, skill);
+        const row = this.unlockedBy.get(key) ?? this.unlock(g.wordId, skill);
+        if (!row) continue;
+        this.unlockedBy.set(key, row);
+        rows.push(row);
+      }
+    }
     return rows;
+  }
+
+  /** Harder skills unlock once reading is genuinely established, not after one lucky review. */
+  private unlock(wordId: string, skill: Exclude<Skill, "read">): MemoryRow | null {
+    const r = this.groups.get(memKey(wordId, "read"))?.row;
+    if (!r || r.reps < 2 || r.s < UNLOCK[skill] || this.groups.has(memKey(wordId, skill))) return null;
+    return { key: memKey(wordId, skill), wordId, skill, s: 0, d: 0, lastTs: r.lastTs, due: r.lastTs, reps: 0, lapses: 0 };
   }
 }
