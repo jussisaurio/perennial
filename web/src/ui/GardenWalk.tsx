@@ -215,7 +215,6 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   // The door in the hedge (#315): open for good once opened; until then the key hides in the garden once "key" brought it,
   // always in the same place for this learner and course, and the world helps once it has waited a few days (#334).
   // Until the learner loads there is no garden to walk (`source` is null), so "locked" is never shown then.
-  // door_open is missing from course rows Electric streams before its first course change after the migration: closed, as it was.
   // The help is for today (`now`); the walk takes its snapshot as it opens.
   const door = useMemo(() => {
     const since = learner ? gardenBroughtAt(learner, "key") : null;
