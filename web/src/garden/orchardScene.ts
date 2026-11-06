@@ -22,6 +22,8 @@ export interface OrchardWorld {
   sprites: (map: THREE.Texture, items: SpriteItem[], w: number, h: number) => THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>;
   /** A new bench like the one by the pond, its seat facing +z (scene.ts benchModel). */
   bench: () => THREE.Group;
+  /** The trees' atlas, orchard() in textures.ts, painted in a worker (T.paintOrchard). */
+  atlas: THREE.Texture;
   /** An unlit material that follows the time of day (scene.ts BuildCtx.mat). */
   mat: (tex: THREE.Texture) => THREE.MeshBasicMaterial;
   /** The bench's plaque: benchLine(first word's planting time). Null when every word is set aside: there is no first word to name, and no plaque. */
@@ -47,7 +49,7 @@ const TREE_INDEX = -7;
 export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: OrchardTree[]): Orchard {
   const group = new THREE.Group();
   const placed = placeTrees(area, trees);
-  const atlas = T.pixelTexture(T.orchard());
+  const { atlas } = world;
   // Half a texel in from the cell's top and bottom, so nearest sampling never reads the row above or below.
   const inset = 0.5 / (CELL_H_PX * LOOKS.length);
   const items: SpriteItem[] = placed.map((t) => ({
@@ -55,7 +57,7 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: Orch
     y: 0,
     z: t.z,
     u: ORCHARD_WORDS.indexOf(t.kind) / ORCHARD_WORDS.length,
-    // Canvas textures flip: the atlas's top row is at the top of v.
+    // The atlas is flipped on upload: its top row is at the top of v.
     v: (LOOKS.length - 1 - LOOKS.indexOf(t.look)) / LOOKS.length + inset,
     uw: 1 / ORCHARD_WORDS.length,
     vh: 1 / LOOKS.length - 2 * inset,
