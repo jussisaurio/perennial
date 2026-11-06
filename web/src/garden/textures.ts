@@ -1,12 +1,10 @@
 // Tiny procedural pixel-art textures, drawn on canvases and shown with
 // nearest-neighbour filtering: the look of a mid-90s 3D game.
 
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { Plant } from "../ui/plant";
 import type { PlacedPlant } from "./world";
+export { VIEW_H } from "./plantCanvas";
 import * as Art from "./visitorArt";
 import * as LeaveArt from "./leaveArt";
 import * as CarryArt from "./carryArt";
@@ -15,7 +13,7 @@ import { FRUIT_KINDS, type Find, type FruitKind, type Guest, type WildGuest } fr
 import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { LEAF_PILE } from "./walkInto";
-import { loadImage } from "../ui/files";
+import type { SpriteDone, SpriteJob } from "./spriteWorker";
 import { FULL_MOON, MOON_PHASES } from "./moon";
 
 export function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
@@ -711,19 +709,18 @@ export function ripple(): HTMLCanvasElement {
 
 // ---- Word plants --------------------------------------------------------
 //
-// Two levels of detail. Every plant has a small sprite in a "low" sheet,
-// drawn from one big SVG per sheet (one decode for up to 2048 plants). The
-// plants near you also get a full-size sprite in a fixed pool of slots,
-// streamed in batches as you walk.
+// Two levels of detail. Every plant has a small sprite in a "low" sheet of up
+// to 2048 plants. The plants near you also get a full-size sprite in a fixed
+// pool of slots, streamed in batches as you walk. A worker draws them
+// (spriteWorker.ts), a run of plants at a time, so the page never waits (#459).
 
 export const ATLAS = 2048;
-/** SVG units per sprite: the same frame for every plant keeps sizes comparable. */
-const VIEW_W = 100;
-export const VIEW_H = 200;
 export const LOW_W = 32;
 export const LOW_H = 64;
 export const LOW_COLS = ATLAS / LOW_W;
 export const LOW_PER_SHEET = LOW_COLS * (ATLAS / LOW_H);
+/** Small sprites drawn at once: a run of plants side by side in one row of a sheet. Divides LOW_COLS. */
+export const LOW_RUN = 16;
 export const HI_W = 96;
 export const HI_H = 192;
 export const HI_COLS = Math.floor(ATLAS / HI_W);
@@ -731,45 +728,57 @@ export const HI_SLOTS = HI_COLS * Math.floor(ATLAS / HI_H);
 const BATCH_COLS = 8;
 export const BATCH = BATCH_COLS * 3;
 
-function plantMarkup(p: PlacedPlant): string {
-  return renderToStaticMarkup(createElement(Plant, { word: p.lemma, growth: p.growth, stage: p.stage, scale: 1 }));
-}
+let worker: Worker | null = null;
+let nextJob = 0;
+const waiting = new Map<number, { resolve: (t: THREE.DataTexture) => void; reject: (e: unknown) => void }>();
 
-/** A nested <svg> per cell clips each plant to its own cell. */
-const cell = (p: PlacedPlant, x: number, y: number, w: number, h: number) =>
-  `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${-VIEW_W / 2} ${-VIEW_H + 4} ${VIEW_W} ${VIEW_H}">${plantMarkup(p)}</svg>`;
-
-async function rasterise(width: number, height: number, body: string): Promise<HTMLCanvasElement> {
-  const img = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${body}</svg>`)}`);
-  const [c, ctx] = canvas(width, height);
-  ctx.drawImage(img, 0, 0);
-  // Hard alpha edges, so the sprites look hand-pixelled rather than blurry.
-  // getImageData is not premultiplied, so a soft edge pixel already has its full colour.
-  const data = ctx.getImageData(0, 0, width, height);
-  const d = data.data;
-  for (let i = 3; i < d.length; i += 4) d[i] = d[i] < 110 ? 0 : 255;
-  ctx.putImageData(data, 0, 0);
-  return c;
-}
-
-/** Small sprites for every plant: one sheet per 2048 plants, only as tall as needed. */
-export async function lowSheets(plants: PlacedPlant[]): Promise<HTMLCanvasElement[]> {
-  const sheets: HTMLCanvasElement[] = [];
-  for (let start = 0; start < plants.length; start += LOW_PER_SHEET) {
-    const chunk = plants.slice(start, start + LOW_PER_SHEET);
-    const rows = Math.ceil(chunk.length / LOW_COLS);
-    const h = Math.min(ATLAS, 2 ** Math.ceil(Math.log2(Math.max(LOW_H, rows * LOW_H))));
-    const body = chunk.map((p, i) => cell(p, (i % LOW_COLS) * LOW_W, Math.floor(i / LOW_COLS) * LOW_H, LOW_W, LOW_H)).join("");
-    sheets.push(await rasterise(ATLAS, h, body));
+/**
+ * Plants drawn by the worker, in a grid of `cols` cells of w × h: unpremultiplied
+ * RGBA, to copy into a sheet with three's copyTextureToTexture. One worker for
+ * the page; it draws one job at a time, in order.
+ */
+function drawn(plants: PlacedPlant[], cols: number, w: number, h: number): Promise<THREE.DataTexture> {
+  if (!worker) {
+    worker = new Worker(new URL("./spriteWorker.ts", import.meta.url), { type: "module" });
+    worker.onmessage = (e: MessageEvent<SpriteDone>) => {
+      const { id, width, height, data } = e.data;
+      const tex = new THREE.DataTexture(data, width, height);
+      waiting.get(id)!.resolve(tex);
+      waiting.delete(id);
+    };
+    // A worker that fails draws nothing more: every plant still waiting fails loudly, not silently blank.
+    worker.onerror = (e) => {
+      for (const w of waiting.values()) w.reject(new Error(`sprite worker: ${e.message}`));
+      waiting.clear();
+    };
   }
-  return sheets;
+  const id = nextJob++;
+  const job: SpriteJob = { id, plants: plants.map((p) => ({ lemma: p.lemma, growth: p.growth, stage: p.stage })), cols, w, h };
+  worker.postMessage(job);
+  return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
 }
+
+/** The height of each sheet of small sprites: one per 2048 plants, only as tall as needed. */
+export function lowSheetHeights(plants: number): number[] {
+  const heights: number[] = [];
+  for (let start = 0; start < plants; start += LOW_PER_SHEET) {
+    const rows = Math.ceil(Math.min(LOW_PER_SHEET, plants - start) / LOW_COLS);
+    heights.push(Math.min(ATLAS, 2 ** Math.ceil(Math.log2(Math.max(LOW_H, rows * LOW_H)))));
+  }
+  return heights;
+}
+
+/** Where plant `i`'s small sprite sits: its sheet, and its cell's corner in pixels. */
+export const lowCell = (i: number) => {
+  const k = i % LOW_PER_SHEET;
+  return { sheet: Math.floor(i / LOW_PER_SHEET), x: (k % LOW_COLS) * LOW_W, y: Math.floor(k / LOW_COLS) * LOW_H };
+};
+
+/** Small sprites for up to LOW_RUN plants, side by side. */
+export const lowRun = (plants: PlacedPlant[]) => drawn(plants, LOW_RUN, LOW_W, LOW_H);
 
 /** Full-size sprites for up to BATCH plants, in a grid of BATCH_COLS. */
-export function highBatch(plants: PlacedPlant[]): Promise<HTMLCanvasElement> {
-  const body = plants.map((p, i) => cell(p, (i % BATCH_COLS) * HI_W, Math.floor(i / BATCH_COLS) * HI_H, HI_W, HI_H)).join("");
-  return rasterise(BATCH_COLS * HI_W, Math.ceil(plants.length / BATCH_COLS) * HI_H, body);
-}
+export const highBatch = (plants: PlacedPlant[]) => drawn(plants, BATCH_COLS, HI_W, HI_H);
 
 export const batchCell = (i: number) => ({ x: (i % BATCH_COLS) * HI_W, y: Math.floor(i / BATCH_COLS) * HI_H });
 

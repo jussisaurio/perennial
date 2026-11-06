@@ -125,6 +125,8 @@ export class Plants {
   /** For each plant: the attribute and instance that hold its high-detail slot. */
   private hiRef: { attr: THREE.InstancedBufferAttribute; i: number }[] = [];
   private pool: THREE.DataTexture | null = null;
+  /** The sheets of small sprites, on the GPU only. */
+  private low: THREE.DataTexture[] = [];
   private slotOwner = new Int32Array(T.HI_SLOTS).fill(-1);
   private slotOf = new Map<number, number>();
   private streaming = false;
@@ -202,36 +204,32 @@ export class Plants {
     }
   }
 
-  /** Rasterises every plant's sprite and builds one mesh per bed (and sheet), so whole beds can be culled. `ctx` for the shared scene and mats set. */
-  async loadPlants(ctx: Pick<BuildCtx, "scene" | "mats">): Promise<void> {
+  /** A texture that lives only on the GPU: allocate, upload empty, drop the CPU copy. Sprites are copied into it later. */
+  private gpuTexture(w: number, h: number): THREE.DataTexture {
+    const t = new THREE.DataTexture(new Uint8Array(w * h * 4), w, h);
+    t.magFilter = t.minFilter = THREE.NearestFilter;
+    t.generateMipmaps = false;
+    t.needsUpdate = true;
+    this.renderer.initTexture(t);
+    (t.image as { data: Uint8Array | null }).data = null;
+    return t;
+  }
+
+  /** One mesh per bed (and sheet), so whole beds can be culled. The sprites are empty until drawSprites draws them. `ctx` for the shared scene and mats set. */
+  buildPlants(ctx: Pick<BuildCtx, "scene" | "mats">) {
     const plants = this.layout.plants;
     if (!plants.length) return;
     this.onProgress(0, plants.length);
-    const sheets = await T.lowSheets(plants);
-    if (this.disposed) return;
-
-    // The pool of full-size slots lives only on the GPU: allocate, upload, drop the CPU copy.
-    const pool = new THREE.DataTexture(new Uint8Array(T.ATLAS * T.ATLAS * 4), T.ATLAS, T.ATLAS);
-    pool.magFilter = pool.minFilter = THREE.NearestFilter;
-    pool.generateMipmaps = false;
-    pool.needsUpdate = true;
-    this.renderer.initTexture(pool);
-    (pool.image as { data: Uint8Array | null }).data = null;
+    const pool = this.gpuTexture(T.ATLAS, T.ATLAS);
     this.pool = pool;
-
-    const mats = sheets.map((c) => {
-      const tex = T.pixelTexture(c);
-      tex.flipY = false;
-      this.renderer.initTexture(tex);
-      // Uploaded once; let the canvas go. Nothing re-uploads it (its version does not change).
-      (tex as THREE.Texture<unknown>).image = { width: c.width, height: c.height };
-      const m = plantMaterial(tex, pool, c.height);
+    this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h));
+    const mats = this.low.map((tex) => {
+      const m = plantMaterial(tex, pool, tex.image.height);
       ctx.mats.add(m);
       this.plantMats.push(m);
       return m;
     });
 
-    // One mesh per bed (and sheet), so whole beds can be culled.
     const groups = new Map<string, number[]>();
     plants.forEach((p, i) => {
       const k = `${p.bed}:${Math.floor(i / T.LOW_PER_SHEET)}`;
@@ -275,7 +273,33 @@ export class Plants {
         this.leanRef[pi] = { attr: leanAttr, i: k };
       });
     }
-    // Not onProgress(done) here: GardenScene.loadPlants calls it after setTime, as main did.
+  }
+
+  /**
+   * Draws every plant's small sprite, a run of plants per task so the page
+   * never waits long (#459); the runs nearest you first, so the plants you see
+   * come up first. Not onProgress(total) at the end: GardenScene.loadPlants does that.
+   */
+  async drawSprites(): Promise<void> {
+    const plants = this.layout.plants;
+    const at = this.camera.position;
+    const runs: { start: number; d: number }[] = [];
+    for (let start = 0; start < plants.length; start += T.LOW_RUN) {
+      let d = Infinity;
+      for (let i = start; i < Math.min(start + T.LOW_RUN, plants.length); i++) d = Math.min(d, Math.hypot(plants[i].x - at.x, plants[i].z - at.z));
+      runs.push({ start, d });
+    }
+    runs.sort((a, b) => a.d - b.d);
+    let done = 0;
+    for (const { start } of runs) {
+      const run = plants.slice(start, start + T.LOW_RUN);
+      const src = await T.lowRun(run);
+      if (this.disposed) return;
+      const c = T.lowCell(start);
+      this.renderer.copyTextureToTexture(src, this.low[c.sheet], null, new THREE.Vector2(c.x, c.y));
+      done += run.length;
+      if (done < plants.length) this.onProgress(done, plants.length);
+    }
   }
 
   private setSlot(plant: number, slot: number) {
@@ -329,12 +353,9 @@ export class Plants {
       }
     };
     T.highBatch(missing.map((i) => plants[i])).then(
-      (canvas) => {
+      (src) => {
         this.streaming = false;
         if (this.disposed) return;
-        // A texture that was never uploaded: three copies straight from the canvas into the slot.
-        const src = new THREE.Texture(canvas);
-        src.flipY = false;
         missing.forEach((plant, k) => {
           const slot = this.slotOf.get(plant)!;
           const c = T.batchCell(k);
