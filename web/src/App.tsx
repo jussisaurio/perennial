@@ -1,7 +1,9 @@
 import { startTransition, Suspense, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
-import { identify, track } from "./observability";
+import { identify, initObservability, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useDeckSentences, useStore } from "./data/learner";
+import { boot } from "./data/boot";
+import { loadDeck, loadSentences } from "./data/deck";
 import { cleanUpForgotten, keepCourse, readCourse } from "./data/device";
 import { language } from "./content/languages";
 import { reloadNeeded } from "./data/http";
@@ -12,11 +14,37 @@ import { CourseSwitcher } from "./ui/CourseSwitcher";
 import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
 import { RefusedBanner, useRefused } from "./ui/Refused";
-import { LearnerGardenWalk, preloadScreens, SessionScreen, SettingsScreen, WordsScreen } from "./ui/screens";
+import { LearnerGardenWalk, preloadScreens, preloadSession, SessionScreen, SettingsScreen, WordsScreen } from "./ui/screens";
 import { DAILY_MINUTES } from "./data/practice";
 import { GiftArrival } from "./ui/Gift";
 import { arrowKeys } from "./ui/arrows";
 import { pendingGift } from "./data/gift";
+
+// The downloads after this code, in the order the learner needs them (#615).
+// On a slow link they share it, so each starts once the one before is in.
+// 1. The course's words: Today waits for them. Asked for here, as soon as this
+//    code is in, not after Today's first paint (useDeck). At the boot answer they
+//    would take the link from this code and hold up that paint.
+// 2. Its sentences (deck.ts) and the Session screen: a session needs both.
+// 3. Error reports, analytics and the other screens.
+// Only the course this device keeps (Main shows it): with none, the screens load the deck.
+void boot()
+  .then(
+    async (b) => {
+      const lang = readCourse();
+      if (!lang || !b.rows?.course.some((c) => c.lang === lang)) return;
+      await loadDeck(lang).then(preloadSession);
+      await loadSentences(lang);
+    },
+    // No boot answer: its readers ask their own endpoints and the screens load the deck.
+    () => {},
+  )
+  // A failed deck is logged (deck.ts) and shown by Main: step 3 still comes.
+  .catch(() => {})
+  .then(() => {
+    initObservability();
+    preloadScreens();
+  });
 
 type Route = "/today" | "/garden" | "/words" | "/words/add" | "/settings" | "/session";
 const ROUTES: Route[] = ["/today", "/garden", "/words", "/words/add", "/settings", "/session"];
@@ -172,7 +200,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   // A friend's seed is kept on this device (#213): only then is GiftArrival drawn, as its learner queries cost time (#230).
   const [giftHere] = useState(() => pendingGift() !== null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
-  const { deck, failed: wordsFailed } = useDeck(course?.lang);
+  const { failed: wordsFailed } = useDeck(course?.lang);
   // Asked for here, so the sentences come right after the words, whatever screen is open (#608).
   const { failed: sentencesFailed } = useDeckSentences(course?.lang);
   // Cards, reading and the word page need the sentences: without them they would wait forever.
@@ -190,11 +218,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   useEffect(() => {
     if (saved && !course) void store.refetchAll();
   }, [saved, course, store]);
-  // Once the deck is in (Today is drawn first, and needs the deck more): fetch the other screens, so a tab opens at once.
-  const deckIn = deck !== null;
-  useEffect(() => {
-    if (deckIn) preloadScreens();
-  }, [deckIn]);
 
   // Still loading, or a course was just started and is on its way: not the landing page.
   if (!course && (!ready || starting)) return <Settling />;

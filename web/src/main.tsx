@@ -2,7 +2,7 @@ import { startBoot } from "./data/bootRequest";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import { initObservability, reportReactError } from "./observability";
+import { reportReactError } from "./observability";
 import { afterPaint } from "./ui/afterPaint";
 import { initTheme } from "./ui/theme";
 import { takeGiftFromUrl } from "./data/gift";
@@ -21,8 +21,6 @@ const App = lazy(async () => {
 // What the app needs to start (session, rows, server info): asked now, so it arrives while the code loads (#602).
 void startBoot();
 initTheme();
-// Error reports load after the first paint, out of this first task (#481). Reports made before then wait for them.
-afterPaint(() => void initObservability());
 // What the server can do, and whether this app is still new enough for it.
 // After the first paint too: its first Schema decode and Effect run are ~25 ms at CPU 10× (#481).
 afterPaint(() => void import("./data/server").then((m) => m.loadServerInfo()));

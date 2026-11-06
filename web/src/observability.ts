@@ -32,8 +32,15 @@ if (SENTRY_DSN) {
 // Safari has no requestIdleCallback: there it runs in the next task.
 const idle = (fn: () => void) => ("requestIdleCallback" in globalThis ? requestIdleCallback(fn) : setTimeout(fn));
 
-/** Loads and starts error reports. Called once, after the first paint. */
+/**
+ * Loads and starts error reports and analytics. Called once, after the
+ * downloads the learner waits for (App.tsx): Sentry is 126 kB and PostHog 86 kB
+ * (brotli), and loaded with them they took the link from the app's code and
+ * the deck (#615).
+ */
 export function initObservability() {
+  initialized = true;
+  if (learner) startPostHog(learner);
   const dsn = SENTRY_DSN;
   if (!dsn) return;
   return (
@@ -86,6 +93,9 @@ const POSTHOG_HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) |
 // Queued with the time they happened, so they keep it when they are sent.
 let waiting: [Event, Record<string, unknown>, Date][] = [];
 let started = false;
+// identify can come before initObservability: PostHog then starts there.
+let initialized = false;
+let learner: string | null = null;
 
 function startPostHog(userId: string) {
   // `started`, not `posthog`: a second identify() can come before the import resolves.
@@ -146,7 +156,8 @@ export function track(event: Event, props: Record<string, unknown> = {}) {
 
 /** Tie events to the learner (an id only, never the email). A new user reloads the app (App.tsx). */
 export function identify(userId: string) {
-  startPostHog(userId);
+  learner = userId;
+  if (initialized) startPostHog(userId);
   withSentry((s) => s.setUser({ id: userId }));
 }
 
