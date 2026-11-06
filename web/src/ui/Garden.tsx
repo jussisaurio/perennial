@@ -246,7 +246,9 @@ export const Garden = memo(function Garden({
         </svg>
         {(["snail", "cat", "bird", "frog", "dog", "fish", "butterfly"] as const).map(view).map((v) => {
           if (!v) return null;
-          const home = layout.find((l) => l.p.id === homePlant(v)?.id);
+          // Looked up once, not per plant: inside the search it cost ~300 ms per Today visit (perf/ui.ts).
+          const plant = homePlant(v);
+          const home = plant && layout.find((l) => l.p.id === plant.id);
           const at = home ? atPlant(v.id, home, isSleepyHour()) : null;
           // No plant of its own: the snail on the soil, the cat asleep at the right end; the bird, frog and fish only in the walk; the dog and butterfly stay away.
           if (!at && v.id !== "snail" && v.id !== "cat") return null;
