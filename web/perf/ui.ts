@@ -16,6 +16,8 @@ const i = process.argv.indexOf("--cpu");
 const CPU = i > 0 ? Number(process.argv[i + 1]) : 4;
 // --reduced-motion: compare with animations off (the app honours the setting).
 const REDUCED = process.argv.includes("--reduced-motion");
+// --no-minify: readable function names in the profiles, to see where the time goes.
+const MINIFY = !process.argv.includes("--no-minify");
 const WEB = join(import.meta.dir, "..");
 const OUT = join(import.meta.dir, "out");
 const PORT = 19900 + Math.floor(Math.random() * 1000);
@@ -26,7 +28,7 @@ mkdirSync(OUT, { recursive: true });
 
 // ---- production build with the demo switch, served by the real server -------
 
-const build = Bun.spawnSync(["bunx", "vite", "build", "--outDir", "perf/out/dist", "--emptyOutDir", "--sourcemap"], { cwd: WEB, env: { ...process.env, VITE_DEV_TOOLS: "1" }, stdout: "ignore", stderr: "inherit" });
+const build = Bun.spawnSync(["bunx", "vite", "build", "--outDir", "perf/out/dist", "--emptyOutDir", "--sourcemap", ...(MINIFY ? [] : ["--minify", "false"])], { cwd: WEB, env: { ...process.env, VITE_DEV_TOOLS: "1" }, stdout: "ignore", stderr: "inherit" });
 if (build.exitCode !== 0) throw new Error("build failed");
 const server = Bun.spawn(["bun", "index.ts"], {
   cwd: join(WEB, "../server"),
@@ -65,6 +67,20 @@ interface Result {
   jank: number;
   heapMb: number;
   nodes: number;
+  top: string[];
+}
+
+/** The functions that took the most time themselves (not counting what they called), from a CPU profile. */
+function topFunctions(profile: { nodes: { id: number; callFrame: { functionName: string; url: string; lineNumber: number } }[]; samples?: number[]; timeDeltas?: number[] }, n = 8): string[] {
+  const byNode = new Map(profile.nodes.map((node) => [node.id, node.callFrame]));
+  const self = new Map<string, number>();
+  (profile.samples ?? []).forEach((id, i) => {
+    const f = byNode.get(id)!;
+    const file = f.url.split("/").pop() || "(native)";
+    const key = `${f.functionName || "(anonymous)"} ${file}:${f.lineNumber + 1}`;
+    self.set(key, (self.get(key) ?? 0) + (profile.timeDeltas?.[i] ?? 0) / 1000);
+  });
+  return [...self].filter(([k]) => !k.startsWith("(idle)") && !k.startsWith("(program)")).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, ms]) => `${Math.round(ms)} ms ${k}`);
 }
 
 const pct = (xs: number[], p: number) => {
@@ -100,6 +116,7 @@ async function measure(page: Page, cdp: CDPSession, screen: string, action: () =
     jank: frames.filter((f) => f > 50).length,
     heapMb: Math.round(metric("JSHeapUsedSize") / 1e6),
     nodes,
+    top: topFunctions(profile),
   };
 }
 
@@ -158,6 +175,26 @@ results.push(await measure(page, cdp, "Session: 10 cards", async () => {
     await page.waitForTimeout(500);
   }
 }));
+// Moving between tabs, as a learner does: the app stays loaded, only the screen changes.
+const tab = (name: string) => page.locator("nav.top").getByRole("tab", { name }).click();
+await page.goto(`${BASE}/#/settings`);
+await page.getByRole("heading", { name: "Settings" }).waitFor();
+await page.waitForTimeout(1000);
+results.push(await measure(page, cdp, "Tab: Settings → Today", async () => {
+  await tab("Today");
+  await page.locator("button.start").waitFor();
+  await page.waitForTimeout(1000);
+}));
+results.push(await measure(page, cdp, "Tab: Today → Words", async () => {
+  await tab("Words");
+  await page.locator("ul.words li").first().waitFor();
+  await page.waitForTimeout(1000);
+}));
+results.push(await measure(page, cdp, "Tab: Words → Today", async () => {
+  await tab("Today");
+  await page.locator("button.start").waitFor();
+  await page.waitForTimeout(1000);
+}));
 results.push(await measure(page, cdp, "3D walk: open and walk", async () => {
   await page.goto(`${BASE}/#/today`);
   await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -177,6 +214,11 @@ const report = `# UI performance (production build, CPU ${CPU}× slower, every S
 ${results.map((r) => `| ${r.screen} | ${r.ms} | ${r.longTasks} | ${r.longest} | ${r.blocked} | ${r.p95Frame} | ${r.jank} | ${r.heapMb} | ${r.nodes} |`).join("\n")}
 
 Blocked ms: main-thread time beyond 50 ms per long task (what makes input feel stuck).
+
+## Where the time went (self time per function)
+
+${results.map((r) => `**${r.screen}**\n${r.top.map((t) => `- ${t}`).join("\n")}`).join("\n\n")}
+
 The 3D walk runs on software WebGL here, so its frame times are worse than on a real GPU.
 CPU profiles per screen: perf/out/*.cpuprofile (Chrome DevTools → Performance, or speedscope.app).
 `;
