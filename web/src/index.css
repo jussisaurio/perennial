@@ -754,7 +754,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-empty { text-align: center; justify-items: center; bottom: 50%; transform: translate(-50%, 50%); animation: none; }
 .gw-empty strong { font: 700 1.5rem/1.1 var(--pixel); }
 
-.gw-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0.8rem 1.1rem; font: 500 1.05rem/1 var(--pixel); }
+/* The walk works while the plants are drawn (#459): a tap goes through to the garden. */
+.gw-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0.8rem 1.1rem; font: 500 1.05rem/1 var(--pixel); pointer-events: none; }
 .gw-hint { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); padding: 0.55rem 0.85rem; font: 500 0.9rem/1.3 var(--pixel); text-align: center; max-width: calc(100% - 40px); animation: gw-pop 300ms steps(4) both; }
 .gw-hint-coarse { display: none; }
 

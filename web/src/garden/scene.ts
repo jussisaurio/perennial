@@ -1465,16 +1465,17 @@ export class GardenScene {
     this.clearTaps({ tree: true, line: true, visitor: true, find: true, fruit: true, boat: true });
   }
 
-  /** Rasterises every plant's sprite, then builds the streaming pool (#323: scenePlants.ts). */
+  /** Builds the plants' meshes, then draws their sprites, nearest first (#323, #459: scenePlants.ts). */
   async loadPlants(): Promise<void> {
-    await this.plants.loadPlants({ scene: this.scene, mats: this.mats });
-    // The walk may have been left (and disposed) while the sprites rasterised: nothing to tint then.
-    if (this.disposed) return;
+    this.plants.buildPlants({ scene: this.scene, mats: this.mats });
     const total = this.layout.plants.length;
-    // Nothing to tint, stream or report in an empty garden: loadPlants above already returned at once.
+    // Nothing to tint, draw or report in an empty garden: buildPlants built nothing.
     if (!total) return;
     // The new plants take the time of day on show; while time speeds up on the bench, the next frame blends them too.
     this.showTime(this.shown);
+    await this.plants.drawSprites();
+    // The walk may have been left (and disposed) while the sprites were drawn.
+    if (this.disposed) return;
     this.cb.onProgress(total, total);
   }
 
