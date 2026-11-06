@@ -113,7 +113,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
               ? "" // no wink under a count of thirsty plants: it would read as if all is well
               : doneTodayNote()
             : started === 0
-              ? `${ready} seeds are ready to plant, the most common words first. Each word has example sentences and audio.`
+              ? `${ready} seeds are ready to plant: the most common words first, and a few garden words early. Each word has example sentences and audio.`
               : ready === 0
                 ? "Every seed in the course is planted. Today is for growing them."
                 : plan.due === 0

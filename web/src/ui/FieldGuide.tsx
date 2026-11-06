@@ -214,9 +214,16 @@ function GiveSeed({ word }: { word: Word }) {
 /** One entry, opened: the plant large, and the word's details. A native dialog: Escape closes it and focus stays inside. */
 function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow; onClose: () => void; detail: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const close = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const d = ref.current;
-    if (d && !d.open) d.showModal();
+    if (d && !d.open) {
+      d.showModal();
+      // showModal focuses the first control in the details and scrolls to it, so on a
+      // short phone the page opened at its bottom (#299). Start at the top, focus on Close.
+      close.current!.focus({ preventScroll: true });
+      d.scrollTop = 0;
+    }
   }, []);
   const read = row.mem.find((m) => m.skill === "read");
   const stage = plantStage(read);
@@ -244,8 +251,7 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
           )}
         </div>
         {detail}
-        {/* Focus starts here, not on the first control in the details. */}
-        <button className="secondary guide-close" autoFocus onClick={() => ref.current?.close()}>
+        <button ref={close} className="secondary guide-close" onClick={() => ref.current?.close()}>
           Close
         </button>
       </div>

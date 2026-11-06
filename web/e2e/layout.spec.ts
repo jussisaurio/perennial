@@ -118,7 +118,11 @@ test("small phone: the landing Start, a long card's question, the summary button
   await done.click();
   await page.getByRole("tab", { name: "Words" }).click();
   await page.getByRole("radio", { name: "Flowers" }).click();
+  // A short phone: the word page opens at its top, with focus on Close (#299).
+  await page.setViewportSize({ width: 360, height: 520 });
   await page.locator(".guide-entry").first().click();
+  await expect(page.getByRole("button", { name: "Close", exact: true })).toBeFocused();
+  expect(await page.locator("dialog.guide-page").evaluate((d) => d.scrollTop), "the word page opens at its top").toBe(0);
   const dialog = (await page.locator("dialog.guide-page").boundingBox())!;
   const close = (await page.getByRole("button", { name: "Close", exact: true }).boundingBox())!;
   expect(close.y + close.height, "Close is inside the word page").toBeLessThanOrEqual(dialog.y + dialog.height);
