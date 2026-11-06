@@ -317,7 +317,11 @@ function Said({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Until then, a key must not press a button that kept focus ("End session" pressed with Enter): keys are the screen's shortcuts.
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    return afterPaint(() => line.current!.focus({ preventScroll: true }));
+    // The element, not the ref, goes to the timer: on unmount React clears the ref first and cancels the timer
+    // later, in this effect's cleanup, and a non-urgent render (or a test clock) can fire the timer between the two.
+    // Focus on an element that left the page does nothing.
+    const el = line.current!;
+    return afterPaint(() => el.focus({ preventScroll: true }));
   }, []);
   return (
     <p className="said sr-only" tabIndex={-1} ref={line}>
