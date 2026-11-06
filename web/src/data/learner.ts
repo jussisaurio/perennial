@@ -185,7 +185,7 @@ class Learners {
   private readonly userWords = new Mirror<UserWordRow>();
   private readonly userSentences = new Mirror<UserSentenceRow>();
   private readonly built = new Map<string, Built>();
-  /** Review changes each built language has not taken in yet. */
+  /** Review changes each built language has not taken in yet, its own only. */
   private readonly pending = new Map<string, ChangeMessage<ReviewRow>[]>();
 
   private readonly store: Store;
@@ -210,7 +210,7 @@ class Learners {
     };
     follow(c.course, this.courses);
     follow(c.review, this.reviews, (changes) => {
-      for (const list of this.pending.values()) list.push(...changes);
+      for (const [lang, list] of this.pending) list.push(...changes.filter((c) => c.value.lang === lang));
     });
     follow(c.word_state, this.states);
     follow(c.user_word, this.userWords);
@@ -239,7 +239,7 @@ class Learners {
     const words = prev && prev.words.links === links && prev.words.states === this.states.version ? prev.words : this.words(links);
     const sentences = prev && prev.sentences.links === links && prev.sentences.version === this.userSentences.version ? prev.sentences : this.sentences(links);
     let reviews = prev && prev.reviews.links === links && prev.reviews.log.retention === course.retention ? prev.reviews : null;
-    if (reviews && pending.length) reviews = moreReviews(reviews, pending, lang);
+    if (reviews && pending.length) reviews = moreReviews(reviews, pending);
     reviews ??= this.allReviews(lang, links, course.retention);
     this.pending.set(lang, []);
     if (prev && prev.learner.course === course && prev.words === words && prev.reviews === reviews && !pending.length && prev.sentences === sentences) return prev.learner;
@@ -297,10 +297,9 @@ class Learners {
 }
 
 /** Take in review changes: only the words they touch change. Null when the log must be built again (MemoryLog says when). */
-function moreReviews(prev: Reviews, changes: readonly ChangeMessage<ReviewRow>[], lang: string): Reviews | null {
+function moreReviews(prev: Reviews, changes: readonly ChangeMessage<ReviewRow>[]): Reviews | null {
   const byWord = new Map(prev.byWord);
   for (const { type, value: r } of changes) {
-    if (r.lang !== lang) continue;
     const id = prev.links.resolve(r.word_id);
     const was = byWord.get(id) ?? [];
     if (type === "delete") {
