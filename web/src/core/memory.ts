@@ -79,33 +79,128 @@ export function readMemory<M>(l: { memory: { get: (key: string) => M | undefined
   return l.memory.get(memKey(wordId, "read"));
 }
 
+/**
+ * The words known just before `t` (ms): what a replay of the reading reviews
+ * before `t` would say. Only words read since `t` are replayed: for the
+ * others, that replay is their memory now.
+ */
+export function knownAt(l: { words: ReadonlyMap<string, unknown>; memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } }, t: number): Set<string> {
+  const known = new Set<string>();
+  for (const id of l.words.keys()) {
+    const now = readMemory(l, id);
+    if (!now) continue;
+    if (now.lastTs < t) {
+      if (wordState(now) === "known") known.add(id);
+      continue;
+    }
+    // A word read since `t` has reviews, listed under it.
+    const before = l.reviewsByWord
+      .get(id)!
+      .filter((r) => r.skill === "read" && Date.parse(r.reviewed_at) < t)
+      .map((r) => ({ ts: Date.parse(r.reviewed_at), grade: r.grade }));
+    if (wordState(replay(fsrs, before, l.course.retention, memKey(id, "read")) ?? undefined) === "known") known.add(id);
+  }
+  return known;
+}
+
 /** Fold reviews into memory rows per word and skill, plus unlocked-but-unpractised skills. */
-export function deriveMemory(reviews: ReviewRow[], retention: number, resolve: (id: string) => string): MemoryRow[] {
-  const groups = new Map<string, { wordId: string; skill: Skill; list: { ts: number; grade: Grade }[] }>();
-  for (const r of reviews) {
-    const wordId = resolve(r.word_id);
+export function deriveMemory(reviews: readonly ReviewRow[], retention: number, resolve: (id: string) => string): MemoryRow[] {
+  const log = new MemoryLog(retention, resolve);
+  for (const r of reviews) log.set(r);
+  return log.rows();
+}
+
+interface Group {
+  wordId: string;
+  skill: Skill;
+  /** In the order the reviews came, as they are in the log. */
+  list: { id: string; ts: number; grade: Grade }[];
+  /** Undefined: changed since the last replay. Null: no reviews. */
+  row: MemoryRow | null | undefined;
+}
+
+/**
+ * The memory of a review log that changes one review at a time: a change
+ * replays only its own word and skill, not the whole log. rows() always equals
+ * deriveMemory over the same reviews in the same order. The order matters:
+ * the planner breaks ties by it, so a group keeps the place of its first review.
+ */
+export class MemoryLog {
+  private readonly groups = new Map<string, Group>();
+  /** Which group each review is in. */
+  private readonly keyOf = new Map<string, string>();
+  private cached: MemoryRow[] | null = null;
+  readonly retention: number;
+  private readonly resolve: (id: string) => string;
+
+  constructor(retention: number, resolve: (id: string) => string) {
+    this.retention = retention;
+    this.resolve = resolve;
+  }
+
+  /** Add a review at the end of the log, or change one in its place. False when the change moves it to another word or skill: then build a new log. */
+  set(r: ReviewRow): boolean {
+    const wordId = this.resolve(r.word_id);
     const key = memKey(wordId, r.skill);
-    const g = groups.get(key) ?? { wordId, skill: r.skill, list: [] };
-    g.list.push({ ts: Date.parse(r.reviewed_at), grade: r.grade });
-    groups.set(key, g);
+    const was = this.keyOf.get(r.id);
+    if (was !== undefined && was !== key) return false;
+    let g = this.groups.get(key);
+    if (!g) {
+      g = { wordId, skill: r.skill, list: [], row: undefined };
+      this.groups.set(key, g);
+    }
+    const entry = { id: r.id, ts: Date.parse(r.reviewed_at), grade: r.grade };
+    const i = was === undefined ? -1 : g.list.findIndex((e) => e.id === r.id);
+    if (i >= 0) g.list[i] = entry;
+    else g.list.push(entry);
+    this.keyOf.set(r.id, key);
+    g.row = undefined;
+    this.cached = null;
+    return true;
   }
-  const rows: MemoryRow[] = [];
-  const read = new Map<string, MemoryRow>();
-  for (const [key, g] of groups) {
-    const st = replay(fsrs, g.list, retention, key);
-    if (!st) continue;
-    const row: MemoryRow = { key, wordId: g.wordId, skill: g.skill, ...st };
-    rows.push(row);
-    if (g.skill === "read") read.set(g.wordId, row);
+
+  /**
+   * Take a review out of the log. False when that moves its group's place in
+   * the order (it was the group's first review, and others remain): then
+   * build a new log.
+   */
+  delete(id: string): boolean {
+    const key = this.keyOf.get(id);
+    if (key === undefined) return true;
+    const g = this.groups.get(key)!;
+    const i = g.list.findIndex((e) => e.id === id);
+    if (i === 0 && g.list.length > 1) return false;
+    g.list.splice(i, 1);
+    this.keyOf.delete(id);
+    if (!g.list.length) this.groups.delete(key);
+    g.row = undefined;
+    this.cached = null;
+    return true;
   }
-  // Harder skills unlock once reading is genuinely established, not after one lucky review.
-  for (const [wordId, r] of read) {
-    if (r.reps < 2) continue;
-    for (const skill of ["listen", "write"] as const) {
-      if (r.s >= UNLOCK[skill] && !groups.has(memKey(wordId, skill))) {
-        rows.push({ key: memKey(wordId, skill), wordId, skill, s: 0, d: 0, lastTs: r.lastTs, due: r.lastTs, reps: 0, lapses: 0 });
+
+  rows(): MemoryRow[] {
+    if (this.cached) return this.cached;
+    const rows: MemoryRow[] = [];
+    const read = new Map<string, MemoryRow>();
+    for (const [key, g] of this.groups) {
+      if (g.row === undefined) {
+        const st = replay(fsrs, g.list, this.retention, key);
+        g.row = st && { key, wordId: g.wordId, skill: g.skill, ...st };
+      }
+      if (!g.row) continue;
+      rows.push(g.row);
+      if (g.skill === "read") read.set(g.wordId, g.row);
+    }
+    // Harder skills unlock once reading is genuinely established, not after one lucky review.
+    for (const [wordId, r] of read) {
+      if (r.reps < 2) continue;
+      for (const skill of ["listen", "write"] as const) {
+        if (r.s >= UNLOCK[skill] && !this.groups.has(memKey(wordId, skill))) {
+          rows.push({ key: memKey(wordId, skill), wordId, skill, s: 0, d: 0, lastTs: r.lastTs, due: r.lastTs, reps: 0, lapses: 0 });
+        }
       }
     }
+    this.cached = rows;
+    return rows;
   }
-  return rows;
 }
