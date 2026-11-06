@@ -21,6 +21,11 @@ mock.module("@sentry/react", () => ({
   browserTracingIntegration: () => ({}),
   replayIntegration: () => ({}),
   consoleLoggingIntegration: () => ({}),
+  eventFiltersIntegration: () => ({}),
+  globalHandlersIntegration: () => ({}),
+  linkedErrorsIntegration: () => ({}),
+  dedupeIntegration: () => ({}),
+  httpContextIntegration: () => ({}),
   setUser: () => {},
   reactErrorHandler: () => {},
   // Bun's module mocks last for the whole test run, so every export the app calls

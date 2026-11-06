@@ -29,12 +29,18 @@ if (SENTRY_DSN) {
   addEventListener("unhandledrejection", earlyRejection);
 }
 
+// Safari has no requestIdleCallback: there it runs in the next task.
+const idle = (fn: () => void) => ("requestIdleCallback" in globalThis ? requestIdleCallback(fn) : setTimeout(fn));
+
 /** Loads and starts error reports. Called once, after the first paint. */
 export function initObservability() {
   const dsn = SENTRY_DSN;
   if (!dsn) return;
   return (
     import("@sentry/react")
+      // Init is tens of ms at CPU 10×: in idle time, not in a frame (#481).
+      // Reports made until then wait in the queue.
+      .then((s) => new Promise<SentryApi>((done) => idle(() => done(s))))
       .then((s) => {
         s.init({
           // Not the learner's IP: by default Sentry works it out from the connection.
@@ -44,6 +50,18 @@ export function initObservability() {
           environment: import.meta.env.MODE,
           // No replay and no page-load traces (#488): replay records every DOM change
           // all the time, tracing wraps every fetch and listener, and nobody read either.
+          // Only what we read: errors (with their causes, once each), the page and
+          // browser, and warnings/errors as logs. Not the defaults that wrap every
+          // listener and timer (browserApiErrors) or keep clicks, fetches and console
+          // lines as breadcrumbs: work on every event, and they can carry the learner's
+          // words. No release-health sessions either. Fewer integrations, less work at init.
+          defaultIntegrations: [
+            s.eventFiltersIntegration(),
+            s.globalHandlersIntegration(),
+            s.linkedErrorsIntegration(),
+            s.dedupeIntegration(),
+            s.httpContextIntegration(),
+          ],
           integrations: [s.consoleLoggingIntegration({ levels: ["warn", "error"] })],
           // Long polls are cancelled by design; not errors.
           ignoreErrors: [/AbortError/, /The user aborted a request/],
