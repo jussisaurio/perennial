@@ -17,6 +17,7 @@ import { useSessionRunner, type Card, type Ended } from "./useSessionRunner";
 import { RefusedLine, useRefused } from "./Refused";
 import type { Refused } from "../data/store";
 import { useKeys, useShortcut } from "./useShortcut";
+import { afterPaint } from "./afterPaint";
 import { track } from "../observability";
 import { chunkLabel, DAILY_MINUTES } from "../data/practice";
 import { KNOWN_RULE, plantStage, readMemory } from "../core/memory";
@@ -78,6 +79,13 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   const [growing, setGrowing] = useState<{ m: GrowthMoment; corner: DOMRect } | null>(null);
   const cornerPlant = useRef<HTMLDivElement>(null);
   const grown = useRef<(() => void) | null>(null);
+  // Where the answered card's plant is: the moment starts from it. Read as the answer
+  // comes, while the layout is fresh; read after the answer's render, it forces a layout (#457).
+  const answeredAt = useRef<DOMRect | null>(null);
+  const answer = (g: Grade | null, o?: { alreadyKnown?: boolean }) => {
+    answeredAt.current = cornerPlant.current!.firstElementChild!.getBoundingClientRect();
+    void finish(g, o);
+  };
   // Every remembered answer is watered, even when the plant barely grows (a retry
   // after "I forgot" adds little): the learner sees the answer counted.
   const grow = (m: GrowthMoment) => {
@@ -87,8 +95,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
         setGrowing(null);
         resolve();
       };
-      // The answered card's plant is still on screen: the moment starts from it.
-      setGrowing({ m, corner: cornerPlant.current!.firstElementChild!.getBoundingClientRect() });
+      setGrowing({ m, corner: answeredAt.current! });
       chime(m.word, chimeDelay(m) / 1000);
     });
   };
@@ -160,7 +167,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       {done ? (
         <Summary learner={learner} counts={counts} refusedBefore={refusedBefore} practised={practised} introduced={introduced} before={before} arrived={arrived} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
       ) : card ? (
-        <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={finish} />
+        <CardView key={serial} card={card} tag={tag} lang={lang} hint={hint} onDone={answer} />
       ) : null}
       {help && <ShortcutHelp onClose={() => setHelp(false)} />}
       {card && !done && (
@@ -283,7 +290,8 @@ function useReveal() {
  */
 function Said({ children }: { children: ReactNode }) {
   const line = useRef<HTMLParagraphElement>(null);
-  useEffect(() => line.current!.focus({ preventScroll: true }), []);
+  // After the paint: focus brings style and layout up to date, half of the key press's task when done in it (#457).
+  useEffect(() => afterPaint(() => line.current!.focus({ preventScroll: true })), []);
   return (
     <p className="said sr-only" tabIndex={-1} ref={line}>
       {children}

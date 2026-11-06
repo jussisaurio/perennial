@@ -12,7 +12,8 @@ import { Session as Runner, type Task } from "../core/session";
 import { recordReview, undoReview, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import { hash32 } from "../lib/seed";
 import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
-import { wakeAudio } from "./chime";
+import { prepareAudio, wakeAudio } from "./chime";
+import { afterPaint } from "./afterPaint";
 import { sessionPlan } from "../data/practice";
 import { grownSpans } from "../data/reading";
 import type { Refused } from "../data/store";
@@ -170,7 +171,13 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     shownAt.current = clock.current.elapsed;
     serial.current++;
     if (!paused.current) setDone(false);
-    setCard({ task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read), grown: example ? grownSpans(l, example.text, tag, word.id) : [] });
+    const shown: Card = { task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read), grown: [] };
+    setCard(shown);
+    // The grown words show only with the answer: found once the card is on screen, not before it (#457).
+    if (example) afterPaint(() => {
+      const grown = grownSpans(live.current!, example.text, tag, word.id);
+      setCard((c) => (c === shown ? { ...shown, grown } : c));
+    });
   };
 
   // Plan once, as soon as the learner has loaded. Later changes (every answer
@@ -182,6 +189,8 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     void start(minutes);
   }, [learner, start, minutes]);
   useEffect(() => () => stopSpeaking(), []);
+  // Ready before the first answer, whose key press then only wakes it.
+  useEffect(() => afterPaint(() => void prepareAudio()), []);
 
   useEffect(() => {
     const t = setInterval(() => setActive(clock.current.tick(Date.now())), 1000);
