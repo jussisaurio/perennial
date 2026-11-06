@@ -5,17 +5,26 @@
 import { kindOf } from "../content/order";
 import { formKey, tokenize } from "../content/text";
 import { readMemory, wordState } from "../core/memory";
-import type { Learner } from "./learner";
+import type { Learner, Word } from "./learner";
 
-/** Each form (lowercase) and the words it can be a form of. Built once per learner. */
-const indexes = new WeakMap<Learner, Map<string, string[]>>();
-function formIndex(l: Learner): Map<string, string[]> {
-  let index = indexes.get(l);
-  if (index) return index;
-  index = new Map();
-  for (const w of l.words.values()) for (const f of new Set([w.lemma, ...w.forms].map(formKey))) index.set(f, [...(index.get(f) ?? []), w.id]);
-  indexes.set(l, index);
+/** Each form (lowercase) of `words` and the words it can be a form of. */
+function indexOf(words: Iterable<Word>): Map<string, string[]> {
+  const index = new Map<string, string[]>();
+  for (const w of words) for (const f of new Set([w.lemma, ...w.forms].map(formKey))) index.set(f, [...(index.get(f) ?? []), w.id]);
   return index;
+}
+
+// The deck's words, indexed once per deck. Every answer makes a new learner, and
+// indexing the whole deck again took 5–12 ms per card at CPU 10× (#457).
+const deckIndexes = new WeakMap<Learner["deck"], Map<string, string[]>>();
+
+/** The words a form (lowercase) can be a form of: the deck's, then the learner's own. */
+function formIndex(l: Learner): { get(form: string): string[] | undefined } {
+  const words = [...l.words.values()];
+  let deck = deckIndexes.get(l.deck);
+  if (!deck) deckIndexes.set(l.deck, (deck = indexOf(words.filter((w) => w.source === "deck"))));
+  const mine = indexOf(words.filter((w) => w.source === "user"));
+  return { get: (f) => (mine.has(f) ? [...(deck.get(f) ?? []), ...mine.get(f)!] : deck.get(f)) };
 }
 
 /**
