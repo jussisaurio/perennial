@@ -1546,6 +1546,9 @@ export class GardenScene {
 
   /** Builds the plants' meshes, then draws their sprites, nearest first (#323, #459: scenePlants.ts). */
   async loadPlants(): Promise<void> {
+    // A task of its own, apart from the first resize and start that come just before it (#459).
+    await yieldToBrowser();
+    if (this.disposed) return;
     this.plants.buildPlants({ scene: this.scene, mats: this.mats });
     const total = this.layout.plants.length;
     // Nothing to tint, draw or report in an empty garden: buildPlants built nothing.
