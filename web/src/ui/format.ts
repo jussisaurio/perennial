@@ -14,13 +14,15 @@ export function refusedLine({ count, clock, gardenClock }: Pick<Refused, "count"
   return parts.join(" ");
 }
 
-const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+// Made on first use: building it costs ~50 ms on a slow laptop, and module load blocks first paint (#481).
+let rtf: Intl.RelativeTimeFormat | undefined;
 
 /** "in 3 days", "in 5 hours", "now" — for when something comes back. */
 export function relTime(ts: number, now = Date.now()): string {
   const diff = ts - now;
   const abs = Math.abs(diff);
   if (abs < 60_000) return "now";
+  rtf ??= new Intl.RelativeTimeFormat("en", { numeric: "auto" });
   if (abs < 3_600_000) return rtf.format(Math.round(diff / 60_000), "minute");
   if (abs < DAY_MS) return rtf.format(Math.round(diff / 3_600_000), "hour");
   if (abs < 60 * DAY_MS) return rtf.format(Math.round(diff / DAY_MS), "day");
