@@ -40,7 +40,7 @@ const course: CourseRow = { user_id: "u", lang: "es", minutes: 5, retention: 0.9
 const deckWords = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", forms: [`word${i}`], rank: i }));
 const byId = new Map<string, unknown>(deckWords.map((w) => [w.id, w]));
 // Only what the learner reads of a deck.
-const deck = { lang: "es", byId, sentencesByWord: new Map(), resolve: (id: string) => byId.get(id === "w3-old" ? "w3" : id) } as unknown as LoadedDeck;
+const deck = { lang: "es", words: deckWords, byId, sentencesByWord: new Map(), resolve: (id: string) => byId.get(id === "w3-old" ? "w3" : id) } as unknown as LoadedDeck;
 
 /** A store with these reviews; the other tables are empty. */
 function store(reviews: ReviewRow[]) {
