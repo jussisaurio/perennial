@@ -83,20 +83,7 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </div>
       </header>
 
-      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code, mole: visitors.mole }} waiting={waiting} />
-      <button className="walk-link" onClick={onWalk}>
-        <FlowerIcon size={18} /> Walk in your garden
-      </button>
-
-      {user?.anonymous && started >= 10 && (
-        // A gentle nudge once there is something worth keeping.
-        <details className="panel more keep-garden">
-          <summary>Keep your garden safe: add your email</summary>
-          <p className="muted small">Your garden is saved in this browser. With your email, it is also kept in your account and on all your devices.</p>
-          <SignIn cta="Send me a code" />
-        </details>
-      )}
-
+      {/* The day's action right under the greeting: on a phone it must never sit under the tab bar. */}
       <div className="start-row">
         {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. */}
         {chunk.state === "done" && <p className="watered">{plan.due ? `${plural(plan.due, "plant")} still ${plan.due === 1 ? "needs" : "need"} water.` : "The garden is watered for today."}</p>}
@@ -124,6 +111,20 @@ export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (
         </p>
         {user && course.minutes !== DAILY_MINUTES && <FiveMinutesNote userId={user.id} />}
       </div>
+
+      <Garden data={garden} onView={view} visitors={visitors && { views: visitors.views, snailAt, lang: code, mole: visitors.mole }} waiting={waiting} />
+      <button className="walk-link" onClick={onWalk}>
+        <FlowerIcon size={18} /> Walk in your garden
+      </button>
+
+      {user?.anonymous && started >= 10 && (
+        // A gentle nudge once there is something worth keeping.
+        <details className="panel more keep-garden">
+          <summary>Keep your garden safe: add your email</summary>
+          <p className="muted small">Your garden is saved in this browser. With your email, it is also kept in your account and on all your devices.</p>
+          <SignIn cta="Send me a code" />
+        </details>
+      )}
 
       {started > 0 && (
         <div className="progress-line">
