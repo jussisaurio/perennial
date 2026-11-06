@@ -317,13 +317,19 @@ function Said({ step, children }: { step?: string; children: ReactNode }) {
   const line = useRef<HTMLParagraphElement>(null);
   // After the paint: focus brings style and layout up to date, half of the key press's task when done in it (#457).
   useEffect(() => {
-    // Until then, a key must not press a button that kept focus ("End session" pressed with Enter): keys are the screen's shortcuts.
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     // The element, not the ref, goes to the timer: on unmount React clears the ref first and cancels the timer
     // later, in this effect's cleanup, and a non-urgent render (or a test clock) can fire the timer between the two.
     // Focus on an element that left the page does nothing.
     const el = line.current!;
-    return afterPaint(() => el.focus({ preventScroll: true }));
+    // Until then, a key must not press a button that kept focus ("End session" pressed with Enter): keys are the screen's shortcuts.
+    // The line itself keeps focus until then: a key on it does nothing, and a blur here would bring style up to date in the key press's task.
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== el) active.blur();
+    return afterPaint(() => {
+      // Focus again, so a screen reader reads the new step: focusing the focused line says nothing.
+      if (document.activeElement === el) el.blur();
+      el.focus({ preventScroll: true });
+    });
   }, [step]);
   return (
     <p className="said sr-only" tabIndex={-1} ref={line}>
