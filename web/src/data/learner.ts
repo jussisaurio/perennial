@@ -7,11 +7,11 @@ import { courseOrder, nextWords, sincePlaced } from "../content/order";
 import { useLiveQuery, type ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { startOfDay } from "../core/day";
-import { MemoryLog, type MemoryRow } from "../core/memory";
+import { MemoryLog, memKey, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
 import { DAILY_MINUTES } from "./practice";
-import { COURSE_DEFAULTS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
+import { COURSE_DEFAULTS, SKILLS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
 import type { Gender, GardenWord, OrchardWord } from "../deck/schema";
 import type { GardenLeft } from "perennial-contract";
@@ -168,6 +168,7 @@ interface Built {
   words: Words;
   reviews: Reviews;
   sentences: { links: Links; version: number; byWord: Map<string, Sentence[]> };
+  memory: Memory;
   learner: Learner;
 }
 
@@ -177,7 +178,7 @@ interface Built {
  * replays only its own word and skill (MemoryLog); a screen that opens again
  * gets the learner it had, with no work at all.
  */
-class Learners {
+export class Learners {
   private readonly listeners = new Set<() => void>();
   private readonly courses = new Mirror<CourseRow>();
   private readonly reviews = new Mirror<ReviewRow>();
@@ -243,8 +244,9 @@ class Learners {
     reviews ??= this.allReviews(lang, links, course.retention);
     this.pending.set(lang, []);
     if (prev && prev.learner.course === course && prev.words === words && prev.reviews === reviews && !pending.length && prev.sentences === sentences) return prev.learner;
-    const learner = assemble(lang, course, words, reviews, sentences.byWord, [...this.reviews.rows.values()].filter((r) => r.lang === lang));
-    this.built.set(lang, { words, reviews, sentences, learner });
+    const memory = memoryOf(reviews.log, words.words, prev && prev.reviews.log === reviews.log && prev.words.words === words.words ? prev.memory : undefined);
+    const learner = assemble(lang, course, words, reviews, sentences.byWord, [...this.reviews.rows.values()].filter((r) => r.lang === lang), memory);
+    this.built.set(lang, { words, reviews, sentences, memory, learner });
     return learner;
   }
 
@@ -316,12 +318,59 @@ function moreReviews(prev: Reviews, changes: readonly ChangeMessage<ReviewRow>[]
   return { ...prev, byWord };
 }
 
-/** The learner itself, from its parts. */
-function assemble(lang: string, course: CourseRow, { words, stateMap, links }: Words, { log, byWord: reviewsByWord }: Reviews, sentencesBy: Map<string, Sentence[]>, langReviews: ReviewRow[]): Learner {
-  const { deck, resolve } = links;
+/** What the review log says about the words: the log's rows, and the parts of the learner made from them. */
+interface Memory {
+  rows: MemoryRow[];
+  memories: MemoryRow[];
+  memory: Map<string, MemoryRow>;
+  started: Set<string>;
+  studied: Word[];
+}
+
+/**
+ * The memory of `log` for `words`. With `prev`, the memory of the same log
+ * and words just before, only the words the log changed since are worked out
+ * again, and the rest is kept (#483). Equal to building it all again.
+ */
+function memoryOf(log: MemoryLog, words: Map<string, Word>, prev: Memory | undefined): Memory {
+  const rows = log.rows();
   // Reviews for words this build doesn't know (a newer deck on another device) are kept, not shown.
-  const memories = log.rows().filter((m) => words.has(m.wordId));
-  const memory = new Map(memories.map((m) => [m.key, m]));
+  const shown = (wordId: string) => words.has(wordId);
+  const studiedOf = (started: Set<string>) => [...words.values()].filter((w) => started.has(w.id) || w.source === "user" || w.status === "queued" || w.status === "paused");
+  const all = (): MemoryRow[] => {
+    const kept = rows.filter((m) => shown(m.wordId));
+    return kept.length === rows.length ? rows : kept;
+  };
+  const touched = log.touched;
+  if (!prev || !touched) {
+    const memories = all();
+    const started = new Set(memories.map((m) => m.wordId));
+    return { rows, memories, memory: new Map(memories.map((m) => [m.key, m])), started, studied: studiedOf(started) };
+  }
+  const memories = prev.memories === prev.rows && [...touched].every(shown) ? rows : all();
+  const memory = new Map(prev.memory);
+  const started = new Set(prev.started);
+  let moved = false;
+  for (const wordId of touched) {
+    if (!shown(wordId)) continue;
+    let any = false;
+    for (const skill of SKILLS) {
+      const key = memKey(wordId, skill);
+      const row = log.get(key);
+      if (row) memory.set(key, row);
+      else memory.delete(key);
+      any ||= !!row;
+    }
+    if (any !== started.has(wordId)) moved = true;
+    if (any) started.add(wordId);
+    else started.delete(wordId);
+  }
+  return { rows, memories, memory, started, studied: moved ? studiedOf(started) : prev.studied };
+}
+
+/** The learner itself, from its parts. */
+function assemble(lang: string, course: CourseRow, { words, stateMap, links }: Words, { byWord: reviewsByWord }: Reviews, sentencesBy: Map<string, Sentence[]>, langReviews: ReviewRow[], { memories, memory, started, studied }: Memory): Learner {
+  const { deck, resolve } = links;
   const sentences = (wordId: string): Sentence[] => [
     ...(deck.sentencesByWord.get(wordId) ?? []).map((s) => ({ id: s.id, text: s.text, translation: s.translation, cloze: s.cloze, origin: "deck" as const })),
     ...(sentencesBy.get(wordId) ?? []),
@@ -329,8 +378,6 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
   // Every list in these maps has at least one sentence.
   const hasSentences = (wordId: string) => deck.sentencesByWord.has(wordId) || sentencesBy.has(wordId);
 
-  const started = new Set(memories.map((m) => m.wordId));
-  const studied = [...words.values()].filter((w) => started.has(w.id) || w.source === "user" || w.status === "queued" || w.status === "paused");
   // Every started word has reviews: memories come from them.
   const firstReview = (id: string) => Math.min(...reviewsByWord.get(id)!.map((r) => Date.parse(r.reviewed_at)));
   // Sessions and the Words list's "New" both read this one order. Worked out once per learner, when first asked.

@@ -1,0 +1,108 @@
+import { describe, expect, mock, test } from "bun:test";
+import type { ChangeMessage } from "@tanstack/react-db";
+import { DAY_MS } from "../core/day";
+import type { Grade } from "../core/fsrs";
+import { rng } from "../lib/seed";
+import type { LoadedDeck } from "./deck";
+import type { Learner } from "./learner";
+import type { CourseRow, ReviewRow, Skill } from "./rows";
+import type { Store } from "./store";
+
+// The decks load through Vite; this test brings its own.
+mock.module("./deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks here")), loadedDeck: () => undefined }));
+const { Learners } = await import("./learner");
+
+/** A table that is ready at once, and sends the changes a test gives it. */
+class Table<T extends object> {
+  private listener: ((changes: ChangeMessage<T>[]) => void) | null = null;
+  private readonly initial: ChangeMessage<T>[];
+  constructor(initial: ChangeMessage<T>[] = []) {
+    this.initial = initial;
+  }
+  subscribeChanges(cb: (changes: ChangeMessage<T>[]) => void) {
+    this.listener = cb;
+    cb(this.initial);
+    return { unsubscribe() {} };
+  }
+  onFirstReady() {
+    return () => {};
+  }
+  isReady() {
+    return true;
+  }
+  send(changes: ChangeMessage<T>[]) {
+    this.listener!(changes);
+  }
+}
+
+const course: CourseRow = { user_id: "u", lang: "es", minutes: 5, retention: 0.9, door_open: false, created_at: "2026-01-01T00:00:00Z" };
+// 60 deck words, one also known by an old id; reviews of w60 and up are for words a newer deck has (not shown here).
+const deckWords = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", forms: [`word${i}`], rank: i }));
+const byId = new Map<string, unknown>(deckWords.map((w) => [w.id, w]));
+// Only what the learner reads of a deck.
+const deck = { lang: "es", byId, sentencesByWord: new Map(), resolve: (id: string) => byId.get(id === "w3-old" ? "w3" : id) } as unknown as LoadedDeck;
+
+/** A store with these reviews; the other tables are empty. */
+function store(reviews: ReviewRow[]) {
+  const review = new Table(reviews.map((r): ChangeMessage<ReviewRow> => ({ type: "insert", key: r.id, value: r })));
+  const collections = { course: new Table([{ type: "insert", key: "es", value: course }]), review, word_state: new Table(), user_word: new Table(), user_sentence: new Table() };
+  // Only the tables and onDispose are used by Learners.
+  const s = { collections, onDispose() {} } as unknown as Store;
+  return { learners: new Learners(s), review };
+}
+
+/** Everything a screen reads of the memory, to compare a learner kept up to date with one built from scratch. */
+const view = (l: Learner) => ({ memories: l.memories, memory: l.memory, studied: l.studied.map((w) => w.id), reviews: l.reviews, reviewsByWord: l.reviewsByWord });
+
+describe("Learners: one review at a time, the same as building it all again", () => {
+  const random = rng(11);
+  const t0 = Date.UTC(2026, 0, 1, 8);
+  let n = 0;
+  const review = (word: number, skill: Skill, day: number, grade: Grade = 3): ReviewRow => ({
+    id: `r${n++}`,
+    user_id: "u",
+    lang: "es",
+    word_id: word === 3 && random() < 0.5 ? "w3-old" : `w${word}`,
+    skill,
+    grade,
+    kind: "review",
+    reviewed_at: new Date(t0 + day * DAY_MS).toISOString(),
+    duration_ms: 3000,
+    sentence_id: null,
+  });
+
+  test("answers, changed answers and undos", () => {
+    // Months of practice on 30 words, so that listening and writing unlock.
+    const rows: ReviewRow[] = [];
+    for (let w = 0; w < 30; w++) for (let k = 0, day = w; k < 6; k++, day += 2 ** k) rows.push(review(w, k > 4 && w % 3 === 0 ? "listen" : "read", day));
+    const live = store(rows);
+    let l = live.learners.get("es", deck)!;
+    let day = 200;
+    for (let step = 0; step < 300; step++) {
+      const before = l;
+      const pick = random();
+      const word = Math.floor(random() * 64);
+      const skill = (["read", "read", "listen", "write"] as const)[Math.floor(random() * 4)];
+      if (pick < 0.6) {
+        const r = review(word, skill, (day += random()), random() < 0.2 ? 1 : 3);
+        live.review.send([{ type: "insert", key: r.id, value: r }]);
+        rows.push(r);
+      } else if (pick < 0.8) {
+        // The server keeps another grade for an answer.
+        const i = Math.floor(random() * rows.length);
+        rows[i] = { ...rows[i], grade: rows[i].grade === 1 ? 3 : 1 };
+        live.review.send([{ type: "update", key: rows[i].id, value: rows[i] }]);
+      } else {
+        // Undo: the newest answer goes.
+        const r = rows.pop()!;
+        live.review.send([{ type: "delete", key: r.id, value: r }]);
+      }
+      l = live.learners.get("es", deck)!;
+      expect(view(l)).toEqual(view(store(rows).learners.get("es", deck)!));
+      for (const m of l.memories) expect(l.memory.get(m.key)).toBe(m);
+      // A row that did not change is the same object, so screens can skip it.
+      const changed = new Set(rows.slice(-1).map((r) => (r.word_id === "w3-old" ? "w3" : r.word_id)));
+      if (pick < 0.6) for (const [key, m] of before.memory) if (!changed.has(m.wordId)) expect(l.memory.get(key)).toBe(m);
+    }
+  });
+});

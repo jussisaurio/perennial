@@ -72,6 +72,13 @@ function Highlight({ text, part, blank, grown = [] }: { text: string; part: stri
 /** How many answers the learner gives before the quick-check hint stops showing. */
 const HINT_ANSWERS = 3;
 
+/** Fewer than `n` answers in the log. It stops counting at `n`: the session asks each second, and the log grows long. */
+function fewerAnswers(reviews: Learner["reviews"], n: number): boolean {
+  let answers = 0;
+  for (const r of reviews) if (r.kind === "review" && ++answers >= n) return false;
+  return true;
+}
+
 export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string; onExit: () => void; onWalk: () => void; minutes: number }) {
   const [help, setHelp] = useState(false);
 
@@ -138,7 +145,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   if (!runner) return <div className="session center muted">Preparing…</div>;
 
   // The quick-check hint is for a learner's first few answers; after that it is noise (#270).
-  const hint = !!learner && learner.reviews.filter((r) => r.kind === "review").length < HINT_ANSWERS;
+  const hint = !!learner && fewerAnswers(learner.reviews, HINT_ANSWERS);
 
   const elapsed = Math.min(1, active / runner.budgetMs);
   const overtime = runner.timeUp(active);
