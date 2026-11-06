@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { language } from "../content/languages";
 import { useUser } from "../data/auth";
 import { perLearnerDay, useLearner, type Learner } from "../data/learner";
@@ -42,13 +42,15 @@ const planToday = {
 
 // Each part below works out its own numbers, so on a slow device React can
 // pause between the parts (App opens screens in a transition) instead of
-// working them all out in one long task.
+// working them all out in one long task. The learner store updates React at
+// once (useSyncExternalStore), so a new learner, as on a cold load, is
+// deferred to get the same pauses.
 export function Home({ lang: code, onStart, onWalk }: { lang: string; onStart: (minutes: number) => void; onWalk: () => void }) {
   const [stagger] = useState(() => !animated);
   useEffect(() => {
     animated = true;
   }, []);
-  const learner = useLearner(code);
+  const learner = useDeferredValue(useLearner(code));
   const now = useNow();
   if (!learner) return <Settling />;
   const chunk = chunkToday(learner, now);
