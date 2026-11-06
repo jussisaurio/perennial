@@ -48,6 +48,8 @@ mkdirSync(OUT, { recursive: true });
 // The server's environment, before Vite's build sets NODE_ENV=production in this process.
 const SERVER_ENV = { ...process.env };
 process.env.VITE_DEV_TOOLS = "1";
+// Sentry on, as in prod, so its cost is measured. A .invalid host never resolves (RFC 2606): no event goes anywhere.
+process.env.VITE_SENTRY_DSN = "https://key@sentry.invalid/1";
 await build({
   root: WEB,
   logLevel: "warn",

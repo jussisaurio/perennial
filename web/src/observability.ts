@@ -18,18 +18,9 @@ export function initObservability() {
       dsn,
       release: RELEASE,
       environment: import.meta.env.MODE,
-      integrations: [
-        Sentry.browserTracingIntegration(),
-        // Replays only around errors, and blind: all text and inputs masked,
-        // media blocked, so no words, names or emails are ever recorded.
-        Sentry.replayIntegration({ maskAllText: true, maskAllInputs: true, blockAllMedia: true }),
-        Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] }),
-      ],
-      tracesSampleRate: 0.1,
-      replaysSessionSampleRate: 0,
-      replaysOnErrorSampleRate: 1,
-      // Same-origin API only: never send trace headers to other services.
-      tracePropagationTargets: [/^\//],
+      // No replay and no page-load traces (#488): replay records every DOM change
+      // all the time, tracing wraps every fetch and listener, and nobody read either.
+      integrations: [Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] })],
       // Long polls are cancelled by design; not errors.
       ignoreErrors: [/AbortError/, /The user aborted a request/],
     });
@@ -119,8 +110,8 @@ export function linkAccount(accountId: string) {
 }
 
 /**
- * A sign-in request has no answer yet (#312). A real exception, so Sentry also
- * sends the masked replay of the moments before. Ids and timings only: no email.
+ * A sign-in request has no answer yet (#312). A real exception, so Sentry shows
+ * it. Ids and timings only: no email.
  * `protocol` is the connection's protocol (h3, h2), when the browser shows it.
  */
 export function reportSlowAuth(step: "send" | "sign-in", path: string, ms: number, protocol: string | undefined) {
