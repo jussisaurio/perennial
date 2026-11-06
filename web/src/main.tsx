@@ -1,3 +1,4 @@
+import { startBoot } from "./data/bootRequest";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
@@ -17,6 +18,8 @@ const App = lazy(async () => {
   return import("./App");
 });
 
+// What the app needs to start (session, rows, server info): asked now, so it arrives while the code loads (#602).
+void startBoot();
 initTheme();
 // Error reports load after the first paint, out of this first task (#481). Reports made before then wait for them.
 afterPaint(() => void initObservability());

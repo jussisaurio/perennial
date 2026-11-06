@@ -1,7 +1,8 @@
 // What the server says about itself (GET /api/server): what it can do right
 // now, so the app shows only features that work; the oldest app version it
 // accepts; and its release. Asked at start and again when the tab comes back
-// (at most every few minutes); the last answer is kept for the next start.
+// (at most every few minutes); the last answer is kept for the next start. At
+// start it comes with GET /api/boot (data/boot.ts).
 // Until it is known, every feature counts as off (no buttons that then vanish).
 //
 // A newer release on the server than the one this app was built from means a
@@ -14,6 +15,7 @@ import { ServerInfo } from "perennial-contract";
 import { useSyncExternalStore } from "react";
 import { reportBadAnswer } from "../observability";
 import { APP_VERSION, RELEASE } from "../version";
+import { boot } from "./boot";
 import { reloadNeeded, request, type BadAnswer } from "./http";
 
 /** What the server can do now. `ai`: Perennial AI (words from your own texts, new sentences). */
@@ -58,14 +60,17 @@ function badAnswer(e: BadAnswer) {
   if (Option.isSome(min) && !versionAtLeast(APP_VERSION, min.value.minClientVersion)) reloadNeeded.dispatchEvent(new Event("reload"));
 }
 
-async function load() {
-  const info = await Effect.runPromise(
+function ask() {
+  return Effect.runPromise(
     request(ServerInfo, "/api/server").pipe(
       Effect.catchTag("BadAnswer", (e) => Effect.sync(() => (badAnswer(e), null))),
       // Offline, or an error answer: keep the last known one.
       Effect.catch(() => Effect.succeed(null)),
     ),
   );
+}
+
+function use(info: ServerInfo | null) {
   if (!info) return;
   try {
     localStorage.setItem(KEY, JSON.stringify(info));
@@ -90,11 +95,15 @@ export function loadServerInfo() {
   if (fetched) return;
   fetched = true;
   lastAsked = Date.now();
-  void load();
+  // Boot failed: ask /api/server, as later checks do.
+  void boot().then(
+    (b) => use(b.server),
+    async () => use(await ask()),
+  );
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible" || Date.now() - lastAsked < RECHECK_MS) return;
     lastAsked = Date.now();
-    void load();
+    void ask().then(use);
   });
 }
 

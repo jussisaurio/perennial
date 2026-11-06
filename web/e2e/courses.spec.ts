@@ -57,7 +57,8 @@ test("a course in a language this build lacks (started on a newer build) is left
   // The same learner on a second device (no local copy yet). The server only
   // takes known languages, so pretend: its rows say the one course is French.
   const other = await browser.newPage({ storageState: await page.context().storageState() });
-  await other.route("**/api/rows", async (route) => {
+  // Its first rows come with /api/boot.
+  await other.route("**/api/boot", async (route) => {
     const res = await route.fetch();
     await route.fulfill({ response: res, body: (await res.text()).replaceAll('"lang":"de"', '"lang":"fr"') });
   });

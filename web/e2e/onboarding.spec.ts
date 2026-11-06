@@ -85,9 +85,10 @@ test("coming back to the tab keeps the sign-in form as it was", async ({ page })
 
 test("a newer app found by the first check at start still shows the reload note (#121)", async ({ page }) => {
   // The first answer arrives before the note is on screen; the note must still see it.
-  await page.route("**/api/server", async (route) => {
+  await page.route("**/api/boot", async (route) => {
     const res = await route.fetch();
-    await route.fulfill({ response: res, json: { ...(await res.json()), minClientVersion: "999.0.0" } });
+    const boot = await res.json();
+    await route.fulfill({ response: res, json: { ...boot, server: { ...boot.server, minClientVersion: "999.0.0" } } });
   });
   await startCourse(page);
   await expect(page.getByRole("status").filter({ hasText: "A new version of Perennial is ready" })).toBeVisible();

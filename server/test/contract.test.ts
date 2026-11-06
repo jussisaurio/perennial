@@ -3,7 +3,7 @@
 
 import { afterAll, expect, test } from "bun:test";
 import { Schema } from "effect";
-import { ApiErrorBody, ExamplesOut, Me, MineOut, ServerInfo, WriteResult } from "perennial-contract";
+import { ApiErrorBody, Boot, ExamplesOut, Me, MineOut, ServerInfo, WriteResult } from "perennial-contract";
 import { QUOTA } from "../src/sync";
 import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 
@@ -16,9 +16,13 @@ test("answers decode with the contract", async () => {
   decodes(ServerInfo, (await t.call("/api/server")).body);
   const cookie = await t.signIn(unique("contract"));
   decodes(Me, (await t.call("/api/me", undefined, cookie)).body);
+  expect(decodes(Boot, (await t.call("/api/boot")).body)).toMatchObject({ user: null, rows: null });
   decodes(WriteResult, (await t.write(cookie, [review(W.a)])).body);
   decodes(MineOut, (await t.call("/api/ai/mine", { lang: "es", items: [{ form: "zorro", sentence: "Veo un zorro." }], known: [] }, cookie)).body);
   decodes(ExamplesOut, (await t.call("/api/ai/examples", { lang: "es", words: [{ lemma: "zorro", gloss: "fox", seen: [] }], known: [] }, cookie)).body);
+  const boot = Schema.decodeUnknownSync(Boot)((await t.call("/api/boot", undefined, cookie)).body);
+  expect(boot.user?.id as string | undefined).toBe((await t.me(cookie)).id);
+  expect(boot.rows?.review.length).toBe(1);
 });
 
 test("error bodies decode with the contract, with their status", async () => {

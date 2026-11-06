@@ -32,3 +32,18 @@ export const LearnerRows = Schema.Struct({
   user_sentence: Rows,
 });
 export type LearnerRows = typeof LearnerRows.Type;
+
+/**
+ * The signed-in user as Better Auth keeps it, the part the app reads. An
+ * anonymous user's email is Better Auth's own placeholder, not a real one.
+ */
+export const AuthUser = Schema.Struct({ id: UserId, email: Schema.String, isAnonymous: Schema.optional(Schema.NullOr(Schema.Boolean)) });
+export type AuthUser = typeof AuthUser.Type;
+
+/**
+ * GET /api/boot: everything the app needs to start, in one answer: the session's
+ * user (null when signed out), their rows (null when signed out) and this
+ * server's info. Later reads use /api/auth/get-session, /api/rows and /api/server.
+ */
+export const Boot = Schema.Struct({ user: Schema.NullOr(AuthUser), rows: Schema.NullOr(LearnerRows), server: ServerInfo });
+export type Boot = typeof Boot.Type;

@@ -5,21 +5,37 @@
 import { anonymousClient, emailOTPClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { Clock, Effect, Fiber, Schema } from "effect";
-import { UserId } from "perennial-contract";
+import { AuthUser, UserId } from "perennial-contract";
 import { linkAccount, reportSlowAuth, track } from "../observability";
+import { boot } from "./boot";
 import { captchaHeaders } from "./captcha";
 import { clearOutboxNow, forgetOnDevice, keepOnDevice, noteSignIn, resolvePendingLink, stopSyncNow } from "./device";
 
-export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()] });
+/**
+ * The first session check is answered from GET /api/boot (data/boot.ts), which
+ * started as the app's code loaded: no request of its own at start (#602).
+ * Later checks (tab back, sign-in, sign-out) ask Better Auth's endpoint.
+ */
+let firstSessionCheck = true;
+const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const path = new URL(input instanceof Request ? input.url : input, location.href).pathname;
+  if (firstSessionCheck && path === "/api/auth/get-session" && (init?.method ?? "GET") === "GET") {
+    firstSessionCheck = false;
+    // undefined: boot failed, so ask the endpoint, as before #602.
+    const user = await boot().then((b) => b.user, () => undefined);
+    // Better Auth's answer has the session too; the app reads only the user.
+    if (user !== undefined) return Response.json(user && { session: null, user });
+  }
+  return fetch(input, init);
+};
+
+export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()], fetchOptions: { customFetchImpl: authFetch } });
 
 export interface SessionUser {
   id: UserId;
   email: string | null;
   anonymous: boolean;
 }
-
-/** What the app reads of Better Auth's session user. */
-const AuthUser = Schema.Struct({ id: UserId, email: Schema.String, isAnonymous: Schema.optional(Schema.NullOr(Schema.Boolean)) });
 
 // A session user without these is a bug in Better Auth's answer: it throws, loudly.
 const decodeUser = Schema.decodeUnknownSync(AuthUser);

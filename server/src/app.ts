@@ -15,7 +15,7 @@ import { Context, Effect, Layer, Schema } from "effect";
 import type { Scope } from "effect";
 import { HttpRouter, HttpServer, HttpServerError, HttpServerRequest, HttpServerResponse } from "effect/http";
 import type { HttpMethod } from "effect/http/HttpMethod";
-import { ExamplesIn, MineIn, UserId, WriteBatch, type Me, type ServerInfo } from "perennial-contract";
+import { AuthUser, ExamplesIn, MineIn, WriteBatch, type Boot, type Me, type ServerInfo } from "perennial-contract";
 import { withClientIp } from "./clientIp";
 import { AppConfig } from "./config";
 import { ApiError, decodeBody, errorResponse, inlineScriptHashes, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
@@ -68,9 +68,6 @@ const finish = (req: Request, res: Response) =>
     return webResponse(res);
   });
 
-/** The signed-in learner, as the app's code sees it: decoded from Better Auth's session. */
-const SessionUser = Schema.Struct({ id: UserId, email: Schema.String, isAnonymous: Schema.optional(Schema.NullOr(Schema.Boolean)) });
-
 type Handler = Effect.Effect<HttpServerResponse.HttpServerResponse, ApiError, RequestContext>;
 type Methods = Partial<Record<HttpMethod, Handler>>;
 
@@ -98,7 +95,7 @@ export const AppLive = Layer.effect(
       const s = yield* inBetterAuth("Auth.getSession", () => auth.api.getSession({ headers: request.headers }));
       if (!s) return null;
       // A session Better Auth hands over without a usable user is a bug: a defect (500).
-      const user = yield* Schema.decodeUnknownEffect(SessionUser)(s.user).pipe(Effect.orDie);
+      const user = yield* Schema.decodeUnknownEffect(AuthUser)(s.user).pipe(Effect.orDie);
       yield* annotate({ userId: user.id });
       return user;
     });
@@ -114,6 +111,7 @@ export const AppLive = Layer.effect(
       const { request } = yield* RequestContext;
       if (!versionAtLeast(request.headers.get("x-perennial-version"), config.minClientVersion)) return yield* refuse({ error: "please_reload", minVersion: config.minClientVersion });
     });
+    const serverInfo: ServerInfo = { release: config.release, minClientVersion: config.minClientVersion, features: { ai: ai.enabled } };
     const body = <S extends Schema.Decoder<unknown>>(schema: S, limit = 64 * 1024) => RequestContext.use(({ request }) => decodeBody(request, schema, limit));
 
     // The router finds the path; the path's own table picks the method (405
@@ -156,10 +154,17 @@ export const AppLive = Layer.effect(
       // and what it can do right now, so the app shows only what works
       // (web/src/data/server.ts). Public: it says nothing about the user.
       at("/api/server", {
-        GET: Effect.sync(() => json({ release: config.release, minClientVersion: config.minClientVersion, features: { ai: ai.enabled } } satisfies ServerInfo, 200, { "cache-control": "no-cache" })),
+        GET: Effect.sync(() => json(serverInfo, 200, { "cache-control": "no-cache" })),
+      }),
+      // What the app needs to start, in one answer, so it waits for one round trip, not three (#602).
+      at("/api/boot", {
+        GET: Effect.gen(function* () {
+          const user = yield* session;
+          return json({ user, rows: user ? yield* sync.rows(user.id) : null, server: serverInfo } satisfies Boot);
+        }),
       }),
 
-      // Everything the learner has: the app reads it at start and when it comes back into view (web/src/data/store.ts).
+      // Everything the learner has: the app reads it again when it comes back into view (web/src/data/store.ts). At start it comes with /api/boot.
       at("/api/rows", {
         GET: Effect.gen(function* () {
           const user = yield* requireUser();
