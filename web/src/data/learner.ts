@@ -10,7 +10,7 @@ import { DAY_MS, startOfDay } from "../core/day";
 import { firstReviewed, MemoryLog, reviewedAt, memKey, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
-import { yieldToBrowser } from "../lib/yield";
+import { inSlices, runAll } from "../lib/yield";
 import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, SKILLS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
@@ -385,28 +385,6 @@ function* allReviews(rows: readonly ReviewRow[], links: Links, retention: number
   return { links, log, byWord, byDay };
 }
 
-function runAll<T>(steps: Generator<void, T>): T {
-  for (;;) {
-    const s = steps.next();
-    if (s.done) return s.value;
-  }
-}
-
-/** Under the 10 ms task budget at CPU 10× (perf/ui.ts), with room for the rest of the task. */
-const SLICE_MS = 5;
-
-async function inSlices<T>(steps: Generator<void, T>): Promise<T> {
-  let start = performance.now();
-  for (;;) {
-    const s = steps.next();
-    if (s.done) return s.value;
-    if (performance.now() - start > SLICE_MS) {
-      await yieldToBrowser();
-      start = performance.now();
-    }
-  }
-}
-
 /** What upcoming() needs of `changed` words from the learner before, read before moreReviews and memoryOf change its maps. */
 function beforeOf(prev: Built, changed: Set<string>): Before {
   const started = new Set([...changed].filter((id) => prev.memory.started.has(id)));
@@ -628,7 +606,12 @@ const placedOf = (w: Word) => ({ garden: w.garden, orchard: w.orchard });
  * keeps the first `now`, as a screen's own memo for the day would.
  */
 export function perLearnerDay<T>(derive: (l: Learner, now: number) => T): (l: Learner, now: number) => T {
-  const cache = new WeakMap<Learner, { day: number; value: T }>();
+  return dayCached(derive, new WeakMap());
+}
+
+type DayCache<T> = WeakMap<Learner, { day: number; value: T }>;
+
+function dayCached<T>(derive: (l: Learner, now: number) => T, cache: DayCache<T>): (l: Learner, now: number) => T {
   return (l, now) => {
     const day = startOfDay(now);
     const hit = cache.get(l);
@@ -637,6 +620,40 @@ export function perLearnerDay<T>(derive: (l: Learner, now: number) => T): (l: Le
     cache.set(l, { day, value });
     return value;
   };
+}
+
+/**
+ * perLearnerDay for work too long for one task: `warm` works it out in
+ * slices, so a render that reads it later (`get`) does no work. A `get`
+ * before that works it all out at once. `warm` stops, and keeps nothing,
+ * once `live()` says `l` is no longer the current learner: an answer changes
+ * its maps in place (moreReviews), so its slices would read a mix.
+ */
+export function slicedPerLearnerDay<T>(steps: (l: Learner, now: number) => Generator<void, T>): {
+  get: (l: Learner, now: number) => T;
+  warm: (l: Learner, now: number, live: () => boolean) => Promise<void>;
+} {
+  const cache: DayCache<T> = new WeakMap();
+  return {
+    get: dayCached((l, now) => runAll(steps(l, now)), cache),
+    warm: async (l, now, live) => {
+      const day = startOfDay(now);
+      if (cache.get(l)?.day === day) return;
+      const done = await inSlices(whileLive(steps(l, now), live));
+      // A render may have asked meanwhile: keep the value it got, an equal one.
+      if (done && cache.get(l)?.day !== day) cache.set(l, { day, value: done.value });
+    },
+  };
+}
+
+/** `steps`, stopped (null) when `live()` turns false between two of them. */
+function* whileLive<T>(steps: Generator<void, T>, live: () => boolean): Generator<void, { value: T } | null> {
+  for (;;) {
+    const s = steps.next();
+    if (s.done) return { value: s.value };
+    yield;
+    if (!live()) return null;
+  }
 }
 
 // ---------- writes ----------
