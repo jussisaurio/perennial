@@ -474,14 +474,29 @@ export class GardenScene {
     this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry, this.toys, this.lanterns];
     this.tinted = [this.mats, this.leaveIt.mats, this.walkInto.mats, this.carry.mats];
     this.scene.fog = this.fog;
-    this.build();
+  }
+
+  /** When the current slice of build or warm work began (performance.now ms). */
+  private sliceFrom = 0;
+
+  /**
+   * Between steps of the build and the warm-up: lets the browser paint and take
+   * input once this slice has run SLICE_MS (#459: in one task, the build blocked
+   * the page for most of a second on a slow laptop). True if the walk was left meanwhile.
+   */
+  private async stopped(): Promise<boolean> {
+    if (performance.now() - this.sliceFrom < SLICE_MS) return this.disposed;
+    await yieldToBrowser();
+    this.sliceFrom = performance.now();
+    return this.disposed;
   }
 
   /**
-   * Builds the static world, part by part; the plants follow (they need
-   * rasterising). Keep the order: the parts share one random sequence.
+   * Builds the static world, part by part, a slice at a time; the plants
+   * follow (they need rasterising). Keep the order: the parts share one random sequence.
    */
-  private build() {
+  async build(): Promise<void> {
+    this.sliceFrom = performance.now();
     const L = this.layout;
     const b = L.bounds;
     const c: BuildCtx = {
@@ -506,27 +521,35 @@ export class GardenScene {
     };
     this.ctx = c;
     this.buildGround(c);
-    this.plants.build(c);
+    if (await this.stopped()) return;
+    for (const _bed of this.plants.build(c)) if (await this.stopped()) return;
     this.buildFence(c);
     this.buildHedge(c);
+    if (await this.stopped()) return;
     const { pads } = this.sky.buildPond(c);
+    if (await this.stopped()) return;
     this.buildTrees(c);
+    if (await this.stopped()) return;
     this.lanterns.build(c);
     const bench = this.buildBench(c);
     const boards = this.buildSigns(c, bench);
+    if (await this.stopped()) return;
     // The one clock read in the build: what is where today (DESIGN.md, Garden code).
     const now = new Date();
     this.openedAt = now.getTime();
     // The mat says the doormat's word as a mat would: the bare word, in capitals.
     const welcome = this.visitors.scenery?.doormat?.word;
     this.jokes.build(c, this.bench, now, welcome ? bareNoun(welcome).toUpperCase() : null);
+    if (await this.stopped()) return;
     // The garden's age, in calendar days since the first review (#379).
     const first = this.visitors.firstReview;
     this.guests.build(this.spots(pads, boards, now), now, first === null ? 0 : dayNumber(now) - dayNumber(first));
+    if (await this.stopped()) return;
     // After the visitors: the dog, if it came for the bowl in the night (#351), waits by what it left.
     this.leaveIt.build(c);
     this.scene.add(this.leaveIt.root);
     this.toys.build(c);
+    if (await this.stopped()) return;
     const dog = this.leaveIt.dogAt();
     if (dog) this.guests.visit("dog", dog);
     // Draws no random numbers either.
@@ -536,14 +559,38 @@ export class GardenScene {
     if (this.keyHelp?.visitors && this.door.key && !dog) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
     // After the visitors: a visitor may sit in the orchard's trees today.
     if (this.visitors.door === "open") this.openDoor();
+    if (await this.stopped()) return;
     this.buildStakes(c);
     this.buildSunflower(c);
+    if (await this.stopped()) return;
     this.buildDecor(c);
+    if (await this.stopped()) return;
     this.sky.buildSkyAndSun(c);
+    if (await this.stopped()) return;
     this.critters.build(c);
     this.walkInto.build(c, this.visitors.autumn);
     this.buildMarker();
     this.setTime(this.time);
+    await this.warm();
+  }
+
+  /**
+   * Compiles the shaders and uploads the textures before the first frame, a
+   * slice at a time (#459): the first render did both in one long task. The
+   * GPU links the shaders while the slices yield.
+   */
+  private async warm(): Promise<void> {
+    // The scene's fog without its objects: compile() walks the whole target scene for lights on
+    // every call, and the garden has none. The fog is part of each shader's cache key.
+    const target = new THREE.Scene();
+    target.fog = this.fog;
+    for (const child of [...this.scene.children]) {
+      this.renderer.compile(child, this.camera, target);
+      child.traverse((o) => {
+        for (const mat of materialsOf(o)) for (const t of texturesOf(mat)) this.renderer.initTexture(t);
+      });
+      if (await this.stopped()) return;
+    }
   }
 
   /** Ground: grass everywhere, a path surface inside the fence. */
@@ -1749,7 +1796,8 @@ export class GardenScene {
       this.elapsed += dt;
       this.tick(dt);
     };
-    loop();
+    // The first frame in a task of its own: it sets up every shader for drawing, and loadPlants follows in this one (#459).
+    this.frame = requestAnimationFrame(loop);
   }
 
   private tick(dt: number) {
@@ -1992,17 +2040,40 @@ export class GardenScene {
     cancelAnimationFrame(this.frame);
     this.orchard?.dispose();
     this.scene.traverse((o) => {
-      const m = o as THREE.Mesh;
-      m.geometry?.dispose();
-      const mats = Array.isArray(m.material) ? m.material : m.material ? [m.material] : [];
-      for (const mat of mats) {
-        for (const v of Object.values(mat)) if (v instanceof THREE.Texture) v.dispose();
-        if (mat instanceof THREE.ShaderMaterial) for (const u of Object.values(mat.uniforms)) if (u.value instanceof THREE.Texture) u.value.dispose();
+      (o as THREE.Mesh).geometry?.dispose();
+      for (const mat of materialsOf(o)) {
+        for (const t of texturesOf(mat)) t.dispose();
         mat.dispose();
       }
     });
     this.renderer.dispose();
   }
+}
+
+/** An object's materials: none, one, or one per face group. */
+function materialsOf(o: THREE.Object3D): THREE.Material[] {
+  const m = (o as THREE.Mesh).material;
+  return Array.isArray(m) ? m : m ? [m] : [];
+}
+
+/** The textures a material draws with: its maps, and for a sprite shader its uniforms. */
+function texturesOf(mat: THREE.Material): THREE.Texture[] {
+  const all = Object.values(mat).filter((v) => v instanceof THREE.Texture);
+  if (mat instanceof THREE.ShaderMaterial) for (const u of Object.values(mat.uniforms)) if (u.value instanceof THREE.Texture) all.push(u.value);
+  return all;
+}
+
+/** How long one slice of the scene's build may run before it yields: under the 10 ms task budget, with room for the browser's own work. */
+const SLICE_MS = 8;
+
+/**
+ * Lets the browser paint and handle input. scheduler.yield resumes this work
+ * ahead of other queued tasks; where it is missing (Safari, for one), a new
+ * task via setTimeout does the same, only queued last.
+ */
+function yieldToBrowser(): Promise<void> {
+  const s = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+  return s?.yield ? s.yield() : new Promise((r) => setTimeout(r, 0));
 }
 
 export function webglAvailable(): boolean {
