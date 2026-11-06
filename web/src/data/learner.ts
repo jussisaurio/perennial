@@ -7,7 +7,7 @@ import { courseOrder, nextWords, sincePlaced } from "../content/order";
 import { useLiveQuery, type ChangeMessage } from "@tanstack/react-db";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import { startOfDay } from "../core/day";
-import { MemoryLog, memKey, type MemoryRow } from "../core/memory";
+import { MemoryLog, memKey, reviewedAt, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
 import { DAILY_MINUTES } from "./practice";
@@ -379,7 +379,7 @@ function assemble(lang: string, course: CourseRow, { words, stateMap, links }: W
   const hasSentences = (wordId: string) => deck.sentencesByWord.has(wordId) || sentencesBy.has(wordId);
 
   // Every started word has reviews: memories come from them.
-  const firstReview = (id: string) => Math.min(...reviewsByWord.get(id)!.map((r) => Date.parse(r.reviewed_at)));
+  const firstReview = (id: string) => Math.min(...reviewsByWord.get(id)!.map((r) => reviewedAt(r)));
   // Sessions and the Words list's "New" both read this one order. Worked out once per learner, when first asked.
   let next: Word[] | null = null;
   const upcoming = () => {

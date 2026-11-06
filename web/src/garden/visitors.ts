@@ -116,17 +116,18 @@ export function heronDay(year: number, month: number): number {
 
 /** The facts visitorsFor needs, from the learner's review times (ms, any order). */
 export function learnerFacts(reviews: Iterable<number>, known: number, now: Date | number, garden: ReadonlySet<GardenWord>): LearnerFacts {
-  const today = dayNumber(now);
+  // A time before a day's local midnight is on an earlier day: one compare per review, not a Date each (#479).
+  const today = startOfDay(now);
   let first: number | null = null;
   let last: number | null = null;
   for (const t of reviews) {
     if (first === null || t < first) first = t;
-    if (dayNumber(t) < today && (last === null || t > last)) last = t;
+    if (t < today && (last === null || t > last)) last = t;
   }
   let prev: number | null = null;
   if (last !== null) {
-    const lastDay = dayNumber(last);
-    for (const t of reviews) if (dayNumber(t) < lastDay && (prev === null || t > prev)) prev = t;
+    const lastDay = startOfDay(last);
+    for (const t of reviews) if (t < lastDay && (prev === null || t > prev)) prev = t;
   }
   return { firstReview: first, lastBeforeToday: last, prevBeforeLast: prev, known, garden };
 }

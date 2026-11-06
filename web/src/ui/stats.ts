@@ -1,5 +1,5 @@
 import { DAY_MS, startOfDay } from "../core/day";
-import { knownAt, readMemory, wordState } from "../core/memory";
+import { knownAt, readMemory, reviewedAt, wordState } from "../core/memory";
 import { perLearnerDay, type Learner } from "../data/learner";
 
 interface CourseStats {
@@ -36,7 +36,7 @@ export function courseStats(l: Learner, now = Date.now()): CourseStats {
   let total = 0;
   const days = Array.from({ length: 30 }, (_, i) => ({ day: startOfToday - (29 - i) * DAY_MS, reviews: 0 }));
   for (const list of l.reviewsByWord.values()) {
-    const ts = list.map((r) => Date.parse(r.reviewed_at));
+    const ts = list.map((r) => reviewedAt(r));
     list.forEach((r, i) => {
       if (ts[i] <= now - 30 * DAY_MS) return;
       const idx = 29 - Math.floor((startOfToday + DAY_MS - 1 - ts[i]) / DAY_MS);

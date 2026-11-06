@@ -74,6 +74,22 @@ export function recall(m: MemoryRow, now = Date.now()): number {
 
 export const memKey = (wordId: string, skill: Skill) => `${wordId}:${skill}`;
 
+const reviewTimes = new WeakMap<ReviewRow, number>();
+
+/**
+ * When a review was made (ms), parsed once per row: each screen reads every
+ * review's time, and parsing them all again on every new learner was slow
+ * (#479). A changed review is a new row object, so it is parsed again.
+ */
+export function reviewedAt(r: ReviewRow): number {
+  let t = reviewTimes.get(r);
+  if (t === undefined) {
+    t = Date.parse(r.reviewed_at);
+    reviewTimes.set(r, t);
+  }
+  return t;
+}
+
 /** A word's reading memory, which decides its state and its plant. */
 export function readMemory<M>(l: { memory: { get: (key: string) => M | undefined } }, wordId: string): M | undefined {
   return l.memory.get(memKey(wordId, "read"));
@@ -96,8 +112,8 @@ export function knownAt(l: { words: ReadonlyMap<string, unknown>; memory: Readon
     // A word read since `t` has reviews, listed under it.
     const before = l.reviewsByWord
       .get(id)!
-      .filter((r) => r.skill === "read" && Date.parse(r.reviewed_at) < t)
-      .map((r) => ({ ts: Date.parse(r.reviewed_at), grade: r.grade }));
+      .filter((r) => r.skill === "read" && reviewedAt(r) < t)
+      .map((r) => ({ ts: reviewedAt(r), grade: r.grade }));
     if (wordState(replay(fsrs, before, l.course.retention, memKey(id, "read")) ?? undefined) === "known") known.add(id);
   }
   return known;
@@ -160,7 +176,7 @@ export class MemoryLog {
       g = { wordId, skill: r.skill, list: [], row: undefined };
       this.groups.set(key, g);
     }
-    const entry = { id: r.id, ts: Date.parse(r.reviewed_at), grade: r.grade };
+    const entry = { id: r.id, ts: reviewedAt(r), grade: r.grade };
     const i = was === undefined ? -1 : g.list.findIndex((e) => e.id === r.id);
     if (i >= 0) g.list[i] = entry;
     else g.list.push(entry);

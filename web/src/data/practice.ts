@@ -3,6 +3,7 @@
 
 import { NEW_WORD_MS, plan, type Plan } from "../core/session";
 import { startOfDay } from "../core/day";
+import { reviewedAt } from "../core/memory";
 import { fsrs as scheduler } from "../core/scheduler";
 import type { Learner } from "./learner";
 import type { ReviewRow } from "./rows";
@@ -11,7 +12,7 @@ import type { ReviewRow } from "./rows";
 function answeredToday(l: Learner, now: number): Set<string> {
   const dayStart = startOfDay(now);
   const done = new Set<string>();
-  for (const r of l.reviews) if (r.grade >= 2 && Date.parse(r.reviewed_at) >= dayStart) done.add(l.resolve(r.word_id));
+  for (const r of l.reviews) if (r.grade >= 2 && reviewedAt(r) >= dayStart) done.add(l.resolve(r.word_id));
   return done;
 }
 
@@ -31,7 +32,7 @@ export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = D
 /** A word's first answer ever: its quick check, or "Already know it". */
 function isFirstAnswer(l: Learner, r: ReviewRow): boolean {
   // !: every review is listed under its resolved word.
-  const first = l.reviewsByWord.get(l.resolve(r.word_id))!.reduce((a, b) => (Date.parse(b.reviewed_at) < Date.parse(a.reviewed_at) ? b : a));
+  const first = l.reviewsByWord.get(l.resolve(r.word_id))!.reduce((a, b) => (reviewedAt(b) < reviewedAt(a) ? b : a));
   return first.id === r.id;
 }
 
@@ -56,7 +57,7 @@ export function nextChunk(l: Learner, now = Date.now()): { state: "start" | "fin
   // Every other answer counts its real time: the timer, not the plan, ends reviews.
   let ms = 0;
   for (const r of l.reviews) {
-    if (Date.parse(r.reviewed_at) < dayStart) continue;
+    if (reviewedAt(r) < dayStart) continue;
     ms += isFirstAnswer(l, r) ? Math.max(r.duration_ms, NEW_WORD_MS) : r.duration_ms;
   }
   const left = DAILY_MINUTES - ms / 60_000;
