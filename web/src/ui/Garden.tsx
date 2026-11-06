@@ -190,8 +190,13 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
   const [scrolled, setScrolled] = useState<number | null>(null);
   const scrollX = !scrolls ? 0 : (scrolled ?? opening);
   useLayoutEffect(() => {
-    // Only a write: reading scrollLeft back here forced a layout of the whole new screen.
-    if (scrolls && scrolled === null && scroller.current) scroller.current.scrollLeft = opening;
+    // In the next frame, before its paint, so the first paint is already there: even a write forces
+    // layout, and in the commit it laid out the whole new screen in the same task (~28 ms at CPU 10×, #569).
+    if (!scrolls || scrolled !== null) return;
+    const frame = requestAnimationFrame(() => {
+      if (scroller.current) scroller.current.scrollLeft = opening;
+    });
+    return () => cancelAnimationFrame(frame);
   }, [scrolls, scrolled, opening]);
 
   // Swipe on touch, two-finger scroll on trackpads, and arrows on desktop.
@@ -282,23 +287,37 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
           ))}
           {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, first.at)} />}
           <path d={`M0 ${GROUND + 4} Q ${fullWidth * 0.25} ${GROUND - 3} ${fullWidth * 0.5} ${GROUND + 3} T ${fullWidth} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
-          {Array.from({ length: Math.ceil((to - from) / 38) }, (_, k) => {
-            const i = Math.floor(from / 38) + k;
-            const gx = (i + hash01(String(i), 31)) * 38;
-            return <path key={i} className="tuft" d={`M${gx} ${GROUND + 6} l -3 -7 M${gx} ${GROUND + 6} l 0 -9 M${gx} ${GROUND + 6} l 3 -6`} />;
-          })}
-          {Array.from({ length: seeds }, (_, i) => {
-            const sx = (scrolls ? fullWidth - width : 0) + 24 + hash01(`seed${i}`, 37) * (width - 48);
-            const sy = GROUND + 14 + hash01(`seed${i}`, 41) * 12;
-            return <ellipse key={i} className="seed" cx={sx} cy={sy} rx={2.6} ry={1.7} transform={`rotate(${hash01(`seed${i}`, 43) * 180} ${sx} ${sy})`} />;
-          })}
+          {/* The tufts, and the seeds below, each one path: every element in the strip costs style and layout (#569). */}
+          <path
+            className="tuft"
+            d={Array.from({ length: Math.ceil((to - from) / 38) }, (_, k) => {
+              const i = Math.floor(from / 38) + k;
+              const gx = (i + hash01(String(i), 31)) * 38;
+              return `M${gx} ${GROUND + 6} l -3 -7 M${gx} ${GROUND + 6} l 0 -9 M${gx} ${GROUND + 6} l 3 -6`;
+            }).join(" ")}
+          />
+          {seeds > 0 && (
+            <path
+              className="seed"
+              d={Array.from({ length: seeds }, (_, i) => {
+                const sx = (scrolls ? fullWidth - width : 0) + 24 + hash01(`seed${i}`, 37) * (width - 48);
+                const sy = GROUND + 14 + hash01(`seed${i}`, 41) * 12;
+                // An ellipse of radii 2.6 and 1.7 turned by `deg`: two half arcs between the ends of its long axis.
+                const deg = hash01(`seed${i}`, 43) * 180;
+                const dx = 2.6 * Math.cos((deg * Math.PI) / 180);
+                const dy = 2.6 * Math.sin((deg * Math.PI) / 180);
+                return `M${sx + dx} ${sy + dy} A2.6 1.7 ${deg} 1 0 ${sx - dx} ${sy - dy} A2.6 1.7 ${deg} 1 0 ${sx + dx} ${sy + dy}Z`;
+              }).join(" ")}
+            />
+          )}
           {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>
         {(["snail", "cat", "bird", "frog", "dog", "fish", "butterfly"] as const).map(view).map((v) => {
           if (!v) return null;
           // Looked up once, not per plant: inside the search it cost ~300 ms per Today visit (perf/ui.ts).
           const plant = homePlant(v);
-          const home = plant && layout.find((l) => l.p.id === plant.id);
+          // The layout is in the plants' order: indexOf, not a search by id (~4 ms of the first render at CPU 10×, #569).
+          const home = plant && layout[plants.indexOf(plant)];
           const at = home ? atPlant(v.id, home, isSleepyHour()) : null;
           // No plant of its own: the snail on the soil, the cat asleep at the right end; the bird, frog and fish only in the walk; the dog and butterfly stay away.
           if (!at && v.id !== "snail" && v.id !== "cat") return null;
