@@ -111,6 +111,8 @@ export interface Learner {
   upcoming(): Word[];
   /** The ids of upcoming(). */
   fresh(): string[];
+  /** fresh(), a step at a time: Today works it out in slices (#569). */
+  freshSteps(): Generator<void, string[]>;
   /** Resolve deck aliases to the word that counts. */
   resolve(id: string): string;
 }
@@ -493,13 +495,25 @@ function assemble(lang: string, course: CourseRow, wordsOf: Words, { byWord: rev
   // Sessions and the Words list's "New" both read this one order. Worked out once per learner, when first asked.
   // The learner before is let go once used: a chain of learners would hold every one's maps.
   let before = from;
-  const upcoming = () => {
-    box.state ??= upcomingOf(wordsOf, started, firstReview, hasSentences, before);
-    before = null;
+  function* upcomingSteps(): Generator<void, Word[]> {
+    if (!box.state) {
+      const state = yield* upcomingOf(wordsOf, started, firstReview, hasSentences, before);
+      // An upcoming() between two steps worked out an equal one: keep the first.
+      box.state ??= state;
+      before = null;
+    }
     return box.state.next;
-  };
+  }
+  const upcoming = () => runAll(upcomingSteps());
   let ids: string[] | null = null;
-  const fresh = () => (ids ??= upcoming().map((w) => w.id));
+  function* freshSteps(): Generator<void, string[]> {
+    if (!ids) {
+      const next = yield* upcomingSteps();
+      ids ??= next.map((w) => w.id);
+    }
+    return ids;
+  }
+  const fresh = () => runAll(freshSteps());
   const reviewsSince = (t: number) => {
     const out: ReviewRow[] = [];
     for (const [day, list] of byDay) if (day >= Math.floor(t / DAY_MS)) for (const r of list) if (reviewedAt(r) >= t) out.push(r);
@@ -525,7 +539,7 @@ function assemble(lang: string, course: CourseRow, wordsOf: Words, { byWord: rev
       bound = day - 1;
     }
   };
-  return { lang, deck, course, words, studied, memories, memory, everyReview, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, sentences, upcoming, fresh, resolve };
+  return { lang, deck, course, words, studied, memories, memory, everyReview, reviewsByWord, reviewsSince, firstReviewAt, lastReviewBefore, states: stateMap, sentences, upcoming, fresh, freshSteps, resolve };
 }
 
 /** upcoming(): the words, and the walk of the course and `since` they came from. */
@@ -548,14 +562,26 @@ interface Before {
 
 /** The course as these words, each word's place in it, and the words you picked, in the order you picked them. Once per Words. */
 const choicesOf = new WeakMap<Words, { course: Word[]; at: Map<string, number>; picked: Word[] }>();
-function choices(w: Words) {
-  let c = choicesOf.get(w);
-  if (!c) {
-    const course = courseOrder(w.links.deck).map((d) => w.words.get(d.id)!);
-    const picked = [...w.words.values()].filter(isPicked).sort((a, b) => (w.stateMap.get(a.id)?.queued_at ?? "").localeCompare(w.stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
-    c = { course, at: new Map(course.map((x, i) => [x.id, i])), picked };
-    choicesOf.set(w, c);
+function* choices(w: Words) {
+  const known = choicesOf.get(w);
+  if (known) return known;
+  const course: Word[] = [];
+  const at = new Map<string, number>();
+  for (const d of courseOrder(w.links.deck)) {
+    const x = w.words.get(d.id)!;
+    at.set(x.id, course.length);
+    course.push(x);
+    yield;
   }
+  const picked: Word[] = [];
+  for (const x of w.words.values()) {
+    if (isPicked(x)) picked.push(x);
+    yield;
+  }
+  picked.sort((a, b) => (w.stateMap.get(a.id)?.queued_at ?? "").localeCompare(w.stateMap.get(b.id)?.queued_at ?? "") || a.rank - b.rank);
+  // Steps of another walk may have made it meanwhile: an equal one.
+  const c = choicesOf.get(w) ?? { course, at, picked };
+  choicesOf.set(w, c);
   return c;
 }
 
@@ -568,24 +594,30 @@ const isPicked = (w: Word) => w.status === "queued" || w.source === "user";
  * words) plus a copy of the list, not O(course) (#486). Equal to working it
  * out from scratch.
  */
-function upcomingOf(words: Words, started: Set<string>, firstReview: (id: string) => number, hasSentences: (id: string) => boolean, from: Before | null): Upcoming {
-  const { course, at, picked } = choices(words);
+function* upcomingOf(words: Words, started: Set<string>, firstReview: (id: string) => number, hasSentences: (id: string) => boolean, from: Before | null): Generator<void, Upcoming> {
+  const { course, at, picked } = yield* choices(words);
   const can = (w: Word) => w.status !== "ignored" && w.status !== "paused" && hasSentences(w.id);
   const open = (w: Word) => !started.has(w.id) && can(w);
   // Picked words are not in the course list too.
   const inCourse = (w: Word) => open(w) && !isPicked(w);
   const pick = (walk: Walk<Word>, last: number): Upcoming => ({ next: [...picked.filter(open), ...walk.list], walk, last });
   // Garden and orchard words keep their spacing from one session to the next. Your own words are not in the deck, so they count as other new words.
-  const fromScratch = () => {
-    const { since, last } = sinceLastPlaced([...started].map((id) => ({ ...placedOf(words.words.get(id)!), first: firstReview(id) })));
+  function* fromScratch(): Generator<void, Upcoming> {
+    const firsts = [];
+    for (const id of started) {
+      firsts.push({ ...placedOf(words.words.get(id)!), first: firstReview(id) });
+      yield;
+    }
+    const { since, last } = sinceLastPlaced(firsts);
+    yield;
     return pick(walkCourse(course, inCourse, since), last);
-  };
-  if (!from) return fromScratch();
+  }
+  if (!from) return yield* fromScratch();
   const firstBefore = (id: string) => from.first.get(id)!;
   const moved = [...from.changed].filter((id) => from.started.has(id) !== started.has(id) || (started.has(id) && firstBefore(id) !== firstReview(id)));
   if (!moved.length) return from.state;
   // A garden or orchard word moved: its time is where `since` counts from.
-  if (moved.some((id) => placed(words.words.get(id)!))) return fromScratch();
+  if (moved.some((id) => placed(words.words.get(id)!))) return yield* fromScratch();
   let since = from.state.walk.since;
   const { last } = from.state;
   for (const id of moved) {

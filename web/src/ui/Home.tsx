@@ -8,7 +8,7 @@ import { FlowerIcon, SeedIcon } from "./icons";
 import { statsToday } from "./stats";
 import { useNow } from "./useNow";
 import { useShortcut } from "./useShortcut";
-import { chunkLabel, DAILY_MINUTES, nextChunk, sessionPlan } from "../data/practice";
+import { chunkLabel, DAILY_MINUTES, nextChunk, sessionPlanSteps } from "../data/practice";
 import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside } from "../content/voice";
@@ -17,7 +17,6 @@ import { focusBowl, focusPlant } from "./gardenFocus";
 import { visitorSteps, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import type { Plan } from "../core/session";
-import { yieldToBrowser } from "../lib/yield";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -36,24 +35,19 @@ const chunkToday = perLearnerDay(nextChunk);
 // The same planner the session uses, for what the day's minutes are for. One per
 // voice setting: sound can be turned off, and voices load late.
 const planToday = {
-  listen: perLearnerDay((l, now) => sessionPlan(l, chunkToday(l, now).minutes, true, now)),
-  quiet: perLearnerDay((l, now) => sessionPlan(l, chunkToday(l, now).minutes, false, now)),
+  listen: slicedPerLearnerDay((l, now) => sessionPlanSteps(l, chunkToday(l, now).minutes, true, now)),
+  quiet: slicedPerLearnerDay((l, now) => sessionPlanSteps(l, chunkToday(l, now).minutes, false, now)),
 };
 const voiceOf = (l: Learner) => (mayListen(language(l.lang).tag) ? "listen" : "quiet");
 
 /**
- * The parts after the first paint, worked out before they render: the first
- * upcoming() and the plan each in a task of their own; the visitors, the
- * stats and the garden in slices.
- * In a render, React could not split them (#569). It stops once `l` is no
- * longer the current learner (see slicedPerLearnerDay).
+ * The parts after the first paint, worked out in slices before they render:
+ * the plan, with the first upcoming(), then the visitors, the stats and the
+ * garden. In a render, React could not split them (#569). It stops once `l`
+ * is no longer the current learner (see slicedPerLearnerDay).
  */
 async function workOut(l: Learner, now: number, live: () => boolean) {
-  l.fresh();
-  await yieldToBrowser();
-  if (!live()) return;
-  planToday[voiceOf(l)](l, now);
-  await yieldToBrowser();
+  await planToday[voiceOf(l)].warm(l, now, live);
   if (!live()) return;
   await visitorsToday.warm(l, now, live);
   if (!live()) return;
@@ -148,7 +142,7 @@ function Aside({ learner, now }: { learner: Learner; now: number }) {
 /** The day's action right under the greeting: on a phone it must never sit under the tab bar. */
 function StartRow({ learner, chunk, now, rest, onStart }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; now: number; rest: boolean; onStart: () => void }) {
   const { user } = useUser();
-  const plan = rest ? planToday[voiceOf(learner)](learner, now) : null;
+  const plan = rest ? planToday[voiceOf(learner)].get(learner, now) : null;
   return (
     <div className="start-row">
       {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. Until the plan is in, an empty line keeps the button where it will be. */}
