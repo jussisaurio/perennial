@@ -1,15 +1,13 @@
 // Loading a language's static deck. Decks are bundled as lazy, content-hashed
-// chunks (so browsers and the CDN keep them for good) and validated
-// defensively: a bad entry is skipped, never fatal. If a whole deck fails to
-// load, the last good copy kept in the Cache API is used instead.
+// chunks (so browsers and the CDN keep them for good). They ship with the code
+// that reads them, and CI decodes each one with the full schema and checks its
+// invariants (scripts/deck/check.ts), so the app trusts their shape: decoding
+// every entry again here cost about 150 ms of main thread at CPU 10× on each
+// launch (#461).
 
-import { Option, Schema } from "effect";
-import { language } from "../content/languages";
-import { wordKeys } from "../content/text";
-import { DeckSentence, DeckWord } from "../deck/schema";
+import type { Deck, DeckSentence, DeckWord } from "../deck/schema";
 
-const loaders = import.meta.glob<unknown>("../../../decks/*/deck.json", { import: "default" });
-const CACHE = "perennial-decks";
+const loaders = import.meta.glob<Deck>("../../../decks/*/deck.json", { import: "default" });
 
 /** A deck sentence with its word keys, always there once loaded. */
 export type CourseSentence = DeckSentence & { keys: readonly string[] };
@@ -23,38 +21,20 @@ export interface LoadedDeck {
   sentencesByWord: Map<string, CourseSentence[]>;
   /** Resolves aliases; returns the word even if retired, or undefined. */
   resolve(id: string): DeckWord | undefined;
-  skipped: number;
 }
 
-/** The deck's outside: its entries are checked one by one below, so one bad entry does not cost the whole deck. */
-const Envelope = (lang: string) =>
-  Schema.Struct({ lang: Schema.Literal(lang), version: Schema.optionalKey(Schema.Number), words: Schema.Array(Schema.Unknown), sentences: Schema.Array(Schema.Unknown) });
-
-function index(raw: unknown, lang: string): LoadedDeck {
-  const envelope = Schema.decodeUnknownOption(Envelope(lang))(raw);
-  if (Option.isNone(envelope)) throw new Error(`deck ${lang}: not a deck`);
-  const d = envelope.value;
-  const decodeWord = Schema.decodeUnknownOption(DeckWord(lang));
-  const decodeSentence = Schema.decodeUnknownOption(DeckSentence(lang));
-  let skipped = 0;
-  const byId = new Map<string, DeckWord>();
-  for (const w of d.words) {
-    const r = decodeWord(w);
-    if (Option.isSome(r)) byId.set(r.value.id, r.value);
-    else skipped++;
-  }
+function index(d: Deck, lang: string): LoadedDeck {
+  if (d.lang !== lang) throw new Error(`deck ${lang}: holds ${d.lang}`);
+  const byId = new Map<string, DeckWord>(d.words.map((w) => [w.id, w]));
   const sentencesByWord = new Map<string, CourseSentence[]>();
   for (const s of d.sentences) {
-    const r = decodeSentence(s);
-    if (Option.isNone(r) || !r.value.text.includes(r.value.cloze) || !byId.has(r.value.wordId)) {
-      skipped++;
-      continue;
-    }
-    if (r.value.retired) continue;
-    const list = sentencesByWord.get(r.value.wordId) ?? [];
-    // The build adds keys (#453); a last good copy kept from before that has none.
-    list.push({ ...r.value, keys: r.value.keys ?? wordKeys(r.value.text, language(lang).tag) });
-    sentencesByWord.set(r.value.wordId, list);
+    if (s.retired) continue;
+    // The build adds keys (#453), so a sentence without them is a build bug.
+    const keys = s.keys;
+    if (!keys) throw new Error(`deck ${lang}: sentence ${s.id} has no keys`);
+    const list = sentencesByWord.get(s.wordId) ?? [];
+    list.push({ ...s, keys });
+    sentencesByWord.set(s.wordId, list);
   }
   const resolve = (id: string) => {
     const w = byId.get(id);
@@ -62,8 +42,7 @@ function index(raw: unknown, lang: string): LoadedDeck {
   };
   // A word without sentences can't be practised: leave it out of the course.
   const words = [...byId.values()].filter((w) => !w.retired && !w.aliasOf && sentencesByWord.has(w.id)).sort((a, b) => a.rank - b.rank);
-  if (skipped) console.warn(`[deck] ${lang}: skipped ${skipped} invalid entries`);
-  return { lang, version: d.version ?? 0, words, byId, sentencesByWord, resolve, skipped };
+  return { lang, version: d.version, words, byId, sentencesByWord, resolve };
 }
 
 const memo = new Map<string, Promise<LoadedDeck>>();
@@ -92,26 +71,7 @@ export function loadDeck(lang: string): Promise<LoadedDeck> {
 }
 
 async function load(lang: string): Promise<LoadedDeck> {
-  const key = `../../../decks/${lang}/deck.json`;
-  const url = `/__deck/${lang}`;
-  try {
-    const loader = loaders[key];
-    if (!loader) throw new Error(`no deck for ${lang}`);
-    const raw = await loader();
-    const deck = index(raw, lang);
-    // Keep a last good copy, in case a future version fails to load. Best
-    // effort: no Cache API (not a secure context) or no space means no copy.
-    void caches?.open(CACHE).then((c) => c.put(url, new Response(JSON.stringify(raw)))).catch(() => {});
-    return deck;
-  } catch (e) {
-    const cached = await caches
-      ?.open(CACHE)
-      .then((c) => c.match(url))
-      .catch(() => undefined);
-    if (cached) {
-      console.error(`[deck] ${lang}: using the last good copy`, e);
-      return index(await cached.json(), lang);
-    }
-    throw e;
-  }
+  const loader = loaders[`../../../decks/${lang}/deck.json`];
+  if (!loader) throw new Error(`no deck for ${lang}`);
+  return index(await loader(), lang);
 }
