@@ -3,7 +3,7 @@ import { savedLine, SOUND_OFF_ASIDE } from "../content/voice";
 import { saveCourse, useLearner, useStore } from "../data/learner";
 import type { CourseRow } from "../data/rows";
 import { useSound } from "./Sound";
-import { growthSetting, reducedMotion, setGrowthSetting } from "./Growth";
+import { reducedMotion, useGrowthSetting } from "./Growth";
 import { AccountPanel } from "./Account";
 import { DataSection } from "./DataSection";
 import { RefusedLine, useRefused } from "./Refused";
@@ -36,11 +36,7 @@ function CourseSettings({ course }: { course: CourseRow }) {
 }
 
 function GrowthSetting() {
-  const [on, setOn] = useState(growthSetting);
-  const set = (v: boolean) => {
-    setGrowthSetting(v);
-    setOn(v);
-  };
+  const [on, set] = useGrowthSetting();
   return (
     <div className="form">
       <RadioChips

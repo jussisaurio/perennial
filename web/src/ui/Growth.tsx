@@ -9,6 +9,7 @@ import { growthOf } from "../garden/plants";
 import type { PlantStage } from "../core/memory";
 import type { PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
+import { WateringCanIcon, WateringCanOffIcon } from "./icons";
 
 export interface PlantLook {
   s: number;
@@ -37,7 +38,7 @@ export interface GrowthMoment {
 // Showing the moment is a per-device choice, like sound.
 const GROWTH_KEY = "growth";
 
-export function growthSetting(): boolean {
+function growthSetting(): boolean {
   try {
     return localStorage.getItem(GROWTH_KEY) !== "off";
   } catch {
@@ -45,12 +46,36 @@ export function growthSetting(): boolean {
   }
 }
 
-export function setGrowthSetting(on: boolean): void {
+const growthListeners = new Set<(on: boolean) => void>();
+
+function setGrowthSetting(on: boolean): void {
   try {
     localStorage.setItem(GROWTH_KEY, on ? "on" : "off");
   } catch {
     // Not saved; nothing else to do.
   }
+  for (const fn of growthListeners) fn(on);
+}
+
+/** The setting, kept up to date when the session bar or Settings changes it. */
+export function useGrowthSetting(): [boolean, (on: boolean) => void] {
+  const [on, setOn] = useState(growthSetting);
+  useEffect(() => {
+    growthListeners.add(setOn);
+    return () => void growthListeners.delete(setOn);
+  }, []);
+  return [on, setGrowthSetting];
+}
+
+/** An icon button in the session bar that turns the moment on or off, like sound. It hides when the device asks for less motion: then nothing moves anyway. */
+export function GrowthToggle() {
+  const [on, set] = useGrowthSetting();
+  if (reducedMotion()) return null;
+  return (
+    <button className="icon" onClick={() => set(!on)} aria-pressed={on} aria-label="Show plants growing" title={on ? "Plants grow after each answer. Click for the next card right away." : "Next card right away. Click to show plants growing."}>
+      {on ? <WateringCanIcon /> : <WateringCanOffIcon />}
+    </button>
+  );
 }
 
 export const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;

@@ -8,7 +8,7 @@ import type { Learner, Word } from "../data/learner";
 import { Garden, gardenFromLearner } from "./Garden";
 import { BookIcon, CloseIcon, EarIcon, PenIcon, SeedIcon, SnailIcon, SpeakerIcon, UndoIcon } from "./icons";
 import { rareOf, WordPlant, type Rare } from "./plant";
-import { chimeDelay, Growth, growthOn, grows, type GrowthMoment, type PlantLook } from "./Growth";
+import { chimeDelay, Growth, growthOn, GrowthToggle, grows, useGrowthSetting, type GrowthMoment, type PlantLook } from "./Growth";
 import { chime } from "./chime";
 import { speak, speakAll, speakSlowly, stopSpeaking } from "./speech";
 import { SoundToggle, useSound } from "./Sound";
@@ -123,6 +123,8 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
   // out when a chunk starts (a new runner), from the learner as it is then.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- once per chunk, not on every answer
   const watching = useMemo(() => (runner && learner ? watcherFor(learner, serial) : null), [runner]);
+  // Turned off in the session bar: the watching visitor leaves now; the next answer has no moment.
+  const [growth] = useGrowthSetting();
 
   useKeys({ z: () => void undo(), "Mod+z": () => void undo(), Escape: () => (help ? setHelp(false) : exit()), "?": () => setHelp((h) => !h) });
 
@@ -148,6 +150,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
         </div>
         <span className="time-left">{done ? "" : overtime ? "finishing" : `${Math.max(1, Math.ceil((runner.budgetMs - active) / 60_000))} min left`}</span>
         <SoundToggle />
+        <GrowthToggle />
         <button className="undo" onClick={() => void undo()} disabled={!canUndo} title="Undo last answer (Z)" aria-keyshortcuts="Z Control+Z Meta+Z">
           <UndoIcon size={18} /> Undo <kbd aria-hidden="true">Z</kbd>
         </button>
@@ -167,7 +170,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       )}
       {/* ?.: a tap may already have ended the moment. */}
       {growing && <Growth m={growing.m} corner={growing.corner} onDone={() => grown.current?.()} />}
-      {watching && card && !done && serial - watching.start >= watching.visit.from - 1 && serial - watching.start < watching.visit.to - 1 && <Watcher view={watching.view} />}
+      {growth && watching && card && !done && serial - watching.start >= watching.visit.from - 1 && serial - watching.start < watching.visit.to - 1 && <Watcher view={watching.view} />}
     </div>
   );
 }
