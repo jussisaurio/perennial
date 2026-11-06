@@ -15,7 +15,9 @@ test("smoke: landing → start learning → a session → progress survives a re
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /^Done/ }).click();
   await page.reload();
-  await expect(page.getByText(/You are learning|You know/)).toBeVisible({ timeout: 15000 });
+  // Progress is on the Words page.
+  await page.getByRole("tab", { name: "Words" }).click();
+  await expect(page.getByRole("region", { name: "Your progress" })).toContainText("You are learning 1 word.", { timeout: 15000 });
 });
 
 test("a deck that cannot load, with no copy kept: the learner is told, not left on a loading screen", async ({ page, allowConsoleError }) => {
