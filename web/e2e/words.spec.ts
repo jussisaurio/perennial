@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Client } from "pg";
 import { expect, test } from "./test";
-import { expectServerRows, serverRows, startCourse } from "./helpers";
+import { expectServerRows, serverRows, startCourse, waitForSynced } from "./helpers";
 
 test("course words: search the upcoming words, pause and resume, never show (with undo)", async ({ page }) => {
   await startCourse(page);
@@ -122,16 +122,19 @@ test("a word saved with its forms as a JSON string (#337) is found by search, kn
   // As /api/write stored forms before #340: a jsonb string holding the list's JSON text.
   // Straight into the e2e server's database: server/src/config.ts's default (the e2e setup sets no DATABASE_URL).
   const db = new Client("postgres://perennial:perennial@localhost:25432/perennial");
+  const wordId = randomUUID();
   await db.connect();
   try {
     await db.query("insert into user_word (id, user_id, lang, lemma, gloss, forms) values ($1, $2, 'es', 'xilofonista', 'xylophonist', to_jsonb($3::text))", [
-      randomUUID(),
+      wordId,
       userId,
       JSON.stringify(["xilofonista", "xilofonistas"]),
     ]);
   } finally {
     await db.end();
   }
+  // Nothing pushes a row written behind the app's back (#507): it reads the rows again.
+  await waitForSynced(page, "user_word", [wordId]);
 
   // Search reaches the word's forms when the headword and meaning don't match.
   await page.getByRole("tab", { name: "Words" }).click();
