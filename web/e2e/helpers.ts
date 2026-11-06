@@ -85,7 +85,7 @@ export async function tabTo(page: Page, target: Locator) {
   await expect(target).toBeFocused();
 }
 
-/** Reveal the answer and wait until the double-click guard lets an answer through. */
+/** Reveal the answer or meaning and wait until its answer buttons show. */
 export async function reveal(page: Page) {
   const card = page.locator("main.card");
   await expect(card).toBeVisible();
@@ -95,11 +95,11 @@ export async function reveal(page: Page) {
   // nothing once the answer is showing.
   await expect(async () => {
     await page.keyboard.press("Space");
-    await expect(card).toHaveAttribute("data-armed", "true", { timeout: 1000 });
+    await expect(card.locator('[aria-keyshortcuts="1"]')).toBeVisible({ timeout: 1000 });
   }).toPass();
 }
 
-/** Answer any card: show its answer or meaning, wait past the double-click guard, then press `key` (1 = left, 2 = right). */
+/** Answer any card: show its answer or meaning, then press `key` (1 = left, 2 = right). */
 export async function answer(page: Page, key: "1" | "2") {
   await reveal(page);
   await advance(page, key);
