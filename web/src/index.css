@@ -541,6 +541,8 @@ details.danger { margin-top: 2.5rem; }
    than the Add words button, so the button touched the filter row below (#116). */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .page-head h1 { margin: 0; }
+.progress { margin: 0.25rem 0 1.5rem; }
+.progress .activity { height: 28px; margin-top: 0.75rem; }
 .progress-line { display: grid; gap: 0.2rem; font-size: 1.15rem; color: var(--ink-2); margin: 0.5rem 0 1.25rem; }
 .progress-line p { margin: 0; }
 .progress-line strong { font: 1.6rem/1 var(--display); color: var(--ink); font-weight: 400; }
@@ -845,7 +847,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-sheet h2 { font: 2rem/1.1 var(--display); margin: 0.2rem 0 0; }
 .guide-sheet .gl { margin: 0; color: var(--ink-2); }
 /* Close stays in view at the foot of a long page (#264). */
-.guide-close { display: block; margin: 0.8rem auto 0; position: sticky; bottom: 0.8rem; box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.5); }
+.guide-foot { position: sticky; bottom: 0; padding: 1.4rem 0 0.8rem; background: linear-gradient(transparent, var(--paper) 1.2rem); }
+.guide-close { display: block; margin: 0 auto; box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.5); }
 
 /* A friend's gifted seed (#213): a quiet note, not a banner. */
 .gift-card { margin: 0.6rem 0 1rem; padding: 0.7rem 0.9rem; border: 1px dashed var(--line); border-radius: 12px; background: var(--card); color: var(--ink-2); }

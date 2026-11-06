@@ -21,16 +21,13 @@ function CourseSettings({ course }: { course: CourseRow }) {
   };
   return (
     <div className="form">
-      <details className="more">
-        <summary>How often to review</summary>
-        <label className="form">
-          <span>Target: remember {Math.round(retention * 100)}% of words</span>
-          <input type="range" aria-valuetext={`${Math.round(retention * 100)}%`} min={0.8} max={0.95} step={0.01} value={retention} onChange={(e) => setRetention(Number(e.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
-          <span className="muted small">
-            When a word comes back, this is how sure you are to remember it. 90% is good for most people. A higher number gives you many more reviews. A lower number makes you forget more.
-          </span>
-        </label>
-      </details>
+      <label className="form">
+        <span>Target: remember {Math.round(retention * 100)}% of words</span>
+        <input type="range" aria-valuetext={`${Math.round(retention * 100)}%`} min={0.8} max={0.95} step={0.01} value={retention} onChange={(e) => setRetention(Number(e.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
+        <span className="muted small">
+          When a word comes back, this is how sure you are to remember it. 90% is good for most people. A higher number gives you many more reviews. A lower number makes you forget more.
+        </span>
+      </label>
     </div>
   );
 }

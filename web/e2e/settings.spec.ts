@@ -4,7 +4,7 @@ import { addEmail, serverRows, startCourse } from "./helpers";
 test("target recall changed with the keyboard is saved on the server", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Settings" }).click();
-  await page.getByText("How often to review").click();
+  // Shown openly, not behind a "How often to review" toggle.
   const slider = page.getByRole("slider");
   await slider.focus();
   await page.keyboard.press("ArrowRight");
@@ -43,13 +43,14 @@ test("theme choice uses plain words and applies", async ({ page }) => {
   await expect(page.getByRole("tab", { name: "Today" })).toHaveAttribute("aria-selected", "true");
 });
 
-test("anonymous learners are invited to add an email; after that the account card says words sync", async ({ page }) => {
+test("anonymous learners are invited to add an email; after that the account card shows it", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Settings" }).click();
   await expect(page.getByText("Keep your garden safe.")).toBeVisible();
   await expect(page.getByText("All changes are saved.")).toBeVisible();
   await addEmail(page);
-  await expect(page.getByText("Your words sync on all your devices")).toBeVisible();
+  await expect(page.locator(".status-card strong")).toHaveText(/@/);
+  await expect(page.getByText("Your words sync on all your devices")).toHaveCount(0); // obvious with an account
   // Progress lives on the server (no on-device copy since offline mode was removed, #188).
   await expect(page.getByText(/Your progress is saved on the Perennial server/)).toBeVisible();
   await expect(page.getByText(/saved on this device and on the Perennial server/)).toHaveCount(0);

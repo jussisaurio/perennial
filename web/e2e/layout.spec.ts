@@ -146,3 +146,14 @@ test("the listening card's kicker is the same pill as the others (#419)", async 
   );
   expect(listen).toEqual(read);
 });
+
+test("phone: Today's main button sits above the tab bar, with a big garden too", async ({ page }) => {
+  // iPhone 15's visible area in Safari; the demo learner has a full garden and the day done ("Practice more").
+  await page.setViewportSize({ width: 390, height: 664 });
+  await page.goto("/?demo=es#/today");
+  const start = page.locator("button.start");
+  await start.waitFor({ timeout: 60_000 });
+  const button = (await start.boundingBox())!;
+  const tabs = (await page.locator("nav.top .tabs").boundingBox())!;
+  expect(button.y + button.height, "the button ends above the tab bar").toBeLessThanOrEqual(tabs.y);
+});

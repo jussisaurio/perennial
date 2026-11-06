@@ -5,6 +5,7 @@ import { useFeatures } from "../data/server";
 import { useUser } from "../data/auth";
 import { recall, wordState, type MemoryRow, type WordState } from "../core/memory";
 import { notStartedWords } from "../content/order";
+import { Progress } from "./Progress";
 import { setWordStatus, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import type { ReviewRow, UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
@@ -128,6 +129,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           </button>
         )}
       </div>
+      {learner && <Progress learner={learner} lang={lang} />}
       <div className="row">
         <input ref={search} className="search" type="search" placeholder={TOUCH ? "Search words or meanings" : "Search words or meanings (/)"} aria-keyshortcuts="/" value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)} aria-label="Which words">

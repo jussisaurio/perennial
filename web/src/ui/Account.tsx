@@ -187,7 +187,6 @@ export function AccountPanel() {
         <CheckIcon size={18} />
         <div>
           <strong>{user.email}</strong>
-          <span className="muted small">Your words sync on all your devices</span>
         </div>
         <button className="ghost" onClick={() => void signOut()} title="Your garden stays in your account. Sign in again to see it.">
           Sign out
