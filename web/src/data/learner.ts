@@ -172,6 +172,9 @@ interface Reviews {
 /** A review's UTC day: unlike a local day, it stays right if the time zone changes. */
 const dayOf = (r: ReviewRow) => Math.floor(reviewedAt(r) / DAY_MS);
 
+/** A language's first build: what `get` goes on from, as it goes on from the build before. */
+type First = Pick<Built, "reviews" | "words" | "memory">;
+
 interface Built {
   words: Words;
   reviews: Reviews;
@@ -196,8 +199,8 @@ export class Learners {
   private readonly built = new Map<string, Built>();
   /** Review changes each built language has not taken in yet, its own only. */
   private readonly pending = new Map<string, ChangeMessage<ReviewRow>[]>();
-  /** Each language's first build of its reviews: null while it runs (firstReviews). */
-  private readonly first = new Map<string, Reviews | null>();
+  /** Each language's first build of its reviews, words and memory: null while it runs (firstBuild). */
+  private readonly first = new Map<string, First | null>();
 
   private readonly store: Store;
 
@@ -246,19 +249,22 @@ export class Learners {
     if (!course) return null;
     const prev = this.built.get(lang);
     // Later full builds (a new retention, a new word of the learner's) run at once: a loading screen would flash.
-    const base = prev ? prev.reviews : this.firstReviews(lang, deck, course.retention);
-    if (!base) return null;
+    const earlier = prev ?? this.firstBuild(lang, deck, course.retention);
+    if (!earlier) return null;
+    const base = earlier.reviews;
     // A built language's changes are listed from its first build on.
     const pending = this.pending.get(lang)!;
     const links = base.links.deck === deck && base.links.userWords === this.userWords.version ? base.links : this.links(lang, deck);
-    const words = prev && prev.words.links === links && prev.words.states === this.states.version ? prev.words : this.words(links);
+    const words = earlier.words.links === links && earlier.words.states === this.states.version ? earlier.words : this.words(links);
     const sentences = prev && prev.sentences.links === links && prev.sentences.version === this.userSentences.version ? prev.sentences : this.sentences(links);
     let reviews = base.links === links && base.log.retention === course.retention ? base : null;
     if (reviews && pending.length) reviews = moreReviews(reviews, pending);
     reviews ??= runAll(allReviews(this.langReviews(lang), links, course.retention));
     this.pending.set(lang, []);
     if (prev && prev.learner.course === course && prev.words === words && prev.reviews === reviews && !pending.length && prev.sentences === sentences) return prev.learner;
-    const memory = memoryOf(reviews.log, words.words, prev && prev.reviews.log === reviews.log && prev.words.words === words.words ? prev.memory : undefined);
+    // The same reviews and words (the first build, with no answers since): the same memory, with no copy of its maps.
+    const memory =
+      earlier.reviews === reviews && earlier.words === words ? earlier.memory : memoryOf(reviews.log, words.words, earlier.reviews.log === reviews.log && earlier.words.words === words.words ? earlier.memory : undefined);
     const learner = assemble(lang, course, words, reviews, sentences.byWord, [...this.reviews.rows.values()].filter((r) => r.lang === lang), memory);
     this.built.set(lang, { words, reviews, sentences, memory, learner });
     this.first.delete(lang);
@@ -299,26 +305,30 @@ export class Learners {
   }
 
   /**
-   * The first build of a language's reviews, in slices (#486): a year of
-   * reviews took 150 ms in one task at CPU 10×. Null until it is done, so the
-   * screens show their loading state. Changes that arrive meanwhile wait in
-   * `pending`, as for any built learner.
+   * The first build of a language's reviews and memory, in slices (#486): a
+   * year of reviews took 150 ms in one task at CPU 10×. Null until it is done,
+   * so the screens show their loading state. Changes that arrive meanwhile
+   * wait in `pending`, as for any built learner; `get` takes them in as it
+   * does after any build.
    */
-  private firstReviews(lang: string, deck: LoadedDeck, retention: number): Reviews | null {
+  private firstBuild(lang: string, deck: LoadedDeck, retention: number): First | null {
     const first = this.first.get(lang);
     if (first !== undefined) return first;
     this.first.set(lang, null);
     this.pending.set(lang, []);
     const links = this.links(lang, deck);
+    const words = this.words(links);
     const rows = this.langReviews(lang);
     // The course order (~16 ms at CPU 10×, once per deck) is one step too: upcoming() reads it right after first paint.
-    const steps = (function* () {
+    const steps = (function* (): Generator<void, First> {
       courseOrder(deck);
       yield;
-      return yield* allReviews(rows, links, retention);
+      const reviews = yield* allReviews(rows, links, retention);
+      // The memory map, started words and studied list: O(memories + words), so not in the first render either.
+      return { reviews, words, memory: memoryOf(reviews.log, words.words, undefined) };
     })();
-    void inSlices(steps).then((reviews) => {
-      this.first.set(lang, reviews);
+    void inSlices(steps).then((first) => {
+      this.first.set(lang, first);
       this.notify();
     });
     return null;
