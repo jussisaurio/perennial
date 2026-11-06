@@ -133,6 +133,9 @@ export class Plants {
   private streaming = false;
   private hungry = true;
   private lastStream = -1;
+  /** stream's scratch: each plant's distance, and the plants in order of it. Sized in buildPlants. */
+  private dist = new Float64Array(0);
+  private order = new Uint32Array(0);
   /** Every plant's material, for the perk uniform; also added to ctx.mats for GardenScene's per-frame loop. */
   private plantMats: THREE.ShaderMaterial[] = [];
   /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
@@ -238,6 +241,8 @@ export class Plants {
     this.onProgress(0, plants.length);
     const pool = this.gpuTexture(T.ATLAS, T.ATLAS);
     this.pool = pool;
+    this.dist = new Float64Array(plants.length);
+    this.order = new Uint32Array(plants.length);
     this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h));
     const mats = this.low.map((tex) => {
       const m = plantMaterial(tex, pool, tex.image.height);
@@ -349,13 +354,16 @@ export class Plants {
     const plants = this.layout.plants;
     const fx = -Math.sin(yaw);
     const fz = -Math.cos(yaw);
-    const order = plants.map((p, i) => {
-      const dx = p.x - x;
-      const dz = p.z - z;
-      return { i, d: Math.hypot(dx, dz) * (dx * fx + dz * fz < 0 ? 1.8 : 1) };
-    });
-    order.sort((a, b) => a.d - b.d);
-    const wanted = order.slice(0, T.HI_SLOTS).map((o) => o.i);
+    // Into arrays sized once, not an object per plant: this runs 4 times a second, or every frame while plants are missing (#459).
+    const { dist, order } = this;
+    for (let i = 0; i < plants.length; i++) {
+      const dx = plants[i].x - x;
+      const dz = plants[i].z - z;
+      dist[i] = Math.sqrt(dx * dx + dz * dz) * (dx * fx + dz * fz < 0 ? 1.8 : 1);
+      order[i] = i;
+    }
+    order.sort((a, b) => dist[a] - dist[b]);
+    const wanted = Array.from(order.subarray(0, T.HI_SLOTS));
     const keep = new Set(wanted);
     for (const [plant, slot] of this.slotOf)
       if (!keep.has(plant)) {
@@ -548,7 +556,10 @@ export class Plants {
   labelsNear(x: number, z: number, v: THREE.Vector3): Label[] {
     const near: { p: PlacedPlant; d: number }[] = [];
     for (const p of this.layout.plants) {
-      const d = Math.hypot(p.x - x, p.z - z);
+      const dx = p.x - x;
+      const dz = p.z - z;
+      // Not Math.hypot: it allocates on each call, and this runs for every plant on every frame (#459).
+      const d = Math.sqrt(dx * dx + dz * dz);
       if (d < NAME_NEAR) near.push({ p, d });
     }
     near.sort((a, b) => a.d - b.d);
