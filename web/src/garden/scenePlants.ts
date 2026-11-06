@@ -133,9 +133,8 @@ export class Plants {
   private streaming = false;
   private hungry = true;
   private lastStream = -1;
-  /** stream's scratch: each plant's distance, and the plants in order of it. Sized in buildPlants. */
-  private dist = new Float64Array(0);
-  private order = new Uint32Array(0);
+  /** stream's scratch: per plant, its distance and index in one number (see stream). Sized in buildPlants. */
+  private near = new Float64Array(0);
   /** Every plant's material, for the perk uniform; also added to ctx.mats for GardenScene's per-frame loop. */
   private plantMats: THREE.ShaderMaterial[] = [];
   /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
@@ -253,8 +252,7 @@ export class Plants {
     this.onProgress(0, plants.length);
     const pool = this.gpuTexture(T.ATLAS, T.ATLAS);
     this.pool = pool;
-    this.dist = new Float64Array(plants.length);
-    this.order = new Uint32Array(plants.length);
+    this.near = new Float64Array(plants.length);
     this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h));
     const mats = this.low.map((tex) => {
       const m = plantMaterial(tex, pool, tex.image.height);
@@ -367,15 +365,17 @@ export class Plants {
     const fx = -Math.sin(yaw);
     const fz = -Math.cos(yaw);
     // Into arrays sized once, not an object per plant: this runs 4 times a second, or every frame while plants are missing (#459).
-    const { dist, order } = this;
-    for (let i = 0; i < plants.length; i++) {
+    // Distance (in 1/4096 m) times the plant count, plus the index: sort() with no compare
+    // function sorts in native code. With one, V8 sorted through copies of the array: the walk's biggest allocation (#571).
+    const { near } = this;
+    const n = plants.length;
+    for (let i = 0; i < n; i++) {
       const dx = plants[i].x - x;
       const dz = plants[i].z - z;
-      dist[i] = Math.sqrt(dx * dx + dz * dz) * (dx * fx + dz * fz < 0 ? 1.8 : 1);
-      order[i] = i;
+      near[i] = Math.floor(Math.sqrt(dx * dx + dz * dz) * (dx * fx + dz * fz < 0 ? 1.8 : 1) * 4096) * n + i;
     }
-    order.sort((a, b) => dist[a] - dist[b]);
-    const wanted = Array.from(order.subarray(0, T.HI_SLOTS));
+    near.sort();
+    const wanted = Array.from(near.subarray(0, T.HI_SLOTS), (k) => k % n);
     const keep = new Set(wanted);
     for (const [plant, slot] of this.slotOf)
       if (!keep.has(plant)) {

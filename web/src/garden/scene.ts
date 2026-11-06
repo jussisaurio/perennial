@@ -525,6 +525,7 @@ export class GardenScene {
     if (await this.stopped()) return;
     for (const _bed of this.plants.build(c)) if (await this.stopped()) return;
     this.buildFence(c);
+    if (await this.stopped()) return;
     this.buildHedge(c);
     if (await this.stopped()) return;
     const { pads } = this.sky.buildPond(c);
@@ -532,7 +533,9 @@ export class GardenScene {
     this.buildTrees(c);
     if (await this.stopped()) return;
     this.lanterns.build(c);
+    if (await this.stopped()) return;
     const bench = this.buildBench(c);
+    if (await this.stopped()) return;
     const boards = this.buildSigns(c, bench);
     if (await this.stopped()) return;
     // The one clock read in the build: what is where today (DESIGN.md, Garden code).
@@ -549,6 +552,7 @@ export class GardenScene {
     // After the visitors: the dog, if it came for the bowl in the night (#351), waits by what it left.
     this.leaveIt.build(c);
     this.scene.add(this.leaveIt.root);
+    if (await this.stopped()) return;
     this.toys.build(c);
     if (await this.stopped()) return;
     const dog = this.leaveIt.dogAt();
@@ -562,6 +566,7 @@ export class GardenScene {
     if (this.visitors.door === "open") this.openDoor();
     if (await this.stopped()) return;
     this.buildStakes(c);
+    if (await this.stopped()) return;
     this.buildSunflower(c);
     if (await this.stopped()) return;
     this.buildDecor(c);
@@ -569,6 +574,7 @@ export class GardenScene {
     this.sky.buildSkyAndSun(c);
     if (await this.stopped()) return;
     this.critters.build(c);
+    if (await this.stopped()) return;
     this.walkInto.build(c, this.visitors.autumn);
     this.buildMarker();
     this.setTime(this.time);
