@@ -6,6 +6,7 @@
 import { DAY_MS } from "./day";
 import { replay, type Grade } from "./fsrs";
 import { fsrs } from "./scheduler";
+import { runAll } from "../lib/yield";
 import type { ReviewRow, Skill } from "../data/rows";
 
 /** Harder skills unlock once reading is established (read stability in days). */
@@ -125,12 +126,20 @@ const knownAtCache = new WeakMap<object, { t: number; known: ReadonlySet<string>
  * others, that replay is their memory now. Worked out once per learner and
  * `t`: Today's stats and its visitors both ask for the start of the day.
  */
-export function knownAt(l: { memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } }, t: number): ReadonlySet<string> {
+export function knownAt(l: KnownAtLearner, t: number): ReadonlySet<string> {
+  return runAll(knownAtSteps(l, t));
+}
+
+type KnownAtLearner = { memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } };
+
+/** knownAt a step per memory row, so Today can work it out in slices (#569). */
+export function* knownAtSteps(l: KnownAtLearner, t: number): Generator<void, ReadonlySet<string>> {
   const hit = knownAtCache.get(l);
   if (hit?.t === t) return hit.known;
   const known = new Set<string>();
   // The memory holds only the learner's own words: walk their reading rows, not the whole deck.
   for (const now of l.memory.values()) {
+    yield;
     if (now.skill !== "read") continue;
     const id = now.wordId;
     if (now.lastTs < t) {

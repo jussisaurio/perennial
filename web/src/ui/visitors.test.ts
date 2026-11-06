@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { deriveMemory, knownAt as knownSet, wordState } from "../core/memory";
 import type { ReviewRow } from "../data/rows";
 import { milestoneLine } from "../garden/visitors";
+import { runAll } from "../lib/yield";
 import { boatWord, broughtAt, knownWords } from "./visitors";
 
 const DAY = 86_400_000;
@@ -68,7 +69,7 @@ describe("known words for unlocks, milestones and the frog", () => {
 
   test("counts every known word, though the frog croaks only nouns once there are five", () => {
     const words = [...Array.from({ length: 6 }, (_, i) => word(i, "noun")), ...Array.from({ length: 30 }, (_, i) => word(i, "verb"))];
-    const k = knownWords(words, memoryOf(words.map((w) => w.id)));
+    const k = runAll(knownWords(words, memoryOf(words.map((w) => w.id))));
     expect(k.count).toBe(36);
     expect(k.croaks).toHaveLength(6);
     expect(k.croaks.every((l) => l.startsWith("noun"))).toBe(true);
@@ -79,7 +80,7 @@ describe("known words for unlocks, milestones and the frog", () => {
   test("with few nouns the frog croaks any known word; words not known yet count for nothing", () => {
     const words = [word(0, "noun"), word(1, "verb"), word(2, "verb")];
     const memory = new Map([...memoryOf(["noun0", "verb1"]), ["verb2:read", { s: 30, reps: 1 }]]);
-    const k = knownWords(words, memory);
+    const k = runAll(knownWords(words, memory));
     expect(k.count).toBe(2);
     expect(k.croaks).toEqual(["noun-0", "verb-1"]);
     expect(k.lemmas).toEqual(new Set(["noun-0", "verb-1"]));

@@ -14,7 +14,7 @@ const readableToday = perLearnerDay((l) => readableCount(l));
 /** How the course is going, on the Words page: open, not behind "More progress". Today keeps only the day's action. */
 export function Progress({ learner, lang: code }: { learner: Learner; lang: string }) {
   const now = useNow();
-  const stats = statsToday(learner, now);
+  const stats = statsToday.get(learner, now);
   const readable = readableToday(learner, now);
   if (stats.known + stats.learning === 0) return null;
   const max = Math.max(1, ...stats.days.map((d) => d.reviews));

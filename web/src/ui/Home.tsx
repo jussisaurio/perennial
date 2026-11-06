@@ -14,7 +14,7 @@ import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside } from "../content/voice";
 import { longDay, plural } from "./format";
 import { focusBowl, focusPlant } from "./gardenFocus";
-import { learnerVisitors, waitingGuest } from "./visitors";
+import { visitorSteps, waitingGuest } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import type { Plan } from "../core/session";
 import { yieldToBrowser } from "../lib/yield";
@@ -29,7 +29,7 @@ let animated = false;
 
 // Today's garden, visitors and plan: each worked out once per learner and day, whichever part asks first.
 const gardenToday = slicedPerLearnerDay(gardenSteps);
-const visitorsToday = perLearnerDay((l, now) => learnerVisitors(l, new Date(now)));
+const visitorsToday = slicedPerLearnerDay((l, now) => visitorSteps(l, new Date(now)));
 // What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.
 const guestToday = perLearnerDay(waitingGuest);
 const chunkToday = perLearnerDay(nextChunk);
@@ -43,7 +43,8 @@ const voiceOf = (l: Learner) => (mayListen(language(l.lang).tag) ? "listen" : "q
 
 /**
  * The parts after the first paint, worked out before they render: the first
- * upcoming() and the plan each in a task of their own, the garden in slices.
+ * upcoming() and the plan each in a task of their own; the visitors, the
+ * stats and the garden in slices.
  * In a render, React could not split them (#569). It stops once `l` is no
  * longer the current learner (see slicedPerLearnerDay).
  */
@@ -53,6 +54,10 @@ async function workOut(l: Learner, now: number, live: () => boolean) {
   if (!live()) return;
   planToday[voiceOf(l)](l, now);
   await yieldToBrowser();
+  if (!live()) return;
+  await visitorsToday.warm(l, now, live);
+  if (!live()) return;
+  await statsToday.warm(l, now, live);
   if (!live()) return;
   await gardenToday.warm(l, now, live);
 }
@@ -135,7 +140,7 @@ function useAfterPaint(learner: Learner | null, now: number): boolean {
 
 /** On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside. */
 function Aside({ learner, now }: { learner: Learner; now: number }) {
-  const visitors = visitorsToday(learner, now);
+  const visitors = visitorsToday.get(learner, now);
   const aside = visitors.milestone ?? visitors.welcome ?? greetingAside();
   return aside && <p className="greeting-aside">{aside}</p>;
 }
@@ -162,7 +167,7 @@ function StartRow({ learner, chunk, now, rest, onStart }: { learner: Learner; ch
 }
 
 function StartNote({ learner, chunk, plan, now }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; plan: Plan; now: number }) {
-  const stats = statsToday(learner, now);
+  const stats = statsToday.get(learner, now);
   const ready = stats.seeds;
   const started = stats.known + stats.learning;
   return (
@@ -190,7 +195,7 @@ function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; 
     onWalk();
   };
   const garden = gardenToday.get(learner, now);
-  const visitors = visitorsToday(learner, now);
+  const visitors = visitorsToday.get(learner, now);
   const guest = guestToday(learner, now);
   const waiting = guest && {
     guest,
@@ -207,7 +212,7 @@ function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; 
 /** A gentle nudge once there is something worth keeping. */
 function KeepGarden({ learner, now }: { learner: Learner; now: number }) {
   const { user } = useUser();
-  const stats = statsToday(learner, now);
+  const stats = statsToday.get(learner, now);
   if (!user?.anonymous || stats.known + stats.learning < 10) return null;
   return (
     <details className="panel more keep-garden">
