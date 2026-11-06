@@ -75,7 +75,8 @@ const view = (l: Learner) => ({
   memories: l.memories,
   memory: l.memory,
   studied: l.studied.map((w) => w.id),
-  reviews: l.reviews,
+  // Word by word, so in no set order.
+  reviews: l.everyReview().toSorted((a, b) => a.id.localeCompare(b.id)),
   reviewsByWord: l.reviewsByWord,
   // From the start, from mid-day 200 (the live answers), and from a day with none yet.
   since: [0, 200.5, 400].map((day) => l.reviewsSince(Date.UTC(2026, 0, 1, 8) + day * DAY_MS).map((r) => r.id).sort()),
@@ -132,6 +133,7 @@ describe("Learners: one review at a time, the same as building it all again", ()
       l = live.learners.get("es", deck)!;
       expect(view(l)).toEqual(view(await fromScratch(rows)));
       // The first review and the last before a time, as a walk of every review finds them.
+      expect(view(l).reviews).toEqual(rows.toSorted((a, b) => a.id.localeCompare(b.id)));
       const times = rows.map((r) => Date.parse(r.reviewed_at));
       expect(l.firstReviewAt()).toBe(Math.min(...times));
       for (const t of [t0, t0 + 1, t0 + 37.3 * DAY_MS, t0 + day * DAY_MS, t0 + (day + 0.01) * DAY_MS, t0 + 900 * DAY_MS]) {

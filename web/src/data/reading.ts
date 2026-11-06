@@ -66,7 +66,7 @@ export interface ReadNow {
  */
 export function readNow(l: Learner, practised: ReadonlySet<string>, shown: ReadonlySet<string>): ReadNow | null {
   const index = formIndex(l);
-  const onCards = new Set(l.reviews.map((r) => r.sentence_id));
+  const onCards = new Set(l.everyReview().map((r) => r.sentence_id));
   const grown = (id: string) => !!readMemory(l, id)?.reps;
   let best: { s: ReadNow; today: number } | null = null;
   for (const list of l.deck.sentencesByWord.values()) {

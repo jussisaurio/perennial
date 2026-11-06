@@ -12,7 +12,7 @@ const stamp = () => new Date().toISOString().slice(0, 10);
 /** Everything Perennial keeps about you for this language, including the full review log. */
 function exportJSON(l: Learner): string {
   const words = l.studied.map((w) => ({ ...w, sentences: l.sentences(w.id) }));
-  const data = { app: "perennial", version: 2, exportedAt: new Date().toISOString(), language: l.lang, course: l.course, words, reviews: l.reviews, wordStates: [...l.states.values()] };
+  const data = { app: "perennial", version: 2, exportedAt: new Date().toISOString(), language: l.lang, course: l.course, words, reviews: l.everyReview(), wordStates: [...l.states.values()] };
   const name = `perennial-${l.lang}-${stamp()}.json`;
   download(name, new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   return `Downloading all your data as ${name}. Look for it in your downloads.`;

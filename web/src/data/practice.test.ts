@@ -15,7 +15,6 @@ function learner(fresh: number, memories: MemoryRow[], reviews: { word_id: strin
   const byWord = new Map<string, typeof rows>();
   for (const r of rows) byWord.set(resolve(r.word_id), [...(byWord.get(resolve(r.word_id)) ?? []), r]);
   return {
-    reviews: rows,
     reviewsByWord: byWord,
     reviewsSince: (t: number) => rows.filter((r) => Date.parse(r.reviewed_at) >= t),
     resolve,
