@@ -14,7 +14,7 @@ import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { LEAF_PILE } from "./walkInto";
 import type { SpriteDone, SpriteJob } from "./spriteWorker";
-import type { PaintDone, PaintJob, Pixels } from "./paintWorker";
+import type { FarPixels, PaintJob, Pixels } from "./paintWorker";
 import type { TimeOfDay } from "./scene";
 import { FULL_MOON, MOON_PHASES } from "./moon";
 
@@ -58,23 +58,28 @@ export interface FarTextures {
 }
 
 /**
- * Paints FarTextures in a worker (paintWorker.ts), a worker for the one job: pixel
- * by pixel they took build steps of 10-40 ms at CPU 10× on the main thread (#571).
+ * Runs one paint job in a worker (paintWorker.ts), a worker per job, so jobs
+ * paint side by side: pixel by pixel they took build steps of 10-340 ms at CPU 10× on the main thread (#571).
  */
-export function paintFar(moonPhase: number): Promise<FarTextures> {
+function paint<T>(job: PaintJob): Promise<T> {
   const worker = new Worker(new URL("./paintWorker.ts", import.meta.url), { type: "module" });
-  const job: PaintJob = { moonPhase };
   worker.postMessage(job);
-  return new Promise<FarTextures>((resolve, reject) => {
-    worker.onmessage = (e: MessageEvent<PaintDone>) => {
-      const { trees, cloud, looks } = e.data;
-      const look = (l: PaintDone["looks"][TimeOfDay]) => ({ sky: paintedTexture(l.sky), hills: paintedTexture(l.hills, true), sun: paintedTexture(l.sun) });
-      resolve({ trees: paintedTexture(trees), cloud: paintedTexture(cloud), looks: { day: look(looks.day), dusk: look(looks.dusk), night: look(looks.night) } });
-    };
+  return new Promise<T>((resolve, reject) => {
+    worker.onmessage = (e: MessageEvent<T>) => resolve(e.data);
     // Loudly: a walk without its sky would be a black dome.
-    worker.onerror = (e) => reject(new Error(`paint worker: ${e.message}`));
+    worker.onerror = (e) => reject(new Error(`paint worker (${job.kind}): ${e.message}`));
   }).finally(() => worker.terminate());
 }
+
+/** FarTextures, painted in a worker. */
+export async function paintFar(moonPhase: number): Promise<FarTextures> {
+  const { trees, cloud, looks } = await paint<FarPixels>({ kind: "far", moonPhase });
+  const look = (l: FarPixels["looks"][TimeOfDay]) => ({ sky: paintedTexture(l.sky), hills: paintedTexture(l.hills, true), sun: paintedTexture(l.sun) });
+  return { trees: paintedTexture(trees), cloud: paintedTexture(cloud), looks: { day: look(looks.day), dusk: look(looks.dusk), night: look(looks.night) } };
+}
+
+/** The orchard's atlas (orchard()), painted in a worker. */
+export const paintOrchard = async (): Promise<THREE.Texture> => paintedTexture(await paint<Pixels>({ kind: "orchard" }));
 
 export const px = (ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
   ctx.fillStyle = color;

@@ -361,6 +361,8 @@ export class GardenScene {
   private treeTap: { tree: PlacedTree; until: number } | null = null;
   /** What the world is built with, kept for the orchard, which is built when the door opens. */
   private ctx!: BuildCtx;
+  /** The orchard's tree atlas, painted in a worker during the build (#571), for when the door opens. */
+  private orchardAtlas!: THREE.Texture;
 
   /** The help the world gives for a key left waiting (#334), while it still lies in the garden. */
   private get keyHelp(): KeyHelp | null {
@@ -498,8 +500,9 @@ export class GardenScene {
    */
   async build(): Promise<void> {
     this.sliceFrom = performance.now();
-    // Painted in a worker while the steps before the trees run.
+    // Painted in workers while the steps before the trees, and the door, run.
     const far = T.paintFar(this.visitors.moon);
+    const orchardAtlas = T.paintOrchard();
     const L = this.layout;
     const b = L.bounds;
     const c: BuildCtx = {
@@ -565,6 +568,8 @@ export class GardenScene {
     this.scene.add(this.carry.root);
     // A key left waiting a few days (#334): the dog, if it is here today, sits by it.
     if (this.keyHelp?.visitors && this.door.key && !dog) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
+    // Even with the door shut: it may open in this walk.
+    this.orchardAtlas = await orchardAtlas;
     // After the visitors: a visitor may sit in the orchard's trees today.
     if (this.visitors.door === "open") this.openDoor();
     if (await this.stopped()) return;
@@ -708,6 +713,7 @@ export class GardenScene {
       {
         parent: this.scene,
         sprites,
+        atlas: this.orchardAtlas,
         bench: () => benchModel(this.ctx),
         mat: this.ctx.mat,
         plaque: firstPlanted === null ? null : benchLine(firstPlanted),
