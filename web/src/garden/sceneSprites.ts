@@ -194,6 +194,18 @@ export interface BuildCtx {
   basic: THREE.MeshBasicMaterial[];
 }
 
+/**
+ * For what never moves once built: its matrices are set once here, not recomposed
+ * on every frame (#571). Anything that moves, turns or scales later must not be still.
+ */
+export function still<O extends THREE.Object3D>(o: O): O {
+  o.traverse((p) => {
+    p.matrixAutoUpdate = false;
+    p.updateMatrix();
+  });
+  return o;
+}
+
 /** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */
 export function signBoard(c: BuildCtx, tex: THREE.Texture, w: number, h: number): THREE.Group {
   const g = new THREE.Group();

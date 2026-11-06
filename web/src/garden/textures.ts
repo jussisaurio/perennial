@@ -440,26 +440,44 @@ export function butterfly(hue: number): HTMLCanvasElement {
 function board(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   // Read back by crispText.
   const [c, ctx] = canvas(w, h, true);
-  px(ctx, 0, 0, "#7a4f2c", w, h);
-  px(ctx, 2, 2, "#c99257", w - 4, h - 4);
-  px(ctx, 2, 2, "#ddb07a", w - 4, 2);
-  px(ctx, 2, h / 2, "#b8834b", w - 4, 1);
+  plank(ctx, 0, 0, w, h);
+  return [c, ctx];
+}
+
+/** board()'s wood at (x, y), and the ink set for its text. */
+function plank(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  px(ctx, x, y, "#7a4f2c", w, h);
+  px(ctx, x + 2, y + 2, "#c99257", w - 4, h - 4);
+  px(ctx, x + 2, y + 2, "#ddb07a", w - 4, 2);
+  px(ctx, x + 2, y + h / 2, "#b8834b", w - 4, 1);
   ctx.fillStyle = "#3b2414";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  return [c, ctx];
 }
 
 const boardFont = (size: number) => `bold ${size}px ui-monospace, Menlo, monospace`;
 
-/** A wooden sign board with a label, in a chunky pixel font size. */
-export function sign(label: string): HTMLCanvasElement {
-  const [c, ctx] = board(128, 40);
-  let size = 16;
-  do ctx.font = boardFont(size);
-  while (ctx.measureText(label).width > 116 && --size > 7);
-  ctx.fillText(label, 64, 21);
-  crispText(ctx, 128, 40);
+/** The bed signs' atlas: SIGN.cols signs a row, each SIGN.w×SIGN.h. Rows, not one column, keep a big garden's atlas within an old GPU's 4096 px. */
+export const SIGN = { w: 128, h: 40, cols: 8 } as const;
+
+/**
+ * Every bed's wooden sign with its label, in a chunky pixel font size, on one canvas:
+ * sign `i` at column i % SIGN.cols, row ⌊i / SIGN.cols⌋. A canvas per sign cost ~130 ms
+ * over the walk's beds at CPU 10×, mostly the first draw on each new canvas (#571).
+ */
+export function signs(labels: string[]): HTMLCanvasElement {
+  const rows = Math.ceil(labels.length / SIGN.cols);
+  const [c, ctx] = canvas(SIGN.w * SIGN.cols, SIGN.h * rows, true);
+  labels.forEach((label, i) => {
+    const x = (i % SIGN.cols) * SIGN.w;
+    const y = Math.floor(i / SIGN.cols) * SIGN.h;
+    plank(ctx, x, y, SIGN.w, SIGN.h);
+    let size = 16;
+    do ctx.font = boardFont(size);
+    while (ctx.measureText(label).width > 116 && --size > 7);
+    ctx.fillText(label, x + SIGN.w / 2, y + 21);
+  });
+  crispText(ctx, c.width, c.height);
   return c;
 }
 

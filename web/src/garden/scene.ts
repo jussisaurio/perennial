@@ -39,7 +39,7 @@ import type { Gender } from "../deck/schema";
 import { Jokes, type Joke } from "./sceneJokes";
 import { WalkInto } from "./sceneWalkInto";
 import { leafPiles, type Fell, type Rolling } from "./walkInto";
-import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, type BuildCtx, type SpriteItem } from "./sceneSprites";
+import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
 import { inLang } from "./nouns";
 import { dayNumber } from "../core/day";
@@ -638,13 +638,13 @@ export class GardenScene {
     ground.rotation.x = -Math.PI / 2;
     // Layers of flat ground sit a few cm apart: some GPUs have a 16-bit depth buffer.
     ground.position.y = -0.06;
-    this.scene.add(ground);
+    this.scene.add(still(ground));
     const pathTex = T.pixelTexture(T.path(), true);
     pathTex.repeat.set(w / 1.1, d / 1.1);
     const yard = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(pathTex));
     yard.rotation.x = -Math.PI / 2;
     yard.position.set(cx, 0.01, cz);
-    this.scene.add(yard);
+    this.scene.add(still(yard));
   }
 
   /** The picket fence, with a gap on the gate side where the door in the hedge is. */
@@ -659,7 +659,7 @@ export class GardenScene {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.8), mat(t, { transparent: false, alphaTest: 0.5, side: THREE.DoubleSide }));
       m.position.set((x1 + x2) / 2, 0.4, (z1 + z2) / 2);
       m.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
-      this.scene.add(m);
+      this.scene.add(still(m));
       this.hitBoxes.push({ id: "fence", min: [Math.min(x1, x2) - 0.05, 0, Math.min(z1, z2) - 0.05], max: [Math.max(x1, x2) + 0.05, 0.8, Math.max(z1, z2) + 0.05], tag: null });
     };
     fence(b.minX, b.minZ, b.maxX, b.minZ);
@@ -1288,7 +1288,7 @@ export class GardenScene {
     }
     const treeMesh = sprites(treeTex, trees);
     this.mats.add(treeMesh.material);
-    this.scene.add(treeMesh);
+    this.scene.add(still(treeMesh));
   }
 
   /** A bench by the pond, for sitting and admiring. Returns where it stands. */
@@ -1297,7 +1297,7 @@ export class GardenScene {
     const at = benchAt(c.L);
     this.bench = at;
     bench.position.set(at.x, 0, at.z);
-    this.scene.add(bench);
+    this.scene.add(still(bench));
     {
       const { x, z } = bench.position;
       this.hitBoxes.push({ id: "bench", min: [x - 0.68, 0, z - 0.25], max: [x + 0.68, 0.8, z + 0.22], tag: [x, 0.88, z] });
@@ -1334,7 +1334,7 @@ export class GardenScene {
       }
       g.position.set(x, 0, z);
       g.rotation.y = turn;
-      this.scene.add(g);
+      this.scene.add(still(g));
       this.hitBoxes.push(boardBox(x, z, 1.2, NOTICE_TOP, turn));
     };
     noticeBoard(signs.fence, L.gate.x, b.minZ + 0.25, 0);
@@ -1352,7 +1352,7 @@ export class GardenScene {
       g.add(post);
       g.position.set(L.gate.x + GATE_HALF + 1.7, 0, b.maxZ - 0.3);
       g.rotation.y = Math.PI - 0.25;
-      this.scene.add(g);
+      this.scene.add(still(g));
       this.hitBoxes.push(boardBox(g.position.x, g.position.z, 1.0, 0.82, g.rotation.y));
     }
     return tops;
@@ -1372,7 +1372,7 @@ export class GardenScene {
       g.add(post);
       g.position.set(x, 0, z);
       g.rotation.y = turn;
-      this.scene.add(g);
+      this.scene.add(still(g));
       this.hitBoxes.push(boardBox(x, z, w, y + w * 0.2, turn));
     };
     const first = L.beds[0];
@@ -1399,7 +1399,7 @@ export class GardenScene {
     const geo = flowerMesh.geometry;
     this.flower = { x, z, uv: geo.getAttribute("iUv") as THREE.InstancedBufferAttribute, params: geo.getAttribute("iParams") as THREE.InstancedBufferAttribute, face: null };
     this.mats.add(flowerMesh.material);
-    this.scene.add(flowerMesh);
+    this.scene.add(still(flowerMesh));
   }
 
   /** Wild bits: tufts, flowers, mushrooms, stones. Thick outside, a few by the fence and pond. */
@@ -1439,7 +1439,7 @@ export class GardenScene {
     }
     const decorMesh = sprites(decorTex, decor);
     this.mats.add(decorMesh.material);
-    this.scene.add(decorMesh);
+    this.scene.add(still(decorMesh));
   }
 
   /** The marker over the selected plant, always on top of the hills and clouds; the ring on the ground where a walk goes; the glint on the thing in reach. */

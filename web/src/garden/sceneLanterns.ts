@@ -9,7 +9,7 @@ import { lanternSpots } from "./world";
 import { rayBox, spriteBox, type HitBox, type Ray } from "./scenery";
 import type { Conditions } from "./conditions";
 import type { Part } from "./scenePart";
-import { sprites, type BuildCtx, type SpriteItem } from "./sceneSprites";
+import { sprites, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import * as T from "./textures";
 
 /** Near enough to a lantern (m, from its post) to blow it out or light it. */
@@ -42,7 +42,7 @@ export class Lanterns implements Part {
     const lit = sprites(lanternTex, lanternItems(0.5), 0.42, 1.26);
     for (const m of [unlit, lit]) {
       c.mats.add(m.material);
-      c.scene.add(m);
+      c.scene.add(still(m));
     }
     this.unlit = unlit.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     this.lit = lit.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
@@ -56,7 +56,7 @@ export class Lanterns implements Part {
       pool.rotation.x = -Math.PI / 2;
       pool.position.set(x, 0.06, z);
       this.glows.push([halo, pool]);
-      c.scene.add(halo, pool);
+      c.scene.add(still(halo), still(pool));
     }
   }
 
