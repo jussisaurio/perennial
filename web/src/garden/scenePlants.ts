@@ -4,6 +4,7 @@
 // (loadPlants) so memory stays the same whatever the garden's size.
 
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { petalAt, petalForms, shakeLength, shiver } from "./shake";
 import { brush, brushStep, type Brush } from "./walkInto";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, SNEEZE } from "./whimsy";
@@ -11,7 +12,7 @@ import type { Label } from "./scene";
 import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
 import { isOld } from "./plants";
-import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, signBoard, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
+import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, SPRITE_H, SPRITE_W, standingQuad, type BuildCtx } from "./sceneSprites";
 import { boardBox } from "./scenery";
 import { BED_H, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
@@ -173,36 +174,47 @@ export class Plants {
     for (const m of this.plantMats) m.uniforms.uSilver.value = silver;
   }
 
-  /** Raised beds: wooden sides, soil on top, and a sign for each, a bed per step: the scene yields between them (#459). Draws no random numbers. */
+  /**
+   * Raised beds: wooden sides, soil on top, and a sign for each, a bed per step: the scene yields between them (#459). Draws no random numbers.
+   * All beds' wood is one mesh and all their soil another: a mesh per bed part was most of the walk's draw calls, and each costs main-thread time every frame.
+   */
   *build(c: BuildCtx): Generator<void> {
     const { L, mat, woodTex } = c;
     const soilTex = T.pixelTexture(T.soil(), true);
+    const wood: THREE.BufferGeometry[] = [];
+    const soil: THREE.BufferGeometry[] = [];
     for (const bed of L.beds) {
-      const side = woodTex.clone();
-      side.repeat.set(bed.w / 1.2, 1);
-      const sideD = woodTex.clone();
-      sideD.repeat.set(bed.d / 1.2, 1);
-      const top = soilTex.clone();
-      top.repeat.set(bed.w / 1.0, bed.d / 1.0);
-      const box = new THREE.Mesh(new THREE.BoxGeometry(bed.w, BED_H, bed.d), [mat(sideD), mat(sideD), mat(top), mat(top), mat(side), mat(side)]);
-      box.position.set(bed.x, BED_H / 2, bed.z);
-      c.scene.add(box);
+      const box = new THREE.BoxGeometry(bed.w, BED_H, bed.d);
+      // Each face's texture repeat (faces +x, -x, +y, -y, +z, -z), in its UVs, so one material draws every bed.
+      const repeat = [[bed.d / 1.2, 1], [bed.d / 1.2, 1], [bed.w, bed.d], [bed.w, bed.d], [bed.w / 1.2, 1], [bed.w / 1.2, 1]];
+      const uv = box.getAttribute("uv");
+      for (let i = 0; i < uv.count; i++) {
+        const [ru, rv] = repeat[Math.floor(i / 4)];
+        uv.setXY(i, uv.getX(i) * ru, uv.getY(i) * rv);
+      }
+      box.translate(bed.x, BED_H / 2, bed.z);
+      wood.push(faces(box, [0, 1, 4, 5]));
+      soil.push(faces(box, [2, 3]));
       c.hitBoxes.push({ id: "bed", min: [bed.x - bed.w / 2, 0, bed.z - bed.d / 2], max: [bed.x + bed.w / 2, BED_H, bed.z + bed.d / 2], tag: null });
       const signTex = T.pixelTexture(T.sign(bed.label));
       // Just outside the front-left corner, turned toward the path, so it never hides a plant.
       const sx = bed.x - bed.w / 2 - 0.3;
       const sz = bed.z + bed.d / 2 + 0.3;
-      const board = signBoard(c, signTex, 0.96, 0.3);
+      // As signBoard: the text on the front only, plain wood on the back.
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.3), mat(signTex));
       board.position.set(sx, 0.78, sz);
       board.rotation.y = 0.5;
       c.scene.add(board);
+      wood.push(new THREE.PlaneGeometry(0.96, 0.3).rotateY(Math.PI + 0.5).translate(sx, 0.78, sz));
       c.hitBoxes.push(boardBox(sx, sz, 0.96, 0.93, 0.5));
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.66, 0.06), mat(woodTex));
-      // Behind the board (it faces the path), never in its plane.
-      post.position.set(sx - Math.sin(0.5) * 0.06, 0.33, sz - Math.cos(0.5) * 0.06);
-      c.scene.add(post);
+      // The post: behind the board (it faces the path), never in its plane.
+      wood.push(new THREE.BoxGeometry(0.06, 0.66, 0.06).translate(sx - Math.sin(0.5) * 0.06, 0.33, sz - Math.cos(0.5) * 0.06));
       yield;
     }
+    // A garden with no beds yet: mergeGeometries needs at least one geometry.
+    if (!wood.length) return;
+    c.scene.add(new THREE.Mesh(mergeGeometries(wood), mat(woodTex)));
+    c.scene.add(new THREE.Mesh(mergeGeometries(soil), mat(soilTex)));
   }
 
   /** A texture that lives only on the GPU: allocate, upload empty, drop the CPU copy. Sprites are copied into it later. */
@@ -535,4 +547,13 @@ export class Plants {
   dispose() {
     this.disposed = true;
   }
+}
+
+/** Some faces of a one-segment box (+x, -x, +y, -y, +z, -z), as a geometry of their own. */
+function faces(box: THREE.BoxGeometry, which: number[]): THREE.BufferGeometry {
+  const index = box.getIndex()!.array;
+  const g = new THREE.BufferGeometry();
+  for (const name of ["position", "normal", "uv"]) g.setAttribute(name, box.getAttribute(name));
+  g.setIndex(which.flatMap((f) => Array.from(index.slice(f * 6, f * 6 + 6))));
+  return g;
 }
