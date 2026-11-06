@@ -7,6 +7,7 @@ import type { FSRS, Grade } from "./fsrs";
 import { DAY_MS } from "./day";
 import type { MemoryRow } from "./memory";
 import type { Skill } from "../data/rows";
+import { runAll } from "../lib/yield";
 
 export type Task =
   | { kind: "intro"; wordId: string }
@@ -70,6 +71,11 @@ const DUE_HORIZON_MS = 6 * 3_600_000;
  * They are not sized to the budget: the timer, not the queue, ends the chunk.
  */
 export function plan(input: PlanInput): Plan {
+  return runAll(planSteps(input));
+}
+
+/** plan, a step per memory: Today works it out in slices (#569). */
+export function* planSteps(input: PlanInput): Generator<void, Plan> {
   const { now, budgetMs, memories, fresh, fsrs, answeredToday } = input;
   const recall = (m: MemoryRow) => fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s);
 
@@ -80,6 +86,7 @@ export function plan(input: PlanInput): Plan {
   const unlocked = new Map<string, MemoryRow>();
   const learned: MemoryRow[] = [];
   for (const m of memories) {
+    yield;
     if (answeredToday.has(m.wordId)) continue;
     if (m.reps === 0) {
       if (!unlocked.has(m.wordId)) unlocked.set(m.wordId, m);
@@ -122,12 +129,12 @@ export function plan(input: PlanInput): Plan {
   // Early reviews for the rest of the time: what comes due soonest, then the
   // weakest of everything else. Practising early is worth a little less, never harm.
   const taken = new Set([...byWord.keys(), ...newSkills.map((m) => m.wordId)]);
-  const soon = firstPerWord(
+  const soon = yield* firstPerWord(
     learned.filter((m) => !taken.has(m.wordId) && m.due <= now + DAY_MS),
     (m) => m.due,
   );
   for (const m of soon) taken.add(m.wordId);
-  const weakest = firstPerWord(
+  const weakest = yield* firstPerWord(
     learned.filter((m) => !taken.has(m.wordId)),
     recall,
   );
@@ -155,7 +162,7 @@ export function plan(input: PlanInput): Plan {
   // Every learned word was already answered today and no new words are left
   // (a small course, practised a lot): a second try today beats an empty chunk.
   if (!queue.length) {
-    const again = firstPerWord(
+    const again = yield* firstPerWord(
       memories.filter((m) => m.reps > 0),
       recall,
     );
@@ -170,10 +177,14 @@ export function plan(input: PlanInput): Plan {
  * Each key is worked out once, not in every comparison of the sort: recall is a
  * power, and a big garden sorts thousands of memories when a session starts (#457).
  */
-function firstPerWord(memories: MemoryRow[], key: (m: MemoryRow) => number): MemoryRow[] {
+function* firstPerWord(memories: MemoryRow[], key: (m: MemoryRow) => number): Generator<void, MemoryRow[]> {
   const seen = new Set<string>();
-  return memories
-    .map((m) => ({ m, k: key(m) }))
+  const keyed: { m: MemoryRow; k: number }[] = [];
+  for (const m of memories) {
+    keyed.push({ m, k: key(m) });
+    yield;
+  }
+  return keyed
     .sort((a, b) => a.k - b.k)
     .map(({ m }) => m)
     .filter((m) => !seen.has(m.wordId) && !!seen.add(m.wordId));

@@ -12,6 +12,7 @@ import type { Store } from "./store";
 // The decks load through Vite; this test brings its own.
 mock.module("./deck", () => ({ loadDeck: () => Promise.reject(new Error("no decks here")), loadedDeck: () => undefined }));
 const { Learners } = await import("./learner");
+const { sessionPlan, sessionPlanSteps } = await import("./practice");
 
 /** A table that is ready at once, and sends the changes a test gives it. */
 class Table<T extends object> {
@@ -191,5 +192,20 @@ describe("upcoming(): one answer at a time, the same as working it out again", (
       l = live.learners.get("es", deck)!;
       expect(l.fresh()).toEqual((await fromScratch(rows, deck)).fresh());
     }
+  });
+
+  test("Today's plan in slices is the session's plan, with a one-shot plan asked in between", async () => {
+    const now = t0 + 40 * DAY_MS;
+    const rows = Array.from({ length: 150 }, (_, i) => review(`w${(i * 7) % 400}`, i / 5));
+    const l = await fromScratch(rows, deck);
+    const steps = sessionPlanSteps(l, 5, true, now);
+    for (let i = 0; i < 50; i++) expect(steps.next().done).toBe(false);
+    // A render that asks before the slices are done works it all out at once.
+    const oneShot = sessionPlan(l, 5, true, now);
+    let s = steps.next();
+    while (!s.done) s = steps.next();
+    expect(s.value).toEqual(oneShot);
+    expect(oneShot).toEqual(sessionPlan(await fromScratch(rows, deck), 5, true, now));
+    expect(oneShot.queue.length).toBeGreaterThan(0);
   });
 });

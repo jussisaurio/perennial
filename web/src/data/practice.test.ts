@@ -20,7 +20,10 @@ function learner(fresh: number, memories: MemoryRow[], reviews: { word_id: strin
     resolve,
     words: new Map(),
     memories,
-    fresh: () => Array.from({ length: fresh }, (_, i) => `f${i}`),
+    freshSteps: function* () {
+      yield;
+      return Array.from({ length: fresh }, (_, i) => `f${i}`);
+    },
   } as unknown as Learner;
 }
 const at = (t: number) => new Date(t).toISOString();

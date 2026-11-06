@@ -1,10 +1,11 @@
 // What a session would practise now: the one place that turns a learner into
 // a session plan, so the session and the Today screen agree on what it holds.
 
-import { NEW_WORD_MS, plan, type Plan } from "../core/session";
+import { NEW_WORD_MS, planSteps, type Plan } from "../core/session";
 import { startOfDay } from "../core/day";
-import { reviewedAt } from "../core/memory";
+import { reviewedAt, type MemoryRow } from "../core/memory";
 import { fsrs as scheduler } from "../core/scheduler";
+import { runAll } from "../lib/yield";
 import type { Learner } from "./learner";
 import type { ReviewRow } from "./rows";
 
@@ -18,12 +19,27 @@ function answeredToday(l: Learner, now: number): Set<string> {
 
 /** The session plan for `minutes`; `voice`: listening exercises possible. */
 export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = Date.now()): Plan {
-  const suspended = new Set([...l.words.values()].filter((w) => w.status === "paused" || w.status === "ignored").map((w) => w.id));
-  return plan({
+  return runAll(sessionPlanSteps(l, minutes, voice, now));
+}
+
+/** sessionPlan a step at a time, with the learner's upcoming(): Today works it out in slices (#569). */
+export function* sessionPlanSteps(l: Learner, minutes: number, voice: boolean, now: number): Generator<void, Plan> {
+  const fresh = yield* l.freshSteps();
+  const suspended = new Set<string>();
+  for (const w of l.words.values()) {
+    if (w.status === "paused" || w.status === "ignored") suspended.add(w.id);
+    yield;
+  }
+  const memories: MemoryRow[] = [];
+  for (const m of l.memories) {
+    if ((voice || m.skill !== "listen") && !suspended.has(m.wordId)) memories.push(m);
+    yield;
+  }
+  return yield* planSteps({
     now,
     budgetMs: minutes * 60_000,
-    memories: l.memories.filter((m) => (voice || m.skill !== "listen") && !suspended.has(m.wordId)),
-    fresh: l.fresh(),
+    memories,
+    fresh,
     fsrs: scheduler,
     answeredToday: answeredToday(l, now),
   });
