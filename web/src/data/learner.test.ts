@@ -51,6 +51,25 @@ function store(reviews: ReviewRow[]) {
   return { learners: new Learners(s), review };
 }
 
+/** The first learner is built in slices: null until then, and then a notice. */
+function built(learners: InstanceType<typeof Learners>): Promise<Learner> {
+  return new Promise((done) => {
+    const off = learners.subscribe(() => {
+      const l = learners.get("es", deck);
+      if (!l) return;
+      off();
+      done(l);
+    });
+  });
+}
+
+/** The learner of these reviews, built from scratch. */
+async function fromScratch(reviews: ReviewRow[]): Promise<Learner> {
+  const { learners } = store(reviews);
+  expect(learners.get("es", deck)).toBeNull();
+  return built(learners);
+}
+
 /** Everything a screen reads of the memory, to compare a learner kept up to date with one built from scratch. */
 const view = (l: Learner) => ({ memories: l.memories, memory: l.memory, studied: l.studied.map((w) => w.id), reviews: l.reviews, reviewsByWord: l.reviewsByWord });
 
@@ -71,12 +90,17 @@ describe("Learners: one review at a time, the same as building it all again", ()
     sentence_id: null,
   });
 
-  test("answers, changed answers and undos", () => {
+  test("answers, changed answers and undos", async () => {
     // Months of practice on 30 words, so that listening and writing unlock.
     const rows: ReviewRow[] = [];
     for (let w = 0; w < 30; w++) for (let k = 0, day = w; k < 6; k++, day += 2 ** k) rows.push(review(w, k > 4 && w % 3 === 0 ? "listen" : "read", day));
-    const live = store(rows);
-    let l = live.learners.get("es", deck)!;
+    const live = store(rows.slice(0, -20));
+    expect(live.learners.get("es", deck)).toBeNull();
+    // Answers that arrive while the first build runs are taken in after it.
+    const first = built(live.learners);
+    live.review.send(rows.slice(-20).map((r): ChangeMessage<ReviewRow> => ({ type: "insert", key: r.id, value: r })));
+    let l = await first;
+    expect(view(l)).toEqual(view(await fromScratch(rows)));
     let day = 200;
     for (let step = 0; step < 300; step++) {
       const before = l;
@@ -98,7 +122,7 @@ describe("Learners: one review at a time, the same as building it all again", ()
         live.review.send([{ type: "delete", key: r.id, value: r }]);
       }
       l = live.learners.get("es", deck)!;
-      expect(view(l)).toEqual(view(store(rows).learners.get("es", deck)!));
+      expect(view(l)).toEqual(view(await fromScratch(rows)));
       for (const m of l.memories) expect(l.memory.get(m.key)).toBe(m);
       // A row that did not change is the same object, so screens can skip it.
       const changed = new Set(rows.slice(-1).map((r) => (r.word_id === "w3-old" ? "w3" : r.word_id)));

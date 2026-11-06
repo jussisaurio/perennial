@@ -228,6 +228,14 @@ export class MemoryLog {
     return this.groups.get(key)?.row ?? this.unlockedBy.get(key);
   }
 
+  /** Replay each group not replayed yet, one step per group, so a long first build can pause between steps (#486). rows() then only puts them in order. */
+  *replaying(): Generator<void> {
+    for (const [key, g] of this.groups) {
+      this.replay(key, g);
+      yield;
+    }
+  }
+
   private replay(key: string, g: Group): MemoryRow {
     if (g.row === undefined) {
       const st = replay(fsrs, g.list, this.retention, key);

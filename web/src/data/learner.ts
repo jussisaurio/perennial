@@ -10,6 +10,7 @@ import { startOfDay } from "../core/day";
 import { MemoryLog, memKey, reviewedAt, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, type LoadedDeck } from "./deck";
 import { postWrite } from "./http";
+import { yieldToBrowser } from "../lib/yield";
 import { DAILY_MINUTES } from "./practice";
 import { COURSE_DEFAULTS, SKILLS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
@@ -188,6 +189,8 @@ export class Learners {
   private readonly built = new Map<string, Built>();
   /** Review changes each built language has not taken in yet, its own only. */
   private readonly pending = new Map<string, ChangeMessage<ReviewRow>[]>();
+  /** Each language's first build of its reviews: null while it runs (firstReviews). */
+  private readonly first = new Map<string, Reviews | null>();
 
   private readonly store: Store;
 
@@ -235,18 +238,23 @@ export class Learners {
     const course = this.courses.rows.get(lang);
     if (!course) return null;
     const prev = this.built.get(lang);
-    const pending = this.pending.get(lang) ?? [];
-    const links = prev && prev.words.links.deck === deck && prev.words.links.userWords === this.userWords.version ? prev.words.links : this.links(lang, deck);
+    // Later full builds (a new retention, a new word of the learner's) run at once: a loading screen would flash.
+    const base = prev ? prev.reviews : this.firstReviews(lang, deck, course.retention);
+    if (!base) return null;
+    // A built language's changes are listed from its first build on.
+    const pending = this.pending.get(lang)!;
+    const links = base.links.deck === deck && base.links.userWords === this.userWords.version ? base.links : this.links(lang, deck);
     const words = prev && prev.words.links === links && prev.words.states === this.states.version ? prev.words : this.words(links);
     const sentences = prev && prev.sentences.links === links && prev.sentences.version === this.userSentences.version ? prev.sentences : this.sentences(links);
-    let reviews = prev && prev.reviews.links === links && prev.reviews.log.retention === course.retention ? prev.reviews : null;
+    let reviews = base.links === links && base.log.retention === course.retention ? base : null;
     if (reviews && pending.length) reviews = moreReviews(reviews, pending);
-    reviews ??= this.allReviews(lang, links, course.retention);
+    reviews ??= runAll(allReviews(this.langReviews(lang), links, course.retention));
     this.pending.set(lang, []);
     if (prev && prev.learner.course === course && prev.words === words && prev.reviews === reviews && !pending.length && prev.sentences === sentences) return prev.learner;
     const memory = memoryOf(reviews.log, words.words, prev && prev.reviews.log === reviews.log && prev.words.words === words.words ? prev.memory : undefined);
     const learner = assemble(lang, course, words, reviews, sentences.byWord, [...this.reviews.rows.values()].filter((r) => r.lang === lang), memory);
     this.built.set(lang, { words, reviews, sentences, memory, learner });
+    this.first.delete(lang);
     return learner;
   }
 
@@ -283,18 +291,65 @@ export class Learners {
     return { links, version: this.userSentences.version, byWord };
   }
 
-  private allReviews(lang: string, links: Links, retention: number): Reviews {
-    const log = new MemoryLog(retention, links.resolve);
-    const byWord = new Map<string, ReviewRow[]>();
-    for (const r of this.reviews.rows.values()) {
-      if (r.lang !== lang) continue;
-      log.set(r);
-      const id = links.resolve(r.word_id);
-      const list = byWord.get(id) ?? [];
-      list.push(r);
-      byWord.set(id, list);
+  /**
+   * The first build of a language's reviews, in slices (#486): a year of
+   * reviews took 150 ms in one task at CPU 10×. Null until it is done, so the
+   * screens show their loading state. Changes that arrive meanwhile wait in
+   * `pending`, as for any built learner.
+   */
+  private firstReviews(lang: string, deck: LoadedDeck, retention: number): Reviews | null {
+    const first = this.first.get(lang);
+    if (first !== undefined) return first;
+    this.first.set(lang, null);
+    this.pending.set(lang, []);
+    const steps = allReviews(this.langReviews(lang), this.links(lang, deck), retention);
+    void inSlices(steps).then((reviews) => {
+      this.first.set(lang, reviews);
+      this.notify();
+    });
+    return null;
+  }
+
+  private langReviews(lang: string): ReviewRow[] {
+    return [...this.reviews.rows.values()].filter((r) => r.lang === lang);
+  }
+}
+
+/** The log of all these reviews, a step at a time: run all at once, or in slices. */
+function* allReviews(rows: readonly ReviewRow[], links: Links, retention: number): Generator<void, Reviews> {
+  const log = new MemoryLog(retention, links.resolve);
+  const byWord = new Map<string, ReviewRow[]>();
+  for (const r of rows) {
+    log.set(r);
+    const id = links.resolve(r.word_id);
+    const list = byWord.get(id) ?? [];
+    list.push(r);
+    byWord.set(id, list);
+    yield;
+  }
+  yield* log.replaying();
+  return { links, log, byWord };
+}
+
+function runAll<T>(steps: Generator<void, T>): T {
+  for (;;) {
+    const s = steps.next();
+    if (s.done) return s.value;
+  }
+}
+
+/** Under the 10 ms task budget at CPU 10× (perf/ui.ts), with room for the rest of the task. */
+const SLICE_MS = 5;
+
+async function inSlices<T>(steps: Generator<void, T>): Promise<T> {
+  let start = performance.now();
+  for (;;) {
+    const s = steps.next();
+    if (s.done) return s.value;
+    if (performance.now() - start > SLICE_MS) {
+      await yieldToBrowser();
+      start = performance.now();
     }
-    return { links, log, byWord };
   }
 }
 
