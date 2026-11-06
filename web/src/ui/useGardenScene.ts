@@ -202,9 +202,10 @@ export function useGardenScene({
       // The current choices, not the ones from when loading began: the scene
       // module loads asynchronously, and the viewer may have changed them since.
       s.setTime(timeNow.current);
-      s.setDetail(detailNow.current);
+      // The size before the detail: setDetail resizes too, and each new size is a new drawing buffer.
       const r = el.getBoundingClientRect();
       s.resize(r.width, r.height);
+      s.setDetail(detailNow.current);
       ro.observe(el);
       s.start();
       setReady(true);

@@ -629,6 +629,31 @@ export class GardenScene {
     this.sliceFrom = performance.now();
     if (this.disposed) return;
     await this.drawOnce(parts);
+    if (this.disposed) return;
+    await this.gpuDone();
+  }
+
+  /**
+   * Waits, without blocking, until the GPU has done all the work queued so far.
+   * The uploads and links of the warm-up run in the GPU process after it ends: the next
+   * call that must wait for that process (a resize, a uniform, any state change) blocked
+   * the first frames for 10-20 ms at CPU 10× (#571). A fence lets the browser poll instead.
+   */
+  private async gpuDone(): Promise<void> {
+    const gl = this.renderer.getContext();
+    // three has made only WebGL 2 contexts since r163; its type still names WebGL 1.
+    if (!(gl instanceof WebGL2RenderingContext)) throw new Error("the walk needs WebGL 2");
+    const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    // Null only when the context is lost: then there is no GPU work to wait for.
+    if (!fence) return;
+    gl.flush();
+    while (gl.getSyncParameter(fence, gl.SYNC_STATUS) !== gl.SIGNALED) {
+      // A timer, not scheduler.yield: Chrome updates the status in a task of its own, which a yield's continuation runs ahead of.
+      await new Promise((r) => setTimeout(r, 1));
+      if (this.disposed) break;
+    }
+    gl.deleteSync(fence);
+    this.sliceFrom = performance.now();
   }
 
   /**
@@ -1674,14 +1699,19 @@ export class GardenScene {
     // device pixels per game pixel keeps every pixel the same size.
     const dpr = window.devicePixelRatio || 1;
     const scale = Math.max(1, Math.round((cssW * dpr) / DETAIL[this.detail]));
-    this.renderer.setSize(Math.round((cssW * dpr) / scale), Math.round((cssH * dpr) / scale), false);
+    const w = Math.round((cssW * dpr) / scale);
+    const h = Math.round((cssH * dpr) / scale);
+    // Setting the canvas size waits on the GPU process: up to 15 ms at CPU 10× (#571). The first
+    // ResizeObserver callback repeats the size the walk opened with.
+    const now = this.renderer.getSize(new THREE.Vector2());
+    if (now.x !== w || now.y !== h) this.renderer.setSize(w, h, false);
     this.camera.aspect = cssW / cssH;
     this.camera.updateProjectionMatrix();
     // Framebuffer pixels per metre at 1 m, for the z's and the bits' point size.
-    const pxPerMetre = Math.round((cssH * dpr) / scale) / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
+    const pxPerMetre = h / (2 * Math.tan((this.camera.fov * Math.PI) / 360));
     this.critters.resize(pxPerMetre);
     this.walkInto.resize(pxPerMetre);
-    this.sky.resize(Math.round((cssH * dpr) / scale));
+    this.sky.resize(h);
   }
 
   /**
