@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { answer, kicker, reveal, startCourse } from "./helpers";
+import { answer, kicker, readRowsAgain, reveal, startCourse } from "./helpers";
 
 // #189: 5 minutes a day for everyone, and "Practice more" whenever the learner wants.
 test.use({ viewport: { width: 1280, height: 900 } });
@@ -12,7 +12,7 @@ const timeLeft = (page: Page) => page.locator(".time-left");
 
 /**
  * Answers from an earlier session, posted as the app posts them: `count` deck words
- * from `from` on, `minutes` of practice in all, `daysAgo` days ago.
+ * from `from` on, `minutes` of practice in all, `daysAgo` days ago. The app then reads its rows again.
  */
 async function answered(page: Page, { from = 0, count, minutes, daysAgo = 0 }: { from?: number; count: number; minutes: number; daysAgo?: number }) {
   await page.evaluate(
@@ -30,6 +30,7 @@ async function answered(page: Page, { from = 0, count, minutes, daysAgo = 0 }: {
     },
     { from, count, ms: minutes * 60_000, daysAgo },
   );
+  await readRowsAgain(page);
 }
 
 test("first day: 5 minutes a day, no minutes to choose, and the day's button", async ({ page }) => {
@@ -107,6 +108,7 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
     const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
     await postWrite([{ type: "course.upsert", row: { lang: "es", minutes: 20 } }]);
   });
+  await readRowsAgain(page);
   const note = page.getByText("Perennial is now 5 minutes at a time.", { exact: false });
   await expect(note).toBeVisible();
   await expect(startButton(page)).toHaveText("Start today's practice");
