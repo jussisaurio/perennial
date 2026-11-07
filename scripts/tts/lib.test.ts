@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { clipKey, clipPath, slug, VOICE } from "../../web/src/content/clips.ts";
-import { backoff, chars, clipsFor, pace, putClip, render, spokenTexts, type Clip, type Deps } from "./lib.ts";
+import { backoff, chars, clipsFor, pace, purge, putClip, render, spokenTexts, type Clip, type Deps } from "./lib.ts";
 
 const deck = {
   words: [
@@ -78,6 +78,24 @@ test("an upload sets the object's type; browsers keep it a day and the CDN a yea
   const headers = new Headers(seen[0]!.init.headers);
   expect(headers.get("content-type")).toBe("audio/mpeg");
   expect(headers.get("cache-control")).toBe("public, max-age=86400, s-maxage=31536000");
+});
+
+test("purge sends the clips' public URLs, 30 a call, with the token in a header", async () => {
+  const seen: { url: string; init: RequestInit }[] = [];
+  const paths = Array.from({ length: 31 }, (_, i) => `de/w${i}.mp3`);
+  await purge(paths, { zone: "z", token: "t" }, async (url, init) => {
+    seen.push({ url, init });
+    return Response.json({ success: true });
+  });
+  expect(seen.map((s) => s.url)).toEqual(["https://api.cloudflare.com/client/v4/zones/z/purge_cache", "https://api.cloudflare.com/client/v4/zones/z/purge_cache"]);
+  expect(new Headers(seen[0]!.init.headers).get("authorization")).toBe("Bearer t");
+  const files = seen.map((s) => (JSON.parse(String(s.init.body)) as { files: string[] }).files);
+  expect(files.map((f) => f.length)).toEqual([30, 1]);
+  expect(files[1]).toEqual(["https://audio.playperennial.com/de/w30.mp3"]);
+});
+
+test("a failed purge fails loudly", async () => {
+  await expect(purge(["de/a.mp3"], { zone: "z", token: "t" }, async () => new Response("no", { status: 403 }))).rejects.toThrow("HTTP 403");
 });
 
 /** A 32 kbps MPEG-2 Layer III MP3 as Chirp 3 HD sends it, `seconds` long. */

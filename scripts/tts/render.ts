@@ -6,19 +6,20 @@
 //
 // Options: --lang es|de (default: every course), --rpm N (requests a minute,
 // default Google's limit of 200), --concurrency N (default 16, above what the pace needs),
-// --replace FILE (texts, one a line, whose clips are bad: made again and uploaded over
-// the old ones; then purge the URLs it prints from Cloudflare's cache).
+// --replace FILE (texts, one a line, whose clips are bad: made again, uploaded over
+// the old ones and purged from Cloudflare's cache).
 // A real run needs --max-chars: it refuses a plan over that, and stops once the
 // characters sent (retries included) reach it. Clips already in R2 or in the
 // out folder are not made again, so a re-run costs nothing for work done.
-// Env (.env.tts): GOOGLE_TTS_KEY, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET.
+// Env (.env.tts): GOOGLE_TTS_KEY, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET,
+// and for --replace CF_ZONE_ID and CF_PURGE_TOKEN (a token that may purge the audio zone's cache).
 
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DECK_LANGS, isDeckLang } from "../../web/src/deck/langs.ts";
 import { Deck } from "../../web/src/deck/schema.ts";
 import { ROOT, decode, deckDir, flagValue } from "../deck/lib.ts";
-import { GOOGLE_RPM, chars, clipsFor, costLine, putClip, render, spokenTexts, type Clip } from "./lib.ts";
+import { GOOGLE_RPM, chars, clipsFor, costLine, purge, putClip, render, spokenTexts, type Clip } from "./lib.ts";
 
 const OUT = join(ROOT, "scripts/.tts-out");
 
@@ -74,6 +75,8 @@ const s3 = new Bun.S3Client({
   bucket: need("R2_BUCKET"),
   endpoint: `https://${need("R2_ACCOUNT_ID")}.r2.cloudflarestorage.com`,
 });
+// Read before anything is sent: a replaced clip left in Cloudflare's cache is still the bad one.
+const cf = replace.size ? { zone: need("CF_ZONE_ID"), token: need("CF_PURGE_TOKEN") } : null;
 
 const inBucket = new Set<string>();
 for (const lang of langs) {
@@ -118,9 +121,9 @@ if (result.failed.length) {
   console.log(`Failed (${result.failed.length}):`);
   for (const f of result.failed) console.log(`  ${f.path}  ${JSON.stringify(f.text)}  ${f.reason}`);
 }
-if (replace.size) {
-  // Cloudflare's edge keeps a clip a year (s-maxage, lib.ts CLIP_HEADERS): until purged, it serves the bad one.
-  console.log(`Replaced: purge these from Cloudflare now (audio.playperennial.com's zone → Caching → Configuration → Purge Cache → Custom Purge → URL):`);
-  for (const p of replace) console.log(`  https://audio.playperennial.com/${p}`);
+if (cf) {
+  const uploaded = [...replace].filter((p) => !result.failed.some((f) => f.path === p));
+  await purge(uploaded, cf, fetch);
+  console.log(`Purged ${uploaded.length} replaced clips from Cloudflare's cache.`);
 }
 if (result.failed.length) process.exit(1);
