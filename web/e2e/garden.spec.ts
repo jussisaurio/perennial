@@ -84,13 +84,16 @@ test("Today's strip stays one element while the rest of Today comes in, so its e
   await page.setViewportSize({ width: 1000, height: 800 });
   await page.clock.setFixedTime(new Date(2026, 5, 10, 12));
   // Hold animation frames: the rest of Today waits for one (Home's useAfterPaint), so the strip shows first, with no data.
+  // Only once the strip is there: the deck loads after a frame too (useDeck), and the strip needs it (#796).
+  // Home asks for its frame only after the strip is drawn, so that frame is always held.
   // Not a paused clock: the app's loading waits on timers too.
   await page.addInitScript(() => {
     const held = new Map<number, FrameRequestCallback>();
     const { requestAnimationFrame: request, cancelAnimationFrame: cancel } = window;
     let hold = true;
     let id = 0;
-    window.requestAnimationFrame = (cb) => (hold ? (held.set(--id, cb), id) : request(cb));
+    const holding = () => hold && document.querySelector('[data-testid="today-garden"]') !== null;
+    window.requestAnimationFrame = (cb) => (holding() ? (held.set(--id, cb), id) : request(cb));
     window.cancelAnimationFrame = (n) => (n < 0 ? held.delete(n) : cancel(n));
     Object.assign(window, {
       releaseFrames: () => {
