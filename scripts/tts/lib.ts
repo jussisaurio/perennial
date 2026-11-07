@@ -64,6 +64,7 @@ export function costLine(n: number): string {
 export interface Deps {
   fetch: (url: string, init: RequestInit) => Promise<Response>;
   sleep: (ms: number) => Promise<void>;
+  now: () => number;
   random: () => number;
   /** The local out folder: a clip made before but not uploaded is not made again. */
   local: { read: (path: string) => Uint8Array<ArrayBuffer> | null; write: (path: string, bytes: Uint8Array<ArrayBuffer>) => void };
@@ -76,6 +77,8 @@ export interface RenderOptions {
   /** Stop once this many characters have been sent, retries included. */
   maxChars: number;
   concurrency: number;
+  /** Requests started in any 60 s, at most (pace). */
+  rpm: number;
   /** Tries per clip on 429, 5xx or a network error, before it is listed as failed. */
   attempts: number;
 }
@@ -100,6 +103,31 @@ export async function putClip(url: string, bytes: Uint8Array<ArrayBuffer>, fetch
 
 const SYNTHESIZE = "https://texttospeech.googleapis.com/v1/text:synthesize";
 
+/**
+ * Google allows 200 Chirp 3 HD requests a minute per project (Chirp3RequestsPerMinutePerProject,
+ * https://cloud.google.com/text-to-speech/quotas). Going faster only earns 429s.
+ */
+export const GOOGLE_RPM = 200;
+const MINUTE = 60_000;
+
+/** Waits until a request may start: at most `rpm` starts in any rolling 60 s. Callers queue in order. */
+export function pace(rpm: number, now: () => number, sleep: (ms: number) => Promise<void>): () => Promise<void> {
+  const starts: number[] = [];
+  let line = Promise.resolve();
+  return () =>
+    (line = line.then(async () => {
+      for (;;) {
+        const t = now();
+        while (starts.length && starts[0]! <= t - MINUTE) starts.shift();
+        if (starts.length < rpm) {
+          starts.push(t);
+          return;
+        }
+        await sleep(starts[0]! + MINUTE - t);
+      }
+    }));
+}
+
 /** Successes in a row that win back one parallel request, after a 429 or 5xx halved them. */
 const RAISE_AFTER = 20;
 
@@ -116,6 +144,7 @@ export async function render(clips: readonly Clip[], o: RenderOptions, d: Deps):
   let done = 0;
   let capped = false;
   const failed: Rendered["failed"] = [];
+  const slot = pace(o.rpm, d.now, d.sleep);
 
   const synthesize = async (c: Clip): Promise<Uint8Array<ArrayBuffer>> => {
     const res = await d
@@ -150,7 +179,8 @@ export async function render(clips: readonly Clip[], o: RenderOptions, d: Deps):
   };
 
   const make = async (c: Clip) => {
-    const bytes = await tries(() => {
+    const bytes = await tries(async () => {
+      await slot();
       // Checked before each request: the cap holds with retries too.
       if (sent + c.text.length > o.maxChars) {
         capped = true;

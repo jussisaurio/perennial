@@ -4,7 +4,8 @@
 //   bun scripts/tts/render.ts                          dry run: counts and cost, nothing sent
 //   bun --env-file=.env.tts scripts/tts/render.ts --run --max-chars 500000
 //
-// Options: --lang es|de (default: every course), --concurrency N (default 8).
+// Options: --lang es|de (default: every course), --rpm N (requests a minute,
+// default Google's limit of 200), --concurrency N (default 16, above what the pace needs).
 // A real run needs --max-chars: it refuses a plan over that, and stops once the
 // characters sent (retries included) reach it. Clips already in R2 or in the
 // out folder are not made again, so a re-run costs nothing for work done.
@@ -15,7 +16,7 @@ import { dirname, join } from "node:path";
 import { DECK_LANGS, isDeckLang } from "../../web/src/deck/langs.ts";
 import { Deck } from "../../web/src/deck/schema.ts";
 import { ROOT, decode, deckDir, flagValue } from "../deck/lib.ts";
-import { chars, clipsFor, costLine, putClip, render, spokenTexts, type Clip } from "./lib.ts";
+import { GOOGLE_RPM, chars, clipsFor, costLine, putClip, render, spokenTexts, type Clip } from "./lib.ts";
 
 const OUT = join(ROOT, "scripts/.tts-out");
 
@@ -24,6 +25,8 @@ const real = args.includes("--run");
 const langArg = flagValue(args, "lang");
 if (langArg !== undefined && !isDeckLang(langArg)) throw new Error(`--lang: no course "${langArg}"`);
 const langs = langArg === undefined ? DECK_LANGS : [langArg];
+const rpm = Number(flagValue(args, "rpm") ?? GOOGLE_RPM);
+if (!Number.isInteger(rpm) || rpm <= 0) throw new Error(`--rpm: not a positive whole number`);
 
 const clips: Clip[] = [];
 for (const lang of langs) {
@@ -37,6 +40,7 @@ const local = (path: string) => join(OUT, path);
 const made = clips.filter((c) => existsSync(local(c.path)));
 console.log(`All: ${clips.length.toLocaleString("en")} clips. ${costLine(chars(clips))}`);
 if (made.length) console.log(`In ${OUT} already (upload only, not made again): ${made.length.toLocaleString("en")} clips.`);
+console.log(`Time: about ${Math.ceil((clips.length - made.length) / rpm).toLocaleString("en")} minutes at ${rpm} requests a minute.`);
 
 if (!real) {
   console.log("Dry run: nothing sent. Add --run --max-chars N to render. Clips already in R2 are skipped then.");
@@ -47,7 +51,7 @@ const maxCharsArg = flagValue(args, "max-chars");
 if (maxCharsArg === undefined) throw new Error("--run needs --max-chars N");
 const maxChars = Number(maxCharsArg);
 if (!Number.isInteger(maxChars) || maxChars <= 0) throw new Error(`--max-chars: not a positive whole number: ${maxCharsArg}`);
-const concurrency = Number(flagValue(args, "concurrency") ?? 8);
+const concurrency = Number(flagValue(args, "concurrency") ?? 16);
 
 const need = (name: string) => {
   const v = process.env[name];
@@ -81,10 +85,11 @@ if (chars(toMake) > maxChars) {
 
 const result = await render(
   todo,
-  { apiKey, maxChars, concurrency, attempts: 6 },
+  { apiKey, maxChars, concurrency, rpm, attempts: 6 },
   {
     fetch: (url, init) => fetch(url, init),
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+    now: Date.now,
     random: Math.random,
     local: {
       read: (path) => (existsSync(local(path)) ? new Uint8Array(readFileSync(local(path))) : null),
