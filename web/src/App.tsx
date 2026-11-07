@@ -1,5 +1,5 @@
 import { startTransition, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { signOut, useUser } from "./data/auth";
+import { googleSignInFailed, signOut, useUser } from "./data/auth";
 import { identify, initObservability, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useDeckSentences, useStore } from "./data/learner";
 import { boot } from "./data/boot";
@@ -144,6 +144,33 @@ function DeckFailed({ lang }: { lang: string }) {
 }
 
 export default function App() {
+  return (
+    <>
+      <Screens />
+      <GoogleFailedBanner />
+    </>
+  );
+}
+
+/**
+ * A Google sign-in that did not work comes back to the start (server auth.ts,
+ * onAPIError). Said wherever the learner lands, signed in or not: read once,
+ * as the app starts.
+ */
+function GoogleFailedBanner() {
+  const [shown, setShown] = useState(googleSignInFailed);
+  if (!shown) return null;
+  return (
+    <div className="toast" role="status">
+      <span>Google sign-in did not work. Try again, or use an email code.</span>
+      <button className="ghost" onClick={() => setShown(false)}>
+        OK
+      </button>
+    </div>
+  );
+}
+
+function Screens() {
   const { user, pending } = useUser();
   const [route, go] = useRoute();
   // Signing in, or linking an anonymous learner to an account, changes the

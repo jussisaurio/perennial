@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useFeatures } from "../data/server";
 import type { Me } from "perennial-contract";
 import { getMe, resetDate } from "../data/ai";
-import { AuthError, googleSignInFailed, sendCode, signInWithCode, signInWithGoogle, signOut, useUser } from "../data/auth";
+import { AuthError, sendCode, signInWithCode, signInWithGoogle, signOut, useUser } from "../data/auth";
 import { track } from "../observability";
 import { CheckIcon, GoogleMark } from "./icons";
 
@@ -49,7 +49,8 @@ export function SignIn({ cta }: { cta: string }) {
   const [byEmail, setByEmail] = useState(false);
   const [sent, setSent] = useState<Sent>("sent");
   const [busy, setBusy] = useState<"send" | "sign-in" | "google" | null>(null);
-  const [error, setError] = useState(() => (googleSignInFailed() ? "Signing in with Google did not finish. Try again, or use an email code." : ""));
+  // A failed Google sign-in is said by the app wherever the learner lands (App.tsx, GoogleFailedBanner).
+  const [error, setError] = useState("");
   const { google } = useFeatures();
   const [resendAt, setResendAt] = useState(0);
   const [now, setNow] = useState(() => Date.now());
