@@ -24,8 +24,39 @@ The cat almost never comes: it flicks one ear. Rarely, it gets up and walks over
 
 Visitors never stand in your way: you can walk through them. You never have to wait for one: walk on whenever you like.
 
+**How a visitor goes anywhere.** A visitor never vanishes from one place and shows up in another. When one goes somewhere (to you, home, to the bench, to wait by the key), you can watch it go: the dog and the cat walk or run on the ground, round the beds, the pond and the hedge, the same ways you can walk, and jump down from or up onto a seat or a step; the bird flies, up over things and down again. The gnome plays statues: while it is off your screen it walks, slowly, round the beds like the others; the moment it is on your screen it freezes. So a quick look back can catch it part of the way there. When the walk starts, each visitor is already in its place. With "reduce motion" on in your device, a visitor that goes somewhere is there at once: this is the one exception, for access.
+
+**Who comes to sit with you on the bench** (#362). Sit still on the bench. After about ten seconds the bird flies over and lands on its back; after about twenty, the cat walks over and jumps up beside you; after about forty, the gnome comes to the grass past the far end, walking only while you are not looking at it. A screen reader hears each one when it has got there. Stand up and each goes back to its own place the same way it came.
+
 - `call.dog-round`: With a bed between you and the dog, the dog runs round the bed to you and is never on the bed.
 - `call.dog-home`: A few seconds after it reaches you, the dog trots back to its own place by the shed, again never over a bed.
+- `visit.bench-walk`: Sitting on the bench, the bird and the cat come to sit with you: in each frame on the way each one is a short step from where it was in the frame before, and the cat is never inside a bed. Stand up and they go home the same way.
+- `visit.gnome-statues`: Sitting on the bench, the gnome comes over: it never moves in a frame where it is on screen, and each frame it moves it goes a short step.
+
+## The door in the hedge and the key
+
+In the hedge on the gate side there is an old wooden door, shut. At dusk and night a warm light shows through its keyhole. Walk up to it and the action button (a hand) is "Try the door": press it and a quiet line over the door says it is locked ("Cerrado con llave."). No button opens it yet.
+
+When the learner knows the word for key (llave), the key lies somewhere in the garden, always in the same place for this learner: half under the bench, among the stones at the pond's edge, at the foot of a lantern, by the back corner of a bed, or under the sunflower. It is small: a brass key lying on the ground. Walk near it (about two metres) and the action button is "Pick up the key", and a screen reader hears "The key is here." Press it, or tap the key, and the key is gone from the ground, into your hand, and a quiet line over the place says "Has encontrado la llave." A tap on the key from farther away walks you up to it first, and then picks it up. With the key in hand, by the door the button is "Open the door with the key". The door swings open into the orchard, and stays open for good.
+
+**Help when the key waits a long time** (#334). The garden never says where the key is in words. If the key has waited three days or more, the dog (on a day it is here) waits by it instead of by the shed. It sits on the ground beside the key, a little under a metre away, never on top of it, and it looks at it: it turns its head to the key from wherever you see it. It sits on the side of the key away from the middle of the garden, where there is open ground, so from most of the garden you see the key in front of the dog. It wags its tail as you come near, as it does by the shed. It does not move off on its own. While it waits by the key, its place is by the key: call it and it comes to you, then goes back to the key. At dusk and night the bird (on a day it is here) waits on the ground by the key too, on the other side of it.
+
+If the key has waited a week or more, it also glints: a small star of light on the key, on and off every few seconds, whenever you face it, from far away and up close. Like the key, it is hidden by whatever stands in front of it. On a day the dog waits by the key, the key does not glint: the dog is the help that day, and a star just in front of it reads as the dog sparkling.
+
+A tap on the dog is a tap on the dog: its name shows, as anywhere. It does not pick up the key. Near the key the action button is still "Pick up the key", as it is wherever the key lies; it is the key that it picks up, and the found line shows low over the key, not on the dog.
+
+**Once you have the key**, whoever waited by it has nothing left to watch. The dog stays a moment, wagging, as if pleased; after about two seconds it gets up and trots home to its place by the shed, round the beds and the pond, the way it goes home after you call it. The bird flies up and back to its own perch. Neither one vanishes. Call the dog after that and it comes from wherever it is, and goes back to the shed.
+
+**What you can't do, and how you can tell.** The door does not open without the key: "Try the door" says it is locked. The dog does not bring you the key or lead you to it; it only waits by it, and calling it there brings it to you, then back to the key. No button names the key until you are near it.
+
+### Claims
+
+- `key.dog-beside`: With the key left four days, the dog sits on open ground beside the key, between 0.6 and 1 metre from it, on the side away from the middle of the garden.
+- `key.dog-looks`: Seen from either side of the dog, the dog's picture faces the key: its art is mirrored when the key is on the left of it on screen.
+- `key.no-glint-with-dog`: With the key left eight days and the dog here, facing the key from the garden side, the key never glints; without the dog, it does.
+- `key.tap-dog`: A tap on the dog by the key shows the dog's tag; the key stays on the ground.
+- `key.dog-walks-home`: Picking up the key: the dog is still beside the key two seconds later, then trots home to the shed, a short step each frame, never inside a bed, and ends at its place.
+- `key.bird-flies-home`: At dusk with the key left four days, picking up the key: the bird flies home, a short step each frame, and ends on its own perch.
 
 ## Back fence, stile and hill
 

@@ -9,7 +9,7 @@ import * as T from "./textures";
 import { type VisitorId, type VisitorView } from "./visitors";
 import { daily } from "../core/day";
 import { KINDS } from "./kinds";
-import type { Bloom, Body, Hideout, Reply, Visitor, VisitorKind } from "./kinds/kind";
+import { there, type Bloom, type Body, type Hideout, type Reply, type Visitor, type VisitorKind } from "./kinds/kind";
 import type { Layout } from "./world";
 import type { Ground } from "./ground";
 import type { Spots } from "./spots";
@@ -33,13 +33,16 @@ const CELLS: Record<string, Record<string, number>> = {};
 const LANTERN_LIGHT = new THREE.Color(0.85, 0.8, 0.7);
 
 /**
- * Point a visitor's sprite at its texture cell; upload only when it changes (tick runs
- * every frame). The attribute stores float32, so compare with the float32 value.
+ * Point a visitor's sprite at its texture cell, `flip`ped left to right or not;
+ * upload only when it changes (tick runs every frame). The attribute stores
+ * float32, so compare with the float32 values.
  */
-export function showCell(uv: THREE.BufferAttribute, cell: number, cells: number) {
-  const u = Math.fround(cell / cells);
-  if (uv.getX(0) === u) return;
+export function showCell(uv: THREE.BufferAttribute, cell: number, cells: number, flip: boolean) {
+  const u = Math.fround((flip ? cell + 1 : cell) / cells);
+  const w = Math.fround((flip ? -1 : 1) / cells);
+  if (uv.getX(0) === u && uv.getZ(0) === w) return;
   uv.setX(0, u);
+  uv.setZ(0, w);
   uv.needsUpdate = true;
 }
 
@@ -189,7 +192,7 @@ export class SceneVisitors implements Part {
     const b = s.body;
     const d = s.drawn;
     s.mesh.visible = b.visible;
-    showCell(s.uv, CELLS[s.v.id][b.frame], ATLAS.length);
+    showCell(s.uv, CELLS[s.v.id][b.frame], ATLAS.length, this.turnedRound(b));
     if (b.x !== d[0] || b.y !== d[1] || b.z !== d[2]) {
       d[0] = b.x;
       d[1] = b.y;
@@ -212,6 +215,18 @@ export class SceneVisitors implements Part {
     const k = 1 / Math.max(1e-6, Math.hypot(e[0], e[8]));
     const off = at.dx * s.size;
     glow.position.set(b.x + e[0] * k * off, b.y + at.dy * s.size, b.z + e[8] * k * off);
+  }
+
+  /**
+   * A visitor's art faces the camera's right. One that `looks` at something
+   * (#802: the dog at the key) is turned round when that thing is on its left
+   * on screen, while it sits at its spot.
+   */
+  private turnedRound(b: Body<string>): boolean {
+    if (!b.looks || !there(b)) return false;
+    // The camera's right, in the world.
+    const e = this.world.camera.matrixWorldInverse.elements;
+    return e[0] * (b.looks.x - b.x) + e[8] * (b.looks.z - b.z) < 0;
   }
 
   onConditions(c: Conditions) {
@@ -316,18 +331,45 @@ export class SceneVisitors implements Part {
   }
 
   /**
-   * A visitor waits somewhere else for now (#334: by a key left waiting), or
-   * (null) goes back to its own spot. A visitor not here today: nothing to move.
-   * `settled`: it sits with you on the bench (#362), and does not mind you there.
+   * A visitor waits somewhere else for now (#334: by a key left waiting; #362:
+   * on the bench with you), or (null) goes back to its own spot. It goes there
+   * in its own way, from where it is: it never jumps (#802). A visitor not here
+   * today: nothing to move. `settled`: it sits with you on the bench, and does
+   * not mind you there.
    */
   visit(id: VisitorId, at: [number, number, number] | null, settled = false) {
     const s = this.sprites.find((o) => o.v.id === id);
     if (!s) return;
     const b = s.body;
-    [b.at.x, b.at.y, b.at.z] = at ?? s.home;
-    [b.x, b.y, b.z] = [b.at.x, b.at.y, b.at.z];
-    s.visitor.onVisit?.(settled);
+    const [x, y, z] = at ?? s.home;
+    // There, or on its way there, already.
+    if (b.at.x === x && b.at.y === y && b.at.z === z) return;
+    [b.at.x, b.at.y, b.at.z] = [x, y, z];
+    b.looks = null;
+    s.visitor.onVisit?.(settled, this.world.elapsed());
     this.draw(s);
+  }
+
+  /**
+   * As the walk is built, a visitor's place today is somewhere else (#334: by a
+   * key): it is there from the start, as nobody sees it go, and it `looks` at
+   * what it waits by.
+   */
+  place(id: VisitorId, at: [number, number, number], looks: { x: number; z: number }) {
+    const s = this.sprites.find((o) => o.v.id === id);
+    if (!s) return;
+    const b = s.body;
+    [b.at.x, b.at.y, b.at.z] = at;
+    [b.x, b.y, b.z] = at;
+    b.looks = looks;
+    s.visitor.onVisit?.(false, this.world.elapsed());
+    this.draw(s);
+  }
+
+  /** Has this visitor got to where it was sent (visit)? No allocation: the bench asks every frame while one comes (#802). */
+  arrived(id: VisitorId): boolean {
+    for (const s of this.sprites) if (s.v.id === id) return there(s.body);
+    return false;
   }
 
   /** Is this visitor here, and in sight, now? */
@@ -387,8 +429,8 @@ export class SceneVisitors implements Part {
     const camera = this.world.camera;
     for (const s of this.sprites) {
       if (s.visitor.step) {
-        // On screen: in front of the camera and inside it (a little margin).
-        const p = this.tmp.set(s.body.at.x, s.body.at.y, s.body.at.z).project(camera);
+        // On screen where it is drawn, not where it is going (#802: the gnome on its way): in front of the camera and inside it (a little margin).
+        const p = this.tmp.set(s.body.x, s.body.y, s.body.z).project(camera);
         const seen = p.z < 1 && Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95;
         const did = s.visitor.step(f, seen);
         if (did === "startled" && this.tapped?.id === s.v.id) this.tapped = null;

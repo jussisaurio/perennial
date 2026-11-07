@@ -47,6 +47,8 @@ export class Door {
   swing: number | null = null;
   /** The world's help for a key left waiting (#334); null without a key. The scene reads it too. */
   help: KeyHelp | null = null;
+  /** The dog waits by the key (#802): it is the help, so the key does not glint. A star by the dog read as the dog sparkling. */
+  guarded = false;
 
   constructor(reducedMotion: boolean) {
     this.reducedMotion = reducedMotion;
@@ -100,9 +102,8 @@ export class Door {
       c.mats.add(mesh.material);
       c.scene.add(mesh);
       // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted or fogged: a glint is bright at
-      // dusk too. Drawn over whatever stands in front (a bench leg, a bed): it is the help, so it must not hide.
-      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthTest: false, depthWrite: false, fog: false }));
-      glint.renderOrder = 10;
+      // dusk too. Whatever stands in front hides it, as it hides the key.
+      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthWrite: false, fog: false }));
       glint.position.set(x, 0.25, z);
       glint.visible = false;
       c.scene.add(glint);
@@ -141,7 +142,7 @@ export class Door {
     // Forward is -z at yaw 0.
     const facing = (-Math.sin(f.yaw) * dx - Math.cos(f.yaw) * dz) / d > FACING;
     const k = f.elapsed % LATE.every;
-    key.glint.visible = !!this.help?.glint && facing && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
+    key.glint.visible = !!this.help?.glint && !this.guarded && facing && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
     const pulse = this.reducedMotion ? 1 : 0.8 + 0.2 * Math.sin((Math.PI * k) / LATE.on);
     key.glint.scale.setScalar(Math.max(LATE.min, LATE.size * d) * pulse);
   }

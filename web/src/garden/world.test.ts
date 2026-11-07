@@ -3,7 +3,7 @@ import { ORCHARD_WORDS } from "../deck/schema";
 import { rng } from "../lib/seed";
 import { shedAt } from "./shed";
 import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
-import { along, bedSign, benchAt, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
+import { along, bedSign, benchAt, besideKey, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
 
 const DAY = 86_400_000;
 const plant = (i: number, pos = "noun"): GardenPlant => ({
@@ -329,6 +329,18 @@ describe("the hidden key (#315)", () => {
     expect(on(7, 23)).toEqual({ visitors: true, glint: false });
     expect(on(8, 0)).toEqual({ visitors: true, glint: true });
     expect(on(40, 12)).toEqual({ visitors: true, glint: true });
+  });
+
+  test("the dog and the bird find open ground beside the key, wherever it is (#802)", () => {
+    for (const l of gardens)
+      for (const spot of KEY_SPOTS) {
+        const k = keyAt(l, spot);
+        for (const who of ["dog", "bird"] as const) {
+          const [x, , z] = besideKey(l, k, who);
+          expect(Math.hypot(x - k.x, z - k.z)).toBeLessThan(1);
+          expect(collide(l, x, z)).toEqual({ x, z });
+        }
+      }
   });
 
   test("a learner always gets the same spot, and learners get different ones", () => {

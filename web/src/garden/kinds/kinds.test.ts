@@ -109,7 +109,7 @@ describe("visitor kinds", () => {
     expect(frog.body.y).toBeCloseTo(from.y, 9);
   });
 
-  test("the bird hops away when you come close, is gone, and comes back to its spot when you walk off", () => {
+  test("the bird hops away when you come close, is gone, and flies back to its spot when you walk off (#802)", () => {
     const bird = arrive("bird");
     const at = { ...bird.body.at };
     expect(at).toEqual({ x: 1, y: 1.19, z: 1 });
@@ -118,6 +118,10 @@ describe("visitor kinds", () => {
     run(bird, 1, at.x + 0.5, at.z);
     expect(bird.body.visible).toBe(false);
     run(bird, 0.1, at.x + 10, at.z);
+    // On its way back, from where it went.
+    expect(bird.body).toMatchObject({ visible: true, frame: "hop" });
+    expect(Math.hypot(bird.body.x - at.x, bird.body.z - at.z)).toBeGreaterThan(1);
+    run(bird, 2, at.x + 10, at.z);
     expect(bird.body).toMatchObject({ visible: true, frame: "sit", x: at.x, y: at.y, z: at.z });
   });
 
