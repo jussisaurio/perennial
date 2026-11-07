@@ -150,17 +150,18 @@ export const speak = (text: string, tag: string) => sayAll([text], tag, false);
 export const speakAll = (texts: string[], tag: string) => sayAll(texts, tag, false);
 
 /**
- * An animal's answer (#739): its recorded sound, then the known word it holds
- * up, if any, in the course voice. Call it inside the tap: iOS lets the sound
- * start there.
+ * An animal's answer (#739): only its recorded sound, never the course voice.
+ * Call it inside the tap: iOS lets the sound start there.
  */
-export const animalSays = (sound: AnimalSound, word: string | null, tag: string) => sayAll(word ? [word] : [], tag, false, ANIMAL_SOUNDS[sound]);
+export async function animalSays(sound: AnimalSound): Promise<void> {
+  if (!soundOn) return;
+  // Like a new speak call, it stops what was being said.
+  generation++;
+  await playClip(ANIMAL_SOUNDS[sound], 1);}
 
-async function sayAll(texts: string[], tag: string, slow: boolean, sound?: string): Promise<void> {
+async function sayAll(texts: string[], tag: string, slow: boolean): Promise<void> {
   if (!soundOn) return;
   const gen = ++generation;
-  // A sound that will not play (no tap yet) is skipped; the word still comes.
-  if (sound) await playClip(sound, 1);
   for (const text of texts) {
     if (gen !== generation || !soundOn) return;
     await say(text, tag, slow, gen);

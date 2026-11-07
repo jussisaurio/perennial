@@ -84,11 +84,10 @@ interface Tap {
 /** Each animal that makes a sound: a real recording of its own (ui/animalSounds.ts), never the course voice (#739). */
 export type AnimalSound = "frog";
 
-/** A visitor's answer to a tap: its bubble, its recorded sound, and the known word in the bubble (said in the course voice after the sound), if any. */
+/** A visitor's answer to a tap: its bubble, and its recorded sound (the bubble's words are not said aloud). */
 export interface Reply {
   say: string;
   sound: AnimalSound;
-  word: string | null;
 }
 
 /** You whistled (#377). */

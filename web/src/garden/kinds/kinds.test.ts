@@ -85,7 +85,7 @@ describe("visitor kinds", () => {
     frog.onConditions!(conditions("dusk"));
     // About one day in 25 it sleeps all day: this one is not.
     expect(frog.body.frame).toBe("awake");
-    expect(frog.onTap!({ elapsed: 1, known: ["casa"], lang: "es" })).toEqual({ say: "croac… casa", sound: "frog", word: "casa" });
+    expect(frog.onTap!({ elapsed: 1, known: ["casa"], lang: "es" })).toEqual({ say: "croac… casa", sound: "frog" });
     expect(frog.body.frame).toBe("croak");
     run(frog, 1, 50, 50, true, 1);
     expect(frog.body.frame).toBe("awake");

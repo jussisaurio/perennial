@@ -28,7 +28,7 @@ export interface SpokenDeck {
  * words (cards, plants, orchard trees, the well's echo), a shaken
  * plant's forms, sentences, and the garden's scenery and visitor nouns. Animals never
  * speak in this voice: the frog's croak is a real recording (web/src/ui/animalSounds.ts),
- * and only the known word after it is said in this voice. Words from the learner's own
+ * and the word in its bubble is not said aloud. Words from the learner's own
  * texts have no clip: those plays use browser speech.
  */
 export function spokenTexts(deck: SpokenDeck, lang: DeckLang): string[] {
