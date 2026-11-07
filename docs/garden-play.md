@@ -41,9 +41,9 @@ When the learner knows the word for key (llave), the key lies somewhere in the g
 
 **Help when the key waits a long time** (#334). The garden never says where the key is in words. If the key has waited three days or more, the dog (on a day it is here) waits by it instead of by the shed. It sits on the ground beside the key, a little under a metre away, never on top of it, and it looks at it: it turns its head to the key from wherever you see it. It sits on the side of the key away from the middle of the garden, where there is open ground, so from most of the garden you see the key in front of the dog. It wags its tail as you come near, as it does by the shed. It does not move off on its own. While it waits by the key, its place is by the key: call it and it comes to you, then goes back to the key. At dusk and night the bird (on a day it is here) waits on the ground by the key too, on the other side of it.
 
-If the key has waited a week or more, it also glints: a small star of light on the key, on and off every few seconds, whenever you face it, from far away and up close. The glint is on the key, not in the air: like the key, it is hidden by whatever stands in front of it, the dog too. Walk round, and it shows again.
+If the key has waited a week or more, it also glints: a small star of light on the key, on and off every few seconds, whenever you face it, from far away and up close. Like the key, it is hidden by whatever stands in front of it. On a day the dog waits by the key, the key does not glint: the dog is the help that day, and a star just in front of it reads as the dog sparkling.
 
-A tap on the dog is a tap on the dog: its name shows, as anywhere. It does not pick up the key. Near the key the action button is still "Pick up the key", as it is wherever the key lies; it is the key that it picks up, and the found line shows over the key, not over the dog.
+A tap on the dog is a tap on the dog: its name shows, as anywhere. It does not pick up the key. Near the key the action button is still "Pick up the key", as it is wherever the key lies; it is the key that it picks up, and the found line shows low over the key, not on the dog.
 
 **Once you have the key**, whoever waited by it has nothing left to watch. The dog stays a moment, wagging, as if pleased; after about two seconds it gets up and trots home to its place by the shed, round the beds and the pond, the way it goes home after you call it. The bird flies up and back to its own perch. Neither one vanishes. Call the dog after that and it comes from wherever it is, and goes back to the shed.
 
@@ -53,7 +53,7 @@ A tap on the dog is a tap on the dog: its name shows, as anywhere. It does not p
 
 - `key.dog-beside`: With the key left four days, the dog sits on open ground beside the key, between 0.6 and 1 metre from it, on the side away from the middle of the garden.
 - `key.dog-looks`: Seen from either side of the dog, the dog's picture faces the key: its art is mirrored when the key is on the left of it on screen.
-- `key.glint-hidden`: With the key left eight days, the glint is drawn with the depth test, so a thing in front of the key hides it.
+- `key.no-glint-with-dog`: With the key left eight days and the dog here, facing the key from the garden side, the key never glints; without the dog, it does.
 - `key.tap-dog`: A tap on the dog by the key shows the dog's tag; the key stays on the ground.
 - `key.dog-walks-home`: Picking up the key: the dog is still beside the key two seconds later, then trots home to the shed, a short step each frame, never inside a bed, and ends at its place.
 - `key.bird-flies-home`: At dusk with the key left four days, picking up the key: the bird flies home, a short step each frame, and ends on its own perch.

@@ -603,7 +603,10 @@ export class GardenScene {
     this.scene.add(this.carry.root);
     // A key left waiting a few days (#334): the dog, if it is here today, sits by it from the start (#802). At dusk and night the bird too (birdByKey).
     const key = this.door.key;
-    if (this.keyHelp?.visitors && key) this.guests.place("dog", besideKey(this.layout, key, "dog"), key);
+    if (this.keyHelp?.visitors && key && this.guests.has("dog")) {
+      this.guests.place("dog", besideKey(this.layout, key, "dog"), key);
+      this.door.guarded = true;
+    }
     // Even with the door shut: it may open in this walk.
     this.orchardAtlas = await orchardAtlas;
     // After the visitors: a visitor may sit in the orchard's trees today.
@@ -1192,7 +1195,7 @@ export class GardenScene {
       // Whoever waited by it goes home.
       this.guests.visit("dog", null);
       this.guests.visit("bird", null);
-      this.showLine(DOOR_LINES[this.lang].found, [d.key.x, 0.45, d.key.z], DOOR_SPOKEN.found);
+      this.showLine(DOOR_LINES[this.lang].found, [d.key.x, 0.15, d.key.z], DOOR_SPOKEN.found);
     } else if (a === "open" && d.state === "held") {
       this.openDoor(true);
       this.clearTaps({ line: true });

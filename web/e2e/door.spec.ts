@@ -337,7 +337,7 @@ type KeyScene = {
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
   layout: { bounds: { minX: number; maxX: number; minZ: number; maxZ: number } };
-  door: { key: { x: number; z: number; glint: { material: { depthTest: boolean } } } };
+  door: { key: { x: number; z: number } };
   guests: { sprites: Guest[] };
   doorAct(a: string): void;
 };
@@ -400,9 +400,12 @@ test("key.dog-looks: seen from either side, the dog's picture faces the key", as
   for (const v of [one, other]) expect(v.flipped).toBe(v.keyLeft);
 });
 
-test("key.glint-hidden: a key left a week glints on the key, hidden by whatever stands in front of it", async ({ page }) => {
+// Without the dog it glints: the test above.
+test("key.no-glint-with-dog: a key left a week does not glint while the dog waits by it", async ({ page }) => {
   await keyWaited(page, 8, "&visitors=dog");
-  expect(await page.evaluate(() => (window as unknown as { __garden: KeyScene }).__garden.door.key.glint.material.depthTest)).toBe(true);
+  await keyInTheOpen(page);
+  await standByKey(page, 5);
+  expect(await keyGlints(page)).toBe(false);
 });
 
 test("key.tap-dog: a tap on the dog by the key shows the dog's name, and the key stays on the ground", async ({ page }) => {
@@ -438,8 +441,16 @@ test.describe(() => {
     await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
     await keyWaited(page, 4, "&visitors=bird");
     expect((await whereIs(page, "bird")).key).toBeLessThan(1);
-    // From farther off than it lets you come: up close it would fly off first.
-    await standByKey(page, 5);
+    // Stand in the garden's corner farthest from both the key and the bird's perch: near either, it would hop off from you instead.
+    await page.evaluate(() => {
+      const s = (window as unknown as { __garden: KeyScene }).__garden;
+      const { minX, maxX, minZ, maxZ } = s.layout.bounds;
+      const home = s.guests.sprites.find((o) => o.v.id === "bird")!.home;
+      const away = (p: [number, number]) => Math.min(Math.hypot(p[0] - s.door.key.x, p[1] - s.door.key.z), Math.hypot(p[0] - home[0], p[1] - home[2]));
+      const corners: [number, number][] = [[minX + 1, minZ + 1], [minX + 1, maxZ - 1], [maxX - 1, minZ + 1], [maxX - 1, maxZ - 1]];
+      const [x, z] = corners.reduce((a, b) => (away(b) > away(a) ? b : a));
+      Object.assign(s, { x, z });
+    });
     await trackVisitors(page, ["bird"]);
     await page.evaluate(() => (window as unknown as { __garden: KeyScene }).__garden.doorAct("key"));
     await expect.poll(async () => (await whereIs(page, "bird")).home, { timeout: 30_000 }).toBeLessThan(0.01);
