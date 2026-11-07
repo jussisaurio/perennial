@@ -60,7 +60,7 @@ const onTop = (page: Page) =>
     const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
     const s = (window as unknown as { __garden: Scene }).__garden;
     const at = stileAt(s.layout as Parameters<typeof stileAt>[0]);
-    Object.assign(s, { climbed: true, x: at.x, z: at.z, yaw: 0, pitch: -0.5 });
+    Object.assign(s, { climbed: true, x: at.x, z: at.z, yaw: 0, pitch: -0.22 });
   });
 
 /** Spots in the garden walk, each a place to stand once the walk is open. Forward is -z at yaw 0. */
@@ -91,7 +91,7 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       // A few steps back from it, facing the back fence and the hill past it (−z is yaw 0).
       Object.assign(s, { x: at.x + 0.6, z: at.z + 4, yaw: 0.1, pitch: -0.02 });
     }),
-  // The far steps whole (#749), and broken for a learner without the hill's note (WORDS).
+  // The old path past the fence, cleared (#749), and blocked by a fallen tree for a learner without the hill's note (WORDS).
   top: onTop,
   "top-shut": onTop,
   lookout: (page) =>
