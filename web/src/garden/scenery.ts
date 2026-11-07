@@ -6,7 +6,7 @@
 // Pure data and hit tests, so they are easy to test. The scene builds the hit
 // volumes once; a tap casts one ray through them.
 
-import { nounLemma, nounView, type NounDef, type NounView } from "./nouns";
+import { nounView, type NounDef, type NounView } from "./nouns";
 
 export type SceneryId =
   | "sunflower"
@@ -78,9 +78,6 @@ export interface SceneryView extends NounView {
 }
 
 export type SceneryViews = Partial<Record<SceneryId, SceneryView>>;
-
-/** The deck lemma behind a scenery word: the noun after the article, or the singular for a plural. */
-export const sceneryLemma = (id: SceneryId, lang: string): string | null => nounLemma(SCENERY[id], lang);
 
 /** Every scenery word for this course (none for a course without them). `isKnown` gets the bare lemma ("sol", not "el sol"). */
 export function sceneryViews(lang: string, isKnown: (lemma: string) => boolean = () => false): SceneryViews {
@@ -261,7 +258,7 @@ const CLOUD_TAG = 5;
  * ground) come first; past the fog, a cloud, the sun or moon, the hills, and
  * at last the sky. `has` drops things this course has no word for.
  */
-export function pickScenery(r: Ray, w: SceneryWorld, has: (id: SceneryId) => boolean = () => true): SceneryHit | null {
+export function pickScenery(r: Ray, w: SceneryWorld, has: (id: SceneryId) => boolean): SceneryHit | null {
   const { hit: best, t: bestT } = nearestThing(r, w, has);
   // The ground: path inside the fence, grass outside.
   if (r.dy < 0) {

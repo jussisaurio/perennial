@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DECK_LANGS } from "../deck/langs";
+import { nounLemma } from "./nouns";
 import { VISITORS, STRIP_VISITORS } from "./visitors";
 import {
   boardBox,
@@ -14,7 +15,6 @@ import {
   rayDisc,
   rayHills,
   SCENERY,
-  sceneryLemma,
   sceneryViews,
   spriteBox,
   TREE_KINDS,
@@ -25,6 +25,7 @@ import {
 } from "./scenery";
 
 const ids = Object.keys(SCENERY) as SceneryId[];
+const lemma = (id: SceneryId, lang: string) => nounLemma(SCENERY[id], lang);
 const deckLemmas = (lang: string) =>
   new Set((JSON.parse(readFileSync(join(import.meta.dir, `../../../decks/${lang}/deck.json`), "utf8")) as { words: { lemma: string; pos: string }[] }).words.filter((w) => w.pos === "noun").map((w) => w.lemma));
 
@@ -51,16 +52,16 @@ describe("scenery words", () => {
   });
 
   test("the lemma is the noun after the article, or the singular for a plural", () => {
-    expect(sceneryLemma("sunflower", "es")).toBe("girasol");
-    expect(sceneryLemma("cherry", "de")).toBe("Kirschbaum");
-    expect(sceneryLemma("hills", "es")).toBe("colina");
-    expect(sceneryLemma("sun", "fr")).toBeNull();
+    expect(lemma("sunflower", "es")).toBe("girasol");
+    expect(lemma("cherry", "de")).toBe("Kirschbaum");
+    expect(lemma("hills", "es")).toBe("colina");
+    expect(lemma("sun", "fr")).toBeNull();
   });
 
   test("the deck words among them are the ones we expect (they get the known leaf once known)", () => {
     const inDeck = (lang: string) => {
       const deck = deckLemmas(lang);
-      return ids.filter((id) => deck.has(sceneryLemma(id, lang)!)).sort();
+      return ids.filter((id) => deck.has(lemma(id, lang)!)).sort();
     };
     expect(inDeck("es")).toEqual(["bench", "cloud", "door", "flower", "grass", "hills", "moon", "path", "sky", "stone", "sun", "tree"]);
     expect(inDeck("de")).toEqual(["bench", "cloud", "door", "flower", "grass", "moon", "path", "sign", "sky", "stone", "sun", "tree"]);
@@ -145,27 +146,28 @@ describe("pickScenery", () => {
     ...over,
   });
   const eye = (dx: number, dy: number, dz: number) => ray(0, 1, 0, dx, dy, dz);
+  const all = () => true;
 
   test("the nearest thing wins, and its tag sits over it", () => {
-    const hit = pickScenery(eye(0, 0, -1), world())!;
+    const hit = pickScenery(eye(0, 0, -1), world(), all)!;
     expect(hit.id).toBe("sunflower");
     expect(hit.y).toBeGreaterThan(1.6);
     // Over the sunflower's head: the fence, then a tree beyond it.
-    expect(pickScenery(eye(0, -0.3 / 8, -1), world({ boxes: world().boxes.slice(1) }))!.id).toBe("fence");
-    expect(pickScenery(eye(0, 0.15, -1), world())!.id).toBe("tree");
+    expect(pickScenery(eye(0, -0.3 / 8, -1), world({ boxes: world().boxes.slice(1) }), all)!.id).toBe("fence");
+    expect(pickScenery(eye(0, 0.15, -1), world(), all)!.id).toBe("tree");
   });
 
   test("a long thing's tag sits where you tapped it", () => {
-    const hit = pickScenery(eye(2, -0.3, -8), world({ boxes: world().boxes.slice(1, 2) }))!;
+    const hit = pickScenery(eye(2, -0.3, -8), world({ boxes: world().boxes.slice(1, 2) }), all)!;
     expect(hit.id).toBe("fence");
     expect(hit.x).toBeCloseTo(2, 0);
     expect(hit.y).toBeCloseTo(0.85);
   });
 
   test("the ground is path inside the fence and grass outside; the pond is the pond", () => {
-    expect(pickScenery(eye(1, -1, 0), world())!.id).toBe("path");
-    expect(pickScenery(eye(4, -1, 0), world())!.id).toBe("pond");
-    expect(pickScenery(eye(12, -1, 0), world())!.id).toBe("grass");
+    expect(pickScenery(eye(1, -1, 0), world(), all)!.id).toBe("path");
+    expect(pickScenery(eye(4, -1, 0), world(), all)!.id).toBe("pond");
+    expect(pickScenery(eye(12, -1, 0), world(), all)!.id).toBe("grass");
   });
 
   test("the ground a tap walks to (#336): only where nothing stands in front of it, and short of the fog", () => {
@@ -179,11 +181,11 @@ describe("pickScenery", () => {
   });
 
   test("the sky: the sun by day, the moon at night, a cloud, the hills, and the sky itself", () => {
-    expect(pickScenery(eye(0, 1, 1), world())).toMatchObject({ id: "sun", follow: "sun" });
-    expect(pickScenery(eye(0, 1, 1), world({ night: true }))!.id).toBe("moon");
-    expect(pickScenery(eye(-130, 49, 0), world())).toMatchObject({ id: "cloud", follow: { cloud: 0 } });
-    expect(pickScenery(eye(1, 0.02, 0), world())!.id).toBe("hills");
-    expect(pickScenery(eye(1, 0.6, 0.3), world())!.id).toBe("sky");
+    expect(pickScenery(eye(0, 1, 1), world(), all)).toMatchObject({ id: "sun", follow: "sun" });
+    expect(pickScenery(eye(0, 1, 1), world({ night: true }), all)!.id).toBe("moon");
+    expect(pickScenery(eye(-130, 49, 0), world(), all)).toMatchObject({ id: "cloud", follow: { cloud: 0 } });
+    expect(pickScenery(eye(1, 0.02, 0), world(), all)!.id).toBe("hills");
+    expect(pickScenery(eye(1, 0.6, 0.3), world(), all)!.id).toBe("sky");
   });
 
   test("things this course has no word for are passed over", () => {
