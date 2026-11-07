@@ -1,15 +1,32 @@
 // Writes the server refused for good (#253). They are gone from this device
-// too, so every place that could say "saved" asks here first.
+// too, so every place that could say "saved" asks here first, and also
+// whether any write is still on its way (useUnsent).
 
 import { useLayoutEffect, useSyncExternalStore } from "react";
 import { useStore } from "../data/learner";
-import type { Refused } from "../data/store";
+import type { Refused, Unsent } from "../data/store";
 import { refusedLine } from "./format";
 import { AlertIcon } from "./icons";
 
 export function useRefused(): Refused {
   const store = useStore();
   return useSyncExternalStore(store.onRefused, store.refused);
+}
+
+/** Writes the server does not have yet, and how many have waited long (store.ts, LATE_MS). */
+export function useUnsent(): Unsent {
+  const store = useStore();
+  return useSyncExternalStore(store.onUnsent, store.unsent);
+}
+
+/** Says so while a write has waited long to reach the server. It goes once the write is sent. */
+export function UnsentBanner() {
+  if (!useUnsent().late) return null;
+  return (
+    <div className="toast" role="status">
+      <span>Not saved yet. Trying again.</span>
+    </div>
+  );
 }
 
 /**

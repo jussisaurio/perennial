@@ -299,7 +299,7 @@ A restore always creates a **new branch**. It does not overwrite the current one
 4. Redeploy `web` and `housekeeping`.
 5. Check with `bun scripts/live-check.ts` (2.3) and the browser checks in 5.
 
-Learners' devices then read the restored data on their next read (start, or the tab coming back). Writes that devices still have in their offline queue are sent again. Reviews made after the restore point that are only on the server are lost.
+Learners' devices then read the restored data on their next read (start, or the tab coming back). Writes that an open tab has not sent yet are sent after it. Reviews made after the restore point that are only on the server are lost.
 
 ## 8. Rotate secrets
 

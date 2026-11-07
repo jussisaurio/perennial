@@ -1,11 +1,11 @@
-import { useEffect, useState, lazy, Suspense, type CSSProperties } from "react";
+import { useState, lazy, Suspense, type CSSProperties } from "react";
 import { saveCourse, useLearner, useStore } from "../data/learner";
 import type { CourseRow } from "../data/rows";
 import { useSound } from "./Sound";
 import { reducedMotion, useGrowthSetting } from "./Growth";
 import { AccountPanel } from "./Account";
 import { DataSection } from "./DataSection";
-import { RefusedLine, useRefused } from "./Refused";
+import { RefusedLine, useRefused, useUnsent } from "./Refused";
 import { getThemePref, setThemePref, type ThemePref } from "./theme";
 import { Segmented, Switch } from "./arrows";
 
@@ -82,23 +82,17 @@ function Appearance() {
   );
 }
 
-/** Whether the device has changes the server hasn't received yet (offline, for example). */
+/** Whether the server has every change. One that waits long says so itself (UnsentBanner). */
 function SavedStatus() {
-  const store = useStore();
-  const [pending, setPending] = useState(store.pendingWrites());
-  useEffect(() => {
-    const t = setInterval(() => setPending(store.pendingWrites()), 2000);
-    return () => clearInterval(t);
-  }, [store]);
+  const unsent = useUnsent().count;
   const refused = useRefused().count > 0;
-  const waiting = pending ? `${pending} ${pending === 1 ? "change is" : "changes are"} saved on this device and will upload when you are online.` : null;
   return (
     <>
       <RefusedLine />
-      {/* "All changes are saved" would be untrue after a refusal. */}
-      {(waiting || !refused) && (
+      {/* "All changes are saved" would be untrue after a refusal, or while one is on its way. */}
+      {!unsent && !refused && (
         <p className="muted small" role="status">
-          {waiting ?? "All changes are saved."}
+          All changes are saved.
         </p>
       )}
     </>

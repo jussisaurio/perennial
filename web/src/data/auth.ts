@@ -9,7 +9,7 @@ import { AuthUser, GOOGLE_FAILED, UserId } from "perennial-contract";
 import { linkAccount, reportSlowAuth, track } from "../observability";
 import { boot } from "./boot";
 import { captchaHeaders } from "./captcha";
-import { clearOutboxNow, forgetOnDevice, keepOnDevice, noteSignIn, resolvePendingLink, stopSyncNow } from "./device";
+import { stopSyncNow } from "./device";
 
 /**
  * The first session check is answered from GET /api/boot (data/boot.ts), which
@@ -122,8 +122,6 @@ async function dropDemo(user: SessionUser | null): Promise<SessionUser | null> {
   const out = await fetch("/api/auth/sign-out", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
   if (!out.ok) throw demoNotDeleted();
   stopSyncNow(user.id);
-  forgetOnDevice(user.id);
-  await clearOutboxNow(user.id);
   return null;
 }
 
@@ -208,8 +206,6 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
       // Nothing was sent yet, so there is nothing to recover.
       const asked = yield* askSession;
       const before = yield* Effect.tryPromise({ try: () => dropDemo(asked), catch: demoNotDeleted });
-      // Before the request: the app may see the account before this code does (#314).
-      noteSignIn(before, email);
       const { user, timedOut } = yield* timed("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } })).pipe(
         Effect.flatMap((r) =>
           r.error || !r.data
@@ -223,24 +219,17 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
         track("email_added");
         linkAccount(user.id);
       }
-      // An anonymous learner's progress moves into the account on the server; their
-      // unsent writes follow here. Also on a try again, when `before` was the account.
-      resolvePendingLink(user.id, user.email);
       track("signin_done", { ms: (yield* Clock.currentTimeMillis) - started, timedOut });
       // The lost answer would have told the app the user changed. Reload as the
-      // account now (after the adoption above): a session refetch could hang too.
+      // account now: a session refetch could hang too.
       if (timedOut) location.reload();
       return user;
     }),
   );
 
-/**
- * Leaves for Google's sign-in page; it comes back to the app's start, signed in.
- * The account's email is known only then, so the anonymous learner's unsent
- * writes follow whichever account the app sees next (device.ts).
- */
+/** Leaves for Google's sign-in page; it comes back to the app's start, signed in. */
 export async function signInWithGoogle() {
-  noteSignIn(await dropDemo(await currentUser()), null);
+  await dropDemo(await currentUser());
   track("signin_google_started");
   // A failure comes back to the server's error address (auth.ts onAPIError), which googleSignInFailed reads.
   const r = await authClient.signIn.social({ provider: "google", callbackURL: "/" });
@@ -258,30 +247,21 @@ export function googleSignInFailed(): boolean {
   return googleFailedSeen;
 }
 
-/** Signs out, and forgets this user's data on this device (see device.ts). */
+/** Signs out. Writes not sent yet are dropped with the store (store.ts). */
 export async function signOut() {
   const userId = (await authClient.getSession()).data?.user?.id;
-  let stopped = false;
-  if (userId) {
-    forgetOnDevice(userId);
-    // Stop syncing first: a table still loading would get a 401 once the session ends.
-    stopped = stopSyncNow(userId);
-  }
+  // Stop syncing first: a table still loading would get a 401 once the session ends.
+  const stopped = userId ? stopSyncNow(userId) : false;
   const r = await authClient.signOut().catch((e: unknown) => ({ error: e }));
   if (r.error) {
-    // Still signed in: keep their data, and reload so a stopped sync starts again.
-    if (userId) keepOnDevice(userId);
+    // Still signed in: reload so a stopped sync starts again.
     console.warn("[auth] sign-out failed", r.error);
     if (stopped) location.reload();
-    return;
   }
-  // Nothing more uploads for them from this tab.
-  if (userId) await clearOutboxNow(userId);
 }
 
 /** Deletes the account on the server and signs out. `lang` picks the goodbye's language. */
 export async function deleteAccount(lang?: string) {
-  const userId = (await authClient.getSession()).data?.user?.id;
   const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
   if (!res.ok) throw new Error(`Could not delete the account (${res.status})`);
   try {
@@ -290,8 +270,6 @@ export async function deleteAccount(lang?: string) {
   } catch {
     // No storage: no goodbye line. Fine.
   }
-  // The account is gone: forget its data here, even if signing out fails.
-  if (userId) forgetOnDevice(userId);
+  // The account is gone, and its sessions with it: a failed sign-out changes nothing.
   await authClient.signOut().catch(() => {});
-  if (userId) await clearOutboxNow(userId);
 }

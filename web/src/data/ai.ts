@@ -63,6 +63,6 @@ export function apiMessage(e: unknown): string {
   if (e instanceof ApiError) return message(e.body);
   // A code this app does not know yet, a proxy's error page, or an answer that breaks the contract: never their raw words.
   if (e instanceof HttpError || e instanceof BadAnswer || Schema.isSchemaError(e)) return SOMETHING_WRONG;
-  // No connection ("Failed to fetch"), or the app's own words ("Perennial is open in another tab").
+  // No connection ("Failed to fetch"), or the app's own words.
   return e instanceof Error ? e.message : String(e);
 }
