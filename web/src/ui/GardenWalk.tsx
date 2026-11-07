@@ -507,8 +507,7 @@ export function GardenWalk({
     if (sound) void speak(echoWord!, tag);
   }, [echoId, echoWord, sound, tag]);
   // A plant chosen from outside its card (the summary's "See it in the garden", a click in
-  // the scene) takes focus to the card, so a screen reader reads it (#266). From the
-  // card's own Next plant, focus stays on that button and the live card body is read.
+  // the scene) takes focus to the card, so a screen reader reads it (#266).
   const dialog = useRef<HTMLDivElement>(null);
   const selectedId = selected?.id;
   useEffect(() => {
@@ -629,11 +628,16 @@ export function GardenWalk({
     setHint(false);
   };
 
-  const step = (dir: 1 | -1) => {
+  // Next plant opens the card after the last one seen, so pressing it again after closing a card goes on round the garden.
+  const lastSeen = useRef<PlacedPlant | null>(null);
+  useEffect(() => {
+    if (selected) lastSeen.current = selected;
+  }, [selected]);
+  const nextPlant = () => {
     const ps = data?.l.plants;
     if (!ps?.length || !scene.current) return;
-    const i = selected ? ps.indexOf(selected) : dir === 1 ? -1 : 0;
-    scene.current.select(ps[(i + dir + ps.length) % ps.length], true);
+    const i = lastSeen.current ? ps.indexOf(lastSeen.current) : -1;
+    scene.current.select(ps[(i + 1) % ps.length], true);
     setHint(false);
   };
 
@@ -663,7 +667,7 @@ export function GardenWalk({
         ref={canvas}
         className="gw-canvas"
         tabIndex={-1}
-        aria-label="Your word garden in 3D. Use W, A, S and D or the arrow keys to walk. Drag to look around. Use the Next plant button to go from plant to plant."
+        aria-label="Your word garden in 3D. Use W, A, S and D or the arrow keys to walk. Drag to look around. Tab to the Next plant button to open a plant's card."
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -774,8 +778,8 @@ export function GardenWalk({
               <span className="muted small gw-bed">Planted on {echoDate(selected.planted, openedAt, "en-GB")}.</span>
             </div>
           </div>
-          <div className="row">
-            {sound && (
+          {sound && (
+            <div className="row">
               <button
                 className="gw-btn gw-listen"
                 onClick={() => {
@@ -786,15 +790,8 @@ export function GardenWalk({
               >
                 <Glyph name="soundOn" /> Listen
               </button>
-            )}
-            <span className="gw-spacer" />
-            <button className="gw-btn" onClick={() => step(-1)} aria-label="Previous plant">
-              <Glyph name="left" />
-            </button>
-            <button className="gw-btn" onClick={() => step(1)}>
-              Next plant <Glyph name="right" />
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -825,8 +822,9 @@ export function GardenWalk({
             <PixelIcon rows={REACH_ICON[reach]} />
           </button>
         )}
+        {/* For keyboard and screen-reader players only: it shows while it has focus. Others find plants by walking (#710). */}
         {ready && !selected && stats.total > 0 && (
-          <button className="gw-btn" onClick={() => step(1)}>
+          <button className="gw-btn sr-only gw-skip" onClick={nextPlant}>
             Next plant <Glyph name="right" />
           </button>
         )}

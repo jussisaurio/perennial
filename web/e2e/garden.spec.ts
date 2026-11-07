@@ -1,7 +1,7 @@
 import { expect, test } from "./test";
 import { aimAtGround, arrives, pinDetail, plantNearMiddle, settledGardenWidth, startCourse, walker } from "./helpers";
 
-test("walk-in garden: every word is a plant; next plant, listen, and back", async ({ page }) => {
+test("walk-in garden: every word is a plant; next plant by keyboard, listen, and back", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   // Pin low detail. CI draws WebGL in software: at normal detail every frame is
@@ -14,16 +14,34 @@ test("walk-in garden: every word is a plant; next plant, listen, and back", asyn
   await expect(page).toHaveURL(/#\/garden$/);
   await expect(page.getByText(/30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20000 });
 
-  await page.getByRole("button", { name: "Next plant" }).click();
+  // Next plant is for the keyboard only (#710): hidden until Tab reaches it, then shown.
+  const next = page.getByRole("button", { name: "Next plant" });
+  // Shown means a tap at its middle lands on it.
+  const shown = () =>
+    next.evaluate((b) => {
+      const r = b.getBoundingClientRect();
+      return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === b;
+    });
+  expect(await shown()).toBe(false);
+  // Back and the sound switch come first.
+  await expect(async () => {
+    await page.keyboard.press("Tab");
+    await expect(next).toBeFocused({ timeout: 100 });
+  }).toPass({ timeout: 5000 });
+  expect(await shown()).toBe(true);
+  await page.keyboard.press("Enter");
   const card = page.getByRole("dialog", { name: /^The plant for / });
   await expect(card).toBeVisible();
   await expect(card).toBeFocused(); // its button went away: focus goes to the card, so a screen reader reads it (#266)
   const first = await card.getAttribute("aria-label");
   await expect(card.getByRole("button", { name: /Listen/ })).toBeVisible();
-  await card.getByRole("button", { name: "Next plant" }).click();
+  // After the card closes, Next plant goes on to the next plant, not the first again.
+  await page.keyboard.press("Escape");
+  await expect(card).toBeHidden();
+  await next.focus();
+  await page.keyboard.press("Enter");
+  await expect(card).toBeVisible();
   await expect(card).not.toHaveAttribute("aria-label", first!);
-  await page.getByRole("button", { name: "Previous plant" }).click();
-  await expect(card).toHaveAttribute("aria-label", first!);
 
   // Trackpad swipes look around instead of scrolling.
   await page.mouse.move(400, 300);

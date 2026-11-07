@@ -820,6 +820,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-btn:hover { background: var(--panel-2); }
 .gw-btn:active { transform: translateY(var(--px)); }
 .gw-btn:focus-visible { outline: var(--px) solid var(--accent); outline-offset: calc(var(--px) * 2); }
+/* Hidden until a keyboard reaches it, like a skip link (#710). */
+.gw-skip:focus-visible { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
 .gw-water { background: #d8f0ff; color: #0e3a5c; --panel-2: #bfe3fb; --edge-hi: #f4fbff; }
 .gw-night .gw-water { background: #24507a; color: #e6f4ff; --panel-2: #1c4166; --edge-hi: #4d86bd; }
 
@@ -960,7 +962,6 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 }
 @media (prefers-reduced-motion: reduce) { .gw-card, .gw-hint { animation: none; } }
 .gw-fallback { padding-top: 3rem; }
-.gw-spacer { flex: 1; }
 .gw-listen { background: var(--accent); --panel-2: #f0c419; --edge-hi: #fff2a8; color: #2b1d12; }
 @media (max-width: 560px) {
   /* On phones the card sits over the sky, leaving the plant and the stick free. */

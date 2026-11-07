@@ -38,7 +38,7 @@ Motion is never needed to understand a screen. With `prefers-reduced-motion: red
 
 ## 7. The garden walk has another way in
 
-The 3D walk is for joy, not for learning. Everything you need to learn (your words, how well you know them) is also in Today, Words and the field guide, which work with a keyboard and a screen reader. The walk has keyboard controls and named buttons, and a status line tells a screen reader what is near. A new garden feature that carries information must say it in text too. Source: [WCAG 1.1.1 Non-text Content](https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html).
+The 3D walk is for joy, not for learning. Everything you need to learn (your words, how well you know them) is also in Today, Words and the field guide, which work with a keyboard and a screen reader. The walk has keyboard controls and named buttons, and a status line tells a screen reader what is near. A Next plant button opens a plant's card; it is hidden until Tab reaches it, because others find plants by walking. A new garden feature that carries information must say it in text too. Source: [WCAG 1.1.1 Non-text Content](https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html).
 
 ## 8. Sound has words, and sound off is a real choice
 
