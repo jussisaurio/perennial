@@ -1,6 +1,6 @@
 // Talking to our server: one fetch wrapper that checks every answer and every
 // error with the wire contract (contract/), and the one way to send writes
-// (the store's writes, starting a course, the dev demo).
+// (the store's writes, starting a course).
 
 import { Effect, Option, Schema } from "effect";
 import { ApiErrorBody, WriteResult, type ErrorCode } from "perennial-contract";

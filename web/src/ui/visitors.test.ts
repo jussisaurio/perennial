@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { deriveMemory, knownAt as knownSet, wordState } from "../core/memory";
+import { deriveMemory, knownAtSteps, wordState } from "../core/memory";
 import type { ReviewRow } from "../data/rows";
 import { milestoneLine } from "../garden/visitors";
 import { runAll } from "../lib/yield";
@@ -25,7 +25,7 @@ const same = (id: string) => id;
 function knownAt(reviews: ReviewRow[], t: number, retention: number, resolve: (id: string) => string, words: Set<string>): number {
   const memories = deriveMemory(reviews, retention, resolve).filter((m) => words.has(m.wordId));
   const reviewsByWord = Map.groupBy(reviews, (r) => resolve(r.word_id));
-  return knownSet({ words: new Map([...words].map((id) => [id, id])), memory: new Map(memories.map((m) => [m.key, m])), reviewsByWord, course: { retention } }, t).size;
+  return runAll(knownAtSteps({ memory: new Map(memories.map((m) => [m.key, m])), reviewsByWord, course: { retention } }, t)).size;
 }
 
 describe("known words at the start of a day (for the milestone line)", () => {

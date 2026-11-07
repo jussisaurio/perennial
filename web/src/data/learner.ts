@@ -9,7 +9,6 @@ import { createContext, useContext, useEffect, useState, useSyncExternalStore } 
 import { DAY_MS, startOfDay } from "../core/day";
 import { firstReviewed, MemoryLog, reviewedAt, memKey, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, loadedSentences, loadSentences, type DeckSentences, type LoadedDeck } from "./deck";
-import { postWrite } from "./http";
 import { inSlices, runAll, yieldToBrowser } from "../lib/yield";
 import { DAILY_MINUTES } from "./practice";
 import { afterPaint } from "../ui/afterPaint";
@@ -762,13 +761,10 @@ export function recordReview(store: Store, r: Omit<ReviewRow, "id" | "user_id" |
 }
 
 export function undoReview(store: Store, id: string) {
-  if (store.collections.review.has(id)) {
-    void store.write(() => store.collections.review.delete(id)).catch((e) => console.error("undo not saved", e));
-    return;
-  }
-  // Saved, but not back through sync yet (its echo can be slow): there is no
-  // row to delete here, so ask the server directly. Its delete syncs back.
-  void postWrite([{ type: "review.delete", id }]).catch((e) => console.error("undo not saved", e));
+  // The row is on the device from recordReview on, and kept once the server has
+  // it (store.ts confirm). Not there: the server refused it and it rolled back.
+  if (!store.collections.review.has(id)) return;
+  void store.write(() => store.collections.review.delete(id)).catch((e) => console.error("undo not saved", e));
 }
 
 export function setWordStatus(store: Store, wordId: string, status: Word["status"]) {

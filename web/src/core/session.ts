@@ -7,7 +7,6 @@ import type { FSRS, Grade } from "./fsrs";
 import { DAY_MS } from "./day";
 import type { MemoryRow } from "./memory";
 import type { Skill } from "../data/rows";
-import { runAll } from "../lib/yield";
 
 export type Task =
   | { kind: "intro"; wordId: string }
@@ -69,12 +68,8 @@ const DUE_HORIZON_MS = 6 * 3_600_000;
  * 5. any other learned word, weakest first.
  * Steps 4 and 5 make sure a chunk is never empty once anything is learned.
  * They are not sized to the budget: the timer, not the queue, ends the chunk.
+ * A step per memory: Today works it out in slices (#569).
  */
-export function plan(input: PlanInput): Plan {
-  return runAll(planSteps(input));
-}
-
-/** plan, a step per memory: Today works it out in slices (#569). */
 export function* planSteps(input: PlanInput): Generator<void, Plan> {
   const { now, budgetMs, memories, fresh, fsrs, answeredToday } = input;
   const recall = (m: MemoryRow) => fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s);
