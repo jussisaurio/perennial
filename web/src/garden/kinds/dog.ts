@@ -1,10 +1,10 @@
 // The dog (#209): sitting by the shed (#641), and wagging its tail while you
 // are near. With reduced motion it just sits. Called (#377), it runs to you, tail
-// going, sits with you a while and trots home. With reduced motion it does not
+// going, round whatever is in the way (#761), sits with you a while and trots home. With reduced motion it does not
 // run: it is just there, then just by you.
 
 import { DOG, DOG_WAG } from "../visitorArt";
-import { besideYou, bodyAt, moveToward, type VisitorKind } from "./kind";
+import { bodyAt, walkHome, walkOn, walkTo, type VisitorKind, type Walk } from "./kind";
 
 /** How long each frame of the wag shows (s), and how near you come before it wags (m). */
 const WAG_S = 0.3;
@@ -21,13 +21,13 @@ export const dog: VisitorKind<Look> = {
   id: "dog",
   art: { sit: DOG, wag: DOG_WAG },
   hit: [0.25, 0.3, 0.27],
-  arrive({ spots, reducedMotion }) {
+  arrive({ spots, ground, reducedMotion }) {
     // On the ground a little out from the step.
     const [sx, , sz] = spots.shedStep;
     const body = bodyAt<Look>(sx - 0.9, 0, sz - 0.2, "sit");
     /** Called: running to where you were ("come"), sitting there until `until` (elapsed s), then going home ("back"). */
     let mode: "home" | "come" | "stay" | "back" = "home";
-    let to = { x: 0, z: 0 };
+    let walk: Walk = { way: [], leg: 0 };
     let until = 0;
     const settle = () => {
       mode = "home";
@@ -39,9 +39,9 @@ export const dog: VisitorKind<Look> = {
       body,
       step({ dt, elapsed, x, z }) {
         const wag = !reducedMotion && Math.floor(elapsed / WAG_S) % 2 === 1;
-        if (mode === "come" && moveToward(body, to.x, to.z, run(dt))) [mode, until] = ["stay", elapsed + STAY_S];
-        else if (mode === "stay" && elapsed > until) mode = "back";
-        else if (mode === "back" && moveToward(body, body.at.x, body.at.z, reducedMotion ? Infinity : TROT * dt)) settle();
+        if (mode === "come" && walkOn(body, walk, run(dt))) [mode, until] = ["stay", elapsed + STAY_S];
+        else if (mode === "stay" && elapsed > until) [mode, walk] = ["back", walkHome(ground, body)];
+        else if (mode === "back" && walkOn(body, walk, reducedMotion ? Infinity : TROT * dt)) settle();
         // Called, its tail goes the whole time it is with you; at home, while you are near.
         const near = mode !== "home" || Math.hypot(body.at.x - x, body.at.z - z) < WAG_RANGE;
         body.frame = near && wag ? "wag" : "sit";
@@ -50,7 +50,7 @@ export const dog: VisitorKind<Look> = {
         settle();
       },
       onCall({ x, z }) {
-        to = besideYou(body, x, z, AT_FEET);
+        walk = walkTo(ground, body, x, z, AT_FEET);
         mode = "come";
         return { line: "The dog runs over, tail going." };
       },

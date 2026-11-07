@@ -5,8 +5,9 @@
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { yieldToBrowser } from "../lib/yield";
-import { along, BED_H, benchAt, collide, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, wayTo, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
-import { benchLine, collideTrees, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
+import { along, BED_H, benchAt, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, walkStep, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
+import { standAt, wayNear, type Ground } from "./ground";
+import { benchLine, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
@@ -387,6 +388,11 @@ export class GardenScene {
   private get trunks(): readonly PlacedTree[] {
     return this.orchard?.trees ?? [];
   }
+
+  /** The ground as it is now (#761), for every way on foot: yours and the visitors'. */
+  private get ground(): Ground {
+    return { layout: this.layout, doorOpen: () => this.door.state === "open", trees: () => this.trunks };
+  }
   /**
    * A quiet line from the garden (the door's, or a joke's), over a point, until a time. A joke's line is in the
    * course language, and `spoken` is its English for screen readers (#650); the door's lines are English.
@@ -464,6 +470,7 @@ export class GardenScene {
         scene: this.scene,
         camera: this.camera,
         layout,
+        ground: this.ground,
         reducedMotion,
         lang,
         elapsed: () => this.elapsed,
@@ -1762,17 +1769,12 @@ export class GardenScene {
 
   /** Walk round whatever is in the way to (x, z), or as near as a walker may stand, then stop `stop` m short and do `then`. */
   private goTo(x: number, z: number, stop: number, then: (() => void) | null) {
-    const open = this.door.state === "open";
-    const free = (px: number, pz: number) => {
-      const p = collide(this.layout, px, pz, WALKER, open);
-      return collideTrees(this.trunks, p.x, p.z, WALKER);
-    };
     // A glide (Next plant) passes over beds; a tap during one starts from where a walker would stand.
-    ({ x: this.x, z: this.z } = free(this.x, this.z));
+    ({ x: this.x, z: this.z } = standAt(this.ground, this.x, this.z));
     this.standUp();
-    const to = free(x, z);
+    const to = standAt(this.ground, x, z);
     this.glide = null;
-    this.trip = { way: wayTo(this.layout, this.x, this.z, to.x, to.z, open, this.trunks), leg: 1, stop, then, turn: !this.reducedMotion, stuck: 0 };
+    this.trip = { way: wayNear(this.ground, this.x, this.z, to.x, to.z, 0), leg: 1, stop, then, turn: !this.reducedMotion, stuck: 0 };
     this.spot.position.set(to.x, 0.03, to.z);
     this.spot.visible = true;
   }
