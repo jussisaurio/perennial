@@ -57,6 +57,8 @@ export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   build: {
     sourcemap: sentry ? "hidden" : false,
+    // Never inline audio as a data: URL: the CSP's media-src (server/src/http.ts) refuses it, so it never plays (#841).
+    assetsInlineLimit: (file) => (file.endsWith(".mp3") ? false : undefined),
     rolldownOptions: {
       // deck-es-words-<hash>.js, not two files both named deck-<hash>.js.
       output: {
