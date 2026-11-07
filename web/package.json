@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "@babel/parser": "^7.29.0",
     "@paulirish/trace_engine": "0.0.68",
     "@playwright/test": "^1.64.0",
     "@rolldown/plugin-babel": "^0.2.4",
@@ -47,6 +48,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "monocart-coverage-reports": "^3.2.0",
     "oxlint": "^1.81.0",
     "pg": "8",
     "ts-fsrs": "^6.0.0",
