@@ -116,10 +116,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { label: "Chromium 1/4", browser: chromium, args: "--project=desktop --project=phone --shard=1/4" }
-          - { label: "Chromium 2/4", browser: chromium, args: "--project=desktop --project=phone --shard=2/4" }
-          - { label: "Chromium 3/4", browser: chromium, args: "--project=desktop --project=phone --shard=3/4" }
-          - { label: "Chromium 4/4", browser: chromium, args: "--project=desktop --project=phone --shard=4/4" }
+          - { label: "Chromium 1/8", browser: chromium, args: "--project=desktop --project=phone --shard=1/8" }
+          - { label: "Chromium 2/8", browser: chromium, args: "--project=desktop --project=phone --shard=2/8" }
+          - { label: "Chromium 3/8", browser: chromium, args: "--project=desktop --project=phone --shard=3/8" }
+          - { label: "Chromium 4/8", browser: chromium, args: "--project=desktop --project=phone --shard=4/8" }
+          - { label: "Chromium 5/8", browser: chromium, args: "--project=desktop --project=phone --shard=5/8" }
+          - { label: "Chromium 6/8", browser: chromium, args: "--project=desktop --project=phone --shard=6/8" }
+          - { label: "Chromium 7/8", browser: chromium, args: "--project=desktop --project=phone --shard=7/8" }
+          - { label: "Chromium 8/8", browser: chromium, args: "--project=desktop --project=phone --shard=8/8" }
           - { label: "iPhone, WebKit", browser: webkit, args: "--project=iphone" }
     steps:
       - uses: actions/checkout@v7
