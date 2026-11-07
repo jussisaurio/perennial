@@ -97,28 +97,34 @@ type Until = { of: "y" | "z" | [number, number]; above?: number; below?: number 
 /**
  * Hold a key until `until` holds, then let go. The page lets go itself, on the
  * first frame it holds: a slow machine moves far in a frame, so a key up from
- * the test, frames later, would overshoot (#790).
+ * the test, frames later, would overshoot (#790). It gives up after `budget`
+ * seconds of the garden's time, not the test's: CI draws about 7 frames a second,
+ * so a long walk takes far longer there by the wall clock (#793).
  */
-async function holdUntil(page: Page, key: string, until: Until, timeout = 15_000) {
+async function holdUntil(page: Page, key: string, until: Until, budget = 20) {
   await page.evaluate(
-    ({ key, until }) => {
-      const w = window as unknown as { __garden: HillScene; __letGo: boolean };
-      w.__letGo = false;
+    ({ key, until, budget }) => {
+      const w = window as unknown as { __garden: HillScene; __letGo: "walking" | "there" | "gave up" };
+      w.__letGo = "walking";
+      let from = 0;
       const check = () => {
         const s = w.__garden;
         const v = until.of === "y" ? s.camera.position.y : until.of === "z" ? s.z : Math.hypot(s.x - until.of[0], s.z - until.of[1]);
-        if ((until.above !== undefined && v > until.above) || (until.below !== undefined && v < until.below)) {
+        const there = (until.above !== undefined && v > until.above) || (until.below !== undefined && v < until.below);
+        if (there || s.elapsed - from > budget) {
           window.dispatchEvent(new KeyboardEvent("keyup", { code: key }));
-          w.__letGo = true;
+          w.__letGo = there ? "there" : "gave up";
         } else requestAnimationFrame(check);
       };
       // Checked from the key down on: a key up before it would be lost, and the walker would walk on.
-      window.addEventListener("keydown", (e) => e.code === key && requestAnimationFrame(check), { once: true });
+      window.addEventListener("keydown", (e) => e.code === key && ((from = w.__garden.elapsed), requestAnimationFrame(check)), { once: true });
     },
-    { key, until },
+    { key, until, budget },
   );
   await page.keyboard.down(key);
-  await expect.poll(() => page.evaluate(() => (window as unknown as { __letGo: boolean }).__letGo), { intervals: [20], timeout }).toBe(true);
+  // timeout 0: the game-time budget above ends the wait, and the test's own timeout backs it.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __letGo: string }).__letGo), { intervals: [20], timeout: 0 }).not.toBe("walking");
+  expect(await page.evaluate(() => (window as unknown as { __letGo: string }).__letGo)).toBe("there");
   // The page's key up was not the keyboard's: let go of it there too.
   await page.keyboard.up(key);
 }
