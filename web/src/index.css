@@ -832,6 +832,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-bottom { position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); right: 16px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; z-index: 3; }
 
 .gw-labels { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+/* Each label sits at the layer's corner; GardenWalk moves it with `translate`, which adds to the class's own transform (#729). */
+.gw-labels > * { left: 0; top: 0; }
 .gw-label {
   position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
   font: 700 0.95rem/1 var(--pixel); color: #fffaf0; letter-spacing: 0.03em; padding-bottom: 6px;
