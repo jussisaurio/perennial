@@ -63,13 +63,13 @@ test("All and New find any word in the course, also one far past the first 500 (
   await expect(page.getByText("No word like this in the course.")).toBeVisible();
 });
 
-test("empty lists say what is missing, with a small wink (#58)", async ({ page }) => {
+test("empty lists say what is missing (#58)", async ({ page }) => {
   await startCourse(page);
   await page.getByRole("tab", { name: "Words" }).click();
   await page.getByRole("combobox", { name: "Which words" }).selectOption("suspended");
-  await expect(page.getByText("No paused words. Everyone is awake.")).toBeVisible();
+  await expect(page.getByText("No paused words.")).toBeVisible();
   await page.getByRole("combobox", { name: "Which words" }).selectOption("known");
-  await expect(page.getByText("No flowers yet. They are coming.")).toBeVisible();
+  await expect(page.getByText("No known words yet.")).toBeVisible();
   await page.getByRole("combobox", { name: "Which words" }).selectOption("new");
   await page.getByPlaceholder("Search words or meanings").fill("qqzzxx");
   await expect(page.getByText("No new word like this. Try All.")).toBeVisible(); // New has every word not started: say where else to look (#262)

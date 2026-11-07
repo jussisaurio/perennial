@@ -171,9 +171,9 @@ test("the garden tab opens the garden; an empty garden offers the first session"
   // The empty strip is not empty: a stake, and a worm that says its word (#58).
   await expect(page.locator(".garden-stake")).toHaveText("Reserved for Spanish wordsReservado");
   await page.getByRole("button", { name: "el gusano · worm" }).hover();
-  await expect(page.getByRole("tooltip")).toHaveText("el gusano · wormWaiting.");
+  await expect(page.getByRole("tooltip")).toHaveText("el gusano · worm");
   await page.getByRole("tab", { name: "Garden" }).click();
-  await expect(page.getByText("Just soil for now. Very good soil.")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("Nothing planted yet.")).toBeVisible({ timeout: 15000 });
   await expect(page.getByRole("button", { name: "Plant my first words" })).toBeVisible();
 });
 

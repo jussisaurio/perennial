@@ -166,7 +166,7 @@ export function welcomeBack(facts: LearnerFacts, now: Date = new Date()): string
   if (facts.lastBeforeToday === null) return null;
   // Only on the first day back, not the day after.
   const away = dayNumber(now) - dayNumber(facts.lastBeforeToday);
-  return away >= 7 ? "Welcome back. The garden waited for you." : null;
+  return away >= 7 ? "Welcome back." : null;
 }
 
 /** Known-word counts that get one line on the Today screen, on the day they are crossed. */
@@ -183,7 +183,7 @@ export function milestoneLine(before: number, now: number): string | null {
   for (const m of MILESTONES) if (before < m && now >= m) hit = m;
   if (!hit) return null;
   const arrives = VISITORS.some((v) => v.unlock === hit);
-  return arrives ? `You know ${hit} words. Someone has arrived in the garden.` : `You know ${hit} words. The garden noticed.`;
+  return arrives ? `You know ${hit} words. Someone has arrived in the garden.` : `You know ${hit} words.`;
 }
 
 // ---- Strip-only visitors: the worm (#58) and the mole (#61) ----

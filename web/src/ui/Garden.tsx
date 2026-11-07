@@ -6,7 +6,7 @@
 import { memo, startTransition, type MouseEvent, type PointerEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
-import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
+import { reservedStake } from "../content/voice";
 import { language } from "../content/languages";
 import { FORM, plantHeight, StripPlant, type SpriteImage } from "./plant";
 import { spriteBox } from "../garden/plantCanvas";
@@ -14,7 +14,7 @@ import { drawSprites, spriteKey, stripSprite } from "../garden/stripSprites";
 import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
 import { stripPlaces } from "../garden/stripPlaces";
-import { growthOf, leanDeg, plantMood, plantSteps, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
+import { growthOf, leanDeg, plantSteps, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
 import { BIRD, BUTTERFLY, BUTTERFLY_CLOSED, CAT_ASLEEP, DOG, FISHBOWL, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
 import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
@@ -139,7 +139,7 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
   // Hover intent: with a card open, switching to another plant waits a moment,
   // so the pointer can cross other plants on its way to the card's button.
   const switching = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const [visitorTip, setVisitorTip] = useState<{ v: TipVisitor; x: number; line?: string } | null>(null);
+  const [visitorTip, setVisitorTip] = useState<{ v: TipVisitor; x: number } | null>(null);
   // A tapped plant hops (#60); `n` restarts the animation on every tap. Rarely the neighbour hops too.
   const [perk, setPerk] = useState<{ id: string; n: number; neighbour: string | null } | null>(null);
   const show = (h: { p: GardenPlant; x: number; y: number }, now = false) => {
@@ -373,7 +373,7 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
             art={WORM_ASLEEP}
             scale={2}
             x={width / 2 + 44}
-            onShow={(x) => setVisitorTip({ v: worm, x, line: WORM_LINE })}
+            onShow={showVisitor(worm)}
             onHide={() => setVisitorTip(null)}
           />
         )}
@@ -394,10 +394,9 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
         )}
       </div>
       {visitorTip && (
-        <div className="visitor-tip" role="tooltip" style={{ left: Math.min(width - 150, Math.max(8, visitorTip.x - scrollX - 60)), top: GROUND - (visitorTip.line ? 78 : 58) }}>
+        <div className="visitor-tip" role="tooltip" style={{ left: Math.min(width - 150, Math.max(8, visitorTip.x - scrollX - 60)), top: GROUND - 58 }}>
           <i lang={visitors?.lang}>{visitorTip.v.word}</i>
           <span> · {visitorTip.v.gloss}</span>
-          {visitorTip.line && <em>{visitorTip.line}</em>}
         </div>
       )}
       {data && data.total === 0 && !stake && <p className="garden-empty">Your words will grow here.</p>}
@@ -416,7 +415,6 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
             {hover.p.listen && " · listening ✓"}
             {hover.p.write && " · writing ✓"}
           </em>
-          {!showcase && <span className="tip-flavour">{plantLine(hover.p.lemma, plantMood(hover.p))}</span>}
           {onView && (
             <button className="ghost small" onClick={() => onView(hover.p.id)}>
               View in garden →

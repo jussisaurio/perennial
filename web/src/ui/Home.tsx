@@ -11,7 +11,6 @@ import { useShortcut } from "./useShortcut";
 import { chunkLabel, DAILY_MINUTES, nextChunk, sessionPlanSteps } from "../data/practice";
 import { mayListen } from "./speech";
 import { Settling } from "./Settling";
-import { doneTodayNote, greetingAside } from "../content/voice";
 import { longDay, plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { visitorSteps } from "./visitors";
@@ -143,10 +142,10 @@ function useAfterPaint(learner: Learner | null, now: number): boolean {
   return rest;
 }
 
-/** On the day a milestone is crossed, or after a break, one quiet line instead of the usual aside. */
+/** On the day a milestone is crossed, or after a break, one quiet line under the greeting. */
 function Aside({ learner, now }: { learner: Learner; now: number }) {
   const visitors = visitorsToday.get(learner, now);
-  const aside = visitors.milestone ?? visitors.welcome ?? greetingAside();
+  const aside = visitors.milestone ?? visitors.welcome;
   return aside && <p className="greeting-aside">{aside}</p>;
 }
 
@@ -165,23 +164,20 @@ function StartRow({ learner, chunk, now, rest, onStart }: { learner: Learner; ch
         </span>
         {chunkLabel(chunk)}
       </button>
-      {plan && <StartNote learner={learner} chunk={chunk} plan={plan} now={now} />}
+      {/* Once done, the line above the button says what is left. */}
+      {plan && chunk.state !== "done" && <StartNote learner={learner} plan={plan} now={now} />}
       {user && learner.course.minutes !== DAILY_MINUTES && <FiveMinutesNote userId={user.id} />}
     </div>
   );
 }
 
-function StartNote({ learner, chunk, plan, now }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; plan: Plan; now: number }) {
+function StartNote({ learner, plan, now }: { learner: Learner; plan: Plan; now: number }) {
   const stats = statsToday.get(learner, now);
   const ready = stats.seeds;
   const started = stats.known + stats.learning;
   return (
     <p className="start-note">
-      {chunk.state === "done"
-        ? plan.due
-          ? "" // no wink under a count of thirsty plants: it would read as if all is well
-          : doneTodayNote()
-        : started === 0
+      {started === 0
           ? `${ready} seeds are ready to plant: the most common words first, and a few garden words early. Each word has example sentences and audio.`
           : ready === 0
             ? "Every seed in the course is planted. Today is for growing them."
@@ -245,7 +241,7 @@ function FiveMinutesNote({ userId }: { userId: string }) {
     }
   }, [key]);
   if (!show) return null;
-  return <p className="muted small five-minutes-note">Perennial is now 5 minutes at a time. Practice more whenever you like: your plants will drink it up.</p>;
+  return <p className="muted small five-minutes-note">Perennial is now 5 minutes at a time. Practice more whenever you like.</p>;
 }
 
 /** Enter starts the session. */

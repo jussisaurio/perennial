@@ -375,7 +375,6 @@ section { margin-bottom: 1.25rem; }
 @media (hover: none) { .garden-arrows { display: none; } }
 @media (hover: hover) { .swipe-hint { display: none; } }
 .garden-strip.scrolls .garden-scroll { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-.plant-tip .tip-flavour { font-style: italic; color: var(--muted); font-size: 0.78rem; }
 .plant-tip.interactive { pointer-events: auto; cursor: auto; }
 .plant-tip button { margin-top: 0.3rem; padding: 0.2rem 0; align-self: flex-start; }
 .garden .tuft { stroke: var(--leaf-2); stroke-width: 1.3; stroke-linecap: round; fill: none; opacity: 0.7; }
@@ -891,8 +890,6 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-word { font: 700 1.9rem/1 var(--pixel); letter-spacing: 0.01em; }
 .gw-gloss { font-size: 1.05rem; }
 .gw-card .muted { color: var(--gw-muted); }
-/* No italic: the pixel font has none, and a slanted one smears its pixels. */
-.gw-flavour { color: var(--gw-muted); }
 .gw-card .row { gap: 0.5rem; flex-wrap: wrap; }
 .gw-card button.secondary, .gw-card button.ghost, .gw-empty button.primary { font-family: var(--pixel); border-radius: 0; }
 .gw-night .gw-card button.ghost { color: var(--gw-ink); }
@@ -996,9 +993,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* The bot check, when it needs to ask (data/captcha.ts). */
 .captcha { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 50; }
 
-/* The garden's small voice (content/voice.ts) */
+/* Quiet one-line notes: the Today aside, the farewell. */
 .greeting-aside { margin: 0.2rem 0 0; color: var(--muted); font-style: italic; }
-.headline-small { margin-top: -0.4rem; }
 .farewell { margin: 1.5rem 0 0; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink-2); }
 
 /* Between screens: nothing for a fast load, a quietly growing sprout for a slow one. */

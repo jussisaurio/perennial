@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useFeatures } from "../data/server";
-import { errorLine, sendingLabel } from "../content/voice";
 import type { Me } from "perennial-contract";
 import { getMe, resetDate } from "../data/ai";
 import { AuthError, googleSignInFailed, sendCode, signInWithCode, signInWithGoogle, signOut, useUser } from "../data/auth";
@@ -69,7 +68,7 @@ export function SignIn({ cta }: { cta: string }) {
     try {
       await fn();
     } catch (e) {
-      setError(e instanceof AuthError ? e.message : errorLine());
+      setError(e instanceof AuthError ? e.message : "Something went wrong. Try again.");
     } finally {
       setBusy(null);
     }
@@ -122,7 +121,7 @@ export function SignIn({ cta }: { cta: string }) {
           {alert}
         </div>
         <button className="primary block" type="submit" disabled={!!busy || !email.includes("@")}>
-          {busy === "send" ? sendingLabel() : cta}
+          {busy === "send" ? "Sending…" : cta}
         </button>
         <button className="ghost link" type="button" disabled={!!busy || !email.includes("@")} onClick={() => (setSent("have-code"), setStep("code"), setError(""))}>
           Enter a code I already have
@@ -157,7 +156,7 @@ export function SignIn({ cta }: { cta: string }) {
       </button>
       <div className="signin-links">
         <button className="ghost link" type="button" disabled={!!busy || resendIn > 0} onClick={() => void run("send", () => send(true))}>
-          {busy === "send" ? sendingLabel() : resendIn > 0 ? `Send the code again in ${resendIn} s` : "Send the code again"}
+          {busy === "send" ? "Sending…" : resendIn > 0 ? `Send the code again in ${resendIn} s` : "Send the code again"}
         </button>
         <button className="ghost link" type="button" disabled={!!busy} onClick={() => (setStep("email"), setCode(""), setError(""))}>
           Use another email

@@ -1,23 +1,20 @@
 # Perennial's voice
 
-A serene garden with quirks. The humour is quiet, often hidden, and it rewards attention. These rules apply to every string in the app and every creature in the gardens. Helpers for rotating lines and rare events: `web/src/core/day.ts` (`daily`, `rareDay`).
+UI copy is plain and clear. It says the clear thing and stops. There are no jokes in UI sentences: the garden's whimsy lives in the world itself (what you see, and the story you find alone, #639), not in the words around it. These rules apply to every string in the app.
 
-1. The garden is funny, not the app. Plants, animals and weather have small opinions; the UI never cracks jokes about itself or the user. Good: 'A bee noticed.' Bad: 'Wow, look at you go, language legend!'
-2. Clear sentence first, wink second. The wink can be deleted and the meaning stays. Good: 'Something went wrong. Try again. A leaf fell in the machine.' Bad: 'Oops, the gnomes ate your request!'
-3. Short, common words, simple present tense, 2-8 words per sentence. No idioms, phrasal-verb tricks or sarcasm (puns are welcome, see below). Good: 'It has two leaves. It is proud of both.' Bad: 'This sprout is punching above its weight.'
-4. Deadpan, not excited. No exclamation marks in English (target-language praise like '¡Muy bien!' is fine). Good: 'Bench: for sitting.' Bad: 'Bench time!! Take a load off!'
-5. Never guilt, never count absence, never hurry. Time passing is a story, not a debt. Good: 'Welcome back. The garden waited for you.' Bad: 'Your plants missed you for 12 days.'
-6. Show before you say. If a picture or behaviour can carry the joke, use no words at all. Good: a sunflower that only shows its face when you stand between it and the sun. Bad: a tooltip that says 'This sunflower is shy, haha.'
-7. Rare or rotating, never fixed. A daily-seen line comes from a pool or changes with time, season or progress; a one-off gag must be rare (1 in 25 or less). Good: one sign text per day from a pool of 15. Bad: the same 'Let's grow!' on every session start.
-8. Serious where it matters. No jokes in destructive confirms, payment, account deletion, or inside the recall task itself. Good: 'Type delete to confirm.' Bad: 'Are you sure? The plants will cry.'
+1. Say the clear thing, then stop. No wink after it. Good: 'Something went wrong. Try again.' Bad: 'Something went wrong. A leaf fell in the machine.'
+2. No jokes in UI copy. Plants and animals do not get lines of personality, and the UI never jokes about itself or the user. Good: 'No paused words.' Bad: 'No paused words. Everyone is awake.'
+3. Short, common words, simple present tense. No idioms or sarcasm. Many learners do not speak English as a first language. Good: 'Practice more whenever you like.' Bad: 'Your plants will drink it up.'
+4. Calm, not excited. No exclamation marks in English (target-language praise like '¡Muy bien!' is fine). Good: 'Session complete.' Bad: 'Amazing work!!'
+5. Never guilt, never count absence, never hurry. Good: 'Welcome back.' Bad: 'Your plants missed you for 12 days.'
+6. Show, don't say. If a picture or behaviour in the garden can carry a small surprise, it needs no words. Good: a sunflower that only shows its face when you stand between it and the sun. Bad: a tooltip that says 'This sunflower is shy.'
 
-## Puns are welcome
+## What is not UI copy
 
-Puns are fine anywhere they still read as a sensible line to someone who misses the second meaning (for example the sign "No running during your Shift."). Keep the words simple; the pun is a bonus, not the point.
+Text that is part of the garden world is not in scope here: the gardener's notes, signs, stakes, and what a visitor does when you meet it. These follow the garden's own story and design.
 
-## Checklist for a new line or quirk
+## Checklist for a new line
 
-- Would it still be nice on day 30? If it is seen daily, it comes from a pool or changes with time, season or progress.
-- Can a non-native reader understand it with simple words? No idioms or sarcasm. A pun is fine if the line still makes sense without it.
-- Does the meaning survive if you delete the joke?
-- Is it outside destructive confirms, account deletion and the recall task itself?
+- Does it say one clear thing?
+- If you delete the last sentence, is anything lost? If not, delete it.
+- Can a non-native reader understand it with simple words?

@@ -13,13 +13,12 @@ import { openDoor, readNote, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_LINES, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
-import { plantMood, plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
+import { plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
 import type { Hider } from "../garden/sceneVisitors";
 import type { Hideout } from "../garden/kinds/kind";
-import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
-import { snoreLine } from "../garden/whimsy";
+import { EMPTY_WALK } from "../content/voice";
 import { echoDate } from "../garden/well";
 import { takeFocus, type Focus } from "./gardenFocus";
 import { WordPlant } from "./plant";
@@ -381,11 +380,6 @@ const NO_NOTES = { list: [], read: [], isKnown: () => false, opened: () => {} };
 /** The landing page's walk: the door stays locked, and there is nothing to save. */
 const SHOWCASE_DOOR = { state: "locked" as const, open: () => {} };
 
-/** The plant's one line of personality (the same every time for this word, and the same as in the 2D garden). */
-function personality(p: PlacedPlant): string {
-  return plantLine(p.lemma, plantMood(p));
-}
-
 /** Without `water` it is view-only (the landing page): no watering, no sessions. */
 export function GardenWalk({
   lang,
@@ -740,7 +734,7 @@ export function GardenWalk({
 
       {progress && progress[1] > 0 && (
         <div className="gw-loading" role="status">
-          {loadingLine()}… {Math.round((progress[0] / progress[1]) * 100)}%
+          Loading your garden… {Math.round((progress[0] / progress[1]) * 100)}%
         </div>
       )}
 
@@ -778,12 +772,6 @@ export function GardenWalk({
                 {stageSentence(selected.stage)} {selected.r < THIRSTY && "It is a little thirsty."}
               </span>
               <span className="muted small gw-bed">Planted on {echoDate(selected.planted, openedAt, "en-GB")}.</span>
-              <span className="small gw-flavour">{personality(selected)}</span>
-              {time === "night" && selected.id === data?.visitors.sleeper && (
-                <span className="small gw-flavour gw-snore">
-                  {snoreLine(lang)}
-                </span>
-              )}
             </div>
           </div>
           <div className="row">
