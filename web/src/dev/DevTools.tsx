@@ -36,7 +36,7 @@ export default function DevTools() {
             className="primary"
             disabled={busy}
             // Through the boot path (dev/boot.ts): seeding here would race the reload
-            // that follows its sign-out (App reloads on every change of user).
+            // that follows the new user (App reloads when a user follows another).
             onClick={() => {
               setBusy(true);
               location.href = `/?demo=${lang}:${count}#/garden`;

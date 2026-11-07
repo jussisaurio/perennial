@@ -158,18 +158,23 @@ function DeckFailed({ lang }: { lang: string }) {
 export default function App() {
   const { user, pending } = useUser();
   const [route, go] = useRoute();
-  // Signing in, out, or linking an anonymous learner to an account changes the
+  // Signing in, or linking an anonymous learner to an account, changes the
   // user: start clean with a reload. Queued writes belong to their user: an
   // anonymous learner's move to the account they sign in to, a signed-out
-  // learner's are dropped (see data/device.ts).
-  const firstUser = useRef<string | null | undefined>(undefined);
+  // learner's are dropped (see data/device.ts). Signing out does not reload:
+  // the landing page shows at once, not after a blank page (#682). A user
+  // after that still reloads: this page's boot answer was the old user's.
+  const lastUser = useRef<string | null | undefined>(undefined);
+  const hadUser = useRef(false);
   useEffect(() => {
     if (pending) return;
     const id = user?.id ?? null;
-    if (firstUser.current === undefined) firstUser.current = id;
-    else if (firstUser.current !== null && firstUser.current !== id) location.reload();
-    else firstUser.current = id;
-    if (id) identify(id);
+    if (id !== null && hadUser.current && id !== lastUser.current) location.reload();
+    lastUser.current = id;
+    if (id) {
+      hadUser.current = true;
+      identify(id);
+    }
   }, [user?.id, pending]);
   // Signed out: delete what earlier learners left on this device (see device.ts).
   useEffect(() => {
