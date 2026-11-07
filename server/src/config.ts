@@ -178,6 +178,7 @@ export const AppConfigFromEnv = Layer.effect(
 /**
  * Production must be configured, not defaulted: refuse to start rather than
  * run with a public secret, an open dev outbox, or no email.
+ * @internal Exported for tests.
  */
 export function configProblems(c: Config): string[] {
   if (!c.production) return [];

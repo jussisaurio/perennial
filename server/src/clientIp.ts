@@ -18,12 +18,13 @@ const addSubnet = (cidr: string, type: "ipv4" | "ipv6") => {
 for (const r of CLOUDFLARE_V4) addSubnet(r, "ipv4");
 for (const r of CLOUDFLARE_V6) addSubnet(r, "ipv6");
 
+/** Whether `ip` is in Cloudflare's ranges. @internal Exported for tests. */
 export const fromCloudflare = (ip: string) => cloudflare.check(ip, ip.includes(":") ? "ipv6" : "ipv4");
 
 /** The header Better Auth reads: set here from `headers` (CLIENT_IP_HEADERS), never by the client. */
 export const CLIENT_IP_HEADER = "x-perennial-client-ip";
 
-/** The first IP the configured headers give; cf-connecting-ip only when X-Real-IP is Cloudflare's, else X-Real-IP. */
+/** The first IP the configured headers give; cf-connecting-ip only when X-Real-IP is Cloudflare's, else X-Real-IP. @internal Exported for tests. */
 export function clientIp(h: Headers, headers: string[]): string | null {
   for (const name of headers) {
     if (name === "cf-connecting-ip") {

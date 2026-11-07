@@ -20,12 +20,10 @@
     },
     "scripts": {
       "name": "perennial-scripts",
-      "dependencies": {
-        "@anthropic-ai/sdk": "^0.133.0",
-        "effect": "4.0.0",
-      },
       "devDependencies": {
+        "@anthropic-ai/sdk": "^0.133.0",
         "@types/bun": "^1.4.2",
+        "effect": "4.0.0",
         "typescript": "~7.0.2",
       },
     },

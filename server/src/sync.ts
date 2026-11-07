@@ -21,6 +21,7 @@ const clamp = (d: Date, now: Date) => (d.getTime() > now.getTime() ? now : d);
  * Per-learner storage limits: far above real use (a 2000-word course with
  * every word added from texts), low enough that one account can't fill the
  * database.
+ * @internal Exported for tests, which lower it.
  */
 export const QUOTA = { user_word: 5_000, user_sentence: 25_000, word_state: 50_000, reviewsPerDay: 5_000 };
 
