@@ -104,6 +104,11 @@ export class StileScene {
     return (x - this.spot.x) * Math.cos(PATH_TURN) - (z - this.spot.z) * Math.sin(PATH_TURN);
   }
 
+  /** How far (x, z) is out along the old path from the stile (m). */
+  private along(x: number, z: number): number {
+    return -(x - this.spot.x) * Math.sin(PATH_TURN) - (z - this.spot.z) * Math.cos(PATH_TURN);
+  }
+
   /**
    * A bramble cane from `a` arching over `b` to `c`, with thorns along it, pushed onto `out`.
    * `k`: how light (a cut cane, withered, is darker).
@@ -142,7 +147,8 @@ export class StileScene {
     const [sx, sz] = [this.spot.x, this.spot.z];
     const [x0, x1] = [c.b.minX - 0.6, c.b.maxX + 0.6];
     const tex = T.pixelTexture(T.bramble(), true);
-    const cut = (x: number, z: number, wide = 0) => this.open && Math.abs(this.side(x, z)) < CUT + wide;
+    // The way stops at the hilltop: the ring past it, on the far side, stays whole.
+    const cut = (x: number, z: number, wide = 0) => this.open && Math.abs(this.side(x, z)) < CUT + wide && this.along(x, z) < HILL.out;
     // The solid middle: one box, or two either side of the way cut through.
     const [zn, zf] = [sz - THICKET.near - 0.25, sz - THICKET.far + 0.35];
     const mid = sx - Math.sin(PATH_TURN) * ((THICKET.near + THICKET.far) / 2);
