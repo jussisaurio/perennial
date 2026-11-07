@@ -35,7 +35,7 @@ export interface Ledge {
   at: [number, number, number];
 }
 
-/** The middle of a lantern's glass (m): the moth goes round it, and the glint shows there (#361). */
+/** The middle of a lantern's glass (m): the moth goes round it (#361). */
 export const LANTERN_GLASS_Y = 1.02;
 
 /** The top of the fence's upper rail (m). */

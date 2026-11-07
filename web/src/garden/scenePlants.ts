@@ -19,6 +19,8 @@ import * as T from "./textures";
 
 /** Plants this near you (m) show their names; a tap on one opens its card where you stand, and a tap on one farther away walks to it first (#336). */
 export const NAME_NEAR = 3.2;
+/** The plant the action button shakes stands this much taller (#689): a steady mark, like a note lifting off the wall, never a flash. */
+const READY_GROW = 0.08;
 
 // Plants: like other sprites (BILLBOARD, SHADE: sceneSprites.ts), but each
 // samples its small sprite, or its full-size one once the streamer has put
@@ -31,6 +33,7 @@ const PLANT_VERT = /* glsl */ `
   attribute float iOld; // 1: an old friend (plants.ts isOld)
   uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uShake; // plant index, lean (#357)
+  uniform float uReady; // the plant the action button shakes (#689)
   uniform vec2 uSneeze; // plant index, squash (#360)
   uniform vec2 uLowSize;
   uniform float uSilver;
@@ -48,11 +51,13 @@ const PLANT_VERT = /* glsl */ `
   void main() {
     // A plant that hears its name grows a few percent for a moment.
     float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
+    // The plant the action button shakes stands a little taller, for as long as it is the one.
+    float ready = abs(iParams.w - uReady) < 0.5 ? ${READY_GROW.toFixed(2)} : 0.0;
     // A shaken plant shivers: it leans side to side for a moment (#357). A brushed one leans away and springs back (#359).
     float shake = abs(iParams.w - uShake.x) < 0.5 ? uShake.y : 0.0;
     // A plant a dandelion seed lands on sneezes (#360): squashed down and out for a moment.
     float sq = abs(iParams.w - uSneeze.x) < 0.5 ? uSneeze.y : 0.0;
-    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk) * vec2(1.0 + sq * 0.6, 1.0 - sq), iParams.x, iParams.y + shake + iLean * uSway);
+    vec4 mv = billboard(iPos, position.xy * iParams.z * (1.0 + perk + ready) * vec2(1.0 + sq * 0.6, 1.0 - sq), iParams.x, iParams.y + shake + iLean * uSway);
     gl_Position = projectionMatrix * mv;
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
@@ -106,6 +111,7 @@ function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: numbe
       uSelected: { value: -1 },
       uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
       uShake: { value: new THREE.Vector2(-1, 0) },
+      uReady: { value: -1 },
       uSneeze: { value: new THREE.Vector2(-1, 0) },
       uSilver: { value: 0 },
     },
@@ -137,6 +143,8 @@ export class Plants {
   private near = new Float64Array(0);
   /** Every plant's material, for the perk uniform; also added to ctx.mats for GardenScene's per-frame loop. */
   private plantMats: THREE.ShaderMaterial[] = [];
+  /** The plant the action button shakes (an index into the layout's plants; -1: none), kept for materials built after it was chosen. */
+  private readyIndex = -1;
   /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
   private perk = { i: -1, at: 0, n: -1 };
   /** A shaken plant (#357): its index, when, and the forms falling from it as petals ([]: one leaf). */
@@ -263,6 +271,7 @@ export class Plants {
     this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h));
     const mats = this.low.map((tex) => {
       const m = plantMaterial(tex, pool, tex.image.height);
+      m.uniforms.uReady.value = this.readyIndex;
       ctx.mats.add(m);
       this.plantMats.push(m);
       return m;
@@ -440,6 +449,12 @@ export class Plants {
     this.perk.i = i;
     this.perk.at = elapsed;
     this.perk.n = neighbourPerks() ? nearestPlant(this.layout.plants, i) : -1;
+  }
+
+  /** Mark the plant the action button shakes (#689), or none. */
+  ready(p: PlacedPlant | null) {
+    this.readyIndex = p ? this.layout.plants.indexOf(p) : -1;
+    for (const m of this.plantMats) m.uniforms.uReady.value = this.readyIndex;
   }
 
   /**

@@ -36,8 +36,7 @@ const LATE = { on: 1.4, every: 3.2, size: 0.045, min: 0.18 };
  * The door in the hedge: "key" means the key is hidden in the garden; "held"
  * means the learner picked it up this walk; only "open" is saved. `leaf` turns
  * on its hinge; `swing` is how far through its swing it is (null: not
- * swinging). `handle`: where its ring handle is, for the glint that shows it
- * can be used (#334). `help`: the world's help for a key left waiting.
+ * swinging). `help`: the world's help for a key left waiting.
  */
 export class Door {
   private reducedMotion: boolean;
@@ -46,7 +45,6 @@ export class Door {
   keyhole!: { hole: THREE.Mesh; glow: THREE.Sprite };
   key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
   swing: number | null = null;
-  handle!: [number, number, number];
   /** The world's help for a key left waiting (#334); null without a key. The scene reads it too. */
   help: KeyHelp | null = null;
 
@@ -112,8 +110,6 @@ export class Door {
     }
     this.state = typeof doorState === "object" ? "key" : doorState;
     this.help = typeof doorState === "object" ? doorState.help : null;
-    // The ring handle, just over the keyhole, on the garden side.
-    this.handle = [gx + DOOR_HALF + KEYHOLE.x, KEYHOLE.y + 0.12, z0 - 0.05];
     this.leaf = leaf;
     this.keyhole = { hole, glow };
     this.key = key;
@@ -126,8 +122,9 @@ export class Door {
 
   /**
    * The door swings open, slowing as it goes. A key left waiting a week (#334)
-   * glints now and then whenever you face it, from as far as you can see; in
-   * reach, the scene's own glint shows it instead.
+   * glints now and then whenever you face it, from as far as you can see and
+   * right up to it (#689: nothing else in reach glints, so it does not stop as
+   * you come near).
    */
   tick(f: Frame) {
     if (this.swing !== null) {
@@ -144,7 +141,7 @@ export class Door {
     // Forward is -z at yaw 0.
     const facing = (-Math.sin(f.yaw) * dx - Math.cos(f.yaw) * dz) / d > FACING;
     const k = f.elapsed % LATE.every;
-    key.glint.visible = !!this.help?.glint && facing && d >= KEY_REACH && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
+    key.glint.visible = !!this.help?.glint && facing && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
     const pulse = this.reducedMotion ? 1 : 0.8 + 0.2 * Math.sin((Math.PI * k) / LATE.on);
     key.glint.scale.setScalar(Math.max(LATE.min, LATE.size * d) * pulse);
   }

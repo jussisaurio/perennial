@@ -174,17 +174,6 @@ export class Carry implements Part {
     return r;
   }
 
-  /** Where the glint shows for a target in reach. */
-  cueAt(t: CarryTarget): [number, number, number] {
-    if (t.at === "thing") {
-      const th = this.things[t.i];
-      return [th.x, th.y + 0.12 * SCALE[th.kind], th.z];
-    }
-    // Over the dark of the well's mouth.
-    if (t.at === "well") return [this.layout.well.x, 0.75, this.layout.well.z];
-    return [t.x, 0.1, t.z];
-  }
-
   /** Where to walk to act on a target from afar, and whether you are near enough already. */
   standFor(t: CarryTarget, x: number, z: number): { x: number; z: number; near: boolean } {
     const w = this.layout.well;
