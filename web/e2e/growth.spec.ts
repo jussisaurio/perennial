@@ -155,7 +155,7 @@ test("the summary replays what grew this chunk, then rests; a tap ends it (#216)
   await expect(moment(page)).toHaveCount(0);
   await freeze(page);
   await page.getByRole("button", { name: "End session" }).click();
-  const garden = page.locator("main.summary .garden");
+  const garden = page.locator("main.summary .garden-strip");
   await expect(garden).toHaveAttribute("data-replaying", "true");
   // The plant's glow sits at its top: low while it regrows, high once it has.
   const glowTop = () => garden.locator("circle.glow").first().evaluate((c) => Number(c.getAttribute("cy")));
@@ -184,7 +184,7 @@ test("with 'Next card right away' the summary does not replay (#216)", async ({ 
   await page.locator("button.start").click();
   await answer(page, "2");
   await page.getByRole("button", { name: "End session" }).click();
-  const garden = page.locator("main.summary .garden");
+  const garden = page.locator("main.summary .garden-strip");
   await expect(garden.locator("circle.glow")).toHaveCount(1);
   await expect(garden).not.toHaveAttribute("data-replaying", "true");
 });

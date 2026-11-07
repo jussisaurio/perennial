@@ -116,7 +116,7 @@ export async function answer(page: Page, key: "1" | "2") {
  * over a moment) and is wider than `min` pixels. Returns the strip's width.
  */
 export async function settledGardenWidth(page: Page, min = 2000) {
-  const strip = page.locator(".garden-scroll");
+  const strip = page.getByTestId("today-garden").locator(".garden-scroll");
   const width = () => strip.evaluate((el) => el.scrollWidth);
   let last = -1;
   await expect
@@ -135,9 +135,9 @@ export async function settledGardenWidth(page: Page, min = 2000) {
 
 /** A point on the strip's plant nearest the middle, a little above its foot (between two plants there is a small gap). */
 export async function plantNearMiddle(page: Page) {
-  const box = (await page.locator(".garden-scroll").boundingBox())!;
+  const box = (await page.getByTestId("today-garden").locator(".garden-scroll").boundingBox())!;
   // Each plant's group stands at its foot by its CSS `translate`.
-  return page.locator(".garden svg > .sway").evaluateAll((els, mid) => {
+  return page.getByTestId("today-garden").locator("svg > .sway").evaluateAll((els, mid) => {
     const svg = els[0].closest("svg")!.getBoundingClientRect();
     const feet = els.map((e) => {
       const [x, y] = getComputedStyle(e).translate.split(" ").map(parseFloat);

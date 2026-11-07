@@ -70,6 +70,41 @@ test("visitors: the snail and the cat in the 2D strip say their word; they are n
   expect(errors).toEqual([]);
 });
 
+test("Today's strip stays one element while the rest of Today comes in, so its entrance plays once (#653)", async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await page.clock.setFixedTime(new Date(2026, 5, 10, 12));
+  // Hold animation frames: the rest of Today waits for one (Home's useAfterPaint), so the strip shows first, with no data.
+  // Not a paused clock: the app's loading waits on timers too.
+  await page.addInitScript(() => {
+    const held = new Map<number, FrameRequestCallback>();
+    const { requestAnimationFrame: request, cancelAnimationFrame: cancel } = window;
+    let hold = true;
+    let id = 0;
+    window.requestAnimationFrame = (cb) => (hold ? (held.set(--id, cb), id) : request(cb));
+    window.cancelAnimationFrame = (n) => (n < 0 ? held.delete(n) : cancel(n));
+    Object.assign(window, {
+      releaseFrames: () => {
+        hold = false;
+        for (const cb of held.values()) request(cb);
+      },
+    });
+  });
+  await page.goto("/?demo=es:30&visitors=all#/today");
+  const strip = page.getByTestId("today-garden");
+  await expect(strip).toBeAttached({ timeout: 30_000 });
+  const before = await strip.elementHandle();
+  const snail = page.getByRole("button", { name: "el caracol · snail" });
+  await expect(snail).toHaveCount(0);
+
+  await page.evaluate(() => (window as unknown as { releaseFrames: () => void }).releaseFrames());
+  await snail.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("el caracol · snail");
+  // A new element would play the rise again: it moves the snail out from under the pointer, and its word goes.
+  expect(await strip.evaluate((el, b) => el === b && el.isConnected, before)).toBe(true);
+  await strip.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  await expect(page.getByRole("tooltip")).toHaveText("el caracol · snail");
+});
+
 test("a visitor in the 2D strip shows the app's focus ring when reached with Tab, in light and dark", async ({ page }) => {
   await page.goto("/?demo=es:30&visitors=all#/today");
   const snail = page.getByRole("button", { name: "el caracol · snail" });
@@ -155,7 +190,7 @@ test("the ends of the strip: the first word's post at the left, the mole at the 
   // The dev override brings the mole today, whatever the date.
   await page.goto("/?demo=es&visitors=all#/today");
   const strip = page.locator(".garden-scroll");
-  await expect(page.locator(".garden.scrolls")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".garden-strip.scrolls")).toBeVisible({ timeout: 30_000 });
   await settledGardenWidth(page);
   // The strip opens at the right end, where the mole looks up and says its word.
   const mole = page.getByRole("button", { name: "el topo · mole" });
@@ -172,7 +207,7 @@ test("2D garden: a big garden scrolls; arrows page through it; a plant opens in 
   await page.setViewportSize({ width: 1000, height: 800 });
   await page.goto("/?demo=es#/today");
   const strip = page.locator(".garden-scroll");
-  await expect(page.locator(".garden.scrolls")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".garden-strip.scrolls")).toBeVisible({ timeout: 30_000 });
   const scrollLeft = () => strip.evaluate((el) => el.scrollLeft);
   // The demo learner's words sync in over a moment: wait until the garden stops growing.
   await settledGardenWidth(page);
