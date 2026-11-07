@@ -44,6 +44,8 @@ export interface LearnerVisitors {
   milestone: string | null;
   /** Words the learner knows (lemmas) for the frog to croak: nouns once there are a few. */
   known: string[];
+  /** Every word the learner knows, by lemma (lower case): the clear words in the gardener's notes (#654). */
+  lemmas: ReadonlySet<string>;
   /** The mole looks up at the far right end of the strip today. */
   mole: boolean;
   /** Words for the garden itself (#74), shown in the walk when you tap the sunflower, a tree, the pond... */
@@ -126,6 +128,7 @@ export function* visitorSteps(l: Learner, now: Date): Generator<void, LearnerVis
     welcome: welcomeBack(facts, now),
     milestone: milestoneLine(before, count),
     known: croaks,
+    lemmas,
     mole: moleVisits(now, devVisitorOverride()),
     scenery: sceneryViews(l.lang, (lemma) => lemmas.has(lemma.toLowerCase())),
   };
@@ -136,5 +139,5 @@ export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitor
   // A garden a few months in: its learner knows the words for the garden-word visitors.
   const facts = { ...NO_FACTS, garden: new Set<GardenWord>(VISITORS.flatMap((v) => (v.garden ? [v.garden] : []))) };
   const today = visitorsFor(facts, now, devVisitorOverride());
-  return { facts, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
+  return { facts, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], lemmas: new Set(), mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
 }

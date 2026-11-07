@@ -26,6 +26,24 @@ export function shedRoof(l: Layout): [number, number, number] {
   return [s.x - SHED.depth / 2 - 0.1, SHED.h + 0.06 + 0.025 + 0.1 * Math.sin(SHED.tilt), s.z + 0.3];
 }
 
+/** The nails for the gardener's notes (#654): rows of this many on the back wall, this far apart (m), the top row this high, the next ones lower. */
+const NAILS = { perRow: 6, apart: 0.24, top: 1.24, drop: 0.3 };
+
+/**
+ * Where the `n` notes hang (#654): on the inside of the back wall, in rows
+ * from the top, each row filled from the left as you face the wall (−z).
+ * Each point is the middle of a note, a hair off the wall.
+ */
+export function nailSpots(l: Layout, n: number): [number, number, number][] {
+  const s = shedAt(l);
+  return Array.from({ length: n }, (_, i) => {
+    const row = Math.floor(i / NAILS.perRow);
+    const inRow = Math.min(NAILS.perRow, n - row * NAILS.perRow);
+    const k = i % NAILS.perRow;
+    return [s.x - 0.04, NAILS.top - row * NAILS.drop, s.z + (k - (inRow - 1) / 2) * NAILS.apart];
+  });
+}
+
 /** The shed's boards, in one group for the scene to add. */
 export function buildShed(c: BuildCtx, l: Layout): THREE.Group {
   const root = new THREE.Group();

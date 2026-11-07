@@ -737,6 +737,19 @@ export function mouseDoor(): OffscreenCanvas {
   return c;
 }
 
+/** A gardener's note on its nail (#654): a scrap of paper with pencil lines, a folded corner and the nail at the top. */
+export function notePaper(): OffscreenCanvas {
+  const [c, ctx] = canvas(12, 14);
+  px(ctx, 0, 1, "#d8cdb0", 12, 13);
+  px(ctx, 1, 2, "#f1e8d0", 10, 11);
+  for (const y of [5, 7, 9, 11]) px(ctx, 2, y, "#9a917e", y === 11 ? 5 : 8, 1);
+  // The folded bottom corner, and the nail through the top.
+  px(ctx, 10, 12, "#c7bb9c", 2, 2);
+  ctx.clearRect(11, 13, 1, 1);
+  px(ctx, 5, 0, "#5c5a57", 2, 2);
+  return c;
+}
+
 /** The mouse door's mat (#364), seen from above: coir with a dark edge and `word` on it (none for a course without one). */
 export function doormat(word: string | null): OffscreenCanvas {
   const [c, ctx] = canvas(48, 14);

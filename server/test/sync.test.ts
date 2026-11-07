@@ -84,6 +84,19 @@ test("the orchard door opens for good, per course, and syncs to the learner's de
   expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", false], ["es", true]]);
 });
 
+test("the gardener's notes read only grow, merged from every device (#654)", async () => {
+  const cookie = await t.signIn(unique("notes"));
+  const id = (await t.me(cookie)).id;
+  const read = async () => (await t.sql`select notes_read from course where user_id = ${id} and lang = 'es'`)[0]?.notes_read;
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", minutes: 5, retention: 0.9, door_open: false, notes_read: [] } }]);
+  expect(await read()).toEqual([]);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", notes_read: ["n02"] } }]);
+  // Another device that had read only n01: n02 stays read. A settings change keeps the list.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", notes_read: ["n01"] } }]);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", retention: 0.85 } }]);
+  expect(await read()).toEqual(["n01", "n02"]);
+});
+
 test("a word's forms are stored as a list, which is what the app reads", async () => {
   const cookie = await t.signIn(unique("forms"));
   const id = crypto.randomUUID();

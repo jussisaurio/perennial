@@ -44,6 +44,8 @@ export const Mutation = Schema.Union([
       retention: Schema.optionalKey(Schema.Finite.check(Schema.isBetween({ minimum: 0.7, maximum: 0.99 }))),
       // The orchard door (#315). A new course row sends false; only true changes anything.
       door_open: Schema.optionalKey(Schema.Boolean),
+      // The gardener's notes read (#654), by id. The server adds them to what it has: the list only grows.
+      notes_read: Schema.optionalKey(Schema.Array(max(8)).check(Schema.isMaxLength(64))),
     }),
   }),
   Schema.Struct({

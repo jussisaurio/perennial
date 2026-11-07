@@ -323,6 +323,8 @@ section { margin-bottom: 1.25rem; }
 /* ---------- garden ---------- */
 .garden { position: relative; margin: 0.5rem -16px 0; }
 .garden svg { display: block; overflow: visible; }
+/* An unread gardener's note (#654): pinned up in the strip's corner, quiet, leading nowhere. */
+.garden-pin { position: absolute; top: 8px; right: 18px; image-rendering: pixelated; }
 .garden-scroll { position: relative; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
 .garden-scroll::-webkit-scrollbar { display: none; }
 .garden-arrows { margin-left: auto; display: inline-flex; gap: 0.35rem; }
@@ -859,6 +861,28 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-card button.secondary, .gw-card button.ghost, .gw-empty button.primary { font-family: var(--pixel); border-radius: 0; }
 .gw-night .gw-card button.ghost { color: var(--gw-ink); }
 .gw-close { position: absolute; top: 4px; right: 6px; width: 40px; height: 40px; border: 0; padding: 0; background: none; display: grid; place-items: center; color: var(--gw-muted); cursor: pointer; }
+/* A gardener's note (#654): a scrap of lined paper taken off its nail, a little crooked. Not a pixel frame: it is
+   the gardener's own paper. Words the learner does not know yet are faint, never hidden. */
+.gw-note {
+  --line: 2.1rem;
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-0.7deg);
+  width: min(27rem, calc(100% - 40px)); max-height: calc(100% - 200px); overflow-y: auto; z-index: 4; outline: none;
+  padding: 2rem 1.9rem 1.5rem; color: #3b3026;
+  /* Ruled lines under each line of text: they start where the text does, and scroll with it. */
+  background: repeating-linear-gradient(transparent 0 calc(var(--line) - 1px), rgb(96 120 150 / 0.2) calc(var(--line) - 1px) var(--line)) local, #f5edd6;
+  background-position: 0 2rem;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.08), 0 16px 34px rgb(0 0 0 / 0.38), inset 0 0 0 1px rgb(120 96 60 / 0.18);
+  animation: gw-note-in 240ms ease-out both;
+}
+/* The hole the nail left. */
+.gw-note::before { content: ""; position: absolute; left: 50%; top: 0.75rem; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #6b5a45; box-shadow: inset 1px 1px 0 rgb(0 0 0 / 0.35), 0 1px 0 rgb(255 255 255 / 0.6); }
+.gw-night .gw-note { background-color: #d8ceb4; }
+.gw-note .gw-close { color: #8a7660; }
+.gw-note-text { margin: 0; padding-right: 18px; font: 1.3rem/var(--line) var(--display); white-space: pre-line; overflow-wrap: break-word; }
+.gw-note-faint { opacity: 0.42; }
+@keyframes gw-note-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)) rotate(-2deg); } }
+@media (prefers-reduced-motion: reduce) { .gw-note { animation: none; } }
+@media (max-width: 560px) { .gw-note { width: calc(100% - 32px); padding: 2rem 1.4rem 1.3rem; --line: 1.95rem; } .gw-note-text { font-size: 1.18rem; } }
 .gw-empty { text-align: center; justify-items: center; bottom: 50%; transform: translate(-50%, 50%); animation: none; }
 .gw-empty strong { font: 700 1.5rem/1.1 var(--pixel); }
 

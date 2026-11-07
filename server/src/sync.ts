@@ -7,7 +7,7 @@ import { PgClient } from "@effect/sql-pg";
 import { Clock, Context, Effect, Layer } from "effect";
 import type { SqlError } from "effect/sql/SqlError";
 import { type LearnerRows, type Mutation, type UserId, type WordId, type WriteResult } from "perennial-contract";
-import { COURSE_DEFAULTS } from "./course";
+import { COURSE_DEFAULTS, NOTES_READ_UNION } from "./course";
 import { rowCount, theRow } from "./db";
 import { type ApiError, refuse } from "./http";
 import { event, RequestContext } from "./request";
@@ -160,12 +160,15 @@ export const SyncLive = Layer.effect(
                   const r = m.row;
                   // Only the columns sent change, so two devices editing different settings both win.
                   // The door only ever opens: a device that still has it closed never shuts it again.
-                  const res = yield* sql<{ inserted: boolean }>`insert into course (user_id, lang, minutes, retention, door_open)
-                    values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true})
+                  // The notes read only grow (#654): a device that has not seen a note read elsewhere never unreads it.
+                  // `?? []`: a write without the list adds nothing to it.
+                  const res = yield* sql<{ inserted: boolean }>`insert into course (user_id, lang, minutes, retention, door_open, notes_read)
+                    values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true}, ${sql.json(r.notes_read ?? [])})
                     on conflict (user_id, lang) do update set
                       minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
                       retention = coalesce(${r.retention ?? null}::real, course.retention),
-                      door_open = course.door_open or excluded.door_open
+                      door_open = course.door_open or excluded.door_open,
+                      notes_read = ${sql.literal(NOTES_READ_UNION)}
                     returning (xmax = 0) as inserted`;
                   rows += res.length;
                   // xmax = 0: a new row, not an update. A new course is a learner starting a language.

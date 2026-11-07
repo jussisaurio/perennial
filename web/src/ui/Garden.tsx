@@ -103,9 +103,31 @@ interface GardenProps {
   onView?: (id: string) => void;
   /** Plants to grow again from these looks (the summary, #216). The caller decides whether it plays (the setting, reduced motion). */
   replay?: readonly { id: string; from: PlantLook }[] | null;
+  /** A gardener's note the learner has not read hangs in the shed (#654): a small pinned paper in the corner. It leads nowhere. */
+  pinned?: boolean;
 }
 
-function Strip({ data, highlight, compact, showcase, onView, visitors, replay, width, wrap }: GardenProps & { width: number; wrap: RefCallback<HTMLDivElement> }) {
+/** A gardener's note pinned up, unread (#654): paper with pencil lines, held by a red pin, a little crooked. */
+const NOTE_PIN: PixelArt = {
+  rows: [
+    "....rr.....",
+    "...rRRr....",
+    "..eerrees..",
+    ".epppppppe.",
+    ".epllllppe.",
+    ".eppppppe..",
+    ".epllllpe..",
+    ".eppppppe..",
+    "..epllpppe.",
+    "..eppppppe.",
+    "..epllllpe.",
+    "..eppppppfe",
+    "..eeeeeeee.",
+  ],
+  pal: { r: "#c24a3a", R: "#f08070", e: "#8a7656", p: "#fbf3df", l: "#9aa6b4", f: "#d8ccae", s: "#8a7656" },
+};
+
+function Strip({ data, highlight, compact, showcase, onView, visitors, replay, pinned, width, wrap }: GardenProps & { width: number; wrap: RefCallback<HTMLDivElement> }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ p: GardenPlant; x: number; y: number } | null>(null);
   // Hover intent: with a card open, switching to another plant waits a moment,
@@ -373,6 +395,12 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
         </div>
       )}
       {data && data.total === 0 && !stake && <p className="garden-empty">Your words will grow here.</p>}
+      {pinned && (
+        <svg className="garden-pin" width={NOTE_PIN.rows[0].length * 2} height={NOTE_PIN.rows.length * 2} viewBox={`0 0 ${NOTE_PIN.rows[0].length} ${NOTE_PIN.rows.length}`} role="img">
+          <title>A new note in the shed</title>
+          <PixelRects art={NOTE_PIN} />
+        </svg>
+      )}
       {hover && (
         <div className={onView ? "plant-tip interactive" : "plant-tip"} style={{ left: Math.min(width - 210, Math.max(8, hover.x - scrollX - 100)), top: 8 }} role="status" onPointerEnter={() => clearTimeout(switching.current)}>
           <strong>{hover.p.lemma}</strong>

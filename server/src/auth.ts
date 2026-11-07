@@ -21,6 +21,7 @@ import { Pool } from "pg";
 import { googleClient, type Config } from "./config";
 import { CLIENT_IP_HEADER } from "./clientIp";
 import { GOOGLE_FAILED } from "perennial-contract";
+import { NOTES_READ_UNION } from "./course";
 import { theRow } from "./db";
 import { event, log } from "./log";
 import type { Mailer } from "./mail";
@@ -45,10 +46,10 @@ const mergeUsers = Effect.fn("Auth.mergeUsers")(function* (from: string, to: str
         select ${to}, word_id, status, queued_at, updated_at from word_state where user_id = ${from}
         on conflict (user_id, word_id) do update set status = excluded.status, queued_at = excluded.queued_at, updated_at = excluded.updated_at
         where excluded.updated_at > word_state.updated_at`;
-      // A course the real account already has keeps its settings; a door opened on either stays open.
-      yield* sql`insert into course (user_id, lang, minutes, retention, door_open, created_at)
-        select ${to}, lang, minutes, retention, door_open, created_at from course where user_id = ${from}
-        on conflict (user_id, lang) do update set door_open = course.door_open or excluded.door_open`;
+      // A course the real account already has keeps its settings; a door opened on either stays open, and a note read on either stays read.
+      yield* sql`insert into course (user_id, lang, minutes, retention, door_open, notes_read, created_at)
+        select ${to}, lang, minutes, retention, door_open, notes_read, created_at from course where user_id = ${from}
+        on conflict (user_id, lang) do update set door_open = course.door_open or excluded.door_open, notes_read = ${sql.literal(NOTES_READ_UNION)}`;
       yield* sql`insert into ai_usage (user_id, period, used)
         select ${to}, period, used from ai_usage where user_id = ${from}
         on conflict (user_id, period) do update set used = ai_usage.used + excluded.used`;
