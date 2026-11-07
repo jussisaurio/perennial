@@ -6,7 +6,7 @@ import { clipPath, voiceName } from "../../web/src/content/clips.ts";
 import { language } from "../../web/src/content/languages.ts";
 import { petalForms } from "../../web/src/garden/shake.ts";
 import { SCENERY } from "../../web/src/garden/scenery.ts";
-import { VISITORS, frogCroak } from "../../web/src/garden/visitors.ts";
+import { VISITORS } from "../../web/src/garden/visitors.ts";
 
 export interface Clip {
   lang: DeckLang;
@@ -25,10 +25,10 @@ export interface SpokenDeck {
 
 /**
  * Every text the app says in this course, each once (callers of web/src/ui/speech.ts):
- * words (cards, plants, orchard trees, the well's echo, the frog's word), a shaken
- * plant's forms, sentences, the garden's scenery and visitor nouns, and the frog's
- * croak. A croak with a word after it, and words from the learner's own texts, have
- * no clip: those plays use browser speech.
+ * words (cards, plants, orchard trees, the well's echo), a shaken
+ * plant's forms, sentences, and the garden's scenery and visitor nouns. Animals never
+ * speak in this voice, so the frog's croak has no clip (nor do words from the learner's
+ * own texts): those plays use browser speech.
  */
 export function spokenTexts(deck: SpokenDeck, lang: DeckLang): string[] {
   const out = new Set<string>();
@@ -40,7 +40,6 @@ export function spokenTexts(deck: SpokenDeck, lang: DeckLang): string[] {
   for (const s of deck.sentences) add(s.text);
   for (const def of Object.values(SCENERY)) add(def.words[lang]);
   for (const v of VISITORS) add(v.words[lang]);
-  add(frogCroak([], lang, 0));
   return [...out];
 }
 
