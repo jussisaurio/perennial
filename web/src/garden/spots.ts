@@ -9,11 +9,13 @@ import type { Layout } from "./world";
 export interface Spots {
   /** The middle of the pond's bench, on the ground. */
   bench: { x: number; z: number };
+  /** The middle of the shed's step, on top of it (x, y, z): the cat sleeps here some days, and the dog sits in front of it. */
+  shedStep: readonly [number, number, number];
   /** The lily pads (x, z). */
   pads: readonly [number, number][];
   /** The lanterns (x, z). */
   lanterns: readonly [number, number][];
-  /** Where a small bird can sit (x, y, z): the tops of the notice boards and of the fence's rail. */
+  /** Where a small bird can sit (x, y, z): the top of the hedge, of the notice boards, of the first bed's sign and of the fence's rail. */
   perches: readonly [number, number, number][];
   /** The top of the first bed's sign (x, y, z). It is one of the perches too. */
   sign: readonly [number, number, number];

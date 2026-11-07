@@ -4,6 +4,7 @@
 // stage itself follows plantStage (data/learner.ts), next to wordState.
 
 import { courseOrder } from "../content/order";
+import { DAY_MS } from "../core/day";
 import type { PLANT_LINES } from "../content/voice";
 import type { LoadedDeck } from "../data/deck";
 import { firstReviewed, isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "../core/memory";
@@ -13,7 +14,7 @@ import { runAll } from "../lib/yield";
 import type { Stage } from "../ui/plant";
 import { orchardInput, orchardTrees, plantedAt, type OrchardTree } from "./orchard";
 import type { Met } from "./well";
-import { leanDeg, leanDir, type GardenPlant } from "./world";
+import { leanDeg, leanDir, type GardenPlant, type Planting } from "./world";
 
 export { leanDeg, leanDir, type GardenPlant };
 
@@ -30,6 +31,8 @@ export interface FirstWord {
 /** The plants of one garden, and the seeds still waiting. */
 export interface PlantSource {
   plants: GardenPlant[];
+  /** Words set aside after they were planted: their places in the beds stay empty (world.ts layout). */
+  aside: Planting[];
   seeds: number;
   /** The learner's first word and when it was planted, for its keepsake (#61) and the orchard's bench (#315). */
   first?: FirstWord | null;
@@ -98,12 +101,17 @@ export function plantsFromLearner(l: Learner, now = Date.now()): PlantSource {
 /** plantsFromLearner a step at a time, so Today's first load can work it out in slices (#569). */
 export function* plantSteps(l: Learner, now: number): Generator<void, PlantSource> {
   const plants: GardenPlant[] = [];
+  const aside: Planting[] = [];
   for (const m of l.memories) {
     yield;
     const w = l.words.get(m.wordId);
-    if (m.skill !== "read" || !w || w.status === "ignored") continue;
+    if (m.skill !== "read" || !w) continue;
     const stage = plantStage(m);
     if (stage === "seed") continue;
+    if (w.status === "ignored") {
+      aside.push({ id: w.id, lemma: w.lemma, rank: w.rank, planted: plantedAt(l, w.id) });
+      continue;
+    }
     const r = recall(m, now);
     plants.push({
       id: w.id,
@@ -111,6 +119,7 @@ export function* plantSteps(l: Learner, now: number): Generator<void, PlantSourc
       gloss: w.gloss,
       pos: w.pos ?? "",
       rank: w.rank,
+      planted: plantedAt(l, w.id),
       s: m.s,
       r,
       stage,
@@ -124,21 +133,24 @@ export function* plantSteps(l: Learner, now: number): Generator<void, PlantSourc
   }
   plants.sort((a, b) => a.rank - b.rank);
   yield;
-  const met = plants.map((p) => ({ lemma: p.lemma, at: plantedAt(l, p.id) }));
+  const met = plants.map((p) => ({ lemma: p.lemma, at: p.planted }));
   yield;
   const first = firstWord(l);
   yield;
-  return { plants, seeds: l.fresh().length, first, orchard: orchardTrees(orchardInput(l), now), met };
+  return { plants, aside, seeds: l.fresh().length, first, orchard: orchardTrees(orchardInput(l), now), met };
 }
 
 const SHOWCASE_SPAN = 160;
+/** The showcase learner's new words a day. */
+const SHOWCASE_PER_DAY = 6;
 
 /**
  * A made-up but believable garden for the landing page: the first words of the
  * course at a spread of stages, so newcomers see what learning will look like.
  * The same word looks the same in the strip and in the walk.
  */
-export function showcasePlants(deck: LoadedDeck, count: number): PlantSource {
+// `now` defaults to the clock: the landing page shows a garden planted up to today.
+export function showcasePlants(deck: LoadedDeck, count: number, now = Date.now()): PlantSource {
   const r = 0.92;
   const plants = courseOrder(deck)
     .slice(0, count)
@@ -149,10 +161,12 @@ export function showcasePlants(deck: LoadedDeck, count: number): PlantSource {
       const s = h < 0.15 ? 1 + h * 10 : h < 0.35 ? 3 + h * 8 : 8 + (1 - Math.min(i, SHOWCASE_SPAN) / SHOWCASE_SPAN) * 120 * h;
       // Every showcase word has been practised a few times, so the stage follows stability alone.
       const stage = plantStage({ s, reps: 3 }) as Stage;
-      return { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, s, r, stage, growth: growthOf(s), listen: s > 60, write: s > 90, forms: w.forms, gender: w.gender, garden: w.garden };
+      // Planted in course order, a few words a day, the span's last ones today; by the span, not `count`, so a word has the same day in a small showcase as in a big one.
+      const planted = now - Math.floor((SHOWCASE_SPAN - 1 - i) / SHOWCASE_PER_DAY) * DAY_MS;
+      return { id: w.id, lemma: w.lemma, gloss: w.gloss, pos: w.pos ?? "", rank: w.rank, planted, s, r, stage, growth: growthOf(s), listen: s > 60, write: s > 90, forms: w.forms, gender: w.gender, garden: w.garden };
     });
   // The landing page's door stays locked: nothing grows behind it, and there is no well to echo.
-  return { plants, seeds: Math.max(0, deck.words.length - count), orchard: [], met: [] };
+  return { plants, aside: [], seeds: Math.max(0, deck.words.length - count), orchard: [], met: [] };
 }
 
 /** The landing page's walk: the same words, at the same stages, as its strip, without seeds to water (it is view-only). */

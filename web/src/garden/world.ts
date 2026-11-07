@@ -1,19 +1,27 @@
-// Layout of the walkable garden: words are planted in raised beds, one kind
-// of word per row of beds (nouns, verbs, …), the most common words nearest
-// the gate. Pure functions, so the layout is stable and testable.
+// Layout of the walkable garden: words are planted in raised beds in the
+// order the learner planted them (their first review), along a path that
+// winds outward from the gate (#641). A bed never moves once it exists. Pure
+// functions, so the layout is stable, the same on every device, and testable.
 
-import { toPos, type Gender, type GardenWord, type Pos } from "../deck/schema";
+import type { Gender, GardenWord } from "../deck/schema";
 import { dayNumber } from "../core/day";
 import { hash01 } from "../lib/seed";
 import { collideTrees, ORCHARD_MIN, orchardWell, WELL_R, type PlacedTree } from "./orchard";
+import { MONTHS } from "../ui/format";
 import type { Stage } from "../ui/plant";
 
-export interface GardenPlant {
+/** A word that has its place in the beds: when it was planted, and what breaks a tie. */
+export interface Planting {
   id: string;
   lemma: string;
+  rank: number;
+  /** Its first reading review (ms). */
+  planted: number;
+}
+
+export interface GardenPlant extends Planting {
   gloss: string;
   pos: string;
-  rank: number;
   s: number;
   r: number;
   stage: Stage;
@@ -42,7 +50,8 @@ export interface Bed {
   z: number;
   w: number;
   d: number;
-  label: string;
+  /** Its sign: the month its first word was planted, on the first bed of each month only; null: no sign. */
+  label: string | null;
 }
 
 export interface Layout {
@@ -74,20 +83,46 @@ const BED_W = BED_COLS * SPACING + MARGIN * 2;
 const BED_D = BED_ROWS * SPACING + MARGIN * 2;
 const PATH = 1.9;
 const CAPACITY = BED_COLS * BED_ROWS;
+const CELL_W = BED_W + PATH;
+const CELL_D = BED_D + PATH;
+/** Past the outermost beds, the fence is this far from their edge (m). */
+const SIDE = PATH / 2 + 1.2;
+/** The garden is never narrower than this, so the pond, the bench and the shed by the gate have room (m). */
+const MIN_HALF_W = CELL_W + 1.2;
+/** A year (ms), for when bed signs add the year. */
+const YEAR_MS = 365 * 24 * 3600 * 1000;
 
-const GROUPS: { label: string; pos: readonly Pos[] }[] = [
-  { label: "Nouns", pos: ["noun"] },
-  { label: "Verbs", pos: ["verb"] },
-  { label: "Adjectives", pos: ["adj"] },
-  { label: "Adverbs", pos: ["adv"] },
-  { label: "Small words", pos: ["pron", "prep", "conj", "det", "num", "particle"] },
-  { label: "Phrases", pos: ["phrase"] },
-];
-const OTHER = "Other words";
+/**
+ * The first `count` places for beds along the path, as [column, row]: column
+ * 0 is in front of the gate, negative to the left; row 0 is by the gate. The
+ * path winds outward in rings round the first bed: ring k goes up one side,
+ * along the back and down the other side, and the next ring starts beside
+ * where it ended. So a new bed always joins at the far end of the path, and no
+ * place depends on how many beds there are.
+ */
+function bedCells(count: number): [number, number][] {
+  const out: [number, number][] = [[0, 0]];
+  for (let k = 1; out.length < count; k++) {
+    const ring: [number, number][] = [];
+    for (let r = 0; r <= k; r++) ring.push([-k, r]);
+    for (let c = -k + 1; c < k; c++) ring.push([c, k]);
+    for (let r = k; r >= 0; r--) ring.push([k, r]);
+    // Every other ring goes the other way, so it starts beside where the last one ended.
+    if (k % 2 === 0) ring.reverse();
+    out.push(...ring);
+  }
+  return out.slice(0, count);
+}
 
-export function groupOf(pos: string): string {
-  const p = toPos(pos);
-  return (p && GROUPS.find((g) => g.pos.includes(p))?.label) || OTHER;
+/** Planting order: first planted first; on a tie, the commoner word, then by lemma and id, so every device agrees. */
+function byPlanting(a: Planting, b: Planting): number {
+  return a.planted - b.planted || a.rank - b.rank || (a.lemma < b.lemma ? -1 : a.lemma > b.lemma ? 1 : 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
+/** A bed sign's month: "October", or "October 2026" when `year`. In local time, like the garden's calendar days. */
+export function monthLabel(planted: number, year: boolean): string {
+  const d = new Date(planted);
+  return year ? `${MONTHS[d.getMonth()]} ${d.getFullYear()}` : MONTHS[d.getMonth()];
 }
 
 /** Which way a word's plant leans when it leans at all: 1 to the right, -1 to the left, the same in every view. */
@@ -109,64 +144,65 @@ export function droopFor(id: string, r: number): number {
   return (-leanDeg(id, r) * Math.PI) / 180;
 }
 
-export function layout(plants: GardenPlant[]): Layout {
-  const byGroup = new Map<string, GardenPlant[]>();
-  for (const p of plants) {
-    const g = groupOf(p.pos);
-    // Pushed, not spread: a copy per plant was quadratic, ~8 MB of garbage for ~1000 plants (#459).
-    const list = byGroup.get(g);
-    if (list) list.push(p);
-    else byGroup.set(g, [p]);
-  }
-  const order = [...GROUPS.map((g) => g.label), OTHER].filter((g) => byGroup.has(g));
-  for (const g of order) byGroup.get(g)!.sort((a, b) => a.rank - b.rank || a.lemma.localeCompare(b.lemma));
-
-  // One group per row of beds; a big group wraps onto more rows.
-  const totalBeds = Math.max(1, order.reduce((n, g) => n + Math.ceil(byGroup.get(g)!.length / CAPACITY), 0));
-  const cols = Math.max(2, Math.min(7, Math.ceil(Math.sqrt(totalBeds * 1.3))));
-  const cellW = BED_W + PATH;
-  const cellD = BED_D + PATH;
+/**
+ * Each word takes the next place in planting order: 30 to a bed, filled from
+ * the front, beds along the path (bedCells). `aside`: words set aside after
+ * they were planted. Each keeps its place as an empty spot, so setting a word
+ * aside never moves the plants planted after it, and bringing it back puts it
+ * where it was. Words not planted yet take no place: when they are, they come
+ * after every word planted before. `aside` defaults to none, as in a garden
+ * made up for a test.
+ */
+export function layout(plants: readonly GardenPlant[], aside: readonly Planting[] = []): Layout {
+  // Plants and empty spots (plant: null), in planting order.
+  const slots: { at: Planting; plant: GardenPlant | null }[] = [...plants.map((p) => ({ at: p, plant: p })), ...aside.map((a) => ({ at: a, plant: null }))];
+  slots.sort((a, b) => byPlanting(a.at, b.at));
+  const count = Math.max(1, Math.ceil(slots.length / CAPACITY));
+  // The year shows on every sign once the garden's planting spans a year: only then can a month name come round again.
+  const year = slots.length > 0 && slots[slots.length - 1].at.planted - slots[0].at.planted >= YEAR_MS;
+  const month = (b: number) => {
+    const d = new Date(slots[b * CAPACITY].at.planted);
+    return d.getFullYear() * 12 + d.getMonth();
+  };
 
   const beds: Bed[] = [];
   const placed: PlacedPlant[] = [];
-  let row = 0;
-  const groups = order.length ? order : [""];
-  for (const g of groups) {
-    const list = byGroup.get(g) ?? [];
-    const n = Math.max(1, Math.ceil(list.length / CAPACITY));
-    for (let b = 0; b < n; b++) {
-      const col = b % cols;
-      if (b > 0 && col === 0) row++;
-      // Centre each row of beds on the main path from the gate.
-      const inRow = Math.min(cols, n - (b - col));
-      const x = (col - (inRow - 1) / 2) * cellW;
-      const z = -row * cellD;
-      const label = !g ? "Your first words grow here" : b === 0 ? g : `${g} · ${b + 1}`;
-      beds.push({ x, z, w: BED_W, d: BED_D, label });
-      const bedIndex = beds.length - 1;
-      list.slice(b * CAPACITY, (b + 1) * CAPACITY).forEach((p, i) => {
-        // Fill from the front (the gate side) so the most common words are seen first.
-        const c = i % BED_COLS;
-        const rr = Math.floor(i / BED_COLS);
-        const jx = (hash01(p.id, 1) - 0.5) * 0.2;
-        const jz = (hash01(p.id, 2) - 0.5) * 0.2;
-        placed.push({
-          ...p,
-          x: x - BED_W / 2 + MARGIN + (c + 0.5) * SPACING + jx,
-          z: z + BED_D / 2 - MARGIN - (rr + 0.5) * SPACING + jz,
-          droop: droopFor(p.id, p.r),
-          phase: hash01(p.id, 3) * Math.PI * 2,
-          bed: bedIndex,
-        });
+  for (const [b, [col, row]] of bedCells(count).entries()) {
+    const x = col * CELL_W;
+    const z = -row * CELL_D;
+    // A sign where a month starts, not on every bed: a learner fills several beds a month.
+    const label = !slots.length ? "Your first words grow here" : b === 0 || month(b) !== month(b - 1) ? monthLabel(slots[b * CAPACITY].at.planted, year) : null;
+    beds.push({ x, z, w: BED_W, d: BED_D, label });
+    for (let i = 0; i < CAPACITY; i++) {
+      // Past the last word, or a word set aside: nothing grows here.
+      const gp = slots[b * CAPACITY + i]?.plant;
+      if (!gp) continue;
+      // Fill from the front (the path side), so the bed's first words are seen first.
+      const c = i % BED_COLS;
+      const rr = Math.floor(i / BED_COLS);
+      const jx = (hash01(gp.id, 1) - 0.5) * 0.2;
+      const jz = (hash01(gp.id, 2) - 0.5) * 0.2;
+      placed.push({
+        ...gp,
+        x: x - BED_W / 2 + MARGIN + (c + 0.5) * SPACING + jx,
+        z: z + BED_D / 2 - MARGIN - (rr + 0.5) * SPACING + jz,
+        droop: droopFor(gp.id, gp.r),
+        phase: hash01(gp.id, 3) * Math.PI * 2,
+        bed: b,
       });
     }
-    row++;
   }
 
-  const rows = row;
-  const halfW = (cols * cellW) / 2 + 1.2;
+  // The fence round every bed, as far out on both sides of the gate, so the hedge and the orchard stay in the middle.
+  let maxAbsX = 0;
+  let minZ = 0;
+  for (const bed of beds) {
+    maxAbsX = Math.max(maxAbsX, Math.abs(bed.x));
+    minZ = Math.min(minZ, bed.z);
+  }
+  const halfW = Math.max(MIN_HALF_W, maxAbsX + BED_W / 2 + SIDE);
   const front = BED_D / 2 + PATH + 4.5; // room by the gate for the pond
-  const bounds = { minX: -halfW, maxX: halfW, minZ: -(rows - 1) * cellD - BED_D / 2 - PATH, maxZ: front };
+  const bounds = { minX: -halfW, maxX: halfW, minZ: minZ - BED_D / 2 - PATH, maxZ: front };
   // A fixed size, whatever the size of the garden: just big enough for a tree of every kind. The door is in the middle of its side toward the garden.
   const orchard = { x: 0, z: bounds.maxZ + HEDGE.gap + HEDGE.depth + ORCHARD_MIN.d / 2, w: ORCHARD_MIN.w, d: ORCHARD_MIN.d };
   return {

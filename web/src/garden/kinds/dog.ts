@@ -1,6 +1,5 @@
-// The dog (#209): sitting beside its word's plant, looking at it, and wagging
-// its tail while you are near. A word set aside has no plant: then it stays
-// away. With reduced motion it just sits. Called (#377), it runs to you, tail
+// The dog (#209): sitting by the shed (#641), and wagging its tail while you
+// are near. With reduced motion it just sits. Called (#377), it runs to you, tail
 // going, sits with you a while and trots home. Throw something by it and it
 // fetches (#335 S2): it runs to it, brings something back to you, wags a
 // moment, and trots home. With reduced motion it does not run: it is just
@@ -26,9 +25,10 @@ export const dog: VisitorKind<Look> = {
   id: "dog",
   art: { sit: DOG, wag: DOG_WAG },
   hit: [0.25, 0.3, 0.27],
-  arrive({ home, reducedMotion }) {
-    if (!home) return null;
-    const body = bodyAt<Look>(home.x - 0.24, home.soil, home.z + 0.12, "sit");
+  arrive({ spots, reducedMotion }) {
+    // On the ground a little out from the step, clear of the basket and of the stick by the fence.
+    const [sx, , sz] = spots.shedStep;
+    const body = bodyAt<Look>(sx - 0.9, 0, sz - 0.2, "sit");
     /**
      * Called: running to where you were ("come"), sitting there until `until`
      * (elapsed s). Fetching: running out to `to` ("fetch"), bringing what it

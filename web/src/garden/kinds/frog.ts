@@ -1,4 +1,4 @@
-// The frog (#57): on the lily pad nearest the gate, or beside its word's plant.
+// The frog (#57): on the lily pad nearest the gate.
 // Asleep by day, as in the strip, and all day on about one day in 25. Awake,
 // a tap makes it croak one of your known words, its throat puffed up. Called
 // (#377), it croaks back once, awake or asleep.
@@ -22,14 +22,13 @@ export const frog: VisitorKind<Look> = {
   art: { awake: FROG, croak: FROG_CROAK, asleep: FROG_ASLEEP },
   hit: [0.17, 0.25, 0.2],
   top: 0.42,
-  arrive({ spots, layout, home, now, reducedMotion }) {
+  arrive({ spots, layout, now, reducedMotion }) {
     const pad = padByGate(spots, layout);
     const { pads } = spots;
-    /** The pad it sits on (null: at its word's plant), and its hop from the last one (t: 0 to 1, from x, z). */
-    let on = home ? null : pads.indexOf(pad);
+    /** The pad it sits on, and its hop from the last one (t: 0 to 1, from x, z). */
+    let on = pads.indexOf(pad);
     const hop = { t: 1, x: 0, z: 0 };
-    // Beside its word's plant, in its bed; or on the lily pad nearest the gate.
-    const body = home ? bodyAt<Look>(home.x - 0.14, home.soil, home.z + 0.1, "asleep") : bodyAt<Look>(pad[0], 0.075, pad[1], "asleep");
+    const body = bodyAt<Look>(pad[0], 0.075, pad[1], "asleep");
     const sleepy = rareDay(25, "frog-asleep", now);
     let awake = false;
     /** Its throat is puffed up until then (elapsed s); its croaks so far in this walk. */
@@ -64,7 +63,6 @@ export const frog: VisitorKind<Look> = {
       },
       onSplash() {
         // A pebble in the pond: on a pad, it hops to the next one and stays there. With reduced motion it is there at once.
-        if (on === null) return false;
         on = (on + 1) % pads.length;
         const [x, z] = pads[on];
         Object.assign(hop, { t: reducedMotion ? 1 : 0, x: body.at.x, z: body.at.z });

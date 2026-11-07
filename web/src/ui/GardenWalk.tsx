@@ -10,7 +10,7 @@ import { language } from "../content/languages";
 import { openDoor, saveLeft, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
-import { DOOR_LINES, groupOf, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
+import { DOOR_LINES, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { Detail, DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
@@ -18,6 +18,7 @@ import type { Hider } from "../garden/sceneVisitors";
 import type { Hideout } from "../garden/kinds/kind";
 import { EMPTY_WALK, loadingLine, plantLine } from "../content/voice";
 import { snoreLine } from "../garden/whimsy";
+import { echoDate } from "../garden/well";
 import { takeFocus, type Focus } from "./gardenFocus";
 import { WordPlant } from "./plant";
 import { speak, speakAll } from "./speech";
@@ -505,6 +506,8 @@ export function GardenWalk({
   hint?: { show: boolean; moved: () => void };
 }) {
   const [time, setTime] = useState<TimeOfDay>(initialTime);
+  // For a plant's card: its planting date has the year only when that was another year.
+  const [openedAt] = useState(Date.now);
   const [hint, setHint] = useState(hintFirst.show);
   const [detail, setDetail] = useState<Detail>(() => savedDetail() ?? "normal");
   const [sound] = useSound();
@@ -869,7 +872,7 @@ export function GardenWalk({
                 {/* No recall number: right after an answer it reads 100%, which looks made up (#261). */}
                 {stageSentence(selected.stage)} {selected.r < THIRSTY && "It is a little thirsty."}
               </span>
-              <span className="muted small gw-bed">In the bed for {groupOf(selected.pos).toLowerCase()}.</span>
+              <span className="muted small gw-bed">Planted on {echoDate(selected.planted, openedAt)}.</span>
               <span className="small gw-flavour">{personality(selected)}</span>
               {time === "night" && selected.id === data?.visitors.sleeper && (
                 <span className="small gw-flavour gw-snore">

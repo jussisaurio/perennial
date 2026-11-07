@@ -118,7 +118,7 @@ export function useGardenScene({
   // A snapshot of the garden when it opens: it does not change while you walk.
   const [openedAt] = useState(() => Date.now());
   if (source && !data) {
-    const l = layout(source.plants);
+    const l = layout(source.plants, source.aside);
     const first = source.first && l.plants.some((p) => p.id === source.first!.id) ? { id: source.first.id, text: keepsakeLabel(source.first.lemma, source.first.at) } : null;
     setData({
       l,

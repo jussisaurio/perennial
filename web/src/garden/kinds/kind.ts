@@ -12,8 +12,8 @@ import type { PixelArt } from "../visitorArt";
 import type { VisitorId } from "../visitors";
 import type { Layout } from "../world";
 
-/** Its word's plant (#235), for a garden-word visitor whose plant is in the garden. */
-export interface Home {
+/** A plant in bloom, for a visitor that rests on flowers (the butterfly). */
+export interface Bloom {
   x: number;
   z: number;
   /** The height of the bed's soil (m). */
@@ -28,8 +28,8 @@ export interface Home {
 export interface Arrival {
   spots: Spots;
   layout: Layout;
-  /** Its word's plant, or null when it has none (no garden word, or the word was set aside). */
-  home: Home | null;
+  /** Today's bloom (#641): a plant in bloom picked by the day, or null when nothing is in bloom. */
+  bloom: Bloom | null;
   /** The moment the walk opened: daily picks use its calendar day. */
   now: Date;
   /** The garden's age: calendar days since the first review (0 for a new learner). Never words or study days. */

@@ -5,7 +5,7 @@ import type { Spots } from "../spots";
 import { layout, lanternSpots, type GardenPlant } from "../world";
 import { KINDS } from ".";
 import { catComes } from "./cat";
-import type { Arrival, Home, Visitor } from "./kind";
+import type { Arrival, Bloom, Visitor } from "./kind";
 import { GOAT_GONE } from "./goat";
 import { CAUGHT, GAP, MOLE_CAUGHT, molePops, POP } from "./mole";
 
@@ -13,10 +13,11 @@ import { CAUGHT, GAP, MOLE_CAUGHT, molePops, POP } from "./mole";
 
 const NOW = new Date(2026, 9, 15, 12, 0);
 const DT = 1 / 60;
-const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: "noun", rank: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
+const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: "noun", rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
 const L = layout([plant(1), plant(2), plant(3)]);
 const SPOTS: Spots = {
   bench: { x: 0, z: 2 },
+  shedStep: [4, 0.2, 3],
   pads: [
     [L.pond.x + 0.5, L.pond.z],
     [L.pond.x, L.pond.z + 0.5],
@@ -34,10 +35,10 @@ const SPOTS: Spots = {
     { on: "bench", at: [0, 0.8, 1.8] },
   ],
 };
-const HOME: Home = { x: 1, z: 1, soil: 0.3, top: 0.9, thirsty: false };
+const BLOOM: Bloom = { x: 1, z: 1, soil: 0.3, top: 0.9, thirsty: false };
 
 function arrive(id: keyof typeof KINDS, a: Partial<Arrival> = {}): Visitor<string> {
-  const it = KINDS[id].arrive({ spots: SPOTS, layout: L, home: null, now: NOW, age: 0, reducedMotion: false, lang: "es", ...a });
+  const it = KINDS[id].arrive({ spots: SPOTS, layout: L, bloom: BLOOM, now: NOW, age: 0, reducedMotion: false, lang: "es", ...a });
   if (!it) throw new Error(`${id} stayed away`);
   return it;
 }
@@ -57,15 +58,23 @@ describe("visitor kinds", () => {
   test("every kind's frames have art, and every kind that comes starts on one of them", () => {
     for (const k of Object.values(KINDS)) {
       expect(Object.keys(k.art).length).toBeGreaterThan(0);
-      const it = k.arrive({ spots: SPOTS, layout: L, home: HOME, now: NOW, age: 0, reducedMotion: false, lang: "es" });
+      const it = k.arrive({ spots: SPOTS, layout: L, bloom: BLOOM, now: NOW, age: 0, reducedMotion: false, lang: "es" });
       expect(it).not.toBeNull();
       expect(Object.keys(k.art)).toContain(it!.body.frame);
     }
   });
 
-  test("the dog and the butterfly stay away without their word's plant", () => {
-    expect(KINDS.dog.arrive({ spots: SPOTS, layout: L, home: null, now: NOW, age: 0, reducedMotion: false, lang: "es" })).toBeNull();
-    expect(KINDS.butterfly.arrive({ spots: SPOTS, layout: L, home: null, now: NOW, age: 0, reducedMotion: false, lang: "es" })).toBeNull();
+  test("each visitor comes to its own place: the cat on the bench or the shed's step, the dog by the shed, the butterfly on a bloom (#641)", () => {
+    const cat = (day: number) => arrive("cat", { now: new Date(2026, 9, day, 12) }).body.at;
+    const days = Array.from({ length: 20 }, (_, i) => cat(i + 1));
+    expect(days).toContainEqual({ x: 4, y: 0.2, z: 3.4 });
+    expect(days).toContainEqual({ x: 0.18, y: 0.45, z: 2.02 });
+    const dog = arrive("dog").body.at;
+    expect(Math.hypot(dog.x - 4, dog.z - 3)).toBeLessThan(1);
+    expect(dog.y).toBe(0);
+    expect(arrive("butterfly").body.at).toMatchObject({ x: 1.03, z: 1.06 });
+    // Nothing in bloom: no butterfly.
+    expect(KINDS.butterfly.arrive({ spots: SPOTS, layout: L, bloom: null, now: NOW, age: 0, reducedMotion: false, lang: "es" })).toBeNull();
   });
 
   test("the frog sleeps by day and does not answer a tap; awake at dusk, it croaks a known word, puffed up for a moment", () => {
@@ -84,7 +93,7 @@ describe("visitor kinds", () => {
     expect(frog.body.mute).toBe(true);
   });
 
-  test("a pebble in the pond: the frog on a pad hops to the next pad in an arc and stays; at its plant it does not", () => {
+  test("a pebble in the pond: the frog on a pad hops to the next pad in an arc and stays", () => {
     const frog = arrive("frog");
     const from = { ...frog.body.at };
     expect(frog.onSplash!()).toBe(true);
@@ -95,7 +104,6 @@ describe("visitor kinds", () => {
     expect([frog.body.x, frog.body.z]).toEqual([frog.body.at.x, frog.body.at.z]);
     // Landed: sin(π) leaves a rounding error, not a height.
     expect(frog.body.y).toBeCloseTo(from.y, 9);
-    expect(arrive("frog", { home: HOME }).onSplash!()).toBe(false);
   });
 
   test("the bird hops away when you come close, is gone, and comes back to its spot when you walk off", () => {
@@ -111,7 +119,7 @@ describe("visitor kinds", () => {
   });
 
   test("the bird sits in its orchard tree on its days there", () => {
-    const bird = arrive("bird", { home: HOME, spots: { ...SPOTS, trees: [{ who: "bird", tree: "t1", x: 5, y: 3, z: -20 }] } });
+    const bird = arrive("bird", { spots: { ...SPOTS, trees: [{ who: "bird", tree: "t1", x: 5, y: 3, z: -20 }] } });
     expect(bird.body.at).toEqual({ x: 5, y: 3, z: -20 });
   });
 
@@ -145,7 +153,7 @@ describe("visitor kinds", () => {
   });
 
   test("fetch (#335 S2): the dog runs to it, takes it, brings it to you, waits, and goes home; one fetch at a time", () => {
-    const dog = arrive("dog", { home: HOME });
+    const dog = arrive("dog");
     const home = { ...dog.body.at };
     /** Steps until the dog says `e`, with you at (x, z); how many seconds that took. */
     const until = (e: "took" | "dropped", x: number, z: number) => {
@@ -173,7 +181,7 @@ describe("visitor kinds", () => {
   });
 
   test("with reduced motion the dog fetches without running: it is there, then by you", () => {
-    const dog = arrive("dog", { home: HOME, reducedMotion: true });
+    const dog = arrive("dog", { reducedMotion: true });
     const f: Frame = { dt: DT, elapsed: 0, x: 0, z: 5, yaw: 0, speed: 0 };
     dog.fetch!(4, 1);
     expect(dog.step!(f, true)).toBe("took");
@@ -200,7 +208,7 @@ describe("visitor kinds", () => {
 
   test("the moth is out only at dusk and night, and the butterfly goes at night", () => {
     const moth = arrive("moth");
-    const butterfly = arrive("butterfly", { home: HOME });
+    const butterfly = arrive("butterfly");
     moth.onConditions!(conditions("day"));
     butterfly.onConditions!(conditions("day"));
     expect([moth.body.visible, butterfly.body.visible]).toEqual([false, true]);
@@ -209,7 +217,7 @@ describe("visitor kinds", () => {
     expect([moth.body.visible, butterfly.body.visible]).toEqual([true, false]);
   });
 
-  test("the snail creeps along the rail with the walk's own clock, and stays on its plant when it has one", () => {
+  test("the snail creeps along the rail with the walk's own clock", () => {
     const snail = arrive("snail");
     const start = { ...snail.body.at };
     run(snail, 600, 0, 0);
@@ -217,9 +225,6 @@ describe("visitor kinds", () => {
     // About a millimetre a second.
     expect(moved).toBeGreaterThan(0.2);
     expect(moved).toBeLessThan(2);
-    const home = arrive("snail", { home: HOME });
-    run(home, 10, 0, 0);
-    expect(home.body.at).toEqual({ x: 1.05, y: 0.3 + 0.6 * 0.45, z: 1.09 });
   });
 
   test("the fish swims round the pond head first", () => {
@@ -262,7 +267,7 @@ describe("a call (#377)", () => {
 
   test("every kind answers a call in its own way", () => {
     for (const k of Object.values(KINDS)) {
-      const it = k.arrive({ spots: SPOTS, layout: L, home: HOME, now: NOW, reducedMotion: false, lang: "es" })!;
+      const it = k.arrive({ spots: SPOTS, layout: L, bloom: BLOOM, now: NOW, reducedMotion: false, lang: "es" })!;
       // A call asks only the visitors in sight: the mole is under the ground until it comes up (its own test below).
       if (!it.body.visible) continue;
       expect(call(it, 0, 5, 5)?.line).toBeTruthy();
@@ -270,7 +275,7 @@ describe("a call (#377)", () => {
   });
 
   test("the dog runs to you, tail going, sits a while and trots home, back up on its bed", () => {
-    const dog = arrive("dog", { home: HOME });
+    const dog = arrive("dog");
     const at = { ...dog.body.at };
     expect(call(dog, 0, 5, 1)?.line).toBe("The dog runs over, tail going.");
     const frames = new Set<string>();
@@ -286,7 +291,7 @@ describe("a call (#377)", () => {
   });
 
   test("the cat flicks one ear; about one call in 50 it walks over, sits and stares, and goes back once you walk away", () => {
-    const cat = arrive("cat", { home: HOME });
+    const cat = arrive("cat");
     let n = 0;
     while (!catComes(NOW, n)) n++;
     expect(n).toBeGreaterThan(0);
@@ -346,7 +351,7 @@ describe("a call (#377)", () => {
   });
 
   test("the snail goes into its shell three full seconds after the call, and comes out again", () => {
-    const snail = arrive("snail", { home: HOME });
+    const snail = arrive("snail");
     call(snail, 1, 0, 0);
     run(snail, 2.9, 0, 0, true, 1);
     expect(snail.body.frame).toBe("snail");
@@ -372,8 +377,8 @@ describe("a call (#377)", () => {
     run(darting, 1, 0, 0);
     expect(darting.body.turn - Math.PI / 2).toBeCloseTo(8 * (calm.body.turn - Math.PI / 2), 1);
 
-    const still = arrive("butterfly", { home: HOME });
-    const flying = arrive("butterfly", { home: HOME });
+    const still = arrive("butterfly");
+    const flying = arrive("butterfly");
     call(flying, 0, 0, 0);
     run(still, 0.8, 0, 0);
     run(flying, 0.8, 0, 0);

@@ -6,9 +6,10 @@
 
 import * as THREE from "three";
 import * as T from "./textures";
-import { visitor, type VisitorId, type VisitorView } from "./visitors";
+import { type VisitorId, type VisitorView } from "./visitors";
+import { daily } from "../core/day";
 import { KINDS } from "./kinds";
-import type { Body, Hideout, Home, Visitor, VisitorKind } from "./kinds/kind";
+import type { Bloom, Body, Hideout, Visitor, VisitorKind } from "./kinds/kind";
 import type { Layout } from "./world";
 import type { Spots } from "./spots";
 import type { Conditions } from "./conditions";
@@ -140,13 +141,13 @@ export class SceneVisitors implements Part {
     const L = w.layout;
     const tex = T.pixelTexture(T.visitors(ATLAS));
     const cellU = 1 / ATLAS.length;
+    // Visitors live in their own places in the world (#641), not by their word's plant: only one rests on a flower, any one in bloom.
+    const blooms = L.plants.filter((p) => p.stage === "bloom");
+    const plant = blooms.length ? daily(blooms, "visitor-bloom", now) : null;
+    const bloom: Bloom | null = plant && { x: plant.x, z: plant.z, soil: w.bedTop, top: w.plantTop(plant), thirsty: plant.r < THIRSTY };
     for (const v of this.list) {
       const kind = KINDS[v.id];
-      // A garden-word visitor (#209) lives at its word's plant (#235), if it is in the garden.
-      const g = visitor(v.id).garden;
-      const plant = g ? L.plants.find((p) => p.garden === g) : undefined;
-      const home: Home | null = plant ? { x: plant.x, z: plant.z, soil: w.bedTop, top: w.plantTop(plant), thirsty: plant.r < THIRSTY } : null;
-      const it = kind.arrive({ spots, layout: L, home, now, age, reducedMotion: w.reducedMotion, lang: w.lang });
+      const it = kind.arrive({ spots, layout: L, bloom, now, age, reducedMotion: w.reducedMotion, lang: w.lang });
       if (!it) continue;
       const { body, size } = it;
       const u = CELLS[v.id][body.frame] * cellU;

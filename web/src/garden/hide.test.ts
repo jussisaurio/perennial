@@ -12,7 +12,7 @@ import { conditions } from "./conditions";
 
 // Hide-and-seek (#379): pinned days, gardens of every size.
 
-const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: ["noun", "verb", "adj"][i % 3], rank: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
+const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: ["noun", "verb", "adj"][i % 3], rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
 const gardens = [0, 1, 3, 40, 300, 800].map((n) => layout(Array.from({ length: n }, (_, i) => plant(i))));
 const TREES: OrchardTree[] = ORCHARD_WORDS.map((kind, i) => ({ id: `t${i}`, lemma: `tree${i}`, gloss: kind, kind, planted: 0, height: 3, look: "leaves" }));
 
