@@ -254,6 +254,16 @@ const GLYPH = {
 /** A walk icon at 2 px a pixel: the stroke of the pixel font beside it. */
 const Glyph = ({ name }: { name: keyof typeof GLYPH }) => <PixelIcon rows={GLYPH[name]} cell={2} />;
 
+/** A label that changes with a choice, as wide as its widest choice, so the buttons beside it do not shift (#274). */
+const SteadyLabel = ({ label, all }: { label: string; all: readonly string[] }) => (
+  <span className="gw-tool-label gw-steady">
+    <span>{label}</span>
+    {all.filter((l) => l !== label).map((l) => (
+      <span key={l} className="gw-ghost" aria-hidden="true">{l}</span>
+    ))}
+  </span>
+);
+
 /**
  * The action button (#334) shows only an icon, which changes shape with what it
  * does: you find out by pressing it. A screen reader hears what it does, said
@@ -695,10 +705,10 @@ export function GardenWalk({
             aria-label={`Quality: ${DETAIL_LABEL[detail]}`}
           >
             <span className={`gw-px gw-px-${detail}`} aria-hidden="true" />
-            <span className="gw-tool-label">{DETAIL_LABEL[detail]}</span>
+            <SteadyLabel label={DETAIL_LABEL[detail]} all={Object.values(DETAIL_LABEL)} />
           </button>
           <button className="gw-btn gw-time" onClick={() => setTime(NEXT_TIME[time])} title="Change the time of day" aria-label={`Time of day: ${TIME_LABEL[time]}`}>
-            <Glyph name={time} /> <span className="gw-tool-label">{TIME_LABEL[time]}</span>
+            <Glyph name={time} /> <SteadyLabel label={TIME_LABEL[time]} all={Object.values(TIME_LABEL)} />
           </button>
         </div>
       </div>
