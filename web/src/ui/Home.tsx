@@ -16,6 +16,7 @@ import { longDay, plural } from "./format";
 import { focusPlant } from "./gardenFocus";
 import { visitorSteps } from "./visitors";
 import { snailLap } from "../garden/visitors";
+import { courseNotes, hasUnread } from "../garden/notes/read";
 import type { Plan } from "../core/session";
 
 function greeting(): string {
@@ -202,7 +203,9 @@ function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; 
   const visitors = visitorsToday.get(learner, now);
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
-  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} />;
+  // An unread gardener's note in the shed (#654): unlocked by the same known words the visitors count.
+  const pinned = hasUnread(courseNotes(learner.lang), visitors.facts.known, learner.course.notes_read);
+  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} pinned={pinned} />;
 }
 
 /** A gentle nudge once there is something worth keeping. */

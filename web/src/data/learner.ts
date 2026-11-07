@@ -798,7 +798,17 @@ export function saveCourse(store: Store, lang: string, patch: Partial<Pick<Cours
         Object.assign(d, patch);
       });
     // The app no longer reads `minutes` (5 a day for everyone); older app versions still do.
-    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, door_open: false, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
+    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, door_open: false, notes_read: [], created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
+  });
+}
+
+/** The learner read one of the gardener's notes (#654). It stays read, on every device; the server never takes it off the list. */
+export function readNote(store: Store, lang: string, id: string) {
+  return store.write(() => {
+    store.collections.course.update(lang, (d) => {
+      // Replaced whole, as saveCourse does: the write sends the changed list, and the server adds it to what it has.
+      if (!d.notes_read.includes(id)) Object.assign(d, { notes_read: [...d.notes_read, id] });
+    });
   });
 }
 

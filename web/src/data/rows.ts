@@ -16,6 +16,8 @@ export interface CourseRow {
   retention: number;
   /** The garden's door to the orchard (#315): opened with the key, and then open for good. */
   door_open: boolean;
+  /** The gardener's notes the learner has read (#654), by id. The server only ever adds to it. */
+  notes_read: readonly string[];
   created_at: string;
 }
 

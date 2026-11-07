@@ -7,7 +7,7 @@ import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { language } from "../content/languages";
-import { openDoor, useLearner, useStore } from "../data/learner";
+import { openDoor, readNote, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_LINES, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
@@ -40,6 +40,8 @@ import { PixelRects } from "./pixel";
 import { brushNote, wakeAudio, whistle } from "./chime";
 import { fellLine } from "../garden/walkInto";
 import type { Gender } from "../deck/schema";
+import type { Note } from "../garden/notes/note";
+import { courseNotes, noteInk, unlockedNotes } from "../garden/notes/read";
 
 /** A plant just shaken (#357): its word and the forms that fell from it ([]: one leaf). */
 type Shook = { lemma: string; forms: string[] };
@@ -215,7 +217,21 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   const chunk = learner ? nextChunk(learner, now) : null;
   const water = learner && chunk ? { label: chunkLabel(chunk), start: () => onWater(nextChunk(learner).minutes) } : undefined;
   const [hint] = useState(() => ({ show: !hintSeen(), moved: markHintSeen }));
-  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} toys={toys ?? undefined} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
+  // The gardener's notes (#654): the ones unlocked by the words known as the walk opens, as the visitors are.
+  // A note is read once it is opened; the list syncs to the learner's other devices.
+  const read = learner?.course.notes_read;
+  const notes = useMemo(() => {
+    if (!visitors) return undefined;
+    const list = unlockedNotes(courseNotes(lang), visitors.facts.known);
+    const isKnown = (lemma: string) => visitors.lemmas.has(lemma);
+    const opened = (id: string) => {
+      if (read?.includes(id)) return;
+      // A write the server refuses is told by the refused-writes notice (#253); the note was still read here.
+      readNote(store, lang, id).catch((e) => console.error("note read not saved", e));
+    };
+    return { list, isKnown, opened };
+  }, [visitors, read, store, lang]);
+  return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} toys={toys ?? undefined} notes={notes} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
 }
 
 /** The time of day on the wall clock: the garden has no other way to change it (#646). */
@@ -281,6 +297,7 @@ const REACH_NAME: Record<Reach, string> = {
   call: "Call",
   well: "Drop it in the well",
   seek: "Found you",
+  read: "Read the note",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -307,6 +324,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   well: ["....##....", "....##....", "..........", "....##....", "..........", "#........#", "#........#", "##########", "##########"],
   // An open eye: I see you.
   seek: ["...####...", ".##....##.", "#...##...#", "#..####..#", "#...##...#", ".##....##.", "...####..."],
+  // A note on its nail, with lines of writing.
+  read: ["....##....", "#########.", "#.......##", "#.#####..#", "#.......##", "#.####...#", "#........#", "#.#####..#", "#........#", "##########"],
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -364,6 +383,9 @@ function markHintSeen() {
 /** The landing page's walk: the hint shows each time, and nothing is saved. */
 const SHOWCASE_HINT = { show: true, moved: () => {} };
 
+/** The landing page's walk has no learner, so no notes in the shed. */
+const NO_NOTES = { list: [], isKnown: () => false, opened: () => {} };
+
 /** The landing page's walk: the door stays locked, and there is nothing to save. */
 const SHOWCASE_DOOR = { state: "locked" as const, open: () => {} };
 
@@ -379,6 +401,7 @@ export function GardenWalk({
   visitors,
   door = SHOWCASE_DOOR,
   toys: toysGiven,
+  notes = NO_NOTES,
   onExit,
   water,
   focus,
@@ -393,6 +416,11 @@ export function GardenWalk({
   door?: { state: DoorState; open: () => void };
   /** The lawn toys (#360). Without it (the landing page), today's clocks. */
   toys?: ToysWalk;
+  /**
+   * The gardener's notes on the shed's nails (#654): the unlocked ones, whether the learner knows a lemma
+   * (its words are clear), and what to do once one is opened. Without it (the landing page) the nails are bare.
+   */
+  notes?: { list: readonly Note[]; isKnown: (lemma: string) => boolean; opened: (id: string) => void };
   onExit: () => void;
   /** Starts practice; `label` says what it starts. */
   water?: { label: string; start: () => void };
@@ -475,7 +503,19 @@ export function GardenWalk({
     setCalled(null);
   };
   const toys = { walk: toysGiven ?? showcaseToys, done: toyDone };
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall });
+  // The note open on its card (#654), if any.
+  const [note, setNote] = useState<Note | null>(null);
+  const openNote = (id: string) => {
+    const n = notes.list.find((n) => n.id === id);
+    // The scene hangs only the notes it was given, so its id is always one of them.
+    if (!n) throw new Error(`no note "${id}"`);
+    scene.current?.select(null);
+    setNote(n);
+    setHint(false);
+    notes.opened(id);
+  };
+  const noteIds = useMemo(() => notes.list.map((n) => n.id), [notes.list]);
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { ids: noteIds, open: openNote } });
   const held = hand && handView(hand);
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = labels.find((l) => l.kind === "echo");
@@ -528,6 +568,7 @@ export function GardenWalk({
     const r = wrap.current.getBoundingClientRect();
     const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
+    setNote(null);
     if (hit) onTap?.(hit.kind);
     switch (hit?.kind) {
       case "visitor": {
@@ -558,6 +599,11 @@ export function GardenWalk({
         scene.current.tapJoke(hit.j);
         setHint(false);
         return;
+      case "note":
+        // A gardener's note (#654): its card opens; from afar, once you have walked up to the shed.
+        scene.current.tapNote(hit.id);
+        setHint(false);
+        return;
       case "carry":
         // A loose thing to pick up; holding one, the well, the water to throw it in, or the ground to put it down (#358). From afar, once you have walked up to it.
         scene.current.tapCarry(hit.t);
@@ -586,6 +632,11 @@ export function GardenWalk({
       default:
         return; // nothing there: already deselected above
     }
+  };
+
+  const closeNote = () => {
+    setNote(null);
+    canvas.current?.focus({ preventScroll: true });
   };
 
   const stats = useMemo(() => {
@@ -784,13 +835,15 @@ export function GardenWalk({
         </div>
       )}
 
+      {note && !selected && <NoteCard note={note} lang={lang} isKnown={notes.isKnown} onClose={closeNote} />}
+
       <div className="gw-bottom">
         {held && !selected && (
           <div className="gw-hand" aria-hidden="true">
             <ArtIcon art={held.art} />
           </div>
         )}
-        {reach && !selected && (
+        {reach && !selected && !note && (
           <button
             className="gw-btn gw-icon gw-act"
             aria-label={REACH_NAME[reach]}
@@ -823,6 +876,38 @@ export function GardenWalk({
       </div>
 
       <Joystick onMove={stick} />
+    </div>
+  );
+}
+
+/**
+ * A gardener's note (#654), on its scrap of paper: only the note is in the course's language. A word whose lemma the
+ * learner knows is clear; the rest are faint but still readable, never hidden, and there is nothing to look up.
+ */
+function NoteCard({ note, lang, isKnown, onClose }: { note: Note; lang: string; isKnown: (lemma: string) => boolean; onClose: () => void }) {
+  const card = useRef<HTMLDivElement>(null);
+  // Focus moves to the card as it opens, so a screen reader reads it and Escape closes it.
+  useEffect(() => card.current!.focus({ preventScroll: true }), [note.id]);
+  return (
+    <div
+      className="gw-note"
+      role="dialog"
+      aria-label="A note from the gardener"
+      ref={card}
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if (e.key !== "Escape") return;
+        // Only the card closes: the walk's own Escape would leave the garden.
+        e.stopPropagation();
+        onClose();
+      }}
+    >
+      <button className="gw-close" onClick={onClose} aria-label="Close">
+        <Glyph name="close" />
+      </button>
+      <p className="gw-note-text" lang={lang}>
+        {noteInk(note, isKnown).map((ink, i) => (ink.faint ? <span key={i} className="gw-note-faint">{ink.text}</span> : ink.text))}
+      </p>
     </div>
   );
 }

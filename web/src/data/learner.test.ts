@@ -42,7 +42,7 @@ class Table<T extends object> {
   }
 }
 
-const course: CourseRow = { user_id: "u", lang: "es", minutes: 5, retention: 0.9, door_open: false, created_at: "2026-01-01T00:00:00Z" };
+const course: CourseRow = { user_id: "u", lang: "es", minutes: 5, retention: 0.9, door_open: false, notes_read: [], created_at: "2026-01-01T00:00:00Z" };
 // 60 deck words, one also known by an old id; reviews of w60 and up are for words a newer deck has (not shown here).
 const deckWords = Array.from({ length: 60 }, (_, i) => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", forms: [`word${i}`], rank: i }));
 const byId = new Map<string, unknown>(deckWords.map((w) => [w.id, w]));

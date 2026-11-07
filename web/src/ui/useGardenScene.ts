@@ -39,6 +39,8 @@ interface WalkData {
  * that fell from it. `onCarry`: a loose thing was picked up or put down, or it
  * landed (#358).
  * `onCall`: you whistled, and what each visitor that answered did (#377).
+ * `notes`: the gardener's notes on the shed's nails (#654), by id, and what to
+ * do when one is opened.
  */
 export function useGardenScene({
   lang,
@@ -56,6 +58,7 @@ export function useGardenScene({
   onShake,
   onCarry,
   onCall,
+  notes,
 }: {
   lang: string;
   source: PlantSource | null;
@@ -73,6 +76,7 @@ export function useGardenScene({
   onShake: (p: PlacedPlant, forms: string[]) => void;
   onCarry: (d: CarryDone) => void;
   onCall: (heard: string[]) => void;
+  notes: { ids: readonly string[]; open: (id: string) => void };
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
@@ -94,6 +98,7 @@ export function useGardenScene({
   const carryNow = useRef(onCarry);
   const toysNow = useRef(toys);
   const callNow = useRef(onCall);
+  const noteNow = useRef(notes.open);
   // Before the browser paints, so the scene never calls the ones from before.
   useLayoutEffect(() => {
     openDoor.current = door.open;
@@ -102,6 +107,7 @@ export function useGardenScene({
     carryNow.current = onCarry;
     toysNow.current = toys;
     callNow.current = onCall;
+    noteNow.current = notes.open;
   });
   const timeNow = useRef(time);
   const detailNow = useRef(detail);
@@ -128,6 +134,7 @@ export function useGardenScene({
         met: source.met,
         // The landing page's walk has no learner, and no visitors to hide.
         firstReview: visitors ? visitors.facts.firstReview : null,
+        notes: notes.ids,
       },
     });
   }
@@ -171,6 +178,7 @@ export function useGardenScene({
             onToy: (d) => toysNow.current.done(d),
             onStars: setStars,
             onCall: (heard) => callNow.current(heard),
+            onNote: (id) => noteNow.current(id),
           },
           reduced,
           lang,
