@@ -26,7 +26,8 @@ How we write and merge code here. It applies to every session and every agent. T
 We are pre-alpha and the owner is the only user: ship fast. A temporary break costs nothing.
 
 - **Every PR**, including auth, sync, the data model and migrations: the author's own checks (typecheck, lint, the tests that cover the change) are enough. Merge right away; do not wait for CI. For a non-trivial change, ask one fresh agent for a quick review, but don't wait for it: put its findings in a follow-up PR.
-- The PR description ends with `Reviewed: <none | quick>`.
+- **Garden changes that touch movement or interaction** are the one exception: before merge, a fresh Opus agent playtests the change (docs/agents.md, "Playtest") and the author fixes what it finds. A screenshot and a passing test do not show how a thing feels to play.
+- The PR description ends with `Reviewed: <none | quick | playtest>`.
 
 Deck content (decks/) also follows the proofreader process in docs/decks.md.
 
@@ -41,6 +42,7 @@ Per-PR reviews catch local problems, not slow drift across files. Once a week, o
 - **Simple English** in all UI text and docs: short sentences, common words. Many learners do not speak English as a first language.
 - **Choices predict their outcome.** For side-by-side buttons or options, the labels alone must tell a first-time user how the results differ.
 - **Accessibility:** follow [docs/accessibility.md](docs/accessibility.md): a choice never looks like an action, and a state is never shown by color alone.
+- **The garden is physical.** You go places by walking. No teleports, no auto-walks, no button that moves you. A thing that looks like you can climb it, you can; a thing that looks open is open; a way that is shut looks shut. A button is for acting on a thing in reach (read, raise, sit), never for travel.
 - **Whimsy is quiet.** Small, discoverable details. Never streaks, shaming or confetti, and never in the way of learning.
 - **Privacy:** logs and analytics carry ids, counts and short values. Never emails, sign-in codes, request bodies or the learner's text.
 

@@ -16,6 +16,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - Never run prettier (there is no config, and it rewraps files).
 - Pin the clock and viewport in tests that depend on them.
 - **UI changes:** before merging, take screenshots on phone and desktop, light and dark, and look at them yourself. Nothing misaligned or cheap-looking. Use the screenshot script, not a spec of your own. In web/: `SHOTS_DIR=<your scratch folder> bun run shots -g "today|shed"`. It names its screens and garden spots in `web/e2e/shots.ts`. Add a screen there if yours is not in the list. Run it in the background and wait with Monitor: it may wait for an e2e slot. Shed notes need 60+ known words, so garden spots use `/?demo=es:800` (it also opens the way over the stile, note n08 at 620 known words).
+- **Playtest (garden movement or interaction):** after your own checks, start one fresh Opus agent as the playtester and wait for it. It gets only the issue and the PR, not your reasoning. It plays the change the way the learner would: in a Playwright browser at the right `?demo=` level, with the keyboard only (WASD and arrows, the action key), recording video (`video: "on"`) and looking at frames from it. It checks: Can I tell what I can and can't do, just from looking? Can I walk everywhere that looks walkable, and never through anything solid? Does anything move me without me walking (a teleport, an auto-walk, a snap back)? Does every button do what its label says, to a thing in reach? What feels cheap, odd or arbitrary? It reports with frames. Fix everything it finds before you merge. If you can't fix something, file it and say so in the PR.
 - **Machine load:** e2e runs are queued, so load from them stays near the core count. If an e2e test still times out, run `uptime` and rerun only that spec with `--workers=1`. If it fails alone, it's a real failure: fix it. If it fails only under load, say so in the PR. Never just rerun it until it's green.
 - **Perf runs:** do not run `bun perf/ui.ts` while any e2e run is going on the machine. The extra load changes the numbers.
 
@@ -23,7 +24,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - One PR does one thing. It says `Closes #n`, or `Refs #n` when it is one part of an issue.
 - **Some tasks need no code change:** the bug is already gone, or the issue is wrong. Then close the issue yourself (`gh issue close <n> --comment "..."`), with a comment that gives the evidence, and open no PR. The owner allows agents to close issues.
 - Commits end with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`.
-- The PR body ends with `Reviewed: none`, a blank line, then `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
+- The PR body ends with `Reviewed: none` (or `Reviewed: playtest`), a blank line, then `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 - Merge right after your checks, without waiting for CI: `scripts/merge.sh <pr>`. It merges, checks the state is MERGED, and deletes the remote branch. It works from any worktree.
 - **Migrations are expand, then contract:** never drop a table or column in the same release that stops using it. Railway runs migrations while the old version is still serving. #604 broke this rule and caused #614. The full rule is in [DEPLOY.md](DEPLOY.md).
 
