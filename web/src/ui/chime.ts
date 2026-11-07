@@ -39,7 +39,7 @@ export function wakeAudio(): void {
 }
 
 /** Plays the word's note once, quietly, `delay` seconds from now. Only with sound on, after wakeAudio. */
-export function chime(word: string, delay = 0): void {
+export function chime(word: string, delay: number): void {
   ring(word, delay, { peak: 0.07, octave: 0.25, fade: 0.9 });
 }
 
