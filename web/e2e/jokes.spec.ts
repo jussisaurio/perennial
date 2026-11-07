@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "./test";
 import type { WalkScene } from "./helpers";
+import { pinDetail } from "./helpers";
 
 // #364, the deadpan scenery: a sundial by the bench that tells the real time
 // (and is closed at night), a mouse door at the foot of the hedge, and a fish
@@ -62,8 +63,8 @@ test.beforeEach(async ({ page }) => {
   // Three in the afternoon.
   await page.clock.setFixedTime(new Date("2026-06-01T15:00:00"));
   await page.setViewportSize({ width: 1280, height: 800 });
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("the sundial tells the time and is closed at night; the mouse door is the wrong size; its mat says welcome", async ({ page }) => {

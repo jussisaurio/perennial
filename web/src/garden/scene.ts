@@ -16,6 +16,7 @@ import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from
 import { SceneVisitors, type Hider } from "./sceneVisitors";
 import { LANTERN_GLASS_Y, RAIL, type Ledge, type Spots } from "./spots";
 import { conditions } from "./conditions";
+import { DETAIL, DetailPicker, type Detail } from "./detail";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SKY_R, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
@@ -147,6 +148,8 @@ export interface SceneCallbacks {
   onVisitorStatus: (line: string | null) => void;
   /** A walk to a tapped spot stalled (#336): a way wayTo should never give. At most once per scene. */
   onStall: () => void;
+  /** Even the lowest detail cannot keep up (#677): the median frame, in ms. Once per walk. */
+  onTooSlow: (medianMs: number, detail: Detail) => void;
   /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
   onWalkInto: (e: WalkIntoEvent) => void;
   /** Every lantern is out and the stars are out over the hills, or no longer (#361). */
@@ -181,13 +184,6 @@ const BENCH_REACH = 1.6;
 const SEAT = { eye: 0.78, dx: -0.5, speed: 2.5 };
 /** How fast the view turns toward where a walk goes: the share of the turn left that it makes per second. */
 const TRIP_TURN = 3;
-/**
- * Width of the framebuffer, in pixels, for each level of detail. Normal
- * renders at about screen resolution on most screens (the textures keep the
- * pixel-art look). Low uses big pixels, for slow devices.
- */
-export const DETAIL = { normal: 2160, low: 760 } as const;
-export type Detail = keyof typeof DETAIL;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
 
@@ -1587,10 +1583,22 @@ export class GardenScene {
 
   private detail: Detail = "normal";
   private size: [number, number] = [1, 1];
+  /** Picks the detail from frame times (#677), once the plants are loaded; null while they load, or when a test pins it. */
+  private picker: DetailPicker | null = null;
+  private onVisibility = () => this.picker?.pause();
 
   setDetail(d: Detail) {
     this.detail = d;
     this.resize(...this.size);
+  }
+
+  /** From now on the frame times pick the detail. After loadPlants: its work slows frames whatever the detail. */
+  autoDetail() {
+    this.picker = new DetailPicker(
+      (d) => this.setDetail(d),
+      (ms) => this.cb.onTooSlow(ms, this.detail),
+    );
+    document.addEventListener("visibilitychange", this.onVisibility);
   }
 
   resize(cssW: number, cssH: number) {
@@ -1811,6 +1819,7 @@ export class GardenScene {
       if (this.disposed) return;
       this.frame = requestAnimationFrame(loop);
       const now = performance.now();
+      this.picker?.frame(now - this.last);
       const dt = Math.min(0.05, (now - this.last) / 1000);
       this.last = now;
       this.elapsed += dt;
@@ -2040,6 +2049,7 @@ export class GardenScene {
 
   dispose() {
     this.disposed = true;
+    document.removeEventListener("visibilitychange", this.onVisibility);
     for (const part of this.parts) part.dispose?.();
     cancelAnimationFrame(this.frame);
     this.renderer.dispose();

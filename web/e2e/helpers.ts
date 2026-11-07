@@ -7,6 +7,17 @@ export async function serverRows<T = Record<string, unknown>>(page: Page, table:
   return page.evaluate(async (table) => ((await (await fetch("/api/rows")).json()) as Record<string, unknown[]>)[table], table);
 }
 
+/**
+ * Fixes the walk's detail for every page load in this test (#677): otherwise
+ * it follows the frame times, and the test machine's speed would change what
+ * a test sees. Low draws faster where CI draws WebGL in software.
+ */
+export async function pinDetail(page: Page, detail: "normal" | "low") {
+  await page.addInitScript((d) => {
+    (window as unknown as { __gardenDetail: string }).__gardenDetail = d;
+  }, detail);
+}
+
 /** Wait until the server has `n` rows in `table` (writes upload in the background). */
 export async function expectServerRows(page: Page, table: string, n: number | ((count: number) => boolean)) {
   const ok = typeof n === "number" ? (c: number) => c === n : n;

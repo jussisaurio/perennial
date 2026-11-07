@@ -976,14 +976,6 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 }
 @keyframes gw-drop { from { transform: translate(-50%, -16px); opacity: 0; } }
 .gw-tools { display: flex; gap: 14px; }
-/* A tiny grid that shows the pixel size: 2×2, 3×3 or 4×4 squares. */
-.gw-px { width: 14px; height: 14px; display: inline-block; background: conic-gradient(currentColor 25%, transparent 0 50%, currentColor 0 75%, transparent 0) 0 0 / var(--cell) var(--cell); opacity: 0.85; }
-.gw-px-low { --cell: 7px; }
-.gw-px-normal { --cell: 3.5px; }
-/* All of a label's choices share one grid cell; the others are hidden but keep the width. */
-.gw-steady { display: inline-grid; }
-.gw-steady > * { grid-area: 1 / 1; }
-.gw-ghost { visibility: hidden; }
 @media (max-width: 560px) { .gw-tool-label { display: none; } .gw-tools { gap: 10px; } }
 /* The pixel font turns "fi" into a glyph that reads as "A". The font shorthand resets this, so set it on every element. */
 .gw, .gw * { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }

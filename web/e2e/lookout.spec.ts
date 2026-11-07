@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { readRowsAgain } from "./helpers";
+import { pinDetail, readRowsAgain } from "./helpers";
 
 // #683, the lookout: a gap in the orchard's far hedge with a lantern on a post.
 // At night a small light shines in a far house across the valley. Raise the
@@ -20,8 +20,8 @@ const farLight = (page: Page) => page.evaluate(() => (window as unknown as { __g
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(NIGHT);
   await page.setViewportSize({ width: 1280, height: 720 });
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("at night the far light shines; raise the lantern: nothing answers, then, once n12 is on the nails, it blinks twice, once", async ({ page }) => {

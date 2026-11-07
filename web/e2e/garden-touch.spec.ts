@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { aimAtGround, arrives, plantNearMiddle, settledGardenWidth, standAtDoor, walker, type WalkScene } from "./helpers";
+import { aimAtGround, arrives, pinDetail, plantNearMiddle, settledGardenWidth, standAtDoor, walker, type WalkScene } from "./helpers";
 
 // Runs on the iPhone (WebKit) project only. Playwright's tap sends a whole tap
 // in one go, so React never renders between touchdown and lift; a real finger
@@ -36,10 +36,10 @@ test("iPhone: a tapped plant's card stays open, and its link opens the 3D garden
   await expect(page.getByRole("dialog", { name: `The plant for ${word}` })).toBeVisible({ timeout: 20_000 });
 });
 
-/** The demo learner's walk, at a fixed day and hour (visitors change by day), in low quality (software WebGL draws it faster). */
+/** The demo learner's walk, at a fixed day and hour (visitors change by day), at low detail (software WebGL draws it faster). */
 async function openWalk(page: Page, plants = 30) {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await pinDetail(page, "low");
   await page.goto(`/?demo=es:${plants}#/today`);
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(new RegExp(`^${plants} plants · \\d+ in bloom`))).toBeVisible({ timeout: 20_000 });

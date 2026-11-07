@@ -5,6 +5,7 @@
 
 import type { PostHog } from "posthog-js";
 import { RELEASE } from "./version";
+import type { Detail } from "./garden/detail";
 
 let posthog: PostHog | null = null;
 
@@ -200,6 +201,16 @@ export function reportBadAnswer(path: string, issue: string) {
 export function reportStalledWalk(plants: number) {
   const size = plants < 50 ? "<50" : plants < 200 ? "<200" : plants < 1000 ? "<1000" : "1000+";
   withSentry((s) => s.captureException(new Error("garden walk stalled"), { tags: { size } }));
+}
+
+/**
+ * Even the walk's lowest detail cannot keep up on this device (#677): slow is
+ * our bug, so it is reported, once per walk. The median frame, roughly, and
+ * the detail: nothing else.
+ */
+export function reportSlowWalk(medianMs: number, detail: Detail) {
+  const frame = medianMs < 60 ? "<60" : medianMs < 100 ? "<100" : medianMs < 200 ? "<200" : "200+";
+  withSentry((s) => s.captureException(new Error("garden walk too slow"), { tags: { frame, detail } }));
 }
 
 /**

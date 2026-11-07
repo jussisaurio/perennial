@@ -4,9 +4,10 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
 import { isDeckLang } from "../deck/langs";
-import { reportStalledWalk } from "../observability";
+import { reportSlowWalk, reportStalledWalk } from "../observability";
 import type { PlantSource } from "../garden/plants";
-import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
+import { DETAIL, type Detail } from "../garden/detail";
+import type { DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
 import type { CarryDone, Held } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
 import type { ToyDone } from "../garden/sceneToys";
@@ -24,6 +25,19 @@ import type { LearnerVisitors } from "./visitors";
 /** A press held this long (ms) without moving is a long press (#357). */
 const HOLD_MS = 500;
 
+/**
+ * Dev and perf builds only: a detail the tests fix with `window.__gardenDetail`
+ * (e2e/helpers.ts pinDetail), so the frames of a slow test machine do not
+ * change what a test sees, or what the perf run measures.
+ */
+function pinnedDetail(): Detail | null {
+  if (!import.meta.env.DEV && import.meta.env.VITE_DEV_TOOLS !== "1") return null;
+  const d = (window as unknown as { __gardenDetail?: unknown }).__gardenDetail;
+  if (d === undefined) return null;
+  if (typeof d === "string" && d in DETAIL) return d as Detail;
+  throw new Error(`__gardenDetail is "${String(d)}": use one of ${Object.keys(DETAIL).join(", ")}`);
+}
+
 interface WalkData {
   l: Layout;
   seeds: number;
@@ -33,8 +47,8 @@ interface WalkData {
 /**
  * The scene for this garden. A snapshot is taken when the garden opens (it does
  * not change while you walk) and the scene is built once from it; time of day
- * and quality changes go to the running scene. `onFocused`: the scene walked to
- * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
+ * changes go to the running scene, which picks its own detail (#677).
+ * `onFocused`: the scene walked to `focus` and opened its card. `door`: the door in the hedge (#315), and how to
  * save it once it is opened. `toys`: the dandelion clocks (#360), and what to
  * do when one is blown. `onShake`: a plant was shaken (#357), and the forms
  * that fell from it. `onCarry`: a loose thing was picked up or put down, or it
@@ -52,7 +66,6 @@ export function useGardenScene({
   toys,
   focus,
   time,
-  detail,
   wrap,
   canvas,
   onFocused,
@@ -70,7 +83,6 @@ export function useGardenScene({
   toys: { walk: ToysWalk; done: (d: ToyDone) => void };
   focus?: Focus | null;
   time: TimeOfDay;
-  detail: Detail;
   wrap: RefObject<HTMLDivElement | null>;
   canvas: RefObject<HTMLCanvasElement | null>;
   onFocused: () => void;
@@ -119,7 +131,6 @@ export function useGardenScene({
     noteNow.current = notes.open;
   });
   const timeNow = useRef(time);
-  const detailNow = useRef(detail);
 
   // A snapshot of the garden when it opens: it does not change while you walk.
   const [openedAt] = useState(() => Date.now());
@@ -178,6 +189,7 @@ export function useGardenScene({
             onReach: setReach,
             onDoorOpen: () => openDoor.current(),
             onStall: () => reportStalledWalk(data.l.plants.length),
+            onTooSlow: reportSlowWalk,
             onHand: setHand,
             onCompany: setCompany,
             onVisitorStatus: setHeard,
@@ -212,7 +224,8 @@ export function useGardenScene({
       // The size before the detail: setDetail resizes too, and each new size is a new drawing buffer.
       const r = el.getBoundingClientRect();
       s.resize(r.width, r.height);
-      s.setDetail(detailNow.current);
+      const pinned = pinnedDetail();
+      if (pinned) s.setDetail(pinned);
       ro.observe(el);
       s.start();
       setReady(true);
@@ -223,7 +236,9 @@ export function useGardenScene({
         onFocused();
       }
       await s.loadPlants();
-      if (alive) setProgress(null);
+      if (!alive) return;
+      setProgress(null);
+      if (!pinned) s.autoDetail();
     })();
     return () => {
       alive = false;
@@ -243,10 +258,6 @@ export function useGardenScene({
     timeNow.current = time;
     scene.current?.setTime(time);
   }, [time]);
-  useEffect(() => {
-    detailNow.current = detail;
-    scene.current?.setDetail(detail);
-  }, [detail]);
 
   return { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised };
 }

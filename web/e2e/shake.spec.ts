@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./test";
+import { pinDetail } from "./helpers";
 
 // #357, plants answer back: shake a plant and its word's other forms fall as
 // petals, written on them; a word with no other forms drops one leaf. Each noun
@@ -48,8 +49,8 @@ const status = (page: Page) => page.locator(".gw > .sr-only[role=status]");
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("the action button shakes the plant ahead: ser's forms fall as petals, and a screen reader hears them", async ({ page }) => {

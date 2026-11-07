@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { answer, kicker, readRowsAgain, reveal, startCourse } from "./helpers";
+import { answer, kicker, pinDetail, readRowsAgain, reveal, startCourse } from "./helpers";
 
 // #189: 5 minutes a day for everyone, and "Practice more" whenever the learner wants.
 test.use({ viewport: { width: 1280, height: 900 } });
@@ -127,8 +127,8 @@ test("a learner who chose 20 minutes a day before: 5-minute chunks, told once", 
 });
 
 test("the walk's Water button: the rest of today's practice, then more once done", async ({ page }) => {
-  // Low quality: CI draws WebGL in software, and normal quality is too slow there (garden.spec.ts).
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: CI draws WebGL in software, and normal detail is too slow there (garden.spec.ts).
+  await pinDetail(page, "low");
   await page.clock.setFixedTime(MORNING);
   await startCourse(page);
   await answered(page, { count: 6, minutes: 1, daysAgo: 30 }); // thirsty plants

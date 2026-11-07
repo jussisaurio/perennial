@@ -1,13 +1,13 @@
 import { expect, test } from "./test";
-import { aimAtGround, arrives, plantNearMiddle, settledGardenWidth, startCourse, walker } from "./helpers";
+import { aimAtGround, arrives, pinDetail, plantNearMiddle, settledGardenWidth, startCourse, walker } from "./helpers";
 
-test("walk-in garden: every word is a plant; next plant, listen, quality, and back", async ({ page }) => {
+test("walk-in garden: every word is a plant; next plant, listen, and back", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
-  // Pin low quality. CI draws WebGL in software: at normal quality every frame is
+  // Pin low detail. CI draws WebGL in software: at normal detail every frame is
   // slow, and each click waits for frames (about 2.5 s a click), so the test ran into
   // its timeout.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await pinDetail(page, "low");
   await page.clock.setFixedTime(new Date(2026, 5, 10, 12));
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -33,14 +33,6 @@ test("walk-in garden: every word is a plant; next plant, listen, quality, and ba
   // Escape closes the card first.
   await page.keyboard.press("Escape");
   await expect(card).toBeHidden();
-  // Quality toggles and is remembered (last: normal quality is slow to draw here).
-  const quality = page.getByRole("button", { name: /^Quality: / });
-  const width = (await quality.boundingBox())!.width;
-  await quality.click();
-  await expect(quality).toHaveAccessibleName("Quality: Normal quality");
-  // A steady width, so the buttons beside it do not shift (#274).
-  expect((await quality.boundingBox())!.width).toBe(width);
-  expect(await page.evaluate(() => localStorage.getItem("garden-quality"))).toBe("normal");
   // A second Escape leaves the garden.
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/#\/today$/);
@@ -50,7 +42,7 @@ test("walk-in garden: every word is a plant; next plant, listen, quality, and ba
 test("visitors: the snail and the cat in the 2D strip say their word; they are not plants", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  await pinDetail(page, "normal");
   // A dev-only override brings every visitor today, so the test does not depend on the date.
   await page.goto("/?demo=es:30&visitors=all#/today");
   const snail = page.getByRole("button", { name: "el caracol · snail" });
@@ -130,7 +122,7 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  await pinDetail(page, "normal");
   // The dev override brings every visitor; the dev-only scene handle lets the test stand by the pond.
   await page.goto("/?demo=es:30&visitors=all#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -237,7 +229,7 @@ test("the garden itself teaches: tap the sunflower for its word; a plant still o
   // A fixed day and hour: the snail walks the fence over the day (snailLap) and, from
   // about 09:19 to 09:35, stands between us and the sunflower; visitors change by day.
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  await pinDetail(page, "normal");
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
@@ -288,7 +280,7 @@ test("the garden itself teaches: tap the sunflower for its word; a plant still o
 // browser's swipe-back gesture. Browsers decide that at the page root.
 test("the walk switches off swipe-back navigation while it is open, and only then", async ({ page }) => {
   const rootOverscroll = () => page.evaluate(() => [getComputedStyle(document.documentElement).overscrollBehaviorX, getComputedStyle(document.body).overscrollBehaviorX]);
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await pinDetail(page, "low");
   await page.goto("/?demo=es:30#/today");
   expect(await rootOverscroll()).toEqual(["auto", "auto"]);
   await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -319,7 +311,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const)
       const errors: string[] = [];
       page.on("pageerror", (e) => errors.push(String(e)));
       await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-      await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+      await pinDetail(page, "low");
       await page.goto("/?demo=es:30#/today");
       await page.getByRole("button", { name: "Walk in your garden" }).click();
       await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
@@ -338,7 +330,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const)
 
 test("a walking key takes over from a walk under way (#336)", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await pinDetail(page, "low");
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
@@ -359,7 +351,7 @@ test("a walking key takes over from a walk under way (#336)", async ({ page }) =
 // #334: one action button for what is in reach; its icon changes shape, and a screen reader hears what it does.
 test("by the bench the action button sits you down, facing the pond; it or a step stands you up again", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await pinDetail(page, "low");
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
@@ -399,7 +391,7 @@ test("by the bench the action button sits you down, facing the pond; it or a ste
 // #362: sit still and the garden comes to you. Seconds sat are moved on through the dev-only scene handle, as a test cannot sit for a minute.
 test("sitting still on the bench: the bird, the cat and the gnome come to sit with you, and time runs on to dusk; stand up and it is now again", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await pinDetail(page, "low");
   // A dev-only override brings every visitor today.
   await page.goto("/?demo=es:30&visitors=all#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -450,7 +442,7 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
 });
 
 test("the controls hint shows in the learner's walk until they first move; the landing page's walk does not use it up (#334)", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  await pinDetail(page, "low");
   const hint = page.locator(".gw-hint");
   const walkIn = async () => {
     await page.getByRole("button", { name: "Walk in your garden" }).click();
