@@ -12,7 +12,7 @@ import { language } from "../content/languages";
 import { openDoor, readNote, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
-import { DOOR_LINES, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
+import { DOOR_SPOKEN, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
 import type { DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
@@ -144,7 +144,7 @@ const RAISED_LINE: Record<Raised, string> = {
 
 /** The door's line as a screen reader hears it: the locked line also says where this learner's key lies, once there is one. */
 function spokenLine(line: string | undefined, state: DoorState): string | undefined {
-  return line === DOOR_LINES.locked && typeof state === "object" ? `${line} ${KEY_PLACE[state.key]}` : line;
+  return line === DOOR_SPOKEN.locked && typeof state === "object" ? `${line} ${KEY_PLACE[state.key]}` : line;
 }
 
 /** Who came to sit with you on the bench (#362), as a screen reader hears it. The gnome's word is in the course language. */

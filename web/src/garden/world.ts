@@ -264,8 +264,14 @@ export function lanternSpots(l: Layout): [number, number][] {
   return [...spots.values()];
 }
 
-/** The door's quiet lines (#315). Here, not in the scene, so the page can use them without loading three.js. */
-export const DOOR_LINES = { locked: "Locked.", found: "You found the key." } as const;
+/** The door's quiet lines (#315), in the course language like every line in the garden (#650). Here, not in the scene, so the page can use them without loading three.js. */
+export const DOOR_LINES: PerLang<{ locked: string; found: string }> = {
+  es: { locked: "Cerrado con llave.", found: "Has encontrado la llave." },
+  de: { locked: "Abgeschlossen.", found: "Du hast den Schlüssel gefunden." },
+};
+
+/** The same lines as a screen reader hears them, in English. */
+export const DOOR_SPOKEN = { locked: "Locked.", found: "You found the key." } as const;
 
 /** Where the key to the door can hide (#315): one place per learner, never by the door. */
 export const KEY_SPOTS = ["bench", "pond", "lantern", "bed", "sunflower"] as const;
