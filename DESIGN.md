@@ -126,7 +126,7 @@ rendering code should follow, and the places it still does not (yet):
   tree — then a visitor's); and what the one action button acts on
   (`reportReach`: stand up, the key, what a loose thing in your hands does
   (throw it, or drop it in the well), a visitor hiding near you (#379), the
-  door, a lantern, picking up a loose thing, the bench, the toys (blow a
+  door, a lantern, the lookout's lantern (raise it, #683), picking up a loose thing, the bench, the toys (blow a
   dandelion clock), then the plant ahead; with nothing in reach, call, #377).
   What a thing thrown or put down does where it lands is a row in
   `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a

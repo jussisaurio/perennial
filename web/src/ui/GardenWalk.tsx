@@ -35,6 +35,7 @@ import type { PixelArt } from "../garden/visitorArt";
 import type { CarryAct, CarryDone, Held } from "../garden/sceneCarry";
 import { LOOSE_ART } from "../garden/carryArt";
 import type { ToyAct, ToyDone } from "../garden/sceneToys";
+import type { Raised } from "../garden/lookout";
 import type { ToysWalk } from "../garden/toys";
 import { inLang } from "../garden/nouns";
 import { GNOME_WORD, type Companion } from "../garden/bench";
@@ -72,11 +73,13 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  * and the stars once every one is (#361); what a thing thrown or put down did where it
  * landed (#358); what they hold. Things in the world, never instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, raised: Raised | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
   if (toy) return "The seeds fly away on the wind.";
+  // What the far light did as the lookout's lantern went up (#683), for a few seconds.
+  if (raised) return RAISED_LINE[raised];
   // It never says what hides, only that something small does: the button finds it.
   if (seek.near)
     return (
@@ -127,6 +130,13 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   if (!held) return landed;
   return `You hold ${held.name}.`;
 }
+
+/** The lookout's lantern raised (#683), as a screen reader hears it: at night the far light shines across the valley, and once it answers. */
+const RAISED_LINE: Record<Raised, string> = {
+  dusk: "You raise the lantern.",
+  steady: "You raise the lantern. Far away, a small light shines.",
+  blink: "You raise the lantern. Far away, the small light blinks twice.",
+};
 
 /** The door's line as a screen reader hears it: the locked line also says where this learner's key lies, once there is one. */
 function spokenLine(line: string | undefined, state: DoorState): string | undefined {
@@ -301,6 +311,7 @@ const REACH_NAME: Record<Reach, string> = {
   well: "Drop it in the well",
   seek: "Found you",
   read: "Read the note",
+  raise: "Raise the lantern",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -329,6 +340,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   seek: ["...####...", ".##....##.", "#...##...#", "#..####..#", "#...##...#", ".##....##.", "...####..."],
   // A note on its nail, with lines of writing.
   read: ["....##....", "#########.", "#.......##", "#.#####..#", "#.......##", "#.####...#", "#........#", "#.#####..#", "#........#", "##########"],
+  // A lantern, held up high.
+  raise: ["..#####..", "...###...", "..#...#..", "..#.#.#..", "..#...#..", "...###...", "....#....", "....#....", "...###...", "..#####.."],
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -519,7 +532,7 @@ export function GardenWalk({
   };
   // The scene takes these once, as the walk opens; a note opened during the walk turns read on the wall by itself.
   const nails = useMemo(() => notes.list.map((n) => ({ id: n.id, unread: !notes.read.includes(n.id) })), [notes.list, notes.read]);
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { nails, open: openNote } });
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { nails, open: openNote } });
   const held = hand && handView(hand);
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = labels.find((l) => l.kind === "echo");
@@ -698,7 +711,7 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           what they hold (#358); who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, shook, called, company, heard, landed, toyNews, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
+        {spokenStatus(reach, labels, door.state, held, shook, called, company, heard, landed, toyNews, raised && raised.r, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
       </div>
       <div className="gw-labels" aria-hidden="true">
         {labels.map((l) =>
