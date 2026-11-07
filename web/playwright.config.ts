@@ -31,11 +31,15 @@ export default defineConfig({
   },
   // Each project must also be in a CI matrix entry (.github/workflows/ci.yml), or CI skips it.
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] }, testIgnore: /layout\.spec|garden-touch\.spec/ },
-    { name: "phone", use: { ...devices["Pixel 7"] }, testMatch: /layout\.spec/ },
+    // The cold dev server's first page load runs before the tests (#610). One per browser,
+    // as each CI job installs only its own. They run as dependencies, so need no CI entry.
+    { name: "warm", use: { ...devices["Desktop Chrome"] }, testMatch: /warm\.setup/ },
+    { name: "desktop", use: { ...devices["Desktop Chrome"] }, testIgnore: /layout\.spec|garden-touch\.spec/, dependencies: ["warm"] },
+    { name: "phone", use: { ...devices["Pixel 7"] }, testMatch: /layout\.spec/, dependencies: ["warm"] },
     // Touch on iOS (#113): WebKit, for the one spec about it, so CI time barely grows.
     // No --mute-audio: it is a Chromium flag, and WebKit on Linux will not start with it.
-    { name: "iphone", use: { ...devices["iPhone 15"], launchOptions: { args: [] } }, testMatch: /garden-touch\.spec/ },
+    { name: "warm-webkit", use: { ...devices["iPhone 15"], launchOptions: { args: [] } }, testMatch: /warm\.setup/ },
+    { name: "iphone", use: { ...devices["iPhone 15"], launchOptions: { args: [] } }, testMatch: /garden-touch\.spec/, dependencies: ["warm-webkit"] },
   ],
   webServer: [
     { command: `PORT=${LLM} bun ../server/mock-llm.ts`, port: LLM, reuseExistingServer: false },
