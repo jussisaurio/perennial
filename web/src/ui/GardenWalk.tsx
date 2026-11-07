@@ -27,7 +27,7 @@ import { useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
 import { yieldToBrowser } from "../lib/yield";
-import { useGardenScene, useWalkInput, type LabelStore } from "./useGardenScene";
+import { useGardenScene, useWalkInput, type Store } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { gardenBroughtAt, learnerVisitors, type LearnerVisitors } from "./visitors";
 import type { PixelArt } from "../garden/visitorArt";
@@ -721,11 +721,7 @@ export function GardenWalk({
         </div>
       </div>
 
-      {progress && progress[1] > 0 && (
-        <div className="gw-loading" role="status">
-          Loading your garden… {Math.round((progress[0] / progress[1]) * 100)}%
-        </div>
-      )}
+      <WalkLoading store={progress} />
 
       {data && stats.total === 0 && water && (
         <div className="gw-card gw-empty">
@@ -830,8 +826,20 @@ export function GardenWalk({
  * A gardener's note (#654), on its scrap of paper: only the note is in the course's language. A word whose lemma the
  * learner knows is clear; the rest are faint but still readable, never hidden, and there is nothing to look up.
  */
+/** The loading line. Its percent changes on each load chunk, so it renders on its own, not with all of GardenWalk (#727). */
+function WalkLoading({ store }: { store: Store<number | null> }) {
+  const pct = useSyncExternalStore(store.subscribe, store.get);
+  return (
+    pct !== null && (
+      <div className="gw-loading" role="status">
+        Loading your garden… {pct}%
+      </div>
+    )
+  );
+}
+
 /** The names and tags over the scene. They move on every walking frame, so they render on their own, not with all of GardenWalk (#713). */
-function WalkLabels({ store, selectedId, lang }: { store: LabelStore; selectedId: string | undefined; lang: string }) {
+function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; selectedId: string | undefined; lang: string }) {
   const shown = useSyncExternalStore(store.subscribe, store.get);
   return (
     <div className="gw-labels" aria-hidden="true">

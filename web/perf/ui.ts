@@ -310,6 +310,15 @@ const onScreen = async (page: Page, hash: string, ready: () => Promise<unknown>)
 const today = (page: Page) => page.locator("button.start").waitFor();
 const words = (page: Page) => page.locator("ul.words li").first().waitFor();
 
+/** Opens the walk and waits until all its plants have loaded: the loading line comes, then goes. */
+const openWalk = async (page: Page) => {
+  await page.goto(`${BASE}/#/today`);
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  const loading = page.getByText("Loading your garden");
+  await loading.waitFor();
+  await loading.waitFor({ state: "detached" });
+};
+
 const SCENARIOS: Scenario[] = [
   // From about:blank: a goto to the URL the page is at only changes the hash, and loads no script (#461).
   { name: "Today: cold load", setup: async (page) => void (await page.goto("about:blank")), action: (page) => onScreen(page, "#/today", () => today(page)) },
@@ -337,12 +346,12 @@ const SCENARIOS: Scenario[] = [
   { name: "Tab: Settings → Today", setup: (page) => onScreen(page, "#/settings", () => page.getByRole("heading", { name: "Settings" }).waitFor()), action: async (page) => { await tab(page, "Today"); await today(page); await page.waitForTimeout(1000); } },
   { name: "Tab: Today → Words", setup: (page) => onScreen(page, "#/today", () => today(page)), action: async (page) => { await tab(page, "Words"); await words(page); await page.waitForTimeout(1000); } },
   { name: "Tab: Words → Today", setup: (page) => onScreen(page, "#/words", () => words(page)), action: async (page) => { await tab(page, "Today"); await today(page); await page.waitForTimeout(1000); } },
+  // Opening and walking are measured apart (#727): a walk that starts while the plants still load measures mostly the load.
+  { name: "3D walk: open", action: openWalk },
   {
-    name: "3D walk: open and walk",
+    name: "3D walk: walk",
+    setup: openWalk,
     action: async (page) => {
-      await page.goto(`${BASE}/#/today`);
-      await page.getByRole("button", { name: "Walk in your garden" }).click();
-      await page.locator("canvas").waitFor();
       await page.keyboard.down("w");
       await page.waitForTimeout(3000);
       await page.keyboard.up("w");
