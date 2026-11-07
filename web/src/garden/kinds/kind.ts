@@ -95,21 +95,6 @@ export interface Reply {
   sound: AnimalSound;
 }
 
-/** You whistled (#377). */
-interface Call {
-  elapsed: number;
-  /** Where you stand. */
-  x: number;
-  z: number;
-  lang: string;
-}
-
-/** A visitor's answer to a call: what a screen reader hears (one short sentence), and what it says in a bubble, if anything. */
-interface Heard {
-  line: string;
-  say?: string;
-}
-
 /** One visitor in today's walk: its body and its hooks. */
 export interface Visitor<F extends string> {
   /** Its cell's size (m). */
@@ -135,8 +120,6 @@ export interface Visitor<F extends string> {
   onSplash?(): boolean;
   /** A lantern was blown out or lit again (#361), `on` by spot (Spots.lanterns). What it says about it, or null. */
   onLanterns?(on: readonly boolean[]): string | null;
-  /** You whistled (#377): it answers in its own way (its Body moves in the next steps), or null when it does not. Asked only while it is seen. */
-  onCall?(c: Call): Heard | null;
 }
 
 export interface VisitorKind<F extends string = string> {

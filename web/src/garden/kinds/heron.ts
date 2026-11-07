@@ -1,7 +1,7 @@
 // The heron, one day a month: on the stones at the pond's edge, a little
 // round from the frog's pad, looking at it. It takes one slow step back when
-// you come close, and steps home once you are well away. Called (#377), it
-// takes that slow step back too. With reduced motion it just stays.
+// you come close, and steps home once you are well away. With reduced motion
+// it just stays.
 
 import { HERON, HERON_STEP } from "../visitorArt";
 import { padByGate } from "../spots";
@@ -53,12 +53,6 @@ export const heron: VisitorKind<Look> = {
         ({ x: body.x, z: body.z } = along(way, t * t * (3 - 2 * t)));
         body.frame = t > 0.15 && t < 0.85 ? "step" : "stand";
         if (t === 0 || t === 1) dir = 0;
-      },
-      onCall({ x, z }) {
-        // Already stepping, or a step away: it does not answer. Out of reach (CALM), it steps home again at once.
-        if (reducedMotion || dir !== 0 || t !== 0) return null;
-        back(x, z);
-        return { line: "The heron takes one slow step back." };
       },
     };
   },

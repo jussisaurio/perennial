@@ -107,15 +107,6 @@ export const mole: VisitorKind<Look> = {
           body.visible = true;
         }
       },
-      // A call (#377), asked only while it is up and in sight: it digs down at once, as when caught.
-      onCall({ elapsed }) {
-        if (pop < 0) return null;
-        if (caught < 0) {
-          caught = elapsed;
-          body.says = null;
-        }
-        return { line: "The mole digs back down, fast." };
-      },
     };
   },
 };
