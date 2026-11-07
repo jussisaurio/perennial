@@ -405,18 +405,22 @@ export function useWalkInput({
       keys.delete(e.code);
       update();
     };
-    const blur = () => {
+    // A right-click menu takes the keys without blurring the window, so their
+    // key ups never come: let go of everything, or the walker turns forever.
+    const release = () => {
       keys.clear();
       update();
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    window.addEventListener("blur", blur);
+    window.addEventListener("blur", release);
+    window.addEventListener("contextmenu", release);
     return () => {
       cancelAnimationFrame(turning);
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.removeEventListener("blur", blur);
+      window.removeEventListener("blur", release);
+      window.removeEventListener("contextmenu", release);
     };
     // The refs live as long as the screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
