@@ -94,7 +94,7 @@ function HomeBody({ learner, now, rest, onStart, onWalk }: { learner: Learner; n
   return (
     <>
       <StartRow learner={learner} chunk={chunk} now={now} rest={rest} onStart={() => onStart(chunk.minutes)} />
-      {rest ? <TodayGarden learner={learner} now={now} onWalk={onWalk} /> : <Garden data={null} />}
+      <TodayGarden learner={learner} now={now} rest={rest} onWalk={onWalk} />
       <button className="walk-link" onClick={onWalk}>
         <FlowerIcon size={18} /> Walk in your garden
       </button>
@@ -194,7 +194,9 @@ function StartNote({ learner, chunk, plan, now }: { learner: Learner; chunk: Ret
   );
 }
 
-function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; onWalk: () => void }) {
+function TodayGarden({ learner, now, rest, onWalk }: { learner: Learner; now: number; rest: boolean; onWalk: () => void }) {
+  // Until the rest comes, the same Garden with no data: one strip element, so its entrance plays once (#653).
+  if (!rest) return <Garden data={null} testId="today-garden" />;
   const view = (id: string) => {
     focusPlant(id);
     onWalk();
@@ -205,7 +207,7 @@ function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; 
   const snailAt = snailLap();
   // An unread gardener's note in the shed (#654): unlocked by the same known words the visitors count.
   const pinned = hasUnread(courseNotes(learner.lang), visitors.facts.known, learner.course.notes_read);
-  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} pinned={pinned} />;
+  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} pinned={pinned} testId="today-garden" />;
 }
 
 /** A gentle nudge once there is something worth keeping. */

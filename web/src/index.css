@@ -321,7 +321,8 @@ section { margin-bottom: 1.25rem; }
 .activity-cap { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-top: 0.35rem; }
 
 /* ---------- garden ---------- */
-.garden { position: relative; margin: 0.5rem -16px 0; }
+.garden { margin: 0.5rem -16px 0; }
+.garden-strip { position: relative; }
 .garden svg { display: block; overflow: visible; }
 /* An unread gardener's note (#654): pinned up in the strip's corner, quiet, leading nowhere. */
 .garden-pin { position: absolute; top: 8px; right: 18px; image-rendering: pixelated; }
@@ -340,7 +341,7 @@ section { margin-bottom: 1.25rem; }
 /* Touch screens swipe; the arrows are for mice and keyboards. */
 @media (hover: none) { .garden-arrows { display: none; } }
 @media (hover: hover) { .swipe-hint { display: none; } }
-.garden.scrolls .garden-scroll { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+.garden-strip.scrolls .garden-scroll { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .plant-tip .tip-flavour { font-style: italic; color: var(--muted); font-size: 0.78rem; }
 .plant-tip.interactive { pointer-events: auto; cursor: auto; }
 .plant-tip button { margin-top: 0.3rem; padding: 0.2rem 0; align-self: flex-start; }

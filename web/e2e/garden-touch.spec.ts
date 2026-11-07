@@ -24,7 +24,7 @@ async function fingerTap(page: Page, x: number, y: number) {
 
 test("iPhone: a tapped plant's card stays open, and its link opens the 3D garden (#113)", async ({ page }) => {
   await page.goto("/?demo=es#/today");
-  await expect(page.locator(".garden.scrolls")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".garden-strip.scrolls")).toBeVisible({ timeout: 30_000 });
   await settledGardenWidth(page);
   await fingerTap(page, ...(await plantNearMiddle(page)));
   const card = page.locator(".plant-tip");

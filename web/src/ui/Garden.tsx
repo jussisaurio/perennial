@@ -3,7 +3,7 @@
 // recall fades — until the next session waters them. Nothing ever dies.
 // The plants themselves come from garden/plants.ts, shared with the walk.
 
-import { memo, startTransition, type MouseEvent, type PointerEvent, type RefCallback, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, startTransition, type MouseEvent, type PointerEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
 import { plantLine, reservedStake, WORM_LINE } from "../content/voice";
@@ -87,9 +87,13 @@ export const Garden = memo(function Garden(props: GardenProps) {
     return () => ro.disconnect();
   }, []);
   // The same box as contentRect: .garden has no padding or border.
-  // At the strip's height: whatever lays out in this frame (the landing focuses its walk link, #273) sees the page as it will be.
-  if (width === null) return <div className={`garden ${props.compact ? "compact" : ""}`} style={{ height: H }} ref={observe} />;
-  return <Strip {...props} width={width} wrap={observe} />;
+  // Until measured, at the strip's height: whatever lays out in this frame (the landing focuses its walk link, #273) sees the page as it will be.
+  // One element for the strip's whole life: a new one would play the page's entrance again, and a word under the pointer would go (#653).
+  return (
+    <div className={`garden ${props.compact ? "compact" : ""}`} style={width === null ? { height: H } : undefined} ref={observe} data-testid={props.testId}>
+      {width !== null && <Strip {...props} width={width} />}
+    </div>
+  );
 });
 
 interface GardenProps {
@@ -105,6 +109,8 @@ interface GardenProps {
   replay?: readonly { id: string; from: PlantLook }[] | null;
   /** A gardener's note the learner has not read hangs in the shed (#654): a small pinned paper in the corner. It leads nowhere. */
   pinned?: boolean;
+  /** Which strip this is, for the e2e tests: the landing page's and Today's can be on screen together. */
+  testId?: string;
 }
 
 /** A gardener's note pinned up, unread (#654): paper with pencil lines, held by a red pin, a little crooked. */
@@ -127,7 +133,7 @@ const NOTE_PIN: PixelArt = {
   pal: { r: "#c24a3a", R: "#f08070", e: "#8a7656", p: "#fbf3df", l: "#9aa6b4", f: "#d8ccae", s: "#8a7656" },
 };
 
-function Strip({ data, highlight, compact, showcase, onView, visitors, replay, pinned, width, wrap }: GardenProps & { width: number; wrap: RefCallback<HTMLDivElement> }) {
+function Strip({ data, highlight, compact, showcase, onView, visitors, replay, pinned, width }: GardenProps & { width: number }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ p: GardenPlant; x: number; y: number } | null>(null);
   // Hover intent: with a card open, switching to another plant waits a moment,
@@ -300,7 +306,7 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
   };
 
   return (
-    <div className={`garden ${compact ? "compact" : ""} ${scrolls ? "scrolls" : ""}`} ref={wrap} data-replaying={replaying.on || undefined} onPointerLeave={(e) => hovers(e) && hide()}>
+    <div className={`garden-strip ${scrolls ? "scrolls" : ""}`} data-replaying={replaying.on || undefined} onPointerLeave={(e) => hovers(e) && hide()}>
       <div className="garden-scroll" ref={scroller} onScroll={scrolls ? onScroll : undefined}>
         <svg width={fullWidth} height={H} viewBox={`0 0 ${fullWidth} ${H}`} role="img" aria-label={label} onPointerMove={onPointerMove} onClick={onClick}>
           <defs>
