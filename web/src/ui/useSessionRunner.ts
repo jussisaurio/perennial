@@ -351,7 +351,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     return id;
   };
 
-  /** The word's memory once it has more than `reps` reviews. Undefined when the answer was not recorded (another tab writes): no moment then. */
+  /** The word's memory once it has more than `reps` reviews. Undefined when the answer was not recorded: no moment then. */
   const memoryAfter = (wordId: string, skill: Skill, reps: number) => {
     const m = live.current?.memory.get(memKey(wordId, skill));
     return m && m.reps > reps ? m : undefined;

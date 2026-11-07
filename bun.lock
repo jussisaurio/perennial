@@ -58,7 +58,6 @@
         "@fontsource/patrick-hand": "^5.3.0",
         "@fontsource/pixelify-sans": "^5.3.0",
         "@sentry/react": "11",
-        "@tanstack/offline-transactions": "1.1.0",
         "@tanstack/query-core": "5.106.1",
         "@tanstack/react-db": "0.5.8",
         "@tanstack/react-virtual": "^3.14.14",
@@ -505,8 +504,6 @@
     "@tanstack/db": ["@tanstack/db@0.13.0", "", { "dependencies": { "@standard-schema/spec": "^1.1.0", "@tanstack/db-ivm": "0.1.26", "@tanstack/pacer-lite": "^0.2.1" }, "peerDependencies": { "typescript": ">=4.7" } }, "sha512-Opp8m9K/5cw2N8WXK59W0WeV0yD+hV8zreqQv6U8GLSQAssnOPvrC5j0UwIyl8SfT6LslGFYNFGfnVN5V0oWmg=="],
 
     "@tanstack/db-ivm": ["@tanstack/db-ivm@0.1.26", "", { "dependencies": { "fractional-indexing": "^3.2.0", "sorted-btree": "^1.8.1" }, "peerDependencies": { "typescript": ">=4.7" } }, "sha512-Td2HbR68RfpMPv4zyMNQk83z/5gTjGl/I1LA/07A26LXMEPGh+hTsNbfPSr5YPZhq6KXX9lDFjDzv3Qz3DjV5w=="],
-
-    "@tanstack/offline-transactions": ["@tanstack/offline-transactions@1.1.0", "", { "dependencies": { "@tanstack/db": "0.13.0" }, "peerDependencies": { "@react-native-community/netinfo": ">=11.0.0", "react-native": ">=0.70.0" }, "optionalPeers": ["@react-native-community/netinfo", "react-native"] }, "sha512-oihrxHwzjk0k7z+CyXzHqghAQeY5trfcxCKWgzwDPDfnXlZrKdeM7ADl2JrfkXl3krj7dF3kKk23MP0gYN5WGA=="],
 
     "@tanstack/pacer-lite": ["@tanstack/pacer-lite@0.2.2", "", {}, "sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw=="],
 

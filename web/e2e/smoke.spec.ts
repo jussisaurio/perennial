@@ -1,5 +1,5 @@
 import { expect, test } from "./test";
-import { answer, reveal, startCourse, startSession } from "./helpers";
+import { answer, expectServerRows, reveal, serverRows, startCourse, startSession } from "./helpers";
 
 test("smoke: landing → start learning → a session → progress survives a reload", async ({ page }) => {
   await page.goto("/");
@@ -67,7 +67,36 @@ test("connection lost mid-session: practice continues", async ({ page, context }
   await startCourse(page);
   await startSession(page);
   await context.setOffline(true);
-  // The answer goes into the write queue; the session takes it with no connection.
+  // The answer waits in memory to be sent; the session takes it with no connection.
   await answer(page, "1");
   await context.setOffline(false);
+});
+
+test("an answer shows at once, and stays once a failed write is sent again", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  await startSession(page);
+  await page.route("**/api/write", (route) => route.abort());
+  const tried = page.waitForRequest("**/api/write");
+  // "I knew it" on a new word records a review (as in the smoke test).
+  await reveal(page);
+  await page.getByRole("button", { name: /I knew it/ }).click();
+  await tried;
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.getByRole("button", { name: /^Done/ }).click();
+  await page.getByRole("tab", { name: "Words" }).click();
+  const progress = page.getByRole("region", { name: "Your progress" });
+  await expect(progress).toContainText("You are learning 1 word.");
+  expect(await serverRows(page, "review")).toEqual([]);
+
+  // Unsent for a while: the learner is told, quietly.
+  await page.clock.fastForward(11_000);
+  await expect(page.getByText("Not saved yet. Trying again.")).toBeVisible();
+
+  // Writes get through again: the next try (at most 30 s away) sends it.
+  await page.unroute("**/api/write");
+  await page.clock.fastForward(30_000);
+  await expectServerRows(page, "review", 1);
+  await expect(page.getByText("Not saved yet. Trying again.")).toBeHidden();
+  await expect(progress).toContainText("You are learning 1 word.");
 });

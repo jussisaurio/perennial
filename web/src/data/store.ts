@@ -1,35 +1,32 @@
 // The learner's synced data. Each table is a TanStack DB query collection, held
 // in memory and read from GET /api/rows (at start, from GET /api/boot), and
-// again when the tab comes back into view after a while. Writes go through a queue (TanStack DB's offline
-// transactions): they apply instantly on the device, are stored in IndexedDB,
-// and are sent to /api/write, with retries, until the server has them. Then the
-// rows go into the collection as the server's own.
+// again when the tab comes back into view after a while. Writes apply at once
+// on the device and are sent to /api/write, one after another, tried again
+// until the server has them. Then the rows go into the collection as the
+// server's own.
 //
-// A store belongs to one user, and so does its queue (see device.ts): a write
-// queued by one learner is never sent while another is signed in, except that
-// an anonymous learner's queue moves to the account they sign in to. Signing
-// in or out disposes the store and makes a new one.
+// Unsent writes live only in this tab's memory. When the page goes away
+// (pagehide), what is left goes in one last request; if that fails too, it is
+// lost. Every tab writes: the server merges writes from tabs as it does from
+// devices (server/src/sync.ts).
 //
-// One tab writes: the queue is shared by the user's tabs, so only the tab
-// holding the user's Web Lock may write. Other tabs ask the learner to use
-// that one (see `writer` below and App).
+// A store belongs to one user: a write is never sent while another user is
+// signed in. Signing in or out disposes the store and makes a new one.
 
 import { QueryClient } from "@tanstack/query-core";
-import { IndexedDBAdapter, LocalStorageAdapter, startOfflineExecutor, type OfflineExecutor, type StorageAdapter } from "@tanstack/offline-transactions";
-import { createCollection, type PendingMutation } from "@tanstack/react-db";
+import { createCollection, createTransaction, type PendingMutation } from "@tanstack/react-db";
 import { Effect } from "effect";
 import { LearnerRows, type WriteResult } from "perennial-contract";
 import { sessionUserId } from "./auth";
 import { boot } from "./boot";
-import { adopted, adoptedBy, cleanUpForgotten, keepOnDevice, outboxName, registerOutbox, registerSync, resolvePendingLink } from "./device";
-import { ApiError, HttpError, request } from "./http";
+import { registerSync } from "./device";
+import { ApiError, HttpError, request, sendWrite } from "./http";
 import { reportBadAnswer, reportError } from "../observability";
 import { Learners } from "./learner";
 import { makeTable } from "./table";
 import { yieldToBrowser } from "../lib/yield";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
-import { OtherUser, sendQueued, shouldRetry } from "./send";
-import { tabLock } from "./tabLock";
+import { sendUntilStored } from "./send";
 
 /**
  * Read the rows again when the tab comes back after this long hidden: a quick
@@ -38,44 +35,13 @@ import { tabLock } from "./tabLock";
  */
 const REFETCH_AFTER_HIDDEN_MS = 60_000;
 
+/** A write unsent this long is late: the learner is told it is not saved yet. A normal send takes well under a second. */
+const LATE_MS = 10_000;
+
 /** Signed out: this store is being replaced, so asking again cannot help. */
 const signedOut = (e: unknown) => (e instanceof ApiError && e.body.error === "sign_in_required") || (e instanceof HttpError && e.status === 401);
 
-/** This user's queue of unsent writes: their own IndexedDB database (or localStorage keys). */
-async function outboxStorage(userId: string): Promise<StorageAdapter | undefined> {
-  if ((await IndexedDBAdapter.probe()).available) return new IndexedDBAdapter(outboxName(userId));
-  if (LocalStorageAdapter.probe().available) return new LocalStorageAdapter(`${outboxName(userId)}:`);
-  // No storage at all: the executor finds none either, and writes go straight to the server.
-  return undefined;
-}
-
-/** An anonymous learner who signed in: move their unsent writes into the account's queue. */
-async function adoptQueues(userId: string, target: StorageAdapter) {
-  for (const from of adoptedBy(userId)) {
-    try {
-      const source = await outboxStorage(from);
-      if (source) {
-        for (const key of await source.keys()) {
-          const value = await source.get(key);
-          if (value !== null) await target.set(key, value);
-        }
-        await source.clear();
-      }
-      adopted(from);
-    } catch (e) {
-      // Left in place; tried again on the next start.
-      console.warn("[store] could not move queued writes", e);
-    }
-  }
-}
-
-export async function createStore(userId: string, email: string | null) {
-  // Queues of learners who signed out here go first; this learner is using theirs again.
-  await cleanUpForgotten();
-  keepOnDevice(userId);
-  // An account's first start after a sign-in that this tab did not see finish
-  // (#314): the anonymous learner's queue is the account's now. (Anonymous: no email.)
-  resolvePendingLink(userId, email);
+export async function createStore(userId: string) {
   // Stopped before a sign-out reaches the server (stopSyncNow): a read still under way
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();
@@ -139,22 +105,44 @@ export async function createStore(userId: string, email: string | null) {
     await queryClient.cancelQueries();
     await Promise.all(Object.values(collections).map((c) => c.refetch()));
   };
+  // Ends the wait between tries of a write at once: back online, or the tab is shown again.
+  let wakeUp = () => {};
+  let woken = new Promise<void>((r) => (wakeUp = r));
+  const wake = () => {
+    wakeUp();
+    woken = new Promise<void>((r) => (wakeUp = r));
+  };
+  window.addEventListener("online", wake);
   let hiddenAt: number | null = null;
   const onVisibility = () => {
     if (document.visibilityState === "hidden") return void (hiddenAt = Date.now());
+    wake();
     if (hiddenAt !== null && Date.now() - hiddenAt > REFETCH_AFTER_HIDDEN_MS) void refetchAll();
     hiddenAt = null;
   };
   document.addEventListener("visibilitychange", onVisibility);
 
-  // Whether this tab may write. Without a queue (no storage) every tab sends directly.
-  let writer = true;
-  const writerListeners = new Set<() => void>();
-  const setWriter = (v: boolean) => {
-    if (writer === v) return;
-    writer = v;
-    for (const l of writerListeners) l();
+  const otherUser = () => {
+    const current = sessionUserId();
+    return !!current && current !== userId;
   };
+  // Writes the server does not have yet, by idempotency key, in the order made.
+  const unsent = new Map<string, readonly unknown[]>();
+  let unsentNow: Unsent = { count: 0, late: 0 };
+  const unsentListeners = new Set<() => void>();
+  const setUnsent = (u: Unsent) => {
+    unsentNow = u;
+    for (const l of unsentListeners) l();
+  };
+  // The page is going away: what is left goes in one request that outlives it.
+  // Nothing can try again after this, so if it fails those writes are lost.
+  const onPageHide = () => {
+    if (!unsent.size || otherUser()) return;
+    // A new key: this request joins several writes. Sent again after it (the page
+    // came back from the back/forward cache), each still applies once more harmlessly: the server's merges are idempotent.
+    Effect.runFork(sendWrite([...unsent.values()].flat(), crypto.randomUUID(), true).pipe(Effect.ignore));
+  };
+  window.addEventListener("pagehide", onPageHide);
 
   // Writes the server refused for good. They are rolled back on this device, so
   // the learner must be told (#253): "saved" would be untrue.
@@ -171,36 +159,45 @@ export async function createStore(userId: string, email: string | null) {
     setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (code === "review_from_the_future" ? 1 : 0) });
   };
 
-  const storage = await outboxStorage(userId);
-  if (storage) await adoptQueues(userId, storage);
-  const executor: OfflineExecutor = startOfflineExecutor({
-    collections,
-    storage,
-    leaderElection: tabLock(`perennial-writer-${userId}`),
-    onLeadershipChange: setWriter,
-    mutationFns: {
-      write: ({ transaction, idempotencyKey }) =>
+  // Stops the writes still being sent when the store is disposed (a sign-out or a new user).
+  const sending = new AbortController();
+  // Sent one after another, in the order made: an undo must not reach the server before its answer.
+  let lastSend: Promise<unknown> = Promise.resolve();
+  /** Send one write's changes until the server has them. `at`: when they were made. */
+  function send(changes: readonly PendingMutation[], at: string) {
+    const mutations = changes.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
+    if (!mutations.length) return Promise.resolve();
+    // One key for every try: the server applies a write once.
+    const key = crypto.randomUUID();
+    unsent.set(key, mutations);
+    setUnsent({ ...unsentNow, count: unsentNow.count + 1 });
+    let late = false;
+    const lateTimer = setTimeout(() => {
+      late = true;
+      setUnsent({ ...unsentNow, late: unsentNow.late + 1 });
+    }, LATE_MS);
+    const run = lastSend
+      .then(() =>
         Effect.runPromise(
           Effect.gen(function* () {
-            const at = typeof transaction.metadata?.at === "string" ? transaction.metadata.at : undefined;
-            const mutations = transaction.mutations.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
-            if (!mutations.length) return;
-            const current = sessionUserId();
-            if (current && current !== userId) return yield* new OtherUser();
-            const result = yield* sendQueued(mutations, idempotencyKey, noteRefused);
+            const result = yield* sendUntilStored(mutations, key, { otherUser, wake: () => woken, onRefused: noteRefused });
             // The server has them: the rows become the collection's own, so they stay
             // when this transaction ends (no flicker until the next read).
             // An answer that broke the contract (null, reported) has no stored rows: the device's stay.
-            yield* Effect.promise(() => confirm(transaction.mutations, result?.stored));
+            yield* Effect.promise(() => confirm(changes, result?.stored));
           }),
+          { signal: sending.signal },
         ),
-    },
-    // A session that expired offline, or an app that must reload first: keep
-    // the queued writes (they are this user's) and try again later.
-    shouldRetry,
-    onStorageFailure: (d) => console.warn("[store] offline queue storage:", d.code, d.message),
-  });
-  await executor.waitForInit();
+      )
+      .finally(() => {
+        clearTimeout(lateTimer);
+        unsent.delete(key);
+        setUnsent({ count: unsentNow.count - 1, late: unsentNow.late - (late ? 1 : 0) });
+      });
+    // The next write waits for this one to end, however it ends.
+    lastSend = run.catch(() => undefined);
+    return run;
+  }
 
   /**
    * Put rows the server took into the collections. The server merges courses
@@ -225,17 +222,19 @@ export async function createStore(userId: string, email: string | null) {
       (e: unknown) => void (console.error("[store] could not keep saved rows", e), reportError(e)),
     );
   }
-  const unregister = registerOutbox(userId, () => executor.clearOutbox());
   const unregisterSync = registerSync(userId, stopSync);
   if (import.meta.env.DEV) (window as unknown as { __store: unknown }).__store = { userId, collections, refetchAll };
 
-  /** Apply changes on the device now; send them to the server when possible. */
-  function write(mutate: () => void) {
-    if (!writer) return Promise.reject(new Error("Perennial is open in another tab"));
-    // Stamped when the change is made, not when it uploads: an old offline change must not win over a newer one.
-    const tx = executor.createOfflineTransaction({ mutationFnName: "write", autoCommit: false, metadata: { at: new Date().toISOString() } });
+  /**
+   * Apply changes on the device now; send them to the server. Resolves once the
+   * server has them; a refusal rejects, and the changes roll back.
+   */
+  async function write(mutate: () => void) {
+    // Stamped when the change is made, not when it uploads: a late change must not win over a newer one.
+    const at = new Date().toISOString();
+    const tx = createTransaction({ autoCommit: false, mutationFn: ({ transaction }) => send(transaction.mutations, at) });
     tx.mutate(mutate);
-    return tx.commit();
+    await tx.commit();
   }
 
   return {
@@ -243,13 +242,12 @@ export async function createStore(userId: string, email: string | null) {
     collections,
     write,
     refetchAll,
-    /** Whether this tab may write (see tabLock). For useSyncExternalStore. */
-    isWriter: () => writer,
-    onWriterChange: (cb: () => void) => {
-      writerListeners.add(cb);
-      return () => void writerListeners.delete(cb);
+    /** Writes the server does not have yet. For useSyncExternalStore. */
+    unsent: () => unsentNow,
+    onUnsent: (cb: () => void) => {
+      unsentListeners.add(cb);
+      return () => void unsentListeners.delete(cb);
     },
-    pendingWrites: () => executor.getPendingCount(),
     /** Writes the server refused since this store started. For useSyncExternalStore. */
     refused: () => refused,
     /** The learner has been told of every refusal so far. */
@@ -267,19 +265,26 @@ export async function createStore(userId: string, email: string | null) {
     dispose() {
       // First: a collection is cleaned up only once nothing follows it.
       for (const d of disposers) d();
-      unregister();
       unregisterSync();
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", wake);
+      window.removeEventListener("pagehide", onPageHide);
       stopSync();
-      writerListeners.clear();
+      sending.abort();
+      unsentListeners.clear();
       refusedListeners.clear();
-      executor.dispose();
       for (const c of Object.values(collections)) cleanUpWhenUnused(c);
     },
   };
 }
 
 export type Store = Awaited<ReturnType<typeof createStore>>;
+
+/** Writes the server does not have yet, and how many of them are late (LATE_MS). */
+export interface Unsent {
+  count: number;
+  late: number;
+}
 
 /** Writes the server refused for good: all of them, answers refused for a wrong device clock, and how many the learner was told of. */
 export interface Refused {

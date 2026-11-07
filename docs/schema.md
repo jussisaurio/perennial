@@ -43,7 +43,7 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
 
 **Auth:** Better Auth's tables `user` (with `"isAnonymous"`; Better Auth's own camelCase column names are kept), `account`, `session` and `verification`. User ids are `uuid`. `account` has one row per sign-in method (`provider_id`, `account_id`), so social login is config, not a schema change.
 
-**Synced per user**: `GET /api/rows` returns all of it in one response, always filtered `where user_id = $session`, into TanStack DB query collections on the client. Writes go through our own endpoints, queued offline by TanStack DB's offline transactions. Composite keys keep their Postgres primary key; the client keys rows by the non-user part (`lang`, `word_id`), so linking an account doesn't make every local row resync.
+**Synced per user**: `GET /api/rows` returns all of it in one response, always filtered `where user_id = $session`, into TanStack DB query collections on the client. Writes go through our own endpoints, retried in memory until the server has them. Composite keys keep their Postgres primary key; the client keys rows by the non-user part (`lang`, `word_id`), so linking an account doesn't make every local row resync.
 
 ```sql
 create table course (            -- one per language; settings edited per column

@@ -1,10 +1,10 @@
-import { startTransition, Suspense, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { startTransition, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { signOut, useUser } from "./data/auth";
 import { identify, initObservability, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useDeckSentences, useStore } from "./data/learner";
 import { boot } from "./data/boot";
 import { loadDeck, loadSentences } from "./data/deck";
-import { cleanUpForgotten, keepCourse, readCourse } from "./data/device";
+import { deleteOldOfflineData, keepCourse, readCourse } from "./data/device";
 import { language } from "./content/languages";
 import { reloadNeeded } from "./data/http";
 import { createStore, type Store } from "./data/store";
@@ -13,7 +13,7 @@ import { FlowerIcon, GearIcon, HomeIcon, ListIcon, SproutMark } from "./ui/icons
 import { CourseSwitcher } from "./ui/CourseSwitcher";
 import { courseArrived, Onboarding, useStartingCourse } from "./ui/Onboarding";
 import { Settling } from "./ui/Settling";
-import { RefusedBanner, useRefused } from "./ui/Refused";
+import { RefusedBanner, UnsentBanner, useRefused, useUnsent } from "./ui/Refused";
 import { LearnerGardenWalk, preloadScreens, preloadSession, SessionScreen, SettingsScreen, WordsScreen } from "./ui/screens";
 import { DAILY_MINUTES } from "./data/practice";
 import { arrowKeys } from "./ui/arrows";
@@ -42,6 +42,7 @@ void boot()
   .then(() => {
     initObservability();
     preloadScreens();
+    void deleteOldOfflineData();
   });
 
 type Route = "/today" | "/garden" | "/words" | "/words/add" | "/settings" | "/session";
@@ -77,13 +78,13 @@ function useRoute(): [Route, (to: Route, opts?: { replace?: boolean }) => void] 
 }
 
 /** One store per signed-in user; a new user (sign-in, sign-out) gets a fresh one. */
-function StoreProvider({ userId, email, children }: { userId: string; email: string | null; children: ReactNode }) {
+function StoreProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const [store, setStore] = useState<Store | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
     let alive = true;
     let made: Store | null = null;
-    createStore(userId, email).then(
+    createStore(userId).then(
       (s) => {
         made = s;
         if (alive) setStore(s);
@@ -96,33 +97,20 @@ function StoreProvider({ userId, email, children }: { userId: string; email: str
       // Dispose after the screens using this store have unmounted.
       setTimeout(() => made?.dispose(), 0);
     };
-  }, [userId, email]);
+  }, [userId]);
   if (error) return <div className="page narrow"><p className="error">Could not open your data: {error}</p></div>;
   if (!store) return <Settling />;
   // Keyed by user: a new user remounts every screen, so none holds the old store.
   return (
     <StoreContext.Provider key={store.userId} value={store}>
-      <WriterOnly store={store}>{children}</WriterOnly>
+      {children}
     </StoreContext.Provider>
   );
 }
 
-/** One tab writes (see data/tabLock.ts); another tab says so instead of losing answers. */
-function WriterOnly({ store, children }: { store: Store; children: ReactNode }) {
-  const writer = useSyncExternalStore(store.onWriterChange, store.isWriter);
-  if (writer) return children;
-  return (
-    <div className="other-tab" role="status">
-      <p>Perennial is open in another tab. Use that tab, or close it and reload here.</p>
-      <button className="primary" onClick={() => location.reload()}>
-        Reload
-      </button>
-    </div>
-  );
-}
-
 function ReloadBanner() {
-  const refused = useRefused().count > 0;
+  const refused = useRefused().count;
+  const pending = useUnsent().count;
   const [needed, setNeeded] = useState(reloadNeeded.needed);
   useEffect(() => {
     const on = () => setNeeded(true);
@@ -133,7 +121,7 @@ function ReloadBanner() {
   if (!needed) return null;
   return (
     <div className="toast" role="status">
-      <span>A new version of Perennial is ready.{!refused && " Your answers are saved."}</span>
+      <span>A new version of Perennial is ready.{!refused && !pending && " Your answers are saved."}</span>
       <button className="ghost" onClick={() => location.reload()}>
         Reload
       </button>
@@ -159,9 +147,8 @@ export default function App() {
   const { user, pending } = useUser();
   const [route, go] = useRoute();
   // Signing in, or linking an anonymous learner to an account, changes the
-  // user: start clean with a reload. Queued writes belong to their user: an
-  // anonymous learner's move to the account they sign in to, a signed-out
-  // learner's are dropped (see data/device.ts). Signing out does not reload:
+  // user: start clean with a reload. Writes not sent yet belong to the old
+  // user and go with its store (data/store.ts). Signing out does not reload:
   // the landing page shows at once, not after a blank page (#682). A user
   // after that still reloads: this page's boot answer was the old user's.
   const lastUser = useRef<string | null | undefined>(undefined);
@@ -176,20 +163,17 @@ export default function App() {
       identify(id);
     }
   }, [user?.id, pending]);
-  // Signed out: delete what earlier learners left on this device (see device.ts).
-  useEffect(() => {
-    if (!pending && !user) void cleanUpForgotten();
-  }, [pending, user]);
   if (pending) return <Settling />;
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
   return (
-    <StoreProvider key={user.id} userId={user.id} email={user.email}>
+    <StoreProvider key={user.id} userId={user.id}>
       {/* While a screen's chunk loads (ui/screens.ts). Below the store, so its effects stay up. Tab changes are transitions, so they keep the old screen up instead. */}
       <Suspense fallback={<Settling />}>
         <Main route={route} go={go} />
       </Suspense>
       <ReloadBanner />
       <RefusedBanner />
+      <UnsentBanner />
     </StoreProvider>
   );
 }
@@ -237,10 +221,10 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const startAnother = (l: string) => {
     setStartError("");
     const previous = course.lang;
-    // Refused (by the server, or another tab is the writer): the new course is
-    // rolled back, so go back to the one they came from and say why.
-    // Counted once the server has it (offline: when the queue sends it). A tab closed
-    // before then loses the event, though the course is still sent: a slight undercount.
+    // Refused by the server: the new course is rolled back, so go back to the
+    // one they came from and say why.
+    // Counted once the server has it. A tab closed before then loses the event,
+    // though the course may still be sent (store.ts, pagehide): a slight undercount.
     void saveCourse(store, l, {}).then(
       () => track("course_started", { lang: l, another: true }),
       (e) => {

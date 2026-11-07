@@ -1,6 +1,6 @@
 // Talking to our server: one fetch wrapper that checks every answer and every
 // error with the wire contract (contract/), and the one way to send writes
-// (the offline queue, starting a course, the dev demo).
+// (the store's writes, starting a course, the dev demo).
 
 import { Effect, Option, Schema } from "effect";
 import { ApiErrorBody, WriteResult, type ErrorCode } from "perennial-contract";
@@ -8,7 +8,7 @@ import { APP_VERSION } from "../version";
 
 /** The server refused, with one of the contract's error bodies. */
 export class ApiError extends Schema.TaggedError<ApiError>()("ApiError", { body: ApiErrorBody }) {
-  // The code, as before: the offline queue's default retry rule reads the message (store.ts).
+  // The code: logs and the refused-write message (send.ts) show it.
   override get message() {
     return this.body.error;
   }
@@ -20,7 +20,7 @@ export class ApiError extends Schema.TaggedError<ApiError>()("ApiError", { body:
  * the body has one).
  */
 export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", { status: Schema.Number, code: Schema.optional(Schema.String) }) {
-  // As before: the code, else http_<status>. The offline queue's default retry rule reads it (store.ts).
+  // The code, else http_<status>, as ApiError's message.
   override get message() {
     return this.code ?? `http_${this.status}`;
   }
@@ -113,13 +113,14 @@ export const readAnswer = Effect.fn("Http.readAnswer")(function* <S extends Sche
   return yield* new HttpError({ status: res.status, code: Option.getOrUndefined(Schema.decodeUnknownOption(SomeCode)(body))?.error });
 });
 
-/** Send changes in the server's mutation format (contract/write.ts). */
-export const sendWrite = (mutations: readonly unknown[], idempotencyKey: string) =>
+/** Send changes in the server's mutation format (contract/write.ts). `keepalive`: the request outlives the page (store.ts, pagehide). */
+export const sendWrite = (mutations: readonly unknown[], idempotencyKey: string, keepalive = false) =>
   request(WriteResult, "/api/write", {
     method: "POST",
+    keepalive,
     headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION, "idempotency-key": idempotencyKey },
     body: JSON.stringify({ mutations }),
   });
 
-/** `sendWrite`, for Promise code. A one-off write (no queue, so no retries) gets a fresh idempotency key. */
+/** `sendWrite`, for Promise code. A one-off write (not the store's, so no retries) gets a fresh idempotency key. */
 export const postWrite = (mutations: readonly unknown[], opts: { idempotencyKey?: string } = {}) => Effect.runPromise(sendWrite(mutations, opts.idempotencyKey ?? crypto.randomUUID()));

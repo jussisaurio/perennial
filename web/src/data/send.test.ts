@@ -1,73 +1,117 @@
-import { afterEach, expect, test } from "bun:test";
-import { DefaultRetryPolicy, NonRetriableError } from "@tanstack/offline-transactions";
+import { afterEach, beforeEach, expect, jest, test } from "bun:test";
 import { Effect } from "effect";
 import type { ApiError, HttpError } from "./http";
-import { OtherUser, sendQueued, shouldRetry } from "./send";
+import { Refused, sendUntilStored } from "./send";
 
 const realFetch = globalThis.fetch;
+/** The server's answers, in order; the last one repeats. */
+let answers: Response[] = [];
+let calls = 0;
+beforeEach(() => {
+  jest.useFakeTimers({ now: new Date("2026-11-07T12:00:00Z") });
+  calls = 0;
+  globalThis.fetch = (async () => answers[Math.min(calls++, answers.length - 1)]!.clone()) as unknown as typeof fetch;
+});
 afterEach(() => {
+  jest.useRealTimers();
   globalThis.fetch = realFetch;
 });
 
-function answer(status: number, body: string, contentType = "application/json") {
-  globalThis.fetch = (async () => new Response(body, { status, headers: { "content-type": contentType } })) as unknown as typeof fetch;
-}
+const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+const html = (status: number) => new Response("<html>page</html>", { status, headers: { "content-type": "text/html" } });
+const stored = json(200, { changed: true, stored: { course: [], word_state: [] } });
 
-/** What the offline queue does with a failed batch, as TanStack's executor decides it. */
-const triedAgain = (e: Error) => (e instanceof NonRetriableError ? false : (shouldRetry(e) ?? new DefaultRetryPolicy().shouldRetry(e, 0)));
+/** Let promise callbacks run. */
+const settle = async () => {
+  for (let i = 0; i < 20; i++) await Promise.resolve();
+};
 
-/** Send one batch; the error it fails with, and the refusals counted. */
-async function send() {
+/** Start sending one write; `result` fills in when it ends. `wake` ends a wait between tries (back online). */
+function send(otherUser = () => false, wake = () => new Promise<void>(() => {})) {
   const refused: (ApiError | HttpError)[] = [];
-  const result = await Effect.runPromise(sendQueued([], "key-1", (e) => refused.push(e))).then(
-    (r) => ({ ok: r, error: null }),
-    (e: Error) => ({ ok: undefined, error: e }),
+  const result: { ok?: unknown; error?: unknown } = {};
+  void Effect.runPromise(sendUntilStored([], "key-1", { otherUser, wake, onRefused: (e) => refused.push(e) })).then(
+    (ok) => (result.ok = ok),
+    (error: unknown) => (result.error = error),
   );
-  return { ...result, refused };
+  return { result, refused };
 }
 
-test("a proxy's 401 page: the batch is kept and tried again", async () => {
-  answer(401, "<html>Unauthorized</html>", "text/html");
-  const { error, refused } = await send();
-  expect(triedAgain(error!)).toBe(true);
+/** Run the clock forward, a second at a time, letting each try finish. */
+async function wait(ms: number) {
+  for (let t = 0; t < ms; t += 1000) {
+    await settle();
+    jest.advanceTimersByTime(1000);
+  }
+  await settle();
+}
+
+test("no answer the app can use (a proxy's 401 or 426 page, a newer server's code): tried again until the server has it", async () => {
+  answers = [html(401), html(426), json(400, { error: "new_code" }), json(403, { error: "new_code" }), json(401, { error: "sign_in_required" }), stored];
+  const { result, refused } = send();
+  await wait(60_000);
+  expect(calls).toBe(6);
+  expect(result.ok).toEqual({ changed: true, stored: { course: [], word_state: [] } });
   expect(refused).toEqual([]);
 });
 
-test("a proxy's 426 page: tried again after the reload", async () => {
-  answer(426, "<html>Upgrade</html>", "text/html");
-  expect(triedAgain((await send()).error!)).toBe(true);
+test("no connection: tried again, at most 30 s apart", async () => {
+  globalThis.fetch = (async () => {
+    calls++;
+    throw new TypeError("Failed to fetch");
+  }) as unknown as typeof fetch;
+  const { result } = send();
+  await wait(60_000);
+  const before = calls;
+  await wait(30_000);
+  expect(calls).toBe(before + 1);
+  expect(result).toEqual({});
 });
 
-test("a code from a newer server with 400 or 403: tried again, not dropped", async () => {
-  for (const status of [400, 403]) {
-    answer(status, JSON.stringify({ error: "new_code" }));
-    const { error, refused } = await send();
-    expect(error!.message).toBe("new_code");
-    expect(triedAgain(error!)).toBe(true);
-    expect(refused).toEqual([]);
-  }
+test("back online: tried again at once, not after the wait", async () => {
+  let fail = true;
+  globalThis.fetch = (async () => {
+    calls++;
+    if (fail) throw new TypeError("Failed to fetch");
+    return stored.clone();
+  }) as unknown as typeof fetch;
+  let online = () => {};
+  const { result } = send(undefined, () => new Promise<void>((r) => (online = r)));
+  // Tries at 0, 1, 3, 7, 15 s; the next is 16 s later.
+  await wait(16_000);
+  const before = calls;
+  fail = false;
+  online();
+  await settle();
+  expect(calls).toBe(before + 1);
+  expect(result.ok).toBeDefined();
 });
 
-test("quota for a table this app does not know: refused for good, and counted", async () => {
-  answer(429, JSON.stringify({ error: "quota", table: "new_table", limit: 10 }));
-  const { error, refused } = await send();
-  expect(error).toBeInstanceOf(NonRetriableError);
-  expect(triedAgain(error!)).toBe(false);
+test("a refusal for good (quota for a table this app does not know): not sent again, and counted", async () => {
+  answers = [json(429, { error: "quota", table: "new_table", limit: 10 })];
+  const { result, refused } = send();
+  await wait(10_000);
+  expect(calls).toBe(1);
+  expect(result.error).toBeInstanceOf(Refused);
   expect(refused.map((e) => e.message)).toEqual(["quota"]);
 });
 
-test("a contract refusal is counted; a lost session is tried again", async () => {
-  answer(422, JSON.stringify({ error: "review_from_the_future" }));
-  const first = await send();
-  expect(triedAgain(first.error!)).toBe(false);
-  expect(first.refused.map((e) => e.message)).toEqual(["review_from_the_future"]);
-
-  answer(401, JSON.stringify({ error: "sign_in_required" }));
-  expect(triedAgain((await send()).error!)).toBe(true);
-  expect(triedAgain(new OtherUser())).toBe(true);
+test("another user signed in here: nothing is sent for them until this user is back", async () => {
+  answers = [stored];
+  let other = true;
+  const { result } = send(() => other);
+  await wait(10_000);
+  expect(calls).toBe(0);
+  other = false;
+  await wait(30_000);
+  expect(calls).toBe(1);
+  expect(result.ok).toBeDefined();
 });
 
-test("an answer that breaks the contract after the server took the write: counted as sent, no echo to wait for", async () => {
-  answer(200, "<html>OK</html>", "text/html");
-  expect(await send()).toEqual({ ok: null, error: null, refused: [] });
+test("an answer that breaks the contract after the server took the write: counted as sent", async () => {
+  answers = [html(200)];
+  const { result, refused } = send();
+  await wait(0);
+  expect(result).toEqual({ ok: null });
+  expect(refused).toEqual([]);
 });

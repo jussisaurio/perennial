@@ -17,7 +17,7 @@ Anki; see [DESIGN.md](DESIGN.md) for what we changed and why.
 
 ```
 decks/<lang>/deck.json      the shared course: static JSON, built into the app
-web/  (Vite + React)        TanStack DB query collections fed by GET /api/rows; a write queue
+web/  (Vite + React)        TanStack DB query collections fed by GET /api/rows; writes retried in memory
 server/  (Bun)              Better Auth, /api/rows, /api/write, Perennial AI, serves web/dist
 contract/                   the wire contract: every request, answer and error code, as Effect Schemas
 Postgres                    learner data; the server reads and writes it, scoped to the session user
@@ -31,7 +31,7 @@ Postgres                    learner data; the server reads and writes it, scoped
   - **Perennial AI:** task endpoints (`/api/ai/mine`, `/api/ai/examples`) through the Anthropic SDK. Each word costs one AI word from a monthly allowance (`FREE_CREDITS`). A global monthly budget (`MONTHLY_BUDGET_USD`) pauses AI for everyone when it is reached.
   - Also: `/health`, account deletion, structured JSON logs with request ids, Sentry (`server/instrument.ts`). All settings: `server/src/config.ts`.
 - **Observability in the browser** (`web/src/observability.ts`): Sentry error reports and privacy-first PostHog events (no cookies, no autocapture, no session replay). Both are off unless their keys are set at build time.
-- **Client** (`web/src/data/`): each synced table is a TanStack DB query collection, held in memory and read from `GET /api/rows`: once at start, and again when the tab comes back into view after being hidden over a minute. There is no live push between devices; another device's changes show up on the next read. Writes apply on the device at once, wait in a queue (IndexedDB, TanStack DB offline transactions), and go to `/api/write`, with retries, until the server has them; the confirmed rows then go into the collections directly, so they don't flicker. There is no offline mode for now ([#188](https://github.com/jussisaurio/perennial/issues/188)). Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
+- **Client** (`web/src/data/`): each synced table is a TanStack DB query collection, held in memory and read from `GET /api/rows`: once at start, and again when the tab comes back into view after being hidden over a minute. There is no live push between devices; another device's changes show up on the next read. Writes apply on the device at once and go to `/api/write`, one after another, retried until the server has them. Unsent writes live only in the tab's memory: when the page closes, what is left goes in one last request, and is lost if that fails; the confirmed rows then go into the collections directly, so they don't flicker. There is no offline mode for now ([#188](https://github.com/jussisaurio/perennial/issues/188)). Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
 
 License: the code is [MIT](LICENSE). The course content in `decks/` is not ([decks/LICENSE](decks/LICENSE)). The order of the words is based on word frequencies from [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018, CC BY-SA 4.0).
 

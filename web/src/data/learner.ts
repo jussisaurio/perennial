@@ -768,7 +768,6 @@ export function undoReview(store: Store, id: string) {
   }
   // Saved, but not back through sync yet (its echo can be slow): there is no
   // row to delete here, so ask the server directly. Its delete syncs back.
-  if (!store.isWriter()) return;
   void postWrite([{ type: "review.delete", id }]).catch((e) => console.error("undo not saved", e));
 }
 
