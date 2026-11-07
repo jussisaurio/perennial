@@ -55,7 +55,8 @@ interface WalkData {
  * landed (#358).
  * `onCall`: you whistled, and what each visitor that answered did (#377).
  * `notes`: the gardener's notes on the shed's nails (#654), by id and whether
- * each is unread, and what to do when one is opened.
+ * each is unread, those under the stile's step (#714, null: no stile yet), and
+ * what to do when one is opened.
  */
 export function useGardenScene({
   lang,
@@ -89,7 +90,7 @@ export function useGardenScene({
   onShake: (p: PlacedPlant, forms: string[]) => void;
   onCarry: (d: CarryDone) => void;
   onCall: (heard: string[]) => void;
-  notes: { nails: readonly { id: string; unread: boolean }[]; open: (id: string) => void };
+  notes: { nails: readonly { id: string; unread: boolean }[]; stile: readonly string[] | null; open: (id: string) => void };
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   const [progress, setProgress] = useState<[number, number] | null>(null);
@@ -155,6 +156,7 @@ export function useGardenScene({
         // The landing page's walk has no learner, and no visitors to hide.
         firstReview: visitors ? visitors.facts.firstReview : null,
         notes: notes.nails,
+        stile: notes.stile,
       },
     });
   }

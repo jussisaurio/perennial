@@ -87,7 +87,8 @@ const BED_W = BED_COLS * SPACING + MARGIN * 2;
 const BED_D = BED_ROWS * SPACING + MARGIN * 2;
 const PATH = 1.9;
 const CAPACITY = BED_COLS * BED_ROWS;
-const CELL_W = BED_W + PATH;
+/** A bed and the path beside it, across (m): the paths between bed columns run CELL_W / 2 either side of the gate's line, and every CELL_W further out. */
+export const CELL_W = BED_W + PATH;
 const CELL_D = BED_D + PATH;
 /** Past the outermost beds, the fence is this far from their edge (m). */
 const SIDE = PATH / 2 + 1.2;

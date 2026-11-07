@@ -44,6 +44,7 @@ import { fellLine } from "../garden/walkInto";
 import type { Gender } from "../deck/schema";
 import type { Note } from "../garden/notes/note";
 import { courseNotes, noteInk, unlockedNotes } from "../garden/notes/read";
+import { placeNotes } from "../garden/stile";
 
 /** A plant just shaken (#357): its word and the forms that fell from it ([]: one leaf). */
 type Shook = { lemma: string; forms: string[] };
@@ -124,6 +125,9 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   const quiet = labels.find((l) => l.kind === "line");
   const line = spokenLine(quiet?.gloss ?? quiet?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
+  // The stile (#714): it goes nowhere, but you can look.
+  if (!line && reach === "climb") return "Wooden steps go over the back fence.";
+  if (!line && reach === "down") return "You stand on the steps, above the fence. Past it, an old path goes on into the long grass.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.
   if (!held) return landed;
@@ -287,6 +291,8 @@ const REACH_NAME: Record<Reach, string> = {
   seek: "Found you",
   read: "Read the note",
   raise: "Raise the lantern",
+  climb: "Climb the stile",
+  down: "Climb down",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -317,6 +323,9 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   read: ["....##....", "#########.", "#.......##", "#.#####..#", "#.......##", "#.####...#", "#........#", "#.#####..#", "#........#", "##########"],
   // A lantern, held up high.
   raise: ["..#####..", "...###...", "..#...#..", "..#.#.#..", "..#...#..", "...###...", "....#....", "....#....", "...###...", "..#####.."],
+  // Steps, going up; and going down again.
+  climb: ["......###", "......#..", "....###..", "....#....", "..###....", "..#......", "###......"],
+  down: ["###......", "..#......", "..###....", "....#....", "....###..", "......#..", "......###"],
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -484,16 +493,16 @@ export function GardenWalk({
   const [note, setNote] = useState<Note | null>(null);
   const openNote = (id: string) => {
     const n = notes.list.find((n) => n.id === id);
-    // The scene hangs only the notes it was given, so its id is always one of them.
+    // The scene shows only the notes it was given, so its id is always one of them.
     if (!n) throw new Error(`no note "${id}"`);
     scene.current?.select(null);
     setNote(n);
     setHint(false);
     notes.opened(id);
   };
-  // The scene takes these once, as the walk opens; a note opened during the walk turns read on the wall by itself.
-  const nails = useMemo(() => notes.list.map((n) => ({ id: n.id, unread: !notes.read.includes(n.id) })), [notes.list, notes.read]);
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { nails, open: openNote } });
+  // The scene takes these once, as the walk opens; a note opened during the walk turns read where it is by itself.
+  const placed = useMemo(() => placeNotes(notes.list, notes.read), [notes.list, notes.read]);
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { ...placed, open: openNote } });
   const held = hand && handView(hand);
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = labels.find((l) => l.kind === "echo");
