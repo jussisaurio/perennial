@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { standBy } from "./helpers";
+import { pinDetail, standBy } from "./helpers";
 
 // #358, carry and throw: pick up a pebble by the pond, throw it in, and the
 // frog on its lily pad hops away, until it has had enough and only looks at
@@ -42,8 +42,8 @@ const facePond = (page: Page) =>
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-06-01T12:00:00"));
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("pick up a pebble with a tap, throw it in the pond: the frog hops, then only looks; throw one on the grass", async ({ page }) => {

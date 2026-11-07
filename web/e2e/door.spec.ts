@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { doorNow, serverRows, standAtDoor, standByKey, waitForSynced } from "./helpers";
+import { doorNow, pinDetail, serverRows, standAtDoor, standByKey, waitForSynced } from "./helpers";
 
 // #315: the old door in the hedge. Locked until "key" (llave) brings the key,
 // which hides somewhere in the garden (a different place for each learner);
@@ -27,8 +27,8 @@ async function openWalk(page: Page) {
 test.beforeEach(async ({ page }) => {
   // A fixed day and hour: visitors change by day, and the snail walks the fence over the day.
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("the locked door says so by its button, to screen readers too; without the word 'llave' there is no key", async ({ page }) => {

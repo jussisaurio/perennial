@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { readRowsAgain, standBy } from "./helpers";
+import { pinDetail, readRowsAgain, standBy } from "./helpers";
 
 // #335 S6, the wishing well: carry a pebble from the pond, through the open
 // door, to the well at the far end of the orchard's path, and drop it in. A
@@ -23,8 +23,8 @@ const scene = (page: Page) => page.evaluate(() => (window as unknown as { __gard
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-17T12:00:00"));
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("carry a pebble through the door to the well and drop it in: the echo says an old word and its day", async ({ page }) => {

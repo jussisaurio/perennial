@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { readRowsAgain } from "./helpers";
+import { pinDetail, readRowsAgain } from "./helpers";
 
 // #359, walk into things (#335 V6): no button, your body is the verb. Brush
 // past a bed and its plants play their notes (and sway); walk into an orchard
@@ -45,8 +45,8 @@ const walkerX = (page: Page) => page.evaluate(() => (window as unknown as { __ga
 test.beforeEach(async ({ page }) => {
   // Mid October: autumn, when the leaf piles lie on the paths.
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  // Low quality: software WebGL on CI draws it faster.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster.
+  await pinDetail(page, "low");
   // Count the notes played: each brushed plant starts an oscillator or two (ui/chime.ts).
   await page.addInitScript(() => {
     const w = window as unknown as { notes: number };

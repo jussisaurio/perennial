@@ -1,4 +1,5 @@
 import { expect, test } from "./test";
+import { pinDetail } from "./helpers";
 
 // #379, the gnome's hide-and-seek: on 11 October 2026 it hides behind a plant
 // in the front row of a bed. Near it, the action button finds it, and a
@@ -10,8 +11,8 @@ type HideScene = { x: number; z: number; yaw: number; pitch: number; guests: { s
 
 test("the gnome hides behind a plant: near it, the button finds it, it falls over, and its tag says where it was", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  // Low quality: software WebGL on CI draws it faster.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster.
+  await pinDetail(page, "low");
   // A dev-only override brings the gnome today (it comes at 50 known words).
   await page.goto("/?demo=es:30&visitors=gnome#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();

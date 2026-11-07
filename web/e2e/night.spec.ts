@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "./test";
 import type { WalkScene } from "./helpers";
+import { pinDetail } from "./helpers";
 
 // #361, the night sky: tonight's real moon, and the lanterns blown out one by
 // one until the stars come out over the hills. The clock is pinned to a full
@@ -55,8 +56,8 @@ const standBy = (page: Page, i: number, metres: number) =>
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(FULL_MOON_NIGHT);
   await page.setViewportSize({ width: 1280, height: 720 });
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("a full moon's night: tap the moon for its word; blow every lantern out, the moth moves, the stars come out; light one, and they fade", async ({ page }) => {

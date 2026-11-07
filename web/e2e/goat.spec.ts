@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { standBy } from "./helpers";
+import { pinDetail, standBy } from "./helpers";
 
 // #376, the goat in impossible places: on its days it stands somewhere no goat
 // could get. Its tag says what it is; a screen reader hears where it stands.
@@ -24,8 +24,8 @@ const turnRound = (page: Page) => page.evaluate(() => ((window as unknown as { _
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-06-01T12:00:00"));
   await page.setViewportSize({ width: 1280, height: 720 });
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("a goat stands somewhere no goat could get, with its tag; look away and back, and it has gone", async ({ page }) => {

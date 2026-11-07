@@ -39,7 +39,7 @@ mock.module("@sentry/react", () => ({
 const env = { VITE_POSTHOG_KEY: "phc_test", VITE_POSTHOG_HOST: "", VITE_SENTRY_DSN: "https://key@sentry.test/1", VITE_RELEASE: "" };
 const saved = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
 Object.assign(process.env, env);
-const { identify, initObservability, linkAccount, reportBadAnswer, reportStalledWalk, track } = await import("./observability");
+const { identify, initObservability, linkAccount, reportBadAnswer, reportSlowWalk, reportStalledWalk, track } = await import("./observability");
 await initObservability();
 for (const [k, v] of Object.entries(saved)) {
   if (v === undefined) delete process.env[k];
@@ -60,6 +60,12 @@ test("Sentry: a stalled walk in the garden is reported with the garden's size on
   reportStalledWalk(230);
   expect(sentryErrors.at(-1)).toBe("garden walk stalled");
   expect(sentryHints.at(-1)).toEqual({ tags: { size: "<1000" } });
+});
+
+test("Sentry: a walk too slow even at low detail is reported with the frame time's bucket and the detail only (#677)", () => {
+  reportSlowWalk(72.4, "low");
+  expect(sentryErrors.at(-1)).toBe("garden walk too slow");
+  expect(sentryHints.at(-1)).toEqual({ tags: { frame: "<100", detail: "low" } });
 });
 
 test("Sentry: the browser never asks Sentry to work out the learner's IP", () => {

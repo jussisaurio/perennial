@@ -1,5 +1,5 @@
 import { expect, test } from "./test";
-import { addEmail, expectServerRows, startCourse } from "./helpers";
+import { addEmail, expectServerRows, pinDetail, startCourse } from "./helpers";
 
 test("landing: the garden shows real words per language; start without an account", async ({ page }) => {
   await page.goto("/");
@@ -28,8 +28,8 @@ test("landing: a saved choice of a language this build does not have falls back 
 });
 
 test("landing: walk through the showcase garden in 3D, view only", async ({ page }) => {
-  // Low quality: CI draws WebGL in software, and normal quality is too slow there (garden.spec.ts).
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: CI draws WebGL in software, and normal detail is too slow there (garden.spec.ts).
+  await pinDetail(page, "low");
   await page.goto("/");
   await page.getByRole("button", { name: "Walk through this garden in 3D" }).click();
   await expect(page.getByText(/\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 15000 });

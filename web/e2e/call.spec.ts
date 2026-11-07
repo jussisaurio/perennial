@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./test";
+import { pinDetail } from "./helpers";
 
 // #377, call: with nothing in reach the action button whistles, and each
 // visitor in sight answers in its own way. A long press on open ground calls
@@ -25,8 +26,8 @@ const status = (page: Page) => page.locator(".gw > .sr-only[role=status]");
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
   await page.setViewportSize({ width: 1280, height: 720 });
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 test("with nothing in reach the action button calls: the dog comes to your feet, and a screen reader hears who answered", async ({ page }) => {

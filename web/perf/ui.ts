@@ -276,7 +276,10 @@ async function open(): Promise<{ context: BrowserContext; page: Page; cdp: CDPSe
   await page.addInitScript(() => {
     if ("SpeechSynthesis" in window) SpeechSynthesis.prototype.speak = () => {};
   });
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
+  // The walk's detail fixed at normal (#677): otherwise it follows the frame times, and runs at CPU 10× would measure low.
+  await page.addInitScript(() => {
+    (window as unknown as { __gardenDetail: string }).__gardenDetail = "normal";
+  });
   const cdp = await context.newCDPSession(page);
   await cdp.send("Performance.enable");
   await cdp.send("Profiler.enable");

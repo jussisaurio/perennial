@@ -14,7 +14,7 @@ import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_LINES, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantMood, plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
-import type { Detail, DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
+import type { DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
 import type { Hider } from "../garden/sceneVisitors";
 import type { Hideout } from "../garden/kinds/kind";
@@ -253,20 +253,6 @@ function clockTime(): TimeOfDay {
   return h >= 6 && h < 18 ? "day" : h >= 18 && h < 21 ? "dusk" : "night";
 }
 
-const DETAIL_LABEL: Record<Detail, string> = { normal: "Normal quality", low: "Low quality" };
-const QUALITY_KEY = "garden-quality";
-
-/** The quality the viewer chose, or null if they never chose (then we may pick for them). */
-function savedDetail(): Detail | null {
-  try {
-    const d = localStorage.getItem(QUALITY_KEY);
-    if (d === "normal" || d === "low") return d;
-  } catch {
-    // Storage can be blocked; the default is fine.
-  }
-  return null;
-}
-
 /** The walk's small icons, drawn in pixels like its frames: emoji and font glyphs each come in another style. */
 const GLYPH = {
   left: ["...#...", "..#....", ".#.....", "#######", ".#.....", "..#....", "...#..."],
@@ -279,16 +265,6 @@ const GLYPH = {
 
 /** A walk icon at 2 px a pixel: the stroke of the pixel font beside it. */
 const Glyph = ({ name }: { name: keyof typeof GLYPH }) => <PixelIcon rows={GLYPH[name]} cell={2} />;
-
-/** A label that changes with a choice, as wide as its widest choice, so the buttons beside it do not shift (#274). */
-const SteadyLabel = ({ label, all }: { label: string; all: readonly string[] }) => (
-  <span className="gw-tool-label gw-steady">
-    <span>{label}</span>
-    {all.filter((l) => l !== label).map((l) => (
-      <span key={l} className="gw-ghost" aria-hidden="true">{l}</span>
-    ))}
-  </span>
-);
 
 /**
  * The action button (#334) shows only an icon, which changes shape with what it
@@ -456,16 +432,7 @@ export function GardenWalk({
   // For a plant's card: its planting date has the year only when that was another year.
   const [openedAt] = useState(Date.now);
   const [hint, setHint] = useState(hintFirst.show);
-  const [detail, setDetail] = useState<Detail>(() => savedDetail() ?? "normal");
   const [sound] = useSound();
-  const chooseDetail = (d: Detail) => {
-    setDetail(d);
-    try {
-      localStorage.setItem(QUALITY_KEY, d);
-    } catch {
-      // Not saved; it still applies now.
-    }
-  };
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const tag = language(lang).tag;
@@ -532,7 +499,7 @@ export function GardenWalk({
   };
   // The scene takes these once, as the walk opens; a note opened during the walk turns read on the wall by itself.
   const nails = useMemo(() => notes.list.map((n) => ({ id: n.id, unread: !notes.read.includes(n.id) })), [notes.list, notes.read]);
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { nails, open: openNote } });
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { nails, open: openNote } });
   const held = hand && handView(hand);
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = labels.find((l) => l.kind === "echo");
@@ -768,15 +735,6 @@ export function GardenWalk({
         </div>
         <div className="gw-tools">
           <WalkSound />
-          <button
-            className="gw-btn gw-quality"
-            onClick={() => chooseDetail(detail === "normal" ? "low" : "normal")}
-            title={detail === "normal" ? "Use low quality: bigger pixels, faster on older devices" : "Use normal quality"}
-            aria-label={`Quality: ${DETAIL_LABEL[detail]}`}
-          >
-            <span className={`gw-px gw-px-${detail}`} aria-hidden="true" />
-            <SteadyLabel label={DETAIL_LABEL[detail]} all={Object.values(DETAIL_LABEL)} />
-          </button>
         </div>
       </div>
 

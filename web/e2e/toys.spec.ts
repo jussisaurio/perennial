@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "./test";
+import { pinDetail } from "./helpers";
 
 // #360, lawn toys: blow a dandelion clock by the fence. The playwright config
 // asks for reduced motion: the seeds fade on the clock. Where the wind takes
@@ -20,8 +21,8 @@ const DAY = new Date("2026-06-01T12:00:00");
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(DAY);
   await page.setViewportSize({ width: 1280, height: 800 });
-  // Low quality: software WebGL on CI draws it faster, and every click waits for frames.
-  await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Low detail: software WebGL on CI draws it faster, and every click waits for frames.
+  await pinDetail(page, "low");
 });
 
 async function openWalk(page: Page) {
