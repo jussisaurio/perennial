@@ -220,7 +220,9 @@ function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
 
 export class GardenScene {
   private renderer: THREE.WebGLRenderer;
-  private scene = new THREE.Scene();
+  // The scene itself never moves. three recomposes a moving object's matrix on every frame, and then remakes the
+  // world matrix of everything under it: with the scene's own on, that was every object, still() ones too (#571).
+  private scene = Object.assign(new THREE.Scene(), { matrixAutoUpdate: false });
   // Far enough to see the sky dome from anywhere inside the hills: a big garden's far corner is well off the world's middle (#641).
   private camera = new THREE.PerspectiveCamera(62, 1, 0.1, SKY_R + HILLS.radius);
   private last = performance.now();
