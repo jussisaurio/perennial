@@ -7,14 +7,14 @@ import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 // The gardener's hand, for the notes in the shed (#673).
 import "@fontsource/patrick-hand/400.css";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { language } from "../content/languages";
 import { openDoor, readNote, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_LINES, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
-import type { DoorState, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
+import type { DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
 import type { TapHit } from "../garden/scenePart";
 import type { Hider } from "../garden/sceneVisitors";
 import type { Hideout } from "../garden/kinds/kind";
@@ -23,6 +23,7 @@ import { echoDate } from "../garden/well";
 import { takeFocus, type Focus } from "./gardenFocus";
 import { WordPlant } from "./plant";
 import { animalSays, speak, speakAll } from "./speech";
+import { clipsOn, loadClip, prefetchClips } from "./clipPlayer";
 import { useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
@@ -380,6 +381,54 @@ function hintSeen(): boolean {
   }
 }
 
+/** How far (m) round the walker the words' clips load ahead, and how often (ms) that is looked at again: a walk covers about 4 m in that time. */
+const CLIPS_NEAR = { metres: 8, everyMs: 1000 };
+/** How often (ms) at most the thing under a mouse is looked for: each look casts a ray through the garden. */
+const HOVER_MS = 150;
+
+/**
+ * Loads the clips a tap may soon say (#754), while sound is on: the words near the walker, and the one under
+ * the mouse. Returns the pointer-move handler for the mouse. Nothing here runs in the frame loop.
+ */
+function useClipsAhead(scene: RefObject<GardenScene | null>, wrap: RefObject<HTMLDivElement | null>, tag: string, sound: boolean) {
+  const on = sound && clipsOn();
+  useEffect(() => {
+    if (!on) return;
+    const look = () => {
+      if (scene.current) prefetchClips(scene.current.wordsNear(CLIPS_NEAR.metres), tag, "garden");
+    };
+    look();
+    const t = setInterval(look, CLIPS_NEAR.everyMs);
+    return () => clearInterval(t);
+  }, [on, scene, tag]);
+  const lastHover = useRef(0);
+  return (e: React.PointerEvent) => {
+    // A mouse with no button down: a touch or a drag is not pointing at something to tap.
+    if (!on || e.pointerType !== "mouse" || e.buttons !== 0 || !scene.current || !wrap.current) return;
+    if (e.timeStamp - lastHover.current < HOVER_MS) return;
+    lastHover.current = e.timeStamp;
+    const r = wrap.current.getBoundingClientRect();
+    const word = hoverWord(scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height));
+    if (word) void loadClip(word, tag);
+  };
+}
+
+/** The word a tap on this would say, if any (onPointerUp below). */
+function hoverWord(hit: TapHit | null): string | null {
+  switch (hit?.kind) {
+    case "visitor":
+      return hit.v.word;
+    case "plant":
+      return hit.p.lemma;
+    case "tree":
+      return hit.t.lemma;
+    case "scenery":
+      return hit.s.view.word;
+    default:
+      return null;
+  }
+}
+
 function markHintSeen() {
   try {
     localStorage.setItem(HINT_SEEN_KEY, "1");
@@ -542,6 +591,7 @@ export function GardenWalk({
     }
   };
   const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => moved(), onHold });
+  const hover = useClipsAhead(scene, wrap, tag, sound);
 
   useEffect(() => {
     if (!hint) return;
@@ -687,7 +737,10 @@ export function GardenWalk({
         tabIndex={-1}
         aria-label="Your word garden in 3D. Use W, A, S and D or the arrow keys to walk. Drag to look around. Tab to the Next plant button to open a plant's card."
         onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
+        onPointerMove={(e) => {
+          onPointerMove(e);
+          hover(e);
+        }}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       />

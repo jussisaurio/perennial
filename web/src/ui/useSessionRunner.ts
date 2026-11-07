@@ -72,6 +72,26 @@ function chooseExample(l: Learner, deck: DeckSentences, wordId: string, onIntro:
   return least[hash32(`${wordId}:${l.reviewsByWord.get(wordId)?.length ?? 0}`) % least.length];
 }
 
+/** What the cards for `tasks` will say: each word, then its sentence. */
+function cardTexts(l: Learner, tasks: readonly Task[], exampleOf: (t: Task) => Sentence | undefined): string[] {
+  return tasks.flatMap((t) => {
+    const w = l.words.get(t.wordId);
+    if (!w) return [];
+    const ex = exampleOf(t);
+    return ex ? [w.lemma, ex.text] : [w.lemma];
+  });
+}
+
+/** Cards of today's plan whose clips Home loads, so the first card speaks at once (#754). */
+const CLIPS_FROM_HOME = 5;
+
+/** Loads the clips for the first cards of `queue` (today's plan, as Home sees it) before the session starts. */
+export function prefetchFirstCards(l: Learner, deck: DeckSentences, queue: readonly Task[], tag: string): void {
+  if (!clipsOn()) return;
+  // No new-word card has shown yet, so no sentence is held back for its quick check.
+  prefetchClips(cardTexts(l, queue.slice(0, CLIPS_FROM_HOME), (t) => chooseExample(l, deck, t.wordId, undefined)), tag, "session");
+}
+
 interface Feedback {
   /** The word's plant is planted or grows; the next card waits until this resolves. */
   grow: (m: GrowthMoment) => Promise<void>;
@@ -175,13 +195,8 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     // later cards' sentences are chosen as they would be now; a guess, mostly right.
     if (clipsOn()) afterPaint(() => {
       const l = live.current!;
-      const texts = [task, ...r.upcoming(CLIPS_AHEAD)].flatMap((t) => {
-        const w = l.words.get(t.wordId);
-        if (!w) return [];
-        const ex = t === task ? example : chooseExample(l, deckSentences.current!, w.id, introSentence.current.get(w.id));
-        return ex ? [w.lemma, ex.text] : [w.lemma];
-      });
-      prefetchClips(texts, tag);
+      const texts = cardTexts(l, [task, ...r.upcoming(CLIPS_AHEAD)], (t) => (t === task ? example : chooseExample(l, deckSentences.current!, t.wordId, introSentence.current.get(t.wordId))));
+      prefetchClips(texts, tag, "session");
     });
     if (example) afterPaint(() => {
       const grown = grownSpans(live.current!, example.text, tag, word.id);

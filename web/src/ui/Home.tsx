@@ -1,7 +1,7 @@
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { language } from "../content/languages";
 import { useUser } from "../data/auth";
-import { perLearnerDay, slicedPerLearnerDay, useLearner, useStore, type Learner } from "../data/learner";
+import { perLearnerDay, slicedPerLearnerDay, useDeckSentences, useLearner, useStore, type Learner } from "../data/learner";
 import { SignIn } from "./Account";
 import { Garden, gardenSteps } from "./Garden";
 import { FlowerIcon, SeedIcon } from "./icons";
@@ -17,6 +17,7 @@ import { visitorSteps } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import { courseNotes, hasUnread } from "../garden/notes/read";
 import type { Plan } from "../core/session";
+import { prefetchFirstCards } from "./useSessionRunner";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -153,6 +154,11 @@ function Aside({ learner, now }: { learner: Learner; now: number }) {
 function StartRow({ learner, chunk, now, rest, onStart }: { learner: Learner; chunk: ReturnType<typeof nextChunk>; now: number; rest: boolean; onStart: () => void }) {
   const { user } = useUser();
   const plan = rest ? planToday[voiceOf(learner)].get(learner, now) : null;
+  // The first cards' clips load here, so the session's first card speaks at once (#754).
+  const { sentences } = useDeckSentences(learner.lang);
+  useEffect(() => {
+    if (plan && sentences) prefetchFirstCards(learner, sentences, plan.queue, language(learner.lang).tag);
+  }, [learner, plan, sentences]);
   return (
     <div className="start-row">
       {/* Watered only once nothing is due: with 5 minutes a day, a big garden can still have thirsty plants. Until the plan is in, an empty line keeps the button where it will be. */}

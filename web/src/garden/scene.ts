@@ -37,7 +37,7 @@ import { echo, echoDate, type Met } from "./well";
 import { TOY_STAND, Toys, type ToyAct, type ToyDone, type ToyTarget } from "./sceneToys";
 import type { ToysWalk } from "./toys";
 import { bareNoun } from "./nouns";
-import { plantInReach } from "./shake";
+import { petalForms, plantInReach } from "./shake";
 import type { Gender } from "../deck/schema";
 import type { DeckLang } from "../deck/langs";
 import { Jokes, type Joke } from "./sceneJokes";
@@ -1838,6 +1838,22 @@ export class GardenScene {
     const c = this.camera.position;
     const d = Math.hypot(x - c.x, y - c.y, z - c.z);
     return this.hedgeAt({ ox: c.x, oy: c.y, oz: c.z, dx: (x - c.x) / d, dy: (y - c.y) / d, dz: (z - c.z) / d }) < d;
+  }
+
+  /**
+   * The words a tap or a shake may soon say (#754), for loading their clips ahead: the words of the
+   * plants and orchard trees within `metres` of the walker, nearest first; then today's visitors and
+   * the garden's scenery words, which are few; then the near plants' other forms, said when shaken.
+   */
+  wordsNear(metres: number): string[] {
+    const near = [...this.layout.plants, ...this.trunks]
+      .map((t) => ({ t, d: Math.hypot(t.x - this.x, t.z - this.z) }))
+      .filter((n) => n.d < metres)
+      .sort((a, b) => a.d - b.d)
+      .map((n) => n.t);
+    const named = [...this.visitors.list.map((v) => v.word), ...Object.values(this.visitors.scenery ?? {}).map((v) => v.word)].filter((w) => w !== null);
+    const forms = near.flatMap((t) => ("forms" in t ? petalForms(t.lemma, t.forms) : []));
+    return [...near.map((t) => t.lemma), ...named, ...forms];
   }
 
   /**

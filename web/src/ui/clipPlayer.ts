@@ -56,25 +56,31 @@ export function loadClip(text: string, tag: string): Promise<string | null> {
 
 /** Clips fetched at the same time ahead of need, so they do not slow the one asked for now. */
 const AHEAD_AT_ONCE = 3;
-let wanted: { text: string; tag: string }[] = [];
+/**
+ * Who loads ahead: a session (or Home, for its first cards) and the garden walk.
+ * Each keeps its own waiting list, so one never drops the other's; the session's goes first.
+ */
+type Asker = "session" | "garden";
+const wanted: Record<Asker, { text: string; tag: string }[]> = { session: [], garden: [] };
 let busy = 0;
 
 function pump(): void {
-  while (busy < AHEAD_AT_ONCE && wanted.length) {
-    const { text, tag } = wanted.shift()!;
-    if (loaded.has(keyOf(text, tag))) continue;
+  while (busy < AHEAD_AT_ONCE) {
+    const next = wanted.session.shift() ?? wanted.garden.shift();
+    if (!next) return;
+    if (loaded.has(keyOf(next.text, next.tag))) continue;
     busy++;
-    void loadClip(text, tag).finally(() => {
+    void loadClip(next.text, next.tag).finally(() => {
       busy--;
       pump();
     });
   }
 }
 
-/** Loads the clips for texts about to be said, in order. Replaces what an earlier call still had waiting. */
-export function prefetchClips(texts: readonly string[], tag: string): void {
+/** Loads the clips for texts about to be said, in order. Replaces what this asker's earlier call still had waiting. */
+export function prefetchClips(texts: readonly string[], tag: string, by: Asker): void {
   if (!BASE) return;
-  wanted = texts.map((text) => ({ text, tag }));
+  wanted[by] = texts.map((text) => ({ text, tag }));
   pump();
 }
 

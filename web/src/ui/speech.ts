@@ -126,10 +126,24 @@ async function utter(text: string, tag: string, rate: number, gen: number): Prom
   });
 }
 
-/** One text: its clip, or the browser's voice when it has none or the clip will not play. */
+/**
+ * How long (ms) a clip still loading may keep the learner waiting before the browser voice says the
+ * text instead (#754). A clip is about 5 KB, so it comes well inside this on any working connection;
+ * longer, and silence after a tap feels broken.
+ */
+const CLIP_WAIT_MS = 1000;
+
+/** The clip, or null when it has not come within CLIP_WAIT_MS. It keeps loading for next time. */
+function clipInTime(text: string, tag: string): Promise<string | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<null>((resolve) => (timer = setTimeout(() => resolve(null), CLIP_WAIT_MS)));
+  return Promise.race([loadClip(text, tag), late]).finally(() => clearTimeout(timer));
+}
+
+/** One text: its clip, or the browser's voice when it has none, it is slow to come, or it will not play. */
 async function say(text: string, tag: string, slow: boolean, gen: number): Promise<void> {
   if (clipsOn()) {
-    const url = await loadClip(text, tag);
+    const url = await clipInTime(text, tag);
     if (gen !== generation) return;
     if (url && (await playClip(url, slow ? SLOW_CLIP_RATE : 1))) return;
     if (gen !== generation) return;
