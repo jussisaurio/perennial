@@ -171,6 +171,14 @@ export interface Input {
 
 const EYE = 1.05;
 const WALK = 3.6;
+/**
+ * The longest frame the garden runs in full (s). Down to 10 frames a second
+ * the garden runs in real time: a walk is as fast and a visitor's wait as long
+ * (#790; at 0.05, CI's software WebGL ran it at a third of its speed). Below
+ * that it runs slower, so a walk still moves in steps short enough to see the
+ * stile's top board, and a gap (a hidden tab, a stalled load) is not one jump.
+ */
+const MAX_FRAME = 0.1;
 /** On the stile's steps (#770), a walk goes this much of its pace: you climb. */
 const STEPS_PACE = 0.6;
 /** A tap past the back fence counts this near (m) to where a walker may stand (#770): at a bramble's foot, say. */
@@ -1915,7 +1923,7 @@ export class GardenScene {
       this.frame = requestAnimationFrame(loop);
       const now = performance.now();
       this.picker?.frame(now - this.last);
-      const dt = Math.min(0.05, (now - this.last) / 1000);
+      const dt = Math.min(MAX_FRAME, (now - this.last) / 1000);
       this.last = now;
       this.elapsed += dt;
       this.tick(dt);
