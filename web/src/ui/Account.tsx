@@ -18,7 +18,7 @@ export function useMe(): { me: Me | null; refresh: () => void } {
     let alive = true;
     void getMe()
       .then((m) => alive && setMe(m))
-      // A failed fetch leaves `me` null, the same as while it loads.
+      // A failed fetch (getMe reports it) leaves `me` null, the same as while it loads.
       .catch(() => {});
     return () => {
       alive = false;

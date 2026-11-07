@@ -4,12 +4,28 @@
 
 import { Effect, Schema } from "effect";
 import { ApiErrorBody, ExamplesOut, Me, MineOut } from "perennial-contract";
+import { reportBadAnswer, reportError } from "../observability";
 import { ApiError, BadAnswer, HttpError, request } from "./http";
 
 const post = <S extends Schema.Decoder<unknown>>(schema: S, path: string, body: unknown) =>
   Effect.runPromise(request(schema, path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }));
 
-export const getMe = () => Effect.runPromise(request(Me, "/api/me"));
+/**
+ * The learner's account (AI words left). A failure is reported here: the
+ * screens then just show no count, and nobody would know. The error's code or
+ * status only. Offline is not a fault, so it is not reported.
+ */
+export const getMe = () =>
+  Effect.runPromise(
+    request(Me, "/api/me").pipe(
+      Effect.tapError((e) =>
+        Effect.sync(() => {
+          if (e._tag === "BadAnswer") reportBadAnswer(e.path, String(e.cause));
+          else if (e._tag !== "NetworkError") reportError(e);
+        }),
+      ),
+    ),
+  );
 
 export const mineWords = (lang: string, items: { form: string; sentence: string }[], known: string[]) => post(MineOut, "/api/ai/mine", { lang, items, known });
 
