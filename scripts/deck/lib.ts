@@ -97,7 +97,8 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden =
 
   const next: Manifest = { words: { ...manifest.words }, sentences: { ...manifest.sentences } };
   const words: DeckWord[] = [];
-  const liveSentences = new Map<string, DeckSentence[]>();
+  type Unkeyed = Omit<DeckSentence, "keys">;
+  const liveSentences = new Map<string, Unkeyed[]>();
   const seenKeys = new Set<string>();
 
   source.forEach((src, i) => {
@@ -107,7 +108,7 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden =
     const id = assign(next.words, key, "w", (id) => !!prevWords.get(id)?.retired);
     words.push(clean({ id, lemma: src.lemma, gloss: src.gloss, pos: src.pos, sense: src.sense, rank: i + 1, forms: src.forms, notes: src.notes, gender: src.gender }));
     const texts = new Set<string>();
-    const list: DeckSentence[] = [];
+    const list: Unkeyed[] = [];
     for (const s of src.sentences) {
       if (texts.has(s.text)) errors.push(`${src.lemma}: sentence "${s.text}" appears twice`);
       texts.add(s.text);
@@ -147,7 +148,7 @@ export function buildDeck({ lang, source, manifest, prev, aliases = {}, garden =
 
   // Stable order: by rank (retired words keep their old rank), live first, then id.
   words.sort((a, b) => a.rank - b.rank || Number(!!a.retired) - Number(!!b.retired) || a.id.localeCompare(b.id));
-  const sentences: DeckSentence[] = [];
+  const sentences: Unkeyed[] = [];
   for (const w of words) {
     const live = liveSentences.get(w.id) ?? [];
     const liveSids = new Set(live.map((s) => s.id));

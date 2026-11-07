@@ -1,5 +1,5 @@
 // What a course is, on the wire. MVP scope: English speakers learning Spanish
-// or German. These must match the app (web/src/deck/schema.ts DECK_LANGS) and
+// or German. These must match the app (web/src/deck/langs.ts DECK_LANGS) and
 // the decks/ folders, which server/test/course.test.ts checks, and the course
 // table in server/migrations/0001_init.sql.
 

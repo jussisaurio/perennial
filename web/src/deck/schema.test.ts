@@ -5,7 +5,7 @@ import { Deck, compatibility, deckProblems, manifestKey, type DeckWord } from ".
 const parses = (schema: Schema.ConstraintDecoder<unknown>, v: unknown) => Option.isSome(Schema.decodeUnknownOption(schema)(v));
 const w = (body: string, lemma: string, extra: Partial<DeckWord> = {}): DeckWord => ({ id: `es.w.${body}`, lemma, gloss: lemma, pos: "noun", rank: 1, forms: [lemma], ...extra });
 const sentences = (word: DeckWord, n = 3) =>
-  Array.from({ length: n }, (_, i) => ({ id: `es.s.${word.id.slice(5, 14)}${i}`, wordId: word.id, text: `Mi ${word.lemma} ${i}.`, translation: `My ${word.lemma}.`, cloze: word.lemma }));
+  Array.from({ length: n }, (_, i) => ({ id: `es.s.${word.id.slice(5, 14)}${i}`, wordId: word.id, text: `Mi ${word.lemma} ${i}.`, translation: `My ${word.lemma}.`, cloze: word.lemma, keys: [] }));
 const deck = (words: DeckWord[], extra: Partial<Deck> = {}): Deck => ({
   lang: "es",
   native: "en",

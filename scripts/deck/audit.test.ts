@@ -3,7 +3,7 @@ import type { Deck } from "../../web/src/deck/schema.ts";
 import { auditDeck } from "./audit.ts";
 
 const word = (n: number, lemma: string, extra: { garden?: "hedgehog"; orchard?: "fig" } = {}) => ({ id: `es.w.000000000${n}`, lemma, gloss: lemma, pos: "noun" as const, rank: n, forms: [lemma], ...extra });
-const sentences = (n: number, lemma: string) => [1, 2, 3].map((i) => ({ id: `es.s.00000000${n}${i}`, wordId: `es.w.000000000${n}`, text: `El ${lemma} ${i}.`, translation: `The ${lemma}.`, cloze: lemma }));
+const sentences = (n: number, lemma: string) => [1, 2, 3].map((i) => ({ id: `es.s.00000000${n}${i}`, wordId: `es.w.000000000${n}`, text: `El ${lemma} ${i}.`, translation: `The ${lemma}.`, cloze: lemma, keys: [] }));
 
 test("rank drift is flagged, except for garden and orchard words, which the course places on purpose", () => {
   const words = [word(1, "erizo", { garden: "hedgehog" }), word(2, "tortuga"), word(3, "higo", { orchard: "fig" })];

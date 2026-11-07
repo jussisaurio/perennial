@@ -16,9 +16,6 @@ type SentencesPart = { lang: string; sentences: DeckSentence[] };
 const wordParts = import.meta.glob<WordsPart>("../../../decks/*/deck.json", { query: "?part=words", import: "default" });
 const sentenceParts = import.meta.glob<SentencesPart>("../../../decks/*/deck.json", { query: "?part=sentences", import: "default" });
 
-/** A deck sentence with its word keys, always there once loaded. */
-type CourseSentence = DeckSentence & { keys: readonly string[] };
-
 export interface LoadedDeck {
   lang: string;
   /** Live words in frequency order (no retired words, no aliases). */
@@ -29,7 +26,7 @@ export interface LoadedDeck {
 }
 
 /** A deck's live sentences, by word. Every live word has at least 3 (deckProblems). */
-export type DeckSentences = ReadonlyMap<string, CourseSentence[]>;
+export type DeckSentences = ReadonlyMap<string, DeckSentence[]>;
 
 function indexWords(d: WordsPart, lang: string): LoadedDeck {
   if (d.lang !== lang) throw new Error(`deck ${lang}: holds ${d.lang}`);
@@ -45,14 +42,11 @@ function indexWords(d: WordsPart, lang: string): LoadedDeck {
 
 function indexSentences(d: SentencesPart, lang: string): DeckSentences {
   if (d.lang !== lang) throw new Error(`deck ${lang}: sentences hold ${d.lang}`);
-  const byWord = new Map<string, CourseSentence[]>();
+  const byWord = new Map<string, DeckSentence[]>();
   // The part has live sentences only (vite.config.ts).
   for (const s of d.sentences) {
-    // The build adds keys (#453), so a sentence without them is a build bug.
-    const keys = s.keys;
-    if (!keys) throw new Error(`deck ${lang}: sentence ${s.id} has no keys`);
     const list = byWord.get(s.wordId) ?? [];
-    list.push({ ...s, keys });
+    list.push(s);
     byWord.set(s.wordId, list);
   }
   return byWord;
