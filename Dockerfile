@@ -46,6 +46,10 @@ RUN bun install --frozen-lockfile --production --filter perennial-server
 # The wire contract: the server imports it from source.
 COPY contract/ contract/
 COPY server/ server/
+# The demo (server/src/demo.ts) runs the app's own planner from web/src. Its
+# packages (effect, ts-fsrs) resolve through the server's, which list them.
+COPY web/src/ web/src/
+RUN ln -s ../server/node_modules web/node_modules
 WORKDIR /app/server
 COPY decks/ /app/decks/
 COPY --from=web /app/web/dist /app/web/dist

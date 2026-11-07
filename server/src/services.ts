@@ -1,12 +1,13 @@
 // The app's services, put together: Better Auth (its own Promise API, wrapped
-// here), and the Effect services from their modules (mail, sync, AI, the deck
-// words). Each layer closes what it opened.
+// here), and the Effect services from their modules (mail, sync, AI, the demo,
+// the deck words). Each layer closes what it opened.
 
 import { PgClient } from "@effect/sql-pg";
 import { Context, Effect, Layer } from "effect";
 import { AiLive } from "./ai";
 import { createAuth } from "./auth";
 import { AppConfig } from "./config";
+import { DemoLive } from "./demo";
 import { Mail, MailLive } from "./mail";
 import { ModelLive } from "./model";
 import { SyncLive } from "./sync";
@@ -30,8 +31,8 @@ const AuthLive = Layer.effect(
   }),
 );
 
-/** Mail, auth, sync, AI and the deck words, on a database and settings from elsewhere. */
-export const ServicesLive = Layer.mergeAll(AuthLive, AiLive.pipe(Layer.provide(ModelLive))).pipe(
+/** Mail, auth, sync, AI, the demo and the deck words, on a database and settings from elsewhere. */
+export const ServicesLive = Layer.mergeAll(AuthLive, AiLive.pipe(Layer.provide(ModelLive)), DemoLive).pipe(
   Layer.provideMerge(SyncLive),
   Layer.provideMerge(WordsLive),
   Layer.provideMerge(MailLive),

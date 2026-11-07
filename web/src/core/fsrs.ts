@@ -92,14 +92,15 @@ export function replay(
 ): Scheduled | null {
   if (reviews.length === 0) return null;
   const sorted = [...reviews].sort((a, b) => a.ts - b.ts);
-  let m = fsrs.init(sorted[0].grade);
-  let lapses = sorted[0].grade === 1 ? 1 : 0;
-  for (let i = 1; i < sorted.length; i++) {
-    const t = (sorted[i].ts - sorted[i - 1].ts) / DAY_MS;
-    m = fsrs.next(m, t, sorted[i].grade);
-    if (sorted[i].grade === 1) lapses++;
+  // !: there is at least one review (above).
+  let last = sorted[0]!;
+  let m = fsrs.init(last.grade);
+  let lapses = last.grade === 1 ? 1 : 0;
+  for (const r of sorted.slice(1)) {
+    m = fsrs.next(m, (r.ts - last.ts) / DAY_MS, r.grade);
+    if (r.grade === 1) lapses++;
+    last = r;
   }
-  const last = sorted[sorted.length - 1];
   const days = fuzz(fsrs.interval(m.s, retention), `${seed}:${sorted.length}`);
   return { ...m, lastTs: last.ts, due: last.ts + days * DAY_MS, reps: sorted.length, lapses };
 }

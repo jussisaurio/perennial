@@ -5,6 +5,7 @@
 export * from "./ai";
 export * from "./api";
 export * from "./course";
+export * from "./demo";
 export * from "./errors";
 export * from "./ids";
 export * from "./write";

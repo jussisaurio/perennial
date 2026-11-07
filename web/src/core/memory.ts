@@ -61,10 +61,11 @@ const RECORD_MIN_DAYS = 14;
  * has waited and still been remembered. Otherwise null.
  */
 export function recordGap(times: number[], now: number): number | null {
-  if (!times.length) return null;
   const sorted = [...times].sort((a, b) => a - b);
-  const gap = now - sorted[sorted.length - 1];
-  for (let i = 1; i < sorted.length; i++) if (sorted[i] - sorted[i - 1] >= gap) return null;
+  const latest = sorted.at(-1);
+  if (latest === undefined) return null;
+  const gap = now - latest;
+  for (let i = 1; i < sorted.length; i++) if (sorted[i]! - sorted[i - 1]! >= gap) return null; // !: both below sorted.length
   const days = Math.floor(gap / DAY_MS);
   return days >= RECORD_MIN_DAYS ? days : null;
 }
@@ -359,7 +360,7 @@ export class MemoryLog {
     let hi = this.unlocked.length;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
-      if (order(this.unlocked[mid]) < at) lo = mid + 1;
+      if (order(this.unlocked[mid]!) < at) lo = mid + 1; // !: lo <= mid < hi <= length
       else hi = mid;
     }
     return lo;

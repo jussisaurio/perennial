@@ -62,6 +62,7 @@ const PERMANENT = {
   quota: true,
   unknown_word: true,
   review_from_the_future: true,
+  demo_needs_new_learner: true,
   out_of_credits: false,
   slow_down: false,
   ai_off: false,

@@ -24,7 +24,7 @@ test("dev demo: a seed that fails is reported, and the app still opens", async (
   const errors: string[] = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   allowConsoleError(/^\[demo\] could not seed/, "this test deliberately makes the demo's write fail, to check it is reported");
-  await page.route("**/api/write", (route) => route.fulfill({ status: 422, json: { error: "invalid" } }));
+  await page.route("**/api/demo", (route) => route.fulfill({ status: 422, json: { error: "invalid" } }));
   await page.goto("/?demo=es:5");
   await expect(page.getByRole("heading", { name: "Grow a language, 5 minutes a day." })).toBeVisible({ timeout: 20000 });
   expect(errors.some((e) => e.includes("[demo] could not seed es"))).toBe(true);

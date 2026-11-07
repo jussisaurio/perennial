@@ -7,7 +7,9 @@
     },
     "server": {
       // Config for the Better Auth CLI: `bunx auth generate --config auth.cli.ts`.
-      "entry": ["auth.cli.ts"]
+      "entry": ["auth.cli.ts"],
+      // web/src/core/fsrs.ts imports it when the demo runs the app's planner (Dockerfile).
+      "ignoreDependencies": ["ts-fsrs"]
     },
     "web": {
       // Playwright picks these files by a testMatch regex, which knip does not read.

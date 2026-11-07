@@ -17,7 +17,7 @@ const failure = (exit: Exit.Exit<unknown, unknown>) => (Exit.isFailure(exit) ? S
 test("a course with no deck.json stops the start", async () => {
   const dir = mkdtempSync(join(tmpdir(), "decks-"));
   mkdirSync(join(dir, "es"));
-  writeFileSync(join(dir, "es", "deck.json"), JSON.stringify({ words: [{ id: "es.w.x" }] }));
+  writeFileSync(join(dir, "es", "deck.json"), JSON.stringify({ words: [{ id: "es.w.x", rank: 1 }] }));
   expect(failure(await load(dir))).toContain(join(dir, "de", "deck.json"));
 });
 
@@ -25,7 +25,7 @@ test("a deck.json that is not a deck stops the start", async () => {
   const dir = mkdtempSync(join(tmpdir(), "decks-"));
   for (const lang of ["es", "de"]) {
     mkdirSync(join(dir, lang));
-    writeFileSync(join(dir, lang, "deck.json"), lang === "de" ? JSON.stringify({ words: [{ lemma: "no id" }] }) : JSON.stringify({ words: [{ id: "es.w.x" }] }));
+    writeFileSync(join(dir, lang, "deck.json"), lang === "de" ? JSON.stringify({ words: [{ lemma: "no id" }] }) : JSON.stringify({ words: [{ id: "es.w.x", rank: 1 }] }));
   }
   expect(failure(await load(dir))).toContain(join(dir, "de", "deck.json"));
 });

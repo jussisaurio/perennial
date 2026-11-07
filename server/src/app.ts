@@ -15,7 +15,7 @@ import { Context, Effect, Layer, Schema } from "effect";
 import type { Scope } from "effect";
 import { HttpRouter, HttpServer, HttpServerError, HttpServerRequest, HttpServerResponse } from "effect/http";
 import type { HttpMethod } from "effect/http/HttpMethod";
-import { AuthUser, ExamplesIn, MineIn, WriteBatch, type Boot, type Me, type ServerInfo } from "perennial-contract";
+import { AuthUser, DemoIn, ExamplesIn, MineIn, WriteBatch, type Boot, type Me, type ServerInfo } from "perennial-contract";
 import { withClientIp } from "./clientIp";
 import { AppConfig, googleClient } from "./config";
 import { ApiError, decodeBody, errorResponse, inlineScriptHashes, json, refuse, securityHeaders, serveStatic, versionAtLeast } from "./http";
@@ -23,6 +23,7 @@ import { traceId } from "./log";
 import { annotate, event, inBetterAuth, inSentryScope, RequestContext, sentrySpan, type RequestInfo } from "./request";
 import { Mail, OutboxMailer } from "./mail";
 import { Ai } from "./ai";
+import { Demo } from "./demo";
 import { Auth } from "./services";
 import { Sync } from "./sync";
 import { reportVerySlow, VERY_SLOW_MS } from "./watchdog";
@@ -85,6 +86,7 @@ export const AppLive = Layer.effect(
     const auth = yield* Auth;
     const ai = yield* Ai;
     const sync = yield* Sync;
+    const demo = yield* Demo;
     // No built page (server tests, API-only runs): no inline scripts to allow.
     const index = Bun.file(join(config.staticDir, "index.html"));
     const page = (yield* Effect.promise(() => index.exists())) ? yield* Effect.promise(() => index.text()) : "";
@@ -184,6 +186,14 @@ export const AppLive = Layer.effect(
           const result = yield* sentrySpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, sync.applyWrites(user.id, mutations));
           yield* event({ writeChanged: result.changed });
           return json(result);
+        }),
+      }),
+      // The demo learner's course and made-up history, made here in one request (demo.ts, #784).
+      at("/api/demo", {
+        POST: Effect.gen(function* () {
+          const user = yield* requireUser();
+          yield* demo.seed(user, yield* body(DemoIn));
+          return json({ ok: true });
         }),
       }),
 
