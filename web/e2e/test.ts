@@ -6,6 +6,8 @@
 
 import { expect as baseExpect, test as base } from "@playwright/test";
 
+import { addCoverage, COVERAGE } from "./coverage";
+
 export { expect, type Page } from "@playwright/test";
 
 // console.error messages seen on plain main that are not bugs. Keep this list short and
@@ -26,6 +28,7 @@ const ALLOWED_CONSOLE_ERRORS: { pattern: RegExp; reason: string }[] = [
 
 export const test = base.extend<{
   silentSpeech: void;
+  coverage: void;
   // A spec that deliberately makes the page log a console.error calls this before it
   // happens, with why that one error is expected. Not for noise seen across many specs:
   // that goes in ALLOWED_CONSOLE_ERRORS above, with its own reason.
@@ -37,6 +40,18 @@ export const test = base.extend<{
         if ("SpeechSynthesis" in window) SpeechSynthesis.prototype.speak = () => {};
       });
       await use();
+    },
+    { auto: true },
+  ],
+
+  // Only with E2E_COVERAGE=1 (e2e/coverage.ts). Only Chromium has page.coverage, so
+  // the WebKit spec (garden-touch) adds nothing to the report.
+  coverage: [
+    async ({ page, browserName }, use) => {
+      if (!COVERAGE || browserName !== "chromium") return use();
+      await page.coverage.startJSCoverage({ resetOnNavigation: false });
+      await use();
+      await addCoverage(await page.coverage.stopJSCoverage());
     },
     { auto: true },
   ],
