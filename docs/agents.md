@@ -17,6 +17,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - Pin the clock and viewport in tests that depend on them.
 - **UI changes:** before merging, take screenshots on phone and desktop, light and dark, and look at them yourself. Nothing misaligned or cheap-looking. Use the screenshot script, not a spec of your own. In web/: `SHOTS_DIR=<your scratch folder> bun run shots -g "today|shed"`. It names its screens and garden spots in `web/e2e/shots.ts`. Add a screen there if yours is not in the list. Run it in the background and wait with Monitor: it may wait for an e2e slot. Shed notes need 60+ known words, so garden spots use `/?demo=es:800` (it also opens the way over the stile, note n08 at 620 known words).
 - **Machine load:** e2e runs are queued, so load from them stays near the core count. If an e2e test still times out, run `uptime` and rerun only that spec with `--workers=1`. If it fails alone, it's a real failure: fix it. If it fails only under load, say so in the PR. Never just rerun it until it's green.
+- **Perf runs:** do not run `bun perf/ui.ts` while any e2e run is going on the machine. The extra load changes the numbers.
 
 ## PR and merge
 - One PR does one thing. It says `Closes #n`, or `Refs #n` when it is one part of an issue.

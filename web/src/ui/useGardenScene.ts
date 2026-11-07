@@ -61,20 +61,20 @@ interface WalkData {
 /** The kinds of label whose words GardenWalk's screen-reader status says. */
 const SPOKEN = new Set<Label["kind"]>(["fruit", "echo", "line"]);
 
-/** The scene's labels as of the last frame, for useSyncExternalStore. */
-export interface LabelStore {
-  get: () => Label[];
-  set: (labels: Label[]) => void;
+/** A value the scene changes often (the labels each frame, the load's percent), for useSyncExternalStore: only the part that reads it renders then (#713). */
+export interface Store<T> {
+  get: () => T;
+  set: (value: T) => void;
   subscribe: (onChange: () => void) => () => void;
 }
 
-function labelStore(): LabelStore {
-  let labels: Label[] = [];
+function store<T>(initial: T): Store<T> {
+  let value = initial;
   const subs = new Set<() => void>();
   return {
-    get: () => labels,
-    set: (l) => {
-      labels = l;
+    get: () => value,
+    set: (v) => {
+      value = v;
       for (const f of subs) f();
     },
     subscribe: (f) => {
@@ -119,12 +119,13 @@ export function useGardenScene({
   notes: { nails: readonly { id: string; unread: boolean }[]; stile: readonly string[] | null; open: (id: string) => void };
 }) {
   const [data, setData] = useState<WalkData | null>(null);
-  const [progress, setProgress] = useState<[number, number] | null>(null);
+  // How much of the garden has loaded, as a percent (null: not loading). It changes on each load chunk, so only the loading line reads it (#727).
+  const [progress] = useState(() => store<number | null>(null));
   // `retry`: loading again can help (its code did not load), so the page offers it; an installed app has no reload button.
   const [failed, setFailed] = useState<{ text: string; retry?: true } | null>(null);
   const [selected, setSelected] = useState<PlacedPlant | null>(null);
   // The labels move on every walking frame: they go to a store that only the label layer reads, so only it renders then (#713).
-  const [labels] = useState(labelStore);
+  const [labels] = useState(() => store<Label[]>([]));
   // The tags a screen reader hears of (a fallen fruit, the echo, the door's line) change rarely: state, set only when one comes, goes or changes its words.
   const [spoken, setSpoken] = useState<Label[]>([]);
   const spokenKey = useRef("");
@@ -224,7 +225,11 @@ export function useGardenScene({
               spokenKey.current = key;
               setSpoken(said);
             },
-            onProgress: (d, t) => setProgress([d, t]),
+            onProgress: (d, t) => {
+              // The same percent again changes nothing on screen.
+              const pct = t > 0 ? Math.round((d / t) * 100) : null;
+              if (pct !== progress.get()) progress.set(pct);
+            },
             onReach: setReach,
             onDoorOpen: () => openDoor.current(),
             onStall: () => reportStalledWalk(data.l.plants.length),
@@ -276,7 +281,7 @@ export function useGardenScene({
       }
       await s.loadPlants();
       if (!alive) return;
-      setProgress(null);
+      progress.set(null);
       if (!pinned) s.autoDetail();
     })();
     return () => {
