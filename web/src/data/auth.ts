@@ -237,7 +237,7 @@ export async function signInWithGoogle() {
 }
 
 let googleFailedSeen: boolean | undefined;
-/** True if this page load came back from a Google sign-in that did not work. Takes the mark out of the address. */
+/** True if this page load came back from a Google sign-in that did not work. Takes the mark out of the address, so the answer is kept: ask again and it is the same. */
 export function googleSignInFailed(): boolean {
   if (googleFailedSeen === undefined) {
     const params = new URLSearchParams(location.search);

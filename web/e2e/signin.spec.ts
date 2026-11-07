@@ -164,3 +164,13 @@ test("an anonymous learner signs in from Today right after starting, and their p
   await page.getByRole("tab", { name: "Today" }).click();
   await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
 });
+
+test("a Google sign-in that did not work says so, even to a learner already signed in, and leaves a clean address (#811)", async ({ page }) => {
+  await startCourse(page);
+  // Where the server sends a failed Google sign-in (server auth.ts, onAPIError).
+  await page.goto("/?google-failed");
+  await expect(page.getByText("Google sign-in did not work. Try again, or use an email code.")).toBeVisible();
+  expect(new URL(page.url()).search).toBe("");
+  await page.getByRole("button", { name: "OK" }).click();
+  await expect(page.getByText("Google sign-in did not work.")).toBeHidden();
+});
