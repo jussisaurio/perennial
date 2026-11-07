@@ -185,13 +185,16 @@ const clipFailures = new Set<string>();
 /**
  * A recorded clip (#306) did not load or play, so the browser spoke instead.
  * Why, and the course: never the text. Once per reason and course per page
- * load, so a dead connection does not send one report per word.
+ * load, so a dead connection does not send one report per word. The browser's
+ * own error goes along as the cause; online and hidden tell a dropped
+ * connection or a closing page from a real fault (#801).
  */
-export function reportClipFailed(reason: string, lang?: string) {
+export function reportClipFailed(reason: string, lang?: string, cause?: unknown) {
   const key = `${reason}|${lang}`;
   if (clipFailures.has(key)) return;
   clipFailures.add(key);
-  withSentry((s) => s.captureException(new Error(`audio clip failed: ${reason}`), { tags: { reason, lang } }));
+  const tags = { reason, lang, online: String(navigator.onLine), hidden: String(document.hidden) };
+  withSentry((s) => s.captureException(new Error(`audio clip failed: ${reason}`, { cause }), { tags }));
 }
 
 /**

@@ -29,10 +29,10 @@ async function fetchClip(text: string, tag: string): Promise<string | null> {
   let res: Response;
   try {
     res = await fetch(`${BASE}/${await clipPath(text, lang)}`);
-  } catch {
+  } catch (e) {
     // Offline or a dropped connection: asked again next time, not kept as missing.
     loaded.delete(keyOf(text, tag));
-    reportClipFailed("network", lang);
+    reportClipFailed("network", lang, e);
     return null;
   }
   if (!res.ok) {
@@ -136,7 +136,7 @@ export async function playClip(url: string, rate: number): Promise<boolean> {
     await a.play();
   } catch (e) {
     // Expected, not faults: NotAllowedError, no tap yet this page load; AbortError, stopped or replaced before it started.
-    if (!(e instanceof DOMException && (e.name === "NotAllowedError" || e.name === "AbortError"))) reportClipFailed("play");
+    if (!(e instanceof DOMException && (e.name === "NotAllowedError" || e.name === "AbortError"))) reportClipFailed("play", undefined, e);
     return false;
   }
   await new Promise<void>((resolve) => {

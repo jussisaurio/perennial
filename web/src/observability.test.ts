@@ -14,6 +14,8 @@ mock.module("posthog-js", () => ({
 }));
 let sentryOptions: Record<string, unknown> | undefined;
 const sentryErrors: string[] = [];
+/** The cause each captured exception carried, in step with sentryErrors. */
+const sentryCauses: unknown[] = [];
 /** What each captured exception was sent with (its tags and extras), in step with sentryErrors. */
 const sentryHints: unknown[] = [];
 mock.module("@sentry/react", () => ({
@@ -32,6 +34,7 @@ mock.module("@sentry/react", () => ({
   // must be here, or a later file that reaches Sentry fails (send.test.ts).
   captureException: (e: Error, hint: unknown) => {
     sentryErrors.push(e.message);
+    sentryCauses.push(e.cause);
     sentryHints.push(hint);
   },
 }));
@@ -39,7 +42,7 @@ mock.module("@sentry/react", () => ({
 const env = { VITE_POSTHOG_KEY: "phc_test", VITE_POSTHOG_HOST: "", VITE_SENTRY_DSN: "https://key@sentry.test/1", VITE_RELEASE: "" };
 const saved = Object.fromEntries(Object.keys(env).map((k) => [k, process.env[k]]));
 Object.assign(process.env, env);
-const { identify, initObservability, linkAccount, reportBadAnswer, reportSlowWalk, reportStalledWalk, track } = await import("./observability");
+const { identify, initObservability, linkAccount, reportBadAnswer, reportClipFailed, reportSlowWalk, reportStalledWalk, track } = await import("./observability");
 await initObservability();
 for (const [k, v] of Object.entries(saved)) {
   if (v === undefined) delete process.env[k];
@@ -50,6 +53,17 @@ test("Sentry: a broken answer is reported once per path, never once per request"
   for (let i = 0; i < 3; i++) reportBadAnswer("/api/write", "Expected number");
   reportBadAnswer("/api/server", "Expected boolean");
   expect(sentryErrors).toEqual(["bad answer: /api/write", "bad answer: /api/server"]);
+});
+
+test("Sentry: a failed clip carries the browser's own error, and whether the page was online and shown (#801)", () => {
+  const browser = new TypeError("Load failed");
+  // Unit tests run without a DOM; the page always has a document.
+  Object.assign(globalThis, { document: { hidden: true } });
+  reportClipFailed("network", "es", browser);
+  delete (globalThis as { document?: unknown }).document;
+  const at = sentryErrors.lastIndexOf("audio clip failed: network");
+  expect(sentryCauses[at]).toBe(browser);
+  expect(sentryHints[at]).toEqual({ tags: { reason: "network", lang: "es", online: String(navigator.onLine), hidden: "true" } });
 });
 
 test("Sentry: an unset release is named as the server names it, never empty", () => {
