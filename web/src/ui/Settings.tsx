@@ -8,7 +8,7 @@ import { AccountPanel } from "./Account";
 import { DataSection } from "./DataSection";
 import { RefusedLine, useRefused } from "./Refused";
 import { getThemePref, setThemePref, type ThemePref } from "./theme";
-import { RadioChips } from "./arrows";
+import { Segmented, Switch } from "./arrows";
 
 const DevTools = import.meta.env.DEV ? lazy(() => import("../dev/DevTools")) : null;
 
@@ -41,52 +41,34 @@ function CourseSettings({ course }: { course: CourseRow }) {
 function GrowthSetting() {
   const [on, set] = useGrowthSetting();
   return (
-    <div className="form">
-      <RadioChips
-        label="Growing plants"
-        className="even"
-        options={[
-          [true, "Show plants growing"],
-          [false, "Next card right away"],
-        ]}
-        value={on}
-        onChange={set}
-      />
-      <p className="muted small">
-        After a good answer, the word's plant gets water and grows. A new word's seed goes into the soil. It takes about a second, and a tap skips it. This setting is only for this device.
-        {on && reducedMotion() && " Your device asks for less motion, so the plants do not move."}
-      </p>
-    </div>
+    <Switch
+      label="Watch the plant grow after a good answer"
+      on={on}
+      onChange={set}
+      help="The word's plant gets water and grows. A new word's seed goes into the soil. It takes about a second, and a tap skips it. This setting is only for this device."
+      // The device's own setting wins, and the switch says so (docs/accessibility.md).
+      blocked={reducedMotion() ? "Your device asks for less motion, so this is off. To turn it on, change the motion setting on your device." : undefined}
+    />
   );
 }
 
 function SoundSetting() {
   const [on, set] = useSound();
   return (
-    <div className="form">
-      <RadioChips
-        label="Sound"
-        className="even"
-        options={[
-          [true, "Sound on"],
-          [false, "Sound off"],
-        ]}
-        value={on}
-        onChange={set}
-      />
-      <p className="muted small">
-        When sound is off, Perennial does not speak words or sentences, and there are no listening exercises. This setting is only for this device.{!on && ` ${SOUND_OFF_ASIDE}`}
-      </p>
-    </div>
+    <Switch
+      label="Speak words aloud"
+      on={on}
+      onChange={set}
+      help={`When this is off, Perennial does not speak words or sentences, and there are no listening exercises. This setting is only for this device.${on ? "" : ` ${SOUND_OFF_ASIDE}`}`}
+    />
   );
 }
 
 function Appearance() {
   const [pref, setPref] = useState<ThemePref>(getThemePref());
   return (
-    <RadioChips<ThemePref>
-      label="Theme"
-      className="even"
+    <Segmented<ThemePref>
+      label="Colors"
       options={[
         ["system", "Same as my device"],
         ["light", "Light"],

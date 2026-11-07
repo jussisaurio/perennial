@@ -13,7 +13,7 @@ import { useNow } from "./useNow";
 import { useScrollMargin } from "./useScrollMargin";
 import { noForcedLayout } from "./virtualRows";
 import { useShortcut } from "./useShortcut";
-import { RadioChips } from "./arrows";
+import { Segmented } from "./arrows";
 import { AddScreen } from "./Add";
 import { drawnRows, FieldGuide } from "./FieldGuide";
 import { StageGlyph } from "./StageGlyph";
@@ -142,7 +142,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
           <option value="suspended">Paused</option>
           {(onAdd || hasMine) && <option value="mine">From my texts</option>}
         </select>
-        <RadioChips<WordsView>
+        <Segmented<WordsView>
           className="words-view"
           label="Show words as"
           options={[

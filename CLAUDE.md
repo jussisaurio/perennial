@@ -40,6 +40,7 @@ Per-PR reviews catch local problems, not slow drift across files. Once a week, o
 
 - **Simple English** in all UI text and docs: short sentences, common words. Many learners do not speak English as a first language.
 - **Choices predict their outcome.** For side-by-side buttons or options, the labels alone must tell a first-time user how the results differ.
+- **Accessibility:** follow [docs/accessibility.md](docs/accessibility.md): a choice never looks like an action, and a state is never shown by color alone.
 - **Whimsy is quiet.** Small, discoverable details. Never streaks, shaming or confetti, and never in the way of learning.
 - **Privacy:** logs and analytics carry ids, counts and short values. Never emails, sign-in codes, request bodies or the learner's text.
 

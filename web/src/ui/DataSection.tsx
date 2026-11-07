@@ -6,6 +6,7 @@ import { useLearner, useSentences, type Learner, type Sentences } from "../data/
 import { language } from "../content/languages";
 import { download } from "./files";
 import { plural } from "./format";
+import { DownloadIcon } from "./icons";
 
 const stamp = () => new Date().toISOString().slice(0, 10);
 
@@ -80,10 +81,10 @@ export function DataSection({ lang }: { lang: string }) {
       </p>
       <div className="row even">
         <button className="secondary" disabled={!learner || !sentences} onClick={() => learner && sentences && setSaved(exportJSON(learner, sentences))}>
-          Download all my data (JSON)
+          <DownloadIcon size={18} /> Download all my data (JSON)
         </button>
         <button className="secondary" disabled={!learner} onClick={() => learner && setSaved(exportCSV(learner))}>
-          Download my words (CSV)
+          <DownloadIcon size={18} /> Download my words (CSV)
         </button>
       </div>
       {saved && (
