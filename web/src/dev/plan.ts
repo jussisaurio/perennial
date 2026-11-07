@@ -69,7 +69,7 @@ function planWords(words: readonly { id: string }[], now: number, days: number, 
 /** How big the demo learner is: this many words studied, or exactly this many known (a story point, jumps.ts). */
 export type DemoSize = { studied: number } | { known: number };
 
-/** The words to upload reviews for, the most common first. */
+/** The words to upload reviews for, the most common first. @internal Exported for tests. */
 export function planDemo(words: readonly { id: string }[], size: DemoSize, now: number): WordPlan[] {
   if ("studied" in size) return planWords(words.slice(0, size.studied), now, DAYS, false);
   const days = Math.max(DAYS, Math.ceil(size.known / KNOWN_A_DAY));

@@ -18,7 +18,7 @@ const AT_FEET = 0.45;
 const WALK = 0.8;
 const LEFT = 3;
 
-/** Whether the cat comes on the `n`-th call (from 0) of a walk opened on this day: about one in 50, the same each time. */
+/** Whether the cat comes on the `n`-th call (from 0) of a walk opened on this day: about one in 50, the same each time. @internal Exported for tests. */
 export function catComes(now: Date, n: number): boolean {
   // FNV alone mixes the last characters poorly (about one in 100 here): mulberry32 over it is even.
   return rng(hash32(`cat-call:${dayNumber(now)}:${n}`))() < 1 / 50;

@@ -153,7 +153,7 @@ export function leanDeg(id: string, r: number): number {
   return leanDir(id) * Math.max(0, Math.min(1, (0.9 - r) / 0.4)) * 18;
 }
 
-/** The same lean as the 2D garden (leanDeg), in radians for the sprite shader, where positive turns the top to the left. */
+/** The same lean as the 2D garden (leanDeg), in radians for the sprite shader, where positive turns the top to the left. @internal Exported for tests. */
 export function droopFor(id: string, r: number): number {
   return (-leanDeg(id, r) * Math.PI) / 180;
 }
@@ -684,6 +684,7 @@ export interface Trip {
  * A walk that makes no headway for this long (s) has stalled: something holds
  * it that wayTo did not plan round. That should never happen, so it is
  * reported; the walk ends rather than walk into a wall for ever.
+ * @internal Exported for tests.
  */
 export const TRIP_STUCK = 0.5;
 

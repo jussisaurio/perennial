@@ -43,7 +43,7 @@ const MEANINGS: ReadonlyMap<string, Meaning> = new Map<string, Meaning>([
   ...["feliz", "glücklich"].map((w) => [w, { kind: "happy" }] as const),
 ]);
 
-/** Every word with a meaning, for the test that each is a real deck word. */
+/** Every word with a meaning, for the test that each is a real deck word. @internal Exported for tests. */
 export const MEANING_WORDS: readonly string[] = [...MEANINGS.keys()];
 
 export function meaningOf(word: string): Meaning | null {

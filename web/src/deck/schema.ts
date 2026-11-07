@@ -54,7 +54,7 @@ export type GardenWord = (typeof GARDEN_WORDS)[number];
 export const ORCHARD_WORDS = ["tree", "apple", "orange", "lemon", "cherry", "pear", "plum", "fig", "olive", "grape", "peach"] as const;
 export type OrchardWord = (typeof ORCHARD_WORDS)[number];
 
-/** Id bodies are ten of these: lowercase base32 without i, l, o, u, to avoid confusion. */
+/** Id bodies are ten of these: lowercase base32 without i, l, o, u, to avoid confusion. @internal Exported for scripts/deck and tests. */
 export const ID_ALPHABET = "0123456789abcdefghjkmnpqrstvwxyz";
 const wordId = (lang: string) => Schema.String.check(Schema.isPattern(new RegExp(`^${lang}\\.w\\.[${ID_ALPHABET}]{10}$`)));
 const sentenceId = (lang: string) => Schema.String.check(Schema.isPattern(new RegExp(`^${lang}\\.s\\.[${ID_ALPHABET}]{10}$`)));
@@ -70,6 +70,7 @@ const SourceSentence = Schema.Struct({
   cloze: text(60),
 });
 
+/** @internal Only scripts/deck uses it. */
 export const SourceWord = Schema.Struct({
   lemma: text(60),
   gloss: text(120),
@@ -120,6 +121,7 @@ export const DeckSentence = (lang: string) =>
     keys: Schema.Array(Schema.String),
   });
 
+/** @internal Exported for scripts/ and tests. */
 export const Deck = (lang: string) =>
   Schema.Struct({
     lang: Schema.Literal(lang),
@@ -134,12 +136,13 @@ export type DeckWord = Schema.Schema.Type<ReturnType<typeof DeckWord>>;
 export type DeckSentence = Schema.Schema.Type<ReturnType<typeof DeckSentence>>;
 export type Deck = Schema.Schema.Type<ReturnType<typeof Deck>>;
 
-/** Manifest: (lemma, pos, sense) → id, so regenerating content keeps ids. */
+/** Manifest: (lemma, pos, sense) → id, so regenerating content keeps ids. @internal Exported for scripts/deck and tests. */
 export const manifestKey = (w: { lemma: string; pos: string; sense?: string }) => `${w.lemma.normalize("NFC").toLowerCase()}|${w.pos}|${w.sense ?? ""}`;
 
 /**
  * Invariants a single deck must satisfy beyond its schema. Returns problems,
  * empty when the deck is fine.
+ * @internal Exported for scripts/deck and tests.
  */
 export function deckProblems(deck: Deck): string[] {
   const out: string[] = [];
@@ -186,6 +189,7 @@ export function deckProblems(deck: Deck): string[] {
 /**
  * Compatibility of a new deck version with the last released one. Errors
  * block the change; `retiredShare` lets CI ask for approval on big changes.
+ * @internal Exported for scripts/deck and tests.
  */
 export function compatibility(prev: Deck, next: Deck): { errors: string[]; added: number; edited: number; retired: number; retiredShare: number } {
   const errors: string[] = [];

@@ -14,6 +14,7 @@ import { benchAt, KEY_SPOTS, keyAt, lanternSpots, sunflowerAt, WALKER, type Layo
 
 // ---- Brushing the beds ----
 
+/** @internal Exported for tests. */
 export const BRUSH = {
   /**
    * A plant this near the walker (m) is brushed. A walker keeps WALKER from a

@@ -7,7 +7,7 @@
 import { hash01 } from "../lib/seed";
 import type { VisitorId } from "./visitors";
 
-/** How many cards it stays. */
+/** How many cards it stays. @internal Exported for tests. */
 export const WATCH_CARDS = 4;
 
 export interface SessionVisit {

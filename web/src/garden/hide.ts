@@ -30,7 +30,7 @@ export interface Hiding {
 /** How often it hides: on about this share of days in a new garden, growing to `grown` in a garden `days` old. */
 const OFTEN = { young: 0.45, grown: 0.7, days: 120 } as const;
 
-/** Does it hide today, in a garden `age` days old? The same all day. */
+/** Does it hide today, in a garden `age` days old? The same all day. @internal Exported for tests. */
 export function hidesToday(age: number, now: Date): boolean {
   const share = OFTEN.young + (OFTEN.grown - OFTEN.young) * Math.min(1, age / OFTEN.days);
   return (hash32(`${today(now)}:gnome-hides`) % 1000) / 1000 < share;
@@ -42,7 +42,7 @@ export function hidesToday(age: number, now: Date): boolean {
  * (facing the gate, where you walk in), under the bench, on the sign. Then the
  * pond, the leaf piles, behind any plant at a bed's edge, and the orchard.
  */
-export const PLACES = { front: 0, bench: 0, sign: 0, pads: 5, leaves: 10, edges: 14, orchard: 14 } as const;
+const PLACES = { front: 0, bench: 0, sign: 0, pads: 5, leaves: 10, edges: 14, orchard: 14 } as const;
 type Place = keyof typeof PLACES;
 
 /** A plant this near its bed's edge (m) is in reach from the path. It crouches this far behind it (m), away from the path. */

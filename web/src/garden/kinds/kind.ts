@@ -25,7 +25,7 @@ export interface Bloom {
   thirsty: boolean;
 }
 
-/** What a visitor is told when it arrives, as the garden is built. */
+/** What a visitor is told when it arrives, as the garden is built. @internal Exported for tests. */
 export interface Arrival {
   spots: Spots;
   layout: Layout;

@@ -13,6 +13,7 @@ import type { VisitorId } from "./visitors";
  * The time-lapse: sit still `still` s and time starts to speed up, reaching
  * full speed over `ramp` s; then one part of the day passes every `part` s.
  * Standing up runs it back to the time it was at `back` parts a second.
+ * @internal Exported for tests.
  */
 export const LAPSE = { still: 6, ramp: 4, part: 15, back: 1.2 };
 
@@ -91,7 +92,7 @@ export function sunPath(look: Look, out: [number, number, number]): [number, num
   return out;
 }
 
-/** Who comes to sit with you, if they are in the garden today, and after how many seconds of sitting. */
+/** Who comes to sit with you, if they are in the garden today, and after how many seconds of sitting. @internal Exported for tests. */
 export const COMPANY = [
   { id: "bird", after: 10 },
   { id: "cat", after: 20 },

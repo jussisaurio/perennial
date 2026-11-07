@@ -10,7 +10,7 @@ const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
 /** The base note: A4. */
 const BASE_HZ = 440;
 
-/** The word's note, in Hz: the same for the word everywhere. */
+/** The word's note, in Hz: the same for the word everywhere. @internal Exported for tests. */
 export function noteFor(word: string): number {
   const step = SCALE[hash32(word.normalize("NFC").toLowerCase(), 0xc417) % SCALE.length];
   return BASE_HZ * 2 ** (step / 12);

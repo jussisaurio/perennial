@@ -161,7 +161,7 @@ export const PERK_SCALE = 0.04;
 /** A sneeze (#360, a dandelion seed lands on the plant): a quick squash (fraction of its height), then it pops back (s). */
 export const SNEEZE = { rise: 0.08, fall: 0.35, squash: 0.18 } as const;
 /** On about one listen in this many, the neighbour perks up too, as if you called it. */
-export const NEIGHBOUR_PERK = 30;
+const NEIGHBOUR_PERK = 30;
 
 /** Does the neighbour think you called it this time? */
 export const neighbourPerks = (rand: () => number = Math.random): boolean => rand() * NEIGHBOUR_PERK < 1;

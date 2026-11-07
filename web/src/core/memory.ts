@@ -153,7 +153,7 @@ export function* knownAtSteps(l: KnownAtLearner, t: number): Generator<void, Rea
   return known;
 }
 
-/** Fold reviews into memory rows per word and skill, plus unlocked-but-unpractised skills. */
+/** Fold reviews into memory rows per word and skill, plus unlocked-but-unpractised skills. @internal Exported for tests. */
 export function deriveMemory(reviews: readonly ReviewRow[], retention: number, resolve: (id: string) => string): MemoryRow[] {
   const log = new MemoryLog(retention, resolve);
   for (const r of reviews) log.set(r);
