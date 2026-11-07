@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, jest, test } from "bun:test";
 import { Effect } from "effect";
 import type { ApiError, HttpError } from "./http";
-import { Refused, sendUntilStored } from "./send";
+import { Refused, sendUntilStored, writeQueue } from "./send";
 
 const realFetch = globalThis.fetch;
 /** The server's answers, in order; the last one repeats. */
@@ -30,7 +30,7 @@ const settle = async () => {
 function send(otherUser = () => false, wake = () => new Promise<void>(() => {})) {
   const refused: (ApiError | HttpError)[] = [];
   const result: { ok?: unknown; error?: unknown } = {};
-  void Effect.runPromise(sendUntilStored([], "key-1", { otherUser, wake, onRefused: (e) => refused.push(e) })).then(
+  void Effect.runPromise(sendUntilStored({ mutations: [] }, { otherUser, wake, onRefused: (e) => refused.push(e) })).then(
     (ok) => (result.ok = ok),
     (error: unknown) => (result.error = error),
   );
@@ -114,4 +114,71 @@ test("an answer that breaks the contract after the server took the write: counte
   await wait(0);
   expect(result).toEqual({ ok: null });
   expect(refused).toEqual([]);
+});
+
+/** The bodies the server got, and whether each was a keepalive request. */
+let bodies: { mutations: { id: number }[]; from: { seq: number[] }; keepalive: boolean; bytes: number }[] = [];
+/** Answer every write request with `answer`, keeping its body. */
+function server(answer: (body: (typeof bodies)[number]) => Response | Promise<Response>) {
+  bodies = [];
+  globalThis.fetch = (async (_path: string, init: RequestInit) => {
+    calls++;
+    const text = init.body as string;
+    const body = { ...(JSON.parse(text) as Pick<(typeof bodies)[number], "mutations" | "from">), keepalive: !!init.keepalive, bytes: new TextEncoder().encode(text).length };
+    bodies.push(body);
+    return answer(body);
+  }) as unknown as typeof fetch;
+}
+/** A write of one mutation about the size of a review (~250 bytes). */
+const write = (id: number) => [{ id, pad: "x".repeat(230) }];
+
+function queue() {
+  const refused: (ApiError | HttpError)[] = [];
+  let online = () => {};
+  const q = writeQueue({ otherUser: () => false, wake: () => new Promise<void>((r) => (online = r)), onRefused: (e) => refused.push(e), signal: new AbortController().signal });
+  return { q, refused, online: () => online() };
+}
+
+test("a backlog made offline goes in a few requests, not one per write, each under 64 KB (#817)", async () => {
+  let up = false;
+  server(() => (up ? stored.clone() : Promise.reject(new TypeError("Failed to fetch"))));
+  const { q, online } = queue();
+  const done = Array.from({ length: 600 }, (_, i) => q.send(write(i)));
+  await settle();
+  up = true;
+  const before = bodies.length;
+  online();
+  await Promise.all(done);
+  const sent = bodies.slice(before);
+  expect(sent.length).toBeLessThanOrEqual(4);
+  expect(sent.flatMap((b) => b.mutations.map((m) => m.id))).toEqual(Array.from({ length: 600 }, (_, i) => i));
+  for (const b of sent) expect(b.bytes).toBeLessThanOrEqual(64 * 1024);
+});
+
+test("the page goes away: the oldest writes that fit go in one keepalive request under 64 KB, with the one on the way, numbered (#817, #818)", async () => {
+  server(() => new Promise<Response>(() => {})); // The first request never answers.
+  const { q } = queue();
+  for (let i = 0; i < 600; i++) void q.send(write(i));
+  await settle();
+  q.pageHide();
+  await settle();
+  expect(bodies.length).toBe(2);
+  const [onTheWay, last] = bodies as [(typeof bodies)[number], (typeof bodies)[number]];
+  expect(last.keepalive).toBe(true);
+  expect(last.bytes).toBeLessThanOrEqual(64 * 1024);
+  expect(last.mutations.length).toBeGreaterThan(200);
+  // From the oldest, the writes on the way too, with the numbers they were sent with: the server applies each number once.
+  const ids = last.mutations.map((m) => m.id);
+  expect(ids).toEqual(Array.from({ length: ids.length }, (_, i) => i));
+  expect(last.from.seq).toEqual(ids);
+  expect(last.from.seq.slice(0, onTheWay.from.seq.length)).toEqual(onTheWay.from.seq);
+});
+
+test("one write refused for good in a batch: only that one is refused, the others are stored (#817)", async () => {
+  server((b) => (b.mutations.some((m) => m.id === 1) ? json(422, { error: "review_from_the_future" }) : stored.clone()));
+  const { q, refused } = queue();
+  const results = await Promise.allSettled([0, 1, 2].map((i) => q.send(write(i))));
+  expect(results.map((r) => r.status)).toEqual(["fulfilled", "rejected", "fulfilled"]);
+  expect(refused.map((e) => e.message)).toEqual(["review_from_the_future"]);
+  expect(bodies.map((b) => b.mutations.map((m) => m.id))).toEqual([[0], [1, 2], [1], [2]]);
 });

@@ -46,6 +46,22 @@ test("a batch of reviews is stored in order", async () => {
   expect(ids.toSorted()).toEqual([a.row.id, c.row.id].toSorted());
 });
 
+// The closing page sends the writes again, also one still on the way; that one can land last (#818).
+test("a tab's writes apply once each, in its order: a late copy of an older write is skipped", async () => {
+  const cookie = await t.signIn(unique("seq"));
+  const tab = crypto.randomUUID();
+  const r = review(W.a);
+  const undo = { type: "review.delete", id: r.row.id };
+  // Answer, then Undo, both in the page's last request; then the answer's own request lands.
+  expect((await t.call("/api/write", { mutations: [r, undo], from: { tab, seq: [0, 1] } }, cookie)).status).toBe(200);
+  const late = await t.call("/api/write", { mutations: [r], from: { tab, seq: [0] } }, cookie);
+  expect(late.status).toBe(200);
+  expect(late.body).toMatchObject({ changed: false });
+  expect((await t.sql`select 1 from review where id = ${r.row.id}`).length).toBe(0);
+  // Another tab's numbers are its own.
+  expect((await t.call("/api/write", { mutations: [r], from: { tab: crypto.randomUUID(), seq: [0] } }, cookie)).body).toMatchObject({ changed: true });
+});
+
 test("word state: the newer change wins, and the server caps future times", async () => {
   const cookie = await t.signIn(unique("state"));
   const id = (await t.me(cookie)).id;

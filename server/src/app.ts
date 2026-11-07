@@ -177,13 +177,14 @@ export const AppLive = Layer.effect(
         POST: Effect.gen(function* () {
           yield* requireFreshClient;
           const user = yield* requireUser();
-          const { mutations } = yield* body(WriteBatch, 512 * 1024);
+          const batch = yield* body(WriteBatch, 512 * 1024);
+          const { mutations } = batch;
           const types: Record<string, number> = {};
           for (const m of mutations) types[m.type] = (types[m.type] ?? 0) + 1;
           // "review.insert:3 course.upsert:1": what the batch was, searchable as text.
           yield* event({ writes: mutations.length, writeTypes: Object.entries(types).map(([k, n]) => `${k}:${n}`).join(" ") });
           // A span per write batch, so a slow trace shows the database time (sampled, see instrument.ts).
-          const result = yield* sentrySpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, sync.applyWrites(user.id, mutations));
+          const result = yield* sentrySpan({ name: "write batch", op: "db.write", attributes: { mutations: mutations.length } }, sync.applyWrites(user.id, batch));
           yield* event({ writeChanged: result.changed });
           return json(result);
         }),

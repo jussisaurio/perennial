@@ -6,7 +6,7 @@
 import { PgClient } from "@effect/sql-pg";
 import { Clock, Context, Effect, Layer } from "effect";
 import type { SqlError } from "effect/sql/SqlError";
-import { type LearnerRows, type Mutation, type UserId, type WordId, type WriteResult } from "perennial-contract";
+import { type LearnerRows, type Mutation, type UserId, type WordId, type WriteBatch, type WriteResult } from "perennial-contract";
 import { COURSE_DEFAULTS, NOTES_READ_UNION } from "./course";
 import { rowCount, theRow } from "./db";
 import { type ApiError, refuse } from "./http";
@@ -30,7 +30,7 @@ export class Sync extends Context.Service<
   Sync,
   {
     /** Applies a batch for the learner, in one transaction. */
-    readonly applyWrites: (userId: UserId, mutations: readonly Mutation[]) => Effect.Effect<WriteResult, ApiError, RequestContext>;
+    readonly applyWrites: (userId: UserId, batch: WriteBatch) => Effect.Effect<WriteResult, ApiError, RequestContext>;
     /**
      * Refuse (429 quota) when `n` more rows would not fit. The AI routes ask before they
      * call the model: their words are charged before the app writes them.
@@ -128,7 +128,9 @@ export const SyncLive = Layer.effect(
      * touched a row (a retried insert, an older state, a delete of nothing).
      */
     const applyWrites = Effect.fn("Sync.applyWrites")(
-      function* (userId: UserId, mutations: readonly Mutation[]) {
+      function* (userId: UserId, { mutations: sent, from }: WriteBatch) {
+        if (from && from.seq.length !== sent.length) return yield* refuse({ error: "bad_request", issues: [{ path: ["from", "seq"], message: "needs one number per mutation" }] });
+        let mutations = sent;
         const now = new Date(yield* Clock.currentTimeMillis);
         for (const m of mutations) if (m.type === "review.insert" && m.row.reviewed_at.getTime() > now.getTime() + DAY) return yield* refuse({ error: "review_from_the_future" });
         const { started, ...result } = yield* sql.withTransaction(
@@ -139,6 +141,16 @@ export const SyncLive = Layer.effect(
             // deletion would take with it. A write that got here first is moved over.
             const user = yield* sql`select id from "user" where id = ${userId} for share`;
             if (!user.length || !(yield* sql`select 1 from session where "userId" = ${userId} limit 1`).length) return yield* refuse({ error: "sign_in_required" });
+            if (from) {
+              // A tab's writes apply once each, in its order: one sent again (its answer
+              // was lost, or the closing page sent it again while it was on the way)
+              // is skipped. The row lock makes a second request from the tab wait for
+              // the first, so a late copy of an older write never lands after newer ones (#818).
+              yield* sql`insert into write_tab (user_id, tab, applied) values (${userId}, ${from.tab}, -1) on conflict do nothing`;
+              const { applied } = yield* theRow(sql<{ applied: number }>`select applied from write_tab where user_id = ${userId} and tab = ${from.tab} for update`);
+              mutations = sent.filter((_, i) => from.seq[i]! > applied);
+              yield* sql`update write_tab set applied = ${Math.max(applied, ...from.seq)}, updated_at = now() where user_id = ${userId} and tab = ${from.tab}`;
+            }
             yield* checkQuota(userId, mutations);
             yield* checkWords(userId, mutations);
             let rows = 0;
@@ -221,8 +233,9 @@ export const SyncLive = Layer.effect(
             }
             yield* insertReviews;
             // The rows the server merges, as stored now: the app keeps these, not its own (store.ts confirm).
-            const langs = [...new Set(mutations.flatMap((m) => (m.type === "course.upsert" ? [m.row.lang] : [])))];
-            const wordIds = [...new Set(mutations.flatMap((m) => (m.type === "word_state.upsert" ? [m.row.word_id] : m.type === "word_state.delete" ? [m.word_id] : [])))];
+            // Also for mutations skipped above: the app is waiting for this answer, not the first one.
+            const langs = [...new Set(sent.flatMap((m) => (m.type === "course.upsert" ? [m.row.lang] : [])))];
+            const wordIds = [...new Set(sent.flatMap((m) => (m.type === "word_state.upsert" ? [m.row.word_id] : m.type === "word_state.delete" ? [m.word_id] : [])))];
             const stored = {
               course: langs.length ? yield* sql`select * from course where user_id = ${userId} and lang in ${sql.in(langs)}` : [],
               word_state: wordIds.length ? yield* sql`select * from word_state where user_id = ${userId} and word_id in ${sql.in(wordIds)}` : [],
