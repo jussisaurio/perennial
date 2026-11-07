@@ -1,5 +1,5 @@
 import { startTransition, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { googleSignInFailed, signOut, useUser } from "./data/auth";
+import { googleSignInFailed, useUser } from "./data/auth";
 import { identify, initObservability, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useDeckSentences, useStore } from "./data/learner";
 import { boot } from "./data/boot";
@@ -343,7 +343,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
         />
       )}
       {(route === "/words" || route === "/words/add") && !noDeck && <WordsScreen lang={lang} adding={route === "/words/add"} onAdd={() => go("/words/add")} onBack={() => go("/words")} />}
-      {route === "/settings" && <SettingsScreen lang={lang} onSignedOut={() => void signOut()} />}
+      {route === "/settings" && <SettingsScreen lang={lang} />}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { recall, wordState, type MemoryRow, type WordState } from "../core/memor
 import { notStartedWords } from "../content/order";
 import { Progress } from "./Progress";
 import { setWordStatus, useLearner, useSentences, useStore, type Learner, type Sentence, type Word } from "../data/learner";
-import type { ReviewRow, UserSentenceRow } from "../data/rows";
+import { SKILLS, type ReviewRow, type UserSentenceRow } from "../data/rows";
 import { tooFewCredits, useMe } from "./Account";
 import { useNow } from "./useNow";
 import { useScrollMargin } from "./useScrollMargin";
@@ -23,12 +23,11 @@ import { wordsEmptyLine } from "../content/voice";
 import { headword } from "../content/forms";
 
 type Filter = "all" | WordState | "suspended" | "mine";
-const SKILL_ORDER = ["read", "listen", "write"];
 // The "/" shortcut needs a keyboard: touch screens hide key hints (as kbd does in index.css).
 const TOUCH = matchMedia("(hover: none)").matches;
 
 /** The skills practised at least once, reading first. */
-const practisedSkills = (memory: MemoryRow[]) => memory.filter((m) => m.reps > 0).sort((x, y) => SKILL_ORDER.indexOf(x.skill) - SKILL_ORDER.indexOf(y.skill));
+const practisedSkills = (memory: MemoryRow[]) => memory.filter((m) => m.reps > 0).sort((x, y) => SKILLS.indexOf(x.skill) - SKILLS.indexOf(y.skill));
 
 export function WordsScreen({ lang, adding, onAdd, onBack }: { lang: string; adding: boolean; onAdd: () => void; onBack: () => void }) {
   // Adding words from a text needs Perennial AI (the server says if it is on): without it, the
