@@ -99,7 +99,7 @@ function SavedStatus() {
   );
 }
 
-export function SettingsScreen({ lang }: { lang: string; onSignedOut?: () => void }) {
+export function SettingsScreen({ lang }: { lang: string }) {
   const learner = useLearner(lang);
   const course = learner?.course;
   return (
