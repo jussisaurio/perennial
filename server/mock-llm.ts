@@ -72,7 +72,8 @@ const server = Bun.serve({
     const body = (await req.json().catch(() => ({}))) as { system?: string; messages?: { content: string }[] };
     const prompt = [body.system ?? "", ...(body.messages?.map((m) => m.content) ?? [])].join("\n");
     await Bun.sleep(150);
-    const text = JSON.stringify(reply(prompt));
+    // Test hook: a word starting "garbled" gets an answer that is not JSON (the tokens are still billed).
+    const text = /^- "garbled/m.test(prompt) ? "Sorry, here are your words: zorro, búho" : JSON.stringify(reply(prompt));
     if (path.endsWith("/messages")) {
       // Anthropic Messages API shape, for the hosted server's SDK calls.
       return Response.json(
