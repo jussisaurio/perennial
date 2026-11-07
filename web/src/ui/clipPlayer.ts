@@ -1,10 +1,11 @@
-// Recorded clips (#306): the app's words and sentences, said by one voice
+// Recorded clips (#306): the app's words and sentences, said by Google voices
 // (content/clips.ts names them). Loaded ahead of time into memory, and played
 // on one reused <audio> element. Off until VITE_AUDIO_BASE_URL is set at build
 // time: until then, and for any text without a clip, the browser speaks.
 
 import { clipPath } from "../content/clips";
 import { COURSE_LANGUAGES } from "../content/languages";
+import type { DeckLang } from "../deck/langs";
 import { reportClipFailed } from "../observability";
 
 // `||`: an empty build argument means no clips, the same as none.
@@ -12,7 +13,7 @@ const BASE = (import.meta.env.VITE_AUDIO_BASE_URL as string | undefined) || unde
 
 export const clipsOn = () => BASE !== undefined;
 
-function courseOf(tag: string): string {
+function courseOf(tag: string): DeckLang {
   const l = COURSE_LANGUAGES.find((x) => x.tag === tag);
   // Every caller speaks a course's own tag (language(code).tag).
   if (!l) throw new Error(`no course speaks ${tag}`);

@@ -15,7 +15,7 @@ const COURSES: Record<DeckLang, Omit<Language, "code"> & { blurb: string }> = {
   de: { name: "German", tag: "de-DE", blurb: "Germany, Austria and Switzerland" },
 };
 
-export const COURSE_LANGUAGES: (Language & { blurb: string })[] = DECK_LANGS.map((code) => ({ code, ...COURSES[code] }));
+export const COURSE_LANGUAGES: (Language & { code: DeckLang; blurb: string })[] = DECK_LANGS.map((code) => ({ code, ...COURSES[code] }));
 
 /**
  * The courses this build can teach. A course in a newer language can sync here

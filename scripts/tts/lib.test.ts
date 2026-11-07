@@ -36,11 +36,20 @@ test("a clip's path is the app's path for the same text, whatever its Unicode fo
 
 describe("clipKey", () => {
   const base = { ...VOICE, lang: "es", text: "hola" };
+  const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
   test("is sha256 of version|model|voice|speed|lang|text, and the path ends with its first 16 hex digits", async () => {
-    const key = createHash("sha256").update("v1|chirp3-hd|Charon|1|es|hola").digest("hex");
+    const key = sha("v1|chirp3-hd|Charon|1|es|hola");
     expect(await clipKey(base)).toBe(key);
-    expect(await clipPath("hola", "es")).toBe(`es/hola-${key.slice(0, 16)}.mp3`);
+    // A sentence keeps the name it has had since #306.
+    expect(await clipPath("Hola, amigo.", "es")).toBe(`es/hola-amigo-${sha("v1|chirp3-hd|Charon|1|es|Hola, amigo.").slice(0, 16)}.mp3`);
+  });
+
+  test("a lone word is said by a WaveNet voice, so its clip has a name of its own (#776)", async () => {
+    expect(await clipPath("Name", "de")).toBe(`de/name-${sha("v1|wavenet|H|1|de|Name").slice(0, 16)}.mp3`);
+    const [word, sentence] = await clipsFor(["Name", "Wie ist dein Name?"], "de");
+    expect(word!.voice).toBe("de-DE-Wavenet-H");
+    expect(sentence!.voice).toBe("de-DE-Chirp3-HD-Charon");
   });
 
   test("changes when any input changes", async () => {
@@ -67,7 +76,7 @@ describe("slug", () => {
   });
 });
 
-test("an upload sets the object's type and lets the CDN and browsers keep it forever", async () => {
+test("an upload sets the object's type; browsers keep it a day and the CDN a year", async () => {
   const seen: { url: string; init: RequestInit }[] = [];
   await putClip("https://r2.example/presigned", new Uint8Array([1, 2]), async (url, init) => {
     seen.push({ url, init });
@@ -77,11 +86,18 @@ test("an upload sets the object's type and lets the CDN and browsers keep it for
   expect(seen[0]!.init.method).toBe("PUT");
   const headers = new Headers(seen[0]!.init.headers);
   expect(headers.get("content-type")).toBe("audio/mpeg");
-  expect(headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+  expect(headers.get("cache-control")).toBe("public, max-age=86400, s-maxage=31536000");
 });
 
-const audio = Buffer.from("mp3").toString("base64");
-const ok = () => Response.json({ audioContent: audio });
+/** A 32 kbps MPEG-2 Layer III MP3 as Chirp 3 HD sends it, `seconds` long. */
+const mp3 = (seconds: number) => {
+  const b = new Uint8Array(Math.round((seconds * 32_000) / 8));
+  b.set([0xff, 0xf3, 0x44, 0xc4]);
+  return Buffer.from(b).toString("base64");
+};
+const ok = () => Response.json({ audioContent: mp3(1) });
+// What Chirp 3 HD sent for "gut" and "de" (#776): 1,152 bytes of near silence.
+const silent = () => Response.json({ audioContent: mp3(0.288) });
 
 function harness(answer: (call: number, body: { input: { text: string } }) => Response | Promise<Response>) {
   const calls: string[] = [];
@@ -119,7 +135,7 @@ function harness(answer: (call: number, body: { input: { text: string } }) => Re
   return { deps, calls, uploads, sleeps, stored, inFlight };
 }
 
-const clips = (texts: string[]): Clip[] => texts.map((text) => ({ lang: "es", tag: "es-ES", text, path: `es/${text}.mp3` }));
+const clips = (texts: string[]): Clip[] => texts.map((text) => ({ lang: "es", tag: "es-ES", voice: "es-ES-Chirp3-HD-Charon", text, path: `es/${text}.mp3` }));
 const opts = { apiKey: "k", maxChars: 1_000, concurrency: 4, rpm: 1_000, attempts: 4 };
 
 describe("render", () => {
@@ -171,6 +187,14 @@ describe("render", () => {
     expect(h.calls.filter((t) => t === "bad")).toHaveLength(4);
     expect(r.done).toBe(1);
     expect(r.failed).toEqual([{ path: "es/bad.mp3", text: "bad", reason: "HTTP 500" }]);
+  });
+
+  test("a near-silent clip is asked for again, and listed if it stays silent", async () => {
+    const h = harness((n, body) => (body.input.text === "gut" && n > 1 ? ok() : silent()));
+    const r = await render(clips(["gut", "de"]), { ...opts, concurrency: 1 }, h.deps);
+    expect(h.uploads).toEqual(["es/gut.mp3"]);
+    expect(h.calls.filter((t) => t === "de")).toHaveLength(4);
+    expect(r.failed).toEqual([{ path: "es/de.mp3", text: "de", reason: "too short: 0.29 s for 2 characters" }]);
   });
 
   test("a 400 is not retried", async () => {
