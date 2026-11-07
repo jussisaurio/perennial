@@ -4,10 +4,10 @@
 // course this device shows (keepCourse, at the end): per device, not per
 // user, and kept on sign-out.
 //
-// The app reloads right after a sign-out, and an open database cannot be
-// deleted, so forgetting is two steps: clear the queue now (so nothing more
-// uploads), and remember to delete the rest on the next start, before any
-// store opens. Deletion is best effort and tried again on each start.
+// An open database cannot be deleted, so forgetting is two steps: clear the
+// queue now (so nothing more uploads), and remember to delete the rest once
+// the signed-out page shows, and on each start, before any store opens.
+// Deletion is best effort and tried again on each start.
 //
 // One exception: an anonymous learner who signs in with email keeps their
 // queue (see adoptOnDevice).
@@ -220,7 +220,7 @@ export function adopted(from: string) {
 
 let cleaning: Promise<void> | null = null;
 
-/** Delete what users who signed out here left on the device. Runs once per start, before any store opens. */
+/** Delete what users who signed out here left on the device: before a store opens, and after a sign-out. One run at a time. */
 export function cleanUpForgotten(): Promise<void> {
   cleaning ??= (async () => {
     // The queue all users once shared: never replayed (it could belong to
@@ -236,7 +236,12 @@ export function cleanUpForgotten(): Promise<void> {
     for (const id of ids) if (!(await deleteAll(id))) left.push(id);
     // Someone may have been marked while this ran: keep those too.
     saveForgetList([...new Set([...left, ...forgetList().filter((id) => !ids.includes(id))])]);
-  })().catch((e) => console.warn("[device] cleanup failed", e));
+  })()
+    .catch((e) => console.warn("[device] cleanup failed", e))
+    // Done: a later sign-out in this page runs it again.
+    .finally(() => {
+      cleaning = null;
+    });
   return cleaning;
 }
 

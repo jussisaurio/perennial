@@ -82,7 +82,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
   // The draft may name a language this build lacks (saved by a newer build in another tab): start from Spanish then.
   const [lang, setLang] = useState<string>(() => (draft.lang && isDeckLang(draft.lang) ? draft.lang : "es"));
   // After "Delete my account": a goodbye on the landing page, for a short
-  // while (the app reloads once as the user changes), then never again.
+  // while (a reload soon after shows it again), then never again.
   const [goodbye] = useState(() => {
     try {
       const saved = JSON.parse(sessionStorage.getItem("perennial-farewell") ?? "null") as { lang: string | null; at: number } | null;
