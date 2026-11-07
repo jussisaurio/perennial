@@ -137,6 +137,29 @@ export function path(): OffscreenCanvas {
   return c;
 }
 
+/**
+ * The old path past the stile (#714), seen from above, from its far end (row
+ * 0, the top of a plane laid flat) to the stile: bare earth that winds a
+ * little, narrower and grown over far out. Transparent where grass shows.
+ */
+export function track(): OffscreenCanvas {
+  const [c, ctx] = canvas(24, 128);
+  const r = rng(714);
+  for (let y = 0; y < 128; y++) {
+    // 0 at the stile, 1 at the far end.
+    const k = 1 - y / 127;
+    const mid = 12 + Math.sin(k * 5.2) * 3.5;
+    const half = 4.5 - k * 2.5 + (r() - 0.5);
+    for (let x = Math.ceil(mid - half); x < mid + half; x++) {
+      // Toward the far end, more of it is grown over.
+      if (r() < k * k * 0.9) continue;
+      const v = r();
+      px(ctx, x, y, v < 0.55 ? "#c9ad78" : v < 0.85 ? "#b99d69" : "#d9c08e");
+    }
+  }
+  return c;
+}
+
 export function soil(): OffscreenCanvas {
   return speckle(3, "#6b4630", [
     ["#5a3a27", 160],
