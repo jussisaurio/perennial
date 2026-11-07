@@ -131,9 +131,9 @@ export class Lanterns implements Part {
     this.head.halo.visible = this.dark;
   }
 
-  /** Near enough to the lookout's lantern to raise it, while it is lit. Runs every frame: no allocation. */
-  canRaise(x: number, z: number): boolean {
-    return this.dark && !!this.post && Math.hypot(this.post[0] - x, this.post[1] - z) < RAISE_REACH;
+  /** Near enough (and `slack` m more) to the lookout's lantern to raise it, while it is lit. Runs every frame: no allocation. */
+  canRaise(x: number, z: number, slack: number): boolean {
+    return this.dark && !!this.post && Math.hypot(this.post[0] - x, this.post[1] - z) < RAISE_REACH + slack;
   }
 
   /** The lookout's lantern rises, holds, and comes down (lookout.ts); with reduced motion it stays where it is. */
@@ -168,11 +168,11 @@ export class Lanterns implements Part {
     return this.dark && this.on.every((on) => !on);
   }
 
-  /** The lantern nearest (x, z) in reach while it is dark, or -1. Runs every frame: no allocation. */
-  inReach(x: number, z: number): number {
+  /** The lantern nearest (x, z) in reach (and `slack` m more) while it is dark, or -1. Runs every frame: no allocation. */
+  inReach(x: number, z: number, slack: number): number {
     if (!this.dark) return -1;
     let best = -1;
-    let bestD = LANTERN_REACH;
+    let bestD = LANTERN_REACH + slack;
     for (let i = 0; i < this.spots.length; i++) {
       const d = Math.hypot(this.spots[i][0] - x, this.spots[i][1] - z);
       if (d < bestD) [best, bestD] = [i, d];

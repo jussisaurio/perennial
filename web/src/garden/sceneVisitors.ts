@@ -307,9 +307,9 @@ export class SceneVisitors implements Part {
     this.draw(s);
   }
 
-  /** A visitor hiding within reach of (x, z), for the action button (#379); null when none is. No allocation: asked every frame. */
-  hiderNear(x: number, z: number): VisitorId | null {
-    for (const s of this.sprites) if (s.body.hiding && s.mesh.visible && Math.hypot(s.body.at.x - x, s.body.at.z - z) < SEEK_REACH) return s.v.id;
+  /** A visitor hiding within reach (and `slack` m more) of (x, z), for the action button (#379); null when none is. No allocation: asked every frame. */
+  hiderNear(x: number, z: number, slack: number): VisitorId | null {
+    for (const s of this.sprites) if (s.body.hiding && s.mesh.visible && Math.hypot(s.body.at.x - x, s.body.at.z - z) < SEEK_REACH + slack) return s.v.id;
     return null;
   }
 

@@ -139,17 +139,17 @@ export class Carry implements Part {
   /**
    * What the action button can do with pebbles from (x, z): holding one by
    * the well, drop it in; holding one elsewhere, throw it where you face;
-   * empty-handed, pick up the nearest one in reach.
+   * empty-handed, pick up the nearest one in reach. Reach goes `slack` m farther.
    */
-  reachAt(x: number, z: number): { a: CarryAct; target: CarryTarget | null } | null {
+  reachAt(x: number, z: number, slack: number): { a: CarryAct; target: CarryTarget | null } | null {
     const r = this.reach;
     if (this.held !== null) {
-      if (this.well.shown && near(x, z, this.layout.well, WELL_REACH)) [r.a, r.target] = ["well", this.targets.well];
+      if (this.well.shown && near(x, z, this.layout.well, WELL_REACH + slack)) [r.a, r.target] = ["well", this.targets.well];
       else [r.a, r.target] = ["throw", null];
       return r;
     }
     let best = -1;
-    let bestD = REACH;
+    let bestD = REACH + slack;
     for (let i = 0; i < this.things.length; i++) {
       const t = this.things[i];
       const d = Math.hypot(x - t.x, z - t.z);

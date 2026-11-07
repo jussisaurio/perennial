@@ -161,10 +161,10 @@ export class Toys implements Part {
     this.seeds.visible = live;
   }
 
-  /** The nearest clock still to blow within reach of (x, z), or -1. */
-  private clockNear(x: number, z: number): number {
+  /** The nearest clock still to blow within reach (and `slack` m more) of (x, z), or -1. */
+  private clockNear(x: number, z: number, slack: number): number {
     let best = -1;
-    let bestD = REACH;
+    let bestD = REACH + slack;
     for (let i = 0; i < this.heads.length; i++) {
       const d = Math.hypot(this.heads[i].x - x, this.heads[i].z - z);
       if (!this.blown[i] && d < bestD) [best, bestD] = [i, d];
@@ -173,8 +173,8 @@ export class Toys implements Part {
   }
 
   /** What the action button can do from (x, z), and on what: blow a clock in reach. Null when nothing here. */
-  reachAt(x: number, z: number): { a: ToyAct; target: ToyTarget } | null {
-    const i = this.clockNear(x, z);
+  reachAt(x: number, z: number, slack: number): { a: ToyAct; target: ToyTarget } | null {
+    const i = this.clockNear(x, z, slack);
     if (i < 0) return null;
     this.reach.target = this.targets[i];
     return this.reach;

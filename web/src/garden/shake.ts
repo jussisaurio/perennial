@@ -63,9 +63,10 @@ export const SHAKE_REACH = 2.2;
 /**
  * The plant you can shake from (x, z) facing `yaw`: of the plants in reach and
  * ahead of you (within 60° of where you look), the one nearest the middle of
- * the view, the nearer one when two are as near it; or null.
+ * the view, the nearer one when two are as near it; or null. With `slack`
+ * (scene.ts REACH_SLACK), a plant counts that many metres past both edges.
  */
-export function plantInReach<P extends { x: number; z: number }>(plants: readonly P[], x: number, z: number, yaw: number): P | null {
+export function plantInReach<P extends { x: number; z: number }>(plants: readonly P[], x: number, z: number, yaw: number, slack: number): P | null {
   // Forward is -z at yaw 0.
   const fx = -Math.sin(yaw);
   const fz = -Math.cos(yaw);
@@ -77,7 +78,7 @@ export function plantInReach<P extends { x: number; z: number }>(plants: readonl
     // Not Math.hypot: it allocates on each call, and this runs for every plant on every frame (#459).
     const d = Math.sqrt(dx * dx + dz * dz);
     const ahead = dx * fx + dz * fz;
-    if (d > SHAKE_REACH || ahead < d * 0.5) continue;
+    if (d > SHAKE_REACH + slack || ahead < d * 0.5 - slack) continue;
     // How far it is from the line you look along, and a little for how far away.
     const score = Math.abs(dx * fz - dz * fx) + d * 0.1;
     if (score < bestScore) {

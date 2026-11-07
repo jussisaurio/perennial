@@ -195,8 +195,12 @@ const ECHO = { delay: 1.2, show: 5 };
 const PERK_NEAR = 0.9;
 /** Near enough to the bench (m, from its middle) to sit on it (#334). */
 const BENCH_REACH = 1.6;
-/** How long (s) "Shake the plant" stays after the plant ahead drops out of reach: crossing the path between two beds, it would blink out for a moment (#835). */
-const SHAKE_LINGER_S = 0.5;
+/** A thing the action button shows stays in reach this much farther (m) than where it came into reach (#838), so the button does not blink at the edge. */
+const REACH_SLACK = 0.3;
+/** How much farther (m) a thing counts as in reach: REACH_SLACK for what the action button shows now (`shown`), none for anything else. */
+function slack(shown: boolean): number {
+  return shown ? REACH_SLACK : 0;
+}
 /** Sitting on the bench (#334): the eye's height, where you sit along the seat (near its left end: the rest is for company, #362), and how fast you sit down (per second). */
 const SEAT = { eye: 0.78, dx: -0.5, speed: 2.5 };
 /** No tree outside the back fence within this far (m) either side of the stile (#714): the old path is seen from its top board. */
@@ -275,8 +279,6 @@ export class GardenScene {
   private reach: Reach | null = null;
   /** The plant the action button shakes, when it shakes one (#357). */
   private shakeTarget: PlacedPlant | null = null;
-  /** When (this.elapsed) a plant was last in reach to shake. */
-  private shakeSeen = 0;
   /** What the action button acts on when it does carry's (#358; putting down has none: it goes in front of you). */
   private carryTarget: CarryTarget | null = null;
   /** The hiding visitor the action button finds, when it finds one (#379). */
@@ -886,17 +888,17 @@ export class GardenScene {
     // From farther than its reach too: a tap there walks to it first (tapDoor, #336). There, whatever
     // stands in front of it (a lantern, the sunflower) is what the tap meets; in reach the key comes first, as it did.
     const disc = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
-    const toKey = disc < Infinity && !this.inReach("key") && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
+    const toKey = disc < Infinity && !this.inReach("key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
     if (toKey <= toDoor) return "key";
     return d.state === "held" ? "open" : "try";
   }
 
-  /** Is the viewer near enough to the key (for "key") or the door (the rest) to act on it? */
-  private inReach(a: DoorAction): boolean {
+  /** Is the viewer near enough (and `slack` m more) to the key (for "key") or the door (the rest) to act on it? */
+  private inReach(a: DoorAction, slack: number): boolean {
     const k = this.door.key;
-    if (a === "key") return !!k && Math.hypot(this.x - k.x, this.z - k.z) < KEY_REACH;
-    return Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH;
+    if (a === "key") return !!k && Math.hypot(this.x - k.x, this.z - k.z) < KEY_REACH + slack;
+    return Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH + slack;
   }
 
   /** The action button (#334): do what it shows to the thing in reach. Anything else no longer applies and does nothing. */
@@ -1174,7 +1176,7 @@ export class GardenScene {
 
   /** A tap on the key or the door (#336): act on it in reach; from farther away, walk up to it first. */
   tapDoor(a: DoorAction) {
-    if (this.inReach(a)) return this.doorAct(a);
+    if (this.inReach(a, 0)) return this.doorAct(a);
     const k = this.door.key;
     if (a === "key" && k) this.goTo(k.x, k.z, KEY_STAND, () => this.doorAct(a));
     else this.goTo(this.layout.gate.x, this.layout.bounds.maxZ - DOOR_STAND, 0, () => this.doorAct(a));
@@ -1242,11 +1244,11 @@ export class GardenScene {
   /** A tap on a note: open it from in front of the shed, or by the stile's foot (#714); from farther away, walk up to it first. */
   tapNote(id: string) {
     if (this.stile?.has(id)) {
-      if (this.stile.inReach(this.x, this.z)) return this.openNote(id);
+      if (this.stile.inReach(this.x, this.z, 0)) return this.openNote(id);
       const [fx, fz] = stileAt(this.layout).foot;
       return this.goTo(fx, fz, 0, () => this.openNote(id));
     }
-    if (this.notes.inFront(this.x, this.z)) return this.openNote(id);
+    if (this.notes.inFront(this.x, this.z, 0)) return this.openNote(id);
     const at = this.notes.standAt(id, this.camera.aspect * Math.tan((this.camera.fov * Math.PI) / 360));
     this.goTo(at.x, at.z, 0, () => this.openNote(id));
   }
@@ -2119,7 +2121,8 @@ export class GardenScene {
    * (#361), raise the lookout's lantern (#683), read a note (#654) in the shed or at the stile's foot, pick up a loose thing, sit on the bench, blow a dandelion clock
    * (#360), or shake the plant ahead of you (#357), for whichever is in reach (in that
    * order); with nothing in reach, no button (#835): when it shows, it has
-   * something to do. The button's name says what it does, so nothing in reach
+   * something to do. What it shows now stays in reach REACH_SLACK farther
+   * (#838). The button's name says what it does, so nothing in reach
    * flashes (#689); where its target could be one of several alike, that one
    * shows it quietly and steadily: a note lifts off the wall, a plant stands
    * a little taller.
@@ -2127,31 +2130,30 @@ export class GardenScene {
   private reportReach() {
     const d = this.door;
     const b = this.bench;
-    const nearKey = d.state === "key" && this.inReach("key");
+    const r = this.reach;
+    const nearKey = d.state === "key" && this.inReach("key", slack(r === "key"));
     // On the bench, the button only gets you up.
     const off = this.seated;
-    const lamp = off ? -1 : this.lanterns.inReach(this.x, this.z);
+    const lamp = off ? -1 : this.lanterns.inReach(this.x, this.z, slack(r === "snuff" || r === "light"));
     const lampAct: Reach | null = lamp < 0 ? null : this.lanterns.on[lamp] ? "snuff" : "light";
     // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
     const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spots[lamp][0] - this.x, this.lanterns.spots[lamp][1] - this.z);
-    const nearDoor = d.state !== "open" && this.inReach("try") && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) <= lampNear;
-    const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH;
+    const nearDoor = d.state !== "open" && this.inReach("try", slack(r === "try" || r === "open")) && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) <= lampNear;
+    const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH + slack(r === "sit");
     // A loose thing in your hands (#358) is used first: put down, or dropped in the well.
     const holding = this.carry.held !== null;
-    const carry = off || nearKey ? null : this.carry.reachAt(this.x, this.z);
-    const toy = off || nearKey ? null : this.toys.reachAt(this.x, this.z);
+    const carry = off || nearKey ? null : this.carry.reachAt(this.x, this.z, slack(r === "lift-pebble" || r === "well"));
+    const toy = off || nearKey ? null : this.toys.reachAt(this.x, this.z, slack(r === "blow"));
     // A hiding visitor (#379) comes before the bench and the plant ahead: it hides under the one and behind the other.
-    const hider = off || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z);
+    const hider = off || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z, slack(r === "seek"));
     const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
-    const atStile = !off && !nearKey && !holding && this.stile !== null && this.stile.inReach(this.x, this.z);
-    const note = off || nearKey || holding ? null : (this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE) ?? (atStile && this.stile ? this.stile.unopened() : null));
-    const raise: Reach | null = !off && this.lanterns.canRaise(this.x, this.z) ? "raise" : null;
+    const atStile = !off && !nearKey && !holding && this.stile !== null && this.stile.inReach(this.x, this.z, slack(r === "read"));
+    const note = off || nearKey || holding ? null : (this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE, slack(r === "read")) ?? (atStile && this.stile ? this.stile.unopened() : null));
+    const raise: Reach | null = !off && this.lanterns.canRaise(this.x, this.z, slack(r === "raise")) ? "raise" : null;
     // The first of these that applies, in reportReach's order above.
     const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? raise ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
-    const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
+    const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw, slack(r === "shake"));
     const a: Reach | null = plant ? "shake" : before;
-    if (plant) this.shakeSeen = this.elapsed;
-    else if (a === null && this.reach === "shake" && this.elapsed - this.shakeSeen < SHAKE_LINGER_S) return;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = a === "blow" && toy ? toy.target : null;
     const lantern = lampAct && a === lampAct ? lamp : -1;

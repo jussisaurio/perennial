@@ -59,10 +59,10 @@ describe("shaking a plant (#357)", () => {
       { id: "far", x: 0, z: -SHAKE_REACH - 0.1 },
     ];
     // Facing -z (yaw 0).
-    expect(plantInReach(plants, 0, 0, 0)?.id).toBe("ahead");
+    expect(plantInReach(plants, 0, 0, 0, 0)?.id).toBe("ahead");
     // Facing +z: only the one behind is ahead now.
-    expect(plantInReach(plants, 0, 0, Math.PI)?.id).toBe("behind");
+    expect(plantInReach(plants, 0, 0, Math.PI, 0)?.id).toBe("behind");
     // Facing -x: nothing there.
-    expect(plantInReach(plants, 0, 0, Math.PI / 2)).toBeNull();
+    expect(plantInReach(plants, 0, 0, Math.PI / 2, 0)).toBeNull();
   });
 });

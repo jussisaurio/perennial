@@ -14,13 +14,18 @@ Each claim has one e2e test whose title starts with its id, and the test plays i
 
 ## The action button
 
-The action button sits low on the screen. It shows only when it has something to act on: a plant just ahead of you, the bench, the door, the key, a pebble, a dandelion clock, a note, a lantern. Its picture changes with what it does, and a screen reader hears its name ("Shake the plant", "Sit on the bench"). Walk away from everything and the button goes away: on open ground there is no button. When you see it, there is something near you to use. When you walk past beds, "Shake the plant" stays for half a second after the plant goes out of reach, so the button does not blink as you cross the small path between two beds.
+The action button sits low on the screen. It shows only when it has something to act on: a plant just ahead of you, the bench, the door, the key, a pebble, a dandelion clock, a note, a lantern. Its picture changes with what it does, and a screen reader hears its name ("Shake the plant", "Sit on the bench"). Walk away from everything and the button goes away: on open ground there is no button. When you see it, there is something near you to use.
+
+Each thing has a reach: how near you must come to it. The same rule holds for every thing. A thing comes into reach when you come that near. It stays in reach until you go a small step (about 30 cm) farther away. So when you stand at the edge of reach, or step a little back and forth there, the button does not blink on and off. And a press always acts on a thing that is still in reach. A plant must also be ahead of you, not beside or behind you. Here too there is a small margin: as you turn, a plant at the edge of your view stays ahead of you until it is about 30 cm past that edge.
+
+Between two beds, the path across has no plant on it. As you cross it, the plant behind you is out of reach and the next one is not yet in reach, so the button goes away for a moment, and comes back at the next bed. This is the open-ground rule: there is nothing there to shake.
 
 While you hold a pebble, the button stays everywhere: it throws the pebble, so there is always something to do with it.
 
 With the keyboard, Tab takes you to the button when it shows. If the button goes while it has focus, focus goes back to the garden, so the walk keys and Tab still work.
 
 - `action.none`: On open ground away from everything, no action button shows. Walk up to the bench and the button shows, named "Sit on the bench".
+- `action.reach-edge`: Come up to the bench until "Sit on the bench" shows. Step back 15 cm: it still shows. Step back 40 cm: it goes. Come forward to 15 cm back: still no button. Come forward 15 cm more, into reach: it shows again.
 
 ## Visitors
 

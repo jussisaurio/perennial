@@ -72,8 +72,8 @@ export class ShedNotes {
   }
 
   /** The note you look at from where you stand (eyes `eye` m up), near enough to read (the action button's "read"), or null. */
-  reachAt(x: number, z: number, yaw: number, pitch: number, eye: number): string | null {
-    if (this.notes.length === 0 || !this.inFront(x, z)) return null;
+  reachAt(x: number, z: number, yaw: number, pitch: number, eye: number, slack: number): string | null {
+    if (this.notes.length === 0 || !this.inFront(x, z, slack)) return null;
     const w = this.wall;
     // Forward is (−sin yaw, −cos yaw); the wall faces −x, so facing it is forward along +x.
     const fx = -Math.sin(yaw);
@@ -92,10 +92,10 @@ export class ShedNotes {
     return best;
   }
 
-  /** Is (x, z) in front of the shed, near enough to read its notes? */
-  inFront(x: number, z: number): boolean {
+  /** Is (x, z) in front of the shed, near enough (and `slack` m more) to read its notes? */
+  inFront(x: number, z: number, slack: number): boolean {
     const w = this.wall;
-    return x <= w.x && w.x - x <= READ.near && Math.abs(z - w.z) <= READ.along;
+    return x <= w.x && w.x - x <= READ.near + slack && Math.abs(z - w.z) <= READ.along + slack;
   }
 
   /** Where to stand to read note `id`: in front of the shed, level with it, for a view `halfTan` wide (the tangent of half its width's angle). */

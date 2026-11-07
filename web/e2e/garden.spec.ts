@@ -451,6 +451,38 @@ test("action.none: on open ground away from everything no action button shows; w
   await page.keyboard.up("KeyS");
 });
 
+// docs/garden-play.md, "The action button" (#838). Steps of a few centimetres are set on the dev-only scene handle: a held key at 7 frames a second on CI cannot stop that exactly.
+test("action.reach-edge: the bench comes into reach where Sit shows, and stays in reach a small step farther, so the button does not blink at the edge", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await pinDetail(page, "low");
+  await page.goto("/?demo=es:30#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  // Stand `back` m from the bench's middle (world.ts benchAt), on open ground away from the pond, your back to it.
+  const standBack = async (back: number) => {
+    await page.evaluate((back) => {
+      const s = (window as unknown as { __garden: { bench: { x: number; z: number } } }).__garden;
+      Object.assign(s, { x: s.bench.x, z: s.bench.z - back, yaw: 0, pitch: 0 });
+    }, back);
+    await gameSeconds(page, 0.3);
+  };
+  const sit = page.getByRole("button", { name: "Sit on the bench" });
+  const act = page.locator(".gw-act");
+  // Just inside the bench's reach (scene.ts BENCH_REACH 1.6 m).
+  await standBack(1.55);
+  await expect(sit).toBeVisible();
+  await standBack(1.7);
+  await expect(sit).toBeVisible();
+  await standBack(1.95);
+  await expect(act).toHaveCount(0);
+  await standBack(1.7);
+  await expect(act).toHaveCount(0);
+  await standBack(1.55);
+  await expect(sit).toBeVisible();
+});
+
 // #362: sit still and the garden comes to you. Seconds sat are moved on through the dev-only scene handle, as a test cannot sit for a minute.
 test("sitting still on the bench: the bird, the cat and the gnome come to sit with you, and time runs on to dusk; stand up and it is now again", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
