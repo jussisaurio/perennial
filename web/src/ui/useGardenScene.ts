@@ -8,7 +8,7 @@ import { reportSlowWalk, reportStalledWalk } from "../observability";
 import type { PlantSource } from "../garden/plants";
 import { DETAIL, type Detail } from "../garden/detail";
 import type { DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
-import type { CarryDone, Held } from "../garden/sceneCarry";
+import type { CarryDone } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
 import type { ToyDone } from "../garden/sceneToys";
 import type { Raised } from "../garden/lookout";
@@ -131,7 +131,7 @@ export function useGardenScene({
   const spokenKey = useRef("");
   const [ready, setReady] = useState(false);
   const [reach, setReach] = useState<Reach | null>(null);
-  const [hand, setHand] = useState<Held | null>(null);
+  const [holding, setHolding] = useState(false);
   const [company, setCompany] = useState<Companion | null>(null);
   const [stars, setStars] = useState(false);
   const [heard, setHeard] = useState<string | null>(null);
@@ -234,7 +234,7 @@ export function useGardenScene({
             onDoorOpen: () => openDoor.current(),
             onStall: () => reportStalledWalk(data.l.plants.length),
             onTooSlow: reportSlowWalk,
-            onHand: setHand,
+            onHand: setHolding,
             onCompany: setCompany,
             onVisitorStatus: setHeard,
             onShake: (p, forms) => shakeNow.current(p, forms),
@@ -303,7 +303,7 @@ export function useGardenScene({
     scene.current?.setTime(time);
   }, [time]);
 
-  return { data, scene, ready, failed, progress, labels, spoken, selected, reach, hand, company, stars, heard, raised };
+  return { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard, raised };
 }
 
 /**
