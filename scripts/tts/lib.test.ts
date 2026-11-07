@@ -14,7 +14,9 @@ const deck = {
 describe("spokenTexts", () => {
   test("has each word, its shaken forms, each sentence and the garden's nouns, once", () => {
     const t = spokenTexts(deck, "es");
-    for (const s of ["ser", "soy", "es", "de", "Soy de México.", "Es de aquí.", "el girasol", "el caracol", "croac…"]) expect(t).toContain(s);
+    for (const s of ["ser", "soy", "es", "de", "Soy de México.", "Es de aquí.", "el girasol", "el caracol"]) expect(t).toContain(s);
+    // Animals never speak in the course voice: the frog's croak is a recorded sound of its own.
+    expect(t).not.toContain("croac…");
     expect(new Set(t).size).toBe(t.length);
   });
 
