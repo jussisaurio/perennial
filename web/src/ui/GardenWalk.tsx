@@ -7,7 +7,7 @@ import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 // The gardener's hand, for the notes in the shed (#673).
 import "@fontsource/patrick-hand/400.css";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { language } from "../content/languages";
 import { openDoor, readNote, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
@@ -838,35 +838,104 @@ function WalkLoading({ store }: { store: Store<number | null> }) {
   );
 }
 
-/** The names and tags over the scene. They move on every walking frame, so they render on their own, not with all of GardenWalk (#713). */
-function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; selectedId: string | undefined; lang: string }) {
-  const shown = useSyncExternalStore(store.subscribe, store.get);
+/** Whether two frames show the same labels with the same words, in any order: then only their places, opacities and stacking differ. */
+function sameLabels(a: readonly Label[], b: readonly Label[]): boolean {
   return (
-    <div className="gw-labels" aria-hidden="true">
+    a.length === b.length &&
+    a.every((l) => {
+      const m = b.find((m) => m.id === l.id);
+      return m !== undefined && l.text === m.text && l.kind === m.kind && l.gloss === m.gloss && l.known === m.known && l.gender === m.gender && l.where?.text === m.where?.text && l.where?.word === m.where?.word;
+    })
+  );
+}
+
+/** A label's opacity, or null for those that keep their own (a line, the well's echo). */
+function labelOpacity(l: Label): number | null {
+  if (l.kind === "echo" || l.kind === "say" || l.kind === "line") return null;
+  if (l.kind === "petal" || l.kind === "tree" || l.kind === "fruit" || l.where || l.kind === "visitor" || l.kind === "scenery") return l.near;
+  return 0.35 + l.near * 0.65;
+}
+
+/**
+ * The names and tags over the scene. They move on every walking frame, so they render on their own, not with all of GardenWalk (#713).
+ * React renders only a new set of labels; a move is written straight to each span's `translate`, `opacity` and `z-index` (#729): React's style writes cost ~1 ms a frame on an old laptop.
+ * The plants' names come nearest first, so their order changes as you walk: z-index keeps the scene's order of what shows over what.
+ */
+function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; selectedId: string | undefined; lang: string }) {
+  const layer = useRef<HTMLDivElement>(null);
+  const set = useRef<Label[]>([]);
+  const shown = useSyncExternalStore(store.subscribe, () => {
+    const all = store.get();
+    if (!sameLabels(all, set.current)) set.current = all;
+    return set.current;
+  });
+  // The layer's size, from a ResizeObserver: reading it as a new set renders would force a layout (#729).
+  const size = useRef<{ w: number; h: number } | null>(null);
+  const placeAll = useRef(() => {});
+  useLayoutEffect(() => {
+    const ro = new ResizeObserver(([e]) => {
+      size.current = { w: e.contentRect.width, h: e.contentRect.height };
+      placeAll.current();
+    });
+    ro.observe(layer.current!);
+    return () => ro.disconnect();
+  }, []);
+  useLayoutEffect(() => {
+    const div = layer.current!;
+    const spans = new Map(shown.map((l, i) => [l.id, div.children[i] as HTMLElement]));
+    const dpr = devicePixelRatio;
+    // What each span has now, so a label that did not change is not written again.
+    const done = new Map<string, { at: string; op: string; z: string }>();
+    const place = () => {
+      const all = store.get();
+      // A new set: React renders it, and this effect runs again for it.
+      if (!sameLabels(all, shown)) return;
+      // Not measured yet: the observer's first call places them, before the first paint.
+      if (!size.current) return;
+      const { w, h } = size.current;
+      all.forEach((l, i) => {
+        const el = spans.get(l.id)!;
+        let d = done.get(l.id);
+        if (!d) done.set(l.id, (d = { at: "", op: "", z: "" }));
+        // On whole device pixels, as `left` and `top` were laid out: the pixel font stays sharp.
+        const at = `${Math.round(l.x * w * dpr) / dpr}px ${Math.round(l.y * h * dpr) / dpr}px`;
+        if (d.at !== at) el.style.translate = d.at = at;
+        const o = labelOpacity(l);
+        if (o !== null && d.op !== String(o)) el.style.opacity = d.op = String(o);
+        if (d.z !== String(i)) el.style.zIndex = d.z = String(i);
+      });
+    };
+    // The observer places them all again on a resize.
+    placeAll.current = place;
+    place();
+    return store.subscribe(place);
+  }, [shown, store]);
+  return (
+    <div className="gw-labels" aria-hidden="true" ref={layer}>
       {shown.map((l) =>
         l.kind === "petal" ? (
           // A form falling from a shaken plant (#357), or a leaf for a word with none.
-          <span key={l.id} className="gw-petal" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
+          <span key={l.id} className="gw-petal" lang={lang}>
             {l.text || <LeafMark />}
           </span>
         ) : l.kind === "echo" ? (
           // The well's echo (#335 S6): the day it was met, then the word, both in the course language (#650).
-          <span key={l.id} className="gw-echo" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+          <span key={l.id} className="gw-echo" lang={lang}>
             {l.gloss}: <i>{l.text}</i>.
           </span>
         ) : l.kind === "say" || l.kind === "line" ? (
           // A line with a gloss (a joke's) is in the course language; the door's lines are English.
-          <span key={l.id} className="gw-say" lang={l.kind === "line" && l.gloss === undefined ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+          <span key={l.id} className="gw-say" lang={l.kind === "line" && l.gloss === undefined ? "en" : lang}>
             {l.text}
           </span>
         ) : l.kind === "tree" || l.kind === "fruit" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
-          <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
+          <span key={l.id} className="gw-tag" lang={lang}>
             <i>{l.text}</i>
             {/* A visitor found hiding (#379) says where it was in place of its meaning. */}
             <small lang="en"> · {l.where ? <Where where={l.where} lang={lang} /> : l.gloss}</small>
           </span>
         ) : (
-          <span key={l.id} className={selectedId === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" || l.kind === "scenery" ? l.near : 0.35 + l.near * 0.65 }}>
+          <span key={l.id} className={selectedId === l.id ? "gw-label on" : "gw-label"}>
             {l.known && <LeafMark />}
             {l.gender && <StakeMark gender={l.gender} />}
             {l.text}

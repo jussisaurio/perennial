@@ -66,6 +66,13 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       // In front of the notes on its back wall, facing it (+x is yaw -π/2).
       Object.assign(s, { x: at.x - 2, z: at.z, yaw: -Math.PI / 2, pitch: 0.05 });
     }),
+  // Among the plants, with their names over them (#729).
+  names: (page) =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: Scene & { layout: { plants: { x: number; z: number }[] } } }).__garden;
+      const p = s.layout.plants[40];
+      Object.assign(s, { x: p.x + 0.3, z: p.z + 1.8, yaw: 0, pitch: 0.45 });
+    }),
   door: (page) => standAtDoor(page),
   stile: (page) =>
     page.evaluate(async () => {
