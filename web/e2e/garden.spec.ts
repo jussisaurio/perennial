@@ -8,6 +8,8 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
   // slow, and each click waits for frames (about 2.5 s a click), so the test ran into
   // its timeout.
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
+  // Noon: the time button starts at Day and goes to Evening, its widest label.
+  await page.clock.setFixedTime(new Date(2026, 5, 10, 12));
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page).toHaveURL(/#\/garden$/);
