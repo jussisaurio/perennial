@@ -10,7 +10,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - Run only the specs you need, not the whole suite.
 
 ## Checks
-- **Light testing:** typecheck, lint, and the tests closest to your change. Unit tests run with `bun run test`. A test for a fix must fail without the fix.
+- **Light testing:** typecheck, lint, and the tests closest to your change. Before merging, also run the full unit suite with `bun run test` in web/ (about 30 s), because a test can pass alone and fail beside the others (#661). A test for a fix must fail without the fix.
 - Never run prettier (there is no config, and it rewraps files).
 - Pin the clock and viewport in tests that depend on them.
 - **UI changes:** before merging, take screenshots on phone and desktop, light and dark, and look at them yourself. Nothing misaligned or cheap-looking.
