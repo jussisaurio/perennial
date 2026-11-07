@@ -58,6 +58,32 @@ interface WalkData {
  * each is unread, those under the stile's step (#714, null: no stile yet), and
  * what to do when one is opened.
  */
+/** The kinds of label whose words GardenWalk's screen-reader status says. */
+const SPOKEN = new Set<Label["kind"]>(["fruit", "echo", "line"]);
+
+/** The scene's labels as of the last frame, for useSyncExternalStore. */
+export interface LabelStore {
+  get: () => Label[];
+  set: (labels: Label[]) => void;
+  subscribe: (onChange: () => void) => () => void;
+}
+
+function labelStore(): LabelStore {
+  let labels: Label[] = [];
+  const subs = new Set<() => void>();
+  return {
+    get: () => labels,
+    set: (l) => {
+      labels = l;
+      for (const f of subs) f();
+    },
+    subscribe: (f) => {
+      subs.add(f);
+      return () => subs.delete(f);
+    },
+  };
+}
+
 export function useGardenScene({
   lang,
   source,
@@ -97,7 +123,11 @@ export function useGardenScene({
   // `retry`: loading again can help (its code did not load), so the page offers it; an installed app has no reload button.
   const [failed, setFailed] = useState<{ text: string; retry?: true } | null>(null);
   const [selected, setSelected] = useState<PlacedPlant | null>(null);
-  const [labels, setLabels] = useState<Label[]>([]);
+  // The labels move on every walking frame: they go to a store that only the label layer reads, so only it renders then (#713).
+  const [labels] = useState(labelStore);
+  // The tags a screen reader hears of (a fallen fruit, the echo, the door's line) change rarely: state, set only when one comes, goes or changes its words.
+  const [spoken, setSpoken] = useState<Label[]>([]);
+  const spokenKey = useRef("");
   const [ready, setReady] = useState(false);
   const [reach, setReach] = useState<Reach | null>(null);
   const [hand, setHand] = useState<Held | null>(null);
@@ -186,7 +216,14 @@ export function useGardenScene({
           data.l,
           {
             onSelect: setSelected,
-            onLabels: setLabels,
+            onLabels: (all) => {
+              labels.set(all);
+              const said = all.filter((l) => SPOKEN.has(l.kind));
+              const key = said.map((l) => `${l.id}\n${l.text}\n${l.gloss}`).join("\n");
+              if (key === spokenKey.current) return;
+              spokenKey.current = key;
+              setSpoken(said);
+            },
             onProgress: (d, t) => setProgress([d, t]),
             onReach: setReach,
             onDoorOpen: () => openDoor.current(),
@@ -261,7 +298,7 @@ export function useGardenScene({
     scene.current?.setTime(time);
   }, [time]);
 
-  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised };
+  return { data, scene, ready, failed, progress, labels, spoken, selected, reach, hand, company, stars, heard, raised };
 }
 
 /**
