@@ -312,7 +312,7 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
               {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
             </g>
           ))}
-          {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, first.at)} />}
+          {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, first.at, "en-GB")} />}
           <path d={`M0 ${GROUND + 4} Q ${fullWidth * 0.25} ${GROUND - 3} ${fullWidth * 0.5} ${GROUND + 3} T ${fullWidth} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
           {/* The tufts one path, the seeds a path per layer: every element in the strip costs style and layout (#569). */}
           <path

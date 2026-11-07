@@ -3,7 +3,7 @@ import { ORCHARD_WORDS } from "../deck/schema";
 import { rng } from "../lib/seed";
 import { shedAt } from "./shed";
 import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
-import { along, benchAt, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
+import { along, bedSign, benchAt, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
 
 const DAY = 86_400_000;
 const plant = (i: number, pos = "noun"): GardenPlant => ({
@@ -95,10 +95,14 @@ describe("garden layout", () => {
     const nov = new Date(2026, 10, 2).getTime();
     // Two beds of October, one of November.
     const ps = Array.from({ length: 70 }, (_, i) => ({ ...plant(i), planted: i < 60 ? oct + i : nov + i }));
-    expect(layout(ps).beds.map((b) => b.label)).toEqual(["October", null, "November"]);
+    // The signs are in the course language (#650).
+    const signs = (l: Layout, lang: "es" | "de") => l.beds.map((b) => b.sign && bedSign(b.sign, lang));
+    expect(signs(layout(ps), "es")).toEqual(["Octubre", null, "Noviembre"]);
+    expect(signs(layout(ps), "de")).toEqual(["Oktober", null, "November"]);
     const later = { ...plant(70), planted: new Date(2027, 9, 5).getTime() };
-    expect(layout([...ps, later]).beds.map((b) => b.label)).toEqual(["October 2026", null, "November 2026"]);
-    expect(layout([]).beds.map((b) => b.label)).toEqual(["Your first words grow here"]);
+    expect(signs(layout([...ps, later]), "es")).toEqual(["Octubre de 2026", null, "Noviembre de 2026"]);
+    expect(signs(layout([...ps, later]), "de")).toEqual(["Oktober 2026", null, "November 2026"]);
+    expect(signs(layout([]), "de")).toEqual(["Hier wachsen deine Wörter"]);
   });
 
   test("every plant sits inside its bed, and the layout is stable", () => {

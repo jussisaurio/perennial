@@ -14,7 +14,7 @@ import type { Frame } from "./scenePart";
 import { isOld } from "./plants";
 import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, SPRITE_H, SPRITE_W, standingQuad, still, type BuildCtx } from "./sceneSprites";
 import { boardBox } from "./scenery";
-import { BED_H, type Layout, type PlacedPlant } from "./world";
+import { BED_H, bedSign, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 
 /** Plants this near you (m) show their names; a tap on one opens its card where you stand, and a tap on one farther away walks to it first (#336). */
@@ -186,7 +186,7 @@ export class Plants {
     const wood: THREE.BufferGeometry[] = [];
     const soil: THREE.BufferGeometry[] = [];
     // Every bed sign on one canvas, one texture and one material; each board shows its own cell.
-    const atlas = T.signs(L.beds.flatMap((bed) => bed.label ?? []));
+    const atlas = T.signs(L.beds.flatMap((bed) => (bed.sign === null ? [] : bedSign(bed.sign, c.lang))));
     const signMat = mat(T.pixelTexture(atlas));
     const rows = atlas.height / T.SIGN.h;
     let sign = 0;
@@ -204,7 +204,7 @@ export class Plants {
       soil.push(faces(box, [2, 3]));
       c.hitBoxes.push({ id: "bed", min: [bed.x - bed.w / 2, 0, bed.z - bed.d / 2], max: [bed.x + bed.w / 2, BED_H, bed.z + bed.d / 2], tag: null });
       // Only the first bed of a month has a sign (world.ts layout).
-      if (bed.label === null) {
+      if (bed.sign === null) {
         yield;
         continue;
       }

@@ -49,8 +49,9 @@ describe("the well's echo (#335 S6)", () => {
     expect(echoes([...log].reverse(), 10)).toEqual(echoes(log, 10));
   });
 
-  test("the date: day and month, and the year when it was another year", () => {
-    expect(echoDate(met("casa", 5).at, NOW)).toBe("12 October");
-    expect(echoDate(met("casa", 400).at, NOW)).toBe("12 September 2025");
+  test("the date: day and month in the course language, and the year when it was another year", () => {
+    expect(echoDate(met("casa", 5).at, NOW, "es")).toBe("12 de octubre");
+    expect(echoDate(met("Haus", 5).at, NOW, "de")).toBe("12. Oktober");
+    expect(echoDate(met("casa", 400).at, NOW, "es")).toBe("12 de septiembre de 2025");
   });
 });

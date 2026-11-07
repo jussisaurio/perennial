@@ -95,11 +95,11 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
       </>
     );
   const echoed = labels.find((l) => l.kind === "echo");
-  // The echo's gloss is the day the word was met (scene.ts labels).
+  // The day it says before the word is in the course language (#650), so it is left out here.
   if (echoed)
     return (
       <>
-        An echo from the well: {echoed.gloss}: <span lang={lang}>{echoed.text}</span>.
+        An echo from the well. It says one of your old words: <span lang={lang}>{echoed.text}</span>.
       </>
     );
   if (shook)
@@ -114,7 +114,9 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
     );
   if (called) return called.length ? called.join(" ") : "Only the wind answers.";
   if (heard) return heard;
-  const line = spokenLine(labels.find((l) => l.kind === "line")?.text, state);
+  // A joke's line is in the course language, and its gloss is what it means (scene.ts showLine); the door's line is English.
+  const quiet = labels.find((l) => l.kind === "line");
+  const line = spokenLine(quiet?.gloss ?? quiet?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.
@@ -651,12 +653,13 @@ export function GardenWalk({
               {l.text || <LeafMark />}
             </span>
           ) : l.kind === "echo" ? (
-            // The well's echo (#335 S6): the day it was met, then the word.
-            <span key={l.id} className="gw-echo" lang="en" style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
-              {l.gloss}: <i lang={lang}>{l.text}</i>.
+            // The well's echo (#335 S6): the day it was met, then the word, both in the course language (#650).
+            <span key={l.id} className="gw-echo" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+              {l.gloss}: <i>{l.text}</i>.
             </span>
           ) : l.kind === "say" || l.kind === "line" ? (
-            <span key={l.id} className="gw-say" lang={l.kind === "line" ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+            // A line with a gloss (a joke's) is in the course language; the door's lines are English.
+            <span key={l.id} className="gw-say" lang={l.kind === "line" && l.gloss === undefined ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
               {l.text}
             </span>
           ) : l.kind === "tree" || l.kind === "fruit" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
@@ -748,7 +751,7 @@ export function GardenWalk({
                 {/* No recall number: right after an answer it reads 100%, which looks made up (#261). */}
                 {stageSentence(selected.stage)} {selected.r < THIRSTY && "It is a little thirsty."}
               </span>
-              <span className="muted small gw-bed">Planted on {echoDate(selected.planted, openedAt)}.</span>
+              <span className="muted small gw-bed">Planted on {echoDate(selected.planted, openedAt, "en-GB")}.</span>
               <span className="small gw-flavour">{personality(selected)}</span>
               {time === "night" && selected.id === data?.visitors.sleeper && (
                 <span className="small gw-flavour gw-snore">

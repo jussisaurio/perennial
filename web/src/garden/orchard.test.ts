@@ -198,7 +198,8 @@ describe("tapping a tree", () => {
 
 describe("the bench and the visitors", () => {
   test("the bench shows the day the first word was planted", () => {
-    expect(benchLine(new Date(2026, 9, 3, 18).getTime())).toBe("First word planted 3 Oct 2026");
+    expect(benchLine(new Date(2026, 9, 3, 18).getTime(), "es")).toBe("Primera palabra plantada el 3 oct 2026");
+    expect(benchLine(new Date(2026, 9, 3, 18).getTime(), "de")).toBe("Erstes Wort gepflanzt am 3. Okt. 2026");
   });
 
   const area = { x: 0, z: -20, ...ORCHARD_MIN };

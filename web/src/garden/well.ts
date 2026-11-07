@@ -1,6 +1,6 @@
 // The wishing well in the orchard (#335 S6): drop a pebble in, and a moment
 // later the echo answers with a word you met long ago, and the day you met it:
-// "12 October: casa." It answers "am I getting anywhere?" with your own old
+// "12 de octubre: casa." It answers "am I getting anywhere?" with your own old
 // words, never a test, never a question. Pure: the word comes from when each
 // word was first met, the pick from a seeded hash. Nothing is saved.
 
@@ -34,9 +34,13 @@ export function echo(met: readonly Met[], now: number, n: number): Met | null {
   return pool[hash32(`well:${now}:${n}`) % pool.length];
 }
 
-/** The echo's line before the word: "12 October", with the year when it was another year than `now`'s. */
-export function echoDate(at: number, now: number): string {
+/**
+ * The echo's line before the word: "12 de octubre", with the year when it was
+ * another year than `now`'s. `locale`: the course language for the echo, which
+ * is in the world (#650); "en-GB" for the plant card's "Planted on", which is not.
+ */
+export function echoDate(at: number, now: number, locale: string): string {
   const d = new Date(at);
   const year = d.getFullYear() === new Date(now).getFullYear() ? {} : { year: "numeric" as const };
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", ...year });
+  return d.toLocaleDateString(locale, { day: "numeric", month: "long", ...year });
 }

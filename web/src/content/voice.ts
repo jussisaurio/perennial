@@ -4,6 +4,7 @@
 
 import { hash32 } from "../lib/seed";
 import { daily, rareDay } from "../core/day";
+import { inLang, type PerLang } from "../garden/nouns";
 
 /** One line per plant, chosen by the word, so a plant always says the same thing. */
 export const PLANT_LINES = {
@@ -112,12 +113,13 @@ export const restDayLine = (date: string) => `${date}: rest day. Plants grow on 
 export const EMPTY_WALK = { title: "Just soil for now. Very good soil.", body: "Each word you learn grows into a plant here.", cta: "Plant my first words" } as const;
 /** The worm asleep in an empty strip, under its word. */
 export const WORM_LINE = "Waiting.";
-/** "Reserved", per course language, small under the stake's English. */
-const RESERVED: Record<string, string> = { es: "Reservado", de: "Reserviert" };
+/** "Reserved", per course language: small under the strip stake's English, and alone on the walk's stake (#650). */
+export const RESERVED: PerLang<string> = { es: "Reservado", de: "Reserviert" };
 
 /** The stake in an empty strip: the clear line in English, and the course language's word small below. */
 export function reservedStake(langName: string, code: string): { line: string; local?: string } {
-  return { line: `Reserved for ${langName} words`, local: RESERVED[code] };
+  // No word for a course without a deck: the English line is enough.
+  return { line: `Reserved for ${langName} words`, local: inLang(RESERVED, code) ?? undefined };
 }
 
 export type WordsFilter = "all" | "known" | "learning" | "new" | "suspended" | "mine";

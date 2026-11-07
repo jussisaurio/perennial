@@ -3,63 +3,95 @@
 // deadpan scenery (#364): a sundial that tells the time, and a fish.
 // Pure functions, so they are easy to test.
 
-import { daily, dailyIndex, rareDay } from "../core/day";
+import { daily, dailyIndex } from "../core/day";
+import type { DeckLang } from "../deck/langs";
 import { inLang, type PerLang } from "./nouns";
 
 export interface SignLine {
   text: string;
   /** Drawn upside down, for "This side up". */
   upsideDown?: boolean;
-  /** BCP 47 code when the line is in the course language. */
-  lang?: string;
   /** Put right by hand (#364): `strike` (the end of the text) is crossed out, and `write` written in after it. */
   fix?: { strike: string; write: string };
 }
 
-/** The sign that turns out to be wrong (#364). */
-const NO_FISH = "No fishing. No fish.";
-
 /**
- * Lines for either sign. Every line must be true in the garden: Shift is the
- * run key, the lanterns come on in the evening, and the pond has no fish (or
- * the sign is put right: fishSign).
+ * What the garden's own signs say (#650). They are in the world, so they are
+ * in the course language, written as a sign there would put it: the learner
+ * works a line out, or doesn't.
  */
-export const SIGN_POOL: readonly SignLine[] = [
-  { text: "Please walk slowly. Words are growing." },
-  { text: "No running during your Shift." },
-  { text: "Do not feed the verbs." },
-  { text: "Quiet, please. Words sleeping." },
-  { text: "Snail crossing" },
-  { text: "This side up", upsideDown: true },
-  { text: "Please do not pick the words." },
-  { text: "Keep off the soil." },
-  { text: NO_FISH },
-  { text: "Lanterns come on at dusk." },
-  { text: "Words may grow without warning." },
-  { text: "This is a sign." },
-  { text: "Gate: always open." },
-  { text: "Slow growth area" },
-  { text: "The sky is free." },
-  { text: "Water the words, not the sign." },
-  { text: "Please admire the plants." },
-];
+interface Signs {
+  /** Lines for either notice board. Every line must be true in the garden: Shift is the run key, and the lanterns come on in the evening. */
+  pool: readonly SignLine[];
+  /** Extra lines that only make sense by the bench, or on the back fence. */
+  bench: readonly SignLine[];
+  fence: readonly SignLine[];
+  /** The bench's sign while the cat sits on the bench. */
+  taken: string;
+  /** The sign that turns out to be wrong (#364): the pond has no fish until the learner brings it, and then `strike` is crossed out for `write`. */
+  noFish: { text: string; strike: string; write: string };
+}
 
-/** Extra lines that only make sense in one place. */
-export const BENCH_LINES: readonly SignLine[] = [{ text: "Bench: for sitting." }, { text: "Bench. Pond. View." }];
-export const FENCE_LINES: readonly SignLine[] = [{ text: "Fence: keeps the words in." }, { text: "End of garden. For now." }];
-
-/** About one day in four, one sign is in the language you are learning. */
-export const LOCAL_LINES: PerLang<readonly string[]> = {
-  es: ["Silencio, por favor", "Agua: sí", "Despacio, por favor", "Prohibido pisar la tierra"],
-  de: ["Bitte leise", "Kein Eis", "Langsam gehen, bitte", "Erde nicht betreten"],
+export const SIGNS: PerLang<Signs> = {
+  es: {
+    pool: [
+      { text: "Despacio. Las palabras están creciendo." },
+      { text: "Prohibido correr. Sí, también con Shift." },
+      { text: "No alimentar a los verbos." },
+      { text: "Silencio. Palabras durmiendo." },
+      { text: "Paso de caracoles" },
+      { text: "Este lado arriba", upsideDown: true },
+      { text: "No arranquen las palabras." },
+      { text: "Prohibido pisar la tierra." },
+      { text: "Los farolillos se encienden al anochecer." },
+      { text: "Palabras creciendo sin previo aviso." },
+      { text: "Esto es un cartel." },
+      { text: "Verja: siempre abierta." },
+      { text: "Zona de crecimiento lento" },
+      { text: "El cielo es gratis." },
+      { text: "Regar las palabras, no el cartel." },
+      { text: "Se ruega admirar las plantas." },
+      { text: "Agua: sí." },
+    ],
+    bench: [{ text: "Banco: para sentarse." }, { text: "Banco. Estanque. Vistas." }],
+    fence: [{ text: "Valla. Las palabras, dentro." }, { text: "Fin del jardín. De momento." }],
+    taken: "Banco: ocupado.",
+    noFish: { text: "Prohibido pescar. No hay peces.", strike: "No hay peces.", write: "Hay uno." },
+  },
+  de: {
+    pool: [
+      { text: "Langsam gehen. Wörter wachsen." },
+      { text: "Rennen verboten. Auch mit Shift." },
+      { text: "Verben bitte nicht füttern." },
+      { text: "Ruhe bitte. Wörter schlafen." },
+      { text: "Achtung: Schneckenwanderung" },
+      { text: "Diese Seite nach oben", upsideDown: true },
+      { text: "Wörter pflücken verboten." },
+      { text: "Erde nicht betreten." },
+      { text: "Laternen gehen abends an." },
+      { text: "Wörter wachsen ohne Vorwarnung." },
+      { text: "Dies ist ein Schild." },
+      { text: "Tor: immer offen." },
+      { text: "Wachstumsberuhigte Zone" },
+      { text: "Der Himmel ist gratis." },
+      { text: "Wörter gießen, nicht das Schild." },
+      { text: "Pflanzen bitte bewundern." },
+      { text: "Kein Eis." },
+    ],
+    bench: [{ text: "Bank: zum Sitzen." }, { text: "Bank. Teich. Aussicht." }],
+    fence: [{ text: "Zaun: hält die Wörter drin." }, { text: "Ende des Gartens. Vorerst." }],
+    taken: "Bank: besetzt.",
+    noFish: { text: "Angeln verboten. Keine Fische.", strike: "Keine Fische.", write: "Ein Fisch." },
+  },
 };
 
 /** Today's text for the back-fence sign and the bench sign. Never the same line twice. */
-export function pickSigns(lang: string, now = new Date()): { fence: SignLine; bench: SignLine } {
-  const fencePool = [...SIGN_POOL, ...FENCE_LINES];
-  const benchPool = [...SIGN_POOL, ...BENCH_LINES];
-  const local = inLang(LOCAL_LINES, lang);
-  const fence: SignLine = local && rareDay(4, "sign-lang", now) ? { text: daily(local, "sign-local", now), lang } : daily(fencePool, "sign-fence", now);
+export function pickSigns(lang: DeckLang, now = new Date()): { fence: SignLine; bench: SignLine } {
+  const s = SIGNS[lang];
+  const pool = [...s.pool, { text: s.noFish.text }];
+  const fencePool = [...pool, ...s.fence];
+  const benchPool = [...pool, ...s.bench];
+  const fence = daily(fencePool, "sign-fence", now);
   let bench = daily(benchPool, "sign-bench", now);
   if (bench.text === fence.text) bench = benchPool[(benchPool.indexOf(bench) + 1) % benchPool.length];
   return { fence, bench };
@@ -165,27 +197,35 @@ export function perkEnvelope(t: number, rise: number, fall: number): number {
 
 // ---- The first-word keepsake (#61) ----
 
-export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-/** The keepsake post's text: the first word and the day it was planted, e.g. "casa · 3 Oct". */
-export function keepsakeLabel(lemma: string, at: number): string {
-  const d = new Date(at);
-  return `${lemma} · ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+/**
+ * The keepsake post's text: the first word and the day it was planted, e.g.
+ * "casa · 3 oct". `locale`: the course language in the walk, where the post
+ * is in the world (#650); "en-GB" in the strip, a picture on the Today page.
+ */
+export function keepsakeLabel(lemma: string, at: number, locale: string): string {
+  return `${lemma} · ${new Date(at).toLocaleDateString(locale, { day: "numeric", month: "short" })}`;
 }
 
 // ---- Deadpan scenery (#364) ----
 
 /**
  * The fish swims in the pond once the learner has brought it (#209: they know
- * pez or Fisch): then "No fish." is crossed out by hand, and "One fish."
- * written in after it. Any other line stays as it is.
+ * pez or Fisch): then "no fish" is crossed out by hand, and "one fish" written
+ * in after it. Any other line stays as it is.
  */
-export function fishSign(line: SignLine, fishHere: boolean): SignLine {
-  return fishHere && line.text === NO_FISH ? { ...line, fix: { strike: "No fish.", write: "One fish." } } : line;
+export function fishSign(line: SignLine, fishHere: boolean, lang: DeckLang): SignLine {
+  const { text, strike, write } = SIGNS[lang].noFish;
+  return fishHere && line.text === text ? { ...line, fix: { strike, write } } : line;
 }
 
-/** What the sundial and the mouse door say when tapped: the dial only at night, when it has no shadow. */
-export const JOKE_LINES = { sundial: "Sundial: closed until morning.", mouseDoor: "Locked. Wrong size." } as const;
+/** What the sundial and the mouse door say when tapped: the dial only at night, when it has no shadow. In the course language (#650). */
+export const JOKE_LINES: PerLang<{ sundial: string; mouseDoor: string }> = {
+  es: { sundial: "Reloj de sol: cerrado hasta el amanecer.", mouseDoor: "Cerrado. No es tu talla." },
+  de: { sundial: "Sonnenuhr: geschlossen bis Sonnenaufgang.", mouseDoor: "Abgeschlossen. Falsche Größe." },
+};
+
+/** The same jokes as a screen reader hears them: what the line means, in English. */
+export const JOKE_SPOKEN = { sundial: "Sundial: closed until morning.", mouseDoor: "Locked. Wrong size." } as const;
 
 /**
  * The sundial's shadow (#364) at the clock time `now`: radians round from the
