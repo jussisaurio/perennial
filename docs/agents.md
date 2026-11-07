@@ -4,6 +4,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 
 ## Setup
 - Branch from an up-to-date `origin/main`. Other agents merge in parallel: if your PR conflicts, rebase onto origin/main, re-run your checks and force-push with lease.
+- **A new worktree has no packages:** run `bun install` at the root and in `web/` before any check.
 - **Scratch files:** in the session scratchpad your prompt names, under a subfolder named after your task. Never at its top level, because other agents share it.
 - **E2E ports:** in a worktree under `.claude/worktrees/`, `web/playwright.config.ts` picks a port offset from the worktree's path, so parallel agents don't clash. Set `E2E_PORT_OFFSET` only to override that. If a port is still in use, the run fails loudly at start (no server is reused): set another multiple of 10.
 - **Postgres** is one shared container (`docker compose up -d` from the main checkout). Never touch the `pg-sandbox` container.
