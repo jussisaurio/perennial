@@ -1,14 +1,16 @@
 import { expect, test, type Page } from "./test";
 import { standBy } from "./helpers";
 
-// #358, carry and put down: pick up a pebble by the pond, put it in, and the
+// #358, carry and throw: pick up a pebble by the pond, throw it in, and the
 // frog on its lily pad hops away, until it has had enough and only looks at
-// you; put a pebble down on the grass and pick it up again. Nothing here is
-// saved.
+// you; throw one on the grass. Nothing here is saved.
 
 type Spot = { x: number; z: number };
 /** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
 type CarryScene = {
+  x: number;
+  z: number;
+  yaw: number;
   layout: { pond: Spot & { r: number } };
   carry: { held: number | null };
   guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] };
@@ -29,11 +31,14 @@ const frogAt = async (page: Page) => {
   return { x: f.body.at.x, z: f.body.at.z };
 };
 
-/** Stand at the pond's edge, facing its middle: what you put down goes in the water. */
-const byPond = async (page: Page) => {
-  const p = (await scene(page)).layout.pond;
-  await standBy(page, { x: p.x, y: 0, z: p.z }, p.r + 0.3);
-};
+/** Turn to face the middle of the pond, where you stand. */
+const facePond = (page: Page) =>
+  page.evaluate(() => {
+    const s = (window as unknown as { __garden: CarryScene }).__garden;
+    const p = s.layout.pond;
+    // Forward is -z at yaw 0.
+    s.yaw = Math.atan2(-(p.x - s.x), -(p.z - s.z));
+  });
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-06-01T12:00:00"));
@@ -41,7 +46,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
 });
 
-test("pick up a pebble with a tap, put it in the pond: the frog hops, then only looks; put one on the grass", async ({ page }) => {
+test("pick up a pebble with a tap, throw it in the pond: the frog hops, then only looks; throw one on the grass", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   // The frog, with no word of its own here: it sits on the lily pad nearest the gate.
@@ -59,20 +64,18 @@ test("pick up a pebble with a tap, put it in the pond: the frog hops, then only 
   await expect(page.locator(".gw-hand")).toBeVisible();
   await expect(status).toHaveText("You hold the pebble.");
 
-  // Put it down in front of you, into the pond. The frog hops to another pad.
+  // Throw it where you face: into the pond. The frog hops to another pad.
+  await facePond(page);
   const before = await frogAt(page);
-  await byPond(page);
-  await act("Put it down").click();
+  await act("Throw it").click();
   await expect(status).toHaveText("Plop. Rings spread on the water. The frog hops to another pad.");
   expect(await frogAt(page)).not.toEqual(before);
   await expect(page.locator(".gw-hand")).toHaveCount(0);
 
   // The pebble sank, and another waits by the pond. Twice more, the frog hops; then it has had enough.
   const pebbleIn = async () => {
-    await standBy(page, pebble, 0.8);
     await act("Pick up the pebble").click();
-    await byPond(page);
-    await act("Put it down").click();
+    await act("Throw it").click();
   };
   for (let i = 0; i < 2; i++) {
     await pebbleIn();
@@ -82,11 +85,13 @@ test("pick up a pebble with a tap, put it in the pond: the frog hops, then only 
   await expect(status).toHaveText("Plop. Rings spread on the water. The frog looks at you.");
   await expect(page.locator(".gw-say").filter({ hasText: "…" })).toBeVisible();
 
-  // Put one down on the grass: it lies there, in reach, and can be picked up again.
-  await standBy(page, pebble, 0.8);
+  // Throw one away from the pond: it lands on the grass, and can be picked up again there.
   await act("Pick up the pebble").click();
-  await act("Put it down").click();
-  await expect(status).toHaveText("You put it down.");
-  await expect(act("Pick up the pebble")).toBeVisible();
+  await page.evaluate(() => {
+    const s = (window as unknown as { __garden: CarryScene }).__garden;
+    s.yaw += Math.PI;
+  });
+  await act("Throw it").click();
+  await expect(status).toHaveText("It lands on the ground.");
   expect(errors).toEqual([]);
 });

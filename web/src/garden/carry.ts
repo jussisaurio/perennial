@@ -1,25 +1,25 @@
-// Carry and put down (#358): the small loose things in the garden (pebbles by
-// the pond, a stick by the shed), where they lie, and what happens when one is
-// put down somewhere. What happens is data: one row per (thing, place), so a
+// Carry, throw and put down (#358): the small loose things in the garden
+// (pebbles by the pond, a stick by the shed), where they lie, and what happens
+// when one lands somewhere. What happens is data: one row per (thing, place), so a
 // new joke is one row. Who answers (the frog, a plant, the well) is a small
 // function each, on an interface the scene fills in. Nothing here is saved: a
-// pebble put in the pond is back by the pond next visit.
+// pebble thrown in the pond is back by the pond next visit.
 
 import { collide, type Layout } from "./world";
 
 /** A loose thing you can pick up. */
 export type Loose = "pebble" | "stick";
 
-/** Where a thing is put down: in the pond, down the orchard's well, in a bed, or on the ground. */
+/** Where a thing lands: in the pond, down the orchard's well, in a bed, or on the ground. */
 export type Place = "pond" | "well" | "bed" | "ground";
 
 /** Who answers: the well's answer is its echo (#335 S6). */
 export type Answer = "frog" | "plant" | "well";
 
-/** What putting a thing down does. */
+/** What a landing does. */
 export interface Reaction {
   /**
-   * What becomes of the thing: it lies where it is put; it sinks (and another
+   * What becomes of the thing: it lies where it lands; it sinks (and another
    * waits by the pond, so pebbles never run out); or it floats and drifts back
    * to the edge.
    */
@@ -31,19 +31,19 @@ export interface Reaction {
   said: string;
 }
 
-/** Anything put where no row says otherwise. */
-const LIE: Reaction = { then: "lie", said: "You put it down." };
+/** Anything that lands where no row says otherwise. */
+const LIE: Reaction = { then: "lie", said: "It lands on the ground." };
 
 /** The rows: (thing, place) → what happens. A place with no row here is the ground. */
 const ROWS: Record<Loose, Partial<Record<Place, Reaction>>> = {
   pebble: {
     pond: { then: "sink", ripple: true, answer: "frog", said: "Plop. Rings spread on the water." },
-    bed: { then: "lie", answer: "plant", said: "You put it by a plant." },
+    bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
     well: { then: "sink", answer: "well", said: "It falls a long way. Plop." },
   },
   stick: {
     pond: { then: "float", ripple: true, said: "Splash. The stick floats." },
-    bed: { then: "lie", answer: "plant", said: "You put it by a plant." },
+    bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
   },
 };
 
@@ -54,7 +54,7 @@ export function reaction(thing: Loose, place: Place): Reaction {
 /** How many pebbles the frog hops away from in one visit; after that it only looks at you. */
 export const FROG_PATIENCE = 3;
 
-/** Where a thing was put down. */
+/** Where a thing came down. */
 export interface Down {
   x: number;
   z: number;
@@ -86,25 +86,25 @@ export const ANSWERS: Record<Answer, (who: Answerers, at: Down, n: number) => st
   },
 };
 
-/** Where a thing put down at (x, z) is. */
+/** Where a thing that lands at (x, z) has landed. */
 export function placeAt(l: Layout, x: number, z: number): Place {
   if (Math.hypot(x - l.pond.x, z - l.pond.z) < l.pond.r) return "pond";
-  // Behind the hedge: with the door shut, nothing carried gets this far.
+  // Behind the hedge: with the door shut, nothing thrown or carried gets this far.
   if (Math.hypot(x - l.well.x, z - l.well.z) < l.well.r) return "well";
   if (l.beds.some((b) => Math.abs(x - b.x) < b.w / 2 && Math.abs(z - b.z) < b.d / 2)) return "bed";
   return "ground";
 }
 
-/** How far (m) in front of you the action button puts a thing down. */
-const PUT = 0.7;
+/** How far (m) a throw goes, ahead of you. */
+const THROW = 3.2;
 
-/** Where a thing put down from (x, z), facing `yaw` (forward is -z at yaw 0), goes. */
-export function aheadOf(x: number, z: number, yaw: number): { x: number; z: number } {
-  return { x: x - Math.sin(yaw) * PUT, z: z - Math.cos(yaw) * PUT };
+/** Where a throw from (x, z), facing `yaw` (forward is -z at yaw 0), comes down. */
+export function aimAt(x: number, z: number, yaw: number): { x: number; z: number } {
+  return { x: x - Math.sin(yaw) * THROW, z: z - Math.cos(yaw) * THROW };
 }
 
 /**
- * Where a thing put at (x, z) comes to rest: in the pond, where it went in;
+ * Where a thing that lands at (x, z) comes to rest: in the pond, where it fell;
  * out of the way otherwise: inside the fence, and off a bed onto the path
  * beside it, where a hand can reach it again.
  */

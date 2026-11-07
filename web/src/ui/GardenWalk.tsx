@@ -65,7 +65,7 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  * hiding near them, or what they just found hiding (#379); what fell from a
  * shaken plant (#357); who answered a call (#377); a visitor's own line (#376:
  * the goat up high, the mole caught); the door's line; a lantern that is out,
- * and the stars once every one is (#361); what a thing put down did where it
+ * and the stars once every one is (#361); what a thing thrown or put down did where it
  * landed (#358); what they hold. Things in the world, never instructions (#334).
  */
 function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
@@ -117,7 +117,7 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   const line = spokenLine(labels.find((l) => l.kind === "line")?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
-  // Nothing held: what the last thing put down did, if anything.
+  // Nothing held: what the last thing thrown or put down did, if anything.
   if (!held) return landed;
   return `You hold ${held.name}.`;
 }
@@ -278,7 +278,7 @@ const REACH_NAME: Record<Reach, string> = {
   shake: "Shake the plant",
   "lift-pebble": "Pick up the pebble",
   "lift-stick": "Pick up the stick",
-  put: "Put it down",
+  throw: "Throw it",
   blow: "Blow the dandelion",
   snuff: "Blow out the lantern",
   light: "Light the lantern",
@@ -298,8 +298,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   shake: [".#..#..#.", "#..###..#", ".#.#.#.#.", "#...#...#", "....#....", "..#####..", "...###..."],
   "lift-pebble": HAND,
   "lift-stick": HAND,
-  // A thing, set down on the ground.
-  put: ["...##...", "...##...", "........", "..####..", "........", "########", "########"],
+  // An arc, coming down.
+  throw: ["..######....", ".#......#...", "#........#..", "#........#..", "#......#####", "#.......###.", "#........#.."],
   // A dandelion clock, on its stem.
   blow: ["..#.#.#..", ".#.###.#.", "..#####..", "#.#####.#", "..#####..", ".#.###.#.", "..#.#.#..", "....#....", "....#....", "....#...."],
   // Puffs of air at a small flame.
@@ -315,8 +315,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
-const CARRY_ACTS = new Set<Reach>(["lift-pebble", "lift-stick", "put", "well"] satisfies CarryAct[]);
-/** Picking up a loose thing keeps the action button, for what comes next (putting it down). */
+const CARRY_ACTS = new Set<Reach>(["lift-pebble", "lift-stick", "throw", "well"] satisfies CarryAct[]);
+/** Picking up a loose thing keeps the action button, for what comes next (a throw). */
 const LIFTS = new Set<Reach>(["lift-pebble", "lift-stick"] satisfies CarryAct[]);
 /** The toys' actions (#360, sceneToys.ts ToyAct). */
 const TOY_ACTS = new Set<Reach>(["blow"] satisfies ToyAct[]);
@@ -451,7 +451,7 @@ export function GardenWalk({
     if (e.did === "brush") brushNote(e.word, e.clear);
     else if (e.did === "bump" && e.fell === "fruit" && sound) void speak(e.word, tag);
   };
-  // What a put-down thing did where it landed (#358), for screen readers. Doing something with it ends what a shake said.
+  // What a thrown or put-down thing did where it landed (#358), for screen readers. Doing something with it ends what a shake said.
   const [landed, setLanded] = useState<string | null>(null);
   const carryDone = (d: CarryDone) => {
     if (d.did === "land") return setLanded(d.said);
@@ -558,7 +558,7 @@ export function GardenWalk({
         setHint(false);
         return;
       case "carry":
-        // A loose thing to pick up; holding one, the well, the water or the ground to put it down (#358). From afar, once you have walked up to it.
+        // A loose thing to pick up; holding one, the well, the water to throw it in, or the ground to put it down (#358). From afar, once you have walked up to it.
         scene.current.tapCarry(hit.t);
         setHint(false);
         return;
@@ -802,8 +802,8 @@ export function GardenWalk({
               if (!CARRY_ACTS.has(reach) && !TOY_ACTS.has(reach) && reach !== "shake") onTap?.(reach);
               if (reach !== "shake") setShook(null);
               if (reach !== "call") setCalled(null);
-              // After the door opens, the key is picked up, something is put down or a toy is played with, there may be nothing in reach:
-              // keep keyboard focus in the walk, not lost to the page. Picking up keeps the button, for what comes next (putting it down).
+              // After the door opens, the key is picked up, something is thrown or put down or a toy is played with, there may be nothing in reach:
+              // keep keyboard focus in the walk, not lost to the page. Picking up keeps the button, for what comes next (a throw).
               if (reach === "open" || reach === "key" || reach === "seek" || ((CARRY_ACTS.has(reach) || TOY_ACTS.has(reach)) && !LIFTS.has(reach))) canvas.current?.focus({ preventScroll: true });
             }}
           >

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { aheadOf, ANSWERS, FROG_PATIENCE, PEBBLES, pebbleHome, placeAt, reaction, restAt, stickHome, type Answerers } from "./carry";
+import { aimAt, ANSWERS, FROG_PATIENCE, PEBBLES, pebbleHome, placeAt, reaction, restAt, stickHome, type Answerers } from "./carry";
 import { collide, layout, WALKER, type GardenPlant } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos, rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false });
@@ -29,13 +29,13 @@ describe("where a thing lands", () => {
     expect(placeAt(L, L.gate.x, L.gate.z - 1)).toBe("ground");
   });
 
-  test("the action button puts a thing down just ahead, where you face", () => {
+  test("a throw comes down a few steps ahead, where you face", () => {
     // Forward is -z at yaw 0.
-    const ahead = aheadOf(1, 1, 0);
+    const ahead = aimAt(1, 1, 0);
     expect(ahead.x).toBeCloseTo(1);
-    expect(ahead.z).toBeCloseTo(0.3);
-    const left = aheadOf(0, 0, Math.PI / 2);
-    expect(left.x).toBeCloseTo(-0.7);
+    expect(ahead.z).toBeCloseTo(-2.2);
+    const left = aimAt(0, 0, Math.PI / 2);
+    expect(left.x).toBeCloseTo(-3.2);
     expect(left.z).toBeCloseTo(0);
   });
 

@@ -107,7 +107,7 @@ and key, the critters (fireflies, butterflies...), the plants (beds,
 culling, texture streaming, brushing past them), the visitors, the deadpan
 scenery (#364: the sundial, the mouse door, the fish that jumps), walking
 into things (#359: a CPU-moved pool of pixel bits for bursts and showers, and
-fallen fruit), the loose things you carry and put down (`sceneCarry.ts`,
+fallen fruit), the loose things you carry and throw (`sceneCarry.ts`,
 #358: one instanced mesh for all of them, the pond's rings, and the
 orchard's well, #335 S6), and the toys (#360: the dandelion clocks with their
 seed points). These are the rules a change to the garden's
@@ -125,10 +125,10 @@ rendering code should follow, and the places it still does not (yet):
   say, then the one active tag — the door's line, a fallen fruit's word, scenery or
   tree — then a visitor's); and what the one action button acts on
   (`reportReach`: stand up, the key, what a loose thing in your hands does
-  (put it down, or drop it in the well), a visitor hiding near you (#379), the
+  (throw it, or drop it in the well), a visitor hiding near you (#379), the
   door, a lantern, picking up a loose thing, the bench, the toys (blow a
   dandelion clock), then the plant ahead; with nothing in reach, call, #377).
-  What a thing put down does where it lands is a row in
+  What a thing thrown or put down does where it lands is a row in
   `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a
   small function there: a new joke is one row, not new scene code. A Part never reaches into another
   Part's build or pick order.
