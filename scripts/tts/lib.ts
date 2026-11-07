@@ -102,6 +102,24 @@ export async function putClip(url: string, bytes: Uint8Array<ArrayBuffer>, fetch
   if (!res.ok) throw new Error(`R2 PUT ${res.status}`);
 }
 
+/** Where the app fetches clips (VITE_AUDIO_BASE_URL in docs/DEPLOY.md): the URLs Cloudflare caches. */
+export const AUDIO_BASE = "https://audio.playperennial.com";
+
+/** Cloudflare takes at most 30 URLs in one purge call (developers.cloudflare.com/cache/how-to/purge-cache/purge-by-single-file). */
+const PURGE_BATCH = 30;
+
+/** Drops replaced clips from Cloudflare's edge, which keeps them a year (CLIP_HEADERS). The token goes in a header. */
+export async function purge(paths: readonly string[], cf: { zone: string; token: string }, fetchFn: Deps["fetch"]): Promise<void> {
+  for (let i = 0; i < paths.length; i += PURGE_BATCH) {
+    const res = await fetchFn(`https://api.cloudflare.com/client/v4/zones/${cf.zone}/purge_cache`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${cf.token}` },
+      body: JSON.stringify({ files: paths.slice(i, i + PURGE_BATCH).map((p) => `${AUDIO_BASE}/${p}`) }),
+    });
+    if (!res.ok) throw new Error(`Cloudflare purge: HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  }
+}
+
 const SYNTHESIZE = "https://texttospeech.googleapis.com/v1/text:synthesize";
 
 /**
@@ -154,7 +172,33 @@ function mp3Seconds(bytes: Uint8Array): number {
 const minSeconds = (text: string) => Math.max(0.37, 0.04 * text.length);
 
 /** A request that may work later (throttled, a server error, the network) or never (any other answer). */
-class Retry extends Error {}
+export class Retry extends Error {}
+
+/** A 400: Google refused the request, for example an IPA with a phone the voice lacks (fix.ts). */
+export class Refused extends Error {}
+
+/** One take of a clip. `ipa` pins how the whole text is said (Chirp 3 HD customPronunciations, #776). */
+export async function synthesize(c: Clip, apiKey: string, fetchFn: Deps["fetch"], ipa?: string): Promise<Uint8Array<ArrayBuffer>> {
+  const input = ipa === undefined ? { text: c.text } : { text: c.text, customPronunciations: { pronunciations: [{ phrase: c.text, phoneticEncoding: "PHONETIC_ENCODING_IPA", pronunciation: ipa }] } };
+  const res = await fetchFn(SYNTHESIZE, {
+    method: "POST",
+    // In a header, not the URL: URLs end up in logs.
+    headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+    body: JSON.stringify({ input, voice: { languageCode: c.tag, name: voiceName(c.tag) }, audioConfig: { audioEncoding: "MP3" } }),
+  }).catch((e: unknown) => {
+    throw new Retry(`network: ${String(e)}`);
+  });
+  if (res.status === 429 || res.status >= 500) throw new Retry(`HTTP ${res.status}`);
+  if (res.status === 400) throw new Refused(`HTTP 400: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const body = (await res.json()) as { audioContent?: string };
+  if (!body.audioContent) throw new Error("no audioContent in the answer");
+  const bytes = Uint8Array.from(Buffer.from(body.audioContent, "base64"));
+  // Chirp 3 HD sometimes answers a short word with a near-silent 0.3 s clip (#776). Asked again, it says the word.
+  const s = mp3Seconds(bytes);
+  if (s < minSeconds(c.text)) throw new Retry(`too short: ${s.toFixed(2)} s for ${c.text.length} characters`);
+  return bytes;
+}
 
 export async function render(clips: readonly Clip[], o: RenderOptions, d: Deps): Promise<Rendered> {
   let limit = o.concurrency;
@@ -164,28 +208,6 @@ export async function render(clips: readonly Clip[], o: RenderOptions, d: Deps):
   let capped = false;
   const failed: Rendered["failed"] = [];
   const slot = pace(o.rpm, d.now, d.sleep);
-
-  const synthesize = async (c: Clip): Promise<Uint8Array<ArrayBuffer>> => {
-    const res = await d
-      .fetch(SYNTHESIZE, {
-        method: "POST",
-        // In a header, not the URL: URLs end up in logs.
-        headers: { "content-type": "application/json", "x-goog-api-key": o.apiKey },
-        body: JSON.stringify({ input: { text: c.text }, voice: { languageCode: c.tag, name: voiceName(c.tag) }, audioConfig: { audioEncoding: "MP3" } }),
-      })
-      .catch((e: unknown) => {
-        throw new Retry(`network: ${String(e)}`);
-      });
-    if (res.status === 429 || res.status >= 500) throw new Retry(`HTTP ${res.status}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    const body = (await res.json()) as { audioContent?: string };
-    if (!body.audioContent) throw new Error("no audioContent in the answer");
-    const bytes = Uint8Array.from(Buffer.from(body.audioContent, "base64"));
-    // Chirp 3 HD sometimes answers a short word with a near-silent 0.3 s clip (#776). Asked again, it says the word.
-    const s = mp3Seconds(bytes);
-    if (s < minSeconds(c.text)) throw new Retry(`too short: ${s.toFixed(2)} s for ${c.text.length} characters`);
-    return bytes;
-  };
 
   // One step with retries. A throttle or server error halves the parallel requests.
   const tries = async <T>(step: () => Promise<T>): Promise<T> => {
@@ -210,7 +232,7 @@ export async function render(clips: readonly Clip[], o: RenderOptions, d: Deps):
         throw new Error("not sent: --max-chars reached");
       }
       sent += c.text.length;
-      return synthesize(c);
+      return synthesize(c, o.apiKey, d.fetch);
     });
     d.local.write(c.path, bytes);
     return bytes;
