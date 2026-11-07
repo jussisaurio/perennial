@@ -141,6 +141,12 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   await pinDetail(page, "normal");
+  // What the page hands the browser's voice.
+  await page.addInitScript(() => {
+    const spoken: string[] = [];
+    (window as unknown as { spoken: string[] }).spoken = spoken;
+    speechSynthesis.speak = (u) => void spoken.push(u.text);
+  });
   // The dev override brings every visitor; the dev-only scene handle lets the test stand by the pond.
   await page.goto("/?demo=es:30&visitors=all#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -164,10 +170,15 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   const tag = page.locator(".gw-tag", { hasText: "la rana" });
   await expect(tag).toHaveText("la rana · frog");
   const box = (await tag.boundingBox())!;
+  const croak = page.waitForResponse(/frog-croak.*\.mp3$/);
   await page.mouse.click(box.x + box.width / 2, box.y + box.height + 25);
   // Its sound and a word (the demo learner's words); never its own name.
   await expect(page.locator(".gw-say")).toHaveText(/^croac…/);
   await expect(page.locator(".gw-say")).not.toHaveText(/rana/);
+  // Aloud, a real recorded croak, then only the word in the course voice (#739).
+  expect((await croak).ok()).toBe(true);
+  const word = (await page.locator(".gw-say").textContent())!.replace("croac… ", "");
+  await expect.poll(() => page.evaluate(() => (window as unknown as { spoken: string[] }).spoken)).toEqual([word]);
   // By day it stays, asleep on its pad, as in the strip: a learner who brought it finds it (#209).
   // Come back at noon the next day.
   await page.clock.setFixedTime(new Date("2026-10-12T12:00:00"));

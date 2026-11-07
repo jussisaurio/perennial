@@ -2,6 +2,8 @@
 // speech synthesis for any text without one. Browser speech is free, offline on
 // most platforms, and covers every course language on recent OSes.
 
+import type { AnimalSound } from "../garden/kinds/kind";
+import { ANIMAL_SOUNDS } from "./animalSounds";
 import { clipsOn, loadClip, playClip, stopClip } from "./clipPlayer";
 
 // Sound on or off is a per-device choice (where you are matters more than who
@@ -147,9 +149,18 @@ export const speak = (text: string, tag: string) => sayAll([text], tag, false);
 /** Speak the texts one after another. Stops early when stopSpeaking() or another speak call comes first. */
 export const speakAll = (texts: string[], tag: string) => sayAll(texts, tag, false);
 
-async function sayAll(texts: string[], tag: string, slow: boolean): Promise<void> {
+/**
+ * An animal's answer (#739): its recorded sound, then the known word it holds
+ * up, if any, in the course voice. Call it inside the tap: iOS lets the sound
+ * start there.
+ */
+export const animalSays = (sound: AnimalSound, word: string | null, tag: string) => sayAll(word ? [word] : [], tag, false, ANIMAL_SOUNDS[sound]);
+
+async function sayAll(texts: string[], tag: string, slow: boolean, sound?: string): Promise<void> {
   if (!soundOn) return;
   const gen = ++generation;
+  // A sound that will not play (no tap yet) is skipped; the word still comes.
+  if (sound) await playClip(sound, 1);
   for (const text of texts) {
     if (gen !== generation || !soundOn) return;
     await say(text, tag, slow, gen);

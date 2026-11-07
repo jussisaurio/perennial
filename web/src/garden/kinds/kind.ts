@@ -81,6 +81,16 @@ interface Tap {
   lang: string;
 }
 
+/** Each animal that makes a sound: a real recording of its own (ui/animalSounds.ts), never the course voice (#739). */
+export type AnimalSound = "frog";
+
+/** A visitor's answer to a tap: its bubble, its recorded sound, and the known word in the bubble (said in the course voice after the sound), if any. */
+export interface Reply {
+  say: string;
+  sound: AnimalSound;
+  word: string | null;
+}
+
 /** You whistled (#377). */
 interface Call {
   elapsed: number;
@@ -107,8 +117,8 @@ export interface Visitor<F extends string> {
    */
   step?(f: Frame, seen: boolean): void | "startled";
   onConditions?(c: Conditions): void;
-  /** Its answer to a tap, said in a bubble instead of its tag; null shows its tag as usual. */
-  onTap?(t: Tap): string | null;
+  /** Its answer to a tap, in a bubble instead of its tag and aloud; null shows its tag as usual. */
+  onTap?(t: Tap): Reply | null;
   /**
    * The scene moved it (visit): settle there, whatever it was doing.
    * `settled`: it sits with you on the bench (#362), so it does not mind you near.

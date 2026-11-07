@@ -188,26 +188,26 @@ describe("the gnome plays statues", () => {
 
 describe("the frog's croak", () => {
   const now = new Date(2026, 9, 11, 20);
-  test("its sound, then one word the learner knows", () => {
-    expect(frogCroak(["casa"], "es", 0, now)).toBe("croac… casa");
-    expect(frogCroak(["Haus"], "de", 3, now)).toBe("quak… Haus");
+  test("its sound written, then one word the learner knows: only the word is for the voice", () => {
+    expect(frogCroak(["casa"], "es", 0, now)).toEqual({ say: "croac… casa", word: "casa" });
+    expect(frogCroak(["Haus"], "de", 3, now)).toEqual({ say: "quak… Haus", word: "Haus" });
   });
 
   test("never its own name, in any case", () => {
     for (let tap = 0; tap < 50; tap++) {
-      expect(frogCroak(["rana", "casa", "Rana"], "es", tap, now)).toBe("croac… casa");
-      expect(frogCroak(["Frosch", "Haus"], "de", tap, now)).toBe("quak… Haus");
+      expect(frogCroak(["rana", "casa", "Rana"], "es", tap, now).word).toBe("casa");
+      expect(frogCroak(["Frosch", "Haus"], "de", tap, now).word).toBe("Haus");
     }
-    expect(frogCroak(["rana"], "es", 0, now)).toBe("croac…");
-    expect(frogCroak([], "es", 0, now)).toBe("croac…");
+    expect(frogCroak(["rana"], "es", 0, now)).toEqual({ say: "croac…", word: null });
+    expect(frogCroak([], "es", 0, now)).toEqual({ say: "croac…", word: null });
   });
 
   test("different words over a few taps, the same order all day", () => {
     const known = ["casa", "perro", "agua", "sol", "mesa", "libro", "calle", "noche"];
-    const said = new Set(Array.from({ length: 12 }, (_, i) => frogCroak(known, "es", i, now)));
+    const said = new Set(Array.from({ length: 12 }, (_, i) => frogCroak(known, "es", i, now).word));
     expect(said.size).toBeGreaterThan(3);
-    for (const w of said) expect(known).toContain(w.replace("croac… ", ""));
-    expect(frogCroak(known, "es", 5, new Date(2026, 9, 11, 23))).toBe(frogCroak(known, "es", 5, now));
+    for (const w of said) expect(known).toContain(w);
+    expect(frogCroak(known, "es", 5, new Date(2026, 9, 11, 23))).toEqual(frogCroak(known, "es", 5, now));
   });
 });
 
