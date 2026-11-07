@@ -277,7 +277,6 @@ const REACH_NAME: Record<Reach, string> = {
   stand: "Stand up",
   shake: "Shake the plant",
   "lift-pebble": "Pick up the pebble",
-  "lift-stick": "Pick up the stick",
   throw: "Throw it",
   blow: "Blow the dandelion",
   snuff: "Blow out the lantern",
@@ -297,7 +296,6 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   // A small plant, shaking.
   shake: [".#..#..#.", "#..###..#", ".#.#.#.#.", "#...#...#", "....#....", "..#####..", "...###..."],
   "lift-pebble": HAND,
-  "lift-stick": HAND,
   // An arc, coming down.
   throw: ["..######....", ".#......#...", "#........#..", "#........#..", "#......#####", "#.......###.", "#........#.."],
   // A dandelion clock, on its stem.
@@ -315,9 +313,9 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
-const CARRY_ACTS = new Set<Reach>(["lift-pebble", "lift-stick", "throw", "well"] satisfies CarryAct[]);
+const CARRY_ACTS = new Set<Reach>(["lift-pebble", "throw", "well"] satisfies CarryAct[]);
 /** Picking up a loose thing keeps the action button, for what comes next (a throw). */
-const LIFTS = new Set<Reach>(["lift-pebble", "lift-stick"] satisfies CarryAct[]);
+const LIFTS = new Set<Reach>(["lift-pebble"] satisfies CarryAct[]);
 /** The toys' actions (#360, sceneToys.ts ToyAct). */
 const TOY_ACTS = new Set<Reach>(["blow"] satisfies ToyAct[]);
 

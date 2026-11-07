@@ -1,13 +1,12 @@
 // Carry, throw and put down in the walk (#358; garden/carry.ts says what
-// happens): the pebbles by the pond, the stick by the shed, the rings a splash
-// makes, and the orchard's well (#335 S6) once the door is open. It says what
+// happens): the pebbles by the pond, the rings a splash makes, and the orchard's well (#335 S6) once the door is open. It says what
 // the action button can do with them where you stand, does it, flies a thrown
 // thing in a small arc, and tells the scene where it landed, for whoever
-// answers. A Part: the one place loose things move (a flight, a stick drifting
-// to the pond's edge), all in one instanced sprite mesh.
+// answers. A Part: the one place loose things move (a flight), all in one
+// instanced sprite mesh.
 
 import * as THREE from "three";
-import { PEBBLES, pebbleHome, placeAt, reaction, restAt, stickHome, type Down, type Loose, type Place, type Reaction } from "./carry";
+import { PEBBLES, pebbleHome, placeAt, reaction, restAt, type Down, type Loose, type Place, type Reaction } from "./carry";
 import { rayBox, type Ray } from "./scenery";
 import type { Frame, Part } from "./scenePart";
 import { sprites } from "./sceneSprites";
@@ -51,20 +50,18 @@ const WELL_FRONT = 0.5;
 export const CARRY_STAND = 0.6;
 /** Metres per atlas cell, and each thing's size in cells. */
 const SIZE = 0.5;
-const SCALE: Record<Loose, number> = { pebble: 1.1, stick: 2 };
+const SCALE: Record<Loose, number> = { pebble: 1.1 };
 /** What the action button says it picks up, per thing: made once, so reachAt allocates nothing. */
-const LIFT: { [K in Loose]: `lift-${K}` } = { pebble: "lift-pebble", stick: "lift-stick" };
+const LIFT: { [K in Loose]: `lift-${K}` } = { pebble: "lift-pebble" };
 /** The well's cell is 1.4 m: its stones as wide as its ring (orchard.ts WELL_R), its roof a little over the eye. */
 const WELL_SCALE = 2.8;
 /** A throw: it starts this far in front of you at this height, peaks this much above the line (plus some per metre), and flies this long (plus some per metre). */
 const FLIGHT = { ahead: 0.3, from: 0.8, peak: 0.15, peakPerM: 0.05, s: 0.3, sPerM: 0.06 };
 /** The rings spread for this long (s), from this size to this much bigger (m). */
 const RIPPLE = { s: 1.1, size: 1.2, grow: 0.8 };
-/** A floating stick drifts to this far inside the pond's edge, at this speed (m/s). */
-const FLOAT = { edge: 0.2, speed: 0.25, y: 0.03 };
 
 /** Where a thing is. */
-type State = "rest" | "held" | "flying" | "floating";
+type State = "rest" | "held" | "flying";
 
 interface Thing {
   kind: Loose;
@@ -76,8 +73,8 @@ interface Thing {
 }
 
 const near = (x: number, z: number, p: { x: number; z: number }, r: number) => Math.hypot(x - p.x, z - p.z) < r;
-/** Lying or floating, where a hand can pick it up: not held, not in the air. */
-const free = (t: Thing) => t.at === "rest" || t.at === "floating";
+/** Lying where a hand can pick it up: not held, not in the air. */
+const free = (t: Thing) => t.at === "rest";
 /** A thing's drawn size: none while you hold it. */
 const shown = (t: Thing) => (t.at === "held" ? 0 : SCALE[t.kind]);
 
@@ -106,9 +103,7 @@ export class Carry implements Part {
     this.layout = layout;
     this.world = world;
     this.reducedMotion = reducedMotion;
-    const pebbles = Array.from({ length: PEBBLES }, (_, i): Thing => ({ kind: "pebble", ...pebbleHome(layout, i), y: 0.01, at: "rest", home: pebbleHome(layout, i) }));
-    const stick: Thing = { kind: "stick", ...stickHome(layout), y: 0.01, at: "rest", home: stickHome(layout) };
-    this.things = [...pebbles, stick];
+    this.things = Array.from({ length: PEBBLES }, (_, i): Thing => ({ kind: "pebble", ...pebbleHome(layout, i), y: 0.01, at: "rest", home: pebbleHome(layout, i) }));
     this.targets = { things: this.things.map((_, i) => ({ at: "thing", i })), well: { at: "well" } };
   }
 
@@ -240,14 +235,13 @@ export class Carry implements Part {
     const place = placeAt(this.layout, ax, az);
     const rx = reaction(th.kind, place);
     const rest = restAt(this.layout, ax, az, place, this.world.doorOpen());
-    const y = rx.then === "float" ? FLOAT.y : 0.01;
     // Put down by hand on the ground: that is all that happened.
     const said = !arc && place === "ground" ? "You put it down." : rx.said;
     const landing: Landing = { i, thing: th.kind, place, x: ax, z: az, reaction: rx, said };
     this.held = null;
     th.at = "flying";
     if (!arc || this.reducedMotion) {
-      [th.x, th.y, th.z] = [rest.x, y, rest.z];
+      [th.x, th.y, th.z] = [rest.x, 0.01, rest.z];
       this.land(i, landing);
       return true;
     }
@@ -255,7 +249,7 @@ export class Carry implements Part {
     if (this.flight) this.endFlight();
     const d = Math.hypot(ax - x, az - z);
     const k = FLIGHT.ahead / Math.max(d, 0.01);
-    this.flight = { i, from: [x + (ax - x) * k, FLIGHT.from, z + (az - z) * k], to: [rest.x, y, rest.z], peak: FLIGHT.peak + d * FLIGHT.peakPerM, t: 0, s: FLIGHT.s + d * FLIGHT.sPerM, landing };
+    this.flight = { i, from: [x + (ax - x) * k, FLIGHT.from, z + (az - z) * k], to: [rest.x, 0.01, rest.z], peak: FLIGHT.peak + d * FLIGHT.peakPerM, t: 0, s: FLIGHT.s + d * FLIGHT.sPerM, landing };
     return true;
   }
 
@@ -267,14 +261,14 @@ export class Carry implements Part {
     this.land(f.i, f.landing);
   }
 
-  /** A thing came down: it sinks, floats or lies, by its row; then the scene hears where. */
+  /** A thing came down: it sinks or lies, by its row; then the scene hears where. */
   private land(i: number, l: Landing) {
     const th = this.things[i];
     const rx = l.reaction;
     if (rx.ripple) this.ripple(l.x, l.z);
     // Another waits by the pond: pebbles never run out.
     if (rx.then === "sink") [th.x, th.y, th.z, th.at] = [th.home.x, 0.01, th.home.z, "rest"];
-    else th.at = rx.then === "float" ? "floating" : "rest";
+    else th.at = "rest";
     this.draw(i);
     this.world.land(l);
   }
@@ -285,7 +279,7 @@ export class Carry implements Part {
     this.ring.pos.needsUpdate = true;
   }
 
-  /** The flight, the rings, and a floating stick's drift. Allocates nothing. */
+  /** The flight and the rings. Allocates nothing. */
   tick(f: Frame) {
     const fl = this.flight;
     if (fl) {
@@ -307,23 +301,6 @@ export class Carry implements Part {
       ring.uv.setX(0, cell / T.CARRY_CELLS);
       ring.params.setZ(0, k >= 1 ? 0 : this.reducedMotion ? 1 : 0.5 + k * RIPPLE.grow);
       ring.uv.needsUpdate = ring.params.needsUpdate = true;
-    }
-    const p = this.layout.pond;
-    for (let i = 0; i < this.things.length; i++) {
-      const th = this.things[i];
-      if (th.at !== "floating") continue;
-      const d = Math.hypot(th.x - p.x, th.z - p.z);
-      const to = p.r - FLOAT.edge;
-      if (d >= to) continue;
-      // Out to the edge, where a hand reaches it from the bank.
-      const step = this.reducedMotion ? to - d : Math.min(to - d, FLOAT.speed * f.dt);
-      // From the middle exactly, any way out will do.
-      if (d < 1e-3) th.x += step;
-      else {
-        th.x += ((th.x - p.x) / d) * step;
-        th.z += ((th.z - p.z) / d) * step;
-      }
-      this.draw(i);
     }
   }
 }

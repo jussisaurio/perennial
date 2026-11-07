@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { aimAt, ANSWERS, FROG_PATIENCE, PEBBLES, pebbleHome, placeAt, reaction, restAt, stickHome, type Answerers } from "./carry";
+import { aimAt, ANSWERS, FROG_PATIENCE, PEBBLES, pebbleHome, placeAt, reaction, restAt, type Answerers } from "./carry";
 import { collide, layout, WALKER, type GardenPlant } from "./world";
 
 const plant = (i: number, pos = "noun"): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos, rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false });
@@ -50,9 +50,8 @@ describe("where a thing lands", () => {
 });
 
 describe("the rows", () => {
-  test("a pebble in the pond sinks with a ripple, and the frog answers; a stick floats", () => {
+  test("a pebble in the pond sinks with a ripple, and the frog answers", () => {
     expect(reaction("pebble", "pond")).toMatchObject({ then: "sink", ripple: true, answer: "frog" });
-    expect(reaction("stick", "pond")).toMatchObject({ then: "float", ripple: true });
   });
 
   test("the frog hops away from the first few pebbles, then only looks at you", () => {
@@ -72,9 +71,9 @@ describe("the rows", () => {
   });
 });
 
-test("in every size of garden, the pebbles and the stick lie on open ground a walker can reach", () => {
+test("in every size of garden, the pebbles lie on open ground a walker can reach", () => {
   for (const L of gardens) {
-    const spots = [...Array.from({ length: PEBBLES }, (_, i) => pebbleHome(L, i)), stickHome(L)];
+    const spots = Array.from({ length: PEBBLES }, (_, i) => pebbleHome(L, i));
     for (const p of spots) {
       expect(placeAt(L, p.x, p.z)).not.toBe("pond");
       expect(placeAt(L, p.x, p.z)).not.toBe("bed");

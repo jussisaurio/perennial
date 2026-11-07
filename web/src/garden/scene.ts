@@ -252,7 +252,7 @@ export class GardenScene {
   private carryTarget: CarryTarget | null = null;
   /** The hiding visitor the action button finds, when it finds one (#379). */
   private seekTarget: VisitorId | null = null;
-  /** Carry (#358): the pebbles and the stick; and how often each one has answered a landing this visit. */
+  /** Carry (#358): the pebbles; and how often each one has answered a landing this visit. */
   private carry: Carry;
   private answered: Record<Answer, number> = { frog: 0, plant: 0, well: 0 };
   /** The well's echo (#335 S6): an old word and the day it was met, over the well, from `from` until `until` (elapsed s). */
@@ -1825,7 +1825,7 @@ export class GardenScene {
     // (chunk culling — beds outside the fog are skipped — streaming the
     // plants nearest you, the perk and sneeze uniforms, brushing), the
     // visitors, the jokes, walking into trees and leaf piles (#359), the loose
-    // things (the pond's rings, a stick drifting), then the toys (#360: the
+    // things (the pond's rings), then the toys (#360: the
     // dandelion seeds).
     const frame = this.tickFrame;
     frame.dt = dt;
