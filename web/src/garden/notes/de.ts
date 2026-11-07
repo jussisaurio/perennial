@@ -1,6 +1,6 @@
 // The gardener's notes, German (#654, story in #639). Written in German, not
 // translated. Gardener words no deck teaches: Türchen (the mouse door),
-// Krümel (the mouse), Zauntreppe (the stile), Fünkchen (the far light).
+// Krümel (the mouse), Zauntreppe (the stile), Dornen (the brambles), Fünkchen (the far light).
 
 import type { Note } from "./note";
 
@@ -37,8 +37,8 @@ export const NOTES: readonly Note[] = [
     id: "n05",
     beat: "stile",
     unlockAt: 250,
-    text: "Jeden Abend derselbe Weg: bis ans Ende vom Garten.\nSie geht über die Zauntreppe, ohne zu schauen.\nIch: langsam, vorsichtig.\nSie wartet drüben. Immer.",
-    forms: { ans: "an", die: "der", geht: "gehen", jeden: "jeder", vom: "von", wartet: "warten" },
+    text: "Früher jeden Abend derselbe Weg: bis ans Ende vom Garten.\nSie ging über die Zauntreppe, ohne zu schauen.\nIch: langsam, vorsichtig.\nJetzt sind da Dornen, höher als ich.",
+    forms: { ans: "an", die: "der", ging: "gehen", "höher": "hoch", jeden: "jeder", sind: "sein", vom: "von" },
   },
   {
     id: "n06",
@@ -58,8 +58,8 @@ export const NOTES: readonly Note[] = [
     id: "n08",
     beat: "lookout",
     unlockAt: 560,
-    text: "Hinter der Zauntreppe ein kleiner Berg.\nVon oben, nachts: das Fünkchen,\nein warmes Licht, fern, auf der anderen Seite.\nEs geht nie aus, nicht einmal im Winter.\nSie fragt nicht.",
-    forms: { anderen: "andere", fragt: "fragen", geht: "gehen", im: "in", kleiner: "klein", warmes: "warm" },
+    text: "Hinter den Dornen und der Zauntreppe ein kleiner Berg.\nVon oben, nachts: das Fünkchen,\nein warmes Licht, fern, auf der anderen Seite.\nEs geht nie aus, nicht einmal im Winter.\nSie fragt nicht.",
+    forms: { anderen: "andere", den: "der", fragt: "fragen", geht: "gehen", im: "in", kleiner: "klein", warmes: "warm" },
   },
   {
     id: "n09",

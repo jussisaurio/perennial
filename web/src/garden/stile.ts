@@ -1,17 +1,16 @@
 // The stile in the back fence (#714, a beat of #639): a few wooden steps up
-// one side of the fence and down the other, where the garden ends. It stands
-// once the learner knows enough words for the first stile note, and the stile
-// notes are found under its step, not on the shed's nails. Climb it, and from
-// the top board you see an old path go on past the fence, up a small hill; the
-// walk goes no further until the note that tells of the hill (lookout.ts
-// HILL_NOTE). Pure: where things go, and which notes lie where. The scene
-// draws it (sceneStile.ts).
+// one side of the fence and down the other, where the garden ends. Its place
+// is known once the learner knows enough words for the first stile note, and
+// the stile notes are found there, not on the shed's nails. Brambles shut the
+// way until the note that tells of the hill (lookout.ts HILL_NOTE); then they
+// are cut back and the stile goes over, up a small hill (#749). Pure: where
+// things go, and which notes lie where. The scene draws it (sceneStile.ts).
 
 import type { Note } from "./notes/note";
 import { CELL_W, type Layout } from "./world";
 
-/** Near enough to the stile's foot (m) to climb it or read the note under its step. */
-export const CLIMB_REACH = 1.3;
+/** Near enough to the stile's foot (m) to go over it or read the notes there. */
+export const STILE_REACH = 1.3;
 
 /** The top board's height (m): a hand above the fence's 0.8. */
 export const TOP = 0.86;

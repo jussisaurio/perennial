@@ -10,7 +10,7 @@ import { still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */
-function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeometry {
+export function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeometry {
   const box = new THREE.BoxGeometry(w, h, d);
   const uv = box.getAttribute("uv") as THREE.BufferAttribute;
   // Faces +x, -x, +y, -y, +z, -z, with four corners each: each face's width and height in metres.
@@ -29,7 +29,7 @@ function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeome
 }
 
 /** Vertex colours from `low` at the bottom to `high` at the top, for an unlit material with vertexColors: shading without lights. */
-function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
+export function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
   geo.computeBoundingBox();
   const { min, max } = geo.boundingBox!;
   const pos = geo.getAttribute("position");

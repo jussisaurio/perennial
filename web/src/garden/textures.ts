@@ -183,33 +183,41 @@ export function wood(): OffscreenCanvas {
   return c;
 }
 
-/** Rough bark (#749): dark furrows that run along the trunk (down the texture), lighter ridges between them. */
-export function bark(): OffscreenCanvas {
-  const [c, ctx] = canvas(16, 16);
-  const r = rng(749);
-  px(ctx, 0, 0, "#6b5544", 16, 16);
-  for (let x = 0; x < 16; x += 4) {
-    // Each furrow wanders a pixel left or right as it goes.
-    let fx = x + Math.floor(r() * 2);
-    for (let y = 0; y < 16; y++) {
-      if (r() < 0.25) fx += r() < 0.5 ? -1 : 1;
-      px(ctx, (fx + 16) % 16, y, "#3f3027");
-      px(ctx, (fx + 17) % 16, y, r() < 0.5 ? "#4f3d31" : "#6b5544");
+/** A bramble thicket's leaves (#749): dark, ragged green, crossed by red-purple canes with pale thorns, and a few blackberries. Wilder and darker than the clipped hedge. */
+export function bramble(): OffscreenCanvas {
+  const c = speckle(749, "#2c4a26", [
+    ["#22391e", 170],
+    ["#3a5e2f", 120],
+    ["#4d7238", 30],
+    ["#16260f", 60],
+  ]);
+  const ctx = c.getContext("2d")!;
+  const r = rng(750);
+  // Canes running every which way through the leaves, each with thorns.
+  for (let i = 0; i < 7; i++) {
+    let [x, y] = [Math.floor(r() * 32), Math.floor(r() * 32)];
+    const dx = r() < 0.5 ? 1 : -1;
+    for (let k = 0; k < 14; k++) {
+      px(ctx, (x + 32) % 32, (y + 32) % 32, "#6a2a3c");
+      if (k % 4 === 2) px(ctx, (x + 32) % 32, (y + 31) % 32, "#e6d6a8");
+      x += dx;
+      if (r() < 0.4) y += 1;
     }
   }
-  for (let i = 0; i < 18; i++) px(ctx, Math.floor(r() * 16), Math.floor(r() * 16), "#8a7260");
+  for (let i = 0; i < 5; i++) {
+    const [x, y] = [Math.floor(r() * 31), Math.floor(r() * 31)];
+    px(ctx, x, y, "#1a1024", 2, 2);
+    px(ctx, x, y, "#4a3a66");
+  }
   return c;
 }
 
-/** A sawn log's end (#749): pale wood in rings round a dark heart, and bark round the edge. */
-export function logEnd(): OffscreenCanvas {
-  const [c, ctx] = canvas(16, 16);
-  for (let y = 0; y < 16; y++)
-    for (let x = 0; x < 16; x++) {
-      const d = Math.hypot(x - 7.5, y - 7.5);
-      px(ctx, x, y, d > 6.6 ? "#4f3d31" : d < 1.5 ? "#a8743f" : Math.round(d) % 2 ? "#e2c08e" : "#c99e66");
-    }
-  return c;
+/** A bramble cane (#749): dark red-purple. */
+export function cane(): OffscreenCanvas {
+  return speckle(751, "#5a2234", [
+    ["#7a3446", 3],
+    ["#3e1624", 3],
+  ], 4);
 }
 
 export function picket(): OffscreenCanvas {

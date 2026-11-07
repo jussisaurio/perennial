@@ -57,16 +57,7 @@ const APP: Record<string, (page: Page) => Promise<void>> = {
 };
 
 /** The parts of the dev-only scene handle (window.__garden) the spots move. */
-type Scene = { x: number; z: number; yaw: number; pitch: number; over: boolean; climbed: boolean; layout: object };
-
-/** On the stile's top board, as climbing it leaves you (scene.ts climb). */
-const onTop = (page: Page) =>
-  page.evaluate(async () => {
-    const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
-    const s = (window as unknown as { __garden: Scene }).__garden;
-    const at = stileAt(s.layout as Parameters<typeof stileAt>[0]);
-    Object.assign(s, { climbed: true, x: at.x, z: at.z, yaw: 0, pitch: -0.22 });
-  });
+type Scene = { x: number; z: number; yaw: number; pitch: number; over: boolean; layout: object };
 
 /** Spots in the garden walk, each a place to stand once the walk is open. Forward is -z at yaw 0. */
 const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
@@ -96,9 +87,8 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       // A few steps back from it, facing the back fence and the hill past it (−z is yaw 0).
       Object.assign(s, { x: at.x + 0.6, z: at.z + 4, yaw: 0.1, pitch: -0.02 });
     }),
-  // The old path past the fence, cleared (#749), and blocked by a fallen tree for a learner without the hill's note (WORDS).
-  top: onTop,
-  "top-shut": onTop,
+  // The same, for a learner without the hill's note (WORDS): brambles, no stile (#749).
+  "stile-shut": (page) => GARDEN.stile(page),
   lookout: (page) =>
     page.evaluate(async () => {
       const { lookoutAt } = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
@@ -111,8 +101,8 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
     }),
 };
 
-/** Spots seen by a learner with fewer words: 500 put the stile's notes under its step, but not the hill's note (n08). */
-const WORDS: Partial<Record<string, number>> = { "top-shut": 500 };
+/** Spots seen by a learner with fewer words: 500 put the stile's notes at its foot, but not the hill's note (n08). */
+const WORDS: Partial<Record<string, number>> = { "stile-shut": 500 };
 
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
