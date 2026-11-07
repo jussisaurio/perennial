@@ -1,0 +1,130 @@
+// Screenshots of named screens for a UI change (#699), so each agent need not write its
+// own spec: every screen on a phone and a desktop, light and dark, and each garden spot
+// by day and by night. From web/:
+//
+//   SHOTS_DIR=/abs/folder bun run shots -g "today|door"
+//
+// -g picks screens by name (leave it out for all). Each PNG is named
+// <screen>-<phone|desktop>-<light|dark>[-<day|night>].png. To add a screen, add an
+// entry to APP or GARDEN below.
+
+import { pinDetail, readRowsAgain, reveal, standAtDoor, startSession } from "./helpers";
+import { expect, test, type Page } from "./test";
+
+const DIR = process.env.SHOTS_DIR;
+if (DIR === undefined) throw new Error("set SHOTS_DIR to the folder for the PNGs");
+
+// In the past: the server refuses reviews from its future. The night is a full moon (night.spec.ts).
+const DAY = new Date("2026-10-11T12:00:00");
+const NIGHT = new Date("2026-09-26T22:00:00");
+
+/** Screens of the app, each reached from a fresh demo learner with 30 words. */
+const APP: Record<string, (page: Page) => Promise<void>> = {
+  today: async (page) => {
+    await page.goto("/?demo=es:30#/today");
+    await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
+  },
+  card: async (page) => {
+    await APP.today(page);
+    await startSession(page);
+  },
+  answer: async (page) => {
+    await APP.card(page);
+    await reveal(page);
+  },
+  summary: async (page) => {
+    await APP.card(page);
+    for (let i = 0; i < 2; i++) {
+      await reveal(page);
+      await page.keyboard.press("1");
+    }
+    await page.getByRole("button", { name: "End session" }).click();
+    await expect(page.locator("main.summary")).toBeVisible();
+  },
+  words: async (page) => {
+    await page.goto("/?demo=es:30#/words");
+    await expect(page.locator(".word-row").first()).toBeVisible({ timeout: 20_000 });
+  },
+  settings: async (page) => {
+    await page.goto("/?demo=es:30#/settings");
+    await expect(page.getByRole("tab", { name: "Settings", selected: true })).toBeVisible({ timeout: 20_000 });
+  },
+};
+
+/** The parts of the dev-only scene handle (window.__garden) the spots move. */
+type Scene = { x: number; z: number; yaw: number; pitch: number; layout: { orchard: { x: number; z: number; w: number; d: number } } };
+
+/** Spots in the garden walk, each a place to stand once the walk is open. Forward is -z at yaw 0. */
+const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
+  // Where the walk opens.
+  walk: async () => {},
+  shed: (page) =>
+    page.evaluate(async () => {
+      const { shedAt } = await import(/* @vite-ignore */ "/src/garden/shed.ts");
+      const s = (window as unknown as { __garden: Scene }).__garden;
+      const at = shedAt(s.layout);
+      // In front of the notes on its back wall, facing it (+x is yaw -π/2).
+      Object.assign(s, { x: at.x - 2, z: at.z, yaw: -Math.PI / 2, pitch: 0.05 });
+    }),
+  door: (page) => standAtDoor(page),
+  lookout: (page) =>
+    page.evaluate(async () => {
+      const { lookoutAt } = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
+      const s = (window as unknown as { __garden: Scene }).__garden;
+      const gap = lookoutAt(s.layout.orchard);
+      // In the gap in the far hedge, facing out across the valley (+z is yaw π).
+      Object.assign(s, { x: gap.x, z: gap.z - 0.45, yaw: Math.PI, pitch: 0.03 });
+    }),
+};
+
+/**
+ * Open the walk for a demo learner far into the course: 400 words put notes on the shed's
+ * nails (each needs 60 or more known words). The door is opened, so the lookout behind it can be reached.
+ */
+async function openWalk(page: Page) {
+  await page.goto("/?demo=es:400#/today");
+  await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
+  await page.evaluate(async () => {
+    const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
+    await postWrite([{ type: "course.upsert", row: { lang: "es", door_open: true } }]);
+  });
+  await readRowsAgain(page);
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+}
+
+/** Two frames: the scene draws a moved camera on the next one. */
+const frames = (page: Page) => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+
+const shoot = (page: Page, name: string) => page.screenshot({ path: `${DIR}/${name}.png` });
+
+for (const theme of ["light", "dark"] as const) {
+  test.describe(() => {
+    test.use({ colorScheme: theme });
+
+    for (const [name, go] of Object.entries(APP))
+      test(`${name} ${theme}`, async ({ page }, info) => {
+        await page.clock.setFixedTime(DAY);
+        await go(page);
+        await shoot(page, `${name}-${info.project.name}-${theme}`);
+      });
+
+    for (const [name, stand] of Object.entries(GARDEN))
+      for (const [time, at] of [
+        ["day", DAY],
+        ["night", NIGHT],
+      ] as const)
+        test(`${name} ${theme} ${time}`, async ({ page }, info) => {
+          await page.clock.setFixedTime(at);
+          // Normal detail, as most learners see it, whatever this machine's frame times.
+          await pinDetail(page, "normal");
+          await openWalk(page);
+          await stand(page);
+          // The walk builds its parts after it opens, with a progress line until they are all in.
+          await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
+          await frames(page);
+          await shoot(page, `${name}-${info.project.name}-${theme}-${time}`);
+        });
+  });
+}

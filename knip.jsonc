@@ -10,8 +10,8 @@
       "entry": ["auth.cli.ts"]
     },
     "web": {
-      // Playwright picks this file by a testMatch regex, which knip does not read.
-      "entry": ["e2e/warm.setup.ts"],
+      // Playwright picks these files by a testMatch regex, which knip does not read.
+      "entry": ["e2e/warm.setup.ts", "e2e/shots.ts"],
       // Imported from index.css, and knip does not read CSS @import.
       "ignoreDependencies": ["@fontsource/gloock", "@fontsource-variable/onest"],
       // e2e specs import app modules by their Vite dev-server URL inside the page.
