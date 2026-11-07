@@ -101,8 +101,6 @@ export interface Flight {
   phase: number;
   /** The plant it lands on (an index into the layout's plants), or -1. */
   plant: number;
-  /** It came down on open ground inside the fence: a clock can grow there. */
-  ground: boolean;
 }
 
 /** The height of a clock's fluff above the ground (m), where the seeds start. */
@@ -145,7 +143,7 @@ export function flight(l: Layout, h: Head, day: number, i: number, bedTop: numbe
   const { to, time, r } = seedWay(h, day, i);
   const plant = plantAt(l, to);
   const inBed = l.beds.some((bed) => Math.abs(to.x - bed.x) < bed.w / 2 && Math.abs(to.z - bed.z) < bed.d / 2);
-  return { from: { x: h.x, z: h.z }, to, delay: r(4) * 0.6, time, lift: 0.5 + r(5) * 0.9, land: plant >= 0 || (inside(l, to) && inBed) ? bedTop : 0.02, phase: r(6) * Math.PI * 2, plant, ground: onGround(l, to) };
+  return { from: { x: h.x, z: h.z }, to, delay: r(4) * 0.6, time, lift: 0.5 + r(5) * 0.9, land: plant >= 0 || (inside(l, to) && inBed) ? bedTop : 0.02, phase: r(6) * Math.PI * 2, plant };
 }
 
 /** The plant whose middle is nearest a point, within reach of a landing seed; -1 for none. */
