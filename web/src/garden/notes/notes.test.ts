@@ -11,8 +11,8 @@ import { noteInk } from "./read";
 // The gardener's own words, which no deck teaches (#654). Every other word in a
 // note is a deck lemma, or maps to one through `forms`.
 const GARDENER_WORDS: PerLang<readonly string[]> = {
-  es: ["puertecilla", "migas", "saltavallas", "lucero"],
-  de: ["türchen", "krümel", "zauntreppe", "fünkchen"],
+  es: ["puertecilla", "migas", "saltavallas", "zarzas", "lucero"],
+  de: ["türchen", "krümel", "zauntreppe", "dornen", "fünkchen"],
 };
 
 for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {

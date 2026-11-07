@@ -1,6 +1,6 @@
 // The gardener's notes, Spanish (#654, story in #639). Written in Spanish, not
 // translated. Gardener words no deck teaches: puertecilla (the mouse door),
-// Migas (the mouse), saltavallas (the stile), lucero (the far light).
+// Migas (the mouse), saltavallas (the stile), zarzas (the brambles), lucero (the far light).
 
 import type { Note } from "./note";
 
@@ -37,8 +37,8 @@ export const NOTES: readonly Note[] = [
     id: "n05",
     beat: "stile",
     unlockAt: 250,
-    text: "Cada tarde, el mismo paseo: hasta el fondo del jardín.\nElla salta el saltavallas sin mirar.\nYo, despacio, con cuidado.\nElla me espera al otro lado. Siempre.",
-    forms: { al: "a", del: "de", espera: "esperar", salta: "saltar" },
+    text: "Antes, cada tarde, el mismo paseo: hasta el fondo del jardín.\nElla saltaba el saltavallas sin mirar.\nYo, despacio, con cuidado.\nAhora hay zarzas, más altas que yo.",
+    forms: { altas: "alto", del: "de", hay: "haber", saltaba: "saltar" },
   },
   {
     id: "n06",
@@ -58,8 +58,8 @@ export const NOTES: readonly Note[] = [
     id: "n08",
     beat: "lookout",
     unlockAt: 620,
-    text: "Tras el saltavallas, una colina.\nDesde la cima, a medianoche: el lucero,\nuna luz amarilla al otro lado del valle.\nNunca se apaga, ni en invierno.\nElla no pregunta.",
-    forms: { al: "a", amarilla: "amarillo", apaga: "apagar", del: "de", la: "el", una: "un" },
+    text: "Tras las zarzas y el saltavallas, una colina.\nDesde la cima, a medianoche: el lucero,\nuna luz amarilla al otro lado del valle.\nNunca se apaga, ni en invierno.\nElla no pregunta.",
+    forms: { al: "a", amarilla: "amarillo", apaga: "apagar", del: "de", la: "el", las: "el", una: "un" },
   },
   {
     id: "n09",
