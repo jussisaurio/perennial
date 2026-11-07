@@ -72,7 +72,7 @@ function fuzz01(str: string): number {
   return (hash32(str) % 100000) / 100000;
 }
 
-/** Spread reviews out a bit so words learned together don't stay clumped. */
+/** Spread reviews out a bit so words learned together don't stay clumped. @internal Exported for tests. */
 export function fuzz(days: number, seed: string): number {
   if (days < 2.5) return days;
   const pct = days < 7 ? 0.15 : days < 20 ? 0.1 : 0.05;

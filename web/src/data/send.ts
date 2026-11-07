@@ -10,7 +10,7 @@ import { ApiError, HttpError, isPermanent, sendWrite, type Batch } from "./http"
 /** Signed in as someone else since (in another tab): this user's writes wait for them. */
 class OtherUser extends Schema.TaggedError<OtherUser>()("OtherUser", {}) {}
 
-/** The server refused the write for good: sending it again would never succeed. */
+/** The server refused the write for good: sending it again would never succeed. @internal Exported for tests. */
 export class Refused extends Schema.TaggedError<Refused>()("Refused", { cause: Schema.Defect() }) {
   override get message() {
     return `rejected: ${this.cause instanceof Error ? this.cause.message : String(this.cause)}`;
@@ -49,6 +49,7 @@ const sendOnce = (batch: Batch, onRefused: (e: ApiError | HttpError) => void) =>
  * no connection, a lost session, an app that must reload first, an answer
  * this app can't read, or another user signed in here (`otherUser`). A wait
  * between tries ends early when `wake` resolves (back online, say).
+ * @internal Exported for tests.
  */
 export const sendUntilStored = (batch: Batch, opts: SendOptions) =>
   Effect.gen(function* () {

@@ -9,7 +9,7 @@ import type { Ledge } from "../spots";
 import { GOAT } from "../visitorArt";
 import { bodyAt, type VisitorKind } from "./kind";
 
-/** Out of view this long (s) after you saw it, and it has gone. */
+/** Out of view this long (s) after you saw it, and it has gone. @internal Exported for tests. */
 export const GOAT_GONE = 1;
 /** Its name shows, and a screen reader hears where it stands, while you are this near (m): it stands high up, so further than most. */
 const GOAT_NEAR = 4;

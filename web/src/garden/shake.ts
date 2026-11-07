@@ -6,10 +6,10 @@
 import { formKey } from "../content/text";
 import { hash01 } from "../lib/seed";
 
-/** At most this many petals: a big verb's 16 forms would bury the plant. */
+/** At most this many petals: a big verb's 16 forms would bury the plant. @internal Exported for tests. */
 export const MAX_PETALS = 8;
 
-/** Seconds: the shiver; the gap between petals; a petal's fall, its rest on the soil, and its fade. */
+/** Seconds: the shiver; the gap between petals; a petal's fall, its rest on the soil, and its fade. @internal Exported for tests. */
 export const SHAKE = { shiver: 0.7, gap: 0.22, fall: 1.7, rest: 1.6, fade: 0.8 } as const;
 
 /** The forms that fall: the deck's forms that are not the word itself, each once, in the deck's order. */
@@ -57,7 +57,7 @@ export function petalAt(seed: string, i: number, t: number, drop: number, still:
   return { dx: Math.cos(a) * out + sway, dy: -drop * k, dz: Math.sin(a) * out, alpha };
 }
 
-/** Near enough to a plant (m) to shake it, if it is ahead of you: a front-row plant from where Next plant stands (world.ts viewpoint). */
+/** Near enough to a plant (m) to shake it, if it is ahead of you: a front-row plant from where Next plant stands (world.ts viewpoint). @internal Exported for tests. */
 export const SHAKE_REACH = 2.2;
 
 /**

@@ -46,7 +46,7 @@ export function reaction(thing: Loose, place: Place): Reaction {
   return ROWS[thing][place] ?? LIE;
 }
 
-/** How many pebbles the frog hops away from in one visit; after that it only looks at you. */
+/** How many pebbles the frog hops away from in one visit; after that it only looks at you. @internal Exported for tests. */
 export const FROG_PATIENCE = 3;
 
 /** Where a thing came down. */

@@ -52,7 +52,7 @@ export interface VisitorDef extends NounDef {
 
 /** A break this long (in calendar days) brings the cat. */
 const CAT_BREAK = 5;
-/** At most this many rare visitors at once. Residents (the snail, gnome, frog and moth) do not count. */
+/** At most this many rare visitors at once. Residents (the snail, gnome, frog and moth) do not count. @internal Exported for tests. */
 export const RARE_CAP = 2;
 /** Known words that bring the gnome, and the frog for learners who knew 150 words before it had a word of its own (#209). */
 const GNOME_KNOWN = 50;
@@ -94,7 +94,7 @@ export const VISITORS: readonly VisitorDef[] = [
 
 export const visitor = (id: VisitorId): VisitorDef => VISITORS.find((v) => v.id === id)!;
 
-/** The heron's one day this month (1-based). The same for everyone, so people can ask "did you see the heron?". */
+/** The heron's one day this month (1-based). The same for everyone, so people can ask "did you see the heron?". @internal Exported for tests. */
 export function heronDay(year: number, month: number): number {
   const days = new Date(year, month + 1, 0).getDate();
   return daily(
@@ -123,6 +123,7 @@ export function learnerFacts(reviews: ReviewTimes, known: number, now: Date | nu
  * The cat comes after a break of CAT_BREAK or more calendar days and leaves
  * one day after the first session back. Returns the break length in days, or
  * null when there is no cat.
+ * @internal Exported for tests.
  */
 export function catBreak(f: LearnerFacts, now: Date): number | null {
   if (f.lastBeforeToday === null) return null;
@@ -168,7 +169,7 @@ export function welcomeBack(facts: LearnerFacts, now: Date): string | null {
   return away >= 7 ? "Welcome back." : null;
 }
 
-/** Known-word counts that get one line on the Today screen, on the day they are crossed. */
+/** Known-word counts that get one line on the Today screen, on the day they are crossed. @internal Exported for tests. */
 export const MILESTONES = [25, 50, 100, 150, 200, 500] as const;
 
 /**
@@ -195,7 +196,7 @@ export const STRIP_VISITORS: Record<StripVisitorId, { words: NounWords; gloss: s
   mole: { words: MOLE_WORDS, gloss: "mole" },
 };
 
-/** The mole looks up at the end of the strip on about one day in this many. */
+/** The mole looks up at the end of the strip on about one day in this many. @internal Exported for tests. */
 export const MOLE_ONE_IN = 4;
 
 /** Is the mole at the end of the strip today? Stable all day; the dev override can bring it. */
@@ -232,9 +233,9 @@ export function visitorViews(present: readonly VisitorId[], lang: string, isKnow
  * away for a few seconds and it turns to look at something else; look back
  * and you catch it, still glancing away for a moment, before it turns back.
  */
-/** Seconds out of view before it looks away. */
+/** Seconds out of view before it looks away. @internal Exported for tests. */
 export const GNOME_TURN = 2.5;
-/** Seconds you see it still looking away after you look back. */
+/** Seconds you see it still looking away after you look back. @internal Exported for tests. */
 export const GNOME_CAUGHT = 0.7;
 
 export type GnomePose = "front" | "side";
@@ -269,7 +270,7 @@ export function frogCroak(known: readonly string[], lang: string, tap: number, n
 
 // ---- The snail's long trip (#55) ----
 
-/** Pickets per metre of fence (the picket texture has four per metre). */
+/** Pickets per metre of fence (the picket texture has four per metre). @internal Exported for tests. */
 export const PICKETS_PER_M = 4;
 /** Half the width of the gate opening, in metres. */
 export const GATE_HALF = 1.1;

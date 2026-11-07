@@ -56,6 +56,7 @@ const hsl = (h: number, s: number, l: number) => `hsl(${Math.round(h)} ${Math.ro
 /** A plant's height in drawing units before its genome and scale: a seedling is 14, a full-grown plant 134. */
 export const stemHeight = (growth: number) => 14 + 120 * growth;
 
+/** @internal Exported for tests. */
 export function genome(word: string): Genome {
   const r = rng(hash32(word.normalize("NFC").toLowerCase()));
   const [h0, h1, s, l] = pick(r, FAMILIES);

@@ -17,20 +17,21 @@ const HELLO: PerLang<string> = { es: "¿Hola?", de: "Hallo?" };
 const STILL = { s: 2.5, move: 0.2 };
 /** It comes up once you are `near` m from where you stood, at least `after` s after you left it; it forgets the place when you go `far` or after `wait` s. */
 const BEHIND = { near: 2, after: 1.5, far: 10, wait: 12 };
-/** At least this long (s) from one time it goes down to the next place it may come up. */
+/** At least this long (s) from one time it goes down to the next place it may come up. @internal Exported for tests. */
 export const GAP = 60;
-/** Coming up (s from when the hill starts to rise): the hill alone, then it looks out, then the hill alone again. */
+/** Coming up (s from when the hill starts to rise): the hill alone, then it looks out, then the hill alone again. @internal Exported for tests. */
 export const POP = { hill: 0.5, up: 2.5, end: 2.9 };
-/** Caught (s from when you saw it): it panics, digs (a frame every `flick` s), then the hill alone; a screen reader's line stays `heard` s. */
+/** Caught (s from when you saw it): it panics, digs (a frame every `flick` s), then the hill alone; a screen reader's line stays `heard` s. @internal Exported for tests. */
 export const CAUGHT = { panic: 0.35, dig: 0.95, flick: 0.06, end: 1.2, heard: 4 };
 /** How many times it comes up in one visit: never on some visits, a few times on others. */
 const POPS = [0, 1, 1, 2, 3] as const;
 
-/** How many times the mole comes up in the walk that opened at `now`. */
+/** How many times the mole comes up in the walk that opened at `now`. @internal Exported for tests. */
 export function molePops(now: Date): number {
   return POPS[hash32(`visitor-mole:${now.getTime()}`) % POPS.length];
 }
 
+/** @internal Exported for tests. */
 export const MOLE_CAUGHT = "A mole looks out of the ground where you stood. It sees you and digs away, fast.";
 
 type Look = "hill" | "up" | "panic" | "dig" | "dig2";

@@ -14,7 +14,7 @@ export interface ToysWalk {
   day: number;
 }
 
-/** The day's wind: which way and how fast it blows (m/s along x and z). The same all day, a new one tomorrow. */
+/** The day's wind: which way and how fast it blows (m/s along x and z). The same all day, a new one tomorrow. @internal Exported for tests. */
 export function windFor(day: number): XZ {
   const a = hash01(`${day}:wind`) * Math.PI * 2;
   const speed = WIND.min + hash01(`${day}:wind`, 1) * (WIND.max - WIND.min);
@@ -103,7 +103,7 @@ export interface Flight {
   plant: number;
 }
 
-/** The height of a clock's fluff above the ground (m), where the seeds start. */
+/** The height of a clock's fluff above the ground (m), where the seeds start. @internal Exported for tests. */
 export const HEAD_TOP = 0.32;
 /** A seed coming down this near a plant's middle (m) lands on it. */
 const ON_PLANT = 0.3;

@@ -35,7 +35,7 @@ export type SceneryId =
   | "moon"
   | "sky";
 
-/** Spain Spanish; plain nouns, not species names. Signs and notice boards are all "el letrero". */
+/** Spain Spanish; plain nouns, not species names. Signs and notice boards are all "el letrero". @internal Exported for scripts/tts and tests. */
 export const SCENERY: Record<SceneryId, NounDef> = {
   sunflower: { words: { es: "el girasol", de: "die Sonnenblume" }, gloss: "sunflower" },
   // The round, leafy trees outside the fence.
@@ -168,6 +168,7 @@ export function rayDisc(r: Ray, x: number, y: number, z: number, rad: number): n
 /**
  * Distance along the ray to an upright rectangle that faces the world's
  * vertical axis (a cloud: a plane turned to look at the middle), or Infinity.
+ * @internal Exported for tests.
  */
 export function rayCloud(r: Ray, cx: number, cy: number, cz: number, halfW: number, halfH: number): number {
   const len = Math.hypot(cx, cz) || 1;
@@ -185,7 +186,7 @@ export function rayCloud(r: Ray, cx: number, cy: number, cz: number, halfW: numb
   return Math.abs(across) <= halfW && Math.abs(py) <= halfH ? t : Infinity;
 }
 
-/** The far hills: a ring round the world's middle, textured `repeat` times round. */
+/** The far hills: a ring round the world's middle, textured `repeat` times round. @internal Exported for tests. */
 export interface HillRing {
   radius: number;
   bottom: number;
@@ -197,14 +198,14 @@ export interface HillRing {
   repeat: number;
 }
 
-/** The height of the ridge at the ring's angle `theta` (atan2(x, z), as three's cylinder uses it). */
+/** The height of the ridge at the ring's angle `theta` (atan2(x, z), as three's cylinder uses it). @internal Exported for tests. */
 export function hillTopY(h: HillRing, theta: number): number {
   const u = (((theta / (Math.PI * 2)) % 1) + 1) % 1;
   const col = Math.floor((u * h.repeat * h.profile.length) % h.profile.length);
   return h.top - (h.profile[col] / h.rows) * (h.top - h.bottom);
 }
 
-/** Does the ray, from inside the ring, meet the hills below their ridge? Returns the point, or null. */
+/** Does the ray, from inside the ring, meet the hills below their ridge? Returns the point, or null. @internal Exported for tests. */
 export function rayHills(r: Ray, h: HillRing): [number, number, number] | null {
   const a = r.dx * r.dx + r.dz * r.dz;
   if (a < 1e-9) return null;

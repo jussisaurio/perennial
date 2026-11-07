@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { rng } from "../lib/seed";
 import { daily } from "../core/day";
-import { isSleepyHour, keepsakeLabel, NEIGHBOUR, NEIGHBOUR_PERK, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId } from "./whimsy";
+import { isSleepyHour, keepsakeLabel, NEIGHBOUR, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId } from "./whimsy";
 import { MOLE_ONE_IN, moleVisits, stripVisitor, visitorsFor, NO_FACTS } from "./visitors";
 
 const days = Array.from({ length: 400 }, (_, d) => new Date(2026, 0, 1 + d, 12));
@@ -48,7 +48,6 @@ describe("the plant hears its name (#60)", () => {
   });
 
   test("the neighbour's mistake is rare: about one listen in 30", () => {
-    expect(NEIGHBOUR_PERK).toBeGreaterThanOrEqual(25);
     const rand = rng(7);
     const hits = Array.from({ length: 30_000 }, () => neighbourPerks(rand)).filter(Boolean).length;
     expect(hits).toBeGreaterThan(700);

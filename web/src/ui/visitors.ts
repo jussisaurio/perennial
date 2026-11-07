@@ -55,6 +55,7 @@ export interface LearnerVisitors {
 /**
  * The learner's known words: how many (all of them, for unlocks and
  * milestones), their lemmas (lower case), and what the frog may croak.
+ * @internal Exported for tests.
  */
 export function* knownWords(words: Iterable<Pick<Word, "id" | "lemma" | "pos">>, memory: { get: (key: string) => Pick<MemoryRow, "s" | "reps"> | undefined }): Generator<void, { count: number; lemmas: Set<string>; croaks: string[] }> {
   const all: string[] = [];
@@ -82,7 +83,7 @@ export function broughtVisitor(l: Pick<Learner, "reviewsByWord">, wordId: string
   return broughtAt(l, wordId) !== null;
 }
 
-/** When a garden word brought its visitor: its first good reading answer (ms), or null while it has none. */
+/** When a garden word brought its visitor: its first good reading answer (ms), or null while it has none. @internal Exported for tests. */
 export function broughtAt(l: Pick<Learner, "reviewsByWord">, wordId: string): number | null {
   let at: number | null = null;
   // `?? []`: a word never reviewed has no list.

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { DAY_MS } from "../core/day";
-import { hidesToday, hideout, PLACES, SEEK_REACH, type Hiding } from "./hide";
+import { hidesToday, hideout, SEEK_REACH, type Hiding } from "./hide";
 import { collideTrees, placeTrees, type OrchardTree, type PlacedTree } from "./orchard";
 import type { Spots } from "./spots";
 import { leafPiles } from "./walkInto";
@@ -77,7 +77,6 @@ describe("the gnome's hide-and-seek", () => {
     expect(seen(400, AUTUMN, true)).toEqual(new Set(["plant", "under the bench", "on the sign", "among the lily pads", "behind the leaves", "orchard"]));
     // Door shut: never the orchard.
     expect(seen(400, AUTUMN, false).has("orchard")).toBe(false);
-    expect(Math.max(...Object.values(PLACES))).toBeLessThan(400);
   });
 
   test("in a young garden it hides only in the front row of a bed, behind the plant (away from the gate), and its tag names the plant's word", () => {

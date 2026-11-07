@@ -15,7 +15,7 @@ import { rayBox, type Ray } from "./scenery";
 import type { DeckLang } from "../deck/langs";
 import type { PerLang } from "./nouns";
 
-/** Read stability (days) at which a known word's tree bears fruit; below it a known word's tree is in blossom. */
+/** Read stability (days) at which a known word's tree bears fruit; below it a known word's tree is in blossom. @internal Exported for tests. */
 export const FRUIT_S = 21;
 
 type TreeLook = "leaves" | "blossom" | "fruit";

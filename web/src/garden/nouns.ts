@@ -25,7 +25,7 @@ export interface NounDef {
   lemma?: NounWords;
 }
 
-/** The deck lemma behind a garden word: the noun after the article, or the singular for a plural. */
+/** The deck lemma behind a garden word: the noun after the article, or the singular for a plural. @internal Exported for tests. */
 export function nounLemma(def: NounDef, lang: string): string | null {
   const word = inLang(def.words, lang);
   if (!word) return null;

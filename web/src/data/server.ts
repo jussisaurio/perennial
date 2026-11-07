@@ -42,7 +42,7 @@ function cached(): Features | null {
   }
 }
 
-/** "1.10.0" ≥ "1.9.2", by numbers. */
+/** "1.10.0" ≥ "1.9.2", by numbers. @internal Exported for tests. */
 export function versionAtLeast(v: string, min: string): boolean {
   const a = v.split(".").map(Number);
   const b = min.split(".").map(Number);
@@ -82,7 +82,7 @@ function use(info: ServerInfo | null) {
   if (!versionAtLeast(APP_VERSION, info.minClientVersion) || newDeploy(info.release)) reloadNeeded.dispatchEvent(new Event("reload"));
 }
 
-/** A different, real release on the server than the one this app came from. */
+/** A different, real release on the server than the one this app came from. @internal Exported for tests. */
 export function newDeploy(serverRelease: string, built = RELEASE): boolean {
   return built !== "dev" && serverRelease !== "dev" && !!serverRelease && serverRelease !== built;
 }

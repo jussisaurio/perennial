@@ -36,6 +36,7 @@ const LANTERN_LIGHT = new THREE.Color(0.85, 0.8, 0.7);
  * Point a visitor's sprite at its texture cell, `flip`ped left to right or not;
  * upload only when it changes (tick runs every frame). The attribute stores
  * float32, so compare with the float32 values.
+ * @internal Exported for tests.
  */
 export function showCell(uv: THREE.BufferAttribute, cell: number, cells: number, flip: boolean) {
   const u = Math.fround((flip ? cell + 1 : cell) / cells);
