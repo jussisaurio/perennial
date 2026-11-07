@@ -24,7 +24,7 @@
     "@tanstack/react-db": "0.5.8",
     "@tanstack/react-virtual": "^3.14.14",
     "better-auth": "1.7.7",
-    "effect": "4.0.0",
+    "effect": "4.1.2",
     "perennial-contract": "workspace:*",
     "posthog-js": "1",
     "react": "^19.2.8",
