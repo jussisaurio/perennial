@@ -59,7 +59,7 @@ export type TapHit =
   | { kind: "door"; a: DoorAction }
   // The deadpan scenery (#364): the mouse door, or the sundial at night, says its line.
   | { kind: "joke"; j: Joke }
-  // Carry (#358): a loose thing to pick up; holding one, the well, the water or the ground in reach to put it down.
+  // Carry (#358): a loose thing to pick up; holding one, the well, the water to throw it in, or the ground in reach to put it down.
   | { kind: "carry"; t: CarryTarget }
   // A dandelion clock (#360), by its index in the walk's clocks.
   | { kind: "toy"; i: number }

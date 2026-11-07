@@ -27,7 +27,7 @@ import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
 import { buildShed, shedRoof, shedStep } from "./shed";
 import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
-import { aheadOf, ANSWERS, type Answer, type Answerers } from "./carry";
+import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { echo, echoDate, type Met } from "./well";
 import { TOY_STAND, Toys, type ToyAct, type ToyDone, type ToyTarget } from "./sceneToys";
 import type { ToysWalk } from "./toys";
@@ -827,7 +827,7 @@ export class GardenScene {
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
     else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
     else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
-    else if (a === "put" && this.reach === "put") this.putAhead();
+    else if (a === "throw" && this.reach === "throw") this.throwAhead();
     else if (a === "call" && this.reach === "call") this.call();
     else if (a === "seek" && this.reach === "seek" && this.seekTarget) this.seek(this.seekTarget);
     else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
@@ -882,7 +882,7 @@ export class GardenScene {
 
   /**
    * A loose thing under a point on the canvas (CSS pixels), with your hands
-   * free; holding one, the well (a pebble), the pond to put it in, or the
+   * free; holding one, the well (a pebble), the pond to throw it in, or the
    * ground in reach to put it down.
    */
   pickCarry(cssX: number, cssY: number, cssW: number, cssH: number): CarryTarget | null {
@@ -911,7 +911,7 @@ export class GardenScene {
     this.goTo(at.x, at.z, CARRY_STAND, () => this.doCarry(t));
   }
 
-  /** Pick up a loose thing; put what you hold down on the water or the ground, or drop it in the well. Anything that no longer applies does nothing. */
+  /** Pick up a loose thing; throw what you hold in the water, put it down on the ground, or drop it in the well. Anything that no longer applies does nothing. */
   private doCarry(t: CarryTarget) {
     const c = this.carry;
     if (t.at === "thing") {
@@ -921,17 +921,17 @@ export class GardenScene {
       return;
     }
     const at = t.at === "well" ? this.layout.well : t;
-    if (!c.putDown(at.x, at.z)) return;
+    if (!c.letGo(this.x, this.z, at.x, at.z, t.at === "water")) return;
     this.cb.onHand(null);
-    this.cb.onCarry({ did: t.at === "well" ? "well" : "put" });
+    this.cb.onCarry({ did: t.at === "water" ? "throw" : t.at === "well" ? "well" : "put" });
   }
 
-  /** The action button's put (#358): what you hold goes down just in front of you. */
-  private putAhead() {
-    const to = aheadOf(this.x, this.z, this.yaw);
-    if (!this.carry.putDown(to.x, to.z)) return;
+  /** The action button's throw (#358): what you hold flies a few steps ahead, where you face. */
+  private throwAhead() {
+    const to = aimAt(this.x, this.z, this.yaw);
+    if (!this.carry.letGo(this.x, this.z, to.x, to.z, true)) return;
     this.cb.onHand(null);
-    this.cb.onCarry({ did: "put" });
+    this.cb.onCarry({ did: "throw" });
   }
 
   /** What answers a landing (carry.ts ANSWERS): the frog, a plant, the well. */
