@@ -202,6 +202,16 @@ export function reportStalledWalk(plants: number) {
   withSentry((s) => s.captureException(new Error("garden walk stalled"), { tags: { size } }));
 }
 
+/**
+ * A garden strip sprite's PNG did not load as an image (#637). A real
+ * exception, so Sentry shows it, with the browser's error as its cause. The
+ * PNG's size and whether the page was in view, to tell an empty PNG from a
+ * load the browser broke off: no words.
+ */
+export function reportSpriteFailed(cause: unknown, bytes: number) {
+  withSentry((s) => s.captureException(new Error("strip sprite did not load", { cause }), { tags: { visibility: document.visibilityState }, extra: { bytes } }));
+}
+
 /** For createRoot's error options: an error React caught, or one it could not recover from. */
 export function reportReactError(error: unknown, info: { componentStack?: string }) {
   withSentry((s) => s.reactErrorHandler()(error, info));
