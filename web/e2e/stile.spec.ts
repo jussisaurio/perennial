@@ -3,8 +3,8 @@ import { pinDetail } from "./helpers";
 
 // #714, the stile in the back fence: wooden steps over it, once the first
 // stile note is unlocked by the words known. The note lies under its step; read
-// it, climb, and from the top board look out along an old path. The walk goes
-// no further: the button climbs you back down. The clock is pinned to a day.
+// it, climb, and from the top board look out along an old path up a small hill.
+// Until note n08, the walk goes no further: the button climbs you back down. The clock is pinned to a day.
 
 /** The parts of the dev-only scene handle (window.__garden) this test reads and moves. */
 type StileScene = {
@@ -58,7 +58,7 @@ test("read the note under the stile's step, climb it and look out, and climb dow
 
   await expect(status).toHaveText("Wooden steps go over the back fence.");
   await page.getByRole("button", { name: "Climb the stile", exact: true }).click();
-  await expect(status).toHaveText("You stand on the steps, above the fence. Past it, an old path goes on into the long grass.");
+  await expect(status).toHaveText("You stand on the steps, above the fence. Past it, an old path goes up a small hill.");
   // On the top board, the eye is above the fence (0.8 m), higher than a walker's (1.05 m).
   await expect.poll(async () => (await scene(page)).eye, { intervals: [50], timeout: 5_000 }).toBeGreaterThan(1.8);
 

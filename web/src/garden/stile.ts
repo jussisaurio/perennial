@@ -2,9 +2,10 @@
 // one side of the fence and down the other, where the garden ends. It stands
 // once the learner knows enough words for the first stile note, and the stile
 // notes are found under its step, not on the shed's nails. Climb it, and from
-// the top board you see an old path go on past the fence into the long grass;
-// the walk goes no further. Pure: where things go, and which notes lie where.
-// The scene draws it (sceneStile.ts).
+// the top board you see an old path go on past the fence, up a small hill; the
+// walk goes no further until the note that tells of the hill (lookout.ts
+// HILL_NOTE). Pure: where things go, and which notes lie where. The scene
+// draws it (sceneStile.ts).
 
 import type { Note } from "./notes/note";
 import { CELL_W, type Layout } from "./world";
@@ -14,6 +15,9 @@ export const CLIMB_REACH = 1.3;
 
 /** The top board's height (m): a hand above the fence's 0.8. */
 export const TOP = 0.86;
+
+/** The steps' width across the fence, and how far each side's foot stands out from the fence (m). */
+export const STEP = { w: 0.72, out: 0.66 };
 
 /** Where the stile's things stand: its middle on the fence line, its foot inside, and the note under its lowest step, each as [x, z]. */
 export interface StileSpot {
@@ -28,7 +32,12 @@ export function stileAt(l: Layout): StileSpot {
   // At the back end of the path left of the first bed's column.
   const x = l.gate.x - CELL_W / 2;
   const z = l.bounds.minZ;
-  return { x, z, foot: [x, z + 0.95], note: [x + 0.12, z + 0.66] };
+  return { x, z, foot: [x, z + 0.95], note: [x + 0.12, z + STEP.out] };
+}
+
+/** How high the stile lifts you at `z`, going over it (m): up its steps to the top board, and down the far side. */
+export function stepY(s: StileSpot, z: number): number {
+  return TOP * Math.max(0, 1 - Math.abs(z - s.z) / STEP.out);
 }
 
 /**

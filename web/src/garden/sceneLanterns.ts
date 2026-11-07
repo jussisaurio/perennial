@@ -3,7 +3,7 @@
 // visit only: the next walk finds them all lit again. Each lantern is one
 // instance in a lit and an unlit sprite mesh; the one not shown is drawn at
 // scale 0, so a lantern going out costs two attribute writes. And the
-// lookout's lantern on its post (#683), lifted to the far light across the
+// lookout's lantern on its post (#683), on the hill past the stile (#722), lifted to the far light across the
 // valley: lit by dark, and never blown out.
 
 import * as THREE from "three";
@@ -11,7 +11,7 @@ import { lanternSpots } from "./world";
 import { rayBox, spriteBox, type HitBox, type Ray } from "./scenery";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
-import { RAISE_REACH, type Lookout, type LookoutLight } from "./lookout";
+import { hillY, RAISE_REACH, type Lookout, type LookoutLight } from "./lookout";
 import { sprites, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import * as T from "./textures";
 
@@ -33,8 +33,9 @@ export class Lanterns implements Part {
   private unlit!: THREE.InstancedBufferAttribute;
   /** Each lantern's halo and pool of light on the ground. */
   private glows: [THREE.Object3D, THREE.Object3D][] = [];
-  /** The lookout's lantern (#683), once the door is open: where its post stands, its head (its uv and place) and halo, and how high it was lifted last frame. */
+  /** The lookout's lantern (#683), once the stile stands (#722): where its post stands and how high the hill is at its foot, its head (its uv and place) and halo, and how high it was lifted last frame. */
   private post: [number, number] | null = null;
+  private foot = 0;
   private head!: { uv: THREE.InstancedBufferAttribute; pos: THREE.InstancedBufferAttribute; halo: THREE.Sprite };
   private lifted = 0;
   private lookout: LookoutLight;
@@ -79,23 +80,24 @@ export class Lanterns implements Part {
   }
 
   /**
-   * The lookout (#683), built as the door opens: the old gardener's stool, and
-   * a lantern on a post whose head lifts off it. The head is its own sprite,
+   * The lookout (#683) on the hill past the stile (#722): the old gardener's
+   * stool, and a lantern on a post whose head lifts off it. The head is its own sprite,
    * cut from the lanterns' texture, so it can rise; its halo goes with it.
    */
   buildLookout(c: BuildCtx, at: Lookout) {
     const [px, pz] = at.post;
     this.post = at.post;
+    this.foot = hillY(at, px, pz);
     const tex = T.pixelTexture(T.lantern());
     const postH = LANTERN.h * (1 - LANTERN.head);
     // The texture is flipped on upload: v 0 is its bottom row.
     const item = (y: number, v: number, vh: number): SpriteItem[] => [{ x: px, y, z: pz, u: 0, v, uw: 0.5, vh, phase: 0, droop: 0, scale: 1, index: -3 }];
-    const post = sprites(tex, item(0, 0, 1 - LANTERN.head), LANTERN.w, postH);
-    const head = sprites(tex, item(postH, 1 - LANTERN.head, LANTERN.head), LANTERN.w, LANTERN.h * LANTERN.head);
+    const post = sprites(tex, item(this.foot, 0, 1 - LANTERN.head), LANTERN.w, postH);
+    const head = sprites(tex, item(this.foot + postH, 1 - LANTERN.head, LANTERN.head), LANTERN.w, LANTERN.h * LANTERN.head);
     for (const m of [post, head]) c.mats.add(m.material);
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glow()), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     halo.scale.set(1.1, 1.1, 1);
-    halo.position.set(px, 1.12, pz);
+    halo.position.set(px, this.foot + 1.12, pz);
     this.head = { uv: head.geometry.getAttribute("iUv") as THREE.InstancedBufferAttribute, pos: head.geometry.getAttribute("iPos") as THREE.InstancedBufferAttribute, halo };
     // A three-legged stool, its seat a round of wood.
     const stool = new THREE.Group();
@@ -110,7 +112,7 @@ export class Lanterns implements Part {
       leg.rotation.set(Math.sin(a) * 0.12, 0, -Math.cos(a) * 0.12);
       stool.add(leg);
     }
-    stool.position.set(at.stool[0], 0, at.stool[1]);
+    stool.position.set(at.stool[0], hillY(at, ...at.stool), at.stool[1]);
     stool.rotation.y = 0.5;
     c.scene.add(still(post), head, halo, still(stool));
     this.showHead();
@@ -140,9 +142,9 @@ export class Lanterns implements Part {
     const lift = this.lookout.lift(f.elapsed) * LIFT_M;
     if (lift === this.lifted) return;
     this.lifted = lift;
-    this.head.pos.setY(0, LANTERN.h * (1 - LANTERN.head) + lift);
+    this.head.pos.setY(0, this.foot + LANTERN.h * (1 - LANTERN.head) + lift);
     this.head.pos.needsUpdate = true;
-    this.head.halo.position.y = 1.12 + lift;
+    this.head.halo.position.y = this.foot + 1.12 + lift;
   }
 
   /** Lit by dark, unless blown out: the lit or the unlit sprite, and the glow. */

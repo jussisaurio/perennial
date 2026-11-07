@@ -125,9 +125,10 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   const quiet = labels.find((l) => l.kind === "line");
   const line = spokenLine(quiet?.gloss ?? quiet?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
-  // The stile (#714): it goes nowhere, but you can look.
-  if (!line && reach === "climb") return "Wooden steps go over the back fence.";
-  if (!line && reach === "down") return "You stand on the steps, above the fence. Past it, an old path goes on into the long grass.";
+  // The stile (#714): it goes nowhere until the note that tells of the hill, but you can look. Then over it, the hill (#722).
+  if (!line && (reach === "climb" || reach === "over")) return "Wooden steps go over the back fence.";
+  if (!line && reach === "down") return "You stand on the steps, above the fence. Past it, an old path goes up a small hill.";
+  if (!line && reach === "back") return "You stand on a small hill past the fence. Far away, across the valley, there is a small house.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.
   if (!held) return landed;
@@ -293,6 +294,8 @@ const REACH_NAME: Record<Reach, string> = {
   raise: "Raise the lantern",
   climb: "Climb the stile",
   down: "Climb down",
+  over: "Climb over the stile",
+  back: "Walk back to the garden",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -326,6 +329,10 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   // Steps, going up; and going down again.
   climb: ["......###", "......#..", "....###..", "....#....", "..###....", "..#......", "###......"],
   down: ["###......", "..#......", "..###....", "....#....", "....###..", "......#..", "......###"],
+  // Steps, up and over.
+  over: ["...###...", "...#.#...", ".###.###.", ".#.....#.", "##.....##"],
+  // Steps, going down: back over the stile.
+  back: ["###......", "..#......", "..###....", "....#....", "....###..", "......#..", "......###"],
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */

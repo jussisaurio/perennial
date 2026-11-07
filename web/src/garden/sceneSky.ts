@@ -128,8 +128,8 @@ export class SkyWater implements Part {
   }
 
   /**
-   * The far house on the hill across the valley (#683), seen through the
-   * lookout's gap in the orchard's hedge, and its window's light. Like the
+   * The far house on the hill across the valley (#683), seen from the
+   * lookout on the hill past the stile (#722), and its window's light. Like the
    * hills: no fog, and its own looks by day and night, not tinted. Drawn after
    * the hills, so it stands on them; anything near hides it.
    */
