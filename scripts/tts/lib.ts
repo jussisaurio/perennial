@@ -149,9 +149,9 @@ function mp3Seconds(bytes: Uint8Array): number {
 
 /**
  * The shortest a real clip of `text` can be. The near-silent clips were 0.26–0.34 s; the shortest
- * real one in R2 was 0.53 s (German "ob"), and a sentence takes at least 0.07 s a character.
+ * real ones in R2 are 0.41 s (Spanish "no", German "oben"), and a sentence takes at least 0.07 s a character.
  */
-const minSeconds = (text: string) => Math.max(0.4, 0.04 * text.length);
+const minSeconds = (text: string) => Math.max(0.37, 0.04 * text.length);
 
 /** A request that may work later (throttled, a server error, the network) or never (any other answer). */
 class Retry extends Error {}
