@@ -99,31 +99,10 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       const [x, z] = hill.top;
       Object.assign(s, { x, z: z + 0.5, yaw: 0.08, pitch: 0 });
     }),
-  // The dog called from behind a bed (#761): halfway round it, on its way to you.
-  dog: async (page) => {
-    await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
-    await page.evaluate(async () => {
-      const { standAt } = await import(/* @vite-ignore */ "/src/garden/ground.ts");
-      type Dog = Scene & { ground: Parameters<typeof standAt>[0]; call(): void; guests: { sprites: { v: { id: string }; body: { x: number; z: number } }[] } };
-      const s = (window as unknown as { __garden: Dog }).__garden;
-      const dog = s.guests.sprites.find((g) => g.v.id === "dog")!.body;
-      const beds = (s.layout as { beds: { x: number; z: number; w: number; d: number }[] }).beds;
-      const bed = beds.reduce((a, b) => (Math.hypot(b.x - dog.x, b.z - dog.z) < Math.hypot(a.x - dog.x, a.z - dog.z) ? b : a));
-      // On the far side of the bed from the dog, facing it (forward is -z at yaw 0).
-      const d = Math.hypot(bed.x - dog.x, bed.z - dog.z);
-      const reach = Math.hypot(bed.w, bed.d) / 2 + 1.5;
-      const at = standAt(s.ground, bed.x + ((bed.x - dog.x) / d) * reach, bed.z + ((bed.z - dog.z) / d) * reach);
-      Object.assign(s, { x: at.x, z: at.z, yaw: Math.atan2(-(dog.x - at.x), -(dog.z - at.z)), pitch: 0.3 });
-      s.call();
-    });
-    await page.waitForTimeout(1200);
-  },
 };
 
 /** Spots seen by a learner with fewer words: 500 put the stile's notes at its foot, but not the hill's note (n08). */
 const WORDS: Partial<Record<string, number>> = { "stile-shut": 500 };
-/** Spots that need a visitor brought in (the URL's `visitors`), and that show it moving, so not with reduced motion. */
-const VISITORS: Partial<Record<string, string>> = { dog: "dog" };
 
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
@@ -131,8 +110,8 @@ const VISITORS: Partial<Record<string, string>> = { dog: "dog" };
  * over the stile to the lookout (note n08, 620 known: not every demo word is known). The door is opened too.
  * A spot in WORDS opens with fewer words.
  */
-async function openWalk(page: Page, words: number, visitors: string | undefined) {
-  await page.goto(`/?demo=es:${words}${visitors === undefined ? "" : `&visitors=${visitors}`}#/today`);
+async function openWalk(page: Page, words: number) {
+  await page.goto(`/?demo=es:${words}#/today`);
   await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
   await page.evaluate(async () => {
     const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
@@ -169,9 +148,8 @@ for (const theme of ["light", "dark"] as const) {
           await page.clock.setFixedTime(at);
           // Normal detail, as most learners see it, whatever this machine's frame times.
           await pinDetail(page, "normal");
-          if (VISITORS[name] !== undefined) await page.emulateMedia({ reducedMotion: "no-preference" });
           // Every other spot opens the way over the stile.
-          await openWalk(page, WORDS[name] ?? 800, VISITORS[name]);
+          await openWalk(page, WORDS[name] ?? 800);
           await stand(page);
           // The walk builds its parts after it opens, with a progress line until they are all in.
           await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });

@@ -53,7 +53,6 @@ interface WalkData {
  * do when one is blown. `onShake`: a plant was shaken (#357), and the forms
  * that fell from it. `onCarry`: a loose thing was picked up or put down, or it
  * landed (#358).
- * `onCall`: you whistled, and what each visitor that answered did (#377).
  * `notes`: the gardener's notes on the shed's nails (#654), by id and whether
  * each is unread, those under the stile's step (#714, null: no stile yet), and
  * what to do when one is opened.
@@ -98,7 +97,6 @@ export function useGardenScene({
   onFocused,
   onShake,
   onCarry,
-  onCall,
   notes,
 }: {
   lang: string;
@@ -115,7 +113,6 @@ export function useGardenScene({
   onFocused: () => void;
   onShake: (p: PlacedPlant, forms: string[]) => void;
   onCarry: (d: CarryDone) => void;
-  onCall: (heard: string[]) => void;
   notes: { nails: readonly { id: string; unread: boolean }[]; stile: readonly string[] | null; open: (id: string) => void };
 }) {
   const [data, setData] = useState<WalkData | null>(null);
@@ -150,7 +147,6 @@ export function useGardenScene({
   const walkIntoNow = useRef(walkInto);
   const carryNow = useRef(onCarry);
   const toysNow = useRef(toys);
-  const callNow = useRef(onCall);
   const noteNow = useRef(notes.open);
   // Before the browser paints, so the scene never calls the ones from before.
   useLayoutEffect(() => {
@@ -159,7 +155,6 @@ export function useGardenScene({
     walkIntoNow.current = walkInto;
     carryNow.current = onCarry;
     toysNow.current = toys;
-    callNow.current = onCall;
     noteNow.current = notes.open;
   });
   const timeNow = useRef(time);
@@ -243,7 +238,6 @@ export function useGardenScene({
             onToy: (d) => toysNow.current.done(d),
             onStars: setStars,
             onRaise: (r) => setRaised({ r }),
-            onCall: (heard) => callNow.current(heard),
             onNote: (id) => noteNow.current(id),
           },
           reduced,

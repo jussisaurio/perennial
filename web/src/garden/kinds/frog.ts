@@ -1,8 +1,7 @@
 // The frog (#57): on the lily pad nearest the gate.
 // Asleep by day, as in the strip, and all day on about one day in 25. Awake,
 // a tap makes it croak one of your known words, its throat puffed up: a real
-// recorded croak, and the word in its bubble (#739). Called
-// (#377), it croaks back once, awake or asleep.
+// recorded croak, and the word in its bubble (#739).
 
 import { rareDay } from "../../core/day";
 import { FROG, FROG_ASLEEP, FROG_CROAK } from "../visitorArt";
@@ -78,12 +77,6 @@ export const frog: VisitorKind<Look> = {
         puffed = elapsed + PUFF_S;
         body.frame = "croak";
         return { say: frogCroak(known, lang, croaks++, now), sound: "frog" };
-      },
-      onCall({ elapsed, lang }) {
-        // Croaks back once, just its sound, puffed up: asleep too, then it sleeps on.
-        puffed = elapsed + PUFF_S;
-        body.frame = "croak";
-        return { line: awake ? "The frog croaks back." : "The frog croaks once in its sleep.", say: frogCroak([], lang, 0, now) };
       },
     };
   },

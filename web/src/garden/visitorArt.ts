@@ -28,11 +28,6 @@ export const SNAIL: PixelArt = {
   ],
   pal: { o: INK, s: "#c0703a", S: "#e6a060", d: "#8a4a24", b: "#d8c8a0", B: "#a89870", e: INK },
 };
-/** The snail gone into its shell (#377): only the edge of its foot shows. */
-export const SNAIL_SHELL: PixelArt = {
-  rows: SNAIL.rows.map((r, y) => (y < 9 ? r.slice(0, 10) + "......" : y === 9 ? "..bbooooob......" : "..BBBBBBBB......")),
-  pal: SNAIL.pal,
-};
 
 const CAT_ROWS = [
   "..o..o..................",
@@ -58,11 +53,7 @@ export const CAT_AWAKE: PixelArt = {
   pal: { ...CAT_PAL, "1": INK, "2": INK, "3": "#9ad050", "4": INK },
 };
 
-/** The cat's right ear flicked flat (#377): asleep, and awake with one eye open. */
-const earFlat = (rows: readonly string[]) => rows.map((r, y) => (y === 0 ? "..o..." + r.slice(6) : y === 1 ? ".oCo.oo" + r.slice(7) : r));
-export const CAT_EAR: PixelArt = { rows: earFlat(CAT_ASLEEP.rows), pal: CAT_ASLEEP.pal };
-export const CAT_EAR_AWAKE: PixelArt = { rows: earFlat(CAT_AWAKE.rows), pal: CAT_AWAKE.pal };
-/** The cat sitting up, facing you, staring (#377): its eyes look at the middle. */
+/** The cat up and walking (#362: to the bench and home), facing you: its eyes look at the middle. */
 export const CAT_STARE: PixelArt = {
   rows: [
     "o.......o..",

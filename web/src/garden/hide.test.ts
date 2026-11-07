@@ -158,15 +158,6 @@ describe("the gnome, hiding and found", () => {
     expect([g.body.frame, g.body.y, g.body.glow, g.body.tag]).toEqual(["fallen", h.y, false, 1]);
   });
 
-  test("a call (#377) does not give it away while it hides, nor stir it once it lies flat; on other days it still freezes", () => {
-    const call = { elapsed: 1, x: 0, z: 0, lang: "es" };
-    const g = arrive(hiding);
-    expect(g.onCall!(call)).toBeNull();
-    g.onFind!(2);
-    expect(g.onCall!({ ...call, elapsed: 3 })).toBeNull();
-    expect(arrive(home).onCall!(call)).not.toBeNull();
-  });
-
   test("with reduced motion it is flat at once", () => {
     const g = arrive(hiding, true);
     g.onFind!(3);

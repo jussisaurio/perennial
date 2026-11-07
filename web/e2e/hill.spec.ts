@@ -166,7 +166,8 @@ test("stile.notes: by the notes at the stile, Read the note opens them one at a 
   }
   expect(seen.length).toBeGreaterThan(1);
   expect(new Set(seen).size).toBe(seen.length);
-  await expect(page.getByRole("button", { name: "Call", exact: true })).toBeVisible();
+  // All read: nothing left in reach, so no button.
+  await expect(page.locator(".gw-act")).toHaveCount(0);
 });
 
 test("stile.walk-over: with n08, holding W takes you up the steps, over the top board and down past the fence", async ({ page }) => {

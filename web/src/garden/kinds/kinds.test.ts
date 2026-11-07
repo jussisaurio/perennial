@@ -3,9 +3,8 @@ import { conditions } from "../conditions";
 import type { Ground } from "../ground";
 import type { Frame } from "../scenePart";
 import type { Spots } from "../spots";
-import { collide, layout, lanternSpots, WALKER, type GardenPlant } from "../world";
+import { collide, layout, lanternSpots, type GardenPlant } from "../world";
 import { KINDS } from ".";
-import { catComes } from "./cat";
 import type { Arrival, Bloom, Visitor } from "./kind";
 import { GOAT_GONE } from "./goat";
 import { CAUGHT, GAP, MOLE_CAUGHT, molePops, POP } from "./mole";
@@ -214,155 +213,28 @@ describe("visitor kinds", () => {
   });
 });
 
-describe("a call (#377)", () => {
-  /** Whistle at `elapsed` s, standing at (x, z). */
-  const call = (v: Visitor<string>, elapsed: number, x: number, z: number) => v.onCall!({ elapsed, x, z, lang: "es" });
-
-  test("every kind answers a call in its own way", () => {
-    for (const k of Object.values(KINDS)) {
-      const it = k.arrive({ spots: SPOTS, layout: L, ground: GROUND, bloom: BLOOM, now: NOW, reducedMotion: false, lang: "es" })!;
-      // A call asks only the visitors in sight: the mole is under the ground until it comes up (its own test below).
-      if (!it.body.visible) continue;
-      expect(call(it, 0, 5, 5)?.line).toBeTruthy();
-    }
-  });
-
-  test("the dog runs to you, tail going, sits a while and trots home, back up on its bed", () => {
-    const dog = arrive("dog");
-    const at = { ...dog.body.at };
-    expect(call(dog, 0, 5, 1)?.line).toBe("The dog runs over, tail going.");
-    const frames = new Set<string>();
-    for (let t = 0; t < 2; t += 0.1) {
-      run(dog, 0.1, 5, 1, true, t);
-      frames.add(dog.body.frame);
-    }
-    expect(Math.hypot(dog.body.x - 5, dog.body.z - 1)).toBeCloseTo(0.7, 5);
-    expect(dog.body.y).toBe(0);
-    expect(frames).toEqual(new Set(["sit", "wag"]));
-    run(dog, 10, 5, 1, true, 2);
-    expect(dog.body).toMatchObject({ x: at.x, y: at.y, z: at.z });
-  });
-
-  test("a called dog goes round the bed and through the door, never through them, and comes as near as it can to you past a shut door (#761)", () => {
+describe("a visitor sent somewhere walks there (#761)", () => {
+  test("the dog goes round the bed and through the open door, never through them", () => {
     /** Is (x, z) in something solid: a bed, the pond, the hedge? A hair of radius, so the edges themselves count as clear. */
     const inSolid = (x: number, z: number, open: boolean) => {
       const p = collide(L, x, z, 0.02, open);
       return Math.hypot(p.x - x, p.z - z) > 1e-9;
     };
-    const walkTo = (x: number, z: number, open: boolean) => {
+    const sendTo = (x: number, z: number, open: boolean) => {
       const dog = arrive("dog", { ground: { layout: L, doorOpen: () => open, trees: () => [] } });
-      call(dog, 0, x, z);
+      [dog.body.at.x, dog.body.at.z] = [x, z];
+      dog.onVisit!(false, 0);
       let solid = 0;
-      for (let t = 0; t < 6; t += 0.05) {
-        run(dog, 0.05, x, z, true, t);
+      for (let t = 0; t < 20; t += 0.05) {
+        run(dog, 0.05, 0, 0, true, t);
         if (inSolid(dog.body.x, dog.body.z, open)) solid++;
       }
       return { solid, gap: Math.hypot(dog.body.x - x, dog.body.z - z) };
     };
     // Behind the bed, from the dog by the shed: straight there crosses the bed.
-    expect(walkTo(-1, -2.5, false)).toEqual({ solid: 0, gap: expect.closeTo(0.7, 5) });
+    expect(sendTo(-1, -2.5, false)).toEqual({ solid: 0, gap: 0 });
     // In the orchard, past the hedge: through the open door.
-    expect(walkTo(3, 11, true)).toEqual({ solid: 0, gap: expect.closeTo(0.7, 5) });
-    // The door shut, you over the hedge (as on the stile): it comes to the hedge's foot below you and waits there.
-    const shut = walkTo(3, 9.5, false);
-    expect(shut.solid).toBe(0);
-    expect(shut.gap).toBeCloseTo(9.5 - (L.bounds.maxZ - WALKER), 5);
-  });
-
-  test("the cat flicks one ear; about one call in 50 it walks over, sits and stares, and goes back once you walk away", () => {
-    const cat = arrive("cat");
-    let n = 0;
-    while (!catComes(NOW, n)) n++;
-    expect(n).toBeGreaterThan(0);
-    expect(call(cat, 0, 5, 1)?.line).toBe("The cat flicks one ear.");
-    run(cat, 0.1, 5, 1);
-    expect(cat.body.frame).toBe("ear");
-    run(cat, 0.5, 5, 1, true, 0.1);
-    expect(cat.body.frame).toBe("asleep");
-    for (let i = 1; i < n; i++) expect(call(cat, 1, 5, 1)?.line).toBe("The cat flicks one ear.");
-    expect(call(cat, 1, 5, 1)?.line).toBe("The cat gets up, walks over, sits at your feet and stares at you.");
-    run(cat, 10, 5, 1, true, 1);
-    expect(cat.body.frame).toBe("stare");
-    expect(Math.hypot(cat.body.x - 5, cat.body.z - 1)).toBeCloseTo(0.45, 5);
-    expect(call(cat, 11, 5, 1)?.line).toBe("The cat stares at you.");
-    run(cat, 15, 15, 1, true, 11);
-    expect(cat.body).toMatchObject({ frame: "asleep", x: cat.body.at.x, y: cat.body.at.y, z: cat.body.at.z });
-    // Seeded, about one call in 50.
-    let comes = 0;
-    for (let i = 0; i < 5000; i++) if (catComes(NOW, i)) comes++;
-    expect(comes).toBeGreaterThan(50);
-    expect(comes).toBeLessThan(200);
-  });
-
-  test("the gnome freezes, its name hidden, then plays statues again", () => {
-    const gnome = arrive("gnome");
-    gnome.onConditions!(conditions("day"));
-    call(gnome, 0, 0, 0);
-    expect(gnome.body.tag).toBe(0);
-    // Out of view it would look away after a few seconds: frozen, it does not.
-    run(gnome, 5, 0, 0, false);
-    expect(gnome.body).toMatchObject({ frame: "front", tag: 0 });
-    run(gnome, 2, 0, 0, true, 5);
-    expect(gnome.body).toMatchObject({ frame: "front", tag: 1 });
-  });
-
-  test("the frog croaks back once, in its course's sound, even in its sleep", () => {
-    const frog = arrive("frog");
-    frog.onConditions!(conditions("day"));
-    expect(call(frog, 0, 0, 0)).toEqual({ line: "The frog croaks once in its sleep.", say: "croac…" });
-    expect(frog.body.frame).toBe("croak");
-    run(frog, 1, 0, 0);
-    expect(frog.body.frame).toBe("asleep");
-    frog.onConditions!(conditions("dusk"));
-    expect(call(frog, 1, 0, 0)?.line).toBe("The frog croaks back.");
-  });
-
-  test("the bird flies up and lands again where it was; with reduced motion it does not answer", () => {
-    const bird = arrive("bird");
-    const at = { ...bird.body.at };
-    call(bird, 0, 10, 10);
-    run(bird, 0.7, 10, 10);
-    expect(bird.body).toMatchObject({ frame: "hop", x: at.x, z: at.z });
-    expect(bird.body.y).toBeGreaterThan(at.y + 0.5);
-    run(bird, 1, 10, 10, true, 0.7);
-    expect(bird.body).toMatchObject({ frame: "sit", y: at.y });
-    expect(call(arrive("bird", { reducedMotion: true }), 0, 10, 10)).toBeNull();
-  });
-
-  test("the snail goes into its shell three full seconds after the call, and comes out again", () => {
-    const snail = arrive("snail");
-    call(snail, 1, 0, 0);
-    run(snail, 2.9, 0, 0, true, 1);
-    expect(snail.body.frame).toBe("snail");
-    run(snail, 0.2, 0, 0, true, 3.9);
-    expect(snail.body.frame).toBe("shell");
-    run(snail, 5, 0, 0, true, 4.1);
-    expect(snail.body.frame).toBe("snail");
-  });
-
-  test("the heron takes one slow step back and home again; the fish darts round; the butterfly lifts off higher", () => {
-    const heron = arrive("heron");
-    const { x, z } = heron.body.at;
-    call(heron, 0, x + 10, z);
-    // A whole step (1.4 s): it may first step off the stones, away from the water.
-    run(heron, 1.5, x + 10, z);
-    expect(heron.body.x).toBeLessThan(x);
-    run(heron, 4, x + 10, z, true, 1.5);
-    expect([heron.body.x, heron.body.z]).toEqual([x, z]);
-
-    const calm = arrive("fish");
-    const darting = arrive("fish");
-    call(darting, 0, 0, 0);
-    run(calm, 1, 0, 0);
-    run(darting, 1, 0, 0);
-    expect(darting.body.turn - Math.PI / 2).toBeCloseTo(8 * (calm.body.turn - Math.PI / 2), 1);
-
-    const still = arrive("butterfly");
-    const flying = arrive("butterfly");
-    call(flying, 0, 0, 0);
-    run(still, 0.8, 0, 0);
-    run(flying, 0.8, 0, 0);
-    expect(flying.body.y - still.body.y).toBeCloseTo(0.4, 1);
+    expect(sendTo(3, 11, true)).toEqual({ solid: 0, gap: 0 });
   });
 });
 
@@ -523,17 +395,5 @@ describe("the mole behind your back (#376)", () => {
     });
     expect(pops).toBe(2);
     expect(at[1] - at[0]).toBeGreaterThanOrEqual(GAP);
-  });
-
-  test("whistle while it is up (#377): it digs back down at once", () => {
-    const m = arrive("mole", { now: visitWith(1) });
-    let line: string | undefined;
-    const shown = drive(m, 10, (t) => {
-      if (line === undefined && m.body.frame === "up") line = m.onCall!({ elapsed: t, x: 0, z: 0, lang: "es" })?.line;
-      return standThenWalk(t);
-    });
-    expect(line).toBe("The mole digs back down, fast.");
-    expect(shown).toEqual(["hill", "up", "panic", "dig", "dig2"].concat(shown.slice(5)));
-    expect(m.body.visible).toBe(false);
   });
 });

@@ -73,8 +73,8 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or raise the lookout's lantern (#683); with nothing in reach, call (#377). */
-export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call" | "seek" | "read" | "raise";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or raise the lookout's lantern (#683). */
+export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "seek" | "read" | "raise";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
 export interface Label {
@@ -131,14 +131,12 @@ export interface SceneCallbacks {
   onSelect: (p: PlacedPlant | null) => void;
   onLabels: (labels: Label[]) => void;
   onProgress: (done: number, total: number) => void;
-  /** What the action button does now, for the thing in reach (#334); with nothing in reach, call (#377). */
-  onReach: (a: Reach) => void;
+  /** What the action button does now, for the thing in reach (#334); null with nothing in reach (no button, #835). */
+  onReach: (a: Reach | null) => void;
   /** You picked up a pebble, or let it go (#358). */
   onHand: (holding: boolean) => void;
   /** A plant was shaken (#357): the forms that fell from it ([]: one leaf). */
   onShake: (p: PlacedPlant, forms: string[]) => void;
-  /** You whistled (#377): what each visitor that answered did, as a screen reader hears it ([]: no one answered). */
-  onCall: (heard: string[]) => void;
   /** Carry (#358): a loose thing was picked up or put down, or it landed. */
   onCarry: (done: CarryDone) => void;
   /** A dandelion clock was blown (#360). */
@@ -197,6 +195,8 @@ const ECHO = { delay: 1.2, show: 5 };
 const PERK_NEAR = 0.9;
 /** Near enough to the bench (m, from its middle) to sit on it (#334). */
 const BENCH_REACH = 1.6;
+/** How long (s) "Shake the plant" stays after the plant ahead drops out of reach: crossing the path between two beds, it would blink out for a moment (#835). */
+const SHAKE_LINGER_S = 0.5;
 /** Sitting on the bench (#334): the eye's height, where you sit along the seat (near its left end: the rest is for company, #362), and how fast you sit down (per second). */
 const SEAT = { eye: 0.78, dx: -0.5, speed: 2.5 };
 /** No tree outside the back fence within this far (m) either side of the stile (#714): the old path is seen from its top board. */
@@ -275,6 +275,8 @@ export class GardenScene {
   private reach: Reach | null = null;
   /** The plant the action button shakes, when it shakes one (#357). */
   private shakeTarget: PlacedPlant | null = null;
+  /** When (this.elapsed) a plant was last in reach to shake. */
+  private shakeSeen = 0;
   /** What the action button acts on when it does carry's (#358; putting down has none: it goes in front of you). */
   private carryTarget: CarryTarget | null = null;
   /** The hiding visitor the action button finds, when it finds one (#379). */
@@ -905,7 +907,6 @@ export class GardenScene {
     else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
     else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
     else if (a === "throw" && this.reach === "throw") this.throwAhead();
-    else if (a === "call" && this.reach === "call") this.call();
     else if (a === "seek" && this.reach === "seek" && this.seekTarget) this.seek(this.seekTarget);
     else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
     else if (a === "blow" && this.reach === "blow" && this.toyTarget) this.doToy(this.toyTarget);
@@ -941,11 +942,6 @@ export class GardenScene {
     this.sky.setStars(out);
     this.critters.setBright(out);
     this.cb.onStars(out);
-  }
-
-  /** Whistle (#377): every visitor in sight answers in its own way. From the action button with nothing in reach, or a long press on open ground. */
-  call() {
-    this.cb.onCall(this.guests.call(this.x, this.z));
   }
 
   /** A long press on a plant (#357): shake it where it stands when its name shows; from farther away, walk to it first. */
@@ -2122,8 +2118,8 @@ export class GardenScene {
    * (unless a lantern by the gate is nearer), blow out or light a lantern
    * (#361), raise the lookout's lantern (#683), read a note (#654) in the shed or at the stile's foot, pick up a loose thing, sit on the bench, blow a dandelion clock
    * (#360), or shake the plant ahead of you (#357), for whichever is in reach (in that
-   * order); with nothing in reach, call (#377), so the button always does
-   * something. The button's name says what it does, so nothing in reach
+   * order); with nothing in reach, no button (#835): when it shows, it has
+   * something to do. The button's name says what it does, so nothing in reach
    * flashes (#689); where its target could be one of several alike, that one
    * shows it quietly and steadily: a note lifts off the wall, a plant stands
    * a little taller.
@@ -2153,7 +2149,9 @@ export class GardenScene {
     // The first of these that applies, in reportReach's order above.
     const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? raise ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
-    const a: Reach = plant ? "shake" : (before ?? "call");
+    const a: Reach | null = plant ? "shake" : before;
+    if (plant) this.shakeSeen = this.elapsed;
+    else if (a === null && this.reach === "shake" && this.elapsed - this.shakeSeen < SHAKE_LINGER_S) return;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = a === "blow" && toy ? toy.target : null;
     const lantern = lampAct && a === lampAct ? lamp : -1;

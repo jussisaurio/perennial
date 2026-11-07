@@ -1,9 +1,8 @@
 // The shy gnome (#54): at a bed corner chosen by the date, never the
 // front-left one, where the bed's sign is. It plays "statues" (gnomePose): it
 // faces you while you look at it, and its name shows only then. Its lantern
-// is lit at dusk and night, with a small glow. Called (#377), it freezes
-// where it is for a while, its name hidden: only a garden gnome. Sent
-// somewhere (#362: the bench), it walks there, but only while you do not see it.
+// is lit at dusk and night, with a small glow. Sent somewhere (#362: the
+// bench), it walks there, but only while you do not see it.
 //
 // On some days it hides instead (#379, hide.ts): behind a plant, under the
 // bench, on the sign... Its name never shows while it hides. Found (a tap, or
@@ -16,8 +15,6 @@ import { GNOME_FALLEN, GNOME_PAD, GNOME_PEEK, gnomeArt } from "../visitorArt";
 import { gnomePose, gnomeTag, type GnomePose } from "../visitors";
 import { bodyAt, there, walkHome, walkOn, type Body, type VisitorKind, type Walk } from "./kind";
 
-/** How long it stays frozen after a call (s). */
-const FREEZE_S = 6;
 /** Sent somewhere (#362: to the bench), it walks there this fast (m/s), only while it is off your screen (#802). */
 const WALK = 0.5;
 
@@ -66,8 +63,6 @@ export const gnome: VisitorKind<Look> = {
     /** On screen, and since when (elapsed s). */
     let seen = true;
     let since = 0;
-    /** Frozen by a call until then (elapsed s). */
-    let frozen = -1;
     let dark = false;
     /** On its way to its spot (onVisit); null once it is there. */
     let walk: Walk | null = null;
@@ -83,7 +78,7 @@ export const gnome: VisitorKind<Look> = {
         return;
       }
       body.frame = body.glow ? `${pose}Lit` : pose;
-      body.tag = frozen >= 0 ? 0 : gnomeTag(pose);
+      body.tag = gnomeTag(pose);
     };
     return {
       size: 0.56,
@@ -103,12 +98,6 @@ export const gnome: VisitorKind<Look> = {
           else [body.frame, body.y] = ["fallen", y + TUMBLE.bounce * Math.sin((Math.PI * (t - TUMBLE.pop)) / TUMBLE.fall)];
           return;
         }
-        if (frozen >= 0 && elapsed < frozen) return;
-        if (frozen >= 0) {
-          // It thaws as if you had just looked: no turn at once.
-          [frozen, seen, since] = [-1, inView, elapsed];
-          show();
-        }
         // Statues: it walks only while you cannot see it. With reduced motion it is just there.
         if (walk && (reducedMotion || !inView) && walkOn(body, walk, reducedMotion ? Infinity : WALK * dt)) walk = null;
         if (inView !== seen) [seen, since] = [inView, elapsed];
@@ -117,13 +106,6 @@ export const gnome: VisitorKind<Look> = {
         if (next === pose) return;
         pose = next;
         show();
-      },
-      onCall({ elapsed }) {
-        // Hiding, it keeps still and quiet: a call must not give it away. Lying flat, it is already as still as can be.
-        if (body.hiding || fell !== null) return null;
-        frozen = elapsed + FREEZE_S;
-        show();
-        return { line: "The gnome freezes. It is only a garden gnome." };
       },
       onFind(elapsed) {
         body.hiding = false;

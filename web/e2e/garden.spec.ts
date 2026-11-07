@@ -421,6 +421,36 @@ test("by the bench the action button sits you down, facing the pond; it or a ste
   expect((await scene()).seated).toBe(false);
 });
 
+// docs/garden-play.md, "The action button" (#835).
+test("action.none: on open ground away from everything no action button shows; walk up to the bench and it shows, named Sit on the bench", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await pinDetail(page, "low");
+  await page.goto("/?demo=es:30#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  // A step in front of the bench (world.ts benchAt), your back to it: W walks you away from it.
+  await page.evaluate(() => {
+    const s = (window as unknown as { __garden: { layout: { pond: { x: number; z: number; r: number } } } }).__garden;
+    const p = s.layout.pond;
+    Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+  });
+  const sit = page.getByRole("button", { name: "Sit on the bench" });
+  const act = page.locator(".gw-act");
+  await sit.focus();
+  // Walk on, away from the bench and the pond (its pebbles), until nothing is in reach: the button goes, and focus goes back to the walk.
+  await page.keyboard.down("KeyW");
+  await expect(act).toHaveCount(0);
+  await page.keyboard.up("KeyW");
+  await expect(act).toHaveCount(0);
+  await expect(page.locator(".gw-canvas")).toBeFocused();
+  // Step back to it with S.
+  await page.keyboard.down("KeyS");
+  await expect(sit).toBeVisible();
+  await page.keyboard.up("KeyS");
+});
+
 // #362: sit still and the garden comes to you. Seconds sat are moved on through the dev-only scene handle, as a test cannot sit for a minute.
 test("sitting still on the bench: the bird, the cat and the gnome come to sit with you, and time runs on to dusk; stand up and it is now again", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));

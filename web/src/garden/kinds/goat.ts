@@ -52,8 +52,6 @@ export const goat: VisitorKind<Look> = {
         }
         body.status = Math.hypot(body.at.x - x, body.at.z - z) < GOAT_NEAR ? STANDS[ledge.on] : null;
       },
-      // A call (#377): it does not move. It never explains itself.
-      onCall: () => ({ line: "The goat looks down at you, chewing." }),
     };
   },
 };
