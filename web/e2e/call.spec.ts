@@ -3,8 +3,9 @@ import { pinDetail } from "./helpers";
 
 // #377, call: with nothing in reach the action button whistles, and each
 // visitor in sight answers in its own way. A long press on open ground calls
-// too. The demo garden of 400 words has the gnome (hiding, on this day), the frog, the dog and (at dusk
-// and night) the moth.
+// too. The visitors are named in the URL: the gnome (hiding, on this day), the frog, the dog and (at dusk
+// and night) the moth. The demo's own visitors change with its review history: since #704 its 400 words
+// no longer bring the dog.
 
 type CallScene = {
   x: number;
@@ -14,7 +15,7 @@ type CallScene = {
 };
 
 async function openWalk(page: Page) {
-  await page.goto("/?demo=es:400#/today");
+  await page.goto("/?demo=es:400&visitors=gnome,frog,moth,dog#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
