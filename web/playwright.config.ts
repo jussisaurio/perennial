@@ -22,7 +22,9 @@ export default defineConfig({
   // GitHub's runners for public repos have 4 vCPUs, but they also run vite, the
   // API and Postgres: 4 workers saved ~0–13 s and brought a new
   // ECONNRESET on the shared server (#287), so 2 per runner (CI also shards the suite).
-  workers: process.env.CI ? 2 : undefined,
+  // Locally up to 3 runs share one machine (scripts/e2e-slot.ts), each with software
+  // WebGL; at the default of half the cores per run the load average stayed at 50–98 (#656).
+  workers: process.env.CI ? 2 : 3,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL: `http://localhost:${WEB}`,
