@@ -12,7 +12,7 @@ import { Session as Runner, type Task } from "../core/session";
 import { recordReview, sentencesOf, undoReview, useDeckSentences, useLearner, useStore, type Learner, type Sentence, type Word } from "../data/learner";
 import type { DeckSentences } from "../data/deck";
 import { hash32 } from "../lib/seed";
-import { hasVoice, isSoundOn, stopSpeaking } from "./speech";
+import { hasVoice, listenOn, onSoundChange, pauseListening, stopSpeaking } from "./speech";
 import { prepareAudio, wakeAudio } from "./chime";
 import { afterPaint } from "./afterPaint";
 import { sessionPlan } from "../data/practice";
@@ -176,10 +176,10 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
 
   const start = useCallback(
     async (mins: number) => {
-      // No voice, or sound turned off: no listening exercises.
+      // No voice, sound turned off, or "Can't listen now" within the hour: no listening exercises.
       const l = live.current;
       if (!l) return;
-      const voice = isSoundOn() && (await hasVoice(tag));
+      const voice = listenOn(Date.now()) && (await hasVoice(tag));
       const p = sessionPlan(l, mins, voice, Date.now());
       const r = new Runner(p, mins * 60_000);
       // Each chunk is its own session: its own summary, and nothing to undo from the last one.
@@ -247,6 +247,23 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       busy.current = false;
     }
   };
+
+  // Sound turned off mid-chunk: no more listening cards, the one on screen
+  // included (#716). Turning it back on brings none back.
+  useEffect(() => {
+    if (!runner) return;
+    return onSoundChange((on) => {
+      if (on) return;
+      runner.dropListening();
+      // While an answer finishes (busy), its card has been answered; the next one comes from the queue just dropped.
+      if (card?.task.kind === "review" && card.task.skill === "listen" && !busy.current) {
+        runner.skip();
+        advance(runner);
+      }
+    });
+    // `advance` reads only refs and stable setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runner, card]);
 
   const undo = async () => {
     if (!runner || busy.current || !undoStack.length) return;
@@ -385,9 +402,12 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       }
       return { word: word.lemma, from: look, to: { s: after.s, stage: plantStage(after) }, planted: false, visitor, strong, note: gap ? `Last seen ${gap} days ago. Its longest wait yet.` : undefined };
     } else {
-      // Passed over without an answer ("Can't listen now"): nothing to undo, so
-      // Undo steps back over this card to the last answer.
+      // Passed over without an answer ("Can't listen now", only on listening
+      // cards): nothing to undo, so Undo steps back over this card to the last
+      // answer. No more listening this chunk, nor for the next hour (#716).
       runner.skip();
+      runner.dropListening();
+      pauseListening(Date.now());
     }
     return null;
   };
