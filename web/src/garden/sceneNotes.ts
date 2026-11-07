@@ -107,7 +107,7 @@ export class ShedNotes {
 
   /**
    * Show which note the action button opens (#673): it comes off the wall a little toward you and hangs straight,
-   * where the others hang crooked. Not the button's glint: on a wall of notes a flash reads as "this one is new".
+   * where the others hang crooked. Not a glint (#689): on a wall of notes a flash reads as "this one is new".
    * Null puts the last one back.
    */
   lift(id: string | null) {

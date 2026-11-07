@@ -180,11 +180,6 @@ export class Toys implements Part {
     return this.reach;
   }
 
-  /** Where the glint shows for a clock in reach: on its fluff. */
-  cueAt(t: ToyTarget): [number, number, number] {
-    return [this.heads[t.i].x, CLOCK.h * 0.7, this.heads[t.i].z];
-  }
-
   /** Where to walk to blow a clock from afar, and whether you are near enough already. */
   standFor(i: number, x: number, z: number): { x: number; z: number; near: boolean } {
     const h = this.heads[i];

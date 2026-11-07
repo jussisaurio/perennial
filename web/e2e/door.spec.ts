@@ -281,7 +281,7 @@ const keyGlints = (page: Page) =>
   );
 
 // #334: help for a stuck key hunt comes from the world, late and gently, never as text. The clock is pinned (beforeEach).
-test("a key left a week glints whenever you face it, from afar; a key left a day does not", async ({ page }) => {
+test("a key left a week glints whenever you face it, from afar and in reach; a key left a day does not", async ({ page }) => {
   await keyWaited(page, 1);
   await keyInTheOpen(page);
   await standByKey(page, 5);
@@ -291,6 +291,9 @@ test("a key left a week glints whenever you face it, from afar; a key left a day
   await keyInTheOpen(page);
   await standByKey(page, 5);
   // With reduced motion (as these tests run), a still glint.
+  expect(await keyGlints(page)).toBe(true);
+  // In reach it keeps glinting (#689): no other mark takes its place there.
+  await standByKey(page);
   expect(await keyGlints(page)).toBe(true);
   // Facing away: nothing calls from behind you.
   await page.evaluate(() => ((window as unknown as { __garden: { yaw: number } }).__garden.yaw += Math.PI));

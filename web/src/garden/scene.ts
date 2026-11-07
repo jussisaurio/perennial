@@ -14,7 +14,7 @@ import { plantHeight as plantHeightOf } from "../ui/plant";
 import { fishSign, keepsakeLabel, pickSigns, SIGNS, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { SceneVisitors, type Hider } from "./sceneVisitors";
-import { LANTERN_GLASS_Y, RAIL, type Ledge, type Spots } from "./spots";
+import { RAIL, type Ledge, type Spots } from "./spots";
 import { conditions } from "./conditions";
 import { DETAIL, DetailPicker, type Detail } from "./detail";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
@@ -172,8 +172,6 @@ const GROUND_REACH = 1.5;
 const DOOR_STAND = 1.4;
 /** A walk to the key stops this short of it (m), so it is still in view, in reach (KEY_REACH). */
 const KEY_STAND = 1;
-/** The thing in reach glints (#334): a flash this long (s), this often (s); more often than the key's late help, as it is right there. */
-const CUE = { flash: 0.5, every: 1.6 };
 /** The well's echo (#335 S6) comes this long (s) after the plop, and shows for this long. */
 const ECHO = { delay: 1.2, show: 5 };
 /** A plant this near (m) where a thing lands perks up (#358). */
@@ -248,7 +246,7 @@ export class GardenScene {
   private stallReported = false;
   /** The ring on the ground where a walk goes. */
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  /** What the action button does now (#334), and the glint on the thing in reach that shows it can be used. */
+  /** What the action button does now (#334). */
   private reach: Reach | null = null;
   /** The plant the action button shakes, when it shakes one (#357). */
   private shakeTarget: PlacedPlant | null = null;
@@ -274,7 +272,6 @@ export class GardenScene {
   /** The gardener's notes in the shed (#654), and the one the action button reads. */
   private notes = new ShedNotes();
   private noteTarget: string | null = null;
-  private cue!: THREE.Sprite;
   /** Sitting on the bench (#334); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
   private seated = false;
   private seat = 0;
@@ -1411,7 +1408,7 @@ export class GardenScene {
     this.scene.add(still(decorMesh));
   }
 
-  /** The marker over the selected plant, always on top of the hills and clouds; the ring on the ground where a walk goes; the glint on the thing in reach. */
+  /** The marker over the selected plant, always on top of the hills and clouds; the ring on the ground where a walk goes. */
   private buildMarker() {
     // Always on top: no depth test, and in the transparent pass with the highest
     // renderOrder, because the far hills and clouds draw in that pass after the
@@ -1428,10 +1425,6 @@ export class GardenScene {
     this.spot.rotation.x = -Math.PI / 2;
     this.spot.visible = false;
     this.scene.add(this.spot);
-    // The glint on the thing in reach (#334): not tinted or fogged, as a glint is bright at dusk too.
-    this.cue = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glint()), transparent: true, depthWrite: false, fog: false }));
-    this.cue.visible = false;
-    this.scene.add(this.cue);
   }
 
   /** The visitor under a point on the canvas (CSS pixels), if any. */
@@ -1891,11 +1884,6 @@ export class GardenScene {
     // dt is 0 only on the very first frame, before anyone could walk.
     frame.speed = onFoot && dt > 0 ? Math.hypot(this.x - x0, this.z - z0) / dt : 0;
     for (const part of this.parts) part.tick?.(frame);
-    // The thing in reach glints now and then (#334); with reduced motion, a still glint.
-    if (this.cue.visible) {
-      const k = t % CUE.every;
-      this.cue.scale.setScalar(this.reducedMotion ? 0.12 : k < CUE.flash ? 0.04 + 0.16 * Math.sin((Math.PI * k) / CUE.flash) : 0);
-    }
     if (this.selected) {
       const p = this.selected;
       this.marker.position.set(p.x, BED_H + plantHeight(p.growth) + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
@@ -1998,7 +1986,10 @@ export class GardenScene {
    * (#361), raise the lookout's lantern (#683), read a note (#654), pick up a loose thing, sit on the bench, blow a dandelion clock
    * (#360), or shake the plant ahead of you (#357), for whichever is in reach (in that
    * order); with nothing in reach, call (#377), so the button always does
-   * something. The thing in reach glints (the cue).
+   * something. The button's name says what it does, so nothing in reach
+   * flashes (#689); where its target could be one of several alike, that one
+   * shows it quietly and steadily: a note lifts off the wall, a plant stands
+   * a little taller.
    */
   private reportReach() {
     const d = this.door;
@@ -2032,18 +2023,13 @@ export class GardenScene {
     if (a === this.reach && plant === this.shakeTarget && carried === this.carryTarget && toyTarget === this.toyTarget && lantern === this.lanternTarget && seeking === this.seekTarget && reading === this.noteTarget) return;
     this.reach = a;
     this.noteTarget = reading;
-    // A note shows it is the one by lifting off the wall, with no glint (sceneNotes.ts lift).
     this.notes.lift(reading);
+    this.plants.ready(plant);
     this.seekTarget = seeking;
     this.shakeTarget = plant;
     this.carryTarget = carried;
     this.toyTarget = toyTarget;
     this.lanternTarget = lantern;
-    const lampAt = lantern >= 0 ? this.lanterns.spots[lantern] : null;
-    const post = a === "raise" ? lookoutAt(this.layout.orchard).post : null;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : post ? [post[0], LANTERN_GLASS_Y, post[1]] : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
-    this.cue.visible = !!at;
-    if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);
   }
 

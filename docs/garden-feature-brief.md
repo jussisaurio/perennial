@@ -13,6 +13,8 @@ The user's goal now: **"focus heavily on implementing a lot of fun features, tha
 - **Quiet whimsy:** no streaks, scores, FOMO, confetti, nags, timers or currency. Nothing withers or is lost.
 - **Never asks the learner to practise.** More words make more material to play with; never gate a verb behind a word count.
 - **No instruction text in the walk (#334).** The world shows what can be done. The one action button is icon-only, but its accessible name says the action.
+- **A glint is only late help (#689).** Use it only for something the learner has not found after a long time, like the key's glint after a week (sceneDoor.ts). Never use it to show that a thing is in reach: the action button's name already says what it does. Never put it on a thing that was already found or used.
+- **Show the button's target quietly.** If the button could act on one of several things that look alike, mark that one with a small, steady change that fits the thing. A shed note lifts off the wall and hangs straight. A plant stands a little taller. Never flash or pulse it.
 - **The wall clock sets the time of day (#646).** There is no button for it. Night things are a quiet surprise for someone who comes at night.
 - **Phones:** one thumb, sound off. Anything that relies on sound has a visual half.
 - **Screen readers:** each verb works through the action button with a name, plus a short status line.
