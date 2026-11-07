@@ -59,10 +59,18 @@ describe("shaking a plant (#357)", () => {
       { id: "far", x: 0, z: -SHAKE_REACH - 0.1 },
     ];
     // Facing -z (yaw 0).
-    expect(plantInReach(plants, 0, 0, 0)?.id).toBe("ahead");
+    expect(plantInReach(plants, 0, 0, 0, null)?.id).toBe("ahead");
     // Facing +z: only the one behind is ahead now.
-    expect(plantInReach(plants, 0, 0, Math.PI)?.id).toBe("behind");
+    expect(plantInReach(plants, 0, 0, Math.PI, null)?.id).toBe("behind");
     // Facing -x: nothing there.
-    expect(plantInReach(plants, 0, 0, Math.PI / 2)).toBeNull();
+    expect(plantInReach(plants, 0, 0, Math.PI / 2, null)).toBeNull();
+  });
+
+  test("the plant the button shows stays in reach a little farther; no other plant does (#838)", () => {
+    const shown = { id: "shown", x: 0, z: -SHAKE_REACH - 0.2 };
+    const other = { id: "other", x: 0.3, z: -SHAKE_REACH - 0.2 };
+    expect(plantInReach([other, shown], 0, 0, 0, null)).toBeNull();
+    expect(plantInReach([other, shown], 0, 0, 0, shown)?.id).toBe("shown");
+    expect(plantInReach([other], 0, 0, 0, shown)).toBeNull();
   });
 });

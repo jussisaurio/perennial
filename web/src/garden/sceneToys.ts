@@ -11,6 +11,7 @@ import { rayBox, type Ray } from "./scenery";
 import { sprites, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 import { blowEnds, dandelions, flight, SEEDS, seedAt, type Flight, type Head, type ToysWalk } from "./toys";
+import { REACH_SLACK } from "./reach";
 import { BED_H, type Layout } from "./world";
 
 /** What the action button does here (GardenScene's Reach): blow a dandelion clock. */
@@ -161,20 +162,20 @@ export class Toys implements Part {
     this.seeds.visible = live;
   }
 
-  /** The nearest clock still to blow within reach of (x, z), or -1. */
-  private clockNear(x: number, z: number): number {
+  /** The nearest clock still to blow within reach of (x, z), or -1. The one the button shows now (`held`) stays in reach REACH_SLACK farther (#838). */
+  private clockNear(x: number, z: number, held: ToyTarget | null): number {
     let best = -1;
-    let bestD = REACH;
+    let bestD = Infinity;
     for (let i = 0; i < this.heads.length; i++) {
       const d = Math.hypot(this.heads[i].x - x, this.heads[i].z - z);
-      if (!this.blown[i] && d < bestD) [best, bestD] = [i, d];
+      if (!this.blown[i] && d < bestD && d < REACH + (held === this.targets[i] ? REACH_SLACK : 0)) [best, bestD] = [i, d];
     }
     return best;
   }
 
   /** What the action button can do from (x, z), and on what: blow a clock in reach. Null when nothing here. */
-  reachAt(x: number, z: number): { a: ToyAct; target: ToyTarget } | null {
-    const i = this.clockNear(x, z);
+  reachAt(x: number, z: number, held: ToyTarget | null): { a: ToyAct; target: ToyTarget } | null {
+    const i = this.clockNear(x, z, held);
     if (i < 0) return null;
     this.reach.target = this.targets[i];
     return this.reach;

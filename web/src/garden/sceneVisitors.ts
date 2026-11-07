@@ -10,6 +10,7 @@ import { type VisitorId, type VisitorView } from "./visitors";
 import { daily } from "../core/day";
 import { KINDS } from "./kinds";
 import { there, type Bloom, type Body, type Hideout, type Reply, type Visitor, type VisitorKind } from "./kinds/kind";
+import { REACH_SLACK } from "./reach";
 import type { Layout } from "./world";
 import type { Ground } from "./ground";
 import type { Spots } from "./spots";
@@ -307,9 +308,9 @@ export class SceneVisitors implements Part {
     this.draw(s);
   }
 
-  /** A visitor hiding within reach of (x, z), for the action button (#379); null when none is. No allocation: asked every frame. */
-  hiderNear(x: number, z: number): VisitorId | null {
-    for (const s of this.sprites) if (s.body.hiding && s.mesh.visible && Math.hypot(s.body.at.x - x, s.body.at.z - z) < SEEK_REACH) return s.v.id;
+  /** A visitor hiding within reach of (x, z), for the action button (#379); null when none is. The one it shows now (`held`) stays in reach REACH_SLACK farther (#838). No allocation: asked every frame. */
+  hiderNear(x: number, z: number, held: VisitorId | null): VisitorId | null {
+    for (const s of this.sprites) if (s.body.hiding && s.mesh.visible && Math.hypot(s.body.at.x - x, s.body.at.z - z) < SEEK_REACH + (s.v.id === held ? REACH_SLACK : 0)) return s.v.id;
     return null;
   }
 

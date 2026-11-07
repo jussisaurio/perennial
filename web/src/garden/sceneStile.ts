@@ -362,9 +362,9 @@ export class StileScene {
     return best === null ? null : { id: best, t: near };
   }
 
-  /** Near enough to the stile's foot, inside the garden, to go over it or read the notes there. Runs every frame: no allocation. */
-  inReach(x: number, z: number): boolean {
+  /** Near enough (and `slack` m more) to the stile's foot, inside the garden, to go over it or read the notes there. Runs every frame: no allocation. */
+  inReach(x: number, z: number, slack: number): boolean {
     const [fx, fz] = this.spot.foot;
-    return z > this.spot.z && Math.hypot(fx - x, fz - z) < STILE_REACH;
+    return z > this.spot.z && Math.hypot(fx - x, fz - z) < STILE_REACH + slack;
   }
 }

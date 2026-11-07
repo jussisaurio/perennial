@@ -11,6 +11,7 @@ import { rayBox, type Ray } from "./scenery";
 import type { Frame, Part } from "./scenePart";
 import { sprites } from "./sceneSprites";
 import * as T from "./textures";
+import { REACH_SLACK } from "./reach";
 import type { Layout } from "./world";
 
 /** What the action button does with pebbles: pick one up, throw the one you hold where you face, or drop it in the well. */
@@ -139,21 +140,22 @@ export class Carry implements Part {
   /**
    * What the action button can do with pebbles from (x, z): holding one by
    * the well, drop it in; holding one elsewhere, throw it where you face;
-   * empty-handed, pick up the nearest one in reach.
+   * empty-handed, pick up the nearest one in reach. What the button shows now
+   * (`held`) stays in reach REACH_SLACK farther (#838).
    */
-  reachAt(x: number, z: number): { a: CarryAct; target: CarryTarget | null } | null {
+  reachAt(x: number, z: number, held: CarryTarget | null): { a: CarryAct; target: CarryTarget | null } | null {
     const r = this.reach;
     if (this.held !== null) {
-      if (this.well.shown && near(x, z, this.layout.well, WELL_REACH)) [r.a, r.target] = ["well", this.targets.well];
+      if (this.well.shown && near(x, z, this.layout.well, WELL_REACH + (held === this.targets.well ? REACH_SLACK : 0))) [r.a, r.target] = ["well", this.targets.well];
       else [r.a, r.target] = ["throw", null];
       return r;
     }
     let best = -1;
-    let bestD = REACH;
+    let bestD = Infinity;
     for (let i = 0; i < this.things.length; i++) {
       const t = this.things[i];
       const d = Math.hypot(x - t.x, z - t.z);
-      if (d < bestD && free(t)) [best, bestD] = [i, d];
+      if (d < bestD && d < REACH + (held === this.targets.things[i] ? REACH_SLACK : 0) && free(t)) [best, bestD] = [i, d];
     }
     if (best < 0) return null;
     r.a = "lift-pebble";
