@@ -27,7 +27,7 @@ Inside Effect code, plain TypeScript is fine: `null`, `if`, loops. We do not use
 
 ### Where the app is now (#322, part 4)
 
-- **Effect:** `data/http.ts` (one `fetch` wrapper: answers and errors are checked with the contract, and errors are typed), `data/auth.ts` (deadlines for sign-in requests), and the write in `data/send.ts`.
+- **Effect:** `data/http.ts` (one `fetch` wrapper: answers and errors are checked with the contract, and errors are typed; `fetchOk` for a request whose answer only has to be ok), `data/auth.ts` (deadlines for sign-in requests, and the requests that delete the demo or the account), the clip fetch in `ui/clipPlayer.ts`, and the write in `data/send.ts`.
 - **At the edge:** each exported function runs its Effect with `Effect.runPromise`. React and TanStack DB still get Promises. `runPromise` rejects with the typed error itself, so `instanceof ApiError` works there.
 - **Plain on purpose:** the voice wait in `ui/speech.ts`, the wait for an answer in `ui/useSessionRunner.ts`, the bot check in `data/captcha.ts`, the deck loader's cache in `data/deck.ts`, and the visibility check in `data/server.ts`. Effect would only add words there.
 - **Not `effect/http`:** a small `fetch` wrapper costs much less in the bundle, and we only need one POST and a few GETs.
