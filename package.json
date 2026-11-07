@@ -4,9 +4,11 @@
   "workspaces": ["contract", "web", "server", "scripts"],
   "scripts": {
     "dev": "bun scripts/dev.ts",
-    "dev:ai": "bun scripts/dev.ts --ai"
+    "dev:ai": "bun scripts/dev.ts --ai",
+    "knip": "knip"
   },
   "devDependencies": {
+    "knip": "^6.44.1",
     "railway": "^3.13.1"
   },
   "overrides": {
