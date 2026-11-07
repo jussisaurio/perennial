@@ -245,6 +245,9 @@ export function benchAt(l: Layout): { x: number; z: number } {
   return { x: l.pond.x + 0.2, z: l.pond.z - l.pond.r - 0.75 };
 }
 
+/** The bench's size about its middle (m): half its length, and how far its back and its front are. */
+export const BENCH = { half: 0.68, back: 0.25, front: 0.22 } as const;
+
 /** The sunflower, in the far right corner by the back fence. */
 export function sunflowerAt(l: Layout): { x: number; z: number } {
   return { x: l.bounds.maxX - 1, z: l.bounds.minZ + 0.45 };
@@ -328,6 +331,39 @@ export function keyAt(l: Layout, spot: KeySpot): { x: number; z: number } {
       return { x: f.x - 0.3, z: f.z + 0.2 };
     }
   }
+}
+
+/** How far from the key each visitor waits (m), and how far round from the side away from the garden's middle (rad): the bird beside it, not behind the dog. */
+const BY_KEY = { dog: [0.8, 0], bird: [0.5, Math.PI / 2] } as const;
+
+/**
+ * Where a visitor waits by a key left waiting (#802): near it, on the side
+ * away from the garden's middle (BY_KEY), so the key lies between it and you
+ * as you come. On open ground: the nearest
+ * such place out of the beds, the pond, the bench, the lanterns' posts and
+ * the sunflower, and inside the fence.
+ */
+export function besideKey(l: Layout, key: { x: number; z: number }, who: keyof typeof BY_KEY): [number, number, number] {
+  const [d, turn] = BY_KEY[who];
+  const b = l.bounds;
+  const away = Math.atan2(key.z - (b.minZ + b.maxZ) / 2, key.x - (b.minX + b.maxX) / 2) + turn;
+  const bench = benchAt(l);
+  const posts: [number, number][] = [...lanternSpots(l), [sunflowerAt(l).x, sunflowerAt(l).z]];
+  // Room for the dog's body (m) from a post or the bench.
+  const room = 0.35;
+  for (let i = 0; i < 24; i++) {
+    // 0, +15°, -15°, +30°, ...
+    const a = away + Math.ceil(i / 2) * (i % 2 ? 1 : -1) * (Math.PI / 12);
+    const x = key.x + Math.cos(a) * d;
+    const z = key.z + Math.sin(a) * d;
+    const p = collide(l, x, z);
+    if (p.x !== x || p.z !== z) continue;
+    if (Math.abs(x - bench.x) < BENCH.half + room && z > bench.z - BENCH.back - room && z < bench.z + BENCH.front + room) continue;
+    if (posts.some(([px, pz]) => Math.hypot(x - px, z - pz) < room)) continue;
+    return [x, 0, z];
+  }
+  // Every key spot has open ground round it (world.test.ts).
+  throw new Error("No room beside the key");
 }
 
 type Rect = [minX: number, maxX: number, minZ: number, maxZ: number];

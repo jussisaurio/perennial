@@ -7,12 +7,12 @@ describe("visitor texture cells", () => {
     // Any atlas size: 23 cells is about the walk's, and its fractions do not round evenly in float32.
     const cells = 23;
     for (let cell = 0; cell < cells; cell++) {
-      const uv = new THREE.InstancedBufferAttribute(new Float32Array(2), 2);
-      showCell(uv, cell === 0 ? 1 : 0, cells); // start somewhere else
+      const uv = new THREE.InstancedBufferAttribute(new Float32Array(4), 4);
+      showCell(uv, cell === 0 ? 1 : 0, cells, false); // start somewhere else
       const before = uv.version;
-      showCell(uv, cell, cells);
+      showCell(uv, cell, cells, false);
       expect(uv.version).toBe(before + 1); // a change uploads once
-      showCell(uv, cell, cells);
+      showCell(uv, cell, cells, false);
       expect(uv.version).toBe(before + 1); // the same cell again: no upload
     }
   });

@@ -2,7 +2,8 @@
 // front-left one, where the bed's sign is. It plays "statues" (gnomePose): it
 // faces you while you look at it, and its name shows only then. Its lantern
 // is lit at dusk and night, with a small glow. Called (#377), it freezes
-// where it is for a while, its name hidden: only a garden gnome.
+// where it is for a while, its name hidden: only a garden gnome. Sent
+// somewhere (#362: the bench), it walks there, but only while you do not see it.
 //
 // On some days it hides instead (#379, hide.ts): behind a plant, under the
 // bench, on the sign... Its name never shows while it hides. Found (a tap, or
@@ -13,10 +14,12 @@ import { daily } from "../../core/day";
 import { hideout } from "../hide";
 import { GNOME_FALLEN, GNOME_PAD, GNOME_PEEK, gnomeArt } from "../visitorArt";
 import { gnomePose, gnomeTag, type GnomePose } from "../visitors";
-import { bodyAt, type Body, type VisitorKind } from "./kind";
+import { bodyAt, there, walkHome, walkOn, type Body, type VisitorKind, type Walk } from "./kind";
 
 /** How long it stays frozen after a call (s). */
 const FREEZE_S = 6;
+/** Sent somewhere (#362: to the bench), it walks there this fast (m/s), only while it is off your screen (#802). */
+const WALK = 0.5;
 
 const CORNERS: readonly [number, number][] = [
   [1, 1],
@@ -46,7 +49,7 @@ export const gnome: VisitorKind<Look> = {
   tagRange: 7,
   // The lantern hangs 7.5 px right of the middle and 4.5 px up in its cell.
   glow: { dx: 7.5 / 32, dy: 4.5 / 32, size: 0.3 },
-  arrive({ layout, spots, now, age, reducedMotion }) {
+  arrive({ layout, spots, ground, now, age, reducedMotion }) {
     const hide = hideout(layout, spots, age, now);
     let body: Body<Look>;
     if (hide) {
@@ -66,6 +69,8 @@ export const gnome: VisitorKind<Look> = {
     /** Frozen by a call until then (elapsed s). */
     let frozen = -1;
     let dark = false;
+    /** On its way to its spot (onVisit); null once it is there. */
+    let walk: Walk | null = null;
     /** When it was found and fell over (elapsed s); null while it hides, and on a day it did not. */
     let fell: number | null = null;
     /** Its lantern shows only while it stands here: hiding, it would give it away; lying, it is not where the glow goes. */
@@ -87,7 +92,7 @@ export const gnome: VisitorKind<Look> = {
         dark = c.dark;
         show();
       },
-      step({ elapsed }, inView) {
+      step({ dt, elapsed }, inView) {
         if (body.hiding || !body.visible) return;
         if (fell !== null) {
           // Up in surprise, then flat on its back with one small bounce.
@@ -104,6 +109,8 @@ export const gnome: VisitorKind<Look> = {
           [frozen, seen, since] = [-1, inView, elapsed];
           show();
         }
+        // Statues: it walks only while you cannot see it. With reduced motion it is just there.
+        if (walk && (reducedMotion || !inView) && walkOn(body, walk, reducedMotion ? Infinity : WALK * dt)) walk = null;
         if (inView !== seen) [seen, since] = [inView, elapsed];
         const t = elapsed - since;
         const next = gnomePose(pose, inView, inView ? 0 : t, inView ? t : 0);
@@ -129,6 +136,7 @@ export const gnome: VisitorKind<Look> = {
         body.hid = null;
         fell = null;
         pose = "front";
+        walk = there(body) ? null : walkHome(ground, body);
         show();
       },
     };

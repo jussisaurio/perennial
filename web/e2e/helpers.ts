@@ -328,3 +328,48 @@ export function standBy(page: Page, p: { x: number; y: number; z: number }, metr
     { p, metres },
   );
 }
+
+type TrackScene = {
+  elapsed: number;
+  layout: { beds: { x: number; z: number; w: number; d: number }[] };
+  guests: { sprites: { v: { id: string }; body: { x: number; y: number; z: number } }[] };
+};
+type Tracked = { __garden: TrackScene; __tracks: Record<string, [number, number, number][]> };
+
+/** From now, record where each of these visitors is drawn on every frame (#802). */
+export function trackVisitors(page: Page, ids: string[]) {
+  return page.evaluate((ids) => {
+    const w = window as unknown as Tracked;
+    w.__tracks = {};
+    const bodies = ids.map((id) => {
+      w.__tracks[id] = [];
+      return [w.__tracks[id], w.__garden.guests.sprites.find((g) => g.v.id === id)!.body] as const;
+    });
+    const record = () => {
+      for (const [t, b] of bodies) t.push([b.x, b.y, b.z]);
+      requestAnimationFrame(record);
+    };
+    record();
+  }, ids);
+}
+
+/** A tracked visitor's way so far: its longest move from one frame to the next (m), how far it went in all, and in how many frames it was inside a bed. */
+export function trackOf(page: Page, id: string) {
+  return page.evaluate((id) => {
+    const w = window as unknown as Tracked;
+    const t = w.__tracks[id];
+    let [step, went] = [0, 0];
+    for (let i = 1; i < t.length; i++) {
+      const d = Math.hypot(t[i][0] - t[i - 1][0], t[i][1] - t[i - 1][1], t[i][2] - t[i - 1][2]);
+      [step, went] = [Math.max(step, d), went + d];
+    }
+    const inBed = t.filter(([x, , z]) => w.__garden.layout.beds.some((b) => Math.abs(x - b.x) < b.w / 2 && Math.abs(z - b.z) < b.d / 2)).length;
+    return { step, went, inBed };
+  }, id);
+}
+
+/** Wait until `s` seconds of the garden's own time have gone by: CI draws few frames a second. */
+export async function gameSeconds(page: Page, s: number) {
+  const from = await page.evaluate(() => (window as unknown as Tracked).__garden.elapsed);
+  await page.waitForFunction((until) => (window as unknown as Tracked).__garden.elapsed >= until, from + s, { timeout: 30_000 });
+}

@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { yieldToBrowser } from "../lib/yield";
-import { along, BED_H, benchAt, collide, DOOR_HALF, DOOR_LINES, DOOR_SPOKEN, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, type BackWay, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
+import { along, BED_H, BENCH, benchAt, besideKey, collide, DOOR_HALF, DOOR_LINES, DOOR_SPOKEN, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, type BackWay, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
 import { standAt, wayNear, type Ground } from "./ground";
 import { benchLine, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
@@ -249,6 +249,8 @@ export class GardenScene {
   private last = performance.now();
   private elapsed = 0;
   private frame = 0;
+  /** The walk is drawn: from now on a visitor sent somewhere goes there in its own way (#802). */
+  private started = false;
   private disposed = false;
   private yaw = 0;
   private pitch = -0.2;
@@ -321,6 +323,8 @@ export class GardenScene {
   private lapse = 0;
   private readonly lapseNow: Look = { from: "day", to: "day", k: 0 };
   private come = new Set<Companion>();
+  /** Who is on the way to the bench, not there yet (#802). */
+  private onWay = new Set<Companion>();
   private seatView = { yaw: 0, pitch: 0, looked: false };
   private turnTo: { yaw: number; pitch: number; at: number } | null = null;
   private gnomeSays: number | null = null;
@@ -597,8 +601,9 @@ export class GardenScene {
     // Draws no random numbers either.
     this.carry.build();
     this.scene.add(this.carry.root);
-    // A key left waiting a few days (#334): the dog, if it is here today, sits by it.
-    if (this.keyHelp?.visitors && this.door.key) this.guests.visit("dog", [this.door.key.x - 0.4, 0, this.door.key.z + 0.2]);
+    // A key left waiting a few days (#334): the dog, if it is here today, sits by it from the start (#802). At dusk and night the bird too (birdByKey).
+    const key = this.door.key;
+    if (this.keyHelp?.visitors && key) this.guests.place("dog", besideKey(this.layout, key, "dog"), key);
     // Even with the door shut: it may open in this walk.
     this.orchardAtlas = await orchardAtlas;
     // After the visitors: a visitor may sit in the orchard's trees today.
@@ -1087,6 +1092,7 @@ export class GardenScene {
     for (const id of this.come) this.guests.visit(id, null);
     const bird = this.come.has("bird");
     this.come.clear();
+    this.onWay.clear();
     // The bird may have been waiting by a key before it came.
     if (bird) this.birdByKey();
     this.cb.onCompany(null);
@@ -1095,7 +1101,7 @@ export class GardenScene {
   /**
    * One frame of sitting on the bench (#362), before the camera moves: time
    * speeds up after a while (bench.ts), and visitors here today come to sit
-   * with you, each once its place is out of view, so you never see one come.
+   * with you: you can watch each one come (#802).
    * The head turns to whoever came (not with reduced motion, nor once you have
    * looked round yourself). Standing up, time runs back to the time chosen.
    */
@@ -1106,7 +1112,8 @@ export class GardenScene {
       race = lapseRate(this.sat);
       this.lapse += race * dt;
       const who = due(this.sat, this.here, this.come);
-      if (who && !this.inView(who)) this.sitBeside(who);
+      if (who) this.sitBeside(who);
+      for (const id of this.onWay) if (this.guests.arrived(id)) this.sitsWith(id);
       if (this.gnomeSays !== null && this.sat >= this.gnomeSays) {
         this.gnomeSays = null;
         this.guests.say("gnome", GNOME_WORD[this.lang]);
@@ -1141,19 +1148,19 @@ export class GardenScene {
     this.tint();
   }
 
-  /** Is a visitor's place on the bench in view now? */
-  private inView(who: Companion): boolean {
-    const [dx, dy, dz] = COMPANY_SPOT[who];
-    const p = this.tmp.set(this.bench.x + dx, dy + 0.15, this.bench.z + dz).project(this.camera);
-    return p.z < 1 && Math.abs(p.x) < 1 && Math.abs(p.y) < 1;
-  }
-
-  /** A visitor comes to sit with you on the bench (#362), and the head turns to it. The gnome says its word once you see it. */
+  /** A visitor comes to sit with you on the bench (#362), on its way there in its own way (#802). */
   private sitBeside(who: Companion) {
     const [dx, dy, dz] = COMPANY_SPOT[who];
-    const at: [number, number, number] = [this.bench.x + dx, dy, this.bench.z + dz];
-    this.guests.visit(who, at, true);
+    this.guests.visit(who, [this.bench.x + dx, dy, this.bench.z + dz], true);
     this.come.add(who);
+    this.onWay.add(who);
+  }
+
+  /** A visitor got to the bench: a screen reader hears it, and the head turns to it. The gnome says its word once you see it. */
+  private sitsWith(who: Companion) {
+    this.onWay.delete(who);
+    const [dx, dy, dz] = COMPANY_SPOT[who];
+    const at = [this.bench.x + dx, dy, this.bench.z + dz];
     this.cb.onCompany(who);
     const turn = !this.reducedMotion && !this.seatView.looked;
     if (who === "gnome") this.gnomeSays = this.sat + (turn ? GLANCE.turn : 0);
@@ -1341,7 +1348,7 @@ export class GardenScene {
     this.scene.add(still(bench));
     {
       const { x, z } = bench.position;
-      this.hitBoxes.push({ id: "bench", min: [x - 0.68, 0, z - 0.25], max: [x + 0.68, 0.8, z + 0.22], tag: [x, 0.88, z] });
+      this.hitBoxes.push({ id: "bench", min: [x - BENCH.half, 0, z - BENCH.back], max: [x + BENCH.half, 0.8, z + BENCH.front], tag: [x, 0.88, z] });
     }
     return bench;
   }
@@ -1653,10 +1660,17 @@ export class GardenScene {
     this.flower.params.needsUpdate = true;
   }
 
-  /** A key left waiting a few days (#334): at dusk and night the bird, if it is here today, lands by it; not while it sits with you on the bench (#362). */
+  /**
+   * A key left waiting a few days (#334): at dusk and night the bird, if it is
+   * here today, lands by it; not while it sits with you on the bench (#362).
+   * Before the walk starts (its time is set just before), it is there already (#802).
+   */
   private birdByKey() {
-    const help = this.keyHelp;
-    if (help?.visitors && this.door.key && !this.come.has("bird")) this.guests.visit("bird", this.shown !== "day" ? [this.door.key.x + 0.2, 0, this.door.key.z - 0.1] : null);
+    const key = this.door.key;
+    if (!this.keyHelp?.visitors || !key || this.come.has("bird")) return;
+    const at = this.shown !== "day" ? besideKey(this.layout, key, "bird") : null;
+    if (at && !this.started) this.guests.place("bird", at, key);
+    else this.guests.visit("bird", at);
   }
 
   /** Tint everything unlit and every sprite with tintNow, and fog them with fogNow. Allocates nothing: the time-lapse on the bench (#362) calls it every frame. */
@@ -1918,6 +1932,7 @@ export class GardenScene {
   }
 
   start() {
+    this.started = true;
     const loop = () => {
       if (this.disposed) return;
       this.frame = requestAnimationFrame(loop);

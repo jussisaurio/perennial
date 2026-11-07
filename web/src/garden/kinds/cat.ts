@@ -1,12 +1,13 @@
 // The cat (#17, #209): asleep on the bench or on the shed's step, one or the
 // other each day (#641). It opens one eye when you come near. Called (#377), it flicks
 // one ear and does nothing. About one call in 50 it gets up, walks over, sits
-// at your feet and stares at you, until you walk away; then it goes back.
+// at your feet and stares at you, until you walk away; then it goes back. Sent
+// to the bench beside you (#362), or home again, it walks there.
 
 import { daily, dayNumber } from "../../core/day";
 import { hash32, rng } from "../../lib/seed";
 import { CAT_ASLEEP, CAT_AWAKE, CAT_EAR, CAT_EAR_AWAKE, CAT_STARE } from "../visitorArt";
-import { bodyAt, walkHome, walkOn, walkTo, type VisitorKind, type Walk } from "./kind";
+import { bodyAt, there, walkHome, walkOn, walkTo, type VisitorKind, type Walk } from "./kind";
 
 /** How near you come before it opens an eye (m). */
 const WAKE_RANGE = 2.4;
@@ -42,7 +43,7 @@ export const cat: VisitorKind<Look> = {
     let ear = -1;
     let calls = 0;
     let mode: "home" | "come" | "stare" | "back" = "home";
-    let walk: Walk = { way: [], leg: 0 };
+    let walk: Walk = { way: [], leg: 0, y: 0 };
     const settle = () => {
       mode = "home";
       [body.x, body.y, body.z] = [body.at.x, body.at.y, body.at.z];
@@ -65,7 +66,8 @@ export const cat: VisitorKind<Look> = {
       },
       onVisit(s) {
         settled = s;
-        settle();
+        if (there(body)) settle();
+        else [mode, walk] = ["back", walkHome(ground, body)];
       },
       onCall({ elapsed, x, z }) {
         if (mode !== "home") return { line: "The cat stares at you." };

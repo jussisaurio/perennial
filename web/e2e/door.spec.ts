@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { doorNow, pinDetail, serverRows, standAtDoor, standByKey, waitForSynced } from "./helpers";
+import { doorNow, gameSeconds, pinDetail, serverRows, standAtDoor, standBy, standByKey, trackOf, trackVisitors, waitForSynced } from "./helpers";
 
 // #315: the old door in the hedge. Locked until "key" (llave) brings the key,
 // which hides somewhere in the garden (a different place for each learner);
@@ -320,8 +320,131 @@ test("a key left a few days: at dusk the bird waits by it, and by day it is back
   };
   await comeBackAt("2026-10-11T19:00:00");
   await expect(page.locator(".gw")).toHaveClass(/\bgw-dusk\b/);
-  expect(await birdFromKey()).toBeLessThan(0.5);
+  expect(await birdFromKey()).toBeLessThan(1);
   await comeBackAt("2026-10-11T12:00:00");
   await expect(page.locator(".gw")).toHaveClass(/\bgw-day\b/);
   expect(await birdFromKey()).toBeGreaterThan(1);
+});
+
+// docs/garden-play.md, "The door in the hedge and the key" (#802): the dog waits by the key as a hint you can see, and nobody jumps.
+type Body = { x: number; y: number; z: number; at: { x: number; y: number; z: number } };
+type Guest = { v: { id: string }; home: [number, number, number]; uv: { getZ(i: number): number }; body: Body };
+type KeyScene = {
+  x: number;
+  z: number;
+  yaw: number;
+  pitch: number;
+  camera: unknown;
+  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
+  layout: { bounds: { minX: number; maxX: number; minZ: number; maxZ: number } };
+  door: { key: { x: number; z: number; glint: { material: { depthTest: boolean } } } };
+  guests: { sprites: Guest[] };
+  doorAct(a: string): void;
+};
+
+/** How far a visitor is drawn from the key, from its own place today, and from where it was sent (m). */
+const whereIs = (page: Page, id: string) =>
+  page.evaluate((id) => {
+    const s = (window as unknown as { __garden: KeyScene }).__garden;
+    const g = s.guests.sprites.find((o) => o.v.id === id)!;
+    const b = g.body;
+    const k = s.door.key;
+    return { key: Math.hypot(b.x - k.x, b.z - k.z), home: Math.hypot(b.x - g.home[0], b.y - g.home[1], b.z - g.home[2]), at: Math.hypot(b.x - b.at.x, b.y - b.at.y, b.z - b.at.z) };
+  }, id);
+
+test("key.dog-beside: with the key left four days, the dog sits on open ground beside it, on the side away from the middle of the garden", async ({ page }) => {
+  await keyWaited(page, 4, "&visitors=dog");
+  const dog = await page.evaluate(async () => {
+    const { collide } = await import(/* @vite-ignore */ "/src/garden/world.ts");
+    const s = (window as unknown as { __garden: KeyScene }).__garden;
+    const b = s.guests.sprites.find((o) => o.v.id === "dog")!.body;
+    const k = s.door.key;
+    const L = s.layout.bounds;
+    const p = collide(s.layout as Parameters<typeof collide>[0], b.x, b.z);
+    const away = (b.x - k.x) * (k.x - (L.minX + L.maxX) / 2) + (b.z - k.z) * (k.z - (L.minZ + L.maxZ) / 2);
+    return { open: p.x === b.x && p.z === b.z, away: away > 0 };
+  });
+  expect(dog).toEqual({ open: true, away: true });
+  const { key, at } = await whereIs(page, "dog");
+  expect(key).toBeGreaterThan(0.6);
+  expect(key).toBeLessThan(1);
+  // It sits there from the start.
+  expect(at).toBe(0);
+});
+
+test("key.dog-looks: seen from either side, the dog's picture faces the key", async ({ page }) => {
+  await keyWaited(page, 4, "&visitors=dog");
+  const seenFrom = (side: number) =>
+    page.evaluate(
+      (side) =>
+        new Promise<{ flipped: boolean; keyLeft: boolean }>((done) => {
+          const s = (window as unknown as { __garden: KeyScene }).__garden;
+          const g = s.guests.sprites.find((o) => o.v.id === "dog")!;
+          const [d, k] = [g.body, s.door.key];
+          const len = Math.hypot(k.x - d.x, k.z - d.z);
+          // 3 m out from the dog, square to the line from it to the key, looking at the dog. Forward is -z at yaw 0.
+          const [x, z] = [d.x - ((k.z - d.z) / len) * 3 * side, d.z + ((k.x - d.x) / len) * 3 * side];
+          Object.assign(s, { x, z, yaw: Math.atan2(-(d.x - x), -(d.z - z)), pitch: -0.2 });
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              const onScreen = (px: number, pz: number) => new s.tmp.constructor(px, 0, pz).project(s.camera).x;
+              done({ flipped: g.uv.getZ(0) < 0, keyLeft: onScreen(k.x, k.z) < onScreen(d.x, d.z) });
+            }),
+          );
+        }),
+      side,
+    );
+  const one = await seenFrom(1);
+  const other = await seenFrom(-1);
+  expect(one.keyLeft).not.toBe(other.keyLeft);
+  for (const v of [one, other]) expect(v.flipped).toBe(v.keyLeft);
+});
+
+test("key.glint-hidden: a key left a week glints on the key, hidden by whatever stands in front of it", async ({ page }) => {
+  await keyWaited(page, 8, "&visitors=dog");
+  expect(await page.evaluate(() => (window as unknown as { __garden: KeyScene }).__garden.door.key.glint.material.depthTest)).toBe(true);
+});
+
+test("key.tap-dog: a tap on the dog by the key shows the dog's name, and the key stays on the ground", async ({ page }) => {
+  await keyWaited(page, 4, "&visitors=dog");
+  const dog = await page.evaluate(() => (window as unknown as { __garden: KeyScene }).__garden.guests.sprites.find((o) => o.v.id === "dog")!.body.at);
+  await page.mouse.click(...(await standBy(page, { x: dog.x, y: 0.2, z: dog.z }, 3)));
+  await expect(page.locator(".gw-tag", { hasText: "el perro" })).toBeVisible();
+  expect(await doorNow(page)).toMatchObject({ state: "key", key: true });
+});
+
+test.describe(() => {
+  // The visitors are seen going home, not put there at once.
+  test.use({ reducedMotion: "no-preference" });
+  // On CI's software WebGL (~7 frames a second) the walk takes 10–20 s to open; then the dog waits and trots home in real time.
+  test.describe.configure({ timeout: 60_000 });
+
+  test("key.dog-walks-home: picking up the key, the dog stays a moment, then trots home a short step at a time, never over a bed", async ({ page }) => {
+    await keyWaited(page, 4, "&visitors=dog");
+    await standByKey(page);
+    await trackVisitors(page, ["dog"]);
+    await page.getByRole("button", { name: "Pick up the key" }).click();
+    await expect.poll(async () => (await doorNow(page)).state).toBe("held");
+    await gameSeconds(page, 2);
+    expect((await whereIs(page, "dog")).key).toBeLessThan(1);
+    await expect.poll(async () => (await whereIs(page, "dog")).home, { timeout: 30_000 }).toBeLessThan(0.01);
+    const way = await trackOf(page, "dog");
+    expect(way.step).toBeLessThan(0.6);
+    expect(way.went).toBeGreaterThan(1);
+    expect(way.inBed).toBe(0);
+  });
+
+  test("key.bird-flies-home: at dusk, picking up the key, the bird flies home to its own perch a short way at a time", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
+    await keyWaited(page, 4, "&visitors=bird");
+    expect((await whereIs(page, "bird")).key).toBeLessThan(1);
+    // From farther off than it lets you come: up close it would fly off first.
+    await standByKey(page, 5);
+    await trackVisitors(page, ["bird"]);
+    await page.evaluate(() => (window as unknown as { __garden: KeyScene }).__garden.doorAct("key"));
+    await expect.poll(async () => (await whereIs(page, "bird")).home, { timeout: 30_000 }).toBeLessThan(0.01);
+    const way = await trackOf(page, "bird");
+    expect(way.step).toBeLessThan(0.6);
+    expect(way.went).toBeGreaterThan(1);
+  });
 });

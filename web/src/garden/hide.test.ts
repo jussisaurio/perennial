@@ -177,7 +177,7 @@ describe("the gnome, hiding and found", () => {
 
   test("called to the bench while it hides (#362), it gives up hiding: it stands, and has nothing to say about where it was", () => {
     const g = arrive(hiding);
-    g.onVisit!(true);
+    g.onVisit!(true, 0);
     expect([g.body.hiding, g.body.hid, g.body.frame, g.body.tag]).toEqual([false, null, "front", 1]);
   });
 });

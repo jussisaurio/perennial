@@ -74,6 +74,8 @@ export interface Body<F extends string> {
   says: string | null;
   /** What a screen reader hears about it now, in plain English ("A goat stands on top of the hedge."); null: nothing. */
   status: string | null;
+  /** What it looks at while it sits at its spot (#802: the key it waits by), or null: its art faces the camera's right. */
+  looks: { x: number; z: number } | null;
 }
 
 /** A tap that a visitor may answer. */
@@ -122,10 +124,11 @@ export interface Visitor<F extends string> {
   /** Its answer to a tap, in a bubble instead of its tag and aloud; null shows its tag as usual. */
   onTap?(t: Tap): Reply | null;
   /**
-   * The scene moved it (visit): settle there, whatever it was doing.
+   * The scene gave it a new spot (body.at): go there from where it is drawn, in
+   * its own way (#802: never at once, unless it is drawn there already).
    * `settled`: it sits with you on the bench (#362), so it does not mind you near.
    */
-  onVisit?(settled: boolean): void;
+  onVisit?(settled: boolean, elapsed: number): void;
   /** It was found while it hid (#379): a tap on it, or the action button near it. */
   onFind?(elapsed: number): void;
   /** Something lands in the pond (#358). True when it answers (and so the walk says so). */
@@ -158,34 +161,41 @@ export interface VisitorKind<F extends string = string> {
 
 /** A body standing still at a spot, showing `frame`. */
 export function bodyAt<F extends string>(x: number, y: number, z: number, frame: F): Body<F> {
-  return { at: { x, y, z }, x, y, z, frame, visible: true, turn: 0, tag: 1, glow: false, mute: false, hiding: false, hid: null, says: null, status: null };
+  return { at: { x, y, z }, x, y, z, frame, visible: true, turn: 0, tag: 1, glow: false, mute: false, hiding: false, hid: null, says: null, status: null, looks: null };
 }
 
-/** Within this far of its spot (m), a visitor walking off it comes down to the ground (its spot may be up on a bed or the bench). */
+/** Within this far of where it set off or of its spot (m), a walking visitor comes down to the ground or goes up (a spot may be up on a bed or the bench). */
 const STEP_DOWN = 0.5;
 
-/** A visitor's walk on the ground (#761): its way (ground.ts), and the corner it heads for. */
+/** A visitor's walk on the ground (#761): its way (ground.ts) from where it was drawn, the corner it heads for, and the height it set off from. */
 export interface Walk {
   way: [number, number][];
   leg: number;
+  y: number;
 }
 
 /** A walk from where a visitor is drawn, round whatever is in the way, to `stop` metres from (x, z), or as near as it may come. */
 export function walkTo(ground: Ground, body: Body<string>, x: number, z: number, stop: number): Walk {
-  return { way: wayNear(ground, body.x, body.z, x, z, stop), leg: 1 };
+  return { way: wayNear(ground, body.x, body.z, x, z, stop), leg: 1, y: body.y };
+}
+
+/** Is a body drawn at its spot? */
+export function there(body: Body<string>): boolean {
+  return body.x === body.at.x && body.y === body.at.y && body.z === body.at.z;
 }
 
 /** A walk back to its own spot; the last short step is onto it, as its spot may lie a hair inside a walker's clearance (the heron on the pond's stones). */
 export function walkHome(ground: Ground, body: Body<string>): Walk {
   const way = wayNear(ground, body.x, body.z, body.at.x, body.at.z, 0);
   way.push([body.at.x, body.at.z]);
-  return { way, leg: 1 };
+  return { way, leg: 1, y: body.y };
 }
 
 /**
  * Moves a body's drawn place along its walk by `d` metres (Infinity: there at
- * once), coming down from its spot as it leaves and going back up as it comes
- * home. True once it is at the walk's end. No allocation: it runs every frame.
+ * once), coming down from where it set off (a seat, a step) and going up onto
+ * its spot as it comes near. True once it is at the walk's end. No allocation:
+ * it runs every frame.
  */
 export function walkOn(body: Body<string>, w: Walk, d: number): boolean {
   while (w.leg < w.way.length) {
@@ -201,6 +211,8 @@ export function walkOn(body: Body<string>, w: Walk, d: number): boolean {
     d -= gap;
     w.leg++;
   }
-  body.y = body.at.y * Math.max(0, 1 - Math.hypot(body.x - body.at.x, body.z - body.at.z) / STEP_DOWN);
+  const [sx, sz] = w.way[0];
+  const down = w.y * Math.max(0, 1 - Math.hypot(body.x - sx, body.z - sz) / STEP_DOWN);
+  body.y = Math.max(down, body.at.y * Math.max(0, 1 - Math.hypot(body.x - body.at.x, body.z - body.at.z) / STEP_DOWN));
   return w.leg === w.way.length;
 }

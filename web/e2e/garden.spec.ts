@@ -1,5 +1,5 @@
-import { expect, test } from "./test";
-import { aimAtGround, arrives, pinDetail, plantNearMiddle, settledGardenWidth, startCourse, walker } from "./helpers";
+import { expect, test, type Page } from "./test";
+import { aimAtGround, arrives, gameSeconds, pinDetail, plantNearMiddle, settledGardenWidth, startCourse, trackOf, trackVisitors, walker } from "./helpers";
 
 test("walk-in garden: every word is a plant; next plant by keyboard, listen, and back", async ({ page }) => {
   const errors: string[] = [];
@@ -472,6 +472,84 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await expect.poll(async () => (await scene()).lapse).toBe(0);
   expect(await scene()).toEqual({ lapse: 0, shown: "day", lit: false, birdFromBench: away });
   await expect(status).toHaveText("");
+});
+
+// docs/garden-play.md, "Who comes to sit with you on the bench" (#802): you can watch each one come, and go.
+test.describe(() => {
+  test.use({ reducedMotion: "no-preference" });
+  // On CI's software WebGL (~7 frames a second) the walk takes 10–20 s to open; then the visitors come in real time.
+  test.describe.configure({ timeout: 90_000 });
+  type Sprite = { v: { id: string }; home: [number, number, number]; body: { x: number; y: number; z: number; at: { x: number; y: number; z: number } } };
+  type Bench = { sat: number; x: number; z: number; yaw: number; pitch: number; layout: { pond: { x: number; z: number; r: number } }; guests: { sprites: Sprite[] } };
+  const status = (page: Page) => page.locator(".gw > .sr-only[role=status]");
+
+  /** Open the walk with these visitors, and sit on the bench facing the pond. */
+  async function sitDown(page: Page, visitors: string) {
+    await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+    await pinDetail(page, "low");
+    await page.goto(`/?demo=es:30&visitors=${visitors}#/today`);
+    await page.getByRole("button", { name: "Walk in your garden" }).click();
+    await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+    await page.waitForFunction(() => "__garden" in window);
+    await page.evaluate(() => {
+      const s = (window as unknown as { __garden: Bench }).__garden;
+      const p = s.layout.pond;
+      Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+    });
+    await page.getByRole("button", { name: "Sit on the bench" }).click();
+    await expect(page.getByRole("button", { name: "Stand up" })).toBeVisible();
+  }
+  const sat = (page: Page, n: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden, { sat: n }), n);
+  /** How far a visitor is drawn from its own place (m). */
+  const fromHome = (page: Page, id: string) =>
+    page.evaluate((id) => {
+      const g = (window as unknown as { __garden: Bench }).__garden.guests.sprites.find((o) => o.v.id === id)!;
+      return Math.hypot(g.body.x - g.home[0], g.body.y - g.home[1], g.body.z - g.home[2]);
+    }, id);
+
+  test("visit.bench-walk: the bird and the cat come to the bench a short step at a time, the cat never over a bed, and go home the same way", async ({ page }) => {
+    await sitDown(page, "bird,cat");
+    await trackVisitors(page, ["bird", "cat"]);
+    await sat(page, 9.9);
+    await expect(status(page)).toHaveText("A bird lands on the back of the bench.", { timeout: 30_000 });
+    await sat(page, 19.9);
+    await expect(status(page)).toHaveText("The cat sits beside you.", { timeout: 30_000 });
+    const far = { bird: await fromHome(page, "bird"), cat: await fromHome(page, "cat") };
+    await page.getByRole("button", { name: "Stand up" }).click();
+    for (const id of ["bird", "cat"] as const) await expect.poll(() => fromHome(page, id), { timeout: 30_000 }).toBeLessThan(0.01);
+    for (const id of ["bird", "cat"] as const) {
+      const way = await trackOf(page, id);
+      expect(way.step, id).toBeLessThan(0.6);
+      // There and back, all the way.
+      expect(way.went, id).toBeGreaterThanOrEqual(2 * far[id] - 0.01);
+      if (id === "cat") expect(way.inBed).toBe(0);
+    }
+  });
+
+  test("visit.gnome-statues: the gnome comes to the bench, but never moves while it is on screen", async ({ page }) => {
+    await sitDown(page, "gnome");
+    await trackVisitors(page, ["gnome"]);
+    await sat(page, 39.9);
+    // Look at it: it stays as still as a statue.
+    const lookAt = () =>
+      page.evaluate(() => {
+        const s = (window as unknown as { __garden: Bench }).__garden;
+        const g = s.guests.sprites.find((o) => o.v.id === "gnome")!.body;
+        // Forward is -z at yaw 0.
+        Object.assign(s, { yaw: Math.atan2(-(g.x - s.x), -(g.z - s.z)), pitch: -0.2 });
+        return [g.x, g.z];
+      });
+    await gameSeconds(page, 0.5);
+    const seen = await lookAt();
+    await gameSeconds(page, 2);
+    expect(await lookAt()).toEqual(seen);
+    // Look away, back at the pond: it comes.
+    await page.evaluate(() => Object.assign((window as unknown as { __garden: Bench }).__garden, { yaw: Math.PI, pitch: 0.1 }));
+    await expect(status(page)).toHaveText("The gnome comes over. It says: Bonito.", { timeout: 60_000 });
+    const way = await trackOf(page, "gnome");
+    expect(way.step).toBeLessThan(0.3);
+    expect(way.went).toBeGreaterThan(1);
+  });
 });
 
 test("the controls hint shows in the learner's walk until they first move; the landing page's walk does not use it up (#334)", async ({ page }) => {

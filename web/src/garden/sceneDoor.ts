@@ -100,9 +100,8 @@ export class Door {
       c.mats.add(mesh.material);
       c.scene.add(mesh);
       // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted or fogged: a glint is bright at
-      // dusk too. Drawn over whatever stands in front (a bench leg, a bed): it is the help, so it must not hide.
-      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthTest: false, depthWrite: false, fog: false }));
-      glint.renderOrder = 10;
+      // dusk too. It is on the key, so whatever stands in front hides it, as it hides the key (#802: drawn over the dog by the key, the dog seemed to sparkle).
+      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthWrite: false, fog: false }));
       glint.position.set(x, 0.25, z);
       glint.visible = false;
       c.scene.add(glint);
