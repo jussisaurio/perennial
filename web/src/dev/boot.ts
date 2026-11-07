@@ -8,7 +8,7 @@
 
 import type { ComponentType } from "react";
 import { DECK_LANGS, isDeckLang } from "../deck/langs";
-import type { DemoSize } from "./plan";
+import type { DemoSize } from "perennial-contract";
 
 /** The page to show instead of the app (the story points), or null to open the app. */
 export async function devBoot(): Promise<ComponentType | null> {
@@ -31,7 +31,8 @@ export async function devBoot(): Promise<ComponentType | null> {
     console.warn(`[demo] unknown language "${lang}": use ${DECK_LANGS.join(" or ")}`);
     return null;
   }
-  const size: DemoSize = a === "known" ? { known: Number(b) } : { studied: a ? Number(a) : Infinity };
+  // No count: every deck word.
+  const size: DemoSize = a === "known" ? { known: Number(b) } : a ? { studied: Number(a) } : {};
   // The app renders after this: a failed seed is reported, not a blank page.
   await seedDemo(lang, size).then(
     () => console.info(`[demo] seeded ${lang}`),

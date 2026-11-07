@@ -1,11 +1,12 @@
-// The demo learner's made-up review history (demo.ts uploads it). Pure: the
-// same words, size and `now` give the same reviews.
+// The demo learner's made-up review history. The server makes it and writes it
+// (server/src/demo.ts, #784). Pure: the same words, size and `now` give the same reviews.
 
 import { DAY_MS } from "../core/day";
 import { replay, type Grade } from "../core/fsrs";
 import { fsrs } from "../core/scheduler";
 import { memKey, wordState } from "../core/memory";
 import { COURSE_DEFAULTS } from "../data/rows";
+import { courseNotes } from "../garden/notes/read";
 import { rng } from "../lib/seed";
 
 /** How far back a demo of words studied goes. */
@@ -35,15 +36,18 @@ function planWords(words: readonly { id: string }[], now: number, days: number, 
   // after a lapse and showed as not known (#697). Each word gets at least 2.
   const reviews = age.map((a) => Math.min(40, 2 + Math.floor(((4800 - 2 * words.length) * a) / totalAge)));
   return words.map((w, i) => {
+    // !: one each per word.
+    const wordAge = age[i]!;
+    const share = reviews[i]!;
     // Common words are easier: a quarter of the average lapses and hard answers for "de", 1.75 times for the rarest.
     const hard = 0.25 + (1.5 * i) / words.length;
-    let ts = now - days * DAY_MS * age[i] + r() * DAY_MS * 0.5;
+    let ts = now - days * DAY_MS * wordAge + r() * DAY_MS * 0.5;
     ts = Math.min(ts, now - DAY_MS * 0.1 * r());
     // About 1 in 6 words stopped getting practice at some point.
     const stopAt = r() < 0.17 ? ts + (now - ts) * (0.3 + r() * 0.5) : now;
     const log: WordPlan["log"] = [];
     let known = false;
-    for (let n = 0; n < reviews[i] && ts < stopAt; n++) {
+    for (let n = 0; n < share && ts < stopAt; n++) {
       const x = r();
       // A word the share leaves only 2 reviews is one a learner of this many words
       // often knew before: "I knew it" first. With "remembered", 2 reviews rarely
@@ -51,7 +55,7 @@ function planWords(words: readonly { id: string }[], now: number, days: number, 
       // Only for a story point: in 90 days, "I knew it" puts the second review past
       // now for the newest words, so ?demo=es:800 knew 616 words, not 664, and the
       // way over the stile (620) stayed shut.
-      const grade: Grade = knewFirst && n === 0 && reviews[i] === 2 ? 4 : x < 0.06 * hard ? 1 : x < 0.16 * hard ? 2 : x < 0.92 ? 3 : 4;
+      const grade: Grade = knewFirst && n === 0 && share === 2 ? 4 : x < 0.06 * hard ? 1 : x < 0.16 * hard ? 2 : x < 0.92 ? 3 : 4;
       log.push({ ts: Math.round(ts), grade, ms: 2500 + Math.round(r() * 5000) });
       const st = replay(fsrs, log, COURSE_DEFAULTS.retention, memKey(w.id, "read"))!;
       // As the app counts it from the same reviews (ui/visitors.ts knownWords).
@@ -82,4 +86,12 @@ export function planDemo(words: readonly { id: string }[], size: DemoSize, now: 
     if (n >= words.length) throw new Error(`the deck has too few words for ${size.known} known`);
     n = Math.min(words.length, n + Math.ceil((size.known - known) * 1.2));
   }
+}
+
+/** The demo learner's course: the gardener's notes read, and every review, oldest word first. */
+export function demoHistory(lang: string, words: readonly { id: string }[], size: DemoSize, now: number) {
+  // At a story point, the notes before it were read, as a learner who got there would have; its own is new.
+  const notesRead = "known" in size ? courseNotes(lang).filter((n) => n.unlockAt < size.known).map((n) => n.id) : [];
+  const reviews = planDemo(words, size, now).flatMap((w) => w.log.map((r) => ({ wordId: w.wordId, ...r })));
+  return { notesRead, reviews };
 }

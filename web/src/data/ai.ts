@@ -50,6 +50,7 @@ const message = ApiErrorBody.match({
   please_reload: somethingWrong,
   unknown_word: somethingWrong,
   review_from_the_future: somethingWrong,
+  demo_needs_new_learner: somethingWrong,
   ai_unreachable: somethingWrong,
   ai_error: somethingWrong,
   bad_output: somethingWrong,

@@ -28,7 +28,8 @@ export function dayNumber(t: number | Date): number {
 
 /** One line from a pool: the same all day for this key, a different one tomorrow. */
 export function daily<T>(pool: readonly T[], key: string, now = new Date()): T {
-  return pool[dailyIndex(pool.length, key, now)];
+  // !: dailyIndex is below pool.length (a pool is never empty).
+  return pool[dailyIndex(pool.length, key, now)]!;
 }
 
 /** daily's pick as an index into a pool of this size. */

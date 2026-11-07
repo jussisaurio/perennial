@@ -28,6 +28,8 @@ export const ApiErrorBody = Schema.Union([
   Schema.Struct({ error: Schema.tag("quota"), table: Schema.Literals(["user_word", "user_sentence", "word_state", "reviewsPerDay"]), limit: Schema.Number }),
   Schema.Struct({ error: Schema.tag("unknown_word"), word_id: Schema.String }),
   bare("review_from_the_future"),
+  // The demo learner (/api/demo): only a new anonymous learner can become one.
+  bare("demo_needs_new_learner"),
   // Perennial AI
   Schema.Struct({
     error: Schema.tag("out_of_credits"),
@@ -66,6 +68,7 @@ export const ERROR_STATUS = {
   quota: 429,
   unknown_word: 422,
   review_from_the_future: 422,
+  demo_needs_new_learner: 409,
   out_of_credits: 402,
   slow_down: 429,
   ai_off: 503,
