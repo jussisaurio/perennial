@@ -19,6 +19,10 @@ test("theme choice uses plain words and applies", async ({ page }) => {
   await page.getByRole("tab", { name: "Settings" }).click();
   await page.getByRole("radio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  // The choice is exposed, and shown with a check, not by color alone (#678).
+  await expect(page.getByRole("radio", { name: "Dark" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("radiogroup", { name: "Colors" }).locator("svg")).toHaveCount(1);
+  await expect(page.getByRole("radio", { name: "Dark" }).locator("svg")).toHaveCount(1);
   await page.getByRole("radio", { name: "Light" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(page.getByRole("radio", { name: "Same as my device" })).toBeVisible();
@@ -41,6 +45,20 @@ test("theme choice uses plain words and applies", async ({ page }) => {
   await page.keyboard.press("ArrowLeft");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("tab", { name: "Today" })).toHaveAttribute("aria-selected", "true");
+});
+
+// The suite runs with reduced motion (playwright.config.ts): the device wins, and the switch says so (#678).
+test("when the device asks for less motion, the growing plants switch shows off and says why", async ({ page }) => {
+  await startCourse(page);
+  await page.getByRole("tab", { name: "Settings" }).click();
+  const grow = page.getByRole("switch", { name: "Watch the plant grow after a good answer" });
+  await expect(grow).toHaveAttribute("aria-checked", "false");
+  await expect(grow).toHaveAttribute("aria-disabled", "true");
+  await expect(grow).toHaveAccessibleDescription(/Your device asks for less motion, so this is off/);
+  // Still focusable, so a screen reader hears why; Space does nothing. (Playwright will not click an aria-disabled control.)
+  await grow.focus();
+  await page.keyboard.press("Space");
+  await expect(grow).toHaveAttribute("aria-checked", "false");
 });
 
 test("anonymous learners are invited to add an email; after that the account card shows it", async ({ page }) => {

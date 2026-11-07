@@ -29,7 +29,9 @@ test("sound off: nothing is spoken, speaker buttons hide, and the icon and Setti
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /^Done/ }).click();
   await page.getByRole("tab", { name: "Settings" }).click();
-  await expect(page.getByRole("radio", { name: "Sound off" })).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("radio", { name: "Sound on" }).click();
+  const speak = page.getByRole("switch", { name: "Speak words aloud" });
+  await expect(speak).toHaveAttribute("aria-checked", "false");
+  await speak.click();
+  await expect(speak).toHaveAttribute("aria-checked", "true");
   expect(await page.evaluate(() => localStorage.getItem("sound"))).toBe("on");
 });

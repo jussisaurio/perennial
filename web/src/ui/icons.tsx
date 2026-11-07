@@ -146,6 +146,12 @@ export const CheckIcon = (p: P) => (
   </Icon>
 );
 
+export const DownloadIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 4.5v10M7.5 10.5l4.5 4.5 4.5-4.5M5 19.5h14" />
+  </Icon>
+);
+
 export const AlertIcon = (p: P) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="8.5" />

@@ -94,11 +94,11 @@ test("after I forgot, remembering the word on its retry still waters it", async 
   throw new Error("the forgotten word never came back");
 });
 
-test("the setting 'Next card right away' skips the moment", async ({ page }) => {
+test("turning off the setting skips the moment", async ({ page }) => {
   await page.clock.install();
   await startCourse(page);
   await page.goto("/#/settings");
-  await page.getByRole("radio", { name: "Next card right away" }).click();
+  await page.getByRole("switch", { name: "Watch the plant grow after a good answer" }).click();
   await page.goto("/");
   await page.locator("button.start").click();
   await reveal(page);
@@ -109,7 +109,7 @@ test("the setting 'Next card right away' skips the moment", async ({ page }) => 
   await page.clock.resume();
   // It is kept for this device.
   await page.goto("/#/settings");
-  await expect(page.getByRole("radio", { name: "Next card right away" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("switch", { name: "Watch the plant grow after a good answer" })).toHaveAttribute("aria-checked", "false");
 });
 
 test("the session bar turns the moment off and on, and Settings agrees", async ({ page }) => {
@@ -144,7 +144,7 @@ test("the session bar turns the moment off and on, and Settings agrees", async (
   await page.getByRole("button", { name: "End session" }).click();
   await page.getByRole("button", { name: /^Done/ }).click();
   await page.goto("/#/settings");
-  await expect(page.getByRole("radio", { name: "Next card right away" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("switch", { name: "Watch the plant grow after a good answer" })).toHaveAttribute("aria-checked", "false");
 });
 
 test("the summary replays what grew this chunk, then rests; a tap ends it (#216)", async ({ page }) => {
@@ -176,10 +176,10 @@ test("the summary replays what grew this chunk, then rests; a tap ends it (#216)
   await expect(garden).not.toHaveAttribute("data-replaying", "true");
 });
 
-test("with 'Next card right away' the summary does not replay (#216)", async ({ page }) => {
+test("with the setting off the summary does not replay (#216)", async ({ page }) => {
   await startCourse(page);
   await page.goto("/#/settings");
-  await page.getByRole("radio", { name: "Next card right away" }).click();
+  await page.getByRole("switch", { name: "Watch the plant grow after a good answer" }).click();
   await page.goto("/");
   await page.locator("button.start").click();
   await answer(page, "2");

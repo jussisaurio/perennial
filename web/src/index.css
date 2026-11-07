@@ -119,6 +119,8 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 button:active:not(:disabled) { transform: scale(0.97); }
+/* A long label must not squeeze a button's icon to nothing. */
+button > svg { flex: none; }
 button:disabled { opacity: 0.4; cursor: default; }
 :focus-visible { outline: 2.5px solid var(--persimmon); outline-offset: 2px; }
 button.primary { background: var(--ink); color: var(--paper); box-shadow: 0 6px 18px -10px rgb(0 0 0 / 0.5); }
@@ -186,9 +188,40 @@ input[type="search"]::-webkit-search-cancel-button:hover { background: var(--ink
 .form label { display: grid; gap: 0.4rem; font-size: 0.88rem; font-weight: 500; color: var(--ink-2); }
 .row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 .row > input { flex: 1; }
-.chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.chip { border: 1px solid var(--line); background: var(--card); padding: 0.55rem 1rem; }
-.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+/* Choices are not buttons (#678, docs/accessibility.md): a choice of a few is a sunken track whose chosen
+   option is raised, in bold, with a check; an on/off setting is a switch. Neither looks like a pill button. */
+.segmented {
+  display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.2rem; width: 100%; max-width: 40rem;
+  padding: 0.25rem; border-radius: 14px; background: var(--paper-2); border: 1px solid var(--line);
+}
+/* Room for the check on both sides, so the label stays centred and choosing never changes a width. */
+.segment { position: relative; border-radius: 10px; padding: 0.5rem 1.75rem; min-height: 2.6rem; color: var(--ink-2); line-height: 1.25; text-align: center; white-space: nowrap; }
+.segment:hover { color: var(--ink); background: color-mix(in oklab, var(--paper-2), var(--ink) 5%); }
+.segment[aria-checked="true"] { color: var(--ink); font-weight: 600; background: var(--card); border-color: var(--line); box-shadow: 0 2px 8px -4px rgb(0 0 0 / 0.25); }
+/* In the dark the card is almost the track's colour: lift the chosen option, as the chosen tab is lifted. */
+:root[data-theme="dark"] .segment[aria-checked="true"] { background: color-mix(in oklab, var(--card), var(--ink) 14%); border-color: transparent; }
+.segment > svg { position: absolute; left: 0.6rem; top: 50%; translate: 0 -50%; }
+/* On a phone three long labels do not fit in a row: the options stack, as a short list. */
+@media (max-width: 640px) {
+  .segmented:not(.words-view) { display: grid; grid-auto-flow: row; }
+  .segmented:not(.words-view) .segment { justify-content: flex-start; padding-left: 2.2rem; text-align: left; }
+}
+.switch-row {
+  display: flex; justify-content: space-between; gap: 1rem; width: 100%; max-width: 40rem; text-align: left; font-weight: 500;
+  padding: 0.75rem 0.85rem 0.75rem 1rem; border-radius: 14px; background: var(--card); border-color: var(--line);
+}
+.switch-row:hover .switch { border-color: var(--ink-2); }
+.switch-row[aria-disabled="true"] { cursor: default; color: var(--muted); }
+.switch-row:active[aria-disabled="true"] { transform: none; }
+/* The track's edge is --muted (3:1 or more on the card in both themes, WCAG 1.4.11); on, it fills with leaf and the thumb moves right and shows a check. */
+.switch { flex: none; position: relative; width: 2.9rem; height: 1.75rem; border-radius: 999px; border: 1.5px solid var(--muted); transition: background 0.2s, border-color 0.2s; }
+.switch-thumb {
+  position: absolute; top: 50%; left: 0.2rem; width: 1.15rem; height: 1.15rem; border-radius: 50%; translate: 0 -50%;
+  display: grid; place-items: center; background: var(--muted); color: var(--leaf); transition: left 0.2s var(--ease), width 0.2s var(--ease), height 0.2s var(--ease), background 0.2s;
+}
+.switch-row[aria-checked="true"] .switch { background: var(--leaf); border-color: var(--leaf); }
+.switch-row[aria-checked="true"] .switch-thumb { left: calc(100% - 1.5rem); width: 1.3rem; height: 1.3rem; background: var(--card); }
+.switch-row[aria-disabled="true"] .switch { border-style: dashed; }
 /* Options of one choice, or a pair of buttons: equal widths, in one row. On a phone they stack, each as wide as the column. */
 .even { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); max-width: 34rem; }
 .even > * { white-space: nowrap; }
@@ -518,7 +551,8 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .words-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.6rem; margin-bottom: 0.9rem; }
 .words-bar .search { flex: 1 1 0; min-width: 0; }
 .words-bar select { flex: none; width: auto; }
-.words-bar .words-view { flex: none; flex-wrap: nowrap; }
+.words-bar .words-view { flex: none; width: auto; }
+.words-view .segment { min-height: 0; padding-block: 0.3rem; }
 @media (max-width: 560px) {
   .words-bar .search { flex-basis: 100%; }
   .words-bar select { flex: 1 1 0; }
