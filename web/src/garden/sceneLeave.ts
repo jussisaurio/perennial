@@ -38,6 +38,12 @@ const PRINT = { size: 0.14, step: 0.32, side: 0.05 };
 /** The shed: its back wall is this tall, the shelf's board and the hooks this high, the hooks this far apart along the wall; its roof slopes down to the back by `tilt` (rad). */
 const SHED = { h: 1.7, half: 0.8, depth: 0.7, step: 0.08, board: 0.92, hook: 1.38, gap: 0.45, tilt: 0.18 };
 
+/** The middle of the shed's step, on top of it (spots.ts shedStep). */
+export function shedStep(l: Layout): [number, number, number] {
+  const s = shedAt(l);
+  return [s.x - SHED.depth - 0.1, SHED.step, s.z];
+}
+
 /** A place on the shed's roof, a little toward its front and its near end (#376: the goat stands there). */
 export function shedRoof(l: Layout): [number, number, number] {
   const s = shedAt(l);

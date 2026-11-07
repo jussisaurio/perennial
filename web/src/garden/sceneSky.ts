@@ -17,6 +17,8 @@ import * as T from "./textures";
 
 /** The far hills: a ring of this radius and height, its middle this high, the texture repeated this often round it. pickScenery (scene.ts) uses it too, for the ring's shape. */
 export const HILLS = { radius: 150, height: 34, y: 10, repeat: 4 };
+/** The sky dome's radius, round the world's middle. */
+export const SKY_R = 240;
 const UP = new THREE.Vector3(0, 1, 0);
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
@@ -167,11 +169,11 @@ export class SkyWater implements Part {
   private buildSky(c: BuildCtx, cloudTex: THREE.Texture) {
     const { rand } = c;
     this.skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false });
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(240, 16, 12), this.skyMat);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(SKY_R, 16, 12), this.skyMat);
     dome.renderOrder = -2;
     c.scene.add(still(dome));
     // Just inside the dome, so it draws over it.
-    this.nextSky = new THREE.Mesh(new THREE.SphereGeometry(238, 16, 12), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false, transparent: true }));
+    this.nextSky = new THREE.Mesh(new THREE.SphereGeometry(SKY_R - 2, 16, 12), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, depthWrite: false, transparent: true }));
     this.nextSky.renderOrder = -2;
     this.nextSky.visible = false;
     c.scene.add(still(this.nextSky));

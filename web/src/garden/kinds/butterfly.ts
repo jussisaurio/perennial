@@ -1,5 +1,5 @@
-// The butterfly (#209): resting on top of its word's plant (low by the stem
-// when the plant droops). Now and then it lifts off, flapping, and settles
+// The butterfly (#209): resting on top of today's bloom (#641; low by the stem
+// when the plant droops). With nothing in bloom, it stays away. Now and then it lifts off, flapping, and settles
 // again. It goes at night, like the garden's own. Called (#377), it lifts
 // off higher and lands again. With reduced motion it rests, wings open.
 
@@ -17,9 +17,9 @@ export const butterfly: VisitorKind<Look> = {
   art: { open: BUTTERFLY, closed: BUTTERFLY_CLOSED },
   hit: [0.17, 0.22, 0.2],
   top: 0.4,
-  arrive({ home, reducedMotion }) {
-    if (!home) return null;
-    const body = bodyAt<Look>(home.x + 0.03, home.thirsty ? home.soil + 0.12 : home.top, home.z + 0.06, "open");
+  arrive({ bloom, reducedMotion }) {
+    if (!bloom) return null;
+    const body = bodyAt<Look>(bloom.x + 0.03, bloom.thirsty ? bloom.soil + 0.12 : bloom.top, bloom.z + 0.06, "open");
     /** When it was last called (elapsed s). */
     let flown = -Infinity;
     return {

@@ -17,7 +17,7 @@ import { SceneVisitors, type Hider } from "./sceneVisitors";
 import { LANTERN_GLASS_Y, RAIL, type Ledge, type Spots } from "./spots";
 import { conditions } from "./conditions";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
-import { HILLS, SkyWater } from "./sceneSky";
+import { HILLS, SKY_R, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
 import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
@@ -25,7 +25,7 @@ import { NAME_NEAR, Plants } from "./scenePlants";
 import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
-import { LEAVE_STAND, LeaveItOut, shedRoof, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
+import { LEAVE_STAND, LeaveItOut, shedRoof, shedStep, type LeaveAct, type LeaveDone, type LeaveTarget } from "./sceneLeave";
 import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
 import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { echo, echoDate, type Met } from "./well";
@@ -228,7 +228,8 @@ function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
 export class GardenScene {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
-  private camera = new THREE.PerspectiveCamera(62, 1, 0.1, 260);
+  // Far enough to see the sky dome from anywhere inside the hills: a big garden's far corner is well off the world's middle (#641).
+  private camera = new THREE.PerspectiveCamera(62, 1, 0.1, SKY_R + HILLS.radius);
   private last = performance.now();
   private elapsed = 0;
   private frame = 0;
@@ -807,6 +808,8 @@ export class GardenScene {
       sign,
       [b.maxX - 0.06, RAIL, (b.maxZ + first.z) / 2],
       [b.minX + 0.06, RAIL, first.z - 1],
+      // On top of the hedge, right of the door (the goat's place is to the left).
+      [L.gate.x + 2.2, HEDGE.height + 0.12, b.maxZ + HEDGE.gap + 0.25],
       ...boards.slice(1),
     ];
     // Only when the walk starts with the door open: a visitor the learner may be looking at
@@ -824,7 +827,7 @@ export class GardenScene {
       { on: "sign", at: [sx - 0.3, sy, sz] },
       { on: "bench", at: [this.bench.x + 0.15, BENCH_BACK, this.bench.z - 0.2] },
     ];
-    return { bench: this.bench, pads, lanterns: this.lanterns.spots, perches, sign, trees, orchard, piles, ledges };
+    return { bench: this.bench, shedStep: shedStep(L), pads, lanterns: this.lanterns.spots, perches, sign, trees, orchard, piles, ledges };
   }
 
   /** The ray from the eye through a point on the canvas (CSS pixels). */

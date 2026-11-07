@@ -185,11 +185,12 @@ export class Plants {
     const soilTex = T.pixelTexture(T.soil(), true);
     const wood: THREE.BufferGeometry[] = [];
     const soil: THREE.BufferGeometry[] = [];
-    // Every bed's sign on one canvas, one texture and one material; each board shows its own cell.
-    const atlas = T.signs(L.beds.map((bed) => bed.label));
+    // Every bed sign on one canvas, one texture and one material; each board shows its own cell.
+    const atlas = T.signs(L.beds.flatMap((bed) => bed.label ?? []));
     const signMat = mat(T.pixelTexture(atlas));
     const rows = atlas.height / T.SIGN.h;
-    for (const [n, bed] of L.beds.entries()) {
+    let sign = 0;
+    for (const bed of L.beds) {
       const box = new THREE.BoxGeometry(bed.w, BED_H, bed.d);
       // Each face's texture repeat (faces +x, -x, +y, -y, +z, -z), in its UVs, so one material draws every bed.
       const repeat = [[bed.d / 1.2, 1], [bed.d / 1.2, 1], [bed.w, bed.d], [bed.w, bed.d], [bed.w / 1.2, 1], [bed.w / 1.2, 1]];
@@ -202,6 +203,12 @@ export class Plants {
       wood.push(faces(box, [0, 1, 4, 5]));
       soil.push(faces(box, [2, 3]));
       c.hitBoxes.push({ id: "bed", min: [bed.x - bed.w / 2, 0, bed.z - bed.d / 2], max: [bed.x + bed.w / 2, BED_H, bed.z + bed.d / 2], tag: null });
+      // Only the first bed of a month has a sign (world.ts layout).
+      if (bed.label === null) {
+        yield;
+        continue;
+      }
+      const n = sign++;
       // Just outside the front-left corner, turned toward the path, so it never hides a plant.
       const sx = bed.x - bed.w / 2 - 0.3;
       const sz = bed.z + bed.d / 2 + 0.3;

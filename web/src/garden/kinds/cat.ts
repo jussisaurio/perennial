@@ -1,9 +1,9 @@
-// The cat (#17, #209): curled up at the foot of its word's plant, or asleep
-// on the bench. It opens one eye when you come near. Called (#377), it flicks
+// The cat (#17, #209): asleep on the bench or on the shed's step, one or the
+// other each day (#641). It opens one eye when you come near. Called (#377), it flicks
 // one ear and does nothing. About one call in 50 it gets up, walks over, sits
 // at your feet and stares at you, until you walk away; then it goes back.
 
-import { dayNumber } from "../../core/day";
+import { daily, dayNumber } from "../../core/day";
 import { hash32, rng } from "../../lib/seed";
 import { CAT_ASLEEP, CAT_AWAKE, CAT_EAR, CAT_EAR_AWAKE, CAT_STARE } from "../visitorArt";
 import { besideYou, bodyAt, moveToward, type VisitorKind } from "./kind";
@@ -29,10 +29,15 @@ export const cat: VisitorKind<Look> = {
   id: "cat",
   art: { asleep: CAT_ASLEEP, awake: CAT_AWAKE, ear: CAT_EAR, earAwake: CAT_EAR_AWAKE, stare: CAT_STARE },
   top: 0.45,
-  arrive({ spots, home, now, reducedMotion }) {
+  arrive({ spots, now, reducedMotion }) {
     /** Sitting with you on the bench (#362): it does not open an eye. */
     let settled = false;
-    const body = home ? bodyAt<Look>(home.x + 0.2, home.soil, home.z + 0.12, "asleep") : bodyAt<Look>(spots.bench.x + 0.18, 0.45, spots.bench.z + 0.02, "asleep");
+    const [sx, sy, sz] = spots.shedStep;
+    const body =
+      daily(["bench", "step"] as const, "visitor-cat-spot", now) === "bench"
+        ? bodyAt<Look>(spots.bench.x + 0.18, 0.45, spots.bench.z + 0.02, "asleep")
+        : // At the step's far end, clear of the basket.
+          bodyAt<Look>(sx, sy, sz + 0.4, "asleep");
     /** Its ear is flat until then (elapsed s); calls so far in this walk; on its rare walk: to you ("come"), sitting ("stare"), going back. */
     let ear = -1;
     let calls = 0;

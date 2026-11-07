@@ -72,12 +72,17 @@ test("the action button shakes the plant ahead: ser's forms fall as petals, and 
 
 test("a long press on a word with no other forms drops one leaf, and opens no card", async ({ page }) => {
   await openWalk(page);
-  const [x, y] = await standBy(page, "y");
+  // A word with no other forms, in the bed's front row so no other plant stands in front of it (beds fill from the front, #641).
+  const lemma = await page.evaluate(() => {
+    const ps = (window as unknown as { __garden: ShakeScene }).__garden.layout.plants.filter((p) => p.forms.every((f) => f === p.lemma));
+    return ps.reduce((a, b) => (b.z > a.z ? b : a)).lemma;
+  });
+  const [x, y] = await standBy(page, lemma);
   await page.mouse.move(x, y);
   await page.mouse.down();
   await expect(page.locator(".gw-petal svg")).toBeVisible();
   await page.mouse.up();
-  await expect(status(page)).toHaveText("y shakes. One leaf falls.");
+  await expect(status(page)).toHaveText(`${lemma} shakes. One leaf falls.`);
   await expect(page.locator(".gw-petal")).toHaveCount(1);
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });

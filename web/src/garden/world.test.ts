@@ -1,15 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { rng } from "../lib/seed";
+import { shedAt } from "./leave";
 import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
-import { along, collide, DOOR_HALF, groupOf, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
+import { along, benchAt, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
 
+const DAY = 86_400_000;
 const plant = (i: number, pos = "noun"): GardenPlant => ({
   id: `w${i}`,
   lemma: `word${i}`,
   gloss: "",
   pos,
   rank: i,
+  // A few words a day.
+  planted: Math.floor(i / 6) * DAY,
   s: 10,
   r: 0.95,
   stage: "bloom",
@@ -20,35 +24,92 @@ const plant = (i: number, pos = "noun"): GardenPlant => ({
 });
 
 describe("garden layout", () => {
-  test("groups words by kind, one row of beds per kind", () => {
-    expect(groupOf("Noun")).toBe("Nouns");
-    expect(groupOf("prep")).toBe("Small words");
-    expect(groupOf("")).toBe("Other words");
-    expect(groupOf("Adjective")).toBe("Adjectives"); // an AI-written word of your own may spell it out
-    expect(groupOf("interj")).toBe("Other words");
-    const l = layout([plant(1), plant(2, "verb"), plant(3, "adj")]);
-    expect(l.beds.map((b) => b.label)).toEqual(["Nouns", "Verbs", "Adjectives"]);
-    expect(new Set(l.beds.map((b) => b.z)).size).toBe(3);
+  test("words take beds in the order they were first planted; ties go to the commoner word", () => {
+    // Planted out of rank order: the late common word goes after the early rare one.
+    const l = layout([{ ...plant(5), planted: DAY }, { ...plant(1), planted: 2 * DAY }, { ...plant(9), planted: DAY }]);
+    // All three in the front row, left to right.
+    const order = [...l.plants].sort((a, b) => a.x - b.x).map((p) => p.id);
+    expect(order).toEqual(["w5", "w9", "w1"]);
   });
 
-  test("big groups get more beds; common words are nearest the gate", () => {
-    const l = layout(Array.from({ length: 70 }, (_, i) => plant(i)));
-    expect(l.beds.map((b) => b.label)).toEqual(["Nouns", "Nouns · 2", "Nouns · 3"]);
-    const first = l.plants.find((p) => p.rank === 0)!;
-    const last = l.plants.find((p) => p.rank === 29)!;
-    expect(first.bed).toBe(0);
-    expect(first.z).toBeGreaterThan(last.z);
+  test("adding words never moves a plant or a bed, over 2,000 words planted a few a day", () => {
+    const all = Array.from({ length: 2000 }, (_, i) => plant(i));
+    const seen = new Map<string, { x: number; z: number; bed: number }>();
+    let beds: { x: number; z: number }[] = [];
+    for (let n = 1; n <= all.length; n += 7) {
+      const l = layout(all.slice(0, n));
+      for (const p of l.plants) {
+        const was = seen.get(p.id);
+        if (was) expect({ x: p.x, z: p.z, bed: p.bed }).toEqual(was);
+        else seen.set(p.id, { x: p.x, z: p.z, bed: p.bed });
+      }
+      expect(l.beds.slice(0, beds.length).map((b) => ({ x: b.x, z: b.z }))).toEqual(beds);
+      beds = l.beds.map((b) => ({ x: b.x, z: b.z }));
+    }
+    expect(seen.size).toBeGreaterThan(1990);
+  });
+
+  test("a word set aside keeps its spot empty, so no other plant moves, and gets it back", () => {
+    const all = Array.from({ length: 50 }, (_, i) => plant(i));
+    const full = layout(all);
+    const gap = layout(all.filter((p) => p.id !== "w3"), [all[3]]);
+    expect(gap.plants.find((p) => p.id === "w3")).toBeUndefined();
+    expect(gap.plants).toEqual(full.plants.filter((p) => p.id !== "w3"));
+  });
+
+  test("beds go along a path from the gate, clear of the pond, the bench, the shed, the hedge and the orchard", () => {
+    for (const n of [1, 30, 200, 2000]) {
+      const l = layout(Array.from({ length: n }, (_, i) => plant(i)));
+      const [first] = l.beds;
+      expect(first.x).toBe(l.gate.x);
+      const bench = benchAt(l);
+      const shed = shedAt(l);
+      for (const [i, b] of l.beds.entries()) {
+        // Inside the fence with room to walk round it.
+        expect(b.x - b.w / 2).toBeGreaterThan(l.bounds.minX + 1);
+        expect(b.x + b.w / 2).toBeLessThan(l.bounds.maxX - 1);
+        expect(b.z - b.d / 2).toBeGreaterThan(l.bounds.minZ + 1);
+        // Behind the front yard, where the pond, the bench and the shed are.
+        expect(b.z + b.d / 2).toBeLessThan(l.pond.z - l.pond.r - 1);
+        expect(b.z + b.d / 2).toBeLessThan(bench.z - 0.5);
+        expect(b.z + b.d / 2).toBeLessThan(shed.z - 2);
+        // Next to the bed before it, so the path winds on from bed to bed.
+        if (i > 0) {
+          const p = l.beds[i - 1];
+          expect(Math.abs(p.x - b.x) / (b.w + 1) + Math.abs(p.z - b.z) / (b.d + 1)).toBeLessThan(1.5);
+        }
+      }
+    }
+  });
+
+  test("a 2,000-word garden lays out in a few milliseconds", () => {
+    const all = Array.from({ length: 2000 }, (_, i) => plant(i));
+    layout(all);
+    const t = performance.now();
+    for (let i = 0; i < 10; i++) layout(all);
+    expect((performance.now() - t) / 10).toBeLessThan(5);
+  });
+
+  test("a sign where a month starts, with the year once the garden is over a year old", () => {
+    const oct = new Date(2026, 9, 3).getTime();
+    const nov = new Date(2026, 10, 2).getTime();
+    // Two beds of October, one of November.
+    const ps = Array.from({ length: 70 }, (_, i) => ({ ...plant(i), planted: i < 60 ? oct + i : nov + i }));
+    expect(layout(ps).beds.map((b) => b.label)).toEqual(["October", null, "November"]);
+    const later = { ...plant(70), planted: new Date(2027, 9, 5).getTime() };
+    expect(layout([...ps, later]).beds.map((b) => b.label)).toEqual(["October 2026", null, "November 2026"]);
+    expect(layout([]).beds.map((b) => b.label)).toEqual(["Your first words grow here"]);
   });
 
   test("every plant sits inside its bed, and the layout is stable", () => {
-    const ps = Array.from({ length: 200 }, (_, i) => plant(i, ["noun", "verb", "adj", ""][i % 4]));
+    const ps = Array.from({ length: 200 }, (_, i) => plant(i));
     const a = layout(ps);
     for (const p of a.plants) {
       const b = a.beds[p.bed];
       expect(Math.abs(p.x - b.x)).toBeLessThan(b.w / 2);
       expect(Math.abs(p.z - b.z)).toBeLessThan(b.d / 2);
     }
-    expect(layout(ps).plants).toEqual(a.plants);
+    expect(layout([...ps].reverse()).plants).toEqual(a.plants);
   });
 
   test("an empty garden still has a bed to look at", () => {

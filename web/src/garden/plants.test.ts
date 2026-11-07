@@ -53,8 +53,9 @@ describe("garden plants", () => {
   const deck = { words } as unknown as LoadedDeck;
 
   test("a showcase word is the same plant in a small showcase and a big one", () => {
-    const small = showcasePlants(deck, 64).plants;
-    const big = new Map(showcasePlants(deck, 160).plants.map((p) => [p.id, p]));
+    const now = Date.UTC(2026, 9, 15, 12);
+    const small = showcasePlants(deck, 64, now).plants;
+    const big = new Map(showcasePlants(deck, 160, now).plants.map((p) => [p.id, p]));
     expect(small).toHaveLength(64);
     for (const p of small) expect(big.get(p.id)).toEqual(p);
     expect(new Set(small.map((p) => p.stage))).toEqual(new Set(["sprout", "bud", "bloom"]));

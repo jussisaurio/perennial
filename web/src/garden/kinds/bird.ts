@@ -1,6 +1,6 @@
-// The bird (#209): in an orchard tree on its days there (#315), on top of its
-// word's plant (at its foot when the plant droops), or on a notice board or
-// the fence's rail. It hops away when you come close, and comes back to the
+// The bird (#209): in an orchard tree on its days there (#315), else on the
+// hedge, a notice board, the first bed's sign or the fence's rail, a new
+// place each day (#641). It hops away when you come close, and comes back to the
 // same spot once you are well away. Called (#377), it flies up and lands
 // again where it was.
 
@@ -23,13 +23,9 @@ export const bird: VisitorKind<Look> = {
   id: "bird",
   // Two empty rows under the hop: it is in the air.
   art: { sit: BIRD, hop: { ...BIRD_HOP, rows: [...BIRD_HOP.rows, "", ""] } },
-  arrive({ spots, home, now, reducedMotion }) {
+  arrive({ spots, now, reducedMotion }) {
     const tree = spots.trees.find((t) => t.who === "bird");
-    const body = tree
-      ? bodyAt<Look>(tree.x, tree.y, tree.z, "sit")
-      : home
-        ? bodyAt<Look>(home.x, home.thirsty ? home.soil : home.top + 0.02, home.z + 0.05, "sit")
-        : bodyAt<Look>(...daily(spots.perches, "visitor-bird-spot", now), "sit");
+    const body = tree ? bodyAt<Look>(tree.x, tree.y, tree.z, "sit") : bodyAt<Look>(...daily(spots.perches, "visitor-bird-spot", now), "sit");
     /** t: -1 sitting, 0 to 1 while hopping, 1 once gone; (dx, dz): away from you. */
     let t = -1;
     let dx = 0;
