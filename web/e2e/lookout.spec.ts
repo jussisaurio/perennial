@@ -41,8 +41,8 @@ test("at night the far light shines; raise the lantern: nothing answers, then, o
   const status = page.locator(".sr-only[role=status]");
   const raise = page.getByRole("button", { name: "Raise the lantern", exact: true });
 
-  // Every night, from the first: the far light shines.
-  expect(await farLight(page)).toBe(true);
+  // Every night, from the first: the far light shines. Polled: the sky sets it on its first frame, which may not have run yet (#707).
+  await expect.poll(() => farLight(page), { intervals: [50], timeout: 5_000 }).toBe(true);
 
   // Stand in the gap, beside the lantern's post, facing out across the valley (+z is yaw π).
   await page.evaluate(async () => {
