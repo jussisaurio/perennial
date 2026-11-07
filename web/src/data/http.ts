@@ -113,14 +113,20 @@ export const readAnswer = Effect.fn("Http.readAnswer")(function* <S extends Sche
   return yield* new HttpError({ status: res.status, code: Option.getOrUndefined(Schema.decodeUnknownOption(SomeCode)(body))?.error });
 });
 
-/** Send changes in the server's mutation format (contract/write.ts). `keepalive`: the request outlives the page (store.ts, pagehide). */
-export const sendWrite = (mutations: readonly unknown[], idempotencyKey: string, keepalive = false) =>
+/** A write request's body (contract/write.ts WriteBatch). The server checks the mutations. */
+export interface Batch {
+  mutations: readonly unknown[];
+  from?: { tab: string; seq: readonly number[] };
+}
+
+/** Send changes in the server's mutation format. `keepalive`: the request outlives the page (send.ts, pageHide). */
+export const sendWrite = (batch: Batch, keepalive = false) =>
   request(WriteResult, "/api/write", {
     method: "POST",
     keepalive,
-    headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION, "idempotency-key": idempotencyKey },
-    body: JSON.stringify({ mutations }),
+    headers: { "content-type": "application/json", "x-perennial-version": APP_VERSION },
+    body: JSON.stringify(batch),
   });
 
-/** `sendWrite`, for Promise code. A one-off write (not the store's, so no retries) gets a fresh idempotency key. */
-export const postWrite = (mutations: readonly unknown[], opts: { idempotencyKey?: string } = {}) => Effect.runPromise(sendWrite(mutations, opts.idempotencyKey ?? crypto.randomUUID()));
+/** `sendWrite`, for Promise code: a one-off write, not the store's, so not tried again. */
+export const postWrite = (mutations: readonly unknown[]) => Effect.runPromise(sendWrite({ mutations }));

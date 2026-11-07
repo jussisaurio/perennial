@@ -1,9 +1,9 @@
 // The learner's synced data. Each table is a TanStack DB query collection, held
 // in memory and read from GET /api/rows (at start, from GET /api/boot), and
 // again when the tab comes back into view after a while. Writes apply at once
-// on the device and are sent to /api/write, one after another, tried again
-// until the server has them. Then the rows go into the collection as the
-// server's own.
+// on the device and are sent to /api/write in the order made, tried again
+// until the server has them (send.ts). Then the rows go into the collection as
+// the server's own.
 //
 // Unsent writes live only in this tab's memory. When the page goes away
 // (pagehide), what is left goes in one last request; if that fails too, it is
@@ -20,13 +20,13 @@ import { LearnerRows, type WriteResult } from "perennial-contract";
 import { sessionUserId } from "./auth";
 import { boot } from "./boot";
 import { registerSync } from "./device";
-import { ApiError, HttpError, request, sendWrite } from "./http";
+import { ApiError, HttpError, request } from "./http";
 import { reportBadAnswer, reportError } from "../observability";
 import { Learners } from "./learner";
 import { makeTable } from "./table";
 import { yieldToBrowser } from "../lib/yield";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
-import { sendUntilStored } from "./send";
+import { writeQueue } from "./send";
 
 /**
  * Read the rows again when the tab comes back after this long hidden: a quick
@@ -126,24 +126,12 @@ export async function createStore(userId: string) {
     const current = sessionUserId();
     return !!current && current !== userId;
   };
-  // Writes the server does not have yet, by idempotency key, in the order made.
-  const unsent = new Map<string, readonly unknown[]>();
   let unsentNow: Unsent = { count: 0, late: 0 };
   const unsentListeners = new Set<() => void>();
   const setUnsent = (u: Unsent) => {
     unsentNow = u;
     for (const l of unsentListeners) l();
   };
-  // The page is going away: what is left goes in one request that outlives it.
-  // Nothing can try again after this, so if it fails those writes are lost.
-  const onPageHide = () => {
-    if (!unsent.size || otherUser()) return;
-    // A new key: this request joins several writes. Sent again after it (the page
-    // came back from the back/forward cache), each still applies once more harmlessly: the server's merges are idempotent.
-    Effect.runFork(sendWrite([...unsent.values()].flat(), crypto.randomUUID(), true).pipe(Effect.ignore));
-  };
-  window.addEventListener("pagehide", onPageHide);
-
   // Writes the server refused for good. They are rolled back on this device, so
   // the learner must be told (#253): "saved" would be untrue.
   let refused: Refused = { count: 0, clock: 0, seen: 0 };
@@ -161,42 +149,30 @@ export async function createStore(userId: string) {
 
   // Stops the writes still being sent when the store is disposed (a sign-out or a new user).
   const sending = new AbortController();
-  // Sent one after another, in the order made: an undo must not reach the server before its answer.
-  let lastSend: Promise<unknown> = Promise.resolve();
+  const writes = writeQueue({ otherUser, wake: () => woken, onRefused: noteRefused, signal: sending.signal });
+  // The page is going away: what is not sent yet goes in one last request (send.ts).
+  const onPageHide = () => writes.pageHide();
+  window.addEventListener("pagehide", onPageHide);
   /** Send one write's changes until the server has them. `at`: when they were made. */
-  function send(changes: readonly PendingMutation[], at: string) {
+  async function send(changes: readonly PendingMutation[], at: string) {
     const mutations = changes.map((m) => toServer(m, at)).filter((m): m is NonNullable<typeof m> => !!m);
-    if (!mutations.length) return Promise.resolve();
-    // One key for every try: the server applies a write once.
-    const key = crypto.randomUUID();
-    unsent.set(key, mutations);
+    if (!mutations.length) return;
     setUnsent({ ...unsentNow, count: unsentNow.count + 1 });
     let late = false;
     const lateTimer = setTimeout(() => {
       late = true;
       setUnsent({ ...unsentNow, late: unsentNow.late + 1 });
     }, LATE_MS);
-    const run = lastSend
-      .then(() =>
-        Effect.runPromise(
-          Effect.gen(function* () {
-            const result = yield* sendUntilStored(mutations, key, { otherUser, wake: () => woken, onRefused: noteRefused });
-            // The server has them: the rows become the collection's own, so they stay
-            // when this transaction ends (no flicker until the next read).
-            // An answer that broke the contract (null, reported) has no stored rows: the device's stay.
-            yield* Effect.promise(() => confirm(changes, result?.stored));
-          }),
-          { signal: sending.signal },
-        ),
-      )
-      .finally(() => {
-        clearTimeout(lateTimer);
-        unsent.delete(key);
-        setUnsent({ count: unsentNow.count - 1, late: unsentNow.late - (late ? 1 : 0) });
-      });
-    // The next write waits for this one to end, however it ends.
-    lastSend = run.catch(() => undefined);
-    return run;
+    try {
+      const result = await writes.send(mutations);
+      // The server has them: the rows become the collection's own, so they stay
+      // when this transaction ends (no flicker until the next read).
+      // An answer that broke the contract (null, reported) has no stored rows: the device's stay.
+      await confirm(changes, result?.stored);
+    } finally {
+      clearTimeout(lateTimer);
+      setUnsent({ count: unsentNow.count - 1, late: unsentNow.late - (late ? 1 : 0) });
+    }
   }
 
   /**

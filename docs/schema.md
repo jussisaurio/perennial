@@ -84,13 +84,14 @@ create index on user_sentence (user_id, word_id);
 
 Theme and sound are per-device preferences (localStorage), so they don't sync. Deletes are real deletes: the next read of `/api/rows` brings them. Undo deletes the review, and deleting a word or sentence removes it.
 
-**Server only:** `ai_usage (user_id, period, used)`, `ai_spend (period, usd)`, and `ai_request` (model, prompt version, tokens, cost, latency). Rows that reference a user cascade when the user is deleted.
+**Server only:** `ai_usage (user_id, period, used)`, `ai_spend (period, usd)`, `ai_request` (model, prompt version, tokens, cost, latency), and `write_tab (user_id, tab, applied)`, the last write applied from each tab. Rows that reference a user cascade when the user is deleted.
 
 **Removed from today's server:** the op log, our own login code and session tables, the course batch cache, and the Stripe columns.
 
 ## Upload endpoint rules
 
 - **Scope:** every write is scoped `where user_id = $session`.
+- **Order:** a tab numbers its writes. The server applies each number once, in order, so a write sent twice (a lost answer, or the closing page sending it again) is applied once and never lands after newer ones.
 - **Reviews:** insert with `on conflict (id) do nothing`. A review is never updated; Undo is a delete.
 - **Course:** a PATCH updates only the columns sent, in arrival order. `door_open` only ever opens: the server ORs it with the stored value.
 - **Word state:** upsert only if the incoming `updated_at` is newer.

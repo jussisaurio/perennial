@@ -83,7 +83,18 @@ export const Mutation = Schema.Union([
 ]).pipe(Schema.toTaggedUnion("type"));
 export type Mutation = typeof Mutation.Type;
 
-export const WriteBatch = Schema.Struct({ mutations: Schema.Array(Mutation).check(Schema.isMinLength(1), Schema.isMaxLength(500)) });
+/** Most mutations in one batch. */
+export const MAX_BATCH = 500;
+
+export const WriteBatch = Schema.Struct({
+  mutations: Schema.Array(Mutation).check(Schema.isMinLength(1), Schema.isMaxLength(MAX_BATCH)),
+  /**
+   * The app's own writes: the tab that made them, and for each mutation the
+   * number of its write. A tab numbers its writes in order, and the server
+   * applies each number once (server/src/sync.ts). A one-off write has none.
+   */
+  from: Schema.optionalKey(Schema.Struct({ tab: uuid, seq: Schema.Array(int(0, 2 ** 31 - 1)) })),
+});
 export type WriteBatch = typeof WriteBatch.Type;
 
 const Rows = Schema.Array(Schema.Record(Schema.String, Schema.Unknown));

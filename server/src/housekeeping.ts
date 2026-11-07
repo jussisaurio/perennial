@@ -4,7 +4,7 @@
 // - Anonymous learners with no activity for N days are deleted (their rows
 //   cascade). Activity = a session renewed, which happens daily while in use.
 // - AI request logs older than 180 days are deleted.
-// - Expired sign-in codes and sessions, and the per-email code log, are deleted.
+// - Expired sign-in codes and sessions, the per-email code log, and the tabs' write numbers (sync.ts) are deleted.
 
 import { PgClient } from "@effect/sql-pg";
 import * as Sentry from "@sentry/bun";
@@ -51,6 +51,8 @@ export const HousekeepingLive = Layer.effect(
       const codes = yield* rowCount(sql`delete from "verification" where "expiresAt" < now()`);
       const sessions = yield* rowCount(sql`delete from "session" where "expiresAt" < now()`);
       yield* sql`delete from mail_log where sent_at < now() - interval '2 days'`;
+      // A tab sends a write again within minutes (store.ts); a day later its number is not needed.
+      yield* sql`delete from write_tab where updated_at < now() - interval '1 day'`;
       const result = { anonymousUsers, aiRequests, codes, sessions };
       // The job's one wide line: what it removed and how long it took.
       yield* Effect.logInfo("housekeeping").pipe(Effect.annotateLogs({ ...result, ms: Math.round(performance.now() - t0) }));
