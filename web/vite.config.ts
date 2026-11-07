@@ -7,8 +7,12 @@ import pkg from "./package.json" with { type: "json" };
 
 // Source maps for readable error reports: uploaded to Sentry during the
 // production build (tagged with the commit), then deleted, so they are never
-// served. Off unless the build has a token, org and project (Railway build vars).
-const sentry = !!(process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG && process.env.SENTRY_PROJECT);
+// served. Off on purpose when the build has no token (local builds); a token
+// without an org or project is a broken setup and fails the build (#328).
+const sentry = !!process.env.SENTRY_AUTH_TOKEN;
+if (sentry && !(process.env.SENTRY_ORG && process.env.SENTRY_PROJECT)) {
+  throw new Error("SENTRY_AUTH_TOKEN is set, but SENTRY_ORG or SENTRY_PROJECT is not: source maps can't upload");
+}
 
 // The first screens' fonts, fetched with the page and not only once the CSS is applied.
 // Without this, the first layouts look up fallback fonts and lay out again when each
@@ -78,6 +82,11 @@ export default defineConfig({
         release: { name: process.env.VITE_RELEASE || "dev" },
         sourcemaps: { filesToDeleteAfterUpload: ["./dist/**/*.map"] },
         telemetry: false,
+        // The plugin only logs a failed release or upload and the build goes on, so
+        // production stacks stay minified with no sign of it (#328). Fail the build.
+        errorHandler: (err) => {
+          throw err;
+        },
       }),
   ],
   server: {
