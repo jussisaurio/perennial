@@ -7,7 +7,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - **A new worktree has no packages:** run `bun install` at the root and in `web/` before any check.
 - **Scratch files:** in the session scratchpad your prompt names, under a subfolder named after your task. Never at its top level, because other agents share it.
 - **E2E runs:** run them the normal way (`bunx playwright test e2e/x.spec.ts` in web/). In a worktree under `.claude/worktrees/`, the worktree's name gives the run its own ports and its own database (`web/e2e/worktree.ts`); the database is made on the first run. At most 3 runs go at once on the machine. A 4th waits for a free slot and prints a line that says so; this is normal. If a port is still in use, the run fails loudly at start: set `E2E_PORT_OFFSET` to another multiple of 10.
-- **Shell commands:** in a worktree, a guard blocks compound commands: `$(...)`, `$VAR` arguments, `for` loops, `&&` chains with git, and process tools like `pgrep`, `lsof` and `pkill`. Run one plain command per call. For anything longer, write a small script in your scratch folder and run that. To wait for something, use Monitor, not `sleep`.
+- **Shell commands:** in a worktree, a guard blocks compound commands: `$(...)`, `$VAR` arguments, `for` loops, `&&` chains with git, and process tools like `pgrep`, `lsof` and `pkill`. Run one plain command per call; for git, use `git -C <worktree> ...` instead of `cd ... && git`. For anything longer, write a small script in your scratch folder and run that. To wait for something, use Monitor, not `sleep`.
 - **Postgres** is one shared container (`docker compose up -d` from the main checkout). Never touch the `pg-sandbox` container.
 - Run only the specs you need, not the whole suite.
 
