@@ -52,7 +52,16 @@ const APP: Record<string, (page: Page) => Promise<void>> = {
 };
 
 /** The parts of the dev-only scene handle (window.__garden) the spots move. */
-type Scene = { x: number; z: number; yaw: number; pitch: number; over: boolean; layout: object };
+type Scene = { x: number; z: number; yaw: number; pitch: number; over: boolean; climbed: boolean; layout: object };
+
+/** On the stile's top board, as climbing it leaves you (scene.ts climb). */
+const onTop = (page: Page) =>
+  page.evaluate(async () => {
+    const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
+    const s = (window as unknown as { __garden: Scene }).__garden;
+    const at = stileAt(s.layout as Parameters<typeof stileAt>[0]);
+    Object.assign(s, { climbed: true, x: at.x, z: at.z, yaw: 0, pitch: -0.5 });
+  });
 
 /** Spots in the garden walk, each a place to stand once the walk is open. Forward is -z at yaw 0. */
 const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
@@ -82,6 +91,9 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       // A few steps back from it, facing the back fence and the hill past it (−z is yaw 0).
       Object.assign(s, { x: at.x + 0.6, z: at.z + 4, yaw: 0.1, pitch: -0.02 });
     }),
+  // The far steps whole (#749), and broken for a learner without the hill's note (WORDS).
+  top: onTop,
+  "top-shut": onTop,
   lookout: (page) =>
     page.evaluate(async () => {
       const { lookoutAt } = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
@@ -94,13 +106,17 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
     }),
 };
 
+/** Spots seen by a learner with fewer words: 500 put the stile's notes under its step, but not the hill's note (n08). */
+const WORDS: Partial<Record<string, number>> = { "top-shut": 500 };
+
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
  * nails (each needs 60 or more known words) and under the stile's step, and open the way
  * over the stile to the lookout (note n08, 620 known: not every demo word is known). The door is opened too.
+ * A spot in WORDS opens with fewer words.
  */
-async function openWalk(page: Page) {
-  await page.goto("/?demo=es:800#/today");
+async function openWalk(page: Page, words: number) {
+  await page.goto(`/?demo=es:${words}#/today`);
   await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
   await page.evaluate(async () => {
     const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
@@ -137,7 +153,8 @@ for (const theme of ["light", "dark"] as const) {
           await page.clock.setFixedTime(at);
           // Normal detail, as most learners see it, whatever this machine's frame times.
           await pinDetail(page, "normal");
-          await openWalk(page);
+          // Every other spot opens the way over the stile.
+          await openWalk(page, WORDS[name] ?? 800);
           await stand(page);
           // The walk builds its parts after it opens, with a progress line until they are all in.
           await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });

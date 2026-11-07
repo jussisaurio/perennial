@@ -1,6 +1,7 @@
 // The stile in the back fence (#714): wooden steps up one side and down the
 // other, a top board over the fence, and a post to hold. Past it, an old path
-// goes on up a small hill, to the lookout on its top (#722, lookout.ts). The
+// goes on up a small hill, to the lookout on its top (#722, lookout.ts). Until
+// the note that tells of the hill, the steps down the far side are broken (#749). The
 // stile notes lie under its lowest step, a stone on them, until they are read
 // (stile.ts placeNotes). Static meshes, in the shed's wood: the words are never
 // drawn in the world.
@@ -28,10 +29,13 @@ export class StileScene {
   private spot: StileSpot;
   private hill: Lookout;
   private readPaper!: THREE.Material;
+  /** Has the learner the note that tells of the hill (lookout.ts HILL_NOTE): are the far steps whole? */
+  private open: boolean;
 
-  constructor(spot: StileSpot, hill: Lookout) {
+  constructor(spot: StileSpot, hill: Lookout, open: boolean) {
     this.spot = spot;
     this.hill = hill;
+    this.open = open;
   }
 
   /**
@@ -64,24 +68,47 @@ export class StileScene {
     c.scene.add(still(new THREE.Mesh(geo, c.mat(T.pixelTexture(T.grass(), true), { vertexColors: true }))));
   }
 
+  /**
+   * The far side, broken (#749): a stub of each stringer, one standing up from
+   * the ground and one hanging from the top board, and the rest of it and a
+   * tread fallen in the grass on the old path, where the eye on the top board
+   * sees them. The other tread is gone. `box` takes the stile's own coordinates.
+   */
+  private buildBroken(box: (w: number, h: number, d: number, x: number, y: number, z: number, tilt?: number, mat?: THREE.Material, turn?: number) => void, len: number) {
+    const tilt = Math.atan2(STEP.out, TOP);
+    const x = STEP.w / 2 - 0.02;
+    // A piece of the stringer `l` long, its middle `f` of the way up from the far foot.
+    const stub = (sx: number, l: number, f: number) => box(0.05, l, 0.07, sx * x, TOP * f, -STEP.out * (1 - f), tilt);
+    stub(-1, 0.3, 0.15 / len);
+    stub(1, 0.22, 1 - 0.11 / len);
+    // On the ground past the fence, as the old path lies there.
+    const ground = (gx: number, gz: number, h: number) => GROUND_Y + TRACK_LIFT + hillY(this.hill, this.spot.x + gx, this.spot.z + gz) + h / 2;
+    box(STEP.w - 0.08, 0.045, 0.2, 0.05, ground(0.05, -1.8, 0.045), -1.8, 0.06, undefined, 0.55);
+    box(0.05, len - 0.3, 0.07, 0.35, ground(0.35, -1.5, 0.07), -1.5, Math.PI / 2, undefined, 1.25);
+  }
+
   /** The stile, and `notes` under its step (unread ones: read ones hang in the shed). Draws no random numbers. */
   build(c: BuildCtx, notes: readonly string[]) {
     const at = this.spot;
     const wood = c.mat(c.woodTex);
     const g = new THREE.Group();
-    const box = (w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wood);
+    const box = (w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0, mat: THREE.Material = wood, turn = 0) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
       m.position.set(x, y, z);
-      m.rotation.x = tilt;
+      m.rotation.set(tilt, turn, 0, "YXZ");
       g.add(m);
     };
     // Each side: two stringers from the ground up to the top board, and two treads between them. `s` is +1 inside the garden, −1 past the fence.
     const len = Math.hypot(STEP.out, TOP);
-    for (const s of [1, -1]) {
+    const side = (s: number, mat: THREE.Material) => {
       const tilt = Math.atan2(-s * STEP.out, TOP);
-      for (const sx of [-1, 1]) box(0.05, len, 0.07, sx * (STEP.w / 2 - 0.02), TOP / 2, (s * STEP.out) / 2, tilt);
-      for (const k of [1 / 3, 2 / 3]) box(STEP.w - 0.08, 0.045, 0.2, 0, TOP * k, s * STEP.out * (1 - k));
-    }
+      for (const sx of [-1, 1]) box(0.05, len, 0.07, sx * (STEP.w / 2 - 0.02), TOP / 2, (s * STEP.out) / 2, tilt, mat);
+      for (const k of [1 / 3, 2 / 3]) box(STEP.w - 0.08, 0.045, 0.2, 0, TOP * k, s * STEP.out * (1 - k), 0, mat);
+    };
+    side(1, wood);
+    // Past the fence (#749): mended in new wood once the note that tells of the hill is unlocked; until then broken, so from the top board there is plainly no way down.
+    if (this.open) side(-1, c.mat(T.pixelTexture(T.freshWood(), true)));
+    else this.buildBroken(box, len);
     box(STEP.w, 0.05, 0.3, 0, TOP, 0);
     // The post to hold as you go over, on the right as you climb out, a little taller than the eye on the top board.
     box(0.07, 1.45, 0.07, STEP.w / 2 + 0.05, 0.725, 0);

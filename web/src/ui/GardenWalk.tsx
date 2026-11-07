@@ -127,7 +127,8 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   // The stile (#714): it goes nowhere until the note that tells of the hill, but you can look. Then over it, the hill (#722).
   if (!line && (reach === "climb" || reach === "over")) return "Wooden steps go over the back fence.";
-  if (!line && reach === "down") return "You stand on the steps, above the fence. Past it, an old path goes up a small hill.";
+  // "down" is only before the hill's note: after it, the stile goes "over" (#749).
+  if (!line && reach === "down") return "You stand on the steps, above the fence. The steps down the other side are broken. Past them, an old path goes up a small hill.";
   if (!line && reach === "back") return "You stand on a small hill past the fence. Far away, across the valley, there is a small house.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.

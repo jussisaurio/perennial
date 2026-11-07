@@ -169,17 +169,26 @@ export function soil(): OffscreenCanvas {
 }
 
 export function wood(): OffscreenCanvas {
+  return planks(["#b07a45", "#9d6a3a", "#bf8a53", "#6e4524", "#cf9c66", "#7c4f2a"]);
+}
+
+/** New wood, paler than the rest: the stile's far steps once mended (#749). */
+export function freshWood(): OffscreenCanvas {
+  return planks(["#dcb98c", "#cfa979", "#e6c69c", "#a98256", "#f0d6b0", "#b38a5c"]);
+}
+
+/** Two planks with a dark seam, a highlight on top, and a knot. The colours: base, dark grain, light grain, seam, highlight, knot. */
+function planks([base, dark, light, seam, top, knot]: readonly string[]): OffscreenCanvas {
   const [c, ctx] = canvas(32, 16);
   const r = rng(4);
-  px(ctx, 0, 0, "#b07a45", 32, 16);
-  for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) if (r() < 0.18) px(ctx, x, y, r() < 0.5 ? "#9d6a3a" : "#bf8a53");
-  // Two planks with a dark seam, a highlight on top, and a knot.
-  px(ctx, 0, 7, "#6e4524", 32, 1);
-  px(ctx, 0, 15, "#6e4524", 32, 1);
-  px(ctx, 0, 0, "#cf9c66", 32, 1);
-  px(ctx, 0, 8, "#cf9c66", 32, 1);
-  px(ctx, 11, 3, "#7c4f2a", 2, 2);
-  px(ctx, 24, 11, "#7c4f2a", 2, 2);
+  px(ctx, 0, 0, base, 32, 16);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) if (r() < 0.18) px(ctx, x, y, r() < 0.5 ? dark : light);
+  px(ctx, 0, 7, seam, 32, 1);
+  px(ctx, 0, 15, seam, 32, 1);
+  px(ctx, 0, 0, top, 32, 1);
+  px(ctx, 0, 8, top, 32, 1);
+  px(ctx, 11, 3, knot, 2, 2);
+  px(ctx, 24, 11, knot, 2, 2);
   return c;
 }
 
