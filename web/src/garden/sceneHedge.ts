@@ -41,10 +41,17 @@ function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
 /** Hedge has nothing to tick, pick or dispose on its own (its meshes are plain scene children): it only builds. */
 export class Hedge {
   private mat!: THREE.MeshBasicMaterial;
+  private clumpMat!: THREE.MeshBasicMaterial;
 
-  /** The hedge material, shared by every wall addWalls builds: the gate's now, the orchard's later, once the door opens. */
+  /**
+   * The hedge materials, shared by every wall addWalls builds: the gate's now, the orchard's later, once the door opens.
+   * The same look twice: one for the boxes, one for the instanced clumps. three keeps one shader per material, so a
+   * material on both kinds of mesh switched shader twice on every frame (#571).
+   */
   build(ctx: BuildCtx) {
-    this.mat = ctx.mat(T.pixelTexture(T.hedge(), true), { vertexColors: true });
+    const tex = T.pixelTexture(T.hedge(), true);
+    this.mat = ctx.mat(tex, { vertexColors: true });
+    this.clumpMat = ctx.mat(tex, { vertexColors: true });
   }
 
   /**
@@ -72,7 +79,7 @@ export class Hedge {
     // About as many leaves to the metre as on the solid middle.
     const uv = clump.getAttribute("uv") as THREE.BufferAttribute;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
-    const mesh = new THREE.InstancedMesh(clump, this.mat, clumps.length);
+    const mesh = new THREE.InstancedMesh(clump, this.clumpMat, clumps.length);
     const m4 = new THREE.Matrix4();
     const color = new THREE.Color();
     clumps.forEach((c, i) => {
