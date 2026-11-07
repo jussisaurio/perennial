@@ -140,9 +140,6 @@ export type Event =
   // A kind of tap in the walk-in garden and how many, per visit (#335): which verbs people use.
   | "garden_action"
   | "words_added"
-  | "seed_shared"
-  | "seed_planted"
-  | "page_shared"
   // The sign-in steps (#312), to see where people stop.
   | "signin_code_requested"
   | "signin_code_shown"
