@@ -58,7 +58,7 @@ test("read the note under the stile's step, climb it and look out, and climb dow
 
   await expect(status).toHaveText("Wooden steps go over the back fence.");
   await page.getByRole("button", { name: "Climb the stile", exact: true }).click();
-  await expect(status).toHaveText("You stand on the steps, above the fence. Past it, an old path goes up a small hill.");
+  await expect(status).toHaveText("You stand on the steps, above the fence. The steps down the other side are broken. Past them, an old path goes up a small hill.");
   // On the top board, the eye is above the fence (0.8 m), higher than a walker's (1.05 m).
   await expect.poll(async () => (await scene(page)).eye, { intervals: [50], timeout: 5_000 }).toBeGreaterThan(1.8);
 

@@ -569,7 +569,7 @@ export class GardenScene {
     // The hill is there whenever the stile is (the constructor).
     if (stile && this.hill) {
       // Draws no random numbers.
-      this.stile = new StileScene(stileAt(this.layout), this.hill);
+      this.stile = new StileScene(stileAt(this.layout), this.hill, this.hillOpen);
       this.stile.build(c, stile);
       this.lanterns.buildLookout(c, this.hill);
     }
@@ -1062,8 +1062,8 @@ export class GardenScene {
     const s = stileAt(this.layout);
     this.endTrip();
     this.glide = null;
-    // Forward is -z at yaw 0: out past the back fence, along the old path.
-    [this.x, this.z, this.yaw, this.pitch] = [s.x, s.z, 0, -0.22];
+    // Forward is -z at yaw 0: out past the back fence, along the old path, and down at the broken steps on its far side (#749).
+    [this.x, this.z, this.yaw, this.pitch] = [s.x, s.z, 0, -0.5];
     this.climbed = true;
   }
 
