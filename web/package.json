@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "bun test src",
     "e2e": "playwright test",
+    "shots": "playwright test -c shots.config.ts",
     "typecheck": "tsc -b",
     "perf": "bun perf/ui.ts"
   },
