@@ -24,13 +24,13 @@ async function openWalk(page: Page, demo = "es:30") {
 }
 
 /** Stand 1.2 m in front of the plant for `lemma`, facing it, and return where its stem shows on the page (pixels), once a frame has drawn it there. */
-const standBy = (page: Page, lemma: string) =>
+const standBy = (page: Page, lemma: string, pitch = -0.3) =>
   page.evaluate(
-    (lemma) => {
+    ([lemma, pitch]) => {
       const s = (window as unknown as { __garden: ShakeScene }).__garden;
       const p = s.layout.plants.find((q) => q.lemma === lemma)!;
       // Forward is -z at yaw 0.
-      Object.assign(s, { x: p.x, z: p.z + 1.2, yaw: 0, pitch: -0.3 });
+      Object.assign(s, { x: p.x, z: p.z + 1.2, yaw: 0, pitch });
       return new Promise<[number, number]>((done) =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -41,7 +41,7 @@ const standBy = (page: Page, lemma: string) =>
         ),
       );
     },
-    lemma,
+    [lemma, pitch] as const,
   );
 
 // The sr-only line, not the loading line: that is a status too while plants still stream in (#621).
@@ -92,7 +92,8 @@ test("a noun's label stake has a top shaped by its gender, the same for the same
   // The first German nouns: der Mann, das Leben, die Zeit, der Gott.
   await openWalk(page, "de:110");
   const stake = async (lemma: string) => {
-    await standBy(page, lemma);
+    // Looking straight ahead: looking down, a tall plant's label is above the view (sein, grown to 0.93 in the demo since #704).
+    await standBy(page, lemma, 0);
     const label = page.locator(".gw-label", { hasText: new RegExp(`^${lemma}$`) });
     await expect(label).toBeVisible();
     return (await label.locator("svg.gw-stake").evaluateAll((els) => els.map((e) => e.innerHTML)))[0] ?? null;
