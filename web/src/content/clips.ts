@@ -4,11 +4,11 @@
 // works out the name from the text it is about to say. The same text in two
 // places is one clip, and an edited sentence gets a new name by itself.
 
-/** What a clip sounds like. Changing any value here gives every clip a new name: a full re-render. */
+/** What a clip sounds like. Changing any value here gives every clip a new name: a full re-render. @internal Exported for tests. */
 export const VOICE = { version: "v1", model: "chirp3-hd", voice: "Charon", speed: 1 } as const;
 
 /** Everything a clip's name depends on. `lang` is the course code ("es"). */
-export interface ClipInputs {
+interface ClipInputs {
   version: string;
   model: string;
   voice: string;
@@ -17,10 +17,10 @@ export interface ClipInputs {
   text: string;
 }
 
-/** Google's name for the voice in a language, e.g. "es-ES-Chirp3-HD-Charon". `tag` is the BCP 47 tag. */
+/** Google's name for the voice in a language, e.g. "es-ES-Chirp3-HD-Charon". `tag` is the BCP 47 tag. @internal Only scripts/tts uses it. */
 export const voiceName = (tag: string) => `${tag}-Chirp3-HD-${VOICE.voice}`;
 
-/** sha256 of "version|model|voice|speed|lang|NFC(text)", in hex. */
+/** sha256 of "version|model|voice|speed|lang|NFC(text)", in hex. @internal Exported for tests. */
 export async function clipKey(i: ClipInputs): Promise<string> {
   const id = [i.version, i.model, i.voice, i.speed, i.lang, i.text.normalize("NFC")].join("|");
   const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(id)));
@@ -29,7 +29,7 @@ export async function clipKey(i: ClipInputs): Promise<string> {
 
 const SLUG_MAX = 40;
 
-/** The text, readable in a file name: "¿Por qué, María?" → "por-que-maria". Decoration only: the hash is the clip's identity. */
+/** The text, readable in a file name: "¿Por qué, María?" → "por-que-maria". Decoration only: the hash is the clip's identity. @internal Exported for tests. */
 export function slug(text: string): string {
   const plain = text
     .toLowerCase()

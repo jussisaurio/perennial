@@ -129,7 +129,7 @@ function ReloadBanner() {
   );
 }
 
-/** The deck could not load and no copy was kept (say, no connection when it was first needed). */
+/** The deck could not load (say, no connection when it was needed). */
 function DeckFailed({ lang }: { lang: string }) {
   return (
     <div className="page narrow deck-failed">

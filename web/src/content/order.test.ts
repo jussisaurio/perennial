@@ -3,7 +3,7 @@ import { Schema } from "effect";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { Deck, GARDEN_WORDS, ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema";
-import { courseOrder, deckKind, gardenSlot, introOrder, kindOf, nextWords, notStartedWords, orchardSlot, placed, sincePlaced, type WordKind } from "./order";
+import { courseOrder, deckKind, gardenSlot, introOrder, kindOf, notStartedWords, orchardSlot, placed, sinceLastPlaced, walkCourse, type WordKind } from "./order";
 
 const kind = (s: string): WordKind => ({ n: "noun", v: "verb", o: "other", f: "function" })[s[0] as "n" | "v" | "o" | "f"] as WordKind;
 
@@ -72,7 +72,7 @@ describe("courseOrder", () => {
     expect(places.slice(0, 3)).toEqual([70, 118, 166]);
     expect(places.at(-1)).toBe(550);
     expect(gardenSlot(GARDEN_WORDS.indexOf("key")) + 1).toBe(64);
-    // Closer than 5 would make nextWords hold one back (CATCH_UP), so a new learner would not get the course as it is.
+    // Closer than 5 would make walkCourse hold one back (CATCH_UP), so a new learner would not get the course as it is.
     const garden = GARDEN_WORDS.map((_, n) => gardenSlot(n) + 1);
     for (const p of places) expect(Math.min(...garden.map((g) => Math.abs(g - p)))).toBeGreaterThanOrEqual(6);
   });
@@ -105,23 +105,23 @@ describe("courseOrder", () => {
     expect(courseOrder({ words: [tree, ...words] }).map((w) => w.id)).toEqual(["n1", "v1", "cat", "n2", "bird", "tree"]);
   });
 
-  test("sincePlaced: other new words since the last garden or orchard word", () => {
-    expect(sincePlaced([{ first: 1 }, { first: 2 }])).toBe(Infinity);
-    expect(sincePlaced([{ garden: "cat", first: 1 }, { first: 2 }, { first: 3 }, { orchard: "tree", first: 4 }, { first: 5 }])).toBe(1);
+  test("sinceLastPlaced: other new words since the last garden or orchard word", () => {
+    expect(sinceLastPlaced([{ first: 1 }, { first: 2 }]).since).toBe(Infinity);
+    expect(sinceLastPlaced([{ garden: "cat", first: 1 }, { first: 2 }, { first: 3 }, { orchard: "tree", first: 4 }, { first: 5 }]).since).toBe(1);
   });
 
   for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
     const course = courseOrder({ words: Schema.decodeUnknownSync(Deck(lang))(deck).words.filter((w) => !w.retired && !w.aliasOf) });
 
     test(`${lang}: a new learner meets cat 3rd and bird 12th`, () => {
-      const next = nextWords(course, () => true, sincePlaced([]));
+      const next = walkCourse(course, () => true, sinceLastPlaced([]).since).list;
       expect(next).toEqual([...course]);
       expect([next[2].garden, next[11].garden]).toEqual(["cat", "bird"]);
     });
 
     test(`${lang}: a learner at course word 300 with no garden or orchard word yet gets one of them, then 4 others, until caught up`, () => {
       const done = new Set(course.slice(0, 300).filter((w) => !placed(w)).map((w) => w.id));
-      const next = nextWords(course, (w) => !done.has(w.id), sincePlaced([...done].map((_, i) => ({ first: i }))));
+      const next = walkCourse(course, (w) => !done.has(w.id), sinceLastPlaced([...done].map((_, i) => ({ first: i }))).since).list;
       const behind = course.slice(0, 300).filter(placed);
       expect(behind.filter((w) => w.garden).length).toBe(20); // places 3, 12, 39, … 292
       expect(behind.filter((w) => w.orchard).length).toBe(5); // places 70, 118, … 262
@@ -139,7 +139,7 @@ describe("courseOrder", () => {
         for (const w of course.slice(0, 300)) if (!placed(w)) started.set(w.id, { first: started.size });
         const met: boolean[] = [];
         while (met.length < 60) {
-          for (const w of nextWords(course, (x) => !started.has(x.id), sincePlaced(started.values())).slice(0, newCount)) {
+          for (const w of walkCourse(course, (x) => !started.has(x.id), sinceLastPlaced(started.values()).since).list.slice(0, newCount)) {
             started.set(w.id, { garden: w.garden, orchard: w.orchard, first: started.size });
             met.push(placed(w));
           }
@@ -156,7 +156,7 @@ describe("courseOrder", () => {
       const done = new Set(practised.map((w) => w.id));
       const memories = practised.map((w) => ({ wordId: w.id, reps: 1 }));
       const paused = course[310].id;
-      const upcoming = () => nextWords(course, (w) => !done.has(w.id) && w.id !== paused, sincePlaced(practised.map((_, i) => ({ first: i })))).map((w) => words.get(w.id)!);
+      const upcoming = () => walkCourse(course, (w) => !done.has(w.id) && w.id !== paused, sinceLastPlaced(practised.map((_, i) => ({ first: i }))).since).list.map((w) => words.get(w.id)!);
 
       const ids = notStartedWords({ deck: { words: course }, words, memories, upcoming }).map((w) => w.id);
       const next = upcoming().map((w) => w.id);
@@ -197,7 +197,7 @@ describe("courseOrder", () => {
     for (const at of [80, 150, 700]) {
       test(`${lang}: a learner at word ${at} of the course before keeps every started word; what they passed comes one in every 5 new words`, () => {
         const started = new Map(before.slice(0, at).map((w, i) => [w.id, { garden: w.garden, first: i }]));
-        const next = nextWords(course, (w) => !started.has(w.id), sincePlaced(started.values()));
+        const next = walkCourse(course, (w) => !started.has(w.id), sinceLastPlaced(started.values()).since).list;
         // Nothing they started comes again, and every word they haven't started still comes, once.
         expect(next.filter((w) => started.has(w.id))).toEqual([]);
         expect(next.map((w) => w.id).sort()).toEqual(course.filter((w) => !started.has(w.id)).map((w) => w.id).sort());

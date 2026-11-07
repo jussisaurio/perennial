@@ -30,6 +30,7 @@ const PATTERN: readonly WordKind[] = ["noun", "verb", "noun", "other", "function
 /**
  * Interleave by kind following PATTERN; within a kind, the given order stays.
  * A kind that has run out gives its turn to the next kind in the pattern.
+ * @internal Exported for tests.
  */
 export function introOrder<T>(items: readonly T[], kind: (item: T) => WordKind): T[] {
   const queues = new Map<WordKind, T[]>();
@@ -53,7 +54,7 @@ export function introOrder<T>(items: readonly T[], kind: (item: T) => WordKind):
   return out;
 }
 
-/** For deck words (anything with a part of speech). */
+/** For deck words (anything with a part of speech). @internal Exported for tests. */
 export const deckKind = (w: { pos?: string | null }) => kindOf(w.pos);
 
 /**
@@ -64,6 +65,7 @@ export const deckKind = (w: { pos?: string | null }) => kindOf(w.pos);
  * ever longer gaps in days. Since #311 a daily learner gets about 22 new words
  * on day one and 8–9 a day later, so a new garden word comes every 2–3 days.
  * The slots stay: moving them would reorder the course for learners mid-course.
+ * @internal Exported for tests.
  */
 export function gardenSlot(n: number): number {
   if (n === 0) return 2;
@@ -78,7 +80,8 @@ export function gardenSlot(n: number): number {
  * the door opens; then one every 48 words, about one every few weeks. Every
  * place is at least 6 words from a garden place (those are 12 apart from 172
  * on, and these are 6 off that beat), so a new learner meets both where they are:
- * nextWords never has to push one back.
+ * walkCourse never has to push one back.
+ * @internal Exported for tests.
  */
 export function orchardSlot(n: number): number {
   return 69 + 48 * n;
@@ -132,16 +135,12 @@ export function* courseOrderSteps<W extends DeckWord>(deck: { words: readonly W[
 const CATCH_UP = 5;
 
 /**
- * Other new words the learner started after their last garden or orchard word,
- * from the time of each word's first review. Sessions take only a few new words
- * at a time, so the spacing below must carry over from one session to the next.
- * Before any such word there is nothing to keep a distance from: Infinity.
+ * `since`: other new words the learner started after their last garden or
+ * orchard word, from the time of each word's first review. Sessions take only a
+ * few new words at a time, so the spacing below must carry over from one session
+ * to the next. Before any such word there is nothing to keep a distance from:
+ * Infinity. `last`: that word's first review time (-Infinity for none).
  */
-export function sincePlaced(started: Iterable<{ garden?: GardenWord; orchard?: OrchardWord; first: number }>): number {
-  return sinceLastPlaced(started).since;
-}
-
-/** sincePlaced, and the first review time of the last garden or orchard word it counts from (-Infinity for none). */
 export function sinceLastPlaced(started: Iterable<{ garden?: GardenWord; orchard?: OrchardWord; first: number }>): { since: number; last: number } {
   const words = [...started];
   const last = Math.max(...words.filter(placed).map((w) => w.first));
@@ -149,19 +148,7 @@ export function sinceLastPlaced(started: Iterable<{ garden?: GardenWord; orchard
   return { since: words.filter((w) => !placed(w) && w.first > last).length, last };
 }
 
-/**
- * The words a learner meets next: the course, minus words they can't get now
- * (`open` false). A garden or orchard word comes at its place, but never before
- * CATCH_UP - 1 other new words since the last one (`since`: sincePlaced). A
- * learner who was past their places when such words came to the course gets
- * them one in every CATCH_UP new words, not all in a row, in course order. A new
- * learner gets the course as it is: its places are further apart.
- */
-export function nextWords<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean, since: number): W[] {
-  return walkCourse(course, open, since).list;
-}
-
-/** nextWords' walk so far: the words out, the garden and orchard words held back, and `since`. */
+/** walkCourse's walk so far: the words out, the garden and orchard words held back, and `since`. */
 class Walker<W extends DeckWord> {
   readonly out: W[] = [];
   readonly due: W[] = [];
@@ -188,14 +175,21 @@ class Walker<W extends DeckWord> {
   }
 }
 
-/** nextWords, kept so the next learner's walk can go on from it (walkAgain). `head`: the first open course place. */
+/** walkCourse's answer, kept so the next walk can go on from it (walkAgain). `head`: the first open course place. */
 export interface Walk<W> {
   list: W[];
   since: number;
   head: number;
 }
 
-/** nextWords, from the start of the course. */
+/**
+ * The words a learner meets next (`list`): the course, minus words they can't
+ * get now (`open` false). A garden or orchard word comes at its place, but never
+ * before CATCH_UP - 1 other new words since the last one (`since`:
+ * sinceLastPlaced). A learner who was past their places when such words came to
+ * the course gets them one in every CATCH_UP new words, not all in a row, in
+ * course order. A new learner gets the course as it is: its places are further apart.
+ */
 export function walkCourse<W extends DeckWord>(course: readonly W[], open: (w: W) => boolean, since: number): Walk<W> {
   const walker = new Walker<W>(since);
   let head = course.length;
