@@ -44,7 +44,7 @@ test("the locked door says so by its button, to screen readers too; without the 
   // One action button (#334): only an icon, no words; a screen reader hears what it does.
   await expect(page.getByRole("button", { name: "Try the door" })).toHaveText("");
   await page.getByRole("button", { name: "Try the door" }).click();
-  await expect(page.locator(".gw-say")).toHaveText("Locked.");
+  await expect(page.locator(".gw-say")).toHaveText("Cerrado con llave.");
   // The drawn line is hidden from screen readers; a status says it to them.
   await expect(page.getByRole("status").filter({ hasText: "Locked." })).toHaveText("Locked.");
   expect(await doorNow(page)).toMatchObject({ state: "locked" });
@@ -77,7 +77,7 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
 
   // Tapping the door first: still locked, and no hint of the key there.
   await page.mouse.click(...(await standAtDoor(page)));
-  await expect(page.locator(".gw-say")).toHaveText("Locked.");
+  await expect(page.locator(".gw-say")).toHaveText("Cerrado con llave.");
   // A screen reader also hears where it lies, as a thing in the world (#334): what a seeing learner might spot cannot be heard.
   await expect(page.locator(".sr-only[role=status]")).toHaveText(/^Locked\. Something small glints (under|among|by) the /);
   await expect(page.getByRole("button", { name: "Try the door" })).toBeVisible();
@@ -117,7 +117,7 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   await expect(page.getByRole("button", { name: "Pick up the key" })).toBeVisible();
   await expect(page.locator(".sr-only[role=status]")).toHaveText("The key is here.");
   await page.mouse.click(...key);
-  await expect(page.locator(".gw-say")).toHaveText("You found the key.");
+  await expect(page.locator(".gw-say")).toHaveText("Has encontrado la llave.");
   expect(await doorNow(page)).toMatchObject({ state: "held", key: false });
   await expect(page.getByRole("button", { name: "Pick up the key" })).toHaveCount(0);
   // The door opens; with reduced motion (as these tests run) at once, without a swing.

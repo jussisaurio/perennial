@@ -5,7 +5,7 @@
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { yieldToBrowser } from "../lib/yield";
-import { along, BED_H, benchAt, DOOR_HALF, DOOR_LINES, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, walkStep, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
+import { along, BED_H, benchAt, DOOR_HALF, DOOR_LINES, DOOR_SPOKEN, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, walkStep, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
 import { standAt, wayNear, type Ground } from "./ground";
 import { benchLine, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
@@ -395,7 +395,7 @@ export class GardenScene {
   }
   /**
    * A quiet line from the garden (the door's, or a joke's), over a point, until a time. A joke's line is in the
-   * course language, and `spoken` is its English for screen readers (#650); the door's lines are English.
+   * course language, and `spoken` is its English for screen readers (#650).
    */
   private line: { text: string; spoken?: string; at: [number, number, number]; until: number } | null = null;
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
@@ -1205,12 +1205,12 @@ export class GardenScene {
       // Whoever waited by it goes home.
       this.guests.visit("dog", null);
       this.guests.visit("bird", null);
-      this.showLine(DOOR_LINES.found, [d.key.x, 0.45, d.key.z]);
+      this.showLine(DOOR_LINES[this.lang].found, [d.key.x, 0.45, d.key.z], DOOR_SPOKEN.found);
     } else if (a === "open" && d.state === "held") {
       this.openDoor(true);
       this.clearTaps({ line: true });
       this.cb.onDoorOpen();
-    } else if (a === "try" && d.state !== "open") this.showLine(DOOR_LINES.locked, [L.gate.x, 1.5, z0]);
+    } else if (a === "try" && d.state !== "open") this.showLine(DOOR_LINES[this.lang].locked, [L.gate.x, 1.5, z0], DOOR_SPOKEN.locked);
   }
 
   /** Show a quiet line over a point for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
