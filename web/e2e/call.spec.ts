@@ -128,6 +128,8 @@ async function whistle(page: Page) {
 test.describe(() => {
   // The dog is seen running, not put at your feet at once.
   test.use({ reducedMotion: "no-preference" });
+  // On CI's software WebGL (~7 frames a second) the walk takes 10–20 s to open; then the dog runs, stays 6 s and trots home in real time.
+  test.describe.configure({ timeout: 60_000 });
 
   test("call.dog-round: with a bed between you and the dog, the dog runs round the bed to you and is never on the bed", async ({ page }) => {
     await openWalk(page);
