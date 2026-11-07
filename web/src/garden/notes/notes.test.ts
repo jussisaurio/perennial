@@ -32,7 +32,7 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
       noteInk({ ...n, text: n.text.replace(/~~[^~]*~~/g, "") }, (lemma) => (place.get(lemma) ?? Infinity) <= known).filter((ink) => /\p{L}/u.test(ink.text) && !gardener.has(ink.text.toLowerCase()));
 
     test("every word is a deck word or one of 3-5 gardener words, and each gardener word comes back", () => {
-      expect(notes.flatMap((n) => inkAt(n, Infinity).filter((ink) => ink.faint).map((ink) => ink.text))).toEqual([]);
+      expect(notes.flatMap((n) => inkAt(n, Infinity).filter((ink) => ink.style === "faint").map((ink) => ink.text))).toEqual([]);
       expect(gardener.size).toBeGreaterThanOrEqual(3);
       expect(gardener.size).toBeLessThanOrEqual(5);
       for (const g of gardener) expect(notes.filter((n) => n.text.toLowerCase().includes(g)).length).toBeGreaterThanOrEqual(2);
@@ -45,7 +45,7 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
     test("each note unlocks when the learner knows 55% of its words, and an early or stile note at most 75%", () => {
       for (const n of notes) {
         const ink = inkAt(n, n.unlockAt);
-        const share = ink.filter((i) => !i.faint).length / ink.length;
+        const share = ink.filter((i) => i.style !== "faint").length / ink.length;
         const ceiling = n.beat === "early" || n.beat === "stile" ? 0.75 : 1;
         expect({ id: n.id, ok: share >= 0.55 && share <= ceiling }).toEqual({ id: n.id, ok: true });
       }

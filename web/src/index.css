@@ -749,6 +749,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
   --accent: #ffd84a;
   --water: #5bb4f0;
   --pixel: "Pixelify Sans", ui-monospace, monospace;
+  --hand: "Patrick Hand", cursive;
   position: fixed; inset: 0; overflow: hidden; background: #1a1430; color: var(--gw-ink);
   touch-action: none; user-select: none; -webkit-user-select: none; overscroll-behavior: none;
 }
@@ -862,28 +863,40 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-card button.secondary, .gw-card button.ghost, .gw-empty button.primary { font-family: var(--pixel); border-radius: 0; }
 .gw-night .gw-card button.ghost { color: var(--gw-ink); }
 .gw-close { position: absolute; top: 4px; right: 6px; width: 40px; height: 40px; border: 0; padding: 0; background: none; display: grid; place-items: center; color: var(--gw-muted); cursor: pointer; }
-/* A gardener's note (#654): a scrap of lined paper taken off its nail, a little crooked. Not a pixel frame: it is
-   the gardener's own paper. Words the learner does not know yet are faint, never hidden. */
+/* A gardener's note (#654, #673): the paper off the nail, brought close. Portrait like the note on the wall, in the
+   gardener's own hand, not a pixel frame. Words the learner does not know yet are faint, never hidden. */
 .gw-note {
-  --line: 2.1rem;
+  --w: min(23rem, 80vw);
+  --line: 2.3rem;
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-0.7deg);
-  width: min(27rem, calc(100% - 40px)); max-height: calc(100% - 200px); overflow-y: auto; z-index: 4; outline: none;
-  padding: 2rem 1.9rem 1.5rem; color: #3b3026;
-  /* Ruled lines under each line of text: they start where the text does, and scroll with it. */
-  background: repeating-linear-gradient(transparent 0 calc(var(--line) - 1px), rgb(96 120 150 / 0.2) calc(var(--line) - 1px) var(--line)) local, #f5edd6;
-  background-position: 0 2rem;
-  box-shadow: 0 1px 0 rgb(0 0 0 / 0.08), 0 16px 34px rgb(0 0 0 / 0.38), inset 0 0 0 1px rgb(120 96 60 / 0.18);
+  display: flex; flex-direction: column;
+  /* As tall for its width as the paper on the nail (12 × 14 pixels); a long note makes it taller. */
+  width: var(--w); min-height: calc(var(--w) * 7 / 6); max-height: calc(100% - 9rem); overflow-y: auto; z-index: 4; outline: none;
+  padding: 3rem 1.6rem 1.6rem; color: #33281f; background: #f5edd6;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.08), 0 18px 40px rgb(0 0 0 / 0.4), inset 0 0 0 1px rgb(120 96 60 / 0.18), inset 0 0 2.5rem rgb(150 120 70 / 0.12);
   animation: gw-note-in 240ms ease-out both;
 }
 /* The hole the nail left. */
-.gw-note::before { content: ""; position: absolute; left: 50%; top: 0.75rem; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #6b5a45; box-shadow: inset 1px 1px 0 rgb(0 0 0 / 0.35), 0 1px 0 rgb(255 255 255 / 0.6); }
+.gw-note::before { content: ""; position: absolute; left: 50%; top: 1rem; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #6b5a45; box-shadow: inset 1px 1px 0 rgb(0 0 0 / 0.35), 0 1px 0 rgb(255 255 255 / 0.6); }
 .gw-night .gw-note { background-color: #d8ceb4; }
 .gw-note .gw-close { color: #8a7660; }
-.gw-note-text { margin: 0; padding-right: 18px; font: 1.3rem/var(--line) var(--display); white-space: pre-line; overflow-wrap: break-word; }
-.gw-note-faint { opacity: 0.42; }
+/* A rule under each line of writing, just below its letters, on down to the bottom of the paper. */
+.gw-note-text {
+  --rule-up: 0.42rem;
+  flex: 1; margin: 0; font: 1.6rem/var(--line) var(--hand); white-space: pre-line; overflow-wrap: break-word;
+  background: repeating-linear-gradient(transparent 0 calc(var(--line) - var(--rule-up) - 1.5px), rgb(96 120 150 / 0.28) 0 calc(var(--line) - var(--rule-up)), transparent 0 var(--line));
+}
+.gw-note-faint { opacity: 0.45; }
+/* A word the gardener crossed out (#674): one pen stroke through it, a little uneven and aslant, in the same ink.
+   The word stays readable under it. */
+.gw-note-struck { position: relative; text-decoration: none; }
+.gw-note-struck::after {
+  content: ""; position: absolute; left: -0.15em; right: -0.1em; top: 38%; height: 0.32em; background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M1 7.2C14 6.1 26 6.6 40 5.2S68 4.4 80 3.6 94 2.9 99 2.2' fill='none' stroke='black' stroke-width='2.1' stroke-linecap='round'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
 @keyframes gw-note-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)) rotate(-2deg); } }
 @media (prefers-reduced-motion: reduce) { .gw-note { animation: none; } }
-@media (max-width: 560px) { .gw-note { width: calc(100% - 32px); padding: 2rem 1.4rem 1.3rem; --line: 1.95rem; } .gw-note-text { font-size: 1.18rem; } }
+@media (max-width: 560px) { .gw-note { --line: 2.1rem; padding: 2.8rem 1.3rem 1.3rem; } .gw-note-text { font-size: 1.45rem; --rule-up: 0.38rem; } }
 .gw-empty { text-align: center; justify-items: center; bottom: 50%; transform: translate(-50%, 50%); animation: none; }
 .gw-empty strong { font: 700 1.5rem/1.1 var(--pixel); }
 

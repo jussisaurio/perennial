@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import type { Note } from "./note";
-import { hasUnread, noteInk, unlockedNotes } from "./read";
+import { hasUnread, noteInk, unlockedNotes, type Ink } from "./read";
 
 // Fixtures: the real notes are written apart from the system (es.ts, de.ts).
 const first: Note = { id: "n01", beat: "early", unlockAt: 20, text: "Fui al jardín.\nNo me gustan los caracoles.", forms: { fui: "ir", al: "a", gustan: "gustar", caracoles: "caracol" } };
 const later: Note = { id: "n02", beat: "stile", unlockAt: 300, text: "Das Haus ist alt." };
 
-const faintWords = (ink: { text: string; faint: boolean }[]) => ink.filter((i) => i.faint).map((i) => i.text);
+const faintWords = (ink: Ink[]) => ink.filter((i) => i.style === "faint").map((i) => i.text);
 
 describe("a note's words", () => {
   test("are clear when their lemma is known: the word itself, or its form's lemma", () => {
@@ -20,6 +20,18 @@ describe("a note's words", () => {
   test("match by lower case, so a capital at the start of a line or a German noun still counts", () => {
     const known = new Set(["das", "haus"]);
     expect(faintWords(noteInk(later, (l) => known.has(l)))).toEqual(["ist", "alt"]);
+  });
+
+  test("crossed out by the gardener (~~x~~) are struck, without the marks and never faint; the word after reads as any other", () => {
+    const fixed: Note = { id: "n03", beat: "early", unlockAt: 20, text: "Hoy ~~soy~~ estoy.", forms: { estoy: "estar" } };
+    expect(noteInk(fixed, (l) => l === "estar")).toEqual([
+      { text: "Hoy", style: "faint" },
+      { text: " ", style: "clear" },
+      { text: "soy", style: "struck" },
+      { text: " ", style: "clear" },
+      { text: "estoy", style: "clear" },
+      { text: ".", style: "clear" },
+    ]);
   });
 });
 

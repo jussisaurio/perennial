@@ -115,8 +115,8 @@ export interface WalkVisitors {
   met: Met[];
   /** The learner's first review ever (ms), for the garden's age (#379); null for a new learner. */
   firstReview: number | null;
-  /** The gardener's notes on the shed's nails (#654): the unlocked ones' ids, in the order they came. */
-  notes: readonly string[];
+  /** The gardener's notes on the shed's nails (#654): the unlocked ones, in the order they came, and whether each is still unread. */
+  notes: readonly { id: string; unread: boolean }[];
 }
 
 export interface SceneCallbacks {
@@ -844,7 +844,7 @@ export class GardenScene {
     else if (a === "seek" && this.reach === "seek" && this.seekTarget) this.seek(this.seekTarget);
     else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
     else if (a === "blow" && this.reach === "blow" && this.toyTarget) this.doToy(this.toyTarget);
-    else if (a === "read" && this.reach === "read" && this.noteTarget) this.cb.onNote(this.noteTarget);
+    else if (a === "read" && this.reach === "read" && this.noteTarget) this.openNote(this.noteTarget);
   }
 
   /** The lantern under a point on the canvas (CSS pixels), while they are lit (#361), with nothing in front of it. */
@@ -1170,9 +1170,15 @@ export class GardenScene {
 
   /** A tap on a note: open it from in front of the shed; from farther away, walk up to it first. */
   tapNote(id: string) {
-    if (this.notes.inFront(this.x, this.z)) return this.cb.onNote(id);
-    const at = this.notes.standAt(id);
-    this.goTo(at.x, at.z, 0, () => this.cb.onNote(id));
+    if (this.notes.inFront(this.x, this.z)) return this.openNote(id);
+    const at = this.notes.standAt(id, this.camera.aspect * Math.tan((this.camera.fov * Math.PI) / 360));
+    this.goTo(at.x, at.z, 0, () => this.openNote(id));
+  }
+
+  /** Open note `id` on its card; on the wall it is a read one from now on. */
+  private openNote(id: string) {
+    this.notes.read(id);
+    this.cb.onNote(id);
   }
 
   /** A joke's quiet line, over it for a few seconds (after a tap). */
@@ -1991,7 +1997,7 @@ export class GardenScene {
     // A hiding visitor (#379) comes before the bench and the plant ahead: it hides under the one and behind the other.
     const hider = this.seated || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z);
     const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
-    const note = this.seated || nearKey || holding ? null : this.notes.reachAt(this.x, this.z, this.yaw);
+    const note = this.seated || nearKey || holding ? null : this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE);
     // The first of these that applies, in reportReach's order above.
     const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
@@ -2005,13 +2011,15 @@ export class GardenScene {
     if (a === this.reach && plant === this.shakeTarget && carried === this.carryTarget && toyTarget === this.toyTarget && lantern === this.lanternTarget && seeking === this.seekTarget && reading === this.noteTarget) return;
     this.reach = a;
     this.noteTarget = reading;
+    // A note shows it is the one by lifting off the wall, with no glint (sceneNotes.ts lift).
+    this.notes.lift(reading);
     this.seekTarget = seeking;
     this.shakeTarget = plant;
     this.carryTarget = carried;
     this.toyTarget = toyTarget;
     this.lanternTarget = lantern;
     const lampAt = lantern >= 0 ? this.lanterns.spots[lantern] : null;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : carried ? this.carry.cueAt(carried) : reading ? this.notes.cueAt(reading) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
     this.cue.visible = !!at;
     if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);
