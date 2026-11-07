@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { clipKey, clipPath, slug, VOICE } from "../../web/src/content/clips.ts";
-import { backoff, chars, clipsFor, putClip, render, spokenTexts, type Clip, type Deps } from "./lib.ts";
+import { backoff, chars, clipsFor, pace, putClip, render, spokenTexts, type Clip, type Deps } from "./lib.ts";
 
 const deck = {
   words: [
@@ -87,22 +87,28 @@ function harness(answer: (call: number, body: { input: { text: string } }) => Re
   const inFlight = new Map<string, number>();
   const uploads: string[] = [];
   const sleeps: number[] = [];
+  let clock = 0;
   const stored = new Map<string, Uint8Array<ArrayBuffer>>();
   let active = 0;
   const deps: Deps = {
     fetch: async (_url, init) => {
       const body = JSON.parse(String(init.body)) as { input: { text: string } };
-      calls.push(body.input.text);
+      const n = calls.push(body.input.text);
       active++;
       inFlight.set(body.input.text, Math.max(inFlight.get(body.input.text) ?? 0, active));
-      await Promise.resolve();
+      // A macrotask, as a real request takes: the paced starts of a batch then overlap.
+      await new Promise((r) => setTimeout(r, 0));
       try {
-        return await answer(calls.length, body);
+        return await answer(n, body);
       } finally {
         active--;
       }
     },
-    sleep: async (ms) => void sleeps.push(ms),
+    sleep: async (ms) => {
+      sleeps.push(ms);
+      clock += ms;
+    },
+    now: () => clock,
     random: () => 0.5,
     local: { read: (p) => stored.get(p) ?? null, write: (p, b) => void stored.set(p, b) },
     upload: async (p) => void uploads.push(p),
@@ -112,7 +118,7 @@ function harness(answer: (call: number, body: { input: { text: string } }) => Re
 }
 
 const clips = (texts: string[]): Clip[] => texts.map((text) => ({ lang: "es", tag: "es-ES", text, path: `es/${text}.mp3` }));
-const opts = { apiKey: "k", maxChars: 1_000, concurrency: 4, attempts: 4 };
+const opts = { apiKey: "k", maxChars: 1_000, concurrency: 4, rpm: 1_000, attempts: 4 };
 
 describe("render", () => {
   test("makes and uploads every clip", async () => {
@@ -172,11 +178,36 @@ describe("render", () => {
     expect(r.failed[0]!.reason).toBe("HTTP 400: bad voice");
   });
 
+  test("starts at most --rpm requests in any 60 s", async () => {
+    const h = harness(ok);
+    const r = await render(clips(["a", "b", "c", "d", "e"]), { ...opts, rpm: 2 }, h.deps);
+    expect(r.done).toBe(5);
+    // a, b at 0 s; c, d once a minute has passed; e a minute after that.
+    expect(h.sleeps).toEqual([60_000, 60_000]);
+  });
+
   test("backoff doubles, with jitter, up to 30 s", () => {
     expect(backoff(1, () => 0.5)).toBe(1000);
     expect(backoff(3, () => 0)).toBe(2000);
     expect(backoff(10, () => 1)).toBe(45_000);
   });
+});
+
+test("pace: a start waits until the oldest of the last rpm starts is a minute old", async () => {
+  let t = 0;
+  const waits: number[] = [];
+  const startedAt: number[] = [];
+  const slot = pace(3, () => t, async (ms) => {
+    waits.push(ms);
+    t += ms;
+  });
+  for (const at of [0, 10_000, 20_000, 25_000, 30_000]) {
+    t = Math.max(t, at);
+    await slot();
+    startedAt.push(t);
+  }
+  expect(startedAt).toEqual([0, 10_000, 20_000, 60_000, 70_000]);
+  expect(waits).toEqual([35_000, 10_000]);
 });
 
 test("chars counts every clip's text", () => {
