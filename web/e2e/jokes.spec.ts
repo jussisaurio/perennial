@@ -88,11 +88,12 @@ test("the sundial tells the time and is closed at night; the mouse door is the w
   await page.mouse.click(...(await lookAt(page, at.mat, 1)));
   await expect(page.locator('.gw-tag[lang="es"]').filter({ hasText: "la bienvenida" })).toBeVisible();
 
-  // At night: no shadow, and the sundial is closed.
-  await page.getByRole("button", { name: "Time of day: Day" }).click();
-  await page.getByRole("button", { name: "Time of day: Evening" }).click();
+  // Come back at eleven at night: no shadow, and the sundial is closed.
+  await page.clock.setFixedTime(new Date("2026-06-01T23:00:00"));
+  await page.getByRole("button", { name: "Back" }).click();
+  await openWalk(page);
   expect((await jokes(page)).shadowShows).toBe(false);
-  await page.mouse.click(...(await lookAt(page, at.sundial, 1.5)));
+  await page.mouse.click(...(await lookAt(page, (await places(page)).sundial, 1.5)));
   await expect(page.locator(".gw-say")).toHaveText("Sundial: closed until morning.");
   expect(errors).toEqual([]);
 });

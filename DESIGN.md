@@ -142,7 +142,7 @@ rendering code should follow, and the places it still does not (yet):
   `core/day.ts` (which visitors already used before this): those pick *what*
   is in the garden today, not how it moves from frame to frame.
 - **The time of day on show can differ from the one chosen** while time
-  speeds up on the bench (#362): `time` is what the clock or the button chose,
+  speeds up on the bench (#362): `time` is what the wall clock says,
   `shown` is what the parts get as `Conditions`. The host works out the
   time-lapse from the seconds sat (`garden/bench.ts`, pure) and, each frame,
   fades the sky (`SkyWater.blend`), the tint and the fog between two times of

@@ -53,11 +53,9 @@ test("with nothing in reach the action button calls: the dog comes to your feet,
 });
 
 test("at night a long press on open ground calls too, and the moth does not leave its lantern", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T23:00:00"));
   await openWalk(page);
-  const time = page.getByRole("button", { name: /^Time of day: / });
-  await time.click();
-  await time.click();
-  await expect(time).toHaveAccessibleName("Time of day: Night");
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-night\b/);
   // Look down at the path ahead, and press and hold on it.
   await page.evaluate(() => Object.assign((window as unknown as { __garden: CallScene }).__garden, { pitch: -0.5 }));
   const box = (await page.locator(".gw-canvas").boundingBox())!;

@@ -216,7 +216,8 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} toys={toys ?? undefined} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
 }
 
-function initialTime(): TimeOfDay {
+/** The time of day on the wall clock: the garden has no other way to change it (#646). */
+function clockTime(): TimeOfDay {
   const h = new Date().getHours();
   return h >= 6 && h < 18 ? "day" : h >= 18 && h < 21 ? "dusk" : "night";
 }
@@ -235,9 +236,6 @@ function savedDetail(): Detail | null {
   return null;
 }
 
-const TIME_LABEL: Record<TimeOfDay, string> = { day: "Day", dusk: "Evening", night: "Night" };
-const NEXT_TIME: Record<TimeOfDay, TimeOfDay> = { day: "dusk", dusk: "night", night: "day" };
-
 /** The walk's small icons, drawn in pixels like its frames: emoji and font glyphs each come in another style. */
 const GLYPH = {
   left: ["...#...", "..#....", ".#.....", "#######", ".#.....", "..#....", "...#..."],
@@ -246,9 +244,6 @@ const GLYPH = {
   soundOn: ["...#....#..", "..##..#..#.", "####...#..#", "####...#..#", "####...#..#", "..##..#..#.", "...#....#.."],
   soundOff: ["...#.......", "..##..#...#", "####...#.#.", "####....#..", "####...#.#.", "..##..#...#", "...#......."],
   drop: ["...#...", "..###..", ".#####.", ".#####.", "#######", "#######", ".#####.", "..###.."],
-  day: ["...#...", ".#...#.", "..###..", "#.###.#", "..###..", ".#...#.", "...#..."],
-  dusk: ["...#...", "#.....#", "..###..", ".#####.", "#######", ".......", "#######"],
-  night: ["..####.", ".###...", "###....", "###....", "###....", ".###...", "..####."],
 } satisfies Record<string, readonly string[]>;
 
 /** A walk icon at 2 px a pixel: the stroke of the pixel font beside it. */
@@ -405,7 +400,13 @@ export function GardenWalk({
   /** Whether the controls hint shows, and what to do once the viewer first moves while it shows. */
   hint?: { show: boolean; moved: () => void };
 }) {
-  const [time, setTime] = useState<TimeOfDay>(initialTime);
+  const [time, setTime] = useState<TimeOfDay>(clockTime);
+  // Follow the clock while the walk is open, so evening comes in at 18:00 for someone walking then.
+  // Once a minute is soon enough: the light changes only at the hour.
+  useEffect(() => {
+    const t = setInterval(() => setTime(clockTime()), 60_000);
+    return () => clearInterval(t);
+  }, []);
   // For a plant's card: its planting date has the year only when that was another year.
   const [openedAt] = useState(Date.now);
   const [hint, setHint] = useState(hintFirst.show);
@@ -704,9 +705,6 @@ export function GardenWalk({
           >
             <span className={`gw-px gw-px-${detail}`} aria-hidden="true" />
             <SteadyLabel label={DETAIL_LABEL[detail]} all={Object.values(DETAIL_LABEL)} />
-          </button>
-          <button className="gw-btn gw-time" onClick={() => setTime(NEXT_TIME[time])} title="Change the time of day" aria-label={`Time of day: ${TIME_LABEL[time]}`}>
-            <Glyph name={time} /> <SteadyLabel label={TIME_LABEL[time]} all={Object.values(TIME_LABEL)} />
           </button>
         </div>
       </div>

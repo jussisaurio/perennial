@@ -1,14 +1,13 @@
 import { expect, test } from "./test";
 import { aimAtGround, arrives, plantNearMiddle, settledGardenWidth, startCourse, walker } from "./helpers";
 
-test("walk-in garden: every word is a plant; next plant, listen, time of day, and back", async ({ page }) => {
+test("walk-in garden: every word is a plant; next plant, listen, quality, and back", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   // Pin low quality. CI draws WebGL in software: at normal quality every frame is
   // slow, and each click waits for frames (about 2.5 s a click), so the test ran into
   // its timeout.
   await page.addInitScript(() => localStorage.setItem("garden-quality", "low"));
-  // Noon: the time button starts at Day and goes to Evening, its widest label.
   await page.clock.setFixedTime(new Date(2026, 5, 10, 12));
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
@@ -26,14 +25,6 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
   await page.getByRole("button", { name: "Previous plant" }).click();
   await expect(card).toHaveAttribute("aria-label", first!);
 
-  const time = page.getByRole("button", { name: /^Time of day: / });
-  const before = await time.textContent();
-  const width = (await time.boundingBox())!.width;
-  await time.click();
-  await expect(time).not.toHaveText(before!);
-  // A steady width, so the buttons beside it do not shift (#274).
-  expect((await time.boundingBox())!.width).toBe(width);
-
   // Trackpad swipes look around instead of scrolling.
   await page.mouse.move(400, 300);
   await page.mouse.wheel(-200, 50);
@@ -43,8 +34,12 @@ test("walk-in garden: every word is a plant; next plant, listen, time of day, an
   await page.keyboard.press("Escape");
   await expect(card).toBeHidden();
   // Quality toggles and is remembered (last: normal quality is slow to draw here).
-  await page.getByRole("button", { name: "Quality: Low quality" }).click();
-  await expect(page.getByRole("button", { name: "Quality: Normal quality" })).toBeVisible();
+  const quality = page.getByRole("button", { name: /^Quality: / });
+  const width = (await quality.boundingBox())!.width;
+  await quality.click();
+  await expect(quality).toHaveAccessibleName("Quality: Normal quality");
+  // A steady width, so the buttons beside it do not shift (#274).
+  expect((await quality.boundingBox())!.width).toBe(width);
   expect(await page.evaluate(() => localStorage.getItem("garden-quality"))).toBe("normal");
   // A second Escape leaves the garden.
   await page.keyboard.press("Escape");
@@ -96,9 +91,8 @@ test("a visitor in the 2D strip shows the app's focus ring when reached with Tab
 });
 
 test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, and by day it sleeps", async ({ page }) => {
-  // Midday, so the walk opens by day and the switch to evening happens while it may
-  // still be loading (a time chosen during loading used to be lost: no frog by dusk).
-  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+  // Seven in the evening: the wall clock sets the time of day (#646).
+  await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.addInitScript(() => localStorage.setItem("garden-quality", "normal"));
@@ -106,20 +100,22 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   await page.goto("/?demo=es:30&visitors=all#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-  const time = page.getByRole("button", { name: /^Time of day: / });
-  while ((await time.getAttribute("aria-label")) !== "Time of day: Evening") await time.click();
-  await page.waitForFunction(() => "__garden" in window);
-  await page.evaluate(() => {
-    type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
-    const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
-    const frog = s.guests.sprites.find((o) => o.v.id === "frog")!.body.at;
-    // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
-    const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
-    s.x = frog.x + Math.sin(a) * 1.3;
-    s.z = frog.z + Math.cos(a) * 1.3;
-    s.yaw = a;
-    s.pitch = -0.45;
-  });
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-dusk\b/);
+  const standByFrog = async () => {
+    await page.waitForFunction(() => "__garden" in window);
+    await page.evaluate(() => {
+      type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
+      const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
+      const frog = s.guests.sprites.find((o) => o.v.id === "frog")!.body.at;
+      // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
+      const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
+      s.x = frog.x + Math.sin(a) * 1.3;
+      s.z = frog.z + Math.cos(a) * 1.3;
+      s.yaw = a;
+      s.pitch = -0.45;
+    });
+  };
+  await standByFrog();
   const tag = page.locator(".gw-tag", { hasText: "la rana" });
   await expect(tag).toHaveText("la rana · frog");
   const box = (await tag.boundingBox())!;
@@ -128,9 +124,12 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   await expect(page.locator(".gw-say")).toHaveText(/^croac…/);
   await expect(page.locator(".gw-say")).not.toHaveText(/rana/);
   // By day it stays, asleep on its pad, as in the strip: a learner who brought it finds it (#209).
-  await time.click();
-  await time.click();
-  await expect(time).toHaveAttribute("aria-label", "Time of day: Day");
+  // Come back at noon the next day.
+  await page.clock.setFixedTime(new Date("2026-10-12T12:00:00"));
+  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-day\b/);
+  await standByFrog();
   await expect(tag).toHaveText("la rana · frog");
   const frame = await page.evaluate(() => {
     type Sprite = { v: { id: string }; body: { frame: string } };
@@ -402,11 +401,11 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   // The gnome's word is said in the course language.
   await expect(status.locator("span[lang=es]")).toHaveText("Bonito.");
 
-  // Time has run on to dusk: the lanterns are lit. The time of day the learner chose stays as it was.
+  // Time has run on to dusk: the lanterns are lit. The time of day from the wall clock stays as it was.
   await page.evaluate(() => Object.assign((window as unknown as { __garden: Bench }).__garden, { lapse: 0.9 }));
   await expect.poll(async () => (await scene()).shown).toBe("dusk");
   expect((await scene()).lit).toBe(true);
-  await expect(page.getByRole("button", { name: "Time of day: Day" })).toBeVisible();
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-day\b/);
 
   // Stand up: time runs back to now, and the visitors go back to their places.
   await page.getByRole("button", { name: "Stand up" }).click();

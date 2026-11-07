@@ -64,13 +64,15 @@ test("a full moon's night: tap the moon for its word; blow every lantern out, th
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto("/?demo=es:30#/today");
   await openWalk(page);
-  await expect(page.getByRole("button", { name: "Time of day: Night" })).toBeVisible();
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-night\b/);
 
   // Face the moon and tap it: its word, like the rest of the garden.
   await page.evaluate(() => {
     const s = (window as unknown as { __garden: NightScene }).__garden;
     const d = s.sky.sunDir;
     Object.assign(s, { yaw: Math.atan2(-d.x, -d.z), pitch: Math.asin(d.y) });
+    // The camera turns on the next frame; a tap before it picks with the old view.
+    return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
   });
   const box = (await page.locator(".gw-canvas").boundingBox())!;
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
