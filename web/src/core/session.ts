@@ -269,6 +269,11 @@ export class Session {
     return null;
   }
 
+  /** The cards likely to come next, soonest first: promised follow-ups, then the queue. A guess, for loading ahead. */
+  upcoming(n: number): Task[] {
+    return [...this.followUps].sort((a, b) => a.at - b.at).map((f) => f.task).concat(this.queue).slice(0, n);
+  }
+
   /** Returns true when a forgotten item was queued for another try this session. */
   report(task: Task, outcome: Outcome): boolean {
     if (task.kind === "intro") {

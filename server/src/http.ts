@@ -79,6 +79,8 @@ export function securityHeaders(connect: string[], scriptHashes: string[], https
     "font-src 'self' data:",
     `connect-src 'self' ${connect.join(" ")}`.trim(),
     "worker-src 'self' blob:",
+    // Recorded audio (#306) plays from blobs the page fetched (connect-src).
+    "media-src 'self' blob:",
     "manifest-src 'self'",
     `frame-src ${cf ? cf.trim() : "'none'"}`,
     "frame-ancestors 'none'",

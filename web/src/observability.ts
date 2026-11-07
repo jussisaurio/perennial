@@ -180,6 +180,20 @@ export function reportSlowAuth(step: "send" | "sign-in", path: string, ms: numbe
 
 const badAnswerPaths = new Set<string>();
 
+const clipFailures = new Set<string>();
+
+/**
+ * A recorded clip (#306) did not load or play, so the browser spoke instead.
+ * Why, and the course: never the text. Once per reason and course per page
+ * load, so a dead connection does not send one report per word.
+ */
+export function reportClipFailed(reason: string, lang?: string) {
+  const key = `${reason}|${lang}`;
+  if (clipFailures.has(key)) return;
+  clipFailures.add(key);
+  withSentry((s) => s.captureException(new Error(`audio clip failed: ${reason}`), { tags: { reason, lang } }));
+}
+
 /**
  * Our server answered with a body that breaks the contract (data/http.ts): a
  * bug on one side, or a server newer than this app. The path and what did not
