@@ -5,6 +5,7 @@
 
 import { formKey } from "../content/text";
 import { hash01 } from "../lib/seed";
+import { REACH_SLACK } from "./reach";
 
 /** At most this many petals: a big verb's 16 forms would bury the plant. @internal Exported for tests. */
 export const MAX_PETALS = 8;
@@ -59,14 +60,17 @@ export function petalAt(seed: string, i: number, t: number, drop: number, still:
 
 /** Near enough to a plant (m) to shake it, if it is ahead of you: a front-row plant from where Next plant stands (world.ts viewpoint). @internal Exported for tests. */
 export const SHAKE_REACH = 2.2;
+/** The plant the button shows stays ahead of you within about 70° of where you look (cos 70°), not 60°: turning at the edge does not blink it (#838). */
+const HELD_AHEAD = 0.34;
 
 /**
  * The plant you can shake from (x, z) facing `yaw`: of the plants in reach and
  * ahead of you (within 60° of where you look), the one nearest the middle of
- * the view, the nearer one when two are as near it; or null. With `slack`
- * (scene.ts REACH_SLACK), a plant counts that many metres past both edges.
+ * the view, the nearer one when two are as near it; or null. The plant the
+ * button shows now (`held`) stays in reach REACH_SLACK farther and a little
+ * wider (HELD_AHEAD), so the button does not blink at the edge (#838).
  */
-export function plantInReach<P extends { x: number; z: number }>(plants: readonly P[], x: number, z: number, yaw: number, slack: number): P | null {
+export function plantInReach<P extends { x: number; z: number }>(plants: readonly P[], x: number, z: number, yaw: number, held: P | null): P | null {
   // Forward is -z at yaw 0.
   const fx = -Math.sin(yaw);
   const fz = -Math.cos(yaw);
@@ -78,7 +82,8 @@ export function plantInReach<P extends { x: number; z: number }>(plants: readonl
     // Not Math.hypot: it allocates on each call, and this runs for every plant on every frame (#459).
     const d = Math.sqrt(dx * dx + dz * dz);
     const ahead = dx * fx + dz * fz;
-    if (d > SHAKE_REACH + slack || ahead < d * 0.5 - slack) continue;
+    const keep = p === held;
+    if (d > SHAKE_REACH + (keep ? REACH_SLACK : 0) || ahead < d * (keep ? HELD_AHEAD : 0.5)) continue;
     // How far it is from the line you look along, and a little for how far away.
     const score = Math.abs(dx * fz - dz * fx) + d * 0.1;
     if (score < bestScore) {

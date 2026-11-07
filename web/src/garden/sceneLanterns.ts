@@ -7,6 +7,7 @@
 // valley: lit by dark, and never blown out.
 
 import * as THREE from "three";
+import { REACH_SLACK } from "./reach";
 import { lanternSpots } from "./world";
 import { rayBox, spriteBox, type HitBox, type Ray } from "./scenery";
 import type { Conditions } from "./conditions";
@@ -168,14 +169,14 @@ export class Lanterns implements Part {
     return this.dark && this.on.every((on) => !on);
   }
 
-  /** The lantern nearest (x, z) in reach (and `slack` m more) while it is dark, or -1. Runs every frame: no allocation. */
-  inReach(x: number, z: number, slack: number): number {
+  /** The lantern nearest (x, z) in reach while it is dark, or -1; the one the button shows now (`held`) stays in reach REACH_SLACK farther (#838). Runs every frame: no allocation. */
+  inReach(x: number, z: number, held: number): number {
     if (!this.dark) return -1;
     let best = -1;
-    let bestD = LANTERN_REACH + slack;
+    let bestD = Infinity;
     for (let i = 0; i < this.spots.length; i++) {
       const d = Math.hypot(this.spots[i][0] - x, this.spots[i][1] - z);
-      if (d < bestD) [best, bestD] = [i, d];
+      if (d < bestD && d < LANTERN_REACH + (i === held ? REACH_SLACK : 0)) [best, bestD] = [i, d];
     }
     return best;
   }

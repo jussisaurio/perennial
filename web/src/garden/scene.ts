@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { yieldToBrowser } from "../lib/yield";
 import { along, BED_H, BENCH, benchAt, besideKey, collide, DOOR_HALF, DOOR_LINES, DOOR_SPOKEN, HEDGE, hedgeSpan, keyAt, route, sunflowerAt, viewpoint, walk, WALKER, walkStep, type BackWay, type KeyHelp, type KeySpot, type Layout, type PlacedPlant, type Trip } from "./world";
+import { REACH_SLACK } from "./reach";
 import { standAt, wayNear, type Ground } from "./ground";
 import { benchLine, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
@@ -195,8 +196,6 @@ const ECHO = { delay: 1.2, show: 5 };
 const PERK_NEAR = 0.9;
 /** Near enough to the bench (m, from its middle) to sit on it (#334). */
 const BENCH_REACH = 1.6;
-/** A thing the action button shows stays in reach this much farther (m) than where it came into reach (#838), so the button does not blink at the edge. */
-const REACH_SLACK = 0.3;
 /** How much farther (m) a thing counts as in reach: REACH_SLACK for what the action button shows now (`shown`), none for anything else. */
 function slack(shown: boolean): number {
   return shown ? REACH_SLACK : 0;
@@ -2134,7 +2133,7 @@ export class GardenScene {
     const nearKey = d.state === "key" && this.inReach("key", slack(r === "key"));
     // On the bench, the button only gets you up.
     const off = this.seated;
-    const lamp = off ? -1 : this.lanterns.inReach(this.x, this.z, slack(r === "snuff" || r === "light"));
+    const lamp = off ? -1 : this.lanterns.inReach(this.x, this.z, this.lanternTarget);
     const lampAct: Reach | null = lamp < 0 ? null : this.lanterns.on[lamp] ? "snuff" : "light";
     // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
     const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spots[lamp][0] - this.x, this.lanterns.spots[lamp][1] - this.z);
@@ -2142,17 +2141,17 @@ export class GardenScene {
     const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH + slack(r === "sit");
     // A loose thing in your hands (#358) is used first: put down, or dropped in the well.
     const holding = this.carry.held !== null;
-    const carry = off || nearKey ? null : this.carry.reachAt(this.x, this.z, slack(r === "lift-pebble" || r === "well"));
-    const toy = off || nearKey ? null : this.toys.reachAt(this.x, this.z, slack(r === "blow"));
+    const carry = off || nearKey ? null : this.carry.reachAt(this.x, this.z, this.carryTarget);
+    const toy = off || nearKey ? null : this.toys.reachAt(this.x, this.z, this.toyTarget);
     // A hiding visitor (#379) comes before the bench and the plant ahead: it hides under the one and behind the other.
-    const hider = off || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z, slack(r === "seek"));
+    const hider = off || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z, this.seekTarget);
     const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
     const atStile = !off && !nearKey && !holding && this.stile !== null && this.stile.inReach(this.x, this.z, slack(r === "read"));
     const note = off || nearKey || holding ? null : (this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE, slack(r === "read")) ?? (atStile && this.stile ? this.stile.unopened() : null));
     const raise: Reach | null = !off && this.lanterns.canRaise(this.x, this.z, slack(r === "raise")) ? "raise" : null;
     // The first of these that applies, in reportReach's order above.
     const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? raise ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
-    const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw, slack(r === "shake"));
+    const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw, this.shakeTarget);
     const a: Reach | null = plant ? "shake" : before;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = a === "blow" && toy ? toy.target : null;
