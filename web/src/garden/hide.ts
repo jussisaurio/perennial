@@ -16,7 +16,7 @@ import { BED_H, type Layout, type PlacedPlant } from "./world";
 export const SEEK_REACH = 1.5;
 
 /** How it looks where it hides: crouched with its hat and eyes peeking out, a lily pad on its head, or standing very still. */
-export type HideLook = "peek" | "pad" | "front";
+type HideLook = "peek" | "pad" | "front";
 
 /** Where it hides today: on the ground, in a bed or on top of something, and how it looks there. */
 export interface Hiding {
@@ -43,7 +43,7 @@ export function hidesToday(age: number, now: Date): boolean {
  * pond, the leaf piles, behind any plant at a bed's edge, and the orchard.
  */
 export const PLACES = { front: 0, bench: 0, sign: 0, pads: 5, leaves: 10, edges: 14, orchard: 14 } as const;
-export type Place = keyof typeof PLACES;
+type Place = keyof typeof PLACES;
 
 /** A plant this near its bed's edge (m) is in reach from the path. It crouches this far behind it (m), away from the path. */
 const EDGE = 0.8;

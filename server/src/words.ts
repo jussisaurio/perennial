@@ -12,7 +12,7 @@ import { AppConfig } from "./config";
 const DeckIds = Schema.fromJsonString(Schema.Struct({ words: Schema.Array(Schema.Struct({ id: Schema.String })) }));
 
 /** A course's deck is missing or not a deck: the server cannot check writes, so it does not start. */
-export class DeckUnreadable extends Schema.TaggedError<DeckUnreadable>()("DeckUnreadable", { message: Schema.String }) {}
+class DeckUnreadable extends Schema.TaggedError<DeckUnreadable>()("DeckUnreadable", { message: Schema.String }) {}
 
 export class Words extends Context.Service<
   Words,

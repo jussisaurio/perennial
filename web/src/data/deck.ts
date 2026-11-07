@@ -17,7 +17,7 @@ const wordParts = import.meta.glob<WordsPart>("../../../decks/*/deck.json", { qu
 const sentenceParts = import.meta.glob<SentencesPart>("../../../decks/*/deck.json", { query: "?part=sentences", import: "default" });
 
 /** A deck sentence with its word keys, always there once loaded. */
-export type CourseSentence = DeckSentence & { keys: readonly string[] };
+type CourseSentence = DeckSentence & { keys: readonly string[] };
 
 export interface LoadedDeck {
   lang: string;

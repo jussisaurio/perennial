@@ -29,7 +29,7 @@ const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<
   return fetch(input, init);
 };
 
-export const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()], fetchOptions: { customFetchImpl: authFetch } });
+const authClient = createAuthClient({ plugins: [emailOTPClient(), anonymousClient()], fetchOptions: { customFetchImpl: authFetch } });
 
 export interface SessionUser {
   id: UserId;

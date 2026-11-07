@@ -7,11 +7,11 @@
 import { Schema } from "effect";
 
 /** Parts of speech, as decks spell them. Groupings (garden beds, course order) are built from these. */
-export const POS = ["noun", "verb", "adj", "adv", "pron", "prep", "conj", "det", "num", "particle", "phrase", "interj"] as const;
+const POS = ["noun", "verb", "adj", "adv", "pron", "prep", "conj", "det", "num", "particle", "phrase", "interj"] as const;
 export type Pos = (typeof POS)[number];
 
 /** A noun's gender, as decks spell it: "mf" is a noun that takes either (el/la colega). */
-export const GENDERS = ["m", "f", "n", "mf"] as const;
+const GENDERS = ["m", "f", "n", "mf"] as const;
 export type Gender = (typeof GENDERS)[number];
 
 /** Spelled-out names, as an AI-written word of the learner's own may have them. */

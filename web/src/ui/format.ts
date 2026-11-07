@@ -14,7 +14,7 @@ export function refusedLine({ count, clock }: Pick<Refused, "count" | "clock">):
 }
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /**
  * "Friday, November 6": what toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }) says,

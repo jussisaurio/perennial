@@ -4,7 +4,7 @@
 import { hash01 } from "../lib/seed";
 import type { GardenPlant } from "./plants";
 
-export interface Placed {
+interface Placed {
   p: GardenPlant;
   x: number;
   y: number;

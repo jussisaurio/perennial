@@ -46,7 +46,7 @@ export interface PlacedPlant extends GardenPlant {
   bed: number;
 }
 
-export interface Bed {
+interface Bed {
   x: number;
   z: number;
   w: number;
@@ -139,7 +139,7 @@ export function bedSign(sign: BedSign, lang: DeckLang): string {
 }
 
 /** Which way a word's plant leans when it leans at all: 1 to the right, -1 to the left, the same in every view. */
-export function leanDir(id: string): 1 | -1 {
+function leanDir(id: string): 1 | -1 {
   return hash01(id, 9) > 0.5 ? 1 : -1;
 }
 

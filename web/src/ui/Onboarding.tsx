@@ -64,7 +64,7 @@ export const courseArrived = () => {
 };
 
 /** The first write: an anonymous account (if there is none yet) and the course. */
-export async function startCourse(lang: string) {
+async function startCourse(lang: string) {
   setStarting({ lang, saved: false, error: "" });
   try {
     await ensureUser();

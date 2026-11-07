@@ -5,7 +5,7 @@ import { Resend } from "resend";
 import { AppConfig, type Config } from "./config";
 
 /** The provider refused the message. */
-export class MailFailed extends Schema.TaggedError<MailFailed>()("MailFailed", { message: Schema.String }) {}
+class MailFailed extends Schema.TaggedError<MailFailed>()("MailFailed", { message: Schema.String }) {}
 
 export interface Mailer {
   readonly send: (to: string, subject: string, text: string) => Effect.Effect<void, MailFailed>;
@@ -39,7 +39,7 @@ function resendMailer(apiKey: string, from: string): Mailer {
   };
 }
 
-export function createMailer(config: Config): Mailer {
+function createMailer(config: Config): Mailer {
   return config.mail.resendKey && !config.dev ? resendMailer(config.mail.resendKey, config.mail.from) : new OutboxMailer();
 }
 
