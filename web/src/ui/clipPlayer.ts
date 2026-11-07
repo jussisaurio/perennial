@@ -93,10 +93,12 @@ let finish: (() => void) | undefined;
  * an element later, after awaits, only once it has played inside a gesture.
  */
 function unlock(): void {
-  const wav = new DataView(new ArrayBuffer(46));
+  // 80 samples (10 ms): WebKit can't decode a one-sample WAV, and its play() then never settles (#774).
+  const samples = 80;
+  const wav = new DataView(new ArrayBuffer(44 + samples * 2));
   const ascii = (at: number, s: string) => [...s].forEach((c, i) => wav.setUint8(at + i, c.charCodeAt(0)));
   ascii(0, "RIFF");
-  wav.setUint32(4, 38, true);
+  wav.setUint32(4, 36 + samples * 2, true);
   ascii(8, "WAVEfmt ");
   wav.setUint32(16, 16, true);
   wav.setUint16(20, 1, true); // PCM
@@ -106,7 +108,7 @@ function unlock(): void {
   wav.setUint16(32, 2, true);
   wav.setUint16(34, 16, true);
   ascii(36, "data");
-  wav.setUint32(40, 2, true);
+  wav.setUint32(40, samples * 2, true);
   const a = (audio ??= new Audio());
   a.src = URL.createObjectURL(new Blob([wav.buffer], { type: "audio/wav" }));
   // A refusal here changes nothing: playClip then fails and the browser speaks.
