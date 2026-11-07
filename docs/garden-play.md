@@ -12,24 +12,24 @@ After the prose, each section lists its claims: short, checkable sentences, each
 
 Each claim has one e2e test whose title starts with its id, and the test plays it with the keyboard like the learner would. A claim that has no test is a missing test. A garden test that names no claim is either a claim missing from this file or a test to delete.
 
-## Calling a visitor
+## The action button
 
-With nothing in reach, the action button shows a whistle, and its name is "Call". Press it, or press and hold on open ground, to whistle. Each visitor you can see answers in its own way, and a screen reader hears what each one did.
+The action button sits low on the screen. It shows only when it has something to act on: a plant just ahead of you, the bench, the door, the key, a pebble, a dandelion clock, a note, a lantern. Its picture changes with what it does, and a screen reader hears its name ("Shake the plant", "Sit on the bench"). Walk away from everything and the button goes away: on open ground there is no button. When you see it, there is something near you to use.
 
-The dog comes. It gets up from its place by the shed and runs to you, wagging its tail. It goes the way you would walk: round the beds, round the pond, and through the door in the hedge when you are in the orchard. It never goes over or through them. It stops a short way from you and sits there for a few seconds. Then it trots home the same way and sits down in its place again. It runs to where you stood when you whistled: if you walk off, you find it waiting there. Whistle again and it comes to you again, from wherever it is.
+While you hold a pebble, the button stays everywhere: it throws the pebble, so there is always something to do with it.
 
-Everywhere you can stand, the dog can reach on foot: the door in the hedge never shuts once it is open, and before that you cannot be on the far side of it. If a later change makes a place you can stand that the dog cannot reach, the dog comes as near as it can and waits there; that change must say so here. The stile and the hill past the back fence are such places (#770): call from there, and the dog comes to the back fence near the stile and waits there.
+With the keyboard, Tab takes you to the button when it shows. If the button goes while it has focus, focus goes back to the garden, so the walk keys and Tab still work.
 
-The cat almost never comes: it flicks one ear. Rarely, it gets up and walks over the same way the dog does, stops the same short way from you, and stares at you until you walk away. The heron takes one slow step back from you, and never into the pond. The other visitors answer where they are: they fly, swim, or call back.
+- `action.none`: On open ground away from everything, no action button shows. Walk up to the bench and the button shows, named "Sit on the bench".
+
+## Visitors
 
 Visitors never stand in your way: you can walk through them. You never have to wait for one: walk on whenever you like.
 
-**How a visitor goes anywhere.** A visitor never vanishes from one place and shows up in another. When one goes somewhere (to you, home, to the bench, to wait by the key), you can watch it go: the dog and the cat walk or run on the ground, round the beds, the pond and the hedge, the same ways you can walk, and jump down from or up onto a seat or a step; the bird flies, up over things and down again. The gnome plays statues: while it is off your screen it walks, slowly, round the beds like the others; the moment it is on your screen it freezes. So a quick look back can catch it part of the way there. When the walk starts, each visitor is already in its place. With "reduce motion" on in your device, a visitor that goes somewhere is there at once: this is the one exception, for access.
+**How a visitor goes anywhere.** A visitor never vanishes from one place and shows up in another. When one goes somewhere (home, to the bench, to wait by the key), you can watch it go: the dog and the cat walk or run on the ground, round the beds, the pond and the hedge, the same ways you can walk, and jump down from or up onto a seat or a step; the bird flies, up over things and down again. The gnome plays statues: while it is off your screen it walks, slowly, round the beds like the others; the moment it is on your screen it freezes. So a quick look back can catch it part of the way there. When the walk starts, each visitor is already in its place. With "reduce motion" on in your device, a visitor that goes somewhere is there at once: this is the one exception, for access.
 
 **Who comes to sit with you on the bench** (#362). Sit still on the bench. After about ten seconds the bird flies over and lands on its back; after about twenty, the cat walks over and jumps up beside you; after about forty, the gnome comes to the grass past the far end, walking only while you are not looking at it. A screen reader hears each one when it has got there. Stand up and each goes back to its own place the same way it came.
 
-- `call.dog-round`: With a bed between you and the dog, the dog runs round the bed to you and is never on the bed.
-- `call.dog-home`: A few seconds after it reaches you, the dog trots back to its own place by the shed, again never over a bed.
 - `visit.bench-walk`: Sitting on the bench, the bird and the cat come to sit with you: in each frame on the way each one is a short step from where it was in the frame before, and the cat is never inside a bed. Stand up and they go home the same way.
 - `visit.gnome-statues`: Sitting on the bench, the gnome comes over: it never moves in a frame where it is on screen, and each frame it moves it goes a short step.
 
@@ -39,15 +39,15 @@ In the hedge on the gate side there is an old wooden door, shut. At dusk and nig
 
 When the learner knows the word for key (llave), the key lies somewhere in the garden, always in the same place for this learner: half under the bench, among the stones at the pond's edge, at the foot of a lantern, by the back corner of a bed, or under the sunflower. It is small: a brass key lying on the ground. Walk near it (about two metres) and the action button is "Pick up the key", and a screen reader hears "The key is here." Press it, or tap the key, and the key is gone from the ground, into your hand, and a quiet line over the place says "Has encontrado la llave." A tap on the key from farther away walks you up to it first, and then picks it up. With the key in hand, by the door the button is "Open the door with the key". The door swings open into the orchard, and stays open for good.
 
-**Help when the key waits a long time** (#334). The garden never says where the key is in words. If the key has waited three days or more, the dog (on a day it is here) waits by it instead of by the shed. It sits on the ground beside the key, a little under a metre away, never on top of it, and it looks at it: it turns its head to the key from wherever you see it. It sits on the side of the key away from the middle of the garden, where there is open ground, so from most of the garden you see the key in front of the dog. It wags its tail as you come near, as it does by the shed. It does not move off on its own. While it waits by the key, its place is by the key: call it and it comes to you, then goes back to the key. At dusk and night the bird (on a day it is here) waits on the ground by the key too, on the other side of it.
+**Help when the key waits a long time** (#334). The garden never says where the key is in words. If the key has waited three days or more, the dog (on a day it is here) waits by it instead of by the shed. It sits on the ground beside the key, a little under a metre away, never on top of it, and it looks at it: it turns its head to the key from wherever you see it. It sits on the side of the key away from the middle of the garden, where there is open ground, so from most of the garden you see the key in front of the dog. It wags its tail as you come near, as it does by the shed. It does not move off on its own. At dusk and night the bird (on a day it is here) waits on the ground by the key too, on the other side of it.
 
 If the key has waited a week or more, it also glints: a small star of light on the key, on and off every few seconds, whenever you face it, from far away and up close. Like the key, it is hidden by whatever stands in front of it. On a day the dog waits by the key, the key does not glint: the dog is the help that day, and a star just in front of it reads as the dog sparkling.
 
 A tap on the dog is a tap on the dog: its name shows, as anywhere. It does not pick up the key. Near the key the action button is still "Pick up the key", as it is wherever the key lies; it is the key that it picks up, and the found line shows low over the key, not on the dog.
 
-**Once you have the key**, whoever waited by it has nothing left to watch. The dog stays a moment, wagging, as if pleased; after about two seconds it gets up and trots home to its place by the shed, round the beds and the pond, the way it goes home after you call it. The bird flies up and back to its own perch. Neither one vanishes. Call the dog after that and it comes from wherever it is, and goes back to the shed.
+**Once you have the key**, whoever waited by it has nothing left to watch. The dog stays a moment, wagging, as if pleased; after about two seconds it gets up and trots home to its place by the shed, round the beds and the pond. The bird flies up and back to its own perch. Neither one vanishes.
 
-**What you can't do, and how you can tell.** The door does not open without the key: "Try the door" says it is locked. The dog does not bring you the key or lead you to it; it only waits by it, and calling it there brings it to you, then back to the key. No button names the key until you are near it.
+**What you can't do, and how you can tell.** The door does not open without the key: "Try the door" says it is locked. The dog does not bring you the key or lead you to it; it only waits by it. No button names the key until you are near it.
 
 ### Claims
 
@@ -66,7 +66,7 @@ The garden's back fence is a white picket fence, lower than your eyes. Right beh
 
 When the first stile note comes (n05, at about 250 known words), a few notes lie on the path in front of the back fence, on the path left of the first bed's column, a flat stone on them. Behind them, in the fence, is an old wooden stile, but the brambles have grown through the fence there and over its steps. They come nearly a metre into the garden, a little wider than the stile: walking along the fence, you go round them. You see the stile's top board and its posts among the thorns.
 
-Walk up to it with the keys, the stick or a tap. The brambles are solid: you stop at their edge, as you stop at a bed. The notes lie just in front of them, so you can stand by the notes without touching the thorns. Near the notes, the action button says "Read the note". Each press opens one note. When all are read, the button says what it says elsewhere ("Call"). A note you have read stays at the stile for the rest of the walk. From the next walk it is gone from the stile and hangs on the shed's nails, where you can read it again. No button offers a way over, and nothing moves you.
+Walk up to it with the keys, the stick or a tap. The brambles are solid: you stop at their edge, as you stop at a bed. The notes lie just in front of them, so you can stand by the notes without touching the thorns. Near the notes, the action button says "Read the note". Each press opens one note. When all are read, the button goes away, as it does wherever nothing is in reach. A note you have read stays at the stile for the rest of the walk. From the next walk it is gone from the stile and hangs on the shed's nails, where you can read it again. No button offers a way over, and nothing moves you.
 
 How you can tell the way is shut: the thorns stand between you and the steps, and you can't get through them. The first note (n05) says the gardener's old walk went over the stile, and that brambles taller than the gardener grow there now.
 
@@ -78,7 +78,7 @@ Note n08 hangs in the shed once it has come (at about 620 known words). It says:
 
 **The hill.** Walk on along the old path and the ground rises under you. The way opens onto the grassy top of the hill: open ground about eleven metres across, with brambles round its edge. On the top stand the old gardener's stool and a lantern on a post. From the top you look over the brambles, across a valley, to a small house on the far hills. At night a light shines in its window. The valley and the far hills are the view, past the brambles at the edge: like the sky, they are not a place to walk.
 
-You can walk anywhere on the grass of the hilltop and the cut way. The brambles, the stool and the post are solid. When the lantern is lit (from dusk), stand near its post and the action button says "Raise the lantern". Press it and the lantern rises on its post, holds for a moment, and comes down. Anywhere else on the hill, the button says what it says in the garden when nothing is in reach ("Call").
+You can walk anywhere on the grass of the hilltop and the cut way. The brambles, the stool and the post are solid. When the lantern is lit (from dusk), stand near its post and the action button says "Raise the lantern". Press it and the lantern rises on its post, holds for a moment, and comes down. Anywhere else on the hill there is no button, unless you hold a pebble.
 
 **Coming back.** Turn round and walk down the old path, through the cut, up the steps and down into the garden. Or tap a spot you can see in the garden, and you walk there the way you came, over the stile. Nothing takes you back on its own. When you stop, you stay where you are, on the hill or on the steps.
 
