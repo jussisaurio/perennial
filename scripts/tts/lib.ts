@@ -1,8 +1,8 @@
-// The clips the app needs (#306), and rendering them with Google's voices (content/clips.ts voiceFor).
+// The clips the app needs (#306), and rendering them with Google Chirp 3 HD.
 // Pure apart from what comes in through Deps, so tests run it with a fake fetch.
 
 import type { DeckLang } from "../../web/src/deck/langs.ts";
-import { clipPath, voiceFor, voiceName } from "../../web/src/content/clips.ts";
+import { clipPath, voiceName } from "../../web/src/content/clips.ts";
 import { language } from "../../web/src/content/languages.ts";
 import { petalForms } from "../../web/src/garden/shake.ts";
 import { SCENERY } from "../../web/src/garden/scenery.ts";
@@ -12,8 +12,6 @@ export interface Clip {
   lang: DeckLang;
   /** The BCP 47 tag Google's voice is named by. */
   tag: string;
-  /** Google's voice for this text (voiceFor). */
-  voice: string;
   text: string;
   /** Its name in the bucket (clipPath). */
   path: string;
@@ -48,13 +46,13 @@ export function spokenTexts(deck: SpokenDeck, lang: DeckLang): string[] {
 
 export async function clipsFor(texts: readonly string[], lang: DeckLang): Promise<Clip[]> {
   const { tag } = language(lang);
-  return Promise.all(texts.map(async (text) => ({ lang, tag, voice: voiceName(tag, voiceFor(text, lang)), text, path: await clipPath(text, lang) })));
+  return Promise.all(texts.map(async (text) => ({ lang, tag, text, path: await clipPath(text, lang) })));
 }
 
 /** Characters Google bills for. UTF-16 length is never below the code-point count, so the cap errs on the safe side. */
 export const chars = (clips: readonly Clip[]) => clips.reduce((n, c) => n + c.text.length, 0);
 
-/** Chirp 3 HD: the first 1M characters each month are free, then $30 per 1M (Google Cloud pricing, 2026-11). WaveNet, for lone words, is cheaper: 4M free, then $4 per 1M. */
+/** Chirp 3 HD: the first 1M characters each month are free, then $30 per 1M (Google Cloud pricing, 2026-11). */
 const FREE_CHARS = 1_000_000;
 const USD_PER_MILLION = 30;
 
@@ -94,7 +92,7 @@ export interface Rendered {
 /**
  * R2 object headers. New text gets a new name, but a bad clip may be made again under its own name
  * (#776). So browsers keep a clip a day, and Cloudflare's edge a year, until a replace purges it.
- * Google's MP3 is small already (32 kbps from Chirp 3 HD, 64 from WaveNet): it is stored as it comes, not re-encoded.
+ * Google's MP3 is 32 kbps already (about 4.7 KB a clip): it is stored as it comes, not re-encoded.
  */
 const CLIP_HEADERS = { "content-type": "audio/mpeg", "cache-control": "public, max-age=86400, s-maxage=31536000" } as const;
 
@@ -140,7 +138,7 @@ export const backoff = (attempt: number, random: () => number) => Math.min(30_00
 /** MPEG-2 Layer III bitrates in kbps, by the header's 4-bit index. */
 const MPEG2_L3_KBPS = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
 
-/** Length of a constant-bitrate MP3 as Google makes it (MPEG-2 Layer III, 24 kHz: 32 kbps from Chirp 3 HD, 64 from WaveNet). */
+/** Length of a constant-bitrate MP3 as Chirp 3 HD makes it (MPEG-2 Layer III, 24 kHz, 32 kbps). */
 function mp3Seconds(bytes: Uint8Array): number {
   // Sync word, then version bits 10 (MPEG-2) and layer bits 01 (Layer III).
   if (bytes[0] !== 0xff || ((bytes[1] ?? 0) & 0xfe) !== 0xf2) throw new Error("not an MPEG-2 Layer III MP3");
@@ -151,7 +149,7 @@ function mp3Seconds(bytes: Uint8Array): number {
 
 /**
  * The shortest a real clip of `text` can be. The near-silent clips were 0.26–0.34 s; the shortest
- * real one measured was 0.46 s (WaveNet "he"), and a sentence takes at least 0.07 s a character.
+ * real one in R2 was 0.53 s (German "ob"), and a sentence takes at least 0.07 s a character.
  */
 const minSeconds = (text: string) => Math.max(0.4, 0.04 * text.length);
 
@@ -173,7 +171,7 @@ export async function render(clips: readonly Clip[], o: RenderOptions, d: Deps):
         method: "POST",
         // In a header, not the URL: URLs end up in logs.
         headers: { "content-type": "application/json", "x-goog-api-key": o.apiKey },
-        body: JSON.stringify({ input: { text: c.text }, voice: { languageCode: c.tag, name: c.voice }, audioConfig: { audioEncoding: "MP3" } }),
+        body: JSON.stringify({ input: { text: c.text }, voice: { languageCode: c.tag, name: voiceName(c.tag) }, audioConfig: { audioEncoding: "MP3" } }),
       })
       .catch((e: unknown) => {
         throw new Retry(`network: ${String(e)}`);

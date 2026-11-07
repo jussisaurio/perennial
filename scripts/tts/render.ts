@@ -1,5 +1,5 @@
-// Renders the app's recorded audio (#306) with Google's voices (content/clips.ts
-// voiceFor) and uploads it to R2. Run by hand, from the owner's machine; never in CI.
+// Renders the app's recorded audio (#306) with Google Chirp 3 HD and uploads
+// it to R2. Run by hand, from the owner's machine; never in CI.
 //
 //   bun scripts/tts/render.ts                          dry run: counts and cost, nothing sent
 //   bun --env-file=.env.tts scripts/tts/render.ts --run --max-chars 500000

@@ -36,20 +36,11 @@ test("a clip's path is the app's path for the same text, whatever its Unicode fo
 
 describe("clipKey", () => {
   const base = { ...VOICE, lang: "es", text: "hola" };
-  const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
   test("is sha256 of version|model|voice|speed|lang|text, and the path ends with its first 16 hex digits", async () => {
-    const key = sha("v1|chirp3-hd|Charon|1|es|hola");
+    const key = createHash("sha256").update("v1|chirp3-hd|Charon|1|es|hola").digest("hex");
     expect(await clipKey(base)).toBe(key);
-    // A sentence keeps the name it has had since #306.
-    expect(await clipPath("Hola, amigo.", "es")).toBe(`es/hola-amigo-${sha("v1|chirp3-hd|Charon|1|es|Hola, amigo.").slice(0, 16)}.mp3`);
-  });
-
-  test("a lone word is said by a WaveNet voice, so its clip has a name of its own (#776)", async () => {
-    expect(await clipPath("Name", "de")).toBe(`de/name-${sha("v1|wavenet|H|1|de|Name").slice(0, 16)}.mp3`);
-    const [word, sentence] = await clipsFor(["Name", "Wie ist dein Name?"], "de");
-    expect(word!.voice).toBe("de-DE-Wavenet-H");
-    expect(sentence!.voice).toBe("de-DE-Chirp3-HD-Charon");
+    expect(await clipPath("hola", "es")).toBe(`es/hola-${key.slice(0, 16)}.mp3`);
   });
 
   test("changes when any input changes", async () => {
@@ -135,7 +126,7 @@ function harness(answer: (call: number, body: { input: { text: string } }) => Re
   return { deps, calls, uploads, sleeps, stored, inFlight };
 }
 
-const clips = (texts: string[]): Clip[] => texts.map((text) => ({ lang: "es", tag: "es-ES", voice: "es-ES-Chirp3-HD-Charon", text, path: `es/${text}.mp3` }));
+const clips = (texts: string[]): Clip[] => texts.map((text) => ({ lang: "es", tag: "es-ES", text, path: `es/${text}.mp3` }));
 const opts = { apiKey: "k", maxChars: 1_000, concurrency: 4, rpm: 1_000, attempts: 4 };
 
 describe("render", () => {
