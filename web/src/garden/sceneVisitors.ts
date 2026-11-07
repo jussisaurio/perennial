@@ -11,6 +11,7 @@ import { daily } from "../core/day";
 import { KINDS } from "./kinds";
 import type { Bloom, Body, Hideout, Reply, Visitor, VisitorKind } from "./kinds/kind";
 import type { Layout } from "./world";
+import type { Ground } from "./ground";
 import type { Spots } from "./spots";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
@@ -71,6 +72,8 @@ export interface VisitorWorld {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   layout: Layout;
+  /** The ground as it is now, for a visitor that walks (#761). */
+  ground: Ground;
   reducedMotion: boolean;
   /** The course language, for what a visitor says. */
   lang: string;
@@ -145,7 +148,7 @@ export class SceneVisitors implements Part {
     const bloom: Bloom | null = plant && { x: plant.x, z: plant.z, soil: w.bedTop, top: w.plantTop(plant), thirsty: plant.r < THIRSTY };
     for (const v of this.list) {
       const kind = KINDS[v.id];
-      const it = kind.arrive({ spots, layout: L, bloom, now, age, reducedMotion: w.reducedMotion, lang: w.lang });
+      const it = kind.arrive({ spots, layout: L, ground: w.ground, bloom, now, age, reducedMotion: w.reducedMotion, lang: w.lang });
       if (!it) continue;
       const { body, size } = it;
       const u = CELLS[v.id][body.frame] * cellU;

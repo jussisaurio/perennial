@@ -6,7 +6,7 @@
 import { daily, dayNumber } from "../../core/day";
 import { hash32, rng } from "../../lib/seed";
 import { CAT_ASLEEP, CAT_AWAKE, CAT_EAR, CAT_EAR_AWAKE, CAT_STARE } from "../visitorArt";
-import { besideYou, bodyAt, moveToward, type VisitorKind } from "./kind";
+import { bodyAt, walkHome, walkOn, walkTo, type VisitorKind, type Walk } from "./kind";
 
 /** How near you come before it opens an eye (m). */
 const WAKE_RANGE = 2.4;
@@ -29,7 +29,7 @@ export const cat: VisitorKind<Look> = {
   id: "cat",
   art: { asleep: CAT_ASLEEP, awake: CAT_AWAKE, ear: CAT_EAR, earAwake: CAT_EAR_AWAKE, stare: CAT_STARE },
   top: 0.45,
-  arrive({ spots, now, reducedMotion }) {
+  arrive({ spots, ground, now, reducedMotion }) {
     /** Sitting with you on the bench (#362): it does not open an eye. */
     let settled = false;
     const [sx, sy, sz] = spots.shedStep;
@@ -42,7 +42,7 @@ export const cat: VisitorKind<Look> = {
     let ear = -1;
     let calls = 0;
     let mode: "home" | "come" | "stare" | "back" = "home";
-    let to = { x: 0, z: 0 };
+    let walk: Walk = { way: [], leg: 0 };
     const settle = () => {
       mode = "home";
       [body.x, body.y, body.z] = [body.at.x, body.at.y, body.at.z];
@@ -52,9 +52,9 @@ export const cat: VisitorKind<Look> = {
       body,
       step({ dt, elapsed, x, z }) {
         const pace = reducedMotion ? Infinity : WALK * dt;
-        if (mode === "come" && moveToward(body, to.x, to.z, pace)) mode = "stare";
-        else if (mode === "stare" && Math.hypot(body.x - x, body.z - z) > LEFT) mode = "back";
-        else if (mode === "back" && moveToward(body, body.at.x, body.at.z, pace)) settle();
+        if (mode === "come" && walkOn(body, walk, pace)) mode = "stare";
+        else if (mode === "stare" && Math.hypot(body.x - x, body.z - z) > LEFT) [mode, walk] = ["back", walkHome(ground, body)];
+        else if (mode === "back" && walkOn(body, walk, pace)) settle();
         if (mode !== "home") {
           body.frame = "stare";
           return;
@@ -73,7 +73,7 @@ export const cat: VisitorKind<Look> = {
           ear = elapsed + EAR_S;
           return { line: "The cat flicks one ear." };
         }
-        to = besideYou(body, x, z, AT_FEET);
+        walk = walkTo(ground, body, x, z, AT_FEET);
         mode = "come";
         return { line: "The cat gets up, walks over, sits at your feet and stares at you." };
       },

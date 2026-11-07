@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { conditions } from "../conditions";
+import type { Ground } from "../ground";
 import type { Frame } from "../scenePart";
 import type { Spots } from "../spots";
-import { layout, lanternSpots, type GardenPlant } from "../world";
+import { collide, layout, lanternSpots, WALKER, type GardenPlant } from "../world";
 import { KINDS } from ".";
 import { catComes } from "./cat";
 import type { Arrival, Bloom, Visitor } from "./kind";
@@ -35,10 +36,12 @@ const SPOTS: Spots = {
     { on: "bench", at: [0, 0.8, 1.8] },
   ],
 };
+/** The garden with its door shut. */
+const GROUND: Ground = { layout: L, doorOpen: () => false, trees: () => [] };
 const BLOOM: Bloom = { x: 1, z: 1, soil: 0.3, top: 0.9, thirsty: false };
 
 function arrive(id: keyof typeof KINDS, a: Partial<Arrival> = {}): Visitor<string> {
-  const it = KINDS[id].arrive({ spots: SPOTS, layout: L, bloom: BLOOM, now: NOW, age: 0, reducedMotion: false, lang: "es", ...a });
+  const it = KINDS[id].arrive({ spots: SPOTS, layout: L, ground: GROUND, bloom: BLOOM, now: NOW, age: 0, reducedMotion: false, lang: "es", ...a });
   if (!it) throw new Error(`${id} stayed away`);
   return it;
 }
@@ -58,7 +61,7 @@ describe("visitor kinds", () => {
   test("every kind's frames have art, and every kind that comes starts on one of them", () => {
     for (const k of Object.values(KINDS)) {
       expect(Object.keys(k.art).length).toBeGreaterThan(0);
-      const it = k.arrive({ spots: SPOTS, layout: L, bloom: BLOOM, now: NOW, age: 0, reducedMotion: false, lang: "es" });
+      const it = k.arrive({ spots: SPOTS, layout: L, ground: GROUND, bloom: BLOOM, now: NOW, age: 0, reducedMotion: false, lang: "es" });
       expect(it).not.toBeNull();
       expect(Object.keys(k.art)).toContain(it!.body.frame);
     }
@@ -74,7 +77,7 @@ describe("visitor kinds", () => {
     expect(dog.y).toBe(0);
     expect(arrive("butterfly").body.at).toMatchObject({ x: 1.03, z: 1.06 });
     // Nothing in bloom: no butterfly.
-    expect(KINDS.butterfly.arrive({ spots: SPOTS, layout: L, bloom: null, now: NOW, age: 0, reducedMotion: false, lang: "es" })).toBeNull();
+    expect(KINDS.butterfly.arrive({ spots: SPOTS, layout: L, ground: GROUND, bloom: null, now: NOW, age: 0, reducedMotion: false, lang: "es" })).toBeNull();
   });
 
   test("the frog sleeps by day and does not answer a tap; awake at dusk, it croaks a known word, puffed up for a moment", () => {
@@ -213,7 +216,7 @@ describe("a call (#377)", () => {
 
   test("every kind answers a call in its own way", () => {
     for (const k of Object.values(KINDS)) {
-      const it = k.arrive({ spots: SPOTS, layout: L, bloom: BLOOM, now: NOW, reducedMotion: false, lang: "es" })!;
+      const it = k.arrive({ spots: SPOTS, layout: L, ground: GROUND, bloom: BLOOM, now: NOW, reducedMotion: false, lang: "es" })!;
       // A call asks only the visitors in sight: the mole is under the ground until it comes up (its own test below).
       if (!it.body.visible) continue;
       expect(call(it, 0, 5, 5)?.line).toBeTruthy();
@@ -234,6 +237,32 @@ describe("a call (#377)", () => {
     expect(frames).toEqual(new Set(["sit", "wag"]));
     run(dog, 10, 5, 1, true, 2);
     expect(dog.body).toMatchObject({ x: at.x, y: at.y, z: at.z });
+  });
+
+  test("a called dog goes round the bed and through the door, never through them, and comes as near as it can to you past a shut door (#761)", () => {
+    /** Is (x, z) in something solid: a bed, the pond, the hedge? A hair of radius, so the edges themselves count as clear. */
+    const inSolid = (x: number, z: number, open: boolean) => {
+      const p = collide(L, x, z, 0.02, open);
+      return Math.hypot(p.x - x, p.z - z) > 1e-9;
+    };
+    const walkTo = (x: number, z: number, open: boolean) => {
+      const dog = arrive("dog", { ground: { layout: L, doorOpen: () => open, trees: () => [] } });
+      call(dog, 0, x, z);
+      let solid = 0;
+      for (let t = 0; t < 6; t += 0.05) {
+        run(dog, 0.05, x, z, true, t);
+        if (inSolid(dog.body.x, dog.body.z, open)) solid++;
+      }
+      return { solid, gap: Math.hypot(dog.body.x - x, dog.body.z - z) };
+    };
+    // Behind the bed, from the dog by the shed: straight there crosses the bed.
+    expect(walkTo(-1, -2.5, false)).toEqual({ solid: 0, gap: expect.closeTo(0.7, 5) });
+    // In the orchard, past the hedge: through the open door.
+    expect(walkTo(3, 11, true)).toEqual({ solid: 0, gap: expect.closeTo(0.7, 5) });
+    // The door shut, you over the hedge (as on the stile): it comes to the hedge's foot below you and waits there.
+    const shut = walkTo(3, 9.5, false);
+    expect(shut.solid).toBe(0);
+    expect(shut.gap).toBeCloseTo(9.5 - (L.bounds.maxZ - WALKER), 5);
   });
 
   test("the cat flicks one ear; about one call in 50 it walks over, sits and stares, and goes back once you walk away", () => {
@@ -311,9 +340,10 @@ describe("a call (#377)", () => {
     const heron = arrive("heron");
     const { x, z } = heron.body.at;
     call(heron, 0, x + 10, z);
-    run(heron, 1, x + 10, z);
+    // A whole step (1.4 s): it may first step off the stones, away from the water.
+    run(heron, 1.5, x + 10, z);
     expect(heron.body.x).toBeLessThan(x);
-    run(heron, 4, x + 10, z, true, 1);
+    run(heron, 4, x + 10, z, true, 1.5);
     expect([heron.body.x, heron.body.z]).toEqual([x, z]);
 
     const calm = arrive("fish");

@@ -6,6 +6,7 @@
 // and Conditions.
 
 import type { Conditions } from "../conditions";
+import { wayNear, type Ground } from "../ground";
 import type { Frame } from "../scenePart";
 import type { Spots } from "../spots";
 import type { PixelArt } from "../visitorArt";
@@ -28,6 +29,8 @@ export interface Bloom {
 export interface Arrival {
   spots: Spots;
   layout: Layout;
+  /** The ground as it is now, for a visitor that walks (#761). */
+  ground: Ground;
   /** Today's bloom (#641): a plant in bloom picked by the day, or null when nothing is in bloom. */
   bloom: Bloom | null;
   /** The moment the walk opened: daily picks use its calendar day. */
@@ -161,23 +164,43 @@ export function bodyAt<F extends string>(x: number, y: number, z: number, frame:
 /** Within this far of its spot (m), a visitor walking off it comes down to the ground (its spot may be up on a bed or the bench). */
 const STEP_DOWN = 0.5;
 
-/**
- * Moves a body's drawn place toward (x, z) on the ground by `d` metres
- * (Infinity: there at once), coming down from its spot as it leaves and going
- * back up as it comes home. True once it is there.
- */
-export function moveToward(body: Body<string>, x: number, z: number, d: number): boolean {
-  const gap = Math.hypot(x - body.x, z - body.z);
-  const k = gap <= d ? 1 : d / gap;
-  body.x += (x - body.x) * k;
-  body.z += (z - body.z) * k;
-  body.y = body.at.y * Math.max(0, 1 - Math.hypot(body.x - body.at.x, body.z - body.at.z) / STEP_DOWN);
-  return k === 1;
+/** A visitor's walk on the ground (#761): its way (ground.ts), and the corner it heads for. */
+export interface Walk {
+  way: [number, number][];
+  leg: number;
 }
 
-/** Where a visitor called over to you stops: `gap` metres from you (x, z), on its side of you. */
-export function besideYou(body: Body<string>, x: number, z: number, gap: number): { x: number; z: number } {
-  const d = Math.max(0.01, Math.hypot(body.x - x, body.z - z));
-  const k = Math.min(1, gap / d);
-  return { x: x + (body.x - x) * k, z: z + (body.z - z) * k };
+/** A walk from where a visitor is drawn, round whatever is in the way, to `stop` metres from (x, z), or as near as it may come. */
+export function walkTo(ground: Ground, body: Body<string>, x: number, z: number, stop: number): Walk {
+  return { way: wayNear(ground, body.x, body.z, x, z, stop), leg: 1 };
+}
+
+/** A walk back to its own spot; the last short step is onto it, as its spot may lie a hair inside a walker's clearance (the heron on the pond's stones). */
+export function walkHome(ground: Ground, body: Body<string>): Walk {
+  const way = wayNear(ground, body.x, body.z, body.at.x, body.at.z, 0);
+  way.push([body.at.x, body.at.z]);
+  return { way, leg: 1 };
+}
+
+/**
+ * Moves a body's drawn place along its walk by `d` metres (Infinity: there at
+ * once), coming down from its spot as it leaves and going back up as it comes
+ * home. True once it is at the walk's end. No allocation: it runs every frame.
+ */
+export function walkOn(body: Body<string>, w: Walk, d: number): boolean {
+  while (w.leg < w.way.length) {
+    const [x, z] = w.way[w.leg];
+    const gap = Math.hypot(x - body.x, z - body.z);
+    if (gap > d) {
+      body.x += ((x - body.x) * d) / gap;
+      body.z += ((z - body.z) * d) / gap;
+      break;
+    }
+    body.x = x;
+    body.z = z;
+    d -= gap;
+    w.leg++;
+  }
+  body.y = body.at.y * Math.max(0, 1 - Math.hypot(body.x - body.at.x, body.z - body.at.z) / STEP_DOWN);
+  return w.leg === w.way.length;
 }

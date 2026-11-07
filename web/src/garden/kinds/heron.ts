@@ -5,8 +5,8 @@
 
 import { HERON, HERON_STEP } from "../visitorArt";
 import { padByGate } from "../spots";
-import { collide } from "../world";
-import { bodyAt, type VisitorKind } from "./kind";
+import { along } from "../world";
+import { bodyAt, walkTo, type VisitorKind } from "./kind";
 
 /** It steps back when you come this near (m), and home when you are this far (m). */
 const SHY = 1.5;
@@ -23,21 +23,20 @@ export const heron: VisitorKind<Look> = {
   hit: [0.44, 0.22, 0.44],
   top: 0.92,
   tagRange: 2.5,
-  arrive({ spots, layout, reducedMotion }) {
+  arrive({ spots, layout, ground, reducedMotion }) {
     const pad = padByGate(spots, layout);
     const { pond } = layout;
     const a = Math.atan2(pad[1] - pond.z, pad[0] - pond.x) - 0.6;
     const body = bodyAt<Look>(pond.x + Math.cos(a) * (pond.r + 0.12), 0, pond.z + Math.sin(a) * (pond.r + 0.12), "stand");
-    /** t: 0 at home, 1 one step back; dir: +1 stepping back, -1 stepping home; (tx, tz): where the step goes. */
+    /** t: 0 at home, 1 one step back; dir: +1 stepping back, -1 stepping home (the same way back); `way`: the step's way on the ground (#761). */
     let t = 0;
     let dir = 0;
-    let tx = 0;
-    let tz = 0;
+    let way: [number, number][] = [];
     /** One slow step back, away from (x, z). */
     const back = (x: number, z: number) => {
       const { at } = body;
       const k = STEP_M / Math.max(Math.hypot(at.x - x, at.z - z), 0.01);
-      ({ x: tx, z: tz } = collide(layout, at.x + (at.x - x) * k, at.z + (at.z - z) * k, 0.12));
+      ({ way } = walkTo(ground, body, at.x + (at.x - x) * k, at.z + (at.z - z) * k, 0));
       dir = 1;
     };
     return {
@@ -51,9 +50,7 @@ export const heron: VisitorKind<Look> = {
         else if (dir === 0 && t === 1 && d > CALM) dir = -1;
         if (dir === 0) return;
         t = Math.max(0, Math.min(1, t + (dir * dt) / STEP_S));
-        const e = t * t * (3 - 2 * t);
-        body.x = at.x + (tx - at.x) * e;
-        body.z = at.z + (tz - at.z) * e;
+        ({ x: body.x, z: body.z } = along(way, t * t * (3 - 2 * t)));
         body.frame = t > 0.15 && t < 0.85 ? "step" : "stand";
         if (t === 0 || t === 1) dir = 0;
       },
