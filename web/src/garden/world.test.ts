@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { rng } from "../lib/seed";
-import { shedAt } from "./leave";
+import { shedAt } from "./shed";
 import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
 import { along, benchAt, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
 

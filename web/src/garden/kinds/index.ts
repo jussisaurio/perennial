@@ -17,6 +17,5 @@ import type { VisitorKind } from "./kind";
 import { mole } from "./mole";
 import { moth } from "./moth";
 import { snail } from "./snail";
-import { toadstool } from "./toadstool";
 
-export const KINDS: Record<VisitorId, VisitorKind> = { snail, cat, toadstool, bird, frog, gnome, heron, moth, dog, fish, butterfly, goat, mole };
+export const KINDS: Record<VisitorId, VisitorKind> = { snail, cat, bird, frog, gnome, heron, moth, dog, fish, butterfly, goat, mole };

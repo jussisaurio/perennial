@@ -85,26 +85,6 @@ export const CAT_STARE: PixelArt = {
   pal: { ...CAT_PAL, "3": "#9ad050", e: INK },
 };
 
-export const TOADSTOOL: PixelArt = {
-  rows: [
-    ".....oooooo.....",
-    "...ooRRRRwwoo...",
-    "..oRRwwRRRRRRo..",
-    ".oRRRwwRRRRwwRo.",
-    ".oRRRRRRRRRwwRo.",
-    "oRRwwRRRRRRRRRRo",
-    "oRRwwRRRwwRRRRRo",
-    "oDDDDDDDDDDDDDDo",
-    ".oooommmmmmoooo.",
-    ".....mMMMmm.....",
-    ".....mMMMmm.....",
-    "....omMMMmmo....",
-    "....mMMMMmmm....",
-    "...gGgggGggGg...",
-  ],
-  pal: { o: "#5a1e14", R: "#d9443d", D: "#9c2c28", w: "#fff8e7", m: "#d8ccae", M: "#f6eedc", g: "#4e9140", G: "#72b85a" },
-};
-
 const BIRD_PAL = { o: INK, B: "#8a5a34", b: "#a8764a", R: "#e0703a", y: "#f0b030", e: "#111111", k: "#5a3a20" };
 
 /** A small brown bird with an orange breast, perched. */
@@ -310,29 +290,11 @@ const GNOME_SIDE_ROWS = gnome([
   "..oWWWBBBBBBBo..",
   "..oSBBBBBBBBBBS.",
 ]);
-/** Hatless, its back to you (the dog has its hat, #335 S2): a bald head, a fringe of white hair, the coat. */
-const GNOME_BACK_ROWS = [
-  ...Array(6).fill("................"),
-  ".......o.o......",
-  ".....oooooo.....",
-  "....oSSSSSSo....",
-  "...oSSSSSSSSo...",
-  "...oSSSSSSSSo...",
-  "..SoWWWWWWWWoS..",
-  "..oWWWWWWWWWWo..",
-  "..oBBBBBBBBBBo..",
-  "..oBBBBBBBBBBo..",
-  ".oBBBBBBBBBBBBo.",
-  ".SBBBBBBBBBBBBS.",
-  ...GNOME_LEGS,
-];
-/** The gnome facing you or looking away, or hatless with its back to you, with its lantern unlit (by day) or lit. */
-export function gnomeArt(pose: "front" | "side" | "back", lit: boolean): PixelArt {
-  const rows = { front: GNOME_FRONT_ROWS, side: GNOME_SIDE_ROWS, back: GNOME_BACK_ROWS }[pose];
+/** The gnome facing you or looking away, with its lantern unlit (by day) or lit. */
+export function gnomeArt(pose: "front" | "side", lit: boolean): PixelArt {
+  const rows = { front: GNOME_FRONT_ROWS, side: GNOME_SIDE_ROWS }[pose];
   return { rows, pal: { ...GNOME_PAL, L: lit ? "#ffe680" : "#4a4048" } };
 }
-/** The gnome's hat, on its own (the dog brings it back, #335 S2). */
-export const GNOME_HAT_ART: PixelArt = { rows: GNOME_HAT, pal: GNOME_PAL };
 
 // Hide-and-seek (#379): how the gnome looks where it hides, and once it is found.
 const GNOME_EYES = ["...oSSSSSSSSo...", "...oSeSSSSeSo..."];

@@ -293,26 +293,6 @@ export async function arrives(page: Page, to: { x: number; z: number }) {
     .toBe(true);
 }
 
-// Leave it out (#351), through the dev-only scene handle (window.__garden).
-type LeaveThing = "basket" | "bowl" | "shelf" | "find";
-
-/** Where a thing of leave it out (#351) is: x, z, and a height to look at. */
-const leavePlace = (page: Page, what: LeaveThing) =>
-  page.evaluate(async (what) => {
-    const { basketAt, bowlAt, shedAt } = await import(/* @vite-ignore */ "/src/garden/leave.ts");
-    const s = (window as unknown as { __garden: { layout: Parameters<typeof bowlAt>[0]; leaveIt: { findSpot(): { x: number; z: number } } } }).__garden;
-    const L = s.layout;
-    if (what === "basket") return { ...basketAt(L), y: 0.25 };
-    if (what === "bowl") return { ...bowlAt(L), y: 0.05 };
-    if (what === "shelf") return { x: shedAt(L).x, z: shedAt(L).z, y: 1.2 };
-    return { ...s.leaveIt.findSpot()!, y: 0.05 };
-  }, what);
-
-/** Stand `metres` from a thing, on the garden side, facing it; return where it shows on the page (pixels). */
-export async function standByLeave(page: Page, what: LeaveThing, metres: number) {
-  return standBy(page, await leavePlace(page, what), metres);
-}
-
 /** Stand `metres` from a point (x, z, and a height to look at), on the garden side, facing it; return where it shows on the page (pixels). */
 export function standBy(page: Page, p: { x: number; y: number; z: number }, metres: number) {
   return page.evaluate(

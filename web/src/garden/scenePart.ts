@@ -10,7 +10,6 @@
 
 import type { DoorAction } from "./scene";
 import type { Conditions } from "./conditions";
-import type { LeaveTarget } from "./sceneLeave";
 import type { Joke } from "./sceneJokes";
 import type { CarryTarget } from "./sceneCarry";
 import type { PlacedTree } from "./orchard";
@@ -43,12 +42,11 @@ export interface Part {
 
 /**
  * A tap the scene can answer. The host's one dispatcher (GardenScene.pickAny)
- * asks its own pickVisitor/pick/pickTree/pickDoor/pickLeave/pickJoke/pickLantern/pickCarry/pickToy/pickGround/pickScenery
+ * asks its own pickVisitor/pick/pickTree/pickDoor/pickJoke/pickLantern/pickCarry/pickToy/pickGround/pickScenery
  * methods (each already a pure query against a part or the host's own state)
  * and keeps the hit whose kind comes first in TAP_PRIORITY: a visitor, then a
- * plant, an orchard tree, the door or key, the bowl and its things (#351),
- * a joke (#364), a lit lantern (#361), loose things and where to put or throw
- * them (#358), a dandelion clock (#360), ground to walk to, and last the
+ * plant, an orchard tree, the door or key, a joke (#364), a lit lantern
+ * (#361), loose things and where to put them (#358), a dandelion clock (#360), ground to walk to, and last the
  * garden itself (scenery).
  * GardenWalk.tsx has one switch on `kind` instead of the five-step chain it
  * used to run itself. Picking is not part of the Part interface: no part
@@ -59,11 +57,9 @@ export type TapHit =
   | { kind: "plant"; p: PlacedPlant }
   | { kind: "tree"; t: PlacedTree }
   | { kind: "door"; a: DoorAction }
-  // Leave it out (#351): the bowl, the basket's things, the shelf, or what came in the night.
-  | { kind: "bowl"; t: LeaveTarget }
   // The deadpan scenery (#364): the mouse door, or the sundial at night, says its line.
   | { kind: "joke"; j: Joke }
-  // Carry (#358): a loose thing to pick up; holding one, the cairn, the water to throw it in, or the ground in reach to put it down.
+  // Carry (#358): a loose thing to pick up; holding one, the well, the water or the ground in reach to put it down.
   | { kind: "carry"; t: CarryTarget }
   // A dandelion clock (#360), by its index in the walk's clocks.
   | { kind: "toy"; i: number }
@@ -74,4 +70,4 @@ export type TapHit =
   | { kind: "scenery"; s: { view: SceneryView; hit: SceneryHit } };
 
 /** The order GardenScene.pickAny checks a tap in: first match wins. */
-export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "bowl", "joke", "lantern", "carry", "toy", "walk", "scenery"];
+export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "joke", "lantern", "carry", "toy", "walk", "scenery"];

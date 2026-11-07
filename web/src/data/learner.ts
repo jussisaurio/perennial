@@ -16,7 +16,6 @@ import { afterPaint } from "../ui/afterPaint";
 import { COURSE_DEFAULTS, SKILLS, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import type { Store } from "./store";
 import type { Gender, GardenWord, OrchardWord } from "../deck/schema";
-import { NO_LEFT, type GardenLeft } from "perennial-contract";
 
 export interface Sentence {
   id: string;
@@ -816,20 +815,7 @@ export function saveCourse(store: Store, lang: string, patch: Partial<Pick<Cours
         Object.assign(d, patch);
       });
     // The app no longer reads `minutes` (5 a day for everyone); older app versions still do.
-    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, door_open: false, garden_left: NO_LEFT, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
-  });
-}
-
-/**
- * Leave it out (#351): the garden's bowl and shelf changed. The server merges
- * it with what it has, so it only moves forward on every device (server/src/garden.ts).
- */
-export function saveLeft(store: Store, lang: string, left: GardenLeft) {
-  return store.write(() => {
-    store.collections.course.update(lang, (d) => {
-      // As saveCourse does: the draft's type wants mutable arrays, and the value is replaced whole, never edited in place.
-      Object.assign(d, { garden_left: left });
-    });
+    else c.insert({ user_id: store.userId, lang, minutes: DAILY_MINUTES, retention: patch.retention ?? COURSE_DEFAULTS.retention, door_open: false, created_at: new Date().toISOString() } as CourseRow & Record<string, unknown>);
   });
 }
 

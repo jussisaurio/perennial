@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "./test";
 
-// #360, lawn and pond toys: blow a dandelion clock by the fence, and fold a
-// paper boat at the pond with the learner's word on it. The playwright config
-// asks for reduced motion: the seeds fade on the clock, and the boat is set on
-// the water. Where the wind takes things is unit-tested (garden/toys.test.ts).
+// #360, lawn toys: blow a dandelion clock by the fence. The playwright config
+// asks for reduced motion: the seeds fade on the clock. Where the wind takes
+// things is unit-tested (garden/toys.test.ts).
 
 /** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
 type ToyScene = {
@@ -13,9 +12,7 @@ type ToyScene = {
   pitch: number;
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  layout: { pond: { x: number; z: number; r: number } };
-  visitors: { toys: { boat: { lemma: string; gloss: string } | null } };
-  toys: { heads: { id: string; x: number; z: number }[]; blown: boolean[]; seeds: { visible: boolean }; boatSpot(): { x: number; z: number } | null };
+  toys: { heads: { id: string; x: number; z: number }[]; blown: boolean[]; seeds: { visible: boolean } };
 };
 
 const DAY = new Date("2026-06-01T12:00:00");
@@ -36,7 +33,7 @@ async function openWalk(page: Page) {
 const toysNow = (page: Page) =>
   page.evaluate(() => {
     const s = (window as unknown as { __garden: ToyScene }).__garden;
-    return { blown: s.toys.blown, seeds: s.toys.seeds.visible, boat: s.toys.boatSpot(), word: s.visitors.toys.boat };
+    return { blown: s.toys.blown, seeds: s.toys.seeds.visible };
   });
 
 /** Stand 1.5 m in front of the clock on the back fence, facing it; return where it shows on the page (pixels). */
@@ -58,7 +55,7 @@ const facingClock = (page: Page) =>
       }),
   );
 
-test("a tap walks up to a dandelion clock and blows it; at the pond the button folds a paper boat with the learner's word on it, once", async ({ page }) => {
+test("a tap walks up to a dandelion clock and blows it", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   await page.goto("/?demo=es:3#/today");
@@ -75,29 +72,5 @@ test("a tap walks up to a dandelion clock and blows it; at the pond the button f
   await expect(page.getByRole("button", { name: "Blow the dandelion" })).toHaveCount(0);
   // The seeds fade, and are gone.
   await expect.poll(async () => (await toysNow(page)).seeds, { timeout: 15_000 }).toBe(false);
-
-  // At the pond's edge on the gate's side, away from the bench and the pebbles (#358): the button folds a boat.
-  await page.evaluate(() => {
-    const s = (window as unknown as { __garden: ToyScene }).__garden;
-    const p = s.layout.pond;
-    // Forward is -z at yaw 0: face the pond.
-    Object.assign(s, { x: p.x, z: p.z + p.r + 0.5, yaw: 0, pitch: -0.4 });
-  });
-  const word = (await toysNow(page)).word!;
-  expect(word).not.toBeNull();
-  await page.getByRole("button", { name: "Fold a boat" }).click();
-  await expect.poll(async () => !!(await toysNow(page)).boat, { timeout: 15_000 }).toBe(true);
-  // Its word and meaning over it, in the course language; and said to a screen reader.
-  const tag = page.locator(".gw-tag", { hasText: word.lemma });
-  await expect(tag).toBeVisible();
-  await expect(tag).toHaveAttribute("lang", "es");
-  await expect(tag).toContainText(word.gloss);
-  await expect(page.getByRole("status").locator("span[lang=es]", { hasText: word.lemma })).toHaveCount(1);
-  // On the water, inside the rim.
-  const boat = (await toysNow(page)).boat!;
-  const pond = await page.evaluate(() => (window as unknown as { __garden: ToyScene }).__garden.layout.pond);
-  expect(Math.hypot(boat.x - pond.x, boat.z - pond.z)).toBeLessThan(pond.r);
-  // One boat a walk.
-  await expect(page.getByRole("button", { name: "Fold a boat" })).toHaveCount(0);
   expect(errors).toEqual([]);
 });

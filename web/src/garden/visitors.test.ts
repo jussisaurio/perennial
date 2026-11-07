@@ -92,31 +92,18 @@ describe("who visits today", () => {
     }
   });
 
-  test("the toadstool comes about one day in seven, and more often in autumn", () => {
-    const has = (d: Date) => visitorsFor(NO_FACTS, d).present.includes("toadstool");
-    const autumn = days.filter((d) => d.getMonth() >= 8 && d.getMonth() <= 10);
-    const rest = days.filter((d) => d.getMonth() < 8 || d.getMonth() > 10);
-    const a = autumn.filter(has).length / autumn.length;
-    const r = rest.filter(has).length / rest.length;
-    expect(r).toBeGreaterThan(0.06);
-    expect(r).toBeLessThan(0.25);
-    expect(a).toBeGreaterThan(0.2);
-    expect(a).toBeLessThan(0.5);
-  });
-
   test("never more than two rare visitors: the cat stays, the last one waits", () => {
-    // Away for ten days: the cat is there every day; toadstool and bird share the rest.
+    // Away for ten days: the cat is there every day.
     for (const d of days) {
       const f: LearnerFacts = { ...NO_FACTS, firstReview: d.getTime() - 100 * 86_400_000, lastBeforeToday: d.getTime() - 10 * 86_400_000 };
       const t = visitorsFor(f, d);
       expect(t.present).toContain("cat");
       expect(t.present.filter((id) => visitor(id).rare).length).toBeLessThanOrEqual(RARE_CAP);
-      if (t.present.includes("toadstool")) expect(t.present).not.toContain("bird");
     }
   });
 
   test("the dev override shows everyone, or only the ones asked for", () => {
-    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "gnome", "frog", "moth", "cat", "heron", "toadstool", "bird", "dog", "fish", "butterfly", "goat", "mole"]);
+    expect(visitorsFor(NO_FACTS, days[0], "all").present).toEqual(["snail", "gnome", "frog", "moth", "cat", "heron", "bird", "dog", "fish", "butterfly", "goat", "mole"]);
     expect(visitorsFor(NO_FACTS, days[0], ["cat"]).present).toEqual(["cat"]);
   });
 
@@ -154,7 +141,7 @@ describe("residents: the gnome, the frog and the moth", () => {
       expect(rare.length).toBeLessThanOrEqual(RARE_CAP);
       if (rare.length === 2) both++;
     }
-    // The rare ones now are the heron (a day a month) and the mushroom (about a day a week): some days bring both.
+    // The rare ones now are the heron (a day a month) and the goat (about a day in six): some days bring both.
     expect(both).toBeGreaterThan(0);
   });
 });
@@ -177,7 +164,7 @@ describe("the heron (one day a month)", () => {
     expect(set.size).toBeGreaterThan(4);
   });
 
-  test("on its day it comes, before the toadstool", () => {
+  test("on its day it comes, first of the rare ones", () => {
     const d = new Date(2026, 4, heronDay(2026, 4), 12);
     expect(visitorsFor(NO_FACTS, d).present).toContain("heron");
     expect(visitorsFor(NO_FACTS, d).present.filter((id) => visitor(id).rare)[0]).toBe("heron");
@@ -288,8 +275,7 @@ describe("the cat (after a break)", () => {
     expect(away(1)).toBeNull();
     expect(away(6)).toBeNull();
     // Said on Today, which has no bench: the line makes sense on its own (#270).
-    expect(away(7)).toBe("Welcome back. A cat sat in the garden while you were away.");
-    expect(away(30)).toBe("Welcome back. A cat sat in the garden while you were away.");
+    expect(away(7)).toBe("Welcome back. The garden waited for you.");
     expect(away(90)).toBe("Welcome back. The garden waited for you.");
     for (const n of [7, 30, 90]) {
       expect(away(n)).not.toMatch(/\d|!|miss/i);

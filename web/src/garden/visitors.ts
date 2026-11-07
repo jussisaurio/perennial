@@ -4,12 +4,12 @@
 // the Words list, Next plant or the session summary: they are just for fun.
 // Pure functions, so they are easy to test. Rules: docs/voice.md and issue #69.
 
-import { daily, DAY_MS, dayNumber, isAutumn, rareDay, startOfDay } from "../core/day";
+import { daily, DAY_MS, dayNumber, rareDay, startOfDay } from "../core/day";
 import { bareNoun, inLang, nounView, type NounDef, type NounView, type NounWords, type PerLang } from "./nouns";
 import type { Layout } from "./world";
 import type { GardenWord } from "../deck/schema";
 
-export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "toadstool" | "bird" | "dog" | "fish" | "butterfly" | "goat" | "mole";
+export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "bird" | "dog" | "fish" | "butterfly" | "goat" | "mole";
 
 /** What we know about the learner, from review dates only. */
 export interface LearnerFacts {
@@ -65,7 +65,7 @@ const MOLE_WORDS: NounWords = { es: "el topo", de: "der Maulwurf" };
 
 /**
  * Residents first, then rare visitors in priority order: when more than two
- * are due, the first ones stay. The monthly heron comes before the mushroom.
+ * are due, the first ones stay.
  * Garden-word visitors (#209: snail, frog, cat, bird, dog, fish, butterfly)
  * live here once their word is learned, and do not count toward the cap.
  */
@@ -80,15 +80,6 @@ export const VISITORS: readonly VisitorDef[] = [
   // Learn its word and it lives here; before that it still comes after a long break (#17's secret cat).
   { id: "cat", words: { es: "el gato", de: "die Katze" }, gloss: "cat", rare: false, tag: "approach", garden: "cat", schedule: ({ facts, now }) => facts.garden.has("cat") || catBreak(facts, now) !== null },
   { id: "heron", words: { es: "la garza", de: "der Reiher" }, gloss: "heron", rare: true, tag: "approach", schedule: ({ now }) => now.getDate() === heronDay(now.getFullYear(), now.getMonth()) },
-  {
-    id: "toadstool",
-    words: { es: "la seta", de: "der Pilz" },
-    gloss: "mushroom",
-    rare: true,
-    tag: "approach",
-    // Autumn is mushroom season.
-    schedule: ({ now }) => rareDay(isAutumn(now) ? 3 : 7, "visitor-toadstool", now),
-  },
   { id: "bird", words: { es: "el pájaro", de: "der Vogel" }, gloss: "bird", rare: false, tag: "tap", garden: "bird", schedule: ({ facts }) => facts.garden.has("bird") },
   // Sits beside its word's plant, and wags its tail when you come near.
   { id: "dog", words: { es: "el perro", de: "der Hund" }, gloss: "dog", rare: false, tag: "approach", garden: "dog", schedule: ({ facts }) => facts.garden.has("dog") },
@@ -175,9 +166,7 @@ export function welcomeBack(facts: LearnerFacts, now: Date = new Date()): string
   if (facts.lastBeforeToday === null) return null;
   // Only on the first day back, not the day after.
   const away = dayNumber(now) - dayNumber(facts.lastBeforeToday);
-  if (away >= 60) return "Welcome back. The garden waited for you.";
-  if (away >= 7) return "Welcome back. A cat sat in the garden while you were away.";
-  return null;
+  return away >= 7 ? "Welcome back. The garden waited for you." : null;
 }
 
 /** Known-word counts that get one line on the Today screen, on the day they are crossed. */

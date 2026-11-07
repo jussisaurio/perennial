@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { dayNumber } from "../core/day";
-import { boatAt, blowEnds, dandelions, flight, HEAD_TOP, SEEDS, seedAt, voyage, windFor } from "./toys";
+import { blowEnds, dandelions, flight, HEAD_TOP, SEEDS, seedAt, windFor } from "./toys";
 import { collide, layout, type GardenPlant } from "./world";
 
 /** 17 Oct 2026, local: a pinned day. */
@@ -124,35 +124,5 @@ describe("a blow", () => {
     expect(Math.hypot(p.x - hit!.to.x, p.z - hit!.to.z)).toBeLessThan(0.3);
     expect(hit!.land).toBe(BED_TOP);
     expect(hit!.ground).toBe(false);
-  });
-});
-
-describe("a paper boat", () => {
-  const pond = big.pond;
-  const p = { x: 0, z: 0 };
-  const fromPond = () => Math.hypot(p.x - pond.x, p.z - pond.z);
-
-  test("sets off from the rim nearest the folder, and floats out", () => {
-    const v = voyage(pond, pond.x, pond.z - pond.r - 0.4, DAY);
-    boatAt(v, 0, p);
-    expect(p.x).toBeCloseTo(pond.x, 9);
-    expect(p.z).toBeLessThan(pond.z);
-    const start = fromPond();
-    boatAt(v, 2, p);
-    expect(fromPond()).toBeLessThan(start);
-  });
-
-  test("always stays on the water, and comes to rest downwind against the rim", () => {
-    for (let d = 0; d < 20; d++) {
-      const v = voyage(pond, pond.x + pond.r + 0.4, pond.z, DAY + d);
-      for (let t = 0; t < 600; t += 7) {
-        boatAt(v, t, p);
-        expect(fromPond()).toBeLessThanOrEqual(pond.r - 0.25 + 1e-9);
-      }
-      boatAt(v, 3600, p);
-      const w = windFor(DAY + d);
-      const along = ((p.x - pond.x) * w.x + (p.z - pond.z) * w.z) / Math.hypot(w.x, w.z) / fromPond();
-      expect(along).toBeGreaterThan(0.99);
-    }
   });
 });

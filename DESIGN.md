@@ -107,10 +107,10 @@ and key, the critters (fireflies, butterflies...), the plants (beds,
 culling, texture streaming, brushing past them), the visitors, the deadpan
 scenery (#364: the sundial, the mouse door, the fish that jumps), walking
 into things (#359: a CPU-moved pool of pixel bits for bursts and showers, and
-fallen fruit), the loose things you carry and throw (`sceneCarry.ts`,
-#358: one instanced mesh for all of them, their flights, the cairn's wobble,
-the pond's rings, and the orchard's well, #335 S6), and the toys (#360: the dandelion clocks with their
-seed points, and the paper boat). These are the rules a change to the garden's
+fallen fruit), the loose things you carry and put down (`sceneCarry.ts`,
+#358: one instanced mesh for all of them, the pond's rings, and the
+orchard's well, #335 S6), and the toys (#360: the dandelion clocks with their
+seed points). These are the rules a change to the garden's
 rendering code should follow, and the places it still does not (yet):
 
 - **A new Part is for a new rendering technique, never one per thing.** There
@@ -122,16 +122,15 @@ rendering code should follow, and the places it still does not (yet):
   share one random sequence, drawn in a fixed sequence — never reshuffle it);
   the order `parts` is ticked, disposed and given `Conditions` in; pick
   priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
-  say, then the one active tag — the door's line, a find's word (or what the dog fetched), a fallen fruit's word, scenery or
+  say, then the one active tag — the door's line, a fallen fruit's word, scenery or
   tree — then a visitor's); and what the one action button acts on
   (`reportReach`: stand up, the key, what a loose thing in your hands does
-  (throw it, put it on the cairn, drop it in the well, or give the gnome its hat back), a find at your feet, a visitor hiding
-  near you (#379), the door, the
-  bowl, shelf and basket, a lantern, picking up a loose thing, the bench, the toys
-  (blow a dandelion clock, fold a boat at the pond), then the plant ahead; with nothing in reach, call, #377). What a thrown thing does where it lands is a row in
+  (put it down, or drop it in the well), a visitor hiding near you (#379), the
+  door, a lantern, picking up a loose thing, the bench, the toys (blow a
+  dandelion clock), then the plant ahead; with nothing in reach, call, #377).
+  What a thing put down does where it lands is a row in
   `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a
-  small function there: a new joke is one row, not new scene code. What the dog fetches is a table
-  too (`garden/fetch.ts`). A Part never reaches into another
+  small function there: a new joke is one row, not new scene code. A Part never reaches into another
   Part's build or pick order.
 - **`tick` allocates nothing.** It runs every frame; a `Part.tick(f: Frame)`
   mutates existing buffers and uniforms, never creates one.
@@ -151,12 +150,10 @@ rendering code should follow, and the places it still does not (yet):
   so this makes nothing new each frame.
 
 Known exceptions, not yet brought in line:
-- **The hedge, the orchard and leave it out's bowl and shed (`sceneLeave.ts`,
-  #351) are not Parts.** They build geometry once and never tick, react to
-  `Conditions` or need disposing beyond the scene's own sweep, so there was
-  nothing to gain by giving them the interface. What came for the bowl is
-  worked out from calendar days the page passes in (`garden/leave.ts`
-  `resolve`), never from the clock in the scene.
+- **The hedge, the orchard and the shed (`shed.ts`) are not Parts.** They
+  build geometry once and never tick, react to `Conditions` or need disposing
+  beyond the scene's own sweep, so there was nothing to gain by giving them
+  the interface.
 - **A few scene stories still name a visitor:** the bench's sign says
   "Bench: taken" and the snail's board stands only when the cat or the snail
   is here, and the scene asks the dog and the bird to wait by a key or a find

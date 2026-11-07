@@ -8,8 +8,6 @@ import { reportStalledWalk } from "../observability";
 import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
 import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
-import type { Left, LeaveWalk } from "../garden/leave";
-import type { LeaveDone } from "../garden/sceneLeave";
 import type { CarryDone, Held } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
 import type { ToyDone } from "../garden/sceneToys";
@@ -37,11 +35,9 @@ interface WalkData {
  * not change while you walk) and the scene is built once from it; time of day
  * and quality changes go to the running scene. `onFocused`: the scene walked to
  * `focus` and opened its card. `door`: the door in the hedge (#315), and how to
- * save it once it is opened. `leave`: the bowl and the shelf (#351), how to save
- * them, and what to do when the learner leaves or finds something. `toys`: the
- * dandelion clocks and the paper boat (#360), and what to do when one is played
- * with. `onShake`: a plant was shaken (#357), and the forms that fell from it.
- * `onCarry`: a loose thing was picked up, thrown, put down or stacked, or it
+ * save it once it is opened. `toys`: the dandelion clocks (#360), and what to
+ * do when one is blown. `onShake`: a plant was shaken (#357), and the forms
+ * that fell from it. `onCarry`: a loose thing was picked up or put down, or it
  * landed (#358).
  * `onCall`: you whistled, and what each visitor that answered did (#377).
  */
@@ -50,7 +46,6 @@ export function useGardenScene({
   source,
   visitors,
   door,
-  leave,
   walkInto,
   toys,
   focus,
@@ -67,7 +62,6 @@ export function useGardenScene({
   source: PlantSource | null;
   visitors?: LearnerVisitors | null;
   door: { state: DoorState; open: () => void };
-  leave: { walk: LeaveWalk; save: (left: Left) => void; done: (d: LeaveDone) => void };
   /** The walker brushed a plant, bumped a tree or burst a leaf pile (#359). */
   walkInto: (e: WalkIntoEvent) => void;
   toys: { walk: ToysWalk; done: (d: ToyDone) => void };
@@ -96,7 +90,6 @@ export function useGardenScene({
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
-  const leaveNow = useRef(leave);
   const shakeNow = useRef(onShake);
   const walkIntoNow = useRef(walkInto);
   const carryNow = useRef(onCarry);
@@ -105,7 +98,6 @@ export function useGardenScene({
   // Before the browser paints, so the scene never calls the ones from before.
   useLayoutEffect(() => {
     openDoor.current = door.open;
-    leaveNow.current = leave;
     shakeNow.current = onShake;
     walkIntoNow.current = walkInto;
     carryNow.current = onCarry;
@@ -131,7 +123,6 @@ export function useGardenScene({
         scenery: visitors?.scenery ?? sceneryViews(lang),
         door: door.state,
         orchard: { trees: source.orchard, firstPlanted: source.first ? source.first.at : null },
-        leave: leave.walk,
         autumn: isAutumn(new Date(openedAt)),
         toys: toys.walk,
         // Tonight's real moon (#361), as the walk opens: the same as outside the window.
@@ -174,8 +165,6 @@ export function useGardenScene({
             onHand: setHand,
             onCompany: setCompany,
             onVisitorStatus: setHeard,
-            onLeave: (d) => leaveNow.current.done(d),
-            onLeft: (left) => leaveNow.current.save(left),
             onShake: (p, forms) => shakeNow.current(p, forms),
             onWalkInto: (e) => walkIntoNow.current(e),
             onCarry: (d) => carryNow.current(d),
@@ -215,8 +204,6 @@ export function useGardenScene({
         s.select(target, true);
         onFocused();
       }
-      // Opened from what waits in Today's strip (#335): walk up to the bowl, where the prints start. Following them is the learner's.
-      if (focus?.at === "bowl") s.walkToBowl();
       await s.loadPlants();
       if (alive) setProgress(null);
     })();
