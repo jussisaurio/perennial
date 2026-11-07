@@ -32,8 +32,8 @@ import { useGardenScene, useWalkInput, type Store } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { gardenBroughtAt, learnerVisitors, type LearnerVisitors } from "./visitors";
 import type { PixelArt } from "../garden/visitorArt";
-import type { CarryAct, CarryDone, Held } from "../garden/sceneCarry";
-import { LOOSE_ART } from "../garden/carryArt";
+import type { CarryAct, CarryDone } from "../garden/sceneCarry";
+import { PEBBLE } from "../garden/carryArt";
 import type { ToyAct, ToyDone } from "../garden/sceneToys";
 import type { Raised } from "../garden/lookout";
 import type { ToysWalk } from "../garden/toys";
@@ -74,7 +74,7 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  * and the stars once every one is (#361); what a thing thrown or put down did where it
  * landed (#358); what they hold. Things in the world, never instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, held: HandView | null, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, raised: Raised | null, seek: Seek, lang: string, stars: boolean): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, holding: boolean, shook: Shook | null, called: string[] | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, raised: Raised | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
@@ -128,8 +128,8 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.
-  if (!held) return landed;
-  return `You hold ${held.name}.`;
+  if (!holding) return landed;
+  return "You hold the pebble.";
 }
 
 /** The lookout's lantern raised (#683), as a screen reader hears it: at night the far light shines across the valley, and once it answers. */
@@ -323,15 +323,8 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
 const CARRY_ACTS = new Set<Reach>(["lift-pebble", "throw", "well"] satisfies CarryAct[]);
-/** Picking up a loose thing keeps the action button, for what comes next (a throw). */
-const LIFTS = new Set<Reach>(["lift-pebble"] satisfies CarryAct[]);
 /** The toys' actions (#360, sceneToys.ts ToyAct). */
 const TOY_ACTS = new Set<Reach>(["blow"] satisfies ToyAct[]);
-
-/** What you hold (#358), drawn small by the action button, and said to screen readers. */
-type HandView = { art: PixelArt; name: string };
-
-const handView = (h: Held): HandView => ({ art: LOOSE_ART[h], name: `the ${h}` });
 
 /** The landing page's walk: today's wind and dandelion clocks. */
 const showcaseToysNow = (): ToysWalk => ({ day: dayNumber(Date.now()) });
@@ -543,8 +536,7 @@ export function GardenWalk({
   };
   // The scene takes these once, as the walk opens; a note opened during the walk turns read where it is by itself.
   const placed = useMemo(() => placeNotes(notes.list, notes.read), [notes.list, notes.read]);
-  const { data, scene, ready, failed, progress, labels, spoken, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { ...placed, open: openNote } });
-  const held = hand && handView(hand);
+  const { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { ...placed, open: openNote } });
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = spoken.find((l) => l.kind === "echo");
   const echoId = echoed?.id;
@@ -731,7 +723,7 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           what they hold (#358); who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, spoken, door.state, held, shook, called, company, heard, landed, toyNews, raised && raised.r, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
+        {spokenStatus(reach, spoken, door.state, holding, shook, called, company, heard, landed, toyNews, raised && raised.r, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
       </div>
       <WalkLabels store={labels} selectedId={selected?.id} lang={lang} />
 
@@ -818,9 +810,9 @@ export function GardenWalk({
       {note && !selected && <NoteCard note={note} lang={lang} isKnown={notes.isKnown} onClose={closeNote} />}
 
       <div className="gw-bottom">
-        {held && !selected && (
+        {holding && !selected && (
           <div className="gw-hand" aria-hidden="true">
-            <ArtIcon art={held.art} />
+            <ArtIcon art={PEBBLE} />
           </div>
         )}
         {reach && !selected && !note && (
@@ -836,7 +828,7 @@ export function GardenWalk({
               if (reach !== "call") setCalled(null);
               // After the door opens, the key is picked up, something is thrown or put down or a toy is played with, there may be nothing in reach:
               // keep keyboard focus in the walk, not lost to the page. Picking up keeps the button, for what comes next (a throw).
-              if (reach === "open" || reach === "key" || reach === "seek" || ((CARRY_ACTS.has(reach) || TOY_ACTS.has(reach)) && !LIFTS.has(reach))) canvas.current?.focus({ preventScroll: true });
+              if (reach === "open" || reach === "key" || reach === "seek" || ((CARRY_ACTS.has(reach) || TOY_ACTS.has(reach)) && reach !== "lift-pebble")) canvas.current?.focus({ preventScroll: true });
             }}
           >
             <PixelIcon rows={REACH_ICON[reach]} />

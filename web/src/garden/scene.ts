@@ -32,7 +32,7 @@ import { courseNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
 import { buildShed, shedRoof, shedStep } from "./shed";
-import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Held, type Landing } from "./sceneCarry";
+import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Landing } from "./sceneCarry";
 import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { echo, echoDate, type Met } from "./well";
 import { TOY_STAND, Toys, type ToyAct, type ToyDone, type ToyTarget } from "./sceneToys";
@@ -133,8 +133,8 @@ export interface SceneCallbacks {
   onProgress: (done: number, total: number) => void;
   /** What the action button does now, for the thing in reach (#334); with nothing in reach, call (#377). */
   onReach: (a: Reach) => void;
-  /** What you hold changed (#358). */
-  onHand: (h: Held | null) => void;
+  /** You picked up a pebble, or let it go (#358). */
+  onHand: (holding: boolean) => void;
   /** A plant was shaken (#357): the forms that fell from it ([]: one leaf). */
   onShake: (p: PlacedPlant, forms: string[]) => void;
   /** You whistled (#377): what each visitor that answered did, as a screen reader hears it ([]: no one answered). */
@@ -995,13 +995,13 @@ export class GardenScene {
     const c = this.carry;
     if (t.at === "thing") {
       if (!c.lift(t.i)) return;
-      this.cb.onHand(c.thing);
+      this.cb.onHand(true);
       this.cb.onCarry({ did: "lift" });
       return;
     }
     const at = t.at === "well" ? this.layout.well : t;
     if (!c.letGo(this.x, this.z, at.x, at.z, t.at === "water")) return;
-    this.cb.onHand(null);
+    this.cb.onHand(false);
     this.cb.onCarry({ did: t.at === "water" ? "throw" : t.at === "well" ? "well" : "put" });
   }
 
@@ -1009,7 +1009,7 @@ export class GardenScene {
   private throwAhead() {
     const to = aimAt(this.x, this.z, this.yaw);
     if (!this.carry.letGo(this.x, this.z, to.x, to.z, true)) return;
-    this.cb.onHand(null);
+    this.cb.onHand(false);
     this.cb.onCarry({ did: "throw" });
   }
 

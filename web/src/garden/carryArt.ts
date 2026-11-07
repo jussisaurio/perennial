@@ -3,15 +3,12 @@
 // splash makes. Drawn into the walk's texture (textures.ts carryAtlas) and, for
 // what you hold, into the page (GardenWalk.tsx).
 
-import type { Loose } from "./carry";
 import type { PixelArt } from "./visitorArt";
 
 const STONE = { o: "#4a4440", S: "#9a948a", s: "#7a746a", w: "#c8c2b6" };
 
-export const LOOSE_ART: Record<Loose, PixelArt> = {
-  // Round, blue-grey and outlined, with a shine: not one of the path's grey specks.
-  pebble: { rows: ["..oooo..", ".oSwwSo.", "oSSwSSSo", "oSSSSSso", ".osssso.", "..oooo.."], pal: { o: "#33383e", S: "#a4aeb8", s: "#78828c", w: "#e8eef2" } },
-};
+/** Round, blue-grey and outlined, with a shine: not one of the path's grey specks. */
+export const PEBBLE: PixelArt = { rows: ["..oooo..", ".oSwwSo.", "oSSwSSSo", "oSSSSSso", ".osssso.", "..oooo.."], pal: { o: "#33383e", S: "#a4aeb8", s: "#78828c", w: "#e8eef2" } };
 
 /** The orchard's wishing well (#335 S6): a ring of stones, dark inside, under a small roof with a bucket on its rope. */
 export const WELL: PixelArt = {

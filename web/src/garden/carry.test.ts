@@ -51,7 +51,7 @@ describe("where a thing lands", () => {
 
 describe("the rows", () => {
   test("a pebble in the pond sinks with a ripple, and the frog answers", () => {
-    expect(reaction("pebble", "pond")).toMatchObject({ then: "sink", ripple: true, answer: "frog" });
+    expect(reaction("pond")).toMatchObject({ then: "sink", ripple: true, answer: "frog" });
   });
 
   test("the frog hops away from the first few pebbles, then only looks at you", () => {
@@ -90,7 +90,7 @@ describe("the orchard's well (#335 S6)", () => {
 
   test("a pebble dropped in falls, and another waits by the pond; the echo answers a moment later, with its own line", () => {
     expect(placeAt(L, w.x + 0.2, w.z)).toBe("well");
-    expect(reaction("pebble", "well")).toMatchObject({ then: "sink", answer: "well" });
+    expect(reaction("well")).toMatchObject({ then: "sink", answer: "well" });
     const { who, did } = scene({});
     expect(ANSWERS.well(who, w, 2)).toBeNull();
     expect(did).toEqual(["echo:2"]);

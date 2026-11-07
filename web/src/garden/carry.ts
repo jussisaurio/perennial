@@ -1,14 +1,11 @@
 // Carry, throw and put down (#358): the small loose things in the garden
 // (pebbles by the pond), where they lie, and what happens
-// when one lands somewhere. What happens is data: one row per (thing, place), so a
+// when one lands somewhere. What happens is data: one row per place, so a
 // new joke is one row. Who answers (the frog, a plant, the well) is a small
 // function each, on an interface the scene fills in. Nothing here is saved: a
 // pebble thrown in the pond is back by the pond next visit.
 
 import { collide, type Layout } from "./world";
-
-/** A loose thing you can pick up. */
-export type Loose = "pebble";
 
 /** Where a thing lands: in the pond, down the orchard's well, in a bed, or on the ground. */
 export type Place = "pond" | "well" | "bed" | "ground";
@@ -33,17 +30,15 @@ export interface Reaction {
 /** Anything that lands where no row says otherwise. */
 const LIE: Reaction = { then: "lie", said: "It lands on the ground." };
 
-/** The rows: (thing, place) → what happens. A place with no row here is the ground. */
-const ROWS: Record<Loose, Partial<Record<Place, Reaction>>> = {
-  pebble: {
-    pond: { then: "sink", ripple: true, answer: "frog", said: "Plop. Rings spread on the water." },
-    bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
-    well: { then: "sink", answer: "well", said: "It falls a long way. Plop." },
-  },
+/** The rows: where a pebble lands → what happens. A place with no row here is the ground. */
+const ROWS: Partial<Record<Place, Reaction>> = {
+  pond: { then: "sink", ripple: true, answer: "frog", said: "Plop. Rings spread on the water." },
+  bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
+  well: { then: "sink", answer: "well", said: "It falls a long way. Plop." },
 };
 
-export function reaction(thing: Loose, place: Place): Reaction {
-  return ROWS[thing][place] ?? LIE;
+export function reaction(place: Place): Reaction {
+  return ROWS[place] ?? LIE;
 }
 
 /** How many pebbles the frog hops away from in one visit; after that it only looks at you. */

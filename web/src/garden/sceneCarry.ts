@@ -6,18 +6,15 @@
 // instanced sprite mesh.
 
 import * as THREE from "three";
-import { PEBBLES, pebbleHome, placeAt, reaction, restAt, type Down, type Loose, type Place, type Reaction } from "./carry";
+import { PEBBLES, pebbleHome, placeAt, reaction, restAt, type Down, type Place, type Reaction } from "./carry";
 import { rayBox, type Ray } from "./scenery";
 import type { Frame, Part } from "./scenePart";
 import { sprites } from "./sceneSprites";
 import * as T from "./textures";
 import type { Layout } from "./world";
 
-/** What you hold: one loose thing at a time. */
-export type Held = Loose;
-
-/** What the action button does with loose things: pick one up, throw what you hold where you face, or drop a pebble in the well. */
-export type CarryAct = `lift-${Loose}` | "throw" | "well";
+/** What the action button does with pebbles: pick one up, throw the one you hold where you face, or drop it in the well. */
+export type CarryAct = "lift-pebble" | "throw" | "well";
 
 /** What a tap or the action button acts on: a loose thing, the well, a point on the water to throw at, or the ground in reach to put a thing down on. */
 export type CarryTarget = { at: "thing"; i: number } | { at: "well" } | { at: "water"; x: number; z: number } | { at: "ground"; x: number; z: number };
@@ -28,7 +25,6 @@ export type CarryDone = { did: "lift" | "throw" | "put" | "well" } | { did: "lan
 /** A thing came down: which one, where it was aimed, the place and its row, and what a screen reader hears (the scene adds who answers). */
 export interface Landing extends Down {
   i: number;
-  thing: Loose;
   place: Place;
   reaction: Reaction;
   said: string;
@@ -48,11 +44,9 @@ const WELL_REACH = 1.8;
 const WELL_FRONT = 0.5;
 /** A walk to a loose thing, or to where a thing goes, stops this short of it. */
 export const CARRY_STAND = 0.6;
-/** Metres per atlas cell, and each thing's size in cells. */
+/** Metres per atlas cell, and a pebble's size in cells. */
 const SIZE = 0.5;
-const SCALE: Record<Loose, number> = { pebble: 1.1 };
-/** What the action button says it picks up, per thing: made once, so reachAt allocates nothing. */
-const LIFT: { [K in Loose]: `lift-${K}` } = { pebble: "lift-pebble" };
+const SCALE = 1.1;
 /** The well's cell is 1.4 m: its stones as wide as its ring (orchard.ts WELL_R), its roof a little over the eye. */
 const WELL_SCALE = 2.8;
 /** A throw: it starts this far in front of you at this height, peaks this much above the line (plus some per metre), and flies this long (plus some per metre). */
@@ -64,7 +58,6 @@ const RIPPLE = { s: 1.1, size: 1.2, grow: 0.8 };
 type State = "rest" | "held" | "flying";
 
 interface Thing {
-  kind: Loose;
   x: number;
   y: number;
   z: number;
@@ -76,7 +69,7 @@ const near = (x: number, z: number, p: { x: number; z: number }, r: number) => M
 /** Lying where a hand can pick it up: not held, not in the air. */
 const free = (t: Thing) => t.at === "rest";
 /** A thing's drawn size: none while you hold it. */
-const shown = (t: Thing) => (t.at === "held" ? 0 : SCALE[t.kind]);
+const shown = (t: Thing) => (t.at === "held" ? 0 : SCALE);
 
 export class Carry implements Part {
   /** Their own materials: tinted with the time of day, never swaying in the wind (GardenScene.tint). */
@@ -103,20 +96,15 @@ export class Carry implements Part {
     this.layout = layout;
     this.world = world;
     this.reducedMotion = reducedMotion;
-    this.things = Array.from({ length: PEBBLES }, (_, i): Thing => ({ kind: "pebble", ...pebbleHome(layout, i), y: 0.01, at: "rest", home: pebbleHome(layout, i) }));
+    this.things = Array.from({ length: PEBBLES }, (_, i): Thing => ({ ...pebbleHome(layout, i), y: 0.01, at: "rest", home: pebbleHome(layout, i) }));
     this.targets = { things: this.things.map((_, i) => ({ at: "thing", i })), well: { at: "well" } };
-  }
-
-  /** The loose thing you hold, if any. */
-  get thing(): Loose | null {
-    return this.held === null ? null : this.things[this.held].kind;
   }
 
   /** The loose things and the well (unseen until showWell), in one instanced mesh; the rings, lying on the water. Draws no random numbers. */
   build() {
     const tex = T.pixelTexture(T.carryAtlas());
     const cell = (c: number) => c / T.CARRY_CELLS;
-    const items = this.things.map((t) => ({ x: t.x, y: t.y, z: t.z, u: cell(T.CARRY_CELL[t.kind]), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: shown(t), index: -8 }));
+    const items = this.things.map((t) => ({ x: t.x, y: t.y, z: t.z, u: cell(T.CARRY_CELL.pebble), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: shown(t), index: -8 }));
     const w = this.layout.well;
     this.well.i = items.length;
     items.push({ x: w.x, y: 0, z: w.z, u: cell(T.CARRY_CELL.well), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -8 });
@@ -149,15 +137,14 @@ export class Carry implements Part {
   }
 
   /**
-   * What the action button can do with loose things from (x, z): holding a
-   * pebble by the well, drop it in; holding anything else, throw it where you
-   * face; empty-handed, pick up the nearest thing in reach.
+   * What the action button can do with pebbles from (x, z): holding one by
+   * the well, drop it in; holding one elsewhere, throw it where you face;
+   * empty-handed, pick up the nearest one in reach.
    */
   reachAt(x: number, z: number): { a: CarryAct; target: CarryTarget | null } | null {
     const r = this.reach;
     if (this.held !== null) {
-      const pebble = this.things[this.held].kind === "pebble";
-      if (pebble && this.well.shown && near(x, z, this.layout.well, WELL_REACH)) [r.a, r.target] = ["well", this.targets.well];
+      if (this.well.shown && near(x, z, this.layout.well, WELL_REACH)) [r.a, r.target] = ["well", this.targets.well];
       else [r.a, r.target] = ["throw", null];
       return r;
     }
@@ -169,7 +156,7 @@ export class Carry implements Part {
       if (d < bestD && free(t)) [best, bestD] = [i, d];
     }
     if (best < 0) return null;
-    r.a = LIFT[this.things[best].kind];
+    r.a = "lift-pebble";
     r.target = this.targets.things[best];
     return r;
   }
@@ -189,7 +176,7 @@ export class Carry implements Part {
     this.things.forEach((th, i) => {
       if (!free(th)) return;
       // Generous: a pebble is a few pixels wide, and a finger is not.
-      const half = 0.12 * SCALE[th.kind];
+      const half = 0.12 * SCALE;
       const t = rayBox(r, [th.x - half, th.y, th.z - half], [th.x + half, th.y + 0.18, th.z + half]);
       if (t < (best?.t ?? Infinity)) best = { target: this.targets.things[i], t };
     });
@@ -198,7 +185,7 @@ export class Carry implements Part {
 
   /** How far along the ray the well is, while you hold a pebble and the door is open; Infinity otherwise. */
   pickWell(r: Ray): number {
-    if (this.thing !== "pebble" || !this.well.shown) return Infinity;
+    if (this.held === null || !this.well.shown) return Infinity;
     const w = this.layout.well;
     return rayBox(r, [w.x - w.r, 0, w.z - w.r], [w.x + w.r, 1.2, w.z + w.r]);
   }
@@ -222,11 +209,11 @@ export class Carry implements Part {
     if (i === null) return false;
     const th = this.things[i];
     const place = placeAt(this.layout, ax, az);
-    const rx = reaction(th.kind, place);
+    const rx = reaction(place);
     const rest = restAt(this.layout, ax, az, place, this.world.doorOpen());
     // Put down by hand on the ground: that is all that happened.
     const said = !arc && place === "ground" ? "You put it down." : rx.said;
-    const landing: Landing = { i, thing: th.kind, place, x: ax, z: az, reaction: rx, said };
+    const landing: Landing = { i, place, x: ax, z: az, reaction: rx, said };
     this.held = null;
     th.at = "flying";
     if (!arc || this.reducedMotion) {
