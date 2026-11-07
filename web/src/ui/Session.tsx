@@ -509,10 +509,12 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
       ) : example ? (
         <p className="sentence big" lang={tag}>
           <Highlight text={example.text} part={example.cloze} grown={revealed ? card.grown : undefined} />
-          {revealed && <Speaker text={example.text} tag={tag} what="sentence" />}
+          <Speaker text={example.text} tag={tag} what="sentence" />
         </p>
       ) : (
-        <div className="word">{word.lemma}</div>
+        <div className="word">
+          {word.lemma} <Speaker text={word.lemma} tag={tag} what="word" />
+        </div>
       )}
       {revealed ? (
         <>
