@@ -47,6 +47,8 @@ const report = [
   "",
   "A finding is a lead, not proof. Check each one before you delete it: code may run only on a path the suite does not take (an error, a slow network, the iPhone touch spec, a server-only path).",
   "",
+  "Coverage sees the page only: code that runs only in a web worker (garden/*Worker.ts) shows as never run, and so does a type-only module.",
+  "",
   "## 1. knip --production",
   "",
   "Production mode leaves out tests and tools, so an export used only by tests shows here, and so does a script that is run by hand.",
