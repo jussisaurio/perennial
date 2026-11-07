@@ -224,10 +224,10 @@ describe("the milestone line", () => {
 
   test("the gnome's count says someone arrived too; other counts only notice", () => {
     expect(milestoneLine(49, 50)).toBe("You know 50 words. Someone has arrived in the garden.");
-    expect(milestoneLine(149, 150)).toBe("You know 150 words. The garden noticed.");
-    expect(milestoneLine(24, 25)).toBe("You know 25 words. The garden noticed.");
-    expect(milestoneLine(99, 101)).toBe("You know 100 words. The garden noticed.");
-    expect(milestoneLine(498, 503)).toBe("You know 500 words. The garden noticed.");
+    expect(milestoneLine(149, 150)).toBe("You know 150 words.");
+    expect(milestoneLine(24, 25)).toBe("You know 25 words.");
+    expect(milestoneLine(99, 101)).toBe("You know 100 words.");
+    expect(milestoneLine(498, 503)).toBe("You know 500 words.");
     // Two at once (a big import): the higher one.
     expect(milestoneLine(20, 60)).toBe("You know 50 words. Someone has arrived in the garden.");
   });
@@ -275,8 +275,8 @@ describe("the cat (after a break)", () => {
     expect(away(1)).toBeNull();
     expect(away(6)).toBeNull();
     // Said on Today, which has no bench: the line makes sense on its own (#270).
-    expect(away(7)).toBe("Welcome back. The garden waited for you.");
-    expect(away(90)).toBe("Welcome back. The garden waited for you.");
+    expect(away(7)).toBe("Welcome back.");
+    expect(away(90)).toBe("Welcome back.");
     for (const n of [7, 30, 90]) {
       expect(away(n)).not.toMatch(/\d|!|miss/i);
     }

@@ -1,11 +1,10 @@
 // One description of a word's plant for every garden: the strip on Today, the
 // walk-in garden and the landing page all build their plants here, so the same
-// word has the same stage, height, lean, mood and wording everywhere. The
+// word has the same stage, height, lean and wording everywhere. The
 // stage itself follows plantStage (data/learner.ts), next to wordState.
 
 import { courseOrder } from "../content/order";
 import { DAY_MS } from "../core/day";
-import type { PLANT_LINES } from "../content/voice";
 import type { LoadedDeck } from "../data/deck";
 import { firstReviewed, isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "../core/memory";
 import type { Learner } from "../data/learner";
@@ -45,15 +44,6 @@ export interface PlantSource {
 /** Height from 0 to 1: grows fast at first, then slower; full height at about four months of stability. */
 export function growthOf(s: number): number {
   return Math.min(1, Math.log1p(s) / Math.log1p(120));
-}
-
-export type PlantMood = keyof typeof PLANT_LINES;
-
-/** The plant's mood for its line of personality: thirsty first, then an old friend, else its stage. */
-export function plantMood(p: { s: number; r: number; stage: Stage }): PlantMood {
-  if (p.r < THIRSTY) return "thirsty";
-  if (isOld(p)) return "old";
-  return p.stage;
 }
 
 /** An old friend: in bloom and known for a long time. On a full moon its edge shines silver in the walk (#361). */

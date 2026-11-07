@@ -1,5 +1,4 @@
 import { useEffect, useState, lazy, Suspense, type CSSProperties } from "react";
-import { savedLine, SOUND_OFF_ASIDE } from "../content/voice";
 import { saveCourse, useLearner, useStore } from "../data/learner";
 import type { CourseRow } from "../data/rows";
 import { useSound } from "./Sound";
@@ -59,7 +58,7 @@ function SoundSetting() {
       label="Speak words aloud"
       on={on}
       onChange={set}
-      help={`When this is off, Perennial does not speak words or sentences, and there are no listening exercises. This setting is only for this device.${on ? "" : ` ${SOUND_OFF_ASIDE}`}`}
+      help="When this is off, Perennial does not speak words or sentences, and there are no listening exercises. This setting is only for this device."
     />
   );
 }
@@ -99,7 +98,7 @@ function SavedStatus() {
       {/* "All changes are saved" would be untrue after a refusal. */}
       {(waiting || !refused) && (
         <p className="muted small" role="status">
-          {waiting ?? savedLine()}
+          {waiting ?? "All changes are saved."}
         </p>
       )}
     </>

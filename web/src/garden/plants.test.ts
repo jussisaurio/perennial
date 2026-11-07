@@ -3,7 +3,7 @@ import { DAY_MS } from "../core/day";
 import { isStrong, plantStage, wordState, type MemoryRow } from "../core/memory";
 import type { LoadedDeck } from "../data/deck";
 import type { Learner } from "../data/learner";
-import { leanDeg, plantMood, plantsFromLearner, showcasePlants, stageLabel, stageSentence, THIRSTY } from "./plants";
+import { leanDeg, plantsFromLearner, showcasePlants, stageLabel, stageSentence } from "./plants";
 import { droopFor } from "./world";
 
 describe("one definition of a word's stage", () => {
@@ -30,14 +30,7 @@ describe("one definition of a word's stage", () => {
   });
 });
 
-describe("plant moods and lean", () => {
-  test("thirsty below THIRSTY, then old friends, then the stage", () => {
-    expect(plantMood({ s: 300, r: THIRSTY - 0.01, stage: "bloom" })).toBe("thirsty");
-    expect(plantMood({ s: 300, r: 0.95, stage: "bloom" })).toBe("old");
-    expect(plantMood({ s: 20, r: 0.95, stage: "bloom" })).toBe("bloom");
-    expect(plantMood({ s: 4, r: THIRSTY, stage: "bud" })).toBe("bud");
-  });
-
+describe("plant lean", () => {
   test("the walk leans the same way as the strip: the shader turns the other way round", () => {
     for (const id of ["casa", "perro", "mañana", "Blume", "Haus"]) {
       expect(Math.abs(leanDeg(id, 0.95))).toBe(0);

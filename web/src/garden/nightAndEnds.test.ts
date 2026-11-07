@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { rng } from "../lib/seed";
 import { daily } from "../core/day";
-import { isSleepyHour, keepsakeLabel, NEIGHBOUR, NEIGHBOUR_PERK, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId, snoreLine } from "./whimsy";
+import { isSleepyHour, keepsakeLabel, NEIGHBOUR, NEIGHBOUR_PERK, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId } from "./whimsy";
 import { MOLE_ONE_IN, moleVisits, stripVisitor, visitorsFor, NO_FACTS } from "./visitors";
 
 const days = Array.from({ length: 400 }, (_, d) => new Date(2026, 0, 1 + d, 12));
@@ -27,12 +27,6 @@ describe("a plant that sleeps at night (#62)", () => {
       const ids = Array.from({ length: n }, () => `w${Math.floor(r() * 5000)}`);
       for (const d of days.slice(0, 60)) expect(sleeperId(ids, d)).toBe(daily([...ids].sort(), "sleeper", d));
     }
-  });
-
-  test("the card teaches the verb, after the snore", () => {
-    expect(snoreLine("es")).toBe("Zzz... (dormir = to sleep)");
-    expect(snoreLine("de")).toBe("Zzz... (schlafen = to sleep)");
-    expect(snoreLine("fr")).toBe("Zzz...");
   });
 });
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
-import { didLine, firstPlantsLine, summaryHeadline } from "../content/voice";
+import { didLine, firstPlantsLine } from "../content/voice";
 import { check, differences, passes, type Verdict } from "../core/answer";
 import type { Grade } from "../core/fsrs";
 import { askedForm, headword, otherForm } from "../content/forms";
@@ -830,8 +830,6 @@ function Summary({
     });
     return grew.length ? grew : null;
   });
-  // ?? only for the type: a summary follows a started session, so the learner has loaded.
-  const [headline] = useState(() => summaryHeadline(learner?.course.lang ?? "", learner?.everyReview().length ?? 0));
   const title = paused ? "Session paused" : "Session complete";
   // Live: a refusal can arrive after the summary opens, as the last answers upload.
   const refused = useRefused();
@@ -849,12 +847,6 @@ function Summary({
         <SeedIcon size={15} /> {title.toLowerCase()}
       </div>
       <h1>{line}</h1>
-      {did && (
-        <p className="muted headline-small">
-          {headline.line}
-          {headline.small && ` ${headline.small}`}
-        </p>
-      )}
       {why && <p className="muted">{why}</p>}
       {/* A paused session drops its promised quick checks unless the learner continues (#254). */}
       {paused && met > 0 && (

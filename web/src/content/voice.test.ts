@@ -1,36 +1,16 @@
 import { expect, test } from "bun:test";
-import {
-  didLine,
-  doneTodayNote,
-  EMPTY_WALK,
-  firstPlantsLine,
-  greetingAside,
-  loadingLine,
-  PLANT_LINES,
-  reservedStake,
-  restDayLine,
-  summaryHeadline,
-  WORM_LINE,
-  wordsEmptyLine,
-  type WordsFilter,
-} from "./voice";
+import { didLine, EMPTY_WALK, firstPlantsLine, reservedStake, wordsEmptyLine, type WordsFilter } from "./voice";
 
 const FILTERS: WordsFilter[] = ["all", "known", "learning", "new", "suspended", "mine"];
 
-// docs/voice.md: short, simple, no "!" in English; the clear sentence comes first.
-const days = Array.from({ length: 60 }, (_, d) => new Date(2026, 8, 1 + d, [8, 14, 20, 23][d % 4]));
+// docs/voice.md: short, simple, no "!" in English.
 const english = [
-  ...Object.values(PLANT_LINES).flat(),
-  ...days.flatMap((d) => [loadingLine(d), doneTodayNote(d), greetingAside(d) ?? ""]),
-  ...days.map((d, i) => summaryHeadline("es", i, d)).flatMap((h) => (h.small ? [h.small] : [h.line])),
   ...Object.values(EMPTY_WALK),
-  WORM_LINE,
-  restDayLine("Oct 3"),
   reservedStake("Spanish", "es").line,
   firstPlantsLine(1),
   firstPlantsLine(5),
   ...FILTERS.flatMap((f) => [wordsEmptyLine(f, false), wordsEmptyLine(f, true)]),
-].filter(Boolean);
+];
 
 test("English lines: no exclamation marks, short sentences", () => {
   for (const line of english) {
@@ -39,19 +19,7 @@ test("English lines: no exclamation marks, short sentences", () => {
   }
 });
 
-test("lines rotate across days", () => {
-  expect(new Set(days.map((d) => summaryHeadline("de", 40, d).line)).size).toBeGreaterThan(4);
-});
-
-test("the summary headline changes between sessions on the same day (#270)", () => {
-  const day = new Date(2026, 9, 14, 15); // a pumpkin day: the same joke on every summary before
-  const lines = [10, 25, 40, 61, 80].map((answers) => summaryHeadline("es", answers, day).line);
-  expect(new Set(lines).size).toBeGreaterThan(3);
-  expect(lines.filter((l) => l.includes("pumpkins")).length).toBeLessThan(3);
-});
-
-test("quiet copy: the clear part comes first, the wink after (#58, #68)", () => {
-  expect(restDayLine("Oct 3").startsWith("Oct 3: rest day.")).toBe(true);
+test("plain copy says what is there (#58, #262)", () => {
   for (const f of FILTERS) expect(wordsEmptyLine(f, false)).toMatch(/^No /);
   expect(wordsEmptyLine("new", true)).toBe("No new word like this. Try All.");
   expect(reservedStake("Spanish", "es")).toEqual({ line: "Reserved for Spanish words", local: "Reservado" });

@@ -5,7 +5,7 @@
 
 import { daily, dailyIndex } from "../core/day";
 import type { DeckLang } from "../deck/langs";
-import { inLang, type PerLang } from "./nouns";
+import type { PerLang } from "./nouns";
 
 export interface SignLine {
   text: string;
@@ -117,9 +117,6 @@ export function sunflowerFaces(flowerX: number, flowerZ: number, camX: number, c
 /** The strip's sleeper snores only late at night (real clock). */
 export const isSleepyHour = (now: Date = new Date()): boolean => now.getHours() >= 22 || now.getHours() < 5;
 
-/** The verb "to sleep" per course language, for the sleeper's card in the walk. */
-const SLEEP_VERB: PerLang<string> = { es: "dormir", de: "schlafen" };
-
 /**
  * Tonight's sleeper: one blooming plant, picked by the date. It is the k-th id
  * in sorted order, so the strip and the walk agree whatever order they keep.
@@ -151,12 +148,6 @@ function kthSmallest(xs: string[], k: number): string {
     else return xs[k];
   }
   return xs[k];
-}
-
-/** The line on the sleeper's card: the snore first, then the verb it teaches. */
-export function snoreLine(lang: string): string {
-  const verb = inLang(SLEEP_VERB, lang);
-  return verb ? `Zzz... (${verb} = to sleep)` : "Zzz...";
 }
 
 // ---- The plant hears its name (#60) ----
