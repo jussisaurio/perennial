@@ -1073,15 +1073,15 @@ export function leafPile(): OffscreenCanvas {
 /** Rings on the water, from small to wide, as they spread. */
 export const RINGS = 3;
 /** Cells of the carry atlas (32×32 each, things standing on the bottom row; the rings fill theirs), in this order. */
-export const CARRY_CELL = { pebble: 0, stick: 1, ring: (i: number) => 2 + i, well: 2 + RINGS };
-export const CARRY_CELLS = 3 + RINGS;
+export const CARRY_CELL = { pebble: 0, ring: (i: number) => 1 + i, well: 1 + RINGS };
+export const CARRY_CELLS = 2 + RINGS;
 
 /** The loose things, the rings and the orchard's well (#335 S6), in one small atlas (drawn once), in CARRY_CELL order. */
 export function carryAtlas(): OffscreenCanvas {
   const [c, ctx] = canvas(32 * CARRY_CELLS, 32);
   const rings = Array.from({ length: RINGS }, (_, i) => CarryArt.ring(5 + i * 5, 32));
   const L = CarryArt.LOOSE_ART;
-  [L.pebble, L.stick, ...rings, CarryArt.WELL].forEach((art, i) => {
+  [L.pebble, ...rings, CarryArt.WELL].forEach((art, i) => {
     const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
     const oy = 32 - art.rows.length;
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);

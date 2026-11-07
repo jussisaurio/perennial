@@ -22,7 +22,7 @@ export const dog: VisitorKind<Look> = {
   art: { sit: DOG, wag: DOG_WAG },
   hit: [0.25, 0.3, 0.27],
   arrive({ spots, reducedMotion }) {
-    // On the ground a little out from the step, clear of the stick by the fence.
+    // On the ground a little out from the step.
     const [sx, , sz] = spots.shedStep;
     const body = bodyAt<Look>(sx - 0.9, 0, sz - 0.2, "sit");
     /** Called: running to where you were ("come"), sitting there until `until` (elapsed s), then going home ("back"). */

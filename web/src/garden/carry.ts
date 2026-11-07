@@ -1,5 +1,5 @@
 // Carry, throw and put down (#358): the small loose things in the garden
-// (pebbles by the pond, a stick by the shed), where they lie, and what happens
+// (pebbles by the pond), where they lie, and what happens
 // when one lands somewhere. What happens is data: one row per (thing, place), so a
 // new joke is one row. Who answers (the frog, a plant, the well) is a small
 // function each, on an interface the scene fills in. Nothing here is saved: a
@@ -8,7 +8,7 @@
 import { collide, type Layout } from "./world";
 
 /** A loose thing you can pick up. */
-export type Loose = "pebble" | "stick";
+export type Loose = "pebble";
 
 /** Where a thing lands: in the pond, down the orchard's well, in a bed, or on the ground. */
 export type Place = "pond" | "well" | "bed" | "ground";
@@ -19,11 +19,10 @@ export type Answer = "frog" | "plant" | "well";
 /** What a landing does. */
 export interface Reaction {
   /**
-   * What becomes of the thing: it lies where it lands; it sinks (and another
-   * waits by the pond, so pebbles never run out); or it floats and drifts back
-   * to the edge.
+   * What becomes of the thing: it lies where it lands; or it sinks (and
+   * another waits by the pond, so pebbles never run out).
    */
-  then: "lie" | "sink" | "float";
+  then: "lie" | "sink";
   /** Rings spread on the water where it goes in. */
   ripple?: true;
   answer?: Answer;
@@ -40,10 +39,6 @@ const ROWS: Record<Loose, Partial<Record<Place, Reaction>>> = {
     pond: { then: "sink", ripple: true, answer: "frog", said: "Plop. Rings spread on the water." },
     bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
     well: { then: "sink", answer: "well", said: "It falls a long way. Plop." },
-  },
-  stick: {
-    pond: { then: "float", ripple: true, said: "Splash. The stick floats." },
-    bed: { then: "lie", answer: "plant", said: "It lands by a plant." },
   },
 };
 
@@ -124,7 +119,3 @@ export function pebbleHome(l: Layout, i: number): { x: number; z: number } {
   return { x: l.pond.x + l.pond.r + 0.55 + Math.cos(a) * r, z: l.pond.z + 0.5 + Math.sin(a) * r };
 }
 
-/** The stick, on the ground in front of the shed, toward the gate. */
-export function stickHome(l: Layout): { x: number; z: number } {
-  return { x: l.bounds.maxX - 1.6, z: l.bounds.maxZ - 1.1 };
-}
