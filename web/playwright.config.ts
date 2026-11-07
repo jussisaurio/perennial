@@ -1,24 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// Ports are offset from the dev defaults so the suite can run beside `bun dev`.
-// E2E_PORT_OFFSET shifts them again, so two checkouts can run the suite at once.
-// An agent worktree (.claude/worktrees/<name>) gets its own offset from its name,
-// so parallel agents need not pick one; a clash fails at start, as no server is reused.
-// Needs Postgres: `docker compose up -d` at the repo root.
-const OFFSET = Number(process.env.E2E_PORT_OFFSET ?? worktreeOffset(process.cwd()));
+import { DATABASE_URL, PORT_OFFSET } from "./e2e/worktree.ts";
 
-/** 10–4000 in steps of 10 (each offset uses 3 consecutive ports), or 0 outside a worktree. */
-function worktreeOffset(dir: string): number {
-  const name = /\/\.claude\/worktrees\/([^/]+)/.exec(dir)?.[1];
-  if (name === undefined) return 0;
-  let h = 0;
-  for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return 10 * (1 + (h % 400));
-}
-const WEB = 5181 + OFFSET;
-const API = 18787 + OFFSET;
-const LLM = 18788 + OFFSET;
-const SERVER_ENV = [`PORT=${API}`, "PERENNIAL_DEV=1", "LOG_LEVEL=warn", `APP_URL=http://localhost:${WEB}`, "ANTHROPIC_API_KEY=test", `ANTHROPIC_BASE_URL=http://localhost:${LLM}`, "FREE_CREDITS=6"].join(" ");
+// Ports are offset from the dev defaults so the suite can run beside `bun dev`.
+// An agent worktree gets its own offset and database (e2e/worktree.ts), so parallel
+// agents need not pick them; a port clash fails at start, as no server is reused.
+// Needs Postgres: `docker compose up -d` at the repo root.
+const WEB = 5181 + PORT_OFFSET;
+const API = 18787 + PORT_OFFSET;
+const LLM = 18788 + PORT_OFFSET;
+const SLOT = 18789 + PORT_OFFSET;
+const SERVER_ENV = [`PORT=${API}`, "PERENNIAL_DEV=1", "LOG_LEVEL=warn", `APP_URL=http://localhost:${WEB}`, "ANTHROPIC_API_KEY=test", `ANTHROPIC_BASE_URL=http://localhost:${LLM}`, "FREE_CREDITS=6", `DATABASE_URL=${DATABASE_URL}`].join(" ");
 
 export default defineConfig({
   testDir: "e2e",
@@ -53,9 +45,13 @@ export default defineConfig({
     { name: "iphone", use: { ...devices["iPhone 15"], launchOptions: { args: [] } }, testMatch: /garden-touch\.spec/, dependencies: ["warm-webkit"] },
   ],
   webServer: [
+    // First, as Playwright starts these in order: wait for one of the machine's few e2e
+    // slots (scripts/e2e-slot.ts). Parallel agents' runs once had ~45 Chromes on 14 cores
+    // and frame-timed tests timed out (#665). Two hours: the wait is behind other full runs.
+    { command: `bun ../scripts/e2e-slot.ts ${SLOT}`, port: SLOT, reuseExistingServer: false, timeout: 2 * 60 * 60_000 },
     { command: `PORT=${LLM} bun ../server/mock-llm.ts`, port: LLM, reuseExistingServer: false },
     {
-      command: `${SERVER_ENV} bun ../server/src/migrate.ts && ${SERVER_ENV} bun ../server/index.ts`,
+      command: `${SERVER_ENV} bun ../scripts/e2e-db.ts && ${SERVER_ENV} bun ../server/src/migrate.ts && ${SERVER_ENV} bun ../server/index.ts`,
       port: API,
       reuseExistingServer: false,
     },

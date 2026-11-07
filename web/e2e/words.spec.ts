@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Client } from "pg";
 import { expect, test } from "./test";
 import { expectServerRows, serverRows, startCourse, waitForSynced } from "./helpers";
+import { DATABASE_URL } from "./worktree";
 
 test("course words: search the upcoming words, pause and resume, never show (with undo)", async ({ page }) => {
   await startCourse(page);
@@ -132,8 +133,8 @@ test("a word saved with its forms as a JSON string (#337) is found by search, kn
   await startCourse(page);
   const userId = await page.evaluate(() => (window as unknown as { __store: { userId: string } }).__store.userId);
   // As /api/write stored forms before #340: a jsonb string holding the list's JSON text.
-  // Straight into the e2e server's database: server/src/config.ts's default (the e2e setup sets no DATABASE_URL).
-  const db = new Client("postgres://perennial:perennial@localhost:25432/perennial");
+  // Straight into the e2e server's database.
+  const db = new Client(DATABASE_URL);
   const wordId = randomUUID();
   await db.connect();
   try {

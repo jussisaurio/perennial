@@ -6,16 +6,16 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - Branch from an up-to-date `origin/main`. Other agents merge in parallel: if your PR conflicts, rebase onto origin/main, re-run your checks and force-push with lease.
 - **A new worktree has no packages:** run `bun install` at the root and in `web/` before any check.
 - **Scratch files:** in the session scratchpad your prompt names, under a subfolder named after your task. Never at its top level, because other agents share it.
-- **E2E ports:** in a worktree under `.claude/worktrees/`, `web/playwright.config.ts` picks a port offset from the worktree's path, so parallel agents don't clash. Set `E2E_PORT_OFFSET` only to override that. If a port is still in use, the run fails loudly at start (no server is reused): set another multiple of 10.
+- **E2E runs:** run them the normal way (`bunx playwright test e2e/x.spec.ts` in web/). In a worktree under `.claude/worktrees/`, the worktree's name gives the run its own ports and its own database (`web/e2e/worktree.ts`); the database is made on the first run. At most 3 runs go at once on the machine. A 4th waits for a free slot and prints a line that says so; this is normal. If a port is still in use, the run fails loudly at start: set `E2E_PORT_OFFSET` to another multiple of 10.
 - **Postgres** is one shared container (`docker compose up -d` from the main checkout). Never touch the `pg-sandbox` container.
 - Run only the specs you need, not the whole suite.
 
 ## Checks
-- **Light testing:** typecheck, lint, `bun run knip` at the root (unused files, exports and dependencies), and the tests closest to your change. Before merging, also run the full unit suite with `bun run test` in web/ (about 30 s), because a test can pass alone and fail beside the others (#661). A test for a fix must fail without the fix.
+- **Light testing:** `bun run typecheck`, `bun run lint` and `bun run knip` at the root (each covers every workspace; knip finds unused files, exports and dependencies), and the tests closest to your change. Before merging, also run the full unit suite with `bun run test` in web/ (about 30 s), because a test can pass alone and fail beside the others (#661). A test for a fix must fail without the fix.
 - Never run prettier (there is no config, and it rewraps files).
 - Pin the clock and viewport in tests that depend on them.
 - **UI changes:** before merging, take screenshots on phone and desktop, light and dark, and look at them yourself. Nothing misaligned or cheap-looking.
-- **Machine load:** many agents share one machine. If an e2e test times out, run `uptime` and rerun only that spec with `--workers=1`. If it fails alone, it's a real failure: fix it. If it fails only under load, say so in the PR. Never just rerun it until it's green.
+- **Machine load:** e2e runs are queued, so load from them stays near the core count. If an e2e test still times out, run `uptime` and rerun only that spec with `--workers=1`. If it fails alone, it's a real failure: fix it. If it fails only under load, say so in the PR. Never just rerun it until it's green.
 
 ## PR and merge
 - One PR does one thing. It says `Closes #n`, or `Refs #n` when it is one part of an issue.
