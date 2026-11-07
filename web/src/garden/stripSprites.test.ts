@@ -18,7 +18,9 @@ class FakeImage {
     if ((await blobs.get(this.src)!.text()) === "broken") throw new DOMException("Loading error.", "EncodingError");
   }
 }
-Object.assign(globalThis, { Worker: FakeWorker, Image: FakeImage });
+// The failure report reads whether the page is in view. It only runs once another
+// test file has loaded Sentry, so without this the test passed alone and failed in the full run (#661).
+Object.assign(globalThis, { Worker: FakeWorker, Image: FakeImage, document: { visibilityState: "visible" } });
 let next = 0;
 URL.createObjectURL = (b: Blob) => {
   const url = `blob:${next++}`;
