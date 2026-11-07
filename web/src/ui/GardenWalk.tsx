@@ -126,9 +126,6 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   const quiet = labels.find((l) => l.kind === "line");
   const line = spokenLine(quiet?.gloss ?? quiet?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
-  // The stile (#714) stands once the note that tells of the hill is unlocked (#749); over it, the hill (#722).
-  if (!line && reach === "over") return "Wooden steps go over the back fence.";
-  if (!line && reach === "back") return "You stand on a small hill past the fence. Far away, across the valley, there is a small house.";
   if (line) return line;
   // Nothing held: what the last thing thrown or put down did, if anything.
   if (!held) return landed;
@@ -292,8 +289,6 @@ const REACH_NAME: Record<Reach, string> = {
   seek: "Found you",
   read: "Read the note",
   raise: "Raise the lantern",
-  over: "Climb over the stile",
-  back: "Walk back to the garden",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -324,10 +319,6 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   read: ["....##....", "#########.", "#.......##", "#.#####..#", "#.......##", "#.####...#", "#........#", "#.#####..#", "#........#", "##########"],
   // A lantern, held up high.
   raise: ["..#####..", "...###...", "..#...#..", "..#.#.#..", "..#...#..", "...###...", "....#....", "....#....", "...###...", "..#####.."],
-  // Steps, up and over.
-  over: ["...###...", "...#.#...", ".###.###.", ".#.....#.", "##.....##"],
-  // Steps, going down: back over the stile.
-  back: ["###......", "..#......", "..###....", "....#....", "....###..", "......#..", "......###"],
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */

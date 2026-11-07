@@ -155,8 +155,8 @@ describe("garden layout", () => {
     expect(collide(l, o.x + o.w, o.z, 0.28, true).x).toBeLessThan(o.x + o.w / 2);
     // A long step (a ctrl+wheel notch is 2 m) beside the door stops at the hedge; through the door it goes in.
     const edge = b.maxZ - 0.3;
-    expect(walk(l, l.gate.x + 2, edge, l.gate.x + 2, edge + 2, true, []).z).toBeLessThan(b.maxZ);
-    expect(walk(l, l.gate.x, edge, l.gate.x, edge + 2, true, []).z).toBeCloseTo(edge + 2);
+    expect(walk(l, l.gate.x + 2, edge, l.gate.x + 2, edge + 2, true, [], null).z).toBeLessThan(b.maxZ);
+    expect(walk(l, l.gate.x, edge, l.gate.x, edge + 2, true, [], null).z).toBeCloseTo(edge + 2);
   });
 
   test("a glide from the orchard to a plant goes out through the door, never through the hedge (#315)", () => {
@@ -165,7 +165,7 @@ describe("garden layout", () => {
     const to = viewpoint(l, l.plants[0]);
     // From a corner of the orchard, from beside the door inside it, and from the doorway itself.
     for (const [x, z] of [[o.x + o.w / 2 - 1, o.z + o.d / 2 - 1], [o.x - 3, o.z - o.d / 2 + 0.3], [l.gate.x, l.bounds.maxZ + 0.5]]) {
-      const path = route(l, x, z, to.x, to.z);
+      const path = route(l, x, z, to.x, to.z, null);
       expect(along(path, 0)).toEqual({ x, z });
       expect(along(path, 1)).toEqual({ x: to.x, z: to.z });
       // Every point on the way is somewhere a walker may stand with the door open (a glide passes over beds, as in the garden).
@@ -176,7 +176,7 @@ describe("garden layout", () => {
       }
     }
     // In the garden, straight there.
-    expect(route(l, 1, l.bounds.maxZ - 1, to.x, to.z)).toEqual([[1, l.bounds.maxZ - 1], [to.x, to.z]]);
+    expect(route(l, 1, l.bounds.maxZ - 1, to.x, to.z, null)).toEqual([[1, l.bounds.maxZ - 1], [to.x, to.z]]);
   });
 });
 
@@ -187,7 +187,7 @@ describe("the way on foot to a tapped spot (#336)", () => {
     for (const [cx, cz] of way.slice(1))
       for (let i = 0; i < 5000 && Math.hypot(cx - x, cz - z) > 1e-6; i++) {
         const k = Math.min(1, 0.06 / Math.hypot(cx - x, cz - z));
-        ({ x, z } = walk(l, x, z, x + (cx - x) * k, z + (cz - z) * k, doorOpen, trees));
+        ({ x, z } = walk(l, x, z, x + (cx - x) * k, z + (cz - z) * k, doorOpen, trees, null));
       }
     return { x, z };
   };
@@ -197,10 +197,10 @@ describe("the way on foot to a tapped spot (#336)", () => {
     const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
     const bed = l.beds[0];
     const front = bed.z + bed.d / 2 + 1;
-    const trip = { way: wayTo(l, bed.x - 1, front, bed.x + 1.5, front, false, []), leg: 1, stop: 0.5, stuck: 0 };
+    const trip = { way: wayTo(l, bed.x - 1, front, bed.x + 1.5, front, false, [], null), leg: 1, stop: 0.5, stuck: 0 };
     const at = { x: bed.x - 1, z: front };
     let now = "walking";
-    for (let i = 0; i < 100 && now === "walking"; i++) now = walkStep(l, trip, at, 3.6 / 60, 1 / 60, false, []);
+    for (let i = 0; i < 100 && now === "walking"; i++) now = walkStep(l, trip, at, 3.6 / 60, 1 / 60, false, [], null);
     expect(now).toBe("arrived");
     expect(at.x).toBeCloseTo(bed.x + 1, 2);
   });
@@ -212,7 +212,7 @@ describe("the way on foot to a tapped spot (#336)", () => {
     const trip = { way: [[bed.x, bed.z + bed.d / 2 + 1], [bed.x, bed.z - bed.d / 2 - 1]] as [number, number][], leg: 1, stop: 0, stuck: 0 };
     const at = { x: bed.x, z: bed.z + bed.d / 2 + 1 };
     const frames: string[] = [];
-    for (let i = 0; i < 120; i++) frames.push(walkStep(l, trip, at, 3.6 / 60, 1 / 60, false, []));
+    for (let i = 0; i < 120; i++) frames.push(walkStep(l, trip, at, 3.6 / 60, 1 / 60, false, [], null));
     const stalled = frames.indexOf("stalled");
     expect(stalled).toBeGreaterThan(0);
     // Held for TRIP_STUCK seconds of frames at the bed's edge first, never through it.
@@ -225,7 +225,7 @@ describe("the way on foot to a tapped spot (#336)", () => {
     const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
     const bed = l.beds[0];
     const front = bed.z + bed.d / 2 + 1;
-    expect(wayTo(l, bed.x - 1, front, bed.x + 1.5, front, false, [])).toEqual([[bed.x - 1, front], [bed.x + 1.5, front]]);
+    expect(wayTo(l, bed.x - 1, front, bed.x + 1.5, front, false, [], null)).toEqual([[bed.x - 1, front], [bed.x + 1.5, front]]);
   });
 
   test("round a bed, by its nearer side, and all the way there", () => {
@@ -234,19 +234,19 @@ describe("the way on foot to a tapped spot (#336)", () => {
     // In front of the bed, a little right of its middle; the spot is right behind it.
     const [x, z] = [bed.x + 0.5, bed.z + bed.d / 2 + 0.6];
     const [tx, tz] = [bed.x + 0.5, bed.z - bed.d / 2 - 0.6];
-    const way = wayTo(l, x, z, tx, tz, false, []);
+    const way = wayTo(l, x, z, tx, tz, false, [], null);
     expect(way.length).toBeGreaterThan(2);
     // Round the right side: it is the shorter way.
     expect(way.slice(1, -1).every(([cx]) => cx > bed.x + bed.w / 2)).toBe(true);
     expect(length(way)).toBeLessThan(bed.d + bed.w + 2);
-    const end = follow(l, way, false, []);
+    const end = follow(l, way, false, [], null);
     expect(Math.hypot(end.x - tx, end.z - tz)).toBeLessThan(0.02);
   });
 
   test("round the pond", () => {
     const l = layout(Array.from({ length: 30 }, (_, i) => plant(i)));
     const p = l.pond;
-    const way = wayTo(l, p.x + p.r + 0.5, p.z, p.x - p.r - 0.5, p.z, false, []);
+    const way = wayTo(l, p.x + p.r + 0.5, p.z, p.x - p.r - 0.5, p.z, false, [], null);
     for (let k = 0; k <= 1; k += 0.01) {
       const q = along(way, k);
       expect(Math.hypot(q.x - p.x, q.z - p.z)).toBeGreaterThan(p.r + WALKER - 0.02);
@@ -263,7 +263,7 @@ describe("the way on foot to a tapped spot (#336)", () => {
     // From the far side of the garden to just behind a trunk, seen from the door.
     const behind = { x: t.x, z: t.z + t.trunk + 0.6 };
     const start = { x: l.bounds.minX + 1, z: l.bounds.maxZ - 1.5 };
-    const way = wayTo(l, start.x, start.z, behind.x, behind.z, true, trees);
+    const way = wayTo(l, start.x, start.z, behind.x, behind.z, true, trees, null);
     const near = l.orchard.z - l.orchard.d / 2;
     // Through the doorway: wherever the way is between the garden and the orchard, it is in the door.
     for (let k = 0; k <= 1; k += 0.002) {
@@ -295,7 +295,7 @@ describe("the way on foot to a tapped spot (#336)", () => {
       };
       for (let i = 0; i < 40; i++) {
         const [from, to] = [spot(), spot()];
-        const way = wayTo(l, from.x, from.z, to.x, to.z, doorOpen, trees);
+        const way = wayTo(l, from.x, from.z, to.x, to.z, doorOpen, trees, null);
         const end = follow(l, way, doorOpen, trees);
         expect(Math.hypot(end.x - to.x, end.z - to.z)).toBeLessThan(0.05);
       }
@@ -350,7 +350,7 @@ describe("the hidden key (#315)", () => {
         const p = todo.pop()!;
         reached.push(p);
         for (const [dx, dz] of [[g, 0], [-g, 0], [0, g], [0, -g]]) {
-          const to = walk(l, p.x, p.z, p.x + dx, p.z + dz, false, []);
+          const to = walk(l, p.x, p.z, p.x + dx, p.z + dz, false, [], null);
           if (Math.hypot(to.x - p.x - dx, to.z - p.z - dz) > 1e-9 || seen.has(at(to.x, to.z))) continue;
           seen.add(at(to.x, to.z));
           todo.push(to);

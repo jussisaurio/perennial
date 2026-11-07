@@ -3,14 +3,15 @@
 // post. From there, across the valley, a tiny house; at night one warm light
 // in its window. The hill hides it from the garden and from the stile's top
 // board. Once the learner has the note that tells of the hill (n08), the
-// stile goes over and the old path takes you up; before, the walk stops on its
-// top board. Raise the lantern, and once the learner has the note that tells
+// brambles are cut and you walk over the stile and up the old path (#770);
+// before, they shut it. Raise the lantern, and once the learner has the note that tells
 // of it (n12), the far light blinks twice back, once a visit. Pure: where
 // things go, and when the light is on. The scene draws it (sceneStile.ts,
 // sceneSky.ts, sceneLanterns.ts).
 
 import type { Note } from "./notes/note";
-import { STEP, type StileSpot } from "./stile";
+import { BRAMBLES_IN, STEP, type StileSpot } from "./stile";
+import { WALKER, type BackWay } from "./world";
 
 /** The note that tells of the hill: "Behind the stile, a hill. From the top, at midnight: the far light". From it on, the stile goes over. */
 export const HILL_NOTE = "n08";
@@ -22,6 +23,14 @@ export const HILL = { out: 11, h: 2.6, r: 9 };
 /** The old path's turn off straight out from the fence (rad, toward −x). */
 export const PATH_TURN = 0.12;
 
+/** The open grass on the hill's top, ringed by brambles (m): about eleven metres across. */
+export const HILLTOP_R = 5.5;
+/** Half the width of the way cut through the brambles, up the old path (m): a little wider than the path. */
+export const CUT = 1.05;
+/** The lookout's things a walker goes round: the lantern's post and the stool (m, sceneLanterns.ts buildLookout). */
+const POST_R = 0.08;
+const STOOL_R = 0.22;
+
 /** Near enough to the lantern's post (m) to raise it. */
 export const RAISE_REACH = 1.3;
 
@@ -30,15 +39,36 @@ export interface Lookout {
   top: [number, number];
   post: [number, number];
   stool: [number, number];
-  /** The way from the stile's foot inside the garden, over its top board, down the far side and up the old path to the top, as corners. */
-  way: [number, number][];
 }
 
 export function lookoutAt(s: StileSpot): Lookout {
-  const along = (d: number): [number, number] => [s.x - Math.sin(PATH_TURN) * d, s.z - Math.cos(PATH_TURN) * d];
-  const [x, z] = along(HILL.out);
+  const [x, z] = [s.x - Math.sin(PATH_TURN) * HILL.out, s.z - Math.cos(PATH_TURN) * HILL.out];
   // Facing on out (−z), the post ahead on the left, in reach but off to the side, so it does not stand in the view; the stool on the right.
-  return { top: [x, z], post: [x - 0.85, z - 0.8], stool: [x + 0.55, z - 0.35], way: [s.foot, [s.x, s.z], along(STEP.out), along(HILL.out)] };
+  return { top: [x, z], post: [x - 0.85, z - 0.8], stool: [x + 0.55, z - 0.35] };
+}
+
+/**
+ * The ground past the back fence a walker may stand on (#770, world.ts
+ * BackWay). Before the hill's note, the brambles over the stile, a block in
+ * front of it. After, over the stile, up the way cut along the old path from
+ * a little past the far foot (clear of the rails' ends) to the top, and the
+ * hilltop's grass.
+ */
+export function backWay(s: StileSpot, at: Lookout, open: boolean): BackWay {
+  const half = STEP.w / 2;
+  if (!open) return { open: false, brambles: [s.x - half - 0.4, s.x + half + 0.4, s.z, s.z + BRAMBLES_IN] };
+  const [dx, dz] = [-Math.sin(PATH_TURN), -Math.cos(PATH_TURN)];
+  const start = STEP.out + WALKER;
+  return {
+    open: true,
+    stile: { x: s.x, z: s.z, half, out: STEP.out },
+    way: { x: s.x + dx * start, z: s.z + dz * start, dx, dz, len: HILL.out - start, half: CUT },
+    top: { x: at.top[0], z: at.top[1], r: HILLTOP_R },
+    things: [
+      { x: at.post[0], z: at.post[1], r: POST_R },
+      { x: at.stool[0], z: at.stool[1], r: STOOL_R },
+    ],
+  };
 }
 
 /** How high the hill's ground is at (x, z) (m): a smooth mound, 0 past its foot. */

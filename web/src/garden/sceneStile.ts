@@ -1,21 +1,23 @@
-// The way out of the back fence (#714, #749). Until the note that tells of the
-// hill, a thicket of brambles taller than the walker stands behind the whole
-// fence. Once it is unlocked, a way is cut through, and in it stands the stile:
-// wooden steps up one side and down the other, a top board over the fence, and
-// a post to hold. Past it, an old path goes on up a small hill, to the lookout
-// on its top (#722, lookout.ts). The stile notes lie on the ground at its foot,
-// a stone on them, until they are read (stile.ts placeNotes). Static meshes,
+// The way out of the back fence (#714, #749, #770). A thicket of brambles
+// taller than the walker stands behind the whole fence, and rings the hill's
+// top. In the fence stands the stile: wooden steps up one side and down the
+// other, a top board over the fence, and a handrail down each side. Until the
+// note that tells of the hill, brambles have grown through the fence over it,
+// into the garden. Once it is unlocked, they are cut back, and a way is cut
+// through the thicket along the old path, up the hill to the lookout on its
+// top (#722, lookout.ts). The stile notes lie on the ground in front of it, a
+// stone on them, until they are read (stile.ts placeNotes). Static meshes,
 // built once: the words are never drawn in the world.
 
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { rng } from "../lib/seed";
 import { SUN_AT } from "./bench";
-import { HILL, hillY, PATH_TURN, type Lookout } from "./lookout";
+import { CUT, HILL, HILLTOP_R, hillY, PATH_TURN, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
 import { shadeUp, tiledBox } from "./sceneHedge";
 import { still, type BuildCtx } from "./sceneSprites";
-import { STILE_REACH, STEP, TOP, type StileSpot } from "./stile";
+import { BRAMBLES_IN, STILE_REACH, STEP, TOP, type StileSpot } from "./stile";
 import * as T from "./textures";
 
 /** A note on the ground: the paper's size (m), as on the shed's nails. */
@@ -28,8 +30,10 @@ const HILL_SINK = 0.02;
 const TRACK_LIFT = 0.035;
 /** The bramble thicket behind the back fence: from how far out to how far (m), and how high it stands. The walker's eye is at 1.05. */
 const THICKET = { near: 0.15, far: 3.2, h: 2.1 };
-/** Half the width of the way cut through the thicket (m): a little wider than the old path. */
-const CUT = 1.05;
+/** The brambles round the hill's top: out to the hill's foot, where they meet the thicket (m). Low enough on the slope that from the top you see over them. */
+const RING = { far: HILL.r + 0.4, h: 1.9 };
+/** How high the handrails stand over the steps (m). */
+const RAIL_H = 0.8;
 
 /** Toward the day's sun: the same shading at every time of day, as the tint does the rest. */
 const SUN = new THREE.Vector3(...SUN_AT.day).normalize();
@@ -100,6 +104,11 @@ export class StileScene {
     return (x - this.spot.x) * Math.cos(PATH_TURN) - (z - this.spot.z) * Math.sin(PATH_TURN);
   }
 
+  /** How far (x, z) is out along the old path from the stile (m). */
+  private along(x: number, z: number): number {
+    return -(x - this.spot.x) * Math.sin(PATH_TURN) - (z - this.spot.z) * Math.cos(PATH_TURN);
+  }
+
   /**
    * A bramble cane from `a` arching over `b` to `c`, with thorns along it, pushed onto `out`.
    * `k`: how light (a cut cane, withered, is darker).
@@ -138,7 +147,8 @@ export class StileScene {
     const [sx, sz] = [this.spot.x, this.spot.z];
     const [x0, x1] = [c.b.minX - 0.6, c.b.maxX + 0.6];
     const tex = T.pixelTexture(T.bramble(), true);
-    const cut = (x: number, z: number, wide = 0) => this.open && Math.abs(this.side(x, z)) < CUT + wide;
+    // The way stops at the hilltop: the ring past it, on the far side, stays whole.
+    const cut = (x: number, z: number, wide = 0) => this.open && Math.abs(this.side(x, z)) < CUT + wide && this.along(x, z) < HILL.out;
     // The solid middle: one box, or two either side of the way cut through.
     const [zn, zf] = [sz - THICKET.near - 0.25, sz - THICKET.far + 0.35];
     const mid = sx - Math.sin(PATH_TURN) * ((THICKET.near + THICKET.far) / 2);
@@ -158,7 +168,8 @@ export class StileScene {
       for (const [k, back] of [[0, THICKET.near + 0.5], [1, 1.2], [2, 1.9], [3, 2.7]]) {
         const cx = x + (r() - 0.5) * 0.3;
         const cz = sz - back + (r() - 0.5) * 0.3;
-        if (cut(cx, cz, 0.25)) continue;
+        // Clear of the way by more than a clump's reach: walking into its side, your eye stays out of them.
+        if (cut(cx, cz, 0.5)) continue;
         const ys = k === 0 ? [0.4, 0.95, 1.5, top - 0.3] : [top - 0.35 - r() * 0.3];
         for (const y of ys) {
           const rad = 0.38 + r() * 0.2;
@@ -166,6 +177,33 @@ export class StileScene {
         }
       }
     }
+    // Round the hilltop's grass, out to the hill's foot, standing on its slope: a face of clumps at the grass's edge, and tops further out.
+    const [tx, tz] = this.hill.top;
+    for (let rr = HILLTOP_R + 0.45; rr < RING.far; rr += 0.6) {
+      const inner = rr < HILLTOP_R + 0.5;
+      for (let a = 0; a < Math.PI * 2; a += 0.42 / rr) {
+        const cx = tx + Math.sin(a) * rr + (r() - 0.5) * 0.15;
+        const cz = tz + Math.cos(a) * rr + (r() - 0.5) * 0.15;
+        // The thicket behind the fence covers the ground nearer the fence; none in the garden.
+        if (cz > sz - THICKET.far + 0.4 || cut(cx, cz, 0.5)) continue;
+        const ground = hillY(this.hill, cx, cz);
+        const top = RING.h * (0.85 + 0.25 * r());
+        for (const y of inner ? [0.35, 0.85, top - 0.3] : [top - 0.35 - r() * 0.3]) {
+          // The face, smaller: it reaches in no further than the edge you stop at, so your eye stays out of it.
+          const rad = inner ? 0.3 + r() * 0.1 : 0.38 + r() * 0.2;
+          clumps.push([cx, ground + y, cz, rad * 1.15, rad * 0.85, rad, 0.55 + (0.45 * y) / RING.h]);
+        }
+      }
+    }
+    // Before the hill's note, brambles grown through the fence over the stile's steps, into the garden: what shuts the way.
+    if (!this.open)
+      // Within the solid block (lookout.ts backWay) less a clump's reach: you stop before your eye is in them.
+      for (let x = sx - STEP.w / 2 - 0.05; x < sx + STEP.w / 2 + 0.1; x += 0.3)
+        for (let d = 0.1; d < BRAMBLES_IN - 0.3; d += 0.3)
+          for (const y of [0.3, 0.75, 1.15]) {
+            const rad = 0.24 + r() * 0.1;
+            clumps.push([x + (r() - 0.5) * 0.1, y + (r() - 0.5) * 0.15, sz + d, rad * 1.1, rad, rad, 0.55 + 0.3 * y]);
+          }
     // Where the way is cut, the thicket's cut sides: clumps on them too, a little darker.
     if (this.open)
       for (let d = THICKET.near + 0.3; d < THICKET.far; d += 0.45)
@@ -191,6 +229,12 @@ export class StileScene {
     // Canes: some arch up out of the top; others reach over the fence toward the garden, at the eye's height.
     const canes: THREE.BufferGeometry[] = [];
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    // Over the shut stile, canes arch out of the brambles across its steps, so they read as thorns.
+    if (!this.open)
+      for (let i = 0; i < 9; i++) {
+        const x = sx + (r() - 0.5) * (STEP.w + 0.5);
+        this.cane(canes, V(x, 0.2, sz - 0.3), V(x + (r() - 0.5) * 0.6, 1.4 + r() * 0.4, sz + 0.2), V(x + (r() - 0.5) * 0.8, 0.5 + r() * 0.4, sz + BRAMBLES_IN + 0.05), r);
+      }
     for (let x = x0 + 0.2; x < x1; x += 0.4) {
       const j = (r() - 0.5) * 0.3;
       if (!cut(x + j, sz - 0.5, 0.3))
@@ -216,32 +260,41 @@ export class StileScene {
     c.scene.add(still(new THREE.Mesh(mergeGeometries(canes), c.mat(T.pixelTexture(T.cane(), true), { vertexColors: true }))));
   }
 
-  /** The stile once the way is open, the thicket, and `notes` at its foot (unread ones: read ones hang in the shed). */
+  /** The stile: steps up and down, the top board over the fence, and a handrail down each side. */
+  private buildStile(c: BuildCtx) {
+    const wood = c.mat(c.woodTex);
+    const g = new THREE.Group();
+    const box = (w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wood);
+      m.position.set(x, y, z);
+      m.rotation.x = tilt;
+      g.add(m);
+    };
+    // Each side: two stringers from the ground up to the top board, and two treads between them. `s` is +1 inside the garden, −1 past the fence.
+    const len = Math.hypot(STEP.out, TOP);
+    for (const s of [1, -1]) {
+      const tilt = Math.atan2(-s * STEP.out, TOP);
+      for (const sx of [-1, 1]) box(0.05, len, 0.07, sx * (STEP.w / 2 - 0.02), TOP / 2, (s * STEP.out) / 2, tilt);
+      for (const k of [1 / 3, 2 / 3]) box(STEP.w - 0.08, 0.045, 0.2, 0, TOP * k, s * STEP.out * (1 - k));
+    }
+    box(STEP.w, 0.05, 0.3, 0, TOP, 0);
+    // A handrail down each side, what stops you stepping off: a post at each foot and at the top board, and a rail over them.
+    for (const sx of [-1, 1]) {
+      const x = sx * (STEP.w / 2 + 0.04);
+      box(0.06, TOP + RAIL_H, 0.06, x, (TOP + RAIL_H) / 2, 0);
+      for (const s of [1, -1]) {
+        box(0.06, RAIL_H, 0.06, x, RAIL_H / 2, s * STEP.out);
+        box(0.05, 0.05, len, x, RAIL_H + TOP / 2, (s * STEP.out) / 2, Math.atan2(s * TOP, STEP.out));
+      }
+    }
+    g.position.set(this.spot.x, 0, this.spot.z);
+    c.scene.add(still(g));
+  }
+
+  /** The stile, the thicket, and `notes` in front of it (unread ones: read ones hang in the shed). */
   build(c: BuildCtx, notes: readonly string[]) {
     const at = this.spot;
-    // No stile before the hill's note: steps would say "climb me" (#749).
-    if (this.open) {
-      const wood = c.mat(c.woodTex);
-      const g = new THREE.Group();
-      const box = (w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0) => {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wood);
-        m.position.set(x, y, z);
-        m.rotation.x = tilt;
-        g.add(m);
-      };
-      // Each side: two stringers from the ground up to the top board, and two treads between them. `s` is +1 inside the garden, −1 past the fence.
-      const len = Math.hypot(STEP.out, TOP);
-      for (const s of [1, -1]) {
-        const tilt = Math.atan2(-s * STEP.out, TOP);
-        for (const sx of [-1, 1]) box(0.05, len, 0.07, sx * (STEP.w / 2 - 0.02), TOP / 2, (s * STEP.out) / 2, tilt);
-        for (const k of [1 / 3, 2 / 3]) box(STEP.w - 0.08, 0.045, 0.2, 0, TOP * k, s * STEP.out * (1 - k));
-      }
-      box(STEP.w, 0.05, 0.3, 0, TOP, 0);
-      // The post to hold as you go over, on the right as you climb out, a little taller than the eye on the top board.
-      box(0.07, 1.45, 0.07, STEP.w / 2 + 0.05, 0.725, 0);
-      g.position.set(at.x, 0, at.z);
-      c.scene.add(still(g));
-    }
+    this.buildStile(c);
 
     this.buildHill(c);
     this.buildThicket(c);

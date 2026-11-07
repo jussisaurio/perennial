@@ -57,7 +57,7 @@ const APP: Record<string, (page: Page) => Promise<void>> = {
 };
 
 /** The parts of the dev-only scene handle (window.__garden) the spots move. */
-type Scene = { x: number; z: number; yaw: number; pitch: number; over: boolean; layout: object };
+type Scene = { x: number; z: number; yaw: number; pitch: number; layout: object };
 
 /** Spots in the garden walk, each a place to stand once the walk is open. Forward is -z at yaw 0. */
 const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
@@ -87,7 +87,7 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       // A few steps back from it, facing the back fence and the hill past it (−z is yaw 0).
       Object.assign(s, { x: at.x + 0.6, z: at.z + 4, yaw: 0.1, pitch: -0.02 });
     }),
-  // The same, for a learner without the hill's note (WORDS): brambles, no stile (#749).
+  // The same, for a learner without the hill's note (WORDS): brambles over the stile (#749, #770).
   "stile-shut": (page) => GARDEN.stile(page),
   lookout: (page) =>
     page.evaluate(async () => {
@@ -95,9 +95,9 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
       const s = (window as unknown as { __garden: Scene }).__garden;
       const hill = lookoutAt(stileAt(s.layout as Parameters<typeof stileAt>[0]));
-      // Where the old path ends on the hill, beside the lantern's post, facing out across the valley, as the walk up leaves you (scene.ts goOver).
-      const [x, z] = hill.way[hill.way.length - 1];
-      Object.assign(s, { over: true, x, z, yaw: 0.08, pitch: 0 });
+      // On the hilltop, a step in from where the old path comes up, the lantern's post ahead on the left, facing out across the valley.
+      const [x, z] = hill.top;
+      Object.assign(s, { x, z: z + 0.5, yaw: 0.08, pitch: 0 });
     }),
   // The dog called from behind a bed (#761): halfway round it, on its way to you.
   dog: async (page) => {
