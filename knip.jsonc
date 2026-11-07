@@ -3,7 +3,7 @@
   "workspaces": {
     "scripts": {
       // Command-line tools run by hand (README.md, docs/decks.md, docs/DEPLOY.md).
-      "entry": ["deck/*.ts", "*.ts"]
+      "entry": ["deck/*.ts", "tts/render.ts", "*.ts"]
     },
     "server": {
       // Config for the Better Auth CLI: `bunx auth generate --config auth.cli.ts`.

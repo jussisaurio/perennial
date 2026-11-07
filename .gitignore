@@ -42,3 +42,6 @@ coverage/
 scripts/.cache/
 server/load/out/
 web/perf/out/
+
+# Rendered audio clips before upload (scripts/tts/render.ts)
+scripts/.tts-out/
