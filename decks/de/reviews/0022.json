@@ -1,9 +1,9 @@
 {
   "file": "source/0022.json",
-  "sha256": "0b0aa26ac1ba04ff8d97ce772176142fe152d6f391bddcc31aec73dcc81a0b3b",
-  "author": "claude-agent:de-author-0022-2026-11-06",
-  "reviewer": "claude-agent:de-proofreader-0022-2026-11-06",
+  "sha256": "e34595e6909649ad1ab1a6a3d6dff98f03c3bc5a53781de84ac7c88cbfe76555",
+  "author": "claude-agent:de-author-0021-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0021-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "Proofread 100 entries; 38 fixed (mostly near-copies of older frames and synonym cloze traps, plus glosses, notes and translations that rule out the older word); 1 follow-up gloss fix (Figur)."
+  "notes": "100 entries proofread; 29 fixed (15 near-copies of older sentences, 8 translations pointing to older synonyms, gloss/notes, naturalness, variety), all re-checked ok"
 }

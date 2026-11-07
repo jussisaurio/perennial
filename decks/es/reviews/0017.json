@@ -1,9 +1,9 @@
 {
   "file": "source/0017.json",
-  "sha256": "7f4d0596ee5a0c73bcd02d9f8d2484dbd1a5028c6cf41aa246b8f6b158c57148",
-  "author": "claude-agent:es-author-0017-2026-11-06",
-  "reviewer": "claude-agent:es-proofreader-0017-2026-11-06",
+  "sha256": "a6533a3d984cfbd373b71259d4fe346c82492e74bce0acd7b5185fc4a556b036",
+  "author": "claude-agent:es-author-0016-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0016-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "100 entries proofread one at a time; 10 fixes (5 near-duplicate/same-frame, 4 calques, 1 rare word in a fix) applied and re-checked; all ok."
+  "notes": "100 entries proofread; 19 fixes applied and re-checked (13 near-duplicate/same-frame, 2 Spain-vs-Latin-America, 2 calque, 3 translation); enojado replaced by materia."
 }

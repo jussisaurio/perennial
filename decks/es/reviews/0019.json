@@ -1,9 +1,9 @@
 {
   "file": "source/0019.json",
-  "sha256": "55b5bc396d24f3109d52e7c889fe82446c156e732715511f8ebb567abdd274d0",
-  "author": "claude-agent:es-author-0019-2026-11-06",
-  "reviewer": "claude-agent:es-proofreader-0019-2026-11-06",
+  "sha256": "ba26e048c3755e09a015ab5160559f2062ea403057506e92005be8f7e560573c",
+  "author": "claude-agent:es-author-0018-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0018-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "100 entries proofread; 34 fixed (28 near-copies of older sentences, 1 variety, 1 calque, 1 translation, 2 appropriateness/factual, ronda re-suggested); all re-checked ok"
+  "notes": "100 entries proofread: 93 ok first pass, 7 fixed (6 near-copies/same-frame of older sentences incl. day names, 1 synonym-in-slot, 1 untaught homograph cura) and re-checked ok"
 }

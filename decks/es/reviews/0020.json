@@ -1,9 +1,9 @@
 {
   "file": "source/0020.json",
-  "sha256": "645f84c06f42920c85d1fffc291f373daac388cedad7784f29c8bc2e995ce634",
-  "author": "claude-agent:es-author-0020-2026-11-06",
-  "reviewer": "claude-agent:es-proofreader-0020-2026-11-06",
+  "sha256": "55b5bc396d24f3109d52e7c889fe82446c156e732715511f8ebb567abdd274d0",
+  "author": "claude-agent:es-author-0019-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0019-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "100 entries proofread; 31 fixed (18 near-copies of older sentences, 11 English cues that pointed to older synonyms, 2 translations, 1 variety); all re-checked ok"
+  "notes": "100 entries proofread; 34 fixed (28 near-copies of older sentences, 1 variety, 1 calque, 1 translation, 2 appropriateness/factual, ronda re-suggested); all re-checked ok"
 }

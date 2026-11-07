@@ -1,9 +1,9 @@
 {
   "file": "source/0014.json",
-  "sha256": "5536e7f9c3b166aeff52fc97f18eea535beda3c0e96f27ae5c74a93da49fe495",
-  "author": "claude-agent:es-author-0014-2026-11-06",
-  "reviewer": "claude-agent:es-proofreader-0014-2026-11-06",
-  "reviewedAt": "2026-11-06",
+  "sha256": "c8cbad0d42cddd1a9b2c62b0e7783b381c2468a2f33207f8cccafa60d597125c",
+  "author": "claude-agent:months-author-2026-11-07",
+  "reviewer": "claude-agent:es-proofreader-0014-2026-11-07",
+  "reviewedAt": "2026-11-07",
   "verdict": "approved",
-  "notes": "100 entries proofread; 11 fixes over three rounds (7 near-duplicates, 2 Spain-Spanish: vídeo, manejar; 1 plural: proceso; 1 note: oler), all re-checked ok."
+  "notes": "7 Spanish month nouns (#430) proofread one by one; 4 fixed (echoes of older month sentences), then all ok."
 }
