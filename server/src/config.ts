@@ -66,6 +66,15 @@ export const releaseOf = (env: Record<string, string | undefined>) => env.RAILWA
  * others keep it (`??`), as each one needs.
  */
 const variable = (name: string) => EnvConfig.option(EnvConfig.String(name)).pipe(EnvConfig.map(Option.getOrUndefined));
+/**
+ * The origin of a URL variable (a Sentry DSN's ingest host, a PostHog host). A
+ * malformed URL fails the config, so the server does not start with a CSP that
+ * silently lacks the host. "" stays "": the Docker build passes an unset one as "".
+ */
+const origin = (name: string) =>
+  EnvConfig.option(EnvConfig.schema(Schema.Union([Schema.Literal(""), Schema.URL]), name)).pipe(
+    EnvConfig.map((url) => Option.match(url, { onNone: () => undefined, onSome: (u) => (u === "" ? "" : u.origin) })),
+  );
 const env = EnvConfig.all({
   NODE_ENV: variable("NODE_ENV"),
   PERENNIAL_DEV: variable("PERENNIAL_DEV"),
@@ -83,11 +92,11 @@ const env = EnvConfig.all({
   RESEND_API_KEY: variable("RESEND_API_KEY"),
   MAIL_FROM: variable("MAIL_FROM"),
   SENTRY_DSN: variable("SENTRY_DSN"),
-  VITE_SENTRY_DSN: variable("VITE_SENTRY_DSN"),
+  VITE_SENTRY_DSN: origin("VITE_SENTRY_DSN"),
   VITE_POSTHOG_KEY: variable("VITE_POSTHOG_KEY"),
-  VITE_POSTHOG_HOST: variable("VITE_POSTHOG_HOST"),
-  VITE_AUDIO_BASE_URL: variable("VITE_AUDIO_BASE_URL"),
-  POSTHOG_HOST: variable("POSTHOG_HOST"),
+  VITE_POSTHOG_HOST: origin("VITE_POSTHOG_HOST"),
+  VITE_AUDIO_BASE_URL: origin("VITE_AUDIO_BASE_URL"),
+  POSTHOG_HOST: origin("POSTHOG_HOST"),
   TURNSTILE_SECRET_KEY: variable("TURNSTILE_SECRET_KEY"),
   VITE_TURNSTILE_SITE_KEY: variable("VITE_TURNSTILE_SITE_KEY"),
   GOOGLE_CLIENT_ID: variable("GOOGLE_CLIENT_ID"),
@@ -128,9 +137,7 @@ const settings = env.pipe(
       // variables to the build and the running server, so the CSP follows them.
       observability: {
         sentryDsn: env.SENTRY_DSN,
-        connect: [env.VITE_SENTRY_DSN, env.VITE_POSTHOG_KEY ? env.VITE_POSTHOG_HOST || "https://eu.i.posthog.com" : undefined, env.POSTHOG_HOST, env.VITE_AUDIO_BASE_URL]
-          .map(origin)
-          .filter((o): o is string => !!o),
+        connect: [env.VITE_SENTRY_DSN, env.VITE_POSTHOG_KEY ? env.VITE_POSTHOG_HOST || "https://eu.i.posthog.com" : undefined, env.POSTHOG_HOST, env.VITE_AUDIO_BASE_URL].filter((o): o is string => !!o),
       },
       turnstile: { secretKey: env.TURNSTILE_SECRET_KEY, siteKey: env.VITE_TURNSTILE_SITE_KEY },
       google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
@@ -204,13 +211,3 @@ export const PRICES: Record<string, [number, number]> = {
   "claude-opus-5": [5, 25],
   "claude-opus-5-5": [4, 20],
 };
-
-/** The origin of a URL (a Sentry DSN's ingest host, a PostHog host), or undefined. */
-function origin(url: string | undefined) {
-  if (!url) return undefined;
-  try {
-    return new URL(url).origin;
-  } catch {
-    return undefined;
-  }
-}

@@ -228,6 +228,11 @@ describe("production configuration fails closed", () => {
     expect(prod({ ...good, VITE_POSTHOG_KEY: "phc_x", VITE_POSTHOG_HOST: "" }).observability.connect).toEqual(["https://eu.i.posthog.com"]);
   });
 
+  test("a malformed report or analytics URL refuses to start, not a CSP without the host", () => {
+    expect(() => prod({ ...good, VITE_SENTRY_DSN: "abc@o12.ingest.us.sentry.io/34" })).toThrow("VITE_SENTRY_DSN");
+    expect(() => prod({ ...good, VITE_POSTHOG_KEY: "phc_x", VITE_POSTHOG_HOST: "us.i.posthog.com" })).toThrow("VITE_POSTHOG_HOST");
+  });
+
   test("default or short auth secret refuses to start", () => {
     expect(configProblems(prod({ ...good, BETTER_AUTH_SECRET: undefined })).join()).toContain("BETTER_AUTH_SECRET");
     expect(configProblems(prod({ ...good, BETTER_AUTH_SECRET: "short" })).join()).toContain("BETTER_AUTH_SECRET");
