@@ -7,9 +7,8 @@
 // moves what is already there.
 
 import * as THREE from "three";
-import type { FruitKind } from "./leave";
 import type { PlacedTree } from "./orchard";
-import { TREE_SHAPES } from "./orchardArt";
+import { FRUIT_KINDS, TREE_SHAPES, type FruitKind } from "./orchardArt";
 import type { Frame, Part } from "./scenePart";
 import { FOG_FAR, FOG_NEAR, sprites, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
@@ -32,7 +31,7 @@ const BIT = { g: 3.2, drag: 2.2, lie: 6, lieHome: 2.5, creep: 0.35, size: 0.05 }
 const SHAKE = { s: 1.1, w: 26, a: 0.06 };
 /** A pile: metres per cell, and its scale while its leaves are out (it grows back as they come home). */
 const PILE = { size: 0.9, low: 0.2 };
-/** Metres per leave atlas cell (32 px) for a fallen fruit: a 7 px fruit is about 13 cm. */
+/** Metres per fruit atlas cell (32 px) for a fallen fruit: a 7 px fruit is about 13 cm. */
 const FRUIT_SIZE = 0.6;
 /** A bit that is not out: drawn nowhere (the vertex shader puts it outside the view). */
 const OFF = -100;
@@ -135,11 +134,11 @@ export class WalkInto implements Part {
     this.bits.frustumCulled = false;
     c.scene.add(this.bits);
 
-    // Fallen fruit: drawn from the leave atlas's fruit cells, hidden (scale 0) until one falls.
-    const atlas = T.pixelTexture(T.leaveAtlas());
+    // Fallen fruit: hidden (scale 0) until one falls.
+    const atlas = T.pixelTexture(T.fruitAtlas());
     this.fruit = sprites(
       atlas,
-      this.fruits.map(() => ({ x: 0, y: 0, z: 0, u: 0, v: 0, uw: 1 / T.LEAVE_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -9 })),
+      this.fruits.map(() => ({ x: 0, y: 0, z: 0, u: 0, v: 0, uw: 1 / T.FRUIT_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -9 })),
       FRUIT_SIZE,
       FRUIT_SIZE,
     ) as SpriteMesh;
@@ -210,7 +209,7 @@ export class WalkInto implements Part {
       this.fruitPos.setXYZ(slot, r.x, r.y, r.z);
       this.fruitPos.needsUpdate = true;
       // fellFrom gives a fruit only for a fruit tree, never the plain tree.
-      this.fruitUv.setX(slot, Math.fround(T.LEAVE_CELL.fruit(t.kind as FruitKind) / T.LEAVE_CELLS));
+      this.fruitUv.setX(slot, Math.fround(FRUIT_KINDS.indexOf(t.kind as FruitKind) / T.FRUIT_CELLS));
       this.fruitUv.needsUpdate = true;
       this.fruitParams.setZ(slot, 1);
       this.fruitParams.needsUpdate = true;

@@ -1,6 +1,5 @@
-// Pixel art for the lawn and pond toys (#360), in visitorArt.ts's style: a
-// dandelion clock, fluffy and blown. Drawn into the walk's toy atlas
-// (textures.ts toyAtlas). The paper boat is drawn with its word (textures.ts boat).
+// Pixel art for the lawn toys (#360), in visitorArt.ts's style: a dandelion
+// clock, fluffy and blown. Drawn into the walk's toy atlas (textures.ts toyAtlas).
 
 import type { PixelArt } from "./visitorArt";
 

@@ -339,7 +339,7 @@ export const TREE_KINDS: readonly { id: SceneryId; half: number; top: number }[]
   { id: "bush", half: 0.37, top: 0.47 },
 ];
 
-/** The drawn part of each decor kind (textures.ts decor(): 32×64 cells). Kind 2 (plain mushrooms) has no word: the toadstool is a visitor's. */
+/** The drawn part of each decor kind (textures.ts decor(): 32×64 cells). Kind 2 (plain mushrooms) has no word. */
 export const DECOR_KINDS: readonly ({ id: SceneryId; half: number; top: number } | null)[] = [
   { id: "grass", half: 0.25, top: 0.56 },
   { id: "flower", half: 0.38, top: 0.78 },

@@ -3,7 +3,8 @@
 // drawn by textures.ts orchard(). The shapes are plain data, so the orchard's
 // hit boxes follow the drawing, and orchard.ts needs no three.js.
 
-import type { OrchardWord } from "../deck/schema";
+import { ORCHARD_WORDS, type OrchardWord } from "../deck/schema";
+import type { PixelArt } from "./visitorArt";
 
 export const CELL_W = 96;
 export const CELL_H_PX = 128;
@@ -62,4 +63,14 @@ export function crownBox(kind: OrchardWord): { half: number; top: number } {
     top = Math.min(top, TRELLIS.top);
   }
   return { half: half / CELL_W, top: (CELL_H_PX - top) / CELL_H_PX };
+}
+
+/** A tree that bears fruit: every orchard word but the plain tree. */
+export type FruitKind = Exclude<OrchardWord, "tree">;
+export const FRUIT_KINDS = ORCHARD_WORDS.filter((k): k is FruitKind => k !== "tree");
+
+/** A fruit, round, with a stem and a leaf, in its tree's colours: one that fell when you walked into its tree (#359). */
+export function fruitArt(kind: FruitKind): PixelArt {
+  const [light, dark] = TREE_SHAPES[kind].fruit.color;
+  return { rows: ["...s...", "..sg...", ".oLLLo.", "oLwLLDo", "oLLLLDo", "oLLLDDo", ".ooooo."], pal: { o: "#3a2416", s: "#5a3a20", g: "#5aa83c", L: light, D: dark, w: "#fff8e7" } };
 }

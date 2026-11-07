@@ -36,7 +36,7 @@ export const cat: VisitorKind<Look> = {
     const body =
       daily(["bench", "step"] as const, "visitor-cat-spot", now) === "bench"
         ? bodyAt<Look>(spots.bench.x + 0.18, 0.45, spots.bench.z + 0.02, "asleep")
-        : // At the step's far end, clear of the basket.
+        : // At the step's far end.
           bodyAt<Look>(sx, sy, sz + 0.4, "asleep");
     /** Its ear is flat until then (elapsed s); calls so far in this walk; on its rare walk: to you ("come"), sitting ("stare"), going back. */
     let ear = -1;

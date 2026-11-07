@@ -8,11 +8,6 @@
 // bench, on the sign... Its name never shows while it hides. Found (a tap, or
 // the action button near it), it pops up and falls over flat, and its tag
 // says where it was.
-//
-// When the dog fetches its hat (#335 S2), it turns its back on you and faces
-// the fence, hatless, and plays no more, until you give the hat back. When
-// the dog fetches the gnome itself, it is gone from its spot for the rest of
-// the visit: it lies somewhere, very stiff (sceneCarry.ts).
 
 import { daily } from "../../core/day";
 import { hideout } from "../hide";
@@ -32,17 +27,15 @@ const CORNERS: readonly [number, number][] = [
 /** Found: it pops up this high (m) for `pop` s, then falls flat, bouncing once over `fall` s. */
 const TUMBLE = { hop: 0.14, pop: 0.2, bounce: 0.05, fall: 0.35 } as const;
 
-type Look = "front" | "side" | "back" | "frontLit" | "sideLit" | "backLit" | "peek" | "pad" | "fallen";
+type Look = "front" | "side" | "frontLit" | "sideLit" | "peek" | "pad" | "fallen";
 
 export const gnome: VisitorKind<Look> = {
   id: "gnome",
   art: {
     front: gnomeArt("front", false),
     side: gnomeArt("side", false),
-    back: gnomeArt("back", false),
     frontLit: gnomeArt("front", true),
     sideLit: gnomeArt("side", true),
-    backLit: gnomeArt("back", true),
     peek: GNOME_PEEK,
     pad: GNOME_PAD,
     fallen: GNOME_FALLEN,
@@ -75,9 +68,7 @@ export const gnome: VisitorKind<Look> = {
     let dark = false;
     /** When it was found and fell over (elapsed s); null while it hides, and on a day it did not. */
     let fell: number | null = null;
-    /** The dog has its hat (#335 S2): it sulks, its back to you, and hides its name. */
-    let hatless = false;
-    /** Its lantern shows only while it stands here: hiding, it would give it away; lying, it is not where the glow goes; fetched, it is gone. */
+    /** Its lantern shows only while it stands here: hiding, it would give it away; lying, it is not where the glow goes. */
     const show = () => {
       body.glow = dark && body.visible && !body.hiding && fell === null;
       if (body.hiding) return;
@@ -86,9 +77,8 @@ export const gnome: VisitorKind<Look> = {
         body.tag = 1;
         return;
       }
-      const look = hatless ? "back" : pose;
-      body.frame = body.glow ? `${look}Lit` : look;
-      body.tag = hatless || frozen >= 0 ? 0 : gnomeTag(pose);
+      body.frame = body.glow ? `${pose}Lit` : pose;
+      body.tag = frozen >= 0 ? 0 : gnomeTag(pose);
     };
     return {
       size: 0.56,
@@ -97,19 +87,8 @@ export const gnome: VisitorKind<Look> = {
         dark = c.dark;
         show();
       },
-      onTaken(what) {
-        if (what === "hat") hatless = true;
-        else body.visible = false;
-        show();
-      },
-      onHatBack() {
-        hatless = false;
-        // It turns round to see who gave it back.
-        pose = "front";
-        show();
-      },
       step({ elapsed }, inView) {
-        if (body.hiding || hatless || !body.visible) return;
+        if (body.hiding || !body.visible) return;
         if (fell !== null) {
           // Up in surprise, then flat on its back with one small bounce.
           const t = elapsed - fell;
@@ -134,8 +113,7 @@ export const gnome: VisitorKind<Look> = {
       },
       onCall({ elapsed }) {
         // Hiding, it keeps still and quiet: a call must not give it away. Lying flat, it is already as still as can be.
-        // Hatless, it sulks: it does not answer either.
-        if (body.hiding || fell !== null || hatless) return null;
+        if (body.hiding || fell !== null) return null;
         frozen = elapsed + FREEZE_S;
         show();
         return { line: "The gnome freezes. It is only a garden gnome." };

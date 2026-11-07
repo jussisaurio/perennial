@@ -20,8 +20,6 @@ import { PixelRects } from "./pixel";
 import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
-import { PRINT_ROWS } from "../garden/leaveArt";
-import type { Guest } from "../garden/leave";
 import { easeOut, easeOutBack, reducedMotion, type PlantLook } from "./Growth";
 import { afterPaint } from "./afterPaint";
 import { runAll } from "../lib/yield";
@@ -105,11 +103,9 @@ interface GardenProps {
   onView?: (id: string) => void;
   /** Plants to grow again from these looks (the summary, #216). The caller decides whether it plays (the setting, reduced motion). */
   replay?: readonly { id: string; from: PlantLook }[] | null;
-  /** Something waits in the walk (#335): the guest whose prints lead from the bowl, and how to open the walk there. */
-  waiting?: { guest: Guest; onOpen: () => void } | null;
 }
 
-function Strip({ data, highlight, compact, showcase, onView, visitors, replay, waiting, width, wrap }: GardenProps & { width: number; wrap: RefCallback<HTMLDivElement> }) {
+function Strip({ data, highlight, compact, showcase, onView, visitors, replay, width, wrap }: GardenProps & { width: number; wrap: RefCallback<HTMLDivElement> }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ p: GardenPlant; x: number; y: number } | null>(null);
   // Hover intent: with a card open, switching to another plant waits a moment,
@@ -369,7 +365,6 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, w
           </div>
         )}
       </div>
-      {waiting && <WaitingPrints guest={waiting.guest} onOpen={waiting.onOpen} />}
       {visitorTip && (
         <div className="visitor-tip" role="tooltip" style={{ left: Math.min(width - 150, Math.max(8, visitorTip.x - scrollX - 60)), top: GROUND - (visitorTip.line ? 78 : 58) }}>
           <i lang={visitors?.lang}>{visitorTip.v.word}</i>
@@ -574,37 +569,6 @@ function MoleHole({ v, x, up, onShow, onHide }: { v: TipVisitor; x: number; up: 
         <path d={`M0 7 Q ${(w + 12) / 2} -3 ${w + 12} 7 Z`} fill="color-mix(in oklab, var(--soil-2), var(--ink) 22%)" />
       </svg>
     </div>
-  );
-}
-
-/** The trail in the strip: how many prints, art pixels between them, and screen pixels per art pixel. */
-const TRAIL = { prints: 4, step: 7, scale: 3 };
-/** Damp earth, a shade darker than the soil, as the mole's hill. */
-const PRINT_FILL = "color-mix(in oklab, var(--soil-2), var(--ink) 40%)";
-
-/**
- * What waits in the walk (#335): a short trail of the guest's prints on the
- * soil, as by the bowl, walking off to the right. No text and no count: it
- * says only that something happened in there. A button: the walk opens by
- * the bowl. Each print is turned so its toes point the way it went.
- */
-function WaitingPrints({ guest, onOpen }: { guest: Guest; onOpen: () => void }) {
-  const rows = PRINT_ROWS[guest];
-  const art = { rows: [...rows], pal: { "#": PRINT_FILL } };
-  const [w, h] = [rows[0].length, rows.length];
-  // Turned a quarter, a print is h wide and w tall; every other one sits lower, left foot then right.
-  const width = (TRAIL.prints - 1) * TRAIL.step + h;
-  const height = w + 3;
-  return (
-    <button type="button" className="waiting-prints" aria-label="Something is waiting in your garden" onClick={onOpen} style={{ top: GROUND + 2 }}>
-      <svg width={width * TRAIL.scale} height={height * TRAIL.scale} viewBox={`0 0 ${width} ${height}`} shapeRendering="crispEdges" aria-hidden="true">
-        {Array.from({ length: TRAIL.prints }, (_, i) => (
-          <g key={i} style={{ animationDelay: `${i * 0.35}s` }} transform={`translate(${i * TRAIL.step + h} ${i % 2 ? 3 : 0}) rotate(90)`}>
-            <PixelRects art={art} />
-          </g>
-        ))}
-      </svg>
-    </button>
   );
 }
 

@@ -4,7 +4,7 @@ The user's goal now: **"focus heavily on implementing a lot of fun features, tha
 
 ## Read first
 - Repo CLAUDE.md (code standard; **the new lighter review rule**). DESIGN.md "Garden code" (Part = rendering technique; the host owns every order table: TAP_PRIORITY, LABEL_PRIORITY, reportReach; tick allocates nothing; behaviour gets time only from the frame/conditions; seeded hashes, never Math.random/Date in behaviour).
-- GitHub #335: the roadmap, the verbs, the cut and its rules. Also #324 (kinds as data), #334 (one action button, no instruction text), #351/#353 (Leave it out, the latest feature: copy its patterns for reach, action button, garden_action, art, e2e).
+- GitHub #335: the roadmap, the verbs, the cut and its rules. Also #324 (kinds as data), #334 (one action button, no instruction text).
 - web/src/garden/* and web/src/ui/GardenWalk.tsx, useGardenScene.ts.
 
 ## Product rules
@@ -16,7 +16,7 @@ The user's goal now: **"focus heavily on implementing a lot of fun features, tha
 - **Screen readers:** each verb works through the action button with a name, plus a short status line.
 - **Simple English** for any text. Course-language words get `lang` and are never quizzed.
 - **Privacy:** `garden_action` counts verbs by name only.
-- **Art:** match the retro pixel style in visitorArt.ts / leaveArt.ts / textures.ts. Use shared atlases where they fit.
+- **Art:** match the retro pixel style in visitorArt.ts / carryArt.ts / textures.ts. Use shared atlases where they fit.
 
 ## Process (velocity)
 1. File your own GitHub issue (labels `garden` + P2) with a short design and why it's fun. Branch from up-to-date main.

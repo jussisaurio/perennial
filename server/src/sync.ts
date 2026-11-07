@@ -6,10 +6,9 @@
 import { PgClient } from "@effect/sql-pg";
 import { Clock, Context, Effect, Layer } from "effect";
 import type { SqlError } from "effect/sql/SqlError";
-import { NO_LEFT, type GardenLeft, type LearnerRows, type Mutation, type UserId, type WordId, type WriteResult } from "perennial-contract";
+import { type LearnerRows, type Mutation, type UserId, type WordId, type WriteResult } from "perennial-contract";
 import { COURSE_DEFAULTS } from "./course";
 import { rowCount, theRow } from "./db";
-import { leftProblem, mergeLeft } from "./garden";
 import { type ApiError, refuse } from "./http";
 import { event, RequestContext } from "./request";
 import { Words } from "./words";
@@ -159,25 +158,14 @@ export const SyncLive = Layer.effect(
                   break;
                 case "course.upsert": {
                   const r = m.row;
-                  // Leave it out (#351): merged with what is stored, under the row's lock, so it only moves forward.
-                  let left: GardenLeft | null = null;
-                  if (r.garden_left) {
-                    const issue = leftProblem(r.garden_left, now.getTime());
-                    if (issue === "clock") return yield* refuse({ error: "garden_from_the_future" });
-                    if (issue) return yield* refuse({ error: "bad_request", issues: [issue] });
-                    const stored = yield* sql<{ garden_left: GardenLeft }>`select garden_left from course where user_id = ${userId} and lang = ${r.lang} for update`;
-                    // No row yet: a new course, with nothing left before this.
-                    left = mergeLeft(stored[0]?.garden_left ?? NO_LEFT, r.garden_left);
-                  }
                   // Only the columns sent change, so two devices editing different settings both win.
                   // The door only ever opens: a device that still has it closed never shuts it again.
-                  const res = yield* sql<{ inserted: boolean }>`insert into course (user_id, lang, minutes, retention, door_open, garden_left)
-                    values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true}, ${sql.json(left ?? NO_LEFT)})
+                  const res = yield* sql<{ inserted: boolean }>`insert into course (user_id, lang, minutes, retention, door_open)
+                    values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true})
                     on conflict (user_id, lang) do update set
                       minutes = coalesce(${r.minutes ?? null}::smallint, course.minutes),
                       retention = coalesce(${r.retention ?? null}::real, course.retention),
-                      door_open = course.door_open or excluded.door_open,
-                      garden_left = ${left ? sql`excluded.garden_left` : sql`course.garden_left`}
+                      door_open = course.door_open or excluded.door_open
                     returning (xmax = 0) as inserted`;
                   rows += res.length;
                   // xmax = 0: a new row, not an update. A new course is a learner starting a language.

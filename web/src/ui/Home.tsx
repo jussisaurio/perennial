@@ -13,8 +13,8 @@ import { mayListen } from "./speech";
 import { Settling } from "./Settling";
 import { doneTodayNote, greetingAside } from "../content/voice";
 import { longDay, plural } from "./format";
-import { focusBowl, focusPlant } from "./gardenFocus";
-import { visitorSteps, waitingGuest } from "./visitors";
+import { focusPlant } from "./gardenFocus";
+import { visitorSteps } from "./visitors";
 import { snailLap } from "../garden/visitors";
 import type { Plan } from "../core/session";
 
@@ -29,8 +29,6 @@ let animated = false;
 // Today's garden, visitors and plan: each worked out once per learner and day, whichever part asks first.
 const gardenToday = slicedPerLearnerDay(gardenSteps);
 const visitorsToday = slicedPerLearnerDay((l, now) => visitorSteps(l, new Date(now)));
-// What waits in the walk (#335): it shows until it is found, whether or not today's practice is done.
-const guestToday = perLearnerDay(waitingGuest);
 const chunkToday = perLearnerDay(nextChunk);
 // The same planner the session uses, for what the day's minutes are for. One per
 // voice setting: sound can be turned off, and voices load late.
@@ -202,17 +200,9 @@ function TodayGarden({ learner, now, onWalk }: { learner: Learner; now: number; 
   };
   const garden = gardenToday.get(learner, now);
   const visitors = visitorsToday.get(learner, now);
-  const guest = guestToday(learner, now);
-  const waiting = guest && {
-    guest,
-    onOpen: () => {
-      focusBowl();
-      onWalk();
-    },
-  };
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
-  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} waiting={waiting} />;
+  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} />;
 }
 
 /** A gentle nudge once there is something worth keeping. */

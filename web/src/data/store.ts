@@ -158,17 +158,17 @@ export async function createStore(userId: string, email: string | null) {
 
   // Writes the server refused for good. They are rolled back on this device, so
   // the learner must be told (#253): "saved" would be untrue.
-  let refused: Refused = { count: 0, clock: 0, gardenClock: 0, seen: 0 };
+  let refused: Refused = { count: 0, clock: 0, seen: 0 };
   const refusedListeners = new Set<() => void>();
   const setRefused = (r: Refused) => {
     refused = r;
     for (const l of refusedListeners) l();
   };
-  // The server refuses answers, and garden changes (#351), dated over a day ahead of its clock
-  // (server/src/sync.ts): the learner can fix that, so each is counted on its own.
+  // The server refuses answers dated over a day ahead of its clock (server/src/sync.ts):
+  // the learner can fix that, so they are counted on their own.
   const noteRefused = (e: ApiError | HttpError) => {
     const code = e._tag === "ApiError" ? e.body.error : null;
-    setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (code === "review_from_the_future" ? 1 : 0), gardenClock: refused.gardenClock + (code === "garden_from_the_future" ? 1 : 0) });
+    setRefused({ ...refused, count: refused.count + 1, clock: refused.clock + (code === "review_from_the_future" ? 1 : 0) });
   };
 
   const storage = await outboxStorage(userId);
@@ -204,7 +204,7 @@ export async function createStore(userId: string, email: string | null) {
 
   /**
    * Put rows the server took into the collections. The server merges courses
-   * and word states (the garden's bowl, the newer word state): of those, its
+   * and word states (the door that only opens, the newer word state): of those, its
    * stored rows go in, not the device's.
    * A failure here is a bug, reported; the write itself is saved.
    */
@@ -281,11 +281,10 @@ export async function createStore(userId: string, email: string | null) {
 
 export type Store = Awaited<ReturnType<typeof createStore>>;
 
-/** Writes the server refused for good: all of them, answers and garden changes refused for a wrong device clock, and how many the learner was told of. */
+/** Writes the server refused for good: all of them, answers refused for a wrong device clock, and how many the learner was told of. */
 export interface Refused {
   count: number;
   clock: number;
-  gardenClock: number;
   seen: number;
 }
 

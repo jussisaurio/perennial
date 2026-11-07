@@ -102,7 +102,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
   /** Long-shot saves shown as strong moments this chunk. */
   const strongMoments = useRef(0);
   // Writes the server had refused before this chunk: the summary tells of any new ones (#253).
-  const [refusedBefore, setRefusedBefore] = useState<Refused>({ count: 0, clock: 0, gardenClock: 0, seen: 0 });
+  const [refusedBefore, setRefusedBefore] = useState<Refused>({ count: 0, clock: 0, seen: 0 });
   const [ended, setEnded] = useState<Ended>("time");
   // Words answered this session, and the new words shown (a seed is planted once it has an answer).
   const practised = useRef(new Set<string>());

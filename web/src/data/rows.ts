@@ -2,7 +2,6 @@
 // server/migrations): timestamps as ISO strings, numbers and JSON parsed.
 
 import { Option, Schema } from "effect";
-import type { GardenLeft } from "perennial-contract";
 
 export const SKILLS = ["read", "listen", "write"] as const;
 export type Skill = (typeof SKILLS)[number];
@@ -17,11 +16,6 @@ export interface CourseRow {
   retention: number;
   /** The garden's door to the orchard (#315): opened with the key, and then open for good. */
   door_open: boolean;
-  /**
-   * Leave it out (#351): what was left in the garden's bowl and when, and the
-   * shed's shelf. The server always sends it (migration 0005 gave it a default).
-   */
-  garden_left: GardenLeft;
   created_at: string;
 }
 

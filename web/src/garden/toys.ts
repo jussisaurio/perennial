@@ -1,23 +1,17 @@
-// Lawn and pond toys (#360): dandelion clocks to blow, and a paper boat to
-// fold at the pond. The day's wind carries both. Everything here comes from the
-// calendar day and seeded hashes, never from the clock or Math.random, so it is
-// the same on every device and nothing is synced. Pure.
+// Lawn toys (#360): dandelion clocks to blow. The day's wind carries their
+// seeds. Everything here comes from the calendar day and seeded hashes, never
+// from the clock or Math.random, so it is the same on every device and nothing
+// is synced. Pure.
 
 import { hash01 } from "../lib/seed";
-import { shedAt } from "./leave";
+import { shedAt } from "./shed";
 import { collide, type Layout } from "./world";
 
 type XZ = { x: number; z: number };
 
-/** The word the boat carries: one practised today, else the newest (ui/visitors.ts boatWord). */
-export interface BoatWord {
-  lemma: string;
-  gloss: string;
-}
-/** The toys as the walk opens: the calendar day (for the wind and the clocks), and the boat's word (null: no words yet, no boat). */
+/** The toys as the walk opens: the calendar day, for the wind and the clocks. */
 export interface ToysWalk {
   day: number;
-  boat: BoatWord | null;
 }
 
 /** The day's wind: which way and how fast it blows (m/s along x and z). The same all day, a new one tomorrow. */
@@ -193,51 +187,3 @@ export function seedAt(f: Flight, t: number, reducedMotion: boolean, out: { x: n
 export function blowEnds(flights: readonly Flight[], reducedMotion: boolean): number {
   return Math.max(...flights.map((f) => f.delay + (reducedMotion ? FADE : f.time + SETTLE)));
 }
-
-/** A paper boat's way on the pond: where it sets off (just inside the rim, nearest the folder), the way it is pushed, and the day's wind. */
-export interface Voyage {
-  pond: Layout["pond"];
-  from: XZ;
-  push: XZ;
-  wind: XZ;
-}
-
-/** The boat stays this far inside the rim (m). */
-const BOAT_RIM = 0.25;
-/** The push from the folder's hand: how far it carries the boat (m), and how fast it dies away (s). */
-const PUSH = { far: 0.9, slow: 2.5 };
-/** How much of the wind's speed the boat drifts with. */
-const DRIFT = 0.12;
-
-/** The boat folded by someone standing at (x, z), on calendar day `day`. */
-export function voyage(pond: Layout["pond"], x: number, z: number, day: number): Voyage {
-  // `|| 1`: no one stands in the pond's middle (world.ts collide), but a boat folded there would set off along +x.
-  const d = Math.hypot(x - pond.x, z - pond.z) || 1;
-  const [ux, uz] = [(x - pond.x) / d, (z - pond.z) / d];
-  const r = pond.r - BOAT_RIM;
-  return { pond, from: { x: pond.x + ux * r, z: pond.z + uz * r }, push: { x: -ux, z: -uz }, wind: windFor(day) };
-}
-
-/**
- * Where the boat is `t` seconds after it sets off: pushed out, then carried
- * by the wind until it rests against the rim downwind, sliding round it.
- * Fills `out` in place: it runs every frame.
- */
-export function boatAt(v: Voyage, t: number, out: XZ) {
-  const pushed = PUSH.far * (1 - Math.exp(-t / PUSH.slow));
-  let x = v.from.x + v.push.x * pushed + v.wind.x * DRIFT * t;
-  let z = v.from.z + v.push.z * pushed + v.wind.z * DRIFT * t;
-  const dx = x - v.pond.x;
-  const dz = z - v.pond.z;
-  const d = Math.hypot(dx, dz);
-  const r = v.pond.r - BOAT_RIM;
-  if (d > r) [x, z] = [v.pond.x + (dx / d) * r, v.pond.z + (dz / d) * r];
-  out.x = x;
-  out.z = z;
-}
-
-/** The frog climbs on when the boat comes this near its lily pad (m). */
-export const FROG_BOARDS = 0.4;
-
-/** Near enough to the pond (m past its edge) to fold a boat there. */
-export const FOLD_REACH = 1.2;

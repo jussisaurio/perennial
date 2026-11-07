@@ -4,8 +4,7 @@
 import { runAll } from "../lib/yield";
 import { knownAtSteps, readMemory, reviewedAt, wordState, type MemoryRow } from "../core/memory";
 import type { Learner, Word } from "../data/learner";
-import { dayNumber, startOfDay } from "../core/day";
-import { basket, bowlNow, FRUIT_KINDS, NO_LEFT, ROWS, walked, type Fruit, type FruitKind, type Guest, type LeaveFacts, type LeaveWalk } from "../garden/leave";
+import { startOfDay } from "../core/day";
 import {
   learnerFacts,
   milestoneLine,
@@ -24,7 +23,6 @@ import {
   type VisitorView,
 } from "../garden/visitors";
 import { sceneryViews, type SceneryViews } from "../garden/scenery";
-import type { BoatWord } from "../garden/toys";
 import type { GardenWord } from "../deck/schema";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
@@ -131,79 +129,6 @@ export function* visitorSteps(l: Learner, now: Date): Generator<void, LearnerVis
     mole: moleVisits(now, devVisitorOverride()),
     scenery: sceneryViews(l.lang, (lemma) => lemmas.has(lemma.toLowerCase())),
   };
-}
-
-/**
- * Leave it out (#351) for this learner today: the synced value, walked today
- * (so what came waits as it is until it is found), the day each row's visitor
- * came, and the basket: the crumbs and the fruits they know, in the orchard's order.
- * `walkedNow`: the value had to be marked as walked today, and must be saved.
- * `dayNow`: today's calendar day whenever it is asked (core/day.ts).
- */
-export function learnerLeave(l: Learner, now: number, dayNow: () => number): { walk: LeaveWalk; walkedNow: boolean } {
-  const today = dayNumber(now);
-  const stored = l.course.garden_left;
-  const seen = walked(stored, today);
-  const fruits: Fruit[] = [];
-  for (const w of l.words.values()) {
-    const kind = w.orchard;
-    if (kind && kind !== "tree" && wordState(readMemory(l, w.id)) === "known") fruits.push({ id: w.id, lemma: w.lemma, gloss: w.gloss, kind });
-  }
-  fruits.sort((a, b) => FRUIT_KINDS.indexOf(a.kind) - FRUIT_KINDS.indexOf(b.kind));
-  const fruitOf = (id: string): FruitKind | null => {
-    const kind = l.words.get(id)?.orchard;
-    return kind && kind !== "tree" ? kind : null;
-  };
-  return { walk: { left: seen ?? stored, today, dayNow, facts: leaveFacts(l), basket: basket(fruits), fruitOf }, walkedNow: seen !== null };
-}
-
-/** What the bowl's rows need from the learner's reviews: the calendar day each row's visitor came. */
-function leaveFacts(l: Learner): LeaveFacts {
-  const brought: LeaveFacts["brought"] = {};
-  for (const r of ROWS) {
-    const at = r.needs ? gardenBroughtAt(l, r.needs) : null;
-    if (r.needs && at !== null) brought[r.needs] = dayNumber(at);
-  }
-  return { brought };
-}
-
-/**
- * The guest who came for what was left in the bowl, while what it left waits
- * to be found, as of `now`; or null (#335: Today's strip shows its prints).
- */
-export function waitingGuest(l: Learner, now: number): Guest | null {
-  const b = bowlNow(l.course.garden_left, dayNumber(now), leaveFacts(l));
-  return b.kind === "came" ? b.outcome.row.guest : null;
-}
-
-/**
- * The word on the paper boat (#360): the word practised last, if that was
- * today; else the newest word (the one whose first answer came last). Null
- * with no answers yet.
- */
-export function boatWord(l: Pick<Learner, "reviewsByWord" | "words">, now: number): BoatWord | null {
-  // Reviews come listed under their word: one look-up per word, not two per review (#479).
-  let last: { id: string; t: number } | null = null;
-  let newest: { id: string; t: number } | null = null;
-  for (const [id, list] of l.reviewsByWord) {
-    if (!l.words.has(id)) continue;
-    let first = Infinity;
-    for (const r of list) {
-      const t = reviewedAt(r);
-      if (!last || t > last.t) last = { id, t };
-      first = Math.min(first, t);
-    }
-    if (!newest || first > newest.t) newest = { id, t: first };
-  }
-  if (!last) return null;
-  // Both are set together: a word with reviews sets each.
-  const w = l.words.get(dayNumber(last.t) === dayNumber(now) ? last.id : newest!.id)!;
-  return { lemma: w.lemma, gloss: w.gloss };
-}
-
-/** Leave it out on the landing page: nothing left, the crumbs in the basket, and nothing saved. */
-export function showcaseLeave(now: number, dayNow: () => number): LeaveWalk {
-  return { left: NO_LEFT, today: dayNumber(now), dayNow, facts: { brought: {} }, basket: basket([]), fruitOf: () => null };
 }
 
 /** Visitors for a garden with no learner behind it (the landing page): the snail at the gate, and whoever drops by today. */

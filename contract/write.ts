@@ -3,7 +3,6 @@
 
 import { Effect, Schema, SchemaTransformation } from "effect";
 import { Lang } from "./course";
-import { GardenLeft } from "./garden";
 import { WordId } from "./ids";
 
 /** Text limits for learner rows. Perennial AI output is held to the same ones (server/src/ai.ts). */
@@ -45,8 +44,6 @@ export const Mutation = Schema.Union([
       retention: Schema.optionalKey(Schema.Finite.check(Schema.isBetween({ minimum: 0.7, maximum: 0.99 }))),
       // The orchard door (#315). A new course row sends false; only true changes anything.
       door_open: Schema.optionalKey(Schema.Boolean),
-      // Leave it out (#351): the whole value; the server merges it with what it has (server/src/garden.ts).
-      garden_left: Schema.optionalKey(GardenLeft),
     }),
   }),
   Schema.Struct({
@@ -92,7 +89,7 @@ const Rows = Schema.Array(Schema.Record(Schema.String, Schema.Unknown));
 /**
  * Whether any row changed (a retried insert or an older state changes none),
  * and the rows the server now has for each course and word state in the batch.
- * The server merges those (the garden's bowl, the newer word state), so they
+ * The server merges those (the door, the newer word state), so they
  * can differ from the device's. A word state that is not there was deleted.
  */
 export const WriteResult = Schema.Struct({ changed: Schema.Boolean, stored: Schema.Struct({ course: Rows, word_state: Rows }) });

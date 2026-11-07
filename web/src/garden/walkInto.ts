@@ -8,7 +8,7 @@
 import type { PlacedTree } from "./orchard";
 import type { Frame } from "./scenePart";
 import type { PixelArt } from "./visitorArt";
-import { basketAt, bowlAt, shedAt } from "./leave";
+import { shedAt } from "./shed";
 import { hash01 } from "../lib/seed";
 import { benchAt, KEY_SPOTS, keyAt, lanternSpots, sunflowerAt, WALKER, type Layout } from "./world";
 
@@ -222,7 +222,7 @@ export const PILES = { count: 3, r: 0.45, clear: 1.1 } as const;
 
 /**
  * Where the leaf piles lie: on the paths beside and behind the beds, away
- * from the lanterns, the sunflower, the bench, the bowl and shed, and every
+ * from the lanterns, the sunflower, the bench, the shed, and every
  * place the key can hide. The same spots every visit to this garden.
  */
 export function leafPiles(l: Layout): { x: number; z: number }[] {
@@ -234,7 +234,7 @@ export function leafPiles(l: Layout): { x: number; z: number }[] {
       [bed.x, bed.z - bed.d / 2 - 0.95],
     ])
       spots.set(`${x.toFixed(1)},${z.toFixed(1)}`, { x, z });
-  const keep = [...lanternSpots(l).map(([x, z]) => ({ x, z })), sunflowerAt(l), benchAt(l), bowlAt(l), shedAt(l), basketAt(l), ...KEY_SPOTS.map((s) => keyAt(l, s))];
+  const keep = [...lanternSpots(l).map(([x, z]) => ({ x, z })), sunflowerAt(l), benchAt(l), shedAt(l), ...KEY_SPOTS.map((s) => keyAt(l, s))];
   // Each key hashed once, and only the first few in hash order checked against `keep`: a big
   // garden has hundreds of beds and of lanterns (#571). The sort is stable, as the old filter-then-sort was.
   const order = [...spots.entries()].map(([key, p]) => ({ h: hash01(key, 359), p })).sort((a, b) => a.h - b.h);

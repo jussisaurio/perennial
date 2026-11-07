@@ -6,11 +6,9 @@ import { rng } from "../lib/seed";
 import type { PlacedPlant } from "./world";
 export { VIEW_H } from "./plantCanvas";
 import * as Art from "./visitorArt";
-import * as LeaveArt from "./leaveArt";
 import * as CarryArt from "./carryArt";
 import * as ToyArt from "./toyArt";
-import { FRUIT_KINDS, type Find, type FruitKind, type Guest, type WildGuest } from "./leave";
-import { CELL_H_PX, CELL_W, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
+import { CELL_H_PX, CELL_W, FRUIT_KINDS, fruitArt, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { LEAF_PILE } from "./walkInto";
 import type { SpriteDone, SpriteJob } from "./spriteWorker";
@@ -871,8 +869,7 @@ export function decor(): OffscreenCanvas {
     px(ctx, x, 62 - h, col, 1, 3);
     px(ctx, x, 63 - h, "#f0a020");
   }
-  // 2: mushrooms. Plain brown on purpose: the red, spotted toadstool is a
-  // visitor with a name (visitors.ts), and decor never looks like a visitor.
+  // 2: mushrooms, plain brown.
   const shroom = (x: number, w: number, h: number) => {
     px(ctx, x - 1, 64 - h, "#ece2cf", 3, h);
     for (let y = 0; y < Math.ceil(w / 2); y++) px(ctx, x - w / 2 + y, 64 - h - y, y === 0 ? "#8a5a3c" : "#a8714a", w - y * 2, 1);
@@ -1044,62 +1041,21 @@ export function visitors(arts: readonly Art.PixelArt[]): OffscreenCanvas {
   return c;
 }
 
-// ---- Leave it out (#351) ----------------------------------------------------
+// ---- Walk into things (#359) ------------------------------------------------
 
-const FIND_IDS = Object.keys(LeaveArt.FIND_ART) as Find[];
-const GUEST_ART: Record<WildGuest, Art.PixelArt> = { sparrow: Art.SPARROW, mouse: Art.MOUSE, hedgehog: Art.HEDGEHOG, fox: Art.FOX };
-const GUESTS = Object.keys(GUEST_ART) as WildGuest[];
+/** Cells of the fallen fruit atlas (32×32 each, standing on the bottom row), in FRUIT_KINDS order. */
+export const FRUIT_CELLS = FRUIT_KINDS.length;
 
-/** Cells of the leave atlas (32×32 each, things standing on the bottom row), in this order. */
-export const LEAVE_CELL = {
-  bowl: 0,
-  bowlCrumbs: 1,
-  bag: 2,
-  basket: 3,
-  guest: (g: WildGuest) => 4 + GUESTS.indexOf(g),
-  find: (f: Find) => 4 + GUESTS.length + FIND_IDS.indexOf(f),
-  fruit: (k: FruitKind) => 4 + GUESTS.length + FIND_IDS.length + FRUIT_KINDS.indexOf(k),
-  bowlFruit: (k: FruitKind) => 4 + GUESTS.length + FIND_IDS.length + FRUIT_KINDS.length + FRUIT_KINDS.indexOf(k),
-};
-export const LEAVE_CELLS = 4 + GUESTS.length + FIND_IDS.length + 2 * FRUIT_KINDS.length;
-
-/** The bowl, the basket and what it offers, the guests and what they leave, in one small atlas (drawn once), in LEAVE_CELL order. */
-export function leaveAtlas(): OffscreenCanvas {
-  const [c, ctx] = canvas(32 * LEAVE_CELLS, 32);
-  [
-    LeaveArt.BOWL,
-    LeaveArt.BOWL_CRUMBS,
-    LeaveArt.CRUMB_BAG,
-    LeaveArt.BASKET,
-    ...GUESTS.map((g) => GUEST_ART[g]),
-    ...FIND_IDS.map((f) => LeaveArt.FIND_ART[f]),
-    ...FRUIT_KINDS.map(LeaveArt.fruitArt),
-    ...FRUIT_KINDS.map(LeaveArt.bowlFruitArt),
-  ].forEach((art, i) => {
+/** Every kind of fruit that can fall from an orchard tree, in one small atlas (drawn once). */
+export function fruitAtlas(): OffscreenCanvas {
+  const [c, ctx] = canvas(32 * FRUIT_CELLS, 32);
+  FRUIT_KINDS.map(fruitArt).forEach((art, i) => {
     const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
     const oy = 32 - art.rows.length;
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
   });
   return c;
 }
-
-/** Pixels per print cell: each guest's prints, seen from above, toes toward the top. */
-export const PRINT_CELL = 8;
-export const PRINT_GUESTS = Object.keys(LeaveArt.PRINT_ROWS) as Guest[];
-
-/** The guests' prints on the path (lying sprites), one cell each, in PRINT_GUESTS order: dark, like damp earth. */
-export function prints(): OffscreenCanvas {
-  const [c, ctx] = canvas(PRINT_CELL * PRINT_GUESTS.length, PRINT_CELL);
-  PRINT_GUESTS.forEach((g, i) => {
-    const rows = LeaveArt.PRINT_ROWS[g];
-    const ox = i * PRINT_CELL + Math.floor((PRINT_CELL - rows[0].length) / 2);
-    const oy = Math.floor((PRINT_CELL - rows.length) / 2);
-    rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, ox + x, oy + y, "#4a3624")));
-  });
-  return c;
-}
-
-// ---- Walk into things (#359) ------------------------------------------------
 
 /** Pixels per side of the leaf pile's cell: the pile stands on its bottom row. */
 export const PILE_CELL = 16;
@@ -1112,25 +1068,20 @@ export function leafPile(): OffscreenCanvas {
   return c;
 }
 
-// ---- Carry, put down, throw (#358) -------------------------------------------
+// ---- Carry and put down (#358) -------------------------------------------
 
 /** Rings on the water, from small to wide, as they spread. */
 export const RINGS = 3;
 /** Cells of the carry atlas (32×32 each, things standing on the bottom row; the rings fill theirs), in this order. */
-export const CARRY_CELL = { pebble: 0, stick: 1, sock: 2, sign: 3, hat: 4, gnome: 5, fruit: 6, flatStone: 7, ring: (i: number) => 8 + i, well: 8 + RINGS };
-export const CARRY_CELLS = 9 + RINGS;
+export const CARRY_CELL = { pebble: 0, stick: 1, ring: (i: number) => 2 + i, well: 2 + RINGS };
+export const CARRY_CELLS = 3 + RINGS;
 
-/**
- * The loose things, the cairn's stone, the rings and the orchard's well (#335
- * S6), in one small atlas (drawn once), in CARRY_CELL order. `fruit`: the
- * fruit the dog may fetch this visit (#335 S2); none leaves its cell empty.
- */
-export function carryAtlas(fruit: FruitKind | null): OffscreenCanvas {
+/** The loose things, the rings and the orchard's well (#335 S6), in one small atlas (drawn once), in CARRY_CELL order. */
+export function carryAtlas(): OffscreenCanvas {
   const [c, ctx] = canvas(32 * CARRY_CELLS, 32);
   const rings = Array.from({ length: RINGS }, (_, i) => CarryArt.ring(5 + i * 5, 32));
   const L = CarryArt.LOOSE_ART;
-  [L.pebble, L.stick, L.sock, L.sign, L.hat, L.gnome, fruit && LeaveArt.fruitArt(fruit), CarryArt.FLAT_STONE, ...rings, CarryArt.WELL].forEach((art, i) => {
-    if (!art) return;
+  [L.pebble, L.stick, ...rings, CarryArt.WELL].forEach((art, i) => {
     const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
     const oy = 32 - art.rows.length;
     for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
@@ -1157,46 +1108,3 @@ export function toyAtlas(): OffscreenCanvas {
   return c;
 }
 
-/** The boat's canvas (px): a paper boat seen from the side, its sail folded up in the middle. */
-export const BOAT_PX = { w: 64, h: 32 } as const;
-
-/**
- * A paper boat with a word written on its side in the pixel font, in ink, as
- * big as fits. The font must be loaded first (document.fonts.load): a canvas
- * does not wait for it.
- */
-export function boat(word: string): OffscreenCanvas {
-  const { w, h } = BOAT_PX;
-  const [c, ctx] = canvas(w, h);
-  const INK = "#3a2416";
-  const PAPER = "#f4efe2";
-  const FOLD = "#d4ccb8";
-  // The sail: a triangle from the hull's top up to a point, its far half in the fold's shade.
-  for (let y = 3; y < 17; y++) {
-    const half = Math.round(((y - 3) / 14) * 17);
-    px(ctx, 32 - half, y, PAPER, half, 1);
-    px(ctx, 32, y, FOLD, half, 1);
-    px(ctx, 31 - half, y, INK);
-    px(ctx, 32 + half, y, INK);
-  }
-  // The hull: wide at the top, narrow at the waterline.
-  for (let y = 17; y < 29; y++) {
-    const half = 30 - Math.round(((y - 17) / 11) * 8);
-    px(ctx, 32 - half, y, y === 17 ? INK : PAPER, half * 2, 1);
-    px(ctx, 32 - half - 1, y, INK);
-    px(ctx, 32 + half, y, INK);
-  }
-  px(ctx, 32 - 22, 29, INK, 44, 1);
-  // The word, drawn alone, then copied in where it is dark enough: crisp pixels, no grey edges.
-  const [, tctx] = canvas(w, h, true);
-  let size = 11;
-  do tctx.font = `700 ${size}px "Pixelify Sans"`;
-  while (tctx.measureText(word).width > 46 && --size > 6);
-  tctx.textAlign = "center";
-  tctx.textBaseline = "middle";
-  tctx.fillStyle = "#000";
-  tctx.fillText(word, w / 2, 23);
-  const img = tctx.getImageData(0, 0, w, h).data;
-  for (let y = 18; y < 29; y++) for (let x = 0; x < w; x++) if (img[(y * w + x) * 4 + 3] > 110) px(ctx, x, y, INK);
-  return c;
-}
