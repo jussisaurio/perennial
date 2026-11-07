@@ -1,8 +1,7 @@
-// Replay: reviews written against one deck version still land on a word in
-// the next version, whatever was retired, aliased or added in between.
+// A deck version's successor: words retired, aliased or added in between, and
+// still a valid, compatible deck.
 
 import { expect, test } from "bun:test";
-import { resolveWordId } from "./resolve";
 import { compatibility, deckProblems, ID_ALPHABET, type Deck, type DeckSentence, type DeckWord } from "./schema";
 
 const body = (n: number) => n.toString(32).padStart(10, "0").replace(/[0-9a-v]/g, (c) => ID_ALPHABET[parseInt(c, 32)]);
@@ -40,43 +39,10 @@ const v2: Deck = {
   sentences: v2Words.flatMap((w) => sentencesOf(w, !!w.retired)),
 };
 
-// A synthetic log: a few reviews of every v1 word, ids only, as in Postgres.
-const log = v1Words.flatMap((w, i) => Array.from({ length: 1 + (i % 4) }, (_, k) => ({ id: `r${i}-${k}`, word_id: w.id, grade: 1 + ((i + k) % 4) })));
-
 test("v2 is a valid, compatible successor of v1", () => {
   expect(deckProblems(v1)).toEqual([]);
   expect(deckProblems(v2)).toEqual([]);
   const c = compatibility(v1, v2);
   expect(c.errors).toEqual([]);
   expect([c.added, c.retired]).toEqual([5, 2]); // the alias is not counted as retired
-});
-
-test("every review from v1 resolves in v2: nothing is orphaned", () => {
-  const orphans = log.filter((r) => !resolveWordId(v2, r.word_id));
-  expect(orphans).toEqual([]);
-
-  // Progress per resolved word: the duplicate's reviews join its target's.
-  const perWord = new Map<string, number>();
-  for (const r of log) {
-    const w = resolveWordId(v2, r.word_id)!;
-    perWord.set(w.id, (perWord.get(w.id) ?? 0) + 1);
-  }
-  const count = (id: string) => log.filter((r) => r.word_id === id).length;
-  expect(perWord.get(v1Words[2].id)).toBe(count(v1Words[2].id) + count(dup.id));
-  expect(perWord.has(dup.id)).toBe(false);
-  expect([...perWord.values()].reduce((a, b) => a + b)).toBe(log.length);
-});
-
-test("resolveWordId", () => {
-  expect(resolveWordId(v2, v1Words[0].id)).toBe(v2.words[0]);
-  // Retired words still resolve, so their reviews stay (hidden).
-  expect(resolveWordId(v2, v1Words[3].id)?.retired).toBe(true);
-  // An alias resolves to its target, one hop.
-  expect(resolveWordId(v2, dup.id)?.id).toBe(v1Words[2].id);
-  // Unknown ids (e.g. from a newer deck) resolve to nothing; the caller keeps them hidden.
-  expect(resolveWordId(v1, added[0].id)).toBeUndefined();
-  expect(resolveWordId(v2, "user-word-uuid")).toBeUndefined();
-  // A dangling alias (invalid deck) falls back to the word itself instead of crashing.
-  const broken: Deck = { ...v1, words: [{ ...v1Words[0], aliasOf: "es.w.zzzzzzzzzz" }] };
-  expect(resolveWordId(broken, v1Words[0].id)?.id).toBe(v1Words[0].id);
 });

@@ -18,7 +18,7 @@ function answeredToday(l: Learner, now: number): Set<string> {
 }
 
 /** The session plan for `minutes`; `voice`: listening exercises possible. */
-export function sessionPlan(l: Learner, minutes: number, voice: boolean, now = Date.now()): Plan {
+export function sessionPlan(l: Learner, minutes: number, voice: boolean, now: number): Plan {
   return runAll(sessionPlanSteps(l, minutes, voice, now));
 }
 

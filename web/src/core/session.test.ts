@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { DAY_MS } from "./day";
 import { FSRS } from "./fsrs";
-import { plan, Session, type PlanInput, type Task } from "./session";
+import { planSteps, Session, type PlanInput, type Task } from "./session";
 import type { MemoryRow } from "./memory";
 import type { Skill } from "../data/rows";
+import { runAll } from "../lib/yield";
 
 const fsrs = new FSRS();
 const now = Date.UTC(2026, 5, 1);
@@ -18,7 +19,7 @@ const unlocked = (id: string, skill: Skill): MemoryRow => ({ ...mem(id, skill, 0
 const words = (n: number, prefix = "f") => Array.from({ length: n }, (_, i) => `${prefix}${i}`);
 
 function chunk(input: Partial<PlanInput>) {
-  return plan({ now, budgetMs: FIVE, memories: [], fresh: [], fsrs, answeredToday: new Set(), ...input });
+  return runAll(planSteps({ now, budgetMs: FIVE, memories: [], fresh: [], fsrs, answeredToday: new Set(), ...input }));
 }
 const ids = (queue: Task[]) => queue.map((t) => t.wordId);
 

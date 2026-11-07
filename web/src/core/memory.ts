@@ -6,7 +6,6 @@
 import { DAY_MS } from "./day";
 import { replay, type Grade } from "./fsrs";
 import { fsrs } from "./scheduler";
-import { runAll } from "../lib/yield";
 import type { ReviewRow, Skill } from "../data/rows";
 
 /** Harder skills unlock once reading is established (read stability in days). */
@@ -70,7 +69,7 @@ export function recordGap(times: number[], now: number): number | null {
   return days >= RECORD_MIN_DAYS ? days : null;
 }
 
-export function recall(m: MemoryRow, now = Date.now()): number {
+export function recall(m: MemoryRow, now: number): number {
   return m.reps ? fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s) : 0;
 }
 
@@ -121,19 +120,15 @@ export function readMemory<M>(l: { memory: { get: (key: string) => M | undefined
 
 const knownAtCache = new WeakMap<object, { t: number; known: ReadonlySet<string> }>();
 
+type KnownAtLearner = { memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } };
+
 /**
  * The words known just before `t` (ms): what a replay of the reading reviews
  * before `t` would say. Only words read since `t` are replayed: for the
  * others, that replay is their memory now. Worked out once per learner and
- * `t`: Today's stats and its visitors both ask for the start of the day.
+ * `t`: Today's stats and its visitors both ask for the start of the day. A
+ * step per memory row, so Today can work it out in slices (#569).
  */
-export function knownAt(l: KnownAtLearner, t: number): ReadonlySet<string> {
-  return runAll(knownAtSteps(l, t));
-}
-
-type KnownAtLearner = { memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } };
-
-/** knownAt a step per memory row, so Today can work it out in slices (#569). */
 export function* knownAtSteps(l: KnownAtLearner, t: number): Generator<void, ReadonlySet<string>> {
   const hit = knownAtCache.get(l);
   if (hit?.t === t) return hit.known;
