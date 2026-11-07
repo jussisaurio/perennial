@@ -6,7 +6,6 @@
 
 import { daily, DAY_MS, dayNumber, rareDay, startOfDay } from "../core/day";
 import { bareNoun, inLang, nounView, type NounDef, type NounView, type NounWords, type PerLang } from "./nouns";
-import type { Layout } from "./world";
 import type { GardenWord } from "../deck/schema";
 
 export type VisitorId = "snail" | "gnome" | "frog" | "moth" | "cat" | "heron" | "bird" | "dog" | "fish" | "butterfly" | "goat" | "mole";
@@ -287,8 +286,18 @@ export function snailLap(now: Date = new Date()): number {
   return Math.min(0.99999, (now.getTime() - startOfDay(now)) / DAY_MS);
 }
 
+/**
+ * The part of the garden's layout (world.ts) the fence needs. Not its type:
+ * importing world.ts would pull the garden's React and Vite code into every
+ * module that reads the visitor table, the audio render script included (#306).
+ */
+interface Fenced {
+  bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
+  gate: { x: number };
+}
+
 /** The fence as one path from the right gate post, round the garden, to the left gate post. */
-function fencePath(l: Layout): [number, number][] {
+function fencePath(l: Fenced): [number, number][] {
   const b = l.bounds;
   return [
     [l.gate.x + GATE_HALF, b.maxZ],
@@ -300,7 +309,7 @@ function fencePath(l: Layout): [number, number][] {
   ];
 }
 
-export function fencePickets(l: Layout): number {
+export function fencePickets(l: Fenced): number {
   const path = fencePath(l);
   let len = 0;
   for (let i = 1; i < path.length; i++) len += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
@@ -308,7 +317,7 @@ export function fencePickets(l: Layout): number {
 }
 
 /** The point on the fence at `picket`, and the direction of the fence there (for "inside"). */
-export function fencePoint(l: Layout, picket: number): { x: number; z: number; dx: number; dz: number } {
+export function fencePoint(l: Fenced, picket: number): { x: number; z: number; dx: number; dz: number } {
   const path = fencePath(l);
   let d = (picket + 0.5) / PICKETS_PER_M;
   for (let i = 1; i < path.length; i++) {
