@@ -106,10 +106,12 @@ test("a sign-out that fails reloads, still signed in and syncing", async ({ page
   const email = await addEmail(page);
   await page.route("**/api/auth/sign-out", (route) => route.fulfill({ status: 500, json: {} }));
   const reloaded = page.waitForEvent("load");
+  // Sync runs again after the reload (the sign-out had stopped it): the rows come with /api/boot.
+  // Wait from before the click: the app asks for /api/boot as its code loads, so the answer can come before "load".
+  const booted = page.waitForResponse((r) => r.url().includes("/api/boot") && r.status() === 200);
   await page.getByRole("button", { name: "Sign out" }).click();
   await reloaded;
-  // Sync runs again after the reload (the sign-out had stopped it): the rows come with /api/boot.
-  await page.waitForResponse((r) => r.url().includes("/api/boot") && r.status() === 200);
+  await booted;
   await expect(page.getByText(email)).toBeVisible();
 });
 
