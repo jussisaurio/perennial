@@ -22,7 +22,7 @@ import { EMPTY_WALK } from "../content/voice";
 import { echoDate } from "../garden/well";
 import { takeFocus, type Focus } from "./gardenFocus";
 import { WordPlant } from "./plant";
-import { speak, speakAll } from "./speech";
+import { animalSays, speak, speakAll } from "./speech";
 import { useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
@@ -566,10 +566,11 @@ export function GardenWalk({
     switch (hit?.kind) {
       case "visitor": {
         // A visitor may answer (the awake frog croaks one of your known words, never its own name):
-        // in a bubble and, with sound on, aloud. Otherwise its tag and its word. No card.
-        const said = scene.current.tapVisitor(hit.v.id, visitors?.known ?? []);
-        const spoken = said ?? hit.v.word;
-        if (sound && spoken) void speak(spoken, tag);
+        // in a bubble and, with sound on, aloud: its recorded sound, then the word (#739). Otherwise its tag and its word. No card.
+        const answer = scene.current.tapVisitor(hit.v.id, visitors?.known ?? []);
+        if (!sound) return;
+        if (answer) void animalSays(answer.sound, answer.word, tag);
+        else if (hit.v.word) void speak(hit.v.word, tag);
         return;
       }
       case "plant":

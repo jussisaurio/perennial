@@ -27,8 +27,9 @@ export interface SpokenDeck {
  * Every text the app says in this course, each once (callers of web/src/ui/speech.ts):
  * words (cards, plants, orchard trees, the well's echo), a shaken
  * plant's forms, sentences, and the garden's scenery and visitor nouns. Animals never
- * speak in this voice, so the frog's croak has no clip (nor do words from the learner's
- * own texts): those plays use browser speech.
+ * speak in this voice: the frog's croak is a real recording (web/src/ui/animalSounds.ts),
+ * and only the known word after it is said in this voice. Words from the learner's own
+ * texts have no clip: those plays use browser speech.
  */
 export function spokenTexts(deck: SpokenDeck, lang: DeckLang): string[] {
   const out = new Set<string>();

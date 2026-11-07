@@ -9,7 +9,7 @@ import * as T from "./textures";
 import { type VisitorId, type VisitorView } from "./visitors";
 import { daily } from "../core/day";
 import { KINDS } from "./kinds";
-import type { Bloom, Body, Hideout, Visitor, VisitorKind } from "./kinds/kind";
+import type { Bloom, Body, Hideout, Reply, Visitor, VisitorKind } from "./kinds/kind";
 import type { Layout } from "./world";
 import type { Spots } from "./spots";
 import type { Conditions } from "./conditions";
@@ -260,7 +260,7 @@ export class SceneVisitors implements Part {
    * says that in a bubble for a few seconds, and this returns it. Otherwise
    * its tag shows for a few seconds.
    */
-  tap(id: VisitorId, known: readonly string[]): string | null {
+  tap(id: VisitorId, known: readonly string[]): Reply | null {
     const s = this.sprites.find((o) => o.v.id === id);
     const elapsed = this.world.elapsed();
     if (s?.body.hiding) {
@@ -272,7 +272,7 @@ export class SceneVisitors implements Part {
       this.tapped = { id, until: elapsed + 4 };
       return null;
     }
-    this.say(id, said);
+    this.say(id, said.say);
     // Its answer's frame (the frog's puffed throat) shows at once.
     if (s) this.draw(s);
     return said;

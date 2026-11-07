@@ -48,7 +48,7 @@ import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE
 import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
 import { RESERVED } from "../content/voice";
 import { dayNumber } from "../core/day";
-import type { Hideout } from "./kinds/kind";
+import type { Hideout, Reply } from "./kinds/kind";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -1532,10 +1532,6 @@ export class GardenScene {
     return this.guests.pick(cssX, cssY, cssW, cssH, (x, y, z) => this.behindHedge(x, y, z));
   }
 
-  /**
-   * A tap on a visitor: what it says back (the awake frog croaks one of the
-   * `known` words) in a small bubble for a few seconds, or else its tag. Returns what it said.
-   */
   /** The action button finds a hiding visitor (#379), as a tap on it would. */
   private seek(id: VisitorId) {
     this.guests.find(id);
@@ -1547,7 +1543,11 @@ export class GardenScene {
     return this.reach === "seek" && this.seekTarget ? this.guests.hider(this.seekTarget) : null;
   }
 
-  tapVisitor(id: VisitorId, known: readonly string[]): string | null {
+  /**
+   * A tap on a visitor: what it says back (the awake frog croaks one of the
+   * `known` words) in a small bubble for a few seconds, or else its tag. Returns what it said.
+   */
+  tapVisitor(id: VisitorId, known: readonly string[]): Reply | null {
     const said = this.guests.tap(id, known);
     this.clearTaps(said === null ? { scenery: true, tree: true, line: true, fruit: true } : { line: true });
     return said;

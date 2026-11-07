@@ -36,7 +36,7 @@ async function fetchClip(text: string, tag: string): Promise<string | null> {
     return null;
   }
   if (!res.ok) {
-    // 404: a text with no clip, such as the frog's croak with a word after it.
+    // 404: a text with no clip, such as a word from the learner's own text.
     reportClipFailed(`HTTP ${res.status}`, lang);
     return null;
   }
@@ -117,7 +117,7 @@ if (BASE && typeof document !== "undefined") {
   document.addEventListener("keydown", first, true);
 }
 
-/** Plays a loaded clip to its end. False when it would not play: the browser says the text instead. */
+/** Plays a loaded clip (or an animal's sound, #739) to its end. False when it would not play: the browser says the text instead. */
 export async function playClip(url: string, rate: number): Promise<boolean> {
   finish?.();
   const a = (audio ??= new Audio());

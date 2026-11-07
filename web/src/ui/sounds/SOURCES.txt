@@ -1,0 +1,10 @@
+Animal sounds (#739). Animals never speak in the course voice: each makes a real recorded sound.
+
+frog-croak.mp3
+  What: a pig frog (Lithobates grylio), recorded at Everglades National Park, Florida.
+  By: NPS Natural Sounds & Night Skies Division (US National Park Service).
+  License: public domain (a work of the US federal government, PD-USGov-NPS).
+  Source: https://commons.wikimedia.org/wiki/File:PigFrog_EvergladesNP.ogg
+  Changes: cut to the double grunt (0.56-1.32 s of the original), short fades,
+  loudness normalized, 22.05 kHz mono MP3 at 48 kb/s:
+    ffmpeg -i PigFrog_EvergladesNP.ogg -af "atrim=0.56:1.32,asetpts=PTS-STARTPTS,afade=t=in:d=0.02,afade=t=out:st=0.70:d=0.06,loudnorm=I=-18:TP=-2:LRA=7,aresample=22050" -ac 1 -c:a libmp3lame -b:a 48k frog-croak.mp3
