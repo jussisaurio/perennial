@@ -75,7 +75,8 @@ describe("the plant hears its name (#60)", () => {
 
 describe("the ends of the strip (#61) and the empty garden (#58)", () => {
   test("the keepsake: the first word and the day", () => {
-    expect(keepsakeLabel("casa", new Date(2026, 9, 3, 18).getTime())).toBe("casa · 3 Oct");
+    expect(keepsakeLabel("casa", new Date(2026, 9, 3, 18).getTime(), "es")).toBe("casa · 3 oct");
+    expect(keepsakeLabel("Haus", new Date(2026, 9, 3, 18).getTime(), "de")).toBe("Haus · 3. Okt.");
   });
 
   test("the mole comes on about one day in four, all day; the dev override brings it", () => {

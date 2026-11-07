@@ -275,8 +275,8 @@ export const PICKETS_PER_M = 4;
 /** Half the width of the gate opening, in metres. */
 export const GATE_HALF = 1.1;
 
-/** The board at the gate, where each lap starts and ends. */
-export const SNAIL_SIGN = "Snail fastest lap: 23h 59min";
+/** The board at the gate, where each lap starts and ends: the snail's fastest lap, 23 hours 59 minutes. */
+export const SNAIL_SIGN: PerLang<string> = { es: "Vuelta rápida del caracol: 23 h 59 min", de: "Rundenrekord Schnecke: 23 Std. 59 Min." };
 
 /**
  * The snail does one lap of the fence a day, starting at the gate at midnight:

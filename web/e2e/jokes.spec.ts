@@ -81,8 +81,8 @@ test("the sundial tells the time and is closed at night; the mouse door is the w
 
   // The mouse door, low in the hedge by the big door.
   await page.mouse.click(...(await lookAt(page, at.door, 1)));
-  await expect(page.locator(".gw-say")).toHaveText("Locked. Wrong size.");
-  // A screen reader hears the line too.
+  await expect(page.locator(".gw-say")).toHaveText("Cerrado. No es tu talla.");
+  // A screen reader hears what it means, in English.
   await expect(page.locator(".sr-only[role=status]")).toHaveText("Locked. Wrong size.");
   // Its mat, in the course language.
   await page.mouse.click(...(await lookAt(page, at.mat, 1)));
@@ -94,7 +94,7 @@ test("the sundial tells the time and is closed at night; the mouse door is the w
   await openWalk(page);
   expect((await jokes(page)).shadowShows).toBe(false);
   await page.mouse.click(...(await lookAt(page, (await places(page)).sundial, 1.5)));
-  await expect(page.locator(".gw-say")).toHaveText("Sundial: closed until morning.");
+  await expect(page.locator(".gw-say")).toHaveText("Reloj de sol: cerrado hasta el amanecer.");
   expect(errors).toEqual([]);
 });
 

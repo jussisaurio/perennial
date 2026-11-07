@@ -12,7 +12,8 @@ import { ORCHARD_WORDS, type GardenWord, type OrchardWord } from "../deck/schema
 import { hash01 } from "../lib/seed";
 import { CELL_H_PX, CELL_W, crownBox, TREE_SHAPES } from "./orchardArt";
 import { rayBox, type Ray } from "./scenery";
-import { MONTHS } from "./whimsy";
+import type { DeckLang } from "../deck/langs";
+import type { PerLang } from "./nouns";
 
 /** Read stability (days) at which a known word's tree bears fruit; below it a known word's tree is in blossom. */
 export const FRUIT_S = 21;
@@ -263,10 +264,15 @@ export function orchardWell(a: OrchardArea): { x: number; z: number } {
   return { x: a.x, z: inFromDoor(a, a.d - 2.2) };
 }
 
-/** The bench's plaque, e.g. "First word planted 3 Oct 2026". */
-export function benchLine(firstPlanted: number): string {
-  const d = new Date(firstPlanted);
-  return `First word planted ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+/** The bench's plaque, in the course language (#650): "First word planted on <date>". */
+const PLAQUE: PerLang<(date: string) => string> = {
+  es: (date) => `Primera palabra plantada el ${date}`,
+  de: (date) => `Erstes Wort gepflanzt am ${date}`,
+};
+
+/** The bench's plaque, e.g. "Primera palabra plantada el 3 oct 2026". */
+export function benchLine(firstPlanted: number, lang: DeckLang): string {
+  return PLAQUE[lang](new Date(firstPlanted).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" }));
 }
 
 /** Garden visitors that like trees. */

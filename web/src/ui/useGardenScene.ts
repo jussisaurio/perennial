@@ -3,9 +3,8 @@
 // trackpad and drags (useWalkInput). GardenWalk.tsx draws everything around it.
 
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
-import { language } from "../content/languages";
+import { isDeckLang } from "../deck/langs";
 import { reportStalledWalk } from "../observability";
-import { reservedStake } from "../content/voice";
 import type { PlantSource } from "../garden/plants";
 import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, WalkVisitors } from "../garden/scene";
 import type { CarryDone, Held } from "../garden/sceneCarry";
@@ -14,7 +13,7 @@ import type { ToyDone } from "../garden/sceneToys";
 import type { ToysWalk } from "../garden/toys";
 import { sceneryViews } from "../garden/scenery";
 import { moonPhase } from "../garden/moon";
-import { keepsakeLabel, sleeperId } from "../garden/whimsy";
+import { sleeperId } from "../garden/whimsy";
 import { isAutumn } from "../core/day";
 import { wakeAudio } from "./chime";
 import { layout, type Layout, type PlacedPlant } from "../garden/world";
@@ -111,14 +110,13 @@ export function useGardenScene({
   const [openedAt] = useState(() => Date.now());
   if (source && !data) {
     const l = layout(source.plants, source.aside);
-    const first = source.first && l.plants.some((p) => p.id === source.first!.id) ? { id: source.first.id, text: keepsakeLabel(source.first.lemma, source.first.at) } : null;
+    const first = source.first && l.plants.some((p) => p.id === source.first!.id) ? source.first : null;
     setData({
       l,
       seeds: source.seeds,
       visitors: {
         list: visitors?.views ?? [],
         keepsake: first,
-        reserved: l.plants.length ? null : reservedStake(language(lang).name, lang).line,
         sleeper: sleeperId(l.plants.filter((p) => p.stage === "bloom").map((p) => p.id)),
         scenery: visitors?.scenery ?? sceneryViews(lang),
         door: door.state,
@@ -152,6 +150,8 @@ export function useGardenScene({
       if (mod === "failed") return setFailed({ text: "The garden could not load.", retry: true });
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        // Every course has a deck (synced courses pass `teachable`, the landing page's draft isDeckLang), and the world is written in its language (#650).
+        if (!isDeckLang(lang)) throw new Error(`No garden for the course "${lang}"`);
         s = new mod.GardenScene(
           cv,
           data.l,

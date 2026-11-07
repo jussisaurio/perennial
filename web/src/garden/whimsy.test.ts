@@ -1,16 +1,20 @@
 import { describe, expect, test } from "bun:test";
-import { BENCH_LINES, FENCE_LINES, fishSign, lapsDone, lapStep, LOCAL_LINES, pickSigns, POND_LAPS, SIGN_POOL, sundialAngle, sunflowerFaces, type Laps } from "./whimsy";
+import { DECK_LANGS } from "../deck/langs";
+import { fishSign, lapsDone, lapStep, pickSigns, POND_LAPS, SIGNS, sundialAngle, sunflowerFaces, type Laps } from "./whimsy";
 
 const days = Array.from({ length: 120 }, (_, d) => new Date(2026, 0, 1 + d, 12));
 
 describe("garden signs", () => {
-  test("every line is short, plain and calm", () => {
-    expect(SIGN_POOL.length).toBeGreaterThanOrEqual(15);
-    for (const { text } of [...SIGN_POOL, ...BENCH_LINES, ...FENCE_LINES]) {
-      const words = text.split(" ").length;
-      expect(words).toBeGreaterThanOrEqual(2);
-      expect(words).toBeLessThanOrEqual(6);
-      expect(text).not.toContain("!");
+  test("every line is short, plain and calm, in every course", () => {
+    for (const lang of DECK_LANGS) {
+      const s = SIGNS[lang];
+      expect(s.pool.length).toBeGreaterThanOrEqual(15);
+      for (const { text } of [...s.pool, ...s.bench, ...s.fence, { text: s.noFish.text }]) {
+        const words = text.split(" ").length;
+        expect(words).toBeGreaterThanOrEqual(2);
+        expect(words).toBeLessThanOrEqual(6);
+        expect(text).not.toContain("!");
+      }
     }
   });
 
@@ -25,18 +29,9 @@ describe("garden signs", () => {
   test("bench lines stay by the bench, fence lines on the fence", () => {
     for (const d of days) {
       const s = pickSigns("de", d);
-      expect(BENCH_LINES).not.toContainEqual(s.fence);
-      expect(FENCE_LINES).not.toContainEqual(s.bench);
+      expect(SIGNS.de.bench).not.toContainEqual(s.fence);
+      expect(SIGNS.de.fence).not.toContainEqual(s.bench);
     }
-  });
-
-  test("about one day in four, a sign is in the course language", () => {
-    const local = days.map((d) => pickSigns("es", d).fence).filter((l) => l.lang === "es");
-    expect(local.length).toBeGreaterThan(days.length / 8);
-    expect(local.length).toBeLessThan(days.length / 2);
-    for (const l of local) expect(LOCAL_LINES.es).toContain(l.text);
-    // A course with no local lines only gets English ones.
-    expect(days.every((d) => !pickSigns("fr", d).fence.lang)).toBe(true);
   });
 
   test("the pool rotates: a month shows many different lines", () => {
@@ -116,10 +111,12 @@ describe("the deadpan scenery (#364)", () => {
   });
 
   test("the fish sign is put right only when the fish is in the pond, and only that sign", () => {
-    const noFish = SIGN_POOL.find((l) => l.text === "No fishing. No fish.")!;
-    expect(fishSign(noFish, false)).toEqual(noFish);
-    expect(fishSign(noFish, true)).toEqual({ text: "No fishing. No fish.", fix: { strike: "No fish.", write: "One fish." } });
-    const other = SIGN_POOL.find((l) => l.text === "Snail crossing")!;
-    expect(fishSign(other, true)).toEqual(other);
+    const noFish = { text: "Prohibido pescar. No hay peces." };
+    expect(fishSign(noFish, false, "es")).toEqual(noFish);
+    expect(fishSign(noFish, true, "es")).toEqual({ text: "Prohibido pescar. No hay peces.", fix: { strike: "No hay peces.", write: "Hay uno." } });
+    const other = SIGNS.es.pool[0];
+    expect(fishSign(other, true, "es")).toEqual(other);
+    // The other course's sign is put right in its own words.
+    expect(fishSign({ text: SIGNS.de.noFish.text }, true, "de").fix).toEqual({ strike: "Keine Fische.", write: "Ein Fisch." });
   });
 });

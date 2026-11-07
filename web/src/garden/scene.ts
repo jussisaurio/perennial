@@ -11,7 +11,7 @@ import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf } from "../ui/plant";
-import { fishSign, pickSigns, sunflowerFaces, type SignLine } from "./whimsy";
+import { fishSign, keepsakeLabel, pickSigns, SIGNS, sunflowerFaces, type SignLine } from "./whimsy";
 import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
 import { SceneVisitors, type Hider } from "./sceneVisitors";
 import { LANTERN_GLASS_Y, RAIL, type Ledge, type Spots } from "./spots";
@@ -34,12 +34,13 @@ import type { ToysWalk } from "./toys";
 import { bareNoun } from "./nouns";
 import { plantInReach } from "./shake";
 import type { Gender } from "../deck/schema";
+import type { DeckLang } from "../deck/langs";
 import { Jokes, type Joke } from "./sceneJokes";
 import { WalkInto } from "./sceneWalkInto";
 import { leafPiles, type Fell, type Rolling } from "./walkInto";
 import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
-import { inLang } from "./nouns";
+import { RESERVED } from "../content/voice";
 import { dayNumber } from "../core/day";
 import type { Hideout } from "./kinds/kind";
 
@@ -89,10 +90,8 @@ export interface Label {
 /** Who visits the walk today. */
 export interface WalkVisitors {
   list: VisitorView[];
-  /** The first word's plant and its stake text, e.g. "casa · 3 Oct" (#61). */
-  keepsake?: { id: string; text: string } | null;
-  /** The stake in an empty garden, e.g. "Reserved for Spanish words" (#58). */
-  reserved?: string | null;
+  /** The first word's plant, its lemma and when it was planted, for its stake: "casa · 3 oct" (#61). */
+  keepsake?: { id: string; lemma: string; at: number } | null;
   /** Tonight's sleeping bloom (#62): three z's drift up from it at night. */
   sleeper?: string | null;
   /** Words for the garden itself (#74): shown when you tap the sunflower, a tree, the pond... */
@@ -358,21 +357,24 @@ export class GardenScene {
   private get trunks(): readonly PlacedTree[] {
     return this.orchard?.trees ?? [];
   }
-  /** A quiet line from the garden (the door's), over a point, until a time. */
-  private line: { text: string; at: [number, number, number]; until: number } | null = null;
+  /**
+   * A quiet line from the garden (the door's, or a joke's), over a point, until a time. A joke's line is in the
+   * course language, and `spoken` is its English for screen readers (#650); the door's lines are English.
+   */
+  private line: { text: string; spoken?: string; at: [number, number, number]; until: number } | null = null;
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
 
   private layout: Layout;
   private cb: SceneCallbacks;
   private reducedMotion: boolean;
 
-  /** The course language, for the odd sign written in it. */
-  private lang: string;
+  /** The course language: the signs and everything else written in the world are in it (#650). */
+  private lang: DeckLang;
   private visitors: WalkVisitors;
   /** Today's visitors in the walk (sceneVisitors.ts). */
   private guests: SceneVisitors;
 
-  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: string, visitors: WalkVisitors) {
+  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: DeckLang, visitors: WalkVisitors) {
     this.layout = layout;
     this.cb = cb;
     this.reducedMotion = reducedMotion;
@@ -474,6 +476,7 @@ export class GardenScene {
     const b = L.bounds;
     const c: BuildCtx = {
       L,
+      lang: this.lang,
       b,
       w: b.maxX - b.minX,
       d: b.maxZ - b.minZ,
@@ -734,7 +737,7 @@ export class GardenScene {
         atlas: this.orchardAtlas,
         bench: () => benchModel(this.ctx),
         mat: this.ctx.mat,
-        plaque: firstPlanted === null ? null : benchLine(firstPlanted),
+        plaque: firstPlanted === null ? null : benchLine(firstPlanted, this.lang),
       },
       o,
       trees,
@@ -957,7 +960,7 @@ export class GardenScene {
       // No words met yet: only the plop.
       if (!e) return;
       const from = this.elapsed + ECHO.delay;
-      this.echoTap = { n, word: e.lemma, date: echoDate(e.at, this.openedAt), from, until: from + ECHO.show };
+      this.echoTap = { n, word: e.lemma, date: echoDate(e.at, this.openedAt, this.lang), from, until: from + ECHO.show };
     },
   };
 
@@ -1034,8 +1037,7 @@ export class GardenScene {
       if (who && !this.inView(who)) this.sitBeside(who);
       if (this.gnomeSays !== null && this.sat >= this.gnomeSays) {
         this.gnomeSays = null;
-        // lang is a deck language here, so a word for it is always there.
-        this.guests.say("gnome", inLang(GNOME_WORD, this.lang)!);
+        this.guests.say("gnome", GNOME_WORD[this.lang]);
       }
       const t = this.turnTo;
       if (t) {
@@ -1120,8 +1122,8 @@ export class GardenScene {
   }
 
   /** Show a quiet line over a point for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
-  private showLine(text: string, at: [number, number, number]) {
-    this.line = { text, at, until: this.elapsed + 4 };
+  private showLine(text: string, at: [number, number, number], spoken?: string) {
+    this.line = { text, spoken, at, until: this.elapsed + 4 };
     this.clearTaps({ scenery: true, tree: true, visitor: true, fruit: true });
   }
 
@@ -1145,12 +1147,12 @@ export class GardenScene {
     const r = this.ray(cssX, cssY, cssW, cssH);
     const got = this.jokes.pick(r);
     if (!got || got.t > FOG_FAR || thingAt(r, this.sceneryWorld()) < got.t) return null;
-    return { line: got.line, at: got.at };
+    return { line: got.line, spoken: got.spoken, at: got.at };
   }
 
   /** A joke's quiet line, over it for a few seconds (after a tap). */
   tapJoke(j: Joke) {
-    this.showLine(j.line, j.at);
+    this.showLine(j.line, j.at, j.spoken);
   }
 
   /** How far along the ray the nearest hedge is, or Infinity: what lies past it is hidden. */
@@ -1244,11 +1246,11 @@ export class GardenScene {
     // Two notice boards whose text changes each day: one on the back fence, one by the bench.
     const signs = pickSigns(this.lang);
     const taken = this.visitors.list.some((v) => v.id === "cat");
-    if (taken) signs.bench = { text: "Bench: taken" };
-    // The fish swims in the pond (#209): "No fish." is put right by hand (#364).
+    if (taken) signs.bench = { text: SIGNS[this.lang].taken };
+    // The fish swims in the pond (#209): "no fish" is put right by hand (#364).
     const fish = this.visitors.list.some((v) => v.id === "fish");
-    signs.fence = fishSign(signs.fence, fish);
-    signs.bench = fishSign(signs.bench, fish);
+    signs.fence = fishSign(signs.fence, fish, this.lang);
+    signs.bench = fishSign(signs.bench, fish, this.lang);
     const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
       const g = new THREE.Group();
       const board = signBoard(c, T.pixelTexture(line.fix ? T.fixedNotice(line.text, line.fix.strike, line.fix.write) : T.notice(line.text)), 1.2, 0.48);
@@ -1273,7 +1275,7 @@ export class GardenScene {
     // The snail's finish line (where it set off), on a small board just inside the gate, facing the garden.
     if (this.visitors.list.some((v) => v.id === "snail")) {
       const g = new THREE.Group();
-      const board = signBoard(c, T.pixelTexture(T.notice(SNAIL_SIGN)), 1.0, 0.4);
+      const board = signBoard(c, T.pixelTexture(T.notice(SNAIL_SIGN[this.lang])), 1.0, 0.4);
       board.position.y = 0.62;
       g.add(board);
       const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), mat(woodTex));
@@ -1305,13 +1307,13 @@ export class GardenScene {
       this.hitBoxes.push(boardBox(x, z, w, y + w * 0.2, turn));
     };
     const first = L.beds[0];
-    // Front right of the empty bed, where the card in the middle does not hide it.
-    if (this.visitors.reserved && !L.plants.length) stake(this.visitors.reserved, first.x + first.w / 2 - 0.32, first.z + first.d / 2 - 0.3, 0.64, 0.56, -0.3);
+    // An empty garden (#58): "Reserved", at the front right of the empty bed, where the card in the middle does not hide it.
+    if (!L.plants.length) stake(RESERVED[this.lang], first.x + first.w / 2 - 0.32, first.z + first.d / 2 - 0.3, 0.64, 0.56, -0.3);
     const keepsake = this.visitors.keepsake;
     const kept = keepsake ? L.plants.find((p) => p.id === keepsake.id) : undefined;
     if (keepsake && kept) {
       const bed = L.beds[kept.bed];
-      stake(keepsake.text, kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
+      stake(keepsakeLabel(keepsake.lemma, keepsake.at, this.lang), kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
     }
     const sleeper = this.visitors.sleeper ? L.plants.find((p) => p.id === this.visitors.sleeper) : undefined;
     this.critters.buildSnore(c, sleeper, plantHeight);
@@ -1888,7 +1890,7 @@ export class GardenScene {
     else if (ln) {
       v.set(...ln.at).project(this.camera);
       // Kept on the screen: standing right at the door, its top is above the view, and the line must still be read.
-      if (v.z <= 1) tags.line = { id: "line", text: ln.text, kind: "line", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
+      if (v.z <= 1) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "line", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
     // A tapped orchard tree's word (#315), over its crown; kept on the screen, as a tall tree's top is often above the view.
     const tt = this.treeTap;

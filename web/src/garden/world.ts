@@ -7,7 +7,8 @@ import type { Gender, GardenWord } from "../deck/schema";
 import { dayNumber } from "../core/day";
 import { hash01 } from "../lib/seed";
 import { collideTrees, ORCHARD_MIN, orchardWell, WELL_R, type PlacedTree } from "./orchard";
-import { MONTHS } from "../ui/format";
+import type { DeckLang } from "../deck/langs";
+import type { PerLang } from "./nouns";
 import type { Stage } from "../ui/plant";
 
 /** A word that has its place in the beds: when it was planted, and what breaks a tie. */
@@ -51,8 +52,11 @@ export interface Bed {
   w: number;
   d: number;
   /** Its sign: the month its first word was planted, on the first bed of each month only; null: no sign. */
-  label: string | null;
+  sign: BedSign | null;
 }
+
+/** What a bed's sign says, before bedSign writes it in the course language: when its first word was planted (`year`: with the year), or "empty" in a garden with no words yet. */
+export type BedSign = { planted: number; year: boolean } | "empty";
 
 export interface Layout {
   beds: Bed[];
@@ -119,10 +123,19 @@ function byPlanting(a: Planting, b: Planting): number {
   return a.planted - b.planted || a.rank - b.rank || (a.lemma < b.lemma ? -1 : a.lemma > b.lemma ? 1 : 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
-/** A bed sign's month: "October", or "October 2026" when `year`. In local time, like the garden's calendar days. */
-export function monthLabel(planted: number, year: boolean): string {
-  const d = new Date(planted);
-  return year ? `${MONTHS[d.getMonth()]} ${d.getFullYear()}` : MONTHS[d.getMonth()];
+/** The empty garden's bed sign, per course language: "Your words will grow here". */
+const EMPTY_BED: PerLang<string> = { es: "Aquí crecerán tus palabras", de: "Hier wachsen deine Wörter" };
+
+/**
+ * A bed sign's text, in the course language (#650): the month, "Octubre" or
+ * "Oktober", with the year when the sign has one. In local time, like the
+ * garden's calendar days.
+ */
+export function bedSign(sign: BedSign, lang: DeckLang): string {
+  if (sign === "empty") return EMPTY_BED[lang];
+  const month = new Date(sign.planted).toLocaleDateString(lang, sign.year ? { month: "long", year: "numeric" } : { month: "long" });
+  // Spanish writes a month small; alone on a sign, it starts with a capital.
+  return month[0].toUpperCase() + month.slice(1);
 }
 
 /** Which way a word's plant leans when it leans at all: 1 to the right, -1 to the left, the same in every view. */
@@ -171,8 +184,8 @@ export function layout(plants: readonly GardenPlant[], aside: readonly Planting[
     const x = col * CELL_W;
     const z = -row * CELL_D;
     // A sign where a month starts, not on every bed: a learner fills several beds a month.
-    const label = !slots.length ? "Your first words grow here" : b === 0 || month(b) !== month(b - 1) ? monthLabel(slots[b * CAPACITY].at.planted, year) : null;
-    beds.push({ x, z, w: BED_W, d: BED_D, label });
+    const sign: BedSign | null = !slots.length ? "empty" : b === 0 || month(b) !== month(b - 1) ? { planted: slots[b * CAPACITY].at.planted, year } : null;
+    beds.push({ x, z, w: BED_W, d: BED_D, sign });
     for (let i = 0; i < CAPACITY; i++) {
       // Past the last word, or a word set aside: nothing grows here.
       const gp = slots[b * CAPACITY + i]?.plant;

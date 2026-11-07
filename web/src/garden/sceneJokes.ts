@@ -6,7 +6,7 @@
 // The laps and the hour are pure functions in whimsy.ts.
 
 import * as THREE from "three";
-import { JOKE_LINES, lapsDone, lapStep, POND_LAPS, sundialAngle, type Laps } from "./whimsy";
+import { JOKE_LINES, JOKE_SPOKEN, lapsDone, lapStep, POND_LAPS, sundialAngle, type Laps } from "./whimsy";
 import { rayBox, type Ray } from "./scenery";
 import type { BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
@@ -14,9 +14,10 @@ import type { Frame, Part } from "./scenePart";
 import { HEDGE } from "./world";
 import * as T from "./textures";
 
-/** A tap on a joke: the line it says, and where the line shows. */
+/** A tap on a joke: the line it says (in the course language), what it means for a screen reader, and where the line shows. */
 export interface Joke {
   line: string;
+  spoken: string;
   at: [number, number, number];
 }
 
@@ -90,7 +91,7 @@ export class Jokes implements Part {
     // By day a tap names it (scenery); at night the same box says its line.
     const box = { min: [x - SUNDIAL.top / 2, 0, z - SUNDIAL.top / 2] as [number, number, number], max: [x + SUNDIAL.top / 2, top, z + SUNDIAL.top / 2] as [number, number, number] };
     c.hitBoxes.push({ id: "sundial", ...box, tag: [x, top + 0.1, z] });
-    this.dial = { ...box, joke: { line: JOKE_LINES.sundial, at: [x, top + 0.3, z] } };
+    this.dial = { ...box, joke: { line: JOKE_LINES[c.lang].sundial, spoken: JOKE_SPOKEN.sundial, at: [x, top + 0.3, z] } };
 
     // The mouse door, flat on the hedge's face, low and small; its mat on the ground in front.
     const z0 = L.bounds.maxZ + HEDGE.gap;
@@ -106,7 +107,7 @@ export class Jokes implements Part {
     rug.position.set(mx, 0.02, mz);
     c.scene.add(door, rug);
     c.hitBoxes.push({ id: "doormat", min: [mx - 0.13, 0, mz - 0.045], max: [mx + 0.13, 0.03, mz + 0.045], tag: [mx, 0.25, mz] });
-    this.door = { min: [mx - 0.08, 0.03, z0 - 0.04], max: [mx + 0.08, MOUSE_DOOR.h + 0.02, z0], joke: { line: JOKE_LINES.mouseDoor, at: [mx, 0.5, z0] } };
+    this.door = { min: [mx - 0.08, 0.03, z0 - 0.04], max: [mx + 0.08, MOUSE_DOOR.h + 0.02, z0], joke: { line: JOKE_LINES[c.lang].mouseDoor, spoken: JOKE_SPOKEN.mouseDoor, at: [mx, 0.5, z0] } };
 
     // The fish, and the rings where it goes in and comes out: hidden until it leaps.
     this.pond = L.pond;

@@ -75,9 +75,9 @@ test("carry a pebble through the door to the well and drop it in: the echo says 
 
   // A moment later, the echo: the day the word was met, then the word, in the course language.
   const echo = page.locator(".gw-echo");
-  await expect(echo).toHaveText(/^\d{1,2} [A-Z][a-z]+( \d{4})?: .+\.$/);
-  const word = await echo.locator('[lang="es"]').textContent();
-  await expect(status).toContainText("An echo from the well: ");
+  await expect(echo).toHaveText(/^\d{1,2} de [a-z]+( de \d{4})?: .+\.$/);
+  const word = await echo.locator("i").textContent();
+  await expect(status).toContainText("An echo from the well. It says one of your old words: ");
   await expect(status.locator('[lang="es"]')).toHaveText(word!);
 
   // Another pebble waits by the pond (pebbles never run out). Brought to the well, the action button drops it in, and the echo answers again.
@@ -89,6 +89,6 @@ test("carry a pebble through the door to the well and drop it in: the echo says 
   });
   await act("Drop it in the well").click();
   await expect(status).toHaveText("It falls a long way. Plop.");
-  await expect(status).toContainText("An echo from the well: ");
+  await expect(status).toContainText("An echo from the well. It says one of your old words: ");
   expect(errors).toEqual([]);
 });

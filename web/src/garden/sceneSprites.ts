@@ -6,6 +6,7 @@
 // instead, so there is one direction of dependency, never a cycle.
 
 import * as THREE from "three";
+import type { DeckLang } from "../deck/langs";
 import { stemHeight } from "../ui/plant";
 import type { HitBox, HitDisc } from "./scenery";
 import * as T from "./textures";
@@ -173,6 +174,8 @@ export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h
  */
 export interface BuildCtx {
   L: Layout;
+  /** The course language, for what is written in the world (#650). */
+  lang: DeckLang;
   b: Layout["bounds"];
   /** The garden inside the fence: width, depth and middle. */
   w: number;
