@@ -566,10 +566,10 @@ export function GardenWalk({
     switch (hit?.kind) {
       case "visitor": {
         // A visitor may answer (the awake frog croaks one of your known words, never its own name):
-        // in a bubble and, with sound on, aloud: its recorded sound, then the word (#739). Otherwise its tag and its word. No card.
+        // in a bubble and, with sound on, its recorded sound (#739). Otherwise its tag and its word. No card.
         const answer = scene.current.tapVisitor(hit.v.id, visitors?.known ?? []);
         if (!sound) return;
-        if (answer) void animalSays(answer.sound, answer.word, tag);
+        if (answer) void animalSays(answer.sound);
         else if (hit.v.word) void speak(hit.v.word, tag);
         return;
       }

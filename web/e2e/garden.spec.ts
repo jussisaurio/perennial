@@ -175,10 +175,11 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   // Its sound and a word (the demo learner's words); never its own name.
   await expect(page.locator(".gw-say")).toHaveText(/^croac…/);
   await expect(page.locator(".gw-say")).not.toHaveText(/rana/);
-  // Aloud, a real recorded croak, then only the word in the course voice (#739).
+  // Aloud, only a real recorded croak: never the course voice (#739).
   expect((await croak).ok()).toBe(true);
-  const word = (await page.locator(".gw-say").textContent())!.replace("croac… ", "");
-  await expect.poll(() => page.evaluate(() => (window as unknown as { spoken: string[] }).spoken)).toEqual([word]);
+  // No event to wait for when nothing is spoken: give the croak (under 1 s) time to end.
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => (window as unknown as { spoken: string[] }).spoken)).toEqual([]);
   // By day it stays, asleep on its pad, as in the strip: a learner who brought it finds it (#209).
   // Come back at noon the next day.
   await page.clock.setFixedTime(new Date("2026-10-12T12:00:00"));

@@ -254,18 +254,17 @@ export const gnomeTag = (pose: GnomePose): number => (pose === "front" ? 1 : 0);
 const CROAK: PerLang<string> = { es: "croac", de: "quak" };
 
 /**
- * What the frog croaks on its `tap`-th tap today: its bubble, its sound and one
- * word the learner knows (never its own name), e.g. "croac… casa". A different
- * word on most taps, in the same order all day.
+ * What the frog croaks on its `tap`-th tap today, in its bubble: its sound and
+ * one word the learner knows (never its own name), e.g. "croac… casa". A
+ * different word on most taps, in the same order all day.
  */
-export function frogCroak(known: readonly string[], lang: string, tap: number, now: Date = new Date()): { say: string; word: string | null } {
+export function frogCroak(known: readonly string[], lang: string, tap: number, now: Date = new Date()): string {
   // lang is a deck language here (synced courses pass `teachable`, the landing page's draft
   // passes isDeckLang), so inLang is never null: the fallbacks only keep the types simple.
   const sound = inLang(CROAK, lang) ?? "croak";
   const own = bareNoun(inLang(visitor("frog").words, lang) ?? "").toLowerCase();
   const pool = known.filter((w) => w.toLowerCase() !== own);
-  const word = pool.length ? daily(pool, `frog-croak-${tap}`, now) : null;
-  return { say: word ? `${sound}… ${word}` : `${sound}…`, word };
+  return pool.length ? `${sound}… ${daily(pool, `frog-croak-${tap}`, now)}` : `${sound}…`;
 }
 
 // ---- The snail's long trip (#55) ----
