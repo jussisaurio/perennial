@@ -18,7 +18,7 @@ import type { PerLang } from "./nouns";
 /** Read stability (days) at which a known word's tree bears fruit; below it a known word's tree is in blossom. */
 export const FRUIT_S = 21;
 
-export type TreeLook = "leaves" | "blossom" | "fruit";
+type TreeLook = "leaves" | "blossom" | "fruit";
 
 /** One started orchard word, as the reviews tell it. */
 export interface OrchardInput {
@@ -71,14 +71,14 @@ const REMEMBERED_H = { each: 0.05, max: 0.5 };
  * A tree's height in metres. It only ever grows: more days or more remembered
  * reviews never make it smaller, and a forgotten review adds nothing but takes nothing.
  */
-export function treeHeight(kind: OrchardWord, days: number, remembered: number): number {
+function treeHeight(kind: OrchardWord, days: number, remembered: number): number {
   const age = Math.min(AGE_H.max, AGE_H.start + AGE_H.perRootDay * Math.sqrt(days));
   const boost = Math.min(REMEMBERED_H.max, REMEMBERED_H.each * remembered);
   return (age + boost) * TREE_SIZE[kind];
 }
 
 /** The tree's look from the word's reading memory: leaves while learning, blossom once known, fruit once well known. */
-export function treeLook(read: Pick<MemoryRow, "s" | "reps">): TreeLook {
+function treeLook(read: Pick<MemoryRow, "s" | "reps">): TreeLook {
   if (plantStage(read) !== "bloom") return "leaves";
   return read.s >= FRUIT_S ? "fruit" : "blossom";
 }
@@ -137,7 +137,7 @@ function inFromDoor(a: OrchardArea, m: number): number {
 }
 
 /** Room between tree rows and columns, the path up the middle from the door, and the strip inside the door kept for the bench. */
-export const ORCHARD_SPACING = 4;
+const ORCHARD_SPACING = 4;
 const AISLE = 2;
 const FRONT = 2.2;
 /** How far a tree may sit off its spot, so the rows look planted by hand. */
@@ -276,8 +276,8 @@ export function benchLine(firstPlanted: number, lang: DeckLang): string {
 }
 
 /** Garden visitors that like trees. */
-export const TREE_VISITORS = ["bird", "owl", "squirrel", "bee"] as const satisfies readonly GardenWord[];
-export type TreeVisitor = (typeof TREE_VISITORS)[number];
+const TREE_VISITORS = ["bird", "owl", "squirrel", "bee"] as const satisfies readonly GardenWord[];
+type TreeVisitor = (typeof TREE_VISITORS)[number];
 
 /** Where a visitor sits, in metres: on the ground for the squirrel, in or by the crown for the others. */
 export interface TreeVisitorSpot {

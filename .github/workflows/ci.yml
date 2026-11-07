@@ -41,6 +41,8 @@ jobs:
       - name: Lint (web)
         working-directory: web
         run: bun run lint
+      - name: Unused files, exports and dependencies (knip, all workspaces)
+        run: bun run knip
       - name: Unit tests (web)
         working-directory: web
         run: bun run test

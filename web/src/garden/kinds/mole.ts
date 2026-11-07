@@ -14,9 +14,9 @@ import { bodyAt, type VisitorKind } from "./kind";
 const HELLO: PerLang<string> = { es: "¿Hola?", de: "Hallo?" };
 
 /** Stand within `move` m of one place this long (s), and the mole may come up there once you have gone. */
-export const STILL = { s: 2.5, move: 0.2 };
+const STILL = { s: 2.5, move: 0.2 };
 /** It comes up once you are `near` m from where you stood, at least `after` s after you left it; it forgets the place when you go `far` or after `wait` s. */
-export const BEHIND = { near: 2, after: 1.5, far: 10, wait: 12 };
+const BEHIND = { near: 2, after: 1.5, far: 10, wait: 12 };
 /** At least this long (s) from one time it goes down to the next place it may come up. */
 export const GAP = 60;
 /** Coming up (s from when the hill starts to rise): the hill alone, then it looks out, then the hill alone again. */

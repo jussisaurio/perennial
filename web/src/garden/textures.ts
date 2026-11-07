@@ -20,7 +20,7 @@ import { FULL_MOON, MOON_PHASES } from "./moon";
  * A pixel canvas, offscreen so a worker can paint it too (paintWorker.ts). `readBack`: its pixels are read with getImageData,
  * so it is kept in CPU memory: on a GPU canvas each read waits for the GPU, ~120 ms over the walk's bed signs at CPU 10× (#447).
  */
-export function canvas(w: number, h: number, readBack = false): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
+function canvas(w: number, h: number, readBack = false): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
   const c = new OffscreenCanvas(w, h);
   const ctx = c.getContext("2d", { willReadFrequently: readBack })!;
   ctx.imageSmoothingEnabled = false;
@@ -79,7 +79,7 @@ export async function paintFar(moonPhase: number): Promise<FarTextures> {
 /** The orchard's atlas (orchard()), painted in a worker. */
 export const paintOrchard = async (): Promise<THREE.Texture> => paintedTexture(await paint<Pixels>({ kind: "orchard" }));
 
-export const px = (ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
+const px = (ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
 };
@@ -1058,7 +1058,7 @@ export function fruitAtlas(): OffscreenCanvas {
 }
 
 /** Pixels per side of the leaf pile's cell: the pile stands on its bottom row. */
-export const PILE_CELL = 16;
+const PILE_CELL = 16;
 
 /** An autumn leaf pile (walkInto.ts LEAF_PILE), standing on the cell's bottom row. */
 export function leafPile(): OffscreenCanvas {

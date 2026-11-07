@@ -3,7 +3,8 @@
   "plugins": [
     "react",
     "typescript",
-    "oxc"
+    "oxc",
+    "import"
   ],
   "jsPlugins": [
     { "name": "react-hooks-js", "specifier": "eslint-plugin-react-hooks" }
@@ -11,6 +12,7 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": "off",
+    "import/no-cycle": "error",
     "react-hooks-js/static-components": "error",
     "react-hooks-js/use-memo": "error",
     "react-hooks-js/void-use-memo": "error",

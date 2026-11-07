@@ -8,7 +8,7 @@ import { createElement, Fragment, isValidElement, type ReactNode } from "react";
 import { Plant, type Stage } from "../ui/plant";
 
 /** SVG units per sprite: the same frame for every plant keeps sizes comparable. */
-export const VIEW_W = 100;
+const VIEW_W = 100;
 export const VIEW_H = 200;
 
 export interface SpritePlant {

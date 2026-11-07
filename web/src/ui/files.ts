@@ -1,4 +1,4 @@
-// Small browser file helpers: the data export and the garden's textures use them.
+// Small browser file helper: the data export uses it.
 
 /** Saves a file through the browser's download. */
 export function download(name: string, blob: Blob) {
@@ -7,13 +7,4 @@ export function download(name: string, blob: Blob) {
   a.click();
   // Not at once: some browsers cancel a download whose URL is revoked during the click.
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-export function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
 }

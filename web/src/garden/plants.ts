@@ -14,14 +14,14 @@ import { runAll } from "../lib/yield";
 import type { Stage } from "../ui/plant";
 import { orchardInput, orchardTrees, plantedAt, type OrchardTree } from "./orchard";
 import type { Met } from "./well";
-import { leanDeg, leanDir, type GardenPlant, type Planting } from "./world";
+import { leanDeg, type GardenPlant, type Planting } from "./world";
 
-export { leanDeg, leanDir, type GardenPlant };
+export { leanDeg, type GardenPlant };
 
 /** Below this recall a plant is thirsty: its card asks for practice and it says so. */
 export const THIRSTY = 0.85;
 
-export interface FirstWord {
+interface FirstWord {
   id: string;
   lemma: string;
   /** The first review (ms). */

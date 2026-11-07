@@ -74,7 +74,7 @@ export interface Body<F extends string> {
 }
 
 /** A tap that a visitor may answer. */
-export interface Tap {
+interface Tap {
   elapsed: number;
   /** Words the learner knows, in the course language. */
   known: readonly string[];
@@ -82,7 +82,7 @@ export interface Tap {
 }
 
 /** You whistled (#377). */
-export interface Call {
+interface Call {
   elapsed: number;
   /** Where you stand. */
   x: number;
@@ -91,7 +91,7 @@ export interface Call {
 }
 
 /** A visitor's answer to a call: what a screen reader hears (one short sentence), and what it says in a bubble, if anything. */
-export interface Heard {
+interface Heard {
   line: string;
   say?: string;
 }
