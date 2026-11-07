@@ -15,7 +15,7 @@ import { inSentryScope, RequestContext } from "./request";
 type Shape = Schema.Top & { readonly DecodingServices: never };
 
 export interface Answer<A> {
-  /** The decoded answer; null when the model wrote none. */
+  /** The decoded answer; null when the model refused or its answer can't be used. */
   readonly output: A | null;
   readonly refused: boolean;
   readonly usage: { readonly input_tokens: number; readonly output_tokens: number };
@@ -26,8 +26,10 @@ export class Model extends Context.Service<
   {
     /**
      * Ask for an answer of shape `schema` (structured outputs). The provider's
-     * failures are refusals (busy, ai_unreachable, ai_error); an answer that
-     * does not fit its shape is a bug (a defect), as the SDK's own parse was.
+     * failures are refusals (busy, ai_unreachable, ai_error). Once the model
+     * has answered, the tokens are billed: the Answer always carries their
+     * usage, and an answer that does not fit its shape is logged and comes
+     * back as output null, not a defect, so the caller can count its cost.
      */
     readonly ask: <S extends Shape>(task: string, schema: S, prompt: { readonly system: string; readonly user: string }) => Effect.Effect<Answer<S["Type"]>, ApiError, RequestContext>;
   }
@@ -42,18 +44,21 @@ export const ModelLive = Layer.effect(
 
     const ask = Effect.fn("Model.ask")(function* <S extends Shape>(task: string, schema: S, prompt: { readonly system: string; readonly user: string }) {
       const ctx = yield* RequestContext;
+      // The SDK's format, without its parse: messages.parse would throw on an
+      // answer that is not JSON, and the answer's usage would be lost with it.
+      const { type, schema: jsonSchema } = jsonSchemaOutputFormat(modelJsonSchema(schema));
       // In the request's scope, the span's parent is the request's root span
       // (inSentryScope), and the SDK's HTTP call (Sentry's fetch span) hangs under it.
       const res = yield* Effect.tryPromise({
         try: () =>
           inSentryScope(ctx, () =>
             Sentry.startSpan({ name: `ai ${task}`, op: "ai.generate", attributes: { model } }, () =>
-              client.messages.parse({
+              client.messages.create({
                 model,
                 max_tokens: 16000,
                 system: prompt.system,
                 messages: [{ role: "user", content: prompt.user }],
-                output_config: { format: jsonSchemaOutputFormat(modelJsonSchema(schema)) },
+                output_config: { format: { type, schema: jsonSchema } },
               }),
             ),
           ),
@@ -66,8 +71,16 @@ export const ModelLive = Layer.effect(
           return Effect.die(e);
         }),
       );
-      const output = res.parsed_output === null ? null : yield* Schema.decodeUnknownEffect(schema)(res.parsed_output).pipe(Effect.orDie);
-      return { output, refused: res.stop_reason === "refusal", usage: res.usage };
+      const refused = res.stop_reason === "refusal";
+      const text = res.content.find((b) => b.type === "text")?.text;
+      const output =
+        refused || text === undefined
+          ? null
+          : yield* Schema.decodeUnknownEffect(Schema.fromJsonString(schema))(text).pipe(
+              // The error quotes the answer, which can quote the learner's text: log the task and stop reason only.
+              Effect.catchTag("SchemaError", () => Effect.as(Effect.logError("model answer unusable").pipe(Effect.annotateLogs({ aiTask: task, stopReason: res.stop_reason })), null)),
+            );
+      return { output, refused, usage: res.usage };
     });
 
     return Model.of({ ask });

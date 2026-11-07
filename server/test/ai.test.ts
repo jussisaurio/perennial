@@ -86,6 +86,22 @@ test("a failed model call gives the credits back", async () => {
   await broken.stop();
 });
 
+// #348: the tokens of an answer that can't be used are billed all the same, so they count toward the budget.
+test("an answer that is not JSON still counts toward the monthly spend, and is refused as bad_output", async () => {
+  const cookie = await t.signIn(unique("garbled"));
+  const id = (await t.me(cookie)).id;
+  const before = await Effect.runPromise(t.app.ai.spentThisMonth());
+  const r = await t.call("/api/ai/mine", { lang: "es", items: [item("garbled")], known: [] }, cookie);
+  expect(r.status).toBe(502);
+  expect(r.body.error).toBe("bad_output");
+  const [row] = await t.sql`select ok, input_tokens, usd from ai_request where user_id = ${id}`;
+  expect(row).toMatchObject({ ok: false });
+  expect(row?.input_tokens).toBeGreaterThan(0);
+  expect(Number(row?.usd)).toBeGreaterThan(0);
+  expect(await Effect.runPromise(t.app.ai.spentThisMonth())).toBeCloseTo(before + Number(row?.usd), 9);
+  expect((await t.me(cookie)).credits.used).toBe(0);
+});
+
 // #174: AI words are charged before the app writes them. Words that could not be
 // saved (the learner is at their own-words limit) are refused first: nothing charged.
 test("at the own-words limit, AI is refused before any model call and nothing is charged", async () => {
