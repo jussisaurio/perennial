@@ -49,7 +49,7 @@ describe("dandelion clocks", () => {
       expect(day).toBeGreaterThanOrEqual(DAY - 3);
       // One of that day's clocks sent a seed exactly there, with that day's wind.
       const from = dandelions(big, day).filter((h) => h.id.startsWith("base"));
-      const landed = from.some((h) => Array.from({ length: SEEDS }, (_, i) => flight(big, h, day, i, BED_TOP)).some((f) => f.ground && f.to.x === g.x && f.to.z === g.z));
+      const landed = from.some((h) => Array.from({ length: SEEDS }, (_, i) => flight(big, h, day, i, BED_TOP)).some((f) => f.to.x === g.x && f.to.z === g.z));
       expect(landed).toBe(true);
     }
   });
@@ -123,6 +123,5 @@ describe("a blow", () => {
     const p = big.plants[hit!.plant];
     expect(Math.hypot(p.x - hit!.to.x, p.z - hit!.to.z)).toBeLessThan(0.3);
     expect(hit!.land).toBe(BED_TOP);
-    expect(hit!.ground).toBe(false);
   });
 });

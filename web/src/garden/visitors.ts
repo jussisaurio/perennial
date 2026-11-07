@@ -147,7 +147,7 @@ export interface TodayVisitors {
 export type VisitorOverride = "all" | (VisitorId | StripVisitorId)[] | null;
 
 /** Who visits today. Seeded by the calendar date, so a visitor stays all day. */
-export function visitorsFor(facts: LearnerFacts, now: Date = new Date(), override: VisitorOverride = null): TodayVisitors {
+export function visitorsFor(facts: LearnerFacts, now: Date, override: VisitorOverride = null): TodayVisitors {
   if (override) return { present: VISITORS.filter((v) => override === "all" || override.includes(v.id)).map((v) => v.id) };
   const present: VisitorId[] = [];
   let rare = 0;
@@ -161,7 +161,7 @@ export function visitorsFor(facts: LearnerFacts, now: Date = new Date(), overrid
 }
 
 /** The Today screen line after a break, or null. Never counts days, never guilt (docs/voice.md rule 5). */
-export function welcomeBack(facts: LearnerFacts, now: Date = new Date()): string | null {
+export function welcomeBack(facts: LearnerFacts, now: Date): string | null {
   if (facts.lastBeforeToday === null) return null;
   // Only on the first day back, not the day after.
   const away = dayNumber(now) - dayNumber(facts.lastBeforeToday);
@@ -199,7 +199,7 @@ export const STRIP_VISITORS: Record<StripVisitorId, { words: NounWords; gloss: s
 export const MOLE_ONE_IN = 4;
 
 /** Is the mole at the end of the strip today? Stable all day; the dev override can bring it. */
-export function moleVisits(now: Date = new Date(), override: VisitorOverride = null): boolean {
+export function moleVisits(now: Date, override: VisitorOverride = null): boolean {
   if (override) return override === "all" || override.includes("mole");
   return rareDay(MOLE_ONE_IN, "visitor-mole", now);
 }
@@ -258,7 +258,7 @@ const CROAK: PerLang<string> = { es: "croac", de: "quak" };
  * one word the learner knows (never its own name), e.g. "croac… casa". A
  * different word on most taps, in the same order all day.
  */
-export function frogCroak(known: readonly string[], lang: string, tap: number, now: Date = new Date()): string {
+export function frogCroak(known: readonly string[], lang: string, tap: number, now: Date): string {
   // lang is a deck language here (synced courses pass `teachable`, the landing page's draft
   // passes isDeckLang), so inLang is never null: the fallbacks only keep the types simple.
   const sound = inLang(CROAK, lang) ?? "croak";

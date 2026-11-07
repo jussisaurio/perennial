@@ -169,7 +169,6 @@ export const neighbourPerks = (rand: () => number = Math.random): boolean => ran
 /** The plant nearest to plant `i` (index), or -1 when it is alone. */
 export function nearestPlant(plants: readonly { x: number; z: number }[], i: number): number {
   const p = plants[i];
-  if (!p) return -1;
   let best = -1;
   let bestD = Infinity;
   for (let k = 0; k < plants.length; k++) {
