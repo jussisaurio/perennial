@@ -430,6 +430,8 @@ export function useWalkInput({
   const drag = useRef<{ x: number; y: number; moved: number; id: number; hold: number; held: boolean } | null>(null);
   useEffect(() => () => clearTimeout(drag.current?.hold), []);
   const onPointerDown = (e: PointerEvent) => {
+    // Only the main button picks or looks. A right-click opens the browser's menu; it must not also walk you to that spot.
+    if (e.button !== 0) return;
     clearTimeout(drag.current?.hold);
     const d = { x: e.clientX, y: e.clientY, moved: 0, id: e.pointerId, hold: 0, held: false };
     d.hold = window.setTimeout(() => {
