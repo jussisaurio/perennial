@@ -332,43 +332,122 @@ export function keyAt(l: Layout, spot: KeySpot): { x: number; z: number } {
 
 type Rect = [minX: number, maxX: number, minZ: number, maxZ: number];
 
-/** The nearest point to (x, z) in any of the rectangles: the walker slides along their edges. */
-function nearestIn(rects: Rect[], x: number, z: number): { x: number; z: number } {
+/** A strip of ground from (x, z) along the unit direction (dx, dz) for `len`, `half` wide either side of its middle line (m). */
+interface Strip {
+  x: number;
+  z: number;
+  dx: number;
+  dz: number;
+  len: number;
+  half: number;
+}
+
+/** A round thing or place: its middle and radius (m). */
+interface Round {
+  x: number;
+  z: number;
+  r: number;
+}
+
+/** The stile's steps: its middle on the fence line, `half` their width either side, and `out` from the fence on each side (m). */
+interface Steps {
+  x: number;
+  z: number;
+  half: number;
+  out: number;
+}
+
+/**
+ * The ground past the back fence (#770), as lookout.ts backWay makes it. Shut:
+ * brambles grown over the stile reach into the garden, a solid block. Open:
+ * the stile's steps, with a handrail down each side; the way cut up the old
+ * path; the hilltop; and the things that stand on it.
+ */
+export type BackWay = { open: false; brambles: Rect } | { open: true; stile: Steps; way: Strip; top: Round; things: Round[] };
+
+/** Ground a walker's middle may be on: a rectangle, a strip or a disc. */
+type Area = Rect | Strip | Round;
+
+/** The nearest point to (x, z) in any of the areas: the walker slides along their edges. */
+function nearestIn(areas: Area[], x: number, z: number): { x: number; z: number } {
   let best = { x, z };
   let bestD = Infinity;
-  for (const [x0, x1, z0, z1] of rects) {
-    const p = { x: Math.max(x0, Math.min(x1, x)), z: Math.max(z0, Math.min(z1, z)) };
+  for (const a of areas) {
+    const p = nearestOn(a, x, z);
     const d = Math.hypot(p.x - x, p.z - z);
     if (d < bestD) [best, bestD] = [p, d];
   }
   return best;
 }
 
+function nearestOn(a: Area, x: number, z: number): { x: number; z: number } {
+  if (Array.isArray(a)) {
+    const [x0, x1, z0, z1] = a;
+    return { x: Math.max(x0, Math.min(x1, x)), z: Math.max(z0, Math.min(z1, z)) };
+  }
+  if ("r" in a) {
+    const d = Math.hypot(x - a.x, z - a.z);
+    return d <= a.r ? { x, z } : { x: a.x + ((x - a.x) * a.r) / d, z: a.z + ((z - a.z) * a.r) / d };
+  }
+  // Along the strip and across it (its left is (−dz, dx)), each kept in bounds.
+  const t = Math.max(0, Math.min(a.len, (x - a.x) * a.dx + (z - a.z) * a.dz));
+  const s = Math.max(-a.half, Math.min(a.half, -(x - a.x) * a.dz + (z - a.z) * a.dx));
+  return { x: a.x + a.dx * t - a.dz * s, z: a.z + a.dz * t + a.dx * s };
+}
+
+/** The open back way's ground for a walker of radius `rad`: over the stile between its rails, up the cut way, and the hilltop. */
+function backGround(b: Extract<BackWay, { open: true }>, rad: number): Area[] {
+  const s = b.stile;
+  // From the garden's edge to a little past the far foot, where the cut way starts clear of the rails' ends.
+  const over: Rect = [s.x - s.half + rad, s.x + s.half - rad, s.z - s.out - rad - 0.05, s.z + rad];
+  return [over, { ...b.way, half: b.way.half - rad }, { ...b.top, r: b.top.r - rad }];
+}
+
+/**
+ * The stile's steps (#770): between the rails you go up and over. Walk into
+ * their front or back with your middle within their width and you slide onto
+ * them; a rail stops you from the side, and from on the steps.
+ */
+function onSteps(s: Steps, x: number, z: number, rad: number): { x: number; z: number } {
+  const dx = x - s.x;
+  const dz = z - s.z;
+  const hw = s.half + rad;
+  const hd = s.out + rad;
+  if (Math.abs(dx) >= hw || Math.abs(dz) >= hd) return { x, z };
+  if (Math.abs(dx) < s.half) return { x: s.x + Math.max(rad - s.half, Math.min(s.half - rad, dx)), z };
+  return outOfBox([s.x - s.half, s.x + s.half, s.z - s.out, s.z + s.out], x, z, rad);
+}
+
+/** Push a walker of radius `rad` out of a box along its shallowest side, as from a bed. */
+function outOfBox([x0, x1, z0, z1]: Rect, x: number, z: number, rad: number): { x: number; z: number } {
+  const [cx, cz] = [(x0 + x1) / 2, (z0 + z1) / 2];
+  const hw = (x1 - x0) / 2 + rad;
+  const hd = (z1 - z0) / 2 + rad;
+  const dx = x - cx;
+  const dz = z - cz;
+  if (Math.abs(dx) >= hw || Math.abs(dz) >= hd) return { x, z };
+  return hw - Math.abs(dx) < hd - Math.abs(dz) ? { x: cx + Math.sign(dx || 1) * hw, z } : { x, z: cz + Math.sign(dz || 1) * hd };
+}
+
 /**
  * Keep a walker of radius `rad` inside the fence and out of beds and the pond.
  * Once the door is open (#315), the doorway and the orchard behind it are open
- * too, and its well stands in the way (#335 S6).
+ * too, and its well stands in the way (#335 S6). `back` is the ground past the
+ * back fence (#770): only the learner walks there, so the rest pass none.
  */
-export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen = false): { x: number; z: number } {
+export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen = false, back: BackWay | null = null): { x: number; z: number } {
   const b = l.bounds;
   const garden: Rect = [b.minX + rad, b.maxX - rad, b.minZ + rad, b.maxZ - rad];
   const o = l.orchard;
   const near = o.z - o.d / 2;
   const doorway: Rect = [l.gate.x - DOOR_HALF + rad, l.gate.x + DOOR_HALF - rad, b.maxZ - rad, near + rad];
   const orchard: Rect = [o.x - o.w / 2 + rad, o.x + o.w / 2 - rad, near + rad, o.z + o.d / 2 - rad];
-  ({ x, z } = nearestIn(doorOpen ? [garden, doorway, orchard] : [garden], x, z));
-  for (const bed of l.beds) {
-    const hw = bed.w / 2 + rad;
-    const hd = bed.d / 2 + rad;
-    const dx = x - bed.x;
-    const dz = z - bed.z;
-    if (Math.abs(dx) < hw && Math.abs(dz) < hd) {
-      // Push out along the shallowest side.
-      const px = hw - Math.abs(dx);
-      const pz = hd - Math.abs(dz);
-      if (px < pz) x = bed.x + Math.sign(dx || 1) * hw;
-      else z = bed.z + Math.sign(dz || 1) * hd;
-    }
+  ({ x, z } = nearestIn([garden, ...(doorOpen ? [doorway, orchard] : []), ...(back?.open ? backGround(back, rad) : [])], x, z));
+  for (const bed of l.beds) ({ x, z } = outOfBox([bed.x - bed.w / 2, bed.x + bed.w / 2, bed.z - bed.d / 2, bed.z + bed.d / 2], x, z, rad));
+  if (back?.open === false) ({ x, z } = outOfBox(back.brambles, x, z, rad));
+  if (back?.open) {
+    ({ x, z } = onSteps(back.stile, x, z, rad));
+    for (const t of back.things) ({ x, z } = outOf(t, x, z, rad));
   }
   ({ x, z } = outOf(l.pond, x, z, rad));
   return doorOpen ? outOf(l.well, x, z, rad) : { x, z };
@@ -387,15 +466,16 @@ function outOf(c: { x: number; z: number; r: number }, x: number, z: number, rad
 
 /**
  * Move a walker from (x, z) toward (toX, toZ), in short pieces through collide,
- * and round the orchard's trunks (`trees`: none while the door is shut).
+ * and round the orchard's trunks (`trees`: none while the door is shut), and
+ * past the back fence on the `back` way (#770).
  * collide sees only where a move ends: one long move (a ctrl+wheel step is 2 m)
  * could end past the hedge's middle and land in the orchard, beside the door (#315).
  */
-export function walk(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean, trees: readonly PlacedTree[]): { x: number; z: number } {
+export function walk(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean, trees: readonly PlacedTree[], back: BackWay | null): { x: number; z: number } {
   const n = Math.max(1, Math.ceil(Math.hypot(toX - x, toZ - z) / 0.25));
   const [dx, dz] = [(toX - x) / n, (toZ - z) / n];
   for (let i = 0; i < n; i++) {
-    ({ x, z } = collide(l, x + dx, z + dz, WALKER, doorOpen));
+    ({ x, z } = collide(l, x + dx, z + dz, WALKER, doorOpen, back));
     ({ x, z } = collideTrees(trees, x, z, WALKER));
   }
   return { x, z };
@@ -407,9 +487,18 @@ const DOOR_STEP = 0.5;
 /**
  * The way to a spot in the garden from (x, z): straight there from the garden;
  * from the orchard or its doorway (#315), out through the door first, so a
- * glide never goes through the hedge. Corners in order, from (x, z) to the spot.
+ * glide never goes through the hedge. From past the back fence (#770), back
+ * down the cut way and over the stile. Corners in order, from (x, z) to the spot.
  */
-export function route(l: Layout, x: number, z: number, toX: number, toZ: number): [number, number][] {
+export function route(l: Layout, x: number, z: number, toX: number, toZ: number, back: BackWay | null): [number, number][] {
+  if (back?.open && z < back.stile.z + WALKER) {
+    const { stile: s, way: w } = back;
+    const out: [number, number][] = [[x, z]];
+    // On the hilltop, first to where the cut way meets it; then to the cut way's start, and over.
+    if ((x - w.x) * w.dx + (z - w.z) * w.dz > w.len - back.top.r) out.push(wayPoint(w, w.len - back.top.r));
+    out.push([w.x, w.z], [s.x, s.z + s.out + DOOR_STEP], [toX, toZ]);
+    return out;
+  }
   if (z <= l.bounds.maxZ) return [[x, z], [toX, toZ]];
   const out: [number, number][] = [[x, z]];
   const near = l.orchard.z - l.orchard.d / 2;
@@ -418,6 +507,14 @@ export function route(l: Layout, x: number, z: number, toX: number, toZ: number)
   out.push([l.gate.x, l.bounds.maxZ - DOOR_STEP], [toX, toZ]);
   return out;
 }
+
+/** The point `t` along a strip's middle line. */
+function wayPoint(w: Strip, t: number): [number, number] {
+  return [w.x + w.dx * t, w.z + w.dz * t];
+}
+
+/** How far apart a leg past the back fence is checked for ground to stand on (m): less than a bramble's edge could cut off. */
+const BACK_STEP = 0.05;
 
 /** How far from a bed's corner, the pond or a trunk a way on foot turns: a little more than a walker's radius, so its legs pass clear. */
 const TURN_CLEAR = WALKER + 0.12;
@@ -459,11 +556,13 @@ function toSegment(x: number, z: number, ax: number, az: number, bx: number, bz:
 /**
  * The way on foot to a spot (#336, tap to walk): the shortest line of corners
  * round the beds, the pond, the hedge (through the door when it is open), the
- * orchard's well and its trunks, from (x, z) to (toX, toZ). Both ends must be where a
- * walker may stand (collide, collideTrees). Straight there when nothing is in
- * the way, which is most taps. Corners in order, from (x, z) to the spot.
+ * orchard's well and its trunks, from (x, z) to (toX, toZ); past the back fence
+ * (#770), over the stile, up the cut way and round the hilltop's things.
+ * Both ends must be where a walker may stand (collide, collideTrees). Straight
+ * there when nothing is in the way, which is most taps. Corners in order, from
+ * (x, z) to the spot.
  */
-export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean, trees: readonly PlacedTree[]): [number, number][] {
+export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number, doorOpen: boolean, trees: readonly PlacedTree[], back: BackWay | null): [number, number][] {
   const near = l.orchard.z - l.orchard.d / 2;
   const [h0, h1] = hedgeSpan(l);
   const rects: Rect[] = [
@@ -472,19 +571,33 @@ export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number,
     ...(doorOpen
       ? [[h0, l.gate.x - DOOR_HALF, l.bounds.maxZ, near] as Rect, [l.gate.x + DOOR_HALF, h1, l.bounds.maxZ, near] as Rect]
       : [[h0, h1, l.bounds.maxZ, near] as Rect]),
+    // The brambles over the shut stile (#770).
+    ...(back?.open === false ? [back.brambles] : []),
   ];
-  const rounds = [l.pond, ...(doorOpen ? [l.well] : []), ...trees.map((t) => ({ x: t.x, z: t.z, r: t.trunk }))];
-  const clear = (ax: number, az: number, bx: number, bz: number) =>
-    rects.every((r) => !crossesRect(ax, az, bx, bz, r, LEG_CLEAR)) && rounds.every((c) => toSegment(c.x, c.z, ax, az, bx, bz) >= c.r + LEG_CLEAR);
-  if (clear(x, z, toX, toZ)) return [[x, z], [toX, toZ]];
-
-  // Turning points: just off every corner, and round every round thing; only those a walker may stand on.
+  const rounds = [l.pond, ...(doorOpen ? [l.well] : []), ...trees.map((t) => ({ x: t.x, z: t.z, r: t.trunk })), ...(back?.open ? back.things : [])];
   const free = (px: number, pz: number) => {
-    const p = collide(l, px, pz, WALKER, doorOpen);
+    const p = collide(l, px, pz, WALKER, doorOpen, back);
     const q = collideTrees(trees, p.x, p.z, WALKER);
     return Math.hypot(q.x - px, q.z - pz) < 1e-9;
   };
+  // Past the back fence the ground is a strip and a disc, not boxes to go round: a leg that reaches the stile's steps is walked in short checks.
+  const steps = back?.open ? back.stile : null;
+  const backClear = (ax: number, az: number, bx: number, bz: number) => {
+    if (!steps || Math.min(az, bz) >= steps.z + steps.out + WALKER) return true;
+    // Through the fence only between the rails: most legs that cross it fail here, before the checks.
+    if ((az - steps.z) * (bz - steps.z) < 0 && Math.abs(ax + ((bx - ax) * (steps.z - az)) / (bz - az) - steps.x) > steps.half - WALKER + 1e-9) return false;
+    const n = Math.ceil(Math.hypot(bx - ax, bz - az) / BACK_STEP);
+    for (let i = 1; i < n; i++) if (!free(ax + ((bx - ax) * i) / n, az + ((bz - az) * i) / n)) return false;
+    return true;
+  };
+  const clear = (ax: number, az: number, bx: number, bz: number) =>
+    rects.every((r) => !crossesRect(ax, az, bx, bz, r, LEG_CLEAR)) && rounds.every((c) => toSegment(c.x, c.z, ax, az, bx, bz) >= c.r + LEG_CLEAR) && backClear(ax, az, bx, bz);
+  if (clear(x, z, toX, toZ)) return [[x, z], [toX, toZ]];
+
+  // Turning points: just off every corner, and round every round thing; only those a walker may stand on.
   const points: [number, number][] = [[x, z], [toX, toZ]];
+  // Over the open stile: in front of its steps, at the cut way's start, and where the cut way meets the hilltop.
+  if (back?.open) points.push([back.stile.x, back.stile.z + back.stile.out + TURN_CLEAR], [back.way.x, back.way.z], wayPoint(back.way, back.way.len - back.top.r));
   for (const [x0, x1, z0, z1] of rects)
     for (const px of [x0 - TURN_CLEAR, x1 + TURN_CLEAR]) for (const pz of [z0 - TURN_CLEAR, z1 + TURN_CLEAR]) if (free(px, pz)) points.push([px, pz]);
   // Eight points round a circle, far enough out that the octagon's sides clear it too.
@@ -544,7 +657,7 @@ export const TRIP_STUCK = 0.5;
  * "arrived" within `stop` of the end, "stalled" after TRIP_STUCK seconds
  * without headway, else "walking".
  */
-export function walkStep(l: Layout, t: Trip, at: { x: number; z: number }, metres: number, dt: number, doorOpen: boolean, trees: readonly PlacedTree[]): "walking" | "arrived" | "stalled" {
+export function walkStep(l: Layout, t: Trip, at: { x: number; z: number }, metres: number, dt: number, doorOpen: boolean, trees: readonly PlacedTree[], back: BackWay | null): "walking" | "arrived" | "stalled" {
   const [cx, cz] = t.way[t.leg];
   const last = t.leg === t.way.length - 1;
   const gap = Math.hypot(cx - at.x, cz - at.z);
@@ -558,7 +671,7 @@ export function walkStep(l: Layout, t: Trip, at: { x: number; z: number }, metre
   const k = step / gap;
   const x0 = at.x;
   const z0 = at.z;
-  ({ x: at.x, z: at.z } = walk(l, x0, z0, x0 + (cx - x0) * k, z0 + (cz - z0) * k, doorOpen, trees));
+  ({ x: at.x, z: at.z } = walk(l, x0, z0, x0 + (cx - x0) * k, z0 + (cz - z0) * k, doorOpen, trees, back));
   t.stuck = Math.hypot(at.x - x0, at.z - z0) < step / 4 ? t.stuck + dt : 0;
   return t.stuck > TRIP_STUCK ? "stalled" : "walking";
 }
