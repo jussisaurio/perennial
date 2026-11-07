@@ -10,6 +10,7 @@ import type { Detail, DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoE
 import type { CarryDone, Held } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
 import type { ToyDone } from "../garden/sceneToys";
+import type { Raised } from "../garden/lookout";
 import type { ToysWalk } from "../garden/toys";
 import { sceneryViews } from "../garden/scenery";
 import { moonPhase } from "../garden/moon";
@@ -90,6 +91,14 @@ export function useGardenScene({
   const [company, setCompany] = useState<Companion | null>(null);
   const [stars, setStars] = useState(false);
   const [heard, setHeard] = useState<string | null>(null);
+  // What the far light did when the lookout's lantern was last raised (#683): a new object each raise, so the same answer is told again.
+  const [raised, setRaised] = useState<{ r: Raised } | null>(null);
+  // Told for a few seconds, as a toy's doing is (GardenWalk.tsx).
+  useEffect(() => {
+    if (!raised) return;
+    const t = setTimeout(() => setRaised(null), 5000);
+    return () => clearTimeout(t);
+  }, [raised]);
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
@@ -177,6 +186,7 @@ export function useGardenScene({
             onCarry: (d) => carryNow.current(d),
             onToy: (d) => toysNow.current.done(d),
             onStars: setStars,
+            onRaise: (r) => setRaised({ r }),
             onCall: (heard) => callNow.current(heard),
             onNote: (id) => noteNow.current(id),
           },
@@ -238,7 +248,7 @@ export function useGardenScene({
     scene.current?.setDetail(detail);
   }, [detail]);
 
-  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard };
+  return { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised };
 }
 
 /**

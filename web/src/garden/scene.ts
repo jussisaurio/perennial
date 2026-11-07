@@ -23,6 +23,8 @@ import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
 import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
+import { lightAnswers, lookoutAt, LookoutLight, type Raised } from "./lookout";
+import { courseNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
 import { buildShed, shedRoof, shedStep } from "./shed";
@@ -67,8 +69,8 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654); with nothing in reach, call (#377). */
-export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call" | "seek" | "read";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or raise the lookout's lantern (#683); with nothing in reach, call (#377). */
+export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call" | "seek" | "read" | "raise";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
 export interface Label {
@@ -149,6 +151,8 @@ export interface SceneCallbacks {
   onWalkInto: (e: WalkIntoEvent) => void;
   /** Every lantern is out and the stars are out over the hills, or no longer (#361). */
   onStars: (out: boolean) => void;
+  /** The lookout's lantern was raised (#683): what the far light did. */
+  onRaise: (r: Raised) => void;
 }
 
 export interface Input {
@@ -333,7 +337,9 @@ export class GardenScene {
   /** The tapped scenery word and where its tag sits (it follows the sun or a cloud). */
   private sceneryTap: { view: SceneryView; hit: SceneryHit; until: number } | null = null;
   /** The lanterns where paths cross (#361): lit at dusk and night, each one blown out or lit again by hand. */
-  private lanterns = new Lanterns();
+  private lanterns: Lanterns;
+  /** The lookout's lantern and the far light (#683): when it was raised, and whether the light answers this visit. The e2e test sets `answers`. */
+  readonly lookout: LookoutLight;
   /** The lantern the action button acts on, by spot (-1: none in reach). */
   private lanternTarget = -1;
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
@@ -400,7 +406,10 @@ export class GardenScene {
     const first = layout.beds[0];
     this.z = Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2);
     this.camera.rotation.order = "YXZ";
-    this.sky = new SkyWater(this.camera, reducedMotion);
+    // The far light answers once the note that tells of it is on the shed's nails.
+    this.lookout = new LookoutLight(lightAnswers(courseNotes(lang), visitors.notes.map((n) => n.id)));
+    this.lanterns = new Lanterns(this.lookout, reducedMotion);
+    this.sky = new SkyWater(this.camera, reducedMotion, this.lookout);
     this.critters = new Critters(this.camera, reducedMotion);
     this.plants = new Plants(
       this.renderer,
@@ -755,6 +764,7 @@ export class GardenScene {
     this.walkInto.setOrchard(orchard.trees, orchard.params);
     for (const m of orchard.mats) this.mats.add(m);
     this.hitBoxes.push(...orchard.scenery);
+    this.lanterns.buildLookout(this.ctx, lookoutAt(o));
     this.carry.showWell();
     // Built after setTime when the door opens in this walk: give it the time of day now.
     this.tint();
@@ -845,6 +855,7 @@ export class GardenScene {
     else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
     else if (a === "blow" && this.reach === "blow" && this.toyTarget) this.doToy(this.toyTarget);
     else if (a === "read" && this.reach === "read" && this.noteTarget) this.openNote(this.noteTarget);
+    else if (a === "raise" && this.reach === "raise") this.cb.onRaise(this.lookout.raise(this.elapsed, this.shown === "night"));
   }
 
   /** The lantern under a point on the canvas (CSS pixels), while they are lit (#361), with nothing in front of it. */
@@ -1975,7 +1986,7 @@ export class GardenScene {
    * bench, pick up the key, put down a loose thing you hold or drop it in
    * the well (#358), find a hiding visitor (#379), open or try the door
    * (unless a lantern by the gate is nearer), blow out or light a lantern
-   * (#361), pick up a loose thing, sit on the bench, blow a dandelion clock
+   * (#361), raise the lookout's lantern (#683), read a note (#654), pick up a loose thing, sit on the bench, blow a dandelion clock
    * (#360), or shake the plant ahead of you (#357), for whichever is in reach (in that
    * order); with nothing in reach, call (#377), so the button always does
    * something. The thing in reach glints (the cue).
@@ -1998,8 +2009,9 @@ export class GardenScene {
     const hider = this.seated || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z);
     const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
     const note = this.seated || nearKey || holding ? null : this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE);
+    const raise = !this.seated && this.lanterns.canRaise(this.x, this.z);
     // The first of these that applies, in reportReach's order above.
-    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
+    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? (raise ? "raise" : null) ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
     const a: Reach = plant ? "shake" : (before ?? "call");
     const carried = carry && a === carry.a ? carry.target : null;
@@ -2019,7 +2031,8 @@ export class GardenScene {
     this.toyTarget = toyTarget;
     this.lanternTarget = lantern;
     const lampAt = lantern >= 0 ? this.lanterns.spots[lantern] : null;
-    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
+    const post = a === "raise" ? lookoutAt(this.layout.orchard).post : null;
+    const at = a === "key" && d.key ? [d.key.x + 0.08, 0.1, d.key.z] : door && a === door ? d.handle : toyTarget ? this.toys.cueAt(toyTarget) : lampAt ? [lampAt[0], LANTERN_GLASS_Y, lampAt[1]] : post ? [post[0], LANTERN_GLASS_Y, post[1]] : carried ? this.carry.cueAt(carried) : a === "sit" ? [b.x, 0.55, b.z + 0.1] : plant ? [plant.x, BED_H + plantHeight(plant.growth) * 0.6, plant.z] : null;
     this.cue.visible = !!at;
     if (at) this.cue.position.set(at[0], at[1], at[2]);
     this.cb.onReach(a);

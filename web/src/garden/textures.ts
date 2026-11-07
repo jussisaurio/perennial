@@ -941,6 +941,29 @@ export function glow(): OffscreenCanvas {
   return c;
 }
 
+/**
+ * The far house across the valley (#683, lookout.ts FAR_HOUSE), 12×9: a roof
+ * with a chimney, a door, and one window (lookout.ts FAR_WINDOW). By day it
+ * is hazy, hardly darker than the hill; at night a dark shape, its window
+ * dark too: the far light is drawn over it.
+ */
+export function farHouse(night: boolean): OffscreenCanvas {
+  const rows = ["........C...", ".....RR.C...", "...RRRRRR...", ".RRRRRRRRRR.", "RRRRRRRRRRRR", ".WWWWWWWWWW.", ".WWDWWWOWWW.", ".WWDWWWOWWW.", ".WWDWWWWWWW."];
+  const colors: Record<string, string> = night ? { C: "#10172e", R: "#0e1428", W: "#151d38", D: "#0b1022", O: "#0b1022" } : { C: "#7f9f86", R: "#7a9a82", W: "#a3c0a2", D: "#8aab8c", O: "#8aab8c" };
+  const [c, ctx] = canvas(12, 9);
+  rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, colors[ch])));
+  return c;
+}
+
+/** The far house's window light (#683), 8×8 for additive blending: a bright core in two hard rings. */
+export function farLight(): OffscreenCanvas {
+  const [c, ctx] = canvas(8, 8);
+  px(ctx, 2, 3, "rgba(255, 184, 74, 0.35)", 4, 2);
+  px(ctx, 3, 2, "rgba(255, 184, 74, 0.35)", 2, 4);
+  px(ctx, 3, 3, "#fff1c2", 2, 2);
+  return c;
+}
+
 export function sun(kind: "day" | "dusk"): OffscreenCanvas {
   const [c, ctx] = canvas(32, 32);
   const [core, rim] = kind === "dusk" ? ["#ffd28a", "#ff9b5e"] : ["#fffbe6", "#ffe58a"];

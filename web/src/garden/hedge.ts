@@ -4,6 +4,7 @@
 // scene.ts draws it: the middles as boxes, the clumps as one instanced mesh.
 
 import { rng } from "../lib/seed";
+import { lookoutAt } from "./lookout";
 import { DOOR_HALF, HEDGE, hedgeSpan, type Layout } from "./world";
 
 /** An axis-aligned box: [x, y, z] corners. */
@@ -43,16 +44,18 @@ export function gateHedge(l: Layout, doorTop: number): HedgeWall[] {
   return [wall(left, gx - DOOR_HALF, 0), wall(gx + DOOR_HALF, right, 0), wall(gx - DOOR_HALF, gx + DOOR_HALF, doorTop)];
 }
 
-/** The orchard's own hedge, round its other three sides: clumps only on the inside, as nobody walks round the outside. */
+/** The orchard's own hedge, round its other three sides: clumps only on the inside, as nobody walks round the outside. The far side has the lookout's gap (#683). */
 export function orchardHedge(l: Layout): HedgeWall[] {
   const o = l.orchard;
   const [x0, x1] = [o.x - o.w / 2, o.x + o.w / 2];
   const [near, far] = [o.z - o.d / 2, o.z + o.d / 2];
   const d = HEDGE.depth;
+  const gap = lookoutAt(o);
   return [
     { min: [x0 - d, 0, near], max: [x0, HEDGE.height, far], faces: [1] },
     { min: [x1, 0, near], max: [x1 + d, HEDGE.height, far], faces: [-1] },
-    { min: [x0 - d, 0, far], max: [x1 + d, HEDGE.height, far + d], faces: [-1] },
+    { min: [x0 - d, 0, far], max: [gap.x0, HEDGE.height, far + d], faces: [-1] },
+    { min: [gap.x1, 0, far], max: [x1 + d, HEDGE.height, far + d], faces: [-1] },
   ];
 }
 
