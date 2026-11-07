@@ -24,8 +24,8 @@ import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
 import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
-import { lightAnswers, lookoutAt, LookoutLight, type Raised } from "./lookout";
-import { stileAt, TOP } from "./stile";
+import { ANSWER_NOTE, hasNote, HILL_NOTE, hillY, lookoutAt, LookoutLight, type Lookout, type Raised } from "./lookout";
+import { stepY, stileAt, TOP } from "./stile";
 import { StileScene } from "./sceneStile";
 import { courseNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
@@ -72,8 +72,8 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or raise the lookout's lantern (#683), or climb the stile and down again (#714); with nothing in reach, call (#377). */
-export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call" | "seek" | "read" | "raise" | "climb" | "down";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or raise the lookout's lantern (#683), or climb the stile and down again (#714), or go over it and up the hill, and back (#722); with nothing in reach, call (#377). */
+export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "call" | "seek" | "read" | "raise" | "climb" | "down" | "over" | "back";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
 export interface Label {
@@ -170,6 +170,8 @@ export interface Input {
 
 const EYE = 1.05;
 const WALK = 3.6;
+/** Going over the stile and up the hill (#722), on its own (m/s): slower than a walk, uphill. */
+const HIKE = 2.4;
 /** Ground nearer than this (m) is in reach (#336): a tap on it names the path, as before; farther ground is walked to. */
 const GROUND_REACH = 1.5;
 /** Where a walk to the door stops: on the path in front of it, in reach of it (sceneDoor.ts DOOR_REACH). */
@@ -287,6 +289,17 @@ export class GardenScene {
   private stile: StileScene | null = null;
   private climbed = false;
   private up = 0;
+  /**
+   * The hill past the stile and the lookout on its top (#722), with the stile.
+   * Once the note that tells of the hill is unlocked, the stile goes over:
+   * `over` from the climb until any move brings you back to its foot inside,
+   * and `hike` the walk up the old path, along the lookout's way, `t` 0 to 1
+   * over `s` seconds, turning the view while `turn` (not once you look round).
+   */
+  private readonly hill: Lookout | null;
+  private readonly hillOpen: boolean;
+  private over = false;
+  private hike: { way: [number, number][]; yaw: [number, number]; pitch: [number, number]; t: number; s: number; turn: boolean } | null = null;
   /**
    * Sitting still on the bench (#362): seconds sat; how far time has run on
    * (parts of the day past `time`, bench.ts) and the look on show for it; who
@@ -411,8 +424,11 @@ export class GardenScene {
     const first = layout.beds[0];
     this.z = Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2);
     this.camera.rotation.order = "YXZ";
-    // The far light answers once the note that tells of it is on the shed's nails.
-    this.lookout = new LookoutLight(lightAnswers(courseNotes(lang), visitors.notes.map((n) => n.id)));
+    // The stile goes over once the note that tells of the hill is unlocked (#722), and the far light answers once the note that tells of that is.
+    const notes = visitors.notes.map((n) => n.id);
+    this.hillOpen = hasNote(courseNotes(lang), notes, HILL_NOTE);
+    this.hill = visitors.stile ? lookoutAt(stileAt(layout)) : null;
+    this.lookout = new LookoutLight(hasNote(courseNotes(lang), notes, ANSWER_NOTE));
     this.lanterns = new Lanterns(this.lookout, reducedMotion);
     this.sky = new SkyWater(this.camera, reducedMotion, this.lookout);
     this.critters = new Critters(this.camera, reducedMotion);
@@ -550,10 +566,12 @@ export class GardenScene {
     this.scene.add(buildShed(c, this.layout));
     this.notes.build(c, this.visitors.notes);
     const stile = this.visitors.stile;
-    if (stile) {
+    // The hill is there whenever the stile is (the constructor).
+    if (stile && this.hill) {
       // Draws no random numbers.
-      this.stile = new StileScene(stileAt(this.layout));
+      this.stile = new StileScene(stileAt(this.layout), this.hill);
       this.stile.build(c, stile);
+      this.lanterns.buildLookout(c, this.hill);
     }
     this.toys.build(c);
     if (await this.stopped()) return;
@@ -775,7 +793,6 @@ export class GardenScene {
     this.walkInto.setOrchard(orchard.trees, orchard.params);
     for (const m of orchard.mats) this.mats.add(m);
     this.hitBoxes.push(...orchard.scenery);
-    this.lanterns.buildLookout(this.ctx, lookoutAt(o));
     this.carry.showWell();
     // Built after setTime when the door opens in this walk: give it the time of day now.
     this.tint();
@@ -856,8 +873,9 @@ export class GardenScene {
   /** The action button (#334): do what it shows to the thing in reach. Anything else no longer applies and does nothing. */
   act(a: Reach) {
     if (a === "sit" && !this.seated) this.sit();
-    else if (a === "stand" || a === "down") this.standUp();
+    else if (a === "stand" || a === "down" || a === "back") this.standUp();
     else if (a === "climb" && this.reach === "climb") this.climb();
+    else if (a === "over" && this.reach === "over") this.goOver();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
     else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
     else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
@@ -1050,14 +1068,42 @@ export class GardenScene {
   }
 
   /**
+   * Go over the stile (#722): over its top board, down the far side and up the
+   * old path to the hill's top, facing out across the valley (a cut there, with
+   * reduced motion). Nothing to walk into out there, so it is one glide; any
+   * move brings you back.
+   */
+  private goOver() {
+    const hill = this.hill;
+    if (!hill) throw new Error("no hill without the stile");
+    this.endTrip();
+    this.glide = null;
+    this.over = true;
+    // A little left of straight out (−z is yaw 0), toward the far house.
+    const [yaw, pitch] = [0.08, 0];
+    const way: [number, number][] = [[this.x, this.z], ...hill.way.slice(1)];
+    if (this.reducedMotion) {
+      [[this.x, this.z]] = way.slice(-1);
+      [this.yaw, this.pitch] = [yaw, pitch];
+      return;
+    }
+    let len = 0;
+    for (let i = 1; i < way.length; i++) len += Math.hypot(way[i][0] - way[i - 1][0], way[i][1] - way[i - 1][1]);
+    // Turn the short way round.
+    const from = yaw + Math.atan2(Math.sin(this.yaw - yaw), Math.cos(this.yaw - yaw));
+    this.hike = { way, yaw: [from, yaw], pitch: [this.pitch, pitch], t: 0, s: len / HIKE, turn: true };
+  }
+
+  /**
    * Stand up (any move does): who came to sit with you goes back to their own
    * places, and time runs back to now (#362). Or climb down from the stile, to
-   * its foot inside the garden (#714). Called every frame you move: nothing to
-   * do unless you sat or climbed.
+   * its foot inside the garden (#714), or from over it (#722). Called every
+   * frame you move: nothing to do unless you sat, climbed or went over.
    */
   private standUp() {
-    if (this.climbed) {
-      this.climbed = false;
+    if (this.climbed || this.over) {
+      this.climbed = this.over = false;
+      this.hike = null;
       [this.x, this.z] = stileAt(this.layout).foot;
     }
     if (!this.seated) return;
@@ -1279,10 +1325,13 @@ export class GardenScene {
       if (nz === 1) continue; // nothing grows behind the hedge: it stays a mystery until the door opens (#315)
       const out = 1.2 + rand() * 5;
       const kind = rand() < 0.3 ? 3 : Math.floor(rand() * 3);
+      const tx = x + nx * out + (rand() - 0.5);
+      const tz = z + nz * out + (rand() - 0.5);
       const tree = {
-        x: x + nx * out + (rand() - 0.5),
-        y: 0,
-        z: z + nz * out + (rand() - 0.5),
+        x: tx,
+        // On the hill past the stile (#722), on its slope.
+        y: this.hill ? hillY(this.hill, tx, tz) : 0,
+        z: tz,
         u: kind * 0.25,
         v: 0,
         uw: 0.25,
@@ -1300,7 +1349,7 @@ export class GardenScene {
     }
     for (const t of trees) {
       const k = TREE_KINDS[Math.round(t.u * 4)];
-      this.hitBoxes.push(spriteBox(k.id, t.x, 0, t.z, k.half * t.scale, k.top * t.scale));
+      this.hitBoxes.push(spriteBox(k.id, t.x, t.y, t.z, k.half * t.scale, k.top * t.scale));
     }
     const treeMesh = sprites(treeTex, trees);
     this.mats.add(treeMesh.material);
@@ -1679,6 +1728,7 @@ export class GardenScene {
     this.lookedRound();
     // A walk goes on, but the viewer looks where they like now.
     if (this.trip) this.trip.turn = false;
+    if (this.hike) this.hike.turn = false;
     this.yaw -= dx * 0.0055;
     this.pitch = Math.max(-0.75, Math.min(0.5, this.pitch - dy * 0.004));
   }
@@ -1701,6 +1751,7 @@ export class GardenScene {
     this.glide = null;
     this.lookedRound();
     if (this.trip) this.trip.turn = false;
+    if (this.hike) this.hike.turn = false;
     this.yaw += amount;
   }
 
@@ -1904,6 +1955,18 @@ export class GardenScene {
       this.pitch = g.pitch[0] + (g.pitch[1] - g.pitch[0]) * e;
       if (g.t >= 1) this.glide = null;
     }
+    if (this.hike) {
+      const h = this.hike;
+      h.t = Math.min(1, h.t + dt / h.s);
+      // Eased in and out over the whole way, as a glide.
+      const e = h.t < 0.5 ? 2 * h.t * h.t : 1 - (-2 * h.t + 2) ** 2 / 2;
+      ({ x: this.x, z: this.z } = along(h.way, e));
+      if (h.turn) {
+        this.yaw = h.yaw[0] + (h.yaw[1] - h.yaw[0]) * e;
+        this.pitch = h.pitch[0] + (h.pitch[1] - h.pitch[0]) * e;
+      }
+      if (h.t >= 1) this.hike = null;
+    }
 
     this.onBench(dt);
     // Sitting down or standing up: the eye sinks or rises over a moment (at once, with reduced motion).
@@ -1911,8 +1974,11 @@ export class GardenScene {
     this.seat = this.reducedMotion ? sat : this.seat + Math.max(-dt * SEAT.speed, Math.min(dt * SEAT.speed, sat - this.seat));
     // Climbing the stile or down again, the same way (#714).
     const up = this.climbed ? 1 : 0;
+    // Over it (#722), the ground lifts you: its steps, then the hill.
+    // `over` is only ever set with a hill (goOver).
+    const lift = this.over && this.hill ? Math.max(stepY(stileAt(this.layout), this.z), hillY(this.hill, this.x, this.z)) : 0;
     this.up = this.reducedMotion ? up : this.up + Math.max(-dt * SEAT.speed, Math.min(dt * SEAT.speed, up - this.up));
-    this.camera.position.set(this.x, EYE - (EYE - SEAT.eye) * this.seat + TOP * this.up + Math.sin(this.bob) * 0.035 * motion, this.z);
+    this.camera.position.set(this.x, EYE - (EYE - SEAT.eye) * this.seat + TOP * this.up + lift + Math.sin(this.bob) * 0.035 * motion, this.z);
     this.camera.rotation.set(this.pitch, this.yaw, 0);
     this.camera.updateMatrixWorld();
 
@@ -2048,8 +2114,8 @@ export class GardenScene {
     const d = this.door;
     const b = this.bench;
     const nearKey = d.state === "key" && this.inReach("key");
-    // On the bench or the stile's top board, the button only gets you up or down.
-    const off = this.seated || this.climbed;
+    // On the bench, the stile's top board or the hill past it, the button only gets you up or back (or raises the lantern on the hill).
+    const off = this.seated || this.climbed || this.over;
     const lamp = off ? -1 : this.lanterns.inReach(this.x, this.z);
     const lampAct: Reach | null = lamp < 0 ? null : this.lanterns.on[lamp] ? "snuff" : "light";
     // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
@@ -2066,9 +2132,9 @@ export class GardenScene {
     const climb = !off && !nearKey && !holding && this.stile !== null && this.stile.inReach(this.x, this.z);
     // A note under the stile's step is read before the stile is climbed: the note is what tells you why.
     const note = off || nearKey || holding ? null : (this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE) ?? (climb && this.stile ? this.stile.unopened() : null));
-    const raise = !off && this.lanterns.canRaise(this.x, this.z);
+    const raise = this.over && this.lanterns.canRaise(this.x, this.z);
     // The first of these that applies, in reportReach's order above.
-    const before: Reach | null = this.climbed ? "down" : this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? (raise ? "raise" : null) ?? (note ? "read" : null) ?? (climb ? "climb" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
+    const before: Reach | null = this.climbed ? "down" : this.over ? (raise ? "raise" : "back") : this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? (note ? "read" : null) ?? (climb ? (this.hillOpen ? "over" : "climb") : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
     const a: Reach = plant ? "shake" : (before ?? "call");
     const carried = carry && a === carry.a ? carry.target : null;

@@ -1,30 +1,67 @@
 // The stile in the back fence (#714): wooden steps up one side and down the
 // other, a top board over the fence, and a post to hold. Past it, an old path
-// goes on into the long grass. The stile notes lie under its lowest step, a
-// stone on them, until they are read (stile.ts placeNotes). Static meshes, in
-// the shed's wood: the words are never drawn in the world.
+// goes on up a small hill, to the lookout on its top (#722, lookout.ts). The
+// stile notes lie under its lowest step, a stone on them, until they are read
+// (stile.ts placeNotes). Static meshes, in the shed's wood: the words are never
+// drawn in the world.
 
 import * as THREE from "three";
+import { SUN_AT } from "./bench";
+import { HILL, hillY, PATH_TURN, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
 import { still, type BuildCtx } from "./sceneSprites";
-import { CLIMB_REACH, TOP, type StileSpot } from "./stile";
+import { CLIMB_REACH, STEP, TOP, type StileSpot } from "./stile";
 import * as T from "./textures";
 
-/** The steps' width across the fence, and how far each side's foot stands out from the fence (m). */
-const STEP = { w: 0.72, out: 0.66 };
 /** A note on the ground: the paper's size (m), as on the shed's nails. */
 const PAPER = { w: 0.15, h: 0.175 };
-/** The old path past the fence: its width and length (m), and its turn off straight out (rad). */
-const TRACK = { w: 1.5, len: 9, turn: 0.12 };
+/** The old path past the fence: its width, and how far past the hill's top it fades out (m). */
+const TRACK = { w: 1.5, past: 0.8 };
+/** The flat ground's height (scene.ts buildGround). The hill sits a little below it, so the ground hides its foot; the path a little above the hill. */
+const GROUND_Y = -0.06;
+const HILL_SINK = 0.02;
+const TRACK_LIFT = 0.035;
 
 export class StileScene {
   /** Each note under the step: its id, its paper, and whether it was opened this walk. */
   private notes: { id: string; mesh: THREE.Mesh; opened: boolean }[] = [];
   private spot: StileSpot;
+  private hill: Lookout;
   private readPaper!: THREE.Material;
 
-  constructor(spot: StileSpot) {
+  constructor(spot: StileSpot, hill: Lookout) {
     this.spot = spot;
+    this.hill = hill;
+  }
+
+  /**
+   * The hill past the fence: a grass mound, its foot under the flat ground.
+   * The garden is lit by tint alone, so its slopes are shaded by hand, a little
+   * lighter toward the sun's side and darker away, or it would not read as a hill.
+   */
+  private buildHill(c: BuildCtx) {
+    const [tx, tz] = this.hill.top;
+    const geo = new THREE.PlaneGeometry(HILL.r * 2, HILL.r * 2, 36, 36);
+    geo.rotateX(-Math.PI / 2).translate(tx, 0, tz);
+    const pos = geo.getAttribute("position");
+    const uv = geo.getAttribute("uv");
+    const shade = new Float32Array(pos.count * 3);
+    // Toward the day's sun: the same shading at every time of day, as the tint does the rest.
+    const light = new THREE.Vector3(...SUN_AT.day).normalize();
+    const n = new THREE.Vector3();
+    const e = 0.05;
+    for (let i = 0; i < pos.count; i++) {
+      const [x, z] = [pos.getX(i), pos.getZ(i)];
+      const y = hillY(this.hill, x, z);
+      pos.setY(i, GROUND_Y - HILL_SINK + y);
+      // The grass's pixels line up with the flat ground's: one texture every 2 m.
+      uv.setXY(i, x / 2, -z / 2);
+      n.set(hillY(this.hill, x - e, z) - hillY(this.hill, x + e, z), 2 * e, hillY(this.hill, x, z - e) - hillY(this.hill, x, z + e)).normalize();
+      const k = 1 + 0.7 * (n.dot(light) - light.y);
+      shade.set([k, k, k], i * 3);
+    }
+    geo.setAttribute("color", new THREE.BufferAttribute(shade, 3));
+    c.scene.add(still(new THREE.Mesh(geo, c.mat(T.pixelTexture(T.grass(), true), { vertexColors: true }))));
   }
 
   /** The stile, and `notes` under its step (unread ones: read ones hang in the shed). Draws no random numbers. */
@@ -51,14 +88,18 @@ export class StileScene {
     g.position.set(at.x, 0, at.z);
     c.scene.add(still(g));
 
-    // The old path past the fence, from the far foot outward.
-    const track = new THREE.Mesh(new THREE.PlaneGeometry(TRACK.w, TRACK.len), c.mat(T.pixelTexture(T.track()), { alphaTest: 0.5 }));
-    // Laid flat, then turned: its top (the texture's far end) points out, away from the fence.
-    track.rotation.set(-Math.PI / 2, TRACK.turn, 0, "YXZ");
-    const mid = STEP.out + TRACK.len / 2 - 0.2;
-    // Between the grass (-0.06) and the yard's path (0.01): some GPUs have a 16-bit depth buffer.
-    track.position.set(at.x - Math.sin(TRACK.turn) * mid, -0.025, at.z - Math.cos(TRACK.turn) * mid);
-    c.scene.add(still(track));
+    this.buildHill(c);
+
+    // The old path past the fence, from the far foot up over the hill's top.
+    const run = HILL.out + TRACK.past - STEP.out + 0.2;
+    const mid = STEP.out + run / 2 - 0.2;
+    const track = new THREE.PlaneGeometry(TRACK.w, run, 1, 48);
+    // Laid flat, then turned: its top (the texture's far end) points out, away from the fence. Then each row on the hill's ground.
+    track.rotateX(-Math.PI / 2).rotateY(PATH_TURN).translate(at.x - Math.sin(PATH_TURN) * mid, 0, at.z - Math.cos(PATH_TURN) * mid);
+    const pos = track.getAttribute("position");
+    // Off the hill, between the grass (-0.06) and the yard's path (0.01): some GPUs have a 16-bit depth buffer.
+    for (let i = 0; i < pos.count; i++) pos.setY(i, GROUND_Y + TRACK_LIFT + hillY(this.hill, pos.getX(i), pos.getZ(i)));
+    c.scene.add(still(new THREE.Mesh(track, c.mat(T.pixelTexture(T.track()), { alphaTest: 0.5 }))));
 
     if (notes.length === 0) return;
     const paper = (unread: boolean) => c.mat(T.pixelTexture(T.notePaper(unread)), { alphaTest: 0.5 });

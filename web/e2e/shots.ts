@@ -52,7 +52,7 @@ const APP: Record<string, (page: Page) => Promise<void>> = {
 };
 
 /** The parts of the dev-only scene handle (window.__garden) the spots move. */
-type Scene = { x: number; z: number; yaw: number; pitch: number; layout: { orchard: { x: number; z: number; w: number; d: number } } };
+type Scene = { x: number; z: number; yaw: number; pitch: number; over: boolean; layout: object };
 
 /** Spots in the garden walk, each a place to stand once the walk is open. Forward is -z at yaw 0. */
 const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
@@ -62,27 +62,38 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
     page.evaluate(async () => {
       const { shedAt } = await import(/* @vite-ignore */ "/src/garden/shed.ts");
       const s = (window as unknown as { __garden: Scene }).__garden;
-      const at = shedAt(s.layout);
+      const at = shedAt(s.layout as Parameters<typeof shedAt>[0]);
       // In front of the notes on its back wall, facing it (+x is yaw -π/2).
       Object.assign(s, { x: at.x - 2, z: at.z, yaw: -Math.PI / 2, pitch: 0.05 });
     }),
   door: (page) => standAtDoor(page),
+  stile: (page) =>
+    page.evaluate(async () => {
+      const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
+      const s = (window as unknown as { __garden: Scene }).__garden;
+      const at = stileAt(s.layout as Parameters<typeof stileAt>[0]);
+      // A few steps back from it, facing the back fence and the hill past it (−z is yaw 0).
+      Object.assign(s, { x: at.x + 0.6, z: at.z + 4, yaw: 0.1, pitch: -0.02 });
+    }),
   lookout: (page) =>
     page.evaluate(async () => {
       const { lookoutAt } = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
+      const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
       const s = (window as unknown as { __garden: Scene }).__garden;
-      const gap = lookoutAt(s.layout.orchard);
-      // In the gap in the far hedge, facing out across the valley (+z is yaw π).
-      Object.assign(s, { x: gap.x, z: gap.z - 0.45, yaw: Math.PI, pitch: 0.03 });
+      const hill = lookoutAt(stileAt(s.layout as Parameters<typeof stileAt>[0]));
+      // Where the old path ends on the hill, beside the lantern's post, facing out across the valley, as the walk up leaves you (scene.ts goOver).
+      const [x, z] = hill.way[hill.way.length - 1];
+      Object.assign(s, { over: true, x, z, yaw: 0.08, pitch: 0 });
     }),
 };
 
 /**
- * Open the walk for a demo learner far into the course: 400 words put notes on the shed's
- * nails (each needs 60 or more known words). The door is opened, so the lookout behind it can be reached.
+ * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
+ * nails (each needs 60 or more known words) and under the stile's step, and open the way
+ * over the stile to the lookout (note n08, 620 known: not every demo word is known). The door is opened too.
  */
 async function openWalk(page: Page) {
-  await page.goto("/?demo=es:400#/today");
+  await page.goto("/?demo=es:800#/today");
   await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
   await page.evaluate(async () => {
     const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");
