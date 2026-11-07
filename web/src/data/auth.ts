@@ -90,6 +90,45 @@ export async function ensureUser(): Promise<SessionUser> {
   return toUser(r.data.user);
 }
 
+// The demo learner (dev/demo.ts) is anonymous, and a sign-in from an anonymous
+// session moves its data into the account (server auth.ts mergeUsers). So its
+// id is kept here, and a sign-in from it deletes it first (#751).
+const DEMO_KEY = "perennial-demo-user";
+
+/** Marks `id` as the demo learner. Throws without storage: the demo must not run when a sign-in could not tell it apart. */
+export function markDemoUser(id: string): void {
+  localStorage.setItem(DEMO_KEY, id);
+}
+
+/**
+ * The session's user for a sign-in to start from: null if it was the demo learner, which is deleted first, so the
+ * sign-in starts clean. A failed delete throws: the sign-in must stop.
+ */
+async function dropDemo(user: SessionUser | null): Promise<SessionUser | null> {
+  if (!user?.anonymous) return user;
+  let demo: string | null;
+  try {
+    demo = localStorage.getItem(DEMO_KEY);
+  } catch {
+    // No storage now: markDemoUser could not have run either, so this is not the demo.
+    return user;
+  }
+  if (demo !== user.id) return user;
+  const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+  if (!res.ok) throw demoNotDeleted();
+  // Drop the deleted demo's cookie: sent with the sign-in, the server would clear it after
+  // setting the new session's, and the sign-in would end signed out. Not authClient.signOut:
+  // the app would see no user, show the landing page and lose the sign-in form.
+  const out = await fetch("/api/auth/sign-out", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+  if (!out.ok) throw demoNotDeleted();
+  stopSyncNow(user.id);
+  forgetOnDevice(user.id);
+  await clearOutboxNow(user.id);
+  return null;
+}
+
+const demoNotDeleted = () => new AuthError({ code: "demo_not_deleted", message: "Could not end the demo. Try again." });
+
 /** A refusal the learner can act on: `message` says what to do. */
 export class AuthError extends Schema.TaggedError<AuthError>()("AuthError", { code: Schema.String, message: Schema.String }) {}
 
@@ -167,7 +206,8 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
     Effect.gen(function* () {
       const started = yield* Clock.currentTimeMillis;
       // Nothing was sent yet, so there is nothing to recover.
-      const before = yield* askSession;
+      const asked = yield* askSession;
+      const before = yield* Effect.tryPromise({ try: () => dropDemo(asked), catch: demoNotDeleted });
       // Before the request: the app may see the account before this code does (#314).
       noteSignIn(before, email);
       const { user, timedOut } = yield* timed("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } })).pipe(
@@ -200,7 +240,7 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
  * writes follow whichever account the app sees next (device.ts).
  */
 export async function signInWithGoogle() {
-  noteSignIn(await currentUser(), null);
+  noteSignIn(await dropDemo(await currentUser()), null);
   track("signin_google_started");
   // A failure comes back to the server's error address (auth.ts onAPIError), which googleSignInFailed reads.
   const r = await authClient.signIn.social({ provider: "google", callbackURL: "/" });

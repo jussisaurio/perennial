@@ -49,6 +49,11 @@ const APP: Record<string, (page: Page) => Promise<void>> = {
     await page.goto("/?demo=es:30#/settings");
     await expect(page.getByRole("tab", { name: "Settings", selected: true })).toBeVisible({ timeout: 20_000 });
   },
+  // The story points to jump to (#751): no learner made.
+  jump: async (page) => {
+    await page.goto("/?demo");
+    await expect(page.getByRole("heading", { name: "Jump to a story point" })).toBeVisible();
+  },
 };
 
 /** The parts of the dev-only scene handle (window.__garden) the spots move. */

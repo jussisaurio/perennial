@@ -203,8 +203,8 @@ input[type="search"]::-webkit-search-cancel-button:hover { background: var(--ink
 .segment > svg { position: absolute; left: 0.6rem; top: 50%; translate: 0 -50%; }
 /* On a phone three long labels do not fit in a row: the options stack, as a short list. */
 @media (max-width: 640px) {
-  .segmented:not(.words-view) { display: grid; grid-auto-flow: row; }
-  .segmented:not(.words-view) .segment { justify-content: flex-start; padding-left: 2.2rem; text-align: left; }
+  .segmented:not(.words-view, .jump-langs) { display: grid; grid-auto-flow: row; }
+  .segmented:not(.words-view, .jump-langs) .segment { justify-content: flex-start; padding-left: 2.2rem; text-align: left; }
 }
 .switch-row {
   display: flex; justify-content: space-between; gap: 1rem; width: 100%; max-width: 40rem; text-align: left; font-weight: 500;
@@ -1059,3 +1059,21 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .session.growing .session-watcher { visibility: hidden; }
 @keyframes watcher-in { from { transform: translate(14px, -100%); opacity: 0; } to { transform: translateY(-100%); opacity: 1; } }
 @media (max-width: 480px) { .session-watcher { right: 49px; } }
+
+/* The demo's story points (?demo, #751): one card of link rows, each with what happens, a line of the note, and the known words it needs. */
+.jump-page { max-width: 40rem; padding-top: 2rem; }
+.jump-warn { display: flex; gap: 0.6rem; align-items: flex-start; margin: 1rem 0; padding: 0.8rem 1rem; border-radius: 14px; background: var(--sun-soft); font-size: 0.92rem; }
+.jump-warn > svg { flex: none; margin-top: 0.1rem; color: color-mix(in oklab, var(--sun), var(--ink) 40%); }
+:root[data-theme="dark"] .jump-warn > svg { color: var(--sun); }
+.jump-langs { margin: 1rem 0 1.25rem; }
+.jump-list { list-style: none; margin: 0; padding: 0; background: var(--card); border: 1px solid var(--line-soft); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.jump-list > li + li { border-top: 1px solid var(--line-soft); }
+.jump { display: flex; align-items: center; gap: 0.9rem; padding: 0.85rem 1rem 0.85rem 1.1rem; color: inherit; text-decoration: none; transition: background 0.15s; }
+.jump:hover { color: inherit; background: color-mix(in oklab, var(--card), var(--ink) 4%); }
+.jump:focus-visible { outline: 2px solid var(--sky); outline-offset: -2px; }
+.jump-text { flex: 1; min-width: 0; display: grid; gap: 0.1rem; }
+.jump-part { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.jump-title { font-weight: 600; }
+.jump-line { font: italic 0.95rem var(--display); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jump-known { flex: none; font-size: 0.86rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.jump-go { flex: none; color: var(--muted); rotate: -90deg; }

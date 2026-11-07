@@ -40,14 +40,17 @@ window.addEventListener("vite:preloadError", (e) => {
 });
 
 async function boot() {
-  // Dev-only switches like ?demo=es. Removed from production builds, except
-  // the one the UI performance run measures (VITE_DEV_TOOLS=1, perf/ui.ts).
-  if (import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLS === "1") await (await import("./dev/boot")).devBoot();
-  createRoot(document.getElementById("root")!, { onUncaughtError: reportReactError, onCaughtError: reportReactError, onRecoverableError: reportReactError }).render(
+  // The demo (?demo, dev/boot.ts), in production too (#751): its code loads only when the address asks for it.
+  const root = createRoot(document.getElementById("root")!, { onUncaughtError: reportReactError, onCaughtError: reportReactError, onRecoverableError: reportReactError });
+  let Jump = null;
+  if (new URLSearchParams(location.search).has("demo")) {
+    // Making a demo learner takes a few seconds: the sprout, not a blank page.
+    root.render(<Settling />);
+    Jump = await (await import("./dev/boot")).devBoot();
+  }
+  root.render(
     <StrictMode>
-      <Suspense fallback={<Settling />}>
-        <App />
-      </Suspense>
+      <Suspense fallback={<Settling />}>{Jump ? <Jump /> : <App />}</Suspense>
     </StrictMode>,
   );
 }
