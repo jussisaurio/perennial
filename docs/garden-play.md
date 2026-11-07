@@ -51,7 +51,7 @@ You can walk anywhere on the grass of the hilltop and the cut way. The brambles,
 
 **Coming back.** Turn round and walk down the old path, through the cut, up the steps and down into the garden. Or tap a spot you can see in the garden, and you walk there the way you came, over the stile. Nothing takes you back on its own. When you stop, you stay where you are, on the hill or on the steps.
 
-**What you can't do, and how you can tell.** You can't go into the brambles anywhere: they are tall, thorny and solid, the same before and after n08. Past the back fence, the only open ground is the cut way and the hilltop, and the brambles are what close everything else. No button moves you. For a screen reader, the hidden Next plant button still moves you to the next plant; from the hill it goes back over the stile.
+**What you can't do, and how you can tell.** You can't go into the brambles anywhere: they are tall, thorny and solid, the same before and after n08. Past the back fence, the only open ground is the cut way and the hilltop, and the brambles are what close everything else. No button moves you. For a screen reader, the hidden Next plant button still moves you to the next plant; from the hill, it takes you straight to that plant in the garden.
 
 ### Claims
 

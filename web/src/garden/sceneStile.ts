@@ -168,7 +168,8 @@ export class StileScene {
       for (const [k, back] of [[0, THICKET.near + 0.5], [1, 1.2], [2, 1.9], [3, 2.7]]) {
         const cx = x + (r() - 0.5) * 0.3;
         const cz = sz - back + (r() - 0.5) * 0.3;
-        if (cut(cx, cz, 0.25)) continue;
+        // Clear of the way by more than a clump's reach: walking into its side, your eye stays out of them.
+        if (cut(cx, cz, 0.5)) continue;
         const ys = k === 0 ? [0.4, 0.95, 1.5, top - 0.3] : [top - 0.35 - r() * 0.3];
         for (const y of ys) {
           const rad = 0.38 + r() * 0.2;
@@ -178,25 +179,27 @@ export class StileScene {
     }
     // Round the hilltop's grass, out to the hill's foot, standing on its slope: a face of clumps at the grass's edge, and tops further out.
     const [tx, tz] = this.hill.top;
-    for (let rr = HILLTOP_R + 0.35; rr < RING.far; rr += 0.6) {
+    for (let rr = HILLTOP_R + 0.45; rr < RING.far; rr += 0.6) {
       const inner = rr < HILLTOP_R + 0.5;
       for (let a = 0; a < Math.PI * 2; a += 0.42 / rr) {
         const cx = tx + Math.sin(a) * rr + (r() - 0.5) * 0.15;
         const cz = tz + Math.cos(a) * rr + (r() - 0.5) * 0.15;
         // The thicket behind the fence covers the ground nearer the fence; none in the garden.
-        if (cz > sz - THICKET.far + 0.4 || cut(cx, cz, 0.25)) continue;
+        if (cz > sz - THICKET.far + 0.4 || cut(cx, cz, 0.5)) continue;
         const ground = hillY(this.hill, cx, cz);
         const top = RING.h * (0.85 + 0.25 * r());
         for (const y of inner ? [0.35, 0.85, top - 0.3] : [top - 0.35 - r() * 0.3]) {
-          const rad = 0.38 + r() * 0.2;
+          // The face, smaller: it reaches in no further than the edge you stop at, so your eye stays out of it.
+          const rad = inner ? 0.3 + r() * 0.1 : 0.38 + r() * 0.2;
           clumps.push([cx, ground + y, cz, rad * 1.15, rad * 0.85, rad, 0.55 + (0.45 * y) / RING.h]);
         }
       }
     }
     // Before the hill's note, brambles grown through the fence over the stile's steps, into the garden: what shuts the way.
     if (!this.open)
-      for (let x = sx - STEP.w / 2 - 0.3; x <= sx + STEP.w / 2 + 0.3; x += 0.3)
-        for (let d = 0.1; d < BRAMBLES_IN; d += 0.3)
+      // Within the solid block (lookout.ts backWay) less a clump's reach: you stop before your eye is in them.
+      for (let x = sx - STEP.w / 2 - 0.05; x < sx + STEP.w / 2 + 0.1; x += 0.3)
+        for (let d = 0.1; d < BRAMBLES_IN - 0.3; d += 0.3)
           for (const y of [0.3, 0.75, 1.15]) {
             const rad = 0.24 + r() * 0.1;
             clumps.push([x + (r() - 0.5) * 0.1, y + (r() - 0.5) * 0.15, sz + d, rad * 1.1, rad, rad, 0.55 + 0.3 * y]);
