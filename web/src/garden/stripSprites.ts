@@ -6,6 +6,7 @@
 import type { SpritePlant } from "./plantCanvas";
 import type { StripDone, StripJob } from "./stripWorker";
 import { inSlices } from "../lib/yield";
+import { reportSpriteFailed } from "../observability";
 
 /** A plant's look at a scale and pixel density: plants that look the same share a sprite. */
 export const spriteKey = (p: SpritePlant, scale: number, dpr: number) => `${p.lemma} ${p.stage} ${p.growth} ${scale} ${dpr}`;
@@ -39,15 +40,31 @@ function drawn(plants: SpritePlant[], scale: number, dpr: number): Promise<Blob[
   return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
 }
 
-/** Starts loading each PNG as an image, one step per image; each URL resolves once its image is decoded. */
-function* decodeSteps(pngs: Blob[]): Generator<void, Promise<string>[]> {
-  const urls: Promise<string>[] = [];
+/**
+ * Starts loading each PNG as an image, one step per image; each URL resolves
+ * once its image is decoded, or as null if the image did not load.
+ */
+function* decodeSteps(pngs: Blob[]): Generator<void, Promise<string | null>[]> {
+  const urls: Promise<string | null>[] = [];
   for (const png of pngs) {
     const url = URL.createObjectURL(png);
     const img = new Image();
     img.src = url;
     // Decoded before the strip shows it, off the main thread, so its first paint does not decode it.
-    urls.push(img.decode().then(() => url));
+    // Safari sometimes fails to load a sprite's blob URL ("EncodingError: Loading
+    // error.", #637), though the worker's PNG is never empty. That plant is
+    // reported and left out, not the whole batch: one failed image kept every
+    // plant drawn with it off the strip.
+    urls.push(
+      img.decode().then(
+        () => url,
+        (e: unknown) => {
+          URL.revokeObjectURL(url);
+          reportSpriteFailed(e, png.size);
+          return null;
+        },
+      ),
+    );
     yield;
   }
   return urls;
@@ -64,7 +81,10 @@ export function drawSprites(plants: SpritePlant[], scale: number, dpr: number): 
       drawing.set(
         key,
         decoded.then(async (urls) => {
-          ready.set(key, await urls[i]);
+          const url = await urls[i];
+          // Forgotten, so the strip draws it again the next time it asks for it.
+          if (url === null) drawing.delete(key);
+          else ready.set(key, url);
         }),
       );
     });
