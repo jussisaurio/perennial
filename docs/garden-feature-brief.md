@@ -12,6 +12,7 @@ The user's goal now: **"focus heavily on implementing a lot of fun features, tha
 - **Quiet whimsy:** no streaks, scores, FOMO, confetti, nags, timers or currency. Nothing withers or is lost.
 - **Never asks the learner to practise.** More words make more material to play with; never gate a verb behind a word count.
 - **No instruction text in the walk (#334).** The world shows what can be done. The one action button is icon-only, but its accessible name says the action.
+- **The wall clock sets the time of day (#646).** There is no button for it. Night things are a quiet surprise for someone who comes at night.
 - **Phones:** one thumb, sound off. Anything that relies on sound has a visual half.
 - **Screen readers:** each verb works through the action button with a name, plus a short status line.
 - **Simple English** for any text. Course-language words get `lang` and are never quizzed.
@@ -20,7 +21,7 @@ The user's goal now: **"focus heavily on implementing a lot of fun features, tha
 
 ## Process (velocity)
 1. File your own GitHub issue (labels `garden` + P2) with a short design and why it's fun. Branch from up-to-date main.
-2. Build it in small commits. Tests: unit tests for pure logic with a pinned `now`; one e2e for the main moment (import `test` from "./test"; pin the clock and viewport; pin `garden-quality` to low). Garden specs keep passing on desktop and iPhone.
+2. Build it in small commits. Tests: unit tests for pure logic with a pinned `now`; one e2e for the main moment (import `test` from "./test"; pin the clock and viewport, and pick the hour for day, evening or night; pin `garden-quality` to low). Garden specs keep passing on desktop and iPhone.
 3. Open a PR with "Closes #n". End the body with `Reviewed: none` (the orchestrator may start a non-blocking quick review) and `🤖 Generated with [Claude Code](https://claude.com/claude-code)`. Commits end with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`.
 4. **Merge it yourself:** run `scripts/merge-when-green.sh <pr>` from the main checkout (/Users/jussi/projects/ankee) as a background command and wait for its result.
    - If it says the PR conflicts: rebase onto origin/main, resolve, re-run the checks, force-push with lease, and run the script again. Other agents merge in parallel, so expect this.

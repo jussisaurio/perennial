@@ -309,12 +309,16 @@ test("a key left a few days: at dusk the bird waits by it, and by day it is back
     });
   // Noon: the bird is in its own spot, away from the key.
   expect(await birdFromKey()).toBeGreaterThan(1);
-  const time = page.getByRole("button", { name: /^Time of day: / });
-  await time.click();
-  await expect(time).toHaveAttribute("aria-label", "Time of day: Evening");
+  // Come back at seven in the evening, then at noon again.
+  const comeBackAt = async (at: string) => {
+    await page.clock.setFixedTime(new Date(at));
+    await page.getByRole("button", { name: "Back" }).click();
+    await openWalk(page);
+  };
+  await comeBackAt("2026-10-11T19:00:00");
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-dusk\b/);
   expect(await birdFromKey()).toBeLessThan(0.5);
-  await time.click();
-  await time.click();
-  await expect(time).toHaveAttribute("aria-label", "Time of day: Day");
+  await comeBackAt("2026-10-11T12:00:00");
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-day\b/);
   expect(await birdFromKey()).toBeGreaterThan(1);
 });
