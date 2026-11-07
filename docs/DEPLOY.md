@@ -156,8 +156,9 @@ Services refer to it as `${{shared.DATABASE_URL}}`.
 | `VITE_POSTHOG_KEY` | empty (off) | Turns on PostHog: no cookies, no autocapture, no session replay, Do Not Track respected, a few named events. |
 | `VITE_POSTHOG_HOST` | `https://eu.i.posthog.com` | The PostHog host. When `VITE_POSTHOG_KEY` is set, the server allows this host in the CSP `connect-src`. |
 | `VITE_RELEASE` | `dev` | Release name in browser error reports. Set it to `${{RAILWAY_GIT_COMMIT_SHA}}` so that it matches the server's release. |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | empty (off) | Uploads the browser source maps to Sentry, so browser errors have readable stacks. The token is a Sentry **organization auth token** (Settings → Auth Tokens) and is a secret: it stays in the build stage, not in the final image or the JavaScript. `SENTRY_PROJECT` is the browser project's slug. With a token set, a failed upload or a missing org or project fails the build, so the deploy stops (#328). |
 
-These values end up in the public JavaScript. That is expected: a Sentry DSN and a PostHog project key are not secrets.
+The `VITE_*` values end up in the public JavaScript. That is expected: a Sentry DSN and a PostHog project key are not secrets.
 
 **Do not set in production:** `PERENNIAL_DEV` (turns on dev mode), `ANTHROPIC_BASE_URL` (for the mock model only), `LOG_PRETTY`. `NODE_ENV` and `PERENNIAL_STATIC` come from the Dockerfile. The release name comes from `RAILWAY_GIT_COMMIT_SHA`, which Railway sets.
 
