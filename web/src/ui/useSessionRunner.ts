@@ -181,7 +181,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
         const ex = t === task ? example : chooseExample(l, deckSentences.current!, w.id, introSentence.current.get(w.id));
         return ex ? [w.lemma, ex.text] : [w.lemma];
       });
-      prefetchClips(texts, tag);
+      prefetchClips(texts, tag, "session");
     });
     if (example) afterPaint(() => {
       const grown = grownSpans(live.current!, example.text, tag, word.id);
