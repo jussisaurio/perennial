@@ -47,6 +47,15 @@ test("intro → quick check loop, with the hint explaining it", async ({ page })
   await expect(hint).toHaveCount(0);
 });
 
+test("a reading card can be heard before the answer shows, and playing it keeps the meaning hidden", async ({ page }) => {
+  await startCourse(page);
+  await startSession(page);
+  await continueIntros(page, 5);
+  await expect(kicker(page)).toHaveText(/quick check/);
+  await page.getByRole("button", { name: "Play the sentence", exact: true }).click();
+  await expect(page.locator(".reveal")).toHaveCount(0);
+});
+
 test("German: nouns come with their article on the card and in Words; an answer says whose form was asked (#259, #260)", async ({ page }) => {
   await startCourse(page, "German");
   await startSession(page);
