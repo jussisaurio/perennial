@@ -16,9 +16,7 @@ import { Settling } from "./ui/Settling";
 import { RefusedBanner, useRefused } from "./ui/Refused";
 import { LearnerGardenWalk, preloadScreens, preloadSession, SessionScreen, SettingsScreen, WordsScreen } from "./ui/screens";
 import { DAILY_MINUTES } from "./data/practice";
-import { GiftArrival } from "./ui/Gift";
 import { arrowKeys } from "./ui/arrows";
-import { pendingGift } from "./data/gift";
 
 // The downloads after this code, in the order the learner needs them (#615).
 // On a slow link they share it, so each starts once the one before is in.
@@ -197,8 +195,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
   const [chosen, setChosen] = useState(readCourse);
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(null);
   const [startError, setStartError] = useState("");
-  // A friend's seed is kept on this device (#213): only then is GiftArrival drawn, as its learner queries cost time (#230).
-  const [giftHere] = useState(() => pendingGift() !== null);
   const course = courses.find((c) => c.lang === chosen) ?? courses[0];
   const { failed: wordsFailed } = useDeck(course?.lang);
   // Asked for here, so the sentences come right after the words, whatever screen is open (#608).
@@ -232,7 +228,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
       />
     );
   const lang = course.lang;
-  /** Start a course in another language: from the language menu, or a friend's seed (#213). */
+  /** Start a course in another language: from the language menu. */
   const startAnother = (l: string) => {
     setStartError("");
     const previous = course.lang;
@@ -320,7 +316,6 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
         </p>
       )}
       {noDeck && <DeckFailed lang={lang} />}
-      {route === "/today" && giftHere && <GiftArrival courses={courses.map((c) => c.lang)} onStart={startAnother} />}
       {route === "/today" && !noDeck && (
         <Home
           lang={lang}

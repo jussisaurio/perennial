@@ -1,4 +1,4 @@
-// Small browser file helpers: the data export, the garden's textures and the shared picture use them.
+// Small browser file helpers: the data export and the garden's textures use them.
 
 /** Saves a file through the browser's download. */
 export function download(name: string, blob: Blob) {

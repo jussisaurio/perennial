@@ -10,11 +10,7 @@ import { noForcedLayout } from "./virtualRows";
 import { plantStage, type MemoryRow, type PlantStage } from "../core/memory";
 import type { Word } from "../data/learner";
 import { WordPlant, rareOf, type Rare } from "./plant";
-import { giftLink } from "../data/gift";
-import { track } from "../observability";
 import { useLatinNames } from "../content/latin";
-import type { PageImage } from "./pageImage";
-import { download } from "./files";
 import { headword } from "../content/forms";
 
 export interface GuideRow {
@@ -123,95 +119,6 @@ export function FieldGuide({ lang, rows, open, onOpen, detail }: { lang: string;
   );
 }
 
-/**
- * "Share a picture of this page" (#225): the pressed flower as an image, through
- * the phone's share sheet, or downloaded where files cannot be shared. Only when
- * the learner chooses it; nothing about them is on the picture.
- */
-function SharePicture({ page }: { page: PageImage }) {
-  // Made when the page opens: Safari opens the share sheet only straight from a tap, not after waiting for the picture.
-  const [file, setFile] = useState<File | "failed" | null>(null);
-  const [saved, setSaved] = useState(false);
-  const { lemma, gloss, latin, rare, s, stage } = page;
-  useEffect(() => {
-    let live = true;
-    // Its own chunk: it pulls in react-dom/server (~190 KB), which the first load does not need (#481).
-    import("./pageImage").then(({ pageImage }) => pageImage({ lemma, gloss, latin, rare, s, stage })).then(
-      (blob) => live && setFile(new File([blob], `perennial-${lemma}.png`, { type: "image/png" })),
-      (e: unknown) => {
-        console.warn("[guide] the picture could not be made", e);
-        if (live) setFile("failed");
-      },
-    );
-    return () => {
-      live = false;
-    };
-  }, [lemma, gloss, latin, rare, s, stage]);
-  if (file === "failed") return <p className="muted small">Could not make a picture of this page.</p>;
-  const share = (f: File) => {
-    if (navigator.canShare?.({ files: [f] })) {
-      void navigator.share({ files: [f] }).then(
-        () => track("page_shared", {}),
-        (e: unknown) => {
-          // Closing the share sheet is a choice, not an error.
-          if (!(e instanceof DOMException && e.name === "AbortError")) console.warn("[guide] share failed", e);
-        },
-      );
-      return;
-    }
-    // No sharing files here (most desktop browsers): save the picture instead.
-    download(f.name, f);
-    track("page_shared", {});
-    setSaved(true);
-  };
-  return (
-    <button className="ghost give-seed" disabled={!file} onClick={() => file && share(file)}>
-      {!file ? "Making the picture…" : saved ? "Picture saved. Share it from your files." : "Share a picture of this page"}
-    </button>
-  );
-}
-
-/**
- * "Give this seed to a friend" (#213): a link that plants this word first in a
- * friend's garden. The phone's share sheet where there is one, otherwise the
- * link is copied. Only on a known word, and only when the learner chooses it.
- */
-function GiveSeed({ word }: { word: Word }) {
-  const [copied, setCopied] = useState(false);
-  // Only deck words: a learner's own words are theirs alone, and not in a friend's deck.
-  if (word.source !== "deck") return null;
-  const give = async () => {
-    const url = giftLink(word.id);
-    const text = `I grew “${word.lemma}” in Perennial. Here is a seed for you.`;
-    if (navigator.share) {
-      const shared = await navigator.share({ text, url }).then(
-        () => true,
-        (e: unknown) => {
-          // Closing the share sheet is a choice, not an error. Anything else: copy the link instead.
-          if (e instanceof DOMException && e.name === "AbortError") return null;
-          console.warn("[seed] share failed; copying the link instead", e);
-          return false;
-        },
-      );
-      if (shared) track("seed_shared", {});
-      if (shared !== false) return;
-    }
-    if (!navigator.clipboard) return console.warn("[seed] no share sheet and no clipboard here");
-    await navigator.clipboard.writeText(`${text} ${url}`).then(
-      () => {
-        setCopied(true);
-        track("seed_shared", {});
-      },
-      (e: unknown) => console.warn("[seed] could not copy the link", e),
-    );
-  };
-  return (
-    <button className="ghost give-seed" onClick={() => void give()}>
-      {copied ? "Link copied. Send it to a friend." : "Give this seed to a friend"}
-    </button>
-  );
-}
-
 /** One entry, opened: the plant large, and the word's details. A native dialog: Escape closes it and focus stays inside. */
 function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow; onClose: () => void; detail: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -244,12 +151,6 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
           <p className="gl">{row.l.gloss}</p>
           {rare && <p className="guide-rare">{RARE_LABEL[rare]}</p>}
           {stage !== "bloom" && <p className="muted small">Still growing. Its flower shows when you know the word.</p>}
-          {stage === "bloom" && (
-            <div className="guide-share">
-              <GiveSeed word={row.l} />
-              <SharePicture page={{ lemma: row.l.lemma, gloss: row.l.gloss, latin, rare: rare ? RARE_LABEL[rare] : undefined, s, stage }} />
-            </div>
-          )}
         </div>
         {detail}
         {/* A bar, not a bare button: the page scrolls under it, and nothing shows through around Close. */}
