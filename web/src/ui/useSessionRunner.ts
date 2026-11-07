@@ -14,6 +14,7 @@ import type { DeckSentences } from "../data/deck";
 import { hash32 } from "../lib/seed";
 import { hasVoice, listenOn, onSoundChange, pauseListening, stopSpeaking } from "./speech";
 import { prepareAudio, wakeAudio } from "./chime";
+import { clipsOn, prefetchClips } from "./clipPlayer";
 import { afterPaint } from "./afterPaint";
 import { sessionPlan } from "../data/practice";
 import { grownSpans } from "../data/reading";
@@ -46,6 +47,8 @@ export interface ChunkDone {
 
 /** Recall below this when remembered: a long shot, which gets a stronger growth moment. */
 const LONG_SHOT = 0.7;
+/** Cards ahead whose clips (#306) load while the learner answers. */
+const CLIPS_AHEAD = 10;
 /** Long-shot moments per chunk. */
 const MAX_STRONG = 3;
 
@@ -168,6 +171,18 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
     const shown: Card = { task, word, example, s: read?.reps ? read.s : 0, stage: plantStage(read), grown: [] };
     setCard(shown);
     // The grown words show only with the answer: found once the card is on screen, not before it (#457).
+    // What this card and the next ones will say, loaded while the learner answers. The
+    // later cards' sentences are chosen as they would be now; a guess, mostly right.
+    if (clipsOn()) afterPaint(() => {
+      const l = live.current!;
+      const texts = [task, ...r.upcoming(CLIPS_AHEAD)].flatMap((t) => {
+        const w = l.words.get(t.wordId);
+        if (!w) return [];
+        const ex = t === task ? example : chooseExample(l, deckSentences.current!, w.id, introSentence.current.get(w.id));
+        return ex ? [w.lemma, ex.text] : [w.lemma];
+      });
+      prefetchClips(texts, tag);
+    });
     if (example) afterPaint(() => {
       const grown = grownSpans(live.current!, example.text, tag, word.id);
       setCard((c) => (c === shown ? { ...shown, grown } : c));

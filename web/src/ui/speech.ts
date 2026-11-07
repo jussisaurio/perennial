@@ -1,5 +1,8 @@
-// Browser speech synthesis. Free, offline on most platforms, and covers every
-// course language on recent OSes.
+// Speech: recorded clips when the build has them (clipPlayer.ts), and browser
+// speech synthesis for any text without one. Browser speech is free, offline on
+// most platforms, and covers every course language on recent OSes.
+
+import { clipsOn, loadClip, playClip, stopClip } from "./clipPlayer";
 
 // Sound on or off is a per-device choice (where you are matters more than who
 // you are), so it lives in localStorage and does not sync.
@@ -54,7 +57,7 @@ function pick(tag: string): SpeechSynthesisVoice | undefined {
 
 /** Right now: can there be listening exercises? (Sound on, and a voice, assumed while voices still load.) */
 export function mayListen(tag: string): boolean {
-  return listenOn(Date.now()) && typeof speechSynthesis !== "undefined" && (voices.length === 0 || !!pick(tag));
+  return listenOn(Date.now()) && (clipsOn() || (typeof speechSynthesis !== "undefined" && (voices.length === 0 || !!pick(tag))));
 }
 
 // "Can't listen now" pauses listening for an hour (#716): long enough for a bus
@@ -83,6 +86,7 @@ export function listenOn(now: number): boolean {
 }
 
 export async function hasVoice(tag: string): Promise<boolean> {
+  if (clipsOn()) return true;
   await ready;
   return !!pick(tag);
 }
@@ -97,6 +101,8 @@ const IOS = typeof navigator !== "undefined" && (/iPhone|iPad|iPod/.test(navigat
 
 /** "Play slowly": iOS squeezes the rate scale, so it needs a lower value to sound clearly slower. */
 const SLOW_RATE = IOS ? 0.5 : 0.65;
+/** "Play slowly" for a clip: the recording played slower, at the same pitch. Much below this it starts to smear. */
+const SLOW_CLIP_RATE = 0.75;
 
 async function utter(text: string, tag: string, rate: number, gen: number): Promise<void> {
   // WebKit (iOS Safari) ignores a new utterance's settings, rate included, when
@@ -118,26 +124,40 @@ async function utter(text: string, tag: string, rate: number, gen: number): Prom
   });
 }
 
-/** The sentence again, slowly (the snail buttons). */
-export const speakSlowly = (text: string, tag: string) => speak(text, tag, SLOW_RATE);
-
-/** Speak `text`. Does nothing while sound is off. */
-export function speak(text: string, tag: string, rate = 1): Promise<void> {
-  return speakAll([text], tag, rate);
+/** One text: its clip, or the browser's voice when it has none or the clip will not play. */
+async function say(text: string, tag: string, slow: boolean, gen: number): Promise<void> {
+  if (clipsOn()) {
+    const url = await loadClip(text, tag);
+    if (gen !== generation) return;
+    if (url && (await playClip(url, slow ? SLOW_CLIP_RATE : 1))) return;
+    if (gen !== generation) return;
+  }
+  if (typeof speechSynthesis === "undefined") return;
+  await ready;
+  if (gen !== generation) return;
+  await utter(text, tag, slow ? SLOW_RATE : 1, gen);
 }
 
+/** The sentence again, slowly (the snail buttons). */
+export const speakSlowly = (text: string, tag: string) => sayAll([text], tag, true);
+
+/** Speak `text`. Does nothing while sound is off. */
+export const speak = (text: string, tag: string) => sayAll([text], tag, false);
+
 /** Speak the texts one after another. Stops early when stopSpeaking() or another speak call comes first. */
-export async function speakAll(texts: string[], tag: string, rate = 1): Promise<void> {
-  if (typeof speechSynthesis === "undefined" || !soundOn) return;
+export const speakAll = (texts: string[], tag: string) => sayAll(texts, tag, false);
+
+async function sayAll(texts: string[], tag: string, slow: boolean): Promise<void> {
+  if (!soundOn) return;
   const gen = ++generation;
-  await ready;
   for (const text of texts) {
     if (gen !== generation || !soundOn) return;
-    await utter(text, tag, rate, gen);
+    await say(text, tag, slow, gen);
   }
 }
 
 export function stopSpeaking(): void {
   generation++;
+  stopClip();
   if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
 }

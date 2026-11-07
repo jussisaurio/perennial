@@ -33,7 +33,7 @@ export interface Config {
   anthropic: { apiKey?: string | undefined; baseURL?: string | undefined; model: string };
   mail: { resendKey?: string | undefined; from: string };
   /** Server reports go to sentryDsn. connect lists the origins the browser
-   *  may send reports and analytics to (CSP connect-src). */
+   *  may send reports and analytics to, or fetch recorded audio from (CSP connect-src). */
   observability: { sentryDsn?: string | undefined; connect: string[] };
   /** Bot check (Cloudflare Turnstile) on new anonymous users and sign-in codes. Off without a secret. */
   turnstile: { secretKey?: string | undefined; siteKey?: string | undefined };
@@ -86,6 +86,7 @@ const env = EnvConfig.all({
   VITE_SENTRY_DSN: variable("VITE_SENTRY_DSN"),
   VITE_POSTHOG_KEY: variable("VITE_POSTHOG_KEY"),
   VITE_POSTHOG_HOST: variable("VITE_POSTHOG_HOST"),
+  VITE_AUDIO_BASE_URL: variable("VITE_AUDIO_BASE_URL"),
   POSTHOG_HOST: variable("POSTHOG_HOST"),
   TURNSTILE_SECRET_KEY: variable("TURNSTILE_SECRET_KEY"),
   VITE_TURNSTILE_SITE_KEY: variable("VITE_TURNSTILE_SITE_KEY"),
@@ -127,7 +128,7 @@ const settings = env.pipe(
       // variables to the build and the running server, so the CSP follows them.
       observability: {
         sentryDsn: env.SENTRY_DSN,
-        connect: [env.VITE_SENTRY_DSN, env.VITE_POSTHOG_KEY ? env.VITE_POSTHOG_HOST || "https://eu.i.posthog.com" : undefined, env.POSTHOG_HOST]
+        connect: [env.VITE_SENTRY_DSN, env.VITE_POSTHOG_KEY ? env.VITE_POSTHOG_HOST || "https://eu.i.posthog.com" : undefined, env.POSTHOG_HOST, env.VITE_AUDIO_BASE_URL]
           .map(origin)
           .filter((o): o is string => !!o),
       },
