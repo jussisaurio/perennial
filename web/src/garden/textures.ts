@@ -737,16 +737,20 @@ export function mouseDoor(): OffscreenCanvas {
   return c;
 }
 
-/** A gardener's note on its nail (#654): a scrap of paper with pencil lines, a folded corner and the nail at the top. */
-export function notePaper(): OffscreenCanvas {
+/**
+ * A gardener's note on its nail (#654): a scrap of paper with pencil lines, a folded corner and the nail at the top.
+ * One not read yet (#673) is a little whiter, on a bright brass pin; once read, it is the old paper on a grey nail.
+ */
+export function notePaper(unread: boolean): OffscreenCanvas {
   const [c, ctx] = canvas(12, 14);
-  px(ctx, 0, 1, "#d8cdb0", 12, 13);
-  px(ctx, 1, 2, "#f1e8d0", 10, 11);
+  px(ctx, 0, 1, unread ? "#e4dabf" : "#d8cdb0", 12, 13);
+  px(ctx, 1, 2, unread ? "#fcf7e6" : "#f1e8d0", 10, 11);
   for (const y of [5, 7, 9, 11]) px(ctx, 2, y, "#9a917e", y === 11 ? 5 : 8, 1);
   // The folded bottom corner, and the nail through the top.
   px(ctx, 10, 12, "#c7bb9c", 2, 2);
   ctx.clearRect(11, 13, 1, 1);
-  px(ctx, 5, 0, "#5c5a57", 2, 2);
+  px(ctx, 5, 0, unread ? "#b8892e" : "#5c5a57", 2, 2);
+  if (unread) px(ctx, 5, 0, "#f0d27a", 1, 1);
   return c;
 }
 

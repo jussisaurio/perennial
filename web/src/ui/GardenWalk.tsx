@@ -5,6 +5,8 @@
 
 import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
+// The gardener's hand, for the notes in the shed (#673).
+import "@fontsource/patrick-hand/400.css";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { language } from "../content/languages";
 import { openDoor, readNote, useLearner, useStore } from "../data/learner";
@@ -229,7 +231,8 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
       // A write the server refuses is told by the refused-writes notice (#253); the note was still read here.
       readNote(store, lang, id).catch((e) => console.error("note read not saved", e));
     };
-    return { list, isKnown, opened };
+    // `?? []`: before the learner loads, nothing has been read.
+    return { list, read: read ?? [], isKnown, opened };
   }, [visitors, read, store, lang]);
   return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} toys={toys ?? undefined} notes={notes} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
 }
@@ -384,7 +387,7 @@ function markHintSeen() {
 const SHOWCASE_HINT = { show: true, moved: () => {} };
 
 /** The landing page's walk has no learner, so no notes in the shed. */
-const NO_NOTES = { list: [], isKnown: () => false, opened: () => {} };
+const NO_NOTES = { list: [], read: [], isKnown: () => false, opened: () => {} };
 
 /** The landing page's walk: the door stays locked, and there is nothing to save. */
 const SHOWCASE_DOOR = { state: "locked" as const, open: () => {} };
@@ -417,10 +420,10 @@ export function GardenWalk({
   /** The lawn toys (#360). Without it (the landing page), today's clocks. */
   toys?: ToysWalk;
   /**
-   * The gardener's notes on the shed's nails (#654): the unlocked ones, whether the learner knows a lemma
-   * (its words are clear), and what to do once one is opened. Without it (the landing page) the nails are bare.
+   * The gardener's notes on the shed's nails (#654): the unlocked ones, the ids of those read, whether the learner
+   * knows a lemma (its words are clear), and what to do once one is opened. Without it (the landing page) the nails are bare.
    */
-  notes?: { list: readonly Note[]; isKnown: (lemma: string) => boolean; opened: (id: string) => void };
+  notes?: { list: readonly Note[]; read: readonly string[]; isKnown: (lemma: string) => boolean; opened: (id: string) => void };
   onExit: () => void;
   /** Starts practice; `label` says what it starts. */
   water?: { label: string; start: () => void };
@@ -514,8 +517,9 @@ export function GardenWalk({
     setHint(false);
     notes.opened(id);
   };
-  const noteIds = useMemo(() => notes.list.map((n) => n.id), [notes.list]);
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { ids: noteIds, open: openNote } });
+  // The scene takes these once, as the walk opens; a note opened during the walk turns read on the wall by itself.
+  const nails = useMemo(() => notes.list.map((n) => ({ id: n.id, unread: !notes.read.includes(n.id) })), [notes.list, notes.read]);
+  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, detail, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { nails, open: openNote } });
   const held = hand && handView(hand);
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = labels.find((l) => l.kind === "echo");
@@ -906,7 +910,23 @@ function NoteCard({ note, lang, isKnown, onClose }: { note: Note; lang: string; 
         <Glyph name="close" />
       </button>
       <p className="gw-note-text" lang={lang}>
-        {noteInk(note, isKnown).map((ink, i) => (ink.faint ? <span key={i} className="gw-note-faint">{ink.text}</span> : ink.text))}
+        {noteInk(note, isKnown).map((ink, i) =>
+          ink.style === "faint" ? (
+            <span key={i} className="gw-note-faint">
+              {ink.text}
+            </span>
+          ) : ink.style === "struck" ? (
+            // A screen reader may say nothing of a strike, so it hears "crossed out" before the word.
+            <del key={i} className="gw-note-struck">
+              <span className="sr-only" lang="en">
+                crossed out:{" "}
+              </span>
+              {ink.text}
+            </del>
+          ) : (
+            ink.text
+          ),
+        )}
       </p>
     </div>
   );
