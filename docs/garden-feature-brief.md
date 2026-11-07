@@ -24,6 +24,6 @@ The user's goal now: **"focus heavily on implementing a lot of fun features, tha
 
 ## Process
 Setup, checks, merging and the report are in [agents.md](agents.md). Specific to garden features:
-1. File your own GitHub issue (labels `garden` + P2) with a short design and why it's fun.
+1. File your own GitHub issue (labels `garden` + P2) with a short design and why it's fun. Then write the feature's section in [garden-play.md](garden-play.md) and get it reviewed for friction before you build (see "Play description review" in agents.md).
 2. Unit tests for pure logic take a pinned `now`. Write one e2e for the main moment: import `test` from "./test", pin the clock and the viewport, pick the hour for day, evening or night, and pin the detail to low (`pinDetail` in e2e/helpers.ts). Garden specs keep passing on desktop and iPhone.
 3. Your report says what a learner can now do.

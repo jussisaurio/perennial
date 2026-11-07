@@ -26,7 +26,10 @@ How we write and merge code here. It applies to every session and every agent. T
 We are pre-alpha and the owner is the only user: ship fast. A temporary break costs nothing.
 
 - **Every PR**, including auth, sync, the data model and migrations: the author's own checks (typecheck, lint, the tests that cover the change) are enough. Merge right away; do not wait for CI. For a non-trivial change, ask one fresh agent for a quick review, but don't wait for it: put its findings in a follow-up PR.
-- **Garden changes that touch movement or interaction** are the one exception: before merge, a fresh Opus agent playtests the change (docs/agents.md, "Playtest") and the author fixes what it finds. A screenshot and a passing test do not show how a thing feels to play.
+- **Garden changes that touch movement or interaction** are the one exception:
+  1. Before building, write or update the feature's section in [docs/garden-play.md](docs/garden-play.md). Describe in prose how it plays: what the learner sees, what they can and must do, and what happens when they do each thing. A fresh Opus agent reviews that text for UX friction, and you fix the design before you write code.
+  2. Before merge, a fresh Opus agent playtests the change (docs/agents.md, "Playtest") against that text, and you fix what it finds.
+  A screenshot and a passing test do not show how a thing feels to play.
 - The PR description ends with `Reviewed: <none | quick | playtest>`.
 
 Deck content (decks/) also follows the proofreader process in docs/decks.md.
