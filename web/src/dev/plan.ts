@@ -20,8 +20,11 @@ interface WordPlan {
   known: boolean;
 }
 
-/** Reviews over the last `days` days for each of `words`, the most common first. */
-function planWords(words: readonly { id: string }[], now: number, days: number): WordPlan[] {
+/**
+ * Reviews over the last `days` days for each of `words`, the most common first.
+ * `knewFirst`: see the grade below.
+ */
+function planWords(words: readonly { id: string }[], now: number, days: number, knewFirst: boolean): WordPlan[] {
   const r = rng(words.length * 31 + days);
   // Common words were met first; the newest ones only in the last days.
   const age = words.map((_, i) => Math.pow(1 - i / words.length, 1.3));
@@ -45,7 +48,10 @@ function planWords(words: readonly { id: string }[], now: number, days: number):
       // A word the share leaves only 2 reviews is one a learner of this many words
       // often knew before: "I knew it" first. With "remembered", 2 reviews rarely
       // make a word known, and no deck had enough for the last note's 1600 (#751).
-      const grade: Grade = n === 0 && reviews[i] === 2 ? 4 : x < 0.06 * hard ? 1 : x < 0.16 * hard ? 2 : x < 0.92 ? 3 : 4;
+      // Only for a story point: in 90 days, "I knew it" puts the second review past
+      // now for the newest words, so ?demo=es:800 knew 616 words, not 664, and the
+      // way over the stile (620) stayed shut.
+      const grade: Grade = knewFirst && n === 0 && reviews[i] === 2 ? 4 : x < 0.06 * hard ? 1 : x < 0.16 * hard ? 2 : x < 0.92 ? 3 : 4;
       log.push({ ts: Math.round(ts), grade, ms: 2500 + Math.round(r() * 5000) });
       const st = replay(fsrs, log, COURSE_DEFAULTS.retention, memKey(w.id, "read"))!;
       // As the app counts it from the same reviews (ui/visitors.ts knownWords).
@@ -61,13 +67,13 @@ export type DemoSize = { studied: number } | { known: number };
 
 /** The words to upload reviews for, the most common first. */
 export function planDemo(words: readonly { id: string }[], size: DemoSize, now: number): WordPlan[] {
-  if ("studied" in size) return planWords(words.slice(0, size.studied), now, DAYS);
+  if ("studied" in size) return planWords(words.slice(0, size.studied), now, DAYS, false);
   const days = Math.max(DAYS, Math.ceil(size.known / KNOWN_A_DAY));
   // Some studied words are not known, so study more until enough are; then
   // leave out the newest known ones past the count, so the count is exact and
   // the next story point is not reached by chance.
   for (let n = size.known; ; ) {
-    const plan = planWords(words.slice(0, n), now, days);
+    const plan = planWords(words.slice(0, n), now, days, true);
     const known = plan.filter((w) => w.known).length;
     if (known >= size.known) {
       let extra = known - size.known;
