@@ -7,7 +7,7 @@ import "@fontsource/pixelify-sans/500.css";
 import "@fontsource/pixelify-sans/700.css";
 // The gardener's hand, for the notes in the shed (#673).
 import "@fontsource/patrick-hand/400.css";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { language } from "../content/languages";
 import { openDoor, readNote, useLearner, useStore } from "../data/learner";
 import { chunkLabel, nextChunk } from "../data/practice";
@@ -27,7 +27,7 @@ import { useSound } from "./Sound";
 import { plural } from "./format";
 import { useNow } from "./useNow";
 import { yieldToBrowser } from "../lib/yield";
-import { useGardenScene, useWalkInput } from "./useGardenScene";
+import { useGardenScene, useWalkInput, type LabelStore } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { gardenBroughtAt, learnerVisitors, type LearnerVisitors } from "./visitors";
 import type { PixelArt } from "../garden/visitorArt";
@@ -509,10 +509,10 @@ export function GardenWalk({
   };
   // The scene takes these once, as the walk opens; a note opened during the walk turns read where it is by itself.
   const placed = useMemo(() => placeNotes(notes.list, notes.read), [notes.list, notes.read]);
-  const { data, scene, ready, failed, progress, labels, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { ...placed, open: openNote } });
+  const { data, scene, ready, failed, progress, labels, spoken, selected, reach, hand, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, onCall, notes: { ...placed, open: openNote } });
   const held = hand && handView(hand);
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
-  const echoed = labels.find((l) => l.kind === "echo");
+  const echoed = spoken.find((l) => l.kind === "echo");
   const echoId = echoed?.id;
   const echoWord = echoed?.text;
   // Once per echo: turning sound on while one shows does not say it again.
@@ -692,40 +692,9 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           what they hold (#358); who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, labels, door.state, held, shook, called, company, heard, landed, toyNews, raised && raised.r, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
+        {spokenStatus(reach, spoken, door.state, held, shook, called, company, heard, landed, toyNews, raised && raised.r, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
       </div>
-      <div className="gw-labels" aria-hidden="true">
-        {labels.map((l) =>
-          l.kind === "petal" ? (
-            // A form falling from a shaken plant (#357), or a leaf for a word with none.
-            <span key={l.id} className="gw-petal" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
-              {l.text || <LeafMark />}
-            </span>
-          ) : l.kind === "echo" ? (
-            // The well's echo (#335 S6): the day it was met, then the word, both in the course language (#650).
-            <span key={l.id} className="gw-echo" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
-              {l.gloss}: <i>{l.text}</i>.
-            </span>
-          ) : l.kind === "say" || l.kind === "line" ? (
-            // A line with a gloss (a joke's) is in the course language; the door's lines are English.
-            <span key={l.id} className="gw-say" lang={l.kind === "line" && l.gloss === undefined ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
-              {l.text}
-            </span>
-          ) : l.kind === "tree" || l.kind === "fruit" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
-            <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
-              <i>{l.text}</i>
-              {/* A visitor found hiding (#379) says where it was in place of its meaning. */}
-              <small lang="en"> · {l.where ? <Where where={l.where} lang={lang} /> : l.gloss}</small>
-            </span>
-          ) : (
-            <span key={l.id} className={selected?.id === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" || l.kind === "scenery" ? l.near : 0.35 + l.near * 0.65 }}>
-              {l.known && <LeafMark />}
-              {l.gender && <StakeMark gender={l.gender} />}
-              {l.text}
-            </span>
-          ),
-        )}
-      </div>
+      <WalkLabels store={labels} selectedId={selected?.id} lang={lang} />
 
       <div className="gw-top">
         <button className="gw-btn" onClick={onExit} aria-label="Back">
@@ -861,6 +830,45 @@ export function GardenWalk({
  * A gardener's note (#654), on its scrap of paper: only the note is in the course's language. A word whose lemma the
  * learner knows is clear; the rest are faint but still readable, never hidden, and there is nothing to look up.
  */
+/** The names and tags over the scene. They move on every walking frame, so they render on their own, not with all of GardenWalk (#713). */
+function WalkLabels({ store, selectedId, lang }: { store: LabelStore; selectedId: string | undefined; lang: string }) {
+  const shown = useSyncExternalStore(store.subscribe, store.get);
+  return (
+    <div className="gw-labels" aria-hidden="true">
+      {shown.map((l) =>
+        l.kind === "petal" ? (
+          // A form falling from a shaken plant (#357), or a leaf for a word with none.
+          <span key={l.id} className="gw-petal" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
+            {l.text || <LeafMark />}
+          </span>
+        ) : l.kind === "echo" ? (
+          // The well's echo (#335 S6): the day it was met, then the word, both in the course language (#650).
+          <span key={l.id} className="gw-echo" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+            {l.gloss}: <i>{l.text}</i>.
+          </span>
+        ) : l.kind === "say" || l.kind === "line" ? (
+          // A line with a gloss (a joke's) is in the course language; the door's lines are English.
+          <span key={l.id} className="gw-say" lang={l.kind === "line" && l.gloss === undefined ? "en" : lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%` }}>
+            {l.text}
+          </span>
+        ) : l.kind === "tree" || l.kind === "fruit" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
+          <span key={l.id} className="gw-tag" lang={lang} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.near }}>
+            <i>{l.text}</i>
+            {/* A visitor found hiding (#379) says where it was in place of its meaning. */}
+            <small lang="en"> · {l.where ? <Where where={l.where} lang={lang} /> : l.gloss}</small>
+          </span>
+        ) : (
+          <span key={l.id} className={selectedId === l.id ? "gw-label on" : "gw-label"} style={{ left: `${l.x * 100}%`, top: `${l.y * 100}%`, opacity: l.kind === "visitor" || l.kind === "scenery" ? l.near : 0.35 + l.near * 0.65 }}>
+            {l.known && <LeafMark />}
+            {l.gender && <StakeMark gender={l.gender} />}
+            {l.text}
+          </span>
+        ),
+      )}
+    </div>
+  );
+}
+
 function NoteCard({ note, lang, isKnown, onClose }: { note: Note; lang: string; isKnown: (lemma: string) => boolean; onClose: () => void }) {
   const card = useRef<HTMLDivElement>(null);
   // Focus moves to the card as it opens, so a screen reader reads it and Escape closes it.
