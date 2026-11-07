@@ -319,4 +319,19 @@ export class Session {
   skip(): void {
     this.history.pop();
   }
+
+  /**
+   * Sound went off, or "Can't listen now": no more listening cards this chunk,
+   * retries included. Undo's saved states lose them too, so Undo cannot bring
+   * one back. The card on screen is the caller's: it passes it over with `skip`.
+   */
+  dropListening(): void {
+    const keep = (t: Task) => t.kind === "intro" || t.skill !== "listen";
+    this.queue = this.queue.filter(keep);
+    this.followUps = this.followUps.filter((f) => keep(f.task));
+    for (const s of this.history) {
+      s.queue = s.queue.filter(keep);
+      s.followUps = s.followUps.filter((f) => keep(f.task));
+    }
+  }
 }

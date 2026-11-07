@@ -54,7 +54,32 @@ function pick(tag: string): SpeechSynthesisVoice | undefined {
 
 /** Right now: can there be listening exercises? (Sound on, and a voice, assumed while voices still load.) */
 export function mayListen(tag: string): boolean {
-  return soundOn && typeof speechSynthesis !== "undefined" && (voices.length === 0 || !!pick(tag));
+  return listenOn(Date.now()) && typeof speechSynthesis !== "undefined" && (voices.length === 0 || !!pick(tag));
+}
+
+// "Can't listen now" pauses listening for an hour (#716): long enough for a bus
+// ride, short enough that listening comes back the same day. Per device, like sound.
+const LISTEN_PAUSE_KEY = "listen-paused-until";
+const LISTEN_PAUSE_MS = 3_600_000;
+
+export function pauseListening(now: number): void {
+  try {
+    localStorage.setItem(LISTEN_PAUSE_KEY, String(now + LISTEN_PAUSE_MS));
+  } catch {
+    // Not saved: the chunk under way still drops its listening cards.
+  }
+}
+
+/** Sound on, and listening not paused: a session planned at `now` may have listening cards. */
+export function listenOn(now: number): boolean {
+  if (!soundOn) return false;
+  try {
+    // Number(null) is 0: never paused.
+    return Number(localStorage.getItem(LISTEN_PAUSE_KEY)) <= now;
+  } catch {
+    // No storage: no pause was saved.
+    return true;
+  }
 }
 
 export async function hasVoice(tag: string): Promise<boolean> {

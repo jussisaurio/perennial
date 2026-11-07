@@ -280,3 +280,37 @@ describe("Session undo", () => {
     expect(s.undo()).toBe(false);
   });
 });
+
+describe("Session without listening (#716)", () => {
+  const queue: Task[] = ["r1", "l1", "r2", "l2", "r3"].map((id) => ({ kind: "review" as const, wordId: id, skill: (id.startsWith("l") ? "listen" : "read") as Skill }));
+  /** Serves and answers what is left, as word ids, retries marked with *. */
+  const rest = (s: Session) => {
+    const out: string[] = [];
+    let t: Task | null;
+    while ((t = s.next(0))) {
+      out.push(`${t.wordId}${t.kind === "review" && t.retry ? "*" : ""}`);
+      s.report(t, { grade: 3 });
+    }
+    return out;
+  };
+  /** r1 and r2 remembered, l1 forgotten (its retry is promised). */
+  const served = () => {
+    const s = new Session({ queue }, 600_000);
+    for (const grade of [3, 1, 3] as const) s.report(s.next(0)!, { grade });
+    return s;
+  };
+
+  test("sound off drops every listening card still to come, retries too", () => {
+    const s = served();
+    s.dropListening();
+    expect(rest(s)).toEqual(["r3"]);
+  });
+
+  test("undo after sound off does not bring listening cards back", () => {
+    const s = served();
+    s.dropListening();
+    expect(s.next(0)!.wordId).toBe("r3");
+    expect(s.undo()).toBe(true);
+    expect(rest(s)).toEqual(["r2", "r3"]);
+  });
+});
