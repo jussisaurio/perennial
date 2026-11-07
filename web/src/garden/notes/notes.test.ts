@@ -38,11 +38,16 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
       for (const g of gardener) expect(notes.filter((n) => n.text.toLowerCase().includes(g)).length).toBeGreaterThanOrEqual(2);
     });
 
-    test("each note unlocks when the learner knows 55-75% of its words", () => {
+    // At least 55% known, so no note is unreadable. The 75% ceiling is only for
+    // the early and stile notes, where working words out is the point. Late
+    // notes unlock after most common words, so a ceiling there forced rare
+    // filler words into what should be the plainest notes.
+    test("each note unlocks when the learner knows 55% of its words, and an early or stile note at most 75%", () => {
       for (const n of notes) {
         const ink = inkAt(n, n.unlockAt);
         const share = ink.filter((i) => !i.faint).length / ink.length;
-        expect({ id: n.id, ok: share >= 0.55 && share <= 0.75 }).toEqual({ id: n.id, ok: true });
+        const ceiling = n.beat === "early" || n.beat === "stile" ? 0.75 : 1;
+        expect({ id: n.id, ok: share >= 0.55 && share <= ceiling }).toEqual({ id: n.id, ok: true });
       }
     });
 
