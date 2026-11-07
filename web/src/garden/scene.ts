@@ -195,6 +195,8 @@ const ECHO = { delay: 1.2, show: 5 };
 const PERK_NEAR = 0.9;
 /** Near enough to the bench (m, from its middle) to sit on it (#334). */
 const BENCH_REACH = 1.6;
+/** How long (s) "Shake the plant" stays after the plant ahead drops out of reach: crossing the path between two beds, it would blink out for a moment (#835). */
+const SHAKE_LINGER_S = 0.5;
 /** Sitting on the bench (#334): the eye's height, where you sit along the seat (near its left end: the rest is for company, #362), and how fast you sit down (per second). */
 const SEAT = { eye: 0.78, dx: -0.5, speed: 2.5 };
 /** No tree outside the back fence within this far (m) either side of the stile (#714): the old path is seen from its top board. */
@@ -273,6 +275,8 @@ export class GardenScene {
   private reach: Reach | null = null;
   /** The plant the action button shakes, when it shakes one (#357). */
   private shakeTarget: PlacedPlant | null = null;
+  /** When (this.elapsed) a plant was last in reach to shake. */
+  private shakeSeen = 0;
   /** What the action button acts on when it does carry's (#358; putting down has none: it goes in front of you). */
   private carryTarget: CarryTarget | null = null;
   /** The hiding visitor the action button finds, when it finds one (#379). */
@@ -2146,6 +2150,8 @@ export class GardenScene {
     const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? raise ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
     const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw);
     const a: Reach | null = plant ? "shake" : before;
+    if (plant) this.shakeSeen = this.elapsed;
+    else if (a === null && this.reach === "shake" && this.elapsed - this.shakeSeen < SHAKE_LINGER_S) return;
     const carried = carry && a === carry.a ? carry.target : null;
     const toyTarget = a === "blow" && toy ? toy.target : null;
     const lantern = lampAct && a === lampAct ? lamp : -1;

@@ -430,7 +430,7 @@ test("action.none: on open ground away from everything no action button shows; w
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
-  // A step in front of the bench (world.ts benchAt), facing it.
+  // A step in front of the bench (world.ts benchAt), your back to it: W walks you away from it.
   await page.evaluate(() => {
     const s = (window as unknown as { __garden: { layout: { pond: { x: number; z: number; r: number } } } }).__garden;
     const p = s.layout.pond;

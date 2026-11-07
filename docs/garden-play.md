@@ -14,7 +14,7 @@ Each claim has one e2e test whose title starts with its id, and the test plays i
 
 ## The action button
 
-The action button sits low on the screen. It shows only when it has something to act on: a plant just ahead of you, the bench, the door, the key, a pebble, a dandelion clock, a note, a lantern. Its picture changes with what it does, and a screen reader hears its name ("Shake the plant", "Sit on the bench"). Walk away from everything and the button goes away: on open ground there is no button. When you see it, there is something near you to use.
+The action button sits low on the screen. It shows only when it has something to act on: a plant just ahead of you, the bench, the door, the key, a pebble, a dandelion clock, a note, a lantern. Its picture changes with what it does, and a screen reader hears its name ("Shake the plant", "Sit on the bench"). Walk away from everything and the button goes away: on open ground there is no button. When you see it, there is something near you to use. When you walk past beds, "Shake the plant" stays for half a second after the plant goes out of reach, so the button does not blink as you cross the small path between two beds.
 
 While you hold a pebble, the button stays everywhere: it throws the pebble, so there is always something to do with it.
 
