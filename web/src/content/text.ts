@@ -14,7 +14,7 @@ export function tokenize(text: string, tag: string): Token[] {
 
 export const formKey = (s: string) => s.normalize("NFC").toLocaleLowerCase().trim();
 
-/** The words of `text` as form keys, in order: what a sentence asks the learner to know. */
+/** The words of `text` as form keys, in order: what a sentence asks the learner to know. @internal Only scripts/deck uses it, to build the deck. */
 export const wordKeys = (text: string, tag: string) =>
   tokenize(text, tag)
     .filter((t) => t.word)
