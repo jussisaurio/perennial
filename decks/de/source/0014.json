@@ -1,0 +1,264 @@
+[
+  {
+    "lemma": "Januar",
+    "gloss": "January",
+    "pos": "noun",
+    "forms": [
+      "Januar"
+    ],
+    "notes": "im Januar = in January. In Austria: Jänner.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "In den Geschäften ist im Januar vieles billiger.",
+        "translation": "In January lots of things in the shops are cheaper.",
+        "cloze": "Januar"
+      },
+      {
+        "text": "Im Januar will plötzlich jeder gesund essen.",
+        "translation": "In January everyone suddenly wants to eat healthily.",
+        "cloze": "Januar"
+      },
+      {
+        "text": "Seit Januar arbeite ich von zu Hause.",
+        "translation": "I've been working from home since January.",
+        "cloze": "Januar"
+      }
+    ]
+  },
+  {
+    "lemma": "Februar",
+    "gloss": "February",
+    "pos": "noun",
+    "forms": [
+      "Februar"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Wie viele Tage hat der Februar dieses Jahr?",
+        "translation": "How many days does February have this year?",
+        "cloze": "Februar"
+      },
+      {
+        "text": "Ich habe im Februar eine neue Stelle angefangen.",
+        "translation": "I started a new job in February.",
+        "cloze": "Februar"
+      },
+      {
+        "text": "Bis Februar liegt hier oft Schnee.",
+        "translation": "There is often snow here until February.",
+        "cloze": "Februar"
+      }
+    ]
+  },
+  {
+    "lemma": "März",
+    "gloss": "March",
+    "pos": "noun",
+    "forms": [
+      "März"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Ende März stellen wir die Uhren um.",
+        "translation": "At the end of March we change the clocks.",
+        "cloze": "März"
+      },
+      {
+        "text": "Im März wird es langsam wärmer.",
+        "translation": "In March it slowly gets warmer.",
+        "cloze": "März"
+      },
+      {
+        "text": "Mein Bruder hat im März den Führerschein gemacht.",
+        "translation": "My brother got his driving licence in March.",
+        "cloze": "März"
+      }
+    ]
+  },
+  {
+    "lemma": "Juni",
+    "gloss": "June",
+    "pos": "noun",
+    "forms": [
+      "Juni"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Im Juni sind unsere Rosen am schönsten.",
+        "translation": "Our roses look their best in June.",
+        "cloze": "Juni"
+      },
+      {
+        "text": "Ab Juni kann man im Meer baden.",
+        "translation": "From June on, you can swim in the sea.",
+        "cloze": "Juni"
+      },
+      {
+        "text": "Im Juni sitzen wir abends lange auf dem Balkon.",
+        "translation": "In June we sit on the balcony until late in the evening.",
+        "cloze": "Juni"
+      }
+    ]
+  },
+  {
+    "lemma": "Juli",
+    "gloss": "July",
+    "pos": "noun",
+    "forms": [
+      "Juli"
+    ],
+    "notes": "People sometimes say Julei when speaking, so it is not heard as Juni.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Im Juli ist es hier oft über dreißig Grad.",
+        "translation": "In July it's often over thirty degrees here.",
+        "cloze": "Juli"
+      },
+      {
+        "text": "Im Juli gibt es in unserem Dorf ein großes Fest.",
+        "translation": "In July there's a big party in our village.",
+        "cloze": "Juli"
+      },
+      {
+        "text": "Für Juli habe ich schon einen Flug gebucht.",
+        "translation": "I've already booked a flight for July.",
+        "cloze": "Juli"
+      }
+    ]
+  },
+  {
+    "lemma": "August",
+    "gloss": "August",
+    "pos": "noun",
+    "forms": [
+      "August"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Viele Leute nehmen im August Urlaub.",
+        "translation": "Lots of people take time off in August.",
+        "cloze": "August"
+      },
+      {
+        "text": "Unsere Tochter kommt im August in die Schule.",
+        "translation": "Our daughter starts school in August.",
+        "cloze": "August"
+      },
+      {
+        "text": "Mitte August ist das Büro fast leer.",
+        "translation": "In mid-August the office is almost empty.",
+        "cloze": "August"
+      }
+    ]
+  },
+  {
+    "lemma": "September",
+    "gloss": "September",
+    "pos": "noun",
+    "forms": [
+      "September"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Im September suchen wir im Wald Pilze.",
+        "translation": "In September we look for mushrooms in the woods.",
+        "cloze": "September"
+      },
+      {
+        "text": "Ich habe erst im September wieder Zeit.",
+        "translation": "I won't have time again until September.",
+        "cloze": "September"
+      },
+      {
+        "text": "Unser zweites Kind kommt im September.",
+        "translation": "Our second baby is due in September.",
+        "cloze": "September"
+      }
+    ]
+  },
+  {
+    "lemma": "Oktober",
+    "gloss": "October",
+    "pos": "noun",
+    "forms": [
+      "Oktober"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Im Oktober machen wir die Heizung an.",
+        "translation": "In October we turn the heating on.",
+        "cloze": "Oktober"
+      },
+      {
+        "text": "Die warmen Jacken hole ich im Oktober aus dem Keller.",
+        "translation": "I get the warm jackets out of the cellar in October.",
+        "cloze": "Oktober"
+      },
+      {
+        "text": "Das Treffen wurde auf Oktober verschoben.",
+        "translation": "The meeting was moved to October.",
+        "cloze": "Oktober"
+      }
+    ]
+  },
+  {
+    "lemma": "November",
+    "gloss": "November",
+    "pos": "noun",
+    "forms": [
+      "November"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Der Himmel ist im November oft grau.",
+        "translation": "The sky is often grey in November.",
+        "cloze": "November"
+      },
+      {
+        "text": "Im November bleibe ich gern zu Hause.",
+        "translation": "In November I like to stay at home.",
+        "cloze": "November"
+      },
+      {
+        "text": "Im November bekommen wir eine neue Küche.",
+        "translation": "We're getting a new kitchen in November.",
+        "cloze": "November"
+      }
+    ]
+  },
+  {
+    "lemma": "Dezember",
+    "gloss": "December",
+    "pos": "noun",
+    "forms": [
+      "Dezember"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Im Dezember backen wir jedes Wochenende.",
+        "translation": "In December we bake every weekend.",
+        "cloze": "Dezember"
+      },
+      {
+        "text": "Der Dezember vergeht immer so schnell.",
+        "translation": "December always goes by so fast.",
+        "cloze": "Dezember"
+      },
+      {
+        "text": "Im Dezember schreibe ich vielen Leuten Karten.",
+        "translation": "In December I write cards to lots of people.",
+        "cloze": "Dezember"
+      }
+    ]
+  }
+]

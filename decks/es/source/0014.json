@@ -1,0 +1,186 @@
+[
+  {
+    "lemma": "enero",
+    "gloss": "January",
+    "pos": "noun",
+    "forms": [
+      "enero"
+    ],
+    "notes": "Months are written with a small letter in Spanish: en enero.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Enero es el primer mes del año.",
+        "translation": "January is the first month of the year.",
+        "cloze": "Enero"
+      },
+      {
+        "text": "El seis de enero los niños reciben regalos.",
+        "translation": "On the sixth of January, children get presents.",
+        "cloze": "enero"
+      },
+      {
+        "text": "Cada año, en enero, me propongo hacer más deporte.",
+        "translation": "Every year in January, I decide to do more sport.",
+        "cloze": "enero"
+      }
+    ]
+  },
+  {
+    "lemma": "febrero",
+    "gloss": "February",
+    "pos": "noun",
+    "forms": [
+      "febrero"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Nos conocimos en febrero, hace dos años.",
+        "translation": "We met in February, two years ago.",
+        "cloze": "febrero"
+      },
+      {
+        "text": "Nació el veintinueve de febrero, así que casi nunca tiene cumpleaños.",
+        "translation": "She was born on the twenty-ninth of February, so she hardly ever has a birthday.",
+        "cloze": "febrero"
+      },
+      {
+        "text": "Mi contrato termina en febrero.",
+        "translation": "My contract ends in February.",
+        "cloze": "febrero"
+      }
+    ]
+  },
+  {
+    "lemma": "marzo",
+    "gloss": "March",
+    "pos": "noun",
+    "forms": [
+      "marzo"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Desde marzo comemos en la terraza.",
+        "translation": "We've been eating on the terrace since March.",
+        "cloze": "marzo"
+      },
+      {
+        "text": "En marzo se cambia la hora y perdemos una hora.",
+        "translation": "In March the clocks change and we lose an hour.",
+        "cloze": "marzo"
+      },
+      {
+        "text": "Mi madre viene a vernos en marzo.",
+        "translation": "My mother is coming to see us in March.",
+        "cloze": "marzo"
+      }
+    ]
+  },
+  {
+    "lemma": "agosto",
+    "gloss": "August",
+    "pos": "noun",
+    "forms": [
+      "agosto"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Cada agosto volvemos al pueblo de mis padres.",
+        "translation": "Every August we go back to my parents' village.",
+        "cloze": "agosto"
+      },
+      {
+        "text": "Este piso es un horno en agosto.",
+        "translation": "This flat is an oven in August.",
+        "cloze": "agosto"
+      },
+      {
+        "text": "Las noches de agosto son perfectas para ver estrellas.",
+        "translation": "August nights are perfect for watching the stars.",
+        "cloze": "agosto"
+      }
+    ]
+  },
+  {
+    "lemma": "octubre",
+    "gloss": "October",
+    "pos": "noun",
+    "forms": [
+      "octubre"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Estuvimos en Roma en octubre y hizo muy buen tiempo.",
+        "translation": "We were in Rome in October and the weather was lovely.",
+        "cloze": "octubre"
+      },
+      {
+        "text": "Saco la ropa de invierno en octubre.",
+        "translation": "I get my winter clothes out in October.",
+        "cloze": "octubre"
+      },
+      {
+        "text": "Empecé este trabajo en octubre.",
+        "translation": "I started this job in October.",
+        "cloze": "octubre"
+      }
+    ]
+  },
+  {
+    "lemma": "noviembre",
+    "gloss": "November",
+    "pos": "noun",
+    "forms": [
+      "noviembre"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Siempre me pongo enfermo en noviembre.",
+        "translation": "I always get ill in November.",
+        "cloze": "noviembre"
+      },
+      {
+        "text": "En noviembre llevamos flores al cementerio.",
+        "translation": "In November we take flowers to the cemetery.",
+        "cloze": "noviembre"
+      },
+      {
+        "text": "Compro los regalos de Navidad en noviembre.",
+        "translation": "I buy my Christmas presents in November.",
+        "cloze": "noviembre"
+      }
+    ]
+  },
+  {
+    "lemma": "diciembre",
+    "gloss": "December",
+    "pos": "noun",
+    "forms": [
+      "diciembre"
+    ],
+    "notes": "Nochevieja = 31 December, New Year's Eve.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Comemos doce uvas el último día de diciembre.",
+        "translation": "We eat twelve grapes on the last day of December.",
+        "cloze": "diciembre"
+      },
+      {
+        "text": "Diciembre siempre pasa muy rápido.",
+        "translation": "December always goes by very fast.",
+        "cloze": "Diciembre"
+      },
+      {
+        "text": "En diciembre nos dan una paga extra.",
+        "translation": "In December we get an extra month's pay.",
+        "cloze": "diciembre"
+      }
+    ]
+  }
+]

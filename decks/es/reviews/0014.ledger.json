@@ -1,0 +1,41 @@
+{
+  "file": "source/0014.json",
+  "reviewer": "claude-agent:es-proofreader-0014-2026-11-07",
+  "entries": {
+    "enero|noun|": {
+      "hash": "b1cd21c6c1114e95",
+      "verdict": "ok",
+      "at": "2026-11-07T04:53:08.320Z"
+    },
+    "febrero|noun|": {
+      "hash": "06fd6abf1a8b938b",
+      "verdict": "ok",
+      "at": "2026-11-07T04:54:20.954Z"
+    },
+    "marzo|noun|": {
+      "hash": "8b600eeeacc67045",
+      "verdict": "ok",
+      "at": "2026-11-07T04:53:17.398Z"
+    },
+    "agosto|noun|": {
+      "hash": "cbdea301cb88aa5a",
+      "verdict": "ok",
+      "at": "2026-11-07T04:54:22.135Z"
+    },
+    "octubre|noun|": {
+      "hash": "c06790bbd34a2dc9",
+      "verdict": "ok",
+      "at": "2026-11-07T04:54:23.162Z"
+    },
+    "noviembre|noun|": {
+      "hash": "f359735dcad04cbd",
+      "verdict": "ok",
+      "at": "2026-11-07T04:54:23.995Z"
+    },
+    "diciembre|noun|": {
+      "hash": "5412998808a27597",
+      "verdict": "ok",
+      "at": "2026-11-07T04:53:36.537Z"
+    }
+  }
+}

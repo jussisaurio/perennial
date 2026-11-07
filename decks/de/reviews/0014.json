@@ -1,0 +1,9 @@
+{
+  "file": "source/0014.json",
+  "sha256": "b10acc40515190b54e43a5951c36fde8957a58069b1e9c83089f19115e1e2958",
+  "author": "claude-agent:months-author-2026-11-07",
+  "reviewer": "claude-agent:de-proofreader-0014-2026-11-07",
+  "reviewedAt": "2026-11-07",
+  "verdict": "approved",
+  "notes": "10 German month nouns (#430) proofread one by one; 8 fixed (echoes of older sentences, frames shared between months, Juli note, Oktober translation), then all ok."
+}
