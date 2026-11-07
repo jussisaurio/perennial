@@ -1,9 +1,9 @@
 {
   "file": "source/0022.json",
-  "sha256": "e08c09e6cc80c2ddf7d55e51b750a0fb38420dcbe8d84069aebf9d5d786b6710",
-  "author": "claude-agent:es-author-0022-2026-11-06",
-  "reviewer": "claude-agent:es-proofreader-0022-2026-11-06",
+  "sha256": "cba4c339c4e477ff5c6c690d45805eccf9c34cc28628d231e9f068d6938361be",
+  "author": "claude-agent:es-author-0021-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0021-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "100 entries proofread; 19 fixed (mostly near-copies/same frames of older sentences where a learner would answer the older synonym, plus 5 gloss narrowings, 1 note, 1 dated claim), all re-checked ok."
+  "notes": "100/100 ok after two rounds: 58 fixes, mostly near-copies of older frames and synonyms filling the cloze (despacio, tontería, opción, época), plus glosses, calques and rare words"
 }

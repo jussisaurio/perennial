@@ -1,506 +1,506 @@
 {
   "file": "source/0020.json",
-  "reviewer": "claude-agent:es-proofreader-0020-2026-11-06",
+  "reviewer": "claude-agent:es-proofreader-0019-2026-11-06",
   "entries": {
-    "espía|noun|": {
-      "hash": "4ba36c8e42a196a6",
+    "nuevamente|adv|": {
+      "hash": "b9e015cd334fff96",
       "verdict": "ok",
-      "at": "2026-11-06T07:31:17.061Z"
+      "at": "2026-11-06T08:29:58.290Z"
     },
-    "empleado|noun|": {
-      "hash": "02d70aa1356cbfcf",
+    "federal|adj|": {
+      "hash": "9af1894a7ccc2643",
       "verdict": "ok",
-      "at": "2026-11-06T07:31:37.993Z"
+      "at": "2026-11-06T07:34:51.973Z"
     },
-    "crema|noun|": {
-      "hash": "f2777c0cb785107c",
+    "terapia|noun|": {
+      "hash": "0532c5a04b9e691c",
       "verdict": "ok",
-      "at": "2026-11-06T07:31:44.787Z"
+      "at": "2026-11-06T07:34:56.624Z"
     },
-    "contestar|verb|": {
-      "hash": "3cf9580552319adc",
+    "lágrima|noun|": {
+      "hash": "e3eed622f379a77e",
       "verdict": "ok",
-      "at": "2026-11-06T07:31:52.162Z"
+      "at": "2026-11-06T07:35:01.020Z"
     },
-    "mandar|verb|": {
-      "hash": "63e9c578e40a0865",
+    "terreno|noun|": {
+      "hash": "e217860f8be53d8c",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:10.926Z"
+      "at": "2026-11-06T07:35:05.852Z"
     },
-    "prisionero|noun|": {
-      "hash": "d63b6f20ea567500",
+    "autoridad|noun|": {
+      "hash": "941aa86e8315856e",
       "verdict": "ok",
-      "at": "2026-11-06T07:32:20.322Z"
+      "at": "2026-11-06T07:35:13.604Z"
     },
-    "flota|noun|": {
-      "hash": "b137524314dad84e",
+    "roca|noun|": {
+      "hash": "54fe559fcda574ca",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:14.285Z"
+      "at": "2026-11-06T07:35:18.336Z"
     },
-    "cometer|verb|": {
-      "hash": "f53ab43851d91818",
+    "superficie|noun|": {
+      "hash": "5868bfd0c6d03dba",
       "verdict": "ok",
-      "at": "2026-11-06T07:32:32.293Z"
+      "at": "2026-11-06T07:35:22.642Z"
     },
-    "igualmente|adv|": {
-      "hash": "d476dc020c9faad1",
+    "hierba|noun|": {
+      "hash": "fad8bb4b9c011ef6",
       "verdict": "ok",
-      "at": "2026-11-06T07:32:43.259Z"
+      "at": "2026-11-06T07:35:27.392Z"
     },
-    "ayudante|noun|": {
-      "hash": "3fab82c6c5f79281",
+    "crecer|verb|": {
+      "hash": "ad90a29f42b0f56b",
       "verdict": "ok",
-      "at": "2026-11-06T07:32:50.211Z"
+      "at": "2026-11-06T07:35:36.018Z"
     },
-    "cultura|noun|": {
-      "hash": "361b901a2e13b8d0",
+    "mental|adj|": {
+      "hash": "0deef38f57f2041f",
       "verdict": "ok",
-      "at": "2026-11-06T07:32:57.828Z"
+      "at": "2026-11-06T07:35:42.376Z"
     },
-    "revolución|noun|": {
-      "hash": "823cc88b8c616d97",
+    "extranjero|adj|": {
+      "hash": "69b000a3af407fd5",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:03.931Z"
+      "at": "2026-11-06T07:35:49.799Z"
     },
-    "hombro|noun|": {
-      "hash": "9e37e96eef4fb70b",
+    "lento|adj|": {
+      "hash": "7b739ec4db5228c9",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:11.442Z"
+      "at": "2026-11-06T07:35:56.391Z"
     },
-    "bota|noun|": {
-      "hash": "540776b12d610aef",
+    "dirigir|verb|": {
+      "hash": "5efa179a1b4240ad",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:22.352Z"
+      "at": "2026-11-06T07:36:04.323Z"
     },
-    "adorar|verb|": {
-      "hash": "9785f9d268512aa4",
+    "chino|noun|": {
+      "hash": "ce906193648aa911",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:31.162Z"
+      "at": "2026-11-06T08:30:02.856Z"
     },
-    "saludo|noun|": {
-      "hash": "6856ddfd9a5d3e18",
+    "meta|noun|": {
+      "hash": "c086c487338b98b4",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:38.902Z"
+      "at": "2026-11-06T07:36:25.248Z"
     },
-    "adulto|noun|": {
-      "hash": "c119257df9445969",
+    "despedida|noun|": {
+      "hash": "3ac505a726aaeda4",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:46.249Z"
+      "at": "2026-11-06T07:36:32.082Z"
     },
-    "serpiente|noun|": {
-      "hash": "250116221344a702",
+    "pasta|noun|": {
+      "hash": "29606fee637c909b",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:52.541Z"
+      "at": "2026-11-06T08:30:07.285Z"
     },
-    "romántico|adj|": {
-      "hash": "f9dc4d2e30a625cc",
+    "cristal|noun|": {
+      "hash": "4b49019b620e038f",
       "verdict": "ok",
-      "at": "2026-11-06T07:33:58.687Z"
+      "at": "2026-11-06T07:37:24.261Z"
     },
-    "posiblemente|adv|": {
-      "hash": "28669ceaf3c50d74",
+    "literalmente|adv|": {
+      "hash": "d95736525fa4d295",
       "verdict": "ok",
-      "at": "2026-11-06T07:34:07.943Z"
+      "at": "2026-11-06T07:37:36.020Z"
     },
-    "enfrente|adv|": {
-      "hash": "5283c1a0372552ac",
+    "apreciar|verb|": {
+      "hash": "a6701b29fbfbcc7d",
       "verdict": "ok",
-      "at": "2026-11-06T07:34:26.325Z"
+      "at": "2026-11-06T08:30:11.862Z"
     },
-    "capacidad|noun|": {
-      "hash": "7a7c0f66fa8c55de",
+    "fotografía|noun|": {
+      "hash": "a023c0b93bd95d1f",
       "verdict": "ok",
-      "at": "2026-11-06T07:34:33.279Z"
+      "at": "2026-11-06T08:30:15.973Z"
     },
-    "aliento|noun|": {
-      "hash": "678f10b576fd82b6",
+    "patrón|noun|": {
+      "hash": "efa4535cf1877322",
       "verdict": "ok",
-      "at": "2026-11-06T07:34:40.911Z"
+      "at": "2026-11-06T08:30:20.292Z"
     },
-    "placa|noun|": {
-      "hash": "42699b5a75400620",
+    "desafío|noun|": {
+      "hash": "715401665aa7ec13",
       "verdict": "ok",
-      "at": "2026-11-06T07:34:51.773Z"
+      "at": "2026-11-06T07:39:18.442Z"
     },
-    "rata|noun|": {
-      "hash": "f3ab7836d4f33f17",
+    "asombroso|adj|": {
+      "hash": "216549bff6cc55cf",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:17.472Z"
+      "at": "2026-11-06T08:30:24.408Z"
     },
-    "cuadro|noun|": {
-      "hash": "cb51ef4f4352200a",
+    "clínica|noun|": {
+      "hash": "9a3d3da44d4fb4c2",
       "verdict": "ok",
-      "at": "2026-11-06T07:35:13.574Z"
+      "at": "2026-11-06T07:39:42.731Z"
     },
-    "afortunado|adj|": {
-      "hash": "418c950a85cc50f7",
+    "experto|noun|": {
+      "hash": "4801e1fbbeac3d34",
       "verdict": "ok",
-      "at": "2026-11-06T07:35:20.550Z"
+      "at": "2026-11-06T07:39:49.787Z"
     },
-    "puesto|noun|": {
-      "hash": "ad65ae022fadbfa5",
+    "medida|noun|": {
+      "hash": "707d88c3c2ccb86e",
       "verdict": "ok",
-      "at": "2026-11-06T07:35:31.159Z"
+      "at": "2026-11-06T07:39:56.897Z"
     },
-    "división|noun|": {
-      "hash": "8639c4bed68e899d",
+    "desagradable|adj|": {
+      "hash": "318e704b85f55fd8",
       "verdict": "ok",
-      "at": "2026-11-06T07:35:39.089Z"
+      "at": "2026-11-06T08:30:29.316Z"
     },
-    "bicicleta|noun|": {
-      "hash": "bb9bb1382204568b",
+    "custodia|noun|": {
+      "hash": "7a49097e8145c2ba",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:19.993Z"
+      "at": "2026-11-06T07:40:17.267Z"
     },
-    "pesado|adj|": {
-      "hash": "b7e991db3a88df3f",
+    "anuncio|noun|": {
+      "hash": "447c2772efc5329e",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:27.042Z"
+      "at": "2026-11-06T07:40:23.686Z"
     },
-    "sugerir|verb|": {
-      "hash": "4becb5c9a7d85f90",
+    "física|noun|": {
+      "hash": "67614454a0d0dd58",
       "verdict": "ok",
-      "at": "2026-11-06T07:36:19.315Z"
+      "at": "2026-11-06T08:30:34.274Z"
     },
-    "espacial|adj|": {
-      "hash": "5f9131e0bb51dfa9",
+    "fiebre|noun|": {
+      "hash": "72e4fa936099e06c",
       "verdict": "ok",
-      "at": "2026-11-06T07:36:27.747Z"
+      "at": "2026-11-06T07:40:38.052Z"
     },
-    "mejorar|verb|": {
-      "hash": "361a0690915a1e14",
+    "organización|noun|": {
+      "hash": "81f1558499f19db6",
       "verdict": "ok",
-      "at": "2026-11-06T07:36:36.177Z"
+      "at": "2026-11-06T07:40:44.171Z"
     },
-    "concurso|noun|": {
-      "hash": "92f3e9052b801f12",
+    "honestamente|adv|": {
+      "hash": "42d98bcecb8b8599",
       "verdict": "ok",
-      "at": "2026-11-06T07:36:46.871Z"
+      "at": "2026-11-06T07:40:52.461Z"
     },
-    "comisaría|noun|": {
-      "hash": "8058d3a4945f45da",
+    "deuda|noun|": {
+      "hash": "70e53bc4754abb7f",
       "verdict": "ok",
-      "at": "2026-11-06T07:36:56.975Z"
+      "at": "2026-11-06T08:30:38.079Z"
     },
-    "sincero|adj|": {
-      "hash": "6b3206b12f1a8d69",
+    "transporte|noun|": {
+      "hash": "a8d1bae4ce2a0d64",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:30.521Z"
+      "at": "2026-11-06T07:41:10.111Z"
     },
-    "céntimo|noun|": {
-      "hash": "07e99c6e6f70d14d",
+    "cocinar|verb|": {
+      "hash": "647bb68d2b3a9921",
       "verdict": "ok",
-      "at": "2026-11-06T07:37:24.690Z"
+      "at": "2026-11-06T07:41:18.611Z"
     },
-    "naturalmente|adv|": {
-      "hash": "499b65cbc2b8bbb0",
+    "delicioso|adj|": {
+      "hash": "023ad72937e6c34b",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:33.324Z"
+      "at": "2026-11-06T08:30:43.541Z"
     },
-    "recurso|noun|": {
-      "hash": "e912fd9fda662923",
+    "habilidad|noun|": {
+      "hash": "68cd68c55bb9cbeb",
       "verdict": "ok",
-      "at": "2026-11-06T07:37:57.206Z"
+      "at": "2026-11-06T07:41:33.982Z"
     },
-    "raza|noun|": {
-      "hash": "5f1bcb3baf011a4a",
+    "nadar|verb|": {
+      "hash": "99790ae0de387954",
       "verdict": "ok",
-      "at": "2026-11-06T07:38:22.836Z"
+      "at": "2026-11-06T07:41:41.805Z"
     },
-    "muestra|noun|": {
-      "hash": "8ade7a6823601d7f",
+    "admitir|verb|": {
+      "hash": "2c11b204ae8c74f1",
       "verdict": "ok",
-      "at": "2026-11-06T07:38:32.444Z"
+      "at": "2026-11-06T07:41:47.354Z"
     },
-    "imaginación|noun|": {
-      "hash": "110acb66888cdbe5",
+    "templo|noun|": {
+      "hash": "d34cca7b5497c2ec",
       "verdict": "ok",
-      "at": "2026-11-06T07:38:44.586Z"
+      "at": "2026-11-06T08:30:47.591Z"
     },
-    "ceremonia|noun|": {
-      "hash": "6842f98702168d3c",
+    "maravilla|noun|": {
+      "hash": "0d081546366c0984",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:39.851Z"
+      "at": "2026-11-06T07:42:05.358Z"
     },
-    "almacén|noun|": {
-      "hash": "871406689417f0df",
+    "piano|noun|": {
+      "hash": "c5803c9f66c458f1",
       "verdict": "ok",
-      "at": "2026-11-06T07:39:33.437Z"
+      "at": "2026-11-06T07:42:10.588Z"
     },
-    "sabor|noun|": {
-      "hash": "a81c81f2445bf36d",
+    "pantalla|noun|": {
+      "hash": "52c59054f4e2f1a3",
       "verdict": "ok",
-      "at": "2026-11-06T07:39:44.788Z"
+      "at": "2026-11-06T08:30:51.367Z"
     },
-    "unión|noun|": {
-      "hash": "9dda9b497a9df045",
+    "civil|adj|": {
+      "hash": "2931868228d66eea",
       "verdict": "ok",
-      "at": "2026-11-06T07:39:52.962Z"
+      "at": "2026-11-06T07:42:25.444Z"
     },
-    "reserva|noun|": {
-      "hash": "56a2e66faa3fa0d8",
+    "gasolina|noun|": {
+      "hash": "6e948fc61530ac65",
       "verdict": "ok",
-      "at": "2026-11-06T07:39:59.839Z"
+      "at": "2026-11-06T07:42:31.403Z"
     },
-    "encanto|noun|": {
-      "hash": "02c7a65c43209560",
+    "tripulación|noun|": {
+      "hash": "b5f6b7ccc7edbc17",
       "verdict": "ok",
-      "at": "2026-11-06T07:40:08.296Z"
+      "at": "2026-11-06T07:42:38.415Z"
     },
-    "calidad|noun|": {
-      "hash": "c28a473dabde97cb",
+    "arrestar|verb|": {
+      "hash": "bcb350cd11aba376",
       "verdict": "ok",
-      "at": "2026-11-06T07:40:14.672Z"
+      "at": "2026-11-06T08:30:56.491Z"
     },
-    "esconder|verb|": {
-      "hash": "2b625566061d569c",
+    "cruzar|verb|": {
+      "hash": "f6531422c81bb9c3",
       "verdict": "ok",
-      "at": "2026-11-06T07:40:23.223Z"
+      "at": "2026-11-06T07:43:02.222Z"
     },
-    "aceite|noun|": {
-      "hash": "9b7d9741ec5b0b6a",
+    "guía|noun|": {
+      "hash": "37a29d7c9c86f4b5",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:43.574Z"
+      "at": "2026-11-06T07:43:07.229Z"
     },
-    "punta|noun|": {
-      "hash": "32238fbc7a0996ee",
+    "conferencia|noun|": {
+      "hash": "6847f25c1fb18859",
       "verdict": "ok",
-      "at": "2026-11-06T07:40:46.382Z"
+      "at": "2026-11-06T08:31:01.044Z"
     },
-    "cinturón|noun|": {
-      "hash": "66dbf173f59e8fa7",
+    "galleta|noun|": {
+      "hash": "82c859f572cbd1ce",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:50.093Z"
+      "at": "2026-11-06T07:43:27.416Z"
     },
-    "chiste|noun|": {
-      "hash": "d36bbf55b98191ba",
+    "delito|noun|": {
+      "hash": "afba1b328f213a7d",
       "verdict": "ok",
-      "at": "2026-11-06T07:41:16.936Z"
+      "at": "2026-11-06T08:31:05.667Z"
     },
-    "consecuencia|noun|": {
-      "hash": "1876c95fb678b0da",
+    "atacar|verb|": {
+      "hash": "995ece7bf0a2565a",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:53.490Z"
+      "at": "2026-11-06T07:43:54.119Z"
     },
-    "sinceramente|adv|": {
-      "hash": "163c04edfde77bfb",
+    "objeto|noun|": {
+      "hash": "d3b04facc110273d",
       "verdict": "ok",
-      "at": "2026-11-06T08:30:57.400Z"
+      "at": "2026-11-06T08:21:46.330Z"
     },
-    "vaca|noun|": {
-      "hash": "dcee5407ee7de50b",
+    "museo|noun|": {
+      "hash": "fae6e753f34752f1",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:03.945Z"
+      "at": "2026-11-06T08:21:51.866Z"
     },
-    "investigar|verb|": {
-      "hash": "2141403c8fab77e2",
+    "rueda|noun|": {
+      "hash": "f64929e3fdda7e47",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:07.238Z"
+      "at": "2026-11-06T08:31:10.275Z"
     },
-    "apellido|noun|": {
-      "hash": "764e859d7b5fc17f",
+    "recientemente|adv|": {
+      "hash": "88bc79e079a1a24c",
       "verdict": "ok",
-      "at": "2026-11-06T07:42:25.433Z"
+      "at": "2026-11-06T08:22:09.792Z"
     },
-    "actual|adj|": {
-      "hash": "e3405fcba0acde28",
+    "sufrir|verb|": {
+      "hash": "40884bf6ca127a98",
       "verdict": "ok",
-      "at": "2026-11-06T07:42:32.596Z"
+      "at": "2026-11-06T08:22:15.527Z"
     },
-    "instante|noun|": {
-      "hash": "c854caf671b71505",
+    "disponible|adj|": {
+      "hash": "95420e562ec5f9df",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:10.856Z"
+      "at": "2026-11-06T08:31:14.654Z"
     },
-    "emoción|noun|": {
-      "hash": "3c241a95eefc7fcd",
+    "práctica|noun|": {
+      "hash": "24b74c720fa28fe0",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:13.360Z"
+      "at": "2026-11-06T08:22:29.118Z"
     },
-    "dormitorio|noun|": {
-      "hash": "8e4c264565dfde47",
+    "pastilla|noun|": {
+      "hash": "a1440c2b981ea64c",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:16.733Z"
+      "at": "2026-11-06T08:22:36.530Z"
     },
-    "pulso|noun|": {
-      "hash": "301b17a77414dc3b",
+    "cable|noun|": {
+      "hash": "ea7a876ce9070ab9",
       "verdict": "ok",
-      "at": "2026-11-06T07:43:38.988Z"
+      "at": "2026-11-06T08:31:19.255Z"
     },
-    "atrever|verb|": {
-      "hash": "0afc08a98c8eadab",
+    "nacimiento|noun|": {
+      "hash": "9492bf7d8fd91851",
       "verdict": "ok",
-      "at": "2026-11-06T07:43:48.246Z"
+      "at": "2026-11-06T08:31:22.995Z"
     },
-    "frase|noun|": {
-      "hash": "3c9daa77769f3900",
+    "consciente|adj|": {
+      "hash": "ccb2260691e6c984",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:20.672Z"
+      "at": "2026-11-06T08:22:58.014Z"
     },
-    "partida|noun|": {
-      "hash": "e3b97f771c64337d",
+    "alcance|noun|": {
+      "hash": "5ecc581de35b7da2",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:23.956Z"
+      "at": "2026-11-06T08:23:03.216Z"
     },
-    "despedir|verb|": {
-      "hash": "83eb567b99f4dd5a",
+    "evento|noun|": {
+      "hash": "e3c7cc826c471a8f",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:27.564Z"
+      "at": "2026-11-06T08:31:27.539Z"
     },
-    "moral|adj|": {
-      "hash": "ab6761e0e141ad3e",
+    "alquiler|noun|": {
+      "hash": "d17673a8277efe5a",
       "verdict": "ok",
-      "at": "2026-11-06T08:22:07.751Z"
+      "at": "2026-11-06T08:31:31.737Z"
     },
-    "asalto|noun|": {
-      "hash": "ded63b3220a6bfc5",
+    "junio|noun|": {
+      "hash": "1e9c7cb810d16806",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:31.488Z"
+      "at": "2026-11-06T08:23:32.249Z"
     },
-    "decente|adj|": {
-      "hash": "166895414fb259b3",
+    "incidente|noun|": {
+      "hash": "85c648186321dab9",
       "verdict": "ok",
-      "at": "2026-11-06T08:22:25.753Z"
+      "at": "2026-11-06T08:23:39.012Z"
     },
-    "asustar|verb|": {
-      "hash": "74cff48d2bc89e82",
+    "maleta|noun|": {
+      "hash": "c126628324059dd2",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:37.979Z"
+      "at": "2026-11-06T08:23:46.369Z"
     },
-    "combustible|noun|": {
-      "hash": "1176b5ae9336bcc9",
+    "kilo|noun|": {
+      "hash": "d6b2cbe68eb62e81",
       "verdict": "ok",
-      "at": "2026-11-06T08:22:45.605Z"
+      "at": "2026-11-06T08:23:51.523Z"
     },
-    "discusión|noun|": {
-      "hash": "51283b066abcf87a",
+    "español|noun|": {
+      "hash": "fb38b4f25dba2059",
       "verdict": "ok",
-      "at": "2026-11-06T08:22:53.290Z"
+      "at": "2026-11-06T08:31:36.264Z"
     },
-    "pata|noun|": {
-      "hash": "cbdc095fc254d603",
+    "renunciar|verb|": {
+      "hash": "a0c89b7a2e3d6c67",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:41.677Z"
+      "at": "2026-11-06T08:24:10.155Z"
     },
-    "requerir|verb|": {
-      "hash": "4c2a1845e605b70a",
+    "actuación|noun|": {
+      "hash": "3b17720b1d9fe348",
       "verdict": "ok",
-      "at": "2026-11-06T08:23:20.476Z"
+      "at": "2026-11-06T08:24:17.415Z"
     },
-    "comunicación|noun|": {
-      "hash": "4df42e2271cb2e57",
+    "refugio|noun|": {
+      "hash": "b5bb8e9cc978fec3",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:45.207Z"
+      "at": "2026-11-06T08:31:40.941Z"
     },
-    "sed|noun|": {
-      "hash": "91e2dc67345903c1",
+    "harto|adj|": {
+      "hash": "f18aeba13c4a3c27",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:48.533Z"
+      "at": "2026-11-06T08:31:45.348Z"
     },
-    "joya|noun|": {
-      "hash": "4ddf49f41bd76bf9",
+    "reacción|noun|": {
+      "hash": "534b7a7469e43cde",
       "verdict": "ok",
-      "at": "2026-11-06T08:23:54.229Z"
+      "at": "2026-11-06T08:31:49.831Z"
     },
-    "noble|adj|": {
-      "hash": "07e6f18dbaa78c07",
+    "paliza|noun|": {
+      "hash": "5e4e7e03fe036237",
       "verdict": "ok",
-      "at": "2026-11-06T08:24:02.708Z"
+      "at": "2026-11-06T08:24:52.034Z"
     },
-    "traidor|noun|": {
-      "hash": "a9fc975d6931c632",
+    "amanecer|noun|": {
+      "hash": "0e31678a96c62242",
       "verdict": "ok",
-      "at": "2026-11-06T08:24:09.728Z"
+      "at": "2026-11-06T08:24:59.419Z"
     },
-    "letra|noun|": {
-      "hash": "cfcdf365da758539",
+    "rumor|noun|": {
+      "hash": "9cb8196ec4ec7aad",
       "verdict": "ok",
-      "at": "2026-11-06T08:24:16.174Z"
+      "at": "2026-11-06T08:31:53.659Z"
     },
-    "vía|noun|": {
-      "hash": "d1f0fea059324b41",
+    "celoso|adj|": {
+      "hash": "cb82b492b2bc6f27",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:51.323Z"
+      "at": "2026-11-06T08:25:12.713Z"
     },
-    "sacerdote|noun|": {
-      "hash": "55a93cfa7f635276",
+    "utilizar|verb|": {
+      "hash": "b67557745b9c1df1",
       "verdict": "ok",
-      "at": "2026-11-06T08:24:38.725Z"
+      "at": "2026-11-06T08:25:20.235Z"
     },
-    "resistencia|noun|": {
-      "hash": "bb015dbebd0919d3",
+    "territorio|noun|": {
+      "hash": "670ae1369e876111",
       "verdict": "ok",
-      "at": "2026-11-06T08:24:50.984Z"
+      "at": "2026-11-06T08:31:58.707Z"
     },
-    "arroz|noun|": {
-      "hash": "4b867a5be0b51814",
+    "disfrutar|verb|": {
+      "hash": "67d89f384a539ed3",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:54.843Z"
+      "at": "2026-11-06T08:25:41.306Z"
     },
-    "desconocido|adj|": {
-      "hash": "04a2747a4dfcdea9",
+    "collar|noun|": {
+      "hash": "9c75c37543702e8f",
       "verdict": "ok",
-      "at": "2026-11-06T08:31:58.410Z"
+      "at": "2026-11-06T08:25:53.653Z"
     },
-    "mínimo|adj|": {
-      "hash": "16e326a2694f6d90",
+    "cercano|adj|": {
+      "hash": "5eb6c345daf504fc",
       "verdict": "ok",
-      "at": "2026-11-06T08:25:23.504Z"
+      "at": "2026-11-06T08:32:03.399Z"
     },
-    "bandera|noun|": {
-      "hash": "c299b7a631cdbaa3",
+    "montar|verb|": {
+      "hash": "b50b110238bb442e",
       "verdict": "ok",
-      "at": "2026-11-06T08:25:32.282Z"
+      "at": "2026-11-06T08:32:08.734Z"
     },
-    "plaza|noun|": {
-      "hash": "533559b0810e35b0",
+    "moto|noun|": {
+      "hash": "4321f58d1957c122",
       "verdict": "ok",
-      "at": "2026-11-06T08:32:04.197Z"
+      "at": "2026-11-06T08:32:12.558Z"
     },
-    "planear|verb|": {
-      "hash": "9662087289cc3462",
+    "instrucción|noun|": {
+      "hash": "451e9ca5cae467f5",
       "verdict": "ok",
-      "at": "2026-11-06T08:26:00.726Z"
+      "at": "2026-11-06T08:32:17.796Z"
     },
-    "imperio|noun|": {
-      "hash": "6e57b944a6729610",
+    "treinta|num|": {
+      "hash": "45b23218dc7ff766",
       "verdict": "ok",
-      "at": "2026-11-06T08:26:09.024Z"
+      "at": "2026-11-06T08:26:43.334Z"
     },
-    "cartera|noun|": {
-      "hash": "c07456c90d7e9bb9",
+    "emperador|noun|": {
+      "hash": "6e7f51b8df683a75",
       "verdict": "ok",
-      "at": "2026-11-06T08:26:17.295Z"
+      "at": "2026-11-06T08:26:52.012Z"
     },
-    "depósito|noun|": {
-      "hash": "f235b4dbea729bb1",
+    "cigarrillo|noun|": {
+      "hash": "2224bb4b22c8c6d1",
       "verdict": "ok",
-      "at": "2026-11-06T08:26:25.676Z"
+      "at": "2026-11-06T08:27:00.082Z"
     },
-    "periodista|noun|": {
-      "hash": "89848f7aeb4a0df4",
+    "mortal|adj|": {
+      "hash": "fb59382a378eb60d",
       "verdict": "ok",
-      "at": "2026-11-06T08:26:34.174Z"
+      "at": "2026-11-06T08:27:05.760Z"
     },
-    "comprobar|verb|": {
-      "hash": "0691ec7a39e7aa60",
+    "ronda|noun|": {
+      "hash": "1700ac84b26bfef8",
       "verdict": "ok",
-      "at": "2026-11-06T08:32:07.790Z"
+      "at": "2026-11-06T08:32:21.495Z"
     },
-    "forense|adj|": {
-      "hash": "d71236b6278f099c",
+    "metal|noun|": {
+      "hash": "a075d628149f5578",
       "verdict": "ok",
-      "at": "2026-11-06T08:26:53.954Z"
+      "at": "2026-11-06T08:27:24.469Z"
     },
-    "tensión|noun|": {
-      "hash": "f756683f7cc3c952",
+    "botón|noun|": {
+      "hash": "f6f1ed57288be79d",
       "verdict": "ok",
-      "at": "2026-11-06T08:32:11.737Z"
+      "at": "2026-11-06T08:27:29.450Z"
     },
-    "involucrado|adj|": {
-      "hash": "8cfc8fa8d1975d98",
+    "tono|noun|": {
+      "hash": "1fde993175ebb64c",
       "verdict": "ok",
-      "at": "2026-11-06T08:27:18.538Z"
+      "at": "2026-11-06T08:32:25.921Z"
     }
   }
 }

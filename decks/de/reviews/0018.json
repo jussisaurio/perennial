@@ -1,9 +1,9 @@
 {
   "file": "source/0018.json",
-  "sha256": "4fa2c1a4ec1bb7c1672225c85c273f3460d8631a1ba125a4c5d21626f30754b5",
-  "author": "claude-agent:de-author-0018-2026-11-06",
-  "reviewer": "claude-agent:de-proofreader-0018-2026-11-06",
+  "sha256": "cb3f6b50c6a68d88a57a3a9acdbf86c257cbe7583e233e90763c26e6d5fcc367",
+  "author": "claude-agent:de-author-0017-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0017-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "100 entries proofread; 25 fixes applied (17 near-copies/reused frames, 2 variety, 4 translation/gloss, 1 colon capital, 1 naturalness); all re-checked ok"
+  "notes": "100 entries proofread; 23 fixes applied (mostly near-duplicates by meaning or with a synonym swapped, plus some repeated sentence patterns; Mittagessen used as a verb; anstatt gloss now names statt); all re-checked ok."
 }

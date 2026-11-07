@@ -1,9 +1,9 @@
 {
   "file": "source/0017.json",
-  "sha256": "cb3f6b50c6a68d88a57a3a9acdbf86c257cbe7583e233e90763c26e6d5fcc367",
-  "author": "claude-agent:de-author-0017-2026-11-06",
-  "reviewer": "claude-agent:de-proofreader-0017-2026-11-06",
+  "sha256": "deb952550c6a2bba69368f08a2c9e38caa8502456c5ecf869b709f93f6483b81",
+  "author": "claude-agent:de-author-0016-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0016-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "100 entries proofread; 23 fixes applied (mostly near-duplicates by meaning or with a synonym swapped, plus some repeated sentence patterns; Mittagessen used as a verb; anstatt gloss now names statt); all re-checked ok."
+  "notes": "100 entries proofread; 31 fixed (mostly near-duplicates of older sentences, 1 wrong sense, 2 variety, 2 translation)"
 }

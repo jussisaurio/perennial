@@ -1,9 +1,9 @@
 {
   "file": "source/0020.json",
-  "sha256": "82d61c452b3674701e8b62b4d0868a6d912466d36a98f932b6eb83ec574b8a79",
-  "author": "claude-agent:de-author-0020-2026-11-06",
-  "reviewer": "claude-agent:de-proofreader-0020-2026-11-06",
+  "sha256": "43e089088744a38126073b6274294750a7852b203561b212baf07b6d2382c970",
+  "author": "claude-agent:de-author-0019-2026-11-06",
+  "reviewer": "claude-agent:de-proofreader-0019-2026-11-06",
   "reviewedAt": "2026-11-06",
   "verdict": "approved",
-  "notes": "100 entries proofread; 36 fixes, mostly near-copies of older sentences or the same frame with a synonym; all re-checked ok"
+  "notes": "100 entries proofread; 31 fixes applied (synonym-in-slot traps, near-copies of 0001-0018, glosses, translations); re-checked against 0001-0023"
 }
