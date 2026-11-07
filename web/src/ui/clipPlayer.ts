@@ -3,8 +3,10 @@
 // on one reused <audio> element. Off until VITE_AUDIO_BASE_URL is set at build
 // time: until then, and for any text without a clip, the browser speaks.
 
+import { Effect } from "effect";
 import { clipPath } from "../content/clips";
 import { COURSE_LANGUAGES } from "../content/languages";
+import { fetchOk, NetworkError } from "../data/http";
 import { reportClipFailed } from "../observability";
 
 // `||`: an empty build argument means no clips, the same as none.
@@ -24,31 +26,33 @@ const keyOf = (text: string, tag: string) => `${tag}|${text.normalize("NFC")}`;
 /** Each clip asked for: its blob URL, or null when it has none (the browser says it then). */
 const loaded = new Map<string, Promise<string | null>>();
 
-async function fetchClip(text: string, tag: string): Promise<string | null> {
+const fetchClip = Effect.fn("Clips.fetch")(function* (text: string, tag: string) {
   const lang = courseOf(tag);
-  let res: Response;
-  try {
-    res = await fetch(`${BASE}/${await clipPath(text, lang)}`);
-  } catch (e) {
-    // Offline or a dropped connection: asked again next time, not kept as missing.
-    loaded.delete(keyOf(text, tag));
-    reportClipFailed("network", lang, e);
-    return null;
-  }
-  if (!res.ok) {
-    // 404: a text with no clip, such as a word from the learner's own text.
-    reportClipFailed(`HTTP ${res.status}`, lang);
-    return null;
-  }
-  return URL.createObjectURL(await res.blob());
-}
+  const path = yield* Effect.promise(() => clipPath(text, lang));
+  return yield* fetchOk(`${BASE}/${path}`).pipe(
+    // The body can break off too: the same as no answer.
+    Effect.flatMap((res) => Effect.tryPromise({ try: () => res.blob(), catch: (cause) => new NetworkError({ cause }) })),
+    Effect.map((blob): string | null => URL.createObjectURL(blob)),
+    Effect.catchTags({
+      NetworkError: (e) =>
+        Effect.sync(() => {
+          // Offline or a dropped connection: asked again next time, not kept as missing.
+          loaded.delete(keyOf(text, tag));
+          reportClipFailed("network", lang, e.cause);
+          return null;
+        }),
+      // 404: a text with no clip, such as a word from the learner's own text.
+      HttpError: (e) => Effect.sync(() => (reportClipFailed(`HTTP ${e.status}`, lang), null)),
+    }),
+  );
+});
 
 /** The clip for `text`, from memory or fetched now. */
 export function loadClip(text: string, tag: string): Promise<string | null> {
   const k = keyOf(text, tag);
   let p = loaded.get(k);
   if (!p) {
-    p = fetchClip(text, tag);
+    p = Effect.runPromise(fetchClip(text, tag));
     loaded.set(k, p);
   }
   return p;

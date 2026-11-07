@@ -10,6 +10,7 @@ import { linkAccount, reportSlowAuth, track } from "../observability";
 import { boot } from "./boot";
 import { captchaHeaders } from "./captcha";
 import { stopSyncNow } from "./device";
+import { fetchOk } from "./http";
 
 /**
  * The first session check is answered from GET /api/boot (data/boot.ts), which
@@ -100,35 +101,37 @@ export function markDemoUser(id: string): void {
   localStorage.setItem(DEMO_KEY, id);
 }
 
+/** A POST whose answer nothing reads: only its status matters. */
+const post = (path: string) => fetchOk(path, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+
 /**
  * The session's user for a sign-in to start from: null if it was the demo learner, which is deleted first, so the
- * sign-in starts clean. A failed delete throws: the sign-in must stop.
+ * sign-in starts clean. A failed delete fails the sign-in: it must stop.
  */
-async function dropDemo(user: SessionUser | null): Promise<SessionUser | null> {
-  if (!user?.anonymous) return user;
-  let demo: string | null;
-  try {
-    demo = localStorage.getItem(DEMO_KEY);
-  } catch {
-    // No storage now: markDemoUser could not have run either, so this is not the demo.
-    return user;
-  }
-  if (demo !== user.id) return user;
-  const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-  if (!res.ok) throw demoNotDeleted();
-  // Drop the deleted demo's cookie: sent with the sign-in, the server would clear it after
-  // setting the new session's, and the sign-in would end signed out. Not authClient.signOut:
-  // the app would see no user, show the landing page and lose the sign-in form.
-  const out = await fetch("/api/auth/sign-out", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-  if (!out.ok) throw demoNotDeleted();
-  stopSyncNow(user.id);
-  return null;
-}
+const dropDemo = Effect.fn("Auth.dropDemo")(
+  function* (user: SessionUser | null) {
+    if (!user?.anonymous) return user;
+    let demo: string | null;
+    try {
+      demo = localStorage.getItem(DEMO_KEY);
+    } catch {
+      // No storage now: markDemoUser could not have run either, so this is not the demo.
+      return user;
+    }
+    if (demo !== user.id) return user;
+    yield* post("/api/account/delete");
+    // Drop the deleted demo's cookie: sent with the sign-in, the server would clear it after
+    // setting the new session's, and the sign-in would end signed out. Not authClient.signOut:
+    // the app would see no user, show the landing page and lose the sign-in form.
+    yield* post("/api/auth/sign-out");
+    stopSyncNow(user.id);
+    return null;
+  },
+  Effect.mapError((cause) => new AuthError({ code: "demo_not_deleted", message: "Could not end the demo. Try again.", cause })),
+);
 
-const demoNotDeleted = () => new AuthError({ code: "demo_not_deleted", message: "Could not end the demo. Try again." });
-
-/** A refusal the learner can act on: `message` says what to do. */
-export class AuthError extends Schema.TaggedError<AuthError>()("AuthError", { code: Schema.String, message: Schema.String }) {}
+/** A refusal the learner can act on: `message` says what to do. `cause`: the failed request behind it, if any. */
+export class AuthError extends Schema.TaggedError<AuthError>()("AuthError", { code: Schema.String, message: Schema.String, cause: Schema.optional(Schema.Defect()) }) {}
 
 // A request can hang with no answer and no error: seen on iPhones, likely
 // HTTP/3 through Cloudflare (#312). The server answers in under a second, so
@@ -205,7 +208,7 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
       const started = yield* Clock.currentTimeMillis;
       // Nothing was sent yet, so there is nothing to recover.
       const asked = yield* askSession;
-      const before = yield* Effect.tryPromise({ try: () => dropDemo(asked), catch: demoNotDeleted });
+      const before = yield* dropDemo(asked);
       const { user, timedOut } = yield* timed("sign-in", "/sign-in/email-otp", (signal) => authClient.signIn.emailOtp({ email, otp, fetchOptions: { signal } })).pipe(
         Effect.flatMap((r) =>
           r.error || !r.data
@@ -228,13 +231,16 @@ export const signInWithCode = (email: string, otp: string): Promise<SessionUser>
   );
 
 /** Leaves for Google's sign-in page; it comes back to the app's start, signed in. */
-export async function signInWithGoogle() {
-  await dropDemo(await currentUser());
-  track("signin_google_started");
-  // A failure comes back to the server's error address (auth.ts onAPIError), which googleSignInFailed reads.
-  const r = await authClient.signIn.social({ provider: "google", callbackURL: "/" });
-  if (r.error) throw new AuthError({ code: r.error.code ?? "google_failed", message: "Could not open Google sign-in. Try again, or use an email code." });
-}
+export const signInWithGoogle = (): Promise<void> =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      yield* dropDemo(yield* Effect.tryPromise(() => currentUser()));
+      track("signin_google_started");
+      // A failure comes back to the server's error address (auth.ts onAPIError), which googleSignInFailed reads.
+      const r = yield* Effect.tryPromise(() => authClient.signIn.social({ provider: "google", callbackURL: "/" }));
+      if (r.error) return yield* new AuthError({ code: r.error.code ?? "google_failed", message: "Could not open Google sign-in. Try again, or use an email code." });
+    }),
+  );
 
 let googleFailedSeen: boolean | undefined;
 /** True if this page load came back from a Google sign-in that did not work. Takes the mark out of the address, so the answer is kept: ask again and it is the same. */
@@ -260,16 +266,20 @@ export async function signOut() {
   }
 }
 
-/** Deletes the account on the server and signs out. `lang` picks the goodbye's language. */
-export async function deleteAccount(lang?: string) {
-  const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-  if (!res.ok) throw new Error(`Could not delete the account (${res.status})`);
-  try {
-    // One goodbye on the landing page (see Onboarding).
-    sessionStorage.setItem("perennial-farewell", JSON.stringify({ lang: lang ?? null, at: Date.now() }));
-  } catch {
-    // No storage: no goodbye line. Fine.
-  }
-  // The account is gone, and its sessions with it: a failed sign-out changes nothing.
-  await authClient.signOut().catch(() => {});
-}
+/** Deletes the account on the server and signs out. `lang` picks the goodbye's language. No answer rejects with NetworkError, whose message is the browser's. */
+export const deleteAccount = (lang?: string): Promise<void> =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      yield* post("/api/account/delete").pipe(
+        Effect.catchTag("HttpError", (e) => Effect.fail(new AuthError({ code: "delete_failed", message: `Could not delete the account (${e.status})`, cause: e }))),
+      );
+      try {
+        // One goodbye on the landing page (see Onboarding).
+        sessionStorage.setItem("perennial-farewell", JSON.stringify({ lang: lang ?? null, at: Date.now() }));
+      } catch {
+        // No storage: no goodbye line. Fine.
+      }
+      // The account is gone, and its sessions with it: a failed sign-out changes nothing.
+      yield* Effect.tryPromise(() => authClient.signOut()).pipe(Effect.ignore);
+    }),
+  );

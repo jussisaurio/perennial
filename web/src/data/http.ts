@@ -17,7 +17,7 @@ export class ApiError extends Schema.TaggedError<ApiError>()("ApiError", { body:
 /**
  * An error answer this app can't read as one of the contract's: a proxy's
  * error page (no code), or a code or fields from a newer server (the code, when
- * the body has one).
+ * the body has one). Also any error answer to `fetchOk`, which does not read it.
  */
 export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", { status: Schema.Number, code: Schema.optional(Schema.String) }) {
   // The code, else http_<status>, as ApiError's message.
@@ -99,6 +99,17 @@ export const reloadNeeded = new (class extends EventTarget {
 export const request = Effect.fn("Http.request")(function* <S extends Schema.Decoder<unknown>>(schema: S, path: string, init: RequestInit = {}) {
   const res = yield* Effect.tryPromise({ try: (signal) => fetch(path, { ...init, signal }), catch: (cause) => new NetworkError({ cause }) });
   return yield* readAnswer(schema, path, res);
+});
+
+/**
+ * A request whose answer only has to be ok: a clip from the audio host, or an
+ * endpoint whose body nothing reads. No answer is NetworkError, an error
+ * status HttpError.
+ */
+export const fetchOk = Effect.fn("Http.fetchOk")(function* (url: string, init: RequestInit = {}) {
+  const res = yield* Effect.tryPromise({ try: (signal) => fetch(url, { ...init, signal }), catch: (cause) => new NetworkError({ cause }) });
+  if (!res.ok) return yield* new HttpError({ status: res.status });
+  return res;
 });
 
 /** An answer from our server to `path`, checked as `request` checks it. For a request started elsewhere (data/boot.ts). */
