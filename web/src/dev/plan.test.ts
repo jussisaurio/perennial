@@ -3,6 +3,8 @@ import { Schema } from "effect";
 import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { Deck } from "../deck/schema";
+import { HILL_NOTE } from "../garden/lookout";
+import { courseNotes } from "../garden/notes/read";
 import { storyJumps } from "./jumps";
 import { planDemo } from "./plan";
 
@@ -28,5 +30,13 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
     test("the demo learner knows exactly the words of each point", () => {
       for (const { known } of jumps) expect(planDemo(words, { known }, NOW).filter((w) => w.known).length).toBe(known);
     });
+
+    // Garden specs and screenshots use ?demo=es:800 to reach the lookout (docs/agents.md).
+    if (lang === "es") {
+      test("800 words studied open the way over the stile", () => {
+        const hill = courseNotes(lang).find((n) => n.id === HILL_NOTE)!;
+        expect(planDemo(words, { studied: 800 }, NOW).filter((w) => w.known).length).toBeGreaterThanOrEqual(hill.unlockAt);
+      });
+    }
   });
 }
