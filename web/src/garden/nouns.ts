@@ -42,7 +42,7 @@ export interface NounView {
 }
 
 /** `isKnown` gets the bare lemma ("perro", not "el perro"). */
-export function nounView(def: NounDef, lang: string, isKnown: (lemma: string) => boolean = () => false): NounView {
+export function nounView(def: NounDef, lang: string, isKnown: (lemma: string) => boolean): NounView {
   const lemma = nounLemma(def, lang);
   return { word: inLang(def.words, lang), gloss: def.gloss, known: !!lemma && isKnown(lemma) };
 }
