@@ -439,17 +439,16 @@ test("action.none: on open ground away from everything no action button shows; w
   const sit = page.getByRole("button", { name: "Sit on the bench" });
   const act = page.locator(".gw-act");
   await sit.focus();
-  // Back away from the bench with S until nothing is in reach: the button goes, and focus goes back to the walk.
-  await page.keyboard.down("KeyS");
+  // Walk on, away from the bench and the pond (its pebbles), until nothing is in reach: the button goes, and focus goes back to the walk.
+  await page.keyboard.down("KeyW");
   await expect(act).toHaveCount(0);
-  await gameSeconds(page, 0.5);
-  await page.keyboard.up("KeyS");
+  await page.keyboard.up("KeyW");
   await expect(act).toHaveCount(0);
   await expect(page.locator(".gw-canvas")).toBeFocused();
-  // Walk up to it again with W.
-  await page.keyboard.down("KeyW");
+  // Step back to it with S.
+  await page.keyboard.down("KeyS");
   await expect(sit).toBeVisible();
-  await page.keyboard.up("KeyW");
+  await page.keyboard.up("KeyS");
 });
 
 // #362: sit still and the garden comes to you. Seconds sat are moved on through the dev-only scene handle, as a test cannot sit for a minute.
