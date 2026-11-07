@@ -143,16 +143,24 @@ export const SyncLive = Layer.effect(
             yield* checkWords(userId, mutations);
             let rows = 0;
             const started: string[] = [];
+            // Reviews in a row go in one statement: one per review cost a round trip
+            // each, 3.3 s for a batch of 500 against the production database (#764).
+            let reviews: Record<string, unknown>[] = [];
+            const insertReviews = Effect.gen(function* () {
+              if (!reviews.length) return;
+              // Insert-only: a reused id never overwrites anything, least of all another user's row.
+              rows += yield* rowCount(sql`insert into review ${sql.insert(reviews)} on conflict (id) do nothing`);
+              reviews = [];
+            });
             for (const m of mutations) {
+              if (m.type === "review.insert") {
+                const r = m.row;
+                reviews.push({ id: r.id, user_id: userId, lang: r.lang, word_id: r.word_id, skill: r.skill, grade: r.grade, kind: r.kind, reviewed_at: clamp(r.reviewed_at, now), duration_ms: r.duration_ms, sentence_id: r.sentence_id ?? null });
+                continue;
+              }
+              // In order: a later mutation may delete a review inserted before it.
+              yield* insertReviews;
               switch (m.type) {
-                case "review.insert": {
-                  const r = m.row;
-                  // Insert-only: a reused id never overwrites anything, least of all another user's row.
-                  rows += yield* rowCount(sql`insert into review (id, user_id, lang, word_id, skill, grade, kind, reviewed_at, duration_ms, sentence_id)
-                    values (${r.id}, ${userId}, ${r.lang}, ${r.word_id}, ${r.skill}, ${r.grade}, ${r.kind}, ${clamp(r.reviewed_at, now)}, ${r.duration_ms}, ${r.sentence_id ?? null})
-                    on conflict (id) do nothing`);
-                  break;
-                }
                 case "review.delete":
                   rows += yield* rowCount(sql`delete from review where id = ${m.id} and user_id = ${userId}`);
                   break;
@@ -211,6 +219,7 @@ export const SyncLive = Layer.effect(
                   break;
               }
             }
+            yield* insertReviews;
             // The rows the server merges, as stored now: the app keeps these, not its own (store.ts confirm).
             const langs = [...new Set(mutations.flatMap((m) => (m.type === "course.upsert" ? [m.row.lang] : [])))];
             const wordIds = [...new Set(mutations.flatMap((m) => (m.type === "word_state.upsert" ? [m.row.word_id] : m.type === "word_state.delete" ? [m.word_id] : [])))];

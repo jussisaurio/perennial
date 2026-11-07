@@ -34,6 +34,18 @@ test("Undo deletes the review", async () => {
   expect((await t.sql`select 1 from review where id = ${r.row.id}`).length).toBe(0);
 });
 
+// Reviews in a row go in one statement (#764): the batch still runs in order, and a repeated id adds one row.
+test("a batch of reviews is stored in order", async () => {
+  const cookie = await t.signIn(unique("many"));
+  const id = (await t.me(cookie)).id;
+  const [a, b, c] = [review(W.a), review(W.c), review(W.i)];
+  const res = await t.write(cookie, [a, b, a, { type: "review.delete", id: b.row.id }, c]);
+  expect(res.status).toBe(200);
+  expect(res.body).toMatchObject({ changed: true });
+  const ids = (await t.sql<{ id: string }>`select id from review where user_id = ${id}`).map((r) => r.id);
+  expect(ids.toSorted()).toEqual([a.row.id, c.row.id].toSorted());
+});
+
 test("word state: the newer change wins, and the server caps future times", async () => {
   const cookie = await t.signIn(unique("state"));
   const id = (await t.me(cookie)).id;
