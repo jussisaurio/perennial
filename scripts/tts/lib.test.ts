@@ -67,7 +67,7 @@ describe("slug", () => {
   });
 });
 
-test("an upload sets the object's type and lets the CDN and browsers keep it forever", async () => {
+test("an upload sets the object's type; browsers keep it a day and the CDN a year", async () => {
   const seen: { url: string; init: RequestInit }[] = [];
   await putClip("https://r2.example/presigned", new Uint8Array([1, 2]), async (url, init) => {
     seen.push({ url, init });
@@ -77,11 +77,18 @@ test("an upload sets the object's type and lets the CDN and browsers keep it for
   expect(seen[0]!.init.method).toBe("PUT");
   const headers = new Headers(seen[0]!.init.headers);
   expect(headers.get("content-type")).toBe("audio/mpeg");
-  expect(headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+  expect(headers.get("cache-control")).toBe("public, max-age=86400, s-maxage=31536000");
 });
 
-const audio = Buffer.from("mp3").toString("base64");
-const ok = () => Response.json({ audioContent: audio });
+/** A 32 kbps MPEG-2 Layer III MP3 as Chirp 3 HD sends it, `seconds` long. */
+const mp3 = (seconds: number) => {
+  const b = new Uint8Array(Math.round((seconds * 32_000) / 8));
+  b.set([0xff, 0xf3, 0x44, 0xc4]);
+  return Buffer.from(b).toString("base64");
+};
+const ok = () => Response.json({ audioContent: mp3(1) });
+// What Chirp 3 HD sent for "gut" and "de" (#776): 1,152 bytes of near silence.
+const silent = () => Response.json({ audioContent: mp3(0.288) });
 
 function harness(answer: (call: number, body: { input: { text: string } }) => Response | Promise<Response>) {
   const calls: string[] = [];
@@ -171,6 +178,14 @@ describe("render", () => {
     expect(h.calls.filter((t) => t === "bad")).toHaveLength(4);
     expect(r.done).toBe(1);
     expect(r.failed).toEqual([{ path: "es/bad.mp3", text: "bad", reason: "HTTP 500" }]);
+  });
+
+  test("a near-silent clip is asked for again, and listed if it stays silent", async () => {
+    const h = harness((n, body) => (body.input.text === "gut" && n > 1 ? ok() : silent()));
+    const r = await render(clips(["gut", "de"]), { ...opts, concurrency: 1 }, h.deps);
+    expect(h.uploads).toEqual(["es/gut.mp3"]);
+    expect(h.calls.filter((t) => t === "de")).toHaveLength(4);
+    expect(r.failed).toEqual([{ path: "es/de.mp3", text: "de", reason: "too short: 0.29 s for 2 characters" }]);
   });
 
   test("a 400 is not retried", async () => {

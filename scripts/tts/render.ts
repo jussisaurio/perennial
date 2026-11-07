@@ -5,13 +5,15 @@
 //   bun --env-file=.env.tts scripts/tts/render.ts --run --max-chars 500000
 //
 // Options: --lang es|de (default: every course), --rpm N (requests a minute,
-// default Google's limit of 200), --concurrency N (default 16, above what the pace needs).
+// default Google's limit of 200), --concurrency N (default 16, above what the pace needs),
+// --replace FILE (texts, one a line, whose clips are bad: made again and uploaded over
+// the old ones; then purge the URLs it prints from Cloudflare's cache).
 // A real run needs --max-chars: it refuses a plan over that, and stops once the
 // characters sent (retries included) reach it. Clips already in R2 or in the
 // out folder are not made again, so a re-run costs nothing for work done.
 // Env (.env.tts): GOOGLE_TTS_KEY, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DECK_LANGS, isDeckLang } from "../../web/src/deck/langs.ts";
 import { Deck } from "../../web/src/deck/schema.ts";
@@ -37,6 +39,13 @@ for (const lang of langs) {
   clips.push(...mine);
 }
 const local = (path: string) => join(OUT, path);
+const replaceArg = flagValue(args, "replace");
+const replaceTexts = new Set(replaceArg === undefined ? [] : readFileSync(replaceArg, "utf8").split("\n").filter(Boolean).map((t) => t.normalize("NFC")));
+const replace = new Set(clips.filter((c) => replaceTexts.has(c.text)).map((c) => c.path));
+const unknown = [...replaceTexts].filter((t) => !clips.some((c) => c.text === t));
+if (unknown.length) throw new Error(`--replace: no clip says ${unknown.map((t) => JSON.stringify(t)).join(", ")}`);
+// A clip to replace is made again, even if the out folder has the bad one.
+for (const p of replace) rmSync(local(p), { force: true });
 const made = clips.filter((c) => existsSync(local(c.path)));
 console.log(`All: ${clips.length.toLocaleString("en")} clips. ${costLine(chars(clips))}`);
 if (made.length) console.log(`In ${OUT} already (upload only, not made again): ${made.length.toLocaleString("en")} clips.`);
@@ -75,7 +84,7 @@ for (const lang of langs) {
     token = page.isTruncated ? page.nextContinuationToken : undefined;
   } while (token);
 }
-const todo = clips.filter((c) => !inBucket.has(c.path));
+const todo = clips.filter((c) => !inBucket.has(c.path) || replace.has(c.path));
 const toMake = todo.filter((c) => !existsSync(local(c.path)));
 console.log(`In R2 already: ${(clips.length - todo.length).toLocaleString("en")}. To upload: ${todo.length.toLocaleString("en")}, of which to make: ${toMake.length.toLocaleString("en")}. ${costLine(chars(toMake))}`);
 if (chars(toMake) > maxChars) {
@@ -108,5 +117,10 @@ console.log(`Done: ${result.done.toLocaleString("en")} uploaded, ${result.sent.t
 if (result.failed.length) {
   console.log(`Failed (${result.failed.length}):`);
   for (const f of result.failed) console.log(`  ${f.path}  ${JSON.stringify(f.text)}  ${f.reason}`);
-  process.exit(1);
 }
+if (replace.size) {
+  // Cloudflare's edge keeps a clip a year (s-maxage, lib.ts CLIP_HEADERS): until purged, it serves the bad one.
+  console.log(`Replaced: purge these from Cloudflare now (audio.playperennial.com's zone → Caching → Configuration → Purge Cache → Custom Purge → URL):`);
+  for (const p of replace) console.log(`  https://audio.playperennial.com/${p}`);
+}
+if (result.failed.length) process.exit(1);

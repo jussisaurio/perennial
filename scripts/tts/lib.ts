@@ -90,10 +90,11 @@ export interface Rendered {
 }
 
 /**
- * R2 object headers. A clip never changes (new text, new name), so the CDN and browsers may keep it forever.
+ * R2 object headers. New text gets a new name, but a bad clip may be made again under its own name
+ * (#776). So browsers keep a clip a day, and Cloudflare's edge a year, until a replace purges it.
  * Google's MP3 is 32 kbps already (about 4.7 KB a clip): it is stored as it comes, not re-encoded.
  */
-const CLIP_HEADERS = { "content-type": "audio/mpeg", "cache-control": "public, max-age=31536000, immutable" } as const;
+const CLIP_HEADERS = { "content-type": "audio/mpeg", "cache-control": "public, max-age=86400, s-maxage=31536000" } as const;
 
 /** Uploads one clip to a presigned PUT URL, with CLIP_HEADERS: R2 keeps them as the object's own headers. */
 export async function putClip(url: string, bytes: Uint8Array<ArrayBuffer>, fetchFn: Deps["fetch"]): Promise<void> {
@@ -134,6 +135,24 @@ const RAISE_AFTER = 20;
 /** 1 s, 2 s, 4 s… up to 30 s, times 0.5–1.5 so parallel retries do not come back together. */
 export const backoff = (attempt: number, random: () => number) => Math.min(30_000, 1000 * 2 ** (attempt - 1)) * (0.5 + random());
 
+/** MPEG-2 Layer III bitrates in kbps, by the header's 4-bit index. */
+const MPEG2_L3_KBPS = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
+
+/** Length of a constant-bitrate MP3 as Chirp 3 HD makes it (MPEG-2 Layer III, 24 kHz, 32 kbps). */
+function mp3Seconds(bytes: Uint8Array): number {
+  // Sync word, then version bits 10 (MPEG-2) and layer bits 01 (Layer III).
+  if (bytes[0] !== 0xff || ((bytes[1] ?? 0) & 0xfe) !== 0xf2) throw new Error("not an MPEG-2 Layer III MP3");
+  const kbps = MPEG2_L3_KBPS[(bytes[2] ?? 0) >> 4];
+  if (!kbps) throw new Error("MP3 with a free or bad bitrate");
+  return (bytes.length * 8) / (kbps * 1000);
+}
+
+/**
+ * The shortest a real clip of `text` can be. The near-silent clips were 0.26–0.34 s; the shortest
+ * real one in R2 was 0.53 s (German "ob"), and a sentence takes at least 0.07 s a character.
+ */
+const minSeconds = (text: string) => Math.max(0.4, 0.04 * text.length);
+
 /** A request that may work later (throttled, a server error, the network) or never (any other answer). */
 class Retry extends Error {}
 
@@ -161,7 +180,11 @@ export async function render(clips: readonly Clip[], o: RenderOptions, d: Deps):
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const body = (await res.json()) as { audioContent?: string };
     if (!body.audioContent) throw new Error("no audioContent in the answer");
-    return Uint8Array.from(Buffer.from(body.audioContent, "base64"));
+    const bytes = Uint8Array.from(Buffer.from(body.audioContent, "base64"));
+    // Chirp 3 HD sometimes answers a short word with a near-silent 0.3 s clip (#776). Asked again, it says the word.
+    const s = mp3Seconds(bytes);
+    if (s < minSeconds(c.text)) throw new Retry(`too short: ${s.toFixed(2)} s for ${c.text.length} characters`);
+    return bytes;
   };
 
   // One step with retries. A throttle or server error halves the parallel requests.
