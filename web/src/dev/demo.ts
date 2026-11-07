@@ -1,19 +1,16 @@
-// Dev-only demo data: an anonymous learner whose garden has a realistic
-// 90-day review history over the deck, so the garden, progress and sessions
-// can be tried without weeks of practice. Uploaded through the normal write API.
+// Demo data: an anonymous learner whose garden has a realistic 90-day review
+// history over the deck (plan.ts), so the garden, progress and sessions can be
+// tried without weeks of practice. Uploaded through the normal write API. In
+// production builds too, behind ?demo (#751): it never writes into a real account.
 
-import { DAY_MS } from "../core/day";
-import { replay, type Grade } from "../core/fsrs";
-import { fsrs } from "../core/scheduler";
-import { currentUser, ensureUser, signOut } from "../data/auth";
+import { currentUser, ensureUser, markDemoUser, signOut } from "../data/auth";
 import { loadDeck } from "../data/deck";
 import { keepCourse } from "../data/device";
 import { postWrite } from "../data/http";
-import { memKey } from "../core/memory";
-import { COURSE_DEFAULTS } from "../data/rows";
 import { DAILY_MINUTES } from "../data/practice";
 import type { DeckLang } from "../deck/langs";
-import { rng } from "../lib/seed";
+import { courseNotes } from "../garden/notes/read";
+import { planDemo, type DemoSize } from "./plan";
 
 async function post(mutations: unknown[]) {
   await postWrite(mutations).catch((e: unknown) => {
@@ -22,45 +19,26 @@ async function post(mutations: unknown[]) {
   });
 }
 
-const DAYS = 90;
-
-/** A fresh anonymous learner with `count` words studied over the last `DAYS` days. The app opens on this course. */
-export async function seedDemo(lang: DeckLang, count: number): Promise<void> {
+/** A fresh anonymous learner of `size`. The app opens on this course. */
+export async function seedDemo(lang: DeckLang, size: DemoSize): Promise<void> {
   const before = await currentUser();
   await signOut();
   // signOut only warns when it fails: then this is still the old user, maybe a real account.
-  if ((await ensureUser()).id === before?.id) throw new Error("sign-out failed, so the demo would write into the learner who is signed in");
+  const user = await ensureUser();
+  if (user.id === before?.id) throw new Error("sign-out failed, so the demo would write into the learner who is signed in");
+  // Before any write: a sign-in from the demo deletes it, so its reviews never join a real account (data/auth.ts).
+  markDemoUser(user.id);
   keepCourse(lang);
   const deck = await loadDeck(lang);
   const now = Date.now();
-  const r = rng(count * 31 + DAYS);
-  const mutations: unknown[] = [{ type: "course.upsert", row: { lang, minutes: DAILY_MINUTES } }];
-  const words = deck.words.slice(0, count);
-  // Common words were met first; the newest ones only in the last days.
-  const age = words.map((_, i) => Math.pow(1 - i / words.length, 1.3));
-  const totalAge = age.reduce((a, b) => a + b, 0);
-  // The server takes at most QUOTA.reviewsPerDay (5000) reviews a day. Share
-  // 4800 by age, as a real learner's reviews are: an even share gave a
-  // 1600-word demo 3 reviews a word, so even "de" and "Tag" often stopped
-  // after a lapse and showed as not known (#697). Each word gets at least 2.
-  const reviews = age.map((a) => Math.min(40, 2 + Math.floor(((4800 - 2 * words.length) * a) / totalAge)));
-  words.forEach((w, i) => {
-    // Common words are easier: a quarter of the average lapses and hard answers for "de", 1.75 times for the rarest.
-    const hard = 0.25 + (1.5 * i) / words.length;
-    let ts = now - DAYS * DAY_MS * age[i] + r() * DAY_MS * 0.5;
-    ts = Math.min(ts, now - DAY_MS * 0.1 * r());
-    // About 1 in 6 words stopped getting practice at some point.
-    const stopAt = r() < 0.17 ? ts + (now - ts) * (0.3 + r() * 0.5) : now;
-    const log: { ts: number; grade: Grade }[] = [];
-    for (let n = 0; n < reviews[i] && ts < stopAt; n++) {
-      const x = r();
-      const grade: Grade = x < 0.06 * hard ? 1 : x < 0.16 * hard ? 2 : x < 0.92 ? 3 : 4;
-      log.push({ ts: Math.round(ts), grade });
-      mutations.push({ type: "review.insert", row: { id: crypto.randomUUID(), lang, word_id: w.id, skill: "read", grade, kind: "review", reviewed_at: new Date(ts).toISOString(), duration_ms: 2500 + Math.round(r() * 5000) } });
-      const st = replay(fsrs, log, COURSE_DEFAULTS.retention, memKey(w.id, "read"))!;
-      ts = st.due + (st.due - ts) * r() * 0.3;
+  // At a story point, the notes before it were read, as a learner who got there would have; its own is new.
+  const notesRead = "known" in size ? courseNotes(lang).filter((n) => n.unlockAt < size.known).map((n) => n.id) : [];
+  const mutations: unknown[] = [{ type: "course.upsert", row: { lang, minutes: DAILY_MINUTES, notes_read: notesRead } }];
+  for (const w of planDemo(deck.words, size, now)) {
+    for (const { ts, grade, ms } of w.log) {
+      mutations.push({ type: "review.insert", row: { id: crypto.randomUUID(), lang, word_id: w.wordId, skill: "read", grade, kind: "review", reviewed_at: new Date(ts).toISOString(), duration_ms: ms } });
     }
-  });
+  }
   for (let i = 0; i < mutations.length; i += 500) await post(mutations.slice(i, i + 500));
 }
 
@@ -69,7 +47,7 @@ export async function removeDemo(): Promise<void> {
   // Only a learner known to be anonymous: no session, or a failed session check, deletes nothing.
   if (!(await currentUser())?.anonymous) return console.warn("[demo] not signed in as a demo learner: nothing deleted");
   // If the delete fails, say so and sign out anyway: this device forgets the learner,
-  // and a leftover anonymous row in a dev database does no harm.
+  // and the server's housekeeping deletes old anonymous users.
   const res = await fetch("/api/account/delete", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).catch((e: unknown) => e);
   if (!(res instanceof Response) || !res.ok) console.warn("[demo] could not delete the demo learner on the server:", res instanceof Response ? res.status : res);
   await signOut();

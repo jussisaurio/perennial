@@ -1,5 +1,5 @@
 import { expect, test } from "./test";
-import { addEmail, serverRows, startCourse } from "./helpers";
+import { addEmail, newEmail, serverRows, signIn, startCourse } from "./helpers";
 
 test("dev demo data: ?demo=es gives a garden with a review history", async ({ page }) => {
   await page.goto("/?demo=es:30#/garden");
@@ -58,6 +58,31 @@ test("dev demo: when sign-out fails, the demo writes nothing into the account", 
   await page.goto("/?demo=es:5");
   await done;
   expect((await serverRows(page, "review")).length).toBe(before);
+});
+
+// #751: signing in from the demo learner would move its made-up reviews into the account.
+test("dev demo: a sign-in from the demo learner starts clean", async ({ page }) => {
+  await page.goto("/?demo=es:5#/today");
+  await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
+  expect((await serverRows(page, "review")).length).toBeGreaterThan(0);
+  await page.getByRole("tab", { name: "Settings" }).click();
+  const reloaded = page.waitForEvent("load");
+  const email = newEmail();
+  await signIn(page, email, "Send me a code");
+  await reloaded;
+  // A new account with nothing in it: it starts on the course choice, not the demo's garden.
+  await expect(page.getByRole("button", { name: "Start learning Spanish" })).toBeVisible();
+  expect(((await (await page.request.get("/api/me")).json()) as { email: string }).email).toBe(email);
+  expect(await serverRows(page, "review")).toEqual([]);
+});
+
+// #751: ?demo lists the story points; one opens the garden with exactly its known words.
+test("demo story points: the stile's point opens the garden with its words known", async ({ page }) => {
+  await page.goto("/?demo");
+  await expect(page.getByRole("heading", { name: "Jump to a story point" })).toBeVisible();
+  await page.getByRole("link", { name: /The stile stands/ }).click();
+  await expect(page.getByText(/^\d+ plants · 250 in bloom/)).toBeVisible({ timeout: 20_000 });
+  expect(new URL(page.url()).hash).toBe("#/garden");
 });
 
 test("dev demo: a failed session check deletes nothing", async ({ page }) => {
