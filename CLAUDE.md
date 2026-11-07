@@ -30,7 +30,7 @@ We are pre-alpha and the owner is the only user: ship fast. A temporary break co
 
 Deck content (decks/) also follows the proofreader process in docs/decks.md.
 
-Then merge: `gh pr merge <pr> --merge --delete-branch`. CI still runs on `main`, and Railway does not deploy a red `main` (Wait for CI, docs/DEPLOY.md), so a red `main` is the first thing to fix: nothing deploys until it is green again. `scripts/merge-when-green.sh` remains for when you do want to wait. Do not watch CI in the foreground.
+Then merge: `scripts/merge.sh <pr>` (it works from any worktree and deletes the branch). CI still runs on `main`, and Railway does not deploy a red `main` (Wait for CI, docs/DEPLOY.md), so a red `main` is the first thing to fix: nothing deploys until it is green again. `scripts/merge-when-green.sh` remains for when you do want to wait. Do not watch CI in the foreground.
 
 ## Every week: a cleanup sweep
 
@@ -45,5 +45,6 @@ Per-PR reviews catch local problems, not slow drift across files. Once a week, o
 
 ## Workflow
 
-- Work in the main checkout on a branch from an up-to-date `main`. Use separate worktrees only for agents that run in parallel.
+- Work in the main checkout on a branch from an up-to-date `main`. Use separate worktrees only for agents that run in parallel; `scripts/clean-worktrees.sh` removes finished ones.
+- Agents read [docs/agents.md](docs/agents.md): setup, checks, merge and the report. Agent prompts give only the task.
 - Every substantial piece of work has a GitHub issue with a priority label (P0–P3). The PR says `Closes #n`.
