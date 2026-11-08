@@ -18,7 +18,7 @@ type HillScene = {
   pitch: number;
   camera: { position: { y: number }; fov: number };
   elapsed: number;
-  seated: boolean;
+  walker: { kind: string };
   /** How far the time-lapse has run: 0 is now; from a day, 2 is night. */
   lapse: number;
   lanterns: { on: boolean[]; lookout: number };
@@ -350,7 +350,7 @@ function byStone(page: Page, s: Spots) {
 }
 
 const lapse = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lapse);
-const seated = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.seated);
+const seated = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.walker.kind === "seated");
 const button = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 
 /** Sit on the stool, from just behind it. */

@@ -248,7 +248,7 @@ export type WalkScene = {
   x: number;
   z: number;
   yaw: number;
-  trip: unknown;
+  walker: { kind: string };
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
   layout: { beds: { x: number; z: number; w: number; d: number }[]; plants: { id: string; lemma: string; x: number; z: number; bed: number }[] };
@@ -259,7 +259,7 @@ export type WalkScene = {
 export const walker = (page: Page) =>
   page.evaluate(() => {
     const s = (window as unknown as { __garden: WalkScene }).__garden;
-    return { x: s.x, z: s.z, yaw: s.yaw, walking: !!s.trip };
+    return { x: s.x, z: s.z, yaw: s.yaw, walking: s.walker.kind === "trip" };
   });
 
 /**

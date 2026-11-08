@@ -389,11 +389,11 @@ test("by the bench the action button sits you down, facing the pond; it or a ste
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
-  type Bench = { x: number; z: number; seated: boolean; camera: { position: { y: number } }; layout: { pond: { x: number; z: number; r: number } } };
+  type Bench = { x: number; z: number; walker: { kind: string }; camera: { position: { y: number } }; layout: { pond: { x: number; z: number; r: number } } };
   const scene = () =>
     page.evaluate(() => {
       const s = (window as unknown as { __garden: Bench }).__garden;
-      return { seated: s.seated, eye: s.camera.position.y };
+      return { seated: s.walker.kind === "seated", eye: s.camera.position.y };
     });
   await expect(page.getByRole("button", { name: "Sit on the bench" })).toHaveCount(0);
   // A step in front of the bench (world.ts benchAt), facing it.
@@ -493,7 +493,7 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
   type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
-  type Bench = { sat: number; lapse: number; shown: string; seated: boolean; bench: { x: number; z: number }; lanterns: { dark: boolean; on: boolean[] }; guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number; r: number } } };
+  type Bench = { sat: number; lapse: number; shown: string; bench: { x: number; z: number }; lanterns: { dark: boolean; on: boolean[] }; guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number; r: number } } };
   const scene = () =>
     page.evaluate(() => {
       const s = (window as unknown as { __garden: Bench }).__garden;
