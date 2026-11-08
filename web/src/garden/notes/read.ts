@@ -42,7 +42,7 @@ const WORD = /~~([^~]+)~~|[\p{L}\p{M}]+(?:['’][\p{L}\p{M}]+)*/gu;
  * lemma: its lower-case form, or the note's `forms` for one whose deck lemma
  * differs ("fui" → "ir"). `isKnown` gets a lower-case lemma.
  */
-export function noteInk(note: Note, isKnown: (lemma: string) => boolean): Ink[] {
+export function noteInk(note: Pick<Note, "text" | "forms">, isKnown: (lemma: string) => boolean): Ink[] {
   const ink: Ink[] = [];
   let at = 0;
   for (const m of note.text.matchAll(WORD)) {

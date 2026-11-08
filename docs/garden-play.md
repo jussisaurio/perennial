@@ -117,3 +117,30 @@ You can walk anywhere on the grass of the hilltop and the cut way. The brambles,
 - `hill.diary-new`: With a diary page not yet read, the diary shows its ribbon and opens on the oldest unread page; once every page is read, it shows no ribbon.
 - `hill.no-answer`: At night, before n12, blowing out the lantern and lighting it again twice leaves the far light shining.
 - `hill.answer`: With n12, by day, sitting on the stool until night and then signalling twice from the seat makes the far light go dark and lit twice, and the line under the garden says the answer. Two more signals get another answer.
+
+## Thoughts: a tap on a thing
+
+Tap a thing in the garden and its name shows on a small paper tag over it, as it always has: "el banco · bench". Five things also make you think something: the bench, the pond, the sunflower, the sundial, and the far hills (the green ring round the garden, which you can tap from anywhere). Once you know enough words, a tap on one of them shows a short line under its name, in the course language: "Es para dos." It is what you notice when you look at the thing. It is not a person talking, it has no English, and it is never more than six words.
+
+**Every word is one you know.** Each of the five has three lines, and each line comes when you know as many words as it needs: by then the course has taught you every word in it. A form counts when you know its word: "sentaba" when you know "sentar". The first line comes at about 100 to 350 known words, the second at about 400 to 700, the last at about 900 to 1800; these numbers are rough. A tap shows the newest line you can read. So the same bench says something new as your words grow, and a line you read today is still there tomorrow, until a newer one takes its place. The lines notice small things about the garden and the person who kept it before you; they never explain. Before its first line, a tap on a thing shows only its name, as on every other thing. There is no count of lines and no mark for a new one: you find a new line by tapping the thing again some other day.
+
+**How long it shows.** A tag with a line stays about ten seconds, long enough to read it slowly, then fades. A tag with only a name stays four seconds, as before. A tap on another thing shows that thing's tag instead. Tap the same thing again and it shows for ten more seconds. If you turn away and back while it shows, it is still there.
+
+**Only when you tap.** Walking near a thing or standing by it shows no line. Nothing in the garden asks you to tap. A tap on a thing never moves you and never stands you up from the bench. A thought never stops you: while it shows, you can walk on, and the action button does what it did before ("Sit on the bench" by the bench). The tag stays over its thing as you walk, and goes from view when the thing does.
+
+**Where a tap does something else,** it does that, and no thought shows. At night the sundial is closed ("Reloj de sol: cerrado hasta el amanecer."), so its line shows only by day. Holding a pebble, a tap on the pond throws it in. A visitor on the bench takes a tap on it, and shows its own tag.
+
+**For a screen reader**, after a tap the status says the thing's name and its line, in the course language. With sound on, a tap says the name aloud as before; the line itself is not read aloud. Like the names, thoughts come only from a tap for now; a way to hear them from the keyboard is #866.
+
+**What you can't do, and how you can tell.** You can't open a list of thoughts, answer one or keep one. Other things show only their name, as before.
+
+### Claims
+
+- `thought.tap`: With 800 known words, a tap on the bench shows its tag, "el banco", and under it the bench's newest line; the status a screen reader hears says the name and the line; you have not moved.
+- `thought.early`: With 3 known words, a tap on the bench shows only its name, with no line.
+- `thought.grows`: A tap on the pond shows three different lines at 200, 700 and 1800 known words, in that order.
+- `thought.only-tap`: With 800 known words, walking up to the bench and standing there 10 seconds shows no line. After a tap, while the line shows, holding W walks you on, and by the bench the button still says "Sit on the bench".
+- `thought.replace`: While the bench's line shows, a tap on the pond shows the pond's tag and line instead.
+- `thought.fades`: With no other input, the tag and its line still show 8 seconds after the tap and are gone 12 seconds after it.
+- `thought.hills`: With 800 known words, a tap on the far hills shows their tag and a line.
+- `thought.sundial-night`: With 800 known words, by day a tap on the sundial shows its line; at night it says it is closed, with no line.

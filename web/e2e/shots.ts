@@ -128,6 +128,26 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
   },
   // By the diary's stone, in reach of it (#858): the book, and its ribbon while a page is unread.
   "hill-stone": (page) => standOnHill(page, "stone"),
+  // A tap on the bench (#864): its tag with a thought under it.
+  thought: async (page) => {
+    // Its parts all in first: the tag shows for ten seconds.
+    await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
+    const at = await page.evaluate(async () => {
+      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number }; pickAny(x: number, y: number, w: number, h: number): { kind: string; s?: { view: { id: string } } } | null } }).__garden;
+      Object.assign(s, { x: s.bench.x + 0.4, z: s.bench.z - 2.2, yaw: Math.PI, pitch: -0.25 });
+      await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+      const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+      // A visitor may sit on it: look for a spot of the bench itself.
+      for (let y = 0.4; y < 0.9; y += 0.02)
+        for (let x = 0.3; x < 0.7; x += 0.02) {
+          const hit = s.pickAny(r.width * x, r.height * y, r.width, r.height);
+          if (hit?.kind === "scenery" && hit.s?.view.id === "bench") return [r.left + r.width * x, r.top + r.height * y] as [number, number];
+        }
+      throw new Error("no bench in view");
+    });
+    await page.mouse.click(...at);
+    await expect(page.locator(".gw-thought")).toBeVisible();
+  },
 };
 
 /** Stand by one of the lookout's things (#858) as a learner would: behind the stool or the stone (from the path), or on the post's far side from the stool. */
@@ -146,9 +166,9 @@ const standOnHill = (page: Page, by: "post" | "stool" | "stone") =>
 
 /**
  * Spots seen by another learner: 500 words put the stile's notes at its foot, but not the hill's note (n08);
- * one who knows exactly 760 words (dev/boot.ts) has the diary's first page (n09), still unread.
+ * one who knows exactly 760 words (dev/boot.ts) has the diary's first page (n09), still unread; one who knows 1400 has the bench's last thought (#864).
  */
-const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:760" };
+const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:760", thought: "known:1400" };
 
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's

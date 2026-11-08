@@ -75,6 +75,15 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  */
 function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, holding: boolean, shook: Shook | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
+  // A tapped thing's thought (#864): its name and the line, both in the course language.
+  // The learner just tapped for it and it shows only 10 s, so it comes before the standing lines (the key, seek).
+  const thought = labels.find((l) => l.kind === "scenery" && l.thought !== undefined);
+  if (thought)
+    return (
+      <>
+        <span lang={lang}>{thought.text}</span>: <span lang={lang}>{thought.thought}</span>
+      </>
+    );
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
   if (toy) return "The seeds fly away on the wind.";
@@ -806,7 +815,7 @@ function sameLabels(a: readonly Label[], b: readonly Label[]): boolean {
     a.length === b.length &&
     a.every((l) => {
       const m = b.find((m) => m.id === l.id);
-      return m !== undefined && l.text === m.text && l.kind === m.kind && l.gloss === m.gloss && l.known === m.known && l.gender === m.gender && l.where?.text === m.where?.text && l.where?.word === m.where?.word;
+      return m !== undefined && l.text === m.text && l.kind === m.kind && l.gloss === m.gloss && l.known === m.known && l.gender === m.gender && l.thought === m.thought && l.where?.text === m.where?.text && l.where?.word === m.where?.word;
     })
   );
 }
@@ -894,6 +903,22 @@ function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; select
           // A line with a gloss (a joke's) is in the course language; the door's lines are English.
           <span key={l.id} className="gw-say" lang={l.kind === "line" && l.gloss === undefined ? "en" : lang}>
             {l.text}
+          </span>
+        ) : l.thought !== undefined ? (
+          // A tapped thing's thought (#864): its tag, with the line under it, all in the course language.
+          <span key={l.id} className="gw-tag gw-thought" lang={lang}>
+            {l.known ? (
+              <>
+                <LeafMark />
+                <i>{l.text}</i>
+              </>
+            ) : (
+              <>
+                <i>{l.text}</i>
+                <small lang="en"> · {l.gloss}</small>
+              </>
+            )}
+            <span className="gw-thought-line">{l.thought}</span>
           </span>
         ) : l.kind === "tree" || l.kind === "fruit" || l.where || ((l.kind === "visitor" || l.kind === "scenery") && !l.known) ? (
           <span key={l.id} className="gw-tag" lang={lang}>

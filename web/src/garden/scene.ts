@@ -94,6 +94,8 @@ export interface Label {
   known?: boolean;
   /** Where a visitor hid today, once it is found (#379): said after its word. */
   where?: Hideout;
+  /** What a tapped scenery thing makes you think (#864), in the course language: shown under its word. */
+  thought?: string;
 }
 
 /** Who visits the walk today. */
@@ -226,8 +228,18 @@ const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color }> = {
   night: { tint: new THREE.Color(...T.SKIES.night.tint), fog: new THREE.Color(T.SKIES.night.fog) },
 };
 
-/** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. */
-const onScreen = (k: number) => Math.max(0.12, Math.min(0.88, k));
+/** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. `edge`: how far in from each side its middle stays. */
+const onScreen = (k: number, edge = 0.12) => Math.max(edge, Math.min(1 - edge, k));
+
+/**
+ * A tapped scenery word's tag (#74), in seconds: a word alone shows for `word`; one with a thought (#864) for `thought`,
+ * long enough to read it slowly, and fades out over its last `fade`.
+ */
+const SCENERY_TAG = { word: 4, thought: 10, fade: 0.6 };
+/** How far in from each side a thought's tag stays: half of its widest (index.css .gw-thought, 15rem), on a phone 412 px wide. */
+const THOUGHT_EDGE = 0.3;
+/** The highest a thought's point goes: its tag is drawn above the point, and two or three lines tall it would go under the top pill. */
+const THOUGHT_TOP = 0.24;
 
 /**
  * The order GardenScene.labels pushes a tag in, when more than one shows at
@@ -1659,9 +1671,9 @@ export class GardenScene {
     };
   }
 
-  /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
+  /** Show a scenery word's tag for a few seconds (after a tap), long enough to read its thought slowly when it has one (#864). One tag at a time: a visitor's tapped tag goes. */
   private tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
-    this.sceneryTap = { ...s, until: this.elapsed + 4 };
+    this.sceneryTap = { ...s, until: this.elapsed + (s.view.thought ? SCENERY_TAG.thought : SCENERY_TAG.word) };
     this.clearTaps({ tree: true, line: true, visitor: true, fruit: true });
   }
 
@@ -2104,8 +2116,12 @@ export class GardenScene {
       }
       else v.set(h.x, h.y, h.z);
       v.project(this.camera);
+      const { thought } = st.view;
+      // A thought's tag fades out at the end; it is wider than a word's, so it is kept on the screen.
       if (v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1)
-        tags.scenery = { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 };
+        tags.scenery = thought
+          ? { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", thought, x: onScreen((v.x + 1) / 2, THOUGHT_EDGE), y: Math.max(THOUGHT_TOP, onScreen((1 - v.y) / 2)), near: Math.min(1, (st.until - this.elapsed) / SCENERY_TAG.fade) }
+          : { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 };
     }
     // The door's quiet line (#315), while it shows.
     const ln = this.line;

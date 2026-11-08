@@ -7,6 +7,7 @@
 // volumes once; a tap casts one ray through them.
 
 import { nounView, type NounDef, type NounView } from "./nouns";
+import { thoughtFor } from "./thoughts";
 
 export type SceneryId =
   | "sunflower"
@@ -75,16 +76,23 @@ export interface SceneryView extends NounView {
   id: SceneryId;
   /** Article and noun, e.g. "el girasol". */
   word: string;
+  /** What a tap on it makes you think (#864), in the course language, for the words the learner knows; absent before its first line. */
+  thought?: string;
 }
 
 export type SceneryViews = Partial<Record<SceneryId, SceneryView>>;
 
-/** Every scenery word for this course (none for a course without them). `isKnown` gets the bare lemma ("sol", not "el sol"). */
-export function sceneryViews(lang: string, isKnown: (lemma: string) => boolean = () => false): SceneryViews {
+/**
+ * Every scenery word for this course (none for a course without them). `isKnown` gets the bare lemma ("sol", not "el sol").
+ * `known`: how many words the learner knows (ui/visitors.ts knownWords), for the thoughts. Both default to a walk with no
+ * learner (the landing page, the showcase), who knows no words.
+ */
+export function sceneryViews(lang: string, isKnown: (lemma: string) => boolean = () => false, known = 0): SceneryViews {
   const out: SceneryViews = {};
   for (const id of Object.keys(SCENERY) as SceneryId[]) {
     const v = nounView(SCENERY[id], lang, isKnown);
-    if (v.word) out[id] = { ...v, id, word: v.word };
+    const thought = thoughtFor(lang, id, known);
+    if (v.word) out[id] = { ...v, id, word: v.word, ...(thought !== null && { thought }) };
   }
   return out;
 }
