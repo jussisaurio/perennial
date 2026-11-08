@@ -67,15 +67,33 @@ test("a boot answer that never comes: the learner is told, not left on the sprou
   await page.clock.install();
   await startCourse(page);
   // What an iPhone saw: the server answered, the page never got it, and no error came.
-  await page.route("**/api/boot", () => {});
+  let tries = 0;
+  await page.route("**/api/boot", () => void tries++);
   await page.reload();
   await expect(page.getByRole("status", { name: "Loading" })).toBeVisible();
-  await page.clock.fastForward(20_000);
+  // Two tries (bootRequest.ts): the first gives up after 5 s of silence, the second after 15 s.
+  await page.clock.fastForward(6_000);
+  await expect.poll(() => tries).toBe(2);
+  await expect(page.getByRole("status", { name: "Loading" })).toBeVisible();
+  await page.clock.fastForward(16_000);
   await expect(page.getByRole("alert")).toHaveText(/Could not load Perennial/);
   // Reload is what helped on the iPhone.
   await page.unroute("**/api/boot");
   await page.getByRole("button", { name: "Reload" }).click();
   await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15_000 });
+});
+
+test("a boot answer lost once: the app asks again by itself and loads (#911)", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  // The first answer never comes, as on the iPhone; the second does, as after a reload.
+  let tries = 0;
+  await page.route("**/api/boot", (route) => (++tries === 1 ? undefined : route.continue()));
+  await page.reload();
+  await expect(page.getByRole("status", { name: "Loading" })).toBeVisible();
+  await page.clock.fastForward(6_000);
+  await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
 test("connection lost mid-session: practice continues", async ({ page, context }) => {

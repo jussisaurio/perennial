@@ -5,19 +5,25 @@
 /**
  * On an iPhone a request can wait with no answer and no error, and only a
  * reload helps (#312, #911: the server sent the boot answer in 156 ms, and the
- * page stayed on the sprout). So the boot stops after this long with nothing
- * new coming, and the page says so. Silence, not the whole download: on a slow
- * link a long history can take longer than this, but bytes keep coming.
+ * page stayed on the sprout). So a boot request stops after a time with
+ * nothing new coming. Silence, not the whole download: on a slow link a long
+ * history takes longer, but bytes keep coming.
+ *
+ * The first try waits 5 s: the server answers in well under a second, and even
+ * a slow phone link brings the first bytes in a second or two, so 5 s of
+ * nothing is a lost answer far more often than a slow one. The second try
+ * waits 15 s, so a link that really is that slow still loads, only later.
  */
-const SILENCE_MS = 15_000;
+const FIRST_SILENCE_MS = 5_000;
+const SECOND_SILENCE_MS = 15_000;
 
-/** The answer, read to its end: a stall in the body counts too. Rejects when nothing came for SILENCE_MS. */
-async function fetchBoot(): Promise<Response> {
+/** The answer, read to its end: a stall in the body counts too. Rejects when nothing came for `silenceMs`. */
+async function fetchBoot(silenceMs: number): Promise<Response> {
   const stop = new AbortController();
-  let timer = setTimeout(() => stop.abort(), SILENCE_MS);
+  let timer = setTimeout(() => stop.abort(), silenceMs);
   const heard = () => {
     clearTimeout(timer);
-    timer = setTimeout(() => stop.abort(), SILENCE_MS);
+    timer = setTimeout(() => stop.abort(), silenceMs);
   };
   try {
     const res = await fetch("/api/boot", { signal: stop.signal });
@@ -39,5 +45,10 @@ async function fetchBoot(): Promise<Response> {
 
 let started: Promise<Response> | null = null;
 
-/** The one boot request: the first call starts it. */
-export const startBoot = () => (started ??= fetchBoot());
+/**
+ * The boot answer: the first call starts it. A failed or silent first try is
+ * sent once more, as a new request, before the page says it could not load:
+ * Safari can lose the answer on a restored tab, and a new request (what a
+ * reload does) gets it (#911).
+ */
+export const startBoot = () => (started ??= fetchBoot(FIRST_SILENCE_MS).catch(() => fetchBoot(SECOND_SILENCE_MS)));
