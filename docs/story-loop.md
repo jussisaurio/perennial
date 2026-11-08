@@ -68,8 +68,8 @@ There are two sizes.
 The steps:
 
 1. **Simulate.** `bun run story:sim es daily` and `de daily`. Write the scripts with `--script` into your scratch folder.
-2. **Read** (arc iterations). Start 3 fresh reader agents for each course, each with a different persona (below). Give a reader part 1 with the reader prompt. When it answers, send the next part to the same agent (SendMessage). Never give a reader a part before it has answered the one before. Never give it a file path: paste the part's text. A reader who has read the story once is never used again.
-3. **Grade.** One fresh grader gets every reader's answers, the parts, and `intended.ts`. It writes the gaps.
+2. **Read** (arc iterations). Start 3 fresh reader agents for each course, each with a different persona (below). Give a reader part 1 with the reader prompt. When it answers, send the next part to the same agent (SendMessage). Never give a reader a part before it has answered the one before. Never give it a file path: paste the part's text. A reader who has read the story once is never used again. With the last part, ask the reader to write all its answers, word for word, to a file in your scratch folder: the grader reads those files.
+3. **Grade.** One fresh grader gets every reader's answers, the parts, and `intended.ts`. It writes the gaps. The grader and the author hand back their reports as text (the harness stops a subagent from writing a report file): save them in your scratch folder.
 4. **Propose.** One fresh author agent gets the grader's report, the numbers, and the aim of this iteration. It proposes at most 3 changes.
 5. **Apply.** A mechanical change (a threshold, a word swap that keeps the meaning) goes on a branch. New writing goes to the owner first ("Writing with the owner", below); the loop does other work while it waits.
 6. **Judge.** Write the scripts again with the change. Give 3 fresh judges the changed part, old and new, in random order, with the part before it for context. For a threshold change, also compare the numbers.
@@ -216,3 +216,5 @@ Mechanical changes stay with the loop: thresholds, and word swaps for readabilit
 ## Lessons
 
 One line per iteration, newest last: the date, what changed, what we learned.
+
+- 2026-11-08, arc 1 (6 readers, daily learner after #943): no story change yet. 3 proposals went to the owner as drafts (#936, Part C). The diary refrain (d1–d3) works once d3 lands (want 5 from 5 of 6), but the months of nothing around it bring want down to 3 at d2, and every long-stretch answer says the reader stops looking round within 1–2 weeks. Readers took n05's "now, brambles" as her death, so the present tense of n06–n07 read as a broken timeline (6 of 6). They took n02 as memory loss (5 of 6). The run itself had 3 flaws, now fixed: Q2 named "she" before the story does (fixed in #944); the German frame showed the Spanish tag (fixed in #944); the frame did not mention Today's pinned paper, so "I could have missed d3" partly came from the script, not the game.

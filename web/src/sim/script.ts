@@ -38,7 +38,7 @@ You are learning ${name} in an app, a few minutes a day. Each day, after your pr
 - Anything written in the garden is in ${name}, with no translation. A word you do not know yet shows as ${MASK}. You see that a word is there, but you can't read it.
 - ~~A word~~ like this was crossed out by the hand that wrote it.
 - Tap a thing in the garden and its name shows on a small tag: "${SCENERY.bench.words[lang]} · ${SCENERY.bench.gloss}". Some things also show a short line under their name. We assume you tap each thing on the day it has a new line.
-- We assume you read each note on the day it comes.
+- When a new note comes, a small pinned paper shows on the app's home screen until you have read it. It does not say where the note is. We assume you read each note on the day it comes.
 - A week or more with nothing new is one line here. In the app, you would still come for a few minutes on each of those days.
 - Do not look anything up or translate with a tool. Work out what you can from the words you know.
 `;
