@@ -31,6 +31,8 @@ const TRACK_LIFT = 0.035;
 const THICKET = { near: 0.15, far: 3.2, h: 2.1 };
 /** The brambles round the hill's top: out to the hill's foot, where they meet the thicket (m). Low enough on the slope that from the top you see over them. */
 const RING = { far: HILL.r + 0.4, h: 1.9 };
+/** How wide a square of the thicket's clumps is drawn as one mesh (m): small enough that a view leaves most of them out, few enough to stay a few draw calls. */
+const CLUMP_SQUARE = 6;
 /** How high the handrails stand over the steps (m). */
 const RAIL_H = 0.8;
 
@@ -185,7 +187,7 @@ export class StileScene {
    * walker and some metres deep, its canes arching up out of it and over the
    * fence. Once the hill's note is unlocked, a way is cut through it along the
    * old path, the cut canes heaped beside it. A solid middle (no gap to see
-   * through), its clumps one instanced mesh, its canes one merged mesh. A step
+   * through), its clumps an instanced mesh per square of ground, its canes one merged mesh. A step
    * per stretch of canes: the scene yields between them (#885).
    */
   private *buildThicket(c: BuildCtx): Generator<void> {
@@ -264,14 +266,25 @@ export class StileScene {
     shadeUp(ball, 0.7, 1);
     const uv = ball.getAttribute("uv");
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
-    const mesh = new THREE.InstancedMesh(ball, c.mat(tex, { vertexColors: true }), clumps.length);
+    // One instanced mesh per square of ground: three culls a mesh whole, and one for every clump was drawn from anywhere (#960).
+    const squares = new Map<string, number[][]>();
+    for (const cl of clumps) {
+      const k = `${Math.floor(cl[0] / CLUMP_SQUARE)}:${Math.floor(cl[2] / CLUMP_SQUARE)}`;
+      const list = squares.get(k);
+      if (list) list.push(cl);
+      else squares.set(k, [cl]);
+    }
+    const mat = c.mat(tex, { vertexColors: true });
     const m4 = new THREE.Matrix4();
     const color = new THREE.Color();
-    clumps.forEach(([x, y, z, rx, ry, rz, k], i) => {
-      mesh.setMatrixAt(i, m4.makeScale(rx, ry, rz).setPosition(x, y, z));
-      mesh.setColorAt(i, color.setScalar(k));
-    });
-    c.scene.add(still(mesh));
+    for (const square of squares.values()) {
+      const mesh = new THREE.InstancedMesh(ball, mat, square.length);
+      square.forEach(([x, y, z, rx, ry, rz, k], i) => {
+        mesh.setMatrixAt(i, m4.makeScale(rx, ry, rz).setPosition(x, y, z));
+        mesh.setColorAt(i, color.setScalar(k));
+      });
+      c.scene.add(still(mesh));
+    }
     yield;
 
     // Canes: some arch up out of the top; others reach over the fence toward the garden, at the eye's height.
