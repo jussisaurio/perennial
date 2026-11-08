@@ -13,7 +13,6 @@
 // A store belongs to one user: a write is never sent while another user is
 // signed in. Signing in or out disposes the store and makes a new one.
 
-import { QueryClient } from "@tanstack/query-core";
 import { createCollection, createTransaction, type PendingMutation } from "@tanstack/react-db";
 import { Effect } from "effect";
 import { LearnerRows, type WriteResult } from "perennial-contract";
@@ -24,6 +23,7 @@ import { ApiError, HttpError, request } from "./http";
 import { reportBadAnswer, reportError } from "../observability";
 import { Learners } from "./learner";
 import { makeTable } from "./table";
+import { rowsReader, signedOut } from "./rowsReader";
 import { yieldToBrowser } from "../lib/yield";
 import { syncedUserWord, type CourseRow, type ReviewRow, type UserSentenceRow, type UserWordRow, type WordStateRow } from "./rows";
 import { writeQueue } from "./send";
@@ -38,14 +38,10 @@ const REFETCH_AFTER_HIDDEN_MS = 60_000;
 /** A write unsent this long is late: the learner is told it is not saved yet. A normal send takes well under a second. */
 const LATE_MS = 10_000;
 
-/** Signed out: this store is being replaced, so asking again cannot help. */
-const signedOut = (e: unknown) => (e instanceof ApiError && e.body.error === "sign_in_required") || (e instanceof HttpError && e.status === 401);
-
 export async function createStore(userId: string) {
   // Stopped before a sign-out reaches the server (stopSyncNow): a read still under way
   // would otherwise get a 401 and mark its collection failed.
   const sync = new AbortController();
-  const queryClient = new QueryClient();
   // Each table's first read is the rows that came with /api/boot, if they are this
   // user's (#602); refetchAll reads the server again. null: not this user's (an
   // anonymous learner who started just now), or boot failed: read /api/rows.
@@ -53,19 +49,8 @@ export async function createStore(userId: string) {
     (b) => (b.user?.id === userId ? b.rows : null),
     () => null,
   );
-  // The tables' reads at the same moment share one request.
-  const read = () =>
-    queryClient.fetchQuery({
-      queryKey: ["rows"],
-      queryFn: async () => (fromBoot && (await fromBoot)) ?? Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }),
-      // A new request each time, unless one is under way (refetchAll cancels that one first).
-      staleTime: 0,
-      // Nothing kept once read: a cancelled read then fails (CancelledError), where it
-      // would return the old response, and the full response is not held in memory.
-      gcTime: 0,
-      // Keep trying (paused while offline, at most 30 s apart) until the rows come: the screens wait for them.
-      retry: (_count, e) => !signedOut(e),
-    });
+  const rows = rowsReader(async () => (fromBoot && (await fromBoot)) ?? Effect.runPromise(request(LearnerRows, "/api/rows"), { signal: sync.signal }));
+  const read = rows.read;
   // Each table in its own task, and the learners after them: making a table
   // starts its read, and all of it in one task was ~35 ms at CPU 10× (#569).
   // The reads still share one request: scheduler.yield resumes ahead of the
@@ -93,7 +78,7 @@ export async function createStore(userId: string) {
   const learners = new Learners({ collections, onDispose });
   const stopSync = () => {
     // The read under way ends; aborting `sync` stops the tables applying it (makeTable) and the request itself.
-    void queryClient.cancelQueries();
+    void rows.cancel();
     sync.abort();
   };
   /** Read every table again, in one new request: one already under way may have started before a change. */
@@ -102,7 +87,7 @@ export async function createStore(userId: string) {
     fromBoot = null;
     // A read under way would be joined (TanStack Query), and may predate the
     // change (#529: a course written while the first read ran never showed). Cancel it.
-    await queryClient.cancelQueries();
+    await rows.cancel();
     await Promise.all(Object.values(collections).map((c) => c.refetch()));
   };
   // Ends the wait between tries of a write at once: back online, or the tab is shown again.
@@ -246,6 +231,7 @@ export async function createStore(userId: string) {
       window.removeEventListener("online", wake);
       window.removeEventListener("pagehide", onPageHide);
       stopSync();
+      rows.unmount();
       sending.abort();
       unsentListeners.clear();
       refusedListeners.clear();
