@@ -2,7 +2,9 @@
 
 Perennial is a spaced-repetition app for going from zero to fluent in a language, in
 5 minutes a day. It takes Anki's core idea (retrieval practice, scheduled
-by a memory model) and drops most of what grew around it.
+by a memory model) and drops most of what grew around it. Product direction and
+scope are in [docs/direction.md](docs/direction.md); this page is the design and
+the research behind it.
 
 ## What's wrong with Anki (and what we do instead)
 

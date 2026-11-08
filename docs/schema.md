@@ -48,7 +48,8 @@ A committed manifest (`(lemma, pos, sense) → id`) keeps ids stable when conten
 ```sql
 create table course (            -- one per language; settings edited per column
   user_id uuid not null references "user" on delete cascade,
-  lang text not null, minutes smallint not null default 7, retention real not null default 0.9,
+  lang text not null, minutes smallint not null default 7,  -- unused: everyone gets 5 minutes (#189)
+  retention real not null default 0.9,
   door_open boolean not null default false,  -- the garden's door to the orchard (#315): only ever opens
   primary key (user_id, lang));
 

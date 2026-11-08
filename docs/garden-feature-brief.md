@@ -1,10 +1,10 @@
 # Shared brief for garden feature agents (Perennial, 2026-10-17)
 
-The user's goal now: **"focus heavily on implementing a lot of fun features, that's the primary goal… ramp up the velocity."** The app is pre-alpha. Ship fast and well.
+What to build, and what is out, is in [direction.md](direction.md): the story comes first, and toys with no part in it are cut. The app is pre-alpha. Ship fast and well.
 
 ## Read first
 - Repo CLAUDE.md (code standard; **the new lighter review rule**). DESIGN.md "Garden code" (Part = rendering technique; the host owns every order table: TAP_PRIORITY, LABEL_PRIORITY, reportReach; tick allocates nothing; behaviour gets time only from the frame/conditions; seeded hashes, never Math.random/Date in behaviour).
-- GitHub #335: the roadmap, the verbs, the cut and its rules. Also #324 (kinds as data), #334 (one action button, no instruction text).
+- [direction.md](direction.md), "The garden", and #639 (the story). Also #324 (kinds as data), #334 (one action button, no instruction text).
 - web/src/garden/* and web/src/ui/GardenWalk.tsx, useGardenScene.ts.
 - To open the walk directly in a browser, go to `/?demo=es:200#/garden` (a demo learner with 200 words) or `#/garden`.
 

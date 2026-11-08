@@ -2,7 +2,8 @@
 
 A spaced-repetition language app with a garden: every word you learn grows
 into a plant. Zero to fluent in 5 minutes a day. It started as a rethink of
-Anki; see [DESIGN.md](DESIGN.md) for what we changed and why.
+Anki; see [DESIGN.md](DESIGN.md) for what we changed and why. What we build
+next, and what we don't: [docs/direction.md](docs/direction.md).
 
 - **Time-boxed sessions, no wall of due cards.** After a week off, you still do your 5 minutes, and the most useful words come first.
 - **MVP scope:** English speakers learning **Spanish** or **German**.
