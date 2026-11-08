@@ -97,6 +97,33 @@ Nearly every proofreading fix in #422 was one of these. Grammar errors were clos
 - **Rebuild deck.json and ids.json from main's at the end.** Words swapped out of the list during review (celular, enojado) otherwise keep an id as retired words that never shipped.
 - **Agents can stop on a usage limit.** Their context survives: a message resumes each one where it stopped. Drafts outside `decks/` and verdicts already in the ledger are safe.
 
+## Adding a language
+
+No new language comes before the launch ([direction.md](direction.md)). The story and the garden make a language much more work than a deck. This is the full cost, for when we do one. Every text in the course language is written in it, not translated, and checked by a fresh proofreader who is not its author.
+
+**The deck**
+- [ ] A word list of about 2000 lemmas from the FrequencyWords subtitle list, drafted by one agent and reviewed by another ("The word list", above). Choose one regional variant and keep to it.
+- [ ] About 20 source files, written and proofread by the process above, with sentences for every word.
+- [ ] `decks/<lang>/garden.json`: a word for each of the 26 garden things. `decks/<lang>/orchard.json`: a word for each orchard tree.
+- [ ] `decks/<lang>/latin.json` (optional): deadpan Latin names for the field guide.
+- [ ] The language's grammar in the tools: genders and lemma rules in `scripts/deck/generate.ts`, articles in `web/src/content/forms.ts`, spelling rules for typed answers in `web/src/core/answer.ts`.
+
+**The app**
+- [ ] Add the code to `DECK_LANGS` (`web/src/deck/langs.ts`). Then `bun run typecheck` names every `PerLang` text that has no value for it: the garden's nouns and signs, the visitors and their sounds, the door lines, the empty bed, the orchard's plaque, the gnome, the mole, the far light's answer, the lines on the sundial and the mouse door, the notes and the thoughts.
+- [ ] The course's name, language tag and blurb in `web/src/content/languages.ts`, and its English name in `server/src/course.ts`.
+
+**The story**
+- [ ] The gardener's notes (`web/src/garden/notes/<lang>.ts`): all 16, in the same beats, with 3–5 gardener words that no deck teaches. `notes.test.ts` checks that each note unlocks when enough of its words are known. Set the thresholds from the 5-minute simulation, as for the other courses.
+- [ ] The thoughts (`web/src/garden/thoughts/<lang>.ts`): three lines for each thing, made only of words known when each line unlocks (`thoughts.test.ts`), and true to the rule in direction.md.
+
+**Audio**
+- [ ] A Chirp 3 HD voice for the language tag (`voiceName` in `web/src/content/clips.ts`).
+- [ ] A pronunciation list (`WIKIPRON_FILE` in `scripts/tts/ipa.ts`) and the hints for the clip checker (`scripts/tts/fix.ts`).
+- [ ] A dry run of `scripts/tts/render.ts --lang <lang>` for the cost, then the real render (about 2 hours for both current courses at Google's rate limit).
+
+**Before it ships**
+- [ ] The story-point demo (`?demo`) works for the course, and the screenshot script looks right on phone and desktop, light and dark.
+
 ## Tools
 
 - `bun scripts/deck/build.ts <lang>`: rebuilds `deck.json` and `ids.json` from source.

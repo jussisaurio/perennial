@@ -1,6 +1,6 @@
 # Working on Perennial
 
-How we write and merge code here. It applies to every session and every agent. The product, architecture and deploy steps are in README.md, DESIGN.md and docs/.
+How we write and merge code here. It applies to every session and every agent. What we build, and what we don't, is in [docs/direction.md](docs/direction.md). The architecture and deploy steps are in README.md, DESIGN.md and docs/.
 
 ## Code standard
 
