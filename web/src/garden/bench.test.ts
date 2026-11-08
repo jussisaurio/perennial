@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { COMPANY, due, glance, GLANCE, LAPSE, lapseLook, lapseRate, settle, sunPath, SUN_AT, type Companion, type Look } from "./bench";
+import { COMPANY, due, glance, GLANCE, LAPSE, lapseLook, lapseRate, settle, sunPath, SUN_AT, untilNight, type Companion, type Look } from "./bench";
 
 /** Sit for `seconds`, frame by frame (60 a second), as the scene does: how far time has run on, in parts of the day. */
 function sitFor(seconds: number): number {
@@ -57,6 +57,13 @@ describe("the time-lapse on the bench (#362)", () => {
     // Nearly a whole day: it runs on to the same time of day, not back through it all.
     expect(stand(2.7)).toBeCloseTo(0.3 / LAPSE.back, 1);
     expect(stand(4)).toBeCloseTo(1 / LAPSE.back, 1);
+  });
+
+  test("on the lookout's stool (#858) time runs only until night, from any time of day", () => {
+    for (const start of ["day", "dusk", "night"] as const) {
+      const held = lapseLook(start, untilNight(start), look());
+      expect([held.from, held.k]).toEqual(["night", 0]);
+    }
   });
 
   test("the sun moves from day to dusk; at nightfall it sets and the moon rises in the east", () => {

@@ -35,7 +35,6 @@ import type { PixelArt } from "../garden/visitorArt";
 import type { CarryAct, CarryDone } from "../garden/sceneCarry";
 import { PEBBLE } from "../garden/carryArt";
 import type { ToyAct, ToyDone } from "../garden/sceneToys";
-import type { Raised } from "../garden/lookout";
 import type { ToysWalk } from "../garden/toys";
 import { inLang } from "../garden/nouns";
 import { GNOME_WORD, type Companion } from "../garden/bench";
@@ -74,13 +73,11 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  * and the stars once every one is (#361); what a thing thrown or put down did where it
  * landed (#358); what they hold. Things in the world, never instructions (#334).
  */
-function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, holding: boolean, shook: Shook | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, raised: Raised | null, seek: Seek, lang: string, stars: boolean): ReactNode {
+function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, holding: boolean, shook: Shook | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
   if (toy) return "The seeds fly away on the wind.";
-  // What the far light did as the lookout's lantern went up (#683), for a few seconds.
-  if (raised) return RAISED_LINE[raised];
   // It never says what hides, only that something small does: the button finds it.
   if (seek.near)
     return (
@@ -122,7 +119,7 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
     );
   if (heard) return heard;
   // A joke's line is in the course language, and its gloss is what it means (scene.ts showLine); the door's line is English.
-  const quiet = labels.find((l) => l.kind === "line");
+  const quiet = labels.find((l) => l.kind === "line" || l.kind === "far");
   const line = spokenLine(quiet?.gloss ?? quiet?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
@@ -130,13 +127,6 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
   if (!holding) return landed;
   return "You hold the pebble.";
 }
-
-/** The lookout's lantern raised (#683), as a screen reader hears it: at night the far light shines across the valley, and once it answers. */
-const RAISED_LINE: Record<Raised, string> = {
-  dusk: "You raise the lantern.",
-  steady: "You raise the lantern. Far away, a small light shines.",
-  blink: "You raise the lantern. Far away, the small light blinks twice.",
-};
 
 /** The door's line as a screen reader hears it: the locked line also says where this learner's key lies, once there is one. */
 function spokenLine(line: string | undefined, state: DoorState): string | undefined {
@@ -286,7 +276,8 @@ const REACH_NAME: Record<Reach, string> = {
   well: "Drop it in the well",
   seek: "Found you",
   read: "Read the note",
-  raise: "Raise the lantern",
+  stool: "Sit on the stool",
+  diary: "Read the diary",
 };
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
@@ -313,8 +304,10 @@ const REACH_ICON: Record<Reach, readonly string[]> = {
   seek: ["...####...", ".##....##.", "#...##...#", "#..####..#", "#...##...#", ".##....##.", "...####..."],
   // A note on its nail, with lines of writing.
   read: ["....##....", "#########.", "#.......##", "#.#####..#", "#.......##", "#.####...#", "#........#", "#.#####..#", "#........#", "##########"],
-  // A lantern, held up high.
-  raise: ["..#####..", "...###...", "..#...#..", "..#.#.#..", "..#...#..", "...###...", "....#....", "....#....", "...###...", "..#####.."],
+  // A three-legged stool.
+  stool: ["########", "########", ".#..#.#.", ".#..#.#.", "#...#..#", "#...#..#"],
+  // A book, its ribbon hanging out.
+  diary: [".#########", "##.......#", "#.#......#", "#.#.####.#", "#.#......#", "#.#.###..#", "#.#......#", "##########", "....#.....", "....#....."],
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -517,9 +510,16 @@ export function GardenWalk({
     setHint(false);
     notes.opened(id);
   };
+  // The diary's pages (#858), the unlocked ones in the order they came: its card turns through them.
+  const pages = useMemo(() => notes.list.filter((n) => n.diary), [notes.list]);
+  const turnPage = (n: Note) => {
+    setNote(n);
+    notes.opened(n.id);
+    scene.current?.readDiary(n.id);
+  };
   // The scene takes these once, as the walk opens; a note opened during the walk turns read where it is by itself.
   const placed = useMemo(() => placeNotes(notes.list, notes.read), [notes.list, notes.read]);
-  const { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard, raised } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, notes: { ...placed, open: openNote } });
+  const { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, notes: { ...placed, open: openNote } });
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = spoken.find((l) => l.kind === "echo");
   const echoId = echoed?.id;
@@ -655,7 +655,7 @@ export function GardenWalk({
       {/* The door's quiet line, for screen readers: the drawn labels are hidden from them. They also hear where the key lies, and when it is at their feet;
           what they hold (#358); who comes to sit with them on the bench (#362); and a fruit that fell (#359). */}
       <div className="sr-only" role="status">
-        {spokenStatus(reach, spoken, door.state, holding, shook, company, heard, landed, toyNews, raised && raised.r, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
+        {spokenStatus(reach, spoken, door.state, holding, shook, company, heard, landed, toyNews, { near: reach === "seek" && scene.current ? scene.current.hider() : null, found }, lang, stars)}
       </div>
       <WalkLabels store={labels} selectedId={selected?.id} lang={lang} />
 
@@ -739,7 +739,7 @@ export function GardenWalk({
         </div>
       )}
 
-      {note && !selected && <NoteCard note={note} lang={lang} isKnown={notes.isKnown} onClose={closeNote} />}
+      {note && !selected && <NoteCard note={note} lang={lang} isKnown={notes.isKnown} onClose={closeNote} pages={note.diary ? pages : null} onTurn={turnPage} />}
 
       <div className="gw-bottom">
         {holding && !selected && (
@@ -813,7 +813,7 @@ function sameLabels(a: readonly Label[], b: readonly Label[]): boolean {
 
 /** A label's opacity, or null for those that keep their own (a line, the well's echo). */
 function labelOpacity(l: Label): number | null {
-  if (l.kind === "echo" || l.kind === "say" || l.kind === "line") return null;
+  if (l.kind === "echo" || l.kind === "say" || l.kind === "line" || l.kind === "far") return null;
   if (l.kind === "petal" || l.kind === "tree" || l.kind === "fruit" || l.where || l.kind === "visitor" || l.kind === "scenery") return l.near;
   return 0.35 + l.near * 0.65;
 }
@@ -885,6 +885,11 @@ function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; select
           <span key={l.id} className="gw-echo" lang={lang}>
             {l.gloss}: <i>{l.text}</i>.
           </span>
+        ) : l.kind === "far" ? (
+          // A line from no thing near (the far light's answer, #858): no bubble pointing at something, but words rising like the echo's, in the course language.
+          <span key={l.id} className="gw-echo" lang={lang}>
+            <i>{l.text}</i>
+          </span>
         ) : l.kind === "say" || l.kind === "line" ? (
           // A line with a gloss (a joke's) is in the course language; the door's lines are English.
           <span key={l.id} className="gw-say" lang={l.kind === "line" && l.gloss === undefined ? "en" : lang}>
@@ -908,15 +913,17 @@ function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; select
   );
 }
 
-function NoteCard({ note, lang, isKnown, onClose }: { note: Note; lang: string; isKnown: (lemma: string) => boolean; onClose: () => void }) {
+/** A gardener's note on its card; a page of the diary (#858) also turns to the diary's other `pages` (null: a note from the shed or the stile). */
+function NoteCard({ note, lang, isKnown, onClose, pages, onTurn }: { note: Note; lang: string; isKnown: (lemma: string) => boolean; onClose: () => void; pages: readonly Note[] | null; onTurn: (n: Note) => void }) {
   const card = useRef<HTMLDivElement>(null);
   // Focus moves to the card as it opens, so a screen reader reads it and Escape closes it.
   useEffect(() => card.current!.focus({ preventScroll: true }), [note.id]);
+  const at = pages ? pages.indexOf(note) : -1;
   return (
     <div
-      className="gw-note"
+      className={pages ? "gw-note gw-diary" : "gw-note"}
       role="dialog"
-      aria-label="A note from the gardener"
+      aria-label={pages ? `A page of the gardener's diary, page ${at + 1} of ${pages.length}` : "A note from the gardener"}
       ref={card}
       tabIndex={-1}
       onKeyDown={(e) => {
@@ -948,6 +955,16 @@ function NoteCard({ note, lang, isKnown, onClose }: { note: Note; lang: string; 
           ),
         )}
       </p>
+      {pages && (
+        <div className="gw-note-pages">
+          <button onClick={() => onTurn(pages[at - 1])} disabled={at === 0}>
+            <Glyph name="left" /> Earlier page
+          </button>
+          <button onClick={() => onTurn(pages[at + 1])} disabled={at === pages.length - 1}>
+            Later page <Glyph name="right" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,11 +1,11 @@
 // Screenshots of named screens for a UI change (#699), so each agent need not write its
 // own spec: every screen on a phone and a desktop, light and dark, and each garden spot
-// by day and by night. From web/:
+// by day, at dusk and by night. From web/:
 //
 //   SHOTS_DIR=/abs/folder bun run shots -g "today|door"
 //
 // -g picks screens by name (leave it out for all). Each PNG is named
-// <screen>-<phone|desktop>-<light|dark>[-<day|night>].png. To add a screen, add an
+// <screen>-<phone|desktop>-<light|dark>[-<day|dusk|night>].png. To add a screen, add an
 // entry to APP or GARDEN below.
 
 import { pinDetail, readRowsAgain, reveal, standAtDoor, startSession } from "./helpers";
@@ -16,6 +16,7 @@ if (DIR === undefined) throw new Error("set SHOTS_DIR to the folder for the PNGs
 
 // In the past: the server refuses reviews from its future. The night is a full moon (night.spec.ts).
 const DAY = new Date("2026-10-11T12:00:00");
+const DUSK = new Date("2026-09-26T19:30:00");
 const NIGHT = new Date("2026-09-26T22:00:00");
 
 /** Screens of the app, each reached from a fresh demo learner with 30 words. */
@@ -99,18 +100,50 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       const [x, z] = hill.top;
       Object.assign(s, { x, z: z + 0.5, yaw: 0.08, pitch: 0 });
     }),
+  // By the lookout's lantern, on the post's far side from the stool, facing it (#858): its halo up close.
+  "hill-post": (page) => standOnHill(page, "post"),
+  // Behind the stool, in reach of it (#858): it reads as a seat, not a little gate.
+  "hill-stool": (page) => standOnHill(page, "stool"),
+  // Sat on the stool (#858): the far house ahead, your lantern in front of you on the left.
+  "hill-seated": async (page) => {
+    await standOnHill(page, "stool");
+    await page.getByRole("button", { name: "Sit on the stool", exact: true }).click();
+    await page.waitForFunction(() => (window as unknown as { __garden: { seated: boolean } }).__garden.seated);
+    // Sitting down eases the eye down over 0.4 s (scene.ts SEAT.speed): wait it out in game time.
+    const from = await page.evaluate(() => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed);
+    await page.waitForFunction((from) => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed > from + 1.5, from);
+  },
+  // By the diary's stone, in reach of it (#858): the book, and its ribbon while a page is unread.
+  "hill-stone": (page) => standOnHill(page, "stone"),
 };
 
-/** Spots seen by a learner with fewer words: 500 put the stile's notes at its foot, but not the hill's note (n08). */
-const WORDS: Partial<Record<string, number>> = { "stile-shut": 500 };
+/** Stand by one of the lookout's things (#858) as a learner would: behind the stool or the stone (from the path), or on the post's far side from the stool. */
+const standOnHill = (page: Page, by: "post" | "stool" | "stone") =>
+  page.evaluate(async (by) => {
+    const { lookoutAt } = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
+    const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
+    const s = (window as unknown as { __garden: Scene }).__garden;
+    const hill = lookoutAt(stileAt(s.layout as Parameters<typeof stileAt>[0]));
+    // Facing the far house from the stool, and its left.
+    const [fx, fz] = [-Math.sin(hill.face), -Math.cos(hill.face)];
+    const [lx, lz] = [fz, -fx];
+    if (by === "post") Object.assign(s, { x: hill.post[0] + lx * 0.6, z: hill.post[1] + lz * 0.6, yaw: Math.atan2(lx, lz), pitch: -0.1 });
+    else Object.assign(s, { x: hill[by][0] - fx * 0.7, z: hill[by][1] - fz * 0.7, yaw: hill.face, pitch: -0.2 });
+  }, by);
+
+/**
+ * Spots seen by another learner: 500 words put the stile's notes at its foot, but not the hill's note (n08);
+ * one who knows exactly 760 words (dev/boot.ts) has the diary's first page (n09), still unread.
+ */
+const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:760" };
 
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
  * nails (each needs 60 or more known words) and under the stile's step, and open the way
  * over the stile to the lookout (note n08, 620 known: not every demo word is known). The door is opened too.
- * A spot in WORDS opens with fewer words.
+ * A spot in WORDS opens for its own learner.
  */
-async function openWalk(page: Page, words: number) {
+async function openWalk(page: Page, words: number | `known:${number}`) {
   await page.goto(`/?demo=es:${words}#/today`);
   await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
   await page.evaluate(async () => {
@@ -142,6 +175,7 @@ for (const theme of ["light", "dark"] as const) {
     for (const [name, stand] of Object.entries(GARDEN))
       for (const [time, at] of [
         ["day", DAY],
+        ["dusk", DUSK],
         ["night", NIGHT],
       ] as const)
         test(`${name} ${theme} ${time}`, async ({ page }, info) => {

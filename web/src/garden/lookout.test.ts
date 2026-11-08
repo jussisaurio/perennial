@@ -1,12 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { ANSWER_NOTE, FAR_HOUSE, hasNote, hillY, lookoutAt, LookoutLight } from "./lookout";
+import { ANSWER_NOTE, FAR_HOUSE, hasNote, HILLTOP_R, hillY, lookoutAt, LookoutLight } from "./lookout";
 import { NOTES } from "./notes";
 import { HILLS } from "./sceneSky";
 import { HILL_ROWS, hillProfile } from "./textures";
 import { stileAt, TOP } from "./stile";
 import { layout } from "./world";
+import { LANTERN_REACH } from "./sceneLanterns";
 
-describe("the far light's answer (#683)", () => {
+describe("the far light's answer (#683, #858)", () => {
   test("it answers once note n12 is on the shed's nails, in every course", () => {
     for (const notes of Object.values(NOTES)) {
       const before = notes.filter((n) => n.id !== ANSWER_NOTE).map((n) => n.id);
@@ -19,30 +20,63 @@ describe("the far light's answer (#683)", () => {
     expect(() => hasNote(NOTES.es.filter((n) => n.id !== ANSWER_NOTE), [], ANSWER_NOTE)).toThrow();
   });
 
-  test("at night, the first raise once it answers gets two blinks; later raises get none", () => {
+  test("from n12 on, every second signal gets an answer a few seconds later: out, on, out, and on for good", () => {
     const light = new LookoutLight(true);
-    expect(light.raise(10, false)).toBe("dusk");
-    expect(light.raise(20, true)).toBe("blink");
-    // Steady, then out, on, out, and on for good.
-    const seen = [21, 22.1, 22.4, 22.8, 23.5, 100].map((t) => light.on(t));
-    expect(seen).toEqual([true, false, true, false, true, true]);
-    expect(light.raise(200, true)).toBe("steady");
-    expect([202.1, 202.8].map((t) => light.on(t))).toEqual([true, true]);
+    light.signal(10);
+    expect(light.answering(20)).toBe(false);
+    expect([11, 13, 15].map((t) => light.on(t))).toEqual([true, true, true]);
+    light.signal(30);
+    // About a second dark, a second lit, a second dark, then lit for good.
+    expect([32, 33.1, 34.1, 35.1, 36.1, 100].map((t) => light.on(t))).toEqual([true, false, true, false, true, true]);
+    // Its line shows once, as it goes dark.
+    expect(light.answering(32.9)).toBe(false);
+    expect(light.answering(33.1)).toBe(true);
+    expect(light.answering(33.5)).toBe(false);
+    // Two more signals, another answer.
+    light.signal(200);
+    expect(light.on(203.1)).toBe(true);
+    light.signal(210);
+    expect(light.on(213.1)).toBe(false);
+    expect(light.answering(213.1)).toBe(true);
   });
 
-  test("before it answers, a raise at night leaves the light shining", () => {
+  test("before n12, signals leave the far light shining", () => {
     const light = new LookoutLight(false);
-    expect(light.raise(5, true)).toBe("steady");
-    expect([7.1, 7.8].map((t) => light.on(t))).toEqual([true, true]);
+    for (const t of [1, 2, 3, 4]) light.signal(t);
+    expect([7.1, 8.1, 9.1, 10.1].map((t) => light.on(t))).toEqual([true, true, true, true]);
+    expect(light.answering(6)).toBe(false);
+  });
+});
+
+describe("the lookout's things (#858)", () => {
+  const hill = lookoutAt(stileAt(layout([])));
+  // Sat on the stool facing the far house: forward, and to the left.
+  const [fx, fz] = [-Math.sin(hill.face), -Math.cos(hill.face)];
+  const rel = ([x, z]: [number, number]) => {
+    const [dx, dz] = [x - hill.stool[0], z - hill.stool[1]];
+    return { ahead: dx * fx + dz * fz, left: dx * fz - dz * fx };
+  };
+
+  test("sat on the stool you face the far house", () => {
+    const { turn, r } = FAR_HOUSE;
+    const across = Math.atan2(Math.sin(turn) * r - hill.stool[0], Math.cos(turn) * r - hill.stool[1]);
+    expect(Math.abs(Math.atan2(Math.sin(across - Math.atan2(fx, fz)), Math.cos(across - Math.atan2(fx, fz))))).toBeLessThan(1e-9);
   });
 
-  test("the lantern rises, holds, and comes back down", () => {
-    const light = new LookoutLight(false);
-    expect(light.lift(0)).toBe(0);
-    light.raise(1, true);
-    expect(light.lift(1.2)).toBeGreaterThan(0);
-    expect(light.lift(2)).toBe(1);
-    expect(light.lift(10)).toBe(0);
+  test("from the seat the post stands in reach, ahead and a little left, in a phone's view; the diary's stone a metre and a half to the right", () => {
+    const post = rel(hill.post);
+    expect(Math.hypot(post.ahead, post.left)).toBeLessThan(LANTERN_REACH);
+    // Its glass (0.21 m wide) clear of the far house, and inside the seated view of a 412×915 phone (50° high).
+    const half = Math.atan((Math.tan((50 / 2) * (Math.PI / 180)) * 412) / 915);
+    const glass = Math.atan2(0.105, post.ahead);
+    const off = Math.atan2(post.left, post.ahead);
+    expect(off - glass).toBeGreaterThan(Math.atan2(FAR_HOUSE.w / 2, FAR_HOUSE.r));
+    expect(off + glass).toBeLessThan(half);
+    const stone = rel(hill.stone);
+    expect(stone.ahead).toBeCloseTo(0);
+    expect(stone.left).toBeCloseTo(-1.5);
+    // All on the hilltop's grass, well inside its brambles.
+    for (const [x, z] of [hill.stool, hill.post, hill.stone]) expect(Math.hypot(x - hill.top[0], z - hill.top[1])).toBeLessThan(HILLTOP_R - 1.5);
   });
 });
 

@@ -26,7 +26,8 @@ import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
 import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
-import { ANSWER_NOTE, backWay, hasNote, HILL_NOTE, HILLTOP_R, hillY, lookoutAt, LookoutLight, type Lookout, type Raised } from "./lookout";
+import { ANSWER_LINE, ANSWER_NOTE, ANSWER_SPOKEN, backWay, DIARY_REACH, hasNote, HILL_NOTE, HILLTOP_R, hillY, lookoutAt, LookoutLight, STOOL_R, type Lookout } from "./lookout";
+import { LookoutThings } from "./sceneLookout";
 import { stepY, stileAt, type StileSpot } from "./stile";
 import { StileScene } from "./sceneStile";
 import { courseNotes } from "./notes/read";
@@ -47,7 +48,7 @@ import { ShedNotes } from "./sceneNotes";
 import { WalkInto } from "./sceneWalkInto";
 import { leafPiles, type Fell, type Rolling } from "./walkInto";
 import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
-import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, type Companion, type Look } from "./bench";
+import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, untilNight, type Companion, type Look } from "./bench";
 import { RESERVED } from "../content/voice";
 import { dayNumber } from "../core/day";
 import type { Hideout, Reply } from "./kinds/kind";
@@ -74,10 +75,10 @@ export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or raise the lookout's lantern (#683). */
-export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "seek" | "read" | "raise";
+/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or sit on the lookout's stool and read the diary there (#858). */
+export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "seek" | "read" | "stool" | "diary";
 
-/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
+/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line from the garden itself over a thing in it (kind "line"; English, or a joke's in the course language) or over no thing (kind "far", the far light's answer, #858), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
 export interface Label {
   id: string;
   text: string;
@@ -85,7 +86,7 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "petal" | "fruit" | "echo";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "far" | "petal" | "fruit" | "echo";
   gloss?: string;
   /** A noun plant's gender: the shape of its label's stake (#357). */
   gender?: Gender;
@@ -126,6 +127,8 @@ export interface WalkVisitors {
   notes: readonly { id: string; unread: boolean }[];
   /** The stile in the back fence (#714): null until the first stile note is unlocked; then the notes under its step (stile.ts placeNotes). */
   stile: readonly string[] | null;
+  /** The diary on the hill (#858): null until its first page is unlocked; then its pages, in the order they came, and whether each is still unread. */
+  diary: readonly { id: string; unread: boolean }[] | null;
 }
 
 export interface SceneCallbacks {
@@ -158,8 +161,6 @@ export interface SceneCallbacks {
   onWalkInto: (e: WalkIntoEvent) => void;
   /** Every lantern is out and the stars are out over the hills, or no longer (#361). */
   onStars: (out: boolean) => void;
-  /** The lookout's lantern was raised (#683): what the far light did. */
-  onRaise: (r: Raised) => void;
 }
 
 export interface Input {
@@ -206,6 +207,11 @@ function reachable<T>(r: Reachable<T>): Reachable<T> {
 }
 /** Sitting on the bench (#334): the eye's height, where you sit along the seat (near its left end: the rest is for company, #362), and how fast you sit down (per second). */
 const SEAT = { eye: 0.78, dx: -0.5, speed: 2.5 };
+/** The view's height (degrees), and on the lookout's stool (#858) a little narrower: the far house and its lantern nearer the middle. */
+const FOV = 62;
+const STOOL_FOV = 50;
+/** A line over no point in the garden (the far light's answer, #858): how far down the view, above the action button. */
+const LOW_LINE = 0.72;
 /** No tree outside the back fence within this far (m) either side of the stile (#714): the old path is seen from its top board. */
 const STILE_VIEW = 2.5;
 /** How fast the view turns toward where a walk goes: the share of the turn left that it makes per second. */
@@ -252,7 +258,7 @@ export class GardenScene {
   // world matrix of everything under it: with the scene's own on, that was every object, still() ones too (#571).
   private scene = Object.assign(new THREE.Scene(), { matrixAutoUpdate: false });
   // Far enough to see the sky dome from anywhere inside the hills: a big garden's far corner is well off the world's middle (#641).
-  private camera = new THREE.PerspectiveCamera(62, 1, 0.1, SKY_R + HILLS.radius);
+  private camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, SKY_R + HILLS.radius);
   private last = performance.now();
   private elapsed = 0;
   private frame = 0;
@@ -296,9 +302,10 @@ export class GardenScene {
   private toys: Toys;
   /** The gardener's notes in the shed (#654). */
   private notes = new ShedNotes();
-  /** Sitting on the bench (#334); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
+  /** Sitting on the bench (#334), or on the lookout's stool (#858); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
   private seated = false;
   private seat = 0;
+  private sitOn: "bench" | "stool" = "bench";
   /** The way out of the back fence (#714, #749): the thicket, and the stile once the hill's note is unlocked. */
   private stile: StileScene | null = null;
   /**
@@ -309,6 +316,8 @@ export class GardenScene {
    */
   private readonly stileSpot: StileSpot | null;
   private readonly hill: Lookout | null;
+  /** The stool and the diary on the hill's top (#858), null with the hill. */
+  private readonly lookoutThings: LookoutThings | null;
   private readonly hillOpen: boolean;
   private readonly back: BackWay | null;
   /**
@@ -369,7 +378,7 @@ export class GardenScene {
   private sceneryTap: { view: SceneryView; hit: SceneryHit; until: number } | null = null;
   /** The lanterns where paths cross (#361): lit at dusk and night, each one blown out or lit again by hand. */
   private lanterns: Lanterns;
-  /** The lookout's lantern and the far light (#683): when it was raised, and whether the light answers this visit. The e2e test sets `answers`. */
+  /** The signals with the lookout's lantern and the far light's answers (#858). */
   readonly lookout: LookoutLight;
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door: Door;
@@ -407,9 +416,10 @@ export class GardenScene {
   }
   /**
    * A quiet line from the garden (the door's, or a joke's), over a point, until a time. A joke's line is in the
-   * course language, and `spoken` is its English for screen readers (#650).
+   * course language, and `spoken` is its English for screen readers (#650). The far light's answer (#858) is
+   * over no point (null): it is low in the view, read wherever you look.
    */
-  private line: { text: string; spoken?: string; at: [number, number, number]; until: number } | null = null;
+  private line: { text: string; spoken?: string; at: [number, number, number] | null; until: number } | null = null;
   readonly input: Input = { move: { x: 0, y: 0 }, run: false };
 
   private layout: Layout;
@@ -441,13 +451,15 @@ export class GardenScene {
     this.z = Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2);
     this.camera.rotation.order = "YXZ";
     // The way over the stile opens once the note that tells of the hill is unlocked (#770), and the far light answers once the note that tells of that is.
-    const notes = visitors.notes.map((n) => n.id);
+    // Null: no diary page is unlocked yet.
+    const notes = [...visitors.notes, ...(visitors.diary ?? [])].map((n) => n.id);
     this.hillOpen = hasNote(courseNotes(lang), notes, HILL_NOTE);
     this.stileSpot = visitors.stile ? stileAt(layout) : null;
     this.hill = this.stileSpot ? lookoutAt(this.stileSpot) : null;
+    this.lookoutThings = this.hill ? new LookoutThings(this.hill) : null;
     this.back = this.stileSpot && this.hill ? backWay(this.stileSpot, this.hill, this.hillOpen) : null;
     this.lookout = new LookoutLight(hasNote(courseNotes(lang), notes, ANSWER_NOTE));
-    this.lanterns = new Lanterns(this.lookout, reducedMotion);
+    this.lanterns = new Lanterns();
     this.sky = new SkyWater(this.camera, reducedMotion, this.lookout);
     this.critters = new Critters(this.camera, reducedMotion);
     this.plants = new Plants(
@@ -566,7 +578,7 @@ export class GardenScene {
     const farTex = await far;
     this.buildTrees(c, farTex.trees);
     if (await this.stopped()) return;
-    this.lanterns.build(c);
+    this.lanterns.build(c, this.hill);
     if (await this.stopped()) return;
     const bench = this.buildBench(c);
     if (await this.stopped()) return;
@@ -587,11 +599,11 @@ export class GardenScene {
     this.notes.build(c, this.visitors.notes);
     const stile = this.visitors.stile;
     // The hill is there whenever the stile is (the constructor).
-    if (stile && this.stileSpot && this.hill) {
+    if (stile && this.stileSpot && this.hill && this.lookoutThings) {
       // Draws no random numbers.
       this.stile = new StileScene(this.stileSpot, this.hill, this.hillOpen);
       this.stile.build(c, stile);
-      this.lanterns.buildLookout(c, this.hill);
+      this.lookoutThings.build(c, this.visitors.diary);
     }
     this.toys.build(c);
     if (await this.stopped()) return;
@@ -898,7 +910,7 @@ export class GardenScene {
     const t = this.reacher;
     if (t && a === this.reach) t.act(a, t.shown);
     // A press that comes before the button caught up with a change in reach: the bench and the door check their own state, so they act all the same.
-    else if (a === "sit" && !this.seated) this.sit();
+    else if (a === "sit" && !this.seated) this.sit("bench");
     else if (a === "stand") this.standUp();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
   }
@@ -912,15 +924,20 @@ export class GardenScene {
 
   /** A tap on a lantern (#361): blow it out or light it in reach; from farther away, walk up to it first. */
   private tapLantern(i: number) {
-    const [x, z] = this.lanterns.spots[i];
+    const [x, z] = this.lanterns.spot(i);
     if (Math.hypot(x - this.x, z - this.z) < LANTERN_REACH) return this.toggleLantern(i);
     this.goTo(x, z, LANTERN_REACH - 0.4, () => this.toggleLantern(i));
   }
 
-  /** Blow lantern `i` out, or light it again; the moth, the stars and the fireflies answer. */
+  /** Blow lantern `i` out, or light it again; the moth, the stars and the fireflies answer. The lookout's, lit again, is a signal to the far light (#858). */
   private toggleLantern(i: number) {
-    this.lanterns.toggle(i);
-    this.guests.lanternsLit(this.lanterns.on);
+    const relit = this.lanterns.toggle(i);
+    if (i === this.lanterns.lookout) {
+      if (relit) this.lookout.signal(this.elapsed);
+      return;
+    }
+    // The moth knows the garden's lanterns only, the lookout's last.
+    this.guests.lanternsLit(this.lanterns.on.slice(0, this.lanterns.spots.length));
     this.nightSky();
   }
 
@@ -1052,13 +1069,24 @@ export class GardenScene {
     if (this.toys.blow(t.i)) this.cb.onToy({ did: "blow" });
   }
 
-  /** Sit on the bench, facing the pond: a cut to the seat, and the eye sinks (at once, with reduced motion). Any move stands you up. */
-  private sit() {
-    const b = this.bench;
+  /**
+   * Sit on the bench, facing the pond, or on the lookout's stool (#858),
+   * facing the far house: a cut to the seat, and the eye sinks (at once, with
+   * reduced motion). Any move stands you up.
+   */
+  private sit(on: "bench" | "stool") {
     this.endTrip();
     this.glide = null;
-    // The bench faces +z, toward the pond; forward is -z at yaw 0.
-    [this.x, this.z, this.yaw, this.pitch] = [b.x + SEAT.dx, b.z + 0.05, Math.PI, 0.1];
+    if (on === "stool") {
+      // The stool is there whenever the button offers it.
+      const h = this.hill!;
+      [this.x, this.z, this.yaw, this.pitch] = [h.stool[0], h.stool[1], h.face, 0];
+    } else {
+      const b = this.bench;
+      // The bench faces +z, toward the pond; forward is -z at yaw 0.
+      [this.x, this.z, this.yaw, this.pitch] = [b.x + SEAT.dx, b.z + 0.05, Math.PI, 0.1];
+    }
+    this.sitOn = on;
     this.seated = true;
     this.sat = 0;
     this.seatView = { yaw: this.yaw, pitch: this.pitch, looked: false };
@@ -1072,6 +1100,12 @@ export class GardenScene {
   private standUp() {
     if (!this.seated) return;
     this.seated = false;
+    if (this.sitOn === "stool") {
+      // Up off the stool, a step toward the far house: the stool is solid, and a walk starts where a walker may stand.
+      const h = this.hill!;
+      const out = STOOL_R + WALKER + 0.01;
+      [this.x, this.z] = [h.stool[0] - Math.sin(h.face) * out, h.stool[1] - Math.cos(h.face) * out];
+    }
     this.turnTo = null;
     this.gnomeSays = null;
     for (const id of this.come) this.guests.visit(id, null);
@@ -1096,21 +1130,11 @@ export class GardenScene {
       this.sat += dt;
       race = lapseRate(this.sat);
       this.lapse += race * dt;
-      const who = due(this.sat, this.here, this.come);
-      if (who) this.sitBeside(who);
-      for (const id of this.onWay) if (this.guests.arrived(id)) this.sitsWith(id);
-      if (this.gnomeSays !== null && this.sat >= this.gnomeSays) {
-        this.gnomeSays = null;
-        this.guests.say("gnome", GNOME_WORD[this.lang]);
-      }
-      const t = this.turnTo;
-      if (t) {
-        const w = glance(this.sat - t.at);
-        const v = this.seatView;
-        this.yaw = v.yaw + (t.yaw - v.yaw) * w;
-        this.pitch = v.pitch + (t.pitch - v.pitch) * w;
-        if (w === 0 && this.sat > t.at) this.turnTo = null;
-      }
+      if (this.sitOn === "stool") {
+        // On the stool, no one comes to sit with you, and time holds once it is night (#858).
+        const most = untilNight(this.time);
+        if (this.lapse >= most) [this.lapse, race] = [most, 0];
+      } else this.company();
     } else if (this.lapse) {
       race = backRate(this.lapse);
       this.lapse = settle(this.lapse, dt);
@@ -1131,6 +1155,25 @@ export class GardenScene {
     this.tintNow.copy(LIGHT[look.from].tint).lerp(LIGHT[look.to].tint, look.k);
     this.fogNow.copy(LIGHT[look.from].fog).lerp(LIGHT[look.to].fog, look.k);
     this.tint();
+  }
+
+  /** One frame of company on the bench (#362): who comes, who has arrived, the gnome's word, and the head's turn toward whoever came. */
+  private company() {
+    const who = due(this.sat, this.here, this.come);
+    if (who) this.sitBeside(who);
+    for (const id of this.onWay) if (this.guests.arrived(id)) this.sitsWith(id);
+    if (this.gnomeSays !== null && this.sat >= this.gnomeSays) {
+      this.gnomeSays = null;
+      this.guests.say("gnome", GNOME_WORD[this.lang]);
+    }
+    const t = this.turnTo;
+    if (t) {
+      const w = glance(this.sat - t.at);
+      const v = this.seatView;
+      this.yaw = v.yaw + (t.yaw - v.yaw) * w;
+      this.pitch = v.pitch + (t.pitch - v.pitch) * w;
+      if (w === 0 && this.sat > t.at) this.turnTo = null;
+    }
   }
 
   /** A visitor comes to sit with you on the bench (#362), on its way there in its own way (#802). */
@@ -1185,9 +1228,10 @@ export class GardenScene {
     } else if (a === "try" && d.state !== "open") this.showLine(DOOR_LINES[this.lang].locked, [L.gate.x, 1.5, z0], DOOR_SPOKEN.locked);
   }
 
-  /** Show a quiet line over a point for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
-  private showLine(text: string, at: [number, number, number], spoken?: string) {
-    this.line = { text, spoken, at, until: this.elapsed + 4 };
+  /** Show a quiet line over a point (null: over no point) for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
+  private showLine(text: string, at: [number, number, number] | null, spoken?: string) {
+    // A line over no point rises and fades as the well's echo does (GardenWalk, kind "far"), over the echo's time.
+    this.line = { text, spoken, at, until: this.elapsed + (at ? 4 : ECHO.show) };
     this.clearTaps({ scenery: true, tree: true, visitor: true, fruit: true });
   }
 
@@ -1218,13 +1262,22 @@ export class GardenScene {
     const shed = this.notes.pick(r);
     // Null: there is no stile yet.
     const step = this.stile?.pick(r) ?? null;
-    const got = step && (!shed || step.t < shed.t) ? step : shed;
+    const near = step && (!shed || step.t < shed.t) ? step : shed;
+    // Infinity: there is no diary yet. A tap on it opens it where it opens (LookoutThings.page).
+    const book = this.lookoutThings?.pick(r) ?? Infinity;
+    const got = book < (near ? near.t : Infinity) ? { id: this.lookoutThings!.page(), t: book } : near;
     if (!got || got.t > FOG_FAR || thingAt(r, this.sceneryWorld()) < got.t) return null;
     return { kind: "note", id: got.id };
   }
 
-  /** A tap on a note: open it from in front of the shed, or by the stile's foot (#714); from farther away, walk up to it first. */
+  /** A tap on a note: open it from in front of the shed, by the stile's foot (#714), or by the diary's stone (#858); from farther away, walk up to it first. */
   private tapNote(id: string) {
+    const things = this.lookoutThings;
+    if (things?.has(id)) {
+      if (things.byDiary(this.x, this.z, 0)) return this.openDiary();
+      const [sx, sz] = this.hill!.stone;
+      return this.goTo(sx, sz, DIARY_REACH - 0.3, () => this.openDiary());
+    }
     if (this.stile?.has(id)) {
       if (this.stile.inReach(this.x, this.z, 0)) return this.openNote(id);
       const [fx, fz] = stileAt(this.layout).foot;
@@ -1240,6 +1293,20 @@ export class GardenScene {
     if (this.stile?.has(id)) this.stile.read(id);
     else this.notes.read(id);
     this.cb.onNote(id);
+  }
+
+  /** Open the diary (#858) on its oldest unread page, or its last. */
+  private openDiary() {
+    // The button and a tap offer the diary only while there is one.
+    const id = this.lookoutThings!.page();
+    this.readDiary(id);
+    this.cb.onNote(id);
+  }
+
+  /** Diary page `id` was read, opened or turned to: the ribbon goes once every page is read. */
+  readDiary(id: string) {
+    // The diary's card shows only while there is a diary.
+    this.lookoutThings!.read(id);
   }
 
   /** A joke's quiet line, over it for a few seconds (after a tap). */
@@ -1958,6 +2025,12 @@ export class GardenScene {
     const sat = this.seated ? 1 : 0;
     this.seat = this.reducedMotion ? sat : this.seat + Math.max(-dt * SEAT.speed, Math.min(dt * SEAT.speed, sat - this.seat));
     this.camera.position.set(this.x, EYE - (EYE - SEAT.eye) * this.seat + this.lift(this.x, this.z) + Math.sin(this.bob) * 0.035 * motion, this.z);
+    // On the stool the view narrows as you sit, and widens again as you get up (#858).
+    const fov = this.sitOn === "stool" ? FOV - (FOV - STOOL_FOV) * this.seat : FOV;
+    if (fov !== this.camera.fov) {
+      this.camera.fov = fov;
+      this.camera.updateProjectionMatrix();
+    }
     this.camera.rotation.set(this.pitch, this.yaw, 0);
     this.camera.updateMatrixWorld();
 
@@ -1982,6 +2055,7 @@ export class GardenScene {
     // dt is 0 only on the very first frame, before anyone could walk.
     frame.speed = onFoot && dt > 0 ? Math.hypot(this.x - x0, this.z - z0) / dt : 0;
     for (const part of this.parts) part.tick?.(frame);
+    if (this.lookout.answering(t)) this.showLine(ANSWER_LINE[this.lang], null, ANSWER_SPOKEN);
     if (this.selected) {
       const p = this.selected;
       this.marker.position.set(p.x, BED_H + plantHeight(p.growth) + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
@@ -2037,7 +2111,8 @@ export class GardenScene {
     // The door's quiet line (#315), while it shows.
     const ln = this.line;
     if (ln && this.elapsed > ln.until) this.line = null;
-    else if (ln) {
+    else if (ln && !ln.at) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "far", x: 0.5, y: LOW_LINE, near: 1 };
+    else if (ln?.at) {
       v.set(...ln.at).project(this.camera);
       // Kept on the screen: standing right at the door, its top is above the view, and the line must still be read.
       if (v.z <= 1) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "line", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
@@ -2148,16 +2223,27 @@ export class GardenScene {
 
   /**
    * Everything the action button can act on (#334, #850), in the order it
-   * chooses: the first in reach wins. On the bench it only gets you up; then
-   * the key; a loose thing in your hands; a hiding visitor (#379), before the
-   * bench and the plant ahead: it hides under the one and behind the other;
-   * the door, unless a lantern by the gate is nearer; a lantern; the
-   * lookout's lantern (#683); a note (#654) in the shed or at the stile's
-   * foot; a loose thing to pick up; the bench; a dandelion clock (#360); last
-   * the plant ahead of you (#357).
+   * chooses: the first in reach wins. On the bench it only gets you up; on
+   * the lookout's stool it blows out or lights the lantern beside you while
+   * they are lit, else gets you up (#858); then the key; a loose thing in your
+   * hands; a hiding visitor (#379), before the bench and the plant ahead: it
+   * hides under the one and behind the other; the door, unless a lantern by
+   * the gate is nearer; the lookout's stool, then its diary, before the
+   * lantern on the post a step in front of the stool; a lantern; a
+   * note (#654) in the shed or at the stile's foot; a loose thing to pick up;
+   * the bench; a dandelion clock (#360); last the plant ahead of you (#357).
    */
   private reachables: Reachable<unknown>[] = [
-    reachable({ shown: null, reach: () => (this.seated ? { a: "stand", target: null } : null), act: () => this.standUp() }),
+    reachable<number | null>({
+      shown: null,
+      reach: () => {
+        if (!this.seated) return null;
+        // -1: by day the lookout's lantern is not lit, and the bench has none.
+        const i = this.sitOn === "stool" ? this.lanterns.lookoutLamp : -1;
+        return i < 0 ? { a: "stand", target: null } : { a: this.lanterns.on[i] ? "snuff" : "light", target: i };
+      },
+      act: (_, i) => (i === null ? this.standUp() : this.toggleLantern(i)),
+    }),
     reachable({
       shown: null,
       reach: () => (this.door.state === "key" && this.inReach("key", slack(this.reach === "key")) ? { a: "key", target: null } : null),
@@ -2171,7 +2257,7 @@ export class GardenScene {
         const d = this.door;
         // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
         const lamp = this.lampInReach();
-        const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spots[lamp][0] - this.x, this.lanterns.spots[lamp][1] - this.z);
+        const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spot(lamp)[0] - this.x, this.lanterns.spot(lamp)[1] - this.z);
         const near = d.state !== "open" && this.inReach("try", slack(this.reach === "try" || this.reach === "open")) && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) <= lampNear;
         if (!near) return null;
         const a = d.state === "held" ? "open" : "try";
@@ -2179,12 +2265,19 @@ export class GardenScene {
       },
       act: (_, a) => this.doorAct(a),
     }),
-    this.lanternReach,
     reachable({
       shown: null,
-      reach: () => (this.lanterns.canRaise(this.x, this.z, slack(this.reach === "raise")) ? { a: "raise", target: null } : null),
-      act: () => this.cb.onRaise(this.lookout.raise(this.elapsed, this.shown === "night")),
+      reach: () => (this.lookoutThings?.byStool(this.x, this.z, slack(this.reach === "stool")) ? { a: "stool", target: null } : null),
+      act: () => {
+        if (!this.seated) this.sit("stool");
+      },
     }),
+    reachable({
+      shown: null,
+      reach: () => (this.lookoutThings?.byDiary(this.x, this.z, slack(this.reach === "diary")) ? { a: "diary", target: null } : null),
+      act: () => this.openDiary(),
+    }),
+    this.lanternReach,
     reachable({
       shown: null,
       reach: () => {
@@ -2200,7 +2293,7 @@ export class GardenScene {
       shown: null,
       reach: () => (Math.hypot(this.x - this.bench.x, this.z - this.bench.z) < BENCH_REACH + slack(this.reach === "sit") ? { a: "sit", target: null } : null),
       act: () => {
-        if (!this.seated) this.sit();
+        if (!this.seated) this.sit("bench");
       },
     }),
     this.toyReach,

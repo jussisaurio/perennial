@@ -14,7 +14,7 @@ import { still, type BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
 import * as T from "./textures";
-import { FAR_HOUSE, FAR_WINDOW, type LookoutLight } from "./lookout";
+import { FAR_HOUSE, FAR_LANTERN, type LookoutLight } from "./lookout";
 
 /** The far hills: a ring of this radius and height, its middle this high, the texture repeated this often round it. pickScenery (scene.ts) uses it too, for the ring's shape. */
 export const HILLS = { radius: 150, height: 34, y: 10, repeat: 4 };
@@ -91,12 +91,12 @@ export class SkyWater implements Part {
   hillProfile: number[] = [];
   /** Unit vector toward the sun (or the moon at night): pickScenery and the sunflower's face read it. */
   readonly sunDir = new THREE.Vector3();
-  /** The far house across the valley (#683), its looks by day and by night, and its window's light, shown at night. */
+  /** The far house across the valley (#683), its looks by day and by night, and its lantern's light, shown at dusk and night (#858). */
   private house!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private houseLooks!: { day: THREE.Texture; night: THREE.Texture };
   private farLight!: THREE.Sprite;
-  private night = false;
-  /** When the far light blinks (lookout.ts): the scene raises the lantern. */
+  private dark = false;
+  /** When the far light blinks (lookout.ts): the scene signals with the lookout's lantern. */
   private lookout: LookoutLight;
 
   constructor(camera: THREE.PerspectiveCamera, reducedMotion: boolean, lookout: LookoutLight) {
@@ -129,7 +129,7 @@ export class SkyWater implements Part {
 
   /**
    * The far house on the hill across the valley (#683), seen from the
-   * lookout on the hill past the stile (#722), and its window's light. Like the
+   * lookout on the hill past the stile (#722), and its lantern's light (#858). Like the
    * hills: no fog, and its own looks by day and night, not tinted. Drawn after
    * the hills, so it stands on them; anything near hides it.
    */
@@ -142,8 +142,8 @@ export class SkyWater implements Part {
     this.house.renderOrder = -0.5;
     c.scene.add(still(this.house));
     this.farLight = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.farLight()), transparent: true, blending: THREE.AdditiveBlending, fog: false, depthWrite: false }));
-    // On the window, a little in front of the wall.
-    this.farLight.position.set((FAR_WINDOW.u - 0.5) * w, (FAR_WINDOW.v - 0.5) * h, 0.1).applyMatrix4(this.house.matrix);
+    // On the far lantern's glass, a little in front of the house.
+    this.farLight.position.set((FAR_LANTERN.u - 0.5) * w, (FAR_LANTERN.v - 0.5) * h, 0.1).applyMatrix4(this.house.matrix);
     this.farLight.scale.set(1.6, 1.6, 1);
     this.farLight.renderOrder = -0.4;
     this.farLight.visible = false;
@@ -286,7 +286,7 @@ export class SkyWater implements Part {
     show(this.sun.material, look.sun);
     // At dusk, like the hills, it keeps its day look.
     show(this.house.material, c.night ? this.houseLooks.night : this.houseLooks.day);
-    this.night = c.night;
+    this.dark = c.dark;
     const [x, y, z] = SUN_AT[c.time];
     this.sunDir.set(x, y, z).normalize();
   }
@@ -324,7 +324,7 @@ export class SkyWater implements Part {
     u.uFade.value = this.starFade;
     u.uTime.value = f.elapsed;
     this.sun.position.copy(this.camera.position).addScaledVector(this.sunDir, SUN_DIST);
-    // Every night, from the first: one steady light, but for its answer to the lantern.
-    this.farLight.visible = this.night && this.lookout.on(f.elapsed);
+    // At dusk and night, from the first: one steady light, but for its answers to the lantern.
+    this.farLight.visible = this.dark && this.lookout.on(f.elapsed);
   }
 }

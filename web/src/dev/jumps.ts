@@ -27,6 +27,8 @@ function noteTitle(n: Note, notes: readonly Note[]): string {
   if (n.id === HILL_NOTE) return "The way over the stile opens";
   if (n.id === ANSWER_NOTE) return "The far light answers";
   if (n === notes.find((m) => m.beat === "stile")) return "The stile stands";
+  if (n === notes.find((m) => m.diary)) return "The diary lies on the hill";
+  if (n.diary) return `Diary page ${notes.filter((m) => m.diary).indexOf(n) + 1}`;
   return `Note ${Number(n.id.slice(1))}`;
 }
 

@@ -806,6 +806,24 @@ export function notePaper(unread: boolean): OffscreenCanvas {
   return c;
 }
 
+/** The gardener's diary on the hill (#858), seen from above: a worn leather cover with a strap. Its sides are the same: at its size the page edges would not show. */
+export function diary(): OffscreenCanvas {
+  const [c, ctx] = canvas(10, 12);
+  px(ctx, 0, 0, "#3e2a1f", 10, 12);
+  px(ctx, 1, 1, "#6b4a33", 8, 10);
+  px(ctx, 2, 2, "#7d5a3f", 3, 3);
+  px(ctx, 0, 7, "#2c1d15", 10, 1);
+  return c;
+}
+
+/** The diary's ribbon (#858), red: it stands out on the grey stone and the brown cover. */
+export function ribbon(): OffscreenCanvas {
+  const [c, ctx] = canvas(2, 8);
+  px(ctx, 0, 0, "#b8352e", 2, 8);
+  px(ctx, 1, 0, "#8e2722", 1, 8);
+  return c;
+}
+
 /** The mouse door's mat (#364), seen from above: coir with a dark edge and `word` on it (none for a course without one). */
 export function doormat(word: string | null): OffscreenCanvas {
   const [c, ctx] = canvas(48, 14);
@@ -978,36 +996,46 @@ export function snoreZ(): OffscreenCanvas {
   return c;
 }
 
-/** A soft round glow in a few hard rings, for additive light pools and halos. */
-export function glow(): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 32);
-  for (let y = 0; y < 32; y++)
-    for (let x = 0; x < 32; x++) {
-      const d = Math.hypot(x - 15.5, y - 15.5) / 16;
-      // Ordered dithering at the edge keeps the retro look.
-      const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5][(y % 4) * 4 + (x % 4)] / 16;
-      const v = Math.max(0, 1 - d);
-      const level = Math.floor(v * 4 + bayer * 0.9) / 4;
-      if (level > 0) px(ctx, x, y, `rgba(255, 200, 110, ${level * 0.55})`);
+/**
+ * A soft round glow for additive light pools and halos. Smooth and filtered,
+ * unlike the pixel textures: a lantern's halo fills much of the view up close,
+ * and there hard rings and dithered holes showed as big see-through blocks
+ * (#858). The small framebuffer, scaled up with hard pixels, still pixelates it.
+ */
+export function glowTexture(): THREE.CanvasTexture<OffscreenCanvas> {
+  const n = 64;
+  const [c, ctx] = canvas(n, n);
+  const img = ctx.createImageData(n, n);
+  for (let y = 0; y < n; y++)
+    for (let x = 0; x < n; x++) {
+      const v = Math.max(0, 1 - Math.hypot(x + 0.5 - n / 2, y + 0.5 - n / 2) / (n / 2));
+      img.data.set([255, 200, 110, Math.round(255 * 0.55 * v * v * (3 - 2 * v))], (y * n + x) * 4);
     }
-  return c;
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = t.minFilter = THREE.LinearFilter;
+  t.generateMipmaps = false;
+  return t;
 }
 
 /**
- * The far house across the valley (#683, lookout.ts FAR_HOUSE), 12×9: a roof
- * with a chimney, a door, and one window (lookout.ts FAR_WINDOW). By day it
- * is hazy, hardly darker than the hill; at night a dark shape, its window
+ * The far house across the valley (#683, lookout.ts FAR_HOUSE), 16×9: a roof
+ * with a chimney, a door and one window, and beside it a lantern on a post,
+ * like the lookout's (#858, lookout.ts FAR_LANTERN). By day it is hazy,
+ * hardly darker than the hill; at night a dark shape, the lantern's glass
  * dark too: the far light is drawn over it.
  */
 export function farHouse(night: boolean): OffscreenCanvas {
-  const rows = ["........C...", ".....RR.C...", "...RRRRRR...", ".RRRRRRRRRR.", "RRRRRRRRRRRR", ".WWWWWWWWWW.", ".WWDWWWOWWW.", ".WWDWWWOWWW.", ".WWDWWWWWWW."];
-  const colors: Record<string, string> = night ? { C: "#10172e", R: "#0e1428", W: "#151d38", D: "#0b1022", O: "#0b1022" } : { C: "#7f9f86", R: "#7a9a82", W: "#a3c0a2", D: "#8aab8c", O: "#8aab8c" };
-  const [c, ctx] = canvas(12, 9);
+  const rows = ["........C.......", ".....RR.C.......", "...RRRRRR.......", ".RRRRRRRRRR...K.", "RRRRRRRRRRRR..G.", ".WWWWWWWWWW...P.", ".WWDWWWOWWW...P.", ".WWDWWWOWWW...P.", ".WWDWWWWWWW...P."];
+  const colors: Record<string, string> = night
+    ? { C: "#10172e", R: "#0e1428", W: "#151d38", D: "#0b1022", O: "#0b1022", K: "#0b1022", G: "#151d38", P: "#0b1022" }
+    : { C: "#7f9f86", R: "#7a9a82", W: "#a3c0a2", D: "#8aab8c", O: "#8aab8c", K: "#7a9a82", G: "#a3c0a2", P: "#7f9f86" };
+  const [c, ctx] = canvas(16, 9);
   rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, colors[ch])));
   return c;
 }
 
-/** The far house's window light (#683), 8×8 for additive blending: a bright core in two hard rings. */
+/** The far lantern's light (#683, #858), 8×8 for additive blending: a bright core in two hard rings. */
 export function farLight(): OffscreenCanvas {
   const [c, ctx] = canvas(8, 8);
   px(ctx, 2, 3, "rgba(255, 184, 74, 0.35)", 4, 2);

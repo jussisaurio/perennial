@@ -1,21 +1,23 @@
-// The lookout (#683, #722, beats of #639): the top of a small hill past the
-// stile, up the old path, with the old gardener's stool and a lantern on a
-// post. From there, across the valley, a tiny house; at night one warm light
-// in its window. The hill hides it from the garden and from the stile's top
-// board. Once the learner has the note that tells of the hill (n08), the
-// brambles are cut and you walk over the stile and up the old path (#770);
-// before, they shut it. Raise the lantern, and once the learner has the note that tells
-// of it (n12), the far light blinks twice back, once a visit. Pure: where
-// things go, and when the light is on. The scene draws it (sceneStile.ts,
-// sceneSky.ts, sceneLanterns.ts).
+// The lookout (#683, #722, #858, beats of #639): the top of a small hill past
+// the stile, up the old path, with the old gardener's stool, a lantern on a
+// post, and the gardener's diary on a flat stone. From there, across the
+// valley, a tiny house with a lantern on a post beside it. The hill hides it
+// from the garden and from the stile's top board. Once the learner has the
+// note that tells of the hill (n08), the brambles are cut and you walk over
+// the stile and up the old path (#770); before, they shut it. Blow the
+// lantern out and light it again, twice, and once the learner has the note
+// that tells of it (n12), the far light answers. Pure: where things go, and
+// when the far light is on. The scene draws it (sceneStile.ts, sceneSky.ts,
+// sceneLanterns.ts, sceneLookout.ts).
 
+import type { PerLang } from "./nouns";
 import type { Note } from "./notes/note";
 import { BRAMBLES_IN, STEP, type StileSpot } from "./stile";
 import { WALKER, type BackWay } from "./world";
 
 /** The note that tells of the hill: "Behind the stile, a hill. From the top, at midnight: the far light". From it on, the stile goes over. */
 export const HILL_NOTE = "n08";
-/** The note that tells of the answer: "I flicked the light twice. The far light answered twice." */
+/** The note that tells of the answer: "I made two signals with the light. The far light answered with two." */
 export const ANSWER_NOTE = "n12";
 
 /** The hill past the stile: its top this far out from the back fence along the old path, how high it is, and how far from its top its foot reaches (m). High enough that from the stile's top board it hides the far house. */
@@ -27,24 +29,47 @@ export const PATH_TURN = 0.12;
 export const HILLTOP_R = 5.5;
 /** Half the width of the way cut through the brambles, up the old path (m): a little wider than the path. */
 export const CUT = 1.05;
-/** The lookout's things a walker goes round: the lantern's post and the stool (m, sceneLanterns.ts buildLookout). */
+/** The lookout's things a walker goes round: the lantern's post, the stool and the diary's stone (m, sceneLanterns.ts, sceneLookout.ts). */
 const POST_R = 0.08;
-const STOOL_R = 0.22;
+export const STOOL_R = 0.22;
+export const STONE_R = 0.28;
 
-/** Near enough to the lantern's post (m) to raise it. */
-export const RAISE_REACH = 1.3;
+/**
+ * The lantern's post from the stool (m, and rad left of straight at the far
+ * house): sat on the stool, it stands in view in front of you, beside the far
+ * house even on a phone's narrow view, and in reach (sceneLanterns.ts LANTERN_REACH).
+ */
+const POST = { d: 1.35, turn: 0.12 };
 
-/** Where the lookout's things stand on the hill, each as [x, z]. */
+/** Near enough to the stool (m, from its middle) to sit on it, and to the diary's stone to read it. */
+export const STOOL_REACH = 1;
+export const DIARY_REACH = 1;
+
+/** Where the lookout's things stand on the hill, each as [x, z]; `face` is the yaw that looks from the stool to the far house. */
 export interface Lookout {
   top: [number, number];
   post: [number, number];
   stool: [number, number];
+  stone: [number, number];
+  face: number;
 }
 
 export function lookoutAt(s: StileSpot): Lookout {
   const [x, z] = [s.x - Math.sin(PATH_TURN) * HILL.out, s.z - Math.cos(PATH_TURN) * HILL.out];
-  // Facing on out (−z), the post ahead on the left, in reach but off to the side, so it does not stand in the view; the stool on the right.
-  return { top: [x, z], post: [x - 0.85, z - 0.8], stool: [x + 0.55, z - 0.35] };
+  const stool: [number, number] = [x + 0.55, z - 0.35];
+  // Sat on the stool, you face the far house: the post ahead and a little to your left, so your lantern stands in view beside the far one; the stone a metre and a half to your right.
+  const [hx, hz] = [Math.sin(FAR_HOUSE.turn) * FAR_HOUSE.r, Math.cos(FAR_HOUSE.turn) * FAR_HOUSE.r];
+  const d = Math.hypot(hx - stool[0], hz - stool[1]);
+  const [fx, fz] = [(hx - stool[0]) / d, (hz - stool[1]) / d];
+  // Forward is −z at yaw 0; your left is (fz, −fx).
+  const [ahead, left] = [Math.cos(POST.turn) * POST.d, Math.sin(POST.turn) * POST.d];
+  return {
+    top: [x, z],
+    stool,
+    post: [stool[0] + fx * ahead + fz * left, stool[1] + fz * ahead - fx * left],
+    stone: [stool[0] - fz * 1.5, stool[1] + fx * 1.5],
+    face: Math.atan2(-fx, -fz),
+  };
 }
 
 /**
@@ -67,6 +92,7 @@ export function backWay(s: StileSpot, at: Lookout, open: boolean): BackWay {
     things: [
       { x: at.post[0], z: at.post[1], r: POST_R },
       { x: at.stool[0], z: at.stool[1], r: STOOL_R },
+      { x: at.stone[0], z: at.stone[1], r: STONE_R },
     ],
   };
 }
@@ -80,12 +106,13 @@ export function hillY(at: Lookout, x: number, z: number): number {
 /**
  * The far house, on the back hills across the valley (sceneSky.ts HILLS):
  * this many radians round from +z (toward +x), this far out (just inside the
- * hills' ring), its bottom this high, and its size (m). A little left of
- * straight ahead from the hill's top, below the ridge behind it.
+ * hills' ring), its bottom this high, and its size (m), the lantern's post
+ * beside it too. A little left of straight ahead from the hill's top, below
+ * the ridge behind it.
  */
-export const FAR_HOUSE = { turn: Math.PI + 0.14, r: 149, y: 2.6, w: 5.6, h: 4.2 };
-/** The window's middle in the house's texture, from its bottom left, as a share of its width and height (textures.ts farHouse). */
-export const FAR_WINDOW = { u: 0.625, v: 0.22 };
+export const FAR_HOUSE = { turn: Math.PI + 0.14, r: 149, y: 2.6, w: 7.5, h: 4.2 };
+/** The far lantern's glass in the house's texture, from its bottom left, as a share of its width and height (textures.ts farHouse). */
+export const FAR_LANTERN = { u: 14.5 / 16, v: 4.5 / 9 };
 
 /** Does the learner have note `id` (HILL_NOTE, ANSWER_NOTE)? `notes` is the course's notes, `unlocked` the ids the learner has. A course without it fails loudly. */
 export function hasNote(notes: readonly Note[], unlocked: readonly string[], id: string): boolean {
@@ -93,46 +120,44 @@ export function hasNote(notes: readonly Note[], unlocked: readonly string[], id:
   return unlocked.includes(id);
 }
 
-/** How long the lantern stays up (s): it rises, holds, and comes down. */
-const LIFT = { up: 0.4, hold: 1.4, down: 0.5 };
-/** After the raise (s): the far light goes out, on, out, and on for good: two blinks. */
-const BLINK = [2, 2.3, 2.65, 2.95] as const;
+/** After a second signal (s): the far light goes out, on, out, and on for good, slowly: two blinks. */
+const BLINK = [3, 4, 5, 6] as const;
 
-/** What a raise of the lantern brought: no far light to see (dusk), the far light shining on, or its answer. */
-export type Raised = "dusk" | "steady" | "blink";
+/** The quiet line as the far light answers, in the course language, and what it says, for a screen reader. */
+export const ANSWER_LINE: PerLang<string> = { es: "El lucero contesta.", de: "Das Fünkchen antwortet." };
+export const ANSWER_SPOKEN = "The far light answers: it goes out and comes back, twice.";
 
-/** The lantern's raises in one visit, and the far light's answer. Times are the scene's own seconds (Frame.elapsed). */
+/** The signals with the lookout's lantern in one visit, and the far light's answers. Times are the scene's own seconds (Frame.elapsed). */
 export class LookoutLight {
-  /** The far light answers this visit (lightAnswers). */
-  answers: boolean;
-  private raisedAt = -Infinity;
+  /** The far light answers this visit (from note n12 on). */
+  readonly answers: boolean;
+  private signals = 0;
   private answeredAt = -Infinity;
+  /** The line for the last answer has been shown. */
+  private told = true;
 
   constructor(answers: boolean) {
     this.answers = answers;
   }
 
-  /** Raise the lantern at `now`. At night, the first raise once it answers gets the blinks; every later one, none. */
-  raise(now: number, night: boolean): Raised {
-    this.raisedAt = now;
-    if (!night) return "dusk";
-    if (!this.answers || this.answeredAt > -Infinity) return "steady";
+  /** The lantern was lit again at `now`, after it was blown out: one signal. Once it answers, every second signal gets an answer. */
+  signal(now: number) {
+    this.signals++;
+    if (!this.answers || this.signals % 2) return;
     this.answeredAt = now;
-    return "blink";
+    this.told = false;
   }
 
-  /** How high the lantern is lifted at `now`, 0 to 1. */
-  lift(now: number): number {
-    const t = now - this.raisedAt;
-    if (t < 0 || t > LIFT.up + LIFT.hold + LIFT.down) return 0;
-    const k = t < LIFT.up ? t / LIFT.up : t < LIFT.up + LIFT.hold ? 1 : 1 - (t - LIFT.up - LIFT.hold) / LIFT.down;
-    // Eased: it slows at the top and at the bottom.
-    return k * k * (3 - 2 * k);
-  }
-
-  /** Is the far light on at `now` (at night)? Always, but for its two blinks after the answer. */
+  /** Is the far light on at `now` (at dusk and night)? Always, but for the two blinks of an answer. */
   on(now: number): boolean {
     const t = now - this.answeredAt;
     return !((t >= BLINK[0] && t < BLINK[1]) || (t >= BLINK[2] && t < BLINK[3]));
+  }
+
+  /** Has an answer just begun at `now`? True once for each answer, so its line shows once. */
+  answering(now: number): boolean {
+    if (this.told || now < this.answeredAt + BLINK[0]) return false;
+    this.told = true;
+    return true;
   }
 }
