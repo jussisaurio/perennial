@@ -1,13 +1,13 @@
-// The story points the demo can jump to (#751), from the gates the garden
-// already has: each note's unlockAt, the visitors that come at a known-word
-// count, and the notes that open the stile, the hill and the far light.
-// Not a list of its own: a new note or gate shows up here by itself.
+// The story points the demo can jump to (#751), from the story's own list
+// (garden/story.ts): each note, the places the notes open, and the visitors
+// that come at a known-word count. A new note or gate shows up here by itself.
 
-import { ANSWER_NOTE, HILL_NOTE } from "../garden/lookout";
-import { courseNotes } from "../garden/notes/read";
-import type { Note } from "../garden/notes/note";
-import { VISITORS } from "../garden/visitors";
+import { courseOrder } from "../content/order";
 import type { DeckLang } from "../deck/langs";
+import type { DeckWord } from "../deck/schema";
+import type { Note } from "../garden/notes/note";
+import { storyEvents, type Opens } from "../garden/story";
+import { visitor } from "../garden/visitors";
 
 export interface Jump {
   /** Known words at this point: the demo learner knows exactly this many. */
@@ -23,11 +23,16 @@ export interface Jump {
 const PART: Record<Note["beat"], string> = { early: "Early", stile: "The stile", lookout: "The hill", late: "Late", door: "The door" };
 
 /** What a note's arrival changes in the garden, beyond the note itself. */
-function noteTitle(n: Note, notes: readonly Note[]): string {
-  if (n.id === HILL_NOTE) return "The way over the stile opens";
-  if (n.id === ANSWER_NOTE) return "The far light answers";
-  if (n === notes.find((m) => m.beat === "stile")) return "The stile stands";
-  if (n === notes.find((m) => m.diary)) return "The diary lies on the hill";
+const OPENS_TITLE: Record<Opens, string> = {
+  stile: "The stile stands",
+  hill: "The way over the stile opens",
+  diary: "The diary lies on the hill",
+  answer: "The far light answers",
+  door: "The mouse door opens",
+};
+
+function noteTitle(n: Note, opens: readonly Opens[], notes: readonly Note[]): string {
+  if (opens.length) return opens.map((o) => OPENS_TITLE[o]).join(". ");
   if (n.diary) return `Diary page ${notes.filter((m) => m.diary).indexOf(n) + 1}`;
   return `Note ${Number(n.id.slice(1))}`;
 }
@@ -35,12 +40,19 @@ function noteTitle(n: Note, notes: readonly Note[]): string {
 /** The note's first line, without the words the gardener crossed out. */
 const firstLine = (n: Note) => n.text.split("\n")[0].replace(/~~[^~]+~~\s*/g, "");
 
-/** Every story point of a course with `deckWords` live words, in the order a learner meets them. */
-export function storyJumps(lang: DeckLang, deckWords: number): Jump[] {
-  const notes = courseNotes(lang, deckWords);
-  const jumps: Jump[] = notes.map((n) => ({ known: n.unlockAt, title: noteTitle(n, notes), line: firstLine(n), part: PART[n.beat] }));
-  for (const v of VISITORS) {
-    if (v.unlock !== undefined) jumps.push({ known: v.unlock, title: `The ${v.gloss} moves in`, line: v.words[lang], part: "Visitors" });
-  }
-  return jumps.sort((a, b) => a.known - b.known);
+/** Every story point of a course with this deck of live words, in the order a learner meets them. */
+export function storyJumps(lang: DeckLang, deck: { words: readonly DeckWord[] }): Jump[] {
+  const events = storyEvents(lang, courseOrder(deck));
+  const notes = events.flatMap((e) => (e.kind === "note" ? [e.note] : []));
+  return events.flatMap((e): Jump[] => {
+    if (e.kind === "note") return [{ known: e.at, title: noteTitle(e.note, e.opens, notes), line: firstLine(e.note), part: PART[e.note.beat] }];
+    // Not a garden word's: the demo learner studies words by how common they are, not in course order (dev/plan.ts),
+    // so knowing a count says nothing of which garden words it has.
+    if (e.kind === "visitor" && "known" in e.gate) {
+      const v = visitor(e.visitor);
+      return [{ known: e.at, title: `The ${v.gloss} moves in`, line: v.words[lang], part: "Visitors" }];
+    }
+    // A thought or a frog's line is a tap away at every later point, so it needs no point of its own.
+    return [];
+  });
 }

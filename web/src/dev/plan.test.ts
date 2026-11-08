@@ -16,7 +16,7 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
     const words = Schema.decodeUnknownSync(Deck(lang))(deck)
       .words.filter((w) => !w.retired && !w.aliasOf)
       .sort((a, b) => a.rank - b.rank);
-    const jumps = storyJumps(lang, words.length);
+    const jumps = storyJumps(lang, { words });
 
     test("come from the notes and the visitors, in order", () => {
       const titles = jumps.map((j) => j.title);
