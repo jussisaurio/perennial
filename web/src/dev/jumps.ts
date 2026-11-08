@@ -35,9 +35,9 @@ function noteTitle(n: Note, notes: readonly Note[]): string {
 /** The note's first line, without the words the gardener crossed out. */
 const firstLine = (n: Note) => n.text.split("\n")[0].replace(/~~[^~]+~~\s*/g, "");
 
-/** Every story point of the course, in the order a learner meets them. */
-export function storyJumps(lang: DeckLang): Jump[] {
-  const notes = courseNotes(lang);
+/** Every story point of a course with `deckWords` live words, in the order a learner meets them. */
+export function storyJumps(lang: DeckLang, deckWords: number): Jump[] {
+  const notes = courseNotes(lang, deckWords);
   const jumps: Jump[] = notes.map((n) => ({ known: n.unlockAt, title: noteTitle(n, notes), line: firstLine(n), part: PART[n.beat] }));
   for (const v of VISITORS) {
     if (v.unlock !== undefined) jumps.push({ known: v.unlock, title: `The ${v.gloss} moves in`, line: v.words[lang], part: "Visitors" });

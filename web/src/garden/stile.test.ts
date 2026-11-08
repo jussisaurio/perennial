@@ -1,22 +1,25 @@
 import { describe, expect, test } from "bun:test";
-import { NOTES } from "./notes";
-import { unlockedNotes } from "./notes/read";
+import { courseNotes, unlockedNotes } from "./notes/read";
 import { placeNotes, stileAt } from "./stile";
 import { collide, layout, WALKER, type GardenPlant } from "./world";
+
+const LANGS = ["es", "de"] as const;
+// About the size of each course's deck: the door's note comes at 90% of it.
+const DECK_WORDS = 2000;
 
 const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: ["noun", "verb", "adj"][i % 3], rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
 
 describe("where the notes are found (#714)", () => {
   test("there is no stile until the first stile note is unlocked by the words known", () => {
-    for (const notes of Object.values(NOTES)) {
+    for (const notes of LANGS.map((lang) => courseNotes(lang, DECK_WORDS))) {
       const first = Math.min(...notes.filter((n) => n.beat === "stile").map((n) => n.unlockAt));
-      expect(placeNotes(unlockedNotes(notes, first - 1), []).stile).toBeNull();
-      expect(placeNotes(unlockedNotes(notes, first), []).stile).toHaveLength(1);
+      expect(placeNotes(unlockedNotes(notes, first - 1, []), []).stile).toBeNull();
+      expect(placeNotes(unlockedNotes(notes, first, []), []).stile).toHaveLength(1);
     }
   });
 
   test("a stile note lies under the step until it is read; then it hangs on the nails", () => {
-    const unlocked = unlockedNotes(NOTES.es, 450);
+    const unlocked = unlockedNotes(courseNotes("es", DECK_WORDS), 450, []);
     const stile = unlocked.filter((n) => n.beat === "stile").map((n) => n.id);
     const fresh = placeNotes(unlocked, []);
     expect(fresh.stile).toEqual(stile);
@@ -31,13 +34,25 @@ describe("where the notes are found (#714)", () => {
 
 describe("the diary on the hill (#858)", () => {
   test("its pages are only in the diary, in the order they came, and there is no diary before the first", () => {
-    for (const notes of Object.values(NOTES)) {
+    for (const notes of LANGS.map((lang) => courseNotes(lang, DECK_WORDS))) {
       const pages = notes.filter((n) => n.diary);
       expect(pages.map((n) => n.id)).toEqual(["n09", "d1", "d2", "d3", "n12"]);
-      expect(placeNotes(unlockedNotes(notes, pages[0].unlockAt - 1), []).diary).toBeNull();
+      expect(placeNotes(unlockedNotes(notes, pages[0].unlockAt - 1, []), []).diary).toBeNull();
       const all = placeNotes(notes, ["n09"]);
       expect(all.diary).toEqual(pages.map((n) => ({ id: n.id, unread: n.id !== "n09" })));
       for (const n of all.nails) expect(pages.map((p) => p.id)).not.toContain(n.id);
+    }
+  });
+});
+
+describe("the last note (#882)", () => {
+  test("comes at nine in ten of the deck's words, and lies only by the mouse door", () => {
+    for (const notes of LANGS.map((lang) => courseNotes(lang, DECK_WORDS))) {
+      expect(placeNotes(unlockedNotes(notes, 1799, []), []).door).toBeNull();
+      const all = placeNotes(unlockedNotes(notes, 1800, []), []);
+      expect(all.door).toEqual({ id: "n13", unread: true });
+      expect(all.nails.map((n) => n.id)).not.toContain("n13");
+      expect(placeNotes(notes, ["n13"]).door).toEqual({ id: "n13", unread: false });
     }
   });
 });

@@ -28,9 +28,9 @@ import { NAME_NEAR, Plants } from "./scenePlants";
 import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
 import { ANSWER_LINE, ANSWER_NOTE, ANSWER_SPOKEN, backWay, DIARY_REACH, hasNote, HILL_NOTE, HILLTOP_R, hillY, lookoutAt, LookoutLight, STOOL_R, type Lookout } from "./lookout";
 import { LookoutThings } from "./sceneLookout";
-import { stepY, stileAt, type StileSpot } from "./stile";
+import { stepY, stileAt, type NotePlace, type StileSpot } from "./stile";
 import { StileScene } from "./sceneStile";
-import { courseNotes } from "./notes/read";
+import { writtenNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type Reachable, type TapAt, type TapHit, type Tapper } from "./scenePart";
 import { buildShed, shedRoof, shedStep } from "./shed";
@@ -133,6 +133,8 @@ export interface WalkVisitors {
   stile: readonly string[] | null;
   /** The diary on the hill (#858): null until its first page is unlocked; then its pages, in the order they came, and whether each is still unread. */
   diary: readonly { id: string; unread: boolean }[] | null;
+  /** The last note (#882), on the mat of the open mouse door: null until it is unlocked, and until then the mouse door is shut. */
+  mouseDoor: NotePlace | null;
 }
 
 export interface SceneCallbacks {
@@ -480,12 +482,12 @@ export class GardenScene {
     // The way over the stile opens once the note that tells of the hill is unlocked (#770), and the far light answers once the note that tells of that is.
     // Null: no diary page is unlocked yet.
     const notes = [...visitors.notes, ...(visitors.diary ?? [])].map((n) => n.id);
-    this.hillOpen = hasNote(courseNotes(lang), notes, HILL_NOTE);
+    this.hillOpen = hasNote(writtenNotes(lang), notes, HILL_NOTE);
     this.stileSpot = visitors.stile ? stileAt(layout) : null;
     this.hill = this.stileSpot ? lookoutAt(this.stileSpot) : null;
     this.lookoutThings = this.hill ? new LookoutThings(this.hill) : null;
     this.back = this.stileSpot && this.hill ? backWay(this.stileSpot, this.hill, this.hillOpen) : null;
-    this.lookout = new LookoutLight(hasNote(courseNotes(lang), notes, ANSWER_NOTE));
+    this.lookout = new LookoutLight(hasNote(writtenNotes(lang), notes, ANSWER_NOTE));
     this.lanterns = new Lanterns();
     this.sky = new SkyWater(this.camera, reducedMotion, this.lookout);
     this.critters = new Critters(this.camera, reducedMotion);
@@ -616,7 +618,7 @@ export class GardenScene {
     this.openedAt = now.getTime();
     // The mat says the doormat's word as a mat would: the bare word, in capitals.
     const welcome = this.visitors.scenery?.doormat?.word;
-    this.jokes.build(c, this.bench, now, welcome ? bareNoun(welcome).toUpperCase() : null);
+    this.jokes.build(c, this.bench, now, welcome ? bareNoun(welcome).toUpperCase() : null, this.visitors.mouseDoor);
     if (await this.stopped()) return;
     // The garden's age, in calendar days since the first review (#379).
     const first = this.visitors.firstReview;
@@ -642,6 +644,11 @@ export class GardenScene {
     if (this.keyHelp?.visitors && key && this.guests.has("dog")) {
       this.guests.place("dog", besideKey(this.layout, key, "dog"), key);
       this.door.guarded = true;
+    }
+    // While the last note waits unread (#882), the cat, if it is here today, sits by the open mouse door and looks in.
+    if (this.visitors.mouseDoor?.unread && this.guests.has("cat")) {
+      const by = this.jokes.besideMouseDoor();
+      this.guests.place("cat", by.at, by.looks);
     }
     // Even with the door shut: it may open in this walk.
     this.orchardAtlas = await orchardAtlas;
@@ -1329,7 +1336,9 @@ export class GardenScene {
     const shed = this.notes.pick(r);
     // Null: there is no stile yet.
     const step = this.stile?.pick(r) ?? null;
-    const near = step && (!shed || step.t < shed.t) ? step : shed;
+    // Null: the mouse door is shut (#882).
+    const mat = this.jokes.pickNote(r);
+    const near = [shed, step, mat].reduce<{ id: string; t: number } | null>((a, b) => (b && (!a || b.t < a.t) ? b : a), null);
     // Infinity: there is no diary yet. A tap on it opens it where it opens (LookoutThings.page).
     const book = this.lookoutThings?.pick(r) ?? Infinity;
     const got = book < (near ? near.t : Infinity) ? { id: this.lookoutThings!.page(), t: book } : near;
@@ -1337,8 +1346,13 @@ export class GardenScene {
     return { kind: "note", id: got.id };
   }
 
-  /** A tap on a note: open it from in front of the shed, by the stile's foot (#714), or by the diary's stone (#858); from farther away, walk up to it first. */
+  /** A tap on a note: open it from in front of the shed, by the stile's foot (#714), by the diary's stone (#858), or by the mouse door's mat (#882); from farther away, walk up to it first. */
   private tapNote(id: string) {
+    if (this.jokes.hasNote(id)) {
+      if (this.jokes.noteInReach(this.x, this.z, 0)) return this.openNote(id);
+      const at = this.jokes.standByNote();
+      return this.goTo(at.x, at.z, 0, () => this.openNote(id));
+    }
     const things = this.lookoutThings;
     if (things?.has(id)) {
       if (things.byDiary(this.x, this.z, 0)) return this.openDiary();
@@ -1358,6 +1372,7 @@ export class GardenScene {
   /** Open note `id` on its card; on the wall it is a read one from now on. */
   private openNote(id: string) {
     if (this.stile?.has(id)) this.stile.read(id);
+    else if (this.jokes.hasNote(id)) this.jokes.readNote();
     else this.notes.read(id);
     this.cb.onNote(id);
   }
@@ -2310,7 +2325,8 @@ export class GardenScene {
    * the lookout's stool it blows out or lights the lantern beside you while
    * they are lit, else gets you up (#858); then the key; a loose thing in your
    * hands; a hiding visitor (#379), before the bench and the plant ahead: it
-   * hides under the one and behind the other; the door, unless a lantern by
+   * hides under the one and behind the other; the last note on the mouse
+   * door's mat (#882), which lies in the door's reach; the door, unless a lantern by
    * the gate is nearer; the lookout's stool, then its diary, before the
    * lantern on the post a step in front of the stool; a lantern; a
    * note (#654) in the shed or at the stile's foot; a loose thing to pick up;
@@ -2334,6 +2350,15 @@ export class GardenScene {
     }),
     this.carryReach(true),
     this.seekReach,
+    // The last note (#882): by the mouse door's mat, before the big door and the lantern by the gate, whose reach covers the mat.
+    reachable<string>({
+      shown: null,
+      reach: () => {
+        const id = this.jokes.noteInReach(this.x, this.z, slack(this.reach === "read"));
+        return id ? { a: "read", target: id } : null;
+      },
+      act: (_, id) => this.openNote(id),
+    }),
     reachable<DoorAction>({
       shown: null,
       reach: () => {

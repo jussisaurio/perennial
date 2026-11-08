@@ -2,9 +2,9 @@
 // translated. Gardener words no deck teaches: Türchen (the mouse door),
 // Krümel (the mouse), Zauntreppe (the stile), Dornen (the brambles), Fünkchen (the far light).
 
-import type { Note } from "./note";
+import type { WrittenNote } from "./note";
 
-export const NOTES: readonly Note[] = [
+export const NOTES: readonly WrittenNote[] = [
   {
     id: "n01",
     beat: "early",
@@ -118,8 +118,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n13",
     beat: "door",
-    unlockAt: 1600,
-    text: "Jetzt ist der Garten dein Garten.\nGib beiden Seiten Wasser. Langsam, wie Sturm.\nDu magst keine Schnecken? Das ist kein Grund.",
-    forms: { beiden: "beide", gib: "geben", ist: "sein", keine: "kein", magst: "mögen", schnecken: "schnecke", seiten: "seite" },
+    text: "Jetzt ist der Garten dein Garten.\nGib Krümel Wasser.\nNachts: Licht aus, Licht an. Zweimal. Das Fünkchen antwortet immer.\nDu magst keine Schnecken? Das ist kein Grund.",
+    forms: { antwortet: "antworten", gib: "geben", ist: "sein", keine: "kein", magst: "mögen", schnecken: "schnecke" },
   },
 ];

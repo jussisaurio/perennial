@@ -28,7 +28,11 @@ interface WordPlan {
 function planWords(words: readonly { id: string }[], now: number, days: number, knewFirst: boolean): WordPlan[] {
   const r = rng(words.length * 31 + days);
   // Common words were met first; the newest ones only in the last days.
-  const age = words.map((_, i) => Math.pow(1 - i / words.length, 1.3));
+  // A story point's newest words were met two weeks ago at the latest: a word met
+  // today can't be known yet, so with every deck word met, no deck could make the
+  // 90% known of the last note (#882).
+  const newest = knewFirst ? 14 / days : 0;
+  const age = words.map((_, i) => Math.max(newest, Math.pow(1 - i / words.length, 1.3)));
   const totalAge = age.reduce((a, b) => a + b, 0);
   // The server takes at most QUOTA.reviewsPerDay (5000) reviews a day. Share
   // 4800 by age, as a real learner's reviews are: an even share gave a
@@ -91,7 +95,7 @@ export function planDemo(words: readonly { id: string }[], size: DemoSize, now: 
 /** The demo learner's course: the gardener's notes read, and every review, oldest word first. */
 export function demoHistory(lang: string, words: readonly { id: string }[], size: DemoSize, now: number) {
   // At a story point, the notes before it were read, as a learner who got there would have; its own is new.
-  const notesRead = "known" in size ? courseNotes(lang).filter((n) => n.unlockAt < size.known).map((n) => n.id) : [];
+  const notesRead = "known" in size ? courseNotes(lang, words.length).filter((n) => n.unlockAt < size.known).map((n) => n.id) : [];
   const reviews = planDemo(words, size, now).flatMap((w) => w.log.map((r) => ({ wordId: w.wordId, ...r })));
   return { notesRead, reviews };
 }

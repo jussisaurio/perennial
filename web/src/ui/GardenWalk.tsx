@@ -184,7 +184,7 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   // The learner's own garden (the same plants as the 2D garden) and today's visitors. The walk is a snapshot of
   // them as it opens, so they are worked out once, in tasks of their own: in render, with every deck word studied,
   // the two took about 120 ms in one task at CPU 10× (#459).
-  const [opened, setOpened] = useState<{ source: PlantSource; visitors: LearnerVisitors } | null>(null);
+  const [opened, setOpened] = useState<{ source: PlantSource; visitors: LearnerVisitors; deckWords: number } | null>(null);
   useEffect(() => {
     if (!learner || opened) return;
     let alive = true;
@@ -193,7 +193,7 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
       if (!alive) return;
       const source = plantsFromLearner(learner);
       await yieldToBrowser();
-      if (alive) setOpened({ source, visitors: learnerVisitors(learner) });
+      if (alive) setOpened({ source, visitors: learnerVisitors(learner), deckWords: learner.deck.words.length });
     })();
     return () => {
       alive = false;
@@ -232,18 +232,21 @@ export function LearnerGardenWalk({ lang, onExit, onWater }: { lang: string; onE
   // The gardener's notes (#654): the ones unlocked by the words known as the walk opens, as the visitors are.
   // A note is read once it is opened; the list syncs to the learner's other devices.
   const read = learner?.course.notes_read;
+  const deckWords = opened?.deckWords;
   const notes = useMemo(() => {
-    if (!visitors) return undefined;
-    const list = unlockedNotes(courseNotes(lang), visitors.facts.known);
+    if (!visitors || deckWords === undefined) return undefined;
+    // `?? []`: before the learner loads, nothing has been read.
+    const done = read ?? [];
+    // The door's note comes at a share of the deck (#882); a note once read stays found.
+    const list = unlockedNotes(courseNotes(lang, deckWords), visitors.facts.known, done);
     const isKnown = (lemma: string) => visitors.lemmas.has(lemma);
     const opened = (id: string) => {
       if (read?.includes(id)) return;
       // A write the server refuses is told by the refused-writes notice (#253); the note was still read here.
       readNote(store, lang, id).catch((e) => console.error("note read not saved", e));
     };
-    // `?? []`: before the learner loads, nothing has been read.
-    return { list, read: read ?? [], isKnown, opened };
-  }, [visitors, read, store, lang]);
+    return { list, read: done, isKnown, opened };
+  }, [visitors, deckWords, read, store, lang]);
   return <GardenWalk lang={lang} source={source} visitors={visitors} door={door} toys={toys ?? undefined} notes={notes} onExit={onExit} water={water} focus={focus} onTap={onTap} hint={hint} />;
 }
 

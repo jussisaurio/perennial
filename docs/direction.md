@@ -62,7 +62,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 - **Notes, places and visitors open by known words, never by days.** A break never costs anything.
 - **Pacing.** A note comes about every 3–4 weeks for a learner who does 5 minutes a day. The thresholds come from a simulation of that learner, not from the deck's size. Long gaps are filled by world changes, not by more notes. (Retune not done yet: #883.)
 
-**The ending.** The mouse door opens when the learner knows about 90% of the deck's words. The last note, "the door" note, is behind it. Then the garden keeps growing but adds no more story. (Not built yet: #882.)
+**The ending.** The mouse door opens when the learner knows about 90% of the deck's words. The last note, "the door" note, is behind it. Then the garden keeps growing but adds no more story (#882).
 
 **Garden words change the world.** Six garden words, and only six, change the world when they become known: lluvia, luna, nieve, búho, zorro, erizo (rain, moon, snow, owl, fox, hedgehog; the same in German). Each one only adds something to the world, with no new verb, and they are placed to fill the gaps between notes. In practice, one small flash, the same for all six, plays when such a word becomes known. Today only the visitor words (cat, bird, dog, frog, fish, snail, butterfly) do something. (Not built yet: #209.)
 
@@ -97,12 +97,12 @@ Until then, work that moves the launch comes before new garden features.
 - Optional AI for mining and examples, for email accounts, under a budget.
 - Start without an account, then keep progress with an email code. More than one course per learner.
 - The garden: the strip and the walk, beds in planting order, visitors, the door and key, the notes, the stile, the hill, the diary, the far light, pebbles, dandelion clocks, the glint and thoughts.
+- The ending: the mouse door and its last note, and the course-end line on Today (#882).
 - The landing page with a walk you can only look at (#14).
 - "Give this seed to a friend", the only way to share (#652 makes the link show the flower).
 - Open garden and accessibility bugs, and the performance debt (#421 and the issues it links).
 
 ### In later (decided, not built)
-- The ending and the course-end state on Today (#882).
 - Note thresholds retuned for 5 minutes a day (#883).
 - Six garden words change the world, with one practice flash (#209).
 - AI readers and writing feedback, after the launch (#748).
