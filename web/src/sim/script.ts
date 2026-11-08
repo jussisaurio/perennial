@@ -37,7 +37,7 @@ You are learning ${name} in an app, a few minutes a day. Each day, after your pr
 - Days count from your first day in the app. "You know 250 words" is how many ${name} words you know that day.
 - Anything written in the garden is in ${name}, with no translation. A word you do not know yet shows as ${MASK}. You see that a word is there, but you can't read it.
 - ~~A word~~ like this was crossed out by the hand that wrote it.
-- Tap a thing in the garden and its name shows on a small tag: "el banco · bench". Some things also show a short line under their name. We assume you tap each thing on the day it has a new line.
+- Tap a thing in the garden and its name shows on a small tag: "${SCENERY.bench.words[lang]} · ${SCENERY.bench.gloss}". Some things also show a short line under their name. We assume you tap each thing on the day it has a new line.
 - We assume you read each note on the day it comes.
 - A week or more with nothing new is one line here. In the app, you would still come for a few minutes on each of those days.
 - Do not look anything up or translate with a tool. Work out what you can from the words you know.
