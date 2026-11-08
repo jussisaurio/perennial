@@ -117,7 +117,7 @@ test("thought.grows: the pond shows a new line at 200, 700 and 1800 words", asyn
     await expect(tag(page)).toContainText("el estanque");
     lines.push(await page.locator(".gw-thought-line").innerText());
   }
-  expect(lines).toEqual(["Hay un pez. O dos.", "Los peces suben cuando llega alguien.", "Los peces aún esperan su pan."]);
+  expect(lines).toEqual(["Hay un pez. O dos.", "Los peces suben. Buscan a alguien.", "Los peces aún esperan su pan."]);
 });
 
 test("thought.only-tap: standing by the bench shows no line; while one shows, W walks on and the button still says Sit on the bench", async ({ page }) => {
@@ -146,7 +146,7 @@ test("thought.replace: a tap on the pond while the bench's line shows shows the 
   await page.mouse.click(...(await facePond(page)));
   await expect(tag(page)).toHaveCount(1);
   await expect(tag(page)).toContainText("el estanque");
-  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben cuando llega alguien.");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben. Buscan a alguien.");
 });
 
 test("thought.seated: sitting on the bench, a tap on the pond shows the pond's tag and line, and you are still sitting", async ({ page }) => {
@@ -171,7 +171,7 @@ test("thought.seated: sitting on the bench, a tap on the pond shows the pond's t
   });
   await page.mouse.click(...at);
   await expect(tag(page)).toContainText("el estanque");
-  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben cuando llega alguien.");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben. Buscan a alguien.");
   await expect(stand).toBeVisible();
 });
 
@@ -251,7 +251,7 @@ test("thought.hills: with 800 words a tap on the far hills shows their tag and a
   });
   await page.mouse.click(...at);
   await expect(tag(page)).toContainText("las colinas");
-  await expect(page.locator(".gw-thought-line")).toHaveText("De allí no viene nadie.");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Siempre están lejos.");
 });
 
 test("thought.sundial-night: by day a tap on the sundial shows its line; at night it says it is closed, with no line", async ({ page }) => {

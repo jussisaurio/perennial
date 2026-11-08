@@ -9,18 +9,18 @@ export const THOUGHTS: readonly Thought[] = [
   { thing: "bench", unlockAt: 1350, text: "Dos marcas de taza, juntas.", forms: { marcas: "marca", juntas: "junto" } },
 
   { thing: "pond", unlockAt: 180, text: "Hay un pez. O dos.", forms: { hay: "haber" } },
-  { thing: "pond", unlockAt: 660, text: "Los peces suben cuando llega alguien.", forms: { los: "el", peces: "pez", suben: "subir", llega: "llegar" } },
+  { thing: "pond", unlockAt: 660, text: "Los peces suben. Buscan a alguien.", forms: { los: "el", peces: "pez", suben: "subir", buscan: "buscar" } },
   { thing: "pond", unlockAt: 900, text: "Los peces aún esperan su pan.", forms: { los: "el", peces: "pez", esperan: "esperar" } },
 
-  { thing: "sunflower", unlockAt: 120, text: "Siempre mira al sol.", forms: { mira: "mirar", al: "a" } },
-  { thing: "sunflower", unlockAt: 600, text: "Cada año, en el mismo sitio." },
-  { thing: "sunflower", unlockAt: 1000, text: "Su cara mira al camino.", forms: { mira: "mirar", al: "a" } },
+  { thing: "sunflower", unlockAt: 250, text: "Mira al sol. A ti, no.", forms: { mira: "mirar", al: "a", ti: "tú" } },
+  { thing: "sunflower", unlockAt: 600, text: "Vuelve cada año, sin ella.", forms: { vuelve: "volver" } },
+  { thing: "sunflower", unlockAt: 1000, text: "Ella lo miraba cada mañana.", forms: { lo: "él", miraba: "mirar" } },
 
-  { thing: "sundial", unlockAt: 180, text: "El sol da la hora.", forms: { da: "dar", la: "el" } },
+  { thing: "sundial", unlockAt: 290, text: "Ya nadie mira la hora.", forms: { mira: "mirar", la: "el" } },
   { thing: "sundial", unlockAt: 400, text: "Sin sol, no hay hora.", forms: { hay: "haber" } },
   { thing: "sundial", unlockAt: 1750, text: "En la piedra, dos letras pequeñas.", forms: { la: "el", letras: "letra", "pequeñas": "pequeño" } },
 
-  { thing: "hills", unlockAt: 200, text: "¿Qué hay allí?", forms: { hay: "haber" } },
-  { thing: "hills", unlockAt: 450, text: "De allí no viene nadie.", forms: { viene: "venir" } },
+  { thing: "hills", unlockAt: 290, text: "De allí no viene nadie.", forms: { viene: "venir" } },
+  { thing: "hills", unlockAt: 520, text: "Siempre están lejos.", forms: { "están": "estar" } },
   { thing: "hills", unlockAt: 1000, text: "Al otro lado vive alguien.", forms: { al: "a", vive: "vivir" } },
 ];
