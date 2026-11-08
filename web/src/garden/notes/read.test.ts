@@ -42,7 +42,7 @@ describe("the notes on the nails", () => {
     expect(unlockedNotes([later, first], 300, []).map((n) => n.id)).toEqual(["n01", "n02"]);
   });
 
-  // The door's note moves with the deck (#882): a learner who read it at 1600 words keeps it when it moves to 1832.
+  // A retune moves notes' counts (#883): a learner who read n03 at 130 words keeps it when it moves to 160.
   test("stay found once read, even when one's count moves past the learner", () => {
     expect(unlockedNotes([later, first], 50, ["n02"]).map((n) => n.id)).toEqual(["n01", "n02"]);
     expect(hasUnread([first, later], 50, ["n01", "n02"])).toBe(false);

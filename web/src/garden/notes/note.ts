@@ -3,12 +3,13 @@
 
 import type { Fact } from "../facts";
 
-/** The share of the course's live words a learner knows when the last note comes and the mouse door opens (#882). */
-export const ENDING_SHARE = 0.9;
-
-interface Written {
+export interface Note {
   /** Stable id, "n01"…, and "d1"… for the pages only in the diary; read state keys on it. */
   id: string;
+  /** The part of the story it belongs to. The last note, the door's (#882), opens the mouse door. */
+  beat: "early" | "stile" | "lookout" | "late" | "door";
+  /** Known words (reading) the learner needs before it appears. */
+  unlockAt: number;
   /** The note, in the course language. Line breaks are kept. */
   text: string;
   /** Surface forms whose deck lemma differs, lower case: "fui" → "ir". */
@@ -19,16 +20,4 @@ interface Written {
   reveals?: readonly Fact[];
   /** The facts a reader must know already, or this note reads wrong. */
   assumes?: readonly Fact[];
-}
-
-/**
- * A note as written. The last one, the door's (#882), has no count of its own:
- * it comes at ENDING_SHARE of the course, so it moves when the deck grows.
- */
-export type WrittenNote = Written & ({ beat: "early" | "stile" | "lookout" | "late"; unlockAt: number } | { beat: "door" });
-
-export interface Note extends Written {
-  beat: WrittenNote["beat"];
-  /** Known words (reading) the learner needs before it appears. */
-  unlockAt: number;
 }

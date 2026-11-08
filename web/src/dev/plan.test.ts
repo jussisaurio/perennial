@@ -34,7 +34,7 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
     // Garden specs and screenshots use ?demo=es:800 to reach the lookout (docs/agents.md).
     if (lang === "es") {
       test("800 words studied open the way over the stile", () => {
-        const hill = courseNotes(lang, words.length).find((n) => n.id === HILL_NOTE)!;
+        const hill = courseNotes(lang).find((n) => n.id === HILL_NOTE)!;
         expect(planDemo(words, { studied: 800 }, NOW).filter((w) => w.known).length).toBeGreaterThanOrEqual(hill.unlockAt);
       });
     }

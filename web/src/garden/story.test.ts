@@ -6,7 +6,7 @@ import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { courseOrder } from "../content/order";
 import { Deck, GARDEN_WORDS } from "../deck/schema";
-import { ENDING_SHARE } from "./notes/note";
+import { dayKnowing, type Trace } from "../sim/trace";
 import { storyEvents, type StoryEvent } from "./story";
 import { NO_FACTS, VISITORS } from "./visitors";
 
@@ -17,6 +17,10 @@ const NOW = new Date("2026-11-08T12:00:00Z");
 const course = (lang: "es" | "de", deck: unknown) =>
   courseOrder({ words: Schema.decodeUnknownSync(Deck(lang))(deck).words.filter((w) => !w.retired && !w.aliasOf) });
 const COURSES = { es: course("es", deckEs), de: course("de", deckDe) };
+const TRACES: Record<"es" | "de", Trace> = {
+  es: await Bun.file(new URL("../sim/traces/es-daily.json", import.meta.url)).json(),
+  de: await Bun.file(new URL("../sim/traces/de-daily.json", import.meta.url)).json(),
+};
 
 const gates = (events: readonly StoryEvent[]) => events.map((e) => e.gate);
 
@@ -36,10 +40,30 @@ for (const lang of ["es", "de"] as const) {
       expect(words[key.at - 1].garden).toBe("key");
     });
 
-    test("the last note opens the mouse door at its share of the course", () => {
-      const door = events.find((e) => e.kind === "note" && e.opens.includes("door"))!;
-      expect(door.at).toBe(Math.ceil(ENDING_SHARE * words.length));
+    test("each place comes with its note, and the last note opens the mouse door", () => {
       expect(events.filter((e) => e.kind === "note" && e.opens.length).map((e) => e.kind === "note" && e.opens)).toEqual([["stile"], ["hill"], ["diary"], ["answer"], ["door"]]);
+      expect(events.findLast((e) => e.kind === "note")).toMatchObject({ opens: ["door"] });
+    });
+
+    // The story's pace (#883), for the learner who does Today's 5 minutes every day (sim/learner.ts).
+    describe("for the daily learner", () => {
+      const trace = TRACES[lang];
+      const notes = events.flatMap((e) => (e.kind === "note" ? [e.at] : []));
+      // !: the trace runs until the learner knows the door's count, the last note's.
+      const day = (known: number) => dayKnowing(trace, known)!;
+
+      test("the traces end at this door (else run `bun run sim:learners` again)", () => {
+        expect(trace.door).toBe(notes.at(-1)!);
+      });
+
+      test("the mouse door opens after about a year", () => {
+        expect(day(notes.at(-1)!)).toBeWithin(335, 396);
+      });
+
+      test("a note comes at least every five weeks", () => {
+        const gaps = notes.slice(1).map((n, i) => day(n) - day(notes[i]));
+        expect(Math.max(...gaps)).toBeLessThanOrEqual(35);
+      });
     });
   });
 }

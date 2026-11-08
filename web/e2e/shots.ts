@@ -185,15 +185,15 @@ const standOnHill = (page: Page, by: "post" | "stool" | "stone") =>
 
 /**
  * Spots seen by another learner: 500 words put the stile's notes at its foot, but not the hill's note (n08);
- * one who knows exactly 760 words (dev/boot.ts) has the diary's first page (n09), still unread; one who knows 1400 has the bench's last thought (#864);
- * one who knows 1833, nine in ten of the Spanish deck's live words (notes/read.ts courseNotes), has the last note behind the mouse door (#882).
+ * one who knows exactly 565 words (dev/boot.ts) has the diary's first page (n09), still unread; one who knows 1400 has the bench's last thought (#864);
+ * one who knows 940 (notes/es.ts n13) has the last note behind the mouse door (#882).
  */
-const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:760", thought: "known:1400", mousedoor: "known:1833" };
+const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:565", thought: "known:1400", mousedoor: "known:940" };
 
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
  * nails (each needs 60 or more known words) and under the stile's step, and open the way
- * over the stile to the lookout (note n08, 620 known: not every demo word is known). The door is opened too.
+ * over the stile to the lookout (note n08, 495 known: not every demo word is known). The door is opened too.
  * A spot in WORDS opens for its own learner.
  */
 async function openWalk(page: Page, words: number | `known:${number}`) {

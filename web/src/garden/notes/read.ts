@@ -3,25 +3,20 @@
 
 import { inLang } from "../nouns";
 import { NOTES } from "./index";
-import { ENDING_SHARE, type Note, type WrittenNote } from "./note";
+import type { Note } from "./note";
 
-/** This course's notes as written. Every course has an entry (notes/index.ts), so a missing one is a bug. */
-export function writtenNotes(lang: string): readonly WrittenNote[] {
+/** This course's notes. Every course has an entry (notes/index.ts), so a missing one is a bug. */
+export function courseNotes(lang: string): readonly Note[] {
   const notes = inLang(NOTES, lang);
   if (!notes) throw new Error(`no notes for course "${lang}"`);
   return notes;
 }
 
-/** This course's notes, the door's placed at ENDING_SHARE of the course's `deckWords` live words (#882). */
-export function courseNotes(lang: string, deckWords: number): Note[] {
-  return writtenNotes(lang).map((n) => (n.beat === "door" ? { ...n, unlockAt: Math.ceil(ENDING_SHARE * deckWords) } : n));
-}
-
 /**
  * The notes found by a learner who knows `known` words (the count the
  * visitors use, ui/visitors.ts knownWords), in the order they came. A note
- * once read stays found, even when its count moves past the learner (the
- * door's moves as the deck grows).
+ * once read stays found, even when a retune moves its count past the
+ * learner (#883).
  */
 export function unlockedNotes(notes: readonly Note[], known: number, read: readonly string[]): Note[] {
   return notes.filter((n) => n.unlockAt <= known || read.includes(n.id)).sort((a, b) => a.unlockAt - b.unlockAt);

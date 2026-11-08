@@ -208,7 +208,7 @@ function TodayGarden({ learner, now, rest, onWalk }: { learner: Learner; now: nu
   // Where the snail is on its daily lap (the strip is the fence, unrolled).
   const snailAt = snailLap();
   // An unread gardener's note (#654): unlocked by the same known words the visitors count.
-  const pinned = hasUnread(courseNotes(learner.lang, learner.deck.words.length), visitors.facts.known, learner.course.notes_read);
+  const pinned = hasUnread(courseNotes(learner.lang), visitors.facts.known, learner.course.notes_read);
   return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} pinned={pinned} testId="today-garden" />;
 }
 

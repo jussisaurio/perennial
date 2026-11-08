@@ -11,7 +11,7 @@ All in `web/`.
 - `bun run story:sim <lang> <pattern>` prints the story as one simulated learner meets it: each event's day, the learner's known words that day, its kind, the share of its words the learner can read, and the pacing numbers below. `<lang>` is `es` or `de`. `<pattern>` is `daily` (5 minutes a day: the one we tune for), `weekdays`, `break` (two weeks off at day 40) or `more` (10 minutes a day).
 - `--json` prints the same as JSON, for an agent to read.
 - `--script <dir>` writes the reader's script: one file per note, `01-n01.md` and on, in day order. Each part ends on its note.
-- The learner traces are in `web/src/sim/traces/`. Rebuild them with `bun run sim:learners` only when the planner, FSRS or the deck changes. A change to the story text needs no rebuild.
+- The learner traces are in `web/src/sim/traces/`. Rebuild them with `bun run sim:learners` only when the planner, FSRS, the deck or the door's count changes: each trace stops at the door. A change to the story text or to another note's count needs no rebuild.
 - What each note should leave the reader with is in `web/src/sim/intended.ts`. Change an entry only when the story changes, never to match what readers said.
 
 The projector (`web/src/sim/timeline.ts`) knows only the learner's words, so it assumes:
@@ -39,7 +39,7 @@ Each event has one of three kinds (direction.md, "Density"), read from the fact 
 - **small**: a thought or frog line that needs a fact from the notes (it has `assumes`);
 - **texture**: everything else: a thought with no `assumes`, a visitor, the key.
 
-The "read" share counts the words the simulated learner really knows that day. `notes.test.ts` uses each word's place in the course instead. The simulated learner often knows less than the place suggests (#938): a de note at 70% by the test reads at 50% here.
+The "read" share counts the words the simulated learner really knows that day. The simulated learner often knows less than a word's place in the course suggests, so `notes.test.ts` and `thoughts.test.ts` check both: by course place, and for the daily learner on the day it comes (#938).
 
 ### The reader's script
 
@@ -54,8 +54,9 @@ A part shows the days since the last note, then the note:
 
 No change is kept unless these pass (`bun test src/garden` in web/):
 - `facts.test.ts`: no line needs a fact before a note tells it, and both courses tell the same facts in the same beats.
-- `notes.test.ts`: each note's words are deck words or the gardener's; a note unlocks when 55% of its words are known, an early or stile note at most 75%; notes stay in story order.
-- `thoughts.test.ts`: a thought or frog line uses only words known when it unlocks; lines on a thing stay in order.
+- `notes.test.ts`: each note's words are deck words, the gardener's, or things the garden names (the hedge); a note unlocks when 55% of its words are known, both by course place and for the daily learner, and an early or stile note at most 75% for the daily learner; notes stay in story order.
+- `thoughts.test.ts`: a thought or frog line uses only words known when it unlocks, both by course place and for the daily learner (by place alone after the door, where the trace stops); lines on a thing stay in order.
+- `story.test.ts`: for the daily learner, the door opens on days 335–396 and a note comes at least every 35 days.
 
 ## One iteration
 

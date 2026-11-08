@@ -4,7 +4,7 @@
 
 import { DECK_LANGS } from "../deck/langs";
 import type { WordsPart } from "../data/deckIndex";
-import { onDay, PATTERNS, type Trace } from "./trace";
+import { dayKnowing, onDay, PATTERNS, type Trace } from "./trace";
 
 // data/deck.ts loads the decks through Vite (import.meta.glob), which Bun does
 // not have. The simulation reads its decks from the files below instead, so
@@ -22,15 +22,15 @@ const { simulate } = await import("./learner");
 const { courseNotes } = await import("../garden/notes/read");
 
 /**
- * Six years: long enough for every pattern to reach the door, so the traces
- * hold each whole story (the slowest, weekdays only, took about 5.5 years in
- * November 2026). A trace that stops here first says so (doorDay null): that
- * is a finding for the pacing, not a run to make longer.
+ * Three years: long enough for every pattern to reach the door, so the traces
+ * hold each whole story (the slowest, weekdays only, took about 1.6 years
+ * after the retune, #883). A trace that stops here first says so (doorDay
+ * null): that is a finding for the pacing, not a run to make longer.
  */
-const MAX_DAYS = 6 * 365;
+const MAX_DAYS = 3 * 365;
 const SEED = 1;
 /** The days the summary table shows: the first months, then each year. */
-const MARKS = [30, 60, 90, 180, 365, 730, 1095, 1460, 1825];
+const MARKS = [30, 60, 90, 180, 365, 730, 1095];
 
 const started = performance.now();
 const traces: Trace[] = [];
@@ -62,9 +62,9 @@ console.log("\nThe day the daily learner first knows each note's count:\n");
 console.log("| course | note | beat | known | day |");
 console.log("|---|---|---|---|---|");
 for (const t of traces.filter((t) => t.pattern === "daily")) {
-  for (const n of courseNotes(t.lang, t.words)) {
-    const day = t.days.find((d) => d.known >= n.unlockAt)?.day;
-    console.log(`| ${t.lang} | ${n.id} | ${n.beat} | ${n.unlockAt} | ${day ?? "-"} |`);
+  for (const n of courseNotes(t.lang)) {
+    // `?? "-"`: a note the trace never reaches; every one should come by the door.
+    console.log(`| ${t.lang} | ${n.id} | ${n.beat} | ${n.unlockAt} | ${dayKnowing(t, n.unlockAt) ?? "-"} |`);
   }
 }
 console.error(`done in ${Math.round((performance.now() - started) / 1000)} s`);

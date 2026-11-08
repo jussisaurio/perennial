@@ -30,7 +30,7 @@ import { ANSWER_LINE, ANSWER_NOTE, ANSWER_SPOKEN, backWay, DIARY_REACH, hasNote,
 import { LookoutThings } from "./sceneLookout";
 import { stepY, stileAt, type NotePlace, type StileSpot } from "./stile";
 import { StileScene } from "./sceneStile";
-import { writtenNotes } from "./notes/read";
+import { courseNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type Reachable, type TapAt, type TapHit, type Tapper } from "./scenePart";
 import { buildShed, shedRoof, shedStep } from "./shed";
@@ -482,12 +482,12 @@ export class GardenScene {
     // The way over the stile opens once the note that tells of the hill is unlocked (#770), and the far light answers once the note that tells of that is.
     // Null: no diary page is unlocked yet.
     const notes = [...visitors.notes, ...(visitors.diary ?? [])].map((n) => n.id);
-    this.hillOpen = hasNote(writtenNotes(lang), notes, HILL_NOTE);
+    this.hillOpen = hasNote(courseNotes(lang), notes, HILL_NOTE);
     this.stileSpot = visitors.stile ? stileAt(layout) : null;
     this.hill = this.stileSpot ? lookoutAt(this.stileSpot) : null;
     this.lookoutThings = this.hill ? new LookoutThings(this.hill) : null;
     this.back = this.stileSpot && this.hill ? backWay(this.stileSpot, this.hill, this.hillOpen) : null;
-    this.lookout = new LookoutLight(hasNote(writtenNotes(lang), notes, ANSWER_NOTE));
+    this.lookout = new LookoutLight(hasNote(courseNotes(lang), notes, ANSWER_NOTE));
     this.lanterns = new Lanterns();
     this.sky = new SkyWater(this.camera, reducedMotion, this.lookout);
     this.critters = new Critters(this.camera, reducedMotion);
