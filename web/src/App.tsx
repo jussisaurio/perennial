@@ -1,8 +1,8 @@
-import { startTransition, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { startTransition, Suspense, use, useEffect, useRef, useState, type ReactNode } from "react";
 import { googleSignInFailed, useUser } from "./data/auth";
 import { identify, initObservability, track } from "./observability";
 import { saveCourse, StoreContext, useCourses, useDeck, useDeckSentences, useStore } from "./data/learner";
-import { boot } from "./data/boot";
+import { boot, bootAnswered } from "./data/boot";
 import { loadDeck, loadSentences } from "./data/deck";
 import { deleteOldOfflineData, keepCourse, readCourse } from "./data/device";
 import { language } from "./content/languages";
@@ -129,12 +129,12 @@ function ReloadBanner() {
   );
 }
 
-/** The deck could not load (say, no connection when it was needed). */
-function DeckFailed({ lang }: { lang: string }) {
+/** Something the screens need could not load (say, no connection when it was needed). */
+function LoadFailed({ what }: { what: string }) {
   return (
-    <div className="page narrow deck-failed">
+    <div className="page narrow load-failed">
       <p className="error" role="alert">
-        Could not load the {language(lang).name} words. Check your internet connection, then reload.
+        Could not load {what}. Check your internet connection, then reload.
       </p>
       <button className="primary" onClick={() => location.reload()}>
         Reload
@@ -171,6 +171,8 @@ function GoogleFailedBanner() {
 }
 
 function Screens() {
+  // Until the boot answer comes, the main.tsx Suspense shows the sprout. Without it nothing can start.
+  const answered = use(bootAnswered());
   const { user, pending } = useUser();
   const [route, go] = useRoute();
   // Signing in, or linking an anonymous learner to an account, changes the
@@ -190,6 +192,7 @@ function Screens() {
       identify(id);
     }
   }, [user?.id, pending]);
+  if (!answered) return <LoadFailed what="Perennial" />;
   if (pending) return <Settling />;
   if (!user) return <Onboarding signedIn={false} onStarted={() => go("/today", { replace: true })} />;
   return (
@@ -331,7 +334,7 @@ function Main({ route, go }: { route: Route; go: (to: Route, opts?: { replace?: 
           {startError}
         </p>
       )}
-      {noDeck && <DeckFailed lang={lang} />}
+      {noDeck && <LoadFailed what={`the ${language(lang).name} words`} />}
       {route === "/today" && !noDeck && (
         <Home
           lang={lang}
