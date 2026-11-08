@@ -97,10 +97,55 @@ export function backWay(s: StileSpot, at: Lookout, open: boolean): BackWay {
   };
 }
 
-/** How high the hill's ground is at (x, z) (m): a smooth mound, 0 past its foot. */
-export function hillY(at: Lookout, x: number, z: number): number {
+/** The hill's grass is drawn as flat triangles: a grid of this many squares a side over the square round its foot, two triangles each. */
+const HILL_GRID = 36;
+const HILL_CELL = (HILL.r * 2) / HILL_GRID;
+
+/** The smooth mound the grid's corners lie on (m): 0 past its foot. */
+function mound(at: Lookout, x: number, z: number): number {
   const k = Math.max(0, 1 - Math.hypot(x - at.top[0], z - at.top[1]) / HILL.r);
   return HILL.h * k * k * (3 - 2 * k);
+}
+
+/**
+ * The hill's ground as it is drawn (sceneStile.ts): each grid corner as
+ * [x, y, z], and the triangles, three corners each, facing up. Each square is
+ * split from its (+x, −z) corner to its (−x, +z) corner, as hillY reads it.
+ */
+export function hillMesh(at: Lookout): { position: Float32Array; index: number[] } {
+  const n = HILL_GRID + 1;
+  const [x0, z0] = [at.top[0] - HILL.r, at.top[1] - HILL.r];
+  const position = new Float32Array(n * n * 3);
+  for (let j = 0; j < n; j++)
+    for (let i = 0; i < n; i++) {
+      const [x, z] = [x0 + i * HILL_CELL, z0 + j * HILL_CELL];
+      position.set([x, mound(at, x, z), z], (j * n + i) * 3);
+    }
+  const index: number[] = [];
+  for (let j = 0; j < HILL_GRID; j++)
+    for (let i = 0; i < HILL_GRID; i++) {
+      const a = j * n + i;
+      // a, then +x (b), +z (c), and both (d).
+      const [b, c, d] = [a + 1, a + n, a + n + 1];
+      index.push(a, c, b, c, d, b);
+    }
+  return { position, index };
+}
+
+/**
+ * How high the ground is at (x, z) past the back fence (m): the height of the
+ * hill's drawn triangle there (hillMesh), 0 off it. The one height for the
+ * hill: what stands or walks on it stands on the grass you see (#861).
+ */
+export function hillY(at: Lookout, x: number, z: number): number {
+  const [x0, z0] = [at.top[0] - HILL.r, at.top[1] - HILL.r];
+  const [gx, gz] = [(x - x0) / HILL_CELL, (z - z0) / HILL_CELL];
+  if (gx < 0 || gz < 0 || gx >= HILL_GRID || gz >= HILL_GRID) return 0;
+  const [i, j] = [Math.floor(gx), Math.floor(gz)];
+  const [u, v] = [gx - i, gz - j];
+  const y = (di: number, dj: number) => mound(at, x0 + (i + di) * HILL_CELL, z0 + (j + dj) * HILL_CELL);
+  if (u + v <= 1) return y(0, 0) + u * (y(1, 0) - y(0, 0)) + v * (y(0, 1) - y(0, 0));
+  return y(1, 1) + (1 - u) * (y(0, 1) - y(1, 1)) + (1 - v) * (y(1, 0) - y(1, 1));
 }
 
 /**

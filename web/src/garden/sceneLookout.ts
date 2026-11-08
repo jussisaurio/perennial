@@ -38,25 +38,38 @@ export class LookoutThings {
     stool.add(seat);
     const [under, splay] = [0.45 - 0.07, 0.3];
     const legLen = under / Math.cos(splay);
+    const yaw = 0.5;
+    // Where each foot stands on the ground, as [x, ground, z].
+    const feet: THREE.Vector3[] = [];
     for (let i = 0; i < 3; i++) {
-      // Each leg in a frame turned so its +x points out from the middle; the leg's foot leans out along it.
+      // Each leg in a frame turned so its +x points out from the middle; the leg's foot leans out along it, to y = 0.
+      const turn = -((i / 3) * Math.PI * 2 + 0.4);
       const out = new THREE.Group();
-      out.rotation.y = -((i / 3) * Math.PI * 2 + 0.4);
+      out.rotation.y = turn;
       const leg = new THREE.Mesh(new THREE.BoxGeometry(0.035, legLen, 0.035), wood);
       leg.rotation.z = splay;
       leg.position.set(0.1 + (legLen / 2) * Math.sin(splay), under / 2, 0);
       out.add(leg);
       stool.add(out);
+      // A turn of `a` about y takes +x to (cos a, −sin a) in (x, z).
+      const [reach, a] = [0.1 + legLen * Math.sin(splay), yaw + turn];
+      const [x, z] = [h.stool[0] + reach * Math.cos(a), h.stool[1] - reach * Math.sin(a)];
+      feet.push(new THREE.Vector3(x, hillY(h, x, z), z));
     }
-    stool.position.set(h.stool[0], hillY(h, ...h.stool), h.stool[1]);
-    stool.rotation.y = 0.5;
+    // It rests on its three feet, each on the ground under it: on the slope it leans with it, as a stool would.
+    const up = new THREE.Vector3().subVectors(feet[2], feet[0]).cross(new THREE.Vector3().subVectors(feet[1], feet[0])).normalize();
+    if (up.y < 0) up.negate();
+    stool.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), up).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw));
+    // The feet's middle is the stool's own (0, 0, 0).
+    stool.position.copy(feet[0]).add(feet[1]).add(feet[2]).divideScalar(3);
     c.scene.add(still(stool));
     if (!pages) return;
 
     this.pages = pages.map((p) => ({ ...p }));
     const [sx, sz] = h.stone;
-    // The stone's foot sits a little into the slope, so no gap shows on its low side.
-    const foot = hillY(h, sx, sz) - 0.04;
+    // Its flat foot rests on the lowest ground under its rim (its seven corners), sunk into the slope above that.
+    const rim = Array.from({ length: 7 }, (_, i) => (i / 7) * Math.PI * 2);
+    const foot = Math.min(...rim.map((a) => hillY(h, sx + STONE_R * Math.sin(a), sz + STONE_R * Math.cos(a))));
     const stone = new THREE.Mesh(new THREE.CylinderGeometry(STONE_R - 0.03, STONE_R, STONE_H, 7), c.mat(T.pixelTexture(T.stone(), true)));
     stone.position.set(sx, foot + STONE_H / 2, sz);
     const top = foot + STONE_H;
