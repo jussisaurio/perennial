@@ -444,14 +444,14 @@ test("hill.answer: with n12, by day, sat on the stool till night, two signals fr
   const s = await walkIn(page, N12);
   await sit(page, s);
   await expect.poll(() => lapse(page), { timeout: 120_000 }).toBe(2);
-  const line = page.locator(".gw-say", { hasText: "El lucero contesta." });
+  const line = page.locator(".gw-echo", { hasText: "El lucero contesta." });
   for (let round = 0; round < 2; round++) {
     await recordFarLight(page);
     await signal(page);
     expect(await farLight(page)).toEqual({ dark: 0, on: true });
     await signal(page);
     await expect(line).toBeVisible({ timeout: 20_000 });
-    // The answer is over 5.5 s after the signal, and its line gone 4 s after it showed.
+    // The answer is over 6 s after the signal, and its line gone 5 s after it showed.
     await waitGame(page, 8);
     await expect(line).toBeHidden();
     expect(await farLight(page)).toEqual({ dark: 2, on: true });

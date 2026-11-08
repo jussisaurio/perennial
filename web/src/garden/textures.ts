@@ -816,11 +816,11 @@ export function diary(): OffscreenCanvas {
   return c;
 }
 
-/** The diary's ribbon (#858), pale against the stone and the cover. */
+/** The diary's ribbon (#858), red: it stands out on the grey stone and the brown cover. */
 export function ribbon(): OffscreenCanvas {
   const [c, ctx] = canvas(2, 8);
-  px(ctx, 0, 0, "#efe3c4", 2, 8);
-  px(ctx, 1, 0, "#d9c9a2", 1, 8);
+  px(ctx, 0, 0, "#b8352e", 2, 8);
+  px(ctx, 1, 0, "#8e2722", 1, 8);
   return c;
 }
 
@@ -996,19 +996,26 @@ export function snoreZ(): OffscreenCanvas {
   return c;
 }
 
-/** A soft round glow in a few hard rings, for additive light pools and halos. */
-export function glow(): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 32);
-  for (let y = 0; y < 32; y++)
-    for (let x = 0; x < 32; x++) {
-      const d = Math.hypot(x - 15.5, y - 15.5) / 16;
-      // Ordered dithering at the edge keeps the retro look.
-      const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5][(y % 4) * 4 + (x % 4)] / 16;
-      const v = Math.max(0, 1 - d);
-      const level = Math.floor(v * 4 + bayer * 0.9) / 4;
-      if (level > 0) px(ctx, x, y, `rgba(255, 200, 110, ${level * 0.55})`);
+/**
+ * A soft round glow for additive light pools and halos. Smooth and filtered,
+ * unlike the pixel textures: a lantern's halo fills much of the view up close,
+ * and there hard rings and dithered holes showed as big see-through blocks
+ * (#858). The small framebuffer, scaled up with hard pixels, still pixelates it.
+ */
+export function glowTexture(): THREE.CanvasTexture<OffscreenCanvas> {
+  const n = 64;
+  const [c, ctx] = canvas(n, n);
+  const img = ctx.createImageData(n, n);
+  for (let y = 0; y < n; y++)
+    for (let x = 0; x < n; x++) {
+      const v = Math.max(0, 1 - Math.hypot(x + 0.5 - n / 2, y + 0.5 - n / 2) / (n / 2));
+      img.data.set([255, 200, 110, Math.round(255 * 0.55 * v * v * (3 - 2 * v))], (y * n + x) * 4);
     }
-  return c;
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = t.minFilter = THREE.LinearFilter;
+  t.generateMipmaps = false;
+  return t;
 }
 
 /**

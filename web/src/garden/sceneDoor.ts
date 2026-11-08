@@ -87,7 +87,7 @@ export class Door {
     const hole = new THREE.Mesh(new THREE.PlaneGeometry(0.035, 0.09), new THREE.MeshBasicMaterial({ color: 0xffd27a, fog: false }));
     hole.rotation.y = Math.PI;
     hole.position.set(KEYHOLE.x, KEYHOLE.y, -DOOR.thick / 2 - 0.004);
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glow()), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.glowTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     glow.scale.set(0.32, 0.32, 1);
     glow.position.set(KEYHOLE.x, KEYHOLE.y, -DOOR.thick / 2 - 0.03);
     leaf.add(hole, glow);

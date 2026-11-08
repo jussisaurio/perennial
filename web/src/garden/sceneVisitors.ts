@@ -164,7 +164,7 @@ export class SceneVisitors implements Part {
       w.scene.add(mesh);
       let glow: THREE.Sprite | null = null;
       if (kind.glow) {
-        glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.glow()), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+        glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.glowTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
         glow.scale.set(kind.glow.size, kind.glow.size, 1);
         glow.visible = false;
         w.scene.add(glow);

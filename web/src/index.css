@@ -859,7 +859,7 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .gw-say::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -2px; width: 6px; height: 6px; background: #fffdf6; border: 2px solid #3a2416; border-top: 0; border-left: 0; transform: translateY(-3px) rotate(45deg); }
 @keyframes gw-say-in { from { opacity: 0; transform: translate(-50%, calc(-100% - 3px)); } }
 @media (prefers-reduced-motion: reduce) { .gw-say { animation: none; } }
-/* The well's echo (#335 S6): pale words rising out of the well and fading, as an echo does. No box: it is a sound. As long as scene.ts ECHO.show. */
+/* The well's echo (#335 S6): pale words rising out of the well and fading, as an echo does. No box: it is a sound. Also a line from no thing near (the far light's answer, #858). As long as scene.ts ECHO.show. */
 .gw-echo {
   position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
   font: 500 1rem/1.2 var(--pixel); letter-spacing: 0.03em; color: #e8f2f4;

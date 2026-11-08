@@ -119,7 +119,7 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
     );
   if (heard) return heard;
   // A joke's line is in the course language, and its gloss is what it means (scene.ts showLine); the door's line is English.
-  const quiet = labels.find((l) => l.kind === "line");
+  const quiet = labels.find((l) => l.kind === "line" || l.kind === "far");
   const line = spokenLine(quiet?.gloss ?? quiet?.text, state);
   if (!line && reach === "light") return stars ? "Every lantern is out. Stars shine over the hills." : "This lantern is out.";
   if (line) return line;
@@ -813,7 +813,7 @@ function sameLabels(a: readonly Label[], b: readonly Label[]): boolean {
 
 /** A label's opacity, or null for those that keep their own (a line, the well's echo). */
 function labelOpacity(l: Label): number | null {
-  if (l.kind === "echo" || l.kind === "say" || l.kind === "line") return null;
+  if (l.kind === "echo" || l.kind === "say" || l.kind === "line" || l.kind === "far") return null;
   if (l.kind === "petal" || l.kind === "tree" || l.kind === "fruit" || l.where || l.kind === "visitor" || l.kind === "scenery") return l.near;
   return 0.35 + l.near * 0.65;
 }
@@ -884,6 +884,11 @@ function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; select
           // The well's echo (#335 S6): the day it was met, then the word, both in the course language (#650).
           <span key={l.id} className="gw-echo" lang={lang}>
             {l.gloss}: <i>{l.text}</i>.
+          </span>
+        ) : l.kind === "far" ? (
+          // A line from no thing near (the far light's answer, #858): no bubble pointing at something, but words rising like the echo's, in the course language.
+          <span key={l.id} className="gw-echo" lang={lang}>
+            <i>{l.text}</i>
           </span>
         ) : l.kind === "say" || l.kind === "line" ? (
           // A line with a gloss (a joke's) is in the course language; the door's lines are English.

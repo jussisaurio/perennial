@@ -78,7 +78,7 @@ export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { d
 /** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or sit on the lookout's stool and read the diary there (#858). */
 export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "seek" | "read" | "stool" | "diary";
 
-/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line in English from the garden itself (kind "line"), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
+/** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line from the garden itself over a thing in it (kind "line"; English, or a joke's in the course language) or over no thing (kind "far", the far light's answer, #858), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
 export interface Label {
   id: string;
   text: string;
@@ -86,7 +86,7 @@ export interface Label {
   y: number;
   /** 0 to 1: how close (plant names), or how much of a visitor tag shows. */
   near: number;
-  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "petal" | "fruit" | "echo";
+  kind?: "visitor" | "scenery" | "tree" | "say" | "line" | "far" | "petal" | "fruit" | "echo";
   gloss?: string;
   /** A noun plant's gender: the shape of its label's stake (#357). */
   gender?: Gender;
@@ -1228,9 +1228,10 @@ export class GardenScene {
     } else if (a === "try" && d.state !== "open") this.showLine(DOOR_LINES[this.lang].locked, [L.gate.x, 1.5, z0], DOOR_SPOKEN.locked);
   }
 
-  /** Show a quiet line over a point for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
+  /** Show a quiet line over a point (null: over no point) for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
   private showLine(text: string, at: [number, number, number] | null, spoken?: string) {
-    this.line = { text, spoken, at, until: this.elapsed + 4 };
+    // A line over no point rises and fades as the well's echo does (GardenWalk, kind "far"), over the echo's time.
+    this.line = { text, spoken, at, until: this.elapsed + (at ? 4 : ECHO.show) };
     this.clearTaps({ scenery: true, tree: true, visitor: true, fruit: true });
   }
 
@@ -2110,7 +2111,7 @@ export class GardenScene {
     // The door's quiet line (#315), while it shows.
     const ln = this.line;
     if (ln && this.elapsed > ln.until) this.line = null;
-    else if (ln && !ln.at) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "line", x: 0.5, y: LOW_LINE, near: 1 };
+    else if (ln && !ln.at) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "far", x: 0.5, y: LOW_LINE, near: 1 };
     else if (ln?.at) {
       v.set(...ln.at).project(this.camera);
       // Kept on the screen: standing right at the door, its top is above the view, and the line must still be read.
@@ -2228,7 +2229,7 @@ export class GardenScene {
    * hands; a hiding visitor (#379), before the bench and the plant ahead: it
    * hides under the one and behind the other; the door, unless a lantern by
    * the gate is nearer; the lookout's stool, then its diary, before the
-   * lantern on the post a little over a metre from the stool; a lantern; a
+   * lantern on the post a step in front of the stool; a lantern; a
    * note (#654) in the shed or at the stile's foot; a loose thing to pick up;
    * the bench; a dandelion clock (#360); last the plant ahead of you (#357).
    */

@@ -34,6 +34,13 @@ const POST_R = 0.08;
 export const STOOL_R = 0.22;
 export const STONE_R = 0.28;
 
+/**
+ * The lantern's post from the stool (m, and rad left of straight at the far
+ * house): sat on the stool, it stands in view in front of you, beside the far
+ * house even on a phone's narrow view, and in reach (sceneLanterns.ts LANTERN_REACH).
+ */
+const POST = { d: 1.35, turn: 0.12 };
+
 /** Near enough to the stool (m, from its middle) to sit on it, and to the diary's stone to read it. */
 export const STOOL_REACH = 1;
 export const DIARY_REACH = 1;
@@ -50,15 +57,16 @@ export interface Lookout {
 export function lookoutAt(s: StileSpot): Lookout {
   const [x, z] = [s.x - Math.sin(PATH_TURN) * HILL.out, s.z - Math.cos(PATH_TURN) * HILL.out];
   const stool: [number, number] = [x + 0.55, z - 0.35];
-  // Sat on the stool, you face the far house: the post a little over a metre to your left, the stone a metre and a half to your right.
+  // Sat on the stool, you face the far house: the post ahead and a little to your left, so your lantern stands in view beside the far one; the stone a metre and a half to your right.
   const [hx, hz] = [Math.sin(FAR_HOUSE.turn) * FAR_HOUSE.r, Math.cos(FAR_HOUSE.turn) * FAR_HOUSE.r];
   const d = Math.hypot(hx - stool[0], hz - stool[1]);
   const [fx, fz] = [(hx - stool[0]) / d, (hz - stool[1]) / d];
   // Forward is −z at yaw 0; your left is (fz, −fx).
+  const [ahead, left] = [Math.cos(POST.turn) * POST.d, Math.sin(POST.turn) * POST.d];
   return {
     top: [x, z],
     stool,
-    post: [stool[0] + fz * 1.2, stool[1] - fx * 1.2],
+    post: [stool[0] + fx * ahead + fz * left, stool[1] + fz * ahead - fx * left],
     stone: [stool[0] - fz * 1.5, stool[1] + fx * 1.5],
     face: Math.atan2(-fx, -fz),
   };
@@ -113,7 +121,7 @@ export function hasNote(notes: readonly Note[], unlocked: readonly string[], id:
 }
 
 /** After a second signal (s): the far light goes out, on, out, and on for good, slowly: two blinks. */
-const BLINK = [2.5, 3.5, 4.5, 5.5] as const;
+const BLINK = [3, 4, 5, 6] as const;
 
 /** The quiet line as the far light answers, in the course language, and what it says, for a screen reader. */
 export const ANSWER_LINE: PerLang<string> = { es: "El lucero contesta.", de: "Das Fünkchen antwortet." };

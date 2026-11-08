@@ -61,7 +61,7 @@ export class Lanterns implements Part {
     }
     this.unlit = unlit.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     this.lit = lit.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
-    const glowTex = T.pixelTexture(T.glow());
+    const glowTex = T.glowTexture();
     const additive = { map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false } as const;
     for (const [x, y, z] of this.at) {
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...additive }));
