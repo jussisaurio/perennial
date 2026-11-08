@@ -1132,5 +1132,33 @@
         "cloze": "meinen"
       }
     ]
+  },
+  {
+    "lemma": "Garten",
+    "gloss": "garden, yard",
+    "pos": "noun",
+    "forms": [
+      "Garten",
+      "Gärten"
+    ],
+    "notes": "Plural: Gärten.",
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Wir sitzen gern im Garten.",
+        "translation": "We like sitting in the garden.",
+        "cloze": "Garten"
+      },
+      {
+        "text": "Unser Garten ist klein, aber schön.",
+        "translation": "Our garden is small but pretty.",
+        "cloze": "Garten"
+      },
+      {
+        "text": "Hier haben alle Häuser große Gärten.",
+        "translation": "All the houses here have big gardens.",
+        "cloze": "Gärten"
+      }
+    ]
   }
 ]

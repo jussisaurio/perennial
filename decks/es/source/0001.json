@@ -1169,5 +1169,32 @@
         "cloze": "quiero"
       }
     ]
+  },
+  {
+    "lemma": "jardín",
+    "gloss": "garden; yard",
+    "pos": "noun",
+    "forms": [
+      "jardín",
+      "jardines"
+    ],
+    "gender": "m",
+    "sentences": [
+      {
+        "text": "Hay un perro en el jardín.",
+        "translation": "There's a dog in the yard.",
+        "cloze": "jardín"
+      },
+      {
+        "text": "Tenemos un jardín pequeño.",
+        "translation": "We have a small garden.",
+        "cloze": "jardín"
+      },
+      {
+        "text": "En mi calle todos los jardines tienen flores.",
+        "translation": "On my street, all the gardens have flowers.",
+        "cloze": "jardines"
+      }
+    ]
   }
 ]

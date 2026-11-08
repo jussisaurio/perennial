@@ -1,9 +1,9 @@
 {
   "file": "source/0001.json",
-  "sha256": "7a96f749713731ef8854927e4db316cc01cebf5e914e076c344de3a004a8bf70",
+  "sha256": "de2b34b01535857dc302ebcfd1ee49a7d53ac19004489e065b36728d8e01c6bd",
   "author": "claude-agent:deck-pipeline-2026-10-11",
-  "reviewer": "claude-agent:de-proofreader-0001-2026-10-11",
-  "reviewedAt": "2026-10-11",
+  "reviewer": "claude-agent:de-proofreader-i947-2026-11-08",
+  "reviewedAt": "2026-11-08",
   "verdict": "approved",
-  "notes": "40/40 ok; 6 fixes (haben s4 past, ja gloss emphasis, noch s3 'noch nicht'+notes, wenn s1 order, mal gloss/notes ever, gut s3 adverbial) applied by editor and re-checked"
+  "notes": "Full re-proofread after Garten moved here from 0015 (#947) by claude-agent:i947-editor-2026-11-08; no fixes."
 }

@@ -1,9 +1,9 @@
 {
   "file": "source/0015.json",
-  "sha256": "8142d5d36a10afdae47c51e4a6b76e11dfbeed6a579bffa68de1531ab98c95eb",
+  "sha256": "df1bde190cacdcd7afee0a4cd1edb4b2620612ad899ab06b34eef19f5e30ea43",
   "author": "claude-agent:de-author-0014-2026-11-06",
   "reviewer": "claude-agent:de-proofreader-0014-2026-11-06",
-  "reviewedAt": "2026-11-06",
+  "reviewedAt": "2026-11-08",
   "verdict": "approved",
-  "notes": "100 entries proofread; 7 fixed (3 translation, 1 naturalness, 1 variety, 2 near-duplicates) plus the Dienst gloss"
+  "notes": "Re-pinned after moving Garten to 0001 (#947, #942) by claude-agent:i947-editor-2026-11-08; no entry changed, the verdicts are the original ledger's."
 }
