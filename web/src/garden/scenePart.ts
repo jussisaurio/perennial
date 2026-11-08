@@ -6,15 +6,18 @@
 // Conditions to every one, and disposes every one in that order, documented
 // in GardenScene itself. The hedge and the orchard build geometry only, with
 // nothing to tick, react to conditions or dispose (the scene's lost context
-// frees their GPU memory), so they are not Parts.
+// frees their GPU memory), so they are not Parts. What a tap or the action
+// button acts on has its own small interfaces below (Tapper, Reachable, #850):
+// a thing, not a technique.
 
-import type { DoorAction } from "./scene";
+import type { DoorAction, Reach } from "./scene";
+import type { Reply } from "./kinds/kind";
 import type { Conditions } from "./conditions";
 import type { Joke } from "./sceneJokes";
 import type { CarryTarget } from "./sceneCarry";
 import type { PlacedTree } from "./orchard";
 import type { PlacedPlant } from "./world";
-import type { SceneryHit, SceneryView } from "./scenery";
+import type { Ray, SceneryHit, SceneryView } from "./scenery";
 import type { VisitorView } from "./visitors";
 
 /** What a Part's tick needs: nothing here is read from Date, performance.now or Math.random. */
@@ -40,36 +43,68 @@ export interface Part {
   dispose?(): void;
 }
 
-/**
- * A tap the scene can answer. The host's one dispatcher (GardenScene.pickAny)
- * asks its own pickVisitor/pick/pickTree/pickDoor/pickJoke/pickNote/pickLantern/pickCarry/pickToy/pickGround/pickScenery
- * methods (each already a pure query against a part or the host's own state)
- * and keeps the hit whose kind comes first in TAP_PRIORITY: a visitor, then a
- * plant, an orchard tree, the door or key, a joke (#364), a gardener's note (#654), a lit lantern
- * (#361), loose things and where to put them (#358), a dandelion clock (#360), ground to walk to, and last the
- * garden itself (scenery).
- * GardenWalk.tsx has one switch on `kind` instead of the five-step chain it
- * used to run itself. Picking is not part of the Part interface: no part
- * implements its own pick, so there is nothing to ask in a loop.
- */
-export type TapHit =
-  | { kind: "visitor"; v: VisitorView }
-  | { kind: "plant"; p: PlacedPlant }
-  | { kind: "tree"; t: PlacedTree }
-  | { kind: "door"; a: DoorAction }
+/** What a tap meets, by kind: each kind's own fields (TapHit). */
+interface Tapped {
+  visitor: { v: VisitorView };
+  plant: { p: PlacedPlant };
+  tree: { t: PlacedTree };
+  door: { a: DoorAction };
   // The deadpan scenery (#364): the mouse door, or the sundial at night, says its line.
-  | { kind: "joke"; j: Joke }
+  joke: { j: Joke };
   // A gardener's note on its nail in the shed (#654), by id.
-  | { kind: "note"; id: string }
+  note: { id: string };
   // Carry (#358): a loose thing to pick up; holding one, the well, the water to throw it in, or the ground in reach to put it down.
-  | { kind: "carry"; t: CarryTarget }
+  carry: { t: CarryTarget };
   // A dandelion clock (#360), by its index in the walk's clocks.
-  | { kind: "toy"; i: number }
+  toy: { i: number };
   // A lantern while they are lit (#361), by spot: blow it out, or light it again.
-  | { kind: "lantern"; i: number }
+  lantern: { i: number };
   // Open ground out of reach (#336): walk there. Ground in reach is still scenery, the path's word.
-  | { kind: "walk"; x: number; z: number }
-  | { kind: "scenery"; s: { view: SceneryView; hit: SceneryHit } };
+  walk: { x: number; z: number };
+  scenery: { s: { view: SceneryView; hit: SceneryHit } };
+}
+
+/**
+ * A tap the scene can answer (#323, #850): one of the kinds above. GardenScene
+ * keeps one Tapper per kind and asks them in TAP_PRIORITY order: a visitor,
+ * then a plant, an orchard tree, the door or key, a joke (#364), a gardener's
+ * note (#654), a lit lantern (#361), loose things and where to put them
+ * (#358), a dandelion clock (#360), ground to walk to, and last the garden
+ * itself (scenery). The first that meets something wins.
+ */
+export type TapHit<K extends keyof Tapped = keyof Tapped> = { [P in K]: { kind: P } & Tapped[P] }[K];
 
 /** The order GardenScene.pickAny checks a tap in: first match wins. */
 export const TAP_PRIORITY: readonly TapHit["kind"][] = ["visitor", "plant", "tree", "door", "joke", "note", "lantern", "carry", "toy", "walk", "scenery"];
+
+/** A tap: a point on the canvas and the canvas's size (CSS pixels), and the ray from the eye through that point. */
+export interface TapAt {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  r: Ray;
+}
+
+/** One kind of thing a tap can meet (#850). */
+export interface Tapper<K extends TapHit["kind"]> {
+  /** What a tap there meets of this kind, or null. Pure: the scene may ask every kind. */
+  pick(at: TapAt): TapHit<K> | null;
+  /** Act on it: in reach at once, from farther away after a walk up to it. A visitor may answer (`known`: the words it may say). */
+  tap(hit: TapHit<K>, known: readonly string[]): Reply | null | void;
+}
+
+/**
+ * One thing the action button can act on (#334, #850). GardenScene asks them
+ * in its own order, every frame, and the first that answers is what the
+ * button shows.
+ */
+export interface Reachable<T> {
+  /** What the button acts on while it shows this thing's action, else null. It stays in reach REACH_SLACK farther (#838). */
+  shown: T | null;
+  /** What the button would do to it from where the viewer stands, and to which one; null when it is not in reach. */
+  reach(): { a: Reach; target: T } | null;
+  act(a: Reach, target: T): void;
+  /** Where the target could be one of several alike, show which one quietly (#689): a note lifts off the wall, a plant stands a little taller. */
+  mark?(target: T | null): void;
+}

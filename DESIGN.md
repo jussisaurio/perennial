@@ -121,10 +121,10 @@ rendering code should follow, and the places it still does not (yet):
 - **The host owns every order, each in one table.** Build order (the parts
   share one random sequence, drawn in a fixed sequence — never reshuffle it);
   the order `parts` is ticked, disposed and given `Conditions` in; pick
-  priority (`TAP_PRIORITY`, `pickAny`); and label priority (`LABEL_PRIORITY`:
+  priority (`TAP_PRIORITY`: one `Tapper` per kind, #850); and label priority (`LABEL_PRIORITY`:
   say, then the one active tag — the door's line, a fallen fruit's word, scenery or
   tree — then a visitor's); and what the one action button acts on
-  (`reportReach`: climb down from the stile (#714), stand up, the key, what a loose thing in your hands does
+  (`reachables`: one `Reachable` per thing, #850: climb down from the stile (#714), stand up, the key, what a loose thing in your hands does
   (throw it, or drop it in the well), a visitor hiding near you (#379), the
   door, a lantern, the lookout's lantern (raise it, #683), a note, climbing the stile, picking up a loose thing, the bench, the toys (blow a
   dandelion clock), then the plant ahead; with nothing in reach, no button, #835).

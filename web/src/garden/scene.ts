@@ -31,7 +31,7 @@ import { stepY, stileAt, type StileSpot } from "./stile";
 import { StileScene } from "./sceneStile";
 import { courseNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
-import { TAP_PRIORITY, type Frame, type Part, type TapHit } from "./scenePart";
+import { TAP_PRIORITY, type Frame, type Part, type Reachable, type TapAt, type TapHit, type Tapper } from "./scenePart";
 import { buildShed, shedRoof, shedStep } from "./shed";
 import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Landing } from "./sceneCarry";
 import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
@@ -200,6 +200,10 @@ const BENCH_REACH = 1.6;
 function slack(shown: boolean): number {
   return shown ? REACH_SLACK : 0;
 }
+/** Infers each action-button thing's target type (#850). */
+function reachable<T>(r: Reachable<T>): Reachable<T> {
+  return r;
+}
 /** Sitting on the bench (#334): the eye's height, where you sit along the seat (near its left end: the rest is for company, #362), and how fast you sit down (per second). */
 const SEAT = { eye: 0.78, dx: -0.5, speed: 2.5 };
 /** No tree outside the back fence within this far (m) either side of the stile (#714): the old path is seen from its top board. */
@@ -274,14 +278,9 @@ export class GardenScene {
   private stallReported = false;
   /** The ring on the ground where a walk goes. */
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  /** What the action button does now (#334). */
+  /** What the action button does now (#334), and to which thing in `reachables` (#850). */
   private reach: Reach | null = null;
-  /** The plant the action button shakes, when it shakes one (#357). */
-  private shakeTarget: PlacedPlant | null = null;
-  /** What the action button acts on when it does carry's (#358; putting down has none: it goes in front of you). */
-  private carryTarget: CarryTarget | null = null;
-  /** The hiding visitor the action button finds, when it finds one (#379). */
-  private seekTarget: VisitorId | null = null;
+  private reacher: Reachable<unknown> | null = null;
   /** Carry (#358): the pebbles; and how often each one has answered a landing this visit. */
   private carry: Carry;
   private answered: Record<Answer, number> = { frog: 0, plant: 0, well: 0 };
@@ -295,11 +294,8 @@ export class GardenScene {
   private walkInto: WalkInto;
   /** The lawn toys (#360): the dandelion clocks. */
   private toys: Toys;
-  /** What the action button acts on when it does a toy's. */
-  private toyTarget: ToyTarget | null = null;
-  /** The gardener's notes in the shed (#654), and the one the action button reads. */
+  /** The gardener's notes in the shed (#654). */
   private notes = new ShedNotes();
-  private noteTarget: string | null = null;
   /** Sitting on the bench (#334); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
   private seated = false;
   private seat = 0;
@@ -375,8 +371,6 @@ export class GardenScene {
   private lanterns: Lanterns;
   /** The lookout's lantern and the far light (#683): when it was raised, and whether the light answers this visit. The e2e test sets `answers`. */
   readonly lookout: LookoutLight;
-  /** The lantern the action button acts on, by spot (-1: none in reach). */
-  private lanternTarget = -1;
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door: Door;
   /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose. */
@@ -876,10 +870,9 @@ export class GardenScene {
   }
 
   /** What a tap does at the door, if it meets the key or the shut door (CSS pixels). Ask after the plants and visitors, before the scenery. */
-  pickDoor(cssX: number, cssY: number, cssW: number, cssH: number): DoorAction | null {
+  private pickDoor({ r }: TapAt): TapHit<"door"> | null {
     const d = this.door;
     if (d.state === "open") return null;
-    const r = this.ray(cssX, cssY, cssW, cssH);
     const L = this.layout;
     const z0 = L.bounds.maxZ + HEDGE.gap;
     const toDoor = rayBox(r, [L.gate.x - DOOR_HALF, 0, z0 - 0.05], [L.gate.x + DOOR_HALF, DOOR.h, z0 + DOOR.thick + 0.05]);
@@ -889,8 +882,8 @@ export class GardenScene {
     const disc = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
     const toKey = disc < Infinity && !this.inReach("key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
-    if (toKey <= toDoor) return "key";
-    return d.state === "held" ? "open" : "try";
+    if (toKey <= toDoor) return { kind: "door", a: "key" };
+    return { kind: "door", a: d.state === "held" ? "open" : "try" };
   }
 
   /** Is the viewer near enough (and `slack` m more) to the key (for "key") or the door (the rest) to act on it? */
@@ -902,29 +895,23 @@ export class GardenScene {
 
   /** The action button (#334): do what it shows to the thing in reach. Anything else no longer applies and does nothing. */
   act(a: Reach) {
-    if (a === "sit" && !this.seated) this.sit();
+    const t = this.reacher;
+    if (t && a === this.reach) t.act(a, t.shown);
+    // A press that comes before the button caught up with a change in reach: the bench and the door check their own state, so they act all the same.
+    else if (a === "sit" && !this.seated) this.sit();
     else if (a === "stand") this.standUp();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
-    else if (a === "shake" && this.reach === "shake" && this.shakeTarget) this.shakeNow(this.shakeTarget);
-    else if ((a === "snuff" || a === "light") && a === this.reach && this.lanternTarget >= 0) this.toggleLantern(this.lanternTarget);
-    else if (a === "throw" && this.reach === "throw") this.throwAhead();
-    else if (a === "seek" && this.reach === "seek" && this.seekTarget) this.seek(this.seekTarget);
-    else if (a === this.reach && this.carryTarget) this.doCarry(this.carryTarget);
-    else if (a === "blow" && this.reach === "blow" && this.toyTarget) this.doToy(this.toyTarget);
-    else if (a === "read" && this.reach === "read" && this.noteTarget) this.openNote(this.noteTarget);
-    else if (a === "raise" && this.reach === "raise") this.cb.onRaise(this.lookout.raise(this.elapsed, this.shown === "night"));
   }
 
   /** The lantern under a point on the canvas (CSS pixels), while they are lit (#361), with nothing in front of it. */
-  pickLantern(cssX: number, cssY: number, cssW: number, cssH: number): number | null {
-    const r = this.ray(cssX, cssY, cssW, cssH);
+  private pickLantern({ r }: TapAt): TapHit<"lantern"> | null {
     const got = this.lanterns.pick(r);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t || thingAt(r, this.sceneryWorld()) < got.t) return null;
-    return got.i;
+    return { kind: "lantern", i: got.i };
   }
 
   /** A tap on a lantern (#361): blow it out or light it in reach; from farther away, walk up to it first. */
-  tapLantern(i: number) {
+  private tapLantern(i: number) {
     const [x, z] = this.lanterns.spots[i];
     if (Math.hypot(x - this.x, z - this.z) < LANTERN_REACH) return this.toggleLantern(i);
     this.goTo(x, z, LANTERN_REACH - 0.4, () => this.toggleLantern(i));
@@ -961,27 +948,26 @@ export class GardenScene {
    * free; holding one, the well (a pebble), the pond to throw it in, or the
    * ground in reach to put it down.
    */
-  pickCarry(cssX: number, cssY: number, cssW: number, cssH: number): CarryTarget | null {
-    const r = this.ray(cssX, cssY, cssW, cssH);
+  private pickCarry({ r }: TapAt): TapHit<"carry"> | null {
     const w = this.sceneryWorld();
     const wall = Math.min(thingAt(r, w), this.hedgeAt(r));
     if (this.carry.held === null) {
       const got = this.carry.pick(r);
       if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
       // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
-      return this.carry.standFor(got.target, this.x, this.z).near || wall >= got.t ? got.target : null;
+      return this.carry.standFor(got.target, this.x, this.z).near || wall >= got.t ? { kind: "carry", t: got.target } : null;
     }
-    if (this.carry.pickWell(r) <= wall) return { at: "well" };
+    if (this.carry.pickWell(r) <= wall) return { kind: "carry", t: { at: "well" } };
     // The pond's own hit disc (sceneSky.ts) lies a few mm over the water and a rim wider: the water may be just behind it.
     const p = this.layout.pond;
     const water = rayDisc(r, p.x, 0.04, p.z, p.r);
-    if (water < FOG_FAR && water < wall + 0.1) return { at: "water", x: r.ox + r.dx * water, z: r.oz + r.dz * water };
+    if (water < FOG_FAR && water < wall + 0.1) return { kind: "carry", t: { at: "water", x: r.ox + r.dx * water, z: r.oz + r.dz * water } };
     const g = groundAt(r, w);
-    return g && Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH ? { at: "ground", ...g } : null;
+    return g && Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH ? { kind: "carry", t: { at: "ground", ...g } } : null;
   }
 
   /** A tap on a loose thing, the well, the water or the ground in reach (#358): act on it in reach; from farther away, walk up to it first. */
-  tapCarry(t: CarryTarget) {
+  private tapCarry(t: CarryTarget) {
     const at = this.carry.standFor(t, this.x, this.z);
     if (at.near) return this.doCarry(t);
     this.goTo(at.x, at.z, CARRY_STAND, () => this.doCarry(t));
@@ -1045,17 +1031,16 @@ export class GardenScene {
   }
 
   /** The dandelion clock under a point on the canvas (CSS pixels), unless something stands in front of it. */
-  pickToy(cssX: number, cssY: number, cssW: number, cssH: number): number | null {
-    const r = this.ray(cssX, cssY, cssW, cssH);
+  private pickToy({ r }: TapAt): TapHit<"toy"> | null {
     const got = this.toys.pick(r);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
     // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
     const near = this.toys.standFor(got.i, this.x, this.z).near;
-    return near || thingAt(r, this.sceneryWorld()) >= got.t ? got.i : null;
+    return near || thingAt(r, this.sceneryWorld()) >= got.t ? { kind: "toy", i: got.i } : null;
   }
 
   /** A tap on a dandelion clock (#360): blow it in reach; from farther away, walk up to it first. */
-  tapToy(i: number) {
+  private tapToy(i: number) {
     const at = this.toys.standFor(i, this.x, this.z);
     const t: ToyTarget = { at: "clock", i };
     if (at.near) return this.doToy(t);
@@ -1174,7 +1159,7 @@ export class GardenScene {
   }
 
   /** A tap on the key or the door (#336): act on it in reach; from farther away, walk up to it first. */
-  tapDoor(a: DoorAction) {
+  private tapDoor(a: DoorAction) {
     if (this.inReach(a, 0)) return this.doorAct(a);
     const k = this.door.key;
     if (a === "key" && k) this.goTo(k.x, k.z, KEY_STAND, () => this.doorAct(a));
@@ -1222,26 +1207,24 @@ export class GardenScene {
   }
 
   /** The mouse door, or the sundial at night (#364), under a point on the canvas (CSS pixels), with nothing in front of it. */
-  pickJoke(cssX: number, cssY: number, cssW: number, cssH: number): Joke | null {
-    const r = this.ray(cssX, cssY, cssW, cssH);
+  private pickJoke({ r }: TapAt): TapHit<"joke"> | null {
     const got = this.jokes.pick(r);
     if (!got || got.t > FOG_FAR || thingAt(r, this.sceneryWorld()) < got.t) return null;
-    return { line: got.line, spoken: got.spoken, at: got.at };
+    return { kind: "joke", j: { line: got.line, spoken: got.spoken, at: got.at } };
   }
 
   /** The gardener's note (#654) under a point on the canvas (CSS pixels), with nothing in front of it. */
-  pickNote(cssX: number, cssY: number, cssW: number, cssH: number): string | null {
-    const r = this.ray(cssX, cssY, cssW, cssH);
+  private pickNote({ r }: TapAt): TapHit<"note"> | null {
     const shed = this.notes.pick(r);
     // Null: there is no stile yet.
     const step = this.stile?.pick(r) ?? null;
     const got = step && (!shed || step.t < shed.t) ? step : shed;
     if (!got || got.t > FOG_FAR || thingAt(r, this.sceneryWorld()) < got.t) return null;
-    return got.id;
+    return { kind: "note", id: got.id };
   }
 
   /** A tap on a note: open it from in front of the shed, or by the stile's foot (#714); from farther away, walk up to it first. */
-  tapNote(id: string) {
+  private tapNote(id: string) {
     if (this.stile?.has(id)) {
       if (this.stile.inReach(this.x, this.z, 0)) return this.openNote(id);
       const [fx, fz] = stileAt(this.layout).foot;
@@ -1260,7 +1243,7 @@ export class GardenScene {
   }
 
   /** A joke's quiet line, over it for a few seconds (after a tap). */
-  tapJoke(j: Joke) {
+  private tapJoke(j: Joke) {
     this.showLine(j.line, j.at, j.spoken);
   }
 
@@ -1272,16 +1255,15 @@ export class GardenScene {
   }
 
   /** The orchard tree under a point on the canvas (CSS pixels), unless the hedge is in front of it (#315). Ask after the plants and visitors. */
-  pickTree(cssX: number, cssY: number, cssW: number, cssH: number): PlacedTree | null {
+  private pickTree({ r }: TapAt): TapHit<"tree"> | null {
     if (!this.orchard) return null;
-    const r = this.ray(cssX, cssY, cssW, cssH);
     const got = pickTree(r, this.orchard.hits);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
-    return this.orchard.trees.find((t) => t.id === got.hit.id)!;
+    return { kind: "tree", t: this.orchard.trees.find((t) => t.id === got.hit.id)! };
   }
 
   /** Show a tree's word and meaning over it for a few seconds (after a tap). One tag at a time. */
-  tapTree(tree: PlacedTree) {
+  private tapTree(tree: PlacedTree) {
     this.treeTap = { tree, until: this.elapsed + 4 };
     this.clearTaps({ scenery: true, line: true, visitor: true, fruit: true });
   }
@@ -1510,9 +1492,10 @@ export class GardenScene {
   }
 
   /** The visitor under a point on the canvas (CSS pixels), if any. */
-  pickVisitor(cssX: number, cssY: number, cssW: number, cssH: number): VisitorView | null {
+  private pickVisitor(at: TapAt): TapHit<"visitor"> | null {
     // The hedge hides the visitors on its other side (#315): a bird in the orchard from the garden, the garden's from the orchard.
-    return this.guests.pick(cssX, cssY, cssW, cssH, (x, y, z) => this.behindHedge(x, y, z));
+    const v = this.guests.pick(at.x, at.y, at.w, at.h, (x, y, z) => this.behindHedge(x, y, z));
+    return v && { kind: "visitor", v };
   }
 
   /** The action button finds a hiding visitor (#379), as a tap on it would. */
@@ -1523,14 +1506,15 @@ export class GardenScene {
 
   /** The hiding visitor the action button would find now (#379), for the status a screen reader hears; null when it would find none. */
   hider(): Hider | null {
-    return this.reach === "seek" && this.seekTarget ? this.guests.hider(this.seekTarget) : null;
+    const id = this.seekReach.shown;
+    return id ? this.guests.hider(id) : null;
   }
 
   /**
    * A tap on a visitor: what it says back (the awake frog croaks one of the
    * `known` words) in a small bubble for a few seconds, or else its tag. Returns what it said.
    */
-  tapVisitor(id: VisitorId, known: readonly string[]): Reply | null {
+  private tapVisitor(id: VisitorId, known: readonly string[]): Reply | null {
     const said = this.guests.tap(id, known);
     this.clearTaps(said === null ? { scenery: true, tree: true, line: true, fruit: true } : { line: true });
     return said;
@@ -1547,11 +1531,11 @@ export class GardenScene {
    * null. Ask only after the plants and visitors: they come first. One ray
    * through volumes built with the garden; it runs on a tap, not every frame.
    */
-  pickScenery(cssX: number, cssY: number, cssW: number, cssH: number): { view: SceneryView; hit: SceneryHit } | null {
+  private pickScenery({ r }: TapAt): TapHit<"scenery"> | null {
     const words = this.visitors.scenery;
     if (!words) return null;
-    const hit = pickScenery(this.ray(cssX, cssY, cssW, cssH), this.sceneryWorld(), (id) => !!words[id]);
-    return hit ? { view: words[hit.id]!, hit } : null;
+    const hit = pickScenery(r, this.sceneryWorld(), (id) => !!words[id]);
+    return hit ? { kind: "scenery", s: { view: words[hit.id]!, hit } } : null;
   }
 
   /**
@@ -1561,8 +1545,7 @@ export class GardenScene {
    * door, before the scenery: the ground in reach and the grass outside the
    * fence still name themselves.
    */
-  pickGround(cssX: number, cssY: number, cssW: number, cssH: number): { x: number; z: number } | null {
-    const r = this.ray(cssX, cssY, cssW, cssH);
+  private pickGround({ r }: TapAt): TapHit<"walk"> | null {
     const w = this.sceneryWorld();
     const g = this.back?.open ? this.groundPast(r, thingAt(r, w)) : groundAt(r, w);
     if (!g || Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH) return null;
@@ -1573,7 +1556,7 @@ export class GardenScene {
     // Past the fence, the cut way's or the hilltop's ground: where a walker may stand, or near enough that a tap at a bramble's foot counts.
     const s = collide(this.layout, g.x, g.z, WALKER, false, this.back);
     const past = g.z < b.minZ && Math.hypot(s.x - g.x, s.z - g.z) < TAP_SLACK;
-    return inGarden || inOrchard || past ? g : null;
+    return inGarden || inOrchard || past ? { kind: "walk", ...g } : null;
   }
 
   /** Where a ray first meets the ground, the stile's steps and the hill too (#770), nearer than `far`; else null. */
@@ -1611,7 +1594,7 @@ export class GardenScene {
   }
 
   /** Show a scenery word's tag for a few seconds (after a tap). One tag at a time: a visitor's tapped tag goes. */
-  tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
+  private tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
     this.sceneryTap = { ...s, until: this.elapsed + 4 };
     this.clearTaps({ tree: true, line: true, visitor: true, fruit: true });
   }
@@ -1768,12 +1751,12 @@ export class GardenScene {
   }
 
   /** Walk to open ground (#336, a tap on it). */
-  walkTo(x: number, z: number) {
+  private walkTo(x: number, z: number) {
     this.goTo(x, z, 0, null);
   }
 
   /** A tap on a plant (#336): its card opens where you stand when its name shows; from farther away, you walk to it first. */
-  tapPlant(p: PlacedPlant) {
+  private tapPlant(p: PlacedPlant) {
     if (Math.hypot(p.x - this.x, p.z - this.z) < NAME_NEAR) {
       // A walk under way stops: the viewer is looking at this plant now.
       this.endTrip();
@@ -1835,11 +1818,6 @@ export class GardenScene {
     }
   }
 
-  /** Select the plant under a point on the canvas (CSS pixels), if any. */
-  pick(cssX: number, cssY: number, cssW: number, cssH: number): PlacedPlant | null {
-    return this.plants.pick(cssX, cssY, cssW, cssH);
-  }
-
   /** Is the hedge between the eye and this point? */
   private behindHedge(x: number, y: number, z: number): boolean {
     const c = this.camera.position;
@@ -1863,43 +1841,39 @@ export class GardenScene {
     return [...near.map((t) => t.lemma), ...named, ...forms];
   }
 
-  /**
-   * One tap (CSS pixels): the visitor, plant, orchard tree, door or key,
-   * a joke (#364), a lit lantern (#361), a loose thing or where to put it (#358), a dandelion clock (#360), open ground to walk to (#336), or scenery word it meets, in that order —
-   * the chain GardenWalk.tsx used to run itself as sequential if-returns
-   * (#323). Every pick here is pure (no side effects), so asking all of them
-   * and keeping the first match in TAP_PRIORITY is exactly that chain's
-   * short-circuit, as one table instead.
-   */
+  private pickPlant(at: TapAt): TapHit<"plant"> | null {
+    const p = this.plants.pick(at.x, at.y, at.w, at.h);
+    return p && { kind: "plant", p };
+  }
+
+  /** Every kind of thing a tap can meet (#850), asked in TAP_PRIORITY order. */
+  private tappers: { [K in TapHit["kind"]]: Tapper<K> } = {
+    visitor: { pick: (at) => this.pickVisitor(at), tap: (h, known) => this.tapVisitor(h.v.id, known) },
+    plant: { pick: (at) => this.pickPlant(at), tap: (h) => this.tapPlant(h.p) },
+    tree: { pick: (at) => this.pickTree(at), tap: (h) => this.tapTree(h.t) },
+    door: { pick: (at) => this.pickDoor(at), tap: (h) => this.tapDoor(h.a) },
+    joke: { pick: (at) => this.pickJoke(at), tap: (h) => this.tapJoke(h.j) },
+    note: { pick: (at) => this.pickNote(at), tap: (h) => this.tapNote(h.id) },
+    lantern: { pick: (at) => this.pickLantern(at), tap: (h) => this.tapLantern(h.i) },
+    carry: { pick: (at) => this.pickCarry(at), tap: (h) => this.tapCarry(h.t) },
+    toy: { pick: (at) => this.pickToy(at), tap: (h) => this.tapToy(h.i) },
+    walk: { pick: (at) => this.pickGround(at), tap: (h) => this.walkTo(h.x, h.z) },
+    scenery: { pick: (at) => this.pickScenery(at), tap: (h) => this.tapScenery(h.s) },
+  };
+
+  /** What one tap (CSS pixels) meets: the first kind of thing in TAP_PRIORITY that meets something (#323, #850). */
   pickAny(cssX: number, cssY: number, cssW: number, cssH: number): TapHit | null {
-    const hits: Partial<Record<TapHit["kind"], TapHit>> = {};
-    const v = this.pickVisitor(cssX, cssY, cssW, cssH);
-    if (v) hits.visitor = { kind: "visitor", v };
-    const p = this.pick(cssX, cssY, cssW, cssH);
-    if (p) hits.plant = { kind: "plant", p };
-    const t = this.pickTree(cssX, cssY, cssW, cssH);
-    if (t) hits.tree = { kind: "tree", t };
-    const d = this.pickDoor(cssX, cssY, cssW, cssH);
-    if (d) hits.door = { kind: "door", a: d };
-    const j = this.pickJoke(cssX, cssY, cssW, cssH);
-    if (j) hits.joke = { kind: "joke", j };
-    const note = this.pickNote(cssX, cssY, cssW, cssH);
-    if (note !== null) hits.note = { kind: "note", id: note };
-    const lantern = this.pickLantern(cssX, cssY, cssW, cssH);
-    if (lantern !== null) hits.lantern = { kind: "lantern", i: lantern };
-    const c = this.pickCarry(cssX, cssY, cssW, cssH);
-    if (c) hits.carry = { kind: "carry", t: c };
-    const toy = this.pickToy(cssX, cssY, cssW, cssH);
-    if (toy !== null) hits.toy = { kind: "toy", i: toy };
-    const g = this.pickGround(cssX, cssY, cssW, cssH);
-    if (g) hits.walk = { kind: "walk", ...g };
-    const s = this.pickScenery(cssX, cssY, cssW, cssH);
-    if (s) hits.scenery = { kind: "scenery", s };
+    const at: TapAt = { x: cssX, y: cssY, w: cssW, h: cssH, r: this.ray(cssX, cssY, cssW, cssH) };
     for (const kind of TAP_PRIORITY) {
-      const hit = hits[kind];
+      const hit = this.tappers[kind].pick(at);
       if (hit) return hit;
     }
     return null;
+  }
+
+  /** Act on what a tap met (pickAny). A visitor may answer (`known`: the words it may say): this returns what it said. */
+  tap<K extends TapHit["kind"]>(hit: TapHit<K>, known: readonly string[]): Reply | null | void {
+    return this.tappers[hit.kind].tap(hit, known);
   }
 
   select(p: PlacedPlant | null, walkTo = false) {
@@ -2113,62 +2087,152 @@ export class GardenScene {
     }
   }
 
+  /** The lantern in reach while they are lit (#361), by spot, or -1. */
+  private lampInReach(): number {
+    const shown = this.lanternReach.shown;
+    // -1: the button shows no lantern now.
+    return this.lanterns.inReach(this.x, this.z, shown === null ? -1 : shown);
+  }
+
+  /** The hiding visitor in reach (#379). */
+  private seekReach: Reachable<VisitorId> = reachable({
+    shown: null,
+    reach: () => {
+      const id = this.guests.hiderNear(this.x, this.z, this.seekReach.shown);
+      return id ? { a: "seek", target: id } : null;
+    },
+    act: (_, id) => this.seek(id),
+  });
+
+  /** The lantern in reach (#361): blow it out, or light it again. */
+  private lanternReach: Reachable<number> = reachable({
+    shown: null,
+    reach: () => {
+      const i = this.lampInReach();
+      return i < 0 ? null : { a: this.lanterns.on[i] ? "snuff" : "light", target: i };
+    },
+    act: (_, i) => this.toggleLantern(i),
+  });
+
+  /** A dandelion clock in reach (#360): blow it. */
+  private toyReach: Reachable<ToyTarget> = reachable({
+    shown: null,
+    reach: () => this.toys.reachAt(this.x, this.z, this.toyReach.shown),
+    act: (_, t) => this.doToy(t),
+  });
+
+  /** The plant ahead of you (#357): shake it. */
+  private plantReach: Reachable<PlacedPlant> = reachable({
+    shown: null,
+    reach: () => {
+      const p = plantInReach(this.layout.plants, this.x, this.z, this.yaw, this.plantReach.shown);
+      return p && { a: "shake", target: p };
+    },
+    act: (_, p) => this.shakeNow(p),
+    mark: (p) => this.plants.ready(p),
+  });
+
+  /** A loose thing (#358): one in your hands is thrown, or dropped in the well; with your hands free, one in reach is picked up. */
+  private carryReach(held: boolean) {
+    const r: Reachable<CarryTarget | null> = reachable({
+      shown: null,
+      reach: () => ((this.carry.held !== null) === held ? this.carry.reachAt(this.x, this.z, r.shown) : null),
+      act: (a, t) => {
+        if (a === "throw") this.throwAhead();
+        // Every other carry act has a target (Carry.reachAt).
+        else if (t) this.doCarry(t);
+      },
+    });
+    return r;
+  }
+
   /**
-   * Tell the page what the action button does now (#334): stand up from the bench, pick up the key, put down a loose thing you hold or drop it in
-   * the well (#358), find a hiding visitor (#379), open or try the door
-   * (unless a lantern by the gate is nearer), blow out or light a lantern
-   * (#361), raise the lookout's lantern (#683), read a note (#654) in the shed or at the stile's foot, pick up a loose thing, sit on the bench, blow a dandelion clock
-   * (#360), or shake the plant ahead of you (#357), for whichever is in reach (in that
-   * order); with nothing in reach, no button (#835): when it shows, it has
-   * something to do. What it shows now stays in reach REACH_SLACK farther
-   * (#838). The button's name says what it does, so nothing in reach
-   * flashes (#689); where its target could be one of several alike, that one
-   * shows it quietly and steadily: a note lifts off the wall, a plant stands
-   * a little taller.
+   * Everything the action button can act on (#334, #850), in the order it
+   * chooses: the first in reach wins. On the bench it only gets you up; then
+   * the key; a loose thing in your hands; a hiding visitor (#379), before the
+   * bench and the plant ahead: it hides under the one and behind the other;
+   * the door, unless a lantern by the gate is nearer; a lantern; the
+   * lookout's lantern (#683); a note (#654) in the shed or at the stile's
+   * foot; a loose thing to pick up; the bench; a dandelion clock (#360); last
+   * the plant ahead of you (#357).
+   */
+  private reachables: Reachable<unknown>[] = [
+    reachable({ shown: null, reach: () => (this.seated ? { a: "stand", target: null } : null), act: () => this.standUp() }),
+    reachable({
+      shown: null,
+      reach: () => (this.door.state === "key" && this.inReach("key", slack(this.reach === "key")) ? { a: "key", target: null } : null),
+      act: () => this.doorAct("key"),
+    }),
+    this.carryReach(true),
+    this.seekReach,
+    reachable<DoorAction>({
+      shown: null,
+      reach: () => {
+        const d = this.door;
+        // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
+        const lamp = this.lampInReach();
+        const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spots[lamp][0] - this.x, this.lanterns.spots[lamp][1] - this.z);
+        const near = d.state !== "open" && this.inReach("try", slack(this.reach === "try" || this.reach === "open")) && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) <= lampNear;
+        if (!near) return null;
+        const a = d.state === "held" ? "open" : "try";
+        return { a, target: a };
+      },
+      act: (_, a) => this.doorAct(a),
+    }),
+    this.lanternReach,
+    reachable({
+      shown: null,
+      reach: () => (this.lanterns.canRaise(this.x, this.z, slack(this.reach === "raise")) ? { a: "raise", target: null } : null),
+      act: () => this.cb.onRaise(this.lookout.raise(this.elapsed, this.shown === "night")),
+    }),
+    reachable({
+      shown: null,
+      reach: () => {
+        const near = slack(this.reach === "read");
+        const id = this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE, near) ?? (this.stile?.inReach(this.x, this.z, near) ? this.stile.unopened() : null);
+        return id ? { a: "read", target: id } : null;
+      },
+      act: (_, id) => this.openNote(id),
+      mark: (id) => this.notes.lift(id),
+    }),
+    this.carryReach(false),
+    reachable({
+      shown: null,
+      reach: () => (Math.hypot(this.x - this.bench.x, this.z - this.bench.z) < BENCH_REACH + slack(this.reach === "sit") ? { a: "sit", target: null } : null),
+      act: () => {
+        if (!this.seated) this.sit();
+      },
+    }),
+    this.toyReach,
+    this.plantReach,
+  ];
+
+  /**
+   * Tell the page what the action button does now (#334): the first thing in
+   * `reachables` in reach. With nothing in reach, no button (#835): when it
+   * shows, it has something to do. The button's name says what it does, so
+   * nothing in reach flashes (#689).
    */
   private reportReach() {
-    const d = this.door;
-    const b = this.bench;
-    const r = this.reach;
-    const nearKey = d.state === "key" && this.inReach("key", slack(r === "key"));
-    // On the bench, the button only gets you up.
-    const off = this.seated;
-    const lamp = off ? -1 : this.lanterns.inReach(this.x, this.z, this.lanternTarget);
-    const lampAct: Reach | null = lamp < 0 ? null : this.lanterns.on[lamp] ? "snuff" : "light";
-    // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
-    const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spots[lamp][0] - this.x, this.lanterns.spots[lamp][1] - this.z);
-    const nearDoor = d.state !== "open" && this.inReach("try", slack(r === "try" || r === "open")) && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) <= lampNear;
-    const nearBench = Math.hypot(this.x - b.x, this.z - b.z) < BENCH_REACH + slack(r === "sit");
-    // A loose thing in your hands (#358) is used first: put down, or dropped in the well.
-    const holding = this.carry.held !== null;
-    const carry = off || nearKey ? null : this.carry.reachAt(this.x, this.z, this.carryTarget);
-    const toy = off || nearKey ? null : this.toys.reachAt(this.x, this.z, this.toyTarget);
-    // A hiding visitor (#379) comes before the bench and the plant ahead: it hides under the one and behind the other.
-    const hider = off || nearKey || holding ? null : this.guests.hiderNear(this.x, this.z, this.seekTarget);
-    const door: DoorAction | null = nearDoor ? (d.state === "held" ? "open" : "try") : null;
-    const atStile = !off && !nearKey && !holding && this.stile !== null && this.stile.inReach(this.x, this.z, slack(r === "read"));
-    const note = off || nearKey || holding ? null : (this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE, slack(r === "read")) ?? (atStile && this.stile ? this.stile.unopened() : null));
-    const raise: Reach | null = !off && this.lanterns.canRaise(this.x, this.z, slack(r === "raise")) ? "raise" : null;
-    // The first of these that applies, in reportReach's order above.
-    const before: Reach | null = this.seated ? "stand" : nearKey ? "key" : holding && carry ? carry.a : hider ? "seek" : (door ?? lampAct ?? raise ?? (note ? "read" : null) ?? carry?.a ?? (nearBench ? "sit" : null) ?? toy?.a ?? null);
-    const plant = before ? null : plantInReach(this.layout.plants, this.x, this.z, this.yaw, this.shakeTarget);
-    const a: Reach | null = plant ? "shake" : before;
-    const carried = carry && a === carry.a ? carry.target : null;
-    const toyTarget = a === "blow" && toy ? toy.target : null;
-    const lantern = lampAct && a === lampAct ? lamp : -1;
-    const seeking = a === "seek" ? hider : null;
-    const reading = a === "read" ? note : null;
+    let won: Reachable<unknown> | null = null;
+    let got: { a: Reach; target: unknown } | null = null;
+    for (const t of this.reachables) {
+      got = t.reach();
+      if (got) {
+        won = t;
+        break;
+      }
+    }
+    const a = got ? got.a : null;
+    const target = got ? got.target : null;
     // Targets are made once (Carry.reachAt, Toys.reachAt), so the same target is the same object.
-    if (a === this.reach && plant === this.shakeTarget && carried === this.carryTarget && toyTarget === this.toyTarget && lantern === this.lanternTarget && seeking === this.seekTarget && reading === this.noteTarget) return;
+    if (a === this.reach && won === this.reacher && (won === null || target === won.shown)) return;
     this.reach = a;
-    this.noteTarget = reading;
-    this.notes.lift(reading);
-    this.plants.ready(plant);
-    this.seekTarget = seeking;
-    this.shakeTarget = plant;
-    this.carryTarget = carried;
-    this.toyTarget = toyTarget;
-    this.lanternTarget = lantern;
+    this.reacher = won;
+    for (const t of this.reachables) {
+      t.shown = t === won ? target : null;
+      t.mark?.(t.shown);
+    }
     this.cb.onReach(a);
   }
 

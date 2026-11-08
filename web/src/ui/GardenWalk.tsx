@@ -571,69 +571,19 @@ export function GardenWalk({
     const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
     setNote(null);
-    if (hit) onTap?.(hit.kind);
-    switch (hit?.kind) {
-      case "visitor": {
-        // A visitor may answer (the awake frog croaks one of your known words, never its own name):
-        // in a bubble and, with sound on, its recorded sound (#739). Otherwise its tag and its word. No card.
-        const answer = scene.current.tapVisitor(hit.v.id, visitors?.known ?? []);
-        if (!sound) return;
-        if (answer) void animalSays(answer.sound);
-        else if (hit.v.word) void speak(hit.v.word, tag);
-        return;
-      }
-      case "plant":
-        // Its card opens here when it is near, or once you have walked up to it.
-        scene.current.tapPlant(hit.p);
-        return;
-      case "tree":
-        // An orchard tree (#315): its word and meaning over it for a moment and, with sound on, its word.
-        scene.current.tapTree(hit.t);
-        setHint(false);
-        if (sound) void speak(hit.t.lemma, tag);
-        return;
-      case "door":
-        // The key, or the shut door (#315): its quiet line, or it opens; from afar, once you have walked up to it.
-        scene.current.tapDoor(hit.a);
-        setHint(false);
-        return;
-      case "joke":
-        // The mouse door, or the sundial at night (#364): its quiet line, from wherever you stand.
-        scene.current.tapJoke(hit.j);
-        setHint(false);
-        return;
-      case "note":
-        // A gardener's note (#654): its card opens; from afar, once you have walked up to the shed.
-        scene.current.tapNote(hit.id);
-        setHint(false);
-        return;
-      case "carry":
-        // A loose thing to pick up; holding one, the well, the water to throw it in, or the ground to put it down (#358). From afar, once you have walked up to it.
-        scene.current.tapCarry(hit.t);
-        setHint(false);
-        return;
-      case "toy":
-        // A dandelion clock (#360): blown; from afar, once you have walked up to it.
-        scene.current.tapToy(hit.i);
-        setHint(false);
-        return;
-      case "lantern":
-        // A lit lantern (#361): blow it out, or light it again; from afar, once you have walked up to it.
-        scene.current.tapLantern(hit.i);
-        setHint(false);
-        return;
-      case "walk":
-        scene.current.walkTo(hit.x, hit.z);
-        moved();
-        return;
-      case "scenery":
-        // The garden itself (#74). Its tag shows for a moment and, with sound on, it says its word.
-        scene.current.tapScenery(hit.s);
-        setHint(false);
-        if (sound) void speak(hit.s.view.word, tag);
-        return;
-      default:
-        return; // nothing there: already deselected above
+    if (!hit) return; // nothing there: already deselected above
+    onTap?.(hit.kind);
+    // A thing in reach acts at once; from afar, once you have walked up to it. A plant's card opens; a visitor may answer
+    // (the awake frog croaks one of your known words, never its own name), in a bubble and, with sound on, its recorded sound (#739).
+    const answer = scene.current.tap(hit, visitors?.known ?? []);
+    if (hit.kind === "walk") moved();
+    else if (hit.kind !== "visitor" && hit.kind !== "plant") setHint(false);
+    // With sound on, a visitor, an orchard tree or the garden itself says its word; a plant's card says its own.
+    if (!sound || hit.kind === "plant") return;
+    if (answer) void animalSays(answer.sound);
+    else {
+      const word = hoverWord(hit);
+      if (word) void speak(word, tag);
     }
   };
 
