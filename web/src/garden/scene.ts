@@ -238,6 +238,8 @@ const onScreen = (k: number, edge = 0.12) => Math.max(edge, Math.min(1 - edge, k
 const SCENERY_TAG = { word: 4, thought: 10, fade: 0.6 };
 /** How far in from each side a thought's tag stays: half of its widest (index.css .gw-thought, 15rem), on a phone 412 px wide. */
 const THOUGHT_EDGE = 0.3;
+/** The highest a thought's point goes: its tag is drawn above the point, and two or three lines tall it would go under the top pill. */
+const THOUGHT_TOP = 0.24;
 
 /**
  * The order GardenScene.labels pushes a tag in, when more than one shows at
@@ -2118,7 +2120,7 @@ export class GardenScene {
       // A thought's tag fades out at the end; it is wider than a word's, so it is kept on the screen.
       if (v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1)
         tags.scenery = thought
-          ? { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", thought, x: onScreen((v.x + 1) / 2, THOUGHT_EDGE), y: onScreen((1 - v.y) / 2), near: Math.min(1, (st.until - this.elapsed) / SCENERY_TAG.fade) }
+          ? { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", thought, x: onScreen((v.x + 1) / 2, THOUGHT_EDGE), y: Math.max(THOUGHT_TOP, onScreen((1 - v.y) / 2)), near: Math.min(1, (st.until - this.elapsed) / SCENERY_TAG.fade) }
           : { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 };
     }
     // The door's quiet line (#315), while it shows.

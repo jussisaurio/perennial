@@ -75,6 +75,15 @@ function Where({ where, lang }: { where: Hideout; lang: string }) {
  */
 function spokenStatus(reach: Reach | null, labels: readonly Label[], state: DoorState, holding: boolean, shook: Shook | null, company: Companion | null, heard: string | null, landed: string | null, toy: ToyDone | null, seek: Seek, lang: string, stars: boolean): ReactNode {
   if (company) return COMPANY_LINE[company](lang);
+  // A tapped thing's thought (#864): its name and the line, both in the course language.
+  // The learner just tapped for it and it shows only 10 s, so it comes before the standing lines (the key, seek).
+  const thought = labels.find((l) => l.kind === "scenery" && l.thought !== undefined);
+  if (thought)
+    return (
+      <>
+        <span lang={lang}>{thought.text}</span>: <span lang={lang}>{thought.thought}</span>
+      </>
+    );
   if (reach === "key") return "The key is here.";
   // What a toy just did (#360), for a few seconds.
   if (toy) return "The seeds fly away on the wind.";
@@ -118,14 +127,6 @@ function spokenStatus(reach: Reach | null, labels: readonly Label[], state: Door
       </>
     );
   if (heard) return heard;
-  // A tapped thing's thought (#864): its name and the line, both in the course language.
-  const thought = labels.find((l) => l.kind === "scenery" && l.thought !== undefined);
-  if (thought)
-    return (
-      <>
-        <span lang={lang}>{thought.text}</span>: <span lang={lang}>{thought.thought}</span>
-      </>
-    );
   // A joke's line is in the course language, and its gloss is what it means (scene.ts showLine); the door's line is English.
   const quiet = labels.find((l) => l.kind === "line" || l.kind === "far");
   const line = spokenLine(quiet?.gloss ?? quiet?.text, state);
