@@ -30,7 +30,10 @@ describe("MemoryLog: one review at a time, the same as replaying the whole log",
     const rows: MemoryRow[] = [];
     const read = new Map<string, MemoryRow>();
     for (const [key, g] of groups) {
-      const row: MemoryRow = { key, wordId: g.wordId, skill: g.skill, ...replay(fsrs, g.list, retention, key)! };
+      // A remembered listening or typing answer is a Good reading review too (#852).
+      const passes = (skill: Skill) => (groups.get(memKey(g.wordId, skill))?.list ?? []).filter((e) => e.grade > 1).map((e) => ({ ...e, grade: 3 as const }));
+      const list = g.skill === "read" ? [...g.list, ...passes("listen"), ...passes("write")] : g.list;
+      const row: MemoryRow = { key, wordId: g.wordId, skill: g.skill, ...replay(fsrs, list, retention, key)! };
       rows.push(row);
       if (g.skill === "read") read.set(g.wordId, row);
     }
@@ -100,5 +103,23 @@ describe("MemoryLog: one review at a time, the same as replaying the whole log",
     // A word's first answer, with others after it: its place in the order would move, so the caller builds a new log.
     const first = changed.find((r) => changed.filter((x) => sameGroup(x, r)).length > 1)!;
     expect(m.delete(first.id)).toBe(false);
+  });
+});
+
+describe("listening and typing count for reading (#852)", () => {
+  const t0 = Date.UTC(2026, 0, 1, 8);
+  const review = (n: number, skill: Skill, day: number, grade: Grade): ReviewRow => ({ id: `r${n}`, user_id: "u", lang: "es", word_id: "w", skill, grade, kind: "review", reviewed_at: new Date(t0 + day * DAY_MS).toISOString(), duration_ms: 3000, sentence_id: null });
+  const reading = [review(0, "read", 0, 3), review(1, "read", 2, 3), review(2, "read", 8, 3)];
+  const readRow = (reviews: ReviewRow[]) => deriveMemory(reviews, 0.9, (id) => id).find((m) => m.skill === "read")!;
+
+  test("a remembered listening answer waters the reading memory", () => {
+    const before = readRow(reading);
+    const after = readRow([...reading, review(3, "listen", 20, 3)]);
+    expect(after.s).toBeGreaterThan(before.s);
+    expect(after.due).toBeGreaterThan(before.due);
+  });
+
+  test("a forgotten one is no reading lapse", () => {
+    expect(readRow([...reading, review(3, "write", 20, 1)])).toEqual(readRow(reading));
   });
 });

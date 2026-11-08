@@ -31,14 +31,15 @@ const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 5_000
 const PLANNED_SHARE = 0.9;
 
 /**
- * First practice of a newly unlocked skill (listening, writing), per session. It
- * comes before new words: with only the time new words left over, a 60-day
- * simulation started almost no listening or typing at all (#405). In a 90-day
- * simulation of one 7-minute chunk a day (#851), one per session typed and heard
- * only about 45 words each; two double that and make listening and typing about
- * a third of each chunk's cards, for about 20% fewer known words at day 60 and 90.
+ * First practices of listening and typing per chunk. Each takes the place of a
+ * due reading review of its word: a remembered answer counts for reading too
+ * (memory.ts), so it costs only its extra seconds and the new skill's own
+ * reviews. In a 90-day simulation of one 7-minute chunk a day (#852), these
+ * heard 152 words and typed 77 by day 90, with 725 known; two extra first
+ * practices per chunk (#851) heard 86, typed 82, with 671 known. Typing costs
+ * the most (12 s a card): a second one a chunk cost another 120 known words.
  */
-const MAX_NEW_SKILLS = 2;
+const FIRST_PRACTICES: Record<Exclude<Skill, "read">, number> = { listen: 2, write: 1 };
 
 export interface PlanInput {
   now: number;
@@ -63,12 +64,12 @@ const DUE_HORIZON_MS = 6 * 3_600_000;
 
 /**
  * One chunk of practice, filled in this order:
- * 1. due reviews, the ones still most likely to be saved first;
- * 2. first practices of newly unlocked skills (listening, writing);
- * 3. new words in the time left (a trickle even during a backlog);
- * 4. reviews due within a day, soonest first;
- * 5. any other learned word, weakest first.
- * Steps 4 and 5 make sure a chunk is never empty once anything is learned.
+ * 1. due reviews, the ones still most likely to be saved first; a few due
+ *    reading reviews come as the first practice of their word's listening or typing;
+ * 2. new words in the time left (a trickle even during a backlog);
+ * 3. reviews due within a day, soonest first;
+ * 4. any other learned word, weakest first.
+ * Steps 3 and 4 make sure a chunk is never empty once anything is learned.
  * They are not sized to the budget: the timer, not the queue, ends the chunk.
  * A step per memory: Today works it out in slices (#569).
  */
@@ -78,15 +79,17 @@ export function* planSteps(input: PlanInput): Generator<void, Plan> {
 
   // One skill per word per session: practising "listen" right after "read" for
   // the same word mostly measures short-term memory. A skill never practised
-  // yet has no memory to save, so it never competes with real reviews.
+  // yet has no memory to save: it comes only in place of its word's due reading.
   const byWord = new Map<string, { m: MemoryRow; r: number }>();
-  const unlocked = new Map<string, MemoryRow>();
+  const unlocked = new Map<string, Partial<Record<Skill, MemoryRow>>>();
   const learned: MemoryRow[] = [];
   for (const m of memories) {
     yield;
     if (answeredToday.has(m.wordId)) continue;
     if (m.reps === 0) {
-      if (!unlocked.has(m.wordId)) unlocked.set(m.wordId, m);
+      const u = unlocked.get(m.wordId);
+      if (u) u[m.skill] = m;
+      else unlocked.set(m.wordId, { [m.skill]: m });
       continue;
     }
     learned.push(m);
@@ -100,32 +103,33 @@ export function* planSteps(input: PlanInput): Generator<void, Plan> {
   // is saved cheaply today; one at R=0.3 is mostly gone and costs the same
   // to relearn tomorrow. This is what makes a week-long break painless.
   const due = [...byWord.values()].sort((a, b) => b.r - a.r);
+  // A due reading review comes as the first practice of its word's typing or
+  // listening instead, the likeliest recalled first: a remembered answer waters
+  // the reading too. Typing first, as it unlocks later and so for fewer words.
+  const firsts = { listen: 0, write: 0 };
+  for (const d of due) {
+    const u = d.m.skill === "read" ? unlocked.get(d.m.wordId) : undefined;
+    if (!u) continue;
+    const skill = (["write", "listen"] as const).find((s) => u[s] && firsts[s] < FIRST_PRACTICES[s]);
+    if (!skill) continue;
+    firsts[skill]++;
+    d.m = u[skill]!; // !: found above
+  }
   // A word likely forgotten costs more: a forgotten card comes back as a retry.
   const dueCost = due.reduce((sum, { m, r }) => sum + COSTS[m.skill] * (2 - r), 0);
-
-  // Newly unlocked skills, for words that have no real review in this session:
-  // after due reviews, before new words.
-  const free = budgetMs * PLANNED_SHARE - dueCost;
-  const newSkills: MemoryRow[] = [];
-  let skillCost = 0;
-  for (const m of unlocked.values()) {
-    if (newSkills.length >= MAX_NEW_SKILLS) break;
-    if (byWord.has(m.wordId) || skillCost + COSTS[m.skill] > free) continue;
-    newSkills.push(m);
-    skillCost += COSTS[m.skill];
-  }
 
   // New words fill the time left over. Keep a trickle (1–2) coming even during
   // a backlog so sessions never become pure catch-up, unless the backlog is
   // truly large.
-  let byTime = Math.floor(Math.max(0, free - skillCost) / COSTS.intro);
+  const free = budgetMs * PLANNED_SHARE - dueCost;
+  let byTime = Math.floor(Math.max(0, free) / COSTS.intro);
   // The trickle compares with the whole budget, not the planned share: it is about how big the backlog is.
   if (byTime === 0 && dueCost < 3 * budgetMs) byTime = dueCost < 1.5 * budgetMs ? 2 : 1;
   const newCount = Math.min(byTime, fresh.length);
 
   // Early reviews for the rest of the time: what comes due soonest, then the
   // weakest of everything else. Practising early is worth a little less, never harm.
-  const taken = new Set([...byWord.keys(), ...newSkills.map((m) => m.wordId)]);
+  const taken = new Set(byWord.keys());
   const soon = yield* firstPerWord(
     learned.filter((m) => !taken.has(m.wordId) && m.due <= now + DAY_MS),
     (m) => m.due,
@@ -136,24 +140,20 @@ export function* planSteps(input: PlanInput): Generator<void, Plan> {
     recall,
   );
 
-  const reviews: Task[] = due.map(({ m }) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
+  const reviews: Task[] = due.map(({ m }) => (m.reps ? { kind: "review", wordId: m.wordId, skill: m.skill } : { kind: "review", wordId: m.wordId, skill: m.skill, isNew: true }));
   const intros: Task[] = fresh.slice(0, newCount).map((wordId) => ({ kind: "intro", wordId }));
-  const skills: Task[] = newSkills.map((m) => ({ kind: "review", wordId: m.wordId, skill: m.skill, isNew: true }));
   const early: Task[] = [...soon, ...weakest].map((m) => ({ kind: "review", wordId: m.wordId, skill: m.skill }));
 
   // Interleave: spread intros through the first part of the session so new
-  // material doesn't all land at the end (and get cut off by the timer). The
-  // new skills go with the due reviews, ahead of the intros they outrank: after
-  // all of them, a short chunk cut it first, and the chunk was a long run of new words.
-  const ahead = [...reviews, ...skills];
+  // material doesn't all land at the end (and get cut off by the timer).
   const queue: Task[] = [];
-  const gap = intros.length ? Math.max(1, Math.floor(Math.min(ahead.length, 20) / intros.length)) : 0;
+  const gap = intros.length ? Math.max(1, Math.floor(Math.min(reviews.length, 20) / intros.length)) : 0;
   let ri = 0;
   for (const intro of intros) {
-    for (let k = 0; k < gap && ri < ahead.length; k++) queue.push(ahead[ri++]);
+    for (let k = 0; k < gap && ri < reviews.length; k++) queue.push(reviews[ri++]);
     queue.push(intro);
   }
-  while (ri < ahead.length) queue.push(ahead[ri++]);
+  while (ri < reviews.length) queue.push(reviews[ri++]);
   queue.push(...early);
 
   // Every learned word was already answered today and no new words are left

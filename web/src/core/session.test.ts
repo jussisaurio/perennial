@@ -57,26 +57,31 @@ describe("plan", () => {
     expect(chunk({ budgetMs: 60_000, memories }).queue).toEqual([{ kind: "review", wordId: "a", skill: "write" }]);
   });
 
-  test("never-practised skills trickle in after real reviews, never ahead of them", () => {
-    const memories = [...Array.from({ length: 10 }, (_, i) => unlocked(`n${i}`, "listen")), mem("slipping", "read", 20, 5), unlocked("w", "write")];
+  test("a few due reading reviews come as their word's first listening or typing practice (#852)", () => {
+    const due = (id: string) => mem(id, "read", 12, 10);
+    const memories = [
+      ...words(4, "l").flatMap((id) => [due(id), unlocked(id, "listen")]),
+      ...words(2, "w").flatMap((id) => [due(id), unlocked(id, "write")]),
+      // Not due: its listening waits for its reading review.
+      mem("later", "read", 1, 30),
+      unlocked("later", "listen"),
+    ];
     const p = chunk({ budgetMs: 7 * 60_000, memories });
-    expect(p.queue[0]).toEqual({ kind: "review", wordId: "slipping", skill: "read" });
-    const newSkills = p.queue.filter((t) => t.kind === "review" && t.isNew);
-    expect(newSkills.length).toBe(2);
+    const firsts = p.queue.filter((t) => t.kind === "review" && t.isNew);
+    expect(firsts).toEqual([
+      { kind: "review", wordId: "l0", skill: "listen", isNew: true },
+      { kind: "review", wordId: "l1", skill: "listen", isNew: true },
+      { kind: "review", wordId: "w0", skill: "write", isNew: true },
+    ]);
+    // The other due words are read, each once.
+    expect(p.queue.filter((t) => t.kind === "review" && t.skill === "read").map((t) => t.wordId)).toEqual(["l2", "l3", "w1", "later"]);
   });
 
-  test("an unlocked skill comes before new words, so listening and typing really start (#405)", () => {
-    const memories = [mem("a", "read", 1, 30), unlocked("a", "write")];
+  test("a first practice takes its time from new words, and comes among the due reviews", () => {
+    const memories = [mem("a", "read", 12, 10), unlocked("a", "write")];
     const p = chunk({ memories, fresh: words(40) });
-    expect(p.queue).toContainEqual({ kind: "review", wordId: "a", skill: "write", isNew: true });
-    expect(p.newCount).toBe(21); // (270 s - 12 s of writing) / 12 s
-    // It comes early, among the new words, not after all 21 of them.
-    expect(p.queue.findIndex((t) => t.kind === "review" && t.isNew)).toBeLessThan(3);
-  });
-
-  test("writing gets its turn: a new skill is offered when the word has nothing else due", () => {
-    const memories = [mem("a", "read", 1, 30), unlocked("a", "write")];
-    expect(chunk({ memories }).queue).toEqual([{ kind: "review", wordId: "a", skill: "write", isNew: true }]);
+    expect(p.queue[0]).toEqual({ kind: "review", wordId: "a", skill: "write", isNew: true });
+    expect(p.newCount).toBe(Math.floor((270_000 - 12_000 * (2 - fsrs.retrievability(12, 10))) / 12_000));
   });
 
   test("huge backlog: no new words; moderate backlog: a trickle", () => {
@@ -102,7 +107,7 @@ describe("plan", () => {
     expect(nextDay.queue.slice(0, 10).every((t) => t.kind === "review")).toBe(true);
   });
 
-  test("a finished course: new skills, then what is due within a day (soonest first), then the weakest words", () => {
+  test("a finished course: what is due, then what is due within a day (soonest first), then the weakest words", () => {
     const memories = [
       mem("strong", "read", 1, 100), // due in 99 days, recalled at ~100%
       mem("shaky", "read", 2.5, 4), // due in 36 h: not within a day
@@ -116,10 +121,10 @@ describe("plan", () => {
     expect(p.newCount).toBe(0);
     expect(p.queue).toEqual([
       { kind: "review", wordId: "soon", skill: "read" },
-      { kind: "review", wordId: "w", skill: "write", isNew: true },
       { kind: "review", wordId: "tonight", skill: "read" },
       { kind: "review", wordId: "later", skill: "read" },
       { kind: "review", wordId: "shaky", skill: "read" },
+      { kind: "review", wordId: "w", skill: "read" },
       { kind: "review", wordId: "strong", skill: "read" },
     ]);
   });

@@ -75,6 +75,18 @@ export function recall(m: MemoryRow, now: number): number {
 
 export const memKey = (wordId: string, skill: Skill) => `${wordId}:${skill}`;
 
+/**
+ * A review's grade as a review of the word's reading memory, or null when it
+ * is not one (#852). A remembered listening or typing answer counts as Good
+ * (3): recalling the meaning from sound, or producing the word, also builds
+ * recognising it (Nakata 2011), and Easy (4) stays for "I already know it". A
+ * forgotten one is no reading lapse: the written word may still be known.
+ */
+function readingGrade(skill: Skill, grade: Grade): Grade | null {
+  if (skill === "read") return grade;
+  return grade === 1 ? null : 3;
+}
+
 const reviewTimes = new WeakMap<ReviewRow, number>();
 
 /**
@@ -123,8 +135,8 @@ const knownAtCache = new WeakMap<object, { t: number; known: ReadonlySet<string>
 type KnownAtLearner = { memory: ReadonlyMap<string, MemoryRow>; reviewsByWord: ReadonlyMap<string, readonly ReviewRow[]>; course: { retention: number } };
 
 /**
- * The words known just before `t` (ms): what a replay of the reading reviews
- * before `t` would say. Only words read since `t` are replayed: for the
+ * The words known just before `t` (ms): what a replay of the reviews of their
+ * reading memory before `t` would say. Only words read since `t` are replayed: for the
  * others, that replay is their memory now. Worked out once per learner and
  * `t`: Today's stats and its visitors both ask for the start of the day. A
  * step per memory row, so Today can work it out in slices (#569).
@@ -143,10 +155,10 @@ export function* knownAtSteps(l: KnownAtLearner, t: number): Generator<void, Rea
       continue;
     }
     // A word read since `t` has reviews, listed under it.
-    const before = l.reviewsByWord
-      .get(id)!
-      .filter((r) => r.skill === "read" && reviewedAt(r) < t)
-      .map((r) => ({ ts: reviewedAt(r), grade: r.grade }));
+    const before = l.reviewsByWord.get(id)!.flatMap((r) => {
+      const grade = readingGrade(r.skill, r.grade);
+      return grade !== null && reviewedAt(r) < t ? [{ ts: reviewedAt(r), grade }] : [];
+    });
     if (wordState(replay(fsrs, before, l.course.retention, memKey(id, "read")) ?? undefined) === "known") known.add(id);
   }
   knownAtCache.set(l, { t, known });
@@ -171,7 +183,7 @@ interface Group {
 
 /**
  * The memory of a review log that changes one review at a time: a change
- * replays only its own word and skill, not the whole log, and the other rows
+ * replays only its own word and skill (and that word's reading), not the whole log, and the other rows
  * stay the same objects. rows() always equals deriveMemory over the same
  * reviews in the same order. The order matters: the planner breaks ties by
  * it, so a group keeps the place of its first review.
@@ -217,8 +229,7 @@ export class MemoryLog {
     if (i >= 0) g.list[i] = entry;
     else g.list.push(entry);
     this.keyOf.set(r.id, key);
-    g.row = undefined;
-    this.changed?.add(key);
+    this.stale(key, g);
     this.cached = null;
     return true;
   }
@@ -236,14 +247,26 @@ export class MemoryLog {
     if (i === 0 && g.list.length > 1) return false;
     g.list.splice(i, 1);
     this.keyOf.delete(id);
-    g.row = undefined;
     // A group that goes moves every row after it: rare (an undo), so the rows are built again.
     if (!g.list.length) {
       this.groups.delete(key);
       this.changed = null;
-    } else this.changed?.add(key);
+    }
+    this.stale(key, g);
     this.cached = null;
     return true;
+  }
+
+  /** A group's reviews changed: replay it, and its word's reading memory, which listening and typing answers also feed. */
+  private stale(key: string, g: Group) {
+    g.row = undefined;
+    this.changed?.add(key);
+    if (g.skill === "read") return;
+    const readKey = memKey(g.wordId, "read");
+    const read = this.groups.get(readKey);
+    if (!read) return;
+    read.row = undefined;
+    this.changed?.add(readKey);
   }
 
   rows(): MemoryRow[] {
@@ -299,11 +322,23 @@ export class MemoryLog {
 
   private replay(key: string, g: Group): MemoryRow {
     if (g.row === undefined) {
-      const st = replay(fsrs, g.list, this.retention, key);
+      const st = replay(fsrs, g.skill === "read" ? this.readingList(g) : g.list, this.retention, key);
       g.row = st && { key, wordId: g.wordId, skill: g.skill, ...st };
     }
     // Every group in the log has reviews, and reviews replay to a row.
     return g.row!;
+  }
+
+  /** A reading group's reviews, with the word's listening and typing answers that count for reading. */
+  private readingList(g: Group): Group["list"] {
+    const list = [...g.list];
+    for (const skill of ["listen", "write"] as const)
+      // ?? []: a skill not practised yet has no group.
+      for (const e of this.groups.get(memKey(g.wordId, skill))?.list ?? []) {
+        const grade = readingGrade(skill, e.grade);
+        if (grade !== null) list.push({ ...e, grade });
+      }
+    return list;
   }
 
   /** Only the changed groups, and the unlocks of their words. */
