@@ -8,7 +8,7 @@ import type { Thought } from "./thought";
 import { THOUGHTS as de } from "./de";
 import { THOUGHTS as es } from "./es";
 
-/** @internal Exported for tests. */
+/** Every course's thoughts; the story's list (story.ts) reads them too. */
 export const THOUGHTS: PerLang<readonly Thought[]> = { es, de };
 
 /** The newest line this thing has for a learner who knows `known` words (ui/visitors.ts knownWords), or null before its first. */

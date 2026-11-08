@@ -44,7 +44,10 @@ export interface VisitorDef extends NounDef {
   tag: "approach" | "tap";
   /** Is it here today? Stable for the whole calendar day. */
   schedule: (c: Ctx) => boolean;
-  /** It moves in once the learner knows this many words (and the Today screen says so that day). */
+  /**
+   * It moves in once the learner knows this many words. The Today screen says so that day, unless it
+   * has a garden word too: it may have come with its word already (milestoneLine).
+   */
   unlock?: number;
   /** It moves in once the learner has started this garden word (#209): learn "gato", and the cat comes. */
   garden?: GardenWord;
@@ -73,7 +76,7 @@ export const VISITORS: readonly VisitorDef[] = [
   // At a bed corner, a different one each day.
   { id: "gnome", words: { es: "el gnomo", de: "der Gartenzwerg" }, gloss: "gnome", rare: false, tag: "approach", unlock: GNOME_KNOWN, schedule: ({ facts }) => facts.known >= GNOME_KNOWN },
   // On a lily pad, at dusk and night only.
-  { id: "frog", words: { es: "la rana", de: "der Frosch" }, gloss: "frog", rare: false, tag: "approach", garden: "frog", schedule: ({ facts }) => facts.garden.has("frog") || facts.known >= FROG_KNOWN },
+  { id: "frog", words: { es: "la rana", de: "der Frosch" }, gloss: "frog", rare: false, tag: "approach", garden: "frog", unlock: FROG_KNOWN, schedule: ({ facts }) => facts.garden.has("frog") || facts.known >= FROG_KNOWN },
   // Round one lantern, at dusk and night only. Small and moving: tap only.
   { id: "moth", words: { es: "la polilla", de: "die Motte" }, gloss: "moth", rare: false, tag: "tap", schedule: () => true },
   // Learn its word and it lives here; before that it still comes after a long break (#17's secret cat).
@@ -182,7 +185,7 @@ export function milestoneLine(before: number, now: number): string | null {
   let hit = 0;
   for (const m of MILESTONES) if (before < m && now >= m) hit = m;
   if (!hit) return null;
-  const arrives = VISITORS.some((v) => v.unlock === hit);
+  const arrives = VISITORS.some((v) => v.unlock === hit && !v.garden);
   return arrives ? `You know ${hit} words. Someone has arrived in the garden.` : `You know ${hit} words.`;
 }
 

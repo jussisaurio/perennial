@@ -6,9 +6,9 @@ import { inLang, type PerLang } from "./nouns";
 import type { Thought } from "./thoughts/thought";
 
 /** A line is gated and checked like a thought (thoughts.test.ts), but belongs to no thing. */
-type FrogLine = Omit<Thought, "thing">;
+export type FrogLine = Omit<Thought, "thing">;
 
-/** @internal Exported for tests. */
+/** Every course's lines; the story's list (story.ts) reads them too. */
 export const FROG_LINES: PerLang<readonly FrogLine[]> = {
   // Its last line is always "no more words": after it the frog only croaks, with no word. So no line comes before it does.
   es: [

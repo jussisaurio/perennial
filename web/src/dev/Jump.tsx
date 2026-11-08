@@ -30,7 +30,7 @@ export default function Jump() {
       {failed && <p role="alert">The course did not load. Reload the page to try again.</p>}
       <ol className="jump-list">
         {/* The door's point is a share of the deck (#882), so the list waits for it. */}
-        {deck && storyJumps(lang, deck.words.length).map((j) => (
+        {deck && storyJumps(lang, deck).map((j) => (
           <li key={`${j.known}-${j.title}`}>
             <a className="jump" href={`/?demo=${lang}:known:${j.known}#/garden`} onClick={() => setGoing(j.known)} aria-busy={going === j.known}>
               <span className="jump-text">
