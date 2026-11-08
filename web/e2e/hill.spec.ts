@@ -95,8 +95,8 @@ const gameTime = (page: Page) => page.evaluate(() => (window as unknown as { __g
 /** Wait until the garden has run `s` seconds: by its own clock, not the test's, so a slow machine's few frames still cover the same ground (#790). */
 async function waitGame(page: Page, s: number) {
   const from = await gameTime(page);
-  // Twice the game time, and at least 15 s, by the wall clock: CI draws few frames a second.
-  await expect.poll(async () => (await gameTime(page)) - from, { intervals: [20], timeout: Math.max(15_000, s * 2000) }).toBeGreaterThanOrEqual(s);
+  // timeout 0: no wall-clock bound, as in holdUntil; the test's own timeout backs it. A frame counts at most 0.1 s (scene.ts MAX_FRAME), so on a CI runner drawing 3–4 frames a second the game runs at a third of the wall clock's speed (#871).
+  await expect.poll(async () => (await gameTime(page)) - from, { intervals: [20], timeout: 0 }).toBeGreaterThanOrEqual(s);
 }
 
 /** Hold a key for `s` seconds of the garden's time. */
@@ -384,8 +384,8 @@ test("hill.sit: by the stool, Sit on the stool seats you facing the far house, a
 });
 
 test("hill.sit-night: by day, sitting on the stool brings dusk and its lit lantern within a minute, then night that holds; standing, time runs back", async ({ page }) => {
-  // About half a minute of the garden's time to night and half a minute held: far longer on CI's few frames.
-  test.setTimeout(240_000);
+  // About half a minute of the garden's time to night and half a minute held: far longer on CI's few frames, where a slow runner's game runs at a third of the clock's speed (#871).
+  test.setTimeout(360_000);
   const s = await walkIn(page, OPEN);
   await sit(page, s);
   const from = await gameTime(page);
@@ -439,8 +439,8 @@ test("hill.no-answer: at night before n12, two signals leave the far light shini
 });
 
 test("hill.answer: with n12, by day, sat on the stool till night, two signals from the seat get two blinks and the line; two more, another answer", async ({ page }) => {
-  // About half a minute of the garden's time to night: far longer on CI's few frames.
-  test.setTimeout(240_000);
+  // About half a minute of the garden's time to night, then two rounds of signals: far longer on CI's few frames, where a slow runner's game runs at a third of the clock's speed (#871).
+  test.setTimeout(360_000);
   const s = await walkIn(page, N12);
   await sit(page, s);
   await expect.poll(() => lapse(page), { timeout: 120_000 }).toBe(2);
