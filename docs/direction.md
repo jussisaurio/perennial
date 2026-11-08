@@ -56,6 +56,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 **The verbs** ([docs/garden-play.md](garden-play.md)): walk, sit on the bench (time passes), shake a plant to see its forms, brush the beds, carry things, throw a pebble, blow a dandelion clock, open the door with its key, read the notes in the shed, climb the stile and the hill, and signal to the far light with the hill's lantern. The glint is only late help (#689). Verbs are never gated by word counts.
 
 **The story** (#639). You are alone in a garden someone else kept. Their notes tell you who they were. The gardener also came from far away and learned this language here.
+- **The theme:** love is kept by small daily tending, like a garden, and a few minutes a day is a lot. It is shown in the couple's rituals and never stated. It is never aimed at the learner's own practice (#639).
 - The beats, in order: early, the stile, the lookout, late, and the door.
 - The notes are only in the course language, with no translation. When a note appears, most of its words are known (`web/src/garden/notes/notes.test.ts`). Each course has 3–5 words of the gardener's own that no deck teaches.
 - **Notes, places and visitors open by known words, never by days.** A break never costs anything.
@@ -65,7 +66,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 
 **Garden words change the world.** Six garden words, and only six, change the world when they become known: lluvia, luna, nieve, búho, zorro, erizo (rain, moon, snow, owl, fox, hedgehog; the same in German). Each one only adds something to the world, with no new verb, and they are placed to fill the gaps between notes. In practice, one small flash, the same for all six, plays when such a word becomes known. Today only the visitor words (cat, bird, dog, frog, fish, snail, butterfly) do something. (Not built yet: #209.)
 
-**Thoughts** (#864). Tap a thing, and a short line in the course language shows under its name, made only of words the learner knows. A thought may be on any thing, not only a thing from the story. Each thought on an ordinary thing is either poignant, with a hint of the story, or a quiet deadpan joke. Never a plain fact. A thought never explains the story and never uses the gardener's own words. (Checking the lines against this rule: #884.)
+**Thoughts** (#864). Tap a thing, and a short line in the course language shows under its name, made only of words the learner knows. A thought may be on any thing, not only a thing from the story. Each thought on an ordinary thing is either poignant, with a hint of the story, or a quiet deadpan joke. Never a plain fact. A thought never explains the story and never uses the gardener's own words. (#884, #889.)
 
 **Whimsy is quiet**: small details you find, never streaks, shaming or confetti, and never in the way of learning.
 
