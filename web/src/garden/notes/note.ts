@@ -1,6 +1,8 @@
 // The gardener's notes (#654): what one note is. The system (notes/read.ts,
 // the shed's nails, the paper card) and the writing (es.ts, de.ts) share it.
 
+import type { Fact } from "../facts";
+
 /** The share of the course's live words a learner knows when the last note comes and the mouse door opens (#882). */
 export const ENDING_SHARE = 0.9;
 
@@ -13,6 +15,10 @@ interface Written {
   forms?: Readonly<Record<string, string>>;
   /** A page of the gardener's diary on the hill (#858): kept there, not on the shed's nails. */
   diary?: true;
+  /** The story's facts a reader learns here (garden/facts.ts), first or again. */
+  reveals?: readonly Fact[];
+  /** The facts a reader must know already, or this note reads wrong. */
+  assumes?: readonly Fact[];
 }
 
 /**

@@ -11,6 +11,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 60,
     text: "Esta es la casa. El jardín no es mío. Es de ella.\nNo me gustan los caracoles.\nElla dice que eso no es razón.",
     forms: { caracoles: "caracol", dice: "decir", es: "ser", esta: "este", gustan: "gustar", la: "el", los: "el" },
+    reveals: ["her-garden", "dislikes-snails"],
   },
   {
     id: "n02",
@@ -18,6 +19,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 70,
     text: "Ella dice el nombre de una flor.\nYo también lo digo.\nMañana ya no lo sé.\nLa flor sí lo sabe.",
     forms: { dice: "decir", digo: "decir", la: "el", sabe: "saber", "sé": "saber", una: "un" },
+    reveals: ["learning-the-language"],
   },
   {
     id: "n03",
@@ -25,6 +27,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 120,
     text: "Hoy ~~soy~~ estoy en el jardín todo el día.\nLas plantas no hablan.\nYo tampoco. Todavía.",
     forms: { estoy: "estar", hablan: "hablar", las: "el", plantas: "planta" },
+    reveals: ["learning-the-language"],
   },
   {
     id: "n04",
@@ -32,6 +35,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 160,
     text: "En el seto hay una puertecilla. No es para mí.\nEs para Migas. Migas se come nuestro pan\ny no pide perdón.\nEl gato mira a Migas. Migas mira al gato.\nNadie hace nada.",
     forms: { al: "a", come: "comer", es: "ser", hace: "hacer", hay: "haber", la: "el", mira: "mirar", pide: "pedir", una: "un" },
+    reveals: ["the-mouse"],
   },
   {
     id: "n05",
@@ -39,6 +43,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 250,
     text: "Antes, cada tarde, el mismo paseo: hasta el fondo del jardín.\nElla saltaba el saltavallas sin mirar.\nYo, despacio, con cuidado.\nAhora hay zarzas, más altas que yo.",
     forms: { altas: "alto", del: "de", hay: "haber", saltaba: "saltar" },
+    reveals: ["the-stile"],
   },
   {
     id: "n06",
@@ -46,6 +51,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 330,
     text: "Su silla de madera es demasiado baja. Se lo repito cada mañana.\nElla dice que es cómoda, y que el problema son mis rodillas.\nPuede ser.\nPero la silla es suya.",
     forms: { baja: "bajo", "cómoda": "cómodo", dice: "decir", es: "ser", la: "el", mis: "mi", puede: "poder", repito: "repetir", rodillas: "rodilla", son: "ser", suya: "suyo" },
+    reveals: ["her-chair"],
   },
   {
     id: "n07",
@@ -53,6 +59,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 420,
     text: "Hoy, una frase larga, entera, sin errores.\nElla se ha reído hasta llorar.\nNo por la frase: se la había dicho al perro del vecino.",
     forms: { al: "a", del: "de", dicho: "decir", entera: "entero", errores: "error", ha: "haber", "había": "haber", la: "el", larga: "largo", "reído": "reír", una: "un" },
+    assumes: ["learning-the-language"],
   },
   {
     id: "n08",
@@ -60,6 +67,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 620,
     text: "Tras las zarzas y el saltavallas, una colina.\nDesde la cima, a medianoche: el lucero,\nuna luz amarilla al otro lado del valle.\nNunca se apaga, ni en invierno.\nElla no pregunta.",
     forms: { al: "a", amarilla: "amarillo", apaga: "apagar", del: "de", la: "el", las: "el", una: "un" },
+    reveals: ["the-far-light", "she-does-not-ask"],
+    assumes: ["the-stile"],
   },
   {
     id: "n09",
@@ -67,6 +76,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 760,
     text: "El lucero: alguien que no me habla. Orgullo, por ambas partes.\nUna discusión absurda, hace once inviernos.\nEntonces no sabía pedir disculpas en ninguna lengua.\nAhora, en dos. Valor, en ninguna.",
     forms: { absurda: "absurdo", ambas: "ambos", disculpas: "disculpa", habla: "hablar", hace: "hacer", inviernos: "invierno", ninguna: "ninguno", partes: "parte", "sabía": "saber", una: "un" },
+    reveals: ["the-quarrel"],
+    assumes: ["the-far-light", "learning-the-language"],
     diary: true,
   },
   {
@@ -75,6 +86,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 900,
     text: "Esta noche, el lucero, como siempre.\nElla me sube un café.\nNo pregunta.",
     forms: { esta: "este", pregunta: "preguntar", sube: "subir" },
+    reveals: ["coffee-on-the-hill"],
+    assumes: ["the-far-light"],
     diary: true,
   },
   {
@@ -83,22 +96,27 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 1000,
     text: "Esta noche, el lucero, como siempre.\nElla me sube un café y un abrigo.\nNo pregunta. Se queda.",
     forms: { esta: "este", pregunta: "preguntar", queda: "quedar", sube: "subir" },
+    assumes: ["coffee-on-the-hill", "she-does-not-ask"],
+    diary: true,
+  },
+  {
+    id: "d3",
+    beat: "late",
+    unlockAt: 1100,
+    text: "Esta noche, el lucero, como siempre.\nEl café me lo subo yo.\nNadie pregunta.",
+    forms: { esta: "este", pregunta: "preguntar", subo: "subir" },
+    reveals: ["she-is-gone"],
+    assumes: ["coffee-on-the-hill", "she-does-not-ask"],
     diary: true,
   },
   {
     id: "n10",
     beat: "late",
-    unlockAt: 1100,
+    unlockAt: 1200,
     text: "He echado agua también en tu lado del jardín.",
     forms: { del: "de", echado: "echar", he: "haber" },
-  },
-  {
-    id: "d3",
-    beat: "late",
-    unlockAt: 1200,
-    text: "Esta noche, el lucero, como siempre.\nEl café me lo subo yo.\nNadie pregunta.",
-    forms: { esta: "este", pregunta: "preguntar", subo: "subir" },
-    diary: true,
+    reveals: ["her-side"],
+    assumes: ["she-is-gone", "two-sides"],
   },
   {
     id: "n11",
@@ -106,6 +124,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 1250,
     text: "Dos tazas en la mesa. Una se queda vacía.\nLa dejo junto a la puertecilla, con agua. Para Migas.\nRayo, el caracol, me escucha. Nunca me dice que no.",
     forms: { dejo: "dejar", dice: "decir", escucha: "escuchar", la: "el", queda: "quedar", tazas: "taza", una: "un", "vacía": "vacío" },
+    reveals: ["the-snail-friend"],
+    assumes: ["she-is-gone", "the-mouse", "dislikes-snails"],
   },
   {
     id: "n12",
@@ -113,6 +133,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 1420,
     text: "Anoche hice dos señales con la luz.\nEl lucero contestó con otras dos.\nNadie ha cruzado el valle. Todavía.",
     forms: { "contestó": "contestar", cruzado: "cruzar", ha: "haber", hice: "hacer", la: "el", otras: "otro", "señales": "señal" },
+    reveals: ["the-light-answers"],
+    assumes: ["the-quarrel"],
     diary: true,
   },
   {
@@ -120,5 +142,7 @@ export const NOTES: readonly WrittenNote[] = [
     beat: "door",
     text: "Ahora el jardín es tuyo.\nEcha agua en los dos lados.\nDeja agua para Migas.\nDe noche, dos señales al lucero. Siempre contesta.\n¿No te gustan los caracoles? Eso no es razón.",
     forms: { caracoles: "caracol", deja: "dejar", echa: "echar", es: "ser", gustan: "gustar", lados: "lado", los: "el", "señales": "señal", contesta: "contestar" },
+    reveals: ["garden-is-yours"],
+    assumes: ["her-side", "the-mouse", "the-light-answers", "dislikes-snails"],
   },
 ];
