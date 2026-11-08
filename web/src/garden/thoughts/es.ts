@@ -10,17 +10,17 @@ export const THOUGHTS: readonly Thought[] = [
 
   { thing: "pond", unlockAt: 180, text: "Hay un pez. O dos.", forms: { hay: "haber" } },
   { thing: "pond", unlockAt: 660, text: "Los peces suben. Buscan a alguien.", forms: { los: "el", peces: "pez", suben: "subir", buscan: "buscar" } },
-  { thing: "pond", unlockAt: 900, text: "Los peces aún esperan su pan.", forms: { los: "el", peces: "pez", esperan: "esperar" } },
+  { thing: "pond", unlockAt: 1250, text: "Los peces aún esperan su pan.", forms: { los: "el", peces: "pez", esperan: "esperar" } },
 
   { thing: "sunflower", unlockAt: 250, text: "Mira al sol. A ti, no.", forms: { mira: "mirar", al: "a", ti: "tú" } },
-  { thing: "sunflower", unlockAt: 600, text: "Vuelve cada año, sin ella.", forms: { vuelve: "volver" } },
-  { thing: "sunflower", unlockAt: 1000, text: "Ella lo miraba cada mañana.", forms: { lo: "él", miraba: "mirar" } },
+  { thing: "sunflower", unlockAt: 600, text: "Ella sabe cómo se llama.", forms: { sabe: "saber", llama: "llamar" } },
+  { thing: "sunflower", unlockAt: 1250, text: "Ella lo miraba cada mañana.", forms: { lo: "él", miraba: "mirar" } },
 
   { thing: "sundial", unlockAt: 290, text: "Ya nadie mira la hora.", forms: { mira: "mirar", la: "el" } },
   { thing: "sundial", unlockAt: 400, text: "Sin sol, no hay hora.", forms: { hay: "haber" } },
   { thing: "sundial", unlockAt: 1750, text: "En la piedra, dos letras pequeñas.", forms: { la: "el", letras: "letra", "pequeñas": "pequeño" } },
 
   { thing: "hills", unlockAt: 290, text: "De allí no viene nadie.", forms: { viene: "venir" } },
-  { thing: "hills", unlockAt: 520, text: "Siempre están lejos.", forms: { "están": "estar" } },
+  { thing: "hills", unlockAt: 520, text: "Desde allí, esto se ve pequeño.", forms: { ve: "ver" } },
   { thing: "hills", unlockAt: 1000, text: "Al otro lado vive alguien.", forms: { al: "a", vive: "vivir" } },
 ];

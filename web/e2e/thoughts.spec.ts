@@ -251,7 +251,7 @@ test("thought.hills: with 800 words a tap on the far hills shows their tag and a
   });
   await page.mouse.click(...at);
   await expect(tag(page)).toContainText("las colinas");
-  await expect(page.locator(".gw-thought-line")).toHaveText("Siempre están lejos.");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Desde allí, esto se ve pequeño.");
 });
 
 test("thought.sundial-night: by day a tap on the sundial shows its line; at night it says it is closed, with no line", async ({ page }) => {
