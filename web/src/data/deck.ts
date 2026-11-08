@@ -9,36 +9,15 @@
 // the plan need, then its sentences, about 3/4 of the bytes, which cards,
 // reading and the word page need.
 
-import type { DeckSentence, DeckWord } from "../deck/schema";
+import type { DeckSentence } from "../deck/schema";
+import { indexWords, type WordsPart } from "./deckIndex";
 
-type WordsPart = { lang: string; words: DeckWord[] };
 type SentencesPart = { lang: string; sentences: DeckSentence[] };
 const wordParts = import.meta.glob<WordsPart>("../../../decks/*/deck.json", { query: "?part=words", import: "default" });
 const sentenceParts = import.meta.glob<SentencesPart>("../../../decks/*/deck.json", { query: "?part=sentences", import: "default" });
 
-export interface LoadedDeck {
-  lang: string;
-  /** Live words in frequency order (no retired words, no aliases). */
-  words: DeckWord[];
-  byId: Map<string, DeckWord>;
-  /** Resolves aliases; returns the word even if retired, or undefined. */
-  resolve(id: string): DeckWord | undefined;
-}
-
 /** A deck's live sentences, by word. Every live word has at least 3 (deckProblems). */
 export type DeckSentences = ReadonlyMap<string, DeckSentence[]>;
-
-function indexWords(d: WordsPart, lang: string): LoadedDeck {
-  if (d.lang !== lang) throw new Error(`deck ${lang}: holds ${d.lang}`);
-  const byId = new Map<string, DeckWord>(d.words.map((w) => [w.id, w]));
-  const resolve = (id: string) => {
-    const w = byId.get(id);
-    return w?.aliasOf ? (byId.get(w.aliasOf) ?? w) : w;
-  };
-  // Every live word has sentences (CI checks it), so all of them can be practised.
-  const words = [...byId.values()].filter((w) => !w.retired && !w.aliasOf).sort((a, b) => a.rank - b.rank);
-  return { lang, words, byId, resolve };
-}
 
 function indexSentences(d: SentencesPart, lang: string): DeckSentences {
   if (d.lang !== lang) throw new Error(`deck ${lang}: sentences hold ${d.lang}`);

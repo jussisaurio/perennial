@@ -4,7 +4,7 @@ import { DAY_MS } from "../core/day";
 import { GARDEN_WORDS, ORCHARD_WORDS } from "../deck/schema";
 import type { Grade } from "../core/fsrs";
 import { rng } from "../lib/seed";
-import type { LoadedDeck } from "./deck";
+import type { LoadedDeck } from "./deckIndex";
 import type { Learner } from "./learner";
 import type { CourseRow, ReviewRow, Skill } from "./rows";
 import type { Store } from "./store";

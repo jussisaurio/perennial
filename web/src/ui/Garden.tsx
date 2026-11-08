@@ -4,7 +4,7 @@
 // The plants themselves come from garden/plants.ts, shared with the walk.
 
 import { memo, startTransition, type MouseEvent, type PointerEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { LoadedDeck } from "../data/deck";
+import type { LoadedDeck } from "../data/deckIndex";
 import type { Learner } from "../data/learner";
 import { reservedStake } from "../content/voice";
 import { language } from "../content/languages";
