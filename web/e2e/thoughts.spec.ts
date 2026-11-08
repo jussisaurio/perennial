@@ -23,6 +23,13 @@ async function openWalk(page: Page, known: number) {
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
+  // The key lies by the bench for one learner in five (world.ts keySpot, seeded by the demo's new user id), and in
+  // reach it takes the action button from the bench: lay it by the first bed instead. With few words there is no key yet.
+  await page.evaluate(() => {
+    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; door: { key: { x: number; z: number } | null } } }).__garden;
+    const bed = s.layout.beds[0];
+    if (s.door.key) Object.assign(s.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
+  });
 }
 
 /** Where things are: the bench's seat and the sundial by it. */
@@ -140,6 +147,32 @@ test("thought.replace: a tap on the pond while the bench's line shows shows the 
   await expect(tag(page)).toHaveCount(1);
   await expect(tag(page)).toContainText("el estanque");
   await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben cuando llega alguien.");
+});
+
+test("thought.seated: sitting on the bench, a tap on the pond shows the pond's tag and line, and you are still sitting", async ({ page }) => {
+  await openWalk(page, 800);
+  await lookAt(page, (await places(page)).bench, 1);
+  await page.getByRole("button", { name: "Sit on the bench" }).click();
+  const stand = page.getByRole("button", { name: "Stand up" });
+  await expect(stand).toBeVisible();
+  // From the seat, without turning: a point on the pond that a tap meets (a lily may be in the way of its middle).
+  const at = await page.evaluate(async () => {
+    const s = (window as unknown as { __garden: ThoughtScene }).__garden;
+    const p = s.layout.pond;
+    const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    for (const off of [0, 0.4, -0.4, 0.8, -0.8]) {
+      const v = new s.tmp.constructor(p.x + off, 0, p.z).project(s.camera);
+      const [x, y] = [((v.x + 1) / 2) * r.width, ((1 - v.y) / 2) * r.height];
+      const hit = s.pickAny(x, y, r.width, r.height);
+      if (hit?.kind === "scenery" && hit.s?.view.id === "pond") return [r.left + x, r.top + y] as [number, number];
+    }
+    throw new Error("no tap from the seat meets the pond");
+  });
+  await page.mouse.click(...at);
+  await expect(tag(page)).toContainText("el estanque");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben cuando llega alguien.");
+  await expect(stand).toBeVisible();
 });
 
 test("thought.fades: the tag and its line still show 8 seconds after the tap and are gone 12 seconds after it", async ({ page }) => {

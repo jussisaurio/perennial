@@ -64,6 +64,8 @@ const BENCH_SIGN = { dx: 1.45, dz: -0.05 };
 const NOTICE_TOP = 1.19;
 /** The height of the top of the bench's back (m). */
 const BENCH_BACK = 0.8;
+/** The height of the top of the bench's seat (m). */
+const BENCH_SEAT = 0.45;
 
 /**
  * The door in the hedge (#315): locked; locked with the key hidden somewhere in
@@ -258,7 +260,7 @@ function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
     m.position.set(x, y, z);
     bench.add(m);
   };
-  plank(1.3, 0.06, 0.4, 0, 0.42, 0);
+  plank(1.3, 0.06, 0.4, 0, BENCH_SEAT - 0.03, 0);
   plank(1.3, 0.28, 0.05, 0, BENCH_BACK - 0.14, -0.2);
   for (const sx of [-0.55, 0.55]) for (const sz of [-0.15, 0.15]) plank(0.06, 0.42, 0.06, sx, 0.21, sz);
   return bench;
@@ -1407,8 +1409,12 @@ export class GardenScene {
     bench.position.set(at.x, 0, at.z);
     this.scene.add(still(bench));
     {
+      // The seat and the back rest as two boxes, not one round both: sitting, the eye is over the seat and in front
+      // of the back, so a tap looks out past the bench to what is under the finger (#868).
       const { x, z } = bench.position;
-      this.hitBoxes.push({ id: "bench", min: [x - BENCH.half, 0, z - BENCH.back], max: [x + BENCH.half, 0.8, z + BENCH.front], tag: [x, 0.88, z] });
+      const tag: [number, number, number] = [x, 0.88, z];
+      this.hitBoxes.push({ id: "bench", min: [x - BENCH.half, 0, z - BENCH.back], max: [x + BENCH.half, BENCH_SEAT, z + BENCH.front], tag });
+      this.hitBoxes.push({ id: "bench", min: [x - BENCH.half, 0, z - BENCH.back], max: [x + BENCH.half, BENCH_BACK, z - 0.15], tag });
     }
     return bench;
   }
