@@ -48,16 +48,22 @@ export function stepY(s: StileSpot, x: number, z: number): number {
  * Where each unlocked note is found as the walk opens (`unlocked`: in the
  * order they came, `read`: the ids opened before). A stile note not read yet
  * lies in front of the stile; every other hangs on the shed's nails, a stile
- * note too once read. `stile` is null until the first stile note is unlocked:
- * until then there is no stile.
+ * note too once read. A diary page (#858) is only ever in the diary on the
+ * hill. `stile` is null until the first stile note is unlocked: until then
+ * there is no stile. `diary` is null until the first page is unlocked.
  */
-export function placeNotes(unlocked: readonly Note[], read: readonly string[]): { nails: { id: string; unread: boolean }[]; stile: string[] | null } {
+export function placeNotes(
+  unlocked: readonly Note[],
+  read: readonly string[],
+): { nails: { id: string; unread: boolean }[]; stile: string[] | null; diary: { id: string; unread: boolean }[] | null } {
   const nails: { id: string; unread: boolean }[] = [];
   const step: string[] = [];
+  const diary: { id: string; unread: boolean }[] = [];
   for (const n of unlocked) {
     const unread = !read.includes(n.id);
-    if (n.beat === "stile" && unread) step.push(n.id);
+    if (n.diary) diary.push({ id: n.id, unread });
+    else if (n.beat === "stile" && unread) step.push(n.id);
     else nails.push({ id: n.id, unread });
   }
-  return { nails, stile: unlocked.some((n) => n.beat === "stile") ? step : null };
+  return { nails, stile: unlocked.some((n) => n.beat === "stile") ? step : null, diary: diary.length ? diary : null };
 }

@@ -11,7 +11,6 @@ import type { DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent, Wa
 import type { CarryDone } from "../garden/sceneCarry";
 import type { Companion } from "../garden/bench";
 import type { ToyDone } from "../garden/sceneToys";
-import type { Raised } from "../garden/lookout";
 import type { ToysWalk } from "../garden/toys";
 import { sceneryViews } from "../garden/scenery";
 import { moonPhase } from "../garden/moon";
@@ -54,8 +53,9 @@ interface WalkData {
  * that fell from it. `onCarry`: a loose thing was picked up or put down, or it
  * landed (#358).
  * `notes`: the gardener's notes on the shed's nails (#654), by id and whether
- * each is unread, those under the stile's step (#714, null: no stile yet), and
- * what to do when one is opened.
+ * each is unread, those under the stile's step (#714, null: no stile yet), the
+ * diary's pages on the hill (#858, null: no diary yet), and what to do when one
+ * is opened.
  */
 /** The kinds of label whose words GardenWalk's screen-reader status says. */
 const SPOKEN = new Set<Label["kind"]>(["fruit", "echo", "line"]);
@@ -113,7 +113,7 @@ export function useGardenScene({
   onFocused: () => void;
   onShake: (p: PlacedPlant, forms: string[]) => void;
   onCarry: (d: CarryDone) => void;
-  notes: { nails: readonly { id: string; unread: boolean }[]; stile: readonly string[] | null; open: (id: string) => void };
+  notes: { nails: readonly { id: string; unread: boolean }[]; stile: readonly string[] | null; diary: readonly { id: string; unread: boolean }[] | null; open: (id: string) => void };
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   // How much of the garden has loaded, as a percent (null: not loading). It changes on each load chunk, so only the loading line reads it (#727).
@@ -132,14 +132,6 @@ export function useGardenScene({
   const [company, setCompany] = useState<Companion | null>(null);
   const [stars, setStars] = useState(false);
   const [heard, setHeard] = useState<string | null>(null);
-  // What the far light did when the lookout's lantern was last raised (#683): a new object each raise, so the same answer is told again.
-  const [raised, setRaised] = useState<{ r: Raised } | null>(null);
-  // Told for a few seconds, as a toy's doing is (GardenWalk.tsx).
-  useEffect(() => {
-    if (!raised) return;
-    const t = setTimeout(() => setRaised(null), 5000);
-    return () => clearTimeout(t);
-  }, [raised]);
   const scene = useRef<GardenScene | null>(null);
   // The scene is built once; it saves the door through whatever the page passes now.
   const openDoor = useRef(door.open);
@@ -183,6 +175,7 @@ export function useGardenScene({
         firstReview: visitors ? visitors.facts.firstReview : null,
         notes: notes.nails,
         stile: notes.stile,
+        diary: notes.diary,
       },
     });
   }
@@ -237,7 +230,6 @@ export function useGardenScene({
             onCarry: (d) => carryNow.current(d),
             onToy: (d) => toysNow.current.done(d),
             onStars: setStars,
-            onRaise: (r) => setRaised({ r }),
             onNote: (id) => noteNow.current(id),
           },
           reduced,
@@ -297,7 +289,7 @@ export function useGardenScene({
     scene.current?.setTime(time);
   }, [time]);
 
-  return { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard, raised };
+  return { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard };
 }
 
 /**

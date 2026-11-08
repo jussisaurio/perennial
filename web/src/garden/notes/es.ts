@@ -67,6 +67,23 @@ export const NOTES: readonly Note[] = [
     unlockAt: 760,
     text: "El lucero: alguien que no me habla. Orgullo, por ambas partes.\nUna discusión absurda, hace once inviernos.\nEntonces no sabía pedir disculpas en ninguna lengua.\nAhora, en dos. Valor, en ninguna.",
     forms: { absurda: "absurdo", ambas: "ambos", disculpas: "disculpa", habla: "hablar", hace: "hacer", inviernos: "invierno", ninguna: "ninguno", partes: "parte", "sabía": "saber", una: "un" },
+    diary: true,
+  },
+  {
+    id: "d1",
+    beat: "lookout",
+    unlockAt: 900,
+    text: "Esta noche, el lucero, como siempre.\nElla me sube un café.\nNo pregunta.",
+    forms: { esta: "este", pregunta: "preguntar", sube: "subir" },
+    diary: true,
+  },
+  {
+    id: "d2",
+    beat: "lookout",
+    unlockAt: 1000,
+    text: "Esta noche, el lucero, como siempre.\nElla me sube un café y un abrigo.\nNo pregunta. Se queda.",
+    forms: { esta: "este", pregunta: "preguntar", queda: "quedar", sube: "subir" },
+    diary: true,
   },
   {
     id: "n10",
@@ -74,6 +91,14 @@ export const NOTES: readonly Note[] = [
     unlockAt: 1100,
     text: "He echado agua también en tu lado del jardín.",
     forms: { del: "de", echado: "echar", he: "haber" },
+  },
+  {
+    id: "d3",
+    beat: "late",
+    unlockAt: 1200,
+    text: "Esta noche, el lucero, como siempre.\nEl café me lo subo yo.\nNadie pregunta.",
+    forms: { esta: "este", pregunta: "preguntar", subo: "subir" },
+    diary: true,
   },
   {
     id: "n11",
@@ -88,6 +113,7 @@ export const NOTES: readonly Note[] = [
     unlockAt: 1420,
     text: "Anoche hice dos señales con la luz.\nEl lucero contestó con otras dos.\nNadie ha cruzado el valle. Todavía.",
     forms: { "contestó": "contestar", cruzado: "cruzar", ha: "haber", hice: "hacer", la: "el", otras: "otro", "señales": "señal" },
+    diary: true,
   },
   {
     id: "n13",

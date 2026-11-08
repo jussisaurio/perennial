@@ -67,6 +67,23 @@ export const NOTES: readonly Note[] = [
     unlockAt: 800,
     text: "Das Fünkchen: jemand, der nicht mit mir redet. Stolz, auf beiden Seiten.\nEin dummer Streit, vor elf Wintern.\nDamals konnte ich mich in keiner Sprache entschuldigen.\nJetzt in zwei. Mutig in keiner.",
     forms: { beiden: "beide", dummer: "dumm", keiner: "kein", konnte: "können", mich: "ich", mir: "ich", redet: "reden", seiten: "seite", wintern: "winter" },
+    diary: true,
+  },
+  {
+    id: "d1",
+    beat: "lookout",
+    unlockAt: 900,
+    text: "Heute Abend das Fünkchen, wie immer.\nSie bringt mir einen Kaffee.\nSie fragt nicht.",
+    forms: { bringt: "bringen", einen: "ein", fragt: "fragen", mir: "ich" },
+    diary: true,
+  },
+  {
+    id: "d2",
+    beat: "lookout",
+    unlockAt: 1000,
+    text: "Heute Abend das Fünkchen, wie immer.\nSie bringt mir einen Kaffee und eine Decke.\nSie fragt nicht. Sie bleibt.",
+    forms: { bleibt: "bleiben", bringt: "bringen", eine: "ein", einen: "ein", fragt: "fragen", mir: "ich" },
+    diary: true,
   },
   {
     id: "n10",
@@ -74,6 +91,14 @@ export const NOTES: readonly Note[] = [
     unlockAt: 1100,
     text: "Deine Seite hat auch Wasser bekommen.",
     forms: { deine: "dein", hat: "haben" },
+  },
+  {
+    id: "d3",
+    beat: "late",
+    unlockAt: 1200,
+    text: "Heute Abend das Fünkchen, wie immer.\nDen Kaffee bringe ich mir selbst.\nNiemand fragt.",
+    forms: { bringe: "bringen", den: "der", fragt: "fragen", mir: "ich" },
+    diary: true,
   },
   {
     id: "n11",
@@ -88,6 +113,7 @@ export const NOTES: readonly Note[] = [
     unlockAt: 1420,
     text: "Letzte Nacht: Licht aus, Licht an. Zweimal.\nDas Fünkchen hat geantwortet: zweimal.\nNiemand ist über den Berg gekommen. Noch nicht.",
     forms: { den: "der", geantwortet: "antworten", gekommen: "kommen", hat: "haben", ist: "sein" },
+    diary: true,
   },
   {
     id: "n13",

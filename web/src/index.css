@@ -914,6 +914,11 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* The hole the nail left. */
 .gw-note::before { content: ""; position: absolute; left: 50%; top: 1rem; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #6b5a45; box-shadow: inset 1px 1px 0 rgb(0 0 0 / 0.35), 0 1px 0 rgb(255 255 255 / 0.6); }
 .gw-night .gw-note { background-color: #d8ceb4; }
+/* A page of the diary on the hill (#858): bound in a book, so no nail hole; it turns to the other pages. */
+.gw-diary::before { content: none; }
+.gw-note-pages { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 1rem; }
+.gw-note-pages button { display: flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0 0.4rem; border: 0; background: none; color: #6b5a45; font: 0.85rem var(--pixel); cursor: pointer; }
+.gw-note-pages button:disabled { visibility: hidden; }
 .gw-note .gw-close { color: #8a7660; }
 /* A rule under each line of writing, just below its letters, on down to the bottom of the paper. */
 .gw-note-text {

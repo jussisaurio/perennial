@@ -37,6 +37,11 @@ export function backRate(lapse: number): number {
   return Math.sign(to - lapse) * LAPSE.back;
 }
 
+/** On the lookout's stool (#858) time runs only until night, then holds: the most `lapse` may be from `start`. */
+export function untilNight(start: TimeOfDay): number {
+  return DAY.length - 1 - DAY.indexOf(start);
+}
+
 /** One frame of standing up: `lapse` runs at backRate for `dt` seconds, and is 0 once it is back to the real time. */
 export function settle(lapse: number, dt: number): number {
   const to = Math.round(lapse / DAY.length) * DAY.length;

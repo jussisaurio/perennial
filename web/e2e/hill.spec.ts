@@ -5,8 +5,9 @@ import { pinDetail } from "./helpers";
 // fence, stile and hill"): one test per claim, played with the keys and a tap
 // as the learner would. Only where the learner stands at the start is set by
 // hand. Until note n08 (620 known words) brambles shut the stile; after it you
-// walk over and up the hill. The clock is pinned to a day, or a night for the
-// lantern; the viewport to a laptop's.
+// walk over and up the hill, to the stool, the lantern and the diary (#858).
+// The clock is pinned to a day, or a night for the lantern; the viewport to a
+// laptop's.
 
 /** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
 type HillScene = {
@@ -15,9 +16,14 @@ type HillScene = {
   z: number;
   yaw: number;
   pitch: number;
-  camera: { position: { y: number } };
+  camera: { position: { y: number }; fov: number };
   elapsed: number;
-  lookout: { answers: boolean; lift(now: number): number };
+  seated: boolean;
+  /** How far the time-lapse has run: 0 is now; from a day, 2 is night. */
+  lapse: number;
+  lanterns: { on: boolean[]; lookout: number };
+  lookout: { answers: boolean };
+  lookoutThings: { ribbon: { visible: boolean } };
   sky: { farLight: { visible: boolean } };
 };
 
@@ -26,6 +32,10 @@ type Spots = {
   stile: { x: number; z: number; foot: [number, number]; note: [number, number] };
   top: [number, number];
   post: [number, number];
+  stool: [number, number];
+  stone: [number, number];
+  /** The yaw that looks from the stool to the far house. */
+  face: number;
   turn: number;
   hilltop: number;
   cut: number;
@@ -41,11 +51,15 @@ const EYE = 1.05;
 /** Words known: enough for the first stile note (n05) but not the hill's (n08); and enough for n08. */
 const SHUT = 300;
 const OPEN = 800;
+/** Learners who know exactly as many words as note n09 (the diary) and n12 (the far light answers) need; the first not yet n09. */
+const N09 = "known:760";
+const N12 = "known:1420";
 
 // On CI's software WebGL (~7 frames a second) the walk alone takes 10–20 s to open, and then the walking is played out in real time.
 test.describe.configure({ timeout: 60_000 });
 
-async function walkIn(page: Page, words: number, at = DAY): Promise<Spots> {
+/** Open the walk for a demo learner: `words` studied, or `known:n` for one who knows exactly n words (dev/boot.ts). */
+async function walkIn(page: Page, words: number | `known:${number}`, at = DAY): Promise<Spots> {
   await page.clock.setFixedTime(at);
   await page.setViewportSize({ width: 1280, height: 720 });
   // Low detail: software WebGL on CI draws it faster.
@@ -62,7 +76,7 @@ async function walkIn(page: Page, words: number, at = DAY): Promise<Spots> {
     const s = (window as unknown as { __garden: HillScene }).__garden;
     const at = stile.stileAt(s.layout as Parameters<typeof stile.stileAt>[0]);
     const hill = lookout.lookoutAt(at);
-    return { stile: at, top: hill.top, post: hill.post, turn: lookout.PATH_TURN, hilltop: lookout.HILLTOP_R, cut: lookout.CUT, steps: { half: stile.STEP.w / 2, out: stile.STEP.out }, walker: world.WALKER, shut: stile.BRAMBLES_IN };
+    return { stile: at, top: hill.top, post: hill.post, stool: hill.stool, stone: hill.stone, face: hill.face, turn: lookout.PATH_TURN, hilltop: lookout.HILLTOP_R, cut: lookout.CUT, steps: { half: stile.STEP.w / 2, out: stile.STEP.out }, walker: world.WALKER, shut: stile.BRAMBLES_IN };
   });
 }
 
@@ -81,7 +95,8 @@ const gameTime = (page: Page) => page.evaluate(() => (window as unknown as { __g
 /** Wait until the garden has run `s` seconds: by its own clock, not the test's, so a slow machine's few frames still cover the same ground (#790). */
 async function waitGame(page: Page, s: number) {
   const from = await gameTime(page);
-  await expect.poll(async () => (await gameTime(page)) - from, { intervals: [20], timeout: 15_000 }).toBeGreaterThanOrEqual(s);
+  // Twice the game time, and at least 15 s, by the wall clock: CI draws few frames a second.
+  await expect.poll(async () => (await gameTime(page)) - from, { intervals: [20], timeout: Math.max(15_000, s * 2000) }).toBeGreaterThanOrEqual(s);
 }
 
 /** Hold a key for `s` seconds of the garden's time. */
@@ -276,66 +291,170 @@ test("hill.tap: tapping the hill's ground past the fence walks you there, over t
   }, { intervals: [100], timeout: 15_000 }).toBeLessThan(0.3);
 });
 
-/**
- * From now on, record the lantern's lift and whether the far light is on, on
- * every frame: a slow machine's poll could miss the lantern's 1.4 s up or a
- * blink's 0.3 s (#790).
- */
-const recordLantern = (page: Page) =>
-  page.evaluate(() => {
-    const w = window as unknown as { __garden: HillScene; __lantern?: [number, boolean][] };
-    const track = () => {
-      w.__lantern!.push([w.__garden.lookout.lift(w.__garden.elapsed), w.__garden.sky.farLight.visible]);
-      requestAnimationFrame(track);
-    };
-    if (!w.__lantern) requestAnimationFrame(track);
-    w.__lantern = [];
-  });
+/** The way a walker on the stool faces (to the far house), and the stool's left (toward the post), as [x, z]. */
+const facing = (s: Spots) => {
+  const [fx, fz] = [-Math.sin(s.face), -Math.cos(s.face)];
+  return { ahead: [fx, fz], left: [fz, -fx] };
+};
 
-/** Since recordLantern: the highest lift, whether the far light went out, and the lift and far light on the last frame. */
-const lantern = (page: Page) =>
-  page.evaluate(() => {
-    const l = (window as unknown as { __lantern: [number, boolean][] }).__lantern;
-    const last = l.at(-1);
-    return { top: Math.max(...l.map(([lift]) => lift)), wentOut: l.some(([, far]) => !far), lift: last?.[0], far: last?.[1] };
-  });
-
-/** On the hilltop by the lantern's post, at night, having walked up from the stile's foot. */
-async function upToThePost(page: Page) {
-  const s = await walkIn(page, OPEN, NIGHT);
-  await stand(page, s.stile.x, s.stile.foot[1], s.turn);
-  await holdUntil(page, "KeyW", { of: s.top, below: 0.6 });
-  // Facing the post, ahead on the left.
-  await stand(page, s.top[0], s.top[1], Math.atan2(-(s.post[0] - s.top[0]), -(s.post[1] - s.top[1])));
+/** Just behind the stool, facing the far house over it. */
+function byStool(page: Page, s: Spots) {
+  const { ahead } = facing(s);
+  return stand(page, s.stool[0] - ahead[0] * 0.6, s.stool[1] - ahead[1] * 0.6, s.face);
 }
 
-test("hill.raise: at night by the lantern's post, Raise the lantern lifts it, says so, and it comes back down", async ({ page }) => {
-  await upToThePost(page);
-  await recordLantern(page);
-  await page.getByRole("button", { name: "Raise the lantern", exact: true }).click();
-  await expect(page.locator(".sr-only[role=status]")).toContainText("You raise the lantern");
-  await expect.poll(async () => (await lantern(page)).top, { intervals: [50], timeout: 5_000 }).toBeGreaterThan(0.9);
-  await expect.poll(async () => (await lantern(page)).lift, { intervals: [50], timeout: 10_000 }).toBe(0);
+/** On the post's far side from the stool, facing the post. */
+function byPost(page: Page, s: Spots) {
+  const { left } = facing(s);
+  return stand(page, s.post[0] + left[0] * 0.6, s.post[1] + left[1] * 0.6, Math.atan2(left[0], left[1]), -0.1);
+}
+
+/** Just behind the diary's stone, looking down at it. */
+function byStone(page: Page, s: Spots) {
+  const { ahead } = facing(s);
+  return stand(page, s.stone[0] - ahead[0] * 0.6, s.stone[1] - ahead[1] * 0.6, s.face, -0.3);
+}
+
+const lapse = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lapse);
+const seated = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.seated);
+const button = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
+
+/** Sit on the stool, from just behind it. */
+async function sit(page: Page, s: Spots) {
+  await byStool(page, s);
+  await button(page, "Sit on the stool").click();
+  await expect.poll(() => seated(page)).toBe(true);
+}
+
+/** Blow the lantern out and light it again: one signal. */
+async function signal(page: Page) {
+  await button(page, "Blow out the lantern").click();
+  await button(page, "Light the lantern").click();
+  await expect(button(page, "Blow out the lantern")).toBeVisible();
+}
+
+/**
+ * From now on, record whether the far light shows, on every frame: a slow
+ * machine's poll could miss a second dark (#790). It is polled on first: the
+ * sky sets it on its first dark frame (#707).
+ */
+async function recordFarLight(page: Page) {
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.sky.farLight.visible)).toBe(true);
+  await page.evaluate(() => {
+    const w = window as unknown as { __garden: HillScene; __far?: boolean[] };
+    const track = () => {
+      w.__far!.push(w.__garden.sky.farLight.visible);
+      requestAnimationFrame(track);
+    };
+    if (!w.__far) requestAnimationFrame(track);
+    w.__far = [];
+  });
+}
+
+/** Since recordFarLight: how many times the far light went dark, and whether it shows now. */
+const farLight = (page: Page) =>
+  page.evaluate(() => {
+    const f = (window as unknown as { __far: boolean[] }).__far;
+    return { dark: f.filter((on, i) => i > 0 && f[i - 1] && !on).length, on: f.at(-1) };
+  });
+
+test("hill.lantern: at night by the lantern's post, Blow out the lantern puts its flame out, and the button says Light the lantern", async ({ page }) => {
+  const s = await walkIn(page, OPEN, NIGHT);
+  await byPost(page, s);
+  await button(page, "Blow out the lantern").click();
+  await expect(button(page, "Light the lantern")).toBeVisible();
+  expect(await page.evaluate(() => (({ on, lookout }) => on[lookout])((window as unknown as { __garden: HillScene }).__garden.lanterns))).toBe(false);
 });
 
-// #683, kept from the lookout's old test.
-test("hill.far-light: before n12 it shines on; once it answers, the first raise gets two blinks, and later ones none", async ({ page }) => {
-  await upToThePost(page);
-  const status = page.locator(".sr-only[role=status]");
-  const raise = page.getByRole("button", { name: "Raise the lantern", exact: true });
-  // Polled: the sky sets it on its first frame, which may not have run yet (#707).
-  await recordLantern(page);
-  await expect.poll(async () => (await lantern(page)).far, { intervals: [50], timeout: 5_000 }).toBe(true);
-  // This learner may have n12: the test says which.
-  await page.evaluate(() => ((window as unknown as { __garden: HillScene }).__garden.lookout.answers = false));
-  await raise.click();
-  await expect(status).toHaveText("You raise the lantern. Far away, a small light shines.");
-  await page.evaluate(() => ((window as unknown as { __garden: HillScene }).__garden.lookout.answers = true));
-  await recordLantern(page);
-  await raise.click();
-  await expect(status).toHaveText("You raise the lantern. Far away, the small light blinks twice.");
-  await expect.poll(async () => (await lantern(page)).wentOut, { intervals: [50], timeout: 5_000 }).toBe(true);
-  await expect.poll(async () => (await lantern(page)).far, { intervals: [50], timeout: 5_000 }).toBe(true);
-  await raise.click();
-  await expect(status).toHaveText("You raise the lantern. Far away, a small light shines.");
+test("hill.sit: by the stool, Sit on the stool seats you facing the far house, and W stands you up", async ({ page }) => {
+  const s = await walkIn(page, OPEN);
+  // Behind the stool, turned away from the far house: sitting turns you to it.
+  const { ahead } = facing(s);
+  await stand(page, s.stool[0] - ahead[0] * 0.6, s.stool[1] - ahead[1] * 0.6, s.face + 1);
+  await button(page, "Sit on the stool").click();
+  await expect.poll(() => seated(page)).toBe(true);
+  const sat = await page.evaluate(() => (({ x, z, yaw }) => ({ x, z, yaw }))((window as unknown as { __garden: HillScene }).__garden));
+  expect(Math.hypot(sat.x - s.stool[0], sat.z - s.stool[1])).toBeLessThan(0.01);
+  expect(sat.yaw).toBeCloseTo(s.face, 3);
+  // The view narrows as you sit down.
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.camera.fov)).toBeLessThan(55);
+  await expect(button(page, "Stand up")).toBeVisible();
+  await hold(page, "KeyW", 0.3);
+  expect(await seated(page)).toBe(false);
+});
+
+test("hill.sit-night: by day, sitting on the stool brings dusk and its lit lantern within a minute, then night that holds; standing, time runs back", async ({ page }) => {
+  // About half a minute of the garden's time to night and half a minute held: far longer on CI's few frames.
+  test.setTimeout(240_000);
+  const s = await walkIn(page, OPEN);
+  await sit(page, s);
+  const from = await gameTime(page);
+  await expect(button(page, "Blow out the lantern")).toBeVisible({ timeout: 120_000 });
+  expect((await gameTime(page)) - from).toBeLessThan(60);
+  // From a day, the time-lapse's night.
+  await expect.poll(() => lapse(page), { timeout: 120_000 }).toBe(2);
+  await waitGame(page, 30);
+  expect(await lapse(page)).toBe(2);
+  expect(await seated(page)).toBe(true);
+  await hold(page, "KeyW", 0.3);
+  await expect.poll(() => lapse(page), { timeout: 30_000 }).toBe(0);
+});
+
+test("hill.diary: with n09, by the stone, Read the diary opens it on n09; before n09 there is no diary", async ({ page }) => {
+  let s = await walkIn(page, "known:759");
+  await byStone(page, s);
+  // A second for the button to come, if it would.
+  await waitGame(page, 1);
+  await expect(button(page, "Read the diary")).toHaveCount(0);
+  s = await walkIn(page, N09);
+  await byStone(page, s);
+  await button(page, "Read the diary").click();
+  await expect(page.getByRole("dialog", { name: "A page of the gardener's diary, page 1 of 1" })).toContainText("El lucero: alguien que no me habla.");
+});
+
+test("hill.diary-new: with a page not read, the diary shows its ribbon and opens on it; read, the ribbon is gone", async ({ page }) => {
+  // n12 not read yet; the four pages before it read.
+  const s = await walkIn(page, N12);
+  const ribbon = () => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lookoutThings.ribbon.visible);
+  expect(await ribbon()).toBe(true);
+  await byStone(page, s);
+  await button(page, "Read the diary").click();
+  const card = page.getByRole("dialog", { name: "A page of the gardener's diary, page 5 of 5" });
+  await expect(card).toContainText("Anoche hice dos señales con la luz.");
+  await card.getByRole("button", { name: "Close" }).click();
+  await expect(card).toBeHidden();
+  expect(await ribbon()).toBe(false);
+});
+
+test("hill.no-answer: at night before n12, two signals leave the far light shining", async ({ page }) => {
+  const s = await walkIn(page, OPEN, NIGHT);
+  expect(await page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lookout.answers)).toBe(false);
+  await byPost(page, s);
+  await recordFarLight(page);
+  await signal(page);
+  await signal(page);
+  // Longer than an answer would take.
+  await waitGame(page, 8);
+  expect(await farLight(page)).toEqual({ dark: 0, on: true });
+});
+
+test("hill.answer: with n12, by day, sat on the stool till night, two signals from the seat get two blinks and the line; two more, another answer", async ({ page }) => {
+  // About half a minute of the garden's time to night: far longer on CI's few frames.
+  test.setTimeout(240_000);
+  const s = await walkIn(page, N12);
+  await sit(page, s);
+  await expect.poll(() => lapse(page), { timeout: 120_000 }).toBe(2);
+  const line = page.locator(".gw-say", { hasText: "El lucero contesta." });
+  for (let round = 0; round < 2; round++) {
+    await recordFarLight(page);
+    await signal(page);
+    expect(await farLight(page)).toEqual({ dark: 0, on: true });
+    await signal(page);
+    await expect(line).toBeVisible({ timeout: 20_000 });
+    // The answer is over 5.5 s after the signal, and its line gone 4 s after it showed.
+    await waitGame(page, 8);
+    await expect(line).toBeHidden();
+    expect(await farLight(page)).toEqual({ dark: 2, on: true });
+  }
+  expect(await seated(page)).toBe(true);
 });

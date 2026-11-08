@@ -29,6 +29,19 @@ describe("where the notes are found (#714)", () => {
   });
 });
 
+describe("the diary on the hill (#858)", () => {
+  test("its pages are only in the diary, in the order they came, and there is no diary before the first", () => {
+    for (const notes of Object.values(NOTES)) {
+      const pages = notes.filter((n) => n.diary);
+      expect(pages.map((n) => n.id)).toEqual(["n09", "d1", "d2", "d3", "n12"]);
+      expect(placeNotes(unlockedNotes(notes, pages[0].unlockAt - 1), []).diary).toBeNull();
+      const all = placeNotes(notes, ["n09"]);
+      expect(all.diary).toEqual(pages.map((n) => ({ id: n.id, unread: n.id !== "n09" })));
+      for (const n of all.nails) expect(pages.map((p) => p.id)).not.toContain(n.id);
+    }
+  });
+});
+
 describe("the stile's place (#714)", () => {
   test("its foot is open ground on the back path, in small and big gardens", () => {
     for (const l of [layout([]), layout(Array.from({ length: 70 }, (_, i) => plant(i))), layout(Array.from({ length: 600 }, (_, i) => plant(i)))]) {
