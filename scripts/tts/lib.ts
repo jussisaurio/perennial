@@ -91,7 +91,8 @@ export interface Rendered {
 
 /**
  * R2 object headers. New text gets a new name, but a bad clip may be made again under its own name
- * (#776). So browsers keep a clip a day, and Cloudflare's edge a year, until a replace purges it.
+ * (#776). So browsers keep a clip a day, and Cloudflare's edge a year, until the owner purges it
+ * in the dashboard (purgeList).
  * Google's MP3 is 32 kbps already (about 4.7 KB a clip): it is stored as it comes, not re-encoded.
  */
 const CLIP_HEADERS = { "content-type": "audio/mpeg", "cache-control": "public, max-age=86400, s-maxage=31536000" } as const;
@@ -105,19 +106,12 @@ export async function putClip(url: string, bytes: Uint8Array<ArrayBuffer>, fetch
 /** Where the app fetches clips (VITE_AUDIO_BASE_URL in docs/DEPLOY.md): the URLs Cloudflare caches. */
 export const AUDIO_BASE = "https://audio.playperennial.com";
 
-/** Cloudflare takes at most 30 URLs in one purge call (developers.cloudflare.com/cache/how-to/purge-cache/purge-by-single-file). */
-const PURGE_BATCH = 30;
-
-/** Drops replaced clips from Cloudflare's edge, which keeps them a year (CLIP_HEADERS). The token goes in a header. */
-export async function purge(paths: readonly string[], cf: { zone: string; token: string }, fetchFn: Deps["fetch"]): Promise<void> {
-  for (let i = 0; i < paths.length; i += PURGE_BATCH) {
-    const res = await fetchFn(`https://api.cloudflare.com/client/v4/zones/${cf.zone}/purge_cache`, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${cf.token}` },
-      body: JSON.stringify({ files: paths.slice(i, i + PURGE_BATCH).map((p) => `${AUDIO_BASE}/${p}`) }),
-    });
-    if (!res.ok) throw new Error(`Cloudflare purge: HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  }
+/**
+ * Replaced clips stay on Cloudflare's edge a year (CLIP_HEADERS) until purged. The owner purges by
+ * hand, so no token is kept (#794): this is the text to paste into the dashboard.
+ */
+export function purgeList(paths: readonly string[]): string {
+  return `Purge these ${paths.length} URLs in Cloudflare (Caching → Configuration → Custom Purge → URL), or learners keep the old clips:\n${paths.map((p) => `${AUDIO_BASE}/${p}`).join("\n")}`;
 }
 
 const SYNTHESIZE = "https://texttospeech.googleapis.com/v1/text:synthesize";
