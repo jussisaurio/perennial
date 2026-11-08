@@ -58,7 +58,7 @@ interface WalkData {
  * is opened.
  */
 /** The kinds of label whose words GardenWalk's screen-reader status says. */
-const SPOKEN = new Set<Label["kind"]>(["fruit", "echo", "line", "far"]);
+const SPOKEN = new Set<Label["kind"]>(["fruit", "echo", "line", "far", "scenery"]);
 
 /** A value the scene changes often (the labels each frame, the load's percent), for useSyncExternalStore: only the part that reads it renders then (#713). */
 export interface Store<T> {

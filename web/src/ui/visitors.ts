@@ -131,7 +131,7 @@ export function* visitorSteps(l: Learner, now: Date): Generator<void, LearnerVis
     known: croaks,
     lemmas,
     mole: moleVisits(now, devVisitorOverride()),
-    scenery: sceneryViews(l.lang, (lemma) => lemmas.has(lemma.toLowerCase())),
+    scenery: sceneryViews(l.lang, (lemma) => lemmas.has(lemma.toLowerCase()), count),
   };
 }
 

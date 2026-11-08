@@ -849,6 +849,10 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 }
 .gw-tag small { font: 500 0.78rem/1 var(--pixel); letter-spacing: 0.03em; color: #7a5a40; }
 .gw-tag::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -4px; border: 4px solid transparent; border-top-color: #3a2416; }
+/* A tapped thing's thought (#864): the line under its word, in plain upright type; it wraps, as wide as scene.ts THOUGHT_EDGE allows. */
+.gw-thought { white-space: normal; width: max-content; max-width: 15rem; text-align: center; }
+.gw-thought .gw-leaf { filter: none; }
+.gw-thought-line { display: block; margin-top: 0.22rem; padding-top: 0.24rem; border-top: 1px dashed #b89a78; font: 500 0.98rem/1.25 var(--display); }
 /* What a visitor says (the frog's croak): a small speech bubble in the course language, no gloss. */
 .gw-say {
   position: absolute; transform: translate(-50%, calc(-100% - 9px)); white-space: nowrap;
