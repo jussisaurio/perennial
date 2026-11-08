@@ -631,7 +631,7 @@ export class GardenScene {
     if (stile && this.stileSpot && this.hill && this.lookoutThings) {
       // Draws no random numbers.
       this.stile = new StileScene(this.stileSpot, this.hill, this.hillOpen);
-      this.stile.build(c, stile);
+      for (const _step of this.stile.build(c, stile)) if (await this.stopped()) return;
       this.lookoutThings.build(c, this.visitors.diary);
     }
     this.toys.build(c);
