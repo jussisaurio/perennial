@@ -33,10 +33,12 @@ const PLANNED_SHARE = 0.9;
 /**
  * First practice of a newly unlocked skill (listening, writing), per session. It
  * comes before new words: with only the time new words left over, a 60-day
- * simulation started almost no listening or typing at all (#405). One per
- * session costs about 15% of the words learned by day 60; two cost 30%.
+ * simulation started almost no listening or typing at all (#405). In a 90-day
+ * simulation of one 7-minute chunk a day (#851), one per session typed and heard
+ * only about 45 words each; two double that and make listening and typing about
+ * a third of each chunk's cards, for about 20% fewer known words at day 60 and 90.
  */
-const MAX_NEW_SKILLS = 1;
+const MAX_NEW_SKILLS = 2;
 
 export interface PlanInput {
   now: number;
@@ -62,7 +64,7 @@ const DUE_HORIZON_MS = 6 * 3_600_000;
 /**
  * One chunk of practice, filled in this order:
  * 1. due reviews, the ones still most likely to be saved first;
- * 2. the first practice of a newly unlocked skill (listening, writing);
+ * 2. first practices of newly unlocked skills (listening, writing);
  * 3. new words in the time left (a trickle even during a backlog);
  * 4. reviews due within a day, soonest first;
  * 5. any other learned word, weakest first.
@@ -141,7 +143,7 @@ export function* planSteps(input: PlanInput): Generator<void, Plan> {
 
   // Interleave: spread intros through the first part of the session so new
   // material doesn't all land at the end (and get cut off by the timer). The
-  // new skill goes with the due reviews, ahead of the intros it outranks: after
+  // new skills go with the due reviews, ahead of the intros they outrank: after
   // all of them, a short chunk cut it first, and the chunk was a long run of new words.
   const ahead = [...reviews, ...skills];
   const queue: Task[] = [];
