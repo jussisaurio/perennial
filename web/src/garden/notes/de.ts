@@ -118,7 +118,7 @@ export const NOTES: readonly WrittenNote[] = [
   {
     id: "n13",
     beat: "door",
-    text: "Jetzt ist der Garten dein Garten.\nGib beiden Seiten Wasser. Und Krümel auch.\nDu magst keine Schnecken? Das ist kein Grund.",
-    forms: { beiden: "beide", gib: "geben", ist: "sein", keine: "kein", magst: "mögen", schnecken: "schnecke", seiten: "seite" },
+    text: "Jetzt ist der Garten dein Garten.\nGib beiden Seiten Wasser. Und Krümel auch.\nNachts: Licht aus, Licht an. Zweimal. Das Fünkchen antwortet immer.\nDu magst keine Schnecken? Das ist kein Grund.",
+    forms: { beiden: "beide", antwortet: "antworten", gib: "geben", ist: "sein", keine: "kein", magst: "mögen", schnecken: "schnecke", seiten: "seite" },
   },
 ];
