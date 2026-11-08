@@ -11,6 +11,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 65,
     text: "Das ist das Haus. Der Garten ist nicht mein Garten. Er ist ihr Garten.\nIch mag keine Schnecken.\nSie sagt, das ist kein Grund.",
     forms: { ist: "sein", keine: "kein", mag: "mögen", sagt: "sagen", schnecken: "schnecke" },
+    reveals: ["her-garden", "dislikes-snails"],
   },
   {
     id: "n02",
@@ -18,6 +19,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 70,
     text: "Sie sagt mir den Namen von einer Blume.\nIch sage ihn auch.\nMorgen weiß ich ihn nicht mehr.\nDie Blume schon.",
     forms: { den: "der", die: "der", einer: "ein", ihn: "er", mir: "ich", namen: "name", sage: "sagen", sagt: "sagen", "weiß": "wissen" },
+    reveals: ["learning-the-language"],
   },
   {
     id: "n03",
@@ -25,6 +27,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 120,
     text: "Heute bin ich den ganzen Tag im Garten.\n~~Der~~ Die Schnecke auch.\nDie Blumen sprechen nicht.\nIch auch nicht. Noch nicht.",
     forms: { bin: "sein", blumen: "blume", den: "der", die: "der", ganzen: "ganz", im: "in" },
+    reveals: ["learning-the-language"],
   },
   {
     id: "n04",
@@ -32,6 +35,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 140,
     text: "In der Hecke ist ein Türchen. Nicht für mich.\nFür Krümel. Krümel isst unser Brot\nund sagt nie Entschuldigung.\nDie Katze sieht Krümel an. Krümel sieht die Katze an.\nNiemand tut etwas.",
     forms: { die: "der", isst: "essen", ist: "sein", mich: "ich", sagt: "sagen", sieht: "sehen", tut: "tun" },
+    reveals: ["the-mouse"],
   },
   {
     id: "n05",
@@ -39,6 +43,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 250,
     text: "Früher jeden Abend derselbe Weg: bis ans Ende vom Garten.\nSie ging über die Zauntreppe, ohne zu schauen.\nIch: langsam, vorsichtig.\nJetzt sind da Dornen, höher als ich.",
     forms: { ans: "an", die: "der", ging: "gehen", "höher": "hoch", jeden: "jeder", sind: "sein", vom: "von" },
+    reveals: ["the-stile"],
   },
   {
     id: "n06",
@@ -46,6 +51,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 330,
     text: "Auf ihrem Stuhl aus Holz sitzt man zu tief. Das sage ich ihr dauernd.\nSie sagt, er ist bequem, und das Problem sind meine Knie.\nVielleicht.\nAber es ist ihr Stuhl.",
     forms: { ihrem: "ihr", ist: "sein", meine: "mein", sage: "sagen", sagt: "sagen", sind: "sein", sitzt: "sitzen" },
+    reveals: ["her-chair"],
   },
   {
     id: "n07",
@@ -53,6 +59,7 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 420,
     text: "Heute ein ganzer Satz, ohne Fehler.\nSie hat Tränen gelacht.\nNicht über den Satz: Ich habe ihn dem dicken Hund von nebenan gesagt.",
     forms: { dem: "der", den: "der", dicken: "dick", ganzer: "ganz", gelacht: "lachen", gesagt: "sagen", habe: "haben", hat: "haben", ihn: "er", "tränen": "träne" },
+    assumes: ["learning-the-language"],
   },
   {
     id: "n08",
@@ -60,6 +67,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 560,
     text: "Hinter den Dornen und der Zauntreppe ein kleiner Berg.\nVon oben, nachts: das Fünkchen,\nein warmes Licht, fern, auf der anderen Seite.\nEs geht nie aus, nicht einmal im Winter.\nSie fragt nicht.",
     forms: { anderen: "andere", den: "der", fragt: "fragen", geht: "gehen", im: "in", kleiner: "klein", warmes: "warm" },
+    reveals: ["the-far-light", "she-does-not-ask"],
+    assumes: ["the-stile"],
   },
   {
     id: "n09",
@@ -67,6 +76,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 800,
     text: "Das Fünkchen: jemand, der nicht mit mir redet. Stolz, auf beiden Seiten.\nEin dummer Streit, vor elf Wintern.\nDamals konnte ich mich in keiner Sprache entschuldigen.\nJetzt in zwei. Mutig in keiner.",
     forms: { beiden: "beide", dummer: "dumm", keiner: "kein", konnte: "können", mich: "ich", mir: "ich", redet: "reden", seiten: "seite", wintern: "winter" },
+    reveals: ["the-quarrel"],
+    assumes: ["the-far-light", "learning-the-language"],
     diary: true,
   },
   {
@@ -75,6 +86,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 900,
     text: "Heute Abend das Fünkchen, wie immer.\nSie bringt mir einen Kaffee.\nSie fragt nicht.",
     forms: { bringt: "bringen", einen: "ein", fragt: "fragen", mir: "ich" },
+    reveals: ["coffee-on-the-hill"],
+    assumes: ["the-far-light"],
     diary: true,
   },
   {
@@ -83,22 +96,27 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 1000,
     text: "Heute Abend das Fünkchen, wie immer.\nSie bringt mir einen Kaffee und eine Decke.\nSie fragt nicht. Sie bleibt.",
     forms: { bleibt: "bleiben", bringt: "bringen", eine: "ein", einen: "ein", fragt: "fragen", mir: "ich" },
+    assumes: ["coffee-on-the-hill", "she-does-not-ask"],
+    diary: true,
+  },
+  {
+    id: "d3",
+    beat: "late",
+    unlockAt: 1100,
+    text: "Heute Abend das Fünkchen, wie immer.\nDen Kaffee bringe ich mir selbst.\nNiemand fragt.",
+    forms: { bringe: "bringen", den: "der", fragt: "fragen", mir: "ich" },
+    reveals: ["she-is-gone"],
+    assumes: ["coffee-on-the-hill", "she-does-not-ask"],
     diary: true,
   },
   {
     id: "n10",
     beat: "late",
-    unlockAt: 1100,
+    unlockAt: 1200,
     text: "Deine Seite hat auch Wasser bekommen.",
     forms: { deine: "dein", hat: "haben" },
-  },
-  {
-    id: "d3",
-    beat: "late",
-    unlockAt: 1200,
-    text: "Heute Abend das Fünkchen, wie immer.\nDen Kaffee bringe ich mir selbst.\nNiemand fragt.",
-    forms: { bringe: "bringen", den: "der", fragt: "fragen", mir: "ich" },
-    diary: true,
+    reveals: ["her-side"],
+    assumes: ["she-is-gone", "two-sides"],
   },
   {
     id: "n11",
@@ -106,6 +124,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 1250,
     text: "Zwei Tassen auf dem Tisch. Eine bleibt leer.\nIch stelle sie ans Türchen, mit Wasser. Für Krümel.\nSturm, die Schnecke, hört mir zu. Sie sagt nie etwas dagegen.",
     forms: { ans: "an", bleibt: "bleiben", dem: "der", die: "der", eine: "ein", "hört": "hören", mir: "ich", sagt: "sagen", stelle: "stellen", tassen: "tasse" },
+    reveals: ["the-snail-friend"],
+    assumes: ["she-is-gone", "the-mouse", "dislikes-snails"],
   },
   {
     id: "n12",
@@ -113,6 +133,8 @@ export const NOTES: readonly WrittenNote[] = [
     unlockAt: 1420,
     text: "Letzte Nacht: Licht aus, Licht an. Zweimal.\nDas Fünkchen hat geantwortet: zweimal.\nNiemand ist über den Berg gekommen. Noch nicht.",
     forms: { den: "der", geantwortet: "antworten", gekommen: "kommen", hat: "haben", ist: "sein" },
+    reveals: ["the-light-answers"],
+    assumes: ["the-quarrel"],
     diary: true,
   },
   {
@@ -120,5 +142,7 @@ export const NOTES: readonly WrittenNote[] = [
     beat: "door",
     text: "Jetzt ist der Garten dein Garten.\nGib beiden Seiten Wasser. Und Krümel auch.\nNachts: Licht aus, Licht an. Zweimal. Das Fünkchen antwortet immer.\nDu magst keine Schnecken? Das ist kein Grund.",
     forms: { beiden: "beide", antwortet: "antworten", gib: "geben", ist: "sein", keine: "kein", magst: "mögen", schnecken: "schnecke", seiten: "seite" },
+    reveals: ["garden-is-yours"],
+    assumes: ["her-side", "the-mouse", "the-light-answers", "dislikes-snails"],
   },
 ];

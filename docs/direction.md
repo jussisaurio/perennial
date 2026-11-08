@@ -58,6 +58,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 **The story** (#639). You are alone in a garden someone else kept. Their notes tell you who they were. The gardener also came from far away and learned this language here.
 - **The theme:** love is kept by small daily tending, like a garden, and a few minutes a day is a lot. It is shown in the couple's rituals and never stated. It is never aimed at the learner's own practice (#639).
 - The beats, in order: early, the stile, the lookout, late, and the door.
+- **The facts** (#928). Each note lists the story's facts it tells and the ones it needs. A thought or the frog only needs them. No line needs a fact before a note has told it, and both courses tell the same facts in the same beats (`web/src/garden/facts.ts`, `facts.test.ts`).
 - The notes are only in the course language, with no translation. When a note appears, most of its words are known (`web/src/garden/notes/notes.test.ts`). Each course has 3–5 words of the gardener's own that no deck teaches.
 - **Notes, places and visitors open by known words, never by days.** A break never costs anything.
 - **Pacing.** A note comes about every 3–4 weeks for a learner who does 5 minutes a day. The thresholds come from a simulation of that learner, not from the deck's size. Long gaps are filled by world changes, not by more notes. (Retune not done yet: #883.)
