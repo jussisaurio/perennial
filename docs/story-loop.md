@@ -68,11 +68,11 @@ There are two sizes.
 The steps:
 
 1. **Simulate.** `bun run story:sim es daily` and `de daily`. Write the scripts with `--script` into your scratch folder.
-2. **Read** (arc iterations). Start 3 fresh reader agents for each course, each with a different persona (below). Give a reader part 1 with the reader prompt. When it answers, send the next part to the same agent (SendMessage). Never give a reader a part before it has answered the one before. Never give it a file path: paste the part's text. A reader who has read the story once is never used again. With the last part, ask the reader to write all its answers, word for word, to a file in your scratch folder: the grader reads those files.
+2. **Read** (arc iterations). Start 3 fresh reader agents for each course, each with a different persona (below). Give a reader part 1 with the reader prompt. When it answers, send the next part to the same agent (SendMessage). Never give a reader a part before it has answered the one before. Never give it a file path: paste the part's text. A reader who has read the story once is never used again. With the last part, ask the reader to write all its answers, word for word, to a file in your scratch folder: the grader reads those files. One orchestrator agent per course can start its 3 readers and send them the parts; that keeps 60 parts out of your own context.
 3. **Grade.** One fresh grader gets every reader's answers, the parts, and `intended.ts`. It writes the gaps. The grader and the author hand back their reports as text (the harness stops a subagent from writing a report file): save them in your scratch folder.
 4. **Propose.** One fresh author agent gets the grader's report, the numbers, and the aim of this iteration. It proposes at most 3 changes.
 5. **Apply.** A mechanical change (a threshold, a word swap that keeps the meaning) goes on a branch. New writing goes to the owner first ("Writing with the owner", below); the loop does other work while it waits.
-6. **Judge.** Write the scripts again with the change. Give 3 fresh judges the changed part, old and new, in random order, with the part before it for context. For a threshold change, also compare the numbers.
+6. **Judge.** Write the scripts again with the change. Give 3 fresh judges the changed part, old and new, in random order, with the story so far for context. Read each judge's "what happened" answers: a judge can prefer a version that it still misreads. For a threshold change, also compare the numbers.
 7. **Keep and learn.** Keep a change when at least 2 of 3 judges prefer it, no part reads worse in the grade, and the hard gates pass. Open a PR (`Refs #928`) and merge it. Add one line to "Lessons", below, whether the change was kept or not.
 
 All agents in the loop run on Opus.
@@ -180,9 +180,11 @@ Rules:
 ```
 You compare two versions of one part of a story. A language learner meets it a few minutes a day, in a garden inside a language app. Words the learner does not know yet are hidden as ▢▢▢. The story is quiet and dry, and it never explains itself.
 
-You get the part before, for context, then version 1 and version 2 of the next part. They are in random order.
+You get the story so far, for context, then version 1 and version 2 of the next part. They are in random order.
 
-For each question, answer "1", "2" or "same", and one line why:
+First, for each version on its own, say in one sentence what happened.
+
+Then for each question, answer "1", "2" or "same", and one line why:
 1. Which makes you want to come back tomorrow?
 2. In which is it clearer what happened, from the words you can read?
 3. Which fits the voice better: dry, quiet, never sentimental, never explaining?
@@ -190,8 +192,8 @@ For each question, answer "1", "2" or "same", and one line why:
 
 Then give your overall pick: "1", "2" or "same". Do not try to guess which version is new.
 
-The part before:
-{before}
+The story so far:
+{story so far}
 
 Version 1:
 {one}
@@ -218,3 +220,4 @@ Mechanical changes stay with the loop: thresholds, and word swaps for readabilit
 One line per iteration, newest last: the date, what changed, what we learned.
 
 - 2026-11-08, arc 1 (6 readers, daily learner after #943): no story change yet. 3 proposals went to the owner as drafts (#936, Part C). The diary refrain (d1–d3) works once d3 lands (want 5 from 5 of 6), but the months of nothing around it bring want down to 3 at d2, and every long-stretch answer says the reader stops looking round within 1–2 weeks. Readers took n05's "now, brambles" as her death, so the present tense of n06–n07 read as a broken timeline (6 of 6). They took n02 as memory loss (5 of 6). The run itself had 3 flaws, now fixed: Q2 named "she" before the story does (fixed in #944); the German frame showed the Spanish tag (fixed in #944); the frame did not mention Today's pinned paper, so "I could have missed d3" partly came from the script, not the game.
+- 2026-11-08, arc 2 (6 readers, after batch 1 shipped in #959): batch 1 filled the long gaps, and d2 rose from 3.3 to 3.7 in both courses, but the diary's middle (p1 to p3) is still the low stretch. p2 was the flattest page (want 2.7 es, 3.0 de), because d2's gift was a hidden word and p2's wind had no answer: d2 now reads "something for the wind" (es and de, kept 3 of 3 each; es then took the proofreader's "para" over "contra"). de p4 read as "my light went off and on by itself" (3 of 3): "Das Fünkchen: nichts." fixed it (3 of 3). The first p4 fix won its judges 3 of 3 while all three still misread it, so judges now say what happened first. es n06 "quedo demasiado bajo" lost 1 to 2 (harder to read at 330 words) and was not kept. Readers still take n05 as her death (6 of 6), now a design question (#966), and n02 as memory loss (6 of 6, #950).

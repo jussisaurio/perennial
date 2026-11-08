@@ -112,7 +112,7 @@ export const NOTES: readonly Note[] = [
     id: "d2",
     beat: "lookout",
     unlockAt: 669,
-    text: "Esta noche, el lucero, como siempre.\nElla me sube un café y un abrigo.\nNo pregunta. Se queda.",
+    text: "Esta noche, el lucero, como siempre.\nElla me sube un café y algo para el viento.\nNo pregunta. Se queda.",
     forms: { esta: "este", pregunta: "preguntar", queda: "quedar", sube: "subir" },
     assumes: ["coffee-on-the-hill", "she-does-not-ask"],
     diary: true,
