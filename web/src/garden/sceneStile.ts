@@ -10,7 +10,6 @@
 // built once: the words are never drawn in the world.
 
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { rng } from "../lib/seed";
 import { SUN_AT } from "./bench";
 import { CUT, HILL, HILLTOP_R, hillMesh, hillY, PATH_TURN, type Lookout } from "./lookout";
@@ -43,17 +42,77 @@ function sunShade(n: THREE.Vector3): number {
   return 1 + 0.7 * (n.dot(SUN) - SUN.y);
 }
 
-/** Shade `geo` by its normals (sunShade), times `k`, as vertex colours. */
+/** How light a face with normal `n` is drawn, times `k`. A round thing shows its side turned from the sun: kept from going black. */
+function roundShade(n: THREE.Vector3, k: number): number {
+  return k * Math.max(0.7, sunShade(n));
+}
+
+/** Shade `geo` by its normals (roundShade), times `k`, as vertex colours. */
 function shade(geo: THREE.BufferGeometry, k = 1) {
   const normal = geo.getAttribute("normal");
   const colors = new Float32Array(normal.count * 3);
   const n = new THREE.Vector3();
-  for (let i = 0; i < normal.count; i++) {
-    // A round thing shows its side turned from the sun: kept from going black.
-    const s = k * Math.max(0.7, sunShade(n.fromBufferAttribute(normal, i)));
-    colors.set([s, s, s], i * 3);
-  }
+  for (let i = 0; i < normal.count; i++) colors.fill(roundShade(n.fromBufferAttribute(normal, i), k), i * 3, i * 3 + 3);
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+}
+
+/** A thorn as a cane bears it, before it is turned and moved: point up, its foot on the cane's skin. */
+const THORN = new THREE.ConeGeometry(0.028, 0.12, 4).translate(0, 0.06 + 0.025, 0);
+
+/**
+ * Every cane of the thicket and its thorns, written straight into one
+ * geometry. A geometry per thorn, turned, shaded and merged after, was one
+ * task of most of a second at CPU 10× as the walk opened (#885): there are
+ * thousands of thorns.
+ */
+class Canes {
+  private position: number[] = [];
+  private normal: number[] = [];
+  private uv: number[] = [];
+  private color: number[] = [];
+  private index: number[] = [];
+  private v = new THREE.Vector3();
+
+  /** A cane's tube, shaded times `k`. */
+  tube(geo: THREE.BufferGeometry, k: number) {
+    this.put(geo, k);
+  }
+
+  /** A thorn turned by `q`, its foot at `p`, shaded times `k`. */
+  thorn(q: THREE.Quaternion, p: THREE.Vector3, k: number) {
+    this.put(THORN, k, q, p);
+  }
+
+  /** `geo`'s vertices and triangles, shaded by their normals (roundShade) times `k`; turned by `q` and moved by `p` when given. */
+  private put(geo: THREE.BufferGeometry, k: number, q?: THREE.Quaternion, p?: THREE.Vector3) {
+    const pos = geo.getAttribute("position");
+    const nor = geo.getAttribute("normal");
+    const uv = geo.getAttribute("uv");
+    const first = this.position.length / 3;
+    const v = this.v;
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      if (q && p) v.applyQuaternion(q).add(p);
+      this.position.push(v.x, v.y, v.z);
+      v.fromBufferAttribute(nor, i);
+      if (q) v.applyQuaternion(q);
+      this.normal.push(v.x, v.y, v.z);
+      const s = roundShade(v, k);
+      this.color.push(s, s, s);
+      this.uv.push(uv.getX(i), uv.getY(i));
+    }
+    for (const i of geo.getIndex()!.array) this.index.push(first + i);
+  }
+
+  geometry(): THREE.BufferGeometry {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(this.position, 3));
+    geo.setAttribute("normal", new THREE.Float32BufferAttribute(this.normal, 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(this.uv, 2));
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(this.color, 3));
+    geo.setIndex(this.index);
+    return geo;
+  }
 }
 
 export class StileScene {
@@ -102,14 +161,12 @@ export class StileScene {
   }
 
   /**
-   * A bramble cane from `a` arching over `b` to `c`, with thorns along it, pushed onto `out`.
+   * A bramble cane from `a` arching over `b` to `c`, with thorns along it, added to `out`.
    * `k`: how light (a cut cane, withered, is darker).
    */
-  private cane(out: THREE.BufferGeometry[], a: THREE.Vector3, b: THREE.Vector3, end: THREE.Vector3, r: () => number, k = 1) {
+  private cane(out: Canes, a: THREE.Vector3, b: THREE.Vector3, end: THREE.Vector3, r: () => number, k = 1) {
     const curve = new THREE.QuadraticBezierCurve3(a, b, end);
-    const tube = new THREE.TubeGeometry(curve, 12, 0.032, 5, false);
-    shade(tube, 0.9 * k);
-    out.push(tube);
+    out.tube(new THREE.TubeGeometry(curve, 12, 0.032, 5, false), 0.9 * k);
     const len = curve.getLength();
     const up = new THREE.Vector3(0, 1, 0);
     const q = new THREE.Quaternion();
@@ -118,12 +175,8 @@ export class StileScene {
       const tan = curve.getTangent(t);
       // Out from the cane, square to it, round a different side each time.
       const dir = new THREE.Vector3(r() - 0.5, r() - 0.5, r() - 0.5).cross(tan).normalize();
-      const thorn = new THREE.ConeGeometry(0.028, 0.12, 4);
-      thorn.translate(0, 0.06 + 0.025, 0);
-      thorn.applyQuaternion(q.setFromUnitVectors(up, dir)).translate(p.x, p.y, p.z);
       // Pale thorn tips, so they show against the dark leaves.
-      shade(thorn, 2.4 * k);
-      out.push(thorn);
+      out.thorn(q.setFromUnitVectors(up, dir), p, 2.4 * k);
     }
   }
 
@@ -132,9 +185,10 @@ export class StileScene {
    * walker and some metres deep, its canes arching up out of it and over the
    * fence. Once the hill's note is unlocked, a way is cut through it along the
    * old path, the cut canes heaped beside it. A solid middle (no gap to see
-   * through), its clumps one instanced mesh, its canes one merged mesh.
+   * through), its clumps one instanced mesh, its canes one merged mesh. A step
+   * per stretch of canes: the scene yields between them (#885).
    */
-  private buildThicket(c: BuildCtx) {
+  private *buildThicket(c: BuildCtx): Generator<void> {
     const r = rng(749);
     const [sx, sz] = [this.spot.x, this.spot.z];
     const [x0, x1] = [c.b.minX - 0.6, c.b.maxX + 0.6];
@@ -153,6 +207,7 @@ export class StileScene {
       geo.translate((a + b) / 2, h / 2, (zn + zf) / 2);
       c.scene.add(still(new THREE.Mesh(geo, coreMat)));
     }
+    yield;
     // Clumps of leaves: stacked up the face toward the garden, and over the top further back. [x, y, z, rx, ry, rz, light]
     const clumps: number[][] = [];
     for (let x = x0; x < x1; x += 0.42) {
@@ -217,9 +272,10 @@ export class StileScene {
       mesh.setColorAt(i, color.setScalar(k));
     });
     c.scene.add(still(mesh));
+    yield;
 
     // Canes: some arch up out of the top; others reach over the fence toward the garden, at the eye's height.
-    const canes: THREE.BufferGeometry[] = [];
+    const canes = new Canes();
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
     // Over the shut stile, canes arch out of the brambles across its steps, so they read as thorns.
     if (!this.open)
@@ -236,6 +292,7 @@ export class StileScene {
       const span = 0.6 + r() * 0.6;
       if (r() < 0.8 && !cut(x, sz - back, 0.4))
         this.cane(canes, V(x, THICKET.h - 0.4, sz - back), V(x + s * span, THICKET.h + 1.1 + r() * 0.7, sz - back + 0.3), V(x + s * span * 2, THICKET.h - 0.2, sz - back + 0.6), r);
+      yield;
     }
     // The cut canes, heaped beside the way through, on its right.
     if (this.open)
@@ -249,7 +306,8 @@ export class StileScene {
         const [dx, dz] = [Math.cos(turn) * half, Math.sin(turn) * half];
         this.cane(canes, V(cx - dx, y, cz - dz), V(cx, y + 0.08, cz), V(cx + dx, y, cz + dz), r, 0.7);
       }
-    c.scene.add(still(new THREE.Mesh(mergeGeometries(canes), c.mat(T.pixelTexture(T.cane(), true), { vertexColors: true }))));
+    yield;
+    c.scene.add(still(new THREE.Mesh(canes.geometry(), c.mat(T.pixelTexture(T.cane(), true), { vertexColors: true }))));
   }
 
   /** The stile: steps up and down, the top board over the fence, and a handrail down each side. */
@@ -283,13 +341,14 @@ export class StileScene {
     c.scene.add(still(g));
   }
 
-  /** The stile, the thicket, and `notes` in front of it (unread ones: read ones hang in the shed). */
-  build(c: BuildCtx, notes: readonly string[]) {
+  /** The stile, the thicket, and `notes` in front of it (unread ones: read ones hang in the shed). In steps, as buildThicket. */
+  *build(c: BuildCtx, notes: readonly string[]): Generator<void> {
     const at = this.spot;
     this.buildStile(c);
 
     this.buildHill(c);
-    this.buildThicket(c);
+    yield;
+    yield* this.buildThicket(c);
 
     // The old path past the fence, from the far foot up over the hill's top.
     const run = HILL.out + TRACK.past - STEP.out + 0.2;
