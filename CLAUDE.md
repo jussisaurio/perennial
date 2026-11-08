@@ -9,6 +9,7 @@ How we write and merge code here. It applies to every session and every agent. T
 - **Do not silence the checks.** No `@ts-ignore`, `as any`, lint-disable comments, `test.skip` or loosened assertions, unless a short comment says why the check is wrong here. Reviewers flag each new one.
 - **No speculative code.** Handle only the cases that exist. No options, flags, layers or "just in case" timers for situations nobody has seen.
 - **One way to do each thing.** Before you add a helper, search for one that already exists. A constant or rule lives in one place.
+- **A mode is one state.** When a thing can be in one of several modes (seated, walking, gliding; which card is open), model it as one discriminated union with one function that changes it, not as several booleans or nullables. Then a wrong mix can't be written (#877).
 - **Delete, don't keep.** No commented-out code, unused exports, or dead branches. Git keeps the history.
 - **Match the surrounding code**: its naming, comment density and idioms. Comments say *why*, in short, plain English.
 - **Small diffs.** One PR does one thing. A refactor is not mixed with a behaviour change.
