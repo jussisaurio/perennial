@@ -191,6 +191,40 @@ test("stile.notes: by the notes at the stile, Read the note opens them one at a 
   await expect(page.locator(".gw-act")).toHaveCount(0);
 });
 
+test("a drag to look round leaves the note open, and then Escape closes the note, not the walk (#874)", async ({ page }) => {
+  const s = await walkIn(page, OPEN);
+  await stand(page, s.stile.foot[0], s.stile.foot[1], 0, -0.3);
+  await page.getByRole("button", { name: "Read the note", exact: true }).click();
+  const card = page.getByRole("dialog", { name: "A note from the gardener" });
+  await expect(card).toBeVisible();
+  // The press lands on the scene, so the card loses focus.
+  await page.mouse.move(300, 300);
+  await page.mouse.down();
+  await page.mouse.move(450, 300, { steps: 5 });
+  await page.mouse.up();
+  await expect(card).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(card).toBeHidden();
+  await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible();
+});
+
+test("Next plant replaces an open note; closing the plant's card brings back neither (#875)", async ({ page }) => {
+  const s = await walkIn(page, OPEN);
+  await stand(page, s.stile.foot[0], s.stile.foot[1], 0, -0.3);
+  await page.getByRole("button", { name: "Read the note", exact: true }).click();
+  const note = page.getByRole("dialog", { name: "A note from the gardener" });
+  await expect(note).toBeVisible();
+  await page.getByRole("button", { name: "Next plant" }).focus();
+  await page.keyboard.press("Enter");
+  const plant = page.getByRole("dialog", { name: /^The plant for / });
+  await expect(plant).toBeVisible();
+  await expect(note).toBeHidden();
+  await page.keyboard.press("Escape");
+  await expect(plant).toBeHidden();
+  await expect(note).toBeHidden();
+  await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible();
+});
+
 test("stile.walk-over: with n08, holding W takes you up the steps, over the top board and down past the fence", async ({ page }) => {
   const s = await walkIn(page, OPEN);
   await stand(page, s.stile.x, s.stile.foot[1], 0);

@@ -95,6 +95,7 @@ export function useGardenScene({
   wrap,
   canvas,
   onFocused,
+  onSelect,
   onShake,
   onCarry,
   notes,
@@ -111,6 +112,8 @@ export function useGardenScene({
   wrap: RefObject<HTMLDivElement | null>;
   canvas: RefObject<HTMLCanvasElement | null>;
   onFocused: () => void;
+  /** The scene opened a plant's card, or closed it (null). */
+  onSelect: (p: PlacedPlant | null) => void;
   onShake: (p: PlacedPlant, forms: string[]) => void;
   onCarry: (d: CarryDone) => void;
   notes: { nails: readonly { id: string; unread: boolean }[]; stile: readonly string[] | null; diary: readonly { id: string; unread: boolean }[] | null; open: (id: string) => void };
@@ -120,7 +123,6 @@ export function useGardenScene({
   const [progress] = useState(() => store<number | null>(null));
   // `retry`: loading again can help (its code did not load), so the page offers it; an installed app has no reload button.
   const [failed, setFailed] = useState<{ text: string; retry?: true } | null>(null);
-  const [selected, setSelected] = useState<PlacedPlant | null>(null);
   // The labels move on every walking frame: they go to a store that only the label layer reads, so only it renders then (#713).
   const [labels] = useState(() => store<Label[]>([]));
   // The tags a screen reader hears of (a fallen fruit, the echo, the door's line) change rarely: state, set only when one comes, goes or changes its words.
@@ -140,6 +142,7 @@ export function useGardenScene({
   const carryNow = useRef(onCarry);
   const toysNow = useRef(toys);
   const noteNow = useRef(notes.open);
+  const selectNow = useRef(onSelect);
   // Before the browser paints, so the scene never calls the ones from before.
   useLayoutEffect(() => {
     openDoor.current = door.open;
@@ -148,6 +151,7 @@ export function useGardenScene({
     carryNow.current = onCarry;
     toysNow.current = toys;
     noteNow.current = notes.open;
+    selectNow.current = onSelect;
   });
   const timeNow = useRef(time);
 
@@ -204,7 +208,7 @@ export function useGardenScene({
           cv,
           data.l,
           {
-            onSelect: setSelected,
+            onSelect: (p) => selectNow.current(p),
             onLabels: (all) => {
               labels.set(all);
               const said = all.filter((l) => SPOKEN.has(l.kind));
@@ -289,7 +293,7 @@ export function useGardenScene({
     scene.current?.setTime(time);
   }, [time]);
 
-  return { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard };
+  return { data, scene, ready, failed, progress, labels, spoken, reach, holding, company, stars, heard };
 }
 
 /**
@@ -305,26 +309,31 @@ export function useWalkInput({
   // A name that ends in "Ref" tells React Compiler this is a ref, which handlers may change.
   scene: sceneRef,
   wrap,
-  selected,
+  open,
+  onClose,
   onExit,
   onMove,
   onHold,
 }: {
   scene: RefObject<GardenScene | null>;
   wrap: RefObject<HTMLDivElement | null>;
-  selected: PlacedPlant | null;
+  /** Whether a card (a plant's, or a note) is open: Escape closes it with `onClose` before it would leave. */
+  open: boolean;
+  onClose: () => void;
   onExit: () => void;
   onMove: () => void;
   onHold: (clientX: number, clientY: number) => void;
 }) {
   const moved = useRef(onMove);
   const held = useRef(onHold);
-  const selectedRef = useRef<PlacedPlant | null>(null);
+  const openRef = useRef(open);
+  const closeRef = useRef(onClose);
   // Before the browser paints, so no key or pointer sees the ones from before.
   useLayoutEffect(() => {
     moved.current = onMove;
     held.current = onHold;
-    selectedRef.current = selected;
+    openRef.current = open;
+    closeRef.current = onClose;
   });
 
   // Trackpad: two-finger swipe looks around, pinch walks forward and back.
@@ -375,7 +384,7 @@ export function useWalkInput({
     const down = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.code === "Escape") {
-        if (sceneRef.current && selectedRef.current) sceneRef.current.select(null);
+        if (openRef.current) closeRef.current();
         else onExit();
         return;
       }
