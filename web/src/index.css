@@ -1014,8 +1014,8 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 @keyframes settle-in { to { opacity: 0.7; } }
 @media (prefers-reduced-motion: reduce) { .settling { animation: none; opacity: 0.7; } }
 
-/* A deck that could not load (see DeckFailed in App): the reason, then Reload. */
-.deck-failed { display: grid; gap: 1rem; justify-items: start; }
+/* Something that could not load (see LoadFailed in App): the reason, then Reload. */
+.load-failed { display: grid; gap: 1rem; justify-items: start; }
 
 /* ---- Field guide (#211): pressed flowers on paper, pencil sketches for words still growing ---- */
 .guide-head { padding: 1.2rem 0 0.5rem; }

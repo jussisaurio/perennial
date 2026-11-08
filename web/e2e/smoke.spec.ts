@@ -63,6 +63,21 @@ test("a deck that cannot load: the learner is told, not left on a loading screen
   await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15_000 });
 });
 
+test("a boot answer that never comes: the learner is told, not left on the sprout (#911)", async ({ page }) => {
+  await page.clock.install();
+  await startCourse(page);
+  // What an iPhone saw: the server answered, the page never got it, and no error came.
+  await page.route("**/api/boot", () => {});
+  await page.reload();
+  await expect(page.getByRole("status", { name: "Loading" })).toBeVisible();
+  await page.clock.fastForward(20_000);
+  await expect(page.getByRole("alert")).toHaveText(/Could not load Perennial/);
+  // Reload is what helped on the iPhone.
+  await page.unroute("**/api/boot");
+  await page.getByRole("button", { name: "Reload" }).click();
+  await expect(page.getByText(/seeds are ready/)).toBeVisible({ timeout: 15_000 });
+});
+
 test("connection lost mid-session: practice continues", async ({ page, context }) => {
   await startCourse(page);
   await startSession(page);
