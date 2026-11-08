@@ -1571,7 +1571,7 @@ export class GardenScene {
     const kept = keepsake ? L.plants.find((p) => p.id === keepsake.id) : undefined;
     if (keepsake && kept) {
       const bed = L.beds[kept.bed];
-      stake(keepsakeLabel(keepsake.lemma, keepsake.at, this.lang), kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
+      stake(keepsakeLabel(keepsake.lemma, new Date(keepsake.at).toLocaleDateString(this.lang, { day: "numeric", month: "short" })), kept.x, bed.z + bed.d / 2 + 0.16, 0.5, 0.36);
     }
     const sleeper = this.visitors.sleeper ? L.plants.find((p) => p.id === this.visitors.sleeper) : undefined;
     this.critters.buildSnore(c, sleeper, plantHeight);

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { longDay, refusedLine } from "./format";
+import { longDay, refusedLine, shortDay } from "./format";
 
 // #253 review: each reason keeps its own advice, whatever order they came in.
 test("refusals for a wrong clock and for other reasons are told apart", () => {
@@ -14,5 +14,11 @@ test("refusals for a wrong clock and for other reasons are told apart", () => {
 test("longDay says the date as toLocaleDateString does", () => {
   for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d.setDate(d.getDate() + 1)) {
     expect(longDay(d)).toBe(d.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" }));
+  }
+});
+
+test("shortDay says the date as toLocaleDateString does", () => {
+  for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d.setDate(d.getDate() + 1)) {
+    expect(shortDay(d)).toBe(d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }));
   }
 });

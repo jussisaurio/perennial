@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { rng } from "../lib/seed";
 import { daily } from "../core/day";
-import { isSleepyHour, keepsakeLabel, NEIGHBOUR, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId } from "./whimsy";
+import { isSleepyHour, NEIGHBOUR, nearestPlant, neighbourPerks, PERK, perkEnvelope, sleeperId } from "./whimsy";
 import { MOLE_ONE_IN, moleVisits, stripVisitor, visitorsFor, NO_FACTS } from "./visitors";
 
 const days = Array.from({ length: 400 }, (_, d) => new Date(2026, 0, 1 + d, 12));
@@ -67,11 +67,6 @@ describe("the plant hears its name (#60)", () => {
 });
 
 describe("the ends of the strip (#61) and the empty garden (#58)", () => {
-  test("the keepsake: the first word and the day", () => {
-    expect(keepsakeLabel("casa", new Date(2026, 9, 3, 18).getTime(), "es")).toBe("casa · 3 oct");
-    expect(keepsakeLabel("Haus", new Date(2026, 9, 3, 18).getTime(), "de")).toBe("Haus · 3. Okt.");
-  });
-
   test("the mole comes on about one day in four, all day; the dev override brings it", () => {
     const hits = days.filter((d) => moleVisits(d)).length;
     expect(hits).toBeGreaterThan(days.length / MOLE_ONE_IN / 1.6);

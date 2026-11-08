@@ -18,6 +18,7 @@ import { growthOf, leanDeg, plantSteps, showcasePlants, stageLabel, THIRSTY, typ
 import { BIRD, BUTTERFLY, BUTTERFLY_CLOSED, CAT_ASLEEP, DOG, FISHBOWL, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
 import { PixelRects } from "./pixel";
 import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
+import { shortDay } from "./format";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
 import { today } from "../core/day";
 import { easeOut, easeOutBack, reducedMotion, type PlantLook } from "./Growth";
@@ -340,7 +341,7 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
               {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
             </g>
           ))}
-          {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, first.at, "en-GB")} />}
+          {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, shortDay(new Date(first.at)))} />}
           <path d={`M0 ${GROUND + 4} Q ${fullWidth * 0.25} ${GROUND - 3} ${fullWidth * 0.5} ${GROUND + 3} T ${fullWidth} ${GROUND + 1} V ${H} H 0 Z`} fill="url(#soil)" />
           {/* The tufts one path, the seeds a path per layer: every element in the strip costs style and layout (#569). */}
           <path
