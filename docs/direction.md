@@ -35,7 +35,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 - Static decks that ship with the app: about 2000 live words each (es 2036, de 2043). Words come in frequency order, with garden and orchard words placed early ([docs/decks.md](decks.md)).
 - Every deck change has an author and a different proofreader. CI checks this.
 
-**When the words run out.** After the last new word, the planner keeps going with the weakest words, so 5 minutes and "Practice more" still work. Today shows one line: "You have planted every word in this course." The plants keep growing, but the story adds nothing more. (Not built yet: #882.)
+**When the words run out.** After the last new word, the planner keeps going with the weakest words, so 5 minutes and "Practice more" still work. Today shows one line: "You have planted every word in this course." The plants keep growing, but the story adds nothing more.
 
 **Grammar** is never taught on purpose. It comes from sentences, from the forms on each plant (shake it), and from the el/la fix (#289). A grammar track would be a second product.
 

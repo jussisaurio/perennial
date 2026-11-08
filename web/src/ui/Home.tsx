@@ -186,7 +186,7 @@ function StartNote({ learner, plan, now }: { learner: Learner; plan: Plan; now: 
       {started === 0
           ? `${ready} seeds are ready to plant: the most common words first, and a few garden words early. Each word has example sentences and audio.`
           : ready === 0
-            ? "Every seed in the course is planted. Today is for growing them."
+            ? "You have planted every word in this course."
             : plan.due === 0
               ? "Every plant has water. Today is for new seeds."
               : plan.newCount > 2
