@@ -496,7 +496,9 @@ function outOf(c: { x: number; z: number; r: number }, x: number, z: number, rad
   const d = Math.hypot(dx, dz);
   const min = c.r + rad;
   if (d >= min) return { x, z };
-  const k = min / (d || 1);
+  // At its very middle (a tap on the diary's stone, #858) no way out is shortest: out toward +z, the way back to the garden.
+  if (d === 0) return { x, z: z + min };
+  const k = min / d;
   return { x: c.x + dx * k, z: c.z + dz * k };
 }
 
