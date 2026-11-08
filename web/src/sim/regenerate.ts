@@ -4,7 +4,7 @@
 
 import { DECK_LANGS } from "../deck/langs";
 import type { WordsPart } from "../data/deckIndex";
-import type { Trace } from "./learner";
+import { onDay, PATTERNS, type Trace } from "./trace";
 
 // data/deck.ts loads the decks through Vite (import.meta.glob), which Bun does
 // not have. The simulation reads its decks from the files below instead, so
@@ -18,7 +18,7 @@ Bun.plugin({
     }));
   },
 });
-const { PATTERNS, onDay, simulate } = await import("./learner");
+const { simulate } = await import("./learner");
 const { courseNotes } = await import("../garden/notes/read");
 
 /**
