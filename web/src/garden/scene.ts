@@ -752,16 +752,15 @@ export class GardenScene {
     const { w, d, cx, cz, mat } = c;
     const grassTex = T.pixelTexture(T.grass(), true);
     grassTex.repeat.set(200, 200);
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(grassTex));
+    // At 0, where everything in the garden stands (#861). Drawn behind what lies on it in the same plane (the yard's path, the hill's grass at its foot) by depth alone, so they never flicker into it.
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(grassTex, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 4 }));
     ground.rotation.x = -Math.PI / 2;
-    // Layers of flat ground sit a few cm apart: some GPUs have a 16-bit depth buffer.
-    ground.position.y = -0.06;
     this.scene.add(still(ground));
     const pathTex = T.pixelTexture(T.path(), true);
     pathTex.repeat.set(w / 1.1, d / 1.1);
     const yard = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(pathTex));
     yard.rotation.x = -Math.PI / 2;
-    yard.position.set(cx, 0.01, cz);
+    yard.position.set(cx, 0, cz);
     this.scene.add(still(yard));
   }
 

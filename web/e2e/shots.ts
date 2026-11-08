@@ -104,6 +104,19 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
   "hill-post": (page) => standOnHill(page, "post"),
   // Behind the stool, in reach of it (#858): it reads as a seat, not a little gate.
   "hill-stool": (page) => standOnHill(page, "stool"),
+  // Beside the stool, across the slope, looking down at its feet (#861): each foot on the grass.
+  "hill-stool-side": (page) =>
+    page.evaluate(async () => {
+      const { lookoutAt } = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
+      const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
+      const s = (window as unknown as { __garden: Scene }).__garden;
+      const hill = lookoutAt(stileAt(s.layout as Parameters<typeof stileAt>[0]));
+      // Downhill from the top through the stool, and across it: stand 1.4 m to the side, facing the stool.
+      const [dx, dz] = [hill.stool[0] - hill.top[0], hill.stool[1] - hill.top[1]];
+      const d = Math.hypot(dx, dz);
+      const [ax, az] = [-dz / d, dx / d];
+      Object.assign(s, { x: hill.stool[0] + ax * 1.4, z: hill.stool[1] + az * 1.4, yaw: Math.atan2(ax, az), pitch: -0.45 });
+    }),
   // Sat on the stool (#858): the far house ahead, your lantern in front of you on the left.
   "hill-seated": async (page) => {
     await standOnHill(page, "stool");

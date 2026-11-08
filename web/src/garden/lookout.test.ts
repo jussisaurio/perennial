@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ANSWER_NOTE, FAR_HOUSE, hasNote, HILLTOP_R, hillY, lookoutAt, LookoutLight } from "./lookout";
+import { ANSWER_NOTE, FAR_HOUSE, hasNote, HILLTOP_R, hillMesh, hillY, lookoutAt, LookoutLight } from "./lookout";
 import { NOTES } from "./notes";
 import { HILLS } from "./sceneSky";
 import { HILL_ROWS, hillProfile } from "./textures";
@@ -114,5 +114,34 @@ describe("the far house (#683, #722)", () => {
       if (hillY(hill, stile.x + (house[0] - stile.x) * k, stile.z + (house[1] - stile.z) * k) > eye + (roof - eye) * k) hidden = true;
     }
     expect(hidden).toBe(true);
+  });
+});
+
+describe("the hill's ground (#861)", () => {
+  const hill = lookoutAt(stileAt(layout([])));
+  const { position: p, index } = hillMesh(hill);
+
+  /** The height of the drawn triangle over (x, z), found among them all. */
+  function drawn(x: number, z: number): number {
+    for (let t = 0; t < index.length; t += 3) {
+      const [a, b, c] = [index[t] * 3, index[t + 1] * 3, index[t + 2] * 3];
+      const det = (p[b + 2] - p[c + 2]) * (p[a] - p[c]) + (p[c] - p[b]) * (p[a + 2] - p[c + 2]);
+      const wa = ((p[b + 2] - p[c + 2]) * (x - p[c]) + (p[c] - p[b]) * (z - p[c + 2])) / det;
+      const wb = ((p[c + 2] - p[a + 2]) * (x - p[c]) + (p[a] - p[c]) * (z - p[c + 2])) / det;
+      const wc = 1 - wa - wb;
+      if (wa >= -1e-9 && wb >= -1e-9 && wc >= -1e-9) return wa * p[a + 1] + wb * p[b + 1] + wc * p[c + 1];
+    }
+    throw new Error(`no drawn triangle over (${x}, ${z})`);
+  }
+
+  test("what stands on the hill stands on the grass as drawn, not over it", () => {
+    const [tx, tz] = hill.top;
+    for (let i = 0; i < 300; i++) {
+      // Spread over the hill, its top and slopes, by a fixed sequence.
+      const [x, z] = [tx + ((i * 0.618) % 1) * 17 - 8.5, tz + ((i * 0.377) % 1) * 17 - 8.5];
+      expect(hillY(hill, x, z)).toBeCloseTo(drawn(x, z), 4);
+    }
+    // The stool, the post and the stone too.
+    for (const [x, z] of [hill.stool, hill.post, hill.stone]) expect(hillY(hill, x, z)).toBeCloseTo(drawn(x, z), 4);
   });
 });
