@@ -118,7 +118,7 @@ export const NOTES: readonly WrittenNote[] = [
   {
     id: "n13",
     beat: "door",
-    text: "Ahora el jardín es tuyo.\nDeja agua para Migas.\nDe noche, dos señales al lucero. Siempre contesta.\n¿No te gustan los caracoles? Eso no es razón.",
-    forms: { caracoles: "caracol", contesta: "contestar", deja: "dejar", es: "ser", gustan: "gustar", los: "el", "señales": "señal" },
+    text: "Ahora el jardín es tuyo.\nEcha agua en los dos lados.\nDeja agua para Migas.\n¿No te gustan los caracoles? Eso no es razón.",
+    forms: { caracoles: "caracol", deja: "dejar", echa: "echar", es: "ser", gustan: "gustar", lados: "lado", los: "el" },
   },
 ];
