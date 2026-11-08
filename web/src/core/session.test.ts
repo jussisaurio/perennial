@@ -62,8 +62,7 @@ describe("plan", () => {
     const p = chunk({ budgetMs: 7 * 60_000, memories });
     expect(p.queue[0]).toEqual({ kind: "review", wordId: "slipping", skill: "read" });
     const newSkills = p.queue.filter((t) => t.kind === "review" && t.isNew);
-    expect(newSkills.length).toBe(1);
-    expect(newSkills.length).toBeGreaterThan(0);
+    expect(newSkills.length).toBe(2);
   });
 
   test("an unlocked skill comes before new words, so listening and typing really start (#405)", () => {
