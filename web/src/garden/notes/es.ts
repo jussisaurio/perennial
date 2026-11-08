@@ -40,7 +40,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n05",
     beat: "stile",
-    unlockAt: 280,
+    unlockAt: 260,
     text: "Cada tarde, el mismo paseo: hasta el fondo del jardín.\nElla salta el saltavallas sin mirar.\nYo, despacio, con cuidado.\nElla dice que las zarzas son más rápidas que yo.",
     forms: { del: "de", dice: "decir", las: "el", "rápidas": "rápido", salta: "saltar", son: "ser" },
     reveals: ["the-stile"],
@@ -48,7 +48,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n06",
     beat: "stile",
-    unlockAt: 330,
+    unlockAt: 320,
     text: "Su silla de madera es demasiado baja. Se lo repito cada mañana.\nElla dice que es cómoda, y que el problema son mis rodillas.\nPuede ser.\nPero la silla es suya.",
     forms: { baja: "bajo", "cómoda": "cómodo", dice: "decir", es: "ser", la: "el", mis: "mi", puede: "poder", repito: "repetir", rodillas: "rodilla", son: "ser", suya: "suyo" },
     reveals: ["her-chair"],
@@ -56,7 +56,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n07",
     beat: "stile",
-    unlockAt: 420,
+    unlockAt: 414,
     text: "Hoy, una frase larga, entera, sin errores.\nElla se ha reído hasta llorar.\nNo por la frase: se la había dicho al perro del vecino.",
     forms: { al: "a", del: "de", dicho: "decir", entera: "entero", errores: "error", ha: "haber", "había": "haber", la: "el", larga: "largo", "reído": "reír", una: "un" },
     assumes: ["learning-the-language"],
@@ -73,7 +73,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n09",
     beat: "lookout",
-    unlockAt: 547,
+    unlockAt: 566,
     text: "El lucero: alguien que no me habla. Orgullo, por ambas partes.\nUna discusión absurda, hace once inviernos.\nEntonces no sabía pedir disculpas en ninguna lengua.\nAhora, en dos. Valor, en ninguna.",
     forms: { absurda: "absurdo", ambas: "ambos", disculpas: "disculpa", habla: "hablar", hace: "hacer", inviernos: "invierno", ninguna: "ninguno", partes: "parte", "sabía": "saber", una: "un" },
     reveals: ["the-quarrel"],
@@ -83,7 +83,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "p1",
     beat: "lookout",
-    unlockAt: 555,
+    unlockAt: 571,
     text: "Otra vez un caracol en mi taburete.\nNo me gustan los caracoles.\nElla sigue diciendo que eso no es razón.",
     forms: { caracoles: "caracol", diciendo: "decir", es: "ser", gustan: "gustar", los: "el", otra: "otro", sigue: "seguir" },
     reveals: ["dislikes-snails"],
@@ -92,7 +92,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d1",
     beat: "lookout",
-    unlockAt: 608,
+    unlockAt: 644,
     text: "Esta noche, el lucero, como siempre.\nElla me sube un café.\nNo pregunta.",
     forms: { esta: "este", pregunta: "preguntar", sube: "subir" },
     reveals: ["coffee-on-the-hill"],
@@ -102,7 +102,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "p2",
     beat: "lookout",
-    unlockAt: 634,
+    unlockAt: 684,
     text: "Viento en la colina. No dije nada.",
     forms: { dije: "decir", la: "el" },
     assumes: ["the-far-light"],
@@ -111,7 +111,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d2",
     beat: "lookout",
-    unlockAt: 669,
+    unlockAt: 719,
     text: "Esta noche, el lucero, como siempre.\nElla me sube un café y algo para el viento.\nNo pregunta. Se queda.",
     forms: { esta: "este", pregunta: "preguntar", queda: "quedar", sube: "subir" },
     assumes: ["coffee-on-the-hill", "she-does-not-ask"],
@@ -120,7 +120,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "p3",
     beat: "lookout",
-    unlockAt: 708,
+    unlockAt: 748,
     text: "Ella dice que mi taburete es demasiado bajo.\nPuede ser.",
     forms: { dice: "decir", es: "ser", puede: "poder" },
     assumes: ["her-chair"],
@@ -129,7 +129,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d3",
     beat: "late",
-    unlockAt: 724,
+    unlockAt: 765,
     text: "Esta noche, el lucero, como siempre.\nEl café me lo subo yo.\nNadie pregunta.",
     forms: { esta: "este", pregunta: "preguntar", subo: "subir" },
     reveals: ["she-is-gone"],
@@ -139,7 +139,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n10",
     beat: "late",
-    unlockAt: 759,
+    unlockAt: 802,
     text: "He echado agua también en tu lado del jardín.",
     forms: { del: "de", echado: "echar", he: "haber" },
     reveals: ["her-side"],
@@ -148,7 +148,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n11",
     beat: "late",
-    unlockAt: 799,
+    unlockAt: 833,
     text: "Dos tazas en la mesa. Una se queda vacía.\nLa dejo junto a la puertecilla, con agua. Para Migas.\nRayo, el caracol, me escucha. Nunca me dice que no.",
     forms: { dejo: "dejar", dice: "decir", escucha: "escuchar", la: "el", queda: "quedar", tazas: "taza", una: "un", "vacía": "vacío" },
     reveals: ["water-for-the-mouse", "the-snail-friend"],
@@ -157,7 +157,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "p4",
     beat: "late",
-    unlockAt: 808,
+    unlockAt: 848,
     text: "Anoche hice una señal con la luz. Solo una.\nNadie contestó.",
     forms: { "contestó": "contestar", hice: "hacer", la: "el", una: "un" },
     assumes: ["the-quarrel"],
@@ -166,7 +166,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n12",
     beat: "late",
-    unlockAt: 828,
+    unlockAt: 865,
     text: "Anoche hice dos señales con la luz.\nEl lucero contestó con otras dos.\nNadie ha cruzado el valle. Todavía.",
     forms: { "contestó": "contestar", cruzado: "cruzar", ha: "haber", hice: "hacer", la: "el", otras: "otro", "señales": "señal" },
     reveals: ["the-light-answers"],
@@ -177,7 +177,7 @@ export const NOTES: readonly Note[] = [
     id: "n13",
     beat: "door",
     // The daily learner's known words after about a year of 5 minutes a day (sim/traces, #883).
-    unlockAt: 867,
+    unlockAt: 921,
     text: "Ahora el jardín es tuyo.\nEcha agua en los dos lados.\nDeja agua para Migas.\nDe noche, dos señales al lucero. Siempre contesta.\n¿No te gustan los caracoles? Eso no es razón.",
     forms: { al: "a", caracoles: "caracol", deja: "dejar", echa: "echar", es: "ser", gustan: "gustar", lados: "lado", los: "el", "señales": "señal", contesta: "contestar" },
     reveals: ["garden-is-yours"],

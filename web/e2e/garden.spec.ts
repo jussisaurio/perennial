@@ -141,8 +141,8 @@ test("a visitor in the 2D strip shows the app's focus ring when reached with Tab
 test("visit.frog-jokes: tapped on, the frog says its lines, then has no more words", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
   await pinDetail(page, "normal");
-  // 300 known Spanish words: its first line and its last (frogLines.ts).
-  await page.goto("/?demo=es:known:300&visitors=frog#/today");
+  // 400 known Spanish words: its first line and its last (frogLines.ts).
+  await page.goto("/?demo=es:known:400&visitors=frog#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.locator(".gw")).toHaveClass(/\bgw-dusk\b/, { timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
