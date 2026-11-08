@@ -2,7 +2,7 @@ import { expect, test, type Page } from "./test";
 import type { WalkScene } from "./helpers";
 import { gameSeconds, pinDetail, walker } from "./helpers";
 
-// docs/garden-play.md, "Thoughts: a tap on a thing" (#864): a tap on the bench, the pond, the sunflower, the sundial or
+// docs/garden-play.md, "Thoughts: a tap on a thing" (#864): a tap on the bench, the pond, the sunflower, the sundial, the stool or
 // the far hills shows a short line under its name, in the course language, from the words the learner knows.
 
 type ThoughtScene = WalkScene & {
@@ -268,4 +268,28 @@ test("thought.sundial-night: by day a tap on the sundial shows its line; at nigh
   await page.mouse.click(...(await lookAt(page, (await places(page)).sundial, 1.5)));
   await expect(page.locator(".gw-say")).toHaveText("Reloj de sol: cerrado hasta el amanecer.");
   await expect(tag(page)).toHaveCount(0);
+});
+
+test("thought.stool: with 800 words, on the hill, a tap on the stool shows its tag and a line, and you have not moved", async ({ page }) => {
+  await openWalk(page, 800);
+  // 1.5 m behind the stool, facing the far house over it: look down the middle of the view until a tap meets the stool.
+  const at = await page.evaluate(async () => {
+    const stile = await import(/* @vite-ignore */ "/src/garden/stile.ts");
+    const lookout = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
+    const s = (window as unknown as { __garden: ThoughtScene }).__garden;
+    const hill = lookout.lookoutAt(stile.stileAt(s.layout as Parameters<typeof stile.stileAt>[0]));
+    Object.assign(s, { x: hill.stool[0] + Math.sin(hill.face) * 1.5, z: hill.stool[1] + Math.cos(hill.face) * 1.5, yaw: hill.face, pitch: -0.45 });
+    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+    for (let y = 0.3; y < 0.9; y += 0.02) {
+      const hit = s.pickAny(r.width / 2, r.height * y, r.width, r.height);
+      if (hit?.kind === "scenery" && hit.s?.view.id === "stool") return [r.left + r.width / 2, r.top + r.height * y] as [number, number];
+    }
+    throw new Error("no view of the stool");
+  });
+  const before = await walker(page);
+  await page.mouse.click(...at);
+  await expect(tag(page)).toContainText("el taburete");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Es para uno.");
+  expect(await walker(page)).toMatchObject({ x: before.x, z: before.z, walking: false });
 });

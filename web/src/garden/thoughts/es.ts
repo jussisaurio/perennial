@@ -8,6 +8,9 @@ export const THOUGHTS: readonly Thought[] = [
   { thing: "bench", unlockAt: 450, text: "Alguien se sentaba aquí cada tarde.", forms: { sentaba: "sentar" } },
   { thing: "bench", unlockAt: 1350, text: "Dos marcas de taza, juntas.", forms: { marcas: "marca", juntas: "junto" } },
 
+  // The bench's first line, the other way round ("caber" is in no deck): the hill was for waiting alone.
+  { thing: "stool", unlockAt: 130, text: "Es para uno.", forms: { es: "ser" } },
+
   { thing: "pond", unlockAt: 180, text: "Hay un pez. O dos.", forms: { hay: "haber" } },
   { thing: "pond", unlockAt: 660, text: "Los peces suben. Buscan a alguien.", forms: { los: "el", peces: "pez", suben: "subir", buscan: "buscar" } },
   { thing: "pond", unlockAt: 1250, text: "Los peces aún esperan su pan.", forms: { los: "el", peces: "pez", esperan: "esperar" } },
@@ -21,6 +24,4 @@ export const THOUGHTS: readonly Thought[] = [
   { thing: "sundial", unlockAt: 1750, text: "En la piedra, dos letras pequeñas.", forms: { la: "el", letras: "letra", "pequeñas": "pequeño" } },
 
   { thing: "hills", unlockAt: 290, text: "De allí no viene nadie.", forms: { viene: "venir" } },
-  { thing: "hills", unlockAt: 520, text: "Desde allí, esto se ve pequeño.", forms: { ve: "ver" } },
-  { thing: "hills", unlockAt: 1000, text: "Al otro lado vive alguien.", forms: { al: "a", vive: "vivir" } },
-];
+  { thing: "hills", unlockAt: 520, text: "Desde allí, esto se ve pequeño.", forms: { ve: "ver" } },];

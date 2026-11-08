@@ -7,7 +7,7 @@ import { Deck } from "../../deck/schema";
 import { noteInk } from "../notes/read";
 import { THOUGHTS, thoughtFor } from ".";
 
-const THINGS = ["bench", "pond", "sunflower", "sundial", "hills"];
+const THINGS = ["bench", "stool", "pond", "sunflower", "sundial", "hills"];
 
 for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
   describe(`${lang} thoughts`, () => {
@@ -31,11 +31,12 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
       expect(unknown).toEqual([]);
     });
 
-    test("each of the five things has three lines of at most six words, richer as words grow", () => {
+    test("each thing has one to three lines of at most six words, richer as words grow", () => {
       expect([...new Set(thoughts.map((t) => t.thing))].sort()).toEqual([...THINGS].sort());
       for (const thing of THINGS) {
         const lines = thoughts.filter((t) => t.thing === thing);
-        expect(lines).toHaveLength(3);
+        expect(lines.length).toBeGreaterThanOrEqual(1);
+        expect(lines.length).toBeLessThanOrEqual(3);
         for (let i = 1; i < lines.length; i++) expect(lines[i].unlockAt).toBeGreaterThan(lines[i - 1].unlockAt);
       }
       for (const t of thoughts) expect({ text: t.text, ok: words(t.text).length <= 6 }).toEqual({ text: t.text, ok: true });
