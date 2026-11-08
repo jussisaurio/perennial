@@ -19,6 +19,7 @@ export type SceneryId =
   | "door"
   | "hedge"
   | "bench"
+  | "stool"
   | "pond"
   | "lily"
   | "lantern"
@@ -50,6 +51,8 @@ export const SCENERY: Record<SceneryId, NounDef> = {
   door: { words: { es: "la puerta", de: "die Tür" }, gloss: "door" },
   hedge: { words: { es: "el seto", de: "die Hecke" }, gloss: "hedge" },
   bench: { words: { es: "el banco", de: "die Bank" }, gloss: "bench" },
+  // The old gardener's stool on the hill (#858).
+  stool: { words: { es: "el taburete", de: "der Hocker" }, gloss: "stool" },
   pond: { words: { es: "el estanque", de: "der Teich" }, gloss: "pond" },
   lily: { words: { es: "el nenúfar", de: "die Seerose" }, gloss: "water lily" },
   lantern: { words: { es: "el farol", de: "die Laterne" }, gloss: "lantern" },

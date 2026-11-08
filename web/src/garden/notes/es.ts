@@ -119,7 +119,7 @@ export const NOTES: readonly Note[] = [
     id: "n13",
     beat: "door",
     unlockAt: 1600,
-    text: "Ahora el jardín es tuyo.\nAprende el nombre de cada flor. Despacio, como Rayo.\n¿No te gustan los caracoles? Eso no es razón.",
-    forms: { aprende: "aprender", caracoles: "caracol", es: "ser", gustan: "gustar", los: "el" },
+    text: "Ahora el jardín es tuyo.\nEcha agua en los dos lados. Despacio, como Rayo.\n¿No te gustan los caracoles? Eso no es razón.",
+    forms: { caracoles: "caracol", echa: "echar", es: "ser", gustan: "gustar", lados: "lado", los: "el" },
   },
 ];

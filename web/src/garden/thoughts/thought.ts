@@ -5,7 +5,7 @@
 import type { SceneryId } from "../scenery";
 
 /** The things that have thoughts. Every course has lines for each (thoughts.test.ts). */
-type ThoughtThing = Extract<SceneryId, "bench" | "pond" | "sunflower" | "sundial" | "hills">;
+type ThoughtThing = Extract<SceneryId, "bench" | "stool" | "pond" | "sunflower" | "sundial" | "hills">;
 
 export interface Thought {
   thing: ThoughtThing;

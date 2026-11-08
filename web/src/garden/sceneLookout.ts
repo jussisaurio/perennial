@@ -5,7 +5,7 @@
 // words are never drawn in the world.
 
 import * as THREE from "three";
-import { DIARY_REACH, hillY, STONE_R, STOOL_REACH, type Lookout } from "./lookout";
+import { DIARY_REACH, hillY, STONE_R, STOOL_R, STOOL_REACH, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
 import { still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
@@ -63,6 +63,11 @@ export class LookoutThings {
     // The feet's middle is the stool's own (0, 0, 0).
     stool.position.copy(feet[0]).add(feet[1]).add(feet[2]).divideScalar(3);
     c.scene.add(still(stool));
+    // A tap names it, and may show its thought (#901): a box round its legs and seat, its tag just over the seat.
+    {
+      const [x, y, z] = [h.stool[0], stool.position.y, h.stool[1]];
+      c.hitBoxes.push({ id: "stool", min: [x - STOOL_R, y, z - STOOL_R], max: [x + STOOL_R, y + 0.45, z + STOOL_R], tag: [x, y + 0.55, z] });
+    }
     if (!pages) return;
 
     this.pages = pages.map((p) => ({ ...p }));

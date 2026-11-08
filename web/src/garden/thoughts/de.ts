@@ -8,6 +8,9 @@ export const THOUGHTS: readonly Thought[] = [
   { thing: "bench", unlockAt: 510, text: "Hier saß jeden Abend jemand.", forms: { "saß": "sitzen", jeden: "jeder" } },
   { thing: "bench", unlockAt: 1400, text: "Zwei Ringe im Holz. Von Tassen.", forms: { im: "in", ringe: "ring", tassen: "tasse" } },
 
+  // The bench's first line, the other way round: the hill was for waiting alone.
+  { thing: "stool", unlockAt: 100, text: "Er ist für einen.", forms: { ist: "sein", einen: "ein" } },
+
   { thing: "pond", unlockAt: 180, text: "Da ist ein Fisch. Oder zwei.", forms: { ist: "sein" } },
   { thing: "pond", unlockAt: 400, text: "Die Fische schauen, wer da kommt.", forms: { die: "der", fische: "fisch", kommt: "kommen" } },
   { thing: "pond", unlockAt: 1250, text: "Die Fische warten noch auf Brot.", forms: { die: "der", fische: "fisch" } },
@@ -21,6 +24,4 @@ export const THOUGHTS: readonly Thought[] = [
   { thing: "sundial", unlockAt: 1500, text: "Im Stein zwei kleine Zeichen.", forms: { im: "in", kleine: "klein" } },
 
   { thing: "hills", unlockAt: 310, text: "Von dort kommt nie jemand.", forms: { kommt: "kommen" } },
-  { thing: "hills", unlockAt: 460, text: "Von dort bist du ganz klein.", forms: { bist: "sein" } },
-  { thing: "hills", unlockAt: 1000, text: "Auf der anderen Seite wohnt jemand.", forms: { anderen: "andere", wohnt: "wohnen" } },
-];
+  { thing: "hills", unlockAt: 460, text: "Von dort bist du ganz klein.", forms: { bist: "sein" } },];

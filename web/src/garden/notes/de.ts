@@ -119,7 +119,7 @@ export const NOTES: readonly Note[] = [
     id: "n13",
     beat: "door",
     unlockAt: 1600,
-    text: "Jetzt ist der Garten dein Garten.\nLern die Namen der Blumen. Langsam, wie Sturm.\nDu magst keine Schnecken? Das ist kein Grund.",
-    forms: { blumen: "blume", die: "der", ist: "sein", keine: "kein", lern: "lernen", magst: "mögen", namen: "name", schnecken: "schnecke" },
+    text: "Jetzt ist der Garten dein Garten.\nGib beiden Seiten Wasser. Langsam, wie Sturm.\nDu magst keine Schnecken? Das ist kein Grund.",
+    forms: { beiden: "beide", gib: "geben", ist: "sein", keine: "kein", magst: "mögen", schnecken: "schnecke", seiten: "seite" },
   },
 ];
