@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { rng } from "../lib/seed";
+import { backWay, DIARY_REACH, HILLTOP_R, lookoutAt } from "./lookout";
 import { shedAt } from "./shed";
+import { STEP, stileAt } from "./stile";
 import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
-import { along, bedSign, benchAt, besideKey, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type GardenPlant, type Layout } from "./world";
+import { along, bedSign, benchAt, besideKey, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type BackWay, type GardenPlant, type Layout } from "./world";
 
 const DAY = 86_400_000;
 const plant = (i: number, pos = "noun"): GardenPlant => ({
@@ -182,12 +184,12 @@ describe("garden layout", () => {
 
 describe("the way on foot to a tapped spot (#336)", () => {
   /** Follow a way as the scene does: a short step at a time toward each corner, through walk(). Returns where the walker ends up. */
-  const follow = (l: Layout, way: [number, number][], doorOpen: boolean, trees: readonly PlacedTree[]) => {
+  const follow = (l: Layout, way: [number, number][], doorOpen: boolean, trees: readonly PlacedTree[], back: BackWay | null = null) => {
     let [x, z] = way[0];
     for (const [cx, cz] of way.slice(1))
       for (let i = 0; i < 5000 && Math.hypot(cx - x, cz - z) > 1e-6; i++) {
         const k = Math.min(1, 0.06 / Math.hypot(cx - x, cz - z));
-        ({ x, z } = walk(l, x, z, x + (cx - x) * k, z + (cz - z) * k, doorOpen, trees, null));
+        ({ x, z } = walk(l, x, z, x + (cx - x) * k, z + (cz - z) * k, doorOpen, trees, back));
       }
     return { x, z };
   };
@@ -274,32 +276,60 @@ describe("the way on foot to a tapped spot (#336)", () => {
     expect(Math.hypot(end.x - behind.x, end.z - behind.z)).toBeLessThan(0.02);
   });
 
-  test("from anywhere to anywhere a walker may stand, in small and big gardens, the way gets there", () => {
+  test("from anywhere to anywhere a walker may stand, in small and big gardens and over the open stile, the way gets there", () => {
     const NOW = Date.UTC(2026, 9, 15, 12);
-    for (const [count, doorOpen] of [[30, false], [200, true], [600, false]] as const) {
+    for (const [count, doorOpen, hill] of [[30, false, false], [200, true, false], [600, false, false], [1000, true, true]] as const) {
       const l = layout(Array.from({ length: count }, (_, i) => plant(i, ["noun", "verb", "adj", "adv", "phrase"][i % 5])));
       const trees = doorOpen ? placeTrees(l.orchard, orchardTrees(ORCHARD_WORDS.map((k) => ({ id: k, lemma: k, gloss: k, kind: k, planted: NOW - 3000 * 86_400_000, read: { s: 300, reps: 40, lapses: 0 } })), NOW)) : [];
+      const s = stileAt(l);
+      const at = lookoutAt(s);
+      const back = hill ? backWay(s, at, true) : null;
       const rand = rng(count);
       const b = l.bounds;
       const o = l.orchard;
-      // A spot a walker may stand on, picked at random: in the garden, or in the orchard behind an open door.
+      const stand = (x: number, z: number) => {
+        const p = collide(l, x, z, WALKER, doorOpen, back);
+        return collideTrees(trees, p.x, p.z, WALKER);
+      };
+      // A spot a walker may stand on, picked at random: in the garden, in the orchard behind an open door, or past the open stile, on the way up and the hilltop.
       const spot = () => {
         for (;;) {
-          const inOrchard = doorOpen && rand() < 0.3;
-          const x = inOrchard ? o.x - o.w / 2 + rand() * o.w : b.minX + rand() * (b.maxX - b.minX);
-          const z = inOrchard ? o.z - o.d / 2 + rand() * o.d : b.minZ + rand() * (b.maxZ - b.minZ);
-          const p = collide(l, x, z, WALKER, doorOpen);
-          const q = collideTrees(trees, p.x, p.z, WALKER);
+          const r = rand();
+          const [x0, x1, z0, z1] =
+            hill && r < 0.4 ? [at.top[0] - HILLTOP_R, s.x + STEP.w, at.top[1] - HILLTOP_R, s.z] : doorOpen && r > 0.7 ? [o.x - o.w / 2, o.x + o.w / 2, o.z - o.d / 2, o.z + o.d / 2] : [b.minX, b.maxX, b.minZ, b.maxZ];
+          const [x, z] = [x0 + rand() * (x1 - x0), z0 + rand() * (z1 - z0)];
+          const q = stand(x, z);
           if (Math.hypot(q.x - x, q.z - z) < 1e-9) return q;
         }
       };
-      for (let i = 0; i < 40; i++) {
-        const [from, to] = [spot(), spot()];
-        const way = wayTo(l, from.x, from.z, to.x, to.z, doorOpen, trees, null);
-        const end = follow(l, way, doorOpen, trees);
+      // A tap right on a round thing's middle walks to where the scene stands you for it (standAt): beside it (#858, the diary's stone).
+      const rounds = [l.pond, ...(doorOpen ? [l.well] : []), ...(back?.open ? back.things : [])];
+      const taps = rounds.map((c) => stand(c.x, c.z));
+      for (const t of taps) {
+        const q = stand(t.x, t.z);
+        expect(Math.hypot(q.x - t.x, q.z - t.z)).toBeLessThan(1e-9);
+      }
+      for (let i = 0; i < 40 + taps.length; i++) {
+        const [from, to] = [spot(), taps[i - 40] ?? spot()];
+        const way = wayTo(l, from.x, from.z, to.x, to.z, doorOpen, trees, back);
+        const end = follow(l, way, doorOpen, trees, back);
         expect(Math.hypot(end.x - to.x, end.z - to.z)).toBeLessThan(0.05);
       }
     }
+  });
+
+  test("a tap on the diary's stone from the hilltop walks up to it (#858: the owner's crash)", () => {
+    const l = layout(Array.from({ length: 1000 }, (_, i) => plant(i, ["noun", "verb", "adj", "adv", "phrase"][i % 5])));
+    const s = stileAt(l);
+    const at = lookoutAt(s);
+    const back = backWay(s, at, true);
+    // As the owner tapped it: standing at (−3.07, −36.91), the stone at (−2.41, −37.83).
+    expect(at.stone.map((v) => v.toFixed(2))).toEqual(["-2.41", "-37.83"]);
+    const to = collide(l, at.stone[0], at.stone[1], WALKER, true, back);
+    const way = wayTo(l, -3.07, -36.91, to.x, to.z, true, [], back);
+    const end = follow(l, way, true, [], back);
+    expect(Math.hypot(end.x - to.x, end.z - to.z)).toBeLessThan(0.05);
+    expect(Math.hypot(end.x - at.stone[0], end.z - at.stone[1])).toBeLessThan(DIARY_REACH);
   });
 });
 
