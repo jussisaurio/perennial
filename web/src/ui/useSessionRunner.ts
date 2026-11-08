@@ -411,7 +411,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
       // No note after "I forgot": the retry card says "try again" when it comes.
       runner.report(task, { grade });
       setUndoStack((s) => [...s, { reviewId, intro: false, practised: fresh ? word.id : undefined, wordId: word.id, example, carried }]);
-      // Every remembered answer waters the plant; only reading makes it grow.
+      // Every remembered answer waters the plant, and grows it: a listening or typing one counts for reading too (#852).
       if (grade < 3) return null;
       // The first good reading answer to a word (a wrong one earlier does not count): a garden word's visitor comes now.
       const visitor = task.skill === "read" && !brought ? visitorArrives(word.id) : undefined;
@@ -428,7 +428,9 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
         // Listening or writing strong for the first time: its dot comes onto the plant, as the garden draws it.
         const dot = isStrong(after) && !isStrong(skillBefore) ? task.skill : undefined;
         const note = dot ? DOT_NOTES[dot] : gap ? `Last seen ${gap} days ago. Its longest wait yet.` : undefined;
-        return { word: word.lemma, from: look, to: look, planted: false, strong, dot, note };
+        // !: a skill unlocks only from a reading memory, and the answer just fed it.
+        const read = readMemory(live.current!, word.id)!;
+        return { word: word.lemma, from: look, to: { s: read.s, stage: plantStage(read) }, planted: false, strong, dot, note };
       }
       return { word: word.lemma, from: look, to: { s: after.s, stage: plantStage(after) }, planted: false, visitor, strong, note: gap ? `Last seen ${gap} days ago. Its longest wait yet.` : undefined };
     } else {
