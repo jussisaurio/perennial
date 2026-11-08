@@ -27,7 +27,7 @@ export const THOUGHTS: readonly Thought[] = [
 
   { thing: "hills", unlockAt: 361, text: "Von dort kommt nie jemand.", forms: { kommt: "kommen" } },
   { thing: "hills", unlockAt: 510, text: "Von dort bist du ganz klein.", forms: { bist: "sein" } },
-  { thing: "hills", unlockAt: 813, text: "Dort schläft auch jemand nicht.", forms: { "schläft": "schlafen" }, assumes: ["the-light-answers"] },
+  { thing: "hills", unlockAt: 813, text: "Dort schläft jemand auch nicht.", forms: { "schläft": "schlafen" }, assumes: ["the-light-answers"] },
 
   { thing: "bed", unlockAt: 369, text: "Zwei Seiten. Ihre ist schöner.", forms: { ihre: "ihr", ist: "sein", "schöner": "schön", seiten: "seite" }, assumes: ["her-garden"] },
   { thing: "bed", unlockAt: 726, text: "Ihre Seite. Immer noch schöner.", forms: { ihre: "ihr", "schöner": "schön" }, assumes: ["her-side"] },
@@ -35,7 +35,7 @@ export const THOUGHTS: readonly Thought[] = [
   { thing: "hedge", unlockAt: 475, text: "Der Hund erklärt etwas. Sehr lange.", forms: { "erklärt": "erklären" } },
   { thing: "hedge", unlockAt: 771, text: "Jeden Morgen weniger Wasser.", forms: { jeden: "jeder", weniger: "wenig" }, assumes: ["water-for-the-mouse"] },
 
-  { thing: "grass", unlockAt: 244, text: "Will immer mehr. Nur das.", forms: { will: "wollen" } },
+  { thing: "grass", unlockAt: 244, text: "Es wird immer mehr. Nur das.", forms: { wird: "werden" } },
 
   { thing: "stone", unlockAt: 318, text: "Schon immer hier. Er weiß viel.", forms: { "weiß": "wissen" } },
 
