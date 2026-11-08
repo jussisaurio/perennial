@@ -78,7 +78,7 @@
   },
   {
     "lemma": "dort",
-    "gloss": "there",
+    "gloss": "there, in that place (more formal than da)",
     "pos": "adv",
     "forms": [
       "dort"
@@ -90,9 +90,9 @@
         "cloze": "dort"
       },
       {
-        "text": "Dort ist der Bahnhof.",
-        "translation": "There's the train station.",
-        "cloze": "Dort"
+        "text": "Mein Vater arbeitet dort.",
+        "translation": "My father works there.",
+        "cloze": "dort"
       },
       {
         "text": "Ich war noch nie dort.",
@@ -164,7 +164,7 @@
     "sentences": [
       {
         "text": "Bis gleich!",
-        "translation": "See you soon!",
+        "translation": "See you in a minute!",
         "cloze": "gleich"
       },
       {
@@ -1481,7 +1481,7 @@
   },
   {
     "lemma": "sofort",
-    "gloss": "immediately; right away",
+    "gloss": "immediately, at once (sooner than gleich)",
     "pos": "adv",
     "forms": [
       "sofort"
@@ -1494,12 +1494,12 @@
       },
       {
         "text": "Ich mache das sofort.",
-        "translation": "I'll do it right away.",
+        "translation": "I'll do it immediately.",
         "cloze": "sofort"
       },
       {
         "text": "Der Arzt kommt sofort.",
-        "translation": "The doctor is coming right away.",
+        "translation": "The doctor is coming immediately.",
         "cloze": "sofort"
       }
     ]
@@ -1757,6 +1757,31 @@
         "text": "Hast du mit ihr gesprochen?",
         "translation": "Have you talked to her?",
         "cloze": "gesprochen"
+      }
+    ]
+  },
+  {
+    "lemma": "zweimal",
+    "gloss": "twice",
+    "pos": "adv",
+    "forms": [
+      "zweimal"
+    ],
+    "sentences": [
+      {
+        "text": "Ich habe dich zweimal angerufen.",
+        "translation": "I called you twice.",
+        "cloze": "zweimal"
+      },
+      {
+        "text": "Nimm die Tabletten zweimal am Tag.",
+        "translation": "Take the pills twice a day.",
+        "cloze": "zweimal"
+      },
+      {
+        "text": "Ich sage es nicht zweimal.",
+        "translation": "I'm not going to say it twice.",
+        "cloze": "zweimal"
       }
     ]
   }

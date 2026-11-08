@@ -466,31 +466,6 @@
     ]
   },
   {
-    "lemma": "zweimal",
-    "gloss": "twice",
-    "pos": "adv",
-    "forms": [
-      "zweimal"
-    ],
-    "sentences": [
-      {
-        "text": "Ich war schon zweimal in Wien.",
-        "translation": "I've been to Vienna twice.",
-        "cloze": "zweimal"
-      },
-      {
-        "text": "Nimm die Tabletten zweimal am Tag.",
-        "translation": "Take the pills twice a day.",
-        "cloze": "zweimal"
-      },
-      {
-        "text": "Ich sage es nicht zweimal.",
-        "translation": "I'm not going to say it twice.",
-        "cloze": "zweimal"
-      }
-    ]
-  },
-  {
     "lemma": "abholen",
     "gloss": "to pick up, to collect",
     "pos": "verb",

@@ -1,9 +1,9 @@
 {
   "file": "source/0016.json",
-  "sha256": "fb5877d315e2cce3eacd049ece058258ea8e703b0ce64e9ef5f7c071cacea838",
+  "sha256": "c9390ed7c369ab000222b7463ac69f22a072caca42ef1c017730379ba4f35bf2",
   "author": "claude-agent:de-author-0015-2026-11-06",
   "reviewer": "claude-agent:de-proofreader-0015-2026-11-06",
-  "reviewedAt": "2026-11-06",
+  "reviewedAt": "2026-11-08",
   "verdict": "approved",
-  "notes": "100 entries proofread; 14 fixes (13 near-duplicates of older sentences, 1 calque) plus 1 translation follow-up, all applied and re-checked"
+  "notes": "Re-pinned after moving zweimal to 0003 (#947) by claude-agent:i947-editor-2026-11-08; no entry changed, the verdicts are the original ledger's."
 }

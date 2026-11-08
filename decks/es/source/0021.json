@@ -84,38 +84,6 @@
     ]
   },
   {
-    "lemma": "contestar",
-    "gloss": "to answer, to reply",
-    "pos": "verb",
-    "forms": [
-      "contestar",
-      "contesta",
-      "contestas",
-      "contesto",
-      "contestó",
-      "contesté",
-      "contestado",
-      "contestes"
-    ],
-    "sentences": [
-      {
-        "text": "¿Por qué no me contestas?",
-        "translation": "Why aren't you answering me?",
-        "cloze": "contestas"
-      },
-      {
-        "text": "Contesté todas las preguntas del examen.",
-        "translation": "I answered all the questions on the exam.",
-        "cloze": "Contesté"
-      },
-      {
-        "text": "Contesta en español, por favor.",
-        "translation": "Answer in Spanish, please.",
-        "cloze": "Contesta"
-      }
-    ]
-  },
-  {
     "lemma": "mandar",
     "gloss": "to send; to order, to be in charge",
     "pos": "verb",

@@ -89,9 +89,9 @@
         "cloze": "oigo"
       },
       {
-        "text": "¿Oíste eso?",
+        "text": "¿Has oído eso?",
         "translation": "Did you hear that?",
-        "cloze": "Oíste"
+        "cloze": "oído"
       },
       {
         "text": "¿Me oyes?",
@@ -270,8 +270,8 @@
         "cloze": "Realmente"
       },
       {
-        "text": "Es realmente bonito.",
-        "translation": "It's really pretty.",
+        "text": "¿Necesitas realmente dos teléfonos?",
+        "translation": "Do you really need two phones?",
         "cloze": "realmente"
       },
       {
@@ -283,7 +283,7 @@
   },
   {
     "lemma": "aún",
-    "gloss": "still; yet",
+    "gloss": "still; yet (shorter than todavía)",
     "pos": "adv",
     "forms": [
       "aún"
@@ -899,7 +899,7 @@
   },
   {
     "lemma": "ustedes",
-    "gloss": "you (plural)",
+    "gloss": "you (plural, formal)",
     "pos": "pron",
     "forms": [
       "ustedes"
@@ -993,7 +993,7 @@
   },
   {
     "lemma": "todavía",
-    "gloss": "still; yet",
+    "gloss": "still; yet (longer than aún)",
     "pos": "adv",
     "forms": [
       "todavía"
@@ -1764,6 +1764,38 @@
         "text": "Pedí ayuda a un vecino.",
         "translation": "I asked a neighbor for help.",
         "cloze": "ayuda"
+      }
+    ]
+  },
+  {
+    "lemma": "contestar",
+    "gloss": "to answer",
+    "pos": "verb",
+    "forms": [
+      "contestar",
+      "contesta",
+      "contestas",
+      "contesto",
+      "contestó",
+      "contesté",
+      "contestado",
+      "contestes"
+    ],
+    "sentences": [
+      {
+        "text": "¿Por qué no me contestas?",
+        "translation": "Why aren't you answering me?",
+        "cloze": "contestas"
+      },
+      {
+        "text": "Contesté todas las preguntas del examen.",
+        "translation": "I answered all the questions on the exam.",
+        "cloze": "Contesté"
+      },
+      {
+        "text": "Contesta en español, por favor.",
+        "translation": "Answer in Spanish, please.",
+        "cloze": "Contesta"
       }
     ]
   }

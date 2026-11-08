@@ -1,9 +1,9 @@
 {
   "file": "source/0003.json",
-  "sha256": "b772870828ceb259b332779f288849b0f6ebb3398d019cdd54eebf9ded39356e",
+  "sha256": "739e8eb90bb3368d634446484bd59323b93774f5509097826f5e014f04b07c29",
   "author": "claude-agent:es-author-2026-10-11",
-  "reviewer": "claude-agent:es-proofreader-0003-2026-10-11",
-  "reviewedAt": "2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-i947-2026-11-08",
+  "reviewedAt": "2026-11-08",
   "verdict": "approved",
-  "notes": "All 60 entries ok; one fix (contra s1 replaced rare-word 'apoyó' sentence with 'Pon la mesa contra la pared.') applied and re-checked."
+  "notes": "Full re-proofread after contestar moved here from 0021 (#947) by claude-agent:i947-editor-2026-11-08; glosses of contestar, aún, todavía and ustedes and sentences of realmente and oír fixed on review."
 }

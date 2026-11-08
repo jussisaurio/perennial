@@ -1,9 +1,9 @@
 {
   "file": "source/0001.json",
-  "sha256": "00e2d660195dbc437f05118532908f6b08fa665ba5f9de1d29a87559afa93a50",
+  "sha256": "4490fe0f4351f6becdcddb61cc987910c1b309aa09789369a69af4f320afaf29",
   "author": "claude-agent:deck-pipeline-2026-10-11",
-  "reviewer": "claude-agent:es-proofreader-0001-2026-10-11",
-  "reviewedAt": "2026-10-11",
+  "reviewer": "claude-agent:es-proofreader-i947-2026-11-08",
+  "reviewedAt": "2026-11-08",
   "verdict": "approved",
-  "notes": "Re-checked 10 edited entries (ser, por, se, estar, su, ir, como, todo, poder, querer); all fix notes applied correctly; 40/40 ok."
+  "notes": "Full re-proofread after jardín moved here from 0011 (#947) by claude-agent:i947-editor-2026-11-08; jardín s3 replaced on review."
 }

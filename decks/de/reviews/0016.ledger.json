@@ -87,11 +87,6 @@
       "verdict": "ok",
       "at": "2026-11-06T07:10:30.851Z"
     },
-    "zweimal|adv|": {
-      "hash": "42341a1b73a23589",
-      "verdict": "ok",
-      "at": "2026-11-06T07:10:36.707Z"
-    },
     "abholen|verb|": {
       "hash": "92d71036b1bd2bd1",
       "verdict": "ok",

@@ -4,7 +4,7 @@ import { pinDetail } from "./helpers";
 // The back fence, the stile and the hill (#770, docs/garden-play.md "Back
 // fence, stile and hill"): one test per claim, played with the keys and a tap
 // as the learner would. Only where the learner stands at the start is set by
-// hand. Until note n08 (495 known words) brambles shut the stile; after it you
+// hand. Until note n08 (486 known words) brambles shut the stile; after it you
 // walk over and up the hill, to the stool, the lantern and the diary (#858).
 // The clock is pinned to a day, or a night for the lantern; the viewport to a
 // laptop's.
@@ -51,9 +51,9 @@ const EYE = 1.05;
 /** Words studied, not all known (dev/plan.ts): enough known for the first stile note (n05) but not the hill's (n08); and enough for n08. */
 const SHUT = 400;
 const OPEN = 800;
-/** Learners who know exactly as many words as note n09 (the diary) and n12 (the far light answers) need; the first not yet n09. */
-const N09 = "known:565";
-const N12 = "known:883";
+/** Known words that note n09 (the diary) and n12 (the far light answers) need (notes/es.ts). */
+const N09 = 547;
+const N12 = 828;
 
 // On CI's software WebGL (~7 frames a second) the walk alone takes 10–20 s to open, and then the walking is played out in real time.
 test.describe.configure({ timeout: 60_000 });
@@ -435,12 +435,12 @@ test("hill.sit-night: by day, sitting on the stool brings dusk and its lit lante
 });
 
 test("hill.diary: with n09, by the stone, Read the diary opens it on n09; before n09 there is no diary", async ({ page }) => {
-  let s = await walkIn(page, "known:564");
+  let s = await walkIn(page, `known:${N09 - 1}`);
   await byStone(page, s);
   // A second for the button to come, if it would.
   await waitGame(page, 1);
   await expect(button(page, "Read the diary")).toHaveCount(0);
-  s = await walkIn(page, N09);
+  s = await walkIn(page, `known:${N09}`);
   await byStone(page, s);
   await button(page, "Read the diary").click();
   await expect(page.getByRole("dialog", { name: "A page of the gardener's diary, page 1 of 1" })).toContainText("El lucero: alguien que no me habla.");
@@ -448,7 +448,7 @@ test("hill.diary: with n09, by the stone, Read the diary opens it on n09; before
 
 test("hill.diary-new: with a page not read, the diary shows its ribbon and opens on it; read, the ribbon is gone", async ({ page }) => {
   // n12 not read yet; the four pages before it read.
-  const s = await walkIn(page, N12);
+  const s = await walkIn(page, `known:${N12}`);
   const ribbon = () => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lookoutThings.ribbon.visible);
   expect(await ribbon()).toBe(true);
   await byStone(page, s);
@@ -475,7 +475,7 @@ test("hill.no-answer: at night before n12, two signals leave the far light shini
 test("hill.answer: with n12, by day, sat on the stool till night, two signals from the seat get two blinks and the line; two more, another answer", async ({ page }) => {
   // About half a minute of the garden's time to night, then two rounds of signals: far longer on CI's few frames, where a slow runner's game runs at a third of the clock's speed (#871).
   test.setTimeout(360_000);
-  const s = await walkIn(page, N12);
+  const s = await walkIn(page, `known:${N12}`);
   await sit(page, s);
   await expect.poll(() => lapse(page), { timeout: 120_000 }).toBe(2);
   const line = page.locator(".gw-echo", { hasText: "El lucero contesta." });

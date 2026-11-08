@@ -8,7 +8,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n01",
     beat: "early",
-    unlockAt: 128,
+    unlockAt: 60,
     text: "Das ist das Haus. Der Garten ist nicht mein Garten. Er ist ihr Garten.\nIch mag keine Schnecken.\nSie sagt, das ist kein Grund.",
     forms: { ist: "sein", keine: "kein", mag: "mögen", sagt: "sagen", schnecken: "schnecke" },
     reveals: ["her-garden", "dislikes-snails"],
@@ -16,7 +16,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n02",
     beat: "early",
-    unlockAt: 138,
+    unlockAt: 70,
     text: "Sie sagt mir den Namen von einer Blume.\nIch sage ihn auch.\nMorgen weiß ich ihn nicht mehr.\nDie Blume schon.",
     forms: { den: "der", die: "der", einer: "ein", ihn: "er", mir: "ich", namen: "name", sage: "sagen", sagt: "sagen", "weiß": "wissen" },
     reveals: ["learning-the-language"],
@@ -32,7 +32,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n04",
     beat: "early",
-    unlockAt: 178,
+    unlockAt: 210,
     text: "In der Hecke ist ein Türchen. Nicht für mich.\nFür Krümel. Krümel isst unser Brot\nund sagt nie Entschuldigung.\nDie Katze sieht Krümel an. Krümel sieht die Katze an.\nNiemand tut etwas.",
     forms: { die: "der", isst: "essen", ist: "sein", mich: "ich", sagt: "sagen", sieht: "sehen", tut: "tun" },
     reveals: ["the-mouse"],
@@ -73,7 +73,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n09",
     beat: "lookout",
-    unlockAt: 540,
+    unlockAt: 533,
     text: "Das Fünkchen: jemand, der nicht mit mir redet. Stolz, auf beiden Seiten.\nEin dummer Streit, vor elf Wintern.\nDamals konnte ich mich in keiner Sprache entschuldigen.\nJetzt in zwei. Mutig in keiner.",
     forms: { beiden: "beide", dummer: "dumm", keiner: "kein", konnte: "können", mich: "ich", mir: "ich", redet: "reden", seiten: "seite", wintern: "winter" },
     reveals: ["the-quarrel"],
@@ -83,7 +83,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d1",
     beat: "lookout",
-    unlockAt: 620,
+    unlockAt: 604,
     text: "Heute Abend das Fünkchen, wie immer.\nSie bringt mir einen Kaffee.\nSie fragt nicht.",
     forms: { bringt: "bringen", einen: "ein", fragt: "fragen", mir: "ich" },
     reveals: ["coffee-on-the-hill"],
@@ -93,7 +93,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d2",
     beat: "lookout",
-    unlockAt: 675,
+    unlockAt: 652,
     text: "Heute Abend das Fünkchen, wie immer.\nSie bringt mir einen Kaffee und eine Decke.\nSie fragt nicht. Sie bleibt.",
     forms: { bleibt: "bleiben", bringt: "bringen", eine: "ein", einen: "ein", fragt: "fragen", mir: "ich" },
     assumes: ["coffee-on-the-hill", "she-does-not-ask"],
@@ -102,7 +102,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d3",
     beat: "late",
-    unlockAt: 705,
+    unlockAt: 683,
     text: "Heute Abend das Fünkchen, wie immer.\nDen Kaffee bringe ich mir selbst.\nNiemand fragt.",
     forms: { bringe: "bringen", den: "der", fragt: "fragen", mir: "ich" },
     reveals: ["she-is-gone"],
@@ -112,7 +112,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n10",
     beat: "late",
-    unlockAt: 735,
+    unlockAt: 717,
     text: "Deine Seite hat auch Wasser bekommen.",
     forms: { deine: "dein", hat: "haben" },
     reveals: ["her-side"],
@@ -121,7 +121,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n11",
     beat: "late",
-    unlockAt: 770,
+    unlockAt: 749,
     text: "Zwei Tassen auf dem Tisch. Eine bleibt leer.\nIch stelle sie ans Türchen, mit Wasser. Für Krümel.\nSturm, die Schnecke, hört mir zu. Sie sagt nie etwas dagegen.",
     forms: { ans: "an", bleibt: "bleiben", dem: "der", die: "der", eine: "ein", "hört": "hören", mir: "ich", sagt: "sagen", stelle: "stellen", tassen: "tasse" },
     reveals: ["the-snail-friend"],
@@ -130,7 +130,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n12",
     beat: "late",
-    unlockAt: 800,
+    unlockAt: 783,
     text: "Letzte Nacht: Licht aus, Licht an. Zweimal.\nDas Fünkchen hat geantwortet: zweimal.\nNiemand ist über den Berg gekommen. Noch nicht.",
     forms: { den: "der", geantwortet: "antworten", gekommen: "kommen", hat: "haben", ist: "sein" },
     reveals: ["the-light-answers"],
