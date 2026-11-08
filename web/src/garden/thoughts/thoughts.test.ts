@@ -6,6 +6,7 @@ import { courseOrder } from "../../content/order";
 import { Deck } from "../../deck/schema";
 import { noteInk } from "../notes/read";
 import { THOUGHTS, thoughtFor } from ".";
+import { FROG_LINES, frogLines } from "../frogLines";
 
 const THINGS = ["bench", "stool", "pond", "sunflower", "sundial", "hills"];
 
@@ -29,6 +30,21 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
           .map((ink) => `${t.text}: ${ink.text}`),
       );
       expect(unknown).toEqual([]);
+    });
+
+    // The frog's lines (#902) are gated the same way.
+    test("every word of a frog line is known when it unlocks, and its last line comes first", () => {
+      const lines = FROG_LINES[lang];
+      const unknown = lines.flatMap((t) =>
+        noteInk(t, (lemma) => (place.get(lemma) ?? Infinity) <= t.unlockAt)
+          .filter((ink) => ink.style === "faint")
+          .map((ink) => `${t.text}: ${ink.text}`),
+      );
+      expect(unknown).toEqual([]);
+      // Its last line says it has no more words: whenever it has lines, that one is among them, at the end.
+      const last = lines[lines.length - 1];
+      for (const l of lines) expect(l.unlockAt).toBeGreaterThanOrEqual(last.unlockAt);
+      expect(frogLines(lang, last.unlockAt - 1)).toEqual([]);
     });
 
     test("each thing has one to three lines of at most six words, richer as words grow", () => {

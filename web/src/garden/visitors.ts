@@ -251,6 +251,15 @@ export const gnomeTag = (pose: GnomePose): number => (pose === "front" ? 1 : 0);
 
 // ---- The frog (#57) ----
 
+/** What the frog may say to this learner: known nouns to croak (#739), and the lines it can read (frogLines.ts, #902). */
+export interface FrogWords {
+  croaks: readonly string[];
+  lines: readonly string[];
+}
+
+/** A frog with nothing to say but its croak: the landing page's walk has no learner. */
+export const SILENT_FROG: FrogWords = { croaks: [], lines: [] };
+
 /** How a frog's croak is written in its bubble, per course language. Only written: aloud it is a recording (#739). */
 const CROAK: PerLang<string> = { es: "croac", de: "quak" };
 

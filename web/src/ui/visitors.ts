@@ -10,11 +10,13 @@ import {
   milestoneLine,
   moleVisits,
   NO_FACTS,
+  SILENT_FROG,
   STRIP_VISITORS,
   VISITORS,
   visitorsFor,
   visitorViews,
   welcomeBack,
+  type FrogWords,
   type LearnerFacts,
   type StripVisitorId,
   type TodayVisitors,
@@ -23,6 +25,7 @@ import {
   type VisitorView,
 } from "../garden/visitors";
 import { sceneryViews, type SceneryViews } from "../garden/scenery";
+import { frogLines } from "../garden/frogLines";
 import type { GardenWord } from "../deck/schema";
 
 /** Dev builds only: `?visitors=all` or `?visitors=cat,bird` shows those visitors, for screenshots and tests. */
@@ -42,8 +45,8 @@ export interface LearnerVisitors {
   welcome: string | null;
   /** The Today screen line on the day a known-word milestone is crossed, or null. */
   milestone: string | null;
-  /** Words the learner knows (lemmas) for the frog to croak: nouns once there are a few. */
-  known: string[];
+  /** What the frog may say: known nouns (lemmas) to croak once there are a few, and the lines the learner can read. */
+  frog: FrogWords;
   /** Every word the learner knows, by lemma (lower case): the clear words in the gardener's notes (#654). */
   lemmas: ReadonlySet<string>;
   /** The mole looks up at the far right end of the strip today. */
@@ -128,7 +131,7 @@ export function* visitorSteps(l: Learner, now: Date): Generator<void, LearnerVis
     views: visitorViews(today.present, l.lang, (noun) => lemmas.has(noun.toLowerCase())),
     welcome: welcomeBack(facts, now),
     milestone: milestoneLine(before, count),
-    known: croaks,
+    frog: { croaks, lines: frogLines(l.lang, count) },
     lemmas,
     mole: moleVisits(now, devVisitorOverride()),
     scenery: sceneryViews(l.lang, (lemma) => lemmas.has(lemma.toLowerCase()), count),
@@ -140,5 +143,5 @@ export function showcaseVisitors(lang: string, now = new Date()): LearnerVisitor
   // A garden a few months in: its learner knows the words for the garden-word visitors.
   const facts = { ...NO_FACTS, garden: new Set<GardenWord>(VISITORS.flatMap((v) => (v.garden ? [v.garden] : []))) };
   const today = visitorsFor(facts, now, devVisitorOverride());
-  return { facts, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, known: [], lemmas: new Set(), mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
+  return { facts, today, views: visitorViews(today.present, lang), welcome: null, milestone: null, frog: SILENT_FROG, lemmas: new Set(), mole: moleVisits(now, devVisitorOverride()), scenery: sceneryViews(lang) };
 }
