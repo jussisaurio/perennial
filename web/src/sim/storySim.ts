@@ -11,7 +11,7 @@ import { isDeckLang } from "../deck/langs";
 import { storyEvents, type StoryEvent } from "../garden/story";
 import { readerScript } from "./script";
 import { courseStory, projectStory, quietStretches, weekOf, written, type Met, type Projection } from "./timeline";
-import { PATTERNS, type Pattern, type Trace } from "./trace";
+import { medianDayKnowing, PATTERNS, type Pattern, type Runs, type Trace } from "./trace";
 
 const USAGE = "usage: bun run story:sim <lang> <pattern> [--json] [--script <dir>]";
 const args = process.argv.slice(2);
@@ -28,11 +28,21 @@ if (!lang || !isDeckLang(lang) || !PATTERNS.includes(pattern as Pattern) || scri
 // traces are written by sim:learners, so this trusts both shapes, as regenerate.ts does.
 const deck: WordsPart = await Bun.file(new URL(`../../../decks/${lang}/deck.json`, import.meta.url)).json();
 const trace: Trace = await Bun.file(new URL(`./traces/${lang}-${pattern}.json`, import.meta.url)).json();
+const seeds: Runs = await Bun.file(new URL(`./traces/${lang}-${pattern}-seeds.json`, import.meta.url)).json();
 const course = courseOrder(indexWords(deck, lang));
 if (course.length !== trace.words) console.error(`note: the deck has ${course.length} live words, the trace ${trace.words}: run bun run sim:learners`);
 // As the app has them: ui/visitors.ts knownWords lower-cases a lemma.
 const story = courseStory(storyEvents(lang, course), new Set(course.map((w) => w.lemma.toLowerCase())));
 const p = projectStory(trace, story);
+
+// The story's pace for the median of all seeds, as story.test.ts tests it (#952). The rest follows seed 1: one learner's luck.
+// `?? Infinity`: most runs stopped at the day cap before this note.
+const medianNotes = story.events.flatMap((e) => (e.kind === "note" ? [medianDayKnowing(seeds, e.at) ?? Infinity] : []));
+const median = {
+  seeds: seeds.runs.length,
+  noteDays: medianNotes,
+  longestGap: Math.max(...medianNotes.slice(1).map((d, i) => d - medianNotes[i])),
+};
 
 /** A short name for an event. */
 function label(e: StoryEvent): string {
@@ -74,7 +84,7 @@ if (scriptDir) {
 if (flag("--json")) {
   const { met, unmet, ...rest } = p;
   const rows = met.map((m) => ({ day: m.day, known: m.known, kind: m.event.kind, tier: m.tier, what: label(m.event), share: m.share, text: text(m) || undefined }));
-  console.log(JSON.stringify({ lang, pattern, words: trace.words, door: trace.door, ...rest, met: rows, unmet: unmet.map(label) }, null, 1));
+  console.log(JSON.stringify({ lang, pattern, words: trace.words, door: trace.door, ...rest, median, met: rows, unmet: unmet.map(label) }, null, 1));
 } else {
   printText(p);
 }
@@ -96,5 +106,6 @@ function printText({ met, unmet, end, metrics: m }: Projection) {
   console.log(`Stale thoughts (2+ notes and 8+ weeks while one shows): ${m.stale.length ? "" : "none"}`);
   for (const s of m.stale) console.log(`  ${s.thing} "${s.text}": days ${s.from}–${s.until - 1}, ${s.notes} notes`);
   console.log(`Door: ${m.doorDay === null ? `not reached; the trace stops on day ${end}` : `day ${m.doorDay}`}`);
+  console.log(`Median of ${median.seeds} seeds: note days ${median.noteDays.join(" ")}; the door on day ${median.noteDays.at(-1)}; longest note gap ${median.longestGap}`);
   if (unmet.length) console.log(`Never met: ${unmet.map(label).join(", ")}`);
 }
