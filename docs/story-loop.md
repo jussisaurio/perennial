@@ -102,7 +102,7 @@ Rules:
 
 After each part:
 1. What happened in this part, in one or two sentences?
-2. Who writes the notes, and who is "she"? What do you believe about them now?
+2. Who writes the notes, and who else is in them? What do you believe about them now?
 3. What do you think is going on that the notes do not say?
 4. What do you want to know next?
 5. How much do you want to read the next part, from 1 (not at all) to 5 (very much)? Why, in one line?
