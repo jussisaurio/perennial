@@ -32,7 +32,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n04",
     beat: "early",
-    unlockAt: 220,
+    unlockAt: 207,
     text: "En el seto hay una puertecilla. No es para mí.\nEs para Migas. Migas se come nuestro pan\ny no pide perdón.\nEl gato mira a Migas. Migas mira al gato.\nNadie hace nada.",
     forms: { al: "a", come: "comer", es: "ser", hace: "hacer", hay: "haber", la: "el", mira: "mirar", pide: "pedir", una: "un" },
     reveals: ["the-mouse"],
@@ -48,7 +48,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n06",
     beat: "stile",
-    unlockAt: 340,
+    unlockAt: 330,
     text: "Su silla de madera es demasiado baja. Se lo repito cada mañana.\nElla dice que es cómoda, y que el problema son mis rodillas.\nPuede ser.\nPero la silla es suya.",
     forms: { baja: "bajo", "cómoda": "cómodo", dice: "decir", es: "ser", la: "el", mis: "mi", puede: "poder", repito: "repetir", rodillas: "rodilla", son: "ser", suya: "suyo" },
     reveals: ["her-chair"],
@@ -64,7 +64,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n08",
     beat: "lookout",
-    unlockAt: 495,
+    unlockAt: 486,
     text: "Tras las zarzas y el saltavallas, una colina.\nDesde la cima, a medianoche: el lucero,\nuna luz amarilla al otro lado del valle.\nNunca se apaga, ni en invierno.\nElla no pregunta.",
     forms: { al: "a", amarilla: "amarillo", apaga: "apagar", del: "de", la: "el", las: "el", una: "un" },
     reveals: ["the-far-light", "she-does-not-ask"],
@@ -73,7 +73,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n09",
     beat: "lookout",
-    unlockAt: 565,
+    unlockAt: 547,
     text: "El lucero: alguien que no me habla. Orgullo, por ambas partes.\nUna discusión absurda, hace once inviernos.\nEntonces no sabía pedir disculpas en ninguna lengua.\nAhora, en dos. Valor, en ninguna.",
     forms: { absurda: "absurdo", ambas: "ambos", disculpas: "disculpa", habla: "hablar", hace: "hacer", inviernos: "invierno", ninguna: "ninguno", partes: "parte", "sabía": "saber", una: "un" },
     reveals: ["the-quarrel"],
@@ -83,7 +83,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d1",
     beat: "lookout",
-    unlockAt: 640,
+    unlockAt: 608,
     text: "Esta noche, el lucero, como siempre.\nElla me sube un café.\nNo pregunta.",
     forms: { esta: "este", pregunta: "preguntar", sube: "subir" },
     reveals: ["coffee-on-the-hill"],
@@ -93,7 +93,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d2",
     beat: "lookout",
-    unlockAt: 710,
+    unlockAt: 669,
     text: "Esta noche, el lucero, como siempre.\nElla me sube un café y un abrigo.\nNo pregunta. Se queda.",
     forms: { esta: "este", pregunta: "preguntar", queda: "quedar", sube: "subir" },
     assumes: ["coffee-on-the-hill", "she-does-not-ask"],
@@ -102,7 +102,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "d3",
     beat: "late",
-    unlockAt: 765,
+    unlockAt: 724,
     text: "Esta noche, el lucero, como siempre.\nEl café me lo subo yo.\nNadie pregunta.",
     forms: { esta: "este", pregunta: "preguntar", subo: "subir" },
     reveals: ["she-is-gone"],
@@ -112,7 +112,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n10",
     beat: "late",
-    unlockAt: 800,
+    unlockAt: 759,
     text: "He echado agua también en tu lado del jardín.",
     forms: { del: "de", echado: "echar", he: "haber" },
     reveals: ["her-side"],
@@ -121,7 +121,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n11",
     beat: "late",
-    unlockAt: 850,
+    unlockAt: 799,
     text: "Dos tazas en la mesa. Una se queda vacía.\nLa dejo junto a la puertecilla, con agua. Para Migas.\nRayo, el caracol, me escucha. Nunca me dice que no.",
     forms: { dejo: "dejar", dice: "decir", escucha: "escuchar", la: "el", queda: "quedar", tazas: "taza", una: "un", "vacía": "vacío" },
     reveals: ["the-snail-friend"],
@@ -130,7 +130,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n12",
     beat: "late",
-    unlockAt: 883,
+    unlockAt: 828,
     text: "Anoche hice dos señales con la luz.\nEl lucero contestó con otras dos.\nNadie ha cruzado el valle. Todavía.",
     forms: { "contestó": "contestar", cruzado: "cruzar", ha: "haber", hice: "hacer", la: "el", otras: "otro", "señales": "señal" },
     reveals: ["the-light-answers"],
@@ -141,7 +141,7 @@ export const NOTES: readonly Note[] = [
     id: "n13",
     beat: "door",
     // The daily learner's known words after about a year of 5 minutes a day (sim/traces, #883).
-    unlockAt: 940,
+    unlockAt: 867,
     text: "Ahora el jardín es tuyo.\nEcha agua en los dos lados.\nDeja agua para Migas.\nDe noche, dos señales al lucero. Siempre contesta.\n¿No te gustan los caracoles? Eso no es razón.",
     forms: { al: "a", caracoles: "caracol", deja: "dejar", echa: "echar", es: "ser", gustan: "gustar", lados: "lado", los: "el", "señales": "señal", contesta: "contestar" },
     reveals: ["garden-is-yours"],

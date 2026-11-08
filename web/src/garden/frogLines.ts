@@ -13,15 +13,15 @@ export const FROG_LINES: PerLang<readonly FrogLine[]> = {
   // Its last line is always "no more words": after it the frog only croaks, with no word. So no line comes before it does.
   es: [
     { unlockAt: 280, text: "¿Otra vez tú?", forms: { otra: "otro" } },
-    { unlockAt: 870, text: "Nada de besos, por favor. Esas historias no son verdad.", forms: { besos: "beso", esas: "ese", historias: "historia", son: "ser" } },
+    { unlockAt: 845, text: "Nada de besos, por favor. Esas historias no son verdad.", forms: { besos: "beso", esas: "ese", historias: "historia", son: "ser" } },
     { unlockAt: 920, text: "No soy un príncipe.", forms: { soy: "ser" } },
     { unlockAt: 280, text: "No tengo más palabras.", forms: { tengo: "tener", palabras: "palabra" } },
   ],
   de: [
-    { unlockAt: 248, text: "Du schon wieder?" },
+    { unlockAt: 342, text: "Du schon wieder?" },
     { unlockAt: 990, text: "Bitte keine Küsse. Diese Geschichten stimmen nicht.", forms: { keine: "kein", "küsse": "kuss", diese: "dieser", geschichten: "geschichte" } },
     { unlockAt: 990, text: "Ich bin kein Prinz.", forms: { bin: "sein" } },
-    { unlockAt: 248, text: "Ich habe keine Wörter mehr.", forms: { habe: "haben", keine: "kein", "wörter": "wort" } },
+    { unlockAt: 342, text: "Ich habe keine Wörter mehr.", forms: { habe: "haben", keine: "kein", "wörter": "wort" } },
   ],
 };
 

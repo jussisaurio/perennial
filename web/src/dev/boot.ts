@@ -3,7 +3,7 @@
 //   ?demo                 a list of story points to jump to (Jump.tsx)
 //   ?demo=es              an anonymous Spanish learner with every deck word studied
 //   ?demo=de:120          a German learner with 120 words studied
-//   ?demo=es:known:495    a Spanish learner who knows exactly 495 words: a story point
+//   ?demo=es:known:486    a Spanish learner who knows exactly 486 words: a story point
 //   ?demo=off             delete the demo learner
 
 import type { ComponentType } from "react";

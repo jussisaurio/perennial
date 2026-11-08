@@ -185,10 +185,10 @@ const standOnHill = (page: Page, by: "post" | "stool" | "stone") =>
 
 /**
  * Spots seen by another learner: 500 words put the stile's notes at its foot, but not the hill's note (n08);
- * one who knows exactly 565 words (dev/boot.ts) has the diary's first page (n09), still unread; one who knows 1400 has the bench's last thought (#864);
- * one who knows 940 (notes/es.ts n13) has the last note behind the mouse door (#882).
+ * one who knows exactly 547 words (dev/boot.ts) has the diary's first page (n09), still unread; one who knows 1400 has the bench's last thought (#864);
+ * one who knows 867 (notes/es.ts n13) has the last note behind the mouse door (#882).
  */
-const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:565", thought: "known:1400", mousedoor: "known:940" };
+const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:547", thought: "known:1400", mousedoor: "known:867" };
 
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
