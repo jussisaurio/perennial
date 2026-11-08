@@ -855,7 +855,7 @@
   },
   {
     "lemma": "mal",
-    "gloss": "just (softens a request); ever, once",
+    "gloss": "just (softens a request)",
     "pos": "particle",
     "forms": [
       "mal"
@@ -1158,6 +1158,33 @@
         "text": "Hier haben alle Häuser große Gärten.",
         "translation": "All the houses here have big gardens.",
         "cloze": "Gärten"
+      }
+    ]
+  },
+  {
+    "lemma": "Blume",
+    "gloss": "flower",
+    "pos": "noun",
+    "forms": [
+      "Blume",
+      "Blumen"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Die Blumen sind für dich.",
+        "translation": "The flowers are for you.",
+        "cloze": "Blumen"
+      },
+      {
+        "text": "Was für eine schöne Blume!",
+        "translation": "What a beautiful flower!",
+        "cloze": "Blume"
+      },
+      {
+        "text": "Er bringt ihr jede Woche Blumen.",
+        "translation": "He brings her flowers every week.",
+        "cloze": "Blumen"
       }
     ]
   }

@@ -1,9 +1,9 @@
 {
   "file": "source/0001.json",
-  "sha256": "4490fe0f4351f6becdcddb61cc987910c1b309aa09789369a69af4f320afaf29",
+  "sha256": "7c6292e1d44f0ad7570d977722e381e54c6f44539e4af1b73edd49a6853df6b7",
   "author": "claude-agent:deck-pipeline-2026-10-11",
-  "reviewer": "claude-agent:es-proofreader-i947-2026-11-08",
+  "reviewer": "claude-agent:es-proofreader-i950-2026-11-08",
   "reviewedAt": "2026-11-08",
   "verdict": "approved",
-  "notes": "Full re-proofread after jardín moved here from 0011 (#947) by claude-agent:i947-editor-2026-11-08; jardín s3 replaced on review."
+  "notes": "Full re-proofread after flor and planta moved here from 0009 and 0017 (#950) by claude-agent:i950-editor-2026-11-08; 43 entries ok after 3 fixes for near-copy sentences (lo s2/s3, yo s2, muy s1/s3); jardín, flor and planta sentences judged fine for the first words of the course."
 }

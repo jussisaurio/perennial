@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "native": "en",
-  "version": 35,
+  "version": 36,
   "words": [
     {
       "id": "de.w.cmn8thykat",
@@ -370,7 +370,7 @@
     {
       "id": "de.w.ej1ff02pkz",
       "lemma": "mal",
-      "gloss": "just (softens a request); ever, once",
+      "gloss": "just (softens a request)",
       "pos": "particle",
       "rank": 31,
       "forms": [
@@ -511,11 +511,23 @@
       "gender": "m"
     },
     {
+      "id": "de.w.mdcmt81tv3",
+      "lemma": "Blume",
+      "gloss": "flower",
+      "pos": "noun",
+      "rank": 42,
+      "forms": [
+        "Blume",
+        "Blumen"
+      ],
+      "gender": "f"
+    },
+    {
       "id": "de.w.t14cg475mg",
       "lemma": "an",
       "gloss": "at; on; to",
       "pos": "prep",
-      "rank": 42,
+      "rank": 43,
       "forms": [
         "an",
         "am",
@@ -528,7 +540,7 @@
       "lemma": "da",
       "gloss": "there; here (present)",
       "pos": "adv",
-      "rank": 43,
+      "rank": 44,
       "forms": [
         "da"
       ],
@@ -539,7 +551,7 @@
       "lemma": "als",
       "gloss": "than; as; when (in the past)",
       "pos": "conj",
-      "rank": 44,
+      "rank": 45,
       "forms": [
         "als"
       ],
@@ -550,7 +562,7 @@
       "lemma": "dann",
       "gloss": "then",
       "pos": "adv",
-      "rank": 45,
+      "rank": 46,
       "forms": [
         "dann"
       ]
@@ -560,7 +572,7 @@
       "lemma": "aus",
       "gloss": "out of; from",
       "pos": "prep",
-      "rank": 46,
+      "rank": 47,
       "forms": [
         "aus"
       ],
@@ -571,7 +583,7 @@
       "lemma": "um",
       "gloss": "around; at (a time); about",
       "pos": "prep",
-      "rank": 47,
+      "rank": 48,
       "forms": [
         "um"
       ],
@@ -582,7 +594,7 @@
       "lemma": "doch",
       "gloss": "yes (after a negative question); but; really",
       "pos": "particle",
-      "rank": 48,
+      "rank": 49,
       "forms": [
         "doch"
       ],
@@ -593,7 +605,7 @@
       "lemma": "alle",
       "gloss": "all; everyone; everything (alles)",
       "pos": "pron",
-      "rank": 49,
+      "rank": 50,
       "forms": [
         "alle",
         "alles",
@@ -607,7 +619,7 @@
       "lemma": "kein",
       "gloss": "no; not a; not any",
       "pos": "det",
-      "rank": 50,
+      "rank": 51,
       "forms": [
         "kein",
         "keine",
@@ -622,7 +634,7 @@
       "lemma": "oder",
       "gloss": "or",
       "pos": "conj",
-      "rank": 51,
+      "rank": 52,
       "forms": [
         "oder"
       ],
@@ -633,7 +645,7 @@
       "lemma": "nach",
       "gloss": "to; after",
       "pos": "prep",
-      "rank": 52,
+      "rank": 53,
       "forms": [
         "nach"
       ],
@@ -644,7 +656,7 @@
       "lemma": "nichts",
       "gloss": "nothing",
       "pos": "pron",
-      "rank": 53,
+      "rank": 54,
       "forms": [
         "nichts"
       ]
@@ -654,7 +666,7 @@
       "lemma": "man",
       "gloss": "one; you; people (in general)",
       "pos": "pron",
-      "rank": 54,
+      "rank": 55,
       "forms": [
         "man"
       ],
@@ -665,7 +677,7 @@
       "lemma": "müssen",
       "gloss": "must; to have to",
       "pos": "verb",
-      "rank": 55,
+      "rank": 56,
       "forms": [
         "müssen",
         "muss",
@@ -683,7 +695,7 @@
       "lemma": "wollen",
       "gloss": "to want",
       "pos": "verb",
-      "rank": 56,
+      "rank": 57,
       "forms": [
         "wollen",
         "will",
@@ -700,7 +712,7 @@
       "lemma": "gehen",
       "gloss": "to go; to walk",
       "pos": "verb",
-      "rank": 57,
+      "rank": 58,
       "forms": [
         "gehen",
         "gehe",
@@ -718,7 +730,7 @@
       "lemma": "wo",
       "gloss": "where",
       "pos": "adv",
-      "rank": 58,
+      "rank": 59,
       "forms": [
         "wo"
       ]
@@ -728,7 +740,7 @@
       "lemma": "etwas",
       "gloss": "something; a little",
       "pos": "pron",
-      "rank": 59,
+      "rank": 60,
       "forms": [
         "etwas"
       ],
@@ -739,7 +751,7 @@
       "lemma": "mehr",
       "gloss": "more",
       "pos": "adv",
-      "rank": 60,
+      "rank": 61,
       "forms": [
         "mehr"
       ],
@@ -750,7 +762,7 @@
       "lemma": "bei",
       "gloss": "at; with; near",
       "pos": "prep",
-      "rank": 61,
+      "rank": 62,
       "forms": [
         "bei",
         "beim"
@@ -762,7 +774,7 @@
       "lemma": "also",
       "gloss": "so; well; therefore",
       "pos": "adv",
-      "rank": 62,
+      "rank": 63,
       "forms": [
         "also"
       ],
@@ -773,7 +785,7 @@
       "lemma": "bitte",
       "gloss": "please; you're welcome",
       "pos": "particle",
-      "rank": 63,
+      "rank": 64,
       "forms": [
         "bitte"
       ],
@@ -784,7 +796,7 @@
       "lemma": "immer",
       "gloss": "always",
       "pos": "adv",
-      "rank": 64,
+      "rank": 65,
       "forms": [
         "immer"
       ],
@@ -795,7 +807,7 @@
       "lemma": "warum",
       "gloss": "why",
       "pos": "adv",
-      "rank": 65,
+      "rank": 66,
       "forms": [
         "warum"
       ]
@@ -805,7 +817,7 @@
       "lemma": "vor",
       "gloss": "in front of; before; ago",
       "pos": "prep",
-      "rank": 66,
+      "rank": 67,
       "forms": [
         "vor"
       ],
@@ -816,7 +828,7 @@
       "lemma": "los",
       "gloss": "off; going; wrong (in Was ist los?)",
       "pos": "adv",
-      "rank": 67,
+      "rank": 68,
       "forms": [
         "los"
       ],
@@ -827,7 +839,7 @@
       "lemma": "wieder",
       "gloss": "again; back",
       "pos": "adv",
-      "rank": 68,
+      "rank": 69,
       "forms": [
         "wieder"
       ],
@@ -838,7 +850,7 @@
       "lemma": "sagen",
       "gloss": "to say; to tell",
       "pos": "verb",
-      "rank": 69,
+      "rank": 70,
       "forms": [
         "sagen",
         "sage",
@@ -855,7 +867,7 @@
       "lemma": "machen",
       "gloss": "to do; to make",
       "pos": "verb",
-      "rank": 70,
+      "rank": 71,
       "forms": [
         "machen",
         "mache",
@@ -872,7 +884,7 @@
       "lemma": "danke",
       "gloss": "thank you; thanks",
       "pos": "interj",
-      "rank": 71,
+      "rank": 72,
       "forms": [
         "danke"
       ],
@@ -883,7 +895,7 @@
       "lemma": "sehr",
       "gloss": "very; very much",
       "pos": "adv",
-      "rank": 72,
+      "rank": 73,
       "forms": [
         "sehr"
       ]
@@ -893,7 +905,7 @@
       "lemma": "denn",
       "gloss": "then; so (in questions, shows interest)",
       "pos": "particle",
-      "rank": 73,
+      "rank": 74,
       "forms": [
         "denn"
       ],
@@ -904,7 +916,7 @@
       "lemma": "Mann",
       "gloss": "man; husband",
       "pos": "noun",
-      "rank": 74,
+      "rank": 75,
       "forms": [
         "Mann",
         "Mannes",
@@ -919,7 +931,7 @@
       "lemma": "tun",
       "gloss": "to do",
       "pos": "verb",
-      "rank": 75,
+      "rank": 76,
       "forms": [
         "tun",
         "tue",
@@ -936,7 +948,7 @@
       "lemma": "sehen",
       "gloss": "to see",
       "pos": "verb",
-      "rank": 76,
+      "rank": 77,
       "forms": [
         "sehen",
         "sehe",
@@ -955,7 +967,7 @@
       "lemma": "vielleicht",
       "gloss": "maybe; perhaps",
       "pos": "adv",
-      "rank": 77,
+      "rank": 78,
       "forms": [
         "vielleicht"
       ]
@@ -965,7 +977,7 @@
       "lemma": "wer",
       "gloss": "who",
       "pos": "pron",
-      "rank": 78,
+      "rank": 79,
       "forms": [
         "wer",
         "wen",
@@ -978,7 +990,7 @@
       "lemma": "ihr",
       "gloss": "her; their; (Ihr) your (formal)",
       "pos": "det",
-      "rank": 79,
+      "rank": 80,
       "forms": [
         "ihr",
         "ihre",
@@ -993,7 +1005,7 @@
       "lemma": "dieser",
       "gloss": "this; that",
       "pos": "det",
-      "rank": 80,
+      "rank": 81,
       "forms": [
         "dieser",
         "diese",
@@ -1007,7 +1019,7 @@
       "lemma": "ihr",
       "gloss": "you (plural, informal)",
       "pos": "pron",
-      "rank": 81,
+      "rank": 82,
       "forms": [
         "ihr",
         "euch"
@@ -1019,7 +1031,7 @@
       "lemma": "kommen",
       "gloss": "to come",
       "pos": "verb",
-      "rank": 82,
+      "rank": 83,
       "forms": [
         "kommen",
         "komme",
@@ -1037,7 +1049,7 @@
       "lemma": "über",
       "gloss": "over; above; about",
       "pos": "prep",
-      "rank": 83,
+      "rank": 84,
       "forms": [
         "über",
         "übers"
@@ -1049,7 +1061,7 @@
       "lemma": "geben",
       "gloss": "to give",
       "pos": "verb",
-      "rank": 84,
+      "rank": 85,
       "forms": [
         "geben",
         "gebe",
@@ -1067,7 +1079,7 @@
       "lemma": "dein",
       "gloss": "your (informal)",
       "pos": "det",
-      "rank": 85,
+      "rank": 86,
       "forms": [
         "dein",
         "deine",
@@ -1081,7 +1093,7 @@
       "lemma": "sollen",
       "gloss": "should; to be supposed to",
       "pos": "verb",
-      "rank": 86,
+      "rank": 87,
       "forms": [
         "sollen",
         "soll",
@@ -1098,7 +1110,7 @@
       "lemma": "nie",
       "gloss": "never",
       "pos": "adv",
-      "rank": 87,
+      "rank": 88,
       "forms": [
         "nie"
       ],
@@ -1109,7 +1121,7 @@
       "lemma": "wirklich",
       "gloss": "really; truly",
       "pos": "adv",
-      "rank": 88,
+      "rank": 89,
       "forms": [
         "wirklich"
       ]
@@ -1119,7 +1131,7 @@
       "lemma": "viel",
       "gloss": "much; a lot; (viele) many",
       "pos": "adj",
-      "rank": 89,
+      "rank": 90,
       "forms": [
         "viel",
         "viele",
@@ -1133,7 +1145,7 @@
       "lemma": "weg",
       "gloss": "away; gone",
       "pos": "adv",
-      "rank": 90,
+      "rank": 91,
       "forms": [
         "weg"
       ],
@@ -1144,7 +1156,7 @@
       "lemma": "einfach",
       "gloss": "simple; easy; just",
       "pos": "adj",
-      "rank": 91,
+      "rank": 92,
       "forms": [
         "einfach",
         "einfache",
@@ -1156,7 +1168,7 @@
       "lemma": "Leben",
       "gloss": "life",
       "pos": "noun",
-      "rank": 92,
+      "rank": 93,
       "forms": [
         "Leben",
         "Lebens"
@@ -1169,7 +1181,7 @@
       "lemma": "Zeit",
       "gloss": "time",
       "pos": "noun",
-      "rank": 93,
+      "rank": 94,
       "forms": [
         "Zeit",
         "Zeiten"
@@ -1182,7 +1194,7 @@
       "lemma": "weil",
       "gloss": "because",
       "pos": "conj",
-      "rank": 94,
+      "rank": 95,
       "forms": [
         "weil"
       ],
@@ -1193,7 +1205,7 @@
       "lemma": "heute",
       "gloss": "today",
       "pos": "adv",
-      "rank": 95,
+      "rank": 96,
       "forms": [
         "heute"
       ],
@@ -1204,7 +1216,7 @@
       "lemma": "damit",
       "gloss": "so that",
       "pos": "conj",
-      "rank": 96,
+      "rank": 97,
       "forms": [
         "damit"
       ],
@@ -1215,7 +1227,7 @@
       "lemma": "ganz",
       "gloss": "whole; quite; completely",
       "pos": "adj",
-      "rank": 97,
+      "rank": 98,
       "forms": [
         "ganz",
         "ganze",
@@ -1228,7 +1240,7 @@
       "lemma": "sicher",
       "gloss": "sure; safe; certainly",
       "pos": "adj",
-      "rank": 98,
+      "rank": 99,
       "forms": [
         "sicher",
         "sichere",
@@ -1241,7 +1253,7 @@
       "lemma": "Frau",
       "gloss": "woman; wife; Mrs",
       "pos": "noun",
-      "rank": 99,
+      "rank": 100,
       "forms": [
         "Frau",
         "Frauen"
@@ -1254,7 +1266,7 @@
       "lemma": "nun",
       "gloss": "now; well",
       "pos": "adv",
-      "rank": 100,
+      "rank": 101,
       "forms": [
         "nun"
       ]
@@ -1264,7 +1276,7 @@
       "lemma": "bis",
       "gloss": "until; by; to",
       "pos": "prep",
-      "rank": 101,
+      "rank": 102,
       "forms": [
         "bis"
       ],
@@ -1275,7 +1287,7 @@
       "lemma": "zurück",
       "gloss": "back",
       "pos": "adv",
-      "rank": 102,
+      "rank": 103,
       "forms": [
         "zurück"
       ]
@@ -1285,7 +1297,7 @@
       "lemma": "lassen",
       "gloss": "to let; to leave",
       "pos": "verb",
-      "rank": 103,
+      "rank": 104,
       "forms": [
         "lassen",
         "lasse",
@@ -1303,7 +1315,7 @@
       "lemma": "hallo",
       "gloss": "hello; hi",
       "pos": "interj",
-      "rank": 104,
+      "rank": 105,
       "forms": [
         "hallo"
       ]
@@ -1313,7 +1325,7 @@
       "lemma": "Gott",
       "gloss": "God; god",
       "pos": "noun",
-      "rank": 105,
+      "rank": 106,
       "forms": [
         "Gott",
         "Gottes",
@@ -1327,7 +1339,7 @@
       "lemma": "sein",
       "gloss": "his; its",
       "pos": "det",
-      "rank": 106,
+      "rank": 107,
       "forms": [
         "sein",
         "seine",
@@ -1342,7 +1354,7 @@
       "lemma": "zwei",
       "gloss": "two",
       "pos": "num",
-      "rank": 107,
+      "rank": 108,
       "forms": [
         "zwei"
       ],
@@ -1353,7 +1365,7 @@
       "lemma": "genau",
       "gloss": "exactly; precisely",
       "pos": "adv",
-      "rank": 108,
+      "rank": 109,
       "forms": [
         "genau"
       ]
@@ -1363,7 +1375,7 @@
       "lemma": "klar",
       "gloss": "clear; sure; of course",
       "pos": "adj",
-      "rank": 109,
+      "rank": 110,
       "forms": [
         "klar",
         "klare",
@@ -1376,7 +1388,7 @@
       "lemma": "morgen",
       "gloss": "tomorrow",
       "pos": "adv",
-      "rank": 110,
+      "rank": 111,
       "forms": [
         "morgen"
       ],
@@ -1387,7 +1399,7 @@
       "lemma": "Leute",
       "gloss": "people",
       "pos": "noun",
-      "rank": 111,
+      "rank": 112,
       "forms": [
         "Leute",
         "Leuten"
@@ -1399,7 +1411,7 @@
       "lemma": "Vater",
       "gloss": "father",
       "pos": "noun",
-      "rank": 112,
+      "rank": 113,
       "forms": [
         "Vater",
         "Vaters",
@@ -1414,7 +1426,7 @@
       "lemma": "schön",
       "gloss": "beautiful; nice",
       "pos": "adj",
-      "rank": 113,
+      "rank": 114,
       "forms": [
         "schön",
         "schöne",
@@ -1428,7 +1440,7 @@
       "lemma": "glauben",
       "gloss": "to believe; to think",
       "pos": "verb",
-      "rank": 114,
+      "rank": 115,
       "forms": [
         "glauben",
         "glaube",
@@ -1444,7 +1456,7 @@
       "lemma": "ab",
       "gloss": "from (a time on); off",
       "pos": "prep",
-      "rank": 115,
+      "rank": 116,
       "forms": [
         "ab"
       ],
@@ -1455,7 +1467,7 @@
       "lemma": "gerade",
       "gloss": "just; right now",
       "pos": "adv",
-      "rank": 116,
+      "rank": 117,
       "forms": [
         "gerade"
       ]
@@ -1465,7 +1477,7 @@
       "lemma": "Tag",
       "gloss": "day",
       "pos": "noun",
-      "rank": 117,
+      "rank": 118,
       "forms": [
         "Tag",
         "Tage",
@@ -1480,7 +1492,7 @@
       "lemma": "reden",
       "gloss": "to talk",
       "pos": "verb",
-      "rank": 118,
+      "rank": 119,
       "forms": [
         "reden",
         "rede",
@@ -1496,7 +1508,7 @@
       "lemma": "wohl",
       "gloss": "probably; well",
       "pos": "adv",
-      "rank": 119,
+      "rank": 120,
       "forms": [
         "wohl"
       ],
@@ -1507,7 +1519,7 @@
       "lemma": "lieben",
       "gloss": "to love",
       "pos": "verb",
-      "rank": 120,
+      "rank": 121,
       "forms": [
         "lieben",
         "liebe",
@@ -1523,7 +1535,7 @@
       "lemma": "unser",
       "gloss": "our",
       "pos": "det",
-      "rank": 121,
+      "rank": 122,
       "forms": [
         "unser",
         "unsere",
@@ -1537,7 +1549,7 @@
       "lemma": "jemand",
       "gloss": "someone; anyone",
       "pos": "pron",
-      "rank": 122,
+      "rank": 123,
       "forms": [
         "jemand",
         "jemanden",
@@ -1549,7 +1561,7 @@
       "lemma": "Geld",
       "gloss": "money",
       "pos": "noun",
-      "rank": 123,
+      "rank": 124,
       "forms": [
         "Geld"
       ],
@@ -1560,7 +1572,7 @@
       "lemma": "durch",
       "gloss": "through; by",
       "pos": "prep",
-      "rank": 124,
+      "rank": 125,
       "forms": [
         "durch"
       ],
@@ -1571,7 +1583,7 @@
       "lemma": "ob",
       "gloss": "whether; if",
       "pos": "conj",
-      "rank": 125,
+      "rank": 126,
       "forms": [
         "ob"
       ],
@@ -1582,7 +1594,7 @@
       "lemma": "Mutter",
       "gloss": "mother",
       "pos": "noun",
-      "rank": 126,
+      "rank": 127,
       "forms": [
         "Mutter",
         "Mütter",
@@ -1596,7 +1608,7 @@
       "lemma": "raus",
       "gloss": "out",
       "pos": "adv",
-      "rank": 127,
+      "rank": 128,
       "forms": [
         "raus"
       ],
@@ -1607,7 +1619,7 @@
       "lemma": "paar",
       "gloss": "a few; a couple (ein paar)",
       "pos": "det",
-      "rank": 128,
+      "rank": 129,
       "forms": [
         "paar"
       ],
@@ -1618,7 +1630,7 @@
       "lemma": "passieren",
       "gloss": "to happen",
       "pos": "verb",
-      "rank": 129,
+      "rank": 130,
       "forms": [
         "passieren",
         "passiert",
@@ -1631,7 +1643,7 @@
       "lemma": "denken",
       "gloss": "to think",
       "pos": "verb",
-      "rank": 130,
+      "rank": 131,
       "forms": [
         "denken",
         "denke",
@@ -1648,7 +1660,7 @@
       "lemma": "wieso",
       "gloss": "why; how come",
       "pos": "adv",
-      "rank": 131,
+      "rank": 132,
       "forms": [
         "wieso"
       ]
@@ -1658,7 +1670,7 @@
       "lemma": "selbst",
       "gloss": "myself, yourself, etc.; even",
       "pos": "pron",
-      "rank": 132,
+      "rank": 133,
       "forms": [
         "selbst"
       ],
@@ -1669,7 +1681,7 @@
       "lemma": "gehören",
       "gloss": "to belong",
       "pos": "verb",
-      "rank": 133,
+      "rank": 134,
       "forms": [
         "gehören",
         "gehört",
@@ -1683,7 +1695,7 @@
       "lemma": "mögen",
       "gloss": "to like",
       "pos": "verb",
-      "rank": 134,
+      "rank": 135,
       "forms": [
         "mögen",
         "mag",
@@ -1701,7 +1713,7 @@
       "lemma": "ohne",
       "gloss": "without",
       "pos": "prep",
-      "rank": 135,
+      "rank": 136,
       "forms": [
         "ohne"
       ],
@@ -1712,7 +1724,7 @@
       "lemma": "hören",
       "gloss": "to hear; to listen",
       "pos": "verb",
-      "rank": 136,
+      "rank": 137,
       "forms": [
         "hören",
         "höre",
@@ -1729,7 +1741,7 @@
       "lemma": "her",
       "gloss": "here (toward the speaker); ago",
       "pos": "adv",
-      "rank": 137,
+      "rank": 138,
       "forms": [
         "her"
       ],
@@ -1740,7 +1752,7 @@
       "lemma": "andere",
       "gloss": "other; different",
       "pos": "adj",
-      "rank": 138,
+      "rank": 139,
       "forms": [
         "andere",
         "anderen",
@@ -1755,7 +1767,7 @@
       "lemma": "helfen",
       "gloss": "to help",
       "pos": "verb",
-      "rank": 139,
+      "rank": 140,
       "forms": [
         "helfen",
         "helfe",
@@ -1772,7 +1784,7 @@
       "lemma": "Nacht",
       "gloss": "night",
       "pos": "noun",
-      "rank": 140,
+      "rank": 141,
       "forms": [
         "Nacht",
         "Nächte",
@@ -1786,7 +1798,7 @@
       "lemma": "finden",
       "gloss": "to find; to think (an opinion)",
       "pos": "verb",
-      "rank": 141,
+      "rank": 142,
       "forms": [
         "finden",
         "finde",
@@ -1803,7 +1815,7 @@
       "lemma": "lange",
       "gloss": "for a long time; long",
       "pos": "adv",
-      "rank": 142,
+      "rank": 143,
       "forms": [
         "lange"
       ],
@@ -1814,7 +1826,7 @@
       "lemma": "natürlich",
       "gloss": "of course; naturally",
       "pos": "adv",
-      "rank": 143,
+      "rank": 144,
       "forms": [
         "natürlich"
       ]
@@ -1824,7 +1836,7 @@
       "lemma": "gar",
       "gloss": "at all (gar nicht, gar nichts)",
       "pos": "particle",
-      "rank": 144,
+      "rank": 145,
       "forms": [
         "gar"
       ],
@@ -1835,7 +1847,7 @@
       "lemma": "dort",
       "gloss": "there, in that place (more formal than da)",
       "pos": "adv",
-      "rank": 145,
+      "rank": 146,
       "forms": [
         "dort"
       ]
@@ -1845,7 +1857,7 @@
       "lemma": "weiter",
       "gloss": "further; on (keep going)",
       "pos": "adv",
-      "rank": 146,
+      "rank": 147,
       "forms": [
         "weiter"
       ],
@@ -1856,7 +1868,7 @@
       "lemma": "seit",
       "gloss": "since; for (a time)",
       "pos": "prep",
-      "rank": 147,
+      "rank": 148,
       "forms": [
         "seit"
       ],
@@ -1867,7 +1879,7 @@
       "lemma": "gleich",
       "gloss": "right away; in a moment",
       "pos": "adv",
-      "rank": 148,
+      "rank": 149,
       "forms": [
         "gleich"
       ],
@@ -1878,7 +1890,7 @@
       "lemma": "recht",
       "gloss": "right (recht haben = to be right)",
       "pos": "adj",
-      "rank": 149,
+      "rank": 150,
       "forms": [
         "recht"
       ],
@@ -1889,7 +1901,7 @@
       "lemma": "richtig",
       "gloss": "right; correct; really",
       "pos": "adj",
-      "rank": 150,
+      "rank": 151,
       "forms": [
         "richtig",
         "richtige",
@@ -1901,7 +1913,7 @@
       "lemma": "Ordnung",
       "gloss": "order (in Ordnung = OK)",
       "pos": "noun",
-      "rank": 151,
+      "rank": 152,
       "forms": [
         "Ordnung"
       ],
@@ -1913,7 +1925,7 @@
       "lemma": "davon",
       "gloss": "of it; about it; from it",
       "pos": "adv",
-      "rank": 152,
+      "rank": 153,
       "forms": [
         "davon"
       ],
@@ -1924,7 +1936,7 @@
       "lemma": "dafür",
       "gloss": "for it; for that",
       "pos": "adv",
-      "rank": 153,
+      "rank": 154,
       "forms": [
         "dafür"
       ],
@@ -1935,7 +1947,7 @@
       "lemma": "wegen",
       "gloss": "because of",
       "pos": "prep",
-      "rank": 154,
+      "rank": 155,
       "forms": [
         "wegen"
       ],
@@ -1946,7 +1958,7 @@
       "lemma": "Haus",
       "gloss": "house",
       "pos": "noun",
-      "rank": 155,
+      "rank": 156,
       "forms": [
         "Haus",
         "Hauses",
@@ -1962,7 +1974,7 @@
       "lemma": "Mädchen",
       "gloss": "girl",
       "pos": "noun",
-      "rank": 156,
+      "rank": 157,
       "forms": [
         "Mädchen"
       ],
@@ -1974,7 +1986,7 @@
       "lemma": "hin",
       "gloss": "there (away from the speaker)",
       "pos": "adv",
-      "rank": 157,
+      "rank": 158,
       "forms": [
         "hin"
       ],
@@ -1985,7 +1997,7 @@
       "lemma": "Abend",
       "gloss": "evening",
       "pos": "noun",
-      "rank": 158,
+      "rank": 159,
       "forms": [
         "Abend",
         "Abende",
@@ -1999,7 +2011,7 @@
       "lemma": "drei",
       "gloss": "three",
       "pos": "num",
-      "rank": 159,
+      "rank": 160,
       "forms": [
         "drei"
       ]
@@ -2009,7 +2021,7 @@
       "lemma": "Freund",
       "gloss": "friend; boyfriend",
       "pos": "noun",
-      "rank": 160,
+      "rank": 161,
       "forms": [
         "Freund",
         "Freunde",
@@ -2024,7 +2036,7 @@
       "lemma": "warten",
       "gloss": "to wait",
       "pos": "verb",
-      "rank": 161,
+      "rank": 162,
       "forms": [
         "warten",
         "warte",
@@ -2040,7 +2052,7 @@
       "lemma": "Mensch",
       "gloss": "person; human being",
       "pos": "noun",
-      "rank": 162,
+      "rank": 163,
       "forms": [
         "Mensch",
         "Menschen"
@@ -2053,7 +2065,7 @@
       "lemma": "essen",
       "gloss": "to eat",
       "pos": "verb",
-      "rank": 163,
+      "rank": 164,
       "forms": [
         "essen",
         "esse",
@@ -2071,7 +2083,7 @@
       "lemma": "Angst",
       "gloss": "fear",
       "pos": "noun",
-      "rank": 164,
+      "rank": 165,
       "forms": [
         "Angst",
         "Ängste"
@@ -2084,7 +2096,7 @@
       "lemma": "bleiben",
       "gloss": "to stay",
       "pos": "verb",
-      "rank": 165,
+      "rank": 166,
       "forms": [
         "bleiben",
         "bleibe",
@@ -2102,7 +2114,7 @@
       "lemma": "zusammen",
       "gloss": "together",
       "pos": "adv",
-      "rank": 166,
+      "rank": 167,
       "forms": [
         "zusammen"
       ],
@@ -2113,7 +2125,7 @@
       "lemma": "Welt",
       "gloss": "world",
       "pos": "noun",
-      "rank": 167,
+      "rank": 168,
       "forms": [
         "Welt",
         "Welten"
@@ -2125,7 +2137,7 @@
       "lemma": "unter",
       "gloss": "under; below; among",
       "pos": "prep",
-      "rank": 168,
+      "rank": 169,
       "forms": [
         "unter"
       ]
@@ -2135,7 +2147,7 @@
       "lemma": "schnell",
       "gloss": "fast; quick; quickly",
       "pos": "adj",
-      "rank": 169,
+      "rank": 170,
       "forms": [
         "schnell",
         "schnelle",
@@ -2148,7 +2160,7 @@
       "lemma": "tot",
       "gloss": "dead",
       "pos": "adj",
-      "rank": 170,
+      "rank": 171,
       "forms": [
         "tot",
         "tote",
@@ -2161,7 +2173,7 @@
       "lemma": "dürfen",
       "gloss": "may; to be allowed to",
       "pos": "verb",
-      "rank": 171,
+      "rank": 172,
       "forms": [
         "dürfen",
         "darf",
@@ -2178,7 +2190,7 @@
       "lemma": "erst",
       "gloss": "only (not until); first",
       "pos": "adv",
-      "rank": 172,
+      "rank": 173,
       "forms": [
         "erst"
       ],
@@ -2189,7 +2201,7 @@
       "lemma": "stimmen",
       "gloss": "to be right; to be true",
       "pos": "verb",
-      "rank": 173,
+      "rank": 174,
       "forms": [
         "stimmen",
         "stimmt",
@@ -2202,7 +2214,7 @@
       "lemma": "nehmen",
       "gloss": "to take",
       "pos": "verb",
-      "rank": 174,
+      "rank": 175,
       "forms": [
         "nehmen",
         "nehme",
@@ -2220,7 +2232,7 @@
       "lemma": "Kind",
       "gloss": "child",
       "pos": "noun",
-      "rank": 175,
+      "rank": 176,
       "forms": [
         "Kind",
         "Kinder",
@@ -2235,7 +2247,7 @@
       "lemma": "bringen",
       "gloss": "to bring; to take (somewhere)",
       "pos": "verb",
-      "rank": 176,
+      "rank": 177,
       "forms": [
         "bringen",
         "bringe",
@@ -2252,7 +2264,7 @@
       "lemma": "genug",
       "gloss": "enough",
       "pos": "adv",
-      "rank": 177,
+      "rank": 178,
       "forms": [
         "genug"
       ]
@@ -2262,7 +2274,7 @@
       "lemma": "brauchen",
       "gloss": "to need",
       "pos": "verb",
-      "rank": 178,
+      "rank": 179,
       "forms": [
         "brauchen",
         "brauche",
@@ -2278,7 +2290,7 @@
       "lemma": "gegen",
       "gloss": "against; around (a time)",
       "pos": "prep",
-      "rank": 179,
+      "rank": 180,
       "forms": [
         "gegen"
       ],
@@ -2289,7 +2301,7 @@
       "lemma": "Moment",
       "gloss": "moment",
       "pos": "noun",
-      "rank": 180,
+      "rank": 181,
       "forms": [
         "Moment",
         "Momente"
@@ -2302,7 +2314,7 @@
       "lemma": "Junge",
       "gloss": "boy",
       "pos": "noun",
-      "rank": 181,
+      "rank": 182,
       "forms": [
         "Junge",
         "Jungen",
@@ -2316,7 +2328,7 @@
       "lemma": "stehen",
       "gloss": "to stand; to be (written)",
       "pos": "verb",
-      "rank": 182,
+      "rank": 183,
       "forms": [
         "stehen",
         "stehe",
@@ -2333,7 +2345,7 @@
       "lemma": "sonst",
       "gloss": "otherwise; else",
       "pos": "adv",
-      "rank": 183,
+      "rank": 184,
       "forms": [
         "sonst"
       ]
@@ -2343,7 +2355,7 @@
       "lemma": "Musik",
       "gloss": "music",
       "pos": "noun",
-      "rank": 184,
+      "rank": 185,
       "forms": [
         "Musik"
       ],
@@ -2354,7 +2366,7 @@
       "lemma": "Arbeit",
       "gloss": "work; job",
       "pos": "noun",
-      "rank": 185,
+      "rank": 186,
       "forms": [
         "Arbeit"
       ],
@@ -2366,7 +2378,7 @@
       "lemma": "fragen",
       "gloss": "to ask",
       "pos": "verb",
-      "rank": 186,
+      "rank": 187,
       "forms": [
         "fragen",
         "frage",
@@ -2383,7 +2395,7 @@
       "lemma": "Herr",
       "gloss": "Mr; gentleman; lord",
       "pos": "noun",
-      "rank": 187,
+      "rank": 188,
       "forms": [
         "Herr",
         "Herrn",
@@ -2397,7 +2409,7 @@
       "lemma": "dabei",
       "gloss": "with it; there; at the same time",
       "pos": "adv",
-      "rank": 188,
+      "rank": 189,
       "forms": [
         "dabei"
       ],
@@ -2408,7 +2420,7 @@
       "lemma": "heißen",
       "gloss": "to be called; to mean",
       "pos": "verb",
-      "rank": 189,
+      "rank": 190,
       "forms": [
         "heißen",
         "heiße",
@@ -2423,7 +2435,7 @@
       "lemma": "Familie",
       "gloss": "family",
       "pos": "noun",
-      "rank": 190,
+      "rank": 191,
       "forms": [
         "Familie",
         "Familien"
@@ -2436,7 +2448,7 @@
       "lemma": "niemand",
       "gloss": "nobody; no one",
       "pos": "pron",
-      "rank": 191,
+      "rank": 192,
       "forms": [
         "niemand",
         "niemanden",
@@ -2448,7 +2460,7 @@
       "lemma": "sofort",
       "gloss": "immediately, at once (sooner than gleich)",
       "pos": "adv",
-      "rank": 192,
+      "rank": 193,
       "forms": [
         "sofort"
       ]
@@ -2458,7 +2470,7 @@
       "lemma": "bevor",
       "gloss": "before",
       "pos": "conj",
-      "rank": 193,
+      "rank": 194,
       "forms": [
         "bevor"
       ],
@@ -2469,7 +2481,7 @@
       "lemma": "Jahr",
       "gloss": "year",
       "pos": "noun",
-      "rank": 194,
+      "rank": 195,
       "forms": [
         "Jahr",
         "Jahre",
@@ -2484,7 +2496,7 @@
       "lemma": "einmal",
       "gloss": "once; one time",
       "pos": "adv",
-      "rank": 195,
+      "rank": 196,
       "forms": [
         "einmal"
       ],
@@ -2495,7 +2507,7 @@
       "lemma": "Problem",
       "gloss": "problem",
       "pos": "noun",
-      "rank": 196,
+      "rank": 197,
       "forms": [
         "Problem",
         "Probleme",
@@ -2509,7 +2521,7 @@
       "lemma": "Sohn",
       "gloss": "son",
       "pos": "noun",
-      "rank": 197,
+      "rank": 198,
       "forms": [
         "Sohn",
         "Söhne",
@@ -2523,7 +2535,7 @@
       "lemma": "wann",
       "gloss": "when",
       "pos": "adv",
-      "rank": 198,
+      "rank": 199,
       "forms": [
         "wann"
       ],
@@ -2534,7 +2546,7 @@
       "lemma": "fertig",
       "gloss": "ready; finished",
       "pos": "adj",
-      "rank": 199,
+      "rank": 200,
       "forms": [
         "fertig"
       ],
@@ -2545,7 +2557,7 @@
       "lemma": "allein",
       "gloss": "alone; by oneself",
       "pos": "adv",
-      "rank": 200,
+      "rank": 201,
       "forms": [
         "allein"
       ],
@@ -2556,7 +2568,7 @@
       "lemma": "sprechen",
       "gloss": "to speak; to talk",
       "pos": "verb",
-      "rank": 201,
+      "rank": 202,
       "forms": [
         "sprechen",
         "spreche",
@@ -2574,7 +2586,7 @@
       "lemma": "zweimal",
       "gloss": "twice",
       "pos": "adv",
-      "rank": 202,
+      "rank": 203,
       "forms": [
         "zweimal"
       ]
@@ -2584,7 +2596,7 @@
       "lemma": "leid",
       "gloss": "sorry (es tut mir leid = I'm sorry)",
       "pos": "adj",
-      "rank": 203,
+      "rank": 204,
       "forms": [
         "leid"
       ],
@@ -2595,7 +2607,7 @@
       "lemma": "rein",
       "gloss": "in, inside (colloquial for herein, hinein)",
       "pos": "adv",
-      "rank": 204,
+      "rank": 205,
       "forms": [
         "rein"
       ],
@@ -2606,7 +2618,7 @@
       "lemma": "halt",
       "gloss": "just, simply (that's how it is)",
       "pos": "particle",
-      "rank": 205,
+      "rank": 206,
       "forms": [
         "halt"
       ],
@@ -2617,7 +2629,7 @@
       "lemma": "beide",
       "gloss": "both",
       "pos": "pron",
-      "rank": 206,
+      "rank": 207,
       "forms": [
         "beide",
         "beiden"
@@ -2629,7 +2641,7 @@
       "lemma": "Sache",
       "gloss": "thing, matter",
       "pos": "noun",
-      "rank": 207,
+      "rank": 208,
       "forms": [
         "Sache",
         "Sachen"
@@ -2642,7 +2654,7 @@
       "lemma": "Hilfe",
       "gloss": "help",
       "pos": "noun",
-      "rank": 208,
+      "rank": 209,
       "forms": [
         "Hilfe"
       ],
@@ -2654,7 +2666,7 @@
       "lemma": "jeder",
       "gloss": "every, each; everyone",
       "pos": "det",
-      "rank": 209,
+      "rank": 210,
       "forms": [
         "jeder",
         "jede",
@@ -2669,7 +2681,7 @@
       "lemma": "gern",
       "gloss": "gladly; (with a verb) to like doing",
       "pos": "adv",
-      "rank": 210,
+      "rank": 211,
       "forms": [
         "gern",
         "gerne"
@@ -2681,7 +2693,7 @@
       "lemma": "darüber",
       "gloss": "about it; over it",
       "pos": "adv",
-      "rank": 211,
+      "rank": 212,
       "forms": [
         "darüber"
       ],
@@ -2692,7 +2704,7 @@
       "lemma": "halten",
       "gloss": "to hold; to stop; (halten von) to think of",
       "pos": "verb",
-      "rank": 212,
+      "rank": 213,
       "forms": [
         "halten",
         "halte",
@@ -2710,7 +2722,7 @@
       "lemma": "verstehen",
       "gloss": "to understand",
       "pos": "verb",
-      "rank": 213,
+      "rank": 214,
       "forms": [
         "verstehen",
         "verstehe",
@@ -2725,7 +2737,7 @@
       "lemma": "wahr",
       "gloss": "true",
       "pos": "adj",
-      "rank": 214,
+      "rank": 215,
       "forms": [
         "wahr",
         "wahre",
@@ -2738,7 +2750,7 @@
       "lemma": "dazu",
       "gloss": "to it; for it; with it",
       "pos": "adv",
-      "rank": 215,
+      "rank": 216,
       "forms": [
         "dazu"
       ],
@@ -2749,7 +2761,7 @@
       "lemma": "Bruder",
       "gloss": "brother",
       "pos": "noun",
-      "rank": 216,
+      "rank": 217,
       "forms": [
         "Bruder",
         "Brüder",
@@ -2763,7 +2775,7 @@
       "lemma": "daran",
       "gloss": "about it; on it (with verbs like denken an)",
       "pos": "adv",
-      "rank": 217,
+      "rank": 218,
       "forms": [
         "daran",
         "dran"
@@ -2775,7 +2787,7 @@
       "lemma": "Dank",
       "gloss": "thanks",
       "pos": "noun",
-      "rank": 218,
+      "rank": 219,
       "forms": [
         "Dank"
       ],
@@ -2787,7 +2799,7 @@
       "lemma": "lieber",
       "gloss": "rather, preferably",
       "pos": "adv",
-      "rank": 219,
+      "rank": 220,
       "forms": [
         "lieber"
       ],
@@ -2798,7 +2810,7 @@
       "lemma": "Fall",
       "gloss": "case",
       "pos": "noun",
-      "rank": 220,
+      "rank": 221,
       "forms": [
         "Fall",
         "Fälle",
@@ -2812,7 +2824,7 @@
       "lemma": "egal",
       "gloss": "all the same; (es ist mir egal) I don't care",
       "pos": "adj",
-      "rank": 221,
+      "rank": 222,
       "forms": [
         "egal"
       ],
@@ -2823,7 +2835,7 @@
       "lemma": "kennen",
       "gloss": "to know (a person or place), be familiar with",
       "pos": "verb",
-      "rank": 222,
+      "rank": 223,
       "forms": [
         "kennen",
         "kenne",
@@ -2840,7 +2852,7 @@
       "lemma": "vergessen",
       "gloss": "to forget",
       "pos": "verb",
-      "rank": 223,
+      "rank": 224,
       "forms": [
         "vergessen",
         "vergesse",
@@ -2855,7 +2867,7 @@
       "lemma": "echt",
       "gloss": "real, genuine; (spoken) really",
       "pos": "adj",
-      "rank": 224,
+      "rank": 225,
       "forms": [
         "echt",
         "echte",
@@ -2869,7 +2881,7 @@
       "lemma": "eigentlich",
       "gloss": "actually; really",
       "pos": "adv",
-      "rank": 225,
+      "rank": 226,
       "forms": [
         "eigentlich"
       ],
@@ -2880,7 +2892,7 @@
       "lemma": "Uhr",
       "gloss": "clock, watch; o'clock",
       "pos": "noun",
-      "rank": 226,
+      "rank": 227,
       "forms": [
         "Uhr"
       ],
@@ -2892,7 +2904,7 @@
       "lemma": "Stadt",
       "gloss": "town, city",
       "pos": "noun",
-      "rank": 227,
+      "rank": 228,
       "forms": [
         "Stadt",
         "Städte",
@@ -2906,7 +2918,7 @@
       "lemma": "Baby",
       "gloss": "baby",
       "pos": "noun",
-      "rank": 228,
+      "rank": 229,
       "forms": [
         "Baby",
         "Babys"
@@ -2919,7 +2931,7 @@
       "lemma": "fahren",
       "gloss": "to drive; to go (by vehicle)",
       "pos": "verb",
-      "rank": 229,
+      "rank": 230,
       "forms": [
         "fahren",
         "fahre",
@@ -2937,7 +2949,7 @@
       "lemma": "Name",
       "gloss": "name",
       "pos": "noun",
-      "rank": 230,
+      "rank": 231,
       "forms": [
         "Name",
         "Namen",
@@ -2951,7 +2963,7 @@
       "lemma": "bekommen",
       "gloss": "to get, receive",
       "pos": "verb",
-      "rank": 231,
+      "rank": 232,
       "forms": [
         "bekommen",
         "bekomme",
@@ -2967,7 +2979,7 @@
       "lemma": "Kopf",
       "gloss": "head",
       "pos": "noun",
-      "rank": 232,
+      "rank": 233,
       "forms": [
         "Kopf"
       ],
@@ -2979,7 +2991,7 @@
       "lemma": "klein",
       "gloss": "small, little",
       "pos": "adj",
-      "rank": 233,
+      "rank": 234,
       "forms": [
         "klein",
         "kleine",
@@ -2995,7 +3007,7 @@
       "lemma": "später",
       "gloss": "later",
       "pos": "adv",
-      "rank": 234,
+      "rank": 235,
       "forms": [
         "später"
       ],
@@ -3006,7 +3018,7 @@
       "lemma": "Glück",
       "gloss": "luck; happiness",
       "pos": "noun",
-      "rank": 235,
+      "rank": 236,
       "forms": [
         "Glück"
       ],
@@ -3018,7 +3030,7 @@
       "lemma": "letzte",
       "gloss": "last",
       "pos": "adj",
-      "rank": 236,
+      "rank": 237,
       "forms": [
         "letzte",
         "letzten",
@@ -3032,7 +3044,7 @@
       "lemma": "darauf",
       "gloss": "on it; for it (with verbs like warten auf)",
       "pos": "adv",
-      "rank": 237,
+      "rank": 238,
       "forms": [
         "darauf",
         "drauf"
@@ -3044,7 +3056,7 @@
       "lemma": "Ende",
       "gloss": "end",
       "pos": "noun",
-      "rank": 238,
+      "rank": 239,
       "forms": [
         "Ende"
       ],
@@ -3056,7 +3068,7 @@
       "lemma": "bald",
       "gloss": "soon",
       "pos": "adv",
-      "rank": 239,
+      "rank": 240,
       "forms": [
         "bald"
       ],
@@ -3067,7 +3079,7 @@
       "lemma": "töten",
       "gloss": "to kill",
       "pos": "verb",
-      "rank": 240,
+      "rank": 241,
       "forms": [
         "töten",
         "töte",
@@ -3082,7 +3094,7 @@
       "lemma": "Ding",
       "gloss": "thing",
       "pos": "noun",
-      "rank": 241,
+      "rank": 242,
       "forms": [
         "Ding",
         "Dinge",
@@ -3096,7 +3108,7 @@
       "lemma": "meinen",
       "gloss": "to mean; to think (have an opinion)",
       "pos": "verb",
-      "rank": 242,
+      "rank": 243,
       "forms": [
         "meinen",
         "meinst",
@@ -3111,7 +3123,7 @@
       "lemma": "toll",
       "gloss": "great, terrific",
       "pos": "adj",
-      "rank": 243,
+      "rank": 244,
       "forms": [
         "toll",
         "tolle",
@@ -3126,7 +3138,7 @@
       "lemma": "eins",
       "gloss": "one (when counting)",
       "pos": "num",
-      "rank": 244,
+      "rank": 245,
       "forms": [
         "eins"
       ],
@@ -3137,7 +3149,7 @@
       "lemma": "Minute",
       "gloss": "minute",
       "pos": "noun",
-      "rank": 245,
+      "rank": 246,
       "forms": [
         "Minute",
         "Minuten"
@@ -3150,7 +3162,7 @@
       "lemma": "bereit",
       "gloss": "ready",
       "pos": "adj",
-      "rank": 246,
+      "rank": 247,
       "forms": [
         "bereit"
       ],
@@ -3161,7 +3173,7 @@
       "lemma": "weit",
       "gloss": "far; wide",
       "pos": "adj",
-      "rank": 247,
+      "rank": 248,
       "forms": [
         "weit"
       ],
@@ -3172,7 +3184,7 @@
       "lemma": "Ahnung",
       "gloss": "idea, clue",
       "pos": "noun",
-      "rank": 248,
+      "rank": 249,
       "forms": [
         "Ahnung"
       ],
@@ -3184,7 +3196,7 @@
       "lemma": "bisschen",
       "gloss": "a bit, a little",
       "pos": "det",
-      "rank": 249,
+      "rank": 250,
       "forms": [
         "bisschen"
       ],
@@ -3195,7 +3207,7 @@
       "lemma": "Tür",
       "gloss": "door",
       "pos": "noun",
-      "rank": 250,
+      "rank": 251,
       "forms": [
         "Tür",
         "Türen"
@@ -3208,7 +3220,7 @@
       "lemma": "Auto",
       "gloss": "car",
       "pos": "noun",
-      "rank": 251,
+      "rank": 252,
       "forms": [
         "Auto",
         "Autos"
@@ -3221,7 +3233,7 @@
       "lemma": "euer",
       "gloss": "your (belonging to you, plural)",
       "pos": "det",
-      "rank": 252,
+      "rank": 253,
       "forms": [
         "euer",
         "eure",
@@ -3236,7 +3248,7 @@
       "lemma": "Auge",
       "gloss": "eye",
       "pos": "noun",
-      "rank": 253,
+      "rank": 254,
       "forms": [
         "Auge",
         "Augen"
@@ -3249,7 +3261,7 @@
       "lemma": "Polizei",
       "gloss": "police",
       "pos": "noun",
-      "rank": 254,
+      "rank": 255,
       "forms": [
         "Polizei"
       ],
@@ -3261,7 +3273,7 @@
       "lemma": "sterben",
       "gloss": "to die",
       "pos": "verb",
-      "rank": 255,
+      "rank": 256,
       "forms": [
         "sterben",
         "sterbe",
@@ -3278,7 +3290,7 @@
       "lemma": "draußen",
       "gloss": "outside",
       "pos": "adv",
-      "rank": 256,
+      "rank": 257,
       "forms": [
         "draußen"
       ],
@@ -3289,7 +3301,7 @@
       "lemma": "fast",
       "gloss": "almost",
       "pos": "adv",
-      "rank": 257,
+      "rank": 258,
       "forms": [
         "fast"
       ],
@@ -3300,7 +3312,7 @@
       "lemma": "runter",
       "gloss": "down (colloquial for herunter, hinunter)",
       "pos": "adv",
-      "rank": 258,
+      "rank": 259,
       "forms": [
         "runter"
       ],
@@ -3311,7 +3323,7 @@
       "lemma": "vorbei",
       "gloss": "over, past",
       "pos": "adv",
-      "rank": 259,
+      "rank": 260,
       "forms": [
         "vorbei"
       ],
@@ -3322,7 +3334,7 @@
       "lemma": "treffen",
       "gloss": "to meet; to hit",
       "pos": "verb",
-      "rank": 260,
+      "rank": 261,
       "forms": [
         "treffen",
         "treffe",
@@ -3339,7 +3351,7 @@
       "lemma": "arbeiten",
       "gloss": "to work",
       "pos": "verb",
-      "rank": 261,
+      "rank": 262,
       "forms": [
         "arbeiten",
         "arbeite",
@@ -3355,7 +3367,7 @@
       "lemma": "verrückt",
       "gloss": "crazy",
       "pos": "adj",
-      "rank": 262,
+      "rank": 263,
       "forms": [
         "verrückt",
         "verrückte",
@@ -3368,7 +3380,7 @@
       "lemma": "neu",
       "gloss": "new",
       "pos": "adj",
-      "rank": 263,
+      "rank": 264,
       "forms": [
         "neu",
         "neue",
@@ -3383,7 +3395,7 @@
       "lemma": "hinter",
       "gloss": "behind",
       "pos": "prep",
-      "rank": 264,
+      "rank": 265,
       "forms": [
         "hinter"
       ],
@@ -3394,7 +3406,7 @@
       "lemma": "Sorge",
       "gloss": "worry",
       "pos": "noun",
-      "rank": 265,
+      "rank": 266,
       "forms": [
         "Sorge",
         "Sorgen"
@@ -3407,7 +3419,7 @@
       "lemma": "einzige",
       "gloss": "only, single",
       "pos": "adj",
-      "rank": 266,
+      "rank": 267,
       "forms": [
         "einzige",
         "einzigen",
@@ -3421,7 +3433,7 @@
       "lemma": "darum",
       "gloss": "that's why; about it",
       "pos": "adv",
-      "rank": 267,
+      "rank": 268,
       "forms": [
         "darum"
       ],
@@ -3432,7 +3444,7 @@
       "lemma": "Tochter",
       "gloss": "daughter",
       "pos": "noun",
-      "rank": 268,
+      "rank": 269,
       "forms": [
         "Tochter",
         "Töchter"
@@ -3445,7 +3457,7 @@
       "lemma": "Idee",
       "gloss": "idea",
       "pos": "noun",
-      "rank": 269,
+      "rank": 270,
       "forms": [
         "Idee",
         "Ideen"
@@ -3458,7 +3470,7 @@
       "lemma": "Schwester",
       "gloss": "sister",
       "pos": "noun",
-      "rank": 270,
+      "rank": 271,
       "forms": [
         "Schwester",
         "Schwestern"
@@ -3471,7 +3483,7 @@
       "lemma": "drin",
       "gloss": "inside, in it (colloquial for darin)",
       "pos": "adv",
-      "rank": 271,
+      "rank": 272,
       "forms": [
         "drin"
       ],
@@ -3482,7 +3494,7 @@
       "lemma": "ruhig",
       "gloss": "quiet, calm",
       "pos": "adj",
-      "rank": 272,
+      "rank": 273,
       "forms": [
         "ruhig",
         "ruhige",
@@ -3495,7 +3507,7 @@
       "lemma": "spät",
       "gloss": "late",
       "pos": "adj",
-      "rank": 273,
+      "rank": 274,
       "forms": [
         "spät"
       ],
@@ -3506,7 +3518,7 @@
       "lemma": "ziemlich",
       "gloss": "quite, fairly",
       "pos": "adv",
-      "rank": 274,
+      "rank": 275,
       "forms": [
         "ziemlich"
       ],
@@ -3517,7 +3529,7 @@
       "lemma": "sogar",
       "gloss": "even",
       "pos": "adv",
-      "rank": 275,
+      "rank": 276,
       "forms": [
         "sogar"
       ],
@@ -3528,7 +3540,7 @@
       "lemma": "kurz",
       "gloss": "short; (adv) briefly, for a moment",
       "pos": "adj",
-      "rank": 276,
+      "rank": 277,
       "forms": [
         "kurz",
         "kurze",
@@ -3542,7 +3554,7 @@
       "lemma": "Kerl",
       "gloss": "guy, fellow",
       "pos": "noun",
-      "rank": 277,
+      "rank": 278,
       "forms": [
         "Kerl",
         "Kerle"
@@ -3555,7 +3567,7 @@
       "lemma": "liegen",
       "gloss": "to lie (be lying); to be located",
       "pos": "verb",
-      "rank": 278,
+      "rank": 279,
       "forms": [
         "liegen",
         "liege",
@@ -3572,7 +3584,7 @@
       "lemma": "suchen",
       "gloss": "to look for, search",
       "pos": "verb",
-      "rank": 279,
+      "rank": 280,
       "forms": [
         "suchen",
         "suche",
@@ -3588,7 +3600,7 @@
       "lemma": "je",
       "gloss": "ever; each; (je … desto) the … the",
       "pos": "adv",
-      "rank": 280,
+      "rank": 281,
       "forms": [
         "je"
       ],
@@ -3599,7 +3611,7 @@
       "lemma": "woher",
       "gloss": "where from",
       "pos": "adv",
-      "rank": 281,
+      "rank": 282,
       "forms": [
         "woher"
       ],
@@ -3610,7 +3622,7 @@
       "lemma": "lang",
       "gloss": "long",
       "pos": "adj",
-      "rank": 282,
+      "rank": 283,
       "forms": [
         "lang",
         "langen",
@@ -3625,7 +3637,7 @@
       "lemma": "Job",
       "gloss": "job",
       "pos": "noun",
-      "rank": 283,
+      "rank": 284,
       "forms": [
         "Job",
         "Jobs"
@@ -3638,7 +3650,7 @@
       "lemma": "spielen",
       "gloss": "to play",
       "pos": "verb",
-      "rank": 284,
+      "rank": 285,
       "forms": [
         "spielen",
         "spiele",
@@ -3654,7 +3666,7 @@
       "lemma": "überhaupt",
       "gloss": "at all; anyway",
       "pos": "adv",
-      "rank": 285,
+      "rank": 286,
       "forms": [
         "überhaupt"
       ],
@@ -3665,7 +3677,7 @@
       "lemma": "Teufel",
       "gloss": "devil",
       "pos": "noun",
-      "rank": 286,
+      "rank": 287,
       "forms": [
         "Teufel"
       ],
@@ -3677,7 +3689,7 @@
       "lemma": "verlieren",
       "gloss": "to lose",
       "pos": "verb",
-      "rank": 287,
+      "rank": 288,
       "forms": [
         "verlieren",
         "verliere",
@@ -3693,7 +3705,7 @@
       "lemma": "groß",
       "gloss": "big, large; tall",
       "pos": "adj",
-      "rank": 288,
+      "rank": 289,
       "forms": [
         "groß",
         "große",
@@ -3709,7 +3721,7 @@
       "lemma": "Hand",
       "gloss": "hand",
       "pos": "noun",
-      "rank": 289,
+      "rank": 290,
       "forms": [
         "Hand",
         "Hände",
@@ -3723,7 +3735,7 @@
       "lemma": "Grund",
       "gloss": "reason; ground",
       "pos": "noun",
-      "rank": 290,
+      "rank": 291,
       "forms": [
         "Grund",
         "Gründe",
@@ -3737,7 +3749,7 @@
       "lemma": "Mama",
       "gloss": "mum, mom",
       "pos": "noun",
-      "rank": 291,
+      "rank": 292,
       "forms": [
         "Mama"
       ],
@@ -3749,7 +3761,7 @@
       "lemma": "Ruhe",
       "gloss": "quiet, peace, rest",
       "pos": "noun",
-      "rank": 292,
+      "rank": 293,
       "forms": [
         "Ruhe"
       ],
@@ -3761,7 +3773,7 @@
       "lemma": "Tod",
       "gloss": "death",
       "pos": "noun",
-      "rank": 293,
+      "rank": 294,
       "forms": [
         "Tod"
       ],
@@ -3773,7 +3785,7 @@
       "lemma": "Stunde",
       "gloss": "hour; lesson",
       "pos": "noun",
-      "rank": 294,
+      "rank": 295,
       "forms": [
         "Stunde",
         "Stunden"
@@ -3786,7 +3798,7 @@
       "lemma": "hoffen",
       "gloss": "to hope",
       "pos": "verb",
-      "rank": 295,
+      "rank": 296,
       "forms": [
         "hoffen",
         "hoffe",
@@ -3802,7 +3814,7 @@
       "lemma": "oben",
       "gloss": "up, upstairs; above",
       "pos": "adv",
-      "rank": 296,
+      "rank": 297,
       "forms": [
         "oben"
       ],
@@ -3813,7 +3825,7 @@
       "lemma": "gestern",
       "gloss": "yesterday",
       "pos": "adv",
-      "rank": 297,
+      "rank": 298,
       "forms": [
         "gestern"
       ],
@@ -3824,7 +3836,7 @@
       "lemma": "versuchen",
       "gloss": "to try",
       "pos": "verb",
-      "rank": 298,
+      "rank": 299,
       "forms": [
         "versuchen",
         "versuche",
@@ -3840,7 +3852,7 @@
       "lemma": "Art",
       "gloss": "kind, sort; way",
       "pos": "noun",
-      "rank": 299,
+      "rank": 300,
       "forms": [
         "Art",
         "Arten"
@@ -3853,7 +3865,7 @@
       "lemma": "Schatz",
       "gloss": "treasure; (term of affection) darling",
       "pos": "noun",
-      "rank": 300,
+      "rank": 301,
       "forms": [
         "Schatz"
       ],
@@ -3865,7 +3877,7 @@
       "lemma": "endlich",
       "gloss": "finally, at last",
       "pos": "adv",
-      "rank": 301,
+      "rank": 302,
       "forms": [
         "endlich"
       ],
@@ -3876,7 +3888,7 @@
       "lemma": "etwa",
       "gloss": "about, approximately; (in questions) by any chance",
       "pos": "adv",
-      "rank": 302,
+      "rank": 303,
       "forms": [
         "etwa"
       ],
@@ -3887,7 +3899,7 @@
       "lemma": "erzählen",
       "gloss": "to tell (a story, news)",
       "pos": "verb",
-      "rank": 303,
+      "rank": 304,
       "forms": [
         "erzählen",
         "erzähle",
@@ -3903,7 +3915,7 @@
       "lemma": "laufen",
       "gloss": "to run; to walk; to go (work, be running)",
       "pos": "verb",
-      "rank": 304,
+      "rank": 305,
       "forms": [
         "laufen",
         "laufe",
@@ -3921,7 +3933,7 @@
       "lemma": "schwer",
       "gloss": "heavy; hard, difficult",
       "pos": "adj",
-      "rank": 305,
+      "rank": 306,
       "forms": [
         "schwer",
         "schwere",
@@ -3935,7 +3947,7 @@
       "lemma": "anders",
       "gloss": "different; differently",
       "pos": "adv",
-      "rank": 306,
+      "rank": 307,
       "forms": [
         "anders"
       ],
@@ -3946,7 +3958,7 @@
       "lemma": "fünf",
       "gloss": "five",
       "pos": "num",
-      "rank": 307,
+      "rank": 308,
       "forms": [
         "fünf"
       ]
@@ -3956,7 +3968,7 @@
       "lemma": "Wasser",
       "gloss": "water",
       "pos": "noun",
-      "rank": 308,
+      "rank": 309,
       "forms": [
         "Wasser"
       ],
@@ -3967,7 +3979,7 @@
       "lemma": "erste",
       "gloss": "first",
       "pos": "adj",
-      "rank": 309,
+      "rank": 310,
       "forms": [
         "erste",
         "ersten",
@@ -3981,7 +3993,7 @@
       "lemma": "Geschichte",
       "gloss": "story; history",
       "pos": "noun",
-      "rank": 310,
+      "rank": 311,
       "forms": [
         "Geschichte",
         "Geschichten"
@@ -3994,7 +4006,7 @@
       "lemma": "wenig",
       "gloss": "little, not much; (plural) few",
       "pos": "det",
-      "rank": 311,
+      "rank": 312,
       "forms": [
         "wenig",
         "wenige",
@@ -4008,7 +4020,7 @@
       "lemma": "holen",
       "gloss": "to fetch, get (go and bring)",
       "pos": "verb",
-      "rank": 312,
+      "rank": 313,
       "forms": [
         "holen",
         "hole",
@@ -4025,7 +4037,7 @@
       "lemma": "bedeuten",
       "gloss": "to mean",
       "pos": "verb",
-      "rank": 313,
+      "rank": 314,
       "forms": [
         "bedeuten",
         "bedeutest",
@@ -4039,7 +4051,7 @@
       "lemma": "nett",
       "gloss": "nice, kind",
       "pos": "adj",
-      "rank": 314,
+      "rank": 315,
       "forms": [
         "nett",
         "nette",
@@ -4053,7 +4065,7 @@
       "lemma": "Wahrheit",
       "gloss": "truth",
       "pos": "noun",
-      "rank": 315,
+      "rank": 316,
       "forms": [
         "Wahrheit"
       ],
@@ -4065,7 +4077,7 @@
       "lemma": "Woche",
       "gloss": "week",
       "pos": "noun",
-      "rank": 316,
+      "rank": 317,
       "forms": [
         "Woche",
         "Wochen"
@@ -4078,7 +4090,7 @@
       "lemma": "deshalb",
       "gloss": "that's why, therefore",
       "pos": "adv",
-      "rank": 317,
+      "rank": 318,
       "forms": [
         "deshalb"
       ],
@@ -4089,7 +4101,7 @@
       "lemma": "welcher",
       "gloss": "which",
       "pos": "det",
-      "rank": 318,
+      "rank": 319,
       "forms": [
         "welcher",
         "welche",
@@ -4104,7 +4116,7 @@
       "lemma": "bestimmt",
       "gloss": "certainly, definitely; surely",
       "pos": "adv",
-      "rank": 319,
+      "rank": 320,
       "forms": [
         "bestimmt"
       ],
@@ -4115,7 +4127,7 @@
       "lemma": "hoch",
       "gloss": "high, tall",
       "pos": "adj",
-      "rank": 320,
+      "rank": 321,
       "forms": [
         "hoch",
         "hohe",
@@ -4129,7 +4141,7 @@
       "lemma": "alt",
       "gloss": "old",
       "pos": "adj",
-      "rank": 321,
+      "rank": 322,
       "forms": [
         "alt",
         "alte",
@@ -4145,7 +4157,7 @@
       "lemma": "schauen",
       "gloss": "to look; to watch (TV, a film)",
       "pos": "verb",
-      "rank": 322,
+      "rank": 323,
       "forms": [
         "schauen",
         "schaue",
@@ -4162,7 +4174,7 @@
       "lemma": "Land",
       "gloss": "country; land; the countryside",
       "pos": "noun",
-      "rank": 323,
+      "rank": 324,
       "forms": [
         "Land",
         "Länder",
@@ -4176,7 +4188,7 @@
       "lemma": "Zimmer",
       "gloss": "room",
       "pos": "noun",
-      "rank": 324,
+      "rank": 325,
       "forms": [
         "Zimmer"
       ],
@@ -4188,7 +4200,7 @@
       "lemma": "Wagen",
       "gloss": "car; carriage, wagon",
       "pos": "noun",
-      "rank": 325,
+      "rank": 326,
       "forms": [
         "Wagen"
       ],
@@ -4200,7 +4212,7 @@
       "lemma": "vier",
       "gloss": "four",
       "pos": "num",
-      "rank": 326,
+      "rank": 327,
       "forms": [
         "vier"
       ]
@@ -4210,7 +4222,7 @@
       "lemma": "gefallen",
       "gloss": "to please; (es gefällt mir) I like it",
       "pos": "verb",
-      "rank": 327,
+      "rank": 328,
       "forms": [
         "gefallen",
         "gefällt",
@@ -4224,7 +4236,7 @@
       "lemma": "Spaß",
       "gloss": "fun; joke",
       "pos": "noun",
-      "rank": 328,
+      "rank": 329,
       "forms": [
         "Spaß"
       ],
@@ -4236,7 +4248,7 @@
       "lemma": "niemals",
       "gloss": "never (stronger than nie)",
       "pos": "adv",
-      "rank": 329,
+      "rank": 330,
       "forms": [
         "niemals"
       ]
@@ -4246,7 +4258,7 @@
       "lemma": "Schuld",
       "gloss": "fault, blame; guilt",
       "pos": "noun",
-      "rank": 330,
+      "rank": 331,
       "forms": [
         "Schuld",
         "Schulden"
@@ -4259,7 +4271,7 @@
       "lemma": "verlassen",
       "gloss": "to leave (a place or person)",
       "pos": "verb",
-      "rank": 331,
+      "rank": 332,
       "forms": [
         "verlassen",
         "verlasse",
@@ -4273,7 +4285,7 @@
       "lemma": "zeigen",
       "gloss": "to show",
       "pos": "verb",
-      "rank": 332,
+      "rank": 333,
       "forms": [
         "zeigen",
         "zeige",
@@ -4290,7 +4302,7 @@
       "lemma": "ernst",
       "gloss": "serious",
       "pos": "adj",
-      "rank": 333,
+      "rank": 334,
       "forms": [
         "ernst",
         "ernste",
@@ -4303,7 +4315,7 @@
       "lemma": "Ort",
       "gloss": "place",
       "pos": "noun",
-      "rank": 334,
+      "rank": 335,
       "forms": [
         "Ort",
         "Orte",
@@ -4317,7 +4329,7 @@
       "lemma": "manchmal",
       "gloss": "sometimes",
       "pos": "adv",
-      "rank": 335,
+      "rank": 336,
       "forms": [
         "manchmal"
       ]
@@ -4327,7 +4339,7 @@
       "lemma": "Seite",
       "gloss": "side; page",
       "pos": "noun",
-      "rank": 336,
+      "rank": 337,
       "forms": [
         "Seite",
         "Seiten"
@@ -4340,7 +4352,7 @@
       "lemma": "zwischen",
       "gloss": "between",
       "pos": "prep",
-      "rank": 337,
+      "rank": 338,
       "forms": [
         "zwischen"
       ],
@@ -4351,7 +4363,7 @@
       "lemma": "eben",
       "gloss": "just (now); simply; exactly",
       "pos": "adv",
-      "rank": 338,
+      "rank": 339,
       "forms": [
         "eben"
       ],
@@ -4362,7 +4374,7 @@
       "lemma": "während",
       "gloss": "during; (conj) while",
       "pos": "prep",
-      "rank": 339,
+      "rank": 340,
       "forms": [
         "während"
       ],
@@ -4373,7 +4385,7 @@
       "lemma": "Spiel",
       "gloss": "game; match",
       "pos": "noun",
-      "rank": 340,
+      "rank": 341,
       "forms": [
         "Spiel",
         "Spiele"
@@ -4386,7 +4398,7 @@
       "lemma": "Chance",
       "gloss": "chance",
       "pos": "noun",
-      "rank": 341,
+      "rank": 342,
       "forms": [
         "Chance",
         "Chancen"
@@ -4399,7 +4411,7 @@
       "lemma": "Freundin",
       "gloss": "(female) friend; girlfriend",
       "pos": "noun",
-      "rank": 342,
+      "rank": 343,
       "forms": [
         "Freundin",
         "Freundinnen"
@@ -4412,7 +4424,7 @@
       "lemma": "Krieg",
       "gloss": "war",
       "pos": "noun",
-      "rank": 343,
+      "rank": 344,
       "forms": [
         "Krieg"
       ],
@@ -4424,7 +4436,7 @@
       "lemma": "entschuldigen",
       "gloss": "to excuse; (sich entschuldigen) to apologize",
       "pos": "verb",
-      "rank": 344,
+      "rank": 345,
       "forms": [
         "entschuldigen",
         "entschuldige",
@@ -4437,7 +4449,7 @@
       "lemma": "wichtig",
       "gloss": "important",
       "pos": "adj",
-      "rank": 345,
+      "rank": 346,
       "forms": [
         "wichtig",
         "wichtige",
@@ -4450,7 +4462,7 @@
       "lemma": "Bett",
       "gloss": "bed",
       "pos": "noun",
-      "rank": 346,
+      "rank": 347,
       "forms": [
         "Bett",
         "Betten"
@@ -4463,7 +4475,7 @@
       "lemma": "schlecht",
       "gloss": "bad; (mir ist schlecht) I feel sick",
       "pos": "adj",
-      "rank": 347,
+      "rank": 348,
       "forms": [
         "schlecht",
         "schlechte",
@@ -4477,7 +4489,7 @@
       "lemma": "Schule",
       "gloss": "school",
       "pos": "noun",
-      "rank": 348,
+      "rank": 349,
       "forms": [
         "Schule",
         "Schulen"
@@ -4490,7 +4502,7 @@
       "lemma": "Entschuldigung",
       "gloss": "apology, excuse; (as a word on its own) sorry, excuse me",
       "pos": "noun",
-      "rank": 349,
+      "rank": 350,
       "forms": [
         "Entschuldigung",
         "Entschuldigungen"
@@ -4502,7 +4514,7 @@
       "lemma": "Wort",
       "gloss": "word",
       "pos": "noun",
-      "rank": 350,
+      "rank": 351,
       "forms": [
         "Wort",
         "Worte",
@@ -4516,7 +4528,7 @@
       "lemma": "Typ",
       "gloss": "guy; type",
       "pos": "noun",
-      "rank": 351,
+      "rank": 352,
       "forms": [
         "Typ",
         "Typen"
@@ -4529,7 +4541,7 @@
       "lemma": "schlafen",
       "gloss": "to sleep",
       "pos": "verb",
-      "rank": 352,
+      "rank": 353,
       "forms": [
         "schlafen",
         "schlafe",
@@ -4545,7 +4557,7 @@
       "lemma": "Gesicht",
       "gloss": "face",
       "pos": "noun",
-      "rank": 353,
+      "rank": 354,
       "forms": [
         "Gesicht",
         "Gesichter"
@@ -4558,7 +4570,7 @@
       "lemma": "falls",
       "gloss": "in case, if",
       "pos": "conj",
-      "rank": 354,
+      "rank": 355,
       "forms": [
         "falls"
       ],
@@ -4569,7 +4581,7 @@
       "lemma": "bloß",
       "gloss": "only, just; (in commands) whatever you do; (in questions) on earth",
       "pos": "adv",
-      "rank": 355,
+      "rank": 356,
       "forms": [
         "bloß"
       ],
@@ -4580,7 +4592,7 @@
       "lemma": "unten",
       "gloss": "down, downstairs; below",
       "pos": "adv",
-      "rank": 356,
+      "rank": 357,
       "forms": [
         "unten"
       ],
@@ -4591,7 +4603,7 @@
       "lemma": "Teil",
       "gloss": "part",
       "pos": "noun",
-      "rank": 357,
+      "rank": 358,
       "forms": [
         "Teil",
         "Teile",
@@ -4605,7 +4617,7 @@
       "lemma": "oft",
       "gloss": "often",
       "pos": "adv",
-      "rank": 358,
+      "rank": 359,
       "forms": [
         "oft"
       ],
@@ -4616,7 +4628,7 @@
       "lemma": "stellen",
       "gloss": "to put (upright), place; (eine Frage stellen) to ask",
       "pos": "verb",
-      "rank": 359,
+      "rank": 360,
       "forms": [
         "stellen",
         "stelle",
@@ -4633,7 +4645,7 @@
       "lemma": "trinken",
       "gloss": "to drink",
       "pos": "verb",
-      "rank": 360,
+      "rank": 361,
       "forms": [
         "trinken",
         "trinke",
@@ -4650,7 +4662,7 @@
       "lemma": "einige",
       "gloss": "some, a few",
       "pos": "det",
-      "rank": 361,
+      "rank": 362,
       "forms": [
         "einige",
         "einigen",
@@ -4663,7 +4675,7 @@
       "lemma": "kriegen",
       "gloss": "to get (colloquial for bekommen)",
       "pos": "verb",
-      "rank": 362,
+      "rank": 363,
       "forms": [
         "kriegen",
         "kriegst",
@@ -4678,7 +4690,7 @@
       "lemma": "Blut",
       "gloss": "blood",
       "pos": "noun",
-      "rank": 363,
+      "rank": 364,
       "forms": [
         "Blut"
       ],
@@ -4689,7 +4701,7 @@
       "lemma": "ehrlich",
       "gloss": "honest; (adv) honestly",
       "pos": "adj",
-      "rank": 364,
+      "rank": 365,
       "forms": [
         "ehrlich",
         "ehrliche",
@@ -4703,7 +4715,7 @@
       "lemma": "Eltern",
       "gloss": "parents",
       "pos": "noun",
-      "rank": 365,
+      "rank": 366,
       "forms": [
         "Eltern"
       ],
@@ -4714,7 +4726,7 @@
       "lemma": "scheinen",
       "gloss": "to seem; to shine",
       "pos": "verb",
-      "rank": 366,
+      "rank": 367,
       "forms": [
         "scheinen",
         "scheint",
@@ -4728,7 +4740,7 @@
       "lemma": "Herz",
       "gloss": "heart",
       "pos": "noun",
-      "rank": 367,
+      "rank": 368,
       "forms": [
         "Herz",
         "Herzen"
@@ -4741,7 +4753,7 @@
       "lemma": "glücklich",
       "gloss": "happy",
       "pos": "adj",
-      "rank": 368,
+      "rank": 369,
       "forms": [
         "glücklich",
         "glückliche",
@@ -4754,7 +4766,7 @@
       "lemma": "Wiedersehen",
       "gloss": "(auf Wiedersehen) goodbye",
       "pos": "noun",
-      "rank": 369,
+      "rank": 370,
       "forms": [
         "Wiedersehen"
       ],
@@ -4766,7 +4778,7 @@
       "lemma": "frei",
       "gloss": "free; available; off (work)",
       "pos": "adj",
-      "rank": 370,
+      "rank": 371,
       "forms": [
         "frei",
         "freie",
@@ -4779,7 +4791,7 @@
       "lemma": "möglich",
       "gloss": "possible",
       "pos": "adj",
-      "rank": 371,
+      "rank": 372,
       "forms": [
         "möglich",
         "mögliche",
@@ -4792,7 +4804,7 @@
       "lemma": "irgendwie",
       "gloss": "somehow",
       "pos": "adv",
-      "rank": 372,
+      "rank": 373,
       "forms": [
         "irgendwie"
       ],
@@ -4803,7 +4815,7 @@
       "lemma": "reichen",
       "gloss": "to be enough; to hand (pass)",
       "pos": "verb",
-      "rank": 373,
+      "rank": 374,
       "forms": [
         "reichen",
         "reichst",
@@ -4817,7 +4829,7 @@
       "lemma": "fest",
       "gloss": "firm, solid; tight; steady, permanent",
       "pos": "adj",
-      "rank": 374,
+      "rank": 375,
       "forms": [
         "fest",
         "feste",
@@ -4830,7 +4842,7 @@
       "lemma": "Waffe",
       "gloss": "weapon; gun",
       "pos": "noun",
-      "rank": 375,
+      "rank": 376,
       "forms": [
         "Waffe",
         "Waffen"
@@ -4843,7 +4855,7 @@
       "lemma": "kaum",
       "gloss": "hardly, barely",
       "pos": "adv",
-      "rank": 376,
+      "rank": 377,
       "forms": [
         "kaum"
       ],
@@ -4854,7 +4866,7 @@
       "lemma": "irgendwas",
       "gloss": "something, anything (colloquial for irgendetwas)",
       "pos": "pron",
-      "rank": 377,
+      "rank": 378,
       "forms": [
         "irgendwas"
       ]
@@ -4864,7 +4876,7 @@
       "lemma": "klingen",
       "gloss": "to sound",
       "pos": "verb",
-      "rank": 378,
+      "rank": 379,
       "forms": [
         "klingen",
         "klingt",
@@ -4877,7 +4889,7 @@
       "lemma": "Platz",
       "gloss": "place, room, space; seat; square",
       "pos": "noun",
-      "rank": 379,
+      "rank": 380,
       "forms": [
         "Platz",
         "Plätze"
@@ -4890,7 +4902,7 @@
       "lemma": "Papa",
       "gloss": "dad",
       "pos": "noun",
-      "rank": 380,
+      "rank": 381,
       "forms": [
         "Papa"
       ],
@@ -4902,7 +4914,7 @@
       "lemma": "falsch",
       "gloss": "wrong; false",
       "pos": "adj",
-      "rank": 381,
+      "rank": 382,
       "forms": [
         "falsch",
         "falsche",
@@ -4915,7 +4927,7 @@
       "lemma": "sondern",
       "gloss": "but (rather), after a negative",
       "pos": "conj",
-      "rank": 382,
+      "rank": 383,
       "forms": [
         "sondern"
       ],
@@ -4926,7 +4938,7 @@
       "lemma": "Nummer",
       "gloss": "number",
       "pos": "noun",
-      "rank": 383,
+      "rank": 384,
       "forms": [
         "Nummer",
         "Nummern"
@@ -4939,7 +4951,7 @@
       "lemma": "früher",
       "gloss": "earlier; in the past, used to",
       "pos": "adv",
-      "rank": 384,
+      "rank": 385,
       "forms": [
         "früher"
       ],
@@ -4950,7 +4962,7 @@
       "lemma": "wohin",
       "gloss": "where (to)",
       "pos": "adv",
-      "rank": 385,
+      "rank": 386,
       "forms": [
         "wohin"
       ],
@@ -4961,7 +4973,7 @@
       "lemma": "außer",
       "gloss": "except, apart from",
       "pos": "prep",
-      "rank": 386,
+      "rank": 387,
       "forms": [
         "außer"
       ],
@@ -4972,7 +4984,7 @@
       "lemma": "früh",
       "gloss": "early",
       "pos": "adj",
-      "rank": 387,
+      "rank": 388,
       "forms": [
         "früh"
       ],
@@ -4983,7 +4995,7 @@
       "lemma": "setzen",
       "gloss": "to put, set; (sich setzen) to sit down",
       "pos": "verb",
-      "rank": 388,
+      "rank": 389,
       "forms": [
         "setzen",
         "setze",
@@ -4998,7 +5010,7 @@
       "lemma": "zuerst",
       "gloss": "first, at first",
       "pos": "adv",
-      "rank": 389,
+      "rank": 390,
       "forms": [
         "zuerst"
       ],
@@ -5009,7 +5021,7 @@
       "lemma": "wahrscheinlich",
       "gloss": "probably",
       "pos": "adv",
-      "rank": 390,
+      "rank": 391,
       "forms": [
         "wahrscheinlich"
       ]
@@ -5019,7 +5031,7 @@
       "lemma": "Telefon",
       "gloss": "phone, telephone",
       "pos": "noun",
-      "rank": 391,
+      "rank": 392,
       "forms": [
         "Telefon"
       ],
@@ -5031,7 +5043,7 @@
       "lemma": "willkommen",
       "gloss": "welcome",
       "pos": "adj",
-      "rank": 392,
+      "rank": 393,
       "forms": [
         "willkommen"
       ],
@@ -5042,7 +5054,7 @@
       "lemma": "Plan",
       "gloss": "plan",
       "pos": "noun",
-      "rank": 393,
+      "rank": 394,
       "forms": [
         "Plan",
         "Pläne",
@@ -5056,7 +5068,7 @@
       "lemma": "retten",
       "gloss": "to save, rescue",
       "pos": "verb",
-      "rank": 394,
+      "rank": 395,
       "forms": [
         "retten",
         "rette",
@@ -5071,7 +5083,7 @@
       "lemma": "hierher",
       "gloss": "here (to this place)",
       "pos": "adv",
-      "rank": 395,
+      "rank": 396,
       "forms": [
         "hierher"
       ],
@@ -5082,7 +5094,7 @@
       "lemma": "Fehler",
       "gloss": "mistake, error",
       "pos": "noun",
-      "rank": 396,
+      "rank": 397,
       "forms": [
         "Fehler",
         "Fehlern"
@@ -5095,7 +5107,7 @@
       "lemma": "zehn",
       "gloss": "ten",
       "pos": "num",
-      "rank": 397,
+      "rank": 398,
       "forms": [
         "zehn"
       ]
@@ -5105,7 +5117,7 @@
       "lemma": "nächste",
       "gloss": "next; nearest",
       "pos": "adj",
-      "rank": 398,
+      "rank": 399,
       "forms": [
         "nächste",
         "nächsten",
@@ -5119,7 +5131,7 @@
       "lemma": "Menge",
       "gloss": "amount, lot; crowd",
       "pos": "noun",
-      "rank": 399,
+      "rank": 400,
       "forms": [
         "Menge"
       ],
@@ -5131,7 +5143,7 @@
       "lemma": "langsam",
       "gloss": "slow; (adv) slowly; gradually",
       "pos": "adj",
-      "rank": 400,
+      "rank": 401,
       "forms": [
         "langsam",
         "langsame",
@@ -5145,7 +5157,7 @@
       "lemma": "bereits",
       "gloss": "already",
       "pos": "adv",
-      "rank": 401,
+      "rank": 402,
       "forms": [
         "bereits"
       ],
@@ -5156,7 +5168,7 @@
       "lemma": "sechs",
       "gloss": "six",
       "pos": "num",
-      "rank": 402,
+      "rank": 403,
       "forms": [
         "sechs"
       ]
@@ -5166,7 +5178,7 @@
       "lemma": "Dollar",
       "gloss": "dollar",
       "pos": "noun",
-      "rank": 403,
+      "rank": 404,
       "forms": [
         "Dollar",
         "Dollars"
@@ -5179,7 +5191,7 @@
       "lemma": "aufpassen",
       "gloss": "to watch out, pay attention; to look after",
       "pos": "verb",
-      "rank": 404,
+      "rank": 405,
       "forms": [
         "aufpassen",
         "aufgepasst",
@@ -5193,7 +5205,7 @@
       "lemma": "Büro",
       "gloss": "office",
       "pos": "noun",
-      "rank": 405,
+      "rank": 406,
       "forms": [
         "Büro",
         "Büros"
@@ -5205,7 +5217,7 @@
       "lemma": "rufen",
       "gloss": "to call, shout",
       "pos": "verb",
-      "rank": 406,
+      "rank": 407,
       "forms": [
         "rufen",
         "rufe",
@@ -5222,7 +5234,7 @@
       "lemma": "schaffen",
       "gloss": "to manage, make it, get done",
       "pos": "verb",
-      "rank": 407,
+      "rank": 408,
       "forms": [
         "schaffen",
         "schaffe",
@@ -5238,7 +5250,7 @@
       "lemma": "leider",
       "gloss": "unfortunately",
       "pos": "adv",
-      "rank": 408,
+      "rank": 409,
       "forms": [
         "leider"
       ]
@@ -5248,7 +5260,7 @@
       "lemma": "Hölle",
       "gloss": "hell",
       "pos": "noun",
-      "rank": 409,
+      "rank": 410,
       "forms": [
         "Hölle"
       ],
@@ -5259,7 +5271,7 @@
       "lemma": "trotzdem",
       "gloss": "still, anyway, all the same",
       "pos": "adv",
-      "rank": 410,
+      "rank": 411,
       "forms": [
         "trotzdem"
       ]
@@ -5269,7 +5281,7 @@
       "lemma": "Doktor",
       "gloss": "doctor (title; colloquially a physician)",
       "pos": "noun",
-      "rank": 411,
+      "rank": 412,
       "forms": [
         "Doktor"
       ],
@@ -5281,7 +5293,7 @@
       "lemma": "voll",
       "gloss": "full",
       "pos": "adj",
-      "rank": 412,
+      "rank": 413,
       "forms": [
         "voll",
         "volle",
@@ -5295,7 +5307,7 @@
       "lemma": "Film",
       "gloss": "film, movie",
       "pos": "noun",
-      "rank": 413,
+      "rank": 414,
       "forms": [
         "Film",
         "Filme",
@@ -5310,7 +5322,7 @@
       "lemma": "überall",
       "gloss": "everywhere",
       "pos": "adv",
-      "rank": 414,
+      "rank": 415,
       "forms": [
         "überall"
       ]
@@ -5320,7 +5332,7 @@
       "lemma": "Hund",
       "gloss": "dog",
       "pos": "noun",
-      "rank": 415,
+      "rank": 416,
       "forms": [
         "Hund",
         "Hunde",
@@ -5336,7 +5348,7 @@
       "lemma": "direkt",
       "gloss": "direct; directly, right (next to, after)",
       "pos": "adj",
-      "rank": 416,
+      "rank": 417,
       "forms": [
         "direkt",
         "direkte",
@@ -5348,7 +5360,7 @@
       "lemma": "Schiff",
       "gloss": "ship",
       "pos": "noun",
-      "rank": 417,
+      "rank": 418,
       "forms": [
         "Schiff",
         "Schiffe",
@@ -5363,7 +5375,7 @@
       "lemma": "König",
       "gloss": "king",
       "pos": "noun",
-      "rank": 418,
+      "rank": 419,
       "forms": [
         "König",
         "Könige",
@@ -5377,7 +5389,7 @@
       "lemma": "danach",
       "gloss": "after that, afterwards",
       "pos": "adv",
-      "rank": 419,
+      "rank": 420,
       "forms": [
         "danach"
       ]
@@ -5387,7 +5399,7 @@
       "lemma": "funktionieren",
       "gloss": "to work (machine, plan)",
       "pos": "verb",
-      "rank": 420,
+      "rank": 421,
       "forms": [
         "funktionieren",
         "funktioniert",
@@ -5400,7 +5412,7 @@
       "lemma": "lernen",
       "gloss": "to learn; to study",
       "pos": "verb",
-      "rank": 421,
+      "rank": 422,
       "forms": [
         "lernen",
         "lerne",
@@ -5415,7 +5427,7 @@
       "lemma": "deswegen",
       "gloss": "that's why, so",
       "pos": "adv",
-      "rank": 422,
+      "rank": 423,
       "forms": [
         "deswegen"
       ],
@@ -5426,7 +5438,7 @@
       "lemma": "nennen",
       "gloss": "to call, name",
       "pos": "verb",
-      "rank": 423,
+      "rank": 424,
       "forms": [
         "nennen",
         "nenne",
@@ -5443,7 +5455,7 @@
       "lemma": "Feuer",
       "gloss": "fire",
       "pos": "noun",
-      "rank": 424,
+      "rank": 425,
       "forms": [
         "Feuer"
       ],
@@ -5454,7 +5466,7 @@
       "lemma": "erinnern",
       "gloss": "to remind; (sich erinnern) to remember",
       "pos": "verb",
-      "rank": 425,
+      "rank": 426,
       "forms": [
         "erinnern",
         "erinnere",
@@ -5469,7 +5481,7 @@
       "lemma": "völlig",
       "gloss": "completely, totally",
       "pos": "adv",
-      "rank": 426,
+      "rank": 427,
       "forms": [
         "völlig"
       ]
@@ -5479,7 +5491,7 @@
       "lemma": "Kumpel",
       "gloss": "buddy, mate",
       "pos": "noun",
-      "rank": 427,
+      "rank": 428,
       "forms": [
         "Kumpel",
         "Kumpels"
@@ -5492,7 +5504,7 @@
       "lemma": "Kaffee",
       "gloss": "coffee",
       "pos": "noun",
-      "rank": 428,
+      "rank": 429,
       "forms": [
         "Kaffee"
       ],
@@ -5503,7 +5515,7 @@
       "lemma": "Luft",
       "gloss": "air",
       "pos": "noun",
-      "rank": 429,
+      "rank": 430,
       "forms": [
         "Luft"
       ],
@@ -5514,7 +5526,7 @@
       "lemma": "ziehen",
       "gloss": "to pull; to move (house)",
       "pos": "verb",
-      "rank": 430,
+      "rank": 431,
       "forms": [
         "ziehen",
         "ziehe",
@@ -5531,7 +5543,7 @@
       "lemma": "verschwinden",
       "gloss": "to disappear",
       "pos": "verb",
-      "rank": 431,
+      "rank": 432,
       "forms": [
         "verschwinden",
         "verschwinde",
@@ -5546,7 +5558,7 @@
       "lemma": "aufhören",
       "gloss": "to stop",
       "pos": "verb",
-      "rank": 432,
+      "rank": 433,
       "forms": [
         "aufhören",
         "aufgehört",
@@ -5559,7 +5571,7 @@
       "lemma": "eigen",
       "gloss": "own",
       "pos": "adj",
-      "rank": 433,
+      "rank": 434,
       "forms": [
         "eigene",
         "eigenen",
@@ -5573,7 +5585,7 @@
       "lemma": "zwar",
       "gloss": "admittedly, it's true (that)",
       "pos": "adv",
-      "rank": 434,
+      "rank": 435,
       "forms": [
         "zwar"
       ],
@@ -5584,7 +5596,7 @@
       "lemma": "Buch",
       "gloss": "book",
       "pos": "noun",
-      "rank": 435,
+      "rank": 436,
       "forms": [
         "Buch",
         "Bücher",
@@ -5599,7 +5611,7 @@
       "lemma": "krank",
       "gloss": "sick, ill",
       "pos": "adj",
-      "rank": 436,
+      "rank": 437,
       "forms": [
         "krank",
         "kranke",
@@ -5612,7 +5624,7 @@
       "lemma": "fühlen",
       "gloss": "to feel",
       "pos": "verb",
-      "rank": 437,
+      "rank": 438,
       "forms": [
         "fühlen",
         "fühle",
@@ -5628,7 +5640,7 @@
       "lemma": "wert",
       "gloss": "worth",
       "pos": "adj",
-      "rank": 438,
+      "rank": 439,
       "forms": [
         "wert"
       ],
@@ -5639,7 +5651,7 @@
       "lemma": "Arzt",
       "gloss": "doctor (physician)",
       "pos": "noun",
-      "rank": 439,
+      "rank": 440,
       "forms": [
         "Arzt",
         "Ärzte",
@@ -5654,7 +5666,7 @@
       "lemma": "froh",
       "gloss": "glad, happy",
       "pos": "adj",
-      "rank": 440,
+      "rank": 441,
       "forms": [
         "froh",
         "frohe",
@@ -5666,7 +5678,7 @@
       "lemma": "Straße",
       "gloss": "street, road",
       "pos": "noun",
-      "rank": 441,
+      "rank": 442,
       "forms": [
         "Straße",
         "Straßen"
@@ -5679,7 +5691,7 @@
       "lemma": "heiraten",
       "gloss": "to marry, get married",
       "pos": "verb",
-      "rank": 442,
+      "rank": 443,
       "forms": [
         "heiraten",
         "heirate",
@@ -5695,7 +5707,7 @@
       "lemma": "super",
       "gloss": "great, super",
       "pos": "adj",
-      "rank": 443,
+      "rank": 444,
       "forms": [
         "super"
       ],
@@ -5706,7 +5718,7 @@
       "lemma": "leben",
       "gloss": "to live; to be alive",
       "pos": "verb",
-      "rank": 444,
+      "rank": 445,
       "forms": [
         "leben",
         "lebe",
@@ -5723,7 +5735,7 @@
       "lemma": "Onkel",
       "gloss": "uncle",
       "pos": "noun",
-      "rank": 445,
+      "rank": 446,
       "forms": [
         "Onkel"
       ],
@@ -5735,7 +5747,7 @@
       "lemma": "total",
       "gloss": "totally, completely (spoken)",
       "pos": "adv",
-      "rank": 446,
+      "rank": 447,
       "forms": [
         "total"
       ]
@@ -5745,7 +5757,7 @@
       "lemma": "Party",
       "gloss": "party",
       "pos": "noun",
-      "rank": 447,
+      "rank": 448,
       "forms": [
         "Party",
         "Partys"
@@ -5758,7 +5770,7 @@
       "lemma": "erklären",
       "gloss": "to explain",
       "pos": "verb",
-      "rank": 448,
+      "rank": 449,
       "forms": [
         "erklären",
         "erkläre",
@@ -5772,7 +5784,7 @@
       "lemma": "Wahl",
       "gloss": "choice; election",
       "pos": "noun",
-      "rank": 449,
+      "rank": 450,
       "forms": [
         "Wahl",
         "Wahlen"
@@ -5784,7 +5796,7 @@
       "lemma": "vertrauen",
       "gloss": "to trust",
       "pos": "verb",
-      "rank": 450,
+      "rank": 451,
       "forms": [
         "vertrauen",
         "vertraue",
@@ -5799,7 +5811,7 @@
       "lemma": "damals",
       "gloss": "back then, at that time",
       "pos": "adv",
-      "rank": 451,
+      "rank": 452,
       "forms": [
         "damals"
       ]
@@ -5809,7 +5821,7 @@
       "lemma": "leicht",
       "gloss": "easy; light (not heavy)",
       "pos": "adj",
-      "rank": 452,
+      "rank": 453,
       "forms": [
         "leicht",
         "leichte",
@@ -5822,7 +5834,7 @@
       "lemma": "nachdem",
       "gloss": "after (doing something)",
       "pos": "conj",
-      "rank": 453,
+      "rank": 454,
       "forms": [
         "nachdem"
       ],
@@ -5833,7 +5845,7 @@
       "lemma": "Gefühl",
       "gloss": "feeling",
       "pos": "noun",
-      "rank": 454,
+      "rank": 455,
       "forms": [
         "Gefühl",
         "Gefühle",
@@ -5847,7 +5859,7 @@
       "lemma": "kaufen",
       "gloss": "to buy",
       "pos": "verb",
-      "rank": 455,
+      "rank": 456,
       "forms": [
         "kaufen",
         "kaufe",
@@ -5863,7 +5875,7 @@
       "lemma": "interessieren",
       "gloss": "to interest; (sich interessieren für) to be interested in",
       "pos": "verb",
-      "rank": 456,
+      "rank": 457,
       "forms": [
         "interessieren",
         "interessiere",
@@ -5877,7 +5889,7 @@
       "lemma": "irgendwo",
       "gloss": "somewhere",
       "pos": "adv",
-      "rank": 457,
+      "rank": 458,
       "forms": [
         "irgendwo"
       ]
@@ -5887,7 +5899,7 @@
       "lemma": "Stück",
       "gloss": "piece, bit",
       "pos": "noun",
-      "rank": 458,
+      "rank": 459,
       "forms": [
         "Stück",
         "Stücke",
@@ -5901,7 +5913,7 @@
       "lemma": "genauso",
       "gloss": "just as, exactly the same",
       "pos": "adv",
-      "rank": 459,
+      "rank": 460,
       "forms": [
         "genauso"
       ],
@@ -5912,7 +5924,7 @@
       "lemma": "Zukunft",
       "gloss": "future",
       "pos": "noun",
-      "rank": 460,
+      "rank": 461,
       "forms": [
         "Zukunft"
       ],
@@ -5923,7 +5935,7 @@
       "lemma": "Licht",
       "gloss": "light",
       "pos": "noun",
-      "rank": 461,
+      "rank": 462,
       "forms": [
         "Licht",
         "Lichter"
@@ -5936,7 +5948,7 @@
       "lemma": "Himmel",
       "gloss": "sky; heaven",
       "pos": "noun",
-      "rank": 462,
+      "rank": 463,
       "forms": [
         "Himmel",
         "Himmels"
@@ -5948,7 +5960,7 @@
       "lemma": "Nachricht",
       "gloss": "message; (plural) the news",
       "pos": "noun",
-      "rank": 463,
+      "rank": 464,
       "forms": [
         "Nachricht",
         "Nachrichten"
@@ -5961,7 +5973,7 @@
       "lemma": "drüben",
       "gloss": "over there",
       "pos": "adv",
-      "rank": 464,
+      "rank": 465,
       "forms": [
         "drüben"
       ],
@@ -5972,7 +5984,7 @@
       "lemma": "passen",
       "gloss": "to fit; to suit, be convenient",
       "pos": "verb",
-      "rank": 465,
+      "rank": 466,
       "forms": [
         "passen",
         "passe",
@@ -5987,7 +5999,7 @@
       "lemma": "kümmern",
       "gloss": "(sich kümmern um) to take care of, look after",
       "pos": "verb",
-      "rank": 466,
+      "rank": 467,
       "forms": [
         "kümmern",
         "kümmere",
@@ -6003,7 +6015,7 @@
       "lemma": "laut",
       "gloss": "loud; aloud",
       "pos": "adj",
-      "rank": 467,
+      "rank": 468,
       "forms": [
         "laut",
         "laute",
@@ -6016,7 +6028,7 @@
       "lemma": "anrufen",
       "gloss": "to call, phone",
       "pos": "verb",
-      "rank": 468,
+      "rank": 469,
       "forms": [
         "anrufen",
         "angerufen",
@@ -6029,7 +6041,7 @@
       "lemma": "sitzen",
       "gloss": "to sit, be sitting",
       "pos": "verb",
-      "rank": 469,
+      "rank": 470,
       "forms": [
         "sitzen",
         "sitze",
@@ -6045,7 +6057,7 @@
       "lemma": "Erde",
       "gloss": "earth; ground, soil",
       "pos": "noun",
-      "rank": 470,
+      "rank": 471,
       "forms": [
         "Erde"
       ],
@@ -6056,7 +6068,7 @@
       "lemma": "Schlüssel",
       "gloss": "key",
       "pos": "noun",
-      "rank": 471,
+      "rank": 472,
       "forms": [
         "Schlüssel"
       ],
@@ -6069,7 +6081,7 @@
       "lemma": "Rest",
       "gloss": "rest, remainder",
       "pos": "noun",
-      "rank": 472,
+      "rank": 473,
       "forms": [
         "Rest",
         "Reste"
@@ -6082,7 +6094,7 @@
       "lemma": "eher",
       "gloss": "rather; sooner, earlier",
       "pos": "adv",
-      "rank": 473,
+      "rank": 474,
       "forms": [
         "eher"
       ]
@@ -6092,7 +6104,7 @@
       "lemma": "Gefängnis",
       "gloss": "prison",
       "pos": "noun",
-      "rank": 474,
+      "rank": 475,
       "forms": [
         "Gefängnis"
       ],
@@ -6104,7 +6116,7 @@
       "lemma": "Opfer",
       "gloss": "victim; sacrifice",
       "pos": "noun",
-      "rank": 475,
+      "rank": 476,
       "forms": [
         "Opfer"
       ],
@@ -6116,7 +6128,7 @@
       "lemma": "Körper",
       "gloss": "body",
       "pos": "noun",
-      "rank": 476,
+      "rank": 477,
       "forms": [
         "Körper"
       ],
@@ -6128,7 +6140,7 @@
       "lemma": "solcher",
       "gloss": "such, like that",
       "pos": "det",
-      "rank": 477,
+      "rank": 478,
       "forms": [
         "solche",
         "solchen",
@@ -6142,7 +6154,7 @@
       "lemma": "schreiben",
       "gloss": "to write",
       "pos": "verb",
-      "rank": 478,
+      "rank": 479,
       "forms": [
         "schreiben",
         "schreibe",
@@ -6159,7 +6171,7 @@
       "lemma": "böse",
       "gloss": "bad, evil; angry (with someone)",
       "pos": "adj",
-      "rank": 479,
+      "rank": 480,
       "forms": [
         "böse",
         "bösen",
@@ -6173,7 +6185,7 @@
       "lemma": "vorstellen",
       "gloss": "to introduce; (sich vorstellen) to imagine",
       "pos": "verb",
-      "rank": 480,
+      "rank": 481,
       "forms": [
         "vorstellen",
         "vorgestellt",
@@ -6186,7 +6198,7 @@
       "lemma": "wovon",
       "gloss": "what … of/about",
       "pos": "adv",
-      "rank": 481,
+      "rank": 482,
       "forms": [
         "wovon"
       ],
@@ -6197,7 +6209,7 @@
       "lemma": "sobald",
       "gloss": "as soon as",
       "pos": "conj",
-      "rank": 482,
+      "rank": 483,
       "forms": [
         "sobald"
       ],
@@ -6208,7 +6220,7 @@
       "lemma": "nochmal",
       "gloss": "again, once more (spoken)",
       "pos": "adv",
-      "rank": 483,
+      "rank": 484,
       "forms": [
         "nochmal"
       ],
@@ -6219,7 +6231,7 @@
       "lemma": "Wohnung",
       "gloss": "flat, apartment",
       "pos": "noun",
-      "rank": 484,
+      "rank": 485,
       "forms": [
         "Wohnung",
         "Wohnungen"
@@ -6232,7 +6244,7 @@
       "lemma": "weh",
       "gloss": "sore, painful (in wehtun: to hurt)",
       "pos": "adj",
-      "rank": 485,
+      "rank": 486,
       "forms": [
         "weh"
       ],
@@ -6243,7 +6255,7 @@
       "lemma": "Krankenhaus",
       "gloss": "hospital",
       "pos": "noun",
-      "rank": 486,
+      "rank": 487,
       "forms": [
         "Krankenhaus"
       ],
@@ -6255,7 +6267,7 @@
       "lemma": "Million",
       "gloss": "million",
       "pos": "noun",
-      "rank": 487,
+      "rank": 488,
       "forms": [
         "Million",
         "Millionen"
@@ -6268,7 +6280,7 @@
       "lemma": "Klasse",
       "gloss": "class (school); (spoken) great",
       "pos": "noun",
-      "rank": 488,
+      "rank": 489,
       "forms": [
         "Klasse",
         "Klassen"
@@ -6281,7 +6293,7 @@
       "lemma": "hart",
       "gloss": "hard; tough",
       "pos": "adj",
-      "rank": 489,
+      "rank": 490,
       "forms": [
         "hart",
         "harte",
@@ -6296,7 +6308,7 @@
       "lemma": "Sinn",
       "gloss": "sense, meaning; point",
       "pos": "noun",
-      "rank": 490,
+      "rank": 491,
       "forms": [
         "Sinn"
       ],
@@ -6308,7 +6320,7 @@
       "lemma": "außerdem",
       "gloss": "besides, also, what's more",
       "pos": "adv",
-      "rank": 491,
+      "rank": 492,
       "forms": [
         "außerdem"
       ]
@@ -6318,7 +6330,7 @@
       "lemma": "verletzen",
       "gloss": "to hurt, injure",
       "pos": "verb",
-      "rank": 492,
+      "rank": 493,
       "forms": [
         "verletzen",
         "verletze",
@@ -6332,7 +6344,7 @@
       "lemma": "ändern",
       "gloss": "to change",
       "pos": "verb",
-      "rank": 493,
+      "rank": 494,
       "forms": [
         "ändern",
         "ändere",
@@ -6348,7 +6360,7 @@
       "lemma": "erfahren",
       "gloss": "to find out, hear (news)",
       "pos": "verb",
-      "rank": 494,
+      "rank": 495,
       "forms": [
         "erfahren",
         "erfahre",
@@ -6363,7 +6375,7 @@
       "lemma": "tragen",
       "gloss": "to carry; to wear",
       "pos": "verb",
-      "rank": 495,
+      "rank": 496,
       "forms": [
         "tragen",
         "trage",
@@ -6379,7 +6391,7 @@
       "lemma": "wenigstens",
       "gloss": "at least",
       "pos": "adv",
-      "rank": 496,
+      "rank": 497,
       "forms": [
         "wenigstens"
       ]
@@ -6389,7 +6401,7 @@
       "lemma": "vorsichtig",
       "gloss": "careful",
       "pos": "adj",
-      "rank": 497,
+      "rank": 498,
       "forms": [
         "vorsichtig"
       ]
@@ -6399,7 +6411,7 @@
       "lemma": "stolz",
       "gloss": "proud",
       "pos": "adj",
-      "rank": 498,
+      "rank": 499,
       "forms": [
         "stolz"
       ],
@@ -6410,7 +6422,7 @@
       "lemma": "stark",
       "gloss": "strong",
       "pos": "adj",
-      "rank": 499,
+      "rank": 500,
       "forms": [
         "stark",
         "starke",
@@ -6424,7 +6436,7 @@
       "lemma": "fallen",
       "gloss": "to fall",
       "pos": "verb",
-      "rank": 500,
+      "rank": 501,
       "forms": [
         "fallen",
         "falle",
@@ -6440,7 +6452,7 @@
       "lemma": "besonders",
       "gloss": "especially, particularly",
       "pos": "adv",
-      "rank": 501,
+      "rank": 502,
       "forms": [
         "besonders"
       ]
@@ -6450,7 +6462,7 @@
       "lemma": "schicken",
       "gloss": "to send",
       "pos": "verb",
-      "rank": 502,
+      "rank": 503,
       "forms": [
         "schicken",
         "schicke",
@@ -6466,7 +6478,7 @@
       "lemma": "Person",
       "gloss": "person",
       "pos": "noun",
-      "rank": 503,
+      "rank": 504,
       "forms": [
         "Person",
         "Personen"
@@ -6479,7 +6491,7 @@
       "lemma": "schätzen",
       "gloss": "to guess, estimate; to value, appreciate",
       "pos": "verb",
-      "rank": 504,
+      "rank": 505,
       "forms": [
         "schätzen",
         "schätze",
@@ -6493,7 +6505,7 @@
       "lemma": "solange",
       "gloss": "as long as",
       "pos": "conj",
-      "rank": 505,
+      "rank": 506,
       "forms": [
         "solange"
       ],
@@ -6504,7 +6516,7 @@
       "lemma": "großartig",
       "gloss": "great, wonderful",
       "pos": "adj",
-      "rank": 506,
+      "rank": 507,
       "forms": [
         "großartig",
         "großartige",
@@ -6516,7 +6528,7 @@
       "lemma": "lachen",
       "gloss": "to laugh",
       "pos": "verb",
-      "rank": 507,
+      "rank": 508,
       "forms": [
         "lachen",
         "lache",
@@ -6532,7 +6544,7 @@
       "lemma": "erwarten",
       "gloss": "to expect",
       "pos": "verb",
-      "rank": 508,
+      "rank": 509,
       "forms": [
         "erwarten",
         "erwarte",
@@ -6547,7 +6559,7 @@
       "lemma": "Boden",
       "gloss": "floor, ground",
       "pos": "noun",
-      "rank": 509,
+      "rank": 510,
       "forms": [
         "Boden"
       ],
@@ -6559,7 +6571,7 @@
       "lemma": "Stimme",
       "gloss": "voice; vote",
       "pos": "noun",
-      "rank": 510,
+      "rank": 511,
       "forms": [
         "Stimme"
       ],
@@ -6571,7 +6583,7 @@
       "lemma": "still",
       "gloss": "quiet, silent; still",
       "pos": "adj",
-      "rank": 511,
+      "rank": 512,
       "forms": [
         "still",
         "stille",
@@ -6584,7 +6596,7 @@
       "lemma": "Sicherheit",
       "gloss": "safety, security; certainty",
       "pos": "noun",
-      "rank": 512,
+      "rank": 513,
       "forms": [
         "Sicherheit"
       ],
@@ -6596,7 +6608,7 @@
       "lemma": "Mund",
       "gloss": "mouth",
       "pos": "noun",
-      "rank": 513,
+      "rank": 514,
       "forms": [
         "Mund"
       ],
@@ -6608,7 +6620,7 @@
       "lemma": "kämpfen",
       "gloss": "to fight",
       "pos": "verb",
-      "rank": 514,
+      "rank": 515,
       "forms": [
         "kämpfen",
         "kämpfe",
@@ -6624,7 +6636,7 @@
       "lemma": "Zeug",
       "gloss": "stuff, things",
       "pos": "noun",
-      "rank": 515,
+      "rank": 516,
       "forms": [
         "Zeug"
       ],
@@ -6636,7 +6648,7 @@
       "lemma": "lustig",
       "gloss": "funny; fun",
       "pos": "adj",
-      "rank": 516,
+      "rank": 517,
       "forms": [
         "lustig",
         "lustige",
@@ -6650,7 +6662,7 @@
       "lemma": "umbringen",
       "gloss": "to kill",
       "pos": "verb",
-      "rank": 517,
+      "rank": 518,
       "forms": [
         "umbringen",
         "umgebracht",
@@ -6663,7 +6675,7 @@
       "lemma": "hassen",
       "gloss": "to hate",
       "pos": "verb",
-      "rank": 518,
+      "rank": 519,
       "forms": [
         "hassen",
         "hasse",
@@ -6678,7 +6690,7 @@
       "lemma": "schlimm",
       "gloss": "bad, serious",
       "pos": "adj",
-      "rank": 519,
+      "rank": 520,
       "forms": [
         "schlimm",
         "schlimme",
@@ -6693,7 +6705,7 @@
       "lemma": "unglaublich",
       "gloss": "unbelievable, incredible",
       "pos": "adj",
-      "rank": 520,
+      "rank": 521,
       "forms": [
         "unglaublich",
         "unglaubliche"
@@ -6704,7 +6716,7 @@
       "lemma": "führen",
       "gloss": "to lead; to run (a business)",
       "pos": "verb",
-      "rank": 521,
+      "rank": 522,
       "forms": [
         "führen",
         "führe",
@@ -6719,7 +6731,7 @@
       "lemma": "Meinung",
       "gloss": "opinion",
       "pos": "noun",
-      "rank": 522,
+      "rank": 523,
       "forms": [
         "Meinung"
       ],
@@ -6731,7 +6743,7 @@
       "lemma": "lesen",
       "gloss": "to read",
       "pos": "verb",
-      "rank": 523,
+      "rank": 524,
       "forms": [
         "lesen",
         "lese",
@@ -6747,7 +6759,7 @@
       "lemma": "Mörder",
       "gloss": "murderer",
       "pos": "noun",
-      "rank": 524,
+      "rank": 525,
       "forms": [
         "Mörder"
       ],
@@ -6759,7 +6771,7 @@
       "lemma": "geschehen",
       "gloss": "to happen",
       "pos": "verb",
-      "rank": 525,
+      "rank": 526,
       "forms": [
         "geschehen",
         "geschieht",
@@ -6772,7 +6784,7 @@
       "lemma": "Geschäft",
       "gloss": "business; shop; deal",
       "pos": "noun",
-      "rank": 526,
+      "rank": 527,
       "forms": [
         "Geschäft",
         "Geschäfte",
@@ -6786,7 +6798,7 @@
       "lemma": "Idiot",
       "gloss": "idiot",
       "pos": "noun",
-      "rank": 527,
+      "rank": 528,
       "forms": [
         "Idiot",
         "Idioten"
@@ -6799,7 +6811,7 @@
       "lemma": "Verzeihung",
       "gloss": "excuse me, pardon; forgiveness",
       "pos": "noun",
-      "rank": 528,
+      "rank": 529,
       "forms": [
         "Verzeihung"
       ],
@@ -6811,7 +6823,7 @@
       "lemma": "fliegen",
       "gloss": "to fly",
       "pos": "verb",
-      "rank": 529,
+      "rank": 530,
       "forms": [
         "fliegen",
         "fliege",
@@ -6827,7 +6839,7 @@
       "lemma": "vorher",
       "gloss": "before, beforehand",
       "pos": "adv",
-      "rank": 530,
+      "rank": 531,
       "forms": [
         "vorher"
       ]
@@ -6837,7 +6849,7 @@
       "lemma": "Schluss",
       "gloss": "end",
       "pos": "noun",
-      "rank": 531,
+      "rank": 532,
       "forms": [
         "Schluss"
       ],
@@ -6849,7 +6861,7 @@
       "lemma": "verdienen",
       "gloss": "to earn; to deserve",
       "pos": "verb",
-      "rank": 532,
+      "rank": 533,
       "forms": [
         "verdienen",
         "verdiene",
@@ -6863,7 +6875,7 @@
       "lemma": "perfekt",
       "gloss": "perfect",
       "pos": "adj",
-      "rank": 533,
+      "rank": 534,
       "forms": [
         "perfekt",
         "perfekte",
@@ -6875,7 +6887,7 @@
       "lemma": "versprechen",
       "gloss": "to promise",
       "pos": "verb",
-      "rank": 534,
+      "rank": 535,
       "forms": [
         "versprechen",
         "verspreche",
@@ -6891,7 +6903,7 @@
       "lemma": "Handy",
       "gloss": "mobile phone, cell phone",
       "pos": "noun",
-      "rank": 535,
+      "rank": 536,
       "forms": [
         "Handy",
         "Handys"
@@ -6904,7 +6916,7 @@
       "lemma": "hinten",
       "gloss": "at the back, behind",
       "pos": "adv",
-      "rank": 536,
+      "rank": 537,
       "forms": [
         "hinten"
       ],
@@ -6915,7 +6927,7 @@
       "lemma": "Monat",
       "gloss": "month",
       "pos": "noun",
-      "rank": 537,
+      "rank": 538,
       "forms": [
         "Monat",
         "Monate",
@@ -6930,7 +6942,7 @@
       "lemma": "acht",
       "gloss": "eight",
       "pos": "num",
-      "rank": 538,
+      "rank": 539,
       "forms": [
         "acht"
       ],
@@ -6941,7 +6953,7 @@
       "lemma": "nötig",
       "gloss": "necessary",
       "pos": "adj",
-      "rank": 539,
+      "rank": 540,
       "forms": [
         "nötig"
       ],
@@ -6952,7 +6964,7 @@
       "lemma": "Mord",
       "gloss": "murder",
       "pos": "noun",
-      "rank": 540,
+      "rank": 541,
       "forms": [
         "Mord",
         "Mordes"
@@ -6965,7 +6977,7 @@
       "lemma": "heraus",
       "gloss": "out (of)",
       "pos": "adv",
-      "rank": 541,
+      "rank": 542,
       "forms": [
         "heraus"
       ],
@@ -6976,7 +6988,7 @@
       "lemma": "unmöglich",
       "gloss": "impossible",
       "pos": "adj",
-      "rank": 542,
+      "rank": 543,
       "forms": [
         "unmöglich"
       ]
@@ -6986,7 +6998,7 @@
       "lemma": "Liebling",
       "gloss": "darling; favourite",
       "pos": "noun",
-      "rank": 543,
+      "rank": 544,
       "forms": [
         "Liebling"
       ],
@@ -6998,7 +7010,7 @@
       "lemma": "tatsächlich",
       "gloss": "actually, really, indeed",
       "pos": "adv",
-      "rank": 544,
+      "rank": 545,
       "forms": [
         "tatsächlich"
       ]
@@ -7008,7 +7020,7 @@
       "lemma": "folgen",
       "gloss": "to follow",
       "pos": "verb",
-      "rank": 545,
+      "rank": 546,
       "forms": [
         "folgen",
         "folge",
@@ -7024,7 +7036,7 @@
       "lemma": "bitten",
       "gloss": "to ask (for), request",
       "pos": "verb",
-      "rank": 546,
+      "rank": 547,
       "forms": [
         "bitten",
         "bittest",
@@ -7039,7 +7051,7 @@
       "lemma": "behalten",
       "gloss": "to keep",
       "pos": "verb",
-      "rank": 547,
+      "rank": 548,
       "forms": [
         "behalten",
         "behalte",
@@ -7054,7 +7066,7 @@
       "lemma": "Nähe",
       "gloss": "nearness; (in der Nähe) nearby",
       "pos": "noun",
-      "rank": 548,
+      "rank": 549,
       "forms": [
         "Nähe"
       ],
@@ -7066,7 +7078,7 @@
       "lemma": "plötzlich",
       "gloss": "suddenly",
       "pos": "adv",
-      "rank": 549,
+      "rank": 550,
       "forms": [
         "plötzlich"
       ]
@@ -7076,7 +7088,7 @@
       "lemma": "Tisch",
       "gloss": "table",
       "pos": "noun",
-      "rank": 550,
+      "rank": 551,
       "forms": [
         "Tisch"
       ],
@@ -7088,7 +7100,7 @@
       "lemma": "jemals",
       "gloss": "ever",
       "pos": "adv",
-      "rank": 551,
+      "rank": 552,
       "forms": [
         "jemals"
       ]
@@ -7098,7 +7110,7 @@
       "lemma": "verkaufen",
       "gloss": "to sell",
       "pos": "verb",
-      "rank": 552,
+      "rank": 553,
       "forms": [
         "verkaufen",
         "verkaufe",
@@ -7112,7 +7124,7 @@
       "lemma": "gefährlich",
       "gloss": "dangerous",
       "pos": "adj",
-      "rank": 553,
+      "rank": 554,
       "forms": [
         "gefährlich",
         "gefährliche",
@@ -7125,7 +7137,7 @@
       "lemma": "anfangen",
       "gloss": "to begin, start",
       "pos": "verb",
-      "rank": 554,
+      "rank": 555,
       "forms": [
         "anfangen",
         "angefangen",
@@ -7138,7 +7150,7 @@
       "lemma": "Hotel",
       "gloss": "hotel",
       "pos": "noun",
-      "rank": 555,
+      "rank": 556,
       "forms": [
         "Hotel",
         "Hotels"
@@ -7151,7 +7163,7 @@
       "lemma": "Meister",
       "gloss": "master; champion",
       "pos": "noun",
-      "rank": 556,
+      "rank": 557,
       "forms": [
         "Meister"
       ],
@@ -7163,7 +7175,7 @@
       "lemma": "Kampf",
       "gloss": "fight, battle",
       "pos": "noun",
-      "rank": 557,
+      "rank": 558,
       "forms": [
         "Kampf"
       ],
@@ -7175,7 +7187,7 @@
       "lemma": "Antwort",
       "gloss": "answer",
       "pos": "noun",
-      "rank": 558,
+      "rank": 559,
       "forms": [
         "Antwort"
       ],
@@ -7187,7 +7199,7 @@
       "lemma": "obwohl",
       "gloss": "although, even though",
       "pos": "conj",
-      "rank": 559,
+      "rank": 560,
       "forms": [
         "obwohl"
       ],
@@ -7198,7 +7210,7 @@
       "lemma": "sieben",
       "gloss": "seven",
       "pos": "num",
-      "rank": 560,
+      "rank": 561,
       "forms": [
         "sieben"
       ]
@@ -7208,7 +7220,7 @@
       "lemma": "komisch",
       "gloss": "strange, weird; funny",
       "pos": "adj",
-      "rank": 561,
+      "rank": 562,
       "forms": [
         "komisch",
         "komische",
@@ -7222,7 +7234,7 @@
       "lemma": "gewinnen",
       "gloss": "to win",
       "pos": "verb",
-      "rank": 562,
+      "rank": 563,
       "forms": [
         "gewinnen",
         "gewinne",
@@ -7238,7 +7250,7 @@
       "lemma": "bezahlen",
       "gloss": "to pay (for)",
       "pos": "verb",
-      "rank": 563,
+      "rank": 564,
       "forms": [
         "bezahlen",
         "bezahle",
@@ -7253,7 +7265,7 @@
       "lemma": "unterwegs",
       "gloss": "on the way; out and about",
       "pos": "adv",
-      "rank": 564,
+      "rank": 565,
       "forms": [
         "unterwegs"
       ]
@@ -7263,7 +7275,7 @@
       "lemma": "dumm",
       "gloss": "stupid",
       "pos": "adj",
-      "rank": 565,
+      "rank": 566,
       "forms": [
         "dumm",
         "dumme",
@@ -7277,7 +7289,7 @@
       "lemma": "Ärger",
       "gloss": "trouble; annoyance",
       "pos": "noun",
-      "rank": 566,
+      "rank": 567,
       "forms": [
         "Ärger"
       ],
@@ -7288,7 +7300,7 @@
       "lemma": "Bild",
       "gloss": "picture",
       "pos": "noun",
-      "rank": 567,
+      "rank": 568,
       "forms": [
         "Bild",
         "Bilder",
@@ -7302,7 +7314,7 @@
       "lemma": "dagegen",
       "gloss": "against it; on the other hand",
       "pos": "adv",
-      "rank": 568,
+      "rank": 569,
       "forms": [
         "dagegen"
       ]
@@ -7312,7 +7324,7 @@
       "lemma": "Leiche",
       "gloss": "(dead) body, corpse",
       "pos": "noun",
-      "rank": 569,
+      "rank": 570,
       "forms": [
         "Leiche"
       ],
@@ -7324,7 +7336,7 @@
       "lemma": "verheiratet",
       "gloss": "married",
       "pos": "adj",
-      "rank": 570,
+      "rank": 571,
       "forms": [
         "verheiratet"
       ],
@@ -7335,7 +7347,7 @@
       "lemma": "Traum",
       "gloss": "dream",
       "pos": "noun",
-      "rank": 571,
+      "rank": 572,
       "forms": [
         "Traum",
         "Träume",
@@ -7349,7 +7361,7 @@
       "lemma": "Entscheidung",
       "gloss": "decision",
       "pos": "noun",
-      "rank": 572,
+      "rank": 573,
       "forms": [
         "Entscheidung"
       ],
@@ -7361,7 +7373,7 @@
       "lemma": "Regel",
       "gloss": "rule",
       "pos": "noun",
-      "rank": 573,
+      "rank": 574,
       "forms": [
         "Regel",
         "Regeln"
@@ -7374,7 +7386,7 @@
       "lemma": "Fenster",
       "gloss": "window",
       "pos": "noun",
-      "rank": 574,
+      "rank": 575,
       "forms": [
         "Fenster"
       ],
@@ -7386,7 +7398,7 @@
       "lemma": "fangen",
       "gloss": "to catch",
       "pos": "verb",
-      "rank": 575,
+      "rank": 576,
       "forms": [
         "fangen",
         "fange",
@@ -7403,7 +7415,7 @@
       "lemma": "fort",
       "gloss": "away, gone",
       "pos": "adv",
-      "rank": 576,
+      "rank": 577,
       "forms": [
         "fort"
       ],
@@ -7414,7 +7426,7 @@
       "lemma": "ständig",
       "gloss": "constantly, all the time",
       "pos": "adv",
-      "rank": 577,
+      "rank": 578,
       "forms": [
         "ständig"
       ]
@@ -7424,7 +7436,7 @@
       "lemma": "Gefahr",
       "gloss": "danger",
       "pos": "noun",
-      "rank": 578,
+      "rank": 579,
       "forms": [
         "Gefahr"
       ],
@@ -7436,7 +7448,7 @@
       "lemma": "absolut",
       "gloss": "absolutely",
       "pos": "adv",
-      "rank": 579,
+      "rank": 580,
       "forms": [
         "absolut"
       ]
@@ -7446,7 +7458,7 @@
       "lemma": "Augenblick",
       "gloss": "moment",
       "pos": "noun",
-      "rank": 580,
+      "rank": 581,
       "forms": [
         "Augenblick"
       ],
@@ -7458,7 +7470,7 @@
       "lemma": "Bescheid",
       "gloss": "word, information (Bescheid sagen: to let know)",
       "pos": "noun",
-      "rank": 581,
+      "rank": 582,
       "forms": [
         "Bescheid"
       ],
@@ -7470,7 +7482,7 @@
       "lemma": "herum",
       "gloss": "around",
       "pos": "adv",
-      "rank": 582,
+      "rank": 583,
       "forms": [
         "herum",
         "rum"
@@ -7482,7 +7494,7 @@
       "lemma": "Gedanke",
       "gloss": "thought",
       "pos": "noun",
-      "rank": 583,
+      "rank": 584,
       "forms": [
         "Gedanke",
         "Gedanken"
@@ -7495,7 +7507,7 @@
       "lemma": "Ziel",
       "gloss": "goal, aim; destination",
       "pos": "noun",
-      "rank": 584,
+      "rank": 585,
       "forms": [
         "Ziel",
         "Ziele",
@@ -7509,7 +7521,7 @@
       "lemma": "benutzen",
       "gloss": "to use",
       "pos": "verb",
-      "rank": 585,
+      "rank": 586,
       "forms": [
         "benutzen",
         "benutze",
@@ -7522,7 +7534,7 @@
       "lemma": "Bewegung",
       "gloss": "movement; exercise",
       "pos": "noun",
-      "rank": 586,
+      "rank": 587,
       "forms": [
         "Bewegung",
         "Bewegungen"
@@ -7535,7 +7547,7 @@
       "lemma": "wünschen",
       "gloss": "to wish; (sich wünschen) to want",
       "pos": "verb",
-      "rank": 587,
+      "rank": 588,
       "forms": [
         "wünschen",
         "wünsche",
@@ -7551,7 +7563,7 @@
       "lemma": "zahlen",
       "gloss": "to pay",
       "pos": "verb",
-      "rank": 588,
+      "rank": 589,
       "forms": [
         "zahlen",
         "zahle",
@@ -7567,7 +7579,7 @@
       "lemma": "Anfang",
       "gloss": "beginning, start",
       "pos": "noun",
-      "rank": 589,
+      "rank": 590,
       "forms": [
         "Anfang"
       ],
@@ -7579,7 +7591,7 @@
       "lemma": "legen",
       "gloss": "to lay, put (down)",
       "pos": "verb",
-      "rank": 590,
+      "rank": 591,
       "forms": [
         "legen",
         "lege",
@@ -7596,7 +7608,7 @@
       "lemma": "Anwalt",
       "gloss": "lawyer",
       "pos": "noun",
-      "rank": 591,
+      "rank": 592,
       "forms": [
         "Anwalt"
       ],
@@ -7608,7 +7620,7 @@
       "lemma": "offen",
       "gloss": "open",
       "pos": "adj",
-      "rank": 592,
+      "rank": 593,
       "forms": [
         "offen",
         "offene",
@@ -7620,7 +7632,7 @@
       "lemma": "arm",
       "gloss": "poor",
       "pos": "adj",
-      "rank": 593,
+      "rank": 594,
       "forms": [
         "arm",
         "arme",
@@ -7634,7 +7646,7 @@
       "lemma": "Bier",
       "gloss": "beer",
       "pos": "noun",
-      "rank": 594,
+      "rank": 595,
       "forms": [
         "Bier"
       ],
@@ -7645,7 +7657,7 @@
       "lemma": "Partner",
       "gloss": "partner",
       "pos": "noun",
-      "rank": 595,
+      "rank": 596,
       "forms": [
         "Partner"
       ],
@@ -7657,7 +7669,7 @@
       "lemma": "süß",
       "gloss": "sweet; cute",
       "pos": "adj",
-      "rank": 596,
+      "rank": 597,
       "forms": [
         "süß",
         "süße",
@@ -7670,7 +7682,7 @@
       "lemma": "Finger",
       "gloss": "finger",
       "pos": "noun",
-      "rank": 597,
+      "rank": 598,
       "forms": [
         "Finger"
       ],
@@ -7682,7 +7694,7 @@
       "lemma": "Rolle",
       "gloss": "role, part; roll",
       "pos": "noun",
-      "rank": 598,
+      "rank": 599,
       "forms": [
         "Rolle"
       ],
@@ -7694,7 +7706,7 @@
       "lemma": "Hochzeit",
       "gloss": "wedding",
       "pos": "noun",
-      "rank": 599,
+      "rank": 600,
       "forms": [
         "Hochzeit"
       ],
@@ -7706,7 +7718,7 @@
       "lemma": "wach",
       "gloss": "awake",
       "pos": "adj",
-      "rank": 600,
+      "rank": 601,
       "forms": [
         "wach"
       ],
@@ -7717,7 +7729,7 @@
       "lemma": "wozu",
       "gloss": "what for, why",
       "pos": "adv",
-      "rank": 601,
+      "rank": 602,
       "forms": [
         "wozu"
       ]
@@ -7727,7 +7739,7 @@
       "lemma": "Chef",
       "gloss": "boss",
       "pos": "noun",
-      "rank": 602,
+      "rank": 603,
       "forms": [
         "Chef"
       ],
@@ -7739,7 +7751,7 @@
       "lemma": "Team",
       "gloss": "team",
       "pos": "noun",
-      "rank": 603,
+      "rank": 604,
       "forms": [
         "Team",
         "Teams"
@@ -7752,7 +7764,7 @@
       "lemma": "Klappe",
       "gloss": "mouth (rude, as in \"Halt die Klappe!\")",
       "pos": "noun",
-      "rank": 604,
+      "rank": 605,
       "forms": [
         "Klappe"
       ],
@@ -7764,7 +7776,7 @@
       "lemma": "Ehe",
       "gloss": "marriage",
       "pos": "noun",
-      "rank": 605,
+      "rank": 606,
       "forms": [
         "Ehe",
         "Ehen"
@@ -7777,7 +7789,7 @@
       "lemma": "Information",
       "gloss": "(piece of) information",
       "pos": "noun",
-      "rank": 606,
+      "rank": 607,
       "forms": [
         "Information",
         "Informationen"
@@ -7790,7 +7802,7 @@
       "lemma": "erledigen",
       "gloss": "to take care of, get done",
       "pos": "verb",
-      "rank": 607,
+      "rank": 608,
       "forms": [
         "erledigen",
         "erledige",
@@ -7804,7 +7816,7 @@
       "lemma": "hoffentlich",
       "gloss": "hopefully, I hope",
       "pos": "adv",
-      "rank": 608,
+      "rank": 609,
       "forms": [
         "hoffentlich"
       ]
@@ -7814,7 +7826,7 @@
       "lemma": "tanzen",
       "gloss": "to dance",
       "pos": "verb",
-      "rank": 609,
+      "rank": 610,
       "forms": [
         "tanzen",
         "tanze",
@@ -7828,7 +7840,7 @@
       "lemma": "ansehen",
       "gloss": "to look at, watch",
       "pos": "verb",
-      "rank": 610,
+      "rank": 611,
       "forms": [
         "ansehen",
         "angesehen",
@@ -7841,7 +7853,7 @@
       "lemma": "zuhause",
       "gloss": "at home",
       "pos": "adv",
-      "rank": 611,
+      "rank": 612,
       "forms": [
         "zuhause"
       ],
@@ -7852,7 +7864,7 @@
       "lemma": "wunderbar",
       "gloss": "wonderful",
       "pos": "adj",
-      "rank": 612,
+      "rank": 613,
       "forms": [
         "wunderbar",
         "wunderbare",
@@ -7865,7 +7877,7 @@
       "lemma": "Reise",
       "gloss": "trip, journey",
       "pos": "noun",
-      "rank": 613,
+      "rank": 614,
       "forms": [
         "Reise",
         "Reisen"
@@ -7877,7 +7889,7 @@
       "lemma": "Dame",
       "gloss": "lady",
       "pos": "noun",
-      "rank": 614,
+      "rank": 615,
       "forms": [
         "Dame",
         "Damen"
@@ -7890,7 +7902,7 @@
       "lemma": "irgendwann",
       "gloss": "sometime, at some point, someday",
       "pos": "adv",
-      "rank": 615,
+      "rank": 616,
       "forms": [
         "irgendwann"
       ]
@@ -7900,7 +7912,7 @@
       "lemma": "stecken",
       "gloss": "to put, stick (into); to be (stuck) somewhere",
       "pos": "verb",
-      "rank": 616,
+      "rank": 617,
       "forms": [
         "stecken",
         "steckst",
@@ -7915,7 +7927,7 @@
       "lemma": "jedenfalls",
       "gloss": "anyway, at any rate",
       "pos": "adv",
-      "rank": 617,
+      "rank": 618,
       "forms": [
         "jedenfalls"
       ]
@@ -7925,7 +7937,7 @@
       "lemma": "schreien",
       "gloss": "to scream, shout",
       "pos": "verb",
-      "rank": 618,
+      "rank": 619,
       "forms": [
         "schreien",
         "schreist",
@@ -7939,7 +7951,7 @@
       "lemma": "rüber",
       "gloss": "over (here or there), across",
       "pos": "adv",
-      "rank": 619,
+      "rank": 620,
       "forms": [
         "rüber"
       ],
@@ -7950,7 +7962,7 @@
       "lemma": "tschüss",
       "gloss": "bye",
       "pos": "interj",
-      "rank": 620,
+      "rank": 621,
       "forms": [
         "tschüss"
       ],
@@ -7961,7 +7973,7 @@
       "lemma": "Raum",
       "gloss": "room, space",
       "pos": "noun",
-      "rank": 621,
+      "rank": 622,
       "forms": [
         "Raum",
         "Räume",
@@ -7974,7 +7986,7 @@
       "lemma": "heiß",
       "gloss": "hot",
       "pos": "adj",
-      "rank": 622,
+      "rank": 623,
       "forms": [
         "heiß",
         "heißes",
@@ -7987,7 +7999,7 @@
       "lemma": "Foto",
       "gloss": "photo",
       "pos": "noun",
-      "rank": 623,
+      "rank": 624,
       "forms": [
         "Foto",
         "Fotos"
@@ -7999,7 +8011,7 @@
       "lemma": "kalt",
       "gloss": "cold",
       "pos": "adj",
-      "rank": 624,
+      "rank": 625,
       "forms": [
         "kalt",
         "kalte",
@@ -8014,7 +8026,7 @@
       "lemma": "Weile",
       "gloss": "while (a period of time)",
       "pos": "noun",
-      "rank": 625,
+      "rank": 626,
       "forms": [
         "Weile"
       ],
@@ -8026,7 +8038,7 @@
       "lemma": "bisher",
       "gloss": "so far, until now",
       "pos": "adv",
-      "rank": 626,
+      "rank": 627,
       "forms": [
         "bisher"
       ]
@@ -8036,7 +8048,7 @@
       "lemma": "unbedingt",
       "gloss": "absolutely, really, by all means",
       "pos": "adv",
-      "rank": 627,
+      "rank": 628,
       "forms": [
         "unbedingt"
       ],
@@ -8047,7 +8059,7 @@
       "lemma": "Zug",
       "gloss": "train",
       "pos": "noun",
-      "rank": 628,
+      "rank": 629,
       "forms": [
         "Zug",
         "Züge",
@@ -8060,7 +8072,7 @@
       "lemma": "Sekunde",
       "gloss": "second (of time)",
       "pos": "noun",
-      "rank": 629,
+      "rank": 630,
       "forms": [
         "Sekunde",
         "Sekunden"
@@ -8073,7 +8085,7 @@
       "lemma": "wofür",
       "gloss": "what for",
       "pos": "adv",
-      "rank": 630,
+      "rank": 631,
       "forms": [
         "wofür"
       ],
@@ -8084,7 +8096,7 @@
       "lemma": "Beweis",
       "gloss": "proof, evidence",
       "pos": "noun",
-      "rank": 631,
+      "rank": 632,
       "forms": [
         "Beweis",
         "Beweise"
@@ -8097,7 +8109,7 @@
       "lemma": "freuen",
       "gloss": "(sich freuen) to be glad; to look forward (to)",
       "pos": "verb",
-      "rank": 632,
+      "rank": 633,
       "forms": [
         "freuen",
         "freue",
@@ -8112,7 +8124,7 @@
       "lemma": "Seele",
       "gloss": "soul",
       "pos": "noun",
-      "rank": 633,
+      "rank": 634,
       "forms": [
         "Seele",
         "Seelen"
@@ -8124,7 +8136,7 @@
       "lemma": "schießen",
       "gloss": "to shoot",
       "pos": "verb",
-      "rank": 634,
+      "rank": 635,
       "forms": [
         "schießen",
         "schießt",
@@ -8137,7 +8149,7 @@
       "lemma": "müde",
       "gloss": "tired",
       "pos": "adj",
-      "rank": 635,
+      "rank": 636,
       "forms": [
         "müde"
       ]
@@ -8147,7 +8159,7 @@
       "lemma": "dauern",
       "gloss": "to last, take (time)",
       "pos": "verb",
-      "rank": 636,
+      "rank": 637,
       "forms": [
         "dauern",
         "dauert",
@@ -8160,7 +8172,7 @@
       "lemma": "Brief",
       "gloss": "letter (mail)",
       "pos": "noun",
-      "rank": 637,
+      "rank": 638,
       "forms": [
         "Brief",
         "Briefe",
@@ -8173,7 +8185,7 @@
       "lemma": "bekannt",
       "gloss": "well-known; familiar",
       "pos": "adj",
-      "rank": 638,
+      "rank": 639,
       "forms": [
         "bekannt",
         "bekannte",
@@ -8187,7 +8199,7 @@
       "lemma": "Unfall",
       "gloss": "accident",
       "pos": "noun",
-      "rank": 639,
+      "rank": 640,
       "forms": [
         "Unfall",
         "Unfälle"
@@ -8199,7 +8211,7 @@
       "lemma": "dahin",
       "gloss": "there (to that place); until then",
       "pos": "adv",
-      "rank": 640,
+      "rank": 641,
       "forms": [
         "dahin"
       ],
@@ -8210,7 +8222,7 @@
       "lemma": "Kontrolle",
       "gloss": "control; check",
       "pos": "noun",
-      "rank": 641,
+      "rank": 642,
       "forms": [
         "Kontrolle",
         "Kontrollen"
@@ -8222,7 +8234,7 @@
       "lemma": "Beispiel",
       "gloss": "example",
       "pos": "noun",
-      "rank": 642,
+      "rank": 643,
       "forms": [
         "Beispiel",
         "Beispiele"
@@ -8235,7 +8247,7 @@
       "lemma": "derselbe",
       "gloss": "the same (one)",
       "pos": "pron",
-      "rank": 643,
+      "rank": 644,
       "forms": [
         "derselbe",
         "dieselbe",
@@ -8250,7 +8262,7 @@
       "lemma": "schlagen",
       "gloss": "to hit, beat",
       "pos": "verb",
-      "rank": 644,
+      "rank": 645,
       "forms": [
         "schlagen",
         "schlägst",
@@ -8264,7 +8276,7 @@
       "lemma": "wütend",
       "gloss": "angry, furious",
       "pos": "adj",
-      "rank": 645,
+      "rank": 646,
       "forms": [
         "wütend",
         "wütende",
@@ -8277,7 +8289,7 @@
       "lemma": "Weise",
       "gloss": "way, manner",
       "pos": "noun",
-      "rank": 646,
+      "rank": 647,
       "forms": [
         "Weise"
       ],
@@ -8289,7 +8301,7 @@
       "lemma": "darin",
       "gloss": "in it, in there; at it",
       "pos": "adv",
-      "rank": 647,
+      "rank": 648,
       "forms": [
         "darin"
       ]
@@ -8299,7 +8311,7 @@
       "lemma": "fehlen",
       "gloss": "to be missing; to be absent",
       "pos": "verb",
-      "rank": 648,
+      "rank": 649,
       "forms": [
         "fehlen",
         "fehlt",
@@ -8314,7 +8326,7 @@
       "lemma": "Vorsicht",
       "gloss": "caution, care",
       "pos": "noun",
-      "rank": 649,
+      "rank": 650,
       "forms": [
         "Vorsicht"
       ],
@@ -8326,7 +8338,7 @@
       "lemma": "beweisen",
       "gloss": "to prove",
       "pos": "verb",
-      "rank": 650,
+      "rank": 651,
       "forms": [
         "beweisen",
         "beweist",
@@ -8340,7 +8352,7 @@
       "lemma": "zumindest",
       "gloss": "at least",
       "pos": "adv",
-      "rank": 651,
+      "rank": 652,
       "forms": [
         "zumindest"
       ]
@@ -8350,7 +8362,7 @@
       "lemma": "vermissen",
       "gloss": "to miss (someone or something)",
       "pos": "verb",
-      "rank": 652,
+      "rank": 653,
       "forms": [
         "vermissen",
         "vermisse",
@@ -8364,7 +8376,7 @@
       "lemma": "hübsch",
       "gloss": "pretty",
       "pos": "adj",
-      "rank": 653,
+      "rank": 654,
       "forms": [
         "hübsch",
         "hübsche",
@@ -8377,7 +8389,7 @@
       "lemma": "Verbindung",
       "gloss": "connection",
       "pos": "noun",
-      "rank": 654,
+      "rank": 655,
       "forms": [
         "Verbindung",
         "Verbindungen"
@@ -8390,7 +8402,7 @@
       "lemma": "tief",
       "gloss": "deep",
       "pos": "adj",
-      "rank": 655,
+      "rank": 656,
       "forms": [
         "tief",
         "tiefe",
@@ -8403,7 +8415,7 @@
       "lemma": "Richtung",
       "gloss": "direction",
       "pos": "noun",
-      "rank": 656,
+      "rank": 657,
       "forms": [
         "Richtung",
         "Richtungen"
@@ -8415,7 +8427,7 @@
       "lemma": "Lage",
       "gloss": "situation; location",
       "pos": "noun",
-      "rank": 657,
+      "rank": 658,
       "forms": [
         "Lage"
       ],
@@ -8427,7 +8439,7 @@
       "lemma": "sowieso",
       "gloss": "anyway, in any case",
       "pos": "adv",
-      "rank": 658,
+      "rank": 659,
       "forms": [
         "sowieso"
       ]
@@ -8437,7 +8449,7 @@
       "lemma": "Kraft",
       "gloss": "strength, power",
       "pos": "noun",
-      "rank": 659,
+      "rank": 660,
       "forms": [
         "Kraft",
         "Kräfte"
@@ -8449,7 +8461,7 @@
       "lemma": "normal",
       "gloss": "normal",
       "pos": "adj",
-      "rank": 660,
+      "rank": 661,
       "forms": [
         "normal",
         "normale",
@@ -8462,7 +8474,7 @@
       "lemma": "Ehre",
       "gloss": "honor",
       "pos": "noun",
-      "rank": 661,
+      "rank": 662,
       "forms": [
         "Ehre"
       ],
@@ -8474,7 +8486,7 @@
       "lemma": "Geschenk",
       "gloss": "present, gift",
       "pos": "noun",
-      "rank": 662,
+      "rank": 663,
       "forms": [
         "Geschenk",
         "Geschenke"
@@ -8486,7 +8498,7 @@
       "lemma": "Bar",
       "gloss": "bar (for drinks)",
       "pos": "noun",
-      "rank": 663,
+      "rank": 664,
       "forms": [
         "Bar",
         "Bars"
@@ -8499,7 +8511,7 @@
       "lemma": "Tasche",
       "gloss": "bag; pocket",
       "pos": "noun",
-      "rank": 664,
+      "rank": 665,
       "forms": [
         "Tasche",
         "Taschen"
@@ -8511,7 +8523,7 @@
       "lemma": "stehlen",
       "gloss": "to steal",
       "pos": "verb",
-      "rank": 665,
+      "rank": 666,
       "forms": [
         "stehlen",
         "stiehlt",
@@ -8525,7 +8537,7 @@
       "lemma": "Hunger",
       "gloss": "hunger",
       "pos": "noun",
-      "rank": 666,
+      "rank": 667,
       "forms": [
         "Hunger"
       ],
@@ -8537,7 +8549,7 @@
       "lemma": "lügen",
       "gloss": "to lie (tell lies)",
       "pos": "verb",
-      "rank": 667,
+      "rank": 668,
       "forms": [
         "lügen",
         "lügst",
@@ -8552,7 +8564,7 @@
       "lemma": "Beziehung",
       "gloss": "relationship",
       "pos": "noun",
-      "rank": 668,
+      "rank": 669,
       "forms": [
         "Beziehung",
         "Beziehungen"
@@ -8564,7 +8576,7 @@
       "lemma": "Preis",
       "gloss": "price; prize",
       "pos": "noun",
-      "rank": 669,
+      "rank": 670,
       "forms": [
         "Preis",
         "Preise"
@@ -8576,7 +8588,7 @@
       "lemma": "Witz",
       "gloss": "joke",
       "pos": "noun",
-      "rank": 670,
+      "rank": 671,
       "forms": [
         "Witz",
         "Witze"
@@ -8589,7 +8601,7 @@
       "lemma": "Liste",
       "gloss": "list",
       "pos": "noun",
-      "rank": 671,
+      "rank": 672,
       "forms": [
         "Liste",
         "Listen"
@@ -8601,7 +8613,7 @@
       "lemma": "Geist",
       "gloss": "ghost; mind, spirit",
       "pos": "noun",
-      "rank": 672,
+      "rank": 673,
       "forms": [
         "Geist",
         "Geister"
@@ -8613,7 +8625,7 @@
       "lemma": "neben",
       "gloss": "next to, beside",
       "pos": "prep",
-      "rank": 673,
+      "rank": 674,
       "forms": [
         "neben"
       ],
@@ -8624,7 +8636,7 @@
       "lemma": "Firma",
       "gloss": "company, firm",
       "pos": "noun",
-      "rank": 674,
+      "rank": 675,
       "forms": [
         "Firma",
         "Firmen"
@@ -8636,7 +8648,7 @@
       "lemma": "Rücken",
       "gloss": "back (of the body)",
       "pos": "noun",
-      "rank": 675,
+      "rank": 676,
       "forms": [
         "Rücken"
       ],
@@ -8648,7 +8660,7 @@
       "lemma": "schrecklich",
       "gloss": "terrible, awful",
       "pos": "adj",
-      "rank": 676,
+      "rank": 677,
       "forms": [
         "schrecklich",
         "schreckliche",
@@ -8660,7 +8672,7 @@
       "lemma": "verliebt",
       "gloss": "in love",
       "pos": "adj",
-      "rank": 677,
+      "rank": 678,
       "forms": [
         "verliebt"
       ],
@@ -8671,7 +8683,7 @@
       "lemma": "öffnen",
       "gloss": "to open",
       "pos": "verb",
-      "rank": 678,
+      "rank": 679,
       "forms": [
         "öffnen",
         "öffne",
@@ -8685,7 +8697,7 @@
       "lemma": "Boot",
       "gloss": "boat",
       "pos": "noun",
-      "rank": 679,
+      "rank": 680,
       "forms": [
         "Boot",
         "Boote",
@@ -8698,7 +8710,7 @@
       "lemma": "seltsam",
       "gloss": "strange, odd",
       "pos": "adj",
-      "rank": 680,
+      "rank": 681,
       "forms": [
         "seltsam",
         "seltsame",
@@ -8711,7 +8723,7 @@
       "lemma": "verstecken",
       "gloss": "to hide",
       "pos": "verb",
-      "rank": 681,
+      "rank": 682,
       "forms": [
         "verstecken",
         "versteckst",
@@ -8724,7 +8736,7 @@
       "lemma": "fürchten",
       "gloss": "to fear, be afraid (of)",
       "pos": "verb",
-      "rank": 682,
+      "rank": 683,
       "forms": [
         "fürchten",
         "fürchte",
@@ -8738,7 +8750,7 @@
       "lemma": "erwischen",
       "gloss": "to catch (in the act)",
       "pos": "verb",
-      "rank": 683,
+      "rank": 684,
       "forms": [
         "erwischen",
         "erwischt",
@@ -8750,7 +8762,7 @@
       "lemma": "Tante",
       "gloss": "aunt",
       "pos": "noun",
-      "rank": 684,
+      "rank": 685,
       "forms": [
         "Tante",
         "Tanten"
@@ -8762,7 +8774,7 @@
       "lemma": "Pferd",
       "gloss": "horse",
       "pos": "noun",
-      "rank": 685,
+      "rank": 686,
       "forms": [
         "Pferd",
         "Pferde",
@@ -8775,7 +8787,7 @@
       "lemma": "Wunder",
       "gloss": "miracle; wonder",
       "pos": "noun",
-      "rank": 686,
+      "rank": 687,
       "forms": [
         "Wunder"
       ],
@@ -8787,7 +8799,7 @@
       "lemma": "sauer",
       "gloss": "sour; (spoken) annoyed, mad",
       "pos": "adj",
-      "rank": 687,
+      "rank": 688,
       "forms": [
         "sauer",
         "saure",
@@ -8800,7 +8812,7 @@
       "lemma": "vermutlich",
       "gloss": "presumably, probably",
       "pos": "adv",
-      "rank": 688,
+      "rank": 689,
       "forms": [
         "vermutlich"
       ]
@@ -8810,7 +8822,7 @@
       "lemma": "nah",
       "gloss": "near, close",
       "pos": "adj",
-      "rank": 689,
+      "rank": 690,
       "forms": [
         "nah",
         "nahe",
@@ -8823,7 +8835,7 @@
       "lemma": "jung",
       "gloss": "young",
       "pos": "adj",
-      "rank": 690,
+      "rank": 691,
       "forms": [
         "jung",
         "jünger",
@@ -8836,7 +8848,7 @@
       "lemma": "aussehen",
       "gloss": "to look (appear)",
       "pos": "verb",
-      "rank": 691,
+      "rank": 692,
       "forms": [
         "aussehen",
         "ausgesehen",
@@ -8849,7 +8861,7 @@
       "lemma": "links",
       "gloss": "left, on the left",
       "pos": "adv",
-      "rank": 692,
+      "rank": 693,
       "forms": [
         "links"
       ],
@@ -8860,7 +8872,7 @@
       "lemma": "beschützen",
       "gloss": "to protect",
       "pos": "verb",
-      "rank": 693,
+      "rank": 694,
       "forms": [
         "beschützen",
         "beschütze",
@@ -8873,7 +8885,7 @@
       "lemma": "geboren",
       "gloss": "born",
       "pos": "adj",
-      "rank": 694,
+      "rank": 695,
       "forms": [
         "geboren"
       ],
@@ -8884,7 +8896,7 @@
       "lemma": "erreichen",
       "gloss": "to reach",
       "pos": "verb",
-      "rank": 695,
+      "rank": 696,
       "forms": [
         "erreichen",
         "erreichst",
@@ -8897,7 +8909,7 @@
       "lemma": "Punkt",
       "gloss": "point; dot, period",
       "pos": "noun",
-      "rank": 696,
+      "rank": 697,
       "forms": [
         "Punkt",
         "Punkte"
@@ -8910,7 +8922,7 @@
       "lemma": "Kirche",
       "gloss": "church",
       "pos": "noun",
-      "rank": 697,
+      "rank": 698,
       "forms": [
         "Kirche",
         "Kirchen"
@@ -8922,7 +8934,7 @@
       "lemma": "verraten",
       "gloss": "to betray; to give away, tell (a secret)",
       "pos": "verb",
-      "rank": 698,
+      "rank": 699,
       "forms": [
         "verraten",
         "verrate",
@@ -8936,7 +8948,7 @@
       "lemma": "Befehl",
       "gloss": "order, command",
       "pos": "noun",
-      "rank": 699,
+      "rank": 700,
       "forms": [
         "Befehl",
         "Befehle"
@@ -8948,7 +8960,7 @@
       "lemma": "Geburtstag",
       "gloss": "birthday",
       "pos": "noun",
-      "rank": 700,
+      "rank": 701,
       "forms": [
         "Geburtstag",
         "Geburtstage"
@@ -8961,7 +8973,7 @@
       "lemma": "Haut",
       "gloss": "skin",
       "pos": "noun",
-      "rank": 701,
+      "rank": 702,
       "forms": [
         "Haut"
       ],
@@ -8972,7 +8984,7 @@
       "lemma": "wetten",
       "gloss": "to bet",
       "pos": "verb",
-      "rank": 702,
+      "rank": 703,
       "forms": [
         "wetten",
         "wette",
@@ -8986,7 +8998,7 @@
       "lemma": "reich",
       "gloss": "rich",
       "pos": "adj",
-      "rank": 703,
+      "rank": 704,
       "forms": [
         "reich",
         "reiche",
@@ -8998,7 +9010,7 @@
       "lemma": "schwören",
       "gloss": "to swear (promise)",
       "pos": "verb",
-      "rank": 704,
+      "rank": 705,
       "forms": [
         "schwören",
         "schwöre",
@@ -9012,7 +9024,7 @@
       "lemma": "traurig",
       "gloss": "sad",
       "pos": "adj",
-      "rank": 705,
+      "rank": 706,
       "forms": [
         "traurig",
         "traurige",
@@ -9024,7 +9036,7 @@
       "lemma": "Anruf",
       "gloss": "(phone) call",
       "pos": "noun",
-      "rank": 706,
+      "rank": 707,
       "forms": [
         "Anruf",
         "Anrufe"
@@ -9037,7 +9049,7 @@
       "lemma": "Frieden",
       "gloss": "peace",
       "pos": "noun",
-      "rank": 707,
+      "rank": 708,
       "forms": [
         "Frieden"
       ],
@@ -9049,7 +9061,7 @@
       "lemma": "Karte",
       "gloss": "card; map; ticket; menu",
       "pos": "noun",
-      "rank": 708,
+      "rank": 709,
       "forms": [
         "Karte",
         "Karten"
@@ -9061,7 +9073,7 @@
       "lemma": "Güte",
       "gloss": "goodness, kindness",
       "pos": "noun",
-      "rank": 709,
+      "rank": 710,
       "forms": [
         "Güte"
       ],
@@ -9073,7 +9085,7 @@
       "lemma": "diesmal",
       "gloss": "this time",
       "pos": "adv",
-      "rank": 710,
+      "rank": 711,
       "forms": [
         "diesmal"
       ]
@@ -9083,7 +9095,7 @@
       "lemma": "schade",
       "gloss": "a pity, too bad",
       "pos": "adj",
-      "rank": 711,
+      "rank": 712,
       "forms": [
         "schade"
       ],
@@ -9094,7 +9106,7 @@
       "lemma": "persönlich",
       "gloss": "personal; in person",
       "pos": "adj",
-      "rank": 712,
+      "rank": 713,
       "forms": [
         "persönlich",
         "persönliche",
@@ -9106,7 +9118,7 @@
       "lemma": "verändern",
       "gloss": "to change",
       "pos": "verb",
-      "rank": 713,
+      "rank": 714,
       "forms": [
         "verändern",
         "verändert",
@@ -9119,7 +9131,7 @@
       "lemma": "Sonne",
       "gloss": "sun",
       "pos": "noun",
-      "rank": 714,
+      "rank": 715,
       "forms": [
         "Sonne"
       ],
@@ -9131,7 +9143,7 @@
       "lemma": "lieb",
       "gloss": "kind, sweet, dear",
       "pos": "adj",
-      "rank": 715,
+      "rank": 716,
       "forms": [
         "lieb",
         "liebes"
@@ -9143,7 +9155,7 @@
       "lemma": "nämlich",
       "gloss": "you see, because; namely",
       "pos": "adv",
-      "rank": 716,
+      "rank": 717,
       "forms": [
         "nämlich"
       ],
@@ -9154,7 +9166,7 @@
       "lemma": "Professor",
       "gloss": "professor",
       "pos": "noun",
-      "rank": 717,
+      "rank": 718,
       "forms": [
         "Professor",
         "Professoren"
@@ -9166,7 +9178,7 @@
       "lemma": "Gericht",
       "gloss": "court; dish (food)",
       "pos": "noun",
-      "rank": 718,
+      "rank": 719,
       "forms": [
         "Gericht",
         "Gerichte"
@@ -9179,7 +9191,7 @@
       "lemma": "Nase",
       "gloss": "nose",
       "pos": "noun",
-      "rank": 719,
+      "rank": 720,
       "forms": [
         "Nase",
         "Nasen"
@@ -9192,7 +9204,7 @@
       "lemma": "ewig",
       "gloss": "eternal; forever",
       "pos": "adj",
-      "rank": 720,
+      "rank": 721,
       "forms": [
         "ewig",
         "ewige",
@@ -9204,7 +9216,7 @@
       "lemma": "singen",
       "gloss": "to sing",
       "pos": "verb",
-      "rank": 721,
+      "rank": 722,
       "forms": [
         "singen",
         "singe",
@@ -9220,7 +9232,7 @@
       "lemma": "Bank",
       "gloss": "bank; bench",
       "pos": "noun",
-      "rank": 722,
+      "rank": 723,
       "forms": [
         "Bank",
         "Banken"
@@ -9233,7 +9245,7 @@
       "lemma": "beschäftigt",
       "gloss": "busy",
       "pos": "adj",
-      "rank": 723,
+      "rank": 724,
       "forms": [
         "beschäftigt"
       ]
@@ -9243,7 +9255,7 @@
       "lemma": "Computer",
       "gloss": "computer",
       "pos": "noun",
-      "rank": 724,
+      "rank": 725,
       "forms": [
         "Computer"
       ],
@@ -9255,7 +9267,7 @@
       "lemma": "Weihnachten",
       "gloss": "Christmas",
       "pos": "noun",
-      "rank": 725,
+      "rank": 726,
       "forms": [
         "Weihnachten"
       ],
@@ -9267,7 +9279,7 @@
       "lemma": "offensichtlich",
       "gloss": "obvious; obviously",
       "pos": "adj",
-      "rank": 726,
+      "rank": 727,
       "forms": [
         "offensichtlich"
       ]
@@ -9277,7 +9289,7 @@
       "lemma": "Fuß",
       "gloss": "foot",
       "pos": "noun",
-      "rank": 727,
+      "rank": 728,
       "forms": [
         "Fuß",
         "Füße",
@@ -9291,7 +9303,7 @@
       "lemma": "Show",
       "gloss": "show",
       "pos": "noun",
-      "rank": 728,
+      "rank": 729,
       "forms": [
         "Show",
         "Shows"
@@ -9303,7 +9315,7 @@
       "lemma": "Überraschung",
       "gloss": "surprise",
       "pos": "noun",
-      "rank": 729,
+      "rank": 730,
       "forms": [
         "Überraschung",
         "Überraschungen"
@@ -9315,7 +9327,7 @@
       "lemma": "Geheimnis",
       "gloss": "secret",
       "pos": "noun",
-      "rank": 730,
+      "rank": 731,
       "forms": [
         "Geheimnis",
         "Geheimnisse"
@@ -9327,7 +9339,7 @@
       "lemma": "Kontakt",
       "gloss": "contact",
       "pos": "noun",
-      "rank": 731,
+      "rank": 732,
       "forms": [
         "Kontakt",
         "Kontakte"
@@ -9339,7 +9351,7 @@
       "lemma": "Gold",
       "gloss": "gold",
       "pos": "noun",
-      "rank": 732,
+      "rank": 733,
       "forms": [
         "Gold"
       ],
@@ -9350,7 +9362,7 @@
       "lemma": "Droge",
       "gloss": "drug",
       "pos": "noun",
-      "rank": 733,
+      "rank": 734,
       "forms": [
         "Droge",
         "Drogen"
@@ -9363,7 +9375,7 @@
       "lemma": "Regierung",
       "gloss": "government",
       "pos": "noun",
-      "rank": 734,
+      "rank": 735,
       "forms": [
         "Regierung",
         "Regierungen"
@@ -9375,7 +9387,7 @@
       "lemma": "Wein",
       "gloss": "wine",
       "pos": "noun",
-      "rank": 735,
+      "rank": 736,
       "forms": [
         "Wein",
         "Weine"
@@ -9387,7 +9399,7 @@
       "lemma": "ermorden",
       "gloss": "to murder",
       "pos": "verb",
-      "rank": 736,
+      "rank": 737,
       "forms": [
         "ermorden",
         "ermordet",
@@ -9399,7 +9411,7 @@
       "lemma": "entfernt",
       "gloss": "away, distant",
       "pos": "adj",
-      "rank": 737,
+      "rank": 738,
       "forms": [
         "entfernt",
         "entfernte",
@@ -9412,7 +9424,7 @@
       "lemma": "manche",
       "gloss": "some, quite a few",
       "pos": "det",
-      "rank": 738,
+      "rank": 739,
       "forms": [
         "manche",
         "manchen",
@@ -9426,7 +9438,7 @@
       "lemma": "ran",
       "gloss": "(spoken) up to, close; on (the phone)",
       "pos": "adv",
-      "rank": 739,
+      "rank": 740,
       "forms": [
         "ran"
       ],
@@ -9437,7 +9449,7 @@
       "lemma": "gegenüber",
       "gloss": "opposite, across from; towards",
       "pos": "prep",
-      "rank": 740,
+      "rank": 741,
       "forms": [
         "gegenüber"
       ],
@@ -9448,7 +9460,7 @@
       "lemma": "Schlaf",
       "gloss": "sleep",
       "pos": "noun",
-      "rank": 741,
+      "rank": 742,
       "forms": [
         "Schlaf"
       ],
@@ -9459,7 +9471,7 @@
       "lemma": "Lust",
       "gloss": "desire; (Lust haben) to feel like",
       "pos": "noun",
-      "rank": 742,
+      "rank": 743,
       "forms": [
         "Lust"
       ],
@@ -9471,7 +9483,7 @@
       "lemma": "wunderschön",
       "gloss": "beautiful, gorgeous",
       "pos": "adj",
-      "rank": 743,
+      "rank": 744,
       "forms": [
         "wunderschön",
         "wunderschöne",
@@ -9483,7 +9495,7 @@
       "lemma": "witzig",
       "gloss": "funny",
       "pos": "adj",
-      "rank": 744,
+      "rank": 745,
       "forms": [
         "witzig",
         "witzige",
@@ -9495,7 +9507,7 @@
       "lemma": "zerstören",
       "gloss": "to destroy",
       "pos": "verb",
-      "rank": 745,
+      "rank": 746,
       "forms": [
         "zerstören",
         "zerstört",
@@ -9507,7 +9519,7 @@
       "lemma": "übrigens",
       "gloss": "by the way",
       "pos": "adv",
-      "rank": 746,
+      "rank": 747,
       "forms": [
         "übrigens"
       ]
@@ -9517,7 +9529,7 @@
       "lemma": "Wille",
       "gloss": "will",
       "pos": "noun",
-      "rank": 747,
+      "rank": 748,
       "forms": [
         "Wille",
         "Willen"
@@ -9530,7 +9542,7 @@
       "lemma": "heim",
       "gloss": "home (to one's home)",
       "pos": "adv",
-      "rank": 748,
+      "rank": 749,
       "forms": [
         "heim"
       ],
@@ -9541,7 +9553,7 @@
       "lemma": "Blick",
       "gloss": "look, glance; view",
       "pos": "noun",
-      "rank": 749,
+      "rank": 750,
       "forms": [
         "Blick",
         "Blicke"
@@ -9554,7 +9566,7 @@
       "lemma": "Besuch",
       "gloss": "visit; visitors",
       "pos": "noun",
-      "rank": 750,
+      "rank": 751,
       "forms": [
         "Besuch",
         "Besuche"
@@ -9567,7 +9579,7 @@
       "lemma": "bewegen",
       "gloss": "to move",
       "pos": "verb",
-      "rank": 751,
+      "rank": 752,
       "forms": [
         "bewegen",
         "beweg",
@@ -9581,7 +9593,7 @@
       "lemma": "Haar",
       "gloss": "hair",
       "pos": "noun",
-      "rank": 752,
+      "rank": 753,
       "forms": [
         "Haar",
         "Haare",
@@ -9595,7 +9607,7 @@
       "lemma": "antworten",
       "gloss": "to answer, reply",
       "pos": "verb",
-      "rank": 753,
+      "rank": 754,
       "forms": [
         "antworten",
         "antworte",
@@ -9611,7 +9623,7 @@
       "lemma": "Präsident",
       "gloss": "president",
       "pos": "noun",
-      "rank": 754,
+      "rank": 755,
       "forms": [
         "Präsident",
         "Präsidenten"
@@ -9624,7 +9636,7 @@
       "lemma": "Hoffnung",
       "gloss": "hope",
       "pos": "noun",
-      "rank": 755,
+      "rank": 756,
       "forms": [
         "Hoffnung",
         "Hoffnungen"
@@ -9636,7 +9648,7 @@
       "lemma": "rechts",
       "gloss": "right, on the right",
       "pos": "adv",
-      "rank": 756,
+      "rank": 757,
       "forms": [
         "rechts"
       ],
@@ -9647,7 +9659,7 @@
       "lemma": "interessant",
       "gloss": "interesting",
       "pos": "adj",
-      "rank": 757,
+      "rank": 758,
       "forms": [
         "interessant",
         "interessante",
@@ -9659,7 +9671,7 @@
       "lemma": "entscheiden",
       "gloss": "to decide",
       "pos": "verb",
-      "rank": 758,
+      "rank": 759,
       "forms": [
         "entscheiden",
         "entscheide",
@@ -9675,7 +9687,7 @@
       "lemma": "miteinander",
       "gloss": "with each other, together",
       "pos": "adv",
-      "rank": 759,
+      "rank": 760,
       "forms": [
         "miteinander"
       ]
@@ -9685,7 +9697,7 @@
       "lemma": "indem",
       "gloss": "by (doing something)",
       "pos": "conj",
-      "rank": 760,
+      "rank": 761,
       "forms": [
         "indem"
       ],
@@ -9696,7 +9708,7 @@
       "lemma": "wohnen",
       "gloss": "to live (somewhere)",
       "pos": "verb",
-      "rank": 761,
+      "rank": 762,
       "forms": [
         "wohnen",
         "wohne",
@@ -9712,7 +9724,7 @@
       "lemma": "weder",
       "gloss": "neither (weder … noch = neither … nor)",
       "pos": "conj",
-      "rank": 762,
+      "rank": 763,
       "forms": [
         "weder"
       ]
@@ -9722,7 +9734,7 @@
       "lemma": "Möglichkeit",
       "gloss": "possibility, chance, option",
       "pos": "noun",
-      "rank": 763,
+      "rank": 764,
       "forms": [
         "Möglichkeit",
         "Möglichkeiten"
@@ -9734,7 +9746,7 @@
       "lemma": "kaputt",
       "gloss": "broken; worn out",
       "pos": "adj",
-      "rank": 764,
+      "rank": 765,
       "forms": [
         "kaputt",
         "kaputte",
@@ -9746,7 +9758,7 @@
       "lemma": "Flugzeug",
       "gloss": "plane, airplane",
       "pos": "noun",
-      "rank": 765,
+      "rank": 766,
       "forms": [
         "Flugzeug",
         "Flugzeuge"
@@ -9758,7 +9770,7 @@
       "lemma": "Vergangenheit",
       "gloss": "past",
       "pos": "noun",
-      "rank": 766,
+      "rank": 767,
       "forms": [
         "Vergangenheit"
       ],
@@ -9769,7 +9781,7 @@
       "lemma": "zweite",
       "gloss": "second",
       "pos": "adj",
-      "rank": 767,
+      "rank": 768,
       "forms": [
         "zweite",
         "zweiten",
@@ -9782,7 +9794,7 @@
       "lemma": "Armee",
       "gloss": "army",
       "pos": "noun",
-      "rank": 768,
+      "rank": 769,
       "forms": [
         "Armee",
         "Armeen"
@@ -9794,7 +9806,7 @@
       "lemma": "Tee",
       "gloss": "tea",
       "pos": "noun",
-      "rank": 769,
+      "rank": 770,
       "forms": [
         "Tee"
       ],
@@ -9805,7 +9817,7 @@
       "lemma": "entweder",
       "gloss": "either (entweder … oder = either … or)",
       "pos": "conj",
-      "rank": 770,
+      "rank": 771,
       "forms": [
         "entweder"
       ]
@@ -9815,7 +9827,7 @@
       "lemma": "aufhalten",
       "gloss": "to stop, hold up",
       "pos": "verb",
-      "rank": 771,
+      "rank": 772,
       "forms": [
         "aufhalten",
         "aufgehalten",
@@ -9828,7 +9840,7 @@
       "lemma": "überraschen",
       "gloss": "to surprise",
       "pos": "verb",
-      "rank": 772,
+      "rank": 773,
       "forms": [
         "überraschen",
         "überrascht",
@@ -9841,7 +9853,7 @@
       "lemma": "sauber",
       "gloss": "clean",
       "pos": "adj",
-      "rank": 773,
+      "rank": 774,
       "forms": [
         "sauber",
         "saubere",
@@ -9853,7 +9865,7 @@
       "lemma": "Schlag",
       "gloss": "blow, hit; bang",
       "pos": "noun",
-      "rank": 774,
+      "rank": 775,
       "forms": [
         "Schlag",
         "Schläge"
@@ -9866,7 +9878,7 @@
       "lemma": "nervös",
       "gloss": "nervous",
       "pos": "adj",
-      "rank": 775,
+      "rank": 776,
       "forms": [
         "nervös"
       ]
@@ -9876,7 +9888,7 @@
       "lemma": "Gesellschaft",
       "gloss": "society; company",
       "pos": "noun",
-      "rank": 776,
+      "rank": 777,
       "forms": [
         "Gesellschaft"
       ],
@@ -9888,7 +9900,7 @@
       "lemma": "schuldig",
       "gloss": "guilty; owing",
       "pos": "adj",
-      "rank": 777,
+      "rank": 778,
       "forms": [
         "schuldig"
       ],
@@ -9899,7 +9911,7 @@
       "lemma": "Hals",
       "gloss": "neck; throat",
       "pos": "noun",
-      "rank": 778,
+      "rank": 779,
       "forms": [
         "Hals"
       ],
@@ -9911,7 +9923,7 @@
       "lemma": "schützen",
       "gloss": "to protect",
       "pos": "verb",
-      "rank": 779,
+      "rank": 780,
       "forms": [
         "schützen",
         "schützt",
@@ -9925,7 +9937,7 @@
       "lemma": "besuchen",
       "gloss": "to visit",
       "pos": "verb",
-      "rank": 780,
+      "rank": 781,
       "forms": [
         "besuchen",
         "besuchst",
@@ -9938,7 +9950,7 @@
       "lemma": "überleben",
       "gloss": "to survive",
       "pos": "verb",
-      "rank": 781,
+      "rank": 782,
       "forms": [
         "überleben",
         "überlebt",
@@ -9950,7 +9962,7 @@
       "lemma": "erhalten",
       "gloss": "to receive, get (formal)",
       "pos": "verb",
-      "rank": 782,
+      "rank": 783,
       "forms": [
         "erhalten",
         "erhält",
@@ -9963,7 +9975,7 @@
       "lemma": "Gebäude",
       "gloss": "building",
       "pos": "noun",
-      "rank": 783,
+      "rank": 784,
       "forms": [
         "Gebäude"
       ],
@@ -9975,7 +9987,7 @@
       "lemma": "Schicksal",
       "gloss": "fate, destiny",
       "pos": "noun",
-      "rank": 784,
+      "rank": 785,
       "forms": [
         "Schicksal"
       ],
@@ -9986,7 +9998,7 @@
       "lemma": "Zeichen",
       "gloss": "sign, signal",
       "pos": "noun",
-      "rank": 785,
+      "rank": 786,
       "forms": [
         "Zeichen"
       ],
@@ -9998,7 +10010,7 @@
       "lemma": "Richter",
       "gloss": "judge",
       "pos": "noun",
-      "rank": 786,
+      "rank": 787,
       "forms": [
         "Richter"
       ],
@@ -10010,7 +10022,7 @@
       "lemma": "besorgt",
       "gloss": "worried",
       "pos": "adj",
-      "rank": 787,
+      "rank": 788,
       "forms": [
         "besorgt"
       ],
@@ -10021,7 +10033,7 @@
       "lemma": "Küche",
       "gloss": "kitchen; cuisine",
       "pos": "noun",
-      "rank": 788,
+      "rank": 789,
       "forms": [
         "Küche"
       ],
@@ -10032,7 +10044,7 @@
       "lemma": "Vergnügen",
       "gloss": "pleasure, fun",
       "pos": "noun",
-      "rank": 789,
+      "rank": 790,
       "forms": [
         "Vergnügen"
       ],
@@ -10044,7 +10056,7 @@
       "lemma": "Volk",
       "gloss": "people, nation",
       "pos": "noun",
-      "rank": 790,
+      "rank": 791,
       "forms": [
         "Volk",
         "Völker"
@@ -10057,7 +10069,7 @@
       "lemma": "herausfinden",
       "gloss": "to find out",
       "pos": "verb",
-      "rank": 791,
+      "rank": 792,
       "forms": [
         "herausfinden",
         "herausgefunden",
@@ -10070,7 +10082,7 @@
       "lemma": "Königin",
       "gloss": "queen",
       "pos": "noun",
-      "rank": 792,
+      "rank": 793,
       "forms": [
         "Königin"
       ],
@@ -10081,7 +10093,7 @@
       "lemma": "Soldat",
       "gloss": "soldier",
       "pos": "noun",
-      "rank": 793,
+      "rank": 794,
       "forms": [
         "Soldat",
         "Soldaten"
@@ -10094,7 +10106,7 @@
       "lemma": "feiern",
       "gloss": "to celebrate; to party",
       "pos": "verb",
-      "rank": 794,
+      "rank": 795,
       "forms": [
         "feiern",
         "feierst",
@@ -10108,7 +10120,7 @@
       "lemma": "Situation",
       "gloss": "situation",
       "pos": "noun",
-      "rank": 795,
+      "rank": 796,
       "forms": [
         "Situation",
         "Situationen"
@@ -10120,7 +10132,7 @@
       "lemma": "allerdings",
       "gloss": "however, though; certainly",
       "pos": "adv",
-      "rank": 796,
+      "rank": 797,
       "forms": [
         "allerdings"
       ],
@@ -10131,7 +10143,7 @@
       "lemma": "soweit",
       "gloss": "as far as; so far, more or less",
       "pos": "adv",
-      "rank": 797,
+      "rank": 798,
       "forms": [
         "soweit"
       ],
@@ -10142,7 +10154,7 @@
       "lemma": "Bord",
       "gloss": "board (of a ship or plane)",
       "pos": "noun",
-      "rank": 798,
+      "rank": 799,
       "forms": [
         "Bord"
       ],
@@ -10154,7 +10166,7 @@
       "lemma": "Rat",
       "gloss": "advice; council",
       "pos": "noun",
-      "rank": 799,
+      "rank": 800,
       "forms": [
         "Rat"
       ],
@@ -10166,7 +10178,7 @@
       "lemma": "worauf",
       "gloss": "what … on/for",
       "pos": "adv",
-      "rank": 800,
+      "rank": 801,
       "forms": [
         "worauf"
       ],
@@ -10177,7 +10189,7 @@
       "lemma": "Kamera",
       "gloss": "camera",
       "pos": "noun",
-      "rank": 801,
+      "rank": 802,
       "forms": [
         "Kamera",
         "Kameras"
@@ -10189,7 +10201,7 @@
       "lemma": "Achtung",
       "gloss": "attention; respect",
       "pos": "noun",
-      "rank": 802,
+      "rank": 803,
       "forms": [
         "Achtung"
       ],
@@ -10201,7 +10213,7 @@
       "lemma": "Boss",
       "gloss": "boss",
       "pos": "noun",
-      "rank": 803,
+      "rank": 804,
       "forms": [
         "Boss",
         "Bosse"
@@ -10214,7 +10226,7 @@
       "lemma": "Laden",
       "gloss": "shop, store",
       "pos": "noun",
-      "rank": 804,
+      "rank": 805,
       "forms": [
         "Laden",
         "Läden"
@@ -10227,7 +10239,7 @@
       "lemma": "General",
       "gloss": "general (army officer)",
       "pos": "noun",
-      "rank": 805,
+      "rank": 806,
       "forms": [
         "General",
         "Generäle"
@@ -10240,7 +10252,7 @@
       "lemma": "Agent",
       "gloss": "agent (secret agent)",
       "pos": "noun",
-      "rank": 806,
+      "rank": 807,
       "forms": [
         "Agent",
         "Agenten"
@@ -10253,7 +10265,7 @@
       "lemma": "irgendetwas",
       "gloss": "something, anything",
       "pos": "pron",
-      "rank": 807,
+      "rank": 808,
       "forms": [
         "irgendetwas"
       ],
@@ -10264,7 +10276,7 @@
       "lemma": "weiter",
       "gloss": "further, additional, more",
       "pos": "adj",
-      "rank": 808,
+      "rank": 809,
       "forms": [
         "weitere",
         "weiteren",
@@ -10277,7 +10289,7 @@
       "lemma": "Majestät",
       "gloss": "Majesty",
       "pos": "noun",
-      "rank": 809,
+      "rank": 810,
       "forms": [
         "Majestät"
       ],
@@ -10289,7 +10301,7 @@
       "lemma": "selber",
       "gloss": "myself, yourself, himself etc. (colloquial for selbst)",
       "pos": "pron",
-      "rank": 810,
+      "rank": 811,
       "forms": [
         "selber"
       ],
@@ -10300,7 +10312,7 @@
       "lemma": "Verstand",
       "gloss": "mind, reason, sense",
       "pos": "noun",
-      "rank": 811,
+      "rank": 812,
       "forms": [
         "Verstand"
       ],
@@ -10312,7 +10324,7 @@
       "lemma": "Schuh",
       "gloss": "shoe",
       "pos": "noun",
-      "rank": 812,
+      "rank": 813,
       "forms": [
         "Schuh",
         "Schuhe",
@@ -10325,7 +10337,7 @@
       "lemma": "Glückwunsch",
       "gloss": "congratulations",
       "pos": "noun",
-      "rank": 813,
+      "rank": 814,
       "forms": [
         "Glückwunsch",
         "Glückwünsche"
@@ -10338,7 +10350,7 @@
       "lemma": "statt",
       "gloss": "instead of",
       "pos": "prep",
-      "rank": 814,
+      "rank": 815,
       "forms": [
         "statt"
       ],
@@ -10349,7 +10361,7 @@
       "lemma": "übernehmen",
       "gloss": "to take over; to take on",
       "pos": "verb",
-      "rank": 815,
+      "rank": 816,
       "forms": [
         "übernehmen",
         "übernehme",
@@ -10363,7 +10375,7 @@
       "lemma": "Gegend",
       "gloss": "area, neighbourhood",
       "pos": "noun",
-      "rank": 816,
+      "rank": 817,
       "forms": [
         "Gegend"
       ],
@@ -10375,7 +10387,7 @@
       "lemma": "Wald",
       "gloss": "forest, woods",
       "pos": "noun",
-      "rank": 817,
+      "rank": 818,
       "forms": [
         "Wald",
         "Wälder"
@@ -10387,7 +10399,7 @@
       "lemma": "erkennen",
       "gloss": "to recognise; to make out",
       "pos": "verb",
-      "rank": 818,
+      "rank": 819,
       "forms": [
         "erkennen",
         "erkenne",
@@ -10402,7 +10414,7 @@
       "lemma": "Glas",
       "gloss": "glass",
       "pos": "noun",
-      "rank": 819,
+      "rank": 820,
       "forms": [
         "Glas",
         "Gläser"
@@ -10414,7 +10426,7 @@
       "lemma": "verantwortlich",
       "gloss": "responsible",
       "pos": "adj",
-      "rank": 820,
+      "rank": 821,
       "forms": [
         "verantwortlich"
       ],
@@ -10425,7 +10437,7 @@
       "lemma": "herein",
       "gloss": "in (towards the speaker)",
       "pos": "adv",
-      "rank": 821,
+      "rank": 822,
       "forms": [
         "herein"
       ],
@@ -10436,7 +10448,7 @@
       "lemma": "Kleid",
       "gloss": "dress",
       "pos": "noun",
-      "rank": 822,
+      "rank": 823,
       "forms": [
         "Kleid",
         "Kleider"
@@ -10449,7 +10461,7 @@
       "lemma": "jawohl",
       "gloss": "yes, sir; certainly",
       "pos": "interj",
-      "rank": 823,
+      "rank": 824,
       "forms": [
         "jawohl"
       ],
@@ -10460,7 +10472,7 @@
       "lemma": "Abendessen",
       "gloss": "dinner, supper",
       "pos": "noun",
-      "rank": 824,
+      "rank": 825,
       "forms": [
         "Abendessen"
       ],
@@ -10471,7 +10483,7 @@
       "lemma": "Gesetz",
       "gloss": "law",
       "pos": "noun",
-      "rank": 825,
+      "rank": 826,
       "forms": [
         "Gesetz",
         "Gesetze"
@@ -10483,7 +10495,7 @@
       "lemma": "gemeinsam",
       "gloss": "together; shared, common",
       "pos": "adj",
-      "rank": 826,
+      "rank": 827,
       "forms": [
         "gemeinsam",
         "gemeinsame",
@@ -10496,7 +10508,7 @@
       "lemma": "Schritt",
       "gloss": "step",
       "pos": "noun",
-      "rank": 827,
+      "rank": 828,
       "forms": [
         "Schritt",
         "Schritte"
@@ -10508,7 +10520,7 @@
       "lemma": "gucken",
       "gloss": "to look; to watch (colloquial)",
       "pos": "verb",
-      "rank": 828,
+      "rank": 829,
       "forms": [
         "gucken",
         "guck",
@@ -10523,7 +10535,7 @@
       "lemma": "beginnen",
       "gloss": "to begin, start",
       "pos": "verb",
-      "rank": 829,
+      "rank": 830,
       "forms": [
         "beginnen",
         "beginnt",
@@ -10537,7 +10549,7 @@
       "lemma": "Band",
       "gloss": "band (music)",
       "pos": "noun",
-      "rank": 830,
+      "rank": 831,
       "forms": [
         "Band",
         "Bands"
@@ -10550,7 +10562,7 @@
       "lemma": "ungefähr",
       "gloss": "about, roughly",
       "pos": "adv",
-      "rank": 831,
+      "rank": 832,
       "forms": [
         "ungefähr"
       ]
@@ -10560,7 +10572,7 @@
       "lemma": "Aufgabe",
       "gloss": "task, job; exercise",
       "pos": "noun",
-      "rank": 832,
+      "rank": 833,
       "forms": [
         "Aufgabe",
         "Aufgaben"
@@ -10573,7 +10585,7 @@
       "lemma": "neun",
       "gloss": "nine",
       "pos": "num",
-      "rank": 833,
+      "rank": 834,
       "forms": [
         "neun"
       ]
@@ -10583,7 +10595,7 @@
       "lemma": "furchtbar",
       "gloss": "terrible, awful",
       "pos": "adj",
-      "rank": 834,
+      "rank": 835,
       "forms": [
         "furchtbar",
         "furchtbare",
@@ -10595,7 +10607,7 @@
       "lemma": "drinnen",
       "gloss": "inside, indoors",
       "pos": "adv",
-      "rank": 835,
+      "rank": 836,
       "forms": [
         "drinnen"
       ],
@@ -10606,7 +10618,7 @@
       "lemma": "zuvor",
       "gloss": "before, previously",
       "pos": "adv",
-      "rank": 836,
+      "rank": 837,
       "forms": [
         "zuvor"
       ],
@@ -10617,7 +10629,7 @@
       "lemma": "übrig",
       "gloss": "left (over), remaining",
       "pos": "adj",
-      "rank": 837,
+      "rank": 838,
       "forms": [
         "übrig",
         "übrigen"
@@ -10629,7 +10641,7 @@
       "lemma": "Spur",
       "gloss": "trace, track",
       "pos": "noun",
-      "rank": 838,
+      "rank": 839,
       "forms": [
         "Spur",
         "Spuren"
@@ -10641,7 +10653,7 @@
       "lemma": "melden",
       "gloss": "to report; sich melden = to get in touch",
       "pos": "verb",
-      "rank": 839,
+      "rank": 840,
       "forms": [
         "melden",
         "melde",
@@ -10655,7 +10667,7 @@
       "lemma": "werfen",
       "gloss": "to throw",
       "pos": "verb",
-      "rank": 840,
+      "rank": 841,
       "forms": [
         "werfen",
         "wirf",
@@ -10670,7 +10682,7 @@
       "lemma": "hängen",
       "gloss": "to hang",
       "pos": "verb",
-      "rank": 841,
+      "rank": 842,
       "forms": [
         "hängen",
         "hängt",
@@ -10684,7 +10696,7 @@
       "lemma": "Freude",
       "gloss": "joy, pleasure",
       "pos": "noun",
-      "rank": 842,
+      "rank": 843,
       "forms": [
         "Freude"
       ],
@@ -10695,7 +10707,7 @@
       "lemma": "Ehemann",
       "gloss": "husband",
       "pos": "noun",
-      "rank": 843,
+      "rank": 844,
       "forms": [
         "Ehemann",
         "Ehemänner"
@@ -10708,7 +10720,7 @@
       "lemma": "erschießen",
       "gloss": "to shoot dead",
       "pos": "verb",
-      "rank": 844,
+      "rank": 845,
       "forms": [
         "erschießen",
         "erschieße",
@@ -10722,7 +10734,7 @@
       "lemma": "verzeihen",
       "gloss": "to forgive",
       "pos": "verb",
-      "rank": 845,
+      "rank": 846,
       "forms": [
         "verzeihen",
         "verzeih",
@@ -10736,7 +10748,7 @@
       "lemma": "Schwein",
       "gloss": "pig",
       "pos": "noun",
-      "rank": 846,
+      "rank": 847,
       "forms": [
         "Schwein",
         "Schweine"
@@ -10749,7 +10761,7 @@
       "lemma": "Monster",
       "gloss": "monster",
       "pos": "noun",
-      "rank": 847,
+      "rank": 848,
       "forms": [
         "Monster"
       ],
@@ -10761,7 +10773,7 @@
       "lemma": "Mission",
       "gloss": "mission",
       "pos": "noun",
-      "rank": 848,
+      "rank": 849,
       "forms": [
         "Mission",
         "Missionen"
@@ -10773,7 +10785,7 @@
       "lemma": "vorne",
       "gloss": "at the front",
       "pos": "adv",
-      "rank": 849,
+      "rank": 850,
       "forms": [
         "vorne",
         "vorn"
@@ -10785,7 +10797,7 @@
       "lemma": "stopp",
       "gloss": "stop!",
       "pos": "interj",
-      "rank": 850,
+      "rank": 851,
       "forms": [
         "stopp"
       ],
@@ -10796,7 +10808,7 @@
       "lemma": "übel",
       "gloss": "bad, nasty; sick (nauseous)",
       "pos": "adj",
-      "rank": 851,
+      "rank": 852,
       "forms": [
         "übel",
         "üble"
@@ -10808,7 +10820,7 @@
       "lemma": "Adresse",
       "gloss": "address",
       "pos": "noun",
-      "rank": 852,
+      "rank": 853,
       "forms": [
         "Adresse",
         "Adressen"
@@ -10820,7 +10832,7 @@
       "lemma": "Unsinn",
       "gloss": "nonsense",
       "pos": "noun",
-      "rank": 853,
+      "rank": 854,
       "forms": [
         "Unsinn"
       ],
@@ -10831,7 +10843,7 @@
       "lemma": "Messer",
       "gloss": "knife",
       "pos": "noun",
-      "rank": 854,
+      "rank": 855,
       "forms": [
         "Messer"
       ],
@@ -10843,7 +10855,7 @@
       "lemma": "gesund",
       "gloss": "healthy",
       "pos": "adj",
-      "rank": 855,
+      "rank": 856,
       "forms": [
         "gesund",
         "gesunde",
@@ -10856,7 +10868,7 @@
       "lemma": "Respekt",
       "gloss": "respect",
       "pos": "noun",
-      "rank": 856,
+      "rank": 857,
       "forms": [
         "Respekt"
       ],
@@ -10868,7 +10880,7 @@
       "lemma": "pro",
       "gloss": "per",
       "pos": "prep",
-      "rank": 857,
+      "rank": 858,
       "forms": [
         "pro"
       ],
@@ -10879,7 +10891,7 @@
       "lemma": "leisten",
       "gloss": "to achieve, do; sich etwas leisten = to afford",
       "pos": "verb",
-      "rank": 858,
+      "rank": 859,
       "forms": [
         "leisten",
         "leiste",
@@ -10892,7 +10904,7 @@
       "lemma": "davor",
       "gloss": "in front of it; before that",
       "pos": "adv",
-      "rank": 859,
+      "rank": 860,
       "forms": [
         "davor"
       ],
@@ -10903,7 +10915,7 @@
       "lemma": "Ball",
       "gloss": "ball",
       "pos": "noun",
-      "rank": 860,
+      "rank": 861,
       "forms": [
         "Ball",
         "Bälle"
@@ -10916,7 +10928,7 @@
       "lemma": "mitnehmen",
       "gloss": "to take along; to give a lift",
       "pos": "verb",
-      "rank": 861,
+      "rank": 862,
       "forms": [
         "mitnehmen",
         "mitgenommen",
@@ -10929,7 +10941,7 @@
       "lemma": "Schwierigkeit",
       "gloss": "difficulty; (plural) trouble",
       "pos": "noun",
-      "rank": 862,
+      "rank": 863,
       "forms": [
         "Schwierigkeit",
         "Schwierigkeiten"
@@ -10942,7 +10954,7 @@
       "lemma": "Hälfte",
       "gloss": "half",
       "pos": "noun",
-      "rank": 863,
+      "rank": 864,
       "forms": [
         "Hälfte",
         "Hälften"
@@ -10955,7 +10967,7 @@
       "lemma": "Planet",
       "gloss": "planet",
       "pos": "noun",
-      "rank": 864,
+      "rank": 865,
       "forms": [
         "Planet",
         "Planeten"
@@ -10968,7 +10980,7 @@
       "lemma": "schwanger",
       "gloss": "pregnant",
       "pos": "adj",
-      "rank": 865,
+      "rank": 866,
       "forms": [
         "schwanger"
       ]
@@ -10978,7 +10990,7 @@
       "lemma": "Gruppe",
       "gloss": "group",
       "pos": "noun",
-      "rank": 866,
+      "rank": 867,
       "forms": [
         "Gruppe",
         "Gruppen"
@@ -10990,7 +11002,7 @@
       "lemma": "verhaften",
       "gloss": "to arrest",
       "pos": "verb",
-      "rank": 867,
+      "rank": 868,
       "forms": [
         "verhaften",
         "verhaftet"
@@ -11002,7 +11014,7 @@
       "lemma": "irgendwelche",
       "gloss": "any, some (plural)",
       "pos": "det",
-      "rank": 868,
+      "rank": 869,
       "forms": [
         "irgendwelche",
         "irgendwelchen"
@@ -11014,7 +11026,7 @@
       "lemma": "drehen",
       "gloss": "to turn",
       "pos": "verb",
-      "rank": 869,
+      "rank": 870,
       "forms": [
         "drehen",
         "dreh",
@@ -11028,7 +11040,7 @@
       "lemma": "Eis",
       "gloss": "ice; ice cream",
       "pos": "noun",
-      "rank": 870,
+      "rank": 871,
       "forms": [
         "Eis"
       ],
@@ -11040,7 +11052,7 @@
       "lemma": "danken",
       "gloss": "to thank",
       "pos": "verb",
-      "rank": 871,
+      "rank": 872,
       "forms": [
         "danken",
         "dankt",
@@ -11053,7 +11065,7 @@
       "lemma": "Erfolg",
       "gloss": "success",
       "pos": "noun",
-      "rank": 872,
+      "rank": 873,
       "forms": [
         "Erfolg",
         "Erfolge"
@@ -11066,7 +11078,7 @@
       "lemma": "zufrieden",
       "gloss": "satisfied, happy (with)",
       "pos": "adj",
-      "rank": 873,
+      "rank": 874,
       "forms": [
         "zufrieden"
       ],
@@ -11077,7 +11089,7 @@
       "lemma": "schließen",
       "gloss": "to close, shut",
       "pos": "verb",
-      "rank": 874,
+      "rank": 875,
       "forms": [
         "schließen",
         "schließ",
@@ -11091,7 +11103,7 @@
       "lemma": "besorgen",
       "gloss": "to get, obtain",
       "pos": "verb",
-      "rank": 875,
+      "rank": 876,
       "forms": [
         "besorgen",
         "besorge",
@@ -11104,7 +11116,7 @@
       "lemma": "Wochenende",
       "gloss": "weekend",
       "pos": "noun",
-      "rank": 876,
+      "rank": 877,
       "forms": [
         "Wochenende",
         "Wochenenden"
@@ -11117,7 +11129,7 @@
       "lemma": "worüber",
       "gloss": "about what; what … about",
       "pos": "adv",
-      "rank": 877,
+      "rank": 878,
       "forms": [
         "worüber"
       ],
@@ -11128,7 +11140,7 @@
       "lemma": "Bein",
       "gloss": "leg",
       "pos": "noun",
-      "rank": 878,
+      "rank": 879,
       "forms": [
         "Bein",
         "Beine",
@@ -11141,7 +11153,7 @@
       "lemma": "Verbrechen",
       "gloss": "crime",
       "pos": "noun",
-      "rank": 879,
+      "rank": 880,
       "forms": [
         "Verbrechen",
         "Verbrechens"
@@ -11154,7 +11166,7 @@
       "lemma": "Bericht",
       "gloss": "report",
       "pos": "noun",
-      "rank": 880,
+      "rank": 881,
       "forms": [
         "Bericht",
         "Berichte"
@@ -11166,7 +11178,7 @@
       "lemma": "nachts",
       "gloss": "at night",
       "pos": "adv",
-      "rank": 881,
+      "rank": 882,
       "forms": [
         "nachts"
       ],
@@ -11177,7 +11189,7 @@
       "lemma": "Prinzessin",
       "gloss": "princess",
       "pos": "noun",
-      "rank": 882,
+      "rank": 883,
       "forms": [
         "Prinzessin",
         "Prinzessinnen"
@@ -11189,7 +11201,7 @@
       "lemma": "Schmerz",
       "gloss": "pain",
       "pos": "noun",
-      "rank": 883,
+      "rank": 884,
       "forms": [
         "Schmerz",
         "Schmerzen"
@@ -11202,7 +11214,7 @@
       "lemma": "klingeln",
       "gloss": "to ring",
       "pos": "verb",
-      "rank": 884,
+      "rank": 885,
       "forms": [
         "klingeln",
         "klingelt",
@@ -11215,7 +11227,7 @@
       "lemma": "Position",
       "gloss": "position",
       "pos": "noun",
-      "rank": 885,
+      "rank": 886,
       "forms": [
         "Position",
         "Positionen"
@@ -11227,7 +11239,7 @@
       "lemma": "Fernsehen",
       "gloss": "television, TV",
       "pos": "noun",
-      "rank": 886,
+      "rank": 887,
       "forms": [
         "Fernsehen"
       ],
@@ -11239,7 +11251,7 @@
       "lemma": "schließlich",
       "gloss": "finally, in the end; after all",
       "pos": "adv",
-      "rank": 887,
+      "rank": 888,
       "forms": [
         "schließlich"
       ],
@@ -11250,7 +11262,7 @@
       "lemma": "Schätzchen",
       "gloss": "sweetheart, honey",
       "pos": "noun",
-      "rank": 888,
+      "rank": 889,
       "forms": [
         "Schätzchen"
       ],
@@ -11262,7 +11274,7 @@
       "lemma": "schwierig",
       "gloss": "difficult",
       "pos": "adj",
-      "rank": 889,
+      "rank": 890,
       "forms": [
         "schwierig",
         "schwierige",
@@ -11274,7 +11286,7 @@
       "lemma": "Angebot",
       "gloss": "offer",
       "pos": "noun",
-      "rank": 890,
+      "rank": 891,
       "forms": [
         "Angebot",
         "Angebote"
@@ -11286,7 +11298,7 @@
       "lemma": "Ring",
       "gloss": "ring",
       "pos": "noun",
-      "rank": 891,
+      "rank": 892,
       "forms": [
         "Ring",
         "Ringe"
@@ -11298,7 +11310,7 @@
       "lemma": "rennen",
       "gloss": "to run (fast)",
       "pos": "verb",
-      "rank": 892,
+      "rank": 893,
       "forms": [
         "rennen",
         "renn",
@@ -11313,7 +11325,7 @@
       "lemma": "Lied",
       "gloss": "song",
       "pos": "noun",
-      "rank": 893,
+      "rank": 894,
       "forms": [
         "Lied",
         "Lieder"
@@ -11325,7 +11337,7 @@
       "lemma": "Ei",
       "gloss": "egg",
       "pos": "noun",
-      "rank": 894,
+      "rank": 895,
       "forms": [
         "Ei",
         "Eier"
@@ -11337,7 +11349,7 @@
       "lemma": "fantastisch",
       "gloss": "fantastic",
       "pos": "adj",
-      "rank": 895,
+      "rank": 896,
       "forms": [
         "fantastisch",
         "fantastischen"
@@ -11348,7 +11360,7 @@
       "lemma": "Insel",
       "gloss": "island",
       "pos": "noun",
-      "rank": 896,
+      "rank": 897,
       "forms": [
         "Insel",
         "Inseln"
@@ -11360,7 +11372,7 @@
       "lemma": "daher",
       "gloss": "that's why, so; from there",
       "pos": "adv",
-      "rank": 897,
+      "rank": 898,
       "forms": [
         "daher"
       ],
@@ -11371,7 +11383,7 @@
       "lemma": "zufällig",
       "gloss": "chance, accidental; by chance",
       "pos": "adj",
-      "rank": 898,
+      "rank": 899,
       "forms": [
         "zufällig",
         "zufälliges"
@@ -11383,7 +11395,7 @@
       "lemma": "Dorf",
       "gloss": "village",
       "pos": "noun",
-      "rank": 899,
+      "rank": 900,
       "forms": [
         "Dorf",
         "Dörfer"
@@ -11395,7 +11407,7 @@
       "lemma": "mitten",
       "gloss": "in the middle (of)",
       "pos": "adv",
-      "rank": 900,
+      "rank": 901,
       "forms": [
         "mitten"
       ],
@@ -11406,7 +11418,7 @@
       "lemma": "Feind",
       "gloss": "enemy",
       "pos": "noun",
-      "rank": 901,
+      "rank": 902,
       "forms": [
         "Feind",
         "Feinde"
@@ -11418,7 +11430,7 @@
       "lemma": "einverstanden",
       "gloss": "agreed; okay with (something)",
       "pos": "adj",
-      "rank": 902,
+      "rank": 903,
       "forms": [
         "einverstanden"
       ],
@@ -11429,7 +11441,7 @@
       "lemma": "bauen",
       "gloss": "to build",
       "pos": "verb",
-      "rank": 903,
+      "rank": 904,
       "forms": [
         "bauen",
         "baut",
@@ -11442,7 +11454,7 @@
       "lemma": "halb",
       "gloss": "half",
       "pos": "adj",
-      "rank": 904,
+      "rank": 905,
       "forms": [
         "halb",
         "halbe",
@@ -11456,7 +11468,7 @@
       "lemma": "verpassen",
       "gloss": "to miss (a train, a chance)",
       "pos": "verb",
-      "rank": 905,
+      "rank": 906,
       "forms": [
         "verpassen",
         "verpasst"
@@ -11468,7 +11480,7 @@
       "lemma": "leise",
       "gloss": "quiet; quietly",
       "pos": "adj",
-      "rank": 906,
+      "rank": 907,
       "forms": [
         "leise",
         "leiser"
@@ -11480,7 +11492,7 @@
       "lemma": "Unternehmen",
       "gloss": "company, business",
       "pos": "noun",
-      "rank": 907,
+      "rank": 908,
       "forms": [
         "Unternehmen"
       ],
@@ -11492,7 +11504,7 @@
       "lemma": "kosten",
       "gloss": "to cost",
       "pos": "verb",
-      "rank": 908,
+      "rank": 909,
       "forms": [
         "kosten",
         "kostet",
@@ -11506,7 +11518,7 @@
       "lemma": "entlang",
       "gloss": "along",
       "pos": "prep",
-      "rank": 909,
+      "rank": 910,
       "forms": [
         "entlang"
       ],
@@ -11517,7 +11529,7 @@
       "lemma": "Tier",
       "gloss": "animal",
       "pos": "noun",
-      "rank": 910,
+      "rank": 911,
       "forms": [
         "Tier",
         "Tiere",
@@ -11530,7 +11542,7 @@
       "lemma": "Freiheit",
       "gloss": "freedom",
       "pos": "noun",
-      "rank": 911,
+      "rank": 912,
       "forms": [
         "Freiheit"
       ],
@@ -11541,7 +11553,7 @@
       "lemma": "unterhalten",
       "gloss": "sich unterhalten = to talk, chat; to entertain",
       "pos": "verb",
-      "rank": 912,
+      "rank": 913,
       "forms": [
         "unterhalten",
         "unterhalte",
@@ -11554,7 +11566,7 @@
       "lemma": "einladen",
       "gloss": "to invite; to treat (pay for someone)",
       "pos": "verb",
-      "rank": 913,
+      "rank": 914,
       "forms": [
         "einladen",
         "eingeladen",
@@ -11567,7 +11579,7 @@
       "lemma": "Schaden",
       "gloss": "damage; harm",
       "pos": "noun",
-      "rank": 914,
+      "rank": 915,
       "forms": [
         "Schaden",
         "Schäden"
@@ -11580,7 +11592,7 @@
       "lemma": "beenden",
       "gloss": "to end, finish",
       "pos": "verb",
-      "rank": 915,
+      "rank": 916,
       "forms": [
         "beenden",
         "beende",
@@ -11593,7 +11605,7 @@
       "lemma": "lächerlich",
       "gloss": "ridiculous",
       "pos": "adj",
-      "rank": 916,
+      "rank": 917,
       "forms": [
         "lächerlich",
         "lächerlichen"
@@ -11605,7 +11617,7 @@
       "lemma": "Park",
       "gloss": "park",
       "pos": "noun",
-      "rank": 917,
+      "rank": 918,
       "forms": [
         "Park",
         "Parks"
@@ -11617,7 +11629,7 @@
       "lemma": "Energie",
       "gloss": "energy",
       "pos": "noun",
-      "rank": 918,
+      "rank": 919,
       "forms": [
         "Energie"
       ],
@@ -11628,7 +11640,7 @@
       "lemma": "Fleisch",
       "gloss": "meat",
       "pos": "noun",
-      "rank": 919,
+      "rank": 920,
       "forms": [
         "Fleisch"
       ],
@@ -11639,7 +11651,7 @@
       "lemma": "bestehen",
       "gloss": "to pass (a test); bestehen aus = to consist of; bestehen auf = to insist on",
       "pos": "verb",
-      "rank": 920,
+      "rank": 921,
       "forms": [
         "bestehen",
         "bestehe",
@@ -11653,7 +11665,7 @@
       "lemma": "Zeitung",
       "gloss": "newspaper",
       "pos": "noun",
-      "rank": 921,
+      "rank": 922,
       "forms": [
         "Zeitung",
         "Zeitungen"
@@ -11665,7 +11677,7 @@
       "lemma": "worum",
       "gloss": "what … about",
       "pos": "adv",
-      "rank": 922,
+      "rank": 923,
       "forms": [
         "worum"
       ],
@@ -11676,7 +11688,7 @@
       "lemma": "nachdenken",
       "gloss": "to think (about), reflect",
       "pos": "verb",
-      "rank": 923,
+      "rank": 924,
       "forms": [
         "nachdenken",
         "nachgedacht"
@@ -11688,7 +11700,7 @@
       "lemma": "betrunken",
       "gloss": "drunk",
       "pos": "adj",
-      "rank": 924,
+      "rank": 925,
       "forms": [
         "betrunken",
         "betrunkene"
@@ -11699,7 +11711,7 @@
       "lemma": "sowas",
       "gloss": "something like that (colloquial)",
       "pos": "pron",
-      "rank": 925,
+      "rank": 926,
       "forms": [
         "sowas"
       ],
@@ -11710,7 +11722,7 @@
       "lemma": "Patient",
       "gloss": "patient",
       "pos": "noun",
-      "rank": 926,
+      "rank": 927,
       "forms": [
         "Patient",
         "Patienten"
@@ -11723,7 +11735,7 @@
       "lemma": "Gespräch",
       "gloss": "conversation, talk",
       "pos": "noun",
-      "rank": 927,
+      "rank": 928,
       "forms": [
         "Gespräch",
         "Gespräche"
@@ -11735,7 +11747,7 @@
       "lemma": "leiden",
       "gloss": "to suffer; nicht leiden können = can't stand",
       "pos": "verb",
-      "rank": 928,
+      "rank": 929,
       "forms": [
         "leiden",
         "leidet",
@@ -11748,7 +11760,7 @@
       "lemma": "Taxi",
       "gloss": "taxi",
       "pos": "noun",
-      "rank": 929,
+      "rank": 930,
       "forms": [
         "Taxi",
         "Taxis"
@@ -11760,7 +11772,7 @@
       "lemma": "See",
       "gloss": "lake",
       "pos": "noun",
-      "rank": 930,
+      "rank": 931,
       "forms": [
         "See",
         "Seen"
@@ -11773,7 +11785,7 @@
       "lemma": "Unterschied",
       "gloss": "difference",
       "pos": "noun",
-      "rank": 931,
+      "rank": 932,
       "forms": [
         "Unterschied",
         "Unterschiede"
@@ -11785,7 +11797,7 @@
       "lemma": "Wind",
       "gloss": "wind",
       "pos": "noun",
-      "rank": 932,
+      "rank": 933,
       "forms": [
         "Wind"
       ],
@@ -11797,7 +11809,7 @@
       "lemma": "Wand",
       "gloss": "wall (of a room)",
       "pos": "noun",
-      "rank": 933,
+      "rank": 934,
       "forms": [
         "Wand",
         "Wände"
@@ -11810,7 +11822,7 @@
       "lemma": "Bus",
       "gloss": "bus",
       "pos": "noun",
-      "rank": 934,
+      "rank": 935,
       "forms": [
         "Bus",
         "Busse"
@@ -11822,7 +11834,7 @@
       "lemma": "Angriff",
       "gloss": "attack",
       "pos": "noun",
-      "rank": 935,
+      "rank": 936,
       "forms": [
         "Angriff",
         "Angriffe"
@@ -11834,7 +11846,7 @@
       "lemma": "Verhalten",
       "gloss": "behaviour",
       "pos": "noun",
-      "rank": 936,
+      "rank": 937,
       "forms": [
         "Verhalten"
       ],
@@ -11846,7 +11858,7 @@
       "lemma": "Loch",
       "gloss": "hole",
       "pos": "noun",
-      "rank": 937,
+      "rank": 938,
       "forms": [
         "Loch",
         "Löcher"
@@ -11858,7 +11870,7 @@
       "lemma": "Interesse",
       "gloss": "interest",
       "pos": "noun",
-      "rank": 938,
+      "rank": 939,
       "forms": [
         "Interesse",
         "Interessen"
@@ -11870,7 +11882,7 @@
       "lemma": "treten",
       "gloss": "to kick; to step",
       "pos": "verb",
-      "rank": 939,
+      "rank": 940,
       "forms": [
         "treten",
         "tritt",
@@ -11884,7 +11896,7 @@
       "lemma": "Quatsch",
       "gloss": "nonsense, rubbish (colloquial)",
       "pos": "noun",
-      "rank": 940,
+      "rank": 941,
       "forms": [
         "Quatsch"
       ],
@@ -11896,25 +11908,13 @@
       "lemma": "Polizist",
       "gloss": "police officer",
       "pos": "noun",
-      "rank": 941,
+      "rank": 942,
       "forms": [
         "Polizist",
         "Polizisten"
       ],
       "notes": "Weak noun: den Polizisten. Female: Polizistin.",
       "gender": "m"
-    },
-    {
-      "id": "de.w.mdcmt81tv3",
-      "lemma": "Blume",
-      "gloss": "flower",
-      "pos": "noun",
-      "rank": 942,
-      "forms": [
-        "Blume",
-        "Blumen"
-      ],
-      "gender": "f"
     },
     {
       "id": "de.w.y7wtw7474z",
@@ -27609,6 +27609,49 @@
         "häuser",
         "große",
         "gärten"
+      ]
+    },
+    {
+      "id": "de.s.j0b5c8bzfv",
+      "wordId": "de.w.mdcmt81tv3",
+      "text": "Die Blumen sind für dich.",
+      "translation": "The flowers are for you.",
+      "cloze": "Blumen",
+      "keys": [
+        "die",
+        "blumen",
+        "sind",
+        "für",
+        "dich"
+      ]
+    },
+    {
+      "id": "de.s.h7xzpwr9tc",
+      "wordId": "de.w.mdcmt81tv3",
+      "text": "Was für eine schöne Blume!",
+      "translation": "What a beautiful flower!",
+      "cloze": "Blume",
+      "keys": [
+        "was",
+        "für",
+        "eine",
+        "schöne",
+        "blume"
+      ]
+    },
+    {
+      "id": "de.s.cvmcsk1c52",
+      "wordId": "de.w.mdcmt81tv3",
+      "text": "Er bringt ihr jede Woche Blumen.",
+      "translation": "He brings her flowers every week.",
+      "cloze": "Blumen",
+      "keys": [
+        "er",
+        "bringt",
+        "ihr",
+        "jede",
+        "woche",
+        "blumen"
       ]
     },
     {
@@ -68649,49 +68692,6 @@
         "überall",
         "waren",
         "polizisten"
-      ]
-    },
-    {
-      "id": "de.s.j0b5c8bzfv",
-      "wordId": "de.w.mdcmt81tv3",
-      "text": "Die Blumen sind für dich.",
-      "translation": "The flowers are for you.",
-      "cloze": "Blumen",
-      "keys": [
-        "die",
-        "blumen",
-        "sind",
-        "für",
-        "dich"
-      ]
-    },
-    {
-      "id": "de.s.h7xzpwr9tc",
-      "wordId": "de.w.mdcmt81tv3",
-      "text": "Was für eine schöne Blume!",
-      "translation": "What a beautiful flower!",
-      "cloze": "Blume",
-      "keys": [
-        "was",
-        "für",
-        "eine",
-        "schöne",
-        "blume"
-      ]
-    },
-    {
-      "id": "de.s.cvmcsk1c52",
-      "wordId": "de.w.mdcmt81tv3",
-      "text": "Er bringt ihr jede Woche Blumen.",
-      "translation": "He brings her flowers every week.",
-      "cloze": "Blumen",
-      "keys": [
-        "er",
-        "bringt",
-        "ihr",
-        "jede",
-        "woche",
-        "blumen"
       ]
     },
     {

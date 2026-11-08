@@ -1486,33 +1486,6 @@
     ]
   },
   {
-    "lemma": "flor",
-    "gloss": "flower",
-    "pos": "noun",
-    "forms": [
-      "flor",
-      "flores"
-    ],
-    "gender": "f",
-    "sentences": [
-      {
-        "text": "Te traje flores.",
-        "translation": "I brought you flowers.",
-        "cloze": "flores"
-      },
-      {
-        "text": "Es una flor muy bonita.",
-        "translation": "It's a very pretty flower.",
-        "cloze": "flor"
-      },
-      {
-        "text": "Hay flores en el jardín.",
-        "translation": "There are flowers in the garden.",
-        "cloze": "flores"
-      }
-    ]
-  },
-  {
     "lemma": "vos",
     "gloss": "you (informal, in Argentina and parts of Latin America)",
     "pos": "pron",
