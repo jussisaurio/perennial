@@ -508,27 +508,40 @@ export function GardenWalk({
     setShook(null);
   };
   const toys = { walk: toysGiven ?? showcaseToys, done: toyDone };
-  // The note open on its card (#654), if any.
-  const [note, setNote] = useState<Note | null>(null);
+  // The one card open over the walk, if any: a plant's or a note's (#654), never both, so closing one never shows another (#875).
+  const [card, setCard] = useState<{ is: "plant"; p: PlacedPlant } | { is: "note"; note: Note } | null>(null);
+  const selected = card?.is === "plant" ? card.p : null;
+  const note = card?.is === "note" ? card.note : null;
+  // A plant the scene opens (a tap, Next plant) replaces any card; the scene closes only its own.
+  const onSelect = (p: PlacedPlant | null) => setCard((c) => (p ? { is: "plant", p } : c?.is === "plant" ? null : c));
   const openNote = (id: string) => {
     const n = notes.list.find((n) => n.id === id);
     // The scene shows only the notes it was given, so its id is always one of them.
     if (!n) throw new Error(`no note "${id}"`);
     scene.current?.select(null);
-    setNote(n);
+    setCard({ is: "note", note: n });
     setHint(false);
     notes.opened(id);
   };
   // The diary's pages (#858), the unlocked ones in the order they came: its card turns through them.
   const pages = useMemo(() => notes.list.filter((n) => n.diary), [notes.list]);
   const turnPage = (n: Note) => {
-    setNote(n);
+    setCard({ is: "note", note: n });
     notes.opened(n.id);
     scene.current?.readDiary(n.id);
   };
+  const closeNote = () => {
+    setCard(null);
+    canvas.current?.focus({ preventScroll: true });
+  };
+  // Escape closes whichever card is open before it would leave the garden (#874): focus may be on the scene, after a drag.
+  const closeCard = () => {
+    if (card?.is === "plant") scene.current!.select(null);
+    else closeNote();
+  };
   // The scene takes these once, as the walk opens; a note opened during the walk turns read where it is by itself.
   const placed = useMemo(() => placeNotes(notes.list, notes.read), [notes.list, notes.read]);
-  const { data, scene, ready, failed, progress, labels, spoken, selected, reach, holding, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onShake, onCarry: carryDone, notes: { ...placed, open: openNote } });
+  const { data, scene, ready, failed, progress, labels, spoken, reach, holding, company, stars, heard } = useGardenScene({ lang, source, visitors, door, walkInto, toys, focus, time, wrap, canvas, onFocused: () => setHint(false), onSelect, onShake, onCarry: carryDone, notes: { ...placed, open: openNote } });
   // With sound on, the well's echo (#335 S6) says its word once, as it rises.
   const echoed = spoken.find((l) => l.kind === "echo");
   const echoId = echoed?.id;
@@ -558,7 +571,7 @@ export function GardenWalk({
   useEffect(() => {
     if (!reach && document.activeElement === document.body) canvas.current?.focus({ preventScroll: true });
   }, [reach]);
-  const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, selected, onExit, onMove: () => moved(), onHold });
+  const { onPointerDown, onPointerMove, onPointerCancel, endDrag, stick } = useWalkInput({ scene, wrap, open: card !== null, onClose: closeCard, onExit, onMove: () => moved(), onHold });
   const hover = useClipsAhead(scene, wrap, tag, sound);
 
   useEffect(() => {
@@ -579,7 +592,8 @@ export function GardenWalk({
     const r = wrap.current.getBoundingClientRect();
     const hit = scene.current.pickAny(e.clientX - r.left, e.clientY - r.top, r.width, r.height);
     if (hit?.kind !== "visitor" && hit?.kind !== "plant") scene.current.select(null);
-    setNote(null);
+    // Any tap puts a note away.
+    setCard((c) => (c?.is === "note" ? null : c));
     if (!hit) return; // nothing there: already deselected above
     onTap?.(hit.kind);
     // A thing in reach acts at once; from afar, once you have walked up to it. A plant's card opens; a visitor may answer
@@ -594,11 +608,6 @@ export function GardenWalk({
       const word = hoverWord(hit);
       if (word) void speak(word, tag);
     }
-  };
-
-  const closeNote = () => {
-    setNote(null);
-    canvas.current?.focus({ preventScroll: true });
   };
 
   const stats = useMemo(() => {
@@ -748,7 +757,7 @@ export function GardenWalk({
         </div>
       )}
 
-      {note && !selected && <NoteCard note={note} lang={lang} isKnown={notes.isKnown} onClose={closeNote} pages={note.diary ? pages : null} onTurn={turnPage} />}
+      {note && <NoteCard note={note} lang={lang} isKnown={notes.isKnown} onClose={closeNote} pages={note.diary ? pages : null} onTurn={turnPage} />}
 
       <div className="gw-bottom">
         {holding && !selected && (
@@ -941,7 +950,7 @@ function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; select
 /** A gardener's note on its card; a page of the diary (#858) also turns to the diary's other `pages` (null: a note from the shed or the stile). */
 function NoteCard({ note, lang, isKnown, onClose, pages, onTurn }: { note: Note; lang: string; isKnown: (lemma: string) => boolean; onClose: () => void; pages: readonly Note[] | null; onTurn: (n: Note) => void }) {
   const card = useRef<HTMLDivElement>(null);
-  // Focus moves to the card as it opens, so a screen reader reads it and Escape closes it.
+  // Focus moves to the card as it opens, so a screen reader reads it.
   useEffect(() => card.current!.focus({ preventScroll: true }), [note.id]);
   const at = pages ? pages.indexOf(note) : -1;
   return (
@@ -951,12 +960,6 @@ function NoteCard({ note, lang, isKnown, onClose, pages, onTurn }: { note: Note;
       aria-label={pages ? `A page of the gardener's diary, page ${at + 1} of ${pages.length}` : "A note from the gardener"}
       ref={card}
       tabIndex={-1}
-      onKeyDown={(e) => {
-        if (e.key !== "Escape") return;
-        // Only the card closes: the walk's own Escape would leave the garden.
-        e.stopPropagation();
-        onClose();
-      }}
     >
       <button className="gw-close" onClick={onClose} aria-label="Close">
         <Glyph name="close" />
