@@ -61,7 +61,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 - **The facts** (#928). Each note lists the story's facts it tells and the ones it needs. A thought or the frog only needs them. No line needs a fact before a note has told it, and both courses tell the same facts in the same beats (`web/src/garden/facts.ts`, `facts.test.ts`).
 - The notes are only in the course language, with no translation. When a note appears, most of its words are known (`web/src/garden/notes/notes.test.ts`). Each course has 3–5 words of the gardener's own that no deck teaches.
 - **Notes, places and visitors open by known words, never by days.** A break never costs anything.
-- **Pacing.** A note comes about every 3–4 weeks for a learner who does 5 minutes a day. The thresholds come from a simulation of that learner, not from the deck's size (#883). Long gaps are filled by world changes, not by more notes. `bun run story:sim <lang> <pattern>` shows the gaps.
+- **Pacing.** A note comes about every 3–4 weeks for a learner who does 5 minutes a day. The thresholds come from a simulation of that learner, not from the deck's size (#883). Between the big notes, small diary pages carry small beats: the ribbon on the hill and Today's pinned paper are what a learner who only glances still sees (#936). `bun run story:sim <lang> <pattern>` shows the gaps.
 - **Density** (#932). A learner who does 5 minutes a day finds something new about once a week. There are three kinds:
   - **big beats:** the notes;
   - **small beats:** a thought or a change in the world that follows a note's beat and shows it without words;
