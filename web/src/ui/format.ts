@@ -22,6 +22,9 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
  */
 export const longDay = (d: Date) => `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
 
+/** "3 Oct": a short day with no Intl, for the same reason; the Today strip's keepsake shows it in its first render. */
+export const shortDay = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
+
 // Made on first use: building it costs ~50 ms on a slow laptop, and module load blocks first paint (#481).
 let rtf: Intl.RelativeTimeFormat | undefined;
 

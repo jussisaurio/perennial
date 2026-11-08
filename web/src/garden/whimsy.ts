@@ -189,12 +189,10 @@ export function perkEnvelope(t: number, rise: number, fall: number): number {
 
 /**
  * The keepsake post's text: the first word and the day it was planted, e.g.
- * "casa · 3 oct". `locale`: the course language in the walk, where the post
- * is in the world (#650); "en-GB" in the strip, a picture on the Today page.
+ * "casa · 3 oct". `day`: in the course language in the walk, where the post
+ * is in the world (#650); in English in the strip, a picture on the Today page.
  */
-export function keepsakeLabel(lemma: string, at: number, locale: string): string {
-  return `${lemma} · ${new Date(at).toLocaleDateString(locale, { day: "numeric", month: "short" })}`;
-}
+export const keepsakeLabel = (lemma: string, day: string) => `${lemma} · ${day}`;
 
 // ---- Deadpan scenery (#364) ----
 
