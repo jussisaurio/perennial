@@ -27,7 +27,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - One PR does one thing. It says `Closes #n`, or `Refs #n` when it is one part of an issue.
 - **Some tasks need no code change:** the bug is already gone, or the issue is wrong. Then close the issue yourself (`gh issue close <n> --comment "..."`), with a comment that gives the evidence, and open no PR. The owner allows agents to close issues.
 - Commits end with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`.
-- The PR body ends with `Reviewed: none` (or `Reviewed: playtest`), a blank line, then `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
+- The PR body ends with `Reviewed: <none | quick | playtest>`, a blank line, then `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
 - Merge right after your checks, without waiting for CI: `scripts/merge.sh <pr>`. It merges, checks the state is MERGED, and deletes the remote branch. It works from any worktree.
 - **Migrations are expand, then contract:** never drop a table or column in the same release that stops using it. Railway runs migrations while the old version is still serving. #604 broke this rule and caused #614. The full rule is in [DEPLOY.md](DEPLOY.md).
 

@@ -100,15 +100,11 @@ Theme and sound are per-device preferences (localStorage), so they don't sync. D
 
 ## Accounts and merging
 
-- **Before the first write:** the app is local-only. The first write creates an anonymous user and session, then the shapes connect.
+- **Before "Start learning":** there is no user, and the landing page shows. "Start learning" creates an anonymous user and session; then the app reads the learner's rows with `/api/boot`.
 - **Signing in** links the account in Better Auth's `onLinkAccount`, all in one transaction:
   - reviews, user words and sentences: their ids are globally unique, so they just change owner (`update … set user_id`);
   - word state and course: newer row wins, but an open door on either course stays open;
   - then the anonymous user is deleted.
-- **During the link:** the client keeps its local DB and upload queue, reconnects with the new token, and replays. The server stamps the new `user_id`.
+- **During the link:** writes already in progress finish first, and their rows move too (server `auth.ts`, `mergeUsers`). Then the page reloads as the new user and reads its rows again (web `App.tsx`).
 - **Anonymous users** inactive for 60 days are deleted by a daily job. The cascade removes their rows.
 - **The client tolerates unknown ids:** reviews for words from a newer deck (synced from another device) are kept and hidden, never dropped.
-
-## Open questions
-
-1. Audio: device speech for now. Pre-generated audio per sentence would become an `audio` field on sentences.
