@@ -9,9 +9,10 @@ The idea: a simulated learner gives the day each part of the story arrives. Fres
 All in `web/`.
 
 - `bun run story:sim <lang> <pattern>` prints the story as one simulated learner meets it: each event's day, the learner's known words that day, its kind, the share of its words the learner can read, and the pacing numbers below. `<lang>` is `es` or `de`. `<pattern>` is `daily` (5 minutes a day: the one we tune for), `weekdays`, `break` (two weeks off at day 40) or `more` (10 minutes a day).
+- The learner is seed 1. Its last line is the median of 25 seeds: each note's day, the door's day and the longest gap between notes. Judge the pace by that line. One seed's days are luck: one answer that goes the other way early on moves its door by weeks, so any deck change reshuffles them (#952).
 - `--json` prints the same as JSON, for an agent to read.
 - `--script <dir>` writes the reader's script: one file per note, `01-n01.md` and on, in day order. Each part ends on its note.
-- The learner traces are in `web/src/sim/traces/`. Rebuild them with `bun run sim:learners` only when the planner, FSRS, the deck or the door's count changes: each trace stops at the door. A change to the story text or to another note's count needs no rebuild.
+- The learner traces are in `web/src/sim/traces/`: seed 1 day by day (`es-daily.json`), and the known count of each of the 25 seeds on each day (`es-daily-seeds.json`). Rebuild them with `bun run sim:learners` (about 80 s) only when the planner, FSRS, the deck or the door's count changes: each trace stops at the door. A change to the story text or to another note's count needs no rebuild.
 - What each note should leave the reader with is in `web/src/sim/intended.ts`. Change an entry only when the story changes, never to match what readers said.
 
 The projector (`web/src/sim/timeline.ts`) knows only the learner's words, so it assumes:
@@ -56,7 +57,7 @@ No change is kept unless these pass (`bun test src/garden` in web/):
 - `facts.test.ts`: no line needs a fact before a note tells it, and both courses tell the same facts in the same beats.
 - `notes.test.ts`: each note's words are deck words, the gardener's, or things the garden names (the hedge); a note unlocks when 55% of its words are known, both by course place and for the daily learner, and an early or stile note at most 75% for the daily learner; notes stay in story order.
 - `thoughts.test.ts`: a thought or frog line uses only words known when it unlocks, both by course place and for the daily learner (by place alone after the door, where the trace stops); lines on a thing stay in order.
-- `story.test.ts`: for the daily learner, the door opens on days 335–396 and a note comes at least every 35 days.
+- `story.test.ts`: for the median of the 25 daily learners, the door opens on days 335–396 and a note comes at least every 35 days.
 
 ## One iteration
 
@@ -82,7 +83,7 @@ All agents in the loop run on Opus.
 The numbers find the gaps; readers and judges decide.
 - Never add a line only to fill a week. A new line must win against "nothing" side by side: give the judges the part with the line and the part without it.
 - Readers never see the numbers, `intended.ts`, the facts or this file.
-- Tune on the daily learner. At each arc iteration, also run `weekdays` and `break` and check that they did not get worse. If a change helps daily and hurts another pattern, write it in Lessons.
+- Tune on the daily learner's median. At each arc iteration, also run `weekdays` and `break` and check that their median line did not get worse. If a change helps daily and hurts another pattern, write it in Lessons.
 - If the grade gets better but the readers' "want to read on" scores fall, the change is not kept.
 
 ## The prompts

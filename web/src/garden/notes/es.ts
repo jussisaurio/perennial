@@ -166,7 +166,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n12",
     beat: "late",
-    unlockAt: 865,
+    unlockAt: 887,
     text: "Anoche hice dos señales con la luz.\nEl lucero contestó con otras dos.\nNadie ha cruzado el valle. Todavía.",
     forms: { "contestó": "contestar", cruzado: "cruzar", ha: "haber", hice: "hacer", la: "el", otras: "otro", "señales": "señal" },
     reveals: ["the-light-answers"],

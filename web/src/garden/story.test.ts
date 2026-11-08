@@ -6,7 +6,7 @@ import deckEs from "../../../decks/es/deck.json";
 import deckDe from "../../../decks/de/deck.json";
 import { courseOrder } from "../content/order";
 import { Deck, GARDEN_WORDS } from "../deck/schema";
-import { dayKnowing, type Trace } from "../sim/trace";
+import { medianDayKnowing, type Runs, type Trace } from "../sim/trace";
 import { storyEvents, type StoryEvent } from "./story";
 import { NO_FACTS, VISITORS } from "./visitors";
 
@@ -20,6 +20,10 @@ const COURSES = { es: course("es", deckEs), de: course("de", deckDe) };
 const TRACES: Record<"es" | "de", Trace> = {
   es: await Bun.file(new URL("../sim/traces/es-daily.json", import.meta.url)).json(),
   de: await Bun.file(new URL("../sim/traces/de-daily.json", import.meta.url)).json(),
+};
+const RUNS: Record<"es" | "de", Runs> = {
+  es: await Bun.file(new URL("../sim/traces/es-daily-seeds.json", import.meta.url)).json(),
+  de: await Bun.file(new URL("../sim/traces/de-daily-seeds.json", import.meta.url)).json(),
 };
 
 const gates = (events: readonly StoryEvent[]) => events.map((e) => e.gate);
@@ -45,15 +49,16 @@ for (const lang of ["es", "de"] as const) {
       expect(events.findLast((e) => e.kind === "note")).toMatchObject({ opens: ["door"] });
     });
 
-    // The story's pace (#883), for the learner who does Today's 5 minutes every day (sim/learner.ts).
-    describe("for the daily learner", () => {
-      const trace = TRACES[lang];
+    // The story's pace (#883), for the learner who does Today's 5 minutes every day (sim/learner.ts): the median
+    // of many seeds, since one seed's days are luck that any deck change reshuffles (#952).
+    describe("for the median daily learner", () => {
+      const runs = RUNS[lang];
       const notes = events.flatMap((e) => (e.kind === "note" ? [e.at] : []));
-      // !: the trace runs until the learner knows the door's count, the last note's.
-      const day = (known: number) => dayKnowing(trace, known)!;
+      // !: every run goes on until it knows the door's count, the last note's.
+      const day = (known: number) => medianDayKnowing(runs, known)!;
 
       test("the traces end at this door (else run `bun run sim:learners` again)", () => {
-        expect(trace.door).toBe(notes.at(-1)!);
+        expect([TRACES[lang].door, runs.door]).toEqual([notes.at(-1)!, notes.at(-1)!]);
       });
 
       test("the mouse door opens after about a year", () => {

@@ -53,7 +53,7 @@ const SHUT = 400;
 const OPEN = 800;
 /** Known words that note n09 (the diary) and n12 (the far light answers) need (notes/es.ts). */
 const N09 = 566;
-const N12 = 865;
+const N12 = 887;
 
 // On CI's software WebGL (~7 frames a second) the walk alone takes 10–20 s to open, and then the walking is played out in real time.
 test.describe.configure({ timeout: 60_000 });

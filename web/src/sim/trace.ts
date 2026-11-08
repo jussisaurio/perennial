@@ -44,6 +44,43 @@ export interface Trace {
   days: TraceDay[];
 }
 
+/**
+ * The same course and pattern run with many seeds (sim/traces/<lang>-<pattern>-seeds.json). One learner's year is
+ * luck: one answer that goes the other way early on moves their door by weeks. So the story's pace is tested on
+ * the median of many (#952).
+ */
+export interface Runs {
+  lang: string;
+  pattern: Pattern;
+  door: number;
+  /** Each run's known count at the end of each day, from day 1 (a day off keeps the day before's), to its door. */
+  runs: { seed: number; known: number[] }[];
+}
+
+/** A trace's known count at the end of each day, as Runs keeps it. */
+export function knownByDay(trace: Trace): number[] {
+  const known: number[] = [];
+  for (const d of trace.days) {
+    // !: every pattern practises on day 1, so there is a day before each later day off.
+    while (known.length < d.day - 1) known.push(known.at(-1)!);
+    known.push(d.known);
+  }
+  return known;
+}
+
+/** The median of the runs' first days knowing `known` words: the day a note gated at that count shows for a typical learner. */
+export function medianDayKnowing(runs: Runs, known: number): number | null {
+  const days = runs.runs
+    .map((r) => r.known.findIndex((k) => k >= known) + 1)
+    // 0: a run that never knew that many (past its door, or stopped at the day cap) knows them after every run that did.
+    .map((d) => (d === 0 ? Infinity : d))
+    .toSorted((a, b) => a - b);
+  // regenerate.ts runs an odd count of seeds, so the median is one run's day.
+  if (days.length % 2 !== 1) throw new Error(`${days.length} runs: the median needs an odd count`);
+  const mid = days[(days.length - 1) / 2];
+  return mid === Infinity ? null : mid;
+}
+
 /** The first day the learner of `trace` knows `known` words: the day a note or line gated at that count shows. */
 export function dayKnowing(trace: Trace, known: number): number | null {
   // `?? null`: the trace stops at the door, so a count past it is never reached.
