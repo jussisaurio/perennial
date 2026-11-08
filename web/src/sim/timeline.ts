@@ -18,7 +18,7 @@ import { noteInk, type Ink } from "../garden/notes/read";
 import type { Note } from "../garden/notes/note";
 import type { StoryEvent } from "../garden/story";
 import type { VisitorId } from "../garden/visitors";
-import { onDay, type Trace } from "./trace";
+import { dayKnowing, onDay, type Trace } from "./trace";
 
 /** A course's story, as the projector reads it. */
 export interface CourseStory {
@@ -135,8 +135,10 @@ export function quietStretches(days: readonly number[], end: number): Quiet[] {
 
 export function projectStory(trace: Trace, story: CourseStory): Projection {
   const reached = (gate: StoryEvent["gate"]): number | null =>
-    // `?.`: a day on which no visitor came leaves `brought` out (sim/trace.ts). `?? null`: never within the trace.
-    trace.days.find((d) => ("known" in gate ? d.known >= gate.known : d.brought?.includes(gate.garden)))?.day ?? null;
+    "known" in gate
+      ? dayKnowing(trace, gate.known)
+      : // `?.`: a day on which no visitor came leaves `brought` out (sim/trace.ts). `?? null`: never within the trace.
+        (trace.days.find((d) => d.brought?.includes(gate.garden))?.day ?? null);
   const all = story.events.map((event) => ({ event, day: reached(event.gate) }));
   type Item = (typeof all)[number];
   const sooner = (a: Item, b: Item) => (b.day !== null && (a.day === null || b.day < a.day) ? b : a);
