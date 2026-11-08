@@ -789,8 +789,12 @@ export const stone = () =>
     ["#8a847c", 70],
   ]);
 
-/** The mouse door (#364): a tiny arched wooden door in a stone frame, with a brass knob. */
-export function mouseDoor(): OffscreenCanvas {
+/**
+ * The mouse door (#364): a tiny arched wooden door in a stone frame, with a
+ * brass knob. Once it opens (#882), its frame round a dark doorway ("way"),
+ * and the wooden door alone ("leaf"), swung open.
+ */
+export function mouseDoor(part: "shut" | "way" | "leaf"): OffscreenCanvas {
   const rows = [
     "....ssss....",
     "..ssddddss..",
@@ -809,9 +813,20 @@ export function mouseDoor(): OffscreenCanvas {
     "sdwwwwdwwwds",
     "ssssssssssss",
   ];
-  const color: Record<string, string> = { s: "#8d8a85", d: "#5a3820", w: "#9c6a3d", k: "#e0b24a" };
+  const wood: Record<string, string> = { d: "#5a3820", w: "#9c6a3d", k: "#e0b24a" };
+  const stone = "#8d8a85";
   const [c, ctx] = canvas(12, 16);
-  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, color[ch])));
+  const color = (ch: string): string | null => {
+    if (ch === ".") return null;
+    if (ch === "s") return part === "leaf" ? null : stone;
+    return part === "way" ? "#1c130c" : wood[ch];
+  };
+  rows.forEach((row, y) =>
+    [...row].forEach((ch, x) => {
+      const col = color(ch);
+      if (col) px(ctx, x, y, col);
+    }),
+  );
   return c;
 }
 

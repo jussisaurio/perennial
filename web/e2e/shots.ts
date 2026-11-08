@@ -80,6 +80,13 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
       Object.assign(s, { x: p.x + 0.3, z: p.z + 1.8, yaw: 0, pitch: 0.45 });
     }),
   door: (page) => standAtDoor(page),
+  // A step back from the open mouse door and its last note (#882), with the cat by it once it lives here.
+  mousedoor: (page) =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: Scene & { layout: { gate: { x: number }; bounds: { maxZ: number } } } }).__garden;
+      // sceneJokes.ts MOUSE_DOOR: 0.9 m left of the big door, at the hedge. Yaw π faces the hedge.
+      Object.assign(s, { x: s.layout.gate.x - 1.1, z: s.layout.bounds.maxZ - 2, yaw: Math.PI, pitch: -0.35 });
+    }),
   stile: (page) =>
     page.evaluate(async () => {
       const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
@@ -178,9 +185,10 @@ const standOnHill = (page: Page, by: "post" | "stool" | "stone") =>
 
 /**
  * Spots seen by another learner: 500 words put the stile's notes at its foot, but not the hill's note (n08);
- * one who knows exactly 760 words (dev/boot.ts) has the diary's first page (n09), still unread; one who knows 1400 has the bench's last thought (#864).
+ * one who knows exactly 760 words (dev/boot.ts) has the diary's first page (n09), still unread; one who knows 1400 has the bench's last thought (#864);
+ * one who knows 1833, nine in ten of the Spanish deck's live words (notes/read.ts courseNotes), has the last note behind the mouse door (#882).
  */
-const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:760", thought: "known:1400" };
+const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:760", thought: "known:1400", mousedoor: "known:1833" };
 
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's

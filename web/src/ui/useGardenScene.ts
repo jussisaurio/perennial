@@ -13,6 +13,7 @@ import type { Companion } from "../garden/bench";
 import type { ToyDone } from "../garden/sceneToys";
 import type { ToysWalk } from "../garden/toys";
 import { sceneryViews } from "../garden/scenery";
+import type { NotePlace } from "../garden/stile";
 import { moonPhase } from "../garden/moon";
 import { sleeperId } from "../garden/whimsy";
 import { isAutumn } from "../core/day";
@@ -116,7 +117,7 @@ export function useGardenScene({
   onSelect: (p: PlacedPlant | null) => void;
   onShake: (p: PlacedPlant, forms: string[]) => void;
   onCarry: (d: CarryDone) => void;
-  notes: { nails: readonly { id: string; unread: boolean }[]; stile: readonly string[] | null; diary: readonly { id: string; unread: boolean }[] | null; open: (id: string) => void };
+  notes: { nails: readonly NotePlace[]; stile: readonly string[] | null; diary: readonly NotePlace[] | null; door: NotePlace | null; open: (id: string) => void };
 }) {
   const [data, setData] = useState<WalkData | null>(null);
   // How much of the garden has loaded, as a percent (null: not loading). It changes on each load chunk, so only the loading line reads it (#727).
@@ -180,6 +181,7 @@ export function useGardenScene({
         notes: notes.nails,
         stile: notes.stile,
         diary: notes.diary,
+        mouseDoor: notes.door,
       },
     });
   }

@@ -5,8 +5,7 @@ import deckDe from "../../../../decks/de/deck.json";
 import { courseOrder } from "../../content/order";
 import { Deck } from "../../deck/schema";
 import type { PerLang } from "../nouns";
-import { NOTES } from ".";
-import { noteInk } from "./read";
+import { courseNotes, noteInk } from "./read";
 
 // The gardener's own words, which no deck teaches (#654). Every other word in a
 // note is a deck lemma, or maps to one through `forms`.
@@ -24,7 +23,7 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
       const lemma = w.lemma.normalize("NFC").toLowerCase();
       if (!place.has(lemma)) place.set(lemma, i + 1);
     });
-    const notes = NOTES[lang];
+    const notes = courseNotes(lang, course.length);
     const gardener = new Set(GARDENER_WORDS[lang]);
     /** The words of a note as the shed shows them, without the crossed-out one and the gardener's words. */
     // A lemma missing from the deck is never known, so the first test names it.

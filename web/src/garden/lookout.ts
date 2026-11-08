@@ -11,7 +11,7 @@
 // sceneLanterns.ts, sceneLookout.ts).
 
 import type { PerLang } from "./nouns";
-import type { Note } from "./notes/note";
+import type { WrittenNote } from "./notes/note";
 import { BRAMBLES_IN, STEP, type StileSpot } from "./stile";
 import { WALKER, type BackWay } from "./world";
 
@@ -160,7 +160,7 @@ export const FAR_HOUSE = { turn: Math.PI + 0.14, r: 149, y: 2.6, w: 7.5, h: 4.2 
 export const FAR_LANTERN = { u: 14.5 / 16, v: 4.5 / 9 };
 
 /** Does the learner have note `id` (HILL_NOTE, ANSWER_NOTE)? `notes` is the course's notes, `unlocked` the ids the learner has. A course without it fails loudly. */
-export function hasNote(notes: readonly Note[], unlocked: readonly string[], id: string): boolean {
+export function hasNote(notes: readonly WrittenNote[], unlocked: readonly string[], id: string): boolean {
   if (!notes.some((n) => n.id === id)) throw new Error(`no note "${id}" in this course`);
   return unlocked.includes(id);
 }

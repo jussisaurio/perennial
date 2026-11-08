@@ -125,6 +125,27 @@ You can walk anywhere on the grass of the hilltop and the cut way. The brambles,
 - `hill.no-answer`: At night, before n12, blowing out the lantern and lighting it again twice leaves the far light shining.
 - `hill.answer`: With n12, by day, sitting on the stool until night and then signalling twice from the seat makes the far light go dark and lit twice, and the line under the garden says the answer. Two more signals get another answer.
 
+## The mouse door and the last note
+
+A step to the left of the old wooden door in the hedge, a tiny arched door sits at the foot of the hedge. It is about a hand high, in a stone frame, with a brass knob, and a small mat lies in front of it. Two of the gardener's notes speak of it: it is the mouse's door. For most of the course it is shut. A tap on it shows a quiet line over it, in the course language: it is locked, and you are the wrong size ("Cerrado. No es tu talla."). No action button acts on it.
+
+**When it opens.** Near the end of the course, when you know about nine in ten of the course's words, the gardener's last note comes, and the mouse door opens. From the next walk after that, the little door stands open, swung back against the hedge. Behind it is a low, dark doorway, and a folded paper lies half out of it, on the mat. At dusk and night a warm light shows in the doorway, like the light through the big door's keyhole. This is the only note that is not in the shed or on the hill. As with every new note, the pinned paper on Today's garden strip shows until you have read it.
+
+Each walk starts just inside the gate, facing into the garden, with the hedge behind you. So the open mouse door is a few steps behind you when the walk opens: turn round and you see it. While the last note waits unread, the cat (once it lives in your garden) sits on the grass by the open mouse door on every walk, looking in, as it once watched Migas. Once you have read the note, the cat goes back to its usual places.
+
+**Reading the note.** Walk up to the mouse door. On the mat in front of it, the action button says "Read the note". Press it, and the note opens on its card, like every other note. On the mat, the button always reads the note; step a little to the side, and the lantern or the big door has its button again. A tap on the paper or the open little door opens the note too; from farther away, a tap on them walks you up to the mat first, then opens it. A tap on the rest of the mat shows its name, as before.
+
+**After you read it.** The paper stays on the mat, now the older paper of a note you have read, and the door stays open for good. You can come back and read the note again whenever you like. It never goes to the shed's nails. If you read this note before it moved here, when it hung in the shed, it is behind the mouse door now, and the door is open for you.
+
+**After the ending.** The garden goes on: the plants grow, the visitors come, and the lanterns and the far light are lit every night. No note comes after this one.
+
+**What you can't do, and how you can tell.** You can't go through the mouse door: it is a hand high, and the hedge stops you, as it always did. Before the last note comes, nothing opens it: there is no key for it, and a tap says it is locked, from near or far, without moving you. Once it is open, a tap no longer says it is locked; it opens the note.
+
+### Claims
+
+- `mousedoor.shut`: Before the last note, a tap on the mouse door shows "Cerrado. No es tu talla.", and on the mat in front of it the button never says "Read the note".
+- `mousedoor.read`: With the last note, standing on the mat in front of the open mouse door, the button says "Read the note", and pressing it opens the last note.
+
 ## Thoughts: a tap on a thing
 
 Tap a thing in the garden and its name shows on a small paper tag over it, as it always has: "el banco · bench". Six things also make you think something: the bench, the pond, the sunflower, the sundial, the far hills (the green ring round the garden, which you can tap from anywhere), and the stool on the hill. Once you know enough words, a tap on one of them shows a short line under its name, in the course language: "Es para dos." It is what you notice when you look at the thing. It is not a person talking, it has no English, and it is never more than six words. Each line carries either a small, sad hint of the gardener's story ("Es para dos.") or a dry, quiet joke ("Hay un pez. O dos."). It is never just a plain fact about the thing: "El agua está fría." would not be a line.

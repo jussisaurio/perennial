@@ -49,21 +49,31 @@ export function stepY(s: StileSpot, x: number, z: number): number {
  * order they came, `read`: the ids opened before). A stile note not read yet
  * lies in front of the stile; every other hangs on the shed's nails, a stile
  * note too once read. A diary page (#858) is only ever in the diary on the
- * hill. `stile` is null until the first stile note is unlocked: until then
- * there is no stile. `diary` is null until the first page is unlocked.
+ * hill. The last note (#882) is only ever on the mat of the mouse door.
+ * `stile` is null until the first stile note is unlocked: until then there is
+ * no stile. `diary` is null until the first page is unlocked, and `door`
+ * until the last note is: until then the mouse door is shut.
  */
 export function placeNotes(
   unlocked: readonly Note[],
   read: readonly string[],
-): { nails: { id: string; unread: boolean }[]; stile: string[] | null; diary: { id: string; unread: boolean }[] | null } {
-  const nails: { id: string; unread: boolean }[] = [];
+): { nails: NotePlace[]; stile: string[] | null; diary: NotePlace[] | null; door: NotePlace | null } {
+  const nails: NotePlace[] = [];
   const step: string[] = [];
-  const diary: { id: string; unread: boolean }[] = [];
+  const diary: NotePlace[] = [];
+  let door: NotePlace | null = null;
   for (const n of unlocked) {
     const unread = !read.includes(n.id);
     if (n.diary) diary.push({ id: n.id, unread });
+    else if (n.beat === "door") door = { id: n.id, unread };
     else if (n.beat === "stile" && unread) step.push(n.id);
     else nails.push({ id: n.id, unread });
   }
-  return { nails, stile: unlocked.some((n) => n.beat === "stile") ? step : null, diary: diary.length ? diary : null };
+  return { nails, stile: unlocked.some((n) => n.beat === "stile") ? step : null, diary: diary.length ? diary : null, door };
+}
+
+/** A note where it is found, and whether it is new. */
+export interface NotePlace {
+  id: string;
+  unread: boolean;
 }
