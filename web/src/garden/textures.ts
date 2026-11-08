@@ -756,6 +756,32 @@ export function sundialFace(): OffscreenCanvas {
   return c;
 }
 
+/** Two small letters cut into the sundial's stone (#869), "E" and "J": 1 cm a pixel, the rest clear. */
+export function carvedLetters(): OffscreenCanvas {
+  const rows = [
+    "###..###", //
+    "#.....#.",
+    "##....#.",
+    "#...#.#.",
+    "###..#..",
+  ];
+  const [c, ctx] = canvas(8, 5);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, x, y, "#625c55")));
+  return c;
+}
+
+/** Two cup rings stained into the bench's seat (#869), side by side: 2 cm a pixel, the rest clear. */
+export function cupRings(): OffscreenCanvas {
+  const [c, ctx] = canvas(12, 6);
+  for (const cx of [3, 8.5])
+    for (let y = 0; y < 6; y++)
+      for (let x = 0; x < 12; x++) {
+        const d = Math.hypot(x + 0.5 - cx, y + 0.5 - 3);
+        if (d > 1.4 && d < 2.6) px(ctx, x, y, "#7c4f2a");
+      }
+  return c;
+}
+
 /** Weathered stone, for the sundial's pillar. */
 export const stone = () =>
   speckle(23, "#a9a29a", [

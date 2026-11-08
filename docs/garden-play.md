@@ -130,6 +130,8 @@ Tap a thing in the garden and its name shows on a small paper tag over it, as it
 
 **From the bench.** Sitting on the bench is a good place to look round and tap. A tap from the seat meets the thing under your finger, as it does when you stand: the pond, the sunflower, the sundial, the hills. A tap on the seat or the back beside you names the bench. You stay sitting.
 
+**What a line names is there.** When a line names a small thing, you can find it up close: two cup rings on the bench's seat, and two letters cut high in the sundial's pillar, on its garden side. They are small and quiet, and nothing points to them.
+
 **Where a tap does something else,** it does that, and no thought shows. At night the sundial is closed ("Reloj de sol: cerrado hasta el amanecer."), so its line shows only by day. Holding a pebble, a tap on the pond throws it in. A visitor on the bench takes a tap on it, and shows its own tag.
 
 **For a screen reader**, after a tap the status says the thing's name and its line, in the course language. With sound on, a tap says the name aloud as before; the line itself is not read aloud. Like the names, thoughts come only from a tap for now; a way to hear them from the keyboard is #866.
@@ -144,6 +146,7 @@ Tap a thing in the garden and its name shows on a small paper tag over it, as it
 - `thought.only-tap`: With 800 known words, walking up to the bench and standing there 10 seconds shows no line. After a tap, while the line shows, holding W walks you on, and by the bench the button still says "Sit on the bench".
 - `thought.replace`: While the bench's line shows, a tap on the pond shows the pond's tag and line instead.
 - `thought.seated`: Sitting on the bench, a tap on the pond shows the pond's tag and line, and you are still sitting.
+- `thought.details`: Standing by the bench, the cup rings show on its seat; standing by the sundial, the letters show on its pillar.
 - `thought.fades`: With no other input, the tag and its line still show 8 seconds after the tap and are gone 12 seconds after it.
 - `thought.hills`: With 800 known words, a tap on the far hills shows their tag and a line.
 - `thought.sundial-night`: With 800 known words, by day a tap on the sundial shows its line; at night it says it is closed, with no line.

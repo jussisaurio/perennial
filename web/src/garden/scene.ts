@@ -1407,6 +1407,12 @@ export class GardenScene {
     const at = benchAt(c.L);
     this.bench = at;
     bench.position.set(at.x, 0, at.z);
+    // Two cup rings on the seat, between where two would sit: small, seen only up close (#869, what the bench's line names).
+    const rings = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.12), c.mat(T.pixelTexture(T.cupRings()), { alphaTest: 0.5 }));
+    rings.name = "cup rings";
+    rings.rotation.x = -Math.PI / 2;
+    rings.position.set(0.05, BENCH_SEAT + 0.002, 0.02);
+    bench.add(rings);
     this.scene.add(still(bench));
     {
       // The seat and the back rest as two boxes, not one round both: sitting, the eye is over the seat and in front

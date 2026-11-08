@@ -86,7 +86,12 @@ export class Jokes implements Part {
     this.shadow.position.set(x, y + 0.006, z);
     // Turning the shadow by -angle about the vertical takes it from noon (-z) toward +x (east) after noon.
     this.shadow.rotation.y = -sundialAngle(now);
-    c.scene.add(pillar, cap, face, gnomon, this.shadow);
+    // Two small letters cut high in the pillar, on its garden side (-z): seen only up close (#869, what the sundial's line names).
+    const letters = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), mat(T.pixelTexture(T.carvedLetters()), { alphaTest: 0.5 }));
+    letters.name = "carved letters";
+    letters.rotation.y = Math.PI;
+    letters.position.set(x, SUNDIAL.pillar - 0.12, z - 0.101);
+    c.scene.add(pillar, cap, face, gnomon, this.shadow, letters);
     const top = y + 0.07;
     // By day a tap names it (scenery); at night the same box says its line.
     const box = { min: [x - SUNDIAL.top / 2, 0, z - SUNDIAL.top / 2] as [number, number, number], max: [x + SUNDIAL.top / 2, top, z + SUNDIAL.top / 2] as [number, number, number] };

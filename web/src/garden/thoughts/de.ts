@@ -14,10 +14,10 @@ export const THOUGHTS: readonly Thought[] = [
 
   { thing: "sunflower", unlockAt: 120, text: "Sie sieht immer zur Sonne.", forms: { sieht: "sehen", zur: "zu" } },
   { thing: "sunflower", unlockAt: 600, text: "Sie lebt nur ein Jahr.", forms: { lebt: "leben" } },
-  { thing: "sunflower", unlockAt: 1000, text: "Jemand hat ihr einen Namen gegeben.", forms: { hat: "haben", einen: "ein", namen: "name", gegeben: "geben" } },
+  { thing: "sunflower", unlockAt: 1000, text: "Ihr Gesicht schaut zum Weg.", forms: { schaut: "schauen", zum: "zu" } },
 
   { thing: "sundial", unlockAt: 350, text: "Ohne Sonne keine Zeit.", forms: { keine: "kein" } },
-  { thing: "sundial", unlockAt: 600, text: "Sie weiß, wie spät es ist.", forms: { "weiß": "wissen", ist: "sein" } },
+  { thing: "sundial", unlockAt: 600, text: "Hier zeigt die Sonne die Stunde.", forms: { zeigt: "zeigen", die: "der" } },
   { thing: "sundial", unlockAt: 1500, text: "Im Stein zwei kleine Zeichen.", forms: { im: "in", kleine: "klein" } },
 
   { thing: "hills", unlockAt: 250, text: "Und was ist dort?", forms: { ist: "sein" } },

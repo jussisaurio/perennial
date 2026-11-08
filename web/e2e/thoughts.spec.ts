@@ -175,6 +175,53 @@ test("thought.seated: sitting on the bench, a tap on the pond shows the pond's t
   await expect(stand).toBeVisible();
 });
 
+test("thought.details: up close, the bench's seat shows two cup rings and the sundial's stone two small letters", async ({ page }) => {
+  await openWalk(page, 800);
+  // The loading line sits in the middle of the view, over what we look at, and changes as the plants stream in.
+  await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
+  // Stand `metres` from a named thing, on its `side` (+1: +z, the pond's side of the bench; -1: -z), looking down at it.
+  // Return a small square of the page round it: shown and hidden, the drawing there must differ.
+  const near = (name: string, side: 1 | -1, metres: number) =>
+    page.evaluate(
+      async ({ name, side, metres }) => {
+        type Obj = { visible: boolean; getWorldPosition(v: unknown): { x: number; y: number; z: number; project(c: unknown): { x: number; y: number } } };
+        const s = (window as unknown as { __garden: ThoughtScene & { scene: { getObjectByName(n: string): Obj | undefined } } }).__garden;
+        const o = s.scene.getObjectByName(name);
+        if (!o) throw new Error(`nothing named ${name}`);
+        const p = o.getWorldPosition(new s.tmp.constructor(0, 0, 0));
+        // Forward is -z at yaw 0.
+        Object.assign(s, { x: p.x, z: p.z + side * metres, yaw: side > 0 ? 0 : Math.PI, pitch: -Math.atan2(1.05 - p.y, metres) });
+        await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+        const v = new s.tmp.constructor(p.x, p.y, p.z).project(s.camera);
+        const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
+        return { x: r.left + ((v.x + 1) / 2) * r.width - 20, y: r.top + ((1 - v.y) / 2) * r.height - 20, width: 40, height: 40 };
+      },
+      { name, side, metres },
+    );
+  const show = (name: string, visible: boolean) =>
+    page.evaluate(
+      ({ name, visible }) =>
+        new Promise<void>((done) => {
+          const s = (window as unknown as { __garden: { scene: { getObjectByName(n: string): { visible: boolean } } } }).__garden;
+          s.scene.getObjectByName(name).visible = visible;
+          requestAnimationFrame(() => requestAnimationFrame(() => done()));
+        }),
+      { name, visible },
+    );
+  for (const [name, side, metres] of [
+    ["cup rings", 1, 0.8],
+    ["carved letters", -1, 0.7],
+  ] as const) {
+    const clip = await near(name, side, metres);
+    const shown = await page.screenshot({ clip });
+    // Nothing else moves there: the same view shows the same picture.
+    expect(await page.screenshot({ clip })).toEqual(shown);
+    await show(name, false);
+    expect(await page.screenshot({ clip })).not.toEqual(shown);
+    await show(name, true);
+  }
+});
+
 test("thought.fades: the tag and its line still show 8 seconds after the tap and are gone 12 seconds after it", async ({ page }) => {
   await openWalk(page, 800);
   await page.mouse.click(...(await lookAt(page, (await places(page)).bench, 2)));
