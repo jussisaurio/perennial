@@ -61,12 +61,18 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 - The notes are only in the course language, with no translation. When a note appears, most of its words are known (`web/src/garden/notes/notes.test.ts`). Each course has 3–5 words of the gardener's own that no deck teaches.
 - **Notes, places and visitors open by known words, never by days.** A break never costs anything.
 - **Pacing.** A note comes about every 3–4 weeks for a learner who does 5 minutes a day. The thresholds come from a simulation of that learner, not from the deck's size. Long gaps are filled by world changes, not by more notes. (Retune not done yet: #883.)
+- **Density** (#932). A learner who does 5 minutes a day finds something new about once a week. There are three kinds:
+  - **big beats:** the notes;
+  - **small beats:** a thought or a change in the world that follows a note's beat and shows it without words;
+  - **texture:** details that build the place and its people but are not part of the plot, like the neighbour's dog, the goat, or what the valley is like. They are deadpan and strange, as in Disco Elysium, where not every detail serves the main story.
+  Texture keeps the same art style and the same dry voice. It never crowds out the story. It is writing and things to look at, not new toys or verbs (#640).
+- **The story loop** (#928). The pacing and the text are tuned by simulated learners and fresh readers ([docs/story-loop.md](story-loop.md)). Nothing in this section is fixed, even the beats, if the loop finds something better. What stays fixed is the theme and the product rules.
 
 **The ending.** The mouse door opens when the learner knows about 90% of the deck's words. The last note, "the door" note, is behind it. Then the garden keeps growing but adds no more story (#882).
 
 **Garden words change the world.** Six garden words, and only six, change the world when they become known: lluvia, luna, nieve, búho, zorro, erizo (rain, moon, snow, owl, fox, hedgehog; the same in German). Each one only adds something to the world, with no new verb, and they are placed to fill the gaps between notes. In practice, one small flash, the same for all six, plays when such a word becomes known. Today only the visitor words (cat, bird, dog, frog, fish, snail, butterfly) do something. (Not built yet: #209.)
 
-**Thoughts** (#864). Tap a thing, and a short line in the course language shows under its name, made only of words the learner knows. A thought may be on any thing, not only a thing from the story. Each thought on an ordinary thing is either poignant, with a hint of the story, or a quiet deadpan joke. Never a plain fact. A thought never explains the story and never uses the gardener's own words. (#884, #889.)
+**Thoughts** (#864). Tap a thing, and a short line in the course language shows under its name, made only of words the learner knows. A thought may be on any thing, not only a thing from the story. Each thought on an ordinary thing is poignant with a hint of the story, a quiet deadpan joke, or a strange detail that builds the world. Never a plain fact. A thought never explains the story and never uses the gardener's own words. (#884, #889.)
 
 **Whimsy is quiet**: small details you find, never streaks, shaming or confetti, and never in the way of learning.
 
