@@ -1901,8 +1901,8 @@ export class GardenScene {
   /** A tap on a plant (#336): its card opens where you stand when its name shows; from farther away, you walk to it first. */
   private tapPlant(p: PlacedPlant) {
     if (Math.hypot(p.x - this.x, p.z - this.z) < NAME_NEAR) {
-      // A walk under way stops: the viewer is looking at this plant now.
-      if (this.walker.kind === "trip") this.toWalker(FREE);
+      // A walk or a glide under way stops: the viewer is looking at this plant now (#876). On a seat, you stay sitting.
+      if (this.walker.kind !== "seated") this.toWalker(FREE);
       return this.select(p);
     }
     this.select(null);
