@@ -126,6 +126,18 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
     const from = await page.evaluate(() => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed);
     await page.waitForFunction((from) => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed > from + 1.5, from);
   },
+  // Up close to the details the thoughts name (#869): the cup rings on the bench's seat, from the pond's side, and
+  // the letters on the sundial's pillar, from the garden's side.
+  "cup-rings": (page) =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number } } }).__garden;
+      Object.assign(s, { x: s.bench.x + 0.05, z: s.bench.z + 0.85, yaw: 0, pitch: -0.65 });
+    }),
+  "carved-letters": (page) =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number } } }).__garden;
+      Object.assign(s, { x: s.bench.x - 1.05, z: s.bench.z - 0.75, yaw: Math.PI, pitch: -0.45 });
+    }),
   // By the diary's stone, in reach of it (#858): the book, and its ribbon while a page is unread.
   "hill-stone": (page) => standOnHill(page, "stone"),
   // A tap on the bench (#864): its tag with a thought under it.

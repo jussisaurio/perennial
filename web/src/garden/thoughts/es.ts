@@ -14,9 +14,9 @@ export const THOUGHTS: readonly Thought[] = [
 
   { thing: "sunflower", unlockAt: 120, text: "Siempre mira al sol.", forms: { mira: "mirar", al: "a" } },
   { thing: "sunflower", unlockAt: 600, text: "Cada año, en el mismo sitio." },
-  { thing: "sunflower", unlockAt: 1000, text: "Alguien le puso un nombre.", forms: { puso: "poner" } },
+  { thing: "sunflower", unlockAt: 1000, text: "Su cara mira al camino.", forms: { mira: "mirar", al: "a" } },
 
-  { thing: "sundial", unlockAt: 100, text: "Sabe qué hora es.", forms: { sabe: "saber", es: "ser" } },
+  { thing: "sundial", unlockAt: 180, text: "El sol da la hora.", forms: { da: "dar", la: "el" } },
   { thing: "sundial", unlockAt: 400, text: "Sin sol, no hay hora.", forms: { hay: "haber" } },
   { thing: "sundial", unlockAt: 1750, text: "En la piedra, dos letras pequeñas.", forms: { la: "el", letras: "letra", "pequeñas": "pequeño" } },
 
