@@ -2,8 +2,8 @@
 // fails the typecheck.
 
 import type { PerLang } from "../nouns";
-import type { WrittenNote } from "./note";
+import type { Note } from "./note";
 import { NOTES as de } from "./de";
 import { NOTES as es } from "./es";
 
-export const NOTES: PerLang<readonly WrittenNote[]> = { es, de };
+export const NOTES: PerLang<readonly Note[]> = { es, de };

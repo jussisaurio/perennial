@@ -4,7 +4,7 @@ import { pinDetail } from "./helpers";
 // The back fence, the stile and the hill (#770, docs/garden-play.md "Back
 // fence, stile and hill"): one test per claim, played with the keys and a tap
 // as the learner would. Only where the learner stands at the start is set by
-// hand. Until note n08 (620 known words) brambles shut the stile; after it you
+// hand. Until note n08 (495 known words) brambles shut the stile; after it you
 // walk over and up the hill, to the stool, the lantern and the diary (#858).
 // The clock is pinned to a day, or a night for the lantern; the viewport to a
 // laptop's.
@@ -48,12 +48,12 @@ const DAY = new Date("2026-09-26T11:00:00");
 const NIGHT = new Date("2026-09-26T22:00:00");
 /** The walker's eye over the ground (scene.ts EYE). */
 const EYE = 1.05;
-/** Words known: enough for the first stile note (n05) but not the hill's (n08); and enough for n08. */
-const SHUT = 300;
+/** Words studied, not all known (dev/plan.ts): enough known for the first stile note (n05) but not the hill's (n08); and enough for n08. */
+const SHUT = 400;
 const OPEN = 800;
 /** Learners who know exactly as many words as note n09 (the diary) and n12 (the far light answers) need; the first not yet n09. */
-const N09 = "known:760";
-const N12 = "known:1420";
+const N09 = "known:565";
+const N12 = "known:883";
 
 // On CI's software WebGL (~7 frames a second) the walk alone takes 10–20 s to open, and then the walking is played out in real time.
 test.describe.configure({ timeout: 60_000 });
@@ -435,7 +435,7 @@ test("hill.sit-night: by day, sitting on the stool brings dusk and its lit lante
 });
 
 test("hill.diary: with n09, by the stone, Read the diary opens it on n09; before n09 there is no diary", async ({ page }) => {
-  let s = await walkIn(page, "known:759");
+  let s = await walkIn(page, "known:564");
   await byStone(page, s);
   // A second for the button to come, if it would.
   await waitGame(page, 1);

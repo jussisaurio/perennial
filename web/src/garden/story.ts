@@ -51,7 +51,7 @@ const KEY: GardenWord = "key";
 
 /**
  * Every story event of a course, in the order a learner meets them. `course` is the deck's words in
- * course order (content/order.ts courseOrder): it places the garden words and the door's note.
+ * course order (content/order.ts courseOrder): it places the garden words.
  */
 export function storyEvents(lang: DeckLang, course: readonly { garden?: GardenWord }[]): StoryEvent[] {
   const at = (gate: Gate): number => {
@@ -60,7 +60,7 @@ export function storyEvents(lang: DeckLang, course: readonly { garden?: GardenWo
     if (place < 0) throw new Error(`no garden word "${gate.garden}" in the ${lang} course`);
     return place + 1;
   };
-  const notes = courseNotes(lang, course.length);
+  const notes = courseNotes(lang);
   const events: StoryEvent[] = [
     ...notes.map((note): StoryEvent => {
       const opens = (Object.keys(OPENS) as Opens[]).filter((o) => OPENS[o](note, notes));

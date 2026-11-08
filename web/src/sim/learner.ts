@@ -94,7 +94,7 @@ export async function simulate({ deck: part, pattern, seed, maxDays }: { deck: W
   if (new Date(0).getTimezoneOffset() !== 0) throw new Error("run the simulation with TZ=UTC");
   const lang = part.lang;
   const deck = indexWords(part, lang);
-  const door = courseNotes(lang, deck.words.length).find((n) => n.beat === "door")!.unlockAt; // !: every course has a door (notes/read.ts)
+  const door = courseNotes(lang).find((n) => n.beat === "door")!.unlockAt; // !: every course has a door (notes/read.ts)
   const random = rng(seed);
   const spread = (ms: number) => ms * (1 - SPREAD / 2 + SPREAD * random());
 

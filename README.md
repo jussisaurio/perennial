@@ -60,7 +60,7 @@ No keys are needed. Without `RESEND_API_KEY`, the server is in dev mode: sign-in
 To see the garden and the progress views without weeks of practice, open the app with a `demo` switch. It works in production too (#751), so use a private tab there: a demo signs you out in that browser. It makes a new anonymous learner with a made-up review history of 90 days, uploaded through the normal write API. As for a real learner, a few words were forgotten at their last review, so now and then even a common word is not known yet:
 
 - `http://localhost:5173/?demo`: a list of story points (the notes, the stile, the hill, the visitors). Each one opens the garden for a learner who knows just enough words for it.
-- `http://localhost:5173/?demo=es:known:620`: a Spanish learner who knows exactly 620 words
+- `http://localhost:5173/?demo=es:known:495`: a Spanish learner who knows exactly 495 words
 - `http://localhost:5173/?demo=es:30`: a Spanish learner with 30 words studied
 - `http://localhost:5173/?demo=de`: a German learner with every deck word studied
 - `http://localhost:5173/?demo=off`: remove the demo learner

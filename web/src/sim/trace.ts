@@ -37,11 +37,17 @@ export interface Trace {
   start: string;
   /** The course's live words. */
   words: number;
-  /** The known count that opens the door: the last note, at ENDING_SHARE of the words. */
+  /** The known count that opens the door: the last note's (garden/notes). */
   door: number;
   /** The day the learner reached the door's count, or null if the run stopped at its day cap first. */
   doorDay: number | null;
   days: TraceDay[];
+}
+
+/** The first day the learner of `trace` knows `known` words: the day a note or line gated at that count shows. */
+export function dayKnowing(trace: Trace, known: number): number | null {
+  // `?? null`: the trace stops at the door, so a count past it is never reached.
+  return trace.days.find((d) => d.known >= known)?.day ?? null;
 }
 
 /** What the learner of `trace` knows at the end of `day`, and the garden words they have brought: the trace's changes replayed up to it. */

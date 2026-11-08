@@ -4,11 +4,18 @@ import deckEs from "../../../../decks/es/deck.json";
 import deckDe from "../../../../decks/de/deck.json";
 import { courseOrder } from "../../content/order";
 import { Deck } from "../../deck/schema";
+import { dayKnowing, onDay, type Trace } from "../../sim/trace";
 import { noteInk } from "../notes/read";
 import { THOUGHTS, thoughtFor } from ".";
-import { FROG_LINES, frogLines } from "../frogLines";
+import { FROG_LINES, frogLines, type FrogLine } from "../frogLines";
 
 const THINGS = ["bench", "stool", "pond", "sunflower", "sundial", "hills"];
+
+// As in notes.test.ts: the simulated daily learner, who knows fewer words than course place says (#938).
+const DAILY: Record<"es" | "de", Trace> = {
+  es: await Bun.file(new URL("../../sim/traces/es-daily.json", import.meta.url)).json(),
+  de: await Bun.file(new URL("../../sim/traces/de-daily.json", import.meta.url)).json(),
+};
 
 for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
   describe(`${lang} thoughts`, () => {
@@ -21,26 +28,28 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
     });
     const thoughts = THOUGHTS[lang];
     const words = (text: string) => text.match(/[\p{L}\p{M}]+/gu) ?? [];
+    /**
+     * The words of each line that a learner does not know on the day it unlocks: by course place, or for the daily
+     * learner. The trace stops at the door, so a line that unlocks after it is read by course place alone.
+     * A lemma missing from the deck is never known, so this names it.
+     */
+    const unknown = (lines: readonly FrogLine[]) =>
+      lines.flatMap((t) => {
+        const day = dayKnowing(DAILY[lang], t.unlockAt);
+        const daily = day === null ? null : onDay(DAILY[lang], day).lemmas;
+        return noteInk(t, (lemma) => (place.get(lemma) ?? Infinity) <= t.unlockAt && (daily === null || daily.has(lemma)))
+          .filter((ink) => ink.style === "faint")
+          .map((ink) => `${t.text}: ${ink.text}`);
+      });
 
     test("every word of a line is known when it unlocks", () => {
-      // A lemma missing from the deck is never known, so this names it.
-      const unknown = thoughts.flatMap((t) =>
-        noteInk(t, (lemma) => (place.get(lemma) ?? Infinity) <= t.unlockAt)
-          .filter((ink) => ink.style === "faint")
-          .map((ink) => `${t.text}: ${ink.text}`),
-      );
-      expect(unknown).toEqual([]);
+      expect(unknown(thoughts)).toEqual([]);
     });
 
     // The frog's lines (#902) are gated the same way.
     test("every word of a frog line is known when it unlocks, and its last line comes first", () => {
       const lines = FROG_LINES[lang];
-      const unknown = lines.flatMap((t) =>
-        noteInk(t, (lemma) => (place.get(lemma) ?? Infinity) <= t.unlockAt)
-          .filter((ink) => ink.style === "faint")
-          .map((ink) => `${t.text}: ${ink.text}`),
-      );
-      expect(unknown).toEqual([]);
+      expect(unknown(lines)).toEqual([]);
       // Its last line says it has no more words: whenever it has lines, that one is among them, at the end.
       const last = lines[lines.length - 1];
       for (const l of lines) expect(l.unlockAt).toBeGreaterThanOrEqual(last.unlockAt);

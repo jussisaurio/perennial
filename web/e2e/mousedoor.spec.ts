@@ -1,25 +1,17 @@
-import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "./test";
 import { pinDetail } from "./helpers";
 
 // The mouse door and the last note (#882, docs/garden-play.md "The mouse door
-// and the last note"): one test per claim. The last note comes at nine in ten
-// of the course's live words (notes/note.ts ENDING_SHARE), so the learner who
-// has it is worked out from the deck. Only where the learner stands is set by
-// hand. The clock is pinned to a night, when the lantern by the gate is lit and
-// in reach of the mat too; the viewport to a laptop's.
+// and the last note"): one test per claim. Only where the learner stands is set
+// by hand. The clock is pinned to a night, when the lantern by the gate is lit
+// and in reach of the mat too; the viewport to a laptop's.
 
 const NIGHT = new Date("2026-09-26T22:00:00");
+/** Known words when the last note comes (notes/es.ts n13). */
+const DOOR = 940;
 
 /** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
 type DoorScene = { x: number; z: number; yaw: number; pitch: number; layout: { gate: { x: number }; bounds: { maxZ: number } } };
-
-/** Known words when the last note comes: 90% of the Spanish deck's live words (notes/read.ts courseNotes). */
-function ending(): number {
-  // The tests run from web/.
-  const deck = JSON.parse(readFileSync("../decks/es/deck.json", "utf8")) as { words: { retired?: boolean; aliasOf?: string }[] };
-  return Math.ceil(0.9 * deck.words.filter((w) => !w.retired && !w.aliasOf).length);
-}
 
 async function walkIn(page: Page, words: string) {
   await page.clock.setFixedTime(NIGHT);
@@ -55,7 +47,7 @@ const onMat = (page: Page) =>
 test.describe.configure({ timeout: 60_000 });
 
 test("mousedoor.shut: before the last note, a tap on the mouse door says it is locked, and on its mat no button reads a note", async ({ page }) => {
-  await walkIn(page, `known:${ending() - 1}`);
+  await walkIn(page, `known:${DOOR - 1}`);
   const door = await onMat(page);
   await expect(page.getByRole("button", { name: "Read the note", exact: true })).toHaveCount(0);
   await page.mouse.click(...door);
@@ -63,7 +55,7 @@ test("mousedoor.shut: before the last note, a tap on the mouse door says it is l
 });
 
 test("mousedoor.read: with the last note, on the mat of the open mouse door, Read the note opens it", async ({ page }) => {
-  await walkIn(page, `known:${ending()}`);
+  await walkIn(page, `known:${DOOR}`);
   await onMat(page);
   const read = page.getByRole("button", { name: "Read the note", exact: true });
   await expect(read).toBeVisible();

@@ -61,7 +61,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 - **The facts** (#928). Each note lists the story's facts it tells and the ones it needs. A thought or the frog only needs them. No line needs a fact before a note has told it, and both courses tell the same facts in the same beats (`web/src/garden/facts.ts`, `facts.test.ts`).
 - The notes are only in the course language, with no translation. When a note appears, most of its words are known (`web/src/garden/notes/notes.test.ts`). Each course has 3–5 words of the gardener's own that no deck teaches.
 - **Notes, places and visitors open by known words, never by days.** A break never costs anything.
-- **Pacing.** A note comes about every 3–4 weeks for a learner who does 5 minutes a day. The thresholds come from a simulation of that learner, not from the deck's size. Long gaps are filled by world changes, not by more notes. (Retune not done yet: #883.)
+- **Pacing.** A note comes about every 3–4 weeks for a learner who does 5 minutes a day. The thresholds come from a simulation of that learner, not from the deck's size (#883). Long gaps are filled by world changes, not by more notes. `bun run story:sim <lang> <pattern>` shows the gaps.
 - **Density** (#932). A learner who does 5 minutes a day finds something new about once a week. There are three kinds:
   - **big beats:** the notes;
   - **small beats:** a thought or a change in the world that follows a note's beat and shows it without words;
@@ -69,7 +69,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
   Texture keeps the same art style and the same dry voice. It never crowds out the story. It is writing and things to look at, not new toys or verbs (#640).
 - **The story loop** (#928). The pacing and the text are tuned by simulated learners and fresh readers ([docs/story-loop.md](story-loop.md)). Nothing in this section is fixed, even the beats, if the loop finds something better. What stays fixed is the theme and the product rules.
 
-**The ending.** The mouse door opens when the learner knows about 90% of the deck's words. The last note, "the door" note, is behind it. Then the garden keeps growing but adds no more story (#882).
+**The ending.** The mouse door opens after about one year of 5 minutes a day: at a fixed count of known words for each course (940 in Spanish, 830 in German, #883). The last note, "the door" note, is behind it. After it the garden keeps growing, but there is no more story for now (#882).
 
 **Garden words change the world.** Six garden words, and only six, change the world when they become known: lluvia, luna, nieve, búho, zorro, erizo (rain, moon, snow, owl, fox, hedgehog; the same in German). Each one only adds something to the world, with no new verb, and they are placed to fill the gaps between notes. In practice, one small flash, the same for all six, plays when such a word becomes known. Today only the visitor words (cat, bird, dog, frog, fish, snail, butterfly) do something. (Not built yet: #209.)
 
@@ -110,12 +110,11 @@ Until then, work that moves the launch comes before new garden features.
 - Open garden and accessibility bugs, and the performance debt (#421 and the issues it links).
 
 ### In later (decided, not built)
-- Note thresholds retuned for 5 minutes a day (#883).
 - Six garden words change the world, with one practice flash (#209).
 - AI readers and writing feedback, after the launch (#748).
 - Product events (#127).
 - Two seeds, one pot (#387). On hold.
-- Growing the decks past about 2000 words (#73). The ending moves with the deck, because it is a share of it.
+- Growing the decks past about 2000 words (#73). The ending stays where it is: it is a count of known words, not a share of the deck.
 
 ### Out
 - **Offline mode and storage on the device.** One online path is simpler, and the learner never sees a stale state (#188, #810).

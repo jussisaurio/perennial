@@ -29,8 +29,8 @@ function planWords(words: readonly { id: string }[], now: number, days: number, 
   const r = rng(words.length * 31 + days);
   // Common words were met first; the newest ones only in the last days.
   // A story point's newest words were met two weeks ago at the latest: a word met
-  // today can't be known yet, so with every deck word met, no deck could make the
-  // 90% known of the last note (#882).
+  // today can't be known yet, so with every deck word met, no deck could make
+  // 90% of its words known (#882).
   const newest = knewFirst ? 14 / days : 0;
   const age = words.map((_, i) => Math.max(newest, Math.pow(1 - i / words.length, 1.3)));
   const totalAge = age.reduce((a, b) => a + b, 0);
@@ -57,8 +57,7 @@ function planWords(words: readonly { id: string }[], now: number, days: number, 
       // often knew before: "I knew it" first. With "remembered", 2 reviews rarely
       // make a word known, and no deck had enough for the last note's 1600 (#751).
       // Only for a story point: in 90 days, "I knew it" puts the second review past
-      // now for the newest words, so ?demo=es:800 knew 616 words, not 664, and the
-      // way over the stile (620) stayed shut.
+      // now for the newest words, so ?demo=es:800 knew 616 words, not 664.
       const grade: Grade = knewFirst && n === 0 && share === 2 ? 4 : x < 0.06 * hard ? 1 : x < 0.16 * hard ? 2 : x < 0.92 ? 3 : 4;
       log.push({ ts: Math.round(ts), grade, ms: 2500 + Math.round(r() * 5000) });
       const st = replay(fsrs, log, COURSE_DEFAULTS.retention, memKey(w.id, "read"))!;
@@ -95,7 +94,7 @@ export function planDemo(words: readonly { id: string }[], size: DemoSize, now: 
 /** The demo learner's course: the gardener's notes read, and every review, oldest word first. */
 export function demoHistory(lang: string, words: readonly { id: string }[], size: DemoSize, now: number) {
   // At a story point, the notes before it were read, as a learner who got there would have; its own is new.
-  const notesRead = "known" in size ? courseNotes(lang, words.length).filter((n) => n.unlockAt < size.known).map((n) => n.id) : [];
+  const notesRead = "known" in size ? courseNotes(lang).filter((n) => n.unlockAt < size.known).map((n) => n.id) : [];
   const reviews = planDemo(words, size, now).flatMap((w) => w.log.map((r) => ({ wordId: w.wordId, ...r })));
   return { notesRead, reviews };
 }

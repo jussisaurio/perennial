@@ -4,7 +4,10 @@ import deckEs from "../../../../decks/es/deck.json";
 import deckDe from "../../../../decks/de/deck.json";
 import { courseOrder } from "../../content/order";
 import { Deck } from "../../deck/schema";
-import type { PerLang } from "../nouns";
+import { dayKnowing, onDay, type Trace } from "../../sim/trace";
+import { nounLemma, type PerLang } from "../nouns";
+import { SCENERY } from "../scenery";
+import type { Note } from "./note";
 import { courseNotes, noteInk } from "./read";
 
 // The gardener's own words, which no deck teaches (#654). Every other word in a
@@ -12,6 +15,13 @@ import { courseNotes, noteInk } from "./read";
 const GARDENER_WORDS: PerLang<readonly string[]> = {
   es: ["puertecilla", "migas", "saltavallas", "zarzas", "lucero"],
   de: ["türchen", "krümel", "zauntreppe", "dornen", "fünkchen"],
+};
+
+// The simulated learner who does Today's 5 minutes every day (sim/traces). They learn a little out of course order
+// and forget some, so they know fewer of a note's words than its count says (#938).
+const DAILY: Record<"es" | "de", Trace> = {
+  es: await Bun.file(new URL("../../sim/traces/es-daily.json", import.meta.url)).json(),
+  de: await Bun.file(new URL("../../sim/traces/de-daily.json", import.meta.url)).json(),
 };
 
 for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
@@ -23,15 +33,20 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
       const lemma = w.lemma.normalize("NFC").toLowerCase();
       if (!place.has(lemma)) place.set(lemma, i + 1);
     });
-    const notes = courseNotes(lang, course.length);
+    const notes = courseNotes(lang);
     const gardener = new Set(GARDENER_WORDS[lang]);
+    // !: every scenery word has a word in each course (scenery.test.ts).
+    const sceneryWords = new Set(Object.values(SCENERY).map((d) => nounLemma(d, lang)!.toLowerCase()));
     /** The words of a note as the shed shows them, without the crossed-out one and the gardener's words. */
-    // A lemma missing from the deck is never known, so the first test names it.
-    const inkAt = (n: (typeof notes)[number], known: number) =>
-      noteInk({ ...n, text: n.text.replace(/~~[^~]*~~/g, "") }, (lemma) => (place.get(lemma) ?? Infinity) <= known).filter((ink) => /\p{L}/u.test(ink.text) && !gardener.has(ink.text.toLowerCase()));
+    const ink = (n: Note, isKnown: (lemma: string) => boolean) =>
+      noteInk({ ...n, text: n.text.replace(/~~[^~]*~~/g, "") }, isKnown).filter((i) => /\p{L}/u.test(i.text) && !gardener.has(i.text.toLowerCase()));
+    const share = (words: ReturnType<typeof ink>) => words.filter((i) => i.style !== "faint").length / words.length;
 
-    test("every word is a deck word or one of 3-5 gardener words, and each gardener word comes back", () => {
-      expect(notes.flatMap((n) => inkAt(n, Infinity).filter((ink) => ink.style === "faint").map((ink) => ink.text))).toEqual([]);
+    test("every word is a deck word, one of 3-5 gardener words, or a thing the garden names; each gardener word comes back", () => {
+      // A word no deck teaches never shows clear (#937). The garden names some things the decks don't have: tap the
+      // hedge and it says "el seto". The shed shows those faint, so the share below counts them as unknown.
+      const faint = notes.flatMap((n) => ink(n, (lemma) => place.has(lemma)).filter((i) => i.style === "faint").map((i) => i.text.toLowerCase()));
+      expect(faint.filter((w) => !sceneryWords.has(w))).toEqual([]);
       expect(gardener.size).toBeGreaterThanOrEqual(3);
       expect(gardener.size).toBeLessThanOrEqual(5);
       for (const g of gardener) expect(notes.filter((n) => n.text.toLowerCase().includes(g)).length).toBeGreaterThanOrEqual(2);
@@ -41,12 +56,18 @@ for (const [lang, deck] of [["es", deckEs], ["de", deckDe]] as const) {
     // the early and stile notes, where working words out is the point. Late
     // notes unlock after most common words, so a ceiling there forced rare
     // filler words into what should be the plainest notes.
+    // Two learners read each note on the day it comes: one who knows the course's words in order, and the daily
+    // learner. The ceiling is for the one working words out, the daily learner: with it by course place too, no
+    // count would suit de n04.
     test("each note unlocks when the learner knows 55% of its words, and an early or stile note at most 75%", () => {
+      const trace = DAILY[lang];
       for (const n of notes) {
-        const ink = inkAt(n, n.unlockAt);
-        const share = ink.filter((i) => i.style !== "faint").length / ink.length;
+        const byPlace = share(ink(n, (lemma) => (place.get(lemma) ?? Infinity) <= n.unlockAt));
+        // !: every note comes by the door, where the trace stops (story.test.ts).
+        const known = onDay(trace, dayKnowing(trace, n.unlockAt)!).lemmas;
+        const daily = share(ink(n, (lemma) => known.has(lemma)));
         const ceiling = n.beat === "early" || n.beat === "stile" ? 0.75 : 1;
-        expect({ id: n.id, ok: share >= 0.55 && share <= ceiling }).toEqual({ id: n.id, ok: true });
+        expect({ id: n.id, byPlace: byPlace >= 0.55, daily: daily >= 0.55 && daily <= ceiling }).toEqual({ id: n.id, byPlace: true, daily: true });
       }
     });
 
