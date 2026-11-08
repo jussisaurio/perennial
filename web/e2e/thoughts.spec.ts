@@ -12,7 +12,7 @@ type ThoughtScene = WalkScene & {
   pickAny(x: number, y: number, w: number, h: number): { kind: string; s?: { view: { id: string } } } | null;
 };
 
-const BENCH = "Alguien se sentaba aquí cada tarde.";
+const BENCH = "Es para dos.";
 const tag = (page: Page) => page.locator(".gw-thought");
 const status = (page: Page) => page.locator(".sr-only[role=status]");
 
@@ -112,7 +112,7 @@ test("thought.early: with 3 words a tap on the bench shows only its name", async
 // One walk a test: three walks in one took most of the 30 s on CI's software WebGL, and all of it on a slow runner.
 for (const [known, line] of [
   [200, "Hay un pez. O dos."],
-  [700, "Los peces suben. Buscan a alguien."],
+  [700, "Los peces miran quién viene."],
   [1800, "Los peces aún esperan su pan."],
 ] as const) {
   test(`thought.grows: with ${known} words the pond shows "${line}"`, async ({ page }) => {
@@ -152,7 +152,7 @@ test("thought.replace: a tap on the pond while the bench's line shows shows the 
   await page.mouse.click(...(await facePond(page)));
   await expect(tag(page)).toHaveCount(1);
   await expect(tag(page)).toContainText("el estanque");
-  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben. Buscan a alguien.");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces miran quién viene.");
 });
 
 test("thought.seated: sitting on the bench, a tap on the pond shows the pond's tag and line, and you are still sitting", async ({ page }) => {
@@ -177,7 +177,7 @@ test("thought.seated: sitting on the bench, a tap on the pond shows the pond's t
   });
   await page.mouse.click(...at);
   await expect(tag(page)).toContainText("el estanque");
-  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces suben. Buscan a alguien.");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Los peces miran quién viene.");
   await expect(stand).toBeVisible();
 });
 

@@ -17,8 +17,9 @@ test("longDay says the date as toLocaleDateString does", () => {
   }
 });
 
-test("shortDay says the date as toLocaleDateString does", () => {
-  for (let d = new Date(2026, 0, 1); d.getFullYear() === 2026; d.setDate(d.getDate() + 1)) {
-    expect(shortDay(d)).toBe(d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }));
-  }
+// Pinned words, not Intl's: ICU versions differ ("1 Sep" here, "1 Sept" on CI's Node), and the strip shows ours.
+test("shortDay says the day and the month's first three letters", () => {
+  expect(shortDay(new Date(2026, 9, 3))).toBe("3 Oct");
+  expect(shortDay(new Date(2026, 8, 1))).toBe("1 Sep");
+  expect(shortDay(new Date(2026, 11, 31))).toBe("31 Dec");
 });
