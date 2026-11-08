@@ -5,7 +5,7 @@
 
 import { courseOrder } from "../content/order";
 import { DAY_MS } from "../core/day";
-import type { LoadedDeck } from "../data/deck";
+import type { LoadedDeck } from "../data/deckIndex";
 import { firstReviewed, isStrong, memKey, OLD_S, plantStage, recall, type PlantStage } from "../core/memory";
 import type { Learner } from "../data/learner";
 import { hash01 } from "../lib/seed";

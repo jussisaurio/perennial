@@ -63,9 +63,9 @@ describe("every gate is in the story's list", () => {
     }
   });
 
-  /** The app's source files, without the tests: path from web/src, and text. */
+  /** The app's source files, without the tests and the learner simulation (sim/, a tool that opens nothing): path from web/src, and text. */
   const sources = [...new Bun.Glob("**/*.{ts,tsx}").scanSync(SRC)]
-    .filter((p) => !/\.test\.tsx?$/.test(p))
+    .filter((p) => !/\.test\.tsx?$/.test(p) && !p.startsWith("sim/"))
     .map((path) => ({ path, text: readFileSync(join(SRC, path), "utf8") }));
 
   // A gate is new code, not a new row in a table the list reads, so only a look at the code finds one the list

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { DAY_MS } from "../core/day";
 import { isStrong, plantStage, wordState, type MemoryRow } from "../core/memory";
-import type { LoadedDeck } from "../data/deck";
+import type { LoadedDeck } from "../data/deckIndex";
 import type { Learner } from "../data/learner";
 import { leanDeg, plantsFromLearner, showcasePlants, stageLabel, stageSentence } from "./plants";
 import { droopFor } from "./world";

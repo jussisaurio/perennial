@@ -18,8 +18,9 @@ export const NEW_WORD_MS = 12_000;
 /**
  * Time per task, ms. `intro` covers the intro and its follow-up test.
  * Heuristic prices from how long self-graded cards really take (#311).
+ * @internal the learner simulation (sim/learner.ts) times its cards by them.
  */
-const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 5_000, listen: 7_000, write: 12_000 };
+export const COSTS: Record<"intro" | Skill, number> = { intro: NEW_WORD_MS, read: 5_000, listen: 7_000, write: 12_000 };
 
 /**
  * The share of a chunk's minutes the plan fills. The rest is for slow answers
