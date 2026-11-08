@@ -30,7 +30,7 @@ export const NOTES: readonly WrittenNote[] = [
     id: "n04",
     beat: "early",
     unlockAt: 160,
-    text: "En la pared hay una puertecilla. No es para mí.\nEs para Migas. Migas se come nuestro pan\ny no pide perdón.\nEl gato mira a Migas. Migas mira al gato.\nNadie hace nada.",
+    text: "En el seto hay una puertecilla. No es para mí.\nEs para Migas. Migas se come nuestro pan\ny no pide perdón.\nEl gato mira a Migas. Migas mira al gato.\nNadie hace nada.",
     forms: { al: "a", come: "comer", es: "ser", hace: "hacer", hay: "haber", la: "el", mira: "mirar", pide: "pedir", una: "un" },
   },
   {

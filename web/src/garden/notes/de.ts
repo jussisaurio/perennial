@@ -30,7 +30,7 @@ export const NOTES: readonly WrittenNote[] = [
     id: "n04",
     beat: "early",
     unlockAt: 140,
-    text: "In der Mauer ist ein Türchen. Nicht für mich.\nFür Krümel. Krümel isst unser Brot\nund sagt nie Entschuldigung.\nDie Katze sieht Krümel an. Krümel sieht die Katze an.\nNiemand tut etwas.",
+    text: "In der Hecke ist ein Türchen. Nicht für mich.\nFür Krümel. Krümel isst unser Brot\nund sagt nie Entschuldigung.\nDie Katze sieht Krümel an. Krümel sieht die Katze an.\nNiemand tut etwas.",
     forms: { die: "der", isst: "essen", ist: "sein", mich: "ich", sagt: "sagen", sieht: "sehen", tut: "tun" },
   },
   {
