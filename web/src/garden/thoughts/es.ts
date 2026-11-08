@@ -26,7 +26,7 @@ export const THOUGHTS: readonly Thought[] = [
 
   { thing: "hills", unlockAt: 351, text: "De allí no viene nadie.", forms: { viene: "venir" } },
   { thing: "hills", unlockAt: 503, text: "Desde allí, esto se ve pequeño.", forms: { ve: "ver" } },
-  { thing: "hills", unlockAt: 879, text: "Allí hay alguien que tampoco duerme.", forms: { duerme: "dormir", hay: "haber" }, assumes: ["the-light-answers"] },
+  { thing: "hills", unlockAt: 896, text: "Allí hay alguien que tampoco duerme.", forms: { duerme: "dormir", hay: "haber" }, assumes: ["the-light-answers"] },
 
   { thing: "bed", unlockAt: 395, text: "Dos lados. Gana el de ella.", forms: { gana: "ganar", lados: "lado" }, assumes: ["her-garden"] },
   { thing: "bed", unlockAt: 812, text: "El lado de ella. Sigue ganando.", forms: { ganando: "ganar", sigue: "seguir" }, assumes: ["her-side"] },

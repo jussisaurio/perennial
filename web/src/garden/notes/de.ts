@@ -64,7 +64,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n08",
     beat: "lookout",
-    unlockAt: 511,
+    unlockAt: 509,
     text: "Hinter den Dornen und der Zauntreppe ein kleiner Berg.\nVon oben, nachts: das Fünkchen,\nein warmes Licht, fern, auf der anderen Seite.\nEs geht nie aus, nicht einmal im Winter.\nSie fragt nicht.",
     forms: { anderen: "andere", den: "der", fragt: "fragen", geht: "gehen", im: "in", kleiner: "klein", warmes: "warm" },
     reveals: ["the-far-light", "she-does-not-ask"],
@@ -73,7 +73,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n09",
     beat: "lookout",
-    unlockAt: 621,
+    unlockAt: 579,
     text: "Das Fünkchen: jemand, der nicht mit mir redet. Stolz, auf beiden Seiten.\nEin dummer Streit, vor elf Wintern.\nDamals konnte ich mich in keiner Sprache entschuldigen.\nJetzt in zwei. Mutig in keiner.",
     forms: { beiden: "beide", dummer: "dumm", keiner: "kein", konnte: "können", mich: "ich", mir: "ich", redet: "reden", seiten: "seite", wintern: "winter" },
     reveals: ["the-quarrel"],
@@ -83,7 +83,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "p1",
     beat: "lookout",
-    unlockAt: 669,
+    unlockAt: 640,
     text: "Schon wieder eine Schnecke auf meinem Hocker.\nIch mag keine Schnecken.\nSie sagt, das ist immer noch kein Grund.",
     forms: { eine: "ein", ist: "sein", keine: "kein", mag: "mögen", meinem: "mein", sagt: "sagen", schnecken: "schnecke" },
     reveals: ["dislikes-snails"],
@@ -165,7 +165,7 @@ export const NOTES: readonly Note[] = [
   {
     id: "n12",
     beat: "late",
-    unlockAt: 882,
+    unlockAt: 898,
     text: "Letzte Nacht: Licht aus, Licht an. Zweimal.\nDas Fünkchen hat geantwortet: zweimal.\nNiemand ist über den Berg gekommen. Noch nicht.",
     forms: { den: "der", geantwortet: "antworten", gekommen: "kommen", hat: "haben", ist: "sein" },
     reveals: ["the-light-answers"],
