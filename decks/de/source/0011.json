@@ -1074,33 +1074,6 @@
     ]
   },
   {
-    "lemma": "Blume",
-    "gloss": "flower",
-    "pos": "noun",
-    "forms": [
-      "Blume",
-      "Blumen"
-    ],
-    "gender": "f",
-    "sentences": [
-      {
-        "text": "Die Blumen sind für dich.",
-        "translation": "The flowers are for you.",
-        "cloze": "Blumen"
-      },
-      {
-        "text": "Was für eine schöne Blume!",
-        "translation": "What a beautiful flower!",
-        "cloze": "Blume"
-      },
-      {
-        "text": "Er bringt ihr jede Woche Blumen.",
-        "translation": "He brings her flowers every week.",
-        "cloze": "Blumen"
-      }
-    ]
-  },
-  {
     "lemma": "Neuigkeit",
     "gloss": "(piece of) news",
     "pos": "noun",

@@ -259,13 +259,13 @@
         "cloze": "Lo"
       },
       {
-        "text": "¿Lo quieres?",
-        "translation": "Do you want it?",
-        "cloze": "Lo"
+        "text": "¿Y tus hermanas? ¿Las ves mucho?",
+        "translation": "And your sisters? Do you see them often?",
+        "cloze": "Las"
       },
       {
-        "text": "Lo veo mañana.",
-        "translation": "I'll see him tomorrow.",
+        "text": "Lo conozco del trabajo.",
+        "translation": "I know him from work.",
         "cloze": "Lo"
       },
       {
@@ -644,8 +644,8 @@
         "cloze": "Yo"
       },
       {
-        "text": "¿Y yo?",
-        "translation": "What about me?",
+        "text": "Él es de Madrid y yo de Sevilla.",
+        "translation": "He's from Madrid and I'm from Seville.",
         "cloze": "yo"
       },
       {
@@ -1047,8 +1047,8 @@
     ],
     "sentences": [
       {
-        "text": "Estoy muy cansado.",
-        "translation": "I'm very tired.",
+        "text": "Esta cama es muy cómoda.",
+        "translation": "This bed is very comfortable.",
         "cloze": "muy"
       },
       {
@@ -1057,9 +1057,9 @@
         "cloze": "muy"
       },
       {
-        "text": "Muy bien, gracias.",
-        "translation": "Very well, thanks.",
-        "cloze": "Muy"
+        "text": "Comes muy poco.",
+        "translation": "You eat very little.",
+        "cloze": "muy"
       }
     ]
   },
@@ -1194,6 +1194,66 @@
         "text": "En mi calle todos los jardines tienen flores.",
         "translation": "On my street, all the gardens have flowers.",
         "cloze": "jardines"
+      }
+    ]
+  },
+  {
+    "lemma": "flor",
+    "gloss": "flower",
+    "pos": "noun",
+    "forms": [
+      "flor",
+      "flores"
+    ],
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Te traje flores.",
+        "translation": "I brought you flowers.",
+        "cloze": "flores"
+      },
+      {
+        "text": "Es una flor muy bonita.",
+        "translation": "It's a very pretty flower.",
+        "cloze": "flor"
+      },
+      {
+        "text": "Hay flores en el jardín.",
+        "translation": "There are flowers in the garden.",
+        "cloze": "flores"
+      }
+    ]
+  },
+  {
+    "lemma": "planta",
+    "gloss": "plant; floor (of a building)",
+    "pos": "noun",
+    "forms": [
+      "planta",
+      "plantas"
+    ],
+    "notes": "la planta baja = the ground floor.",
+    "gender": "f",
+    "sentences": [
+      {
+        "text": "Las plantas necesitan agua y luz.",
+        "translation": "Plants need water and light.",
+        "cloze": "plantas"
+      },
+      {
+        "text": "Esa planta crece muy rápido.",
+        "translation": "That plant grows very fast.",
+        "cloze": "planta"
+      },
+      {
+        "text": "Mi madre tiene muchas plantas en el balcón.",
+        "translation": "My mother has lots of plants on the balcony.",
+        "cloze": "plantas"
+      },
+      {
+        "text": "Los baños están en la planta baja.",
+        "translation": "The restrooms are on the ground floor.",
+        "cloze": "planta"
       }
     ]
   }

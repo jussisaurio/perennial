@@ -8,7 +8,7 @@ import { pinDetail } from "./helpers";
 
 const NIGHT = new Date("2026-09-26T22:00:00");
 /** Known words when the last note comes (notes/es.ts n13). */
-const DOOR = 867;
+const DOOR = 921;
 
 /** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
 type DoorScene = { x: number; z: number; yaw: number; pitch: number; layout: { gate: { x: number }; bounds: { maxZ: number } } };

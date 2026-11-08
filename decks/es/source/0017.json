@@ -965,39 +965,6 @@
     ]
   },
   {
-    "lemma": "planta",
-    "gloss": "plant; floor (of a building)",
-    "pos": "noun",
-    "forms": [
-      "planta",
-      "plantas"
-    ],
-    "notes": "la planta baja = the ground floor.",
-    "gender": "f",
-    "sentences": [
-      {
-        "text": "Las plantas necesitan agua y luz.",
-        "translation": "Plants need water and light.",
-        "cloze": "plantas"
-      },
-      {
-        "text": "Esa planta crece muy rápido.",
-        "translation": "That plant grows very fast.",
-        "cloze": "planta"
-      },
-      {
-        "text": "Mi madre tiene muchas plantas en el balcón.",
-        "translation": "My mother has lots of plants on the balcony.",
-        "cloze": "plantas"
-      },
-      {
-        "text": "Los baños están en la planta baja.",
-        "translation": "The restrooms are on the ground floor.",
-        "cloze": "planta"
-      }
-    ]
-  },
-  {
     "lemma": "ritmo",
     "gloss": "rhythm, beat; pace",
     "pos": "noun",

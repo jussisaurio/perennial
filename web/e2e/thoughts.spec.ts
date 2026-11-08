@@ -268,7 +268,7 @@ test("thought.sundial-night: by day a tap on the sundial shows its line; at nigh
   await openWalk(page, 800);
   await page.mouse.click(...(await lookAt(page, (await places(page)).sundial, 1.5)));
   await expect(tag(page)).toContainText("el reloj de sol");
-  await expect(page.locator(".gw-thought-line")).toHaveText("Ya nadie mira la hora.");
+  await expect(page.locator(".gw-thought-line")).toHaveText("Sin sol, no hay hora.");
 
   // Eleven at night.
   await page.clock.setFixedTime(new Date("2026-06-01T23:00:00"));

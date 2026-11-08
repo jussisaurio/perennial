@@ -14,7 +14,7 @@ Garden words are the exception (#209). `decks/<lang>/garden.json` names the word
 
 Orchard words (#315) work the same way. `decks/<lang>/orchard.json` names the word that plants each orchard tree (`ORCHARD_WORDS`): a tree, an apple, a fig. The course places them steadily after the key. A word names one garden thing or one tree, not both.
 
-A few story words are moved by hand (#947). The gardener's notes need them known by the time the notes come, but their corpus rank is far past the door. So "jardín" and "Garten" sit at the end of 0001, and "contestar" and "zweimal" at the end of 0003. The audit's rank-drift warning on these four is expected.
+A few story words are moved by hand (#947, #950). The gardener's notes need them known by the time the notes come, but their corpus rank is far past the door. So "jardín", "flor", "planta", "Garten" and "Blume" sit at the end of 0001, and "contestar" and "zweimal" at the end of 0003. The audit's rank-drift warning on these seven is expected.
 
 ## Roles
 

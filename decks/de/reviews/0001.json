@@ -1,9 +1,9 @@
 {
   "file": "source/0001.json",
-  "sha256": "de2b34b01535857dc302ebcfd1ee49a7d53ac19004489e065b36728d8e01c6bd",
+  "sha256": "e223971ce7564885f3a5564a42ba40407c75e812c402e51f68fecf553dd0a042",
   "author": "claude-agent:deck-pipeline-2026-10-11",
-  "reviewer": "claude-agent:de-proofreader-i947-2026-11-08",
+  "reviewer": "claude-agent:de-proofreader-i950-2026-11-08",
   "reviewedAt": "2026-11-08",
   "verdict": "approved",
-  "notes": "Full re-proofread after Garten moved here from 0015 (#947) by claude-agent:i947-editor-2026-11-08; no fixes."
+  "notes": "Full re-proofread after Blume moved here from 0011 (#950) by claude-agent:i950-editor-2026-11-08; all 42 entries ok, one fix applied (mal gloss narrowed to the softening sense its sentences show); Garten and Blume sentences are fine for the first course words."
 }
