@@ -10,6 +10,7 @@ export const THOUGHTS: readonly Thought[] = [
 
   // The bench's first line, the other way round ("caber" is in no deck): the hill was for waiting alone.
   { thing: "stool", unlockAt: 130, text: "Es para uno.", forms: { es: "ser" } },
+  { thing: "stool", unlockAt: 496, text: "Muy usado. Muchas noches.", forms: { muchas: "mucho", noches: "noche", usado: "usar" }, assumes: ["the-far-light"] },
 
   { thing: "pond", unlockAt: 180, text: "Hay un pez. O dos.", forms: { hay: "haber" } },
   { thing: "pond", unlockAt: 578, text: "Los peces miran quién viene.", forms: { los: "el", peces: "pez", miran: "mirar", viene: "venir" } },
@@ -24,4 +25,22 @@ export const THOUGHTS: readonly Thought[] = [
   { thing: "sundial", unlockAt: 1750, text: "En la piedra, dos letras pequeñas.", forms: { la: "el", letras: "letra", "pequeñas": "pequeño" } },
 
   { thing: "hills", unlockAt: 351, text: "De allí no viene nadie.", forms: { viene: "venir" } },
-  { thing: "hills", unlockAt: 460, text: "Desde allí, esto se ve pequeño.", forms: { ve: "ver" } },];
+  { thing: "hills", unlockAt: 460, text: "Desde allí, esto se ve pequeño.", forms: { ve: "ver" } },
+  { thing: "hills", unlockAt: 836, text: "Allí hay alguien que tampoco duerme.", forms: { duerme: "dormir", hay: "haber" }, assumes: ["the-light-answers"] },
+
+  { thing: "bed", unlockAt: 395, text: "Dos lados. Gana el de ella.", forms: { gana: "ganar", lados: "lado" }, assumes: ["her-garden"] },
+  { thing: "bed", unlockAt: 773, text: "El lado de ella. Sigue ganando.", forms: { ganando: "ganar", sigue: "seguir" }, assumes: ["her-side"] },
+
+  { thing: "hedge", unlockAt: 444, text: "El perro tiene mucho que decir.", forms: { tiene: "tener" } },
+  { thing: "hedge", unlockAt: 821, text: "Cada mañana, menos agua.", assumes: ["water-for-the-mouse"] },
+
+  { thing: "grass", unlockAt: 240, text: "Más y más. Solo eso." },
+
+  { thing: "stone", unlockAt: 300, text: "Aquí antes que nadie. Sabe cosas.", forms: { cosas: "cosa", sabe: "saber" } },
+
+  { thing: "cherry", unlockAt: 325, text: "Fiesta, una semana. Espera un año.", forms: { espera: "esperar", una: "un" } },
+
+  // Only by day: at dusk and night a tap on a lantern blows it out or lights it (#361).
+  { thing: "lantern", unlockAt: 586, text: "Cada noche, amigos. Siempre los mismos.", forms: { amigos: "amigo", los: "el", mismos: "mismo" } },
+
+  { thing: "moon", unlockAt: 682, text: "Otra vez a su hora.", forms: { otra: "otro" } },];

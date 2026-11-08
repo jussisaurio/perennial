@@ -4,7 +4,7 @@
 import type { Fact } from "../facts";
 
 export interface Note {
-  /** Stable id, "n01"…, and "d1"… for the pages only in the diary; read state keys on it. */
+  /** Stable id, "n01"…, with "d1"… for the refrain pages and "p1"… for the small pages, both only in the diary; read state keys on it. */
   id: string;
   /** The part of the story it belongs to. The last note, the door's (#882), opens the mouse door. */
   beat: "early" | "stile" | "lookout" | "late" | "door";

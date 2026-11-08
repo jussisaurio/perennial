@@ -447,13 +447,13 @@ test("hill.diary: with n09, by the stone, Read the diary opens it on n09; before
 });
 
 test("hill.diary-new: with a page not read, the diary shows its ribbon and opens on it; read, the ribbon is gone", async ({ page }) => {
-  // n12 not read yet; the four pages before it read.
+  // n12 not read yet; the eight pages before it read.
   const s = await walkIn(page, `known:${N12}`);
   const ribbon = () => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lookoutThings.ribbon.visible);
   expect(await ribbon()).toBe(true);
   await byStone(page, s);
   await button(page, "Read the diary").click();
-  const card = page.getByRole("dialog", { name: "A page of the gardener's diary, page 5 of 5" });
+  const card = page.getByRole("dialog", { name: "A page of the gardener's diary, page 9 of 9" });
   await expect(card).toContainText("Anoche hice dos señales con la luz.");
   await card.getByRole("button", { name: "Close" }).click();
   await expect(card).toBeHidden();
