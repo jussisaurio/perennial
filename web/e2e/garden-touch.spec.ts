@@ -117,7 +117,7 @@ test("iPhone: the thumb stick still walks, and takes over from a walk under way 
         const away = () => Math.hypot(s.x - tx, s.z - tz);
         const el = document.querySelector(".gw-stick")!;
         const o = { bubbles: true, cancelable: true, composed: true, pointerType: "touch", pointerId: 3, isPrimary: true };
-        const walking = !!s.trip;
+        const walking = s.walker.kind === "trip";
         const from = away();
         let closest = from;
         el.dispatchEvent(new PointerEvent("pointerdown", { ...o, clientX: cx, clientY: cy }));

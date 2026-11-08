@@ -223,6 +223,27 @@ const TRIP_TURN = 3;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
 
+/** The bench by the pond (#334) or the lookout's stool (#858). */
+type Seat = "bench" | "stool";
+
+/**
+ * What the walker is doing (#877), one at a time:
+ * - free: standing, or walking with the keys;
+ * - trip: a walk to a tapped spot (#336, world.ts Trip and walkStep). It turns the view gently toward where
+ *   it goes while `turn` (never with reduced motion, and no more once the viewer looks round themselves).
+ *   On arrival it does `then` (a plant's card, the door);
+ * - glide: to a plant along `path` (world.ts route), turning from one yaw and pitch to the other, `t` 0 to 1 over `s` seconds;
+ * - seated: on the bench or the stool. Any move stands you up.
+ */
+type Walker =
+  | { kind: "free" }
+  | ({ kind: "trip"; then: (() => void) | null; turn: boolean } & Trip)
+  | { kind: "glide"; path: [number, number][]; yaw: [number, number]; pitch: [number, number]; t: number; s: number }
+  | { kind: "seated"; on: Seat };
+
+/** One for all: the frame loop goes back to free without making a new object. */
+const FREE: Walker = { kind: "free" };
+
 /** Each time of day's tint for everything unlit, and its fog, made once: the time-lapse on the bench (#362) blends them every frame. */
 const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color }> = {
   day: { tint: new THREE.Color(...T.SKIES.day.tint), fog: new THREE.Color(T.SKIES.day.fog) },
@@ -284,15 +305,8 @@ export class GardenScene {
   private x = 0;
   private z = 0;
   private bob = 0;
-  /** A glide to a plant: along `path` (world.ts route), turning from one yaw and pitch to the other, `t` 0 to 1 over `s` seconds. */
-  private glide: { path: [number, number][]; yaw: [number, number]; pitch: [number, number]; t: number; s: number } | null = null;
-  /**
-   * A walk to a tapped spot (#336, world.ts Trip and walkStep). It turns the
-   * view gently toward where it goes while `turn` (never with reduced motion,
-   * and no more once the viewer looks round themselves). On arrival it does
-   * `then` (a plant's card, the door).
-   */
-  private trip: (Trip & { then: (() => void) | null; turn: boolean }) | null = null;
+  /** What the walker is doing (#877): one state, changed only by `toWalker`. */
+  private walker: Walker = FREE;
   /** Where a walk's frame moves the walker (walkStep fills it in place); and whether a stalled walk was reported this time in the garden. */
   private at = { x: 0, z: 0 };
   private stallReported = false;
@@ -316,10 +330,9 @@ export class GardenScene {
   private toys: Toys;
   /** The gardener's notes in the shed (#654). */
   private notes = new ShedNotes();
-  /** Sitting on the bench (#334), or on the lookout's stool (#858); `seat` goes from 0 (standing) to 1 (sitting) for the eye's height. */
-  private seated = false;
+  /** The eye's seat (#334, #858), sat on now or last: `seat` goes from 0 (standing) to 1 (sitting) for the eye's height, and the view narrows on the stool. */
   private seat = 0;
-  private sitOn: "bench" | "stool" = "bench";
+  private sitOn: Seat = "bench";
   /** The way out of the back fence (#714, #749): the thicket, and the stile once the hill's note is unlocked. */
   private stile: StileScene | null = null;
   /**
@@ -923,7 +936,7 @@ export class GardenScene {
     const t = this.reacher;
     if (t && a === this.reach) t.act(a, t.shown);
     // A press that comes before the button caught up with a change in reach: the bench and the door check their own state, so they act all the same.
-    else if (a === "sit" && !this.seated) this.sit("bench");
+    else if (a === "sit" && this.walker.kind !== "seated") this.sit("bench");
     else if (a === "stand") this.standUp();
     else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
   }
@@ -1087,9 +1100,7 @@ export class GardenScene {
    * facing the far house: a cut to the seat, and the eye sinks (at once, with
    * reduced motion). Any move stands you up.
    */
-  private sit(on: "bench" | "stool") {
-    this.endTrip();
-    this.glide = null;
+  private sit(on: Seat) {
     if (on === "stool") {
       // The stool is there whenever the button offers it.
       const h = this.hill!;
@@ -1099,21 +1110,63 @@ export class GardenScene {
       // The bench faces +z, toward the pond; forward is -z at yaw 0.
       [this.x, this.z, this.yaw, this.pitch] = [b.x + SEAT.dx, b.z + 0.05, Math.PI, 0.1];
     }
-    this.sitOn = on;
-    this.seated = true;
-    this.sat = 0;
-    this.seatView = { yaw: this.yaw, pitch: this.pitch, looked: false };
+    this.toWalker({ kind: "seated", on });
+  }
+
+  /** Stand up, if you sat (the action button). */
+  private standUp() {
+    if (this.walker.kind === "seated") this.toWalker(FREE);
   }
 
   /**
-   * Stand up (any move does): who came to sit with you goes back to their own
-   * places, and time runs back to now (#362). Called every frame you move:
-   * nothing to do unless you sat.
+   * The one way the walker's state changes (#877): what leaving the old one
+   * and entering the new one do. Moving with the keys calls it every frame,
+   * so going from free to free does nothing and makes nothing new.
    */
-  private standUp() {
-    if (!this.seated) return;
-    this.seated = false;
-    if (this.sitOn === "stool") {
+  private toWalker(next: Walker) {
+    const was = this.walker;
+    this.walker = next;
+    this.leaveWalker(was);
+    this.enterWalker(next);
+  }
+
+  private leaveWalker(was: Walker) {
+    switch (was.kind) {
+      case "free":
+      case "glide":
+        return;
+      case "trip":
+        this.spot.visible = false;
+        return;
+      case "seated":
+        return this.leaveSeat(was.on);
+      default:
+        return was satisfies never;
+    }
+  }
+
+  private enterWalker(next: Walker) {
+    switch (next.kind) {
+      case "free":
+      case "glide":
+        return;
+      case "trip":
+        // goTo has put the ring where the walk goes.
+        this.spot.visible = true;
+        return;
+      case "seated":
+        this.sitOn = next.on;
+        this.sat = 0;
+        this.seatView = { yaw: this.yaw, pitch: this.pitch, looked: false };
+        return;
+      default:
+        return next satisfies never;
+    }
+  }
+
+  /** Stand up (any move does): who came to sit with you goes back to their own places, and time runs back to now (#362). */
+  private leaveSeat(on: Seat) {
+    if (on === "stool") {
       // Up off the stool, a step toward the far house: the stool is solid, and a walk starts where a walker may stand.
       const h = this.hill!;
       const out = STOOL_R + WALKER + 0.01;
@@ -1139,11 +1192,12 @@ export class GardenScene {
    */
   private onBench(dt: number) {
     let race = 0;
-    if (this.seated) {
+    const w = this.walker;
+    if (w.kind === "seated") {
       this.sat += dt;
       race = lapseRate(this.sat);
       this.lapse += race * dt;
-      if (this.sitOn === "stool") {
+      if (w.on === "stool") {
         // On the stool, no one comes to sit with you, and time holds once it is night (#858).
         const most = untilNight(this.time);
         if (this.lapse >= most) [this.lapse, race] = [most, 0];
@@ -1811,32 +1865,31 @@ export class GardenScene {
   }
 
   look(dx: number, dy: number) {
-    this.glide = null;
     this.lookedRound();
-    // A walk goes on, but the viewer looks where they like now.
-    if (this.trip) this.trip.turn = false;
     this.yaw -= dx * 0.0055;
     this.pitch = Math.max(-0.75, Math.min(0.5, this.pitch - dy * 0.004));
   }
 
-  /** The viewer looks where they like now: on the bench (#362), the head no longer turns to who comes. */
+  /**
+   * The viewer looks where they like now: a glide stops; a walk goes on, but no
+   * longer turns the view; on the bench (#362), the head no longer turns to who comes.
+   */
   private lookedRound() {
+    const w = this.walker;
+    if (w.kind === "glide") this.toWalker(FREE);
+    else if (w.kind === "trip") w.turn = false;
     this.seatView.looked = true;
     this.turnTo = null;
   }
 
   /** Walk straight ahead (or back, if negative) by `metres`. */
   step(metres: number) {
-    this.glide = null;
-    this.endTrip();
-    this.standUp();
+    this.toWalker(FREE);
     ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, this.x - Math.sin(this.yaw) * metres, this.z - Math.cos(this.yaw) * metres, this.door.state === "open", this.trunks, this.back));
   }
 
   turn(amount: number) {
-    this.glide = null;
     this.lookedRound();
-    if (this.trip) this.trip.turn = false;
     this.yaw += amount;
   }
 
@@ -1849,7 +1902,7 @@ export class GardenScene {
   private tapPlant(p: PlacedPlant) {
     if (Math.hypot(p.x - this.x, p.z - this.z) < NAME_NEAR) {
       // A walk under way stops: the viewer is looking at this plant now.
-      this.endTrip();
+      if (this.walker.kind === "trip") this.toWalker(FREE);
       return this.select(p);
     }
     this.select(null);
@@ -1862,37 +1915,29 @@ export class GardenScene {
   private goTo(x: number, z: number, stop: number, then: (() => void) | null) {
     // A glide (Next plant) passes over beds; a tap during one starts from where a walker would stand.
     ({ x: this.x, z: this.z } = standAt(this.ground, this.x, this.z));
-    this.standUp();
+    // Standing up off the stool steps you off it: the way starts from there.
+    this.toWalker(FREE);
     const to = standAt(this.ground, x, z);
-    this.glide = null;
-    this.trip = { way: wayNear(this.ground, this.x, this.z, to.x, to.z, 0), leg: 1, stop, then, turn: !this.reducedMotion, stuck: 0 };
     this.spot.position.set(to.x, 0.03 + this.lift(to.x, to.z), to.z);
-    this.spot.visible = true;
-  }
-
-  private endTrip() {
-    this.trip = null;
-    this.spot.visible = false;
+    this.toWalker({ kind: "trip", way: wayNear(this.ground, this.x, this.z, to.x, to.z, 0), leg: 1, stop, then, turn: !this.reducedMotion, stuck: 0 });
   }
 
   /**
    * One frame of a walk (#336): toward the next corner at walking speed (world.ts walkStep).
    * The view turns gently toward where it goes; with reduced motion it keeps still, and the walk moves at an even pace.
    */
-  private walkOn(dt: number) {
-    const g = this.trip!;
+  private walkOn(g: Walker & { kind: "trip" }, dt: number) {
     this.at.x = this.x;
     this.at.z = this.z;
     const now = walkStep(this.layout, g, this.at, WALK * this.pace() * dt, dt, this.door.state === "open", this.trunks, this.back);
     this.x = this.at.x;
     this.z = this.at.z;
     if (now === "arrived") {
-      const then = g.then;
-      this.endTrip();
-      return then?.();
+      this.toWalker(FREE);
+      return g.then?.();
     }
     if (now === "stalled") {
-      this.endTrip();
+      this.toWalker(FREE);
       // Once per walk in the garden: a broken way is worth one report, not one a tap.
       if (!this.stallReported) this.cb.onStall();
       this.stallReported = true;
@@ -1973,8 +2018,7 @@ export class GardenScene {
     for (const mat of this.mats) mat.uniforms.uSelected.value = index;
     this.marker.visible = !!p;
     if (p && walkTo) {
-      this.endTrip();
-      this.standUp();
+      this.toWalker(FREE);
       const v = viewpoint(this.layout, p);
       // Turn the short way round.
       let yaw = v.yaw;
@@ -1989,7 +2033,7 @@ export class GardenScene {
       } else {
         // From the orchard, out through the door (#315): a longer way, so a little longer.
         const path = route(this.layout, this.x, this.z, v.x, v.z, this.back);
-        this.glide = { path, yaw: [this.yaw, yaw], pitch: [this.pitch, pitch], t: 0, s: path.length > 2 ? 1.8 : 0.9 };
+        this.toWalker({ kind: "glide", path, yaw: [this.yaw, yaw], pitch: [this.pitch, pitch], t: 0, s: path.length > 2 ? 1.8 : 0.9 });
       }
     }
     this.cb.onSelect(p);
@@ -2011,6 +2055,29 @@ export class GardenScene {
     this.frame = requestAnimationFrame(loop);
   }
 
+  /** One frame of a walk or a glide under way. */
+  private moveOn(dt: number) {
+    const w = this.walker;
+    switch (w.kind) {
+      case "free":
+      case "seated":
+        return;
+      case "trip":
+        return this.walkOn(w, dt);
+      case "glide": {
+        w.t = Math.min(1, w.t + dt / w.s);
+        const e = w.t < 0.5 ? 2 * w.t * w.t : 1 - (-2 * w.t + 2) ** 2 / 2;
+        ({ x: this.x, z: this.z } = along(w.path, e));
+        this.yaw = w.yaw[0] + (w.yaw[1] - w.yaw[0]) * e;
+        this.pitch = w.pitch[0] + (w.pitch[1] - w.pitch[0]) * e;
+        if (w.t >= 1) this.toWalker(FREE);
+        return;
+      }
+      default:
+        return w satisfies never;
+    }
+  }
+
   private tick(dt: number) {
     const t = this.elapsed;
     const motion = this.reducedMotion ? 0 : 1;
@@ -2018,13 +2085,11 @@ export class GardenScene {
     // Walking: forward is -z at yaw 0. Where the walker was, and whether they went on foot, for how fast they walk into things (#359).
     const x0 = this.x;
     const z0 = this.z;
-    const onFoot = !!this.trip || Math.hypot(this.input.move.x, this.input.move.y) > 0.01;
+    const onFoot = this.walker.kind === "trip" || Math.hypot(this.input.move.x, this.input.move.y) > 0.01;
     const { move, run } = this.input;
     const len = Math.hypot(move.x, move.y);
     if (len > 0.01) {
-      this.glide = null;
-      if (this.trip) this.endTrip();
-      this.standUp();
+      this.toWalker(FREE);
       const speed = WALK * (run ? 2 : 1) * this.pace() * Math.min(1, len);
       const fx = -Math.sin(this.yaw);
       const fz = -Math.cos(this.yaw);
@@ -2033,19 +2098,10 @@ export class GardenScene {
       ({ x: this.x, z: this.z } = walk(this.layout, this.x, this.z, nx, nz, this.door.state === "open", this.trunks, this.back));
       this.bob += dt * speed * 3.2;
     }
-    if (this.trip) this.walkOn(dt);
-    if (this.glide) {
-      const g = this.glide;
-      g.t = Math.min(1, g.t + dt / g.s);
-      const e = g.t < 0.5 ? 2 * g.t * g.t : 1 - (-2 * g.t + 2) ** 2 / 2;
-      ({ x: this.x, z: this.z } = along(g.path, e));
-      this.yaw = g.yaw[0] + (g.yaw[1] - g.yaw[0]) * e;
-      this.pitch = g.pitch[0] + (g.pitch[1] - g.pitch[0]) * e;
-      if (g.t >= 1) this.glide = null;
-    }
+    this.moveOn(dt);
     this.onBench(dt);
     // Sitting down or standing up: the eye sinks or rises over a moment (at once, with reduced motion).
-    const sat = this.seated ? 1 : 0;
+    const sat = this.walker.kind === "seated" ? 1 : 0;
     this.seat = this.reducedMotion ? sat : this.seat + Math.max(-dt * SEAT.speed, Math.min(dt * SEAT.speed, sat - this.seat));
     this.camera.position.set(this.x, EYE - (EYE - SEAT.eye) * this.seat + this.lift(this.x, this.z) + Math.sin(this.bob) * 0.035 * motion, this.z);
     // On the stool the view narrows as you sit, and widens again as you get up (#858).
@@ -2264,9 +2320,9 @@ export class GardenScene {
     reachable<number | null>({
       shown: null,
       reach: () => {
-        if (!this.seated) return null;
+        if (this.walker.kind !== "seated") return null;
         // -1: by day the lookout's lantern is not lit, and the bench has none.
-        const i = this.sitOn === "stool" ? this.lanterns.lookoutLamp : -1;
+        const i = this.walker.on === "stool" ? this.lanterns.lookoutLamp : -1;
         return i < 0 ? { a: "stand", target: null } : { a: this.lanterns.on[i] ? "snuff" : "light", target: i };
       },
       act: (_, i) => (i === null ? this.standUp() : this.toggleLantern(i)),
@@ -2296,7 +2352,7 @@ export class GardenScene {
       shown: null,
       reach: () => (this.lookoutThings?.byStool(this.x, this.z, slack(this.reach === "stool")) ? { a: "stool", target: null } : null),
       act: () => {
-        if (!this.seated) this.sit("stool");
+        if (this.walker.kind !== "seated") this.sit("stool");
       },
     }),
     reachable({
@@ -2320,7 +2376,7 @@ export class GardenScene {
       shown: null,
       reach: () => (Math.hypot(this.x - this.bench.x, this.z - this.bench.z) < BENCH_REACH + slack(this.reach === "sit") ? { a: "sit", target: null } : null),
       act: () => {
-        if (!this.seated) this.sit("bench");
+        if (this.walker.kind !== "seated") this.sit("bench");
       },
     }),
     this.toyReach,

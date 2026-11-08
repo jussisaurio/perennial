@@ -121,7 +121,7 @@ const GARDEN: Record<string, (page: Page) => Promise<unknown>> = {
   "hill-seated": async (page) => {
     await standOnHill(page, "stool");
     await page.getByRole("button", { name: "Sit on the stool", exact: true }).click();
-    await page.waitForFunction(() => (window as unknown as { __garden: { seated: boolean } }).__garden.seated);
+    await page.waitForFunction(() => (window as unknown as { __garden: { walker: { kind: string } } }).__garden.walker.kind === "seated");
     // Sitting down eases the eye down over 0.4 s (scene.ts SEAT.speed): wait it out in game time.
     const from = await page.evaluate(() => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed);
     await page.waitForFunction((from) => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed > from + 1.5, from);
