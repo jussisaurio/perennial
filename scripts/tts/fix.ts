@@ -1,6 +1,6 @@
 // Makes bad lone-word clips again (#776), under their old names, in the same voice. Each take is
-// checked by Gemini, twice; the first take both votes pass is uploaded over the old clip and purged
-// from Cloudflare's cache. Takes switch between the word's IPA pinned (ipa.ts) and plain text.
+// checked by Gemini, twice; the first take both votes pass is uploaded over the old clip; it prints
+// the URLs to purge from Cloudflare's cache. Takes switch between the word's IPA pinned (ipa.ts) and plain text.
 // Run by hand, from the owner's machine; never in CI.
 //
 // The words come from the owner, who heard them. The checker is not good at finding bad clips:
@@ -13,7 +13,7 @@
 // FILE has one word a line, each a clip already in R2. Options: --takes N (default 8).
 // Results go to scripts/.tts-out/fix-<lang>.jsonl; a re-run skips the words in it. A word whose
 // takes all fail keeps its old clip, and is listed there and at the end for the owner to hear.
-// Env: as render.ts (with CF_ZONE_ID and CF_PURGE_TOKEN), and GEMINI_API_KEY.
+// Env: as render.ts, and GEMINI_API_KEY.
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -21,7 +21,7 @@ import { isDeckLang, type DeckLang } from "../../web/src/deck/langs.ts";
 import { language } from "../../web/src/content/languages.ts";
 import { ROOT, flagValue } from "../deck/lib.ts";
 import { ipasFor, parseWikipron, WIKIPRON_FILE, wikipronUrl } from "./ipa.ts";
-import { AUDIO_BASE, GOOGLE_RPM, Refused, Retry, clipsFor, pace, purge, putClip, synthesize, type Clip } from "./lib.ts";
+import { AUDIO_BASE, GOOGLE_RPM, Refused, Retry, clipsFor, pace, purgeList, putClip, synthesize, type Clip } from "./lib.ts";
 
 const OUT = join(ROOT, "scripts/.tts-out");
 const WORKERS = 8;
@@ -66,7 +66,6 @@ const need = (name: string) => {
 };
 const ttsKey = need("GOOGLE_TTS_KEY");
 const geminiKey = need("GEMINI_API_KEY");
-const cf = { zone: need("CF_ZONE_ID"), token: need("CF_PURGE_TOKEN") };
 const s3 = new Bun.S3Client({
   accessKeyId: need("R2_ACCESS_KEY_ID"),
   secretAccessKey: need("R2_SECRET_ACCESS_KEY"),
@@ -173,9 +172,9 @@ const worker = async () => {
 };
 // A word cut off by an error is not logged, so a re-run makes it again.
 await Promise.all(Array.from({ length: WORKERS }, () => worker().catch((e: unknown) => void (stop ??= e))));
-// Purged even when the run stopped early: these clips are already uploaded.
-await purge(fixed, cf, fetch);
-console.log(`Fixed ${fixed.length} (uploaded and purged), still failing ${failing.length}, not tried ${queue.length}. Gemini: about $${usd.toFixed(2)}.`);
+// Listed even when the run stopped early: these clips are already uploaded.
+if (fixed.length) console.log(purgeList(fixed));
+console.log(`Fixed ${fixed.length} (uploaded), still failing ${failing.length}, not tried ${queue.length}. Gemini: about $${usd.toFixed(2)}.`);
 if (failing.length) console.log(`Still failing, to hear:\n${failing.map((p) => `  ${AUDIO_BASE}/${p}`).join("\n")}`);
 if (stop !== null) throw stop;
 if (queue.length) console.log(`Stopped at --max-usd ${maxUsd}: run again to go on.`);
