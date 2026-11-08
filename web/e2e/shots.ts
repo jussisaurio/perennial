@@ -193,7 +193,7 @@ const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut
 /**
  * Open the walk for a demo learner far into the course: 800 words put notes on the shed's
  * nails (each needs 60 or more known words) and under the stile's step, and open the way
- * over the stile to the lookout (note n08, 495 known: not every demo word is known). The door is opened too.
+ * over the stile to the lookout (note n08, 486 known: not every demo word is known). The door is opened too.
  * A spot in WORDS opens for its own learner.
  */
 async function openWalk(page: Page, words: number | `known:${number}`) {
