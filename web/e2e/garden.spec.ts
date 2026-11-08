@@ -641,3 +641,52 @@ test("the controls hint shows in the learner's walk until they first move; the l
   await walkIn();
   await expect(hint).toHaveCount(0);
 });
+
+// #876: with motion, Next plant glides to the plant; with reduced motion it is a cut, and there is no glide to stop.
+test.describe(() => {
+  test.use({ reducedMotion: "no-preference" });
+  test("a tap on a near plant during the glide to another opens its card, and the glide stops where you are (#876)", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+    await pinDetail(page, "low");
+    await page.goto("/?demo=es:30#/today");
+    await page.getByRole("button", { name: "Walk in your garden" }).click();
+    await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+    await page.waitForFunction(() => "__garden" in window);
+    type P = { lemma: string; x: number; z: number };
+    type Glide = { x: number; z: number; walker: { kind: string }; layout: { plants: P[] }; select(p: P, walkTo: boolean): void; tap(hit: { kind: "plant"; p: P }, known: string[]): void };
+    const kind = () => page.evaluate(() => (window as unknown as { __garden: Glide }).__garden.walker.kind);
+    const card = page.getByRole("dialog", { name: /^The plant for / });
+    // Glide to the first plant (as Next plant does), and stand there.
+    await page.evaluate(() => {
+      const s = (window as unknown as { __garden: Glide }).__garden;
+      s.select(s.layout.plants[0], true);
+    });
+    await expect.poll(kind).toBe("free");
+    await page.keyboard.press("Escape");
+    await expect(card).toBeHidden();
+    // The glide to the plant farthest away starts; before a frame moves you, a tap on the plant nearest you.
+    const at = await page.evaluate(() => {
+      const s = (window as unknown as { __garden: Glide }).__garden;
+      const from = (q: P) => Math.hypot(q.x - s.x, q.z - s.z);
+      const near = s.layout.plants.reduce((a, p) => (from(p) < from(a) ? p : a));
+      const far = s.layout.plants.reduce((a, p) => (from(p) > from(a) ? p : a));
+      const start = { x: s.x, z: s.z, near: near.lemma, by: from(near), far: from(far) };
+      s.select(far, true);
+      s.tap({ kind: "plant", p: near }, []);
+      return start;
+    });
+    // NAME_NEAR (scenePlants.ts): the near plant's name shows, so a tap opens its card where you stand.
+    expect(at.by).toBeLessThan(3.2);
+    expect(at.far).toBeGreaterThan(4);
+    await expect(card).toHaveAttribute("aria-label", `The plant for ${at.near}`);
+    // A glide takes 1.8 s at most: wait longer, in game time. You are still where you tapped.
+    await gameSeconds(page, 2.5);
+    expect(await kind()).toBe("free");
+    const now = await page.evaluate(() => {
+      const s = (window as unknown as { __garden: Glide }).__garden;
+      return { x: s.x, z: s.z };
+    });
+    expect(Math.hypot(now.x - at.x, now.z - at.z)).toBeLessThan(0.01);
+    await expect(card).toHaveAttribute("aria-label", `The plant for ${at.near}`);
+  });
+});
