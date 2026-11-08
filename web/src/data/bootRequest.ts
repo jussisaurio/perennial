@@ -4,8 +4,7 @@
 
 /**
  * On an iPhone a request can wait with no answer and no error, and only a
- * reload helps (#312, #911: the server sent the boot answer in 156 ms, and the
- * page stayed on the sprout). So a boot request stops after a time with
+ * reload helps (#312, #911). So a boot request stops after a time with
  * nothing new coming. Silence, not the whole download: on a slow link a long
  * history takes longer, but bytes keep coming.
  *
