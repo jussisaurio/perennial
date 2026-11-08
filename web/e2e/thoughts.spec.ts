@@ -109,18 +109,24 @@ test("thought.early: with 3 words a tap on the bench shows only its name", async
   await expect(tag(page)).toHaveCount(0);
 });
 
-test("thought.grows: the pond shows a new line at 200, 700 and 1800 words", async ({ page }) => {
-  const lines: string[] = [];
-  for (const known of [200, 700, 1800]) {
+// One walk a test: three walks in one took most of the 30 s on CI's software WebGL, and all of it on a slow runner.
+for (const [known, line] of [
+  [200, "Hay un pez. O dos."],
+  [700, "Los peces suben. Buscan a alguien."],
+  [1800, "Los peces aún esperan su pan."],
+] as const) {
+  test(`thought.grows: with ${known} words the pond shows "${line}"`, async ({ page }) => {
     await openWalk(page, known);
     await page.mouse.click(...(await facePond(page)));
     await expect(tag(page)).toContainText("el estanque");
-    lines.push(await page.locator(".gw-thought-line").innerText());
-  }
-  expect(lines).toEqual(["Hay un pez. O dos.", "Los peces suben. Buscan a alguien.", "Los peces aún esperan su pan."]);
-});
+    await expect(page.locator(".gw-thought-line")).toHaveText(line);
+  });
+}
 
 test("thought.only-tap: standing by the bench shows no line; while one shows, W walks on and the button still says Sit on the bench", async ({ page }) => {
+  // Game time runs at most 0.1 s a frame (scene.ts MAX_FRAME), and CI's software WebGL draws a few frames a second:
+  // with the walk's load, the 10 s here take 20–30 s there, more than the default 30 s on a slow runner.
+  test.setTimeout(60_000);
   await openWalk(page, 800);
   const at = await lookAt(page, (await places(page)).bench, 1);
   const sit = page.getByRole("button", { name: "Sit on the bench" });
@@ -176,6 +182,8 @@ test("thought.seated: sitting on the bench, a tap on the pond shows the pond's t
 });
 
 test("thought.details: up close, the bench's seat shows two cup rings and the sundial's stone two small letters", async ({ page }) => {
+  // On CI's software WebGL the 800-word garden can stream in for most of 30 s (the wait below), after the walk's own load.
+  test.setTimeout(60_000);
   await openWalk(page, 800);
   // The loading line sits in the middle of the view, over what we look at, and changes as the plants stream in.
   await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
@@ -223,6 +231,8 @@ test("thought.details: up close, the bench's seat shows two cup rings and the su
 });
 
 test("thought.fades: the tag and its line still show 8 seconds after the tap and are gone 12 seconds after it", async ({ page }) => {
+  // As in thought.only-tap: 12 game seconds take 20–30 s on CI's software WebGL (27 s on a slow runner, run 42456941971).
+  test.setTimeout(60_000);
   await openWalk(page, 800);
   await page.mouse.click(...(await lookAt(page, (await places(page)).bench, 2)));
   await expect(tag(page)).toBeVisible();
