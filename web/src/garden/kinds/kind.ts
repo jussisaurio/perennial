@@ -10,7 +10,7 @@ import { wayNear, type Ground } from "../ground";
 import type { Frame } from "../scenePart";
 import type { Spots } from "../spots";
 import type { PixelArt } from "../visitorArt";
-import type { VisitorId } from "../visitors";
+import type { FrogWords, VisitorId } from "../visitors";
 import type { Layout } from "../world";
 
 /** A plant in bloom, for a visitor that rests on flowers (the butterfly). */
@@ -81,17 +81,21 @@ export interface Body<F extends string> {
 /** A tap that a visitor may answer. */
 interface Tap {
   elapsed: number;
-  /** Words the learner knows, in the course language. */
-  known: readonly string[];
+  /** What the frog may say to this learner, in the course language. */
+  frog: FrogWords;
   lang: string;
 }
 
 /** Each animal that makes a sound: a real recording of its own (ui/animalSounds.ts), never the course voice (#739). */
 export type AnimalSound = "frog";
 
-/** A visitor's answer to a tap: its bubble, and its recorded sound (the bubble's words are not said aloud). */
+/** How long a visitor's short bubble shows (s). */
+export const SAY_S = 3.2;
+
+/** A visitor's answer to a tap: its bubble and how long it shows (s), and its recorded sound (the bubble's words are not said aloud). */
 export interface Reply {
   say: string;
+  seconds: number;
   sound: AnimalSound;
 }
 

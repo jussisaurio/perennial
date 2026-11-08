@@ -18,7 +18,7 @@ import type { CarryTarget } from "./sceneCarry";
 import type { PlacedTree } from "./orchard";
 import type { PlacedPlant } from "./world";
 import type { Ray, SceneryHit, SceneryView } from "./scenery";
-import type { VisitorView } from "./visitors";
+import type { FrogWords, VisitorView } from "./visitors";
 
 /** What a Part's tick needs: nothing here is read from Date, performance.now or Math.random. */
 export interface Frame {
@@ -90,8 +90,8 @@ export interface TapAt {
 export interface Tapper<K extends TapHit["kind"]> {
   /** What a tap there meets of this kind, or null. Pure: the scene may ask every kind. */
   pick(at: TapAt): TapHit<K> | null;
-  /** Act on it: in reach at once, from farther away after a walk up to it. A visitor may answer (`known`: the words it may say). */
-  tap(hit: TapHit<K>, known: readonly string[]): Reply | null | void;
+  /** Act on it: in reach at once, from farther away after a walk up to it. A visitor may answer (`frog`: what the frog may say). */
+  tap(hit: TapHit<K>, frog: FrogWords): Reply | null | void;
 }
 
 /**

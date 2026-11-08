@@ -138,6 +138,47 @@ test("a visitor in the 2D strip shows the app's focus ring when reached with Tab
   }
 });
 
+test("visit.frog-jokes: tapped on, the frog says its lines, then has no more words", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
+  await pinDetail(page, "normal");
+  // 300 known Spanish words: its first line and its last (frogLines.ts).
+  await page.goto("/?demo=es:known:300&visitors=frog#/today");
+  await page.getByRole("button", { name: "Walk in your garden" }).click();
+  await expect(page.locator(".gw")).toHaveClass(/\bgw-dusk\b/, { timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
+  await page.evaluate(() => {
+    type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
+    const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
+    const frog = s.guests.sprites.find((o) => o.v.id === "frog")!.body.at;
+    // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
+    const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
+    s.x = frog.x + Math.sin(a) * 1.3;
+    s.z = frog.z + Math.cos(a) * 1.3;
+    s.yaw = a;
+    s.pitch = -0.45;
+  });
+  const box = (await page.locator(".gw-tag", { hasText: "la rana" }).boundingBox())!;
+  const tap = () => page.mouse.click(box.x + box.width / 2, box.y + box.height + 25);
+  const bubble = page.locator(".gw-say");
+  await tap();
+  await expect(bubble).toHaveText(/^croac… \p{L}+$/u);
+  await tap();
+  await expect(bubble).toHaveText(/^croac… \p{L}+$/u);
+  await tap();
+  await expect(bubble).toHaveText("¿Otra vez tú?");
+  // A double tap skips nothing.
+  await tap();
+  await expect(bubble).toHaveText("¿Otra vez tú?");
+  await gameSeconds(page, 2);
+  await tap();
+  await expect(bubble).toHaveText("No tengo más palabras.");
+  // Long enough to read it slowly.
+  await gameSeconds(page, 6);
+  await expect(bubble).toHaveText("No tengo más palabras.");
+  await tap();
+  await expect(bubble).toHaveText("croac…");
+});
+
 test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, and by day it sleeps", async ({ page }) => {
   // Seven in the evening: the wall clock sets the time of day (#646).
   await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));

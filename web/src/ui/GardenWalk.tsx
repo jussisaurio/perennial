@@ -32,6 +32,7 @@ import { useGardenScene, useWalkInput, type Store } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { gardenBroughtAt, learnerVisitors, type LearnerVisitors } from "./visitors";
 import type { PixelArt } from "../garden/visitorArt";
+import { SILENT_FROG } from "../garden/visitors";
 import type { CarryAct, CarryDone } from "../garden/sceneCarry";
 import { PEBBLE } from "../garden/carryArt";
 import type { ToyAct, ToyDone } from "../garden/sceneToys";
@@ -597,8 +598,9 @@ export function GardenWalk({
     if (!hit) return; // nothing there: already deselected above
     onTap?.(hit.kind);
     // A thing in reach acts at once; from afar, once you have walked up to it. A plant's card opens; a visitor may answer
-    // (the awake frog croaks one of your known words, never its own name), in a bubble and, with sound on, its recorded sound (#739).
-    const answer = scene.current.tap(hit, visitors?.known ?? []);
+    // (the awake frog croaks one of your known words, never its own name, or says a line), in a bubble and, with sound on, its recorded sound (#739, #902).
+    // SILENT_FROG: the landing page's walk has no learner.
+    const answer = scene.current.tap(hit, visitors?.frog ?? SILENT_FROG);
     if (hit.kind === "walk") moved();
     else if (hit.kind !== "visitor" && hit.kind !== "plant") setHint(false);
     // With sound on, a visitor, an orchard tree or the garden itself says its word; a plant's card says its own.

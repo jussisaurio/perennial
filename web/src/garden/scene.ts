@@ -14,7 +14,7 @@ import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf } from "../ui/plant";
 import { fishSign, keepsakeLabel, pickSigns, SIGNS, sunflowerFaces, type SignLine } from "./whimsy";
-import { GATE_HALF, SNAIL_SIGN, visitor, type VisitorId, type VisitorView } from "./visitors";
+import { GATE_HALF, SNAIL_SIGN, visitor, type FrogWords, type VisitorId, type VisitorView } from "./visitors";
 import { SceneVisitors, type Hider } from "./sceneVisitors";
 import { RAIL, type Ledge, type Spots } from "./spots";
 import { conditions } from "./conditions";
@@ -1656,10 +1656,10 @@ export class GardenScene {
 
   /**
    * A tap on a visitor: what it says back (the awake frog croaks one of the
-   * `known` words) in a small bubble for a few seconds, or else its tag. Returns what it said.
+   * `frog` words, or says a line) in a small bubble for a few seconds, or else its tag. Returns what it said.
    */
-  private tapVisitor(id: VisitorId, known: readonly string[]): Reply | null {
-    const said = this.guests.tap(id, known);
+  private tapVisitor(id: VisitorId, frog: FrogWords): Reply | null {
+    const said = this.guests.tap(id, frog);
     this.clearTaps(said === null ? { scenery: true, tree: true, line: true, fruit: true } : { line: true });
     return said;
   }
@@ -1983,7 +1983,7 @@ export class GardenScene {
 
   /** Every kind of thing a tap can meet (#850), asked in TAP_PRIORITY order. */
   private tappers: { [K in TapHit["kind"]]: Tapper<K> } = {
-    visitor: { pick: (at) => this.pickVisitor(at), tap: (h, known) => this.tapVisitor(h.v.id, known) },
+    visitor: { pick: (at) => this.pickVisitor(at), tap: (h, frog) => this.tapVisitor(h.v.id, frog) },
     plant: { pick: (at) => this.pickPlant(at), tap: (h) => this.tapPlant(h.p) },
     tree: { pick: (at) => this.pickTree(at), tap: (h) => this.tapTree(h.t) },
     door: { pick: (at) => this.pickDoor(at), tap: (h) => this.tapDoor(h.a) },
@@ -2006,9 +2006,9 @@ export class GardenScene {
     return null;
   }
 
-  /** Act on what a tap met (pickAny). A visitor may answer (`known`: the words it may say): this returns what it said. */
-  tap<K extends TapHit["kind"]>(hit: TapHit<K>, known: readonly string[]): Reply | null | void {
-    return this.tappers[hit.kind].tap(hit, known);
+  /** Act on what a tap met (pickAny). A visitor may answer (`frog`: what the frog may say): this returns what it said. */
+  tap<K extends TapHit["kind"]>(hit: TapHit<K>, frog: FrogWords): Reply | null | void {
+    return this.tappers[hit.kind].tap(hit, frog);
   }
 
   select(p: PlacedPlant | null, walkTo = false) {

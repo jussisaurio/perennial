@@ -6,10 +6,10 @@
 
 import * as THREE from "three";
 import * as T from "./textures";
-import { type VisitorId, type VisitorView } from "./visitors";
+import { type FrogWords, type VisitorId, type VisitorView } from "./visitors";
 import { daily } from "../core/day";
 import { KINDS } from "./kinds";
-import { there, type Bloom, type Body, type Hideout, type Reply, type Visitor, type VisitorKind } from "./kinds/kind";
+import { SAY_S, there, type Bloom, type Body, type Hideout, type Reply, type Visitor, type VisitorKind } from "./kinds/kind";
 import { REACH_SLACK } from "./reach";
 import type { Layout } from "./world";
 import type { Ground } from "./ground";
@@ -280,19 +280,19 @@ export class SceneVisitors implements Part {
    * says that in a bubble for a few seconds, and this returns it. Otherwise
    * its tag shows for a few seconds.
    */
-  tap(id: VisitorId, known: readonly string[]): Reply | null {
+  tap(id: VisitorId, frog: FrogWords): Reply | null {
     const s = this.sprites.find((o) => o.v.id === id);
     const elapsed = this.world.elapsed();
     if (s?.body.hiding) {
       this.find(id);
       return null;
     }
-    const said = s?.v.word && s.visitor.onTap ? s.visitor.onTap({ elapsed, known, lang: this.world.lang }) : null;
+    const said = s?.v.word && s.visitor.onTap ? s.visitor.onTap({ elapsed, frog, lang: this.world.lang }) : null;
     if (said === null) {
       this.tapped = { id, until: elapsed + 4 };
       return null;
     }
-    this.say(id, said.say);
+    this.say(id, said.say, said.seconds);
     // Its answer's frame (the frog's puffed throat) shows at once.
     if (s) this.draw(s);
     return said;
@@ -321,9 +321,9 @@ export class SceneVisitors implements Part {
     return { gloss: s.v.gloss, where: s.body.hid };
   }
 
-  /** A visitor says something in a small bubble for a few seconds, in place of its tag. */
-  say(id: VisitorId, text: string) {
-    this.saying = { id, text, until: this.world.elapsed() + 3.2 };
+  /** A visitor says something in a small bubble for `seconds` (a short one unless told: a croak, a "…"), in place of its tag. */
+  say(id: VisitorId, text: string, seconds = SAY_S) {
+    this.saying = { id, text, until: this.world.elapsed() + seconds };
     if (this.tapped?.id === id) this.tapped = null;
   }
 
