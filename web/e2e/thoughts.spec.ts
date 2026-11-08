@@ -300,6 +300,7 @@ test("thought.stool: with 800 words, on the hill, a tap on the stool shows its t
   const before = await walker(page);
   await page.mouse.click(...at);
   await expect(tag(page)).toContainText("el taburete");
-  await expect(page.locator(".gw-thought-line")).toHaveText("Es para uno.");
+  // At 800 words, the stool's later line (thoughts/es.ts, 496).
+  await expect(page.locator(".gw-thought-line")).toHaveText("Muy usado. Muchas noches.");
   expect(await walker(page)).toMatchObject({ x: before.x, z: before.z, walking: false });
 });

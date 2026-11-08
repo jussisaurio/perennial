@@ -81,8 +81,8 @@ test("demo story points: the stile's point opens the garden with its words known
   await page.goto("/?demo");
   await expect(page.getByRole("heading", { name: "Jump to a story point" })).toBeVisible();
   await page.getByRole("link", { name: /The stile stands/ }).click();
-  // 285: the known words of the note that brings the stile (notes/es.ts n05).
-  await expect(page.getByText(/^\d+ plants · 285 in bloom/)).toBeVisible({ timeout: 20_000 });
+  // 280: the known words of the note that brings the stile (notes/es.ts n05).
+  await expect(page.getByText(/^\d+ plants · 280 in bloom/)).toBeVisible({ timeout: 20_000 });
   expect(new URL(page.url()).hash).toBe("#/garden");
 });
 
