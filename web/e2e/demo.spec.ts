@@ -1,5 +1,6 @@
 import { expect, test } from "./test";
 import { addEmail, newEmail, serverRows, signIn, startCourse } from "./helpers";
+import { NOTES } from "../src/garden/notes/es";
 
 test("dev demo data: ?demo=es gives a garden with a review history", async ({ page }) => {
   await page.goto("/?demo=es:30#/garden");
@@ -81,8 +82,10 @@ test("demo story points: the stile's point opens the garden with its words known
   await page.goto("/?demo");
   await expect(page.getByRole("heading", { name: "Jump to a story point" })).toBeVisible();
   await page.getByRole("link", { name: /The stile stands/ }).click();
-  // 280: the known words of the note that brings the stile (notes/es.ts n05).
-  await expect(page.getByText(/^\d+ plants · 280 in bloom/)).toBeVisible({ timeout: 20_000 });
+  // The known words of the note that brings the stile, read from the notes: a copied count broke main each time the story loop moved it (#945, #964).
+  const stile = NOTES.find((n) => n.id === "n05");
+  if (!stile) throw new Error("no note n05 in notes/es.ts");
+  await expect(page.getByText(new RegExp(`^\\d+ plants · ${stile.unlockAt} in bloom`))).toBeVisible({ timeout: 20_000 });
   expect(new URL(page.url()).hash).toBe("#/garden");
 });
 
