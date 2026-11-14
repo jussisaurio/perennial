@@ -268,41 +268,59 @@ export function wood(): OffscreenCanvas {
   return c;
 }
 
-/** A bramble thicket's leaves (#749): dark, ragged green, crossed by red-purple canes with pale thorns, and a few blackberries. Wilder and darker than the clipped hedge. */
+/** Texels on a side of a tile of leaves (hedge, bramble). */
+const LEAVES_PX = 256;
+
+/**
+ * Leaves as flat paper (#1091): one colour, and a calm scatter of leaf cut-outs a shade lighter or darker, `n` of
+ * each colour, each a pointed oval `size` texels long at its own turn. A repeating tile of LEAVES_PX texels.
+ */
+function leaves(seed: number, base: string, cutouts: [string, number][], size: number): [OffscreenCanvas, OffscreenCanvasRenderingContext2D, () => number] {
+  const [c, ctx] = canvas(LEAVES_PX, LEAVES_PX);
+  px(ctx, 0, 0, base, LEAVES_PX, LEAVES_PX);
+  const r = rng(seed);
+  const all = cutouts.flatMap(([color, n]) => Array.from({ length: n }, () => color));
+  const spots = scatter(r, LEAVES_PX, all.length, size * 1.1);
+  spots.forEach(([x, y], i) => {
+    ctx.fillStyle = all[i];
+    const [l, w, a] = [size * (0.8 + r() * 0.4), size * 0.22, r() * Math.PI];
+    const [cx, cy] = [Math.cos(a) * (l / 2), Math.sin(a) * (l / 2)];
+    wrapped(LEAVES_PX, x, y, (x, y) => {
+      ctx.beginPath();
+      ctx.moveTo(x - cx, y - cy);
+      ctx.quadraticCurveTo(x - Math.sin(a) * w * 2, y + Math.cos(a) * w * 2, x + cx, y + cy);
+      ctx.quadraticCurveTo(x + Math.sin(a) * w * 2, y - Math.cos(a) * w * 2, x - cx, y - cy);
+      ctx.fill();
+    });
+  });
+  return [c, ctx, r];
+}
+
+/** A bramble thicket's leaves (#749, #1091): darker and wilder than the clipped hedge, with a few blackberries. Its thorny canes are their own meshes (sceneStile.ts). */
 export function bramble(): OffscreenCanvas {
-  const c = speckle(749, "#33462f", [
-    ["#29392a", 170],
-    ["#41583a", 120],
-    ["#56704a", 30],
-    ["#1d281b", 60],
-  ]);
-  const ctx = c.getContext("2d")!;
-  const r = rng(750);
-  // Canes running every which way through the leaves, each with thorns.
-  for (let i = 0; i < 7; i++) {
-    let [x, y] = [Math.floor(r() * 32), Math.floor(r() * 32)];
-    const dx = r() < 0.5 ? 1 : -1;
-    for (let k = 0; k < 14; k++) {
-      px(ctx, (x + 32) % 32, (y + 32) % 32, "#6b3b49");
-      if (k % 4 === 2) px(ctx, (x + 32) % 32, (y + 31) % 32, "#e7dfd0");
-      x += dx;
-      if (r() < 0.4) y += 1;
-    }
-  }
-  for (let i = 0; i < 5; i++) {
-    const [x, y] = [Math.floor(r() * 31), Math.floor(r() * 31)];
-    px(ctx, x, y, "#1a1024", 2, 2);
-    px(ctx, x, y, "#4a3a66");
+  const [c, ctx, r] = leaves(749, "#3b5236", [["#2f4330", 12], ["#4a6442", 9]], 34);
+  const dot = (x: number, y: number, rad: number, color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, rad, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  // A blackberry is a little knot of round drupelets, one of them catching the light: a lone dark dot reads as a hole.
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = [r() * LEAVES_PX, r() * LEAVES_PX];
+    wrapped(LEAVES_PX, x, y, (x, y) => {
+      for (const [dx, dy] of [[0, -4], [-3.5, 0], [3.5, 0], [0, 4]]) dot(x + dx, y + dy, 3.6, "#2a1d33");
+      dot(x - 1.5, y - 4.5, 1.4, "#6a5a8a");
+    });
   }
   return c;
 }
 
-/** A bramble cane (#749): dark red-purple. */
+/** A bramble cane (#749): one flat dark red-purple. */
 export function cane(): OffscreenCanvas {
-  return speckle(751, "#5e3442", [
-    ["#7a4a57", 3],
-    ["#432531", 3],
-  ], 4);
+  const [c, ctx] = canvas(4, 4);
+  px(ctx, 0, 0, "#5e3442", 4, 4);
+  return c;
 }
 
 /**
@@ -340,24 +358,9 @@ export function picket(): OffscreenCanvas {
   return c;
 }
 
-/** Thick hedge leaves (#315): dense and dark, with no gaps to see through. */
+/** Thick hedge leaves (#315, #1091): dense and dark, with no gaps to see through, a few leaves catching the light. */
 export function hedge(): OffscreenCanvas {
-  const c = speckle(11, "#3e653a", [
-    ["#345834", 150],
-    ["#4a7444", 110],
-    ["#5c8752", 40],
-    ["#29452a", 50],
-  ]);
-  const ctx = c.getContext("2d")!;
-  const r = rng(12);
-  // Little clusters of leaves catching the light.
-  for (let i = 0; i < 14; i++) {
-    const x = Math.floor(r() * 30);
-    const y = Math.floor(r() * 30);
-    px(ctx, x, y, "#6a955a", 2, 1);
-    px(ctx, x + 1, y + 1, "#4a7444");
-  }
-  return c;
+  return leaves(11, "#3e653a", [["#345834", 10], ["#4a7444", 10], ["#5c8752", 3]], 30)[0];
 }
 
 /**

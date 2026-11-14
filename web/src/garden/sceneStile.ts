@@ -172,7 +172,7 @@ export class StileScene {
     const r = rng(749);
     const [sx, sz] = [this.spot.x, this.spot.z];
     const [x0, x1] = [c.b.minX - 0.6, c.b.maxX + 0.6];
-    const tex = T.pixelTexture(T.bramble(), true);
+    const tex = T.paperTexture(T.bramble(), true);
     // The way stops at the hilltop: the ring past it, on the far side, stays whole.
     const cut = (x: number, z: number, wide = 0) => this.open && Math.abs(this.side(x, z)) < CUT + wide && this.along(x, z) < HILL.out;
     // The solid middle: one box, or two either side of the way cut through.
@@ -241,7 +241,7 @@ export class StileScene {
           for (const y of [0.4, 0.95, 1.5]) clumps.push([cx, y + (r() - 0.5) * 0.2, cz, 0.3, 0.4, 0.4, 0.5 + 0.2 * y]);
         }
     const ball = new THREE.IcosahedronGeometry(1, 1);
-    shadeUp(ball, 0.7, 1);
+    shade(ball);
     const uv = ball.getAttribute("uv");
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
     // One instanced mesh per square of ground: three culls a mesh whole, and one for every clump was drawn from anywhere (#960).
@@ -298,7 +298,7 @@ export class StileScene {
         this.cane(canes, V(cx - dx, y, cz - dz), V(cx, y + 0.08, cz), V(cx + dx, y, cz + dz), r, 0.7);
       }
     yield;
-    c.scene.add(still(new THREE.Mesh(canes.geometry(), c.mat(T.pixelTexture(T.cane(), true), { vertexColors: true }))));
+    c.scene.add(still(new THREE.Mesh(canes.geometry(), c.mat(T.paperTexture(T.cane(), true), { vertexColors: true }))));
   }
 
   /** The stile: steps up and down, the top board over the fence, and a handrail down each side. */
