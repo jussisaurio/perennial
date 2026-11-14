@@ -89,6 +89,7 @@ Nearly every proofreading fix in #422 was one of these. Grammar errors were clos
 
 ### Running it with agents
 
+- **Authors and proofreaders run on the strongest model.** In the owner's trial, a cheaper model's sentences had many mistakes. Even then, proofreaders fixed 7 or more entries per 100 (below), so the separate proofreading pass stays.
 - **Pilot first.** Write and proofread one file per language, turn its findings into rules for the author brief, then write the rest in waves of three files per language. After each wave, add the new lessons to the brief.
 - **Draft outside `decks/`.** Authors write drafts elsewhere, check them with `draft.ts check`, and copy a file into `decks/<lang>/source/` only when it has no errors. Then parallel authors never see a broken file.
 - **Every agent keeps its helper files in its own folder.** Parallel agents overwrote each other's shared scripts. `proof.ts mark` refused the wrong file or reviewer, so no wrong verdict landed. Before finishing, check that `proof.ts status` agrees with every verdict.

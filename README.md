@@ -18,8 +18,8 @@ next, and what we don't: [docs/direction.md](docs/direction.md).
 
 ```
 decks/<lang>/deck.json      the shared course: static JSON, built into the app
-web/  (Vite + React)        TanStack DB query collections fed by GET /api/rows; writes retried in memory
-server/  (Bun)              Better Auth, /api/rows, /api/write, Perennial AI, serves web/dist
+web/  (Vite + React)        TanStack DB query collections fed by GET /api/boot and /api/rows; writes retried in memory
+server/  (Bun)              Better Auth, /api/boot, /api/rows, /api/write, Perennial AI, serves web/dist
 contract/                   the wire contract: every request, answer and error code, as Effect Schemas
 Postgres                    learner data; the server reads and writes it, scoped to the session user
 ```
@@ -27,12 +27,12 @@ Postgres                    learner data; the server reads and writes it, scoped
 - **Decks are content, not user data.** The course is static JSON in `decks/`, built into the app. There is no AI at runtime for the course. Format and rules: [docs/schema.md](docs/schema.md).
 - **Server** (`server/`): Bun, [Effect](docs/effect.md) for the HTTP edge, settings and logs, Postgres through `Bun.sql`, plain SQL migrations in `server/migrations/`. Where Effect is used and where it is not: [docs/effect.md](docs/effect.md).
   - **Accounts:** [Better Auth](https://better-auth.com). The first write ("Start learning") creates an anonymous user. Signing in with an email code moves the progress into the real account. Anonymous learners with no activity for 60 days are deleted by a daily job (`server/src/housekeeping.ts`).
-  - **Reads:** `GET /api/rows` returns the session user's rows for every learner table in one response, always `where user_id = <session user>`, never the client's.
+  - **Reads:** the server is a backend for this one UI, not a REST API, so an endpoint is shaped around what a screen needs. `GET /api/boot` answers everything the app needs to start in one request: the session's user, their rows and the server's info. `GET /api/rows` returns the session user's rows for every learner table in one response, always `where user_id = <session user>`, never the client's. A new feature adds its read to a response the screen already asks for, not a new round trip.
   - **Writes:** `POST /api/write` takes a batch of mutations, checks them, scopes them to the session user, and applies them in one transaction. It returns whether anything changed.
   - **Perennial AI:** task endpoints (`/api/ai/mine`, `/api/ai/examples`) through the Anthropic SDK. Each word costs one AI word from a monthly allowance (`FREE_CREDITS`). A global monthly budget (`MONTHLY_BUDGET_USD`) pauses AI for everyone when it is reached.
   - Also: `/health`, account deletion, structured JSON logs with request ids, Sentry (`server/instrument.ts`). All settings: `server/src/config.ts`.
 - **Observability in the browser** (`web/src/observability.ts`): Sentry error reports and privacy-first PostHog events (no cookies, no autocapture, no session replay). Both are off unless their keys are set at build time.
-- **Client** (`web/src/data/`): each synced table is a TanStack DB query collection, held in memory and read from `GET /api/rows`: once at start, and again when the tab comes back into view after being hidden over a minute. There is no live push between devices; another device's changes show up on the next read. Writes apply on the device at once and go to `/api/write` in the order made, the waiting ones together, retried until the server has them; the server applies each once, in order. Unsent writes live only in the tab's memory: when the page closes, what is left goes in one last request (up to 64 KB), and is lost if that fails; the confirmed rows then go into the collections directly, so they don't flicker. There is no offline mode for now ([#188](https://github.com/jussisaurio/perennial/issues/188)). Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
+- **Client** (`web/src/data/`): each synced table is a TanStack DB query collection, held in memory. The first read comes with `GET /api/boot`. The rows are read again from `GET /api/rows` when the tab comes back into view after being hidden over a minute. There is no live push between devices; another device's changes show up on the next read. Writes apply on the device at once and go to `/api/write` in the order made, the waiting ones together, retried until the server has them; the server applies each once, in order. Unsent writes live only in the tab's memory: when the page closes, what is left goes in one last request (up to 64 KB), and is lost if that fails; the confirmed rows then go into the collections directly, so they don't flicker. There is no offline mode for now ([#188](https://github.com/jussisaurio/perennial/issues/188)). Memory (FSRS), unlocks and the garden are derived from the review log on the device; nothing derived is synced.
 
 License: the code is [MIT](LICENSE). The course content in `decks/` is not ([decks/LICENSE](decks/LICENSE)). The order of the words is based on word frequencies from [FrequencyWords](https://github.com/hermitdave/FrequencyWords) by Hermit Dave (OpenSubtitles 2018, CC BY-SA 4.0).
 
@@ -47,7 +47,7 @@ bun run dev          # Postgres, migrations, API (:8787) and app (http://localho
 bun run dev:ai       # the same, plus a mock model so Perennial AI works without a key
 ```
 
-It installs dependencies on first run. `web`, `server` and `scripts` are Bun workspaces with one lockfile (`bun.lock`), so `bun install` at the repo root installs all of them; package scripts still run from each folder (`cd web && bun run build`). Ctrl-C stops the API and the app; `docker compose down` stops the database.
+It installs dependencies on first run. `contract`, `web`, `server` and `scripts` are Bun workspaces with one lockfile (`bun.lock`), so `bun install` at the repo root installs all of them; package scripts still run from each folder (`cd web && bun run build`). Ctrl-C stops the API and the app; `docker compose down` stops the database.
 
 No keys are needed. Without `RESEND_API_KEY`, the server is in dev mode: sign-in codes are printed in the output as `[mail] sign-in code for you@example.com: 123456`.
 

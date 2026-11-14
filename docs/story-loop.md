@@ -72,7 +72,7 @@ The steps:
 2. **Read** (arc iterations). Start 3 fresh reader agents for each course, each with a different persona (below). Give a reader part 1 with the reader prompt. When it answers, send the next part to the same agent (SendMessage). Never give a reader a part before it has answered the one before. Never give it a file path: paste the part's text. A reader who has read the story once is never used again. With the last part, ask the reader to write all its answers, word for word, to a file in your scratch folder: the grader reads those files. One orchestrator agent per course can start its 3 readers and send them the parts; that keeps 60 parts out of your own context.
 3. **Grade.** One fresh grader gets every reader's answers, the parts, and `intended.ts`. It writes the gaps. The grader and the author hand back their reports as text (the harness stops a subagent from writing a report file): save them in your scratch folder.
 4. **Propose.** One fresh author agent gets the grader's report, the numbers, and the aim of this iteration. It proposes at most 3 changes.
-5. **Apply.** A mechanical change (a threshold, a word swap that keeps the meaning) goes on a branch. New writing goes to the owner first ("Writing with the owner", below); the loop does other work while it waits.
+5. **Apply.** A mechanical change (a threshold, a word swap that keeps the meaning) goes on a branch. New writing is drafted in English, adapted and shipped ("Writing with the owner", below). It does not wait for the owner.
 6. **Judge.** Write the scripts again with the change. Give 3 fresh judges the changed part, old and new, in random order, with the story so far for context. Read each judge's "what happened" answers: a judge can prefer a version that it still misreads. For a threshold change, also compare the numbers.
 7. **Keep and learn.** Keep a change when at least 2 of 3 judges prefer it, no part reads worse in the grade, and the hard gates pass. Open a PR (`Refs #928`) and merge it. Add one line to "Lessons", below, whether the change was kept or not.
 
@@ -205,14 +205,17 @@ Version 2:
 
 ## Writing with the owner
 
-The owner writes the story's English. They write English very well but know Spanish and German only a little. So the loop never writes new creative lines straight into es or de.
+The loop ships its own drafts. It does not wait for the owner to rewrite them (decided 2026-11-14). The owner may rewrite any line later, and a line the owner wrote is theirs.
+
+The owner writes English very well but knows Spanish and German only a little. So new creative lines are always drafted in English first, never straight into es or de. The English draft is what the owner can read, judge and rewrite.
 
 1. **Drafts, in English.** For any new writing, the author agent writes an English draft. Each draft has an id, where it goes, its kind, and a short note on its point: the device, the feeling, what it sets up or pays off.
-2. **A writing batch.** The drafts go into one open GitHub issue named "Writing batch N" (the first is #936). The owner rewrites each draft in English, or keeps it (`ok`), cuts it (`cut`) or asks (`?`), in a comment.
-3. **Adapt.** An adaptation agent writes each of the owner's lines in es and de, within the words the learner knows at that line's threshold: it passes the readability test, uses only deck words (or the gardener's own), and gives `forms` for each word whose form differs from its lemma. It writes in each language, not word for word, and keeps the tone.
-4. **Back-translate.** A separate fresh agent, who has not seen the owner's English, writes a literal English back-translation of each es and de line. Post it in the batch issue beside the owner's English, and flag each shift in meaning or tone. The owner can't check the es or de directly, so this is how they check it.
+2. **A writing batch.** The drafts go into one open GitHub issue named "Writing batch N" (the first is #936). The issue is the record, and the place where the owner can rewrite a draft in English, keep it (`ok`), cut it (`cut`) or ask (`?`), at any time, before or after it ships.
+3. **Adapt.** An adaptation agent writes each English line in es and de, within the words the learner knows at that line's threshold: it passes the readability test, uses only deck words (or the gardener's own), and gives `forms` for each word whose form differs from its lemma. It writes in each language, not word for word, and keeps the tone.
+4. **Back-translate.** A separate fresh agent, who has not seen the English, writes a literal English back-translation of each es and de line. Post it in the batch issue beside the English, and flag each shift in meaning or tone. Fix the shifts before the line ships. The owner can't check the es or de directly, so this is also how they check it later.
 5. **Proofread.** A different agent proofreads the es and de, as in [decks.md](decks.md): it writes findings and never fixes silently. The adaptation agent applies them.
-6. **Mark the owner's lines.** In the source, put a comment above each line the owner wrote: `// The owner's line (#<batch issue>).` The loop only proposes changes to these lines, as drafts in the next batch. It never makes them itself, even a word swap. It may still move their thresholds.
+6. **Ship.** The lines go through the judges and the hard gates like any other change ("One iteration", steps 6 and 7).
+7. **Mark the owner's lines.** When the owner rewrites a line, adapt it again (steps 3 to 5) and put a comment above it in the source: `// The owner's line (#<batch issue>).` A draft the owner only kept is not the owner's line and gets no mark. The loop only proposes changes to marked lines, as drafts in the next batch. It never makes them itself, even a word swap. It may still move their thresholds.
 
 Mechanical changes stay with the loop: thresholds, and word swaps for readability in lines that are not the owner's.
 

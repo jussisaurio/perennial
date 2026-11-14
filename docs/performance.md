@@ -8,7 +8,7 @@ Two local runs, both against the local stack (`docker compose up -d`). Run them 
 cd server && bun run load -- --users 100 --seconds 30
 ```
 
-It starts a profiled server and simulates learners as the app behaves: an anonymous sign-in, a course, then a review every 2–5 s while a live shape poll waits for the write to sync back. Output in `server/load/out/`:
+It starts a profiled server and simulates learners as the app behaves: an anonymous sign-in, a course, then reviews written in small batches, and the learner's rows read at start and now and then (`server/load/run.ts`). Output in `server/load/out/`:
 
 - `report.md`: p50/p95/p99 per request, writes per second, server memory over the run.
 - `CPU.*.cpuprofile` (Chrome DevTools → Performance, or speedscope.app) and `CPU.*.md`, a grep-friendly summary of hot functions.
@@ -27,6 +27,8 @@ cd web && bun perf/ui.ts --runs 5 --only "Words"
 ```
 
 It builds the app (with the demo switch on), starts the real server, and creates a learner with every Spanish deck word studied. Then it measures each heavy screen: Today, the garden, the word list, ten session cards, tab changes, the 3D walk. Each run uses a new browser context with a newly made learner, so one run does not inherit state or heap from the last. Before it measures, each run does the screen once at full speed, because a learner has opened the screen before: its code is then compiled and cached. The first visit in a new browser is 2–3× slower. Making the learner and the warm-up take a few seconds per run.
+
+**Do not measure an obvious win.** A change that is faster by construction (all rows → changed rows, work no longer repeated, a cached pure result) needs no before and after runs: the PR states the change in complexity. Measure to find where the time goes, or when the effect is not certain (scheduling, yielding, GPU, layout). Explore with `--runs 1`, and take "before" from the latest baseline in #447.
 
 Numbers from before 2026-11-06 (harness v1, #447 baseline) are not comparable: v1 used one page for all runs, so its first run was cold and its later runs had one or more warm-ups. Measure before and after a change with the same version.
 
@@ -56,10 +58,8 @@ For each screen, the run with the most time over budget saves its Chrome trace (
 
 The browser is full Chromium in headless mode, so WebGL draws on the machine's real GPU. The CPU slowdown does not slow the GPU, and an old laptop's GPU is much slower than an M4's, so the 3D walk's frames are faster here than on that laptop. Before 2026-11-06 (#459), the harness used software WebGL (SwiftShader). Its first draws made the main thread wait 0.6–1.5 s in Commit at CPU 10×. Do not compare the walk's Worst ms and Over budget ms from before then.
 
-## Baseline (2026-10-11, M-series laptop)
+## Baseline
 
-Server, 100 learners for 20 s: no errors; write p95 8 ms; write → synced back p95 11 ms; ~30 writes/s; RSS 181 → 196 MB. CPU is spread out: Better Auth's session lookup (kysely query building, pg row parsing) is the largest app-side cost.
+The UI baseline is the last baseline table in #447 (2026-11-06), made with the current harness at CPU 10×. The open performance debt is #421.
 
-UI, CPU 4× slower, 400 words studied (after the 2D garden became a virtualized strip): Today 0 ms blocked and ~800 DOM elements; Words 22 ms; ten session cards 43 ms; the 3D garden blocks ~0.8 s while it opens (≈ 0.2 s at full speed), about the same with 200 or 400 plants, so it is setup cost (software WebGL in this run), not per-plant.
-
-UI, 2026-11-06, CPU 4× slower, every Spanish deck word studied (about 1030): blocked main-thread time is Today 0 ms (1040 DOM elements), Words 61 ms, ten session cards 591 ms (longest task 527 ms), the Garden tab 2.1 s, the 3D walk 2.4 s. Sessions and the Garden tab are much slower than in October; that is worth a look of its own.
+There is no current server baseline: run the load test before and after your change. The numbers that stood here until 2026-11-14 were removed. The server ones (2026-10-11) timed a write coming back over a live sync connection that the app no longer has. The UI ones used CPU 4× and a deck half today's size.

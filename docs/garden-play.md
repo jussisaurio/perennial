@@ -12,6 +12,21 @@ After the prose, each section lists its claims: short, checkable sentences, each
 
 Each claim has one e2e test whose title starts with its id, and the test plays it with the keyboard like the learner would. A claim that has no test is a missing test. A garden test that names no claim is either a claim missing from this file or a test to delete.
 
+## Rules for every garden feature
+
+What to build is in [direction.md](direction.md), section 3. The physics are in CLAUDE.md, "The garden is physical". The code's rules are in DESIGN.md, "Garden code". These rules hold for every feature in this file:
+
+- **No instruction text in the walk (#334).** The world shows what can be done. The one action button is icon-only, and its accessible name says the action.
+- **A glint is only late help (#689).** Use it only for a thing the learner has not found after a long time, like the key's glint. It never means "in reach", and it never shows on a thing already found or used.
+- **Show the button's target quietly.** If the button could act on one of several things that look alike, mark that one with a small, steady change that fits the thing: a shed note lifts off the wall and hangs straight, a plant stands a little taller. Never flash or pulse it.
+- **Nothing asks the learner to practise, and nothing is lost.** No scores, timers, currency or nags. Nothing withers.
+- **Phones:** one thumb, sound off. Anything that uses sound also shows it.
+- **Screen readers:** each verb works through the action button, which has a name, plus a short status line.
+- **Words in the world are in the course language (#650)** and have a `lang` attribute. They are never quizzed. Text about the world (buttons, the status line) is English.
+- **Privacy:** `garden_action` counts verbs by name only.
+- **Art:** match the retro pixel style of `visitorArt.ts`, `carryArt.ts` and `textures.ts`.
+- **Tests:** unit tests of pure logic take a pinned `now`. An e2e test imports `test` from "./test", pins the clock and the viewport, picks the hour for day, evening or night, and pins the detail to low (`pinDetail` in `e2e/helpers.ts`). To open the walk in a browser: `/?demo=es:200#/garden`.
+
 ## The action button
 
 The action button sits low on the screen. It shows only when it has something to act on: a plant just ahead of you, the bench, the stool, the door, the key, a pebble, a dandelion clock, a note, the diary, a lantern. Its picture changes with what it does, and a screen reader hears its name ("Shake the plant", "Sit on the bench"). Walk away from everything and the button goes away: on open ground there is no button. When you see it, there is something near you to use.
