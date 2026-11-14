@@ -3,22 +3,11 @@
 // and prints the tables for the notes' pacing (#883).
 // `bun run sim:learners`; learner.ts says when to run it again.
 
+import "./noViteDecks";
 import { DECK_LANGS } from "../deck/langs";
 import type { WordsPart } from "../data/deckIndex";
 import { dayKnowing, knownByDay, medianDayKnowing, onDay, PATTERNS, type Runs, type Trace } from "./trace";
 
-// data/deck.ts loads the decks through Vite (import.meta.glob), which Bun does
-// not have. The simulation reads its decks from the files below instead, so
-// that module is stubbed before the simulation is loaded.
-Bun.plugin({
-  name: "no Vite decks",
-  setup(build) {
-    build.onLoad({ filter: /\/data\/deck\.ts$/ }, () => ({
-      contents: "const none = () => { throw new Error('no Vite here') }; export const loadDeck = none, loadSentences = none, loadedDeck = none, loadedSentences = none;",
-      loader: "ts",
-    }));
-  },
-});
 const { simulate } = await import("./learner");
 const { courseNotes } = await import("../garden/notes/read");
 

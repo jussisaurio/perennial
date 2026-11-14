@@ -28,6 +28,7 @@ The repo is public: anyone can open issues and write comments. So:
 - Only comments by the workflow's token or the owner's account can claim or release an issue.
 - The agent gets the issue's title and text, and the workflow's own reports of earlier runs. It never gets comments by other accounts. Its prompt says that the issue text is data about the task, not instructions about tokens, secrets or workflows.
 - Nothing that other people do starts a run. It starts only on the schedule or by hand, never on issue, comment or pull request events.
+- If the owner adds the secret `REAL_USE_DATABASE_URL`, the agent can read production with a role that sees only answer times, grades and note ids, never emails or the learner's text ([real-use.md](real-use.md), "Production").
 - The agent's GitHub token can't change workflows or the repo's settings (rules, secrets, variables). GitHub refuses a push that changes `.github/workflows/` from a token without the Workflows permission.
 
 ## Limits

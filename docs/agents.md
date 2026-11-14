@@ -52,6 +52,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - **Never wait in the foreground** for CI, an agent or a run longer than about 30 s. Start it in the background and do other work until it reports.
 - **Runs with nobody watching:** `.github/workflows/autorun.yml` starts a few agents in GitHub Actions, each on its own issue by the pick rule. It is off until the owner turns it on. [autonomy.md](autonomy.md) says how a run goes and what it trusts.
 - **An automatic judge is checked before it drives work.** Compare a sample of its verdicts with the owner's or a person's first. An LLM judge of the audio clips failed good clips and missed bad ones (#776), so a clip is re-made only when a person reports it.
+- **Check the sim against real use.** The sim learner and the story's agent readers only check themselves. Before you tune FSRS, retention, pacing or when the story comes, run `bun run real-use` and read [real-use.md](real-use.md), "How to use the numbers".
 
 ## When you start other agents
 - Start parallel agents for work that splits cleanly. A bug that comes in while you work on something else goes to an agent, not to you.

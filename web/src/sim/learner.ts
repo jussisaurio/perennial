@@ -88,8 +88,20 @@ function firstLearner(learners: Learners, lang: string, deck: LoadedDeck): Promi
   });
 }
 
-/** Runs one learner for up to `maxDays` days, or until they reach the door. */
-export async function simulate({ deck: part, pattern, seed, maxDays }: { deck: WordsPart; pattern: Pattern; seed: number; maxDays: number }): Promise<Trace> {
+/** Runs one learner for up to `maxDays` days, or until they reach the door. `onReview` gets each answer as it is stored (realUse/sim.ts). */
+export async function simulate({
+  deck: part,
+  pattern,
+  seed,
+  maxDays,
+  onReview,
+}: {
+  deck: WordsPart;
+  pattern: Pattern;
+  seed: number;
+  maxDays: number;
+  onReview?: (r: ReviewRow) => void;
+}): Promise<Trace> {
   // Days start at local midnight (core/day.ts): pinned to UTC, so every machine writes the same trace.
   if (new Date(0).getTimezoneOffset() !== 0) throw new Error("run the simulation with TZ=UTC");
   const lang = part.lang;
@@ -136,7 +148,9 @@ export async function simulate({ deck: part, pattern, seed, maxDays }: { deck: W
       const duration = Math.round(ms + (introMs.get(task.wordId) ?? 0));
       introMs.delete(task.wordId);
       const id = `r${reviews++}`;
-      review.insert(id, { id, user_id: "u", lang, word_id: task.wordId, skill: task.skill, grade, kind: "review", reviewed_at: new Date(now).toISOString(), duration_ms: duration, sentence_id: null });
+      const row: ReviewRow = { id, user_id: "u", lang, word_id: task.wordId, skill: task.skill, grade, kind: "review", reviewed_at: new Date(now).toISOString(), duration_ms: duration, sentence_id: null };
+      review.insert(id, row);
+      onReview?.(row);
       // !: built once already, so every later get() is at once.
       l = learners.get(lang, deck)!;
       session.report(task, { grade });

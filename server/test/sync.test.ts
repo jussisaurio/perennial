@@ -125,6 +125,20 @@ test("the gardener's notes read only grow, merged from every device (#654)", asy
   expect(await read()).toEqual(["n01", "n02"]);
 });
 
+test("a note's first read gets its time, once, for bun run real-use (#984)", async () => {
+  const cookie = await t.signIn(unique("noteread"));
+  const id = (await t.me(cookie)).id;
+  const events = async () => (await t.sql<{ note: string }>`select note from use_event where user_id = ${id} and lang = 'es' and kind = 'note_read' order by note`).map((e) => e.note);
+  // The course's first write already holds a read note.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", notes_read: ["n01"] } }]);
+  expect(await events()).toEqual(["n01"]);
+  // The app sends the whole list again with each new note, and other devices send what they have.
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", notes_read: ["n01", "n02"] } }]);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", notes_read: ["n02"] } }]);
+  await t.write(cookie, [{ type: "course.upsert", row: { lang: "es", retention: 0.85 } }]);
+  expect(await events()).toEqual(["n01", "n02"]);
+});
+
 test("a word's forms are stored as a list, which is what the app reads", async () => {
   const cookie = await t.signIn(unique("forms"));
   const id = crypto.randomUUID();
