@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "bun scripts/dev.ts",
     "dev:ai": "bun scripts/dev.ts --ai",
+    "check": "bun scripts/check.ts",
     "knip": "knip && knip --production",
     "deadcode": "bun scripts/deadcode.ts",
     "typecheck": "bun run --filter '*' typecheck",

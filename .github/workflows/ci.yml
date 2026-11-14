@@ -28,32 +28,14 @@ jobs:
       - name: Install (all workspaces)
         run: bun install --frozen-lockfile
 
-      - name: Typecheck (web)
-        working-directory: web
-        run: bun run typecheck
-      - name: Typecheck (server)
-        working-directory: server
-        run: bun run typecheck
-      - name: Typecheck (contract)
-        # Its own, stricter settings; the server's check reads it with the server's.
-        working-directory: contract
-        run: bun run typecheck
-      - name: Lint (web)
-        working-directory: web
-        run: bun run lint
-      - name: Unused files, exports and dependencies (knip, all workspaces)
-        run: bun run knip
-      - name: Unit tests (web)
-        working-directory: web
-        run: bun run test
       - name: Wait for Postgres
         # Started early (above), so the image pull ran during the other setup. Fail here, not later in the tests.
         run: |
           for i in $(seq 1 90); do docker compose exec -T postgres pg_isready -U perennial > /dev/null 2>&1 && exit 0; sleep 1; done
           echo "Postgres was not ready after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
-      - name: Server tests (against Postgres)
-        working-directory: server
-        run: bun test
+      - name: Check (typecheck, lint, knip, unit tests, deck tests, server tests)
+        # The same command agents run before a merge (docs/agents.md, "Checks").
+        run: bun run check
       - name: Build (web)
         working-directory: web
         run: bunx vite build
@@ -93,11 +75,7 @@ jobs:
       - name: Install (all workspaces)
         run: bun install --frozen-lockfile
 
-      - name: Typecheck (scripts)
-        working-directory: scripts
-        run: bun run typecheck
-      - name: Deck tests (build, schema, replay)
-        run: bun test scripts/deck web/src/deck
+      # The deck tests and the scripts typecheck run in the checks job (`bun run check`).
       # Prints the diff report (added / edited / retired). Fails on broken
       # invariants, a stale deck.json, or more than 5% of words retired.
       - name: Audit decks (duplicates, rare words, order)

@@ -70,6 +70,7 @@ The same options are in Settings → Developer tools, in dev builds only. In pro
 ## Test
 
 ```sh
+bun run check                          # typecheck, lint, knip and every test below except e2e; CI runs it too
 cd web && bun run lint                 # oxlint --deny-warnings (CI fails on any warning)
 cd web && bun test src                 # unit: FSRS (checked against ts-fsrs), planner, answer checking, text, deck schema
 bun test scripts/deck web/src/deck     # decks: build, invariants, compatibility, replay
