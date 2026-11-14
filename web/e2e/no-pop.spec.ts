@@ -5,7 +5,7 @@ import { openWalk, TIMES } from "./spots";
 import { expect, test } from "./test";
 
 // render.no-pop (docs/invariants.md): nothing in view jumps in size more than the camera's move explains.
-// It walks up to a plant until the action button can shake it, then backs away, and on each frame draws each
+// It runs up to a plant until the action button can shake it, then backs away, and on each frame draws each
 // plant near the walker alone and finds its top. The top is in metres on the plant's own upright plane, so a
 // camera move alone leaves it the same, up to a pixel. #1109: the plant in reach grew 8% in one frame.
 
@@ -69,9 +69,10 @@ function install() {
     const tops: Seen["tops"] = [];
     for (const [i, { mesh, foot }] of where) {
       const depth = -tmp.copy(foot).applyMatrix4(cam.matrixWorldInverse).z;
-      // The plant in reach (shake.ts SHAKE_REACH, 2.2 m, and its slack) and the plants beside it. Each one measured
-      // costs a draw and a read, which CI's software WebGL is slow at.
-      if (Math.hypot(foot.x - cam.position.x, foot.z - cam.position.z) > 2.6 || depth < 0.3) continue;
+      // The plant in reach (shake.ts SHAKE_REACH, 2.2 m, and its slack, 0.3 m), still on the first running frame's step
+      // (0.12 m) out of reach, and the plants beside it. Each one measured costs a draw and a read, which CI's software
+      // WebGL is slow at.
+      if (Math.hypot(foot.x - cam.position.x, foot.z - cam.position.z) > 2.7 || depth < 0.3) continue;
       // The part of the screen the plant can cover: 1.5 m to each side of its foot, up to 2.4 m, every way it can lean.
       let x0 = W, x1 = 0, y0 = H, y1 = 0;
       for (const side of [-1.5, 1.5])
@@ -146,15 +147,24 @@ test("render.no-pop: a plant's drawn size changes only as the camera's move expl
   await pinDetail(page, "low");
   // Small, so every plant has its full-size sprite and the walk is quick on CI.
   await openWalk(page, "es:30", "as it is");
+  // Each frame costs CI's software WebGL about a seventh of a second, so the walk is short: it starts a metre nearer
+  // the first bed than where the walk opens (the frames before a plant is near check nothing), and it runs (Shift),
+  // so it takes half the frames for the same way.
+  await page.evaluate(() => {
+    window.__garden.game.me.z -= 1;
+  });
   await page.evaluate(install);
-  const follow = (until: "ready" | "none") => page.evaluate(([u]) => (window as unknown as Follow).__follow(u, 6, 200), [until] as const);
-  // From where the walk opens, straight at the first bed, until a plant is in reach; then back, until none is.
+  const follow = (until: "ready" | "none") => page.evaluate(([u]) => (window as unknown as Follow).__follow(u, 2, 200), [until] as const);
+  // Straight at the first bed until a plant is in reach; then back, until none is.
+  await page.keyboard.down("Shift");
   await page.keyboard.down("w");
   const there = await follow("ready");
   await page.keyboard.up("w");
   await page.keyboard.down("s");
   const back = await follow("none");
   await page.keyboard.up("s");
+  await page.keyboard.up("Shift");
+  expect(there[0].ready, "no plant in reach at the start").toBe(-1);
   expect(there.some((f) => f.ready >= 0), "a plant came in reach").toBe(true);
   expect(back.at(-1)!.ready, "no plant in reach at the end").toBe(-1);
 
