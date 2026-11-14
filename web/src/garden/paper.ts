@@ -75,7 +75,8 @@ export function grain(): OffscreenCanvas {
   const N = GRAIN_PX;
   const r = rng(1164);
   const c = new OffscreenCanvas(N, N);
-  const ctx = c.getContext("2d")!;
+  // Drawn on the CPU: it is read three times, and on the GPU each read waits for the GPU's process (textures.ts canvas, #1177).
+  const ctx = c.getContext("2d", { willReadFrequently: true })!;
   ctx.fillStyle = "#808080";
   ctx.fillRect(0, 0, N, N);
   // Fibres: short, thin strands, a little lighter or darker than the sheet.

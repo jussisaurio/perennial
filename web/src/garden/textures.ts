@@ -18,13 +18,18 @@ import type { FarPixels, PaintJob, Pixels } from "./paintWorker";
 import type { TimeOfDay } from "./game";
 import { FULL_MOON, MOON_PHASES } from "./moon";
 
+// Not `window`: in dev, devWorker.ts gives a worker one.
+const IN_WORKER = typeof document === "undefined";
+
 /**
  * A canvas, offscreen so a worker can paint it too (paintWorker.ts). Read its pixels (getImageData) only in a worker:
  * on the main thread a read waits for the GPU, ~120 ms over the walk's bed signs at CPU 10× when they were read (#447).
+ * A worker paints a canvas only to read it, so there it is drawn on the CPU (willReadFrequently): drawn on the GPU,
+ * each read waited for the GPU's process, 1.5 s of the walk's build on CI's software GPU (#1177).
  */
 function canvas(w: number, h: number): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
   const c = new OffscreenCanvas(w, h);
-  const ctx = c.getContext("2d")!;
+  const ctx = c.getContext("2d", { willReadFrequently: IN_WORKER })!;
   ctx.imageSmoothingEnabled = false;
   return [c, ctx];
 }
