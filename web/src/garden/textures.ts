@@ -1,5 +1,6 @@
-// Tiny procedural pixel-art textures, drawn on canvases and shown with
-// nearest-neighbour filtering: the look of a mid-90s 3D game.
+// Small procedural textures, drawn on canvases. The sky, hills, clouds and far
+// trees are filtered smooth, as paper cut-outs (docs/art-direction.md, #1051);
+// near surfaces and sprites still show their pixels until they are redrawn.
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
@@ -36,15 +37,18 @@ export function pixelTexture(c: OffscreenCanvas, repeat = false): THREE.CanvasTe
   return t;
 }
 
-/** A texture a worker painted (paintWorker.ts), set up as pixelTexture sets up a canvas. */
-function paintedTexture({ width, height, data }: Pixels, repeat = false): THREE.DataTexture {
+/**
+ * A texture a worker painted (paintWorker.ts): the sky, hills, clouds, sun, far trees and the orchard. Filtered smooth
+ * (#1051), so their edges are clean curves, not steps. `aroundRing`: it repeats in x only, as the hills do around the world.
+ */
+function paintedTexture({ width, height, data }: Pixels, aroundRing = false): THREE.DataTexture {
   const t = new THREE.DataTexture(data, width, height);
   // The worker's rows are top first, as a canvas's are: flipped on upload, as a CanvasTexture is.
   t.flipY = true;
-  t.magFilter = THREE.NearestFilter;
-  t.minFilter = THREE.NearestFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.minFilter = THREE.LinearFilter;
   t.needsUpdate = true;
-  if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  if (aroundRing) t.wrapS = THREE.RepeatWrapping;
   return t;
 }
 
@@ -301,18 +305,17 @@ export const SKIES: Record<"day" | "dusk" | "night", Sky> = {
   night: { top: "#0f1318", mid: "#1a212b", horizon: "#2b3542", fog: "#1c232d", tint: [0.44, 0.5, 0.62] },
 };
 
-/** A banded sky gradient for the inside of the sky dome, retro style: no smooth blend. */
+/** The sky's gradient for the inside of the sky dome: a smooth blend, a row per texel. */
 export function sky(s: Sky, stars: boolean): OffscreenCanvas {
   const [c, ctx] = canvas(64, 64);
-  const bands = 12;
   const top = new THREE.Color(s.top);
   const mid = new THREE.Color(s.mid);
   const hor = new THREE.Color(s.horizon);
-  for (let i = 0; i < bands; i++) {
-    const t = i / (bands - 1);
+  for (let y = 0; y < 64; y++) {
+    const t = y / 63;
     const col = t < 0.5 ? top.clone().lerp(mid, t * 2) : mid.clone().lerp(hor, (t - 0.5) * 2);
     // v=0 is the bottom of the texture in three.js; top rows are the zenith.
-    px(ctx, 0, Math.floor((i / bands) * 64), `#${col.getHexString()}`, 64, Math.ceil(64 / bands));
+    px(ctx, 0, y, `#${col.getHexString()}`, 64, 1);
   }
   if (stars) {
     const r = rng(11);
@@ -347,7 +350,7 @@ export function hillProfile(): number[] {
   return a.map((h, x) => Math.min(Math.floor(h), Math.floor(b[x])) - (x % 2 === 0 ? 1 : 0));
 }
 
-/** Two layers of rolling hills with dithered edges, for a ring around the world. */
+/** Two layers of rolling hills, flat colour, for a ring around the world. The ridge's one-pixel steps (hillProfile) blur into a soft edge. */
 export function hills(night: boolean): OffscreenCanvas {
   const [c, ctx] = canvas(256, HILL_ROWS);
   // Colour and shade for each ridge, in RIDGES order.
@@ -366,7 +369,8 @@ export function hills(night: boolean): OffscreenCanvas {
     for (let x = 0; x < 256; x++) {
       const y0 = Math.floor(line[x]);
       px(ctx, x, y0, color, 1, HILL_ROWS - y0);
-      for (let y = y0 + 2; y < HILL_ROWS; y += 3) if ((x + y) % 4 === 0) px(ctx, x, y, shade);
+      // A shade a little below the ridge, so the near hill reads as a fold in paper.
+      px(ctx, x, y0 + 3, shade, 1, HILL_ROWS - y0 - 3);
       if (x % 2 === 0) px(ctx, x, y0 - 1, color);
     }
   });

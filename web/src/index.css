@@ -801,7 +801,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
    the page root, so switch it off there while the walk is open (.gw itself does not scroll).
    Safari ignores this: the walk's wheel handler stops it there (useGardenScene). */
 html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
-.gw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; cursor: grab; outline: none; -webkit-touch-callout: none; }
+.gw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; outline: none; -webkit-touch-callout: none; }
 .gw-canvas:active { cursor: grabbing; }
 
 /* The app's buttons (.primary, .secondary), as tall as a thumb, lifted off the garden. */

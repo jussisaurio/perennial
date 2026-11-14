@@ -118,6 +118,43 @@ export function plantPng(p: SpritePlant, scale: number, dpr: number): Promise<Bl
   return c.convertToBlob();
 }
 
+/** The 4 sides first, then the corners: a pixel takes the colour of the nearest drawn neighbour. */
+const NEIGHBOURS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+  [1, 1],
+  [-1, 1],
+  [1, -1],
+  [-1, -1],
+] as const;
+
+/**
+ * Gives each empty pixel (alpha 0) next to a drawn one that pixel's colour, still empty. A texture filtered smooth
+ * mixes an edge pixel with its empty neighbours, and a canvas leaves those black: the edge got a dark rim (#1051).
+ */
+export function bleedEdges(d: Uint8Array | Uint8ClampedArray, w: number, h: number) {
+  // Read from a copy, so a pixel given a colour does not pass it on.
+  const src = d.slice();
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (src[i + 3] !== 0) continue;
+      for (const [dx, dy] of NEIGHBOURS) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const j = (ny * w + nx) * 4;
+        if (src[j + 3] === 0) continue;
+        d[i] = src[j];
+        d[i + 1] = src[j + 1];
+        d[i + 2] = src[j + 2];
+        break;
+      }
+    }
+}
+
 /**
  * Plants in a grid of `cols`, each in a cell of w × h pixels, as unpremultiplied
  * RGBA. Hard alpha edges, so the sprites look hand-pixelled rather than
