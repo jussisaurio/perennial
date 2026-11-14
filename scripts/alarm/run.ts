@@ -1,16 +1,15 @@
 // The alarm: one P0 issue that says when main is red, when production is behind main,
 // or when the live check failed after a deploy. .github/workflows/alarm.yml runs it
-// (docs/DEPLOY.md, "The alarm"). It needs `gh` and GITHUB_REPOSITORY.
+// (docs/DEPLOY.md, "The alarm"). It needs `gh`.
 //
 //   bun scripts/alarm/run.ts                  open, update or close the alarm issue
 //   bun scripts/alarm/run.ts --live-check     the same, and run scripts/live-check.ts first (after a deploy)
 //   bun scripts/alarm/run.ts --print [run]    change nothing: print the issue text. With a CI run id,
 //                                             print it as if that run were main's latest finished run.
 import { $ } from "bun";
+import { api, REPO, send } from "../gh.ts";
 import { behindSection, carriedLiveSection, type Commit, failedTests, healthSection, issueBody, landedOnMain, liveSection, type Red, redSection, TITLE } from "./lib.ts";
 
-const REPO = process.env.GITHUB_REPOSITORY;
-if (!REPO) throw new Error("GITHUB_REPOSITORY is not set (for example jussisaurio/perennial)");
 const PROD = "https://playperennial.com";
 const args = process.argv.slice(2);
 const print = args.includes("--print");
@@ -19,9 +18,6 @@ const pinnedRun = print ? args[args.indexOf("--print") + 1] : undefined;
 type Run = { id: number; run_number: number; head_sha: string; html_url: string; created_at: string };
 type Job = { id: number; name: string; html_url: string; conclusion: string | null; steps: { name: string; conclusion: string | null }[] };
 type Issue = { number: number; title: string; body: string; pull_request?: unknown };
-
-const api = async <T>(path: string) => (await $`gh api ${path}`.json()) as T;
-const send = (method: "POST" | "PATCH", path: string, payload: object) => $`gh api -X ${method} ${path} --input - < ${new Response(JSON.stringify(payload))}`.quiet();
 
 /** The red section, or nothing when main's latest finished CI run is green. Cancelled runs do not count as finished. */
 async function ci(): Promise<string | undefined> {

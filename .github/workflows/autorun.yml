@@ -1,4 +1,4 @@
-# One Claude Code agent takes one issue and works it to a merged PR (docs/autonomy.md).
+# Claude Code agents, each on its own issue, work the issues to merged PRs (docs/autonomy.md).
 # It is off until the owner sets the repository variable AUTORUN_ENABLED to "true".
 # The logic is in scripts/autorun/.
 name: Autorun
@@ -10,7 +10,7 @@ on:
     - cron: "41 */2 * * *"
   workflow_dispatch:
 
-# One run at a time, so two agents never take the same issue.
+# One run at a time, so that no more than AUTORUN_AGENTS_PER_RUN agents work at once.
 concurrency:
   group: autorun
   cancel-in-progress: false
@@ -18,9 +18,10 @@ concurrency:
 # Each job asks for its own.
 permissions: {}
 
-# The limits, in one place (docs/autonomy.md, "Limits").
+# The limits, in one place (docs/autonomy.md, "Limits"). scripts/autorun/run.ts reads them from this file.
 env:
-  AUTORUN_RUNS_PER_DAY: "4"
+  AUTORUN_AGENTS_PER_RUN: "3"
+  AUTORUN_AGENTS_PER_DAY: "12"
   AUTORUN_MAX_TURNS: "250"
   AUTORUN_MAX_BUDGET_USD: "15"
 
@@ -28,11 +29,12 @@ jobs:
   pick:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # The workflow's own token claims the issues: a comment on each.
     permissions:
       contents: read
-      issues: read
+      issues: write
     outputs:
-      issue: ${{ steps.pick.outputs.issue }}
+      issues: ${{ steps.pick.outputs.issues }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -40,7 +42,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.4
-      - name: Pick an issue, or say why not
+      - name: Pick and claim the issues, or say why not
         id: pick
         run: bun scripts/autorun/run.ts pick
         env:
@@ -51,12 +53,19 @@ jobs:
 
   work:
     needs: pick
-    if: needs.pick.outputs.issue != ''
+    # The pick always writes a list; an empty one means no agent starts.
+    if: needs.pick.outputs.issues != '[]'
+    name: "Agent on #${{ matrix.issue }}"
+    strategy:
+      # Each agent works alone: one that fails does not stop the others.
+      fail-fast: false
+      matrix:
+        issue: ${{ fromJSON(needs.pick.outputs.issues) }}
     runs-on: ubuntu-latest
     timeout-minutes: 150
-    # The workflow's own token only claims the issue and writes the runner's comments (contents: read
-    # is for the setup's actions). The agent pushes, opens PRs and merges with AUTORUN_GH_TOKEN, which
-    # can't change workflows, secrets, variables or the rules on main (docs/autonomy.md).
+    # The workflow's own token only writes the runner's comments (contents: read is for the setup's
+    # actions). The agent pushes, opens PRs and merges with AUTORUN_GH_TOKEN, which can't change
+    # workflows, secrets, variables or the rules on main (docs/autonomy.md).
     permissions:
       contents: read
       issues: write
@@ -70,12 +79,11 @@ jobs:
         with:
           postgres: "true"
           browser: chromium
-      - name: Claim the issue and write the prompt
-        id: start
-        run: bun scripts/autorun/run.ts start "$ISSUE"
+      - name: Write the prompt
+        run: bun scripts/autorun/run.ts prompt "$ISSUE"
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE: ${{ needs.pick.outputs.issue }}
+          ISSUE: ${{ matrix.issue }}
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code@2.1.316
       - name: Run the agent
@@ -93,10 +101,12 @@ jobs:
           # scripts/merge.sh waits for the required checks in the foreground (a few minutes).
           BASH_DEFAULT_TIMEOUT_MS: "600000"
           BASH_MAX_TIMEOUT_MS: "1800000"
-      - name: Report on the issue and remove the claim
-        if: always() && steps.start.outcome == 'success'
+      # The pick claimed the issue, so this runs whatever happened above. If it can't run (the job
+      # died), the claim ends by itself after CLAIM_HOURS (scripts/autorun/lib.ts).
+      - name: Report on the issue and end the claim
+        if: always()
         run: bun scripts/autorun/run.ts finish "$ISSUE"
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE: ${{ needs.pick.outputs.issue }}
+          ISSUE: ${{ matrix.issue }}
           AGENT_OUTCOME: ${{ steps.agent.outcome }}
