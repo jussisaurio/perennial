@@ -32,9 +32,11 @@ base=$(gh pr view "$pr" --json baseRefName -q .baseRefName)
 [ "$base" = main ] || { echo "PR #$pr targets $base, not main; retarget it first"; exit 1; }
 branch=$(gh pr view "$pr" --json headRefName -q .headRefName)
 
-# --auto asks GitHub to merge when the required checks pass. When they have passed
-# already, gh merges at once.
-gh pr merge "$pr" --merge --auto
+# The CI job that runs the e2e specs this PR adds or changes (#1138, .github/workflows/ci.yml).
+# It is not a required check, so GitHub's auto-merge would not wait for it: the merge is asked
+# for only after it passed.
+e2e_job="End-to-end (changed specs)"
+asked=
 
 while :; do
   state=$(gh pr view "$pr" --json state -q .state)
@@ -48,6 +50,19 @@ while :; do
     -q '.[] | select(.bucket == "fail" or .bucket == "cancel") | "\(.name): \(.link)"') || checks=
   [ -z "$checks" ] || not_merged "a required check failed
 $checks"
+  if [ -z "$asked" ]; then
+    # "<bucket> <link>"; empty for a few seconds after a push, as above.
+    e2e=$(gh pr checks "$pr" --json name,bucket,link \
+      -q ".[] | select(.name == \"$e2e_job\") | \"\(.bucket) \(.link)\"") || e2e=
+    case $e2e in
+      # --auto asks GitHub to merge when the required checks pass. When they have passed
+      # already, gh merges at once.
+      "pass "* | "skipping "*) gh pr merge "$pr" --merge --auto; asked=1 ;;
+      "fail "* | "cancel "*) not_merged "$e2e_job failed: ${e2e#* }" ;;
+      # The job starts with the required ones, so once they all passed (exit 0) it must be there.
+      "") gh pr checks "$pr" --required > /dev/null 2>&1 && not_merged "its CI run has no \"$e2e_job\" job; rebase it on main and push, to start a new run" ;;
+    esac
+  fi
   # GitHub has no call that waits for a merge, so ask again every 10 s.
   sleep 10
 done
