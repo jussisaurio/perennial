@@ -309,40 +309,52 @@ export const LEAPING_FISH: Cutout = {
 const WING = "#f0a040";
 const WING_IN = "#e2862e";
 const WING_EDGE = "#3a2416";
-/** A butterfly resting, wings open: orange with dark tips and white spots. */
-export const BUTTERFLY: Cutout = {
-  w: 13,
-  h: 11,
-  pieces: [
-    line("M6.3 3.2 Q5.4 1.4 4.2 0.5 M6.7 3.2 Q7.6 1.4 8.8 0.5", WING_EDGE, 0.3),
-    flat(oval(4.2, 0.5, 0.35), WING_EDGE),
-    flat(oval(8.8, 0.5, 0.35), WING_EDGE),
-    cut("M6.2 6.2 C4.6 6.4 2.6 7.6 2.8 9 C3 10.4 4.8 10.6 5.8 9.4 C6.4 8.6 6.4 7.2 6.2 6.2 Z", WING_IN, WING_EDGE),
-    cut("M6.8 6.2 C8.4 6.4 10.4 7.6 10.2 9 C10 10.4 8.2 10.6 7.2 9.4 C6.6 8.6 6.6 7.2 6.8 6.2 Z", WING_IN, WING_EDGE),
-    cut("M6.2 4.8 C4.6 2.4 1.4 1.6 0.6 3.2 C0 4.6 1 6.6 3 7 C4.6 7.2 5.8 6.2 6.2 5.4 Z", WING, WING_EDGE),
-    cut("M6.8 4.8 C8.4 2.4 11.6 1.6 12.4 3.2 C13 4.6 12 6.6 10 7 C8.4 7.2 7.2 6.2 6.8 5.4 Z", WING, WING_EDGE),
-    flat("M0.7 3.1 C1.5 1.7 3.7 2 4.6 2.8 C3.4 3 2.1 3.6 1.1 4.7 C0.7 4.3 0.55 3.7 0.7 3.1 Z", WING_EDGE),
-    flat("M12.3 3.1 C11.5 1.7 9.3 2 8.4 2.8 C9.6 3 10.9 3.6 11.9 4.7 C12.3 4.3 12.45 3.7 12.3 3.1 Z", WING_EDGE),
-    flat(oval(1.7, 3.3, 0.32), "#fff8e7"),
-    flat(oval(2.9, 2.8, 0.26), "#fff8e7"),
-    flat(oval(11.3, 3.3, 0.32), "#fff8e7"),
-    flat(oval(10.1, 2.8, 0.26), "#fff8e7"),
-    flat(oval(6.5, 6.2, 0.55, 3.2), WING_EDGE),
-  ],
-};
+/** A butterfly resting, wings open: `wing` coloured, the hind wings in `inner`, with dark tips and white spots. */
+function butterflyOpen(wing: string, inner: string): Cutout {
+  return {
+    w: 13,
+    h: 11,
+    pieces: [
+      line("M6.3 3.2 Q5.4 1.4 4.2 0.5 M6.7 3.2 Q7.6 1.4 8.8 0.5", WING_EDGE, 0.3),
+      flat(oval(4.2, 0.5, 0.35), WING_EDGE),
+      flat(oval(8.8, 0.5, 0.35), WING_EDGE),
+      cut("M6.2 6.2 C4.6 6.4 2.6 7.6 2.8 9 C3 10.4 4.8 10.6 5.8 9.4 C6.4 8.6 6.4 7.2 6.2 6.2 Z", inner, WING_EDGE),
+      cut("M6.8 6.2 C8.4 6.4 10.4 7.6 10.2 9 C10 10.4 8.2 10.6 7.2 9.4 C6.6 8.6 6.6 7.2 6.8 6.2 Z", inner, WING_EDGE),
+      cut("M6.2 4.8 C4.6 2.4 1.4 1.6 0.6 3.2 C0 4.6 1 6.6 3 7 C4.6 7.2 5.8 6.2 6.2 5.4 Z", wing, WING_EDGE),
+      cut("M6.8 4.8 C8.4 2.4 11.6 1.6 12.4 3.2 C13 4.6 12 6.6 10 7 C8.4 7.2 7.2 6.2 6.8 5.4 Z", wing, WING_EDGE),
+      flat("M0.7 3.1 C1.5 1.7 3.7 2 4.6 2.8 C3.4 3 2.1 3.6 1.1 4.7 C0.7 4.3 0.55 3.7 0.7 3.1 Z", WING_EDGE),
+      flat("M12.3 3.1 C11.5 1.7 9.3 2 8.4 2.8 C9.6 3 10.9 3.6 11.9 4.7 C12.3 4.3 12.45 3.7 12.3 3.1 Z", WING_EDGE),
+      flat(oval(1.7, 3.3, 0.32), "#fff8e7"),
+      flat(oval(2.9, 2.8, 0.26), "#fff8e7"),
+      flat(oval(11.3, 3.3, 0.32), "#fff8e7"),
+      flat(oval(10.1, 2.8, 0.26), "#fff8e7"),
+      flat(oval(6.5, 6.2, 0.55, 3.2), WING_EDGE),
+    ],
+  };
+}
 /** Wings up and closed, seen edge on: mid-flap, or asleep at night. */
-export const BUTTERFLY_CLOSED: Cutout = {
-  w: 13,
-  h: 10,
-  pieces: [
-    line("M6.3 2.4 Q5.4 1.2 4.2 0.5 M6.7 2.4 Q7.6 1.2 8.8 0.5", WING_EDGE, 0.3),
-    flat(oval(4.2, 0.5, 0.35), WING_EDGE),
-    flat(oval(8.8, 0.5, 0.35), WING_EDGE),
-    cut("M6.5 8.6 C5 7 4.5 4.4 5.2 2.4 C5.6 1.7 7.4 1.7 7.8 2.4 C8.5 4.4 8 7 6.5 8.6 Z", WING, WING_EDGE),
-    flat("M6.5 8.4 C6 7 5.9 5.4 6.2 4.2 L6.8 4.2 C7.1 5.4 7 7 6.5 8.4 Z", WING_IN),
-    line("M6.5 7.4 L6.5 9.6", WING_EDGE, 0.5),
-  ],
-};
+function butterflyClosed(wing: string, inner: string): Cutout {
+  return {
+    w: 13,
+    h: 10,
+    pieces: [
+      line("M6.3 2.4 Q5.4 1.2 4.2 0.5 M6.7 2.4 Q7.6 1.2 8.8 0.5", WING_EDGE, 0.3),
+      flat(oval(4.2, 0.5, 0.35), WING_EDGE),
+      flat(oval(8.8, 0.5, 0.35), WING_EDGE),
+      cut("M6.5 8.6 C5 7 4.5 4.4 5.2 2.4 C5.6 1.7 7.4 1.7 7.8 2.4 C8.5 4.4 8 7 6.5 8.6 Z", wing, WING_EDGE),
+      flat("M6.5 8.4 C6 7 5.9 5.4 6.2 4.2 L6.8 4.2 C7.1 5.4 7 7 6.5 8.4 Z", inner),
+      line("M6.5 7.4 L6.5 9.6", WING_EDGE, 0.5),
+    ],
+  };
+}
+/** The butterfly visitor: orange. */
+export const BUTTERFLY = butterflyOpen(WING, WING_IN);
+export const BUTTERFLY_CLOSED = butterflyClosed(WING, WING_IN);
+/** The walk's own butterflies over the blooms (sceneCritters.ts): the same butterfly, open and closed, its wings in `hue`. */
+export function butterflyIn(hue: number): [Cutout, Cutout] {
+  const [wing, inner] = [`hsl(${hue} 85% 63%)`, `hsl(${hue} 72% 50%)`];
+  return [butterflyOpen(wing, inner), butterflyClosed(wing, inner)];
+}
 
 // ---- Gnome ----
 const HAT = "#d23e34";

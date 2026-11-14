@@ -107,7 +107,7 @@ export class Jokes implements Part {
     // Turning the shadow by -angle about the vertical takes it from noon (-z) toward +x (east) after noon.
     this.shadow.rotation.y = -sundialAngle(now);
     // Two small letters cut high in the pillar, on its garden side (-z): seen only up close (#869, what the sundial's line names).
-    const letters = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), mat(T.pixelTexture(T.carvedLetters()), { alphaTest: 0.5 }));
+    const letters = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), mat(T.paperTexture(T.carvedLetters()), { alphaTest: 0.5 }));
     letters.name = "carved letters";
     letters.rotation.y = Math.PI;
     letters.position.set(x, SUNDIAL.pillar - 0.12, z - 0.101);
@@ -120,7 +120,7 @@ export class Jokes implements Part {
 
     // The mouse door, flat on the hedge's face, low and small; its mat on the ground in front.
     const { z0, x: mx, z: mz, note } = this.mouse;
-    const door = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.pixelTexture(T.mouseDoor(note ? "way" : "shut")), { alphaTest: 0.5 }));
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.paperTexture(T.mouseDoor(note ? "way" : "shut")), { alphaTest: 0.5 }));
     // Facing the garden (-z), a hair in front of the hedge's leaves.
     door.rotation.y = Math.PI;
     door.position.set(mx, MOUSE_DOOR.h / 2, z0 - 0.015);
@@ -139,7 +139,7 @@ export class Jokes implements Part {
     this.fish = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), mat(T.paperTexture(T.leapingFish()), { alphaTest: 0.5, side: THREE.DoubleSide }));
     this.fish.visible = false;
     c.scene.add(this.fish);
-    const ring = T.pixelTexture(T.ripple());
+    const ring = T.paperTexture(T.ripple());
     for (let i = 0; i < 2; i++) {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), mat(ring, { transparent: true, depthWrite: false }));
       m.rotation.x = -Math.PI / 2;
@@ -160,7 +160,7 @@ export class Jokes implements Part {
     const hinge = new THREE.Group();
     hinge.position.set(mx - MOUSE_DOOR.w / 2, 0, z0 - 0.015);
     hinge.rotation.y = MOUSE_DOOR.swing;
-    const leaf = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.pixelTexture(T.mouseDoor("leaf")), { alphaTest: 0.5, side: THREE.DoubleSide }));
+    const leaf = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.paperTexture(T.mouseDoor("leaf")), { alphaTest: 0.5, side: THREE.DoubleSide }));
     leaf.rotation.y = Math.PI;
     leaf.position.set(MOUSE_DOOR.w / 2, MOUSE_DOOR.h / 2, 0);
     hinge.add(leaf);

@@ -952,7 +952,7 @@ export class GardenScene {
     const at = this.game.bench;
     bench.position.set(at.x, 0, at.z);
     // Two cup rings on the seat, between where two would sit: small, seen only up close (#869, what the bench's line names).
-    const rings = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.12), c.mat(T.pixelTexture(T.cupRings()), { alphaTest: 0.5 }));
+    const rings = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.12), c.mat(T.paperTexture(T.cupRings()), { alphaTest: 0.5 }));
     rings.name = "cup rings";
     rings.rotation.x = -Math.PI / 2;
     rings.position.set(0.05, BENCH_SEAT + 0.002, 0.02);
@@ -1113,13 +1113,13 @@ export class GardenScene {
     // opaque one (and a mesh without a depth test writes no depth to stop them).
     this.marker = new THREE.Mesh(
       new THREE.PlaneGeometry(0.28, 0.28),
-      new THREE.MeshBasicMaterial({ map: T.pixelTexture(T.marker()), alphaTest: 0.5, transparent: true, depthTest: false, depthWrite: false }),
+      new THREE.MeshBasicMaterial({ map: T.paperTexture(T.marker()), alphaTest: 0.5, transparent: true, depthTest: false, depthWrite: false }),
     );
     this.marker.renderOrder = 10;
     this.marker.visible = false;
     this.scene.add(this.marker);
     // Where a walk goes (#336): flat on the ground, a little above the path so it never flickers into it.
-    this.spot = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), new THREE.MeshBasicMaterial({ map: T.pixelTexture(T.spot()), alphaTest: 0.5, transparent: true, depthWrite: false }));
+    this.spot = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), new THREE.MeshBasicMaterial({ map: T.paperTexture(T.spot()), alphaTest: 0.5, transparent: true, depthWrite: false }));
     this.spot.rotation.x = -Math.PI / 2;
     this.spot.visible = false;
     this.scene.add(this.spot);
