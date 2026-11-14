@@ -21,7 +21,7 @@
     "web": {
       // Playwright picks these files by a testMatch regex, which knip does not read.
       // e2e/coverage-report.ts is run by scripts/deadcode.ts.
-      "entry": ["e2e/warm.setup.ts", "e2e/shots.ts", "e2e/coverage-report.ts"],
+      "entry": ["e2e/warm.setup.ts", "e2e/shots.ts", "e2e/look.run.ts", "e2e/coverage-report.ts"],
       // e2e/, perf/ and the learner simulation (src/sim, run by `bun run sim:learners`) are tools, not production code.
       "project": ["src/**/*.{ts,tsx}!", "!src/sim/**!", "e2e/**/*.ts", "perf/**/*.ts"],
       // Imported from index.css, and knip does not read CSS @import.
