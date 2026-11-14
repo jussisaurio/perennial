@@ -89,7 +89,7 @@ export class Critters {
     const blooms = L.plants.filter((p) => p.stage === "bloom");
     for (let i = 0; i < Math.min(8, 2 + Math.floor(blooms.length / 15)); i++) {
       const home = blooms.length ? blooms[Math.floor(rand() * blooms.length)] : { x: L.gate.x + rand() * 4 - 2, z: L.gate.z - 3 };
-      const tex = T.pixelTexture(T.butterfly([45, 200, 320, 15, 270][i % 5]));
+      const tex = T.paperTexture(T.butterfly([45, 200, 320, 15, 270][i % 5]));
       tex.repeat.set(0.5, 1);
       const m = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.11), new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide }));
       c.basic.push(m.material);
@@ -108,7 +108,7 @@ export class Critters {
     this.snore = new THREE.Points(
       geo,
       new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uMove: { value: this.reducedMotion ? 0 : 1 }, uScale: { value: 400 }, uMap: { value: T.pixelTexture(T.snoreZ()) } },
+        uniforms: { uTime: { value: 0 }, uMove: { value: this.reducedMotion ? 0 : 1 }, uScale: { value: 400 }, uMap: { value: T.paperTexture(T.snoreZ()) } },
         vertexShader: SNORE_VERT,
         fragmentShader: SNORE_FRAG,
         transparent: true,

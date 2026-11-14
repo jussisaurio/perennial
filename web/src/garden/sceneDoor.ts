@@ -88,12 +88,12 @@ export class Door {
     const k = this.game.key;
     if (this.game.state !== "key" || !k) return;
     // Lying on the ground, turned a little, as if dropped.
-    const mesh = sprites(T.pixelTexture(T.key()), [{ x: k.x, y: 0.03, z: k.z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
+    const mesh = sprites(T.cutoutTexture(T.key()), [{ x: k.x, y: 0.03, z: k.z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
     c.mats.add(mesh.material);
     c.scene.add(mesh);
     // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted or fogged: a glint is bright at
     // dusk too. Whatever stands in front hides it, as it hides the key.
-    const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthWrite: false, fog: false }));
+    const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.paperTexture(T.sparkle()), transparent: true, depthWrite: false, fog: false }));
     glint.position.set(k.x, 0.25, k.z);
     glint.visible = false;
     c.scene.add(glint);

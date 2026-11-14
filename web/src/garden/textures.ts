@@ -54,9 +54,10 @@ export function paperTexture(c: OffscreenCanvas, repeat = false): THREE.CanvasTe
 }
 
 /**
- * A paper cut-out for the instanced sprites (sceneSprites.ts), as paperTexture but uploaded premultiplied: a canvas
- * keeps no colour in its clear pixels, so a straight-alpha edge blends toward black and gets a dark rim, worse far off
- * in the mipmaps. Premultiplied, it blends toward clear, and the sprite shader divides the alpha out again.
+ * A paper cut-out for the instanced sprites (sceneSprites.ts) and the far house, as paperTexture but uploaded
+ * premultiplied: a canvas keeps no colour in its clear pixels, so a straight-alpha edge blends toward black and gets a
+ * dark rim, worse far off in the mipmaps. Premultiplied, it blends toward clear, and the sprite shader divides the
+ * alpha out again (the far house's material blends it premultiplied instead).
  */
 export function cutoutTexture(c: OffscreenCanvas): THREE.CanvasTexture<OffscreenCanvas> {
   const t = paperTexture(c);
@@ -467,11 +468,25 @@ export function door(): OffscreenCanvas {
   return c;
 }
 
-/** A small old key lying on the ground (#315): a ring, a shaft and a bit. */
+/** A small old key lying on the ground (#315): a brass ring, a shaft and a bit. 8 texels to each of the first 14×5 drawing's. */
 export function key(): OffscreenCanvas {
-  const rows = [".ooo..........", "o...o.........", "o...ossssssss.", "o...o.....s.s.", ".ooo......s.s."];
-  const [c, ctx] = canvas(14, 5);
-  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "o" ? "#e0b24a" : "#c9962e")));
+  const [c, ctx] = canvas(14 * 8, 5 * 8);
+  ctx.scale(8, 8);
+  ctx.lineWidth = 1;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#c9962e";
+  ctx.beginPath();
+  ctx.moveTo(4.4, 2.5);
+  ctx.lineTo(12.5, 2.5);
+  ctx.moveTo(10.5, 2.5);
+  ctx.lineTo(10.5, 4.4);
+  ctx.moveTo(12.5, 2.5);
+  ctx.lineTo(12.5, 4.4);
+  ctx.stroke();
+  ctx.strokeStyle = "#e0b24a";
+  ctx.beginPath();
+  ctx.arc(2.5, 2.5, 1.9, 0, Math.PI * 2);
+  ctx.stroke();
   return c;
 }
 
@@ -743,21 +758,13 @@ export function cloud(): OffscreenCanvas {
   return c;
 }
 
-/** A butterfly in two frames (wings open, wings closed), side by side. */
+/** Units on a side of each of the walk's butterfly frames: the butterfly, 13 wide, in the middle. */
+const FLY_CELL = 16;
+
+/** A butterfly in `hue` (visitorArt.ts butterflyIn) in two frames side by side, 8 texels to a unit: wings open, then closed. */
 export function butterfly(hue: number): OffscreenCanvas {
-  const [c, ctx] = canvas(16, 8);
-  const wing = `hsl(${hue} 85% 65%)`;
-  const dark = `hsl(${hue} 70% 42%)`;
-  // open
-  px(ctx, 1, 1, wing, 3, 3);
-  px(ctx, 4, 1, wing, 3, 3);
-  px(ctx, 2, 4, dark, 2, 2);
-  px(ctx, 4, 4, dark, 2, 2);
-  px(ctx, 3, 1, "#2b2230", 2, 5);
-  // closed
-  px(ctx, 11, 1, wing, 2, 4);
-  px(ctx, 11, 5, dark, 2, 1);
-  px(ctx, 13, 1, "#2b2230", 1, 5);
+  const [c, ctx] = canvas(2 * FLY_CELL * 8, FLY_CELL * 8);
+  Art.butterflyIn(hue).forEach((art, i) => cutout(ctx, art, (i * FLY_CELL + (FLY_CELL - art.w) / 2) * 8, ((FLY_CELL - art.h) / 2) * 8, 8));
   return c;
 }
 
@@ -869,62 +876,85 @@ export function water(): OffscreenCanvas {
   return c;
 }
 
+/** A lily pad seen from above: a round leaf with a notch cut to its middle, its rim a shade darker, a few veins and a small pink flower. 8 texels to each of the first 16×16 drawing's. */
 export function lilypad(): OffscreenCanvas {
-  const [c, ctx] = canvas(16, 16);
-  for (let y = 0; y < 16; y++)
-    for (let x = 0; x < 16; x++) {
-      const d = Math.hypot(x - 7.5, y - 7.5);
-      const notch = x > 7 && Math.abs(y - 7.5) < (x - 7) * 0.5;
-      if (d < 7 && !notch) px(ctx, x, y, d > 5.5 ? "#4c7f47" : "#6f9a5c");
-    }
-  px(ctx, 5, 5, "#e9a3bb", 2, 2);
+  const [c, ctx] = canvas(16 * 8, 16 * 8);
+  ctx.scale(8, 8);
+  // The notch opens to the right, as wide as the first drawing's.
+  const notch = Math.atan(0.5);
+  const leaf = (r: number, color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(8, 8);
+    ctx.arc(8, 8, r, notch, Math.PI * 2 - notch);
+    ctx.closePath();
+    ctx.fill();
+  };
+  leaf(7, "#4c7f47");
+  leaf(5.6, "#6f9a5c");
+  ctx.strokeStyle = "#5f8c52";
+  ctx.lineWidth = 0.3;
+  ctx.lineCap = "round";
+  for (const a of [1.3, 2.3, 3.2, 4.1, 5.1]) {
+    ctx.beginPath();
+    ctx.moveTo(8, 8);
+    ctx.lineTo(8 + Math.cos(a) * 4.8, 8 + Math.sin(a) * 4.8);
+    ctx.stroke();
+  }
+  oval(ctx, "#e9a3bb", 6, 6, 1.2);
+  oval(ctx, "#f8dbe4", 5.8, 5.8, 0.5);
   return c;
 }
 
-/** A small pixel arrow that bobs over the selected plant. */
+/** An arrow that bobs over the selected plant: folded paper, its right half a shade darker, with a dark edge. 8 texels to each of the first 16×16 drawing's. */
 export function marker(): OffscreenCanvas {
-  const [c, ctx] = canvas(16, 16);
-  const rows = [
-    "...######...",
-    "...#ffff#...",
-    "...#ffff#...",
-    "####ffff####",
-    ".#ffffffff#.",
-    "..#ffffff#..",
-    "...#ffff#...",
-    "....#ff#....",
-    ".....##.....",
-  ];
-  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x + 2, y + 3, ch === "#" ? "#5a2a12" : "#ffd84a")));
+  const [c, ctx] = canvas(16 * 8, 16 * 8);
+  ctx.scale(8, 8);
+  const arrow = new Path2D("M5.5 3.5 L10.5 3.5 L10.5 6.5 L13.5 6.5 L8 11.8 L2.5 6.5 L5.5 6.5 Z");
+  ctx.fillStyle = "#ffd84a";
+  ctx.fill(arrow);
+  ctx.save();
+  ctx.clip(arrow);
+  px(ctx, 8, 0, "#f2be2e", 8, 16);
+  ctx.restore();
+  ctx.strokeStyle = "#5a2a12";
+  ctx.lineWidth = 1;
+  ctx.lineJoin = "round";
+  ctx.stroke(arrow);
   return c;
 }
 
-/** The key's late glint (#334): a warm four-point sparkle with a dark outline, so it shows on pale sand and on grass. */
+/** The key's late glint (#334): a warm four-point star with a dark edge, so it shows on pale sand and on grass. 8 texels to each of the first 11×11 drawing's. */
 export function sparkle(): OffscreenCanvas {
-  const rows = [
-    ".....d.....",
-    "....dyd....",
-    "....dyd....",
-    "...dyWyd...",
-    "..ddyWydd..",
-    "ddyyWWWyydd",
-    "..ddyWydd..",
-    "...dyWyd...",
-    "....dyd....",
-    "....dyd....",
-    ".....d.....",
-  ];
-  const color: Record<string, string> = { d: "#4a2410", y: "#f2a531", W: "#fffbe0" };
-  const [c, ctx] = canvas(11, 11);
-  rows.forEach((row, y) => [...row].forEach((ch, x) => ch !== "." && px(ctx, x, y, color[ch])));
+  const [c, ctx] = canvas(11 * 8, 11 * 8);
+  ctx.scale(8, 8);
+  // Four points `r` from the middle, their sides curved in.
+  const star = (r: number, color: string) => {
+    const [m, k] = [5.5, r * 0.18];
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(m, m - r);
+    ctx.quadraticCurveTo(m + k, m - k, m + r, m);
+    ctx.quadraticCurveTo(m + k, m + k, m, m + r);
+    ctx.quadraticCurveTo(m - k, m + k, m - r, m);
+    ctx.quadraticCurveTo(m - k, m - k, m, m - r);
+    ctx.fill();
+  };
+  star(5.3, "#4a2410");
+  star(4.2, "#f2a531");
+  star(2.3, "#fffbe0");
   return c;
 }
 
-/** Where a tap sends you (#336): a small pale ring on the ground, seen from above. */
+/** Where a tap sends you (#336): a small pale ring on the ground. 16 texels to each of the first 10×10 drawing's. */
 export function spot(): OffscreenCanvas {
-  const rows = ["...####...", ".##....##.", "#........#", "#........#", ".##....##.", "...####..."];
-  const [c, ctx] = canvas(10, 10);
-  rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, x, y + 2, "#fff6d8")));
+  const [c, ctx] = canvas(10 * 16, 10 * 16);
+  ctx.scale(16, 16);
+  ctx.strokeStyle = "#fff6d8";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.ellipse(5, 5, 4.5, 2.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
   return c;
 }
 
@@ -997,29 +1027,34 @@ export function sundialFace(): OffscreenCanvas {
   return c;
 }
 
-/** Two small letters cut into the sundial's stone (#869), "E" and "J": 1 cm a pixel, the rest clear. */
+/** Two small letters cut into the sundial's stone (#869), "E.J", in 8×5 units of 1 cm (16 texels each), the rest clear. */
 export function carvedLetters(): OffscreenCanvas {
-  const rows = [
-    "###..###", //
-    "#.....#.",
-    "##....#.",
-    "#...#.#.",
-    "###..#..",
-  ];
-  const [c, ctx] = canvas(8, 5);
-  rows.forEach((row, y) => [...row].forEach((ch, x) => ch === "#" && px(ctx, x, y, "#625c55")));
+  const [c, ctx] = canvas(8 * 16, 5 * 16);
+  ctx.scale(16, 16);
+  const ink = "#625c55";
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 0.85;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.stroke(new Path2D("M2.4 0.5 L0.5 0.5 L0.5 4.5 L2.4 4.5 M0.5 2.5 L1.8 2.5 M5.1 0.5 L7.5 0.5 M6.5 0.5 L6.5 3.3 Q6.5 4.5 5.5 4.5 Q4.6 4.5 4.5 3.6"));
+  oval(ctx, ink, 3.4, 4.4, 0.45);
   return c;
 }
 
-/** Two cup rings stained into the bench's seat (#869), side by side: 2 cm a pixel, the rest clear. */
+/** Two cup rings stained into the bench's seat (#869), side by side, the second not quite closed: 12×6 units of 2 cm (16 texels each), the rest clear. */
 export function cupRings(): OffscreenCanvas {
-  const [c, ctx] = canvas(12, 6);
-  for (const cx of [3, 8.5])
-    for (let y = 0; y < 6; y++)
-      for (let x = 0; x < 12; x++) {
-        const d = Math.hypot(x + 0.5 - cx, y + 0.5 - 3);
-        if (d > 1.4 && d < 2.6) px(ctx, x, y, "#7c4f2a");
-      }
+  const [c, ctx] = canvas(12 * 16, 6 * 16);
+  ctx.scale(16, 16);
+  ctx.strokeStyle = "#7c4f2a";
+  ctx.lineWidth = 0.8;
+  for (const [x, from, to] of [
+    [3, 0, Math.PI * 2],
+    [8.5, 0.7, Math.PI * 2 - 0.2],
+  ]) {
+    ctx.beginPath();
+    ctx.arc(x, 3, 2, from, to);
+    ctx.stroke();
+  }
   return c;
 }
 
@@ -1054,41 +1089,44 @@ export function stone(): OffscreenCanvas {
 /**
  * The mouse door (#364): a tiny arched wooden door in a stone frame, with a
  * brass knob. Once it opens (#882), its frame round a dark doorway ("way"),
- * and the wooden door alone ("leaf"), swung open.
+ * and the wooden door alone ("leaf"), swung open. 8 texels to each of the first 12×16 drawing's.
  */
 export function mouseDoor(part: "shut" | "way" | "leaf"): OffscreenCanvas {
-  const rows = [
-    "....ssss....",
-    "..ssddddss..",
-    ".sddwwwwdds.",
-    ".sdwwwdwwds.",
-    "sdwwwwdwwwds",
-    "sdwwwwdwwwds",
-    "sdddddddddds",
-    "sdwwwwdwwwds",
-    "sdwwwwdwwwds",
-    "sdwwwwdwwkds",
-    "sdwwwwdwwwds",
-    "sdwwwwdwwwds",
-    "sdddddddddds",
-    "sdwwwwdwwwds",
-    "sdwwwwdwwwds",
-    "ssssssssssss",
-  ];
-  const wood: Record<string, string> = { d: "#5a3820", w: "#9c6a3d", k: "#e0b24a" };
-  const stone = "#8d8a85";
-  const [c, ctx] = canvas(12, 16);
-  const color = (ch: string): string | null => {
-    if (ch === ".") return null;
-    if (ch === "s") return part === "leaf" ? null : stone;
-    return part === "way" ? "#1c130c" : wood[ch];
+  const [c, ctx] = canvas(12 * 8, 16 * 8);
+  ctx.scale(8, 8);
+  // The arch, `inset` in from the stone's outside, down to `bottom`.
+  const arch = (inset: number, bottom: number) => {
+    ctx.beginPath();
+    ctx.moveTo(inset, bottom);
+    ctx.arc(6, 6, 6 - inset, Math.PI, Math.PI * 2);
+    ctx.lineTo(12 - inset, bottom);
+    ctx.closePath();
   };
-  rows.forEach((row, y) =>
-    [...row].forEach((ch, x) => {
-      const col = color(ch);
-      if (col) px(ctx, x, y, col);
-    }),
-  );
+  if (part !== "leaf") {
+    ctx.fillStyle = "#8d8a85";
+    arch(0, 16);
+    ctx.fill();
+  }
+  if (part === "way") {
+    ctx.fillStyle = "#1c130c";
+    arch(1, 15);
+    ctx.fill();
+    return c;
+  }
+  // The door: a dark edge round its planks, a seam between them and two battens across.
+  const dark = "#5a3820";
+  ctx.fillStyle = dark;
+  arch(1, 15);
+  ctx.fill();
+  ctx.save();
+  arch(1.7, 14.3);
+  ctx.clip();
+  px(ctx, 0, 0, "#9c6a3d", 12, 16);
+  px(ctx, 6.2, 0, dark, 0.6, 16);
+  px(ctx, 0, 6.2, dark, 12, 0.6);
+  px(ctx, 0, 12.2, dark, 12, 0.6);
+  ctx.restore();
+  oval(ctx, "#e0b24a", 9.5, 9.5, 0.6);
   return c;
 }
 
@@ -1130,19 +1168,21 @@ export function notePaper(unread: boolean): OffscreenCanvas {
   return c;
 }
 
-/** The gardener's diary on the hill (#858), seen from above: a worn leather cover with a strap. Its sides are the same: at its size the page edges would not show. */
+/** The gardener's diary on the hill (#858), seen from above: a worn leather cover with a strap. Its sides are the same: at its size the page edges would not show. 8 texels to each of the first 10×12 drawing's. */
 export function diary(): OffscreenCanvas {
-  const [c, ctx] = canvas(10, 12);
+  const [c, ctx] = canvas(10 * 8, 12 * 8);
+  ctx.scale(8, 8);
   px(ctx, 0, 0, "#3e2a1f", 10, 12);
-  px(ctx, 1, 1, "#6b4a33", 8, 10);
-  px(ctx, 2, 2, "#7d5a3f", 3, 3);
+  px(ctx, 0.8, 0.8, "#6b4a33", 8.4, 10.4);
+  oval(ctx, "#7d5a3f", 3.4, 3.4, 1.7, 1.5);
   px(ctx, 0, 7, "#2c1d15", 10, 1);
   return c;
 }
 
-/** The diary's ribbon (#858), red: it stands out on the grey stone and the brown cover. */
+/** The diary's ribbon (#858), red, its right half in shade: it stands out on the grey stone and the brown cover. */
 export function ribbon(): OffscreenCanvas {
-  const [c, ctx] = canvas(2, 8);
+  const [c, ctx] = canvas(2 * 8, 8 * 8);
+  ctx.scale(8, 8);
   px(ctx, 0, 0, "#b8352e", 2, 8);
   px(ctx, 1, 0, "#8e2722", 1, 8);
   return c;
@@ -1174,14 +1214,15 @@ export function leapingFish(): OffscreenCanvas {
   return c;
 }
 
-/** Where the fish went in (#364): a pale ring on the water, seen from above. */
+/** Where the fish went in (#364): a pale ring on the water, seen from above. 8 texels to each of the first 16×16 drawing's. */
 export function ripple(): OffscreenCanvas {
-  const [c, ctx] = canvas(16, 16);
-  for (let y = 0; y < 16; y++)
-    for (let x = 0; x < 16; x++) {
-      const d = Math.hypot(x - 7.5, y - 7.5);
-      if (d > 5.6 && d < 7.2) px(ctx, x, y, "#d8f0ff");
-    }
+  const [c, ctx] = canvas(16 * 8, 16 * 8);
+  ctx.scale(8, 8);
+  ctx.strokeStyle = "#d8f0ff";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(8, 8, 6.4, 0, Math.PI * 2);
+  ctx.stroke();
   return c;
 }
 
@@ -1391,11 +1432,19 @@ export function lantern(): OffscreenCanvas {
   return c;
 }
 
-/** A pixel "z" for the sleeping bloom (#62), pale with a dark edge so it shows on the night sky. */
+/** A "z" for the sleeping bloom (#62), pale with a dark edge so it shows on the night sky. 8 texels to each of the first 8×8 drawing's. */
 export function snoreZ(): OffscreenCanvas {
-  const rows = ["oooooooo", "oZZZZZZo", "ooooZZoo", "..oZZo..", ".oZZo...", "ooZZoooo", "oZZZZZZo", "oooooooo"];
-  const [c, ctx] = canvas(8, 8);
-  rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, ch === "Z" ? "#eef2ff" : "#2a2f4a")));
+  const [c, ctx] = canvas(8 * 8, 8 * 8);
+  ctx.scale(8, 8);
+  const z = new Path2D("M1.9 1.9 L6.1 1.9 L1.9 6.1 L6.1 6.1");
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#2a2f4a";
+  ctx.lineWidth = 3;
+  ctx.stroke(z);
+  ctx.strokeStyle = "#eef2ff";
+  ctx.lineWidth = 1.3;
+  ctx.stroke(z);
   return c;
 }
 
@@ -1422,28 +1471,42 @@ export function glowTexture(): THREE.CanvasTexture<OffscreenCanvas> {
 }
 
 /**
- * The far house across the valley (#683, lookout.ts FAR_HOUSE), 16×9: a roof
- * with a chimney, a door and one window, and beside it a lantern on a post,
- * like the lookout's (#858, lookout.ts FAR_LANTERN). By day it is hazy,
- * hardly darker than the hill; at night a dark shape, the lantern's glass
- * dark too: the far light is drawn over it.
+ * The far house across the valley (#683, lookout.ts FAR_HOUSE), 16×9 units of
+ * 8 texels: a roof with a chimney, a door and one window, and beside it a
+ * lantern on a post, like the lookout's (#858, lookout.ts FAR_LANTERN). By day
+ * it is hazy, hardly darker than the hill; at night a dark shape, the
+ * lantern's glass dark too: the far light is drawn over it.
  */
 export function farHouse(night: boolean): OffscreenCanvas {
-  const rows = ["........C.......", ".....RR.C.......", "...RRRRRR.......", ".RRRRRRRRRR...K.", "RRRRRRRRRRRR..G.", ".WWWWWWWWWW...P.", ".WWDWWWOWWW...P.", ".WWDWWWOWWW...P.", ".WWDWWWWWWW...P."];
-  const colors: Record<string, string> = night
-    ? { C: "#141a22", R: "#11161d", W: "#1a212b", D: "#0d1116", O: "#0d1116", K: "#0d1116", G: "#1a212b", P: "#0d1116" }
-    : { C: "#8ea68a", R: "#89a185", W: "#a9bf9c", D: "#94ac8f", O: "#94ac8f", K: "#89a185", G: "#a9bf9c", P: "#8ea68a" };
-  const [c, ctx] = canvas(16, 9);
-  rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, colors[ch])));
+  const k = night ? { roof: "#11161d", wall: "#1a212b", dark: "#0d1116", chimney: "#141a22", post: "#0d1116" } : { roof: "#89a185", wall: "#a9bf9c", dark: "#94ac8f", chimney: "#8ea68a", post: "#8ea68a" };
+  const [c, ctx] = canvas(16 * 8, 9 * 8);
+  ctx.scale(8, 8);
+  px(ctx, 8, 0, k.chimney, 1.2, 3);
+  polygon(ctx, k.roof, [
+    [0, 5],
+    [6, 0.6],
+    [12, 5],
+  ]);
+  px(ctx, 1, 5, k.wall, 10, 4);
+  px(ctx, 3, 6, k.dark, 1, 3);
+  px(ctx, 7, 6, k.dark, 1, 2);
+  // The lantern: its cap, its glass (where FAR_LANTERN is) and its post.
+  polygon(ctx, k.roof, [
+    [13.7, 4],
+    [14.5, 3],
+    [15.3, 4],
+  ]);
+  px(ctx, 14, 4, k.wall, 1, 1);
+  px(ctx, 14.15, 5, k.post, 0.7, 4);
   return c;
 }
 
-/** The far lantern's light (#683, #858), 8×8 for additive blending: a bright core in two hard rings. */
+/** The far lantern's light (#683, #858), for additive blending: a bright core in a soft-coloured ring. 8 texels to each of the first 8×8 drawing's. */
 export function farLight(): OffscreenCanvas {
-  const [c, ctx] = canvas(8, 8);
-  px(ctx, 2, 3, "rgba(255, 184, 74, 0.35)", 4, 2);
-  px(ctx, 3, 2, "rgba(255, 184, 74, 0.35)", 2, 4);
-  px(ctx, 3, 3, "#fff1c2", 2, 2);
+  const [c, ctx] = canvas(8 * 8, 8 * 8);
+  ctx.scale(8, 8);
+  oval(ctx, "rgba(255, 184, 74, 0.35)", 4, 4, 2);
+  oval(ctx, "#fff1c2", 4, 4, 1);
   return c;
 }
 

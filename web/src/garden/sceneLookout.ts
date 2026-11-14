@@ -85,11 +85,11 @@ export class LookoutThings {
     const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true), { vertexColors: true }));
     stone.position.set(sx, foot + STONE_H / 2, sz);
     const top = foot + STONE_H;
-    const book = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.d), c.mat(T.pixelTexture(T.diary())));
+    const book = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.d), c.mat(T.paperTexture(T.diary())));
     book.position.set(sx, top + BOOK.h / 2, sz);
     book.rotation.y = h.face + 0.3;
     // Out of the pages at the book's head (its -z, toward the far house), lying on the stone's top: from the path side you see it past the book, not under your feet.
-    const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.004, RIBBON), c.mat(T.pixelTexture(T.ribbon())));
+    const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.004, RIBBON), c.mat(T.paperTexture(T.ribbon())));
     ribbon.position.set(0.03, -BOOK.h / 2 + 0.002, -(BOOK.d / 2 + RIBBON / 2 - 0.02));
     book.add(ribbon);
     this.ribbon = ribbon;

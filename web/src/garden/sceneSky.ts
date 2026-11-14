@@ -139,13 +139,16 @@ export class SkyWater implements Part {
    */
   private buildFarHouse(c: BuildCtx) {
     const { turn, r, y, w, h } = FAR_HOUSE;
-    this.houseLooks = { day: T.pixelTexture(T.farHouse(false)), night: T.pixelTexture(T.farHouse(true)) };
-    this.house = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.5, fog: false, depthWrite: false }));
+    this.houseLooks = { day: T.cutoutTexture(T.farHouse(false)), night: T.cutoutTexture(T.farHouse(true)) };
+    // Premultiplied, and blended as such: it is always far off, deep in its mipmaps, where straight alpha would blend
+    // every edge (and the whole thin chimney) toward black.
+    const blend = { blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor };
+    this.house = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ transparent: true, ...blend, fog: false, depthWrite: false }));
     this.house.position.set(Math.sin(turn) * r, y + h / 2, Math.cos(turn) * r);
     this.house.lookAt(0, y + h / 2, 0);
     this.house.renderOrder = -0.5;
     c.scene.add(still(this.house));
-    this.farLight = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.farLight()), transparent: true, blending: THREE.AdditiveBlending, fog: false, depthWrite: false }));
+    this.farLight = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.paperTexture(T.farLight()), transparent: true, blending: THREE.AdditiveBlending, fog: false, depthWrite: false }));
     // On the far lantern's glass, a little in front of the house.
     this.farLight.position.set((FAR_LANTERN.u - 0.5) * w, (FAR_LANTERN.v - 0.5) * h, 0.1).applyMatrix4(this.house.matrix);
     this.farLight.scale.set(1.6, 1.6, 1);
@@ -268,7 +271,7 @@ export class SkyWater implements Part {
     rim.rotation.x = -Math.PI / 2;
     rim.position.set(L.pond.x, 0.045, L.pond.z);
     c.scene.add(still(rim));
-    const padTex = T.pixelTexture(T.lilypad());
+    const padTex = T.paperTexture(T.lilypad());
     const pads: [number, number][] = [];
     for (let i = 0; i < 4; i++) {
       const a = i * 1.9 + 0.4;
