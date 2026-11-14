@@ -20,14 +20,24 @@ for (const [i, time] of (["day", "dusk", "day", "dusk"] as const).entries())
       const t0 = performance.now();
       const e0 = s.game.elapsed;
       let n = 0;
+      const gaps: number[] = [];
+      let last = t0;
       await new Promise<void>((done) => {
         const f = () => {
           n++;
-          if (performance.now() - t0 < 6000) requestAnimationFrame(f);
+          const now = performance.now();
+          gaps.push((now - last) / 1000);
+          last = now;
+          if (now - t0 < 8000) requestAnimationFrame(f);
           else done();
         };
         requestAnimationFrame(f);
       });
+      const sum = (cap: number) => +(gaps.reduce((a, d) => a + Math.min(d, cap), 0) / ((last - t0) / 1000)).toFixed(3);
+      const caps = Object.fromEntries([0.1, 0.2, 0.3, 0.4, 0.5, 1].map((c) => [c, sum(c)]));
+      const sorted = [...gaps].sort((a, b) => a - b);
+      const pct = (q: number) => +sorted[Math.floor(q * (sorted.length - 1))].toFixed(3);
+      const dist = { p50: pct(0.5), p90: pct(0.9), p99: pct(0.99), max: pct(1), over100: gaps.filter((d) => d > 0.1).length, over300: gaps.filter((d) => d > 0.3).length };
       const wall = (performance.now() - t0) / 1000;
       const game = s.game.elapsed - e0;
       const gl = s.renderer.getContext();
@@ -40,7 +50,7 @@ for (const [i, time] of (["day", "dusk", "day", "dusk"] as const).entries())
         ms.push(performance.now() - a);
       }
       ms.sort((a, b) => a - b);
-      return { fps: +(n / wall).toFixed(2), gamePerSec: +(game / wall).toFixed(3), drawMs: +ms[4].toFixed(1), w: gl.drawingBufferWidth };
+      return { fps: +(n / wall).toFixed(2), gamePerSec: +(game / wall).toFixed(3), caps, dist, drawMs: +ms[4].toFixed(1), w: gl.drawingBufferWidth };
     });
     console.log(`MEASURE ${time} ${JSON.stringify({ ...r, readyMs: ready })}`);
   });
