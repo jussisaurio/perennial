@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test";
 import { sessionVisit, WATCH_CARDS } from "./sessionVisitor";
+import type { VisitorId } from "./visitors";
 
 test("a visitor watches about one chunk in two, one the learner has, for a few cards after the first two (#210)", () => {
-  const brought = ["cat", "bird"] as const;
+  const brought: readonly VisitorId[] = ["cat", "bird"];
   let visits = 0;
   const who = new Set<string>();
   for (let d = 1; d <= 28; d++)
