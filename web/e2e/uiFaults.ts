@@ -206,14 +206,9 @@ function domFaults(): DomFault[] {
  */
 export async function uiFaults(page: Page, screen: string): Promise<string[]> {
   const dom = await page.evaluate(domFaults);
-  // WCAG 2.2 A and AA: names, roles, and the 24 px target floor.
+  // WCAG 2.2 A and AA: names, roles, contrast, and the 24 px target floor.
   // Only `violations`: what axe cannot decide (text over a picture) it lists as "incomplete", and we leave it.
-  // Two rules are off until #1009 is fixed: `main` had 41 contrast faults and 4 scroll areas with no
-  // keyboard focus when this check came in. Turn them on again there.
-  const axe = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .disableRules(["color-contrast", "scrollable-region-focusable"])
-    .analyze();
+  const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   const lines = dom.map((f) => `${screen} | ${f.rule} | ${f.element} | box ${f.box.join(",")} | ${f.detail}`);
   for (const v of axe.violations)
     for (const n of v.nodes) {

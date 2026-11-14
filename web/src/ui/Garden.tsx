@@ -308,7 +308,8 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
 
   return (
     <div className={`garden-strip ${scrolls ? "scrolls" : ""}`} data-replaying={replaying.on || undefined} onPointerLeave={(e) => hovers(e) && hide()}>
-      <div className="garden-scroll" ref={scroller} onScroll={scrolls ? onScroll : undefined}>
+      {/* A strip that scrolls takes focus, so the arrow keys scroll it: the summary's strip has no arrow buttons (#1009). */}
+      <div className="garden-scroll" ref={scroller} tabIndex={scrolls ? 0 : undefined} onScroll={scrolls ? onScroll : undefined}>
         <svg width={fullWidth} height={H} viewBox={`0 0 ${fullWidth} ${H}`} role="img" aria-label={label} onPointerMove={onPointerMove} onClick={onClick}>
           <defs>
             <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">

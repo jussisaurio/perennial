@@ -18,7 +18,7 @@ Do not make "X on" and "X off" two side-by-side buttons. A reader cannot tell if
 
 The chosen, checked, on, wrong or new state also has a shape, a mark, a word or a position: a check, a moved switch thumb, bold text, "here now". Test it: in grayscale, can you still tell? Sources: [WCAG 1.4.1 Use of Color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html); [Apple, On/Off Labels](https://support.apple.com/en-us/111773) (iOS adds marks to switches for the same reason).
 
-The mark that shows a state, and the edge of a control, have a contrast of 3:1 or more against what is next to them, in light and dark. Text has 4.5:1. Source: [WCAG 1.4.11 Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
+The mark that shows a state, and the edge of a control, have a contrast of 3:1 or more against what is next to them, in light and dark. Text has 4.5:1. Text in an accent colour uses the accent's ink token (`--leaf-ink`, `--sky-ink`, `--persimmon-ink`, `--sun-ink` in `index.css`): on the light paper the plain accent is too faint for text. Source: [WCAG 1.4.11 Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
 
 ## 3. Focus is always visible
 
