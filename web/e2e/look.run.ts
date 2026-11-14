@@ -162,9 +162,9 @@ test(`look ${run.demo}`, async ({ page }) => {
   await page.clock.setFixedTime(TIMES[run.time]);
   // Normal detail, as most learners see it, whatever this machine's frame times.
   await pinDetail(page, "normal");
-  if (run.spot === null) await openToday(page, run.demo);
+  if (run.spot === null) await openToday(page, run.demo, run.visitors);
   else {
-    await openWalk(page, run.demo, "as it is");
+    await openWalk(page, run.demo, "as it is", run.visitors);
     await SPOTS[run.spot](page);
     await plantsIn(page);
   }

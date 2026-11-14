@@ -4,12 +4,14 @@
 export const USAGE = `Drive the app and get a picture and a state file after each step. From web/:
 
   bun run look <folder> --demo <level> [--spot <name>] [--time day|dusk|night]
-                        [--view desktop|phone] [--theme light|dark] [step ...]
+                        [--view desktop|phone] [--theme light|dark] [--visitors <ids>] [step ...]
 
   <folder>   where the files go (absolute path): 00-start.png, 00-start.json, 01-<step>.png, ...
   --demo     the demo learner: es:30, es:800, es:known:566, de:800 (words studied, or words known)
   --spot     open the garden walk and stand at a named spot (e2e/spots.ts); "walk" is where the walk opens.
              Without it, the run starts on Today.
+  --visitors who is in the garden, in place of the learner's own: "cat,bird,gnome", "all" or "none"
+             (the dev override in src/ui/visitors.ts). Without it, the learner's own visitors come.
   defaults   --time day --view desktop --theme light
 
 Steps, each one quoted argument, run in order:
@@ -51,6 +53,8 @@ export interface Run {
   demo: string;
   /** null: start on Today, not in the garden. */
   spot: string | null;
+  /** The garden's visitors (the app's ?visitors= override), or null for the learner's own. */
+  visitors: string | null;
   time: (typeof TIMES_OF_DAY)[number];
   view: (typeof VIEWS)[number];
   theme: (typeof THEMES)[number];
@@ -105,7 +109,7 @@ export function parseRun(argv: readonly string[], spots: readonly string[]): Run
     else if (i + 1 >= argv.length) throw new Error(`${a} needs a value`);
     else flags[a.slice(2)] = argv[++i];
   }
-  const unknown = Object.keys(flags).filter((f) => !["demo", "spot", "time", "view", "theme"].includes(f));
+  const unknown = Object.keys(flags).filter((f) => !["demo", "spot", "time", "view", "theme", "visitors"].includes(f));
   if (unknown.length > 0) throw new Error(`no such flag: --${unknown[0]}`);
   const [dir, ...steps] = rest;
   if (dir === undefined || !dir.startsWith("/")) throw new Error("the first argument is the folder for the files, as an absolute path");
@@ -118,10 +122,12 @@ export function parseRun(argv: readonly string[], spots: readonly string[]): Run
     return found;
   };
   if (flags.spot !== undefined && !spots.includes(flags.spot)) throw new Error(`--spot is one of: ${spots.join(", ")}`);
+  if (flags.visitors !== undefined && !/^[a-z]+(,[a-z]+)*$/.test(flags.visitors)) throw new Error("--visitors is a list of visitor ids with commas, like cat,bird");
   return {
     dir,
     demo: flags.demo,
     spot: flags.spot ?? null,
+    visitors: flags.visitors ?? null,
     time: oneOf("time", TIMES_OF_DAY),
     view: oneOf("view", VIEWS),
     theme: oneOf("theme", THEMES),

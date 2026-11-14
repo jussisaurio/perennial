@@ -162,9 +162,9 @@ const standOnHill = (page: Page, by: "post" | "stool" | "stone") =>
  */
 export const WORDS: Partial<Record<string, number | `known:${number}`>> = { "stile-shut": 500, "hill-stone": "known:566", thought: "known:1400", mousedoor: "known:921" };
 
-/** Open Today for a demo learner at a story point (`es:800`, `es:known:566`: dev/boot.ts). */
-export async function openToday(page: Page, demo: string) {
-  await page.goto(`/?demo=${demo}#/today`);
+/** Open Today for a demo learner at a story point (`es:800`, `es:known:566`: dev/boot.ts). `visitors`: the app's dev override (src/ui/visitors.ts), or null for the learner's own. */
+export async function openToday(page: Page, demo: string, visitors: string | null = null) {
+  await page.goto(`/?demo=${demo}${visitors === null ? "" : `&visitors=${visitors}`}#/today`);
   await expect(page.getByRole("button", { name: "Walk in your garden" })).toBeVisible({ timeout: 20_000 });
 }
 
@@ -174,14 +174,14 @@ export async function openToday(page: Page, demo: string) {
  * over the stile to the lookout (note n08, 486 known: not every demo word is known).
  * `door`: "open" opens the hedge's door first, for the pictures; "as it is" leaves it as the learner has it.
  */
-export async function openWalk(page: Page, demo: string, door: "open" | "as it is") {
-  await openWalkBuilt(page, demo, door);
+export async function openWalk(page: Page, demo: string, door: "open" | "as it is", visitors: string | null = null) {
+  await openWalkBuilt(page, demo, door, visitors);
   await walkReady(page);
 }
 
 /** Open the walk as openWalk does, but wait only until it is built (walkBuilt), not for its plants' sprites. */
-export async function openWalkBuilt(page: Page, demo: string, door: "open" | "as it is") {
-  await openToday(page, demo);
+export async function openWalkBuilt(page: Page, demo: string, door: "open" | "as it is", visitors: string | null = null) {
+  await openToday(page, demo, visitors);
   if (door === "open") {
     await page.evaluate(async () => {
       const { postWrite } = await import(/* @vite-ignore */ "/src/data/http.ts");

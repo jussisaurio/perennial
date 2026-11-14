@@ -11,7 +11,7 @@ import type { HitBox, HitDisc, SceneryId } from "../garden/scenery";
  * sprite: its leaves, petals or lamp hang over the ground round its stem or post); or none
  * (flat on the ground or the water, small enough to step over, or out of reach).
  */
-const BODY: Record<SceneryId, "all" | "middle" | null> = {
+export const BODY: Record<SceneryId, "all" | "middle" | null> = {
   fence: "all",
   hedge: "all",
   door: "all",
