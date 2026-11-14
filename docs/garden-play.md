@@ -186,7 +186,7 @@ Tap a thing in the garden and its name shows on a small paper tag over it, as it
 - `thought.tap`: With 800 known words, a tap on the bench shows its tag, "el banco", and under it the bench's newest line; the status a screen reader hears says the name and the line; you have not moved.
 - `thought.early`: With 3 known words, a tap on the bench shows only its name, with no line.
 - `thought.grows`: A tap on the pond shows three different lines at 200, 700 and 1800 known words, in that order.
-- `thought.only-tap`: With 800 known words, walking up to the bench and standing there 10 seconds shows no line. After a tap, while the line shows, holding W walks you on, and by the bench the button still says "Sit on the bench".
+- `thought.only-tap`: With 800 known words, walking up to the bench and standing there 10 seconds shows no line. After a tap, while the line shows, holding S walks you back, and by the bench the button still says "Sit on the bench".
 - `thought.replace`: While the bench's line shows, a tap on the pond shows the pond's tag and line instead.
 - `thought.seated`: Sitting on the bench, a tap on the pond shows the pond's tag and line, and you are still sitting.
 - `thought.details`: Standing by the bench, the cup rings show on its seat; standing by the sundial, the letters show on its pillar.

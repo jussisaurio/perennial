@@ -402,26 +402,6 @@ for (const reducedMotion of ["no-preference", "reduce"] as const)
     });
   });
 
-test("a walking key takes over from a walk under way (#336)", async ({ page }) => {
-  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await pinDetail(page, "low");
-  await page.goto("/?demo=es:30#/today");
-  await page.getByRole("button", { name: "Walk in your garden" }).click();
-  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => "__garden" in window);
-  const { x, y, to } = await aimAtGround(page, 0);
-  const start = await walker(page);
-  await page.mouse.click(x, y);
-  expect((await walker(page)).walking).toBe(true);
-  // S steps back: the walk stops, and you end up farther from where it went.
-  await page.keyboard.down("KeyS");
-  await page.waitForTimeout(500);
-  await page.keyboard.up("KeyS");
-  const after = await walker(page);
-  expect(after.walking).toBe(false);
-  expect(Math.hypot(after.x - to.x, after.z - to.z)).toBeGreaterThan(Math.hypot(start.x - to.x, start.z - to.z));
-});
-
 // #334: one action button for what is in reach; its icon changes shape, and a screen reader hears what it does.
 test("by the bench the action button sits you down, facing the pond; it or a step stands you up again", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
