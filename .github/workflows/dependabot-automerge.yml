@@ -1,6 +1,7 @@
 # Dependabot updates merge themselves once CI passes, except major versions
-# (those wait for a person). Branch protection isn't available on this plan,
-# so instead of GitHub's auto-merge: label the PR, then merge after green CI.
+# (those wait for a person). It does not use GitHub's auto-merge: that waits only for
+# the required checks on main, and a dependency update must also pass the e2e tests.
+# So: label the PR, then merge after the whole CI run is green.
 # PRs that change workflow files can't be merged with GITHUB_TOKEN; they stay open.
 name: Dependabot auto-merge
 
