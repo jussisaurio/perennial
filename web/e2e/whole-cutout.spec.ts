@@ -1,5 +1,6 @@
 import type { Body, VisitorKind } from "../src/garden/kinds/kind";
 import type { HitBox } from "../src/garden/scenery";
+import { pinDetail } from "./helpers";
 import { openWalkBuilt, TIMES } from "./spots";
 import { expect, test } from "./test";
 
@@ -17,6 +18,9 @@ test("render.whole-cutout: no solid thing cuts a visitor at rest, from any side,
   // Where each visitor is depends on the day: on this one the cat sleeps on the bench.
   await page.clock.setFixedTime(TIMES.day);
   // Built is enough: every tap volume and visitor is in by then (drawn-solid.spec.ts).
+  // Low detail: a walk starts at normal, whose warm-up draws the shadow pass too (#1174). On CI's software WebGL
+  // that is slow, and it took time from the tests beside it (#1177).
+  await pinDetail(page, "low");
   await openWalkBuilt(page, "es:800", "as it is", "all");
   const found = await page.evaluate(async () => {
     const { cuts, spanOf } = await import(/* @vite-ignore */ "/src/fuzz/wholeCutout.ts");

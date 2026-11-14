@@ -15,7 +15,7 @@ import type { Frame } from "./scenePart";
 import { isOld } from "./plants";
 import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, SPRITE_H, SPRITE_W, standingQuad, still, type BuildCtx } from "./sceneSprites";
 import { GRAIN } from "./paper";
-import { castsShadow, LIT } from "./sceneLight";
+import { castsShadow, LIT, takesLight } from "./sceneLight";
 import { boardBox } from "./scenery";
 import { BED_H, bedSign, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
@@ -153,33 +153,35 @@ const PLANT_FRAG = /* glsl */ `
 `;
 
 function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture, near: THREE.DataTexture, msaa: boolean): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    // Without MSAA it would do nothing, and the shader keeps its cut at one half (ALPHA_TO_COVERAGE).
-    alphaToCoverage: msaa,
-    uniforms: {
-      uLow: { value: low },
-      uHi: { value: high },
-      uNear: { value: near },
-      uLowSize: { value: new THREE.Vector2(low.image.width, low.image.height) },
-      uHiSize: { value: new THREE.Vector2(high.image.width, high.image.height) },
-      uNearSize: { value: new THREE.Vector2(near.image.width, near.image.height) },
-      uTime: { value: 0 },
-      uSway: { value: 1 },
-      uFogNear: { value: FOG_NEAR },
-      uFogFar: { value: FOG_FAR },
-      uFog: { value: new THREE.Color() },
-      uTint: { value: new THREE.Color(1, 1, 1) },
-      uSelected: { value: -1 },
-      uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
-      uShake: { value: new THREE.Vector2(-1, 0) },
-      uSneeze: { value: new THREE.Vector2(-1, 0) },
-      uSilver: { value: 0 },
-      uGrain: GRAIN,
-      ...LIT,
-    },
-    vertexShader: PLANT_VERT,
-    fragmentShader: PLANT_FRAG,
-  });
+  return takesLight(
+    new THREE.ShaderMaterial({
+      // Without MSAA it would do nothing, and the shader keeps its cut at one half (ALPHA_TO_COVERAGE).
+      alphaToCoverage: msaa,
+      uniforms: {
+        uLow: { value: low },
+        uHi: { value: high },
+        uNear: { value: near },
+        uLowSize: { value: new THREE.Vector2(low.image.width, low.image.height) },
+        uHiSize: { value: new THREE.Vector2(high.image.width, high.image.height) },
+        uNearSize: { value: new THREE.Vector2(near.image.width, near.image.height) },
+        uTime: { value: 0 },
+        uSway: { value: 1 },
+        uFogNear: { value: FOG_NEAR },
+        uFogFar: { value: FOG_FAR },
+        uFog: { value: new THREE.Color() },
+        uTint: { value: new THREE.Color(1, 1, 1) },
+        uSelected: { value: -1 },
+        uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
+        uShake: { value: new THREE.Vector2(-1, 0) },
+        uSneeze: { value: new THREE.Vector2(-1, 0) },
+        uSilver: { value: 0 },
+        uGrain: GRAIN,
+        ...LIT,
+      },
+      vertexShader: PLANT_VERT,
+      fragmentShader: PLANT_FRAG,
+    }),
+  );
 }
 
 export class Plants {

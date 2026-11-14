@@ -61,7 +61,8 @@ test("walk-in garden: every word is a plant; next plant by keyboard, listen, and
 test("visitors: the snail and the cat in the 2D strip say their word; they are not plants", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
-  await pinDetail(page, "normal");
+  // Low, as the tests above and below: normal detail draws shadows (#1174), and on CI's software WebGL that ran this into its timeout (#1177).
+  await pinDetail(page, "low");
   // A dev-only override brings every visitor today, so the test does not depend on the date.
   await page.goto("/?demo=es:30&visitors=all#/today");
   const snail = page.getByRole("button", { name: "el caracol · snail" });
@@ -144,7 +145,8 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
-  await pinDetail(page, "normal");
+  // Low, as the tests above and below: normal detail draws shadows (#1174), and on CI's software WebGL that ran this into its timeout (#1177).
+  await pinDetail(page, "low");
   // What the page hands the browser's voice.
   await page.addInitScript(() => {
     const spoken: string[] = [];
@@ -261,7 +263,8 @@ test("the garden itself teaches: tap the sunflower for its word; a plant still o
   // A fixed day and hour: the snail walks the fence over the day (snailLap) and, from
   // about 09:19 to 09:35, stands between us and the sunflower; visitors change by day.
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await pinDetail(page, "normal");
+  // Low, as the tests above and below: normal detail draws shadows (#1174), and on CI's software WebGL that ran this into its timeout (#1177).
+  await pinDetail(page, "low");
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
@@ -576,10 +579,11 @@ test.describe(() => {
 test("the controls hint shows in the learner's walk until they first move; the landing page's walk does not use it up (#334)", async ({ page }) => {
   await pinDetail(page, "low");
   const hint = page.locator(".gw-hint");
+  // The hint is drawn with the plant count, so whether it shows is known before the scene is built. Only a walk that
+  // moves waits for the scene: four full builds took this test past its time on CI (#1177).
   const walkIn = async () => {
     await page.getByRole("button", { name: "Walk in your garden" }).click();
     await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-    await page.waitForFunction(() => "__garden" in window);
   };
   // The landing page's walk: the hint shows, and moving there does not use up the learner's.
   await page.goto("/");
@@ -594,6 +598,7 @@ test("the controls hint shows in the learner's walk until they first move; the l
   await page.getByRole("button", { name: "Back" }).click();
   await walkIn();
   await expect(hint).toContainText("Walk:");
+  await page.waitForFunction(() => "__garden" in window);
   await page.keyboard.press("KeyW");
   await expect(hint).toHaveCount(0);
   await page.getByRole("button", { name: "Back" }).click();
