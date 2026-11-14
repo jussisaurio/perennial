@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "./test";
 import { aimAtGround, arrives, gameSeconds, pinDetail, plantNearMiddle, settledGardenWidth, startCourse, trackOf, trackVisitors, walker } from "./helpers";
+import { BENCH, WALKER } from "../src/garden/world";
 
 test("walk-in garden: every word is a plant; next plant by keyboard, listen, and back", async ({ page }) => {
   const errors: string[] = [];
@@ -403,26 +404,31 @@ for (const reducedMotion of ["no-preference", "reduce"] as const)
   });
 
 // #334: one action button for what is in reach; its icon changes shape, and a screen reader hears what it does.
-test("by the bench the action button sits you down, facing the pond; it or a step stands you up again", async ({ page }) => {
+// docs/garden-play.md, "The bench" (#1011).
+test("bench.sit: W toward the bench stops you at its back; the button sits you down, facing the pond; Stand up puts you in front of it, where S stops you; a step stands you up too", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
   await pinDetail(page, "low");
   await page.goto("/?demo=es:30#/today");
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
-  type Bench = { x: number; z: number; walker: { kind: string }; camera: { position: { y: number } }; layout: { pond: { x: number; z: number; r: number } } };
+  type Bench = { x: number; z: number; walker: { kind: string }; camera: { position: { y: number } }; bench: { x: number; z: number } };
   const scene = () =>
     page.evaluate(() => {
       const s = (window as unknown as { __garden: Bench }).__garden;
       return { seated: s.walker.kind === "seated", eye: s.camera.position.y };
     });
   await expect(page.getByRole("button", { name: "Sit on the bench" })).toHaveCount(0);
-  // A step in front of the bench (world.ts benchAt), facing it.
-  await page.evaluate(() => {
+  // On the garden side of the bench, facing it and the pond past it: forward is -z at yaw 0.
+  const bench = await page.evaluate(() => {
     const s = (window as unknown as { __garden: Bench }).__garden;
-    const p = s.layout.pond;
-    Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+    Object.assign(s, { x: s.bench.x, z: s.bench.z - 1.2, yaw: Math.PI, pitch: 0 });
+    return s.bench;
   });
+  // However long the key is held, you stop a walker's width from the bench's back (world.ts BENCH, WALKER).
+  await page.keyboard.down("KeyW");
+  await expect.poll(async () => (await walker(page)).z).toBeCloseTo(bench.z - BENCH.back - WALKER, 2);
+  await page.keyboard.up("KeyW");
   const sit = page.getByRole("button", { name: "Sit on the bench" });
   await expect(sit).toHaveText("");
   const standing = (await scene()).eye;
@@ -433,6 +439,13 @@ test("by the bench the action button sits you down, facing the pond; it or a ste
   await page.getByRole("button", { name: "Stand up" }).click();
   await expect(sit).toBeVisible();
   await expect.poll(async () => (await scene()).eye).toBeCloseTo(standing, 1);
+  // Up between the bench and the pond, facing the pond: S walks you back into the bench's front, and no farther.
+  expect((await walker(page)).z).toBeGreaterThan(bench.z + BENCH.front + WALKER);
+  await page.keyboard.down("KeyS");
+  await expect.poll(async () => (await walker(page)).z).toBeCloseTo(bench.z + BENCH.front + WALKER, 2);
+  await page.waitForTimeout(300);
+  await page.keyboard.up("KeyS");
+  expect((await walker(page)).z).toBeCloseTo(bench.z + BENCH.front + WALKER, 2);
   // Any step stands you up too.
   await sit.click();
   await expect(page.getByRole("button", { name: "Stand up" })).toBeVisible();
