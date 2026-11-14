@@ -111,7 +111,7 @@ async function doStep(page: Page, text: string, step: Step) {
     }
     case "click": {
       const named = { name: step.name, exact: true };
-      return page.getByRole("button", named).or(page.getByRole("tab", named)).or(page.getByRole("link", named)).first().click();
+      return page.getByRole("button", named).or(page.getByRole("tab", named)).or(page.getByRole("link", named)).first().click({ timeout: 10_000 }); // a wrong name fails soon, not at the run's 5 minutes; the failed step's state file lists the names
     }
     case "wait": {
       const u = step.until;
