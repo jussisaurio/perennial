@@ -1,7 +1,7 @@
 // What the server says about itself (GET /api/server): what it can do right
 // now, so the app shows only features that work; the oldest app version it
-// accepts; and its release. Asked at start and again when the tab comes back
-// (at most every few minutes); the last answer is kept for the next start. At
+// accepts; and its release. Asked at start and again later (at most every few
+// minutes, see loadServerInfo); the last answer is kept for the next start. At
 // start it comes with GET /api/boot (data/boot.ts).
 // Until it is known, every feature counts as off (no buttons that then vanish).
 //
@@ -88,9 +88,18 @@ export function newDeploy(serverRelease: string, built = RELEASE): boolean {
 }
 
 const RECHECK_MS = 5 * 60_000;
+// A tab that is never hidden (on a second screen) still learns of a deploy within this time (#123).
+const IN_VIEW_MS = 30 * 60_000;
 let lastAsked = 0;
 
-/** Ask the server (main.tsx calls this after the first paint; the hook too, if first), then again when the tab returns. */
+/** Ask again, if the tab is in view and the last ask was a few minutes ago. */
+function recheck() {
+  if (document.visibilityState !== "visible" || Date.now() - lastAsked < RECHECK_MS) return;
+  lastAsked = Date.now();
+  void ask().then(use);
+}
+
+/** Ask the server (main.tsx calls this after the first paint; the hook too, if first), then again later. */
 export function loadServerInfo() {
   if (fetched) return;
   fetched = true;
@@ -100,11 +109,10 @@ export function loadServerInfo() {
     (b) => use(b.server),
     async () => use(await ask()),
   );
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState !== "visible" || Date.now() - lastAsked < RECHECK_MS) return;
-    lastAsked = Date.now();
-    void ask().then(use);
-  });
+  // Later: when the tab comes back, when the network comes back (a laptop that wakes up), and now and then while in view.
+  document.addEventListener("visibilitychange", recheck);
+  window.addEventListener("online", recheck);
+  setInterval(recheck, IN_VIEW_MS);
 }
 
 function subscribe(l: () => void) {
