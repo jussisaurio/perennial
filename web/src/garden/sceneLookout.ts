@@ -79,7 +79,7 @@ export class LookoutThings {
     // Seven flat faces, each one shade, not a gradient round it: no corner is shared, so each face keeps its own normal.
     const stoneGeo = new THREE.CylinderGeometry(STONE_R - 0.03, STONE_R, STONE_H, 7).toNonIndexed();
     stoneGeo.computeVertexNormals();
-    const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true), "sugar"));
+    const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true), "card"));
     stone.position.set(sx, foot + STONE_H / 2, sz);
     const top = foot + STONE_H;
     const book = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.d), c.mat(T.paperTexture(T.diary()), "card"));

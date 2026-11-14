@@ -65,7 +65,7 @@ export class Jokes implements Part {
    */
   build(c: BuildCtx, bench: { x: number; z: number }, now: Date, word: string | null) {
     const { L, mat } = c;
-    const stone = mat(T.paperTexture(T.stone(), true), "sugar");
+    const stone = mat(T.paperTexture(T.stone(), true), "card");
 
     // The sundial: a stone pillar, a cap, the bronze face, its gnomon and shadow.
     const [x, z] = [bench.x + SUNDIAL.dx, bench.z + SUNDIAL.dz];
@@ -102,7 +102,7 @@ export class Jokes implements Part {
     // Turning the shadow by -angle about the vertical takes it from noon (-z) toward +x (east) after noon.
     this.shadow.rotation.y = -sundialAngle(now);
     // Two small letters cut high in the pillar, on its garden side (-z): seen only up close (#869, what the sundial's line names).
-    const letters = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), mat(T.paperTexture(T.carvedLetters()), "sugar", { alphaTest: 0.5 }));
+    const letters = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), mat(T.paperTexture(T.carvedLetters()), "card", { alphaTest: 0.5 }));
     letters.name = "carved letters";
     letters.rotation.y = Math.PI;
     letters.position.set(x, SUNDIAL.pillar - 0.12, z - 0.101);
