@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { hillY, STONE_R, STOOL_R, type Diary, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
-import { still, type BuildCtx } from "./sceneSprites";
+import { shade, still, woodBox, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** The flat stone's height, and the diary on it (m): high enough that, stood by it in reach, the book and its ribbon are in view. */
@@ -34,8 +34,10 @@ export class LookoutThings {
     const h = this.hill;
     // A three-legged stool, its seat a thick round of wood, its legs splayed out to feet wider than the seat: from the path it reads as a seat, not a little gate.
     const stool = new THREE.Group();
-    const wood = c.mat(c.woodTex);
-    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.19, 0.07, 10), wood);
+    const wood = c.mat(c.woodTex, { vertexColors: true });
+    const seatGeo = new THREE.CylinderGeometry(0.2, 0.19, 0.07, 10);
+    shade(seatGeo);
+    const seat = new THREE.Mesh(seatGeo, wood);
     seat.position.y = 0.45 - 0.035;
     stool.add(seat);
     const [under, splay] = [0.45 - 0.07, 0.3];
@@ -48,7 +50,7 @@ export class LookoutThings {
       const turn = -((i / 3) * Math.PI * 2 + 0.4);
       const out = new THREE.Group();
       out.rotation.y = turn;
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.035, legLen, 0.035), wood);
+      const leg = new THREE.Mesh(woodBox(0.035, legLen, 0.035), wood);
       leg.rotation.z = splay;
       leg.position.set(0.1 + (legLen / 2) * Math.sin(splay), under / 2, 0);
       out.add(leg);

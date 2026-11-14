@@ -237,18 +237,34 @@ export function soil(): OffscreenCanvas {
   ]);
 }
 
+/**
+ * Wood (#1091): two flat planks along the grain (u), a crisp dark gap between them and at the edges, a light edge where
+ * each plank's top catches the light, and a few fine grain lines. It repeats along u. A narrow piece shows only the
+ * middle of the lower plank (sceneSprites.ts woodBox), so the grain lines there are what a post or a leg shows.
+ */
 export function wood(): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 16);
+  const [W, H] = [512, 256];
+  const [c, ctx] = canvas(W, H);
+  px(ctx, 0, 0, "#b38e5f", W, H);
   const r = rng(4);
-  px(ctx, 0, 0, "#b38e5f", 32, 16);
-  for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) if (r() < 0.18) px(ctx, x, y, r() < 0.5 ? "#a5825a" : "#c09c6c");
-  // Two planks with a dark seam, a highlight on top, and a knot.
-  px(ctx, 0, 7, "#7d6143", 32, 1);
-  px(ctx, 0, 15, "#7d6143", 32, 1);
-  px(ctx, 0, 0, "#cfb084", 32, 1);
-  px(ctx, 0, 8, "#cfb084", 32, 1);
-  px(ctx, 11, 3, "#866848", 2, 2);
-  px(ctx, 24, 11, "#866848", 2, 2);
+  // Two long, gently wavy grain lines a shade darker on each plank; one that runs off the right goes on from the left.
+  ctx.strokeStyle = "#a4805a";
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  for (const top of [0, H / 2])
+    for (let i = 0; i < 2; i++) {
+      const y = top + 24 + i * 44 + r() * 20;
+      const [x0, len, phase] = [r() * W, W * (0.4 + r() * 0.4), r() * 6];
+      for (const dx of [0, -W]) {
+        ctx.beginPath();
+        for (let x = 0; x <= len; x += 8) ctx.lineTo(x0 + dx + x, y + Math.sin(x / 90 + phase) * 3);
+        ctx.stroke();
+      }
+    }
+  for (const top of [0, H / 2]) px(ctx, 0, top + 4, "#c4a072", W, 4);
+  px(ctx, 0, H / 2 - 3, "#7d6143", W, 6);
+  px(ctx, 0, 0, "#7d6143", W, 4);
+  px(ctx, 0, H - 4, "#7d6143", W, 4);
   return c;
 }
 
@@ -289,18 +305,38 @@ export function cane(): OffscreenCanvas {
   ], 4);
 }
 
+/**
+ * A metre of picket fence (#1091): four pickets with pointed tops in front of two rails, cut out (transparent between
+ * them). Each picket's right side is a shade darker, turned from the light. The pickets fill a little over half of the
+ * width, so far off, where the mipmaps average them, the fence stays a solid pale band and does not fade out (alphaTest 0.5).
+ */
 export function picket(): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 32);
-  for (let i = 0; i < 4; i++) {
-    const x = i * 8 + 2;
-    px(ctx, x, 6, "#f3eee4", 4, 26);
-    px(ctx, x + 1, 4, "#f3eee4", 2, 2);
-    px(ctx, x + 3, 6, "#d8cfbf", 1, 26);
+  const S = 256;
+  const [c, ctx] = canvas(S, S);
+  // The rails behind, their undersides in shade.
+  for (const y of [88, 192]) {
+    px(ctx, 0, y, "#e7dfd0", S, 24);
+    px(ctx, 0, y + 24, "#c8bda9", S, 6);
   }
-  px(ctx, 0, 11, "#e7dfd0", 32, 3);
-  px(ctx, 0, 24, "#e7dfd0", 32, 3);
-  px(ctx, 0, 14, "#c8bda9", 32, 1);
-  px(ctx, 0, 27, "#c8bda9", 32, 1);
+  for (let i = 0; i < 4; i++) {
+    const x = i * 64 + 14;
+    const [w, shoulder, tip] = [36, 50, 30];
+    ctx.fillStyle = "#f3eee4";
+    ctx.beginPath();
+    ctx.moveTo(x, S);
+    ctx.lineTo(x, shoulder);
+    ctx.lineTo(x + w / 2, tip);
+    ctx.lineTo(x + w, shoulder);
+    ctx.lineTo(x + w, S);
+    ctx.fill();
+    ctx.fillStyle = "#ddd4c4";
+    ctx.beginPath();
+    ctx.moveTo(x + w - 7, S);
+    ctx.lineTo(x + w - 7, shoulder - 7 * ((shoulder - tip) / (w / 2)));
+    ctx.lineTo(x + w, shoulder);
+    ctx.lineTo(x + w, S);
+    ctx.fill();
+  }
   return c;
 }
 
@@ -324,27 +360,53 @@ export function hedge(): OffscreenCanvas {
   return c;
 }
 
-/** The old wooden door in the hedge (#315): planks, two iron bands, a ring and a keyhole. The keyhole is drawn dark: a warm light shows through it (scene.ts). */
+/**
+ * The old wooden door in the hedge (#315, #1091): upright planks with crisp seams, two iron bands with rivets, a ring
+ * and a keyhole. 4 texels to each of the first drawing's: KEYHOLE (sceneDoor.ts) is placed by that drawing's texels.
+ * The keyhole is drawn dark: a warm light shows through it (sceneDoor.ts).
+ */
 export function door(): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 64);
+  const [W, H] = [128, 256];
+  const [c, ctx] = canvas(W, H);
+  px(ctx, 0, 0, "#8a6a4a", W, H);
+  // Upright planks: a fine grain line down each, and a dark seam between them.
   const r = rng(13);
-  px(ctx, 0, 0, "#8a6a4a", 32, 64);
-  for (let y = 0; y < 64; y++) for (let x = 0; x < 32; x++) if (r() < 0.16) px(ctx, x, y, r() < 0.5 ? "#7b5d41" : "#977756");
-  // Upright planks with dark seams.
-  for (const x of [0, 8, 16, 24]) px(ctx, x, 0, "#5c4632", 1, 64);
-  px(ctx, 31, 0, "#5c4632", 1, 64);
-  // Iron bands with rivets.
-  for (const y of [10, 50]) {
-    px(ctx, 0, y, "#3b3a3a", 32, 3);
-    px(ctx, 0, y, "#5b5a58", 32, 1);
-    for (const x of [3, 11, 19, 27]) px(ctx, x, y + 1, "#8d8a85");
+  ctx.strokeStyle = "#7f6144";
+  ctx.lineWidth = 1.5;
+  for (const x of [0, 32, 64, 96]) {
+    const gx = x + 10 + r() * 12;
+    ctx.beginPath();
+    ctx.moveTo(gx, 0);
+    ctx.bezierCurveTo(gx + 3, H * 0.3, gx - 3, H * 0.6, gx + 1, H);
+    ctx.stroke();
+    px(ctx, x, 0, "#5c4632", 3, H);
   }
-  // A ring handle and the keyhole below it, on the latch side.
-  px(ctx, 24, 27, "#3b3a3a", 4, 1);
-  px(ctx, 23, 28, "#3b3a3a", 1, 3);
-  px(ctx, 28, 28, "#3b3a3a", 1, 3);
-  px(ctx, 24, 31, "#3b3a3a", 4, 1);
-  px(ctx, 24, 34, "#3b3a3a", 4, 6);
+  px(ctx, W - 3, 0, "#5c4632", 3, H);
+  // Iron bands with rivets.
+  for (const y of [40, 200]) {
+    px(ctx, 0, y, "#3b3a3a", W, 12);
+    px(ctx, 0, y, "#5b5a58", W, 3);
+    ctx.fillStyle = "#8d8a85";
+    for (const x of [14, 46, 78, 110]) {
+      ctx.beginPath();
+      ctx.arc(x, y + 7, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // A ring handle, and the keyhole below it, on the latch side.
+  ctx.strokeStyle = "#3b3a3a";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(104, 118, 9, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#3b3a3a";
+  ctx.beginPath();
+  ctx.arc(104, 143, 6, 0, Math.PI * 2);
+  ctx.moveTo(100, 145);
+  ctx.lineTo(97, 160);
+  ctx.lineTo(111, 160);
+  ctx.lineTo(108, 145);
+  ctx.fill();
   return c;
 }
 

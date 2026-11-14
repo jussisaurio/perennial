@@ -8,6 +8,7 @@
 import * as THREE from "three";
 import type { DeckLang } from "../deck/langs";
 import { stemHeight } from "../ui/plant";
+import { SUN_AT } from "./bench";
 import type { HitBox, HitDisc } from "./scenery";
 import * as T from "./textures";
 import type { Layout } from "./world";
@@ -207,6 +208,63 @@ export function still<O extends THREE.Object3D>(o: O): O {
     p.updateMatrix();
   });
   return o;
+}
+
+/** Toward the day's sun: the same shading at every time of day, as the tint does the rest. */
+const SUN = new THREE.Vector3(...SUN_AT.day).normalize();
+
+/** How light a face with normal `n` is drawn, shaded by hand: the garden is lit by tint alone. 1 for flat ground. */
+function sunShade(n: THREE.Vector3): number {
+  return 1 + 0.7 * (n.dot(SUN) - SUN.y);
+}
+
+/** How light a face with normal `n` is drawn, times `k`. A round thing shows its side turned from the sun: kept from going black. */
+export function roundShade(n: THREE.Vector3, k: number): number {
+  return k * Math.max(0.7, sunShade(n));
+}
+
+/** Shade `geo` by its normals (roundShade), times `k`, as vertex colours. */
+export function shade(geo: THREE.BufferGeometry, k = 1) {
+  const normal = geo.getAttribute("normal");
+  const colors = new Float32Array(normal.count * 3);
+  const n = new THREE.Vector3();
+  for (let i = 0; i < normal.count; i++) colors.fill(roundShade(n.fromBufferAttribute(normal, i), k), i * 3, i * 3 + 3);
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+}
+
+/** Metres of wood one repeat of the wood texture covers along the grain. The beds' sides repeat it as often (scenePlants.ts). */
+const WOOD_TILE = 1.2;
+/** A face of wood narrower than this (m) is one piece with no plank gap: a post, a leg, a board's edge. */
+const ONE_PLANK = 0.25;
+
+/**
+ * A box of wood (#1091), for `c.mat(c.woodTex, { vertexColors: true })`. On each face the grain runs along the longer
+ * side; a face at least ONE_PLANK across shows the texture's two planks, a narrower one the middle of one plank. Its
+ * faces are shaded by the sun (shade) in the box's own frame: the bench and signs are turned a little, too little to see.
+ */
+export function woodBox(w: number, h: number, d: number): THREE.BoxGeometry {
+  const box = new THREE.BoxGeometry(w, h, d);
+  const uv = box.getAttribute("uv");
+  // Faces +x, -x, +y, -y, +z, -z, with four corners each: each face's size along its u and its v, in metres.
+  const sizes = [
+    [d, h],
+    [d, h],
+    [w, d],
+    [w, d],
+    [w, h],
+    [w, h],
+  ];
+  // Across the grain: the whole texture (two planks), or a band inside its lower plank, clear of its gaps and light edge (textures.ts wood).
+  const across = (t: number, size: number) => (size < ONE_PLANK ? 0.1 + t * 0.3 : t);
+  sizes.forEach(([fu, fv], f) => {
+    for (let i = f * 4; i < f * 4 + 4; i++) {
+      const [u, v] = [uv.getX(i), uv.getY(i)];
+      if (fu >= fv) uv.setXY(i, (u * fu) / WOOD_TILE, across(v, fv));
+      else uv.setXY(i, (v * fv) / WOOD_TILE, across(u, fu));
+    }
+  });
+  shade(box);
+  return box;
 }
 
 /** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */

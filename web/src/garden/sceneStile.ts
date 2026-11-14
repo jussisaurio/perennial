@@ -11,11 +11,10 @@
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
-import { SUN_AT } from "./bench";
 import { CUT, HILL, HILLTOP_R, hillMesh, hillY, PATH_TURN, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
 import { shadeUp, tiledBox } from "./sceneHedge";
-import { still, type BuildCtx } from "./sceneSprites";
+import { roundShade, shade, still, woodBox, type BuildCtx } from "./sceneSprites";
 import { BRAMBLES_IN, SHEET, STEP, TOP, type StileNotes, type StileSpot } from "./stile";
 import * as T from "./textures";
 
@@ -33,28 +32,6 @@ const RING = { far: HILL.r + 0.4, h: 1.9 };
 const CLUMP_SQUARE = 6;
 /** How high the handrails stand over the steps (m). */
 const RAIL_H = 0.8;
-
-/** Toward the day's sun: the same shading at every time of day, as the tint does the rest. */
-const SUN = new THREE.Vector3(...SUN_AT.day).normalize();
-
-/** How light a face with normal `n` is drawn, shaded by hand: the garden is lit by tint alone. 1 for flat ground. */
-function sunShade(n: THREE.Vector3): number {
-  return 1 + 0.7 * (n.dot(SUN) - SUN.y);
-}
-
-/** How light a face with normal `n` is drawn, times `k`. A round thing shows its side turned from the sun: kept from going black. */
-function roundShade(n: THREE.Vector3, k: number): number {
-  return k * Math.max(0.7, sunShade(n));
-}
-
-/** Shade `geo` by its normals (roundShade), times `k`, as vertex colours. */
-function shade(geo: THREE.BufferGeometry, k = 1) {
-  const normal = geo.getAttribute("normal");
-  const colors = new Float32Array(normal.count * 3);
-  const n = new THREE.Vector3();
-  for (let i = 0; i < normal.count; i++) colors.fill(roundShade(n.fromBufferAttribute(normal, i), k), i * 3, i * 3 + 3);
-  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-}
 
 /** A thorn as a cane bears it, before it is turned and moved: point up, its foot on the cane's skin. */
 const THORN = new THREE.ConeGeometry(0.028, 0.12, 4).translate(0, 0.06 + 0.025, 0);
@@ -326,10 +303,10 @@ export class StileScene {
 
   /** The stile: steps up and down, the top board over the fence, and a handrail down each side. */
   private buildStile(c: BuildCtx) {
-    const wood = c.mat(c.woodTex);
+    const wood = c.mat(c.woodTex, { vertexColors: true });
     const g = new THREE.Group();
     const box = (w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wood);
+      const m = new THREE.Mesh(woodBox(w, h, d), wood);
       m.position.set(x, y, z);
       m.rotation.x = tilt;
       g.add(m);
