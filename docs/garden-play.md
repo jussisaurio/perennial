@@ -24,7 +24,7 @@ What to build is in [direction.md](direction.md), section 3. The physics are in 
 - **Screen readers:** each verb works through the action button, which has a name, plus a short status line.
 - **Words in the world are in the course language (#650)** and have a `lang` attribute. They are never quizzed. Text about the world (buttons, the status line) is English.
 - **Privacy:** `garden_action` counts verbs by name only.
-- **Art:** match the retro pixel style of `visitorArt.ts`, `carryArt.ts` and `textures.ts`.
+- **Art:** follow [art-direction.md](art-direction.md): the app's paper-craft style, not pixel art.
 - **Tests:** unit tests of pure logic take a pinned `now`. An e2e test imports `test` from "./test", pins the clock and the viewport, picks the hour for day, evening or night, and pins the detail to low (`pinDetail` in `e2e/helpers.ts`). To open the walk in a browser: `/?demo=es:200#/garden`.
 
 ## The action button

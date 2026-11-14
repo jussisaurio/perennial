@@ -10,7 +10,7 @@ next, and what we don't: [docs/direction.md](docs/direction.md).
 - **Frequency-first course.** Words come from OpenSubtitles frequency lists. The sentences are drafted with a model ahead of time, reviewed, and shipped as static decks.
 - **Memory per word × skill** (read / listen / write). Each review shows a different sentence.
 - **FSRS-6** scheduling, with two buttons.
-- **The garden:** a plant per word, grown from the word itself. A strip on Today, and a retro 3D garden you can walk through.
+- **The garden:** a plant per word, grown from the word itself. A strip on Today, and a 3D garden you can walk through.
 - **Words from your own texts:** paste any text and tap the unknown words (Perennial AI, needs an email account).
 - **A web app you can add to your home screen.** Start without an account. Add your email to keep your progress and use it on every device.
 
