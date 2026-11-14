@@ -2,7 +2,7 @@
 
 We use [Effect](https://effect.website) where the code does I/O. Errors, timeouts, retries and clean-up then become part of the types, and tests can swap the parts. The plan and the reasons are in [#322](https://github.com/jussisaurio/perennial/issues/322).
 
-**Version:** `effect` **4.0.0**, `@effect/platform-bun` **4.0.0** and `@effect/sql-pg` **4.0.0**, pinned exactly (no `^`). The root `package.json` also pins `@effect/platform-node-shared` to 4.0.0, so the whole family is one version. Upgrade them together, on purpose, in their own PR.
+**Version:** `effect` **4.1.4**, `@effect/platform-bun` **4.1.4** and `@effect/sql-pg` **4.1.4**, pinned exactly (no `^`). The root `package.json` also pins `@effect/platform-node-shared` to 4.1.4, so the whole family is one version. Upgrade them together, on purpose, in their own PR.
 
 **How we write it:** we follow kitlangton's [effect skill](https://github.com/kitlangton/skills/tree/main/skills/effect). When the skill and the installed package disagree, the package wins: read the `.d.ts` files in `node_modules` before you guess an API.
 
@@ -23,7 +23,7 @@ Inside Effect code, plain TypeScript is fine: `null`, `if`, loops. We do not use
 
 - **Effect:** the HTTP edge (`server/src/app.ts`), settings (`config.ts`), logging and the request's context (`log.ts`, `request.ts`), the start and stop of the process (`index.ts`), and every service: Postgres (`db.ts`, on `@effect/sql-pg`), `Sync`, `Ai` and the model adapter `Model` (`model.ts`), `Mail`, `Words` (the deck word ids, read at start), `Migrations`, `Housekeeping` and the event-loop watchdog. `services.ts` puts them together.
 - **Promise code, on purpose:** Better Auth (its hooks call our Effects with `Effect.runPromise`), `instrument.ts` (Sentry's preload), and the pure helpers (`clientIp.ts`, `course.ts`, `prompts.ts`). `mock-llm.ts` is a test stand-in.
-- **Two Postgres pools:** the app's (sql-pg, up to 10) and Better Auth's (`pg`, up to 4). sql-pg 4.0.0 is its own wire-protocol client and cannot share a `pg` pool.
+- **Two Postgres pools:** the app's (sql-pg, up to 10) and Better Auth's (`pg`, up to 4). sql-pg 4.1 is its own wire-protocol client and cannot share a `pg` pool.
 
 ### Where the app is now (#322, part 4)
 

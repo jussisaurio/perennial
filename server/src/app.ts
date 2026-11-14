@@ -14,7 +14,7 @@ import * as Sentry from "@sentry/bun";
 import { Context, Effect, Layer, Schema } from "effect";
 import type { Scope } from "effect";
 import { HttpRouter, HttpServer, HttpServerError, HttpServerRequest, HttpServerResponse } from "effect/http";
-import type { HttpMethod } from "effect/http/HttpMethod";
+import { type HttpMethod, isHttpMethod } from "effect/http/HttpMethod";
 import { AuthUser, DemoIn, ExamplesIn, MineIn, WriteBatch, type Boot, type Me, type ServerInfo } from "perennial-contract";
 import { withClientIp } from "./clientIp";
 import { AppConfig, googleClient } from "./config";
@@ -138,7 +138,8 @@ export const AppLive = Layer.effect(
           // A route answers only its own path, exactly, as before; the others
           // are not found (404 under /api/, else the web app).
           if (new URL(request.url).pathname !== path) return yield* new HttpServerError.HttpServerError({ reason: new HttpServerError.RouteNotFound({ request: incoming }) });
-          const handler = methods[incoming.method];
+          // A method outside the known ones (PROPFIND) has no handler either.
+          const handler = isHttpMethod(incoming.method) ? methods[incoming.method] : undefined;
           return handler ? yield* handler : yield* refuse({ error: "method_not_allowed" });
         }),
         { uninterruptible: true },

@@ -4,7 +4,7 @@
 // response says whether any row changed, and has the rows the server merges.
 
 import { PgClient } from "@effect/sql-pg";
-import { Clock, Context, Effect, Layer } from "effect";
+import { Array as Arr, Clock, Context, Effect, Layer } from "effect";
 import type { SqlError } from "effect/sql/SqlError";
 import { type LearnerRows, type Mutation, type UserId, type WordId, type WriteBatch, type WriteResult } from "perennial-contract";
 import { COURSE_DEFAULTS, NOTES_READ_UNION } from "./course";
@@ -160,7 +160,7 @@ export const SyncLive = Layer.effect(
             // each, 3.3 s for a batch of 500 against the production database (#764).
             let reviews: Record<string, unknown>[] = [];
             const insertReviews = Effect.gen(function* () {
-              if (!reviews.length) return;
+              if (!Arr.isArrayNonEmpty(reviews)) return;
               // Insert-only: a reused id never overwrites anything, least of all another user's row.
               rows += yield* rowCount(sql`insert into review ${sql.insert(reviews)} on conflict (id) do nothing`);
               reviews = [];
@@ -188,8 +188,8 @@ export const SyncLive = Layer.effect(
                     ? ((yield* sql<{ notes_read: string[] }>`select notes_read from course where user_id = ${userId} and lang = ${r.lang} for update`)[0]?.notes_read ?? [])
                     : [];
                   const firstReads = (r.notes_read ?? []).filter((id) => !wasRead.includes(id));
-                  if (firstReads.length)
-                    yield* sql`insert into use_event ${sql.insert(firstReads.map((note) => ({ user_id: userId, lang: r.lang, kind: "note_read", at: now, note })))}`;
+                  if (Arr.isArrayNonEmpty(firstReads))
+                    yield* sql`insert into use_event ${sql.insert(Arr.map(firstReads, (note) => ({ user_id: userId, lang: r.lang, kind: "note_read", at: now, note })))}`;
                   // `?? []`: a write without the list adds nothing to it.
                   const res = yield* sql<{ inserted: boolean }>`insert into course (user_id, lang, minutes, retention, door_open, notes_read)
                     values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true}, ${sql.json(r.notes_read ?? [])})
