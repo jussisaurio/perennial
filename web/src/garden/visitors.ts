@@ -282,8 +282,6 @@ export function frogCroak(known: readonly string[], lang: string, tap: number, n
 
 // ---- The snail's long trip (#55) ----
 
-/** Pickets per metre of fence (the picket texture has four per metre). @internal Exported for tests. */
-export const PICKETS_PER_M = 4;
 /** Half the width of the gate opening, in metres. */
 export const GATE_HALF = 1.1;
 
@@ -322,26 +320,43 @@ function fencePath(l: Fenced): [number, number][] {
   ];
 }
 
-export function fencePickets(l: Fenced): number {
+/**
+ * The fence's line `inside` metres into the garden, the same way round as fencePath. Going (dx, dz) along a side, the
+ * garden is toward (dz, -dx). Every turn is square, so a corner moves in along both sides.
+ */
+function fenceLine(l: Fenced, inside: number): [number, number][] {
   const path = fencePath(l);
-  let len = 0;
-  for (let i = 1; i < path.length; i++) len += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
-  return Math.max(1, Math.floor(len * PICKETS_PER_M));
+  const into = (j: number): [number, number] => {
+    const [[ax, az], [bx, bz]] = [path[j], path[j + 1]];
+    const len = Math.hypot(bx - ax, bz - az);
+    return [((bz - az) / len) * inside, (-(bx - ax) / len) * inside];
+  };
+  return path.map(([x, z], i) => {
+    const sides = [i - 1, i].filter((j) => j >= 0 && j < path.length - 1).map(into);
+    return [x + sides.reduce((s, [ox]) => s + ox, 0), z + sides.reduce((s, [, oz]) => s + oz, 0)];
+  });
 }
 
-/** The point on the fence at `picket`, and the direction of the fence there (for "inside"). */
-export function fencePoint(l: Fenced, picket: number): { x: number; z: number; dx: number; dz: number } {
-  const path = fencePath(l);
-  let d = (picket + 0.5) / PICKETS_PER_M;
-  for (let i = 1; i < path.length; i++) {
-    const [x1, z1] = path[i - 1];
-    const [x2, z2] = path[i];
-    const len = Math.hypot(x2 - x1, z2 - z1);
-    if (d <= len || i === path.length - 1) {
-      const k = len ? Math.min(1, d / len) : 0;
-      return { x: x1 + (x2 - x1) * k, z: z1 + (z2 - z1) * k, dx: len ? (x2 - x1) / len : 1, dz: len ? (z2 - z1) / len : 0 };
-    }
-    d -= len;
-  }
-  return { x: path[0][0], z: path[0][1], dx: 1, dz: 0 };
+/**
+ * A stiff thing `long` metres long on the fence's line `inside` metres in, `lap` of the way round (0 to 1, snailLap):
+ * where its back end is, and the way (dx, dz) to its front end. Both ends stay on the line, so at a corner it spans it,
+ * its back on one side and its front on the next, as a snail does across two walls.
+ */
+export function onFence(l: Fenced, inside: number, long: number, lap: number): { x: number; z: number; dx: number; dz: number } {
+  const line = fenceLine(l, inside);
+  const lens = line.slice(1).map(([x, z], i) => Math.hypot(x - line[i][0], z - line[i][1]));
+  let t = lap * (lens.reduce((a, b) => a + b) - long);
+  let i = 0;
+  while (t > lens[i]) t -= lens[i++];
+  const along = (j: number): [number, number] => [(line[j + 1][0] - line[j][0]) / lens[j], (line[j + 1][1] - line[j][1]) / lens[j]];
+  const [ux, uz] = along(i);
+  const [x, z] = [line[i][0] + ux * t, line[i][1] + uz * t];
+  if (t + long <= lens[i]) return { x, z, dx: ux, dz: uz };
+  // Its front on the next side, s along it: |corner + s·v - back| = long.
+  const [vx, vz] = along(i + 1);
+  const [wx, wz] = [line[i + 1][0] - x, line[i + 1][1] - z];
+  const wv = wx * vx + wz * vz;
+  const s = -wv + Math.sqrt(wv * wv - (wx * wx + wz * wz) + long * long);
+  if (s > lens[i + 1]) throw new Error(`a side of the fence is shorter than ${long} m`);
+  return { x, z, dx: (line[i + 1][0] + vx * s - x) / long, dz: (line[i + 1][1] + vz * s - z) / long };
 }

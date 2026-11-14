@@ -118,7 +118,7 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
       Object.assign(g.me, { x: g.bench.x - 1.05, z: g.bench.z - 0.75, yaw: Math.PI, pitch: -0.45 });
     }),
   // Near the first visitor in the garden (1.3 m, or more for a big one), looking at it, from the first side round it
-  // (from where the walk opens) where no solid thing is in the way (#1164): its drawing up close. Open with
+  // (from where the walk opens, or a fixed one's front) where no solid thing is in the way (#1164): its drawing up close. Open with
   // --visitors <id>. The bird hops off nearer than 1 m (kinds/bird.ts SHY).
   visitor: (page) =>
     page.evaluate(async () => {
@@ -127,7 +127,7 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
       // The scene's parts this reads are private to it, as whole-cutout.spec.ts reads them.
       type Drawn = {
         hitBoxes: HitBox[];
-        guests: { sprites: { size: number; body: { visible: boolean; x: number; y: number; z: number } }[] };
+        guests: { sprites: { kind: { stand?: string }; size: number; body: { visible: boolean; x: number; y: number; z: number; turn: number } }[] };
       };
       const s = window.__garden as unknown as Drawn;
       const v = s.guests.sprites.find((v) => v.body.visible);
@@ -136,7 +136,8 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
       // Where it is drawn now: a visitor may wait away from its home (by the key, #802). Look at the middle of its cell's lower half.
       const { x, z } = v.body;
       const y = v.body.y + v.size * 0.25;
-      const from = Math.atan2(g.me.x - x, g.me.z - z);
+      // A fixed one (the snail on the fence) shows its drawing on its front only, (-sin, cos) of its turn: start there.
+      const from = v.kind.stand === "fixed" ? -v.body.turn : Math.atan2(g.me.x - x, g.me.z - z);
       // Far enough to see a tall one whole (the heron); twice as far if something solid is in the way all round (the goat on its ledge).
       const near = Math.max(1.3, v.size * 2);
       for (const r of [near, near * 2])

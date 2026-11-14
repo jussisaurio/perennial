@@ -15,7 +15,7 @@ export const fish: VisitorKind<Look> = {
   art: { fish: KOI },
   hit: [0, 0.3, 0.2],
   top: 0.2,
-  lying: true,
+  stand: "lying",
   arrive({ layout, reducedMotion }) {
     const { pond } = layout;
     const r = pond.r * CIRCLE;

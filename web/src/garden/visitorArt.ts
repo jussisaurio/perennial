@@ -41,6 +41,11 @@ export function artLeft(w: number): number {
   return Math.floor((32 - w) / 2);
 }
 
+/** Where a cut-out `w` wide ends, left and right, from its cell's middle line, drawn `size` metres to the cell (m). */
+export function artEnds(w: number, size: number): [number, number] {
+  return [((artLeft(w) - 16) / 32) * size, ((artLeft(w) + w - 16) / 32) * size];
+}
+
 /** The one near-black: eyes, noses, a mouth. Never an outline. */
 const INK = "#2b1d15";
 
@@ -140,6 +145,11 @@ export const SNAIL: Cutout = {
     flat(spiral(6.2, 6.0, 4.1, 2.2), SHELL_DARK),
   ],
 };
+/**
+ * The snail going left, as you see it on the fence from inside the garden (kinds/snail.ts). Drawn so, not shown from
+ * behind, so its cut edges still catch the light on their upper left.
+ */
+export const SNAIL_LEFT: Cutout = { w: SNAIL.w, h: SNAIL.h, pieces: mirrored(SNAIL.pieces, SNAIL.w) };
 
 // ---- Cat ----
 const CAT = "#df8a45";

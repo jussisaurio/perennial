@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
-import { cuts, reachOf, type Rest } from "./wholeCutout";
+import { cuts, spanOf, type Rest } from "./wholeCutout";
 import type { HitBox } from "../garden/scenery";
 
 // The check of render.whole-cutout (docs/invariants.md) finds a solid thing inside the circle a cut-out sweeps as it turns.
 
 const box = (id: HitBox["id"], min: [number, number, number], max: [number, number, number], turn?: number): HitBox => ({ id, min, max, tag: null, ...(turn !== undefined && { turn }) });
-const rest = (at: [number, number, number], reach: number, tall = 0.3): Rest => ({ who: "it", at, reach, tall });
+const rest = (at: [number, number, number], reach: number, tall = 0.3): Rest => ({ who: "it", at, span: { kind: "round", reach }, tall });
 const cutBy = (b: HitBox, at: [number, number, number], reach: number, tall?: number) => cuts([b], [rest(at, reach, tall)]).length > 0;
 // A bench's back: 1.36 m along x, behind z = -0.15, up to 0.8 m; its seat up to 0.45 m.
 const back = box("bench", [-0.68, 0, -0.25], [0.68, 0.8, -0.15]);
@@ -42,6 +42,25 @@ test("render.whole-cutout: a visitor reaches as far as its widest frame, from th
   // 24 of 32 units wide: 4 units each side, 12 from the middle. 15 wide: 8 to the left, 7 to the right.
   const a = { w: 24, h: 12, pieces: [] };
   const b = { w: 15, h: 20, pieces: [] };
-  expect(reachOf([a, b], 0.5)).toEqual({ reach: (12 / 32) * 0.5, tall: (20 / 32) * 0.5 });
-  expect(reachOf([b], 1)).toEqual({ reach: 8 / 32, tall: 20 / 32 });
+  expect(spanOf([a, b], 0.5, null)).toEqual({ span: { kind: "round", reach: (12 / 32) * 0.5 }, tall: (20 / 32) * 0.5 });
+  expect(spanOf([b], 1, null)).toEqual({ span: { kind: "round", reach: 8 / 32 }, tall: 20 / 32 });
+  // Fixed, it runs from its left end to its right.
+  expect(spanOf([b], 1, 0.5)).toEqual({ span: { kind: "line", turn: 0.5, from: -8 / 32, to: 7 / 32 }, tall: 20 / 32 });
+});
+
+test("render.whole-cutout: a cut-out fixed along a line is cut only by what is on that line", () => {
+  // A fence along x at z = 0, and a snail 6 cm in from it, 35 cm long, fixed along x: the fence is beside it, not on it.
+  const fence = box("fence", [-2, 0, -0.05], [2, 0.8, 0.05]);
+  const snail = (at: [number, number, number], turn: number): Rest => ({ who: "it", at, span: { kind: "line", turn, from: -0.175, to: 0.175 }, tall: 0.24 });
+  expect(cuts([fence], [snail([0, 0.53, 0.06], 0)])).toEqual([]);
+  expect(cuts([fence], [snail([0, 0.53, 0.06], Math.PI)])).toEqual([]);
+  // Turned to face you, the same snail swings through it.
+  expect(cutBy(fence, [0, 0.53, 0.06], 0.175)).toBe(true);
+  // Across the fence, or with an end past its end into a fence round a corner, it is cut.
+  expect(cuts([fence], [snail([0, 0.53, 0.06], Math.PI / 2)])).toEqual([{ who: "it", by: "fence" }]);
+  const side = box("fence", [2, 0, -2], [2.1, 0.8, 2]);
+  expect(cuts([side], [snail([1.9, 0.53, 0.06], 0)])).toEqual([{ who: "it", by: "fence" }]);
+  expect(cuts([side], [snail([1.8, 0.53, 0.06], 0)])).toEqual([]);
+  // A turned box is met in its own frame: a board turned a quarter, across the snail's line.
+  expect(cuts([box("sign", [-0.5, 0, 0.01], [0.5, 1, 0.11], Math.PI / 2)], [snail([0, 0.53, 0.06], 0)])).toEqual([{ who: "it", by: "sign" }]);
 });
