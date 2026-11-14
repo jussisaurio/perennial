@@ -15,7 +15,7 @@ THREE.ColorManagement.enabled = false;
 /** "far": the trees outside the fence, the clouds and the sky's looks, with tonight's moon. "orchard": the orchard's tree atlas. */
 export type PaintJob = { kind: "far"; moonPhase: number } | { kind: "orchard" };
 
-/** A painted texture: unpremultiplied RGBA, top row first. Empty pixels at an edge carry their neighbour's colour (bleedEdges). */
+/** A painted texture: unpremultiplied RGBA, top row first. Empty pixels carry the nearest drawn pixel's colour (bleedEdges). */
 export interface Pixels {
   width: number;
   height: number;

@@ -1,7 +1,7 @@
-// The orchard's trees as pixel art (#315), in the style of the trees outside
-// the fence (textures.ts trees()): one atlas, a 96×128 cell per kind and look,
-// drawn by textures.ts orchard(). The shapes are plain data, so the orchard's
-// hit boxes follow the drawing, and orchard.ts needs no three.js.
+// The orchard's trees (#315), as paper in the style of the trees outside the
+// fence (textures.ts trees()): one atlas, a cell of 96×128 units per kind and
+// look, drawn by textures.ts orchard(). The shapes are plain data, so the
+// orchard's hit boxes follow the drawing, and orchard.ts needs no three.js.
 
 import { ORCHARD_WORDS, type OrchardWord } from "../deck/schema";
 import type { PixelArt } from "./pixelArt";
@@ -12,14 +12,14 @@ export const CELL_H_PX = 128;
 export const LOOKS = ["leaves", "blossom", "fruit"] as const;
 
 type Fruit = {
-  /** round: 3 px; small: 2 px (olives); pair: cherries on a stem; drop: a pear; bunch: grapes; nest: the plain tree's bird nest. */
+  /** round: a fruit; small: a smaller one (olives); pair: cherries on a stem; drop: a pear; bunch: grapes; nest: the plain tree's bird nest. */
   shape: "round" | "small" | "pair" | "drop" | "bunch" | "nest";
   /** Light and dark colour. */
   color: [string, string];
   count: number;
 };
 
-/** A tree drawn as blobs of leaves ([dx from the middle, y of the middle, radius], in pixels) on a trunk, or a vine on a trellis. */
+/** A tree drawn as blobs of leaves ([dx from the middle, y of the middle, radius], in cell units) on a trunk, or a vine on a trellis. */
 export interface TreeShape {
   blobs: [number, number, number][];
   trunk: { top: number; w: number };
