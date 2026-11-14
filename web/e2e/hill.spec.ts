@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { pinDetail } from "./helpers";
+import { pinDetail, type Drawn } from "./helpers";
 
 // The back fence, the stile and the hill (#770, docs/garden-play.md "Back
 // fence, stile and hill"): the claims that need a browser, played as the
@@ -9,17 +9,8 @@ import { pinDetail } from "./helpers";
 // the start is set by hand. The clock is pinned to a day; the viewport to a
 // laptop's.
 
-/** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
-type HillScene = {
-  layout: object;
-  x: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-  camera: unknown;
-  elapsed: number;
-  lookoutThings: { ribbon: { visible: boolean } };
-};
+/** The renderer's parts these tests read: the game itself is window.__garden.game. */
+type HillScene = Drawn & { lookoutThings: { ribbon: { visible: boolean } } };
 
 /** Where things stand, from the game's own code. */
 type Spots = {
@@ -54,8 +45,7 @@ async function walkIn(page: Page, words: number | `known:${number}`): Promise<Sp
   return page.evaluate(async () => {
     const stile = await import(/* @vite-ignore */ "/src/garden/stile.ts");
     const lookout = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
-    const s = (window as unknown as { __garden: HillScene }).__garden;
-    const at = stile.stileAt(s.layout as Parameters<typeof stile.stileAt>[0]);
+    const at = stile.stileAt(window.__garden.game.layout);
     const hill = lookout.lookoutAt(at);
     return { stile: at, stone: hill.stone, face: hill.face, turn: lookout.PATH_TURN };
   });
@@ -63,15 +53,15 @@ async function walkIn(page: Page, words: number | `known:${number}`): Promise<Sp
 
 /** Stand at (x, z), facing `yaw` (−z is 0; a positive yaw turns left). */
 const stand = (page: Page, x: number, z: number, yaw: number, pitch = 0) =>
-  page.evaluate((at) => Object.assign((window as unknown as { __garden: HillScene }).__garden, at), { x, z, yaw, pitch });
+  page.evaluate((at) => Object.assign(window.__garden.game.me, at), { x, z, yaw, pitch });
 
 const where = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: HillScene }).__garden;
-    return { x: s.x, z: s.z };
+    const me = window.__garden.game.me;
+    return { x: me.x, z: me.z };
   });
 
-const gameTime = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.elapsed);
+const gameTime = (page: Page) => page.evaluate(() => window.__garden.game.elapsed);
 
 /** Wait until the garden has run `s` seconds: by its own clock, not the test's, so a slow machine's few frames still cover the same ground (#790). */
 async function waitGame(page: Page, s: number) {
@@ -142,8 +132,8 @@ test("hill.tap: tapping the hill's ground past the fence walks you there, over t
   const at = await page.evaluate(async (to) => {
     const { hillY, lookoutAt } = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
     const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
-    const s = (window as unknown as { __garden: HillScene & { tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } } } }).__garden;
-    const hill = lookoutAt(stileAt(s.layout as Parameters<typeof stileAt>[0]));
+    const s = window.__garden as unknown as Drawn;
+    const hill = lookoutAt(stileAt(window.__garden.game.layout));
     const v = new s.tmp.constructor(to.x, hillY(hill, to.x, to.z), to.z).project(s.camera);
     const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
     return [r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height] as const;
@@ -178,7 +168,7 @@ test("hill.diary: with n09, by the stone, Read the diary opens it on n09; before
 test("hill.diary-new: with a page not read, the diary shows its ribbon and opens on it; read, the ribbon is gone", async ({ page }) => {
   // n12 not read yet; the eight pages before it read.
   const s = await walkIn(page, `known:${N12}`);
-  const ribbon = () => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lookoutThings.ribbon.visible);
+  const ribbon = () => page.evaluate(() => (window.__garden as unknown as HillScene).lookoutThings.ribbon.visible);
   expect(await ribbon()).toBe(true);
   await byStone(page, s);
   await button(page, "Read the diary").click();

@@ -1,23 +1,12 @@
 import { expect, test, type Page } from "./test";
-import { pinDetail } from "./helpers";
+import { pinDetail, type Drawn } from "./helpers";
 
 // #360, lawn toys: blow a dandelion clock by the fence. The playwright config
 // asks for reduced motion: the seeds fade on the clock. Where the wind takes
 // things is unit-tested (garden/toys.test.ts).
 
-/** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
-type ToyScene = {
-  x: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-  camera: unknown;
-  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  /** The clocks as the game holds them (toys.ts Clocks). */
-  game: { clocks: { heads: { id: string; x: number; z: number }[]; blown: boolean[] } };
-  /** The seeds as drawn (sceneToys.ts). */
-  toys: { seeds: { visible: boolean } };
-};
+/** The renderer's parts these tests read: the seeds as drawn (sceneToys.ts). The clocks are the game's (toys.ts Clocks). */
+type ToyScene = Drawn & { toys: { seeds: { visible: boolean } } };
 
 const DAY = new Date("2026-06-01T12:00:00");
 
@@ -36,8 +25,8 @@ async function openWalk(page: Page) {
 
 const toysNow = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: ToyScene }).__garden;
-    return { blown: s.game.clocks.blown, seeds: s.toys.seeds.visible };
+    const s = window.__garden as unknown as ToyScene;
+    return { blown: window.__garden.game.clocks.blown, seeds: s.toys.seeds.visible };
   });
 
 /** Stand 1.5 m in front of the clock on the back fence, facing it; return where it shows on the page (pixels). */
@@ -45,10 +34,11 @@ const facingClock = (page: Page) =>
   page.evaluate(
     () =>
       new Promise<[number, number]>((done) => {
-        const s = (window as unknown as { __garden: ToyScene }).__garden;
-        const h = s.game.clocks.heads.find((h) => h.id === "base:0")!;
+        const g = window.__garden.game;
+        const s = window.__garden as unknown as Drawn;
+        const h = g.clocks.heads.find((h) => h.id === "base:0")!;
         // Forward is -z at yaw 0: the back fence is that way.
-        Object.assign(s, { x: h.x, z: h.z + 1.5, yaw: 0, pitch: -Math.atan2(1.05 - 0.25, 1.5) });
+        Object.assign(g.me, { x: h.x, z: h.z + 1.5, yaw: 0, pitch: -Math.atan2(1.05 - 0.25, 1.5) });
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             const v = new s.tmp.constructor(h.x, 0.25, h.z).project(s.camera);

@@ -5,21 +5,20 @@ import { pinDetail, standBy } from "./helpers";
 // could get. Its tag says what it is; a screen reader hears where it stands.
 // Look away and back, and it has gone.
 
-/** The parts of the dev-only scene handle (window.__garden) this test reads and moves. */
+/** The renderer's visitors, which this test reads. */
 type GoatScene = {
-  yaw: number;
   guests: { sprites: { v: { id: string }; body: { at: { x: number; y: number; z: number }; visible: boolean } }[] };
 };
 
 const goat = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: GoatScene }).__garden;
+    const s = window.__garden as unknown as GoatScene;
     const { at, visible } = s.guests.sprites.find((o) => o.v.id === "goat")!.body;
     return { at, visible };
   });
 
 /** Turn round by half a turn. */
-const turnRound = (page: Page) => page.evaluate(() => ((window as unknown as { __garden: GoatScene }).__garden.yaw += Math.PI));
+const turnRound = (page: Page) => page.evaluate(() => (window.__garden.game.me.yaw += Math.PI));
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-06-01T12:00:00"));

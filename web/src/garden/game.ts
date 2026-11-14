@@ -189,6 +189,30 @@ export interface GameHooks {
   lantern(i: number): void;
 }
 
+/** The game as plain data (Game.state): what an agent reads beside each picture of the look tool (#974). */
+export interface GameState {
+  x: number;
+  z: number;
+  yaw: number;
+  pitch: number;
+  /** What the walker is doing (walker.ts Mode), and what they sit on while seated. */
+  mode: W.Mode["kind"];
+  seat: W.Seat | null;
+  /** The time of day on show. */
+  time: TimeOfDay;
+  /** The game's own clock (s). */
+  elapsed: number;
+  /** What the action button does now, and everything else in reach that it would do if that were gone. */
+  reach: R.Reach | null;
+  inReach: R.Reach[];
+  /** The door in the hedge (DoorNow). */
+  door: DoorNow["state"];
+  /** The pebble in hand, by its number (carry.ts Pebbles.held), or null. */
+  holding: number | null;
+  /** The line the garden says now (the door's, a joke's, the far light's answer), or null. */
+  line: string | null;
+}
+
 /** The garden, all its state and rules: the walker, what is in reach, and every small thing in it. */
 export class Game {
   /** The walker (walker.ts): where you stand, where you look, and what you are doing. */
@@ -279,7 +303,8 @@ export class Game {
   /** The walk is drawn: from now on a visitor sent somewhere goes there in its own way (#802). */
   private started = false;
 
-  private readonly layout: Layout;
+  /** Where everything stands (world.ts). */
+  readonly layout: Layout;
   /** The course language: the lines the garden says are in it (#650). */
   private readonly lang: DeckLang;
   private readonly visitors: WalkVisitors;
@@ -880,6 +905,26 @@ export class Game {
   lift(x: number, z: number): number {
     if (!this.stileSpot || !this.hill) return 0;
     return stepY(this.stileSpot, x, z) + hillY(this.hill, x, z);
+  }
+
+  /** The game now as plain data (#974), for the look tool's state files. It changes nothing. */
+  state(): GameState {
+    const w = this.me;
+    return {
+      x: w.x,
+      z: w.z,
+      yaw: w.yaw,
+      pitch: w.pitch,
+      mode: w.mode.kind,
+      seat: w.mode.kind === "seated" ? w.mode.on : null,
+      time: this.shown,
+      elapsed: this.elapsed,
+      reach: this.offer ? this.offer.a : null,
+      inReach: R.offersAt(w, this.things, this.offer).map((o) => o.a),
+      door: this.door.state,
+      holding: this.pebbles.held,
+      line: this.line ? this.line.text : null,
+    };
   }
 
   /** Look round by (dx, dy) radians. */

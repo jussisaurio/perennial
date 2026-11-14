@@ -1,16 +1,12 @@
 import { expect, test, type Page } from "./test";
-import type { WalkScene } from "./helpers";
-import { pinDetail } from "./helpers";
+import { pinDetail, type Drawn } from "./helpers";
 
 // #364, the deadpan scenery: a sundial by the bench that tells the real time
 // (and is closed at night), a mouse door at the foot of the hedge, and a fish
 // that jumps once for someone who walks round the pond three times.
 
-/** The parts of the dev-only scene handle (window.__garden) these tests read. */
-type JokeScene = WalkScene & {
-  pitch: number;
-  layout: { pond: { x: number; z: number }; gate: { x: number }; bounds: { maxZ: number } };
-  game: { bench: { x: number; z: number } };
+/** The renderer's parts these tests read: the game itself is window.__garden.game. */
+type JokeScene = Drawn & {
   jokes: { shadow: { rotation: { y: number }; visible: boolean }; leapt: number | null; fish: { visible: boolean } };
 };
 
@@ -23,11 +19,11 @@ async function openWalk(page: Page) {
 /** Where things are: the sundial (by the bench), the mouse door and its mat (by the big door). */
 const places = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: JokeScene }).__garden;
-    const z0 = s.layout.bounds.maxZ + 0.1;
-    const mx = s.layout.gate.x - 0.9;
+    const g = window.__garden.game;
+    const z0 = g.layout.bounds.maxZ + 0.1;
+    const mx = g.layout.gate.x - 0.9;
     return {
-      sundial: { x: s.game.bench.x - 1.05, y: 0.5, z: s.game.bench.z },
+      sundial: { x: g.bench.x - 1.05, y: 0.5, z: g.bench.z },
       door: { x: mx, y: 0.1, z: z0 - 0.02 },
       mat: { x: mx, y: 0.02, z: z0 - 0.08 },
     };
@@ -37,9 +33,9 @@ const places = (page: Page) =>
 const lookAt = (page: Page, p: { x: number; y: number; z: number }, metres: number) =>
   page.evaluate(
     ({ p, metres }) => {
-      const s = (window as unknown as { __garden: JokeScene }).__garden;
+      const s = window.__garden as unknown as Drawn;
       // Forward is -z at yaw 0: yaw π faces +z.
-      Object.assign(s, { x: p.x, z: p.z - metres, yaw: Math.PI, pitch: -Math.atan2(1.05 - p.y, metres) });
+      Object.assign(window.__garden.game.me, { x: p.x, z: p.z - metres, yaw: Math.PI, pitch: -Math.atan2(1.05 - p.y, metres) });
       return new Promise<[number, number]>((done) =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -55,7 +51,7 @@ const lookAt = (page: Page, p: { x: number; y: number; z: number }, metres: numb
 
 const jokes = (page: Page) =>
   page.evaluate(() => {
-    const j = (window as unknown as { __garden: JokeScene }).__garden.jokes;
+    const j = (window.__garden as unknown as JokeScene).jokes;
     return { shadow: j.shadow.rotation.y, shadowShows: j.shadow.visible, leapt: j.leapt, fish: j.fish.visible };
   });
 
@@ -105,13 +101,13 @@ test("three times round the pond, and one fish jumps, once", async ({ page }) =>
   /** Walk `turns` times round the pond, facing it, a frame per step. */
   const round = (turns: number) =>
     page.evaluate(async (turns) => {
-      const s = (window as unknown as { __garden: JokeScene }).__garden;
-      const p = s.layout.pond;
+      const { me, layout } = window.__garden.game;
+      const p = layout.pond;
       const frame = () => new Promise((done) => requestAnimationFrame(done));
       for (let a = 0; a <= turns * Math.PI * 2; a += 0.3) {
         const [x, z] = [p.x + Math.cos(a) * 2, p.z + Math.sin(a) * 2];
         // Forward is -z at yaw 0.
-        Object.assign(s, { x, z, yaw: Math.atan2(-(p.x - x), -(p.z - z)), pitch: -0.3 });
+        Object.assign(me, { x, z, yaw: Math.atan2(-(p.x - x), -(p.z - z)), pitch: -0.3 });
         await frame();
       }
     }, turns);

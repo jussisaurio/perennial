@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { doorNow, gameSeconds, pinDetail, serverRows, standAtDoor, standBy, standByKey, trackOf, trackVisitors, waitForSynced } from "./helpers";
+import { doorNow, gameSeconds, pinDetail, serverRows, standAtDoor, standBy, standByKey, trackOf, trackVisitors, waitForSynced, type Drawn } from "./helpers";
 
 // #315: the old door in the hedge. Locked until "key" (llave) brings the key,
 // which hides somewhere in the garden (a different place for each learner);
@@ -12,9 +12,10 @@ import { doorNow, gameSeconds, pinDetail, serverRows, standAtDoor, standBy, stan
  */
 function keyInTheOpen(page: Page) {
   return page.evaluate(() => {
-    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; game: { door: { key: { x: number; z: number } } } } }).__garden;
-    const bed = s.layout.beds[0];
-    Object.assign(s.game.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
+    const g = window.__garden.game;
+    const bed = g.layout.beds[0];
+    // The key lies on the ground until it is picked up.
+    Object.assign(g.door.key!, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
   });
 }
 
@@ -88,14 +89,15 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
     page.evaluate(
       ([x, y, blocked]) => {
         type Box = { id: string; min: number[]; max: number[]; tag: null };
-        const s = (window as unknown as { __garden: { x: number; z: number; hitBoxes: Box[]; game: { door: { key: { x: number; z: number } } }; pickAny(x: number, y: number, w: number, h: number): { kind: string; a?: string } | null } }).__garden;
-        const k = s.game.door.key;
-        const [mx, mz] = [(s.x + k.x) / 2, (s.z + k.z) / 2];
+        const { me, door } = window.__garden.game;
+        const s = window.__garden as unknown as { hitBoxes: Box[] };
+        const k = door.key!;
+        const [mx, mz] = [(me.x + k.x) / 2, (me.z + k.z) / 2];
         if (blocked) s.hitBoxes.push({ id: "stone", min: [mx - 0.2, 0, mz - 0.2], max: [mx + 0.2, 1.2, mz + 0.2], tag: null });
         const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
-        const hit = s.pickAny(x - r.left, y - r.top, r.width, r.height);
+        const hit = window.__garden.pickAny(x - r.left, y - r.top, r.width, r.height);
         if (blocked) s.hitBoxes.pop();
-        return hit?.a ?? hit?.kind;
+        return hit?.kind === "door" ? hit.a : hit?.kind;
       },
       [...at, blocked] as const,
     );
@@ -103,7 +105,7 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   // cloning it (structured clone, going both ways) strips its Vector3 methods, so Door.tick
   // throws every frame once the clone is written back (#343).
   const home = await page.evaluate(() => {
-    const k = (window as unknown as { __garden: { game: { door: { key: { x: number; z: number } } } } }).__garden.game.door.key;
+    const k = window.__garden.game.door.key!;
     return { x: k.x, z: k.z };
   });
   await keyInTheOpen(page);
@@ -111,7 +113,7 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   expect(await meets(far, false)).toBe("key");
   expect(await meets(far, true)).toBe("scenery");
   expect(await meets(await standByKey(page), true)).toBe("key");
-  await page.evaluate((home) => Object.assign((window as unknown as { __garden: { game: { door: { key: { x: number; z: number } } } } }).__garden.game.door.key, home), home);
+  await page.evaluate((home) => Object.assign(window.__garden.game.door.key!, home), home);
   // By the key, its button shows, and a screen reader hears that it is here. A tap: one quiet line, and it is gone from the ground.
   const key = await standByKey(page);
   await expect(page.getByRole("button", { name: "Pick up the key" })).toBeVisible();
@@ -137,16 +139,11 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   expect(errors).toEqual([]);
 });
 
-/** The parts of the dev-only scene handle (window.__garden) the orchard test reads. */
-type OrchardScene = {
-  x: number;
-  z: number;
-  camera: unknown;
-  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  layout: { orchard: { z: number; d: number } };
+/** The renderer's parts the orchard test reads: the game itself is window.__garden.game. */
+type OrchardScene = Drawn & {
   orchard: { trees: { lemma: string; gloss: string; height: number; look: string; x: number; z: number }[] } | null;
 };
-const orchardNow = (page: Page) => page.evaluate(() => (window as unknown as { __garden: OrchardScene }).__garden.orchard);
+const orchardNow = (page: Page) => page.evaluate(() => (window.__garden as unknown as OrchardScene).orchard);
 
 test("behind the open door, the orchard: a tree for each orchard word started, tapping one shows its word, and you can walk in", async ({ page }) => {
   const errors: string[] = [];
@@ -202,9 +199,9 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
   const [x, y, lemma] = await page.evaluate(
     () =>
       new Promise<[number, number, string]>((done) => {
-        const s = (window as unknown as { __garden: OrchardScene }).__garden;
+        const s = window.__garden as unknown as OrchardScene;
         const t = [...s.orchard!.trees].sort((a, b) => a.z - b.z)[0];
-        Object.assign(s, { x: t.x, z: t.z - 3, yaw: Math.PI, pitch: 0.1 });
+        Object.assign(window.__garden.game.me, { x: t.x, z: t.z - 3, yaw: Math.PI, pitch: 0.1 });
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             const v = new s.tmp.constructor(t.x, t.height * 0.6, t.z).project(s.camera);
@@ -224,8 +221,8 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
   for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -100);
   await page.keyboard.up("Control");
   const at = await page.evaluate(() => {
-    const s = (window as unknown as { __garden: OrchardScene }).__garden;
-    return { z: s.z, near: s.layout.orchard.z - s.layout.orchard.d / 2 };
+    const { me, layout } = window.__garden.game;
+    return { z: me.z, near: layout.orchard.z - layout.orchard.d / 2 };
   });
   expect(at.z).toBeGreaterThan(at.near);
 
@@ -233,10 +230,11 @@ test("behind the open door, the orchard: a tree for each orchard word started, t
   const [px, py] = await page.evaluate(
     () =>
       new Promise<[number, number]>((done) => {
-        const s = (window as unknown as { __garden: OrchardScene & { layout: { gate: { x: number }; plants: { x: number; z: number }[] } } }).__garden;
-        const near = s.layout.orchard.z - s.layout.orchard.d / 2;
-        Object.assign(s, { x: s.layout.gate.x + 3, z: near + 0.5, yaw: 0, pitch: 0 });
-        const p = s.layout.plants[0];
+        const { me, layout } = window.__garden.game;
+        const s = window.__garden as unknown as Drawn;
+        const near = layout.orchard.z - layout.orchard.d / 2;
+        Object.assign(me, { x: layout.gate.x + 3, z: near + 0.5, yaw: 0, pitch: 0 });
+        const p = layout.plants[0];
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             const v = new s.tmp.constructor(p.x, 0.5, p.z).project(s.camera);
@@ -276,7 +274,7 @@ const keyGlints = (page: Page) =>
   page.evaluate(
     () =>
       new Promise<boolean>((done) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => done((window as unknown as { __garden: { door: { key: { glint: { visible: boolean } } } } }).__garden.door.key.glint.visible))),
+        requestAnimationFrame(() => requestAnimationFrame(() => done((window.__garden as unknown as { door: { key: { glint: { visible: boolean } } } }).door.key.glint.visible))),
       ),
   );
 
@@ -296,7 +294,7 @@ test("a key left a week glints whenever you face it, from afar and in reach; a k
   await standByKey(page);
   expect(await keyGlints(page)).toBe(true);
   // Facing away: nothing calls from behind you.
-  await page.evaluate(() => ((window as unknown as { __garden: { yaw: number } }).__garden.yaw += Math.PI));
+  await page.evaluate(() => (window.__garden.game.me.yaw += Math.PI));
   expect(await keyGlints(page)).toBe(false);
   // No words in the walk say where it is: no line from the garden (the controls hint, if it shows, only teaches the controls).
   await expect(page.locator(".gw-say")).toHaveCount(0);
@@ -306,9 +304,10 @@ test("a key left a few days: at dusk the bird waits by it, and by day it is back
   await keyWaited(page, 4, "&visitors=bird");
   const birdFromKey = () =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: { game: { door: { key: { x: number; z: number } } }; guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] } } }).__garden;
+      const s = window.__garden as unknown as { guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] } };
       const b = s.guests.sprites.find((o) => o.v.id === "bird")!.body.at;
-      return Math.hypot(b.x - s.game.door.key.x, b.z - s.game.door.key.z);
+      const k = window.__garden.game.door.key!;
+      return Math.hypot(b.x - k.x, b.z - k.z);
     });
   // Noon: the bird is in its own spot, away from the key.
   expect(await birdFromKey()).toBeGreaterThan(1);
@@ -329,26 +328,16 @@ test("a key left a few days: at dusk the bird waits by it, and by day it is back
 // docs/garden-play.md, "The door in the hedge and the key" (#802): the dog waits by the key as a hint you can see, and nobody jumps.
 type Body = { x: number; y: number; z: number; at: { x: number; y: number; z: number } };
 type Guest = { v: { id: string }; home: [number, number, number]; uv: { getZ(i: number): number }; body: Body };
-type KeyScene = {
-  x: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-  camera: unknown;
-  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  layout: { bounds: { minX: number; maxX: number; minZ: number; maxZ: number } };
-  game: { door: { key: { x: number; z: number } } };
-  guests: { sprites: Guest[] };
-  doorAct(a: string): void;
-};
+/** The renderer's parts these tests read: the game itself is window.__garden.game. */
+type KeyScene = Drawn & { guests: { sprites: Guest[] } };
 
 /** How far a visitor is drawn from the key, and from its own place today (m). */
 const whereIs = (page: Page, id: string) =>
   page.evaluate((id) => {
-    const s = (window as unknown as { __garden: KeyScene }).__garden;
+    const s = window.__garden as unknown as KeyScene;
     const g = s.guests.sprites.find((o) => o.v.id === id)!;
     const b = g.body;
-    const k = s.game.door.key;
+    const k = window.__garden.game.door.key!;
     return { key: Math.hypot(b.x - k.x, b.z - k.z), home: Math.hypot(b.x - g.home[0], b.y - g.home[1], b.z - g.home[2]) };
   }, id);
 
@@ -360,13 +349,13 @@ test("key.dog-looks: seen from either side, the dog's picture faces the key", as
     page.evaluate(
       (side) =>
         new Promise<{ flipped: boolean; keyLeft: boolean }>((done) => {
-          const s = (window as unknown as { __garden: KeyScene }).__garden;
+          const s = window.__garden as unknown as KeyScene;
           const g = s.guests.sprites.find((o) => o.v.id === "dog")!;
-          const [d, k] = [g.body, s.game.door.key];
+          const [d, k] = [g.body, window.__garden.game.door.key!];
           const len = Math.hypot(k.x - d.x, k.z - d.z);
           // 3 m out from the dog, square to the line from it to the key, looking at the dog. Forward is -z at yaw 0.
           const [x, z] = [d.x - ((k.z - d.z) / len) * 3 * side, d.z + ((k.x - d.x) / len) * 3 * side];
-          Object.assign(s, { x, z, yaw: Math.atan2(-(d.x - x), -(d.z - z)), pitch: -0.2 });
+          Object.assign(window.__garden.game.me, { x, z, yaw: Math.atan2(-(d.x - x), -(d.z - z)), pitch: -0.2 });
           requestAnimationFrame(() =>
             requestAnimationFrame(() => {
               const onScreen = (px: number, pz: number) => new s.tmp.constructor(px, 0, pz).project(s.camera).x;
@@ -392,7 +381,7 @@ test("key.no-glint-with-dog: a key left a week does not glint while the dog wait
 
 test("key.tap-dog: a tap on the dog by the key shows the dog's name, and the key stays on the ground", async ({ page }) => {
   await keyWaited(page, 4, "&visitors=dog");
-  const dog = await page.evaluate(() => (window as unknown as { __garden: KeyScene }).__garden.guests.sprites.find((o) => o.v.id === "dog")!.body.at);
+  const dog = await page.evaluate(() => (window.__garden as unknown as KeyScene).guests.sprites.find((o) => o.v.id === "dog")!.body.at);
   await page.mouse.click(...(await standBy(page, { x: dog.x, y: 0.2, z: dog.z }, 3)));
   await expect(page.locator(".gw-tag", { hasText: "el perro" })).toBeVisible();
   expect(await doorNow(page)).toMatchObject({ state: "key", key: true });
@@ -425,16 +414,17 @@ test.describe(() => {
     expect((await whereIs(page, "bird")).key).toBeLessThan(1);
     // Stand in the garden's corner farthest from both the key and the bird's perch: near either, it would hop off from you instead.
     await page.evaluate(() => {
-      const s = (window as unknown as { __garden: KeyScene }).__garden;
-      const { minX, maxX, minZ, maxZ } = s.layout.bounds;
-      const home = s.guests.sprites.find((o) => o.v.id === "bird")!.home;
-      const away = (p: [number, number]) => Math.min(Math.hypot(p[0] - s.game.door.key.x, p[1] - s.game.door.key.z), Math.hypot(p[0] - home[0], p[1] - home[2]));
+      const g = window.__garden.game;
+      const { minX, maxX, minZ, maxZ } = g.layout.bounds;
+      const home = (window.__garden as unknown as KeyScene).guests.sprites.find((o) => o.v.id === "bird")!.home;
+      const k = g.door.key!;
+      const away = (p: [number, number]) => Math.min(Math.hypot(p[0] - k.x, p[1] - k.z), Math.hypot(p[0] - home[0], p[1] - home[2]));
       const corners: [number, number][] = [[minX + 1, minZ + 1], [minX + 1, maxZ - 1], [maxX - 1, minZ + 1], [maxX - 1, maxZ - 1]];
       const [x, z] = corners.reduce((a, b) => (away(b) > away(a) ? b : a));
-      Object.assign(s, { x, z });
+      Object.assign(g.me, { x, z });
     });
     await trackVisitors(page, ["bird"]);
-    await page.evaluate(() => (window as unknown as { __garden: KeyScene }).__garden.doorAct("key"));
+    await page.evaluate(() => window.__garden.doorAct("key"));
     await expect.poll(async () => (await whereIs(page, "bird")).home, { timeout: 30_000 }).toBeLessThan(0.01);
     const way = await trackOf(page, "bird");
     expect(way.step).toBeLessThan(0.6);
