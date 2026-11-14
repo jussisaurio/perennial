@@ -50,22 +50,35 @@ const rank = (i: Issue) => {
 /** The issue that the alarm workflow keeps (scripts/alarm). Only the workflow's own token can open an issue as BOT. */
 export const isAlarm = (i: Issue) => i.title === ALARM_TITLE && i.user.login === BOT && names(i).includes("P0");
 
+/** The titles of the weekly upkeep issues (scripts/upkeep): exactly these words, then the date. */
+const UPKEEP_TITLE = /^(Cleanup sweep|Friction retro) \d{4}-\d{2}-\d{2}$/;
+/**
+ * An issue that the weekly upkeep workflow opened and labelled `ready` (scripts/upkeep). Like the
+ * alarm, only the workflow's own token can open it as BOT, so its `ready` counts as the owner's.
+ */
+export const isUpkeep = (i: Issue) => UPKEEP_TITLE.test(i.title) && i.user.login === BOT;
+
 /**
  * The open issues an agent may take, best first (docs/agents.md, "Pick an issue"): the alarm, then
- * the `ready` issues that the owner opened, highest priority first, oldest first. Never a pull
+ * the `ready` issues that the owner or the upkeep workflow opened, highest priority first, oldest first. Never a pull
  * request, `tracking` or `needs-owner`. Who added `ready`, and claims, are not in this list: the
  * caller checks each issue with readyByOwner and holder.
  */
 export function candidates(issues: Issue[], owner: string): Issue[] {
   const open = issues.filter((i) => i.state === "open" && !i.pull_request && !names(i).some((n) => n === "tracking" || n === "needs-owner"));
-  const ready = open.filter((i) => i.user.login === owner && names(i).includes("ready")).sort((a, b) => rank(a) - rank(b) || a.created_at.localeCompare(b.created_at));
+  const ready = open.filter((i) => (i.user.login === owner || isUpkeep(i)) && names(i).includes("ready")).sort((a, b) => rank(a) - rank(b) || a.created_at.localeCompare(b.created_at));
   return [...open.filter(isAlarm), ...ready];
 }
 
-/** When the owner added `ready` the last time, or undefined when the last `ready` came from another account (only collaborators can label). */
-export function readyByOwner(events: IssueEvent[], owner: string): string | undefined {
+/**
+ * When `ready` was added the last time, if a trusted account added it: the owner, or on an upkeep
+ * issue the workflow's token that opened it. Undefined when the last `ready` came from another
+ * account (only collaborators can label).
+ */
+export function readySince(issue: Issue, events: IssueEvent[], owner: string): string | undefined {
   const last = events.filter((e) => e.event === "labeled" && e.label?.name === "ready").at(-1);
-  return last?.actor?.login === owner ? last.created_at : undefined;
+  const by = last?.actor?.login;
+  return last && (by === owner || (by === BOT && isUpkeep(issue))) ? last.created_at : undefined;
 }
 
 /** Parts of the repo where one change tends to stay. Two agents in one area would likely edit the same files. */
@@ -174,16 +187,21 @@ export const claims = (comments: Comment[], owner: string) => comments.filter((c
 /** The runner's failure reports. */
 export const failures = (comments: Comment[]) => comments.filter((c) => c.user?.login === BOT && c.body.includes(MARK.failed));
 
-/**
- * Who holds the issue at `now`, if anyone. A release, or a run's failure report, ends every claim
- * before it. Of the claims after that, those older than CLAIM_HOURS are dead, and the oldest live
- * one holds: so when two agents claim at once, both see the same winner.
- */
-export function holder(comments: Comment[], owner: string, now: Date): Claim | undefined {
+/** The claims since the last release or failure report, oldest first: live or dead. A release, or a run's failure report, ends every claim before it. */
+export function unended(comments: Comment[], owner: string): Claim[] {
   const log = comments.filter((c) => byRunnerOrOwner(c, owner));
   const ended = log.findLastIndex((c) => c.body.includes(MARK.release) || c.body.includes(MARK.failed));
+  return claims(log.slice(ended + 1), owner);
+}
+
+/**
+ * Who holds the issue at `now`, if anyone. Of the claims that have not ended, those older than
+ * CLAIM_HOURS are dead, and the oldest live one holds: so when two agents claim at once, both see
+ * the same winner.
+ */
+export function holder(comments: Comment[], owner: string, now: Date): Claim | undefined {
   const cutoff = now.getTime() - CLAIM_HOURS * 3600_000;
-  return claims(log.slice(ended + 1), owner).find((c) => Date.parse(c.at) > cutoff);
+  return unended(comments, owner).find((c) => Date.parse(c.at) > cutoff);
 }
 
 /** The start of the UTC day of `now`, the window of the daily limit. */

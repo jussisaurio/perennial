@@ -34,9 +34,13 @@ Deck content (decks/) also follows the proofreader process in docs/decks.md.
 
 Then merge: `scripts/merge.sh <pr>` (it works from any worktree and deletes the branch). `main` has two required checks, the CI jobs "Typecheck, lint, unit tests, build" and "Decks (schema, up to date, compatibility, replay)": no PR merges until both pass on it. The script asks GitHub to merge when they pass, and waits. It ends with `MERGED`, or with `NOT merged`, the failed check and a link: then fix the PR and run it again. The e2e tests are not required. They run after the merge, on `main`, and Railway does not deploy a red `main` (Wait for CI, docs/DEPLOY.md). When `main` is red, one agent fixes it and other merges go on. Do not watch that run in the foreground.
 
-## Every week: a cleanup sweep
+## Every week: a cleanup sweep and a friction retro
 
-Open a P2 issue "Cleanup sweep <date>" and run it. Agents split the code by directory and look for duplication, dead code, needless fallbacks and tangled modules. These are refactors with no behaviour change, in small PRs.
+This runs by itself. Each Monday, `.github/workflows/upkeep.yml` opens two P2 `ready` issues, unless one of that kind is still open. Agents take them like any other issue.
+- **"Cleanup sweep <date>":** reviews of each PR catch local problems, not slow drift across files. Agents split the code by directory and look for duplication, dead code, needless fallbacks and tangled modules. These are refactors with no behaviour change, in small PRs.
+- **"Friction retro <date>":** agents fix the top three frictions from `bun scripts/friction.ts top` (docs/agents.md, "Report"), with a guard in code where they can.
+
+The same workflow ends claims that ended by itself, and takes `ready` off an issue when all the files it names are gone from main. The logic is in `scripts/upkeep/`.
 
 ## Product rules that code reviews also check
 
