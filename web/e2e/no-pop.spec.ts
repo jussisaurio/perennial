@@ -69,7 +69,9 @@ function install() {
     const tops: Seen["tops"] = [];
     for (const [i, { mesh, foot }] of where) {
       const depth = -tmp.copy(foot).applyMatrix4(cam.matrixWorldInverse).z;
-      if (Math.hypot(foot.x - cam.position.x, foot.z - cam.position.z) > 3.5 || depth < 0.3) continue;
+      // The plant in reach (shake.ts SHAKE_REACH, 2.2 m, and its slack) and the plants beside it. Each one measured
+      // costs a draw and a read, which CI's software WebGL is slow at.
+      if (Math.hypot(foot.x - cam.position.x, foot.z - cam.position.z) > 2.6 || depth < 0.3) continue;
       // The part of the screen the plant can cover: 1.5 m to each side of its foot, up to 2.4 m, every way it can lean.
       let x0 = W, x1 = 0, y0 = H, y1 = 0;
       for (const side of [-1.5, 1.5])
@@ -88,11 +90,15 @@ function install() {
       const real = mesh.material;
       const mat = aloneOf(real);
       mat.uniforms.uSelected.value = i;
-      mesh.material = mat;
-      r.render(mesh, cam);
-      mesh.material = real;
       const w = x1 - x0;
       const h = y1 - y0;
+      mesh.material = mat;
+      // Only the box is cleared and drawn: the rest of the bed's plants cost nothing (the renderer's pixel ratio is 1).
+      r.setScissor(x0, y0, w, h);
+      r.setScissorTest(true);
+      r.render(mesh, cam);
+      r.setScissorTest(false);
+      mesh.material = real;
       const px = new Uint8Array(w * h * 4);
       gl.readPixels(x0, y0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
       let top = -1, bottom = h, left = w, right = -1;
@@ -141,7 +147,7 @@ test("render.no-pop: a plant's drawn size changes only as the camera's move expl
   // Small, so every plant has its full-size sprite and the walk is quick on CI.
   await openWalk(page, "es:30", "as it is");
   await page.evaluate(install);
-  const follow = (until: "ready" | "none") => page.evaluate(([u]) => (window as unknown as Follow).__follow(u, 20, 200), [until] as const);
+  const follow = (until: "ready" | "none") => page.evaluate(([u]) => (window as unknown as Follow).__follow(u, 6, 200), [until] as const);
   // From where the walk opens, straight at the first bed, until a plant is in reach; then back, until none is.
   await page.keyboard.down("w");
   const there = await follow("ready");
@@ -161,7 +167,9 @@ test("render.no-pop: a plant's drawn size changes only as the camera's move expl
         jumps.push(`plant ${b.i}, frame ${k}${b.i === frames[k].ready ? " (in reach)" : ""}: top ${a.top.toFixed(3)} m -> ${b.top.toFixed(3)} m`);
     }
   expect(jumps).toEqual([]);
-  // The plant in reach was measured on the frames round the change, so the check saw it.
-  const reached = there.find((f) => f.ready >= 0)!.ready;
-  expect(frames.filter((f) => f.tops.some((t) => t.i === reached)).length, "frames that measured the plant in reach").toBeGreaterThan(30);
+  // The plant in reach was measured on both frames round each change, so the check saw any step there.
+  const on = frames.findIndex((f) => f.ready >= 0);
+  const off = frames.findIndex((f, k) => k > on && f.ready < 0);
+  const reached = frames[on].ready;
+  for (const k of [on - 1, on, off - 1, off]) expect(frames[k].tops.some((t) => t.i === reached), `plant ${reached} measured on frame ${k}`).toBe(true);
 });
