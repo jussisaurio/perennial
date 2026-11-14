@@ -4,6 +4,10 @@
   // An export that only tests or scripts/ use gets a JSDoc `@internal <reason>` tag, which production mode skips.
   // Never let a plain pattern cover a "!" one: production mode then checks nothing at all (#832).
   "workspaces": {
+    ".": {
+      // Playwright loads it when someone runs it at the root by mistake: it fails with the fix.
+      "entry": ["playwright.config.ts"]
+    },
     "scripts": {
       // Command-line tools run by hand (README.md, docs/decks.md, docs/DEPLOY.md). None of it ships.
       "entry": ["deck/*.ts", "tts/render.ts", "tts/fix.ts", "*.ts"],
