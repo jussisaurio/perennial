@@ -124,7 +124,7 @@ export class Jokes implements Part {
     // Facing the garden (-z), a hair in front of the hedge's leaves.
     door.rotation.y = Math.PI;
     door.position.set(mx, MOUSE_DOOR.h / 2, z0 - 0.015);
-    const rug = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.07), mat(T.pixelTexture(T.doormat(word))));
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.07), mat(T.paperTexture(T.doormat(word))));
     // Flat, and turned to read from the garden side.
     rug.rotation.set(-Math.PI / 2, 0, Math.PI);
     rug.position.set(mx, 0.02, mz);

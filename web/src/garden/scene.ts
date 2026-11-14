@@ -366,6 +366,7 @@ export class GardenScene {
     // Painted in workers while the steps before the trees, and the door, run.
     const far = T.paintFar(this.visitors.moon);
     const orchardAtlas = T.paintOrchard();
+    const fonts = T.loadBoardFonts();
     const L = this.layout;
     const b = L.bounds;
     const c: BuildCtx = {
@@ -392,6 +393,8 @@ export class GardenScene {
     this.ctx = c;
     this.buildGround(c);
     if (await this.stopped()) return;
+    // The bed signs are the first boards drawn.
+    await fonts;
     for (const _bed of this.plants.build(c)) if (await this.stopped()) return;
     this.buildFence(c);
     if (await this.stopped()) return;
@@ -983,7 +986,7 @@ export class GardenScene {
     signs.bench = fishSign(signs.bench, fish, this.lang);
     const noticeBoard = (line: SignLine, x: number, z: number, turn: number) => {
       const g = new THREE.Group();
-      const board = signBoard(c, T.pixelTexture(line.fix ? T.fixedNotice(line.text, line.fix.strike, line.fix.write) : T.notice(line.text)), 1.2, 0.48);
+      const board = signBoard(c, T.paperTexture(line.fix ? T.fixedNotice(line.text, line.fix.strike, line.fix.write) : T.notice(line.text)), 1.2, 0.48);
       board.position.y = 0.95;
       if (line.upsideDown) board.rotation.z = Math.PI;
       g.add(board);
@@ -1005,7 +1008,7 @@ export class GardenScene {
     // The snail's finish line (where it set off), on a small board just inside the gate, facing the garden.
     if (this.visitors.list.some((v) => v.id === "snail")) {
       const g = new THREE.Group();
-      const board = signBoard(c, T.pixelTexture(T.notice(SNAIL_SIGN[this.lang])), 1.0, 0.4);
+      const board = signBoard(c, T.paperTexture(T.notice(SNAIL_SIGN[this.lang])), 1.0, 0.4);
       board.position.y = 0.62;
       g.add(board);
       const post = new THREE.Mesh(woodBox(0.05, 0.5, 0.05), mat(woodTex, { vertexColors: true }));
@@ -1025,7 +1028,7 @@ export class GardenScene {
     // Small stakes (#58, #61): one in an empty garden, and the first word's, forever, in front of its plant.
     const stake = (text: string, x: number, z: number, w: number, y: number, turn = 0) => {
       const g = new THREE.Group();
-      const board = signBoard(c, T.pixelTexture(T.notice(text)), w, w * 0.4);
+      const board = signBoard(c, T.paperTexture(T.notice(text)), w, w * 0.4);
       board.position.y = y;
       g.add(board);
       const post = new THREE.Mesh(woodBox(0.04, y, 0.04), mat(woodTex, { vertexColors: true }));

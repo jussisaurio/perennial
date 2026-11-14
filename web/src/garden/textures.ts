@@ -21,12 +21,12 @@ import type { TimeOfDay } from "./game";
 import { FULL_MOON, MOON_PHASES } from "./moon";
 
 /**
- * A pixel canvas, offscreen so a worker can paint it too (paintWorker.ts). `readBack`: its pixels are read with getImageData,
- * so it is kept in CPU memory: on a GPU canvas each read waits for the GPU, ~120 ms over the walk's bed signs at CPU 10× (#447).
+ * A canvas, offscreen so a worker can paint it too (paintWorker.ts). Read its pixels (getImageData) only in a worker:
+ * on the main thread a read waits for the GPU, ~120 ms over the walk's bed signs at CPU 10× when they were read (#447).
  */
-function canvas(w: number, h: number, readBack = false): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
+function canvas(w: number, h: number): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
   const c = new OffscreenCanvas(w, h);
-  const ctx = c.getContext("2d", { willReadFrequently: readBack })!;
+  const ctx = c.getContext("2d")!;
   ctx.imageSmoothingEnabled = false;
   return [c, ctx];
 }
@@ -761,67 +761,64 @@ export function butterfly(hue: number): OffscreenCanvas {
   return c;
 }
 
-/** A blank wooden board, w×h: a dark frame, a lit top edge and a seam across the middle. Set up for centred text in dark ink. */
+/** Texels per unit of the boards' first drawing: the signs, notices and the doormat are drawn this much finer, so their text is smooth. */
+const BOARD_FINE = 4;
+const BOARD_EDGE = "#8a6a49";
+
+/** A blank wooden board, w×h units: a thin darker edge, a lit top edge and a seam across the middle. Set up for centred text in dark ink. */
 function board(w: number, h: number): [OffscreenCanvas, OffscreenCanvasRenderingContext2D] {
-  // Read back by crispText.
-  const [c, ctx] = canvas(w, h, true);
+  const [c, ctx] = canvas(w * BOARD_FINE, h * BOARD_FINE);
+  ctx.scale(BOARD_FINE, BOARD_FINE);
   plank(ctx, 0, 0, w, h);
   return [c, ctx];
 }
 
 /** board()'s wood at (x, y), and the ink set for its text. */
 function plank(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  px(ctx, x, y, "#7d6143", w, h);
-  px(ctx, x + 2, y + 2, "#c4a273", w - 4, h - 4);
-  px(ctx, x + 2, y + 2, "#d6b98c", w - 4, 2);
-  px(ctx, x + 2, y + h / 2, "#b08f62", w - 4, 1);
+  px(ctx, x, y, BOARD_EDGE, w, h);
+  px(ctx, x + 1.25, y + 1.25, "#c4a273", w - 2.5, h - 2.5);
+  px(ctx, x + 1.25, y + 1.25, "#d6b98c", w - 2.5, 1.5);
+  px(ctx, x + 1.25, y + h / 2, "#b08f62", w - 2.5, 0.75);
   ctx.fillStyle = "#3b2a1c";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 }
 
-const boardFont = (size: number) => `bold ${size}px ui-monospace, Menlo, monospace`;
-
-/** The bed signs' atlas: SIGN.cols signs a row, each SIGN.w×SIGN.h. Rows, not one column, keep a big garden's atlas within an old GPU's 4096 px. */
-export const SIGN = { w: 128, h: 40, cols: 8 } as const;
+/** Board text is in the app's display face (index.css --display), as if the app had painted the signs. */
+const boardFont = (size: number) => `${size}px Gloock, Georgia, serif`;
+/** The app's text face (index.css --ui), bold: a hand's fix in marker, and a doormat's word. */
+const plainFont = (size: number, slant = "") => `${slant} 700 ${size}px "Onest Variable", sans-serif`;
 
 /**
- * Every bed's wooden sign with its label, in a chunky pixel font size, on one canvas:
- * sign `i` at column i % SIGN.cols, row ⌊i / SIGN.cols⌋. A canvas per sign cost ~130 ms
- * over the walk's beds at CPU 10×, mostly the first draw on each new canvas (#571).
+ * Loads the boards' faces. A canvas draws text in a face that is not loaded yet in a fallback and never draws it
+ * again, so the walk waits for this before it draws a board.
+ */
+export const loadBoardFonts = () => Promise.all([document.fonts.load(boardFont(16)), document.fonts.load(plainFont(16))]);
+
+/** The bed signs' atlas: SIGN.cols signs a row, each SIGN.w×SIGN.h texels. Rows keep the atlas within an old GPU's 4096 texels up to 100 signs. */
+export const SIGN = { w: 128 * BOARD_FINE, h: 40 * BOARD_FINE, cols: 4 } as const;
+
+/**
+ * Every bed's wooden sign with its label, on one canvas: sign `i` at column i % SIGN.cols, row ⌊i / SIGN.cols⌋.
+ * A canvas per sign cost ~130 ms over the walk's beds at CPU 10×, mostly the first draw on each new canvas (#571).
  */
 export function signs(labels: string[]): OffscreenCanvas {
   const rows = Math.ceil(labels.length / SIGN.cols);
-  const [c, ctx] = canvas(SIGN.w * SIGN.cols, SIGN.h * rows, true);
+  const [c, ctx] = canvas(SIGN.w * SIGN.cols, SIGN.h * rows);
+  // The empty cells after the last sign in the board's edge colour: far off, a mipmap mixes a cell with its neighbour.
+  px(ctx, 0, 0, BOARD_EDGE, c.width, c.height);
+  ctx.scale(BOARD_FINE, BOARD_FINE);
+  const [w, h] = [SIGN.w / BOARD_FINE, SIGN.h / BOARD_FINE];
   labels.forEach((label, i) => {
-    const x = (i % SIGN.cols) * SIGN.w;
-    const y = Math.floor(i / SIGN.cols) * SIGN.h;
-    plank(ctx, x, y, SIGN.w, SIGN.h);
-    let size = 16;
+    const x = (i % SIGN.cols) * w;
+    const y = Math.floor(i / SIGN.cols) * h;
+    plank(ctx, x, y, w, h);
+    let size = 20;
     do ctx.font = boardFont(size);
-    while (ctx.measureText(label).width > 116 && --size > 7);
-    ctx.fillText(label, x + SIGN.w / 2, y + 21);
+    while (ctx.measureText(label).width > w - 20 && --size > 7);
+    ctx.fillText(label, x + w / 2, y + h / 2 + 1);
   });
-  crispText(ctx, c.width, c.height);
   return c;
-}
-
-/** Threshold anti-aliased text on a sign so it stays crisp pixels. */
-function crispText(ctx: OffscreenCanvasRenderingContext2D, w: number, h: number) {
-  const img = ctx.getImageData(0, 0, w, h);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const dark = img.data[i] < 140;
-    if (dark) {
-      img.data[i] = 0x3b;
-      img.data[i + 1] = 0x2a;
-      img.data[i + 2] = 0x1c;
-    } else if (img.data[i] < 190) {
-      img.data[i] = 0xc4;
-      img.data[i + 1] = 0xa2;
-      img.data[i + 2] = 0x73;
-    }
-  }
-  ctx.putImageData(img, 0, 0);
 }
 
 /** A taller notice board for a short sentence: up to two lines, as large as fits. */
@@ -848,7 +845,6 @@ export function notice(text: string): OffscreenCanvas {
   font(best.size || 8);
   const step = best.size + 4;
   best.lines.forEach((l, i) => ctx.fillText(l, W / 2, H / 2 + 1 + (i - (best.lines.length - 1) / 2) * step));
-  crispText(ctx, W, H);
   return c;
 }
 
@@ -934,16 +930,6 @@ export function spot(): OffscreenCanvas {
 
 // ---- Deadpan scenery (#364) -------------------------------------------------
 
-/** Text in one solid colour, with no soft edge: drawn on its own, then only its solid pixels are kept. Left-aligned at `x`, centred on `y`. */
-function hardText(ctx: OffscreenCanvasRenderingContext2D, text: string, x: number, y: number, font: string, color: string) {
-  const [s, sc] = canvas(ctx.canvas.width, ctx.canvas.height, true);
-  sc.font = font;
-  sc.textBaseline = "middle";
-  sc.fillText(text, x, y);
-  const img = sc.getImageData(0, 0, s.width, s.height).data;
-  for (let i = 0; i < img.length; i += 4) if (img[i + 3] > 110) px(ctx, (i / 4) % s.width, Math.floor(i / 4 / s.width), color);
-}
-
 /**
  * The notice "No fishing. No fish." put right by hand (#364): the printed
  * text, with `strike` crossed out in red marker and `write` written in after it.
@@ -953,7 +939,7 @@ export function fixedNotice(text: string, strike: string, write: string): Offscr
   const H = 64;
   const [c, ctx] = board(W, H);
   const first = text.slice(0, text.lastIndexOf(strike)).trim();
-  const hand = (size: number) => `italic bold ${size}px ui-monospace, Menlo, monospace`;
+  const hand = (size: number) => plainFont(size, "italic");
   // Two lines: the first as printed; on the second, the struck words, then the fix. As large as fits.
   let size = 18;
   const width = (s: number) => {
@@ -973,12 +959,12 @@ export function fixedNotice(text: string, strike: string, write: string): Offscr
   ctx.fillText(first, W / 2, y1);
   ctx.textAlign = "left";
   ctx.fillText(strike, x0, y2);
-  crispText(ctx, W, H);
-  // After crispText, which would turn the red to the board's colour.
   const red = "#b3261e";
-  const struck = Math.round(ctx.measureText(strike).width);
-  px(ctx, x0 - 2, Math.round(y2) - 1, red, struck + 4, 2);
-  hardText(ctx, write, x0 + Math.round(w.strike), y2 - 1, hand(size), red);
+  const struck = ctx.measureText(strike).width;
+  px(ctx, x0 - 2, y2 - 1, red, struck + 4, 1.5);
+  ctx.font = hand(size);
+  ctx.fillStyle = red;
+  ctx.fillText(write, x0 + w.strike, y2 - 1);
   return c;
 }
 
@@ -1164,15 +1150,18 @@ export function ribbon(): OffscreenCanvas {
 
 /** The mouse door's mat (#364), seen from above: coir with a dark edge and `word` on it (none for a course without one). */
 export function doormat(word: string | null): OffscreenCanvas {
-  const [c, ctx] = canvas(48, 14);
+  const [c, ctx] = canvas(48 * BOARD_FINE, 14 * BOARD_FINE);
+  ctx.scale(BOARD_FINE, BOARD_FINE);
   px(ctx, 0, 0, "#7a5528", 48, 14);
   px(ctx, 1, 1, "#c09048", 46, 12);
   if (word) {
     let size = 10;
-    const font = (s: number) => `bold ${s}px ui-monospace, Menlo, monospace`;
-    ctx.font = font(size);
-    while (size > 5 && ctx.measureText(word).width > 44) ctx.font = font(--size);
-    hardText(ctx, word, Math.round((48 - ctx.measureText(word).width) / 2), 7, font(size), "#3b2414");
+    ctx.font = plainFont(size);
+    while (size > 5 && ctx.measureText(word).width > 42) ctx.font = plainFont(--size);
+    ctx.fillStyle = "#3b2414";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(word, 24, 7.5);
   }
   return c;
 }
