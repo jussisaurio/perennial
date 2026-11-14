@@ -39,6 +39,7 @@ test("the check finds seeded faults, and not their meant twins", async ({ page }
       <p id="dots" style="width:60px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#000;background:#fff">Text that ends in dots</p>
       <p id="scrolls" style="width:60px;overflow:auto;white-space:nowrap;color:#000;background:#fff">Text that scrolls sideways</p>
       <p id="spill" style="width:60px;white-space:nowrap;color:#000;background:#fff;border:1px solid #000">Text that spills out</p>
+      <p id="faint" style="color:#bbb;background:#fff">Faint text</p>
       <button id="under" style="position:absolute;left:0;top:200px;width:100px;height:44px">Under</button>
       <button id="over" style="position:absolute;left:60px;top:220px;width:100px;height:44px">Over</button>
       <button id="wide" style="position:absolute;left:0;top:300px;width:3000px;height:44px">Too wide</button>
@@ -54,5 +55,8 @@ test("the check finds seeded faults, and not their meant twins", async ({ page }
   expect(found("off-screen", 'button "Too wide"')).toBe(true);
   expect(found("page-scrolls-sideways", "html")).toBe(true);
   expect(found("axe target-size", "#tiny")).toBe(true);
+  expect(found("axe color-contrast", "#faint")).toBe(true);
+  // The text that scrolls is the cut text's meant twin, but a keyboard cannot scroll it: nothing in it takes focus.
+  expect(found("axe scrollable-region-focusable", "#scrolls")).toBe(true);
   expect(faults.filter((f) => f.includes("ends in dots") || f.includes("scrolls sideways"))).toEqual([]);
 });

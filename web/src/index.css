@@ -12,7 +12,7 @@
   --card: #fbf8f1;
   --ink: #1d1b16;
   --ink-2: #47423a;
-  --muted: #6f685b; /* 4.8:1 on the paper: helper text must be readable, not just quiet (#273). */
+  --muted: #6b6457; /* Helper text must be readable, not just quiet (#273): 4.6:1 on paper-2 (the desktop tabs), 5:1 on the paper (#1009). */
   --line: #ddd3c1;
   --line-soft: #e7dfd0;
   --persimmon: #dc5636;
@@ -24,6 +24,13 @@
   --sky-soft: #d7e3ef;
   --sun: #eeb03c;
   --sun-soft: #f8e6bd;
+  /* An accent as small text (a kicker, a pip, "Not quite"): the accent itself reads at only 1.6 to 3.9:1
+     on its soft ground and the paper. Darkened toward the ink, each reads at 4.6:1 or more on both (#1009).
+     The plain accent stays for fills, lines, icons and big headings. */
+  --leaf-ink: color-mix(in oklab, var(--leaf), var(--ink) 20%);
+  --sky-ink: color-mix(in oklab, var(--sky), var(--ink) 20%);
+  --persimmon-ink: color-mix(in oklab, var(--persimmon), var(--ink) 30%);
+  --sun-ink: color-mix(in oklab, var(--sun), var(--ink) 50%);
   --stem: #5d7d45;
   --stem-dry: #a5935f;
   --soil-1: #d9ccb2;
@@ -61,6 +68,11 @@
     --sky-soft: #1a2a3a;
     --sun: #ffcd66;
     --sun-soft: #3a3019;
+    /* On the dark paper the accents read as text already: 5.6:1 or more on their soft grounds. */
+    --leaf-ink: var(--leaf);
+    --sky-ink: var(--sky);
+    --persimmon-ink: var(--persimmon);
+    --sun-ink: var(--sun);
     --stem: #6fa457;
     --stem-dry: #7e7650;
     --soil-1: #4a4230;
@@ -130,7 +142,7 @@ button.primary:disabled { opacity: 1; background: color-mix(in oklab, var(--ink)
 button.secondary { background: var(--card); border-color: var(--line); }
 button.secondary:hover:not(:disabled) { border-color: var(--ink-2); }
 /* The same lift as "I remembered", so the two answers look equal. */
-button.fail { background: var(--persimmon-soft); color: var(--persimmon); box-shadow: 0 8px 20px -12px var(--persimmon); }
+button.fail { background: var(--persimmon-soft); color: var(--persimmon-ink); box-shadow: 0 8px 20px -12px var(--persimmon); }
 button.fail:hover:not(:disabled) { background: color-mix(in oklab, var(--persimmon-soft), var(--persimmon) 14%); }
 button.pass { background: var(--leaf); color: #fff; box-shadow: 0 8px 20px -12px var(--leaf); }
 button.pass:hover:not(:disabled) { box-shadow: 0 10px 24px -10px var(--leaf); }
@@ -143,9 +155,11 @@ button.wide { min-width: 12rem; }
 button.block { width: 100%; max-width: 26rem; min-height: 3.1rem; }
 button.icon { padding: 0.5rem; border-radius: 50%; color: var(--ink-2); }
 button.icon:hover { background: var(--paper-2); color: var(--ink); }
+/* A key hint in a button. Its letters keep the button's own colour, so they read wherever the label does:
+   faded, they fell to 2.9:1 on the dark theme's main button (#1009). Only its outline is faint. */
 kbd {
   font: 500 0.68rem/1 var(--ui); padding: 0.2rem 0.35rem; border-radius: 6px;
-  border: 1px solid currentColor; opacity: 0.45; margin-left: 0.15rem;
+  border: 1px solid color-mix(in oklab, currentColor 45%, transparent); margin-left: 0.15rem;
 }
 @media (hover: none) { kbd { display: none; } }
 
@@ -375,6 +389,8 @@ section { margin-bottom: 1.25rem; }
 @media (hover: none) { .garden-arrows { display: none; } }
 @media (hover: hover) { .swipe-hint { display: none; } }
 .garden-strip.scrolls .garden-scroll { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+/* Focused from the keyboard: the ring inside the strip, and no fade at its ends, which would hide the ring's sides. */
+.garden-strip.scrolls .garden-scroll:focus-visible { mask-image: none; outline-offset: -2.5px; }
 .plant-tip.interactive { pointer-events: auto; cursor: auto; }
 .plant-tip button { margin-top: 0.3rem; padding: 0.2rem 0; align-self: flex-start; }
 .garden .tuft { stroke: var(--leaf-2); stroke-width: 1.3; stroke-linecap: round; fill: none; opacity: 0.7; }
@@ -473,11 +489,10 @@ section { margin-bottom: 1.25rem; }
   font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
   height: var(--kicker-h); padding: 0 0.7rem 0 0.55rem; border-radius: 999px;
 }
-.kicker.read { background: var(--leaf-soft); color: var(--leaf); }
-.kicker.listen { background: var(--sky-soft); color: var(--sky); }
-.kicker.write, .kicker.retry { background: var(--persimmon-soft); color: var(--persimmon); }
-.kicker.intro, .kicker.check, .kicker.newListen, .kicker.newWrite { background: var(--sun-soft); color: color-mix(in oklab, var(--sun), var(--ink) 45%); }
-:root[data-theme="dark"] .kicker.intro, :root[data-theme="dark"] .kicker.check, :root[data-theme="dark"] .kicker.newListen, :root[data-theme="dark"] .kicker.newWrite { color: var(--sun); }
+.kicker.read { background: var(--leaf-soft); color: var(--leaf-ink); }
+.kicker.listen { background: var(--sky-soft); color: var(--sky-ink); }
+.kicker.write, .kicker.retry { background: var(--persimmon-soft); color: var(--persimmon-ink); }
+.kicker.intro, .kicker.check, .kicker.newListen, .kicker.newWrite { background: var(--sun-soft); color: var(--sun-ink); }
 
 .word { font: clamp(2.8rem, 10vw, 4.2rem)/1.05 var(--display); letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; word-break: break-word; }
 .gloss { font-size: 1.3rem; color: var(--ink-2); }
@@ -537,8 +552,8 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
 .answer.bad { border-color: var(--persimmon); background: var(--persimmon-soft); animation: shake 0.35s; }
 @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .feedback { display: grid; gap: 0.6rem; animation: rise 0.25s var(--ease); }
-.ok { color: var(--leaf); }
-.bad { color: var(--persimmon); }
+.ok { color: var(--leaf-ink); }
+.bad { color: var(--persimmon-ink); }
 .hint { font-size: 0.9rem; color: var(--muted); }
 
 .summary { text-align: left; }
@@ -573,9 +588,9 @@ mark { background: linear-gradient(transparent 58%, var(--sun-soft) 58%); color:
   .word-row .gl { font-size: 0.92rem; line-height: 1.3; }
 }
 .pip { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.45rem; border-radius: 999px; font-variant-numeric: tabular-nums; }
-.pip.read { background: var(--leaf-soft); color: var(--leaf); }
-.pip.listen { background: var(--sky-soft); color: var(--sky); }
-.pip.write { background: var(--persimmon-soft); color: var(--persimmon); }
+.pip.read { background: var(--leaf-soft); color: var(--leaf-ink); }
+.pip.listen { background: var(--sky-soft); color: var(--sky-ink); }
+.pip.write { background: var(--persimmon-soft); color: var(--persimmon-ink); }
 @media (max-width: 560px) { .word-row .skills { display: none; } }
 .glyph { flex: none; width: 22px; height: 22px; }
 .detail { padding: 0.5rem 0.4rem 1.25rem; display: grid; gap: 0.85rem; animation: rise 0.25s var(--ease); }
@@ -672,7 +687,7 @@ details.more[open] > :not(summary) { margin-top: 0.75rem; animation: rise 0.25s 
 details.keep-garden > summary { display: flex; color: var(--ink-2); }
 .panel.keep-garden[open] { padding-bottom: 1.1rem; }
 details.danger { margin-top: 2.5rem; }
-.error { color: var(--persimmon); font-size: 0.9rem; margin: 0; }
+.error { color: var(--persimmon-ink); font-size: 0.9rem; margin: 0; }
 /* Writes the server refused (#253): in place, above the card or in Settings. */
 .refused {
   display: flex; align-items: flex-start; gap: 0.55rem; margin: 0.5rem 0; padding: 0.7rem 0.9rem; border-radius: 14px;
@@ -729,13 +744,13 @@ button.undo:disabled { opacity: 1; background: transparent; color: color-mix(in 
 .shortcut-help dl { display: grid; gap: 0.45rem; margin: 0; }
 .shortcut-help dl div { display: grid; grid-template-columns: 9rem 1fr; gap: 0.75rem; align-items: center; }
 .shortcut-help dd { margin: 0; color: var(--ink-2); font-size: 0.92rem; }
-.shortcut-help kbd { opacity: 0.8; font-size: 0.75rem; }
+.shortcut-help kbd { font-size: 0.75rem; }
 .credits-bar.empty { background: var(--persimmon-soft); }
 button.tok { font: inherit; color: inherit; padding: 0.08em 0.12em; border: none; border-radius: 5px; background: none; display: inline; line-height: inherit; gap: 0; }
 button.tok:active { transform: none; }
 .tok.picked, .legend.picked { background: var(--leaf); color: #fff; }
 .tok.picked::before { content: "✓ "; font-size: 0.8em; }
-.tok.added, .legend.added { background: var(--leaf-soft); color: var(--leaf); }
+.tok.added, .legend.added { background: var(--leaf-soft); color: var(--leaf-ink); }
 .tok.added::after { content: " ✓"; font-size: 0.8em; }
 .credit-note { display: grid; gap: 0.75rem; padding: 0.85rem 1rem; border-radius: 14px; background: var(--sun-soft); }
 @media (max-width: 640px) { .app { padding-bottom: calc(9rem + env(safe-area-inset-bottom)); } }
@@ -743,8 +758,7 @@ button.tok:active { transform: none; }
 .lang-choice strong { font: 1.2rem/1.2 var(--display); font-weight: 400; }
 /* On a phone the cards stack: slimmer, so the Start button below them stays on a small screen (#264). */
 @media (max-width: 420px) { .lang-choice { grid-template-columns: 1fr; } .lang-choice label { padding-block: 0.7rem; } button.landing-start { margin-top: 1rem; } }
-.warn { color: color-mix(in oklab, var(--sun), var(--ink) 40%); }
-:root[data-theme="dark"] .warn { color: var(--sun); }
+.warn { color: var(--sun-ink); }
 .answer.warn { border-color: var(--sun); background: var(--sun-soft); }
 mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; padding: 0 0.05em; font-weight: 700; }
 .examples .author { display: block; font-size: 0.75rem; color: var(--muted); }
@@ -1038,7 +1052,7 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 .guide-entry.sketch svg, .guide-sheet.sketch svg { filter: grayscale(1) contrast(0.9); opacity: 0.5; }
 /* Grey at half strength nearly vanishes on the dark paper. */
 :root[data-theme="dark"] .guide-entry.sketch svg, :root[data-theme="dark"] .guide-sheet.sketch svg { opacity: 0.85; }
-.guide-rare { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--persimmon); margin-top: 0.15rem; }
+.guide-rare { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--persimmon-ink); margin-top: 0.15rem; }
 /* No padding on the dialog itself: a click with the dialog as its target is then on the backdrop (FieldGuide.tsx). */
 .guide-page { width: min(34rem, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: none; border-radius: 14px; background: var(--paper); color: var(--ink); overflow-y: auto; }
 .guide-page-body { padding: 1rem; }
