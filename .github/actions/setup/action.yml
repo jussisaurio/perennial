@@ -16,8 +16,10 @@ runs:
       if: inputs.postgres == 'true'
       # Pulling and starting the image takes a few seconds; the next steps run meanwhile.
       # `up -d` alone still blocks during the pull, so it runs as a background process.
+      # Docker Hub sometimes answers a pull with a 502 (#1006), so it tries up to 3 times;
+      # a new try keeps the layers already pulled. "Wait for Postgres" prints this log.
       shell: bash
-      run: nohup docker compose up -d > "$RUNNER_TEMP/compose.log" 2>&1 &
+      run: nohup bash -c 'for i in 1 2 3; do docker compose up -d && exit 0; sleep 5; done; exit 1' > "$RUNNER_TEMP/compose.log" 2>&1 &
     - uses: oven-sh/setup-bun@v2
       with:
         bun-version: 1.4.4
