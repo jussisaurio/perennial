@@ -95,6 +95,7 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 - **Small garden (Today):** an SVG strip of the plants.
 - **Walk-in garden (`#/garden`):** a retro 3D world in `web/src/garden/`.
   - `world.ts` has the pure layout: raised beds per kind of word, collision, viewpoints.
+  - `walker.ts` has the walker (#975): where you stand, where you look, and what you are doing (free, on a walk, on a glide, seated), with one `step` that moves it by a frame. It has no three.js and no clock, so unit tests walk it at a fixed frame length. The scene calls it each frame and draws the result.
   - `textures.ts` draws pixel-art textures procedurally and rasterises the SVG plants into atlases.
   - `scene.ts` hosts the three.js scene (see Garden code, below). It renders billboard sprites into a low-resolution framebuffer, which CSS scales up with `image-rendering: pixelated`.
   - The scene is a snapshot taken when the garden opens.
@@ -103,7 +104,7 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 ### Garden code
 
 `GardenScene` (`scene.ts`) is a small host: the renderer and camera, the frame
-loop, movement, and the rendering subsystems that tick or react to the time of
+loop, and the rendering subsystems that tick or react to the time of
 day behind the `Part` interface (`scenePart.ts`) — the sky and pond, the door
 and key, the critters (fireflies, butterflies...), the plants (beds,
 culling, texture streaming, brushing past them), the visitors, the deadpan
