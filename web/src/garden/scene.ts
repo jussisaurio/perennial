@@ -246,7 +246,7 @@ export class GardenScene {
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door: Door;
   /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose. */
-  private hedge = new Hedge();
+  private hedge: Hedge;
   /**
    * Every rendering subsystem with its own tick and/or onConditions (#323):
    * ticked and given Conditions in this order, and disposed in it too. Order
@@ -292,6 +292,7 @@ export class GardenScene {
     // Dev and the e2e tests still read them, so a broken shader fails there.
     this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
     this.camera.rotation.order = "YXZ";
+    this.hedge = new Hedge(msaa);
     this.plants = new Plants(
       this.renderer,
       this.camera,
@@ -374,6 +375,7 @@ export class GardenScene {
     const far = T.paintFar(this.visitors.moon);
     const orchardAtlas = T.paintOrchard();
     const paper = T.paintPaper();
+    const hedgeSheet = T.paintHedge();
     const fonts = T.loadBoardFonts();
     const L = this.layout;
     const b = L.bounds;
@@ -406,7 +408,7 @@ export class GardenScene {
     for (const _bed of this.plants.build(c)) if (await this.stopped()) return;
     this.buildFence(c);
     if (await this.stopped()) return;
-    this.buildHedge(c);
+    this.buildHedge(c, await hedgeSheet);
     if (await this.stopped()) return;
     const { pads } = this.sky.buildPond(c);
     if (await this.stopped()) return;
@@ -622,9 +624,9 @@ export class GardenScene {
    * eye, and nothing is built behind it until the door opens: no angle shows
    * what is there. Through the keyhole there is only a warm light.
    */
-  private buildHedge(c: BuildCtx) {
+  private buildHedge(c: BuildCtx, sheet: THREE.Texture) {
     const { L } = c;
-    this.hedge.build(c);
+    this.hedge.build(c, sheet);
     // Left and right of the door, and over it, closing into an arch.
     this.hedge.addWalls(c, gateHedge(L, DOOR.h), 1);
     // The door frame, its leaf, the keyhole's light, and the key, if this walk has it.

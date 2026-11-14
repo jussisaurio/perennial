@@ -1,12 +1,12 @@
 // The hedge (#323): walls of clipped hedge round the gate side (with the old
 // door set into it, built by sceneDoor.ts) and, once the door opens, round the
-// orchard too. Its own rendering technique: a solid tiled box per wall (dark
-// in the gaps and low down) plus one InstancedMesh of every wall's leaf
-// clumps, so the whole hedge is two draw calls however many walls it has.
+// orchard too. A solid tiled box per wall (dark in the gaps and low down), and
+// all their rows of paper leaves (#1164) as one mesh of flat sheets, cut out
+// along their tops.
 
 import * as THREE from "three";
-import { hedgeClumps, hedgeCore, type Clump, type HedgeWall } from "./hedge";
-import { shade, still, type BuildCtx } from "./sceneSprites";
+import { hedgeCore, hedgeSheets, SHEET_W, type HedgeWall, type Sheet } from "./hedge";
+import { roundShade, still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */
@@ -38,54 +38,74 @@ export function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 }
 
+/** `sheets` as one geometry: two triangles each, its paper laid on along it from its `u`, lit by the sun and its `light`. */
+function sheetGeometry(sheets: Sheet[]): THREE.BufferGeometry {
+  const pos = new Float32Array(sheets.length * 12);
+  const uv = new Float32Array(sheets.length * 8);
+  const color = new Float32Array(sheets.length * 12);
+  const index: number[] = [];
+  const [bl, along, up, n] = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const p = new THREE.Vector3();
+  sheets.forEach((s, i) => {
+    const [a, b, , d] = s.corners;
+    bl.set(...a);
+    along.set(...b).sub(bl).normalize();
+    up.set(...d).sub(bl);
+    n.crossVectors(along, up).normalize();
+    const light = roundShade(n, s.light);
+    s.corners.forEach((c, j) => {
+      const v = i * 4 + j;
+      pos.set(c, v * 3);
+      // Along the sheet as its bottom edge runs, so a sheet that narrows at the top keeps its leaves upright.
+      uv.set([(s.u + p.set(...c).sub(bl).dot(along)) / SHEET_W, j < 2 ? 0 : 1], v * 2);
+      color.fill(light, v * 3, v * 3 + 3);
+    });
+    index.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+  geo.setAttribute("color", new THREE.BufferAttribute(color, 3));
+  geo.setIndex(index);
+  return geo;
+}
+
 /** Hedge has nothing to tick, pick or dispose on its own (its meshes are plain scene children): it only builds. */
 export class Hedge {
-  private mat!: THREE.MeshBasicMaterial;
-  private clumpMat!: THREE.MeshBasicMaterial;
+  private coreMat!: THREE.MeshBasicMaterial;
+  private sheetMat!: THREE.MeshBasicMaterial;
+  /** The screen smooths shapes' edges (#1106), so the leaves' cut edges can be smooth too (alpha to coverage). */
+  private readonly msaa: boolean;
 
-  /**
-   * The hedge materials, shared by every wall addWalls builds: the gate's now, the orchard's later, once the door opens.
-   * The same look twice: one for the boxes, one for the instanced clumps. three keeps one shader per material, so a
-   * material on both kinds of mesh switched shader twice on every frame (#571).
-   */
-  build(ctx: BuildCtx) {
-    const tex = T.paperTexture(T.hedge(), true);
-    this.mat = ctx.mat(tex, { vertexColors: true });
-    this.clumpMat = ctx.mat(tex, { vertexColors: true });
+  constructor(msaa: boolean) {
+    this.msaa = msaa;
+  }
+
+  /** The hedge materials, shared by every wall addWalls builds: the gate's now, the orchard's later, once the door opens. `sheet`: textures.ts paintHedge. */
+  build(ctx: BuildCtx, sheet: THREE.Texture) {
+    this.coreMat = ctx.mat(T.paperTexture(T.hedge(), true), { vertexColors: true });
+    // Both sides: the sheets along the top are seen from either side.
+    this.sheetMat = ctx.mat(sheet, { vertexColors: true, alphaTest: 0.5, alphaToCoverage: this.msaa, side: THREE.DoubleSide });
   }
 
   /**
-   * Walls of hedge (hedge.ts). Each solid middle is a box; all their leaf
-   * clumps are one instanced mesh: one draw call. A tap meets a wall's
-   * outline (pushed into ctx.hitBoxes as id "hedge"). Called once for the
-   * gate's hedge (GardenScene.build) and again, later, for the orchard's,
-   * when the door opens.
+   * Walls of hedge (hedge.ts). Each solid middle is a box; all their sheets of
+   * leaves are one mesh: one draw call. A tap meets a wall's outline (pushed
+   * into ctx.hitBoxes as id "hedge"). Called once for the gate's hedge
+   * (GardenScene.build) and again, later, for the orchard's, when the door opens.
    */
   addWalls(ctx: BuildCtx, walls: HedgeWall[], seed: number) {
-    const clumps: Clump[] = [];
+    const sheets: Sheet[] = [];
     walls.forEach((w, i) => {
       const { min, max } = hedgeCore(w);
       const geo = tiledBox(max[0] - min[0], max[1] - min[1], max[2] - min[2], 1);
       shadeUp(geo, 0.42, 0.66);
-      const m = new THREE.Mesh(geo, this.mat);
+      const m = new THREE.Mesh(geo, this.coreMat);
       m.position.set((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2);
       ctx.scene.add(still(m));
       ctx.hitBoxes.push({ id: "hedge", min: [...w.min], max: [...w.max], tag: null });
-      clumps.push(...hedgeClumps(w, seed + i));
+      sheets.push(...hedgeSheets(w, seed + i));
     });
-    // A rounded clump, shaded by the sun: its top and its sunny side light, the rest and its underside darker.
-    const clump = new THREE.IcosahedronGeometry(1, 1);
-    shade(clump, 0.9);
-    // About as many leaves to the metre as on the solid middle.
-    const uv = clump.getAttribute("uv") as THREE.BufferAttribute;
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
-    const mesh = new THREE.InstancedMesh(clump, this.clumpMat, clumps.length);
-    const m4 = new THREE.Matrix4();
-    const color = new THREE.Color();
-    clumps.forEach((c, i) => {
-      mesh.setMatrixAt(i, m4.makeScale(...c.r).setPosition(...c.at));
-      mesh.setColorAt(i, color.setScalar(c.shade));
-    });
-    ctx.scene.add(still(mesh));
+    ctx.scene.add(still(new THREE.Mesh(sheetGeometry(sheets), this.sheetMat)));
   }
 }

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { gateHedge, hedgeClumps, hedgeCore, orchardHedge } from "./hedge";
+import { gateHedge, hedgeCore, hedgeSheets, LEAF_H, orchardHedge, SHEET_H, type Sheet } from "./hedge";
+import { MouseMat } from "./mouseDoor";
 import { rayBox } from "./scenery";
 import { collide, DOOR_HALF, layout, WALKER, type GardenPlant } from "./world";
 
@@ -38,22 +39,70 @@ describe("the hedge round the orchard (#315)", () => {
     }
   });
 
-  test("its clumps of leaves stay out of the path, the doorway and the orchard's ground", () => {
+  test("its sheets of leaves stay out of the path, the doorway and the orchard's ground", () => {
     for (const l of gardens) {
       const gx = l.gate.x;
       gateHedge(l, DOOR_TOP).forEach((w, i) => {
-        for (const c of hedgeClumps(w, i)) {
+        for (const { corners } of hedgeSheets(w, i)) {
           // Not out over the fence line, where the walker's eye comes.
-          expect(c.at[2] - c.r[2]).toBeGreaterThan(l.bounds.maxZ);
-          // Not into the doorway, under the door's top.
-          if (c.at[1] - c.r[1] < DOOR_TOP) expect(Math.abs(c.at[0] - gx)).toBeGreaterThanOrEqual(DOOR_HALF + c.r[0] - 1e-9);
+          for (const c of corners) expect(c[2]).toBeGreaterThan(l.bounds.maxZ);
+          // Not into the doorway, under the door's top: all to one side of it, or all above it.
+          const xs = corners.map((c) => c[0]);
+          const clear = Math.max(...xs) <= gx - DOOR_HALF + 1e-9 || Math.min(...xs) >= gx + DOOR_HALF - 1e-9 || corners.every((c) => c[1] >= DOOR_TOP - 1e-9);
+          expect(clear ? "clear" : corners).toBe("clear");
         }
       });
       const o = l.orchard;
       const [x0, x1, far] = [o.x - o.w / 2, o.x + o.w / 2, o.z + o.d / 2];
       // At most a few centimetres into the orchard, past the left, right or far edge of its ground.
       for (const w of orchardHedge(l))
-        for (const c of hedgeClumps(w, 0)) expect(c.at[0] + c.r[0] < x0 + 0.05 || c.at[0] - c.r[0] > x1 - 0.05 || c.at[2] - c.r[2] > far - 0.05 ? "clear" : c).toBe("clear");
+        for (const { corners } of hedgeSheets(w, 0))
+          for (const c of corners) expect(c[0] < x0 + 0.05 || c[0] > x1 - 0.05 || c[2] > far - 0.05 ? "clear" : c).toBe("clear");
+    }
+  });
+
+  test("the mouse door (#364) stands in front of the hedge's leaves, not hidden behind them", () => {
+    for (const l of gardens) {
+      const door = new MouseMat(l, null);
+      gateHedge(l, DOOR_TOP).forEach((w, i) => {
+        for (const { corners } of hedgeSheets(w, i)) for (const c of corners) expect(c[2]).toBeGreaterThanOrEqual(door.z0 - 1e-9);
+      });
+    }
+  });
+
+  test("its rows of leaves leave no gap down to the solid middle, and none cuts through the row below it", () => {
+    const l = layout([]);
+    for (const w of [...gateHedge(l, DOOR_TOP), ...orchardHedge(l)]) {
+      // A face's rows, bottom up: the sheets that face the same way and lean back.
+      const faces = new Map<string, Sheet[]>();
+      for (const sheet of hedgeSheets(w, 0)) {
+        const [bl, br, , tl] = sheet.corners;
+        // Upright sheets only: the crests along the top stand straight.
+        if (Math.abs(tl[0] - bl[0]) + Math.abs(tl[2] - bl[2]) < 1e-9) continue;
+        const key = `${Math.sign(Math.round((br[0] - bl[0]) * 1e6))},${Math.sign(Math.round((br[2] - bl[2]) * 1e6))}`;
+        faces.set(key, [...(faces.get(key) ?? []), sheet]);
+      }
+      expect(faces.size).toBe(w.faces.length + w.ends.length);
+      for (const rows of faces.values()) {
+        rows.sort((a, b) => a.corners[0][1] - b.corners[0][1]);
+        rows.slice(1).forEach((upper, k) => {
+          const lower = rows[k];
+          const [ul, ll] = [upper.corners[0], lower.corners[0]];
+          // The upper row starts below the top of the lower row's solid part.
+          expect(ul[1]).toBeLessThan(ll[1] + SHEET_H - LEAF_H);
+          // Where they overlap, the upper row is further from the outside: how far out a sheet is at height y, along its outward lean.
+          const outAt = (s: Sheet, y: number) => {
+            const [b, , , t] = s.corners;
+            const f = (y - b[1]) / SHEET_H;
+            return [b[0] + (t[0] - b[0]) * f, b[2] + (t[2] - b[2]) * f];
+          };
+          const lean = [lower.corners[0][0] - lower.corners[3][0], lower.corners[0][2] - lower.corners[3][2]];
+          for (const y of [ul[1], ll[1] + SHEET_H]) {
+            const [a, b] = [outAt(upper, y), outAt(lower, y)];
+            expect((b[0] - a[0]) * lean[0] + (b[1] - a[1]) * lean[1]).toBeGreaterThan(0);
+          }
+        });
+      }
     }
   });
 });

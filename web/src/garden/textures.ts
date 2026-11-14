@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import type { PlacedPlant } from "./world";
+import { LEAF_H, SHEET_H, SHEET_W } from "./hedge";
 export { VIEW_H } from "./plantCanvas";
 import * as Art from "./visitorArt";
 import { PEBBLE } from "./carryArt";
@@ -154,6 +155,13 @@ export async function paintFar(moonPhase: number): Promise<FarTextures> {
 
 /** The orchard's atlas (orchard()), painted in a worker. */
 export const paintOrchard = async (): Promise<THREE.Texture> => paintedCutout(await paint<Pixels>({ kind: "orchard" }));
+
+/** A sheet of hedge leaves (hedgeSheet), painted in a worker. It repeats along its length. */
+export async function paintHedge(): Promise<THREE.Texture> {
+  const t = paintedCutout(await paint<Pixels>({ kind: "hedge" }));
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
+}
 
 /** The paper's grain (paper.ts), painted in a worker. It repeats, and has mipmaps, so far off it fades to its middle. */
 export async function paintPaper(): Promise<THREE.Texture> {
@@ -409,6 +417,91 @@ export function picket(): OffscreenCanvas {
 /** Thick hedge leaves (#315, #1091): dense and dark, with no gaps to see through, a few leaves catching the light. */
 export function hedge(): OffscreenCanvas {
   return leaves(11, "#3e653a", [["#345834", 10], ["#4a7444", 10], ["#5c8752", 3]], 30)[0];
+}
+
+/** Texels to a metre of a hedge sheet. */
+const SHEET_PPM = 512;
+/** Where each leaf's shadow falls (texels), from the sun at the upper left, and how soft it is. */
+const LEAF_SHADOW = { dx: 5, dy: 7, blur: 8 };
+
+/**
+ * One leaf cut from paper, standing on its base at (x, y) and leaning `turn` from upright: its outline, traced for
+ * fill or stroke. `side` traces only one half, back down its middle: -1 the left, 1 the right.
+ */
+function leafPath(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, len: number, half: number, turn: number, side = 0) {
+  const [dx, dy] = [Math.sin(turn), -Math.cos(turn)];
+  const [tx, ty] = [x + dx * len, y + dy * len];
+  // A quadratic curve's middle is halfway to its control point: twice the half-width out.
+  const [mx, my, px, py] = [x + (dx * len) / 2, y + (dy * len) / 2, -dy * half * 2, dx * half * 2];
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  if (side <= 0) ctx.quadraticCurveTo(mx - px, my - py, tx, ty);
+  else ctx.lineTo(tx, ty);
+  if (side >= 0) ctx.quadraticCurveTo(mx + px, my + py, x, y);
+  else ctx.lineTo(x, y);
+}
+
+/**
+ * A sheet of hedge leaves cut from paper (#1164): SHEET_W by SHEET_H metres (hedge.ts), repeating along its length.
+ * Its top LEAF_H is a fringe of pointed leaves, cut out; below them, the solid strip they grow from, thick with
+ * leaves. Each leaf is folded down its middle: its half toward the sun lighter. Each has a thin pale cut edge, and
+ * casts a soft shadow on the leaves behind it. Low down it is darker, in the shadow of the row in front.
+ */
+export function hedgeSheet(): OffscreenCanvas {
+  const [W, H, LEAF] = [SHEET_W * SHEET_PPM, Math.round(SHEET_H * SHEET_PPM), Math.round(LEAF_H * SHEET_PPM)];
+  const [c, ctx] = canvas(W, H);
+  const r = rng(1164);
+  const body = ctx.createLinearGradient(0, LEAF, 0, H);
+  body.addColorStop(0, "#35583a");
+  body.addColorStop(1, "#1f3622");
+  ctx.fillStyle = body;
+  ctx.fillRect(0, LEAF - 8, W, H);
+  /** A row of leaves from the back to the front: their bases near `y`, about `gap` apart, `len` long, coloured `light` and `dark` (its two halves), with an `edge` this pale. */
+  const row = (y: number, gap: number, len: number, light: string, dark: string, edge: number) => {
+    for (let x = r() * gap; x < W; x += gap * (0.75 + r() * 0.5)) {
+      const [by, l, half] = [y + (r() - 0.5) * 14, len * (0.8 + r() * 0.4), len * (0.17 + r() * 0.05)];
+      const turn = (r() < 0.5 ? -1 : 1) * (0.08 + r() * 0.42);
+      for (const ox of [-W, 0, W]) {
+        // The shadow first, on what is already there only (source-atop): the leaf is drawn far off and its shadow thrown back.
+        ctx.save();
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.shadowColor = "rgba(10, 26, 12, 0.55)";
+        ctx.shadowBlur = LEAF_SHADOW.blur;
+        ctx.shadowOffsetX = LEAF_SHADOW.dx + 4 * W;
+        ctx.shadowOffsetY = LEAF_SHADOW.dy;
+        leafPath(ctx, x + ox - 4 * W, by, l, half, turn);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = light;
+        leafPath(ctx, x + ox, by, l, half, turn);
+        ctx.fill();
+        ctx.fillStyle = dark;
+        leafPath(ctx, x + ox, by, l, half, turn, 1);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(222, 236, 198, ${edge})`;
+        ctx.lineWidth = 1.6;
+        leafPath(ctx, x + ox, by, l, half, turn);
+        ctx.stroke();
+      }
+    }
+  };
+  // The fringe: a back row reaching highest, then a front row; then the strip's own leaves, darker the lower they are.
+  row(LEAF + 10, 30, 96, "#4a7343", "#385b37", 0.35);
+  row(LEAF + 42, 36, 84, "#57804c", "#426840", 0.42);
+  [
+    ["#44683e", "#335433"],
+    ["#3d613a", "#2e4d30"],
+    ["#365a35", "#29462b"],
+    ["#304f33", "#243f27"],
+  ].forEach(([light, dark], i) => row(LEAF + 80 + i * 40, 38, 70, light, dark, 0.26 - i * 0.05));
+  // The row in front shades the bottom.
+  ctx.globalCompositeOperation = "source-atop";
+  const shade = ctx.createLinearGradient(0, H - 140, 0, H);
+  shade.addColorStop(0, "rgba(12, 28, 14, 0)");
+  shade.addColorStop(1, "rgba(12, 28, 14, 0.4)");
+  ctx.fillStyle = shade;
+  ctx.fillRect(0, 0, W, H);
+  return c;
 }
 
 /**
