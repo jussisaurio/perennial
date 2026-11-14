@@ -8,7 +8,7 @@
 import * as THREE from "three";
 import type { DeckLang } from "../deck/langs";
 import { stemHeight } from "../ui/plant";
-import { GRAIN, PAPER } from "./paper";
+import { GRAIN, PAPER, type StockName } from "./paper";
 import { castsShadow, LIGHT, LIT } from "./sceneLight";
 import type { HitBox, HitDisc } from "./scenery";
 import * as T from "./textures";
@@ -65,7 +65,7 @@ export const BILLBOARD = /* glsl */ `
   }
 `;
 
-// The fragment shader part every sprite shares: the paper's grain
+// The fragment shader part every sprite shares: the grain of smooth card
 // (paper.ts), the light (sceneLight.ts) and time-of-day tint, a pulse when
 // selected, and fog. A cut-out seen from its shaded side takes less of the sun,
 // and a little of it shines through the paper in the paper's own colour. Its
@@ -84,7 +84,7 @@ export const SHADE = /* glsl */ `
   ${PAPER}
   ${LIGHT}
   vec4 shade(vec4 c) {
-    vec3 paperC = c.rgb * paper(vPaper);
+    vec3 paperC = c.rgb * paper(vPaper, CARD);
     float sun = sunShadow(vSunAt + uSunDir * 0.08);
     float front = smoothstep(-0.3, 0.3, vFront);
     vec3 col = paperC * uTint * mix(fillLight(0.0), uKey, sun * mix(0.4, 1.0, front));
@@ -246,8 +246,8 @@ export interface BuildCtx {
   d: number;
   cx: number;
   cz: number;
-  /** A lit material (sceneLight.ts litMaterial) that follows the time of day's tint. */
-  mat: (tex: THREE.Texture, opts?: THREE.MeshBasicMaterialParameters) => THREE.MeshBasicMaterial;
+  /** A lit material (sceneLight.ts litMaterial) that follows the time of day's tint, cut from the paper `stock` (paper.ts STOCK). */
+  mat: (tex: THREE.Texture, stock: StockName, opts?: THREE.MeshBasicMaterialParameters) => THREE.MeshBasicMaterial;
   woodTex: THREE.Texture;
   /** The screen smooths shapes' edges (#1106), so a cut-out's edges can be smooth too (alphaToCoverage). */
   msaa: boolean;
@@ -281,7 +281,7 @@ const WOOD_TILE = 1.2;
 const ONE_PLANK = 0.25;
 
 /**
- * A box of wood (#1091), for `c.mat(c.woodTex)`. On each face the grain runs along the longer side; a face at least
+ * A box of wood (#1091), for `c.mat(c.woodTex, "kraft")`. On each face the grain runs along the longer side; a face at least
  * ONE_PLANK across shows the texture's two planks, a narrower one the middle of one plank.
  */
 export function woodBox(w: number, h: number, d: number): THREE.BoxGeometry {
@@ -311,8 +311,8 @@ export function woodBox(w: number, h: number, d: number): THREE.BoxGeometry {
 /** A sign's board: the text on the front only, plain wood on the back (a two-sided text plane shows the text mirrored from behind). */
 export function signBoard(c: BuildCtx, tex: THREE.Texture, w: number, h: number): THREE.Group {
   const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(tex)));
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(c.woodTex));
+  g.add(new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(tex, "kraft")));
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(w, h), c.mat(c.woodTex, "kraft"));
   back.rotation.y = Math.PI;
   g.add(back);
   return g;

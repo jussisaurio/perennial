@@ -144,7 +144,7 @@ export class StileScene {
     const uv = new Float32Array((position.length / 3) * 2);
     for (let i = 0; i < uv.length / 2; i++) uv.set([position[i * 3] / T.GROUND_TILE, -position[i * 3 + 2] / T.GROUND_TILE], i * 2);
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
-    c.scene.add(still(new THREE.Mesh(geo, c.mat(T.paperTexture(T.grass(), true)))));
+    c.scene.add(still(new THREE.Mesh(geo, c.mat(T.paperTexture(T.grass(), true), "handmade"))));
   }
 
   /** How far (m) the point (x, z) is to the right of the old path's line, facing out. */
@@ -285,7 +285,7 @@ export class StileScene {
       else squares.set(k, [s]);
     }
     // Both sides: the ring's flats are seen from behind from the garden, the thicket's from the hilltop.
-    const mat = c.mat(paper, { vertexColors: true, alphaTest: 0.5, alphaToCoverage: c.msaa, side: THREE.DoubleSide });
+    const mat = c.mat(paper, "card", { vertexColors: true, alphaTest: 0.5, alphaToCoverage: c.msaa, side: THREE.DoubleSide });
     for (const square of squares.values()) c.scene.add(still(new THREE.Mesh(sheetGeometry(square, BRAMBLE_SHEET), mat)));
     yield;
 
@@ -322,12 +322,12 @@ export class StileScene {
         this.cane(canes, V(cx - dx, y, cz - dz), V(cx, y + 0.08, cz), V(cx + dx, y, cz + dz), r, 0.7);
       }
     yield;
-    c.scene.add(still(new THREE.Mesh(canes.geometry(), c.mat(T.paperTexture(T.cane(), true), { vertexColors: true }))));
+    c.scene.add(still(new THREE.Mesh(canes.geometry(), c.mat(T.paperTexture(T.cane(), true), "card", { vertexColors: true }))));
   }
 
   /** The stile: steps up and down, the top board over the fence, and a handrail down each side. */
   private buildStile(c: BuildCtx) {
-    const wood = c.mat(c.woodTex);
+    const wood = c.mat(c.woodTex, "kraft");
     const g = new THREE.Group();
     const box = (w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0) => {
       const m = new THREE.Mesh(woodBox(w, h, d), wood);
@@ -374,11 +374,11 @@ export class StileScene {
     track.rotateX(-Math.PI / 2).rotateY(PATH_TURN).translate(at.x - Math.sin(PATH_TURN) * mid, 0, at.z - Math.cos(PATH_TURN) * mid);
     const pos = track.getAttribute("position");
     for (let i = 0; i < pos.count; i++) pos.setY(i, TRACK_LIFT + hillY(this.hill, pos.getX(i), pos.getZ(i)));
-    c.scene.add(still(new THREE.Mesh(track, c.mat(T.paperTexture(T.track()), { alphaTest: 0.5 }))));
+    c.scene.add(still(new THREE.Mesh(track, c.mat(T.paperTexture(T.track()), "sheet", { alphaTest: 0.5 }))));
 
     const notes = this.stileNotes.notes;
     if (notes.length === 0) return;
-    const paper = (unread: boolean) => c.mat(T.paperTexture(T.notePaper(unread)), { alphaTest: 0.5 });
+    const paper = (unread: boolean) => c.mat(T.paperTexture(T.notePaper(unread)), "sheet", { alphaTest: 0.5 });
     const fresh = paper(true);
     this.readPaper = paper(false);
     const geo = new THREE.PlaneGeometry(PAPER.w, PAPER.h);
@@ -391,7 +391,7 @@ export class StileScene {
     });
     // A flat stone on them, so the wind leaves them where they were put.
     const [nx, nz] = at.note;
-    const stone = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.055), c.mat(T.paperTexture(T.stone(), true)));
+    const stone = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.055), c.mat(T.paperTexture(T.stone(), true), "sugar"));
     stone.position.set(nx + 0.02, SHEET * notes.length + 0.035 / 2, nz - 0.05);
     stone.rotation.y = 0.4;
     c.scene.add(still(stone));

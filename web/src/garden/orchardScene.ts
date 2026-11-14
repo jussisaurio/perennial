@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { orchardBench, SPRITE_M, treeHits, type OrchardArea, type PlacedTree, type TreeHit } from "./orchard";
 import { CELL_H_PX, LOOKS } from "./orchardArt";
+import type { StockName } from "./paper";
 import type { SpriteItem } from "./sceneSprites";
 import type { HitBox } from "./scenery";
 import * as T from "./textures";
@@ -25,7 +26,7 @@ export interface OrchardWorld {
   /** The trees' atlas, orchard() in textures.ts, painted in a worker (T.paintOrchard). */
   atlas: THREE.Texture;
   /** An unlit material that follows the time of day (scene.ts BuildCtx.mat). */
-  mat: (tex: THREE.Texture) => THREE.MeshBasicMaterial;
+  mat: (tex: THREE.Texture, stock: StockName) => THREE.MeshBasicMaterial;
   /** The bench's plaque: benchLine(first word's planting time). Null when every word is set aside: there is no first word to name, and no plaque. */
   plaque: string | null;
 }
@@ -80,7 +81,7 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, placed: rea
   const bench = world.bench();
   if (world.plaque !== null) {
     const plaqueTex = T.paperTexture(T.notice(world.plaque));
-    const plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.28), world.mat(plaqueTex));
+    const plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.28), world.mat(plaqueTex, "card"));
     // Just behind the back rest, facing away from the seat.
     plaque.position.set(0, 0.66, -0.235);
     plaque.rotation.y = Math.PI;

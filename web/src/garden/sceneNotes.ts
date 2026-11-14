@@ -22,7 +22,7 @@ const crooked = (i: number) => (((i * 7) % 5) - 2) * 0.05;
 export function buildShed(c: BuildCtx, l: Layout): THREE.Group {
   const root = new THREE.Group();
   const s = shedAt(l);
-  const wood = c.mat(c.woodTex);
+  const wood = c.mat(c.woodTex, "kraft");
   const box = (w: number, h: number, d: number, x: number, y: number, z: number) => {
     const m = new THREE.Mesh(woodBox(w, h, d), wood);
     m.position.set(x, y, z);
@@ -55,7 +55,7 @@ export class ShedNotes {
   build(c: BuildCtx) {
     const notes = this.wall.notes;
     if (notes.length === 0) return;
-    const paper = (unread: boolean) => c.mat(T.paperTexture(T.notePaper(unread)), { alphaTest: 0.5 });
+    const paper = (unread: boolean) => c.mat(T.paperTexture(T.notePaper(unread)), "sheet", { alphaTest: 0.5 });
     const [read, fresh] = [paper(false), paper(true)];
     this.readPaper = read;
     const geo = new THREE.PlaneGeometry(PAPER.w, PAPER.h);

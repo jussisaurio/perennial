@@ -79,9 +79,9 @@ export class Hedge {
 
   /** The hedge materials, shared by every wall addWalls builds: the gate's now, the orchard's later, once the door opens. `sheet`: textures.ts paintHedge. */
   build(ctx: BuildCtx, sheet: THREE.Texture) {
-    this.coreMat = ctx.mat(T.paperTexture(T.hedge(), true), { vertexColors: true });
+    this.coreMat = ctx.mat(T.paperTexture(T.hedge(), true), "card", { vertexColors: true });
     // Both sides: the sheets along the top are seen from either side.
-    this.sheetMat = ctx.mat(sheet, { vertexColors: true, alphaTest: 0.5, alphaToCoverage: ctx.msaa, side: THREE.DoubleSide });
+    this.sheetMat = ctx.mat(sheet, "card", { vertexColors: true, alphaTest: 0.5, alphaToCoverage: ctx.msaa, side: THREE.DoubleSide });
   }
 
   /**

@@ -277,7 +277,7 @@ export class Plants {
     const soil: THREE.BufferGeometry[] = [];
     // Every bed sign on one canvas, one texture and one material; each board shows its own cell.
     const atlas = T.signs(L.beds.flatMap((bed) => (bed.sign === null ? [] : bedSign(bed.sign, c.lang))));
-    const signMat = mat(T.paperTexture(atlas));
+    const signMat = mat(T.paperTexture(atlas), "kraft");
     const rows = atlas.height / T.SIGN.h;
     let sign = 0;
     for (const bed of L.beds) {
@@ -324,8 +324,8 @@ export class Plants {
     }
     // A garden with no beds yet: mergeGeometries needs at least one geometry.
     if (!wood.length) return;
-    c.scene.add(still(new THREE.Mesh(mergeGeometries(wood), mat(woodTex))));
-    c.scene.add(still(new THREE.Mesh(mergeGeometries(soil), mat(soilTex))));
+    c.scene.add(still(new THREE.Mesh(mergeGeometries(wood), mat(woodTex, "kraft"))));
+    c.scene.add(still(new THREE.Mesh(mergeGeometries(soil), mat(soilTex, "sugar"))));
   }
 
   /**

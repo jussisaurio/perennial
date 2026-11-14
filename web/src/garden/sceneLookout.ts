@@ -34,7 +34,7 @@ export class LookoutThings {
     const h = this.hill;
     // A three-legged stool, its seat a thick round of wood, its legs splayed out to feet wider than the seat: from the path it reads as a seat, not a little gate.
     const stool = new THREE.Group();
-    const wood = c.mat(c.woodTex);
+    const wood = c.mat(c.woodTex, "kraft");
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.19, 0.07, 10), wood);
     seat.position.y = 0.45 - 0.035;
     stool.add(seat);
@@ -79,14 +79,14 @@ export class LookoutThings {
     // Seven flat faces, each one shade, not a gradient round it: no corner is shared, so each face keeps its own normal.
     const stoneGeo = new THREE.CylinderGeometry(STONE_R - 0.03, STONE_R, STONE_H, 7).toNonIndexed();
     stoneGeo.computeVertexNormals();
-    const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true)));
+    const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true), "sugar"));
     stone.position.set(sx, foot + STONE_H / 2, sz);
     const top = foot + STONE_H;
-    const book = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.d), c.mat(T.paperTexture(T.diary())));
+    const book = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.d), c.mat(T.paperTexture(T.diary()), "card"));
     book.position.set(sx, top + BOOK.h / 2, sz);
     book.rotation.y = h.face + 0.3;
     // Out of the pages at the book's head (its -z, toward the far house), lying on the stone's top: from the path side you see it past the book, not under your feet.
-    const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.004, RIBBON), c.mat(T.paperTexture(T.ribbon())));
+    const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.004, RIBBON), c.mat(T.paperTexture(T.ribbon()), "card"));
     ribbon.position.set(0.03, -BOOK.h / 2 + 0.002, -(BOOK.d / 2 + RIBBON / 2 - 0.02));
     book.add(ribbon);
     this.ribbon = ribbon;

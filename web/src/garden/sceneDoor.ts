@@ -46,7 +46,7 @@ export class Door {
    */
   build(c: BuildCtx, L: Layout) {
     const { b, mat, woodTex } = c;
-    const wood = mat(woodTex);
+    const wood = mat(woodTex, "kraft");
     const gx = L.gate.x;
     const z0 = b.maxZ + HEDGE.gap;
     // A wooden frame round the door, on the garden side.
@@ -65,7 +65,7 @@ export class Door {
     // The door turns on its hinge, at the right as you face it from the garden.
     const leaf = new THREE.Group();
     leaf.position.set(gx + DOOR_HALF, 0, z0 + DOOR.thick / 2 + 0.02);
-    const face = mat(T.paperTexture(T.door()));
+    const face = mat(T.paperTexture(T.door()), "kraft");
     // The leaf's edges are the frame's wood; its two faces the drawn door.
     const planks = new THREE.Mesh(new THREE.BoxGeometry(DOOR_HALF * 2, DOOR.h, DOOR.thick), [wood, wood, wood, wood, face, face]);
     planks.position.set(-DOOR_HALF, DOOR.h / 2, 0);

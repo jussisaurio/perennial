@@ -65,7 +65,7 @@ export class Jokes implements Part {
    */
   build(c: BuildCtx, bench: { x: number; z: number }, now: Date, word: string | null) {
     const { L, mat } = c;
-    const stone = mat(T.paperTexture(T.stone(), true));
+    const stone = mat(T.paperTexture(T.stone(), true), "sugar");
 
     // The sundial: a stone pillar, a cap, the bronze face, its gnomon and shadow.
     const [x, z] = [bench.x + SUNDIAL.dx, bench.z + SUNDIAL.dz];
@@ -76,7 +76,7 @@ export class Jokes implements Part {
     const y = SUNDIAL.pillar + 0.05;
     const faceTex = T.paperTexture(T.sundialFace());
     // A round mesh, so the disc's edge is the mesh's, crisp, with no alpha to test.
-    const face = new THREE.Mesh(new THREE.CircleGeometry(SUNDIAL.face / 2, 48), mat(faceTex));
+    const face = new THREE.Mesh(new THREE.CircleGeometry(SUNDIAL.face / 2, 48), mat(faceTex, "foil"));
     // Flat, its top (noon) toward the back fence (-z).
     face.rotation.x = -Math.PI / 2;
     face.position.set(x, y + 0.003, z);
@@ -88,7 +88,7 @@ export class Jokes implements Part {
     // The blade's length (its x) along -z.
     gnomonGeo.rotateY(Math.PI / 2);
     gnomonGeo.getAttribute("uv").array.fill(0.02);
-    const gnomon = new THREE.Mesh(gnomonGeo, mat(faceTex));
+    const gnomon = new THREE.Mesh(gnomonGeo, mat(faceTex, "foil"));
     gnomon.position.set(x, y, z);
     // The shadow starts at the middle and points away from the sun: toward the hour on the face.
     const geo = new THREE.PlaneGeometry(0.022, SUNDIAL.shadow);
@@ -102,7 +102,7 @@ export class Jokes implements Part {
     // Turning the shadow by -angle about the vertical takes it from noon (-z) toward +x (east) after noon.
     this.shadow.rotation.y = -sundialAngle(now);
     // Two small letters cut high in the pillar, on its garden side (-z): seen only up close (#869, what the sundial's line names).
-    const letters = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), mat(T.paperTexture(T.carvedLetters()), { alphaTest: 0.5 }));
+    const letters = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), mat(T.paperTexture(T.carvedLetters()), "sugar", { alphaTest: 0.5 }));
     letters.name = "carved letters";
     letters.rotation.y = Math.PI;
     letters.position.set(x, SUNDIAL.pillar - 0.12, z - 0.101);
@@ -115,11 +115,11 @@ export class Jokes implements Part {
 
     // The mouse door, flat on the hedge's face, low and small; its mat on the ground in front.
     const { z0, x: mx, z: mz, note } = this.mouse;
-    const door = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.paperTexture(T.mouseDoor(note ? "way" : "shut")), { alphaTest: 0.5 }));
+    const door = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.paperTexture(T.mouseDoor(note ? "way" : "shut")), "card", { alphaTest: 0.5 }));
     // Facing the garden (-z), a hair in front of the hedge's leaves.
     door.rotation.y = Math.PI;
     door.position.set(mx, MOUSE_DOOR.h / 2, z0 - 0.015);
-    const rug = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.07), mat(T.paperTexture(T.doormat(word))));
+    const rug = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.07), mat(T.paperTexture(T.doormat(word)), "sugar"));
     // Flat, and turned to read from the garden side.
     rug.rotation.set(-Math.PI / 2, 0, Math.PI);
     rug.position.set(mx, 0.02, mz);
@@ -131,12 +131,12 @@ export class Jokes implements Part {
 
     // The fish, and the rings where it goes in and comes out: hidden until it leaps.
     this.pond = L.pond;
-    this.fish = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), mat(T.paperTexture(T.leapingFish()), { alphaTest: 0.5, side: THREE.DoubleSide }));
+    this.fish = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), mat(T.paperTexture(T.leapingFish()), "card", { alphaTest: 0.5, side: THREE.DoubleSide }));
     this.fish.visible = false;
     c.scene.add(this.fish);
     const ring = T.paperTexture(T.ripple());
     for (let i = 0; i < 2; i++) {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), mat(ring, { transparent: true, depthWrite: false }));
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), mat(ring, "film", { transparent: true, depthWrite: false }));
       m.rotation.x = -Math.PI / 2;
       m.visible = false;
       this.rings.push(m);
@@ -155,7 +155,7 @@ export class Jokes implements Part {
     const hinge = new THREE.Group();
     hinge.position.set(mx - MOUSE_DOOR.w / 2, 0, z0 - 0.015);
     hinge.rotation.y = MOUSE_DOOR.swing;
-    const leaf = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.paperTexture(T.mouseDoor("leaf")), { alphaTest: 0.5, side: THREE.DoubleSide }));
+    const leaf = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.paperTexture(T.mouseDoor("leaf")), "card", { alphaTest: 0.5, side: THREE.DoubleSide }));
     leaf.rotation.y = Math.PI;
     leaf.position.set(MOUSE_DOOR.w / 2, MOUSE_DOOR.h / 2, 0);
     hinge.add(leaf);
@@ -163,7 +163,7 @@ export class Jokes implements Part {
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.glowTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     glow.scale.set(0.3, 0.3, 1);
     glow.position.set(mx, MOUSE_DOOR.h * 0.45, z0 - 0.03);
-    const paperMat = (unread: boolean) => mat(T.paperTexture(T.notePaper(unread)), { alphaTest: 0.5 });
+    const paperMat = (unread: boolean) => mat(T.paperTexture(T.notePaper(unread)), "sheet", { alphaTest: 0.5 });
     const readPaper = paperMat(false);
     const paper = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.paper.w, MOUSE_DOOR.paper.h), note.unread ? paperMat(true) : readPaper);
     // Flat on the mat, a little askew, its far end still in the doorway.

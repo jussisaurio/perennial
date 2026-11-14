@@ -262,12 +262,12 @@ export class SkyWater implements Part {
     const { L, mat } = c;
     this.water = T.paperTexture(T.water(), true);
     this.water.repeat.set(2, 2);
-    const pond = new THREE.Mesh(new THREE.CircleGeometry(L.pond.r, 20), mat(this.water));
+    const pond = new THREE.Mesh(new THREE.CircleGeometry(L.pond.r, 20), mat(this.water, "film"));
     pond.rotation.x = -Math.PI / 2;
     pond.position.set(L.pond.x, 0.04, L.pond.z);
     c.scene.add(still(pond));
     c.hitDiscs.push({ id: "pond", x: L.pond.x, y: 0.045, z: L.pond.z, r: L.pond.r + 0.18, tagY: 0.3 });
-    const rim = new THREE.Mesh(new THREE.RingGeometry(L.pond.r, L.pond.r + 0.18, 20), mat(T.paperTexture(T.path(), true), { color: 0xb0aaa0 }));
+    const rim = new THREE.Mesh(new THREE.RingGeometry(L.pond.r, L.pond.r + 0.18, 20), mat(T.paperTexture(T.path(), true), "sheet", { color: 0xb0aaa0 }));
     rim.rotation.x = -Math.PI / 2;
     rim.position.set(L.pond.x, 0.045, L.pond.z);
     c.scene.add(still(rim));
@@ -275,7 +275,7 @@ export class SkyWater implements Part {
     const pads: [number, number][] = [];
     for (let i = 0; i < 4; i++) {
       const a = i * 1.9 + 0.4;
-      const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), mat(padTex, { alphaTest: 0.5 }));
+      const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), mat(padTex, "card", { alphaTest: 0.5 }));
       pad.rotation.set(-Math.PI / 2, 0, a);
       pad.position.set(L.pond.x + Math.cos(a) * L.pond.r * 0.55, 0.07, L.pond.z + Math.sin(a) * L.pond.r * 0.55);
       pads.push([pad.position.x, pad.position.z]);

@@ -12,7 +12,7 @@
 
 import * as THREE from "three";
 import type { Lamps } from "./lanterns";
-import { after, paperMaterial } from "./paper";
+import { after, paperMaterial, type StockName } from "./paper";
 
 /** Texels on a side of the shadow map. */
 const SHADOW_PX = 2048;
@@ -139,9 +139,9 @@ function onLight(s: THREE.WebGLProgramParametersWithUniforms) {
     );
 }
 
-/** `m`, made of paper (paper.ts) and lit (onLight). */
-export function litMaterial<M extends THREE.Material>(m: M): M {
-  paperMaterial(m);
+/** `m`, made of paper of the stock `stock` (paper.ts) and lit (onLight). */
+export function litMaterial<M extends THREE.Material>(m: M, stock: StockName): M {
+  paperMaterial(m, stock);
   const paper = m.onBeforeCompile;
   m.onBeforeCompile = (s, r) => {
     paper.call(m, s, r);
