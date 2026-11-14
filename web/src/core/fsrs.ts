@@ -18,15 +18,8 @@ export interface Memory {
 }
 
 export class FSRS {
-  readonly w: readonly number[];
-  private readonly algo: FSRS6Algorithm;
-
-  constructor(w: readonly number[] = FSRS6_DEFAULT_WEIGHTS) {
-    if (w.length !== 21) throw new Error(`FSRS-6 needs 21 weights, got ${w.length}`);
-    this.w = w;
-    // Short-term on: a review on the same day uses FSRS's own same-day formula.
-    this.algo = new FSRS6Algorithm([...w], true, FSRS6_MODEL_BOUNDS);
-  }
+  // Short-term on: a review on the same day uses FSRS's own same-day formula.
+  private readonly algo = new FSRS6Algorithm([...FSRS6_DEFAULT_WEIGHTS], true, FSRS6_MODEL_BOUNDS);
 
   /** Probability of recall after `t` days at stability `s`. */
   retrievability(t: number, s: number): number {
