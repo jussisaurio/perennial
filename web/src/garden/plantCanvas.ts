@@ -175,15 +175,18 @@ export function drawPlants(plants: SpritePlant[], cols: number, w: number, h: nu
     ctx.restore();
   });
   const data = ctx.getImageData(0, 0, c.width, c.height);
-  const d = data.data;
-  // getImageData gives each pixel's colour unpremultiplied: multiply it by the pixel's alpha again.
+  premultiply(data.data);
+  return data;
+}
+
+/** getImageData gives each pixel's colour unpremultiplied: this multiplies it by the pixel's alpha again. */
+export function premultiply(d: Uint8ClampedArray) {
   for (let i = 0; i < d.length; i += 4) {
     const a = d[i + 3] / 255;
     d[i] *= a;
     d[i + 1] *= a;
     d[i + 2] *= a;
   }
-  return data;
 }
 
 /**
