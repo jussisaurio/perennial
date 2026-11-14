@@ -29,7 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      DIR: ${{ runner.temp }}/robot
+      # Not runner.temp: a job's env can't read the runner context, and GitHub then fails the file on every push.
+      DIR: ${{ github.workspace }}/robot-run
       SEED: ${{ inputs.seed || github.run_number }}
       DAYS: ${{ inputs.days || '30' }}
     steps:
