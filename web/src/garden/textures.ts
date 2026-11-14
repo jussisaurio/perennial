@@ -1666,8 +1666,15 @@ const VISITOR_PX = 8;
 /** Cells in a row of the visitors' atlas: 8 cells of 32 units keep it 2048 texels wide, which every GPU takes. */
 export const VISITOR_COLS = 8;
 
-/** Draws a paper cut-out with its top left at (x, y), `scale` texels to a unit. */
+/** How far off to draw a part so that only its shade lands in the cell (units): a canvas draws a shade only with its shape. */
+const SHADE_AWAY = 4096;
+
+/**
+ * Draws a paper cut-out with its top left at (x, y), `scale` texels to a unit: each part shades the pieces under it
+ * (and nothing else, as the shade must not grow the shape), then its pale cut edge (Art.LAYER).
+ */
 function cutout(ctx: OffscreenCanvasRenderingContext2D, art: Art.Cutout, x: number, y: number, scale: number) {
+  const { shade, edge } = Art.LAYER;
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
@@ -1675,14 +1682,36 @@ function cutout(ctx: OffscreenCanvasRenderingContext2D, art: Art.Cutout, x: numb
   ctx.lineCap = "round";
   for (const p of art.pieces) {
     const path = new Path2D(p.d);
-    if (p.fill) {
+    if (p.kind === "line") {
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = p.width;
+      ctx.stroke(path);
+      continue;
+    }
+    if (p.kind === "part") {
+      // A shadow's offset and blur are in texels, whatever the transform.
+      ctx.save();
+      ctx.globalCompositeOperation = "source-atop";
+      ctx.shadowColor = shade.color;
+      ctx.shadowBlur = shade.blur * scale;
+      ctx.shadowOffsetX = (SHADE_AWAY + shade.dx) * scale;
+      ctx.shadowOffsetY = shade.dy * scale;
+      ctx.translate(-SHADE_AWAY, 0);
+      ctx.fill(path);
+      ctx.restore();
+    }
+    ctx.fillStyle = p.fill;
+    ctx.fill(path);
+    if (p.kind === "part") {
+      // The rim left when the part is laid again a little down and right, over a pale wash, inside its own shape.
+      ctx.save();
+      ctx.clip(path);
+      ctx.fillStyle = edge.color;
+      ctx.fill(path);
+      ctx.translate(edge.width, edge.width);
       ctx.fillStyle = p.fill;
       ctx.fill(path);
-    }
-    if (p.line) {
-      ctx.strokeStyle = p.line.color;
-      ctx.lineWidth = p.line.width;
-      ctx.stroke(path);
+      ctx.restore();
     }
   }
   ctx.restore();

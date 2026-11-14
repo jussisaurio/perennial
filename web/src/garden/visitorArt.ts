@@ -1,19 +1,30 @@
-// The garden visitors as paper cut-outs (#1091): flat pieces of colour, each
-// with a thin darker edge, as SVG paths. Drawn into the walk's visitor atlas
-// (textures.ts) and as SVG in the 2D strip (ui/cutout.tsx), so both show the
-// same animals.
+// The garden visitors as paper cut-outs (#1091, #1164): a few pieces of
+// coloured card laid one on another, back to front, as SVG paths. Each piece's
+// cut edge catches the light and each shades the pieces under it, so shapes
+// part by tone and by layer, never by an outline. Drawn into the walk's visitor
+// atlas (textures.ts) and as SVG in the 2D strip (ui/cutout.tsx), so both show
+// the same animals.
 
 import type { GardenWord } from "../deck/schema";
 
+/** One piece of a cut-out, drawn in order. Its path uses absolute M, L, C, Q and Z only, so `moved` and `turned` can move it. */
+export type Piece =
+  /** A piece of card cut out and laid on the pieces before it: its cut edge shows pale on the lit side, and it shades what is under it. */
+  | { kind: "part"; d: string; fill: string }
+  /** Colour printed on the card (an eye, a stripe): flat, with no edge. */
+  | { kind: "mark"; d: string; fill: string }
+  /** A line printed on the card, `width` units wide. */
+  | { kind: "line"; d: string; color: string; width: number };
+
 /**
- * One flat piece of a cut-out: an SVG path (absolute M, L, C, Q and Z only, so `moved` can move it), filled, and/or
- * drawn along with a line `width` units wide.
+ * How a part lies on the card under it, in the cut-out's units. The light comes from the upper left, as on the
+ * paper's grain (paper.ts): a part's shade falls down and to the right, soft, on the pieces under it only, and its
+ * cut edge shows as a pale rim on its upper left. One look for the walk's atlas and the 2D strip.
  */
-export interface Piece {
-  d: string;
-  fill?: string;
-  line?: { color: string; width: number };
-}
+export const LAYER = {
+  shade: { dx: 0.3, dy: 0.45, blur: 0.7, color: "rgba(52, 30, 12, 0.42)" },
+  edge: { width: 0.15, color: "rgba(255, 250, 238, 0.5)" },
+} as const;
 
 /**
  * A visitor as paper cut-outs: its pieces, drawn in order, in a w×h box, in units where a cell of the walk's atlas is
@@ -32,7 +43,8 @@ export function artLeft(w: number): number {
 
 /** The width of a piece's cut edge (units). */
 const EDGE = 0.4;
-const INK = "#2e2018";
+/** The one near-black: eyes, noses, a mouth. Never an outline. */
+const INK = "#2b1d15";
 
 /** A number for a path, to two places. */
 const n = (v: number) => String(Math.round(v * 100) / 100);
@@ -44,18 +56,42 @@ function mapPoints(d: string, f: (x: number, y: number) => [number, number]): st
 function moved(pieces: readonly Piece[], dx: number, dy: number): Piece[] {
   return pieces.map((p) => ({ ...p, d: mapPoints(p.d, (x, y) => [x + dx, y + dy]) }));
 }
+/** `pieces` turned by `deg` degrees (clockwise on the page) round (cx, cy): a part on its hinge, like a paper puppet's. */
+function turned(pieces: readonly Piece[], cx: number, cy: number, deg: number): Piece[] {
+  const [c, s] = [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)];
+  return pieces.map((p) => ({ ...p, d: mapPoints(p.d, (x, y) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]) }));
+}
 /** An ellipse as cubic curves, so it moves like any other path. */
 export function oval(cx: number, cy: number, rx: number, ry = rx): string {
   const [kx, ky] = [rx * 0.5523, ry * 0.5523];
   const p = (x: number, y: number) => `${n(x)} ${n(y)}`;
   return `M${p(cx - rx, cy)} C${p(cx - rx, cy - ky)} ${p(cx - kx, cy - ry)} ${p(cx, cy - ry)} C${p(cx + kx, cy - ry)} ${p(cx + rx, cy - ky)} ${p(cx + rx, cy)} C${p(cx + rx, cy + ky)} ${p(cx + kx, cy + ry)} ${p(cx, cy + ry)} C${p(cx - kx, cy + ry)} ${p(cx - rx, cy + ky)} ${p(cx - rx, cy)} Z`;
 }
-/** A piece of `color` with a darker cut `edge`. */
-const cut = (d: string, color: string, edge: string): Piece => ({ d, fill: color, line: { color: edge, width: EDGE } });
-/** A piece of `color` with no edge: a mark on another piece. */
-export const flat = (d: string, color: string): Piece => ({ d, fill: color });
-/** A drawn line. */
-export const line = (d: string, color: string, width: number): Piece => ({ d, line: { color, width } });
+/** A point of a `shape`: x, y, and how round the shape is there (1, if left out: smooth; 0: a sharp corner, as a knife turns). */
+type Pt = readonly [number, number] | readonly [number, number, number];
+/**
+ * A closed shape through `pts`, smooth where they are round and sharp at corners: how the cut-outs are drawn, by a
+ * few points each, so a shape reads as one confident cut. Cubic curves through the points (Catmull-Rom).
+ */
+function shape(...pts: readonly Pt[]): string {
+  const at = (i: number) => pts[(i + pts.length) % pts.length];
+  const p = (x: number, y: number) => `${n(x)} ${n(y)}`;
+  let d = `M${p(pts[0][0], pts[0][1])}`;
+  for (let i = 0; i < pts.length; i++) {
+    const [a, b, prev, next] = [at(i), at(i + 1), at(i - 1), at(i + 2)];
+    const [ka, kb] = [(a[2] ?? 1) / 6, (b[2] ?? 1) / 6];
+    d += ` C${p(a[0] + (b[0] - prev[0]) * ka, a[1] + (b[1] - prev[1]) * ka)} ${p(b[0] - (next[0] - a[0]) * kb, b[1] - (next[1] - a[1]) * kb)} ${p(b[0], b[1])}`;
+  }
+  return `${d} Z`;
+}
+/** A piece of card in `color`, laid on the pieces before it. */
+const part = (d: string, color: string): Piece => ({ kind: "part", d, fill: color });
+/** Colour printed on the pieces under it: no edge. */
+export const flat = (d: string, color: string): Piece => ({ kind: "mark", d, fill: color });
+/** A line printed on the pieces under it. */
+export const line = (d: string, color: string, width: number): Piece => ({ kind: "line", d, color, width });
+/** The old drawings' pieces with a dark edge, now laid as parts: each goes as its visitor is redrawn (#1164). */
+const cut = (d: string, color: string, _edge: string): Piece => part(d, color);
 /** A rounded strip of `color` with a cut edge (a tail, a neck), along `d`. */
 const tube = (d: string, color: string, edge: string, width: number): Piece[] => [line(d, edge, width + 2 * EDGE), line(d, color, width)];
 /** A round dark eye with a speck of light. */
@@ -81,41 +117,46 @@ export const SNAIL: Cutout = {
 };
 
 // ---- Cat ----
-const CAT = "#e08c45";
-const CAT_EDGE = "#a35a26";
-const CAT_STRIPE = "#c06a2c";
-const CREAM = "#fbf0de";
-const CREAM_EDGE = "#d6bf9e";
-const PINK = "#ec9a92";
-const CAT_EYE = "#9ccf55";
-/** Asleep or one eye open: curled up, head on the left, tail round the front. */
+const CAT = "#df8a45";
+const CAT_LIGHT = "#f7e9d2";
+const CAT_DARK = "#b4612c";
+const CAT_EYE = "#a9c74e";
+const CAT_NOSE = "#e2847c";
+/** A tabby stripe printed as a wedge: `w` wide at (x, y), its point (dx, dy) from there. */
+const wedge = (x: number, y: number, w: number, dx: number, dy: number): Piece => flat(shape([x - w / 2, y, 0], [x + w / 2, y, 0], [x + dx, y + dy, 0]), CAT_DARK);
+/** Asleep or one eye open: curled up in a loaf, head on the left, tail round the front. */
 function catCurled(awake: boolean): Cutout {
   return {
     w: 24,
     h: 12,
     pieces: [
-      cut("M6 4.6 C8.6 2.3 17.8 2.1 21.4 3.3 C23.4 4.1 23.8 7.4 23.5 9.3 C23.2 10.9 21.8 11.6 20 11.6 L6.4 11.6 Z", CAT, CAT_EDGE),
-      line("M12.4 2.6 C12 3.8 12.2 5 12.8 5.8", CAT_STRIPE, 0.7),
-      line("M15.4 2.4 C15 3.6 15.2 4.8 15.8 5.6", CAT_STRIPE, 0.7),
-      line("M18.4 2.6 C18 3.8 18.3 4.8 18.9 5.6", CAT_STRIPE, 0.7),
-      line("M20.2 11.2 C18.2 10.8 17.4 8.6 18.6 7 C19.6 5.8 21.6 5.8 22.8 7", CAT_EDGE, 0.4),
-      ...tube("M21.4 10.5 C16 11.6 8.4 11.6 4.4 10.8 C3 10.5 2.1 9.9 2.2 9", CAT, CAT_EDGE, 1.5),
-      line("M6 10.4 L5.9 11.4", CAT_STRIPE, 0.6),
-      line("M8.6 10.6 L8.5 11.6", CAT_STRIPE, 0.6),
-      line("M11.2 10.7 L11.1 11.6", CAT_STRIPE, 0.6),
-      cut(oval(8.4, 10.7, 1.3, 0.7), CREAM, CREAM_EDGE),
-      cut("M1.2 4.6 L1.5 0.6 L4.3 3.2 Z", CAT, CAT_EDGE),
-      cut("M5.1 3.1 L7.6 0.4 L8.4 4.3 Z", CAT, CAT_EDGE),
-      flat("M1.9 3.9 L2.05 1.9 L3.4 3.3 Z", PINK),
-      flat("M5.9 3.1 L7.3 1.6 L7.7 3.7 Z", PINK),
-      cut(oval(4.6, 6.7, 4.2, 3.6), CAT, CAT_EDGE),
-      line("M3.8 3.4 L3.8 4.4", CAT_STRIPE, 0.55),
-      line("M5.2 3.3 L5.2 4.3", CAT_STRIPE, 0.55),
-      cut(oval(3.7, 8.6, 2.2, 1.35), CREAM, CREAM_EDGE),
-      flat("M3.1 7.3 L4.3 7.3 L3.7 8 Z", PINK),
-      line("M3.7 8 Q3.7 8.6 3.1 8.7 M3.7 8 Q3.7 8.6 4.3 8.7", CAT_EDGE, 0.25),
-      line("M1.6 6.2 Q2.3 6.8 3 6.2", INK, 0.4),
-      ...(awake ? [cut(oval(5.4, 6.2, 0.7, 0.6), CAT_EYE, INK), flat(oval(5.4, 6.2, 0.18, 0.5), INK)] : [line("M4.7 6.2 Q5.4 6.8 6.1 6.2", INK, 0.4)]),
+      part(shape([6.0, 11.9, 0], [5.6, 6.4], [8.8, 3.4], [14.8, 2.5], [20.4, 3.0], [23.4, 6.2], [23.3, 10.2], [21.8, 11.9, 0]), CAT),
+      wedge(11.6, 3.0, 1.2, 0.5, 2.6),
+      wedge(14.4, 2.6, 1.3, 0.3, 2.8),
+      wedge(17.2, 2.7, 1.2, 0.0, 2.6),
+      // The haunch, a round cut at the back.
+      part(shape([15.2, 11.9, 0], [15.4, 8.0], [18.0, 5.0], [21.6, 5.0], [23.4, 7.4], [23.2, 10.6], [21.8, 11.9, 0]), CAT),
+      wedge(19.8, 5.2, 1.1, -0.6, 2.2),
+      // The ears behind the head.
+      part(shape([1.6, 5.2, 0], [1.8, 0.6, 0], [4.8, 3.4, 0]), CAT),
+      part(shape([5.6, 3.4, 0], [8.4, 0.7, 0], [9.0, 5.0, 0]), CAT),
+      flat(shape([2.4, 4.4, 0], [2.5, 2.0, 0], [3.9, 3.4, 0]), CAT_NOSE),
+      flat(shape([6.6, 3.5, 0], [8.0, 2.2, 0], [8.3, 4.2, 0]), CAT_NOSE),
+      part(shape([1.0, 7.4], [2.0, 4.4], [5.2, 3.3], [8.6, 4.4], [9.9, 7.2], [8.8, 10.0], [5.4, 10.9], [2.0, 9.9]), CAT),
+      wedge(4.6, 3.5, 0.9, 0.1, 1.5),
+      wedge(5.9, 3.5, 0.9, -0.1, 1.5),
+      part(shape([3.6, 8.9], [4.6, 8.0], [5.5, 8.3], [6.4, 8.0], [7.4, 8.9], [6.6, 9.7], [5.5, 9.6], [4.4, 9.7]), CAT_LIGHT),
+      flat(shape([4.9, 7.7, 0], [6.1, 7.7, 0], [5.5, 8.4, 0]), CAT_NOSE),
+      line("M2.4 6.5 C2.9 7.1 3.7 7.1 4.2 6.5", INK, 0.38),
+      ...(awake
+        ? [flat(shape([6.4, 6.5, 0.6], [7.4, 5.8], [8.4, 6.4, 0.6], [7.4, 7.0]), CAT_EYE), flat(shape([7.4, 5.85, 0], [7.65, 6.4], [7.4, 6.95, 0], [7.15, 6.4]), INK)]
+        : [line("M6.6 6.4 C7.1 7.0 7.9 7.0 8.4 6.4", INK, 0.38)]),
+      // The tail round the front, laid over the chin, ringed, its dark tip curled up.
+      part(shape([22.6, 10.2], [16.0, 10.0], [9.0, 10.2], [4.8, 10.2], [2.2, 9.6], [0.9, 8.4, 0.6], [0.7, 9.8], [2.2, 11.2], [5.0, 11.9, 0], [22.0, 11.9, 0]), CAT),
+      wedge(6.6, 10.25, 1.0, 0.2, 1.6),
+      wedge(10.2, 10.15, 1.0, 0.2, 1.7),
+      wedge(13.8, 10.1, 1.0, 0.2, 1.7),
+      flat(shape([2.6, 9.7], [0.9, 8.4, 0.6], [0.7, 9.8], [2.0, 11.1], [3.0, 11.4, 0]), CAT_DARK),
     ],
   };
 }
@@ -124,54 +165,60 @@ export const CAT_ASLEEP = catCurled(false);
 /** The same cat with one green eye open. */
 export const CAT_AWAKE = catCurled(true);
 
+/** One of the stare's eyes, at (x, y): a green almond with a slit. */
+const catEye = (x: number, y: number): Piece[] => [
+  flat(shape([x - 1, y, 0.6], [x, y - 0.75], [x + 1, y, 0.6], [x, y + 0.75]), CAT_EYE),
+  flat(shape([x, y - 0.7, 0], [x + 0.26, y], [x, y + 0.7, 0], [x - 0.26, y]), INK),
+];
 /** The cat up and walking (#362: to the bench and home), facing you: its eyes look at the middle. */
 export const CAT_STARE: Cutout = {
   w: 11,
   h: 16,
   pieces: [
-    ...tube("M7.4 15.4 C9.8 15.6 10.4 13.6 10 11.8", CAT, CAT_EDGE, 1.1),
-    cut("M3 8 C1.4 9.4 0.7 12.4 0.8 15.6 L9 15.6 C9.2 12.4 8.6 9.4 7 8 Z", CAT, CAT_EDGE),
-    line("M1.6 11.4 L2.8 11.6 M8.2 11.4 L7 11.6", CAT_STRIPE, 0.55),
-    cut("M3.5 8.2 C3.1 10 3.8 11.7 4.9 12.1 C6 11.7 6.7 10 6.3 8.2 Z", CREAM, CREAM_EDGE),
-    line("M4.9 12.6 L4.9 15.3", CAT_EDGE, 0.35),
-    cut(oval(3.1, 15.2, 1.3, 0.6), CREAM, CREAM_EDGE),
-    cut(oval(6.7, 15.2, 1.3, 0.6), CREAM, CREAM_EDGE),
-    cut("M0.6 4.6 L0.9 0.3 L3.6 2.3 Z", CAT, CAT_EDGE),
-    cut("M8.2 4.6 L7.9 0.3 L5.2 2.3 Z", CAT, CAT_EDGE),
-    flat("M1.2 3.5 L1.35 1.3 L2.9 2.4 Z", PINK),
-    flat("M7.6 3.5 L7.45 1.3 L5.9 2.4 Z", PINK),
-    cut(oval(4.4, 5, 3.9, 3.2), CAT, CAT_EDGE),
-    line("M3.6 2.2 L3.6 3 M4.4 2 L4.4 3 M5.2 2.2 L5.2 3", CAT_STRIPE, 0.45),
-    cut(oval(2.9, 4.8, 0.78, 0.72), CAT_EYE, INK),
-    cut(oval(5.9, 4.8, 0.78, 0.72), CAT_EYE, INK),
-    flat(oval(3.1, 4.8, 0.2, 0.55), INK),
-    flat(oval(5.7, 4.8, 0.2, 0.55), INK),
-    cut(oval(4.4, 6.8, 1.6, 1), CREAM, CREAM_EDGE),
-    flat("M3.8 6 L5 6 L4.4 6.6 Z", PINK),
-    line("M4.4 6.6 Q4.4 7.2 3.8 7.3 M4.4 6.6 Q4.4 7.2 5 7.3", CAT_EDGE, 0.25),
+    part(shape([7.6, 15.9, 0], [9.8, 15.2], [10.6, 13.0], [10.0, 10.6, 0], [9.6, 12.8], [8.6, 14.4], [7.0, 14.9]), CAT),
+    part(shape([1.4, 15.9, 0], [1.0, 12.6], [2.4, 9.4], [4.0, 7.8], [7.0, 7.8], [8.6, 9.4], [10.0, 12.6], [9.6, 15.9, 0]), CAT),
+    // The haunches, a round cut each side.
+    part(shape([1.4, 15.9, 0], [0.9, 13.6], [2.2, 11.6], [3.8, 12.4], [4.2, 15.9, 0]), CAT),
+    part(shape([9.6, 15.9, 0], [10.1, 13.6], [8.8, 11.6], [7.2, 12.4], [6.8, 15.9, 0]), CAT),
+    part(shape([3.8, 8.2], [7.2, 8.2], [6.6, 11.4], [5.5, 13.4, 0], [4.4, 11.4]), CAT_LIGHT),
+    part(shape([3.3, 15.9, 0], [3.4, 12.6], [5.2, 12.4], [5.4, 15.9, 0]), CAT_LIGHT),
+    part(shape([5.6, 15.9, 0], [5.8, 12.4], [7.6, 12.6], [7.7, 15.9, 0]), CAT_LIGHT),
+    part(shape([1.4, 4.4, 0], [1.6, 0.2, 0], [4.6, 2.2, 0]), CAT),
+    part(shape([9.6, 4.4, 0], [9.4, 0.2, 0], [6.4, 2.2, 0]), CAT),
+    flat(shape([2.1, 3.4, 0], [2.2, 1.3, 0], [3.6, 2.4, 0]), CAT_NOSE),
+    flat(shape([8.9, 3.4, 0], [8.8, 1.3, 0], [7.4, 2.4, 0]), CAT_NOSE),
+    part(shape([1.2, 5.2], [2.4, 2.4], [5.5, 1.6], [8.6, 2.4], [9.8, 5.2], [8.8, 7.6], [5.5, 8.6], [2.2, 7.6]), CAT),
+    wedge(4.6, 1.7, 0.8, 0.1, 1.4),
+    wedge(5.5, 1.6, 0.8, 0, 1.6),
+    wedge(6.4, 1.7, 0.8, -0.1, 1.4),
+    ...catEye(3.6, 4.6),
+    ...catEye(7.4, 4.6),
+    part(shape([3.6, 6.8], [4.6, 6.0], [5.5, 6.4], [6.4, 6.0], [7.4, 6.8], [6.8, 7.9], [5.5, 8.3], [4.2, 7.9]), CAT_LIGHT),
+    flat(shape([4.9, 6.0, 0], [6.1, 6.0, 0], [5.5, 6.7, 0]), CAT_NOSE),
   ],
 };
 
 // ---- Bird ----
-const BIRD_BROWN = "#946640";
-const BIRD_EDGE = "#5c3c22";
-const BIRD_WING = "#7a5232";
-const BREAST = "#df7a40";
-const BREAST_EDGE = "#a8542a";
-const BEAK = "#eeb040";
-const BEAK_EDGE = "#a87818";
-/** The bird's body, head on the left, `dy` down; its wing `up` or folded. */
-function birdBody(dy: number, up: boolean): Piece[] {
+const BIRD_BROWN = "#8c6a46";
+const BIRD_LIGHT = "#f2e4cb";
+const BIRD_DARK = "#56402c";
+const BREAST = "#dc5636";
+const BEAK = "#eeb03c";
+/** The folded wing, its tip cut in two notches like long feathers; the hop lifts it on its hinge at the shoulder. */
+const BIRD_WING = part(shape([5.8, 4.6], [7.6, 3.2], [10.0, 3.8], [12.4, 5.4, 0], [11.0, 5.7, 0], [11.4, 6.2, 0], [10.0, 6.4, 0], [10.2, 6.9, 0], [7.8, 6.9], [6.0, 6.0]), BIRD_DARK);
+/** The bird's body, head on the left, `dy` down; its wing turned `lift` degrees up from folded. */
+function birdBody(dy: number, lift: number): Piece[] {
   return moved(
     [
-      cut("M9.6 5.2 L13.7 4.3 L13.5 6.4 L10 7.2 Z", BIRD_WING, BIRD_EDGE),
-      cut("M3 4.6 C3 2.4 4.6 1 6.4 1.2 C8.2 1.4 8.8 2.6 9.4 3.8 C11 4.4 11.6 5.4 11 6.6 C10 7.8 7 8.2 5.2 7.6 C3.6 7.1 3 6 3 4.6 Z", BIRD_BROWN, BIRD_EDGE),
-      cut("M3.1 4.4 C3 6 3.8 7.2 5.4 7.6 C6.6 7.9 7.4 7 7 5.8 C6.6 4.6 5.2 3.8 3.4 3.8 Z", BREAST, BREAST_EDGE),
-      up
-        ? cut("M6.6 4.6 C6.8 2.4 8.2 0.2 9.8 -0.6 C10.4 1.2 9.8 3.6 8.2 5 Z", BIRD_WING, BIRD_EDGE)
-        : cut("M6.6 4.4 C8.2 3.8 10.4 4.4 11.2 6 C9.6 6.8 7.8 6.6 6.6 4.4 Z", BIRD_WING, BIRD_EDGE),
-      cut("M3.3 3.3 L0.6 3.9 L3.3 4.5 Z", BEAK, BEAK_EDGE),
-      ...eye(4.5, 3, 0.5),
+      // The tail, forked at its end.
+      part(shape([9.4, 5.0], [13.8, 3.2, 0], [13.0, 4.7, 0], [13.6, 6.2, 0], [10.2, 7.4]), BIRD_DARK),
+      part(shape([2.6, 4.4], [3.3, 2.0], [5.2, 1.1], [7.2, 1.9], [8.8, 3.7], [11.2, 4.9], [12.4, 5.6, 0], [11.2, 7.1], [8.6, 8.2], [5.8, 8.4], [3.6, 7.3]), BIRD_BROWN),
+      part(shape([6.2, 8.4], [8.4, 7.2], [11.0, 6.8], [9.6, 8.0], [7.6, 8.5]), BIRD_LIGHT),
+      part(shape([2.6, 4.4], [3.6, 3.9], [5.4, 4.5], [6.8, 6.2], [6.4, 8.1], [4.6, 8.2], [3.1, 6.8]), BREAST),
+      ...turned([BIRD_WING], 6.4, 4.6, -lift),
+      part(shape([3.0, 3.5, 0], [0.7, 4.1, 0], [2.9, 4.8, 0]), BEAK),
+      flat(oval(4.2, 3.2, 0.7), BIRD_LIGHT),
+      flat(oval(4.2, 3.2, 0.52), INK),
     ],
     0,
     dy,
@@ -181,13 +228,13 @@ function birdBody(dy: number, up: boolean): Piece[] {
 export const BIRD: Cutout = {
   w: 14,
   h: 10,
-  pieces: [line("M6.1 7.8 L5.9 9.7 M7.6 7.8 L7.8 9.7 M5 9.7 L6.6 9.7 M7.1 9.7 L8.7 9.7", BIRD_EDGE, 0.4), ...birdBody(0, false)],
+  pieces: [line("M6.2 8.2 L6.0 9.7 M7.8 8.2 L8.0 9.7 M5.1 9.7 L6.7 9.7 M7.2 9.7 L8.8 9.7", BIRD_DARK, 0.4), ...birdBody(0, 0)],
 };
 /** The bird mid-hop, wings up. */
 export const BIRD_HOP: Cutout = {
   w: 14,
   h: 11,
-  pieces: [line("M6.2 8.8 L6 10.7 M7.6 8.8 L7.8 10.7", BIRD_EDGE, 0.4), ...birdBody(1.6, true)],
+  pieces: [line("M6.3 9.4 L6.1 10.7 M7.8 9.4 L8.0 10.7", BIRD_DARK, 0.4), ...birdBody(1.4, 70)],
 };
 
 // ---- Frog ----
@@ -227,40 +274,46 @@ export const FROG_CROAK = frog(FROG_EYES, [cut(oval(7, 7.9, 3.2, 2.5), "#fff8dc"
 export const FROG_ASLEEP = frog([line("M2.5 2.6 Q3.6 3.4 4.7 2.6", "#2a4a1c", 0.4), line("M9.3 2.6 Q10.4 3.4 11.5 2.6", "#2a4a1c", 0.4)], []);
 
 // ---- Dog ----
-const DOG_TAN = "#c48d58";
-const DOG_EDGE = "#8a5c32";
-const DOG_HAUNCH = "#b47d49";
-const DOG_EAR = "#7a4c2a";
-const DOG_EAR_EDGE = "#56341c";
-/** A tan dog sitting, facing right (it sits left of its plant, looking at it), its tail along `tail`. */
-function dog(tail: string, tip: string): Cutout {
+const DOG_TAN = "#c98a4f";
+const DOG_LIGHT = "#f4e4c8";
+const DOG_DARK = "#7c4a29";
+const COLLAR = "#d9553a";
+const TAG = "#eeb03c";
+/** Its tail up, a hinge at the rump: the wag turns it down. */
+const DOG_TAIL = part(shape([4.4, 12.6], [2.9, 11.1], [1.9, 9.3], [2.2, 7.0, 0], [2.9, 8.8], [3.9, 10.2], [5.3, 11.3]), DOG_TAN);
+/** A tan dog sitting, facing right (it sits left of its plant, looking at it), its tail turned `wag` degrees down. */
+function dog(wag: number): Cutout {
   return {
     w: 18,
     h: 16,
     pieces: [
-      ...tube(tail, DOG_TAN, DOG_EDGE, 1.3),
-      ...tube(tip, CREAM, CREAM_EDGE, 1.1),
-      cut("M9.2 8 C6.6 8.6 3.6 10.6 3.6 13.6 C3.6 15 4.2 15.7 5.4 15.7 L14.4 15.7 C14.8 13.5 14.6 10.8 13.6 8.6 Z", DOG_TAN, DOG_EDGE),
-      cut("M4.8 15.6 C4.6 12.6 6.6 11 9 11.4 C10.8 11.8 11.4 13.8 10.9 15.6 Z", DOG_HAUNCH, DOG_EDGE),
-      cut(oval(9.4, 15.2, 1.4, 0.6), CREAM, CREAM_EDGE),
-      cut("M12 8.8 C11.4 10.6 11.6 13 12 15.6 L14.4 15.7 C14.9 13.2 14.6 10.6 13.7 8.7 Z", CREAM, CREAM_EDGE),
-      line("M13 12.4 L13 15.4", CREAM_EDGE, 0.3),
-      cut(oval(13.5, 15.2, 1.3, 0.55), CREAM, CREAM_EDGE),
-      cut("M9.2 8 C10.9 8.8 12.6 8.8 13.9 8.2 L14.1 9.5 C12.6 10.2 10.8 10.1 9.2 9.3 Z", "#c9503c", "#8e3324"),
-      cut(oval(11.8, 10.4, 0.55), "#e6bd4c", "#a07e26"),
-      cut(oval(12.1, 4.3, 3.5, 3.6), DOG_TAN, DOG_EDGE),
-      cut("M13.4 4.2 C14.8 3.5 16.6 3.6 17.3 4.3 C17.9 4.9 17.8 6.4 17.1 6.9 C16 7.6 14.4 7.6 13.4 7 C12.9 6.2 12.9 4.8 13.4 4.2 Z", CREAM, CREAM_EDGE),
-      flat(oval(17.1, 4.6, 0.75, 0.55), INK),
-      line("M16.9 5.3 Q16.7 6.2 15.6 6.3", DOG_EDGE, 0.3),
-      ...eye(13.4, 3.3, 0.6),
-      cut("M9.6 1.4 C8 1.4 7.1 2.9 7.3 5 C7.5 6.6 8.3 7.7 9.4 7.5 C10.6 7.3 11.1 5.6 10.9 3.7 C10.8 2.3 10.4 1.5 9.6 1.4 Z", DOG_EAR, DOG_EAR_EDGE),
+      ...turned([DOG_TAIL], 4.8, 12, wag),
+      // The far front leg, in shade.
+      part(shape([11.2, 10.4], [12.8, 10.6], [12.8, 15.9, 0], [11.0, 15.9, 0]), DOG_DARK),
+      part(shape([9.6, 6.2], [7.0, 8.0], [4.6, 10.6], [3.5, 13.4], [3.7, 15.9, 0], [14.9, 15.9, 0], [15.1, 12.2], [15.5, 9.4], [14.6, 7.3]), DOG_TAN),
+      // The haunch: one round cut over the body, with the hind paw in front of it.
+      part(shape([3.7, 15.9, 0], [3.6, 12.8], [5.6, 10.2], [8.4, 10.3], [10.2, 12.6], [10.2, 15.9, 0]), DOG_TAN),
+      part(shape([8.6, 15.9, 0], [8.8, 14.9], [10.6, 14.6], [11.9, 15.2], [12.0, 15.9, 0]), DOG_LIGHT),
+      part(shape([12.2, 7.6], [14.6, 7.4], [15.0, 9.4], [14.2, 11.2], [12.8, 11.0], [12.2, 9.6]), DOG_LIGHT),
+      part(shape([12.4, 10.4], [14.4, 10.2], [14.9, 15.9, 0], [12.6, 15.9, 0]), DOG_TAN),
+      part(shape([12.3, 15.9, 0], [12.5, 14.9], [14.4, 14.7], [15.6, 15.3], [15.6, 15.9, 0]), DOG_LIGHT),
+      part(shape([9.9, 6.6, 0], [12.8, 7.9], [15.3, 7.6, 0], [15.5, 8.9, 0], [12.8, 9.3], [9.9, 8.2, 0]), COLLAR),
+      part(oval(13.6, 9.9, 0.62), TAG),
+      part(shape([9.1, 4.4], [9.8, 2.1], [12.2, 1.0], [14.6, 1.8], [15.8, 3.4], [17.2, 3.7], [17.9, 4.9], [17.3, 6.5], [15.4, 7.5], [12.6, 7.7], [10.2, 6.8]), DOG_TAN),
+      part(shape([13.6, 5.6], [15.2, 4.0], [17.1, 3.8], [17.9, 4.9], [17.3, 6.5], [15.4, 7.5], [13.8, 7.1]), DOG_LIGHT),
+      flat(shape([16.3, 4.1], [17.3, 3.6], [18.0, 4.2], [17.7, 5.0], [16.8, 5.0]), INK),
+      line("M17.4 5.6 C17 6.3 16.1 6.4 15.3 6.0", DOG_DARK, 0.3),
+      flat(oval(14.2, 3.7, 0.55, 0.62), INK),
+      line("M13.4 2.6 C13.9 2.2 14.6 2.2 15.1 2.6", DOG_DARK, 0.32),
+      // The ear hangs from the top of the head: laid last, it shades the head and the neck.
+      part(shape([10.6, 1.3], [12.6, 1.7], [12.5, 4.4], [11.6, 7.2], [10.3, 8.3], [9.1, 7.3], [9.3, 4.0]), DOG_DARK),
     ],
   };
 }
 /** A tan dog sitting, facing right, its tail up. */
-export const DOG = dog("M4.4 13 C2.2 12.6 1.4 11.4 1.4 9.6", "M1.42 10 L1.4 9.4");
+export const DOG = dog(0);
 /** The same dog, its tail swept down: two frames make a wag. */
-export const DOG_WAG = dog("M4.4 14.2 C2.6 14.6 1.8 15 0.8 15.1", "M1.2 15.1 L0.8 15.15");
+export const DOG_WAG = dog(-25);
 
 // ---- Fish ----
 const FISH = "#e8803c";
