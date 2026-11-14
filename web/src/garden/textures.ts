@@ -155,6 +155,13 @@ export async function paintFar(moonPhase: number): Promise<FarTextures> {
 /** The orchard's atlas (orchard()), painted in a worker. */
 export const paintOrchard = async (): Promise<THREE.Texture> => paintedCutout(await paint<Pixels>({ kind: "orchard" }));
 
+/** The paper's grain (paper.ts), painted in a worker. It repeats, and has mipmaps, so far off it fades to its middle. */
+export async function paintPaper(): Promise<THREE.Texture> {
+  const t = paintedCutout(await paint<Pixels>({ kind: "paper" }));
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
 const px = (ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);

@@ -9,6 +9,7 @@ import * as THREE from "three";
 import type { DeckLang } from "../deck/langs";
 import { stemHeight } from "../ui/plant";
 import { SUN_AT } from "./bench";
+import { GRAIN, PAPER } from "./paper";
 import type { HitBox, HitDisc } from "./scenery";
 import * as T from "./textures";
 import type { Layout } from "./world";
@@ -28,7 +29,8 @@ export function plantHeight(growth: number): number {
 // The vertex shader part every sprite shares: the fog and selection inputs,
 // and billboard(), which sways the quad in the wind, leans it by `droop`, then
 // turns it to face the camera around the vertical axis only, like Doom's
-// sprites. It returns the view-space position.
+// sprites. It returns the view-space position. vPaper: where on its sheet of
+// paper the point is (SHADE), fixed to the cut-out as it sways and turns.
 export const BILLBOARD = /* glsl */ `
   uniform float uTime;
   uniform float uSway;
@@ -37,7 +39,10 @@ export const BILLBOARD = /* glsl */ `
   uniform float uSelected;
   varying float vFog;
   varying float vSel;
+  varying vec2 vPaper;
   vec4 billboard(vec3 at, vec2 p, float phase, float droop) {
+    // Each cut-out from its own part of the sheet.
+    vPaper = p + vec2(phase * 2.3, phase * 1.7);
     float h = position.y / ${SPRITE_H.toFixed(1)};
     float a = droop + uSway * sin(uTime * 1.4 + phase) * 0.07 * h + uSway * sin(uTime * 3.1 + phase * 2.0) * 0.015;
     p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
@@ -47,16 +52,18 @@ export const BILLBOARD = /* glsl */ `
   }
 `;
 
-// The fragment shader part every sprite shares: time-of-day tint, a pulse
-// when selected, and fog.
+// The fragment shader part every sprite shares: the paper's grain
+// (paper.ts), time-of-day tint, a pulse when selected, and fog.
 export const SHADE = /* glsl */ `
   uniform vec3 uFog;
   uniform vec3 uTint;
   uniform float uTime;
   varying float vFog;
   varying float vSel;
+  varying vec2 vPaper;
+  ${PAPER}
   vec4 shade(vec4 c) {
-    vec3 col = c.rgb * uTint;
+    vec3 col = c.rgb * uTint * paper(vPaper);
     col = mix(col, min(vec3(1.0), col * 1.35 + 0.08), vSel * (0.6 + 0.4 * sin(uTime * 5.0)));
     return vec4(mix(col, uFog, vFog), 1.0);
   }
@@ -89,8 +96,10 @@ const LYING_VERT = /* glsl */ `
   varying vec2 vUv;
   varying float vFog;
   varying float vSel;
+  varying vec2 vPaper;
   void main() {
     vec2 p = position.xy * iParams.z;
+    vPaper = p;
     float a = iParams.y;
     // Local y goes to the far side, so the quad's front faces up.
     vec4 mv = viewMatrix * vec4(iPos + vec3(p.x * cos(a) + p.y * sin(a), 0.0, p.x * sin(a) - p.y * cos(a)), 1.0);
@@ -129,6 +138,7 @@ function spriteMaterial(map: THREE.Texture, vertexShader: string): THREE.ShaderM
       uFog: { value: new THREE.Color() },
       uTint: { value: new THREE.Color(1, 1, 1) },
       uSelected: { value: -1 },
+      uGrain: GRAIN,
     },
     vertexShader,
     fragmentShader: SPRITE_FRAG,
