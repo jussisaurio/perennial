@@ -51,6 +51,8 @@ export interface PlanInput {
   fsrs: FSRS;
   /** Words answered correctly today: not quizzed again until tomorrow. */
   answeredToday: ReadonlySet<string>;
+  /** Words whose one reading answer is "I knew it": the button says "Back in about a week" (#269). */
+  knewIt: ReadonlySet<string>;
 }
 
 export interface Plan {
@@ -69,13 +71,14 @@ const DUE_HORIZON_MS = 6 * 3_600_000;
  *    reading reviews come as the first practice of their word's listening or typing;
  * 2. new words in the time left (a trickle even during a backlog);
  * 3. reviews due within a day, soonest first;
- * 4. any other learned word, weakest first.
+ * 4. any other learned word, weakest first, but not one marked "I knew it":
+ *    that word waits for its due date, about a week, as its button says.
  * Steps 3 and 4 make sure a chunk is never empty once anything is learned.
  * They are not sized to the budget: the timer, not the queue, ends the chunk.
  * A step per memory: Today works it out in slices (#569).
  */
 export function* planSteps(input: PlanInput): Generator<void, Plan> {
-  const { now, budgetMs, memories, fresh, fsrs, answeredToday } = input;
+  const { now, budgetMs, memories, fresh, fsrs, answeredToday, knewIt } = input;
   const recall = (m: MemoryRow) => fsrs.retrievability((now - m.lastTs) / DAY_MS, m.s);
 
   // One skill per word per session: practising "listen" right after "read" for
@@ -130,6 +133,8 @@ export function* planSteps(input: PlanInput): Generator<void, Plan> {
 
   // Early reviews for the rest of the time: what comes due soonest, then the
   // weakest of everything else. Practising early is worth a little less, never harm.
+  // A word marked "I knew it" is not among the weakest: a day later it is still
+  // at R ≈ 0.98, so a review then is worth little, and the learner was told a week.
   const taken = new Set(byWord.keys());
   const soon = yield* firstPerWord(
     learned.filter((m) => !taken.has(m.wordId) && m.due <= now + DAY_MS),
@@ -137,7 +142,7 @@ export function* planSteps(input: PlanInput): Generator<void, Plan> {
   );
   for (const m of soon) taken.add(m.wordId);
   const weakest = yield* firstPerWord(
-    learned.filter((m) => !taken.has(m.wordId)),
+    learned.filter((m) => !taken.has(m.wordId) && !knewIt.has(m.wordId)),
     recall,
   );
 
@@ -157,8 +162,9 @@ export function* planSteps(input: PlanInput): Generator<void, Plan> {
   while (ri < reviews.length) queue.push(reviews[ri++]);
   queue.push(...early);
 
-  // Every learned word was already answered today and no new words are left
-  // (a small course, practised a lot): a second try today beats an empty chunk.
+  // Every learned word was already answered today or waits for its "I knew it"
+  // week, and no new words are left (a small course, practised a lot): a second
+  // try today, or an early one, beats an empty chunk.
   if (!queue.length) {
     const again = yield* firstPerWord(
       memories.filter((m) => m.reps > 0),

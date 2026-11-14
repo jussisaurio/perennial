@@ -27,7 +27,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 - **Never limit use.** "Practice more" always works. Nothing stops or discourages practice. The planner steers without showing it.
 
 **Planner** (`web/src/core/session.ts`).
-- A chunk fills in this order: due reviews, new words, reviews due within a day, then the weakest known words.
+- A chunk fills in this order: due reviews, new words, reviews due within a day, then the weakest known words. A word marked "I knew it" is not among those weakest words: its button says it comes back in about a week (#269).
 - Up to 2 due reading reviews in a chunk come as their word's first listening practice, and 1 as its first typing practice (`FIRST_PRACTICES`). The answer waters reading too.
 - **Never break progress.** A change to scheduling (planner, FSRS, pacing, story thresholds) keeps the progress of learners who are partway through. "Keeps" means nothing is lost or reset and the schedule does not visibly jump; exact due dates may move. Plan and test the transition with a real history.
 
