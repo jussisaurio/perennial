@@ -332,9 +332,13 @@ function leaves(seed: number, base: string, cutouts: [string, number][], size: n
   return [c, ctx, r];
 }
 
-/** A bramble thicket's leaves (#749, #1091): darker and wilder than the clipped hedge, with a few blackberries. Its thorny canes are their own meshes (sceneStile.ts). */
+/**
+ * A bramble thicket's leaves (#749, #1091): greyer and wilder than the clipped hedge, its leaves bigger and more
+ * apart in tone, a few showing their pale undersides, with a few blackberries. Its faces you see are mostly turned
+ * from the sun, so it is no darker than the hedge itself: dark green, never black. Its thorny canes are their own meshes (sceneStile.ts).
+ */
 export function bramble(): OffscreenCanvas {
-  const [c, ctx, r] = leaves(749, "#425c3c", [["#354b35", 12], ["#53704a", 9]], 34);
+  const [c, ctx, r] = leaves(749, "#4a6a45", [["#3b5638", 12], ["#5d8052", 10], ["#7a9a68", 4]], 34);
   const dot = (x: number, y: number, rad: number, color: string) => {
     ctx.fillStyle = color;
     ctx.beginPath();
