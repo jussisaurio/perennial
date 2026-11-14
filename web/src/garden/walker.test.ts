@@ -99,10 +99,10 @@ describe("walking into something solid stops you", () => {
     hold(w, "KeyW", 1.5, wd);
     expect(w.z).toBeCloseTo(b.z - BENCH.back - WALKER, 6);
     expect(w.x).toBeCloseTo(b.x, 6);
-    // Along it, into its end: +x is yaw -π/2.
-    w = stand(b.x - 2, b.z, -Math.PI / 2);
+    // Along it, into its right end (its left has the sundial, #1019): -x is yaw π/2.
+    w = stand(b.x + 2, b.z, Math.PI / 2);
     hold(w, "KeyW", 1.5, wd);
-    expect(w.x).toBeCloseTo(b.x - BENCH.half - WALKER, 6);
+    expect(w.x).toBeCloseTo(b.x + BENCH.half + WALKER, 6);
     expect(w.z).toBeCloseTo(b.z, 6);
     // Between it and the pond, turned to it.
     w = stand(b.x, b.z + BENCH.front + WALKER + 0.05, 0);
@@ -242,6 +242,14 @@ describe("a tap on the ground walks you there (#336)", () => {
       expect(out).toBeGreaterThan(WALKER - 1e-9);
     }
     expect(Math.hypot(w.x - to.x, w.z - to.z)).toBeLessThan(0.01);
+  });
+
+  test("a tap on the shut brambles, near the fence, walks you to their front, never through the fence (#1025)", () => {
+    const wd = world("shut");
+    const w = stand(STILE.foot[0], STILE.foot[1], 0);
+    startTrip(w, STILE.x, STILE.z + 0.3, 0, null, wd);
+    expect(walkOut(w, wd).end).toBe("arrived");
+    expect(w.z).toBeCloseTo(STILE.z + BRAMBLES_IN + WALKER, 6);
   });
 
   test("with reduced motion the view keeps still", () => {

@@ -4,8 +4,8 @@ import { rng } from "../lib/seed";
 import { backWay, DIARY_REACH, HILLTOP_R, lookoutAt } from "./lookout";
 import { shedAt } from "./shed";
 import { STEP, stileAt } from "./stile";
-import { collideTrees, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
-import { along, bedSign, benchAt, besideKey, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type BackWay, type GardenPlant, type Layout } from "./world";
+import { collideTrees, orchardBench, orchardTrees, placeTrees, type PlacedTree } from "./orchard";
+import { along, bedSign, BENCH, benchAt, besideKey, collide, DOOR_HALF, HEDGE, KEY_SPOTS, keyAt, keyHelp, keySpot, layout, route, TRIP_STUCK, viewpoint, walk, walkStep, wayTo, WALKER, type BackWay, type GardenPlant, type Layout } from "./world";
 
 const DAY = 86_400_000;
 const plant = (i: number, pos = "noun"): GardenPlant => ({
@@ -132,6 +132,42 @@ describe("garden layout", () => {
     const p = collide(l, l.pond.x, l.pond.z + 0.1);
     expect(Math.hypot(p.x - l.pond.x, p.z - l.pond.z)).toBeGreaterThan(l.pond.r);
     expect(collide(l, 1e6, 0).x).toBeLessThan(l.bounds.maxX);
+  });
+
+  /** How far (x, z) is from a box [x0, x1, z0, z1]: 0 inside it. */
+  const offBox = ([x0, x1, z0, z1]: number[], x: number, z: number) => Math.hypot(Math.max(0, x0 - x, x - x1), Math.max(0, z0 - z, z - z1));
+
+  test("the sundial beside the bench is solid, and no walker squeezes between them: a way past goes round both (#1019)", () => {
+    const l = layout([plant(1)]);
+    const b = benchAt(l);
+    // The sundial's stone top, as sceneJokes.ts draws it: 0.36 m square, 1.05 m left of the bench's middle.
+    const dial = [b.x - 1.05 - 0.18, b.x - 1.05 + 0.18, b.z - 0.18, b.z + 0.18];
+    const p = collide(l, b.x - 1.05, b.z);
+    expect(offBox(dial, p.x, p.z)).toBeGreaterThanOrEqual(WALKER - 1e-9);
+    // From behind the gap between the bench's end and the sundial to in front of it.
+    const gap = b.x - 0.775;
+    const to = collide(l, gap, b.z + 0.55);
+    const way = wayTo(l, gap, b.z - 1.2, to.x, to.z, false, [], null);
+    for (let k = 0; k <= 1; k += 0.01) {
+      const q = along(way, k);
+      expect(offBox(dial, q.x, q.z)).toBeGreaterThan(WALKER - 0.02);
+    }
+  });
+
+  test("the orchard's bench is solid once the door is open, and a way past it goes round it (#1020)", () => {
+    const l = layout([plant(1)]);
+    const b = orchardBench(l.orchard);
+    // The same bench as by the pond (orchardScene.ts), not turned.
+    expect(b.turn).toBe(0);
+    const box = [b.x - BENCH.half, b.x + BENCH.half, b.z - BENCH.back, b.z + BENCH.front];
+    const p = collide(l, b.x, b.z, WALKER, true);
+    expect(offBox(box, p.x, p.z)).toBeGreaterThanOrEqual(WALKER - 1e-9);
+    // From the gap behind it, by the door, to in front of it.
+    const way = wayTo(l, b.x, b.z - 0.6, b.x, b.z + 1, true, [], null);
+    for (let k = 0; k <= 1; k += 0.01) {
+      const q = along(way, k);
+      expect(offBox(box, q.x, q.z)).toBeGreaterThan(WALKER - 0.02);
+    }
   });
 
   test("every plant's viewpoint, where Next plant and a walk to a plant end, is where a walker may stand: in 60 and 800 plants, the bench is in front of a bed (#1011)", () => {
