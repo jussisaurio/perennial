@@ -95,15 +95,26 @@ Progress is shown as a garden, not as streaks or points. Each word has its own p
 - **Small garden (Today):** an SVG strip of the plants.
 - **Walk-in garden (`#/garden`):** a 3D paper-craft diorama in `web/src/garden/`. Its look follows [docs/art-direction.md](docs/art-direction.md): one style with the app.
   - `world.ts` has the pure layout: raised beds per kind of word, collision, viewpoints.
-  - `walker.ts` has the walker (#975): where you stand, where you look, and what you are doing (free, on a walk, on a glide, seated), with one `step` that moves it by a frame. It has no three.js and no clock, so unit tests walk it at a fixed frame length. The scene calls it each frame and draws the result.
+  - `game.ts` has the game (#975). One `Game` holds the garden's state and its rules: the walker, what is in reach and what the action button does, the time of day and the time-lapse on a seat, the lanterns, the pebbles, the notes, the stile and the hill. You change it in two ways: `step(dt, input)` once a frame, and events (a tap on a thing, a press of the action button). It has no three.js and no window, and it reads no clock and no `Math.random`: it gets the moment the walk opened and the length of each frame. So unit tests play the garden with no browser (`game.test.ts`): they hold keys and press buttons, and check where you are and what the game says. The game tells the scene what happened through its hooks (`GameHooks`), and the scene draws it.
+  - `walker.ts` has the walker (#975): where you stand, where you look, and what you are doing (free, on a walk, on a glide, seated), with one `step` that moves it by a frame. The game calls it each frame.
   - `textures.ts` draws pixel-art textures procedurally and rasterises the SVG plants into atlases.
-  - `scene.ts` hosts the three.js scene (see Garden code, below). It draws camera-facing billboard sprites. The framebuffer's width comes from the detail level (`detail.ts`): about the screen's own resolution at normal, and coarser at low, for slow devices; CSS scales it to the screen.
+  - `scene.ts` draws the game with three.js (see Garden code, below). It draws camera-facing billboard sprites. The framebuffer's width comes from the detail level (`detail.ts`): about the screen's own resolution at normal, and coarser at low, for slow devices; CSS scales it to the screen.
   - The scene is a snapshot taken when the garden opens.
   - three.js loads only on this route.
 
 ### Garden code
 
-`GardenScene` (`scene.ts`) is a small host: the renderer and camera, the frame
+**The game decides; the scene draws.** A rule of the garden (where you can
+walk, what a tap or the button does, when it gets dark, what a visitor says)
+goes in `Game` or a pure file it calls (`walker.ts`, `reachCore.ts`,
+`lanterns.ts`, `bench.ts`, `carry.ts`, `lookout.ts`), and gets a unit test on the game. The
+scene finds what a tap meets on the screen (a ray into the world), passes it
+to the game as an event, steps the game each frame, and draws what the game
+holds. A rule kept in the scene can be tested only in a browser, slowly. A few
+still are: the visitors, walking into things (`walkInto.ts`), and the fish
+in the jokes.
+
+`GardenScene` (`scene.ts`) is the renderer: the renderer and camera, the frame
 loop, and the rendering subsystems that tick or react to the time of
 day behind the `Part` interface (`scenePart.ts`) — the sky and pond, the door
 and key, the critters (fireflies, butterflies...), the plants (beds,
@@ -126,11 +137,9 @@ rendering code should follow, and the places it still does not (yet):
   the order `parts` is ticked, disposed and given `Conditions` in; pick
   priority (`TAP_PRIORITY`: one `Tapper` per kind, #850); and label priority (`LABEL_PRIORITY`:
   say, then the one active tag — the door's line, a fallen fruit's word, scenery or
-  tree — then a visitor's); and what the one action button acts on
-  (`reachables`: one `Reachable` per thing, #850: climb down from the stile (#714), stand up, the key, what a loose thing in your hands does
-  (throw it, or drop it in the well), a visitor hiding near you (#379), the
-  door, a lantern, the lookout's lantern (raise it, #683), a note, climbing the stile, picking up a loose thing, the bench, the toys (blow a
-  dandelion clock), then the plant ahead; with nothing in reach, no button, #835).
+  tree — then a visitor's). What the one action button acts on is the
+  game's: one table of offers in `reachCore.ts` (`offersAt`, #850), in the
+  order it asks them; with nothing in reach, no button (#835).
   What a thing thrown or put down does where it lands is a row in
   `garden/carry.ts` (`(thing, place) → reaction`), and who answers it is a
   small function there: a new joke is one row, not new scene code. A Part never reaches into another
@@ -169,7 +178,8 @@ Known exceptions, not yet brought in line:
   review; the lanterns moved to `Lanterns` (`sceneLanterns.ts`) when they
   could be blown out (#361).
 - **Two calls still read real time or randomness directly, not from a Frame:**
-  `GardenScene.build` reads `new Date()` once, to say what is where today
+  `GardenScene` reads `new Date()` once, as the walk opens (`opened`), and
+  gives it to the game and the build, to say what is where today
   (the visitors' daily spots, a visitor in an orchard tree, the sundial's hour) — a one-off
   placement, not a per-frame behaviour; `whimsy.ts`'s `neighbourPerks` defaults to
   `Math.random`, and `Plants.nod` (the plant perking up when it hears its

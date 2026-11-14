@@ -13,8 +13,8 @@ import { placeTrees, type OrchardTree, type PlacedTree } from "./orchard";
 import type { SceneryHit, SceneryView, SceneryViews } from "./scenery";
 import type { VisitorId, VisitorView } from "./visitors";
 import { conditions } from "./conditions";
-import { ANSWER_LINE, ANSWER_NOTE, ANSWER_SPOKEN, backWay, Diary, DIARY_REACH, hasNote, HILL_NOTE, lookoutAt, LookoutLight, type Lookout } from "./lookout";
-import { stileAt, StileNotes, type NotePlace, type StileSpot } from "./stile";
+import { ANSWER_LINE, ANSWER_NOTE, ANSWER_SPOKEN, backWay, Diary, DIARY_REACH, hasNote, HILL_NOTE, hillY, lookoutAt, LookoutLight, type Lookout } from "./lookout";
+import { stepY, stileAt, StileNotes, type NotePlace, type StileSpot } from "./stile";
 import { courseNotes } from "./notes/read";
 import { ShedWall } from "./shed";
 import { aimAt, ANSWERS, CARRY_STAND, Pebbles, type Answer, type Answerers, type CarryDone, type CarryTarget, type Landing } from "./carry";
@@ -874,6 +874,12 @@ export class Game {
     const at = this.shown !== "day" ? besideKey(this.layout, key, "bird") : null;
     if (at && !this.started) this.guests.place("bird", at, key);
     else this.guests.visit("bird", at);
+  }
+
+  /** How high the ground stands at (x, z) (m): the stile's steps and the hill past it (#770); 0 in the garden. Runs every frame: no allocation. */
+  lift(x: number, z: number): number {
+    if (!this.stileSpot || !this.hill) return 0;
+    return stepY(this.stileSpot, x, z) + hillY(this.hill, x, z);
   }
 
   /** Look round by (dx, dy) radians. */

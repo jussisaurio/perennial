@@ -336,31 +336,29 @@ test("the walk switches off swipe-back navigation while it is open, and only the
   expect(await rootOverscroll()).toEqual(["auto", "auto"]);
 });
 
-// Tap to walk (#336) with a mouse: a click on the ground walks there. The view
-// turns gently toward where you walk, unless the viewer asked for reduced motion.
-for (const reducedMotion of ["no-preference", "reduce"] as const)
-  test.describe(`motion: ${reducedMotion}`, () => {
-    test.use({ reducedMotion });
-    test(`a click on the ground walks there; the view ${reducedMotion === "reduce" ? "keeps still" : "turns toward it"} (#336)`, async ({ page }) => {
-      const errors: string[] = [];
-      page.on("pageerror", (e) => errors.push(String(e)));
-      await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-      await pinDetail(page, "low");
-      await page.goto("/?demo=es:30#/today");
-      await page.getByRole("button", { name: "Walk in your garden" }).click();
-      await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-      await page.waitForFunction(() => "__garden" in window);
-      // Facing a little left of the spot.
-      const { x, y, to, kind, yaw } = await aimAtGround(page, 0.4);
-      expect(kind).toBe("walk");
-      await page.mouse.click(x, y);
-      await arrives(page, to);
-      const turned = yaw - (await walker(page)).yaw;
-      if (reducedMotion === "reduce") expect(turned).toBe(0);
-      else expect(turned).toBeGreaterThan(0.2);
-      expect(errors).toEqual([]);
-    });
+// Tap to walk (#336) with a mouse: a click on the ground walks there, and the
+// view turns gently toward where you walk. With reduced motion it keeps still:
+// that rule is a unit test (walker.test.ts).
+test.describe(() => {
+  test.use({ reducedMotion: "no-preference" });
+  test("a click on the ground walks there; the view turns toward it (#336)", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
+    await pinDetail(page, "low");
+    await page.goto("/?demo=es:30#/today");
+    await page.getByRole("button", { name: "Walk in your garden" }).click();
+    await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+    await page.waitForFunction(() => "__garden" in window);
+    // Facing a little left of the spot.
+    const { x, y, to, kind, yaw } = await aimAtGround(page, 0.4);
+    expect(kind).toBe("walk");
+    await page.mouse.click(x, y);
+    await arrives(page, to);
+    expect(yaw - (await walker(page)).yaw).toBeGreaterThan(0.2);
+    expect(errors).toEqual([]);
   });
+});
 
 // #334: one action button for what is in reach; its icon changes shape, and a screen reader hears what it does.
 // docs/garden-play.md, "The bench" (#1011).
@@ -414,8 +412,10 @@ test("bench.sit: W toward the bench stops you at its back; the button sits you d
   expect((await scene()).seated).toBe(false);
 });
 
-// docs/garden-play.md, "The action button" (#835).
-test("action.none: on open ground away from everything no action button shows; walk up to the bench and it shows, named Sit on the bench", async ({ page }) => {
+// The action button in the page (#835): when nothing is in reach it goes, and the
+// focus it had goes back to the walk. Which thing is in reach, and from how far
+// (docs/garden-play.md action.none, action.reach-edge), is reachCore.test.ts.
+test("the action button goes when you walk away from everything, focus goes back to the walk, and it comes back when you step back (#835)", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
   await page.setViewportSize({ width: 1280, height: 720 });
   await pinDetail(page, "low");
@@ -442,38 +442,6 @@ test("action.none: on open ground away from everything no action button shows; w
   await page.keyboard.down("KeyS");
   await expect(sit).toBeVisible();
   await page.keyboard.up("KeyS");
-});
-
-// docs/garden-play.md, "The action button" (#838). Steps of a few centimetres are set on the dev-only scene handle: a held key at 7 frames a second on CI cannot stop that exactly.
-test("action.reach-edge: the bench comes into reach where Sit shows, and stays in reach a small step farther, so the button does not blink at the edge", async ({ page }) => {
-  await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
-  await page.setViewportSize({ width: 1280, height: 720 });
-  await pinDetail(page, "low");
-  await page.goto("/?demo=es:30#/today");
-  await page.getByRole("button", { name: "Walk in your garden" }).click();
-  await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => "__garden" in window);
-  // Stand `back` m from the bench's middle (world.ts benchAt), on open ground away from the pond, your back to it.
-  const standBack = async (back: number) => {
-    await page.evaluate((back) => {
-      const s = (window as unknown as { __garden: { game: { bench: { x: number; z: number } } } }).__garden;
-      Object.assign(s, { x: s.game.bench.x, z: s.game.bench.z - back, yaw: 0, pitch: 0 });
-    }, back);
-    await gameSeconds(page, 0.3);
-  };
-  const sit = page.getByRole("button", { name: "Sit on the bench" });
-  const act = page.locator(".gw-act");
-  // Just inside the bench's reach (reachCore.ts BENCH_REACH 1.6 m).
-  await standBack(1.55);
-  await expect(sit).toBeVisible();
-  await standBack(1.7);
-  await expect(sit).toBeVisible();
-  await standBack(1.95);
-  await expect(act).toHaveCount(0);
-  await standBack(1.7);
-  await expect(act).toHaveCount(0);
-  await standBack(1.55);
-  await expect(sit).toBeVisible();
 });
 
 // #362: sit still and the garden comes to you. Seconds sat are moved on through the dev-only scene handle, as a test cannot sit for a minute.
