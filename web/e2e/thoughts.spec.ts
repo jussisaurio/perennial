@@ -178,9 +178,9 @@ test("thought.seated: sitting on the bench, a tap on the pond shows the pond's t
 });
 
 test("thought.details: up close, the bench's seat shows two cup rings and the sundial's stone two small letters", async ({ page }) => {
-  // On CI's software WebGL the 800-word garden can stream in for most of 30 s (the wait below), after the walk's own load.
-  test.setTimeout(60_000);
-  await openWalk(page, 800);
+  // A small garden: the rings and the letters are there at any count, and on CI's software WebGL the plants of 800
+  // words took more than the 30 s below to load (#1130), against well under a second for these few.
+  await openWalk(page, 3);
   // The loading line sits in the middle of the view, over what we look at, and changes as the plants stream in.
   await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
   // Stand `metres` from a named thing, on its `side` (+1: +z, the pond's side of the bench; -1: -z), looking down at it.
