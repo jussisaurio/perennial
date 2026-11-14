@@ -1,0 +1,332 @@
+[
+  {
+    "id": "O-frog-kiss",
+    "half": "heldout",
+    "source": "owner",
+    "evidence": "#902: the owner asked for this line ('Please don't kiss me, the stories are not true'). #920:22: 4 of 4 agent readers called the prince jokes too loud; 'the owner likes them', so they stayed.",
+    "at": "n12",
+    "where": "Tapped at dusk, the frog in the pond croaks, then says lines in a speech bubble. So far it has said 'You again?' and then always 'I have no more words.'",
+    "better": "A new frog line, before 'I have no more words': \"No kisses, please. Those stories aren't true.\"",
+    "worse": "No new line: the frog croaks and says 'I have no more words.' as before."
+  },
+  {
+    "id": "O-frog-prince",
+    "half": "heldout",
+    "source": "owner",
+    "evidence": "#920:22: 'The owner likes them (#902)', said of the prince jokes that 4 of 4 agent readers flagged.",
+    "at": "n12",
+    "where": "Tapped at dusk, the frog in the pond croaks, then says lines in a speech bubble. So far it has said 'You again?', 'No kisses, please. Those stories aren't true.' and then always 'I have no more words.'",
+    "better": "A new frog line, before 'I have no more words': \"I'm not a prince.\"",
+    "worse": "No new line: the frog says its old lines as before."
+  },
+  {
+    "id": "O-n13-sides",
+    "half": "heldout",
+    "source": "owner",
+    "evidence": "#918: 'Owner decision: keep the version that makes sense' gave n13 back 'Water both sides'. #920:44: 'los dos lados (owner kept it in #918)', though no agent reader could resolve it (#920 item 2).",
+    "at": "n12",
+    "where": "The last note, found behind the tiny door in the hedge.",
+    "better": "Now the garden is yours.\nWater both sides.\nLeave water for Migas.\nAt night, two signals to the far light. It always answers.\nDon't like snails? That's no reason.",
+    "worse": "Now the garden is yours.\nLeave water for Migas.\nAt night, two signals to the far light. It always answers.\nDon't like snails? That's no reason."
+  },
+  {
+    "id": "R-sunflower-sun",
+    "half": "tuning",
+    "source": "rule",
+    "evidence": "#886 (commit 37368f1), the owner's rule: a thought hints at the story or is a dry joke, never a plain fact.",
+    "at": "n05",
+    "where": "A thought when the learner taps the sunflower.",
+    "better": "It looks at the sun. Not at you.",
+    "worse": "It always looks at the sun."
+  },
+  {
+    "id": "R-sunflower-ahead",
+    "half": "tuning",
+    "source": "rule",
+    "evidence": "#889 (commit 3dd5170): no line shows the loss before the diary does; the owner's rule that a thought never explains the story (#884).",
+    "at": "n08",
+    "where": "A thought when the learner taps the sunflower.",
+    "better": "She knows its name.",
+    "worse": "It comes back every year, without her."
+  },
+  {
+    "id": "R-pond-fact",
+    "half": "tuning",
+    "source": "rule",
+    "evidence": "#886 (commit 37368f1, de \"Kommt jemand, kommen die Fische.\"): the owner set the rule (never a plain fact); an agent named this line as breaking it and wrote the new one.",
+    "at": "p1",
+    "where": "A thought when the learner taps the pond.",
+    "better": "The fish watch who's coming.",
+    "worse": "When someone comes, the fish come."
+  },
+  {
+    "id": "R-pond-ahead",
+    "half": "tuning",
+    "source": "rule",
+    "evidence": "#923 (commit 9fdc63d): the line hinted at her loss before the diary shows it; a thought never explains the story (#884).",
+    "at": "p1",
+    "where": "A thought when the learner taps the pond.",
+    "better": "The fish watch who's coming.",
+    "worse": "The fish come up. They are looking for someone."
+  },
+  {
+    "id": "R-sunflower-face",
+    "half": "heldout",
+    "source": "rule",
+    "evidence": "#886 (commit 37368f1, es \"Su cara mira al camino.\"): the owner set the rule (never a plain fact); an agent named this line as breaking it and wrote the new one.",
+    "at": "d3",
+    "where": "A thought when the learner taps the sunflower.",
+    "better": "She looked at it every morning.",
+    "worse": "Its face looks at the path."
+  },
+  {
+    "id": "R-sundial",
+    "half": "heldout",
+    "source": "rule",
+    "evidence": "#886 (commit 37368f1, es \"El sol da la hora.\"): the owner set the rule (never a plain fact); an agent named this line as breaking it and wrote the new one.",
+    "at": "d3",
+    "where": "A thought when the learner taps the sundial.",
+    "better": "Nobody checks the time anymore.",
+    "worse": "The sun tells the time."
+  },
+  {
+    "id": "R-hills-cut",
+    "half": "heldout",
+    "source": "rule",
+    "evidence": "#901 (commit 300cda8): cut because 'it explains the story again'.",
+    "at": "n12",
+    "where": "A thought when the learner taps the far hills.",
+    "better": "No new line on the hills.",
+    "worse": "A new line on the hills: \"Someone lives on the other side.\""
+  },
+  {
+    "id": "R-n13-learn",
+    "half": "heldout",
+    "source": "rule",
+    "evidence": "#901 (commit 300cda8): the theme rule (#639) says the story is never aimed at the learner's own practice.",
+    "at": "n12",
+    "where": "The last note, found behind the tiny door in the hedge.",
+    "better": "Now the garden is yours.\nWater both sides. Slowly, like Rayo.\nDon't like snails? That's no reason.",
+    "worse": "Now the garden is yours.\nLearn the name of every flower. Slowly, like Rayo.\nDon't like snails? That's no reason."
+  },
+  {
+    "id": "X-n05",
+    "half": "tuning",
+    "source": "reader",
+    "evidence": "#936 Part C, C5: 6 of 6 agent readers took the old line as her death; the owner kept C5 as written (#936, 2026-11-08). Arc 2 readers still took the new one as her death, 6 of 6 (docs/story-loop.md, Lessons).",
+    "at": "n04",
+    "where": "A note in the shed.",
+    "better": "Every evening, the same walk: to the end of the garden.\nShe jumps the stile without looking.\nMe, slowly, carefully.\nShe says the brambles are faster than me.",
+    "worse": "Before, every evening, the same walk: to the end of the garden.\nShe jumped the stile without looking.\nMe, slowly, carefully.\nNow there are brambles, taller than me."
+  },
+  {
+    "id": "X-p4",
+    "half": "heldout",
+    "source": "reader",
+    "evidence": "#967: all 3 agent readers and all 3 first judges read the old de line as 'my light went off and on by itself'; the new line read as meant 3 of 3.",
+    "at": "n11",
+    "where": "A diary page on the hill.",
+    "better": "Last night: my light off, my light on. Once.\nThe far light: nothing.",
+    "worse": "Last night: my light off, my light on. Once.\nNobody did anything."
+  },
+  {
+    "id": "C-same-n02",
+    "half": "tuning",
+    "source": "control",
+    "kind": "same",
+    "at": "n01",
+    "where": "A note in the shed.",
+    "better": "She tells me the name of a flower.\nI say it too.\nTomorrow I won't know it.\nThe flower will.",
+    "worse": "She tells me the name of a flower.\nI say it too.\nTomorrow I won't know it.\nThe flower will."
+  },
+  {
+    "id": "C-same-bed",
+    "half": "heldout",
+    "source": "control",
+    "kind": "same",
+    "at": "n06",
+    "where": "A thought when the learner taps a flower bed.",
+    "better": "Two sides. Hers wins.",
+    "worse": "Two sides. Hers wins."
+  },
+  {
+    "id": "C-same-d1",
+    "half": "tuning",
+    "source": "control",
+    "kind": "same",
+    "at": "p1",
+    "where": "A diary page on the hill.",
+    "better": "Tonight, the far light, as always.\nShe brings me up a coffee.\nShe doesn't ask.",
+    "worse": "Tonight, the far light, as always.\nShe brings me up a coffee.\nShe doesn't ask."
+  },
+  {
+    "id": "C-same-p3",
+    "half": "heldout",
+    "source": "control",
+    "kind": "same",
+    "at": "d2",
+    "where": "A diary page on the hill.",
+    "better": "She says my stool is too low.\nMaybe.",
+    "worse": "She says my stool is too low.\nMaybe."
+  },
+  {
+    "id": "C-wordy-n10",
+    "half": "tuning",
+    "source": "control",
+    "kind": "wordy",
+    "at": "d3",
+    "where": "A note in the shed.",
+    "better": "I watered your side of the garden too.",
+    "worse": "This morning I went out early and I watered your side of the garden too, the same way I always do."
+  },
+  {
+    "id": "C-wordy-stool",
+    "half": "heldout",
+    "source": "control",
+    "kind": "wordy",
+    "at": "n08",
+    "where": "A thought when the learner taps the stool on the hill.",
+    "better": "Worn smooth. Many nights.",
+    "worse": "The wood of this stool is worn smooth, because someone sat here for many, many nights."
+  },
+  {
+    "id": "C-wordy-p2",
+    "half": "tuning",
+    "source": "control",
+    "kind": "wordy",
+    "at": "d1",
+    "where": "A diary page on the hill.",
+    "better": "Wind on the hill. I said nothing.",
+    "worse": "There was a lot of wind on the hill tonight, and it was cold, but I did not say anything about it to her."
+  },
+  {
+    "id": "C-wordy-n12",
+    "half": "heldout",
+    "source": "control",
+    "kind": "wordy",
+    "at": "p4",
+    "where": "A note in the shed.",
+    "better": "Last night I made two signals with the light.\nThe far light answered with two.\nNobody has crossed the valley. Yet.",
+    "worse": "Last night I finally made two signals with the light, one after the other, very carefully.\nThe far light answered me with two signals of its own.\nNobody has crossed the valley between us. Not yet, anyway."
+  },
+  {
+    "id": "C-joke-d3",
+    "half": "tuning",
+    "source": "control",
+    "kind": "jokey",
+    "at": "p3",
+    "where": "A diary page on the hill.",
+    "better": "Tonight, the far light, as always.\nI bring my own coffee up.\nNobody asks.",
+    "worse": "Tonight, the far light, as always.\nI bring my own coffee up.\nNobody asks. Not even the snail, the rude thing."
+  },
+  {
+    "id": "C-joke-sundial",
+    "half": "heldout",
+    "source": "control",
+    "kind": "jokey",
+    "at": "d3",
+    "where": "A thought when the learner taps the sundial.",
+    "better": "Nobody checks the time anymore.",
+    "worse": "Nobody checks the time anymore. The sundial is thrilled."
+  },
+  {
+    "id": "C-joke-n11",
+    "half": "tuning",
+    "source": "control",
+    "kind": "jokey",
+    "at": "n10",
+    "where": "A note in the shed.",
+    "better": "Two cups on the table. One stays empty.\nI leave it by the little door, with water. For Migas.\nRayo the snail listens to me. He never says no.",
+    "worse": "Two cups on the table. One stays empty.\nI leave it by the little door, with water. For Migas.\nRayo the snail listens to me. He never says no. He's a snail. What would he say? Ha."
+  },
+  {
+    "id": "C-joke-moon",
+    "half": "heldout",
+    "source": "control",
+    "kind": "jokey",
+    "at": "d2",
+    "where": "A thought when the learner taps the moon.",
+    "better": "On time again.",
+    "worse": "On time again. Unlike some people I could name."
+  },
+  {
+    "id": "C-explain-d3",
+    "half": "tuning",
+    "source": "control",
+    "kind": "explains",
+    "at": "p3",
+    "where": "A diary page on the hill.",
+    "better": "Tonight, the far light, as always.\nI bring my own coffee up.\nNobody asks.",
+    "worse": "Tonight, the far light, as always.\nShe died in the spring.\nI bring my own coffee up now."
+  },
+  {
+    "id": "C-explain-n08",
+    "half": "heldout",
+    "source": "control",
+    "kind": "explains",
+    "at": "n07",
+    "where": "A note in the shed.",
+    "better": "Past the brambles and the stile, a hill.\nFrom the top, at midnight: the far light,\na yellow light across the valley.\nIt never goes out, not even in winter.\nShe doesn't ask.",
+    "worse": "Past the brambles and the stile, a hill.\nFrom the top, at midnight: the far light,\na yellow light across the valley.\nIt never goes out, not even in winter.\nShe doesn't ask, because she knows it is my old friend over there."
+  },
+  {
+    "id": "C-explain-n10",
+    "half": "heldout",
+    "source": "control",
+    "kind": "explains",
+    "at": "d3",
+    "where": "A note in the shed.",
+    "better": "I watered your side of the garden too.",
+    "worse": "You are gone, but I watered your side of the garden too. Love is a little water every day."
+  },
+  {
+    "id": "C-explain-hedge",
+    "half": "tuning",
+    "source": "control",
+    "kind": "explains",
+    "at": "n10",
+    "where": "A thought when the learner taps the hedge, by the tiny door.",
+    "better": "Every morning, less water.",
+    "worse": "Every morning, less water. The mouse drinks it, so the care goes on."
+  },
+  {
+    "id": "C-hard-n02",
+    "half": "heldout",
+    "source": "control",
+    "kind": "hard",
+    "at": "n01",
+    "where": "A note in the shed.",
+    "better": "She tells me the name of a flower.\nI say it too.\nTomorrow I won't know it.\nThe flower will.",
+    "worse": "She enunciates the appellation of a blossom.\nI reiterate it.\nBy the morrow it will elude me.\nThe blossom shall retain it."
+  },
+  {
+    "id": "C-hard-sunflower",
+    "half": "tuning",
+    "source": "control",
+    "kind": "hard",
+    "at": "n08",
+    "where": "A thought when the learner taps the sunflower.",
+    "better": "She knows its name.",
+    "worse": "She is cognizant of its nomenclature."
+  },
+  {
+    "id": "C-hard-n04",
+    "half": "tuning",
+    "source": "control",
+    "kind": "hard",
+    "at": "n03",
+    "where": "A note in the shed.",
+    "better": "There's a little door in the hedge. Not for me.\nIt's for Migas. Migas eats our bread\nand never says sorry.\nThe cat looks at Migas. Migas looks at the cat.\nNobody does anything.",
+    "worse": "Within the hedge, a diminutive portal. Not intended for me.\nIt is Migas's. Migas consumes our bread\nand never expresses contrition.\nThe cat regards Migas. Migas regards the cat.\nNeither party intervenes."
+  },
+  {
+    "id": "C-hard-bench",
+    "half": "heldout",
+    "source": "control",
+    "kind": "hard",
+    "at": "n10",
+    "where": "A thought when the learner taps the bench.",
+    "better": "Someone sat here every evening.",
+    "worse": "Someone habitually occupied this seat each evening."
+  }
+]
