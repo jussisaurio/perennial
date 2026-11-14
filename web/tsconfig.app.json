@@ -23,5 +23,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/sim/regenerate.ts", "src/sim/storySim.ts", "src/sim/noViteDecks.ts", "src/realUse/cli.ts", "src/realUse/sim.ts"]
+  "exclude": ["src/**/*.test.ts", "src/sim/regenerate.ts", "src/sim/storySim.ts", "src/sim/noViteDecks.ts", "src/realUse/cli.ts", "src/realUse/sim.ts", "src/fuzz/run.ts"]
 }
