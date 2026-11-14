@@ -34,9 +34,9 @@ import { startOfDay, today } from "../core/day";
 import { visitor, VISITORS, type VisitorView, visitorViews } from "../garden/visitors";
 
 /** The correct answer with the letters to look at marked. */
-function Marked({ text, at }: { text: string; at: Set<number> }) {
+function Marked({ text, at, tag }: { text: string; at: Set<number>; tag: string }) {
   return (
-    <strong>
+    <strong lang={tag}>
       {[...text.normalize("NFC")].map((ch, i) => (at.has(i) ? <mark key={i} className="letter">{ch}</mark> : <span key={i}>{ch}</span>))}
     </strong>
   );
@@ -181,7 +181,7 @@ export function SessionScreen({ lang, onExit, onWalk, minutes }: { lang: string;
       {/* During the session and on its summary: in place, never over the answer buttons. */}
       <RefusedLine since={refusedBefore} />
       {done ? (
-        <Summary learner={learner} sentences={sentences}{...done} refusedBefore={refusedBefore} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
+        <Summary lang={lang} learner={learner} sentences={sentences}{...done} refusedBefore={refusedBefore} ended={ended} onMore={() => void start(DAILY_MINUTES)} onContinue={resume} onExit={onExit} onWalk={onWalk} firstSummary={firstSummary} />
       ) : card ? (
         // The card's plant stands on the kicker's row, so it moves with the card when a line above pushes it down.
         <div className="card-stage">
@@ -249,19 +249,19 @@ function Kicker({ kind }: { kind: keyof typeof KICKERS }) {
 }
 
 /** The dictionary word, and how the asked form belongs to it ("soy is a form of ser", #259). */
-function Meaning({ word, lang, asked }: { word: Word; lang: string; asked?: string }) {
+function Meaning({ word, lang, tag, asked }: { word: Word; lang: string; tag: string; asked?: string }) {
   const form = asked && otherForm(word, asked);
   const head = headword(word, lang);
   return (
     <div className="meaning">
       <div>
-        <strong>{head}</strong>
+        <strong lang={tag}>{head}</strong>
         {word.pos && <span className="pos">{word.pos}</span>}{" "}
         {word.gloss}
       </div>
       {form && (
         <div className="small form-of">
-          <b>{form}</b> is a form of <b>{head}</b>.
+          <b lang={tag}>{form}</b> is a form of <b lang={tag}>{head}</b>.
         </div>
       )}
       {word.notes && <div className="muted small">{word.notes}</div>}
@@ -399,7 +399,7 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
       </Said>
       <Kicker kind="intro" />
       <div className="word">
-        {headword(word, lang)} <Speaker text={word.lemma} tag={tag} what="word" />
+        <span lang={tag}>{headword(word, lang)}</span> <Speaker text={word.lemma} tag={tag} what="word" />
       </div>
       {revealed && (
         <div className="gloss">
@@ -410,8 +410,12 @@ function Intro({ card, tag, lang, onDone }: { card: Card; tag: string; lang: str
       {revealed && word.notes && <p className="hint">{word.notes}</p>}
       {example && (
         <div className="example">
-          <p className="sentence" lang={tag}>
-            <Highlight text={example.text} part={example.cloze} grown={revealed ? card.grown : undefined} /> <Speaker text={example.text} tag={tag} what="sentence" />
+          {/* The language is on the sentence, not the paragraph: the speaker's name is English. */}
+          <p className="sentence">
+            <span lang={tag}>
+              <Highlight text={example.text} part={example.cloze} grown={revealed ? card.grown : undefined} />
+            </span>{" "}
+            <Speaker text={example.text} tag={tag} what="sentence" />
           </p>
           {revealed && <p className="translation">{example.translation}</p>}
         </div>
@@ -507,20 +511,22 @@ function Recall({ card, tag, lang, listen, onDone, kicker, hint }: { card: Card;
           </button>
         </div>
       ) : example ? (
-        <p className="sentence big" lang={tag}>
-          <Highlight text={example.text} part={example.cloze} grown={revealed ? card.grown : undefined} />
+        <p className="sentence big">
+          <span lang={tag}>
+            <Highlight text={example.text} part={example.cloze} grown={revealed ? card.grown : undefined} />
+          </span>
           <Speaker text={example.text} tag={tag} what="sentence" />
         </p>
       ) : (
         <div className="word">
-          {word.lemma} <Speaker text={word.lemma} tag={tag} what="word" />
+          <span lang={tag}>{word.lemma}</span> <Speaker text={word.lemma} tag={tag} what="word" />
         </div>
       )}
       {revealed ? (
         <>
           <div className="reveal">
             {example && <p className="translation">{example.translation}</p>}
-            <Meaning word={word} lang={lang} asked={asked} />
+            <Meaning word={word} lang={lang} tag={tag} asked={asked} />
           </div>
           <Actions>
             <button className="fail" onClick={guarded(() => onDone(1))} aria-keyshortcuts="1">
@@ -620,20 +626,20 @@ function Write({ card, tag, lang, onDone, kicker }: { card: Card; tag: string; l
           {verdict === "exact" && <span className="ok">Correct.</span>}
           {verdict === "accent" && (
             <span className="warn">
-              Counted as correct, but look at the marked letters: <Marked text={target} at={differences(value, target)} />
+              Counted as correct, but look at the marked letters: <Marked text={target} at={differences(value, target)} tag={tag} />
             </span>
           )}
           {verdict === "typo" && (
             <span className="warn">
-              Small typing error, counted as correct: <Marked text={target} at={differences(value, target)} />
+              Small typing error, counted as correct: <Marked text={target} at={differences(value, target)} tag={tag} />
             </span>
           )}
           {verdict === "wrong" && (
             <span className="bad">
-              Correct answer: <strong>{target}</strong>
+              Correct answer: <strong lang={tag}>{target}</strong>
             </span>
           )}
-          <Meaning word={word} lang={lang} asked={askedForm(word, example)} />
+          <Meaning word={word} lang={lang} tag={tag} asked={askedForm(word, example)} />
         </div>
       )}
       <Actions>
@@ -688,11 +694,6 @@ function ShortcutHelp({ onClose }: { onClose: () => void }) {
 
 const RARE_NEWS: Record<Rare, string> = { golden: "with a golden flower", twin: "with two flowers", bee: "with a bee on it", striped: "with striped petals" };
 
-/**
- * One line of real news from this chunk for the summary (#232), or null on a
- * plain day: never a routine prompt. A visitor that came first, then a rare
- * flower that opened, then any flower that opened for the first time.
- */
 /** Read-now sentences shown on this device, per language, and the day of the last one. */
 const READ_KEY = (lang: string) => `perennial-read-now:${lang}`;
 
@@ -720,7 +721,12 @@ function readingToday(l: Learner, sentences: DeckSentences, practised: ReadonlyS
   return { ...s, tag };
 }
 
-function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[]): { line: string; wordId: string } | null {
+/**
+ * One line of real news from this chunk for the summary (#232), or null on a
+ * plain day: never a routine prompt. A visitor that came first, then a rare
+ * flower that opened, then any flower that opened for the first time.
+ */
+function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[]): { line: ReactNode; wordId: string } | null {
   // Checked against the learner now: an answer undone after its visitor came takes the visitor away again.
   for (const id of arrived.filter((x) => broughtVisitor(l, x))) {
     const garden = l.deck.byId.get(id)?.garden;
@@ -728,14 +734,15 @@ function gardenNews(l: Learner, before: Map<string, PlantLook>, arrived: string[
     if (v) return { line: `A ${v.gloss} came to the garden.`, wordId: id };
   }
   const opened = [...before].filter(([id, look]) => look.stage !== "bloom" && plantStage(readMemory(l, id)) === "bloom");
+  const tag = language(l.lang).tag;
   for (const [id] of opened) {
     const word = l.words.get(id);
     const rare = word && rareOf(word.lemma);
-    if (word && rare) return { line: `${word.lemma} opened ${RARE_NEWS[rare]}.`, wordId: id };
+    if (word && rare) return { line: <><span lang={tag}>{word.lemma}</span> opened {RARE_NEWS[rare]}.</>, wordId: id };
   }
   // "today", not "for the first time": a word known once, forgotten and learned again opens again.
   const first = opened.length ? l.words.get(opened[0][0]) : undefined;
-  return first ? { line: `${first.lemma} opened today.`, wordId: first.id } : null;
+  return first ? { line: <><span lang={tag}>{first.lemma}</span> opened today.</>, wordId: first.id } : null;
 }
 
 /** This chunk's watching visitor (#210), if any: who, from which card, and the serial the chunk began at. */
@@ -767,6 +774,7 @@ function Watcher({ view }: { view: VisitorView }) {
 }
 
 function Summary({
+  lang,
   learner,
   sentences,
   counts,
@@ -782,6 +790,7 @@ function Summary({
   onWalk,
   firstSummary,
 }: {
+  lang: string;
   learner: Learner | null;
   sentences: DeckSentences | null;
   counts: { intros: number; answers: number };
@@ -858,7 +867,7 @@ function Summary({
             : "New words are planted after their quick check. Tap Continue: their quick checks come in a few cards. If you stop, they come back as new words next time."}
         </p>
       )}
-      <Garden data={garden} highlight={highlight} replay={replay} compact />
+      <Garden data={garden} lang={lang} highlight={highlight} replay={replay} compact />
       {garden && seeds > 0 && garden.total === seeds && <p className="muted small first-plants">{firstPlantsLine(garden.total)}</p>}
       {/* The whole course, not this session: "so far" keeps the two apart, and "0 words" would contradict "You saw 1 new word". */}
       {stats && stats.known + stats.learning > 0 && (
@@ -893,8 +902,8 @@ function Summary({
       {reading && (
         <div className="read-now">
           <p className="muted small">You can read this now.</p>
-          <p className="sentence" lang={reading.tag}>
-            {reading.text} <Speaker text={reading.text} tag={reading.tag} what="sentence" />
+          <p className="sentence">
+            <span lang={reading.tag}>{reading.text}</span> <Speaker text={reading.text} tag={reading.tag} what="sentence" />
           </p>
           {english ? (
             <p className="translation">{reading.translation}</p>

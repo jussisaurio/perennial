@@ -99,11 +99,13 @@ export const Garden = memo(function Garden(props: GardenProps) {
 
 interface GardenProps {
   data: GardenData | null | undefined;
+  /** The course's language code: its words are marked with it, so a screen reader says them in that language. */
+  lang: string;
   highlight?: Set<string>;
   compact?: boolean;
   showcase?: boolean;
   /** Today's visitors drawn in the strip: garden-word visitors at their word's plant (#235); otherwise the snail on the soil line and the cat asleep at the right end; the mole past it. */
-  visitors?: { views: VisitorView[]; snailAt: number; lang: string; mole?: boolean } | null;
+  visitors?: { views: VisitorView[]; snailAt: number; mole?: boolean } | null;
   /** Offered in the plant card: open this plant in the 3D garden. */
   onView?: (id: string) => void;
   /** Plants to grow again from these looks (the summary, #216). The caller decides whether it plays (the setting, reduced motion). */
@@ -134,7 +136,7 @@ const NOTE_PIN: PixelArt = {
   pal: { r: "#c24a3a", R: "#f08070", e: "#8a7656", p: "#fbf3df", l: "#9aa6b4", f: "#d8ccae", s: "#8a7656" },
 };
 
-function Strip({ data, highlight, compact, showcase, onView, visitors, replay, pinned, width }: GardenProps & { width: number }) {
+function Strip({ data, lang, highlight, compact, showcase, onView, visitors, replay, pinned, width }: GardenProps & { width: number }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<{ p: GardenPlant; x: number; y: number } | null>(null);
   // Hover intent: with a card open, switching to another plant waits a moment,
@@ -183,7 +185,7 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
   const scrolls = n * SPACING + pad * 2 + catRoom > width;
   // Only a strip that scrolls has ends to find (#61): the first word's post at the far left, the mole past the seeds.
   const first = scrolls && !showcase ? data?.first : null;
-  const mole = scrolls && visitors?.mole ? stripVisitor("mole", visitors.lang) : null;
+  const mole = scrolls && visitors?.mole ? stripVisitor("mole", lang) : null;
   const keepRoom = first ? 92 : 0;
   const moleRoom = mole ? 56 : 0;
   const fullWidth = scrolls ? n * SPACING + pad * 2 + catRoom + keepRoom + moleRoom : width;
@@ -277,8 +279,8 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
   // Looked for only late at night: by day it searched all the blooms for nothing (#569).
   const snoring = useMemo(() => (sleepy ? sleeperId(plants.filter((p) => p.stage === "bloom").map((p) => p.id)) : null), [plants, day, sleepy]); // eslint-disable-line react-hooks/exhaustive-deps -- a new sleeper each day
   const empty = !!data && data.total === 0 && !showcase;
-  const stake = empty && visitors ? reservedStake(language(visitors.lang).name, visitors.lang) : null;
-  const worm = empty && visitors ? stripVisitor("worm", visitors.lang) : null;
+  const stake = empty && visitors ? reservedStake(language(lang).name, lang) : null;
+  const worm = empty && visitors ? stripVisitor("worm", lang) : null;
   const tap = (l: { p: GardenPlant; x: number; y: number }, i: number) => {
     show(l, true);
     const next = neighbourPerks() ? ((visible[i + 1] ?? visible[i - 1])?.p.id ?? null) : null;
@@ -391,13 +393,13 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
         {stake && (
           <div className="garden-stake" style={{ left: width / 2 - 64, top: GROUND - 74 }}>
             <span>{stake.line}</span>
-            {stake.local && <small lang={visitors?.lang}>{stake.local}</small>}
+            {stake.local && <small lang={lang}>{stake.local}</small>}
           </div>
         )}
       </div>
       {visitorTip && (
         <div className="visitor-tip" role="tooltip" style={{ left: Math.min(width - 150, Math.max(8, visitorTip.x - scrollX - 60)), top: GROUND - 58 }}>
-          <i lang={visitors?.lang}>{visitorTip.v.word}</i>
+          <i lang={lang}>{visitorTip.v.word}</i>
           <span> · {visitorTip.v.gloss}</span>
         </div>
       )}
@@ -410,7 +412,7 @@ function Strip({ data, highlight, compact, showcase, onView, visitors, replay, p
       )}
       {hover && (
         <div className={onView ? "plant-tip interactive" : "plant-tip"} style={{ left: Math.min(width - 210, Math.max(8, hover.x - scrollX - 100)), top: 8 }} role="status" onPointerEnter={() => clearTimeout(switching.current)}>
-          <strong>{hover.p.lemma}</strong>
+          <strong lang={lang}>{hover.p.lemma}</strong>
           <span>{hover.p.gloss}</span>
           <em>
             {showcase ? stageLabel(hover.p.stage) : `${hover.p.stage === "bloom" ? "known" : "learning"} · ${hover.p.r >= THIRSTY ? "fresh in memory" : "ready for practice"}`}

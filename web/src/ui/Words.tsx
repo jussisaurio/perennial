@@ -19,6 +19,7 @@ import { drawnRows, FieldGuide } from "./FieldGuide";
 import { StageGlyph } from "./StageGlyph";
 import { PlusIcon } from "./icons";
 import { plural, relTime } from "./format";
+import { language } from "../content/languages";
 import { wordsEmptyLine } from "../content/voice";
 import { headword } from "../content/forms";
 
@@ -73,6 +74,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
   const [view, setView] = useState<WordsView>(savedView);
   const [open, setOpen] = useState<string | null>(null);
   const [deleted, setDeleted] = useState<Word | null>(null);
+  const tag = language(lang).tag;
   useEffect(() => {
     if (!deleted) return;
     const t = setTimeout(() => setDeleted(null), 7000);
@@ -191,7 +193,7 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
             <>
               <button className="word-row" onClick={() => setOpen(open === l.id ? null : l.id)} aria-expanded={open === l.id}>
                 <StageGlyph s={mem.find((m) => m.skill === "read")?.s ?? 0} reps={mem.find((m) => m.skill === "read")?.reps ?? 0} suspended={l.status === "paused"} />
-                <strong>{headword(l, lang)}</strong>
+                <strong lang={tag}>{headword(l, lang)}</strong>
                 <span className="gl">{l.gloss}</span>
                 {/* The skills practised, without a recall number: unlabelled, it read as a score (#262). The number is in Scheduling details. */}
                 <span className="skills">
@@ -209,7 +211,15 @@ function WordList({ lang, onAdd }: { lang: string; onAdd?: () => void }) {
       )}
       {deleted && (
         <div className="toast" role="status">
-          {deleted.source === "deck" ? `“${deleted.lemma}” will not come up again.` : `Deleted “${deleted.lemma}”.`}
+          {deleted.source === "deck" ? (
+            <>
+              “<span lang={tag}>{deleted.lemma}</span>” will not come up again.
+            </>
+          ) : (
+            <>
+              Deleted “<span lang={tag}>{deleted.lemma}</span>”.
+            </>
+          )}
           {deleted.source === "deck" && (
             <button
               className="ghost"
@@ -379,7 +389,7 @@ function WordDetail({ learner, word, memory, onDeleted }: { learner: Learner; wo
           <ul className="examples">
             {examples.map((e) => (
               <li key={e.id}>
-                <span>{e.text}</span> <span className="muted">— {e.translation}</span>
+                <span lang={language(learner.lang).tag}>{e.text}</span> <span className="muted">— {e.translation}</span>
                 <span className="author">{authorLabel(e)}</span>
                 {e.origin !== "deck" && (
                   <button className="ghost small" onClick={() => void store.write(() => store.collections.user_sentence.delete(e.id))} aria-label="Remove sentence">
