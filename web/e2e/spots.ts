@@ -68,6 +68,11 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
       const [x, z] = hill.top;
       Object.assign(g.me, { x, z: z + 0.5, yaw: 0.08, pitch: 0 });
     }),
+  // The same, looking up at the clouds and the threads they hang from (#1164).
+  sky: async (page) => {
+    await SPOTS.lookout(page);
+    await page.evaluate(() => Object.assign(window.__garden.game.me, { pitch: 0.45 }));
+  },
   // By the lookout's lantern, on the post's far side from the stool, facing it (#858): its halo up close.
   "hill-post": (page) => standOnHill(page, "post"),
   // Behind the stool, in reach of it (#858): it reads as a seat, not a little gate.
