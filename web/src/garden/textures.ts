@@ -1,6 +1,7 @@
 // Small procedural textures, drawn on canvases. The sky, hills, clouds and far
-// trees are filtered smooth, as paper cut-outs (docs/art-direction.md, #1051);
-// near surfaces and sprites still show their pixels until they are redrawn.
+// trees are filtered smooth, as paper cut-outs (docs/art-direction.md, #1051),
+// and so is the ground (paperTexture, #1091); other near surfaces and sprites
+// still show their pixels until they are redrawn.
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
@@ -35,6 +36,64 @@ export function pixelTexture(c: OffscreenCanvas, repeat = false): THREE.CanvasTe
   t.generateMipmaps = false;
   if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return t;
+}
+
+/**
+ * A surface drawn as flat paper (#1091): its shapes have clean, smooth edges up close, and its
+ * mipmaps blend them into the flat colour far off, so it never shimmers. Drawn at a size
+ * where a texel is under a screen pixel at arm's length, so smooth filtering does not blur.
+ */
+export function paperTexture(c: OffscreenCanvas, repeat = false): THREE.CanvasTexture<OffscreenCanvas> {
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.LinearFilter;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+/** Metres of ground one tile of the grass and path textures covers. The hill's grass (sceneStile.ts) lines up with the flat ground's by it. */
+export const GROUND_TILE = 2;
+/** Texels on a side of a ground tile. */
+const GROUND_PX = 256;
+
+/** Calls `draw` at (x, y) and at its copies one tile over each way, so a shape over the edge of a repeating texture goes on at the other side. */
+function wrapped(size: number, x: number, y: number, draw: (x: number, y: number) => void) {
+  for (const dx of [-size, 0, size]) for (const dy of [-size, 0, size]) draw(x + dx, y + dy);
+}
+
+/** Spots for small things on a repeating tile, none closer than `gap` to another (across the edges too): a calm, even scatter, not clumps. */
+function scatter(r: () => number, size: number, n: number, gap: number): [number, number][] {
+  const out: [number, number][] = [];
+  // Tries a fixed number of times: on a full tile, fewer than n is fine.
+  for (let i = 0; i < n * 30 && out.length < n; i++) {
+    const [x, y] = [r() * size, r() * size];
+    const near = out.some(([ox, oy]) => {
+      const dx = Math.abs(x - ox);
+      const dy = Math.abs(y - oy);
+      return Math.hypot(Math.min(dx, size - dx), Math.min(dy, size - dy)) < gap;
+    });
+    if (!near) out.push([x, y]);
+  }
+  return out;
+}
+
+/**
+ * A tuft of grass seen from above, as it lies on the ground: five flat pointed blades out from (x, y), up to `len`
+ * texels long. From above it reads the same from every side, so it never looks upside down to the camera.
+ */
+function tuft(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, len: number, turn: number) {
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = turn + (i / 5) * Math.PI * 2;
+    // Blades of a few lengths, so the tuft is not a regular star.
+    const l = len * [1, 0.7, 0.9, 0.6, 0.8][i];
+    const [cx, cy] = [Math.cos(a), Math.sin(a)];
+    const w = 2.4;
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + cx * l * 0.45 - cy * w, y + cy * l * 0.45 + cx * w, x + cx * l, y + cy * l);
+    ctx.quadraticCurveTo(x + cx * l * 0.45 + cy * w, y + cy * l * 0.45 - cx * w, x, y);
+  }
+  ctx.fill();
 }
 
 /**
@@ -97,69 +156,75 @@ function speckle(seed: number, base: string, dots: [string, number][], size = 32
   return c;
 }
 
+/** Grass (#1091): one flat green, with a scatter of soft tufts a shade darker or lighter. One tile is GROUND_TILE metres. */
 export function grass(): OffscreenCanvas {
-  const c = speckle(1, "#6f9e5f", [
-    ["#64925a", 110],
-    ["#7aa868", 80],
-    ["#8db57a", 18],
-  ]);
-  const ctx = c.getContext("2d")!;
+  const [c, ctx] = canvas(GROUND_PX, GROUND_PX);
+  px(ctx, 0, 0, "#6f9e5f", GROUND_PX, GROUND_PX);
   const r = rng(7);
-  // Little tufts and the odd daisy.
-  for (let i = 0; i < 9; i++) {
-    const x = Math.floor(r() * 30);
-    const y = Math.floor(r() * 30) + 1;
-    px(ctx, x, y, "#557f4c");
-    px(ctx, x + 1, y - 1, "#557f4c");
-    px(ctx, x + 2, y, "#557f4c");
-  }
-  for (let i = 0; i < 3; i++) {
-    const x = Math.floor(r() * 30) + 1;
-    const y = Math.floor(r() * 30) + 1;
-    px(ctx, x, y, "#fbf8f1");
-    px(ctx, x + 1, y, "#fbf8f1");
-    px(ctx, x, y + 1, "#fbf8f1");
-    px(ctx, x + 1, y + 1, "#eeb03c");
+  for (const [x, y] of scatter(r, GROUND_PX, 18, 42)) {
+    ctx.fillStyle = r() < 0.7 ? "#62905a" : "#7dab6a";
+    const [len, turn] = [9 + r() * 4, r() * Math.PI];
+    wrapped(GROUND_PX, x, y, (x, y) => tuft(ctx, x, y, len, turn));
   }
   return c;
 }
 
+/** The yard's packed earth (#1091): one flat sand colour with a few small pebbles, each a pale flat stone on its own soft shadow. One tile is GROUND_TILE metres. */
 export function path(): OffscreenCanvas {
-  const c = speckle(2, "#d9ccb2", [
-    ["#cdbd9f", 140],
-    ["#e3d8c2", 70],
-    ["#bcab8b", 30],
-  ]);
-  const ctx = c.getContext("2d")!;
+  const [c, ctx] = canvas(GROUND_PX, GROUND_PX);
+  px(ctx, 0, 0, "#d9ccb2", GROUND_PX, GROUND_PX);
   const r = rng(8);
-  for (let i = 0; i < 6; i++) {
-    const x = Math.floor(r() * 30);
-    const y = Math.floor(r() * 30);
-    px(ctx, x, y, "#b8afa2", 2, 1);
-    px(ctx, x, y + 1, "#9c9386", 2, 1);
+  for (const [x, y] of scatter(r, GROUND_PX, 10, 52)) {
+    const [rx, ry, turn] = [3 + r() * 3, 2 + r() * 1.6, (r() - 0.5) * 0.8];
+    const pebble = (x: number, y: number, color: string) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.ellipse(x, y, rx, ry, turn, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    wrapped(GROUND_PX, x, y, (x, y) => {
+      pebble(x + 0.6, y + 1.4, "#c4b394");
+      pebble(x, y, "#e8dfcc");
+    });
   }
   return c;
 }
 
 /**
- * The old path past the stile (#714), seen from above, from its far end (row
- * 0, the top of a plane laid flat) to the stile: bare earth that winds a
- * little, narrower and grown over far out. Transparent where grass shows.
+ * The old path past the stile (#714), seen from above, from its far end (the
+ * top of a plane laid flat) to the stile: bare earth with a clean edge that
+ * winds a little, narrower far out, where it breaks up into stepping patches
+ * in the grass. Transparent where grass shows.
  */
 export function track(): OffscreenCanvas {
-  const [c, ctx] = canvas(24, 128);
+  const [W, H] = [96, 512];
+  const [c, ctx] = canvas(W, H);
   const r = rng(714);
-  for (let y = 0; y < 128; y++) {
-    // 0 at the stile, 1 at the far end.
-    const k = 1 - y / 127;
-    const mid = 12 + Math.sin(k * 5.2) * 3.5;
-    const half = 4.5 - k * 2.5 + (r() - 0.5);
-    for (let x = Math.ceil(mid - half); x < mid + half; x++) {
-      // Toward the far end, more of it is grown over.
-      if (r() < k * k * 0.9) continue;
-      const v = r();
-      px(ctx, x, y, v < 0.55 ? "#cdbd9f" : v < 0.85 ? "#bfae8e" : "#d9ccb2");
-    }
+  // Where the path's middle is, and how wide it is, `k` of the way out (0 at the stile, 1 at the far end).
+  const mid = (k: number) => W / 2 + Math.sin(k * 5.2) * 14;
+  const half = (k: number) => 18 - k * 10;
+  // The whole band out to where it breaks up, as one shape: down its left side, back up its right.
+  const BREAK = 0.62;
+  const rows = 64;
+  const side = (s: number) => Array.from({ length: rows + 1 }, (_, i) => (i / rows) * BREAK).map((k) => [mid(k) + s * half(k), (1 - k) * H] as const);
+  ctx.fillStyle = "#cdbd9f";
+  ctx.beginPath();
+  const left = side(-1);
+  const right = side(1).reverse();
+  ctx.moveTo(...left[0]);
+  for (const p of [...left, ...right]) ctx.lineTo(...p);
+  // The band's far end, rounded.
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(mid(BREAK), (1 - BREAK) * H, half(BREAK), half(BREAK) * 0.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Past it, patches of bare earth, smaller and further apart toward the end.
+  for (let k = BREAK + 0.05; k < 0.97; k += 0.035 + (k - BREAK) * 0.12) {
+    const w = half(k) * (0.75 + r() * 0.2);
+    ctx.beginPath();
+    ctx.ellipse(mid(k) + (r() - 0.5) * half(k), (1 - k) * H, w, w * 0.55, (r() - 0.5) * 0.5, 0, Math.PI * 2);
+    ctx.fill();
   }
   return c;
 }
