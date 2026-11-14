@@ -10,6 +10,7 @@ import { type FrogWords, type VisitorId, type VisitorView } from "./visitors";
 import { daily } from "../core/day";
 import { KINDS } from "./kinds";
 import { SAY_S, there, type Bloom, type Body, type Hideout, type Reply, type Visitor, type VisitorKind } from "./kinds/kind";
+import type { Cutout } from "./visitorArt";
 import { REACH_SLACK } from "./reach";
 import type { Layout } from "./world";
 import type { Ground } from "./ground";
@@ -19,32 +20,48 @@ import type { Frame, Part } from "./scenePart";
 import { THIRSTY } from "./plants";
 import { SEEK_REACH } from "./hide";
 
-/** Every kind's frames in one atlas, in KINDS order; a kind's frame name gives its cell. */
-const ATLAS = Object.values(KINDS).flatMap((k) => Object.values(k.art));
-const CELLS: Record<string, Record<string, number>> = {};
-{
-  let cell = 0;
+/**
+ * The frames of today's kinds in one atlas, in KINDS order, with each kind's
+ * frame names to their cells and the atlas's rows (T.VISITOR_COLS cells to a
+ * row). Only today's: at CPU 10×, drawing all 31 frames took 16 ms and a
+ * busy day's 8 took 4 ms (#1091).
+ */
+function atlasOf(ids: ReadonlySet<VisitorId>): { arts: Cutout[]; cells: Partial<Record<VisitorId, Record<string, number>>>; rows: number } {
+  const arts: Cutout[] = [];
+  const cells: Partial<Record<VisitorId, Record<string, number>>> = {};
   for (const k of Object.values(KINDS)) {
-    CELLS[k.id] = {};
-    for (const f of Object.keys(k.art)) CELLS[k.id][f] = cell++;
+    if (!ids.has(k.id)) continue;
+    const own: Record<string, number> = {};
+    for (const [f, art] of Object.entries(k.art)) {
+      own[f] = arts.length;
+      arts.push(art);
+    }
+    cells[k.id] = own;
   }
+  return { arts, cells, rows: Math.ceil(arts.length / T.VISITOR_COLS) };
 }
 
 /** The tint of a lantern's light, for a visitor that is always in it (`lit`). */
 const LANTERN_LIGHT = new THREE.Color(0.85, 0.8, 0.7);
 
+/** Where a cell starts in an atlas of `rows` rows of cells, as u and v (v is up from the bottom of the texture). */
+function cellStart(cell: number, rows: number): [number, number] {
+  return [(cell % T.VISITOR_COLS) / T.VISITOR_COLS, 1 - (Math.floor(cell / T.VISITOR_COLS) + 1) / rows];
+}
+
 /**
- * Point a visitor's sprite at its texture cell, `flip`ped left to right or not;
+ * Point a visitor's sprite at its texture cell in an atlas of `rows` rows, `flip`ped left to right or not;
  * upload only when it changes (tick runs every frame). The attribute stores
  * float32, so compare with the float32 values.
  * @internal Exported for tests.
  */
-export function showCell(uv: THREE.BufferAttribute, cell: number, cells: number, flip: boolean) {
-  const u = Math.fround((flip ? cell + 1 : cell) / cells);
-  const w = Math.fround((flip ? -1 : 1) / cells);
-  if (uv.getX(0) === u && uv.getZ(0) === w) return;
-  uv.setX(0, u);
-  uv.setZ(0, w);
+export function showCell(uv: THREE.BufferAttribute, cell: number, rows: number, flip: boolean) {
+  const [u0, v0] = cellStart(cell, rows);
+  const u = Math.fround(u0 + (flip ? 1 / T.VISITOR_COLS : 0));
+  const v = Math.fround(v0);
+  const w = Math.fround((flip ? -1 : 1) / T.VISITOR_COLS);
+  if (uv.getX(0) === u && uv.getY(0) === v && uv.getZ(0) === w) return;
+  uv.setXYZ(0, u, v, w);
   uv.needsUpdate = true;
 }
 
@@ -56,6 +73,9 @@ interface VisitorSprite {
   kind: VisitorKind;
   visitor: Visitor<string>;
   body: Body<string>;
+  /** Its kind's frame names to their cells in today's atlas, and the atlas's rows. */
+  cells: Record<string, number>;
+  rows: number;
   /** Its cell's size (m), and the kind's hit box and tag height (fractions of the cell). */
   size: number;
   hit: [number, number, number];
@@ -88,10 +108,10 @@ export interface VisitorWorld {
   bedTop: number;
   /** The height (metres) of the top of this plant (its word, growth and genome), standing in its bed. */
   plantTop: (p: { lemma: string; growth: number }) => number;
-  /** A one-instance, camera-facing sprite of `size` metres from `tex`, showing the strip u..u+uw. */
-  sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, size: number) => SpriteMesh;
-  /** The same, lying flat and centred on x, y, z, showing the bottom `vh` of the strip (size × size·vh metres). Turn it with iParams.y. */
-  lying: (tex: THREE.Texture, x: number, y: number, z: number, u: number, uw: number, vh: number, size: number) => SpriteMesh;
+  /** A one-instance, camera-facing sprite of `size` metres from `tex`, showing the part u..u+uw, v..v+vh. */
+  sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, v: number, uw: number, vh: number, size: number) => SpriteMesh;
+  /** The same, lying flat and centred on x, y, z (size × size·`lying` metres, as wide as the part is tall). Turn it with iParams.y. */
+  lying: (tex: THREE.Texture, x: number, y: number, z: number, u: number, v: number, uw: number, vh: number, lying: number, size: number) => SpriteMesh;
 }
 
 /** A visitor's tag, or what it says, as the scene shows labels (screen fractions). */
@@ -136,7 +156,7 @@ export class SceneVisitors implements Part {
   }
 
   /**
-   * Today's visitors, each where its kind says (kinds/). One small texture for
+   * Today's visitors, each where its kind says (kinds/). One texture for
    * all of them; each is a one-instance sprite mesh (a lying kind's lies flat).
    * `now`: the moment the walk opened, for the kinds' daily picks; `age`: the
    * garden's age in calendar days.
@@ -145,8 +165,9 @@ export class SceneVisitors implements Part {
     if (!this.list.length) return;
     const w = this.world;
     const L = w.layout;
-    const tex = T.pixelTexture(T.visitors(ATLAS));
-    const cellU = 1 / ATLAS.length;
+    const { arts, cells, rows } = atlasOf(new Set(this.list.map((v) => v.id)));
+    const tex = T.cutoutTexture(T.visitors(arts));
+    const [cellU, cellV] = [1 / T.VISITOR_COLS, 1 / rows];
     // Visitors live in their own places in the world (#641), not by their word's plant: only one rests on a flower, any one in bloom.
     const blooms = L.plants.filter((p) => p.stage === "bloom");
     const plant = blooms.length ? daily(blooms, "visitor-bloom", now) : null;
@@ -156,9 +177,15 @@ export class SceneVisitors implements Part {
       const it = kind.arrive({ spots, layout: L, ground: w.ground, bloom, now, age, reducedMotion: w.reducedMotion, lang: w.lang });
       if (!it) continue;
       const { body, size } = it;
-      const u = CELLS[v.id][body.frame] * cellU;
+      const own = cells[v.id];
+      // atlasOf drew every kind in this.list.
+      if (!own) throw new Error(`no atlas cells for ${v.id}`);
+      const [u, cv] = cellStart(own[body.frame], rows);
       const first = Object.values(kind.art)[0];
-      const mesh = kind.lying ? w.lying(tex, body.x, body.y, body.z, u, cellU, first.rows.length / 32, size) : w.sprite(tex, body.x, body.y, body.z, u, cellU, size);
+      const tall = first.h / 32;
+      const mesh = kind.lying
+        ? w.lying(tex, body.x, body.y, body.z, u, cv, cellU, cellV * tall, tall, size)
+        : w.sprite(tex, body.x, body.y, body.z, u, cv, cellU, cellV, size);
       const params = mesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
       if (kind.lying) params.setY(0, body.turn);
       w.scene.add(mesh);
@@ -174,6 +201,8 @@ export class SceneVisitors implements Part {
         kind,
         visitor: it,
         body,
+        cells: own,
+        rows,
         size,
         // The defaults: the drawn part is the lower half of the cell, and the tag sits just above it.
         hit: kind.hit ?? [0.2, 0.4, 0.3],
@@ -194,7 +223,7 @@ export class SceneVisitors implements Part {
     const b = s.body;
     const d = s.drawn;
     s.mesh.visible = b.visible;
-    showCell(s.uv, CELLS[s.v.id][b.frame], ATLAS.length, this.turnedRound(b));
+    showCell(s.uv, s.cells[b.frame], s.rows, this.turnedRound(b));
     if (b.x !== d[0] || b.y !== d[1] || b.z !== d[2]) {
       d[0] = b.x;
       d[1] = b.y;

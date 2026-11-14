@@ -4,7 +4,7 @@
 // hit boxes follow the drawing, and orchard.ts needs no three.js.
 
 import { ORCHARD_WORDS, type OrchardWord } from "../deck/schema";
-import type { PixelArt } from "./visitorArt";
+import type { PixelArt } from "./pixelArt";
 
 export const CELL_W = 96;
 export const CELL_H_PX = 128;

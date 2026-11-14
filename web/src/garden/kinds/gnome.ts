@@ -44,7 +44,7 @@ export const gnome: VisitorKind<Look> = {
   top: 0.78,
   // Its name shows from further than most: you see it across the garden, and it hides it when you look away.
   tagRange: 7,
-  // The lantern hangs 7.5 px right of the middle and 4.5 px up in its cell.
+  // The lantern hangs 7.5 units right of the middle and 4.5 up in its cell (visitorArt.ts).
   glow: { dx: 7.5 / 32, dy: 4.5 / 32, size: 0.3 },
   arrive({ layout, spots, ground, now, age, reducedMotion }) {
     const hide = hideout(layout, spots, age, now);

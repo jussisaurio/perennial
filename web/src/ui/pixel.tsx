@@ -1,8 +1,8 @@
-// Pixel art (garden/visitorArt.ts) as SVG: one path per colour, a rectangle per
+// Pixel art (garden/pixelArt.ts) as SVG: one path per colour, a rectangle per
 // run of same-coloured pixels in a row. A rect per run was ~370 elements for the
 // strip's snail and cat, and each element costs style and layout (#486).
 
-import { runs, type PixelArt } from "../garden/visitorArt";
+import { runs, type PixelArt } from "../garden/pixelArt";
 
 export function PixelRects({ art }: { art: PixelArt }) {
   const byFill = new Map<string, string>();

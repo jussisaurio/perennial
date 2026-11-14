@@ -1,7 +1,7 @@
-// Pixel art for the lawn toys (#360), in visitorArt.ts's style: a dandelion
+// Pixel art for the lawn toys (#360), as character maps (pixelArt.ts): a dandelion
 // clock, fluffy and blown. Drawn into the walk's toy atlas (textures.ts toyAtlas).
 
-import type { PixelArt } from "./visitorArt";
+import type { PixelArt } from "./pixelArt";
 
 const PAL = { w: "#d8d4ca", W: "#fbfaf4", c: "#c8b878", C: "#a08a50", s: "#5a8a3a", L: "#3e7a2c", l: "#6aac44" };
 

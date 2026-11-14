@@ -29,7 +29,7 @@ import { language } from "../content/languages";
 import { broughtVisitor, gardenBrought } from "./visitors";
 import { sessionVisit, type SessionVisit } from "../garden/sessionVisitor";
 import { GARDEN_VISITOR_ART } from "../garden/visitorArt";
-import { PixelRects } from "./pixel";
+import { CutoutShapes } from "./cutout";
 import { startOfDay, today } from "../core/day";
 import { visitor, VISITORS, type VisitorView, visitorViews } from "../garden/visitors";
 
@@ -762,12 +762,11 @@ function watcherFor(l: Learner, start: number): { visit: SessionVisit; view: Vis
  */
 function Watcher({ view }: { view: VisitorView }) {
   const art = GARDEN_VISITOR_ART[visitor(view.id).garden!]!;
-  const w = art.rows[0].length;
-  const h = art.rows.length;
+  const { w, h } = art;
   return (
     <div className="session-watcher" aria-label={`${view.word} · ${view.gloss}`} role="img">
-      <svg width={w * 2.2} height={h * 2.2} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" aria-hidden="true">
-        <PixelRects art={art} />
+      <svg width={w * 2.2} height={h * 2.2} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+        <CutoutShapes art={art} />
       </svg>
     </div>
   );
