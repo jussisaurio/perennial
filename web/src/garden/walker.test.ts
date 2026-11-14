@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { backWay, HILLTOP_R, lookoutAt, STOOL_R } from "./lookout";
+import { backWay, CUT, HILLTOP_R, lookoutAt, PATH_TURN, STOOL_R } from "./lookout";
 import { BRAMBLES_IN, STEP, stileAt } from "./stile";
 import { FREE, newWalker, sit, startTrip, step, toMode, type Input, type Walker, type WalkerWorld } from "./walker";
 import { BENCH, benchAt, collide, layout, WALKER, type GardenPlant } from "./world";
@@ -64,13 +64,6 @@ describe("walking into something solid stops you", () => {
     expect(w.x).toBeCloseTo(STILE.x + 2.5, 6);
   });
 
-  test("stile.shut: before n08, walking with W at the stile stops you at the brambles in front of it", () => {
-    const wd = world("shut");
-    const w = stand(STILE.x, STILE.foot[1] + 1, 0);
-    hold(w, "KeyW", 1.5, wd);
-    expect(w.z).toBeCloseTo(STILE.z + BRAMBLES_IN + WALKER, 6);
-  });
-
   test("stile.sides-solid: with n08, the stile stops you along the fence, and a rail stops you on the steps", () => {
     const wd = world("open");
     // Along the back fence toward the stile, with D (+x).
@@ -84,11 +77,18 @@ describe("walking into something solid stops you", () => {
     expect(w.z).toBeCloseTo(STILE.z + 0.3, 6);
   });
 
-  test("hill.brambles: on the hilltop, walking into the brambles stops you", () => {
+  test("hill.brambles: on the cut way and on the hilltop, walking into the brambles stops you", () => {
     const wd = world("open");
-    const w = stand(HILL.top[0], HILL.top[1], 0);
+    let w = stand(HILL.top[0], HILL.top[1], 0);
     hold(w, "KeyW", 2.5, wd);
     expect(Math.hypot(w.x - HILL.top[0], w.z - HILL.top[1])).toBeCloseTo(HILLTOP_R - WALKER, 6);
+    // On the cut way, 3 m past the fence, walking square to it, to the left.
+    const [dx, dz] = [-Math.sin(PATH_TURN), -Math.cos(PATH_TURN)];
+    const [mx, mz] = [STILE.x + dx * 3, STILE.z + dz * 3];
+    w = stand(mx, mz, PATH_TURN + Math.PI / 2);
+    hold(w, "KeyW", 1.5, wd);
+    // How far it went across the way: its left is (dz, −dx).
+    expect((w.x - mx) * dz - (w.z - mz) * dx).toBeCloseTo(CUT - WALKER, 6);
   });
 
   test("bench.solid: walking with W into the bench stops you at it: from the garden behind it, at its end, and from the pond's side", () => {

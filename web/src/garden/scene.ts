@@ -30,7 +30,7 @@ import { Plants } from "./scenePlants";
 import { Lanterns } from "./sceneLanterns";
 import { HILLTOP_R, hillY } from "./lookout";
 import { LookoutThings } from "./sceneLookout";
-import { stepY, stileAt } from "./stile";
+import { stileAt } from "./stile";
 import { StileScene } from "./sceneStile";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapAt, type TapHit, type Tapper } from "./scenePart";
@@ -836,7 +836,7 @@ export class GardenScene {
           this.spot.visible = false;
           return;
         }
-        this.spot.position.set(to.x, 0.03 + this.lift(to.x, to.z), to.z);
+        this.spot.position.set(to.x, 0.03 + this.game.lift(to.x, to.z), to.z);
         this.spot.visible = true;
       },
       lantern: (i) => this.lanterns.show(i),
@@ -1213,7 +1213,7 @@ export class GardenScene {
 
   /** Where a ray first meets the ground, the stile's steps and the hill too (#770), nearer than `far`; else null. */
   private groundPast(r: Ray, far: number): { x: number; z: number } | null {
-    const at = (t: number) => r.oy + r.dy * t - this.lift(r.ox + r.dx * t, r.oz + r.dz * t);
+    const at = (t: number) => r.oy + r.dy * t - this.game.lift(r.ox + r.dx * t, r.oz + r.dz * t);
     // In short steps until below the ground, then halved down to a centimetre.
     let b = GROUND_STEP;
     while (at(b) > 0) {
@@ -1428,7 +1428,7 @@ export class GardenScene {
     const t = g.elapsed;
     // Sitting down or standing up, the eye sinks or rises (walker.ts step).
     const seat = g.me.seat;
-    this.camera.position.set(this.x, EYE - (EYE - W.SEAT.eye) * seat + this.lift(this.x, this.z) + Math.sin(g.me.bob) * 0.035 * motion, this.z);
+    this.camera.position.set(this.x, EYE - (EYE - W.SEAT.eye) * seat + this.game.lift(this.x, this.z) + Math.sin(g.me.bob) * 0.035 * motion, this.z);
     // On the stool the view narrows as you sit, and widens again as you get up (#858).
     const fov = g.sitOn === "stool" ? FOV - (FOV - STOOL_FOV) * seat : FOV;
     if (fov !== this.camera.fov) {
@@ -1476,13 +1476,6 @@ export class GardenScene {
 
     this.renderer.render(this.scene, this.camera);
     this.labels();
-  }
-
-  /** How high the ground stands at (x, z) (m): the stile's steps and the hill past it (#770); 0 in the garden. Runs every frame: no allocation. */
-  private lift(x: number, z: number): number {
-    const g = this.game;
-    if (!g.stileSpot || !g.hill) return 0;
-    return stepY(g.stileSpot, x, z) + hillY(g.hill, x, z);
   }
 
   /** Names over the nearest plants, as DOM text so they stay crisp and readable. */
