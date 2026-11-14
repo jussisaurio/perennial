@@ -579,10 +579,11 @@ test.describe(() => {
 test("the controls hint shows in the learner's walk until they first move; the landing page's walk does not use it up (#334)", async ({ page }) => {
   await pinDetail(page, "low");
   const hint = page.locator(".gw-hint");
+  // The hint is drawn with the plant count, so whether it shows is known before the scene is built. Only a walk that
+  // moves waits for the scene: four full builds took this test past its time on CI (#1177).
   const walkIn = async () => {
     await page.getByRole("button", { name: "Walk in your garden" }).click();
     await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-    await page.waitForFunction(() => "__garden" in window);
   };
   // The landing page's walk: the hint shows, and moving there does not use up the learner's.
   await page.goto("/");
@@ -597,6 +598,7 @@ test("the controls hint shows in the learner's walk until they first move; the l
   await page.getByRole("button", { name: "Back" }).click();
   await walkIn();
   await expect(hint).toContainText("Walk:");
+  await page.waitForFunction(() => "__garden" in window);
   await page.keyboard.press("KeyW");
   await expect(hint).toHaveCount(0);
   await page.getByRole("button", { name: "Back" }).click();
