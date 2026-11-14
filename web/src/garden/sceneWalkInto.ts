@@ -135,7 +135,7 @@ export class WalkInto implements Part {
     c.scene.add(this.bits);
 
     // Fallen fruit: hidden (scale 0) until one falls.
-    const atlas = T.pixelTexture(T.fruitAtlas());
+    const atlas = T.cutoutTexture(T.fruitAtlas());
     this.fruit = sprites(
       atlas,
       this.fruits.map(() => ({ x: 0, y: 0, z: 0, u: 0, v: 0, uw: 1 / T.FRUIT_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -9 })),
@@ -153,7 +153,7 @@ export class WalkInto implements Part {
     this.piles = leafPiles(c.L);
     if (!this.piles.length) return;
     const mesh = sprites(
-      T.pixelTexture(T.leafPile()),
+      T.cutoutTexture(T.leafPile()),
       this.piles.map((p, i) => ({ x: p.x, y: 0.01, z: p.z, u: 0, v: 0, uw: 1, vh: 1, phase: i * 2.1, droop: 0, scale: 1, index: -9 })),
       PILE.size,
       PILE.size,

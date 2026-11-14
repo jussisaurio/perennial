@@ -58,7 +58,7 @@ export class Toys implements Part {
 
   /** The clocks, and the seeds' points (hidden until a blow). Draws no random numbers: the build order's shared sequence is untouched. */
   build(c: BuildCtx) {
-    const tex = T.pixelTexture(T.toyAtlas());
+    const tex = T.cutoutTexture(T.toyAtlas());
     this.clocks = sprites(
       tex,
       this.game.heads.map((h, i) => ({ x: h.x, y: 0, z: h.z, u: T.TOY_CELL.clock / T.TOY_CELLS, v: 0, uw: 1 / T.TOY_CELLS, vh: 1, phase: i * 1.7, droop: 0, scale: 1, index: -9 })),

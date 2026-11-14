@@ -1058,7 +1058,7 @@ export class GardenScene {
     // sprite, it does not look at you: from the garden you see the back of its head,
     // and only from the back path, with the sun behind you, its face.
     const { x, z } = sunflowerAt(c.L);
-    const flowerMesh = sprites(T.pixelTexture(T.sunflower()), [{ x, y: 0, z, u: 0.5, v: 0, uw: 0.5, vh: 1, phase: 1.3, droop: 0, scale: 1, index: -5 }], 0.85, 1.7);
+    const flowerMesh = sprites(T.cutoutTexture(T.sunflower()), [{ x, y: 0, z, u: 0.5, v: 0, uw: 0.5, vh: 1, phase: 1.3, droop: 0, scale: 1, index: -5 }], 0.85, 1.7);
     this.hitBoxes.push(spriteBox("sunflower", x, 0, z, 0.24, 1.62));
     const geo = flowerMesh.geometry;
     this.flower = { x, z, uv: geo.getAttribute("iUv") as THREE.InstancedBufferAttribute, params: geo.getAttribute("iParams") as THREE.InstancedBufferAttribute, face: null };

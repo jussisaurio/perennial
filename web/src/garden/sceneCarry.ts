@@ -49,7 +49,7 @@ export class Carry implements Part {
 
   /** The loose things and the well (unseen until the door opens), in one instanced mesh; the rings, lying on the water. Draws no random numbers. */
   build() {
-    const tex = T.pixelTexture(T.carryAtlas());
+    const tex = T.cutoutTexture(T.carryAtlas());
     const cell = (c: number) => c / T.CARRY_CELLS;
     const items = this.pebbles.things.map((t) => ({ x: t.x, y: t.y, z: t.z, u: cell(T.CARRY_CELL.pebble), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: shown(t), index: -8 }));
     const w = this.layout.well;

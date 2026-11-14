@@ -1,53 +1,21 @@
-// Pixel art for the loose things you carry (#358, garden/carry.ts), in
-// pixelArt.ts's style: a pebble, the orchard's well, and the rings a
-// splash makes. Drawn into the walk's texture (textures.ts carryAtlas) and, for
-// what you hold, into the page (GardenWalk.tsx).
+// The pebble you carry (#358, garden/carry.ts) as a paper cut-out (#1091),
+// in visitorArt.ts's style. Drawn into the walk's texture (textures.ts
+// carryAtlas) and, while you hold it, into the page (GardenWalk.tsx), so both
+// show the same pebble.
 
-import type { PixelArt } from "./pixelArt";
+import { flat, line, oval, type Cutout } from "./visitorArt";
 
-const STONE = { o: "#4a4440", S: "#9a948a", s: "#7a746a", w: "#c8c2b6" };
+const BODY = oval(4, 3, 3.4, 2.4);
 
 /** Round, blue-grey and outlined, with a shine: not one of the path's grey specks. */
-export const PEBBLE: PixelArt = { rows: ["..oooo..", ".oSwwSo.", "oSSwSSSo", "oSSSSSso", ".osssso.", "..oooo.."], pal: { o: "#33383e", S: "#a4aeb8", s: "#78828c", w: "#e8eef2" } };
-
-/** The orchard's wishing well (#335 S6): a ring of stones, dark inside, under a small roof with a bucket on its rope. */
-export const WELL: PixelArt = {
-  rows: [
-    "...........oooooo...........",
-    ".........ooRRRRRRoo.........",
-    ".......ooRRRRrrRRRRoo.......",
-    ".....ooRRRRRrrrrRRRRRoo.....",
-    "...ooRRRRRRrrrrrrRRRRRRoo...",
-    "..orrrrrrrrrrrrrrrrrrrrrro..",
-    "..oooooooooooooooooooooooo..",
-    "..oPo..........c.......oPo..",
-    "..oPo..........c.......oPo..",
-    "..oPo..........c.......oPo..",
-    "..oPo.........obbo.....oPo..",
-    "..oPo.........obbo.....oPo..",
-    "..oPo..........oo......oPo..",
-    "..oPo..................oPo..",
-    ".oooooooooooooooooooooooooo.",
-    "oKKKKKKKKKKKKKKKKKKKKKKKKKKo",
-    "owSSwSSSoSwSSSSoSSwSSSoSwSSo",
-    "osssssssosssssssosssssssosso",
-    "oooooooooooooooooooooooooooo",
-    "oSSwSSSoSSSwSSSoSSwSSSSoSSSo",
-    "osssssosssssssosssssssosssso",
-    "oooooooooooooooooooooooooooo",
-    "owSSSoSSwSSSSoSSSwSSoSSwSSSo",
-    "osssosssssssssossssssossssso",
-    "oooooooooooooooooooooooooooo",
-    "oSSwSSSSoSSSwSSoSSSSwSSSoSSo",
-    "ossssssosssssssossssssssosso",
-    ".oooooooooooooooooooooooooo.",
+export const PEBBLE: Cutout = {
+  w: 8,
+  h: 6,
+  pieces: [
+    flat(BODY, "#a4aeb8"),
+    // Its shade: the lower part, under a curve.
+    flat("M0.6 3 C0.6 4.33 2.12 5.4 4 5.4 C5.88 5.4 7.4 4.33 7.4 3 Q5 4.5 0.6 3 Z", "#78828c"),
+    flat(oval(3.2, 1.9, 1.1, 0.6), "#e8eef2"),
+    line(BODY, "#33383e", 0.4),
   ],
-  pal: { ...STONE, K: "#1c2024", R: "#a8603e", r: "#8a4a32", P: "#8a6440", c: "#c8a870", b: "#7a5233" },
 };
-
-/** Rings on the water, seen from above: a thin light circle, `r` pixels round, in a square of `size`. */
-export function ring(r: number, size: number): PixelArt {
-  const c = (size - 1) / 2;
-  const rows = Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => (Math.abs(Math.hypot(x - c, y - c) - r) < 0.6 ? "w" : ".")).join(""));
-  return { rows, pal: { w: "#dff0f4" } };
-}

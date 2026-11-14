@@ -7,7 +7,6 @@
 
 import type { PlacedTree } from "./orchard";
 import type { Frame } from "./scenePart";
-import type { PixelArt } from "./pixelArt";
 import { shedAt } from "./shed";
 import { hash01 } from "../lib/seed";
 import { benchAt, KEY_SPOTS, keyAt, lanternSpots, sunflowerAt, WALKER, type Layout } from "./world";
@@ -255,16 +254,3 @@ export function scatter(n: number): number {
 
 /** Autumn's leaves: the piles and the bits they burst into. */
 export const AUTUMN = ["#e8902a", "#c8502a", "#f2c240", "#a8642c"] as const;
-
-/** A neat, low pile of autumn leaves. */
-export const LEAF_PILE: PixelArt = {
-  rows: [
-    "......aYb.......",
-    "....bYaaOYa.....",
-    "..aOYbaYaabOY...",
-    ".YabOaYbOaYabOa.",
-    "aOYaabOYaYbaOYab",
-    "bbaObbaabbOabbab",
-  ],
-  pal: { a: AUTUMN[0], O: AUTUMN[1], Y: AUTUMN[2], b: AUTUMN[3] },
-};

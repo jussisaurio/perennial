@@ -49,7 +49,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 
 ## 3. The garden
 
-**Role.** The garden is where the whimsy and the story live. The UI copy stays plain. It has two views: a 2D strip on Today, and a 3D walk in a retro pixel style. The beds fill in the order you planted the words, and a bed never moves once it exists (#641).
+**Role.** The garden is where the whimsy and the story live. The UI copy stays plain. It has two views: a 2D strip on Today, and a 3D walk in the app's paper-craft style ([docs/art-direction.md](art-direction.md)). The beds fill in the order you planted the words, and a bed never moves once it exists (#641).
 
 **Physics.** The rules are in [CLAUDE.md](../CLAUDE.md), "The garden is physical". You go places only by walking. Solid things stop you. Every edge is a thing you can see. Visitors walk; nothing teleports. The wall clock sets the time of day (#646).
 
