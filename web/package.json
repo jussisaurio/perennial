@@ -41,7 +41,7 @@
     "@paulirish/trace_engine": "0.0.68",
     "@playwright/test": "^1.65.0",
     "@rolldown/plugin-babel": "^0.3.1",
-    "@sentry/vite-plugin": "^5.4.1",
+    "@sentry/vite-plugin": "^11.12.0",
     "@types/bun": "^1.4.2",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
