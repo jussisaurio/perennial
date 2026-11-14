@@ -37,3 +37,7 @@ test("garden.drawn-solid: each thing drawn as solid stops a walker, with the doo
   expect(ids.filter((id) => !KNOWN[id]).map((id) => `${id} at ${where(id)}`), "drawn as solid, but a walker may stand there").toEqual([]);
   expect(Object.keys(KNOWN).filter((id) => !ids.includes(id as OpenSpot["id"])), "fixed: take these out of KNOWN").toEqual([]);
 });
+
+test("probe for #1138: fails on purpose, so the job must fail", () => {
+  expect(1).toBe(2);
+});
