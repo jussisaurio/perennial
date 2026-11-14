@@ -182,6 +182,19 @@ describe("Session", () => {
     expect(s2.next(30_000)).toBeNull();
   });
 
+  test("a new word's check comes 3 cards after it; a forgotten card comes back 4 cards later, twice at most", () => {
+    const queue: Task[] = [{ kind: "intro", wordId: "n" }, ...["a", "b", "c", "d", "e"].map((id) => ({ kind: "review" as const, wordId: id, skill: "read" as Skill }))];
+    const s = new Session({ queue }, 600_000);
+    const served: string[] = [];
+    const retried: boolean[] = [];
+    for (let t = s.next(0); t; t = s.next(0)) {
+      served.push(t.kind === "review" && t.retry ? `${t.wordId} again` : t.wordId);
+      retried.push(s.report(t, t.wordId === "a" ? { grade: 1 } : { grade: 3 }));
+    }
+    expect(served).toEqual(["n", "a", "b", "c", "n", "d", "a again", "e", "a again"]);
+    expect(retried).toEqual([false, true, false, false, false, false, true, false, false]);
+  });
+
   test("near the end, no new word starts: its quick check would come right after it (#268)", () => {
     const intro = (id: string): Task => ({ kind: "intro", wordId: id });
     const review: Task = { kind: "review", wordId: "a", skill: "read" };

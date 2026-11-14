@@ -12,6 +12,7 @@ test("hash32 is FNV-1a, and a salt gives another stream", () => {
 test("fsrs fuzz stays pinned: due dates replay the same on every device and release", () => {
   expect(fuzz(3, "casa:1")).toBeCloseTo(2.61822, 9);
   expect(fuzz(10, "perro:read:4")).toBeCloseTo(10.94314, 9);
+  expect(fuzz(25, "gato:listen:6")).toBeCloseTo(25.771625, 9);
   expect(fuzz(40, "w:listen:9")).toBeCloseTo(41.82664, 9);
 });
 

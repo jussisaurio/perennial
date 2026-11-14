@@ -50,6 +50,15 @@ describe("known words at the start of a day (for the milestone line)", () => {
     expect(knownAt(extra, Infinity, 0.9, same, ids)).toBe(words.length);
   });
 
+  test("a word forgotten in reading before the moment was not known; one forgotten in listening was (#852)", () => {
+    const grown = [0, 2, 7, 20, 50].map((d) => review("x", d));
+    const forgot = (r: ReviewRow): ReviewRow => ({ ...r, grade: 1 });
+    const x = new Set(["x"]);
+    // Forgotten on day 60, read well again on day 61: just after the slip, then.
+    expect(knownAt([...grown, forgot(review("x", 60)), review("x", 61)], start + 60.5 * DAY, 0.9, same, x)).toBe(0);
+    expect(knownAt([...grown, forgot(review("x", 60, "listen")), review("x", 61)], start + 60.5 * DAY, 0.9, same, x)).toBe(1);
+  });
+
   test("on the day a word becomes known, the start-of-day count is one lower", () => {
     // The last word starts on day 150. Find the review day that makes it known.
     const dayStart = (d: number) => new Date(2026, 0, 1 + d).getTime();

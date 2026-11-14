@@ -42,7 +42,7 @@ test("the red section names the jobs, the tests, the last green commit and what 
   });
   expect(text).toContain('- **End-to-end (Chromium 1/8)** ([log](https://example.test/job/1)), step "Run e2e"\n  - `[desktop] › e2e/demo.spec.ts:80:1 › the stile`');
   expect(text).toContain("  - No failing test names in the log.");
-  expect(text).toContain("  - The alarm could not read this job's log: HTTP 410");
+  expect(text).toContain("- **Decks** ([log](https://example.test/job/3))\n  - The alarm could not read this job's log: HTTP 410");
   expect(text).toContain("Last green commit on main: `dac76c88`");
   expect(text).toContain("- `a5f3d1b5` Merge pull request #970 from o/fix");
   expect(text).not.toContain("Story: re-fit");

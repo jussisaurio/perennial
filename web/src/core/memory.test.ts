@@ -13,6 +13,7 @@ describe("recordGap: the longest a word has waited and still been remembered", (
     expect(recordGap([day(0), day(30)], day(50))).toBeNull(); // 20 days, but it waited 30 before
     expect(recordGap([day(0), day(3)], day(13))).toBeNull(); // 10 days: not news yet
     expect(recordGap([], day(30))).toBeNull(); // never seen
+    expect(recordGap([day(10), day(0), day(3)], day(33))).toBe(23); // in any order
   });
 });
 
