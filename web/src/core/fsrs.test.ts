@@ -49,6 +49,30 @@ describe("FSRS-6", () => {
     const m = { s: 20, d: 5 };
     expect(f.next(m, 20, 1).s).toBeLessThan(20);
     expect(f.next(m, 0.01, 3).s).toBeGreaterThanOrEqual(20);
+    // FSRS's short-term formula: a young memory still grows a little on the same day.
+    expect(f.next({ s: 1, d: 5 }, 0, 3).s).toBeGreaterThan(1);
+  });
+
+  test("a review later the same day takes the same-day path; a day later does not", () => {
+    const m = { s: 3, d: 5 };
+    expect(f.next(m, 0.3, 3)).toEqual(f.next(m, 0, 3));
+    expect(f.next(m, 1, 3).s).not.toBe(f.next(m, 0, 3).s);
+  });
+
+  test("replay folds each review into the memory, timed from the review before it", () => {
+    const t0 = Date.UTC(2026, 0, 1);
+    const log = [
+      { ts: t0, grade: 1 as Grade },
+      { ts: t0 + 1 * DAY_MS, grade: 3 as Grade },
+      { ts: t0 + 4 * DAY_MS, grade: 1 as Grade },
+      { ts: t0 + 5 * DAY_MS, grade: 3 as Grade },
+    ];
+    let m = f.init(1);
+    for (const [gap, g] of [[1, 3], [3, 1], [1, 3]] as const) m = f.next(m, gap, g);
+    const st = replay(f, log, 0.9, "x")!;
+    expect({ s: st.s, d: st.d }).toEqual(m);
+    expect(st.lastTs).toBe(t0 + 5 * DAY_MS);
+    expect(st.lapses).toBe(2);
   });
 
   test("replay is order-independent and deterministic", () => {
