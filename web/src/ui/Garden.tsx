@@ -8,7 +8,7 @@ import type { LoadedDeck } from "../data/deckIndex";
 import type { Learner } from "../data/learner";
 import { reservedStake } from "../content/voice";
 import { language } from "../content/languages";
-import { FORM, plantHeight, StripPlant, type SpriteImage } from "./plant";
+import { FORM, plantHeight, stemHeight, StripPlant, type SpriteImage } from "./plant";
 import { spriteBox } from "../garden/plantCanvas";
 import { drawSprites, spriteKey, stripSprite } from "../garden/stripSprites";
 import { meaningOf } from "./meaning";
@@ -321,7 +321,7 @@ function Strip({ data, lang, highlight, compact, showcase, onView, visitors, rep
                 // Standing still: its sprite, once the worker has drawn it. Until then an empty slot, so nothing moves.
                 sprites.has(p.id) && <StripPlant p={p} scale={scale} highlighted={!!highlight?.has(p.id)} sprite={sprites.get(p.id)} />
               )}
-              {snoring === p.id && <Snore y={-(16 + 118 * p.growth) * scale + 4} />}
+              {snoring === p.id && <Snore y={-stemHeight(p.growth) * scale + 4} />}
             </g>
           ))}
           {first && <Keepsake x={pad + keepRoom / 2 - 4} text={keepsakeLabel(first.lemma, shortDay(new Date(first.at)))} />}

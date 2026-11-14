@@ -16,6 +16,20 @@ So the reference is now the **Paper Mario** half: flat paper cut-outs (plants, c
 - **Light:** soft and even. Fog and a little aerial tint give depth: far things turn toward the sky's colour. The garden has no scene lights: a solid shows its shape by vertex colours from the one sun (`shade` in `web/src/garden/sceneSprites.ts`), so a face turned from the light is a shade darker. A wooden box is a `woodBox`, so its planks are the same size on every face.
 - **The HUD:** the app's own controls. The same typeface, tokens, radii, buttons and line icons as Today and a card (`web/src/index.css`, `web/src/ui/icons.tsx`).
 
+## Plants: cut from coloured paper
+
+A plant (`web/src/ui/plant.tsx`) looks cut from coloured paper with a sharp knife and stacked, back to front (#1164). The references: Matisse's late cut-outs (bold shapes cut straight from colour), Charley Harper's nature prints (few shapes, each one clear), the folded paper flowers of Paper Mario: The Origami King (a light side and a dark side), and the cut-paper flowers of picture books.
+
+- **Few, bold pieces.** Each part is one clean shape: a leaf, a petal, a bud. Curves are smooth and tips are sharp, as a knife cuts them. No wobble, and no small bits that turn to noise far away.
+- **No outlines.** A piece stops where its paper stops. To set a piece apart from the one behind it, use a lighter or darker paper, never a dark line around it.
+- **Folded down the middle.** A leaf or a petal is folded along its middle line, and the half that faces the light (from the upper left) is a shade lighter. This one fold is the only shading: no gradient on a piece.
+- **A small palette for each plant.** At most four tones of the flower's colour: the base, its lit half, a shade for the pieces behind, and one accent in the heart. The leaves and the stem are two muted greens between `--leaf` and `--leaf-2`.
+- **Back to front.** The back petals are in the shade tone, the front petals lie over them, and the heart is on top. The leaves are behind the stem, the flowers in front of it.
+- **Each family has its own outline.** Far away, in one colour, you can still tell them apart: a daisy is a ring of notched petals; a star has five to seven broad points; a cup is a tulip; a bell hangs from an arch; a cluster is a round dome of florets; a spike is a tapering spire; a pom is a round rosette.
+- **The stage shows in the shape.** A sprout is a short stem with two round seed leaves. A bud is a green teardrop in its green cup, so the flower's colour is a surprise. A bloom is the open head. A state is never shown by colour alone (docs/accessibility.md).
+- **The flower is the accent.** It is the one strong colour. The green is quiet and holds the plant's weight at its foot.
+- **One path per tone.** All the pieces of one tone go into one SVG path (`Cut`, `web/src/ui/plantShapes.ts`), so a plant is about a dozen paths, not hundreds.
+
 ## Palette
 
 Every garden colour comes from one of the app's tokens in `web/src/index.css`, with less saturation and a warm lean. Use this table to pick a colour for a new thing.
