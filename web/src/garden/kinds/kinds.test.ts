@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { conditions } from "../conditions";
+import { frogLines } from "../frogLines";
 import type { Ground } from "../ground";
 import type { Frame } from "../scenePart";
 import type { Spots } from "../spots";
@@ -93,6 +94,23 @@ describe("visitor kinds", () => {
     expect(frog.body.frame).toBe("awake");
     frog.onConditions!(conditions("day"));
     expect(frog.body.mute).toBe(true);
+  });
+
+  // docs/garden-play.md, "visit.frog-jokes" (#902). The tap times are game seconds.
+  test("visit.frog-jokes: at dusk with 400 known words, two croaks with a word, then its lines; a tap at once skips nothing; then only a croak", () => {
+    const frog = arrive("frog");
+    frog.onConditions!(conditions("dusk"));
+    const words = { croaks: ["casa"], lines: frogLines("es", 400) };
+    const tap = (elapsed: number) => frog.onTap!({ elapsed, frog: words, lang: "es" });
+    expect(tap(1)?.say).toBe("croac… casa");
+    expect(tap(2)?.say).toBe("croac… casa");
+    expect(tap(3)?.say).toBe("¿Otra vez tú?");
+    expect(tap(3.2)?.say).toBe("¿Otra vez tú?");
+    const last = tap(5.2);
+    expect(last?.say).toBe("No tengo más palabras.");
+    // The bubble shows that long: still there 6 seconds after the tap.
+    expect(last!.seconds).toBeGreaterThan(6);
+    expect(tap(12)?.say).toBe("croac…");
   });
 
   test("a pebble in the pond: the frog on a pad hops to the next pad in an arc and stays", () => {
