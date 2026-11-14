@@ -10,7 +10,8 @@
 // of its worst run (open both in Chrome DevTools → Performance).
 
 import * as Trace from "@paulirish/trace_engine";
-import { polyfillDOMRect } from "@paulirish/trace_engine/analyze-trace.mjs";
+// The trace engine is DevTools' own, and expects a browser's DOMRect: this module adds one when imported.
+import "@paulirish/trace_engine/analyze-trace.mjs";
 import { chromium, type BrowserContext, type CDPSession, type Page } from "@playwright/test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -164,9 +165,6 @@ const CATEGORIES = [
 /** Set in the page once the profilers are running: only what follows it is measured. */
 const MARK = "perf:measure";
 
-// The trace engine is DevTools' own, and expects a browser's DOMRect.
-polyfillDOMRect();
-
 /**
  * From the trace, as DevTools' Performance panel finds them: the duration in ms of every task
  * the page's main thread ran, and of every frame Chrome drew.
@@ -183,7 +181,7 @@ async function fromTrace(trace: Buffer): Promise<{ tasks: number[]; frames: numb
     // Playwright's and our DevTools commands run on the page's main thread, inside the JS that is
     // running when they arrive (a V8 API interrupt). In the field no DevTools is attached: not app work.
     const devtools = t.entries.filter((e) => e.name === "V8.InvokeApiInterruptCallbacks");
-    return t.entries.filter((e) => Trace.Types.Events.isRunTask(e) && e.ts >= mark.ts).map((task) => {
+    return t.entries.filter(Trace.Types.Events.isRunTask).filter((e) => e.ts >= mark.ts).map((task) => {
       const end = task.ts + task.dur;
       // One still running when the trace stopped has no end; it stays counted, which errs high.
       const inside = devtools.filter((e) => e.ts >= task.ts && e.ts < end).reduce((a, e) => a + (e.dur ?? 0), 0);
