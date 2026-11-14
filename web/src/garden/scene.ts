@@ -23,6 +23,7 @@ import { DETAIL, DetailPicker, type Detail } from "./detail";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryWorld } from "./scenery";
 import { HILLS, SKY_R, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
+import { GRAIN, paperMaterial } from "./paper";
 import { Door, DOOR } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { Plants } from "./scenePlants";
@@ -372,6 +373,7 @@ export class GardenScene {
     // Painted in workers while the steps before the trees, and the door, run.
     const far = T.paintFar(this.visitors.moon);
     const orchardAtlas = T.paintOrchard();
+    const paper = T.paintPaper();
     const fonts = T.loadBoardFonts();
     const L = this.layout;
     const b = L.bounds;
@@ -384,7 +386,7 @@ export class GardenScene {
       cx: (b.minX + b.maxX) / 2,
       cz: (b.minZ + b.maxZ) / 2,
       mat: (tex, opts = {}) => {
-        const m = new THREE.MeshBasicMaterial({ map: tex, ...opts });
+        const m = paperMaterial(new THREE.MeshBasicMaterial({ map: tex, ...opts }));
         this.basic.push(m);
         return m;
       },
@@ -461,6 +463,7 @@ export class GardenScene {
     this.walkInto.build(c, this.visitors.autumn);
     this.buildMarker();
     g.setTime(g.time);
+    GRAIN.value = await paper;
     await this.warm([...this.scene.children]);
   }
 

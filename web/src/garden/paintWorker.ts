@@ -8,12 +8,13 @@ import * as THREE from "three";
 import type { TimeOfDay } from "./game";
 import { cloud, hills, moon, orchard, sky, SKIES, sun, trees } from "./textures";
 import { bleedEdges } from "./plantCanvas";
+import { grain } from "./paper";
 
 // As the walk sets it (GardenScene's constructor): the sky's bands blend its colours as written, not in linear light.
 THREE.ColorManagement.enabled = false;
 
-/** "far": the trees outside the fence, the clouds and the sky's looks, with tonight's moon. "orchard": the orchard's tree atlas. */
-export type PaintJob = { kind: "far"; moonPhase: number } | { kind: "orchard" };
+/** "far": the trees outside the fence, the clouds and the sky's looks, with tonight's moon. "orchard": the orchard's tree atlas. "paper": the paper's grain (paper.ts). */
+export type PaintJob = { kind: "far"; moonPhase: number } | { kind: "orchard" } | { kind: "paper" };
 
 /** A painted texture: unpremultiplied RGBA, top row first. Empty pixels carry the nearest drawn pixel's colour (bleedEdges). */
 export interface Pixels {
@@ -39,8 +40,8 @@ self.onmessage = (e: MessageEvent<PaintJob>) => {
     buffers.push(data.buffer);
     return { width: c.width, height: c.height, data };
   };
-  if (job.kind === "orchard") {
-    self.postMessage(pixels(orchard()), { transfer: buffers });
+  if (job.kind === "orchard" || job.kind === "paper") {
+    self.postMessage(pixels(job.kind === "orchard" ? orchard() : grain()), { transfer: buffers });
     return;
   }
   const look = (time: TimeOfDay) => ({

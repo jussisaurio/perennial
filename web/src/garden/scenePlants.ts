@@ -14,6 +14,7 @@ import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
 import { isOld } from "./plants";
 import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, SPRITE_H, SPRITE_W, standingQuad, still, type BuildCtx } from "./sceneSprites";
+import { GRAIN } from "./paper";
 import { boardBox } from "./scenery";
 import { BED_H, bedSign, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
@@ -155,6 +156,7 @@ function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture, near: TH
       uShake: { value: new THREE.Vector2(-1, 0) },
       uSneeze: { value: new THREE.Vector2(-1, 0) },
       uSilver: { value: 0 },
+      uGrain: GRAIN,
     },
     vertexShader: PLANT_VERT,
     fragmentShader: PLANT_FRAG,
