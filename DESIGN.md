@@ -93,11 +93,11 @@ at runtime.
 Progress is shown as a garden, not as streaks or points. Each word has its own plant, generated from a seed (the word itself). The plant grows with memory stability, flowers once the word is known, and leans a little when recall drops below 90%. Nothing ever dies.
 
 - **Small garden (Today):** an SVG strip of the plants.
-- **Walk-in garden (`#/garden`):** a retro 3D world in `web/src/garden/`.
+- **Walk-in garden (`#/garden`):** a 3D paper-craft diorama in `web/src/garden/`. Its look follows [docs/art-direction.md](docs/art-direction.md): one style with the app.
   - `world.ts` has the pure layout: raised beds per kind of word, collision, viewpoints.
   - `walker.ts` has the walker (#975): where you stand, where you look, and what you are doing (free, on a walk, on a glide, seated), with one `step` that moves it by a frame. It has no three.js and no clock, so unit tests walk it at a fixed frame length. The scene calls it each frame and draws the result.
   - `textures.ts` draws pixel-art textures procedurally and rasterises the SVG plants into atlases.
-  - `scene.ts` hosts the three.js scene (see Garden code, below). It renders billboard sprites into a low-resolution framebuffer, which CSS scales up with `image-rendering: pixelated`.
+  - `scene.ts` hosts the three.js scene (see Garden code, below). It draws camera-facing billboard sprites. The framebuffer's width comes from the detail level (`detail.ts`): about the screen's own resolution at normal, and coarser at low, for slow devices; CSS scales it to the screen.
   - The scene is a snapshot taken when the garden opens.
   - three.js loads only on this route.
 
