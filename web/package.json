@@ -12,6 +12,7 @@
     "e2e": "playwright test",
     "shots": "playwright test -c shots.config.ts",
     "look": "bun e2e/look.ts",
+    "live": "bun e2e/live.ts",
     "typecheck": "tsc -b",
     "perf": "bun perf/ui.ts",
     "sim:learners": "TZ=UTC bun src/sim/regenerate.ts",
