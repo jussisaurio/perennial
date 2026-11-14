@@ -5,7 +5,7 @@
 // words are never drawn in the world.
 
 import * as THREE from "three";
-import { DIARY_REACH, hillY, STONE_R, STOOL_R, STOOL_REACH, type Lookout } from "./lookout";
+import { hillY, STONE_R, STOOL_R, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
 import { still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
@@ -17,9 +17,9 @@ const BOOK = { w: 0.15, h: 0.035, d: 0.2 };
 const RIBBON = 0.15;
 
 export class LookoutThings {
-  private hill: Lookout;
+  readonly hill: Lookout;
   /** Each page in the diary, in the order it came, and whether it is still unread. */
-  private pages: { id: string; unread: boolean }[] = [];
+  pages: { id: string; unread: boolean }[] = [];
   private ribbon: THREE.Object3D | null = null;
   private book: { min: [number, number, number]; max: [number, number, number] } | null = null;
 
@@ -119,16 +119,6 @@ export class LookoutThings {
     if (!p) throw new Error(`no page "${id}" in the diary`);
     p.unread = false;
     this.showRibbon();
-  }
-
-  /** Near enough (and `slack` m more) to the stool to sit on it. Runs every frame: no allocation. */
-  byStool(x: number, z: number, slack: number): boolean {
-    return Math.hypot(this.hill.stool[0] - x, this.hill.stool[1] - z) < STOOL_REACH + slack;
-  }
-
-  /** Near enough (and `slack` m more) to the diary's stone to read it, while there is one. Runs every frame: no allocation. */
-  byDiary(x: number, z: number, slack: number): boolean {
-    return this.pages.length > 0 && Math.hypot(this.hill.stone[0] - x, this.hill.stone[1] - z) < DIARY_REACH + slack;
   }
 
   /** How far along a ray it first meets the diary, or Infinity. */

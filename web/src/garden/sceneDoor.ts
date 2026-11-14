@@ -18,10 +18,6 @@ import * as T from "./textures";
 export const DOOR = { h: 2.05, thick: 0.06, open: Math.PI / 2, swing: 1.4 };
 /** The keyhole, from the door's hinge (texture door(): its iron plate's middle). */
 const KEYHOLE = { x: -(26 / 32) * DOOR_HALF * 2, y: DOOR.h * (1 - 37 / 64) };
-/** Near enough to the door (metres from its middle) to be offered its button. */
-export const DOOR_REACH = 2.6;
-/** Near enough to the hidden key to be offered "Pick up the key" (m). */
-export const KEY_REACH = 2;
 /** Facing the key, for its late glint (#334): within this angle of straight ahead (its cosine, about 25°). */
 const FACING = Math.cos(0.44);
 /**
