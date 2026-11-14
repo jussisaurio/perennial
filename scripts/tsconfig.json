@@ -11,5 +11,5 @@
     "allowImportingTsExtensions": true,
     "noUnusedLocals": true
   },
-  "include": ["deck", "tts", "alarm", "autorun", "*.ts"]
+  "include": ["**/*.ts"]
 }
