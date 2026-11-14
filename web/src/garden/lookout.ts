@@ -81,7 +81,8 @@ export function lookoutAt(s: StileSpot): Lookout {
  */
 export function backWay(s: StileSpot, at: Lookout, open: boolean): BackWay {
   const half = STEP.w / 2;
-  if (!open) return { open: false, brambles: [s.x - half - 0.4, s.x + half + 0.4, s.z, s.z + BRAMBLES_IN] };
+  // The block goes as far back past the fence as into the garden (the thicket is there too), so its nearest way out is never back through the fence (#1025).
+  if (!open) return { open: false, brambles: [s.x - half - 0.4, s.x + half + 0.4, s.z - BRAMBLES_IN, s.z + BRAMBLES_IN] };
   const [dx, dz] = [-Math.sin(PATH_TURN), -Math.cos(PATH_TURN)];
   const start = STEP.out + WALKER;
   return {

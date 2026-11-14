@@ -15,7 +15,8 @@
     "typecheck": "tsc -b",
     "perf": "bun perf/ui.ts",
     "sim:learners": "TZ=UTC bun src/sim/regenerate.ts",
-    "story:sim": "bun src/sim/storySim.ts"
+    "story:sim": "bun src/sim/storySim.ts",
+    "fuzz:garden": "bun src/fuzz/run.ts"
   },
   "dependencies": {
     "@fontsource-variable/onest": "^5.3.1",

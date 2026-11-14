@@ -6,7 +6,7 @@
 import type { Gender, GardenWord } from "../deck/schema";
 import { dayNumber } from "../core/day";
 import { hash01 } from "../lib/seed";
-import { collideTrees, ORCHARD_MIN, orchardWell, WELL_R, type PlacedTree } from "./orchard";
+import { collideTrees, ORCHARD_MIN, orchardBench, orchardWell, WELL_R, type PlacedTree } from "./orchard";
 import type { DeckLang } from "../deck/langs";
 import type { PerLang } from "./nouns";
 import type { Stage } from "../ui/plant";
@@ -252,10 +252,23 @@ export function benchAt(l: Layout): { x: number; z: number } {
 /** The bench's size about its middle (m): half its length, and how far its back and its front are. */
 export const BENCH = { half: 0.68, back: 0.25, front: 0.22 } as const;
 
-/** The ground under the bench, which nothing walks through (#1011). */
-function benchBox(l: Layout): Rect {
-  const b = benchAt(l);
+/**
+ * The sundial at the bench's end (#364): its middle from the bench's, and half
+ * its stone top's width (m). sceneJokes.ts draws it there.
+ * @internal Exported for the garden fuzzer (src/fuzz).
+ */
+export const SUNDIAL = { dx: -1.05, half: 0.18 } as const;
+
+/** The ground under a bench whose seat faces +z, which nothing walks through (#1011): the pond's, and the orchard's (#1020). */
+function benchBox(b: { x: number; z: number }): Rect {
   return [b.x - BENCH.half, b.x + BENCH.half, b.z - BENCH.back, b.z + BENCH.front];
+}
+
+/** The bench by the pond and the sundial at its end, as one solid: a walker is wider than the gap between them (#1019). */
+function pondBenchBox(l: Layout): Rect {
+  const b = benchAt(l);
+  const [, x1, z0, z1] = benchBox(b);
+  return [b.x + SUNDIAL.dx - SUNDIAL.half, x1, z0, z1];
 }
 
 /** The sunflower, in the far right corner by the back fence. */
@@ -476,9 +489,9 @@ function outOfBox([x0, x1, z0, z1]: Rect, x: number, z: number, rad: number): { 
 }
 
 /**
- * Keep a walker of radius `rad` inside the fence and out of beds, the bench and the pond.
+ * Keep a walker of radius `rad` inside the fence and out of beds, the bench and its sundial, and the pond.
  * Once the door is open (#315), the doorway and the orchard behind it are open
- * too, and its well stands in the way (#335 S6). `back` is the ground past the
+ * too, and its well (#335 S6) and its bench stand in the way. `back` is the ground past the
  * back fence (#770): only the learner walks there, so the rest pass none.
  */
 export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen = false, back: BackWay | null = null): { x: number; z: number } {
@@ -490,14 +503,16 @@ export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen 
   const orchard: Rect = [o.x - o.w / 2 + rad, o.x + o.w / 2 - rad, near + rad, o.z + o.d / 2 - rad];
   ({ x, z } = nearestIn([garden, ...(doorOpen ? [doorway, orchard] : []), ...(back?.open ? backGround(back, rad) : [])], x, z));
   for (const bed of l.beds) ({ x, z } = outOfBox([bed.x - bed.w / 2, bed.x + bed.w / 2, bed.z - bed.d / 2, bed.z + bed.d / 2], x, z, rad));
-  ({ x, z } = outOfBox(benchBox(l), x, z, rad));
+  ({ x, z } = outOfBox(pondBenchBox(l), x, z, rad));
   if (back?.open === false) ({ x, z } = outOfBox(back.brambles, x, z, rad));
   if (back?.open) {
     ({ x, z } = onSteps(back.stile, x, z, rad));
     for (const t of back.things) ({ x, z } = outOf(t, x, z, rad));
   }
   ({ x, z } = outOf(l.pond, x, z, rad));
-  return doorOpen ? outOf(l.well, x, z, rad) : { x, z };
+  if (!doorOpen) return { x, z };
+  ({ x, z } = outOfBox(benchBox(orchardBench(l.orchard)), x, z, rad));
+  return outOf(l.well, x, z, rad);
 }
 
 /** Push a walker of radius `rad` out of a round thing (the pond, the well) the shortest way. */
@@ -616,10 +631,10 @@ export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number,
   const [h0, h1] = hedgeSpan(l);
   const rects: Rect[] = [
     ...l.beds.map((b): Rect => [b.x - b.w / 2, b.x + b.w / 2, b.z - b.d / 2, b.z + b.d / 2]),
-    benchBox(l),
-    // The hedge, either side of the door; across it too while the door is shut.
+    pondBenchBox(l),
+    // The hedge, either side of the door; across it too while the door is shut. The orchard's bench behind it.
     ...(doorOpen
-      ? [[h0, l.gate.x - DOOR_HALF, l.bounds.maxZ, near] as Rect, [l.gate.x + DOOR_HALF, h1, l.bounds.maxZ, near] as Rect]
+      ? [[h0, l.gate.x - DOOR_HALF, l.bounds.maxZ, near] as Rect, [l.gate.x + DOOR_HALF, h1, l.bounds.maxZ, near] as Rect, benchBox(orchardBench(l.orchard))]
       : [[h0, h1, l.bounds.maxZ, near] as Rect]),
     // The brambles over the shut stile (#770).
     ...(back?.open === false ? [back.brambles] : []),
