@@ -94,10 +94,10 @@ function speckle(seed: number, base: string, dots: [string, number][], size = 32
 }
 
 export function grass(): OffscreenCanvas {
-  const c = speckle(1, "#5fa44a", [
-    ["#4e9140", 110],
-    ["#72b85a", 80],
-    ["#8ccc6a", 18],
+  const c = speckle(1, "#6f9e5f", [
+    ["#64925a", 110],
+    ["#7aa868", 80],
+    ["#8db57a", 18],
   ]);
   const ctx = c.getContext("2d")!;
   const r = rng(7);
@@ -105,34 +105,34 @@ export function grass(): OffscreenCanvas {
   for (let i = 0; i < 9; i++) {
     const x = Math.floor(r() * 30);
     const y = Math.floor(r() * 30) + 1;
-    px(ctx, x, y, "#3f7d36");
-    px(ctx, x + 1, y - 1, "#3f7d36");
-    px(ctx, x + 2, y, "#3f7d36");
+    px(ctx, x, y, "#557f4c");
+    px(ctx, x + 1, y - 1, "#557f4c");
+    px(ctx, x + 2, y, "#557f4c");
   }
   for (let i = 0; i < 3; i++) {
     const x = Math.floor(r() * 30) + 1;
     const y = Math.floor(r() * 30) + 1;
-    px(ctx, x, y, "#fff8e7");
-    px(ctx, x + 1, y, "#fff8e7");
-    px(ctx, x, y + 1, "#fff8e7");
-    px(ctx, x + 1, y + 1, "#ffd25a");
+    px(ctx, x, y, "#fbf8f1");
+    px(ctx, x + 1, y, "#fbf8f1");
+    px(ctx, x, y + 1, "#fbf8f1");
+    px(ctx, x + 1, y + 1, "#eeb03c");
   }
   return c;
 }
 
 export function path(): OffscreenCanvas {
-  const c = speckle(2, "#d9bf8c", [
-    ["#cbb07c", 140],
-    ["#e6d1a3", 70],
-    ["#b29767", 30],
+  const c = speckle(2, "#d9ccb2", [
+    ["#cdbd9f", 140],
+    ["#e3d8c2", 70],
+    ["#bcab8b", 30],
   ]);
   const ctx = c.getContext("2d")!;
   const r = rng(8);
   for (let i = 0; i < 6; i++) {
     const x = Math.floor(r() * 30);
     const y = Math.floor(r() * 30);
-    px(ctx, x, y, "#a9a29a", 2, 1);
-    px(ctx, x, y + 1, "#8a847c", 2, 1);
+    px(ctx, x, y, "#b8afa2", 2, 1);
+    px(ctx, x, y + 1, "#9c9386", 2, 1);
   }
   return c;
 }
@@ -154,42 +154,42 @@ export function track(): OffscreenCanvas {
       // Toward the far end, more of it is grown over.
       if (r() < k * k * 0.9) continue;
       const v = r();
-      px(ctx, x, y, v < 0.55 ? "#c9ad78" : v < 0.85 ? "#b99d69" : "#d9c08e");
+      px(ctx, x, y, v < 0.55 ? "#cdbd9f" : v < 0.85 ? "#bfae8e" : "#d9ccb2");
     }
   }
   return c;
 }
 
 export function soil(): OffscreenCanvas {
-  return speckle(3, "#6b4630", [
-    ["#5a3a27", 160],
-    ["#7d5640", 90],
-    ["#3f281b", 40],
+  return speckle(3, "#67503b", [
+    ["#5a4532", 160],
+    ["#765e47", 90],
+    ["#45352a", 40],
   ]);
 }
 
 export function wood(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 16);
   const r = rng(4);
-  px(ctx, 0, 0, "#b07a45", 32, 16);
-  for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) if (r() < 0.18) px(ctx, x, y, r() < 0.5 ? "#9d6a3a" : "#bf8a53");
+  px(ctx, 0, 0, "#b38e5f", 32, 16);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) if (r() < 0.18) px(ctx, x, y, r() < 0.5 ? "#a5825a" : "#c09c6c");
   // Two planks with a dark seam, a highlight on top, and a knot.
-  px(ctx, 0, 7, "#6e4524", 32, 1);
-  px(ctx, 0, 15, "#6e4524", 32, 1);
-  px(ctx, 0, 0, "#cf9c66", 32, 1);
-  px(ctx, 0, 8, "#cf9c66", 32, 1);
-  px(ctx, 11, 3, "#7c4f2a", 2, 2);
-  px(ctx, 24, 11, "#7c4f2a", 2, 2);
+  px(ctx, 0, 7, "#7d6143", 32, 1);
+  px(ctx, 0, 15, "#7d6143", 32, 1);
+  px(ctx, 0, 0, "#cfb084", 32, 1);
+  px(ctx, 0, 8, "#cfb084", 32, 1);
+  px(ctx, 11, 3, "#866848", 2, 2);
+  px(ctx, 24, 11, "#866848", 2, 2);
   return c;
 }
 
 /** A bramble thicket's leaves (#749): dark, ragged green, crossed by red-purple canes with pale thorns, and a few blackberries. Wilder and darker than the clipped hedge. */
 export function bramble(): OffscreenCanvas {
-  const c = speckle(749, "#2c4a26", [
-    ["#22391e", 170],
-    ["#3a5e2f", 120],
-    ["#4d7238", 30],
-    ["#16260f", 60],
+  const c = speckle(749, "#33462f", [
+    ["#29392a", 170],
+    ["#41583a", 120],
+    ["#56704a", 30],
+    ["#1d281b", 60],
   ]);
   const ctx = c.getContext("2d")!;
   const r = rng(750);
@@ -198,8 +198,8 @@ export function bramble(): OffscreenCanvas {
     let [x, y] = [Math.floor(r() * 32), Math.floor(r() * 32)];
     const dx = r() < 0.5 ? 1 : -1;
     for (let k = 0; k < 14; k++) {
-      px(ctx, (x + 32) % 32, (y + 32) % 32, "#6a2a3c");
-      if (k % 4 === 2) px(ctx, (x + 32) % 32, (y + 31) % 32, "#e6d6a8");
+      px(ctx, (x + 32) % 32, (y + 32) % 32, "#6b3b49");
+      if (k % 4 === 2) px(ctx, (x + 32) % 32, (y + 31) % 32, "#e7dfd0");
       x += dx;
       if (r() < 0.4) y += 1;
     }
@@ -214,9 +214,9 @@ export function bramble(): OffscreenCanvas {
 
 /** A bramble cane (#749): dark red-purple. */
 export function cane(): OffscreenCanvas {
-  return speckle(751, "#5a2234", [
-    ["#7a3446", 3],
-    ["#3e1624", 3],
+  return speckle(751, "#5e3442", [
+    ["#7a4a57", 3],
+    ["#432531", 3],
   ], 4);
 }
 
@@ -224,24 +224,24 @@ export function picket(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 32);
   for (let i = 0; i < 4; i++) {
     const x = i * 8 + 2;
-    px(ctx, x, 6, "#f4ecdc", 4, 26);
-    px(ctx, x + 1, 4, "#f4ecdc", 2, 2);
-    px(ctx, x + 3, 6, "#d6cbb5", 1, 26);
+    px(ctx, x, 6, "#f3eee4", 4, 26);
+    px(ctx, x + 1, 4, "#f3eee4", 2, 2);
+    px(ctx, x + 3, 6, "#d8cfbf", 1, 26);
   }
-  px(ctx, 0, 11, "#e9dfca", 32, 3);
-  px(ctx, 0, 24, "#e9dfca", 32, 3);
-  px(ctx, 0, 14, "#c4b89f", 32, 1);
-  px(ctx, 0, 27, "#c4b89f", 32, 1);
+  px(ctx, 0, 11, "#e7dfd0", 32, 3);
+  px(ctx, 0, 24, "#e7dfd0", 32, 3);
+  px(ctx, 0, 14, "#c8bda9", 32, 1);
+  px(ctx, 0, 27, "#c8bda9", 32, 1);
   return c;
 }
 
 /** Thick hedge leaves (#315): dense and dark, with no gaps to see through. */
 export function hedge(): OffscreenCanvas {
-  const c = speckle(11, "#2f6b2f", [
-    ["#245a27", 150],
-    ["#3d7f37", 110],
-    ["#4f9442", 40],
-    ["#1b4620", 50],
+  const c = speckle(11, "#3e653a", [
+    ["#345834", 150],
+    ["#4a7444", 110],
+    ["#5c8752", 40],
+    ["#29452a", 50],
   ]);
   const ctx = c.getContext("2d")!;
   const r = rng(12);
@@ -249,8 +249,8 @@ export function hedge(): OffscreenCanvas {
   for (let i = 0; i < 14; i++) {
     const x = Math.floor(r() * 30);
     const y = Math.floor(r() * 30);
-    px(ctx, x, y, "#5aa04a", 2, 1);
-    px(ctx, x + 1, y + 1, "#3d7f37");
+    px(ctx, x, y, "#6a955a", 2, 1);
+    px(ctx, x + 1, y + 1, "#4a7444");
   }
   return c;
 }
@@ -259,11 +259,11 @@ export function hedge(): OffscreenCanvas {
 export function door(): OffscreenCanvas {
   const [c, ctx] = canvas(32, 64);
   const r = rng(13);
-  px(ctx, 0, 0, "#8a5a32", 32, 64);
-  for (let y = 0; y < 64; y++) for (let x = 0; x < 32; x++) if (r() < 0.16) px(ctx, x, y, r() < 0.5 ? "#7a4e2a" : "#9c6a3d");
+  px(ctx, 0, 0, "#8a6a4a", 32, 64);
+  for (let y = 0; y < 64; y++) for (let x = 0; x < 32; x++) if (r() < 0.16) px(ctx, x, y, r() < 0.5 ? "#7b5d41" : "#977756");
   // Upright planks with dark seams.
-  for (const x of [0, 8, 16, 24]) px(ctx, x, 0, "#5a3820", 1, 64);
-  px(ctx, 31, 0, "#5a3820", 1, 64);
+  for (const x of [0, 8, 16, 24]) px(ctx, x, 0, "#5c4632", 1, 64);
+  px(ctx, 31, 0, "#5c4632", 1, 64);
   // Iron bands with rivets.
   for (const y of [10, 50]) {
     px(ctx, 0, y, "#3b3a3a", 32, 3);
@@ -296,9 +296,9 @@ export interface Sky {
 }
 
 export const SKIES: Record<"day" | "dusk" | "night", Sky> = {
-  day: { top: "#5aa8f0", mid: "#8cc8f7", horizon: "#d4efff", fog: "#cbe8f6", tint: [1, 1, 1] },
-  dusk: { top: "#4b4f9c", mid: "#b77aa8", horizon: "#ffc28f", fog: "#e9b7a0", tint: [1, 0.86, 0.8] },
-  night: { top: "#070b26", mid: "#18204d", horizon: "#33407a", fog: "#1d2550", tint: [0.42, 0.5, 0.78] },
+  day: { top: "#86a9cc", mid: "#b2c8df", horizon: "#e8eae8", fog: "#dde3e2", tint: [1, 1, 1] },
+  dusk: { top: "#6c6a92", mid: "#c3909a", horizon: "#f0c6a2", fog: "#e6c0a8", tint: [1, 0.88, 0.8] },
+  night: { top: "#0f1318", mid: "#1a212b", horizon: "#2b3542", fog: "#1c232d", tint: [0.44, 0.5, 0.62] },
 };
 
 /** A banded sky gradient for the inside of the sky dome, retro style: no smooth blend. */
@@ -316,7 +316,7 @@ export function sky(s: Sky, stars: boolean): OffscreenCanvas {
   }
   if (stars) {
     const r = rng(11);
-    for (let i = 0; i < 70; i++) px(ctx, Math.floor(r() * 64), Math.floor(r() * 34), r() < 0.2 ? "#fff6c8" : "#c9d3ff");
+    for (let i = 0; i < 70; i++) px(ctx, Math.floor(r() * 64), Math.floor(r() * 34), r() < 0.2 ? "#fff3cf" : "#d7e3ef");
   }
   return c;
 }
@@ -353,12 +353,12 @@ export function hills(night: boolean): OffscreenCanvas {
   // Colour and shade for each ridge, in RIDGES order.
   const colors: [string, string][] = night
     ? [
-        ["#2a3566", "#24305d"],
-        ["#1c2a4c", "#182444"],
+        ["#28313c", "#252d37"],
+        ["#1d242d", "#1a2029"],
       ]
     : [
-        ["#9ccfa0", "#8fc595"],
-        ["#6fae6a", "#64a160"],
+        ["#b0cb99", "#a8c392"],
+        ["#77a363", "#6f9a5c"],
       ];
   RIDGES.forEach(({ base, seed }, i) => {
     const [color, shade] = colors[i];
@@ -393,16 +393,16 @@ export function trees(): OffscreenCanvas {
   const [c, ctx] = canvas(256, 128);
   const blob = (r: () => number, cx: number, cy: number, rad: number, colors: string[]) => leafBlob(ctx, r, cx, cy, rad, colors);
   const trunk = (cx: number, top: number, w: number) => {
-    px(ctx, cx - w / 2, top, "#7a5233", w, 128 - top);
-    px(ctx, cx - w / 2, top, "#5c3b22", 1, 128 - top);
-    px(ctx, cx + w / 2 - 1, top, "#946540", 1, 128 - top);
+    px(ctx, cx - w / 2, top, "#7f644a", w, 128 - top);
+    px(ctx, cx - w / 2, top, "#5f4a37", 1, 128 - top);
+    px(ctx, cx + w / 2 - 1, top, "#97795a", 1, 128 - top);
   };
   // 0: round oak
   let r = rng(21);
   trunk(32, 70, 6);
-  blob(r, 22, 58, 14, ["#7cc35e", "#58a145", "#3d7a35"]);
-  blob(r, 42, 56, 15, ["#7cc35e", "#58a145", "#3d7a35"]);
-  blob(r, 32, 40, 17, ["#7cc35e", "#58a145", "#3d7a35"]);
+  blob(r, 22, 58, 14, ["#93b775", "#6e9a5c", "#4f7845"]);
+  blob(r, 42, 56, 15, ["#93b775", "#6e9a5c", "#4f7845"]);
+  blob(r, 32, 40, 17, ["#93b775", "#6e9a5c", "#4f7845"]);
   // 1: pine
   r = rng(22);
   trunk(96, 100, 4);
@@ -411,20 +411,20 @@ export function trees(): OffscreenCanvas {
     const w = 7 + i * 5;
     for (let yy = 0; yy < 20; yy++) {
       const half = Math.floor((yy / 20) * w);
-      for (let x = -half; x <= half; x++) px(ctx, 96 + x, y + yy, x < -half / 3 ? "#3f8a5a" : x > half / 2 ? "#245a3d" : r() < 0.1 ? "#2f7049" : "#2f7a4d");
+      for (let x = -half; x <= half; x++) px(ctx, 96 + x, y + yy, x < -half / 3 ? "#5a866a" : x > half / 2 ? "#36564a" : r() < 0.1 ? "#436a56" : "#47715a");
     }
   }
   // 2: blossom tree
   r = rng(23);
   trunk(160, 74, 6);
-  blob(r, 148, 58, 14, ["#ffd1e3", "#f4a4c4", "#d97aa3"]);
-  blob(r, 172, 58, 13, ["#ffd1e3", "#f4a4c4", "#d97aa3"]);
-  blob(r, 160, 42, 16, ["#ffd1e3", "#f4a4c4", "#d97aa3"]);
+  blob(r, 148, 58, 14, ["#f3d3dc", "#e2a8ba", "#c9849a"]);
+  blob(r, 172, 58, 13, ["#f3d3dc", "#e2a8ba", "#c9849a"]);
+  blob(r, 160, 42, 16, ["#f3d3dc", "#e2a8ba", "#c9849a"]);
   // 3: bush with berries
   r = rng(24);
-  blob(r, 214, 112, 14, ["#6fb556", "#4f9441", "#367233"]);
-  blob(r, 236, 114, 12, ["#6fb556", "#4f9441", "#367233"]);
-  for (let i = 0; i < 9; i++) px(ctx, 204 + Math.floor(r() * 40), 104 + Math.floor(r() * 16), "#e2474b");
+  blob(r, 214, 112, 14, ["#86ad6c", "#66904f", "#4b723f"]);
+  blob(r, 236, 114, 12, ["#86ad6c", "#66904f", "#4b723f"]);
+  for (let i = 0; i < 9; i++) px(ctx, 204 + Math.floor(r() * 40), 104 + Math.floor(r() * 16), "#dc5636");
   return c;
 }
 
@@ -507,7 +507,7 @@ export function cloud(): OffscreenCanvas {
   ];
   for (const [cx, cy, rad] of puffs)
     for (let y = -rad; y <= rad; y++)
-      for (let x = -rad; x <= rad; x++) if (Math.hypot(x, y) + r() * 1.2 <= rad && cy + y < 30) px(ctx, cx + x, cy + y, y > rad * 0.35 ? "#dfe9f5" : "#ffffff");
+      for (let x = -rad; x <= rad; x++) if (Math.hypot(x, y) + r() * 1.2 <= rad && cy + y < 30) px(ctx, cx + x, cy + y, y > rad * 0.35 ? "#e6e3dc" : "#fbf8f1");
   return c;
 }
 
@@ -539,11 +539,11 @@ function board(w: number, h: number): [OffscreenCanvas, OffscreenCanvasRendering
 
 /** board()'s wood at (x, y), and the ink set for its text. */
 function plank(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-  px(ctx, x, y, "#7a4f2c", w, h);
-  px(ctx, x + 2, y + 2, "#c99257", w - 4, h - 4);
-  px(ctx, x + 2, y + 2, "#ddb07a", w - 4, 2);
-  px(ctx, x + 2, y + h / 2, "#b8834b", w - 4, 1);
-  ctx.fillStyle = "#3b2414";
+  px(ctx, x, y, "#7d6143", w, h);
+  px(ctx, x + 2, y + 2, "#c4a273", w - 4, h - 4);
+  px(ctx, x + 2, y + 2, "#d6b98c", w - 4, 2);
+  px(ctx, x + 2, y + h / 2, "#b08f62", w - 4, 1);
+  ctx.fillStyle = "#3b2a1c";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 }
@@ -581,12 +581,12 @@ function crispText(ctx: OffscreenCanvasRenderingContext2D, w: number, h: number)
     const dark = img.data[i] < 140;
     if (dark) {
       img.data[i] = 0x3b;
-      img.data[i + 1] = 0x24;
-      img.data[i + 2] = 0x14;
+      img.data[i + 1] = 0x2a;
+      img.data[i + 2] = 0x1c;
     } else if (img.data[i] < 190) {
-      img.data[i] = 0xc9;
-      img.data[i + 1] = 0x92;
-      img.data[i + 2] = 0x57;
+      img.data[i] = 0xc4;
+      img.data[i + 1] = 0xa2;
+      img.data[i + 2] = 0x73;
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -621,13 +621,13 @@ export function notice(text: string): OffscreenCanvas {
 }
 
 export function water(): OffscreenCanvas {
-  const c = speckle(5, "#4f9fd6", [
-    ["#62b2e4", 90],
-    ["#3e88c0", 70],
+  const c = speckle(5, "#779ec6", [
+    ["#86abd0", 90],
+    ["#6890ba", 70],
   ]);
   const ctx = c.getContext("2d")!;
   const r = rng(9);
-  for (let i = 0; i < 6; i++) px(ctx, Math.floor(r() * 28), Math.floor(r() * 30), "#bfe6ff", 3, 1);
+  for (let i = 0; i < 6; i++) px(ctx, Math.floor(r() * 28), Math.floor(r() * 30), "#d7e3ef", 3, 1);
   return c;
 }
 
@@ -637,9 +637,9 @@ export function lilypad(): OffscreenCanvas {
     for (let x = 0; x < 16; x++) {
       const d = Math.hypot(x - 7.5, y - 7.5);
       const notch = x > 7 && Math.abs(y - 7.5) < (x - 7) * 0.5;
-      if (d < 7 && !notch) px(ctx, x, y, d > 5.5 ? "#3f8f3a" : "#5fb24c");
+      if (d < 7 && !notch) px(ctx, x, y, d > 5.5 ? "#4c7f47" : "#6f9a5c");
     }
-  px(ctx, 5, 5, "#ff9cc4", 2, 2);
+  px(ctx, 5, 5, "#e9a3bb", 2, 2);
   return c;
 }
 
@@ -1069,8 +1069,8 @@ export function glowTexture(): THREE.CanvasTexture<OffscreenCanvas> {
 export function farHouse(night: boolean): OffscreenCanvas {
   const rows = ["........C.......", ".....RR.C.......", "...RRRRRR.......", ".RRRRRRRRRR...K.", "RRRRRRRRRRRR..G.", ".WWWWWWWWWW...P.", ".WWDWWWOWWW...P.", ".WWDWWWOWWW...P.", ".WWDWWWWWWW...P."];
   const colors: Record<string, string> = night
-    ? { C: "#10172e", R: "#0e1428", W: "#151d38", D: "#0b1022", O: "#0b1022", K: "#0b1022", G: "#151d38", P: "#0b1022" }
-    : { C: "#7f9f86", R: "#7a9a82", W: "#a3c0a2", D: "#8aab8c", O: "#8aab8c", K: "#7a9a82", G: "#a3c0a2", P: "#7f9f86" };
+    ? { C: "#141a22", R: "#11161d", W: "#1a212b", D: "#0d1116", O: "#0d1116", K: "#0d1116", G: "#1a212b", P: "#0d1116" }
+    : { C: "#8ea68a", R: "#89a185", W: "#a9bf9c", D: "#94ac8f", O: "#94ac8f", K: "#89a185", G: "#a9bf9c", P: "#8ea68a" };
   const [c, ctx] = canvas(16, 9);
   rows.forEach((r, y) => [...r].forEach((ch, x) => ch !== "." && px(ctx, x, y, colors[ch])));
   return c;
@@ -1120,7 +1120,7 @@ export function moon(phase: number): OffscreenCanvas {
       // New and full by name: the disc's edge pixels fall either side of the line by rounding.
       const lit = phase === FULL_MOON || (phase !== 0 && (waxing ? nx > k * half : nx < -k * half));
       const crater = craters.some(([cx, cy, w, h]) => x >= cx && x < cx + w && y >= cy && y < cy + h);
-      px(ctx, x, y, lit ? (d > 9 ? "#d9d2b8" : crater ? "#cfc8ac" : "#fff6d8") : d > 9 ? "#3d477a" : "#2b3360");
+      px(ctx, x, y, lit ? (d > 9 ? "#d9d2b8" : crater ? "#cfc8ac" : "#fff6d8") : d > 9 ? "#3a4250" : "#2a313c");
     }
   return c;
 }
