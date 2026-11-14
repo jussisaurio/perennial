@@ -383,7 +383,7 @@ Every merge to `main` deploys to production by itself: Railway builds `main` aft
 - **The live check failed** after a deploy. This stays until production runs another release.
 - The alarm could not read `/health`.
 
-When the state changes, the alarm edits the issue and adds a comment. When none is true, it closes the issue. To see what it would say, without changing anything: `GITHUB_REPOSITORY=jussisaurio/perennial bun scripts/alarm/run.ts --print`. If the alarm's own run fails, GitHub emails the owner.
+When the state changes, the alarm edits the issue and adds a comment. When none is true, it closes the issue. To see what it would say, without changing anything: `bun scripts/alarm/run.ts --print`. If the alarm's own run fails, GitHub emails the owner.
 
 Rollback:
 - **Fastest:** Railway dashboard → service `perennial` → Deployments → the last good one → **Redeploy**. (The CLI's `railway redeploy` only repeats the latest deployment.)
