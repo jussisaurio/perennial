@@ -40,7 +40,7 @@ function moved(pieces: readonly Piece[], dx: number, dy: number): Piece[] {
   return pieces.map((p) => ({ ...p, d: mapPoints(p.d, (x, y) => [x + dx, y + dy]) }));
 }
 /** An ellipse as cubic curves, so it moves like any other path. */
-function oval(cx: number, cy: number, rx: number, ry = rx): string {
+export function oval(cx: number, cy: number, rx: number, ry = rx): string {
   const [kx, ky] = [rx * 0.5523, ry * 0.5523];
   const p = (x: number, y: number) => `${n(x)} ${n(y)}`;
   return `M${p(cx - rx, cy)} C${p(cx - rx, cy - ky)} ${p(cx - kx, cy - ry)} ${p(cx, cy - ry)} C${p(cx + kx, cy - ry)} ${p(cx + rx, cy - ky)} ${p(cx + rx, cy)} C${p(cx + rx, cy + ky)} ${p(cx + kx, cy + ry)} ${p(cx, cy + ry)} C${p(cx - kx, cy + ry)} ${p(cx - rx, cy + ky)} ${p(cx - rx, cy)} Z`;
@@ -48,9 +48,9 @@ function oval(cx: number, cy: number, rx: number, ry = rx): string {
 /** A piece of `color` with a darker cut `edge`. */
 const cut = (d: string, color: string, edge: string): Piece => ({ d, fill: color, line: { color: edge, width: EDGE } });
 /** A piece of `color` with no edge: a mark on another piece. */
-const flat = (d: string, color: string): Piece => ({ d, fill: color });
+export const flat = (d: string, color: string): Piece => ({ d, fill: color });
 /** A drawn line. */
-const line = (d: string, color: string, width: number): Piece => ({ d, line: { color, width } });
+export const line = (d: string, color: string, width: number): Piece => ({ d, line: { color, width } });
 /** A rounded strip of `color` with a cut edge (a tail, a neck), along `d`. */
 const tube = (d: string, color: string, edge: string, width: number): Piece[] => [line(d, edge, width + 2 * EDGE), line(d, color, width)];
 /** A round dark eye with a speck of light. */

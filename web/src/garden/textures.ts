@@ -1,20 +1,15 @@
-// Small procedural textures, drawn on canvases. The sky, hills, clouds and far
-// trees are filtered smooth, as paper cut-outs (docs/art-direction.md, #1051),
-// and so are the ground and the props redrawn as paper (paperTexture and
-// cutoutTexture, #1091); the rest still show their pixels (pixelTexture)
-// until they are redrawn.
+// Small procedural textures, drawn on canvases as paper cut-outs (docs/art-direction.md,
+// #1051, #1091): flat colour, crisp edges, filtered smooth (paperTexture, cutoutTexture).
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import type { PlacedPlant } from "./world";
 export { VIEW_H } from "./plantCanvas";
 import * as Art from "./visitorArt";
-import { runs } from "./pixelArt";
-import * as CarryArt from "./carryArt";
-import * as ToyArt from "./toyArt";
-import { CELL_H_PX, CELL_W, FRUIT_KINDS, fruitArt, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
+import { PEBBLE } from "./carryArt";
+import { CELL_H_PX, CELL_W, FRUIT_KINDS, LOOKS, TREE_SHAPES, TRELLIS, type Fruit } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
-import { LEAF_PILE } from "./walkInto";
+import { AUTUMN } from "./walkInto";
 import type { SpriteDone, SpriteJob } from "./spriteWorker";
 import type { FarPixels, PaintJob, Pixels } from "./paintWorker";
 import type { TimeOfDay } from "./game";
@@ -29,15 +24,6 @@ function canvas(w: number, h: number): [OffscreenCanvas, OffscreenCanvasRenderin
   const ctx = c.getContext("2d")!;
   ctx.imageSmoothingEnabled = false;
   return [c, ctx];
-}
-
-export function pixelTexture(c: OffscreenCanvas, repeat = false): THREE.CanvasTexture<OffscreenCanvas> {
-  const t = new THREE.CanvasTexture(c);
-  t.magFilter = THREE.NearestFilter;
-  t.minFilter = THREE.NearestFilter;
-  t.generateMipmaps = false;
-  if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  return t;
 }
 
 /**
@@ -682,45 +668,51 @@ export function orchard(): OffscreenCanvas {
           const [x, y] = spot();
           oval(ctx, s.blossom[i % s.blossom.length], x, y, i % 3 ? 1.3 : 1.8);
         }
-      if (look === "fruit") {
-        const f = s.fruit;
-        const [light, dark] = f.color;
-        for (let i = 0; i < f.count; i++) {
+      if (look === "fruit")
+        for (let i = 0; i < s.fruit.count; i++) {
           const [x, y] = spot();
-          if (f.shape === "round" || f.shape === "small") {
-            const rad = f.shape === "round" ? 1.7 : 1.1;
-            oval(ctx, dark, x, y, rad);
-            oval(ctx, light, x - rad * 0.2, y - rad * 0.2, rad * 0.7);
-          } else if (f.shape === "pair") {
-            ctx.strokeStyle = "#4e7a2a";
-            ctx.lineWidth = 0.6;
-            ctx.beginPath();
-            ctx.moveTo(x - 1, y + 1);
-            ctx.lineTo(x + 0.5, y - 2);
-            ctx.lineTo(x + 2.5, y + 1.5);
-            ctx.stroke();
-            oval(ctx, dark, x - 1, y + 1.5, 1.2);
-            oval(ctx, light, x + 2.5, y + 2, 1.2);
-          } else if (f.shape === "drop") {
-            oval(ctx, light, x, y + 1.6, 1.6);
-            oval(ctx, light, x, y, 1);
-            oval(ctx, dark, x + 0.6, y + 2.2, 0.8);
-          } else if (f.shape === "bunch") {
-            // Grapes, three in a row, then two, then one.
-            for (const [gx, gy] of [[-2, 0], [0, 0], [2, 0], [-1, 1.8], [1, 1.8], [0, 3.6]]) oval(ctx, (gx + gy) % 2 ? dark : light, x + gx, y + gy, 1.1);
-          } else {
-            // The plain tree's nest, with one pale egg in it.
-            oval(ctx, "#f4efe2", x - 1, y - 0.6, 1.2, 1);
-            oval(ctx, dark, x, y, 5.5, 2.2, "bottom");
-            px(ctx, x - 5.5, y - 0.6, light, 11, 1.2);
-          }
+          fruit(ctx, s.fruit, x, y);
         }
-      }
       ctx.restore();
     }),
   );
   return c;
 }
+
+/** One of a tree's fruit (or the plain tree's nest) at (x, y), in the orchard's units: on its tree, and fallen (fruitAtlas). */
+function fruit(ctx: OffscreenCanvasRenderingContext2D, f: Fruit, x: number, y: number) {
+  const [light, dark] = f.color;
+  if (f.shape === "round" || f.shape === "small") {
+    const rad = f.shape === "round" ? 1.7 : 1.1;
+    oval(ctx, dark, x, y, rad);
+    oval(ctx, light, x - rad * 0.2, y - rad * 0.2, rad * 0.7);
+  } else if (f.shape === "pair") {
+    ctx.strokeStyle = "#4e7a2a";
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(x - 1, y + 1);
+    ctx.lineTo(x + 0.5, y - 2);
+    ctx.lineTo(x + 2.5, y + 1.5);
+    ctx.stroke();
+    oval(ctx, dark, x - 1, y + 1.5, 1.2);
+    oval(ctx, light, x + 2.5, y + 2, 1.2);
+  } else if (f.shape === "drop") {
+    oval(ctx, light, x, y + 1.6, 1.6);
+    oval(ctx, light, x, y, 1);
+    oval(ctx, dark, x + 0.6, y + 2.2, 0.8);
+  } else if (f.shape === "bunch") {
+    // Grapes, three in a row, then two, then one.
+    for (const [gx, gy] of [[-2, 0], [0, 0], [2, 0], [-1, 1.8], [1, 1.8], [0, 3.6]]) oval(ctx, (gx + gy) % 2 ? dark : light, x + gx, y + gy, 1.1);
+  } else {
+    // The plain tree's nest, with one pale egg in it.
+    oval(ctx, "#f4efe2", x - 1, y - 0.6, 1.2, 1);
+    oval(ctx, dark, x, y, 5.5, 2.2, "bottom");
+    px(ctx, x - 5.5, y - 0.6, light, 11, 1.2);
+  }
+}
+
+/** How far each fruit() shape reaches below its (x, y): a fallen one lies on its lowest point. */
+const FRUIT_FOOT: Record<Fruit["shape"], number> = { round: 1.7, small: 1.1, pair: 3.2, drop: 3.2, bunch: 4.7, nest: 2.2 };
 
 /** Texels to each of the first cloud drawing's: the puffs below are in its texels. */
 const CLOUD_FINE = 4;
@@ -1449,8 +1441,8 @@ export function snoreZ(): OffscreenCanvas {
 }
 
 /**
- * A soft round glow for additive light pools and halos. Smooth and filtered,
- * unlike the pixel textures: a lantern's halo fills much of the view up close,
+ * A soft round glow for additive light pools and halos. Smooth and filtered:
+ * a lantern's halo fills much of the view up close,
  * and there hard rings and dithered holes showed as big see-through blocks
  * (#858). The small framebuffer, scaled up with hard pixels, still pixelates it.
  */
@@ -1510,14 +1502,16 @@ export function farLight(): OffscreenCanvas {
   return c;
 }
 
+/** Texels to each of the first 32×32 sun and moon drawings' units: about one to a screen pixel, as big as they show. */
+const SKY_DISC_FINE = 2;
+
+/** The sun (#1091): a flat disc in a ring a shade deeper, in a 32×32 drawing. */
 export function sun(kind: "day" | "dusk"): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 32);
+  const [c, ctx] = canvas(32 * SKY_DISC_FINE, 32 * SKY_DISC_FINE);
+  ctx.scale(SKY_DISC_FINE, SKY_DISC_FINE);
   const [core, rim] = kind === "dusk" ? ["#ffd28a", "#ff9b5e"] : ["#fffbe6", "#ffe58a"];
-  for (let y = 0; y < 32; y++)
-    for (let x = 0; x < 32; x++) {
-      const d = Math.hypot(x - 15.5, y - 15.5);
-      if (d < 11) px(ctx, x, y, d > 9 ? rim : core);
-    }
+  oval(ctx, rim, 16, 16, 11);
+  oval(ctx, core, 16, 16, 9);
   return c;
 }
 
@@ -1527,85 +1521,119 @@ export function sun(kind: "day" | "dusk"): OffscreenCanvas {
  * The dark part is a faint disc, so even a new moon is there to tap.
  */
 export function moon(phase: number): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 32);
-  // Where light meets dark on each row, as a share of the row's half width.
-  const k = Math.cos((2 * Math.PI * phase) / MOON_PHASES);
-  const waxing = phase <= FULL_MOON;
-  const craters = [
-    [10, 14, 2, 2],
-    [13, 21, 3, 2],
-    [18, 10, 2, 1],
-  ];
-  for (let y = 0; y < 32; y++)
-    for (let x = 0; x < 32; x++) {
-      const d = Math.hypot(x - 15.5, y - 15.5);
-      if (d >= 11) continue;
-      const nx = (x - 15.5) / 11;
-      const half = Math.sqrt(Math.max(0, 1 - ((y - 15.5) / 11) ** 2));
-      // New and full by name: the disc's edge pixels fall either side of the line by rounding.
-      const lit = phase === FULL_MOON || (phase !== 0 && (waxing ? nx > k * half : nx < -k * half));
-      const crater = craters.some(([cx, cy, w, h]) => x >= cx && x < cx + w && y >= cy && y < cy + h);
-      px(ctx, x, y, lit ? (d > 9 ? "#d9d2b8" : crater ? "#cfc8ac" : "#fff6d8") : d > 9 ? "#3a4250" : "#2a313c");
-    }
+  const [c, ctx] = canvas(32 * SKY_DISC_FINE, 32 * SKY_DISC_FINE);
+  ctx.scale(SKY_DISC_FINE, SKY_DISC_FINE);
+  oval(ctx, "#3a4250", 16, 16, 11);
+  oval(ctx, "#2a313c", 16, 16, 9);
+  if (phase === 0) return c;
+  if (phase !== FULL_MOON) {
+    // The lit part: the bright limb, then back along the line where light meets dark, a half ellipse as wide as
+    // `k` of the disc's half width, bowed toward the limb for a crescent (k > 0) and away from it past half.
+    const k = Math.cos((2 * Math.PI * phase) / MOON_PHASES);
+    const waning = phase > FULL_MOON;
+    ctx.beginPath();
+    ctx.arc(16, 16, 11, -Math.PI / 2, Math.PI / 2, waning);
+    ctx.ellipse(16, 16, Math.abs(k) * 11, 11, 0, Math.PI / 2, -Math.PI / 2, k > 0 !== waning);
+    ctx.clip();
+  }
+  oval(ctx, "#d9d2b8", 16, 16, 11);
+  oval(ctx, "#fff6d8", 16, 16, 9);
+  for (const [x, y, rx, ry] of [
+    [11, 15, 1.1, 1],
+    [14.5, 22, 1.5, 1.1],
+    [19, 10.6, 1, 0.7],
+  ])
+    oval(ctx, "#cfc8ac", x, y, rx, ry);
   return c;
 }
 
+/** A leaf or petal from its base to its tip, `w` wide in the middle and pointed at both ends. */
+function pointed(ctx: OffscreenCanvasRenderingContext2D, color: string, bx: number, by: number, tx: number, ty: number, w: number) {
+  const [mx, my] = [(bx + tx) / 2, (by + ty) / 2];
+  const len = Math.hypot(tx - bx, ty - by);
+  // Each side's control point is a full width out: a quadratic curve reaches half of it.
+  const [nx, ny] = [((by - ty) / len) * w, ((tx - bx) / len) * w];
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.quadraticCurveTo(mx + nx, my + ny, tx, ty);
+  ctx.quadraticCurveTo(mx - nx, my - ny, bx, by);
+  ctx.fill();
+}
+
+/** Texels to each of the first sunflower drawing's units. */
+const SUNFLOWER_FINE = 8;
+
 /**
- * The sunflower, two frames of 32×64 side by side: its face (left, a small
- * calm smile) and the back of its head (right). No text.
+ * The sunflower (#1091), two frames of 32×64 units side by side: its face (left, a small calm smile) and the back
+ * of its head (right). No text.
  */
 export function sunflower(): OffscreenCanvas {
-  const [c, ctx] = canvas(64, 64);
+  const [c, ctx] = canvas(64 * SUNFLOWER_FINE, 64 * SUNFLOWER_FINE);
+  ctx.scale(SUNFLOWER_FINE, SUNFLOWER_FINE);
   for (const [ox, face] of [
     [0, true],
     [32, false],
   ] as const) {
-    const r = rng(51); // the same ragged petals on both sides
-    // Stem and two leaves.
-    px(ctx, ox + 15, 22, "#3f7d36", 2, 42);
-    px(ctx, ox + 16, 22, "#4e9140", 1, 42);
-    for (let i = 0; i < 6; i++) {
-      const col = i < 4 ? "#5fa44a" : "#4e9140";
-      px(ctx, ox + 13 - i, 46 - Math.floor(i / 2), col, 2, 2);
-      px(ctx, ox + 17 + i, 38 - Math.floor(i / 2), col, 2, 2);
+    ctx.save();
+    ctx.translate(ox, 0);
+    const r = rng(51); // the same petals on both sides
+    // Stem, its right side a shade lighter, and two leaves with a darker middle line.
+    px(ctx, 15, 20, "#3f7d36", 2, 44);
+    px(ctx, 16, 20, "#4e9140", 1, 44);
+    ctx.strokeStyle = "#4e9140";
+    ctx.lineWidth = 0.35;
+    for (const [bx, by, tx, ty] of [
+      [15.2, 47, 7.5, 42.5],
+      [16.8, 39, 24.5, 34.5],
+    ]) {
+      pointed(ctx, "#5fa44a", bx, by, tx, ty, 3.2);
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(bx + (tx - bx) * 0.75, by + (ty - by) * 0.75);
+      ctx.stroke();
     }
-    // Petals: a ragged ring, lit from the top left.
-    const cx = ox + 15.5;
-    const cy = 12.5;
-    for (let y = 0; y < 26; y++)
-      for (let x = ox; x < ox + 32; x++) {
-        const dx = x - cx;
-        const dy = y - cy;
-        const d = Math.hypot(dx, dy);
-        const edge = 11 + Math.cos(Math.atan2(dy, dx) * 10) * 1.6 + r() * 0.6;
-        if (d > edge || d < 6) continue;
-        const light = (-dx - dy) / d;
-        const shade = light > 0.3 ? 0 : light > -0.4 ? 1 : 2;
-        px(ctx, x, y, (face ? ["#ffe066", "#f8c537", "#e0a020"] : ["#e8c040", "#d0a028", "#b08018"])[shade]);
-      }
-    for (let y = 0; y < 26; y++)
-      for (let x = ox; x < ox + 32; x++) {
-        const d = Math.hypot(x - cx, y - cy);
-        if (d >= 7.5) continue;
-        if (face) px(ctx, x, y, d > 6.2 ? "#5a3216" : r() < 0.2 ? "#8a5428" : "#6e4020");
-        else {
-          // The green back of the head, with bracts in a star.
-          const a = Math.atan2(y - cy, x - cx);
-          px(ctx, x, y, Math.cos(a * 8) > 0.6 && d > 3 ? "#3f7d36" : d > 6.2 ? "#36692e" : "#5a9a48");
-        }
-      }
+    // Petals around the head: ten behind in the deepest shade, and ten in front between them, each lit from the
+    // top left by which way it points.
+    const [cx, cy] = [16, 13];
+    const [lit, mid, deep] = face ? ["#ffe066", "#f8c537", "#e0a020"] : ["#e8c040", "#d0a028", "#b08018"];
+    const petal = (a: number, len: number, w: number, color: string) => pointed(ctx, color, cx + Math.cos(a) * 5.5, cy + Math.sin(a) * 5.5, cx + Math.cos(a) * len, cy + Math.sin(a) * len, w);
+    for (let i = 0; i < 10; i++) petal(((i + 0.5) * Math.PI) / 5, 11.6 + r() * 0.6, 4, deep);
+    for (let i = 0; i < 10; i++) {
+      const a = (i * Math.PI) / 5;
+      const light = -Math.cos(a) - Math.sin(a);
+      petal(a, 12.2 + r() * 0.6, 4.2, light > 0.3 ? lit : light > -0.4 ? mid : deep);
+    }
     if (face) {
+      oval(ctx, "#5a3216", cx, cy, 7.5);
+      oval(ctx, "#6e4020", cx, cy, 6.3);
+      // A ring of seeds round the face.
+      for (let i = 0; i < 18; i++) oval(ctx, "#8a5428", cx + Math.cos((i * Math.PI) / 9) * 5.3, cy + Math.sin((i * Math.PI) / 9) * 5.3, 0.4);
       // Closed, content eyes, rosy cheeks and a small calm smile.
-      const ink = "#2b1608";
-      px(ctx, ox + 12, 10, ink, 2, 1);
-      px(ctx, ox + 18, 10, ink, 2, 1);
-      for (const x of [11, 14, 17, 20]) px(ctx, ox + x, 11, ink);
-      px(ctx, ox + 11, 13, "#d0603a");
-      px(ctx, ox + 20, 13, "#d0603a");
-      px(ctx, ox + 13, 15, ink);
-      px(ctx, ox + 14, 16, ink, 4, 1);
-      px(ctx, ox + 18, 15, ink);
-    } else px(ctx, ox + 15, 13, "#3f7d36", 2, 9); // the stem joins the middle of the back
+      ctx.strokeStyle = "#2b1608";
+      ctx.lineWidth = 0.7;
+      ctx.lineCap = "round";
+      for (const x of [13, 19]) {
+        ctx.beginPath();
+        ctx.arc(x, 11.9, 1.3, Math.PI, Math.PI * 2);
+        ctx.stroke();
+      }
+      oval(ctx, "#d0603a", 11.4, 13.9, 0.8, 0.6);
+      oval(ctx, "#d0603a", 20.6, 13.9, 0.8, 0.6);
+      ctx.beginPath();
+      ctx.arc(cx, 13.6, 2.8, Math.PI * 0.22, Math.PI * 0.78);
+      ctx.stroke();
+    } else {
+      // The green back of the head, with bracts in a star, and the stem joined to its middle.
+      oval(ctx, "#36692e", cx, cy, 7.5);
+      oval(ctx, "#5a9a48", cx, cy, 6.3);
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4;
+        pointed(ctx, "#3f7d36", cx + Math.cos(a) * 2.5, cy + Math.sin(a) * 2.5, cx + Math.cos(a) * 7, cy + Math.sin(a) * 7, 1.8);
+      }
+      px(ctx, 15, 13, "#3f7d36", 2, 8);
+    }
+    ctx.restore();
   }
   return c;
 }
@@ -1658,26 +1686,54 @@ export function visitors(arts: readonly Art.Cutout[]): OffscreenCanvas {
 
 /** Cells of the fallen fruit atlas (32×32 each, standing on the bottom row), in FRUIT_KINDS order. */
 export const FRUIT_CELLS = FRUIT_KINDS.length;
+/** Texels to each of the fruit atlas's units. */
+const FRUIT_FINE = 6;
+/** A fallen fruit is its tree's fruit (fruit()) drawn this many times as big: on the tree it is seen from afar. */
+const FALLEN = 2;
 
-/** Every kind of fruit that can fall from an orchard tree, in one small atlas (drawn once). */
+/** Every kind of fruit that can fall from an orchard tree, in one small atlas (drawn once): the same drawing as on its tree. */
 export function fruitAtlas(): OffscreenCanvas {
-  const [c, ctx] = canvas(32 * FRUIT_CELLS, 32);
-  FRUIT_KINDS.map(fruitArt).forEach((art, i) => {
-    const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
-    const oy = 32 - art.rows.length;
-    for (const r of runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+  const [c, ctx] = canvas(32 * FRUIT_CELLS * FRUIT_FINE, 32 * FRUIT_FINE);
+  ctx.scale(FRUIT_FINE, FRUIT_FINE);
+  FRUIT_KINDS.forEach((kind, i) => {
+    const f = TREE_SHAPES[kind].fruit;
+    ctx.save();
+    ctx.translate(i * 32 + 16, 32 - FRUIT_FOOT[f.shape] * FALLEN);
+    ctx.scale(FALLEN, FALLEN);
+    fruit(ctx, f, 0, 0);
+    ctx.restore();
   });
   return c;
 }
 
-/** Pixels per side of the leaf pile's cell: the pile stands on its bottom row. */
+/** Units on a side of the leaf pile's cell: the pile stands on its bottom edge. */
 const PILE_CELL = 16;
+/** Texels to each of the leaf pile's units. */
+const PILE_FINE = 8;
 
-/** An autumn leaf pile (walkInto.ts LEAF_PILE), standing on the cell's bottom row. */
+/** A neat, low pile of autumn leaves (#1091): a lumpy mound in the deepest leaf colour, under small leaves that reach its edge. */
 export function leafPile(): OffscreenCanvas {
-  const [c, ctx] = canvas(PILE_CELL, PILE_CELL);
-  const oy = PILE_CELL - LEAF_PILE.rows.length;
-  for (const r of runs(LEAF_PILE)) px(ctx, r.x, oy + r.y, r.fill, r.w, 1);
+  const [c, ctx] = canvas(PILE_CELL * PILE_FINE, PILE_CELL * PILE_FINE);
+  ctx.scale(PILE_FINE, PILE_FINE);
+  const [cx, rx, ry] = [PILE_CELL / 2, PILE_CELL / 2 - 1.2, 5];
+  // The mound's top edge at x, and a point under it: a leaf there stays on the pile.
+  const top = (x: number) => PILE_CELL - ry * Math.sqrt(Math.max(0, 1 - ((x - cx) / rx) ** 2));
+  oval(ctx, AUTUMN[3], cx, PILE_CELL, rx, ry, "top");
+  const r = rng(61);
+  const leaves = Array.from({ length: 34 }, (_, i) => {
+    const x = cx + (r() * 2 - 1) * rx * 0.94;
+    return { x, y: top(x) + 0.6 + r() * (PILE_CELL - top(x) - 1.4), a: r() * Math.PI, color: AUTUMN[i % 3] };
+  }).sort((a, b) => a.y - b.y);
+  ctx.strokeStyle = AUTUMN[3];
+  ctx.lineWidth = 0.16;
+  for (const { x, y, a, color } of leaves) {
+    const [dx, dy] = [Math.cos(a) * 1.5, Math.sin(a) * 1.5];
+    pointed(ctx, color, x - dx, y - dy, x + dx, y + dy, 1.7);
+    ctx.beginPath();
+    ctx.moveTo(x - dx * 0.8, y - dy * 0.8);
+    ctx.lineTo(x + dx * 0.6, y + dy * 0.6);
+    ctx.stroke();
+  }
   return c;
 }
 
@@ -1688,17 +1744,82 @@ export const RINGS = 3;
 /** Cells of the carry atlas (32×32 each, things standing on the bottom row; the rings fill theirs), in this order. */
 export const CARRY_CELL = { pebble: 0, ring: (i: number) => 1 + i, well: 1 + RINGS };
 export const CARRY_CELLS = 2 + RINGS;
+/** Texels to each of the carry atlas's units: the well's cell is drawn 2.8 times as big as the pebble's. */
+const CARRY_FINE = 10;
 
 /** The pebble, the rings and the orchard's well (#335 S6), in one small atlas (drawn once), in CARRY_CELL order. */
 export function carryAtlas(): OffscreenCanvas {
-  const [c, ctx] = canvas(32 * CARRY_CELLS, 32);
-  const rings = Array.from({ length: RINGS }, (_, i) => CarryArt.ring(5 + i * 5, 32));
-  [CarryArt.PEBBLE, ...rings, CarryArt.WELL].forEach((art, i) => {
-    const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
-    const oy = 32 - art.rows.length;
-    for (const r of runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
-  });
+  const [c, ctx] = canvas(32 * CARRY_CELLS * CARRY_FINE, 32 * CARRY_FINE);
+  ctx.scale(CARRY_FINE, CARRY_FINE);
+  cutout(ctx, PEBBLE, CARRY_CELL.pebble * 32 + (32 - PEBBLE.w) / 2, 32 - PEBBLE.h, 1);
+  // The rings: thin light circles on the water, seen from above.
+  ctx.strokeStyle = "#dff0f4";
+  ctx.lineWidth = 1.1;
+  for (let i = 0; i < RINGS; i++) {
+    ctx.beginPath();
+    ctx.arc(CARRY_CELL.ring(i) * 32 + 16, 16, 5 + i * 5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.save();
+  ctx.translate(CARRY_CELL.well * 32, 0);
+  well(ctx);
+  ctx.restore();
   return c;
+}
+
+/** The orchard's wishing well (#335 S6) in a 32×32 cell: a wall of stones, dark inside, under a small roof with a bucket on its rope. */
+function well(ctx: OffscreenCanvasRenderingContext2D) {
+  // The roof's gable, its middle in shade under the ridge, on its beam and two posts.
+  polygon(ctx, "#a8603e", [
+    [3.4, 10.2],
+    [16, 3.6],
+    [28.6, 10.2],
+  ]);
+  polygon(ctx, "#8a4a32", [
+    [10.6, 10.2],
+    [16, 6.6],
+    [21.4, 10.2],
+  ]);
+  px(ctx, 3.4, 9.4, "#8a4a32", 25.2, 0.8);
+  for (const x of [5.6, 26.4]) trunk(ctx, x, 10.2, 19, 1.6, ["#8a6440", "#6e4e30"]);
+  px(ctx, 4.4, 10.2, "#6e4e30", 23.2, 0.9);
+  // The rope and the bucket.
+  px(ctx, 17.8, 11.1, "#c8a870", 0.45, 3.4);
+  polygon(ctx, "#7a5233", [
+    [16.5, 14.3],
+    [19.5, 14.3],
+    [19.1, 17.3],
+    [16.9, 17.3],
+  ]);
+  px(ctx, 16.6, 15.2, "#5c3b22", 2.8, 0.45);
+  // The wall: a drum of stones in courses, lit on top and in shade below, set in dark mortar; on top, its lit rim round
+  // the dark mouth.
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(2.4, 19.4, 27.2, 12.6, [0, 0, 2, 2]);
+  ctx.fillStyle = "#4a4440";
+  ctx.fill();
+  ctx.clip();
+  const r = rng(62);
+  for (let row = 0; row < 4; row++) {
+    const y = 20.8 + row * 2.8;
+    for (let x = row % 2 ? -0.4 : 2.4; x < 29.6; ) {
+      const w = 4.4 + r() * 2.2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, 2.45, 0.5);
+      ctx.clip();
+      px(ctx, x, y, "#9a948a", w, 2.45);
+      px(ctx, x, y, "#c8c2b6", w, 0.5);
+      px(ctx, x, y + 1.85, "#7a746a", w, 0.6);
+      ctx.restore();
+      x += w + 0.35;
+    }
+  }
+  ctx.restore();
+  oval(ctx, "#4a4440", 16, 19.6, 13.6, 1.9);
+  oval(ctx, "#c8c2b6", 16, 19.4, 13.2, 1.6);
+  oval(ctx, "#1c2024", 16, 19.4, 11, 1);
 }
 
 // ---- Lawn and pond toys (#360) ----------------------------------------------
@@ -1708,15 +1829,105 @@ export const TOY_CELL = { clock: 0, blown: 1 } as const;
 export const TOY_CELLS = 2;
 const TOY_W = 16;
 const TOY_H = 24;
+/** Texels to each of the toy atlas's units. */
+const TOY_FINE = 8;
 
-/** The dandelion clock and the blown one, side by side. */
+/** The dandelion clock and the blown one, side by side (#1091): a round puff of seeds, or the bare seed bed, on a stem. */
 export function toyAtlas(): OffscreenCanvas {
-  const [c, ctx] = canvas(TOY_W * TOY_CELLS, TOY_H);
-  [ToyArt.CLOCK, ToyArt.BLOWN].forEach((art, i) => {
-    const ox = i * TOY_W + Math.floor((TOY_W - art.rows[0].length) / 2);
-    const oy = TOY_H - art.rows.length;
-    for (const r of runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
-  });
+  const [c, ctx] = canvas(TOY_W * TOY_CELLS * TOY_FINE, TOY_H * TOY_FINE);
+  ctx.scale(TOY_FINE, TOY_FINE);
+  for (const cell of [TOY_CELL.clock, TOY_CELL.blown]) {
+    ctx.save();
+    ctx.translate(cell * TOY_W, 0);
+    // The head's middle: toys.ts HEAD_TOP above the ground. A blown head is only its seed bed, a little lower.
+    const [hx, hy] = [8, 8.6];
+    const bed = 11.6;
+    ctx.strokeStyle = "#5a8a3a";
+    ctx.lineWidth = 0.7;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(hx, cell === TOY_CELL.clock ? hy : bed);
+    ctx.quadraticCurveTo(hx + 0.7, 17, hx + 0.3, TOY_H);
+    ctx.stroke();
+    // Two toothed leaves splayed low at its foot, each with a light middle line.
+    ctx.strokeStyle = "#6aac44";
+    ctx.lineWidth = 0.25;
+    const foot = TOY_H - 1;
+    for (const [tx, ty] of [
+      [1.4, 20.2],
+      [14.8, 20.6],
+    ]) {
+      toothed(ctx, "#3e7a2c", hx + 0.3, foot, tx, ty, 2.5);
+      ctx.beginPath();
+      ctx.moveTo(hx + 0.3, foot);
+      ctx.lineTo(hx + 0.3 + (tx - hx - 0.3) * 0.85, foot + (ty - foot) * 0.85);
+      ctx.stroke();
+    }
+    if (cell === TOY_CELL.clock) {
+      // The puff: a ball of seeds, its edge a soft fringe of fine tufts, a shade greyer outside; each seed a fine
+      // spoke to the middle, where a speck of the seed bed shows.
+      for (const [color, rad, bump] of [
+        ["#d8d4ca", 5, 0.5],
+        ["#fbfaf4", 4.75, 0.4],
+      ] as const) {
+        oval(ctx, color, hx, hy, rad);
+        for (let i = 0; i < 40; i++) oval(ctx, color, hx + Math.cos((i * Math.PI) / 20) * rad, hy + Math.sin((i * Math.PI) / 20) * rad, bump);
+      }
+      ctx.strokeStyle = "#e6e2d8";
+      ctx.lineWidth = 0.12;
+      for (let i = 0; i < 24; i++) {
+        const a = ((i + 0.5) * Math.PI) / 12;
+        ctx.beginPath();
+        ctx.moveTo(hx + Math.cos(a) * 0.5, hy + Math.sin(a) * 0.5);
+        ctx.lineTo(hx + Math.cos(a) * 4.5, hy + Math.sin(a) * 4.5);
+        ctx.stroke();
+      }
+      oval(ctx, "#c8b878", hx, hy, 0.6);
+    } else {
+      // The bare seed bed, a low dome over its bent-back sepals, with one last seed on it.
+      for (const sx of [-1, 1]) pointed(ctx, "#5a8a3a", hx, bed, hx + sx * 2, bed + 2, 0.8);
+      const [ex, ey] = [hx + Math.cos(-1.1) * 4.4, bed + Math.sin(-1.1) * 4.4];
+      ctx.strokeStyle = "#d8d4ca";
+      ctx.lineWidth = 0.16;
+      ctx.beginPath();
+      ctx.moveTo(hx, bed - 0.6);
+      ctx.lineTo(ex, ey);
+      // Its tuft: a few fine hairs fanned out at the tip.
+      for (const da of [-0.8, -0.27, 0.27, 0.8]) {
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex + Math.cos(-1.1 + da) * 1.1, ey + Math.sin(-1.1 + da) * 1.1);
+      }
+      ctx.stroke();
+      oval(ctx, "#c8b878", hx, bed, 2.4, 1.7, "top");
+      oval(ctx, "#a08a50", hx, bed, 1.3, 0.9, "top");
+    }
+    ctx.restore();
+  }
   return c;
 }
 
+/** A dandelion leaf from its base to its tip, `w` wide: both edges cut in lobes whose points face back to the base, the lower ones smaller. */
+function toothed(ctx: OffscreenCanvasRenderingContext2D, color: string, bx: number, by: number, tx: number, ty: number, w: number) {
+  const len = Math.hypot(tx - bx, ty - by);
+  const [ux, uy] = [(tx - bx) / len, (ty - by) / len];
+  // [along, across] in leaf lengths and widths, from the base to the tip: a notch, then a lobe's point, and so on.
+  const edge = [
+    [0.06, 0.16],
+    [0.2, 0.2],
+    [0.23, 0.55],
+    [0.44, 0.22],
+    [0.47, 0.55],
+    [0.68, 0.22],
+    [0.71, 0.45],
+    [0.9, 0.14],
+  ];
+  const at = (t: number, s: number): [number, number] => [bx + ux * len * t - uy * w * s, by + uy * len * t + ux * w * s];
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  for (const [t, s] of edge) ctx.lineTo(...at(t, s));
+  ctx.lineTo(tx, ty);
+  for (const [t, s] of edge.toReversed()) ctx.lineTo(...at(t + 0.03, -s * 0.75));
+  ctx.closePath();
+  ctx.fill();
+}

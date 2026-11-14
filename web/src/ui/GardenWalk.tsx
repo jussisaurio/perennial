@@ -31,14 +31,14 @@ import { yieldToBrowser } from "../lib/yield";
 import { useGardenScene, useWalkInput, type Store } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { gardenBroughtAt, learnerVisitors, type LearnerVisitors } from "./visitors";
-import type { PixelArt } from "../garden/pixelArt";
 import { SILENT_FROG } from "../garden/visitors";
 import type { CarryAct, CarryDone } from "../garden/carry";
 import { PEBBLE } from "../garden/carryArt";
+import type { Cutout } from "../garden/visitorArt";
 import type { ToyAct, ToyDone, ToysWalk } from "../garden/toys";
 import { inLang } from "../garden/nouns";
 import { GNOME_WORD, type Companion } from "../garden/bench";
-import { PixelRects } from "./pixel";
+import { CutoutShapes } from "./cutout";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, BookIcon, CloseIcon, DandelionIcon, EyeIcon, FlameIcon, HandIcon, KeyIcon, NoteIcon, ShakeIcon, SitIcon, SnuffIcon, SpeakerIcon, SpeakerOffIcon, StoolIcon, ThrowIcon, WateringCanIcon, WellIcon } from "./icons";
 import { brushNote, wakeAudio } from "./chime";
 import { fellLine } from "../garden/walkInto";
@@ -959,14 +959,12 @@ function ReachIcon({ reach }: { reach: Reach }) {
   return <Icon size={28} />;
 }
 
-/** Pixel art in its own colours, as big as the action button's icon. */
-function ArtIcon({ art }: { art: PixelArt }) {
-  const w = art.rows[0].length;
-  const h = art.rows.length;
-  const side = Math.max(w, h);
+/** A paper cut-out in its own colours, as big as the action button's icon. */
+function ArtIcon({ art }: { art: Cutout }) {
+  const side = Math.max(art.w, art.h);
   return (
-    <svg viewBox={`${(w - side) / 2 - 1} ${(h - side) / 2 - 1} ${side + 2} ${side + 2}`} width="32" height="32" shapeRendering="crispEdges">
-      <PixelRects art={art} />
+    <svg viewBox={`${(art.w - side) / 2 - 1} ${(art.h - side) / 2 - 1} ${side + 2} ${side + 2}`} width="32" height="32">
+      <CutoutShapes art={art} />
     </svg>
   );
 }
