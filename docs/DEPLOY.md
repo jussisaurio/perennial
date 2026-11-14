@@ -372,7 +372,7 @@ The code no longer uses Electric: sync is `GET /api/rows` (the learner's rows, r
 
 ## Continuous deployment and rollback
 
-Every merge to `main` deploys to production by itself: Railway builds `main` after CI passes (`checkSuites: true` in `.railway/railway.ts`), runs the migrations before the switch (pre-deploy command), and only moves traffic once `/health` (which checks the database) answers. A red CI run on `main` never deploys. After each deploy, the alarm (below) runs `bun scripts/live-check.ts` against production.
+Every merge to `main` deploys to production by itself: Railway builds `main` after CI passes (`checkSuites: true` in `.railway/railway.ts`), runs the migrations before the switch (pre-deploy command), and only moves traffic once `/health` (which checks the database) answers. A red CI run on `main` never deploys. A merge never cancels the CI run of the merge before it, so each commit on `main` gets its own finished run (#994). Railway would deploy a commit whose run was cancelled when another workflow on that commit passed, such as the hourly alarm. After each deploy, the alarm (below) runs `bun scripts/live-check.ts` against production.
 
 ### The alarm
 
