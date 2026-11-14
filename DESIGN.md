@@ -54,7 +54,7 @@ web/ (Vite + React + TS)
   ui/        screens
 server/ (Bun + Postgres via Bun.sql)
   auth           Better Auth: email codes, anonymous users, account linking
-  sync           GET /api/rows, POST /api/write
+  sync           GET /api/boot, GET /api/rows, POST /api/write
   ai             Perennial AI task endpoints, credits and the spend budget
   housekeeping   daily cron: old anonymous users, old AI logs, expired codes and sessions
 ```
@@ -71,8 +71,8 @@ The full model is in [docs/schema.md](docs/schema.md). In short:
 
 ### Sync
 
-- **Reads:** `GET /api/rows` returns the session user's rows for every learner table in one response, always `where user_id = <session user>`. On the client each table is a TanStack DB query collection in memory, read again at start and when the tab comes back into view after being hidden over a minute. There is no live push between devices: another device's changes show up on the next read.
-- **Writes:** a change applies on the device at once and is sent to `POST /api/write`, one write after another, retried until the server has it. Unsent writes are kept only in memory; when the page closes, what is left goes in one last request. The server validates each mutation, stamps the session's `user_id`, and applies the batch in one transaction, telling the client whether anything changed. Once the server has the write, the client puts the confirmed rows into the collections directly, so the optimistic rows don't flicker. A merge the server does on its own (the garden's bowl, a newer word state from another device) shows up at the next read.
+- **Reads:** `GET /api/rows` returns the session user's rows for every learner table in one response, always `where user_id = <session user>`. At start the same rows come with `GET /api/boot`, together with the session's user and the server's info, so the app starts with one request. On the client each table is a TanStack DB query collection in memory, read again when the tab comes back into view after being hidden over a minute. There is no live push between devices: another device's changes show up on the next read.
+- **Writes:** a change applies on the device at once and is sent to `POST /api/write`, one write after another, retried until the server has it. Unsent writes are kept only in memory; when the page closes, what is left goes in one last request. The server validates each mutation, stamps the session's `user_id`, and applies the batch in one transaction, telling the client whether anything changed. Once the server has the write, the client puts the confirmed rows into the collections directly, so the optimistic rows don't flicker. A merge the server does on its own (a newer word state from another device) shows up at the next read.
 - **Merge rules:** reviews are insert-only (`on conflict do nothing`; Undo is a delete); `word_state` changes only when `updated_at` is newer; `course` changes only the columns sent. Times from the future are clamped to the server's time.
 - **Old clients:** writes carry the app version. Below `MIN_CLIENT_VERSION` the server answers "please reload", and the queued writes are kept. Schema changes go expand, then contract.
 - **Accounts:** the first write creates an anonymous user. Signing in with an email code links it to the real account: the server moves the rows in one transaction (newer state wins), then Better Auth deletes the anonymous user.

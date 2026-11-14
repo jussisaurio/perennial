@@ -1,6 +1,6 @@
 # Perennial: direction
 
-This page is the one source of product direction: what Perennial is, what we build next, and what we do not build. If another doc or an issue disagrees with it, this page wins: fix the other one. How we write code is in [CLAUDE.md](../CLAUDE.md), the architecture in [README.md](../README.md) and [DESIGN.md](../DESIGN.md).
+This page is the one source of product direction: what Perennial is, what we build next, and what we do not build. If another doc or an issue disagrees with it, this page wins: fix the other one. Agents choose what to build inside this page; the owner does not pick features (decided 2026-11-14). To change the direction itself, change this page in a PR and say why. How we write code is in [CLAUDE.md](../CLAUDE.md), the architecture in [README.md](../README.md) and [DESIGN.md](../DESIGN.md).
 
 Decided on 2026-11-08. `#n` is a GitHub issue.
 
@@ -29,7 +29,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 **Planner** (`web/src/core/session.ts`).
 - A chunk fills in this order: due reviews, new words, reviews due within a day, then the weakest known words.
 - Up to 2 due reading reviews in a chunk come as their word's first listening practice, and 1 as its first typing practice (`FIRST_PRACTICES`). The answer waters reading too.
-- **Never break progress.** A change to scheduling (planner, FSRS, pacing, story thresholds) keeps the progress of learners who are partway through. Plan and test the transition.
+- **Never break progress.** A change to scheduling (planner, FSRS, pacing, story thresholds) keeps the progress of learners who are partway through. "Keeps" means nothing is lost or reset and the schedule does not visibly jump; exact due dates may move. Plan and test the transition with a real history.
 
 **Decks.**
 - Static decks that ship with the app: about 2000 live words each (es 2036, de 2043). Words come in frequency order, with garden and orchard words placed early ([docs/decks.md](decks.md)).
@@ -53,7 +53,7 @@ Decided on 2026-11-08. `#n` is a GitHub issue.
 
 **Physics.** The rules are in [CLAUDE.md](../CLAUDE.md), "The garden is physical". You go places only by walking. Solid things stop you. Every edge is a thing you can see. Visitors walk; nothing teleports. The wall clock sets the time of day (#646).
 
-**The verbs** ([docs/garden-play.md](garden-play.md)): walk, sit on the bench (time passes), shake a plant to see its forms, brush the beds, carry things, throw a pebble, blow a dandelion clock, open the door with its key, read the notes in the shed, climb the stile and the hill, and signal to the far light with the hill's lantern. The glint is only late help (#689). Verbs are never gated by word counts.
+**The verbs** ([docs/garden-play.md](garden-play.md)): walk, sit on the bench (time passes), shake a plant to see its forms, brush the beds, carry things, throw a pebble, blow a dandelion clock, open the door with its key, read the notes in the shed, climb the stile and the hill, and signal to the far light with the hill's lantern. The glint is only late help (#689). Verbs are never gated by word counts. The rules every garden feature follows are in [docs/garden-play.md](garden-play.md), "Rules for every garden feature".
 
 **The story** (#639). You are alone in a garden someone else kept. Their notes tell you who they were. The gardener also came from far away and learned this language here.
 - **The theme:** love is kept by small daily tending, like a garden, and a few minutes a day is a lot. It is shown in the couple's rituals and never stated. It is never aimed at the learner's own practice (#639).
@@ -83,7 +83,7 @@ The rules that code review checks are in [CLAUDE.md](../CLAUDE.md), "Product rul
 - **Never limit use** and **never break progress** (section 2).
 - **Premium look**: check phone and desktop, light and dark, before merging UI ([docs/agents.md](agents.md)).
 - **Performance**: no main-thread task over 10 ms at 10× CPU slowdown ([docs/performance.md](performance.md)). The app misses this bar today (#421).
-- **The repo is public**: no secrets or exploit recipes in issues or commits.
+- **The repo is public** ([docs/agents.md](agents.md), "PR and merge").
 
 ## 5. Launch
 
