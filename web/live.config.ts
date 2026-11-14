@@ -7,7 +7,7 @@ import e2e from "./playwright.config.ts";
 export default defineConfig({
   ...e2e,
   testMatch: /live\.run\.ts$/,
-  // A run is days of app use; each step waits with its own limit, so the run has none.
+  // A run is days of app use; each wait has its own limit (live.run.ts, open), so the run has none.
   timeout: 0,
   // A trace of a whole run would be gigabytes: the diary and the pictures say what happened.
   use: { ...e2e.use, trace: "off" },
