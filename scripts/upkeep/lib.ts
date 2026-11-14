@@ -20,7 +20,7 @@ export const SWEEP_BODY = `The weekly cleanup sweep (CLAUDE.md, "Every week"). R
 Split the code by folder: \`web/src/garden\`, \`web/src/ui\`, the rest of \`web/src\`, \`web/e2e\` and \`web/perf\`, \`server\` and \`contract\`, \`scripts\`. If you can start agents, give each one a folder. In each folder, look for:
 
 - **Duplication:** two helpers, constants or rules for one thing (CLAUDE.md, "One way to do each thing").
-- **Dead code:** unused exports, branches that no input reaches, commented-out code. \`bun run deadcode\` and knip help.
+- **Dead code:** unused exports, branches that no input reaches, commented-out code. \`bun run deadcode <report.md>\` (it runs the whole e2e suite) and knip help.
 - **Needless fallbacks:** a default, \`??\`, \`||\`, \`catch {}\`, retry or timeout with no comment that says why (CLAUDE.md, "No silent fallbacks").
 - **Tangled modules:** a file that does several jobs, or modules that reach into each other.
 

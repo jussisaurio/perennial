@@ -12,7 +12,7 @@ const out = process.argv[2];
 if (out === undefined) throw new Error("usage: bun run deadcode <report.md>");
 const ROOT = new URL("..", import.meta.url).pathname;
 const WEB = `${ROOT}web`;
-// About 8 agents share a sweep (CLAUDE.md, "Every week: a cleanup sweep").
+// About 8 agents share a sweep (CLAUDE.md, "Every week").
 const PARTS = 8;
 const started = Date.now();
 
