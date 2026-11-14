@@ -87,7 +87,7 @@ That is about 16. Add 14 for each extra `web` replica. Check the limit with `sho
 
 ### 2.3 Check (after the first deploy)
 
-After every deploy, run the live security check: `bun scripts/live-check.ts <APP_URL>` (headers, closed dev and unused auth endpoints, no file leaks, cross-user isolation, CSRF, limits; it cleans up after itself).
+The live security check is `bun scripts/live-check.ts <APP_URL>` (headers, closed dev and unused auth endpoints, no file leaks, cross-user isolation, CSRF, limits; it cleans up after itself). The alarm runs it after every deploy ("The alarm", below).
 
 ## 3. Railway project
 
@@ -372,7 +372,18 @@ The code no longer uses Electric: sync is `GET /api/rows` (the learner's rows, r
 
 ## Continuous deployment and rollback
 
-Every merge to `main` deploys to production by itself: Railway builds `main` after CI passes (`checkSuites: true` in `.railway/railway.ts`), runs the migrations before the switch (pre-deploy command), and only moves traffic once `/health` (which checks the database) answers. A red CI run on `main` never deploys. After a deploy, run `bun scripts/live-check.ts <APP_URL>`.
+Every merge to `main` deploys to production by itself: Railway builds `main` after CI passes (`checkSuites: true` in `.railway/railway.ts`), runs the migrations before the switch (pre-deploy command), and only moves traffic once `/health` (which checks the database) answers. A red CI run on `main` never deploys. After each deploy, the alarm (below) runs `bun scripts/live-check.ts` against production.
+
+### The alarm
+
+`.github/workflows/alarm.yml` keeps one P0 issue, titled "Alarm: main is red or production is behind". The logic is in `scripts/alarm/`. It runs after each CI run on `main`, once an hour, and after each deploy that Railway reports. The issue is open while any of these is true:
+
+- **Main is red:** the latest finished CI run on `main` failed (cancelled runs do not count). The issue lists the failing jobs and tests, the last green commit, and the commits that landed after it.
+- **Production is behind:** the release in `/health` does not have a commit that was on `main` an hour ago.
+- **The live check failed** after a deploy. This stays until production runs another release.
+- The alarm could not read `/health`.
+
+When the state changes, the alarm edits the issue and adds a comment. When none is true, it closes the issue. To see what it would say, without changing anything: `GITHUB_REPOSITORY=jussisaurio/perennial bun scripts/alarm/run.ts --print`. If the alarm's own run fails, GitHub emails the owner.
 
 Rollback:
 - **Fastest:** Railway dashboard → service `perennial` → Deployments → the last good one → **Redeploy**. (The CLI's `railway redeploy` only repeats the latest deployment.)

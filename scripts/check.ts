@@ -17,7 +17,7 @@ const steps: Step[] = [
   { name: "lint", cmd: ["bun", "run", "lint"], cwd: ROOT },
   { name: "knip", cmd: ["bun", "run", "knip"], cwd: ROOT },
   { name: "unit tests (web)", cmd: ["bun", "run", "test"], cwd: join(ROOT, "web") },
-  { name: "deck and tts tests (scripts)", cmd: ["bun", "run", "test"], cwd: join(ROOT, "scripts") },
+  { name: "unit tests (scripts)", cmd: ["bun", "run", "test"], cwd: join(ROOT, "scripts") },
 ];
 const serverTests: Step = { name: "server tests (Postgres)", cmd: ["bun", "run", "test"], cwd: join(ROOT, "server") };
 

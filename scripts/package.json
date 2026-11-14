@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun test deck tts",
+    "test": "bun test deck tts alarm",
     "typecheck": "tsc --noEmit -p ."
   },
   "devDependencies": {
