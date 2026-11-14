@@ -6,6 +6,8 @@ on:
   pull_request:
     # labeled: the deck-big-change label approves retiring >5% of a deck's words.
     types: [opened, synchronize, reopened, labeled]
+  # Runs every job on a branch, e2e too: `gh workflow run CI --ref <branch>` (docs/agents.md, "PR and merge").
+  workflow_dispatch:
 
 # A new push to a PR cancels the PR's older run. On main each commit has its own group, so no
 # merge cancels the run before it: every merge gets a verdict, and Railway's Wait for CI never
@@ -33,6 +35,8 @@ jobs:
 
   security:
     name: Dependency audit and static analysis
+    # Same rule as e2e (below): not on an agent's PR.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -68,6 +72,10 @@ jobs:
 
   e2e:
     name: End-to-end (${{ matrix.label }})
+    # An agent's PR merges on the two required jobs alone, so it skips this job and the security job.
+    # Their 10 runners made the required jobs wait in the queue for 2 to 3 minutes (#1005). They run
+    # on main after each merge, and on Dependabot's PRs, whose auto-merge waits for the whole run.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     # The tests are independent, so the suite splits across runners. WebKit runs
     # alone: its system packages are slow to install, and only one spec uses it.
