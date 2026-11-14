@@ -85,7 +85,7 @@ interface VisitorSprite {
   mesh: SpriteMesh;
   pos: THREE.InstancedBufferAttribute;
   uv: THREE.InstancedBufferAttribute;
-  /** iParams: y is a lying sprite's heading. */
+  /** iParams: y is a lying or fixed sprite's turn. */
   params: THREE.InstancedBufferAttribute;
   /** The place and heading last uploaded. */
   drawn: [number, number, number, number];
@@ -108,8 +108,8 @@ export interface VisitorWorld {
   bedTop: number;
   /** The height (metres) of the top of this plant (its word, growth and genome), standing in its bed. */
   plantTop: (p: { lemma: string; growth: number }) => number;
-  /** A one-instance, camera-facing sprite of `size` metres from `tex`, showing the part u..u+uw, v..v+vh. */
-  sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, v: number, uw: number, vh: number, size: number) => SpriteMesh;
+  /** A one-instance sprite of `size` metres from `tex`, showing the part u..u+uw, v..v+vh: camera-facing, or fixed upright (turn it with iParams.y). */
+  sprite: (tex: THREE.Texture, x: number, y: number, z: number, u: number, v: number, uw: number, vh: number, size: number, stand: "facing" | "fixed") => SpriteMesh;
   /** The same, lying flat and centred on x, y, z (size × size·`lying` metres, as wide as the part is tall). Turn it with iParams.y. */
   lying: (tex: THREE.Texture, x: number, y: number, z: number, u: number, v: number, uw: number, vh: number, lying: number, size: number) => SpriteMesh;
 }
@@ -157,7 +157,7 @@ export class SceneVisitors implements Part {
 
   /**
    * Today's visitors, each where its kind says (kinds/). One texture for
-   * all of them; each is a one-instance sprite mesh (a lying kind's lies flat).
+   * all of them; each is a one-instance sprite mesh (a lying kind's lies flat, a fixed one stands along its turn).
    * `now`: the moment the walk opened, for the kinds' daily picks; `age`: the
    * garden's age in calendar days.
    */
@@ -183,11 +183,13 @@ export class SceneVisitors implements Part {
       const [u, cv] = cellStart(own[body.frame], rows);
       const first = Object.values(kind.art)[0];
       const tall = first.h / 32;
-      const mesh = kind.lying
-        ? w.lying(tex, body.x, body.y, body.z, u, cv, cellU, cellV * tall, tall, size)
-        : w.sprite(tex, body.x, body.y, body.z, u, cv, cellU, cellV, size);
+      const mesh =
+        kind.stand === "lying"
+          ? w.lying(tex, body.x, body.y, body.z, u, cv, cellU, cellV * tall, tall, size)
+          : // A kind with no stand turns to face you.
+            w.sprite(tex, body.x, body.y, body.z, u, cv, cellU, cellV, size, kind.stand ?? "facing");
       const params = mesh.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
-      if (kind.lying) params.setY(0, body.turn);
+      if (kind.stand) params.setY(0, body.turn);
       w.scene.add(mesh);
       let glow: THREE.Sprite | null = null;
       if (kind.glow) {

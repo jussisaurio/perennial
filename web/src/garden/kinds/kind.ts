@@ -58,7 +58,7 @@ export interface Body<F extends string> {
   z: number;
   frame: F;
   visible: boolean;
-  /** A lying visitor's heading (rad): which way its head points. */
+  /** A lying or fixed visitor's turn (rad): its art's right points along (cos, sin) of it on the ground (x, z). */
   turn: number;
   /** How much its tag shows as you come near (0 to 1): the gnome hides it while it looks away. */
   tag: number;
@@ -136,8 +136,12 @@ export interface VisitorKind<F extends string = string> {
   top?: number;
   /** How near you come before its tag shows, for an "approach" tag (m). Default 1.5. */
   tagRange?: number;
-  /** It lies flat, seen from above (the fish), showing the part its art fills at the bottom of the cell. */
-  lying?: boolean;
+  /**
+   * How it stands, when it does not turn to face you (sceneSprites.ts Stand), turned by Body.turn. `lying`: flat, seen
+   * from above (the fish), showing the part its art fills at the bottom of the cell. `fixed`: upright and still, like a
+   * sticker (the snail on the fence, #1161), so it never swings through what it is on.
+   */
+  stand?: "lying" | "fixed";
   /** A small light it carries (the gnome's lantern): where in its cell (fractions, x toward the camera's right) and how big (m). */
   glow?: { dx: number; dy: number; size: number };
   /** Always in a lantern's light, whatever the time of day (the moth). */

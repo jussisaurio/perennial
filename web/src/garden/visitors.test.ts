@@ -2,8 +2,6 @@ import { describe, expect, test } from "bun:test";
 import { layout, type GardenPlant } from "./world";
 import {
   catBreak,
-  fencePickets,
-  fencePoint,
   frogCroak,
   GNOME_CAUGHT,
   GNOME_TURN,
@@ -14,9 +12,9 @@ import {
   milestoneLine,
   MILESTONES,
   NO_FACTS,
+  onFence,
   RARE_CAP,
   snailLap,
-  PICKETS_PER_M,
   VISITORS,
   visitor,
   visitorsFor,
@@ -289,7 +287,8 @@ describe("the cat (after a break)", () => {
 describe("the snail's daily lap", () => {
   const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `w${i}`, gloss: "", pos: i % 2 ? "noun" : "verb", rank: i, planted: i, s: 10, r: 0.9, stage: "bud", growth: 0.5, listen: false, write: false, forms: [] });
   const l = layout(Array.from({ length: 80 }, (_, i) => plant(i)));
-  const pickets = fencePickets(l);
+  // The snail: 6 cm in from the fence, 35 cm long (kinds/snail.ts).
+  const [inside, long] = [0.06, 0.35];
 
   test("one lap a day: at the gate at midnight, halfway at noon, nearly round by night", () => {
     expect(snailLap(new Date(2026, 2, 1, 0, 0))).toBe(0);
@@ -299,23 +298,40 @@ describe("the snail's daily lap", () => {
   });
 
   test("about snail speed: a millimetre or so a second", () => {
-    const metresPerSecond = pickets / PICKETS_PER_M / 86_400;
+    const [a, b] = [onFence(l, inside, long, 0.3), onFence(l, inside, long, 0.3 + 60 / 86_400)];
+    const metresPerSecond = Math.hypot(b.x - a.x, b.z - a.z) / 60;
     expect(metresPerSecond).toBeGreaterThan(0.0002);
     expect(metresPerSecond).toBeLessThan(0.005);
   });
 
-  test("the picket is on the fence, starting by the gate and going round", () => {
+  test("it is on the fence, starting by the gate and going round", () => {
     const b = l.bounds;
-    const start = fencePoint(l, 0);
-    expect(start.z).toBe(b.maxZ);
+    const start = onFence(l, inside, long, 0);
+    expect(start.z).toBeCloseTo(b.maxZ - inside, 9);
     expect(Math.abs(start.x - l.gate.x)).toBeLessThan(1.5);
-    for (let p = 0; p < pickets; p += 7) {
-      const { x, z } = fencePoint(l, p);
-      const onEdge = Math.abs(x - b.minX) < 1e-6 || Math.abs(x - b.maxX) < 1e-6 || Math.abs(z - b.minZ) < 1e-6 || Math.abs(z - b.maxZ) < 1e-6;
-      expect(onEdge).toBe(true);
+    for (let lap = 0; lap < 1; lap += 0.013) {
+      const { x, z } = onFence(l, inside, long, lap);
+      const onEdge = [x - (b.minX + inside), x - (b.maxX - inside), z - (b.minZ + inside), z - (b.maxZ - inside)].some((d) => Math.abs(d) < 1e-6);
+      expect(onEdge, `at ${lap}`).toBe(true);
     }
-    // Never in the gate opening.
-    const last = fencePoint(l, pickets - 1);
-    expect(last.x).toBeLessThan(l.gate.x - 1);
+    // Never in the gate opening: its front reaches the left gate post at most.
+    const last = onFence(l, inside, long, 0.99999);
+    expect(last.x + last.dx * long).toBeLessThan(l.gate.x - 1);
+  });
+
+  test("render.whole-cutout: round a corner it spans it, both ends on the line inside the fence, never through it", () => {
+    const b = l.bounds;
+    const within = (x: number, z: number) => x >= b.minX + inside - 1e-9 && x <= b.maxX - inside + 1e-9 && z >= b.minZ + inside - 1e-9 && z <= b.maxZ - inside + 1e-9;
+    let spanning = 0;
+    for (let lap = 0; lap < 1; lap += 0.0005) {
+      const p = onFence(l, inside, long, lap);
+      const [fx, fz] = [p.x + p.dx * long, p.z + p.dz * long];
+      expect(Math.hypot(p.dx, p.dz)).toBeCloseTo(1, 9);
+      // The inside of the fence is a box, so a stick with both ends in it is all in it, 6 cm clear of every side.
+      expect(within(p.x, p.z) && within(fx, fz), `at ${lap}`).toBe(true);
+      if (Math.abs(p.dx) > 0.1 && Math.abs(p.dz) > 0.1) spanning++;
+    }
+    // It goes round four corners and spans each for a while: the steps above see it there several times each.
+    expect(spanning).toBeGreaterThan(16);
   });
 });
