@@ -191,7 +191,7 @@ export class Plants {
    */
   *build(c: BuildCtx): Generator<void> {
     const { L, mat, woodTex } = c;
-    const soilTex = T.pixelTexture(T.soil(), true);
+    const soilTex = T.paperTexture(T.soil(), true);
     const wood: THREE.BufferGeometry[] = [];
     const soil: THREE.BufferGeometry[] = [];
     // Every bed sign on one canvas, one texture and one material; each board shows its own cell.
