@@ -7,6 +7,7 @@ import "./devWorker";
 import * as THREE from "three";
 import type { TimeOfDay } from "./game";
 import { cloud, hills, moon, orchard, sky, SKIES, sun, trees } from "./textures";
+import { bleedEdges } from "./plantCanvas";
 
 // As the walk sets it (GardenScene's constructor): the sky's bands blend its colours as written, not in linear light.
 THREE.ColorManagement.enabled = false;
@@ -14,7 +15,7 @@ THREE.ColorManagement.enabled = false;
 /** "far": the trees outside the fence, the clouds and the sky's looks, with tonight's moon. "orchard": the orchard's tree atlas. */
 export type PaintJob = { kind: "far"; moonPhase: number } | { kind: "orchard" };
 
-/** A painted texture: unpremultiplied RGBA, top row first. */
+/** A painted texture: unpremultiplied RGBA, top row first. Empty pixels at an edge carry their neighbour's colour (bleedEdges). */
 export interface Pixels {
   width: number;
   height: number;
@@ -33,6 +34,8 @@ self.onmessage = (e: MessageEvent<PaintJob>) => {
   const buffers: ArrayBuffer[] = [];
   const pixels = (c: OffscreenCanvas): Pixels => {
     const data = new Uint8Array(c.getContext("2d")!.getImageData(0, 0, c.width, c.height).data.buffer);
+    // The walk filters these smooth (textures.ts paintedTexture).
+    bleedEdges(data, c.width, c.height);
     buffers.push(data.buffer);
     return { width: c.width, height: c.height, data };
   };

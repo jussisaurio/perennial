@@ -1313,8 +1313,8 @@ export class GardenScene {
 
   resize(cssW: number, cssH: number) {
     this.size = [cssW, cssH];
-    // A small framebuffer scaled up by CSS with hard pixels. A whole number of
-    // device pixels per game pixel keeps every pixel the same size.
+    // The framebuffer's width comes from the detail level; CSS scales it to the screen. A whole
+    // number of device pixels per framebuffer pixel keeps the scaling even.
     const dpr = window.devicePixelRatio || 1;
     const scale = Math.max(1, Math.round((cssW * dpr) / DETAIL[this.detail]));
     const w = Math.round((cssW * dpr) / scale);

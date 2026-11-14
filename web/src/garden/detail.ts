@@ -1,7 +1,7 @@
 /**
  * Width of the framebuffer, in pixels, for each level of detail. Normal
- * renders at about screen resolution on most screens (the textures keep the
- * pixel-art look). Low uses big pixels, for slow devices. Best first.
+ * renders at about screen resolution on most screens. Low renders coarser
+ * and is scaled up, for slow devices. Best first.
  */
 export const DETAIL = { normal: 2160, low: 760 } as const;
 export type Detail = keyof typeof DETAIL;
