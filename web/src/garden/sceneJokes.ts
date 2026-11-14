@@ -8,7 +8,7 @@
 import * as THREE from "three";
 import { JOKE_LINES, JOKE_SPOKEN, lapsDone, lapStep, POND_LAPS, sundialAngle, type Laps } from "./whimsy";
 import { rayBox, type Ray } from "./scenery";
-import type { BuildCtx } from "./sceneSprites";
+import { shade, type BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
 import { MOUSE_DOOR, type MouseMat } from "./mouseDoor";
@@ -65,13 +65,17 @@ export class Jokes implements Part {
    */
   build(c: BuildCtx, bench: { x: number; z: number }, now: Date, word: string | null) {
     const { L, mat } = c;
-    const stone = mat(T.pixelTexture(T.stone(), true));
+    const stone = mat(T.paperTexture(T.stone(), true), { vertexColors: true });
 
     // The sundial: a stone pillar, a cap, the bronze face, its gnomon and shadow.
     const [x, z] = [bench.x + SUNDIAL.dx, bench.z + SUNDIAL.dz];
-    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.2, SUNDIAL.pillar, 0.2), stone);
+    const pillarGeo = new THREE.BoxGeometry(0.2, SUNDIAL.pillar, 0.2);
+    shade(pillarGeo);
+    const pillar = new THREE.Mesh(pillarGeo, stone);
     pillar.position.set(x, SUNDIAL.pillar / 2, z);
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(SUNDIAL.top, 0.05, SUNDIAL.top), stone);
+    const capGeo = new THREE.BoxGeometry(SUNDIAL.top, 0.05, SUNDIAL.top);
+    shade(capGeo);
+    const cap = new THREE.Mesh(capGeo, stone);
     cap.position.set(x, SUNDIAL.pillar + 0.025, z);
     const y = SUNDIAL.pillar + 0.05;
     const face = new THREE.Mesh(new THREE.PlaneGeometry(SUNDIAL.face, SUNDIAL.face), mat(T.pixelTexture(T.sundialFace()), { alphaTest: 0.5 }));
@@ -84,10 +88,10 @@ export class Jokes implements Part {
     const geo = new THREE.PlaneGeometry(0.022, SUNDIAL.shadow);
     geo.translate(0, SUNDIAL.shadow / 2, 0);
     // Not tinted for the time of day (ctx.mat would be): a shadow is dark whatever the light.
-    const shade = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x2a1c0c, transparent: true, opacity: 0.5, depthWrite: false }));
-    shade.rotation.x = -Math.PI / 2;
+    const shadow = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x2a1c0c, transparent: true, opacity: 0.5, depthWrite: false }));
+    shadow.rotation.x = -Math.PI / 2;
     this.shadow = new THREE.Group();
-    this.shadow.add(shade);
+    this.shadow.add(shadow);
     this.shadow.position.set(x, y + 0.006, z);
     // Turning the shadow by -angle about the vertical takes it from noon (-z) toward +x (east) after noon.
     this.shadow.rotation.y = -sundialAngle(now);

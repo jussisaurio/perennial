@@ -253,7 +253,7 @@ export class SkyWater implements Part {
 
   private placePond(c: BuildCtx): [number, number][] {
     const { L, mat } = c;
-    this.water = T.pixelTexture(T.water(), true);
+    this.water = T.paperTexture(T.water(), true);
     this.water.repeat.set(2, 2);
     const pond = new THREE.Mesh(new THREE.CircleGeometry(L.pond.r, 20), mat(this.water));
     pond.rotation.x = -Math.PI / 2;
