@@ -173,6 +173,8 @@ export async function openToday(page: Page, demo: string) {
  * nails (each needs 60 or more known words) and under the stile's step, and open the way
  * over the stile to the lookout (note n08, 486 known: not every demo word is known).
  * `door`: "open" opens the hedge's door first, for the pictures; "as it is" leaves it as the learner has it.
+ * It returns once the walk is built, with every thing in it and its tap volumes. The plants' sprites load after
+ * that: on CI's software WebGL, those of 800 words can take more than 30 s (#1130). A picture waits for them with `walkReady`.
  */
 export async function openWalk(page: Page, demo: string, door: "open" | "as it is") {
   await openToday(page, demo);
@@ -184,13 +186,18 @@ export async function openWalk(page: Page, demo: string, door: "open" | "as it i
     await readRowsAgain(page);
   }
   await page.getByRole("button", { name: "Walk in your garden" }).click();
-  await walkReady(page);
+  await walkBuilt(page);
+}
+
+/** Wait until the walk that is opening is built (useGardenScene.ts sets `__garden` after the scene's build). */
+async function walkBuilt(page: Page) {
+  await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
 }
 
 /** Wait until the walk that is opening is all there. */
 export async function walkReady(page: Page) {
-  await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => "__garden" in window);
+  await walkBuilt(page);
   // The walk builds its parts after it opens, with a progress line until they are all in.
   await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
 }

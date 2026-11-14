@@ -165,6 +165,7 @@ test(`look ${run.demo}`, async ({ page }) => {
   if (run.spot === null) await openToday(page, run.demo);
   else {
     await openWalk(page, run.demo, "as it is");
+    await walkReady(page);
     await SPOTS[run.spot](page);
     await plantsIn(page);
   }
