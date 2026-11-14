@@ -80,7 +80,7 @@ type Pt = readonly [number, number] | readonly [number, number, number];
  * A closed shape through `pts`, smooth where they are round and sharp at corners: how the cut-outs are drawn, by a
  * few points each, so a shape reads as one confident cut. Cubic curves through the points (Catmull-Rom).
  */
-function shape(...pts: readonly Pt[]): string {
+export function shape(...pts: readonly Pt[]): string {
   const at = (i: number) => pts[(i + pts.length) % pts.length];
   const p = (x: number, y: number) => `${n(x)} ${n(y)}`;
   let d = `M${p(pts[0][0], pts[0][1])}`;

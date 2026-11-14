@@ -9,6 +9,7 @@ import { BRAMBLE_SHEET } from "./stile";
 export { VIEW_H } from "./plantCanvas";
 import * as Art from "./visitorArt";
 import { PEBBLE } from "./carryArt";
+import * as Prop from "./propArt";
 import { CELL_H_PX, CELL_W, FRUIT_KINDS, LOOKS, TREE_SHAPES, TRELLIS, type Fruit } from "./orchardArt";
 import { ORCHARD_WORDS } from "../deck/schema";
 import { AUTUMN } from "./walkInto";
@@ -1226,31 +1227,10 @@ export function cupRings(): OffscreenCanvas {
   return c;
 }
 
-/** Weathered stone (#1091), for the sundial and the lookout's flat stone: one flat grey and a few crisp cracks a shade darker. No light chips: stretched up a pillar, they read as smudges. */
+/** Stone (#1091, #1164), for the sundial, the lookout's flat stone and the one on the notes: one flat grey. */
 export function stone(): OffscreenCanvas {
-  const S = 128;
-  const [c, ctx] = canvas(S, S);
-  px(ctx, 0, 0, "#a9a29a", S, S);
-  const r = rng(23);
-  ctx.strokeStyle = "#8d867e";
-  ctx.lineWidth = 1.5;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  // A crack: three short bends, each turned a little from the last.
-  for (const [x, y] of scatter(r, S, 3, 40)) {
-    const a = r() * Math.PI * 2;
-    const bends = [0, 1, 2].map(() => [a + (r() - 0.5) * 1.2, 7 + r() * 9]);
-    wrapped(S, x, y, (x, y) => {
-      let [cx, cy] = [x, y];
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      for (const [b, l] of bends) {
-        [cx, cy] = [cx + Math.cos(b) * l, cy + Math.sin(b) * l];
-        ctx.lineTo(cx, cy);
-      }
-      ctx.stroke();
-    });
-  }
+  const [c, ctx] = canvas(4, 4);
+  px(ctx, 0, 0, "#a9a29a", 4, 4);
   return c;
 }
 
@@ -1579,38 +1559,15 @@ export function decor(): OffscreenCanvas {
   return c;
 }
 
-/**
- * A garden lantern on a wooden post (#1091), unlit (left) and lit (right), 128×384 each: a post with a lit and a
- * shaded side, an iron roof and frame of warm dark grey (not black), and two panes, pale when unlit and warm when lit.
- * 8 texels to each of the first 16×48 drawing's, so its parts are where they were: the halo (sceneLanterns.ts) sits on the glass.
- */
+/** Texels to a unit of the lantern's art (propArt.ts): about one to a screen pixel stood beside one. */
+const LANTERN_PX = 16;
+
+/** A garden lantern on its post (propArt.ts lanternArt), unlit (left) and lit (right). */
 export function lantern(): OffscreenCanvas {
-  const [W, H] = [128, 384];
-  const [c, ctx] = canvas(W * 2, H);
-  const [iron, ironLit] = ["#4f433c", "#6a5a50"];
-  for (const [ox, lit] of [
-    [0, false],
-    [W, true],
-  ] as const) {
-    const at = (pts: [number, number][]) => pts.map(([x, y]) => [ox + x, y] as const);
-    // The post, lit from the left.
-    px(ctx, ox + 57, 112, "#8a6a4a", 7, H - 112);
-    px(ctx, ox + 64, 112, "#6e5139", 7, H - 112);
-    // The roof: a low pyramid seen on its corner, so one side lit and one in shade, and a knob on top.
-    polygon(ctx, ironLit, at([[28, 44], [64, 44], [64, 18], [48, 18]]));
-    polygon(ctx, iron, at([[64, 44], [100, 44], [80, 18], [64, 18]]));
-    oval(ctx, iron, ox + 64, 14, 7);
-    // The frame, its glass, and the bar between the two panes.
-    px(ctx, ox + 34, 44, iron, 60, 62);
-    px(ctx, ox + 42, 50, lit ? "#f2c45e" : "#cdc6b2", 44, 50);
-    if (lit) oval(ctx, "#fff1c6", ox + 64, 76, 15, 19);
-    else polygon(ctx, "#ddd7c6", at([[42, 70], [62, 50], [72, 50], [42, 80]]));
-    px(ctx, ox + 61, 50, iron, 6, 50);
-    // The base plate, and the bracket that holds it on the post.
-    px(ctx, ox + 30, 104, ironLit, 68, 6);
-    px(ctx, ox + 30, 110, iron, 68, 5);
-    polygon(ctx, iron, at([[46, 115], [82, 115], [72, 126], [56, 126]]));
-  }
+  const [unlit, lit] = [Prop.lanternArt(false), Prop.lanternArt(true)];
+  const [c, ctx] = canvas(unlit.w * LANTERN_PX * 2, unlit.h * LANTERN_PX);
+  cutout(ctx, unlit, 0, 0, LANTERN_PX);
+  cutout(ctx, lit, unlit.w * LANTERN_PX, 0, LANTERN_PX);
   return c;
 }
 

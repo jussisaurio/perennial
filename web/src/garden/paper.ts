@@ -131,13 +131,13 @@ type Stock = readonly [fibre: number, tone: number, fleck: number, gloss: number
 
 /** The stocks the garden is cut from (docs/art-direction.md, "Surfaces: paper stocks"). */
 const STOCK = {
-  /** Smooth coloured card: plants, creatures, leaves, pickets, signs. */
+  /** Smooth coloured card: plants, creatures, leaves, pickets, signs, stone blocks. */
   card: [0.06, 0.05, 0, 0],
   /** An even, calm sheet: the yard and the paths, so they never look blotchy. */
   sheet: [0.08, 0.06, 0, 0],
   /** A softer sheet, its tone uneven: the grass. */
   handmade: [0.1, 0.24, 0, 0],
-  /** Rough sugar paper, with pale specks in it: the soil and stones. */
+  /** Rough sugar paper, with pale specks in it: the soil. */
   sugar: [0.18, 0.2, -0.6, 0],
   /** Kraft card, with its short dark fibres: everything made of wood. */
   kraft: [0.07, 0.12, 0.6, 0],
