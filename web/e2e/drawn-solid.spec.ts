@@ -1,6 +1,6 @@
 import type { OpenSpot } from "../src/fuzz/drawnSolid";
 import type { HitBox, HitDisc } from "../src/garden/scenery";
-import { openWalk, TIMES } from "./spots";
+import { openWalkBuilt, TIMES } from "./spots";
 import { expect, test } from "./test";
 
 // garden.drawn-solid (docs/invariants.md): each thing the scene draws as solid stops a walker.
@@ -20,7 +20,9 @@ type Drawn = { hitBoxes: HitBox[]; hitDiscs: HitDisc[]; lanterns: { boxes: HitBo
 test("garden.drawn-solid: each thing drawn as solid stops a walker, with the door and the way over the stile open", async ({ page }) => {
   // Visitors and what they bring (the snail's sign) depend on the day.
   await page.clock.setFixedTime(TIMES.day);
-  await openWalk(page, "es:800", "open");
+  // Built is enough: every tap volume is in by then. The 800 plants' sprites come after, and on CI's software
+  // WebGL they took over 30 s (run 43576713657).
+  await openWalkBuilt(page, "es:800", "open");
   const spots = await page.evaluate(async () => {
     const { openSpots } = await import(/* @vite-ignore */ "/src/fuzz/drawnSolid.ts");
     const { standAt } = await import(/* @vite-ignore */ "/src/garden/ground.ts");

@@ -175,6 +175,12 @@ export async function openToday(page: Page, demo: string) {
  * `door`: "open" opens the hedge's door first, for the pictures; "as it is" leaves it as the learner has it.
  */
 export async function openWalk(page: Page, demo: string, door: "open" | "as it is") {
+  await openWalkBuilt(page, demo, door);
+  await walkReady(page);
+}
+
+/** Open the walk as openWalk does, but wait only until it is built (walkBuilt), not for its plants' sprites. */
+export async function openWalkBuilt(page: Page, demo: string, door: "open" | "as it is") {
   await openToday(page, demo);
   if (door === "open") {
     await page.evaluate(async () => {
@@ -184,14 +190,19 @@ export async function openWalk(page: Page, demo: string, door: "open" | "as it i
     await readRowsAgain(page);
   }
   await page.getByRole("button", { name: "Walk in your garden" }).click();
-  await walkReady(page);
+  await walkBuilt(page);
+}
+
+/** Wait until the walk that is opening is built: all it draws and all that stops a walker is in (useGardenScene.ts sets __garden after build). */
+async function walkBuilt(page: Page) {
+  await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
+  await page.waitForFunction(() => "__garden" in window);
 }
 
 /** Wait until the walk that is opening is all there. */
 export async function walkReady(page: Page) {
-  await expect(page.getByText(/^\d+ plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
-  await page.waitForFunction(() => "__garden" in window);
-  // The walk builds its parts after it opens, with a progress line until they are all in.
+  await walkBuilt(page);
+  // Then the plants' sprites are drawn, with a progress line until they are all in (scene.ts loadPlants).
   await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
 }
 
