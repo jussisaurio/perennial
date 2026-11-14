@@ -143,6 +143,9 @@ function install() {
 }
 
 test("render.no-pop: a plant's drawn size changes only as the camera's move explains, as you walk up to one and away", async ({ page }) => {
+  // On a busy CI shard this took 13.8 s of the default 30 s, most of it to open the walk, which a test can't make
+  // shorter (#1150). A slower shard must not turn main red.
+  test.setTimeout(60_000);
   await page.clock.setFixedTime(TIMES.day);
   await pinDetail(page, "low");
   // Small, so every plant has its full-size sprite and the walk is quick on CI.
