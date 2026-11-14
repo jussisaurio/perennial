@@ -1047,29 +1047,47 @@ export const LOW_COLS = ATLAS / LOW_W;
 export const LOW_PER_SHEET = LOW_COLS * (ATLAS / LOW_H);
 /** Small sprites drawn at once: a run of plants side by side in one row of a sheet. Divides LOW_COLS. */
 export const LOW_RUN = 16;
-export const HI_W = 96;
-export const HI_H = 192;
-export const HI_COLS = Math.floor(ATLAS / HI_W);
-export const HI_SLOTS = HI_COLS * Math.floor(ATLAS / HI_H);
+/** Big enough that a near plant's edges stay clean on a phone, filtered smooth (#1091). */
+export const HI_W = 192;
+export const HI_H = 384;
+/** 210 slots: the plants within about 9 m of you. */
+export const HI_COLS = 21;
+const HI_ROWS = 10;
+export const HI_SLOTS = HI_COLS * HI_ROWS;
+/** The pool of full-size sprites, in pixels. */
+export const POOL_W = HI_COLS * HI_W;
+export const POOL_H = HI_ROWS * HI_H;
 const BATCH_COLS = 8;
-export const BATCH = BATCH_COLS * 3;
+/** 16: copying a batch's sprites with their mipmaps takes the page 6–8 ms at CPU 10× (#1091); 24 took 9–13 ms. */
+export const BATCH = BATCH_COLS * 2;
+
+/** Mipmap levels for cells of w × h: halved while both sides are even, so no level mixes two cells. */
+function levelsFor(w: number, h: number) {
+  let n = 1;
+  for (; w % 2 === 0 && h % 2 === 0; n++) {
+    w /= 2;
+    h /= 2;
+  }
+  return n;
+}
+export const LOW_LEVELS = levelsFor(LOW_W, LOW_H);
+export const HI_LEVELS = levelsFor(HI_W, HI_H);
 
 let worker: Worker | null = null;
 let nextJob = 0;
-const waiting = new Map<number, { resolve: (t: THREE.DataTexture) => void; reject: (e: unknown) => void }>();
+const waiting = new Map<number, { resolve: (t: THREE.DataTexture[]) => void; reject: (e: unknown) => void }>();
 
 /**
- * Plants drawn by the worker, in a grid of `cols` cells of w × h: unpremultiplied
- * RGBA, to copy into a sheet with three's copyTextureToTexture. One worker for
- * the page; it draws one job at a time, in order.
+ * Plants drawn by the worker, in a grid of `cols` cells of w × h: premultiplied
+ * RGBA, one texture per mipmap level, to copy into a sheet with three's
+ * copyTextureToTexture. One worker for the page; it draws one job at a time, in order.
  */
-function drawn(plants: PlacedPlant[], cols: number, w: number, h: number): Promise<THREE.DataTexture> {
+function drawn(plants: PlacedPlant[], cols: number, w: number, h: number, levels: number): Promise<THREE.DataTexture[]> {
   if (!worker) {
     worker = new Worker(new URL("./spriteWorker.ts", import.meta.url), { type: "module" });
     worker.onmessage = (e: MessageEvent<SpriteDone>) => {
-      const { id, width, height, data } = e.data;
-      const tex = new THREE.DataTexture(data, width, height);
-      waiting.get(id)!.resolve(tex);
+      const { id, levels } = e.data;
+      waiting.get(id)!.resolve(levels.map((l) => new THREE.DataTexture(l.data, l.width, l.height)));
       waiting.delete(id);
     };
     // A worker that fails draws nothing more: every plant still waiting fails loudly, not silently blank.
@@ -1079,7 +1097,7 @@ function drawn(plants: PlacedPlant[], cols: number, w: number, h: number): Promi
     };
   }
   const id = nextJob++;
-  const job: SpriteJob = { id, plants: plants.map((p) => ({ lemma: p.lemma, growth: p.growth, stage: p.stage })), cols, w, h };
+  const job: SpriteJob = { id, plants: plants.map((p) => ({ lemma: p.lemma, growth: p.growth, stage: p.stage })), cols, w, h, levels };
   worker.postMessage(job);
   return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
 }
@@ -1101,10 +1119,10 @@ export const lowCell = (i: number) => {
 };
 
 /** Small sprites for up to LOW_RUN plants, side by side. */
-export const lowRun = (plants: PlacedPlant[]) => drawn(plants, LOW_RUN, LOW_W, LOW_H);
+export const lowRun = (plants: PlacedPlant[]) => drawn(plants, LOW_RUN, LOW_W, LOW_H, LOW_LEVELS);
 
 /** Full-size sprites for up to BATCH plants, in a grid of BATCH_COLS. */
-export const highBatch = (plants: PlacedPlant[]) => drawn(plants, BATCH_COLS, HI_W, HI_H);
+export const highBatch = (plants: PlacedPlant[]) => drawn(plants, BATCH_COLS, HI_W, HI_H, HI_LEVELS);
 
 export const batchCell = (i: number) => ({ x: (i % BATCH_COLS) * HI_W, y: Math.floor(i / BATCH_COLS) * HI_H });
 

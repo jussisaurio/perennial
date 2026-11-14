@@ -30,6 +30,15 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
       const p = g.layout.plants[40];
       Object.assign(g.me, { x: p.x + 0.3, z: p.z + 1.8, yaw: 0, pitch: 0.45 });
     }),
+  // Up close to one bloom at the front of a bed, as near as the walker gets (#1091): how a plant's edges look at their biggest.
+  "plant-close": (page) =>
+    page.evaluate(() => {
+      const g = window.__garden.game;
+      const bed = g.layout.beds[g.layout.plants[40].bed];
+      const front = g.layout.plants.filter((p) => g.layout.beds[p.bed] === bed && p.stage === "bloom").sort((a, b) => b.z - a.z)[0];
+      // At the bed's front edge (+z), the walker's 0.28 m from it, looking a little down at the flower.
+      Object.assign(g.me, { x: front.x, z: bed.z + bed.d / 2 + 0.3, yaw: 0, pitch: -0.15 });
+    }),
   door: (page) => standAtDoor(page),
   // A step back from the open mouse door and its last note (#882), with the cat by it once it lives here.
   mousedoor: (page) =>
@@ -184,6 +193,21 @@ export async function walkReady(page: Page) {
   await page.waitForFunction(() => "__garden" in window);
   // The walk builds its parts after it opens, with a progress line until they are all in.
   await expect(page.locator(".gw-loading")).toHaveCount(0, { timeout: 30_000 });
+}
+
+/**
+ * Once you stand somewhere new, the plants near you get their full-size sprites a batch at a time (scenePlants.ts
+ * stream), as they do while you walk. Wait until a stream that began after the move has put all of them in: a picture
+ * taken at once shows the small sprites, which a learner sees only for a moment.
+ */
+export async function plantsIn(page: Page) {
+  // The streamer's own state, private to Plants.
+  type Streamer = { plants: { streaming: boolean; hungry: boolean; lastStream: number } };
+  const from = await page.evaluate(() => window.__garden.game.elapsed);
+  await page.waitForFunction((from) => {
+    const p = (window.__garden as unknown as Streamer).plants;
+    return p.lastStream > from && !p.streaming && !p.hungry;
+  }, from);
 }
 
 /** Two frames: the scene draws a moved camera on the next one. */

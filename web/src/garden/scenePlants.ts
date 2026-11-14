@@ -41,7 +41,7 @@ const PLANT_VERT = /* glsl */ `
   varying float vSilver;
   ${BILLBOARD}
   vec2 cellUv(float idx, float cols, vec2 cell, vec2 size) {
-    // Half a texel in from the edge, so nearest sampling never reads the neighbour.
+    // Half a texel in from the edge, so filtering never reads the neighbour.
     vec2 q = clamp(vec2(uv.x, 1.0 - uv.y), 0.5 / cell, 1.0 - 0.5 / cell);
     float r = floor((idx + 0.5) / cols);
     return (vec2(idx - r * cols, r) * cell + q * cell) / size;
@@ -59,13 +59,15 @@ const PLANT_VERT = /* glsl */ `
     gl_Position = projectionMatrix * mv;
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
-    vHi = cellUv(max(iCell.y, 0.0), ${T.HI_COLS.toFixed(1)}, vec2(${T.HI_W.toFixed(1)}, ${T.HI_H.toFixed(1)}), vec2(${T.ATLAS.toFixed(1)}));
+    vHi = cellUv(max(iCell.y, 0.0), ${T.HI_COLS.toFixed(1)}, vec2(${T.HI_W.toFixed(1)}, ${T.HI_H.toFixed(1)}), vec2(${T.POOL_W.toFixed(1)}, ${T.POOL_H.toFixed(1)}));
     vFog = smoothstep(uFogNear, uFogFar, -mv.z);
     vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
     vSilver = uSilver * iOld;
   }
 `;
 
+// The sprites are premultiplied and filtered smooth (#1091): a plant's edge is
+// where its alpha crosses one half, so it stays clean however close you stand.
 // On a full moon's night (#361), an old friend's outer pixels (those next to an
 // empty one) turn a faint silver, fading with the fog like the rest of it.
 const PLANT_FRAG = /* glsl */ `
@@ -86,9 +88,10 @@ const PLANT_FRAG = /* glsl */ `
   void main() {
     vec4 c = vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
     if (c.a < 0.5) discard;
-    gl_FragColor = shade(c);
+    gl_FragColor = shade(vec4(c.rgb / c.a, 1.0));
     if (vSilver > 0.5) {
-      float rim = vHasHi > 0.5 ? edge(uHi, vHi, vec2(1.0 / ${T.ATLAS.toFixed(1)})) : edge(uLow, vLow, 1.0 / uLowSize);
+      // Two pixels on a full-size sprite: as wide as the rim was when those sprites had half the pixels.
+      float rim = vHasHi > 0.5 ? edge(uHi, vHi, 2.0 / vec2(${T.POOL_W.toFixed(1)}, ${T.POOL_H.toFixed(1)})) : edge(uLow, vLow, 1.0 / uLowSize);
       gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.82, 0.86, 0.96), rim * 0.35 * (1.0 - vFog));
     }
   }
@@ -247,15 +250,29 @@ export class Plants {
   /**
    * A texture that lives only on the GPU: storage allocated, nothing uploaded (WebGL starts it
    * cleared). Sprites are copied into it later. Uploading empty sheets took ~55 ms at CPU 10× (#459).
+   * Filtered smooth, with `levels` mipmap levels for plants far off, which the sprite worker makes (#1091).
    */
-  private gpuTexture(w: number, h: number): THREE.DataTexture {
+  private gpuTexture(w: number, h: number, levels: number): THREE.DataTexture {
     const t = new THREE.DataTexture(null, w, h);
-    t.magFilter = t.minFilter = THREE.NearestFilter;
-    t.generateMipmaps = false;
+    t.magFilter = THREE.LinearFilter;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    // Only the sizes count: three allocates a level for each, and uploads none while dataReady is false.
+    t.mipmaps = Array.from({ length: levels }, (_, l) => ({ data: new Uint8Array(0), width: w >> l, height: h >> l }));
     t.source.dataReady = false;
     t.needsUpdate = true;
     this.renderer.initTexture(t);
     return t;
+  }
+
+  /**
+   * Copies sprites from the worker into `dst` at (x, y), every mipmap level: all of them, or the one
+   * full-size sprite at `cell` of a batch. Every number halves exactly at each level (textures.ts levelsFor).
+   */
+  private copyLevels(src: THREE.DataTexture[], dst: THREE.DataTexture, x: number, y: number, cell?: { x: number; y: number }) {
+    src.forEach((level, l) => {
+      const part = cell ? new THREE.Box2(new THREE.Vector2(cell.x >> l, cell.y >> l), new THREE.Vector2((cell.x + T.HI_W) >> l, (cell.y + T.HI_H) >> l)) : null;
+      this.renderer.copyTextureToTexture(level, dst, part, new THREE.Vector2(x >> l, y >> l), 0, l);
+    });
   }
 
   /** One mesh per bed (and sheet), so whole beds can be culled. The sprites are empty until drawSprites draws them. `ctx` for the shared scene and mats set. */
@@ -263,10 +280,10 @@ export class Plants {
     const plants = this.layout.plants;
     if (!plants.length) return;
     this.onProgress(0, plants.length);
-    const pool = this.gpuTexture(T.ATLAS, T.ATLAS);
+    const pool = this.gpuTexture(T.POOL_W, T.POOL_H, T.HI_LEVELS);
     this.pool = pool;
     this.near = new Float64Array(plants.length);
-    this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h));
+    this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h, T.LOW_LEVELS));
     const mats = this.low.map((tex) => {
       const m = plantMaterial(tex, pool, tex.image.height);
       m.uniforms.uReady.value = this.readyIndex;
@@ -355,7 +372,7 @@ export class Plants {
       const src = await T.lowRun(run);
       if (this.disposed) return;
       const c = T.lowCell(start);
-      this.renderer.copyTextureToTexture(src, this.low[c.sheet], null, new THREE.Vector2(c.x, c.y));
+      this.copyLevels(src, this.low[c.sheet], c.x, c.y);
       done += run.length;
       if (done < plants.length) this.onProgress(done, plants.length);
     }
@@ -422,13 +439,7 @@ export class Plants {
         if (this.disposed) return;
         missing.forEach((plant, k) => {
           const slot = this.slotOf.get(plant)!;
-          const c = T.batchCell(k);
-          this.renderer.copyTextureToTexture(
-            src,
-            pool,
-            new THREE.Box2(new THREE.Vector2(c.x, c.y), new THREE.Vector2(c.x + T.HI_W, c.y + T.HI_H)),
-            new THREE.Vector2((slot % T.HI_COLS) * T.HI_W, Math.floor(slot / T.HI_COLS) * T.HI_H),
-          );
+          this.copyLevels(src, pool, (slot % T.HI_COLS) * T.HI_W, Math.floor(slot / T.HI_COLS) * T.HI_H, T.batchCell(k));
           this.setSlot(plant, slot);
         });
       },

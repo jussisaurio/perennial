@@ -156,9 +156,9 @@ export function bleedEdges(d: Uint8Array | Uint8ClampedArray, w: number, h: numb
 }
 
 /**
- * Plants in a grid of `cols`, each in a cell of w × h pixels, as unpremultiplied
- * RGBA. Hard alpha edges, so the sprites look hand-pixelled rather than
- * blurry: a soft edge pixel already has its full colour.
+ * Plants in a grid of `cols`, each in a cell of w × h pixels, as premultiplied
+ * RGBA with soft edges. The walk filters them smooth, with mipmaps (#1091):
+ * premultiplied colours average right, so an edge gets no dark rim.
  */
 export function drawPlants(plants: SpritePlant[], cols: number, w: number, h: number): ImageData {
   const c = new OffscreenCanvas(Math.min(plants.length, cols) * w, Math.ceil(plants.length / cols) * h);
@@ -175,7 +175,32 @@ export function drawPlants(plants: SpritePlant[], cols: number, w: number, h: nu
     ctx.restore();
   });
   const data = ctx.getImageData(0, 0, c.width, c.height);
-  const d = data.data;
-  for (let i = 3; i < d.length; i += 4) d[i] = d[i] < 110 ? 0 : 255;
+  premultiply(data.data);
   return data;
+}
+
+/** getImageData gives each pixel's colour unpremultiplied: this multiplies it by the pixel's alpha again. @internal Exported for tests. */
+export function premultiply(d: Uint8ClampedArray) {
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3] / 255;
+    d[i] *= a;
+    d[i + 1] *= a;
+    d[i + 2] *= a;
+  }
+}
+
+/**
+ * The next mipmap level of premultiplied RGBA, w × h with both even: each pixel
+ * the mean of a 2 × 2 square. A cell with even sides stays apart from its neighbours.
+ */
+export function halve(d: Uint8Array, w: number, h: number): Uint8Array {
+  const out = new Uint8Array(w * h);
+  for (let y = 0; y < h / 2; y++)
+    for (let x = 0; x < w / 2; x++) {
+      const i = (2 * y * w + 2 * x) * 4;
+      const j = i + w * 4;
+      const o = (y * (w / 2) + x) * 4;
+      for (let c = 0; c < 4; c++) out[o + c] = (d[i + c] + d[i + 4 + c] + d[j + c] + d[j + 4 + c] + 2) >> 2;
+    }
+  return out;
 }
