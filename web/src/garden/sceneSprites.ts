@@ -9,7 +9,7 @@ import * as THREE from "three";
 import type { DeckLang } from "../deck/langs";
 import { stemHeight } from "../ui/plant";
 import { GRAIN, PAPER, type StockName } from "./paper";
-import { castsShadow, LIGHT, LIT } from "./sceneLight";
+import { castsShadow, LIGHT, LIT, takesLight } from "./sceneLight";
 import type { HitBox, HitDisc } from "./scenery";
 import * as T from "./textures";
 import type { Layout } from "./world";
@@ -211,24 +211,26 @@ const SPRITE_FRAG = /* glsl */ `
 `;
 
 function spriteMaterial(map: THREE.Texture, vertexShader: string): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    // Read from the map, so the shader and the map's upload can't disagree.
-    defines: map.premultiplyAlpha ? { PREMULTIPLIED: "" } : {},
-    uniforms: {
-      uMap: { value: map },
-      uTime: { value: 0 },
-      uSway: { value: 1 },
-      uFogNear: { value: FOG_NEAR },
-      uFogFar: { value: FOG_FAR },
-      uFog: { value: new THREE.Color() },
-      uTint: { value: new THREE.Color(1, 1, 1) },
-      uSelected: { value: -1 },
-      uGrain: GRAIN,
-      ...LIT,
-    },
-    vertexShader,
-    fragmentShader: SPRITE_FRAG,
-  });
+  return takesLight(
+    new THREE.ShaderMaterial({
+      // Read from the map, so the shader and the map's upload can't disagree.
+      defines: map.premultiplyAlpha ? { PREMULTIPLIED: "" } : {},
+      uniforms: {
+        uMap: { value: map },
+        uTime: { value: 0 },
+        uSway: { value: 1 },
+        uFogNear: { value: FOG_NEAR },
+        uFogFar: { value: FOG_FAR },
+        uFog: { value: new THREE.Color() },
+        uTint: { value: new THREE.Color(1, 1, 1) },
+        uSelected: { value: -1 },
+        uGrain: GRAIN,
+        ...LIT,
+      },
+      vertexShader,
+      fragmentShader: SPRITE_FRAG,
+    }),
+  );
 }
 
 /** A w×h quad standing on its bottom edge. */

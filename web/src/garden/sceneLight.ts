@@ -7,8 +7,9 @@
 // sun's shadow map covers a square of ground ahead of the eye. A standing
 // cut-out turns to face the camera, but in the shadow map it faces the sun, so
 // its shadow keeps its shape as you turn; it looks its shadows up in that same
-// pose. Low detail draws no shadows (Sun.setShadows): the faces still turn from
-// the light, and the lanterns still glow.
+// pose. Low detail draws no shadows (Sun.setShadows), and its shaders have no
+// shadow code at all (SUN_SHADOW): the faces still turn from the light, and the
+// lanterns still glow.
 
 import * as THREE from "three";
 import type { Lamps } from "./lanterns";
@@ -37,7 +38,6 @@ const FLAME = 1.1;
 export const LIT = {
   uSunMap: { value: null as THREE.DepthTexture | null },
   uSunMatrix: { value: new THREE.Matrix4() },
-  uSunOn: { value: 0 },
   /** Toward the light. */
   uSunDir: { value: new THREE.Vector3(0, 1, 0) },
   /** Across the light, level: a standing cut-out's width runs along it in the shadow map. */
@@ -53,14 +53,15 @@ export const LIT = {
 
 /**
  * GLSL: the light. sunShadow(at): how much sun reaches a point in the world, 0 to 1, soft at the edges (9 filtered
- * taps of the shadow map), and 1 off the map or with no shadows. fillLight(up): the shade's light on a face that turns
- * `up` (1) to the sky or down (-1). lampLight(at, n): the lanterns' light on a point whose face turns to `n` (zero: a
- * cut-out, which takes light from both sides).
+ * taps of the shadow map), and 1 off the map or with no shadows (no SUN_SHADOW). fillLight(up): the shade's light on a
+ * face that turns `up` (1) to the sky or down (-1). lampLight(at, n): the lanterns' light on a point whose face turns to
+ * `n` (zero: a cut-out, which takes light from both sides).
  */
 export const LIGHT = /* glsl */ `
+  #ifdef SUN_SHADOW
   uniform sampler2DShadow uSunMap;
   uniform mat4 uSunMatrix;
-  uniform float uSunOn;
+  #endif
   uniform vec3 uSunDir;
   uniform vec3 uKey;
   uniform vec3 uFill;
@@ -73,7 +74,7 @@ export const LIGHT = /* glsl */ `
     return uFill * mix(vec3(1.1, 1.02, 0.88), vec3(1.0), clamp(0.5 + 0.5 * up, 0.0, 1.0));
   }
   float sunShadow(vec3 at) {
-    if (uSunOn < 0.5) return 1.0;
+    #ifdef SUN_SHADOW
     vec3 s = (uSunMatrix * vec4(at, 1.0)).xyz;
     float edge = max(abs(s.x - 0.5), abs(s.y - 0.5));
     if (edge > 0.5 || s.z > 1.0) return 1.0;
@@ -84,6 +85,9 @@ export const LIGHT = /* glsl */ `
       for (int j = -1; j <= 1; j++)
         sum += texture(uSunMap, vec3(s.xy + vec2(i, j) * tx, s.z - 0.0004));
     return mix(sum / 9.0, 1.0, smoothstep(0.42, 0.5, edge));
+    #else
+    return 1.0;
+    #endif
   }
   vec3 lampLight(vec3 at, vec3 n) {
     float sum = 0.0;
@@ -104,6 +108,29 @@ export const LIGHT = /* glsl */ `
 
 /** Built-in materials made lit (litMaterial), so Sun.casters knows them. */
 const litMats = new WeakSet<THREE.Material>();
+/** Every material that reads LIT (takesLight), so Sun.setShadows can give each one the shadow code or take it away. */
+const lit = new WeakSet<THREE.Material>();
+/** Whether the sun casts shadows now (Sun.setShadows). */
+let shadowsOn = false;
+
+/** Gives `m` the define SUN_SHADOW while the sun casts shadows, and takes it away while it does not. */
+function shadowCode(m: THREE.Material) {
+  const d = { ...m.defines };
+  if (shadowsOn) d.SUN_SHADOW = "";
+  else delete d.SUN_SHADOW;
+  m.defines = d;
+}
+
+/**
+ * `m` reads LIT: it has the shadow code (SUN_SHADOW) while the sun casts shadows, now and as Sun.setShadows changes.
+ * Low detail's shaders have none: software WebGL (CI's) runs the code in a branch it does not take, so low paid for
+ * shadows it does not draw (#1177: a draw at low took 73 ms there, where it takes 66 without).
+ */
+export function takesLight<M extends THREE.Material>(m: M): M {
+  shadowCode(m);
+  lit.add(m);
+  return m;
+}
 
 /**
  * Lights a built-in unlit material (after its paper: paper.ts). Its face turns toward the light or away from it, and
@@ -148,7 +175,7 @@ export function litMaterial<M extends THREE.Material>(m: M, stock: StockName): M
     onLight(s);
   };
   litMats.add(m);
-  return m;
+  return takesLight(m);
 }
 
 /** Each cut-out material's material in the shadow map (castsShadow), one for all the meshes that share it. */
@@ -180,14 +207,16 @@ export class Sun {
   /** A light like this one, for compiling shaders off the scene (GardenScene.warm): which lights there are is part of each program's key. */
   readonly standIn = new THREE.DirectionalLight();
   private readonly renderer: THREE.WebGLRenderer;
+  private readonly scene: THREE.Scene;
   private readonly focus = new THREE.Vector3();
   private readonly up = new THREE.Vector3();
   private readonly near = new Float32Array(MAX_LAMPS);
 
   constructor(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
     this.renderer = renderer;
-    // Always on, with the light always casting: the programs are keyed by both, so they stay the same at each detail.
-    // setShadows says whether the map is drawn.
+    this.scene = scene;
+    // Always on, with the light always casting, as three keys every program by both: only SUN_SHADOW (setShadows)
+    // changes the programs. setShadows says whether the map is drawn.
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
@@ -204,11 +233,14 @@ export class Sun {
     // The last walk's light is gone with its context.
     LIT.uSunMatrix.value = l.shadow.matrix;
     LIT.uSunMap.value = null;
-    LIT.uSunOn.value = 0;
+    shadowsOn = false;
     LIT.uLampCount.value = 0;
   }
 
-  /** Draw shadows, or not (low detail). No shadow map is made until they are first wanted. */
+  /**
+   * Draw shadows, or not (low detail). No shadow map is made until they are first wanted. A change compiles every lit
+   * material's program again, with the shadow code or without it, on its next draw.
+   */
   setShadows(on: boolean) {
     const shadow = this.light.shadow;
     // The map three would make (WebGLShadowMap), with one channel of colour where three makes four, which nothing reads.
@@ -223,8 +255,19 @@ export class Sun {
       shadow.map = map;
     }
     this.renderer.shadowMap.autoUpdate = on;
-    LIT.uSunOn.value = on ? 1 : 0;
     LIT.uSunMap.value = on && shadow.map ? (shadow.map.depthTexture as THREE.DepthTexture) : null;
+    if (on === shadowsOn) return;
+    shadowsOn = on;
+    // Every lit material made so far is in the scene: nothing leaves it, and the detail changes only before the build
+    // (GardenScene's constructor) or after it (autoDetail).
+    this.scene.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      for (const m of meshMaterials(o))
+        if (lit.has(m)) {
+          shadowCode(m);
+          m.needsUpdate = true;
+        }
+    });
   }
 
   /** Every mesh under `root` all of lit materials (litMaterial) that stands up casts a shadow. Again after more is built. */
@@ -232,8 +275,7 @@ export class Sun {
     const box = new THREE.Box3();
     root.traverse((o) => {
       if (!(o instanceof THREE.Mesh)) return;
-      const ms: THREE.Material[] = Array.isArray(o.material) ? o.material : [o.material];
-      if (!ms.every((m) => litMats.has(m) && !m.transparent)) return;
+      if (!meshMaterials(o).every((m) => litMats.has(m) && !m.transparent)) return;
       box.makeEmpty().expandByObject(o, false);
       if (box.max.y - box.min.y >= FLAT) o.castShadow = true;
     });
@@ -293,4 +335,9 @@ export class Sun {
     }
     LIT.uLampCount.value = n;
   }
+}
+
+/** A mesh's materials, one or many. */
+function meshMaterials(o: THREE.Mesh): THREE.Material[] {
+  return Array.isArray(o.material) ? o.material : [o.material];
 }
