@@ -19,7 +19,7 @@ const unlocked = (id: string, skill: Skill): MemoryRow => ({ ...mem(id, skill, 0
 const words = (n: number, prefix = "f") => Array.from({ length: n }, (_, i) => `${prefix}${i}`);
 
 function chunk(input: Partial<PlanInput>) {
-  return runAll(planSteps({ now, budgetMs: FIVE, memories: [], fresh: [], fsrs, answeredToday: new Set(), ...input }));
+  return runAll(planSteps({ now, budgetMs: FIVE, memories: [], fresh: [], fsrs, answeredToday: new Set(), knewIt: new Set(), ...input }));
 }
 const ids = (queue: Task[]) => queue.map((t) => t.wordId);
 
@@ -140,6 +140,12 @@ describe("plan", () => {
     const p = chunk({ memories, fresh: ["n"], answeredToday: new Set(["done"]) });
     expect(ids(p.queue)).not.toContain("done");
     expect(ids(p.queue)).toEqual(expect.arrayContaining(["due", "n", "other"]));
+  });
+
+  test('a word marked "I knew it" is no early review: its button says "Back in about a week" (#269)', () => {
+    // Yesterday: "I knew it" on k (an Easy first answer, s 8.3), and l's quick check remembered (s 2.3). Neither is due.
+    const memories = [{ ...mem("k", "read", 1, 8.3), reps: 1 }, { ...mem("l", "read", 1, 2.3), reps: 1 }];
+    expect(ids(chunk({ memories, knewIt: new Set(["k"]) }).queue)).toEqual(["l"]);
   });
 
   test("only when every learned word was answered today and no new words are left, a second try beats an empty chunk", () => {

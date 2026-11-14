@@ -31,8 +31,11 @@ export function* sessionPlanSteps(l: Learner, minutes: number, voice: boolean, n
     yield;
   }
   const memories: MemoryRow[] = [];
+  const knewIt = new Set<string>();
   for (const m of l.memories) {
     if ((voice || m.skill !== "listen") && !suspended.has(m.wordId)) memories.push(m);
+    // One answer that waters reading, and it was "I knew it". !: a practised memory's reviews are listed under its word.
+    if (m.skill === "read" && m.reps === 1 && l.reviewsByWord.get(m.wordId)!.some((r) => r.kind === "known")) knewIt.add(m.wordId);
     yield;
   }
   return yield* planSteps({
@@ -42,6 +45,7 @@ export function* sessionPlanSteps(l: Learner, minutes: number, voice: boolean, n
     fresh,
     fsrs: scheduler,
     answeredToday: answeredToday(l, now),
+    knewIt,
   });
 }
 

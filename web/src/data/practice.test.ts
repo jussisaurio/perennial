@@ -9,7 +9,7 @@ const mem = (id: string, dueIn: number): MemoryRow => ({ key: `${id}:read`, word
 const due = (id: string) => mem(id, -5);
 
 // A learner with `fresh` unseen words, these memories, and these reviews.
-function learner(fresh: number, memories: MemoryRow[], reviews: { word_id: string; grade: number; reviewed_at: string; duration_ms?: number }[] = []): Learner {
+function learner(fresh: number, memories: MemoryRow[], reviews: { word_id: string; grade: number; reviewed_at: string; duration_ms?: number; kind?: "known" }[] = []): Learner {
   const resolve = (id: string) => (id === "alias" ? "a" : id);
   const rows = reviews.map((r, i) => ({ ...r, id: `r${i}`, skill: "read" }));
   const byWord = new Map<string, typeof rows>();
@@ -37,6 +37,15 @@ test("a word answered correctly today (by any of its ids) is not planned again t
     { word_id: "d", grade: 4, reviewed_at: at(now - 60_000) }, // "Already know it" today
   ]);
   expect(words(l).sort()).toEqual(["b", "c"]);
+});
+
+test('a word marked "I knew it" yesterday is not practised early today (#269)', () => {
+  const yesterday = at(now - DAY_MS);
+  const l = learner(0, [{ ...mem("k", 7), reps: 1 }, { ...mem("l", 1.3), reps: 1 }], [
+    { word_id: "k", grade: 4, kind: "known", reviewed_at: yesterday },
+    { word_id: "l", grade: 3, reviewed_at: yesterday }, // its quick check, remembered
+  ]);
+  expect(words(l)).toEqual(["l"]);
 });
 
 test("there is always something to practise once there is any word", () => {
