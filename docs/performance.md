@@ -23,18 +23,18 @@ No main-thread task over 10 ms, with the CPU slowed 10× (#447). A task that run
 ### How to run it
 
 ```sh
-cd web && bun perf/ui.ts --runs 5 --only "Words"
+cd web && bun run perf
 ```
 
 It builds the app (with the demo switch on), starts the real server, and creates a learner with every Spanish deck word studied. Then it measures each heavy screen: Today, the garden, the word list, ten session cards, tab changes, the 3D walk. Each run uses a new browser context with a newly made learner, so one run does not inherit state or heap from the last. Before it measures, each run does the screen once at full speed, because a learner has opened the screen before: its code is then compiled and cached. The first visit in a new browser is 2–3× slower. Making the learner and the warm-up take a few seconds per run.
 
-**Do not measure an obvious win.** A change that is faster by construction (all rows → changed rows, work no longer repeated, a cached pure result) needs no before and after runs: the PR states the change in complexity. Measure to find where the time goes, or when the effect is not certain (scheduling, yielding, GPU, layout). Explore with `--runs 1`, and take "before" from the latest baseline in #447.
+**Do not measure an obvious win.** A change that is faster by construction (all rows → changed rows, work no longer repeated, a cached pure result) needs no before and after runs: the PR states the change in complexity. Measure to find where the time goes, or when the effect is not certain (scheduling, yielding, GPU, layout). Explore with `--runs 1 --only <screen>`, and take "before" from `web/perf/baseline.json`.
 
 Numbers from before 2026-11-06 (harness v1, #447 baseline) are not comparable: v1 used one page for all runs, so its first run was cold and its later runs had one or more warm-ups. Measure before and after a change with the same version.
 
 Worst ms, Over budget ms, LoAF blocking ms and the frame columns from before the fix in #450 (2026-11-06) count DevTools work as app work. The profiler start alone was one task of 300–650 ms at CPU 10×. Do not compare them with later numbers.
 
-- `--runs <n>`: run each screen n times. The report shows the median, and the p90 for the main numbers. Use 5 to compare before and after a change: one run varies with what else the machine does.
+- `--runs <n>`: run each screen n times (default 3). The report shows the median, and the p90 for the main numbers. One run varies with what else the machine does.
 - `--only <text>`: only the screens whose name has this text.
 - `--cpu <n>`: slow the CPU n times (default 10).
 - `--no-minify`: readable function names in profiles and frame scripts.
@@ -60,6 +60,19 @@ The browser is full Chromium in headless mode, so WebGL draws on the machine's r
 
 ## Baseline
 
-The UI baseline is the last baseline table in #447 (2026-11-06), made with the current harness at CPU 10×. The open performance debt is #421.
+### UI: the ratchet
+
+`web/perf/baseline.json` stores three numbers per screen: Worst ms, Over budget ms and INP ms, each the median of a run with the default settings (#985). `bun run perf` compares each run with it:
+
+- **Clearly worse fails.** A number is clearly worse when even the screen's best run is over its limit: 1.25 × the stored number + 10 ms. The run then exits 1, and the report's "Ratchet" section names each number. One slow run can be the machine; three slow runs are the change.
+- **Clearly better is stored.** When the stored number is over the limit of the new median, the new median replaces it. Commit `baseline.json` with the change that made it faster, so it cannot get slow again unseen.
+- A new screen is stored. A screen that is no longer measured is removed. With `--only`, the other screens keep their numbers.
+- **Not compared:** a run with other settings (`--cpu`, fewer than 3 runs, `--no-minify`, `--reduced-motion`, `--react-profiling`), a run on a busy machine (a 1-minute load average over the number of cores after any screen), or a run on another machine than the one in the file (its CPU model). With no file, the first run that is compared stores its numbers. To start over on a new machine, delete the file.
+
+On a quiet machine the p90 of 3 runs was within 5% of the median (Today's cold load, #924), so the margin is wide. A busy machine is far noisier: at a load average of 24 to 52 on 14 cores, the Session's p90 over budget was 2.7× its median (#985). So do not run it while e2e runs are going on.
+
+The bar is still 10 ms, and most screens miss it (#924; the open debt is #421). The ratchet only stops them from getting worse. The baselines before it are in #447 (2026-11-06).
+
+### Server
 
 There is no current server baseline: run the load test before and after your change. The numbers that stood here until 2026-11-14 were removed. The server ones (2026-10-11) timed a write coming back over a live sync connection that the app no longer has. The UI ones used CPU 4× and a deck half today's size.

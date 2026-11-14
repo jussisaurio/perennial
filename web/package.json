@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint --deny-warnings",
     "preview": "vite preview",
-    "test": "bun test src",
+    "test": "bun test src perf",
     "e2e": "playwright test",
     "shots": "playwright test -c shots.config.ts",
     "look": "bun e2e/look.ts",

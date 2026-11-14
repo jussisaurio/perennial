@@ -35,7 +35,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - **Garden tests wait on the game, not the clock:** CI's software WebGL draws about 7 frames a second (#793). Hold keys and wait in game seconds or on game state (position, yaw), never fixed wall-clock times, or a test that passes locally fails on CI.
 - **A test red on main:** first find the last green main run and the first red one, and look at the merges in between (`gh run list --branch main --workflow CI`). That finds the cause faster than guessing (#796).
 - **Machine load:** e2e runs are queued, so load from them stays near the core count. If an e2e test still times out, run `uptime` and rerun only that spec with `--workers=1`. If it fails alone, it's a real failure: fix it. If it fails only under load, say so in the PR. Never just rerun it until it's green.
-- **Perf runs:** do not run `bun perf/ui.ts` while any e2e run is going on the machine. The extra load changes the numbers.
+- **Perf runs:** after a change to what a screen does on load or on input, run `bun run perf` in web/ (about 7 minutes). It exits 1 when a number got clearly worse than `web/perf/baseline.json`, and stores numbers that got clearly better: commit that file (docs/performance.md, "Baseline"). Do not run it while any e2e run is going on the machine. The extra load changes the numbers.
 
 ## PR and merge
 - One PR does one thing. It says `Closes #n`, or `Refs #n` when it is one part of an issue.
