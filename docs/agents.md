@@ -41,6 +41,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - **Decide, don't ask** (CLAUDE.md, "You decide"). To pick a tool or vendor, take the one that is well regarded, say its main risk in one line, and build. No surveys or bake-offs (#305), unless it is about money, data or security.
 - **When you cut or change a thing, look for what it leaves without a purpose.** The stick had no use once fetch was cut (#835).
 - **Never wait in the foreground** for CI, an agent or a run longer than about 30 s. Start it in the background and do other work until it reports.
+- **Runs with nobody watching:** `.github/workflows/autorun.yml` starts one agent in GitHub Actions on the next issue by the pick rule. It is off until the owner turns it on. [autonomy.md](autonomy.md) says how a run goes and what it trusts.
 - **An automatic judge is checked before it drives work.** Compare a sample of its verdicts with the owner's or a person's first. An LLM judge of the audio clips failed good clips and missed bad ones (#776), so a clip is re-made only when a person reports it.
 
 ## When you start other agents
