@@ -36,7 +36,7 @@ One grain on everything looks like a texture put on by mistake (the owner, 2026-
 - **A stock for each kind of thing:** card, kraft, sheet and the rest (Surfaces, above).
 - **Cut edges:** a leaf of the hedge and an animal's part show a thin pale edge where the knife went through.
 - **Slotted cards:** a far tree is two cards slotted into an X.
-- **Hung clouds:** each cloud hangs from the sky on a thin thread, a shade darker than the cloud, as in a paper theatre (`THREAD` in `web/src/garden/sceneSky.ts`). As the clouds drift, they go round slowly, like a mobile.
+- **Hung clouds:** each cloud hangs from the sky on a thin thread, a shade darker than the cloud, as in a paper theatre (`THREAD` in `web/src/garden/sceneSky.ts`). They hang low, just over the far hills, so the usual walk view shows a cloud or two and a length of thread at its top. As the clouds drift, they go round slowly, like a mobile.
 
 ## Plants: cut from coloured paper
 
