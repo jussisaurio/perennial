@@ -490,35 +490,37 @@ export function sky(s: Sky, stars: boolean): OffscreenCanvas {
   return c;
 }
 
-/** Rows in the far hills' texture. */
+/** Rows in the far hills' profile (hillProfile), top to bottom. */
 export const HILL_ROWS = 64;
+/** The far hills' texture is drawn this many texels to each row and column of the profile, so a ridge is a smooth line (#1091). */
+const HILL_FINE = 4;
 /** The two ridges of the far hills, back to front: the row of the middle of each, and its seed. */
 const RIDGES = [
   { base: 30, seed: 1 },
   { base: 42, seed: 2 },
 ] as const;
 
-/** One layer of the far hills: the ridge's row (0 = top) in each of the texture's 256 columns. */
-function hillLine(base: number, seed: number): number[] {
+/** One layer of the far hills: the ridge's row (0 = top) at column x of the profile's 256, x from 0 to 256. */
+function hillLine(base: number, seed: number): (x: number) => number {
   const r = rng(seed);
   const ph = r() * 10;
-  return Array.from({ length: 256 }, (_, x) => {
+  return (x) => {
     // Periodic in x so the ring repeats without a seam.
     const a = (x / 256) * Math.PI * 2;
     return base - 9 * Math.sin(a * 2 + ph) - 5 * Math.sin(a * 5 + ph * 2) - 2 * Math.sin(a * 11 + ph);
-  });
+  };
 }
 
-/** The top of the hills (the higher of the two ridges) per column, as a texture row. Day and night share the shape. */
+/** The top of the hills (the higher of the two ridges) in each of 256 columns, as a row. Day and night share the shape. */
 export function hillProfile(): number[] {
   const [a, b] = RIDGES.map((r) => hillLine(r.base, r.seed));
-  // One pixel above the ridge on even columns (see hills()).
-  return a.map((h, x) => Math.min(Math.floor(h), Math.floor(b[x])) - (x % 2 === 0 ? 1 : 0));
+  return Array.from({ length: 256 }, (_, x) => Math.min(a(x), b(x)));
 }
 
-/** Two layers of rolling hills, flat colour, for a ring around the world. The ridge's one-pixel steps (hillProfile) blur into a soft edge. */
+/** Two layers of rolling hills, flat colour with a crisp ridge, for a ring around the world. */
 export function hills(night: boolean): OffscreenCanvas {
-  const [c, ctx] = canvas(256, HILL_ROWS);
+  const [W, H] = [256 * HILL_FINE, HILL_ROWS * HILL_FINE];
+  const [c, ctx] = canvas(W, H);
   // Colour and shade for each ridge, in RIDGES order.
   const colors: [string, string][] = night
     ? [
@@ -529,16 +531,22 @@ export function hills(night: boolean): OffscreenCanvas {
         ["#b0cb99", "#a8c392"],
         ["#77a363", "#6f9a5c"],
       ];
+  // Everything under a ridge `down` rows lower, one point a texel.
+  const under = (line: (x: number) => number, down: number) => {
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let x = 0; x <= W; x++) ctx.lineTo(x, (line(x / HILL_FINE) + down) * HILL_FINE);
+    ctx.lineTo(W, H);
+    ctx.fill();
+  };
   RIDGES.forEach(({ base, seed }, i) => {
     const [color, shade] = colors[i];
     const line = hillLine(base, seed);
-    for (let x = 0; x < 256; x++) {
-      const y0 = Math.floor(line[x]);
-      px(ctx, x, y0, color, 1, HILL_ROWS - y0);
-      // A shade a little below the ridge, so the near hill reads as a fold in paper.
-      px(ctx, x, y0 + 3, shade, 1, HILL_ROWS - y0 - 3);
-      if (x % 2 === 0) px(ctx, x, y0 - 1, color);
-    }
+    ctx.fillStyle = color;
+    under(line, 0);
+    // A shade a little below the ridge, so the near hill reads as a fold in paper.
+    ctx.fillStyle = shade;
+    under(line, 3);
   });
   return c;
 }
@@ -666,18 +674,39 @@ export function orchard(): OffscreenCanvas {
   return c;
 }
 
+/** Texels to each of the first cloud drawing's: the puffs below are in its texels. */
+const CLOUD_FINE = 4;
+
+/** A cloud of four round puffs on a flat base (#1091): lit on top, a shade darker underneath. */
 export function cloud(): OffscreenCanvas {
-  const [c, ctx] = canvas(64, 32);
-  const r = rng(31);
+  const [c, ctx] = canvas(64 * CLOUD_FINE, 32 * CLOUD_FINE);
+  ctx.scale(CLOUD_FINE, CLOUD_FINE);
+  // [x, y, radius]
   const puffs = [
     [18, 20, 10],
     [32, 14, 13],
     [46, 20, 10],
     [28, 22, 9],
   ];
-  for (const [cx, cy, rad] of puffs)
-    for (let y = -rad; y <= rad; y++)
-      for (let x = -rad; x <= rad; x++) if (Math.hypot(x, y) + r() * 1.2 <= rad && cy + y < 30) px(ctx, cx + x, cy + y, y > rad * 0.35 ? "#e6e3dc" : "#fbf8f1");
+  const all = (color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (const [x, y, rad] of puffs) {
+      ctx.moveTo(x + rad, y);
+      ctx.arc(x, y, rad, 0, Math.PI * 2);
+    }
+    ctx.fill();
+  };
+  // The base is cut flat.
+  ctx.beginPath();
+  ctx.rect(0, 0, 64, 30);
+  ctx.clip();
+  all("#fbf8f1");
+  // The underside, below a level line.
+  ctx.beginPath();
+  ctx.rect(0, 24, 64, 6);
+  ctx.clip();
+  all("#e6e3dc");
   return c;
 }
 
