@@ -34,7 +34,9 @@ export const cat: VisitorKind<Look> = {
       [body.x, body.y, body.z] = [body.at.x, body.at.y, body.at.z];
     };
     return {
-      size: 0.95,
+      // A house cat's size, smaller than the dog: drawn this wide, it stays whole on the bench seat
+      // from every side, as it turns to face you, not cut by the backrest (render.whole-cutout).
+      size: 0.42,
       body,
       step({ dt, x, z }) {
         if (mode === "back" && walkOn(body, walk, reducedMotion ? Infinity : WALK * dt)) settle();

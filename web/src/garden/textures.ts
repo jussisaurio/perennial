@@ -1689,7 +1689,7 @@ export function visitors(arts: readonly Art.Cutout[]): OffscreenCanvas {
   const cell = 32 * VISITOR_PX;
   const [c, ctx] = canvas(VISITOR_COLS * cell, Math.ceil(arts.length / VISITOR_COLS) * cell);
   arts.forEach((art, i) => {
-    const ox = (i % VISITOR_COLS) * cell + Math.floor((32 - art.w) / 2) * VISITOR_PX;
+    const ox = (i % VISITOR_COLS) * cell + Art.artLeft(art.w) * VISITOR_PX;
     const oy = Math.floor(i / VISITOR_COLS) * cell + (32 - art.h) * VISITOR_PX;
     cutout(ctx, art, ox, oy, VISITOR_PX);
   });

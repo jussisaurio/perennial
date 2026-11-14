@@ -25,6 +25,11 @@ export interface Cutout {
   pieces: readonly Piece[];
 }
 
+/** Where a cut-out `w` wide starts across its 32-unit cell in the walk's atlas: in the middle, to the unit below. */
+export function artLeft(w: number): number {
+  return Math.floor((32 - w) / 2);
+}
+
 /** The width of a piece's cut edge (units). */
 const EDGE = 0.4;
 const INK = "#2e2018";

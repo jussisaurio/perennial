@@ -25,6 +25,7 @@ Use the strongest check that fits: a type that makes the wrong state impossible 
 - `garden.drawn-solid`: Each thing drawn as solid stops you. The check reads the scene's tap volumes, so it does not see the things you cannot tap: the stile, the brambles, the well and the shed. Checked in `web/e2e/drawn-solid.spec.ts`.
 - `garden.no-invisible-wall`: Where nothing solid is drawn, nothing stops you. Not checked yet (#1124).
 - `render.same-outline`: A plant's small, full-size and near sprites have the same outline. Checked in `web/e2e/plant-sprites.spec.ts`.
+- `render.whole-cutout`: A visitor at rest, or one sitting with you on the bench, is drawn whole from every place you can stand: no solid thing cuts it. A visitor is a flat cut-out that turns to face you, so as you walk round it, its ends sweep a circle as wide as it is drawn. The check finds a solid thing inside that circle, from its foot to its top. It reads the scene's tap volumes, so it does not see the shed, the stile, the brambles or the well, and it reads one day: not the places a visitor goes only on other days or at other story points (#1162). Checked in `web/src/fuzz/wholeCutout.test.ts` and `web/e2e/whole-cutout.spec.ts`.
 - `render.no-pop`: While you walk, nothing in view jumps in size, shape or place more than the camera's move explains. The check measures only the drawn height of the plants near you, as you run up to one until the action button can shake it, and back. It does not see far plants (#1144) or anything else yet. Checked in `web/e2e/no-pop.spec.ts`.
 
 ## The app

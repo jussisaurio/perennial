@@ -125,8 +125,8 @@ export interface HitBox {
   turn?: number;
 }
 
-/** The ray in a turned box's own frame (the box turned back by `turn` round its middle). */
-function unturn(r: Ray, b: HitBox): Ray {
+/** The ray in a turned box's own frame (the box turned back by `turn` round its middle). @internal Exported for the render.whole-cutout check (fuzz/wholeCutout.ts). */
+export function unturn(r: Ray, b: HitBox): Ray {
   if (!b.turn) return r;
   const cx = (b.min[0] + b.max[0]) / 2;
   const cz = (b.min[2] + b.max[2]) / 2;
