@@ -199,7 +199,7 @@ const LABEL_PRIORITY = ["say", "echo", "line", "fruit", "scenery", "tree", "tag"
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
   const bench = new THREE.Group();
-  const wood = c.mat(c.woodTex);
+  const wood = c.mat(c.woodTex, "kraft");
   const plank = (w: number, h: number, d: number, x: number, y: number, z: number) => {
     const m = new THREE.Mesh(woodBox(w, h, d), wood);
     m.position.set(x, y, z);
@@ -429,8 +429,8 @@ export class GardenScene {
       d: b.maxZ - b.minZ,
       cx: (b.minX + b.maxX) / 2,
       cz: (b.minZ + b.maxZ) / 2,
-      mat: (tex, opts = {}) => {
-        const m = litMaterial(new THREE.MeshBasicMaterial({ map: tex, ...opts }));
+      mat: (tex, stock, opts = {}) => {
+        const m = litMaterial(new THREE.MeshBasicMaterial({ map: tex, ...opts }), stock);
         this.basic.push(m);
         return m;
       },
@@ -632,12 +632,12 @@ export class GardenScene {
     const grassTex = T.paperTexture(T.grass(), true);
     grassTex.repeat.set(400 / T.GROUND_TILE, 400 / T.GROUND_TILE);
     // At 0, where everything in the garden stands (#861). Drawn behind what lies on it in the same plane (the yard's path, the hill's grass at its foot) by depth alone, so they never flicker into it.
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(grassTex, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 4 }));
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(grassTex, "handmade", { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 4 }));
     ground.rotation.x = -Math.PI / 2;
     this.scene.add(still(ground));
     const pathTex = T.paperTexture(T.path(), true);
     pathTex.repeat.set(w / T.GROUND_TILE, d / T.GROUND_TILE);
-    const yard = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(pathTex));
+    const yard = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(pathTex, "sheet"));
     yard.rotation.x = -Math.PI / 2;
     yard.position.set(cx, 0, cz);
     this.scene.add(still(yard));
@@ -652,7 +652,7 @@ export class GardenScene {
       if (len < 0.1) return;
       const t = fenceTex.clone();
       t.repeat.set(len / 1.0, 1);
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.8), mat(t, { transparent: false, alphaTest: 0.5, side: THREE.DoubleSide }));
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.8), mat(t, "card", { transparent: false, alphaTest: 0.5, side: THREE.DoubleSide }));
       m.position.set((x1 + x2) / 2, 0.4, (z1 + z2) / 2);
       m.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
       this.scene.add(still(m));
@@ -1015,7 +1015,7 @@ export class GardenScene {
     const at = this.game.bench;
     bench.position.set(at.x, 0, at.z);
     // Two cup rings on the seat, between where two would sit: small, seen only up close (#869, what the bench's line names).
-    const rings = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.12), c.mat(T.paperTexture(T.cupRings()), { alphaTest: 0.5 }));
+    const rings = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.12), c.mat(T.paperTexture(T.cupRings()), "kraft", { alphaTest: 0.5 }));
     rings.name = "cup rings";
     rings.rotation.x = -Math.PI / 2;
     rings.position.set(0.05, BENCH_SEAT + 0.002, 0.02);
@@ -1055,7 +1055,7 @@ export class GardenScene {
       g.add(board);
       for (const sx of [-0.45, 0.45]) {
         // Behind the board with a gap: a post in the board's plane fights it and shows through the text.
-        const post = new THREE.Mesh(woodBox(0.06, 0.86, 0.06), mat(woodTex));
+        const post = new THREE.Mesh(woodBox(0.06, 0.86, 0.06), mat(woodTex, "kraft"));
         post.position.set(sx, 0.43, -0.06);
         g.add(post);
       }
@@ -1074,7 +1074,7 @@ export class GardenScene {
       const board = signBoard(c, T.paperTexture(T.notice(SNAIL_SIGN[this.lang])), 1.0, 0.4);
       board.position.y = 0.62;
       g.add(board);
-      const post = new THREE.Mesh(woodBox(0.05, 0.5, 0.05), mat(woodTex));
+      const post = new THREE.Mesh(woodBox(0.05, 0.5, 0.05), mat(woodTex, "kraft"));
       post.position.set(0, 0.25, -0.05);
       g.add(post);
       g.position.set(L.gate.x + GATE_HALF + 1.7, 0, b.maxZ - 0.3);
@@ -1094,7 +1094,7 @@ export class GardenScene {
       const board = signBoard(c, T.paperTexture(T.notice(text)), w, w * 0.4);
       board.position.y = y;
       g.add(board);
-      const post = new THREE.Mesh(woodBox(0.04, y, 0.04), mat(woodTex));
+      const post = new THREE.Mesh(woodBox(0.04, y, 0.04), mat(woodTex, "kraft"));
       post.position.set(0, y / 2, -0.03);
       g.add(post);
       g.position.set(x, 0, z);
