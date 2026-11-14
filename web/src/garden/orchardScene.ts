@@ -50,7 +50,7 @@ const TREE_INDEX = -7;
 export function buildOrchard(world: OrchardWorld, area: OrchardArea, placed: readonly PlacedTree[]): Orchard {
   const group = new THREE.Group();
   const { atlas } = world;
-  // Half a texel in from the cell's top and bottom, so nearest sampling never reads the row above or below.
+  // Half a texel in from the cell's top and bottom, so the smooth filter never reads the row above or below.
   const inset = 0.5 / (CELL_H_PX * LOOKS.length);
   const items: SpriteItem[] = placed.map((t) => ({
     x: t.x,
@@ -79,7 +79,7 @@ export function buildOrchard(world: OrchardWorld, area: OrchardArea, placed: rea
   const b = orchardBench(area);
   const bench = world.bench();
   if (world.plaque !== null) {
-    const plaqueTex = T.pixelTexture(T.notice(world.plaque));
+    const plaqueTex = T.paperTexture(T.notice(world.plaque));
     const plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.28), world.mat(plaqueTex));
     // Just behind the back rest, facing away from the seat.
     plaque.position.set(0, 0.66, -0.235);

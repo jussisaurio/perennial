@@ -200,7 +200,7 @@ export class Plants {
     const soil: THREE.BufferGeometry[] = [];
     // Every bed sign on one canvas, one texture and one material; each board shows its own cell.
     const atlas = T.signs(L.beds.flatMap((bed) => (bed.sign === null ? [] : bedSign(bed.sign, c.lang))));
-    const signMat = mat(T.pixelTexture(atlas));
+    const signMat = mat(T.paperTexture(atlas));
     const rows = atlas.height / T.SIGN.h;
     let sign = 0;
     for (const bed of L.beds) {
@@ -227,8 +227,8 @@ export class Plants {
       const sz = bed.z + bed.d / 2 + 0.3;
       // As signBoard: the text on the front only, plain wood on the back.
       const face = new THREE.PlaneGeometry(0.96, 0.3);
-      // This bed's cell in the atlas, half a texel in from its edge so nearest sampling never reads the next cell (or an
-      // empty one). The texture is flipped: v = 1 is the canvas's top row.
+      // This bed's cell in the atlas, half a texel in from its edge so up close the smooth filter never reads the next cell
+      // (or an empty one). The texture is flipped: v = 1 is the canvas's top row.
       const col = n % T.SIGN.cols;
       const row = Math.floor(n / T.SIGN.cols);
       const inU = (u: number) => Math.min(Math.max(u, 0.5 / T.SIGN.w), 1 - 0.5 / T.SIGN.w);
