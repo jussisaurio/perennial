@@ -32,9 +32,12 @@ const CLOUD: Record<TimeOfDay, THREE.Color> = { day: cloudColor(0xffffff), dusk:
 /**
  * Each cloud hangs from the dome on a thread, as in a paper theatre (#1164). `tie`: how high over the cloud's middle
  * the thread is tied on (m), just under the top of its top puff (textures.ts cloud()). `out`: how far out the clouds
- * hang (m). `shade`: how much darker than its cloud the thread is.
+ * hang (m). `shade`: how much darker than its cloud the thread is. `low`, `rise`: a cloud's middle hangs from `low` to
+ * `low + rise` m up, 9° to 11° over the eye. That is over the far hills (their ridges reach 7°, textures.ts hillLine;
+ * a low cloud may tuck its bottom behind the highest), and low in the usual walk view, whose top edge is 19.5° up
+ * (pitch -0.2 in walker.ts, FOV 62 in scene.ts): so a cloud and a length of its thread show, under the buttons.
  */
-const THREAD = { tie: 5.1, out: 130, shade: 0.72 };
+const THREAD = { tie: 5.1, out: 130, shade: 0.72, low: 21, rise: 6 };
 /** How fast the clouds drift (rad/s), and how much faster for each part of the day a second while time speeds up on the bench (#362), up to `max`. */
 const CLOUD_DRIFT = { speed: 0.004, race: 4, max: 0.6 };
 /**
@@ -239,7 +242,7 @@ export class SkyWater implements Part {
     for (let i = 0; i < 9; i++) {
       const cloud = new THREE.Mesh(new THREE.PlaneGeometry(22, 11), new THREE.MeshBasicMaterial({ map: cloudTex, alphaTest: 0.5, fog: false, depthWrite: false }));
       const a = (i / 9) * Math.PI * 2 + rand();
-      cloud.position.set(Math.cos(a) * THREAD.out, 42 + rand() * 22, Math.sin(a) * THREAD.out);
+      cloud.position.set(Math.cos(a) * THREAD.out, THREAD.low + rand() * THREAD.rise, Math.sin(a) * THREAD.out);
       cloud.lookAt(0, cloud.position.y, 0);
       cloud.renderOrder = -1;
       const line = new THREE.Line(thread, this.thread);
