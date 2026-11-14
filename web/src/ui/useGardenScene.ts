@@ -204,6 +204,7 @@ export function useGardenScene({
       // undefined: this tab runs a release whose chunk is gone after a deploy; main.tsx is reloading the page.
       if (!alive || !mod) return;
       if (mod === "failed") return setFailed({ text: "The garden could not load.", retry: true });
+      const pinned = pinnedDetail();
       try {
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
         // Every course has a deck (synced courses pass `teachable`, the landing page's draft isDeckLang), and the world is written in its language (#650).
@@ -243,6 +244,9 @@ export function useGardenScene({
           reduced,
           lang,
           data.visitors,
+          // MSAA smooths the edges of shapes (#1106), but not in a test that pins low detail: CI draws WebGL
+          // in software (#793), where MSAA made a frame 30–90% slower.
+          pinned !== "low",
         );
         await s.build();
       } catch (e) {
@@ -262,7 +266,6 @@ export function useGardenScene({
       // The size before the detail: setDetail resizes too, and each new size is a new drawing buffer.
       const r = el.getBoundingClientRect();
       s.resize(r.width, r.height);
-      const pinned = pinnedDetail();
       if (pinned) s.setDetail(pinned);
       ro.observe(el);
       s.start();
