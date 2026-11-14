@@ -17,22 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Start Postgres (in the background)
-        # Pulling and starting the image takes a few seconds; the next steps run meanwhile.
-        # `up -d` alone still blocks during the pull, so it runs as a background process.
-        run: nohup docker compose up -d > "$RUNNER_TEMP/compose.log" 2>&1 &
-      - uses: oven-sh/setup-bun@v2
+      - uses: ./.github/actions/setup
         with:
-          bun-version: 1.4.4
-
-      - name: Install (all workspaces)
-        run: bun install --frozen-lockfile
-
-      - name: Wait for Postgres
-        # Started early (above), so the image pull ran during the other setup. Fail here, not later in the tests.
-        run: |
-          for i in $(seq 1 90); do docker compose exec -T postgres pg_isready -U perennial > /dev/null 2>&1 && exit 0; sleep 1; done
-          echo "Postgres was not ready after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
+          postgres: "true"
       - name: Check (typecheck, lint, knip, unit tests, deck tests, server tests)
         # The same command agents run before a merge (docs/agents.md, "Checks").
         run: bun run check
@@ -46,14 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
+      - uses: ./.github/actions/setup
       # Known vulnerabilities in what we ship (dev tools are updated by Dependabot).
       - name: Audit dependencies
-        run: |
-          bun install --frozen-lockfile
-          bun audit --audit-level=high
+        run: bun audit --audit-level=high
       # Semgrep OSS (CodeQL needs Advanced Security on a private repo).
       - name: Semgrep
         run: |
@@ -68,12 +51,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # check.ts compares against origin/main
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
-
-      - name: Install (all workspaces)
-        run: bun install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       # The deck tests and the scripts typecheck run in the checks job (`bun run check`).
       # Prints the diff report (added / edited / retired). Fails on broken
@@ -105,58 +83,10 @@ jobs:
           - { label: "iPhone, WebKit", browser: webkit, args: "--project=iphone" }
     steps:
       - uses: actions/checkout@v7
-      - name: Start Postgres (in the background)
-        # Pulling and starting the image takes a few seconds; the next steps run meanwhile.
-        # `up -d` alone still blocks during the pull, so it runs as a background process.
-        run: nohup docker compose up -d > "$RUNNER_TEMP/compose.log" 2>&1 &
-      - uses: oven-sh/setup-bun@v2
+      - uses: ./.github/actions/setup
         with:
-          bun-version: 1.4.4
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-
-      - name: Install (all workspaces)
-        run: bun install --frozen-lockfile
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('bun.lock') }}
-      # The browsers' system packages (.deb files) are cached too: the runners' Ubuntu mirror is
-      # sometimes very slow (3–6 min per large package), which held the WebKit job for an hour.
-      # apt keeps its downloads in a folder the runner user owns, so actions/cache can save it.
-      - name: Point apt's download cache at a cacheable folder
-        run: |
-          mkdir -p "$HOME/apt-archives/partial"
-          echo "Dir::Cache::Archives \"$HOME/apt-archives\";" | sudo tee /etc/apt/apt.conf.d/99perennial-cache
-      - name: Cache browser system packages
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-archives
-          key: apt-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('bun.lock') }}
-      - name: Install browser system packages
-        working-directory: web
-        # A slow mirror on a cold cache should fail the job in minutes, not hold it for an hour.
-        timeout-minutes: 15
-        run: |
-          bunx playwright install-deps ${{ matrix.browser }}
-          # apt runs as root: give its downloads back to the runner user, so the cache can save them.
-          sudo chown -R "$USER" "$HOME/apt-archives"
-      - name: Install Playwright browsers
-        working-directory: web
-        run: bunx playwright install ${{ matrix.browser }}
-      # No cache for Vite's pre-bundled dependencies (web/node_modules/.vite): a cache from before
-      # a new import (with the same bun.lock) lacks that dependency, so Vite bundles again
-      # mid-run and pages loading at that moment are stuck on "504 Outdated Optimize Dep" (#523).
-      # A cold start scans every import first and takes only a few seconds.
-
-      - name: Wait for Postgres
-        # Started early (above), so the image pull ran during the other setup. Fail here, not later in the tests.
-        run: |
-          for i in $(seq 1 90); do docker compose exec -T postgres pg_isready -U perennial > /dev/null 2>&1 && exit 0; sleep 1; done
-          echo "Postgres was not ready after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
+          postgres: "true"
+          browser: ${{ matrix.browser }}
       - name: Run e2e
         working-directory: web
         run: bunx playwright test ${{ matrix.args }}

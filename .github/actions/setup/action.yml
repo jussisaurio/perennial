@@ -1,0 +1,80 @@
+# The runner setup that CI's jobs and the agent runner (autorun.yml) share: Bun and the
+# packages, and when asked, Postgres and one Playwright browser. Run actions/checkout first.
+name: Setup
+description: Bun and packages; optionally Postgres and a Playwright browser.
+inputs:
+  postgres:
+    description: '"true" starts Postgres (docker compose) and waits until it is ready.'
+    default: "false"
+  browser:
+    description: A Playwright browser to install (chromium or webkit), or empty for none.
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Start Postgres (in the background)
+      if: inputs.postgres == 'true'
+      # Pulling and starting the image takes a few seconds; the next steps run meanwhile.
+      # `up -d` alone still blocks during the pull, so it runs as a background process.
+      shell: bash
+      run: nohup docker compose up -d > "$RUNNER_TEMP/compose.log" 2>&1 &
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: 1.4.4
+    - if: inputs.browser != ''
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+
+    - name: Install (all workspaces)
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Cache Playwright browsers
+      if: inputs.browser != ''
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ inputs.browser }}-${{ hashFiles('bun.lock') }}
+    # The browsers' system packages (.deb files) are cached too: the runners' Ubuntu mirror is
+    # sometimes very slow (3–6 min per large package), which held the WebKit job for an hour.
+    # apt keeps its downloads in a folder the runner user owns, so actions/cache can save it.
+    - name: Point apt's download cache at a cacheable folder
+      if: inputs.browser != ''
+      shell: bash
+      run: |
+        mkdir -p "$HOME/apt-archives/partial"
+        echo "Dir::Cache::Archives \"$HOME/apt-archives\";" | sudo tee /etc/apt/apt.conf.d/99perennial-cache
+    - name: Cache browser system packages
+      if: inputs.browser != ''
+      uses: actions/cache@v6
+      with:
+        path: ~/apt-archives
+        key: apt-${{ runner.os }}-${{ inputs.browser }}-${{ hashFiles('bun.lock') }}
+    - name: Install browser system packages
+      if: inputs.browser != ''
+      working-directory: web
+      shell: bash
+      # A slow mirror on a cold cache should fail the job in minutes, not hold it for an hour.
+      # (Steps of a composite action can't set timeout-minutes, so `timeout` does it.)
+      run: |
+        timeout 15m bunx playwright install-deps ${{ inputs.browser }}
+        # apt runs as root: give its downloads back to the runner user, so the cache can save them.
+        sudo chown -R "$USER" "$HOME/apt-archives"
+    - name: Install Playwright browsers
+      if: inputs.browser != ''
+      working-directory: web
+      shell: bash
+      run: bunx playwright install ${{ inputs.browser }}
+    # No cache for Vite's pre-bundled dependencies (web/node_modules/.vite): a cache from before
+    # a new import (with the same bun.lock) lacks that dependency, so Vite bundles again
+    # mid-run and pages loading at that moment are stuck on "504 Outdated Optimize Dep" (#523).
+    # A cold start scans every import first and takes only a few seconds.
+
+    - name: Wait for Postgres
+      if: inputs.postgres == 'true'
+      # Started early (above), so the image pull ran during the other setup. Fail here, not later in the tests.
+      shell: bash
+      run: |
+        for i in $(seq 1 90); do docker compose exec -T postgres pg_isready -U perennial > /dev/null 2>&1 && exit 0; sleep 1; done
+        echo "Postgres was not ready after 90 s"; cat "$RUNNER_TEMP/compose.log"; docker compose logs; exit 1
