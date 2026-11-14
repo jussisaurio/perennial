@@ -223,6 +223,8 @@ class Robot {
     // The closed page's requests end with it.
     this.inflight.clear();
     this.context = await this.browser.newContext({ ...DEVICES[this.view], baseURL: this.baseURL, timezoneId: LIVE_TZ, reducedMotion: "reduce", storageState: state });
+    // The run has no time limit (live.config.ts): a wait for a thing that never comes stops here, and the robot goes on.
+    this.context.setDefaultTimeout(15_000);
     // Speech would speak aloud on macOS, and needs no check here.
     await this.context.addInitScript(() => {
       if ("SpeechSynthesis" in window) SpeechSynthesis.prototype.speak = () => {};
@@ -242,11 +244,14 @@ class Robot {
     return this.page.evaluate(() => {
       const q = (s: string) => document.querySelector(s);
       const hash = location.hash;
-      const card = q(".session main.card:not(.summary)");
+      // The address changes first, the screen a moment later: a card is still drawn just after End
+      // session left it. So the address says whether this is the session, and the page what part.
+      const inSession = hash.startsWith("#/session");
+      const card = inSession ? q(".session main.card:not(.summary)") : null;
       const kicker = card ? ([...(card.querySelector(".kicker")?.classList ?? [])].find((c) => c !== "kicker") ?? "none") : null;
       const t = (s: string) => card?.querySelector(s)?.textContent?.trim() ?? "";
       const key = card ? `${kicker}|${card.getAttribute("data-lemma") ?? ""}|${t(".word")}|${t(".translation.big")}|${t(".sentence")}` : null;
-      const screen = q("main.card.summary") ? "summary" : card ? "card" : q(".session") ? "session" : q(".landing-top") ? "landing" : hash.startsWith("#/garden") ? "garden" : hash.startsWith("#/words") ? "words" : hash.startsWith("#/settings") ? "settings" : q(".page.home") ? "today" : "other";
+      const screen = inSession ? (q("main.card.summary") ? "summary" : card ? "card" : "session") : q(".landing-top") ? "landing" : hash.startsWith("#/garden") ? "garden" : hash.startsWith("#/words") ? "words" : hash.startsWith("#/settings") ? "settings" : q(".page.home") ? "today" : "other";
       return { screen, kicker, key, text: document.body.innerText } as const;
     });
   }
@@ -495,11 +500,13 @@ class Robot {
         await this.page.reload();
         const after = await this.waitFor(["card", "today", "summary"]);
         if (after.screen === "today") return "quit";
-        // A reload on the session screen starts a fresh 5 minutes (App.tsx, the "/session" route).
+        // A reload on the session screen starts a fresh 5 minutes (App.tsx, the "/session" route),
+        // with nothing to undo: End session then leaves at once, with no summary (useSessionRunner's exit).
         minutes = 5;
         start = await this.pageNow();
         paused = 0;
         last = null;
+        answers.length = 0;
         continue;
       }
       const lemmaBefore = await this.answer(s);
