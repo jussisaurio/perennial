@@ -1,0 +1,47 @@
+# Keeps one P0 issue, "Alarm: main is red or production is behind" (docs/DEPLOY.md, "The alarm").
+# The logic is in scripts/alarm/. Each run reads the whole state again, so a missed run loses nothing.
+name: Alarm
+
+on:
+  # After CI on main: a red run opens or updates the issue at once.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Hourly: is production behind main?
+  schedule:
+    - cron: "23 * * * *"
+  # Railway reports each deploy here; after a good one, the live check runs.
+  deployment_status:
+  workflow_dispatch:
+
+# Only issues are written. The two read permissions are for the checkout and for the CI logs.
+permissions:
+  issues: write
+  actions: read
+  contents: read
+
+# One run at a time, so two runs can never both open an issue.
+concurrency:
+  group: alarm
+  cancel-in-progress: false
+
+jobs:
+  alarm:
+    # A cancelled CI run says nothing about main, and a deploy that has not ended in success has nothing to check.
+    if: >-
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion != 'cancelled') &&
+      (github.event_name != 'deployment_status' || github.event.deployment_status.state == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # A deploy event would check out the deployed commit; the alarm always runs main's scripts.
+          ref: main
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - name: Open, update or close the alarm issue
+        run: bun scripts/alarm/run.ts ${{ github.event_name == 'deployment_status' && '--live-check' || '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
