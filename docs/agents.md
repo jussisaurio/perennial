@@ -70,5 +70,5 @@ Your final message gives:
 - what changed, for the learner or the owner;
 - anything left for later, filed as issues;
 - **A source for every fact:** `file:line`, a command's output or a URL. If you did not check it, check it now, or say plainly that it is a guess;
-- **Friction:** a few bullets on what was annoying or slow, and what would have made it easier (tools, repo setup, docs, the prompt). These go to #656.
+- **Friction:** for each thing that was annoying or slow, run `bun scripts/friction.ts add "<area>" "<what happened, and what would have made it easier>" "<minutes lost>"`. It adds one line to #656 in a fixed format, so a script can rank them. The area is a short tag that groups reports of one problem, such as `shots`, `e2e ports` or `gh`. Run `bun scripts/friction.ts top` first, and use a tag from it when one fits. In your report, give the lines you added. When your PR fixes a friction, run `bun scripts/friction.ts fixed "<area>" "#<pr>"`: it ends the open reports of that area.
 - **Least sure about:** one thing that you could not check. If you can check it, check it instead.
