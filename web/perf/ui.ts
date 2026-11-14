@@ -7,15 +7,18 @@
 // The bar: no main-thread task over BUDGET_MS. A longer task is input that waits.
 //
 // Writes to perf/out/: report.md, and per screen the Chrome trace and CPU profile
-// of its worst run (open both in Chrome DevTools → Performance).
+// of its worst run (open both in Chrome DevTools → Performance). With the default
+// settings it compares with perf/baseline.json, and exits 1 when a number got clearly worse.
 
 import * as Trace from "@paulirish/trace_engine";
 // The trace engine is DevTools' own, and expects a browser's DOMRect: this module adds one when imported.
 import "@paulirish/trace_engine/analyze-trace.mjs";
 import { chromium, type BrowserContext, type CDPSession, type Page } from "@playwright/test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpus, loadavg } from "node:os";
 import { join } from "node:path";
 import { build } from "vite";
+import { ratchet, type Baseline } from "./ratchet.ts";
 
 const arg = (flag: string) => (process.argv.includes(flag) ? process.argv[process.argv.indexOf(flag) + 1] : undefined);
 const CPU = Number(arg("--cpu") ?? 10);
@@ -23,7 +26,8 @@ const CPU = Number(arg("--cpu") ?? 10);
 const BUDGET_MS = 10;
 // --only <text>: just the scenarios whose name has this text. --runs <n>: medians and p90 of n runs.
 const ONLY = arg("--only");
-const RUNS = Number(arg("--runs") ?? 1);
+// 3 runs by default: the ratchet needs them, as one run can be slow because of the machine.
+const RUNS = Number(arg("--runs") ?? 3);
 // --reduced-motion: compare with animations off (the app honours the setting).
 const REDUCED = process.argv.includes("--reduced-motion");
 // --no-minify: readable function names in the profiles, to see where the time goes.
@@ -360,8 +364,10 @@ const SCENARIOS: Scenario[] = [
 // One run varies with what else the machine does: report the median and p90 of RUNS per number.
 const median = (xs: number[]) => pct(xs, 50);
 const p90 = (xs: number[]) => pct(xs, 90);
-interface Summary { median: Result; p90: Result; worstRun: Result }
+interface Summary { median: Result; p90: Result; best: Result; worstRun: Result }
 const summaries: Summary[] = [];
+// The 1-minute load average after each screen: on a busy machine every run is slower (#985).
+const loads: number[] = [];
 for (const sc of SCENARIOS.filter((sc) => !ONLY || sc.name.toLowerCase().includes(ONLY.toLowerCase()))) {
   const each: Result[] = [];
   const file = sc.name.replace(/\W+/g, "-");
@@ -391,11 +397,39 @@ for (const sc of SCENARIOS.filter((sc) => !ONLY || sc.name.toLowerCase().include
     const m = (k: "over" | "worst" | "overMs" | "inp" | "loafBlocking" | "ms" | "p95Frame" | "jank" | "heapMb" | "nodes") => pick(each.map((r) => r[k]));
     return { ...inpRun, loafs: worstRun.loafs, top: worstRun.top, over: m("over"), worst: m("worst"), overMs: m("overMs"), inp: m("inp"), loafBlocking: m("loafBlocking"), ms: m("ms"), p95Frame: m("p95Frame"), jank: m("jank"), heapMb: m("heapMb"), nodes: m("nodes") };
   };
-  summaries.push({ median: numbers(median), p90: numbers(p90), worstRun });
+  summaries.push({ median: numbers(median), p90: numbers(p90), best: numbers((xs) => Math.min(...xs)), worstRun });
+  loads.push(loadavg()[0]!);
 }
 
 await browser.close();
 server.kill();
+
+// ---- the ratchet (#985) -------------------------------------------------------------
+
+const BASELINE = join(import.meta.dir, "baseline.json");
+function compare(): { verdict: string; failed: boolean } {
+  const machine = cpus()[0]!.model;
+  // The stored numbers are for the default settings on one machine: other numbers do not compare.
+  const unlike = [CPU !== 10 && `--cpu ${CPU}`, RUNS < 3 && `--runs ${RUNS}`, REDUCED && "--reduced-motion", !MINIFY && "--no-minify", REACT_PROFILING && "--react-profiling"].filter((s) => s !== false);
+  if (unlike.length) return { verdict: `Not compared with perf/baseline.json: it holds numbers of 3 or more runs with the default settings, not with ${unlike.join(", ")}.`, failed: false };
+  // More runnable threads than cores: the page waits for a core, and every run is slower.
+  const load = Math.max(...loads);
+  if (load > cpus().length) return { verdict: `Not compared with perf/baseline.json: the machine was busy (load average up to ${Math.round(load)} on ${cpus().length} cores), so every run was slower. Run again when no e2e or other heavy runs are going on.`, failed: false };
+  // No file yet, or one deleted to start over on a new machine: this run's numbers become it.
+  const stored: Baseline = existsSync(BASELINE) ? JSON.parse(readFileSync(BASELINE, "utf8")) : { machine, screens: {} };
+  if (stored.machine !== machine) return { verdict: `Not compared with perf/baseline.json: its numbers are from ${stored.machine}, and this machine is ${machine}. To start over on this machine, delete the file and run again.`, failed: false };
+  const { baseline, worse, updated } = ratchet(stored, summaries.map((s) => ({ screen: s.median.screen, median: s.median, best: s.best })), SCENARIOS.map((sc) => sc.name));
+  writeFileSync(BASELINE, `${JSON.stringify(baseline, null, 2)}\n`);
+  const list = (lines: string[]) => lines.map((l) => `- ${l}`).join("\n");
+  return {
+    verdict: [
+      worse.length ? `Clearly worse than perf/baseline.json, even in the best run:\n${list(worse)}` : "No number is clearly worse than perf/baseline.json.",
+      updated.length ? `Clearly better or new, so now stored in perf/baseline.json (commit it with the change):\n${list(updated)}` : "",
+    ].filter((p) => p !== "").join("\n\n"),
+    failed: worse.length > 0,
+  };
+}
+const { verdict, failed } = compare();
 
 const short = (url: string) => url.split("/").pop() || "(no source URL)";
 const loafLine = (l: Loaf) => {
@@ -412,6 +446,10 @@ ${summaries.map(({ median: r, p90: q }) => `| ${r.screen} | ${r.over} | ${r.wors
 The bar: no main-thread task over ${BUDGET_MS} ms. Over budget ms: the time beyond ${BUDGET_MS} ms, summed over those tasks.
 INP ms: the slowest click or key press, from input to the next paint (lab INP; Event Timing only sees those over 16 ms).
 LoAF blocking ms: per long animation frame (over 50 ms), its time beyond 50 ms, summed.
+
+## Ratchet
+
+${verdict}
 
 ## Per screen
 
@@ -432,3 +470,4 @@ Per screen, that run's Chrome trace (*.trace.json) and CPU profile (*.cpuprofile
 `;
 writeFileSync(join(OUT, "report.md"), report);
 console.log(report);
+if (failed) process.exit(1);
