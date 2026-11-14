@@ -12,7 +12,7 @@
     "contract": {
       "name": "perennial-contract",
       "dependencies": {
-        "effect": "4.0.0",
+        "effect": "4.1.3",
       },
       "devDependencies": {
         "typescript": "~7.0.2",
@@ -23,7 +23,7 @@
       "devDependencies": {
         "@anthropic-ai/sdk": "^0.133.0",
         "@types/bun": "^1.4.2",
-        "effect": "4.0.0",
+        "effect": "4.1.3",
         "typescript": "~7.0.2",
       },
     },
@@ -35,7 +35,7 @@
         "@effect/sql-pg": "4.0.0",
         "@sentry/bun": "11",
         "better-auth": "1.7.20",
-        "effect": "4.0.0",
+        "effect": "4.1.3",
         "perennial-contract": "workspace:*",
         "pg": "8",
         "resend": "^6.38.0",
@@ -60,7 +60,7 @@
         "@tanstack/react-db": "0.5.12",
         "@tanstack/react-virtual": "^3.14.26",
         "better-auth": "1.7.20",
-        "effect": "4.0.0",
+        "effect": "4.1.3",
         "perennial-contract": "workspace:*",
         "posthog-js": "1",
         "react": "^19.3.1",
@@ -598,7 +598,7 @@
 
     "dotenv": ["dotenv@17.4.2", "", {}, "sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw=="],
 
-    "effect": ["effect@4.0.0", "", {}, "sha512-ooc1TG5t+FfzgYnFz2ff6BBKyZ7EwBRVXC7c4RhQUAD6/TZ2gTXXMeb4WX7a19ozQo4J73/QW+S00YAIresoMQ=="],
+    "effect": ["effect@4.1.3", "", {}, "sha512-QWNEu35groH/78Ejq01lZGt8U0sF1P4nrhbcAZz5WffcS27bUUK9C/db+xWWUwNYUvFD5SrSLE0mFGtwyP0PCQ=="],
 
     "eight-colors": ["eight-colors@1.3.3", "", {}, "sha512-4B54S2Qi4pJjeHmCbDIsveQZWQ/TSSQng4ixYJ9/SYHHpeS5nYK0pzcHvWzWUfRsvJQjwoIENhAwqg59thQceg=="],
 

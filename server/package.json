@@ -22,7 +22,7 @@
     "@effect/sql-pg": "4.0.0",
     "@sentry/bun": "11",
     "better-auth": "1.7.20",
-    "effect": "4.0.0",
+    "effect": "4.1.3",
     "perennial-contract": "workspace:*",
     "pg": "8",
     "resend": "^6.38.0",
