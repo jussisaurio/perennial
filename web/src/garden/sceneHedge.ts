@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 import { hedgeClumps, hedgeCore, type Clump, type HedgeWall } from "./hedge";
-import { still, type BuildCtx } from "./sceneSprites";
+import { shade, still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */
@@ -49,7 +49,7 @@ export class Hedge {
    * material on both kinds of mesh switched shader twice on every frame (#571).
    */
   build(ctx: BuildCtx) {
-    const tex = T.pixelTexture(T.hedge(), true);
+    const tex = T.paperTexture(T.hedge(), true);
     this.mat = ctx.mat(tex, { vertexColors: true });
     this.clumpMat = ctx.mat(tex, { vertexColors: true });
   }
@@ -73,9 +73,9 @@ export class Hedge {
       ctx.hitBoxes.push({ id: "hedge", min: [...w.min], max: [...w.max], tag: null });
       clumps.push(...hedgeClumps(w, seed + i));
     });
-    // A rounded clump, lit from above: its underside darker.
+    // A rounded clump, shaded by the sun: its top and its sunny side light, the rest and its underside darker.
     const clump = new THREE.IcosahedronGeometry(1, 1);
-    shadeUp(clump, 0.66, 1);
+    shade(clump, 0.9);
     // About as many leaves to the metre as on the solid middle.
     const uv = clump.getAttribute("uv") as THREE.BufferAttribute;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
