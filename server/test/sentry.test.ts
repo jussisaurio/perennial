@@ -12,9 +12,10 @@ type Span = { span_id: string; parent_span_id?: string; trace_id: string; op?: s
 type Transaction = { transaction: string; contexts: { trace: Span }; spans: Span[] };
 type ErrorEvent = { exception?: { values?: { type?: string; value?: string }[] } };
 
-/** A stand-in for Sentry's ingest: it keeps the transactions and error events it is sent. */
+/** A stand-in for Sentry's ingest: it keeps the transactions, error events and logs it is sent. */
 const transactions: Transaction[] = [];
 const errors: ErrorEvent[] = [];
+const sentryLogs: unknown[] = [];
 const ingest = Bun.serve({
   port: 0,
   async fetch(req) {
@@ -28,6 +29,7 @@ const ingest = Bun.serve({
       const type = JSON.parse(header).type;
       if (type === "transaction") transactions.push(JSON.parse(payload));
       if (type === "event") errors.push(JSON.parse(payload));
+      if (type === "log") sentryLogs.push(JSON.parse(payload));
     }
     return new Response("{}");
   },
@@ -56,27 +58,32 @@ const logLines: Record<string, unknown>[] = [];
 const server = start();
 afterAll(() => (server.kill(), ingest.stop(true), stopMockLLM()));
 
-/** The server's URL, from its start line; then every JSON line it prints, kept. */
+/** Every JSON line a stream of the server's prints, kept in logLines, and shown to `each` when given. */
+async function keepLines(stream: ReadableStream<Uint8Array>, each?: (line: Record<string, unknown>) => void) {
+  let buffer = "";
+  for await (const chunk of stream) {
+    buffer += new TextDecoder().decode(chunk);
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("{")) continue; // [mail] lines from the dev outbox
+      const parsed = JSON.parse(line);
+      logLines.push(parsed);
+      each?.(parsed);
+    }
+  }
+}
+
+/** The server's URL, from its start line. Its warnings and errors go to stderr (log.ts): those lines are kept too. */
 const url = await new Promise<string>((resolve, reject) => {
   const timer = setTimeout(() => reject(new Error("the server did not start within 10 s")), 10_000);
-  (async () => {
-    let buffer = "";
-    for await (const chunk of server.stdout) {
-      buffer += new TextDecoder().decode(chunk);
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-      for (const line of lines) {
-        if (!line.startsWith("{")) continue; // [mail] lines from the dev outbox
-        const parsed = JSON.parse(line);
-        logLines.push(parsed);
-        if (parsed.msg === "perennial server started") {
-          clearTimeout(timer);
-          resolve(String(parsed.url));
-        }
-      }
-    }
-  })();
+  void keepLines(server.stdout, (line) => {
+    if (line.msg !== "perennial server started") return;
+    clearTimeout(timer);
+    resolve(String(line.url));
+  });
 });
+void keepLines(server.stderr);
 
 const post = async (path: string, body: unknown, cookie?: string) => {
   const res = await fetch(url + path, { method: "POST", headers: { "content-type": "application/json", origin: "http://localhost:5173", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) });
@@ -137,6 +144,29 @@ test("requests at the same time keep their own traces", async () => {
 async function until(check: () => boolean) {
   while (!check()) await Bun.sleep(50);
 }
+
+test("privacy.no-learner-text: logs and traces carry no request body and no text the learner wrote", async () => {
+  // Text only this learner wrote: a word of their own, a sentence for the AI, and a gloss too long, which the server refuses.
+  const own = { lemma: "zanahoria-propia", gloss: "glosa-propia", form: "zanahorias-propias", notes: "nota-propia del mercado", sentence: "Frase-propia: mi tía guarda secretos.", refused: "glosa-rechazada ".repeat(10) };
+  const [t0, l0, e0, s0] = [transactions.length, logLines.length, errors.length, sentryLogs.length];
+  const email = unique("private");
+  const { cookie: anon } = await post("/api/auth/sign-in/anonymous", {});
+  await post("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, anon);
+  const { code } = (await (await fetch(`${url}/api/dev/outbox?email=${encodeURIComponent(email)}`)).json()) as { code: string };
+  const { cookie } = await post("/api/auth/sign-in/email-otp", { email, otp: code }, anon);
+  const word = (gloss: string) => ({ type: "user_word.upsert", row: { id: crypto.randomUUID(), lang: "es", lemma: own.lemma, gloss, forms: [own.form], notes: own.notes } });
+  expect((await post("/api/write", { mutations: [word(own.gloss)] }, cookie)).res.status).toBe(200);
+  expect((await post("/api/write", { mutations: [word(own.refused)] }, cookie)).res.status).toBe(422);
+  expect((await post("/api/ai/mine", { lang: "es", items: [{ form: own.form, sentence: own.sentence }], known: [] }, cookie)).res.status).toBe(200);
+
+  // Each request's trace and log line has arrived.
+  const done = (path: string, n: number) => () =>
+    transactions.slice(t0).filter((t) => t.transaction === `POST ${path}`).length >= n && logLines.slice(l0).filter((l) => l.path === path).length >= n;
+  await until(done("/api/write", 2));
+  await until(done("/api/ai/mine", 1));
+  const seen = JSON.stringify({ logs: logLines.slice(l0), traces: transactions.slice(t0), errors: errors.slice(e0), sentryLogs: sentryLogs.slice(s0) });
+  expect(Object.values(own).filter((text) => seen.includes(text.trim()))).toEqual([]);
+}, 30_000);
 
 test("a server that can't start says why in Sentry and in its log", async () => {
   // The same address family as the server's (0.0.0.0), or macOS lets both bind the port.
