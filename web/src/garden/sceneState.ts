@@ -1,11 +1,10 @@
 // The walk as plain data (#974), for the dev-only scene handle (window.__garden): the look tool
-// (e2e/look.ts) writes it beside each picture, so an agent can read where it stands and what is
+// (e2e/look.ts) writes it beside each picture, so an agent can read the game's state and what is
 // in view without reading the scene's private fields. Nothing here changes the scene.
 
 import * as THREE from "three";
 
-import type { Reach } from "./reachCore";
-import type { TimeOfDay } from "./game";
+import type { GameState } from "./game";
 import type { HitBox, HitDisc } from "./scenery";
 import { STEP, TOP, type StileSpot } from "./stile";
 
@@ -16,24 +15,8 @@ export interface ThingInView {
   metres: number;
 }
 
-export interface SceneState {
-  x: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-  /** The walker's mode (scene.ts Walker), and what they sit on while seated. */
-  mode: "free" | "trip" | "glide" | "seated";
-  seat: "bench" | "stool" | null;
-  /** The time of day drawn now. */
-  time: TimeOfDay;
-  /** The garden's own clock (s). */
-  elapsed: number;
-  /** What the action button does now, and everything else in reach that it would do if that were gone. */
-  reach: Reach | null;
-  inReach: Reach[];
-  /** The scenery in view, nearest first: a nearer thing may cover a farther one where their boxes meet. */
-  things: ThingInView[];
-}
+/** The game's state (Game.state), and the scenery in view, nearest first: a nearer thing may cover a farther one where their boxes meet. */
+export type SceneState = GameState & { things: ThingInView[] };
 
 /** A box in the world, like a HitBox: `turn` is round the vertical axis through its middle. */
 interface WorldBox {

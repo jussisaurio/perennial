@@ -1,15 +1,12 @@
 import { expect, test, type Page } from "./test";
-import type { WalkScene } from "./helpers";
-import { pinDetail } from "./helpers";
+import { pinDetail, type Drawn } from "./helpers";
 
 // #361, the night sky: tonight's real moon, and the lanterns blown out one by
 // one until the stars come out over the hills. The clock is pinned to a full
 // moon's night (26 September 2026, moon.ts), late enough that the walk opens at night.
 
-/** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
-type NightScene = WalkScene & {
-  pitch: number;
-  game: { lamps: { spots: [number, number][]; on: boolean[] }; tapLantern(i: number): void };
+/** The renderer's parts these tests read: the game itself is window.__garden.game. */
+type NightScene = Drawn & {
   sky: { sunDir: { x: number; y: number; z: number }; starsOut: boolean; stars: { visible: boolean } };
   guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] };
 };
@@ -25,20 +22,22 @@ async function openWalk(page: Page) {
 
 const night = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: NightScene }).__garden;
+    const s = window.__garden as unknown as NightScene;
+    const { lamps } = window.__garden.game;
     // The lantern the moth goes round: the one where it sits.
     const moth = s.guests.sprites.find((g) => g.v.id === "moth")!.body.at;
-    return { on: [...s.game.lamps.on], moth: s.game.lamps.spots.findIndex(([x, z]) => x === moth.x && z === moth.z), starsOut: s.sky.starsOut, stars: s.sky.stars.visible };
+    return { on: [...lamps.on], moth: lamps.spots.findIndex(([x, z]) => x === moth.x && z === moth.z), starsOut: s.sky.starsOut, stars: s.sky.stars.visible };
   });
 
 /** Stand `metres` in front of lantern `i` (toward the gate; behind it, away from the gate, if negative), facing it. Returns where its glass is on the screen. */
 const standBy = (page: Page, i: number, metres: number) =>
   page.evaluate(
     ({ i, metres }) => {
-      const s = (window as unknown as { __garden: NightScene }).__garden;
-      const [lx, lz] = s.game.lamps.spots[i];
+      const g = window.__garden.game;
+      const s = window.__garden as unknown as Drawn;
+      const [lx, lz] = g.lamps.spots[i];
       // Forward is -z at yaw 0.
-      Object.assign(s, { x: lx, z: lz + metres, yaw: metres > 0 ? 0 : Math.PI, pitch: -0.05 });
+      Object.assign(g.me, { x: lx, z: lz + metres, yaw: metres > 0 ? 0 : Math.PI, pitch: -0.05 });
       return new Promise<[number, number]>((done) =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -68,9 +67,8 @@ test("a full moon's night: tap the moon for its word; blow every lantern out, th
 
   // Face the moon and tap it: its word, like the rest of the garden.
   await page.evaluate(() => {
-    const s = (window as unknown as { __garden: NightScene }).__garden;
-    const d = s.sky.sunDir;
-    Object.assign(s, { yaw: Math.atan2(-d.x, -d.z), pitch: Math.asin(d.y) });
+    const d = (window.__garden as unknown as NightScene).sky.sunDir;
+    Object.assign(window.__garden.game.me, { yaw: Math.atan2(-d.x, -d.z), pitch: Math.asin(d.y) });
     // The camera turns on the next frame; a tap before it picks with the old view.
     return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
   });
@@ -94,11 +92,11 @@ test("a full moon's night: tap the moon for its word; blow every lantern out, th
 
   // Every other lantern, one by one, standing by each.
   await page.evaluate(() => {
-    const s = (window as unknown as { __garden: NightScene }).__garden;
-    s.game.lamps.spots.forEach(([x, z], i) => {
-      if (!s.game.lamps.on[i]) return;
-      Object.assign(s, { x, z: z + 0.6 });
-      s.game.tapLantern(i);
+    const g = window.__garden.game;
+    g.lamps.spots.forEach(([x, z], i) => {
+      if (!g.lamps.on[i]) return;
+      Object.assign(g.me, { x, z: z + 0.6 });
+      g.tapLantern(i);
     });
   });
   await expect.poll(async () => (await night(page)).stars, { timeout: 10_000 }).toBe(true);

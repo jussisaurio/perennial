@@ -1,20 +1,9 @@
 import { expect, test, type Page } from "./test";
-import { pinDetail } from "./helpers";
+import { pinDetail, type Drawn } from "./helpers";
 
 // #357, plants answer back: shake a plant and its word's other forms fall as
 // petals, written on them; a word with no other forms drops one leaf. Each noun
 // plant's label has a stake whose top shows the noun's gender.
-
-type Plant = { id: string; lemma: string; pos: string; forms: string[]; gender?: string; x: number; z: number; growth: number };
-type ShakeScene = {
-  x: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-  camera: unknown;
-  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  layout: { plants: Plant[] };
-};
 
 async function openWalk(page: Page, demo = "es:30") {
   await page.goto(`/?demo=${demo}#/today`);
@@ -27,10 +16,11 @@ async function openWalk(page: Page, demo = "es:30") {
 const standBy = (page: Page, lemma: string, pitch = -0.3) =>
   page.evaluate(
     ([lemma, pitch]) => {
-      const s = (window as unknown as { __garden: ShakeScene }).__garden;
-      const p = s.layout.plants.find((q) => q.lemma === lemma)!;
+      const g = window.__garden.game;
+      const s = window.__garden as unknown as Drawn;
+      const p = g.layout.plants.find((q) => q.lemma === lemma)!;
       // Forward is -z at yaw 0.
-      Object.assign(s, { x: p.x, z: p.z + 1.2, yaw: 0, pitch });
+      Object.assign(g.me, { x: p.x, z: p.z + 1.2, yaw: 0, pitch });
       return new Promise<[number, number]>((done) =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -75,7 +65,7 @@ test("a long press on a word with no other forms drops one leaf, and opens no ca
   await openWalk(page);
   // A word with no other forms, in the bed's front row so no other plant stands in front of it (beds fill from the front, #641).
   const lemma = await page.evaluate(() => {
-    const ps = (window as unknown as { __garden: ShakeScene }).__garden.layout.plants.filter((p) => p.forms.every((f) => f === p.lemma));
+    const ps = window.__garden.game.layout.plants.filter((p) => p.forms.every((f) => f === p.lemma));
     return ps.reduce((a, b) => (b.z > a.z ? b : a)).lemma;
   });
   const [x, y] = await standBy(page, lemma);

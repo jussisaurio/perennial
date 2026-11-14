@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { aimAtGround, arrives, gameSeconds, pinDetail, plantNearMiddle, settledGardenWidth, startCourse, trackOf, trackVisitors, walker } from "./helpers";
+import { aimAtGround, arrives, gameSeconds, pinDetail, plantNearMiddle, settledGardenWidth, startCourse, trackOf, trackVisitors, walker, type Drawn } from "./helpers";
 import { BENCH, WALKER } from "../src/garden/world";
 
 test("walk-in garden: every word is a plant; next plant by keyboard, listen, and back", async ({ page }) => {
@@ -160,14 +160,12 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
     await page.waitForFunction(() => "__garden" in window);
     await page.evaluate(() => {
       type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
-      const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
+      const g = window.__garden.game;
+      const s = window.__garden as unknown as { guests: { sprites: Sprite[] } };
       const frog = s.guests.sprites.find((o) => o.v.id === "frog")!.body.at;
       // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
-      const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
-      s.x = frog.x + Math.sin(a) * 1.3;
-      s.z = frog.z + Math.cos(a) * 1.3;
-      s.yaw = a;
-      s.pitch = -0.45;
+      const a = Math.atan2(frog.x - g.layout.pond.x, frog.z - g.layout.pond.z);
+      Object.assign(g.me, { x: frog.x + Math.sin(a) * 1.3, z: frog.z + Math.cos(a) * 1.3, yaw: a, pitch: -0.45 });
     });
   };
   await standByFrog();
@@ -194,7 +192,7 @@ test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, a
   await expect(tag).toHaveText("la rana · frog");
   const frame = await page.evaluate(() => {
     type Sprite = { v: { id: string }; body: { frame: string } };
-    return (window as unknown as { __garden: { guests: { sprites: Sprite[] } } }).__garden.guests.sprites.find((o) => o.v.id === "frog")!.body.frame;
+    return (window.__garden as unknown as { guests: { sprites: Sprite[] } }).guests.sprites.find((o) => o.v.id === "frog")!.body.frame;
   });
   expect(frame).toBe("asleep");
   expect(errors).toEqual([]);
@@ -272,11 +270,10 @@ test("the garden itself teaches: tap the sunflower for its word; a plant still o
   const standAndAim = (at: { x: number; z: number; yaw: number; pitch: number }, target: "flower" | "plant") =>
     page.evaluate(
       ([at, target]) => {
-        type V = { project(c: unknown): { x: number; y: number } };
-        type Scene = { flower: { x: number; z: number }; layout: { plants: { x: number; z: number }[] }; camera: unknown; tmp: { constructor: new (x: number, y: number, z: number) => V } };
-        const s = (window as unknown as { __garden: Scene }).__garden;
-        const p = target === "flower" ? s.flower : s.layout.plants[0];
-        Object.assign(s, { x: p.x + at.x, z: p.z + at.z, yaw: at.yaw, pitch: at.pitch });
+        const g = window.__garden.game;
+        const s = window.__garden as unknown as Drawn & { flower: { x: number; z: number } };
+        const p = target === "flower" ? s.flower : g.layout.plants[0];
+        Object.assign(g.me, { x: p.x + at.x, z: p.z + at.z, yaw: at.yaw, pitch: at.pitch });
         return new Promise<[number, number]>((done) =>
           requestAnimationFrame(() =>
             requestAnimationFrame(() => {
@@ -369,18 +366,17 @@ test("bench.sit: W toward the bench stops you at its back; the button sits you d
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
-  type Bench = { x: number; z: number; walker: { kind: string }; camera: { position: { y: number } }; game: { bench: { x: number; z: number } } };
   const scene = () =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: Bench }).__garden;
-      return { seated: s.walker.kind === "seated", eye: s.camera.position.y };
+      const s = window.__garden as unknown as { camera: { position: { y: number } } };
+      return { seated: window.__garden.game.me.mode.kind === "seated", eye: s.camera.position.y };
     });
   await expect(page.getByRole("button", { name: "Sit on the bench" })).toHaveCount(0);
   // On the garden side of the bench, facing it and the pond past it: forward is -z at yaw 0.
   const bench = await page.evaluate(() => {
-    const s = (window as unknown as { __garden: Bench }).__garden;
-    Object.assign(s, { x: s.game.bench.x, z: s.game.bench.z - 1.2, yaw: Math.PI, pitch: 0 });
-    return s.game.bench;
+    const g = window.__garden.game;
+    Object.assign(g.me, { x: g.bench.x, z: g.bench.z - 1.2, yaw: Math.PI, pitch: 0 });
+    return g.bench;
   });
   // However long the key is held, you stop a walker's width from the bench's back (world.ts BENCH, WALKER).
   await page.keyboard.down("KeyW");
@@ -425,9 +421,9 @@ test("the action button goes when you walk away from everything, focus goes back
   await page.waitForFunction(() => "__garden" in window);
   // A step in front of the bench (world.ts benchAt), your back to it: W walks you away from it.
   await page.evaluate(() => {
-    const s = (window as unknown as { __garden: { layout: { pond: { x: number; z: number; r: number } } } }).__garden;
-    const p = s.layout.pond;
-    Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+    const g = window.__garden.game;
+    const p = g.layout.pond;
+    Object.assign(g.me, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
   });
   const sit = page.getByRole("button", { name: "Sit on the bench" });
   const act = page.locator(".gw-act");
@@ -454,23 +450,19 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
   type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
-  type Bench = {
-    game: { sat: number; lapse: number; shown: string; bench: { x: number; z: number }; lamps: { dark: boolean; on: boolean[] } };
-    guests: { sprites: Sprite[] };
-    layout: { pond: { x: number; z: number; r: number } };
-  };
   const scene = () =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: Bench }).__garden;
-      const g = s.game;
+      const s = window.__garden as unknown as { guests: { sprites: Sprite[] } };
+      const g = window.__garden.game;
       const bird = s.guests.sprites.find((v) => v.v.id === "bird")!.body.at;
       return { lapse: g.lapse, shown: g.shown, lit: g.lamps.dark && g.lamps.on.every(Boolean), birdFromBench: Math.hypot(bird.x - g.bench.x, bird.z - g.bench.z) };
     });
-  const sat = (seconds: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden.game, { sat: n }), seconds);
+  // Seconds sat is the game's own (private) count: a test cannot sit for a minute.
+  const sat = (seconds: number) => page.evaluate((n) => Object.assign(window.__garden.game, { sat: n }), seconds);
   await page.evaluate(() => {
-    const s = (window as unknown as { __garden: Bench }).__garden;
-    const p = s.layout.pond;
-    Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+    const g = window.__garden.game;
+    const p = g.layout.pond;
+    Object.assign(g.me, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
   });
   const away = (await scene()).birdFromBench;
   expect(away).toBeGreaterThan(1);
@@ -490,7 +482,7 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await expect(status.locator("span[lang=es]")).toHaveText("Bonito.");
 
   // Time has run on to dusk: the lanterns are lit. The time of day from the wall clock stays as it was.
-  await page.evaluate(() => Object.assign((window as unknown as { __garden: Bench }).__garden.game, { lapse: 0.9 }));
+  await page.evaluate(() => Object.assign(window.__garden.game, { lapse: 0.9 }));
   await expect.poll(async () => (await scene()).shown).toBe("dusk");
   expect((await scene()).lit).toBe(true);
   await expect(page.locator(".gw")).toHaveClass(/\bgw-day\b/);
@@ -508,7 +500,7 @@ test.describe(() => {
   // On CI's software WebGL (~7 frames a second) the walk takes 10–20 s to open; then the visitors come in real time.
   test.describe.configure({ timeout: 90_000 });
   type Sprite = { v: { id: string }; home: [number, number, number]; body: { x: number; y: number; z: number; at: { x: number; y: number; z: number } } };
-  type Bench = { game: { sat: number }; x: number; z: number; yaw: number; pitch: number; layout: { pond: { x: number; z: number; r: number } }; guests: { sprites: Sprite[] } };
+  type Guests = { guests: { sprites: Sprite[] } };
   const status = (page: Page) => page.locator(".gw > .sr-only[role=status]");
 
   /** Open the walk with these visitors, and sit on the bench facing the pond. */
@@ -520,18 +512,19 @@ test.describe(() => {
     await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
     await page.waitForFunction(() => "__garden" in window);
     await page.evaluate(() => {
-      const s = (window as unknown as { __garden: Bench }).__garden;
-      const p = s.layout.pond;
-      Object.assign(s, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
+      const g = window.__garden.game;
+      const p = g.layout.pond;
+      Object.assign(g.me, { x: p.x + 0.2, z: p.z - p.r - 1.6, yaw: 0, pitch: 0 });
     });
     await page.getByRole("button", { name: "Sit on the bench" }).click();
     await expect(page.getByRole("button", { name: "Stand up" })).toBeVisible();
   }
-  const sat = (page: Page, n: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden.game, { sat: n }), n);
+  // Seconds sat is the game's own (private) count: a test cannot sit for a minute.
+  const sat = (page: Page, n: number) => page.evaluate((n) => Object.assign(window.__garden.game, { sat: n }), n);
   /** How far a visitor is drawn from its own place (m). */
   const fromHome = (page: Page, id: string) =>
     page.evaluate((id) => {
-      const g = (window as unknown as { __garden: Bench }).__garden.guests.sprites.find((o) => o.v.id === id)!;
+      const g = (window.__garden as unknown as Guests).guests.sprites.find((o) => o.v.id === id)!;
       return Math.hypot(g.body.x - g.home[0], g.body.y - g.home[1], g.body.z - g.home[2]);
     }, id);
 
@@ -561,10 +554,10 @@ test.describe(() => {
     // Look at it: it stays as still as a statue.
     const lookAt = () =>
       page.evaluate(() => {
-        const s = (window as unknown as { __garden: Bench }).__garden;
-        const g = s.guests.sprites.find((o) => o.v.id === "gnome")!.body;
+        const me = window.__garden.game.me;
+        const g = (window.__garden as unknown as Guests).guests.sprites.find((o) => o.v.id === "gnome")!.body;
         // Forward is -z at yaw 0.
-        Object.assign(s, { yaw: Math.atan2(-(g.x - s.x), -(g.z - s.z)), pitch: -0.2 });
+        Object.assign(me, { yaw: Math.atan2(-(g.x - me.x), -(g.z - me.z)), pitch: -0.2 });
         return [g.x, g.z];
       });
     await gameSeconds(page, 0.5);
@@ -572,7 +565,7 @@ test.describe(() => {
     await gameSeconds(page, 2);
     expect(await lookAt()).toEqual(seen);
     // Look away, back at the pond: it comes.
-    await page.evaluate(() => Object.assign((window as unknown as { __garden: Bench }).__garden, { yaw: Math.PI, pitch: 0.1 }));
+    await page.evaluate(() => Object.assign(window.__garden.game.me, { yaw: Math.PI, pitch: 0.1 }));
     await expect(status(page)).toHaveText("The gnome comes over. It says: Bonito.", { timeout: 60_000 });
     const way = await trackOf(page, "gnome");
     expect(way.step).toBeLessThan(0.3);
@@ -618,27 +611,27 @@ test.describe(() => {
     await page.getByRole("button", { name: "Walk in your garden" }).click();
     await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
     await page.waitForFunction(() => "__garden" in window);
-    type P = { lemma: string; x: number; z: number };
-    type Glide = { x: number; z: number; walker: { kind: string }; layout: { plants: P[] }; select(p: P, walkTo: boolean): void; tap(hit: { kind: "plant"; p: P }, known: string[]): void };
-    const kind = () => page.evaluate(() => (window as unknown as { __garden: Glide }).__garden.walker.kind);
+    const kind = () => page.evaluate(() => window.__garden.game.me.mode.kind);
     const card = page.getByRole("dialog", { name: /^The plant for / });
     // Glide to the first plant (as Next plant does), and stand there.
     await page.evaluate(() => {
-      const s = (window as unknown as { __garden: Glide }).__garden;
-      s.select(s.layout.plants[0], true);
+      const s = window.__garden;
+      s.select(s.game.layout.plants[0], true);
     });
     await expect.poll(kind).toBe("free");
     await page.keyboard.press("Escape");
     await expect(card).toBeHidden();
     // The glide to the plant farthest away starts; before a frame moves you, a tap on the plant nearest you.
     const at = await page.evaluate(() => {
-      const s = (window as unknown as { __garden: Glide }).__garden;
-      const from = (q: P) => Math.hypot(q.x - s.x, q.z - s.z);
-      const near = s.layout.plants.reduce((a, p) => (from(p) < from(a) ? p : a));
-      const far = s.layout.plants.reduce((a, p) => (from(p) > from(a) ? p : a));
-      const start = { x: s.x, z: s.z, near: near.lemma, by: from(near), far: from(far) };
+      const s = window.__garden;
+      const { me, layout } = s.game;
+      const from = (q: { x: number; z: number }) => Math.hypot(q.x - me.x, q.z - me.z);
+      const near = layout.plants.reduce((a, p) => (from(p) < from(a) ? p : a));
+      const far = layout.plants.reduce((a, p) => (from(p) > from(a) ? p : a));
+      const start = { x: me.x, z: me.z, near: near.lemma, by: from(near), far: from(far) };
       s.select(far, true);
-      s.tap({ kind: "plant", p: near }, []);
+      // A plant tap does not read the frog's words.
+      s.tap({ kind: "plant", p: near }, { croaks: [], lines: [] });
       return start;
     });
     // NAME_NEAR (scenePlants.ts): the near plant's name shows, so a tap opens its card where you stand.
@@ -649,8 +642,8 @@ test.describe(() => {
     await gameSeconds(page, 2.5);
     expect(await kind()).toBe("free");
     const now = await page.evaluate(() => {
-      const s = (window as unknown as { __garden: Glide }).__garden;
-      return { x: s.x, z: s.z };
+      const me = window.__garden.game.me;
+      return { x: me.x, z: me.z };
     });
     expect(Math.hypot(now.x - at.x, now.z - at.z)).toBeLessThan(0.01);
     await expect(card).toHaveAttribute("aria-label", `The plant for ${at.near}`);

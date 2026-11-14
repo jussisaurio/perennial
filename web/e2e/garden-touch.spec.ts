@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { aimAtGround, arrives, pinDetail, plantNearMiddle, settledGardenWidth, standAtDoor, walker, type WalkScene } from "./helpers";
+import { aimAtGround, arrives, pinDetail, plantNearMiddle, settledGardenWidth, standAtDoor, walker, type Drawn } from "./helpers";
 
 // Runs on the iPhone (WebKit) project only. Playwright's tap sends a whole tap
 // in one go, so React never renders between touchdown and lift; a real finger
@@ -69,19 +69,20 @@ test("iPhone: tap a plant far away: walk there, and its card opens (#336)", asyn
   const far = await page.evaluate(
     () =>
       new Promise<{ x: number; y: number; lemma: string } | null>((done) => {
-        const s = (window as unknown as { __garden: WalkScene }).__garden;
-        const bed = s.layout.beds[0];
-        Object.assign(s, { x: bed.x + bed.w / 2 + 0.95, z: bed.z + bed.d / 2 + 2, yaw: 0, pitch: -0.1 });
+        const g = window.__garden.game;
+        const s = window.__garden as unknown as Drawn;
+        const bed = g.layout.beds[0];
+        Object.assign(g.me, { x: bed.x + bed.w / 2 + 0.95, z: bed.z + bed.d / 2 + 2, yaw: 0, pitch: -0.1 });
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
-            for (const p of s.layout.plants.filter((p) => p.bed > 0)) {
+            for (const p of g.layout.plants.filter((p) => p.bed > 0)) {
               const v = new s.tmp.constructor(p.x, 0.5, p.z).project(s.camera);
               const [x, y] = [((v.x + 1) / 2) * r.width, ((1 - v.y) / 2) * r.height];
               // Clear of the top bar, the hint and the buttons at the bottom.
               if (x < 20 || x > r.width - 20 || y < 140 || y > r.height - 200) continue;
-              const hit = s.pickAny(x, y, r.width, r.height);
-              if (hit?.kind === "plant" && hit.p!.id === p.id) return done({ x: r.left + x, y: r.top + y, lemma: p.lemma });
+              const hit = window.__garden.pickAny(x, y, r.width, r.height);
+              if (hit?.kind === "plant" && hit.p.id === p.id) return done({ x: r.left + x, y: r.top + y, lemma: p.lemma });
             }
             done(null);
           }),
@@ -96,7 +97,7 @@ test("iPhone: tap a plant far away: walk there, and its card opens (#336)", asyn
   await expect(page.getByRole("dialog", { name: `The plant for ${far!.lemma}` })).toBeVisible({ timeout: 20_000 });
   // It stands on the path in front of the plant's bed, not in any bed.
   const at = await walker(page);
-  const beds = await page.evaluate(() => (window as unknown as { __garden: WalkScene }).__garden.layout.beds);
+  const beds = await page.evaluate(() => window.__garden.game.layout.beds);
   expect(beds.some((b) => Math.abs(at.x - b.x) < b.w / 2 && Math.abs(at.z - b.z) < b.d / 2)).toBe(false);
 });
 
@@ -113,11 +114,11 @@ test("iPhone: the thumb stick still walks, and takes over from a walk under way 
   const held = await page.evaluate(
     ([cx, cy, tx, tz, far]) =>
       new Promise<{ walking: boolean; from: number; closest: number }>((done) => {
-        const s = (window as unknown as { __garden: WalkScene }).__garden;
-        const away = () => Math.hypot(s.x - tx, s.z - tz);
+        const me = window.__garden.game.me;
+        const away = () => Math.hypot(me.x - tx, me.z - tz);
         const el = document.querySelector(".gw-stick")!;
         const o = { bubbles: true, cancelable: true, composed: true, pointerType: "touch", pointerId: 3, isPrimary: true };
-        const walking = s.walker.kind === "trip";
+        const walking = me.mode.kind === "trip";
         const from = away();
         let closest = from;
         el.dispatchEvent(new PointerEvent("pointerdown", { ...o, clientX: cx, clientY: cy }));

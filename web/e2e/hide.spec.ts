@@ -7,7 +7,7 @@ import { pinDetail } from "./helpers";
 // and its tag says where it was.
 
 type Sprite = { v: { id: string }; body: { at: { x: number; y: number; z: number }; hiding: boolean; hid: { text: string; word: string | null } | null; frame: string } };
-type HideScene = { x: number; z: number; yaw: number; pitch: number; guests: { sprites: Sprite[] } };
+type HideScene = { guests: { sprites: Sprite[] } };
 
 test("the gnome hides behind a plant: near it, the button finds it, it falls over, and its tag says where it was", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-11T12:00:00"));
@@ -20,7 +20,7 @@ test("the gnome hides behind a plant: near it, the button finds it, it falls ove
   await page.waitForFunction(() => "__garden" in window);
   const gnome = () =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: HideScene }).__garden;
+      const s = window.__garden as unknown as HideScene;
       const { body } = s.guests.sprites.find((g) => g.v.id === "gnome")!;
       return { at: body.at, hiding: body.hiding, hid: body.hid, frame: body.frame };
     });
@@ -34,7 +34,7 @@ test("the gnome hides behind a plant: near it, the button finds it, it falls ove
   await expect(page.locator(".gw-tag", { hasText: "el gnomo" })).toHaveCount(0);
 
   // On the path in front of its plant, facing it.
-  await page.evaluate((at) => Object.assign((window as unknown as { __garden: HideScene }).__garden, { x: at.x, z: at.z + 1.2, yaw: 0, pitch: -0.3 }), before.at);
+  await page.evaluate((at) => Object.assign(window.__garden.game.me, { x: at.x, z: at.z + 1.2, yaw: 0, pitch: -0.3 }), before.at);
   await expect(find).toBeVisible();
   await expect(status).toHaveText(`Something small is behind ${word}.`);
   await expect(status.locator("span[lang=es]")).toHaveText(word);

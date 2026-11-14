@@ -6,13 +6,8 @@ import { pinDetail, readRowsAgain } from "./helpers";
 // tree and a fruit falls, with its word; in autumn, walk into a leaf pile and
 // it bursts, then gathers itself again.
 
-/** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
+/** The renderer's parts these tests read: the game itself is window.__garden.game. */
 type IntoScene = {
-  x: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-  layout: { beds: { x: number; z: number; w: number; d: number }[]; plants: { bed: number }[] };
   orchard: { trees: { lemma: string; look: string; x: number; z: number; trunk: number }[] } | null;
   plants: { brush: { moving: number } };
   walkInto: { piles: { x: number; z: number }[]; pileOut: Int16Array; bitsOut: number };
@@ -26,7 +21,7 @@ async function openWalk(page: Page) {
 
 /** Stand at (x, z) facing `yaw` (forward is -z at yaw 0), then walk forward with the W key until `until` holds: software WebGL on CI draws few frames a second, so a walk is measured in metres, not time. */
 async function walkFrom(page: Page, at: { x: number; z: number; yaw: number }, until: () => Promise<unknown>) {
-  await page.evaluate((at) => Object.assign((window as unknown as { __garden: IntoScene }).__garden, { ...at, pitch: -0.2 }), at);
+  await page.evaluate((at) => Object.assign(window.__garden.game.me, { ...at, pitch: -0.2 }), at);
   await page.keyboard.down("KeyW");
   await until();
   await page.keyboard.up("KeyW");
@@ -35,12 +30,12 @@ async function walkFrom(page: Page, at: { x: number; z: number; yaw: number }, u
 /** The bed with the most plants: the demo's first bed (nouns) may hold only one. */
 const fullestBed = (page: Page) =>
   page.evaluate(() => {
-    const { beds, plants } = (window as unknown as { __garden: IntoScene }).__garden.layout;
+    const { beds, plants } = window.__garden.game.layout;
     const count = (i: number) => plants.filter((p) => p.bed === i).length;
     return beds.reduce((best, b, i) => (count(i) > count(beds.indexOf(best)) ? b : best));
   });
 
-const walkerX = (page: Page) => page.evaluate(() => (window as unknown as { __garden: IntoScene }).__garden.x);
+const walkerX = (page: Page) => page.evaluate(() => window.__garden.game.me.x);
 
 test.beforeEach(async ({ page }) => {
   // Mid October: autumn, when the leaf piles lie on the paths.
@@ -87,7 +82,7 @@ test("brushing a bed plays its words' notes; walking into the apple tree drops a
   expect(await page.evaluate(() => (window as unknown as { notes: number }).notes)).toBeGreaterThanOrEqual(4);
 
   // Walk into the apple tree from the door's side: an apple falls (with reduced motion, it lies beside the trunk at once).
-  const tree = await page.evaluate(() => (window as unknown as { __garden: IntoScene }).__garden.orchard!.trees.find((t) => t.lemma === "manzana")!);
+  const tree = await page.evaluate(() => (window.__garden as unknown as IntoScene).orchard!.trees.find((t) => t.lemma === "manzana")!);
   expect(tree.look).toBe("fruit");
   // Facing +z (yaw π), the tree straight ahead.
   await walkFrom(page, { x: tree.x, z: tree.z - tree.trunk - 1.2, yaw: Math.PI }, () => expect(page.locator(".gw-tag").filter({ hasText: "manzana" })).toContainText("apple", { timeout: 20_000 }));
@@ -107,13 +102,13 @@ test.describe("with motion", () => {
     await page.goto("/?demo=es:30#/today");
     await openWalk(page);
     const scene = () => page.evaluate(() => {
-      const s = (window as unknown as { __garden: IntoScene }).__garden;
+      const s = window.__garden as unknown as IntoScene;
       return { moving: s.plants.brush.moving, out: [...s.walkInto.pileOut], bits: s.walkInto.bitsOut, piles: s.walkInto.piles };
     });
 
     // Brushing a bed: its plants lean away and spring back.
     const bed = await fullestBed(page);
-    await page.evaluate((bed) => Object.assign((window as unknown as { __garden: IntoScene }).__garden, { x: bed.x - bed.w / 2 - 0.5, z: bed.z + bed.d / 2 + 0.3, yaw: -Math.PI / 2 }), bed);
+    await page.evaluate((bed) => Object.assign(window.__garden.game.me, { x: bed.x - bed.w / 2 - 0.5, z: bed.z + bed.d / 2 + 0.3, yaw: -Math.PI / 2 }), bed);
     await page.keyboard.down("KeyW");
     await expect.poll(async () => (await scene()).moving).toBeGreaterThan(0);
     await page.keyboard.up("KeyW");
@@ -123,10 +118,10 @@ test.describe("with motion", () => {
     const pile = (await scene()).piles[0];
     expect(pile).toBeDefined();
     await page.evaluate((p) => {
-      const s = (window as unknown as { __garden: IntoScene }).__garden;
-      const beside = s.layout.beds.some((b) => Math.abs(b.z - p.z) < 0.01);
+      const g = window.__garden.game;
+      const beside = g.layout.beds.some((b) => Math.abs(b.z - p.z) < 0.01);
       // Forward is -z at yaw 0, and -x at yaw π/2.
-      Object.assign(s, beside ? { x: p.x, z: p.z + 1.2, yaw: 0 } : { x: p.x + 1.2, z: p.z, yaw: Math.PI / 2 });
+      Object.assign(g.me, beside ? { x: p.x, z: p.z + 1.2, yaw: 0 } : { x: p.x + 1.2, z: p.z, yaw: Math.PI / 2 });
     }, pile);
     await page.keyboard.down("KeyW");
     await expect.poll(async () => (await scene()).out[0]).toBeGreaterThan(0);

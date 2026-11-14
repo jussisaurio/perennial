@@ -15,7 +15,7 @@ async function openWalk(page: Page) {
 
 test("a right-click menu stops a held turn", async ({ page }) => {
   await openWalk(page);
-  const yaw = () => page.evaluate(() => (window as unknown as { __garden: { yaw: number } }).__garden.yaw);
+  const yaw = () => page.evaluate(() => window.__garden.game.me.yaw);
 
   await page.keyboard.down("ArrowLeft");
   const start = await yaw();

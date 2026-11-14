@@ -1,6 +1,17 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import type { GardenScene } from "../src/garden/scene.ts";
 import type { SceneryWorld } from "../src/garden/scenery.ts";
-import type { Layout } from "../src/garden/world.ts";
+
+declare global {
+  interface Window {
+    /**
+     * The garden walk while it is open, in dev builds (useGardenScene.ts). A test reads and sets the garden's state through `game`
+     * (game.ts, #975): `game.me` is where you stand, where you look and what you do. The renderer's own parts are
+     * private: a test that reads one names it in a type of its own.
+     */
+    __garden: GardenScene;
+  }
+}
 
 export const newEmail = (prefix = "learner") => `${prefix}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
@@ -162,14 +173,11 @@ export async function plantNearMiddle(page: Page) {
   }, box.x + box.width / 2);
 }
 
-// The door in the hedge (#315), through the dev-only scene handle (window.__garden).
-type DoorScene = {
-  camera: unknown;
-  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  layout: Layout;
-  /** The door as the game holds it (game.ts DoorNow): where the key lies, or lay. */
-  game: { door: { state: string; key: { x: number; z: number } | null } };
-  /** The door as drawn (sceneDoor.ts): the key on the ground, and the leaf on its hinge. */
+/** The renderer's camera, and a three.js vector to project a point with: where a thing shows on the canvas. */
+export type Drawn = { camera: unknown; tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number; z: number } } } };
+
+// The door in the hedge (#315), as drawn (sceneDoor.ts): the key on the ground, and the leaf on its hinge.
+type DoorDrawn = Drawn & {
   door: { key: { mesh: { visible: boolean } } | null; leaf: { rotation: { y: number } } };
   sceneryWorld(): SceneryWorld;
 };
@@ -177,10 +185,11 @@ type DoorScene = {
 /** Stand 2 m in front of the door, facing it, and return where the door shows on the page (pixels), level, clear of the hint at the top. */
 export function standAtDoor(page: Page) {
   return page.evaluate(() => {
-    const s = (window as unknown as { __garden: DoorScene }).__garden;
-    const gx = s.layout.gate.x;
-    const maxZ = s.layout.bounds.maxZ;
-    Object.assign(s, { x: gx, z: maxZ - 2, yaw: Math.PI, pitch: 0 });
+    const g = window.__garden.game;
+    const s = window.__garden as unknown as DoorDrawn;
+    const gx = g.layout.gate.x;
+    const maxZ = g.layout.bounds.maxZ;
+    Object.assign(g.me, { x: gx, z: maxZ - 2, yaw: Math.PI, pitch: 0 });
     return new Promise<[number, number]>((done) =>
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
@@ -202,14 +211,15 @@ export function standByKey(page: Page, metres = 1.4) {
   return page.evaluate(async (metres) => {
     const { collide } = await import(/* @vite-ignore */ "/src/garden/world.ts");
     const { thingAt } = await import(/* @vite-ignore */ "/src/garden/scenery.ts");
-    const s = (window as unknown as { __garden: DoorScene }).__garden;
-    const k = s.game.door.key!;
+    const g = window.__garden.game;
+    const s = window.__garden as unknown as DoorDrawn;
+    const k = g.door.key!;
     const eye = 1.05;
     // In reach a tap meets the key whatever stands in front of it; from farther, nothing may.
     const { KEY_REACH } = await import(/* @vite-ignore */ "/src/garden/reachCore.ts");
     // Free ground: where a walker may stand, all the way to the key, and nothing in the garden in front of it.
     const free = (x: number, z: number) => {
-      const p = collide(s.layout, x, z);
+      const p = collide(g.layout, x, z);
       return Math.hypot(p.x - x, p.z - z) < 1e-9;
     };
     const seen = (a: number) => {
@@ -222,7 +232,7 @@ export function standByKey(page: Page, metres = 1.4) {
     const way = Array.from({ length: 16 }, (_, i) => (i / 16) * Math.PI * 2).find((a) => steps.every((d) => free(k.x + Math.sin(a) * d, k.z + Math.cos(a) * d)) && (metres <= KEY_REACH || seen(a)));
     if (way === undefined) throw new Error(`no open ground ${metres} m from the key`);
     // Forward is -z at yaw 0: face back along the way, toward the key, looking down at it.
-    Object.assign(s, { x: k.x + Math.sin(way) * metres, z: k.z + Math.cos(way) * metres, yaw: way, pitch: -Math.atan2(eye - 0.03, metres) });
+    Object.assign(g.me, { x: k.x + Math.sin(way) * metres, z: k.z + Math.cos(way) * metres, yaw: way, pitch: -Math.atan2(eye - 0.03, metres) });
     return new Promise<[number, number]>((done) =>
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
@@ -238,34 +248,23 @@ export function standByKey(page: Page, metres = 1.4) {
 /** The door as plain data: its state, whether the key lies on the ground (null: none was brought) and how far it is from the door (m), and how far open the door is (radians). */
 export function doorNow(page: Page) {
   return page.evaluate(() => {
-    const s = (window as unknown as { __garden: DoorScene }).__garden;
-    const d = s.game.door;
+    const g = window.__garden.game;
+    const s = window.__garden as unknown as DoorDrawn;
+    const d = g.door;
     return {
       state: d.state,
       key: s.door.key && s.door.key.mesh.visible,
-      keyFromDoor: d.key && Math.hypot(d.key.x - s.layout.gate.x, d.key.z - s.layout.bounds.maxZ),
+      keyFromDoor: d.key && Math.hypot(d.key.x - g.layout.gate.x, d.key.z - g.layout.bounds.maxZ),
       angle: s.door.leaf.rotation.y,
     };
   });
 }
 
-// Tap to walk (#336), through the dev-only scene handle (window.__garden).
-export type WalkScene = {
-  x: number;
-  z: number;
-  yaw: number;
-  walker: { kind: string };
-  camera: unknown;
-  tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  layout: { beds: { x: number; z: number; w: number; d: number }[]; plants: { id: string; lemma: string; x: number; z: number; bed: number }[] };
-  pickAny(x: number, y: number, w: number, h: number): { kind: string; p?: { id: string } } | null;
-};
-
-/** Where the walker stands and which way they face, and whether a walk is under way. */
+/** Where the walker stands and which way they face, and whether a walk is under way (#336). */
 export const walker = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: WalkScene }).__garden;
-    return { x: s.x, z: s.z, yaw: s.yaw, walking: s.walker.kind === "trip" };
+    const w = window.__garden.game.me;
+    return { x: w.x, z: w.z, yaw: w.yaw, walking: w.mode.kind === "trip" };
   });
 
 /**
@@ -277,19 +276,20 @@ export function aimAtGround(page: Page, off: number) {
   return page.evaluate(
     (off) =>
       new Promise<{ x: number; y: number; to: { x: number; z: number }; kind: string | undefined; yaw: number }>((done) => {
-        const s = (window as unknown as { __garden: WalkScene }).__garden;
-        const bed = s.layout.beds[0];
+        const g = window.__garden.game;
+        const s = window.__garden as unknown as Drawn;
+        const bed = g.layout.beds[0];
         const to = { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 0.9 };
         const from = { x: bed.x - 1, z: bed.z + bed.d / 2 + 3 };
         // Forward is -z at yaw 0.
         const yaw = Math.atan2(-(to.x - from.x), -(to.z - from.z)) + off;
-        Object.assign(s, { ...from, yaw, pitch: -0.35 });
+        Object.assign(g.me, { ...from, yaw, pitch: -0.35 });
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             const v = new s.tmp.constructor(to.x, 0, to.z).project(s.camera);
             const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
             const [x, y] = [((v.x + 1) / 2) * r.width, ((1 - v.y) / 2) * r.height];
-            done({ x: r.left + x, y: r.top + y, to, kind: s.pickAny(x, y, r.width, r.height)?.kind, yaw });
+            done({ x: r.left + x, y: r.top + y, to, kind: window.__garden.pickAny(x, y, r.width, r.height)?.kind, yaw });
           }),
         );
       }),
@@ -314,13 +314,13 @@ export async function arrives(page: Page, to: { x: number; z: number }) {
 export function standBy(page: Page, p: { x: number; y: number; z: number }, metres: number) {
   return page.evaluate(
     ({ p, metres }) => {
-      const s = (window as unknown as { __garden: WalkScene }).__garden;
+      const s = window.__garden as unknown as Drawn;
       // From the middle of the garden's gate side, toward the thing: open path, nothing between.
       const [fx, fz] = [0, p.z - 1.5];
       const d = Math.hypot(p.x - fx, p.z - fz);
       const [x, z] = [p.x - ((p.x - fx) / d) * metres, p.z - ((p.z - fz) / d) * metres];
       // Forward is -z at yaw 0.
-      Object.assign(s, { x, z, yaw: Math.atan2(-(p.x - x), -(p.z - z)), pitch: -Math.atan2(1.05 - p.y, metres) });
+      Object.assign(window.__garden.game.me, { x, z, yaw: Math.atan2(-(p.x - x), -(p.z - z)), pitch: -Math.atan2(1.05 - p.y, metres) });
       return new Promise<[number, number]>((done) =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -335,21 +335,19 @@ export function standBy(page: Page, p: { x: number; y: number; z: number }, metr
   );
 }
 
-type TrackScene = {
-  elapsed: number;
-  layout: { beds: { x: number; z: number; w: number; d: number }[] };
-  guests: { sprites: { v: { id: string }; body: { x: number; y: number; z: number } }[] };
-};
-type Tracked = { __garden: TrackScene; __tracks: Record<string, [number, number, number][]> };
+/** The visitors as drawn (sceneVisitors.ts): each one's body. */
+type GuestsDrawn = { guests: { sprites: { v: { id: string }; body: { x: number; y: number; z: number } }[] } };
+type Tracked = { __tracks: Record<string, [number, number, number][]> };
 
 /** From now, record where each of these visitors is drawn on every frame (#802). */
 export function trackVisitors(page: Page, ids: string[]) {
   return page.evaluate((ids) => {
     const w = window as unknown as Tracked;
+    const s = window.__garden as unknown as GuestsDrawn;
     w.__tracks = {};
     const bodies = ids.map((id) => {
       w.__tracks[id] = [];
-      return [w.__tracks[id], w.__garden.guests.sprites.find((g) => g.v.id === id)!.body] as const;
+      return [w.__tracks[id], s.guests.sprites.find((g) => g.v.id === id)!.body] as const;
     });
     const record = () => {
       for (const [t, b] of bodies) t.push([b.x, b.y, b.z]);
@@ -369,13 +367,13 @@ export function trackOf(page: Page, id: string) {
       const d = Math.hypot(t[i][0] - t[i - 1][0], t[i][1] - t[i - 1][1], t[i][2] - t[i - 1][2]);
       [step, went] = [Math.max(step, d), went + d];
     }
-    const inBed = t.filter(([x, , z]) => w.__garden.layout.beds.some((b) => Math.abs(x - b.x) < b.w / 2 && Math.abs(z - b.z) < b.d / 2)).length;
+    const inBed = t.filter(([x, , z]) => window.__garden.game.layout.beds.some((b) => Math.abs(x - b.x) < b.w / 2 && Math.abs(z - b.z) < b.d / 2)).length;
     return { step, went, inBed };
   }, id);
 }
 
 /** Wait until `s` seconds of the garden's own time have gone by: CI draws few frames a second. */
 export async function gameSeconds(page: Page, s: number) {
-  const from = await page.evaluate(() => (window as unknown as Tracked).__garden.elapsed);
-  await page.waitForFunction((until) => (window as unknown as Tracked).__garden.elapsed >= until, from + s, { timeout: 30_000 });
+  const from = await page.evaluate(() => window.__garden.game.elapsed);
+  await page.waitForFunction((until) => window.__garden.game.elapsed >= until, from + s, { timeout: 30_000 });
 }

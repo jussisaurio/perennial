@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "./test";
-import { pinDetail } from "./helpers";
+import { pinDetail, type Drawn } from "./helpers";
 
 // The mouse door and the last note (#882, docs/garden-play.md "The mouse door
 // and the last note"): one test per claim. Only where the learner stands is set
@@ -9,9 +9,6 @@ import { pinDetail } from "./helpers";
 const NIGHT = new Date("2026-09-26T22:00:00");
 /** Known words when the last note comes (notes/es.ts n13). */
 const DOOR = 921;
-
-/** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
-type DoorScene = { x: number; z: number; yaw: number; pitch: number; layout: { gate: { x: number }; bounds: { maxZ: number } } };
 
 async function walkIn(page: Page, words: string) {
   await page.clock.setFixedTime(NIGHT);
@@ -29,11 +26,12 @@ const onMat = (page: Page) =>
   page.evaluate(
     () =>
       new Promise<[number, number]>((done) => {
-        const s = (window as unknown as { __garden: DoorScene & { tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } }; camera: unknown } }).__garden;
+        const g = window.__garden.game;
+        const s = window.__garden as unknown as Drawn;
         // sceneJokes.ts MOUSE_DOOR: 0.9 m left of the big door, at the hedge; its mat just in front.
-        const [mx, z0] = [s.layout.gate.x - 0.9, s.layout.bounds.maxZ + 0.1];
+        const [mx, z0] = [g.layout.gate.x - 0.9, g.layout.bounds.maxZ + 0.1];
         // Forward is -z at yaw 0: yaw π faces the hedge.
-        Object.assign(s, { x: mx, z: z0 - 0.45, yaw: Math.PI, pitch: -1 });
+        Object.assign(g.me, { x: mx, z: z0 - 0.45, yaw: Math.PI, pitch: -1 });
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             const v = new s.tmp.constructor(mx, 0.08, z0 - 0.02).project(s.camera);

@@ -5,39 +5,29 @@ import { pinDetail, standBy } from "./helpers";
 // frog on its lily pad hops away, until it has had enough and only looks at
 // you; throw one on the grass. Nothing here is saved.
 
-type Spot = { x: number; z: number };
-/** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
-type CarryScene = {
-  x: number;
-  z: number;
-  yaw: number;
-  layout: { pond: Spot & { r: number } };
-  game: { pebbles: { held: number | null } };
-  guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] };
-};
-
-const scene = (page: Page) => page.evaluate(() => (window as unknown as { __garden: CarryScene }).__garden);
+/** The renderer's visitors, which these tests read. */
+type Guests = { guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] } };
 
 /** Where the first pebble waits. */
 const pebbleSpot = (page: Page) =>
   page.evaluate(async () => {
     const { pebbleHome } = await import(/* @vite-ignore */ "/src/garden/carry.ts");
-    const L = (window as unknown as { __garden: { layout: Parameters<typeof pebbleHome>[0] } }).__garden.layout;
-    return pebbleHome(L, 0);
+    return pebbleHome(window.__garden.game.layout, 0);
   });
 
-const frogAt = async (page: Page) => {
-  const f = (await scene(page)).guests.sprites.find((s) => s.v.id === "frog")!;
-  return { x: f.body.at.x, z: f.body.at.z };
-};
+const frogAt = (page: Page) =>
+  page.evaluate(() => {
+    const f = (window.__garden as unknown as Guests).guests.sprites.find((s) => s.v.id === "frog")!;
+    return { x: f.body.at.x, z: f.body.at.z };
+  });
 
 /** Turn to face the middle of the pond, where you stand. */
 const facePond = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: CarryScene }).__garden;
-    const p = s.layout.pond;
+    const { me, layout } = window.__garden.game;
+    const p = layout.pond;
     // Forward is -z at yaw 0.
-    s.yaw = Math.atan2(-(p.x - s.x), -(p.z - s.z));
+    me.yaw = Math.atan2(-(p.x - me.x), -(p.z - me.z));
   });
 
 test.beforeEach(async ({ page }) => {
@@ -60,7 +50,7 @@ test("pick up a pebble with a tap, throw it in the pond: the frog hops, then onl
 
   // A tap on the pebble from a few steps away: you walk up and pick it up. It shows by the action button.
   await page.mouse.click(...(await standBy(page, pebble, 3)));
-  await expect.poll(async () => (await scene(page)).game.pebbles.held, { timeout: 15_000 }).not.toBeNull();
+  await expect.poll(() => page.evaluate(() => window.__garden.game.pebbles.held), { timeout: 15_000 }).not.toBeNull();
   await expect(page.locator(".gw-hand")).toBeVisible();
   await expect(status).toHaveText("You hold the pebble.");
 
@@ -88,8 +78,7 @@ test("pick up a pebble with a tap, throw it in the pond: the frog hops, then onl
   // Throw one away from the pond: it lands on the grass, and can be picked up again there.
   await act("Pick up the pebble").click();
   await page.evaluate(() => {
-    const s = (window as unknown as { __garden: CarryScene }).__garden;
-    s.yaw += Math.PI;
+    window.__garden.game.me.yaw += Math.PI;
   });
   await act("Throw it").click();
   await expect(status).toHaveText("It lands on the ground.");

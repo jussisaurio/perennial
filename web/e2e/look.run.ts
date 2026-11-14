@@ -43,7 +43,8 @@ interface LookState {
 
 const gardenNow = (page: Page) =>
   page.evaluate(() => {
-    const g = (window as unknown as { __garden?: { stateNow(): SceneState } }).__garden;
+    // Off the walk there is no garden: the state says null.
+    const g = "__garden" in window ? window.__garden : null;
     const cv = document.querySelector(".gw-canvas")?.getBoundingClientRect();
     if (!g || !cv) return null;
     const px = (v: number) => Math.round(v);
@@ -120,7 +121,7 @@ async function doStep(page: Page, text: string, step: Step) {
       if ("seconds" in u) return gameSeconds(page, u.seconds);
       await page.waitForFunction(
         (u) => {
-          const s = (window as unknown as { __garden: { stateNow(): SceneState } }).__garden.stateNow();
+          const s = window.__garden.stateNow();
           return "mode" in u ? s.mode === u.mode : s.reach === u.reach;
         },
         u,

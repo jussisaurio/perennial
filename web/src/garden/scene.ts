@@ -198,39 +198,6 @@ export class GardenScene {
   readonly game: Game;
   /** The one clock read (DESIGN.md, Garden code): when the walk opened. The game and the build both take it from here. */
   private readonly opened = new Date();
-  // The walker's place and view, under the names this scene reads them by. The e2e tests (window.__garden) read them too, and set them to stand somewhere.
-  private get x(): number {
-    return this.game.me.x;
-  }
-  private set x(v: number) {
-    this.game.me.x = v;
-  }
-  private get z(): number {
-    return this.game.me.z;
-  }
-  private set z(v: number) {
-    this.game.me.z = v;
-  }
-  private get yaw(): number {
-    return this.game.me.yaw;
-  }
-  private set yaw(v: number) {
-    this.game.me.yaw = v;
-  }
-  private get pitch(): number {
-    return this.game.me.pitch;
-  }
-  private set pitch(v: number) {
-    this.game.me.pitch = v;
-  }
-  /** What the walker is doing (#877), for the e2e tests (window.__garden). */
-  private get walker(): W.Mode {
-    return this.game.me.mode;
-  }
-  /** Seconds in the garden, for the e2e tests (window.__garden). */
-  private get elapsed(): number {
-    return this.game.elapsed;
-  }
   /** The ring on the ground where a walk goes. */
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   /** Carry (#358): the pebbles as drawn. */
@@ -736,7 +703,7 @@ export class GardenScene {
     // From farther than its reach too: a tap there walks to it first (tapDoor, #336). There, whatever
     // stands in front of it (a lantern, the sunflower) is what the tap meets; in reach the key comes first, as it did.
     const disc = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
-    const toKey = disc < Infinity && !R.doorInReach(this.game.things, this.x, this.z, "key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
+    const toKey = disc < Infinity && !R.doorInReach(this.game.things, this.game.me.x, this.game.me.z, "key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
     if (toKey <= toDoor) return { kind: "door", a: "key" };
     return { kind: "door", a: d.state === "held" ? "open" : "try" };
@@ -863,7 +830,7 @@ export class GardenScene {
       const got = this.carry.pick(r);
       if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
       // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
-      return pebbles.standFor(got.target, this.x, this.z).near || wall >= got.t ? { kind: "carry", t: got.target } : null;
+      return pebbles.standFor(got.target, this.game.me.x, this.game.me.z).near || wall >= got.t ? { kind: "carry", t: got.target } : null;
     }
     if (this.carry.pickWell(r) <= wall) return { kind: "carry", t: { at: "well" } };
     // The pond's own hit disc (sceneSky.ts) lies a few mm over the water and a rim wider: the water may be just behind it.
@@ -871,7 +838,7 @@ export class GardenScene {
     const water = rayDisc(r, p.x, 0.04, p.z, p.r);
     if (water < FOG_FAR && water < wall + 0.1) return { kind: "carry", t: { at: "water", x: r.ox + r.dx * water, z: r.oz + r.dz * water } };
     const g = groundAt(r, w);
-    return g && Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH ? { kind: "carry", t: { at: "ground", ...g } } : null;
+    return g && Math.hypot(g.x - this.game.me.x, g.z - this.game.me.z) < GROUND_REACH ? { kind: "carry", t: { at: "ground", ...g } } : null;
   }
 
   /** The dandelion clock under a point on the canvas (CSS pixels), unless something stands in front of it. */
@@ -879,7 +846,7 @@ export class GardenScene {
     const got = this.toys.pick(r);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
     // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
-    const near = this.game.clocks.standFor(got.i, this.x, this.z).near;
+    const near = this.game.clocks.standFor(got.i, this.game.me.x, this.game.me.z).near;
     return near || thingAt(r, this.sceneryWorld()) >= got.t ? { kind: "toy", i: got.i } : null;
   }
 
@@ -1200,7 +1167,7 @@ export class GardenScene {
     const w = this.sceneryWorld();
     const back = this.game.back;
     const g = back?.open ? this.groundPast(r, thingAt(r, w)) : groundAt(r, w);
-    if (!g || Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH) return null;
+    if (!g || Math.hypot(g.x - this.game.me.x, g.z - this.game.me.z) < GROUND_REACH) return null;
     const b = this.layout.bounds;
     const o = this.layout.orchard;
     const inGarden = g.x > b.minX && g.x < b.maxX && g.z > b.minZ && g.z < b.maxZ;
@@ -1338,7 +1305,7 @@ export class GardenScene {
    * thought you called it. Nothing moves with reduced motion.
    */
   nod(p: PlacedPlant) {
-    this.plants.nod(p, this.elapsed, this.reducedMotion);
+    this.plants.nod(p, this.game.elapsed, this.reducedMotion);
   }
 
   /** Is the hedge between the eye and this point? */
@@ -1355,7 +1322,7 @@ export class GardenScene {
    */
   wordsNear(metres: number): string[] {
     const near = [...this.layout.plants, ...this.game.trunks]
-      .map((t) => ({ t, d: Math.hypot(t.x - this.x, t.z - this.z) }))
+      .map((t) => ({ t, d: Math.hypot(t.x - this.game.me.x, t.z - this.game.me.z) }))
       .filter((n) => n.d < metres)
       .sort((a, b) => a.d - b.d)
       .map((n) => n.t);
@@ -1418,24 +1385,25 @@ export class GardenScene {
   /** One frame: the game steps with the input held now, then everything is drawn where the game says. */
   private tick(dt: number) {
     const g = this.game;
+    const me = g.me;
     const motion = this.reducedMotion ? 0 : 1;
 
     // Where the walker was, and whether they went on foot, for how fast they walk into things (#359).
-    const x0 = this.x;
-    const z0 = this.z;
-    const onFoot = this.walker.kind === "trip" || Math.hypot(this.input.move.x, this.input.move.y) > 0.01;
+    const x0 = me.x;
+    const z0 = me.z;
+    const onFoot = me.mode.kind === "trip" || Math.hypot(this.input.move.x, this.input.move.y) > 0.01;
     g.step(dt, this.input);
     const t = g.elapsed;
     // Sitting down or standing up, the eye sinks or rises (walker.ts step).
-    const seat = g.me.seat;
-    this.camera.position.set(this.x, EYE - (EYE - W.SEAT.eye) * seat + this.game.lift(this.x, this.z) + Math.sin(g.me.bob) * 0.035 * motion, this.z);
+    const seat = me.seat;
+    this.camera.position.set(me.x, EYE - (EYE - W.SEAT.eye) * seat + g.lift(me.x, me.z) + Math.sin(me.bob) * 0.035 * motion, me.z);
     // On the stool the view narrows as you sit, and widens again as you get up (#858).
     const fov = g.sitOn === "stool" ? FOV - (FOV - STOOL_FOV) * seat : FOV;
     if (fov !== this.camera.fov) {
       this.camera.fov = fov;
       this.camera.updateProjectionMatrix();
     }
-    this.camera.rotation.set(this.pitch, this.yaw, 0);
+    this.camera.rotation.set(me.pitch, me.yaw, 0);
     this.camera.updateMatrixWorld();
 
     for (const mat of this.mats) {
@@ -1453,11 +1421,11 @@ export class GardenScene {
     const frame = this.tickFrame;
     frame.dt = dt;
     frame.elapsed = t;
-    frame.x = this.x;
-    frame.z = this.z;
-    frame.yaw = this.yaw;
+    frame.x = me.x;
+    frame.z = me.z;
+    frame.yaw = me.yaw;
     // dt is 0 only on the very first frame, before anyone could walk.
-    frame.speed = onFoot && dt > 0 ? Math.hypot(this.x - x0, this.z - z0) / dt : 0;
+    frame.speed = onFoot && dt > 0 ? Math.hypot(me.x - x0, me.z - z0) / dt : 0;
     for (const part of this.parts) part.tick?.(frame);
     if (g.selected) {
       const p = g.selected;
@@ -1467,7 +1435,7 @@ export class GardenScene {
 
     // The sunflower shows its face only to someone standing in its sun (and never at night).
     const fl = this.flower;
-    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sky.sunDir.x, this.sky.sunDir.z, g.shown === "night");
+    const face = sunflowerFaces(fl.x, fl.z, me.x, me.z, this.sky.sunDir.x, this.sky.sunDir.z, g.shown === "night");
     if (face !== fl.face) {
       fl.face = face;
       fl.uv.setX(0, face ? 0 : 0.5);
@@ -1482,7 +1450,7 @@ export class GardenScene {
   private labels() {
     const g = this.game;
     const v = this.tmp;
-    const out: Label[] = this.plants.labelsNear(this.x, this.z, v);
+    const out: Label[] = this.plants.labelsNear(g.me.x, g.me.z, v);
     out.push(...this.plants.petals(g.elapsed, v));
     const tags: Partial<Record<(typeof LABEL_PRIORITY)[number], Label>> = {};
 
@@ -1533,7 +1501,7 @@ export class GardenScene {
     }
     // A visitor's approach tag shows only while none of line/fruit/scenery/tree is active (clearTaps keeps at most one of those set at a time).
     const exclusiveActive = !!(g.sceneryTap || g.treeTap || g.line || g.fruitTap);
-    const { say, tag } = this.guests.labels(this.x, this.z, !exclusiveActive);
+    const { say, tag } = this.guests.labels(g.me.x, g.me.z, !exclusiveActive);
     if (say) tags.say = say;
     if (tag) tags.tag = tag;
     // One table for what shows over what: say (a visitor's bubble) always; then whichever of line/scenery/tree is active; last, a visitor's tag.
@@ -1553,23 +1521,9 @@ export class GardenScene {
     }
   }
 
-  /** For dev tools only, through the window.__garden handle (e2e/look.run.ts, #974): the walk now, as plain data. It changes nothing. */
+  /** For dev tools only, through the window.__garden handle (e2e/look.run.ts, #974): the game now, and what is in view, as plain data. It changes nothing. */
   stateNow(): SceneState {
-    const g = this.game;
-    const w = this.walker;
-    return {
-      x: this.x,
-      z: this.z,
-      yaw: this.yaw,
-      pitch: this.pitch,
-      mode: w.kind,
-      seat: w.kind === "seated" ? w.on : null,
-      time: g.shown,
-      elapsed: g.elapsed,
-      reach: g.offer ? g.offer.a : null,
-      inReach: R.offersAt(g.me, g.things, g.offer).map((o) => o.a),
-      things: thingsInView(this.camera, this.hitBoxes, this.hitDiscs, g.stileSpot),
-    };
+    return { ...this.game.state(), things: thingsInView(this.camera, this.hitBoxes, this.hitDiscs, this.game.stileSpot) };
   }
 
   dispose() {

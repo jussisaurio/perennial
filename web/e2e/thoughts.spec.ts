@@ -1,17 +1,8 @@
 import { expect, test, type Page } from "./test";
-import type { WalkScene } from "./helpers";
-import { gameSeconds, pinDetail, walker } from "./helpers";
+import { gameSeconds, pinDetail, walker, type Drawn } from "./helpers";
 
 // docs/garden-play.md, "Thoughts: a tap on a thing" (#864): a tap on the bench, the pond, the sunflower, the sundial, the stool or
 // the far hills shows a short line under its name, in the course language, from the words the learner knows.
-
-// Without WalkScene's pickAny: it names only a plant hit, and of two same-named methods the first one's type wins.
-type ThoughtScene = Omit<WalkScene, "pickAny"> & {
-  pitch: number;
-  game: { bench: { x: number; z: number } };
-  layout: { pond: { x: number; z: number; r: number } };
-  pickAny(x: number, y: number, w: number, h: number): { kind: string; s?: { view: { id: string } } } | null;
-};
 
 const BENCH = "Es para dos.";
 const tag = (page: Page) => page.locator(".gw-thought");
@@ -27,19 +18,19 @@ async function openWalk(page: Page, known: number) {
   // The key lies by the bench for one learner in five (world.ts keySpot, seeded by the demo's new user id), and in
   // reach it takes the action button from the bench: lay it by the first bed instead. With few words there is no key yet.
   await page.evaluate(() => {
-    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; game: { door: { key: { x: number; z: number } | null } } } }).__garden;
-    const bed = s.layout.beds[0];
-    if (s.game.door.key) Object.assign(s.game.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
+    const g = window.__garden.game;
+    const bed = g.layout.beds[0];
+    if (g.door.key) Object.assign(g.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
   });
 }
 
 /** Where things are: the bench's seat and the sundial by it. */
 const places = (page: Page) =>
   page.evaluate(() => {
-    const s = (window as unknown as { __garden: ThoughtScene }).__garden;
+    const { bench } = window.__garden.game;
     return {
-      bench: { x: s.game.bench.x, y: 0.45, z: s.game.bench.z },
-      sundial: { x: s.game.bench.x - 1.05, y: 0.5, z: s.game.bench.z },
+      bench: { x: bench.x, y: 0.45, z: bench.z },
+      sundial: { x: bench.x - 1.05, y: 0.5, z: bench.z },
     };
   });
 
@@ -47,9 +38,9 @@ const places = (page: Page) =>
 const lookAt = (page: Page, p: { x: number; y: number; z: number }, metres: number) =>
   page.evaluate(
     ({ p, metres }) => {
-      const s = (window as unknown as { __garden: ThoughtScene }).__garden;
+      const s = window.__garden as unknown as Drawn;
       // Forward is -z at yaw 0: yaw π faces +z.
-      Object.assign(s, { x: p.x, z: p.z - metres, yaw: Math.PI, pitch: -Math.atan2(1.05 - p.y, metres) });
+      Object.assign(window.__garden.game.me, { x: p.x, z: p.z - metres, yaw: Math.PI, pitch: -Math.atan2(1.05 - p.y, metres) });
       return new Promise<[number, number]>((done) =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -66,19 +57,20 @@ const lookAt = (page: Page, p: { x: number; y: number; z: number }, metres: numb
 /** Stand 3 m from the pond, on whichever side a tap on its middle meets the water (its lilies, the hedge or the bench are in the way on some); return that point on the page. */
 const facePond = (page: Page) =>
   page.evaluate(async () => {
-    const s = (window as unknown as { __garden: ThoughtScene }).__garden;
-    const p = s.layout.pond;
+    const g = window.__garden.game;
+    const s = window.__garden as unknown as Drawn;
+    const p = g.layout.pond;
     const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
     const frame = () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
     for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
       // Forward is (-sin yaw, -cos yaw): standing at p + 3·(sin a, cos a), yaw a faces the pond.
-      Object.assign(s, { x: p.x + 3 * Math.sin(a), z: p.z + 3 * Math.cos(a), yaw: a, pitch: -Math.atan2(1.05, 3) });
+      Object.assign(g.me, { x: p.x + 3 * Math.sin(a), z: p.z + 3 * Math.cos(a), yaw: a, pitch: -Math.atan2(1.05, 3) });
       await frame();
       for (const off of [0, 0.4, -0.4]) {
         const v = new s.tmp.constructor(p.x + off * Math.cos(a), 0, p.z - off * Math.sin(a)).project(s.camera);
         const [x, y] = [((v.x + 1) / 2) * r.width, ((1 - v.y) / 2) * r.height];
-        const hit = s.pickAny(x, y, r.width, r.height);
-        if (hit?.kind === "scenery" && hit.s?.view.id === "pond") return [r.left + x, r.top + y] as [number, number];
+        const hit = window.__garden.pickAny(x, y, r.width, r.height);
+        if (hit?.kind === "scenery" && hit.s.view.id === "pond") return [r.left + x, r.top + y] as [number, number];
       }
     }
     throw new Error("no clear view of the pond");
@@ -167,15 +159,15 @@ test("thought.seated: sitting on the bench, a tap on the pond shows the pond's t
   await expect(stand).toBeVisible();
   // From the seat, without turning: a point on the pond that a tap meets (a lily may be in the way of its middle).
   const at = await page.evaluate(async () => {
-    const s = (window as unknown as { __garden: ThoughtScene }).__garden;
-    const p = s.layout.pond;
+    const s = window.__garden as unknown as Drawn;
+    const p = window.__garden.game.layout.pond;
     const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
     await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
     for (const off of [0, 0.4, -0.4, 0.8, -0.8]) {
       const v = new s.tmp.constructor(p.x + off, 0, p.z).project(s.camera);
       const [x, y] = [((v.x + 1) / 2) * r.width, ((1 - v.y) / 2) * r.height];
-      const hit = s.pickAny(x, y, r.width, r.height);
-      if (hit?.kind === "scenery" && hit.s?.view.id === "pond") return [r.left + x, r.top + y] as [number, number];
+      const hit = window.__garden.pickAny(x, y, r.width, r.height);
+      if (hit?.kind === "scenery" && hit.s.view.id === "pond") return [r.left + x, r.top + y] as [number, number];
     }
     throw new Error("no tap from the seat meets the pond");
   });
@@ -197,12 +189,12 @@ test("thought.details: up close, the bench's seat shows two cup rings and the su
     page.evaluate(
       async ({ name, side, metres }) => {
         type Obj = { visible: boolean; getWorldPosition(v: unknown): { x: number; y: number; z: number; project(c: unknown): { x: number; y: number } } };
-        const s = (window as unknown as { __garden: ThoughtScene & { scene: { getObjectByName(n: string): Obj | undefined } } }).__garden;
+        const s = window.__garden as unknown as Drawn & { scene: { getObjectByName(n: string): Obj | undefined } };
         const o = s.scene.getObjectByName(name);
         if (!o) throw new Error(`nothing named ${name}`);
         const p = o.getWorldPosition(new s.tmp.constructor(0, 0, 0));
         // Forward is -z at yaw 0.
-        Object.assign(s, { x: p.x, z: p.z + side * metres, yaw: side > 0 ? 0 : Math.PI, pitch: -Math.atan2(1.05 - p.y, metres) });
+        Object.assign(window.__garden.game.me, { x: p.x, z: p.z + side * metres, yaw: side > 0 ? 0 : Math.PI, pitch: -Math.atan2(1.05 - p.y, metres) });
         await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
         const v = new s.tmp.constructor(p.x, p.y, p.z).project(s.camera);
         const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
@@ -214,7 +206,7 @@ test("thought.details: up close, the bench's seat shows two cup rings and the su
     page.evaluate(
       ({ name, visible }) =>
         new Promise<void>((done) => {
-          const s = (window as unknown as { __garden: { scene: { getObjectByName(n: string): { visible: boolean } } } }).__garden;
+          const s = window.__garden as unknown as { scene: { getObjectByName(n: string): { visible: boolean } } };
           s.scene.getObjectByName(name).visible = visible;
           requestAnimationFrame(() => requestAnimationFrame(() => done()));
         }),
@@ -250,15 +242,15 @@ test("thought.hills: with 800 words a tap on the far hills shows their tag and a
   await openWalk(page, 800);
   // From the bench, look round until a point a little above the horizon meets the hills, not a tree or the sky.
   const at = await page.evaluate(async () => {
-    const s = (window as unknown as { __garden: ThoughtScene }).__garden;
+    const s = window.__garden;
     const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
     const frame = () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
     for (let yaw = 0; yaw < Math.PI * 2; yaw += 0.4) {
-      Object.assign(s, { x: s.game.bench.x, z: s.game.bench.z - 1, yaw, pitch: 0 });
+      Object.assign(s.game.me, { x: s.game.bench.x, z: s.game.bench.z - 1, yaw, pitch: 0 });
       await frame();
       for (let y = 0.5; y > 0.3; y -= 0.02) {
         const hit = s.pickAny(r.width / 2, r.height * y, r.width, r.height);
-        if (hit?.kind === "scenery" && hit.s?.view.id === "hills") return [r.left + r.width / 2, r.top + r.height * y] as [number, number];
+        if (hit?.kind === "scenery" && hit.s.view.id === "hills") return [r.left + r.width / 2, r.top + r.height * y] as [number, number];
       }
     }
     throw new Error("no view of the hills from the bench");
@@ -290,14 +282,14 @@ test("thought.stool: with 800 words, on the hill, a tap on the stool shows its t
   const at = await page.evaluate(async () => {
     const stile = await import(/* @vite-ignore */ "/src/garden/stile.ts");
     const lookout = await import(/* @vite-ignore */ "/src/garden/lookout.ts");
-    const s = (window as unknown as { __garden: ThoughtScene }).__garden;
-    const hill = lookout.lookoutAt(stile.stileAt(s.layout as Parameters<typeof stile.stileAt>[0]));
-    Object.assign(s, { x: hill.stool[0] + Math.sin(hill.face) * 1.5, z: hill.stool[1] + Math.cos(hill.face) * 1.5, yaw: hill.face, pitch: -0.45 });
+    const s = window.__garden;
+    const hill = lookout.lookoutAt(stile.stileAt(s.game.layout));
+    Object.assign(s.game.me, { x: hill.stool[0] + Math.sin(hill.face) * 1.5, z: hill.stool[1] + Math.cos(hill.face) * 1.5, yaw: hill.face, pitch: -0.45 });
     await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
     const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
     for (let y = 0.3; y < 0.9; y += 0.02) {
       const hit = s.pickAny(r.width / 2, r.height * y, r.width, r.height);
-      if (hit?.kind === "scenery" && hit.s?.view.id === "stool") return [r.left + r.width / 2, r.top + r.height * y] as [number, number];
+      if (hit?.kind === "scenery" && hit.s.view.id === "stool") return [r.left + r.width / 2, r.top + r.height * y] as [number, number];
     }
     throw new Error("no view of the stool");
   });
