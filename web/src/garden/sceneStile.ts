@@ -354,7 +354,7 @@ export class StileScene {
 
     const notes = this.stileNotes.notes;
     if (notes.length === 0) return;
-    const paper = (unread: boolean) => c.mat(T.pixelTexture(T.notePaper(unread)), { alphaTest: 0.5 });
+    const paper = (unread: boolean) => c.mat(T.paperTexture(T.notePaper(unread)), { alphaTest: 0.5 });
     const fresh = paper(true);
     this.readPaper = paper(false);
     const geo = new THREE.PlaneGeometry(PAPER.w, PAPER.h);

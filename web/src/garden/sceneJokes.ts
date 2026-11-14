@@ -78,12 +78,23 @@ export class Jokes implements Part {
     const cap = new THREE.Mesh(capGeo, stone);
     cap.position.set(x, SUNDIAL.pillar + 0.025, z);
     const y = SUNDIAL.pillar + 0.05;
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(SUNDIAL.face, SUNDIAL.face), mat(T.pixelTexture(T.sundialFace()), { alphaTest: 0.5 }));
+    const faceTex = T.paperTexture(T.sundialFace());
+    // A round mesh, so the disc's edge is the mesh's, crisp, with no alpha to test.
+    const face = new THREE.Mesh(new THREE.CircleGeometry(SUNDIAL.face / 2, 48), mat(faceTex));
     // Flat, its top (noon) toward the back fence (-z).
     face.rotation.x = -Math.PI / 2;
     face.position.set(x, y + 0.003, z);
-    const gnomon = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.06, 0.11), mat(T.pixelTexture(T.sundialFace())));
-    gnomon.position.set(x, y + 0.03, z - 0.04);
+    // The gnomon: a thin blade on the noon line, rising from the middle toward noon (-z). It is the rim's dark
+    // bronze: all its texture coordinates are in the face's corner, which the disc never shows.
+    const blade = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0.1, 0), new THREE.Vector2(0.1, 0.06)]);
+    const gnomonGeo = new THREE.ExtrudeGeometry(blade, { depth: 0.012, bevelEnabled: false });
+    gnomonGeo.translate(0, 0, -0.006);
+    // The blade's length (its x) along -z.
+    gnomonGeo.rotateY(Math.PI / 2);
+    gnomonGeo.getAttribute("uv").array.fill(0.02);
+    shade(gnomonGeo);
+    const gnomon = new THREE.Mesh(gnomonGeo, mat(faceTex, { vertexColors: true }));
+    gnomon.position.set(x, y, z);
     // The shadow starts at the middle and points away from the sun: toward the hour on the face.
     const geo = new THREE.PlaneGeometry(0.022, SUNDIAL.shadow);
     geo.translate(0, SUNDIAL.shadow / 2, 0);
@@ -157,7 +168,7 @@ export class Jokes implements Part {
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.glowTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     glow.scale.set(0.3, 0.3, 1);
     glow.position.set(mx, MOUSE_DOOR.h * 0.45, z0 - 0.03);
-    const paperMat = (unread: boolean) => mat(T.pixelTexture(T.notePaper(unread)), { alphaTest: 0.5 });
+    const paperMat = (unread: boolean) => mat(T.paperTexture(T.notePaper(unread)), { alphaTest: 0.5 });
     const readPaper = paperMat(false);
     const paper = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.paper.w, MOUSE_DOOR.paper.h), note.unread ? paperMat(true) : readPaper);
     // Flat on the mat, a little askew, its far end still in the doorway.

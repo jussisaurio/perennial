@@ -33,7 +33,7 @@ export class Lanterns implements Part {
       this.boxes.push(box);
       c.hitBoxes.push(box);
     }
-    const lanternTex = T.pixelTexture(T.lantern());
+    const lanternTex = T.cutoutTexture(T.lantern());
     const lanternItems = (u: number): SpriteItem[] => at.map(([x, y, z]) => ({ x, y, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
     const unlit = sprites(lanternTex, lanternItems(0), LANTERN.w, LANTERN.h);
     const lit = sprites(lanternTex, lanternItems(0.5), LANTERN.w, LANTERN.h);

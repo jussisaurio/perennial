@@ -101,6 +101,7 @@ const LYING_VERT = /* glsl */ `
   }
 `;
 
+// A premultiplied map (textures.ts cutoutTexture) has its colour divided by its alpha again.
 const SPRITE_FRAG = /* glsl */ `
   uniform sampler2D uMap;
   varying vec2 vUv;
@@ -108,12 +109,17 @@ const SPRITE_FRAG = /* glsl */ `
   void main() {
     vec4 c = texture2D(uMap, vUv);
     if (c.a < 0.5) discard;
+    #ifdef PREMULTIPLIED
+    c.rgb /= c.a;
+    #endif
     gl_FragColor = shade(c);
   }
 `;
 
 function spriteMaterial(map: THREE.Texture, vertexShader: string): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
+    // Read from the map, so the shader and the map's upload can't disagree.
+    defines: map.premultiplyAlpha ? { PREMULTIPLIED: "" } : {},
     uniforms: {
       uMap: { value: map },
       uTime: { value: 0 },

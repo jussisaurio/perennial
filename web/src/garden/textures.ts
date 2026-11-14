@@ -1,7 +1,8 @@
 // Small procedural textures, drawn on canvases. The sky, hills, clouds and far
 // trees are filtered smooth, as paper cut-outs (docs/art-direction.md, #1051),
-// and so is the ground (paperTexture, #1091); other near surfaces and sprites
-// still show their pixels until they are redrawn.
+// and so are the ground and the props redrawn as paper (paperTexture and
+// cutoutTexture, #1091); the rest still show their pixels (pixelTexture)
+// until they are redrawn.
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
@@ -48,6 +49,17 @@ export function paperTexture(c: OffscreenCanvas, repeat = false): THREE.CanvasTe
   t.magFilter = THREE.LinearFilter;
   t.minFilter = THREE.LinearMipmapLinearFilter;
   if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+/**
+ * A paper cut-out for the instanced sprites (sceneSprites.ts), as paperTexture but uploaded premultiplied: a canvas
+ * keeps no colour in its clear pixels, so a straight-alpha edge blends toward black and gets a dark rim, worse far off
+ * in the mipmaps. Premultiplied, it blends toward clear, and the sprite shader divides the alpha out again.
+ */
+export function cutoutTexture(c: OffscreenCanvas): THREE.CanvasTexture<OffscreenCanvas> {
+  const t = paperTexture(c);
+  t.premultiplyAlpha = true;
   return t;
 }
 
@@ -908,19 +920,32 @@ export function fixedNotice(text: string, strike: string, write: string): Offscr
   return c;
 }
 
-/** The sundial's face (#364), seen from above, noon at the top: a bronze disc with hour marks from 6 in the morning (left) to 6 in the evening (right). */
+/**
+ * The sundial's face (#364, #1091), seen from above, noon at the top: a flat bronze disc in a darker rim, with crisp
+ * hour marks from 6 in the morning (left) to 6 in the evening (right), longer every three hours. It fills the square,
+ * corners in the rim's colour: a round mesh cuts the disc out (sceneJokes.ts), so its edge needs no alpha.
+ */
 export function sundialFace(): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 32);
-  for (let y = 0; y < 32; y++)
-    for (let x = 0; x < 32; x++) {
-      const d = Math.hypot(x - 15.5, y - 15.5);
-      if (d < 16) px(ctx, x, y, d > 14.5 ? "#6e5226" : (x + y) % 7 === 0 ? "#9a7a3e" : "#b48c4a");
-    }
+  const S = 256;
+  const [c, ctx] = canvas(S, S);
+  const m = S / 2;
+  px(ctx, 0, 0, "#6e5226", S, S);
+  oval(ctx, "#b48c4a", m, m, 116);
+  ctx.strokeStyle = "#9a7a3e";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(m, m, 60, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#4a3418";
   for (let h = 6; h <= 18; h++) {
     const a = ((h - 12) * Math.PI) / 12;
     const long = h % 3 === 0;
-    for (let r = long ? 9 : 11; r <= 13; r++) px(ctx, Math.round(15.5 + Math.sin(a) * r - 0.5), Math.round(15.5 - Math.cos(a) * r - 0.5), "#4a3418");
+    ctx.lineWidth = long ? 6 : 4;
+    ctx.beginPath();
+    for (const r of [long ? 72 : 88, 104]) ctx.lineTo(m + Math.sin(a) * r, m - Math.cos(a) * r);
+    ctx.stroke();
   }
+  oval(ctx, "#8a6a32", m, m, 9);
   return c;
 }
 
@@ -1024,15 +1049,36 @@ export function mouseDoor(part: "shut" | "way" | "leaf"): OffscreenCanvas {
  * One not read yet (#673) is a little whiter, on a bright brass pin; once read, it is the old paper on a grey nail.
  */
 export function notePaper(unread: boolean): OffscreenCanvas {
-  const [c, ctx] = canvas(12, 14);
-  px(ctx, 0, 1, unread ? "#e4dabf" : "#d8cdb0", 12, 13);
-  px(ctx, 1, 2, unread ? "#fcf7e6" : "#f1e8d0", 10, 11);
-  for (const y of [5, 7, 9, 11]) px(ctx, 2, y, "#9a917e", y === 11 ? 5 : 8, 1);
-  // The folded bottom corner, and the nail through the top.
-  px(ctx, 10, 12, "#c7bb9c", 2, 2);
-  ctx.clearRect(11, 13, 1, 1);
-  px(ctx, 5, 0, unread ? "#b8892e" : "#5c5a57", 2, 2);
-  if (unread) px(ctx, 5, 0, "#f0d27a", 1, 1);
+  // 8 texels to each of the first 12×14 drawing's (#1091): the same shape on the same planes, drawn as paper.
+  const [W, H] = [96, 112];
+  const [c, ctx] = canvas(W, H);
+  px(ctx, 0, 8, unread ? "#e4dabf" : "#d8cdb0", W, H - 8);
+  px(ctx, 3, 11, unread ? "#fcf7e6" : "#f1e8d0", W - 6, H - 14);
+  ctx.strokeStyle = "#9a917e";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  for (const [y, len] of [
+    [44, 64],
+    [58, 58],
+    [72, 66],
+    [86, 38],
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(16, y);
+    ctx.lineTo(16 + len, y);
+    ctx.stroke();
+  }
+  // The folded bottom corner: its flap turned over onto the paper, so the corner itself is gone.
+  const f = 16;
+  ctx.clearRect(W - f, H - f, f, f);
+  polygon(ctx, "#c7bb9c", [
+    [W - f, H],
+    [W, H - f],
+    [W - f, H - f],
+  ]);
+  // The nail through the top, a bright brass pin while unread.
+  oval(ctx, unread ? "#b8892e" : "#5c5a57", W / 2, 9, 7);
+  if (unread) oval(ctx, "#f0d27a", W / 2 - 2.5, 6.5, 2.5);
   return c;
 }
 
@@ -1184,54 +1230,105 @@ export const batchCell = (i: number) => ({ x: (i % BATCH_COLS) * HI_W, y: Math.f
 // ---- Decorations ----------------------------------------------------------
 
 /** Ground decorations, one atlas of 4 cells of 32×64: tuft, wildflowers, mushrooms, stone. */
+/** Fills the polygon through `pts` with `color`. */
+function polygon(ctx: OffscreenCanvasRenderingContext2D, color: string, pts: readonly (readonly [number, number])[]) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  for (const [x, y] of pts) ctx.lineTo(x, y);
+  ctx.fill();
+}
+
+/** Fills a circle, or an ellipse when `ry` is given; `half`: only its top or bottom half. */
+function oval(ctx: OffscreenCanvasRenderingContext2D, color: string, x: number, y: number, rx: number, ry = rx, half?: "top" | "bottom") {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  if (half === "top") ctx.ellipse(x, y, rx, ry, 0, Math.PI, Math.PI * 2);
+  else if (half === "bottom") ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI);
+  else ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/**
+ * The wild bits outside the fence (#1091), as paper cut-outs in four cells of 128×256, each standing on the bottom
+ * edge: a grass tuft, wildflowers, two mushrooms and a stone. Each is as wide and as tall as in the first 32×64
+ * drawing (4 texels to its 1), so the tap boxes (scenery.ts DECOR_KINDS) still fit.
+ */
 export function decor(): OffscreenCanvas {
-  const [c, ctx] = canvas(128, 64);
+  const [C, H] = [128, 256];
+  const [c, ctx] = canvas(C * 4, H);
   const r = rng(41);
-  // 0: grass tuft
-  for (let i = 0; i < 9; i++) {
-    const x = 9 + i * 1.6;
-    const h = 8 + Math.floor(r() * 10);
-    const lean = (i - 4) * 0.5;
-    for (let y = 0; y < h; y++) px(ctx, Math.round(x + (lean * y) / h), 63 - y, y > h - 3 ? "#8ccc6a" : i % 2 ? "#4e9140" : "#5fa44a");
+  // 0: a grass tuft, blades fanned out from the middle, the back ones darker.
+  for (const i of [0, 8, 2, 6, 4, 1, 7, 3, 5]) {
+    const x = 46 + i * 4.5;
+    const h = 32 + r() * 40;
+    const tip = x + (i - 4) * 3;
+    ctx.fillStyle = i % 2 === 0 ? "#4f7d45" : "#6f9e5f";
+    ctx.beginPath();
+    ctx.moveTo(x - 4, H);
+    ctx.quadraticCurveTo(x - 3 + (tip - x) * 0.3, H - h * 0.55, tip, H - h);
+    ctx.quadraticCurveTo(x + 3 + (tip - x) * 0.3, H - h * 0.55, x + 4, H);
+    ctx.fill();
   }
-  // 1: wildflowers
-  for (let i = 0; i < 5; i++) {
-    const x = 36 + i * 5 + Math.floor(r() * 3);
-    const h = 9 + Math.floor(r() * 14);
-    px(ctx, x, 64 - h, "#4e9140", 1, h);
-    const col = ["#fff8e7", "#ffd25a", "#c9a3ff", "#ff9cc4", "#9fd4ff"][i];
-    px(ctx, x - 1, 63 - h, col, 3, 1);
-    px(ctx, x, 62 - h, col, 1, 3);
-    px(ctx, x, 63 - h, "#f0a020");
+  // 1: wildflowers, each a thin stem and a round five-petal head.
+  ["#f6efdc", "#f0b23e", "#b99ad6", "#d97a9c", "#8fb2d9"].forEach((petal, i) => {
+    const x = C + 16 + i * 20 + r() * 12;
+    const h = 36 + r() * 56;
+    px(ctx, x - 1.5, H - h, "#4f7d45", 3, h);
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * Math.PI * 2 + i;
+      oval(ctx, petal, x + Math.cos(a) * 4.5, H - h + Math.sin(a) * 4.5, 4);
+    }
+    oval(ctx, "#d98a2b", x, H - h, 3);
+  });
+  // 2: two mushrooms, plain brown: a pale stem, a dome cap, its dark gills under the rim.
+  for (const [x, w, h] of [
+    [C * 2 + 40, 40, 24],
+    [C * 2 + 80, 28, 16],
+  ]) {
+    px(ctx, x - 6, H - h, "#ece2cf", 12, h);
+    px(ctx, x + 2, H - h, "#d6c9b0", 4, h);
+    oval(ctx, "#a8714a", x, H - h, w / 2, w / 2, "top");
+    oval(ctx, "#8a5a3c", x, H - h, w / 2, 4, "bottom");
   }
-  // 2: mushrooms, plain brown.
-  const shroom = (x: number, w: number, h: number) => {
-    px(ctx, x - 1, 64 - h, "#ece2cf", 3, h);
-    for (let y = 0; y < Math.ceil(w / 2); y++) px(ctx, x - w / 2 + y, 64 - h - y, y === 0 ? "#8a5a3c" : "#a8714a", w - y * 2, 1);
-  };
-  shroom(74, 10, 6);
-  shroom(84, 7, 4);
-  // 3: stone
-  for (let y = 0; y < 8; y++)
-    for (let x = -9; x <= 9; x++) if (Math.hypot(x / 9, (y - 7) / 8) < 1) px(ctx, 112 + x, 63 - y, y > 5 ? "#c9c3b8" : x > 3 ? "#8a847c" : "#a9a29a");
+  // 3: a low round stone: in shade on the right, its top catching the light.
+  const sx = C * 3 + 66;
+  oval(ctx, "#8a847c", sx, H, 36, 30, "top");
+  oval(ctx, "#a9a29a", sx - 6, H, 30, 28, "top");
+  oval(ctx, "#c9c3b8", sx - 8, H - 15, 20, 13, "top");
   return c;
 }
 
-/** A garden lantern on a post, lit (right) and unlit (left), 16×48 each. */
+/**
+ * A garden lantern on a wooden post (#1091), unlit (left) and lit (right), 128×384 each: a post with a lit and a
+ * shaded side, an iron roof and frame of warm dark grey (not black), and two panes, pale when unlit and warm when lit.
+ * 8 texels to each of the first 16×48 drawing's, so its parts are where they were: the halo (sceneLanterns.ts) sits on the glass.
+ */
 export function lantern(): OffscreenCanvas {
-  const [c, ctx] = canvas(32, 48);
+  const [W, H] = [128, 384];
+  const [c, ctx] = canvas(W * 2, H);
+  const [iron, ironLit] = ["#4f433c", "#6a5a50"];
   for (const [ox, lit] of [
     [0, false],
-    [16, true],
+    [W, true],
   ] as const) {
-    px(ctx, ox + 7, 14, "#3b2a20", 2, 34);
-    px(ctx, ox + 4, 3, "#2b2230", 8, 2);
-    px(ctx, ox + 5, 1, "#2b2230", 6, 2);
-    px(ctx, ox + 4, 5, "#2b2230", 1, 8);
-    px(ctx, ox + 11, 5, "#2b2230", 1, 8);
-    px(ctx, ox + 5, 5, lit ? "#ffe9a0" : "#8d8a7a", 6, 8);
-    if (lit) px(ctx, ox + 6, 7, "#fffbe0", 4, 4);
-    px(ctx, ox + 4, 13, "#2b2230", 8, 1);
+    const at = (pts: [number, number][]) => pts.map(([x, y]) => [ox + x, y] as const);
+    // The post, lit from the left.
+    px(ctx, ox + 57, 112, "#8a6a4a", 7, H - 112);
+    px(ctx, ox + 64, 112, "#6e5139", 7, H - 112);
+    // The roof: a low pyramid seen on its corner, so one side lit and one in shade, and a knob on top.
+    polygon(ctx, ironLit, at([[28, 44], [64, 44], [64, 18], [48, 18]]));
+    polygon(ctx, iron, at([[64, 44], [100, 44], [80, 18], [64, 18]]));
+    oval(ctx, iron, ox + 64, 14, 7);
+    // The frame, its glass, and the bar between the two panes.
+    px(ctx, ox + 34, 44, iron, 60, 62);
+    px(ctx, ox + 42, 50, lit ? "#f2c45e" : "#cdc6b2", 44, 50);
+    if (lit) oval(ctx, "#fff1c6", ox + 64, 76, 15, 19);
+    else polygon(ctx, "#ddd7c6", at([[42, 70], [62, 50], [72, 50], [42, 80]]));
+    px(ctx, ox + 61, 50, iron, 6, 50);
+    // The base plate, and the bracket that holds it on the post.
+    px(ctx, ox + 30, 104, ironLit, 68, 6);
+    px(ctx, ox + 30, 110, iron, 68, 5);
+    polygon(ctx, iron, at([[46, 115], [82, 115], [72, 126], [56, 126]]));
   }
   return c;
 }
