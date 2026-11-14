@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "./test";
 import { pinDetail, type Drawn } from "./helpers";
+import { frames } from "./spots";
 
 // The back fence, the stile and the hill (#770, docs/garden-play.md "Back
 // fence, stile and hill"): the claims that need a browser, played as the
@@ -127,6 +128,8 @@ test("Next plant replaces an open note; closing the plant's card brings back nei
 test("hill.tap: tapping the hill's ground past the fence walks you there, over the stile", async ({ page }) => {
   const s = await walkIn(page, OPEN);
   await stand(page, s.stile.x, s.stile.foot[1], s.turn, -0.05);
+  // The camera moves to where you stand only on the next frame (#1099).
+  await frames(page);
   // A spot on the old path up the hill, 7 m out, on the screen.
   const to = { x: s.stile.x - Math.sin(s.turn) * 7, z: s.stile.z - Math.cos(s.turn) * 7 };
   const at = await page.evaluate(async (to) => {
