@@ -1,6 +1,5 @@
-// The walkable word garden, rendered the 90s way: a tiny framebuffer scaled
-// up with hard pixels, unlit textures, fog, and flat sprite plants that turn
-// to face you. Loaded only when the garden is opened. The game itself (its
+// The walkable word garden, a paper diorama: unlit textures, fog, and flat
+// sprite plants that turn to face you. Loaded only when the garden is opened. The game itself (its
 // state and rules) is game.ts: this scene feeds it the input and the taps,
 // steps it each frame, and draws what it holds (#975).
 
@@ -272,14 +271,15 @@ export class GardenScene {
   /** Today's visitors in the walk (sceneVisitors.ts). */
   private guests: SceneVisitors;
 
-  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: DeckLang, visitors: WalkVisitors) {
+  /** @param msaa Smooth the edges of shapes (#1106). The WebGL context keeps it for its whole life. */
+  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: DeckLang, visitors: WalkVisitors, msaa: boolean) {
     this.layout = layout;
     this.cb = cb;
     this.reducedMotion = reducedMotion;
     this.lang = lang;
     this.visitors = visitors;
     THREE.ColorManagement.enabled = false;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: msaa, powerPreference: "low-power" });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     this.renderer.setPixelRatio(1);
     // Reading the shader logs on a program's first use waits for the GPU: ~10 ms of a first draw at CPU 10× (#571).
