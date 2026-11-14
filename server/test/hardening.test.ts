@@ -91,7 +91,7 @@ describe("account linking needs the account's code", () => {
   });
 });
 
-describe("no secrets in logs", () => {
+describe("privacy.no-secrets: no secrets in logs", () => {
   test("sign-in, linking and failures log no tokens, codes or emails", async () => {
     const lines: string[] = [];
     const email = unique("logs");

@@ -121,6 +121,7 @@ class Robot {
     appendFileSync(`${run.dir}/diary.txt`, `${line}\n`);
   }
 
+  // invariant app.robot-clean: each call of find is a fault the robot looks for.
   async find(kind: string, detail: string) {
     const key = shape(kind, detail);
     // The first of each finding gets a picture; the rest say where it came again.

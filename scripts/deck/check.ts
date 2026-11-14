@@ -3,6 +3,7 @@
 // now), and compatibility with the deck at a base git ref.
 //   bun scripts/deck/check.ts [--base origin/main]
 // Big changes (over 5% of live words retired) fail unless DECK_ALLOW_BIG_CHANGE=1.
+// invariant deck.valid
 
 import { join } from "node:path";
 import { readFileSync, existsSync } from "node:fs";

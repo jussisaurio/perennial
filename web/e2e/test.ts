@@ -57,6 +57,7 @@ export const test = base.extend<{
   ],
 
   // Fails the test on any console.error the page logs that isn't expected.
+  // invariant app.no-console-error
   allowConsoleError: [
     async ({ page }, use) => {
       const expectedByThisTest: { pattern: RegExp; reason: string }[] = [];

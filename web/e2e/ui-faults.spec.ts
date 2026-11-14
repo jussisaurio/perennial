@@ -19,7 +19,7 @@ for (const [view, device] of Object.entries(VIEWS))
       test.use({ ...device, colorScheme: theme });
 
       for (const [name, go] of Object.entries(SCREENS))
-        test(`${name}, ${view}, ${theme}: no mechanical UI faults`, async ({ page }) => {
+        test(`ui.no-faults: ${name}, ${view}, ${theme}`, async ({ page }) => {
           await page.clock.setFixedTime(TIMES.day);
           await go(page);
           const faults = await uiFaults(page, `${name} ${view} ${theme}`);

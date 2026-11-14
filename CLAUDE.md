@@ -18,6 +18,7 @@ How we write and merge code here. It applies to every session and every agent. W
 ## Tests
 
 - A test for a fix must **fail without the fix**. Run it against the old code once to check.
+- **Every bug adds an invariant.** A fix names the rule that broke, by its id in [docs/invariants.md](docs/invariants.md) or docs/garden-play.md. If no rule covered it, add one with its check. The fix's test title starts with that id.
 - Test behaviour, not the code's own structure. A test that passes whether or not the bug exists is deleted, not kept as "coverage".
 - **A failing CI test is never just re-run.** Find the cause: read the log, check if a retry fails the same way, reproduce it locally. If a change caused it, fix it in the next PR. If it is an older flaky test, fix it in its own PR.
 - Tests that depend on time pin the clock: `page.clock.setFixedTime` in e2e, and a fixed `now` passed in for unit tests. Tests that depend on layout pin the viewport.
