@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import es from "../../../decks/es/deck.json";
 import de from "../../../decks/de/deck.json";
 import { MEANING_WORDS, meaningOf } from "./meaning";
-import { genome, Plant, PlantForm, plantTop, stemHeight } from "./plant";
+import { genome, Plant, PlantForm, plantTop, rareOf, stemHeight } from "./plant";
 
 const draw = (word: string, stage: "bud" | "bloom") => renderToStaticMarkup(createElement(Plant, { word, growth: 0.6, stage }));
 
@@ -46,9 +46,22 @@ test("sleepy words sleep: every head stays closed, in its own colours, also whil
 });
 
 test("loco scrambles its petals: they are not all the same length", () => {
-  const petals = draw("loco", "bloom").match(/<path d="M0 0 C [^"]+"[^>]*transform="rotate\(-?[\d.]+\)"/g) ?? [];
-  expect(petals.length).toBeGreaterThan(5);
-  expect(new Set(petals.map((p) => p.split('"')[1])).size).toBeGreaterThan(3);
+  // Each petal is one piece ("M…Z") of the head's petal-coloured path, its base at the head's middle (0, 0): its length is its farthest point.
+  const lengths = (word: string) => {
+    const d = draw(word, "bloom").split(`" fill="${genome(word).petal}"`)[0].split('d="').at(-1)!;
+    return d
+      .split("M")
+      .filter(Boolean)
+      .map((piece) => {
+        const n = piece.match(/-?[\d.]+/g)!.map(Number);
+        return Math.round(Math.max(...n.map((_, i) => (i % 2 ? 0 : Math.hypot(n[i], n[i + 1])))));
+      });
+  };
+  expect(lengths("loco").length).toBeGreaterThan(5);
+  expect(new Set(lengths("loco")).size).toBeGreaterThan(3);
+  // A daisy that is not loco: every petal as long as the next.
+  const daisy = Array.from({ length: 100 }, (_, i) => `palabra${i}`).find((w) => genome(w).flower === "daisy" && !rareOf(w))!;
+  expect(new Set(lengths(daisy)).size).toBe(1);
 });
 
 test("grande is slightly too big, pequeño is small, and caer has a petal on the ground", () => {

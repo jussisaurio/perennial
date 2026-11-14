@@ -27,10 +27,9 @@ test("a bud stays green: a word's flower colour shows only when it blooms (#207)
   }
 });
 
-test("the bud colour changed nothing else about a word's plant", () => {
-  // genome("casa") as it was before #207 added the bud colour: the same word must still grow the same plant.
-  const { bud: _bud, budEdge: _edge, ...rest } = genome("casa");
-  expect(rest).toEqual({ flower: "bell", petals: 8, petalShape: "long", petal: "hsl(328 62% 68%)", petalEdge: "hsl(328 62% 54%)", center: "hsl(60 30% 92%)", leafShape: "lance", leaves: 2, opposite: false, leaf: "hsl(126 32% 55%)", stem: "hsl(120 35% 40%)", curve: 0.14680757652968168, height: 1.0114070583321153, branches: 0, lean: -13.545660031959414 });
+test("a word keeps its plant: new colours (#207, #1164) changed nothing else about it", () => {
+  // genome("casa"): its shape traits as they have been since before #207; its colours from the paper palette (#1164).
+  expect(genome("casa")).toEqual({ flower: "bell", petals: 8, petalShape: "long", petal: "hsl(336 52% 67%)", petalEdge: "hsl(340 52% 54%)", bud: "hsl(122 38% 56%)", budEdge: "hsl(112 34% 36%)", center: "hsl(48 42% 90%)", leafShape: "lance", leaves: 2, opposite: false, leaf: "hsl(116 26% 45%)", stem: "hsl(110 30% 36%)", curve: 0.14680757652968168, height: 1.0114070583321153, branches: 0, lean: -13.545660031959414 });
 });
 
 // Made-up words: a large, even sample that does not depend on what a deck holds.
@@ -71,14 +70,14 @@ test("rare flowers show only at bloom (#208)", () => {
   expect(draw(of("bee"), "bud")).not.toContain(bee);
   expect(draw(of("golden"), "bloom")).toContain(gold);
   expect(draw(of("golden"), "bud")).not.toContain(gold);
-  // Twin: one more head, so one more ring of petals than the plant's own flowers (main + branches).
-  const petalCount = (word: string, stage: "bud" | "bloom") => draw(word, stage).split(`fill="${genome(word).petal}"`).length - 1;
+  // Twin: one more head than the plant's own flowers (main + branches). Each head's petals are one path in the petal colour.
+  const heads = (word: string, stage: "bud" | "bloom", colour = genome(word).petal) => draw(word, stage).split(`fill="${colour}"`).length - 1;
   const twin = of("twin", true);
-  expect(petalCount(twin, "bloom")).toBe(genome(twin).petals * (genome(twin).branches + 2));
-  expect(petalCount(twin, "bud")).toBe(0);
-  // Striped: a straight line up the middle of every petal ("M0 a L0 b"), on the main flower and each branch flower.
+  expect(heads(twin, "bloom")).toBe(genome(twin).branches + 2);
+  expect(heads(twin, "bud")).toBe(0);
+  // Striped: pale stripes on every head's petals, one stripe per front petal.
   const striped = of("striped");
-  const stripes = (stage: "bud" | "bloom") => (draw(striped, stage).match(/d="M0 -?[\d.]+ L0 -?[\d.]+"/g) ?? []).length;
-  expect(stripes("bloom")).toBe(genome(striped).petals * (genome(striped).branches + 1));
-  expect(stripes("bud")).toBe(0);
+  const stripe = "hsl(42 70% 95%)";
+  expect(heads(striped, "bloom", stripe)).toBe(genome(striped).branches + 1);
+  expect(heads(striped, "bud", stripe)).toBe(0);
 });
