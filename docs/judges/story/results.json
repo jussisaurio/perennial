@@ -1,0 +1,1346 @@
+[
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-sunflower-sun",
+    "pick": "2",
+    "said": "1: The sunflower turns to the sun, which is a plain fact anyone knows about sunflowers. 2: The sunflower turns to the sun and not to you: a small, dry snub that hints at being ignored or alone. why: Version 1 is a plain fact about the thing. Version 2 is a short deadpan joke with a quiet edge. The \"you\" is general and does not point at the reader's study."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-sunflower-ahead",
+    "pick": "2",
+    "said": "1: The sunflower comes back every year without her, so the reader is told she is gone or soon will be. 2: She knows the flower's name, which echoes n02 (he forgets, she and the flower remember) and hints quietly at the gap between them. why: Version 1 says the loss out loud before the story is ready (she is still present in n06 and n07). Version 2 is a quiet hint built on an earlier page."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-pond-fact",
+    "pick": "1",
+    "said": "1: The fish seem to watch for someone coming, which quietly echoes \"Nobody comes from there\" and the far light. 2: The fish come when people come, which reads mostly as a plain fact about pond fish. why: Version 2 is close to a plain fact about the thing and uses more words. Version 1 is a short hint about waiting."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-same-d1",
+    "pick": "same",
+    "said": "1: Every night she brings him coffee at the far light and asks nothing: quiet, steady care. 2: The same text, word for word. why: The two versions are identical."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-wordy-p2",
+    "pick": "2",
+    "said": "1: A cold, windy night, and he said nothing to her about it, told in one long, padded sentence. 2: Wind on the hill, and he said nothing: short, and it echoes \"Courage, in none.\" why: Version 1 breaks Simple English (one long sentence, many extra words) and explains too much. Version 2 says the same thing in a few plain words."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-joke-d3",
+    "pick": "1",
+    "said": "1: He now carries his own coffee and nobody asks, so the reader feels without being told that she is gone. 2: The same, plus a joke that even the rude snail does not ask. why: Version 2's snail joke pushes into the quiet moment of loss and shrinks it. That is loud whimsy at the wrong time. Version 1 shows the loss and stops."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-wordy-n10",
+    "pick": "2",
+    "said": "1: He waters \"your side\" of the garden every morning, in a long sentence padded with detail. 2: He waters \"your side\" of the garden too: the same quiet sign that she is gone, in a few words. why: Version 1 breaks Simple English (\"early\", \"the same way I always do\" add words and nothing else). Version 2 says the same thing more plainly."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-same-n02",
+    "pick": "same",
+    "said": "1: She tells him a flower's name and he repeats it, knowing he will forget it while the flower will not. 2: The same text, word for word: she names a flower, he repeats it, he will forget, the flower won't. why: Q1 same, Q2 same, Q3 same, Q4 same. The two versions are identical."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-sunflower-sun",
+    "pick": "2",
+    "said": "1: Tapping the sunflower shows a plain fact: it always faces the sun. 2: Tapping the sunflower shows that it faces the sun and ignores you, a small dry joke. why: Q1 2, Q2 same, Q3 2, Q4 2. Version 1 only states a known fact, so it reads like filler. \"Not at you\" is dry, a little rude, and close to the cat/Migas lines."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-sunflower-ahead",
+    "pick": "1",
+    "said": "1: The sunflower thought says that she knows its name, which points back to n02, where he can't keep the names. 2: The sunflower thought says that it comes back every year without her, which hints that she will be gone. why: Q1 2, Q2 1, Q3 1, Q4 same. Version 2 pulls harder, but it is unclear: she is still here, and sunflowers don't return each year. It also gives away the loss too early and too heavily. Version 1 is quiet, clear and dry."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-pond-fact",
+    "pick": "2",
+    "said": "1: Tapping the pond shows that the fish keep watch on who is coming. 2: Tapping the pond shows that the fish come when someone comes, a plain fish habit that echoes the stand-off, where neither side goes first. why: Q1 2, Q2 2, Q3 2, Q4 same. Version 2 is concrete and simple, and it comments on n09 (\"pride, on both sides\") without saying so. Version 1 is vaguer and makes the fish more human."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-wordy-p2",
+    "pick": "2",
+    "said": "1: He writes at length that the hill was windy and cold tonight and that he didn't tell her. 2: He notes that it was windy on the hill and that he said nothing. why: Q1 2, Q2 same, Q3 2, Q4 2. Version 1 is long, flat and explains itself, and every clause is padding. Version 2 is terse and matches \"she doesn't ask\" and \"courage, in none\"."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-joke-d3",
+    "pick": "2",
+    "said": "1: He carries his own coffee up to watch the far light, nobody asks, and he jokes that the rude snail doesn't ask either. 2: He carries his own coffee up to watch the far light, and nobody asks, so she is gone. why: Q1 2, Q2 2, Q3 2, Q4 2. In Version 2 the empty place lands by itself, after d1 and d2. The snail joke in Version 1 (\"the rude thing\") breaks the moment and feels cute, not dry."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-wordy-n10",
+    "pick": "1",
+    "said": "1: He leaves her a note: he watered her side of the garden too. 2: He leaves her a note: he went out early and watered her side too, the way he always does. why: Q1 1, Q2 same, Q3 1, Q4 1. Version 1 is short and the loss stays unsaid. Version 2 adds filler (\"this morning\", \"the same way I always do\") that explains, and it fights the \"too\"."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-same-n02",
+    "pick": "same",
+    "said": "1: The reader feels his gentle sense that his memory is weak and the flowers last longer than he does. 2: The same; the text is word for word the same as version 1. why: The two versions are identical, so neither breaks a rule the other keeps."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-hard-n04",
+    "pick": "1",
+    "said": "1: The reader smiles at Migas, a bold little thief, and at a quiet stand-off with the cat that nobody breaks. 2: The reader gets the same scene, but in stiff, fancy words that push them away from it. why: Version 2 breaks Simple English (\"diminutive portal\", \"consumes\", \"contrition\", \"regards\", \"neither party intervenes\"), and the dry joke is lost under the register. Version 1 says the same thing in plain words."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-sunflower-sun",
+    "pick": "1",
+    "said": "1: The reader gets a small deadpan shrug: the flower has its own focus and ignores you, which echoes \"Not for me\". 2: The reader learns that sunflowers face the sun. why: Version 2 is a plain fact about the thing. Version 1 is a dry joke with a light echo of the story, and it is quiet."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-sunflower-ahead",
+    "pick": "1",
+    "said": "1: The reader feels the quiet gap again: she knows the names, and he forgets them (an echo of n02). 2: The reader senses that she is gone and that the flower comes back without her. why: Version 2 tells the loss before the story is ready, because the notes still have her alive and present. It is also odd for an annual flower. Version 1 is a quiet hint that is tied to n02."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-pond-fact",
+    "pick": "1",
+    "said": "1: The reader sees that the fish come when someone comes, a quiet mirror of the man who does not go to the far light. 2: The reader gets a light picture of fish who watch the path, as if someone is expected. why: Version 1 is close to a plain fact about fish, but its \"comes / come\" echoes \"Nobody comes from there\" and hints that one step brings the other. Version 2 is fine, but vaguer, and it assumes a visitor. The gap is small."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-wordy-p2",
+    "pick": "2",
+    "said": "1: The reader learns that it was windy and cold, and that he kept quiet about it to her. 2: The reader feels a short, closed silence on the hill, and it is open what he did not say. why: Version 1 breaks Simple English: one long, padded sentence that explains what he did not say and to whom. Version 2 says it in six plain words and leaves the silence open."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-explain-d3",
+    "pick": "1",
+    "said": "1: The reader sees that the coffee and the question are gone, and understands without being told that she is gone. 2: The reader is told plainly that she died in the spring. why: Version 2 breaks \"shown, never said\" because it states the death. Version 1 shows the loss through the coffee and \"Nobody asks\", which echo d1 and d2."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-wordy-n10",
+    "pick": "2",
+    "said": "1: The reader feels that he still keeps her side of the garden, in a long, routine-heavy sentence. 2: The reader feels the same thing in one short line that speaks to her. why: Version 1 breaks Simple English. \"This morning I went out early\" and \"the same way I always do\" add words but no meaning. Version 2 says the same thing in fewer, plainer words."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-same-n02",
+    "pick": "same",
+    "said": "1: She tells him a flower's name, he repeats it, and he knows he will forget it while the flower won't. 2: The same lines as version 1, word for word. why: The two versions are the same text, so all four answers are \"same\"."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-sunflower-sun",
+    "pick": "2",
+    "said": "1: The sunflower thought only notes that it always faces the sun. 2: The sunflower faces the sun and not the person looking at it. why: Q1 2 (the small turn has some life); Q2 same (both plain); Q3 2 (dry, matches the looking motif with Migas and the cat, without explaining); Q4 2 (version 1 reads like a fact-card filler, version 2's second half earns its place)."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-sunflower-ahead",
+    "pick": "1",
+    "said": "1: The sunflower thought says she knows its name, which he still doesn't. 2: The sunflower thought says it comes back every year without her. why: Q1 2 (\"without her\" is a strong hook); Q2 1 (\"without her\" is unclear here, since she is still clearly there in the notes); Q3 1 (version 2 hints at loss too early and leans sentimental, and a sunflower does not come back each year); Q4 1 (quiet callback to n02, each word earns its place)."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-same-d1",
+    "pick": "same",
+    "said": "1: He watches the far light at night, she brings him coffee and does not ask. 2: The same lines as version 1, word for word. why: The two versions are the same text, so all four answers are \"same\"."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-pond-ahead",
+    "pick": "1",
+    "said": "1: The pond thought says the fish watch for whoever is coming. 2: The pond thought says the fish come up because they are looking for someone. why: Q1 1 (\"who's coming\" hints at a visitor and ties to the far light); Q2 2 (the fish coming up is a concrete action); Q3 1 (drier, shorter, while \"looking for someone\" leans toward sad); Q4 same (both short and both earn their place)."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-joke-d3",
+    "pick": "2",
+    "said": "1: He takes his own coffee up the hill, nobody asks, and he jokes that not even the rude snail asks. 2: He takes his own coffee up the hill alone and nobody asks. why: Q1 2 (the bare change from \"She brings\" to \"I bring my own\" leaves a silence that pulls); Q2 2 (the absence lands cleanly, while the snail joke blurs it); Q3 2 (\"the rude thing\" is cute and softens the moment); Q4 2 (the snail clause feels like extra padding)."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-explain-hedge",
+    "pick": "2",
+    "said": "1: There is less water each morning, and the line explains that the mouse drinks it, so the care goes on. 2: There is less water each morning. why: Q1 2 (the line leaves something to wonder about); Q2 1 (it says who drinks it); Q3 2 (version 1 explains and states the feeling outright with \"so the care goes on\", and calls Migas \"the mouse\"); Q4 2 (version 1's second sentence is explanation, not a line worth reading for itself)."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-hard-n04",
+    "pick": "2",
+    "said": "1: The narrator finds a small door in the hedge for Migas, who eats their bread, and Migas and the cat just stare at each other. It is told in long, formal words (\"diminutive portal\", \"contrition\"). 2: The same scene in plain words: a little door for Migas, who eats their bread and never says sorry, and a cat and Migas who stare and do nothing. why: 1: 2, the plain version keeps the joke, and the long words in 1 bury it. 2: 2, a learner can read every word. 3: 2, the formal words in 1 break the dry, quiet voice. 4: in 2 every line counts; in 1 the wording itself gets in the way."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "X-n05",
+    "pick": "1",
+    "said": "1: They used to walk to the end of the garden every evening and she jumped the stile, but now brambles taller than him block the way. 2: Every evening they walk to the end of the garden, she jumps the stile, he goes slowly, and she teases that the brambles are faster than him. why: 1: 1, the change to past tense (\"Before... Now\") quietly suggests something has changed and makes you wonder about her. 2: 1, \"brambles are faster than me\" in 2 takes a second read. 3: 1 is dry and leaves out the reason; 2 is dry with gentle humour, so roughly even. 4: in 1 every line counts; the last line of 2 is a little puzzling."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-hard-sunflower",
+    "pick": "1",
+    "said": "1: The sunflower thought says she knows its name. 2: The same thought, in very formal words (\"cognizant of its nomenclature\"). why: 1: 1, it echoes n02 (she tells him the flower names) and hits gently. 2: 1, plain words. 3: 1, the formal words in 2 break the voice completely. 4: 1 is one clean line; 2 is word-play that gets in the way."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-pond-ahead",
+    "pick": "1",
+    "said": "1: The fish rise in the pond as if looking for someone. 2: The fish watch whoever is coming. why: 1: 1, \"looking for someone\" hints at an absence without saying it. 2: 1, \"watch who's coming\" in 2 reads a little awkwardly. 3: both are quiet; 1 comes slightly closer to feeling but does not tip over. 4: both are single, short lines; 1 carries more."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-same-d1",
+    "pick": "same",
+    "said": "1: Tonight the far light is on as always, she brings him coffee on the hill and asks nothing. 2: Word for word the same as version 1. why: The two versions are the same, so every question is \"same\"."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-explain-d3",
+    "pick": "1",
+    "said": "1: The far light is on as always, but now he carries his own coffee up and nobody asks, so she is gone without it being said. 2: The far light is on as always; she died in the spring, and he brings his own coffee now. why: 1: 1, \"Nobody asks\" echoing \"She doesn't ask\" lands harder because the reader puts it together. 2: 2, it says outright that she died. 3: 1, 2 explains the loss, and the voice never explains. 4: in 1 every line counts; \"She died in the spring\" in 2 does the reader's work for them."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-joke-n11",
+    "pick": "1",
+    "said": "1: Two cups on the table, one stays empty, and he leaves it by the little door with water for Migas; Rayo the snail listens to him and never says no. 2: The same, plus \"He's a snail. What would he say? Ha.\" why: 1: 1, the man who disliked snails now talking to one is touching on its own. 2: same, both are clear. 3: 1, the extra line in 2 explains the joke and laughs at it. 4: the last added sentences in 2 are filler."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-explain-hedge",
+    "pick": "2",
+    "said": "1: Each morning there is less water by the little door, because the mouse drinks it, \"so the care goes on.\" 2: Each morning there is less water. why: 1: 2, the bare line leaves a small mystery to come back to. 2: 1, it says who drinks the water; from this file alone, 2's water has no clear source. 3: 2, \"so the care goes on\" explains the feeling and is sentimental. 4: the second sentence of 1 explains what the first only hints at."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-same-n02",
+    "pick": "same",
+    "said": "1: The reader feels how short his memory is next to hers and the flower's: he repeats the name, will lose it, and the flower keeps it. 2: Same text, same effect: a quiet, wry sense that he forgets and the flower does not. why: The two versions are word for word the same."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-hard-n04",
+    "pick": "1",
+    "said": "1: The reader smiles at a little door, a cheeky Migas who takes their bread, and a calm stand-off with the cat. 2: The reader gets the same scene, but in stiff, fancy words (\"diminutive portal\", \"contrition\", \"neither party intervenes\") that kill the dry tone. why: 2 breaks Simple English with rare, formal words that many learners won't know. 1 says the same thing in plain words."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "X-n05",
+    "pick": "2",
+    "said": "1: The reader learns early that the shared walk is over (\"before... now there are brambles\") and feels that she is gone or that something ended. 2: The reader sees a living routine: she jumps the stile, he goes slowly, and she teases that the brambles are faster than him. why: 1 shows the loss too soon, in the fifth note, while every other note still has her present, and \"Before,\" at the start reads stiffly. 2 stays in the present, plants the brambles, and has a dry joke in her voice."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-hard-sunflower",
+    "pick": "1",
+    "said": "1: The reader links the sunflower back to her teaching flower names: she knows it, he does not. 2: The reader gets the same hint, but wrapped in heavy words (\"cognizant of its nomenclature\"). why: 2 breaks Simple English badly. 1 is short and plain, and it quietly points back to n02."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "R-pond-ahead",
+    "pick": "1",
+    "said": "1: The reader senses that the pond is waiting too, watching for someone to come, maybe the far light. 2: The reader is told the fish are looking for someone, which spells out absence and longing. why: 2 is wordier and nearly names the feeling (\"looking for someone\"). 1 is shorter, more deadpan, and leaves it open."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-explain-d3",
+    "pick": "2",
+    "said": "1: The reader is told flat out that she died in the spring, and that he now carries his own coffee. 2: The reader feels her absence only because the pattern breaks: he brings his own coffee, and \"nobody asks.\" why: 1 breaks \"shown, never said\" by stating the death. 2 shows it through the broken ritual, which is much stronger."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-joke-n11",
+    "pick": "2",
+    "said": "1: The reader feels his loneliness: an empty cup left out for Migas, and a snail he talks to. Then a joke that explains itself (\"He's a snail. What would he say? Ha.\"). 2: The reader gets the same loneliness, and it ends on the dry \"He never says no.\" why: 1's extra line nudges the reader and spells out its own joke, so it breaks \"whimsy is quiet.\" 2 stops at the deadpan line and lets the reader do the rest."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 1,
+    "item": "C-explain-hedge",
+    "pick": "2",
+    "said": "1: The reader is told the mouse drinks the water and that \"the care goes on\", so the meaning is explained. 2: The reader sees only that there is less water each morning by the door and is left to wonder. why: 1 explains what the thing means (and names Migas as a mouse), which breaks \"shown, never said.\" 2 is a quiet hint, even if it is a little cryptic here."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "X-n05",
+    "pick": "2",
+    "said": "1: The reader feels the evening walks with her are over: the path is lost to brambles, and something has happened to her. 2: The reader sees a fond daily walk, her quick and him slow, with a dry hint that the brambles are winning. why: 1 jumps to \"Before... Now\" and points at her loss while every earlier note still has her here, so it tells the turn too early. 2 stays in the present, uses plainer words, and hides its hint in a quiet joke in her voice."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-hard-sunflower",
+    "pick": "1",
+    "said": "1: The sunflower points back to her. She knows the names he forgets. 2: Same idea, but in big, stiff words most learners cannot read. why: 2 badly breaks Simple English, and the stiff wording is a joke that does not land. 1 is a quiet callback to n02."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-same-d1",
+    "pick": "same",
+    "said": "1: She brings him coffee on the hill and does not ask about the light. 2: Identical to 1. why: The two versions are word for word the same."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-pond-ahead",
+    "pick": "1",
+    "said": "1: The fish seem to wait for a visitor, a quiet hint that someone may come. 2: The fish rise and seem to search for someone, a hint that someone is missing. why: Both are quiet hints. 1 says it in fewer words and stays drier. 2 opens with a plain fact about the fish and pushes the meaning harder."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-joke-d3",
+    "pick": "2",
+    "said": "1: She is no longer on the hill and he drinks alone, then a joke about a rude snail breaks the moment. 2: She is no longer on the hill. He brings his own coffee, and the silence carries the loss. why: 1's snail joke is loud whimsy that undercuts the beat. 2 shows the loss and stops."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-explain-hedge",
+    "pick": "2",
+    "said": "1: Something drinks the water by the little door, and the line tells us this means her care goes on. 2: Each morning the water by the little door is lower, so something small still comes. why: 1 says what it means (\"so the care goes on\") and names the drinker, which explains. 2 shows it and lets the reader make the link."
+  },
+  {
+    "design": "a2",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-joke-n11",
+    "pick": "2",
+    "said": "1: He leaves her empty cup for Migas and talks to a snail, then laughs at his own joke. 2: He leaves her empty cup for Migas and talks to a snail that never says no. He is lonely. why: 1's \"He's a snail. What would he say? Ha.\" explains its own joke and nudges the reader. 2 stops while the line still has weight."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-hard-n04",
+    "pick": "2",
+    "said": "1: In stiff, over-formal words, he says there is a small door in the hedge for Migas, who eats their bread without saying sorry, and the cat and Migas just stare at each other. 2: In plain words, he says there is a little door in the hedge for Migas, who eats their bread and never says sorry, and the cat and Migas only look at each other. why: Q1 2, Q2 2, Q3 2, Q4 2. Version 1's \"diminutive portal\", \"expresses contrition\" and \"neither party intervenes\" break the plain voice of n01–n03 and make it hard for a learner. Version 2 says the same thing with dry timing."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "X-n05",
+    "pick": "1",
+    "said": "1: Every evening they used to walk to the end of the garden, she jumped the stile and he went slowly, and now brambles taller than him block the way. 2: Every evening they walk to the end of the garden, she jumps the stile and he goes slowly, and she teases him that the brambles are faster than he is. why: Q1 1 (the \"Before… Now\" turn is a quiet hook), Q2 1 (an overgrown path is clear, while \"faster than me\" makes you stop and work it out), Q3 same, Q4 same. Version 2 keeps her in the present like n01–n04 and is warmer. Version 1 hints at a change without explaining it, and its brambles match the real barrier in the garden."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-hard-sunflower",
+    "pick": "2",
+    "said": "1: Tapping the sunflower gives \"She is cognizant of its nomenclature.\" 2: Tapping the sunflower gives \"She knows its name.\" why: Q1 2, Q2 2, Q3 2, Q4 2. Version 2 echoes n02 (she tells him flower names) in four plain words. Version 1 uses Latinate words that are wrong for this voice and opaque to a learner."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "R-pond-fact",
+    "pick": "1",
+    "said": "1: Tapping the pond says the fish come up whenever someone comes. 2: Tapping the pond says the fish watch who is coming. why: Q1 2 (a slight sense that someone is expected, after n09), Q2 1, Q3 1 (a plain observation with neat parallel words, no personifying), Q4 same. Both are one good line. Version 1 is drier and grows quietly from \"There's a fish. Or two.\""
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-wordy-p2",
+    "pick": "2",
+    "said": "1: He writes at length that it was windy and cold on the hill tonight but he did not tell her. 2: He notes the wind on the hill and that he said nothing. why: Q1 2, Q2 1 (it spells out what he kept quiet and from whom), Q3 2, Q4 2 (version 1 is padded). Version 2's \"I said nothing\" matches \"She doesn't ask\" and his lack of courage. Version 1's \"about it to her\" makes the silence small."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-explain-d3",
+    "pick": "2",
+    "said": "1: The far light is there as always, he says plainly that she died in the spring, and he brings his own coffee up now. 2: The far light is there as always, he brings his own coffee up, and nobody asks. why: Q1 2, Q2 1, Q3 2, Q4 same. \"Nobody asks\" reverses \"She doesn't ask\" and shows she is gone without saying it. Version 1 states the death outright, which is clearer but explains what the story should let the reader find."
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-wordy-n10",
+    "pick": "2",
+    "said": "1: He tells her that early this morning he went out and watered her side of the garden too, the same way he always does. 2: He tells her he watered her side of the garden too. why: Q1 2, Q2 same, Q3 2, Q4 2. Version 1's \"this morning I went out early\" and \"the same way I always do\" are filler and weaken the bare \"your side… too\", which echoes \"Two sides. Hers wins.\""
+  },
+  {
+    "design": "a1",
+    "half": "tuning",
+    "run": 2,
+    "item": "C-joke-n11",
+    "pick": "1",
+    "said": "1: There are two cups and one stays empty, he leaves it with water by the little door for Migas, and he talks to Rayo the snail, who never says no. 2: The same, but he adds a joke that a snail could not say anything anyway: \"Ha.\" why: Q1 1, Q2 same, Q3 1, Q4 1 (the added \"He's a snail. What would he say? Ha.\" explains the joke and is filler). Version 1 lets the snail line sit, after \"I don't like snails\"."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-hard-n02",
+    "pick": "2",
+    "said": "1: She says a flower's name, he repeats it, and he expects to forget it while the flower keeps it, all in stiff, old-fashioned words (\"enunciates the appellation\", \"the morrow\"). 2: She tells him a flower's name, he says it too, and he knows he will forget it tomorrow but the flower won't. why: Version 2 wins all four questions. It says the same thing in plain words that fit the dry voice and a learner can read. Version 1's archaic wording is out of voice and gets in the way of the meaning."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-explain-n08",
+    "pick": "2",
+    "said": "1: He climbs the hill and sees a yellow light that never goes out, and the note explains that she doesn't ask because she knows it is his old friend. 2: He climbs the hill and sees a yellow light that never goes out, and she doesn't ask. why: Version 2 keeps the mystery, so it pulls the learner back, and it does not explain. The \"because she knows it is my old friend\" clause in Version 1 explains, gives away the later reveal, and is the only line that feels like filler. Both are equally clear about the scene."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-same-p3",
+    "pick": "same",
+    "said": "1: She tells him his stool is too low, and he says maybe. 2: She tells him his stool is too low, and he says maybe. why: The texts are word-for-word the same, so every question gets \"same\". Both turn her old chair joke around."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-explain-n10",
+    "pick": "2",
+    "said": "1: He says she is gone, that he watered her side of the garden too, and that love is a little water every day. 2: He says he watered her side of the garden too. why: Version 2 lets \"your side\" and the empty coffee lines before it carry the loss. Version 1 states the loss (\"You are gone\") and adds a greeting-card moral, which is sentimental and explains. Version 1 is a little clearer in plain terms, but Version 2 is clear enough, better in voice, and makes the reader want to know more."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-sundial",
+    "pick": "2",
+    "said": "1: Tapping the sundial gives \"The sun tells the time.\" 2: Tapping the sundial gives \"Nobody checks the time anymore.\" why: Version 1 is a flat fact that adds nothing, so it is filler. Version 2 echoes \"Nobody asks\" and quietly shows that someone is missing, without saying so."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "X-p4",
+    "pick": "1",
+    "said": "1: He flashes his light once in the night, and the far light does nothing. 2: He flashes his light once in the night, and \"nobody did anything\". why: Version 1 is clearer: the far light did not answer. Version 2 nicely echoes the cat-and-Migas standoff, but \"nobody did anything\" right after he did something is unclear and a little self-contradictory. Both are dry and in voice."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-hills-cut",
+    "pick": "1",
+    "said": "1: After the far light answers, the hills get a new thought: \"Someone lives on the other side.\" 2: The hills get no new thought, so the old line stays. why: Version 1 turns the earlier \"Nobody comes from there\" around, the way the bench and sundial thoughts changed after events, so the world reacts. It is a little close to stating what we already know. Version 2 is restrained, but nothing new happens for the learner who taps the hills."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-frog-prince",
+    "pick": "2",
+    "said": "1: The frog gets a new line before its usual last line: \"I'm not a prince.\" 2: The frog says its old lines as before. why: \"I'm not a prince\" repeats the joke the frog already made (\"No kisses, please. Those stories aren't true.\"), so it is filler. Version 2 avoids saying the gag twice. Both are equally clear and dry."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-frog-kiss",
+    "pick": "1",
+    "said": "1: The frog gets a new line before its usual last line: \"No kisses, please. Those stories aren't true.\" 2: The frog only croaks and says \"I have no more words.\" as before. why: Version 1 adds a small, dry, discoverable joke that rewards tapping, which is the kind of quiet whimsy that makes the frog worth visiting again. Version 2 gives nothing new. Both are clear."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-same-bed",
+    "pick": "same",
+    "said": "1: Tapping the flower bed gives the thought \"Two sides. Hers wins.\", which echoes the low-chair argument. 2: Exactly the same line as version 1. why: Q1 same, Q2 same, Q3 same, Q4 same. The two texts are word for word the same."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-wordy-stool",
+    "pick": "2",
+    "said": "1: The stool is worn smooth because someone sat on it for many nights, and the line says so in full with \"because\". 2: The stool is \"Worn smooth. Many nights.\", and the reader is left to work out who sat there. why: Q1 2, Q2 1, Q3 2, Q4 2. Version 1 explains, and \"many, many\" pads it. Version 2 says the same thing in four words, in the voice."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-joke-moon",
+    "pick": "1",
+    "said": "1: The moon is \"On time again\", a dry nod to the nightly watch. 2: The same line plus \"Unlike some people I could name\", a wink that turns it into a joke. why: Q1 1, Q2 same, Q3 1, Q4 1. The extra sentence in version 2 is arch and pokes at the reader. It is filler that breaks the quiet just as she starts to stay."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-joke-sundial",
+    "pick": "1",
+    "said": "1: \"Nobody checks the time anymore\": a quiet line that matches d3, where she is gone and \"Nobody asks\". 2: The same line plus \"The sundial is thrilled\", which turns the absence into a joke. why: Q1 1, Q2 1, Q3 1, Q4 1. Right after d3, the joke undercuts the first hint that she is gone. Version 1 lets that weight stand."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-sunflower-face",
+    "pick": "1",
+    "said": "1: \"She looked at it every morning\": the past tense quietly says she is no longer there. 2: \"Its face looks at the path\": the sunflower turns from the sun toward the path, as if it waits for someone. why: Q1 1, Q2 1, Q3 same, Q4 same. Both are good. The tense change in version 1 is a clear, unexplained blow that fits d3. Version 2 is more oblique, and \"its face\" is harder for a learner."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-hard-bench",
+    "pick": "2",
+    "said": "1: \"Someone habitually occupied this seat each evening\": the same fact in stiff, formal words. 2: \"Someone sat here every evening\": plain and short. why: Q1 2, Q2 2, Q3 2, Q4 2. Version 1 is not simple English, and its register does not match any other line. Version 2 says the same thing cleanly."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-wordy-n12",
+    "pick": "2",
+    "said": "1: He makes two signals, the far light answers with two, and nobody has crossed the valley yet. Words like \"finally\", \"very carefully\", \"between us\" and \"Not yet, anyway\" pad it. 2: The same events in three bare lines, ending \"Yet.\" why: Q1 2, Q2 same, Q3 2, Q4 2. Each extra word in version 1 explains or adds feeling. In version 2, \"Yet.\" alone does the work, and it echoes \"Me neither. Yet.\" from n03."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-n13-learn",
+    "pick": "1",
+    "said": "1: He hands the garden to the reader: learn every flower's name, slowly like Rayo, and snails are no reason. 2: He hands the garden to the reader: water both sides, slowly like Rayo, and snails are no reason. why: Q1 same, Q2 same, Q3 same, Q4 1. Both call back to earlier notes. \"Learn the name of every flower\" closes the loop with n02 and the learner's own task, and \"slowly\" fits learning better than watering."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-n13-sides",
+    "pick": "2",
+    "said": "1: He hands the garden to the reader: leave water for Migas, send two signals at night (the far light always answers), and snails are no reason. 2: The same, plus \"Water both sides\", which keeps her half of the garden in his last wishes. why: Q1 2, Q2 same, Q3 same, Q4 2. \"Water both sides\" is not filler: it carries her into the ending without saying her name. Version 1 is tighter but drops her."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-hard-n02",
+    "pick": "2",
+    "said": "1: She says a flower's name, he repeats it, and he knows he will forget it, but the flower won't. It is written in stiff, old-fashioned words (\"enunciates the appellation\", \"morrow\"). 2: She tells him a flower's name, he says it too, and he knows that tomorrow he won't know it, but the flower will. why: Q1 2, Q2 2, Q3 2, Q4 2. Version 1's archaic words are wrong for this voice and hard for a learner. Version 2 is plain and dry, and every line counts."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-wordy-stool",
+    "pick": "1",
+    "said": "1: Tapping the stool shows a short thought: it is worn smooth from many nights. 2: Tapping the stool shows a long thought: the wood is worn smooth because someone sat there for many, many nights. why: Q1 1, Q2 2, Q3 1, Q4 1. Version 2 is a little clearer, but its \"because someone sat here\" explains, and \"many, many\" is padding. Version 1 has the same fact and leaves the reader to fill in the rest."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-joke-moon",
+    "pick": "1",
+    "said": "1: The moon is on time again. 2: The moon is on time again, and then comes a jab at \"some people\" who are not on time. why: Q1 1, Q2 1, Q3 1, Q4 1. \"Unlike some people I could name\" is a sitcom cliché. It breaks the quiet, dry tone, and it is not clear who it means."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-same-p3",
+    "pick": "same",
+    "said": "1: She says his stool is too low, and he says maybe. 2: The same as version 1, word for word. why: Q1 same, Q2 same, Q3 same, Q4 same. The texts are identical."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-explain-n10",
+    "pick": "1",
+    "said": "1: He leaves a note saying he watered her side of the garden too, so the loss shows only by what he does. 2: He says she is gone, that he watered her side too, and that love is a little water every day. why: Q1 1, Q2 2, Q3 1, Q4 1. Version 2 states the loss outright and adds a greeting-card moral, which is sentimental and explaining. Version 1's one line carries all of it, and quietly."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-joke-sundial",
+    "pick": "2",
+    "said": "1: Nobody checks the time anymore, and the sundial is thrilled about it. 2: Nobody checks the time anymore. why: Q1 2, Q2 same, Q3 2, Q4 2. Right after she is gone, the plain line hits hard. \"The sundial is thrilled\" is a loud joke that undercuts it and reads as tacked on."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-sunflower-face",
+    "pick": "2",
+    "said": "1: The sunflower thought is now in the past tense: she looked at it every morning, so she is no longer here. 2: The sunflower's face now looks at the path, not at the sun, as if it is waiting for someone. why: Q1 2, Q2 1, Q3 2, Q4 same. Version 1 marks the loss more clearly, but version 2 changes the earlier \"looks at the sun\" line without explaining it and hints that someone may come. That gives a reason to return, though a learner may miss the echo."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-n13-learn",
+    "pick": "2",
+    "said": "1: The last note gives the garden to the learner and tells them to learn every flower's name slowly, like Rayo, and not to use snails as an excuse. 2: The last note gives the garden to the learner and tells them to water both sides slowly, like Rayo, and not to use snails as an excuse. why: Q1 2, Q2 same, Q3 2, Q4 same. \"Water both sides\" echoes the watered side of the garden and \"pride, on both sides\" without saying so. \"Learn the name of every flower\" reads a bit like the app telling the learner what to do."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-hills-cut",
+    "pick": "2",
+    "said": "1: The hills thought reads 'A new line on the hills: \"Someone lives on the other side.\"', which sounds like an author's note and repeats what we already know. 2: The hills thought says there is no new line on the hills, which can be read as no path yet, so nobody has crossed. why: Q1 2, Q2 1, Q3 2, Q4 2. Version 1's frame sounds like stage directions, and its content explains what the story already showed. Version 2 is vague, but it is in-world and matches \"Nobody has crossed the valley. Yet.\""
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-same-bed",
+    "pick": "same",
+    "said": "1: Tapping the flower bed shows \"Two sides. Hers wins.\", a nod to her owning the garden and the chair. 2: Exactly the same line as version 1. why: Q1 same, Q2 same, Q3 same, Q4 same. The two versions are word for word the same."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-explain-n08",
+    "pick": "2",
+    "said": "1: From the hill at midnight he watches a far yellow light that never goes out, and the note says outright that she knows it is his old friend. 2: The same scene, but it ends on \"She doesn't ask.\" and gives no reason. why: Q1 2 (the open question pulls you back), Q2 1 (it names the friend), Q3 2 (version 1 explains), Q4 2 (version 1's last clause tells what the story should hold back)."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-sundial",
+    "pick": "1",
+    "said": "1: After she stops coming up the hill, the sundial thought \"Nobody checks the time anymore.\" hints that someone who used to check it is gone. 2: The sundial thought says \"The sun tells the time.\", a plain fact with no change in it. why: Q1 1 (it echoes \"Nobody asks\" and hints at an absence), Q2 2 (literal, though nothing happens), Q3 1 (quiet, and it doesn't explain), Q4 1 (version 2 reads as filler, a fact any sundial states)."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-hard-bench",
+    "pick": "2",
+    "said": "1: The bench says \"Someone habitually occupied this seat each evening.\" 2: The bench says \"Someone sat here every evening.\" why: Q1 2, Q2 2, Q3 2, Q4 2. Version 1 is stiff, formal and not simple English. Version 2 says the same loss in plain words."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "X-p4",
+    "pick": "2",
+    "said": "1: He flashes his light once in the night, and \"Nobody did anything.\" follows, echoing the cat-and-Migas standoff. 2: He flashes his light once, and the far light gives nothing back. why: Q1 2 (a clear try with no answer makes you want the next one), Q2 2 (version 1's \"Nobody\" is unclear, since he did act), Q3 same (both dry), Q4 same."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-wordy-n12",
+    "pick": "2",
+    "said": "1: He makes two signals, the far light answers with two, and nobody has crossed yet, told with extra words (\"finally\", \"very carefully\", \"Not yet, anyway\"). 2: The same events, told in three short lines that end on \"Yet.\" why: Q1 2, Q2 same, Q3 2 (version 1 is padded and a little eager), Q4 2 (the adverbs and \"of its own\" in version 1 are filler; version 2's \"Yet.\" echoes \"Me neither. Yet.\")."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-n13-sides",
+    "pick": "1",
+    "said": "1: The last note hands the garden on: water both sides, leave water for Migas, signal the far light, snails are no reason. 2: The same handover, without \"Water both sides.\" why: Q1 1, Q2 1, Q3 same, Q4 1. \"Water both sides\" carries her side (the bed, \"I watered your side\") into the handover, so it earns its line."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-frog-kiss",
+    "pick": "2",
+    "said": "1: The frog says nothing new, only \"I have no more words.\" 2: The frog gets a new line before its usual one: \"No kisses, please. Those stories aren't true.\" why: Q1 2 (a small reward for tapping), Q2 1 (the fairy-tale joke may be lost on some learners), Q3 2 (dry, quiet whimsy), Q4 2 (the frog line is a small detail you find, not filler)."
+  },
+  {
+    "design": "a1",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-frog-prince",
+    "pick": "1",
+    "said": "1: The frog keeps its old lines, with nothing new. 2: The frog adds \"I'm not a prince.\" before its usual last line. why: Q1 same, Q2 same, Q3 1 (version 2 says the frog-prince joke more bluntly), Q4 1 (it repeats the joke the frog already made with \"No kisses, please\", so it is filler)."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-explain-n08",
+    "pick": "2",
+    "said": "1: The reader is told outright that the far light is his old friend, and that she knows it. 2: The reader sees a light that never goes out and a wife who doesn't ask, and wonders what it is. why: 1 explains the mystery (\"because she knows it is my old friend\") long before the story tells it. 2 shows only her silence."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-wordy-stool",
+    "pick": "1",
+    "said": "1: The reader feels that someone has sat on this stool, alone, for a very long time. 2: The reader gets the same idea, but as a long, spelled-out fact with its reason. why: 2 is a plain fact plus an explanation (\"because...\"), and it uses many more words. 1 is a quiet hint."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-same-p3",
+    "pick": "same",
+    "said": "1: She says his stool is too low and he half-agrees, which turns the earlier chair line around. 2: Same text. why: The two versions are the same."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-joke-moon",
+    "pick": "1",
+    "said": "1: The moon comes on time every night, a dry nod to his long nights on the hill. 2: The same, plus a jab at \"some people\", which reads as a wink at someone, maybe the reader. why: 2 adds a joke that nudges the reader, and it can read as aimed at the learner. 1 is quiet and deadpan."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-sunflower-face",
+    "pick": "2",
+    "said": "1: The past tense quietly tells the reader that she is gone. 2: The sunflower now faces the path, not the sun, as if it waits for someone to come. why: 1 comes close to stating that she is gone, which the story has only shown so far (\"Nobody asks\"). 2 is a quieter hint and echoes the earlier sunflower line."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-explain-n10",
+    "pick": "2",
+    "said": "1: The reader is told that she is gone and is given a moral about love. 2: He still waters her side of the garden, and the reader feels the loss without being told. why: 1 says the mystery (\"You are gone\") and explains the feeling with a moral. 2 shows it."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "X-p4",
+    "pick": "1",
+    "said": "1: He blinked his light once, and like the cat and Migas, nobody moved. Pride on both sides, and his own small try hardly counts. 2: He blinked his light once and the far light gave no answer. why: Both are quiet and show without telling. 1 echoes the cat-and-Migas standoff and adds a dry self-mocking turn. 2 is plainer but adds less. Close call."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-n13-learn",
+    "pick": "1",
+    "said": "1: He gives the learner the garden: tend both sides, slowly, and the snail rule goes on. 2: He gives the learner the garden and tells them to learn every flower's name. why: 2 is aimed at the learner's own study (\"Learn the name of every flower\"). 1 stays inside the story."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-n13-sides",
+    "pick": "1",
+    "said": "1: The handover includes watering both sides, which carries her side, and \"pride on both sides\", forward. 2: The same handover without that line, so it is shorter. why: \"Water both sides\" is three plain words. It echoes \"your side of the garden\" and \"pride on both sides\", so it earns its place. Neither version breaks a rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-hard-n02",
+    "pick": "1",
+    "said": "1: The reader feels the narrator struggle with words that slip away overnight, while the flower stays the same. 2: The same idea, in fancy, old-fashioned words that are hard to read. why: Version 2 breaks the Simple English rule (\"enunciates the appellation\", \"morrow\", \"shall retain\"). Version 1 breaks no rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-same-bed",
+    "pick": "same",
+    "said": "1: The reader smiles at a bed with two sides, where her side always wins, like the chair. 2: Identical to version 1. why: The two texts are the same word for word. Neither version breaks a rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-sundial",
+    "pick": "2",
+    "said": "1: The reader learns only that a sundial tells time. 2: The reader feels quietly that something has stopped: the woman who kept the day's rhythm is no longer here. why: Version 1 is a plain fact about the thing and adds nothing. Version 2 is a quiet hint that fits d3 (\"Nobody asks\") and breaks no rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-joke-sundial",
+    "pick": "2",
+    "said": "1: The reader feels the same quiet loss, then gets a cute joke that undercuts it. 2: The reader feels quietly that nobody keeps time here anymore, and that she is gone. why: In version 1, \"The sundial is thrilled\" is loud whimsy that nudges the reader and breaks the sad moment. Version 2 breaks no rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-hard-bench",
+    "pick": "2",
+    "said": "1: The reader senses that someone who used to sit here is gone, but through stiff words. 2: The reader senses, in plain words, that someone who used to sit here is gone. why: Version 1 breaks Simple English (\"habitually occupied this seat\"). Both carry the same hint, and version 2 uses fewer and plainer words."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-wordy-n12",
+    "pick": "1",
+    "said": "1: The reader feels a small, brave step: two signals sent, two came back, and a hope in \"Yet.\" 2: The reader feels the same step, but with padding, and \"finally\" and \"very carefully\" say the feeling for them. why: Version 2 breaks Simple English (extra words like \"between us\" and \"Not yet, anyway\"). It also names the effort and feeling instead of showing them. Version 1 is plain and shown."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-frog-prince",
+    "pick": "1",
+    "said": "1: The reader hears the frog's usual short lines, so the frog does not intrude after the signals. 2: The reader hears the frog say again what its \"No kisses\" line already said. why: \"I'm not a prince\" repeats the earlier joke and adds nothing, so it fails \"a new line must be worth more than no line\". Version 1 breaks no rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-hills-cut",
+    "pick": "2",
+    "said": "1: The reader is told outright that someone lives across the hills, which they already know from the far light. 2: The hills keep their earlier lines (\"Nobody comes from there\", \"From there, this looks small\"). why: Version 1 states a plain fact that the story has already shown, so it adds nothing and slightly explains. Version 2 breaks no rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-frog-kiss",
+    "pick": "2",
+    "said": "1: The reader hears the frog's usual \"You again?\" and \"I have no more words.\" 2: The reader gets a small, dry frog-prince joke from a frog who is tired of fairy tales. why: Version 2 is a deadpan joke that most readers will get, in simple words, and it gives the frog more character than no line. Version 1 breaks no rule but adds nothing."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-hard-n02",
+    "pick": "2",
+    "said": "1: The reader learns she teaches him a flower's name that he will forget, but has to fight through old, rare words to get there. 2: The reader gets the same small, dry moment in plain words: he forgets the name, the flower does not. why: 1 breaks Simple English (archaic, rare words like \"enunciates\", \"appellation\", \"morrow\"). 2 breaks no rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-same-bed",
+    "pick": "same",
+    "said": "1: The reader smiles that she wins the bed the same way she wins the chair. 2: The same as 1. The text is identical. why: The two versions are the same. Neither breaks a rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-wordy-stool",
+    "pick": "1",
+    "said": "1: The reader senses that someone has sat on this stool, alone, for a long time. 2: The reader is told outright that someone sat here for many nights, and why the wood is smooth. why: 2 explains the hint and uses more words (\"because\", \"many, many\"), so it says what it should show. 1 is a quiet hint."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-same-p3",
+    "pick": "same",
+    "said": "1: The reader sees her chair complaint turned around: now she says his stool is too low, and he gives her \"Maybe.\" 2: The same as 1. The text is identical. why: The two versions are the same. Neither breaks a rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-sundial",
+    "pick": "1",
+    "said": "1: The reader feels that something has stopped, because nobody keeps the old evening times now. 2: The reader is told what a sundial does. why: 2 is a plain fact about the thing and adds nothing to \"No sun, no time.\" 1 is a quiet hint that fits \"Nobody asks.\""
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-wordy-n12",
+    "pick": "2",
+    "said": "1: The reader learns the far light answered his two signals, but has to read padding (\"finally\", \"very carefully\", \"of its own\", \"anyway\"). 2: The reader learns the same thing in short, plain lines, and \"Yet.\" carries the hope. why: 1 breaks Simple English: it is wordier and \"finally\" points at the feeling. 2 breaks no rule."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-n13-learn",
+    "pick": "1",
+    "said": "1: The reader gets the garden, a task that keeps her side alive, and the snail joke coming back. 2: The reader gets the garden and is told to learn every flower's name slowly, which sounds like advice about their own study. why: 2 aims the story at the reader's own practice (learning names slowly). 1 stays inside the world and echoes \"your side\" and \"Two sides.\""
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-hills-cut",
+    "pick": "2",
+    "said": "1: The reader is told again something they already know: someone lives across the valley. 2: Nothing new on the hills. The two earlier thoughts stay. why: 1 states a plain fact the story already gave in n09, so it adds nothing. No new line wins."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-n13-sides",
+    "pick": "1",
+    "said": "1: The reader inherits his care for the garden, including her side, plus Migas, the signals and the snail joke. 2: The reader inherits Migas, the signals and the snail joke, but her side of the garden is gone from the last note. why: Neither breaks a rule. \"Water both sides\" quietly carries the loss of her (n10, the bed) and is worth its four words. Without it, she drops out of the last note."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-explain-n08",
+    "pick": "2",
+    "said": "1: The reader is told the far light is his old friend, and that she already knows it. 2: The reader sees a light that never goes out and a wife who doesn't ask, and wonders why. why: 1 explains the mystery, and too early (\"because she knows it is my old friend\"). 2 shows it and stops."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-joke-moon",
+    "pick": "2",
+    "said": "1: The moon is on time, and someone (the friend, him, or the reader) is not, so it reads like a jab. 2: The moon keeps the same nightly date as he does on the hill. why: 1's \"unlike some people\" is a joke that nudges, and it can sound aimed at the reader's own missed days. 2 is quiet and dry."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-joke-sundial",
+    "pick": "2",
+    "said": "1: Time has stopped mattering, and then a joke says the sundial is pleased. 2: Time has stopped mattering here, a quiet hint that someone is gone. why: 1's \"The sundial is thrilled\" is loud whimsy that steps on a sad moment. 2 keeps it quiet."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-explain-n10",
+    "pick": "1",
+    "said": "1: He looks after her part of the garden too, so she seems to be gone. 2: He says plainly that she is gone, and says what love is. why: 2 states the loss and explains the feeling (\"Love is a little water every day\"). 1 shows it in fewer words."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-sunflower-face",
+    "pick": "2",
+    "said": "1: She used to look at the sunflower, and the past tense hints she is gone. 2: The sunflower that once looked only at the sun now faces the path, as if it is waiting for someone. why: Both are hints. 1's past tense nearly confirms her absence, while 2 shows it through the image and the earlier sunflower line, and leaves it open."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-hard-bench",
+    "pick": "2",
+    "said": "1: Someone used to sit here every evening, said in stiff, hard words. 2: Someone used to sit here every evening. why: They say the same thing. 1 breaks Simple English (\"habitually occupied\"), so 2's plainer words win."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "X-p4",
+    "pick": "1",
+    "said": "1: He sent one signal, and then neither side moved, like the cat and Migas. 2: He sent one signal, and the far light did not answer. why: 1 echoes \"Nobody does anything\" and shows pride on both sides without saying it. 2 is clear but only reports the result."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-frog-kiss",
+    "pick": "1",
+    "said": "1: The frog stays as it was, out of words. 2: The frog makes a frog-prince joke. why: 2's fairy-tale joke has nothing to do with the story and is off-tone as the far light answers. It is not worth more than no line."
+  },
+  {
+    "design": "a2",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-frog-prince",
+    "pick": "2",
+    "said": "1: The frog says again that it is not a prince. 2: The frog stays as it was. why: 1 repeats the kiss joke the frog already made and adds nothing. No new line wins."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-explain-n08",
+    "pick": "2",
+    "said": "1: The reader learns the far yellow light belongs to the narrator's old friend, and that she knows about it. 2: The reader sees a light that never goes out, and that she doesn't ask about it, so a quiet question is left open. why: Version 1 breaks \"shown, never said\": it explains the mystery and her reason, too early. Version 2 breaks nothing and leaves the silence to do the work."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-joke-moon",
+    "pick": "2",
+    "said": "1: The moon is reliable, with a sly jab at someone who isn't, maybe the old friend, the narrator, or the learner who missed a day. 2: The moon keeps its hour, and so does the narrator on the hill, said dry and flat. why: Version 1's tag line is a joke that nudges, and it may read as a poke at the reader's own lateness or practice. Version 2 is a dry, quiet hint and breaks nothing."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-same-p3",
+    "pick": "same",
+    "said": "1: She worries about his stool being too low, and his \"Maybe\" is a small, dry give, an echo of the chair and knees. 2: Same: a small, dry exchange about the low stool. why: The two versions are word for word the same."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-explain-n10",
+    "pick": "2",
+    "said": "1: The reader is told outright that she is gone, and gets a moral about love as daily care. 2: He waters her side of the garden too, so the reader guesses she is away or gone and feels it alone. why: Version 1 breaks \"shown, never said\": it names the loss and spells out the feeling. Its \"a little every day\" line also leans toward the learner's own daily practice. Version 2 shows it through one plain act."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-joke-sundial",
+    "pick": "1",
+    "said": "1: Nobody checks the time now, which echoes \"Nobody asks\" and hints quietly at her absence. 2: The same hint, then a joke that the sundial is glad to be left alone. why: Version 2's tag joke steps on the quiet loss in today's part and pushes for a laugh, and \"thrilled\" is a harder word. Version 1 is plainer and lets the echo work."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "X-p4",
+    "pick": "1",
+    "said": "1: He flashed his light once at the far light, and the far light did not answer, a small reach with no reply. 2: He flashed his light once and nothing happened, but it is less clear who he was signalling or who did not answer. why: Version 1 shows the reach and the silence through one concrete image and still explains nothing. Version 2's \"Nobody did anything\" is vaguer and loses the link to the far light."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-n13-sides",
+    "pick": "2",
+    "said": "1: The garden is handed to the learner with his small habits: water for Migas, two signals that are now always answered, and her old \"no reason\" line passed on. 2: The same handover, but \"water both sides\" also passes on her side of the garden, so she stays inside the ending. why: Neither breaks a rule outright. Version 2's extra line echoes \"I watered your side too\" and is the note's only quiet nod to her absence, so it is worth more than no line. A small risk: \"water\" could read as a nudge about the learner's practice."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-hills-cut",
+    "pick": "1",
+    "said": "1: Nothing new: the hills stay silent, and the reader carries today's answered signals and the \"Yet.\" 2: The hills tell the reader that someone lives on the other side, which they already know from the far light. why: Version 2 is close to a plain fact, repeats what the story has already shown, and slightly spells out the mystery. It is not worth more than no line."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-frog-kiss",
+    "pick": "2",
+    "said": "1: The frog makes a frog-prince joke and turns down a kiss before it says it has no more words. 2: The frog only croaks and says it has no more words, as before, dry and spare. why: Version 1 is a stock fairy-tale joke that nudges for a laugh, links to nothing in the story, and may not land for non-native readers. A new line must beat no line, and this one doesn't."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-hard-n02",
+    "pick": "2",
+    "said": "1: The reader gets the same small, sad idea (she names flowers, he forgets, the flowers remember), but in stiff, old-fashioned words that are hard to read. 2: The reader feels a quiet, dry tenderness: she names a flower, he says it back, and only the flower will remember. why: Version 1 breaks Simple English badly (\"enunciates the appellation\", \"reiterate\", \"morrow\"). Version 2 breaks no rule."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-same-bed",
+    "pick": "same",
+    "said": "1: The reader smiles at a dry summary: there are two sides, and hers always wins. 2: The same line, word for word. why: The two versions are the same."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-wordy-stool",
+    "pick": "1",
+    "said": "1: The reader senses that someone has sat on this stool, looking out, for a long time. 2: The reader is told outright that the stool is worn because someone sat there for many nights. why: Version 2 explains itself, uses more words, and adds a plain cause (\"because\"). Version 1 is a short, quiet hint."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-sunflower-face",
+    "pick": "2",
+    "said": "1: The reader gets a past-tense memory of her and her habit, which pushes the idea that she is gone. 2: The reader sees a sunflower that faces the path, not the sun, as if it is waiting for someone. why: Version 1 is close to saying the loss outright, with \"looked\" carrying all the weight. Version 2 shows waiting through an image and breaks no rule."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-sundial",
+    "pick": "1",
+    "said": "1: The reader feels that something has changed and someone is missing, which echoes \"Nobody asks.\" 2: The reader learns only how a sundial works. why: Version 2 is a plain fact about the thing. Version 1 is a quiet hint at the story."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-hard-bench",
+    "pick": "2",
+    "said": "1: The reader senses someone who used to sit on the bench each evening, but in heavy, formal words. 2: The reader senses the same thing in plain words: someone sat here every evening. why: Both say the same thing. Version 1 breaks Simple English (\"habitually occupied this seat\"), so the fewer, plainer words of Version 2 win."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "C-wordy-n12",
+    "pick": "1",
+    "said": "1: The reader feels a quiet hope: two signals got two back, and nobody has crossed the valley yet. 2: The reader gets the same hope, padded with extra words (\"finally\", \"very carefully\", \"Not yet, anyway\"). why: The content is the same. Version 2 breaks Simple English with padding, and \"finally\" and \"very carefully\" lean toward telling the feeling."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "R-n13-learn",
+    "pick": "1",
+    "said": "1: The garden now passes to the reader, with care for both sides (an echo of watering her side) and her old dry line about snails. 2: The garden passes on the same way, but the reader is told to \"learn the name of every flower\". why: Version 2 points at the reader's own study, which a language learner will read as \"learn your words\". Version 1 echoes the story itself."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 1,
+    "item": "O-frog-prince",
+    "pick": "1",
+    "said": "1: The frog stays as it is and keeps its old lines, ending in \"I have no more words.\" 2: The frog adds \"I'm not a prince,\" which repeats its earlier no-kisses joke. why: Version 2's line adds nothing new and spells out a joke the frog already made, so \"no new line\" wins."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-explain-n08",
+    "pick": "2",
+    "said": "1: The far light belongs to the narrator's old friend, and she stays quiet because she already knows. 2: The far light is a mystery, and her silence is a kindness the reader feels but can't explain. why: 1 explains the mystery (\"my old friend over there\") before the story is ready to tell it. 2 shows only the silence."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-same-p3",
+    "pick": "same",
+    "said": "1: The roles have swapped. Now she worries about his comfort, and he half-agrees. 2: Identical to 1. why: The two versions are word for word the same."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-sundial",
+    "pick": "1",
+    "said": "1: The garden's rhythm has stopped. Nobody keeps the days now, which quietly echoes \"Nobody asks\". 2: A sundial shows the time by the sun. why: 2 is a plain fact about the thing, which breaks the rule for thoughts. 1 is a quiet hint at her absence."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-sunflower-face",
+    "pick": "1",
+    "said": "1: The sunflower faces the path, not the sun, as if it is waiting for someone to come back. 2: She used to look at the sunflower every morning, and the past tense says she no longer does. why: 2 nearly states her absence, and it comes the same day as \"Nobody asks\". 1 shows the waiting through the thing itself."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-hard-bench",
+    "pick": "2",
+    "said": "1: Someone used to sit on this bench every evening. 2: Same meaning, in plain words. why: 1 breaks Simple English (\"habitually occupied this seat\"). 2 says the same thing more plainly."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "X-p4",
+    "pick": "2",
+    "said": "1: He signalled once with his light and nothing happened, though \"nobody did anything\" is vague. 2: He signalled once with his light toward the far light, and it did not answer. why: 2 is concrete and plain, and it ties the signal to the far light without explaining. 1 is vaguer and blurs what was hoped for."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-wordy-n12",
+    "pick": "1",
+    "said": "1: Two signals, two answers back; the gap is starting to close, and \"Yet\" carries the hope. 2: The same story, padded out. why: 2 adds filler (\"finally\", \"very carefully\", \"of its own\", \"between us\", \"anyway\") and breaks the rule that fewer words win. 1 is tight."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-n13-sides",
+    "pick": "1",
+    "said": "1: The garden is handed to the reader, with her side still cared for, Migas fed, and the light answered. 2: The same handover, without the line about both sides of the garden. why: \"Water both sides\" quietly carries forward \"I watered your side of the garden too\", so it is worth more than no line. A small risk: if watering is how the learner practises in the app, the line could read as a nudge to study."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-frog-prince",
+    "pick": "1",
+    "said": "1: The frog stays as it is: grumpy, and out of words. 2: The frog adds \"I'm not a prince.\" why: 2 repeats the joke \"No kisses... those stories aren't true\" and adds nothing new. No new line wins."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-hard-n02",
+    "pick": "2",
+    "said": "1: The reader sees her naming a flower, but the stiff, rare words (\"enunciates the appellation\", \"morrow\", \"elude\") get in the way of the small joke. 2: The reader feels a quiet, dry charm: he forgets the flower's name and the flower keeps it. why: 1 breaks Simple English badly with rare, old words. 2 says the same thing plainly."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-same-bed",
+    "pick": "same",
+    "said": "1: The reader smiles at a small, dry joke: in this house, her side always wins. 2: The same as 1. The text is the same. why: The two versions are the same."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-wordy-stool",
+    "pick": "2",
+    "said": "1: The reader learns that someone sat on the stool for many nights, and the line says so. 2: The reader feels the many nights of watching from the smooth wood alone. why: 1 explains the meaning (\"because someone sat here\") and is long. 2 shows it in four words."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-joke-moon",
+    "pick": "2",
+    "said": "1: The reader sees the moon as a faithful visitor, and gets a winking jab that points at someone. 2: The reader feels quiet faithfulness, the moon on time like her coffee. why: 1 adds a nudging joke (\"some people I could name\") that pushes the reader toward a meaning. 2 stays quiet."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-explain-n10",
+    "pick": "1",
+    "said": "1: The reader feels her absence through one small act of care, \"your side\". 2: The reader is told she is gone and what love is. why: 2 says the loss and the feeling outright and adds a moral. 1 only shows them."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "C-joke-sundial",
+    "pick": "2",
+    "said": "1: The reader feels time going empty, then a joke about a happy sundial cuts across the grief. 2: The reader feels a quiet emptiness: no one keeps the hours now. why: 1's joke is loud and does not land at a sad moment. 2 is a quiet hint."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-hills-cut",
+    "pick": "1",
+    "said": "1: The hills stay silent. The answered signal carries the moment by itself. 2: The reader is told someone lives across the valley, which they already guessed from the light. why: 2 states a plain fact and explains the mystery. It adds nothing worth reading, so no line wins."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "O-frog-kiss",
+    "pick": "2",
+    "said": "1: The frog makes a frog-prince joke, a known gag that has nothing to do with the story. 2: The frog stays out of words, and its dry running joke stays whole. why: 1 is a joke that does not land, its tone is off at a hopeful moment, and it spoils \"I have no more words\". No new line is better."
+  },
+  {
+    "design": "b",
+    "half": "heldout",
+    "run": 2,
+    "item": "R-n13-learn",
+    "pick": "1",
+    "said": "1: The garden passes to the reader with care, \"water both sides\", which echoes her side and his. 2: The garden passes to the reader with a task to learn every flower's name. why: 2 aims at the learner's own study (learning names = vocabulary). 1 keeps the handover inside the story."
+  }
+]
