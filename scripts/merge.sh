@@ -10,6 +10,15 @@
 set -euo pipefail
 pr=$1
 
+# A checkout behind main holds an old copy of this script, and one old copy merged
+# in a way the ruleset on main refused (#656). So always run main's copy, read from
+# GitHub (a `git fetch` here can fail on a ref lock when agents fetch at once).
+if [ "${MERGE_SH_FROM_MAIN:-}" != 1 ]; then
+  # Read it first: set -e does not stop on a failed $(...) inside exec's arguments.
+  main_copy=$(gh api -H 'Accept: application/vnd.github.raw' 'repos/{owner}/{repo}/contents/scripts/merge.sh?ref=main')
+  MERGE_SH_FROM_MAIN=1 exec bash -c "$main_copy" scripts/merge.sh "$pr"
+fi
+
 not_merged() {
   echo "PR #$pr is NOT merged: $1"
   # Turn auto-merge off again, so a later push can't merge the PR with nobody watching.
