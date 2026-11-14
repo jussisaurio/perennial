@@ -1,7 +1,8 @@
 // The raised beds and the plants in them (#323): the beds themselves, picking
 // a plant, the names shown over the nearest ones, a plant perking up when it
 // hears its name, and streaming full-size sprites for the plants nearest you
-// (loadPlants) so memory stays the same whatever the garden's size.
+// (loadPlants) so memory stays the same whatever the garden's size, and near
+// sprites for the few right in front of you.
 
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -22,13 +23,23 @@ const READY_GROW = 0.08;
 /** It grows to that over this long (s), and settles back as slowly. In one frame, it read as a fault: the plants jumped taller as you came near (#1109). */
 const READY_TIME = 0.4;
 
+/** A full-size sprite's pixels per metre of plant. */
+const HI_PER_METRE = T.HI_W / (SPRITE_W * PLANT_SCALE);
+/**
+ * A plant in view gets its near sprite where one full-size pixel would cover more than NEAR_FROM framebuffer pixels
+ * (#1154): within about 4 m on a phone, 1.3 m on a 1280 × 720 desktop. It keeps it until that is under NEAR_KEEP, so a
+ * plant at the edge of reach does not swap back and forth as you sway.
+ */
+const NEAR_FROM = 2;
+const NEAR_KEEP = 1.6;
+
 // Plants: like other sprites (BILLBOARD, SHADE: sceneSprites.ts), but each
 // samples its small sprite, or its full-size one once the streamer has put
-// it in a pool slot (iCell.y >= 0).
+// it in a pool slot (iCell.y >= 0), or its near one (iCell.z >= 0).
 const PLANT_VERT = /* glsl */ `
   attribute vec3 iPos;
   attribute vec4 iParams; // phase, droop, scale, index
-  attribute vec2 iCell; // low cell, high slot (-1: none yet)
+  attribute vec3 iCell; // low cell, high slot, near slot (-1: none)
   attribute float iLean; // brushed by the walker (#359): radians, springing back to 0
   attribute float iOld; // 1: an old friend (plants.ts isOld)
   attribute float iReady; // how far it stands taller for the action button (#689): 0 to 1, eased
@@ -37,10 +48,13 @@ const PLANT_VERT = /* glsl */ `
   uniform vec2 uSneeze; // plant index, squash (#360)
   uniform vec2 uLowSize;
   uniform vec2 uHiSize;
+  uniform vec2 uNearSize;
   uniform float uSilver;
   varying vec2 vLow;
   varying vec2 vHi;
+  varying vec2 vNear;
   varying float vHasHi;
+  varying float vHasNear;
   varying float vSilver;
   ${BILLBOARD}
   vec2 cellUv(float idx, float cols, vec2 cell, vec2 size) {
@@ -63,6 +77,8 @@ const PLANT_VERT = /* glsl */ `
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
     vHi = cellUv(max(iCell.y, 0.0), ${T.HI_COLS.toFixed(1)}, vec2(${T.HI_W.toFixed(1)}, ${T.HI_H.toFixed(1)}), uHiSize);
+    vHasNear = iCell.z >= 0.0 ? 1.0 : 0.0;
+    vNear = cellUv(max(iCell.z, 0.0), ${T.NEAR_COLS.toFixed(1)}, vec2(${T.NEAR_W.toFixed(1)}, ${T.NEAR_H.toFixed(1)}), uNearSize);
     vFog = smoothstep(uFogNear, uFogFar, -mv.z);
     vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
     vSilver = uSilver * iOld;
@@ -76,11 +92,15 @@ const PLANT_VERT = /* glsl */ `
 const PLANT_FRAG = /* glsl */ `
   uniform sampler2D uLow;
   uniform sampler2D uHi;
+  uniform sampler2D uNear;
   uniform vec2 uLowSize;
   uniform vec2 uHiSize;
+  uniform vec2 uNearSize;
   varying vec2 vLow;
   varying vec2 vHi;
+  varying vec2 vNear;
   varying float vHasHi;
+  varying float vHasNear;
   varying float vSilver;
   ${SHADE}
   float empty(sampler2D m, vec2 at) {
@@ -90,24 +110,26 @@ const PLANT_FRAG = /* glsl */ `
     return min(1.0, empty(m, at + vec2(px.x, 0.0)) + empty(m, at - vec2(px.x, 0.0)) + empty(m, at + vec2(0.0, px.y)) + empty(m, at - vec2(0.0, px.y)));
   }
   void main() {
-    vec4 c = vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
+    vec4 c = vHasNear > 0.5 ? texture2D(uNear, vNear) : vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
     if (c.a < 0.5) discard;
     gl_FragColor = shade(vec4(c.rgb / c.a, 1.0));
     if (vSilver > 0.5) {
-      // Two pixels on a full-size sprite: as wide as the rim was when those sprites had half the pixels.
-      float rim = vHasHi > 0.5 ? edge(uHi, vHi, 2.0 / uHiSize) : edge(uLow, vLow, 1.0 / uLowSize);
+      // Two pixels on a full-size sprite: as wide as the rim was when those sprites had half the pixels. Six on a near one.
+      float rim = vHasNear > 0.5 ? edge(uNear, vNear, 6.0 / uNearSize) : vHasHi > 0.5 ? edge(uHi, vHi, 2.0 / uHiSize) : edge(uLow, vLow, 1.0 / uLowSize);
       gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.82, 0.86, 0.96), rim * 0.35 * (1.0 - vFog));
     }
   }
 `;
 
-function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture): THREE.ShaderMaterial {
+function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture, near: THREE.DataTexture): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: {
       uLow: { value: low },
       uHi: { value: high },
+      uNear: { value: near },
       uLowSize: { value: new THREE.Vector2(low.image.width, low.image.height) },
       uHiSize: { value: new THREE.Vector2(high.image.width, high.image.height) },
+      uNearSize: { value: new THREE.Vector2(near.image.width, near.image.height) },
       uTime: { value: 0 },
       uSway: { value: 1 },
       uFogNear: { value: FOG_NEAR },
@@ -134,8 +156,8 @@ export class Plants {
   private disposed = false;
 
   private chunks: { mesh: THREE.Mesh; center: THREE.Vector3; radius: number }[] = [];
-  /** For each plant: the attribute and instance that hold its high-detail slot. */
-  private hiRef: { attr: THREE.InstancedBufferAttribute; i: number }[] = [];
+  /** For each plant: the attribute and instance that hold its full-size and near slots. */
+  private cellRef: { attr: THREE.InstancedBufferAttribute; i: number }[] = [];
   private pool: THREE.DataTexture | null = null;
   /** The sheets of small sprites, on the GPU only. */
   private low: THREE.DataTexture[] = [];
@@ -147,6 +169,15 @@ export class Plants {
   private lastStream = -1;
   /** stream's scratch: per plant, its distance and index in one number (see stream). Sized in buildPlants. */
   private near = new Float64Array(0);
+  /** The near sprites (#1154): their texture, which plant holds each slot (-1: none), and the one being drawn (streamNear). */
+  private nearPool: THREE.DataTexture | null = null;
+  private nearOwner = new Int32Array(T.NEAR_SLOTS).fill(-1);
+  private nearDrawing = false;
+  private nearHungry = false;
+  private lastNear = -1;
+  /** streamNear's scratch, as `near` is stream's: per plant in view and in reach, its depth and index in one number. */
+  private inReach = new Float64Array(0);
+  private seen = new THREE.Vector3();
   /** Every plant's material, for the perk uniform; also added to ctx.mats for GardenScene's per-frame loop. */
   private plantMats: THREE.ShaderMaterial[] = [];
   /** The plant the action button shakes (an index into the layout's plants; -1: none). */
@@ -266,7 +297,7 @@ export class Plants {
   private gpuTexture(w: number, h: number, levels: number): THREE.DataTexture {
     const t = new THREE.DataTexture(null, w, h);
     t.magFilter = THREE.LinearFilter;
-    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.minFilter = levels > 1 ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
     // Only the sizes count: three allocates a level for each, and uploads none while dataReady is false.
     t.mipmaps = Array.from({ length: levels }, (_, l) => ({ data: new Uint8Array(0), width: w >> l, height: h >> l }));
     t.source.dataReady = false;
@@ -296,9 +327,12 @@ export class Plants {
     const pool = this.gpuTexture(T.POOL_W, (slots / T.HI_COLS) * T.HI_H, T.HI_LEVELS);
     this.pool = pool;
     this.near = new Float64Array(plants.length);
+    const nearPool = this.gpuTexture(T.NEAR_COLS * T.NEAR_W, (T.NEAR_SLOTS / T.NEAR_COLS) * T.NEAR_H, 1);
+    this.nearPool = nearPool;
+    this.inReach = new Float64Array(plants.length);
     this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h, T.LOW_LEVELS));
     const mats = this.low.map((tex) => {
-      const m = plantMaterial(tex, pool);
+      const m = plantMaterial(tex, pool, nearPool);
       ctx.mats.add(m);
       this.plantMats.push(m);
       return m;
@@ -319,7 +353,7 @@ export class Plants {
       const geo = instanced(quad);
       const pos = new Float32Array(idx.length * 3);
       const params = new Float32Array(idx.length * 4);
-      const cells = new Float32Array(idx.length * 2);
+      const cells = new Float32Array(idx.length * 3);
       const old = new Float32Array(idx.length);
       // Written in place: no small array per plant (#459).
       idx.forEach((pi, k) => {
@@ -331,11 +365,12 @@ export class Plants {
         params[k * 4 + 1] = p.droop;
         params[k * 4 + 2] = PLANT_SCALE;
         params[k * 4 + 3] = pi;
-        cells[k * 2] = pi % T.LOW_PER_SHEET;
-        cells[k * 2 + 1] = -1;
+        cells[k * 3] = pi % T.LOW_PER_SHEET;
+        cells[k * 3 + 1] = -1;
+        cells[k * 3 + 2] = -1;
         old[k] = isOld(p) ? 1 : 0;
       });
-      const cellAttr = new THREE.InstancedBufferAttribute(cells, 2);
+      const cellAttr = new THREE.InstancedBufferAttribute(cells, 3);
       cellAttr.setUsage(THREE.DynamicDrawUsage);
       const leanAttr = new THREE.InstancedBufferAttribute(new Float32Array(idx.length), 1);
       leanAttr.setUsage(THREE.DynamicDrawUsage);
@@ -355,7 +390,7 @@ export class Plants {
       ctx.scene.add(still(mesh));
       this.chunks.push({ mesh, center, radius });
       idx.forEach((pi, k) => {
-        this.hiRef[pi] = { attr: cellAttr, i: k };
+        this.cellRef[pi] = { attr: cellAttr, i: k };
         this.leanRef[pi] = { attr: leanAttr, i: k };
         this.readyRef[pi] = { attr: readyAttr, i: k };
       });
@@ -394,9 +429,11 @@ export class Plants {
     }
   }
 
-  private setSlot(plant: number, slot: number) {
-    const ref = this.hiRef[plant];
-    ref.attr.setY(ref.i, slot);
+  /** Draws `plant` from its sprite at `slot` of the full-size or near pool (-1: none there). */
+  private setSlot(plant: number, pool: "hi" | "near", slot: number) {
+    const ref = this.cellRef[plant];
+    if (pool === "hi") ref.attr.setY(ref.i, slot);
+    else ref.attr.setZ(ref.i, slot);
     ref.attr.needsUpdate = true;
   }
 
@@ -428,7 +465,7 @@ export class Plants {
       if (!keep.has(plant)) {
         this.slotOf.delete(plant);
         this.slotOwner[slot] = -1;
-        this.setSlot(plant, -1);
+        this.setSlot(plant, "hi", -1);
       }
     const missing = wanted.filter((i) => !this.slotOf.has(i)).slice(0, T.BATCH);
     this.hungry = missing.length === T.BATCH;
@@ -456,12 +493,89 @@ export class Plants {
         missing.forEach((plant, k) => {
           const slot = this.slotOf.get(plant)!;
           this.copyLevels(src, pool, (slot % T.HI_COLS) * T.HI_W, Math.floor(slot / T.HI_COLS) * T.HI_H, T.batchCell(k));
-          this.setSlot(plant, slot);
+          this.setSlot(plant, "hi", slot);
         });
       },
       () => {
         this.streaming = false;
         release();
+      },
+    );
+  }
+
+  /**
+   * Near sprites (#1154) for the nearest NEAR_SLOTS plants in view within reach (NEAR_FROM). One at a time: copying
+   * one is as much work for the page as 6 full-size sprites with their mipmaps.
+   */
+  private streamNear() {
+    const pool = this.nearPool;
+    if (!pool) return;
+    const plants = this.layout.plants;
+    const n = plants.length;
+    const cam = this.camera;
+    const e = cam.projectionMatrix.elements;
+    // Framebuffer pixels per metre at 1 m: the canvas is the framebuffer (pixel ratio 1). From the camera now, as the
+    // stool narrows its view (#858).
+    const pxPerMetre = (e[5] * this.renderer.domElement.height) / 2;
+    const reach = pxPerMetre / (HI_PER_METRE * NEAR_FROM);
+    const keep = pxPerMetre / (HI_PER_METRE * NEAR_KEEP);
+    const { inReach, seen: v } = this;
+    let found = 0;
+    for (let i = 0; i < n; i++) {
+      const p = plants[i];
+      const h = plantHeight(p.growth);
+      v.set(p.x, BED_H + h / 2, p.z).applyMatrix4(cam.matrixWorldInverse);
+      const depth = -v.z;
+      // Some of it in view: the sprite is SPRITE_W wide (scaled), and the plant h tall, its flower a little more.
+      if (depth <= 0 || depth > keep) continue;
+      if ((Math.abs(v.x) - (SPRITE_W * PLANT_SCALE) / 2) * e[0] > depth || (Math.abs(v.y) - h / 2 - 0.2) * e[5] > depth) continue;
+      // As in stream: depth (in 1/4096 m) times the plant count, plus the index, sorted in native code.
+      inReach[found++] = Math.floor(depth * 4096) * n + i;
+    }
+    const ranked = inReach.subarray(0, found).sort();
+    const rank = (plant: number) => ranked.findIndex((k) => k % n === plant);
+    // Out of view, or too far for its near sprite to show: back to the full-size one.
+    for (let s = 0; s < T.NEAR_SLOTS; s++) {
+      const owner = this.nearOwner[s];
+      if (owner >= 0 && rank(owner) < 0) {
+        this.nearOwner[s] = -1;
+        this.setSlot(owner, "near", -1);
+      }
+    }
+    const wanted: number[] = [];
+    for (const k of ranked) {
+      if (wanted.length === T.NEAR_SLOTS || Math.floor(k / n) / 4096 > reach) break;
+      wanted.push(k % n);
+    }
+    const missing = wanted.filter((i) => !this.nearOwner.includes(i));
+    this.nearHungry = missing.length > 1;
+    if (!missing.length) return;
+    const plant = missing[0];
+    // A free slot, or else the one of the farthest plant not wanted. There is one: a wanted plant has no slot.
+    let slot = this.nearOwner.indexOf(-1);
+    if (slot < 0) {
+      let far = -1;
+      this.nearOwner.forEach((owner, s) => {
+        if (!wanted.includes(owner) && rank(owner) > far) {
+          far = rank(owner);
+          slot = s;
+        }
+      });
+      this.setSlot(this.nearOwner[slot], "near", -1);
+    }
+    this.nearOwner[slot] = plant;
+    // No other near sprite is asked for (and so no slot changes) until this one is in.
+    this.nearDrawing = true;
+    T.nearSprite(plants[plant]).then(
+      (src) => {
+        this.nearDrawing = false;
+        if (this.disposed) return;
+        this.copyLevels(src, pool, (slot % T.NEAR_COLS) * T.NEAR_W, Math.floor(slot / T.NEAR_COLS) * T.NEAR_H);
+        this.setSlot(plant, "near", slot);
+      },
+      () => {
+        this.nearDrawing = false;
+        this.nearOwner[slot] = -1;
       },
     );
   }
@@ -578,13 +692,17 @@ export class Plants {
     if (done) k.i = -1;
   }
 
-  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, the perk and sneeze uniforms, brushing, and the plant in reach rising. */
+  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you and their near sprites, the perk and sneeze uniforms, brushing, and the plant in reach rising. */
   tick(f: Frame) {
     const { elapsed, x, z, yaw } = f;
     for (const c of this.chunks) c.mesh.visible = c.center.distanceTo(this.camera.position) - c.radius < FOG_FAR;
     if (this.pool && !this.streaming && (this.hungry || elapsed - this.lastStream > 0.25)) {
       this.lastStream = elapsed;
       this.stream(x, z, yaw);
+    }
+    if (this.nearPool && !this.nearDrawing && (this.nearHungry || elapsed - this.lastNear > 0.25)) {
+      this.lastNear = elapsed;
+      this.streamNear();
     }
     this.tickPerk(elapsed);
     this.tickShake(elapsed);

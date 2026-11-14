@@ -208,16 +208,17 @@ export async function walkReady(page: Page) {
 
 /**
  * Once you stand somewhere new, the plants near you get their full-size sprites a batch at a time (scenePlants.ts
- * stream), as they do while you walk. Wait until a stream that began after the move has put all of them in: a picture
- * taken at once shows the small sprites, which a learner sees only for a moment.
+ * stream), and the few right in front of you their near sprites one at a time (streamNear), as they do while you walk.
+ * Wait until streams that began after the move have put all of them in: a picture taken at once shows the small
+ * sprites, which a learner sees only for a moment.
  */
 export async function plantsIn(page: Page) {
-  // The streamer's own state, private to Plants.
-  type Streamer = { plants: { streaming: boolean; hungry: boolean; lastStream: number } };
+  // The streamers' own state, private to Plants.
+  type Streamer = { plants: { streaming: boolean; hungry: boolean; lastStream: number; nearDrawing: boolean; nearHungry: boolean; lastNear: number } };
   const from = await page.evaluate(() => window.__garden.game.elapsed);
   await page.waitForFunction((from) => {
     const p = (window.__garden as unknown as Streamer).plants;
-    return p.lastStream > from && !p.streaming && !p.hungry;
+    return p.lastStream > from && !p.streaming && !p.hungry && p.lastNear > from && !p.nearDrawing && !p.nearHungry;
   }, from);
 }
 
