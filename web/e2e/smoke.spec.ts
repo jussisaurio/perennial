@@ -133,3 +133,22 @@ test("an answer shows at once, and stays once a failed write is sent again", asy
   await expect(page.getByText("Not saved yet. Trying again.")).toBeHidden();
   await expect(progress).toContainText("You are learning 1 word.");
 });
+
+test("a code chunk gone after a deploy, with no storage to count reloads: no reload, so never a loop (#250)", async ({ page }) => {
+  // Storage that throws, as when the browser blocks this site's data.
+  await page.addInitScript(() =>
+    Object.defineProperty(window, "sessionStorage", {
+      get: () => {
+        throw new DOMException("The site's data is blocked.", "SecurityError");
+      },
+    }),
+  );
+  await page.goto("/");
+  // What Vite fires when a chunk fails to load. main.tsx cancels it when it reloads the page.
+  const reloads = await page.evaluate(() => {
+    const e = new Event("vite:preloadError", { cancelable: true });
+    window.dispatchEvent(e);
+    return e.defaultPrevented;
+  });
+  expect(reloads).toBe(false);
+});
