@@ -88,6 +88,17 @@ const KEY_STAND = 1;
 const ECHO = { delay: 1.2, show: 5 };
 /** A plant this near (m) where a thing lands perks up (#358). */
 const PERK_NEAR = 0.9;
+/**
+ * The longest step the game takes at once (s): a walk moves in steps short enough to stop on the stile's top board,
+ * and what the scene draws moves no more than this in a frame, so a visitor's way is a short step at a time (#802).
+ */
+export const MAX_STEP = 0.1;
+/**
+ * The most steps one frame runs. Down to this many frames a second over MAX_STEP the game keeps up with the clock: a
+ * walk is as fast and a wait as long (#909; CI's software WebGL draws 5 to 11 a second, some frames far longer). Below
+ * that it runs slower: a long gap (a hidden tab, a stalled load) is neither one jump nor a long run of steps.
+ */
+const MAX_STEPS = 4;
 
 /**
  * The door in the hedge, as the game holds it (#315): "key" while its key lies
@@ -390,8 +401,17 @@ export class Game {
     this.started = true;
   }
 
+  /** One drawn frame, `dt` seconds after the last, with the keys or stick held now. Returns the game time it ran (s). */
+  frame(dt: number, input: W.Input): number {
+    const run = Math.min(dt, MAX_STEP * MAX_STEPS);
+    // At least one step, even of 0 s (the first frame), so the action button learns what is in reach.
+    const n = Math.max(1, Math.ceil(run / MAX_STEP));
+    for (let i = 0; i < n; i++) this.step(run / n, input);
+    return run;
+  }
+
   /**
-   * One frame of the game, `dt` seconds long, with the keys or stick held now: the walker walks (or a walk to a
+   * One step of the game, `dt` seconds long, with the keys or stick held now: the walker walks (or a walk to a
    * tapped spot goes on), time runs on the bench, the pebbles fly, the clocks' seeds drift, a tag past its time
    * goes, and the action button learns what is in reach.
    */

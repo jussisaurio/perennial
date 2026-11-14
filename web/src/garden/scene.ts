@@ -54,7 +54,7 @@ import type { Companion } from "./bench";
 import { RESERVED } from "../content/voice";
 import { dayNumber } from "../core/day";
 import type { Hideout, Reply } from "./kinds/kind";
-import { EYE, Game, SCENERY_TAG, type GameHooks, type TimeOfDay, type WalkVisitors } from "./game";
+import { EYE, Game, MAX_STEP, SCENERY_TAG, type GameHooks, type TimeOfDay, type WalkVisitors } from "./game";
 
 /**
  * Where the bench's notice board stands, from the bench (it turns 0.35 rad toward
@@ -123,14 +123,6 @@ export interface SceneCallbacks {
   onStars: (out: boolean) => void;
 }
 
-/**
- * The longest frame the garden runs in full (s). Down to 10 frames a second
- * the garden runs in real time: a walk is as fast and a visitor's wait as long
- * (#790; at 0.05, CI's software WebGL ran it at a third of its speed). Below
- * that it runs slower, so a walk still moves in steps short enough to see the
- * stile's top board, and a gap (a hidden tab, a stalled load) is not one jump.
- */
-const MAX_FRAME = 0.1;
 /** A tap past the back fence counts this near (m) to where a walker may stand (#770): at a bramble's foot, say. */
 const TAP_SLACK = 0.5;
 /** How far a ray goes between looks for the ground, on the hill (m). */
@@ -1451,16 +1443,16 @@ export class GardenScene {
       this.frame = requestAnimationFrame(loop);
       const now = performance.now();
       this.picker?.frame(now - this.last);
-      const dt = Math.min(MAX_FRAME, (now - this.last) / 1000);
+      const wall = (now - this.last) / 1000;
       this.last = now;
-      this.tick(dt);
+      this.tick(wall);
     };
     // The first frame in a task of its own: it sets up every shader for drawing, and loadPlants follows in this one (#459).
     this.frame = requestAnimationFrame(loop);
   }
 
-  /** One frame: the game steps with the input held now, then everything is drawn where the game says. */
-  private tick(dt: number) {
+  /** One frame, `wall` seconds after the last: the game steps with the input held now, then everything is drawn where the game says. */
+  private tick(wall: number) {
     const g = this.game;
     const me = g.me;
     const motion = this.reducedMotion ? 0 : 1;
@@ -1469,7 +1461,9 @@ export class GardenScene {
     const x0 = me.x;
     const z0 = me.z;
     const onFoot = me.mode.kind === "trip" || Math.hypot(this.input.move.x, this.input.move.y) > 0.01;
-    g.step(dt, this.input);
+    const ran = g.frame(wall, this.input);
+    // What the parts draw moves at most one step a frame, so a visitor's way is a short step at a time (#802).
+    const dt = Math.min(ran, MAX_STEP);
     const t = g.elapsed;
     // Sitting down or standing up, the eye sinks or rises (walker.ts step).
     const seat = me.seat;
@@ -1501,8 +1495,8 @@ export class GardenScene {
     frame.x = me.x;
     frame.z = me.z;
     frame.yaw = me.yaw;
-    // dt is 0 only on the very first frame, before anyone could walk.
-    frame.speed = onFoot && dt > 0 ? Math.hypot(me.x - x0, me.z - z0) / dt : 0;
+    // The walker went `ran` seconds this frame. It is 0 only on the very first frame, before anyone could walk.
+    frame.speed = onFoot && ran > 0 ? Math.hypot(me.x - x0, me.z - z0) / ran : 0;
     for (const part of this.parts) part.tick?.(frame);
     if (g.selected) {
       const p = g.selected;
