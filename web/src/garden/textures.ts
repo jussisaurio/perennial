@@ -1166,8 +1166,8 @@ export function ripple(): OffscreenCanvas {
 // ---- Word plants --------------------------------------------------------
 //
 // Two levels of detail. Every plant has a small sprite in a "low" sheet of up
-// to 2048 plants. The plants near you also get a full-size sprite in a fixed
-// pool of slots, streamed in batches as you walk. A worker draws them
+// to 2048 plants. The plants near you also get a full-size sprite in a pool
+// of slots, streamed in batches as you walk. A worker draws them
 // (spriteWorker.ts), a run of plants at a time, so the page never waits (#459).
 
 export const ATLAS = 2048;
@@ -1180,13 +1180,20 @@ export const LOW_RUN = 16;
 /** Big enough that a near plant's edges stay clean on a phone, filtered smooth (#1091). */
 export const HI_W = 192;
 export const HI_H = 384;
-/** 210 slots: the plants within about 9 m of you. */
+/** The pool of full-size sprites has rows of 21 slots, up to 10 rows. 210 slots: in a garden of 800, the plants within about 13 m of you. */
 export const HI_COLS = 21;
 const HI_ROWS = 10;
-export const HI_SLOTS = HI_COLS * HI_ROWS;
-/** The pool of full-size sprites, in pixels. */
+/** The pool's width in pixels. */
 export const POOL_W = HI_COLS * HI_W;
-export const POOL_H = HI_ROWS * HI_H;
+
+/**
+ * Full-size slots for a garden of `plants`: whole rows, enough for every plant, up to 210. A full pool
+ * is about 80 MB on the GPU, so a small garden gets a small one (#1107).
+ */
+export function hiSlots(plants: number): number {
+  return HI_COLS * Math.min(HI_ROWS, Math.ceil(plants / HI_COLS));
+}
+
 const BATCH_COLS = 8;
 /** 16: copying a batch's sprites with their mipmaps takes the page 6–8 ms at CPU 10× (#1091); 24 took 9–13 ms. */
 export const BATCH = BATCH_COLS * 2;
@@ -1232,12 +1239,12 @@ function drawn(plants: PlacedPlant[], cols: number, w: number, h: number, levels
   return new Promise((resolve, reject) => waiting.set(id, { resolve, reject }));
 }
 
-/** The height of each sheet of small sprites: one per 2048 plants, only as tall as needed. */
+/** The height of each sheet of small sprites: one per 2048 plants, only as many rows as its plants fill (#1107). */
 export function lowSheetHeights(plants: number): number[] {
   const heights: number[] = [];
   for (let start = 0; start < plants; start += LOW_PER_SHEET) {
     const rows = Math.ceil(Math.min(LOW_PER_SHEET, plants - start) / LOW_COLS);
-    heights.push(Math.min(ATLAS, 2 ** Math.ceil(Math.log2(Math.max(LOW_H, rows * LOW_H)))));
+    heights.push(rows * LOW_H);
   }
   return heights;
 }

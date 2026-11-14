@@ -34,6 +34,7 @@ const PLANT_VERT = /* glsl */ `
   uniform float uReady; // the plant the action button shakes (#689)
   uniform vec2 uSneeze; // plant index, squash (#360)
   uniform vec2 uLowSize;
+  uniform vec2 uHiSize;
   uniform float uSilver;
   varying vec2 vLow;
   varying vec2 vHi;
@@ -59,7 +60,7 @@ const PLANT_VERT = /* glsl */ `
     gl_Position = projectionMatrix * mv;
     vLow = cellUv(iCell.x, ${T.LOW_COLS.toFixed(1)}, vec2(${T.LOW_W.toFixed(1)}, ${T.LOW_H.toFixed(1)}), uLowSize);
     vHasHi = iCell.y >= 0.0 ? 1.0 : 0.0;
-    vHi = cellUv(max(iCell.y, 0.0), ${T.HI_COLS.toFixed(1)}, vec2(${T.HI_W.toFixed(1)}, ${T.HI_H.toFixed(1)}), vec2(${T.POOL_W.toFixed(1)}, ${T.POOL_H.toFixed(1)}));
+    vHi = cellUv(max(iCell.y, 0.0), ${T.HI_COLS.toFixed(1)}, vec2(${T.HI_W.toFixed(1)}, ${T.HI_H.toFixed(1)}), uHiSize);
     vFog = smoothstep(uFogNear, uFogFar, -mv.z);
     vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
     vSilver = uSilver * iOld;
@@ -74,6 +75,7 @@ const PLANT_FRAG = /* glsl */ `
   uniform sampler2D uLow;
   uniform sampler2D uHi;
   uniform vec2 uLowSize;
+  uniform vec2 uHiSize;
   varying vec2 vLow;
   varying vec2 vHi;
   varying float vHasHi;
@@ -91,18 +93,19 @@ const PLANT_FRAG = /* glsl */ `
     gl_FragColor = shade(vec4(c.rgb / c.a, 1.0));
     if (vSilver > 0.5) {
       // Two pixels on a full-size sprite: as wide as the rim was when those sprites had half the pixels.
-      float rim = vHasHi > 0.5 ? edge(uHi, vHi, 2.0 / vec2(${T.POOL_W.toFixed(1)}, ${T.POOL_H.toFixed(1)})) : edge(uLow, vLow, 1.0 / uLowSize);
+      float rim = vHasHi > 0.5 ? edge(uHi, vHi, 2.0 / uHiSize) : edge(uLow, vLow, 1.0 / uLowSize);
       gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.82, 0.86, 0.96), rim * 0.35 * (1.0 - vFog));
     }
   }
 `;
 
-function plantMaterial(low: THREE.Texture, high: THREE.Texture, lowHeight: number): THREE.ShaderMaterial {
+function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: {
       uLow: { value: low },
       uHi: { value: high },
-      uLowSize: { value: new THREE.Vector2(T.ATLAS, lowHeight) },
+      uLowSize: { value: new THREE.Vector2(low.image.width, low.image.height) },
+      uHiSize: { value: new THREE.Vector2(high.image.width, high.image.height) },
       uTime: { value: 0 },
       uSway: { value: 1 },
       uFogNear: { value: FOG_NEAR },
@@ -135,7 +138,8 @@ export class Plants {
   private pool: THREE.DataTexture | null = null;
   /** The sheets of small sprites, on the GPU only. */
   private low: THREE.DataTexture[] = [];
-  private slotOwner = new Int32Array(T.HI_SLOTS).fill(-1);
+  /** Which plant holds each full-size slot (-1: none). Sized in buildPlants, to the garden (textures.ts hiSlots). */
+  private slotOwner = new Int32Array(0);
   private slotOf = new Map<number, number>();
   private streaming = false;
   private hungry = true;
@@ -280,12 +284,14 @@ export class Plants {
     const plants = this.layout.plants;
     if (!plants.length) return;
     this.onProgress(0, plants.length);
-    const pool = this.gpuTexture(T.POOL_W, T.POOL_H, T.HI_LEVELS);
+    const slots = T.hiSlots(plants.length);
+    this.slotOwner = new Int32Array(slots).fill(-1);
+    const pool = this.gpuTexture(T.POOL_W, (slots / T.HI_COLS) * T.HI_H, T.HI_LEVELS);
     this.pool = pool;
     this.near = new Float64Array(plants.length);
     this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h, T.LOW_LEVELS));
     const mats = this.low.map((tex) => {
-      const m = plantMaterial(tex, pool, tex.image.height);
+      const m = plantMaterial(tex, pool);
       m.uniforms.uReady.value = this.readyIndex;
       ctx.mats.add(m);
       this.plantMats.push(m);
@@ -386,8 +392,8 @@ export class Plants {
 
   /**
    * Keep full-size sprites for the plants nearest to you (ahead of you
-   * first) in the fixed pool, one batch at a time. Memory stays the same
-   * whether the garden has 50 plants or 5000.
+   * first) in the pool, one batch at a time. The pool has a slot for every
+   * plant of a small garden and 210 at most, so a garden of 5000 takes no more memory than one of 210.
    */
   private stream(x: number, z: number, yaw: number) {
     const pool = this.pool;
@@ -406,7 +412,7 @@ export class Plants {
       near[i] = Math.floor(Math.sqrt(dx * dx + dz * dz) * (dx * fx + dz * fz < 0 ? 1.8 : 1) * 4096) * n + i;
     }
     near.sort();
-    const wanted = Array.from(near.subarray(0, T.HI_SLOTS), (k) => k % n);
+    const wanted = Array.from(near.subarray(0, this.slotOwner.length), (k) => k % n);
     const keep = new Set(wanted);
     for (const [plant, slot] of this.slotOf)
       if (!keep.has(plant)) {
@@ -418,7 +424,7 @@ export class Plants {
     this.hungry = missing.length === T.BATCH;
     if (!missing.length) return;
     const slots: number[] = [];
-    for (let s = 0; s < T.HI_SLOTS && slots.length < missing.length; s++) if (this.slotOwner[s] === -1) slots.push(s);
+    for (let s = 0; s < this.slotOwner.length && slots.length < missing.length; s++) if (this.slotOwner[s] === -1) slots.push(s);
     missing.forEach((plant, k) => {
       this.slotOwner[slots[k]] = plant;
       this.slotOf.set(plant, slots[k]);
