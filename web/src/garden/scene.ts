@@ -49,7 +49,7 @@ import { Jokes } from "./sceneJokes";
 import { thingsInView, type SceneState } from "./sceneState";
 import { WalkInto } from "./sceneWalkInto";
 import { leafPiles, type Fell } from "./walkInto";
-import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, woodBox, type BuildCtx, type SpriteItem } from "./sceneSprites";
+import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, SPRITE_W, still, woodBox, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import type { Companion } from "./bench";
 import { RESERVED } from "../content/voice";
 import { dayNumber } from "../core/day";
@@ -363,7 +363,7 @@ export class GardenScene {
           mesh.material.uniforms.uSway.value = 0;
           return mesh;
         },
-        lying: (tex, x, y, z, u, v, uw, vh, lying, size) => sprites(tex, [{ x, y, z, u, v, uw, vh, phase: 0, droop: 0, scale: 1, index: -6 }], size, size * lying, true),
+        lying: (tex, x, y, z, u, v, uw, vh, lying, size) => sprites(tex, [{ x, y, z, u, v, uw, vh, phase: 0, droop: 0, scale: 1, index: -6 }], size, size * lying, "lying"),
       },
       visitors.list,
     );
@@ -1004,7 +1004,12 @@ export class GardenScene {
       const k = TREE_KINDS[Math.round(t.u * 4)];
       this.hitBoxes.push(spriteBox(k.id, t.x, t.y, t.z, k.half * t.scale, k.top * t.scale));
     }
-    const treeMesh = sprites(treeTex, trees);
+    // Each tree is two cards slotted into an X, as in a paper model, turned by its phase: no more random numbers.
+    const cards = trees.flatMap((t) => [
+      { ...t, droop: t.phase },
+      { ...t, droop: t.phase + Math.PI / 2 },
+    ]);
+    const treeMesh = sprites(treeTex, cards, SPRITE_W, SPRITE_H, "fixed");
     this.mats.add(treeMesh.material);
     this.scene.add(still(treeMesh));
   }
