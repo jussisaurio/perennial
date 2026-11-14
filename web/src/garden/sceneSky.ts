@@ -29,6 +29,12 @@ const SUN_DIST = 200;
  */
 const cloudColor = (hex: number) => new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace);
 const CLOUD: Record<TimeOfDay, THREE.Color> = { day: cloudColor(0xffffff), dusk: cloudColor(0xffd2c0), night: cloudColor(0x353d49) };
+/**
+ * Each cloud hangs from the dome on a thread, as in a paper theatre (#1164). `tie`: how high over the cloud's middle
+ * the thread is tied on (m), just under the top of its top puff (textures.ts cloud()). `out`: how far out the clouds
+ * hang (m). `shade`: how much darker than its cloud the thread is.
+ */
+const THREAD = { tie: 5.1, out: 130, shade: 0.72 };
 /** How fast the clouds drift (rad/s), and how much faster for each part of the day a second while time speeds up on the bench (#362), up to `max`. */
 const CLOUD_DRIFT = { speed: 0.004, race: 4, max: 0.6 };
 /**
@@ -85,6 +91,10 @@ export class SkyWater implements Part {
   private drift = CLOUD_DRIFT.speed;
   private sunAt: [number, number, number] = [0, 0, 0];
   private clouds: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
+  /** The clouds' threads, one material for all. */
+  private thread = new THREE.LineBasicMaterial({ fog: false, depthWrite: false });
+  /** Scratch for blend's cloud colour: blend runs each frame on the bench. */
+  private readonly tint = new THREE.Color();
   private sun!: THREE.Sprite;
   private water!: THREE.Texture;
   private stars!: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
@@ -223,12 +233,20 @@ export class SkyWater implements Part {
     hillRing.renderOrder = -1;
     c.scene.add(still(hillRing));
     this.hillProfile = T.hillProfile();
+    // A thread a metre long, up from its tie: each cloud's is stretched to reach the dome, `roof` high where they hang.
+    const thread = new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0, 0, 1, 0], 3));
+    const roof = Math.sqrt(SKY_R * SKY_R - THREAD.out * THREAD.out);
     for (let i = 0; i < 9; i++) {
       const cloud = new THREE.Mesh(new THREE.PlaneGeometry(22, 11), new THREE.MeshBasicMaterial({ map: cloudTex, alphaTest: 0.5, fog: false, depthWrite: false }));
       const a = (i / 9) * Math.PI * 2 + rand();
-      cloud.position.set(Math.cos(a) * 130, 42 + rand() * 22, Math.sin(a) * 130);
+      cloud.position.set(Math.cos(a) * THREAD.out, 42 + rand() * 22, Math.sin(a) * THREAD.out);
       cloud.lookAt(0, cloud.position.y, 0);
       cloud.renderOrder = -1;
+      const line = new THREE.Line(thread, this.thread);
+      line.position.y = THREAD.tie;
+      line.scale.y = roof - cloud.position.y - THREAD.tie;
+      line.renderOrder = -1;
+      cloud.add(line);
       this.clouds.push(cloud);
       c.scene.add(cloud);
     }
@@ -289,7 +307,7 @@ export class SkyWater implements Part {
     const look = this.looks[c.time];
     show(this.skyMat, look.sky);
     show(this.hillMat, look.hills);
-    for (const cloud of this.clouds) cloud.material.color.copy(CLOUD[c.time]);
+    this.tintClouds(CLOUD[c.time]);
     show(this.sun.material, look.sun);
     // At dusk, like the hills, it keeps its day look.
     show(this.house.material, c.night ? this.houseLooks.night : this.houseLooks.day);
@@ -312,10 +330,16 @@ export class SkyWater implements Part {
     show(this.skyMat, this.looks[look.from].sky);
     show(this.nextSky.material, this.looks[look.to].sky);
     this.nextSky.material.opacity = look.k;
-    for (const cloud of this.clouds) cloud.material.color.copy(CLOUD[look.from]).lerp(CLOUD[look.to], look.k);
+    this.tintClouds(this.tint.copy(CLOUD[look.from]).lerp(CLOUD[look.to], look.k));
     if (this.reducedMotion) return;
     const at = sunPath(look, this.sunAt);
     this.sunDir.set(at[0], at[1], at[2]).normalize();
+  }
+
+  /** The clouds in `color`, and their threads a shade darker. */
+  private tintClouds(color: THREE.Color) {
+    for (const cloud of this.clouds) cloud.material.color.copy(color);
+    this.thread.color.copy(color).multiplyScalar(THREAD.shade);
   }
 
   tick(f: Frame) {
