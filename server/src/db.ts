@@ -11,7 +11,7 @@ import { AppConfig } from "./config";
  * How every client of ours connects to `url`: the pool, the housekeeping
  * run's one connection, the tests' own connections.
  *
- * TLS, by the URL's sslmode, in sql-pg 4.0.0:
+ * TLS, by the URL's sslmode, in sql-pg 4.1 (the same as in 4.0):
  * - require: TLS without checking the server's certificate. That is libpq's
  *   meaning, and Bun.SQL's; sql-pg alone would check it, so it is set here.
  * - verify-full: TLS, certificate and host name checked.
