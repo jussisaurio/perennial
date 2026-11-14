@@ -1,6 +1,7 @@
 // The named garden spots and how to open the walk (#699, #974): one list for the screenshot
 // script (shots.ts) and the look tool (look.ts). To add a spot, add an entry to SPOTS.
 
+import type { HitBox } from "../src/garden/scenery";
 import { gameSeconds, readRowsAgain, standAtDoor } from "./helpers";
 import { expect, type Page } from "./test";
 
@@ -110,6 +111,38 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
     page.evaluate(() => {
       const g = window.__garden.game;
       Object.assign(g.me, { x: g.bench.x - 1.05, z: g.bench.z - 0.75, yaw: Math.PI, pitch: -0.45 });
+    }),
+  // 1.3 m from the first visitor in the garden, looking at it, from the first side round it (from where the walk opens)
+  // where no solid thing is in the way (#1164): its drawing up close. Open with --visitors <id>. The bird hops off
+  // nearer than 1 m (kinds/bird.ts SHY).
+  visitor: (page) =>
+    page.evaluate(async () => {
+      const { EYE } = await import(/* @vite-ignore */ "/src/garden/game.ts");
+      const { rayBox, unturn } = await import(/* @vite-ignore */ "/src/garden/scenery.ts");
+      // The scene's parts this reads are private to it, as whole-cutout.spec.ts reads them.
+      type Drawn = {
+        hitBoxes: HitBox[];
+        guests: { sprites: { size: number; body: { visible: boolean; x: number; y: number; z: number } }[] };
+      };
+      const s = window.__garden as unknown as Drawn;
+      const v = s.guests.sprites.find((v) => v.body.visible);
+      if (!v) throw new Error("no visitor in view today: open with --visitors <id>");
+      const g = window.__garden.game;
+      // Where it is drawn now: a visitor may wait away from its home (by the key, #802). Look at the middle of its cell's lower half.
+      const { x, z } = v.body;
+      const y = v.body.y + v.size * 0.25;
+      const from = Math.atan2(g.me.x - x, g.me.z - z);
+      for (let i = 0; i < 8; i++) {
+        const a = from + (i * Math.PI) / 4;
+        const [sx, sz] = [x + Math.sin(a) * 1.3, z + Math.cos(a) * 1.3];
+        const d = Math.hypot(1.3, EYE - y);
+        const ray = { ox: sx, oy: EYE, oz: sz, dx: (x - sx) / d, dy: (y - EYE) / d, dz: (z - sz) / d };
+        if (s.hitBoxes.some((b) => rayBox(unturn(ray, b), b.min, b.max) < d)) continue;
+        // Forward is -z at yaw 0.
+        Object.assign(g.me, { x: sx, z: sz, yaw: a, pitch: -Math.atan2(EYE - y, 1.3) });
+        return;
+      }
+      throw new Error("something solid is in the way from every side");
     }),
   // By the diary's stone, in reach of it (#858): the book, and its ribbon while a page is unread.
   "hill-stone": (page) => standOnHill(page, "stone"),
