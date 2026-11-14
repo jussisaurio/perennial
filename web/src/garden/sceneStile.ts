@@ -190,6 +190,9 @@ export class StileScene {
     yield;
     // Clumps of leaves: stacked up the face toward the garden, and over the top further back. [x, y, z, rx, ry, rz, light]
     const clumps: number[][] = [];
+    // How light a clump `y` up a thicket `h` high is: darker low down. Its faces you see from the garden and the
+    // hilltop are turned from the sun, so even the lowest stays well off black.
+    const light = (y: number, h: number) => 0.75 + (0.3 * y) / h;
     for (let x = x0; x < x1; x += 0.42) {
       const top = THICKET.h * (0.85 + 0.3 * r());
       for (const [k, back] of [[0, THICKET.near + 0.5], [1, 1.2], [2, 1.9], [3, 2.7]]) {
@@ -200,7 +203,7 @@ export class StileScene {
         const ys = k === 0 ? [0.4, 0.95, 1.5, top - 0.3] : [top - 0.35 - r() * 0.3];
         for (const y of ys) {
           const rad = 0.38 + r() * 0.2;
-          clumps.push([cx + (r() - 0.5) * 0.15, y, cz, rad * 1.15, rad * 0.85, rad, 0.55 + (0.45 * y) / THICKET.h]);
+          clumps.push([cx + (r() - 0.5) * 0.15, y, cz, rad * 1.15, rad * 0.85, rad, light(y, THICKET.h)]);
         }
       }
     }
@@ -218,7 +221,7 @@ export class StileScene {
         for (const y of inner ? [0.35, 0.85, top - 0.3] : [top - 0.35 - r() * 0.3]) {
           // The face, smaller: it reaches in no further than the edge you stop at, so your eye stays out of it.
           const rad = inner ? 0.3 + r() * 0.1 : 0.38 + r() * 0.2;
-          clumps.push([cx, ground + y, cz, rad * 1.15, rad * 0.85, rad, 0.55 + (0.45 * y) / RING.h]);
+          clumps.push([cx, ground + y, cz, rad * 1.15, rad * 0.85, rad, light(y, RING.h)]);
         }
       }
     }
