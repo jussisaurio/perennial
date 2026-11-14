@@ -7,7 +7,7 @@ inputs:
     description: '"true" starts Postgres (docker compose) and waits until it is ready.'
     default: "false"
   browser:
-    description: A Playwright browser to install (chromium or webkit), or empty for none.
+    description: Playwright browsers to install (chromium, webkit, or both with a space between), or empty for none.
     default: ""
 runs:
   using: composite

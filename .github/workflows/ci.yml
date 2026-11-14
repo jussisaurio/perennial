@@ -112,3 +112,48 @@ jobs:
             web/playwright-report/
             web/test-results/
           retention-days: 7
+
+  e2e-changed:
+    name: End-to-end (changed specs)
+    # A PR runs the spec files it adds or changes, so a new spec's first run is not on main (#1138).
+    # A change to a shared helper (helpers.ts, spots.ts) runs nothing here: the full suite is main's job.
+    # scripts/merge.sh waits for this job: change its name there too.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2 # The PR's merge commit and its parents: HEAD^1 is main.
+      - name: Find the changed specs
+        id: changed
+        # Deleted specs are left out (--diff-filter=d). garden-touch.spec is the one spec that
+        # runs on WebKit (the iphone project in web/playwright.config.ts).
+        run: |
+          specs=$(git diff --name-only --diff-filter=d HEAD^1 HEAD -- 'web/e2e/*.spec.ts' | sed 's|^web/||' | xargs)
+          browsers=$(for s in $specs; do [ "$s" = e2e/garden-touch.spec.ts ] && echo webkit || echo chromium; done | sort -u | xargs)
+          echo "specs: ${specs:-none}"
+          echo "specs=$specs" >> "$GITHUB_OUTPUT"
+          echo "browsers=$browsers" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/setup
+        if: steps.changed.outputs.specs != ''
+        with:
+          postgres: "true"
+          browser: ${{ steps.changed.outputs.browsers }}
+      - name: Run e2e
+        if: steps.changed.outputs.specs != ''
+        working-directory: web
+        env:
+          SPECS: ${{ steps.changed.outputs.specs }}
+        # Playwright runs each spec in every project that matches it, as main's jobs together do.
+        # xargs gives each spec as its own argument.
+        run: echo "$SPECS" | xargs bunx playwright test
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-changed
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 7
