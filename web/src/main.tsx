@@ -33,7 +33,9 @@ window.addEventListener("vite:preloadError", (e) => {
     if (Date.now() - last < 60_000) return;
     sessionStorage.setItem("reloaded-for-chunk", String(Date.now()));
   } catch {
-    // No storage: reload anyway.
+    // No storage, so no way to count reloads: a chunk gone for good would reload forever (#250).
+    // Storage throws when the browser blocks this site's data, which blocks the sign-in cookie too: the app can't work then anyway.
+    return;
   }
   e.preventDefault();
   location.reload();
