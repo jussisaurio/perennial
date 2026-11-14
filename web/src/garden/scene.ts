@@ -24,6 +24,7 @@ import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBo
 import { HILLS, SKY_R, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
 import { GRAIN } from "./paper";
+import { Lens } from "./sceneLens";
 import { litMaterial, Sun } from "./sceneLight";
 import { Door, DOOR } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
@@ -146,14 +147,17 @@ const LAMP = new THREE.Color(1, 0.72, 0.4);
  * Each time of day's tint for everything, and its fog, made once: the time-lapse on the bench (#362) blends them every
  * frame. With the light (sceneLight.ts): `key` for the side the sun (or moon) is on, `fill` for the side in shade, and
  * `lamp`, the lanterns' light. The fill is a little cool, as a shade under a clear sky is, and light enough that paper in it still reads as white; the key warm, most at dusk.
+ * With the lens (sceneLens.ts), the photo's grade: `lift`, the colour the dark is lifted toward, and `gain`, the light's scale.
  */
-const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color; key: THREE.Color; fill: THREE.Color; lamp: THREE.Color }> = {
+const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color; key: THREE.Color; fill: THREE.Color; lamp: THREE.Color; lift: THREE.Color; gain: THREE.Color }> = {
   day: {
     tint: new THREE.Color(...T.SKIES.day.tint),
     fog: new THREE.Color(T.SKIES.day.fog),
     key: new THREE.Color(1.06, 1.02, 0.94),
     fill: new THREE.Color(0.8, 0.81, 0.86),
     lamp: new THREE.Color(0, 0, 0),
+    lift: new THREE.Color(0, 0.004, 0.01),
+    gain: new THREE.Color(1.03, 1.01, 0.97),
   },
   dusk: {
     tint: new THREE.Color(...T.SKIES.dusk.tint),
@@ -161,6 +165,8 @@ const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color; key: THREE
     key: new THREE.Color(1.16, 1, 0.82),
     fill: new THREE.Color(0.7, 0.68, 0.78),
     lamp: LAMP.clone().multiplyScalar(0.45),
+    lift: new THREE.Color(0.012, 0, 0.02),
+    gain: new THREE.Color(1.04, 0.98, 0.9),
   },
   night: {
     tint: new THREE.Color(...T.SKIES.night.tint),
@@ -168,6 +174,8 @@ const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color; key: THREE
     key: new THREE.Color(1, 1.02, 1.08),
     fill: new THREE.Color(0.78, 0.8, 0.86),
     lamp: LAMP.clone(),
+    lift: new THREE.Color(0, 0.004, 0.014),
+    gain: new THREE.Color(0.97, 0.985, 1.02),
   },
 };
 
@@ -238,6 +246,8 @@ export class GardenScene {
   private readonly lampNow = new THREE.Color();
   /** The sun's light and shadows, and the lanterns' light (sceneLight.ts). */
   private readonly sun: Sun;
+  /** The scene drawn as a photo (sceneLens.ts). */
+  private readonly lens: Lens;
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
   private mats = new Set<THREE.ShaderMaterial>();
   private basic: THREE.MeshBasicMaterial[] = [];
@@ -298,8 +308,8 @@ export class GardenScene {
   private guests: SceneVisitors;
 
   /**
-   * @param start The detail the walk opens with. Above low, it smooths the edges of shapes (#1106) for the WebGL
-   * context's whole life: not at low, which tests pin, as CI draws WebGL in software (#793), where MSAA made a frame
+   * @param start The detail the walk opens with. Above low, it smooths the edges of shapes (#1106) for the walk's whole
+   * life (the lens's target): not at low, which tests pin, as CI draws WebGL in software (#793), where MSAA made a frame
    * 30–90% slower.
    */
   constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: DeckLang, visitors: WalkVisitors, start: Detail) {
@@ -313,11 +323,13 @@ export class GardenScene {
     this.msaa = msaa;
     THREE.ColorManagement.enabled = false;
     // Our own context, as three always asks for one with an alpha channel. A plant's smoothed edge writes an alpha
-    // under 1 (#1116), and the page showed through it as a light rim.
-    const gl = canvas.getContext("webgl2", { alpha: false, antialias: msaa, powerPreference: "low-power" });
+    // under 1 (#1116), and the page showed through it as a light rim. With the lens (sceneLens.ts) the scene is drawn
+    // into its target, which has the depth and the smoothing, and the canvas gets one flat pass: it needs neither. With
+    // none (at low) the scene is drawn on the canvas, which needs depth.
+    const gl = canvas.getContext("webgl2", { alpha: false, antialias: false, depth: !msaa, powerPreference: "low-power" });
     // useGardenScene shows "Your browser cannot show 3D graphics." for this.
     if (!gl) throw new Error("No WebGL 2 context");
-    this.renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: msaa, powerPreference: "low-power" });
+    this.renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: false, depth: !msaa, powerPreference: "low-power" });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     this.renderer.setPixelRatio(1);
     // Reading the shader logs on a program's first use waits for the GPU: ~10 ms of a first draw at CPU 10× (#571).
@@ -325,6 +337,7 @@ export class GardenScene {
     this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
     this.sun = new Sun(this.renderer, this.scene);
     this.sun.setShadows(start !== "low");
+    this.lens = new Lens(this.renderer, msaa);
     this.camera.rotation.order = "YXZ";
     this.plants = new Plants(
       this.renderer,
@@ -602,12 +615,9 @@ export class GardenScene {
         this.camera.layers.set(WARM_LAYER);
         o.layers.enable(WARM_LAYER);
         this.scene.matrixWorldAutoUpdate = false;
-        this.renderer.setScissorTest(true);
-        this.renderer.setScissor(0, 0, 1, 1);
         try {
-          this.renderer.render(this.scene, this.camera);
+          this.lens.drawPixel(this.renderer, this.scene, this.camera);
         } finally {
-          this.renderer.setScissorTest(false);
           this.scene.matrixWorldAutoUpdate = true;
           o.layers.disable(WARM_LAYER);
           this.camera.layers.mask = seen;
@@ -855,6 +865,8 @@ export class GardenScene {
         this.keyNow.copy(a.key).lerp(b.key, look.k);
         this.fillNow.copy(a.fill).lerp(b.fill, look.k);
         this.lampNow.copy(a.lamp).lerp(b.lamp, look.k);
+        this.lens.lift.copy(a.lift).lerp(b.lift, look.k);
+        this.lens.gain.copy(a.gain).lerp(b.gain, look.k);
         this.tint();
       },
       trip: (to) => {
@@ -1306,6 +1318,8 @@ export class GardenScene {
     this.keyNow.copy(l.key);
     this.fillNow.copy(l.fill);
     this.lampNow.copy(l.lamp);
+    this.lens.lift.copy(l.lift);
+    this.lens.gain.copy(l.gain);
     this.tint();
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
@@ -1359,6 +1373,7 @@ export class GardenScene {
     // ResizeObserver callback repeats the size the walk opened with.
     const now = this.renderer.getSize(new THREE.Vector2());
     if (now.x !== w || now.y !== h) this.renderer.setSize(w, h, false);
+    this.lens.setSize(w, h);
     this.camera.aspect = cssW / cssH;
     this.camera.updateProjectionMatrix();
     // Framebuffer pixels per metre at 1 m, for the z's and the bits' point size.
@@ -1514,7 +1529,7 @@ export class GardenScene {
     }
 
     this.sun.place(this.camera, this.sky.sunDir, this.keyNow, this.fillNow, this.lampNow, g.lamps);
-    this.renderer.render(this.scene, this.camera);
+    this.lens.draw(this.renderer, this.scene, this.camera);
     this.labels();
   }
 
