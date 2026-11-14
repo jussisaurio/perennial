@@ -22,6 +22,8 @@
       "name": "perennial-scripts",
       "devDependencies": {
         "@anthropic-ai/sdk": "^0.133.0",
+        "@babel/parser": "^7.29.0",
+        "@babel/types": "^7.29.0",
         "@types/bun": "^1.4.2",
         "effect": "4.1.4",
         "typescript": "~7.0.2",

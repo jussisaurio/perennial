@@ -10,6 +10,7 @@
     "real-use:sim": "TZ=UTC bun web/src/realUse/sim.ts",
     "knip": "knip && knip --production",
     "deadcode": "bun scripts/deadcode.ts",
+    "mutate": "bun scripts/mutate.ts",
     "typecheck": "bun run --filter '*' typecheck",
     "lint": "bun run --filter '*' lint"
   },
