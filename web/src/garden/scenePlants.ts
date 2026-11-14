@@ -19,6 +19,8 @@ import * as T from "./textures";
 
 /** The plant the action button shakes stands this much taller (#689): a steady mark, like a note lifting off the wall, never a flash. */
 const READY_GROW = 0.08;
+/** It grows to that over this long (s), and settles back as slowly. In one frame, it read as a fault: the plants jumped taller as you came near (#1109). */
+const READY_TIME = 0.4;
 
 // Plants: like other sprites (BILLBOARD, SHADE: sceneSprites.ts), but each
 // samples its small sprite, or its full-size one once the streamer has put
@@ -29,9 +31,9 @@ const PLANT_VERT = /* glsl */ `
   attribute vec2 iCell; // low cell, high slot (-1: none yet)
   attribute float iLean; // brushed by the walker (#359): radians, springing back to 0
   attribute float iOld; // 1: an old friend (plants.ts isOld)
+  attribute float iReady; // how far it stands taller for the action button (#689): 0 to 1, eased
   uniform vec4 uPerk; // plant index, growth; neighbour index, growth
   uniform vec2 uShake; // plant index, lean (#357)
-  uniform float uReady; // the plant the action button shakes (#689)
   uniform vec2 uSneeze; // plant index, squash (#360)
   uniform vec2 uLowSize;
   uniform vec2 uHiSize;
@@ -51,7 +53,7 @@ const PLANT_VERT = /* glsl */ `
     // A plant that hears its name grows a few percent for a moment.
     float perk = (abs(iParams.w - uPerk.x) < 0.5 ? uPerk.y : 0.0) + (abs(iParams.w - uPerk.z) < 0.5 ? uPerk.w : 0.0);
     // The plant the action button shakes stands a little taller, for as long as it is the one.
-    float ready = abs(iParams.w - uReady) < 0.5 ? ${READY_GROW.toFixed(2)} : 0.0;
+    float ready = iReady * ${READY_GROW.toFixed(2)};
     // A shaken plant shivers: it leans side to side for a moment (#357). A brushed one leans away and springs back (#359).
     float shake = abs(iParams.w - uShake.x) < 0.5 ? uShake.y : 0.0;
     // A plant a dandelion seed lands on sneezes (#360): squashed down and out for a moment.
@@ -115,7 +117,6 @@ function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture): THREE.S
       uSelected: { value: -1 },
       uPerk: { value: new THREE.Vector4(-1, 0, -1, 0) },
       uShake: { value: new THREE.Vector2(-1, 0) },
-      uReady: { value: -1 },
       uSneeze: { value: new THREE.Vector2(-1, 0) },
       uSilver: { value: 0 },
     },
@@ -148,8 +149,13 @@ export class Plants {
   private near = new Float64Array(0);
   /** Every plant's material, for the perk uniform; also added to ctx.mats for GardenScene's per-frame loop. */
   private plantMats: THREE.ShaderMaterial[] = [];
-  /** The plant the action button shakes (an index into the layout's plants; -1: none), kept for materials built after it was chosen. */
+  /** The plant the action button shakes (an index into the layout's plants; -1: none). */
   private readyIndex = -1;
+  /** How far each plant stands taller for the action button, 0 to 1 (#689), before easing; and the plants on the way up or down, the one it shakes among them. */
+  private risen: Float32Array;
+  private rising: number[] = [];
+  /** Where each plant's rise is drawn (once its bed's mesh is built). */
+  private readyRef: { attr: THREE.InstancedBufferAttribute; i: number }[] = [];
   /** A plant perking up when it hears its name: its index, when it began, and the neighbour that thought it was called (-1: none). */
   private perk = { i: -1, at: 0, n: -1 };
   /** A shaken plant (#357): its index, when, and the forms falling from it as petals ([]: one leaf). */
@@ -180,6 +186,7 @@ export class Plants {
     this.behindHedge = behindHedge;
     this.onBrush = onBrush;
     this.brush = brush(layout);
+    this.risen = new Float32Array(layout.plants.length);
     this.fullMoon = fullMoon;
   }
 
@@ -292,7 +299,6 @@ export class Plants {
     this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h, T.LOW_LEVELS));
     const mats = this.low.map((tex) => {
       const m = plantMaterial(tex, pool);
-      m.uniforms.uReady.value = this.readyIndex;
       ctx.mats.add(m);
       this.plantMats.push(m);
       return m;
@@ -334,6 +340,9 @@ export class Plants {
       const leanAttr = new THREE.InstancedBufferAttribute(new Float32Array(idx.length), 1);
       leanAttr.setUsage(THREE.DynamicDrawUsage);
       geo.setAttribute("iLean", leanAttr);
+      const readyAttr = new THREE.InstancedBufferAttribute(new Float32Array(idx.length), 1);
+      readyAttr.setUsage(THREE.DynamicDrawUsage);
+      geo.setAttribute("iReady", readyAttr);
       geo.setAttribute("iPos", new THREE.InstancedBufferAttribute(pos, 3));
       geo.setAttribute("iParams", new THREE.InstancedBufferAttribute(params, 4));
       geo.setAttribute("iCell", cellAttr);
@@ -348,6 +357,7 @@ export class Plants {
       idx.forEach((pi, k) => {
         this.hiRef[pi] = { attr: cellAttr, i: k };
         this.leanRef[pi] = { attr: leanAttr, i: k };
+        this.readyRef[pi] = { attr: readyAttr, i: k };
       });
     }
   }
@@ -466,10 +476,36 @@ export class Plants {
     this.perk.n = neighbourPerks() ? nearestPlant(this.layout.plants, i) : -1;
   }
 
-  /** Mark the plant the action button shakes (#689), or none. */
+  /** Mark the plant the action button shakes (#689), or none: it rises, and the last one settles back (tickReady). */
   ready(p: PlacedPlant | null) {
     this.readyIndex = p ? this.layout.plants.indexOf(p) : -1;
-    for (const m of this.plantMats) m.uniforms.uReady.value = this.readyIndex;
+    if (this.readyIndex >= 0 && !this.rising.includes(this.readyIndex)) this.rising.push(this.readyIndex);
+  }
+
+  /**
+   * Eases each rising plant toward standing taller, or back, so its size never steps (#1109). With reduced motion too:
+   * a step is what looked like a fault (accessibility.md, section 6). No allocations: it runs every frame.
+   */
+  private tickReady(dt: number) {
+    const { rising, risen } = this;
+    for (let k = rising.length - 1; k >= 0; k--) {
+      const i = rising[k];
+      // Before loadPlants has built the beds' meshes there is nothing to draw the rise on yet: it starts once they are.
+      const ref = this.readyRef[i];
+      if (!ref) continue;
+      const up = i === this.readyIndex;
+      const a = up ? Math.min(1, risen[i] + dt / READY_TIME) : Math.max(0, risen[i] - dt / READY_TIME);
+      if (a !== risen[i]) {
+        risen[i] = a;
+        ref.attr.setX(ref.i, a * a * (3 - 2 * a));
+        ref.attr.needsUpdate = true;
+      }
+      // Settled back: out of the list (the order does not matter).
+      if (!up && a === 0) {
+        rising[k] = rising[rising.length - 1];
+        rising.pop();
+      }
+    }
   }
 
   /**
@@ -542,7 +578,7 @@ export class Plants {
     if (done) k.i = -1;
   }
 
-  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, the perk and sneeze uniforms, and brushing. */
+  /** Chunk culling (beds outside the fog are skipped), streaming the plants nearest you, the perk and sneeze uniforms, brushing, and the plant in reach rising. */
   tick(f: Frame) {
     const { elapsed, x, z, yaw } = f;
     for (const c of this.chunks) c.mesh.visible = c.center.distanceTo(this.camera.position) - c.radius < FOG_FAR;
@@ -554,6 +590,7 @@ export class Plants {
     this.tickShake(elapsed);
     this.tickSneeze(elapsed);
     this.tickBrush(f);
+    this.tickReady(f.dt);
   }
 
   /** Brushing the beds (#359): plants you walk right past lean away and spring back, and one plays its note. No allocations. */

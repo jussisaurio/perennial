@@ -34,7 +34,7 @@ When the device asks for something (less motion, dark colors, sound off), we fol
 
 ## 6. Motion is small, and reduced motion stops it
 
-Motion is never needed to understand a screen. With `prefers-reduced-motion: reduce`, transitions end at once (`index.css`), the growing moment does not play, and the garden's sway and glow stop. A new animation must check this too. Source: WCAG 2.3.3.
+Motion is never needed to understand a screen. With `prefers-reduced-motion: reduce`, transitions end at once (`index.css`), the growing moment does not play, and the garden's sway and glow stop. A new animation must check this too. One exception: the plant the action button can shake rises slowly even then, because a sudden jump in size looked like a fault (#1109). Source: WCAG 2.3.3.
 
 ## 7. The garden walk has another way in
 

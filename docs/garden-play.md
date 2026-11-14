@@ -18,7 +18,7 @@ What to build is in [direction.md](direction.md), section 3. The physics are in 
 
 - **No instruction text in the walk (#334).** The world shows what can be done. The one action button is icon-only, and its accessible name says the action.
 - **A glint is only late help (#689).** Use it only for a thing the learner has not found after a long time, like the key's glint. It never means "in reach", and it never shows on a thing already found or used.
-- **Show the button's target quietly.** If the button could act on one of several things that look alike, mark that one with a small, steady change that fits the thing: a shed note lifts off the wall and hangs straight, a plant stands a little taller. Never flash or pulse it.
+- **Show the button's target quietly.** If the button could act on one of several things that look alike, mark that one with a small, steady change that fits the thing: a shed note lifts off the wall and hangs straight, a plant slowly stands a little taller. Never flash or pulse it. A sudden change in size reads as a fault (#1109).
 - **Nothing asks the learner to practise, and nothing is lost.** No scores, timers, currency or nags. Nothing withers.
 - **Phones:** one thumb, sound off. Anything that uses sound also shows it.
 - **Screen readers:** each verb works through the action button, which has a name, plus a short status line.
