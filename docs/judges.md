@@ -1,6 +1,6 @@
 # How good are the agent judges?
 
-A back-test from 2026-11-14 (#976, part of #987). The first part covers UI look and garden feel. The story judges are in [Story](#story), at the end. Audio is not tested.
+A back-test from 2026-11-14 (#976, part of #987). The first part covers UI look and garden feel. Two more tests are at the end: the story judges in [Story](#story), and a judge that compares two versions of a screen in ["Which of two is better?"](#which-of-two-is-better-1004). Audio is not tested.
 
 **The question:** when an agent judge looks at screenshots of this app, how often does it find the problems the owner found? And how often does it raise an alarm on a version that is fixed?
 
@@ -171,3 +171,56 @@ The harness is [scripts/story-judge.ts](../scripts/story-judge.ts) (`folders`, `
 - b is dropped. It costs 2 more agents each time an earlier part changes, and it did no better than a2.
 - The judges are not the owner's taste in jokes. A judge vote against a joke is weak evidence.
 - To measure taste, we need more of the owner's own choices between two lines (#1069).
+
+## Which of two is better? (#1004)
+
+A second back-test, also from 2026-11-14. The open-ended judge above raises too many false alarms to stop a merge. So this test asks a narrower question. A fresh judge sees two versions of one screen, before and after a change, in random order and with no labels. It says which one the owner would rather ship, or "same", in one line.
+
+**The short answer.**
+
+| | Runs |
+| --- | --- |
+| Owner's fixes, held-out half: picked the fixed version | 45 of 56 (80%) |
+| ...the same, without the `stileshut` case (below) | 45 of 48 (94%) |
+| Owner's fixes, tuning half (final prompt) | 9 of 10 |
+| Identical pictures: said "same" | 12 of 12 |
+| Planted regressions: picked the version without it | 16 of 16 |
+| Pairs where every run gave the same answer | 26 of 28 |
+| Runs that picked the version shown as A | 39 of 72 |
+
+We set the bar before the test: 85% on the held-out half, with low variance. **80% does not pass, so this judge is not the UI check.** Nearly all of the misses are one garden case, where still pictures show the wrong thing (below). On app screens and on text in the world, it agreed with the owner in 45 of 48 runs. It never called two identical pictures different, and it caught every planted regression.
+
+### Method
+
+1. **Pairs.** [judges/pairs.json](judges/pairs.json) lists 24 real pairs from 10 issues: the 8 cases above, #1009 (contrast) and #625 (polish on 6 screens; an agent found these, and the owner merged the fix). Each pair is one screen or garden spot, at the commit before the fix and at the merge commit, on a phone or a desktop.
+2. **Controls.** 6 identical pairs (one capture twice), and 8 regressions we planted on today's `main` with CSS or a text change: a date line 10 px out of line, pale body text, spacing cut to 2 px, a jokey main button, two sibling buttons of different shapes, a serif font on the card, the open tab shown by colour alone, and word rows drawn over each other. They are `PLANTS` in [judges/capture.spec.ts.txt](judges/capture.spec.ts.txt).
+3. **Folders.** `bun e2e/pairwise.ts build` (in web/) makes one folder per judge run, with a random name. It holds A and B (the order alternates from run to run), `steps.txt` and the rules. Where the pixels differ in a small part, it also holds that part enlarged, so the judge can read small text. Identical pairs get an enlarged middle, so that a missing zoom does not give the answer.
+4. **Judges.** Each run is one fresh Opus agent with [judges/pairwise-prompt.md](judges/pairwise-prompt.md). It sees one pair only.
+5. **Split.** We fixed it before any judge ran. Tuning: #650, #678, #711, #770, #1009. Held-out: #677, #710, #749, #779, #625. The final round ran each held-out pair 4 times (2 in each order) and each control 2 times.
+6. **Tuning.** The first prompt got 18 of 20 on the tuning half. Both misses were the sign case on a phone: the judge said "same", because it could not read the sign text. The final prompt adds the zooms and asks the judge to list every difference first. It got 9 of 10: on the phone the judge now saw the sign text, but it took the old English sign for Spanish. The pictures are at 1x pixel ratio, so the sign text is about 10 px high, and a zoom adds no detail. We stopped tuning there.
+7. **Scoring.** `bun e2e/pairwise.ts score <folder>` prints the numbers. Every verdict and its reason is in [judges/pairwise-results.json](judges/pairwise-results.json). There were 114 judge runs in all.
+
+### Where it went wrong
+
+- **`stileshut` (#749): 0 of 8.** Every judge picked the old version. The owner's problem was that the stile goes nowhere. Still pictures cannot show that: from the top board, the old path looks like a way up the hill. And in the fixed version, holding W puts the camera inside the brambles (#999). That is a real defect, and every judge named it. The same capture mistake as in the first test is here too: `steps.txt` says "steps" where there are none. So the judges were right that the fixed version shows a bug, and wrong by the owner's verdict.
+- **`polish-card` (#625): 2 of 4.** The fix lined the plant picture up with the column and made "Show answer" a wider box. Two runs chose the lined-up plant. Two chose the old round "Show answer", which matched the Undo button. This is a matter of taste, and the owner did not raise it.
+- **`quality` on desktop (#677): 3 of 4.** One run wanted to keep the "Normal quality" button. This is the product call that no judge made in the first test either.
+
+### Reasons to trust the numbers less
+
+- **We made the planted regressions, and they are plain.** A real regression is often smaller.
+- **Today's rules know some answers**, as in the first test (`nextplant`, and in-world language for `door`).
+- **1x pixel ratio.** `bun run shots` takes a phone at 2.625x. The judges saw less detail than the real shots give.
+- **The judges compare by eye.** A change of a few pixels can look "same" to them. The pixel diff (below) does not miss it.
+- **5 issues in the held-out half.** Read 80% and 94% as a rough size.
+
+### What would make it pass
+
+- Capture at the real pixel ratio, so in-world text can be read.
+- For a case about movement, frames that show the result of the move, or a short video, and a `steps.txt` that is checked against the frames.
+- More held-out cases, most of all in the garden.
+- Then run the held-out half again with the same prompt. If it passes, add the judge to `bun run compare`, as the UI check.
+
+### What shipped
+
+`bun run compare <folder> [-g "today|settings"]` (web/e2e/compare.ts) takes the shots on the main commit your branch started from (its merge base with `origin/main`) and on your branch, and lists the screens whose pixels changed, with the share of changed pixels and the box around them. `<folder>/diff/` marks the changed pixels in red. Use it to see every screen your change touched, then look at those screens yourself (docs/agents.md, "UI changes").
