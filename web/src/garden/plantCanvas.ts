@@ -38,8 +38,27 @@ function transform(ctx: OffscreenCanvasRenderingContext2D, list: string) {
   }
 }
 
-/** Fill, then stroke, with SVG's defaults: a black fill, no stroke, a stroke 1 wide with butt caps and a miter limit of 4. */
-function paint(ctx: OffscreenCanvasRenderingContext2D, shape: Path2D, p: Props, alpha: number) {
+/**
+ * The smallest marks the walk keeps wherever they fall on the pixel grid, in
+ * pixels: it cuts a sprite at half alpha (scenePlants.ts). Smaller ones covered
+ * less than half of every pixel: a small sprite lost its 0.6 px stems and a
+ * spike's top buds, and the plant seemed to grow when its full-size sprite came in (#1109).
+ */
+const MIN_LINE_PX = 1.25;
+const MIN_DOT_PX = 1.75;
+
+/** Pixels per unit here: Plant only scales evenly, so the transform's determinant is its square. */
+function pxPerUnit(ctx: OffscreenCanvasRenderingContext2D) {
+  const m = ctx.getTransform();
+  return Math.sqrt(Math.abs(m.a * m.d - m.b * m.c));
+}
+
+/**
+ * Fill, then stroke, with SVG's defaults: a black fill, no stroke, a stroke 1 wide with butt caps and a miter limit of 4.
+ * For a sprite the walk cuts, a line with no fill, such as a stem, is never narrower than MIN_LINE_PX. An outline on a
+ * fill may thin away: the fill keeps the shape, and a wider outline would darken a small flower.
+ */
+function paint(ctx: OffscreenCanvasRenderingContext2D, shape: Path2D, p: Props, alpha: number, cut: boolean) {
   const fill = p.fill === undefined ? "black" : String(p.fill);
   if (fill !== "none") {
     ctx.globalAlpha = alpha;
@@ -49,7 +68,8 @@ function paint(ctx: OffscreenCanvasRenderingContext2D, shape: Path2D, p: Props, 
   if (p.stroke !== undefined && p.stroke !== "none") {
     ctx.globalAlpha = alpha * (p.strokeOpacity === undefined ? 1 : num(p.strokeOpacity));
     ctx.strokeStyle = String(p.stroke);
-    ctx.lineWidth = p.strokeWidth === undefined ? 1 : num(p.strokeWidth);
+    const width = p.strokeWidth === undefined ? 1 : num(p.strokeWidth);
+    ctx.lineWidth = cut && fill === "none" ? Math.max(width, MIN_LINE_PX / pxPerUnit(ctx)) : width;
     ctx.lineCap = p.strokeLinecap === undefined ? "butt" : (String(p.strokeLinecap) as CanvasLineCap);
     ctx.lineJoin = "miter";
     ctx.miterLimit = 4;
@@ -61,42 +81,48 @@ function paint(ctx: OffscreenCanvasRenderingContext2D, shape: Path2D, p: Props, 
  * Draws a React node of SVG shapes. Opacity multiplies down a group: the same
  * as SVG's group opacity unless shapes in the group overlap. The walk draws
  * whole stages only, where the one group with an opacity (a golden glow) has it at 1.
+ * For a sprite the walk cuts, a circle or an ellipse is never less than MIN_DOT_PX across.
  */
-function draw(ctx: OffscreenCanvasRenderingContext2D, node: ReactNode, alpha: number) {
+function draw(ctx: OffscreenCanvasRenderingContext2D, node: ReactNode, alpha: number, cut: boolean) {
   if (node === null || node === undefined || typeof node === "boolean") return;
   if (Array.isArray(node)) {
-    for (const n of node) draw(ctx, n, alpha);
+    for (const n of node) draw(ctx, n, alpha, cut);
     return;
   }
   if (!isValidElement<Props>(node)) throw new Error(`plantCanvas: cannot draw ${String(node)}`);
   const { type, props } = node;
-  if (type === Fragment) return draw(ctx, props.children as ReactNode, alpha);
+  if (type === Fragment) return draw(ctx, props.children as ReactNode, alpha, cut);
   // Plant's parts are plain functions of their props, with no hooks: call them.
-  if (typeof type === "function") return draw(ctx, (type as (p: Props) => ReactNode)(props), alpha);
+  if (typeof type === "function") return draw(ctx, (type as (p: Props) => ReactNode)(props), alpha, cut);
   for (const k of Object.keys(props)) if (!KNOWN.has(k)) throw new Error(`plantCanvas: ${String(type)} ${k} is not drawn`);
   ctx.save();
   if (props.transform !== undefined) transform(ctx, String(props.transform));
   const a = alpha * (props.opacity === undefined ? 1 : num(props.opacity));
   const cx = props.cx === undefined ? 0 : num(props.cx); // SVG: no centre is the origin
   const cy = props.cy === undefined ? 0 : num(props.cy);
-  if (type === "g") draw(ctx, props.children as ReactNode, a);
-  else if (type === "path") paint(ctx, new Path2D(String(props.d)), props, a);
+  if (type === "g") draw(ctx, props.children as ReactNode, a, cut);
+  else if (type === "path") paint(ctx, new Path2D(String(props.d)), props, a, cut);
   else if (type === "circle") {
     const s = new Path2D();
-    s.arc(cx, cy, num(props.r), 0, Math.PI * 2);
-    paint(ctx, s, props, a);
+    const least = cut ? MIN_DOT_PX / 2 / pxPerUnit(ctx) : 0;
+    s.arc(cx, cy, Math.max(num(props.r), least), 0, Math.PI * 2);
+    paint(ctx, s, props, a, cut);
   } else if (type === "ellipse") {
     const s = new Path2D();
-    s.ellipse(cx, cy, num(props.rx), num(props.ry), 0, 0, Math.PI * 2);
-    paint(ctx, s, props, a);
+    const least = cut ? MIN_DOT_PX / 2 / pxPerUnit(ctx) : 0;
+    s.ellipse(cx, cy, Math.max(num(props.rx), least), Math.max(num(props.ry), least), 0, 0, Math.PI * 2);
+    paint(ctx, s, props, a, cut);
   } else throw new Error(`plantCanvas: <${String(type)}> is not drawn`);
   ctx.restore();
 }
 
-/** One plant at `scale`, its frame (VIEW_W × VIEW_H at scale 1) from the current origin, its foot 4 above the frame's bottom. */
-function drawPlant(ctx: OffscreenCanvasRenderingContext2D, p: SpritePlant, scale: number) {
+/**
+ * One plant at `scale`, its frame (VIEW_W × VIEW_H at scale 1) from the current origin, its foot 4 above the frame's bottom.
+ * `cut`: the walk keeps only its pixels of half alpha or more, so no mark is drawn too small to keep.
+ */
+function drawPlant(ctx: OffscreenCanvasRenderingContext2D, p: SpritePlant, scale: number, cut: boolean) {
   ctx.translate((VIEW_W / 2) * scale, (VIEW_H - 4) * scale);
-  draw(ctx, createElement(Plant, { word: p.lemma, growth: p.growth, stage: p.stage, scale }), 1);
+  draw(ctx, createElement(Plant, { word: p.lemma, growth: p.growth, stage: p.stage, scale }), 1, cut);
 }
 
 /** Where plantPng's sprite sits, in SVG units about the plant's foot: whole device pixels, so it is drawn 1:1. */
@@ -114,7 +140,8 @@ export function plantPng(p: SpritePlant, scale: number, dpr: number): Promise<Bl
   const c = new OffscreenCanvas(Math.round(box.width * dpr), Math.round(box.height * dpr));
   const ctx = c.getContext("2d")!;
   ctx.scale(dpr, dpr);
-  drawPlant(ctx, p, scale);
+  // Every mark at its true size: the strip shows soft edges and cuts nothing away.
+  drawPlant(ctx, p, scale, false);
   return c.convertToBlob();
 }
 
@@ -171,7 +198,7 @@ export function drawPlants(plants: SpritePlant[], cols: number, w: number, h: nu
     ctx.clip();
     ctx.translate((i % cols) * w, Math.floor(i / cols) * h);
     ctx.scale(w / VIEW_W, h / VIEW_H);
-    drawPlant(ctx, p, 1);
+    drawPlant(ctx, p, 1, true);
     ctx.restore();
   });
   const data = ctx.getImageData(0, 0, c.width, c.height);
