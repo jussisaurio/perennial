@@ -24,7 +24,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
 /** The clouds' colour at each time of day. */
-const CLOUD: Record<TimeOfDay, THREE.Color> = { day: new THREE.Color(0xffffff), dusk: new THREE.Color(0xffd2c0), night: new THREE.Color(0x39406a) };
+const CLOUD: Record<TimeOfDay, THREE.Color> = { day: new THREE.Color(0xffffff), dusk: new THREE.Color(0xffd2c0), night: new THREE.Color(0x353d49) };
 /** How fast the clouds drift (rad/s), and how much faster for each part of the day a second while time speeds up on the bench (#362), up to `max`. */
 const CLOUD_DRIFT = { speed: 0.004, race: 4, max: 0.6 };
 /**
