@@ -1220,10 +1220,11 @@ export function ripple(): OffscreenCanvas {
 
 // ---- Word plants --------------------------------------------------------
 //
-// Two levels of detail. Every plant has a small sprite in a "low" sheet of up
+// Three levels of detail. Every plant has a small sprite in a "low" sheet of up
 // to 2048 plants. The plants near you also get a full-size sprite in a pool
-// of slots, streamed in batches as you walk. A worker draws them
-// (spriteWorker.ts), a run of plants at a time, so the page never waits (#459).
+// of slots, streamed in batches as you walk, and the few right in front of you
+// a near sprite. A worker draws them (spriteWorker.ts), a run of plants at a
+// time, so the page never waits (#459).
 
 export const ATLAS = 2048;
 export const LOW_W = 32;
@@ -1317,6 +1318,19 @@ export const lowRun = (plants: PlacedPlant[]) => drawn(plants, LOW_RUN, LOW_W, L
 export const highBatch = (plants: PlacedPlant[]) => drawn(plants, BATCH_COLS, HI_W, HI_H, HI_LEVELS);
 
 export const batchCell = (i: number) => ({ x: (i % BATCH_COLS) * HI_W, y: Math.floor(i / BATCH_COLS) * HI_H });
+
+/**
+ * A near sprite has 3 times the full-size sprite's pixels each way (#1154). At arm's length on a phone, one full-size
+ * pixel covered 4 to 5 screen pixels, and the smooth filter blurred every edge over that many.
+ */
+export const NEAR_W = 3 * HI_W;
+export const NEAR_H = 3 * HI_H;
+/** 8 near slots in rows of 4: about 21 MB on the GPU. No mipmaps: a near sprite is never drawn much smaller than it is. */
+export const NEAR_COLS = 4;
+export const NEAR_SLOTS = 8;
+
+/** One plant's near sprite. Each is 2.6 MB, so the page copies one at a time. */
+export const nearSprite = (plant: PlacedPlant) => drawn([plant], 1, NEAR_W, NEAR_H, 1);
 
 // ---- Decorations ----------------------------------------------------------
 
