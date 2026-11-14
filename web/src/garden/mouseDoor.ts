@@ -2,6 +2,7 @@
 // on its mat once it opens. Pure: where the mat lies, and when you stand by
 // it. sceneJokes.ts draws it.
 
+import { BULGE } from "./hedge";
 import type { NotePlace } from "./stile";
 import { HEDGE, type Layout } from "./world";
 
@@ -16,7 +17,7 @@ import { HEDGE, type Layout } from "./world";
 export const MOUSE_DOOR = { dx: -0.9, w: 0.13, h: 0.17, swing: 1.9, paper: { w: 0.1, h: 0.12 }, reach: 0.75 };
 
 export class MouseMat {
-  /** The hedge's face, where the door is. */
+  /** The front of the hedge's leaves, where the door is. */
   readonly z0: number;
   /** The middle of the mat. */
   readonly x: number;
@@ -27,7 +28,7 @@ export class MouseMat {
   constructor(l: Layout, note: NotePlace | null) {
     // Our own copy: reading it changes `unread`.
     this.note = note && { ...note };
-    this.z0 = l.bounds.maxZ + HEDGE.gap;
+    this.z0 = l.bounds.maxZ + HEDGE.gap - BULGE;
     this.x = l.gate.x + MOUSE_DOOR.dx;
     this.z = this.z0 - 0.08;
   }
