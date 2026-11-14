@@ -383,6 +383,8 @@ describe("the hidden key (#315)", () => {
   const gardens = [
     layout([]),
     layout([plant(1)]),
+    // Two beds, as the e2e demo learner's 30 words and llave.
+    layout(Array.from({ length: 31 }, (_, i) => plant(i))),
     layout(Array.from({ length: 70 }, (_, i) => plant(i, ["noun", "verb", "adj"][i % 3]))),
     layout(Array.from({ length: 600 }, (_, i) => plant(i, ["noun", "verb", "adj", "adv", "phrase"][i % 5]))),
   ];
@@ -416,6 +418,24 @@ describe("the hidden key (#315)", () => {
           expect(Math.hypot(x - k.x, z - k.z)).toBeLessThan(1);
           expect(collide(l, x, z)).toEqual({ x, z });
         }
+      }
+  });
+
+  test("key.dog-beside: the dog sits on open ground 0.6 to 1 m from the key, on the side away from the garden's middle where there is open ground", () => {
+    for (const l of gardens)
+      for (const spot of KEY_SPOTS) {
+        const k = keyAt(l, spot);
+        const [x, , z] = besideKey(l, k, "dog");
+        expect(collide(l, x, z)).toEqual({ x, z });
+        const d = Math.hypot(x - k.x, z - k.z);
+        expect(d).toBeGreaterThan(0.6);
+        expect(d).toBeLessThan(1);
+        // Under the bench the key lies between the bench and the pond: with the sundial, they leave the dog no room on the side away from the middle.
+        if (spot === "bench") continue;
+        const b = l.bounds;
+        const [ox, oz] = [k.x - (b.minX + b.maxX) / 2, k.z - (b.minZ + b.maxZ) / 2];
+        // The cosine of the angle from straight away to the dog: clearly that side, not a right angle that rounding decides (#1071).
+        expect(((x - k.x) * ox + (z - k.z) * oz) / (d * Math.hypot(ox, oz))).toBeGreaterThan(0.25);
       }
   });
 

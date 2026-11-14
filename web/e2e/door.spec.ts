@@ -342,35 +342,17 @@ type KeyScene = {
   doorAct(a: string): void;
 };
 
-/** How far a visitor is drawn from the key, from its own place today, and from where it was sent (m). */
+/** How far a visitor is drawn from the key, and from its own place today (m). */
 const whereIs = (page: Page, id: string) =>
   page.evaluate((id) => {
     const s = (window as unknown as { __garden: KeyScene }).__garden;
     const g = s.guests.sprites.find((o) => o.v.id === id)!;
     const b = g.body;
     const k = s.game.door.key;
-    return { key: Math.hypot(b.x - k.x, b.z - k.z), home: Math.hypot(b.x - g.home[0], b.y - g.home[1], b.z - g.home[2]), at: Math.hypot(b.x - b.at.x, b.y - b.at.y, b.z - b.at.z) };
+    return { key: Math.hypot(b.x - k.x, b.z - k.z), home: Math.hypot(b.x - g.home[0], b.y - g.home[1], b.z - g.home[2]) };
   }, id);
 
-test("key.dog-beside: with the key left four days, the dog sits on open ground beside it, on the side away from the middle of the garden", async ({ page }) => {
-  await keyWaited(page, 4, "&visitors=dog");
-  const dog = await page.evaluate(async () => {
-    const { collide } = await import(/* @vite-ignore */ "/src/garden/world.ts");
-    const s = (window as unknown as { __garden: KeyScene }).__garden;
-    const b = s.guests.sprites.find((o) => o.v.id === "dog")!.body;
-    const k = s.game.door.key;
-    const L = s.layout.bounds;
-    const p = collide(s.layout as Parameters<typeof collide>[0], b.x, b.z);
-    const away = (b.x - k.x) * (k.x - (L.minX + L.maxX) / 2) + (b.z - k.z) * (k.z - (L.minZ + L.maxZ) / 2);
-    return { open: p.x === b.x && p.z === b.z, away: away > 0 };
-  });
-  expect(dog).toEqual({ open: true, away: true });
-  const { key, at } = await whereIs(page, "dog");
-  expect(key).toBeGreaterThan(0.6);
-  expect(key).toBeLessThan(1);
-  // It sits there from the start.
-  expect(at).toBe(0);
-});
+// key.dog-beside, where the dog sits by the key, is a unit test: src/garden/world.test.ts.
 
 test("key.dog-looks: seen from either side, the dog's picture faces the key", async ({ page }) => {
   await keyWaited(page, 4, "&visitors=dog");
