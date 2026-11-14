@@ -23,13 +23,16 @@ type Inner = {
 type Seen = { ready: number; tops: { i: number; top: number; tol: number }[] };
 type Follow = { __follow: (until: "ready" | "none", after: number, most: number) => Promise<Seen[]> };
 
-/** Sets window.__follow: it measures every frame until the plant in reach is set (or gone), then `after` frames more. */
+/** Sets window.__follow: it measures every frame until the plant in reach is set (or gone), then `after` frames more. The game moves only while it runs. */
 function install() {
   const s = window.__garden as unknown as Inner;
   // One frame is a 60th of a second of game time, however slow the machine (CI's software WebGL draws about 7 a
-  // second): so each frame's step is small and the same on every run.
+  // second): so each frame's step is small and the same on every run. Between follows the game's time stands still:
+  // the frames the test does not measure, while it lets go of one key and holds the next, change nothing. On CI, a
+  // plant rose for several of them, and the check saw it as one jump.
+  let following = false;
   const tick = s.tick.bind(s);
-  s.tick = (dt) => tick(dt > 0 ? 1 / 60 : 0);
+  s.tick = (dt) => tick(following && dt > 0 ? 1 / 60 : 0);
   const r = s.renderer;
   const cam = s.camera;
   const gl = r.getContext();
@@ -134,10 +137,14 @@ function install() {
         const seen = measure();
         out.push(seen);
         if (left < 0 && (until === "ready" ? seen.ready >= 0 : seen.ready < 0)) left = after;
-        if (left === 0 || out.length >= most) return done(out);
+        if (left === 0 || out.length >= most) {
+          following = false;
+          return done(out);
+        }
         if (left > 0) left--;
         requestAnimationFrame(frame);
       };
+      following = true;
       requestAnimationFrame(frame);
     });
 }
