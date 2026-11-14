@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.app.json",
+  // The perf run is a Bun script, and Bun has Map.groupBy.
+  "compilerOptions": { "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.perf.tsbuildinfo", "types": ["bun"], "lib": ["ES2023", "DOM", "ES2024.Collection"] },
+  "include": ["perf"],
+  "exclude": ["perf/out"]
+}
