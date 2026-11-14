@@ -6,51 +6,19 @@
 //
 // -g picks screens by name (leave it out for all). Each PNG is named
 // <screen>-<phone|desktop>-<light|dark>[-<day|dusk|night>].png. To add a screen, add an
-// entry to APP below or to SPOTS in spots.ts.
+// entry to SCREENS in screens.ts or to SPOTS in spots.ts.
+//
+// Each app screen is also checked for mechanical UI faults (uiFaults.ts): the run prints
+// one line per fault and fails, after the PNG is written.
 
-import { pinDetail, reveal, startSession } from "./helpers";
-import { frames, openToday, openWalk, SPOTS, TIMES, WORDS } from "./spots";
+import { pinDetail } from "./helpers";
+import { SCREENS } from "./screens";
+import { frames, openWalk, SPOTS, TIMES, WORDS } from "./spots";
 import { expect, test, type Page } from "./test";
+import { uiFaults } from "./uiFaults";
 
 const DIR = process.env.SHOTS_DIR;
 if (DIR === undefined) throw new Error("set SHOTS_DIR to the folder for the PNGs");
-
-/** Screens of the app, each reached from a fresh demo learner with 30 words. */
-const APP: Record<string, (page: Page) => Promise<void>> = {
-  today: async (page) => {
-    await openToday(page, "es:30");
-  },
-  card: async (page) => {
-    await APP.today(page);
-    await startSession(page);
-  },
-  answer: async (page) => {
-    await APP.card(page);
-    await reveal(page);
-  },
-  summary: async (page) => {
-    await APP.card(page);
-    for (let i = 0; i < 2; i++) {
-      await reveal(page);
-      await page.keyboard.press("1");
-    }
-    await page.getByRole("button", { name: "End session" }).click();
-    await expect(page.locator("main.summary")).toBeVisible();
-  },
-  words: async (page) => {
-    await page.goto("/?demo=es:30#/words");
-    await expect(page.locator(".word-row").first()).toBeVisible({ timeout: 20_000 });
-  },
-  settings: async (page) => {
-    await page.goto("/?demo=es:30#/settings");
-    await expect(page.getByRole("tab", { name: "Settings", selected: true })).toBeVisible({ timeout: 20_000 });
-  },
-  // The story points to jump to (#751): no learner made.
-  jump: async (page) => {
-    await page.goto("/?demo");
-    await expect(page.getByRole("heading", { name: "Jump to a story point" })).toBeVisible();
-  },
-};
 
 const shoot = (page: Page, name: string) => page.screenshot({ path: `${DIR}/${name}.png` });
 
@@ -58,11 +26,14 @@ for (const theme of ["light", "dark"] as const) {
   test.describe(() => {
     test.use({ colorScheme: theme });
 
-    for (const [name, go] of Object.entries(APP))
+    for (const [name, go] of Object.entries(SCREENS))
       test(`${name} ${theme}`, async ({ page }, info) => {
         await page.clock.setFixedTime(TIMES.day);
         await go(page);
         await shoot(page, `${name}-${info.project.name}-${theme}`);
+        const faults = await uiFaults(page, `${name} ${info.project.name} ${theme}`);
+        // The message is the list: one line per fault.
+        expect(faults.length, faults.join("\n")).toBe(0);
       });
 
     for (const [name, stand] of Object.entries(SPOTS))

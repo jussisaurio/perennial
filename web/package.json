@@ -35,6 +35,7 @@
     "three": "^0.186.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@babel/core": "^7.29.0",
     "@babel/parser": "^7.29.0",
     "@paulirish/trace_engine": "0.0.68",
