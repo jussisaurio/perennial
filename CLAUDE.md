@@ -26,7 +26,7 @@ How we write and merge code here. It applies to every session and every agent. W
 
 We are pre-alpha and the owner is the only user: ship fast. A temporary break costs nothing.
 
-- **Every PR**, including auth, sync, the data model and migrations: the author's own checks (typecheck, lint, the tests that cover the change) are enough. Merge right away; do not wait for CI. For a non-trivial change, ask one fresh agent for a quick review, but don't wait for it: put its findings in a follow-up PR.
+- **Every PR**, including auth, sync, the data model and migrations: the author's own checks (typecheck, lint, the tests that cover the change) come first. Then merge right away: GitHub merges the PR when two fast CI jobs pass (about a minute), and does not wait for the e2e tests. For a non-trivial change, ask one fresh agent for a quick review, but don't wait for it: put its findings in a follow-up PR.
 - **Garden changes that touch movement or interaction** are the one exception:
   1. Before building, write or update the feature's section in [docs/garden-play.md](docs/garden-play.md). Describe in prose how it plays: what the learner sees, what they can and must do, and what happens when they do each thing. A fresh Opus agent reviews that text for UX friction, and you fix the design before you write code.
   2. Before merge, a fresh Opus agent playtests the change (docs/agents.md, "Playtest") against that text, and you fix what it finds.
@@ -35,7 +35,7 @@ We are pre-alpha and the owner is the only user: ship fast. A temporary break co
 
 Deck content (decks/) also follows the proofreader process in docs/decks.md.
 
-Then merge: `scripts/merge.sh <pr>` (it works from any worktree and deletes the branch). CI still runs on `main`, and Railway does not deploy a red `main` (Wait for CI, docs/DEPLOY.md), so a red `main` is the first thing to fix: nothing deploys until it is green again. `scripts/merge-when-green.sh` remains for when you do want to wait. Do not watch CI in the foreground.
+Then merge: `scripts/merge.sh <pr>` (it works from any worktree and deletes the branch). `main` has two required checks, the CI jobs "Typecheck, lint, unit tests, build" and "Decks (schema, up to date, compatibility, replay)": no PR merges until both pass on it. The script asks GitHub to merge when they pass, and waits. It ends with `MERGED`, or with `NOT merged`, the failed check and a link: then fix the PR and run it again. The e2e tests are not required. They run after the merge, on `main`, and Railway does not deploy a red `main` (Wait for CI, docs/DEPLOY.md), so a red `main` is the first thing to fix: nothing deploys until it is green again. Do not watch that run in the foreground.
 
 ## Every week: a cleanup sweep
 
