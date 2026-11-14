@@ -87,6 +87,13 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
     const from = await page.evaluate(() => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed);
     await page.waitForFunction((from) => (window as unknown as { __garden: { elapsed: number } }).__garden.elapsed > from + 1.5, from);
   },
+  // A step behind the bench, facing it and the pond past it (#1011): as you come to it from the garden.
+  bench: (page) =>
+    page.evaluate(() => {
+      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number } } }).__garden;
+      // Yaw π faces +z, the pond's side.
+      Object.assign(s, { x: s.bench.x, z: s.bench.z - 1.5, yaw: Math.PI, pitch: -0.3 });
+    }),
   // Up close to the details the thoughts name (#869): the cup rings on the bench's seat, from the pond's side, and
   // the letters on the sundial's pillar, from the garden's side.
   "cup-rings": (page) =>

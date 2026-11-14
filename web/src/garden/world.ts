@@ -240,13 +240,23 @@ export function hedgeSpan(l: Layout): [number, number] {
   return [Math.min(l.bounds.minX - 0.6, o.x - o.w / 2 - HEDGE.depth), Math.max(l.bounds.maxX + 0.6, o.x + o.w / 2 + HEDGE.depth)];
 }
 
-/** The bench by the pond, for sitting and admiring: its middle. It faces the pond. */
+/**
+ * The bench by the pond, for sitting and admiring: its middle. It faces the
+ * pond, far enough from it that a walker fits between them (#1011): you stand
+ * up there.
+ */
 export function benchAt(l: Layout): { x: number; z: number } {
-  return { x: l.pond.x + 0.2, z: l.pond.z - l.pond.r - 0.75 };
+  return { x: l.pond.x + 0.2, z: l.pond.z - l.pond.r - 0.85 };
 }
 
 /** The bench's size about its middle (m): half its length, and how far its back and its front are. */
 export const BENCH = { half: 0.68, back: 0.25, front: 0.22 } as const;
+
+/** The ground under the bench, which nothing walks through (#1011). */
+function benchBox(l: Layout): Rect {
+  const b = benchAt(l);
+  return [b.x - BENCH.half, b.x + BENCH.half, b.z - BENCH.back, b.z + BENCH.front];
+}
 
 /** The sunflower, in the far right corner by the back fence. */
 export function sunflowerAt(l: Layout): { x: number; z: number } {
@@ -466,7 +476,7 @@ function outOfBox([x0, x1, z0, z1]: Rect, x: number, z: number, rad: number): { 
 }
 
 /**
- * Keep a walker of radius `rad` inside the fence and out of beds and the pond.
+ * Keep a walker of radius `rad` inside the fence and out of beds, the bench and the pond.
  * Once the door is open (#315), the doorway and the orchard behind it are open
  * too, and its well stands in the way (#335 S6). `back` is the ground past the
  * back fence (#770): only the learner walks there, so the rest pass none.
@@ -480,6 +490,7 @@ export function collide(l: Layout, x: number, z: number, rad = WALKER, doorOpen 
   const orchard: Rect = [o.x - o.w / 2 + rad, o.x + o.w / 2 - rad, near + rad, o.z + o.d / 2 - rad];
   ({ x, z } = nearestIn([garden, ...(doorOpen ? [doorway, orchard] : []), ...(back?.open ? backGround(back, rad) : [])], x, z));
   for (const bed of l.beds) ({ x, z } = outOfBox([bed.x - bed.w / 2, bed.x + bed.w / 2, bed.z - bed.d / 2, bed.z + bed.d / 2], x, z, rad));
+  ({ x, z } = outOfBox(benchBox(l), x, z, rad));
   if (back?.open === false) ({ x, z } = outOfBox(back.brambles, x, z, rad));
   if (back?.open) {
     ({ x, z } = onSteps(back.stile, x, z, rad));
@@ -593,7 +604,7 @@ function toSegment(x: number, z: number, ax: number, az: number, bx: number, bz:
 
 /**
  * The way on foot to a spot (#336, tap to walk): the shortest line of corners
- * round the beds, the pond, the hedge (through the door when it is open), the
+ * round the beds, the bench, the pond, the hedge (through the door when it is open), the
  * orchard's well and its trunks, from (x, z) to (toX, toZ); past the back fence
  * (#770), over the stile, up the cut way and round the hilltop's things.
  * Both ends must be where a walker may stand (collide, collideTrees). Straight
@@ -605,6 +616,7 @@ export function wayTo(l: Layout, x: number, z: number, toX: number, toZ: number,
   const [h0, h1] = hedgeSpan(l);
   const rects: Rect[] = [
     ...l.beds.map((b): Rect => [b.x - b.w / 2, b.x + b.w / 2, b.z - b.d / 2, b.z + b.d / 2]),
+    benchBox(l),
     // The hedge, either side of the door; across it too while the door is shut.
     ...(doorOpen
       ? [[h0, l.gate.x - DOOR_HALF, l.bounds.maxZ, near] as Rect, [l.gate.x + DOOR_HALF, h1, l.bounds.maxZ, near] as Rect]
@@ -735,8 +747,8 @@ export function along(path: readonly [number, number][], k: number): { x: number
 /** Where to stand to look at a plant: on the path in front of its bed. */
 export function viewpoint(l: Layout, p: PlacedPlant): { x: number; z: number; yaw: number } {
   const bed = l.beds[p.bed];
-  const z = bed.z + bed.d / 2 + 1.45;
-  const x = p.x;
+  // Where a walker may stand: the bench stands in front of a bed by the pond (#1011).
+  const { x, z } = collide(l, p.x, bed.z + bed.d / 2 + 1.45);
   const yaw = Math.atan2(-(p.x - x), -(p.z - z)); // forward is -z at yaw 0
   return { x, z, yaw };
 }

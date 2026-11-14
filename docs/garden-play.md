@@ -42,11 +42,19 @@ With the keyboard, Tab takes you to the button when it shows. If the button goes
 - `action.none`: On open ground away from everything, no action button shows. Walk up to the bench and the button shows, named "Sit on the bench".
 - `action.reach-edge`: Come up to the bench until "Sit on the bench" shows. Step back 15 cm: it still shows. Step back 40 cm: it goes. Come forward to 15 cm back: still no button. Come forward 15 cm more, into reach: it shows again.
 
+## The bench
+
+The bench stands by the pond, its back to the garden and its seat facing the water. It is solid, like a bed (#1011): walk into it from the garden and you stop at its back; from the side, you stop at its end. Walk round either end and you can stand between the bench and the pond: there is just room for you there. A tap on the ground past the bench walks you round it.
+
+By the bench, from any side, the action button says "Sit on the bench". Press it and you sit, facing the pond, and the eye sinks. The button now says "Stand up". Press it, or press a walk key, and you stand up a step in front of where you sat, between the bench and the pond. A tap on the ground stands you up there too, and walks you on to the spot.
+
+- `bench.sit`: From the garden, holding W toward the bench stops you at its back, and the button says "Sit on the bench". Press it and you sit, facing the pond. Press "Stand up" and you stand in front of the bench; holding S there stops you at its front. Sit again, and a step stands you up too.
+
 ## Visitors
 
 Visitors never stand in your way: you can walk through them. You never have to wait for one: walk on whenever you like.
 
-**How a visitor goes anywhere.** A visitor never vanishes from one place and shows up in another. When one goes somewhere (home, to the bench, to wait by the key), you can watch it go: the dog and the cat walk or run on the ground, round the beds, the pond and the hedge, the same ways you can walk, and jump down from or up onto a seat or a step; the bird flies, up over things and down again. The gnome plays statues: while it is off your screen it walks, slowly, round the beds like the others; the moment it is on your screen it freezes. So a quick look back can catch it part of the way there. When the walk starts, each visitor is already in its place. With "reduce motion" on in your device, a visitor that goes somewhere is there at once: this is the one exception, for access.
+**How a visitor goes anywhere.** A visitor never vanishes from one place and shows up in another. When one goes somewhere (home, to the bench, to wait by the key), you can watch it go: the dog and the cat walk or run on the ground, round the beds, the bench, the pond and the hedge, the same ways you can walk, and jump down from or up onto a seat or a step; the bird flies, up over things and down again. The gnome plays statues: while it is off your screen it walks, slowly, round the beds like the others; the moment it is on your screen it freezes. So a quick look back can catch it part of the way there. When the walk starts, each visitor is already in its place. With "reduce motion" on in your device, a visitor that goes somewhere is there at once: this is the one exception, for access.
 
 **Who comes to sit with you on the bench** (#362). Sit still on the bench. After about ten seconds the bird flies over and lands on its back; after about twenty, the cat walks over and jumps up beside you; after about forty, the gnome comes to the grass past the far end, walking only while you are not looking at it. A screen reader hears each one when it has got there. Stand up and each goes back to its own place the same way it came.
 
@@ -186,7 +194,7 @@ Tap a thing in the garden and its name shows on a small paper tag over it, as it
 - `thought.tap`: With 800 known words, a tap on the bench shows its tag, "el banco", and under it the bench's newest line; the status a screen reader hears says the name and the line; you have not moved.
 - `thought.early`: With 3 known words, a tap on the bench shows only its name, with no line.
 - `thought.grows`: A tap on the pond shows three different lines at 200, 700 and 1800 known words, in that order.
-- `thought.only-tap`: With 800 known words, walking up to the bench and standing there 10 seconds shows no line. After a tap, while the line shows, holding S walks you back, and by the bench the button still says "Sit on the bench".
+- `thought.only-tap`: With 800 known words, walking up to the bench and standing there 10 seconds shows no line. After a tap, while the line shows, holding W walks you on until the bench stops you, and the line and the button "Sit on the bench" still show.
 - `thought.replace`: While the bench's line shows, a tap on the pond shows the pond's tag and line instead.
 - `thought.seated`: Sitting on the bench, a tap on the pond shows the pond's tag and line, and you are still sitting.
 - `thought.details`: Standing by the bench, the cup rings show on its seat; standing by the sundial, the letters show on its pillar.

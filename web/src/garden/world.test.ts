@@ -132,8 +132,18 @@ describe("garden layout", () => {
     const p = collide(l, l.pond.x, l.pond.z + 0.1);
     expect(Math.hypot(p.x - l.pond.x, p.z - l.pond.z)).toBeGreaterThan(l.pond.r);
     expect(collide(l, 1e6, 0).x).toBeLessThan(l.bounds.maxX);
-    const v = viewpoint(l, l.plants[0]);
-    expect(collide(l, v.x, v.z)).toEqual({ x: v.x, z: v.z });
+  });
+
+  test("every plant's viewpoint, where Next plant and a walk to a plant end, is where a walker may stand: in 60 and 800 plants, the bench is in front of a bed (#1011)", () => {
+    for (const n of [1, 60, 800]) {
+      const l = layout(Array.from({ length: n }, (_, i) => plant(i)));
+      for (const p of l.plants) {
+        const v = viewpoint(l, p);
+        expect(collide(l, v.x, v.z)).toEqual({ x: v.x, z: v.z });
+        // Facing the plant: forward is -z at yaw 0.
+        expect(v.yaw).toBeCloseTo(Math.atan2(-(p.x - v.x), -(p.z - v.z)), 9);
+      }
+    }
   });
 
   test("the door in the hedge (#315): shut, it stops walkers; open, they walk through it into the orchard, and only through it", () => {

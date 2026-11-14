@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { backWay, HILLTOP_R, lookoutAt, STOOL_R } from "./lookout";
 import { BRAMBLES_IN, STEP, stileAt } from "./stile";
 import { FREE, newWalker, sit, startTrip, step, toMode, type Input, type Walker, type WalkerWorld } from "./walker";
-import { benchAt, collide, layout, WALKER, type GardenPlant } from "./world";
+import { BENCH, benchAt, collide, layout, WALKER, type GardenPlant } from "./world";
 
 // The claims of docs/garden-play.md that are about where the walker may go,
 // played on the walker alone (#975): the same keys held for the same seconds as
@@ -90,6 +90,25 @@ describe("walking into something solid stops you", () => {
     hold(w, "KeyW", 2.5, wd);
     expect(Math.hypot(w.x - HILL.top[0], w.z - HILL.top[1])).toBeCloseTo(HILLTOP_R - WALKER, 6);
   });
+
+  test("bench.solid: walking with W into the bench stops you at it: from the garden behind it, at its end, and from the pond's side", () => {
+    const wd = world("shut");
+    const b = benchAt(L);
+    // From the garden, facing the pond: +z is yaw π.
+    let w = stand(b.x, b.z - 1.5, Math.PI);
+    hold(w, "KeyW", 1.5, wd);
+    expect(w.z).toBeCloseTo(b.z - BENCH.back - WALKER, 6);
+    expect(w.x).toBeCloseTo(b.x, 6);
+    // Along it, into its end: +x is yaw -π/2.
+    w = stand(b.x - 2, b.z, -Math.PI / 2);
+    hold(w, "KeyW", 1.5, wd);
+    expect(w.x).toBeCloseTo(b.x - BENCH.half - WALKER, 6);
+    expect(w.z).toBeCloseTo(b.z, 6);
+    // Between it and the pond, turned to it.
+    w = stand(b.x, b.z + BENCH.front + WALKER + 0.05, 0);
+    hold(w, "KeyW", 1, wd);
+    expect(w.z).toBeCloseTo(b.z + BENCH.front + WALKER, 6);
+  });
 });
 
 describe("you can walk wherever there is ground", () => {
@@ -140,10 +159,11 @@ describe("sitting and standing", () => {
     expect(collide(L, w.x, w.z, WALKER, false, wd.ground.back)).toEqual({ x: w.x, z: w.z });
   });
 
-  test("the bench seats you facing the pond; a step stands you up again", () => {
+  test("the bench seats you facing the pond; a step stands you up again, clear of the bench", () => {
     const wd = world("shut");
     const b = benchAt(L);
-    const w = stand(b.x, b.z + 1, 0);
+    // From the garden behind it, as you come to it.
+    const w = stand(b.x, b.z - 1, 0);
     sit(w, "bench", wd);
     expect(w.mode).toEqual({ kind: "seated", on: "bench" });
     // Forward is -z at yaw 0: the pond is on the bench's +z side.
@@ -151,7 +171,21 @@ describe("sitting and standing", () => {
     expect(L.pond.z).toBeGreaterThan(b.z);
     hold(w, "KeyW", 0.3, wd);
     expect(w.mode).toBe(FREE);
-    expect(w.z).toBeGreaterThan(b.z + 0.5);
+    // The bench is solid (#1011): you stand where a walker may stand, in front of it.
+    expect(w.z).toBeGreaterThanOrEqual(b.z + BENCH.front + WALKER);
+    expect(collide(L, w.x, w.z, WALKER, false, wd.ground.back)).toEqual({ x: w.x, z: w.z });
+  });
+
+  test("standing up from the bench with the button puts you a step in front of where you sat, toward the pond", () => {
+    const wd = world("shut");
+    const b = benchAt(L);
+    const w = stand(b.x, b.z - 1, 0);
+    sit(w, "bench", wd);
+    const seat = { x: w.x, z: w.z };
+    toMode(w, FREE, wd);
+    expect(w.x).toBe(seat.x);
+    expect(w.z).toBeCloseTo(b.z + BENCH.front + WALKER + 0.01, 9);
+    expect(collide(L, w.x, w.z, WALKER, false, wd.ground.back)).toEqual({ x: w.x, z: w.z });
   });
 
   test("with reduced motion the eye is at the seat at once", () => {
@@ -193,6 +227,21 @@ describe("a tap on the ground walks you there (#336)", () => {
     expect(w.mode).toBe(FREE);
     expect(Math.hypot(w.x - to.x, w.z - to.z)).toBeLessThan(0.01);
     expect(w.yaw).not.toBe(0);
+  });
+
+  test("a tap between the bench and the pond, from the garden behind it, walks you round the bench (#1011)", () => {
+    const wd = world("shut");
+    const b = benchAt(L);
+    const to = { x: b.x, z: b.z + BENCH.front + WALKER + 0.05 };
+    const w = stand(b.x, b.z - 1, 0);
+    startTrip(w, to.x, to.z, 0, null, wd);
+    for (let t = 0; t < 30 && w.mode.kind === "trip"; t += DT) {
+      step(w, NONE, DT, wd);
+      // Never nearer the bench's box than a walker's radius.
+      const out = Math.hypot(Math.max(0, Math.abs(w.x - b.x) - BENCH.half), Math.max(0, b.z - BENCH.back - w.z, w.z - b.z - BENCH.front));
+      expect(out).toBeGreaterThan(WALKER - 1e-9);
+    }
+    expect(Math.hypot(w.x - to.x, w.z - to.z)).toBeLessThan(0.01);
   });
 
   test("with reduced motion the view keeps still", () => {

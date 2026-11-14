@@ -124,7 +124,7 @@ for (const [known, line] of [
   });
 }
 
-test("thought.only-tap: standing by the bench shows no line; while one shows, S walks you back and the button still says Sit on the bench", async ({ page }) => {
+test("thought.only-tap: standing by the bench shows no line; while one shows, W walks you on and the button still says Sit on the bench", async ({ page }) => {
   // Game time runs at most 0.1 s a frame (scene.ts MAX_FRAME), and CI's software WebGL draws a few frames a second:
   // with the walk's load, the 10 s here take 20–30 s there, more than the default 30 s on a slow runner.
   test.setTimeout(60_000);
@@ -139,12 +139,13 @@ test("thought.only-tap: standing by the bench shows no line; while one shows, S 
   await expect(page.locator(".gw-thought-line")).toHaveText(BENCH);
   await expect(sit).toBeVisible();
   const before = await walker(page);
-  // Back, not on: the bench stays in view however far the key takes you before the test lets go of it. With W you
-  // walk on past the bench in three frames on CI, and a tag does not show for a thing behind you (#978).
-  await page.keyboard.down("KeyS");
-  await expect.poll(async () => Math.abs((await walker(page)).z - before.z)).toBeGreaterThan(0.1);
-  await page.keyboard.up("KeyS");
+  // On, until the bench stops you (#1011): it stays ahead of you however long CI's slow frames hold the key, and a tag
+  // shows only for a thing in front of you.
+  await page.keyboard.down("KeyW");
+  await expect.poll(async () => (await walker(page)).z - before.z).toBeGreaterThan(0.1);
+  await page.keyboard.up("KeyW");
   await expect(tag(page)).toBeVisible();
+  await expect(sit).toBeVisible();
 });
 
 test("thought.replace: a tap on the pond while the bench's line shows shows the pond's tag and line instead", async ({ page }) => {

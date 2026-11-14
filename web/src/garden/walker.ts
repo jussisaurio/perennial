@@ -8,7 +8,7 @@
 import { standAt, wayNear, type Ground } from "./ground";
 import { STOOL_R, type Lookout } from "./lookout";
 import { stepY, type StileSpot } from "./stile";
-import { along, benchAt, route, walk, WALKER, walkStep, type Trip } from "./world";
+import { along, BENCH, benchAt, route, walk, WALKER, walkStep, type Trip } from "./world";
 
 export interface Input {
   /** -1..1 each: forward and right, from keys or the touch stick. */
@@ -87,12 +87,15 @@ export function newWalker(x: number, z: number): Walker {
 export function toMode(w: Walker, next: Mode, world: WalkerWorld): Mode {
   const was = w.mode;
   w.mode = next;
+  // Up off a seat, a step the way it faces: the stool and the bench are solid (#1011), and a walk starts where a walker may stand.
   if (was.kind === "seated" && was.on === "stool") {
-    // Up off the stool, a step toward the far house: the stool is solid, and a walk starts where a walker may stand.
-    // The stool is there whenever you sat on it.
+    // Toward the far house. The stool is there whenever you sat on it.
     const h = world.hill!;
     const out = STOOL_R + WALKER + 0.01;
     [w.x, w.z] = [h.stool[0] - Math.sin(h.face) * out, h.stool[1] - Math.cos(h.face) * out];
+  } else if (was.kind === "seated" && was.on === "bench") {
+    // Toward the pond, straight out from where you sat.
+    w.z = benchAt(world.ground.layout).z + BENCH.front + WALKER + 0.01;
   }
   return was;
 }
@@ -151,7 +154,7 @@ export function startTrip(w: Walker, x: number, z: number, stop: number, then: (
   const g = world.ground;
   // A glide (Next plant) passes over beds; a tap during one starts from where a walker would stand.
   ({ x: w.x, z: w.z } = standAt(g, w.x, w.z));
-  // Standing up off the stool steps you off it: the way starts from there.
+  // Standing up off a seat steps you off it: the way starts from there.
   const was = toMode(w, FREE, world);
   const to = standAt(g, x, z);
   toMode(w, { kind: "trip", way: wayNear(g, w.x, w.z, to.x, to.z, 0), leg: 1, stop, then, turn: !world.reducedMotion, stuck: 0 }, world);
