@@ -147,15 +147,6 @@ const px = (ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, color:
   ctx.fillRect(x, y, w, h);
 };
 
-/** Speckled ground: base colour plus a scatter of lighter and darker pixels. */
-function speckle(seed: number, base: string, dots: [string, number][], size = 32): OffscreenCanvas {
-  const [c, ctx] = canvas(size, size);
-  const r = rng(seed);
-  px(ctx, 0, 0, base, size, size);
-  for (const [color, n] of dots) for (let i = 0; i < n; i++) px(ctx, Math.floor(r() * size), Math.floor(r() * size), color);
-  return c;
-}
-
 /** Grass (#1091): one flat green, with a scatter of soft tufts a shade darker or lighter. One tile is GROUND_TILE metres. */
 export function grass(): OffscreenCanvas {
   const [c, ctx] = canvas(GROUND_PX, GROUND_PX);
@@ -229,12 +220,45 @@ export function track(): OffscreenCanvas {
   return c;
 }
 
+/** Texels on a side of a tile of the beds' soil: one tile is a metre (scenePlants.ts). */
+const SOIL_PX = 256;
+
+/**
+ * The beds' soil (#1091): one flat deep brown with a calm scatter of small clods, each a lumpy shape a shade lighter
+ * on its own darker shadow, as the path's pebbles are. One tile is a metre.
+ */
 export function soil(): OffscreenCanvas {
-  return speckle(3, "#67503b", [
-    ["#5a4532", 160],
-    ["#765e47", 90],
-    ["#45352a", 40],
-  ]);
+  const [c, ctx] = canvas(SOIL_PX, SOIL_PX);
+  px(ctx, 0, 0, "#5f4733", SOIL_PX, SOIL_PX);
+  const r = rng(3);
+  for (const [x, y] of scatter(r, SOIL_PX, 16, 46)) {
+    // A clod: a ring of seven points at uneven distances, joined by curves through their midpoints.
+    const rad = 4 + r() * 4;
+    const ring = Array.from({ length: 7 }, (_, i) => {
+      const a = (i / 7) * Math.PI * 2 + r() * 0.5;
+      const d = rad * (0.75 + r() * 0.4);
+      return [Math.cos(a) * d, Math.sin(a) * d * 0.75] as const;
+    });
+    const clod = (x: number, y: number, color: string) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ring.forEach(([ax, ay], i) => {
+        const [bx, by] = ring[(i + 1) % ring.length];
+        const [mx, my] = [x + (ax + bx) / 2, y + (ay + by) / 2];
+        if (i === 0) ctx.moveTo(mx, my);
+        else ctx.quadraticCurveTo(x + ax, y + ay, mx, my);
+      });
+      const [ax, ay] = ring[0];
+      const [bx, by] = ring[1];
+      ctx.quadraticCurveTo(x + ax, y + ay, x + (ax + bx) / 2, y + (ay + by) / 2);
+      ctx.fill();
+    };
+    wrapped(SOIL_PX, x, y, (x, y) => {
+      clod(x + 1, y + 2, "#4e3a29");
+      clod(x, y, "#6e5640");
+    });
+  }
+  return c;
 }
 
 /**
