@@ -58,6 +58,8 @@ function domFaults(): DomFault[] {
   /** Drawn at all: not display:none, hidden, fully transparent, or the 1 px box of screen-reader-only text. */
   const drawn = (el: Element): boolean => {
     if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true, contentVisibilityAuto: true })) return false;
+    // .sr-only cuts its whole box away, however big a button's padding makes it (the garden's Next plant, #1024).
+    if (getComputedStyle(el).clipPath === "inset(50%)") return false;
     const r = el.getBoundingClientRect();
     return r.width > 1 && r.height > 1;
   };
@@ -88,11 +90,12 @@ function domFaults(): DomFault[] {
     }
     return out;
   };
-  /** Does the element stay put when the page scrolls (it is fixed, or inside a fixed box)? */
-  const fixedLayer = (el: Element): Element | null => {
-    for (let a: Element | null = el; a && a !== document.body; a = a.parentElement) if (getComputedStyle(a).position === "fixed") return a;
+  /** The box that keeps the element put while the page scrolls: the nearest ancestor (or itself) with a position in `kinds`. */
+  const layerOf = (el: Element, kinds: string[]): Element | null => {
+    for (let a: Element | null = el; a && a !== document.body; a = a.parentElement) if (kinds.includes(getComputedStyle(a).position)) return a;
     return null;
   };
+  const fixedLayer = (el: Element) => layerOf(el, ["fixed"]);
 
   // 1. The page itself scrolls sideways.
   if (document.documentElement.scrollWidth > vw + SLACK) add("page-scrolls-sideways", document.documentElement, [0, 0, document.documentElement.scrollWidth, vh], `the page is ${document.documentElement.scrollWidth} px wide in a ${vw} px viewport`);
@@ -176,8 +179,10 @@ function domFaults(): DomFault[] {
       }
       if (shown.right - shown.left <= 1 || shown.bottom - shown.top <= 1) return [];
       offScreen(el, r, cl);
-      // Controls are compared only within one layer: a fixed bar lies over the page on purpose, and the page scrolls under it.
-      return [{ el, shown, layer: fixedLayer(el), scroller: cl.find((c) => c.x === "scroll" || c.y === "scroll")?.el ?? null }];
+      // Controls are compared only within one layer: a fixed or sticky bar lies over the page on purpose, and the page
+      // scrolls under it (a long summary's links pass under its sticky .actions, #1024). A sticky bar cannot hide what
+      // comes before it for good: at the end of the scroll it sits below it.
+      return [{ el, shown, layer: layerOf(el, ["fixed", "sticky"]), scroller: cl.find((c) => c.x === "scroll" || c.y === "scroll")?.el ?? null }];
     });
   const isField = (el: Element) => el instanceof HTMLTextAreaElement || (el instanceof HTMLInputElement && !["checkbox", "radio", "range", "button", "submit", "file", "color"].includes(el.type));
   for (let i = 0; i < controls.length; i++)

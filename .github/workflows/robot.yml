@@ -1,0 +1,78 @@
+# The robot learner (#1024, docs/agents.md "Checks"): 30 days of the app as one new learner, each night
+# with a new seed. It keeps one issue, "Robot learner: findings": open with the last run's findings, closed
+# when a run finds none. It is not a check on main: a finding, or a robot that crashed, never turns main red.
+name: Robot learner
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Days to live
+        default: "30"
+      seed:
+        description: "The seed (empty: the run's number, a new one each run)"
+        default: ""
+
+permissions:
+  issues: write
+  contents: read
+
+# One run at a time, so two runs can never both open the issue.
+concurrency:
+  group: robot-learner
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DIR: ${{ runner.temp }}/robot
+      SEED: ${{ inputs.seed || github.run_number }}
+      DAYS: ${{ inputs.days || '30' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          postgres: "true"
+          browser: chromium
+      - name: Live
+        id: live
+        working-directory: web
+        # A robot that crashed is said in the issue, like a finding: the run stays green.
+        continue-on-error: true
+        run: bun run live "$DIR" --days "$DAYS" --seed "$SEED"
+      - name: Keep the diary and pictures
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: robot-learner-seed-${{ env.SEED }}
+          path: ${{ env.DIR }}
+          retention-days: 14
+      - name: Open, update or close the issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTCOME: ${{ steps.live.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Robot learner: findings"
+          # Only the issue this workflow opened: anyone can open one with the same title in a public repo.
+          open=$(gh api "repos/$GITHUB_REPOSITORY/issues?state=open&labels=P2&per_page=100" --paginate --jq ".[] | select(.title == \"$title\" and .user.login == \"github-actions[bot]\") | .number" | head -1)
+          # No findings.json: the robot crashed before its first day ended.
+          found=$(jq length "$DIR/findings.json" 2>/dev/null || echo none)
+          if [ "$OUTCOME" = success ] && [ "$found" = 0 ]; then
+            if [ -n "$open" ]; then gh issue close "$open" --comment "The robot's run with seed $SEED found nothing: $RUN_URL"; fi
+            exit 0
+          fi
+          {
+            if [ "$OUTCOME" != success ]; then echo "**The robot itself failed** ($OUTCOME): see the run's log."; echo; fi
+            if [ -f "$DIR/findings.md" ]; then cat "$DIR/findings.md"; echo; fi
+            echo "Run: $RUN_URL. The diary and the pictures are the run's artifact \`robot-learner-seed-$SEED\`."
+            echo
+            echo "Each finding is a fact the robot checked, not taste. File each real bug as its own issue with the seed and the day; fix a wrong check in web/e2e/live.run.ts (docs/agents.md, \"Checks\")."
+          } > "$RUNNER_TEMP/body.md"
+          if [ -n "$open" ]; then gh issue edit "$open" --body-file "$RUNNER_TEMP/body.md"
+          else gh issue create --title "$title" --label P2 --body-file "$RUNNER_TEMP/body.md"; fi
