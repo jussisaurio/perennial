@@ -12,10 +12,11 @@
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { CUT, HILL, HILLTOP_R, hillMesh, hillY, PATH_TURN, type Lookout } from "./lookout";
+import type { Sheet } from "./hedge";
 import { rayBox, type Ray } from "./scenery";
-import { shadeUp, tiledBox } from "./sceneHedge";
+import { sheetGeometry } from "./sceneHedge";
 import { roundShade, shade, still, woodBox, type BuildCtx } from "./sceneSprites";
-import { BRAMBLES_IN, SHEET, STEP, TOP, type StileNotes, type StileSpot } from "./stile";
+import { BRAMBLE_SHEET, BRAMBLES_IN, SHEET, STEP, TOP, type StileNotes, type StileSpot } from "./stile";
 import * as T from "./textures";
 
 /** A note on the ground: the paper's size (m), as on the shed's nails. */
@@ -26,10 +27,29 @@ const TRACK = { w: 1.5, past: 0.8 };
 const TRACK_LIFT = 0.035;
 /** The bramble thicket behind the back fence: from how far out to how far (m), and how high it stands. The walker's eye is at 1.05. */
 const THICKET = { near: 0.15, far: 3.2, h: 2.1 };
-/** The brambles round the hill's top: out to the hill's foot, where they meet the thicket (m). Low enough on the slope that from the top you see over them. */
-const RING = { far: HILL.r + 0.4, h: 1.9 };
-/** How wide a square of the thicket's clumps is drawn as one mesh (m): small enough that a view leaves most of them out, few enough to stay a few draw calls. */
-const CLUMP_SQUARE = 6;
+/** The thicket's rows of flats (#1164), front to back: how far behind the fence each stands (m), and its top as a part of THICKET.h. Each is higher than the one in front, so from the garden it is a bank of leaves rising away. */
+const THICKET_ROWS: [number, number][] = [[0.3, 0.52], [0.8, 0.7], [1.4, 0.85], [2.0, 0.95], [2.7, 1.05]];
+/** How high the brambles round the hill's top stand over their ground (m). Low enough on the slope that from the top you see over them. */
+const RING_H = 1.9;
+/**
+ * The ring's rows of flats (#1164), from the hilltop's grass out to the hill's foot: how far past the grass's edge
+ * (HILLTOP_R) each stands (m), and its top as a part of RING_H. The first is low, so at the edge you see leaves down to the grass.
+ */
+const RING_ROWS: [number, number][] = [[0.1, 0.45], [0.5, 0.9], [1.2, 0.95], [1.9, 1], [2.7, 1], [3.6, 1]];
+/** The way's wings (#1164): flats beside it, each turned to face you as you come up it, as a paper theatre's wings face the seats. How wide each is and how far apart (m), and how far turned from the way's line (radians). */
+const WING = { w: 1.1, step: 0.8, turn: 0.7 };
+/** The rows of wings on each side, front to back: how far past the way's edge (CUT) each stands (m), its top as a part of THICKET.h, and how light it is (the cut sides are a little darker). */
+const WINGS: [number, number, number][] = [[0.05, 0.45, 0.75], [0.35, 0.8, 0.85]];
+/** How far past the way's edge (CUT) the thicket's rows and the ring's stop (m): among the wings, so none stands out in front of them. */
+const ROWS_CLEAR = 0.45;
+/** Over the shut stile, rows of flats across its steps, in the garden (#1164): how far in from the fence each stands (m), and its top as a part of THICKET.h. Low enough that the top board shows among the leaves; the last in front of the steps' feet. */
+const STILE_ROWS: [number, number][] = [[0.15, 0.45], [0.45, 0.36], [0.72, 0.24]];
+/** How high a row of flats is at its ends, as a part of its top: it ends in a slope of leaves, not a straight cut edge. */
+const ROW_END = 0.35;
+/** How far a flat's foot goes under the ground (m): on the hill's slope, its straight foot would leave a gap under it. */
+const FLAT_SINK = 0.1;
+/** How wide a square of the thicket's flats is drawn as one mesh (m): small enough that a view leaves most of them out, few enough to stay a few draw calls. */
+const FLAT_SQUARE = 6;
 /** How high the handrails stand over the steps (m). */
 const RAIL_H = 0.8;
 
@@ -160,112 +180,116 @@ export class StileScene {
     }
   }
 
+  /** The point `d` m out along the old path from the stile, and `s` m to the right of its line, facing out: as [x, z]. */
+  private onWay(d: number, s: number): [number, number] {
+    return [this.spot.x - Math.sin(PATH_TURN) * d + Math.cos(PATH_TURN) * s, this.spot.z - Math.cos(PATH_TURN) * d - Math.sin(PATH_TURN) * s];
+  }
+
   /**
    * A thicket of brambles behind the whole back fence (#749), taller than the
    * walker and some metres deep, its canes arching up out of it and over the
-   * fence. Once the hill's note is unlocked, a way is cut through it along the
-   * old path, the cut canes heaped beside it. A solid middle (no gap to see
-   * through), its clumps an instanced mesh per square of ground, its canes one merged mesh. A step
-   * per stretch of canes: the scene yields between them (#885).
+   * fence. Built as a paper theatre's flats (#1164): rows of bramble paper
+   * (textures.ts brambleSheet) one behind another, each higher than the one in
+   * front, so you see a bank of leaves and never a gap through it. Rows ring
+   * the hill's top too, low enough that from it you see over them. Once the
+   * hill's note is unlocked, a way is cut through along the old path: its
+   * sides are wings, turned to face you as you come up it, and the cut canes
+   * lie heaped beside it. The flats are a mesh per square of ground, the canes
+   * one merged mesh. A step per stretch of canes: the scene yields between
+   * them (#885).
    */
-  private *buildThicket(c: BuildCtx): Generator<void> {
+  private *buildThicket(c: BuildCtx, paper: THREE.Texture): Generator<void> {
     const r = rng(749);
     const [sx, sz] = [this.spot.x, this.spot.z];
     const [x0, x1] = [c.b.minX - 0.6, c.b.maxX + 0.6];
-    const tex = T.paperTexture(T.bramble(), true);
     // The way stops at the hilltop: the ring past it, on the far side, stays whole.
     const cut = (x: number, z: number, wide = 0) => this.open && Math.abs(this.side(x, z)) < CUT + wide && this.along(x, z) < HILL.out;
-    // The solid middle: one box, or two either side of the way cut through.
-    const [zn, zf] = [sz - THICKET.near - 0.25, sz - THICKET.far + 0.35];
-    const mid = sx - Math.sin(PATH_TURN) * ((THICKET.near + THICKET.far) / 2);
-    const spans: [number, number][] = this.open ? [[x0, mid - CUT - 0.35], [mid + CUT + 0.35, x1]] : [[x0, x1]];
-    const coreMat = c.mat(tex, { vertexColors: true });
-    for (const [a, b] of spans) {
-      const h = THICKET.h - 0.45;
-      const geo = tiledBox(b - a, h, zn - zf, 1);
-      shadeUp(geo, 0.45, 0.7);
-      geo.translate((a + b) / 2, h / 2, (zn + zf) / 2);
-      c.scene.add(still(new THREE.Mesh(geo, coreMat)));
-    }
-    yield;
-    // Clumps of leaves: stacked up the face toward the garden, and over the top further back. [x, y, z, rx, ry, rz, light]
-    const clumps: number[][] = [];
-    // How light a clump `y` up a thicket `h` high is: darker low down. Its faces you see from the garden and the
-    // hilltop are turned from the sun, so even the lowest stays a clear dark green.
-    const light = (y: number, h: number) => 0.9 + (0.25 * y) / h;
-    for (let x = x0; x < x1; x += 0.42) {
-      const top = THICKET.h * (0.85 + 0.3 * r());
-      for (const [k, back] of [[0, THICKET.near + 0.5], [1, 1.2], [2, 1.9], [3, 2.7]]) {
-        const cx = x + (r() - 0.5) * 0.3;
-        const cz = sz - back + (r() - 0.5) * 0.3;
-        // Clear of the way by more than a clump's reach: walking into its side, your eye stays out of them.
-        if (cut(cx, cz, 0.5)) continue;
-        const ys = k === 0 ? [0.4, 0.95, 1.5, top - 0.3] : [top - 0.35 - r() * 0.3];
-        for (const y of ys) {
-          const rad = 0.38 + r() * 0.2;
-          clumps.push([cx + (r() - 0.5) * 0.15, y, cz, rad * 1.15, rad * 0.85, rad, light(y, THICKET.h)]);
-        }
+    /** A flat from `a` to `b` facing toward `to`'s side, its top `ta` over the ground at `a` and `tb` at `b`, its foot a little under it, so no gap shows on a slope. */
+    const flat = (a: [number, number], b: [number, number], to: [number, number], ta: number, tb: number, light: number): Sheet => {
+      // Its corners left to right as seen from the side it faces (sceneHedge.ts sheetGeometry).
+      if ((a[1] - b[1]) * to[0] + (b[0] - a[0]) * to[1] < 0) [a, b, ta, tb] = [b, a, tb, ta];
+      const [ga, gb] = [hillY(this.hill, ...a), hillY(this.hill, ...b)];
+      const corners: [number, number, number][] = [[a[0], ga - FLAT_SINK, a[1]], [b[0], gb - FLAT_SINK, b[1]], [b[0], gb + tb, b[1]], [a[0], ga + ta, a[1]]];
+      return { corners, u: r() * BRAMBLE_SHEET.w, light: light * (0.94 + r() * 0.12) };
+    };
+    /**
+     * A row of flats along a line `len` m long (`at(t)`: the point `t` m along it), each about `seg` wide and over the
+     * next a little, each end up to `wobble` out of the line; facing `to(x, z)`, their tops near `top` over the ground.
+     * `ends`: the row has ends (a whole ring has none), and it slopes down to ROW_END at them.
+     */
+    const row = (len: number, at: (t: number) => [number, number], seg: number, wobble: number, to: (x: number, z: number) => [number, number], top: number, light: number, ends = true) => {
+      const out: Sheet[] = [];
+      for (let t = 0; t < len; ) {
+        const t1 = Math.min(len, t + seg * (0.8 + r() * 0.4));
+        const [a, b] = [at(t), at(t1)];
+        // Each end moves off the line square to it: along the line turned a quarter.
+        const [nx, nz] = [a[1] - b[1], b[0] - a[0]].map((v) => v / Math.hypot(a[0] - b[0], a[1] - b[1]));
+        const w = () => (r() - 0.5) * 2 * wobble;
+        const [wa, wb] = [w(), w()];
+        const h = top * (0.9 + r() * 0.2);
+        const [ta, tb] = [ends && t === 0 ? h * ROW_END : h, ends && t1 === len ? h * ROW_END : h];
+        out.push(flat([a[0] + nx * wa, a[1] + nz * wa], [b[0] + nx * wb, b[1] + nz * wb], to((a[0] + b[0]) / 2, (a[1] + b[1]) / 2), ta, tb, light));
+        if (t1 === len) break;
+        t = t1 - 0.15 * seg;
       }
+      return out;
+    };
+    const sheets: Sheet[] = [];
+    // Behind the fence, across the garden: each row's tops over the row in front. Open, each row stops short of the way's wings.
+    for (const [back, k] of THICKET_ROWS) {
+      // Where this row meets the way's sides: there side(x, z) is ±s.
+      const at = (s: number) => sx + (s - back * Math.sin(PATH_TURN)) / Math.cos(PATH_TURN);
+      const spans = this.open ? [[x0, at(-CUT - ROWS_CLEAR)], [at(CUT + ROWS_CLEAR), x1]] : [[x0, x1]];
+      for (const [a, b] of spans) sheets.push(...row(b - a, (t) => [a + t, sz - back], 1.3, 0.05, () => [0, 1], THICKET.h * k, 0.8 + 0.25 * k));
     }
-    // Round the hilltop's grass, out to the hill's foot, standing on its slope: a face of clumps at the grass's edge, and tops further out.
+    // Round the hilltop's grass, facing it: a low row at its edge, so you see leaves down to the grass, then taller ones out to the hill's foot.
     const [tx, tz] = this.hill.top;
-    for (let rr = HILLTOP_R + 0.45; rr < RING.far; rr += 0.6) {
-      const inner = rr < HILLTOP_R + 0.5;
-      for (let a = 0; a < Math.PI * 2; a += 0.42 / rr) {
-        const cx = tx + Math.sin(a) * rr + (r() - 0.5) * 0.15;
-        const cz = tz + Math.cos(a) * rr + (r() - 0.5) * 0.15;
-        // The thicket behind the fence covers the ground nearer the fence; none in the garden.
-        if (cz > sz - THICKET.far + 0.4 || cut(cx, cz, 0.5)) continue;
-        const ground = hillY(this.hill, cx, cz);
-        const top = RING.h * (0.85 + 0.25 * r());
-        for (const y of inner ? [0.35, 0.85, top - 0.3] : [top - 0.35 - r() * 0.3]) {
-          // The face, smaller: it reaches in no further than the edge you stop at, so your eye stays out of it.
-          const rad = inner ? 0.3 + r() * 0.1 : 0.38 + r() * 0.2;
-          clumps.push([cx, ground + y, cz, rad * 1.15, rad * 0.85, rad, light(y, RING.h)]);
-        }
-      }
-    }
-    // Before the hill's note, brambles grown through the fence over the stile's steps, into the garden: what shuts the way.
-    if (!this.open)
-      // Within the solid block (lookout.ts backWay) less a clump's reach: you stop before your eye is in them.
-      for (let x = sx - STEP.w / 2 - 0.05; x < sx + STEP.w / 2 + 0.1; x += 0.3)
-        for (let d = 0.1; d < BRAMBLES_IN - 0.3; d += 0.3)
-          for (const y of [0.3, 0.75, 1.15]) {
-            const rad = 0.24 + r() * 0.1;
-            clumps.push([x + (r() - 0.5) * 0.1, y + (r() - 0.5) * 0.15, sz + d, rad * 1.1, rad, rad, 0.75 + 0.25 * y]);
-          }
-    // Where the way is cut, the thicket's cut sides: clumps on them too, a little darker.
+    RING_ROWS.forEach(([out, k], i) => {
+      const rr = HILLTOP_R + out;
+      // Open, the ring goes round from the way's one side to its other: on the ring, side is rr·sin(turn from the way's line).
+      const gap = this.open ? Math.asin((i === 0 ? CUT + WINGS[0][0] : CUT + ROWS_CLEAR) / rr) : 0;
+      const a0 = PATH_TURN + gap;
+      const ring = row((Math.PI * 2 - 2 * gap) * rr, (t) => [tx + Math.sin(a0 + t / rr) * rr, tz + Math.cos(a0 + t / rr) * rr], 1.3, 0.05, (x, z) => [tx - x, tz - z], RING_H * k, 0.8 + 0.25 * k, this.open);
+      // The thicket behind the fence covers the ground nearer the fence.
+      sheets.push(...ring.filter((s) => (s.corners[0][2] + s.corners[1][2]) / 2 < sz - THICKET.far + 0.4));
+    });
+    // Where the way is cut: on each side, wings beside it from the fence to the hilltop, a low one in front of a tall one.
     if (this.open)
-      for (let d = THICKET.near + 0.3; d < THICKET.far; d += 0.45)
-        for (const s of [-1, 1]) {
-          const along = sx - Math.sin(PATH_TURN) * d;
-          const cx = along + s * (CUT + 0.25) * Math.cos(PATH_TURN);
-          const cz = sz - Math.cos(PATH_TURN) * d - s * (CUT + 0.25) * Math.sin(PATH_TURN);
-          for (const y of [0.4, 0.95, 1.5]) clumps.push([cx, y + (r() - 0.5) * 0.2, cz, 0.3, 0.4, 0.4, 0.7 + 0.2 * y]);
+      for (const s of [-1, 1])
+        for (const [out, k, darker] of WINGS) {
+          // The last stops at the hilltop's low row of flats.
+          const end = HILL.out - Math.sqrt((HILLTOP_R + RING_ROWS[0][0]) ** 2 - (CUT + out) ** 2);
+          // The first starts as far up the way as the widest reaches back, so its outer end stays behind the fence.
+          for (let d = THICKET.near + Math.cos(WING.turn) * WING.w * 1.15; d < end; d += WING.step * (0.85 + r() * 0.3)) {
+            const w = WING.w * (0.85 + r() * 0.3);
+            // The inner end beside the way, the outer end out and back toward the fence.
+            const a = this.onWay(d, s * (CUT + out));
+            const b = this.onWay(d - Math.cos(WING.turn) * w, s * (CUT + out + Math.sin(WING.turn) * w));
+            const you = this.onWay(d - 3, 0);
+            // A tall one is low near the fence, as the thicket's rows are.
+            const top = THICKET.h * k * Math.min(1, 0.6 + 0.3 * d) * (0.9 + r() * 0.2);
+            sheets.push(flat(a, b, [you[0] - a[0], you[1] - a[1]], top, top, darker));
+          }
         }
-    const ball = new THREE.IcosahedronGeometry(1, 1);
-    shade(ball);
-    const uv = ball.getAttribute("uv");
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2.4, uv.getY(i) * 1.2);
-    // One instanced mesh per square of ground: three culls a mesh whole, and one for every clump was drawn from anywhere (#960).
-    const squares = new Map<string, number[][]>();
-    for (const cl of clumps) {
-      const k = `${Math.floor(cl[0] / CLUMP_SQUARE)}:${Math.floor(cl[2] / CLUMP_SQUARE)}`;
+    // Before the hill's note, brambles grown through the fence over the stile's steps, into the garden: what shuts the
+    // way. Low enough that the top board shows among the leaves; inside the solid block (lookout.ts backWay), so you stop before them.
+    if (!this.open)
+      for (const [out, k] of STILE_ROWS) {
+        const a = sx - STEP.w / 2 - 0.35;
+        sheets.push(...row(STEP.w + 0.7, (t) => [a + t, sz + out], 0.6, 0.12, () => [0, 1], THICKET.h * k, 0.9));
+      }
+    // One mesh per square of ground: three culls a mesh whole, and one for the whole thicket was drawn from anywhere (#960).
+    const squares = new Map<string, Sheet[]>();
+    for (const s of sheets) {
+      const [x, z] = [(s.corners[0][0] + s.corners[1][0]) / 2, (s.corners[0][2] + s.corners[1][2]) / 2];
+      const k = `${Math.floor(x / FLAT_SQUARE)}:${Math.floor(z / FLAT_SQUARE)}`;
       const list = squares.get(k);
-      if (list) list.push(cl);
-      else squares.set(k, [cl]);
+      if (list) list.push(s);
+      else squares.set(k, [s]);
     }
-    const mat = c.mat(tex, { vertexColors: true });
-    const m4 = new THREE.Matrix4();
-    const color = new THREE.Color();
-    for (const square of squares.values()) {
-      const mesh = new THREE.InstancedMesh(ball, mat, square.length);
-      square.forEach(([x, y, z, rx, ry, rz, k], i) => {
-        mesh.setMatrixAt(i, m4.makeScale(rx, ry, rz).setPosition(x, y, z));
-        mesh.setColorAt(i, color.setScalar(k));
-      });
-      c.scene.add(still(mesh));
-    }
+    // Both sides: the ring's flats are seen from behind from the garden, the thicket's from the hilltop.
+    const mat = c.mat(paper, { vertexColors: true, alphaTest: 0.5, alphaToCoverage: c.msaa, side: THREE.DoubleSide });
+    for (const square of squares.values()) c.scene.add(still(new THREE.Mesh(sheetGeometry(square, BRAMBLE_SHEET), mat)));
     yield;
 
     // Canes: some arch up out of the top; others reach over the fence toward the garden, at the eye's height.
@@ -335,14 +359,14 @@ export class StileScene {
     c.scene.add(still(g));
   }
 
-  /** The stile, the thicket, and the notes in front of it (unread ones: read ones hang in the shed). In steps, as buildThicket. */
-  *build(c: BuildCtx): Generator<void> {
+  /** The stile, the thicket (`brambles`: textures.ts paintBrambles), and the notes in front of it (unread ones: read ones hang in the shed). In steps, as buildThicket. */
+  *build(c: BuildCtx, brambles: THREE.Texture): Generator<void> {
     const at = this.spot;
     this.buildStile(c);
 
     this.buildHill(c);
     yield;
-    yield* this.buildThicket(c);
+    yield* this.buildThicket(c, brambles);
 
     // The old path past the fence, from the far foot up over the hill's top.
     const run = HILL.out + TRACK.past - STEP.out + 0.2;

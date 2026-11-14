@@ -6,7 +6,7 @@
 import "./devWorker";
 import * as THREE from "three";
 import type { TimeOfDay } from "./game";
-import { cloud, hedgeSheet, hills, moon, orchard, sky, SKIES, sun, trees } from "./textures";
+import { brambleSheet, cloud, hedgeSheet, hills, moon, orchard, sky, SKIES, sun, trees } from "./textures";
 import { bleedEdges } from "./plantCanvas";
 import { grain } from "./paper";
 
@@ -15,12 +15,12 @@ THREE.ColorManagement.enabled = false;
 
 /**
  * "far": the trees outside the fence, the clouds and the sky's looks, with tonight's moon. "orchard": the orchard's
- * tree atlas. "paper": the paper's grain (paper.ts). "hedge": a sheet of the hedge's leaves.
+ * tree atlas. "paper": the paper's grain (paper.ts). "hedge" and "brambles": a sheet of their leaves.
  */
-export type PaintJob = { kind: "far"; moonPhase: number } | { kind: "orchard" } | { kind: "paper" } | { kind: "hedge" };
+export type PaintJob = { kind: "far"; moonPhase: number } | { kind: "orchard" } | { kind: "paper" } | { kind: "hedge" } | { kind: "brambles" };
 
 /** What each job that paints one texture paints. */
-const ONE = { orchard, paper: grain, hedge: hedgeSheet };
+const ONE = { orchard, paper: grain, hedge: hedgeSheet, brambles: brambleSheet };
 
 /** A painted texture: unpremultiplied RGBA, top row first. Empty pixels carry the nearest drawn pixel's colour (bleedEdges). */
 export interface Pixels {

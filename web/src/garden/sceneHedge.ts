@@ -5,12 +5,12 @@
 // along their tops.
 
 import * as THREE from "three";
-import { hedgeCore, hedgeSheets, SHEET_W, type HedgeWall, type Sheet } from "./hedge";
+import { hedgeCore, hedgeSheets, SHEET_H, SHEET_W, type HedgeWall, type Sheet } from "./hedge";
 import { roundShade, still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */
-export function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeometry {
+function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeometry {
   const box = new THREE.BoxGeometry(w, h, d);
   const uv = box.getAttribute("uv") as THREE.BufferAttribute;
   // Faces +x, -x, +y, -y, +z, -z, with four corners each: each face's width and height in metres.
@@ -29,7 +29,7 @@ export function tiledBox(w: number, h: number, d: number, tile: number): THREE.B
 }
 
 /** Vertex colours from `low` at the bottom to `high` at the top, for an unlit material with vertexColors: shading without lights. */
-export function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
+function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
   geo.computeBoundingBox();
   const { min, max } = geo.boundingBox!;
   const pos = geo.getAttribute("position");
@@ -38,8 +38,12 @@ export function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 }
 
-/** `sheets` as one geometry: two triangles each, its paper laid on along it from its `u`, lit by the sun and its `light`. */
-function sheetGeometry(sheets: Sheet[]): THREE.BufferGeometry {
+/**
+ * `sheets` as one geometry: two triangles each, their `paper` (its size in metres) laid on along each from its `u`, lit
+ * by the sun and its `light`. The paper's top is at a sheet's top; a sheet taller than its paper carries the paper's
+ * bottom row on down (the texture clamps there), so a tall flat is solid below its leaves.
+ */
+export function sheetGeometry(sheets: Sheet[], paper: { w: number; h: number }): THREE.BufferGeometry {
   const pos = new Float32Array(sheets.length * 12);
   const uv = new Float32Array(sheets.length * 8);
   const color = new Float32Array(sheets.length * 12);
@@ -56,8 +60,9 @@ function sheetGeometry(sheets: Sheet[]): THREE.BufferGeometry {
     s.corners.forEach((c, j) => {
       const v = i * 4 + j;
       pos.set(c, v * 3);
-      // Along the sheet as its bottom edge runs, so a sheet that narrows at the top keeps its leaves upright.
-      uv.set([(s.u + p.set(...c).sub(bl).dot(along)) / SHEET_W, j < 2 ? 0 : 1], v * 2);
+      // Along the sheet as its bottom edge runs, so a sheet that narrows at the top keeps its leaves upright. Down
+      // from the top corner above it (the bottom left's is the top left).
+      uv.set([(s.u + p.set(...c).sub(bl).dot(along)) / paper.w, j < 2 ? 1 - (s.corners[3 - j][1] - c[1]) / paper.h : 1], v * 2);
       color.fill(light, v * 3, v * 3 + 3);
     });
     index.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
@@ -74,18 +79,12 @@ function sheetGeometry(sheets: Sheet[]): THREE.BufferGeometry {
 export class Hedge {
   private coreMat!: THREE.MeshBasicMaterial;
   private sheetMat!: THREE.MeshBasicMaterial;
-  /** The screen smooths shapes' edges (#1106), so the leaves' cut edges can be smooth too (alpha to coverage). */
-  private readonly msaa: boolean;
-
-  constructor(msaa: boolean) {
-    this.msaa = msaa;
-  }
 
   /** The hedge materials, shared by every wall addWalls builds: the gate's now, the orchard's later, once the door opens. `sheet`: textures.ts paintHedge. */
   build(ctx: BuildCtx, sheet: THREE.Texture) {
     this.coreMat = ctx.mat(T.paperTexture(T.hedge(), true), { vertexColors: true });
     // Both sides: the sheets along the top are seen from either side.
-    this.sheetMat = ctx.mat(sheet, { vertexColors: true, alphaTest: 0.5, alphaToCoverage: this.msaa, side: THREE.DoubleSide });
+    this.sheetMat = ctx.mat(sheet, { vertexColors: true, alphaTest: 0.5, alphaToCoverage: ctx.msaa, side: THREE.DoubleSide });
   }
 
   /**
@@ -106,6 +105,6 @@ export class Hedge {
       ctx.hitBoxes.push({ id: "hedge", min: [...w.min], max: [...w.max], tag: null });
       sheets.push(...hedgeSheets(w, seed + i));
     });
-    ctx.scene.add(still(new THREE.Mesh(sheetGeometry(sheets), this.sheetMat)));
+    ctx.scene.add(still(new THREE.Mesh(sheetGeometry(sheets, { w: SHEET_W, h: SHEET_H }), this.sheetMat)));
   }
 }

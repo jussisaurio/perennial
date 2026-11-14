@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { rng } from "../lib/seed";
 import type { PlacedPlant } from "./world";
 import { LEAF_H, SHEET_H, SHEET_W } from "./hedge";
+import { BRAMBLE_SHEET } from "./stile";
 export { VIEW_H } from "./plantCanvas";
 import * as Art from "./visitorArt";
 import { PEBBLE } from "./carryArt";
@@ -159,6 +160,13 @@ export const paintOrchard = async (): Promise<THREE.Texture> => paintedCutout(aw
 /** A sheet of hedge leaves (hedgeSheet), painted in a worker. It repeats along its length. */
 export async function paintHedge(): Promise<THREE.Texture> {
   const t = paintedCutout(await paint<Pixels>({ kind: "hedge" }));
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
+}
+
+/** A sheet of bramble leaves (brambleSheet), painted in a worker. It repeats along its length; below it, its bottom row carries on. */
+export async function paintBrambles(): Promise<THREE.Texture> {
+  const t = paintedCutout(await paint<Pixels>({ kind: "brambles" }));
   t.wrapS = THREE.RepeatWrapping;
   return t;
 }
@@ -320,14 +328,14 @@ export function wood(): OffscreenCanvas {
   return c;
 }
 
-/** Texels on a side of a tile of leaves (hedge, bramble). */
+/** Texels on a side of a tile of leaves (the hedge's middle). */
 const LEAVES_PX = 256;
 
 /**
  * Leaves as flat paper (#1091): one colour, and a calm scatter of leaf cut-outs a shade lighter or darker, `n` of
  * each colour, each a pointed oval `size` texels long at its own turn. A repeating tile of LEAVES_PX texels.
  */
-function leaves(seed: number, base: string, cutouts: [string, number][], size: number): [OffscreenCanvas, OffscreenCanvasRenderingContext2D, () => number] {
+function leaves(seed: number, base: string, cutouts: [string, number][], size: number): OffscreenCanvas {
   const [c, ctx] = canvas(LEAVES_PX, LEAVES_PX);
   px(ctx, 0, 0, base, LEAVES_PX, LEAVES_PX);
   const r = rng(seed);
@@ -345,30 +353,6 @@ function leaves(seed: number, base: string, cutouts: [string, number][], size: n
       ctx.fill();
     });
   });
-  return [c, ctx, r];
-}
-
-/**
- * A bramble thicket's leaves (#749, #1091): greyer and wilder than the clipped hedge, its leaves bigger and more
- * apart in tone, a few showing their pale undersides, with a few blackberries. Its faces you see are mostly turned
- * from the sun, so it is no darker than the hedge itself: dark green, never black. Its thorny canes are their own meshes (sceneStile.ts).
- */
-export function bramble(): OffscreenCanvas {
-  const [c, ctx, r] = leaves(749, "#4a6a45", [["#3b5638", 12], ["#5d8052", 10], ["#7a9a68", 4]], 34);
-  const dot = (x: number, y: number, rad: number, color: string) => {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x, y, rad, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  // A blackberry is a little knot of round drupelets, one of them catching the light: a lone dark dot reads as a hole.
-  for (let i = 0; i < 4; i++) {
-    const [x, y] = [r() * LEAVES_PX, r() * LEAVES_PX];
-    wrapped(LEAVES_PX, x, y, (x, y) => {
-      for (const [dx, dy] of [[0, -4], [-3.5, 0], [3.5, 0], [0, 4]]) dot(x + dx, y + dy, 3.6, "#2a1d33");
-      dot(x - 1.5, y - 4.5, 1.4, "#6a5a8a");
-    });
-  }
   return c;
 }
 
@@ -416,7 +400,7 @@ export function picket(): OffscreenCanvas {
 
 /** Thick hedge leaves (#315, #1091): dense and dark, with no gaps to see through, a few leaves catching the light. */
 export function hedge(): OffscreenCanvas {
-  return leaves(11, "#3e653a", [["#345834", 10], ["#4a7444", 10], ["#5c8752", 3]], 30)[0];
+  return leaves(11, "#3e653a", [["#345834", 10], ["#4a7444", 10], ["#5c8752", 3]], 30);
 }
 
 /** Texels to a metre of a hedge sheet. */
@@ -461,28 +445,7 @@ export function hedgeSheet(): OffscreenCanvas {
     for (let x = r() * gap; x < W; x += gap * (0.75 + r() * 0.5)) {
       const [by, l, half] = [y + (r() - 0.5) * 14, len * (0.8 + r() * 0.4), len * (0.17 + r() * 0.05)];
       const turn = (r() < 0.5 ? -1 : 1) * (0.08 + r() * 0.42);
-      for (const ox of [-W, 0, W]) {
-        // The shadow first, on what is already there only (source-atop): the leaf is drawn far off and its shadow thrown back.
-        ctx.save();
-        ctx.globalCompositeOperation = "source-atop";
-        ctx.shadowColor = "rgba(10, 26, 12, 0.55)";
-        ctx.shadowBlur = LEAF_SHADOW.blur;
-        ctx.shadowOffsetX = LEAF_SHADOW.dx + 4 * W;
-        ctx.shadowOffsetY = LEAF_SHADOW.dy;
-        leafPath(ctx, x + ox - 4 * W, by, l, half, turn);
-        ctx.fill();
-        ctx.restore();
-        ctx.fillStyle = light;
-        leafPath(ctx, x + ox, by, l, half, turn);
-        ctx.fill();
-        ctx.fillStyle = dark;
-        leafPath(ctx, x + ox, by, l, half, turn, 1);
-        ctx.fill();
-        ctx.strokeStyle = `rgba(222, 236, 198, ${edge})`;
-        ctx.lineWidth = 1.6;
-        leafPath(ctx, x + ox, by, l, half, turn);
-        ctx.stroke();
-      }
+      paperLeaf(ctx, W, x, by, l, half, turn, light, dark, edge);
     }
   };
   // The fringe: a back row reaching highest, then a front row; then the strip's own leaves, darker the lower they are.
@@ -494,14 +457,127 @@ export function hedgeSheet(): OffscreenCanvas {
     ["#365a35", "#29462b"],
     ["#304f33", "#243f27"],
   ].forEach(([light, dark], i) => row(LEAF + 80 + i * 40, 38, 70, light, dark, 0.26 - i * 0.05));
-  // The row in front shades the bottom.
+  shadeBottom(ctx, W, H);
+  return c;
+}
+
+/**
+ * A sheet of bramble leaves cut from paper (#1164): BRAMBLE_SHEET (stile.ts) metres, repeating along its length. Cut
+ * as a hedge sheet (hedgeSheet), but wild: its top is a ragged edge of sprays at uneven heights, each three round
+ * leaflets, greyer than the hedge's, a few turned up to show their paler undersides; and a few blackberries. Below,
+ * rows of sprays down to its foot, darker the lower they are, then the foot in shadow, one even colour: a flat taller
+ * than the sheet carries its bottom row down to the ground (sceneStile.ts), and a row of leaves would show as stripes.
+ */
+export function brambleSheet(): OffscreenCanvas {
+  const [W, H, LEAF] = [BRAMBLE_SHEET.w * SHEET_PPM, Math.round(BRAMBLE_SHEET.h * SHEET_PPM), Math.round(BRAMBLE_SHEET.leaf * SHEET_PPM)];
+  const [c, ctx] = canvas(W, H);
+  const r = rng(749);
+  const body = ctx.createLinearGradient(0, LEAF, 0, H);
+  body.addColorStop(0, "#33492f");
+  body.addColorStop(1, "#24361f");
+  ctx.fillStyle = body;
+  // Below the top sprays' bases: between sprays the edge dips, so the top is ragged.
+  ctx.fillRect(0, LEAF + 24, W, H);
+  /** A row of sprays: their bases near `y` (up to `jitter` above or below), about `gap` apart, `len` long, coloured `light` and `dark`, with an `edge` this pale. */
+  const sprays = (y: number, jitter: number, gap: number, len: number, light: string, dark: string, edge: number) => {
+    for (let x = r() * gap; x < W; x += gap * (0.7 + r() * 0.6)) {
+      const [by, l, turn] = [y + (r() - 0.5) * jitter, len * (0.75 + r() * 0.5), (r() - 0.5) * 0.7];
+      // The leaflets meet a little up the stalk.
+      const [fx, fy] = [x + Math.sin(turn) * l * 0.15, by - Math.cos(turn) * l * 0.15];
+      const [li, da] = r() < 0.05 ? ["#6e8466", "#5d7257"] : [light, dark];
+      // The side leaflets first, behind the middle one.
+      for (const [dt, k] of [[-0.85, 0.75], [0.85, 0.75], [0, 0.9]]) paperLeaf(ctx, W, fx, fy, l * k, l * k * 0.3, turn + dt, li, da, edge);
+    }
+  };
+  sprays(LEAF + 40, 60, 84, 120, "#56714b", "#43593c", 0.4);
+  sprays(LEAF + 95, 40, 70, 100, "#4c6644", "#3b5137", 0.32);
+  // The body's rows, down past the foot: each a shade darker, from the top row's green to the foot's.
+  const rows = Math.ceil((H - LEAF - 150) / 48) + 1;
+  const mix = (a: number[], b: number[], k: number) => `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * k)).join(",")})`;
+  for (let i = 0; i < rows; i++) {
+    const k = i / (rows - 1);
+    sprays(LEAF + 150 + i * 48, 20, 62, 80, mix([67, 92, 62], [44, 62, 42], k), mix([52, 74, 50], [33, 48, 32], k), 0.24 - k * 0.16);
+  }
+  // Blackberries, among the top leaves: most ripe, a few still red. Each a knot of round drupelets, one catching the light.
+  for (let i = 0; i < 7; i++) {
+    const [x, y] = [r() * W, LEAF + 30 + r() * 70];
+    const [ripe, shine] = r() < 0.75 ? ["#2a1d33", "#6a5a8a"] : ["#8e3a3f", "#c97a70"];
+    const knot = (ox: number) => {
+      ctx.beginPath();
+      for (const [dx, dy] of [[0, -9], [-7, -3], [7, -3], [-4, 5], [4, 5], [0, 0]]) {
+        ctx.moveTo(x + ox + dx + 6, y + dy);
+        ctx.arc(x + ox + dx, y + dy, 6, 0, Math.PI * 2);
+      }
+    };
+    for (const ox of [-W, 0, W]) {
+      withShadow(ctx, W, (s) => knot(ox + s));
+      ctx.fillStyle = ripe;
+      knot(ox);
+      ctx.fill();
+      ctx.fillStyle = shine;
+      ctx.beginPath();
+      ctx.arc(x + ox - 3, y - 11, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  shadeBottom(ctx, W, H);
+  // The foot: the leaves fade into one even shadow, its last rows all one colour.
+  const foot = ctx.createLinearGradient(0, H - 48, 0, H - 8);
+  foot.addColorStop(0, "rgba(26, 40, 25, 0)");
+  foot.addColorStop(1, "rgba(26, 40, 25, 1)");
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.fillStyle = foot;
+  ctx.fillRect(0, H - 48, W, 48);
+  ctx.globalCompositeOperation = "source-over";
+  return c;
+}
+
+/** The row in front shades a sheet's bottom (hedgeSheet, brambleSheet). */
+function shadeBottom(ctx: OffscreenCanvasRenderingContext2D, W: number, H: number) {
   ctx.globalCompositeOperation = "source-atop";
   const shade = ctx.createLinearGradient(0, H - 140, 0, H);
   shade.addColorStop(0, "rgba(12, 28, 14, 0)");
   shade.addColorStop(1, "rgba(12, 28, 14, 0.4)");
   ctx.fillStyle = shade;
   ctx.fillRect(0, 0, W, H);
-  return c;
+  ctx.globalCompositeOperation = "source-over";
+}
+
+/**
+ * Fills what `trace` traces, as its soft shadow from the sun at the upper left, on what is already painted only: it
+ * is traced 4W to the left, and its shadow thrown back. `trace` takes how far to the side to trace it.
+ */
+function withShadow(ctx: OffscreenCanvasRenderingContext2D, W: number, trace: (ox: number) => void) {
+  ctx.save();
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.shadowColor = "rgba(10, 26, 12, 0.55)";
+  ctx.shadowBlur = LEAF_SHADOW.blur;
+  ctx.shadowOffsetX = LEAF_SHADOW.dx + 4 * W;
+  ctx.shadowOffsetY = LEAF_SHADOW.dy;
+  trace(-4 * W);
+  ctx.fill();
+  ctx.restore();
+}
+
+/**
+ * One leaf cut from paper on a sheet `W` texels long that repeats (hedgeSheet, brambleSheet), its base at (x, y): its
+ * soft shadow on the leaves behind, then the leaf folded down its middle, its half away from the sun `dark`, and a
+ * thin pale cut edge (`edge`: how pale). Drawn again a sheet's length to each side, so it carries over the seam.
+ */
+function paperLeaf(ctx: OffscreenCanvasRenderingContext2D, W: number, x: number, y: number, len: number, half: number, turn: number, light: string, dark: string, edge: number) {
+  for (const ox of [-W, 0, W]) {
+    withShadow(ctx, W, (s) => leafPath(ctx, x + ox + s, y, len, half, turn));
+    ctx.fillStyle = light;
+    leafPath(ctx, x + ox, y, len, half, turn);
+    ctx.fill();
+    ctx.fillStyle = dark;
+    leafPath(ctx, x + ox, y, len, half, turn, 1);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(222, 236, 198, ${edge})`;
+    ctx.lineWidth = 1.6;
+    leafPath(ctx, x + ox, y, len, half, turn);
+    ctx.stroke();
+  }
 }
 
 /**
