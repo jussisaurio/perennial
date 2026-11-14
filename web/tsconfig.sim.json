@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": { "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.sim.tsbuildinfo", "types": ["vite/client", "bun"] },
-  "include": ["src/sim/regenerate.ts", "src/sim/storySim.ts"],
+  "include": ["src/sim/regenerate.ts", "src/sim/storySim.ts", "src/sim/noViteDecks.ts", "src/realUse/cli.ts", "src/realUse/sim.ts"],
   "exclude": []
 }

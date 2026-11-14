@@ -64,20 +64,28 @@ export function chunkLabel(c: { state: "start" | "finish" | "done" }): string {
   return c.state === "done" ? "Practice more" : c.state === "finish" ? "Finish today's practice" : "Start today's practice";
 }
 
+/**
+ * The time an answer counts toward the day's minutes. A new word counts at least the time the plan gave it: a fast learner who plants
+ * all of a chunk's new words has done its minutes, even in less real time.
+ * Otherwise Today asks for more minutes after every chunk that ran out of new words (#255).
+ * Every other answer counts its real time: the timer, not the plan, ends reviews.
+ * @internal Exported for the real-use report (realUse/report.ts).
+ */
+export const countedMs = (durationMs: number, firstAnswer: boolean) => (firstAnswer ? Math.max(durationMs, NEW_WORD_MS) : durationMs);
+
+/**
+ * The day's minutes are done with under a minute left: a session that short is not worth a button.
+ * @internal Exported for the real-use report (realUse/report.ts).
+ */
+export const dayDone = (countedToday: number) => DAILY_MINUTES - countedToday / 60_000 < 1;
+
 /** What Today offers now: the day's 5 minutes, the rest of them, or (once they are done) 5 more. */
 export function nextChunk(l: Learner, now = Date.now()): { state: "start" | "finish" | "done"; minutes: number } {
   const dayStart = startOfDay(now);
-  // A new word counts at least the time the plan gave it: a fast learner who plants
-  // all of a chunk's new words has done its minutes, even in less real time.
-  // Otherwise Today asks for more minutes after every chunk that ran out of new words (#255).
-  // Every other answer counts its real time: the timer, not the plan, ends reviews.
   let ms = 0;
-  for (const r of l.reviewsSince(dayStart)) {
-    ms += isFirstAnswer(l, r) ? Math.max(r.duration_ms, NEW_WORD_MS) : r.duration_ms;
-  }
+  for (const r of l.reviewsSince(dayStart)) ms += countedMs(r.duration_ms, isFirstAnswer(l, r));
+  if (dayDone(ms)) return { state: "done", minutes: DAILY_MINUTES };
   const left = DAILY_MINUTES - ms / 60_000;
-  // Under a minute left counts as done: a session that short is not worth a button.
-  if (left < 1) return { state: "done", minutes: DAILY_MINUTES };
   // Half a minute in is a start, not a session to finish.
   if (ms < 30_000) return { state: "start", minutes: DAILY_MINUTES };
   return { state: "finish", minutes: Math.round(left) };

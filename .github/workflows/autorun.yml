@@ -95,6 +95,8 @@ jobs:
           GH_TOKEN: ${{ secrets.AUTORUN_GH_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Read-only, for `bun run real-use` (docs/real-use.md). Empty until the owner adds the secret.
+          REAL_USE_DATABASE_URL: ${{ secrets.REAL_USE_DATABASE_URL }}
           # Claude Code's own credential is taken out of the environment of the agent's commands.
           CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: "1"
           DISABLE_AUTOUPDATER: "1"

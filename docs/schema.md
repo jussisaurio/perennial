@@ -85,7 +85,7 @@ create index on user_sentence (user_id, word_id);
 
 Theme and sound are per-device preferences (localStorage), so they don't sync. Deletes are real deletes: the next read of `/api/rows` brings them. Undo deletes the review, and deleting a word or sentence removes it.
 
-**Server only:** `ai_usage (user_id, period, used)`, `ai_spend (period, usd)`, `ai_request` (model, prompt version, tokens, cost, latency), and `write_tab (user_id, tab, applied)`, the last write applied from each tab. Rows that reference a user cascade when the user is deleted.
+**Server only:** `ai_usage (user_id, period, used)`, `ai_spend (period, usd)`, `ai_request` (model, prompt version, tokens, cost, latency), `write_tab (user_id, tab, applied)`, the last write applied from each tab, and `use_event (user_id, lang, kind, at, note)`, the time of each note's first read, for `bun run real-use` ([real-use.md](real-use.md)). Rows that reference a user cascade when the user is deleted.
 
 **Removed from today's server:** the op log, our own login code and session tables, the course batch cache, and the Stripe columns.
 

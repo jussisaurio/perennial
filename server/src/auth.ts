@@ -41,6 +41,7 @@ const mergeUsers = Effect.fn("Auth.mergeUsers")(function* (from: string, to: str
       yield* sql`update review set user_id = ${to} where user_id = ${from}`;
       yield* sql`update user_word set user_id = ${to} where user_id = ${from}`;
       yield* sql`update user_sentence set user_id = ${to} where user_id = ${from}`;
+      yield* sql`update use_event set user_id = ${to} where user_id = ${from}`;
       // Rows with a natural key: the newer one wins.
       yield* sql`insert into word_state (user_id, word_id, status, queued_at, updated_at)
         select ${to}, word_id, status, queued_at, updated_at from word_state where user_id = ${from}

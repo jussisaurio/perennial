@@ -6,6 +6,8 @@
     "dev": "bun scripts/dev.ts",
     "dev:ai": "bun scripts/dev.ts --ai",
     "check": "bun scripts/check.ts",
+    "real-use": "bun web/src/realUse/cli.ts",
+    "real-use:sim": "TZ=UTC bun web/src/realUse/sim.ts",
     "knip": "knip && knip --production",
     "deadcode": "bun scripts/deadcode.ts",
     "typecheck": "bun run --filter '*' typecheck",

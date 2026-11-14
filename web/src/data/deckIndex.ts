@@ -15,6 +15,12 @@ export interface LoadedDeck {
   resolve(id: string): DeckWord | undefined;
 }
 
+/**
+ * A word id to the id its memory is kept under: a deck alias to its word, and
+ * the learner's own word to the deck word it was linked to (user_word.deck_id).
+ */
+export const wordResolver = (deck: LoadedDeck, linked: ReadonlyMap<string, string>) => (id: string) => deck.resolve(id)?.id ?? linked.get(id) ?? id;
+
 export function indexWords(d: WordsPart, lang: string): LoadedDeck {
   if (d.lang !== lang) throw new Error(`deck ${lang}: holds ${d.lang}`);
   const byId = new Map<string, DeckWord>(d.words.map((w) => [w.id, w]));

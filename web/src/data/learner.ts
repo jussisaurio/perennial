@@ -9,7 +9,7 @@ import { createContext, useContext, useEffect, useState, useSyncExternalStore } 
 import { DAY_MS, startOfDay } from "../core/day";
 import { firstReviewed, MemoryLog, reviewedAt, memKey, type MemoryRow } from "../core/memory";
 import { loadDeck, loadedDeck, loadedSentences, loadSentences, type DeckSentences } from "./deck";
-import type { LoadedDeck } from "./deckIndex";
+import { wordResolver, type LoadedDeck } from "./deckIndex";
 import { inSlices, runAll, yieldToBrowser } from "../lib/yield";
 import { DAILY_MINUTES } from "./practice";
 import { afterPaint } from "../ui/afterPaint";
@@ -362,7 +362,7 @@ export class Learners {
   private links(lang: string, deck: LoadedDeck): Links {
     const mine = [...this.userWords.rows.values()].filter((u) => u.lang === lang).sort((a, b) => a.created_at.localeCompare(b.created_at));
     const linked = new Map(mine.flatMap((u) => (u.deck_id ? [[u.id, u.deck_id] as const] : [])));
-    return { deck, userWords: this.userWords.version, mine, resolve: (id) => deck.resolve(id)?.id ?? linked.get(id) ?? id };
+    return { deck, userWords: this.userWords.version, mine, resolve: wordResolver(deck, linked) };
   }
 
   private words(links: Links): Words {

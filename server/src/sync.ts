@@ -182,6 +182,14 @@ export const SyncLive = Layer.effect(
                   // Only the columns sent change, so two devices editing different settings both win.
                   // The door only ever opens: a device that still has it closed never shuts it again.
                   // The notes read only grow (#654): a device that has not seen a note read elsewhere never unreads it.
+                  // A note read for the first time gets its time (use_event), which notes_read does not keep (#984).
+                  // `?? []`: no course yet, so every note sent is new; a write without the list reads nothing.
+                  const wasRead = r.notes_read?.length
+                    ? ((yield* sql<{ notes_read: string[] }>`select notes_read from course where user_id = ${userId} and lang = ${r.lang} for update`)[0]?.notes_read ?? [])
+                    : [];
+                  const firstReads = (r.notes_read ?? []).filter((id) => !wasRead.includes(id));
+                  if (firstReads.length)
+                    yield* sql`insert into use_event ${sql.insert(firstReads.map((note) => ({ user_id: userId, lang: r.lang, kind: "note_read", at: now, note })))}`;
                   // `?? []`: a write without the list adds nothing to it.
                   const res = yield* sql<{ inserted: boolean }>`insert into course (user_id, lang, minutes, retention, door_open, notes_read)
                     values (${userId}, ${r.lang}, ${r.minutes ?? COURSE_DEFAULTS.minutes}, ${r.retention ?? COURSE_DEFAULTS.retention}, ${r.door_open === true}, ${sql.json(r.notes_read ?? [])})
