@@ -1,5 +1,15 @@
 import { expect, test } from "bun:test";
-import { halve, premultiply } from "./plantCanvas";
+import { bleedEdges, halve, premultiply } from "./plantCanvas";
+
+test("bleedEdges gives every empty pixel the nearest drawn colour, and leaves it empty", () => {
+  // One row: red, then four empty pixels, then blue. Far from an edge too, as a mipmap mixes them in (#1115).
+  const red = [200, 0, 0, 255];
+  const blue = [0, 0, 180, 255];
+  const empty = [0, 0, 0, 0];
+  const d = new Uint8Array([...red, ...empty, ...empty, ...empty, ...empty, ...blue]);
+  bleedEdges(d, 6, 1);
+  expect([...d]).toEqual([...red, 200, 0, 0, 0, 200, 0, 0, 0, 0, 0, 180, 0, 0, 0, 180, 0, ...blue]);
+});
 
 test("premultiply scales each colour by its pixel's alpha", () => {
   const d = new Uint8ClampedArray([10, 20, 30, 255, 200, 100, 50, 128, 90, 90, 90, 0]);

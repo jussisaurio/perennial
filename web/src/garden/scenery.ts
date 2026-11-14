@@ -338,9 +338,9 @@ function nearestThing(r: Ray, w: SceneryWorld, has: (id: SceneryId) => boolean):
   return { hit: best, t: bestT };
 }
 
-// ---- Hit volumes for sprites, from their pixel art ----
+// ---- Hit volumes for sprites, from their drawing ----
 
-/** The drawn part of each tree kind (textures.ts trees(): 64×128 cells), as half width and height per unit of scale. */
+/** The drawn part of each tree kind (textures.ts trees(): cells of 64×128 units), as half width and height per unit of scale. */
 export const TREE_KINDS: readonly { id: SceneryId; half: number; top: number }[] = [
   { id: "tree", half: 0.34, top: 1.64 },
   { id: "pine", half: 0.3, top: 1.72 },

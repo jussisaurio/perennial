@@ -145,7 +145,7 @@ export function plantPng(p: SpritePlant, scale: number, dpr: number): Promise<Bl
   return c.convertToBlob();
 }
 
-/** The 4 sides first, then the corners: a pixel takes the colour of the nearest drawn neighbour. */
+/** The 4 sides first, then the corners. */
 const NEIGHBOURS = [
   [1, 0],
   [-1, 0],
@@ -158,28 +158,36 @@ const NEIGHBOURS = [
 ] as const;
 
 /**
- * Gives each empty pixel (alpha 0) next to a drawn one that pixel's colour, still empty. A texture filtered smooth
- * mixes an edge pixel with its empty neighbours, and a canvas leaves those black: the edge got a dark rim (#1051).
+ * Gives every empty pixel (alpha 0) the colour of the nearest drawn one, still empty. A texture filtered smooth mixes
+ * an edge pixel with its empty neighbours, and its mipmaps mix in empty pixels further out; a canvas leaves those
+ * black, so the edge got a dark rim (#1051), worse far off. A fill out from the drawing, one ring at a time.
  */
 export function bleedEdges(d: Uint8Array | Uint8ClampedArray, w: number, h: number) {
-  // Read from a copy, so a pixel given a colour does not pass it on.
-  const src = d.slice();
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      if (src[i + 3] !== 0) continue;
-      for (const [dx, dy] of NEIGHBOURS) {
-        const nx = x + dx;
-        const ny = y + dy;
-        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-        const j = (ny * w + nx) * 4;
-        if (src[j + 3] === 0) continue;
-        d[i] = src[j];
-        d[i + 1] = src[j + 1];
-        d[i + 2] = src[j + 2];
-        break;
-      }
+  const queue = new Int32Array(w * h);
+  const coloured = new Uint8Array(w * h);
+  let tail = 0;
+  for (let p = 0; p < w * h; p++)
+    if (d[p * 4 + 3] !== 0) {
+      coloured[p] = 1;
+      queue[tail++] = p;
     }
+  for (let head = 0; head < tail; head++) {
+    const p = queue[head];
+    const x = p % w;
+    const y = (p - x) / w;
+    for (const [dx, dy] of NEIGHBOURS) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const q = ny * w + nx;
+      if (coloured[q]) continue;
+      coloured[q] = 1;
+      d[q * 4] = d[p * 4];
+      d[q * 4 + 1] = d[p * 4 + 1];
+      d[q * 4 + 2] = d[p * 4 + 2];
+      queue[tail++] = q;
+    }
+  }
 }
 
 /**

@@ -124,6 +124,19 @@ function paintedTexture({ width, height, data }: Pixels, aroundRing = false): TH
   return t;
 }
 
+/**
+ * A painted cut-out that stands as sprites (the trees outside the fence, the orchard): as paintedTexture, but with
+ * mipmaps, so far off it does not shimmer. Its empty pixels carry their nearest colour (bleedEdges), so the mipmaps
+ * blend an edge toward its own colour, not toward a dark rim. Not premultiplied on upload, as cutoutTexture is: for
+ * raw pixels the browser does that on the main thread, 20–30 ms for the orchard at CPU 10×.
+ */
+function paintedCutout(p: Pixels): THREE.DataTexture {
+  const t = paintedTexture(p);
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.generateMipmaps = true;
+  return t;
+}
+
 /** The trees outside the fence, the clouds, and the sky's looks for each time of day, with tonight's moon. */
 export interface FarTextures {
   trees: THREE.Texture;
@@ -149,11 +162,11 @@ function paint<T>(job: PaintJob): Promise<T> {
 export async function paintFar(moonPhase: number): Promise<FarTextures> {
   const { trees, cloud, looks } = await paint<FarPixels>({ kind: "far", moonPhase });
   const look = (l: FarPixels["looks"][TimeOfDay]) => ({ sky: paintedTexture(l.sky), hills: paintedTexture(l.hills, true), sun: paintedTexture(l.sun) });
-  return { trees: paintedTexture(trees), cloud: paintedTexture(cloud), looks: { day: look(looks.day), dusk: look(looks.dusk), night: look(looks.night) } };
+  return { trees: paintedCutout(trees), cloud: paintedTexture(cloud), looks: { day: look(looks.day), dusk: look(looks.dusk), night: look(looks.night) } };
 }
 
 /** The orchard's atlas (orchard()), painted in a worker. */
-export const paintOrchard = async (): Promise<THREE.Texture> => paintedTexture(await paint<Pixels>({ kind: "orchard" }));
+export const paintOrchard = async (): Promise<THREE.Texture> => paintedCutout(await paint<Pixels>({ kind: "orchard" }));
 
 const px = (ctx: OffscreenCanvasRenderingContext2D, x: number, y: number, color: string, w = 1, h = 1) => {
   ctx.fillStyle = color;
@@ -556,97 +569,103 @@ export function hills(night: boolean): OffscreenCanvas {
   return c;
 }
 
-/** A round blob of leaves centred on (cx, cy), lit from the top left: three shades plus speckle. Returns the pixels it drew. */
-function leafBlob(ctx: OffscreenCanvasRenderingContext2D, r: () => number, cx: number, cy: number, rad: number, colors: readonly string[]): [number, number][] {
-  const out: [number, number][] = [];
-  for (let y = -rad; y <= rad; y++)
-    for (let x = -rad; x <= rad; x++) {
-      const d = Math.hypot(x, y * 1.1) + r() * 1.6;
-      if (d > rad) continue;
-      const light = (-x - y) / rad;
-      const i = light > 0.45 ? 0 : light > -0.3 ? 1 : 2;
-      px(ctx, cx + x, cy + y, r() < 0.08 ? colors[Math.min(2, i + 1)] : colors[i]);
-      out.push([cx + x, cy + y]);
-    }
-  return out;
+/**
+ * A crown of round leaf masses as paper (#1091), `blobs` as [x, y, radius]. The highest mass is at the back and the
+ * lowest in front. Each is a disc in the dark shade with a disc of the middle shade over its upper left and a small
+ * light one higher still, kept inside its own disc: a crisp cut-out lit from the top left, its lower right in shade.
+ */
+function crown(ctx: OffscreenCanvasRenderingContext2D, blobs: readonly (readonly [number, number, number])[], [light, mid, dark]: readonly string[]) {
+  for (const [x, y, rad] of [...blobs].sort((a, b) => a[1] - b[1])) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, rad, 0, Math.PI * 2);
+    ctx.clip();
+    oval(ctx, dark, x, y, rad);
+    oval(ctx, mid, x - rad * 0.14, y - rad * 0.16, rad * 0.94);
+    oval(ctx, light, x - rad * 0.4, y - rad * 0.44, rad * 0.48);
+    ctx.restore();
+  }
 }
 
-/** Trees and bushes for outside the fence: one atlas, 4 cells of 64×128. */
+/** A trunk from `top` down to `bottom`, `w` wide, its right side a shade darker, turned from the light. */
+function trunk(ctx: OffscreenCanvasRenderingContext2D, cx: number, top: number, bottom: number, w: number, [lit, shade]: readonly [string, string]) {
+  px(ctx, cx - w / 2, top, lit, w, bottom - top);
+  px(ctx, cx + w * 0.1, top, shade, w * 0.4, bottom - top);
+}
+
+/** Texels to each of the first far trees drawing's: trees() draws in its texels, so TREE_KINDS (scenery.ts) still fits. */
+const TREE_FINE = 4;
+
+/** Trees and bushes for outside the fence, as paper (#1115): one atlas, 4 cells of 64×128 in the first drawing's texels. */
 export function trees(): OffscreenCanvas {
-  const [c, ctx] = canvas(256, 128);
-  const blob = (r: () => number, cx: number, cy: number, rad: number, colors: string[]) => leafBlob(ctx, r, cx, cy, rad, colors);
-  const trunk = (cx: number, top: number, w: number) => {
-    px(ctx, cx - w / 2, top, "#7f644a", w, 128 - top);
-    px(ctx, cx - w / 2, top, "#5f4a37", 1, 128 - top);
-    px(ctx, cx + w / 2 - 1, top, "#97795a", 1, 128 - top);
-  };
+  const [c, ctx] = canvas(256 * TREE_FINE, 128 * TREE_FINE);
+  ctx.scale(TREE_FINE, TREE_FINE);
+  const bark = ["#7f644a", "#634d39"] as const;
   // 0: round oak
-  let r = rng(21);
-  trunk(32, 70, 6);
-  blob(r, 22, 58, 14, ["#93b775", "#6e9a5c", "#4f7845"]);
-  blob(r, 42, 56, 15, ["#93b775", "#6e9a5c", "#4f7845"]);
-  blob(r, 32, 40, 17, ["#93b775", "#6e9a5c", "#4f7845"]);
-  // 1: pine
-  r = rng(22);
-  trunk(96, 100, 4);
-  for (let i = 0; i < 5; i++) {
+  trunk(ctx, 32, 70, 128, 6, bark);
+  crown(ctx, [[22, 58, 14], [42, 56, 15], [32, 40, 17]], ["#93b775", "#6e9a5c", "#4f7845"]);
+  // 1: pine, five tiers, each upper one over the one below it: a cone with its left face lit and its right in shade.
+  trunk(ctx, 96, 100, 128, 4, bark);
+  for (let i = 4; i >= 0; i--) {
     const y = 18 + i * 17;
     const w = 7 + i * 5;
-    for (let yy = 0; yy < 20; yy++) {
-      const half = Math.floor((yy / 20) * w);
-      for (let x = -half; x <= half; x++) px(ctx, 96 + x, y + yy, x < -half / 3 ? "#5a866a" : x > half / 2 ? "#36564a" : r() < 0.1 ? "#436a56" : "#47715a");
-    }
+    const [apex, base] = [[96, y], y + 20] as const;
+    polygon(ctx, "#47715a", [apex, [96 - w, base], [96 + w, base]]);
+    polygon(ctx, "#5a866a", [apex, [96 - w, base], [96 - w / 3, base]]);
+    polygon(ctx, "#36564a", [apex, [96 + w / 2, base], [96 + w, base]]);
   }
   // 2: blossom tree
-  r = rng(23);
-  trunk(160, 74, 6);
-  blob(r, 148, 58, 14, ["#f3d3dc", "#e2a8ba", "#c9849a"]);
-  blob(r, 172, 58, 13, ["#f3d3dc", "#e2a8ba", "#c9849a"]);
-  blob(r, 160, 42, 16, ["#f3d3dc", "#e2a8ba", "#c9849a"]);
+  trunk(ctx, 160, 74, 128, 6, bark);
+  crown(ctx, [[148, 58, 14], [172, 58, 13], [160, 42, 16]], ["#f3d3dc", "#e2a8ba", "#c9849a"]);
   // 3: bush with berries
-  r = rng(24);
-  blob(r, 214, 112, 14, ["#86ad6c", "#66904f", "#4b723f"]);
-  blob(r, 236, 114, 12, ["#86ad6c", "#66904f", "#4b723f"]);
-  for (let i = 0; i < 9; i++) px(ctx, 204 + Math.floor(r() * 40), 104 + Math.floor(r() * 16), "#dc5636");
+  crown(ctx, [[214, 112, 14], [236, 114, 12]], ["#86ad6c", "#66904f", "#4b723f"]);
+  const r = rng(24);
+  for (let i = 0; i < 9; i++) oval(ctx, "#dc5636", 205 + r() * 38, 105 + r() * 14, 1.1);
   return c;
 }
 
-/** The orchard's trees (#315, orchardArt.ts): every kind in every look, a column per kind (in ORCHARD_WORDS order), a row per look (LOOKS). */
+/**
+ * Texels to each of the first orchard drawing's: orchard() draws in its texels, as orchardArt.ts gives the shapes.
+ * Fewer than the far trees': the atlas has 33 cells, and copying it to the GPU is one main-thread step.
+ */
+const ORCHARD_FINE = 2;
+
+/**
+ * The orchard's trees (#315, orchardArt.ts) as paper (#1091): every kind in every look, a column per kind (in
+ * ORCHARD_WORDS order), a row per look (LOOKS). Flowers and fruit are small round cut-outs on the crown.
+ */
 export function orchard(): OffscreenCanvas {
-  const [c, ctx] = canvas(CELL_W * ORCHARD_WORDS.length, CELL_H_PX * LOOKS.length);
+  const [c, ctx] = canvas(CELL_W * ORCHARD_WORDS.length * ORCHARD_FINE, CELL_H_PX * LOOKS.length * ORCHARD_FINE);
+  ctx.scale(ORCHARD_FINE, ORCHARD_FINE);
   ORCHARD_WORDS.forEach((kind, col) =>
     LOOKS.forEach((look, row) => {
       const s = TREE_SHAPES[kind];
-      const ox = col * CELL_W;
-      const oy = row * CELL_H_PX;
+      ctx.save();
+      ctx.translate(col * CELL_W, row * CELL_H_PX);
       const mid = CELL_W / 2;
       // The same seed in every look, so blossom and fruit sit on the very same tree.
       const r = rng(70 + col);
-      // Draws in the cell's own pixels.
-      const p = (x: number, y: number, color: string, w = 1, h = 1) => px(ctx, ox + x, oy + y, color, w, h);
       if (s.trellis) {
-        for (const sx of [-1, 1]) p(mid + sx * TRELLIS.half - 1, TRELLIS.top, "#8a6440", 3, CELL_H_PX - TRELLIS.top);
-        p(mid - TRELLIS.half, TRELLIS.top + 2, "#a37a52", TRELLIS.half * 2, 2);
-        p(mid - TRELLIS.half, TRELLIS.top + 22, "#a37a52", TRELLIS.half * 2, 2);
+        for (const sx of [-1, 1]) trunk(ctx, mid + sx * TRELLIS.half + 0.5, TRELLIS.top, CELL_H_PX, 3, ["#8a6440", "#6e4e30"]);
+        px(ctx, mid - TRELLIS.half, TRELLIS.top + 2, "#a37a52", TRELLIS.half * 2, 2);
+        px(ctx, mid - TRELLIS.half, TRELLIS.top + 22, "#a37a52", TRELLIS.half * 2, 2);
       }
-      // The trunk, lit from the left like the trees outside the fence.
-      const tw = s.trunk.w;
-      p(mid - tw / 2, s.trunk.top, "#7a5233", tw, CELL_H_PX - s.trunk.top);
-      p(mid - tw / 2, s.trunk.top, "#946540", 1, CELL_H_PX - s.trunk.top);
-      p(mid + tw / 2 - 1, s.trunk.top, "#5c3b22", 1, CELL_H_PX - s.trunk.top);
-      // The crown: blobs of three shades, light from the top left, with speckle. Its pixels are kept for the flowers and fruit.
-      const crown = new Set<number>();
-      for (const [dx, cy, rad] of s.blobs) for (const [X, Y] of leafBlob(ctx, r, ox + mid + dx, oy + cy, rad, s.leaf)) crown.add((Y - oy) * CELL_W + (X - ox));
-      // Spots well inside the crown, in a fixed order for this tree.
-      const inner = [...crown].filter((k) => [3, -3, CELL_W * 3, -CELL_W * 3].every((o) => crown.has(k + o)));
-      const spot = () => {
-        const k = inner[Math.floor(r() * inner.length)];
-        return [k % CELL_W, Math.floor(k / CELL_W)];
+      trunk(ctx, mid, s.trunk.top, CELL_H_PX, s.trunk.w, ["#7a5233", "#5c3b22"]);
+      const blobs = s.blobs.map(([dx, cy, rad]) => [mid + dx, cy, rad] as const);
+      crown(ctx, blobs, s.leaf);
+      // A spot well inside the crown: a mass picked by its area, then a point at least 3 texels in from its edge.
+      const area = blobs.reduce((sum, [, , rad]) => sum + rad * rad, 0);
+      const spot = (): [number, number] => {
+        let pick = r() * area;
+        // The last mass if rounding leaves `pick` a hair over the total.
+        const [x, y, rad] = blobs.find(([, , rad]) => (pick -= rad * rad) < 0) ?? blobs[blobs.length - 1];
+        const [a, d] = [r() * Math.PI * 2, Math.sqrt(r()) * (rad - 3)];
+        return [x + Math.cos(a) * d, y + Math.sin(a) * d];
       };
       if (look === "blossom")
-        for (let i = 0; i < 90; i++) {
+        for (let i = 0; i < 40; i++) {
           const [x, y] = spot();
-          p(x, y, s.blossom[i % s.blossom.length], i % 2 ? 1 : 2, i % 4 ? 1 : 2);
+          oval(ctx, s.blossom[i % s.blossom.length], x, y, i % 3 ? 1.3 : 1.8);
         }
       if (look === "fruit") {
         const f = s.fruit;
@@ -654,26 +673,35 @@ export function orchard(): OffscreenCanvas {
         for (let i = 0; i < f.count; i++) {
           const [x, y] = spot();
           if (f.shape === "round" || f.shape === "small") {
-            const n = f.shape === "round" ? 3 : 2;
-            p(x, y, dark, n, n);
-            p(x, y, light, n - 1, n - 1);
+            const rad = f.shape === "round" ? 1.7 : 1.1;
+            oval(ctx, dark, x, y, rad);
+            oval(ctx, light, x - rad * 0.2, y - rad * 0.2, rad * 0.7);
           } else if (f.shape === "pair") {
-            p(x + 1, y - 2, "#4e7a2a", 1, 2);
-            p(x, y, dark, 2, 2);
-            p(x + 2, y + 1, light, 2, 2);
+            ctx.strokeStyle = "#4e7a2a";
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(x - 1, y + 1);
+            ctx.lineTo(x + 0.5, y - 2);
+            ctx.lineTo(x + 2.5, y + 1.5);
+            ctx.stroke();
+            oval(ctx, dark, x - 1, y + 1.5, 1.2);
+            oval(ctx, light, x + 2.5, y + 2, 1.2);
           } else if (f.shape === "drop") {
-            p(x, y, light, 1, 1);
-            p(x - 1, y + 1, light, 3, 2);
-            p(x + 1, y + 2, dark, 1, 1);
+            oval(ctx, light, x, y + 1.6, 1.6);
+            oval(ctx, light, x, y, 1);
+            oval(ctx, dark, x + 0.6, y + 2.2, 0.8);
           } else if (f.shape === "bunch") {
-            for (let k = 0; k < 4; k++) p(x - 3 + k, y + k * 2, k % 2 ? dark : light, 7 - k * 2, 2);
+            // Grapes, three in a row, then two, then one.
+            for (const [gx, gy] of [[-2, 0], [0, 0], [2, 0], [-1, 1.8], [1, 1.8], [0, 3.6]]) oval(ctx, (gx + gy) % 2 ? dark : light, x + gx, y + gy, 1.1);
           } else {
-            p(x - 5, y, dark, 11, 2);
-            p(x - 4, y - 1, light, 9, 1);
-            p(x - 2, y - 2, "#f4efe2", 2, 1);
+            // The plain tree's nest, with one pale egg in it.
+            oval(ctx, "#f4efe2", x - 1, y - 0.6, 1.2, 1);
+            oval(ctx, dark, x, y, 5.5, 2.2, "bottom");
+            px(ctx, x - 5.5, y - 0.6, light, 11, 1.2);
           }
         }
       }
+      ctx.restore();
     }),
   );
   return c;
