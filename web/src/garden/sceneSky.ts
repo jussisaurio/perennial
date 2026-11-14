@@ -260,7 +260,7 @@ export class SkyWater implements Part {
     pond.position.set(L.pond.x, 0.04, L.pond.z);
     c.scene.add(still(pond));
     c.hitDiscs.push({ id: "pond", x: L.pond.x, y: 0.045, z: L.pond.z, r: L.pond.r + 0.18, tagY: 0.3 });
-    const rim = new THREE.Mesh(new THREE.RingGeometry(L.pond.r, L.pond.r + 0.18, 20), mat(T.pixelTexture(T.path(), true), { color: 0xb0aaa0 }));
+    const rim = new THREE.Mesh(new THREE.RingGeometry(L.pond.r, L.pond.r + 0.18, 20), mat(T.paperTexture(T.path(), true), { color: 0xb0aaa0 }));
     rim.rotation.x = -Math.PI / 2;
     rim.position.set(L.pond.x, 0.045, L.pond.z);
     c.scene.add(still(rim));

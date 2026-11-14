@@ -145,12 +145,12 @@ export class StileScene {
     geo.setAttribute("position", new THREE.BufferAttribute(position, 3));
     geo.setIndex(index);
     geo.computeVertexNormals();
-    // The grass's pixels line up with the flat ground's: one texture every 2 m.
+    // The grass's tufts line up with the flat ground's: one tile every GROUND_TILE metres.
     const uv = new Float32Array((position.length / 3) * 2);
-    for (let i = 0; i < uv.length / 2; i++) uv.set([position[i * 3] / 2, -position[i * 3 + 2] / 2], i * 2);
+    for (let i = 0; i < uv.length / 2; i++) uv.set([position[i * 3] / T.GROUND_TILE, -position[i * 3 + 2] / T.GROUND_TILE], i * 2);
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
     shade(geo);
-    c.scene.add(still(new THREE.Mesh(geo, c.mat(T.pixelTexture(T.grass(), true), { vertexColors: true }))));
+    c.scene.add(still(new THREE.Mesh(geo, c.mat(T.paperTexture(T.grass(), true), { vertexColors: true }))));
   }
 
   /** How far (m) the point (x, z) is to the right of the old path's line, facing out. */
@@ -373,7 +373,7 @@ export class StileScene {
     track.rotateX(-Math.PI / 2).rotateY(PATH_TURN).translate(at.x - Math.sin(PATH_TURN) * mid, 0, at.z - Math.cos(PATH_TURN) * mid);
     const pos = track.getAttribute("position");
     for (let i = 0; i < pos.count; i++) pos.setY(i, TRACK_LIFT + hillY(this.hill, pos.getX(i), pos.getZ(i)));
-    c.scene.add(still(new THREE.Mesh(track, c.mat(T.pixelTexture(T.track()), { alphaTest: 0.5 }))));
+    c.scene.add(still(new THREE.Mesh(track, c.mat(T.paperTexture(T.track()), { alphaTest: 0.5 }))));
 
     const notes = this.stileNotes.notes;
     if (notes.length === 0) return;

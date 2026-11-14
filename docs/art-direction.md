@@ -12,7 +12,7 @@ So the reference is now the **Paper Mario** half: flat paper cut-outs (plants, c
 
 - **Shapes:** simple and low-poly. Boxes, slopes and flat cut-outs. Simple shapes are cheap and they are the charm. Do not add detail to look "better".
 - **Plants and creatures:** flat cut-outs that turn to face you. A plant in the garden is the same drawing as the plant on a card and on Today (`ui/plant.tsx`), only bigger.
-- **Surfaces:** flat colour, or a soft, slow change of colour, like paper or gouache. No pixel noise, no hard speckles, no texture that shimmers when it is far away.
+- **Surfaces:** flat colour, or a soft, slow change of colour, like paper or gouache. No pixel noise, no hard speckles, no texture that shimmers when it is far away. Detail is a few crisp shapes a shade darker or lighter: a tuft, a pebble, a plank gap. Draw them big enough that a texel is smaller than a screen pixel up close, and use `paperTexture` (`web/src/garden/textures.ts`). Do not smooth-filter an old pixel texture: it looks blurred and cheap (#1091).
 - **Light:** soft and even. Fog and a little aerial tint give depth: far things turn toward the sky's colour.
 - **The HUD:** the app's own controls. The same typeface, tokens, radii, buttons and line icons as Today and a card (`web/src/index.css`, `web/src/ui/icons.tsx`).
 

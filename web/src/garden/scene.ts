@@ -600,14 +600,14 @@ export class GardenScene {
   /** Ground: grass everywhere, a path surface inside the fence. */
   private buildGround(c: BuildCtx) {
     const { w, d, cx, cz, mat } = c;
-    const grassTex = T.pixelTexture(T.grass(), true);
-    grassTex.repeat.set(200, 200);
+    const grassTex = T.paperTexture(T.grass(), true);
+    grassTex.repeat.set(400 / T.GROUND_TILE, 400 / T.GROUND_TILE);
     // At 0, where everything in the garden stands (#861). Drawn behind what lies on it in the same plane (the yard's path, the hill's grass at its foot) by depth alone, so they never flicker into it.
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), mat(grassTex, { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 4 }));
     ground.rotation.x = -Math.PI / 2;
     this.scene.add(still(ground));
-    const pathTex = T.pixelTexture(T.path(), true);
-    pathTex.repeat.set(w / 1.1, d / 1.1);
+    const pathTex = T.paperTexture(T.path(), true);
+    pathTex.repeat.set(w / T.GROUND_TILE, d / T.GROUND_TILE);
     const yard = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(pathTex));
     yard.rotation.x = -Math.PI / 2;
     yard.position.set(cx, 0, cz);
