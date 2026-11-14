@@ -16,8 +16,6 @@ export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  // One retry on CI: software WebGL on shared runners can be slow to start.
-  retries: process.env.CI ? 1 : 0,
   // Every test makes its own learner, so tests run in any order and at once.
   // GitHub's runners for public repos have 4 vCPUs, but they also run vite, the
   // API and Postgres: 4 workers saved ~0–13 s and brought a new
