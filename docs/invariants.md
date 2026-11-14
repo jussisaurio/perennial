@@ -24,7 +24,7 @@ Use the strongest check that fits: a type that makes the wrong state impossible 
 - `garden.walk-rules`: The garden's physical rules (`RULES` in [web/src/fuzz/garden.ts](../web/src/fuzz/garden.ts)) hold in many random gardens. `bun run fuzz:garden` tries more of them. Checked in `web/src/fuzz/garden.test.ts`.
 - `garden.drawn-solid`: Each thing drawn as solid stops you. Not checked yet (#1110).
 - `garden.no-invisible-wall`: Where nothing solid is drawn, nothing stops you. Not checked yet (#1110).
-- `render.same-outline`: A plant's small sprite and its full-size sprite have the same outline. Not checked yet (#1109).
+- `render.same-outline`: A plant's small sprite and its full-size sprite have the same outline. Checked in `web/e2e/plant-sprites.spec.ts`.
 - `render.no-pop`: While you walk, nothing in view jumps in size, shape or place more than the camera's move explains. Not checked yet (#1112).
 
 ## The app
