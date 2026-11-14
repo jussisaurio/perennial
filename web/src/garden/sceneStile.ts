@@ -183,7 +183,7 @@ export class StileScene {
     for (const [a, b] of spans) {
       const h = THICKET.h - 0.45;
       const geo = tiledBox(b - a, h, zn - zf, 1);
-      shadeUp(geo, 0.3, 0.55);
+      shadeUp(geo, 0.45, 0.7);
       geo.translate((a + b) / 2, h / 2, (zn + zf) / 2);
       c.scene.add(still(new THREE.Mesh(geo, coreMat)));
     }
@@ -191,8 +191,8 @@ export class StileScene {
     // Clumps of leaves: stacked up the face toward the garden, and over the top further back. [x, y, z, rx, ry, rz, light]
     const clumps: number[][] = [];
     // How light a clump `y` up a thicket `h` high is: darker low down. Its faces you see from the garden and the
-    // hilltop are turned from the sun, so even the lowest stays well off black.
-    const light = (y: number, h: number) => 0.75 + (0.3 * y) / h;
+    // hilltop are turned from the sun, so even the lowest stays a clear dark green.
+    const light = (y: number, h: number) => 0.9 + (0.25 * y) / h;
     for (let x = x0; x < x1; x += 0.42) {
       const top = THICKET.h * (0.85 + 0.3 * r());
       for (const [k, back] of [[0, THICKET.near + 0.5], [1, 1.2], [2, 1.9], [3, 2.7]]) {
@@ -232,7 +232,7 @@ export class StileScene {
         for (let d = 0.1; d < BRAMBLES_IN - 0.3; d += 0.3)
           for (const y of [0.3, 0.75, 1.15]) {
             const rad = 0.24 + r() * 0.1;
-            clumps.push([x + (r() - 0.5) * 0.1, y + (r() - 0.5) * 0.15, sz + d, rad * 1.1, rad, rad, 0.55 + 0.3 * y]);
+            clumps.push([x + (r() - 0.5) * 0.1, y + (r() - 0.5) * 0.15, sz + d, rad * 1.1, rad, rad, 0.75 + 0.25 * y]);
           }
     // Where the way is cut, the thicket's cut sides: clumps on them too, a little darker.
     if (this.open)
@@ -241,7 +241,7 @@ export class StileScene {
           const along = sx - Math.sin(PATH_TURN) * d;
           const cx = along + s * (CUT + 0.25) * Math.cos(PATH_TURN);
           const cz = sz - Math.cos(PATH_TURN) * d - s * (CUT + 0.25) * Math.sin(PATH_TURN);
-          for (const y of [0.4, 0.95, 1.5]) clumps.push([cx, y + (r() - 0.5) * 0.2, cz, 0.3, 0.4, 0.4, 0.5 + 0.2 * y]);
+          for (const y of [0.4, 0.95, 1.5]) clumps.push([cx, y + (r() - 0.5) * 0.2, cz, 0.3, 0.4, 0.4, 0.7 + 0.2 * y]);
         }
     const ball = new THREE.IcosahedronGeometry(1, 1);
     shade(ball);
