@@ -5,7 +5,7 @@
 // words are never drawn in the world.
 
 import * as THREE from "three";
-import { hillY, STONE_R, STOOL_R, type Lookout } from "./lookout";
+import { hillY, STONE_R, STOOL_R, type Diary, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
 import { still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
@@ -18,17 +18,19 @@ const RIBBON = 0.15;
 
 export class LookoutThings {
   readonly hill: Lookout;
-  /** Each page in the diary, in the order it came, and whether it is still unread. */
-  pages: { id: string; unread: boolean }[] = [];
   private ribbon: THREE.Object3D | null = null;
   private book: { min: [number, number, number]; max: [number, number, number] } | null = null;
 
-  constructor(hill: Lookout) {
+  /** Null before n09, when there is no diary. */
+  private diary: Diary | null;
+
+  constructor(hill: Lookout, diary: Diary | null) {
     this.hill = hill;
+    this.diary = diary;
   }
 
-  /** The stool, and the diary on its stone when it has `pages` (null: before n09, no diary). */
-  build(c: BuildCtx, pages: readonly { id: string; unread: boolean }[] | null) {
+  /** The stool, and the diary on its stone once there is one. */
+  build(c: BuildCtx) {
     const h = this.hill;
     // A three-legged stool, its seat a thick round of wood, its legs splayed out to feet wider than the seat: from the path it reads as a seat, not a little gate.
     const stool = new THREE.Group();
@@ -68,9 +70,8 @@ export class LookoutThings {
       const [x, y, z] = [h.stool[0], stool.position.y, h.stool[1]];
       c.hitBoxes.push({ id: "stool", min: [x - STOOL_R, y, z - STOOL_R], max: [x + STOOL_R, y + 0.45, z + STOOL_R], tag: [x, y + 0.55, z] });
     }
-    if (!pages) return;
+    if (!this.diary) return;
 
-    this.pages = pages.map((p) => ({ ...p }));
     const [sx, sz] = h.stone;
     // Its flat foot rests on the lowest ground under its rim (its seven corners), sunk into the slope above that.
     const rim = Array.from({ length: 7 }, (_, i) => (i / 7) * Math.PI * 2);
@@ -89,36 +90,13 @@ export class LookoutThings {
     const r = Math.hypot(BOOK.w, BOOK.d) / 2;
     this.book = { min: [sx - r, top, sz - r], max: [sx + r, top + BOOK.h, sz + r] };
     c.scene.add(still(stone), still(book));
-    this.showRibbon();
+    this.show();
   }
 
   /** The ribbon lies out of the book while a page is unread. */
-  private showRibbon() {
-    this.ribbon!.visible = this.unread;
-  }
-
-  /** Has the diary a page not read yet? */
-  get unread(): boolean {
-    return this.pages.some((p) => p.unread);
-  }
-
-  /** Is note `id` a page of the diary? */
-  has(id: string): boolean {
-    return this.pages.some((p) => p.id === id);
-  }
-
-  /** The page the diary opens on: the oldest not read yet, or the last when every page is read. */
-  page(): string {
-    const p = this.pages.find((p) => p.unread);
-    return p ? p.id : this.pages[this.pages.length - 1].id;
-  }
-
-  /** Page `id` was read. */
-  read(id: string) {
-    const p = this.pages.find((p) => p.id === id);
-    if (!p) throw new Error(`no page "${id}" in the diary`);
-    p.unread = false;
-    this.showRibbon();
+  show() {
+    // Before n09 there is no diary, and no ribbon to show.
+    if (this.ribbon && this.diary) this.ribbon.visible = this.diary.unread;
   }
 
   /** How far along a ray it first meets the diary, or Infinity. */

@@ -139,47 +139,6 @@ test("a visitor in the 2D strip shows the app's focus ring when reached with Tab
   }
 });
 
-test("visit.frog-jokes: tapped on, the frog says its lines, then has no more words", async ({ page }) => {
-  await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
-  await pinDetail(page, "normal");
-  // 400 known Spanish words: its first line and its last (frogLines.ts).
-  await page.goto("/?demo=es:known:400&visitors=frog#/today");
-  await page.getByRole("button", { name: "Walk in your garden" }).click();
-  await expect(page.locator(".gw")).toHaveClass(/\bgw-dusk\b/, { timeout: 20_000 });
-  await page.waitForFunction(() => "__garden" in window);
-  await page.evaluate(() => {
-    type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
-    const s = (window as unknown as { __garden: { guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number } }; x: number; z: number; yaw: number; pitch: number } }).__garden;
-    const frog = s.guests.sprites.find((o) => o.v.id === "frog")!.body.at;
-    // 1.3 m from the frog, on the side away from the middle of the pond, looking at it.
-    const a = Math.atan2(frog.x - s.layout.pond.x, frog.z - s.layout.pond.z);
-    s.x = frog.x + Math.sin(a) * 1.3;
-    s.z = frog.z + Math.cos(a) * 1.3;
-    s.yaw = a;
-    s.pitch = -0.45;
-  });
-  const box = (await page.locator(".gw-tag", { hasText: "la rana" }).boundingBox())!;
-  const tap = () => page.mouse.click(box.x + box.width / 2, box.y + box.height + 25);
-  const bubble = page.locator(".gw-say");
-  await tap();
-  await expect(bubble).toHaveText(/^croac… \p{L}+$/u);
-  await tap();
-  await expect(bubble).toHaveText(/^croac… \p{L}+$/u);
-  await tap();
-  await expect(bubble).toHaveText("¿Otra vez tú?");
-  // A double tap skips nothing.
-  await tap();
-  await expect(bubble).toHaveText("¿Otra vez tú?");
-  await gameSeconds(page, 2);
-  await tap();
-  await expect(bubble).toHaveText("No tengo más palabras.");
-  // Long enough to read it slowly.
-  await gameSeconds(page, 6);
-  await expect(bubble).toHaveText("No tengo más palabras.");
-  await tap();
-  await expect(bubble).toHaveText("croac…");
-});
-
 test("visitors in the walk: the frog's tag at dusk, a tap croaks a known word, and by day it sleeps", async ({ page }) => {
   // Seven in the evening: the wall clock sets the time of day (#646).
   await page.clock.setFixedTime(new Date("2026-10-11T19:00:00"));
@@ -412,7 +371,7 @@ test("bench.sit: W toward the bench stops you at its back; the button sits you d
   await page.getByRole("button", { name: "Walk in your garden" }).click();
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
-  type Bench = { x: number; z: number; walker: { kind: string }; camera: { position: { y: number } }; bench: { x: number; z: number } };
+  type Bench = { x: number; z: number; walker: { kind: string }; camera: { position: { y: number } }; game: { bench: { x: number; z: number } } };
   const scene = () =>
     page.evaluate(() => {
       const s = (window as unknown as { __garden: Bench }).__garden;
@@ -422,8 +381,8 @@ test("bench.sit: W toward the bench stops you at its back; the button sits you d
   // On the garden side of the bench, facing it and the pond past it: forward is -z at yaw 0.
   const bench = await page.evaluate(() => {
     const s = (window as unknown as { __garden: Bench }).__garden;
-    Object.assign(s, { x: s.bench.x, z: s.bench.z - 1.2, yaw: Math.PI, pitch: 0 });
-    return s.bench;
+    Object.assign(s, { x: s.game.bench.x, z: s.game.bench.z - 1.2, yaw: Math.PI, pitch: 0 });
+    return s.game.bench;
   });
   // However long the key is held, you stop a walker's width from the bench's back (world.ts BENCH, WALKER).
   await page.keyboard.down("KeyW");
@@ -497,8 +456,8 @@ test("action.reach-edge: the bench comes into reach where Sit shows, and stays i
   // Stand `back` m from the bench's middle (world.ts benchAt), on open ground away from the pond, your back to it.
   const standBack = async (back: number) => {
     await page.evaluate((back) => {
-      const s = (window as unknown as { __garden: { bench: { x: number; z: number } } }).__garden;
-      Object.assign(s, { x: s.bench.x, z: s.bench.z - back, yaw: 0, pitch: 0 });
+      const s = (window as unknown as { __garden: { game: { bench: { x: number; z: number } } } }).__garden;
+      Object.assign(s, { x: s.game.bench.x, z: s.game.bench.z - back, yaw: 0, pitch: 0 });
     }, back);
     await gameSeconds(page, 0.3);
   };
@@ -527,14 +486,19 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await expect(page.getByText(/^30 plants · \d+ in bloom/)).toBeVisible({ timeout: 20_000 });
   await page.waitForFunction(() => "__garden" in window);
   type Sprite = { v: { id: string }; body: { at: { x: number; z: number } } };
-  type Bench = { sat: number; lapse: number; shown: string; bench: { x: number; z: number }; lanterns: { dark: boolean; on: boolean[] }; guests: { sprites: Sprite[] }; layout: { pond: { x: number; z: number; r: number } } };
+  type Bench = {
+    game: { sat: number; lapse: number; shown: string; bench: { x: number; z: number }; lamps: { dark: boolean; on: boolean[] } };
+    guests: { sprites: Sprite[] };
+    layout: { pond: { x: number; z: number; r: number } };
+  };
   const scene = () =>
     page.evaluate(() => {
       const s = (window as unknown as { __garden: Bench }).__garden;
-      const bird = s.guests.sprites.find((g) => g.v.id === "bird")!.body.at;
-      return { lapse: s.lapse, shown: s.shown, lit: s.lanterns.dark && s.lanterns.on.every(Boolean), birdFromBench: Math.hypot(bird.x - s.bench.x, bird.z - s.bench.z) };
+      const g = s.game;
+      const bird = s.guests.sprites.find((v) => v.v.id === "bird")!.body.at;
+      return { lapse: g.lapse, shown: g.shown, lit: g.lamps.dark && g.lamps.on.every(Boolean), birdFromBench: Math.hypot(bird.x - g.bench.x, bird.z - g.bench.z) };
     });
-  const sat = (seconds: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden, { sat: n }), seconds);
+  const sat = (seconds: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden.game, { sat: n }), seconds);
   await page.evaluate(() => {
     const s = (window as unknown as { __garden: Bench }).__garden;
     const p = s.layout.pond;
@@ -558,7 +522,7 @@ test("sitting still on the bench: the bird, the cat and the gnome come to sit wi
   await expect(status.locator("span[lang=es]")).toHaveText("Bonito.");
 
   // Time has run on to dusk: the lanterns are lit. The time of day from the wall clock stays as it was.
-  await page.evaluate(() => Object.assign((window as unknown as { __garden: Bench }).__garden, { lapse: 0.9 }));
+  await page.evaluate(() => Object.assign((window as unknown as { __garden: Bench }).__garden.game, { lapse: 0.9 }));
   await expect.poll(async () => (await scene()).shown).toBe("dusk");
   expect((await scene()).lit).toBe(true);
   await expect(page.locator(".gw")).toHaveClass(/\bgw-day\b/);
@@ -576,7 +540,7 @@ test.describe(() => {
   // On CI's software WebGL (~7 frames a second) the walk takes 10–20 s to open; then the visitors come in real time.
   test.describe.configure({ timeout: 90_000 });
   type Sprite = { v: { id: string }; home: [number, number, number]; body: { x: number; y: number; z: number; at: { x: number; y: number; z: number } } };
-  type Bench = { sat: number; x: number; z: number; yaw: number; pitch: number; layout: { pond: { x: number; z: number; r: number } }; guests: { sprites: Sprite[] } };
+  type Bench = { game: { sat: number }; x: number; z: number; yaw: number; pitch: number; layout: { pond: { x: number; z: number; r: number } }; guests: { sprites: Sprite[] } };
   const status = (page: Page) => page.locator(".gw > .sr-only[role=status]");
 
   /** Open the walk with these visitors, and sit on the bench facing the pond. */
@@ -595,7 +559,7 @@ test.describe(() => {
     await page.getByRole("button", { name: "Sit on the bench" }).click();
     await expect(page.getByRole("button", { name: "Stand up" })).toBeVisible();
   }
-  const sat = (page: Page, n: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden, { sat: n }), n);
+  const sat = (page: Page, n: number) => page.evaluate((n) => Object.assign((window as unknown as { __garden: Bench }).__garden.game, { sat: n }), n);
   /** How far a visitor is drawn from its own place (m). */
   const fromHome = (page: Page, id: string) =>
     page.evaluate((id) => {

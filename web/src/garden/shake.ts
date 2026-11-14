@@ -58,6 +58,9 @@ export function petalAt(seed: string, i: number, t: number, drop: number, still:
   return { dx: Math.cos(a) * out + sway, dy: -drop * k, dz: Math.sin(a) * out, alpha };
 }
 
+/** Plants this near you (m) show their names; a tap on one opens its card where you stand, and a tap on one farther away walks to it first (#336). */
+export const NAME_NEAR = 3.2;
+
 /** Near enough to a plant (m) to shake it, if it is ahead of you: a front-row plant from where Next plant stands (world.ts viewpoint). @internal Exported for tests. */
 export const SHAKE_REACH = 2.2;
 /** The plant the button shows stays ahead of you within about 70° of where you look (cos 70°), not 60°: turning at the edge does not blink it (#838). */

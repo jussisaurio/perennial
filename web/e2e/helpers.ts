@@ -167,7 +167,10 @@ type DoorScene = {
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
   layout: Layout;
-  door: { state: string; key: { x: number; z: number; mesh: { visible: boolean } } | null; leaf: { rotation: { y: number } } };
+  /** The door as the game holds it (game.ts DoorNow): where the key lies, or lay. */
+  game: { door: { state: string; key: { x: number; z: number } | null } };
+  /** The door as drawn (sceneDoor.ts): the key on the ground, and the leaf on its hinge. */
+  door: { key: { mesh: { visible: boolean } } | null; leaf: { rotation: { y: number } } };
   sceneryWorld(): SceneryWorld;
 };
 
@@ -200,7 +203,7 @@ export function standByKey(page: Page, metres = 1.4) {
     const { collide } = await import(/* @vite-ignore */ "/src/garden/world.ts");
     const { thingAt } = await import(/* @vite-ignore */ "/src/garden/scenery.ts");
     const s = (window as unknown as { __garden: DoorScene }).__garden;
-    const k = s.door.key!;
+    const k = s.game.door.key!;
     const eye = 1.05;
     // In reach a tap meets the key whatever stands in front of it; from farther, nothing may.
     const { KEY_REACH } = await import(/* @vite-ignore */ "/src/garden/reachCore.ts");
@@ -236,12 +239,12 @@ export function standByKey(page: Page, metres = 1.4) {
 export function doorNow(page: Page) {
   return page.evaluate(() => {
     const s = (window as unknown as { __garden: DoorScene }).__garden;
-    const d = s.door;
+    const d = s.game.door;
     return {
       state: d.state,
-      key: d.key && d.key.mesh.visible,
+      key: s.door.key && s.door.key.mesh.visible,
       keyFromDoor: d.key && Math.hypot(d.key.x - s.layout.gate.x, d.key.z - s.layout.bounds.maxZ),
-      angle: d.leaf.rotation.y,
+      angle: s.door.leaf.rotation.y,
     };
   });
 }

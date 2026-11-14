@@ -13,7 +13,10 @@ type ToyScene = {
   pitch: number;
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  toys: { heads: { id: string; x: number; z: number }[]; blown: boolean[]; seeds: { visible: boolean } };
+  /** The clocks as the game holds them (toys.ts Clocks). */
+  game: { clocks: { heads: { id: string; x: number; z: number }[]; blown: boolean[] } };
+  /** The seeds as drawn (sceneToys.ts). */
+  toys: { seeds: { visible: boolean } };
 };
 
 const DAY = new Date("2026-06-01T12:00:00");
@@ -34,7 +37,7 @@ async function openWalk(page: Page) {
 const toysNow = (page: Page) =>
   page.evaluate(() => {
     const s = (window as unknown as { __garden: ToyScene }).__garden;
-    return { blown: s.toys.blown, seeds: s.toys.seeds.visible };
+    return { blown: s.game.clocks.blown, seeds: s.toys.seeds.visible };
   });
 
 /** Stand 1.5 m in front of the clock on the back fence, facing it; return where it shows on the page (pixels). */
@@ -43,7 +46,7 @@ const facingClock = (page: Page) =>
     () =>
       new Promise<[number, number]>((done) => {
         const s = (window as unknown as { __garden: ToyScene }).__garden;
-        const h = s.toys.heads.find((h) => h.id === "base:0")!;
+        const h = s.game.clocks.heads.find((h) => h.id === "base:0")!;
         // Forward is -z at yaw 0: the back fence is that way.
         Object.assign(s, { x: h.x, z: h.z + 1.5, yaw: 0, pitch: -Math.atan2(1.05 - 0.25, 1.5) });
         requestAnimationFrame(() =>

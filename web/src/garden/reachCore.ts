@@ -1,6 +1,6 @@
 // What is in reach, and what the one action button does (#334, #850, #975):
-// the rules, with no three.js, no window and no clock. The scene (scene.ts)
-// asks every frame what the button offers from where the walker stands, shows
+// the rules, with no three.js, no window and no clock. The game (game.ts)
+// asks every step what the button offers from where the walker stands, shows
 // that, and does what a press gives back; a test asks the same with a walker
 // and plain things. The walker is walker.ts's; the plant ahead is shake.ts's.
 
@@ -10,8 +10,8 @@ import { DIARY_REACH, STOOL_REACH, type Lookout } from "./lookout";
 import type { Walker } from "./walker";
 import type { PlacedPlant } from "./world";
 import type { VisitorId } from "./visitors";
-import type { CarryAct, CarryTarget } from "./sceneCarry";
-import type { ToyAct, ToyTarget } from "./sceneToys";
+import type { CarryAct, CarryTarget } from "./carry";
+import type { ToyAct, ToyTarget } from "./toys";
 
 /** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
 export type DoorAction = "try" | "key" | "open";
@@ -51,7 +51,7 @@ export const KEY_REACH = 2;
 /** Near enough to a lantern (m) to blow it out or light it. */
 export const LANTERN_REACH = 1.5;
 
-/** The lanterns (sceneLanterns.ts Lanterns): where each stands ([x, y, z]), which are lit when it is dark, and the lookout's by its index (-1: none). */
+/** The lanterns (lanterns.ts Lamps): where each stands ([x, y, z]), which are lit when it is dark, and the lookout's by its index (-1: none). */
 interface LanternsNow {
   readonly at: readonly (readonly [number, number, number])[];
   readonly on: readonly boolean[];
@@ -60,29 +60,28 @@ interface LanternsNow {
 }
 
 /**
- * The things the button can act on, as the scene's parts keep them. The first
- * six are plain data, and their rules are here. The last five are parts whose
- * state still lives with their meshes (#975's plan): each answers for itself,
- * and only the order they come in is here.
+ * The things the button can act on, as the game (game.ts) keeps them. The
+ * first six are plain data, and their rules are here. The rest answer for
+ * themselves, and only the order they come in is here.
  */
 export interface Things {
-  /** The door in the hedge (sceneDoor.ts Door): "key" while its key lies in the garden, at `key`. */
+  /** The door in the hedge (game.ts DoorNow): "key" while its key lies in the garden, at `key`. */
   door: { readonly state: "locked" | "key" | "held" | "open"; readonly key: { x: number; z: number } | null };
   /** The door's middle. */
   gate: { x: number; z: number };
   /** The pond's bench, by its middle (world.ts benchAt). */
   bench: { x: number; z: number };
   lanterns: LanternsNow;
-  /** The hill's lookout and the diary's pages (sceneLookout.ts LookoutThings); null while there is no stile. */
+  /** The hill's lookout and the diary's pages (lookout.ts Diary); null while there is no stile. */
   lookout: { readonly hill: Lookout; readonly pages: readonly unknown[] } | null;
   plants: readonly PlacedPlant[];
-  /** The pebbles (sceneCarry.ts Carry): `held` is not null while one is in your hands. */
+  /** The pebbles (carry.ts Pebbles): `held` is not null while one is in your hands. */
   carry: { readonly held: unknown; reachAt(x: number, z: number, held: CarryTarget | null): { a: CarryAct; target: CarryTarget | null } | null };
-  /** The dandelion clocks (sceneToys.ts Toys). */
+  /** The dandelion clocks (toys.ts Clocks). */
   toys: { reachAt(x: number, z: number, held: ToyTarget | null): { a: ToyAct; target: ToyTarget } | null };
-  /** The visitors (sceneVisitors.ts): one hiding within reach (#379). */
+  /** The visitors (game.ts Guests): one hiding within reach (#379). */
   hiders: { hiderNear(x: number, z: number, held: VisitorId | null): VisitorId | null };
-  /** The last note on the mouse door's mat (#882, sceneJokes.ts). */
+  /** The last note on the mouse door's mat (#882, mouseDoor.ts). */
   mat: { noteInReach(x: number, z: number, slack: number): string | null };
   /** A note in the shed that you look at, or one at the stile's foot (#654), `slack` m farther than its reach. */
   note(x: number, z: number, yaw: number, pitch: number, slack: number): string | null;

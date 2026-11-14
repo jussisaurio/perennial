@@ -16,13 +16,11 @@ import { CUT, HILL, HILLTOP_R, hillMesh, hillY, PATH_TURN, type Lookout } from "
 import { rayBox, type Ray } from "./scenery";
 import { shadeUp, tiledBox } from "./sceneHedge";
 import { still, type BuildCtx } from "./sceneSprites";
-import { BRAMBLES_IN, STILE_REACH, STEP, TOP, type StileSpot } from "./stile";
+import { BRAMBLES_IN, SHEET, STEP, TOP, type StileNotes, type StileSpot } from "./stile";
 import * as T from "./textures";
 
 /** A note on the ground: the paper's size (m), as on the shed's nails. */
 const PAPER = { w: 0.15, h: 0.175 };
-/** How thick a sheet lies (m). */
-const SHEET = 0.004;
 /** The old path past the fence: its width, and how far past the hill's top it fades out (m). */
 const TRACK = { w: 1.5, past: 0.8 };
 /** How far the old path's surface lies over the hill's grass (m): its own triangles cross the grass's. */
@@ -118,18 +116,21 @@ class Canes {
 }
 
 export class StileScene {
-  /** Each note under the step: its id, its paper, and whether it was opened this walk. */
-  private notes: { id: string; mesh: THREE.Mesh; opened: boolean }[] = [];
+  /** Each note's paper, in stile.ts StileNotes' order. */
+  private meshes: THREE.Mesh[] = [];
   private spot: StileSpot;
   private hill: Lookout;
   private readPaper!: THREE.Material;
   /** Has the learner the note that tells of the hill (lookout.ts HILL_NOTE): is the way open? */
   private open: boolean;
 
-  constructor(spot: StileSpot, hill: Lookout, open: boolean) {
+  private stileNotes: StileNotes;
+
+  constructor(spot: StileSpot, hill: Lookout, open: boolean, stileNotes: StileNotes) {
     this.spot = spot;
     this.hill = hill;
     this.open = open;
+    this.stileNotes = stileNotes;
   }
 
   /**
@@ -354,8 +355,8 @@ export class StileScene {
     c.scene.add(still(g));
   }
 
-  /** The stile, the thicket, and `notes` in front of it (unread ones: read ones hang in the shed). In steps, as buildThicket. */
-  *build(c: BuildCtx, notes: readonly string[]): Generator<void> {
+  /** The stile, the thicket, and the notes in front of it (unread ones: read ones hang in the shed). In steps, as buildThicket. */
+  *build(c: BuildCtx): Generator<void> {
     const at = this.spot;
     this.buildStile(c);
 
@@ -374,61 +375,43 @@ export class StileScene {
     for (let i = 0; i < pos.count; i++) pos.setY(i, TRACK_LIFT + hillY(this.hill, pos.getX(i), pos.getZ(i)));
     c.scene.add(still(new THREE.Mesh(track, c.mat(T.pixelTexture(T.track()), { alphaTest: 0.5 }))));
 
+    const notes = this.stileNotes.notes;
     if (notes.length === 0) return;
     const paper = (unread: boolean) => c.mat(T.pixelTexture(T.notePaper(unread)), { alphaTest: 0.5 });
     const fresh = paper(true);
     this.readPaper = paper(false);
     const geo = new THREE.PlaneGeometry(PAPER.w, PAPER.h);
-    const [nx, nz] = at.note;
-    notes.forEach((id, i) => {
+    notes.forEach((n, i) => {
       const m = new THREE.Mesh(geo, fresh);
-      // Flat on the ground, half under the lowest step; a later one a little askew on top of the first. Each a hair over what it lies on, so they never flicker into each other.
       m.rotation.set(-Math.PI / 2, 0.35 - i * 0.5, 0, "YXZ");
-      m.position.set(nx - i * 0.06, SHEET * (i + 1), nz + i * 0.03);
+      m.position.set(...n.at);
       c.scene.add(still(m));
-      this.notes.push({ id, mesh: m, opened: false });
+      this.meshes.push(m);
     });
     // A flat stone on them, so the wind leaves them where they were put.
+    const [nx, nz] = at.note;
     const stone = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.055), c.mat(T.pixelTexture(T.stone(), true)));
     stone.position.set(nx + 0.02, SHEET * notes.length + 0.035 / 2, nz - 0.05);
     stone.rotation.y = 0.4;
     c.scene.add(still(stone));
   }
 
-  /** Is note `id` one of those under the step? */
-  has(id: string): boolean {
-    return this.notes.some((n) => n.id === id);
-  }
-
-  /** Note `id` was opened: from now on it lies on the paper of a read one. */
-  read(id: string) {
-    const n = this.notes.find((n) => n.id === id);
-    if (!n) throw new Error(`no note "${id}" under the stile's step`);
-    n.opened = true;
-    n.mesh.material = this.readPaper;
-  }
-
-  /** The first note under the step not opened this walk, for the action button's "read", or null. */
-  unopened(): string | null {
-    for (const n of this.notes) if (!n.opened) return n.id;
-    return null;
+  /** Each note as it is now: an opened one lies on the paper of a read one. */
+  show() {
+    this.stileNotes.notes.forEach((n, i) => {
+      if (n.opened) this.meshes[i].material = this.readPaper;
+    });
   }
 
   /** The note a ray meets first, and how far along it. */
   pick(r: Ray): { id: string; t: number } | null {
     let best: string | null = null;
     let near = Infinity;
-    for (const { id, mesh } of this.notes) {
-      const { x, y, z } = mesh.position;
+    for (const { id, at } of this.stileNotes.notes) {
+      const [x, y, z] = at;
       const t = rayBox(r, [x - PAPER.h / 2, y - 0.02, z - PAPER.h / 2], [x + PAPER.h / 2, y + 0.02, z + PAPER.h / 2]);
       if (t < near) [best, near] = [id, t];
     }
     return best === null ? null : { id: best, t: near };
-  }
-
-  /** Near enough (and `slack` m more) to the stile's foot, inside the garden, to go over it or read the notes there. Runs every frame: no allocation. */
-  inReach(x: number, z: number, slack: number): boolean {
-    const [fx, fz] = this.spot.foot;
-    return z > this.spot.z && Math.hypot(fx - x, fz - z) < STILE_REACH + slack;
   }
 }

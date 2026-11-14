@@ -8,7 +8,7 @@
 
 import * as THREE from "three";
 import { sunPath, SUN_AT, type Look } from "./bench";
-import type { TimeOfDay } from "./scene";
+import type { TimeOfDay } from "./game";
 import { rng } from "../lib/seed";
 import { still, type BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";

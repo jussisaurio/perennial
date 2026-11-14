@@ -3,7 +3,7 @@
 // never the clock. The learner picks the time of day; weather and the season
 // will join it here.
 
-import type { TimeOfDay } from "./scene";
+import type { TimeOfDay } from "./game";
 
 export interface Conditions {
   time: TimeOfDay;

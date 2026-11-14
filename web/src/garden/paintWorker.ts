@@ -5,7 +5,7 @@
 
 import "./devWorker";
 import * as THREE from "three";
-import type { TimeOfDay } from "./scene";
+import type { TimeOfDay } from "./game";
 import { cloud, hills, moon, orchard, sky, SKIES, sun, trees } from "./textures";
 
 // As the walk sets it (GardenScene's constructor): the sky's bands blend its colours as written, not in linear light.

@@ -12,9 +12,9 @@ import { doorNow, gameSeconds, pinDetail, serverRows, standAtDoor, standBy, stan
  */
 function keyInTheOpen(page: Page) {
   return page.evaluate(() => {
-    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; door: { key: { x: number; z: number } } } }).__garden;
+    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; game: { door: { key: { x: number; z: number } } } } }).__garden;
     const bed = s.layout.beds[0];
-    Object.assign(s.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
+    Object.assign(s.game.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
   });
 }
 
@@ -88,8 +88,8 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
     page.evaluate(
       ([x, y, blocked]) => {
         type Box = { id: string; min: number[]; max: number[]; tag: null };
-        const s = (window as unknown as { __garden: { x: number; z: number; hitBoxes: Box[]; door: { key: { x: number; z: number } }; pickAny(x: number, y: number, w: number, h: number): { kind: string; a?: string } | null } }).__garden;
-        const k = s.door.key;
+        const s = (window as unknown as { __garden: { x: number; z: number; hitBoxes: Box[]; game: { door: { key: { x: number; z: number } } }; pickAny(x: number, y: number, w: number, h: number): { kind: string; a?: string } | null } }).__garden;
+        const k = s.game.door.key;
         const [mx, mz] = [(s.x + k.x) / 2, (s.z + k.z) / 2];
         if (blocked) s.hitBoxes.push({ id: "stone", min: [mx - 0.2, 0, mz - 0.2], max: [mx + 0.2, 1.2, mz + 0.2], tag: null });
         const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
@@ -103,7 +103,7 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   // cloning it (structured clone, going both ways) strips its Vector3 methods, so Door.tick
   // throws every frame once the clone is written back (#343).
   const home = await page.evaluate(() => {
-    const k = (window as unknown as { __garden: { door: { key: { x: number; z: number } } } }).__garden.door.key;
+    const k = (window as unknown as { __garden: { game: { door: { key: { x: number; z: number } } } } }).__garden.game.door.key;
     return { x: k.x, z: k.z };
   });
   await keyInTheOpen(page);
@@ -111,7 +111,7 @@ test("'llave' brings the key, hidden away from the door: a tap picks it up, a ta
   expect(await meets(far, false)).toBe("key");
   expect(await meets(far, true)).toBe("scenery");
   expect(await meets(await standByKey(page), true)).toBe("key");
-  await page.evaluate((home) => Object.assign((window as unknown as { __garden: { door: { key: { x: number; z: number } } } }).__garden.door.key, home), home);
+  await page.evaluate((home) => Object.assign((window as unknown as { __garden: { game: { door: { key: { x: number; z: number } } } } }).__garden.game.door.key, home), home);
   // By the key, its button shows, and a screen reader hears that it is here. A tap: one quiet line, and it is gone from the ground.
   const key = await standByKey(page);
   await expect(page.getByRole("button", { name: "Pick up the key" })).toBeVisible();
@@ -306,9 +306,9 @@ test("a key left a few days: at dusk the bird waits by it, and by day it is back
   await keyWaited(page, 4, "&visitors=bird");
   const birdFromKey = () =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: { door: { key: { x: number; z: number } }; guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] } } }).__garden;
+      const s = (window as unknown as { __garden: { game: { door: { key: { x: number; z: number } } }; guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] } } }).__garden;
       const b = s.guests.sprites.find((o) => o.v.id === "bird")!.body.at;
-      return Math.hypot(b.x - s.door.key.x, b.z - s.door.key.z);
+      return Math.hypot(b.x - s.game.door.key.x, b.z - s.game.door.key.z);
     });
   // Noon: the bird is in its own spot, away from the key.
   expect(await birdFromKey()).toBeGreaterThan(1);
@@ -337,7 +337,7 @@ type KeyScene = {
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
   layout: { bounds: { minX: number; maxX: number; minZ: number; maxZ: number } };
-  door: { key: { x: number; z: number } };
+  game: { door: { key: { x: number; z: number } } };
   guests: { sprites: Guest[] };
   doorAct(a: string): void;
 };
@@ -348,7 +348,7 @@ const whereIs = (page: Page, id: string) =>
     const s = (window as unknown as { __garden: KeyScene }).__garden;
     const g = s.guests.sprites.find((o) => o.v.id === id)!;
     const b = g.body;
-    const k = s.door.key;
+    const k = s.game.door.key;
     return { key: Math.hypot(b.x - k.x, b.z - k.z), home: Math.hypot(b.x - g.home[0], b.y - g.home[1], b.z - g.home[2]), at: Math.hypot(b.x - b.at.x, b.y - b.at.y, b.z - b.at.z) };
   }, id);
 
@@ -358,7 +358,7 @@ test("key.dog-beside: with the key left four days, the dog sits on open ground b
     const { collide } = await import(/* @vite-ignore */ "/src/garden/world.ts");
     const s = (window as unknown as { __garden: KeyScene }).__garden;
     const b = s.guests.sprites.find((o) => o.v.id === "dog")!.body;
-    const k = s.door.key;
+    const k = s.game.door.key;
     const L = s.layout.bounds;
     const p = collide(s.layout as Parameters<typeof collide>[0], b.x, b.z);
     const away = (b.x - k.x) * (k.x - (L.minX + L.maxX) / 2) + (b.z - k.z) * (k.z - (L.minZ + L.maxZ) / 2);
@@ -380,7 +380,7 @@ test("key.dog-looks: seen from either side, the dog's picture faces the key", as
         new Promise<{ flipped: boolean; keyLeft: boolean }>((done) => {
           const s = (window as unknown as { __garden: KeyScene }).__garden;
           const g = s.guests.sprites.find((o) => o.v.id === "dog")!;
-          const [d, k] = [g.body, s.door.key];
+          const [d, k] = [g.body, s.game.door.key];
           const len = Math.hypot(k.x - d.x, k.z - d.z);
           // 3 m out from the dog, square to the line from it to the key, looking at the dog. Forward is -z at yaw 0.
           const [x, z] = [d.x - ((k.z - d.z) / len) * 3 * side, d.z + ((k.x - d.x) / len) * 3 * side];
@@ -446,7 +446,7 @@ test.describe(() => {
       const s = (window as unknown as { __garden: KeyScene }).__garden;
       const { minX, maxX, minZ, maxZ } = s.layout.bounds;
       const home = s.guests.sprites.find((o) => o.v.id === "bird")!.home;
-      const away = (p: [number, number]) => Math.min(Math.hypot(p[0] - s.door.key.x, p[1] - s.door.key.z), Math.hypot(p[0] - home[0], p[1] - home[2]));
+      const away = (p: [number, number]) => Math.min(Math.hypot(p[0] - s.game.door.key.x, p[1] - s.game.door.key.z), Math.hypot(p[0] - home[0], p[1] - home[2]));
       const corners: [number, number][] = [[minX + 1, minZ + 1], [minX + 1, maxZ - 1], [maxX - 1, minZ + 1], [maxX - 1, maxZ - 1]];
       const [x, z] = corners.reduce((a, b) => (away(b) > away(a) ? b : a));
       Object.assign(s, { x, z });

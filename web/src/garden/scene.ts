@@ -1,61 +1,59 @@
 // The walkable word garden, rendered the 90s way: a tiny framebuffer scaled
 // up with hard pixels, unlit textures, fog, and flat sprite plants that turn
-// to face you. Loaded only when the garden is opened.
+// to face you. Loaded only when the garden is opened. The game itself (its
+// state and rules) is game.ts: this scene feeds it the input and the taps,
+// steps it each frame, and draws what it holds (#975).
 
 import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { yieldToBrowser } from "../lib/yield";
-import { BED_H, BENCH, benchAt, besideKey, collide, DOOR_HALF, DOOR_LINES, DOOR_SPOKEN, HEDGE, hedgeSpan, keyAt, sunflowerAt, viewpoint, WALKER, type BackWay, type KeyHelp, type KeySpot, type Layout, type PlacedPlant } from "./world";
+import { BED_H, BENCH, collide, DOOR_HALF, HEDGE, hedgeSpan, keyAt, sunflowerAt, WALKER, type Layout, type PlacedPlant } from "./world";
 import * as R from "./reachCore";
 import * as W from "./walker";
-import type { Ground } from "./ground";
-import { benchLine, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
+import { benchLine, pickTree, treeVisitorSpots } from "./orchard";
 import { buildOrchard, type Orchard } from "./orchardScene";
 import { gateHedge, orchardHedge } from "./hedge";
 import * as T from "./textures";
 import { plantHeight as plantHeightOf } from "../ui/plant";
 import { fishSign, keepsakeLabel, pickSigns, SIGNS, sunflowerFaces, type SignLine } from "./whimsy";
-import { GATE_HALF, SNAIL_SIGN, visitor, type FrogWords, type VisitorId, type VisitorView } from "./visitors";
+import { GATE_HALF, SNAIL_SIGN, visitor, type FrogWords, type VisitorId } from "./visitors";
 import { SceneVisitors, type Hider } from "./sceneVisitors";
 import { RAIL, type Ledge, type Spots } from "./spots";
 import { conditions } from "./conditions";
 import { DETAIL, DetailPicker, type Detail } from "./detail";
-import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
+import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryWorld } from "./scenery";
 import { HILLS, SKY_R, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
 import { Door, DOOR } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
-import { NAME_NEAR, Plants } from "./scenePlants";
+import { Plants } from "./scenePlants";
 import { Lanterns } from "./sceneLanterns";
-import { ANSWER_LINE, ANSWER_NOTE, ANSWER_SPOKEN, backWay, DIARY_REACH, hasNote, HILL_NOTE, HILLTOP_R, hillY, lookoutAt, LookoutLight, type Lookout } from "./lookout";
+import { HILLTOP_R, hillY } from "./lookout";
 import { LookoutThings } from "./sceneLookout";
-import { stepY, stileAt, type NotePlace, type StileSpot } from "./stile";
+import { stepY, stileAt } from "./stile";
 import { StileScene } from "./sceneStile";
-import { courseNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
 import { TAP_PRIORITY, type Frame, type Part, type TapAt, type TapHit, type Tapper } from "./scenePart";
-import { buildShed, shedRoof, shedStep } from "./shed";
-import { Carry, CARRY_STAND, type CarryDone, type CarryTarget, type Landing } from "./sceneCarry";
-import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
-import { echo, echoDate, type Met } from "./well";
-import { TOY_STAND, Toys, type ToyDone, type ToyTarget } from "./sceneToys";
-import type { ToysWalk } from "./toys";
+import { shedRoof, shedStep } from "./shed";
+import { buildShed, ShedNotes } from "./sceneNotes";
+import { Carry } from "./sceneCarry";
+import type { CarryDone } from "./carry";
+import { Toys } from "./sceneToys";
+import type { ToyDone } from "./toys";
 import { bareNoun } from "./nouns";
 import { petalForms } from "./shake";
 import type { Gender } from "../deck/schema";
 import type { DeckLang } from "../deck/langs";
-import { Jokes, type Joke } from "./sceneJokes";
-import { ShedNotes } from "./sceneNotes";
+import { Jokes } from "./sceneJokes";
 import { thingsInView, type SceneState } from "./sceneState";
 import { WalkInto } from "./sceneWalkInto";
-import { leafPiles, type Fell, type Rolling } from "./walkInto";
+import { leafPiles, type Fell } from "./walkInto";
 import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
-import { backRate, COMPANY_SPOT, due, glance, GLANCE, GNOME_WORD, lapseLook, lapseRate, settle, untilNight, type Companion, type Look } from "./bench";
+import type { Companion } from "./bench";
 import { RESERVED } from "../content/voice";
 import { dayNumber } from "../core/day";
 import type { Hideout, Reply } from "./kinds/kind";
-
-export type TimeOfDay = "day" | "dusk" | "night";
+import { EYE, Game, SCENERY_TAG, type GameHooks, type TimeOfDay, type WalkVisitors } from "./game";
 
 /**
  * Where the bench's notice board stands, from the bench (it turns 0.35 rad toward
@@ -69,12 +67,6 @@ const BENCH_BACK = 0.8;
 /** The height of the top of the bench's seat (m). */
 const BENCH_SEAT = 0.45;
 
-/**
- * The door in the hedge (#315): locked; locked with the key hidden somewhere in
- * the garden (its garden word brought it), with the help the world gives once it
- * has waited a while (#334); or open for good.
- */
-export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
 
@@ -96,43 +88,6 @@ export interface Label {
   where?: Hideout;
   /** What a tapped scenery thing makes you think (#864), in the course language: shown under its word. */
   thought?: string;
-}
-
-/** Who visits the walk today. */
-export interface WalkVisitors {
-  list: VisitorView[];
-  /** The first word's plant, its lemma and when it was planted, for its stake: "casa · 3 oct" (#61). */
-  keepsake?: { id: string; lemma: string; at: number } | null;
-  /** Tonight's sleeping bloom (#62): three z's drift up from it at night. */
-  sleeper?: string | null;
-  /** Words for the garden itself (#74): shown when you tap the sunflower, a tree, the pond... */
-  scenery?: SceneryViews;
-  /** The door in the hedge (#315), as the walk opens. */
-  door: DoorState;
-  /**
-   * The orchard behind the door (#315): every tree planted so far, and when the
-   * first word was planted, for the bench (null: every word is set aside). Built
-   * only once the door is open.
-   */
-  orchard: { trees: OrchardTree[]; firstPlanted: number | null };
-  /** Autumn as the walk opens (core/day.ts isAutumn): leaf piles on the paths (#359). */
-  autumn: boolean;
-  /** The lawn toys (#360): today's calendar day. */
-  toys: ToysWalk;
-  /** Tonight's moon (#361, moon.ts moonPhase), as the walk opens. */
-  moon: number;
-  /** Every word in the garden and when it was first met, for the well's echo (#335 S6). */
-  met: Met[];
-  /** The learner's first review ever (ms), for the garden's age (#379); null for a new learner. */
-  firstReview: number | null;
-  /** The gardener's notes on the shed's nails (#654): the unlocked ones, in the order they came, and whether each is still unread. */
-  notes: readonly { id: string; unread: boolean }[];
-  /** The stile in the back fence (#714): null until the first stile note is unlocked; then the notes under its step (stile.ts placeNotes). */
-  stile: readonly string[] | null;
-  /** The diary on the hill (#858): null until its first page is unlocked; then its pages, in the order they came, and whether each is still unread. */
-  diary: readonly { id: string; unread: boolean }[] | null;
-  /** The last note (#882), on the mat of the open mouse door: null until it is unlocked, and until then the mouse door is shut. */
-  mouseDoor: NotePlace | null;
 }
 
 export interface SceneCallbacks {
@@ -167,7 +122,6 @@ export interface SceneCallbacks {
   onStars: (out: boolean) => void;
 }
 
-const EYE = 1.05;
 /**
  * The longest frame the garden runs in full (s). Down to 10 frames a second
  * the garden runs in real time: a walk is as fast and a visitor's wait as long
@@ -182,14 +136,6 @@ const TAP_SLACK = 0.5;
 const GROUND_STEP = 0.1;
 /** Ground nearer than this (m) is in reach (#336): a tap on it names the path, as before; farther ground is walked to. */
 const GROUND_REACH = 1.5;
-/** Where a walk to the door stops: on the path in front of it, in reach of it (reachCore.ts DOOR_REACH). */
-const DOOR_STAND = 1.4;
-/** A walk to the key stops this short of it (m), so it is still in view, in reach (KEY_REACH). */
-const KEY_STAND = 1;
-/** The well's echo (#335 S6) comes this long (s) after the plop, and shows for this long. */
-const ECHO = { delay: 1.2, show: 5 };
-/** A plant this near (m) where a thing lands perks up (#358). */
-const PERK_NEAR = 0.9;
 /** The view's height (degrees), and on the lookout's stool (#858) a little narrower: the far house and its lantern nearer the middle. */
 const FOV = 62;
 const STOOL_FOV = 50;
@@ -210,11 +156,6 @@ const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color }> = {
 /** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. `edge`: how far in from each side its middle stays. */
 const onScreen = (k: number, edge = 0.12) => Math.max(edge, Math.min(1 - edge, k));
 
-/**
- * A tapped scenery word's tag (#74), in seconds: a word alone shows for `word`; one with a thought (#864) for `thought`,
- * long enough to read it slowly, and fades out over its last `fade`.
- */
-const SCENERY_TAG = { word: 4, thought: 10, fade: 0.6 };
 /** How far in from each side a thought's tag stays: half of its widest (index.css .gw-thought, 15rem), on a phone 412 px wide. */
 const THOUGHT_EDGE = 0.3;
 /** The highest a thought's point goes: its tag is drawn above the point, and two or three lines tall it would go under the top pill. */
@@ -223,7 +164,7 @@ const THOUGHT_TOP = 0.24;
 /**
  * The order GardenScene.labels pushes a tag in, when more than one shows at
  * once: a visitor's "say" bubble (the frog's croak) first; the well's echo; then whichever of
- * line/fruit/scenery/tree is active (GardenScene.clearTaps keeps at most one of
+ * line/fruit/scenery/tree is active (game.ts clearTaps keeps at most one of
  * those three set); a visitor's approach tag last. One table, like
  * TAP_PRIORITY.
  */
@@ -251,104 +192,61 @@ export class GardenScene {
   // Far enough to see the sky dome from anywhere inside the hills: a big garden's far corner is well off the world's middle (#641).
   private camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, SKY_R + HILLS.radius);
   private last = performance.now();
-  private elapsed = 0;
   private frame = 0;
-  /** The walk is drawn: from now on a visitor sent somewhere goes there in its own way (#802). */
-  private started = false;
   private disposed = false;
-  /** The walker (walker.ts, #975): where you stand, where you look and what you are doing. Its functions change it; this scene draws it. */
-  private readonly me: W.Walker;
-  private readonly world: W.WalkerWorld;
+  /** The garden's state and rules (#975): this scene feeds it, steps it and draws it. */
+  readonly game: Game;
+  /** The one clock read (DESIGN.md, Garden code): when the walk opened. The game and the build both take it from here. */
+  private readonly opened = new Date();
   // The walker's place and view, under the names this scene reads them by. The e2e tests (window.__garden) read them too, and set them to stand somewhere.
   private get x(): number {
-    return this.me.x;
+    return this.game.me.x;
   }
   private set x(v: number) {
-    this.me.x = v;
+    this.game.me.x = v;
   }
   private get z(): number {
-    return this.me.z;
+    return this.game.me.z;
   }
   private set z(v: number) {
-    this.me.z = v;
+    this.game.me.z = v;
   }
   private get yaw(): number {
-    return this.me.yaw;
+    return this.game.me.yaw;
   }
   private set yaw(v: number) {
-    this.me.yaw = v;
+    this.game.me.yaw = v;
   }
   private get pitch(): number {
-    return this.me.pitch;
+    return this.game.me.pitch;
   }
   private set pitch(v: number) {
-    this.me.pitch = v;
+    this.game.me.pitch = v;
   }
-  /** What the walker is doing (#877): one state, changed only by walker.ts (here, through `toWalker`). */
+  /** What the walker is doing (#877), for the e2e tests (window.__garden). */
   private get walker(): W.Mode {
-    return this.me.mode;
+    return this.game.me.mode;
   }
-  /** Whether a stalled walk was reported this time in the garden. */
-  private stallReported = false;
+  /** Seconds in the garden, for the e2e tests (window.__garden). */
+  private get elapsed(): number {
+    return this.game.elapsed;
+  }
   /** The ring on the ground where a walk goes. */
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  /** What the action button does now (#334), and to which thing (reachCore.ts); null with nothing in reach. */
-  private offer: R.Offer | null = null;
-  /** What the button can act on, for reachCore.ts: the parts themselves, which keep their own state. */
-  private things: R.Things;
-  /** Carry (#358): the pebbles; and how often each one has answered a landing this visit. */
+  /** Carry (#358): the pebbles as drawn. */
   private carry: Carry;
-  private answered: Record<Answer, number> = { frog: 0, plant: 0, well: 0 };
-  /** The well's echo (#335 S6): an old word and the day it was met, over the well, from `from` until `until` (elapsed s). */
-  private echoTap: { n: number; word: string; date: string; from: number; until: number } | null = null;
-  /** When the walk opened (ms): the well's echo reaches back from then. */
-  private openedAt = 0;
-  /** A fallen fruit's tag (#359): the word of the tree it fell from, over the fruit as it rolls, for a few seconds. */
-  private fruitTap: { tree: PlacedTree; at: Readonly<Rolling>; until: number } | null = null;
   /** Walking into things (#359): bumping orchard trees and bursting leaf piles. */
   private walkInto: WalkInto;
   /** The lawn toys (#360): the dandelion clocks. */
   private toys: Toys;
   /** The gardener's notes in the shed (#654). */
-  private notes = new ShedNotes();
-  /** The eye's seat (#334, #858), sat on now or last: the view narrows on the stool. */
-  private sitOn: W.Seat = "bench";
+  private notes: ShedNotes;
   /** The way out of the back fence (#714, #749): the thicket, and the stile once the hill's note is unlocked. */
   private stile: StileScene | null = null;
-  /**
-   * The stile, the hill past it and the lookout on its top (#722), all null
-   * until the stile is there; and the ground past the back fence the walker
-   * may stand on (#770): none past the brambles until the note that tells of
-   * the hill is unlocked, then over the stile and up the old path.
-   */
-  private readonly stileSpot: StileSpot | null;
-  private readonly hill: Lookout | null;
   /** The stool and the diary on the hill's top (#858), null with the hill. */
   private readonly lookoutThings: LookoutThings | null;
-  private readonly hillOpen: boolean;
-  private readonly back: BackWay | null;
-  /**
-   * Sitting still on the bench (#362): seconds sat; how far time has run on
-   * (parts of the day past `time`, bench.ts) and the look on show for it; who
-   * came to sit with you; the view you sat down with, and whether you have
-   * looked round yourself since; the turn of the head toward who came last;
-   * and when the gnome says its word (seconds sat).
-   */
-  private sat = 0;
-  private lapse = 0;
-  private readonly lapseNow: Look = { from: "day", to: "day", k: 0 };
-  private come = new Set<Companion>();
-  /** Who is on the way to the bench, not there yet (#802). */
-  private onWay = new Set<Companion>();
-  private seatView = { yaw: 0, pitch: 0, looked: false };
-  private turnTo: { yaw: number; pitch: number; at: number } | null = null;
-  private gnomeSays: number | null = null;
-  /** Is this visitor here today? Made once: the bench asks every frame while you sit. */
-  private readonly here = (id: Companion) => this.guests.has(id);
   private readonly tintNow = new THREE.Color();
   private readonly fogNow = new THREE.Color();
-  /** The pond's bench, by its middle (world.ts benchAt), worked out once: reportReach runs every frame. */
-  private bench: { x: number; z: number };
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
   private mats = new Set<THREE.ShaderMaterial>();
   private basic: THREE.MeshBasicMaterial[] = [];
@@ -363,12 +261,6 @@ export class GardenScene {
   private marker!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   /** The sunflower: where it stands, its sprite's frame and lean, and which side it shows (null: not drawn yet). */
   private flower!: { x: number; z: number; uv: THREE.InstancedBufferAttribute; params: THREE.InstancedBufferAttribute; face: boolean | null };
-  private selected: PlacedPlant | null = null;
-  /** The time of day chosen (the clock, or the button), and the one on show: they differ while time speeds up on the bench (#362). */
-  private time: TimeOfDay = "day";
-  private shown: TimeOfDay = "day";
-  /** Time is sped up on the bench now, or running back to the time chosen (#362). */
-  private lapsing = false;
   private readonly fog = new THREE.Fog(0xffffff, FOG_NEAR, FOG_FAR);
   /** The sprite materials tint() tints itself (the visitors tint their own). */
   private tinted: readonly Set<THREE.ShaderMaterial>[];
@@ -381,12 +273,8 @@ export class GardenScene {
   /** What a tap can name in the garden itself (#74), built once. The clouds and the sun are read at tap time. */
   private hitBoxes: HitBox[] = [];
   private hitDiscs: HitDisc[] = [];
-  /** The tapped scenery word and where its tag sits (it follows the sun or a cloud). */
-  private sceneryTap: { view: SceneryView; hit: SceneryHit; until: number } | null = null;
-  /** The lanterns where paths cross (#361): lit at dusk and night, each one blown out or lit again by hand. */
+  /** The lanterns where paths cross (#361), as drawn. */
   private lanterns: Lanterns;
-  /** The signals with the lookout's lantern and the far light's answers (#858). */
-  readonly lookout: LookoutLight;
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door: Door;
   /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose. */
@@ -400,33 +288,10 @@ export class GardenScene {
   private parts: Part[];
   /** The orchard behind the door, once it is open (#315). */
   private orchard: Orchard | null = null;
-  /** The orchard tree tapped last and until when its tag shows. */
-  private treeTap: { tree: PlacedTree; until: number } | null = null;
   /** What the world is built with, kept for the orchard, which is built when the door opens. */
   private ctx!: BuildCtx;
   /** The orchard's tree atlas, painted in a worker during the build (#571), for when the door opens. */
   private orchardAtlas!: THREE.Texture;
-
-  /** The help the world gives for a key left waiting (#334), while it still lies in the garden. */
-  private get keyHelp(): KeyHelp | null {
-    return this.door.state === "key" ? this.door.help : null;
-  }
-
-  /** The orchard's trees, for walking round their trunks: none while the door is shut. */
-  private get trunks(): readonly PlacedTree[] {
-    return this.orchard?.trees ?? [];
-  }
-
-  /** The ground as it is now (#761), for your ways on foot, over the stile too (#770). */
-  private get ground(): Ground {
-    return this.world.ground;
-  }
-  /**
-   * A quiet line from the garden (the door's, or a joke's), over a point, until a time. A joke's line is in the
-   * course language, and `spoken` is its English for screen readers (#650). The far light's answer (#858) is
-   * over no point (null): it is low in the view, read wherever you look.
-   */
-  private line: { text: string; spoken?: string; at: [number, number, number] | null; until: number } | null = null;
   readonly input: W.Input = { move: { x: 0, y: 0 }, run: false };
 
   private layout: Layout;
@@ -452,26 +317,7 @@ export class GardenScene {
     // Reading the shader logs on a program's first use waits for the GPU: ~10 ms of a first draw at CPU 10× (#571).
     // Dev and the e2e tests still read them, so a broken shader fails there.
     this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
-    // Start inside the gate, close enough that the first bed fills the view.
-    const first = layout.beds[0];
-    this.bench = benchAt(layout);
-    this.me = W.newWalker(layout.gate.x, Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2));
     this.camera.rotation.order = "YXZ";
-    // The way over the stile opens once the note that tells of the hill is unlocked (#770), and the far light answers once the note that tells of that is.
-    // Null: no diary page is unlocked yet.
-    const notes = [...visitors.notes, ...(visitors.diary ?? [])].map((n) => n.id);
-    this.hillOpen = hasNote(courseNotes(lang), notes, HILL_NOTE);
-    this.stileSpot = visitors.stile ? stileAt(layout) : null;
-    this.hill = this.stileSpot ? lookoutAt(this.stileSpot) : null;
-    this.lookoutThings = this.hill ? new LookoutThings(this.hill) : null;
-    this.back = this.stileSpot && this.hill ? backWay(this.stileSpot, this.hill, this.hillOpen) : null;
-    // The door and the trees are read when asked: the door is made below, and opens during a walk.
-    const ground: Ground = { layout, doorOpen: () => this.door.state === "open", trees: () => this.trunks, back: this.back };
-    this.world = { ground, stile: this.stileSpot, hill: this.hill, reducedMotion };
-    this.lookout = new LookoutLight(hasNote(courseNotes(lang), notes, ANSWER_NOTE));
-    this.lanterns = new Lanterns();
-    this.sky = new SkyWater(this.camera, reducedMotion, this.lookout);
-    this.critters = new Critters(this.camera, reducedMotion);
     this.plants = new Plants(
       this.renderer,
       this.camera,
@@ -481,36 +327,17 @@ export class GardenScene {
       (p) => this.cb.onWalkInto({ did: "brush", word: p.lemma, clear: p.stage === "bloom" }),
       visitors.moon === FULL_MOON,
     );
-    this.door = new Door(reducedMotion);
-    this.jokes = new Jokes(this.camera, reducedMotion);
-    this.walkInto = new WalkInto(
-      reducedMotion,
-      (tree, fell, fruit) => {
-        if (fruit) {
-          this.fruitTap = { tree, at: fruit, until: this.elapsed + 4 };
-          this.clearTaps({ scenery: true, tree: true, line: true, visitor: true });
-        }
-        this.cb.onWalkInto({ did: "bump", fell, word: tree.lemma });
-      },
-      () => this.cb.onWalkInto({ did: "pile" }),
-    );
-    this.carry = new Carry(layout, reducedMotion, {
-      doorOpen: () => this.door.state === "open",
-      land: (l) => this.landed(l),
-    });
-    this.toys = new Toys(layout, visitors.toys, reducedMotion, {
-      sneeze: (i) => this.plants.sneeze(i, this.elapsed),
-    });
     this.guests = new SceneVisitors(
       {
         scene: this.scene,
         camera: this.camera,
         layout,
         // The visitors stay in the garden: they are drawn on flat ground, not on the stile or the hill (#770).
-        ground: { ...this.ground, back: null },
+        // The door and the trees are read when asked: the door opens during a walk.
+        ground: { layout, doorOpen: () => this.game.door.state === "open", trees: () => this.game.trunks, back: null },
         reducedMotion,
         lang,
-        elapsed: () => this.elapsed,
+        elapsed: () => this.game.elapsed,
         bedTop: BED_H,
         // The plant's own drawn height (its genome and meaning too), as its sprite shows it.
         plantTop: (p) => BED_H + (plantHeightOf(p.lemma, p.growth, 1) / T.VIEW_H) * SPRITE_H * PLANT_SCALE,
@@ -523,20 +350,26 @@ export class GardenScene {
       },
       visitors.list,
     );
+    const game = new Game(layout, lang, visitors, reducedMotion, this.opened.getTime(), this.hooks(), this.guests);
+    this.game = game;
+    this.sky = new SkyWater(this.camera, reducedMotion, game.lookout);
+    this.critters = new Critters(this.camera, reducedMotion);
+    this.door = new Door(reducedMotion, game.door);
+    this.jokes = new Jokes(this.camera, reducedMotion, game.mouse);
+    this.walkInto = new WalkInto(
+      reducedMotion,
+      (tree, fell, fruit) => {
+        if (fruit) game.fruitFell(tree, fruit);
+        this.cb.onWalkInto({ did: "bump", fell, word: tree.lemma });
+      },
+      () => this.cb.onWalkInto({ did: "pile" }),
+    );
+    this.carry = new Carry(layout, reducedMotion, game.pebbles);
+    this.toys = new Toys(game.clocks, reducedMotion);
+    this.notes = new ShedNotes(game.shed);
+    this.lanterns = new Lanterns(game.lamps);
+    this.lookoutThings = game.hill ? new LookoutThings(game.hill, game.diary) : null;
     this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry, this.toys, this.lanterns];
-    this.things = {
-      door: this.door,
-      gate: { x: layout.gate.x, z: layout.bounds.maxZ },
-      bench: this.bench,
-      lanterns: this.lanterns,
-      lookout: this.lookoutThings,
-      plants: layout.plants,
-      carry: this.carry,
-      toys: this.toys,
-      hiders: this.guests,
-      mat: this.jokes,
-      note: (x, z, yaw, pitch, slack) => this.notes.reachAt(x, z, yaw, pitch, EYE, slack) ?? (this.stile?.inReach(x, z, slack) ? this.stile.unopened() : null),
-    };
     this.tinted = [this.mats, this.walkInto.mats, this.carry.mats];
     this.scene.fog = this.fog;
   }
@@ -601,53 +434,42 @@ export class GardenScene {
     const farTex = await far;
     this.buildTrees(c, farTex.trees);
     if (await this.stopped()) return;
-    this.lanterns.build(c, this.hill);
+    this.lanterns.build(c);
     if (await this.stopped()) return;
     const bench = this.buildBench(c);
     if (await this.stopped()) return;
     const boards = this.buildSigns(c, bench);
     if (await this.stopped()) return;
-    // The one clock read in the build: what is where today (DESIGN.md, Garden code).
-    const now = new Date();
-    this.openedAt = now.getTime();
+    // What is where today (DESIGN.md, Garden code): from the one clock read.
+    const now = this.opened;
+    const g = this.game;
     // The mat says the doormat's word as a mat would: the bare word, in capitals.
     const welcome = this.visitors.scenery?.doormat?.word;
-    this.jokes.build(c, this.bench, now, welcome ? bareNoun(welcome).toUpperCase() : null, this.visitors.mouseDoor);
+    this.jokes.build(c, g.bench, now, welcome ? bareNoun(welcome).toUpperCase() : null);
     if (await this.stopped()) return;
     // The garden's age, in calendar days since the first review (#379).
     const first = this.visitors.firstReview;
     this.guests.build(this.spots(pads, boards, now), now, first === null ? 0 : dayNumber(now) - dayNumber(first));
     if (await this.stopped()) return;
     this.scene.add(buildShed(c, this.layout));
-    this.notes.build(c, this.visitors.notes);
-    const stile = this.visitors.stile;
-    // The hill is there whenever the stile is (the constructor).
-    if (stile && this.stileSpot && this.hill && this.lookoutThings) {
+    this.notes.build(c);
+    // The hill is there whenever the stile is (game.ts).
+    if (g.stileNotes && g.stileSpot && g.hill && this.lookoutThings) {
       // Draws no random numbers.
-      this.stile = new StileScene(this.stileSpot, this.hill, this.hillOpen);
-      for (const _step of this.stile.build(c, stile)) if (await this.stopped()) return;
-      this.lookoutThings.build(c, this.visitors.diary);
+      this.stile = new StileScene(g.stileSpot, g.hill, g.hillOpen, g.stileNotes);
+      for (const _step of this.stile.build(c)) if (await this.stopped()) return;
+      this.lookoutThings.build(c);
     }
     this.toys.build(c);
     if (await this.stopped()) return;
     // Draws no random numbers either.
     this.carry.build();
     this.scene.add(this.carry.root);
-    // A key left waiting a few days (#334): the dog, if it is here today, sits by it from the start (#802). At dusk and night the bird too (birdByKey).
-    const key = this.door.key;
-    if (this.keyHelp?.visitors && key && this.guests.has("dog")) {
-      this.guests.place("dog", besideKey(this.layout, key, "dog"), key);
-      this.door.guarded = true;
-    }
-    // While the last note waits unread (#882), the cat, if it is here today, sits by the open mouse door and looks in.
-    if (this.visitors.mouseDoor?.unread && this.guests.has("cat")) {
-      const by = this.jokes.besideMouseDoor();
-      this.guests.place("cat", by.at, by.looks);
-    }
+    g.placeWaiting();
     // Even with the door shut: it may open in this walk.
     this.orchardAtlas = await orchardAtlas;
     // After the visitors: a visitor may sit in the orchard's trees today.
-    if (this.visitors.door === "open") this.openDoor();
+    if (g.door.state === "open") this.openDoorView(false);
     if (await this.stopped()) return;
     this.buildStakes(c);
     if (await this.stopped()) return;
@@ -661,7 +483,7 @@ export class GardenScene {
     if (await this.stopped()) return;
     this.walkInto.build(c, this.visitors.autumn);
     this.buildMarker();
-    this.setTime(this.time);
+    g.setTime(g.time);
     await this.warm([...this.scene.children]);
   }
 
@@ -826,20 +648,16 @@ export class GardenScene {
     // Left and right of the door, and over it, closing into an arch.
     this.hedge.addWalls(c, gateHedge(L, DOOR.h), 1);
     // The door frame, its leaf, the keyhole's light, and the key, if this walk has it.
-    this.door.build(c, L, this.visitors.door);
+    this.door.build(c, L);
   }
 
-  /** Opens the door for good: the swing (none with reduced motion), and what lies behind it is built now. */
-  private openDoor(swing = false) {
-    const d = this.door;
-    d.state = "open";
-    d.keyhole.hole.visible = d.keyhole.glow.visible = false;
-    if (swing && !this.reducedMotion) d.swing = 0;
-    else d.leaf.rotation.y = DOOR.open;
+  /** The door is open for good: the swing (`swing`; none with reduced motion), and what lies behind it is built now. */
+  private openDoorView(swing: boolean) {
+    this.door.open(swing);
     // The orchard's own hedge, round the far sides, so it is a walled garden.
     const o = this.layout.orchard;
     this.hedge.addWalls(this.ctx, orchardHedge(this.layout), 4);
-    const { trees, firstPlanted } = this.visitors.orchard;
+    const { firstPlanted } = this.visitors.orchard;
     const orchard = buildOrchard(
       {
         parent: this.scene,
@@ -850,13 +668,12 @@ export class GardenScene {
         plaque: firstPlanted === null ? null : benchLine(firstPlanted, this.lang),
       },
       o,
-      trees,
+      this.game.trunks,
     );
     this.orchard = orchard;
     this.walkInto.setOrchard(orchard.trees, orchard.params);
     for (const m of orchard.mats) this.mats.add(m);
     this.hitBoxes.push(...orchard.scenery);
-    this.carry.showWell();
     // Built after setTime when the door opens in this walk: give it the time of day now.
     this.tint();
   }
@@ -887,7 +704,7 @@ export class GardenScene {
     // does not vanish from the garden as the door opens. Visitors that came another way
     // (the gnome, the moth...) have no garden word and never sit in the trees.
     const brought = new Set(this.visitors.list.flatMap((v) => visitor(v.id).garden ?? []));
-    const orchard = this.visitors.door === "open" ? placeTrees(L.orchard, this.visitors.orchard.trees) : [];
+    const orchard = this.visitors.door === "open" ? this.game.trunks : [];
     const trees = treeVisitorSpots(orchard, brought, now);
     const piles = this.visitors.autumn ? leafPiles(L) : [];
     // On top of the hedge left of the door, just behind its front, on the leaves that stand above it; on the back fence's board, beside where a bird sits; on the bench's back, clear of the sitter and the bird.
@@ -896,9 +713,9 @@ export class GardenScene {
       { on: "hedge", at: [L.gate.x - 2.2, HEDGE.height + 0.12, b.maxZ + HEDGE.gap + 0.25] },
       { on: "shed", at: shedRoof(L) },
       { on: "sign", at: [sx - 0.3, sy, sz] },
-      { on: "bench", at: [this.bench.x + 0.15, BENCH_BACK, this.bench.z - 0.2] },
+      { on: "bench", at: [this.game.bench.x + 0.15, BENCH_BACK, this.game.bench.z - 0.2] },
     ];
-    return { bench: this.bench, shedStep: shedStep(L), pads, lanterns: this.lanterns.spots, perches, sign, trees, orchard, piles, ledges };
+    return { bench: this.game.bench, shedStep: shedStep(L), pads, lanterns: this.game.lamps.spots, perches, sign, trees, orchard, piles, ledges };
   }
 
   /** The ray from the eye through a point on the canvas (CSS pixels). */
@@ -910,7 +727,7 @@ export class GardenScene {
 
   /** What a tap does at the door, if it meets the key or the shut door (CSS pixels). Ask after the plants and visitors, before the scenery. */
   private pickDoor({ r }: TapAt): TapHit<"door"> | null {
-    const d = this.door;
+    const d = this.game.door;
     if (d.state === "open") return null;
     const L = this.layout;
     const z0 = L.bounds.maxZ + HEDGE.gap;
@@ -919,47 +736,111 @@ export class GardenScene {
     // From farther than its reach too: a tap there walks to it first (tapDoor, #336). There, whatever
     // stands in front of it (a lantern, the sunflower) is what the tap meets; in reach the key comes first, as it did.
     const disc = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
-    const toKey = disc < Infinity && !R.doorInReach(this.things, this.x, this.z, "key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
+    const toKey = disc < Infinity && !R.doorInReach(this.game.things, this.x, this.z, "key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
     if (toKey <= toDoor) return { kind: "door", a: "key" };
     return { kind: "door", a: d.state === "held" ? "open" : "try" };
   }
 
-  /** The action button (#334), pressed while it said `a`: do what reachCore.ts's press says. */
+  // What the page asks of the garden: each goes to the game (game.ts), which says what happens.
   act(a: R.Reach) {
-    const o = R.press(a, this.offer, this.me);
-    if (!o) return;
-    switch (o.on) {
-      case "seat":
-        return o.target === null ? this.standUp() : this.toggleLantern(o.target);
-      case "key":
-      case "door":
-        return this.doorAct(o.a);
-      case "carry":
-        if (o.a === "throw") this.throwAhead();
-        // Every other carry act has a target (Carry.reachAt).
-        else if (o.target) this.doCarry(o.target);
-        return;
-      case "hider":
-        return this.seek(o.target);
-      case "mat":
-      case "note":
-        return this.openNote(o.target);
-      case "stool":
-        return this.sit("stool");
-      case "diary":
-        return this.openDiary();
-      case "lantern":
-        return this.toggleLantern(o.target);
-      case "bench":
-        return this.sit("bench");
-      case "toy":
-        return this.doToy(o.target);
-      case "plant":
-        return this.shakeNow(o.target);
-      default:
-        return o satisfies never;
-    }
+    this.game.act(a);
+  }
+  shake(p: PlacedPlant) {
+    this.game.shake(p);
+  }
+  doorAct(a: R.DoorAction) {
+    this.game.doorAct(a);
+  }
+  readDiary(id: string) {
+    this.game.readDiary(id);
+  }
+  setTime(t: TimeOfDay) {
+    this.game.setTime(t);
+  }
+  look(dx: number, dy: number) {
+    this.game.look(dx, dy);
+  }
+  step(metres: number) {
+    this.game.stepAhead(metres);
+  }
+  turn(amount: number) {
+    this.game.turn(amount);
+  }
+  select(p: PlacedPlant | null, walkTo = false) {
+    this.game.select(p, walkTo);
+  }
+
+  /** What the game tells this scene to show (game.ts GameHooks). */
+  private hooks(): GameHooks {
+    return {
+      plantTop: (p) => BED_H + plantHeight(p.growth),
+      select: (p) => {
+        const i = p ? this.layout.plants.indexOf(p) : -1;
+        for (const m of this.mats) m.uniforms.uSelected.value = i;
+        this.marker.visible = !!p;
+        this.cb.onSelect(p);
+      },
+      shake: (p, forms) => {
+        this.plants.shake(p, forms, this.game.elapsed, this.reducedMotion);
+        this.cb.onShake(p, forms);
+      },
+      nod: (p) => this.nod(p),
+      sneeze: (i) => this.plants.sneeze(i, this.game.elapsed),
+      hand: (holding) => this.cb.onHand(holding),
+      carry: (done) => this.cb.onCarry(done),
+      toy: (done) => this.cb.onToy(done),
+      keyTaken: () => this.door.keyTaken(),
+      doorOpen: () => {
+        this.openDoorView(true);
+        this.cb.onDoorOpen();
+      },
+      read: (on, id) => {
+        switch (on) {
+          case "shed":
+            return this.notes.read(id);
+          // A stile note and a diary page are read only where the game has a stile and a hill: the build made them.
+          case "stile":
+            return this.stile!.show();
+          case "mat":
+            return this.jokes.showNote();
+          case "diary":
+            return this.lookoutThings!.show();
+          default:
+            return on satisfies never;
+        }
+      },
+      open: (id) => this.cb.onNote(id),
+      company: (c) => this.cb.onCompany(c),
+      stall: () => this.cb.onStall(),
+      reach: (o) => {
+        this.notes.lift(o?.on === "note" ? o.target : null);
+        this.plants.ready(o?.on === "plant" ? o.target : null);
+        this.cb.onReach(o ? o.a : null);
+      },
+      stars: (out) => {
+        this.sky.setStars(out);
+        this.critters.setBright(out);
+        this.cb.onStars(out);
+      },
+      time: (t) => this.light(t),
+      blend: (look, race) => {
+        this.sky.blend(look, race);
+        if (!look) return;
+        this.tintNow.copy(LIGHT[look.from].tint).lerp(LIGHT[look.to].tint, look.k);
+        this.fogNow.copy(LIGHT[look.from].fog).lerp(LIGHT[look.to].fog, look.k);
+        this.tint();
+      },
+      trip: (to) => {
+        if (!to) {
+          this.spot.visible = false;
+          return;
+        }
+        this.spot.position.set(to.x, 0.03 + this.lift(to.x, to.z), to.z);
+        this.spot.visible = true;
+      },
+      lantern: (i) => this.lanterns.show(i),
+    };
   }
 
   /** The lantern under a point on the canvas (CSS pixels), while they are lit (#361), with nothing in front of it. */
@@ -967,44 +848,6 @@ export class GardenScene {
     const got = this.lanterns.pick(r);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t || thingAt(r, this.sceneryWorld()) < got.t) return null;
     return { kind: "lantern", i: got.i };
-  }
-
-  /** A tap on a lantern (#361): blow it out or light it in reach; from farther away, walk up to it first. */
-  private tapLantern(i: number) {
-    const [x, z] = this.lanterns.spot(i);
-    if (Math.hypot(x - this.x, z - this.z) < R.LANTERN_REACH) return this.toggleLantern(i);
-    this.goTo(x, z, R.LANTERN_REACH - 0.4, () => this.toggleLantern(i));
-  }
-
-  /** Blow lantern `i` out, or light it again; the moth, the stars and the fireflies answer. The lookout's, lit again, is a signal to the far light (#858). */
-  private toggleLantern(i: number) {
-    const relit = this.lanterns.toggle(i);
-    if (i === this.lanterns.lookout) {
-      if (relit) this.lookout.signal(this.elapsed);
-      return;
-    }
-    // The moth knows the garden's lanterns only, the lookout's last.
-    this.guests.lanternsLit(this.lanterns.on.slice(0, this.lanterns.spots.length));
-    this.nightSky();
-  }
-
-  /** Every lantern out: the stars come out over the hills and the fireflies glow brighter (#361); otherwise they go back. */
-  private nightSky() {
-    const out = this.lanterns.allOut;
-    this.sky.setStars(out);
-    this.critters.setBright(out);
-    this.cb.onStars(out);
-  }
-
-  /** A long press on a plant (#357): shake it where it stands when its name shows; from farther away, walk to it first. */
-  shake(p: PlacedPlant) {
-    if (Math.hypot(p.x - this.x, p.z - this.z) < NAME_NEAR) return this.shakeNow(p);
-    const v = viewpoint(this.layout, p);
-    this.goTo(v.x, v.z, 0, () => this.shakeNow(p));
-  }
-
-  private shakeNow(p: PlacedPlant) {
-    this.cb.onShake(p, this.plants.shake(p, this.elapsed, this.reducedMotion));
   }
 
   /**
@@ -1015,11 +858,12 @@ export class GardenScene {
   private pickCarry({ r }: TapAt): TapHit<"carry"> | null {
     const w = this.sceneryWorld();
     const wall = Math.min(thingAt(r, w), this.hedgeAt(r));
-    if (this.carry.held === null) {
+    const pebbles = this.game.pebbles;
+    if (pebbles.held === null) {
       const got = this.carry.pick(r);
       if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
       // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
-      return this.carry.standFor(got.target, this.x, this.z).near || wall >= got.t ? { kind: "carry", t: got.target } : null;
+      return pebbles.standFor(got.target, this.x, this.z).near || wall >= got.t ? { kind: "carry", t: got.target } : null;
     }
     if (this.carry.pickWell(r) <= wall) return { kind: "carry", t: { at: "well" } };
     // The pond's own hit disc (sceneSky.ts) lies a few mm over the water and a rim wider: the water may be just behind it.
@@ -1030,296 +874,13 @@ export class GardenScene {
     return g && Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH ? { kind: "carry", t: { at: "ground", ...g } } : null;
   }
 
-  /** A tap on a loose thing, the well, the water or the ground in reach (#358): act on it in reach; from farther away, walk up to it first. */
-  private tapCarry(t: CarryTarget) {
-    const at = this.carry.standFor(t, this.x, this.z);
-    if (at.near) return this.doCarry(t);
-    this.goTo(at.x, at.z, CARRY_STAND, () => this.doCarry(t));
-  }
-
-  /** Pick up a loose thing; throw what you hold in the water, put it down on the ground, or drop it in the well. Anything that no longer applies does nothing. */
-  private doCarry(t: CarryTarget) {
-    const c = this.carry;
-    if (t.at === "thing") {
-      if (!c.lift(t.i)) return;
-      this.cb.onHand(true);
-      this.cb.onCarry({ did: "lift" });
-      return;
-    }
-    const at = t.at === "well" ? this.layout.well : t;
-    if (!c.letGo(this.x, this.z, at.x, at.z, t.at === "water")) return;
-    this.cb.onHand(false);
-    this.cb.onCarry({ did: t.at === "water" ? "throw" : t.at === "well" ? "well" : "put" });
-  }
-
-  /** The action button's throw (#358): what you hold flies a few steps ahead, where you face. */
-  private throwAhead() {
-    const to = aimAt(this.x, this.z, this.yaw);
-    if (!this.carry.letGo(this.x, this.z, to.x, to.z, true)) return;
-    this.cb.onHand(false);
-    this.cb.onCarry({ did: "throw" });
-  }
-
-  /** What answers a landing (carry.ts ANSWERS): the frog, a plant, the well. */
-  private answerers: Answerers = {
-    frogHop: () => this.guests.splash(),
-    say: (id, text) => {
-      if (!this.guests.here(id)) return false;
-      this.say(id, text);
-      return true;
-    },
-    perk: (x, z) => {
-      let best: PlacedPlant | null = null;
-      let bestD = PERK_NEAR;
-      for (const p of this.layout.plants) {
-        const d = Math.hypot(p.x - x, p.z - z);
-        if (d < bestD) [best, bestD] = [p, d];
-      }
-      if (best) this.nod(best);
-      return !!best;
-    },
-    echo: (n) => {
-      const e = echo(this.visitors.met, this.openedAt, n);
-      // No words met yet: only the plop.
-      if (!e) return;
-      const from = this.elapsed + ECHO.delay;
-      this.echoTap = { n, word: e.lemma, date: echoDate(e.at, this.openedAt, this.lang), from, until: from + ECHO.show };
-    },
-  };
-
-  /** A put-down thing landed (#358): whoever its row names answers, and the page hears what happened. */
-  private landed(l: Landing) {
-    const a = l.reaction.answer;
-    const more = a ? ANSWERS[a](this.answerers, l, this.answered[a]++) : null;
-    this.cb.onCarry({ did: "land", said: more ? `${l.said} ${more}` : l.said });
-  }
-
   /** The dandelion clock under a point on the canvas (CSS pixels), unless something stands in front of it. */
   private pickToy({ r }: TapAt): TapHit<"toy"> | null {
     const got = this.toys.pick(r);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
     // From afar a tap walks there first: whatever stands in front of it is what the tap meets. In reach it comes first.
-    const near = this.toys.standFor(got.i, this.x, this.z).near;
+    const near = this.game.clocks.standFor(got.i, this.x, this.z).near;
     return near || thingAt(r, this.sceneryWorld()) >= got.t ? { kind: "toy", i: got.i } : null;
-  }
-
-  /** A tap on a dandelion clock (#360): blow it in reach; from farther away, walk up to it first. */
-  private tapToy(i: number) {
-    const at = this.toys.standFor(i, this.x, this.z);
-    const t: ToyTarget = { at: "clock", i };
-    if (at.near) return this.doToy(t);
-    this.goTo(at.x, at.z, TOY_STAND, () => this.doToy(t));
-  }
-
-  /** Blow a clock: one blown already does nothing. */
-  private doToy(t: ToyTarget) {
-    if (this.toys.blow(t.i)) this.cb.onToy({ did: "blow" });
-  }
-
-  /**
-   * Sit on the bench, facing the pond, or on the lookout's stool (#858),
-   * facing the far house: a cut to the seat, and the eye sinks (at once, with
-   * reduced motion). Any move stands you up.
-   */
-  private sit(on: W.Seat) {
-    this.walkerWent(W.sit(this.me, on, this.world));
-  }
-
-  /** Stand up, if you sat (the action button). */
-  private standUp() {
-    if (this.walker.kind === "seated") this.toWalker(W.FREE);
-  }
-
-  /** Change what the walker is doing (#877, walker.ts toMode), and show it. */
-  private toWalker(next: W.Mode) {
-    this.walkerWent(W.toMode(this.me, next, this.world));
-  }
-
-  /** What the scene does when walker.ts has changed the walker's mode: for leaving `was`, and for entering the one it is in now. */
-  private walkerWent(was: W.Mode) {
-    this.leaveWalker(was);
-    this.enterWalker(this.me.mode);
-  }
-
-  private leaveWalker(was: W.Mode) {
-    switch (was.kind) {
-      case "free":
-      case "glide":
-        return;
-      case "trip":
-        this.spot.visible = false;
-        return;
-      case "seated":
-        return this.leaveSeat();
-      default:
-        return was satisfies never;
-    }
-  }
-
-  private enterWalker(next: W.Mode) {
-    switch (next.kind) {
-      case "free":
-      case "glide":
-        return;
-      case "trip":
-        // goTo has put the ring where the walk goes.
-        this.spot.visible = true;
-        return;
-      case "seated":
-        this.sitOn = next.on;
-        this.sat = 0;
-        this.seatView = { yaw: this.yaw, pitch: this.pitch, looked: false };
-        return;
-      default:
-        return next satisfies never;
-    }
-  }
-
-  /** Stand up (any move does): who came to sit with you goes back to their own places, and time runs back to now (#362). */
-  private leaveSeat() {
-    this.turnTo = null;
-    this.gnomeSays = null;
-    for (const id of this.come) this.guests.visit(id, null);
-    const bird = this.come.has("bird");
-    this.come.clear();
-    this.onWay.clear();
-    // The bird may have been waiting by a key before it came.
-    if (bird) this.birdByKey();
-    this.cb.onCompany(null);
-  }
-
-  /**
-   * One frame of sitting on the bench (#362), before the camera moves: time
-   * speeds up after a while (bench.ts), and visitors here today come to sit
-   * with you: you can watch each one come (#802).
-   * The head turns to whoever came (not with reduced motion, nor once you have
-   * looked round yourself). Standing up, time runs back to the time chosen.
-   */
-  private onBench(dt: number) {
-    let race = 0;
-    const w = this.walker;
-    if (w.kind === "seated") {
-      this.sat += dt;
-      race = lapseRate(this.sat);
-      this.lapse += race * dt;
-      if (w.on === "stool") {
-        // On the stool, no one comes to sit with you, and time holds once it is night (#858).
-        const most = untilNight(this.time);
-        if (this.lapse >= most) [this.lapse, race] = [most, 0];
-      } else this.company();
-    } else if (this.lapse) {
-      race = backRate(this.lapse);
-      this.lapse = settle(this.lapse, dt);
-    }
-    if (!this.lapse) {
-      if (!this.lapsing) return;
-      // Back to the time chosen.
-      this.lapsing = false;
-      this.sky.blend(null, 0);
-      return this.showTime(this.time);
-    }
-    this.lapsing = true;
-    const look = lapseLook(this.time, this.lapse, this.lapseNow);
-    // What is lit or awake changes half way; the sky, the light and the fog fade.
-    const now = look.k < 0.5 ? look.from : look.to;
-    if (now !== this.shown) this.showTime(now);
-    this.sky.blend(look, race);
-    this.tintNow.copy(LIGHT[look.from].tint).lerp(LIGHT[look.to].tint, look.k);
-    this.fogNow.copy(LIGHT[look.from].fog).lerp(LIGHT[look.to].fog, look.k);
-    this.tint();
-  }
-
-  /** One frame of company on the bench (#362): who comes, who has arrived, the gnome's word, and the head's turn toward whoever came. */
-  private company() {
-    const who = due(this.sat, this.here, this.come);
-    if (who) this.sitBeside(who);
-    for (const id of this.onWay) if (this.guests.arrived(id)) this.sitsWith(id);
-    if (this.gnomeSays !== null && this.sat >= this.gnomeSays) {
-      this.gnomeSays = null;
-      this.guests.say("gnome", GNOME_WORD[this.lang]);
-    }
-    const t = this.turnTo;
-    if (t) {
-      const w = glance(this.sat - t.at);
-      const v = this.seatView;
-      this.yaw = v.yaw + (t.yaw - v.yaw) * w;
-      this.pitch = v.pitch + (t.pitch - v.pitch) * w;
-      if (w === 0 && this.sat > t.at) this.turnTo = null;
-    }
-  }
-
-  /** A visitor comes to sit with you on the bench (#362), on its way there in its own way (#802). */
-  private sitBeside(who: Companion) {
-    const [dx, dy, dz] = COMPANY_SPOT[who];
-    this.guests.visit(who, [this.bench.x + dx, dy, this.bench.z + dz], true);
-    this.come.add(who);
-    this.onWay.add(who);
-  }
-
-  /** A visitor got to the bench: a screen reader hears it, and the head turns to it. The gnome says its word once you see it. */
-  private sitsWith(who: Companion) {
-    this.onWay.delete(who);
-    const [dx, dy, dz] = COMPANY_SPOT[who];
-    const at = [this.bench.x + dx, dy, this.bench.z + dz];
-    this.cb.onCompany(who);
-    const turn = !this.reducedMotion && !this.seatView.looked;
-    if (who === "gnome") this.gnomeSays = this.sat + (turn ? GLANCE.turn : 0);
-    if (!turn) return;
-    // Forward is -z at yaw 0; turn the short way round. Look at its middle, a little above where it sits.
-    const v = this.seatView;
-    let yaw = Math.atan2(-(at[0] - this.x), -(at[2] - this.z));
-    yaw -= Math.round((yaw - v.yaw) / (Math.PI * 2)) * Math.PI * 2;
-    const pitch = Math.max(-0.75, Math.atan2(at[1] + 0.2 - W.SEAT.eye, Math.hypot(at[0] - this.x, at[2] - this.z)));
-    this.turnTo = { yaw, pitch, at: this.sat };
-  }
-
-  /** A tap on the key or the door (#336): act on it in reach; from farther away, walk up to it first. */
-  private tapDoor(a: R.DoorAction) {
-    if (R.doorInReach(this.things, this.x, this.z, a, 0)) return this.doorAct(a);
-    const k = this.door.key;
-    if (a === "key" && k) this.goTo(k.x, k.z, KEY_STAND, () => this.doorAct(a));
-    else this.goTo(this.layout.gate.x, this.layout.bounds.maxZ - DOOR_STAND, 0, () => this.doorAct(a));
-  }
-
-  /** Try the door, pick up the key, or open the door with it: from a tap in reach, or the door's button. Anything else no longer applies and does nothing. */
-  doorAct(a: R.DoorAction) {
-    const d = this.door;
-    const L = this.layout;
-    const z0 = L.bounds.maxZ + HEDGE.gap;
-    if (a === "key" && d.state === "key" && d.key) {
-      d.state = "held";
-      d.key.mesh.visible = d.key.glint.visible = false;
-      // Whoever waited by it goes home.
-      this.guests.visit("dog", null);
-      this.guests.visit("bird", null);
-      this.showLine(DOOR_LINES[this.lang].found, [d.key.x, 0.15, d.key.z], DOOR_SPOKEN.found);
-    } else if (a === "open" && d.state === "held") {
-      this.openDoor(true);
-      this.clearTaps({ line: true });
-      this.cb.onDoorOpen();
-    } else if (a === "try" && d.state !== "open") this.showLine(DOOR_LINES[this.lang].locked, [L.gate.x, 1.5, z0], DOOR_SPOKEN.locked);
-  }
-
-  /** Show a quiet line over a point (null: over no point) for a few seconds. One tag at a time: a tapped scenery or visitor tag goes. */
-  private showLine(text: string, at: [number, number, number] | null, spoken?: string) {
-    // A line over no point rises and fades as the well's echo does (GardenWalk, kind "far"), over the echo's time.
-    this.line = { text, spoken, at, until: this.elapsed + (at ? 4 : ECHO.show) };
-    this.clearTaps({ scenery: true, tree: true, visitor: true, fruit: true });
-  }
-
-  /**
-   * A scenery word, an orchard tree, the door's quiet line, a fallen fruit's
-   * word (#359) and a visitor's tag take turns showing: setting one clears
-   * whichever of the rest is named here. One place for the rule this file's
-   * own select/tapVisitor/tapTree/tapScenery/showLine used to half-repeat,
-   * each inline (#323).
-   */
-  private clearTaps(which: { scenery?: boolean; tree?: boolean; line?: boolean; visitor?: boolean; fruit?: boolean }) {
-    if (which.scenery) this.sceneryTap = null;
-    if (which.tree) this.treeTap = null;
-    if (which.line) this.line = null;
-    if (which.visitor) this.guests.untap();
-    if (which.fruit) this.fruitTap = null;
   }
 
   /** The mouse door, or the sundial at night (#364), under a point on the canvas (CSS pixels), with nothing in front of it. */
@@ -1337,61 +898,12 @@ export class GardenScene {
     // Null: the mouse door is shut (#882).
     const mat = this.jokes.pickNote(r);
     const near = [shed, step, mat].reduce<{ id: string; t: number } | null>((a, b) => (b && (!a || b.t < a.t) ? b : a), null);
-    // Infinity: there is no diary yet. A tap on it opens it where it opens (LookoutThings.page).
+    // Infinity: there is no diary yet. A tap on it opens it where it opens (Diary.page).
     const book = this.lookoutThings?.pick(r) ?? Infinity;
-    const got = book < (near ? near.t : Infinity) ? { id: this.lookoutThings!.page(), t: book } : near;
+    // The book is drawn only where the game has a diary (game.ts).
+    const got = book < (near ? near.t : Infinity) ? { id: this.game.diary!.page(), t: book } : near;
     if (!got || got.t > FOG_FAR || thingAt(r, this.sceneryWorld()) < got.t) return null;
     return { kind: "note", id: got.id };
-  }
-
-  /** A tap on a note: open it from in front of the shed, by the stile's foot (#714), by the diary's stone (#858), or by the mouse door's mat (#882); from farther away, walk up to it first. */
-  private tapNote(id: string) {
-    if (this.jokes.hasNote(id)) {
-      if (this.jokes.noteInReach(this.x, this.z, 0)) return this.openNote(id);
-      const at = this.jokes.standByNote();
-      return this.goTo(at.x, at.z, 0, () => this.openNote(id));
-    }
-    const things = this.lookoutThings;
-    if (things?.has(id)) {
-      if (R.byDiary(things, this.x, this.z, 0)) return this.openDiary();
-      const [sx, sz] = this.hill!.stone;
-      return this.goTo(sx, sz, DIARY_REACH - 0.3, () => this.openDiary());
-    }
-    if (this.stile?.has(id)) {
-      if (this.stile.inReach(this.x, this.z, 0)) return this.openNote(id);
-      const [fx, fz] = stileAt(this.layout).foot;
-      return this.goTo(fx, fz, 0, () => this.openNote(id));
-    }
-    if (this.notes.inFront(this.x, this.z, 0)) return this.openNote(id);
-    const at = this.notes.standAt(id, this.camera.aspect * Math.tan((this.camera.fov * Math.PI) / 360));
-    this.goTo(at.x, at.z, 0, () => this.openNote(id));
-  }
-
-  /** Open note `id` on its card; on the wall it is a read one from now on. */
-  private openNote(id: string) {
-    if (this.stile?.has(id)) this.stile.read(id);
-    else if (this.jokes.hasNote(id)) this.jokes.readNote();
-    else this.notes.read(id);
-    this.cb.onNote(id);
-  }
-
-  /** Open the diary (#858) on its oldest unread page, or its last. */
-  private openDiary() {
-    // The button and a tap offer the diary only while there is one.
-    const id = this.lookoutThings!.page();
-    this.readDiary(id);
-    this.cb.onNote(id);
-  }
-
-  /** Diary page `id` was read, opened or turned to: the ribbon goes once every page is read. */
-  readDiary(id: string) {
-    // The diary's card shows only while there is a diary.
-    this.lookoutThings!.read(id);
-  }
-
-  /** A joke's quiet line, over it for a few seconds (after a tap). */
-  private tapJoke(j: Joke) {
-    this.showLine(j.line, j.at, j.spoken);
   }
 
   /** How far along the ray the nearest hedge is, or Infinity: what lies past it is hidden. */
@@ -1407,12 +919,6 @@ export class GardenScene {
     const got = pickTree(r, this.orchard.hits);
     if (!got || got.t > FOG_FAR || this.hedgeAt(r) < got.t) return null;
     return { kind: "tree", t: this.orchard.trees.find((t) => t.id === got.hit.id)! };
-  }
-
-  /** Show a tree's word and meaning over it for a few seconds (after a tap). One tag at a time. */
-  private tapTree(tree: PlacedTree) {
-    this.treeTap = { tree, until: this.elapsed + 4 };
-    this.clearTaps({ scenery: true, line: true, visitor: true, fruit: true });
   }
 
   /** Trees and bushes outside the fence. */
@@ -1440,7 +946,7 @@ export class GardenScene {
       const tree = {
         x: tx,
         // On the hill past the stile (#722), on its slope.
-        y: this.hill ? hillY(this.hill, tx, tz) : 0,
+        y: this.game.hill ? hillY(this.game.hill, tx, tz) : 0,
         z: tz,
         u: kind * 0.25,
         v: 0,
@@ -1456,7 +962,8 @@ export class GardenScene {
       // Nor on the old path past the stile (#714), so the view from its top board is open. After the rand() calls: the other trees stay where they were.
       if (stileX !== null && nz === -1 && Math.abs(tree.x - stileX) < STILE_VIEW) continue;
       // Nor on the hilltop's open grass (#770): only the brambles ring it.
-      if (this.hill && Math.hypot(tree.x - this.hill.top[0], tree.z - this.hill.top[1]) < HILLTOP_R + 0.5) continue;
+      const hill = this.game.hill;
+      if (hill && Math.hypot(tree.x - hill.top[0], tree.z - hill.top[1]) < HILLTOP_R + 0.5) continue;
       trees.push(tree);
     }
     for (const t of trees) {
@@ -1471,7 +978,7 @@ export class GardenScene {
   /** A bench by the pond, for sitting and admiring. Returns where it stands. */
   private buildBench(c: BuildCtx): THREE.Group {
     const bench = benchModel(c);
-    const at = this.bench;
+    const at = this.game.bench;
     bench.position.set(at.x, 0, at.z);
     // Two cup rings on the seat, between where two would sit: small, seen only up close (#869, what the bench's line names).
     const rings = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.12), c.mat(T.pixelTexture(T.cupRings()), { alphaTest: 0.5 }));
@@ -1654,15 +1161,9 @@ export class GardenScene {
     return v && { kind: "visitor", v };
   }
 
-  /** The action button finds a hiding visitor (#379), as a tap on it would. */
-  private seek(id: VisitorId) {
-    this.guests.find(id);
-    this.clearTaps({ scenery: true, tree: true, line: true, fruit: true });
-  }
-
   /** The hiding visitor the action button would find now (#379), for the status a screen reader hears; null when it would find none. */
   hider(): Hider | null {
-    const o = this.offer;
+    const o = this.game.offer;
     return o?.on === "hider" ? this.guests.hider(o.target) : null;
   }
 
@@ -1672,14 +1173,8 @@ export class GardenScene {
    */
   private tapVisitor(id: VisitorId, frog: FrogWords): Reply | null {
     const said = this.guests.tap(id, frog);
-    this.clearTaps(said === null ? { scenery: true, tree: true, line: true, fruit: true } : { line: true });
+    this.game.visitorTapped(said);
     return said;
-  }
-
-  /** A visitor says something in a small bubble for a few seconds (the frog answering a splash, #358). */
-  private say(id: VisitorId, text: string) {
-    this.guests.say(id, text);
-    this.clearTaps({ line: true });
   }
 
   /**
@@ -1703,14 +1198,15 @@ export class GardenScene {
    */
   private pickGround({ r }: TapAt): TapHit<"walk"> | null {
     const w = this.sceneryWorld();
-    const g = this.back?.open ? this.groundPast(r, thingAt(r, w)) : groundAt(r, w);
+    const back = this.game.back;
+    const g = back?.open ? this.groundPast(r, thingAt(r, w)) : groundAt(r, w);
     if (!g || Math.hypot(g.x - this.x, g.z - this.z) < GROUND_REACH) return null;
     const b = this.layout.bounds;
     const o = this.layout.orchard;
     const inGarden = g.x > b.minX && g.x < b.maxX && g.z > b.minZ && g.z < b.maxZ;
     const inOrchard = !!this.orchard && Math.abs(g.x - o.x) < o.w / 2 && Math.abs(g.z - o.z) < o.d / 2;
     // Past the fence, the cut way's or the hilltop's ground: where a walker may stand, or near enough that a tap at a bramble's foot counts.
-    const s = collide(this.layout, g.x, g.z, WALKER, false, this.back);
+    const s = collide(this.layout, g.x, g.z, WALKER, false, back);
     const past = g.z < b.minZ && Math.hypot(s.x - g.x, s.z - g.z) < TAP_SLACK;
     return inGarden || inOrchard || past ? { kind: "walk", ...g } : null;
   }
@@ -1742,17 +1238,11 @@ export class GardenScene {
       far: FOG_FAR,
       hills: { radius: HILLS.radius, bottom: HILLS.y - HILLS.height / 2, top: HILLS.y + HILLS.height / 2, profile: this.sky.hillProfile, rows: T.HILL_ROWS, repeat: HILLS.repeat },
       sunDir: this.sky.sunDir,
-      night: this.shown === "night",
+      night: this.game.shown === "night",
       sunRadius: 0.045,
       clouds: this.sky.cloudPositions,
       cloudHalf: [8.8, 5],
     };
-  }
-
-  /** Show a scenery word's tag for a few seconds (after a tap), long enough to read its thought slowly when it has one (#864). One tag at a time: a visitor's tapped tag goes. */
-  private tapScenery(s: { view: SceneryView; hit: SceneryHit }) {
-    this.sceneryTap = { ...s, until: this.elapsed + (s.view.thought ? SCENERY_TAG.thought : SCENERY_TAG.word) };
-    this.clearTaps({ tree: true, line: true, visitor: true, fruit: true });
   }
 
   /** Builds the plants' meshes, then draws their sprites, nearest first (#323, #459: scenePlants.ts). */
@@ -1765,7 +1255,7 @@ export class GardenScene {
     // Nothing to tint, draw or report in an empty garden: buildPlants built nothing.
     if (!total) return;
     // The new plants take the time of day on show; while time speeds up on the bench, the next frame blends them too.
-    this.showTime(this.shown);
+    this.light(this.game.shown);
     // Their materials set up here, a slice at a time, not all on the next frame (~50 ms at CPU 10×, #459).
     await this.warm(this.plants.meshes());
     if (this.disposed) return;
@@ -1775,41 +1265,16 @@ export class GardenScene {
     this.cb.onProgress(total, total);
   }
 
-  setTime(t: TimeOfDay) {
-    this.time = t;
-    // Time sped up on the bench (#362) runs on from the time chosen now.
-    this.lapse = 0;
-    this.lapsing = false;
-    this.sky.blend(null, 0);
-    this.showTime(t);
-  }
-
   /** Show a time of day: the sky, what is lit, who is awake, the tint and the fog. The one chosen, or one on the way while time speeds up on the bench (#362). */
-  private showTime(t: TimeOfDay) {
-    this.shown = t;
+  private light(t: TimeOfDay) {
     const c = conditions(t);
     for (const part of this.parts) part.onConditions?.(c);
     this.tintNow.copy(LIGHT[t].tint);
     this.fogNow.copy(LIGHT[t].fog);
     this.tint();
-    this.nightSky();
-    this.birdByKey();
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
     this.flower.params.needsUpdate = true;
-  }
-
-  /**
-   * A key left waiting a few days (#334): at dusk and night the bird, if it is
-   * here today, lands by it; not while it sits with you on the bench (#362).
-   * Before the walk starts (its time is set just before), it is there already (#802).
-   */
-  private birdByKey() {
-    const key = this.door.key;
-    if (!this.keyHelp?.visitors || !key || this.come.has("bird")) return;
-    const at = this.shown !== "day" ? besideKey(this.layout, key, "bird") : null;
-    if (at && !this.started) this.guests.place("bird", at, key);
-    else this.guests.visit("bird", at);
   }
 
   /** Tint everything unlit and every sprite with tintNow, and fog them with fogNow. Allocates nothing: the time-lapse on the bench (#362) calls it every frame. */
@@ -1876,53 +1341,6 @@ export class GardenScene {
     this.plants.nod(p, this.elapsed, this.reducedMotion);
   }
 
-  look(dx: number, dy: number) {
-    this.lookedRound();
-    W.look(this.me, dx, dy, this.world);
-  }
-
-  /** The viewer looks where they like now (walker.ts does the walk's part): on the bench (#362), the head no longer turns to who comes. */
-  private lookedRound() {
-    this.seatView.looked = true;
-    this.turnTo = null;
-  }
-
-  /** Walk straight ahead (or back, if negative) by `metres`. */
-  step(metres: number) {
-    this.walkerWent(W.stepAhead(this.me, metres, this.world));
-  }
-
-  turn(amount: number) {
-    this.lookedRound();
-    W.turn(this.me, amount, this.world);
-  }
-
-  /** Walk to open ground (#336, a tap on it). */
-  private walkTo(x: number, z: number) {
-    this.goTo(x, z, 0, null);
-  }
-
-  /** A tap on a plant (#336): its card opens where you stand when its name shows; from farther away, you walk to it first. */
-  private tapPlant(p: PlacedPlant) {
-    if (Math.hypot(p.x - this.x, p.z - this.z) < NAME_NEAR) {
-      // A walk or a glide under way stops: the viewer is looking at this plant now (#876). On a seat, you stay sitting.
-      if (this.walker.kind !== "seated") this.toWalker(W.FREE);
-      return this.select(p);
-    }
-    this.select(null);
-    const v = viewpoint(this.layout, p);
-    // On arrival, the short glide that faces the plant, as Next plant does, and its card.
-    this.goTo(v.x, v.z, 0, () => this.select(p, true));
-  }
-
-  /** Walk round whatever is in the way to (x, z), or as near as a walker may stand, then stop `stop` m short and do `then`. */
-  private goTo(x: number, z: number, stop: number, then: (() => void) | null) {
-    const { was, to } = W.startTrip(this.me, x, z, stop, then, this.world);
-    // The ring goes where the walk goes.
-    this.spot.position.set(to.x, 0.03 + this.lift(to.x, to.z), to.z);
-    this.walkerWent(was);
-  }
-
   /** Is the hedge between the eye and this point? */
   private behindHedge(x: number, y: number, z: number): boolean {
     const c = this.camera.position;
@@ -1936,7 +1354,7 @@ export class GardenScene {
    * the garden's scenery words, which are few; then the near plants' other forms, said when shaken.
    */
   wordsNear(metres: number): string[] {
-    const near = [...this.layout.plants, ...this.trunks]
+    const near = [...this.layout.plants, ...this.game.trunks]
       .map((t) => ({ t, d: Math.hypot(t.x - this.x, t.z - this.z) }))
       .filter((n) => n.d < metres)
       .sort((a, b) => a.d - b.d)
@@ -1954,16 +1372,17 @@ export class GardenScene {
   /** Every kind of thing a tap can meet (#850), asked in TAP_PRIORITY order. */
   private tappers: { [K in TapHit["kind"]]: Tapper<K> } = {
     visitor: { pick: (at) => this.pickVisitor(at), tap: (h, frog) => this.tapVisitor(h.v.id, frog) },
-    plant: { pick: (at) => this.pickPlant(at), tap: (h) => this.tapPlant(h.p) },
-    tree: { pick: (at) => this.pickTree(at), tap: (h) => this.tapTree(h.t) },
-    door: { pick: (at) => this.pickDoor(at), tap: (h) => this.tapDoor(h.a) },
-    joke: { pick: (at) => this.pickJoke(at), tap: (h) => this.tapJoke(h.j) },
-    note: { pick: (at) => this.pickNote(at), tap: (h) => this.tapNote(h.id) },
-    lantern: { pick: (at) => this.pickLantern(at), tap: (h) => this.tapLantern(h.i) },
-    carry: { pick: (at) => this.pickCarry(at), tap: (h) => this.tapCarry(h.t) },
-    toy: { pick: (at) => this.pickToy(at), tap: (h) => this.tapToy(h.i) },
-    walk: { pick: (at) => this.pickGround(at), tap: (h) => this.walkTo(h.x, h.z) },
-    scenery: { pick: (at) => this.pickScenery(at), tap: (h) => this.tapScenery(h.s) },
+    plant: { pick: (at) => this.pickPlant(at), tap: (h) => this.game.tapPlant(h.p) },
+    tree: { pick: (at) => this.pickTree(at), tap: (h) => this.game.tapTree(h.t) },
+    door: { pick: (at) => this.pickDoor(at), tap: (h) => this.game.tapDoor(h.a) },
+    joke: { pick: (at) => this.pickJoke(at), tap: (h) => this.game.showLine(h.j.line, h.j.at, h.j.spoken) },
+    // How wide the view is at one metre away: the game reads a note close enough to fill it.
+    note: { pick: (at) => this.pickNote(at), tap: (h) => this.game.tapNote(h.id, this.camera.aspect * Math.tan((this.camera.fov * Math.PI) / 360)) },
+    lantern: { pick: (at) => this.pickLantern(at), tap: (h) => this.game.tapLantern(h.i) },
+    carry: { pick: (at) => this.pickCarry(at), tap: (h) => this.game.tapCarry(h.t) },
+    toy: { pick: (at) => this.pickToy(at), tap: (h) => this.game.tapToy(h.i) },
+    walk: { pick: (at) => this.pickGround(at), tap: (h) => this.game.walkTo(h.x, h.z) },
+    scenery: { pick: (at) => this.pickScenery(at), tap: (h) => this.game.tapScenery(h.s) },
   };
 
   /** What one tap (CSS pixels) meets: the first kind of thing in TAP_PRIORITY that meets something (#323, #850). */
@@ -1981,25 +1400,8 @@ export class GardenScene {
     return this.tappers[hit.kind].tap(hit, frog);
   }
 
-  select(p: PlacedPlant | null, walkTo = false) {
-    this.selected = p;
-    if (p) this.clearTaps({ scenery: true, tree: true, fruit: true });
-    const index = p ? this.layout.plants.indexOf(p) : -1;
-    for (const mat of this.mats) mat.uniforms.uSelected.value = index;
-    this.marker.visible = !!p;
-    if (p && walkTo) {
-      const v = viewpoint(this.layout, p);
-      // Look at the flower head, not the stem, so the view stays nearly level
-      // and the plant sits above the card at the bottom of the screen.
-      const top = BED_H + plantHeight(p.growth);
-      const pitch = Math.max(-0.18, Math.min(0.05, Math.atan2(top - EYE, Math.hypot(p.x - v.x, p.z - v.z))));
-      this.walkerWent(W.glideTo(this.me, v.x, v.z, v.yaw, pitch, this.world));
-    }
-    this.cb.onSelect(p);
-  }
-
   start() {
-    this.started = true;
+    this.game.start();
     const loop = () => {
       if (this.disposed) return;
       this.frame = requestAnimationFrame(loop);
@@ -2007,36 +1409,28 @@ export class GardenScene {
       this.picker?.frame(now - this.last);
       const dt = Math.min(MAX_FRAME, (now - this.last) / 1000);
       this.last = now;
-      this.elapsed += dt;
       this.tick(dt);
     };
     // The first frame in a task of its own: it sets up every shader for drawing, and loadPlants follows in this one (#459).
     this.frame = requestAnimationFrame(loop);
   }
 
+  /** One frame: the game steps with the input held now, then everything is drawn where the game says. */
   private tick(dt: number) {
-    const t = this.elapsed;
+    const g = this.game;
     const motion = this.reducedMotion ? 0 : 1;
 
-    // Walking: forward is -z at yaw 0. Where the walker was, and whether they went on foot, for how fast they walk into things (#359).
+    // Where the walker was, and whether they went on foot, for how fast they walk into things (#359).
     const x0 = this.x;
     const z0 = this.z;
     const onFoot = this.walker.kind === "trip" || Math.hypot(this.input.move.x, this.input.move.y) > 0.01;
-    const was = this.me.mode;
-    const end = W.step(this.me, this.input, dt, this.world);
-    if (this.me.mode !== was) this.walkerWent(was);
-    if (end?.end === "arrived") end.then?.();
-    else if (end) {
-      // Once per walk in the garden: a broken way is worth one report, not one a tap.
-      if (!this.stallReported) this.cb.onStall();
-      this.stallReported = true;
-    }
-    this.onBench(dt);
+    g.step(dt, this.input);
+    const t = g.elapsed;
     // Sitting down or standing up, the eye sinks or rises (walker.ts step).
-    const seat = this.me.seat;
-    this.camera.position.set(this.x, EYE - (EYE - W.SEAT.eye) * seat + this.lift(this.x, this.z) + Math.sin(this.me.bob) * 0.035 * motion, this.z);
+    const seat = g.me.seat;
+    this.camera.position.set(this.x, EYE - (EYE - W.SEAT.eye) * seat + this.lift(this.x, this.z) + Math.sin(g.me.bob) * 0.035 * motion, this.z);
     // On the stool the view narrows as you sit, and widens again as you get up (#858).
-    const fov = this.sitOn === "stool" ? FOV - (FOV - STOOL_FOV) * seat : FOV;
+    const fov = g.sitOn === "stool" ? FOV - (FOV - STOOL_FOV) * seat : FOV;
     if (fov !== this.camera.fov) {
       this.camera.fov = fov;
       this.camera.updateProjectionMatrix();
@@ -2065,16 +1459,15 @@ export class GardenScene {
     // dt is 0 only on the very first frame, before anyone could walk.
     frame.speed = onFoot && dt > 0 ? Math.hypot(this.x - x0, this.z - z0) / dt : 0;
     for (const part of this.parts) part.tick?.(frame);
-    if (this.lookout.answering(t)) this.showLine(ANSWER_LINE[this.lang], null, ANSWER_SPOKEN);
-    if (this.selected) {
-      const p = this.selected;
+    if (g.selected) {
+      const p = g.selected;
       this.marker.position.set(p.x, BED_H + plantHeight(p.growth) + 0.32 + Math.sin(t * 3) * 0.05 * motion, p.z);
       this.marker.quaternion.copy(this.camera.quaternion);
     }
 
     // The sunflower shows its face only to someone standing in its sun (and never at night).
     const fl = this.flower;
-    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sky.sunDir.x, this.sky.sunDir.z, this.shown === "night");
+    const face = sunflowerFaces(fl.x, fl.z, this.x, this.z, this.sky.sunDir.x, this.sky.sunDir.z, g.shown === "night");
     if (face !== fl.face) {
       fl.face = face;
       fl.uv.setX(0, face ? 0 : 0.5);
@@ -2087,21 +1480,22 @@ export class GardenScene {
 
   /** How high the ground stands at (x, z) (m): the stile's steps and the hill past it (#770); 0 in the garden. Runs every frame: no allocation. */
   private lift(x: number, z: number): number {
-    if (!this.stileSpot || !this.hill) return 0;
-    return stepY(this.stileSpot, x, z) + hillY(this.hill, x, z);
+    const g = this.game;
+    if (!g.stileSpot || !g.hill) return 0;
+    return stepY(g.stileSpot, x, z) + hillY(g.hill, x, z);
   }
 
   /** Names over the nearest plants, as DOM text so they stay crisp and readable. */
   private labels() {
+    const g = this.game;
     const v = this.tmp;
     const out: Label[] = this.plants.labelsNear(this.x, this.z, v);
-    out.push(...this.plants.petals(this.elapsed, v));
+    out.push(...this.plants.petals(g.elapsed, v));
     const tags: Partial<Record<(typeof LABEL_PRIORITY)[number], Label>> = {};
 
     // A tapped scenery word (#74) is the one tag while it shows: no visitor tag beside it.
-    const st = this.sceneryTap;
-    if (st && this.elapsed > st.until) this.sceneryTap = null;
-    else if (st) {
+    const st = g.sceneryTap;
+    if (st) {
       const h = st.hit;
       if (h.follow === "sun") v.copy(this.camera.position).addScaledVector(this.sky.sunDir, SUN_DIST).y += SUN_DIST * SUN_TAG;
       else if (h.follow) {
@@ -2114,42 +1508,38 @@ export class GardenScene {
       // A thought's tag fades out at the end; it is wider than a word's, so it is kept on the screen.
       if (v.z <= 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1)
         tags.scenery = thought
-          ? { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", thought, x: onScreen((v.x + 1) / 2, THOUGHT_EDGE), y: Math.max(THOUGHT_TOP, onScreen((1 - v.y) / 2)), near: Math.min(1, (st.until - this.elapsed) / SCENERY_TAG.fade) }
+          ? { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", thought, x: onScreen((v.x + 1) / 2, THOUGHT_EDGE), y: Math.max(THOUGHT_TOP, onScreen((1 - v.y) / 2)), near: Math.min(1, (st.until - g.elapsed) / SCENERY_TAG.fade) }
           : { id: `scenery:${st.view.id}`, text: st.view.word, gloss: st.view.gloss, known: st.view.known, kind: "scenery", x: (v.x + 1) / 2, y: (1 - v.y) / 2, near: 1 };
     }
     // The door's quiet line (#315), while it shows.
-    const ln = this.line;
-    if (ln && this.elapsed > ln.until) this.line = null;
-    else if (ln && !ln.at) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "far", x: 0.5, y: LOW_LINE, near: 1 };
+    const ln = g.line;
+    if (ln && !ln.at) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "far", x: 0.5, y: LOW_LINE, near: 1 };
     else if (ln?.at) {
       v.set(...ln.at).project(this.camera);
       // Kept on the screen: standing right at the door, its top is above the view, and the line must still be read.
       if (v.z <= 1) tags.line = { id: "line", text: ln.text, gloss: ln.spoken, kind: "line", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
     // A tapped orchard tree's word (#315), over its crown; kept on the screen, as a tall tree's top is often above the view.
-    const tt = this.treeTap;
-    if (tt && this.elapsed > tt.until) this.treeTap = null;
-    else if (tt) {
+    const tt = g.treeTap;
+    if (tt) {
       v.set(tt.tree.x, tt.tree.height + 0.08, tt.tree.z).project(this.camera);
       if (v.z <= 1) tags.tree = { id: `tree:${tt.tree.id}`, text: tt.tree.lemma, gloss: tt.tree.gloss, kind: "tree", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
     // A fallen fruit's word (#359), over the fruit as it rolls; kept on the screen. Its meaning is the fruit's kind, the plain English name.
-    const fr = this.fruitTap;
-    if (fr && this.elapsed > fr.until) this.fruitTap = null;
-    else if (fr) {
+    const fr = g.fruitTap;
+    if (fr) {
       v.set(fr.at.x, fr.at.y + 0.25, fr.at.z).project(this.camera);
       if (v.z <= 1) tags.fruit = { id: "fruit", text: fr.tree.lemma, gloss: fr.tree.kind, kind: "fruit", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
     // The well's echo (#335 S6), a moment after the plop, over its roof; kept on the screen.
-    const ec = this.echoTap;
-    if (ec && this.elapsed > ec.until) this.echoTap = null;
-    else if (ec && this.elapsed >= ec.from) {
+    const ec = g.echoTap;
+    if (ec && g.elapsed >= ec.from) {
       const w = this.layout.well;
       v.set(w.x, 1.4, w.z).project(this.camera);
       if (v.z <= 1) tags.echo = { id: `echo:${ec.n}`, text: ec.word, gloss: ec.date, kind: "echo", x: onScreen((v.x + 1) / 2), y: onScreen((1 - v.y) / 2), near: 1 };
     }
     // A visitor's approach tag shows only while none of line/fruit/scenery/tree is active (clearTaps keeps at most one of those set at a time).
-    const exclusiveActive = !!(this.sceneryTap || this.treeTap || this.line || this.fruitTap);
+    const exclusiveActive = !!(g.sceneryTap || g.treeTap || g.line || g.fruitTap);
     const { say, tag } = this.guests.labels(this.x, this.z, !exclusiveActive);
     if (say) tags.say = say;
     if (tag) tags.tag = tag;
@@ -2158,7 +1548,6 @@ export class GardenScene {
       const l = tags[kind];
       if (l) out.push(l);
     }
-    this.reportReach();
     const heard = this.guests.status();
     if (heard !== this.lastHeard) {
       this.lastHeard = heard;
@@ -2171,25 +1560,9 @@ export class GardenScene {
     }
   }
 
-  /**
-   * Tell the page what the action button does now (#334): what reachCore.ts
-   * offers from where the walker stands. With nothing in reach, no button
-   * (#835): when it shows, it has something to do. The button's name says what
-   * it does, so nothing in reach flashes (#689). Where the target could be one
-   * of several alike, show which one quietly: a note lifts off the wall, a
-   * plant stands a little taller.
-   */
-  private reportReach() {
-    const got = R.offerAt(this.me, this.things, this.offer);
-    if (R.same(got, this.offer)) return;
-    this.offer = got;
-    this.notes.lift(got?.on === "note" ? got.target : null);
-    this.plants.ready(got?.on === "plant" ? got.target : null);
-    this.cb.onReach(got ? got.a : null);
-  }
-
   /** For dev tools only, through the window.__garden handle (e2e/look.run.ts, #974): the walk now, as plain data. It changes nothing. */
   stateNow(): SceneState {
+    const g = this.game;
     const w = this.walker;
     return {
       x: this.x,
@@ -2198,11 +1571,11 @@ export class GardenScene {
       pitch: this.pitch,
       mode: w.kind,
       seat: w.kind === "seated" ? w.on : null,
-      time: this.shown,
-      elapsed: this.elapsed,
-      reach: this.offer ? this.offer.a : null,
-      inReach: R.offersAt(this.me, this.things, this.offer).map((o) => o.a),
-      things: thingsInView(this.camera, this.hitBoxes, this.hitDiscs, this.stileSpot),
+      time: g.shown,
+      elapsed: g.elapsed,
+      reach: g.offer ? g.offer.a : null,
+      inReach: R.offersAt(g.me, g.things, g.offer).map((o) => o.a),
+      things: thingsInView(this.camera, this.hitBoxes, this.hitDiscs, g.stileSpot),
     };
   }
 

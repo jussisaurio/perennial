@@ -10,7 +10,7 @@ After the prose, each section lists its claims: short, checkable sentences, each
 
 - `stile.walk-over`: With n08 unlocked, holding W walks you up the stile's steps and down the other side.
 
-Each claim has one e2e test whose title starts with its id, and the test plays it with the keyboard like the learner would. A claim that has no test is a missing test. A garden test that names no claim is either a claim missing from this file or a test to delete.
+Each claim has one test whose title starts with its id. A rule of the world (where you can walk, what a tap or a button does, what a visitor says) is a unit test on the game: it steps the `Game` (`web/src/garden/game.ts`) with no browser, so it runs in milliseconds. An e2e test plays the garden in a browser like the learner would. Keep e2e tests only for what needs the browser: one for each way in (keys, a tap, the action button, sitting), and the ones that check what the screen shows. A claim that has no test is a missing test. A garden test that names no claim is either a claim missing from this file or a test to delete.
 
 ## Rules for every garden feature
 

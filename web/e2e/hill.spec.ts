@@ -19,10 +19,12 @@ type HillScene = {
   camera: { position: { y: number }; fov: number };
   elapsed: number;
   walker: { kind: string };
-  /** How far the time-lapse has run: 0 is now; from a day, 2 is night. */
-  lapse: number;
-  lanterns: { on: boolean[]; lookout: number };
-  lookout: { answers: boolean };
+  game: {
+    /** How far the time-lapse has run: 0 is now; from a day, 2 is night. */
+    lapse: number;
+    lamps: { on: boolean[]; lookout: number };
+    lookout: { answers: boolean };
+  };
   lookoutThings: { ribbon: { visible: boolean } };
   sky: { farLight: { visible: boolean } };
 };
@@ -349,7 +351,7 @@ function byStone(page: Page, s: Spots) {
   return stand(page, s.stone[0] - ahead[0] * 0.6, s.stone[1] - ahead[1] * 0.6, s.face, -0.3);
 }
 
-const lapse = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lapse);
+const lapse = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.game.lapse);
 const seated = (page: Page) => page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.walker.kind === "seated");
 const button = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 
@@ -397,7 +399,7 @@ test("hill.lantern: at night by the lantern's post, Blow out the lantern puts it
   await byPost(page, s);
   await button(page, "Blow out the lantern").click();
   await expect(button(page, "Light the lantern")).toBeVisible();
-  expect(await page.evaluate(() => (({ on, lookout }) => on[lookout])((window as unknown as { __garden: HillScene }).__garden.lanterns))).toBe(false);
+  expect(await page.evaluate(() => (({ on, lookout }) => on[lookout])((window as unknown as { __garden: HillScene }).__garden.game.lamps))).toBe(false);
 });
 
 test("hill.sit: by the stool, Sit on the stool seats you facing the far house, and W stands you up", async ({ page }) => {
@@ -462,7 +464,7 @@ test("hill.diary-new: with a page not read, the diary shows its ribbon and opens
 
 test("hill.no-answer: at night before n12, two signals leave the far light shining", async ({ page }) => {
   const s = await walkIn(page, OPEN, NIGHT);
-  expect(await page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.lookout.answers)).toBe(false);
+  expect(await page.evaluate(() => (window as unknown as { __garden: HillScene }).__garden.game.lookout.answers)).toBe(false);
   await byPost(page, s);
   await recordFarLight(page);
   await signal(page);

@@ -1,17 +1,11 @@
-// The lanterns where paths cross (#361): lit at dusk and night, and each one
-// blown out or lit again by hand while they are lit. Which are out lasts the
-// visit only: the next walk finds them all lit again. Each lantern is one
-// instance in a lit and an unlit sprite mesh; the one not shown is drawn at
-// scale 0, so a lantern going out costs two attribute writes. The lookout's
-// lantern on its post (#683), on the hill past the stile (#722), is one more,
-// the last: the same lantern, blown out and lit the same way (#858).
+// The lanterns (lanterns.ts says which are lit): each is one instance in a lit
+// and an unlit sprite mesh; the one not shown is drawn at scale 0, so a lantern
+// going out costs two attribute writes.
 
 import * as THREE from "three";
-import { lanternSpots } from "./world";
 import { rayBox, spriteBox, type HitBox, type Ray } from "./scenery";
-import type { Conditions } from "./conditions";
 import type { Part } from "./scenePart";
-import { hillY, type Lookout } from "./lookout";
+import type { Lamps } from "./lanterns";
 import { sprites, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import * as T from "./textures";
 
@@ -19,38 +13,28 @@ import * as T from "./textures";
 const LANTERN = { w: 0.42, h: 1.26 };
 
 export class Lanterns implements Part {
-  /** Where each lantern in the garden stands (world.ts lanternSpots), in a fixed order: the moth's lantern is one of these. */
-  spots: [number, number][] = [];
-  /** The lookout's lantern, by its index after the garden's, or -1 while there is none. */
-  lookout = -1;
-  /** Which lanterns are lit when it is dark, by index: the garden's, then the lookout's. */
-  readonly on: boolean[] = [];
-  /** Dusk or night: the lanterns are lit. reachCore.ts reads it, and where each stands. */
-  dark = false;
-  /** Where each lantern stands, by index: [x, y, z]. */
-  at: [number, number, number][] = [];
   private boxes: HitBox[] = [];
   private lit!: THREE.InstancedBufferAttribute;
   private unlit!: THREE.InstancedBufferAttribute;
   /** Each lantern's halo and pool of light on the ground. */
   private glows: [THREE.Object3D, THREE.Object3D][] = [];
 
-  /** Lanterns where paths cross, two by the door, and the lookout's on the hill (`hill`: null while there is no stile). Draws no random numbers. */
-  build(c: BuildCtx, hill: Lookout | null) {
-    this.spots = lanternSpots(c.L);
-    this.at = this.spots.map(([x, z]) => [x, 0, z]);
-    if (hill) {
-      this.lookout = this.at.length;
-      this.at.push([hill.post[0], hillY(hill, ...hill.post), hill.post[1]]);
-    }
-    for (const [x, y, z] of this.at) {
+  private lamps: Lamps;
+
+  constructor(lamps: Lamps) {
+    this.lamps = lamps;
+  }
+
+  /** Draws no random numbers. */
+  build(c: BuildCtx) {
+    const at = this.lamps.at;
+    for (const [x, y, z] of at) {
       const box = spriteBox("lantern", x, y, z, 0.13, 1.26);
       this.boxes.push(box);
       c.hitBoxes.push(box);
-      this.on.push(true);
     }
     const lanternTex = T.pixelTexture(T.lantern());
-    const lanternItems = (u: number): SpriteItem[] => this.at.map(([x, y, z]) => ({ x, y, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
+    const lanternItems = (u: number): SpriteItem[] => at.map(([x, y, z]) => ({ x, y, z, u, v: 0, uw: 0.5, vh: 1, phase: 0, droop: 0, scale: 1, index: -3 }));
     const unlit = sprites(lanternTex, lanternItems(0), LANTERN.w, LANTERN.h);
     const lit = sprites(lanternTex, lanternItems(0.5), LANTERN.w, LANTERN.h);
     for (const m of [unlit, lit]) {
@@ -61,7 +45,7 @@ export class Lanterns implements Part {
     this.lit = lit.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     const glowTex = T.glowTexture();
     const additive = { map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false } as const;
-    for (const [x, y, z] of this.at) {
+    for (const [x, y, z] of at) {
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...additive }));
       halo.scale.set(1.1, 1.1, 1);
       halo.position.set(x, y + 1.12, z);
@@ -73,41 +57,23 @@ export class Lanterns implements Part {
     }
   }
 
-  onConditions(c: Conditions) {
-    this.dark = c.dark;
-    for (let i = 0; i < this.at.length; i++) this.show(i);
+  /** The time of day changed (lanterns.ts has its dark already): every lantern as it is now. */
+  onConditions() {
+    for (let i = 0; i < this.lamps.at.length; i++) this.show(i);
   }
 
-  /** Lit by dark, unless blown out: the lit or the unlit sprite, and the glow. */
-  private show(i: number) {
-    const lit = this.dark && this.on[i];
+  /** Lantern `i` as it is now: the lit or the unlit sprite, and the glow. */
+  show(i: number) {
+    const lit = this.lamps.lit(i);
     this.lit.setZ(i, lit ? 1 : 0);
     this.unlit.setZ(i, lit ? 0 : 1);
     this.lit.needsUpdate = this.unlit.needsUpdate = true;
     for (const g of this.glows[i]) g.visible = lit;
   }
 
-  /** Blow lantern `i` out, or light it again. Only while they are lit, at dusk and night: is it lit again now? */
-  toggle(i: number): boolean {
-    if (!this.dark) return false;
-    this.on[i] = !this.on[i];
-    this.show(i);
-    return this.on[i];
-  }
-
-  /** Where lantern `i` stands: [x, z]. */
-  spot(i: number): [number, number] {
-    return [this.at[i][0], this.at[i][2]];
-  }
-
-  /** It is dark, and every lantern in the garden is out. */
-  get allOut(): boolean {
-    return this.dark && this.on.every((on, i) => i === this.lookout || !on);
-  }
-
   /** The lantern a ray meets first while it is dark, and how far along the ray. */
   pick(r: Ray): { i: number; t: number } | null {
-    if (!this.dark) return null;
+    if (!this.lamps.dark) return null;
     let got = -1;
     let best = Infinity;
     for (let i = 0; i < this.boxes.length; i++) {
