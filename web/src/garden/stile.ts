@@ -21,6 +21,13 @@ export const STEP = { w: 1.1, out: 0.66 };
 /** How far the brambles over the shut stile reach into the garden (m): over its steps, and a little more. */
 export const BRAMBLES_IN = STEP.out + 0.1;
 
+/**
+ * A sheet of the brambles' paper (m, #1164): one repeat of it along its length, its height, and the top part of it cut
+ * into sprays of leaves. textures.ts brambleSheet paints it to these. As tall as the flats you see the whole of, so
+ * leaves go down to their feet; a taller one carries the sheet's dark foot down to the ground.
+ */
+export const BRAMBLE_SHEET = { w: 2, h: 1.2, leaf: 0.34 };
+
 /** Where the stile's things stand: its middle on the fence line, its foot inside, and the notes on the ground in front of it, each as [x, z]. */
 export interface StileSpot {
   x: number;

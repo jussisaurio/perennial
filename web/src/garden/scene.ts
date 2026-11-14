@@ -246,7 +246,7 @@ export class GardenScene {
   /** The door in the hedge (#315), and the key (#323: sceneDoor.ts). */
   private door: Door;
   /** The gate's hedge and, once the door opens, the orchard's (#323). Not a Part: nothing to tick, react to conditions, or dispose. */
-  private hedge: Hedge;
+  private hedge = new Hedge();
   /**
    * Every rendering subsystem with its own tick and/or onConditions (#323):
    * ticked and given Conditions in this order, and disposed in it too. Order
@@ -269,6 +269,8 @@ export class GardenScene {
   /** The course language: the signs and everything else written in the world are in it (#650). */
   private lang: DeckLang;
   private visitors: WalkVisitors;
+  /** Smooth the edges of shapes (#1106), and so of cut-outs (BuildCtx). */
+  private readonly msaa: boolean;
   /** Today's visitors in the walk (sceneVisitors.ts). */
   private guests: SceneVisitors;
 
@@ -279,6 +281,7 @@ export class GardenScene {
     this.reducedMotion = reducedMotion;
     this.lang = lang;
     this.visitors = visitors;
+    this.msaa = msaa;
     THREE.ColorManagement.enabled = false;
     // Our own context, as three always asks for one with an alpha channel. A plant's smoothed edge writes an alpha
     // under 1 (#1116), and the page showed through it as a light rim.
@@ -292,7 +295,6 @@ export class GardenScene {
     // Dev and the e2e tests still read them, so a broken shader fails there.
     this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
     this.camera.rotation.order = "YXZ";
-    this.hedge = new Hedge(msaa);
     this.plants = new Plants(
       this.renderer,
       this.camera,
@@ -376,6 +378,7 @@ export class GardenScene {
     const orchardAtlas = T.paintOrchard();
     const paper = T.paintPaper();
     const hedgeSheet = T.paintHedge();
+    const brambles = T.paintBrambles();
     const fonts = T.loadBoardFonts();
     const L = this.layout;
     const b = L.bounds;
@@ -393,6 +396,7 @@ export class GardenScene {
         return m;
       },
       woodTex: T.paperTexture(T.wood(), true),
+      msaa: this.msaa,
       rand: rng(1),
       scene: this.scene,
       hitBoxes: this.hitBoxes,
@@ -438,7 +442,8 @@ export class GardenScene {
     if (g.stileNotes && g.stileSpot && g.hill && this.lookoutThings) {
       // Draws no random numbers.
       this.stile = new StileScene(g.stileSpot, g.hill, g.hillOpen, g.stileNotes);
-      for (const _step of this.stile.build(c)) if (await this.stopped()) return;
+      const sheet = await brambles;
+      for (const _step of this.stile.build(c, sheet)) if (await this.stopped()) return;
       this.lookoutThings.build(c);
     }
     this.toys.build(c);

@@ -202,6 +202,8 @@ export interface BuildCtx {
   /** An unlit material that follows the time of day's tint. */
   mat: (tex: THREE.Texture, opts?: THREE.MeshBasicMaterialParameters) => THREE.MeshBasicMaterial;
   woodTex: THREE.Texture;
+  /** The screen smooths shapes' edges (#1106), so a cut-out's edges can be smooth too (alphaToCoverage). */
+  msaa: boolean;
   /** One random sequence for the whole world, so it is laid out the same every time. */
   rand: () => number;
   scene: THREE.Scene;
