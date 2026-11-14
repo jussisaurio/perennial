@@ -6,7 +6,7 @@ import { collide, layout, type GardenPlant } from "./world";
 /** 17 Oct 2026, local: a pinned day. */
 const DAY = dayNumber(new Date(2026, 9, 17, 12, 0));
 const BED_TOP = 0.28;
-const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: ["noun", "verb", "adj"][i % 3], rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false });
+const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: ["noun", "verb", "adj"][i % 3], rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
 const small = layout(Array.from({ length: 3 }, (_, i) => plant(i)));
 const big = layout(Array.from({ length: 400 }, (_, i) => plant(i)));
 const out = { x: 0, y: 0, z: 0, a: 0 };

@@ -119,7 +119,8 @@ test("a sign-in answered in time: no reload", async () => {
   server.session = () => Promise.resolve({ data: { user: anonymous } });
   server.signIn = () => Promise.resolve({ data: { user: account }, error: null });
   const user = await signInWithCode("ana@example.com", "123456");
-  expect(user).toEqual({ id: "acct-1", email: "ana@example.com", anonymous: false });
+  // `<unknown>`: the id is a branded string, and the test compares it with a plain one.
+  expect<unknown>(user).toEqual({ id: "acct-1", email: "ana@example.com", anonymous: false });
   expect(events).toEqual([["track", "email_added"], ["linkAccount", "acct-1"], ["track", "signin_done", { ms: 0, timedOut: false }]]);
   expect(reloads).toBe(0);
 });

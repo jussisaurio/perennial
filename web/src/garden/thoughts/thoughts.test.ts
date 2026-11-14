@@ -9,7 +9,7 @@ import { noteInk } from "../notes/read";
 import { THOUGHTS, thoughtFor } from ".";
 import { FROG_LINES, frogLines, type FrogLine } from "../frogLines";
 
-const THINGS = ["bench", "stool", "pond", "sunflower", "sundial", "hills", "bed", "hedge", "grass", "stone", "cherry", "lantern", "moon"];
+const THINGS = ["bench", "stool", "pond", "sunflower", "sundial", "hills", "bed", "hedge", "grass", "stone", "cherry", "lantern", "moon"] as const;
 
 // As in notes.test.ts: the simulated daily learner, who knows fewer words than course place says (#938).
 const DAILY: Record<"es" | "de", Trace> = {

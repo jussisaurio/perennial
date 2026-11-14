@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { aimAt, ANSWERS, FROG_PATIENCE, PEBBLES, pebbleHome, placeAt, reaction, restAt, type Answerers } from "./carry";
 import { collide, layout, WALKER, type GardenPlant } from "./world";
 
-const plant = (i: number, pos = "noun"): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos, rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false });
+const plant = (i: number, pos = "noun"): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos, rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
 const gardens = [0, 3, 40, 300].map((n) => layout(Array.from({ length: n }, (_, i) => plant(i, i % 3 ? "noun" : "verb"))));
 
 /** Where a thing came down, for the answers: the origin. */

@@ -5,7 +5,7 @@ import type { Frame } from "./scenePart";
 import { brush, BRUSH, brushStep, bumpStep, fellFrom, fellLine, fruitDrop, leafPiles, PILES, rollStep, type Rolling } from "./walkInto";
 import { benchAt, collide, KEY_SPOTS, keyAt, lanternSpots, layout, sunflowerAt, WALKER, type GardenPlant, type Layout } from "./world";
 
-const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: "noun", rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false });
+const plant = (i: number): GardenPlant => ({ id: `w${i}`, lemma: `word${i}`, gloss: "", pos: "noun", rank: i, planted: i, s: 10, r: 0.95, stage: "bloom", growth: 0.5, listen: false, write: false, forms: [] });
 
 const DT = 1 / 60;
 const frame = (x: number, z: number, elapsed: number, speed: number, yaw = 0): Frame => ({ dt: DT, elapsed, x, z, yaw, speed });

@@ -5,7 +5,8 @@ import { gameSeconds, pinDetail, walker } from "./helpers";
 // docs/garden-play.md, "Thoughts: a tap on a thing" (#864): a tap on the bench, the pond, the sunflower, the sundial, the stool or
 // the far hills shows a short line under its name, in the course language, from the words the learner knows.
 
-type ThoughtScene = WalkScene & {
+// Without WalkScene's pickAny: it names only a plant hit, and of two same-named methods the first one's type wins.
+type ThoughtScene = Omit<WalkScene, "pickAny"> & {
   pitch: number;
   bench: { x: number; z: number };
   layout: { pond: { x: number; z: number; r: number } };

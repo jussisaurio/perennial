@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "types": ["vite/client", "bun"],
+    // The tests run in Bun, which has Map.groupBy. The app stays at ES2023 (tsconfig.app.json).
+    "lib": ["ES2023", "DOM", "ES2024.Collection"]
+  },
+  "include": ["src/**/*.test.ts"],
+  "exclude": []
+}

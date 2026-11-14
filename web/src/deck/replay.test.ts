@@ -16,6 +16,7 @@ function sentencesOf(w: DeckWord, retired = false): DeckSentence[] {
     text: `Veo la ${w.lemma} ${i}.`,
     translation: `I see the ${w.gloss}.`,
     cloze: w.lemma,
+    keys: [],
     ...(retired ? { retired } : {}),
   }));
 }

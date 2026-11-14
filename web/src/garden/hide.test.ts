@@ -3,6 +3,7 @@ import { ORCHARD_WORDS } from "../deck/schema";
 import { DAY_MS } from "../core/day";
 import { hidesToday, hideout, SEEK_REACH, type Hiding } from "./hide";
 import { collideTrees, placeTrees, type OrchardTree, type PlacedTree } from "./orchard";
+import { shedStep } from "./shed";
 import type { Spots } from "./spots";
 import { leafPiles } from "./walkInto";
 import { BED_H, benchAt, collide, lanternSpots, layout, WALKER, type GardenPlant, type Layout } from "./world";
@@ -22,7 +23,7 @@ function spotsFor(l: Layout, opts: { autumn: boolean; door: boolean }): { spots:
   const sign: [number, number, number] = [first.x - first.w / 2 - 0.3, 0.93, first.z + first.d / 2 + 0.3];
   const pads = Array.from({ length: 4 }, (_, i): [number, number] => [l.pond.x + Math.cos(i * 1.9 + 0.4) * l.pond.r * 0.55, l.pond.z + Math.sin(i * 1.9 + 0.4) * l.pond.r * 0.55]);
   const trees = opts.door ? placeTrees(l.orchard, TREES) : [];
-  const spots: Spots = { bench: benchAt(l), pads, lanterns: lanternSpots(l), perches: [sign], sign, trees: [], orchard: trees, piles: opts.autumn ? leafPiles(l) : [] };
+  const spots: Spots = { bench: benchAt(l), shedStep: shedStep(l), pads, lanterns: lanternSpots(l), perches: [sign], sign, trees: [], orchard: trees, piles: opts.autumn ? leafPiles(l) : [], ledges: [] };
   return { spots, trees };
 }
 
@@ -125,7 +126,7 @@ describe("the gnome, hiding and found", () => {
   const days = Array.from({ length: 60 }, (_, i) => day(SPRING, i));
   const hiding = days.find((d) => hideout(l, spots, 30, d))!;
   const home = days.find((d) => !hideout(l, spots, 30, d))!;
-  const arrive = (now: Date, reducedMotion = false) => KINDS.gnome.arrive({ spots, layout: l, home: null, now, age: 30, reducedMotion })!;
+  const arrive = (now: Date, reducedMotion = false) => KINDS.gnome.arrive({ spots, layout: l, ground: { layout: l, doorOpen: () => false, trees: () => [], back: null }, bloom: null, now, age: 30, reducedMotion, lang: "es" })!;
   const frame = (elapsed: number): Frame => ({ dt: 1 / 60, elapsed, x: 0, z: 0, yaw: 0, speed: 0 });
 
   test("on a day it does not hide, it stands at a bed corner as it always has, its name showing", () => {

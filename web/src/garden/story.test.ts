@@ -100,7 +100,7 @@ describe("every gate is in the story's list", () => {
   // A gate is new code, not a new row in a table the list reads, so only a look at the code finds one the list
   // misses. Garden words are the gates still to come (#209), so those are checked by name.
   test("every garden word the code asks for by name is a gate", () => {
-    const listed = new Set(gates(storyEvents("es", COURSES.es)).flatMap((g) => ("garden" in g ? [g.garden] : [])));
+    const listed = new Set<string>(gates(storyEvents("es", COURSES.es)).flatMap((g) => ("garden" in g ? [g.garden] : [])));
     for (const { path, text } of sources) {
       for (const m of text.matchAll(/garden\.has\("(\w+)"\)|gardenBroughtAt\([^,()]+,\s*"(\w+)"\)/g)) {
         // `??`: one of the two groups matched.

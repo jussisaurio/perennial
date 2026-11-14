@@ -1,10 +1,13 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import type { SceneryWorld } from "../src/garden/scenery.ts";
+import type { Layout } from "../src/garden/world.ts";
 
 export const newEmail = (prefix = "learner") => `${prefix}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
 /** Rows the server has for the signed-in learner (GET /api/rows). */
 export async function serverRows<T = Record<string, unknown>>(page: Page, table: string): Promise<T[]> {
-  return page.evaluate(async (table) => ((await (await fetch("/api/rows")).json()) as Record<string, unknown[]>)[table], table);
+  // The server's JSON has no type here: the caller names the row shape it reads.
+  return page.evaluate(async (table) => ((await (await fetch("/api/rows")).json()) as Record<string, T[]>)[table], table);
 }
 
 /**
@@ -163,9 +166,9 @@ export async function plantNearMiddle(page: Page) {
 type DoorScene = {
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
-  layout: { gate: { x: number }; bounds: { maxZ: number } };
+  layout: Layout;
   door: { state: string; key: { x: number; z: number; mesh: { visible: boolean } } | null; leaf: { rotation: { y: number } } };
-  sceneryWorld(): unknown;
+  sceneryWorld(): SceneryWorld;
 };
 
 /** Stand 2 m in front of the door, facing it, and return where the door shows on the page (pixels), level, clear of the hint at the top. */

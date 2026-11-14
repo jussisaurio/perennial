@@ -89,10 +89,10 @@ describe("known words for unlocks, milestones and the frog", () => {
 
 describe("when a garden word brought its visitor", () => {
   test("its first good reading answer; a wrong one or a listening one does not count", () => {
-    const rows = [{ ...review("llave", 1), grade: 1 }, review("llave", 0, "listen"), review("llave", 5), review("llave", 2)];
+    const rows: ReviewRow[] = [{ ...review("llave", 1), grade: 1 }, review("llave", 0, "listen"), review("llave", 5), review("llave", 2)];
     const l = { reviewsByWord: new Map([["llave", rows]]) };
     expect(broughtAt(l, "llave")).toBe(start + 2 * DAY);
     expect(broughtAt(l, "casa")).toBeNull();
-    expect(broughtAt({ reviewsByWord: new Map([["llave", [{ ...review("llave", 1), grade: 2 }]]]) }, "llave")).toBeNull();
+    expect(broughtAt({ reviewsByWord: new Map<string, ReviewRow[]>([["llave", [{ ...review("llave", 1), grade: 2 }]]]) }, "llave")).toBeNull();
   });
 });

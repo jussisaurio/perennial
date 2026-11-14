@@ -36,7 +36,7 @@ const SPOTS: Spots = {
   ],
 };
 /** The garden with its door shut. */
-const GROUND: Ground = { layout: L, doorOpen: () => false, trees: () => [] };
+const GROUND: Ground = { layout: L, doorOpen: () => false, trees: () => [], back: null };
 const BLOOM: Bloom = { x: 1, z: 1, soil: 0.3, top: 0.9, thirsty: false };
 
 function arrive(id: keyof typeof KINDS, a: Partial<Arrival> = {}): Visitor<string> {
@@ -47,7 +47,7 @@ function arrive(id: keyof typeof KINDS, a: Partial<Arrival> = {}): Visitor<strin
 
 /** Steps a visitor `s` seconds with the viewer standing at (x, z); returns whether it was ever startled. */
 function run(v: Visitor<string>, s: number, x: number, z: number, seen = true, from = 0): boolean {
-  const f: Frame = { dt: DT, elapsed: from, x, z, yaw: 0 };
+  const f: Frame = { dt: DT, elapsed: from, x, z, yaw: 0, speed: 0 };
   let startled = false;
   for (let t = 0; t < s; t += DT) {
     f.elapsed += DT;
@@ -221,7 +221,7 @@ describe("a visitor sent somewhere walks there (#761)", () => {
       return Math.hypot(p.x - x, p.z - z) > 1e-9;
     };
     const sendTo = (x: number, z: number, open: boolean) => {
-      const dog = arrive("dog", { ground: { layout: L, doorOpen: () => open, trees: () => [] } });
+      const dog = arrive("dog", { ground: { layout: L, doorOpen: () => open, trees: () => [], back: null } });
       [dog.body.at.x, dog.body.at.z] = [x, z];
       dog.onVisit!(false, 0);
       let solid = 0;
@@ -316,7 +316,8 @@ describe("the mole behind your back (#376)", () => {
     });
     expect(shown).toEqual(["hill", "up", "hill"]);
     expect([m.body.at.x, m.body.at.z]).toEqual([0, 0]);
-    expect(said).toBe("¿Hola?");
+    // `<string | null>` here and below: the value is set inside a callback, which the type narrowing does not see.
+    expect<string | null>(said).toBe("¿Hola?");
     expect(m.body.visible).toBe(false);
     expect(m.body.status).toBeNull();
     const de = arrive("mole", { now: visitWith(1), lang: "de" });
@@ -325,7 +326,7 @@ describe("the mole behind your back (#376)", () => {
       said ??= de.body.says;
       return standThenWalk(t);
     });
-    expect(said).toBe("Hallo?");
+    expect<string | null>(said).toBe("Hallo?");
   });
 
   test("it does not come up while you look, nor where you only walked past, nor on a visit it stays down", () => {
@@ -359,7 +360,7 @@ describe("the mole behind your back (#376)", () => {
       heard ??= again.body.status;
       return [standThenWalk(t)[0], 0, up >= 0 && t > up + 0.5];
     });
-    expect(heard).toBe(MOLE_CAUGHT);
+    expect<string | null>(heard).toBe(MOLE_CAUGHT);
     expect(up).toBeGreaterThan(0);
     // Caught, it is down well before it would have finished saying hello.
     expect(CAUGHT.end).toBeLessThan(POP.end - POP.hill);

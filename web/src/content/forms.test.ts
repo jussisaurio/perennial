@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
+import { Schema } from "effect";
 import de from "../../../decks/de/deck.json";
 import es from "../../../decks/es/deck.json";
+import { Deck } from "../deck/schema";
 import { askedForm, headword, otherForm } from "./forms";
 
 const word = (deck: { words: { lemma: string; forms: string[] }[] }, lemma: string) => deck.words.find((w) => w.lemma === lemma)!;
@@ -36,7 +38,9 @@ test("the answer names the dictionary word only when the asked form is another o
 });
 
 test("German nouns come with der, die or das; other words as they are (#260)", () => {
-  const head = (deck: typeof de | typeof es, lemma: string) => headword(deck.words.find((w) => w.lemma === lemma)!, deck.lang);
-  expect([head(de, "Mann"), head(de, "Katze"), head(de, "Haus")]).toEqual(["der Mann", "die Katze", "das Haus"]);
-  expect([head(de, "haben"), head(de, "Eltern"), head(es, "casa")]).toEqual(["haben", "Eltern", "casa"]);
+  // Decoded, as the app has them: the JSON file's own type says only that a gender is a string.
+  const decks = { de: Schema.decodeUnknownSync(Deck("de"))(de), es: Schema.decodeUnknownSync(Deck("es"))(es) };
+  const head = (lang: "de" | "es", lemma: string) => headword(decks[lang].words.find((w) => w.lemma === lemma)!, lang);
+  expect([head("de", "Mann"), head("de", "Katze"), head("de", "Haus")]).toEqual(["der Mann", "die Katze", "das Haus"]);
+  expect([head("de", "haben"), head("de", "Eltern"), head("es", "casa")]).toEqual(["haben", "Eltern", "casa"]);
 });
