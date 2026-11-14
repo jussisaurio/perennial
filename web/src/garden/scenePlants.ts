@@ -15,6 +15,7 @@ import type { Frame } from "./scenePart";
 import { isOld } from "./plants";
 import { BILLBOARD, FOG_FAR, FOG_NEAR, instanced, PLANT_SCALE, plantHeight, SHADE, SPRITE_H, SPRITE_W, standingQuad, still, type BuildCtx } from "./sceneSprites";
 import { GRAIN } from "./paper";
+import { castsShadow, LIT } from "./sceneLight";
 import { boardBox } from "./scenery";
 import { BED_H, bedSign, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
@@ -86,23 +87,40 @@ const PLANT_VERT = /* glsl */ `
   }
 `;
 
-// The sprites are premultiplied and filtered smooth (#1091): a plant's edge is
-// where its alpha crosses one half, so it stays clean however close you stand.
-// On a full moon's night (#361), an old friend's outer pixels (those next to an
-// empty one) turn a faint silver, fading with the fog like the rest of it.
-const PLANT_FRAG = /* glsl */ `
+// A plant's pixel from the best sprite it has: plantPixel().
+const PLANT_PIXEL = /* glsl */ `
   uniform sampler2D uLow;
   uniform sampler2D uHi;
   uniform sampler2D uNear;
-  uniform vec2 uLowSize;
-  uniform vec2 uHiSize;
-  uniform vec2 uNearSize;
   varying vec2 vLow;
   varying vec2 vHi;
   varying vec2 vNear;
   varying float vHasHi;
   varying float vHasNear;
+  vec4 plantPixel() {
+    return vHasNear > 0.5 ? texture2D(uNear, vNear) : vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
+  }
+`;
+
+// The plant in the sun's shadow map: cut where it is cut.
+const PLANT_DEPTH = /* glsl */ `
+  ${PLANT_PIXEL}
+  void main() {
+    if (plantPixel().a < 0.5) discard;
+    gl_FragColor = vec4(1.0);
+  }
+`;
+
+// The sprites are premultiplied and filtered smooth (#1091): a plant's edge is
+// where its alpha crosses one half, so it stays clean however close you stand.
+// On a full moon's night (#361), an old friend's outer pixels (those next to an
+// empty one) turn a faint silver, fading with the fog like the rest of it.
+const PLANT_FRAG = /* glsl */ `
+  uniform vec2 uLowSize;
+  uniform vec2 uHiSize;
+  uniform vec2 uNearSize;
   varying float vSilver;
+  ${PLANT_PIXEL}
   ${SHADE}
   float empty(sampler2D m, vec2 at) {
     return 1.0 - step(0.5, texture2D(m, at).a);
@@ -111,7 +129,7 @@ const PLANT_FRAG = /* glsl */ `
     return min(1.0, empty(m, at + vec2(px.x, 0.0)) + empty(m, at - vec2(px.x, 0.0)) + empty(m, at + vec2(0.0, px.y)) + empty(m, at - vec2(0.0, px.y)));
   }
   void main() {
-    vec4 c = vHasNear > 0.5 ? texture2D(uNear, vNear) : vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
+    vec4 c = plantPixel();
   #ifdef ALPHA_TO_COVERAGE
     // With MSAA, how much of the pixel the plant covers sets how many of its samples it draws, so the cut edge is
     // smoothed as a shape's edge is (#1116). The alpha is made one pixel wide around one half: the outline stays where
@@ -157,6 +175,7 @@ function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture, near: TH
       uSneeze: { value: new THREE.Vector2(-1, 0) },
       uSilver: { value: 0 },
       uGrain: GRAIN,
+      ...LIT,
     },
     vertexShader: PLANT_VERT,
     fragmentShader: PLANT_FRAG,
@@ -407,6 +426,7 @@ export class Plants {
       const radius = Math.hypot(bed.w / 2, bed.d / 2, 1.2) + 0.4;
       geo.boundingSphere = new THREE.Sphere(center, radius);
       const mesh = new THREE.Mesh(geo, mats[sheet]);
+      castsShadow(mesh, PLANT_DEPTH);
       ctx.scene.add(still(mesh));
       this.chunks.push({ mesh, center, radius });
       idx.forEach((pi, k) => {

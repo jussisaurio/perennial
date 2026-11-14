@@ -23,7 +23,8 @@ import { DETAIL, DetailPicker, type Detail } from "./detail";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryWorld } from "./scenery";
 import { HILLS, SKY_R, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
-import { GRAIN, paperMaterial } from "./paper";
+import { GRAIN } from "./paper";
+import { litMaterial, Sun } from "./sceneLight";
 import { Door, DOOR } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { Plants } from "./scenePlants";
@@ -146,11 +147,36 @@ const STILE_VIEW = 2.5;
 /** How far away the sun (or moon) is drawn, along its direction from the eye. */
 const SUN_DIST = 200;
 
-/** Each time of day's tint for everything unlit, and its fog, made once: the time-lapse on the bench (#362) blends them every frame. */
-const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color }> = {
-  day: { tint: new THREE.Color(...T.SKIES.day.tint), fog: new THREE.Color(T.SKIES.day.fog) },
-  dusk: { tint: new THREE.Color(...T.SKIES.dusk.tint), fog: new THREE.Color(T.SKIES.dusk.fog) },
-  night: { tint: new THREE.Color(...T.SKIES.night.tint), fog: new THREE.Color(T.SKIES.night.fog) },
+/** A lantern's light at full strength (sceneLight.ts): warm, as its flame. */
+const LAMP = new THREE.Color(1, 0.72, 0.4);
+
+/**
+ * Each time of day's tint for everything, and its fog, made once: the time-lapse on the bench (#362) blends them every
+ * frame. With the light (sceneLight.ts): `key` for the side the sun (or moon) is on, `fill` for the side in shade, and
+ * `lamp`, the lanterns' light. The fill is a little cool, as a shade under a clear sky is, and light enough that paper in it still reads as white; the key warm, most at dusk.
+ */
+const LIGHT: Record<TimeOfDay, { tint: THREE.Color; fog: THREE.Color; key: THREE.Color; fill: THREE.Color; lamp: THREE.Color }> = {
+  day: {
+    tint: new THREE.Color(...T.SKIES.day.tint),
+    fog: new THREE.Color(T.SKIES.day.fog),
+    key: new THREE.Color(1.06, 1.02, 0.94),
+    fill: new THREE.Color(0.8, 0.81, 0.86),
+    lamp: new THREE.Color(0, 0, 0),
+  },
+  dusk: {
+    tint: new THREE.Color(...T.SKIES.dusk.tint),
+    fog: new THREE.Color(T.SKIES.dusk.fog),
+    key: new THREE.Color(1.16, 1, 0.82),
+    fill: new THREE.Color(0.7, 0.68, 0.78),
+    lamp: LAMP.clone().multiplyScalar(0.45),
+  },
+  night: {
+    tint: new THREE.Color(...T.SKIES.night.tint),
+    fog: new THREE.Color(T.SKIES.night.fog),
+    key: new THREE.Color(1, 1.02, 1.08),
+    fill: new THREE.Color(0.78, 0.8, 0.86),
+    lamp: LAMP.clone(),
+  },
 };
 
 /** A label's place kept on the screen (a fraction of it), for lines that must be read even when their point is out of view. `edge`: how far in from each side its middle stays. */
@@ -173,7 +199,7 @@ const LABEL_PRIORITY = ["say", "echo", "line", "fruit", "scenery", "tree", "tag"
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
   const bench = new THREE.Group();
-  const wood = c.mat(c.woodTex, { vertexColors: true });
+  const wood = c.mat(c.woodTex);
   const plank = (w: number, h: number, d: number, x: number, y: number, z: number) => {
     const m = new THREE.Mesh(woodBox(w, h, d), wood);
     m.position.set(x, y, z);
@@ -215,6 +241,11 @@ export class GardenScene {
   private readonly lookoutThings: LookoutThings | null;
   private readonly tintNow = new THREE.Color();
   private readonly fogNow = new THREE.Color();
+  private readonly keyNow = new THREE.Color();
+  private readonly fillNow = new THREE.Color();
+  private readonly lampNow = new THREE.Color();
+  /** The sun's light and shadows, and the lanterns' light (sceneLight.ts). */
+  private readonly sun: Sun;
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
   private mats = new Set<THREE.ShaderMaterial>();
   private basic: THREE.MeshBasicMaterial[] = [];
@@ -274,8 +305,14 @@ export class GardenScene {
   /** Today's visitors in the walk (sceneVisitors.ts). */
   private guests: SceneVisitors;
 
-  /** @param msaa Smooth the edges of shapes (#1106). The WebGL context keeps it for its whole life. */
-  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: DeckLang, visitors: WalkVisitors, msaa: boolean) {
+  /**
+   * @param start The detail the walk opens with. Above low, it smooths the edges of shapes (#1106) for the WebGL
+   * context's whole life: not at low, which tests pin, as CI draws WebGL in software (#793), where MSAA made a frame
+   * 30–90% slower.
+   */
+  constructor(canvas: HTMLCanvasElement, layout: Layout, cb: SceneCallbacks, reducedMotion: boolean, lang: DeckLang, visitors: WalkVisitors, start: Detail) {
+    const msaa = start !== "low";
+    this.detail = start;
     this.layout = layout;
     this.cb = cb;
     this.reducedMotion = reducedMotion;
@@ -294,6 +331,8 @@ export class GardenScene {
     // Reading the shader logs on a program's first use waits for the GPU: ~10 ms of a first draw at CPU 10× (#571).
     // Dev and the e2e tests still read them, so a broken shader fails there.
     this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
+    this.sun = new Sun(this.renderer, this.scene);
+    this.sun.setShadows(start !== "low");
     this.camera.rotation.order = "YXZ";
     this.plants = new Plants(
       this.renderer,
@@ -391,7 +430,7 @@ export class GardenScene {
       cx: (b.minX + b.maxX) / 2,
       cz: (b.minZ + b.maxZ) / 2,
       mat: (tex, opts = {}) => {
-        const m = paperMaterial(new THREE.MeshBasicMaterial({ map: tex, ...opts }));
+        const m = litMaterial(new THREE.MeshBasicMaterial({ map: tex, ...opts }));
         this.basic.push(m);
         return m;
       },
@@ -470,6 +509,7 @@ export class GardenScene {
     this.walkInto.build(c, this.visitors.autumn);
     this.buildMarker();
     g.setTime(g.time);
+    this.sun.casters(this.scene);
     GRAIN.value = await paper;
     await this.warm([...this.scene.children]);
   }
@@ -482,10 +522,11 @@ export class GardenScene {
    * first draws wait for the links. `parts`: children of the scene.
    */
   private async warm(parts: THREE.Object3D[]): Promise<void> {
-    // The scene's fog without its objects: compile() walks the whole target scene for lights on
-    // every call, and the garden has none. The fog is part of each shader's cache key.
+    // The scene's fog and a light like the sun without its objects: compile() walks the whole target scene for lights
+    // on every call. The fog and the lights are part of each shader's cache key.
     const target = new THREE.Scene();
     target.fog = this.fog;
+    target.add(this.sun.standIn);
     const meshes = new Set<string>();
     const textures = new Set<THREE.Texture>();
     const linked: Promise<unknown>[] = [];
@@ -562,7 +603,8 @@ export class GardenScene {
       for (const o of firstOfEach(p, drawn, frustum)) {
         for (let i = 0; i < all.length; i++) {
           shown[i] = all[i].visible;
-          all[i].visible = all[i] === p;
+          // The sun too: which lights there are is part of each program's key.
+          all[i].visible = all[i] === p || all[i] === this.sun.light;
         }
         const seen = this.camera.layers.mask;
         this.camera.layers.set(WARM_LAYER);
@@ -661,6 +703,7 @@ export class GardenScene {
     this.walkInto.setOrchard(orchard.trees, orchard.params);
     for (const m of orchard.mats) this.mats.add(m);
     this.hitBoxes.push(...orchard.scenery);
+    this.sun.casters(this.scene);
     // Built after setTime when the door opens in this walk: give it the time of day now.
     this.tint();
   }
@@ -814,8 +857,12 @@ export class GardenScene {
       blend: (look, race) => {
         this.sky.blend(look, race);
         if (!look) return;
-        this.tintNow.copy(LIGHT[look.from].tint).lerp(LIGHT[look.to].tint, look.k);
-        this.fogNow.copy(LIGHT[look.from].fog).lerp(LIGHT[look.to].fog, look.k);
+        const [a, b] = [LIGHT[look.from], LIGHT[look.to]];
+        this.tintNow.copy(a.tint).lerp(b.tint, look.k);
+        this.fogNow.copy(a.fog).lerp(b.fog, look.k);
+        this.keyNow.copy(a.key).lerp(b.key, look.k);
+        this.fillNow.copy(a.fill).lerp(b.fill, look.k);
+        this.lampNow.copy(a.lamp).lerp(b.lamp, look.k);
         this.tint();
       },
       trip: (to) => {
@@ -1008,7 +1055,7 @@ export class GardenScene {
       g.add(board);
       for (const sx of [-0.45, 0.45]) {
         // Behind the board with a gap: a post in the board's plane fights it and shows through the text.
-        const post = new THREE.Mesh(woodBox(0.06, 0.86, 0.06), mat(woodTex, { vertexColors: true }));
+        const post = new THREE.Mesh(woodBox(0.06, 0.86, 0.06), mat(woodTex));
         post.position.set(sx, 0.43, -0.06);
         g.add(post);
       }
@@ -1027,7 +1074,7 @@ export class GardenScene {
       const board = signBoard(c, T.paperTexture(T.notice(SNAIL_SIGN[this.lang])), 1.0, 0.4);
       board.position.y = 0.62;
       g.add(board);
-      const post = new THREE.Mesh(woodBox(0.05, 0.5, 0.05), mat(woodTex, { vertexColors: true }));
+      const post = new THREE.Mesh(woodBox(0.05, 0.5, 0.05), mat(woodTex));
       post.position.set(0, 0.25, -0.05);
       g.add(post);
       g.position.set(L.gate.x + GATE_HALF + 1.7, 0, b.maxZ - 0.3);
@@ -1047,7 +1094,7 @@ export class GardenScene {
       const board = signBoard(c, T.paperTexture(T.notice(text)), w, w * 0.4);
       board.position.y = y;
       g.add(board);
-      const post = new THREE.Mesh(woodBox(0.04, y, 0.04), mat(woodTex, { vertexColors: true }));
+      const post = new THREE.Mesh(woodBox(0.04, y, 0.04), mat(woodTex));
       post.position.set(0, y / 2, -0.03);
       g.add(post);
       g.position.set(x, 0, z);
@@ -1252,12 +1299,16 @@ export class GardenScene {
     this.cb.onProgress(total, total);
   }
 
-  /** Show a time of day: the sky, what is lit, who is awake, the tint and the fog. The one chosen, or one on the way while time speeds up on the bench (#362). */
+  /** Show a time of day: the sky, what is lit, who is awake, the tint, the light and the fog. The one chosen, or one on the way while time speeds up on the bench (#362). */
   private light(t: TimeOfDay) {
     const c = conditions(t);
     for (const part of this.parts) part.onConditions?.(c);
-    this.tintNow.copy(LIGHT[t].tint);
-    this.fogNow.copy(LIGHT[t].fog);
+    const l = LIGHT[t];
+    this.tintNow.copy(l.tint);
+    this.fogNow.copy(l.fog);
+    this.keyNow.copy(l.key);
+    this.fillNow.copy(l.fill);
+    this.lampNow.copy(l.lamp);
     this.tint();
     // The sunflower droops a little at dusk.
     this.flower.params.setY(0, t === "dusk" ? 0.14 : 0);
@@ -1278,7 +1329,7 @@ export class GardenScene {
     this.guests.tint(tint, fog);
   }
 
-  private detail: Detail = "normal";
+  private detail: Detail;
   private size: [number, number] = [1, 1];
   /** Picks the detail from frame times (#677), once the plants are loaded; null while they load, or when a test pins it. */
   private picker: DetailPicker | null = null;
@@ -1286,6 +1337,7 @@ export class GardenScene {
 
   setDetail(d: Detail) {
     this.detail = d;
+    this.sun.setShadows(d !== "low");
     this.resize(...this.size);
   }
 
@@ -1462,6 +1514,7 @@ export class GardenScene {
       fl.uv.needsUpdate = true;
     }
 
+    this.sun.place(this.camera, this.sky.sunDir, this.keyNow, this.fillNow, this.lampNow, g.lamps);
     this.renderer.render(this.scene, this.camera);
     this.labels();
   }
