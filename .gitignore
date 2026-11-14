@@ -38,6 +38,9 @@ coverage/
 # Claude Code local state (agent worktrees)
 .claude/
 
+# Agents' scratch files, kept here because macOS empties /private/tmp (scripts/agent-worktree.sh)
+.scratch/
+
 # Downloaded frequency lists for the deck audit
 scripts/.cache/
 server/load/out/

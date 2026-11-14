@@ -49,7 +49,7 @@ Open a P2 issue "Cleanup sweep <date>" and run it. Agents split the code by dire
 
 ## Workflow
 
-- Work in the main checkout on a branch from an up-to-date `main`. Use separate worktrees only for agents that run in parallel; `scripts/clean-worktrees.sh` removes finished ones.
+- Work in the main checkout on a branch from an up-to-date `main`. Agents that run in parallel each make their own worktree with `scripts/agent-worktree.sh` as their first step (docs/agents.md, "Setup"). Start them without `isolation: worktree`: its shell check refuses heredocs, `$(...)`, loops and git chains (#982). `scripts/clean-worktrees.sh` removes finished worktrees.
 - Agents read [docs/agents.md](docs/agents.md): setup, checks, merge and the report. Agent prompts give only the task.
 - Every substantial piece of work has a GitHub issue with a priority label (P0–P3). The PR says `Closes #n`. A finding or idea you do not act on now also becomes an issue, so it is not lost in a chat or a report. Close issues that are done or stale, with a comment that says why.
 - **What to do next:** with no other task, take the next `ready` issue by the pick rule in [docs/agents.md](docs/agents.md), "Pick an issue".

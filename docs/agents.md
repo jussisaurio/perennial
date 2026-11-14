@@ -3,12 +3,16 @@
 Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: the issue, the time box, and anything special. This file gives the rest, so prompts stay short.
 
 ## Setup
-- Branch from an up-to-date `origin/main`. Other agents merge in parallel: if your PR conflicts, rebase onto origin/main, re-run your checks and force-push with lease.
-- **A new worktree has no packages:** run `bun install` at the root and in `web/` before any check.
-- **Scratch files:** in the session scratchpad your prompt names, under a subfolder named after your task. Never at its top level, because other agents share it.
-- **E2E runs:** run them the normal way (`bunx playwright test e2e/x.spec.ts` in web/). In a worktree under `.claude/worktrees/`, the worktree's name gives the run its own ports and its own database (`web/e2e/worktree.ts`); the database is made on the first run. At most 3 runs go at once on the machine. A 4th waits for a free slot and prints a line that says so; this is normal. If a port is still in use, the run fails loudly at start: set `E2E_PORT_OFFSET` to another multiple of 10.
-- **Shell commands:** in a worktree, a guard blocks compound commands: `$(...)`, `$VAR` arguments, `for` loops, `&&` chains with git, and process tools like `pgrep`, `lsof` and `pkill`. Run one plain command per call; for git, use `git -C <absolute worktree path> ...` (not a relative path like `..`) instead of `cd ... && git`. For anything longer, write a small script in your scratch folder and run that. To wait for something, use Monitor, not `sleep`.
-- **Postgres** is one shared container (`docker compose up -d` from the main checkout). Never touch the `pg-sandbox` container.
+- **Make your own worktree first.** You start in the owner's checkout, and other agents work there too: never edit files, commit or switch branches in it. Run this once, with a short name for your task (lowercase letters, digits and dashes, such as `stile-982`):
+  `git fetch -q origin main && bash -c "$(git show origin/main:scripts/agent-worktree.sh)" agent-worktree <name>`
+  This runs main's copy of `scripts/agent-worktree.sh`, because the owner's checkout may be old. It makes the branch `<name>` from origin/main and a worktree for it at `.claude/worktrees/<name>`, installs the packages, and makes your scratch folder. It prints both paths. The autorun agent in GitHub Actions works alone, so it skips this step.
+- **Run every command in your worktree.** Each Bash call starts in the owner's checkout, so begin each call with `cd <worktree> && `, or use `git -C <worktree>`. Give Edit and Write the worktree's absolute paths. The shell has no extra limits: heredocs, `$(...)`, variables, loops, pipes and `&&` chains all work.
+- **Commit and open the PR** with a message file or a heredoc: `cd <worktree> && git commit -F <message file>`, then `cd <worktree> && git push -q origin HEAD && gh pr create --title "..." --body-file <body file>`.
+- Other agents merge in parallel: if your PR conflicts, rebase onto origin/main, re-run your checks and force-push with lease (`git push --force-with-lease origin HEAD`).
+- **Scratch files:** in your scratch folder, `.scratch/<name>/` in the owner's checkout. It is gitignored, and it stays when your worktree is removed. Keep files that matter there (story-loop answers, reports), not in /private/tmp: macOS empties /private/tmp.
+- **E2E runs:** run them the normal way (`bunx playwright test e2e/x.spec.ts` in web/). Your worktree's name gives the run its own ports and its own database (`web/e2e/worktree.ts`); the database is made on the first run. At most 3 runs go at once on the machine. A 4th waits for a free slot and prints a line that says so; this is normal. If a port is still in use, the run fails loudly at start: set `E2E_PORT_OFFSET` to another multiple of 10.
+- **To wait for something,** use Monitor, not `sleep`.
+- **Postgres** is one shared container (`docker compose up -d` from the owner's checkout). Never touch the `pg-sandbox` container.
 - Run only the specs you need, not the whole suite.
 
 ## Pick an issue
@@ -38,7 +42,7 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - Commits end with the `Co-Authored-By` line your session gives you.
 - **The repo is public.** No secrets, personal data or steps to exploit a bug in commits, issues, PRs or comments. Describe a security problem as a class, and fix it before you write the details.
 - The PR body ends with `Reviewed: <none | playtest>`, a blank line, then `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
-- Merge right after your checks: `scripts/merge.sh <pr>`. It works from any worktree. `main` has two required checks: the CI jobs "Typecheck, lint, unit tests, build" and "Decks (schema, up to date, compatibility, replay)". The script asks GitHub to merge the PR when both pass, waits (about a minute), and deletes the remote branch. The PR is merged only if the last line says `MERGED`. If a required check fails, the script prints `NOT merged`, the check's name and a link, and exits non-zero: fix the PR, push, and run the script again. The e2e tests are not required: they run on `main` after the merge.
+- Merge right after your checks: `scripts/merge.sh <pr>`. It works from any worktree, and it always runs main's copy of itself. `main` has two required checks: the CI jobs "Typecheck, lint, unit tests, build" and "Decks (schema, up to date, compatibility, replay)". The script asks GitHub to merge the PR when both pass, waits (about a minute), and deletes the remote branch. The PR is merged only if the last line says `MERGED`. If a required check fails, the script prints `NOT merged`, the check's name and a link, and exits non-zero: fix the PR, push, and run the script again. The e2e tests are not required: they run on `main` after the merge.
 - **Migrations are expand, then contract:** never drop a table or column in the same release that stops using it. Railway runs migrations while the old version is still serving. #604 broke this rule and caused #614. The full rule is in [DEPLOY.md](DEPLOY.md).
 
 ## Scope and decisions
@@ -50,9 +54,10 @@ Every agent reads this first, along with CLAUDE.md. Your prompt gives the task: 
 - **An automatic judge is checked before it drives work.** Compare a sample of its verdicts with the owner's or a person's first. An LLM judge of the audio clips failed good clips and missed bad ones (#776), so a clip is re-made only when a person reports it.
 
 ## When you start other agents
-- Start parallel agents for work that splits cleanly, each in its own worktree. A bug that comes in while you work on something else goes to an agent, not to you.
+- Start parallel agents for work that splits cleanly. A bug that comes in while you work on something else goes to an agent, not to you.
+- **Start them without `isolation: worktree`.** Its shell check refuses heredocs, `$(...)`, loops and git chains, and it can't be turned off (#982). Each agent makes its own worktree as its first step (Setup, above).
 - The first line of the prompt names the issue or request the task serves. An agent that could not tell whose task it had once stopped a whole deck batch.
-- The prompt gives the task, a time box and the scratch folder. This file gives the rest.
+- The prompt gives the task, a time box and a name for the agent's worktree, unique among the agents you run. This file gives the rest.
 - Judging work (a play review, a playtest, proofreading, story readers and judges) runs on the strongest model your session can start. Where a doc says "Opus", it means that. Mechanical work (renames, applying exact fix notes, link checks) can use a cheaper model.
 - Before you start a follow-up, check that no running or just-finished agent already has it.
 - An agent's report is a claim, not a source. If you pass it on, say "the agent reports", and check what you can.
