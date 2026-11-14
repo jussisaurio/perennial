@@ -37,7 +37,7 @@ export const STONE_R = 0.28;
 /**
  * The lantern's post from the stool (m, and rad left of straight at the far
  * house): sat on the stool, it stands in view in front of you, beside the far
- * house even on a phone's narrow view, and in reach (sceneLanterns.ts LANTERN_REACH).
+ * house even on a phone's narrow view, and in reach (reachCore.ts LANTERN_REACH).
  */
 const POST = { d: 1.35, turn: 0.12 };
 

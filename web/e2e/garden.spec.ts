@@ -491,7 +491,7 @@ test("action.reach-edge: the bench comes into reach where Sit shows, and stays i
   };
   const sit = page.getByRole("button", { name: "Sit on the bench" });
   const act = page.locator(".gw-act");
-  // Just inside the bench's reach (scene.ts BENCH_REACH 1.6 m).
+  // Just inside the bench's reach (reachCore.ts BENCH_REACH 1.6 m).
   await standBack(1.55);
   await expect(sit).toBeVisible();
   await standBack(1.7);

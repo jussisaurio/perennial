@@ -5,7 +5,7 @@ import { HILLS } from "./sceneSky";
 import { HILL_ROWS, hillProfile } from "./textures";
 import { stileAt, TOP } from "./stile";
 import { layout } from "./world";
-import { LANTERN_REACH } from "./sceneLanterns";
+import { LANTERN_REACH } from "./reachCore";
 
 describe("the far light's answer (#683, #858)", () => {
   test("it answers once note n12 is on the shed's nails, in every course", () => {

@@ -203,7 +203,7 @@ export function standByKey(page: Page, metres = 1.4) {
     const k = s.door.key!;
     const eye = 1.05;
     // In reach a tap meets the key whatever stands in front of it; from farther, nothing may.
-    const { KEY_REACH } = await import(/* @vite-ignore */ "/src/garden/sceneDoor.ts");
+    const { KEY_REACH } = await import(/* @vite-ignore */ "/src/garden/reachCore.ts");
     // Free ground: where a walker may stand, all the way to the key, and nothing in the garden in front of it.
     const free = (x: number, z: number) => {
       const p = collide(s.layout, x, z);

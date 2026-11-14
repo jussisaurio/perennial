@@ -6,11 +6,11 @@
 // Conditions to every one, and disposes every one in that order, documented
 // in GardenScene itself. The hedge and the orchard build geometry only, with
 // nothing to tick, react to conditions or dispose (the scene's lost context
-// frees their GPU memory), so they are not Parts. What a tap or the action
-// button acts on has its own small interfaces below (Tapper, Reachable, #850):
-// a thing, not a technique.
+// frees their GPU memory), so they are not Parts. What a tap acts on has
+// its own small interface below (Tapper, #850): a thing, not a technique. What
+// the action button acts on is reachCore.ts's.
 
-import type { DoorAction, Reach } from "./scene";
+import type { DoorAction } from "./reachCore";
 import type { Reply } from "./kinds/kind";
 import type { Conditions } from "./conditions";
 import type { Joke } from "./sceneJokes";
@@ -92,19 +92,4 @@ export interface Tapper<K extends TapHit["kind"]> {
   pick(at: TapAt): TapHit<K> | null;
   /** Act on it: in reach at once, from farther away after a walk up to it. A visitor may answer (`frog`: what the frog may say). */
   tap(hit: TapHit<K>, frog: FrogWords): Reply | null | void;
-}
-
-/**
- * One thing the action button can act on (#334, #850). GardenScene asks them
- * in its own order, every frame, and the first that answers is what the
- * button shows.
- */
-export interface Reachable<T> {
-  /** What the button acts on while it shows this thing's action, else null. It stays in reach REACH_SLACK farther (#838). */
-  shown: T | null;
-  /** What the button would do to it from where the viewer stands, and to which one; null when it is not in reach. */
-  reach(): { a: Reach; target: T } | null;
-  act(a: Reach, target: T): void;
-  /** Where the target could be one of several alike, show which one quietly (#689): a note lifts off the wall, a plant stands a little taller. */
-  mark?(target: T | null): void;
 }

@@ -4,7 +4,8 @@
 
 import * as THREE from "three";
 
-import type { Reach, TimeOfDay } from "./scene";
+import type { Reach } from "./reachCore";
+import type { TimeOfDay } from "./scene";
 import type { HitBox, HitDisc } from "./scenery";
 import { STEP, TOP, type StileSpot } from "./stile";
 

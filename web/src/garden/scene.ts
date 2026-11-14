@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { rng } from "../lib/seed";
 import { yieldToBrowser } from "../lib/yield";
 import { BED_H, BENCH, benchAt, besideKey, collide, DOOR_HALF, DOOR_LINES, DOOR_SPOKEN, HEDGE, hedgeSpan, keyAt, sunflowerAt, viewpoint, WALKER, type BackWay, type KeyHelp, type KeySpot, type Layout, type PlacedPlant } from "./world";
-import { REACH_SLACK } from "./reach";
+import * as R from "./reachCore";
 import * as W from "./walker";
 import type { Ground } from "./ground";
 import { benchLine, pickTree, placeTrees, treeVisitorSpots, type OrchardTree, type PlacedTree } from "./orchard";
@@ -23,25 +23,25 @@ import { DETAIL, DetailPicker, type Detail } from "./detail";
 import { boardBox, DECOR_KINDS, groundAt, pickScenery, rayBox, rayDisc, spriteBox, SUN_TAG, thingAt, TREE_KINDS, type HitBox, type HitDisc, type Ray, type SceneryHit, type SceneryView, type SceneryViews, type SceneryWorld } from "./scenery";
 import { HILLS, SKY_R, SkyWater } from "./sceneSky";
 import { Hedge } from "./sceneHedge";
-import { Door, DOOR, DOOR_REACH, KEY_REACH } from "./sceneDoor";
+import { Door, DOOR } from "./sceneDoor";
 import { Critters } from "./sceneCritters";
 import { NAME_NEAR, Plants } from "./scenePlants";
-import { LANTERN_REACH, Lanterns } from "./sceneLanterns";
+import { Lanterns } from "./sceneLanterns";
 import { ANSWER_LINE, ANSWER_NOTE, ANSWER_SPOKEN, backWay, DIARY_REACH, hasNote, HILL_NOTE, HILLTOP_R, hillY, lookoutAt, LookoutLight, type Lookout } from "./lookout";
 import { LookoutThings } from "./sceneLookout";
 import { stepY, stileAt, type NotePlace, type StileSpot } from "./stile";
 import { StileScene } from "./sceneStile";
 import { courseNotes } from "./notes/read";
 import { FULL_MOON } from "./moon";
-import { TAP_PRIORITY, type Frame, type Part, type Reachable, type TapAt, type TapHit, type Tapper } from "./scenePart";
+import { TAP_PRIORITY, type Frame, type Part, type TapAt, type TapHit, type Tapper } from "./scenePart";
 import { buildShed, shedRoof, shedStep } from "./shed";
-import { Carry, CARRY_STAND, type CarryAct, type CarryDone, type CarryTarget, type Landing } from "./sceneCarry";
+import { Carry, CARRY_STAND, type CarryDone, type CarryTarget, type Landing } from "./sceneCarry";
 import { aimAt, ANSWERS, type Answer, type Answerers } from "./carry";
 import { echo, echoDate, type Met } from "./well";
-import { TOY_STAND, Toys, type ToyAct, type ToyDone, type ToyTarget } from "./sceneToys";
+import { TOY_STAND, Toys, type ToyDone, type ToyTarget } from "./sceneToys";
 import type { ToysWalk } from "./toys";
 import { bareNoun } from "./nouns";
-import { petalForms, plantInReach } from "./shake";
+import { petalForms } from "./shake";
 import type { Gender } from "../deck/schema";
 import type { DeckLang } from "../deck/langs";
 import { Jokes, type Joke } from "./sceneJokes";
@@ -75,12 +75,8 @@ const BENCH_SEAT = 0.45;
  * has waited a while (#334); or open for good.
  */
 export type DoorState = "locked" | { key: KeySpot; help: KeyHelp } | "open";
-/** What the learner can do at the door: try it while it is locked, pick up the key, or open the door with the key. */
-export type DoorAction = "try" | "key" | "open";
 /** Walk into things (#359): a plant brushed past plays its word's note (a bloom's clear, a younger plant's soft); a tree walked into let something fall; a leaf pile burst. */
 export type WalkIntoEvent = { did: "brush"; word: string; clear: boolean } | { did: "bump"; fell: Fell; word: string } | { did: "pile" };
-/** What the one action button does to the thing in reach (#334): the door's actions, sit on the bench and stand up again, shake a plant (#357), carry's (#358), the toys' (#360), blow a lantern out and light it again (#361), or find the gnome where it hides (#379), or read a note in the shed (#654), or sit on the lookout's stool and read the diary there (#858). */
-export type Reach = DoorAction | "sit" | "stand" | "shake" | CarryAct | ToyAct | "snuff" | "light" | "seek" | "read" | "stool" | "diary";
 
 /** A name over a plant, a visitor's tag (kind "visitor"), a tapped scenery word (kind "scenery") or orchard tree (kind "tree"), what a visitor says (kind "say"), a quiet line from the garden itself over a thing in it (kind "line"; English, or a joke's in the course language) or over no thing (kind "far", the far light's answer, #858), a form falling from a shaken plant (kind "petal", #357; no text: a leaf), or the well's echo (kind "echo", #335 S6: the word, and the day it was met as its gloss), in screen fractions. */
 export interface Label {
@@ -144,7 +140,7 @@ export interface SceneCallbacks {
   onLabels: (labels: Label[]) => void;
   onProgress: (done: number, total: number) => void;
   /** What the action button does now, for the thing in reach (#334); null with nothing in reach (no button, #835). */
-  onReach: (a: Reach | null) => void;
+  onReach: (a: R.Reach | null) => void;
   /** You picked up a pebble, or let it go (#358). */
   onHand: (holding: boolean) => void;
   /** A plant was shaken (#357): the forms that fell from it ([]: one leaf). */
@@ -186,7 +182,7 @@ const TAP_SLACK = 0.5;
 const GROUND_STEP = 0.1;
 /** Ground nearer than this (m) is in reach (#336): a tap on it names the path, as before; farther ground is walked to. */
 const GROUND_REACH = 1.5;
-/** Where a walk to the door stops: on the path in front of it, in reach of it (sceneDoor.ts DOOR_REACH). */
+/** Where a walk to the door stops: on the path in front of it, in reach of it (reachCore.ts DOOR_REACH). */
 const DOOR_STAND = 1.4;
 /** A walk to the key stops this short of it (m), so it is still in view, in reach (KEY_REACH). */
 const KEY_STAND = 1;
@@ -194,16 +190,6 @@ const KEY_STAND = 1;
 const ECHO = { delay: 1.2, show: 5 };
 /** A plant this near (m) where a thing lands perks up (#358). */
 const PERK_NEAR = 0.9;
-/** Near enough to the bench (m, from its middle) to sit on it (#334). */
-const BENCH_REACH = 1.6;
-/** How much farther (m) a thing counts as in reach: REACH_SLACK for what the action button shows now (`shown`), none for anything else. */
-function slack(shown: boolean): number {
-  return shown ? REACH_SLACK : 0;
-}
-/** Infers each action-button thing's target type (#850). */
-function reachable<T>(r: Reachable<T>): Reachable<T> {
-  return r;
-}
 /** The view's height (degrees), and on the lookout's stool (#858) a little narrower: the far house and its lantern nearer the middle. */
 const FOV = 62;
 const STOOL_FOV = 50;
@@ -306,9 +292,10 @@ export class GardenScene {
   private stallReported = false;
   /** The ring on the ground where a walk goes. */
   private spot!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  /** What the action button does now (#334), and to which thing in `reachables` (#850). */
-  private reach: Reach | null = null;
-  private reacher: Reachable<unknown> | null = null;
+  /** What the action button does now (#334), and to which thing (reachCore.ts); null with nothing in reach. */
+  private offer: R.Offer | null = null;
+  /** What the button can act on, for reachCore.ts: the parts themselves, which keep their own state. */
+  private things: R.Things;
   /** Carry (#358): the pebbles; and how often each one has answered a landing this visit. */
   private carry: Carry;
   private answered: Record<Answer, number> = { frog: 0, plant: 0, well: 0 };
@@ -361,7 +348,7 @@ export class GardenScene {
   private readonly tintNow = new THREE.Color();
   private readonly fogNow = new THREE.Color();
   /** The pond's bench, by its middle (world.ts benchAt), worked out once: reportReach runs every frame. */
-  private bench!: { x: number; z: number };
+  private bench: { x: number; z: number };
   /** Every sprite material, for time, sway, tint, fog and selection uniforms. */
   private mats = new Set<THREE.ShaderMaterial>();
   private basic: THREE.MeshBasicMaterial[] = [];
@@ -467,6 +454,7 @@ export class GardenScene {
     this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
     // Start inside the gate, close enough that the first bed fills the view.
     const first = layout.beds[0];
+    this.bench = benchAt(layout);
     this.me = W.newWalker(layout.gate.x, Math.min(layout.gate.z - 1.2, first.z + first.d / 2 + 3.2));
     this.camera.rotation.order = "YXZ";
     // The way over the stile opens once the note that tells of the hill is unlocked (#770), and the far light answers once the note that tells of that is.
@@ -536,6 +524,19 @@ export class GardenScene {
       visitors.list,
     );
     this.parts = [this.sky, this.door, this.critters, this.plants, this.guests, this.jokes, this.walkInto, this.carry, this.toys, this.lanterns];
+    this.things = {
+      door: this.door,
+      gate: { x: layout.gate.x, z: layout.bounds.maxZ },
+      bench: this.bench,
+      lanterns: this.lanterns,
+      lookout: this.lookoutThings,
+      plants: layout.plants,
+      carry: this.carry,
+      toys: this.toys,
+      hiders: this.guests,
+      mat: this.jokes,
+      note: (x, z, yaw, pitch, slack) => this.notes.reachAt(x, z, yaw, pitch, EYE, slack) ?? (this.stile?.inReach(x, z, slack) ? this.stile.unopened() : null),
+    };
     this.tinted = [this.mats, this.walkInto.mats, this.carry.mats];
     this.scene.fog = this.fog;
   }
@@ -918,27 +919,47 @@ export class GardenScene {
     // From farther than its reach too: a tap there walks to it first (tapDoor, #336). There, whatever
     // stands in front of it (a lantern, the sunflower) is what the tap meets; in reach the key comes first, as it did.
     const disc = d.key && d.state === "key" ? rayDisc(r, d.key.x, 0.03, d.key.z, 0.3) : Infinity;
-    const toKey = disc < Infinity && !this.inReach("key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
+    const toKey = disc < Infinity && !R.doorInReach(this.things, this.x, this.z, "key", 0) && thingAt(r, this.sceneryWorld()) < disc ? Infinity : disc;
     if (Math.min(toDoor, toKey) > FOG_FAR) return null;
     if (toKey <= toDoor) return { kind: "door", a: "key" };
     return { kind: "door", a: d.state === "held" ? "open" : "try" };
   }
 
-  /** Is the viewer near enough (and `slack` m more) to the key (for "key") or the door (the rest) to act on it? */
-  private inReach(a: DoorAction, slack: number): boolean {
-    const k = this.door.key;
-    if (a === "key") return !!k && Math.hypot(this.x - k.x, this.z - k.z) < KEY_REACH + slack;
-    return Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) < DOOR_REACH + slack;
-  }
-
-  /** The action button (#334): do what it shows to the thing in reach. Anything else no longer applies and does nothing. */
-  act(a: Reach) {
-    const t = this.reacher;
-    if (t && a === this.reach) t.act(a, t.shown);
-    // A press that comes before the button caught up with a change in reach: the bench and the door check their own state, so they act all the same.
-    else if (a === "sit" && this.walker.kind !== "seated") this.sit("bench");
-    else if (a === "stand") this.standUp();
-    else if (a === "try" || a === "key" || a === "open") this.doorAct(a);
+  /** The action button (#334), pressed while it said `a`: do what reachCore.ts's press says. */
+  act(a: R.Reach) {
+    const o = R.press(a, this.offer, this.me);
+    if (!o) return;
+    switch (o.on) {
+      case "seat":
+        return o.target === null ? this.standUp() : this.toggleLantern(o.target);
+      case "key":
+      case "door":
+        return this.doorAct(o.a);
+      case "carry":
+        if (o.a === "throw") this.throwAhead();
+        // Every other carry act has a target (Carry.reachAt).
+        else if (o.target) this.doCarry(o.target);
+        return;
+      case "hider":
+        return this.seek(o.target);
+      case "mat":
+      case "note":
+        return this.openNote(o.target);
+      case "stool":
+        return this.sit("stool");
+      case "diary":
+        return this.openDiary();
+      case "lantern":
+        return this.toggleLantern(o.target);
+      case "bench":
+        return this.sit("bench");
+      case "toy":
+        return this.doToy(o.target);
+      case "plant":
+        return this.shakeNow(o.target);
+      default:
+        return o satisfies never;
+    }
   }
 
   /** The lantern under a point on the canvas (CSS pixels), while they are lit (#361), with nothing in front of it. */
@@ -951,8 +972,8 @@ export class GardenScene {
   /** A tap on a lantern (#361): blow it out or light it in reach; from farther away, walk up to it first. */
   private tapLantern(i: number) {
     const [x, z] = this.lanterns.spot(i);
-    if (Math.hypot(x - this.x, z - this.z) < LANTERN_REACH) return this.toggleLantern(i);
-    this.goTo(x, z, LANTERN_REACH - 0.4, () => this.toggleLantern(i));
+    if (Math.hypot(x - this.x, z - this.z) < R.LANTERN_REACH) return this.toggleLantern(i);
+    this.goTo(x, z, R.LANTERN_REACH - 0.4, () => this.toggleLantern(i));
   }
 
   /** Blow lantern `i` out, or light it again; the moth, the stars and the fireflies answer. The lookout's, lit again, is a signal to the far light (#858). */
@@ -1253,15 +1274,15 @@ export class GardenScene {
   }
 
   /** A tap on the key or the door (#336): act on it in reach; from farther away, walk up to it first. */
-  private tapDoor(a: DoorAction) {
-    if (this.inReach(a, 0)) return this.doorAct(a);
+  private tapDoor(a: R.DoorAction) {
+    if (R.doorInReach(this.things, this.x, this.z, a, 0)) return this.doorAct(a);
     const k = this.door.key;
     if (a === "key" && k) this.goTo(k.x, k.z, KEY_STAND, () => this.doorAct(a));
     else this.goTo(this.layout.gate.x, this.layout.bounds.maxZ - DOOR_STAND, 0, () => this.doorAct(a));
   }
 
   /** Try the door, pick up the key, or open the door with it: from a tap in reach, or the door's button. Anything else no longer applies and does nothing. */
-  doorAct(a: DoorAction) {
+  doorAct(a: R.DoorAction) {
     const d = this.door;
     const L = this.layout;
     const z0 = L.bounds.maxZ + HEDGE.gap;
@@ -1332,7 +1353,7 @@ export class GardenScene {
     }
     const things = this.lookoutThings;
     if (things?.has(id)) {
-      if (things.byDiary(this.x, this.z, 0)) return this.openDiary();
+      if (R.byDiary(things, this.x, this.z, 0)) return this.openDiary();
       const [sx, sz] = this.hill!.stone;
       return this.goTo(sx, sz, DIARY_REACH - 0.3, () => this.openDiary());
     }
@@ -1450,8 +1471,7 @@ export class GardenScene {
   /** A bench by the pond, for sitting and admiring. Returns where it stands. */
   private buildBench(c: BuildCtx): THREE.Group {
     const bench = benchModel(c);
-    const at = benchAt(c.L);
-    this.bench = at;
+    const at = this.bench;
     bench.position.set(at.x, 0, at.z);
     // Two cup rings on the seat, between where two would sit: small, seen only up close (#869, what the bench's line names).
     const rings = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.12), c.mat(T.pixelTexture(T.cupRings()), { alphaTest: 0.5 }));
@@ -1642,8 +1662,8 @@ export class GardenScene {
 
   /** The hiding visitor the action button would find now (#379), for the status a screen reader hears; null when it would find none. */
   hider(): Hider | null {
-    const id = this.seekReach.shown;
-    return id ? this.guests.hider(id) : null;
+    const o = this.offer;
+    return o?.on === "hider" ? this.guests.hider(o.target) : null;
   }
 
   /**
@@ -2151,181 +2171,21 @@ export class GardenScene {
     }
   }
 
-  /** The lantern in reach while they are lit (#361), by spot, or -1. */
-  private lampInReach(): number {
-    const shown = this.lanternReach.shown;
-    // -1: the button shows no lantern now.
-    return this.lanterns.inReach(this.x, this.z, shown === null ? -1 : shown);
-  }
-
-  /** The hiding visitor in reach (#379). */
-  private seekReach: Reachable<VisitorId> = reachable({
-    shown: null,
-    reach: () => {
-      const id = this.guests.hiderNear(this.x, this.z, this.seekReach.shown);
-      return id ? { a: "seek", target: id } : null;
-    },
-    act: (_, id) => this.seek(id),
-  });
-
-  /** The lantern in reach (#361): blow it out, or light it again. */
-  private lanternReach: Reachable<number> = reachable({
-    shown: null,
-    reach: () => {
-      const i = this.lampInReach();
-      return i < 0 ? null : { a: this.lanterns.on[i] ? "snuff" : "light", target: i };
-    },
-    act: (_, i) => this.toggleLantern(i),
-  });
-
-  /** A dandelion clock in reach (#360): blow it. */
-  private toyReach: Reachable<ToyTarget> = reachable({
-    shown: null,
-    reach: () => this.toys.reachAt(this.x, this.z, this.toyReach.shown),
-    act: (_, t) => this.doToy(t),
-  });
-
-  /** The plant ahead of you (#357): shake it. */
-  private plantReach: Reachable<PlacedPlant> = reachable({
-    shown: null,
-    reach: () => {
-      const p = plantInReach(this.layout.plants, this.x, this.z, this.yaw, this.plantReach.shown);
-      return p && { a: "shake", target: p };
-    },
-    act: (_, p) => this.shakeNow(p),
-    mark: (p) => this.plants.ready(p),
-  });
-
-  /** A loose thing (#358): one in your hands is thrown, or dropped in the well; with your hands free, one in reach is picked up. */
-  private carryReach(held: boolean) {
-    const r: Reachable<CarryTarget | null> = reachable({
-      shown: null,
-      reach: () => ((this.carry.held !== null) === held ? this.carry.reachAt(this.x, this.z, r.shown) : null),
-      act: (a, t) => {
-        if (a === "throw") this.throwAhead();
-        // Every other carry act has a target (Carry.reachAt).
-        else if (t) this.doCarry(t);
-      },
-    });
-    return r;
-  }
-
   /**
-   * Everything the action button can act on (#334, #850), in the order it
-   * chooses: the first in reach wins. On the bench it only gets you up; on
-   * the lookout's stool it blows out or lights the lantern beside you while
-   * they are lit, else gets you up (#858); then the key; a loose thing in your
-   * hands; a hiding visitor (#379), before the bench and the plant ahead: it
-   * hides under the one and behind the other; the last note on the mouse
-   * door's mat (#882), which lies in the door's reach; the door, unless a lantern by
-   * the gate is nearer; the lookout's stool, then its diary, before the
-   * lantern on the post a step in front of the stool; a lantern; a
-   * note (#654) in the shed or at the stile's foot; a loose thing to pick up;
-   * the bench; a dandelion clock (#360); last the plant ahead of you (#357).
-   */
-  private reachables: Reachable<unknown>[] = [
-    reachable<number | null>({
-      shown: null,
-      reach: () => {
-        if (this.walker.kind !== "seated") return null;
-        // -1: by day the lookout's lantern is not lit, and the bench has none.
-        const i = this.walker.on === "stool" ? this.lanterns.lookoutLamp : -1;
-        return i < 0 ? { a: "stand", target: null } : { a: this.lanterns.on[i] ? "snuff" : "light", target: i };
-      },
-      act: (_, i) => (i === null ? this.standUp() : this.toggleLantern(i)),
-    }),
-    reachable({
-      shown: null,
-      reach: () => (this.door.state === "key" && this.inReach("key", slack(this.reach === "key")) ? { a: "key", target: null } : null),
-      act: () => this.doorAct("key"),
-    }),
-    this.carryReach(true),
-    this.seekReach,
-    // The last note (#882): by the mouse door's mat, before the big door and the lantern by the gate, whose reach covers the mat.
-    reachable<string>({
-      shown: null,
-      reach: () => {
-        const id = this.jokes.noteInReach(this.x, this.z, slack(this.reach === "read"));
-        return id ? { a: "read", target: id } : null;
-      },
-      act: (_, id) => this.openNote(id),
-    }),
-    reachable<DoorAction>({
-      shown: null,
-      reach: () => {
-        const d = this.door;
-        // The two lanterns by the gate stand in the door's reach: whichever is nearer comes first.
-        const lamp = this.lampInReach();
-        const lampNear = lamp < 0 ? Infinity : Math.hypot(this.lanterns.spot(lamp)[0] - this.x, this.lanterns.spot(lamp)[1] - this.z);
-        const near = d.state !== "open" && this.inReach("try", slack(this.reach === "try" || this.reach === "open")) && Math.hypot(this.x - this.layout.gate.x, this.z - this.layout.bounds.maxZ) <= lampNear;
-        if (!near) return null;
-        const a = d.state === "held" ? "open" : "try";
-        return { a, target: a };
-      },
-      act: (_, a) => this.doorAct(a),
-    }),
-    reachable({
-      shown: null,
-      reach: () => (this.lookoutThings?.byStool(this.x, this.z, slack(this.reach === "stool")) ? { a: "stool", target: null } : null),
-      act: () => {
-        if (this.walker.kind !== "seated") this.sit("stool");
-      },
-    }),
-    reachable({
-      shown: null,
-      reach: () => (this.lookoutThings?.byDiary(this.x, this.z, slack(this.reach === "diary")) ? { a: "diary", target: null } : null),
-      act: () => this.openDiary(),
-    }),
-    this.lanternReach,
-    reachable({
-      shown: null,
-      reach: () => {
-        const near = slack(this.reach === "read");
-        const id = this.notes.reachAt(this.x, this.z, this.yaw, this.pitch, EYE, near) ?? (this.stile?.inReach(this.x, this.z, near) ? this.stile.unopened() : null);
-        return id ? { a: "read", target: id } : null;
-      },
-      act: (_, id) => this.openNote(id),
-      mark: (id) => this.notes.lift(id),
-    }),
-    this.carryReach(false),
-    reachable({
-      shown: null,
-      reach: () => (Math.hypot(this.x - this.bench.x, this.z - this.bench.z) < BENCH_REACH + slack(this.reach === "sit") ? { a: "sit", target: null } : null),
-      act: () => {
-        if (this.walker.kind !== "seated") this.sit("bench");
-      },
-    }),
-    this.toyReach,
-    this.plantReach,
-  ];
-
-  /**
-   * Tell the page what the action button does now (#334): the first thing in
-   * `reachables` in reach. With nothing in reach, no button (#835): when it
-   * shows, it has something to do. The button's name says what it does, so
-   * nothing in reach flashes (#689).
+   * Tell the page what the action button does now (#334): what reachCore.ts
+   * offers from where the walker stands. With nothing in reach, no button
+   * (#835): when it shows, it has something to do. The button's name says what
+   * it does, so nothing in reach flashes (#689). Where the target could be one
+   * of several alike, show which one quietly: a note lifts off the wall, a
+   * plant stands a little taller.
    */
   private reportReach() {
-    let won: Reachable<unknown> | null = null;
-    let got: { a: Reach; target: unknown } | null = null;
-    for (const t of this.reachables) {
-      got = t.reach();
-      if (got) {
-        won = t;
-        break;
-      }
-    }
-    const a = got ? got.a : null;
-    const target = got ? got.target : null;
-    // Targets are made once (Carry.reachAt, Toys.reachAt), so the same target is the same object.
-    if (a === this.reach && won === this.reacher && (won === null || target === won.shown)) return;
-    this.reach = a;
-    this.reacher = won;
-    for (const t of this.reachables) {
-      t.shown = t === won ? target : null;
-      t.mark?.(t.shown);
-    }
-    this.cb.onReach(a);
+    const got = R.offerAt(this.me, this.things, this.offer);
+    if (R.same(got, this.offer)) return;
+    this.offer = got;
+    this.notes.lift(got?.on === "note" ? got.target : null);
+    this.plants.ready(got?.on === "plant" ? got.target : null);
+    this.cb.onReach(got ? got.a : null);
   }
 
   /** For dev tools only, through the window.__garden handle (e2e/look.run.ts, #974): the walk now, as plain data. It changes nothing. */
@@ -2340,8 +2200,8 @@ export class GardenScene {
       seat: w.kind === "seated" ? w.on : null,
       time: this.shown,
       elapsed: this.elapsed,
-      reach: this.reach,
-      inReach: this.reachables.flatMap((r) => r.reach()?.a ?? []),
+      reach: this.offer ? this.offer.a : null,
+      inReach: R.offersAt(this.me, this.things, this.offer).map((o) => o.a),
       things: thingsInView(this.camera, this.hitBoxes, this.hitDiscs, this.stileSpot),
     };
   }

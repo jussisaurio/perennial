@@ -7,7 +7,6 @@
 // the last: the same lantern, blown out and lit the same way (#858).
 
 import * as THREE from "three";
-import { REACH_SLACK } from "./reach";
 import { lanternSpots } from "./world";
 import { rayBox, spriteBox, type HitBox, type Ray } from "./scenery";
 import type { Conditions } from "./conditions";
@@ -16,8 +15,6 @@ import { hillY, type Lookout } from "./lookout";
 import { sprites, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import * as T from "./textures";
 
-/** Near enough to a lantern (m, from its post) to blow it out or light it. */
-export const LANTERN_REACH = 1.5;
 /** A lantern's sprite (m). */
 const LANTERN = { w: 0.42, h: 1.26 };
 
@@ -28,9 +25,10 @@ export class Lanterns implements Part {
   lookout = -1;
   /** Which lanterns are lit when it is dark, by index: the garden's, then the lookout's. */
   readonly on: boolean[] = [];
-  private dark = false;
+  /** Dusk or night: the lanterns are lit. reachCore.ts reads it, and where each stands. */
+  dark = false;
   /** Where each lantern stands, by index: [x, y, z]. */
-  private at: [number, number, number][] = [];
+  at: [number, number, number][] = [];
   private boxes: HitBox[] = [];
   private lit!: THREE.InstancedBufferAttribute;
   private unlit!: THREE.InstancedBufferAttribute;
@@ -105,23 +103,6 @@ export class Lanterns implements Part {
   /** It is dark, and every lantern in the garden is out. */
   get allOut(): boolean {
     return this.dark && this.on.every((on, i) => i === this.lookout || !on);
-  }
-
-  /** The lookout's lantern while they are lit, at dusk and night, or -1. */
-  get lookoutLamp(): number {
-    return this.dark ? this.lookout : -1;
-  }
-
-  /** The lantern nearest (x, z) in reach while it is dark, or -1; the one the button shows now (`held`) stays in reach REACH_SLACK farther (#838). Runs every frame: no allocation. */
-  inReach(x: number, z: number, held: number): number {
-    if (!this.dark) return -1;
-    let best = -1;
-    let bestD = Infinity;
-    for (let i = 0; i < this.at.length; i++) {
-      const d = Math.hypot(this.at[i][0] - x, this.at[i][2] - z);
-      if (d < bestD && d < LANTERN_REACH + (i === held ? REACH_SLACK : 0)) [best, bestD] = [i, d];
-    }
-    return best;
   }
 
   /** The lantern a ray meets first while it is dark, and how far along the ray. */

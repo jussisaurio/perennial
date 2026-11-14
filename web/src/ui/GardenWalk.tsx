@@ -14,7 +14,8 @@ import { chunkLabel, nextChunk } from "../data/practice";
 import { track } from "../observability";
 import { DOOR_SPOKEN, keyHelp, keySpot, type KeySpot, type PlacedPlant } from "../garden/world";
 import { plantsFromLearner, stageSentence, THIRSTY, type PlantSource } from "../garden/plants";
-import type { DoorState, GardenScene, Label, Reach, TimeOfDay, WalkIntoEvent } from "../garden/scene";
+import type { DoorState, GardenScene, Label, TimeOfDay, WalkIntoEvent } from "../garden/scene";
+import { REACH_NAME, type Reach } from "../garden/reachCore";
 import type { TapHit } from "../garden/scenePart";
 import type { Hider } from "../garden/sceneVisitors";
 import type { Hideout } from "../garden/kinds/kind";
@@ -268,29 +269,6 @@ const GLYPH = {
 /** A walk icon at 2 px a pixel: the stroke of the pixel font beside it. */
 const Glyph = ({ name }: { name: keyof typeof GLYPH }) => <PixelIcon rows={GLYPH[name]} cell={2} />;
 
-/**
- * The action button (#334) shows only an icon, which changes shape with what it
- * does: you find out by pressing it. A screen reader hears what it does, said
- * plainly: mystery must not lock anyone out.
- */
-const REACH_NAME: Record<Reach, string> = {
-  try: "Try the door",
-  key: "Pick up the key",
-  open: "Open the door with the key",
-  sit: "Sit on the bench",
-  stand: "Stand up",
-  shake: "Shake the plant",
-  "lift-pebble": "Pick up the pebble",
-  throw: "Throw it",
-  blow: "Blow the dandelion",
-  snuff: "Blow out the lantern",
-  light: "Light the lantern",
-  well: "Drop it in the well",
-  seek: "Found you",
-  read: "Read the note",
-  stool: "Sit on the stool",
-  diary: "Read the diary",
-};
 /** An open hand, in pixels: try the door, pick up the key. */
 const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
 const REACH_ICON: Record<Reach, readonly string[]> = {
