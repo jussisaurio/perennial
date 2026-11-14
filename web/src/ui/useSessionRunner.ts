@@ -20,7 +20,7 @@ import { sessionPlan } from "../data/practice";
 import { grownSpans } from "../data/reading";
 import type { Refused } from "../data/store";
 import { growthOn, type GrowthMoment, type PlantLook } from "./Growth";
-import { GARDEN_VISITOR_ART, type PixelArt } from "../garden/visitorArt";
+import { GARDEN_VISITOR_ART, type Cutout } from "../garden/visitorArt";
 import { broughtVisitor } from "./visitors";
 
 export interface Card {
@@ -363,7 +363,7 @@ export function useSessionRunner({ lang, minutes, onExit, grow }: { lang: string
    * summary then says it came. No line during the session: it would stay after
    * the visitor left and cover the next card.
    */
-  const visitorArrives = (wordId: string): PixelArt | undefined => {
+  const visitorArrives = (wordId: string): Cutout | undefined => {
     const garden = live.current?.deck.byId.get(wordId)?.garden;
     const art = garden && GARDEN_VISITOR_ART[garden];
     if (!art) return undefined;

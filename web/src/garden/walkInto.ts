@@ -7,7 +7,7 @@
 
 import type { PlacedTree } from "./orchard";
 import type { Frame } from "./scenePart";
-import type { PixelArt } from "./visitorArt";
+import type { PixelArt } from "./pixelArt";
 import { shedAt } from "./shed";
 import { hash01 } from "../lib/seed";
 import { benchAt, KEY_SPOTS, keyAt, lanternSpots, sunflowerAt, WALKER, type Layout } from "./world";

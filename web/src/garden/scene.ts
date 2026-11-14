@@ -309,12 +309,12 @@ export class GardenScene {
         bedTop: BED_H,
         // The plant's own drawn height (its genome and meaning too), as its sprite shows it.
         plantTop: (p) => BED_H + (plantHeightOf(p.lemma, p.growth, 1) / T.VIEW_H) * SPRITE_H * PLANT_SCALE,
-        sprite: (tex, x, y, z, u, uw, size) => {
-          const mesh = sprites(tex, [{ x, y, z, u, v: 0, uw, vh: 1, phase: 0, droop: 0, scale: 1, index: -6 }], size, size);
+        sprite: (tex, x, y, z, u, v, uw, vh, size) => {
+          const mesh = sprites(tex, [{ x, y, z, u, v, uw, vh, phase: 0, droop: 0, scale: 1, index: -6 }], size, size);
           mesh.material.uniforms.uSway.value = 0;
           return mesh;
         },
-        lying: (tex, x, y, z, u, uw, vh, size) => sprites(tex, [{ x, y, z, u, v: 0, uw, vh, phase: 0, droop: 0, scale: 1, index: -6 }], size, size * vh, true),
+        lying: (tex, x, y, z, u, v, uw, vh, lying, size) => sprites(tex, [{ x, y, z, u, v, uw, vh, phase: 0, droop: 0, scale: 1, index: -6 }], size, size * lying, true),
       },
       visitors.list,
     );

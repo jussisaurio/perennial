@@ -9,7 +9,7 @@ import type { Conditions } from "../conditions";
 import { wayNear, type Ground } from "../ground";
 import type { Frame } from "../scenePart";
 import type { Spots } from "../spots";
-import type { PixelArt } from "../visitorArt";
+import type { Cutout } from "../visitorArt";
 import type { FrogWords, VisitorId } from "../visitors";
 import type { Layout } from "../world";
 
@@ -128,15 +128,15 @@ export interface Visitor<F extends string> {
 
 export interface VisitorKind<F extends string = string> {
   id: VisitorId;
-  /** Its frames in the shared visitor atlas (32×32 cells, standing on the bottom row). */
-  art: Record<F, PixelArt>;
+  /** Its frames in the shared visitor atlas (cells of 32×32 units, standing on the bottom). */
+  art: Record<F, Cutout>;
   /** The drawn part: its middle height and half width and height, as fractions of the cell. Default [0.2, 0.4, 0.3]. */
   hit?: [number, number, number];
   /** Where its tag sits, as a fraction of the cell's height. Default 0.55. */
   top?: number;
   /** How near you come before its tag shows, for an "approach" tag (m). Default 1.5. */
   tagRange?: number;
-  /** It lies flat, seen from above (the fish), showing the rows its art fills at the bottom of the cell. */
+  /** It lies flat, seen from above (the fish), showing the part its art fills at the bottom of the cell. */
   lying?: boolean;
   /** A small light it carries (the gnome's lantern): where in its cell (fractions, x toward the camera's right) and how big (m). */
   glow?: { dx: number; dy: number; size: number };

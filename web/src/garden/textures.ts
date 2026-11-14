@@ -9,6 +9,7 @@ import { rng } from "../lib/seed";
 import type { PlacedPlant } from "./world";
 export { VIEW_H } from "./plantCanvas";
 import * as Art from "./visitorArt";
+import { runs } from "./pixelArt";
 import * as CarryArt from "./carryArt";
 import * as ToyArt from "./toyArt";
 import { CELL_H_PX, CELL_W, FRUIT_KINDS, fruitArt, LOOKS, TREE_SHAPES, TRELLIS } from "./orchardArt";
@@ -1151,8 +1152,8 @@ export function doormat(word: string | null): OffscreenCanvas {
 /** The fish that jumps (#364), from the side, head to the right. */
 export function leapingFish(): OffscreenCanvas {
   const art = Art.LEAPING_FISH;
-  const [c, ctx] = canvas(art.rows[0].length, art.rows.length);
-  for (const r of Art.runs(art)) px(ctx, r.x, r.y, r.fill, r.w, 1);
+  const [c, ctx] = canvas(art.w * VISITOR_PX, art.h * VISITOR_PX);
+  cutout(ctx, art, 0, 0, VISITOR_PX);
   return c;
 }
 
@@ -1531,17 +1532,44 @@ export function sunflower(): OffscreenCanvas {
 
 // ---- Visitors ---------------------------------------------------------------
 
+/** Texels to a unit of the visitors' art: about one to a screen pixel when one is close in the walk. */
+const VISITOR_PX = 8;
+/** Cells in a row of the visitors' atlas: 8 cells of 32 units keep it 2048 texels wide, which every GPU takes. */
+export const VISITOR_COLS = 8;
+
+/** Draws a paper cut-out with its top left at (x, y), `scale` texels to a unit. */
+function cutout(ctx: OffscreenCanvasRenderingContext2D, art: Art.Cutout, x: number, y: number, scale: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  for (const p of art.pieces) {
+    const path = new Path2D(p.d);
+    if (p.fill) {
+      ctx.fillStyle = p.fill;
+      ctx.fill(path);
+    }
+    if (p.line) {
+      ctx.strokeStyle = p.line.color;
+      ctx.lineWidth = p.line.width;
+      ctx.stroke(path);
+    }
+  }
+  ctx.restore();
+}
+
 /**
- * The garden visitors' frames in one small atlas (drawn once): one 32×32 cell
- * each, in this order, standing on the bottom row (kinds/index.ts lists them).
+ * The garden visitors' frames in one atlas (drawn once): one cell of 32×32 units each, in this order, VISITOR_COLS
+ * to a row, standing on the bottom of the cell (kinds/index.ts lists them).
  */
-export function visitors(arts: readonly Art.PixelArt[]): OffscreenCanvas {
-  const [c, ctx] = canvas(32 * arts.length, 32);
+export function visitors(arts: readonly Art.Cutout[]): OffscreenCanvas {
+  const cell = 32 * VISITOR_PX;
+  const [c, ctx] = canvas(VISITOR_COLS * cell, Math.ceil(arts.length / VISITOR_COLS) * cell);
   arts.forEach((art, i) => {
-    const w = art.rows[0].length;
-    const ox = i * 32 + Math.floor((32 - w) / 2);
-    const oy = 32 - art.rows.length;
-    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+    const ox = (i % VISITOR_COLS) * cell + Math.floor((32 - art.w) / 2) * VISITOR_PX;
+    const oy = Math.floor(i / VISITOR_COLS) * cell + (32 - art.h) * VISITOR_PX;
+    cutout(ctx, art, ox, oy, VISITOR_PX);
   });
   return c;
 }
@@ -1557,7 +1585,7 @@ export function fruitAtlas(): OffscreenCanvas {
   FRUIT_KINDS.map(fruitArt).forEach((art, i) => {
     const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
     const oy = 32 - art.rows.length;
-    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+    for (const r of runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
   });
   return c;
 }
@@ -1569,7 +1597,7 @@ const PILE_CELL = 16;
 export function leafPile(): OffscreenCanvas {
   const [c, ctx] = canvas(PILE_CELL, PILE_CELL);
   const oy = PILE_CELL - LEAF_PILE.rows.length;
-  for (const r of Art.runs(LEAF_PILE)) px(ctx, r.x, oy + r.y, r.fill, r.w, 1);
+  for (const r of runs(LEAF_PILE)) px(ctx, r.x, oy + r.y, r.fill, r.w, 1);
   return c;
 }
 
@@ -1588,7 +1616,7 @@ export function carryAtlas(): OffscreenCanvas {
   [CarryArt.PEBBLE, ...rings, CarryArt.WELL].forEach((art, i) => {
     const ox = i * 32 + Math.floor((32 - art.rows[0].length) / 2);
     const oy = 32 - art.rows.length;
-    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+    for (const r of runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
   });
   return c;
 }
@@ -1607,7 +1635,7 @@ export function toyAtlas(): OffscreenCanvas {
   [ToyArt.CLOCK, ToyArt.BLOWN].forEach((art, i) => {
     const ox = i * TOY_W + Math.floor((TOY_W - art.rows[0].length) / 2);
     const oy = TOY_H - art.rows.length;
-    for (const r of Art.runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
+    for (const r of runs(art)) px(ctx, ox + r.x, oy + r.y, r.fill, r.w, 1);
   });
   return c;
 }

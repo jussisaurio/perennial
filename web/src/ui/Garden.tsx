@@ -15,8 +15,8 @@ import { meaningOf } from "./meaning";
 import { hash01 } from "../lib/seed";
 import { stripPlaces } from "../garden/stripPlaces";
 import { growthOf, leanDeg, plantSteps, showcasePlants, stageLabel, THIRSTY, type GardenPlant, type PlantSource } from "../garden/plants";
-import { BIRD, BUTTERFLY, BUTTERFLY_CLOSED, CAT_ASLEEP, DOG, FISHBOWL, FROG, FROG_ASLEEP, MOLE, SNAIL, WATERING_CAN, WORM_ASLEEP, type PixelArt } from "../garden/visitorArt";
-import { PixelRects } from "./pixel";
+import { BIRD, BUTTERFLY, BUTTERFLY_CLOSED, CAT_ASLEEP, DOG, FISHBOWL, FROG, FROG_ASLEEP, MOLE, NOTE_PIN, SNAIL, WATERING_CAN, WORM_ASLEEP, type Cutout } from "../garden/visitorArt";
+import { CutoutShapes } from "./cutout";
 import { stripVisitor, visitor, type VisitorId, type VisitorView } from "../garden/visitors";
 import { shortDay } from "./format";
 import { isSleepyHour, keepsakeLabel, neighbourPerks, sleeperId } from "../garden/whimsy";
@@ -115,26 +115,6 @@ interface GardenProps {
   /** Which strip this is, for the e2e tests: the landing page's and Today's can be on screen together. */
   testId?: string;
 }
-
-/** A gardener's note pinned up, unread (#654): paper with pencil lines, held by a red pin, a little crooked. */
-const NOTE_PIN: PixelArt = {
-  rows: [
-    "....rr.....",
-    "...rRRr....",
-    "..eerrees..",
-    ".epppppppe.",
-    ".epllllppe.",
-    ".eppppppe..",
-    ".epllllpe..",
-    ".eppppppe..",
-    "..epllpppe.",
-    "..eppppppe.",
-    "..epllllpe.",
-    "..eppppppfe",
-    "..eeeeeeee.",
-  ],
-  pal: { r: "#c24a3a", R: "#f08070", e: "#8a7656", p: "#fbf3df", l: "#9aa6b4", f: "#d8ccae", s: "#8a7656" },
-};
 
 function Strip({ data, lang, highlight, compact, showcase, onView, visitors, replay, pinned, width }: GardenProps & { width: number }) {
   const scroller = useRef<HTMLDivElement>(null);
@@ -358,7 +338,7 @@ function Strip({ data, lang, highlight, compact, showcase, onView, visitors, rep
           {seedLayers(seeds, (scrolls ? fullWidth - width : 0) + 24, width - 48).map((d, i) => (
             <path key={i} className="seed" d={d} />
           ))}
-          {empty && <PixelSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
+          {empty && <CutoutSprite art={WATERING_CAN} scale={2} x={width / 2 + 96} y={GROUND + 7} />}
         </svg>
         {(["snail", "cat", "bird", "frog", "dog", "fish", "butterfly"] as const).map(view).map((v) => {
           if (!v) return null;
@@ -405,9 +385,9 @@ function Strip({ data, lang, highlight, compact, showcase, onView, visitors, rep
       )}
       {data && data.total === 0 && !stake && <p className="garden-empty">Your words will grow here.</p>}
       {pinned && (
-        <svg className="garden-pin" width={NOTE_PIN.rows[0].length * 2} height={NOTE_PIN.rows.length * 2} viewBox={`0 0 ${NOTE_PIN.rows[0].length} ${NOTE_PIN.rows.length}`} role="img">
+        <svg className="garden-pin" width={NOTE_PIN.w * 2} height={NOTE_PIN.h * 2} viewBox={`0 0 ${NOTE_PIN.w} ${NOTE_PIN.h}`} role="img">
           <title>A new note in the shed</title>
-          <PixelRects art={NOTE_PIN} />
+          <CutoutShapes art={NOTE_PIN} />
         </svg>
       )}
       {hover && (
@@ -466,12 +446,12 @@ type TipVisitor = { id: string; word: string | null; gloss: string };
  * follow the plant's lean, as recall fades. `top`
  * is the sprite's top edge (default: on the soil).
  */
-function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale: number }, night: boolean): { art: PixelArt; scale: number; x: number; top?: number } | null {
+function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale: number }, night: boolean): { art: Cutout; scale: number; x: number; top?: number } | null {
   const h = plantHeight(l.p.lemma, l.p.growth, l.scale);
   const lean = (leanDeg(l.p.id, l.p.r) * Math.PI) / 180;
   // A point at fraction t up the stem: StripPlant rotates the whole plant about its foot.
   const onStem = (t: number) => ({ x: l.x + Math.sin(lean) * h * t, y: l.y - Math.cos(lean) * h * t });
-  const tall = (art: PixelArt, scale: number) => art.rows.length * scale;
+  const tall = (art: Cutout, scale: number) => art.h * scale;
   switch (id) {
     case "cat":
       return { art: CAT_ASLEEP, scale: 1.5, x: l.x + 11 };
@@ -503,12 +483,11 @@ function atPlant(id: VisitorId, l: { p: GardenPlant; x: number; y: number; scale
 }
 
 /**
- * A visitor in the strip, standing on the soil line: a small pixel sprite in a
+ * A visitor in the strip, standing on the soil line: a small paper sprite in a
  * button, so it can be focused and tapped. Hover, focus or tap shows its word.
  */
-function VisitorMark({ v, art, x, scale, onShow, onHide, top, at }: { v: TipVisitor; art: PixelArt; x: number; scale: number; onShow: (x: number) => void; onHide: () => void; top?: number; at?: string }) {
-  const w = art.rows[0].length;
-  const h = art.rows.length;
+function VisitorMark({ v, art, x, scale, onShow, onHide, top, at }: { v: TipVisitor; art: Cutout; x: number; scale: number; onShow: (x: number) => void; onHide: () => void; top?: number; at?: string }) {
+  const { w, h } = art;
   return (
     <button
       type="button"
@@ -523,20 +502,19 @@ function VisitorMark({ v, art, x, scale, onShow, onHide, top, at }: { v: TipVisi
       onBlur={onHide}
       onClick={() => onShow(x)}
     >
-      <svg width={w * scale} height={h * scale} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" aria-hidden="true">
-        <PixelRects art={art} />
+      <svg width={w * scale} height={h * scale} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+        <CutoutShapes art={art} />
       </svg>
     </button>
   );
 }
 
-/** Pixel art as SVG rects, standing on (x, y): for things in the strip that are not buttons. */
-function PixelSprite({ art, x, y, scale }: { art: PixelArt; x: number; y: number; scale: number }) {
-  const w = art.rows[0].length;
-  const h = art.rows.length;
+/** A paper cut-out standing on (x, y): for things in the strip that are not buttons. */
+function CutoutSprite({ art, x, y, scale }: { art: Cutout; x: number; y: number; scale: number }) {
+  const { w, h } = art;
   return (
-    <g transform={`translate(${(x - (w * scale) / 2).toFixed(1)} ${(y - h * scale).toFixed(1)}) scale(${scale})`} shapeRendering="crispEdges" aria-hidden="true">
-      <PixelRects art={art} />
+    <g transform={`translate(${(x - (w * scale) / 2).toFixed(1)} ${(y - h * scale).toFixed(1)}) scale(${scale})`} aria-hidden="true">
+      <CutoutShapes art={art} />
     </g>
   );
 }
@@ -594,8 +572,8 @@ function Keepsake({ x, text }: { x: number; text: string }) {
  */
 function MoleHole({ v, x, up, onShow, onHide }: { v: TipVisitor; x: number; up: boolean; onShow: (x: number) => void; onHide: () => void }) {
   const scale = 2;
-  const w = MOLE.rows[0].length * scale;
-  const h = MOLE.rows.length * scale;
+  const w = MOLE.w * scale;
+  const h = MOLE.h * scale;
   return (
     <div className={up ? "mole up" : "mole"} style={{ left: x - w / 2 - 6, top: GROUND + 9 - h, width: w + 12, height: h }}>
       <div className="mole-body" inert={!up}>

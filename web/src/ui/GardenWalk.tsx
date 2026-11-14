@@ -31,7 +31,7 @@ import { yieldToBrowser } from "../lib/yield";
 import { useGardenScene, useWalkInput, type Store } from "./useGardenScene";
 import { dayNumber } from "../core/day";
 import { gardenBroughtAt, learnerVisitors, type LearnerVisitors } from "./visitors";
-import type { PixelArt } from "../garden/visitorArt";
+import type { PixelArt } from "../garden/pixelArt";
 import { SILENT_FROG } from "../garden/visitors";
 import type { CarryAct, CarryDone } from "../garden/carry";
 import { PEBBLE } from "../garden/carryArt";

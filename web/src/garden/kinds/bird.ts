@@ -21,8 +21,8 @@ type Look = "sit" | "hop";
 
 export const bird: VisitorKind<Look> = {
   id: "bird",
-  // Two empty rows under the hop: it is in the air.
-  art: { sit: BIRD, hop: { ...BIRD_HOP, rows: [...BIRD_HOP.rows, "", ""] } },
+  // Two empty units under the hop: it is in the air.
+  art: { sit: BIRD, hop: { ...BIRD_HOP, h: BIRD_HOP.h + 2 } },
   arrive({ spots, now, reducedMotion }) {
     const tree = spots.trees.find((t) => t.who === "bird");
     const body = tree ? bodyAt<Look>(tree.x, tree.y, tree.z, "sit") : bodyAt<Look>(...daily(spots.perches, "visitor-bird-spot", now), "sit");

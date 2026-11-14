@@ -7,8 +7,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FORM, PlantForm, plantFrame, plantTop, stemHeight, stemPoint } from "./plant";
 import { growthOf } from "../garden/plants";
 import type { PlantStage } from "../core/memory";
-import type { PixelArt } from "../garden/visitorArt";
-import { PixelRects } from "./pixel";
+import type { Cutout } from "../garden/visitorArt";
+import { CutoutShapes } from "./cutout";
 import { WateringCanIcon, WateringCanOffIcon } from "./icons";
 
 export interface PlantLook {
@@ -23,7 +23,7 @@ export interface GrowthMoment {
   /** A new word: its seed is planted first. */
   planted: boolean;
   /** A garden word's visitor (#209), arriving with this first good answer. */
-  visitor?: PixelArt;
+  visitor?: Cutout;
   /**
    * A remembered word that was hard: back on its retry after "I forgot", or likely
    * forgotten. More water and a little spring, so the feedback fits the answer (#412).
@@ -195,9 +195,8 @@ function WateringCan({ e, side, growStart, growMs, drops }: { e: number; side: n
 }
 
 /** A garden word's visitor (#209) hops in along the soil from the left, and stops beside the plant. */
-function Visitor({ art, e, side, until }: { art: PixelArt; e: number; side: number; until: number }) {
-  const w = art.rows[0].length;
-  const h = art.rows.length;
+function Visitor({ art, e, side, until }: { art: Cutout; e: number; side: number; until: number }) {
+  const { w, h } = art;
   // About a third of the frame wide, whatever the plant's size: it should read as an animal, not a crumb.
   const k = (side * 0.34) / w;
   const t = clamp01(e / Math.max(1, until));
@@ -205,8 +204,8 @@ function Visitor({ art, e, side, until }: { art: PixelArt; e: number; side: numb
   // Three small hops on the way in.
   const hop = Math.abs(Math.sin(t * Math.PI * 3)) * side * 0.04 * (1 - t);
   return (
-    <g transform={`translate(${x - (w * k) / 2} ${3 - h * k - hop}) scale(${k})`} shapeRendering="crispEdges">
-      <PixelRects art={art} />
+    <g transform={`translate(${x - (w * k) / 2} ${3 - h * k - hop}) scale(${k})`}>
+      <CutoutShapes art={art} />
     </g>
   );
 }

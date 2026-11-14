@@ -377,7 +377,7 @@ section { margin-bottom: 1.25rem; }
 .garden-strip { position: relative; }
 .garden svg { display: block; overflow: visible; }
 /* An unread gardener's note (#654): pinned up in the strip's corner, quiet, leading nowhere. */
-.garden-pin { position: absolute; top: 8px; right: 18px; image-rendering: pixelated; }
+.garden-pin { position: absolute; top: 8px; right: 18px; }
 .garden-scroll { position: relative; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
 .garden-scroll::-webkit-scrollbar { display: none; }
 .garden-arrows { margin-left: auto; display: inline-flex; gap: 0.35rem; }

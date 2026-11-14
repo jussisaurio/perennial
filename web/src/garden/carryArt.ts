@@ -1,9 +1,9 @@
 // Pixel art for the loose things you carry (#358, garden/carry.ts), in
-// visitorArt.ts's style: a pebble, the orchard's well, and the rings a
+// pixelArt.ts's style: a pebble, the orchard's well, and the rings a
 // splash makes. Drawn into the walk's texture (textures.ts carryAtlas) and, for
 // what you hold, into the page (GardenWalk.tsx).
 
-import type { PixelArt } from "./visitorArt";
+import type { PixelArt } from "./pixelArt";
 
 const STONE = { o: "#4a4440", S: "#9a948a", s: "#7a746a", w: "#c8c2b6" };
 

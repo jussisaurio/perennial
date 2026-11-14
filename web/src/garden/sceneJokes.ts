@@ -136,7 +136,7 @@ export class Jokes implements Part {
 
     // The fish, and the rings where it goes in and comes out: hidden until it leaps.
     this.pond = L.pond;
-    this.fish = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), mat(T.pixelTexture(T.leapingFish()), { alphaTest: 0.5, side: THREE.DoubleSide }));
+    this.fish = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), mat(T.paperTexture(T.leapingFish()), { alphaTest: 0.5, side: THREE.DoubleSide }));
     this.fish.visible = false;
     c.scene.add(this.fish);
     const ring = T.pixelTexture(T.ripple());
