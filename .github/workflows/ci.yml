@@ -9,12 +9,13 @@ on:
   # Runs every job on a branch, e2e too: `gh workflow run CI --ref <branch>` (docs/agents.md, "PR and merge").
   workflow_dispatch:
 
-# A new push to a PR cancels the PR's older run. On main each commit has its own group, so no
-# merge cancels the run before it: every merge gets a verdict, and Railway's Wait for CI never
-# sees a cancelled run, which it lets deploy when another workflow on the commit passed (#994).
+# A new push to a PR cancels the PR's older run. On main the run in progress always finishes, so
+# main gets a verdict that Railway can deploy (#994). GitHub keeps one pending run per group: a
+# new merge replaces it, so the next run tests the newest commit. One run per merge queued for
+# hours behind a busy hour of merges (#1064). The alarm names the merges between two verdicts.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: true
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
