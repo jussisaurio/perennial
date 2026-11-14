@@ -1,0 +1,714 @@
+[
+ {
+  "case": "card",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | Anyone can see the \"Next plant\" and \"←\" buttons on the card, and each press moves the camera to a new spot. The \"Julio\" sign is close in 1 and gone in 2 and 3, and the \"Agosto\" sign shifts on phone. That makes it a travel button, which the rules allow only as the screen-reader-only Next plant control.",
+   "serious | 3-phone.png | After the third press, the selected plant's purple bloom sits half under the card and the yellow pointer arrow is hidden behind it. On a phone you can't see which plant the card is about.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png, 1-desktop.png | The previous-plant button is a bare \"←\" with no label next to \"Next plant →\", so the pair doesn't say what it does. On phone it is the same glyph as the top-left Back button just above it, so the two are easy to mix up.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The card thumbnail for \"de\" and \"que\" is a pale, faded bare stem, but the text says \"In bloom\" and the 3D plant has a flower. It doesn't match the plant's state and looks unfinished.",
+   "minor | 1-desktop.png, 1-phone.png, 3-desktop.png | Floating word labels collide. \"de\" and \"y\" overlap and read as \"dey\", and in 3-desktop \"lo\" and \"en\" sit on top of flowers.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png | The camera stops with signs pressed against the lens. The \"Julio\" board fills the left third, a blank brown board fills the left edge in 2-desktop, and a cut-off \"de · 13 jul\" stake sticks out under the card and at the bottom edge. The frames look messy.",
+   "minor | 3-desktop.png | The yellow pointer arrow sits right on the selected bloom and covers part of the flower it points at."
+  ]
+ },
+ {
+  "case": "card",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | Sighted users can see the \"Next plant\" button on the card, and it moves their view. Each press shifts the viewpoint: the Agosto sign, the \"Julio\" sign and the \"de · 13 jul\" bed sign slide across the screen between shots. The rules allow a button that moves you only as the screen-reader-only Next plant button. A visible button must never be used for travel.",
+   "serious | 3-phone.png | The card covers the pointer arrow and the top of the selected plant \"a\". Only a sliver of the arrow's stem shows under the card's bottom edge. On phone, the camera framing leaves no room below the card for the selected plant.",
+   "minor | 1-desktop.png, 1-phone.png, 3-desktop.png | The floating word labels collide: \"de\" and \"y\" overlap and read as \"dey\", and the \"a\" label sits on its own flower head. In 3-desktop the arrow also covers the top petals of the selected flower. The labels are small light-grey text on a pale sky, so they are hard to read.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The card thumbnails for \"de\" and \"que\" show a white flower on a cream square. The flower is almost invisible, so the picture looks like a bare stem while the text says \"In bloom\".",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | In the pixel font the gloss separator \";\" looks like a colon, so \"to; at\" and \"of; from\" read like a label and a value (\"to: at\"). A comma or a slash would be clearer for learners who do not speak English as a first language.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | Two plain \"←\" buttons with different results are close together: Back at the top left, and the previous-plant button on the card. On the card, \"←\" sits next to \"Next plant →\" but does not say \"Previous plant\", so the label alone does not predict the outcome.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png | After Next plant, the camera stops too close to wooden signs. A huge \"Julio\" sign, a blank sign back (2-desktop) and the \"de · 13 jul\" plank fill the foreground. The screen edge and the card cut the plank, so it looks like a clipped UI bar."
+  ]
+ },
+ {
+  "case": "card",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | \"Next plant\" is a visible button that moves the learner. Between shots, near objects (the Julio sign, the lantern, the \"de · 13 jul\" bed sign) slide by hundreds of pixels while the far trees barely move, so the camera travels and does not just turn. The rules allow a button that moves you only for the screen-reader-only Next plant, so this breaks \"the garden is physical\".",
+   "serious | 1-phone.png, 3-phone.png | On phone the card covers the plant it describes. The card's bottom edge cuts the pointer arrow in half in 1-phone. In 3-phone the arrow is fully hidden and the \"a\" flower head sits under the card, so nothing clearly shows which plant the card is about.",
+   "minor | 1-desktop.png, 1-phone.png | The floating word labels \"de\" and \"y\" overlap and read as \"dey\", right under the arrow, so the current plant's own label is hard to read.",
+   "minor | 3-desktop.png | The arrow tip sits on the \"a\" flower and covers its top petals, when it should stop just above the flower.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png | The camera stops with signs crowding the frame. A huge \"Julio\" sign fills the left third of 1-desktop, and the \"de · 13 jul\" bed sign is cut off under the card and at the bottom edge, which looks messy.",
+   "minor | 1-desktop.png, 1-phone.png (all shots) | The card's icon-only \"←\" has no label next to \"Next plant →\", so a first-time user can't tell what it does. On phone the top-left Back button is the same bare \"←\" but leaves the garden, so one symbol has two different outcomes.",
+   "minor | 2-phone.png, 3-phone.png (also 2-desktop.png, 3-desktop.png) | After presses 2 and 3, \"Next plant\" keeps a darker fill, (238,224,186) against (248,240,217) after the first press. On a phone this is a sticky hover or pressed look, so the button looks selected or stuck.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | \"It remembers you too.\" is vague for a non-native reader: it is not clear what it means or whether it describes a state. That goes against the Simple English rule.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png | \"1636 seeds ready\" has no thousands separator (\"1,636\"), which looks unpolished in the header."
+  ]
+ },
+ {
+  "case": "card",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | Anyone can see the \"Next plant\" button, and it moves the player through the garden. Near objects slide much further than far ones between shots: the \"de · 13 jul\" sign moves about 280px per press on desktop while the far pines move about 15px, so the player is moved, not just turned. The rules allow a travel button only as the screen-reader-only Next plant.",
+   "serious | 3-phone.png, 1-phone.png | On phone the card covers the plant it describes. In 3-phone the yellow arrow is fully hidden and the selected purple bloom is cut off behind the card's bottom edge. In 1-phone half of the arrow pokes out under the card like a broken tail. Only 2-phone shows the arrow whole, so the marker comes and goes depending on how tall the plant is.",
+   "minor | 1-desktop.png, 1-phone.png, 3-desktop.png | Word labels pile up. The selected \"de\" overlaps \"y\" and reads as \"dey\". In 3-desktop the arrow sits on the selected bloom, the \"a\" label sits inside the flower's petals and \"lo\" sits on the stem, so the labels are hard to read.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | The top-left Back button and the card's previous-plant button are the same icon-only \"←\" with different results (leave the garden or go back one plant). The label alone does not tell a first-time user which is which.",
+   "minor | 1-desktop.png, 1-phone.png | The view stops right against signs: a huge \"Julio\" board fills the left foreground, and the \"de · 13 jul\" sign is cut in half by the bottom edge of the screen. It looks like a badly placed camera, not a framed shot.",
+   "minor | 2-phone.png, 3-phone.png | After a tap, \"Next plant\" keeps its darker pressed/hover fill on touch, so it looks like a selected state.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | The two meanings are joined with a colon (\"of: from\", \"that: than\", \"to: at\"). This reads like \"word: its meaning\", not two meanings; a comma or slash would be clearer for learners.",
+   "minor | 2-desktop.png, 2-phone.png | The \"que\" thumbnail looks like a bare stem with an almost invisible bud, but the text says \"In bloom\". The picture does not show the state.",
+   "minor | 3-desktop.png, 3-phone.png | \"A good word. Very sure of itself.\" is an idiom that is hard for non-native readers (Simple English rule)."
+  ]
+ },
+ {
+  "case": "climb",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 3-desktop.png, 4-desktop.png, 3-phone.png, 4-phone.png | Walking into the bramble hedge puts the camera inside it. The whole screen fills with stretched, warped leaf texture, and slivers of sky show through gaps in the mesh. The player stops after the camera is already inside the hedge (4 is almost the same view as 3), not at its visible surface, so the hedge does not read as a solid thing you bump into. It looks broken and cheap.",
+   "minor | 1-desktop.png, 1-phone.png | The thorny bramble vine on the right goes through the step planks and the fence rails instead of resting against them. You can see the geometry clipping at the foot of the steps.",
+   "minor | 2-desktop.png, 2-phone.png | The wooden frame on the hilltop looks crooked: the legs splay at different angles and do not meet the top beam cleanly. It also stands right in front of the hedge, so it looks like an open way through that is actually shut."
+  ]
+ },
+ {
+  "case": "climb",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 3-desktop.png, 4-desktop.png, 3-phone.png, 4-phone.png | Walking on across the hilltop puts the camera inside the hedge. The whole screen fills with the hedge's inside faces, and sky shows through gaps at the edges. The player stops (frames 3 and 4 are the same), but the stop point is deeper than the hedge's visible surface, so the hedge does not look solid. You should stop at the outside of the hedge.",
+   "minor | 2-desktop.png, 2-phone.png | The wooden frame on the hilltop looks crooked. Its legs lean at different angles and cross under the top bar, so it looks like a broken model, not a thing someone built.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The icon-only button (a key or glasses shape) next to the labelled \"Practice more\" button gives a first-time user no hint of what it does."
+  ]
+ },
+ {
+  "case": "climb",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 2-desktop.png, 3-desktop.png, 2-phone.png, 3-phone.png, 4-desktop.png, 4-phone.png | Pressing \"Climb over the stile\" puts the view somewhere unrelated: an open meadow facing a lake, with no stile, fence, hedge or path in sight, and on desktop a lantern post at point-blank range. The view stays frozen there for 9+ s, then 0.4 s of W snaps it back onto the stile's top board, still on the stile and not over it. This looks like a teleport or a broken camera, not a climb, and it breaks \"the garden is physical / no teleports\".",
+   "minor | 2-desktop.png, 3-desktop.png, 2-phone.png, 3-phone.png | The action button changes from the stile icon to a staircase icon and has no text. This icon-only button sits next to the labelled \"Practice more\" button, so a first-time user cannot tell what it will do.",
+   "minor | 4-desktop.png, 4-phone.png | A yellow ring appears on the stile button after a W press, and nothing else about the button changes. It is not clear what state the ring shows.",
+   "minor | 1-phone.png | On phone the camera is so close to the stile that its planks fill almost the whole lower half of the screen, and they hide the path ahead. The framing looks cramped.",
+   "minor | 1-desktop.png, 4-desktop.png | The hedges are faceted blobs with stretched pixel textures and jagged polygon outlines. They look cheap next to the clean stile and fence.",
+   "minor | 2-desktop.png | Up close, the lantern is a flat dark box with a plain grey panel and almost no detail. It looks unfinished at this distance."
+  ]
+ },
+ {
+  "case": "climb",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 2-desktop.png, 3-desktop.png, 2-phone.png, 3-phone.png | After one press of \"Climb over the stile\", the view jumps somewhere else: a wide flat meadow, a lake and far hills, with the hilltop lamp post right up against the camera on desktop. The hill, path, hedges and stile that should be ahead are all gone. This is a teleport or camera glitch, and the view stays frozen there for 12 s (frames 2 and 3 are identical).",
+   "serious | 4-desktop.png, 4-phone.png | A 0.4 s tap of W snaps the view back to the top plank of the stile, still facing the same hill from the near side. That is a second jump, not a walk, and it shows the climb never finished: 12 s after the press, the learner has still not crossed the fence.",
+   "minor | 1-desktop.png, 1-phone.png, 4-desktop.png, 4-phone.png | The stile crossing is done by a button (\"Climb over the stile\") that moves the learner, not by walking up the visible steps. This is close to the \"no button for travel\" rule, and the steps look climbable on foot.",
+   "minor | 1-desktop.png, 2-desktop.png, 2-phone.png | The action button has an icon only and no visible label. The arch glyph, and the zigzag stair glyph it changes to in frames 2–3, do not tell a sighted first-time user what will happen. \"Practice more\" next to it does have text.",
+   "minor | 2-desktop.png, 3-desktop.png | The lamp next to the camera is a huge flat block that is cut off at the left edge of the screen. It looks cheap, like an unfinished billboard, not a premium scene."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "minor | 1-phone.png | The camera is so close to the door that the door fills the whole phone screen. No hedge, ground or sky shows, so the scene reads as a flat wall of brown pixels and the learner can't tell where they are.",
+   "minor | 1-desktop.png, 1-phone.png | The only answer to \"Try the door\" is \"Cerrado con llave.\" with no gloss and no other cue (no rattle or lock highlight). A beginner may not know the phrase, so they may not understand that the door is locked.",
+   "minor | 1-desktop.png, 1-phone.png | The action button is only a hand icon, next to the labelled \"Start today's practice\" button. From the icon alone, a first-time user can't tell that it tries the door, which breaks \"choices predict their outcome\".",
+   "minor | 1-phone.png | The phone hint gives desktop controls (\"W A S D, arrow keys or click the ground\", \"Click a plant\"). A touch user should see tap wording.",
+   "minor | 1-desktop.png, 1-phone.png | The speech bubble uses an italic serif font, but the rest of the UI uses a pixel font. The bubble also stays under a large hint panel that still covers the top of the door after the action, so the top of the screen looks crowded.",
+   "minor | 1-desktop.png | The tiny door and its sign at the hedge base sit almost against the hand button, and the sign text can't be read. The detail looks cramped by the HUD, not placed there on purpose."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "minor | 1-phone.png | The hint tells a phone user \"W A S D, arrow keys or click the ground\" and \"Click a plant\". On a touch screen it should say \"tap\", and the keyboard part is noise. It also still covers the top of the scene after the learner has already walked to the door.",
+   "minor | 1-phone.png | The camera is so close that the whole phone screen is brown planks, with no hedge, frame or sky in view. The moment looks like a flat texture wall, not a door in a hedge.",
+   "minor | 1-desktop.png | The hand action button sits on top of the small door and its little sign at the bottom right, so part of the sign is hidden behind the HUD.",
+   "minor | 1-desktop.png, 1-phone.png | The only reply is \"Cerrado con llave.\" with no visible way to see what it means. A beginner may not understand why the door did not open.",
+   "minor | 1-desktop.png, 1-phone.png | The action button is a bare hand icon. Nothing on screen says it will try the door, so a first-time user cannot predict what it does.",
+   "minor | 1-desktop.png | \"2006 seeds ready\" is a very large count to show as a to-do number, which reads as pressure. The phone pill leaves it out, so the two layouts disagree.",
+   "minor | 1-desktop.png, 1-phone.png | The speech bubble uses a high-contrast serif italic, while every other piece of text is in the pixel font. It looks like it comes from a different app.",
+   "minor | 1-phone.png | The hint banner's left and right edges sit a few pixels inside the edges of the top buttons and the \"Start today's practice\" button, so the edges do not line up.",
+   "minor | 1-desktop.png | The desktop hint breaks the line between \"Look: drag\" and \"or swipe\", which splits one instruction across two lines."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "after",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | The button that tried the door shows only a hand icon and no words. A sighted first-time learner can't tell that it will try the door, because the \"Try the door\" name is only for screen readers. It also sits next to a labelled button, \"Start today's practice\", so this pair of choices doesn't tell you what each one does.",
+   "minor | 1-phone.png | On the phone, the hint says to walk with \"W A S D, arrow keys or click the ground\". A phone user can't do any of that: it should say tap, and it shouldn't mention keys.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button shows only a speaker icon. You can't tell if the sound is on now, or if a tap will turn it on or off.",
+   "minor | 1-desktop.png, 1-phone.png | On desktop, \"2006 seeds ready\" is a large raw number that could be read as a year, and a learner can't act on it. The phone pill leaves it out, so the two layouts give different information.",
+   "minor | 1-desktop.png | The hint card breaks a phrase across two lines (\"Look: drag / or swipe with two fingers\"). Together with the stats pill, it covers the top of the door, and a thin dark strip of the lintel shows in the gap between the two cards, which looks cluttered."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "after",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "minor | 1-desktop.png, 1-phone.png | The action button shows only a hand icon and no visible label. A first-time learner cannot tell from looking that it tries the door, because \"Try the door\" is only its screen-reader name. The button next to it (\"Start today's practice\") has a label.",
+   "minor | 1-phone.png | The hint card on the phone says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". These are keyboard and mouse steps that a phone learner cannot follow. On a phone they should say \"tap\".",
+   "minor | 1-desktop.png, 1-phone.png | In the desktop status pill, \"2006 seeds ready\" is a large number that can read like a year, and a learner cannot tell what a ready seed is or what to do about it. The phone pill leaves it out, so the two layouts show different facts.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button is only an icon. You cannot tell if sound is on now, or if a tap turns it off, so you cannot tell whether it shows a state or does an action.",
+   "minor | 1-desktop.png | The hint card breaks \"Look: drag / or swipe\" across two lines. Also, the hint card and the status pill both cover the top of the door frame and leave a thin strip of lintel between them, which looks cluttered."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "minor | 1-phone.png | The hint on a phone says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". These are keyboard and mouse words on a touch screen. It should say tap.",
+   "minor | 1-desktop.png, 1-phone.png | The action button is only a hand icon with no visible label, and it sits next to \"Start today's practice\". A sighted first-time user cannot tell from the icon that it means \"Try the door\".",
+   "minor | 1-desktop.png, 1-phone.png | The desktop stats pill says \"2006 seeds ready\". That number is very large next to 30 plants, so it looks wrong and can feel like pressure. The phone pill leaves the seeds count out, so the two sizes do not match.",
+   "minor | 1-desktop.png | The hint box breaks the line in the middle of a phrase (\"Look: drag / or swipe with two fingers\"). A thin dark strip of the door frame shows between the stats pill and the hint box, so the stacked top bar looks crowded and unplanned.",
+   "minor | 1-desktop.png | The hint \"Click a plant to see its word\" stays on screen at the door, where no plant is in view, and it covers the top of the door frame. Guidance that does not fit the moment makes the scene look busy.",
+   "minor | 1-phone.png | On the phone the camera is so close that the door fills the whole screen. No hedge, path or other context shows, so it looks like a flat wall texture and not a place in a world.",
+   "minor | 1-desktop.png, 1-phone.png | Under the bottom of the door there is a strip of grass with a small white and yellow sliver (desktop near x≈500–535, phone at the bottom left). It looks like a rendering glitch or an object clipping through.",
+   "minor | 1-desktop.png, 1-phone.png | The \"Locked.\" bubble uses a bold italic serif font, but the rest of the UI uses the pixel font. Its tail points at the upper iron band and not at the lock, so the bubble does not look tied to anything."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "minor | 1-phone.png | The hint banner still says \"W A S D, arrow keys or click the ground\" and \"Click a plant\" on a phone, where the learner taps. On a touch screen it should say tap and leave out the keys.",
+   "minor | 1-phone.png | The camera is so close to the door that the whole portrait screen is brown planks. No hedge, sky or ground is in view, so it looks like a flat texture, not a door in a garden.",
+   "minor | 1-desktop.png, 1-phone.png | The hand action button has no visible label. A sighted learner cannot tell that it means \"Try the door\", because only the screen-reader name says so.",
+   "minor | 1-desktop.png, 1-phone.png | The \"Locked.\" bubble uses an italic serif font, but all other text uses the pixel font. It looks like it came from a different app.",
+   "minor | 1-desktop.png, 1-phone.png | In the pixel font, \"28 in bloom\" reads as \"2S in bloom\" because the 8 looks too much like an S.",
+   "minor | 1-desktop.png | At the bottom right, the tiny door and its sign sit against the hand button and are partly hidden by it. The sign text cannot be read.",
+   "minor | 1-desktop.png | The hint banner breaks the line in the middle of a phrase (\"drag / or swipe\"). It also stays over the top of the door after the action and covers the scene."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "before",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | The \"Locked.\" speech bubble drawn over the door in the 3D world is in English, but this is a Spanish course. Text inside the world must be in the language being studied (for example \"Cerrada.\").",
+   "minor | 1-desktop.png, 1-phone.png | The action button that tried the door shows only a hand icon with no visible label. A first-time learner can't tell from looking that it means \"Try the door\", and next to the labelled \"Start today's practice\" it doesn't say what it does.",
+   "minor | 1-desktop.png, 1-phone.png | \"Locked.\" is the only result of the action, and it gives no next step. The learner can't tell whether the door can ever be opened, or how, so they may keep pressing the button.",
+   "minor | 1-phone.png | The hint card on the phone says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". Those are keyboard and mouse words on a touch screen, and the card covers the top of the view.",
+   "minor | 1-desktop.png, 1-phone.png | The status pill's \"2006 seeds ready\" on desktop is a huge, unclear number that the learner can't act on (ready for what?). The phone version drops it with no hint, so the two sizes show different facts.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button is a speaker icon only. You can't tell if sound is on now, or if a tap mutes it, so it isn't clear whether it shows a state or does an action."
+  ]
+ },
+ {
+  "case": "door",
+  "version": "before",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | The \"Locked.\" speech bubble drawn on the door in the 3D world is in English, but this is a Spanish course. Text in the world must be in Spanish (for example \"Cerrada.\").",
+   "minor | 1-desktop.png, 1-phone.png | The action button shows only a hand icon and no label. A first-time learner can't tell that it tries the door; it could mean grab, wave or stop.",
+   "minor | 1-phone.png | On a phone the hint says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". A phone has no keys or mouse, so it should say \"tap\".",
+   "minor | 1-desktop.png | \"2006 seeds ready\" is faint grey, the number reads like a year, and a learner can't tell what the seeds are ready for or what to do. The phone stats pill leaves it out, so the two screens don't match.",
+   "minor | 1-phone.png | Standing at the door, the door's planks fill the whole portrait screen. No hedge, ground or sky shows, so the learner loses any sense of where they are.",
+   "minor | 1-desktop.png | The hand button sits right against the small fairy door and its \"BIENVENIDA\" sign at the bottom right, so it crowds a world detail. The sign is also too small to read."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-phone.png, 1-desktop.png | The walk hint is the same text on every device. On the phone it says \"W A S D, arrow keys or click the ground\" and \"Click a plant\", which are wrong for a touch screen, and on desktop it says \"swipe with two fingers\". A first-time phone user is not told how to walk.",
+   "serious | 1-desktop.png, 1-phone.png | The icon-only button next to \"Finish today's practice\" has no label, and its glyph (a key or glasses?) does not say what it does. This breaks \"choices predict their outcome\" for the two side-by-side buttons.",
+   "minor | 2-desktop.png, 2-phone.png | The floating word labels collide: \"de\" is drawn on top of \"y\", \"qu\" is clipped at the phone's right edge, and \"a\" sits on a flower. The small grey labels (\"lo\", \"no\") are hard to read against the pale sky.",
+   "minor | 2-phone.png | The plant's yellow pointer arrow touches the bottom edge of the card, so it looks like part of the card instead of a marker on the plant.",
+   "minor | 2-desktop.png, 2-phone.png | The \"de · 13 jul\" bed marker is cut off at the bottom edge. On desktop it pokes out under the card, and on phone it is huge and clipped, which looks cluttered.",
+   "minor | 1-desktop.png | The hint breaks its line between \"drag\" and \"or swipe with two fingers\", and the three instructions are run together with dots. It reads as one dense block, not three short steps.",
+   "minor | 1-desktop.png, 1-phone.png | The desktop HUD shows \"1636 seeds ready\" in a fainter colour, but the phone HUD leaves it out. \"Seeds ready\" is also unclear to a first-time user.",
+   "minor | 2-desktop.png, 2-phone.png | The plant thumbnail on the card is very pale and washed out, so it looks like a placeholder next to the crisp pixel art in the world.",
+   "minor | 1-phone.png | On first open, plain gravel fills the lower half of the phone screen and the garden is squeezed into a thin band. The two bottom buttons sit off to the right with no clear alignment."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "minor | 2-desktop.png, 2-phone.png | The open plant's floating label \"de\" runs into the next plant's \"y\" label right under the yellow arrow, so it reads as \"dey\". This is where the eye goes first, and the overlap looks broken.",
+   "minor | 1-phone.png, 1-desktop.png | On the phone, the hint says \"W A S D, arrow keys\", \"click the ground\" and \"Click a plant\", but a phone has no keys and you tap, not click. On desktop, the same hint says \"swipe with two fingers\", which is a touch gesture. The hint should match the device.",
+   "minor | 2-phone.png, 2-desktop.png | The plant's own stake (\"de · 13 jul\") is cut off by the bottom edge of the screen, and on desktop it is also half hidden under the card. It looks unfinished.",
+   "minor | 2-desktop.png, 2-phone.png | The small floating word labels (\"no\", \"lo\", \"a\", \"en\") are pale text on pale sky or bright flowers and hard to read. On the phone, \"qu\" is cut off at the right edge.",
+   "minor | 1-desktop.png, 1-phone.png | The button next to \"Finish today's practice\" shows only an icon that looks like a key, with no label. A first-time user cannot tell what it does."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "after",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | The small icon button next to \"Finish today's practice\" shows only a key-like symbol and has no label. A first-time learner cannot tell what it does, and next to a labelled button it does not say how its result differs.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | In frame 2 the player stands about twice as close to the \"Julio\" sign and the \"de · 13 jul\" plaque, and the view is tilted up, but steps.txt lists no walk input. If clicking a plant carries the player to it, that is travel by tap. These stills cannot show whether it was a visible walk or a jump, so check this.",
+   "minor | 2-desktop.png, 2-phone.png | The in-world label of the selected plant overlaps a neighbour's \"y\" label, so the word reads \"dey\". This happens on the very plant the arrow points to.",
+   "minor | 1-phone.png | The phone hint says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". A phone has no keys and uses taps, not clicks. The three instructions are also packed into one wrapped line with dot separators, which makes them hard to scan.",
+   "minor | 1-desktop.png, 1-phone.png | \"Finish today's practice\" can mean \"end today's practice now\" or \"go and do the rest of today's practice\". Its light-blue fill, unlike every other button, can also make it look like a selected state instead of an action.",
+   "minor | 1-desktop.png | \"1636 seeds ready\" does not say what a seed is or what to do with it, and nothing on this screen acts on it. It is shown in low-contrast grey, and the phone leaves it out completely.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button shows only a speaker icon with waves. You cannot tell if it means \"sound is on now\" or \"tap to turn sound on\"."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "after",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | The icon-only button next to \"Finish today's practice\" looks like a key and has no label. A first-time learner cannot tell what it will do.",
+   "serious | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | Between frame 1 and frame 2 the player moved from the path to stand right in front of the \"de · 13 jul\" plaque: the Julio sign and the plaque look about 2.5x larger, and the Agosto sign is much closer. steps.txt lists no walk input, and the hint only says \"Click a plant to see its word\". Opening the card seems to carry the player to the plant. If this is a jump or an automatic glide and not a walk the learner chose, it breaks \"the garden is physical\".",
+   "minor | 2-phone.png, 2-desktop.png | The player stops pressed against the plaque. On the phone a huge, cut-off \"de · 13 jul\" board fills the bottom of the screen, and on desktop it shows under the card. This looks cheap.",
+   "minor | 1-phone.png | The phone hint says \"W A S D, arrow keys or click the ground\", but a phone learner has no keys and taps instead of clicking. \"Look: drag or swipe with two fingers\" also does not say whether a one-finger drag looks or walks.",
+   "minor | 2-desktop.png, 2-phone.png | The world labels \"de\" and \"y\" overlap above the selected plant and read as \"dey\". The \"a\" label covers the centre of the purple flower.",
+   "minor | 1-desktop.png, 1-phone.png | \"Finish today's practice\" can mean \"stop now\" or \"go do the rest of today's practice\". The label does not tell the learner which will happen.",
+   "minor | 1-desktop.png | \"1636 seeds ready\" does not say what the seeds are ready for, and it is more seeds than the 400 plants, so it could alarm a learner. It is in lighter, lower-contrast text, and the phone HUD leaves it out.",
+   "minor | 2-desktop.png, 2-phone.png | The phone card leaves out the \"Planted on 13 July.\" line that the desktop card shows.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button is only an icon. You cannot tell if the speaker with waves means sound is on now or that a tap will turn it on."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png, 2-desktop.png, 2-phone.png | A visible \"Next plant →\" button (with a \"←\" button on the card) is shown to every user. The rules allow a button that moves you only as the screen-reader-only Next plant button. Between 1-desktop and 2-desktop the camera jumped from far back to the side of the \"de\" bed, so this looks like travel by button.",
+   "minor | 2-desktop.png, 2-phone.png | The floating word labels \"de\" and \"y\" overlap and read as one word, \"dey\". This is right where the yellow arrow points, and a learner can misread it.",
+   "minor | 1-phone.png | The phone hint tells the learner to use \"W A S D, arrow keys or click the ground\" and \"click a plant\". These are keyboard and mouse steps on a touch screen, so they should say tap.",
+   "minor | 2-phone.png, 2-desktop.png | The phone card leaves out the \"Planted on 13 July.\" line that the desktop card shows. The same card gives different information on each device.",
+   "minor | 1-phone.png, 1-desktop.png | The phone count box leaves out \"1636 seeds ready\", which desktop shows. On desktop that part is in a light grey with low contrast against the cream box.",
+   "minor | 1-desktop.png, 1-phone.png | The icon-only button next to \"Next plant\" (a key- or glasses-like shape) has no label, and its meaning is not clear to a first-time user.",
+   "minor | 2-phone.png | The big yellow arrow sits tight against the bottom edge of the card, so the top of the screen looks crowded.",
+   "minor | 1-phone.png | The stacked bottom buttons do not line up: the left edge of \"Finish today's practice\" sits further left than the row above it.",
+   "minor | 2-desktop.png | The \"de · 13 jul\" sign shows as a cut-off strip under the open card at the bottom edge, which looks untidy."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png, 2-desktop.png, 2-phone.png | Everyone can see the \"Next plant →\" button, and the card's \"←\" button too, and both move the viewer to another plant. The rules allow a moving button only as a screen-reader-only button. The view in the 2-* shots is also far from the 1-* view, and steps.txt lists no walking, so a button seems to have moved the viewer.",
+   "minor | 1-phone.png | The phone hint says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". A phone has no keyboard or click, so it should say tap. This is the first thing a phone learner reads.",
+   "minor | 2-desktop.png, 2-phone.png | The floating word labels \"de\" and \"y\" overlap right under the yellow arrow, so the label it points at reads \"dey\".",
+   "minor | 2-desktop.png, 2-phone.png | The bed sign \"de · 13 jul\" is cut off: on desktop it peeks out under the card, and on phone it is a huge sign cut off by the bottom edge. It looks unfinished.",
+   "minor | 1-desktop.png, 1-phone.png | The icon-only button next to \"Next plant\" (it looks like a key or glasses) has no label, and you can't guess what it does.",
+   "minor | 2-desktop.png, 2-phone.png | The bare \"←\" next to \"Next plant →\" does not say \"previous plant\", and it looks like the \"←\"/\"Back\" button at top left. The label alone does not tell you what happens.",
+   "minor | 1-desktop.png, 1-phone.png | \"1636 seeds ready\" has no thousands separator, and a first-time user can't tell what \"seeds ready\" means or how it relates to \"400 plants\". The phone drops it with no sign.",
+   "minor | 1-desktop.png, 1-phone.png | The opening view points low: about half the desktop screen and more than half the phone screen is empty gravel, so the first view looks empty, not premium.",
+   "minor | 1-desktop.png, 1-phone.png | The hint is one dense run-on line of three instructions joined by \"·\", with spaced \"W A S D\". On desktop it wraps in the middle of a phrase (\"drag / or swipe\"), so it is not simple English.",
+   "minor | 2-phone.png | The yellow arrow almost touches the bottom edge of the card, which looks crowded. The phone card also drops \"Planted on 13 July.\" that desktop shows.",
+   "minor | 2-desktop.png, 2-phone.png | The plant picture in the card is a faint, tiny sprite on a flat beige square, which looks like a placeholder."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "before",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | Sighted users see \"Next plant →\" on the walk screen, and \"←\" and \"Next plant →\" on the card. In frame 2 the player stands in a different place, close to the Julio sign, but steps.txt names no walk input. These buttons seem to carry the player, which breaks \"no button that moves you\". Only the screen-reader-only Next plant button may do that.",
+   "serious | 1-desktop.png, 1-phone.png | The icon button left of \"Next plant\" has no label. Its icon looks like a key or a watering can on its side. A first-time learner cannot tell what it does.",
+   "minor | 2-desktop.png, 2-phone.png | The word labels over the plants overlap. \"de\" sits on \"y\", so it reads \"dey\", right under the selected plant's arrow. On desktop the \"a\" label covers the purple flower.",
+   "minor | 1-phone.png | The phone hint tells the learner to use \"W A S D, arrow keys or click the ground\". A phone has no keys, and you tap, not click. The learner cannot act on this line.",
+   "minor | 1-desktop.png, 1-phone.png | \"Finish today's practice\" can mean \"stop now\" or \"go and do the rest of today's practice\". It sits next to \"Back\", so the learner cannot predict the result.",
+   "minor | 1-desktop.png, 1-phone.png | \"1636 seeds ready\" does not say what a seed is or what the learner can do with it. It is in low-contrast grey, and the phone hides it.",
+   "minor | 1-desktop.png, 1-phone.png | The speaker button at top right does not show if it is a state (sound on) or an action (play or mute). On phone, the back button is a bare \"←\" with no \"Back\" label.",
+   "minor | 2-desktop.png, 2-phone.png | The card's bare \"←\" next to \"Next plant →\" can be read as \"back\" or \"close\", not \"previous plant\".",
+   "minor | 2-desktop.png, 2-phone.png | On desktop the card sits on top of the \"de · 13 jul\" plaque and cuts its text at the bottom edge. On phone the yellow arrow touches the bottom of the card, which looks cramped."
+  ]
+ },
+ {
+  "case": "nextplant",
+  "version": "before",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The player moved between frame 1 and frame 2, but steps.txt lists no walk input. On desktop the Julio sign and the \"de · 13 jul\" plaque go from mid-distance to right beside the camera, and on phone the player now stands at the plaque. Sighted users also see a \"Next plant\" button, both in the walk bar and on the card, so this looks like a button that carries the player. Only the screen-reader-only Next plant button may do that.",
+   "serious | 1-desktop.png, 1-phone.png | The icon-only button left of \"Next plant\" (a whistle or key shape) has no label. A first-time learner cannot tell what it will do.",
+   "minor | 1-phone.png | On a phone, the hint says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". Those are keyboard and mouse words on a touch screen, so a phone learner gets no usable walk instruction.",
+   "minor | 2-phone.png, 2-desktop.png | The card's previous-plant button is a bare \"←\". On phone it looks the same as the top-left Back \"←\", so a learner cannot tell that one goes to the previous plant and the other leaves the garden. Its partner button has a text label (\"Next plant →\") and this one does not.",
+   "minor | 1-desktop.png | \"1636 seeds ready\" does not say what a seed is or what to do with one, and the number is four times the plant count. It is also in a lighter grey with weaker contrast than the rest of the bar.",
+   "minor | 1-desktop.png, 1-phone.png | On a garden that was just opened, \"Finish today's practice\" can mean \"stop now\" or \"go do the rest of today's practice\". The label does not predict which one.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The sound button is only a speaker icon. You cannot tell if it shows that sound is on now or if it is the action that turns sound on or off.",
+   "minor | 2-desktop.png, 2-phone.png | The floating word labels \"de\" and \"y\" overlap, so they read as one word, \"dey\".",
+   "minor | 2-desktop.png, 2-phone.png | The \"de · 13 jul\" plaque shows as large, cut-off text below the card (desktop) and at the bottom edge (phone). It looks messy next to the card."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | \"Next plant →\" is a visible button, and its label and arrow say it moves you to another plant. The rules allow this travel button only for screen readers, so sighted learners should walk instead of seeing it.",
+   "minor | 1-phone.png | The phone hint tells a touch user to use \"W A S D, arrow keys or click the ground\" and to \"Click a plant\". These are desktop controls. On a phone the hint should say tap.",
+   "minor | 1-desktop.png, 1-phone.png | The small button left of \"Next plant\" has only an icon, and the icon is hard to read (it may be a key or a whistle). A first-time user can't tell what it does.",
+   "minor | 1-phone.png | The bottom buttons have uneven left edges. \"Finish today's practice\" is wider and starts about 23px left of the icon button above it, so the stack looks messy.",
+   "minor | 1-phone.png, 1-desktop.png | The desktop header shows \"1636 seeds ready\", but the phone header drops it without saying so. The two layouts give different information.",
+   "minor | 1-desktop.png | The bed sign \"de · 13 jul\" is hard to understand. A word fragment, a dot and a date don't tell the learner what the sign means.",
+   "minor | 1-phone.png | The hint panel sits about 4px inside the outer edges of the back and sound buttons above it, so the top edges don't line up."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | A visible \"Next plant →\" button moves the learner to another plant. That is a travel button for every user. The rules allow Next plant only as a screen-reader-only control.",
+   "minor | 1-phone.png, 1-desktop.png | The hint is the same on every device. On the phone it says \"W A S D, arrow keys or click the ground\" and \"Click a plant\", which a touch user cannot do. On desktop it says \"swipe with two fingers\". It is also one long run-on line split with \"·\", which is hard to read for learners who are not native English speakers.",
+   "minor | 1-desktop.png, 1-phone.png | The icon-only button to the left of \"Next plant\" shows a small glyph that could be a key or a watering can, and it has no label. Next to two text buttons, a first-time user cannot tell what it does.",
+   "minor | 1-desktop.png, 1-phone.png | \"Finish today's practice\" can mean \"stop now\" or \"do the rest of today's practice\", so the label does not clearly predict what happens next to \"Next plant\".",
+   "minor | 1-desktop.png, 1-phone.png | The counter shows \"1636 seeds ready\" on desktop but drops it on the phone, so the two sizes show different information. \"Seeds ready\", next to only 400 plants, is not clear on its own.",
+   "minor | 1-desktop.png | The small bed sign \"de · 13 jul\" is cryptic. The learner cannot tell what \"de\" and the date refer to.",
+   "minor | 1-phone.png | The bottom buttons are right-aligned, but their left edges do not line up: the \"Finish\" row is wider than the icon + \"Next plant\" row above it, so the group looks ragged.",
+   "minor | 1-desktop.png | In the hint box the line breaks in the middle of a phrase (\"Look: drag / or swipe with two fingers\"), and the small text floats in a box that is too wide for it."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "after",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | A visible \"Next plant →\" button sits in the main action bar for every learner. Its label and arrow say it carries you to another plant, and the rules allow a travel button only as the screen-reader-only Next plant, so a sighted learner gets a teleport button.",
+   "serious | 1-desktop.png, 1-phone.png | The icon-only button left of \"Next plant\" (it looks like a key or a whistle) has no label. A first-time learner cannot tell what tapping it will do.",
+   "minor | 1-phone.png | The phone shows the desktop hint: \"W A S D, arrow keys or click the ground … Click a plant\". A phone learner has no keys and taps instead of clicking, so half of the hint is something they cannot do.",
+   "minor | 1-desktop.png, 1-phone.png | \"Finish today's practice\" can be read two ways: \"end my session now\" or \"go and do the rest of today's practice\". The label alone does not say which.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button is a bare speaker icon with waves. You cannot tell if it shows the current state (sound is on) or what a tap will do (turn sound on).",
+   "minor | 1-desktop.png | \"1636 seeds ready\" is in faint grey text with low contrast, and the learner cannot act on it here (ready for what?). The phone leaves it out, so the two layouts show different facts.",
+   "minor | 1-desktop.png | The bed plaque reads \"de · 13 jul\". With the dot splitting it, it looks like a broken fragment, not a plain Spanish phrase, and a learner could misread it (for example as the code for German).",
+   "minor | 1-desktop.png, 1-phone.png | The stats bar and the hint card use the same cream fill, dark border and hard shadow as the buttons, so text that is only information looks like something you can tap.",
+   "minor | 1-phone.png | In the bottom-right group, the left edge of \"Finish today's practice\" does not line up with the icon button above it, so the stack looks a little uneven."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "after",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | A visible \"Next plant →\" button shows for every user on desktop and phone. The rules allow a Next plant button that moves you only as a screen-reader-only control. A visible one invites travel by button and breaks \"the garden is physical\".",
+   "serious | 1-desktop.png, 1-phone.png | The bottom-row button left of \"Next plant\" has only an icon (it looks like a watering can or a key) and no label. A first-time learner can't tell what it does, or how it differs from \"Finish today's practice\", which also has a water-drop icon.",
+   "minor | 1-desktop.png | The small plaque in front of the bed reads \"de · 13 jul\". It looks like a broken template: a stray \"de\" (Spanish \"of\", or a \"de\" language code leaking into the world). A learner can't tell what it means, and if \"de\" is the course code, the Spanish \"Julio\"/\"Agosto\" signs would be in the wrong language.",
+   "minor | 1-phone.png | The phone hint says \"Walk: W A S D, arrow keys or click the ground … Click a plant\". A phone has no keys and you tap, not click, so most of the line is something a phone learner can't act on.",
+   "minor | 1-desktop.png, 1-phone.png | \"Finish today's practice\" can be read as \"stop practising now\" or as \"go do the rest of today's practice\". The drop icon doesn't settle it, and it sits next to Back, which also leaves.",
+   "minor | 1-desktop.png, 1-phone.png | \"1636 seeds ready\" says nothing a learner can act on (what seeds, ready for what?). It is in low-contrast grey and missing from the phone status box, so the two layouts disagree.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button is a speaker with waves. You can't tell if it shows the current state (sound on) or what a tap will do.",
+   "minor | 1-phone.png | The status box (\"400 plants / 389 in bloom\") has the same bordered style as the ← and sound buttons, so it looks tappable. Also, \"Finish today's practice\" is wider than the row above it and its left edge doesn't line up with that row."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | A \"Next plant →\" button is shown to all sighted users. It moves the learner, so it is a travel button. The rules allow Next plant only as a screen-reader-only button.",
+   "minor | 1-phone.png | The walk hint on the phone says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". A touch user has no keys and taps, so the hint should match the device.",
+   "minor | 1-desktop.png, 1-phone.png | The small icon button left of \"Next plant\" has no text label, even on desktop where every other button has one. Its glyph (a key or watering-can shape) does not tell a first-time user what it does.",
+   "minor | 1-desktop.png | The \"Normal quality\" button shows a state, not an action. A user cannot tell if clicking it picks normal quality or changes away from it, so the choice looks like an action.",
+   "minor | 1-phone.png | The quality button is only a checker icon with no label, so its purpose is unclear on phone.",
+   "minor | 1-phone.png | \"Finish today's practice\" is wider than the row above it, so its left edge (about x=156) does not line up with the icon button above (about x=179). The bottom-right cluster looks ragged.",
+   "minor | 1-desktop.png | The bed sign \"de · 13 jul\" is cryptic. It is not clear what \"de\" means here (a language code, or Spanish \"from\"?).",
+   "minor | 1-desktop.png | The bottom half of the frame is empty, low-detail sand, and the plants sit in a thin band. The opening view feels empty rather than premium."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | A \"Next plant →\" button shows on screen for everyone. The rules allow a button that moves you only as a screen-reader-only aid. A visible one is a button for travel, which breaks \"you go places by walking\".",
+   "minor | 1-phone.png | The phone hint gives desktop controls: \"W A S D, arrow keys or click the ground\" and \"Click a plant\". A phone learner has no keys and taps, so the first instruction they read is wrong for their device. It could be serious if this is a real touch screenshot.",
+   "minor | 1-desktop.png, 1-phone.png | The icon-only button left of \"Next plant\" (a pipe or key shape) has an unclear glyph and no label. The phone quality button is only a checker-pattern icon. A first-time user cannot tell what either one does.",
+   "minor | 1-desktop.png | \"Normal quality\" is a setting toggle, but it looks the same as the action buttons (Back, Next plant). It is not clear if the label shows the current state or the state it will switch to.",
+   "minor | 1-desktop.png | The hint panel breaks \"Look: drag / or swipe\" across two lines, and its text is small for the wide box. It reads like a pasted-in instruction line, not a designed HUD element.",
+   "minor | 1-desktop.png | \"1636 seeds ready\" is in a faint grey with low contrast on the cream pill. A large backlog count right at the start can also feel like a debt. The phone drops this count, so the two layouts disagree.",
+   "minor | 1-phone.png | In the bottom-right stack, \"Finish today's practice\" is wider than the row above it, so the left edges don't line up and the cluster looks ragged.",
+   "minor | 1-desktop.png | The start view is crowded by a huge \"Julio\" sign close to the camera, cut off by the left edge, and it covers part of the near bed."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "before",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | A \"Next plant →\" button is visible to every user, not just screen readers. A sighted learner can press it to travel, and that breaks \"no button that moves you\" (the only exception is the screen-reader-only Next plant button).",
+   "minor | 1-phone.png | The phone shows the desktop hint: \"Walk: W A S D, arrow keys or click the ground … Click a plant to see its word\". A phone has no keys and no clicks. The hint should say \"tap\".",
+   "minor | 1-desktop.png, 1-phone.png | The bottom button left of \"Next plant\" has only an icon (a whistle or key shape) and no label. A first-time learner can't tell what it does.",
+   "minor | 1-desktop.png, 1-phone.png | The quality control looks like an action button that also shows a state (\"Normal quality\"). You can't tell if a tap changes it or what it changes to. On the phone it is only a checker icon with no text, so you can't tell what it does or which option is on. The sound button is icon-only too, and nothing shows whether sound is on or off apart from the icon.",
+   "minor | 1-desktop.png | \"1636 seeds ready\" doesn't say what the seeds are ready for or what the learner can do with them. It is also grey text with lower contrast than the rest of the bar. The phone drops it entirely.",
+   "minor | 1-desktop.png | The bed plaque reads \"de · 13 jul\". It is a short fragment, not natural Spanish, and with the dot \"de\" can read like a language code instead of a word."
+  ]
+ },
+ {
+  "case": "quality",
+  "version": "before",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 1-phone.png | \"Next plant →\" is a visible button for all users. The rules allow a button that moves you only as a screen-reader-only access button, so a sighted learner now has a travel button, which breaks \"the garden is physical\".",
+   "serious | 1-desktop.png, 1-phone.png | The icon-only button next to \"Next plant\" (it looks like a key or a pipe) has no label on either screen. A first-time learner cannot tell what it does.",
+   "serious | 1-desktop.png, 1-phone.png | \"▦ Normal quality\" is a setting (a state) drawn as a normal action button. You cannot tell if it shows the current quality or if a tap switches to \"Normal\". On the phone it is only a checkered icon with no text, so there is no clue that it is a quality setting at all.",
+   "minor | 1-desktop.png, 1-phone.png | The speaker button is icon-only. It does not show if sound is on now or what a tap will do (mute or unmute).",
+   "minor | 1-phone.png | On a phone, the hint says \"Walk: W A S D, arrow keys or click the ground\" and \"Click a plant\". A phone has no keys and you tap, not click, so a phone learner gets wrong instructions.",
+   "minor | 1-desktop.png | \"1636 seeds ready\" does not say what a seed is or what the learner can do with it. It is also grey with lower contrast than the rest of the header, so it is harder to read.",
+   "minor | 1-desktop.png | The hint card breaks its line in the middle of a phrase (\"Look: drag / or swipe with two fingers\"), so it is harder to read than it should be.",
+   "minor | 1-desktop.png, 1-phone.png | The water-drop icon on \"Finish today's practice\" has no clear link to finishing practice. The learner has only just opened the garden walk, so \"Finish\" can be misread as \"leave the garden\".",
+   "minor | 1-phone.png | The \"Finish today's practice\" button's left edge (about x=155) does not line up with the buttons above it (about x=178), so the bottom-right group looks uneven."
+  ]
+ },
+ {
+  "case": "settings",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "minor | 1-dark-desktop.png, 2-dark-desktop.png, 1-light-desktop.png, 2-light-desktop.png | On desktop the controls in one column have three different widths. The email field and \"Send me a code\" end at about x=656, the Colors control and toggle rows end at x=880, and the slider and body text end at x=1040. The right edges look ragged instead of planned.",
+   "minor | 1-dark-desktop.png, 1-light-desktop.png, 1-dark-phone.png, 1-light-phone.png | \"Enter a code I already have\" is plain grey text with no underline or button shape. It looks the same as the \"All changes are saved.\" status line under it, so the action does not look tappable.",
+   "minor | 1-dark-desktop.png, 1-light-desktop.png, 1-dark-phone.png, 1-light-phone.png | \"All changes are saved.\" sits inside the Account block, under the sign-in form, so it reads as a status for sign-in. It is a page-wide save status, and it shows before the learner has changed anything.",
+   "minor | 3-dark-desktop.png, 3-light-desktop.png, 3-dark-phone.png, 3-light-phone.png | \"Delete my account\" shows while the Account section tells this learner they have no account yet (\"If you have no account yet, this makes one\"), so the wording contradicts itself. The gap above it, after the download buttons, is also much bigger than the other gaps on the page and looks like a missing element.",
+   "minor | 3-dark-phone.png, 3-light-phone.png | On phone, \"Delete demo learner\" (beside the main button on desktop) is not in any shot. It is probably behind the floating tab bar, and no shot shows that the page end has enough bottom padding to clear the bar. This is in the dev-only section."
+  ]
+ },
+ {
+  "case": "settings",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "minor | 3-light-phone.png, 3-dark-phone.png | On phone, \"Delete demo learner\" (next to the main button on desktop) cannot be seen. It probably wraps to a new line under the floating bottom nav. I can't tell if 1368 px is the end of the page, but the last control may not clear the nav.",
+   "minor | 1-light-desktop.png, 1-dark-desktop.png, 1-light-phone.png, 1-dark-phone.png | \"Enter a code I already have\" is plain grey text with no underline and no button shape, so it does not look tappable. The underlined \"privacy policy\" link looks different. It also sits about 1 px to the right of the column's left edge.",
+   "minor | 1-light-desktop.png, 1-dark-desktop.png, 1-light-phone.png, 1-dark-phone.png | \"All changes are saved.\" sits inside the Account section under the empty sign-in form, so it reads as the status of that form, not of the settings.",
+   "minor | 1-light-desktop.png, 2-light-desktop.png, 1-dark-desktop.png, 2-dark-desktop.png | On desktop the controls end at three different right edges: the email field and button at about 656 px, the Colors and toggle cards at about 880 px, and the slider and help text at 1040 px. The column looks unaligned.",
+   "minor | 3-light-desktop.png, 3-dark-desktop.png, 3-light-phone.png, 3-dark-phone.png | There is a large gap (about 70 px) between the download buttons and \"Delete my account\". The gap is bigger than the gaps elsewhere in the section, so the disclosure looks cut off from \"Your data\".",
+   "minor | 2-light-desktop.png, 2-dark-desktop.png, 2-light-phone.png, 2-dark-phone.png | The \"Watch the plant grow\" toggle is greyed out with a dashed outline. The reason it is off (the device asks for less motion) only comes in the fourth sentence of a long help paragraph, so at first the toggle just looks broken."
+  ]
+ },
+ {
+  "case": "settings",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 2-dark-desktop.png, 2-light-desktop.png, 2-dark-phone.png, 2-light-phone.png, 3-dark-desktop.png, 3-light-desktop.png, 3-dark-phone.png, 3-light-phone.png | The choices for Colors, Growing plants and Sound use the same pill buttons as the actions. An unselected option looks exactly like \"Download all my data (JSON)\", and a selected one looks like the filled \"Make demo learner and open the garden\" button. On phone they are full-width buttons in a stack, the same as the Download buttons. This breaks the rule that a choice never looks like an action.",
+   "serious | 2-dark-desktop.png, 2-light-desktop.png, 2-dark-phone.png, 2-light-phone.png | The selected option is shown only by its fill color (dark against light). There is no check mark, radio dot or other mark that is not color. This breaks the rule that a state is never shown by color alone.",
+   "minor | 2-dark-desktop.png, 2-light-desktop.png, 2-dark-phone.png, 2-light-phone.png | \"Show plants growing\" is selected, but the text under it says \"Your device asks for less motion, so the plants do not move.\" The selected label says the opposite of what will happen, and this note comes last in a long paragraph.",
+   "minor | 1-dark-desktop.png, 1-light-desktop.png, 1-dark-phone.png, 1-light-phone.png | \"All changes are saved.\" sits under the sign-in form, inside Account. It looks like a status for the email form, not for the whole Settings page.",
+   "minor | 1-dark-desktop.png, 1-light-desktop.png, 1-dark-phone.png, 1-light-phone.png | \"Enter a code I already have\" is plain grey text with no underline or button shape, so it looks like helper text, not something you can tap. The \"privacy policy\" link further down is underlined, so the link styles do not match.",
+   "minor | 1-dark-desktop.png, 1-light-desktop.png, 3-dark-desktop.png, 3-light-desktop.png | The corner shapes do not match. The email field and the Developer tools selects are rounded rectangles, but the buttons right next to them are full pills.",
+   "minor | 3-dark-desktop.png, 3-light-desktop.png, 3-dark-phone.png, 3-light-phone.png | \"Delete my account\" is small grey text after a large gap below the Download buttons, with no heading of its own. It looks like an afterthought, not part of the \"Your data\" section.",
+   "minor | 1-dark-phone.png, 1-light-phone.png, 2-dark-phone.png, 2-light-phone.png | The floating bottom tab bar lets page content show through and below it. Part of a button shows under the bar, and the \"When sound is off…\" text shows behind its top edge, which looks messy."
+  ]
+ },
+ {
+  "case": "settings",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 2-dark-desktop.png, 2-light-desktop.png, 2-dark-phone.png, 2-light-phone.png, 3-dark-desktop.png, 3-light-desktop.png | The Colors, Growing plants and Sound choices are plain pills that look the same as the action buttons (\"Download all my data (JSON)\", \"Make demo learner and open the garden\"). The selected option is shown only by an inverted fill colour, with no check mark or radio dot. This breaks both accessibility rules: a choice looks like an action, and a state is shown by colour alone.",
+   "minor | 2-dark-desktop.png, 2-light-desktop.png, 2-dark-phone.png, 2-light-phone.png | \"Show plants growing\" is selected, but the text below it says \"Your device asks for less motion, so the plants do not move.\" The selected option contradicts its own help text, so the labels do not tell the learner what each choice will do.",
+   "minor | 1-dark-desktop.png, 1-light-desktop.png, 1-dark-phone.png, 1-light-phone.png | \"All changes are saved.\" sits in the Account section, right under the sign-in form, before any change has been made. It reads like a sign-in status, not a page-wide save note.",
+   "minor | 1-dark-phone.png, 1-light-phone.png, 2-dark-phone.png, 2-light-phone.png, 3-dark-phone.png, 3-light-phone.png | Page content shows in the gaps around and below the floating tab bar: the edge of a button pokes out under the bar, and a heading letter and text lines are cut off beside it. This looks unfinished.",
+   "minor | 3-dark-desktop.png, 3-light-desktop.png, 3-dark-phone.png, 3-light-phone.png | \"Delete my account\" stands alone with no heading and a much bigger gap above it than anywhere else. It looks orphaned and makes the spacing uneven.",
+   "minor | 1-dark-desktop.png, 1-light-desktop.png, 2-dark-desktop.png, 2-light-desktop.png | On desktop the controls end at three different right edges: the email field and \"Send me a code\" end at one, the choice and download pills at another, and the slider and body text at the full column width. The column looks ragged."
+  ]
+ },
+ {
+  "case": "signs",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | A visible \"Next plant →\" button sits in the bottom bar for every user. The rules allow a button that moves you only as the screen-reader-only Next plant button, so this is a travel button that sighted learners can see and use.",
+   "serious | 3-desktop.png, 3-phone.png | At 1.6 m the plant word labels (\"de\", \"que\", \"en\", \"no\", \"lo\") sit at the very top edge of the screen. The screen edge cuts them off and the stats pill and hint panel cover them, so they look broken and the learner cannot read the words.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | The phone hint gives keyboard and mouse instructions (\"W A S D, arrow keys or click the ground\", \"Click a plant\") on a touch device. The panel also covers a large part of the top of the scene.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | The button left of \"Next plant\" has only an icon, and the icon changes between 2 and 3 (a key-like glyph, then a hand/paw glyph). A first-time user cannot tell what it does, and on desktop it is the only bottom button without a text label.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | The left edge of \"Finish today's practice\" (x≈156) does not line up with the row above it (x≈179), so the bottom button group looks ragged.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png | \"1629 seeds ready\" is in pale grey with low contrast on the cream pill, and the phone does not show it at all. The large number also does not say what the seeds are ready for.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png | \"Normal quality\" (only a checker icon on phone) is a setting, but it looks the same as the action buttons, and its label shows the current state rather than what a click will change it to.",
+   "minor | 1-desktop.png, 2-desktop.png | The bed sign \"de · 13 jul\" puts a Spanish word next to a date, so it reads like a Spanish phrase (\"de 13 jul\") and does not clearly read as a label for the bed."
+  ]
+ },
+ {
+  "case": "signs",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | Every user can see a \"Next plant →\" button, and it moves the learner. That breaks the physical-garden rule: only a screen-reader-only Next plant button may move you.",
+   "serious | 3-desktop.png, 3-phone.png | At 1.6 m the plants rise above eye level. Their word labels (\"de\", \"que\", \"en\", \"lo\", \"no\") sit at the top edge, cut off by the screen and covered by the counter pill and hint card, so the learner can't read the words of the bed they walked up to. At 3 m (2-desktop.png, 2-phone.png) no plant words show at all.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | The big hint card stays on after the learner has walked and covers the upper middle of the scene. Its text is a run-on of fragments. The phone shows keyboard and \"click\" steps instead of \"tap\", and the desktop shows \"swipe with two fingers\".",
+   "minor | 1-desktop.png, 3-desktop.png, 1-phone.png, 3-phone.png | The square button next to \"Next plant\" has only an icon and no label. The icon is unclear and changes from a key-like shape to a paw-like shape, so a first-time user can't tell what it does.",
+   "minor | 1-desktop.png, 1-phone.png | \"Normal quality\" looks like an action button but reads like a state, so it is unclear whether it shows the current setting or switches to it. On the phone it is an unlabeled checker icon.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png | \"1629 seeds ready\" is pale grey with low contrast next to the darker counts. The phone hides it with no sign it was dropped.",
+   "minor | 3-desktop.png, 1-phone.png, 3-phone.png | Close up, the butterflies look like flat purple/black and blue rectangles floating in mid-air. They read as rendering glitches, not creatures."
+  ]
+ },
+ {
+  "case": "signs",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | A visible \"Next plant →\" button is on screen at all times. The rules allow Next plant only as a screen-reader-only button, because a button that moves you is travel. Sighted learners should not see it.",
+   "serious | 3-desktop.png, 3-phone.png | At 1.6 m from the bed, the camera shows only soil and stems. The flower heads and their word labels (\"de\", \"que\", \"en\", \"no\", \"lo\") are cut off at the top edge, behind the top HUD pills and the hint banner. The thing the learner walked up to see is hidden, and the labels peeking out between the HUD buttons look broken.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | On the phone, the hint says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". A phone has no keyboard, and it should say \"tap\". This hint was written for desktop.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | The large hint banner stays on screen in every position, even after the learner has moved up to the bed. It covers the scene: the trees in 1–2 and the flowers in 3. On the phone it takes up about a sixth of the screen.",
+   "minor | 1-desktop.png, 3-desktop.png, 1-phone.png, 3-phone.png | The bottom-left button has only an icon and no label. Its icon changes from a key or watering-can shape to a pot with sprouts near the bed, and neither icon says what the button does. The phone's quality toggle (checkerboard) also has only an icon. And \"Normal quality\" on desktop shows a state, so it does not tell you what a click will do.",
+   "minor | 1-desktop.png, 2-desktop.png | The bed sign \"de · 13 Jul\" reads like a language code (\"de\" = German) plus a date, not like the Spanish word \"de\". The Spanish word sits next to English month text (\"Jul\", \"July\", \"August\"), which makes the sign unclear.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | The bottom-right buttons do not line up. \"Finish today's practice\" starts about 23 px further left than the icon and Next plant row above it, so the stack's left edge is ragged.",
+   "minor | 3-phone.png, 3-desktop.png | Up close, the butterflies show as flat purple and blue blocks (for example the purple-black rectangle at right in 3-phone). They look like rendering glitches, not creatures."
+  ]
+ },
+ {
+  "case": "signs",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | At 1.6 m from the bed, the flowers and their floating word labels (\"de\", \"que\", \"en\", \"no\", \"lo\") are at the very top edge of the screen. They are clipped and partly hidden behind the counter pill, the top buttons and the hint banner. At normal reading distance, the learner cannot see the words of the plants right in front of them.",
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | Every sighted user sees a \"Next plant →\" button in the HUD. The rules allow a Next plant travel button only for screen readers, so this looks like a button that moves you.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | On the phone, the hint says \"W A S D, arrow keys\" and \"click\", which a phone does not have; it should say tap and swipe. The three-line banner also covers a large part of the scene.",
+   "minor | 2-desktop.png, 3-desktop.png, 2-phone.png, 3-phone.png | The \"Walk… Look… Click…\" hint is still shown after the learner has walked up to the bed. It is one long run-on line joined by \"·\", not short, simple sentences.",
+   "minor | 1-desktop.png, 3-desktop.png, 1-phone.png, 3-phone.png | The square button left of \"Next plant\" has only an icon and no text, and its icon changes in step 3, so a first-time user cannot tell what it does. On the phone, the quality button is also only a checker icon.",
+   "minor | 2-desktop.png, 3-desktop.png, 3-phone.png | Small flat purple and blue rectangles float in the air above the bed. Up close they look like rendering glitches, not creatures, which looks cheap.",
+   "minor | 1-phone.png, 2-phone.png, 3-phone.png | The bottom buttons do not line up. \"Finish today's practice\" starts further left than the icon and \"Next plant\" row above it, so only the right edges match.",
+   "minor | 1-desktop.png, 2-desktop.png | The bed plaque \"de · 13 Jul\" puts a Spanish word next to an English date, so it can read as \"de 13 Jul\" (\"of 13 July\"). The month signs (\"July\", \"August\") are in English in a Spanish garden."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "after",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | After holding W for 3 s from the foot of the steps, the camera ends up inside the bramble mesh. The whole screen is huge flat green and maroon texels with nothing readable. The learner either walked through the fence and brambles, or the camera clips into them. Solid brambles should stop the learner in front of them, and the view should stay outside the geometry.",
+   "serious | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | There are no steps over the back fence. The pickets run unbroken, with brambles right behind them, so the learner sees nothing to climb. If the steps do exist, they lead straight into the bramble wall.",
+   "minor | 1-phone.png, 2-phone.png | The hint on the phone says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". Those are keyboard and mouse words on a touch screen.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The square button next to \"Finish today's practice\" has only an icon, and the icon changes from a key-like shape to a clipboard. A first-time user can't tell what it does."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "after",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | After holding W for 3 s from the foot of the steps, the camera ends up inside the bramble mesh: the whole view is huge flat bramble texels and the fence is gone. The learner walked through or into something that should be solid, and the camera clips into the geometry. This breaks \"if something is solid, you can't\" walk there, and it looks broken.",
+   "serious | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | No steps (stile) can be seen over the back fence, even \"3 m from the steps\" and \"at the foot of the steps\". The fence is the same plain pickets all along with dense brambles right behind it. The feature under test is either missing or hidden, so the learner has no visible way over.",
+   "serious | 1-desktop.png, 2-desktop.png, 3-desktop.png | If the steps do go over the fence, they drop you straight into the bramble wall (shot 3), so the way looks open but leads nowhere. A climbable thing must lead to ground you can reach, or be visibly shut before you climb it.",
+   "minor | 1-phone.png, 2-phone.png | The phone hint tells you to use \"W A S D, arrow keys or click the ground\" and \"Click a plant\". On a touch phone it should say tap, and it should not list keys.",
+   "minor | 1-desktop.png, 2-desktop.png | The bottom-left icon button has no label, and its icon changes (key or whistle shape in 1, clipboard in 2). A first-time user can't tell what it does or why it changed.",
+   "minor | 1-phone.png | The phone stats pill drops \"1736 seeds ready\", which desktop shows. If this is on purpose to save space, fine; otherwise the phone loses information."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "after",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | After holding W for 3 s from the foot of the steps, the camera is inside the bramble hedge: the screen is filled with the inside of the bush mesh. The player went through or over the fence and into the brambles, which are the visible thing that shuts this way. That breaks \"the garden is physical\", and the mesh clipping looks broken.",
+   "serious | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | No steps over the back fence can be seen. steps.txt says the player stands 3 m from the steps and then at their foot, but both frames show only a plain picket fence, grass and brambles. A learner cannot see that a climbable way exists here.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The square icon button next to \"Finish today's practice\" has no label. In frame 1 it shows a key-like icon and in frame 2 a clipboard, and a first-time learner cannot tell what either one does, or why it changed.",
+   "minor | 1-phone.png, 2-phone.png | The phone hint says \"Walk: W A S D, arrow keys or click the ground … Click a plant\". A phone has no keys and the learner taps, so the hint gives instructions they cannot follow.",
+   "minor | 1-desktop.png | \"1736 seeds ready\" in the top bar does not say what the seeds are ready for or what the learner should do. The phone bar leaves this text out."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "after",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | After holding W at the foot of the steps, the camera ends up inside the bramble hedge: the whole view is huge leaf and thorn texture. The player walked through the solid fence and into brambles that should block the way, which breaks \"the garden is physical\".",
+   "serious | 1-desktop.png, 1-phone.png, 2-desktop.png, 2-phone.png | No steps can be seen over the back fence, not from 3 m away and not at their foot. The fence and bramble hedge look like a closed wall, so a learner has no sign that there is a way up or over.",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The icon-only button next to \"Finish today's practice\" has no label. Its icon also changes from a key-like shape (frame 1) to a clipboard (frame 2) with no visible reason, so a first-time learner cannot tell what a tap will do.",
+   "minor | 1-desktop.png | \"1736 seeds ready\" in the top bar does not say what the seeds are ready for or what the learner can do with them. The number is also very large, and the phone layout leaves this text out."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "before",
+  "rubric": "A",
+  "run": 1,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | After 3 s of walking forward from the foot of the steps, the learner has not crossed the fence. The view stops at the top board of the steps, and that board fills the lower half of the screen on both devices. Either the steps look climbable but do not take you over, or the camera goes into the top board.",
+   "minor | 1-phone.png, 2-phone.png | The phone hint gives keyboard and mouse controls (\"W A S D, arrow keys or click the ground\", \"Click a plant\") on a touch screen. It should say \"tap\".",
+   "minor | 1-desktop.png, 2-desktop.png, 1-phone.png, 2-phone.png | The square button beside \"Finish today's practice\" has only an icon and no label. Its icon changes from a key or whistle (1) to a clipboard (2, 3) with no visible reason, so a first-time user cannot tell what it does."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "before",
+  "rubric": "A",
+  "run": 2,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | After holding W for 3 s from the foot of the steps, the learner has not gone over the stile onto the hill. They seem stuck against its top board, with the eye just above it, or the camera clips into it. A huge close-up plank fills the lower half of the screen. The stile looks climbable but doesn't carry you over, and the frame looks broken.",
+   "minor | 1-desktop.png, 1-phone.png | From 3 m the stile looks like a narrow chair or step-ladder leaning on the fence, not clearly a way over it. It has one tall post on the right only, and you can't see the steps on the far side.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | The small button left of \"Finish today's practice\" has no label, and its icon changes for no visible reason: a key in shot 1, a clipboard in shots 2 and 3. A first-time user can't tell what it does.",
+   "minor | 1-phone.png, 2-phone.png | The phone hint says \"Walk: W A S D, arrow keys or click the ground\". That is keyboard and mouse help on a touch screen, and it should say \"tap\". The desktop hint has the opposite problem: it says \"swipe with two fingers\".",
+   "minor | 2-desktop.png, 2-phone.png | The hilltop lamp post and arch show in the thin gap between the stats chip and the hint panel. They look like a wire or bracket that hangs the panel from the chip."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "before",
+  "rubric": "B",
+  "run": 1,
+  "list": [
+   "serious | 3-desktop.png, 3-phone.png | After holding W for 3 s from the foot of the steps, the player is still on the stile. Its top board sits at chest height, about 1 m ahead, and fills the lower half of the view, and the hill looks no closer than in frame 2. The steps look like a way over the fence, but the walk stops at the top and never reaches the hill path.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | The icon-only button left of \"Finish today's practice\" shows a key in frame 1 and a clipboard in frames 2 and 3. There is no label, so a first-time learner cannot tell what either one does or why it changed.",
+   "minor | 1-phone.png, 2-phone.png | The phone hint says \"Walk: W A S D, arrow keys or click the ground\" and \"Click a plant to see its word\". A phone learner has no keys and taps instead of clicking, so the walk instruction is not something they can follow.",
+   "minor | 1-desktop.png, 3-desktop.png, 3-phone.png | Open meadow runs from both sides of the hill out to the water, and no brambles or hedge shut it anywhere in view. If the learner cannot walk there after crossing the stile, it is shut by an invisible wall.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png | \"1736 seeds ready\" does not say what the seeds are ready for or what the learner should do. The phone pill leaves this part out, so the two layouts show different information.",
+   "minor | 1-desktop.png, 1-phone.png | The sound button is only a speaker icon. It does not show whether sound is on now, or whether a tap will turn it off."
+  ]
+ },
+ {
+  "case": "stileshut",
+  "version": "before",
+  "rubric": "B",
+  "run": 2,
+  "list": [
+   "serious | 2-desktop.png, 3-desktop.png, 2-phone.png, 3-phone.png | After holding W for 3 s from the foot of the steps, the player has not gone up or over the fence. The camera is pressed against the front of the stile's top board: its face fills the lower half of the view with huge texels. The steps act as a wall at chest height, so a thing that looks climbable is not, and the hill path shown beyond is ground the player can't reach.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png, 1-phone.png, 2-phone.png, 3-phone.png | The square icon-only button beside \"Finish today's practice\" has no label, and its icon changes from a key/whistle shape (frame 1) to a clipboard (frames 2-3) for no visible reason. A first-time learner can't tell what it does.",
+   "minor | 1-phone.png, 2-phone.png | On the phone the hint says \"W A S D, arrow keys or click the ground\" and \"Click a plant\". Those are keyboard and mouse words on a touch screen; it should say tap.",
+   "minor | 1-desktop.png, 1-phone.png | From 3 m away the stile reads as a high chair or ladder leaning on the fence: it has one tall post on the right only, and no steps show on the far side. It is not obvious that it is a way over the fence to the hill.",
+   "minor | 1-desktop.png, 2-desktop.png, 3-desktop.png | \"1736 seeds ready\" is pale, low-contrast text, and nothing says what a seed is or what to do with it. It also disappears on phone, so the two layouts show different information.",
+   "minor | 1-desktop.png, 1-phone.png | \"Finish today's practice\" (with an unexplained drop icon) can be read as \"stop now\" or as \"go do the rest of today's practice\". The label doesn't predict which one happens.",
+   "minor | 1-desktop.png | The left leg of the \"Se ruega admirar las plantas.\" sign sticks up above the board and the right leg does not, so it looks like a stray or unfinished post."
+  ]
+ }
+]

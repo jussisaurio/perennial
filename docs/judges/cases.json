@@ -1,0 +1,238 @@
+[
+  {
+    "id": "signs",
+    "issue": 650,
+    "fixPr": 658,
+    "before": "896edbf",
+    "after": "2abe6e425",
+    "half": "tuning",
+    "kind": "still",
+    "screen": "Garden walk, ?demo=es:400: where it opens, then 3 m and 1.6 m from the first bed, facing it",
+    "ownerSaw": "Text in the world (a bed's month sign, the snail's sign) is in English. It should be in the course language.",
+    "ownerFoundIt": "yes: the issue says 'The owner said (2026-11-07)'",
+    "steps": {
+      "before": [
+        "1-desktop.png: a Spanish course. The garden walk, just opened",
+        "2-desktop.png: a Spanish course. Standing 3 m from the first bed, facing it",
+        "3-desktop.png: a Spanish course. Standing 1.6 m from the first bed, facing it",
+        "1-phone.png: a Spanish course. The garden walk, just opened",
+        "2-phone.png: a Spanish course. Standing 3 m from the first bed, facing it",
+        "3-phone.png: a Spanish course. Standing 1.6 m from the first bed, facing it"
+      ],
+      "after": [
+        "1-desktop.png: a Spanish course. The garden walk, just opened",
+        "2-desktop.png: a Spanish course. Standing 3 m from the first bed, facing it",
+        "3-desktop.png: a Spanish course. Standing 1.6 m from the first bed, facing it",
+        "1-phone.png: a Spanish course. The garden walk, just opened",
+        "2-phone.png: a Spanish course. Standing 3 m from the first bed, facing it",
+        "3-phone.png: a Spanish course. Standing 1.6 m from the first bed, facing it"
+      ]
+    }
+  },
+  {
+    "id": "quality",
+    "issue": 677,
+    "fixPr": 703,
+    "before": "b8e05b5",
+    "after": "54a0fac10",
+    "half": "heldout",
+    "kind": "still",
+    "screen": "Garden walk, ?demo=es:400, where it opens",
+    "ownerSaw": "A 'Normal quality' / 'Low quality' button in the walk. The app should own its speed problems, not ask the learner to cut quality.",
+    "ownerFoundIt": "yes: the issue quotes the owner",
+    "steps": {
+      "before": [
+        "1-desktop.png: the garden walk, just opened",
+        "1-phone.png: the garden walk, just opened"
+      ],
+      "after": [
+        "1-desktop.png: the garden walk, just opened",
+        "1-phone.png: the garden walk, just opened"
+      ]
+    }
+  },
+  {
+    "id": "settings",
+    "issue": 678,
+    "fixPr": 700,
+    "before": "c3a81a6",
+    "after": "9dcc7f7a6",
+    "half": "tuning",
+    "kind": "still",
+    "screen": "Settings, ?demo=es:30, dark and light, scrolled in steps",
+    "ownerSaw": "You can't tell which option is on and which is not.",
+    "ownerFoundIt": "yes: the issue quotes the owner",
+    "steps": {
+      "before": [
+        "1-dark-desktop.png: the Settings screen, scrolled down 0 px",
+        "2-dark-desktop.png: the Settings screen, scrolled down 560 px",
+        "3-dark-desktop.png: the Settings screen, scrolled down 1120 px",
+        "1-dark-phone.png: the Settings screen, scrolled down 0 px",
+        "2-dark-phone.png: the Settings screen, scrolled down 684 px",
+        "3-dark-phone.png: the Settings screen, scrolled down 1368 px",
+        "1-light-desktop.png: the Settings screen, scrolled down 0 px",
+        "2-light-desktop.png: the Settings screen, scrolled down 560 px",
+        "3-light-desktop.png: the Settings screen, scrolled down 1120 px",
+        "1-light-phone.png: the Settings screen, scrolled down 0 px",
+        "2-light-phone.png: the Settings screen, scrolled down 684 px",
+        "3-light-phone.png: the Settings screen, scrolled down 1368 px"
+      ],
+      "after": [
+        "1-dark-desktop.png: the Settings screen, scrolled down 0 px",
+        "2-dark-desktop.png: the Settings screen, scrolled down 560 px",
+        "3-dark-desktop.png: the Settings screen, scrolled down 1120 px",
+        "1-dark-phone.png: the Settings screen, scrolled down 0 px",
+        "2-dark-phone.png: the Settings screen, scrolled down 684 px",
+        "3-dark-phone.png: the Settings screen, scrolled down 1368 px",
+        "1-light-desktop.png: the Settings screen, scrolled down 0 px",
+        "2-light-desktop.png: the Settings screen, scrolled down 560 px",
+        "3-light-desktop.png: the Settings screen, scrolled down 1120 px",
+        "1-light-phone.png: the Settings screen, scrolled down 0 px",
+        "2-light-phone.png: the Settings screen, scrolled down 684 px",
+        "3-light-phone.png: the Settings screen, scrolled down 1368 px"
+      ]
+    }
+  },
+  {
+    "id": "nextplant",
+    "issue": 710,
+    "fixPr": 717,
+    "before": "74a57fb",
+    "after": "4fea0bc1b",
+    "half": "heldout",
+    "kind": "still",
+    "screen": "Garden walk, ?demo=es:400: where it opens, then a plant's card",
+    "ownerSaw": "The 'Next plant' button in the bottom bar and the card's Previous / Next pair are close to useless, and they jump you from plant to plant.",
+    "ownerFoundIt": "yes: 'The owner's call (2026-11-07)'",
+    "steps": {
+      "before": [
+        "1-desktop.png: the garden walk, just opened",
+        "2-desktop.png: a plant's card, open",
+        "1-phone.png: the garden walk, just opened",
+        "2-phone.png: a plant's card, open"
+      ],
+      "after": [
+        "1-desktop.png: the garden walk, just opened",
+        "2-desktop.png: a plant's card, open",
+        "1-phone.png: the garden walk, just opened",
+        "2-phone.png: a plant's card, open"
+      ]
+    }
+  },
+  {
+    "id": "card",
+    "issue": 711,
+    "fixPr": 715,
+    "before": "b257f3a",
+    "after": "74a57fbf3",
+    "half": "tuning",
+    "kind": "still",
+    "screen": "Garden walk, ?demo=es:400: three plant cards",
+    "ownerSaw": "A jokey line on the plant card ('Showing off a little. It earned it.', 'It remembers you too.'). Learners will be confused by it.",
+    "ownerFoundIt": "yes: the issue quotes the owner",
+    "steps": {
+      "before": [
+        "1-desktop.png: the garden walk, after 1 press(es) of the \"Next plant\" button in the bottom bar",
+        "2-desktop.png: the garden walk, after 2 press(es) of the \"Next plant\" button in the bottom bar",
+        "3-desktop.png: the garden walk, after 3 press(es) of the \"Next plant\" button in the bottom bar",
+        "1-phone.png: the garden walk, after 1 press(es) of the \"Next plant\" button in the bottom bar",
+        "2-phone.png: the garden walk, after 2 press(es) of the \"Next plant\" button in the bottom bar",
+        "3-phone.png: the garden walk, after 3 press(es) of the \"Next plant\" button in the bottom bar"
+      ],
+      "after": [
+        "1-desktop.png: the garden walk, after 1 press(es) of the \"Next plant\" button in the bottom bar",
+        "2-desktop.png: the garden walk, after 2 press(es) of the \"Next plant\" button in the bottom bar",
+        "3-desktop.png: the garden walk, after 3 press(es) of the \"Next plant\" button in the bottom bar",
+        "1-phone.png: the garden walk, after 1 press(es) of the \"Next plant\" button in the bottom bar",
+        "2-phone.png: the garden walk, after 2 press(es) of the \"Next plant\" button in the bottom bar",
+        "3-phone.png: the garden walk, after 3 press(es) of the \"Next plant\" button in the bottom bar"
+      ]
+    }
+  },
+  {
+    "id": "stileshut",
+    "issue": 749,
+    "fixPr": 765,
+    "before": "b201e7c",
+    "after": "101d8d9c3",
+    "half": "heldout",
+    "kind": "sequence",
+    "screen": "Garden walk, ?demo=es:300 (no hill note yet): 3 m from the stile, then on it, then W held",
+    "ownerSaw": "You climb the stile and it goes nowhere. Nothing shows that the way is shut for now, so it reads as a bug.",
+    "ownerFoundIt": "yes: 'The owner climbed the stile and found it goes nowhere'",
+    "steps": {
+      "before": [
+        "1-desktop.png: standing 3 m from the steps over the back fence",
+        "2-desktop.png: at the foot of the steps (no action button is shown)",
+        "3-desktop.png: then after holding W (walk forward) for 3 s",
+        "1-phone.png: standing 3 m from the steps over the back fence",
+        "2-phone.png: at the foot of the steps (no action button is shown)",
+        "3-phone.png: then after holding W (walk forward) for 3 s"
+      ],
+      "after": [
+        "1-desktop.png: standing 3 m from the steps over the back fence",
+        "2-desktop.png: at the foot of the steps (no action button is shown)",
+        "3-desktop.png: then after holding W (walk forward) for 3 s",
+        "1-phone.png: standing 3 m from the steps over the back fence",
+        "2-phone.png: at the foot of the steps (no action button is shown)",
+        "3-phone.png: then after holding W (walk forward) for 3 s"
+      ]
+    }
+  },
+  {
+    "id": "climb",
+    "issue": 770,
+    "fixPr": 782,
+    "before": "1431b6b",
+    "after": "39e8267e4",
+    "half": "tuning",
+    "kind": "sequence",
+    "screen": "Garden walk, ?demo=es:800: at the stile's foot, the action button or W, then W again",
+    "ownerSaw": "You can't walk over the stile. A 'Climb over the stile' button walks you over it and up the hill by itself, and your first move snaps you back.",
+    "ownerFoundIt": "yes: 'Owner report (2026-11-07, prod)'",
+    "steps": {
+      "before": [
+        "1-desktop.png: at the foot of the steps over the back fence",
+        "2-desktop.png: no key held: 3 s after one press of the action button in frame 1 (its screen-reader name: \"Climb over the stile\")",
+        "3-desktop.png: no key held: 9 s later",
+        "4-desktop.png: then after holding W (walk forward) for 0.4 s",
+        "1-phone.png: at the foot of the steps over the back fence",
+        "2-phone.png: no key held: 3 s after one press of the action button in frame 1 (its screen-reader name: \"Climb over the stile\")",
+        "3-phone.png: no key held: 9 s later",
+        "4-phone.png: then after holding W (walk forward) for 0.4 s"
+      ],
+      "after": [
+        "1-desktop.png: at the foot of the steps over the back fence (no action button is shown)",
+        "2-desktop.png: after holding W (walk forward) for 3 s",
+        "3-desktop.png: after holding W for 9 s more",
+        "4-desktop.png: then after holding W for 0.4 s more",
+        "1-phone.png: at the foot of the steps over the back fence (no action button is shown)",
+        "2-phone.png: after holding W (walk forward) for 3 s",
+        "3-phone.png: after holding W for 9 s more",
+        "4-phone.png: then after holding W for 0.4 s more"
+      ]
+    }
+  },
+  {
+    "id": "door",
+    "issue": 779,
+    "fixPr": 780,
+    "before": "cb9635f",
+    "after": "1431b6be3",
+    "half": "heldout",
+    "kind": "still",
+    "screen": "Garden walk, ?demo=es:30: at the locked door, after 'Try the door'",
+    "ownerSaw": "The door's line is 'Locked.' in English. In-world text should be in the course language.",
+    "ownerFoundIt": "yes: 'Owner report (2026-11-07)'",
+    "steps": {
+      "before": [
+        "1-desktop.png: a Spanish course. Standing at the door in the hedge, just after pressing the action button (its screen-reader name: \"Try the door\")",
+        "1-phone.png: a Spanish course. Standing at the door in the hedge, just after pressing the action button (its screen-reader name: \"Try the door\")"
+      ],
+      "after": [
+        "1-desktop.png: a Spanish course. Standing at the door in the hedge, just after pressing the action button (its screen-reader name: \"Try the door\")",
+        "1-phone.png: a Spanish course. Standing at the door in the hedge, just after pressing the action button (its screen-reader name: \"Try the door\")"
+      ]
+    }
+  }
+]
