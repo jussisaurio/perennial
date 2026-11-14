@@ -49,6 +49,7 @@ The bench stands by the pond, its back to the garden and its seat facing the wat
 By the bench, from any side, the action button says "Sit on the bench". Press it and you sit, facing the pond, and the eye sinks. The button now says "Stand up". Press it, or press a walk key, and you stand up a step in front of where you sat, between the bench and the pond. A tap on the ground stands you up there too, and walks you on to the spot.
 
 - `bench.sit`: From the garden, holding W toward the bench stops you at its back, and the button says "Sit on the bench". Press it and you sit, facing the pond. Press "Stand up" and you stand in front of the bench; holding S there stops you at its front. Sit again, and a step stands you up too.
+- `bench.solid`: Holding W into the bench stops you at it: from the garden at its back, from the side at its end, and from the pond's side at its front.
 
 ## Visitors
 

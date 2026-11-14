@@ -30,7 +30,7 @@ async function aliceWithData() {
 const TABLES = ["course", "review", "word_state", "user_word", "user_sentence"];
 const count = async (table: string, userId: string) => Number((await t.sql`select count(*)::int as n from ${t.db(table)} where user_id = ${userId}`)[0]?.n);
 
-describe("reads: /api/rows only ever has your own rows", () => {
+describe("security.own-rows: /api/rows only ever has your own rows", () => {
   test("whatever the client asks for", async () => {
     const { aliceId } = await aliceWithData();
     const mallory = await t.signIn(unique("mallory"));
@@ -48,7 +48,7 @@ describe("reads: /api/rows only ever has your own rows", () => {
   });
 });
 
-describe("writes: every mutation is scoped to the session's user", () => {
+describe("security.own-writes: every mutation is scoped to the session's user", () => {
   test("another user's ids can't be overwritten or deleted", async () => {
     const { aliceId, reviewId, wordId, sentenceId } = await aliceWithData();
     const before = Object.fromEntries(await Promise.all(TABLES.map(async (tb) => [tb, await count(tb, aliceId)])));

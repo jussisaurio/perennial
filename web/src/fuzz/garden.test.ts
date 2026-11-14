@@ -5,7 +5,7 @@ import { caseName, caseOf, check } from "./garden";
 // run, a short walk in each. A finding prints its case; the full run there
 // shrinks it and has more seeds.
 
-test("the garden fuzzer finds nothing in its fixed gardens", () => {
+test("garden.walk-rules: the garden fuzzer finds nothing in its fixed gardens", () => {
   const found: string[] = [];
   for (let seed = 1; seed <= 16; seed++) {
     const c = caseOf(seed);

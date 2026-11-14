@@ -1,7 +1,7 @@
 import { expect, test } from "./test";
 import { addEmail, answer, expectServerRows, newEmail, openAdd, signIn, startCourse, startSession } from "./helpers";
 
-test("progress made before adding an email stays, and another device signs in to the same garden", async ({ browser }) => {
+test("progress.survives-sign-in: progress made before adding an email stays, and another device signs in to the same garden", async ({ browser }) => {
   const one = await browser.newPage();
   await startCourse(one);
   await startSession(one);

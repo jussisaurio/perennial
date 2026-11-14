@@ -6,7 +6,7 @@ import { review, startApp, stopMockLLM, unique, W } from "./helpers";
 const t = await startApp();
 afterAll(async () => (await t.stop(), stopMockLLM()));
 
-test("review inserts are idempotent", async () => {
+test("sync.review-once: review inserts are idempotent", async () => {
   const cookie = await t.signIn(unique("write"));
   const r = review(W.a);
   const first = await t.write(cookie, [r]);
@@ -112,7 +112,7 @@ test("the orchard door opens for good, per course, and syncs to the learner's de
   expect(rows.map((r) => [r.lang, r.door_open]).sort()).toEqual([["de", false], ["es", true]]);
 });
 
-test("the gardener's notes read only grow, merged from every device (#654)", async () => {
+test("progress.notes-grow: the gardener's notes read only grow, merged from every device (#654)", async () => {
   const cookie = await t.signIn(unique("notes"));
   const id = (await t.me(cookie)).id;
   const read = async () => (await t.sql`select notes_read from course where user_id = ${id} and lang = 'es'`)[0]?.notes_read;
@@ -166,7 +166,7 @@ test("migration 0004 turns forms stored as a JSON string into the list, and the 
   expect(rows.map((r) => [r.id, r.forms])).toEqual([[id, forms]]);
 });
 
-test("bad batches are rejected whole; reviews from the future too", async () => {
+test("sync.batch-whole: bad batches are rejected whole; reviews from the future too", async () => {
   const cookie = await t.signIn(unique("bad"));
   expect((await t.write(cookie, [{ type: "review.insert", row: { id: "nope" } }])).status).toBe(422);
   expect((await t.write(cookie, [review(W.e, { reviewed_at: new Date(Date.now() + 3 * 86_400_000).toISOString() })])).status).toBe(422);
