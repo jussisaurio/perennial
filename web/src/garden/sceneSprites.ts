@@ -27,9 +27,9 @@ export function plantHeight(growth: number): number {
 }
 
 // The vertex shader part every sprite shares: the fog and selection inputs,
-// and billboard(), which sways the quad in the wind, leans it by `droop`, then
-// turns it to face the camera around the vertical axis only, like Doom's
-// sprites. It returns the view-space position. vPaper: where on its sheet of
+// sway(), how far the wind leans a cut-out, and billboard(), which sways the
+// quad, leans it by `droop`, then turns it to face the camera around the
+// vertical axis only, like Doom's sprites. It returns the view-space position. vPaper: where on its sheet of
 // paper the point is (SHADE), fixed to the cut-out as it sways and turns.
 // In the shadow map the view is the sun's, so there the cut-out faces the sun
 // (sceneLight.ts); vSunAt is the point in that pose, where SHADE looks up its
@@ -49,12 +49,15 @@ export const BILLBOARD = /* glsl */ `
   varying vec3 vSunAt;
   varying float vFront;
   varying float vFoot;
+  float sway(float phase) {
+    float h = position.y / ${SPRITE_H.toFixed(1)};
+    return uSway * sin(uTime * 1.4 + phase) * 0.07 * h + uSway * sin(uTime * 3.1 + phase * 2.0) * 0.015;
+  }
   vec4 billboard(vec3 at, vec2 p, float phase, float droop) {
     // Each cut-out from its own part of the sheet.
     vPaper = p + vec2(phase * 2.3, phase * 1.7);
     vFoot = p.y;
-    float h = position.y / ${SPRITE_H.toFixed(1)};
-    float a = droop + uSway * sin(uTime * 1.4 + phase) * 0.07 * h + uSway * sin(uTime * 3.1 + phase * 2.0) * 0.015;
+    float a = droop + sway(phase);
     p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
     vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
     vec3 world = at + right * p.x + vec3(0.0, p.y, 0.0);
@@ -104,6 +107,43 @@ const SPRITE_VERT = /* glsl */ `
   ${BILLBOARD}
   void main() {
     vec4 mv = billboard(iPos, position.xy * iParams.z, iParams.x, iParams.y);
+    gl_Position = projectionMatrix * mv;
+    vUv = iUv.xy + uv * iUv.zw;
+    vFog = smoothstep(uFogNear, uFogFar, -mv.z);
+    vSel = abs(iParams.w - uSelected) < 0.5 ? 1.0 : 0.0;
+  }
+`;
+
+// A card that stands still, like one stuck in the ground: its foot on iPos, its
+// +x turned toward (cos a, 0, sin a), where a is iParams.y. Two of them slotted
+// into an X make a tree. The wind leans the whole thing one way round its foot,
+// so cards slotted together stay together. It stands where it is in the sun's
+// shadow map too, so it looks its shadow up where it is.
+const FIXED_VERT = /* glsl */ `
+  attribute vec3 iPos;
+  attribute vec4 iUv;
+  attribute vec4 iParams; // phase, heading, scale, index
+  uniform vec3 uSunDir;
+  varying vec2 vUv;
+  ${BILLBOARD}
+  void main() {
+    vec2 p = position.xy * iParams.z;
+    float a = iParams.y;
+    // Each card from its own part of the sheet, the two of an X too.
+    vPaper = p + vec2(iParams.x * 2.3 + a, iParams.x * 1.7);
+    vFoot = p.y;
+    vec3 along = vec3(cos(a), 0.0, sin(a));
+    vec3 o = along * p.x + vec3(0.0, p.y, 0.0);
+    float s = sway(iParams.x);
+    o = vec3(o.x * cos(s) - o.y * sin(s), o.x * sin(s) + o.y * cos(s), o.z);
+    vAt = iPos + o;
+    vSunAt = vAt;
+    // The face you see, and how square it is to the sun's level way: 0 with the sun straight overhead, which lights
+    // both faces alike (the max keeps that 0 from being 0 / 0).
+    vec3 n = vec3(-along.z, 0.0, along.x);
+    if (dot(n, cameraPosition - vAt) < 0.0) n = -n;
+    vFront = dot(n, uSunDir) * inversesqrt(max(dot(uSunDir.xz, uSunDir.xz), 1e-6));
+    vec4 mv = viewMatrix * vec4(vAt, 1.0);
     gl_Position = projectionMatrix * mv;
     vUv = iUv.xy + uv * iUv.zw;
     vFog = smoothstep(uFogNear, uFogFar, -mv.z);
@@ -207,10 +247,17 @@ export function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeome
   return geo;
 }
 
-/** Instanced camera-facing quads, bottom-centre anchored, from one atlas, casting shadows. `lying`: flat on the ground instead, centred, turned by `droop` (LYING_VERT), casting none. */
+/**
+ * How a sprite stands: on its foot, turned to face the eye (SPRITE_VERT); on its foot and still, turned by its `droop`,
+ * seen from both sides (FIXED_VERT); or lying flat on the ground, centred, turned by its `droop` (LYING_VERT).
+ */
+export type Stand = "facing" | "fixed" | "lying";
+const STAND_VERT: Record<Stand, string> = { facing: SPRITE_VERT, fixed: FIXED_VERT, lying: LYING_VERT };
+
+/** Instanced quads from one atlas, standing as `stand` says. A standing one casts a shadow. */
 export type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
-export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, lying = false) {
-  const geo = instanced(lying ? new THREE.PlaneGeometry(w, h) : standingQuad(w, h));
+export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, stand: Stand = "facing") {
+  const geo = instanced(stand === "lying" ? new THREE.PlaneGeometry(w, h) : standingQuad(w, h));
   const pos = new Float32Array(items.length * 3);
   const uv = new Float32Array(items.length * 4);
   const params = new Float32Array(items.length * 4);
@@ -223,9 +270,10 @@ export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h
   geo.setAttribute("iUv", new THREE.InstancedBufferAttribute(uv, 4));
   geo.setAttribute("iParams", new THREE.InstancedBufferAttribute(params, 4));
   geo.instanceCount = items.length;
-  const mesh = new THREE.Mesh(geo, spriteMaterial(map, lying ? LYING_VERT : SPRITE_VERT));
+  const mesh = new THREE.Mesh(geo, spriteMaterial(map, STAND_VERT[stand]));
+  if (stand === "fixed") mesh.material.side = THREE.DoubleSide;
   mesh.frustumCulled = false;
-  if (!lying) castsShadow(mesh, SPRITE_DEPTH);
+  if (stand !== "lying") castsShadow(mesh, SPRITE_DEPTH);
   return mesh;
 }
 

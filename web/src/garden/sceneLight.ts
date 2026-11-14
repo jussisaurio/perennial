@@ -156,7 +156,7 @@ const depthOf = new WeakMap<THREE.ShaderMaterial, THREE.ShaderMaterial>();
 
 /**
  * Makes a cut-out's mesh cast a shadow: drawn into the shadow map from both sides, by its own vertex shader (which
- * turns it to face the light there) and `fragmentShader`, which discards where the paper is cut away.
+ * turns one that faces the eye to face the light there) and `fragmentShader`, which discards where the paper is cut away.
  */
 export function castsShadow(mesh: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>, fragmentShader: string) {
   const m = mesh.material;

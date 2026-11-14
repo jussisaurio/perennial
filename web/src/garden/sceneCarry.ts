@@ -56,7 +56,7 @@ export class Carry implements Part {
     this.wellAt = items.length;
     items.push({ x: w.x, y: 0, z: w.z, u: cell(T.CARRY_CELL.well), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -8 });
     const mesh = sprites(tex, items, SIZE, SIZE);
-    const rings = sprites(tex, [{ x: 0, y: 0.05, z: 0, u: cell(T.CARRY_CELL.ring(0)), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -8 }], RIPPLE.size, RIPPLE.size, true);
+    const rings = sprites(tex, [{ x: 0, y: 0.05, z: 0, u: cell(T.CARRY_CELL.ring(0)), v: 0, uw: 1 / T.CARRY_CELLS, vh: 1, phase: 0, droop: 0, scale: 0, index: -8 }], RIPPLE.size, RIPPLE.size, "lying");
     for (const m of [mesh, rings]) {
       m.material.uniforms.uSway.value = 0;
       this.mats.add(m.material);
