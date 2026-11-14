@@ -17,7 +17,7 @@ import { basename, join } from "node:path";
 import { all, api, remove, REPO, send } from "../gh.ts";
 import {
   type AgentResult, agentsStarted, candidates, choose, CLAIM_HOURS, claimComment, claims, type Comment, dayStart, failedComment, failures, holder,
-  isAlarm, type Issue, type IssueEvent, MAX_FAILURES, mergedSince, prompt, readyByOwner, releaseComment, slots, type TimelineEvent,
+  isAlarm, type Issue, type IssueEvent, MAX_FAILURES, mergedSince, prompt, readySince, releaseComment, slots, type TimelineEvent,
 } from "./lib.ts";
 
 const ROOT = join(import.meta.dir, "../..");
@@ -67,7 +67,7 @@ const comments = (n: number) => all<Comment>(`repos/${REPO}/issues/${n}/comments
 
 /** Why an issue can't be taken now, from GitHub: the owner's `ready` check that candidates() leaves out, and a live claim. */
 async function blocked(issue: Issue): Promise<string | undefined> {
-  if (!isAlarm(issue) && !readyByOwner(await all<IssueEvent>(`repos/${REPO}/issues/${issue.number}/events?per_page=100`), OWNER)) return `the last \`ready\` was not added by ${OWNER}`;
+  if (!isAlarm(issue) && !readySince(issue, await all<IssueEvent>(`repos/${REPO}/issues/${issue.number}/events?per_page=100`), OWNER)) return `the last \`ready\` was not added by ${OWNER} (or by the upkeep workflow on its own issue)`;
   const h = holder(await comments(issue.number), OWNER, new Date());
   return h && `claimed by ${h.who} at ${h.at}`;
 }
@@ -213,7 +213,7 @@ async function finish(n: number) {
   }
 
   // The alarm issue has no `ready` label: its failures count from when it was opened.
-  const since = readyByOwner(await all<IssueEvent>(`repos/${REPO}/issues/${n}/events?per_page=100`), OWNER) ?? issue.created_at;
+  const since = readySince(issue, await all<IssueEvent>(`repos/${REPO}/issues/${n}/events?per_page=100`), OWNER) ?? issue.created_at;
   const count = failures(said).filter((c) => c.created_at > since).length + 1;
   const body = failedComment({
     runUrl: runUrl(),

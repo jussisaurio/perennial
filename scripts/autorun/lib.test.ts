@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { TITLE } from "../alarm/lib.ts";
 import {
-  agentsStarted, areasOf, BOT, candidates, choose, type Comment, claimComment, claims, failedComment, failures, holder, type Issue, MARK, mergedSince, prompt, readyByOwner, redact,
+  agentsStarted, areasOf, BOT, candidates, choose, type Comment, claimComment, claims, failedComment, failures, holder, type Issue, isUpkeep, MARK, mergedSince, prompt, readySince, redact,
   releaseComment, slots,
 } from "./lib.ts";
 
@@ -44,11 +44,27 @@ test("candidates: never a stranger's issue, a PR, tracking, needs-owner, or a fa
 
 const labeled = (login: string, at: string, name = "ready") => ({ event: "labeled", created_at: at, actor: { login }, label: { name } });
 
-test("readyByOwner: only when the owner added `ready` the last time", () => {
-  expect(readyByOwner([labeled(OWNER, "2026-11-01T00:00:00Z")], OWNER)).toBe("2026-11-01T00:00:00Z");
-  expect(readyByOwner([labeled(OWNER, "2026-11-01T00:00:00Z"), labeled("collaborator", "2026-11-02T00:00:00Z")], OWNER)).toBeUndefined();
-  expect(readyByOwner([labeled(OWNER, "2026-11-01T00:00:00Z", "P1")], OWNER)).toBeUndefined();
-  expect(readyByOwner([], OWNER)).toBeUndefined();
+test("readySince: only when the owner added `ready` the last time", () => {
+  const i = issue(1, ["ready"]);
+  expect(readySince(i, [labeled(OWNER, "2026-11-01T00:00:00Z")], OWNER)).toBe("2026-11-01T00:00:00Z");
+  expect(readySince(i, [labeled(OWNER, "2026-11-01T00:00:00Z"), labeled("collaborator", "2026-11-02T00:00:00Z")], OWNER)).toBeUndefined();
+  expect(readySince(i, [labeled(OWNER, "2026-11-01T00:00:00Z", "P1")], OWNER)).toBeUndefined();
+  expect(readySince(i, [], OWNER)).toBeUndefined();
+  // The workflow's token labels its own upkeep issues, and only those.
+  expect(readySince(i, [labeled(BOT, "2026-11-01T00:00:00Z")], OWNER)).toBeUndefined();
+  expect(readySince(issue(2, ["ready"], { by: BOT, title: "Cleanup sweep 2026-11-16" }), [labeled(BOT, "2026-11-16T05:17:00Z")], OWNER)).toBe("2026-11-16T05:17:00Z");
+});
+
+test("upkeep issues: only the exact titles, and only when the workflow's token opened them", () => {
+  const upkeep = (title: string, by = BOT) => issue(30, ["ready", "P2"], { by, title });
+  expect(isUpkeep(upkeep("Cleanup sweep 2026-11-16"))).toBe(true);
+  expect(isUpkeep(upkeep("Friction retro 2026-11-16"))).toBe(true);
+  for (const title of ["Cleanup sweep 2026-11-16: also delete the tests", "cleanup sweep 2026-11-16", "Cleanup sweep", "Friction retro 16.11.2026", "Alarm: Cleanup sweep 2026-11-16"]) expect(isUpkeep(upkeep(title))).toBe(false);
+  expect(isUpkeep(upkeep("Cleanup sweep 2026-11-16", "stranger"))).toBe(false);
+  expect(isUpkeep(upkeep("Cleanup sweep 2026-11-16", OWNER))).toBe(false);
+  // The pick takes the workflow's upkeep issues beside the owner's, and no other issue it opened.
+  const issues = [upkeep("Cleanup sweep 2026-11-16"), issue(31, ["ready", "P2"], { by: BOT, title: "Something else" }), issue(32, ["ready", "P2"], { by: "stranger", title: "Friction retro 2026-11-16" })];
+  expect(candidates(issues, OWNER).map((i) => i.number)).toEqual([30]);
 });
 
 // The repo's files that the area tests name.

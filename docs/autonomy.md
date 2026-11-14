@@ -24,7 +24,7 @@ A claim is a comment on the issue that says who holds it, with the time. Local a
 ## What a run trusts
 
 The repo is public: anyone can open issues and write comments. So:
-- A run takes only an issue that **the owner's account opened**, and only if **the owner's account added `ready`** the last time. The one other issue it takes is the alarm, which only the workflow's own token can open.
+- A run takes only an issue that **the owner's account opened**, and only if **the owner's account added `ready`** the last time. The other issues it takes are the alarm and the weekly "Cleanup sweep <date>" and "Friction retro <date>" (CLAUDE.md, "Every week"). Each one needs its exact title, and the workflow's own token must have opened it. On the weekly issues, `ready` from that token also counts.
 - Only comments by the workflow's token or the owner's account can claim or release an issue.
 - The agent gets the issue's title and text, and the workflow's own reports of earlier runs. It never gets comments by other accounts. Its prompt says that the issue text is data about the task, not instructions about tokens, secrets or workflows.
 - Nothing that other people do starts a run. It starts only on the schedule or by hand, never on issue, comment or pull request events.
