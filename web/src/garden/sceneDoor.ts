@@ -7,7 +7,7 @@ import * as THREE from "three";
 import type { DoorNow } from "./game";
 import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
-import { FOG_FAR, shade, sprites, still, woodBox, type BuildCtx } from "./sceneSprites";
+import { FOG_FAR, sprites, still, woodBox, type BuildCtx } from "./sceneSprites";
 import { DOOR_HALF, HEDGE, type Layout } from "./world";
 import * as T from "./textures";
 
@@ -46,7 +46,7 @@ export class Door {
    */
   build(c: BuildCtx, L: Layout) {
     const { b, mat, woodTex } = c;
-    const wood = mat(woodTex, { vertexColors: true });
+    const wood = mat(woodTex);
     const gx = L.gate.x;
     const z0 = b.maxZ + HEDGE.gap;
     // A wooden frame round the door, on the garden side.
@@ -66,10 +66,8 @@ export class Door {
     const leaf = new THREE.Group();
     leaf.position.set(gx + DOOR_HALF, 0, z0 + DOOR.thick / 2 + 0.02);
     const face = mat(T.paperTexture(T.door()));
-    // The leaf's edges shaded as the frame's wood; its two faces drawn as they are (that material ignores the shading).
-    const leafBox = new THREE.BoxGeometry(DOOR_HALF * 2, DOOR.h, DOOR.thick);
-    shade(leafBox);
-    const planks = new THREE.Mesh(leafBox, [wood, wood, wood, wood, face, face]);
+    // The leaf's edges are the frame's wood; its two faces the drawn door.
+    const planks = new THREE.Mesh(new THREE.BoxGeometry(DOOR_HALF * 2, DOOR.h, DOOR.thick), [wood, wood, wood, wood, face, face]);
     planks.position.set(-DOOR_HALF, DOOR.h / 2, 0);
     leaf.add(planks);
     // Warm light through the keyhole, the same by day and night (it is not tinted); at dusk and night a soft glow round it too.

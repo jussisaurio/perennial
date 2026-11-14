@@ -8,8 +8,8 @@
 import * as THREE from "three";
 import type { DeckLang } from "../deck/langs";
 import { stemHeight } from "../ui/plant";
-import { SUN_AT } from "./bench";
 import { GRAIN, PAPER } from "./paper";
+import { castsShadow, LIGHT, LIT } from "./sceneLight";
 import type { HitBox, HitDisc } from "./scenery";
 import * as T from "./textures";
 import type { Layout } from "./world";
@@ -31,29 +31,45 @@ export function plantHeight(growth: number): number {
 // turns it to face the camera around the vertical axis only, like Doom's
 // sprites. It returns the view-space position. vPaper: where on its sheet of
 // paper the point is (SHADE), fixed to the cut-out as it sways and turns.
+// In the shadow map the view is the sun's, so there the cut-out faces the sun
+// (sceneLight.ts); vSunAt is the point in that pose, where SHADE looks up its
+// shadow. vFront: 1 when the eye sees the side the sun is on, -1 the other.
+// vFoot: how high over its foot the point is (m).
 export const BILLBOARD = /* glsl */ `
   uniform float uTime;
   uniform float uSway;
   uniform float uFogNear;
   uniform float uFogFar;
   uniform float uSelected;
+  uniform vec3 uSunRight;
   varying float vFog;
   varying float vSel;
   varying vec2 vPaper;
+  varying vec3 vAt;
+  varying vec3 vSunAt;
+  varying float vFront;
+  varying float vFoot;
   vec4 billboard(vec3 at, vec2 p, float phase, float droop) {
     // Each cut-out from its own part of the sheet.
     vPaper = p + vec2(phase * 2.3, phase * 1.7);
+    vFoot = p.y;
     float h = position.y / ${SPRITE_H.toFixed(1)};
     float a = droop + uSway * sin(uTime * 1.4 + phase) * 0.07 * h + uSway * sin(uTime * 3.1 + phase * 2.0) * 0.015;
     p = vec2(p.x * cos(a) - p.y * sin(a), p.x * sin(a) + p.y * cos(a));
     vec3 right = normalize(vec3(viewMatrix[0][0], 0.0, viewMatrix[2][0]));
     vec3 world = at + right * p.x + vec3(0.0, p.y, 0.0);
+    vAt = world;
+    vSunAt = at + uSunRight * p.x + vec3(0.0, p.y, 0.0);
+    vFront = dot(right, uSunRight);
     return viewMatrix * vec4(world, 1.0);
   }
 `;
 
 // The fragment shader part every sprite shares: the paper's grain
-// (paper.ts), time-of-day tint, a pulse when selected, and fog.
+// (paper.ts), the light (sceneLight.ts) and time-of-day tint, a pulse when
+// selected, and fog. A cut-out seen from its shaded side takes less of the sun,
+// and a little of it shines through the paper in the paper's own colour. Its
+// foot, where it stands, is a little darker.
 export const SHADE = /* glsl */ `
   uniform vec3 uFog;
   uniform vec3 uTint;
@@ -61,9 +77,20 @@ export const SHADE = /* glsl */ `
   varying float vFog;
   varying float vSel;
   varying vec2 vPaper;
+  varying vec3 vAt;
+  varying vec3 vSunAt;
+  varying float vFront;
+  varying float vFoot;
   ${PAPER}
+  ${LIGHT}
   vec4 shade(vec4 c) {
-    vec3 col = c.rgb * uTint * paper(vPaper);
+    vec3 paperC = c.rgb * paper(vPaper);
+    float sun = sunShadow(vSunAt + uSunDir * 0.08);
+    float front = smoothstep(-0.3, 0.3, vFront);
+    vec3 col = paperC * uTint * mix(fillLight(0.0), uKey, sun * mix(0.4, 1.0, front));
+    col += paperC * paperC * uTint * uKey * sun * (1.0 - front) * 0.35;
+    col += paperC * lampLight(vAt, vec3(0.0));
+    col *= mix(0.78, 1.0, smoothstep(0.0, 0.12, vFoot));
     col = mix(col, min(vec3(1.0), col * 1.35 + 0.08), vSel * (0.6 + 0.4 * sin(uTime * 5.0)));
     return vec4(mix(col, uFog, vFog), 1.0);
   }
@@ -97,12 +124,21 @@ const LYING_VERT = /* glsl */ `
   varying float vFog;
   varying float vSel;
   varying vec2 vPaper;
+  varying vec3 vAt;
+  varying vec3 vSunAt;
+  varying float vFront;
+  varying float vFoot;
   void main() {
     vec2 p = position.xy * iParams.z;
     vPaper = p;
     float a = iParams.y;
     // Local y goes to the far side, so the quad's front faces up.
-    vec4 mv = viewMatrix * vec4(iPos + vec3(p.x * cos(a) + p.y * sin(a), 0.0, p.x * sin(a) - p.y * cos(a)), 1.0);
+    vAt = iPos + vec3(p.x * cos(a) + p.y * sin(a), 0.0, p.x * sin(a) - p.y * cos(a));
+    // Lying down, it faces the sky: lit from the front, with no foot.
+    vSunAt = vAt;
+    vFront = 1.0;
+    vFoot = 1.0;
+    vec4 mv = viewMatrix * vec4(vAt, 1.0);
     gl_Position = projectionMatrix * mv;
     vUv = iUv.xy + uv * iUv.zw;
     vFog = smoothstep(uFogNear, uFogFar, -mv.z);
@@ -111,6 +147,15 @@ const LYING_VERT = /* glsl */ `
 `;
 
 // A premultiplied map (textures.ts cutoutTexture) has its colour divided by its alpha again.
+// SPRITE_DEPTH: the same cut-out in the sun's shadow map.
+const SPRITE_DEPTH = /* glsl */ `
+  uniform sampler2D uMap;
+  varying vec2 vUv;
+  void main() {
+    if (texture2D(uMap, vUv).a < 0.5) discard;
+    gl_FragColor = vec4(1.0);
+  }
+`;
 const SPRITE_FRAG = /* glsl */ `
   uniform sampler2D uMap;
   varying vec2 vUv;
@@ -139,6 +184,7 @@ function spriteMaterial(map: THREE.Texture, vertexShader: string): THREE.ShaderM
       uTint: { value: new THREE.Color(1, 1, 1) },
       uSelected: { value: -1 },
       uGrain: GRAIN,
+      ...LIT,
     },
     vertexShader,
     fragmentShader: SPRITE_FRAG,
@@ -161,7 +207,7 @@ export function instanced(quad: THREE.PlaneGeometry): THREE.InstancedBufferGeome
   return geo;
 }
 
-/** Instanced camera-facing quads, bottom-centre anchored, from one atlas. `lying`: flat on the ground instead, centred, turned by `droop` (LYING_VERT). */
+/** Instanced camera-facing quads, bottom-centre anchored, from one atlas, casting shadows. `lying`: flat on the ground instead, centred, turned by `droop` (LYING_VERT), casting none. */
 export type SpriteItem = { x: number; y: number; z: number; u: number; v: number; uw: number; vh: number; phase: number; droop: number; scale: number; index: number };
 export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h = SPRITE_H, lying = false) {
   const geo = instanced(lying ? new THREE.PlaneGeometry(w, h) : standingQuad(w, h));
@@ -179,6 +225,7 @@ export function sprites(map: THREE.Texture, items: SpriteItem[], w = SPRITE_W, h
   geo.instanceCount = items.length;
   const mesh = new THREE.Mesh(geo, spriteMaterial(map, lying ? LYING_VERT : SPRITE_VERT));
   mesh.frustumCulled = false;
+  if (!lying) castsShadow(mesh, SPRITE_DEPTH);
   return mesh;
 }
 
@@ -199,7 +246,7 @@ export interface BuildCtx {
   d: number;
   cx: number;
   cz: number;
-  /** An unlit material that follows the time of day's tint. */
+  /** A lit material (sceneLight.ts litMaterial) that follows the time of day's tint. */
   mat: (tex: THREE.Texture, opts?: THREE.MeshBasicMaterialParameters) => THREE.MeshBasicMaterial;
   woodTex: THREE.Texture;
   /** The screen smooths shapes' edges (#1106), so a cut-out's edges can be smooth too (alphaToCoverage). */
@@ -228,37 +275,14 @@ export function still<O extends THREE.Object3D>(o: O): O {
   return o;
 }
 
-/** Toward the day's sun: the same shading at every time of day, as the tint does the rest. */
-const SUN = new THREE.Vector3(...SUN_AT.day).normalize();
-
-/** How light a face with normal `n` is drawn, shaded by hand: the garden is lit by tint alone. 1 for flat ground. */
-function sunShade(n: THREE.Vector3): number {
-  return 1 + 0.7 * (n.dot(SUN) - SUN.y);
-}
-
-/** How light a face with normal `n` is drawn, times `k`. A round thing shows its side turned from the sun: kept from going black. */
-export function roundShade(n: THREE.Vector3, k: number): number {
-  return k * Math.max(0.7, sunShade(n));
-}
-
-/** Shade `geo` by its normals (roundShade), times `k`, as vertex colours. */
-export function shade(geo: THREE.BufferGeometry, k = 1) {
-  const normal = geo.getAttribute("normal");
-  const colors = new Float32Array(normal.count * 3);
-  const n = new THREE.Vector3();
-  for (let i = 0; i < normal.count; i++) colors.fill(roundShade(n.fromBufferAttribute(normal, i), k), i * 3, i * 3 + 3);
-  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-}
-
 /** Metres of wood one repeat of the wood texture covers along the grain. The beds' sides repeat it as often (scenePlants.ts). */
 const WOOD_TILE = 1.2;
 /** A face of wood narrower than this (m) is one piece with no plank gap: a post, a leg, a board's edge. */
 const ONE_PLANK = 0.25;
 
 /**
- * A box of wood (#1091), for `c.mat(c.woodTex, { vertexColors: true })`. On each face the grain runs along the longer
- * side; a face at least ONE_PLANK across shows the texture's two planks, a narrower one the middle of one plank. Its
- * faces are shaded by the sun (shade) in the box's own frame: the bench and signs are turned a little, too little to see.
+ * A box of wood (#1091), for `c.mat(c.woodTex)`. On each face the grain runs along the longer side; a face at least
+ * ONE_PLANK across shows the texture's two planks, a narrower one the middle of one plank.
  */
 export function woodBox(w: number, h: number, d: number): THREE.BoxGeometry {
   const box = new THREE.BoxGeometry(w, h, d);
@@ -281,7 +305,6 @@ export function woodBox(w: number, h: number, d: number): THREE.BoxGeometry {
       else uv.setXY(i, (v * fv) / WOOD_TILE, across(u, fu));
     }
   });
-  shade(box);
   return box;
 }
 

@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { hillY, STONE_R, STOOL_R, type Diary, type Lookout } from "./lookout";
 import { rayBox, type Ray } from "./scenery";
-import { shade, still, woodBox, type BuildCtx } from "./sceneSprites";
+import { still, woodBox, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** The flat stone's height, and the diary on it (m): high enough that, stood by it in reach, the book and its ribbon are in view. */
@@ -34,10 +34,8 @@ export class LookoutThings {
     const h = this.hill;
     // A three-legged stool, its seat a thick round of wood, its legs splayed out to feet wider than the seat: from the path it reads as a seat, not a little gate.
     const stool = new THREE.Group();
-    const wood = c.mat(c.woodTex, { vertexColors: true });
-    const seatGeo = new THREE.CylinderGeometry(0.2, 0.19, 0.07, 10);
-    shade(seatGeo);
-    const seat = new THREE.Mesh(seatGeo, wood);
+    const wood = c.mat(c.woodTex);
+    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.19, 0.07, 10), wood);
     seat.position.y = 0.45 - 0.035;
     stool.add(seat);
     const [under, splay] = [0.45 - 0.07, 0.3];
@@ -81,8 +79,7 @@ export class LookoutThings {
     // Seven flat faces, each one shade, not a gradient round it: no corner is shared, so each face keeps its own normal.
     const stoneGeo = new THREE.CylinderGeometry(STONE_R - 0.03, STONE_R, STONE_H, 7).toNonIndexed();
     stoneGeo.computeVertexNormals();
-    shade(stoneGeo);
-    const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true), { vertexColors: true }));
+    const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true)));
     stone.position.set(sx, foot + STONE_H / 2, sz);
     const top = foot + STONE_H;
     const book = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.d), c.mat(T.paperTexture(T.diary())));

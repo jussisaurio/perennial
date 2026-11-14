@@ -6,7 +6,7 @@
 
 import * as THREE from "three";
 import { hedgeCore, hedgeSheets, SHEET_H, SHEET_W, type HedgeWall, type Sheet } from "./hedge";
-import { roundShade, still, type BuildCtx } from "./sceneSprites";
+import { still, type BuildCtx } from "./sceneSprites";
 import * as T from "./textures";
 
 /** A box whose repeating texture shows one tile per `tile` metres on every face (a plain box stretches the texture to each face). */
@@ -28,7 +28,7 @@ function tiledBox(w: number, h: number, d: number, tile: number): THREE.BoxGeome
   return box;
 }
 
-/** Vertex colours from `low` at the bottom to `high` at the top, for an unlit material with vertexColors: shading without lights. */
+/** Vertex colours from `low` at the bottom to `high` at the top, for a material with vertexColors: darker deep down, where the light does not reach in. */
 function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
   geo.computeBoundingBox();
   const { min, max } = geo.boundingBox!;
@@ -39,8 +39,8 @@ function shadeUp(geo: THREE.BufferGeometry, low: number, high: number) {
 }
 
 /**
- * `sheets` as one geometry: two triangles each, their `paper` (its size in metres) laid on along each from its `u`, lit
- * by the sun and its `light`. The paper's top is at a sheet's top; a sheet taller than its paper carries the paper's
+ * `sheets` as one geometry: two triangles each, their `paper` (its size in metres) laid on along each from its `u`, and
+ * its `light` as its colour (the sun's light is sceneLight.ts's). The paper's top is at a sheet's top; a sheet taller than its paper carries the paper's
  * bottom row on down (the texture clamps there), so a tall flat is solid below its leaves.
  */
 export function sheetGeometry(sheets: Sheet[], paper: { w: number; h: number }): THREE.BufferGeometry {
@@ -48,22 +48,19 @@ export function sheetGeometry(sheets: Sheet[], paper: { w: number; h: number }):
   const uv = new Float32Array(sheets.length * 8);
   const color = new Float32Array(sheets.length * 12);
   const index: number[] = [];
-  const [bl, along, up, n] = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+  const [bl, along] = [new THREE.Vector3(), new THREE.Vector3()];
   const p = new THREE.Vector3();
   sheets.forEach((s, i) => {
-    const [a, b, , d] = s.corners;
+    const [a, b] = s.corners;
     bl.set(...a);
     along.set(...b).sub(bl).normalize();
-    up.set(...d).sub(bl);
-    n.crossVectors(along, up).normalize();
-    const light = roundShade(n, s.light);
     s.corners.forEach((c, j) => {
       const v = i * 4 + j;
       pos.set(c, v * 3);
       // Along the sheet as its bottom edge runs, so a sheet that narrows at the top keeps its leaves upright. Down
       // from the top corner above it (the bottom left's is the top left).
       uv.set([(s.u + p.set(...c).sub(bl).dot(along)) / paper.w, j < 2 ? 1 - (s.corners[3 - j][1] - c[1]) / paper.h : 1], v * 2);
-      color.fill(light, v * 3, v * 3 + 3);
+      color.fill(s.light, v * 3, v * 3 + 3);
     });
     index.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
   });

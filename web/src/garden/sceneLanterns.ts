@@ -16,8 +16,8 @@ export class Lanterns implements Part {
   private boxes: HitBox[] = [];
   private lit!: THREE.InstancedBufferAttribute;
   private unlit!: THREE.InstancedBufferAttribute;
-  /** Each lantern's halo and pool of light on the ground. */
-  private glows: [THREE.Object3D, THREE.Object3D][] = [];
+  /** Each lantern's halo. Its light on the ground and on what is near is the light's (sceneLight.ts lampLight). */
+  private halos: THREE.Sprite[] = [];
 
   private lamps: Lamps;
 
@@ -44,16 +44,12 @@ export class Lanterns implements Part {
     this.unlit = unlit.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     this.lit = lit.geometry.getAttribute("iParams") as THREE.InstancedBufferAttribute;
     const glowTex = T.glowTexture();
-    const additive = { map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false } as const;
     for (const [x, y, z] of at) {
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...additive }));
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
       halo.scale.set(1.1, 1.1, 1);
       halo.position.set(x, y + 1.12, z);
-      const pool = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ ...additive, opacity: 0.55 }));
-      pool.rotation.x = -Math.PI / 2;
-      pool.position.set(x, y + 0.06, z);
-      this.glows.push([halo, pool]);
-      c.scene.add(still(halo), still(pool));
+      this.halos.push(halo);
+      c.scene.add(still(halo));
     }
   }
 
@@ -62,13 +58,13 @@ export class Lanterns implements Part {
     for (let i = 0; i < this.lamps.at.length; i++) this.show(i);
   }
 
-  /** Lantern `i` as it is now: the lit or the unlit sprite, and the glow. */
+  /** Lantern `i` as it is now: the lit or the unlit sprite, and the halo. */
   show(i: number) {
     const lit = this.lamps.lit(i);
     this.lit.setZ(i, lit ? 1 : 0);
     this.unlit.setZ(i, lit ? 0 : 1);
     this.lit.needsUpdate = this.unlit.needsUpdate = true;
-    for (const g of this.glows[i]) g.visible = lit;
+    this.halos[i].visible = lit;
   }
 
   /** The lantern a ray meets first while it is dark, and how far along the ray. */

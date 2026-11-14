@@ -8,7 +8,7 @@
 import * as THREE from "three";
 import { JOKE_LINES, JOKE_SPOKEN, lapsDone, lapStep, POND_LAPS, sundialAngle, type Laps } from "./whimsy";
 import { rayBox, type Ray } from "./scenery";
-import { shade, type BuildCtx } from "./sceneSprites";
+import { type BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
 import { MOUSE_DOOR, type MouseMat } from "./mouseDoor";
@@ -65,17 +65,13 @@ export class Jokes implements Part {
    */
   build(c: BuildCtx, bench: { x: number; z: number }, now: Date, word: string | null) {
     const { L, mat } = c;
-    const stone = mat(T.paperTexture(T.stone(), true), { vertexColors: true });
+    const stone = mat(T.paperTexture(T.stone(), true));
 
     // The sundial: a stone pillar, a cap, the bronze face, its gnomon and shadow.
     const [x, z] = [bench.x + SUNDIAL.dx, bench.z + SUNDIAL.dz];
-    const pillarGeo = new THREE.BoxGeometry(0.2, SUNDIAL.pillar, 0.2);
-    shade(pillarGeo);
-    const pillar = new THREE.Mesh(pillarGeo, stone);
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.2, SUNDIAL.pillar, 0.2), stone);
     pillar.position.set(x, SUNDIAL.pillar / 2, z);
-    const capGeo = new THREE.BoxGeometry(SUNDIAL.top, 0.05, SUNDIAL.top);
-    shade(capGeo);
-    const cap = new THREE.Mesh(capGeo, stone);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(SUNDIAL.top, 0.05, SUNDIAL.top), stone);
     cap.position.set(x, SUNDIAL.pillar + 0.025, z);
     const y = SUNDIAL.pillar + 0.05;
     const faceTex = T.paperTexture(T.sundialFace());
@@ -92,8 +88,7 @@ export class Jokes implements Part {
     // The blade's length (its x) along -z.
     gnomonGeo.rotateY(Math.PI / 2);
     gnomonGeo.getAttribute("uv").array.fill(0.02);
-    shade(gnomonGeo);
-    const gnomon = new THREE.Mesh(gnomonGeo, mat(faceTex, { vertexColors: true }));
+    const gnomon = new THREE.Mesh(gnomonGeo, mat(faceTex));
     gnomon.position.set(x, y, z);
     // The shadow starts at the middle and points away from the sun: toward the hour on the face.
     const geo = new THREE.PlaneGeometry(0.022, SUNDIAL.shadow);

@@ -22,7 +22,7 @@ const crooked = (i: number) => (((i * 7) % 5) - 2) * 0.05;
 export function buildShed(c: BuildCtx, l: Layout): THREE.Group {
   const root = new THREE.Group();
   const s = shedAt(l);
-  const wood = c.mat(c.woodTex, { vertexColors: true });
+  const wood = c.mat(c.woodTex);
   const box = (w: number, h: number, d: number, x: number, y: number, z: number) => {
     const m = new THREE.Mesh(woodBox(w, h, d), wood);
     m.position.set(x, y, z);

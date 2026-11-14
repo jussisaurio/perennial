@@ -244,9 +244,7 @@ export function useGardenScene({
           reduced,
           lang,
           data.visitors,
-          // MSAA smooths the edges of shapes (#1106), but not in a test that pins low detail: CI draws WebGL
-          // in software (#793), where MSAA made a frame 30–90% slower.
-          pinned !== "low",
+          pinned ?? "normal",
         );
         await s.build();
       } catch (e) {
@@ -263,10 +261,8 @@ export function useGardenScene({
       // The current choices, not the ones from when loading began: the scene
       // module loads asynchronously, and the viewer may have changed them since.
       s.setTime(timeNow.current);
-      // The size before the detail: setDetail resizes too, and each new size is a new drawing buffer.
       const r = el.getBoundingClientRect();
       s.resize(r.width, r.height);
-      if (pinned) s.setDetail(pinned);
       ro.observe(el);
       s.start();
       setReady(true);

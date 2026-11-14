@@ -15,7 +15,7 @@ import { CUT, HILL, HILLTOP_R, hillMesh, hillY, PATH_TURN, type Lookout } from "
 import type { Sheet } from "./hedge";
 import { rayBox, type Ray } from "./scenery";
 import { sheetGeometry } from "./sceneHedge";
-import { roundShade, shade, still, woodBox, type BuildCtx } from "./sceneSprites";
+import { still, woodBox, type BuildCtx } from "./sceneSprites";
 import { BRAMBLE_SHEET, BRAMBLES_IN, SHEET, STEP, TOP, type StileNotes, type StileSpot } from "./stile";
 import * as T from "./textures";
 
@@ -70,17 +70,17 @@ class Canes {
   private index: number[] = [];
   private v = new THREE.Vector3();
 
-  /** A cane's tube, shaded times `k`. */
+  /** A cane's tube, its colour times `k`. */
   tube(geo: THREE.BufferGeometry, k: number) {
     this.put(geo, k);
   }
 
-  /** A thorn turned by `q`, its foot at `p`, shaded times `k`. */
+  /** A thorn turned by `q`, its foot at `p`, its colour times `k`. */
   thorn(q: THREE.Quaternion, p: THREE.Vector3, k: number) {
     this.put(THORN, k, q, p);
   }
 
-  /** `geo`'s vertices and triangles, shaded by their normals (roundShade) times `k`; turned by `q` and moved by `p` when given. */
+  /** `geo`'s vertices and triangles, its colour times `k`; turned by `q` and moved by `p` when given. */
   private put(geo: THREE.BufferGeometry, k: number, q?: THREE.Quaternion, p?: THREE.Vector3) {
     const pos = geo.getAttribute("position");
     const nor = geo.getAttribute("normal");
@@ -94,8 +94,7 @@ class Canes {
       v.fromBufferAttribute(nor, i);
       if (q) v.applyQuaternion(q);
       this.normal.push(v.x, v.y, v.z);
-      const s = roundShade(v, k);
-      this.color.push(s, s, s);
+      this.color.push(k, k, k);
       this.uv.push(uv.getX(i), uv.getY(i));
     }
     for (const i of geo.getIndex()!.array) this.index.push(first + i);
@@ -132,9 +131,8 @@ export class StileScene {
 
   /**
    * The hill past the fence: a grass mound, drawn as the ground hillY reads, so
-   * what stands on it stands on this grass (#861). The garden is lit by tint
-   * alone, so its slopes are shaded by hand, a little lighter toward the sun's
-   * side and darker away, or it would not read as a hill.
+   * what stands on it stands on this grass (#861). Its slopes are lit by the
+   * sun by their normals (sceneLight.ts), so it reads as a hill.
    */
   private buildHill(c: BuildCtx) {
     const { position, index } = hillMesh(this.hill);
@@ -146,8 +144,7 @@ export class StileScene {
     const uv = new Float32Array((position.length / 3) * 2);
     for (let i = 0; i < uv.length / 2; i++) uv.set([position[i * 3] / T.GROUND_TILE, -position[i * 3 + 2] / T.GROUND_TILE], i * 2);
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
-    shade(geo);
-    c.scene.add(still(new THREE.Mesh(geo, c.mat(T.paperTexture(T.grass(), true), { vertexColors: true }))));
+    c.scene.add(still(new THREE.Mesh(geo, c.mat(T.paperTexture(T.grass(), true)))));
   }
 
   /** How far (m) the point (x, z) is to the right of the old path's line, facing out. */
@@ -330,7 +327,7 @@ export class StileScene {
 
   /** The stile: steps up and down, the top board over the fence, and a handrail down each side. */
   private buildStile(c: BuildCtx) {
-    const wood = c.mat(c.woodTex, { vertexColors: true });
+    const wood = c.mat(c.woodTex);
     const g = new THREE.Group();
     const box = (w: number, h: number, d: number, x: number, y: number, z: number, tilt = 0) => {
       const m = new THREE.Mesh(woodBox(w, h, d), wood);

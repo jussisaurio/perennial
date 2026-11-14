@@ -110,7 +110,7 @@ export const PAPER = /* glsl */ `
 `;
 
 /** Puts `chunk` after `include` in `src`, loudly if three's shader no longer has it. */
-function after(src: string, include: string, chunk: string): string {
+export function after(src: string, include: string, chunk: string): string {
   if (!src.includes(include)) throw new Error(`paper: no ${include} in the shader`);
   return src.replace(include, `${include}\n${chunk}`);
 }
