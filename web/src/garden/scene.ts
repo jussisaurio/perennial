@@ -46,6 +46,7 @@ import type { Gender } from "../deck/schema";
 import type { DeckLang } from "../deck/langs";
 import { Jokes, type Joke } from "./sceneJokes";
 import { ShedNotes } from "./sceneNotes";
+import { thingsInView, type SceneState } from "./sceneState";
 import { WalkInto } from "./sceneWalkInto";
 import { leafPiles, type Fell, type Rolling } from "./walkInto";
 import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
@@ -2325,6 +2326,24 @@ export class GardenScene {
       t.mark?.(t.shown);
     }
     this.cb.onReach(a);
+  }
+
+  /** For dev tools only, through the window.__garden handle (e2e/look.run.ts, #974): the walk now, as plain data. It changes nothing. */
+  stateNow(): SceneState {
+    const w = this.walker;
+    return {
+      x: this.x,
+      z: this.z,
+      yaw: this.yaw,
+      pitch: this.pitch,
+      mode: w.kind,
+      seat: w.kind === "seated" ? w.on : null,
+      time: this.shown,
+      elapsed: this.elapsed,
+      reach: this.reach,
+      inReach: this.reachables.flatMap((r) => r.reach()?.a ?? []),
+      things: thingsInView(this.camera, this.hitBoxes, this.hitDiscs, this.stileSpot),
+    };
   }
 
   dispose() {
