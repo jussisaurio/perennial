@@ -198,7 +198,7 @@ function StartNote({ learner, plan, now }: { learner: Learner; plan: Plan; now: 
 
 function TodayGarden({ learner, now, rest, onWalk }: { learner: Learner; now: number; rest: boolean; onWalk: () => void }) {
   // Until the rest comes, the same Garden with no data: one strip element, so its entrance plays once (#653).
-  if (!rest) return <Garden data={null} testId="today-garden" />;
+  if (!rest) return <Garden data={null} lang={learner.lang} testId="today-garden" />;
   const view = (id: string) => {
     focusPlant(id);
     onWalk();
@@ -209,7 +209,7 @@ function TodayGarden({ learner, now, rest, onWalk }: { learner: Learner; now: nu
   const snailAt = snailLap();
   // An unread gardener's note (#654): unlocked by the same known words the visitors count.
   const pinned = hasUnread(courseNotes(learner.lang), visitors.facts.known, learner.course.notes_read);
-  return <Garden data={garden} onView={view} visitors={{ views: visitors.views, snailAt, lang: learner.lang, mole: visitors.mole }} pinned={pinned} testId="today-garden" />;
+  return <Garden data={garden} lang={learner.lang} onView={view} visitors={{ views: visitors.views, snailAt, mole: visitors.mole }} pinned={pinned} testId="today-garden" />;
 }
 
 /** A gentle nudge once there is something worth keeping. */

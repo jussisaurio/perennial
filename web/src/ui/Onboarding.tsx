@@ -211,7 +211,7 @@ export function Onboarding({ onStarted, signedIn }: { onStarted: (lang: string) 
       )}
       <p className="muted small">Free. No account needed to start. Add your email later to keep your garden on all your devices.</p>
       <figure className="landing-garden" aria-label={`A ${name} garden after a few months`}>
-        <Garden data={showcase} showcase testId="landing-garden" />
+        <Garden data={showcase} lang={lang} showcase testId="landing-garden" />
         <figcaption className="muted small">A {name} garden after a few months of practice. Point at a plant to see its word.</figcaption>
       </figure>
       <button

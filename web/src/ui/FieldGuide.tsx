@@ -12,6 +12,7 @@ import type { Word } from "../data/learner";
 import { WordPlant, rareOf, type Rare } from "./plant";
 import { useLatinNames } from "../content/latin";
 import { headword } from "../content/forms";
+import { language } from "../content/languages";
 
 export interface GuideRow {
   l: Word;
@@ -38,7 +39,7 @@ const Entry = memo(function Entry({ row, lang, onOpen }: { row: GuideRow; lang: 
       <span aria-hidden="true">
         <WordPlant word={row.l.lemma} s={read?.reps ? read.s : 0} stage={stage} size={104} />
       </span>
-      <strong>{headword(row.l, lang)}</strong>
+      <strong lang={language(lang).tag}>{headword(row.l, lang)}</strong>
       <span className="gl">{row.l.gloss}</span>
       {rare && <span className="guide-rare">{RARE_LABEL[rare]}</span>}
     </button>
@@ -146,8 +147,12 @@ function GuidePage({ lang, row, onClose, detail }: { lang: string; row: GuideRow
       <div className="guide-page-body">
         <div className={stage === "bloom" ? "guide-sheet pressed" : "guide-sheet sketch"}>
           <WordPlant word={row.l.lemma} s={s} stage={stage} size={180} />
-          <h2>{headword(row.l, lang)}</h2>
-          {stage === "bloom" && latin && <p className="guide-latin">{latin}</p>}
+          <h2 lang={language(lang).tag}>{headword(row.l, lang)}</h2>
+          {stage === "bloom" && latin && (
+            <p className="guide-latin" lang="la">
+              {latin}
+            </p>
+          )}
           <p className="gl">{row.l.gloss}</p>
           {rare && <p className="guide-rare">{RARE_LABEL[rare]}</p>}
           {stage !== "bloom" && <p className="muted small">Still growing. Its flower shows when you know the word.</p>}

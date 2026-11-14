@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "./test";
+import { expect, test, type Locator, type Page } from "./test";
 import { advance, answer, expectServerRows, kicker, reveal, serverRows, startCourse, startSession, tabTo } from "./helpers";
 
 async function continueIntros(page: Page, n: number) {
@@ -379,4 +379,27 @@ test("buttons and meanings have names a screen reader reads clearly (#266)", asy
   // The word class and the meaning are two words, not "nountime".
   const pos = (await page.locator(".gloss .pos").textContent())!;
   await expect(page.locator(".gloss")).toHaveText(new RegExp(`^${pos} \\S`));
+});
+
+test("course words are marked with their language, and the English around them is not (#692)", async ({ page }) => {
+  // What a screen reader speaks each in: the nearest lang attribute.
+  const langOf = (l: Locator) => l.evaluate((el) => el.closest("[lang]")?.getAttribute("lang"));
+  await startCourse(page);
+  await startSession(page);
+  // The new word, and the speakers' English names beside the Spanish.
+  await expect(kicker(page)).toHaveText(/new word/);
+  expect(await langOf(page.locator(".word > span").first())).toBe("es-ES"); // the word, not its speaker
+  expect(await langOf(page.getByRole("button", { name: "Play the word", exact: true }))).toBe("en");
+  expect(await langOf(page.locator("main.card .sentence mark"))).toBe("es-ES");
+  expect(await langOf(page.getByRole("button", { name: "Play the sentence", exact: true }))).toBe("en");
+  // A quick check's answer names the word in Spanish.
+  await continueIntros(page, 5);
+  await expect(kicker(page)).toHaveText(/quick check/);
+  await reveal(page);
+  expect(await langOf(page.locator(".meaning strong"))).toBe("es-ES");
+  // The word list.
+  await page.getByRole("button", { name: "End session" }).click();
+  await page.getByRole("button", { name: /^Done/ }).click();
+  await page.getByRole("tab", { name: "Words" }).click();
+  expect(await langOf(page.locator(".word-row strong").first())).toBe("es-ES");
 });

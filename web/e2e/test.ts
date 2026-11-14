@@ -8,7 +8,7 @@ import { expect as baseExpect, test as base } from "@playwright/test";
 
 import { addCoverage, COVERAGE } from "./coverage";
 
-export { expect, type Page } from "@playwright/test";
+export { expect, type Locator, type Page } from "@playwright/test";
 
 // console.error messages seen on plain main that are not bugs. Keep this list short and
 // specific: a broad pattern here would hide a real one (#375, found via a part that threw
