@@ -279,7 +279,12 @@ export class GardenScene {
     this.lang = lang;
     this.visitors = visitors;
     THREE.ColorManagement.enabled = false;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: msaa, powerPreference: "low-power" });
+    // Our own context, as three always asks for one with an alpha channel. A plant's smoothed edge writes an alpha
+    // under 1 (#1116), and the page showed through it as a light rim.
+    const gl = canvas.getContext("webgl2", { alpha: false, antialias: msaa, powerPreference: "low-power" });
+    // useGardenScene shows "Your browser cannot show 3D graphics." for this.
+    if (!gl) throw new Error("No WebGL 2 context");
+    this.renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: msaa, powerPreference: "low-power" });
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     this.renderer.setPixelRatio(1);
     // Reading the shader logs on a program's first use waits for the GPU: ~10 ms of a first draw at CPU 10× (#571).
@@ -294,6 +299,7 @@ export class GardenScene {
       (x, y, z) => this.behindHedge(x, y, z),
       (p) => this.cb.onWalkInto({ did: "brush", word: p.lemma, clear: p.stage === "bloom" }),
       visitors.moon === FULL_MOON,
+      msaa,
     );
     this.guests = new SceneVisitors(
       {

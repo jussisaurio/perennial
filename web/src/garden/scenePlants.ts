@@ -111,18 +111,32 @@ const PLANT_FRAG = /* glsl */ `
   }
   void main() {
     vec4 c = vHasNear > 0.5 ? texture2D(uNear, vNear) : vHasHi > 0.5 ? texture2D(uHi, vHi) : texture2D(uLow, vLow);
+  #ifdef ALPHA_TO_COVERAGE
+    // With MSAA, how much of the pixel the plant covers sets how many of its samples it draws, so the cut edge is
+    // smoothed as a shape's edge is (#1116). The alpha is made one pixel wide around one half: the outline stays where
+    // the cut puts it, and does not go soft up close.
+    float cover = clamp((c.a - 0.5) / max(fwidth(c.a), 1e-4) + 0.5, 0.0, 1.0);
+    if (cover == 0.0) discard;
+  #else
     if (c.a < 0.5) discard;
-    gl_FragColor = shade(vec4(c.rgb / c.a, 1.0));
+  #endif
+    // c.a can be 0 at a covered edge, where the alpha jumps by more than one over the pixel; its colour is then 0 too.
+    gl_FragColor = shade(vec4(c.rgb / max(c.a, 1.0 / 255.0), 1.0));
     if (vSilver > 0.5) {
       // Two pixels on a full-size sprite: as wide as the rim was when those sprites had half the pixels. Six on a near one.
       float rim = vHasNear > 0.5 ? edge(uNear, vNear, 6.0 / uNearSize) : vHasHi > 0.5 ? edge(uHi, vHi, 2.0 / uHiSize) : edge(uLow, vLow, 1.0 / uLowSize);
       gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.82, 0.86, 0.96), rim * 0.35 * (1.0 - vFog));
     }
+  #ifdef ALPHA_TO_COVERAGE
+    gl_FragColor.a = cover;
+  #endif
   }
 `;
 
-function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture, near: THREE.DataTexture): THREE.ShaderMaterial {
+function plantMaterial(low: THREE.DataTexture, high: THREE.DataTexture, near: THREE.DataTexture, msaa: boolean): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
+    // Without MSAA it would do nothing, and the shader keeps its cut at one half (ALPHA_TO_COVERAGE).
+    alphaToCoverage: msaa,
     uniforms: {
       uLow: { value: low },
       uHi: { value: high },
@@ -199,6 +213,8 @@ export class Plants {
   private sneezing = { i: -1, at: 0 };
   /** Tonight's moon is full (moon.ts). */
   private fullMoon: boolean;
+  /** The canvas smooths edges (#1106), so a plant's cut edge can be smoothed too (plantMaterial). */
+  private msaa: boolean;
 
   /** `onBrush`: the walker brushed past a plant, and its note plays now (at most one a frame). `fullMoon`: tonight's moon is full (#361). */
   constructor(
@@ -209,6 +225,7 @@ export class Plants {
     behindHedge: (x: number, y: number, z: number) => boolean,
     onBrush: (p: PlacedPlant) => void,
     fullMoon: boolean,
+    msaa: boolean,
   ) {
     this.renderer = renderer;
     this.camera = camera;
@@ -219,6 +236,7 @@ export class Plants {
     this.brush = brush(layout);
     this.risen = new Float32Array(layout.plants.length);
     this.fullMoon = fullMoon;
+    this.msaa = msaa;
   }
 
   /** On a full moon's night, old friends get their silver edge (#361). GardenScene.loadPlants gives the conditions again once the materials exist. */
@@ -332,7 +350,7 @@ export class Plants {
     this.inReach = new Float64Array(plants.length);
     this.low = T.lowSheetHeights(plants.length).map((h) => this.gpuTexture(T.ATLAS, h, T.LOW_LEVELS));
     const mats = this.low.map((tex) => {
-      const m = plantMaterial(tex, pool, nearPool);
+      const m = plantMaterial(tex, pool, nearPool, this.msaa);
       ctx.mats.add(m);
       this.plantMats.push(m);
       return m;
