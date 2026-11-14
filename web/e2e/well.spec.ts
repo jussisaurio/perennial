@@ -19,7 +19,12 @@ type WellScene = {
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
 };
 
-const scene = (page: Page) => page.evaluate(() => (window as unknown as { __garden: WellScene }).__garden);
+/** How far along z the walker is, what they hold, and the layout. Read by name: x and z are accessors on the scene, so a copy of the whole scene has neither. */
+const scene = (page: Page) =>
+  page.evaluate(() => {
+    const s = (window as unknown as { __garden: WellScene }).__garden;
+    return { z: s.z, held: s.carry.held, layout: s.layout };
+  });
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-17T12:00:00"));
@@ -60,7 +65,7 @@ test("carry a pebble through the door to the well and drop it in: the echo says 
   await page.keyboard.down("KeyW");
   await expect.poll(async () => (await scene(page)).z, { timeout: 20_000 }).toBeGreaterThan(inside);
   await page.keyboard.up("KeyW");
-  expect((await scene(page)).carry.held).not.toBeNull();
+  expect((await scene(page)).held).not.toBeNull();
 
   // The well stands at the end of the path, straight ahead: a tap on it walks there and drops the pebble in.
   const at = await page.evaluate(() => {
