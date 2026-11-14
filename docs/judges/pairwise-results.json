@@ -1,0 +1,1142 @@
+[
+  {
+    "round": "tuning v1",
+    "pair": "signs-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "The signs drawn in the 3D garden are in Spanish in A (\"Julio\", \"Agosto\", \"de · 13 jul\") but in English in B (\"July\", \"August\", \"de · 13 Jul\", which also mixes Spanish \"de\" with English \"Jul\"), and world text must be in the language the learner studies."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "signs-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "The signs in the 3D garden show the month names in Spanish in B (\"Julio\", \"Agosto\", \"13 jul\"), but in English in A (\"July\", \"August\", \"13 Jul\"), and in-world text must be in the language the learner studies."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "signs-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "same",
+    "afterIs": "A",
+    "why": "I found no visible difference between A and B in any of the three moments (top bar, help text, buttons, icons and the 3D garden all match)."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "signs-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "same",
+    "afterIs": "B",
+    "why": "Each A-n matches its B-n in every part I compared (top bar, hint box, garden scene, labels drawn in the world, the action button, Next plant and Finish today's practice), so no difference matters."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "settings-dark-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B turns the Colors, Growing plants and Sound settings into loose pills styled exactly like the page's action buttons (the chosen one is the same cream pill as \"Make demo learner and open the garden\", with no check mark), so choices look like actions and their state is shown by fill alone, while A uses a checked segmented control and on/off toggles."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "settings-dark-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A shows the selected Colors/Growing plants/Sound option only by a cream fill on pills that look like the primary action button (and marks \"Show plants growing\" as on while saying the plants do not move), while B uses a segmented control with a check mark and real toggles, including a disabled growth toggle that says why it is off."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "settings-light-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B draws the Colors, Growing plants and Sound choices as full-width pill buttons like the Download actions, marks the selected one only by a dark fill, and shows \"Show plants growing\" selected while its text says the plants do not move; A uses a checkmarked list and switches whose state is clear and matches the text."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "settings-light-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "In A the Colors, Growing plants and Sound settings are full-width pill buttons that look the same as the action buttons (Download, Send me a code) and show the chosen one only by a black fill, and A even marks \"Show plants growing\" as chosen while its text says the plants do not move; B uses a checkmarked list and labelled toggles whose state is clear, with the motion toggle shown off and disabled to match its text."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "card-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B adds a joke line to every plant card (\"It remembers you too.\", \"A good word. Very sure of itself.\"), which makes the card taller and puts a playful aside in the way of learning, while A keeps the card plain and useful."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "card-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A's plant card adds a joke line under the facts (\"It remembers you too.\", \"A good word. Very sure of itself.\"), an aside that breaks the plain-text rule, while B's card shows only the useful facts."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "card-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B adds a joking aside line to the plant card (\"It remembers you too.\", \"A good word. Very sure of itself.\"), which breaks the plain-text rule and makes the card taller so it covers part of the yellow arrow pointing at the plant."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "card-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A adds jokey aside lines to the plant card (\"It remembers you too.\", \"A good word. Very sure of itself.\"), which breaks the plain-text, no-jokes rule and makes the card taller so it hides the pointer arrow and more of the garden."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "climb-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B moves the learner over the stile with a \"Climb over the stile\" button press and no walking, then jumps them back to the stile top on the next W press, which breaks the rule that a button never moves you; in A you climb the stile by walking with W."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "climb-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "In A the \"Climb over the stile\" button carries the learner off to the far hilltop and then W snaps them back onto the stile (a travel button plus a teleport, both against the physical-garden rule), while in B you simply walk up and over the stile with W; B's own flaw, the camera sinking into the edge hedge in B-3/B-4, is smaller."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "climb-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B a \"Climb over the stile\" button carries you over the fence and one W press puts you back on the garden side, which breaks the no-travel-button and no-teleport rules; A lets you walk over the steps (its one flaw is the camera ending up inside the bramble hedge in A-3/A-4)."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "climb-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A crosses the stile with a \"Climb over the stile\" button, a button that moves the learner, which the rules forbid; it also leaves them stuck for 12 s in an empty flat meadow and then snaps them back onto the stile, while B lets the learner walk over the stile (B's camera clipping into the bramble hedge in B-3/B-4 is a real bug, but a smaller one)."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "contrast-answer-light-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B draws the wrong typed answer \"x\" and \"Correct answer: Lo\" in a brighter orange-red, and the \"Enter\" hint on Next in dim grey, so both have weaker contrast than A's darker red and clearer white hint."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "contrast-answer-light-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B draws the wrong-answer \"x\" and the \"Correct answer: Lo\" line in a darker red that reads clearly on the beige page (A's bright orange-red has weak contrast), and its \"Enter\" hint on the Next button is crisper too."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "contrast-answer-light-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B draws the wrong-answer text (\"Correct answer: Lo\" and the typed \"x\") in a lighter orange-red with weaker contrast on the beige background, and its \"Enter\" keycap on the Next button is dimmer grey, while A keeps both in darker, more readable colours."
+  },
+  {
+    "round": "tuning v1",
+    "pair": "contrast-answer-light-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B draws the wrong \"x\" and the \"Correct answer: Lo\" line in a darker red (and its Enter hint lighter), so the text has better contrast than A's light orange-red on the beige and pink backgrounds."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "signs-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "The month signs in the 3D garden read \"Julio\", \"Agosto\" and \"de · 13 jul\" in Spanish in A, but B shows \"July\", \"August\" and \"de · 13 Jul\", which puts English inside the world of a Spanish course and mixes it with the Spanish \"de\"."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "signs-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "The only difference is the wooden sign by the first bed: B's text looks like English (bits like \"the\", \"while\", \"plan…\"), but A's looks like Spanish (bits like \"salir\"), and text in the 3D world should be in the language the learner studies."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "settings-dark-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B the Colors, Growing plants and Sound choices are separate pill buttons that look like actions (the selected one has the same cream fill as the \"Make demo learner\" action button) and show the selected one by fill alone, and B even marks \"Show plants growing\" as selected while saying the plants do not move; A uses a segmented control with a checkmark and toggles that clearly show on, off and the disabled state."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "settings-light-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B shows the Colors, Growing plants and Sound settings as a checkmarked list and labelled switches, while A shows them as pill buttons that look like the Download buttons and mark the chosen one only by a black fill, so A's choices look like actions (A also marks \"Show plants growing\" as on while its text says the plants do not move)."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "card-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B adds a jokey aside to the plant card (\"It remembers you too.\", \"A good word. Very sure of itself.\"), which is not useful text and breaks the no-jokes rule, while A shows only the plain facts."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "card-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A adds a jokey aside line to the plant card (\"It remembers you too.\", \"A good word. Very sure of itself.\"), which breaks the plain-text rule and makes the card taller, so in A-1 it covers part of the yellow pointer arrow."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "climb-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B crosses the back fence with a \"Climb over the stile\" action button that moves the learner (B-2: you are dropped beside the lamp in an open field). The rules forbid a button for travel. In A you cross the stile by walking up its steps with W."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "climb-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A moves the learner over the back fence with a \"Climb over the stile\" action button (a button for travel, which the garden rules forbid), while B lets the learner walk up the stile steps with no travel button."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "contrast-answer-light-desktop",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B draws the wrong-answer \"x\" and \"Correct answer: Lo\" in a lighter orange-red and dims the \"Enter\" hint on the Next button, so both have weaker contrast than in A."
+  },
+  {
+    "round": "tuning v2",
+    "pair": "contrast-answer-light-phone",
+    "kind": "real",
+    "half": "tuning",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B draws the \"Correct answer: Lo\" line and the typed \"x\" in a darker red with readable contrast on the beige background, and its \"Enter\" key hint on the Next button is bright and clear, where A uses a light orange that is hard to read and a faint grey hint."
+  },
+  {
+    "round": "final",
+    "pair": "quality-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B adds a \"Normal quality\" button to the top bar whose label names a state with no verb, so a learner cannot tell what tapping it does, and a technical setting now crowds the calm top bar."
+  },
+  {
+    "round": "final",
+    "pair": "quality-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "The only difference is A's extra top-right \"Normal quality\" button, a graphics setting drawn as an action button whose label names a state instead of what a tap does, which adds unclear technical chrome to the calm garden top bar."
+  },
+  {
+    "round": "final",
+    "pair": "quality-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B adds a \"Normal quality\" button to the top bar whose label names a state instead of starting with a verb, so a learner cannot tell whether tapping it changes the quality or what it changes to, which adds clutter without a clear purpose."
+  },
+  {
+    "round": "final",
+    "pair": "quality-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "B drops the \"Normal quality\" button from the top-right bar, so the learner can no longer see or change the render quality; in A it matches its sibling sound button in height, border and spacing."
+  },
+  {
+    "round": "final",
+    "pair": "quality-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B adds a top-right button whose only label is a grey checkerboard icon, so you cannot tell what it does or whether it is on, and it pushes the plant counter off centre in the top bar."
+  },
+  {
+    "round": "final",
+    "pair": "quality-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A adds a top-bar button with only a faint grey checkerboard icon, so you cannot tell what it does or whether it is on, and it pushes the plant-count box off centre; B's top bar has just back, count and sound, evenly placed."
+  },
+  {
+    "round": "final",
+    "pair": "quality-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B adds a fourth top-bar button with only a grey checkerboard icon, so you cannot tell what it does or what state it is in, and it pushes the plant counter off-centre."
+  },
+  {
+    "round": "final",
+    "pair": "quality-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A adds a top-bar button with only a grey checkerboard icon, so you cannot tell what it does or whether it is on, and it pushes the plant count pill off centre; B's top bar has only clear controls and the count is centred."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B shows visible \"Next plant\" travel buttons (in the walk's bottom bar and as ←/Next plant on the card), which breaks the rule that no button moves you and that Next plant is for screen readers only."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A shows visible \"Next plant\" travel buttons (in the walk view and as ←/Next plant on the card), but the rules allow that button only for screen readers and never a button that moves you, and B keeps it hidden."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B shows visible \"Next plant\" and back-arrow buttons in the garden bar and on the plant card that move the learner, which breaks the rule that no button is for travel (the Next plant button may only be screen-reader-only)."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A shows visible \"Next plant\" travel buttons (in the bottom bar and as ←/Next plant in the plant card), which break the rule that no button moves you and that Next plant is screen-reader-only; B hides them."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B shows visible \"Next plant\" (and a back-arrow) buttons on the garden walk and on the plant card, buttons that move you between plants, which breaks the rule that travel is by walking and the Next plant button is screen-reader-only; A keeps them hidden."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A shows visible \"Next plant\" (and back-arrow) travel buttons on the garden and the plant card, which break the rule that no button moves you and that Next plant is for screen readers only; B keeps them hidden."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B shows visible \"Next plant\" (and back-arrow) buttons on the walk screen and the plant card, which move the learner between plants, but the rules allow such a travel button only as a screen-reader-only control; A keeps them hidden."
+  },
+  {
+    "round": "final",
+    "pair": "nextplant-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A shows visible \"Next plant\" travel buttons on the walk screen and on the plant card, which move the learner and break the rule that only the screen-reader-only Next plant button may move you; B keeps them hidden."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "A",
+    "why": "In A the steps over the back fence are missing, and holding W walks the learner through the solid fence until the camera sits inside the bramble hedge (A-3); in B a stile you can climb stands over the fence, and walking forward takes you up onto it with a view of the hill path."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B there are no steps, only brambles behind the back fence, yet holding W walks the camera through the fence and into the bramble mesh (B-3), which breaks the physical-garden rule; A shows real steps you climb onto, with an open hill path you can reach."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "A",
+    "why": "In A there are no steps and holding W walks the camera through the solid fence into the bramble mesh (A-3 shows only clipped bramble texture), while in B visible wooden steps cross the fence and walking forward climbs them onto a path up a reachable hill."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B the steps over the back fence are gone and a bramble wall stands behind it, and holding W puts the camera inside the bramble mesh (B-3), so you pass through solid things; in A you climb the steps onto a hill path you can walk."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "A",
+    "why": "In A there are no steps, only brambles behind the fence, and walking forward pushes the camera inside the bramble (A-3 is a screen of huge blurred pixels, so the solid hedge is not solid); in B you climb the visible wooden steps over the fence onto a hill path, as the physics rule asks."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In A the steps over the back fence are visible and walking forward climbs them to a reachable hill path, while B has no steps but walking forward still takes the camera through the fence into the brambles (B-3 is filled with clipped bramble texture), which breaks the \"solid things stop you, no invisible ways\" physics rule."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "A",
+    "why": "A has no steps over the back fence, only brambles, and walking forward puts the camera inside the bramble (A-3 is a screen of huge green blocks), while B shows visible wooden steps that you climb up to a path on the hill, as the rules ask: what looks climbable is climbable and nothing clips."
+  },
+  {
+    "round": "final",
+    "pair": "stileshut-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "A shows visible wooden steps over the back fence that you climb onto a hill path, while B has no steps but still lets you walk through the fence, so after 3 s of W the camera sits inside the solid brambles (B-3), which breaks the garden's physics."
+  },
+  {
+    "round": "final",
+    "pair": "door-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "The bubble on the door in the 3D world says \"Cerrado con llave.\" in A, which is Spanish, the language the learner studies, but it says \"Locked.\" in English in B."
+  },
+  {
+    "round": "final",
+    "pair": "door-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "The speech bubble on the door in the 3D world says \"Cerrado con llave.\" in Spanish, the language the learner studies, where A shows it in English (\"Locked.\")."
+  },
+  {
+    "round": "final",
+    "pair": "door-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "The bubble on the door in the 3D world says \"Cerrado con llave.\" in Spanish, the language the learner studies, where B says \"Locked.\" in English."
+  },
+  {
+    "round": "final",
+    "pair": "door-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "The speech bubble on the door says \"Cerrado con llave.\" in Spanish, the language the learner studies, while A shows the English \"Locked.\"; nothing else on the screen differs."
+  },
+  {
+    "round": "final",
+    "pair": "door-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "The bubble on the door in the 3D world says \"Cerrado con llave.\" in Spanish, the language the learner studies, while B shows it in English (\"Locked.\")."
+  },
+  {
+    "round": "final",
+    "pair": "door-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "The bubble on the door is drawn in the 3D world, and B writes it in Spanish, the course language (\"Cerrado con llave.\"), while A writes it in English (\"Locked.\")."
+  },
+  {
+    "round": "final",
+    "pair": "door-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "The door's in-world bubble reads \"Cerrado con llave.\" in Spanish, the language this course teaches, while B shows it in English (\"Locked.\")."
+  },
+  {
+    "round": "final",
+    "pair": "door-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "The bubble on the door in the 3D world says \"Cerrado con llave.\" in Spanish, the language the learner studies, while A shows it in English (\"Locked.\")."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-light-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B \"Walk in your garden\" is bare text squeezed under the stats row instead of A's bordered pill button, so it no longer reads as a control and the spacing is cramped (B also swaps the language picker's chevron for a tiny mismatched triangle)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-light-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B draws \"Walk in your garden\" as a pill button that matches the other pill controls, so you can see it is tappable; in A it is plain bold text that looks like a heading."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-light-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B \"Walk in your garden\" is plain text jammed just under the stats row with no button outline, so it no longer looks tappable, while A shows it as a clear pill button with even spacing (B also swaps the language chevron for a tiny triangle)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-light-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "In B \"Walk in your garden\" is a clear pill button (and the language picker has a proper chevron), while in A it is bare bold text that reads like a label, so you cannot tell it is tappable."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B the garden strip spills past the content column's left and right edges and \"Walk in your garden\" loses its button outline and sits cramped under the stats, while A keeps the strip aligned with the text and shows a clear pill button."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "In B the garden strip lines up with the content column (240–1040px) and the card below, and \"Walk in your garden\" is a clear pill button with even spacing, while in A the strip sticks out 16px past both edges and the link sits cramped under the stats as plain text."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B the garden strip sticks out past the page's left and right content edges and \"Walk in your garden\" loses its pill border, so it reads as plain text crammed under the stats; A keeps the strip aligned and the button clearly a button, matching the other pills."
+  },
+  {
+    "round": "final",
+    "pair": "polish-today-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "In A the garden strip sticks out about 16px past the content column on both sides, so its edges miss the heading and card below, and \"Walk in your garden\" is plain text pressed under the stats; in B the strip lines up with the column and \"Walk in your garden\" is a clear pill button."
+  },
+  {
+    "round": "final",
+    "pair": "polish-settings-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B falls back to unstyled browser defaults: the Course target slider is a native orange range input that clashes with the calm cream-on-dark palette, and the \"Enter a code I already have\" link is indented about 10px off the left text edge with very low contrast, while A keeps a themed slider and an aligned, readable link."
+  },
+  {
+    "round": "final",
+    "pair": "polish-settings-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "In A the \"Enter a code I already have\" link is very low contrast and indented about 10px off the left edge, while B shows it readable and aligned with the field and text above (B also has a clearer chevron on the language picker and a calmer neutral slider in place of A's off-palette orange)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-settings-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B loses the styling in several places: its \"Enter a code I already have\" link is indented about 10px off the left edge and very faint, its target slider is a default browser control in an orange that clashes with the calm cream-and-green palette, and its language picker has a tiny default caret instead of A's chevron."
+  },
+  {
+    "round": "final",
+    "pair": "polish-settings-dark-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "In A the \"Enter a code I already have\" link has very low contrast and is indented about 11px past the left edge that every other element lines up on; in B it is readable and aligned (B also has a clear chevron on the language picker instead of A's tiny dot-like caret)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-words-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B the meanings sit right after each word with no shared column, so they form a ragged edge, and the List/Flowers toggle drops onto its own row under the search; A lines the meanings up in one column and keeps search, filter and toggle on one even row."
+  },
+  {
+    "round": "final",
+    "pair": "polish-words-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B lines the word meanings up in one column and gives the language picker the same chevron as the All dropdown, while A has ragged meanings and a tiny mismatched ▾ caret."
+  },
+  {
+    "round": "final",
+    "pair": "polish-words-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B the word meanings start right after each word, so they form a ragged column, while in A they line up in one column (B also pushes the List/Flowers toggle onto a row of its own and uses a smaller, mismatched caret on the Spanish dropdown)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-words-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B's Spanish picker uses the same chevron as the \"All\" dropdown (A shows a tiny mismatched \"▾\" glyph), and B lines up search, filter and the List/Flowers toggle in one row of equal height, where A's toggle is shorter and sits on a row of its own."
+  },
+  {
+    "round": "final",
+    "pair": "polish-answer-dark-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B puts a coloured neon glow around both \"I forgot\" and \"I remembered\" and pushes the plant up so it crowds the top bar, while A keeps flat, calm buttons and sets the plant's base level with the READING chip."
+  },
+  {
+    "round": "final",
+    "pair": "polish-answer-dark-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "B's \"I forgot\" and \"I remembered\" buttons are flat and calm, while A puts coloured red and green glows under them, which looks loud and less premium. The other differences matter less: the Undo pill is filled in A and outlined in B, the part-of-speech tag is \"CONJ\" in caps in A and \"conj\" in italics in B, and the plant sits a little higher in A."
+  },
+  {
+    "round": "final",
+    "pair": "polish-answer-dark-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "B puts coloured neon-like glows under the \"I forgot\" and \"I remembered\" buttons and lifts the plant up against the top bar, while A keeps flat, calm buttons and sets the plant level with the READING row."
+  },
+  {
+    "round": "final",
+    "pair": "polish-answer-dark-phone",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "B",
+    "why": "A puts a coloured glow under the \"I forgot\" and \"I remembered\" buttons, which looks loud and blurry, while B keeps the two buttons flat and calm (the other differences, the Undo pill style, the plant's position and \"CONJ\" vs italic \"conj\", are about even)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-card-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In B the plant picture floats about 23px higher and 8px in from the right edge, so it no longer lines up with the right edge of the Undo and Show answer buttons or sits level with the READING chip as in A (B's pill-shaped, narrower Show answer button is a style change, not a defect)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-card-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "A's \"Show answer\" is a compact pill that matches the pill-shaped Undo button and READING chip, while B makes it a wide, square-ish rounded rectangle of arbitrary width that breaks the shape language (B's only gain is a plant nudged a few pixels to sit flush with the right edge)."
+  },
+  {
+    "round": "final",
+    "pair": "polish-card-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "after",
+    "afterIs": "A",
+    "why": "In A the plant lines up with the right edge of the column (like Undo and Show answer) and sits level with the READING chip, but in B it sits about 7px left of that edge and higher up, close to the top bar; the other difference (A has a wide rounded-rectangle Show answer button, B a narrow pill) is a style choice that breaks no rule."
+  },
+  {
+    "round": "final",
+    "pair": "polish-card-light-desktop",
+    "kind": "real",
+    "half": "heldout",
+    "wanted": "after",
+    "got": "before",
+    "afterIs": "B",
+    "why": "A's \"Show answer\" button is a pill like the Undo button and the READING chip, while B makes it a wider box with small rounded corners that does not match them (B lines the plant drawing up with the right edge a little better, but that matters less)."
+  },
+  {
+    "round": "final",
+    "pair": "same-settings",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "A",
+    "why": "A-1 and B-1 (and their zooms) match part by part: the top bar, headings, account text, email field, code button, link, saved note and course slider are the same."
+  },
+  {
+    "round": "final",
+    "pair": "same-settings",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "B",
+    "why": "A-1 and B-1 (and their zooms) match part by part in the top bar, headings, account text, email field, buttons, spacing, colours and slider, so no difference matters."
+  },
+  {
+    "round": "final",
+    "pair": "same-today",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "A",
+    "why": "I compared A-1 with B-1 and A-1-zoom with B-1-zoom part by part (top bar, heading, button, paragraph text, garden strip, stats, arrows, Walk button, sign-in card, bottom nav) and found no visible difference."
+  },
+  {
+    "round": "final",
+    "pair": "same-today",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "B",
+    "why": "A-1 and B-1 (and their zooms of the text under the practice button) match in every part I compared: top bar, heading, button, body text and its colour and spacing, garden art, counts, walk button, sign-in card and tab bar."
+  },
+  {
+    "round": "final",
+    "pair": "same-words",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "A",
+    "why": "I found no visible difference between A-1 and B-1, or between their zooms: the top bar, heading, stats text, review chart, filters and word list all match."
+  },
+  {
+    "round": "final",
+    "pair": "same-words",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "B",
+    "why": "A-1 and B-1 (and their zooms) match part by part: top bar, heading, stats text, review bars, search/filter/List-Flowers controls and word rows show no visible difference."
+  },
+  {
+    "round": "final",
+    "pair": "same-garden",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "A",
+    "why": "A-1 and B-1 (and their zooms) match in every part I compared: top bar, hint panel, bed signs, plants, butterflies and bottom buttons, so no difference matters."
+  },
+  {
+    "round": "final",
+    "pair": "same-garden",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "B",
+    "why": "I found no visible difference: A-1 and B-1, and both zooms, match in the top bar, hint text, buttons, signs and 3D garden."
+  },
+  {
+    "round": "final",
+    "pair": "same-plantcard",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "A",
+    "why": "A-1 and B-1 (and their zooms) match in every part I compared: top bar, word card text and buttons, the arrow marker, the floating word labels and the 3D garden, so no difference matters."
+  },
+  {
+    "round": "final",
+    "pair": "same-plantcard",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "B",
+    "why": "A-1 and B-1 (and their zooms) match part by part: top bar, word card, Listen and Next plant buttons, the arrow, the in-world labels and the plants are all the same."
+  },
+  {
+    "round": "final",
+    "pair": "same-signs",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "A",
+    "why": "A and B match in all three moments and every zoom (top bar, help text, buttons, the bed sign and the 3D garden), so no difference decides it."
+  },
+  {
+    "round": "final",
+    "pair": "same-signs",
+    "kind": "same",
+    "half": "control",
+    "wanted": "same",
+    "got": "same",
+    "afterIs": "B",
+    "why": "A and B look the same in all three moments and their zooms (top bar, hint text, buttons, beds, plants and the bed sign), so no difference decides it."
+  },
+  {
+    "round": "final",
+    "pair": "planted-misalign",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "In A the \"SUNDAY, OCTOBER 11\" date label is indented about 10px to the right of the heading and everything else on the page, while in B it lines up at the same left edge (x 240)."
+  },
+  {
+    "round": "final",
+    "pair": "planted-misalign",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B the \"SUNDAY, OCTOBER 11\" date label is shifted about 10px right, so it no longer lines up with the left edge of the heading, button and text below it, while in A it does."
+  },
+  {
+    "round": "final",
+    "pair": "planted-contrast",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "Under the Start button, the two lines of text (\"Water your plants...\" and \"Perennial is now 5 minutes...\") are very pale and hard to read in A, but they have good contrast in B."
+  },
+  {
+    "round": "final",
+    "pair": "planted-contrast",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B the two lines under the Start button (\"Water your plants...\" and \"Perennial is now 5 minutes...\") are a very pale grey on the cream background and hard to read, while A shows them in a readable mid-grey with good contrast."
+  },
+  {
+    "round": "final",
+    "pair": "planted-cramped",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "In A the \"Send me a code\" button sits almost flush under the email field (about 4px gap, much tighter than the other gaps), so they look cramped and joined; B keeps an even gap between the field, the button and the \"Enter a code\" link."
+  },
+  {
+    "round": "final",
+    "pair": "planted-cramped",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B the \"Send me a code\" button sits almost against the email field (about 4px gap) while A keeps an even gap between the field, the button and the link below, so A's form spacing is calmer and more consistent."
+  },
+  {
+    "round": "final",
+    "pair": "planted-jokey",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "The main button in B says the plain \"Start today's practice\", while A says the jokey \"Feed the word-monster!\", which does not tell the learner what the tap does."
+  },
+  {
+    "round": "final",
+    "pair": "planted-jokey",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "The main button says plainly \"Start today's practice\" in A, but in B it is the joke \"Feed the word-monster!\", which does not say what tapping it does."
+  },
+  {
+    "round": "final",
+    "pair": "planted-unequal",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "In A the \"My answer was correct\" button has nearly square corners and smaller text next to the fully rounded Next button, while in B the two sibling buttons share the same corner radius and height."
+  },
+  {
+    "round": "final",
+    "pair": "planted-unequal",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B the \"My answer was correct\" button is shorter than the Next button beside it, with smaller text and sharper corners, so the sibling buttons do not match or line up at the top; in A both buttons have the same height, radius and text size."
+  },
+  {
+    "round": "final",
+    "pair": "planted-font",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "A shows the card text, badge, input and Check button in a default Times-like serif while its top bar stays sans-serif, so fonts clash; B uses one sans-serif font throughout."
+  },
+  {
+    "round": "final",
+    "pair": "planted-font",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "B draws the whole card body (badge, prompt, sentences, input, Check button) in a fallback serif font while the top bar stays in the app's sans font, so fonts clash on one screen; A uses the sans font throughout."
+  },
+  {
+    "round": "final",
+    "pair": "planted-colouronly",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "The active \"Settings\" tab in the top bar is shown in B by a raised light pill with dark text, while A shows it only by green text colour, which breaks the rule that a state is never shown by colour alone."
+  },
+  {
+    "round": "final",
+    "pair": "planted-colouronly",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B the current \"Settings\" tab is marked only by green text, so the state is shown by color alone, while A marks it with a raised light pill around dark text."
+  },
+  {
+    "round": "final",
+    "pair": "planted-overlap",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "A",
+    "why": "In A each word row has no bottom padding, so the meaning line (\"that; than\", \"to; at\") sits right on the divider below it, while B gives each row even space above and below."
+  },
+  {
+    "round": "final",
+    "pair": "planted-overlap",
+    "kind": "planted",
+    "half": "control",
+    "wanted": "before",
+    "got": "before",
+    "afterIs": "B",
+    "why": "In B the word list rows have no bottom padding, so each meaning line (\"of; from\", \"that; than\") sits right on the divider below it, while A gives each row even space above and below."
+  }
+]

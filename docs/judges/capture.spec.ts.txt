@@ -1,13 +1,12 @@
-// Back-test capture (#976): one case at one commit. Copied into web/e2e/ by cap.sh, never committed there.
-//   BT_CASE=<case id> BT_OUT=<folder> bunx playwright test e2e/bt.spec.ts --project desktop --workers=1
-// It writes PNGs and a steps.txt that names only the inputs given between frames.
+// Back-test capture (#976, #1004): some cases at one commit. Copied into web/e2e/ by hand, never committed there.
+//   BT_CASE=<case id>[,<case id>...] BT_OUT=<folder> bunx playwright test e2e/bt.spec.ts --project desktop --workers=1
+// Each case writes PNGs and a steps.txt, which names only the inputs given between frames, into <folder>/<case id>/.
 import { expect, test, type Page } from "@playwright/test";
 import { appendFileSync, mkdirSync } from "node:fs";
 
-const CASE = process.env.BT_CASE ?? "";
 const OUT = process.env.BT_OUT ?? "";
-if (CASE === "" || OUT === "") throw new Error("set BT_CASE and BT_OUT");
-mkdirSync(OUT, { recursive: true });
+const WANT = (process.env.BT_CASE ?? "").split(",").filter((c) => c !== "");
+if (WANT.length === 0 || OUT === "") throw new Error("set BT_CASE and BT_OUT");
 
 const DAY = new Date("2026-10-11T12:00:00");
 const NIGHT = new Date("2026-09-26T22:00:00");
@@ -15,14 +14,9 @@ const VIEWS = { desktop: { width: 1280, height: 720 }, phone: { width: 390, heig
 type View = keyof typeof VIEWS;
 
 type G = { x: number; z: number; yaw: number; pitch: number; elapsed?: number; layout: { gate: { x: number }; bounds: { maxZ: number } } };
-const garden = "(window).__garden";
 
-const step = (line: string) => appendFileSync(`${OUT}/steps.txt`, line + "\n");
-async function shoot(page: Page, view: View, n: number, what: string, fullPage = false) {
-  const name = `${n}-${view}.png`;
-  await page.screenshot({ path: `${OUT}/${name}`, fullPage });
-  step(`${name}: ${what}`);
-}
+/** One test's frames: `<n>-<prefix><view>.png` in the case's folder. */
+type Shot = (n: number | string, what: string) => Promise<void>;
 
 const frames = (page: Page) => page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
 
@@ -70,11 +64,95 @@ const atStile = (page: Page, back: number, pitch: number) =>
 const button = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 const has = async (page: Page, name: string) => (await button(page, name).count()) > 0 && (await button(page, name).first().isVisible());
 
-const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, view: View) => Promise<void> }> = {
+type Screen = "today" | "card" | "answer" | "words" | "settings";
+
+/** Open one app screen of a fresh 30-word demo learner. */
+async function openScreen(page: Page, screen: Screen) {
+  await page.clock.setFixedTime(DAY);
+  if (screen === "words" || screen === "settings") {
+    const name = screen === "words" ? "Words" : "Settings";
+    await page.goto(`/?demo=es:30#/${screen}`);
+    await expect(page.getByRole("tab", { name })).toBeVisible({ timeout: 60_000 });
+    await page.waitForTimeout(1500);
+    return;
+  }
+  await page.goto("/?demo=es:30#/today");
+  const start = page.getByRole("button", { name: /today's practice/i });
+  await expect(start).toBeVisible({ timeout: 120_000 });
+  await page.waitForTimeout(1500);
+  if (screen === "today") return;
+  await start.click();
+  const card = page.locator("main.card");
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(800);
+  if (screen === "card") return;
+  // A writing card is checked with a wrong word; any other card is shown with Space.
+  const field = page.getByRole("textbox");
+  if (await field.isVisible()) {
+    await field.fill("x");
+    await page.keyboard.press("Enter");
+  } else
+    await expect(async () => {
+      await page.keyboard.press("Space");
+      await expect(card.locator('[aria-keyshortcuts="1"]')).toBeVisible({ timeout: 1000 });
+    }).toPass();
+  await page.waitForTimeout(800);
+}
+
+const SCREENS: Record<Screen, string> = {
+  today: "the Today screen of a learner with 30 words",
+  card: "the first card of a practice session",
+  answer: "the first card of a practice session, after its answer is shown",
+  words: "the Words screen",
+  settings: "the Settings screen",
+};
+
+async function appScreens(page: Page, shoot: Shot) {
+  for (const screen of Object.keys(SCREENS) as Screen[]) {
+    await openScreen(page, screen);
+    await shoot(screen, SCREENS[screen]);
+  }
+}
+
+/**
+ * Deliberate regressions on today's app (#1004), so a pairwise judge cannot win by
+ * preferring the newer style. Each is one small CSS or text change on one screen.
+ */
+const PLANTS: { name: string; screen: Screen; what: string; css?: string; js?: string }[] = [
+  { name: "misalign", screen: "today", what: "the date line moved 10 px right of the heading", css: ".home-head .date { margin-left: 10px !important; }" },
+  { name: "contrast", screen: "today", what: "body text in a pale grey", css: ".page p, .muted { color: #c9c4ba !important; }" },
+  { name: "cramped", screen: "settings", what: "spacing between sections and inside panels cut to 2 px", css: ".page > *, .panel, .form, section { margin-top: 2px !important; margin-bottom: 2px !important; padding-top: 2px !important; padding-bottom: 2px !important; gap: 2px !important; }" },
+  { name: "jokey", screen: "today", what: "a jokey main button", js: "const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); for (let n = w.nextNode(); n; n = w.nextNode()) if (/today's practice/i.test(n.textContent)) n.textContent = 'Feed the word-monster!';" },
+  { name: "unequal", screen: "answer", what: "the two buttons under the card made different shapes and sizes", css: "main.card .actions > :first-child { border-radius: 4px !important; padding: 0.4rem 0.7rem !important; font-size: 0.85rem !important; align-self: center !important; }" },
+  { name: "font", screen: "card", what: "the card's text in a different font", css: "main.card, main.card * { font-family: 'Times New Roman', serif !important; }" },
+  { name: "colouronly", screen: "settings", what: "the chosen tab shown only by a green text colour", css: ".tab.on { background: transparent !important; box-shadow: none !important; color: #4f8a52 !important; }" },
+  { name: "overlap", screen: "words", what: "a row's text drawn over the next row", css: ".word-row { margin-bottom: -14px !important; }" },
+];
+
+/** Each plant's screen as it is, then with the plant. */
+async function planted(page: Page, shoot: Shot) {
+  for (const p of PLANTS) {
+    await openScreen(page, p.screen);
+    await shoot(`${p.name}-base`, SCREENS[p.screen]);
+    await page.evaluate(
+      ([css, js]) => {
+        const style = document.createElement("style");
+        style.textContent = css;
+        document.head.append(style);
+        if (js !== "") new Function(js)();
+      },
+      [p.css ?? "", p.js ?? ""],
+    );
+    await page.waitForTimeout(300);
+    await shoot(`${p.name}-bad`, `${SCREENS[p.screen]}; planted: ${p.what}`);
+  }
+}
+
+const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, shoot: Shot) => Promise<void> }> = {
   // #678
   settings: {
     themes: ["dark", "light"],
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await page.clock.setFixedTime(DAY);
       await page.goto("/?demo=es:30#/settings");
       await expect(page.getByRole("tab", { name: "Settings" })).toBeVisible({ timeout: 60_000 });
@@ -85,48 +163,48 @@ const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, v
       for (let n = 1, y = 0; y < tall - 80 && n <= 3; n++, y += h - 160) {
         await page.evaluate((y) => window.scrollTo(0, y), y);
         await page.waitForTimeout(300);
-        await shoot(page, view, n, `the Settings screen, scrolled down ${y} px`);
+        await shoot(n, `the Settings screen, scrolled down ${y} px`);
       }
     },
   },
   // #677
   quality: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 400);
-      await shoot(page, view, 1, "the garden walk, just opened");
+      await shoot(1, "the garden walk, just opened");
     },
   },
   // #711
   card: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 400);
       for (let i = 1; i <= 3; i++) {
         await button(page, "Next plant").first().click();
         await page.waitForTimeout(1500);
-        await shoot(page, view, i, `the garden walk, after ${i} press(es) of the "Next plant" button in the bottom bar`);
+        await shoot(i, `the garden walk, after ${i} press(es) of the "Next plant" button in the bottom bar`);
       }
     },
   },
   // #710
   nextplant: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 400);
-      await shoot(page, view, 1, "the garden walk, just opened");
+      await shoot(1, "the garden walk, just opened");
       await button(page, "Next plant").first().focus();
       await page.keyboard.press("Enter");
       await page.waitForTimeout(1500);
       await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
       await frames(page);
-      await shoot(page, view, 2, "a plant's card, open");
+      await shoot(2, "a plant's card, open");
     },
   },
   // #749
   stileshut: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 300);
       await atStile(page, 3, -0.05);
       await frames(page);
-      await shoot(page, view, 1, "standing 3 m from the steps over the back fence");
+      await shoot(1, "standing 3 m from the steps over the back fence");
       await atStile(page, 0, -0.3);
       await frames(page);
       await page.waitForTimeout(500);
@@ -134,19 +212,19 @@ const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, v
         await button(page, "Climb the stile").click();
         await gameSeconds(page, 2);
         await frames(page);
-        await shoot(page, view, 2, 'at the foot of the steps, 2 s after pressing the action button (its screen-reader name: "Climb the stile")');
+        await shoot(2, 'at the foot of the steps, 2 s after pressing the action button (its screen-reader name: "Climb the stile")');
         await hold(page, "KeyW", 2);
-        await shoot(page, view, 3, "then after holding W (walk forward) for 2 s");
+        await shoot(3, "then after holding W (walk forward) for 2 s");
       } else {
-        await shoot(page, view, 2, "at the foot of the steps (no action button is shown)");
+        await shoot(2, "at the foot of the steps (no action button is shown)");
         await hold(page, "KeyW", 3);
-        await shoot(page, view, 3, "then after holding W (walk forward) for 3 s");
+        await shoot(3, "then after holding W (walk forward) for 3 s");
       }
     },
   },
   // #770
   climb: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 800);
       await atStile(page, 0, -0.1);
       await frames(page);
@@ -158,30 +236,30 @@ const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, v
         await page.waitForTimeout(300);
       }
       if (await has(page, "Climb over the stile")) {
-        await shoot(page, view, 1, "at the foot of the steps over the back fence");
+        await shoot(1, "at the foot of the steps over the back fence");
         await button(page, "Climb over the stile").click();
         await gameSeconds(page, 3);
-        await shoot(page, view, 2, 'no key held: 3 s after one press of the action button in frame 1 (its screen-reader name: "Climb over the stile")');
+        await shoot(2, 'no key held: 3 s after one press of the action button in frame 1 (its screen-reader name: "Climb over the stile")');
         await gameSeconds(page, 9);
-        await shoot(page, view, 3, "no key held: 9 s later");
+        await shoot(3, "no key held: 9 s later");
         await hold(page, "KeyW", 0.4);
         await gameSeconds(page, 1);
-        await shoot(page, view, 4, "then after holding W (walk forward) for 0.4 s");
+        await shoot(4, "then after holding W (walk forward) for 0.4 s");
       } else {
-        await shoot(page, view, 1, "at the foot of the steps over the back fence (no action button is shown)");
+        await shoot(1, "at the foot of the steps over the back fence (no action button is shown)");
         await hold(page, "KeyW", 3);
-        await shoot(page, view, 2, "after holding W (walk forward) for 3 s");
+        await shoot(2, "after holding W (walk forward) for 3 s");
         await hold(page, "KeyW", 9);
-        await shoot(page, view, 3, "after holding W for 9 s more");
+        await shoot(3, "after holding W for 9 s more");
         await hold(page, "KeyW", 0.4);
         await gameSeconds(page, 1);
-        await shoot(page, view, 4, "then after holding W for 0.4 s more");
+        await shoot(4, "then after holding W for 0.4 s more");
       }
     },
   },
   // #779
   door: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 30);
       await page.evaluate(() => {
         const s = (window as unknown as { __garden: G }).__garden;
@@ -190,14 +268,14 @@ const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, v
       await frames(page);
       await button(page, "Try the door").click();
       await expect(page.locator(".gw-say")).toBeVisible();
-      await shoot(page, view, 1, 'a Spanish course. Standing at the door in the hedge, just after pressing the action button (its screen-reader name: "Try the door")');
+      await shoot(1, 'a Spanish course. Standing at the door in the hedge, just after pressing the action button (its screen-reader name: "Try the door")');
     },
   },
   // #650
   signs: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 400);
-      await shoot(page, view, 1, "a Spanish course. The garden walk, just opened");
+      await shoot(1, "a Spanish course. The garden walk, just opened");
       for (const [n, pitch, back] of [
         [2, -0.15, 3],
         [3, -0.35, 1.6],
@@ -212,13 +290,13 @@ const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, v
         );
         await frames(page);
         await page.waitForTimeout(400);
-        await shoot(page, view, n, `a Spanish course. Standing ${back} m from the first bed, facing it`);
+        await shoot(n, `a Spanish course. Standing ${back} m from the first bed, facing it`);
       }
     },
   },
   // #858
   lantern: {
-    run: async (page, view) => {
+    run: async (page, shoot) => {
       await openWalk(page, 800, NIGHT);
       await page.evaluate(async () => {
         const { stileAt } = await import(/* @vite-ignore */ "/src/garden/stile.ts");
@@ -231,33 +309,41 @@ const CASES: Record<string, { themes?: ("light" | "dark")[]; run: (page: Page, v
       });
       await frames(page);
       await page.waitForTimeout(500);
-      await shoot(page, view, 1, "at night, on the hilltop, facing the lantern on its post");
+      await shoot(1, "at night, on the hilltop, facing the lantern on its post");
       if (await has(page, "Raise the lantern")) {
         await button(page, "Raise the lantern").click();
         await gameSeconds(page, 0.8);
         await frames(page);
-        await shoot(page, view, 2, '0.8 s after pressing the action button (its screen-reader name: "Raise the lantern")');
+        await shoot(2, '0.8 s after pressing the action button (its screen-reader name: "Raise the lantern")');
         await gameSeconds(page, 0.8);
         await frames(page);
-        await shoot(page, view, 3, "0.8 s later");
+        await shoot(3, "0.8 s later");
       }
     },
   },
+  // The app screens: #625 (before and after the polish PRs #627 to #635) and #1009 (PR #1017).
+  screens: { themes: ["light", "dark"], run: appScreens },
+  // #1004: deliberate regressions, on one commit.
+  planted: { themes: ["light", "dark"], run: planted },
 };
 
-const c = CASES[CASE];
-if (c === undefined) throw new Error(`no case ${CASE}`);
 test.describe.configure({ timeout: 300_000, mode: "serial" });
-for (const theme of c.themes ?? ["light"])
-  for (const view of Object.keys(VIEWS) as View[])
-    test(`${CASE} ${view} ${theme}`, async ({ page }) => {
-      await page.emulateMedia({ colorScheme: theme });
-      await page.setViewportSize(VIEWS[view]);
-      const real = shootName(theme, c.themes !== undefined);
-      await c.run(new Proxy(page, {}), (real + view) as View);
-    });
-
-/** Screens shot in both themes get the theme in the file name. */
-function shootName(theme: string, both: boolean) {
-  return both ? `${theme}-` : "";
+for (const id of WANT) {
+  const c = CASES[id];
+  if (c === undefined) throw new Error(`no case ${id}`);
+  const dir = `${OUT}/${id}`;
+  mkdirSync(dir, { recursive: true });
+  for (const theme of c.themes ?? ["light"])
+    for (const view of Object.keys(VIEWS) as View[])
+      test(`${id} ${view} ${theme}`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: theme });
+        await page.setViewportSize(VIEWS[view]);
+        // Screens shot in both themes get the theme in the file name.
+        const suffix = `${c.themes === undefined ? "" : `${theme}-`}${view}`;
+        await c.run(page, async (n, what) => {
+          const name = `${n}-${suffix}.png`;
+          await page.screenshot({ path: `${dir}/${name}` });
+          appendFileSync(`${dir}/steps.txt`, `${name}: ${what}\n`);
+        });
+      });
 }

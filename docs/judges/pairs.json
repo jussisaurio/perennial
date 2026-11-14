@@ -1,0 +1,738 @@
+[
+ {
+  "id": "signs-desktop",
+  "issue": 650,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "896edbf/signs",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "2abe6e4/signs",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "signs-phone",
+  "issue": 650,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "896edbf/signs",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "2abe6e4/signs",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "settings-dark-desktop",
+  "issue": 678,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "c3a81a6/settings",
+   "frames": [
+    "1-dark-desktop.png",
+    "2-dark-desktop.png",
+    "3-dark-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "9dcc7f7/settings",
+   "frames": [
+    "1-dark-desktop.png",
+    "2-dark-desktop.png",
+    "3-dark-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "settings-light-phone",
+  "issue": 678,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "c3a81a6/settings",
+   "frames": [
+    "1-light-phone.png",
+    "2-light-phone.png",
+    "3-light-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "9dcc7f7/settings",
+   "frames": [
+    "1-light-phone.png",
+    "2-light-phone.png",
+    "3-light-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "card-desktop",
+  "issue": 711,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "b257f3a/card",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "74a57fb/card",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "card-phone",
+  "issue": 711,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "b257f3a/card",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "74a57fb/card",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "climb-desktop",
+  "issue": 770,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "1431b6b/climb",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png",
+    "4-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "39e8267/climb",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png",
+    "4-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "climb-phone",
+  "issue": 770,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "1431b6b/climb",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png",
+    "4-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "39e8267/climb",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png",
+    "4-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "contrast-answer-light-desktop",
+  "issue": 1009,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "8dd1c89/screens",
+   "frames": [
+    "answer-light-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/screens",
+   "frames": [
+    "answer-light-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "contrast-answer-light-phone",
+  "issue": 1009,
+  "half": "tuning",
+  "kind": "real",
+  "before": {
+   "dir": "8dd1c89/screens",
+   "frames": [
+    "answer-light-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/screens",
+   "frames": [
+    "answer-light-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "quality-desktop",
+  "issue": 677,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "b8e05b5/quality",
+   "frames": [
+    "1-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "54a0fac/quality",
+   "frames": [
+    "1-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "quality-phone",
+  "issue": 677,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "b8e05b5/quality",
+   "frames": [
+    "1-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "54a0fac/quality",
+   "frames": [
+    "1-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "nextplant-desktop",
+  "issue": 710,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "74a57fb/nextplant",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "4fea0bc/nextplant",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "nextplant-phone",
+  "issue": 710,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "74a57fb/nextplant",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "4fea0bc/nextplant",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "stileshut-desktop",
+  "issue": 749,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "b201e7c/stileshut",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "101d8d9/stileshut",
+   "frames": [
+    "1-desktop.png",
+    "2-desktop.png",
+    "3-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "stileshut-phone",
+  "issue": 749,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "b201e7c/stileshut",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "101d8d9/stileshut",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "door-desktop",
+  "issue": 779,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "cb9635f/door",
+   "frames": [
+    "1-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "1431b6b/door",
+   "frames": [
+    "1-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "door-phone",
+  "issue": 779,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "cb9635f/door",
+   "frames": [
+    "1-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "1431b6b/door",
+   "frames": [
+    "1-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "polish-today-light-phone",
+  "issue": 625,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "605bb34/screens",
+   "frames": [
+    "today-light-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "382addd/screens",
+   "frames": [
+    "today-light-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "polish-today-dark-desktop",
+  "issue": 625,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "605bb34/screens",
+   "frames": [
+    "today-dark-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "382addd/screens",
+   "frames": [
+    "today-dark-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "polish-settings-dark-desktop",
+  "issue": 625,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "605bb34/screens",
+   "frames": [
+    "settings-dark-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "382addd/screens",
+   "frames": [
+    "settings-dark-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "polish-words-light-desktop",
+  "issue": 625,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "605bb34/screens",
+   "frames": [
+    "words-light-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "382addd/screens",
+   "frames": [
+    "words-light-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "polish-answer-dark-phone",
+  "issue": 625,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "605bb34/screens",
+   "frames": [
+    "answer-dark-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "382addd/screens",
+   "frames": [
+    "answer-dark-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "polish-card-light-desktop",
+  "issue": 625,
+  "half": "heldout",
+  "kind": "real",
+  "before": {
+   "dir": "605bb34/screens",
+   "frames": [
+    "card-light-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "382addd/screens",
+   "frames": [
+    "card-light-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "same-settings",
+  "issue": 1004,
+  "half": "control",
+  "kind": "same",
+  "before": {
+   "dir": "c3a81a6/settings",
+   "frames": [
+    "1-dark-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "9dcc7f7/settings",
+   "frames": [
+    "1-dark-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "same-today",
+  "issue": 1004,
+  "half": "control",
+  "kind": "same",
+  "before": {
+   "dir": "8dd1c89/screens",
+   "frames": [
+    "today-light-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/screens",
+   "frames": [
+    "today-light-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "same-words",
+  "issue": 1004,
+  "half": "control",
+  "kind": "same",
+  "before": {
+   "dir": "8dd1c89/screens",
+   "frames": [
+    "words-dark-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/screens",
+   "frames": [
+    "words-dark-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "same-garden",
+  "issue": 1004,
+  "half": "control",
+  "kind": "same",
+  "before": {
+   "dir": "54a0fac/quality",
+   "frames": [
+    "1-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "54a0fac/quality",
+   "frames": [
+    "1-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "same-plantcard",
+  "issue": 1004,
+  "half": "control",
+  "kind": "same",
+  "before": {
+   "dir": "74a57fb/card",
+   "frames": [
+    "2-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "74a57fb/card",
+   "frames": [
+    "2-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "same-signs",
+  "issue": 1004,
+  "half": "control",
+  "kind": "same",
+  "before": {
+   "dir": "2abe6e4/signs",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "2abe6e4/signs",
+   "frames": [
+    "1-phone.png",
+    "2-phone.png",
+    "3-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-misalign",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "misalign-base-light-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "misalign-bad-light-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-contrast",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "contrast-base-light-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "contrast-bad-light-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-cramped",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "cramped-base-dark-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "cramped-bad-dark-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-jokey",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "jokey-base-dark-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "jokey-bad-dark-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-unequal",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "unequal-base-light-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "unequal-bad-light-phone.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-font",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "font-base-dark-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "font-bad-dark-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-colouronly",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "colouronly-base-light-desktop.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "colouronly-bad-light-desktop.png"
+   ]
+  }
+ },
+ {
+  "id": "planted-overlap",
+  "issue": 1004,
+  "half": "control",
+  "kind": "planted",
+  "before": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "overlap-base-dark-phone.png"
+   ]
+  },
+  "after": {
+   "dir": "a1fd0ba/planted",
+   "frames": [
+    "overlap-bad-dark-phone.png"
+   ]
+  }
+ }
+]
