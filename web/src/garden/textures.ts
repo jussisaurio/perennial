@@ -754,14 +754,24 @@ export function notice(text: string): OffscreenCanvas {
   return c;
 }
 
+/** The pond (#1091): one calm blue, with a few long, thin ripples a shade paler. The pond drifts it (sceneSky.ts). */
 export function water(): OffscreenCanvas {
-  const c = speckle(5, "#779ec6", [
-    ["#86abd0", 90],
-    ["#6890ba", 70],
-  ]);
-  const ctx = c.getContext("2d")!;
-  const r = rng(9);
-  for (let i = 0; i < 6; i++) px(ctx, Math.floor(r() * 28), Math.floor(r() * 30), "#d7e3ef", 3, 1);
+  const S = 256;
+  const [c, ctx] = canvas(S, S);
+  px(ctx, 0, 0, "#779ec6", S, S);
+  const r = rng(5);
+  ctx.strokeStyle = "#93b5d8";
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  for (const [x, y] of scatter(r, S, 7, 56)) {
+    const l = 24 + r() * 30;
+    wrapped(S, x, y, (x, y) => {
+      ctx.beginPath();
+      ctx.moveTo(x - l / 2, y);
+      ctx.quadraticCurveTo(x, y - 4, x + l / 2, y);
+      ctx.stroke();
+    });
+  }
   return c;
 }
 
@@ -916,12 +926,33 @@ export function cupRings(): OffscreenCanvas {
   return c;
 }
 
-/** Weathered stone, for the sundial's pillar. */
-export const stone = () =>
-  speckle(23, "#a9a29a", [
-    ["#c9c3b8", 60],
-    ["#8a847c", 70],
-  ]);
+/** Weathered stone (#1091), for the sundial and the lookout's flat stone: one flat grey and a few crisp cracks a shade darker. No light chips: stretched up a pillar, they read as smudges. */
+export function stone(): OffscreenCanvas {
+  const S = 128;
+  const [c, ctx] = canvas(S, S);
+  px(ctx, 0, 0, "#a9a29a", S, S);
+  const r = rng(23);
+  ctx.strokeStyle = "#8d867e";
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  // A crack: three short bends, each turned a little from the last.
+  for (const [x, y] of scatter(r, S, 3, 40)) {
+    const a = r() * Math.PI * 2;
+    const bends = [0, 1, 2].map(() => [a + (r() - 0.5) * 1.2, 7 + r() * 9]);
+    wrapped(S, x, y, (x, y) => {
+      let [cx, cy] = [x, y];
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      for (const [b, l] of bends) {
+        [cx, cy] = [cx + Math.cos(b) * l, cy + Math.sin(b) * l];
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    });
+  }
+  return c;
+}
 
 /**
  * The mouse door (#364): a tiny arched wooden door in a stone frame, with a

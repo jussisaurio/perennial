@@ -78,7 +78,11 @@ export class LookoutThings {
     // Its flat foot rests on the lowest ground under its rim (its seven corners), sunk into the slope above that.
     const rim = Array.from({ length: 7 }, (_, i) => (i / 7) * Math.PI * 2);
     const foot = Math.min(...rim.map((a) => hillY(h, sx + STONE_R * Math.sin(a), sz + STONE_R * Math.cos(a))));
-    const stone = new THREE.Mesh(new THREE.CylinderGeometry(STONE_R - 0.03, STONE_R, STONE_H, 7), c.mat(T.pixelTexture(T.stone(), true)));
+    // Seven flat faces, each one shade, not a gradient round it: no corner is shared, so each face keeps its own normal.
+    const stoneGeo = new THREE.CylinderGeometry(STONE_R - 0.03, STONE_R, STONE_H, 7).toNonIndexed();
+    stoneGeo.computeVertexNormals();
+    shade(stoneGeo);
+    const stone = new THREE.Mesh(stoneGeo, c.mat(T.paperTexture(T.stone(), true), { vertexColors: true }));
     stone.position.set(sx, foot + STONE_H / 2, sz);
     const top = foot + STONE_H;
     const book = new THREE.Mesh(new THREE.BoxGeometry(BOOK.w, BOOK.h, BOOK.d), c.mat(T.pixelTexture(T.diary())));

@@ -367,7 +367,7 @@ export class StileScene {
     });
     // A flat stone on them, so the wind leaves them where they were put.
     const [nx, nz] = at.note;
-    const stone = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.055), c.mat(T.pixelTexture(T.stone(), true)));
+    const stone = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.055), c.mat(T.paperTexture(T.stone(), true)));
     stone.position.set(nx + 0.02, SHEET * notes.length + 0.035 / 2, nz - 0.05);
     stone.rotation.y = 0.4;
     c.scene.add(still(stone));
