@@ -25,7 +25,7 @@ Use the strongest check that fits: a type that makes the wrong state impossible 
 - `garden.drawn-solid`: Each thing drawn as solid stops you. The check reads the scene's tap volumes, so it does not see the things you cannot tap: the stile, the brambles, the well and the shed. Checked in `web/e2e/drawn-solid.spec.ts`.
 - `garden.no-invisible-wall`: Where nothing solid is drawn, nothing stops you. Not checked yet (#1124).
 - `render.same-outline`: A plant's small sprite and its full-size sprite have the same outline. Checked in `web/e2e/plant-sprites.spec.ts`.
-- `render.no-pop`: While you walk, nothing in view jumps in size, shape or place more than the camera's move explains. The check measures only the drawn height of the plants near you, as you walk up to one until the action button can shake it, and back. It does not see far plants (#1144) or anything else yet. Checked in `web/e2e/no-pop.spec.ts`.
+- `render.no-pop`: While you walk, nothing in view jumps in size, shape or place more than the camera's move explains. The check measures only the drawn height of the plants near you, as you run up to one until the action button can shake it, and back. It does not see far plants (#1144) or anything else yet. Checked in `web/e2e/no-pop.spec.ts`.
 
 ## The app
 
