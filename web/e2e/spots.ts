@@ -112,9 +112,9 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
       const g = window.__garden.game;
       Object.assign(g.me, { x: g.bench.x - 1.05, z: g.bench.z - 0.75, yaw: Math.PI, pitch: -0.45 });
     }),
-  // 1.3 m from the first visitor in the garden, looking at it, from the first side round it (from where the walk opens)
-  // where no solid thing is in the way (#1164): its drawing up close. Open with --visitors <id>. The bird hops off
-  // nearer than 1 m (kinds/bird.ts SHY).
+  // Near the first visitor in the garden (1.3 m, or more for a big one), looking at it, from the first side round it
+  // (from where the walk opens) where no solid thing is in the way (#1164): its drawing up close. Open with
+  // --visitors <id>. The bird hops off nearer than 1 m (kinds/bird.ts SHY).
   visitor: (page) =>
     page.evaluate(async () => {
       const { EYE } = await import(/* @vite-ignore */ "/src/garden/game.ts");
@@ -132,16 +132,19 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
       const { x, z } = v.body;
       const y = v.body.y + v.size * 0.25;
       const from = Math.atan2(g.me.x - x, g.me.z - z);
-      for (let i = 0; i < 8; i++) {
-        const a = from + (i * Math.PI) / 4;
-        const [sx, sz] = [x + Math.sin(a) * 1.3, z + Math.cos(a) * 1.3];
-        const d = Math.hypot(1.3, EYE - y);
-        const ray = { ox: sx, oy: EYE, oz: sz, dx: (x - sx) / d, dy: (y - EYE) / d, dz: (z - sz) / d };
-        if (s.hitBoxes.some((b) => rayBox(unturn(ray, b), b.min, b.max) < d)) continue;
-        // Forward is -z at yaw 0.
-        Object.assign(g.me, { x: sx, z: sz, yaw: a, pitch: -Math.atan2(EYE - y, 1.3) });
-        return;
-      }
+      // Far enough to see a tall one whole (the heron); twice as far if something solid is in the way all round (the goat on its ledge).
+      const near = Math.max(1.3, v.size * 2);
+      for (const r of [near, near * 2])
+        for (let i = 0; i < 8; i++) {
+          const a = from + (i * Math.PI) / 4;
+          const [sx, sz] = [x + Math.sin(a) * r, z + Math.cos(a) * r];
+          const d = Math.hypot(r, EYE - y);
+          const ray = { ox: sx, oy: EYE, oz: sz, dx: (x - sx) / d, dy: (y - EYE) / d, dz: (z - sz) / d };
+          if (s.hitBoxes.some((b) => rayBox(unturn(ray, b), b.min, b.max) < d)) continue;
+          // Forward is -z at yaw 0.
+          Object.assign(g.me, { x: sx, z: sz, yaw: a, pitch: -Math.atan2(EYE - y, r) });
+          return;
+        }
       throw new Error("something solid is in the way from every side");
     }),
   // By the diary's stone, in reach of it (#858): the book, and its ribbon while a page is unread.

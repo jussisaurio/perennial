@@ -61,6 +61,10 @@ function turned(pieces: readonly Piece[], cx: number, cy: number, deg: number): 
   const [c, s] = [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)];
   return pieces.map((p) => ({ ...p, d: mapPoints(p.d, (x, y) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]) }));
 }
+/** `pieces` mirrored left to right in a cut-out `w` wide: the other half of a thing that faces you. */
+function mirrored(pieces: readonly Piece[], w: number): Piece[] {
+  return pieces.map((p) => ({ ...p, d: mapPoints(p.d, (x, y) => [w - x, y]) }));
+}
 /** An ellipse as cubic curves, so it moves like any other path. */
 export function oval(cx: number, cy: number, rx: number, ry = rx): string {
   const [kx, ky] = [rx * 0.5523, ry * 0.5523];
@@ -96,23 +100,52 @@ const cut = (d: string, color: string, _edge: string): Piece => part(d, color);
 const tube = (d: string, color: string, edge: string, width: number): Piece[] => [line(d, edge, width + 2 * EDGE), line(d, color, width)];
 /** A round dark eye with a speck of light. */
 const eye = (cx: number, cy: number, r: number): Piece[] => [flat(oval(cx, cy, r), INK), flat(oval(cx + r * 0.3, cy - r * 0.35, r * 0.34), "#fffaf0")];
+/** A brass paper fastener at (x, y): the pivot a moving part turns on, through it and the part under it, as on a paper puppet. */
+const pin = (x: number, y: number): Piece[] => [part(oval(x, y, 0.42), "#d3a645"), flat(oval(x - 0.12, y - 0.13, 0.16), "#f8e7b0")];
+/**
+ * The foot a standing figure stands on, from `x0` to `x1` under it, in a cut-out `h` tall: the card's plain back,
+ * folded toward you where it meets the ground, so it flares.
+ */
+const tab = (x0: number, x1: number, h: number): Piece => part(shape([x0, h - 0.8, 0], [x1, h - 0.8, 0], [x1 + 0.6, h, 0], [x0 - 0.6, h, 0]), "#e6dcc6");
+/** A thin limb of card along `pts`, `w` wide, cut square at both ends: a heron's leg. */
+function limb(pts: readonly (readonly [number, number])[], w: number): string {
+  const side = (k: number): Pt[] =>
+    pts.map(([x, y], i) => {
+      const [a, b] = [pts[Math.max(i - 1, 0)], pts[Math.min(i + 1, pts.length - 1)]];
+      const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      return [x - ((b[1] - a[1]) / l) * k * (w / 2), y + ((b[0] - a[0]) / l) * k * (w / 2), 0];
+    });
+  return shape(...side(1), ...side(-1).reverse());
+}
 
 // ---- Snail ----
-const SNAIL_SHELL = "#e09a58";
-const SNAIL_SHELL_EDGE = "#8a4a24";
-const SNAIL_BODY = "#dcc9a0";
-const SNAIL_BODY_EDGE = "#a48e64";
+/** A band cut in one piece, wound `turns` times out from (cx, cy) to `r`: a point at the middle, wide at the rim. */
+function spiral(cx: number, cy: number, r: number, turns: number): string {
+  const steps = Math.round(turns * 10);
+  // Its two cut edges, out along one and back along the other; the point and the square end are sharp.
+  const edge = (i: number, side: number): Pt => {
+    const t = i / steps;
+    const a = Math.PI * (0.5 - 2 * turns * (1 - t));
+    const d = r * t + side * 0.3 * (r / turns) * t;
+    return [cx + Math.cos(a) * d, cy + Math.sin(a) * d, i === 0 || i === steps ? 0 : 1];
+  };
+  return shape(...Array.from({ length: steps + 1 }, (_, i) => edge(i, 1)), ...Array.from({ length: steps }, (_, i) => edge(steps - i, -1)));
+}
+const SHELL = "#d98f4e";
+const SHELL_DARK = "#a0532a";
+const SNAIL_FOOT = "#e3d3ae";
+/** A snail, side on, going right: its foot long and pale, its shell a coil of discs stacked smaller and smaller, light and dark by turns. */
 export const SNAIL: Cutout = {
   w: 16,
   h: 11,
   pieces: [
-    ...tube("M12.6 3.6 L12.1 1.2", SNAIL_BODY, SNAIL_BODY_EDGE, 0.5),
-    ...tube("M13.8 3.8 L14.6 1.4", SNAIL_BODY, SNAIL_BODY_EDGE, 0.5),
-    cut("M0.4 10.7 C1.6 9.8 4.4 9.5 10.6 9.3 L11.1 5.4 C11.2 3.8 12.1 3.1 13 3.1 C13.9 3.1 14.7 3.9 14.6 5.3 L14.4 9.6 C14.3 10.3 13.7 10.7 12.8 10.7 Z", SNAIL_BODY, SNAIL_BODY_EDGE),
-    ...eye(12.1, 1.1, 0.55),
-    ...eye(14.6, 1.3, 0.55),
-    cut(oval(6, 5.6, 4.7, 4.6), SNAIL_SHELL, SNAIL_SHELL_EDGE),
-    line("M6.2 5.8 C7.1 5.6 7 7 6 7 C4.6 7 4.5 4.8 5.9 4.5 C7.7 4.1 8.6 6.2 8 7.6 C7.2 9.2 4.2 9.3 3.2 7.3 C2.2 5.1 3.8 2.6 6.4 2.5", SNAIL_SHELL_EDGE, 0.5),
+    part(limb([[12.3, 4.0], [11.9, 1.4]], 0.5), SNAIL_FOOT),
+    part(limb([[13.6, 4.0], [14.5, 1.6]], 0.5), SNAIL_FOOT),
+    flat(oval(11.9, 1.3, 0.5), INK),
+    flat(oval(14.5, 1.5, 0.5), INK),
+    part(shape([0.4, 10.7, 0], [2.6, 9.7], [10.4, 9.3], [11.0, 5.6], [12.0, 3.4], [13.4, 3.2], [14.6, 4.4], [14.6, 7.0], [14.4, 9.8], [13.2, 10.7, 0]), SNAIL_FOOT),
+    part(oval(6.0, 5.8, 4.7, 4.6), SHELL),
+    flat(spiral(6.2, 6.0, 4.1, 2.2), SHELL_DARK),
   ],
 };
 
@@ -238,40 +271,52 @@ export const BIRD_HOP: Cutout = {
 };
 
 // ---- Frog ----
-const FROG_GREEN = "#5ea83f";
-const FROG_EDGE = "#3a7426";
-const FROG_DARK = "#4a9232";
-const FROG_BELLY = "#d2e49e";
-const FROG_BELLY_EDGE = "#a6bf6c";
-/** A green frog sitting, looking at you; `face` gives its eyes and throat. */
-function frog(face: Piece[], throat: Piece[]): Cutout {
+const FROG_GREEN = "#8cbc4c";
+const FROG_LIGHT = "#eaeebc";
+const FROG_DARK = "#4f8a38";
+const GOLD = "#eeb03c";
+/** Its left half, from the back: a hind leg folded at its side, wider than its body, its foot's toes cut long. */
+const FROG_HIND = [
+  part(shape([0.3, 9.4], [0.5, 7.2], [1.8, 5.6], [3.8, 5.6], [5.0, 7.4], [4.8, 9.6], [3.0, 10.6], [1.2, 10.5]), FROG_DARK),
+  part(shape([4.8, 10.95, 0], [0.1, 10.95, 0], [1.3, 10.4, 0.5], [0.2, 9.8, 0], [1.9, 9.95, 0.5], [1.2, 9.2, 0], [3.0, 9.7], [4.8, 9.8]), FROG_GREEN),
+];
+/** Its left front leg, elbow out, its hand's three toes spread on the pad. */
+const FROG_ARM = part(shape([2.5, 7.6], [3.7, 7.1], [4.3, 8.6], [4.7, 9.9], [5.9, 10.5, 0], [4.9, 10.45, 0.3], [4.3, 10.95, 0], [3.8, 10.45, 0.3], [2.8, 10.95, 0], [3.4, 9.9], [2.9, 8.8]), FROG_GREEN);
+/** A frog sitting, looking at you; `eyes` open or shut, its throat puffed out or not. */
+function frog(eyes: Piece[], puffed: boolean): Cutout {
   return {
     w: 14,
     h: 11,
     pieces: [
-      cut(oval(2, 8.8, 1.8, 1.7), FROG_DARK, FROG_EDGE),
-      cut(oval(12, 8.8, 1.8, 1.7), FROG_DARK, FROG_EDGE),
-      cut("M1.2 7 C1.2 4 3.6 2.6 7 2.6 C10.4 2.6 12.8 4 12.8 7 C12.8 9.4 11 10.5 7 10.5 C3 10.5 1.2 9.4 1.2 7 Z", FROG_GREEN, FROG_EDGE),
-      cut(oval(3.6, 2.4, 1.9), FROG_GREEN, FROG_EDGE),
-      cut(oval(10.4, 2.4, 1.9), FROG_GREEN, FROG_EDGE),
-      flat(oval(5.4, 4.6, 0.45), FROG_DARK),
-      flat(oval(9.2, 4.9, 0.35), FROG_DARK),
-      cut(oval(7, 8.2, 3.6, 2.1), FROG_BELLY, FROG_BELLY_EDGE),
-      ...throat,
-      line("M3.4 5.8 Q7 7.2 10.6 5.8", "#2a4a1c", 0.4),
-      cut(oval(4.6, 10.4, 1.3, 0.5), FROG_DARK, FROG_EDGE),
-      cut(oval(9.4, 10.4, 1.3, 0.5), FROG_DARK, FROG_EDGE),
-      ...face,
+      ...FROG_HIND,
+      ...mirrored(FROG_HIND, 14),
+      part(shape([2.6, 10.9, 0], [2.1, 8.4], [2.5, 6.2], [4.0, 4.7], [7, 4.2], [10.0, 4.7], [11.5, 6.2], [11.9, 8.4], [11.4, 10.9, 0]), FROG_GREEN),
+      part(oval(4.0, 3.5, 2.0, 1.95), FROG_GREEN),
+      part(oval(10.0, 3.5, 2.0, 1.95), FROG_GREEN),
+      flat(oval(10.9, 5.8, 0.35), FROG_DARK),
+      flat(oval(3.4, 6.4, 0.3), FROG_DARK),
+      part(shape([4.2, 10.9, 0], [4.0, 9.0], [5.2, 7.5], [7, 7.1], [8.8, 7.5], [10.0, 9.0], [9.8, 10.9, 0]), FROG_LIGHT),
+      ...(puffed ? [part(oval(7, 7.7, 2.6, 2.0), "#f6f2d4")] : []),
+      line("M3.4 6.0 C5.2 7.3 8.8 7.3 10.6 6.0", INK, 0.32),
+      flat(oval(6.3, 5.1, 0.2), FROG_DARK),
+      flat(oval(7.7, 5.1, 0.2), FROG_DARK),
+      FROG_ARM,
+      ...mirrored([FROG_ARM], 14),
+      ...eyes,
     ],
   };
 }
-const FROG_EYES = [flat(oval(3.6, 2.4, 1.25), "#fffbea"), flat(oval(10.4, 2.4, 1.25), "#fffbea"), ...eye(3.7, 2.5, 0.68), ...eye(10.3, 2.5, 0.68)];
+/** Its eyes: gold, each with a wide dark slit. */
+const FROG_EYES = [4.0, 10.0].flatMap((x) => [flat(oval(x, 3.4, 1.25), GOLD), flat(oval(x, 3.4, 0.9, 0.45), INK)]);
 /** A green frog sitting on a lily pad, looking at you. */
-export const FROG = frog(FROG_EYES, []);
-/** The frog croaking: its throat puffs up pale. */
-export const FROG_CROAK = frog(FROG_EYES, [cut(oval(7, 7.9, 3.2, 2.5), "#fff8dc", "#d8d0a0")]);
-/** Eyes closed: it talks in its sleep. */
-export const FROG_ASLEEP = frog([line("M2.5 2.6 Q3.6 3.4 4.7 2.6", "#2a4a1c", 0.4), line("M9.3 2.6 Q10.4 3.4 11.5 2.6", "#2a4a1c", 0.4)], []);
+export const FROG = frog(FROG_EYES, false);
+/** The frog croaking: its throat puffs out pale. */
+export const FROG_CROAK = frog(FROG_EYES, true);
+/** Eyes shut: it talks in its sleep. */
+export const FROG_ASLEEP = frog(
+  [4.0, 10.0].map((x) => line(`M${n(x - 1.2)} 3.5 C${n(x - 0.6)} 4.2 ${n(x + 0.6)} 4.2 ${n(x + 1.2)} 3.5`, INK, 0.32)),
+  false,
+);
 
 // ---- Dog ----
 const DOG_TAN = "#c98a4f";
@@ -293,6 +338,7 @@ function dog(wag: number): Cutout {
       part(shape([9.6, 6.2], [7.0, 8.0], [4.6, 10.6], [3.5, 13.4], [3.7, 15.9, 0], [14.9, 15.9, 0], [15.1, 12.2], [15.5, 9.4], [14.6, 7.3]), DOG_TAN),
       // The haunch: one round cut over the body, with the hind paw in front of it.
       part(shape([3.7, 15.9, 0], [3.6, 12.8], [5.6, 10.2], [8.4, 10.3], [10.2, 12.6], [10.2, 15.9, 0]), DOG_TAN),
+      ...pin(4.8, 12),
       part(shape([8.6, 15.9, 0], [8.8, 14.9], [10.6, 14.6], [11.9, 15.2], [12.0, 15.9, 0]), DOG_LIGHT),
       part(shape([12.2, 7.6], [14.6, 7.4], [15.0, 9.4], [14.2, 11.2], [12.8, 11.0], [12.2, 9.6]), DOG_LIGHT),
       part(shape([12.4, 10.4], [14.4, 10.2], [14.9, 15.9, 0], [12.6, 15.9, 0]), DOG_TAN),
@@ -415,112 +461,130 @@ export function butterflyIn(hue: number): [Cutout, Cutout] {
 }
 
 // ---- Gnome ----
-const HAT = "#d23e34";
-const HAT_EDGE = "#94281f";
+const HAT = "#c9472f";
+const HAT_LIT = "#e0684a";
 const SKIN = "#f0c8a0";
-const SKIN_EDGE = "#c39470";
-const BEARD = "#f6f1e8";
-const BEARD_EDGE = "#cbc2b2";
-const COAT = "#3e6eb8";
-const COAT_EDGE = "#284c86";
-const BOOT = "#6a4428";
-const BOOT_EDGE = "#43301c";
-const GNOME_HAT = [cut("M8 0.3 C8.6 2 10.6 5.4 12.4 8.2 L3.6 8.2 C5.4 5.4 7.4 2 8 0.3 Z", HAT, HAT_EDGE)];
-const GNOME_BRIM = [cut("M3 8.4 C3 7.6 13 7.6 13 8.4 C13 9.2 3 9.2 3 8.4 Z", "#9a2a24", "#6e1c18")];
-/** The gnome below its face: coat, belt, legs, boots, hands, and its lantern (`lit` or not) in its right hand. */
-function gnomeBody(lit: boolean, hands: [number, number]): Piece[] {
+const NOSE = "#e2866e";
+const BEARD = "#f5f0e4";
+const COAT = "#4a74ad";
+const COAT_DARK = "#36598c";
+const BOOT = "#5c3f2a";
+/** Its tall hat, folded down the middle: the half toward the light a shade lighter. Its tip leans to the right. */
+const GNOME_HAT = [
+  part(shape([3.0, 9.2, 0], [4.8, 6.2], [6.8, 3.0], [8.8, 1.0], [10.8, 0.2, 0], [9.9, 1.8], [10.0, 4.4], [11.4, 7.0], [13.0, 9.2, 0], [8.0, 9.75, 0.6]), HAT),
+  flat(shape([3.0, 9.2, 0], [4.8, 6.2], [6.8, 3.0], [8.8, 1.0], [10.8, 0.2, 0], [8.6, 3.4], [7.6, 6.6], [7.6, 9.72, 0], [5.4, 9.6]), HAT_LIT),
+];
+/** Its lantern, `lit` or not, hanging from its right hand: its middle is where the walk puts its glow (kinds/gnome.ts). */
+const lantern = (lit: boolean): Piece[] => [
+  line("M14.8 16.9 L15.2 17.5", INK, 0.25),
+  part(shape([14.65, 17.9, 0], [15.75, 17.9, 0], [15.65, 19.5, 0], [14.75, 19.5, 0]), lit ? "#ffe27a" : "#c9cbbd"),
+  part(shape([14.4, 18.05, 0], [15.2, 17.2, 0], [16.0, 18.05, 0]), INK),
+  part(shape([14.6, 19.4, 0], [15.8, 19.4, 0], [15.7, 19.9, 0], [14.7, 19.9, 0]), INK),
+];
+/** Below its face, the same in both poses: boots, a long coat with a belt, sleeves and hands, the lantern. */
+function gnomeBody(lit: boolean): Piece[] {
+  const boot = part(shape([1.6, 22.2, 0], [1.8, 21.4], [3.2, 20.7], [4.8, 20.3, 0], [7.5, 20.3, 0], [7.6, 22.2, 0]), BOOT);
   return [
-    cut("M3.4 13 C2 14.4 1.4 16.6 1.4 18.6 L14.4 18.6 C14.4 16.6 14 14.4 12.6 13 Z", COAT, COAT_EDGE),
-    cut("M2.9 19.2 L7.3 19.2 L7.2 21.2 L3 21.2 Z", COAT, COAT_EDGE),
-    cut("M8.7 19.2 L13.1 19.2 L13 21.2 L8.8 21.2 Z", COAT, COAT_EDGE),
-    cut("M1.4 18 L14.4 18 L14.4 19.4 L1.4 19.4 Z", "#5a3a20", "#3a2412"),
-    line("M7.3 18.1 L8.7 18.1 L8.7 19.3 L7.3 19.3 Z", "#e0b860", 0.35),
-    cut("M2.5 21 L7.4 21 C7.6 22 7.2 22.7 6.4 22.7 L2.7 22.7 C2 22.7 1.8 21.8 2.5 21 Z", BOOT, BOOT_EDGE),
-    cut("M8.6 21 L13.5 21 C14.2 21.8 14 22.7 13.3 22.7 L9.6 22.7 C8.8 22.7 8.4 22 8.6 21 Z", BOOT, BOOT_EDGE),
-    cut(oval(hands[0], 16.8, 0.95), SKIN, SKIN_EDGE),
-    line("M14.6 16.9 L15.3 17.5", "#3a2e34", 0.3),
-    cut("M14.7 17.6 L15.9 17.6 L16 19.5 L14.6 19.5 Z", lit ? "#ffe680" : "#4a4048", "#3a2e34"),
-    flat("M14.5 17.7 L16.1 17.7 L15.3 17 Z", "#3a2e34"),
-    cut(oval(hands[1], 16.8, 0.95), SKIN, SKIN_EDGE),
+    tab(2.4, 13.6, 23),
+    boot,
+    ...mirrored([boot], 16),
+    part(shape([4.8, 12.3], [3.2, 13.6], [2.4, 15.8], [1.9, 18.4], [1.5, 21.0, 0], [14.5, 21.0, 0], [14.1, 18.4], [13.6, 15.8], [12.8, 13.6], [11.2, 12.3]), COAT),
+    flat(shape([7.5, 21.0, 0], [8.0, 19.2, 0], [8.5, 21.0, 0]), COAT_DARK),
+    part(shape([2.05, 17.5, 0], [13.95, 17.5, 0], [14.15, 18.8, 0], [1.85, 18.8, 0]), BOOT),
+    part(shape([7.0, 17.3, 0], [9.0, 17.3, 0], [9.0, 19.0, 0], [7.0, 19.0, 0]), GOLD),
+    flat(shape([7.6, 17.85, 0], [8.4, 17.85, 0], [8.4, 18.45, 0], [7.6, 18.45, 0]), BOOT),
+    part(shape([4.4, 12.6], [3.0, 14.4], [1.6, 16.4, 0], [3.2, 17.0, 0], [4.6, 15.0]), COAT_DARK),
+    part(shape([11.6, 12.6], [13.0, 14.4], [14.6, 16.2, 0], [13.0, 16.9, 0], [11.4, 15.0]), COAT_DARK),
+    part(oval(2.2, 16.9, 0.95), SKIN),
+    ...lantern(lit),
+    part(oval(14.6, 16.7, 0.95), SKIN),
   ];
 }
-const GNOME_FACE = [cut(oval(8, 10.6, 3.8, 2.3), SKIN, SKIN_EDGE)];
-const GNOME_EYES = [...eye(6.2, 10.1, 0.42), ...eye(9.8, 10.1, 0.42)];
-function gnomeFront(lit: boolean): Piece[] {
-  return [
-    ...gnomeBody(lit, [1.5, 14.4]),
-    ...GNOME_FACE,
-    cut("M3.8 11.2 C4 14.4 5.6 16.6 8 17 C10.4 16.6 12 14.4 12.2 11.2 C11 12 10 12.2 9 11.8 C8.4 12.4 7.6 12.4 7 11.8 C6 12.2 5 12 3.8 11.2 Z", BEARD, BEARD_EDGE),
-    cut(oval(8, 11.3, 0.95, 0.8), "#e3907a", "#b86a58"),
-    ...GNOME_EYES,
-    ...GNOME_HAT,
-    ...GNOME_BRIM,
-  ];
-}
-function gnomeSide(lit: boolean): Piece[] {
-  return [
-    ...gnomeBody(lit, [3.2, 14.4]),
-    cut(oval(7.6, 10.6, 3.8, 2.3), SKIN, SKIN_EDGE),
-    cut("M8.8 9 L12 9 C12.4 10 12.2 11.4 11.4 12 C10.4 12.2 9.4 11.6 8.8 11 Z", "#d8cfbf", "#aaa090"),
-    cut("M3.4 11.2 C3.4 14 4.6 16 6.8 16.6 C8 15 8.6 13 8.4 11.4 C6.8 12 5 11.8 3.4 11.2 Z", BEARD, BEARD_EDGE),
-    cut(oval(3.4, 11, 0.95, 0.8), "#e3907a", "#b86a58"),
-    ...eye(5.4, 10.1, 0.42),
-    ...GNOME_HAT,
-    ...GNOME_BRIM,
-  ];
-}
+/** Its face toward you: the beard over the coat, cut to points, a round nose, two dark eyes under the hat. */
+const GNOME_FACE: Piece[] = [
+  part(oval(8, 10.6, 3.6, 2.0), SKIN),
+  part(shape([4.6, 11.2], [4.4, 13.0], [5.2, 15.0], [6.3, 15.9, 0], [6.8, 15.4], [8.0, 17.2, 0], [9.2, 15.4], [9.7, 15.9, 0], [10.8, 15.0], [11.6, 13.0], [11.4, 11.2], [8, 11.8]), BEARD),
+  part(shape([5.6, 12.0], [6.7, 11.1], [8.0, 11.5, 0], [9.3, 11.1], [10.4, 12.0], [9.4, 12.5], [8.0, 12.1, 0], [6.6, 12.5]), BEARD),
+  part(oval(8, 11.1, 1.05, 0.9), NOSE),
+  flat(oval(6.3, 10.3, 0.38), INK),
+  flat(oval(9.7, 10.3, 0.38), INK),
+];
+/** Its head turned away to your left, three-quarters: the face slid that way, the far eye smaller, its white hair and an ear showing behind. */
+const GNOME_PROFILE: Piece[] = [
+  part(shape([9.4, 9.4], [12.2, 9.4], [12.5, 11.2], [11.4, 12.9], [9.6, 12.2]), BEARD),
+  part(oval(6.9, 10.6, 3.4, 2.0), SKIN),
+  part(oval(10.0, 10.9, 0.55, 0.75), SKIN),
+  part(shape([3.2, 11.2], [3.0, 13.0], [3.8, 15.0], [4.9, 15.9, 0], [5.4, 15.4], [6.6, 17.2, 0], [7.8, 15.4], [8.3, 15.9, 0], [9.4, 15.0], [10.0, 13.0], [9.8, 11.2], [6.6, 11.8]), BEARD),
+  part(shape([4.2, 12.0], [5.3, 11.1], [6.6, 11.5, 0], [7.9, 11.1], [9.0, 12.0], [8.0, 12.5], [6.6, 12.1, 0], [5.2, 12.5]), BEARD),
+  part(oval(5.3, 11.1, 1.05, 0.9), NOSE),
+  flat(oval(4.6, 10.3, 0.38), INK),
+  flat(oval(7.7, 10.3, 0.32), INK),
+];
 /** The gnome facing you or looking away, with its lantern unlit (by day) or lit. */
 export function gnomeArt(pose: "front" | "side", lit: boolean): Cutout {
-  return { w: 16, h: 23, pieces: pose === "front" ? gnomeFront(lit) : gnomeSide(lit) };
+  return { w: 16, h: 23, pieces: [...gnomeBody(lit), ...(pose === "front" ? GNOME_FACE : GNOME_PROFILE), ...GNOME_HAT] };
 }
 /** Crouched behind something: only its hat and eyes peek out. */
 export const GNOME_PEEK: Cutout = {
   w: 16,
   h: 11,
-  pieces: [cut("M4.2 11 C4.2 9.8 5.4 9.1 8 9.1 C10.6 9.1 11.8 9.8 11.8 11 Z", SKIN, SKIN_EDGE), ...GNOME_EYES, ...GNOME_HAT, ...GNOME_BRIM],
+  pieces: [part(shape([4.2, 11, 0], [4.6, 9.6], [8, 9.2], [11.4, 9.6], [11.8, 11, 0]), SKIN), flat(oval(6.3, 10.3, 0.38), INK), flat(oval(9.7, 10.3, 0.38), INK), ...GNOME_HAT],
 };
 /** Among the lily pads, pretending to be one: a pad on its head, the hat poking through, its eyes just over the water. */
 export const GNOME_PAD: Cutout = {
   w: 16,
   h: 13,
   pieces: [
-    cut("M4.4 13 L4.4 12 C4.4 11.4 5.6 11 8 11 C10.4 11 11.6 11.4 11.6 12 L11.6 13 Z", SKIN, SKIN_EDGE),
-    ...eye(6.4, 12.1, 0.4),
-    ...eye(9.6, 12.1, 0.4),
-    cut("M0.4 9.8 C0.4 8.4 3.6 7.6 8 7.6 C12.4 7.6 15.6 8.4 15.6 9.8 C15.6 11.2 12.4 11.9 8 11.9 C3.6 11.9 0.4 11.2 0.4 9.8 Z", "#5fb24c", "#3f8f3a"),
-    line("M3 9.2 L6.6 9.8 M12.8 10.4 L9.6 9.9", "#3f8f3a", 0.3),
-    cut("M8 0.3 C8.6 2 10.4 5.6 11.4 9.4 L4.6 9.4 C5.6 5.6 7.4 2 8 0.3 Z", HAT, HAT_EDGE),
+    part(shape([4.4, 13, 0], [4.6, 11.8], [8, 11.2], [11.4, 11.8], [11.6, 13, 0]), SKIN),
+    flat(oval(6.4, 12.2, 0.36), INK),
+    flat(oval(9.6, 12.2, 0.36), INK),
+    // The pad, its notch cut to the middle, as the pond's are.
+    part(shape([0.4, 9.8], [2.2, 8.3], [8.0, 7.6], [13.8, 8.3], [15.6, 9.8], [13.8, 11.3], [10.6, 11.85, 0], [8.6, 9.9, 0], [8.2, 11.95, 0], [2.2, 11.3]), "#6f9a5c"),
+    flat(shape([3.0, 9.4, 0], [6.4, 9.8, 0], [3.2, 9.7, 0]), "#4c7f47"),
+    flat(shape([13.0, 10.4, 0], [9.6, 9.9, 0], [12.8, 10.7, 0]), "#4c7f47"),
+    ...moved(GNOME_HAT, 0, -0.2),
   ],
 };
 /** Found: it falls over, flat on its back, its hat to one side (the front drawing turned on its side), its lantern unlit. */
-export const GNOME_FALLEN: Cutout = { w: 23, h: 16, pieces: gnomeFront(false).map((p) => ({ ...p, d: mapPoints(p.d, (x, y) => [y, x]) })) };
+export const GNOME_FALLEN: Cutout = { w: 23, h: 16, pieces: gnomeArt("front", false).pieces.map((p) => ({ ...p, d: mapPoints(p.d, (x, y) => [y, x]) })) };
 
 // ---- Heron ----
-const HERON_WHITE = "#eef1f3";
-const HERON_EDGE = "#5a636d";
-const HERON_LEG = "#d0a43c";
-const HERON_BODY = [
-  cut("M5.4 12 C4.4 14 4.4 16.6 5.6 18 C7 19.6 9.4 20.4 11.2 20.2 C13 19.8 14.6 17.4 15.7 15.4 C14.4 13.6 12 12 9.6 11.6 C8 11.4 6.4 11.4 5.4 12 Z", HERON_WHITE, HERON_EDGE),
-  cut("M6.8 12.6 C9 12.2 12.4 13.2 15.7 15.4 C14.8 17.6 13 19.8 11 20.2 C9 20 7.6 19 6.9 17.6 C6.3 16 6.3 14 6.8 12.6 Z", "#9ba5ae", HERON_EDGE),
-  line("M8.6 14.6 C10.2 15.2 11.8 16.6 12.6 18.4 M9.4 16.8 C10.4 17.6 11 18.6 11.3 19.6", "#6b7680", 0.35),
-  ...tube("M7 3.4 C6 5.6 6.8 7.4 7.8 8.6 C8.6 9.8 7.6 11.2 6.8 12.6", HERON_WHITE, HERON_EDGE, 1.4),
-  line("M8.2 2.2 C9.6 2.3 11 2.8 12.4 3.8", "#1d2025", 0.5),
-  cut(oval(6.9, 2.6, 2, 1.7), HERON_WHITE, HERON_EDGE),
-  line("M6 2.1 L8.6 2.4", "#1d2025", 0.35),
-  cut("M5.1 2.5 L0.3 3.4 L5.1 3.6 Z", "#e0b040", "#a07820"),
-  ...eye(6.1, 2.6, 0.38),
+const HERON_GREY = "#a3adb5";
+const HERON_LIT = "#c4ccd1";
+const HERON_LIGHT = "#eceeea";
+const HERON_DARK = "#56616c";
+const HERON_GOLD = "#dfaa3c";
+/** A leg standing, from the hip at `x`: its heel a little back, its long toes along the ground. */
+const heronLeg = (x: number): Piece[] => [
+  part(limb([[x, 18.4], [x + 0.35, 23.2], [x, 27.0]], 0.55), HERON_GOLD),
+  part(shape([x + 0.4, 26.8, 0], [x + 1.1, 27.2, 0], [x - 2.1, 27.2, 0], [x - 0.3, 26.8, 0]), HERON_GOLD),
 ];
-/** A tall grey heron standing still, looking left at the water. */
-export const HERON: Cutout = {
-  w: 16,
-  h: 28,
-  pieces: [line("M8.4 19.6 L8.4 27.6 M10.4 19.6 L10.4 27.6 M7.2 27.6 L9.2 27.6 M9.8 27.6 L11.8 27.6", HERON_LEG, 0.5), ...HERON_BODY],
-};
-/** Mid-step: one leg lifted and bent. */
+/** Its body over its legs: the S of its neck, a black crest, a dagger bill, its wing folded down the middle, its legs on one fastener. */
+const HERON_BODY: Piece[] = [
+  // The long dark flight feathers, notched, under the wing's end.
+  part(shape([11.4, 16.0], [14.4, 15.8], [15.95, 17.3, 0], [15.3, 18.2, 0], [14.8, 17.8, 0.3], [14.5, 18.9, 0], [13.7, 18.3, 0.3], [13.2, 19.3, 0], [11.6, 18.4]), HERON_DARK),
+  part(shape([5.6, 13.6], [7.4, 11.8], [10.4, 11.8], [13.4, 13.4], [15.6, 16.6, 0], [12.8, 18.6], [9.6, 19.6], [7.0, 19.2], [5.6, 17.0]), HERON_LIGHT),
+  part(shape([4.9, 4.2], [4.6, 5.8], [5.2, 7.6], [6.4, 9.2], [6.6, 10.8], [5.8, 12.6], [8.6, 12.4], [8.4, 10.6], [7.9, 8.6], [6.7, 7.2], [6.4, 5.8], [7.0, 4.4]), HERON_LIGHT),
+  // A dark streak down the front of its neck, cut as one thin wedge.
+  flat(shape([4.85, 5.0, 0], [5.15, 5.3], [5.55, 7.3], [6.55, 8.9], [6.75, 10.6, 0], [6.25, 9.2], [5.25, 7.6], [4.8, 6.0]), HERON_DARK),
+  // The plumes on its breast, cut to points.
+  part(shape([5.4, 12.0], [7.4, 11.8], [7.8, 14.4], [7.3, 17.2, 0], [6.8, 16.1, 0.4], [6.2, 17.7, 0], [5.7, 16.4, 0.4], [5.0, 17.1, 0], [4.8, 14.4]), HERON_LIGHT),
+  part(shape([7.4, 13.0], [9.6, 12.0], [12.6, 12.8], [15.0, 15.0], [15.9, 17.2, 0], [13.2, 18.0], [10.4, 18.4], [8.2, 17.4], [7.2, 15.2]), HERON_GREY),
+  flat(shape([7.4, 13.0], [9.6, 12.0], [12.6, 12.8], [15.0, 15.0], [15.9, 17.2, 0], [12.4, 15.7], [9.4, 15.1], [7.3, 14.8, 0]), HERON_LIT),
+  ...pin(9.7, 18.7),
+  part(oval(5.7, 3.4, 1.7, 1.35), HERON_LIGHT),
+  flat(shape([4.9, 3.0, 0], [6.2, 2.5], [7.8, 2.55], [10.9, 3.9, 0], [7.6, 3.05], [6.2, 3.15], [5.0, 3.3, 0]), INK),
+  part(shape([4.5, 2.95, 0], [0.2, 3.75, 0], [4.5, 4.05, 0]), HERON_GOLD),
+  flat(oval(5.3, 3.35, 0.4), HERON_GOLD),
+  flat(oval(5.3, 3.35, 0.22), INK),
+];
+/** A tall grey heron standing still, looking left at the water, on its folded foot. */
+export const HERON: Cutout = { w: 16, h: 28, pieces: [tab(6.0, 12.0, 28), ...heronLeg(9.0), ...heronLeg(10.4), ...HERON_BODY] };
+/** Mid-step: the near leg lifted on its fastener, bent back at the heel, its toes hanging. */
 export const HERON_STEP: Cutout = {
   w: 16,
   h: 28,
-  pieces: [line("M8.4 19.6 L8.4 27.6 M7.2 27.6 L9.2 27.6 M10.4 19.6 L11.8 23 L10.8 25.6 L11.8 26", HERON_LEG, 0.5), ...HERON_BODY],
+  pieces: [tab(6.0, 12.0, 28), ...heronLeg(9.0), part(limb([[10.0, 18.4], [12.2, 22.4], [11.2, 25.0], [10.0, 25.9]], 0.55), HERON_GOLD), ...HERON_BODY],
 };
 
 // ---- Moth ----
@@ -649,35 +713,42 @@ export const MOLE_DIG_2 = molehill(5, [
 ]);
 
 // ---- Goat ----
-const GOAT_WHITE = "#f2ecdc";
-const GOAT_EDGE = "#9a907a";
-const GOAT_FAR = "#ddd4c0";
+const GOAT_WHITE = "#efe7d6";
+const GOAT_LIT = "#faf6ec";
+const GOAT_SHADE = "#cfc3aa";
+const HORN = "#b8976a";
 const HOOF = "#5a4a3a";
-/** A leg from the body down, its hoof on the ground, `x` from the left. */
-const goatLeg = (x: number, color: string): Piece[] => [
-  cut(`M${n(x)} 11.6 L${n(x + 1.9)} 11.6 L${n(x + 1.7)} 16.3 L${n(x + 0.2)} 16.3 Z`, color, GOAT_EDGE),
-  cut(`M${n(x + 0.15)} 16.2 L${n(x + 1.75)} 16.2 L${n(x + 1.85)} 17.7 L${n(x + 0.05)} 17.7 Z`, HOOF, "#3a2e22"),
+/** A leg, its top at (x, y), its hoof on the ground in a cut-out 17.2 high (the folded foot is under it). */
+const goatLeg = (x: number, y: number, color: string): Piece[] => [
+  part(shape([x, y], [x + 2.0, y], [x + 1.6, 13.4], [x + 1.55, 16.5, 0], [x + 0.45, 16.5, 0], [x + 0.4, 13.4]), color),
+  part(shape([x + 0.4, 16.3, 0], [x + 1.6, 16.3, 0], [x + 1.75, 17.2, 0], [x + 1.05, 17.2, 0], [x + 1.0, 16.8, 0], [x + 0.95, 17.2, 0], [x + 0.25, 17.2, 0]), HOOF),
 ];
-/** A white goat, side on, head to the left: back-curved horns, a beard, a short tail up. */
+/** A white goat, side on, head to the left: its barrel body folded along its side, horns curved back, a beard, an ear folded out. */
 export const GOAT: Cutout = {
   w: 21,
   h: 18,
   pieces: [
-    ...goatLeg(9.9, GOAT_FAR),
-    ...goatLeg(16.8, GOAT_FAR),
-    cut("M19.4 7.9 L20.5 5.9 L20.8 7.6 Z", GOAT_WHITE, GOAT_EDGE),
-    cut("M6.2 8.4 C8 7.2 16 7 18.6 7.6 C20 8 20.6 9.4 20 11 C19.4 12.4 17.6 12.6 16 12.4 L9 12.4 C7.4 12.4 6.2 11.6 6 10.4 Z", GOAT_WHITE, GOAT_EDGE),
-    flat("M8.6 11.5 C11 12.2 15 12.2 18.8 11.4 C18.4 12.2 17.6 12.4 16 12.3 L9 12.3 C8.8 12.1 8.6 11.8 8.6 11.5 Z", "#e2d9c4"),
-    ...goatLeg(7.6, GOAT_WHITE),
-    ...goatLeg(14.6, GOAT_WHITE),
-    cut("M6.2 10.6 C5 9 4.6 7 5.4 5.4 L8.4 5.8 C8.2 7 8 8 8.2 8.8 Z", GOAT_WHITE, GOAT_EDGE),
-    cut("M2.9 7.6 L2.6 9.9 L3.9 7.6 Z", "#d8d0bc", GOAT_EDGE),
-    cut("M4.4 3.5 C4.6 1.6 5.8 0.3 7.6 0.4 C6.4 1 5.8 2.2 5.8 3.5 Z", "#a08c68", "#6e5c40"),
-    cut("M1.2 5.6 C0.8 4.6 1.6 3.4 3 3.2 C4.6 3 6.8 3.6 7.6 4.8 C8.2 5.8 7.4 7.2 5.8 7.2 C4.6 7.2 3.6 7.4 2.8 7.8 C1.6 8.2 0.6 7.2 1.2 5.6 Z", GOAT_WHITE, GOAT_EDGE),
-    cut("M6.8 4.3 C7.8 3.9 9 4.1 9.4 4.5 C8.6 5.1 7.6 5.3 6.8 5.1 Z", GOAT_WHITE, GOAT_EDGE),
-    flat(oval(1.3, 6.1, 0.35), "#d8a090"),
-    flat(oval(3.7, 4.8, 0.55, 0.45), "#d8a84a"),
-    flat(oval(3.7, 4.8, 0.42, 0.13), INK),
+    tab(4.2, 18.6, 18),
+    ...goatLeg(5.0, 10.6, GOAT_SHADE),
+    ...goatLeg(15.0, 10.8, GOAT_SHADE),
+    part(shape([18.0, 8.4, 0], [19.6, 6.2, 0], [19.4, 8.6, 0]), GOAT_WHITE),
+    // Its neck, up from the chest.
+    part(shape([4.8, 11.2], [4.0, 8.6], [4.4, 6.0], [6.4, 4.6], [8.0, 6.4], [8.8, 8.6], [9.2, 10.4]), GOAT_WHITE),
+    part(shape([5.4, 9.6], [6.8, 7.6], [9.6, 7.0], [13.0, 7.3], [16.4, 7.1], [18.4, 7.4], [19.6, 9.2], [19.1, 11.4], [17.0, 12.0], [14.2, 11.5], [11.0, 12.3], [7.4, 12.3], [5.6, 11.2]), GOAT_WHITE),
+    // The lit side above the fold.
+    flat(shape([5.4, 9.6], [6.8, 7.6], [9.6, 7.0], [13.0, 7.3], [16.4, 7.1], [18.4, 7.4], [19.6, 9.2, 0], [15.0, 9.7], [10.0, 9.9], [5.5, 10.4, 0]), GOAT_LIT),
+    ...goatLeg(6.6, 10.8, GOAT_WHITE),
+    part(shape([15.4, 9.6], [18.4, 9.6], [19.0, 11.4], [18.1, 13.6], [17.65, 16.5, 0], [16.55, 16.5, 0], [16.6, 14.2], [16.1, 12.2]), GOAT_WHITE),
+    part(shape([16.5, 16.3, 0], [17.7, 16.3, 0], [17.85, 17.2, 0], [17.15, 17.2, 0], [17.1, 16.8, 0], [17.05, 17.2, 0], [16.35, 17.2, 0]), HOOF),
+    part(shape([4.6, 3.6, 0], [5.0, 1.8], [6.6, 0.5], [8.9, 0.6, 0], [7.0, 1.3], [6.0, 2.5], [5.9, 3.7, 0]), HORN),
+    part(shape([2.4, 3.8], [4.6, 3.0], [6.6, 3.6], [7.2, 5.0], [6.0, 6.4], [3.6, 7.2], [1.4, 7.4, 0.4], [0.8, 6.4], [1.2, 5.0]), GOAT_WHITE),
+    part(shape([2.2, 7.0], [3.6, 6.9], [3.1, 9.4, 0], [2.6, 8.6, 0.3], [2.1, 9.1, 0]), GOAT_SHADE),
+    // The ear, out sideways, folded along its length: its under half shows a shade darker.
+    part(shape([6.0, 4.0, 0], [8.2, 3.7], [9.8, 4.4, 0], [8.2, 5.1], [6.2, 5.1, 0]), GOAT_SHADE),
+    part(shape([6.0, 4.0, 0], [8.2, 3.7], [9.8, 4.4, 0], [8.0, 4.5], [6.1, 4.6, 0]), GOAT_LIT),
+    flat(oval(1.3, 5.9, 0.32), "#d8a090"),
+    flat(oval(3.8, 4.7, 0.55, 0.45), "#d8a84a"),
+    flat(oval(3.8, 4.7, 0.42, 0.13), INK),
   ],
 };
 
