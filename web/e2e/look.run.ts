@@ -7,7 +7,7 @@ import { writeFileSync } from "node:fs";
 import type { SceneState } from "../src/garden/sceneState";
 import { gameSeconds, pinDetail } from "./helpers";
 import { parseRun, type Run, type Step } from "./lookScript";
-import { frames, openToday, openWalk, SPOTS, TIMES, walkReady } from "./spots";
+import { frames, openToday, openWalk, plantsIn, SPOTS, TIMES, walkReady } from "./spots";
 import { expect, test, type Page } from "./test";
 
 const args = process.env.LOOK_ARGS;
@@ -166,6 +166,7 @@ test(`look ${run.demo}`, async ({ page }) => {
   else {
     await openWalk(page, run.demo, "as it is");
     await SPOTS[run.spot](page);
+    await plantsIn(page);
   }
   await snap(0, "start");
   for (const [i, { text, step }] of run.steps.entries()) {

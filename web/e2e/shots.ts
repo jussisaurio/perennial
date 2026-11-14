@@ -13,7 +13,7 @@
 
 import { pinDetail } from "./helpers";
 import { SCREENS } from "./screens";
-import { frames, openWalk, SPOTS, TIMES, WORDS } from "./spots";
+import { frames, openWalk, plantsIn, SPOTS, TIMES, WORDS } from "./spots";
 import { expect, test, type Page } from "./test";
 import { uiFaults } from "./uiFaults";
 
@@ -45,6 +45,7 @@ for (const theme of ["light", "dark"] as const) {
           // A spot in WORDS opens for its own learner; every other one opens the way over the stile. The door is opened too.
           await openWalk(page, `es:${WORDS[name] ?? 800}`, "open");
           await stand(page);
+          await plantsIn(page);
           await frames(page);
           await shoot(page, `${name}-${info.project.name}-${theme}-${time}`);
         });
