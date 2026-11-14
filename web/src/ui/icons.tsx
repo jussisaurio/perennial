@@ -165,6 +165,121 @@ export const ChevronDownIcon = (p: P) => (
   </Icon>
 );
 
+export const ArrowLeftIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M19 12H5M11 6l-6 6 6 6" />
+  </Icon>
+);
+
+export const ArrowRightIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </Icon>
+);
+
+// The walk's action button (#334) shows only one of these: each says what a press does there.
+
+/** An open hand: try the door, pick up the key or a pebble. */
+export const HandIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M8 12.5V6a1.5 1.5 0 0 1 3 0v5.5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v6" />
+    <path d="M17 9.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-1.2a6 6 0 0 1-4.5-2l-3.4-3.9a1.6 1.6 0 0 1 2.4-2.1L8 14.8" />
+  </Icon>
+);
+
+export const KeyIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="7.5" cy="12" r="3.5" />
+    <path d="M11 12h10M17 12v3M20 12v2.5" />
+  </Icon>
+);
+
+/** A chair from the side: sit down. */
+export const SitIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M7 4v16M7 13h10.5M17.5 13v7" />
+  </Icon>
+);
+
+export const ArrowUpIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 19V5M6 11l6-6 6 6" />
+  </Icon>
+);
+
+/** A small plant, shaking. */
+export const ShakeIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 21v-9M12 14c-3 0-5-2-5-5 3 0 5 2 5 5zM12 12c0-3 2-5 5-5 0 3-2 5-5 5z" />
+    <path d="M4 8.5c-1 1.6-1 3.4 0 5M20 10.5c1 1.6 1 3.4 0 5" />
+  </Icon>
+);
+
+/** An arc, coming down. */
+export const ThrowIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4 20C4 11 8 6 13 6s7 4 7 8" />
+    <path d="M17.5 11.5L20 14l2.5-2.5" />
+  </Icon>
+);
+
+/** A dandelion clock, on its stem. */
+export const DandelionIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 10.5V21" />
+    <circle cx="12" cy="8" r="1.4" />
+    <path d="M12 2.8v2.4M16.3 4.2l-1.8 1.8M17.5 8h-2.6M16.3 11.8l-1.8-1.8M7.7 11.8l1.8-1.8M6.5 8h2.6M7.7 4.2l1.8 1.8" />
+  </Icon>
+);
+
+/** Puffs of air at a small flame. */
+export const SnuffIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3 9h7M3 12.5h9M3 16h6" />
+    <path d="M18 20a3 3 0 0 1-3-3c0-2.5 3-4 3-8 0 0 3 3 3 8a3 3 0 0 1-3 3z" />
+  </Icon>
+);
+
+export const FlameIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 21a5 5 0 0 1-5-5c0-4.5 5-6.5 5-12.5 0 0 5 4.5 5 12.5a5 5 0 0 1-5 5z" />
+    <path d="M12 21a2 2 0 0 1-2-2c0-1.6 2-2.6 2-4.6 0 0 2 1.6 2 4.6a2 2 0 0 1-2 2z" />
+  </Icon>
+);
+
+/** A stone, dropping into a well. */
+export const WellIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3 13h18M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+    <circle cx="12" cy="4.5" r="1.6" />
+    <path d="M12 8.5v1.5" />
+  </Icon>
+);
+
+/** An open eye: I see you. */
+export const EyeIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Icon>
+);
+
+/** A note on its nail, with lines of writing. */
+export const NoteIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="5.5" y="5" width="13" height="16" rx="1.5" />
+    <path d="M12 3v.01M9 10h6M9 13.5h6M9 17h4" />
+  </Icon>
+);
+
+/** A three-legged stool. */
+export const StoolIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="4.5" y="6" width="15" height="3" rx="1.5" />
+    <path d="M7.5 9L6 20M16.5 9l1.5 11M12 9v10" />
+  </Icon>
+);
+
 export const SproutMark = ({ size = 22 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M12 21v-8" stroke="var(--leaf)" strokeWidth="2" strokeLinecap="round" />

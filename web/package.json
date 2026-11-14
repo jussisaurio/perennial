@@ -23,7 +23,6 @@
     "@fontsource-variable/onest": "^5.3.1",
     "@fontsource/gloock": "^5.3.0",
     "@fontsource/patrick-hand": "^5.3.0",
-    "@fontsource/pixelify-sans": "^5.3.0",
     "@sentry/react": "11",
     "@tanstack/query-core": "5.107.1",
     "@tanstack/react-db": "0.5.12",

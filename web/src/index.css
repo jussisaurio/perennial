@@ -50,7 +50,9 @@
   color-scheme: light;
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+/* The walk at night wears the dark theme, whatever the app's theme: its HUD sits on a dark sky (docs/art-direction.md). */
+.gw-night {
     --paper: #10130e;
     --paper-2: #161a13;
     --card: #1b2017;
@@ -781,7 +783,7 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .session.growing .card-plant { visibility: hidden; }
 @media (max-width: 480px) { .card-plant { transform: scale(0.85); transform-origin: bottom right; } }
 
-/* ---- Walk-in garden: a 90s game in a cosy frame ---------------------- */
+/* ---- Walk-in garden: the app's own controls over its paper garden ---- */
 /* Without this the figure keeps the browser's 40 px side margins: caption indented, garden narrowed. */
 .landing-garden { margin-inline: 0; }
 /* A small pill, so it reads as a way in: as bare bold text it looked like a stray label. */
@@ -789,138 +791,108 @@ mark.letter { background: var(--sun); color: #2a2111; border-radius: 3px; paddin
 .walk-link:hover { border-color: var(--ink-2); }
 
 .gw {
-  --px: 3px;
-  --panel: #fbf3dc;
-  --panel-2: #f1e3bd;
-  --edge: #3b2414;
-  --edge-hi: #fffaf0;
-  --gw-ink: #2b1d12;
-  --gw-muted: #6d5640;
-  --accent: #ffd84a;
-  --water: #5bb4f0;
-  --pixel: "Pixelify Sans", ui-monospace, monospace;
+  /* The walk's controls float over the garden: the app's own buttons and cards, with a deeper shadow (docs/art-direction.md). */
+  --gw-float: 0 1px 0 rgb(255 255 255 / 0.35) inset, 0 10px 26px -12px rgb(20 16 8 / 0.55);
   --hand: "Patrick Hand", cursive;
-  position: fixed; inset: 0; overflow: hidden; background: #1a1430; color: var(--gw-ink);
+  position: fixed; inset: 0; overflow: hidden; background: var(--paper); color: var(--ink);
   touch-action: none; user-select: none; -webkit-user-select: none; overscroll-behavior: none;
 }
 /* A two-finger swipe looks around in the walk. Chrome and Firefox decide on swipe-back at
    the page root, so switch it off there while the walk is open (.gw itself does not scroll).
    Safari ignores this: the walk's wheel handler stops it there (useGardenScene). */
 html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
-.gw-night { --panel: #1d2350; --panel-2: #262e66; --edge: #0a0d24; --edge-hi: #5a67b8; --gw-ink: #f5ecd0; --gw-muted: #aab3e6; }
 .gw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; cursor: grab; outline: none; -webkit-touch-callout: none; }
 .gw-canvas:active { cursor: grabbing; }
-/* Soft vignette and the faintest scanlines: a hint of an old screen, never in the way. */
-.gw::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-  background:
-    radial-gradient(120% 90% at 50% 45%, transparent 60%, rgb(20 10 30 / 0.35) 100%),
-    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.045) 0 1px, transparent 1px 3px);
-}
 
-/* Chunky notched pixel frames, like a SNES dialog box. */
-.gw-btn, .gw-card, .gw-stats, .gw-loading, .gw-hint, .gw-knob {
-  background: var(--panel);
-  box-shadow:
-    0 calc(-1 * var(--px)) 0 0 var(--edge), 0 var(--px) 0 0 var(--edge),
-    calc(-1 * var(--px)) 0 0 0 var(--edge), var(--px) 0 0 0 var(--edge),
-    inset var(--px) var(--px) 0 0 var(--edge-hi), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 0 var(--panel-2),
-    0 calc(var(--px) * 3) 0 0 rgb(0 0 0 / 0.28);
-  border-radius: 0; z-index: 2;
-}
-.gw-btn {
-  font: 500 1rem/1 var(--pixel); color: var(--gw-ink); padding: 0.6rem 0.85rem; border: 0; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; letter-spacing: 0.02em; white-space: nowrap;
-  transition: transform 80ms steps(2);
-}
-.gw-btn svg, .gw-close svg { display: block; flex: none; }
-.gw-btn:hover { background: var(--panel-2); }
-.gw-btn:active { transform: translateY(var(--px)); }
-.gw-btn:focus-visible { outline: var(--px) solid var(--accent); outline-offset: calc(var(--px) * 2); }
+/* The app's buttons (.primary, .secondary), as tall as a thumb, lifted off the garden. */
+.gw .gw-btn { min-height: 44px; padding: 0.55rem 1.05rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; box-shadow: var(--gw-float); z-index: 2; }
 /* Hidden until a keyboard reaches it, like a skip link (#710). :focus, not :focus-visible: a screen reader's cursor can focus it without focus-visible, and a pointer never reaches it. */
 .gw-skip:focus { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
-.gw-water { background: #d8f0ff; color: #0e3a5c; --panel-2: #bfe3fb; --edge-hi: #f4fbff; }
-.gw-night .gw-water { background: #24507a; color: #e6f4ff; --panel-2: #1c4166; --edge-hi: #4d86bd; }
+/* The counts, the hint and the loading line: quiet cards, not buttons. Square-ish corners keep them from looking pressable. */
+.gw-stats, .gw-hint, .gw-loading { background: var(--card); color: var(--ink-2); border: 1px solid var(--line-soft); border-radius: 14px; box-shadow: var(--gw-float); z-index: 2; }
 
-.gw-top { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; gap: 14px; align-items: center; justify-content: space-between; z-index: 3; }
+.gw-top { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; z-index: 3; }
 /* As tall as the 44 px buttons beside it, so the bar's tops and bottoms line up. */
-.gw-stats { font: 500 1rem/1.2 var(--pixel); letter-spacing: 0.02em; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.3rem 0.8rem; text-align: center; min-width: 0; }
-.gw-seeds { color: var(--gw-muted); }
-.gw-bottom { position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); right: 16px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; z-index: 3; }
+.gw-stats { font-size: 0.92rem; line-height: 1.2; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.3rem 0.9rem; text-align: center; min-width: 0; }
+.gw-seeds { color: var(--muted); }
+.gw-bottom { position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); right: 16px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; align-items: center; z-index: 3; }
 
 .gw-labels { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
 /* Each label sits at the layer's corner; GardenWalk moves it with `translate`, which adds to the class's own transform (#729). */
 .gw-labels > * { left: 0; top: 0; }
+/* A plant's name: white type in a tight dark halo, readable on a pale sky, leaves and soil alike. Always pale, in either theme. */
 .gw-label {
   position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
-  font: 700 0.95rem/1 var(--pixel); color: #fffaf0; letter-spacing: 0.03em; padding-bottom: 6px;
-  text-shadow: 2px 0 #2b1d12, -2px 0 #2b1d12, 0 2px #2b1d12, 0 -2px #2b1d12, 2px 2px #2b1d12, -2px 2px #2b1d12, 2px -2px #2b1d12, -2px -2px #2b1d12, 0 4px rgb(0 0 0 / 0.3);
+  font: 600 0.95rem/1 var(--ui); color: #fffaf0; padding-bottom: 7px;
+  text-shadow: 0 0 1px rgb(20 16 8 / 0.9), 0 0 2px rgb(20 16 8 / 0.8), 0 1px 3px rgb(20 16 8 / 0.7), 0 0 10px rgb(20 16 8 / 0.4);
 }
-.gw-label::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 4px; height: 4px; margin-left: -2px; background: #2b1d12; }
-.gw-label.on { color: var(--accent); font-size: 1.15rem; }
-/* A visitor tag, unlike a plant label: a small paper tag, the word in italic, the English small. Decorative (aria-hidden). */
+.gw-label::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: #fffaf0; box-shadow: 0 0 3px rgb(20 16 8 / 0.7); }
+/* The open plant's name: bigger and gold, so it is not shown by colour alone. */
+.gw-label.on { color: #ffd98a; font-size: 1.15rem; }
+/* A visitor tag, unlike a plant label: a small card, the word in italic, the English small. Decorative (aria-hidden). */
 .gw-tag {
   position: absolute; transform: translate(-50%, calc(-100% - 7px)); white-space: nowrap;
-  padding: 0.18rem 0.5rem 0.22rem; background: #fff4dc; color: #3a2416; border: 2px solid #3a2416;
-  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28); font: italic 1.12rem/1.1 var(--display);
+  padding: 0.22rem 0.6rem 0.26rem; background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--gw-float); font: italic 1.12rem/1.1 var(--display);
 }
-.gw-tag small { font: 500 0.78rem/1 var(--pixel); letter-spacing: 0.03em; color: #7a5a40; }
-.gw-tag::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -4px; border: 4px solid transparent; border-top-color: #3a2416; }
+.gw-tag small { font: 500 0.78rem/1 var(--ui); color: var(--muted); }
+.gw-tag::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -5px; border: 5px solid transparent; border-top-color: var(--card); }
 /* A tapped thing's thought (#864): the line under its word, in plain upright type; it wraps, as wide as scene.ts THOUGHT_EDGE allows. */
 .gw-thought { white-space: normal; width: max-content; max-width: 15rem; text-align: center; text-wrap: balance; }
-.gw-thought .gw-leaf { filter: none; }
-.gw-thought-line { display: block; margin-top: 0.22rem; padding-top: 0.24rem; border-top: 1px dashed #b89a78; font: 500 0.98rem/1.25 var(--display); }
+.gw-thought-line { display: block; margin-top: 0.24rem; padding-top: 0.26rem; border-top: 1px solid var(--line); font: 500 0.98rem/1.25 var(--display); }
 /* What a visitor says (the frog's croak): a small speech bubble in the course language, no gloss. */
 .gw-say {
   position: absolute; transform: translate(-50%, calc(-100% - 9px)); white-space: nowrap;
-  padding: 0.2rem 0.55rem 0.24rem; background: #fffdf6; color: #3a2416; border: 2px solid #3a2416; border-radius: 10px;
-  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28); font: italic 1.12rem/1.1 var(--display);
-  animation: gw-say-in 160ms steps(3) both;
+  padding: 0.24rem 0.65rem 0.28rem; background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--gw-float); font: italic 1.12rem/1.1 var(--display);
+  animation: gw-say-in 180ms var(--ease) both;
 }
-.gw-say::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -2px; width: 6px; height: 6px; background: #fffdf6; border: 2px solid #3a2416; border-top: 0; border-left: 0; transform: translateY(-3px) rotate(45deg); }
+.gw-say::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -5px; border: 5px solid transparent; border-top-color: var(--card); }
 @keyframes gw-say-in { from { opacity: 0; transform: translate(-50%, calc(-100% - 3px)); } }
 @media (prefers-reduced-motion: reduce) { .gw-say { animation: none; } }
 /* The well's echo (#335 S6): pale words rising out of the well and fading, as an echo does. No box: it is a sound. Also a line from no thing near (the far light's answer, #858). As long as scene.ts ECHO.show. */
 .gw-echo {
   position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
-  font: 500 1rem/1.2 var(--pixel); letter-spacing: 0.03em; color: #e8f2f4;
-  text-shadow: 2px 0 #1c2a30, -2px 0 #1c2a30, 0 2px #1c2a30, 0 -2px #1c2a30, 0 3px rgb(0 0 0 / 0.3);
+  font: 500 1rem/1.2 var(--ui); color: #eef3f2;
+  text-shadow: 0 1px 2px rgb(16 24 28 / 0.8), 0 0 12px rgb(16 24 28 / 0.5);
   animation: gw-echo 5s ease-out both;
 }
 .gw-echo i { font: italic 1.5rem/1.1 var(--display); }
 @keyframes gw-echo { 0% { opacity: 0; transform: translate(-50%, -40%); } 15%, 60% { opacity: 1; transform: translate(-50%, -100%); } 100% { opacity: 0; transform: translate(-50%, -150%); } }
 /* Still: it shows, then goes (scene.ts ECHO.show). */
 @media (prefers-reduced-motion: reduce) { .gw-echo { animation: none; } }
-.gw-leaf { display: inline-block; margin-right: 3px; vertical-align: -1px; filter: drop-shadow(1px 1px 0 #2b1d12); }
+/* On a plant's pale label the marks are pale too; on a tag's card, the leaf is the app's leaf. */
+.gw-leaf { display: inline-block; margin-right: 4px; vertical-align: -1px; color: #b5dc97; filter: drop-shadow(0 1px 1px rgb(20 16 8 / 0.6)); }
+.gw-tag .gw-leaf { color: var(--leaf); filter: none; }
 /* A noun plant's stake (#357): its top's shape is the noun's gender. */
-.gw-stake { display: inline-block; margin-right: 4px; vertical-align: -2px; filter: drop-shadow(1px 0 0 #2b1d12) drop-shadow(-1px 0 0 #2b1d12) drop-shadow(0 1px 0 #2b1d12) drop-shadow(0 -1px 0 #2b1d12); }
+.gw-stake { display: inline-block; margin-right: 4px; vertical-align: -2px; color: #ecd3a2; filter: drop-shadow(0 1px 1px rgb(20 16 8 / 0.7)); }
 /* A form falling from a shaken plant (#357): a small pale petal with the form on it. */
 .gw-petal {
   position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
-  padding: 0.1rem 0.4rem 0.14rem; background: #ffe3ec; color: #5a2438; border: 2px solid #5a2438; border-radius: 8px 2px;
-  font: 500 0.82rem/1 var(--pixel); letter-spacing: 0.02em;
+  padding: 0.14rem 0.5rem 0.18rem; background: #fbe6ec; color: #5a2438; border: 1px solid #e7b6c6; border-radius: 10px 3px;
+  box-shadow: 0 4px 10px -6px rgb(60 20 35 / 0.5); font: 600 0.82rem/1 var(--ui);
 }
-.gw-petal:has(svg) { padding: 0; background: none; border: 0; }
+.gw-petal:has(svg) { padding: 0; background: none; border: 0; box-shadow: none; }
 
+/* A plant's card: the app's panel, over the garden. */
 .gw-card {
   position: absolute; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%);
-  width: min(30rem, calc(100% - 40px)); padding: 1rem 1.1rem 1.05rem; display: grid; gap: 0.8rem; font-family: var(--pixel); letter-spacing: 0.02em;
-  animation: gw-pop 220ms steps(4) both; z-index: 4;
+  width: min(30rem, calc(100% - 40px)); padding: 1rem 1.1rem 1.05rem; display: grid; gap: 0.8rem;
+  background: var(--card); color: var(--ink); border: 1px solid var(--line-soft); border-radius: var(--radius); box-shadow: var(--gw-float);
+  animation: gw-pop 240ms var(--ease) both; z-index: 4;
 }
-@keyframes gw-pop { from { transform: translate(-50%, 24px); opacity: 0; } }
+@keyframes gw-pop { from { transform: translate(-50%, 16px); opacity: 0; } }
 .gw-card-body { display: grid; grid-template-columns: auto 1fr; gap: 0.9rem; align-items: center; }
 /* The right padding keeps a long meaning clear of the close button. */
 .gw-card-body > div { display: grid; gap: 0.25rem; min-width: 0; padding-right: 28px; }
-.gw-card-body > svg { background: var(--panel-2); image-rendering: pixelated; }
-.gw-word { font: 700 1.9rem/1 var(--pixel); letter-spacing: 0.01em; }
+.gw-card-body > svg { background: var(--paper-2); border-radius: 14px; }
+.gw-word { font: 1.9rem/1 var(--display); letter-spacing: -0.01em; }
 .gw-gloss { font-size: 1.05rem; }
-.gw-card .muted { color: var(--gw-muted); }
 .gw-card .row { gap: 0.5rem; flex-wrap: wrap; }
-.gw-card button.secondary, .gw-card button.ghost, .gw-empty button.primary { font-family: var(--pixel); border-radius: 0; }
-.gw-night .gw-card button.ghost { color: var(--gw-ink); }
-.gw-close { position: absolute; top: 4px; right: 6px; width: 40px; height: 40px; border: 0; padding: 0; background: none; display: grid; place-items: center; color: var(--gw-muted); cursor: pointer; }
+.gw-close { position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; border: 0; padding: 0; border-radius: 50%; background: none; display: grid; place-items: center; color: var(--muted); cursor: pointer; }
+.gw-close:hover { background: var(--paper-2); color: var(--ink); }
 /* A gardener's note (#654, #673): the paper off the nail, brought close. Portrait like the note on the wall, in the
-   gardener's own hand, not a pixel frame. Words the learner does not know yet are faint, never hidden. */
+   gardener's own hand. Words the learner does not know yet are faint, never hidden. */
 .gw-note {
   --w: min(23rem, 80vw);
   --line: 2.3rem;
@@ -938,9 +910,11 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 /* A page of the diary on the hill (#858): bound in a book, so no nail hole; it turns to the other pages. */
 .gw-diary::before { content: none; }
 .gw-note-pages { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 1rem; }
-.gw-note-pages button { display: flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0 0.4rem; border: 0; background: none; color: #6b5a45; font: 0.85rem var(--pixel); cursor: pointer; }
+.gw-note-pages button { min-height: 44px; padding: 0 0.6rem; color: #6b5a45; font-size: 0.88rem; font-weight: 600; }
+.gw-note-pages button:hover:not(:disabled) { background: rgb(107 90 69 / 0.1); }
 .gw-note-pages button:disabled { visibility: hidden; }
 .gw-note .gw-close { color: #8a7660; }
+.gw-note .gw-close:hover { background: rgb(107 90 69 / 0.1); color: #33281f; }
 /* A rule under each line of writing, just below its letters, on down to the bottom of the paper. */
 .gw-note-text {
   --rule-up: 0.42rem;
@@ -959,20 +933,17 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
 @media (prefers-reduced-motion: reduce) { .gw-note { animation: none; } }
 @media (max-width: 560px) { .gw-note { --line: 2.1rem; padding: 2.8rem 1.3rem 1.3rem; } .gw-note-text { font-size: 1.45rem; --rule-up: 0.38rem; } }
 .gw-empty { text-align: center; justify-items: center; bottom: 50%; transform: translate(-50%, 50%); animation: none; }
-.gw-empty strong { font: 700 1.5rem/1.1 var(--pixel); }
+.gw-empty strong { font: 1.5rem/1.1 var(--display); }
 
 /* The walk works while the plants are drawn (#459): a tap goes through to the garden. */
 /* max-content: a box at left 50% would otherwise shrink to the half of the screen right of it, and wrap. */
-.gw-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: calc(100% - 40px); padding: 0.8rem 1.1rem; font: 500 1.05rem/1.3 var(--pixel); text-align: center; pointer-events: none; }
-.gw-hint { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); width: max-content; padding: 0.55rem 0.85rem; font: 500 0.9rem/1.3 var(--pixel); text-align: center; text-wrap: balance; max-width: min(40rem, calc(100% - 40px)); animation: gw-pop 300ms steps(4) both; }
+.gw-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: calc(100% - 40px); padding: 0.75rem 1.1rem; font-size: 1rem; font-weight: 500; font-variant-numeric: tabular-nums; text-align: center; pointer-events: none; }
+.gw-hint { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); width: max-content; padding: 0.55rem 0.95rem; font-size: 0.88rem; line-height: 1.35; text-align: center; text-wrap: balance; max-width: min(40rem, calc(100% - 40px)); animation: gw-pop 300ms var(--ease) both; }
 .gw-hint-coarse { display: none; }
 
-/* A pixel disc (GardenWalk's STICK_CELLS, 4 px a pixel) with a knob framed like the buttons. */
-.gw-stick { display: none; position: absolute; left: 22px; bottom: max(24px, env(safe-area-inset-bottom)); width: 96px; height: 96px; z-index: 3; touch-action: none; }
-.gw-stick svg { display: block; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 var(--px) 0 rgb(0 0 0 / 0.25)); }
-.gw-stick-fill { fill: var(--panel); opacity: 0.4; }
-.gw-stick-rim { fill: var(--edge); opacity: 0.75; }
-.gw-knob { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; pointer-events: none; }
+/* A soft disc with a knob like the app's buttons. */
+.gw-stick { display: none; position: absolute; left: 22px; bottom: max(24px, env(safe-area-inset-bottom)); width: 96px; height: 96px; z-index: 3; touch-action: none; border-radius: 50%; background: color-mix(in oklab, var(--card), transparent 55%); border: 1px solid color-mix(in oklab, var(--line), transparent 20%); box-shadow: var(--gw-float); }
+.gw-knob { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; pointer-events: none; border-radius: 50%; background: var(--card); border: 1px solid var(--line); box-shadow: var(--gw-float); }
 @media (pointer: coarse) {
   .gw-stick { display: block; }
   .gw-hint-fine { display: none; }
@@ -980,17 +951,15 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
   .gw-bottom { left: 132px; }
 }
 @media (max-width: 560px) {
-  .gw { --px: 2px; }
-  /* Too narrow for one line in the pixel font: the two counts stack, each on its own line. */
-  .gw-stats { font-size: 0.85rem; line-height: 1.15; padding: 0.3rem 0.55rem; }
+  /* Too narrow for one line: the two counts stack, each on its own line. */
+  .gw-stats { font-size: 0.82rem; line-height: 1.2; padding: 0.3rem 0.75rem; }
   .gw-stats span span:not(.gw-seeds, .gw-dot) { display: block; }
   .gw-dot { display: none; }
-  .gw-btn { font-size: 0.9rem; padding: 0.5rem 0.65rem; }
+  .gw .gw-btn { font-size: 0.9rem; padding: 0.5rem 0.85rem; }
   .gw-card { bottom: 160px; }
 }
 @media (prefers-reduced-motion: reduce) { .gw-card, .gw-hint { animation: none; } }
 .gw-fallback { padding-top: 3rem; }
-.gw-listen { background: var(--accent); --panel-2: #f0c419; --edge-hi: #fff2a8; color: #2b1d12; }
 @media (max-width: 560px) {
   /* On phones the card sits over the sky, leaving the plant and the stick free. */
   .gw-card { top: calc(max(14px, env(safe-area-inset-top)) + 64px); bottom: auto; padding: 0.75rem 0.8rem 0.8rem; gap: 0.6rem; animation-name: gw-drop; }
@@ -1001,21 +970,19 @@ html:has(.gw), html:has(.gw) body { overscroll-behavior-x: none; }
   .gw-empty { top: 50%; }
 }
 @keyframes gw-drop { from { transform: translate(-50%, -16px); opacity: 0; } }
-.gw-tools { display: flex; gap: 14px; }
+.gw-tools { display: flex; gap: 12px; }
 @media (max-width: 560px) { .gw-tool-label { display: none; } .gw-tools { gap: 10px; } }
-/* The pixel font turns "fi" into a glyph that reads as "A". The font shorthand resets this, so set it on every element. */
-.gw, .gw * { font-variant-ligatures: none; font-feature-settings: "liga" 0, "clig" 0; }
-.gw-icon { min-width: 44px; justify-content: center; padding: 0.6rem; }
+.gw .gw-icon { min-width: 44px; padding: 0.55rem; }
 @media (min-width: 561px) {
   /* Equal side columns, so the counts sit in the middle of the screen, under the hint. */
   .gw-top { display: grid; grid-template-columns: 1fr auto 1fr; }
   .gw-top > :first-child { justify-self: start; }
   .gw-tools { justify-self: end; }
 }
-/* The action button (#334): only an icon, a little bigger than the rest, for a thumb. */
-.gw-act { min-width: 56px; min-height: 56px; }
-/* What you hold (#351), beside the action button: the thing itself, on a small paper square. Not a button. */
-.gw-hand { align-self: center; padding: 6px; background: rgb(255 244 220 / 0.85); border: 2px solid #3a2416; box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28); }
+/* The action button (#334): only an icon, a round button a little bigger than the rest, for a thumb. */
+.gw .gw-act { min-width: 56px; min-height: 56px; padding: 0.6rem; }
+/* What you hold (#351), beside the action button: the thing itself, on a small round card. Not a button: no border, no lift. */
+.gw-hand { padding: 6px; border-radius: 50%; background: color-mix(in oklab, var(--card), transparent 15%); }
 .gw-hand svg { display: block; }
 @media (max-width: 560px) { .gw-seeds { display: none; } .gw-top { gap: 10px; } }
 

@@ -3,8 +3,6 @@
 // The three.js scene loads only when this screen opens. The plants come from
 // garden/plants.ts, shared with the 2D garden, so a word looks the same in both.
 
-import "@fontsource/pixelify-sans/500.css";
-import "@fontsource/pixelify-sans/700.css";
 // The gardener's hand, for the notes in the shed (#673).
 import "@fontsource/patrick-hand/400.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
@@ -41,6 +39,7 @@ import type { ToyAct, ToyDone, ToysWalk } from "../garden/toys";
 import { inLang } from "../garden/nouns";
 import { GNOME_WORD, type Companion } from "../garden/bench";
 import { PixelRects } from "./pixel";
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, BookIcon, CloseIcon, DandelionIcon, EyeIcon, FlameIcon, HandIcon, KeyIcon, NoteIcon, ShakeIcon, SitIcon, SnuffIcon, SpeakerIcon, SpeakerOffIcon, StoolIcon, ThrowIcon, WateringCanIcon, WellIcon } from "./icons";
 import { brushNote, wakeAudio } from "./chime";
 import { fellLine } from "../garden/walkInto";
 import type { Gender } from "../deck/schema";
@@ -256,48 +255,24 @@ function clockTime(): TimeOfDay {
   return h >= 6 && h < 18 ? "day" : h >= 18 && h < 21 ? "dusk" : "night";
 }
 
-/** The walk's small icons, drawn in pixels like its frames: emoji and font glyphs each come in another style. */
-const GLYPH = {
-  left: ["...#...", "..#....", ".#.....", "#######", ".#.....", "..#....", "...#..."],
-  right: ["...#...", "....#..", ".....#.", "#######", ".....#.", "....#..", "...#..."],
-  close: ["#.....#", ".#...#.", "..#.#..", "...#...", "..#.#..", ".#...#.", "#.....#"],
-  soundOn: ["...#....#..", "..##..#..#.", "####...#..#", "####...#..#", "####...#..#", "..##..#..#.", "...#....#.."],
-  soundOff: ["...#.......", "..##..#...#", "####...#.#.", "####....#..", "####...#.#.", "..##..#...#", "...#......."],
-  drop: ["...#...", "..###..", ".#####.", ".#####.", "#######", "#######", ".#####.", "..###.."],
-} satisfies Record<string, readonly string[]>;
-
-/** A walk icon at 2 px a pixel: the stroke of the pixel font beside it. */
-const Glyph = ({ name }: { name: keyof typeof GLYPH }) => <PixelIcon rows={GLYPH[name]} cell={2} />;
-
-/** An open hand, in pixels: try the door, pick up the key. */
-const HAND = ["....#.....", "..#.#.#...", "..#.#.#...", "..#.#.#.#.", "..#.#.#.#.", "#.#######.", "##########", ".#########", "..#######.", "...#####..", "...#####.."];
-const REACH_ICON: Record<Reach, readonly string[]> = {
-  try: HAND,
-  key: HAND,
-  open: ["..###.......", ".#...#......", ".#...#######", ".#...#..#.#.", "..###...#.#."],
-  sit: ["#.......", "#.......", "#.......", "########", "#......#", "#......#"],
-  stand: ["...#...", "..###..", ".#####.", "#######", "..###..", "..###..", "..###.."],
-  // A small plant, shaking.
-  shake: [".#..#..#.", "#..###..#", ".#.#.#.#.", "#...#...#", "....#....", "..#####..", "...###..."],
-  "lift-pebble": HAND,
-  // An arc, coming down.
-  throw: ["..######....", ".#......#...", "#........#..", "#........#..", "#......#####", "#.......###.", "#........#.."],
-  // A dandelion clock, on its stem.
-  blow: ["..#.#.#..", ".#.###.#.", "..#####..", "#.#####.#", "..#####..", ".#.###.#.", "..#.#.#..", "....#....", "....#....", "....#...."],
-  // Puffs of air at a small flame.
-  snuff: ["..........#.", "####......##", ".........###", "#####....###", ".........###", "####......#."],
-  // A flame.
-  light: ["...#...", "...##..", "..###..", ".#####.", ".#####.", "#######", "#######", ".#####.", "..###.."],
-  // A stone, dropping into a well.
-  well: ["....##....", "....##....", "..........", "....##....", "..........", "#........#", "#........#", "##########", "##########"],
-  // An open eye: I see you.
-  seek: ["...####...", ".##....##.", "#...##...#", "#..####..#", "#...##...#", ".##....##.", "...####..."],
-  // A note on its nail, with lines of writing.
-  read: ["....##....", "#########.", "#.......##", "#.#####..#", "#.......##", "#.####...#", "#........#", "#.#####..#", "#........#", "##########"],
-  // A three-legged stool.
-  stool: ["########", "########", ".#..#.#.", ".#..#.#.", "#...#..#", "#...#..#"],
-  // A book, its ribbon hanging out.
-  diary: [".#########", "##.......#", "#.#......#", "#.#.####.#", "#.#......#", "#.#.###..#", "#.#......#", "##########", "....#.....", "....#....."],
+/** The action button's icon (#334): it changes shape with what a press does there. */
+const REACH_ICON: Record<Reach, typeof HandIcon> = {
+  try: HandIcon,
+  key: HandIcon,
+  open: KeyIcon,
+  sit: SitIcon,
+  stand: ArrowUpIcon,
+  shake: ShakeIcon,
+  "lift-pebble": HandIcon,
+  throw: ThrowIcon,
+  blow: DandelionIcon,
+  snuff: SnuffIcon,
+  light: FlameIcon,
+  well: WellIcon,
+  seek: EyeIcon,
+  read: NoteIcon,
+  stool: StoolIcon,
+  diary: BookIcon,
 };
 
 /** Carry's actions (#358, sceneCarry.ts CarryAct): counted when done, not when pressed. */
@@ -660,8 +635,8 @@ export function GardenWalk({
       <WalkLabels store={labels} selectedId={selected?.id} lang={lang} />
 
       <div className="gw-top">
-        <button className="gw-btn" onClick={onExit} aria-label="Back">
-          <Glyph name="left" /> <span className="gw-tool-label">Back</span>
+        <button className="secondary gw-btn" onClick={onExit} aria-label="Back">
+          <ArrowLeftIcon /> <span className="gw-tool-label">Back</span>
         </button>
         <div className="gw-stats" aria-live="polite">
           {/* One span: as flex items, the parts would lose the spaces between them. On a phone the two counts stack (.gw-dot). */}
@@ -706,7 +681,7 @@ export function GardenWalk({
       {selected && (
         <div className="gw-card" role="dialog" aria-label={`The plant for ${selected.lemma}`} ref={dialog} tabIndex={-1}>
           <button className="gw-close" onClick={() => scene.current?.select(null)} aria-label="Close">
-            <Glyph name="close" />
+            <CloseIcon />
           </button>
           <div className="gw-card-body" aria-live="polite">
             <WordPlant word={selected.lemma} s={selected.s} stage={selected.stage} size={72} />
@@ -725,14 +700,14 @@ export function GardenWalk({
           {sound && (
             <div className="row">
               <button
-                className="gw-btn gw-listen"
+                className="secondary"
                 onClick={() => {
                   // The plant hears its name and perks up for a moment (#60).
                   scene.current?.nod(selected);
                   void speak(selected.lemma, tag);
                 }}
               >
-                <Glyph name="soundOn" /> Listen
+                <SpeakerIcon /> Listen
               </button>
             </div>
           )}
@@ -749,7 +724,7 @@ export function GardenWalk({
         )}
         {reach && !selected && !note && (
           <button
-            className="gw-btn gw-icon gw-act"
+            className="secondary gw-btn gw-icon gw-act"
             aria-label={REACH_NAME[reach]}
             onClick={() => {
               setFound(reach === "seek" && scene.current ? scene.current.hider() : null);
@@ -762,19 +737,19 @@ export function GardenWalk({
               if (reach === "open" || reach === "key" || reach === "seek" || ((CARRY_ACTS.has(reach) || TOY_ACTS.has(reach)) && reach !== "lift-pebble")) canvas.current?.focus({ preventScroll: true });
             }}
           >
-            <PixelIcon rows={REACH_ICON[reach]} />
+            <ReachIcon reach={reach} />
           </button>
         )}
         {/* For keyboard and screen-reader players only: it shows while it has focus. Others find plants by walking (#710). */}
         {ready && !selected && stats.total > 0 && (
-          <button className="gw-btn sr-only gw-skip" onClick={nextPlant}>
-            Next plant <Glyph name="right" />
+          <button className="secondary gw-btn sr-only gw-skip" onClick={nextPlant}>
+            Next plant <ArrowRightIcon />
           </button>
         )}
         {/* Named for what it starts, with no count of thirsty plants: Today keeps missed days from piling up, and so does the walk (#263). */}
         {water && stats.total > 0 && !selected && (
-          <button className="gw-btn gw-water" onClick={water.start}>
-            <Glyph name="drop" /> {water.label}
+          <button className="primary gw-btn gw-water" onClick={water.start}>
+            <WateringCanIcon /> {water.label}
           </button>
         )}
       </div>
@@ -859,7 +834,7 @@ function WalkLabels({ store, selectedId, lang }: { store: Store<Label[]>; select
         const el = spans.get(l.id)!;
         let d = done.get(l.id);
         if (!d) done.set(l.id, (d = { at: "", op: "", z: "" }));
-        // On whole device pixels, as `left` and `top` were laid out: the pixel font stays sharp.
+        // On whole device pixels, as `left` and `top` were laid out: the text stays sharp.
         const at = `${Math.round(l.x * w * dpr) / dpr}px ${Math.round(l.y * h * dpr) / dpr}px`;
         if (d.at !== at) el.style.translate = d.at = at;
         const o = labelOpacity(l);
@@ -944,7 +919,7 @@ function NoteCard({ note, lang, isKnown, onClose, pages, onTurn }: { note: Note;
       tabIndex={-1}
     >
       <button className="gw-close" onClick={onClose} aria-label="Close">
-        <Glyph name="close" />
+        <CloseIcon />
       </button>
       <p className="gw-note-text" lang={lang}>
         {noteInk(note, isKnown).map((ink, i) =>
@@ -968,10 +943,10 @@ function NoteCard({ note, lang, isKnown, onClose, pages, onTurn }: { note: Note;
       {pages && (
         <div className="gw-note-pages">
           <button onClick={() => onTurn(pages[at - 1])} disabled={at === 0}>
-            <Glyph name="left" /> Earlier page
+            <ArrowLeftIcon size={18} /> Earlier page
           </button>
           <button onClick={() => onTurn(pages[at + 1])} disabled={at === pages.length - 1}>
-            Later page <Glyph name="right" />
+            Later page <ArrowRightIcon size={18} />
           </button>
         </div>
       )}
@@ -979,19 +954,9 @@ function NoteCard({ note, lang, isKnown, onClose, pages, onTurn }: { note: Note;
   );
 }
 
-/** A small pixel-art icon from rows of "#" (drawn) and "." (empty), in the button's colour: 32 px square, or `cell` px a pixel. */
-function PixelIcon({ rows, cell }: { rows: readonly string[]; cell?: number }) {
-  const w = Math.max(...rows.map((r) => r.length));
-  return (
-    <svg viewBox={`-1 -1 ${w + 2} ${rows.length + 2}`} width={cell ? (w + 2) * cell : 32} height={cell ? (rows.length + 2) * cell : 32} aria-hidden="true" shapeRendering="crispEdges">
-      <path d={pixelPath(rows)} fill="currentColor" />
-    </svg>
-  );
-}
-
-/** An SVG path with a 1×1 square for each "#" in the rows. */
-function pixelPath(rows: readonly string[]): string {
-  return rows.flatMap((row, y) => [...row].flatMap((ch, x) => (ch === "#" ? [`M${x} ${y}h1v1h-1z`] : []))).join("");
+function ReachIcon({ reach }: { reach: Reach }) {
+  const Icon = REACH_ICON[reach];
+  return <Icon size={28} />;
 }
 
 /** Pixel art in its own colours, as big as the action button's icon. */
@@ -1006,11 +971,11 @@ function ArtIcon({ art }: { art: PixelArt }) {
   );
 }
 
-/** A tiny pixel leaf: this visitor is also one of your words. */
+/** A small leaf: this visitor is also one of your words. */
 function LeafMark() {
   return (
-    <svg className="gw-leaf" viewBox="0 0 5 5" width="10" height="10" aria-hidden="true" shapeRendering="crispEdges">
-      <path d="M3 0h2v2h-1v1h-1v1h-2v1h-1v-2h1v-1h1v-1h1z" fill="#8ccc6a" />
+    <svg className="gw-leaf" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true">
+      <path d="M1.5 10.5C1.5 5 5 1.5 10.5 1.5c0 5.5-3.5 9-9 9z" fill="currentColor" />
     </svg>
   );
 }
@@ -1021,42 +986,36 @@ function LeafMark() {
  * Never explained: the learner finds the pattern.
  */
 const STAKE_TOP = {
-  point: ["...#...", "..###..", ".#####.", "#######"],
-  round: ["..###..", ".#####.", ".#####.", "..###.."],
-  square: [".#####.", ".#####.", ".#####.", ".#####."],
+  point: <path d="M3.5 0L7 4H0z" />,
+  round: <circle cx="3.5" cy="2" r="2.1" />,
+  square: <rect x="1" y="0" width="5" height="4" rx="0.6" />,
 };
-const STAKE_POST = ["...#...", "...#...", "...#..."];
 const STAKE_TOPS: Record<Gender, (keyof typeof STAKE_TOP)[]> = { m: ["point"], f: ["round"], n: ["square"], mf: ["point", "round"] };
 
 function StakeMark({ gender }: { gender: Gender }) {
   const tops = STAKE_TOPS[gender];
   const w = tops.length * 8 - 1;
   return (
-    <svg className="gw-stake" viewBox={`0 0 ${w} 7`} width={w * 2} height="14" aria-hidden="true" shapeRendering="crispEdges">
+    <svg className="gw-stake" viewBox={`0 0 ${w} 7`} width={w * 2} height="14" aria-hidden="true">
       {tops.map((t, i) => (
-        <path key={t} transform={`translate(${i * 8} 0)`} d={pixelPath([...STAKE_TOP[t], ...STAKE_POST])} fill="#e2bd86" />
+        <g key={t} transform={`translate(${i * 8} 0)`} fill="currentColor">
+          {STAKE_TOP[t]}
+          <rect x="3" y="3.5" width="1" height="3.5" />
+        </g>
       ))}
     </svg>
   );
 }
 
-/** The app's sound toggle (Sound.tsx), with the walk's pixel speaker. */
+/** The app's sound toggle (Sound.tsx), as a walk button. */
 function WalkSound() {
   const [on, set] = useSound();
   return (
-    <button className="gw-btn gw-icon" onClick={() => set(!on)} aria-pressed={!on} aria-label="Mute sound" title={on ? "Sound is on. Click to turn it off." : "Sound is off. Click to turn it on."}>
-      <Glyph name={on ? "soundOn" : "soundOff"} />
+    <button className="secondary gw-btn gw-icon" onClick={() => set(!on)} aria-pressed={!on} aria-label="Mute sound" title={on ? "Sound is on. Click to turn it off." : "Sound is off. Click to turn it on."}>
+      {on ? <SpeakerIcon /> : <SpeakerOffIcon />}
     </button>
   );
 }
-
-/** The thumb stick's base: a disc of 24 × 24 pixels with a rim, like the walk's frames. */
-const STICK_CELLS = 24;
-/** Each cell's distance from the middle, in cells, picks whether it is drawn. */
-const stickPath = (drawn: (d: number) => boolean) =>
-  pixelPath(Array.from({ length: STICK_CELLS }, (_, y) => Array.from({ length: STICK_CELLS }, (_, x) => (drawn(Math.hypot(x + 0.5 - STICK_CELLS / 2, y + 0.5 - STICK_CELLS / 2)) ? "#" : ".")).join("")));
-const STICK_RIM = stickPath((d) => d <= 12 && d > 10.5);
-const STICK_FILL = stickPath((d) => d <= 10.5);
 
 /** A thumb stick for touch screens. Hidden where there is a mouse. */
 function Joystick({ onMove }: { onMove: (x: number, y: number) => void }) {
@@ -1094,10 +1053,6 @@ function Joystick({ onMove }: { onMove: (x: number, y: number) => void }) {
       onPointerUp={end}
       onPointerCancel={end}
     >
-      <svg viewBox={`0 0 ${STICK_CELLS} ${STICK_CELLS}`} shapeRendering="crispEdges">
-        <path className="gw-stick-fill" d={STICK_FILL} />
-        <path className="gw-stick-rim" d={STICK_RIM} />
-      </svg>
       <div className="gw-knob" style={{ transform: `translate(${knob[0]}px, ${knob[1]}px)` }} />
     </div>
   );

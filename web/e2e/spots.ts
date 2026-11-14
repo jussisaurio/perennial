@@ -108,6 +108,14 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
     }),
   // By the diary's stone, in reach of it (#858): the book, and its ribbon while a page is unread.
   "hill-stone": (page) => standOnHill(page, "stone"),
+  // Among the plants with one plant's card open (#1051): the card's word, drawing and buttons over the walk.
+  "plant-card": async (page) => {
+    await SPOTS.names(page);
+    // Next plant opens the nearest plant's card, as a keyboard learner would.
+    await page.getByRole("button", { name: "Next plant" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("dialog", { name: /^The plant for / })).toBeVisible();
+  },
   // A tap on the bench (#864): its tag with a thought under it.
   thought: async (page) => {
     const at = await page.evaluate(async () => {
