@@ -5,7 +5,7 @@
 // test; the scene (scene.ts) counts those seconds from its Frame and draws it.
 // None of it changes the real clock, the time-of-day button or saved data.
 
-import type { TimeOfDay } from "./scene";
+import type { TimeOfDay } from "./game";
 import type { PerLang } from "./nouns";
 import type { VisitorId } from "./visitors";
 

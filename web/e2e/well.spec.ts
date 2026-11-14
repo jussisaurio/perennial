@@ -14,7 +14,7 @@ type WellScene = {
   yaw: number;
   pitch: number;
   layout: { gate: Spot; bounds: { maxZ: number }; orchard: Spot & { d: number }; well: Spot & { r: number } };
-  carry: { held: number | null };
+  game: { pebbles: { held: number | null } };
   camera: unknown;
   tmp: { constructor: new (x: number, y: number, z: number) => { project(c: unknown): { x: number; y: number } } };
 };
@@ -23,7 +23,7 @@ type WellScene = {
 const scene = (page: Page) =>
   page.evaluate(() => {
     const s = (window as unknown as { __garden: WellScene }).__garden;
-    return { z: s.z, held: s.carry.held, layout: s.layout };
+    return { z: s.z, held: s.game.pebbles.held, layout: s.layout };
   });
 
 test.beforeEach(async ({ page }) => {

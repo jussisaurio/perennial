@@ -12,7 +12,7 @@ type CarryScene = {
   z: number;
   yaw: number;
   layout: { pond: Spot & { r: number } };
-  carry: { held: number | null };
+  game: { pebbles: { held: number | null } };
   guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] };
 };
 
@@ -60,7 +60,7 @@ test("pick up a pebble with a tap, throw it in the pond: the frog hops, then onl
 
   // A tap on the pebble from a few steps away: you walk up and pick it up. It shows by the action button.
   await page.mouse.click(...(await standBy(page, pebble, 3)));
-  await expect.poll(async () => (await scene(page)).carry.held, { timeout: 15_000 }).not.toBeNull();
+  await expect.poll(async () => (await scene(page)).game.pebbles.held, { timeout: 15_000 }).not.toBeNull();
   await expect(page.locator(".gw-hand")).toBeVisible();
   await expect(status).toHaveText("You hold the pebble.");
 

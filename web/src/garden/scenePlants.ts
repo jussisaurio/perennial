@@ -5,7 +5,7 @@
 
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { petalAt, petalForms, shakeLength, shiver } from "./shake";
+import { NAME_NEAR, petalAt, shakeLength, shiver } from "./shake";
 import { brush, brushStep, type Brush } from "./walkInto";
 import { nearestPlant, NEIGHBOUR, neighbourPerks, PERK, PERK_SCALE, perkEnvelope, SNEEZE } from "./whimsy";
 import type { Label } from "./scene";
@@ -17,8 +17,6 @@ import { boardBox } from "./scenery";
 import { BED_H, bedSign, type Layout, type PlacedPlant } from "./world";
 import * as T from "./textures";
 
-/** Plants this near you (m) show their names; a tap on one opens its card where you stand, and a tap on one farther away walks to it first (#336). */
-export const NAME_NEAR = 3.2;
 /** The plant the action button shakes stands this much taller (#689): a steady mark, like a note lifting off the wall, never a flash. */
 const READY_GROW = 0.08;
 
@@ -461,12 +459,10 @@ export class Plants {
    * Shake a plant (#357): it shivers, and its word's other forms fall from it
    * as petals, written on them; a word with no other forms drops one leaf.
    * A new shake ends the last one. With reduced motion it does not shiver,
-   * and the petals lie on the soil from the start. Returns the forms that fall.
+   * and the petals lie on the soil from the start. `forms`: the ones that fall (game.ts, shake.ts petalForms).
    */
-  shake(p: PlacedPlant, elapsed: number, reducedMotion: boolean): string[] {
-    const forms = petalForms(p.lemma, p.forms);
+  shake(p: PlacedPlant, forms: string[], elapsed: number, reducedMotion: boolean) {
     this.shook = { i: this.layout.plants.indexOf(p), at: elapsed, forms, still: reducedMotion };
-    return forms;
   }
 
   /** The shaken plant's shiver; the shake ends once its last petal has faded. No allocations: it runs every frame. */

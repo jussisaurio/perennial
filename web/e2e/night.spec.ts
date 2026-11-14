@@ -9,10 +9,9 @@ import { pinDetail } from "./helpers";
 /** The parts of the dev-only scene handle (window.__garden) these tests read and move. */
 type NightScene = WalkScene & {
   pitch: number;
-  lanterns: { spots: [number, number][]; on: boolean[] };
+  game: { lamps: { spots: [number, number][]; on: boolean[] }; tapLantern(i: number): void };
   sky: { sunDir: { x: number; y: number; z: number }; starsOut: boolean; stars: { visible: boolean } };
   guests: { sprites: { v: { id: string }; body: { at: { x: number; z: number } } }[] };
-  tapLantern(i: number): void;
 };
 
 // In the past: the server refuses reviews from its future.
@@ -29,7 +28,7 @@ const night = (page: Page) =>
     const s = (window as unknown as { __garden: NightScene }).__garden;
     // The lantern the moth goes round: the one where it sits.
     const moth = s.guests.sprites.find((g) => g.v.id === "moth")!.body.at;
-    return { on: [...s.lanterns.on], moth: s.lanterns.spots.findIndex(([x, z]) => x === moth.x && z === moth.z), starsOut: s.sky.starsOut, stars: s.sky.stars.visible };
+    return { on: [...s.game.lamps.on], moth: s.game.lamps.spots.findIndex(([x, z]) => x === moth.x && z === moth.z), starsOut: s.sky.starsOut, stars: s.sky.stars.visible };
   });
 
 /** Stand `metres` in front of lantern `i` (toward the gate; behind it, away from the gate, if negative), facing it. Returns where its glass is on the screen. */
@@ -37,7 +36,7 @@ const standBy = (page: Page, i: number, metres: number) =>
   page.evaluate(
     ({ i, metres }) => {
       const s = (window as unknown as { __garden: NightScene }).__garden;
-      const [lx, lz] = s.lanterns.spots[i];
+      const [lx, lz] = s.game.lamps.spots[i];
       // Forward is -z at yaw 0.
       Object.assign(s, { x: lx, z: lz + metres, yaw: metres > 0 ? 0 : Math.PI, pitch: -0.05 });
       return new Promise<[number, number]>((done) =>
@@ -96,10 +95,10 @@ test("a full moon's night: tap the moon for its word; blow every lantern out, th
   // Every other lantern, one by one, standing by each.
   await page.evaluate(() => {
     const s = (window as unknown as { __garden: NightScene }).__garden;
-    s.lanterns.spots.forEach(([x, z], i) => {
-      if (!s.lanterns.on[i]) return;
+    s.game.lamps.spots.forEach(([x, z], i) => {
+      if (!s.game.lamps.on[i]) return;
       Object.assign(s, { x, z: z + 0.6 });
-      s.tapLantern(i);
+      s.game.tapLantern(i);
     });
   });
   await expect.poll(async () => (await night(page)).stars, { timeout: 10_000 }).toBe(true);

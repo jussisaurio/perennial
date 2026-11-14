@@ -13,7 +13,7 @@ import { ORCHARD_WORDS } from "../deck/schema";
 import { LEAF_PILE } from "./walkInto";
 import type { SpriteDone, SpriteJob } from "./spriteWorker";
 import type { FarPixels, PaintJob, Pixels } from "./paintWorker";
-import type { TimeOfDay } from "./scene";
+import type { TimeOfDay } from "./game";
 import { FULL_MOON, MOON_PHASES } from "./moon";
 
 /**

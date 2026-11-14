@@ -1,17 +1,14 @@
-// The old door in the hedge, and the key that unlocks it (#315, #323). This
-// part builds the door's meshes (the frame, the leaf on its hinge, the
-// keyhole's light, and the key lying in the garden), swings the leaf open,
-// and ticks the key's glint. GardenScene still owns picking the door, acting
-// on a tap, and opening it (which reveals the orchard): the door's state
-// (locked/key/held/open) is cross-cutting — the tap chain and the quiet line
-// it shows live on the host, which also reads `state`/`key`/`leaf` directly.
+// The old door in the hedge, and the key that unlocks it (#315, #323). The
+// game (game.ts) holds the door's state; this draws it: the frame, the leaf on
+// its hinge, the keyhole's light, and the key lying in the garden. It swings
+// the leaf open and ticks the key's glint.
 
 import * as THREE from "three";
-import type { DoorState } from "./scene";
+import type { DoorNow } from "./game";
 import type { Conditions } from "./conditions";
 import type { Frame } from "./scenePart";
 import { FOG_FAR, sprites, still, type BuildCtx } from "./sceneSprites";
-import { DOOR_HALF, HEDGE, keyAt, type KeyHelp, type Layout } from "./world";
+import { DOOR_HALF, HEDGE, type Layout } from "./world";
 import * as T from "./textures";
 
 /** The door's height and thickness, how far it swings open (it swings out, into the orchard), and for how long. */
@@ -28,26 +25,18 @@ const FACING = Math.cos(0.44);
  */
 const LATE = { on: 1.4, every: 3.2, size: 0.045, min: 0.18 };
 
-/**
- * The door in the hedge: "key" means the key is hidden in the garden; "held"
- * means the learner picked it up this walk; only "open" is saved. `leaf` turns
- * on its hinge; `swing` is how far through its swing it is (null: not
- * swinging). `help`: the world's help for a key left waiting.
- */
+/** The door in the hedge as drawn: `leaf` turns on its hinge; `swing` is how far through its swing it is (null: not swinging). */
 export class Door {
   private reducedMotion: boolean;
-  state: "locked" | "key" | "held" | "open" = "locked";
+  private game: DoorNow;
   leaf!: THREE.Group;
   keyhole!: { hole: THREE.Mesh; glow: THREE.Sprite };
-  key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
+  key: { mesh: THREE.Mesh; glint: THREE.Sprite } | null = null;
   swing: number | null = null;
-  /** The world's help for a key left waiting (#334); null without a key. The scene reads it too. */
-  help: KeyHelp | null = null;
-  /** The dog waits by the key (#802): it is the help, so the key does not glint. A star by the dog read as the dog sparkling. */
-  guarded = false;
 
-  constructor(reducedMotion: boolean) {
+  constructor(reducedMotion: boolean, door: DoorNow) {
     this.reducedMotion = reducedMotion;
+    this.game = door;
   }
 
   /**
@@ -55,7 +44,7 @@ export class Door {
    * learner's hiding place, if its word brought it. Built right after the
    * gate's hedge (GardenScene.buildHedge): nothing here draws random numbers.
    */
-  build(c: BuildCtx, L: Layout, doorState: DoorState) {
+  build(c: BuildCtx, L: Layout) {
     const { b, mat, woodTex } = c;
     const gx = L.gate.x;
     const z0 = b.maxZ + HEDGE.gap;
@@ -88,33 +77,43 @@ export class Door {
     glow.position.set(KEYHOLE.x, KEYHOLE.y, -DOOR.thick / 2 - 0.03);
     leaf.add(hole, glow);
     c.scene.add(leaf);
-
-    // The key, at this learner's hiding place, far from the door: a small find.
-    let key: { mesh: THREE.Mesh; glint: THREE.Sprite; x: number; z: number } | null = null;
-    if (typeof doorState === "object") {
-      const { x, z } = keyAt(L, doorState.key);
-      // Lying on the ground, turned a little, as if dropped.
-      const mesh = sprites(T.pixelTexture(T.key()), [{ x, y: 0.03, z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
-      c.mats.add(mesh.material);
-      c.scene.add(mesh);
-      // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted or fogged: a glint is bright at
-      // dusk too. Whatever stands in front hides it, as it hides the key.
-      const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthWrite: false, fog: false }));
-      glint.position.set(x, 0.25, z);
-      glint.visible = false;
-      c.scene.add(glint);
-      key = { mesh, glint, x, z };
-    }
-    this.state = typeof doorState === "object" ? "key" : doorState;
-    this.help = typeof doorState === "object" ? doorState.help : null;
     this.leaf = leaf;
     this.keyhole = { hole, glow };
-    this.key = key;
+
+    // The key, at this learner's hiding place, far from the door: a small find.
+    const k = this.game.key;
+    if (this.game.state !== "key" || !k) return;
+    // Lying on the ground, turned a little, as if dropped.
+    const mesh = sprites(T.pixelTexture(T.key()), [{ x: k.x, y: 0.03, z: k.z, u: 0, v: 0, uw: 1, vh: 1, phase: 0, droop: 0.5, scale: 1, index: -7 }], 0.36, 0.13, true);
+    c.mats.add(mesh.material);
+    c.scene.add(mesh);
+    // Late help (#334): after a week it catches the light now and then, whenever you face it (tick). Not tinted or fogged: a glint is bright at
+    // dusk too. Whatever stands in front hides it, as it hides the key.
+    const glint = new THREE.Sprite(new THREE.SpriteMaterial({ map: T.pixelTexture(T.sparkle()), transparent: true, depthWrite: false, fog: false }));
+    glint.position.set(k.x, 0.25, k.z);
+    glint.visible = false;
+    c.scene.add(glint);
+    this.key = { mesh, glint };
+  }
+
+  /** The key was picked up: it is no longer on the ground. */
+  keyTaken() {
+    if (!this.key) throw new Error("no key on the ground to take");
+    this.key.mesh.visible = false;
+    this.key.glint.visible = false;
+  }
+
+  /** The door is open for good: no light through the keyhole. `swing`: it swings open now, as you watch (not with reduced motion); otherwise it stands open. */
+  open(swing: boolean) {
+    this.keyhole.hole.visible = false;
+    this.keyhole.glow.visible = false;
+    if (swing && !this.reducedMotion) this.swing = 0;
+    else this.leaf.rotation.y = DOOR.open;
   }
 
   /** Warm light through the keyhole shows at dusk and night, until the door opens for good. */
   onConditions(c: Conditions) {
-    this.keyhole.glow.visible = c.dark && this.state !== "open";
+    this.keyhole.glow.visible = c.dark && this.game.state !== "open";
   }
 
   /**
@@ -130,15 +129,16 @@ export class Door {
       if (this.swing >= 1) this.swing = null;
     }
     // With reduced motion, a still glint.
-    const key = this.state === "key" ? this.key : null;
-    if (!key) return;
-    const dx = key.x - f.x;
-    const dz = key.z - f.z;
+    const key = this.game.state === "key" ? this.key : null;
+    const at = this.game.key;
+    if (!key || !at) return;
+    const dx = at.x - f.x;
+    const dz = at.z - f.z;
     const d = Math.hypot(dx, dz);
     // Forward is -z at yaw 0.
     const facing = (-Math.sin(f.yaw) * dx - Math.cos(f.yaw) * dz) / d > FACING;
     const k = f.elapsed % LATE.every;
-    key.glint.visible = !!this.help?.glint && !this.guarded && facing && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
+    key.glint.visible = !!this.game.help?.glint && !this.game.guarded && facing && d < FOG_FAR && (this.reducedMotion || k < LATE.on);
     const pulse = this.reducedMotion ? 1 : 0.8 + 0.2 * Math.sin((Math.PI * k) / LATE.on);
     key.glint.scale.setScalar(Math.max(LATE.min, LATE.size * d) * pulse);
   }

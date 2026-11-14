@@ -8,7 +8,7 @@ import { gameSeconds, pinDetail, walker } from "./helpers";
 // Without WalkScene's pickAny: it names only a plant hit, and of two same-named methods the first one's type wins.
 type ThoughtScene = Omit<WalkScene, "pickAny"> & {
   pitch: number;
-  bench: { x: number; z: number };
+  game: { bench: { x: number; z: number } };
   layout: { pond: { x: number; z: number; r: number } };
   pickAny(x: number, y: number, w: number, h: number): { kind: string; s?: { view: { id: string } } } | null;
 };
@@ -27,9 +27,9 @@ async function openWalk(page: Page, known: number) {
   // The key lies by the bench for one learner in five (world.ts keySpot, seeded by the demo's new user id), and in
   // reach it takes the action button from the bench: lay it by the first bed instead. With few words there is no key yet.
   await page.evaluate(() => {
-    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; door: { key: { x: number; z: number } | null } } }).__garden;
+    const s = (window as unknown as { __garden: { layout: { beds: { x: number; z: number; d: number }[] }; game: { door: { key: { x: number; z: number } | null } } } }).__garden;
     const bed = s.layout.beds[0];
-    if (s.door.key) Object.assign(s.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
+    if (s.game.door.key) Object.assign(s.game.door.key, { x: bed.x + 1.2, z: bed.z + bed.d / 2 + 1 });
   });
 }
 
@@ -38,8 +38,8 @@ const places = (page: Page) =>
   page.evaluate(() => {
     const s = (window as unknown as { __garden: ThoughtScene }).__garden;
     return {
-      bench: { x: s.bench.x, y: 0.45, z: s.bench.z },
-      sundial: { x: s.bench.x - 1.05, y: 0.5, z: s.bench.z },
+      bench: { x: s.game.bench.x, y: 0.45, z: s.game.bench.z },
+      sundial: { x: s.game.bench.x - 1.05, y: 0.5, z: s.game.bench.z },
     };
   });
 
@@ -254,7 +254,7 @@ test("thought.hills: with 800 words a tap on the far hills shows their tag and a
     const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
     const frame = () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
     for (let yaw = 0; yaw < Math.PI * 2; yaw += 0.4) {
-      Object.assign(s, { x: s.bench.x, z: s.bench.z - 1, yaw, pitch: 0 });
+      Object.assign(s, { x: s.game.bench.x, z: s.game.bench.z - 1, yaw, pitch: 0 });
       await frame();
       for (let y = 0.5; y > 0.3; y -= 0.02) {
         const hit = s.pickAny(r.width / 2, r.height * y, r.width, r.height);

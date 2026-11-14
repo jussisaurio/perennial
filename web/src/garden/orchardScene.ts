@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { ORCHARD_WORDS } from "../deck/schema";
-import { orchardBench, placeTrees, SPRITE_M, treeHits, type OrchardArea, type OrchardTree, type PlacedTree, type TreeHit } from "./orchard";
+import { orchardBench, SPRITE_M, treeHits, type OrchardArea, type PlacedTree, type TreeHit } from "./orchard";
 import { CELL_H_PX, LOOKS } from "./orchardArt";
 import type { SpriteItem } from "./sceneSprites";
 import type { HitBox } from "./scenery";
@@ -32,7 +32,7 @@ export interface OrchardWorld {
 
 export interface Orchard {
   /** The trees where they stand, for visitors (treeVisitorSpots) and walking (collideTrees). */
-  trees: PlacedTree[];
+  trees: readonly PlacedTree[];
   /** Tap targets: each tree shows its word (pickTree). */
   hits: TreeHit[];
   /** Scenery the tap can name: the bench. */
@@ -46,9 +46,9 @@ export interface Orchard {
 /** Sprite index for the trees: never the selected plant's. */
 const TREE_INDEX = -7;
 
-export function buildOrchard(world: OrchardWorld, area: OrchardArea, trees: OrchardTree[]): Orchard {
+/** The orchard's trees where the game placed them (game.ts trunks, orchard.ts placeTrees). */
+export function buildOrchard(world: OrchardWorld, area: OrchardArea, placed: readonly PlacedTree[]): Orchard {
   const group = new THREE.Group();
-  const placed = placeTrees(area, trees);
   const { atlas } = world;
   // Half a texel in from the cell's top and bottom, so nearest sampling never reads the row above or below.
   const inset = 0.5 / (CELL_H_PX * LOOKS.length);

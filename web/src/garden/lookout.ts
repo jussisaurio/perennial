@@ -166,6 +166,38 @@ export function hasNote(notes: readonly Note[], unlocked: readonly string[], id:
   return unlocked.includes(id);
 }
 
+/** The old gardener's diary on the hill (#858): its pages in the order they came, and which are still unread. sceneLookout.ts draws it. */
+export class Diary {
+  readonly pages: { id: string; unread: boolean }[];
+
+  constructor(pages: readonly { id: string; unread: boolean }[]) {
+    this.pages = pages.map((p) => ({ ...p }));
+  }
+
+  /** Has the diary a page not read yet? */
+  get unread(): boolean {
+    return this.pages.some((p) => p.unread);
+  }
+
+  /** Is note `id` a page of the diary? */
+  has(id: string): boolean {
+    return this.pages.some((p) => p.id === id);
+  }
+
+  /** The page the diary opens on: the oldest not read yet, or the last when every page is read. */
+  page(): string {
+    const p = this.pages.find((p) => p.unread);
+    return p ? p.id : this.pages[this.pages.length - 1].id;
+  }
+
+  /** Page `id` was read. */
+  read(id: string) {
+    const p = this.pages.find((p) => p.id === id);
+    if (!p) throw new Error(`no page "${id}" in the diary`);
+    p.unread = false;
+  }
+}
+
 /** After a second signal (s): the far light goes out, on, out, and on for good, slowly: two blinks. */
 const BLINK = [3, 4, 5, 6] as const;
 

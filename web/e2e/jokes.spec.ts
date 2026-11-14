@@ -10,7 +10,7 @@ import { pinDetail } from "./helpers";
 type JokeScene = WalkScene & {
   pitch: number;
   layout: { pond: { x: number; z: number }; gate: { x: number }; bounds: { maxZ: number } };
-  bench: { x: number; z: number };
+  game: { bench: { x: number; z: number } };
   jokes: { shadow: { rotation: { y: number }; visible: boolean }; leapt: number | null; fish: { visible: boolean } };
 };
 
@@ -27,7 +27,7 @@ const places = (page: Page) =>
     const z0 = s.layout.bounds.maxZ + 0.1;
     const mx = s.layout.gate.x - 0.9;
     return {
-      sundial: { x: s.bench.x - 1.05, y: 0.5, z: s.bench.z },
+      sundial: { x: s.game.bench.x - 1.05, y: 0.5, z: s.game.bench.z },
       door: { x: mx, y: 0.1, z: z0 - 0.02 },
       mat: { x: mx, y: 0.02, z: z0 - 0.08 },
     };

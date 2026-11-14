@@ -10,7 +10,7 @@ import type { Note } from "./notes/note";
 import { CELL_W, type Layout } from "./world";
 
 /** Near enough to the stile's foot (m) to read the notes there. */
-export const STILE_REACH = 1.3;
+const STILE_REACH = 1.3;
 
 /** The top board's height (m): a hand above the fence's 0.8. */
 export const TOP = 0.86;
@@ -76,4 +76,46 @@ export function placeNotes(
 export interface NotePlace {
   id: string;
   unread: boolean;
+}
+
+/** How thick a sheet lies (m). */
+export const SHEET = 0.004;
+
+/** The notes under the stile's step (placeNotes' `stile`), and which were opened this walk. sceneStile.ts draws them. */
+export class StileNotes {
+  /** Each note: its id, where its paper lies [x, y, z], and whether it was opened this walk. */
+  readonly notes: { id: string; at: [number, number, number]; opened: boolean }[];
+
+  private spot: StileSpot;
+
+  constructor(spot: StileSpot, ids: readonly string[]) {
+    this.spot = spot;
+    const [nx, nz] = spot.note;
+    // Flat on the ground, half under the lowest step; a later one a little askew on top of the first. Each a hair over what it lies on, so they never flicker into each other.
+    this.notes = ids.map((id, i) => ({ id, at: [nx - i * 0.06, SHEET * (i + 1), nz + i * 0.03], opened: false }));
+  }
+
+  /** Is note `id` one of those under the step? */
+  has(id: string): boolean {
+    return this.notes.some((n) => n.id === id);
+  }
+
+  /** Note `id` was opened: from now on it lies on the paper of a read one. */
+  read(id: string) {
+    const n = this.notes.find((n) => n.id === id);
+    if (!n) throw new Error(`no note "${id}" under the stile's step`);
+    n.opened = true;
+  }
+
+  /** The first note under the step not opened this walk, for the action button's "read", or null. */
+  unopened(): string | null {
+    for (const n of this.notes) if (!n.opened) return n.id;
+    return null;
+  }
+
+  /** Near enough (and `slack` m more) to the stile's foot, inside the garden, to go over it or read the notes there. Runs every frame: no allocation. */
+  inReach(x: number, z: number, slack: number): boolean {
+    const [fx, fz] = this.spot.foot;
+    return z > this.spot.z && Math.hypot(fx - x, fz - z) < STILE_REACH + slack;
+  }
 }

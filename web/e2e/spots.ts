@@ -90,29 +90,29 @@ export const SPOTS: Record<string, (page: Page) => Promise<unknown>> = {
   // A step behind the bench, facing it and the pond past it (#1011): as you come to it from the garden.
   bench: (page) =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number } } }).__garden;
+      const s = (window as unknown as { __garden: Scene & { game: { bench: { x: number; z: number } } } }).__garden;
       // Yaw π faces +z, the pond's side.
-      Object.assign(s, { x: s.bench.x, z: s.bench.z - 1.5, yaw: Math.PI, pitch: -0.3 });
+      Object.assign(s, { x: s.game.bench.x, z: s.game.bench.z - 1.5, yaw: Math.PI, pitch: -0.3 });
     }),
   // Up close to the details the thoughts name (#869): the cup rings on the bench's seat, from the pond's side, and
   // the letters on the sundial's pillar, from the garden's side.
   "cup-rings": (page) =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number } } }).__garden;
-      Object.assign(s, { x: s.bench.x + 0.05, z: s.bench.z + 0.85, yaw: 0, pitch: -0.65 });
+      const s = (window as unknown as { __garden: Scene & { game: { bench: { x: number; z: number } } } }).__garden;
+      Object.assign(s, { x: s.game.bench.x + 0.05, z: s.game.bench.z + 0.85, yaw: 0, pitch: -0.65 });
     }),
   "carved-letters": (page) =>
     page.evaluate(() => {
-      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number } } }).__garden;
-      Object.assign(s, { x: s.bench.x - 1.05, z: s.bench.z - 0.75, yaw: Math.PI, pitch: -0.45 });
+      const s = (window as unknown as { __garden: Scene & { game: { bench: { x: number; z: number } } } }).__garden;
+      Object.assign(s, { x: s.game.bench.x - 1.05, z: s.game.bench.z - 0.75, yaw: Math.PI, pitch: -0.45 });
     }),
   // By the diary's stone, in reach of it (#858): the book, and its ribbon while a page is unread.
   "hill-stone": (page) => standOnHill(page, "stone"),
   // A tap on the bench (#864): its tag with a thought under it.
   thought: async (page) => {
     const at = await page.evaluate(async () => {
-      const s = (window as unknown as { __garden: Scene & { bench: { x: number; z: number }; pickAny(x: number, y: number, w: number, h: number): { kind: string; s?: { view: { id: string } } } | null } }).__garden;
-      Object.assign(s, { x: s.bench.x + 0.4, z: s.bench.z - 2.2, yaw: Math.PI, pitch: -0.25 });
+      const s = (window as unknown as { __garden: Scene & { game: { bench: { x: number; z: number } }; pickAny(x: number, y: number, w: number, h: number): { kind: string; s?: { view: { id: string } } } | null } }).__garden;
+      Object.assign(s, { x: s.game.bench.x + 0.4, z: s.game.bench.z - 2.2, yaw: Math.PI, pitch: -0.25 });
       await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
       const r = document.querySelector(".gw-canvas")!.getBoundingClientRect();
       // A visitor may sit on it: look for a spot of the bench itself.

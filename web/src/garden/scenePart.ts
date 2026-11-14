@@ -14,7 +14,7 @@ import type { DoorAction } from "./reachCore";
 import type { Reply } from "./kinds/kind";
 import type { Conditions } from "./conditions";
 import type { Joke } from "./sceneJokes";
-import type { CarryTarget } from "./sceneCarry";
+import type { CarryTarget } from "./carry";
 import type { PlacedTree } from "./orchard";
 import type { PlacedPlant } from "./world";
 import type { Ray, SceneryHit, SceneryView } from "./scenery";

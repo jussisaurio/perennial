@@ -4,6 +4,7 @@
 // is synced. Pure.
 
 import { hash01 } from "../lib/seed";
+import { REACH_SLACK } from "./reach";
 import { shedAt } from "./shed";
 import { collide, type Layout } from "./world";
 
@@ -61,7 +62,7 @@ function baseHeads(l: Layout): Head[] {
  * Today's dandelion clocks: those by the fence, and one for each of the last
  * few days where a seed from that day's wind came down on open ground (on a
  * day when the wind took every seed over the fence, none).
- * Whether or not the learner blew it, the wind did: no state is kept.
+ * Whether or not the learner blew it, the wind did: no state is kept. @internal Exported for tests.
  */
 export function dandelions(l: Layout, day: number): Head[] {
   const heads = baseHeads(l);
@@ -138,7 +139,7 @@ function inside(l: Layout, to: XZ): boolean {
   return to.x > b.minX && to.x < b.maxX && to.z > b.minZ && to.z < b.maxZ;
 }
 
-/** Seed `i` of clock `h`, blown on calendar day `day`: where the wind takes it, and what it lands on. */
+/** Seed `i` of clock `h`, blown on calendar day `day`: where the wind takes it, and what it lands on. @internal Exported for tests. */
 export function flight(l: Layout, h: Head, day: number, i: number, bedTop: number): Flight {
   const { to, time, r } = seedWay(h, day, i);
   const plant = plantAt(l, to);
@@ -181,7 +182,118 @@ export function seedAt(f: Flight, t: number, reducedMotion: boolean, out: { x: n
   out.a = 1 - Math.max(0, Math.min(1, (t - f.delay - f.time) / SETTLE));
 }
 
-/** How long a blow lasts, until every seed has settled and gone (s). */
+/** How long a blow lasts, until every seed has settled and gone (s). @internal Exported for tests. */
 export function blowEnds(flights: readonly Flight[], reducedMotion: boolean): number {
   return Math.max(...flights.map((f) => f.delay + (reducedMotion ? FADE : f.time + SETTLE)));
+}
+
+// ---- The clocks in play ----
+
+/** What the action button does here: blow a dandelion clock. */
+export type ToyAct = "blow";
+/** A clock a tap or the action button acts on. */
+export type ToyTarget = { at: "clock"; i: number };
+/** What a toy did, for the page to count and to say. */
+export type ToyDone = { did: "blow" };
+
+/** Near enough to a clock (m) to blow it. */
+const REACH = 1.2;
+/** A walk to a clock stops this short of it, so it is still in view. */
+export const TOY_STAND = 0.8;
+
+/** One clock's blow: when it began (the game's clock, s), its seeds' ways, and which of them have landed yet. */
+export interface Blow {
+  at: number;
+  flights: Flight[];
+  landed: Uint8Array;
+  ends: number;
+}
+
+/**
+ * Today's clocks in play: which are blown, and the seeds of each blow under
+ * way. It says what the action button can do where you stand, and does it; a
+ * seed that lands on a plant makes it sneeze (`sneeze`).
+ */
+export class Clocks {
+  readonly heads: Head[];
+  readonly blown: boolean[];
+  /** Each clock's blow while its seeds are in the air or on the ground, else null. */
+  readonly blows: (Blow | null)[];
+  /** Every target the action button can point at, and what reachAt returns, made once: it allocates nothing. */
+  private targets: ToyTarget[];
+  private reach: { a: ToyAct; target: ToyTarget };
+  private layout: Layout;
+  private day: number;
+  private bedTop: number;
+  private reducedMotion: boolean;
+  private sneeze: (plant: number) => void;
+
+  constructor(layout: Layout, day: number, bedTop: number, reducedMotion: boolean, sneeze: (plant: number) => void) {
+    this.layout = layout;
+    this.day = day;
+    this.bedTop = bedTop;
+    this.reducedMotion = reducedMotion;
+    this.sneeze = sneeze;
+    this.heads = dandelions(layout, day);
+    this.blown = this.heads.map(() => false);
+    this.blows = this.heads.map(() => null);
+    this.targets = this.heads.map((_, i) => ({ at: "clock", i }));
+    this.reach = { a: "blow", target: this.targets[0] };
+  }
+
+  /** The nearest clock still to blow within reach of (x, z), or -1. The one the button shows now (`held`) stays in reach REACH_SLACK farther (#838). */
+  private clockNear(x: number, z: number, held: ToyTarget | null): number {
+    let best = -1;
+    let bestD = Infinity;
+    for (let i = 0; i < this.heads.length; i++) {
+      const d = Math.hypot(this.heads[i].x - x, this.heads[i].z - z);
+      if (!this.blown[i] && d < bestD && d < REACH + (held === this.targets[i] ? REACH_SLACK : 0)) [best, bestD] = [i, d];
+    }
+    return best;
+  }
+
+  /** What the action button can do from (x, z), and on what: blow a clock in reach. Null when nothing here. */
+  reachAt(x: number, z: number, held: ToyTarget | null): { a: ToyAct; target: ToyTarget } | null {
+    const i = this.clockNear(x, z, held);
+    if (i < 0) return null;
+    this.reach.target = this.targets[i];
+    return this.reach;
+  }
+
+  /** The target for clock `i`, the same object reachAt returns. */
+  clock(i: number): ToyTarget {
+    return this.targets[i];
+  }
+
+  /** Where to walk to blow a clock from afar, and whether you are near enough already. */
+  standFor(i: number, x: number, z: number): { x: number; z: number; near: boolean } {
+    const h = this.heads[i];
+    return { x: h.x, z: h.z, near: Math.hypot(x - h.x, z - h.z) < REACH };
+  }
+
+  /** Blow clock `i` at `now` (s): its seeds go with today's wind, and it stands bare for the rest of the walk. False when it is blown already. */
+  blow(i: number, now: number): boolean {
+    if (this.blown[i]) return false;
+    this.blown[i] = true;
+    const flights = Array.from({ length: SEEDS }, (_, k) => flight(this.layout, this.heads[i], this.day, k, this.bedTop));
+    this.blows[i] = { at: now, flights, landed: new Uint8Array(SEEDS), ends: blowEnds(flights, this.reducedMotion) };
+    return true;
+  }
+
+  /** The seeds as of `elapsed` (s): one that lands on a plant makes it sneeze; a blow whose seeds have all gone ends. Allocates nothing. */
+  step(elapsed: number) {
+    for (let h = 0; h < this.blows.length; h++) {
+      const b = this.blows[h];
+      if (!b) continue;
+      const t = elapsed - b.at;
+      for (let i = 0; i < SEEDS; i++) {
+        const f = b.flights[i];
+        if (b.landed[i] || t < f.delay + f.time) continue;
+        b.landed[i] = 1;
+        // With reduced motion nothing lands: the seeds fade on the clock.
+        if (f.plant >= 0 && !this.reducedMotion) this.sneeze(f.plant);
+      }
+      if (t > b.ends) this.blows[h] = null;
+    }
+  }
 }

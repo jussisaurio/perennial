@@ -11,8 +11,8 @@ import { rayBox, type Ray } from "./scenery";
 import type { BuildCtx } from "./sceneSprites";
 import type { Conditions } from "./conditions";
 import type { Frame, Part } from "./scenePart";
+import { MOUSE_DOOR, type MouseMat } from "./mouseDoor";
 import type { NotePlace } from "./stile";
-import { HEDGE } from "./world";
 import * as T from "./textures";
 
 /** A tap on a joke: the line it says (in the course language), what it means for a screen reader, and where the line shows. */
@@ -24,15 +24,6 @@ export interface Joke {
 
 /** The sundial, from the bench's middle (beside it, at the end away from its notice board), and its sizes (m). */
 const SUNDIAL = { dx: -1.05, dz: 0, pillar: 0.7, top: 0.36, face: 0.32, shadow: 0.13 };
-/**
- * The mouse door, from the middle of the big door (along the hedge, just past
- * its frame, where the fence has its gap), and its size (m). Once open (#882):
- * how far it swings out (rad), the size of the last note on its mat, and how
- * near the mat's middle you stand to read it. That reach ends before the big
- * door's middle and the lantern by the gate, so a step aside gives them back
- * the button.
- */
-const MOUSE_DOOR = { dx: -0.9, w: 0.13, h: 0.17, swing: 1.9, paper: { w: 0.1, h: 0.12 }, reach: 0.75 };
 /** The fish's leap: how long (s), how high (m) and how far (m) it goes, and how long the rings on the water last (s). */
 const LEAP = { s: 0.9, high: 0.55, far: 0.9, ripple: 1.2 };
 /** With reduced motion the fish shows, still, at the top of its leap, this long (s). */
@@ -48,10 +39,8 @@ export class Jokes implements Part {
   private door!: { min: [number, number, number]; max: [number, number, number]; joke: Joke };
   private dial!: { min: [number, number, number]; max: [number, number, number]; joke: Joke };
   private night = false;
-  /** The middle of the mouse door's mat. */
-  private matAt!: { x: number; z: number };
   /** The last note (#882) on the mat of the open mouse door; null while the door is shut. */
-  private lastNote: { id: string; paper: THREE.Mesh; readPaper: THREE.Material; glow: THREE.Sprite; box: { min: [number, number, number]; max: [number, number, number] } } | null = null;
+  private lastNote: { note: NotePlace; paper: THREE.Mesh; readPaper: THREE.Material; glow: THREE.Sprite; box: { min: [number, number, number]; max: [number, number, number] } } | null = null;
   private pond!: { x: number; z: number };
   private laps: Laps = { turned: 0, last: null };
   /** When the fish leapt (s since the walk opened; null: not yet), and the view's right as it did: it leaps across your view. */
@@ -60,18 +49,21 @@ export class Jokes implements Part {
   private fish!: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private rings: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
 
-  constructor(camera: THREE.Camera, reducedMotion: boolean) {
+  private mouse: MouseMat;
+
+  constructor(camera: THREE.Camera, reducedMotion: boolean, mouse: MouseMat) {
     this.camera = camera;
     this.reducedMotion = reducedMotion;
+    this.mouse = mouse;
   }
 
   /**
    * The sundial by the bench, its shadow at the hour `now`; the mouse door
    * and its mat (`word`: what the mat says, null for a course without one),
-   * open with the last note on the mat once there is one (`note`, #882);
+   * open with the last note on the mat once there is one (#882);
    * the fish, out of sight until it leaps. Draws no random numbers.
    */
-  build(c: BuildCtx, bench: { x: number; z: number }, now: Date, word: string | null, note: NotePlace | null) {
+  build(c: BuildCtx, bench: { x: number; z: number }, now: Date, word: string | null) {
     const { L, mat } = c;
     const stone = mat(T.pixelTexture(T.stone(), true));
 
@@ -112,14 +104,11 @@ export class Jokes implements Part {
     this.dial = { ...box, joke: { line: JOKE_LINES[c.lang].sundial, spoken: JOKE_SPOKEN.sundial, at: [x, top + 0.3, z] } };
 
     // The mouse door, flat on the hedge's face, low and small; its mat on the ground in front.
-    const z0 = L.bounds.maxZ + HEDGE.gap;
-    const mx = L.gate.x + MOUSE_DOOR.dx;
+    const { z0, x: mx, z: mz, note } = this.mouse;
     const door = new THREE.Mesh(new THREE.PlaneGeometry(MOUSE_DOOR.w, MOUSE_DOOR.h), mat(T.pixelTexture(T.mouseDoor(note ? "way" : "shut")), { alphaTest: 0.5 }));
     // Facing the garden (-z), a hair in front of the hedge's leaves.
     door.rotation.y = Math.PI;
     door.position.set(mx, MOUSE_DOOR.h / 2, z0 - 0.015);
-    const mz = z0 - 0.08;
-    this.matAt = { x: mx, z: mz };
     const rug = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.07), mat(T.pixelTexture(T.doormat(word))));
     // Flat, and turned to read from the garden side.
     rug.rotation.set(-Math.PI / 2, 0, Math.PI);
@@ -152,7 +141,7 @@ export class Jokes implements Part {
    */
   private openMouseDoor(c: BuildCtx, note: NotePlace, doorway: { min: [number, number, number]; max: [number, number, number] }, z0: number) {
     const { mat } = c;
-    const { x: mx, z: mz } = this.matAt;
+    const { x: mx, z: mz } = this.mouse;
     const hinge = new THREE.Group();
     hinge.position.set(mx - MOUSE_DOOR.w / 2, 0, z0 - 0.015);
     hinge.rotation.y = MOUSE_DOOR.swing;
@@ -174,7 +163,7 @@ export class Jokes implements Part {
     const p = MOUSE_DOOR.paper.h / 2;
     // A tap on the paper or the doorway: both are the note.
     const box = { min: [Math.min(mx - p, doorway.min[0]), 0, mz - p] as [number, number, number], max: [Math.max(mx + p, doorway.max[0]), doorway.max[1], doorway.max[2]] as [number, number, number] };
-    this.lastNote = { id: note.id, paper, readPaper, glow, box };
+    this.lastNote = { note, paper, readPaper, glow, box };
   }
 
   /** The joke a ray meets first, and how far along it (the host checks nothing stands in front). The sundial says its line only at night, and the mouse door only while it is shut. */
@@ -190,38 +179,14 @@ export class Jokes implements Part {
     const n = this.lastNote;
     if (!n) return null;
     const t = rayBox(r, n.box.min, n.box.max);
-    return t === Infinity ? null : { id: n.id, t };
+    return t === Infinity ? null : { id: n.note.id, t };
   }
 
-  /** Is `id` the last note, on the mouse door's mat? */
-  hasNote(id: string): boolean {
-    return this.lastNote?.id === id;
-  }
-
-  /** The last note, if you stand by the mat (and `slack` m more); null while the door is shut. Runs every frame: no allocation. */
-  noteInReach(x: number, z: number, slack: number): string | null {
+  /** The last note as it is now: once read, it lies on the paper of a read one. */
+  showNote() {
     const n = this.lastNote;
-    if (!n) return null;
-    return Math.hypot(x - this.matAt.x, z - this.matAt.z) < MOUSE_DOOR.reach + slack ? n.id : null;
-  }
-
-  /** Where a walk to the last note stops: in front of the mat, in reach of it. */
-  standByNote(): { x: number; z: number } {
-    return { x: this.matAt.x, z: this.matAt.z - MOUSE_DOOR.reach / 2 };
-  }
-
-  /** Where the cat sits while the last note waits: on the grass beside the mat, on the side away from the big door, looking at the doorway. */
-  besideMouseDoor(): { at: [number, number, number]; looks: { x: number; z: number } } {
-    const { x, z } = this.matAt;
-    // Along the hedge on the side away from the big door, far enough that its long body never hides the doorway or the paper from the path.
-    return { at: [x - 0.6, 0, z - 0.1], looks: { x, z: z + 0.08 } };
-  }
-
-  /** The last note was opened: from now on it lies on the paper of a read one. */
-  readNote() {
-    const n = this.lastNote;
-    if (!n) throw new Error("no note on the mouse door's mat");
-    n.paper.material = n.readPaper;
+    // While the door is shut there is no note to show.
+    if (n && !n.note.unread) n.paper.material = n.readPaper;
   }
 
   /** No sun at night, so no shadow, and the sundial is closed. A light shows in the open mouse door at dusk and night. */
