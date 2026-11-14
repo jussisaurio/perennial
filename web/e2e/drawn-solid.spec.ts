@@ -1,3 +1,4 @@
+// Probe for #1138: CI runs this changed spec on the PR. Never merge.
 import type { OpenSpot } from "../src/fuzz/drawnSolid";
 import type { HitBox, HitDisc } from "../src/garden/scenery";
 import { openWalkBuilt, TIMES } from "./spots";
