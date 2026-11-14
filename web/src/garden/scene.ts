@@ -48,7 +48,7 @@ import { Jokes } from "./sceneJokes";
 import { thingsInView, type SceneState } from "./sceneState";
 import { WalkInto } from "./sceneWalkInto";
 import { leafPiles, type Fell } from "./walkInto";
-import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, type BuildCtx, type SpriteItem } from "./sceneSprites";
+import { FOG_FAR, FOG_NEAR, PLANT_SCALE, plantHeight, signBoard, sprites, SPRITE_H, still, woodBox, type BuildCtx, type SpriteItem } from "./sceneSprites";
 import type { Companion } from "./bench";
 import { RESERVED } from "../content/voice";
 import { dayNumber } from "../core/day";
@@ -173,8 +173,9 @@ const LABEL_PRIORITY = ["say", "echo", "line", "fruit", "scenery", "tree", "tag"
 /** A wooden bench: a seat facing +z, a back rest behind it, four legs. The one by the pond, and the orchard's (#315). */
 function benchModel(c: Pick<BuildCtx, "mat" | "woodTex">): THREE.Group {
   const bench = new THREE.Group();
+  const wood = c.mat(c.woodTex, { vertexColors: true });
   const plank = (w: number, h: number, d: number, x: number, y: number, z: number) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), c.mat(c.woodTex));
+    const m = new THREE.Mesh(woodBox(w, h, d), wood);
     m.position.set(x, y, z);
     bench.add(m);
   };
@@ -413,7 +414,7 @@ export class GardenScene {
         this.basic.push(m);
         return m;
       },
-      woodTex: T.pixelTexture(T.wood(), true),
+      woodTex: T.paperTexture(T.wood(), true),
       rand: rng(1),
       scene: this.scene,
       hitBoxes: this.hitBoxes,
@@ -617,7 +618,7 @@ export class GardenScene {
   /** The picket fence, with a gap on the gate side where the door in the hedge is. */
   private buildFence(c: BuildCtx) {
     const { L, b, mat } = c;
-    const fenceTex = T.pixelTexture(T.picket(), true);
+    const fenceTex = T.paperTexture(T.picket(), true);
     const fence = (x1: number, z1: number, x2: number, z2: number) => {
       const len = Math.hypot(x2 - x1, z2 - z1);
       if (len < 0.1) return;
@@ -1021,7 +1022,7 @@ export class GardenScene {
       g.add(board);
       for (const sx of [-0.45, 0.45]) {
         // Behind the board with a gap: a post in the board's plane fights it and shows through the text.
-        const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.86, 0.06), mat(woodTex));
+        const post = new THREE.Mesh(woodBox(0.06, 0.86, 0.06), mat(woodTex, { vertexColors: true }));
         post.position.set(sx, 0.43, -0.06);
         g.add(post);
       }
@@ -1040,7 +1041,7 @@ export class GardenScene {
       const board = signBoard(c, T.pixelTexture(T.notice(SNAIL_SIGN[this.lang])), 1.0, 0.4);
       board.position.y = 0.62;
       g.add(board);
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), mat(woodTex));
+      const post = new THREE.Mesh(woodBox(0.05, 0.5, 0.05), mat(woodTex, { vertexColors: true }));
       post.position.set(0, 0.25, -0.05);
       g.add(post);
       g.position.set(L.gate.x + GATE_HALF + 1.7, 0, b.maxZ - 0.3);
@@ -1060,7 +1061,7 @@ export class GardenScene {
       const board = signBoard(c, T.pixelTexture(T.notice(text)), w, w * 0.4);
       board.position.y = y;
       g.add(board);
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.04, y, 0.04), mat(woodTex));
+      const post = new THREE.Mesh(woodBox(0.04, y, 0.04), mat(woodTex, { vertexColors: true }));
       post.position.set(0, y / 2, -0.03);
       g.add(post);
       g.position.set(x, 0, z);

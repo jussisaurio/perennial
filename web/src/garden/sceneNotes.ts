@@ -5,7 +5,7 @@
 
 import * as THREE from "three";
 import { rayBox, type Ray } from "./scenery";
-import type { BuildCtx } from "./sceneSprites";
+import { woodBox, type BuildCtx } from "./sceneSprites";
 import { SHED, shedAt, type ShedWall } from "./shed";
 import * as T from "./textures";
 import type { Layout } from "./world";
@@ -22,8 +22,9 @@ const crooked = (i: number) => (((i * 7) % 5) - 2) * 0.05;
 export function buildShed(c: BuildCtx, l: Layout): THREE.Group {
   const root = new THREE.Group();
   const s = shedAt(l);
+  const wood = c.mat(c.woodTex, { vertexColors: true });
   const box = (w: number, h: number, d: number, x: number, y: number, z: number) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), c.mat(c.woodTex));
+    const m = new THREE.Mesh(woodBox(w, h, d), wood);
     m.position.set(x, y, z);
     root.add(m);
     return m;
