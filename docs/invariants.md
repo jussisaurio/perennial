@@ -48,4 +48,4 @@ Use the strongest check that fits: a type that makes the wrong state impossible 
 - `security.own-rows`: You only ever read your own rows. Checked in `server/test/security.test.ts`.
 - `security.own-writes`: A write only ever changes the rows of the learner who is signed in. Checked in `server/test/security.test.ts`.
 - `privacy.no-secrets`: Logs carry no email, sign-in code or session token. Checked in `server/test/hardening.test.ts`.
-- `privacy.no-learner-text`: Logs and traces carry no request body and no text the learner wrote. Not checked yet (#1110).
+- `privacy.no-learner-text`: Logs and traces carry no request body and no text the learner wrote. Checked in `server/test/sentry.test.ts`.
