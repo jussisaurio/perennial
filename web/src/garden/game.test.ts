@@ -262,6 +262,27 @@ describe("over the stile and up the hill", () => {
     expect(lift(g)).toBeGreaterThan(2);
   });
 
+  test("garden.real-time: at 4 frames a second, holding W over the stile and up the old path takes as long, on the clock and in the game, as at 60", () => {
+    /** Hold W at `fps` from the stile's front until the hilltop: the seconds it took on the clock and in the game. */
+    const climb = (fps: number) => {
+      const { g } = play(HILL_OPEN);
+      const { s, h } = hillOf(g);
+      stand(g, s.x, s.foot[1], PATH_TURN);
+      let frames = 0;
+      while (Math.hypot(g.me.x - h.top[0], g.me.z - h.top[1]) >= 1.5 && frames < 60 * fps) {
+        g.frame(1 / fps, KEY_W);
+        frames++;
+      }
+      return { clock: frames / fps, game: g.elapsed };
+    };
+    const smooth = climb(60);
+    const slow = climb(4);
+    expect(smooth.clock).toBeLessThan(60);
+    expect(slow.game).toBeCloseTo(slow.clock, 6);
+    // Within a frame of the smooth walk.
+    expect(Math.abs(slow.clock - smooth.clock)).toBeLessThanOrEqual(1 / 4);
+  });
+
   test("hill.walk-back: from the hilltop, walking back down the path takes you over the stile into the garden; two seconds after you stop, your place has not changed", () => {
     const { g } = play(HILL_OPEN);
     const { s, h } = hillOf(g);
