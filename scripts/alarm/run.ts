@@ -7,7 +7,7 @@
 //   bun scripts/alarm/run.ts --print [run]    change nothing: print the issue text. With a CI run id,
 //                                             print it as if that run were main's latest finished run.
 import { $ } from "bun";
-import { api, REPO, send } from "../gh.ts";
+import { api, REPO, send, text } from "../gh.ts";
 import { behindSection, carriedLiveSection, type Commit, failedTests, healthSection, issueBody, landedOnMain, liveSection, type Red, redSection, TITLE } from "./lib.ts";
 
 const PROD = "https://playperennial.com";
@@ -32,13 +32,8 @@ async function ci(): Promise<string | undefined> {
   const failed: Red["jobs"] = [];
   for (const job of jobs.filter((j) => j.conclusion === "failure")) {
     // A log that cannot be read (expired, or GitHub is down) must not stop the alarm: the issue says so instead.
-    const log = await $`gh api repos/${REPO}/actions/jobs/${job.id}/logs`.nothrow().quiet();
-    failed.push({
-      name: job.name,
-      url: job.html_url,
-      steps: job.steps.filter((s) => s.conclusion === "failure").map((s) => s.name),
-      tests: log.exitCode === 0 ? failedTests(log.stdout.toString()) : { unreadable: log.stderr.toString().trim() },
-    });
+    const tests = await text(`repos/${REPO}/actions/jobs/${job.id}/logs`).then(failedTests, (e: unknown) => ({ unreadable: String(e) }));
+    failed.push({ name: job.name, url: job.html_url, steps: job.steps.filter((s) => s.conclusion === "failure").map((s) => s.name), tests });
   }
   const pages = (await $`gh api --paginate --slurp repos/${REPO}/compare/${green.head_sha}...${red.head_sha}?per_page=100`.json()) as { commits: Commit[] }[];
   return redSection({
