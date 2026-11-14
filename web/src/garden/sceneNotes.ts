@@ -55,7 +55,7 @@ export class ShedNotes {
   build(c: BuildCtx) {
     const notes = this.wall.notes;
     if (notes.length === 0) return;
-    const paper = (unread: boolean) => c.mat(T.pixelTexture(T.notePaper(unread)), { alphaTest: 0.5 });
+    const paper = (unread: boolean) => c.mat(T.paperTexture(T.notePaper(unread)), { alphaTest: 0.5 });
     const [read, fresh] = [paper(false), paper(true)];
     this.readPaper = read;
     const geo = new THREE.PlaneGeometry(PAPER.w, PAPER.h);

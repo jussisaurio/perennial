@@ -1067,7 +1067,7 @@ export class GardenScene {
   private buildDecor(c: BuildCtx) {
     const { L, b, w, d, cx, cz, rand } = c;
     const hedge = hedgeSpan(L);
-    const decorTex = T.pixelTexture(T.decor());
+    const decorTex = T.cutoutTexture(T.decor());
     const decor: SpriteItem[] = [];
     const put = (x: number, z: number, kind: number, scale = 0.42, y = 0.01) => decor.push({ x, y, z, u: kind * 0.25, v: 0, uw: 0.25, vh: 1, phase: rand() * 6, droop: 0, scale, index: -4 });
     for (let i = 0; i < 420; i++) {
