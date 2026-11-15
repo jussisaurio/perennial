@@ -15,7 +15,7 @@
     "lint": "bun run --filter '*' lint"
   },
   "devDependencies": {
-    "knip": "^6.45.0",
+    "knip": "^6.45.1",
     "railway": "^3.16.0"
   },
   "overrides": {
