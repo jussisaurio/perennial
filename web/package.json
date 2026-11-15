@@ -39,7 +39,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@babel/core": "^7.29.0",
-    "@babel/parser": "^7.29.0",
+    "@babel/parser": "^8.1.2",
     "@paulirish/trace_engine": "0.0.68",
     "@playwright/test": "^1.65.0",
     "@rolldown/plugin-babel": "^0.3.1",
