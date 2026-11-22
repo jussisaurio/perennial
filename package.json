@@ -15,8 +15,8 @@
     "lint": "bun run --filter '*' lint"
   },
   "devDependencies": {
-    "knip": "^6.45.0",
-    "railway": "^3.16.0"
+    "knip": "^6.46.1",
+    "railway": "^3.17.0"
   },
   "overrides": {
     "@effect/platform-node-shared": "4.1.4",
